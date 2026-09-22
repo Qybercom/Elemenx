@@ -6,8 +6,9 @@ Elemenx v0.43.5 package baseline.
 
 ```bash
 npm install
-npx playwright install chromium
 ```
+
+No Playwright browser download is required. The test suite uses the locally installed stable Google Chrome.
 
 ## Test
 
@@ -15,7 +16,10 @@ npx playwright install chromium
 npm test
 ```
 
-Tests run in a real headless Chromium through Vitest Browser Mode + Playwright.
+`npm test` runs two layers:
+
+1. Vitest Browser Mode in the locally installed Google Chrome for component/state/lifecycle/template/service/network/router regressions.
+2. Playwright Test in the same locally installed Google Chrome for real top-level History API / popstate regressions that must not run inside an iframe.
 
 ## Examples
 
@@ -28,7 +32,4 @@ Then open:
 - `/examples/simple/`
 - `/examples/application/`
 
-`simple` demonstrates the minimum Application + Component + reactive State flow.
-`application` is a small routed application using nested components, a Service, a Guard, route Params/Query/Hash and lifecycle.
-
-The historical hand-written regression pages are intentionally not the primary test runner anymore. Confirmed behaviors are being converted into normal automated browser tests.
+The important contracts from the three-day manual regression campaign are tracked in `tests/REGRESSION-MIGRATION.md`. New regressions should be added as automated tests instead of new numbered HTML phases.

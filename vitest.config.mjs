@@ -2,15 +2,21 @@ import { defineConfig } from 'vitest/config';
 import { playwright } from '@vitest/browser-playwright';
 
 export default defineConfig({
+	publicDir: 'tests/public',
 	test: {
 		browser: {
 			enabled: true,
-			provider: playwright(),
+			provider: playwright({
+				launchOptions: {
+					channel: 'chrome'
+				}
+			}),
 			instances: [
 				{ browser: 'chromium' }
 			],
 			headless: true
 		},
-		include: ['tests/**/*.test.js']
+		include: ['tests/**/*.test.js'],
+		exclude: ['tests/history/**']
 	}
 });
