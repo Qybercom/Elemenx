@@ -10401,7 +10401,7 @@ Runtime.WithRouter = function (router, callback) {
 				return api;
 			}
 
-			return Elemenx.Network(context);
+			return Runtime.NetworkFor ? Runtime.NetworkFor(api)(context) : Elemenx.Network;
 		};
 
 		api.Storage = function (context, value) {
@@ -10419,7 +10419,7 @@ Runtime.WithRouter = function (router, callback) {
 				return api;
 			}
 
-			return Elemenx.Messaging(context);
+			return Runtime.MessagingFor ? Runtime.MessagingFor(api)(context) : Elemenx.Messaging(context);
 		};
 
 		api.WebWorker = function (workerName, value) {
@@ -10513,6 +10513,8 @@ Runtime.WithRouter = function (router, callback) {
 				}
 			}
 
+			if (Runtime.DestroyNetworkOwner) Runtime.DestroyNetworkOwner(api);
+			if (Runtime.DestroyMessagingOwner) Runtime.DestroyMessagingOwner(api);
 			if (Runtime.DestroyWebWorkerOwner) Runtime.DestroyWebWorkerOwner(api);
 
 			for (workerName in serviceWorkers) {
