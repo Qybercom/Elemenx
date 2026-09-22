@@ -1,0 +1,1 @@
+window.P8PreloadChildLoads=(window.P8PreloadChildLoads||0)+1;Elemenx.Component('P8PreloadChild',{Template:'<span class="p8-preload-child">{{name}}</span>'});

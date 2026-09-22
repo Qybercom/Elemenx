@@ -1,0 +1,1 @@
+Elemenx.Component('P8KeyedParent',{Template:'<section><div data-if="show"><P8KeyedChild data-each="items" data-key="id"></P8KeyedChild></div></section>',ElemenxOnCreate:function(data){this.State.show=true;this.State.items=data.items||[];}});

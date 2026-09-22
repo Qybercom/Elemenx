@@ -1,0 +1,1 @@
+window.P8CompileRemoteLoads=(window.P8CompileRemoteLoads||0)+1;Elemenx.Component('P8CompileRemote',{Template:'<i class="p8-compile-remote">{{value}}</i>'});

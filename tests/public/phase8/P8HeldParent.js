@@ -1,0 +1,1 @@
+Elemenx.Component('P8HeldParent',{Template:'<div class="p8-held-parent"><P8HeldChild value="{{value}}"></P8HeldChild></div>'});

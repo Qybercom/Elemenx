@@ -1,0 +1,15 @@
+[
+	'P8NestedParent.js',
+	'P8NestedChild.js',
+	'P8NestedGrand.js',
+	'P8ConcurrentChild.js',
+	'P8ConcurrentGrand.js',
+	'P8KeyedChild.js',
+	'P8DirectChild.js',
+	'P8PreloadChild.js',
+	'P8PreloadParent.js',
+	'P8CompileRemote.js',
+	'P8CacheRemote.js',
+	'P8HeldChild.js',
+	'P8FinalHeldChild.js'
+]

@@ -1,0 +1,1 @@
+Elemenx.Component('P8PreloadParent',{Template:'<div><P8PreloadChild data-each="items" data-key="id"></P8PreloadChild></div>',ElemenxOnCreate:function(){this.State.items=[{id:1,name:'A'},{id:2,name:'B'}];}});

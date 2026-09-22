@@ -1,0 +1,1 @@
+window.P8FinalHeldChildLoads=(window.P8FinalHeldChildLoads||0)+1;Elemenx.Component('P8FinalHeldChild',{Template:'<span class="p8-final-held-child">{{value}}</span>',ElemenxOnCreate:function(){window.P8FinalHeldChildCreates=(window.P8FinalHeldChildCreates||0)+1;}});

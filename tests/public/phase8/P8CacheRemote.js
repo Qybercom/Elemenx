@@ -1,0 +1,1 @@
+window.P8CacheRemoteLoads=(window.P8CacheRemoteLoads||0)+1;Elemenx.Component('P8CacheRemote',{Template:'<i class="p8-cache-remote">{{value}}</i>'});

@@ -1,0 +1,1 @@
+window.P8NestedParentLoads=(window.P8NestedParentLoads||0)+1;Elemenx.Component('P8NestedParent',{Template:'<section class="p8-nested-parent"><P8NestedChild value="{{value}}"></P8NestedChild></section>'});

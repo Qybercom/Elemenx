@@ -1,0 +1,1 @@
+window.P8PendingChildLoads=(window.P8PendingChildLoads||0)+1;Elemenx.Component('P8PendingChild',{Template:'<span class="p8-pending-child">{{value}}</span>',ElemenxOnCreate:function(){window.P8PendingChildCreates=(window.P8PendingChildCreates||0)+1;}});

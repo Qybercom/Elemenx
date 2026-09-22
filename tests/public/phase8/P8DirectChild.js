@@ -1,0 +1,1 @@
+window.P8DirectChildLoads=(window.P8DirectChildLoads||0)+1;Elemenx.Component('P8DirectChild',{Template:'<span class="p8-direct-child">{{name}}</span>'});
