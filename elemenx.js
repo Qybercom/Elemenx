@@ -2941,12 +2941,12 @@
 			
 			function splitPath (path) {
 				var clean = trimPath(path);
+				var result = [];
 				if (clean === '/') return result;
 				
 				var parts = clean.substring(1).split('/');
-				var result = [];
-				
 				var i = 0;
+				
 				while (i < parts.length) {
 					if (parts[i])
 						result.push(decodeURIComponent(parts[i]));
@@ -2959,6 +2959,7 @@
 			
 			function routeParts (path) {
 				var value = String(path || '');
+				var parts = [];
 				if (!value || value === '/') return parts;
 				
 				if (value.charAt(0) === '/')
@@ -2970,9 +2971,8 @@
 				if (!value) return parts;
 				
 				var raw = value.split('/');
-				var parts = [];
-				
 				var i = 0;
+				
 				while (i < raw.length) {
 					if (raw[i])
 						parts.push(raw[i]);
