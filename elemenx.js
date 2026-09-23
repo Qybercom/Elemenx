@@ -10,12 +10,12 @@
 		global.Elemenx = global.Elemenx || {};
 		
 		function RuntimeID () {
+			if (Runtime.ID) return Runtime.ID;
+			
 			var crypto = global.crypto;
+			var result = '';
 			var values;
 			var i;
-			var result = '';
-			
-			if (Runtime.ID) return Runtime.ID;
 			
 			if (crypto && typeof crypto.getRandomValues === 'function' && typeof Uint32Array !== 'undefined') {
 				values = new Uint32Array(4);
@@ -1362,10 +1362,65 @@
 		return result;
 	};
 	
+
+	Runtime.Directive = {
+		Names: {
+			If: 'data-if',
+			Each: 'data-each',
+			Key: 'data-key',
+			Pending: 'data-pending',
+			Error: 'data-error',
+			Model: 'data-model',
+			Show: 'data-show',
+			Hide: 'data-hide'
+		},
+		Prefixes: {
+			On: 'data-on-',
+			Bind: 'data-bind-'
+		},
+		Name: function (name) {
+			return this.Names[name] || null;
+		},
+		Prefix: function (name) {
+			return this.Prefixes[name] || null;
+		},
+		Is: function (attribute, name) {
+			return attribute === this.Name(name);
+		},
+		Match: function (attribute, name) {
+			var prefix = this.Prefix(name);
+			if (!prefix) return false;
+			
+			return attribute.indexOf(prefix) === 0;
+		},
+		Argument: function (attribute, name) {
+			var prefix = this.Prefix(name);
+			if (!prefix || attribute.indexOf(prefix) !== 0) return null;
+			
+			return attribute.substring(prefix.length);
+		},
+		Reserved: function (attribute) {
+			var name;
+			
+			for (name in this.Names) {
+				if (Object.prototype.hasOwnProperty.call(this.Names, name) && attribute === this.Names[name]) return true;
+			}
+			
+			for (name in this.Prefixes) {
+				if (Object.prototype.hasOwnProperty.call(this.Prefixes, name) && attribute.indexOf(this.Prefixes[name]) === 0) return true;
+			}
+			
+			return false;
+		}
+	};
+
 	(function (global) {
 		'use strict';
 		
 		var Elemenx = global.Elemenx;
+		
+		Elemenx.Directive = Runtime.Directive;
+		
 		var componentRegistry = {};
 		var componentGenerations = {};
 		var componentOutlets = new WeakMap();
@@ -1865,8 +1920,8 @@
 				while (j < attrs.length) {
 					attr = attrs[j];
 					
-					if (attr.name.indexOf('data-bind-') === 0) {
-						type = attr.name.substr(10);
+					if (Runtime.Directive.Match(attr.name, 'Bind')) {
+						type = Runtime.Directive.Argument(attr.name, 'Bind');
 						key = attr.value;
 						
 						if (type === 'class') {
@@ -1885,21 +1940,21 @@
 							addBinding(bindings, key, {type: 'attribute', name: type, node: nodes[i]});
 						}
 					}
-					else if (attr.name === 'data-show') {
+					else if (Runtime.Directive.Is(attr.name, 'Show')) {
 						addBinding(bindings, attr.value, {
 							type: 'show',
 							node: nodes[i],
 							display: nodes[i].style.display
 						});
 					}
-					else if (attr.name === 'data-hide') {
+					else if (Runtime.Directive.Is(attr.name, 'Hide')) {
 						addBinding(bindings, attr.value, {
 							type: 'hide',
 							node: nodes[i],
 							display: nodes[i].style.display
 						});
 					}
-					else if (attr.name === 'data-model') {
+					else if (Runtime.Directive.Is(attr.name, 'Model')) {
 						key = attr.value;
 						models.push({
 							key: key,
@@ -2153,7 +2208,7 @@
 				 * Keep the host transparent to layout while allowing the real root to
 				 * participate in the same destroy/recreate path as nested data-if.
 				 */
-				if (root.nodeType === 1 && root.hasAttribute('data-if')) {
+				if (root.nodeType === 1 && root.hasAttribute(Runtime.Directive.Name('If'))) {
 					var structuralRoot = document.createElement('span');
 					
 					structuralRoot.style.display = 'contents';
@@ -2348,8 +2403,8 @@
 						while (j < attrs.length) {
 							attr = attrs[j];
 							
-							if (attr.name.indexOf('data-on-') === 0) {
-								eventName = attr.name.substr(8);
+							if (Runtime.Directive.Match(attr.name, 'On')) {
+								eventName = Runtime.Directive.Argument(attr.name, 'On');
 								methodName = attr.value;
 								method = definition[methodName];
 								
@@ -2790,9 +2845,10 @@
 		
 		Runtime.ReloadComponentInstances = function (name) {
 			var list = liveComponentInstances[name];
-			if (!list || !factory) return 0;
+			if (!list) return 0;
 			
 			var factory = Runtime.ResolveComponentRegistered(name);
+			if (!factory) return 0;
 			var snapshot = list.slice();
 			
 			Runtime.ComponentReloading = true;
@@ -3752,14 +3808,7 @@
 				while (i < attrs.length) {
 					name = attrs[i].name;
 					
-					if (
-						name !== 'data-if' &&
-						name !== 'data-each' &&
-						name !== 'data-key' &&
-						name !== 'data-pending' &&
-						name !== 'data-error' &&
-						name.indexOf('data-on-') !== 0
-					) {
+					if (!Runtime.Directive.Reserved(name)) {
 						name = name.replace(/-([a-z])/g, function (match, letter) {
 							return letter.toUpperCase();
 						});
@@ -3861,8 +3910,8 @@
 				while (i < attrs.length) {
 					name = attrs[i].name;
 					
-					if (name.indexOf('data-on-') === 0)
-						result[name.substring(8)] = attrs[i].value;
+					if (Runtime.Directive.Match(name, 'On'))
+						result[Runtime.Directive.Argument(name, 'On')] = attrs[i].value;
 					
 					i++;
 				}
@@ -3878,8 +3927,8 @@
 				result.AsyncLifecycle = {
 					Owner: component,
 					Name: name,
-					Pending: blueprint.getAttribute('data-pending'),
-					Error: blueprint.getAttribute('data-error')
+					Pending: blueprint.getAttribute(Runtime.Directive.Name('Pending')),
+					Error: blueprint.getAttribute(Runtime.Directive.Name('Error'))
 				};
 				
 				return result;
@@ -3955,7 +4004,7 @@
 					return;
 				}
 				
-				if (node.hasAttribute('data-if')) {
+				if (node.hasAttribute(Runtime.Directive.Name('If'))) {
 					compileIf(node);
 					
 					return;
@@ -3998,9 +4047,9 @@
 			function compileComponent (node, factory) {
 				var parent = node.parentNode;
 				var end = document.createComment('ui:' + node.tagName + ':end');
-				var each = node.getAttribute('data-each');
-				var key = node.getAttribute('data-key') || 'id';
-				var condition = node.getAttribute('data-if');
+				var each = node.getAttribute(Runtime.Directive.Name('Each'));
+				var key = node.getAttribute(Runtime.Directive.Name('Key')) || 'id';
+				var condition = node.getAttribute(Runtime.Directive.Name('If'));
 				var eventMap = events(node);
 				var pristineNode = pristineNodeFor(node);
 				var pristineProjection = pristineNode ? slotProjection(pristineNode.cloneNode(true)) : null;
@@ -4323,12 +4372,12 @@
 			
 			function compileIf (node) {
 				var parent = node.parentNode;
-				var field = node.getAttribute('data-if');
+				var field = node.getAttribute(Runtime.Directive.Name('If'));
 				var template = blueprintFor(node).cloneNode(true);
 				var end = document.createComment('ui:if:' + field + ':end');
 				var child = null;
 				
-				template.removeAttribute('data-if');
+				template.removeAttribute(Runtime.Directive.Name('If'));
 				parent.insertBefore(end, node.nextSibling);
 				parent.removeChild(node);
 				
