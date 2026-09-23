@@ -1,1308 +1,1369 @@
 (function () {
 	var Runtime = {};
+	
 	Runtime.ScriptURL = typeof document !== 'undefined' && document.currentScript ? document.currentScript.src : null;
 	Runtime.HasDOM = typeof document !== 'undefined';
 
-(function (global) {
-	'use strict';
-
-	global.Elemenx = global.Elemenx || {};
-
-	function RuntimeID () {
-		var crypto = global.crypto;
-		var values;
-		var i;
-		var result = '';
-
-		if (Runtime.ID) return Runtime.ID;
-
-		if (crypto && typeof crypto.getRandomValues === 'function' && typeof Uint32Array !== 'undefined') {
-			values = new Uint32Array(4);
-			crypto.getRandomValues(values);
-			i = 0;
-
-			while (i < values.length) {
-				result += (values[i] + 0x100000000).toString(16).slice(1);
-				i++;
-			}
-		}
-		else {
-			result = Date.now().toString(16) + '-' + Math.floor(Math.random() * 0x100000000).toString(16);
-		}
-
-		Runtime.ID = 'runtime-' + result;
-		return Runtime.ID;
-	}
-
-	global.Elemenx.RuntimeID = RuntimeID;
-	RuntimeID();
-})(typeof globalThis !== 'undefined' ? globalThis : self);
-
-(function (global) {
-	'use strict';
-
-	var Elemenx = global.Elemenx;
-
-	function Outlet (element) {
-		var current = null;
-
-		function Render (component) {
-			if (current === component) return component;
-
-			if (current && current.Destroy) {
-				current.Destroy();
+	(function (global) {
+		'use strict';
+	
+		global.Elemenx = global.Elemenx || {};
+	
+		function RuntimeID () {
+			var crypto = global.crypto;
+			var values;
+			var i;
+			var result = '';
+	
+			if (Runtime.ID) return Runtime.ID;
+	
+			if (crypto && typeof crypto.getRandomValues === 'function' && typeof Uint32Array !== 'undefined') {
+				values = new Uint32Array(4);
+				crypto.getRandomValues(values);
+				i = 0;
+	
+				while (i < values.length) {
+					result += (values[i] + 0x100000000).toString(16).slice(1);
+					
+					i++;
+				}
 			}
 			else {
+				result = Date.now().toString(16) + '-' + Math.floor(Math.random() * 0x100000000).toString(16);
+			}
+	
+			Runtime.ID = 'runtime-' + result;
+			
+			return Runtime.ID;
+		}
+	
+		global.Elemenx.RuntimeID = RuntimeID;
+		
+		RuntimeID();
+	})(typeof globalThis !== 'undefined' ? globalThis : self);
+
+	(function (global) {
+		'use strict';
+	
+		var Elemenx = global.Elemenx;
+	
+		function Outlet (element) {
+			var current = null;
+	
+			function Render (component) {
+				if (current === component) return component;
+	
+				if (current && current.Destroy) {
+					current.Destroy();
+				}
+				else {
+					while (element.firstChild) {
+						element.removeChild(element.firstChild);
+					}
+				}
+	
+				current = component || null;
+	
+				if (current)
+					element.appendChild(current.Element ? current.Element() : current);
+	
+				return current;
+			}
+	
+			function Clear () {
+				Render(null);
+			}
+	
+			function Current () {
+				return current;
+			}
+	
+			function Destroy () {
+				Clear();
+			}
+	
+			return {
+				Element: function () { return element; },
+				Render: Render,
+				Clear: Clear,
+				Current: Current,
+				Destroy: Destroy
+			};
+		}
+	
+		Runtime.Outlet = Outlet;
+	})(typeof globalThis !== 'undefined' ? globalThis : self);
+
+	(function (global) {
+		'use strict';
+	
+		var Elemenx = global.Elemenx;
+	
+		function valueByPath (object, path) {
+			var parts = String(path).split('.');
+			var value = object;
+			var i = 0;
+	
+			while (i < parts.length) {
+				if (value == null)
+					return undefined;
+	
+				value = value[parts[i]];
+				
+				i++;
+			}
+	
+			return value;
+		}
+	
+		function Collection (element, factory, options) {
+			options = options || {};
+	
+			var keyOption = options.Key || options.key || 'id';
+			var items = {};
+			var order = [];
+	
+			function keyOf (data, index) {
+				if (typeof keyOption === 'function')
+					return String(keyOption(data, index));
+	
+				return String(valueByPath(data, keyOption));
+			}
+	
+			function create (key, data) {
+				var component = factory(data, key);
+				
+				items[key] = {
+					key: key,
+					data: data,
+					component: component
+				};
+				
+				return items[key];
+			}
+	
+			function updateEntry (entry, data) {
+				entry.data = data;
+	
+				if (entry.component && entry.component.Update)
+					entry.component.Update(data);
+	
+				return entry;
+			}
+	
+			function Set (data) {
+				data = data || [];
+	
+				var wanted = {};
+				var nextOrder = [];
+				var i = 0;
+				var key, entry, node;
+				var active = null;
+				var selectionStart = null;
+				var selectionEnd = null;
+				var selectionDirection = null;
+	
+				if (global.document && element.contains(global.document.activeElement)) {
+					active = global.document.activeElement;
+	
+					if (typeof active.selectionStart === 'number') {
+						selectionStart = active.selectionStart;
+						selectionEnd = active.selectionEnd;
+						selectionDirection = active.selectionDirection;
+					}
+				}
+	
+				while (i < data.length) {
+					key = keyOf(data[i], i);
+	
+					if (key === 'undefined' || key === 'null') {
+						throw new Error('Collection item has no key at index ' + i);
+					}
+	
+					if (wanted[key]) {
+						throw new Error('Duplicate collection key: ' + key);
+					}
+	
+					wanted[key] = true;
+					nextOrder.push(key);
+	
+					entry = items[key];
+	
+					if (entry) {
+						updateEntry(entry, data[i]);
+					}
+					else {
+						entry = create(key, data[i]);
+					}
+	
+					node = entry.component.Element ? entry.component.Element() : entry.component;
+	
+					/*
+					 * Preserve DOM position for retained keyed items.
+					 *
+					 * Moving an existing focused subtree with appendChild()
+					 * keeps component identity but the browser can still drop
+					 * focus/selection. Only move a node when ordering actually
+					 * differs.
+					 */
+	
+					if (element.children[i] !== node) {
+						if (element.children[i]) {
+							element.insertBefore(node, element.children[i]);
+						}
+						else {
+							element.appendChild(node);
+						}
+					}
+	
+					i++;
+				}
+	
+				i = order.length - 1;
+	
+				while (i >= 0) {
+					key = order[i];
+	
+					if (!wanted[key] && items[key]) {
+						if (items[key].component && items[key].component.Destroy) {
+							items[key].component.Destroy();
+						}
+						
+						delete items[key];
+					}
+	
+					i--;
+				}
+	
+				order = nextOrder;
+	
+				/*
+				 * Moving an ancestor of the active element can make browsers blur it
+				 * even though the keyed DOM node itself is retained. Restore focus and
+				 * text selection after the complete reorder, never between moves.
+				 */
+	
+				if (active && element.contains(active) && global.document.activeElement !== active) {
+					active.focus();
+	
+					if (selectionStart !== null && typeof active.setSelectionRange === 'function')
+						active.setSelectionRange(selectionStart, selectionEnd, selectionDirection);
+				}
+	
+				return api;
+			}
+	
+			function Update (key, data) {
+				key = String(key);
+	
+				var entry = items[key];
+	
+				if (!entry) return false;
+	
+				updateEntry(entry, data);
+				return true;
+			}
+	
+			function Patch (key, patch) {
+				key = String(key);
+	
+				var entry = items[key];
+				var next, name;
+	
+				if (!entry) return false;
+	
+				next = {};
+	
+				for (name in entry.data) {
+					if (Object.prototype.hasOwnProperty.call(entry.data, name)) {
+						next[name] = entry.data[name];
+					}
+				}
+	
+				patch = patch || {};
+	
+				for (name in patch) {
+					if (Object.prototype.hasOwnProperty.call(patch, name)) {
+						next[name] = patch[name];
+					}
+				}
+	
+				updateEntry(entry, next);
+				
+				return true;
+			}
+	
+			function Remove (key) {
+				key = String(key);
+	
+				var entry = items[key];
+				var nextOrder = [];
+				var i = 0;
+	
+				if (!entry) return false;
+	
+				if (entry.component && entry.component.Destroy) {
+					entry.component.Destroy();
+				}
+	
+				delete items[key];
+	
+				while (i < order.length) {
+					if (order[i] !== key)nextOrder.push(order[i]);
+					
+					i++;
+				}
+	
+				order = nextOrder;
+				
+				return true;
+			}
+	
+			function Get (key) {
+				key = String(key);
+				
+				return items[key] ? items[key].component : null;
+			}
+	
+			function Data (key) {
+				key = String(key);
+				
+				return items[key] ? items[key].data : null;
+			}
+	
+			function Keys () {
+				return order.slice(0);
+			}
+	
+			function Clear () {
+				var i = order.length - 1;
+				var key;
+	
+				while (i >= 0) {
+					key = order[i];
+	
+					if (items[key] && items[key].component && items[key].component.Destroy) {
+						items[key].component.Destroy();
+					}
+	
+					i--;
+				}
+	
+				items = {};
+				order = [];
+	
 				while (element.firstChild) {
 					element.removeChild(element.firstChild);
 				}
+	
+				return api;
 			}
-
-			current = component || null;
-
-			if (current) {
-				element.appendChild(
-					current.Element ? current.Element() : current
-				);
+	
+			function Destroy () {
+				Clear();
 			}
-
-			return current;
-		}
-
-		function Clear () {
-			Render(null);
-		}
-
-		function Current () {
-			return current;
-		}
-
-		function Destroy () {
-			Clear();
-		}
-
-		return {
-			Element: function () { return element; },
-			Render: Render,
-			Clear: Clear,
-			Current: Current,
-			Destroy: Destroy
-		};
-	}
-
-	Runtime.Outlet = Outlet;
-})(typeof globalThis !== 'undefined' ? globalThis : self);
-
-(function (global) {
-	'use strict';
-
-	var Elemenx = global.Elemenx;
-
-	function valueByPath (object, path) {
-		var parts = String(path).split('.');
-		var value = object;
-		var i = 0;
-
-		while (i < parts.length) {
-			if (value == null) return undefined;
-
-			value = value[parts[i]];
-			i++;
-		}
-
-		return value;
-	}
-
-	function Collection (element, factory, options) {
-		options = options || {};
-
-		var keyOption = options.Key || options.key || 'id';
-		var items = {};
-		var order = [];
-
-		function keyOf (data, index) {
-			if (typeof keyOption === 'function') {
-				return String(keyOption(data, index));
-			}
-
-			return String(valueByPath(data, keyOption));
-		}
-
-		function create (key, data) {
-			var component = factory(data, key);
-			items[key] = {
-				key: key,
-				data: data,
-				component: component
+	
+			var api = {
+				Element: function () { return element; },
+				Set: Set,
+				Update: Update,
+				Patch: Patch,
+				Remove: Remove,
+				Get: Get,
+				Data: Data,
+				Keys: Keys,
+				Clear: Clear,
+				Destroy: Destroy
 			};
-			return items[key];
-		}
-
-		function updateEntry (entry, data) {
-			entry.data = data;
-
-			if (entry.component && entry.component.Update) {
-				entry.component.Update(data);
-			}
-
-			return entry;
-		}
-
-		function Set (data) {
-			data = data || [];
-
-			var wanted = {};
-			var nextOrder = [];
-			var i = 0;
-			var key, entry, node;
-			var active = null;
-			var selectionStart = null;
-			var selectionEnd = null;
-			var selectionDirection = null;
-
-			if (global.document && element.contains(global.document.activeElement)) {
-				active = global.document.activeElement;
-
-				if (typeof active.selectionStart === 'number') {
-					selectionStart = active.selectionStart;
-					selectionEnd = active.selectionEnd;
-					selectionDirection = active.selectionDirection;
-				}
-			}
-
-			while (i < data.length) {
-				key = keyOf(data[i], i);
-
-				if (key === 'undefined' || key === 'null') {
-					throw new Error('Collection item has no key at index ' + i);
-				}
-
-				if (wanted[key]) {
-					throw new Error('Duplicate collection key: ' + key);
-				}
-
-				wanted[key] = true;
-				nextOrder.push(key);
-
-				entry = items[key];
-
-				if (entry) {
-					updateEntry(entry, data[i]);
-				}
-				else {
-					entry = create(key, data[i]);
-				}
-
-				node = entry.component.Element ?
-					entry.component.Element() :
-					entry.component;
-
-				/*
-				 * Preserve DOM position for retained keyed items.
-				 *
-				 * Moving an existing focused subtree with appendChild()
-				 * keeps component identity but the browser can still drop
-				 * focus/selection. Only move a node when ordering actually
-				 * differs.
-				 */
-
-				if (element.children[i] !== node) {
-					if (element.children[i]) {
-						element.insertBefore(node, element.children[i]);
-					}
-					else {
-						element.appendChild(node);
-					}
-				}
-
-				i++;
-			}
-
-			i = order.length - 1;
-
-			while (i >= 0) {
-				key = order[i];
-
-				if (!wanted[key] && items[key]) {
-					if (items[key].component && items[key].component.Destroy) {
-						items[key].component.Destroy();
-					}
-					delete items[key];
-				}
-
-				i--;
-			}
-
-			order = nextOrder;
-
-			/*
-			 * Moving an ancestor of the active element can make browsers blur it
-			 * even though the keyed DOM node itself is retained. Restore focus and
-			 * text selection after the complete reorder, never between moves.
-			 */
-
-			if (active && element.contains(active) && global.document.activeElement !== active) {
-				active.focus();
-
-				if (selectionStart !== null && typeof active.setSelectionRange === 'function') {
-					active.setSelectionRange(selectionStart, selectionEnd, selectionDirection);
-				}
-			}
-
+	
 			return api;
 		}
+	
+		Runtime.Collection = Collection;
+	})(typeof globalThis !== 'undefined' ? globalThis : self);
 
-		function Update (key, data) {
-			key = String(key);
-
-			var entry = items[key];
-
-			if (!entry) return false;
-
-			updateEntry(entry, data);
-			return true;
+	(function (global) {
+		'use strict';
+	
+		var Elemenx = global.Elemenx;
+		var targetMap = new WeakMap();
+		var proxyCache = new WeakMap();
+		var rawCache = new WeakMap();
+		var activeConsumer = null;
+		var consumerStack = [];
+		var batchDepth = 0;
+		var pending = new Set();
+		var ITERATE = typeof Symbol === 'function' ?
+			Symbol('Elemenx.iterate') :
+			'__elemenx_iterate__';
+	
+		function reactiveTarget (value) {
+			if (!value || typeof value !== 'object') return false;
+	
+			return Array.isArray(value)
+				|| Object.getPrototypeOf(value) === Object.prototype
+				|| Object.getPrototypeOf(value) === null;
 		}
-
-		function Patch (key, patch) {
-			key = String(key);
-
-			var entry = items[key];
-			var next, name;
-
-			if (!entry) return false;
-
-			next = {};
-
-			for (name in entry.data) {
-				if (Object.prototype.hasOwnProperty.call(entry.data, name)) {
-					next[name] = entry.data[name];
-				}
-			}
-
-			patch = patch || {};
-
-			for (name in patch) {
-				if (Object.prototype.hasOwnProperty.call(patch, name)) {
-					next[name] = patch[name];
-				}
-			}
-
-			updateEntry(entry, next);
-			return true;
-		}
-
-		function Remove (key) {
-			key = String(key);
-
-			var entry = items[key];
-			var nextOrder = [];
+	
+		function cleanup (consumer) {
 			var i = 0;
-
-			if (!entry) return false;
-
-			if (entry.component && entry.component.Destroy) {
-				entry.component.Destroy();
-			}
-
-			delete items[key];
-
-			while (i < order.length) {
-				if (order[i] !== key)nextOrder.push(order[i]);
+	
+			while (i < consumer.deps.length) {
+				consumer.deps[i].delete(consumer);
+				
 				i++;
 			}
-
-			order = nextOrder;
-			return true;
+			
+			consumer.deps.length = 0;
 		}
-
-		function Get (key) {
-			key = String(key);
-			return items[key] ? items[key].component : null;
-		}
-
-		function Data (key) {
-			key = String(key);
-			return items[key] ? items[key].data : null;
-		}
-
-		function Keys () {
-			return order.slice(0);
-		}
-
-		function Clear () {
-			var i = order.length - 1;
-			var key;
-
-			while (i >= 0) {
-				key = order[i];
-
-				if (items[key] && items[key].component && items[key].component.Destroy) {
-					items[key].component.Destroy();
-				}
-
-				i--;
+	
+		function track (target, key) {
+			var map, dep;
+			if (!activeConsumer) return;
+	
+			map = targetMap.get(target);
+	
+			if (!map) {
+				map = new Map();
+				targetMap.set(target, map);
 			}
-
-			items = {};
-			order = [];
-
-			while (element.firstChild) {
-				element.removeChild(element.firstChild);
+			
+			dep = map.get(key);
+	
+			if (!dep) {
+				dep = new Set();
+				
+				map.set(key, dep);
 			}
-
-			return api;
+	
+			if (!dep.has(activeConsumer)) {
+				dep.add(activeConsumer);
+				
+				activeConsumer.deps.push(dep);
+			}
 		}
-
-		function Destroy () {
-			Clear();
+	
+		function queue (consumer) {
+			if (batchDepth) {
+				pending.add(consumer);
+			}
+			else {
+				consumer.Run();
+			}
 		}
-
-		var api = {
-			Element: function () { return element; },
-			Set: Set,
-			Update: Update,
-			Patch: Patch,
-			Remove: Remove,
-			Get: Get,
-			Data: Data,
-			Keys: Keys,
-			Clear: Clear,
-			Destroy: Destroy
-		};
-
-		return api;
-	}
-
-	Runtime.Collection = Collection;
-})(typeof globalThis !== 'undefined' ? globalThis : self);
-
-(function (global) {
-	'use strict';
-
-	var Elemenx = global.Elemenx;
-	var targetMap = new WeakMap();
-	var proxyCache = new WeakMap();
-	var rawCache = new WeakMap();
-	var activeConsumer = null;
-	var consumerStack = [];
-	var batchDepth = 0;
-	var pending = new Set();
-	var ITERATE = typeof Symbol === 'function' ?
-		Symbol('Elemenx.iterate') :
-		'__elemenx_iterate__';
-
-	function reactiveTarget (value) {
-		if (!value || typeof value !== 'object') return false;
-
-		return Array.isArray(value) ||
-			Object.getPrototypeOf(value) === Object.prototype ||
-			Object.getPrototypeOf(value) === null;
-	}
-
-	function cleanup (consumer) {
-		var i = 0;
-
-		while (i < consumer.deps.length) {
-			consumer.deps[i].delete(consumer);
-			i++;
+	
+		function trigger (target, key) {
+			var map = targetMap.get(target);
+			var dep;
+			var copy;
+	
+			if (!map) return;
+	
+			dep = map.get(key);
+	
+			if (!dep) return;
+	
+			copy = Array.from(dep);
+			copy.forEach(queue);
 		}
-		consumer.deps.length = 0;
-	}
-
-	function track (target, key) {
-		var map, dep;
-
-		if (!activeConsumer) return;
-
-		map = targetMap.get(target);
-
-		if (!map) {
-			map = new Map();
-			targetMap.set(target, map);
+	
+		function flush () {
+			var copy;
+	
+			if (batchDepth || !pending.size) return;
+	
+			copy = Array.from(pending);
+			
+			pending.clear();
+			
+			copy.forEach(function (consumer) { consumer.Run(); });
 		}
-		dep = map.get(key);
-
-		if (!dep) {
-			dep = new Set();
-			map.set(key, dep);
+	
+		function Batch (callback) {
+			batchDepth++;
+	
+			try {
+				return callback();
+			}
+			finally {
+				batchDepth--;
+				if (batchDepth < 0) batchDepth = 0;
+				
+				flush();
+			}
 		}
-
-		if (!dep.has(activeConsumer)) {
-			dep.add(activeConsumer);
-			activeConsumer.deps.push(dep);
+	
+		function raw (value) {
+			return rawCache.get(value) || value;
 		}
-	}
-
-	function queue (consumer) {
-		if (batchDepth) {
-			pending.add(consumer);
-		}
-		else {
-			consumer.Run();
-		}
-	}
-
-	function trigger (target, key) {
-		var map = targetMap.get(target);
-		var dep;
-		var copy;
-
-		if (!map) return;
-
-		dep = map.get(key);
-
-		if (!dep) return;
-
-		copy = Array.from(dep);
-		copy.forEach(queue);
-	}
-
-	function flush () {
-		var copy;
-
-		if (batchDepth || !pending.size) return;
-
-		copy = Array.from(pending);
-		pending.clear();
-		copy.forEach(function (consumer) { consumer.Run(); });
-	}
-
-	function Batch (callback) {
-		batchDepth++;
-
-		try {
-			return callback();
-		}
-		finally {
-			batchDepth--;
-
-			if (batchDepth < 0)batchDepth = 0;
-			flush();
-		}
-	}
-
-	function raw (value) {
-		return rawCache.get(value) || value;
-	}
-
-	function wrap (value) {
-		var proxy;
-
-		if (!reactiveTarget(value)) return value;
-
-		proxy = proxyCache.get(value);
-
-		if (proxy) return proxy;
-
-		proxy = new Proxy(value, {
-			get:function (target, key, receiver) {
-				var result;
-
-				if (key === '__raw__') return target;
-
-				if (
-					Array.isArray(target) &&
-					(
-						key === 'push' || key === 'pop' ||
-						key === 'shift' || key === 'unshift' ||
-						key === 'splice' || key === 'reverse' ||
-						key === 'sort'
-					)
-				) {
+	
+		function wrap (value) {
+			var proxy;
+	
+			if (!reactiveTarget(value)) return value;
+	
+			proxy = proxyCache.get(value);
+	
+			if (proxy) return proxy;
+	
+			proxy = new Proxy(value, {
+				get:function (target, key, receiver) {
+					var result;
+	
+					if (key === '__raw__') return target;
+	
+					if (
+						Array.isArray(target) &&
+						(
+							key === 'push' || key === 'pop' ||
+							key === 'shift' || key === 'unshift' ||
+							key === 'splice' || key === 'reverse' ||
+							key === 'sort'
+						)
+					) {
+						result = Reflect.get(target, key, receiver);
+						
+						return function () {
+							var answer;
+							var args = arguments;
+	
+							Batch(function () {
+								answer = result.apply(receiver, args);
+							});
+	
+							return answer;
+						};
+					}
+	
+					track(target, key);
+					
 					result = Reflect.get(target, key, receiver);
-					return function () {
-						var answer;
-						var args = arguments;
-
-						Batch(function () {
-							answer = result.apply(receiver, args);
-						});
-
-						return answer;
-					};
-				}
-
-				track(target, key);
-				result = Reflect.get(target, key, receiver);
-				return wrap(result);
-			},
-
-			set:function (target, key, value, receiver) {
-				var next = raw(value);
-				var had = Object.prototype.hasOwnProperty.call(target, key);
-				var previous = target[key];
-				var oldLength = Array.isArray(target) ? target.length : 0;
-				var result = Reflect.set(target, key, next, receiver);
-				var arrayIndex = Array.isArray(target) &&
-					key !== 'length' &&
-					String(+key) === String(key);
-
-				if (!Object.is(previous, next)) {
-					trigger(target, key);
-
-					if (arrayIndex && target.length !== oldLength) {
-						trigger(target, 'length');
-					}
-
-					if (Array.isArray(target)) {
-						if (arrayIndex || key === 'length') {
+					
+					return wrap(result);
+				},
+	
+				set:function (target, key, value, receiver) {
+					var next = raw(value);
+					var had = Object.prototype.hasOwnProperty.call(target, key);
+					var previous = target[key];
+					var oldLength = Array.isArray(target) ? target.length : 0;
+					var result = Reflect.set(target, key, next, receiver);
+					var arrayIndex = Array.isArray(target) && key !== 'length' && String(+key) === String(key);
+	
+					if (!Object.is(previous, next)) {
+						trigger(target, key);
+	
+						if (arrayIndex && target.length !== oldLength) {
+							trigger(target, 'length');
+						}
+	
+						if (Array.isArray(target)) {
+							if (arrayIndex || key === 'length') {
+								trigger(target, ITERATE);
+							}
+						}
+						else if (!had) {
 							trigger(target, ITERATE);
 						}
 					}
-					else if (!had) {
+	
+					return result;
+				},
+	
+				deleteProperty:function (target, key) {
+					var had = Object.prototype.hasOwnProperty.call(target, key);
+					var result = Reflect.deleteProperty(target, key);
+	
+					if (had && result) {
+						trigger(target, key);
 						trigger(target, ITERATE);
 					}
+	
+					return result;
 				}
-
-				return result;
-			},
-
-			deleteProperty:function (target, key) {
-				var had = Object.prototype.hasOwnProperty.call(target, key);
-				var result = Reflect.deleteProperty(target, key);
-
-				if (had && result) {
-					trigger(target, key);
-					trigger(target, ITERATE);
-				}
-
-				return result;
-			}
-		});
-
-		proxyCache.set(value, proxy);
-		rawCache.set(proxy, value);
-		return proxy;
-	}
-
-	function Effect (callback, lazy) {
-		var consumer = {
-			deps:[],
-			destroyed:false,
-
-			Run:function () {
-				var previousActive;
-
-				if (consumer.destroyed) return;
-
-				cleanup(consumer);
-				previousActive = activeConsumer;
-				consumerStack.push(previousActive);
-				activeConsumer = consumer;
-
-				try {
-					return callback();
-				}
-				finally {
-					activeConsumer = consumerStack.pop();
-				}
-			},
-
-			Destroy:function () {
-				consumer.destroyed = true;
-				cleanup(consumer);
-				pending.delete(consumer);
-			}
-		};
-
-		if (!lazy)consumer.Run();
-		return consumer;
-	}
-
-	Runtime.Reactive = wrap;
-	Runtime.Effect = Effect;
-	Runtime.BatchReactive = Batch;
-	Runtime.Raw = raw;
-
-	Runtime.TrackIteration = function (value) {
-		var target = raw(value);
-
-		if (target && typeof target === 'object') {
-			track(target, ITERATE);
+			});
+	
+			proxyCache.set(value, proxy);
+			rawCache.set(proxy, value);
+			
+			return proxy;
 		}
-
-		return value;
-	};
-})(typeof globalThis !== 'undefined' ? globalThis : self);
+	
+		function Effect (callback, lazy) {
+			var consumer = {
+				deps:[],
+				destroyed:false,
+	
+				Run:function () {
+					var previousActive;
+					if (consumer.destroyed) return;
+	
+					cleanup(consumer);
+					
+					previousActive = activeConsumer;
+					
+					consumerStack.push(previousActive);
+					
+					activeConsumer = consumer;
+	
+					try {
+						return callback();
+					}
+					finally {
+						activeConsumer = consumerStack.pop();
+					}
+				},
+	
+				Destroy:function () {
+					consumer.destroyed = true;
+					
+					cleanup(consumer);
+					
+					pending.delete(consumer);
+				}
+			};
+	
+			if (!lazy) consumer.Run();
+			
+			return consumer;
+		}
+	
+		Runtime.Reactive = wrap;
+		Runtime.Effect = Effect;
+		Runtime.BatchReactive = Batch;
+		Runtime.Raw = raw;
+	
+		Runtime.TrackIteration = function (value) {
+			var target = raw(value);
+	
+			if (target && typeof target === 'object') {
+				track(target, ITERATE);
+			}
+	
+			return value;
+		};
+	})(typeof globalThis !== 'undefined' ? globalThis : self);
 
 /* Discovery */
-(function (global) {
-	'use strict';
-
-	var maps = new WeakMap();
-	var builds = new WeakMap();
-	var scripts = {};
-	var pending = {};
-	var revision = 0;
-
-	function trimSlash (value) {
-		return String(value || '').replace(/\/+$/, '');
-	}
-
-	function absolute (base, value) {
-		if (/^(?:[a-z]+:)?\/\//i.test(value) || value.charAt(0) === '/') return value;
-		return trimSlash(base) + '/' + String(value).replace(/^\.\//, '');
-	}
-
-	function basename (url) {
-		var clean = String(url || '').split('?')[0].split('#')[0];
-		var name = clean.substring(clean.lastIndexOf('/') + 1);
-		return name.replace(/\.js$/i, '');
-	}
-
-	function requestText (url, callback) {
-		var xhr = new XMLHttpRequest();
-
-		xhr.open('GET', url, true);
-
-		xhr.onreadystatechange = function () {
-			if (xhr.readyState !== 4) return;
-
-			if (xhr.status >= 200 && xhr.status < 300) {
-				callback(null, xhr.responseText);
-				return;
-			}
-
-			callback(new Error('Elemenx Discovery failed: ' + url + ' [' + xhr.status + ']'));
-		};
-
-		xhr.onerror = function () {
-			callback(new Error('Elemenx Discovery failed: ' + url));
-		};
-
-		xhr.send(null);
-	}
-
-	function parseIndex (source, url) {
-		try {
-			return (new Function('return (' + source.replace(/;\s*$/, '') + ');'))();
+	(function (global) {
+		'use strict';
+	
+		var maps = new WeakMap();
+		var builds = new WeakMap();
+		var scripts = {};
+		var pending = {};
+		var revision = 0;
+	
+		function trimSlash (value) {
+			return String(value || '').replace(/\/+$/, '');
 		}
-		catch (error) {
-			error.message = 'Elemenx Discovery index error in ' + url + ': ' + error.message;
-			throw error;
+	
+		function absolute (base, value) {
+			if (/^(?:[a-z]+:)?\/\//i.test(value) || value.charAt(0) === '/') return value;
+			
+			return trimSlash(base) + '/' + String(value).replace(/^\.\//, '');
 		}
-	}
-
-	function buildDirectory (base, map, visited, callback) {
-		var directory = trimSlash(base);
-		var url = directory + '/index.js';
-
-		if (visited[directory]) {
-			callback(null);
-			return;
+	
+		function basename (url) {
+			var clean = String(url || '').split('?')[0].split('#')[0];
+			var name = clean.substring(clean.lastIndexOf('/') + 1);
+			
+			return name.replace(/\.js$/i, '');
 		}
-
-		visited[directory] = true;
-
-		requestText(url, function (error, source) {
-			var entries;
-			var remaining;
-			var failed = false;
-			var i = 0;
-
-			if (error) {
-				callback(error);
-				return;
-			}
-
-			try {
-				entries = parseIndex(source, url);
-			}
-			catch (parseError) {
-				callback(parseError);
-				return;
-			}
-
-			if (!Array.isArray(entries)) {
-				callback(new Error('Elemenx Discovery index must return an Array: ' + url));
-				return;
-			}
-
-			remaining = entries.length;
-
-			if (!remaining) {
-				callback(null);
-				return;
-			}
-
-			function complete (entryError) {
-				if (failed) return;
-
-				if (entryError) {
-					failed = true;
-					callback(entryError);
+	
+		function requestText (url, callback) {
+			var xhr = new XMLHttpRequest();
+	
+			xhr.open('GET', url, true);
+	
+			xhr.onreadystatechange = function () {
+				if (xhr.readyState !== 4) return;
+	
+				if (xhr.status >= 200 && xhr.status < 300) {
+					callback(null, xhr.responseText);
+					
 					return;
 				}
-
-				remaining--;
-
-				if (!remaining) callback(null);
+	
+				callback(new Error('Elemenx Discovery failed: ' + url + ' [' + xhr.status + ']'));
+			};
+	
+			xhr.onerror = function () {
+				callback(new Error('Elemenx Discovery failed: ' + url));
+			};
+	
+			xhr.send(null);
+		}
+	
+		function parseIndex (source, url) {
+			try {
+				return (new Function('return (' + source.replace(/;\s*$/, '') + ');'))();
 			}
-
-			while (i < entries.length) {
-				(function (entry) {
-					var value;
-					var target;
-					var name;
-
-					if (typeof entry !== 'string') {
-						complete(new Error('Elemenx Discovery index entries must be strings: ' + url));
+			catch (error) {
+				error.message = 'Elemenx Discovery index error in ' + url + ': ' + error.message;
+				
+				throw error;
+			}
+		}
+	
+		function buildDirectory (base, map, visited, callback) {
+			var directory = trimSlash(base);
+			var url = directory + '/index.js';
+	
+			if (visited[directory]) {
+				callback(null);
+				
+				return;
+			}
+	
+			visited[directory] = true;
+	
+			requestText(url, function (error, source) {
+				var entries;
+				var remaining;
+				var failed = false;
+				var i = 0;
+	
+				if (error) {
+					callback(error);
+					
+					return;
+				}
+	
+				try {
+					entries = parseIndex(source, url);
+				}
+				catch (parseError) {
+					callback(parseError);
+					
+					return;
+				}
+	
+				if (!Array.isArray(entries)) {
+					callback(new Error('Elemenx Discovery index must return an Array: ' + url));
+					
+					return;
+				}
+	
+				remaining = entries.length;
+	
+				if (!remaining) {
+					callback(null);
+					
+					return;
+				}
+	
+				function complete (entryError) {
+					if (failed) return;
+	
+					if (entryError) {
+						failed = true;
+						
+						callback(entryError);
+						
 						return;
 					}
-
-					value = entry.replace(/^\.\//, '');
-					target = absolute(directory, value);
-
-					if (/\.js(?:[?#].*)?$/i.test(value)) {
-						name = basename(value);
-
-						if (map[name] && map[name] !== target) {
-							complete(new Error(
-								'Elemenx Discovery duplicate entity "' + name + '": ' +
-								map[name] + ' and ' + target
-							));
+	
+					remaining--;
+	
+					if (!remaining) callback(null);
+				}
+	
+				while (i < entries.length) {
+					(function (entry) {
+						var value;
+						var target;
+						var name;
+	
+						if (typeof entry !== 'string') {
+							complete(new Error('Elemenx Discovery index entries must be strings: ' + url));
+							
 							return;
 						}
-
-						map[name] = target;
-						complete(null);
-						return;
-					}
-
-					buildDirectory(target, map, visited, complete);
-				})(entries[i]);
-
-				i++;
-			}
-		});
-	}
-
-	function build (application, root, callback) {
-		var map = maps.get(application);
-		var callbacks;
-		var current;
-		var i;
-
-		if (!Runtime.HasDOM) {
-			callback(new Error('Elemenx Discovery requires DOM'));
-			return;
-		}
-
-		if (!root) {
-			callback(new Error('Elemenx Application Root is not configured'));
-			return;
-		}
-
-		if (map) {
-			callback(null, map);
-			return;
-		}
-
-		current = builds.get(application);
-
-		if (current) {
-			current.push(callback);
-			return;
-		}
-
-		callbacks = [callback];
-		builds.set(application, callbacks);
-		map = {};
-
-		buildDirectory(root, map, {}, function (error) {
-			callbacks = builds.get(application) || [];
-			builds.delete(application);
-
-			if (!error) maps.set(application, map);
-
-			i = 0;
-
-			while (i < callbacks.length) {
-				callbacks[i](error, error ? null : map);
-				i++;
-			}
-		});
-	}
-
-	function scriptURL (url, force) {
-		if (!force) return url;
-
-		revision++;
-		return url + (url.indexOf('?') === -1 ? '?' : '&') + 'elemenx-reload=' + revision;
-	}
-
-	function load (application, type, name, force, callback) {
-		var map = maps.get(application);
-		var url = map && map[name];
-		var key;
-		var target;
-		var script;
-		var callbacks;
-		var i;
-
-		if (!url) {
-			if (callback) callback(new Error('Elemenx unknown ' + type + ': ' + name));
-			return false;
-		}
-
-		key = type + ':' + url;
-
-		if (!force && scripts[key]) {
-			if (callback) callback(null);
-			return true;
-		}
-
-		if (!force && pending[key]) {
-			if (callback) pending[key].push(callback);
-			return true;
-		}
-
-		callbacks = callback ? [callback] : [];
-		pending[key] = callbacks;
-		target = scriptURL(url, force);
-		script = global.document.createElement('script');
-		script.src = target;
-		script.async = true;
-
-		script.onload = function () {
-			callbacks = pending[key] || [];
-			delete pending[key];
-			scripts[key] = true;
-			i = 0;
-
-			while (i < callbacks.length) {
-				callbacks[i](null);
-				i++;
-			}
-		};
-
-		script.onerror = function () {
-			var error = new Error('Elemenx Discovery entity failed: ' + target);
-			callbacks = pending[key] || [];
-			delete pending[key];
-			i = 0;
-
-			while (i < callbacks.length) {
-				callbacks[i](error);
-				i++;
-			}
-		};
-
-		(global.document.head || global.document.documentElement).appendChild(script);
-		return true;
-	}
-
-	Runtime.Discovery = {
-		Build: build,
-
-		Ready: function (application) {
-			return !!maps.get(application);
-		},
-
-		Load: load,
-
-		Reload: function (application, type, name, callback) {
-			return load(application, type, name, true, callback);
-		},
-
-		ResolvedName: function (application, name) {
-			var map = maps.get(application);
-			var key;
-			if (!map) return null;
-			if (map[name]) return name;
-			for (key in map) {
-				if (Object.prototype.hasOwnProperty.call(map, key) && key.toLowerCase() === String(name).toLowerCase()) return key;
-			}
-			return null;
-		},
-
-		ResolvedURL: function (application, name) {
-			var map = maps.get(application);
-			return map ? map[name] || null : null;
-		}
-	};
-})(typeof globalThis !== 'undefined' ? globalThis : self);
-(function (global) {
-	'use strict';
-
-	var Elemenx = global.Elemenx;
-	var serviceRegistry = {};
-	var serviceHandles = {};
-	var applicationServiceHandles = new WeakMap();
-	var guardRegistry = {};
-
-	function ServiceAccessor (name) {
-		var application = this && this.Application ? this.Application() : null;
-		return serviceHandle(name, application);
-	}
-
-	function createService (name, definition, generation, application) {
-		var instance = {};
-		var key;
-
-		definition = definition || {};
-
-		for (key in definition) {
-			if (
-				Object.prototype.hasOwnProperty.call(definition, key) &&
-				key !== 'ElemenxOnCreate' &&
-				key !== 'ElemenxOnDestroy'
-			) {
-				instance[key] = definition[key];
-			}
-		}
-
-		instance.Generation = function () { return generation || 0; };
-		instance.Application = function () { return application || null; };
-		instance.Service = function (serviceName) { return serviceHandle(serviceName, application); };
-		instance.Network = Runtime.NetworkFor ? Runtime.NetworkFor(instance) : Elemenx.Network;
-		instance.Storage = Runtime.StorageFor ? Runtime.StorageFor(instance) : Elemenx.Storage;
-		instance.WebWorker = Runtime.WebWorkerFor ? Runtime.WebWorkerFor(instance) : null;
-		instance.ServiceWorker = Runtime.ServiceWorkerFor ? Runtime.ServiceWorkerFor(instance) : null;
-
-		if (Runtime.SetMessagingEntity) Runtime.SetMessagingEntity(instance, name, 0);
-		instance.Messaging = Runtime.MessagingFor ? Runtime.MessagingFor(instance) : Elemenx.Messaging;
-		instance.Destroy = function () {
-			if (Runtime.DestroyNetworkOwner) Runtime.DestroyNetworkOwner(instance);
-			if (Runtime.DestroyMessagingOwner) Runtime.DestroyMessagingOwner(instance);
-			if (Runtime.DestroyWebWorkerOwner) Runtime.DestroyWebWorkerOwner(instance);
-
-			if (typeof definition.ElemenxOnDestroy === 'function') {
-				definition.ElemenxOnDestroy.call(instance);
-			}
-		};
-
-		if (typeof definition.ElemenxOnCreate === 'function') {
-			definition.ElemenxOnCreate.call(instance);
-		}
-
-		return instance;
-	}
-
-	function serviceTarget (name, application) {
-		var entry = serviceRegistry[name];
-		var applicationInstance;
-
-		if (!entry) return null;
-
-		if (application) {
-			entry.ApplicationInstances = entry.ApplicationInstances || new WeakMap();
-			entry.ApplicationInstanceList = entry.ApplicationInstanceList || [];
-
-			if (!entry.ApplicationInstances.has(application)) {
-				applicationInstance = createService(name, entry.Definition, entry.Generation, application);
-				entry.ApplicationInstances.set(application, applicationInstance);
-				entry.ApplicationInstanceList.push(applicationInstance);
-			}
-
-			return entry.ApplicationInstances.get(application);
-		}
-
-		if (!entry.Instance) {
-			entry.Instance = createService(name, entry.Definition, entry.Generation, null);
-		}
-
-		return entry.Instance;
-	}
-
-	function serviceHandle (name, application) {
-		var map = serviceHandles;
-		var handle;
-
-		if (application) {
-			map = applicationServiceHandles.get(application);
-
-			if (!map) {
-				map = {};
-				applicationServiceHandles.set(application, map);
-			}
-		}
-
-		handle = map[name];
-		var queued = [];
-		var loading = false;
-
-		if (handle) return handle;
-
-		handle = new Proxy({}, {
-			get: function (object, property) {
-				var target;
-
-				if (property === 'ElemenxServiceHandle') return true;
-				if (property === 'ElemenxDeferred') return !serviceRegistry[name];
-				if (property === 'Destroy') {
-					return function () {
-						var entry = serviceRegistry[name];
-						var target;
-
-						queued = [];
-
-						if (!entry) return;
-
-						target = serviceTarget(name, application);
-
-						if (target && target.Destroy) target.Destroy();
-
-						if (application && entry.ApplicationInstances) {
-							entry.ApplicationInstances.delete(application);
-						}
-						else {
-							entry.Instance = null;
-						}
-					};
-				}
-
-				target = serviceTarget(name, application);
-
-				if (target) {
-					if (typeof target[property] === 'function') return target[property].bind(target);
-					return target[property];
-				}
-
-				if (Runtime.Discovery && application && Runtime.Discovery.Ready(application)) {
-					if (!loading) {
-						loading = true;
-						Runtime.Discovery.Load(application, 'Service', name, false, function (error) {
-							var call;
-							var resolved;
-							var i = 0;
-
-							loading = false;
-
-							if (error) {
-								queued = [];
-								if (global.console && console.error) console.error(error);
+	
+						value = entry.replace(/^\.\//, '');
+						target = absolute(directory, value);
+	
+						if (/\.js(?:[?#].*)?$/i.test(value)) {
+							name = basename(value);
+	
+							if (map[name] && map[name] !== target) {
+								complete(new Error(
+									'Elemenx Discovery duplicate entity "' + name + '": ' +
+									map[name] + ' and ' + target
+								));
 								return;
 							}
-
-							resolved = serviceTarget(name, application);
-
-							while (i < queued.length) {
-								call = queued[i];
-
-								if (resolved && typeof resolved[call.Property] === 'function') {
-									resolved[call.Property].apply(resolved, call.Arguments);
-								}
-
-								i++;
-							}
-
-							queued = [];
-						});
-					}
-
-					return function () {
-						queued.push({
-							Property: property,
-							Arguments: Array.prototype.slice.call(arguments)
-						});
-					};
+	
+							map[name] = target;
+							
+							complete(null);
+							
+							return;
+						}
+	
+						buildDirectory(target, map, visited, complete);
+					})(entries[i]);
+	
+					i++;
 				}
-
-				return undefined;
-			},
-
-			set: function (object, property, value) {
-				var target = serviceTarget(name, application);
-
-				if (target) target[property] = value;
-				else object[property] = value;
-
+			});
+		}
+	
+		function build (application, root, callback) {
+			var map = maps.get(application);
+			var callbacks;
+			var current;
+			var i;
+	
+			if (!Runtime.HasDOM) {
+				callback(new Error('Elemenx Discovery requires DOM'));
+				
+				return;
+			}
+	
+			if (!root) {
+				callback(new Error('Elemenx Application Root is not configured'));
+				
+				return;
+			}
+	
+			if (map) {
+				callback(null, map);
+				
+				return;
+			}
+	
+			current = builds.get(application);
+	
+			if (current) {
+				current.push(callback);
+				
+				return;
+			}
+	
+			callbacks = [callback];
+			builds.set(application, callbacks);
+			map = {};
+	
+			buildDirectory(root, map, {}, function (error) {
+				callbacks = builds.get(application) || [];
+				builds.delete(application);
+	
+				if (!error)
+					maps.set(application, map);
+	
+				i = 0;
+	
+				while (i < callbacks.length) {
+					callbacks[i](error, error ? null : map);
+					
+					i++;
+				}
+			});
+		}
+	
+		function scriptURL (url, force) {
+			if (!force) return url;
+	
+			revision++;
+			
+			return url + (url.indexOf('?') === -1 ? '?' : '&') + 'elemenx-reload=' + revision;
+		}
+	
+		function load (application, type, name, force, callback) {
+			var map = maps.get(application);
+			var url = map && map[name];
+			var key;
+			var target;
+			var script;
+			var callbacks;
+			var i;
+	
+			if (!url) {
+				if (callback)
+					callback(new Error('Elemenx unknown ' + type + ': ' + name));
+				
+				return false;
+			}
+	
+			key = type + ':' + url;
+	
+			if (!force && scripts[key]) {
+				if (callback)
+					callback(null);
+				
 				return true;
 			}
-		});
-
-		map[name] = handle;
-		return handle;
-	}
-
-	Elemenx.Service = function (name, definition) {
-		if (arguments.length === 2) {
-			Runtime.RegisterServiceDefinition(name, definition);
-			return serviceHandle(name);
-		}
-
-		if (arguments.length !== 1) {
-			throw new Error('Elemenx.Service expects (name) or (name, definition)');
-		}
-
-		if (!serviceRegistry[name]) {
-			return null;
-		}
-
-		return serviceHandle(name);
-	};
-
-	Elemenx.Guard = function (name, guard) {
-		if (arguments.length === 2) {
-			if (typeof guard !== 'function') {
-				throw new Error('Elemenx.Guard definition must be a function');
+	
+			if (!force && pending[key]) {
+				if (callback)
+					pending[key].push(callback);
+				
+				return true;
 			}
-
-			guardRegistry[name] = guard;
-			return guard;
+	
+			callbacks = callback ? [callback] : [];
+			pending[key] = callbacks;
+			target = scriptURL(url, force);
+			script = global.document.createElement('script');
+			script.src = target;
+			script.async = true;
+	
+			script.onload = function () {
+				callbacks = pending[key] || [];
+				delete pending[key];
+				scripts[key] = true;
+				i = 0;
+	
+				while (i < callbacks.length) {
+					callbacks[i](null);
+					
+					i++;
+				}
+			};
+	
+			script.onerror = function () {
+				var error = new Error('Elemenx Discovery entity failed: ' + target);
+				
+				callbacks = pending[key] || [];
+				delete pending[key];
+				i = 0;
+	
+				while (i < callbacks.length) {
+					callbacks[i](error);
+					
+					i++;
+				}
+			};
+	
+			(global.document.head || global.document.documentElement).appendChild(script);
+			
+			return true;
 		}
-
-		if (arguments.length !== 1) {
-			throw new Error('Elemenx.Guard expects (name) or (name, guard)');
-		}
-
-		return guardRegistry[name] || null;
-	};
-
-	Runtime.Service = ServiceAccessor;
-	Runtime.ServiceForApplication = function (application, name) {
-		return serviceHandle(name, application || null);
-	};
-	Runtime.RegisterServiceDefinition = function (name, definition) {
-		var previous = serviceRegistry[name];
-		var i = 0;
-
-		if (previous && previous.Instance && previous.Instance.Destroy) previous.Instance.Destroy();
-
-		if (previous && previous.ApplicationInstanceList) {
-			while (i < previous.ApplicationInstanceList.length) {
-				if (previous.ApplicationInstanceList[i].Destroy) previous.ApplicationInstanceList[i].Destroy();
-				i++;
+	
+		Runtime.Discovery = {
+			Build: build,
+	
+			Ready: function (application) {
+				return !!maps.get(application);
+			},
+	
+			Load: load,
+	
+			Reload: function (application, type, name, callback) {
+				return load(application, type, name, true, callback);
+			},
+	
+			ResolvedName: function (application, name) {
+				var map = maps.get(application);
+				var key;
+				
+				if (!map) return null;
+				if (map[name]) return name;
+				
+				for (key in map) {
+					if (Object.prototype.hasOwnProperty.call(map, key) && key.toLowerCase() === String(name).toLowerCase()) return key;
+				}
+				
+				return null;
+			},
+	
+			ResolvedURL: function (application, name) {
+				var map = maps.get(application);
+				
+				return map ? map[name] || null : null;
 			}
-		}
-
-		serviceRegistry[name] = {
-			Definition: definition || {},
-			Instance: null,
-			ApplicationInstances: new WeakMap(),
-			ApplicationInstanceList: [],
-			Generation: previous ? previous.Generation + 1 : 0
 		};
-	};
-
-	Runtime.RefreshDeferredService = function (name) {
-		return serviceHandles[name] || null;
-	};
-
-	Runtime.ResolveGuard = function (guard) {
-		if (typeof guard === 'function') return guard;
-
-		if (typeof guard === 'string') return Elemenx.Guard(guard);
-
-		return null;
-	};
-})(typeof globalThis !== 'undefined' ? globalThis : self);
-
-Runtime.ComponentRouters = new WeakMap();
-Runtime.ComponentRouterFacades = new WeakMap();
-Runtime.ActiveRouter = null;
-
-Runtime.RouterFor = function (component) {
-	var facade = Runtime.ComponentRouterFacades.get(component);
-
-	if (facade) return facade;
-
-	facade = {
-		Pending: [],
-
-		On: function (name, callback) {
-			var router = Runtime.ComponentRouters.get(component);
-
-			if (router) {
-				router.Owner(component).On(name, callback);
+	})(typeof globalThis !== 'undefined' ? globalThis : self);
+	(function (global) {
+		'use strict';
+	
+		var Elemenx = global.Elemenx;
+		var serviceRegistry = {};
+		var serviceHandles = {};
+		var applicationServiceHandles = new WeakMap();
+		var guardRegistry = {};
+	
+		function ServiceAccessor (name) {
+			var application = this && this.Application ? this.Application() : null;
+			
+			return serviceHandle(name, application);
+		}
+	
+		function createService (name, definition, generation, application) {
+			var instance = {};
+			var key;
+	
+			definition = definition || {};
+	
+			for (key in definition) {
+				if (
+					Object.prototype.hasOwnProperty.call(definition, key) &&
+					key !== 'ElemenxOnCreate' &&
+					key !== 'ElemenxOnDestroy'
+				) {
+					instance[key] = definition[key];
+				}
 			}
-			else {
-				facade.Pending.push({
-					Name: name,
-					Callback: callback
-				});
+	
+			instance.Generation = function () { return generation || 0; };
+			instance.Application = function () { return application || null; };
+			instance.Service = function (serviceName) { return serviceHandle(serviceName, application); };
+			instance.Network = Runtime.NetworkFor ? Runtime.NetworkFor(instance) : Elemenx.Network;
+			instance.Storage = Runtime.StorageFor ? Runtime.StorageFor(instance) : Elemenx.Storage;
+			instance.WebWorker = Runtime.WebWorkerFor ? Runtime.WebWorkerFor(instance) : null;
+			instance.ServiceWorker = Runtime.ServiceWorkerFor ? Runtime.ServiceWorkerFor(instance) : null;
+	
+			if (Runtime.SetMessagingEntity)
+				Runtime.SetMessagingEntity(instance, name, 0);
+			
+			instance.Messaging = Runtime.MessagingFor ? Runtime.MessagingFor(instance) : Elemenx.Messaging;
+			instance.Destroy = function () {
+				if (Runtime.DestroyNetworkOwner)
+					Runtime.DestroyNetworkOwner(instance);
+				
+				if (Runtime.DestroyMessagingOwner)
+					Runtime.DestroyMessagingOwner(instance);
+				
+				if (Runtime.DestroyWebWorkerOwner)
+					Runtime.DestroyWebWorkerOwner(instance);
+	
+				if (typeof definition.ElemenxOnDestroy === 'function') {
+					definition.ElemenxOnDestroy.call(instance);
+				}
+			};
+	
+			if (typeof definition.ElemenxOnCreate === 'function') {
+				definition.ElemenxOnCreate.call(instance);
 			}
+	
+			return instance;
+		}
+	
+		function serviceTarget (name, application) {
+			var entry = serviceRegistry[name];
+			var applicationInstance;
+	
+			if (!entry) return null;
+	
+			if (application) {
+				entry.ApplicationInstances = entry.ApplicationInstances || new WeakMap();
+				entry.ApplicationInstanceList = entry.ApplicationInstanceList || [];
+	
+				if (!entry.ApplicationInstances.has(application)) {
+					applicationInstance = createService(name, entry.Definition, entry.Generation, application);
+					
+					entry.ApplicationInstances.set(application, applicationInstance);
+					entry.ApplicationInstanceList.push(applicationInstance);
+				}
+	
+				return entry.ApplicationInstances.get(application);
+			}
+	
+			if (!entry.Instance)
+				entry.Instance = createService(name, entry.Definition, entry.Generation, null);
+	
+			return entry.Instance;
+		}
+	
+		function serviceHandle (name, application) {
+			var map = serviceHandles;
+			var handle;
+	
+			if (application) {
+				map = applicationServiceHandles.get(application);
+	
+				if (!map) {
+					map = {};
+					applicationServiceHandles.set(application, map);
+				}
+			}
+	
+			handle = map[name];
+			var queued = [];
+			var loading = false;
+	
+			if (handle) return handle;
+	
+			handle = new Proxy({}, {
+				get: function (object, property) {
+					var target;
+	
+					if (property === 'ElemenxServiceHandle') return true;
+					if (property === 'ElemenxDeferred') return !serviceRegistry[name];
+					if (property === 'Destroy') {
+						return function () {
+							var entry = serviceRegistry[name];
+							var target;
+	
+							queued = [];
+	
+							if (!entry) return;
+	
+							target = serviceTarget(name, application);
+	
+							if (target && target.Destroy) target.Destroy();
+	
+							if (application && entry.ApplicationInstances) {
+								entry.ApplicationInstances.delete(application);
+							}
+							else {
+								entry.Instance = null;
+							}
+						};
+					}
+	
+					target = serviceTarget(name, application);
+	
+					if (target) {
+						if (typeof target[property] === 'function')
+							return target[property].bind(target);
+						
+						return target[property];
+					}
+	
+					if (Runtime.Discovery && application && Runtime.Discovery.Ready(application)) {
+						if (!loading) {
+							loading = true;
+							Runtime.Discovery.Load(application, 'Service', name, false, function (error) {
+								var call;
+								var resolved;
+								var i = 0;
+	
+								loading = false;
+	
+								if (error) {
+									queued = [];
+									if (global.console && console.error) console.error(error);
+									
+									return;
+								}
+	
+								resolved = serviceTarget(name, application);
+	
+								while (i < queued.length) {
+									call = queued[i];
+	
+									if (resolved && typeof resolved[call.Property] === 'function') {
+										resolved[call.Property].apply(resolved, call.Arguments);
+									}
+	
+									i++;
+								}
+	
+								queued = [];
+							});
+						}
+	
+						return function () {
+							queued.push({
+								Property: property,
+								Arguments: Array.prototype.slice.call(arguments)
+							});
+						};
+					}
+	
+					return undefined;
+				},
+	
+				set: function (object, property, value) {
+					var target = serviceTarget(name, application);
+	
+					if (target) target[property] = value;
+					else object[property] = value;
+	
+					return true;
+				}
+			});
+	
+			map[name] = handle;
+			return handle;
+		}
+	
+		Elemenx.Service = function (name, definition) {
+			if (arguments.length === 2) {
+				Runtime.RegisterServiceDefinition(name, definition);
+				
+				return serviceHandle(name);
+			}
+	
+			if (arguments.length !== 1)
+				throw new Error('Elemenx.Service expects (name) or (name, definition)');
+	
+			if (!serviceRegistry[name]) return null;
+	
+			return serviceHandle(name);
+		};
+	
+		Elemenx.Guard = function (name, guard) {
+			if (arguments.length === 2) {
+				if (typeof guard !== 'function')
+					throw new Error('Elemenx.Guard definition must be a function');
+	
+				guardRegistry[name] = guard;
+				
+				return guard;
+			}
+	
+			if (arguments.length !== 1)
+				throw new Error('Elemenx.Guard expects (name) or (name, guard)');
+	
+			return guardRegistry[name] || null;
+		};
+	
+		Runtime.Service = ServiceAccessor;
+		Runtime.ServiceForApplication = function (application, name) {
+			return serviceHandle(name, application || null);
+		};
+		Runtime.RegisterServiceDefinition = function (name, definition) {
+			var previous = serviceRegistry[name];
+			var i = 0;
+	
+			if (previous && previous.Instance && previous.Instance.Destroy) previous.Instance.Destroy();
+	
+			if (previous && previous.ApplicationInstanceList) {
+				while (i < previous.ApplicationInstanceList.length) {
+					if (previous.ApplicationInstanceList[i].Destroy) previous.ApplicationInstanceList[i].Destroy();
+					
+					i++;
+				}
+			}
+	
+			serviceRegistry[name] = {
+				Definition: definition || {},
+				Instance: null,
+				ApplicationInstances: new WeakMap(),
+				ApplicationInstanceList: [],
+				Generation: previous ? previous.Generation + 1 : 0
+			};
+		};
+	
+		Runtime.RefreshDeferredService = function (name) {
+			return serviceHandles[name] || null;
+		};
+	
+		Runtime.ResolveGuard = function (guard) {
+			if (typeof guard === 'function') return guard;
+	
+			if (typeof guard === 'string') return Elemenx.Guard(guard);
+	
+			return null;
+		};
+	})(typeof globalThis !== 'undefined' ? globalThis : self);
 
-			return facade;
-		},
+	Runtime.ComponentRouters = new WeakMap();
+	Runtime.ComponentRouterFacades = new WeakMap();
+	Runtime.ActiveRouter = null;
 
-		Go: function (url) {
-			var router = Runtime.ComponentRouters.get(component);
-
-			return router ? router.Go(url) : facade;
-		},
-
-		Replace: function (url) {
-			var router = Runtime.ComponentRouters.get(component);
-
-			return router ? router.Replace(url) : facade;
-		},
-
-		Back: function () {
-			var router = Runtime.ComponentRouters.get(component);
-
-			return router ? router.Back() : facade;
-		},
-
-		Forward: function () {
-			var router = Runtime.ComponentRouters.get(component);
-
-			return router ? router.Forward() : facade;
-		},
-
-		Current: function () {
-			var router = Runtime.ComponentRouters.get(component);
-
-			return router ? router.Current() : [];
+	Runtime.RouterFor = function (component) {
+		var facade = Runtime.ComponentRouterFacades.get(component);
+		if (facade) return facade;
+	
+		facade = {
+			Pending: [],
+	
+			On: function (name, callback) {
+				var router = Runtime.ComponentRouters.get(component);
+	
+				if (router) {
+					router.Owner(component).On(name, callback);
+				}
+				else {
+					facade.Pending.push({
+						Name: name,
+						Callback: callback
+					});
+				}
+	
+				return facade;
+			},
+	
+			Go: function (url) {
+				var router = Runtime.ComponentRouters.get(component);
+	
+				return router ? router.Go(url) : facade;
+			},
+	
+			Replace: function (url) {
+				var router = Runtime.ComponentRouters.get(component);
+	
+				return router ? router.Replace(url) : facade;
+			},
+	
+			Back: function () {
+				var router = Runtime.ComponentRouters.get(component);
+	
+				return router ? router.Back() : facade;
+			},
+	
+			Forward: function () {
+				var router = Runtime.ComponentRouters.get(component);
+	
+				return router ? router.Forward() : facade;
+			},
+	
+			Current: function () {
+				var router = Runtime.ComponentRouters.get(component);
+	
+				return router ? router.Current() : [];
+			}
+		};
+	
+		Runtime.ComponentRouterFacades.set(component, facade);
+		
+		return facade;
+	};
+	
+	Runtime.AttachRouter = function (component, router) {
+		var facade;
+		var pending;
+		var i = 0;
+	
+		if (!component) return;
+	
+		Runtime.ComponentRouters.set(component, router);
+		facade = Runtime.RouterFor(component);
+		pending = facade.Pending.slice(0);
+		facade.Pending.length = 0;
+	
+		while (i < pending.length) {
+			router.Owner(component).On(pending[i].Name, pending[i].Callback);
+			
+			i++;
 		}
 	};
-
-	Runtime.ComponentRouterFacades.set(component, facade);
-	return facade;
-};
-
-Runtime.AttachRouter = function (component, router) {
-	var facade;
-	var pending;
-	var i = 0;
-
-	if (!component) return;
-
-	Runtime.ComponentRouters.set(component, router);
-	facade = Runtime.RouterFor(component);
-	pending = facade.Pending.slice(0);
-	facade.Pending.length = 0;
-
-	while (i < pending.length) {
-		router.Owner(component).On(
-			pending[i].Name,
-			pending[i].Callback
-		);
-		i++;
-	}
-};
-
-Runtime.DetachRouterOwner = function (component) {
-	var router = Runtime.ComponentRouters.get(component);
-	var facade = Runtime.ComponentRouterFacades.get(component);
-
-	if (router) {
-		router.OffOwner(component);
-		Runtime.ComponentRouters.delete(component);
-	}
-
-	if (facade) {
-		facade.Pending.length = 0;
-		Runtime.ComponentRouterFacades.delete(component);
-	}
-};
-
-Runtime.WithRouter = function (router, callback) {
-	var previous = Runtime.ActiveRouter;
-	var result;
-
-	Runtime.ActiveRouter = router;
-
-	try {
-		result = callback();
-	}
-	finally {
-		Runtime.ActiveRouter = previous;
-	}
-
-	return result;
-};
+	
+	Runtime.DetachRouterOwner = function (component) {
+		var router = Runtime.ComponentRouters.get(component);
+		var facade = Runtime.ComponentRouterFacades.get(component);
+	
+		if (router) {
+			router.OffOwner(component);
+			Runtime.ComponentRouters.delete(component);
+		}
+	
+		if (facade) {
+			facade.Pending.length = 0;
+			Runtime.ComponentRouterFacades.delete(component);
+		}
+	};
+	
+	Runtime.WithRouter = function (router, callback) {
+		var previous = Runtime.ActiveRouter;
+		var result;
+	
+		Runtime.ActiveRouter = router;
+	
+		try {
+			result = callback();
+		}
+		finally {
+			Runtime.ActiveRouter = previous;
+		}
+	
+		return result;
+	};
 
 (function (global) {
 	'use strict';
@@ -1323,11 +1384,13 @@ Runtime.WithRouter = function (router, callback) {
 
 		if (!force && templateResources[url] !== undefined) {
 			callback(null, templateResources[url]);
+			
 			return;
 		}
 
 		if (!force && templatePending[url]) {
 			templatePending[url].push(callback);
+			
 			return;
 		}
 
@@ -1359,6 +1422,7 @@ Runtime.WithRouter = function (router, callback) {
 
 			while (i < callbacks.length) {
 				callbacks[i](error, templateResources[url]);
+				
 				i++;
 			}
 		};
@@ -1371,8 +1435,10 @@ Runtime.WithRouter = function (router, callback) {
 		var list;
 
 		if (!name || !component) return component;
+		
 		list = liveComponentInstances[name] || (liveComponentInstances[name] = []);
 		list.push(component);
+		
 		return component;
 	}
 
@@ -1381,9 +1447,11 @@ Runtime.WithRouter = function (router, callback) {
 		var index;
 
 		if (!list) return;
+		
 		index = list.indexOf(component);
 
-		if (index !== -1) list.splice(index, 1);
+		if (index !== -1)
+			list.splice(index, 1);
 	}
 
 	function deferredComponent (resolver, data, slotProjection, options) {
@@ -1412,7 +1480,9 @@ Runtime.WithRouter = function (router, callback) {
 
 				if (template && template.tagName === 'TEMPLATE') {
 					fragment = template.content.cloneNode(true);
+					
 					placeholder.appendChild(fragment);
+					
 					return;
 				}
 			}
@@ -1444,8 +1514,8 @@ Runtime.WithRouter = function (router, callback) {
 
 		api.Application = function () {
 			if (current && current.Application) return current.Application();
-
 			if (api._parent && api._parent.Application) return api._parent.Application();
+			
 			return options && options.Application ? options.Application : null;
 		};
 
@@ -1473,12 +1543,14 @@ Runtime.WithRouter = function (router, callback) {
 		api.Update = function (value) {
 			if (current) current.Update(value);
 			else updates.push(value);
+			
 			return api;
 		};
 
 		api.On = function (name, callback) {
 			if (current) current.On(name, callback);
 			else listeners.push({Name:name, Callback:callback});
+			
 			return api;
 		};
 
@@ -1487,31 +1559,40 @@ Runtime.WithRouter = function (router, callback) {
 			updates = [];
 			listeners = [];
 
-			if (current) current.Destroy();
+			if (current)
+				current.Destroy();
+			
 			current = null;
 
-			if (placeholder.parentNode) placeholder.parentNode.removeChild(placeholder);
+			if (placeholder.parentNode)
+				placeholder.parentNode.removeChild(placeholder);
 		};
 
 		api._Pending = function () {
 			var oldElement;
-
+			
 			if (destroyed) return false;
+			
 			oldElement = current ? current.Element() : placeholder;
 			reloadParent = oldElement && oldElement.parentNode;
 			reloadNext = oldElement && oldElement.nextSibling;
 
-			if (current) current.Destroy();
+			if (current)
+				current.Destroy();
+			
 			current = null;
 
-			if (lifecycle) renderStatus(lifecycle.Pending);
+			if (lifecycle)
+				renderStatus(lifecycle.Pending);
 
 			if (reloadParent && !placeholder.parentNode) {
 				if (reloadNext && reloadNext.parentNode === reloadParent) reloadParent.insertBefore(placeholder, reloadNext);
 				else reloadParent.appendChild(placeholder);
 			}
 
-			if (lifecycle) lifecycleCall('ElemenxOnComponentPending', null);
+			if (lifecycle)
+				lifecycleCall('ElemenxOnComponentPending', null);
+			
 			return true;
 		};
 
