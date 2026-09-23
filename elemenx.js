@@ -2185,7 +2185,30 @@ Runtime.WithRouter = function (router, callback) {
 			}
 
 			function Ref (name) {
-				return refs[name] || null;
+				var ref = refs[name] || null;
+				var node;
+
+				if (ref && ref.isConnected && root.contains(ref)) return ref;
+
+				/*
+				 * Structural directives may destroy/recreate DOM that contained
+				 * data-ref nodes after the initial collectRefs() pass. Never expose
+				 * a detached stale node; resolve the current live ref lazily.
+				 */
+				if (root.nodeType === 1 && root.getAttribute('data-ref') === name) {
+					node = root;
+				}
+				else if (root.querySelector) {
+					node = root.querySelector('[data-ref="' + String(name).replace(/\\/g,'\\\\').replace(/"/g,'\\"') + '"]');
+				}
+
+				if (node) {
+					refs[name] = node;
+					return node;
+				}
+
+				if (ref) delete refs[name];
+				return null;
 			}
 
 			function Outlet (name) {

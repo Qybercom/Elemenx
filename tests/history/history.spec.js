@@ -88,3 +88,26 @@ test.describe('Regression: real browser session history', function () {
 	});
 
 });
+
+test.describe('Regression: Router public history facade', function () {
+	test('Router.Back and Router.Forward drive real browser session history', async function ({ page }) {
+		await boot(page);
+		await page.evaluate(function () {
+			Elemenx.Component('FBRoot',{Template:'<main data-outlet="Content"></main>'});
+			Elemenx.Component('FBPage',{Template:'<div id="fb">{{Params.id}}</div>'});
+			window.App=Elemenx.Application('FBApp',{Component:'FBRoot',Mount:'#mount'});
+			window.Router=Elemenx.Router({Root:App.Component(),Routes:[{Path:'/fb/:id',Component:'FBPage'}]});
+			Router.Start();
+			Router.Go('/fb/1');
+			Router.Go('/fb/2');
+			Router.Go('/fb/3');
+		});
+		await expect(page.locator('#fb')).toHaveText('3');
+		await page.evaluate(function () { Router.Back(); });
+		await expect(page.locator('#fb')).toHaveText('2');
+		await page.evaluate(function () { Router.Back(); });
+		await expect(page.locator('#fb')).toHaveText('1');
+		await page.evaluate(function () { Router.Forward(); });
+		await expect(page.locator('#fb')).toHaveText('2');
+	});
+});
