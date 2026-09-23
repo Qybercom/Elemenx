@@ -1,1 +1,0 @@
-window.P8ConcurrentChildLoads=(window.P8ConcurrentChildLoads||0)+1;Elemenx.Component('P8ConcurrentChild',{Template:'<span class="p8-concurrent-child">{{name}}<P8ConcurrentGrand value="{{name}}"></P8ConcurrentGrand></span>'});

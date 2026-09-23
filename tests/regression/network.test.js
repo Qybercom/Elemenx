@@ -34,7 +34,7 @@ describe('Regression: deferred / network component discovery', function () {
 		var c=Elemenx.Component('RemoteBasic')({value:'A'},null,{Application:app});
 		document.getElementById('mount').appendChild(c.Element());
 
-		expect(await waitFor(function(){return document.querySelector('.remote-basic');},1500)).not.toBe(false);
+		expect(await waitFor(function () {return document.querySelector('.remote-basic');},1500)).not.toBe(false);
 		expect(document.querySelector('.remote-basic').textContent).toBe('REMOTE:A');
 
 		c.Destroy();
@@ -51,7 +51,7 @@ describe('Regression: deferred / network component discovery', function () {
 		document.getElementById('mount').appendChild(a.Element());
 		document.getElementById('mount').appendChild(b.Element());
 
-		expect(await waitFor(function(){return document.querySelectorAll('.remote-concurrent').length===2;},1500)).toBe(true);
+		expect(await waitFor(function () {return document.querySelectorAll('.remote-concurrent').length===2;},1500)).toBe(true);
 		expect(window.RemoteConcurrentLoads).toBe(1);
 
 		var c=Elemenx.Component('RemoteConcurrent')({value:'C'},null,{Application:app});
@@ -76,7 +76,7 @@ describe('Regression: deferred / network component discovery', function () {
 		var held=null;
 
 		head.appendChild=function (node) {
-			if(node.tagName==='SCRIPT'&&String(node.src).indexOf('RemoteDestroy.js')!==-1){
+			if (node.tagName==='SCRIPT'&&String(node.src).indexOf('RemoteDestroy.js')!==-1) {
 				held=node;
 				return node;
 			}
@@ -87,7 +87,7 @@ describe('Regression: deferred / network component discovery', function () {
 		var c=Elemenx.Component('RemoteDestroy')({value:'X'},null,{Application:app});
 		document.getElementById('mount').appendChild(c.Element());
 
-		expect(await waitFor(function(){return held;},500)).not.toBe(false);
+		expect(await waitFor(function () {return held;},500)).not.toBe(false);
 
 		c.Destroy();
 		head.appendChild=append;

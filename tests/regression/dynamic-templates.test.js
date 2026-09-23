@@ -1,12 +1,12 @@
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { loadElemenx, resetDOM, tick, unique } from '../setup.js';
 
-describe('Regression: Phase 7.5 Dynamic Templates / Structural Composition', function () {
+describe('Regression: dynamic templates / structural composition', function () {
 	beforeAll(async function () { await loadElemenx(); });
 	beforeEach(function () { resetDOM(); });
 
 	it('Function Template creates independent reactive instances', async function () {
-		var name=unique('P75Basic'), source='<section class="remote">{{message}}</section>';
+		var name=unique('DynamicTemplateBasic'), source='<section class="remote">{{message}}</section>';
 		Elemenx.Component(name,{
 			Template:function () { return source; },
 			ElemenxOnCreate:function (data) { this.State.message=data.message; }
@@ -28,7 +28,7 @@ describe('Regression: Phase 7.5 Dynamic Templates / Structural Composition', fun
 	});
 
 	it('Function Template recreates nested data-if with current state', async function () {
-		var name=unique('P75If'), owner, source='<div><section data-if="outer"><b data-if="inner" class="leaf">{{text}}</b></section></div>';
+		var name=unique('DynamicTemplateIf'), owner, source='<div><section data-if="outer"><b data-if="inner" class="leaf">{{text}}</b></section></div>';
 		Elemenx.Component(name,{
 			Template:function () { return source; },
 			ElemenxOnCreate:function () {
@@ -59,7 +59,7 @@ describe('Regression: Phase 7.5 Dynamic Templates / Structural Composition', fun
 	});
 
 	it('Function Template preserves keyed data-each identity and events', async function () {
-		var row=unique('P75Row'), root=unique('P75Each'), owner, hits='', source='<div><'+row+' data-each="items" data-key="id"></'+row+'></div>';
+		var row=unique('DynamicTemplateRow'), root=unique('DynamicTemplateEach'), owner, hits='', source='<div><'+row+' data-each="items" data-key="id"></'+row+'></div>';
 		Elemenx.Component(row,{
 			Template:'<button class="row" data-on-click="Hit">{{name}}</button>',
 			Hit:function () { hits+=this.State.name; }
@@ -90,7 +90,7 @@ describe('Regression: Phase 7.5 Dynamic Templates / Structural Composition', fun
 	});
 
 	it('Function Template composes data-if with keyed component collection', async function () {
-		var cell=unique('P75Cell'), root=unique('P75Mix'), owner, made=0, gone=0, source='<div><section data-if="show"><'+cell+' data-each="items" data-key="id"></'+cell+'></section></div>';
+		var cell=unique('DynamicTemplateCell'), root=unique('DynamicTemplateMix'), owner, made=0, gone=0, source='<div><section data-if="show"><'+cell+' data-each="items" data-key="id"></'+cell+'></section></div>';
 		Elemenx.Component(cell,{
 			Template:'<span class="cell">{{name}}</span>',
 			ElemenxOnCreate:function () { made++; },
@@ -124,7 +124,7 @@ describe('Regression: Phase 7.5 Dynamic Templates / Structural Composition', fun
 	});
 
 	it('Function Template destroy/recreate detaches dead listeners', async function () {
-		var name=unique('P75Dead'), made=0, gone=0, hits=0, source='<button class="dead" data-on-click="Hit">{{text}}</button>';
+		var name=unique('DynamicTemplateDead'), made=0, gone=0, hits=0, source='<button class="dead" data-on-click="Hit">{{text}}</button>';
 		Elemenx.Component(name,{
 			Template:function () { return source; },
 			ElemenxOnCreate:function (data) { made++; this.State.text=data.text; },
@@ -151,7 +151,7 @@ describe('Regression: Phase 7.5 Dynamic Templates / Structural Composition', fun
 	});
 
 	it('Function Template composes slot projection with structural content', async function () {
-		var box=unique('P75Box'), root=unique('P75Slot'), owner, source='<div><'+box+'><b data-if="show" class="projected">{{text}}</b></'+box+'></div>';
+		var box=unique('DynamicTemplateBox'), root=unique('DynamicTemplateSlot'), owner, source='<div><'+box+'><b data-if="show" class="projected">{{text}}</b></'+box+'></div>';
 		Elemenx.Component(box,{Template:'<div class="box"><slot></slot></div>'});
 		Elemenx.Component(root,{
 			Template:function () { return source; },
@@ -179,7 +179,12 @@ describe('Regression: Phase 7.5 Dynamic Templates / Structural Composition', fun
 	});
 
 	it('Function Template survives deep model / nested-if / keyed / event composition', async function () {
-		var row=unique('P75DeepRow'), root=unique('P75Deep'), owner, hits='', source='<div><input class="edit" data-model="title"><section data-if="outer"><div data-if="inner"><'+row+' data-each="items" data-key="id"></'+row+'></div></section></div>';
+		var row=unique('DynamicTemplateDeepRow');
+		var root=unique('DynamicTemplateDeep');
+		var owner;
+		var hits='';
+		var source='<div><input class="edit" data-model="title"><section data-if="outer"><div data-if="inner">'+
+			'<'+row+' data-each="items" data-key="id"></'+row+'></div></section></div>';
 		Elemenx.Component(row,{
 			Template:'<button class="deep-row" data-on-click="Hit">{{name}}</button>',
 			Hit:function () { hits+=this.State.name; }

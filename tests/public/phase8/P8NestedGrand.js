@@ -1,1 +1,0 @@
-window.P8NestedGrandLoads=(window.P8NestedGrandLoads||0)+1;Elemenx.Component('P8NestedGrand',{Template:'<b class="p8-nested-grand">G:{{value}}</b>'});

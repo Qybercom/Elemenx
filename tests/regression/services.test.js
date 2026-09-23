@@ -7,7 +7,7 @@ describe('Regression: Services / Application context', function () {
 
 	it('keeps service instances application-scoped', function () {
 		var service=unique('Store'), ca=unique('AppAComp'), cb=unique('AppBComp'), aa=unique('AppA'), ab=unique('AppB');
-		Elemenx.Service(service,{Value:0,Inc:function(){this.Value++;return this.Value;}});
+		Elemenx.Service(service,{Value:0,Inc:function () {this.Value++;return this.Value;}});
 		Elemenx.Component(ca,{Template:'<div>A</div>'});
 		Elemenx.Component(cb,{Template:'<div>B</div>'});
 		document.body.innerHTML='<div id="a"></div><div id="b"></div>';

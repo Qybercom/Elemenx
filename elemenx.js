@@ -2554,7 +2554,7 @@ Runtime.WithRouter = function (router, callback) {
 
 			/*
 			 * Bootstrap is intentionally delayed until after ElemenxOnCreate().
-			 * This preserves v0.13.4 semantics: components may populate their
+			 * This preserves the established semantics: components may populate their
 			 * initial state in ElemenxOnCreate without expressions seeing an empty scope.
 			 */
 			activateEffects();
@@ -4991,7 +4991,7 @@ Runtime.WithRouter = function (router, callback) {
 							protocolData(result.value, dataEvent);
 
 							if (!paused) Read();
-						}).catch(function (error) {
+						}).catch (function (error) {
 							reading = false;
 
 							if (!active || currentGeneration !== generation || reader !== currentReader) return;
@@ -5010,7 +5010,7 @@ Runtime.WithRouter = function (router, callback) {
 
 					resumeRead = Read;
 					Read();
-				}).catch(function (error) {
+				}).catch (function (error) {
 					if (!active || currentGeneration !== generation || controller !== currentController) return;
 
 					active = false;
@@ -5076,7 +5076,7 @@ Runtime.WithRouter = function (router, callback) {
 				controller = null;
 
 				if (currentReader) {
-					currentReader.cancel().catch(function () {
+					currentReader.cancel().catch (function () {
 					});
 				}
 
@@ -5942,7 +5942,7 @@ Runtime.WithRouter = function (router, callback) {
 							fail('Error', error);
 						}
 
-					}).catch(function (error) {
+					}).catch (function (error) {
 						if (!active || currentGeneration !== generation) return;
 
 						delete inFlight[chunkIndex];
@@ -6108,7 +6108,7 @@ Runtime.WithRouter = function (router, callback) {
 
 				transport.Data(payload);
 				transport.Execute();
-			}).catch(function (error) {
+			}).catch (function (error) {
 				fail('Error', error);
 			});
 		}
@@ -10225,14 +10225,17 @@ Runtime.WithRouter = function (router, callback) {
 			scriptURL = absoluteURL(definition.Script);
 			serviceURL = frameworkURL;
 			separator = serviceURL.indexOf('?') === -1 ? '?' : '&';
-			serviceURL += separator + 'elemenx_service_worker=1&elemenx_script=' + encodeURIComponent(scriptURL) + '&elemenx_name=' + encodeURIComponent(name) + '&elemenx_channel=' + encodeURIComponent(String(definition.Channel));
+			serviceURL += separator +
+				'elemenx_service_worker=1&elemenx_script=' + encodeURIComponent(scriptURL) +
+				'&elemenx_name=' + encodeURIComponent(name) +
+				'&elemenx_channel=' + encodeURIComponent(String(definition.Channel));
 
 			setState('Registering');
 
 			global.navigator.serviceWorker.register(serviceURL, { scope: definition.Scope }).then(function (value) {
 				if (destroyed) return;
 				observeRegistration(value);
-			}).catch(function (error) {
+			}).catch (function (error) {
 				if (destroyed) return;
 				setState('Error', error);
 			});
@@ -10244,7 +10247,7 @@ Runtime.WithRouter = function (router, callback) {
 			if (destroyed) throw new Error('Elemenx ServiceWorker handle is destroyed: ' + name);
 			if (!registration) return api;
 
-			registration.update().catch(function (error) {
+			registration.update().catch (function (error) {
 				setState('Error', error);
 			});
 			return api;
@@ -10273,7 +10276,7 @@ Runtime.WithRouter = function (router, callback) {
 
 					registration = value;
 					Unregister();
-				}).catch(function (error) {
+				}).catch (function (error) {
 					if (destroyed) return;
 					setState('Error', error);
 				});
@@ -10296,11 +10299,11 @@ Runtime.WithRouter = function (router, callback) {
 					}
 
 					setState('Unregistered', { Result: result, Registered: false });
-				}).catch(function (error) {
+				}).catch (function (error) {
 					if (destroyed) return;
 					setState('Error', error);
 				});
-			}).catch(function (error) {
+			}).catch (function (error) {
 				if (destroyed) return;
 				setState('Error', error);
 			});
@@ -10313,7 +10316,7 @@ Runtime.WithRouter = function (router, callback) {
 
 			registrationForScope().then(function (value) {
 				callback(!!value);
-			}).catch(function () {
+			}).catch (function () {
 				callback(false);
 			});
 

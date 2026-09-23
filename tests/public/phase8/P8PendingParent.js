@@ -1,1 +1,0 @@
-Elemenx.Component('P8PendingParent',{Template:'<div class="p8-pending-parent"><P8PendingChild value="{{value}}"></P8PendingChild></div>'});

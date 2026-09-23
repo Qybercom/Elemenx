@@ -1,6 +1,6 @@
 {
 	"name": "elemenx",
-	"version": "0.43.5",
+	"version": "1.0.0",
 	"description": "Elemenx browser UI framework",
 	"main": "elemenx.js",
 	"files": [
@@ -14,7 +14,9 @@
 		"test:browser": "vitest run",
 		"test:watch": "vitest",
 		"test:history": "playwright test",
-		"examples": "vite --host 127.0.0.1"
+		"examples": "vite --host 127.0.0.1",
+		"example:simple": "node examples/simple/server.js",
+		"example:application": "node examples/application/server.js"
 	},
 	"devDependencies": {
 		"@playwright/test": "1.63.0",

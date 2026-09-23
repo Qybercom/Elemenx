@@ -1,35 +1,45 @@
 # Elemenx
 
-Elemenx v0.43.5 package baseline.
+Elemenx is a browser UI framework for component-based applications with reactive state, routing, services, storage, messaging and network transports.
 
-## Install development dependencies
+## Development
+
+Install the development dependencies:
 
 ```bash
 npm install
 ```
 
-No Playwright browser download is required. The test suite uses the locally installed stable Google Chrome.
+The browser regression suite uses the locally installed stable Google Chrome; no Playwright browser download is required.
 
-## Test
+Run the complete suite:
 
 ```bash
 npm test
 ```
 
-`npm test` runs two layers:
-
-1. Vitest Browser Mode in the locally installed Google Chrome for component/state/lifecycle/template/service/network/router regressions.
-2. Playwright Test in the same locally installed Google Chrome for real top-level History API / popstate regressions that must not run inside an iframe.
+`npm test` runs Vitest Browser Mode for browser-level contracts and Playwright Test for top-level History API behavior.
 
 ## Examples
 
+Every directory under `examples/` is a standalone project. Copy an example directory anywhere and run it independently from the Elemenx repository.
+
+Simple example:
+
 ```bash
-npm run examples
+cd examples/simple
+npm start
 ```
 
-Then open:
+Application/router example:
 
-- `/examples/simple/`
-- `/examples/application/`
+```bash
+cd examples/application
+npm start
+```
 
-The important contracts from the three-day manual regression campaign are tracked in `tests/REGRESSION-MIGRATION.md`. New regressions should be added as automated tests instead of new numbered HTML phases.
+Then open the URL printed by the example server. Each example contains its own `elemenx.js`, `package.json`, server and README.
+
+## Regression coverage
+
+The maintained coverage map is in `tests/TEST-COVERAGE.md`. New public API should include an automated contract, and bug fixes should include a regression test.

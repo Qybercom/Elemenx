@@ -1,1 +1,0 @@
-window.P8KeyedChildLoads=(window.P8KeyedChildLoads||0)+1;Elemenx.Component('P8KeyedChild',{Template:'<button class="p8-keyed-child">{{name}}</button>'});

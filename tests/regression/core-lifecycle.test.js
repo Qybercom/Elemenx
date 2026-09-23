@@ -100,8 +100,8 @@ describe('Regression: core / lifecycle / structural state', function () {
 
 	it('parent Destroy recursively destroys structural descendants', async function () {
 		var child=unique('DeepChild'), root=unique('DeepRoot'), gone=0;
-		Elemenx.Component(child,{Template:'<i class="deep-child">{{label}}</i>',ElemenxOnDestroy:function(){gone++;}});
-		Elemenx.Component(root,{Template:'<div><'+child+' data-each="items" data-key="id"></'+child+'></div>',ElemenxOnCreate:function(){this.State.items=[{id:1,label:'A'},{id:2,label:'B'}];}});
+		Elemenx.Component(child,{Template:'<i class="deep-child">{{label}}</i>',ElemenxOnDestroy:function () {gone++;}});
+		Elemenx.Component(root,{Template:'<div><'+child+' data-each="items" data-key="id"></'+child+'></div>',ElemenxOnCreate:function () {this.State.items=[{id:1,label:'A'},{id:2,label:'B'}];}});
 		var c=Elemenx.Component(root)();
 		document.getElementById('mount').appendChild(c.Element());
 		await tick();
@@ -115,12 +115,12 @@ describe('Regression: core / lifecycle / structural state', function () {
 		var row=unique('ChurnRow'),root=unique('ChurnRoot'),made=0,gone=0,instances={};
 		Elemenx.Component(row,{
 			Template:'<span class="churn-row">{{label}}</span>',
-			ElemenxOnCreate:function(){made++;instances[this.State.id]=this;},
-			ElemenxOnDestroy:function(){gone++;}
+			ElemenxOnCreate:function () {made++;instances[this.State.id]=this;},
+			ElemenxOnDestroy:function () {gone++;}
 		});
 		Elemenx.Component(root,{
 			Template:'<div><'+row+' data-each="items" data-key="id"></'+row+'></div>',
-			ElemenxOnCreate:function(){this.State.items=[{id:'a',label:'A'},{id:'b',label:'B'},{id:'c',label:'C'}];window.__churn=this;}
+			ElemenxOnCreate:function () {this.State.items=[{id:'a',label:'A'},{id:'b',label:'B'},{id:'c',label:'C'}];window.__churn=this;}
 		});
 		var c=Elemenx.Component(root)();
 		document.getElementById('mount').appendChild(c.Element());
@@ -132,7 +132,7 @@ describe('Regression: core / lifecycle / structural state', function () {
 		expect(instances.c).toBe(c0);
 		expect(made).toBe(4);
 		expect(gone).toBe(1);
-		expect(Array.from(document.querySelectorAll('.churn-row')).map(function(n){return n.textContent;}).join('|')).toBe('C2|A2|D');
+		expect(Array.from(document.querySelectorAll('.churn-row')).map(function (n) {return n.textContent;}).join('|')).toBe('C2|A2|D');
 		c.Destroy();
 		expect(gone).toBe(4);
 	});
@@ -141,11 +141,11 @@ describe('Regression: core / lifecycle / structural state', function () {
 		var child=unique('IsoChild'),root=unique('IsoRoot'),made=0,last=null;
 		Elemenx.Component(child,{
 			Template:'<div class="iso-child">{{value}}/{{local}}</div>',
-			ElemenxOnCreate:function(){made++;this.State.local='L'+made;last=this;}
+			ElemenxOnCreate:function () {made++;this.State.local='L'+made;last=this;}
 		});
 		Elemenx.Component(root,{
 			Template:'<section><'+child+' data-if="show" value="{{value}}"></'+child+'><b id="iso-parent">{{value}}</b></section>',
-			ElemenxOnCreate:function(){this.State.show=true;this.State.value='P1';window.__iso=this;}
+			ElemenxOnCreate:function () {this.State.show=true;this.State.value='P1';window.__iso=this;}
 		});
 		var c=Elemenx.Component(root)();
 		document.getElementById('mount').appendChild(c.Element());
@@ -169,14 +169,14 @@ describe('Regression: core / lifecycle / structural state', function () {
 		var row=unique('ComboRow'),root=unique('ComboRoot'),made=0,gone=0;
 		Elemenx.Component(row,{
 			Template:'<div class="combo-row"><input class="combo-input" data-model="label"><button data-on-click="Remove">x</button><i data-if="enabled">{{label}}</i></div>',
-			Remove:function(){this.Emit('remove',{id:this.State.id});},
-			ElemenxOnCreate:function(){made++;},
-			ElemenxOnDestroy:function(){gone++;}
+			Remove:function () {this.Emit('remove',{id:this.State.id});},
+			ElemenxOnCreate:function () {made++;},
+			ElemenxOnDestroy:function () {gone++;}
 		});
 		Elemenx.Component(root,{
 			Template:'<section><'+row+' data-each="items" data-key="id" data-on-remove="Remove"></'+row+'></section>',
-			ElemenxOnCreate:function(){this.State.items=[{id:'a',label:'A',enabled:true},{id:'b',label:'B',enabled:false}];window.__combo=this;},
-			Remove:function(e){var next=[],i=0;while(i<this.State.items.length){if(this.State.items[i].id!==e.id)next.push(this.State.items[i]);i++;}this.State.items=next;}
+			ElemenxOnCreate:function () {this.State.items=[{id:'a',label:'A',enabled:true},{id:'b',label:'B',enabled:false}];window.__combo=this;},
+			Remove:function (e) {var next=[],i=0;while (i<this.State.items.length) {if (this.State.items[i].id!==e.id)next.push(this.State.items[i]);i++;}this.State.items=next;}
 		});
 		var c=Elemenx.Component(root)();
 		document.getElementById('mount').appendChild(c.Element());

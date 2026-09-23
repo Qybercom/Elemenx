@@ -1,1 +1,0 @@
-Elemenx.Component('P8ConcurrentParent',{Template:'<div><P8ConcurrentChild data-each="items" data-key="id"></P8ConcurrentChild></div>',ElemenxOnCreate:function(data){this.State.items=data.items||[];}});
