@@ -1556,18 +1556,7 @@
 		}
 		
 
-		function renderTrace (name, data) {
-			if (!Runtime.DebugNavigationTrace || !global.console || !global.console.log) return;
-
-			global.console.log('[Elemenx.Render]', name, {
-				Time: global.performance && global.performance.now ? global.performance.now() : Date.now(),
-				Location: global.location.href,
-				Data: data || null
-			});
-		}
-
 		function deferredComponent (resolver, data, slotProjection, options) {
-			renderTrace('Deferred:Create', null);
 			var placeholder = document.createElement('span');
 			var current = null;
 			var destroyed = false;
@@ -1766,7 +1755,6 @@
 			};
 			
 			resolver(function (error, factory) {
-				renderTrace('Deferred:Resolved', {Error: !!error, HasFactory: !!factory, Destroyed: destroyed});
 				if (destroyed) return;
 				
 				if (error || !factory) {
@@ -3756,17 +3744,6 @@
 				emit('GuardFailed', failure);
 			}
 			
-			function navigationTrace (name, data) {
-				Runtime.DebugNavigationTrace = !!config.DebugNavigation;
-				if (!config.DebugNavigation || !global.console || !global.console.log) return;
-
-				global.console.log('[Elemenx.Router]', name, {
-					Time: global.performance && global.performance.now ? global.performance.now() : Date.now(),
-					Location: global.location.href,
-					Data: data || null
-				});
-			}
-
 			function execute (prepared, mode) {
 				var id = ++navigationID;
 				var previousURL = currentURL();
@@ -3780,7 +3757,6 @@
 					Guard: null
 				};
 
-				navigationTrace('NavigationStart', {ID: id, Mode: mode, Target: prepared.URL.href});
 				emit('NavigationStart', context);
 
 				runLeaveGuards(prepared.Common, context, function (leaveResult) {
@@ -3829,20 +3805,12 @@
 								// absolute from Application bootstrap, so changing location here cannot
 								// retarget a deferred component request. This keeps browser history ahead
 								// of every target-page load and render operation.
-								navigationTrace('BeforeHistory', {ID: id, Target: prepared.URL.href});
 								if (mode === 'push') global.history.pushState(null, '', prepared.URL.href);
 								else if (mode === 'replace') global.history.replaceState(null, '', prepared.URL.href);
-								navigationTrace('AfterHistory', {ID: id, Target: prepared.URL.href});
 
 								emit('NavigationCommit', context);
 
-								// history.pushState()/replaceState() updates location synchronously, but the
-								// browser chrome cannot paint the new address while this JavaScript task is
-								// still occupying the main thread. Yield BEFORE Discovery/route loading; that
-								// is the first potentially expensive work after the navigation commit.
-								global.setTimeout(function () {
-									if (id !== navigationID) return;
-									navigationTrace('BeforeLoad', {ID: id});
+								if (id !== navigationID) return;
 
 									loadRouteComponents(prepared.Found.Chain, prepared.Common, function (componentError) {
 									if (id !== navigationID) return;
@@ -3855,20 +3823,12 @@
 										throw componentError;
 									}
 
-									navigationTrace('BeforeRender', {ID: id});
 									commit(prepared);
-									navigationTrace('AfterRender', {ID: id});
-
-									if (global.requestAnimationFrame) global.requestAnimationFrame(function () {
-										navigationTrace('AfterRenderFrame', {ID: id});
-									});
 
 									finishWaitingAfterCommit(prepared, id, function () {
-											navigationTrace('NavigationEnd', {ID: id});
 											emit('NavigationEnd', context);
 										});
 									});
-								}, 0);
 							}
 						);
 					});
