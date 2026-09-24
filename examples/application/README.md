@@ -1,11 +1,29 @@
-# Elemenx example
+# Elemenx application example
 
-This directory is a standalone project. It does not depend on files outside this directory.
+This directory can be copied as a standalone project. It intentionally contains neither a copy of `elemenx.js` nor a private copy of the development server.
 
-Run it with Node.js:
+After copying the directory:
 
 ```bash
+npm install
 npm start
 ```
 
-Open the URL printed in the terminal.
+The installed `elemenx` package provides both the shared `tools/server.js` and the framework exposed by that server as `/elemenx.js`.
+
+Component source and markup live together:
+
+```text
+components/
+  layout/
+    layout.js
+    layout.html
+  home/
+    home.js
+    home.html
+  project/
+    project.js
+    project.html
+```
+
+Each component references the `.html` file in its own directory through `TemplateURL`.

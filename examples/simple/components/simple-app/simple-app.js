@@ -1,5 +1,5 @@
 Elemenx.Component('SimpleApp', {
-	Template: '<main><h1>{{Title}}</h1><p>Counter: <b>{{Count}}</b></p><button data-ref="Increment">Increment</button></main>',
+	TemplateURL: 'components/simple-app/simple-app.html',
 
 	ElemenxOnCreate: function () {
 		var component = this;
@@ -15,9 +15,4 @@ Elemenx.Component('SimpleApp', {
 			});
 		});
 	}
-});
-
-Elemenx.Application('SimpleExample', {
-	Component: 'SimpleApp',
-	Mount: '#app'
 });

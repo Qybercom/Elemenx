@@ -2,7 +2,8 @@ var http = require('http');
 var fs = require('fs');
 var path = require('path');
 
-var Root = __dirname;
+var Root = path.resolve(process.argv[2] || process.cwd());
+var Framework = path.resolve(__dirname, '..', 'elemenx.js');
 var Port = Number(process.env.PORT || 4173);
 var Types = {
 	'.html': 'text/html; charset=utf-8',
@@ -27,10 +28,16 @@ function Send (response, file) {
 
 http.createServer(function (request, response) {
 	var pathname = decodeURIComponent(request.url.split('?')[0]);
+
+	if (pathname === '/elemenx.js') {
+		Send(response, Framework);
+		return;
+	}
+
 	var relative = pathname === '/' ? 'index.html' : pathname.replace(/^\/+/, '');
 	var file = path.resolve(Root, relative);
 
-	if (file.indexOf(path.resolve(Root)) !== 0) {
+	if (file.indexOf(Root) !== 0) {
 		response.writeHead(403);
 		response.end('Forbidden');
 		return;

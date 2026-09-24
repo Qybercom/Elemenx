@@ -7,6 +7,7 @@
 		"elemenx.js",
 		"README.md",
 		"LICENSE",
+		"tools",
 		"examples"
 	],
 	"scripts": {
@@ -15,8 +16,8 @@
 		"test:watch": "vitest",
 		"test:history": "playwright test",
 		"examples": "vite --host 127.0.0.1",
-		"example:simple": "node examples/simple/server.js",
-		"example:application": "node examples/application/server.js"
+		"example:simple": "node tools/server.js examples/simple",
+		"example:application": "node tools/server.js examples/application"
 	},
 	"devDependencies": {
 		"@playwright/test": "1.63.0",
