@@ -45,6 +45,72 @@ describe('Regression: Application public facade and ownership', function () {
 		expect(document.querySelector('.application-root').textContent).toBe('ready');
 	});
 
+	it('declarative Router is created, started and exposed by Application automatically', async function () {
+		var layout=unique('DeclarativeRouterLayout');
+		var home=unique('DeclarativeRouterHome');
+		var next=unique('DeclarativeRouterNext');
+		Elemenx.Component(layout,{Template:'<main data-outlet="Content"></main>'});
+		Elemenx.Component(home,{Template:'<div id="declarative-router-home">HOME</div>'});
+		Elemenx.Component(next,{Template:'<div id="declarative-router-next">NEXT</div>'});
+
+		var app=createApplication(unique('DeclarativeRouterApplication'),{
+			Component:layout,
+			Mount:'#mount',
+			Router:{
+				Routes:[
+					{Path:'/',Component:home},
+					{Path:'/declarative-next',Component:next}
+				]
+			}
+		});
+
+		await tick(40);
+		expect(app.Router()).not.toBeNull();
+		expect(document.getElementById('declarative-router-home')).not.toBeNull();
+
+		app.Component().Router().Go('/declarative-next');
+		await tick(40);
+		expect(document.getElementById('declarative-router-next')).not.toBeNull();
+		expect(location.pathname).toBe('/declarative-next');
+	});
+
+	it('declarative Router owns Root and ignores a Router.Root override', async function () {
+		var layout=unique('OwnedRouterLayout');
+		var wrong=unique('WrongRouterRoot');
+		var home=unique('OwnedRouterHome');
+		Elemenx.Component(layout,{Template:'<main id="owned-router-root" data-outlet="Content"></main>'});
+		Elemenx.Component(wrong,{Template:'<main id="wrong-router-root" data-outlet="Content"></main>'});
+		Elemenx.Component(home,{Template:'<div id="owned-router-home">HOME</div>'});
+		var wrongRoot=Elemenx.Component(wrong)({},null,{});
+
+		var app=createApplication(unique('OwnedRouterApplication'),{
+			Component:layout,
+			Mount:'#mount',
+			Router:{Root:wrongRoot,Routes:[{Path:'/',Component:home}]}
+		});
+
+		await tick(40);
+		expect(document.getElementById('owned-router-home')).not.toBeNull();
+		expect(wrongRoot.Element().querySelector('#owned-router-home')).toBeNull();
+		wrongRoot.Destroy();
+	});
+
+	it('Destroy tears down the declarative Router owned by Application', async function () {
+		var layout=unique('DestroyRouterLayout');
+		var home=unique('DestroyRouterHome');
+		Elemenx.Component(layout,{Template:'<main data-outlet="Content"></main>'});
+		Elemenx.Component(home,{Template:'<div>HOME</div>'});
+		var app=createApplication(unique('DestroyRouterApplication'),{
+			Component:layout,
+			Mount:'#mount',
+			Router:{Routes:[{Path:'/',Component:home}]}
+		});
+		await tick(30);
+		expect(app.Router()).not.toBeNull();
+		destroyApplication(app);
+		expect(app.Router()).toBeNull();
+	});
+
 	it('Bootstrap runs with the Application facade before root construction', function () {
 		var component=unique('BootstrapRoot');
 		var name=unique('BootstrapApplication');

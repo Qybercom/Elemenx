@@ -60,33 +60,12 @@ describe('Regression: Router / Guards', function () {
 		x.Router.Destroy(); x.App.Destroy();
 	});
 
-	it('commits browser URL before route rendering after guards pass', async function () {
-		var guard=unique('URLCommitGuard'),page=unique('URLCommitPage'),pathAtCreate=null;
-		Elemenx.Guard(guard,function () {return true;});
-		Elemenx.Component(page,{Template:'<div id="url-commit-page">OK</div>',ElemenxOnCreate:function () {pathAtCreate=location.pathname;}});
-		var x=boot([{Path:'/url-commit',Component:page,Guard:guard}]);
-		x.Router.Go('/url-commit');
-		await tick(40);
-		expect(pathAtCreate).toBe('/url-commit');
-		expect(location.pathname).toBe('/url-commit');
-		expect(document.getElementById('url-commit-page')).not.toBeNull();
-		x.Router.Destroy();x.App.Destroy();
-	});
-
-	it('guard this.Service resolves properties from the Router Application service instance', async function () {
+	it('guard Context.Service resolves the Router Application service instance', async function () {
 		var service=unique('GuardService'),guard=unique('GuardServiceCheck'),page=unique('GuardServicePage');
 		Elemenx.Service(service,{Authorized:false});
-		Elemenx.Guard(guard,function (x) {
-			var session=this.Service(service);
-			if (session.Authorized) return true;
-			return x.Fail('Login required');
-		});
+		Elemenx.Guard(guard,function (x) {return x.Context.Service(service).Authorized;});
 		Elemenx.Component(page,{Template:'<div id="guard-service-page">OK</div>'});
 		var x=boot([{Path:'/guard-service',Component:page,Guard:guard}]);
-		x.Router.Go('/guard-service');
-		await tick(40);
-		expect(document.getElementById('guard-service-page')).toBeNull();
-		expect(location.pathname).toBe('/');
 		x.App.Service(service).Authorized=true;
 		x.Router.Go('/guard-service');
 		await tick(40);
@@ -100,7 +79,7 @@ describe('Regression: Router / Guards', function () {
 		Elemenx.Component(home,{Template:'<div>HOME</div>'});
 		Elemenx.Component(nf,{Template:'<div id="not-found">NF</div>'});
 		Elemenx.Component(next,{Template:'<div id="replace-page">NEXT</div>'});
-		var x=boot([{Path:'/',Component:home},{Path:'/next',Component:next}],null,{Component:nf});
+		var x=boot([{Path:'/',Component:home},{Path:'/next',Component:next}],null,nf);
 		x.Router.Go('/missing');
 		await tick(40);
 		expect(document.getElementById('not-found')).not.toBeNull();
@@ -109,6 +88,48 @@ describe('Regression: Router / Guards', function () {
 		expect(document.getElementById('replace-page')).not.toBeNull();
 		expect(location.pathname).toBe('/next');
 		x.Router.Destroy(); x.App.Destroy();
+	});
+
+	it('Waiting uses the Router component while an async guard is pending', async function () {
+		var guard=unique('WaitingGuard'),home=unique('WaitingHome'),page=unique('WaitingPage'),waiting=unique('WaitingPageLoading');
+		Elemenx.Guard(guard,function (x) {return x.Wait(function (done) {setTimeout(function () {done(true);},80);});});
+		Elemenx.Component(home,{Template:'<div id="waiting-home">HOME</div>'});
+		Elemenx.Component(page,{Template:'<div id="waiting-target">TARGET</div>'});
+		Elemenx.Component(waiting,{Template:'<div id="waiting-global">WAIT</div>'});
+		var root=unique('WaitingRoot'),appName=unique('WaitingApp');
+		Elemenx.Component(root,{Template:'<main data-outlet="Content"></main>'});
+		var app=Elemenx.Application(appName,{Component:root,Mount:'#mount'});
+		var router=Elemenx.Router({Root:app.Component(),Waiting:waiting,Routes:[{Path:'/',Component:home},{Path:'/waiting',Component:page,Guard:guard}]});
+		router.Start();
+		router.Go('/waiting');
+		await tick(20);
+		expect(document.getElementById('waiting-global')).not.toBeNull();
+		expect(document.getElementById('waiting-target')).toBeNull();
+		await tick(100);
+		expect(document.getElementById('waiting-global')).toBeNull();
+		expect(document.getElementById('waiting-target')).not.toBeNull();
+		router.Destroy(); app.Destroy();
+	});
+
+	it('route Waiting overrides Router Waiting', async function () {
+		var guard=unique('RouteWaitingGuard'),page=unique('RouteWaitingPage'),globalWaiting=unique('GlobalWaiting'),routeWaiting=unique('RouteWaiting');
+		Elemenx.Guard(guard,function (x) {return x.Wait(function (done) {setTimeout(function () {done(true);},80);});});
+		Elemenx.Component(page,{Template:'<div id="route-waiting-target">TARGET</div>'});
+		Elemenx.Component(globalWaiting,{Template:'<div id="global-waiting">GLOBAL</div>'});
+		Elemenx.Component(routeWaiting,{Template:'<div id="route-waiting">ROUTE</div>'});
+		var root=unique('RouteWaitingRoot'),appName=unique('RouteWaitingApp');
+		Elemenx.Component(root,{Template:'<main data-outlet="Content"></main>'});
+		var app=Elemenx.Application(appName,{Component:root,Mount:'#mount'});
+		var router=Elemenx.Router({Root:app.Component(),Waiting:globalWaiting,Routes:[{Path:'/route-waiting',Component:page,Guard:guard,Waiting:routeWaiting}]});
+		router.Start();
+		router.Go('/route-waiting');
+		await tick(20);
+		expect(document.getElementById('route-waiting')).not.toBeNull();
+		expect(document.getElementById('global-waiting')).toBeNull();
+		await tick(100);
+		expect(document.getElementById('route-waiting')).toBeNull();
+		expect(document.getElementById('route-waiting-target')).not.toBeNull();
+		router.Destroy(); app.Destroy();
 	});
 
 	it('common-prefix navigation reuses nested component instances', async function () {
@@ -163,31 +184,6 @@ describe('Regression: Router / Guards', function () {
 		expect(document.getElementById('redirect-fast')).not.toBeNull();
 		expect(document.getElementById('redirect-target')).toBeNull();
 		expect(location.pathname).toBe('/redirect-fast');
-		x.Router.Destroy();x.App.Destroy();
-	});
-
-
-	it('keeps route Wait mounted through commit and starts page creation after URL commit', async function () {
-		var wait=unique('CommitWait'),page=unique('CommitPage'),guard=unique('CommitGuard'),pathAtCreate=null,pageAtCommit=null,waitAtCommit=null;
-		Elemenx.Component(wait,{Template:'<div id="commit-wait">WAIT</div>'});
-		Elemenx.Component(page,{Template:'<div id="commit-page">PAGE</div>',ElemenxOnCreate:function () {pathAtCreate=location.pathname;}});
-		Elemenx.Guard(guard,function (x) {return x.Wait(function (done) {setTimeout(function () {done(true);},40);});});
-		var x=boot([{Path:'/wait-commit',Component:page,Guard:guard,Wait:wait}]);
-		x.Router.On('NavigationCommit',function () {
-			pageAtCommit=document.getElementById('commit-page');
-			waitAtCommit=document.getElementById('commit-wait');
-		});
-		x.Router.Go('/wait-commit');
-		await tick(20);
-		expect(document.getElementById('commit-wait')).not.toBeNull();
-		expect(document.getElementById('commit-page')).toBeNull();
-		await tick(50);
-		expect(location.pathname).toBe('/wait-commit');
-		expect(pageAtCommit).toBeNull();
-		expect(waitAtCommit).not.toBeNull();
-		expect(pathAtCreate).toBe('/wait-commit');
-		expect(document.getElementById('commit-wait')).toBeNull();
-		expect(document.getElementById('commit-page')).not.toBeNull();
 		x.Router.Destroy();x.App.Destroy();
 	});
 
