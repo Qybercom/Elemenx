@@ -820,6 +820,11 @@
 				return;
 			}
 			
+			// Freeze the Discovery root against the document URL at build time.
+			// Route navigation may change location.href later; entity URLs must not
+			// change their meaning with the current browser route.
+			root = new URL(String(root), global.location.href).href;
+			
 			if (map) {
 				callback(null, map);
 				
@@ -937,8 +942,55 @@
 			return true;
 		}
 		
+		function loadServices (application, callback) {
+			var map = maps.get(application);
+			var names = [];
+			var name;
+			var remaining;
+			var failed = false;
+			var i = 0;
+			
+			if (!map) {
+				callback(new Error('Elemenx Discovery is not ready'));
+				
+				return;
+			}
+			
+			for (name in map) {
+				if (Object.prototype.hasOwnProperty.call(map, name) && /(?:^|\/)services(?:\/|$)/i.test(map[name]))
+					names.push(name);
+			}
+			
+			remaining = names.length;
+			if (!remaining) {
+				callback(null);
+				
+				return;
+			}
+			
+			function complete (error) {
+				if (failed) return;
+				
+				if (error) {
+					failed = true;
+					callback(error);
+					
+					return;
+				}
+				
+				remaining--;
+				if (!remaining) callback(null);
+			}
+			
+			while (i < names.length) {
+				load(application, 'Service', names[i], false, complete);
+				i++;
+			}
+		}
+		
 		Runtime.Discovery = {
 			Build: build,
+			LoadServices: loadServices,
 			
 			Ready: function (application) {
 				return !!maps.get(application);
@@ -1503,7 +1555,19 @@
 				list.splice(index, 1);
 		}
 		
+
+		function renderTrace (name, data) {
+			if (!Runtime.DebugNavigationTrace || !global.console || !global.console.log) return;
+
+			global.console.log('[Elemenx.Render]', name, {
+				Time: global.performance && global.performance.now ? global.performance.now() : Date.now(),
+				Location: global.location.href,
+				Data: data || null
+			});
+		}
+
 		function deferredComponent (resolver, data, slotProjection, options) {
+			renderTrace('Deferred:Create', null);
 			var placeholder = document.createElement('span');
 			var current = null;
 			var destroyed = false;
@@ -1702,6 +1766,7 @@
 			};
 			
 			resolver(function (error, factory) {
+				renderTrace('Deferred:Resolved', {Error: !!error, HasFactory: !!factory, Destroyed: destroyed});
 				if (destroyed) return;
 				
 				if (error || !factory) {
@@ -3175,7 +3240,10 @@
 			function componentFactory (route) {
 				if (typeof route.Component === 'function') return route.Component;
 				
-				return Elemenx.Component(route.Component);
+				// Router preloads named route components before commit. Never fall back to
+				// ResolveComponent() here: that would create a second lazy/deferred wrapper
+				// and turn a preload/registration problem into a late render failure.
+				return Runtime.ResolveComponentRegistered(route.Component);
 			}
 			
 			function loadRouteComponents (chain, common, callback) {
@@ -3202,10 +3270,105 @@
 						return;
 					}
 
-					Runtime.Discovery.Load(currentApplication, 'Component', route.Component, false, next);
+					Runtime.Discovery.Load(currentApplication, 'Component', route.Component, false, function (error) {
+						if (error) {
+							next(error);
+
+							return;
+						}
+
+						if (!Runtime.ResolveComponentRegistered(route.Component)) {
+							next(new Error('Elemenx route component did not register: ' + route.Component));
+
+							return;
+						}
+
+						next(null);
+					});
 				}
 
 				next(null);
+			}
+
+			var waitingComponent = null;
+			var waitingElement = null;
+
+			function clearWaiting () {
+				if (!waitingComponent) return;
+
+				if (waitingElement && waitingElement.parentNode)
+					waitingElement.parentNode.removeChild(waitingElement);
+
+				if (waitingComponent.Destroy)
+					waitingComponent.Destroy();
+
+				waitingComponent = null;
+				waitingElement = null;
+			}
+
+			function showWaiting (prepared, callback) {
+				var chain = prepared.Found.Chain;
+				var route = chain.length ? chain[chain.length - 1] : null;
+				var reference = route && route.Wait !== undefined ? route.Wait : (route && route.Waiting !== undefined ? route.Waiting : (config.Wait !== undefined ? config.Wait : config.Waiting));
+
+				clearWaiting();
+
+				if (!reference) {
+					callback(null);
+
+					return;
+				}
+
+				function render () {
+					var factory = typeof reference === 'function' ? reference : Runtime.ResolveComponentRegistered(reference);
+					if (!factory) {
+						callback(new Error('Elemenx route waiting component not found: ' + reference));
+
+						return;
+					}
+
+					var outlet = Runtime.ResolveOutlet(root, rootOutletName);
+					if (!outlet) {
+						callback(new Error('Elemenx router outlet not found: ' + rootOutletName));
+
+						return;
+					}
+
+					waitingComponent = Runtime.WithRouter(api, function () {
+						return factory(prepared.Packet, null, {Application: application()});
+					});
+
+					Runtime.AttachRouter(waitingComponent, api);
+					waitingComponent.Parent(root);
+					waitingElement = waitingComponent.Element ? waitingComponent.Element() : waitingComponent;
+					outlet.Element().appendChild(waitingElement);
+					emit('NavigationWaiting', prepared.Packet);
+
+					callback(null);
+				}
+
+				if (typeof reference === 'function' || Runtime.ResolveComponentRegistered(reference)) {
+					render();
+
+					return;
+				}
+
+				var currentApplication = application();
+				if (!Runtime.Discovery || !currentApplication || !Runtime.Discovery.Ready(currentApplication)) {
+					callback(new Error('Elemenx route waiting component not found: ' + reference));
+
+					return;
+				}
+
+				Runtime.Discovery.Load(currentApplication, 'Component', reference, false, function (error) {
+					if (error) {
+						callback(error);
+
+						return;
+					}
+
+					render();
+				});
 			}
 
 			function guardsFor (route) {
@@ -3496,6 +3659,59 @@
 			function currentURL () {
 				return new URL(global.location.href);
 			}
+
+			function routeComponentsReady (from) {
+				var i = from;
+
+				while (i < active.length) {
+					if (active[i].Component && active[i].Component._Component && !active[i].Component._Component())
+						return false;
+
+					i++;
+				}
+
+				return true;
+			}
+
+			function finishWaitingAfterCommit (prepared, id, callback) {
+				var outlet;
+
+				if (!waitingComponent || !waitingElement) {
+					callback();
+
+					return;
+				}
+
+				// outlet.Render() replaces the old outlet contents, including the waiting
+				// element. Mount it again over the committed target until every deferred
+				// route component has actually resolved.
+				outlet = Runtime.ResolveOutlet(root, rootOutletName);
+				if (outlet && waitingElement && !waitingElement.parentNode)
+					outlet.Element().appendChild(waitingElement);
+
+				function check () {
+					if (id !== navigationID) return;
+
+					if (!routeComponentsReady(prepared.Common)) {
+						global.setTimeout(check, 0);
+
+						return;
+					}
+
+					function painted () {
+						if (id !== navigationID) return;
+
+						clearWaiting();
+						callback();
+					}
+
+					if (global.requestAnimationFrame)
+						global.requestAnimationFrame(function () { global.requestAnimationFrame(painted); });
+					else global.setTimeout(painted, 0);
+				}
+
+				check();
+			}
 			
 			function commonPrefix (chain) {
 				var common = 0;
@@ -3540,23 +3756,36 @@
 				emit('GuardFailed', failure);
 			}
 			
+			function navigationTrace (name, data) {
+				Runtime.DebugNavigationTrace = !!config.DebugNavigation;
+				if (!config.DebugNavigation || !global.console || !global.console.log) return;
+
+				global.console.log('[Elemenx.Router]', name, {
+					Time: global.performance && global.performance.now ? global.performance.now() : Date.now(),
+					Location: global.location.href,
+					Data: data || null
+				});
+			}
+
 			function execute (prepared, mode) {
 				var id = ++navigationID;
+				var previousURL = currentURL();
 				var context = {
 					Service: function (name) {
 						return Runtime.ServiceForApplication(application(), name);
 					},
-					From: navigationPacket(currentURL()),
+					From: navigationPacket(previousURL),
 					To: prepared.Packet,
 					Route: null,
 					Guard: null
 				};
-				
+
+				navigationTrace('NavigationStart', {ID: id, Mode: mode, Target: prepared.URL.href});
 				emit('NavigationStart', context);
-				
+
 				runLeaveGuards(prepared.Common, context, function (leaveResult) {
 					if (id !== navigationID) return;
-					
+
 					if (leaveResult !== true && leaveResult !== undefined) {
 						if (typeof leaveResult === 'string') {
 							emit('NavigationCancel', context);
@@ -3566,50 +3795,86 @@
 							handleGuardFailure(leaveResult, context);
 							emit('NavigationCancel', context);
 						}
-						
+
 						return;
 					}
-					
-					runEnterGuards(
-						prepared.Found.Chain,
-						prepared.Common,
-						context,
-						function (enterResult) {
-							if (id !== navigationID) return;
-							
-							if (enterResult !== true && enterResult !== undefined) {
-								if (typeof enterResult === 'string') {
-									emit('NavigationCancel', context);
-									navigate(enterResult, 'replace');
-								}
-								else {
-									handleGuardFailure(enterResult, context);
-									emit('NavigationCancel', context);
-								}
-								
-								return;
-							}
-							
-							loadRouteComponents(prepared.Found.Chain, prepared.Common, function (componentError) {
-								if (id !== navigationID) return;
-								if (componentError) throw componentError;
 
-								if (mode === 'push') {
-									global.history.pushState(null, '', prepared.URL.href);
+					showWaiting(prepared, function (waitingError) {
+						if (id !== navigationID) return;
+						if (waitingError) throw waitingError;
+
+						runEnterGuards(
+							prepared.Found.Chain,
+							prepared.Common,
+							context,
+							function (enterResult) {
+								if (id !== navigationID) return;
+
+								if (enterResult !== true && enterResult !== undefined) {
+									clearWaiting();
+
+									if (typeof enterResult === 'string') {
+										emit('NavigationCancel', context);
+										navigate(enterResult, 'replace');
+									}
+									else {
+										handleGuardFailure(enterResult, context);
+										emit('NavigationCancel', context);
+									}
+
+									return;
 								}
-								else if (mode === 'replace') {
-									global.history.replaceState(null, '', prepared.URL.href);
-								}
+
+								// Guard success is the navigation commit point. Discovery URLs are
+								// absolute from Application bootstrap, so changing location here cannot
+								// retarget a deferred component request. This keeps browser history ahead
+								// of every target-page load and render operation.
+								navigationTrace('BeforeHistory', {ID: id, Target: prepared.URL.href});
+								if (mode === 'push') global.history.pushState(null, '', prepared.URL.href);
+								else if (mode === 'replace') global.history.replaceState(null, '', prepared.URL.href);
+								navigationTrace('AfterHistory', {ID: id, Target: prepared.URL.href});
 
 								emit('NavigationCommit', context);
-								commit(prepared);
-								emit('NavigationEnd', context);
-							});
-						}
-					);
+
+								// history.pushState()/replaceState() updates location synchronously, but the
+								// browser chrome cannot paint the new address while this JavaScript task is
+								// still occupying the main thread. Yield BEFORE Discovery/route loading; that
+								// is the first potentially expensive work after the navigation commit.
+								global.setTimeout(function () {
+									if (id !== navigationID) return;
+									navigationTrace('BeforeLoad', {ID: id});
+
+									loadRouteComponents(prepared.Found.Chain, prepared.Common, function (componentError) {
+									if (id !== navigationID) return;
+									if (componentError) {
+										if (mode === 'push' || mode === 'replace')
+											global.history.replaceState(null, '', previousURL.href);
+
+										clearWaiting();
+
+										throw componentError;
+									}
+
+									navigationTrace('BeforeRender', {ID: id});
+									commit(prepared);
+									navigationTrace('AfterRender', {ID: id});
+
+									if (global.requestAnimationFrame) global.requestAnimationFrame(function () {
+										navigationTrace('AfterRenderFrame', {ID: id});
+									});
+
+									finishWaitingAfterCommit(prepared, id, function () {
+											navigationTrace('NavigationEnd', {ID: id});
+											emit('NavigationEnd', context);
+										});
+									});
+								}, 0);
+							}
+						);
+					});
 				});
 			}
-			
+
 			function notFound (url, mode) {
 				var policy = config.NotFound;
 				if (!policy) return false;
@@ -11257,7 +11522,18 @@
 						return;
 					}
 					
-					createRoot();
+					Runtime.Discovery.LoadServices(api, function (serviceError) {
+						if (destroyed) return;
+						
+						if (serviceError) {
+							applicationStatus(definition.Error || null);
+							applicationLifecycle('ElemenxOnComponentError', serviceError);
+							
+							return;
+						}
+						
+						createRoot();
+					});
 				});
 			}
 			

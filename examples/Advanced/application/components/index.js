@@ -1,5 +1,6 @@
 [
 	'Layout/Layout.js',
 	'HomePage/HomePage.js',
-	'ProjectPage/ProjectPage.js'
+	'ProjectPage/ProjectPage.js',
+	'PageLoading/PageLoading.js'
 ]

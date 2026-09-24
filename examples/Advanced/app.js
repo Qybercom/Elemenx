@@ -10,9 +10,11 @@ var Application = Elemenx.Application('ApplicationExample', {
 
 		Router = Elemenx.Router({
 			Root: this.Component(),
+			Waiting: 'PageLoading',
+			DebugNavigation: true,
 			Routes: [
 				{Path: '/', Component: 'HomePage'},
-				{Path: '/project/:id', Component: 'ProjectPage', Guard: 'Authorized'}
+				{Path: '/project/:id', Component: 'ProjectPage', Guard: 'Authorized', Waiting: 'PageLoading'}
 			]
 		});
 
