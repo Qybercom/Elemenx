@@ -1,14 +1,21 @@
+var Router = null;
+
 var Application = Elemenx.Application('ApplicationExample', {
 	Component: 'Layout',
-	Mount: '#app'
-});
+	Root: 'components',
+	Mount: '#app',
 
-var Router = Elemenx.Router({
-	Root: Application.Component(),
-	Routes: [
-		{Path: '/', Component: 'HomePage'},
-		{Path: '/project/:id', Component: 'ProjectPage', Guard: 'Authorized'}
-	]
-});
+	ElemenxOnComponentReady: function () {
+		if (Router) return;
 
-Router.Start();
+		Router = Elemenx.Router({
+			Root: this.Component(),
+			Routes: [
+				{Path: '/', Component: 'HomePage'},
+				{Path: '/project/:id', Component: 'ProjectPage', Guard: 'Authorized'}
+			]
+		});
+
+		Router.Start();
+	}
+});

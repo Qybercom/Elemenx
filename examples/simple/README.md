@@ -1,6 +1,6 @@
 # Elemenx simple example
 
-This directory can be copied as a standalone project. It intentionally contains neither a copy of `elemenx.js` nor a private copy of the development server.
+This directory can be copied as a standalone project. It contains neither a copy of `elemenx.js` nor a private copy of the development server.
 
 After copying the directory:
 
@@ -9,9 +9,9 @@ npm install
 npm start
 ```
 
-The installed `elemenx` package provides both the shared `tools/server.js` and the framework exposed by that server as `/elemenx.js`.
+The installed `elemenx` package provides the shared `tools/server.js` and the framework exposed by that server as `/elemenx.js`.
 
-Each component owns its files in one directory, following the same component-local layout used by frameworks such as Angular:
+The component keeps its source and markup together:
 
 ```text
 components/
@@ -20,4 +20,4 @@ components/
     simple-app.html
 ```
 
-`simple-app.js` references its neighboring markup through `TemplateURL`.
+`simple-app.js` uses `TemplateURL: 'simple-app.html'`, so the template is resolved next to the component definition script.

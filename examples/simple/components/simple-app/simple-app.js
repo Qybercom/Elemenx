@@ -1,5 +1,5 @@
 Elemenx.Component('SimpleApp', {
-	TemplateURL: 'components/simple-app/simple-app.html',
+	TemplateURL: 'simple-app.html',
 
 	ElemenxOnCreate: function () {
 		var component = this;

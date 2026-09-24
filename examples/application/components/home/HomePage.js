@@ -1,5 +1,5 @@
 Elemenx.Component('HomePage', {
-	TemplateURL: 'components/home/home.html',
+	TemplateURL: 'HomePage.html',
 
 	ElemenxOnCreate: function () {
 		var session = this.Service('Session');
