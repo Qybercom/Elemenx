@@ -3836,59 +3836,64 @@
 			}
 
 			function notFound (url, mode) {
-				var policy = config.NotFound;
-				if (!policy) return false;
-				
-				if (typeof policy === 'function') {
-					policy.call(api, navigationPacket(url), api);
-					
-					return true;
-				}
-				
-				if (typeof policy.Redirect === 'string') {
-					navigate(policy.Redirect, mode === 'replace' ? 'replace' : 'push');
-					
-					return true;
-				}
-				
-				if (!policy.Component) return false;
-				
-				var factory = typeof policy.Component === 'function' ? policy.Component : Elemenx.Component(policy.Component);
-				if (!factory)
-					throw new Error('Elemenx NotFound component not found: ' + policy.Component);
-				
+				var reference = config.NotFound;
+				if (!reference) return false;
+
+				var id = ++navigationID;
 				var packet = statePacket(url, {});
-				var outlet = Runtime.ResolveOutlet(root, rootOutletName);
-				
-				if (!outlet)
-					throw new Error('Elemenx router outlet not found: ' + rootOutletName);
-				
-				navigationID++;
-				destroyFrom(0);
-				
-				var component = Runtime.WithRouter(api, function () {
-					return factory(packet, null, {Application: application()});
-				});
-				
-				Runtime.AttachRouter(component, api);
-				component.Parent(root);
-				outlet.Render(component);
-				
-				active.push({
-					Route: policy,
-					Component: component
-				});
-				
-				if (mode === 'push') {
+
+				function render () {
+					if (id !== navigationID) return;
+
+					var factory = Runtime.ResolveComponentRegistered(reference);
+					if (!factory)
+						throw new Error('Elemenx NotFound component not found: ' + reference);
+
+					var outlet = Runtime.ResolveOutlet(root, rootOutletName);
+					if (!outlet)
+						throw new Error('Elemenx router outlet not found: ' + rootOutletName);
+
+					destroyFrom(0);
+
+					var component = Runtime.WithRouter(api, function () {
+						return factory(packet, null, {Application: application()});
+					});
+
+					Runtime.AttachRouter(component, api);
+					component.Parent(root);
+					outlet.Render(component);
+
+					active.push({
+						Route: null,
+						Component: component
+					});
+				}
+
+				if (mode === 'push')
 					global.history.pushState(null, '', url.href);
-				}
-				else if (mode === 'replace') {
+				else if (mode === 'replace')
 					global.history.replaceState(null, '', url.href);
+
+				if (Runtime.ResolveComponentRegistered(reference)) {
+					render();
+
+					return true;
 				}
-				
+
+				var currentApplication = application();
+				if (!Runtime.Discovery || !currentApplication || !Runtime.Discovery.Ready(currentApplication))
+					throw new Error('Elemenx NotFound component not found: ' + reference);
+
+				Runtime.Discovery.Load(currentApplication, 'Component', reference, false, function (error) {
+					if (id !== navigationID) return;
+					if (error) throw error;
+
+					render();
+				});
+
 				return true;
 			}
-			
+
 			function navigate (url, mode) {
 				var target = new URL(url, global.location.href);
 				if (target.origin !== global.location.origin) {
