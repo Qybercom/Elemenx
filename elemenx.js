@@ -2877,10 +2877,12 @@
 		Runtime.ResolveOutlet = function (component, name) {
 			if (!component) return null;
 			
-			if (component._Component)
-				component = component._Component();
-			
-			if (!component) return null;
+			while (component._Component) {
+				var resolved = component._Component();
+				if (!resolved || resolved === component) return null;
+				
+				component = resolved;
+			}
 			
 			var outlets = componentOutlets.get(component);
 			if (!outlets) return null;
