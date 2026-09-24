@@ -2,7 +2,7 @@ var Router = null;
 
 var Application = Elemenx.Application('ApplicationExample', {
 	Component: 'Layout',
-	Root: 'components',
+	Root: 'application',
 	Mount: '#app',
 
 	ElemenxOnComponentReady: function () {

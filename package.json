@@ -16,8 +16,8 @@
 		"test:watch": "vitest",
 		"test:history": "playwright test",
 		"examples": "vite --host 127.0.0.1",
-		"example:simple": "node tools/server.js examples/simple",
-		"example:application": "node tools/server.js examples/application"
+		"example:simple": "node tools/server.js examples/Simple",
+		"example:advanced": "node tools/server.js examples/Advanced"
 	},
 	"devDependencies": {
 		"@playwright/test": "1.63.0",

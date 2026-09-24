@@ -1,0 +1,5 @@
+[
+	'components',
+	'guards',
+	'services'
+]
