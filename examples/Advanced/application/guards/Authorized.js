@@ -1,7 +1,7 @@
-Elemenx.Guard('Authorized', function (args) {
+Elemenx.Guard('Authorized', function () {
 	var session = this.Service('Session');
 
 	if (session.Authorized) return true;
 
-	return args.Fail('Login required');
+	return this.Fail('Login required');
 });

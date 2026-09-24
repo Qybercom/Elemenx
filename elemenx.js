@@ -3381,9 +3381,11 @@
 				};
 			}
 			
-			function guardArguments (context) {
+			function leaveArguments (context) {
 				return {
-					Context: context,
+					From: context.From,
+					To: context.To,
+					Route: context.Route,
 					Wait: waiter,
 					Fail: fail
 				};
@@ -3500,7 +3502,7 @@
 							emit('GuardStart', context);
 							
 							settleGuard(
-								guard.call(context, guardArguments(context)),
+								guard.call(context),
 								function (result) {
 									if (result === false || (result && result.ElemenxGuardFailure === true)) {
 										if (result === false) {
@@ -3555,7 +3557,7 @@
 					emit('GuardStart', context);
 					
 					settleGuard(
-						hook.call(component, guardArguments(context)),
+						hook.call(component, leaveArguments(context)),
 						function (result) {
 							if (result === false || (result && result.ElemenxGuardFailure === true)) {
 								if (result === false) {
@@ -3751,6 +3753,8 @@
 					Service: function (name) {
 						return Runtime.ServiceForApplication(application(), name);
 					},
+					Wait: waiter,
+					Fail: fail,
 					From: navigationPacket(previousURL),
 					To: prepared.Packet,
 					Route: null,

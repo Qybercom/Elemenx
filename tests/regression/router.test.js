@@ -21,7 +21,7 @@ describe('Regression: Router / Guards', function () {
 
 	it('stale pending guard cannot override a newer navigation', async function () {
 		var slow=unique('Slow'), home=unique('Home'), sp=unique('SlowPage'), fp=unique('FastPage');
-		Elemenx.Guard(slow,function (x) {return x.Wait(function (done) {setTimeout(function () {done(true);},120);});});
+		Elemenx.Guard(slow,function () {return this.Wait(function (done) {setTimeout(function () {done(true);},120);});});
 		Elemenx.Component(home,{Template:'<div>HOME</div>'});
 		Elemenx.Component(sp,{Template:'<div id="slow">SLOW</div>'});
 		Elemenx.Component(fp,{Template:'<div id="fast">FAST</div>'});
@@ -37,7 +37,7 @@ describe('Regression: Router / Guards', function () {
 
 	it('Destroy invalidates a pending guarded navigation', async function () {
 		var guard=unique('DestroyGuard'), page=unique('DestroyPage');
-		Elemenx.Guard(guard,function (x) {return x.Wait(function (done) {setTimeout(function () {done(true);},100);});});
+		Elemenx.Guard(guard,function () {return this.Wait(function (done) {setTimeout(function () {done(true);},100);});});
 		Elemenx.Component(page,{Template:'<div id="destroy-page">PAGE</div>'});
 		var x=boot([{Path:'/destroy-pending',Component:page,Guard:guard}]);
 		x.Router.Go('/destroy-pending');
@@ -63,7 +63,7 @@ describe('Regression: Router / Guards', function () {
 	it('guard Context.Service resolves the Router Application service instance', async function () {
 		var service=unique('GuardService'),guard=unique('GuardServiceCheck'),page=unique('GuardServicePage');
 		Elemenx.Service(service,{Authorized:false});
-		Elemenx.Guard(guard,function (x) {return x.Context.Service(service).Authorized;});
+		Elemenx.Guard(guard,function () {return this.Service(service).Authorized;});
 		Elemenx.Component(page,{Template:'<div id="guard-service-page">OK</div>'});
 		var x=boot([{Path:'/guard-service',Component:page,Guard:guard}]);
 		x.App.Service(service).Authorized=true;
@@ -71,6 +71,29 @@ describe('Regression: Router / Guards', function () {
 		await tick(40);
 		expect(document.getElementById('guard-service-page')).not.toBeNull();
 		expect(location.pathname).toBe('/guard-service');
+		x.Router.Destroy();x.App.Destroy();
+	});
+
+	it('guard uses this as its complete execution context and receives no args', async function () {
+		var guard=unique('GuardContext'),page=unique('GuardContextPage'),received=-1,context=null;
+		Elemenx.Guard(guard,function () {
+			received=arguments.length;
+			context=this;
+			if (!this.From || !this.To || !this.Route || !this.Guard) return this.Fail('missing context');
+			return true;
+		});
+		Elemenx.Component(page,{Template:'<div id="guard-context-page">OK</div>'});
+		var x=boot([{Path:'/guard-context/:id',Component:page,Guard:guard}]);
+		x.Router.Go('/guard-context/42?q=yes#hash');
+		await tick(40);
+		expect(received).toBe(0);
+		expect(context.To.Params.id).toBe('42');
+		expect(context.To.Query.q).toBe('yes');
+		expect(context.To.Hash).toBe('hash');
+		expect(typeof context.Service).toBe('function');
+		expect(typeof context.Wait).toBe('function');
+		expect(typeof context.Fail).toBe('function');
+		expect(document.getElementById('guard-context-page')).not.toBeNull();
 		x.Router.Destroy();x.App.Destroy();
 	});
 
@@ -92,7 +115,7 @@ describe('Regression: Router / Guards', function () {
 
 	it('Waiting uses the Router component while an async guard is pending', async function () {
 		var guard=unique('WaitingGuard'),home=unique('WaitingHome'),page=unique('WaitingPage'),waiting=unique('WaitingPageLoading');
-		Elemenx.Guard(guard,function (x) {return x.Wait(function (done) {setTimeout(function () {done(true);},80);});});
+		Elemenx.Guard(guard,function () {return this.Wait(function (done) {setTimeout(function () {done(true);},80);});});
 		Elemenx.Component(home,{Template:'<div id="waiting-home">HOME</div>'});
 		Elemenx.Component(page,{Template:'<div id="waiting-target">TARGET</div>'});
 		Elemenx.Component(waiting,{Template:'<div id="waiting-global">WAIT</div>'});
@@ -113,7 +136,7 @@ describe('Regression: Router / Guards', function () {
 
 	it('route Waiting overrides Router Waiting', async function () {
 		var guard=unique('RouteWaitingGuard'),page=unique('RouteWaitingPage'),globalWaiting=unique('GlobalWaiting'),routeWaiting=unique('RouteWaiting');
-		Elemenx.Guard(guard,function (x) {return x.Wait(function (done) {setTimeout(function () {done(true);},80);});});
+		Elemenx.Guard(guard,function () {return this.Wait(function (done) {setTimeout(function () {done(true);},80);});});
 		Elemenx.Component(page,{Template:'<div id="route-waiting-target">TARGET</div>'});
 		Elemenx.Component(globalWaiting,{Template:'<div id="global-waiting">GLOBAL</div>'});
 		Elemenx.Component(routeWaiting,{Template:'<div id="route-waiting">ROUTE</div>'});
@@ -172,7 +195,7 @@ describe('Regression: Router / Guards', function () {
 
 	it('stale async redirect cannot override a newer navigation', async function () {
 		var guard=unique('RedirectGuard'),home=unique('RedirectHome'),slow=unique('RedirectSlow'),fast=unique('RedirectFast'),target=unique('RedirectTarget');
-		Elemenx.Guard(guard,function (x) {return x.Wait(function (done) {setTimeout(function () {done('/redirect-target');},120);});});
+		Elemenx.Guard(guard,function () {return this.Wait(function (done) {setTimeout(function () {done('/redirect-target');},120);});});
 		Elemenx.Component(home,{Template:'<div>HOME</div>'});
 		Elemenx.Component(slow,{Template:'<div id="redirect-slow">SLOW</div>'});
 		Elemenx.Component(fast,{Template:'<div id="redirect-fast">FAST</div>'});

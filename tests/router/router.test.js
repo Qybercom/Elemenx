@@ -45,8 +45,8 @@ describe('Router / Guards', function () {
 		Elemenx.Component('PackageGuardRoot', {Template:'<main data-outlet="Content"></main>'});
 		Elemenx.Component('PackageGuardPage', {Template:'<div id="guard-ok">OK</div>'});
 
-		Elemenx.Guard('PackageAsyncGuard', function (args) {
-			return args.Wait(function (done) {
+		Elemenx.Guard('PackageAsyncGuard', function () {
+			return this.Wait(function (done) {
 				setTimeout(function () { done(true); }, 20);
 			});
 		});
