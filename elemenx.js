@@ -11230,6 +11230,7 @@
 		function createApplication (name, definition) {
 			var destroyed = false;
 			var root = null;
+			var router = null;
 			var webWorkers = {};
 			var serviceWorkers = {};
 			var api = {};
@@ -11365,9 +11366,16 @@
 				return root;
 			};
 			
+			api.Router = function () {
+				return router;
+			};
+			
 			api.Destroy = function () {
 				if (destroyed) return;
 				destroyed = true;
+				
+				if (router && router.Destroy) router.Destroy();
+				router = null;
 				
 				if (root && root.Destroy) root.Destroy();
 				root = null;
@@ -11423,7 +11431,26 @@
 				mount.innerHTML = String(source);
 			}
 			
+			function startRouter () {
+				if (destroyed || router || !definition.Router || !root) return;
+				
+				var routerDefinition = {};
+				var key;
+				
+				for (key in definition.Router) {
+					if (!Object.prototype.hasOwnProperty.call(definition.Router, key)) continue;
+					if (key === 'Root') continue;
+					
+					routerDefinition[key] = definition.Router[key];
+				}
+				
+				routerDefinition.Root = root;
+				router = Elemenx.Router(routerDefinition);
+				router.Start();
+			}
+			
 			function applicationLifecycle (method, error) {
+				if (method === 'ElemenxOnComponentReady') startRouter();
 				if (typeof api[method] !== 'function') return;
 				
 				api[method].call(api, {
@@ -11458,6 +11485,9 @@
 				root = factory(definition.State || {}, null, options);
 				
 				mount.appendChild(root.Element());
+				
+				if (!root._Component || root._Component())
+					startRouter();
 			}
 			
 			function startRoot () {
@@ -11498,7 +11528,12 @@
 			}
 			
 			api.ElemenxOnComponentPending = definition.ElemenxOnComponentPending || null;
-			api.ElemenxOnComponentReady = definition.ElemenxOnComponentReady || null;
+			api.ElemenxOnComponentReady = function (args) {
+				startRouter();
+				
+				if (typeof definition.ElemenxOnComponentReady === 'function')
+					definition.ElemenxOnComponentReady.call(api, args);
+			};
 			api.ElemenxOnComponentError = definition.ElemenxOnComponentError || null;
 			
 			if (Runtime.HasDOM && global.document.readyState === 'loading') {
