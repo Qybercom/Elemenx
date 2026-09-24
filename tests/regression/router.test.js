@@ -120,13 +120,16 @@ describe('Regression: Router / Guards', function () {
 		Elemenx.Component(page,{Template:'<div id="waiting-target">TARGET</div>'});
 		Elemenx.Component(waiting,{Template:'<div id="waiting-global">WAIT</div>'});
 		var root=unique('WaitingRoot'),appName=unique('WaitingApp');
-		Elemenx.Component(root,{Template:'<main data-outlet="Content"></main>'});
+		Elemenx.Component(root,{Template:'<main data-outlet="Content"></main><aside data-outlet="Waiting"></aside>'});
 		var app=Elemenx.Application(appName,{Component:root,Mount:'#mount'});
 		var router=Elemenx.Router({Root:app.Component(),Waiting:waiting,Routes:[{Path:'/',Component:home},{Path:'/waiting',Component:page,Guard:guard}]});
 		router.Start();
+		await tick(20);
 		router.Go('/waiting');
 		await tick(20);
 		expect(document.getElementById('waiting-global')).not.toBeNull();
+		expect(document.getElementById('waiting-global').parentNode.getAttribute('data-outlet')).toBe('Waiting');
+		expect(document.getElementById('waiting-home')).not.toBeNull();
 		expect(document.getElementById('waiting-target')).toBeNull();
 		await tick(100);
 		expect(document.getElementById('waiting-global')).toBeNull();
@@ -141,7 +144,7 @@ describe('Regression: Router / Guards', function () {
 		Elemenx.Component(globalWaiting,{Template:'<div id="global-waiting">GLOBAL</div>'});
 		Elemenx.Component(routeWaiting,{Template:'<div id="route-waiting">ROUTE</div>'});
 		var root=unique('RouteWaitingRoot'),appName=unique('RouteWaitingApp');
-		Elemenx.Component(root,{Template:'<main data-outlet="Content"></main>'});
+		Elemenx.Component(root,{Template:'<main data-outlet="Content"></main><aside data-outlet="Waiting"></aside>'});
 		var app=Elemenx.Application(appName,{Component:root,Mount:'#mount'});
 		var router=Elemenx.Router({Root:app.Component(),Waiting:globalWaiting,Routes:[{Path:'/route-waiting',Component:page,Guard:guard,Waiting:routeWaiting}]});
 		router.Start();
@@ -152,6 +155,27 @@ describe('Regression: Router / Guards', function () {
 		await tick(100);
 		expect(document.getElementById('route-waiting')).toBeNull();
 		expect(document.getElementById('route-waiting-target')).not.toBeNull();
+		router.Destroy(); app.Destroy();
+	});
+
+
+	it('WaitingOutlet overrides the default Waiting outlet name', async function () {
+		var guard=unique('CustomWaitingOutletGuard'),page=unique('CustomWaitingOutletPage'),waiting=unique('CustomWaitingOutletLoading');
+		Elemenx.Guard(guard,function () {return this.Wait(function (done) {setTimeout(function () {done(true);},80);});});
+		Elemenx.Component(page,{Template:'<div id="custom-waiting-target">TARGET</div>'});
+		Elemenx.Component(waiting,{Template:'<div id="custom-waiting-loader">WAIT</div>'});
+		var root=unique('CustomWaitingOutletRoot'),appName=unique('CustomWaitingOutletApp');
+		Elemenx.Component(root,{Template:'<main data-outlet="Content"></main><aside data-outlet="Busy"></aside>'});
+		var app=Elemenx.Application(appName,{Component:root,Mount:'#mount'});
+		var router=Elemenx.Router({Root:app.Component(),Waiting:waiting,WaitingOutlet:'Busy',Routes:[{Path:'/custom-waiting',Component:page,Guard:guard}]});
+		router.Start();
+		router.Go('/custom-waiting');
+		await tick(20);
+		expect(document.getElementById('custom-waiting-loader')).not.toBeNull();
+		expect(document.getElementById('custom-waiting-loader').parentNode.getAttribute('data-outlet')).toBe('Busy');
+		await tick(100);
+		expect(document.getElementById('custom-waiting-loader')).toBeNull();
+		expect(document.getElementById('custom-waiting-target')).not.toBeNull();
 		router.Destroy(); app.Destroy();
 	});
 

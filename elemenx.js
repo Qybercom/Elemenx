@@ -2962,6 +2962,7 @@
 		function Router (config) {
 			var root = config.Root;
 			var rootOutletName = config.Outlet || 'Content';
+			var waitingOutletName = config.WaitingOutlet || 'Waiting';
 			var routes = config.Routes || [];
 			var active = [];
 			var started = false;
@@ -3315,9 +3316,9 @@
 						return;
 					}
 
-					var outlet = Runtime.ResolveOutlet(root, rootOutletName);
+					var outlet = Runtime.ResolveOutlet(root, waitingOutletName);
 					if (!outlet) {
-						callback(new Error('Elemenx router outlet not found: ' + rootOutletName));
+						callback(new Error('Elemenx router waiting outlet not found: ' + waitingOutletName));
 
 						return;
 					}
@@ -3672,10 +3673,9 @@
 					return;
 				}
 
-				// outlet.Render() replaces the old outlet contents, including the waiting
-				// element. Mount it again over the committed target until every deferred
-				// route component has actually resolved.
-				outlet = Runtime.ResolveOutlet(root, rootOutletName);
+				// Waiting has its own outlet, independent from the route Content outlet.
+				// Keep it mounted until every deferred route component has resolved.
+				outlet = Runtime.ResolveOutlet(root, waitingOutletName);
 				if (outlet && waitingElement && !waitingElement.parentNode)
 					outlet.Element().appendChild(waitingElement);
 
