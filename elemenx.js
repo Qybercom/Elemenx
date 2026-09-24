@@ -1739,7 +1739,7 @@
 				if (placeholder.parentNode)
 					placeholder.parentNode.replaceChild(element, placeholder);
 				
-				if (lifecycle)
+				if (lifecycle && (!current._Component || current._Component()))
 					lifecycleCall('ElemenxOnComponentReady', null);
 				
 				updates = [];
@@ -2880,7 +2880,7 @@
 			while (component._Component) {
 				var resolved = component._Component();
 				if (!resolved || resolved === component) return null;
-				
+			
 				component = resolved;
 			}
 			
@@ -2916,6 +2916,10 @@
 			var popHandler;
 			var navigationID = 0;
 			var events = {};
+			
+			function application () {
+				return root && root.Application ? root.Application() : null;
+			}
 			
 			function emit (name, data) {
 				var list = events[name];
@@ -3174,6 +3178,36 @@
 				return Elemenx.Component(route.Component);
 			}
 			
+			function loadRouteComponents (chain, common, callback) {
+				var index = common;
+
+				function next (error) {
+					if (error || index >= chain.length) {
+						callback(error || null);
+
+						return;
+					}
+
+					var route = chain[index++];
+					if (typeof route.Component === 'function' || Runtime.ResolveComponentRegistered(route.Component)) {
+						next(null);
+
+						return;
+					}
+
+					var currentApplication = application();
+					if (!Runtime.Discovery || !currentApplication || !Runtime.Discovery.Ready(currentApplication)) {
+						callback(new Error('Elemenx route component not found: ' + route.Component));
+
+						return;
+					}
+
+					Runtime.Discovery.Load(currentApplication, 'Component', route.Component, false, next);
+				}
+
+				next(null);
+			}
+
 			function guardsFor (route) {
 				if (route.Guards instanceof Array) return route.Guards;
 				if (route.Guard !== undefined) return [route.Guard];
@@ -3287,7 +3321,23 @@
 							return;
 						}
 						
-						guard = Runtime.ResolveGuard(list[guardIndex]);
+						var guardReference = list[guardIndex];
+						guard = Runtime.ResolveGuard(guardReference);
+						
+						if (!guard && typeof guardReference === 'string') {
+							var currentApplication = application();
+							
+							if (Runtime.Discovery && currentApplication && Runtime.Discovery.Ready(currentApplication)) {
+								Runtime.Discovery.Load(currentApplication, 'Guard', guardReference, false, function (error) {
+									if (error) throw error;
+									
+									nextGuard(true);
+								});
+								
+								return;
+							}
+						}
+						
 						guardIndex++;
 						
 						if (!guard)
@@ -3423,7 +3473,7 @@
 						throw new Error('Elemenx route component not found: ' + route.Component);
 					
 					component = Runtime.WithRouter(api, function () {
-						return factory(packet);
+						return factory(packet, null, {Application: application()});
 					});
 					
 					Runtime.AttachRouter(component, api);
@@ -3493,7 +3543,9 @@
 			function execute (prepared, mode) {
 				var id = ++navigationID;
 				var context = {
-					Service: Runtime.Service,
+					Service: function (name) {
+						return Runtime.ServiceForApplication(application(), name);
+					},
 					From: navigationPacket(currentURL()),
 					To: prepared.Packet,
 					Route: null,
@@ -3538,16 +3590,21 @@
 								return;
 							}
 							
-							if (mode === 'push') {
-								global.history.pushState(null, '', prepared.URL.href);
-							}
-							else if (mode === 'replace') {
-								global.history.replaceState(null, '', prepared.URL.href);
-							}
-							
-							emit('NavigationCommit', context);
-							commit(prepared);
-							emit('NavigationEnd', context);
+							loadRouteComponents(prepared.Found.Chain, prepared.Common, function (componentError) {
+								if (id !== navigationID) return;
+								if (componentError) throw componentError;
+
+								if (mode === 'push') {
+									global.history.pushState(null, '', prepared.URL.href);
+								}
+								else if (mode === 'replace') {
+									global.history.replaceState(null, '', prepared.URL.href);
+								}
+
+								emit('NavigationCommit', context);
+								commit(prepared);
+								emit('NavigationEnd', context);
+							});
 						}
 					);
 				});
@@ -3585,7 +3642,7 @@
 				destroyFrom(0);
 				
 				var component = Runtime.WithRouter(api, function () {
-					return factory(packet);
+					return factory(packet, null, {Application: application()});
 				});
 				
 				Runtime.AttachRouter(component, api);
@@ -3680,7 +3737,7 @@
 				var prepared = prepare(url);
 				
 				if (prepared) {
-					commit(prepared);
+					execute(prepared, 'start');
 				}
 				else {
 					notFound(url, 'replace');

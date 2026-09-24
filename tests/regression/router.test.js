@@ -60,6 +60,20 @@ describe('Regression: Router / Guards', function () {
 		x.Router.Destroy(); x.App.Destroy();
 	});
 
+	it('guard Context.Service resolves the Router Application service instance', async function () {
+		var service=unique('GuardService'),guard=unique('GuardServiceCheck'),page=unique('GuardServicePage');
+		Elemenx.Service(service,{Authorized:false});
+		Elemenx.Guard(guard,function (x) {return x.Context.Service(service).Authorized;});
+		Elemenx.Component(page,{Template:'<div id="guard-service-page">OK</div>'});
+		var x=boot([{Path:'/guard-service',Component:page,Guard:guard}]);
+		x.App.Service(service).Authorized=true;
+		x.Router.Go('/guard-service');
+		await tick(40);
+		expect(document.getElementById('guard-service-page')).not.toBeNull();
+		expect(location.pathname).toBe('/guard-service');
+		x.Router.Destroy();x.App.Destroy();
+	});
+
 	it('NotFound and Replace preserve expected route semantics', async function () {
 		var home=unique('NFHome'), nf=unique('NFPage'), next=unique('NFNext');
 		Elemenx.Component(home,{Template:'<div>HOME</div>'});

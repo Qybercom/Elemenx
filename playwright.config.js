@@ -9,11 +9,21 @@ export default defineConfig({
 		channel: 'chrome',
 		headless: true
 	},
-	webServer: {
-		command: 'node ./node_modules/vite/bin/vite.js --host 127.0.0.1 --port 4173 --strictPort --configLoader bundle',
-		url: 'http://127.0.0.1:4173/tests/history/fixture.html',
-		reuseExistingServer: false,
-		stdout: 'pipe',
-		stderr: 'pipe'
-	}
+	webServer: [
+		{
+			command: 'node ./node_modules/vite/bin/vite.js --host 127.0.0.1 --port 4173 --strictPort --configLoader bundle',
+			url: 'http://127.0.0.1:4173/tests/history/fixture.html',
+			reuseExistingServer: false,
+			stdout: 'pipe',
+			stderr: 'pipe'
+		},
+		{
+			command: 'node tools/server.js examples/Advanced',
+			url: 'http://127.0.0.1:4174/',
+			env: {PORT: '4174'},
+			reuseExistingServer: false,
+			stdout: 'pipe',
+			stderr: 'pipe'
+		}
+	]
 });
