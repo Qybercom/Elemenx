@@ -1572,6 +1572,10 @@
 				return current ? current.Element() : placeholder;
 			};
 			
+			api._Component = function () {
+				return current;
+			};
+			
 			api.Parent = function (value) {
 				if (arguments.length) {
 					if (current) current.Parent(value);
@@ -2871,6 +2875,13 @@
 		};
 		
 		Runtime.ResolveOutlet = function (component, name) {
+			if (!component) return null;
+			
+			if (component._Component)
+				component = component._Component();
+			
+			if (!component) return null;
+			
 			var outlets = componentOutlets.get(component);
 			if (!outlets) return null;
 			

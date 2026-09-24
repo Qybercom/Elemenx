@@ -11,5 +11,6 @@
 	'DeferredCompileRemote.js',
 	'DeferredCacheRemote.js',
 	'DeferredHeldChild.js',
-	'DeferredFinalHeldChild.js'
+	'DeferredFinalHeldChild.js',
+	'DeferredRouterRoot.js'
 ]

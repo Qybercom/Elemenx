@@ -199,4 +199,28 @@ describe('Regression: deferred structural composition', function () {
 			head.appendChild=append;
 		}
 	});
+	it('Application lazy root exposes its real outlet to Router', async function () {
+		var route=unique('DeferredRouterRoute');
+		Elemenx.Component(route,{Template:'<article class="deferred-router-route">Ready</article>'});
+
+		var app=Elemenx.Application(unique('DeferredRouterApp'),{
+			Component:'DeferredRouterRoot',
+			Root:'/deferred-structural',
+			Mount:'#mount'
+		});
+		live.push(app);
+
+		expect(await waitFor(function () { return document.querySelector('[data-outlet="Content"]'); },1500)).not.toBe(false);
+
+		var router=Elemenx.Router({
+			Root:app.Component(),
+			Routes:[{Path:'/',Component:route}]
+		});
+		router.Start();
+
+		expect(await waitFor(function () { return document.querySelector('.deferred-router-route'); },1500)).not.toBe(false);
+		expect(document.querySelector('.deferred-router-route').textContent).toBe('Ready');
+		router.Destroy();
+	});
+
 });
