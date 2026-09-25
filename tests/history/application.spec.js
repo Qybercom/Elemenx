@@ -15,34 +15,37 @@ function captureErrors (page) {
 	return errors;
 }
 
-test('official Advanced Application example enforces Guard and navigates after authorization', async ({ page }) => {
+test('official Advanced Application example renders GuardFailed component and navigates after authorization', async ({ page }) => {
 	var errors = captureErrors(page);
 
 	await page.goto('http://127.0.0.1:4174/');
-	await expect(page.locator('h1')).toHaveText('Home');
-	await expect(page.locator('main')).toContainText('This example uses Router, Service and Guard.');
+	await expect(page.getByRole('heading', {name: 'Welcome to Elemenx'})).toBeVisible();
 
 	await page.getByRole('link', {name: 'Project'}).click();
-	await expect(page).toHaveURL(/\/$/);
-	await expect(page.locator('h1')).toHaveText('Home');
+	await expect(page).toHaveURL(/\/project\/42\?tab=activity#latest$/);
+	await expect(page.getByRole('heading', {name: 'Access denied'})).toBeVisible();
+	await expect(page.getByText('Authorized', {exact: true})).toBeVisible();
+	await expect(page.getByRole('heading', {name: 'Project 42'})).toHaveCount(0);
 
+	await page.getByRole('link', {name: 'Return home'}).click();
 	await page.getByRole('button', {name: 'Enable protected project'}).click();
 	await page.getByRole('link', {name: 'Project'}).click();
 
 	await expect(page).toHaveURL(/\/project\/42\?tab=activity#latest$/);
-	await expect(page.locator('h1')).toHaveText('Project 42');
+	await expect(page.getByRole('heading', {name: 'Project 42'})).toBeVisible();
 	await expect(page.locator('main')).toContainText('activity');
 	await expect(page.locator('main')).toContainText('latest');
 
 	expect(errors).toEqual([]);
 });
 
-test('official Advanced Application example enforces Guard on initial protected URL', async ({ page }) => {
+test('official Advanced Application example renders GuardFailed component on initial protected URL', async ({ page }) => {
 	var errors = captureErrors(page);
 
 	await page.goto('http://127.0.0.1:4174/project/42?tab=activity#latest');
-	await expect(page.locator('h1')).toHaveCount(0);
-	await expect(page.getByText('Project 42', { exact: true })).toHaveCount(0);
+	await expect(page).toHaveURL(/\/project\/42\?tab=activity#latest$/);
+	await expect(page.getByRole('heading', {name: 'Access denied'})).toBeVisible();
+	await expect(page.getByRole('heading', {name: 'Project 42'})).toHaveCount(0);
 
 	expect(errors).toEqual([]);
 });

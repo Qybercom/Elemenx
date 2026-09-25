@@ -333,3 +333,33 @@ footer {
 		grid-template-columns: 1fr;
 	}
 }
+
+.access-denied {
+	max-width: 680px;
+	margin: 36px auto;
+	text-align: center;
+}
+
+.access-denied-code {
+	margin: 4px 0 18px;
+	font: 800 clamp(72px, 18vw, 150px)/0.9 ui-monospace, SFMono-Regular, Consolas, monospace;
+	letter-spacing: -0.08em;
+	color: var(--border);
+}
+
+.access-denied h1 {
+	font-size: 34px;
+}
+
+.access-denied p:not(.eyebrow) {
+	max-width: 540px;
+	margin: 14px auto 0;
+	color: var(--muted);
+	line-height: 1.65;
+}
+
+.access-denied a {
+	display: inline-block;
+	margin-top: 20px;
+	font-weight: 700;
+}

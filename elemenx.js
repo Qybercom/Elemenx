@@ -2901,6 +2901,9 @@
 					api.Hash = options.RoutePacket.Hash;
 				}
 				
+				if (options && options.GuardFailure)
+					api.GuardFailure = options.GuardFailure;
+				
 				/*
 				 * The component is now fully initialized. Declarative Title is applied
 				 * before lifecycle hooks, so Ready may replace it with a dynamic value.
@@ -3765,7 +3768,7 @@
 						throw new Error('Elemenx route component not found: ' + route.Component);
 					
 					component = Runtime.WithRouter(api, function () {
-						return factory(packet, null, {Application: application(), RoutePacket: packet});
+						return factory(packet, null, {Application: application(), RoutePacket: packet, GuardFailure: route.GuardFailure || null});
 					});
 					
 					Runtime.AttachRouter(component, api);
@@ -3826,16 +3829,8 @@
 						return;
 					}
 
-					function painted () {
-						if (id !== navigationID) return;
-
-						clearWaiting();
-						callback();
-					}
-
-					if (global.requestAnimationFrame)
-						global.requestAnimationFrame(function () { global.requestAnimationFrame(painted); });
-					else global.setTimeout(painted, 0);
+					clearWaiting();
+					callback();
 				}
 
 				check();
@@ -3869,6 +3864,57 @@
 				return statePacket(url, found ? found.Params : {});
 			}
 			
+			function guardFailureComponent (route, failure) {
+				var policy = route && route.GuardFailed;
+				
+				if (!policy) return null;
+				if (typeof policy === 'string' || typeof policy === 'function') return policy;
+				if (typeof policy !== 'object') return null;
+				
+				if (failure.Guard !== undefined && policy[failure.Guard] !== undefined)
+					return policy[failure.Guard];
+				
+				return policy.Default !== undefined ? policy.Default : null;
+			}
+			
+			function renderGuardFailure (prepared, failure, reference, mode, id, context) {
+				var chain = prepared.Found.Chain;
+				var failureIndex = chain.indexOf(failure.Route);
+				var failureRoute;
+				var failureChain;
+				var failurePrepared;
+				
+				if (failureIndex === -1) return false;
+				
+				failureRoute = {
+					Component: reference,
+					Outlet: failure.Route.Outlet,
+					GuardFailure: failure
+				};
+				failureChain = chain.slice(0, failureIndex);
+				failureChain.push(failureRoute);
+				failurePrepared = {
+					URL: prepared.URL,
+					Found: {Chain: failureChain, Params: prepared.Found.Params},
+					Packet: prepared.Packet,
+					Common: commonPrefix(failureChain)
+				};
+				
+				loadRouteComponents(failureChain, failurePrepared.Common, function (error) {
+					if (id !== navigationID) return;
+					if (error) throw error;
+					
+					if (mode === 'push') global.history.pushState(null, '', prepared.URL.href);
+					else if (mode === 'replace') global.history.replaceState(null, '', prepared.URL.href);
+					
+					emit('NavigationCommit', context);
+					commit(failurePrepared);
+					emit('NavigationEnd', context);
+				});
+				
+				return true;
+			}
+			
 			function handleGuardFailure (result, context) {
 				var failure = result;
 				
@@ -3882,6 +3928,8 @@
 				failure.Guard = failure.Guard || context.Guard;
 				
 				emit('GuardFailed', failure);
+				
+				return failure;
 			}
 			
 			function execute (prepared, mode) {
@@ -3936,8 +3984,11 @@
 										navigate(enterResult, 'replace');
 									}
 									else {
-										handleGuardFailure(enterResult, context);
-										emit('NavigationCancel', context);
+										var failure = handleGuardFailure(enterResult, context);
+										var failureComponent = guardFailureComponent(failure.Route, failure);
+										
+										if (!failureComponent || !renderGuardFailure(prepared, failure, failureComponent, mode, id, context))
+											emit('NavigationCancel', context);
 									}
 
 									return;
@@ -11654,7 +11705,13 @@
 				applicationStatus(definition.Pending || null);
 				applicationLifecycle('ElemenxOnComponentPending', null);
 				
-				Runtime.Discovery.Build(api, definition.Root, function (error) {
+				var discoveryRoot = definition.Root;
+				
+				if (definition.ElemenxDefinitionURL && !(/^(?:[a-z]+:)?\/\//i.test(discoveryRoot)) && discoveryRoot.charAt(0) !== '/') {
+					discoveryRoot = definition.ElemenxDefinitionURL.substring(0, definition.ElemenxDefinitionURL.lastIndexOf('/') + 1) + discoveryRoot.replace(/^\.\//, '');
+				}
+				
+				Runtime.Discovery.Build(api, discoveryRoot, function (error) {
 					if (destroyed) return;
 					
 					if (error) {
@@ -11706,6 +11763,9 @@
 			
 			if (applications[name])
 				throw new Error('Elemenx Application already exists: ' + name);
+			
+			if (definition && global.document && global.document.currentScript && !definition.ElemenxDefinitionURL)
+				definition.ElemenxDefinitionURL = global.document.currentScript.src.split('?')[0].split('#')[0];
 			
 			applications[name] = createApplication(name, definition);
 			

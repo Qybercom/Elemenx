@@ -234,4 +234,50 @@ describe('Regression: Router / Guards', function () {
 		x.Router.Destroy();x.App.Destroy();
 	});
 
+
+	it('GuardFailed renders a route fallback at the protected URL and exposes failure context', async function () {
+		var guard=unique('FallbackGuard'),page=unique('FallbackPage'),denied=unique('FallbackDenied'),failure=null;
+		Elemenx.Guard(guard,function () {return this.Fail('blocked');});
+		Elemenx.Component(page,{Template:'<div id="fallback-page">PAGE</div>'});
+		Elemenx.Component(denied,{Template:'<div id="fallback-denied">DENIED</div>',ElemenxOnComponentReady:function () {failure=this.GuardFailure;}});
+		var x=boot([{Path:'/guard-fallback/:id',Component:page,Guard:guard,GuardFailed:denied}]);
+		x.Router.Go('/guard-fallback/42?q=yes#hash');
+		await tick(60);
+		expect(location.pathname).toBe('/guard-fallback/42');
+		expect(location.search).toBe('?q=yes');
+		expect(location.hash).toBe('#hash');
+		expect(document.getElementById('fallback-denied')).not.toBeNull();
+		expect(document.getElementById('fallback-page')).toBeNull();
+		expect(failure.Reason).toBe('blocked');
+		expect(failure.Guard).toBe(guard);
+		expect(failure.To.Params.id).toBe('42');
+		x.Router.Destroy();x.App.Destroy();
+	});
+
+	it('GuardFailed map selects the fallback for the first failing guard in a composition', async function () {
+		var auth=unique('MapAuth'),access=unique('MapAccess'),page=unique('MapPage'),login=unique('MapLogin'),denied=unique('MapDenied');
+		var authorized=false,allowed=false;
+		Elemenx.Guard(auth,function () {return authorized ? true : this.Fail('login');});
+		Elemenx.Guard(access,function () {return allowed ? true : this.Fail('access');});
+		Elemenx.Component(page,{Template:'<div id="map-page">PAGE</div>'});
+		Elemenx.Component(login,{Template:'<div id="map-login">LOGIN</div>'});
+		Elemenx.Component(denied,{Template:'<div id="map-denied">DENIED</div>'});
+		var route={Path:'/guard-map',Component:page,Guards:[auth,access],GuardFailed:{}};
+		route.GuardFailed[auth]=login;
+		route.GuardFailed[access]=denied;
+		var x=boot([route]);
+		x.Router.Go('/guard-map');
+		await tick(50);
+		expect(document.getElementById('map-login')).not.toBeNull();
+		authorized=true;
+		x.Router.Replace('/guard-map');
+		await tick(50);
+		expect(document.getElementById('map-denied')).not.toBeNull();
+		allowed=true;
+		x.Router.Replace('/guard-map');
+		await tick(50);
+		expect(document.getElementById('map-page')).not.toBeNull();
+		x.Router.Destroy();x.App.Destroy();
+	});
+
 });

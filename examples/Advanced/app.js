@@ -8,7 +8,7 @@ Elemenx.Application('ApplicationExample', {
 		NotFound: 'PageNotFound',
 		Routes: [
 			{Path: '/', Component: 'HomePage'},
-			{Path: '/project/:id', Component: 'ProjectPage', Guard: 'Authorized', Waiting: 'PageLoading'}
+			{Path: '/project/:id', Component: 'ProjectPage', Guard: 'Authorized', GuardFailed: 'AccessDenied', Waiting: 'PageLoading'}
 		]
 	}
 });
