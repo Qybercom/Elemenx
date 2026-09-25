@@ -1,7 +1,32 @@
 <section>
-	<h1>Project {{Params.id}}</h1>
+	<div class="page-heading">
+		<p class="eyebrow">Protected route</p>
+
+		<h1>Project {{Params.id}}</h1>
+
+		<p class="lead">
+			Route parameters, query values and the URL hash are available directly from the component context.
+		</p>
+	</div>
 	<div class="card">
-		Tab: <b>{{Query.tab}}</b><br>
-		Hash: <b>{{Hash}}</b>
+		<h2 class="card-title">Route context</h2>
+		<div class="meta-grid">
+			<div class="meta-item">
+				<span class="meta-label">Project ID</span>
+				<span class="meta-value">{{Params.id}}</span>
+			</div>
+			<div class="meta-item">
+				<span class="meta-label">Query · tab</span>
+				<span class="meta-value">{{Query.tab}}</span>
+			</div>
+			<div class="meta-item">
+				<span class="meta-label">Hash</span>
+				<span class="meta-value">{{Hash}}</span>
+			</div>
+			<div class="meta-item">
+				<span class="meta-label">Title</span>
+				<span class="meta-value">Dynamic via Ready</span>
+			</div>
+		</div>
 	</div>
 </section>

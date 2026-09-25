@@ -1,3 +1,3 @@
 Elemenx.Component('PageLoading', {
-	Template: '<h4>Loading...</h4>'
+	Template: '<div class="loading-card"><span class="loading-dot"></span><span>Loading page...</span></div>'
 });

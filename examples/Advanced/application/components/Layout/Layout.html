@@ -1,11 +1,23 @@
-<div>
-	<header>
-		<strong>Elemenx Application</strong>
+<div class="application-shell">
+	<header class="application-header">
+		<a class="brand" href="/" data-router>
+			<span class="brand-mark">E</span>
+			<span>
+				<strong>Elemenx</strong>
+				<small>Advanced example</small>
+			</span>
+		</a>
+
 		<nav>
 			<a href="/" data-router>Home</a>
 			<a href="/project/42?tab=activity#latest" data-router>Project</a>
 		</nav>
+
+		<button class="theme-switch" data-ref="Theme">{{Theme}} theme</button>
 	</header>
-	<main data-outlet="Content"></main>
-	<div data-outlet="Waiting"></div>
+
+	<main class="application-main" data-outlet="Content"></main>
+	<div class="waiting-outlet" data-outlet="Waiting"></div>
+
+	<footer>Built with Elemenx · Router · Services · Guards · Storage</footer>
 </div>
