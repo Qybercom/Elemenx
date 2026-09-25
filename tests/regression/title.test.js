@@ -29,6 +29,21 @@ describe('Regression: Document Title', function () {
 		expect(document.title).toBe('Runtime component title');
 	});
 
+
+	it('ElemenxOnComponentReady can override declarative Title', function () {
+		var name=unique('TitleReadyComponent');
+		var factory=Elemenx.Component(name,{
+			Title:'Project - Elemenx',
+			Template:'<div></div>',
+			ElemenxOnComponentReady:function () {
+				this.Title('Project \"42\" - Elemenx');
+			}
+		});
+		var component=factory();
+		expect(document.title).toBe('Project \"42\" - Elemenx');
+		component.Destroy();
+	});
+
 	it('Application Title sets the default document title and exposes Title()', function () {
 		var componentName=unique('TitleApplicationRoot');
 		var applicationName=unique('TitleApplication');
@@ -40,4 +55,33 @@ describe('Regression: Document Title', function () {
 		expect(document.title).toBe('Runtime application title');
 		application.Destroy();
 	});
+
+	it('route Params are available in ElemenxOnComponentReady after ElemenxOnCreate', async function () {
+		var page=unique('TitleRoutePage'),root=unique('TitleRouteRoot'),applicationName=unique('TitleRouteApplication');
+		var createParams=null,readyParams=null;
+		Elemenx.Component(page,{
+			Title:'Project - Elemenx',
+			Template:'<div></div>',
+			ElemenxOnCreate:function () {
+				createParams=this.Params;
+			},
+			ElemenxOnComponentReady:function () {
+				readyParams=this.Params;
+				this.Title('Project "' + this.Params.id + '" - Elemenx');
+			}
+		});
+		Elemenx.Component(root,{Template:'<main data-outlet="Content"></main>'});
+		var application=Elemenx.Application(applicationName,{
+			Component:root,
+			Mount:'#mount',
+			Router:{Routes:[{Path:'/project/:id',Component:page}]}
+		});
+		application.Router().Go('/project/42');
+		await new Promise(function (resolve) {setTimeout(resolve,20);});
+		expect(createParams).toBeUndefined();
+		expect(readyParams.id).toBe('42');
+		expect(document.title).toBe('Project "42" - Elemenx');
+		application.Destroy();
+	});
+
 });

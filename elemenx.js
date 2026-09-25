@@ -2889,6 +2889,25 @@
 				 */
 				syncModels();
 				
+				/*
+				 * Router context becomes part of the component only after Create has
+				 * completed, but before ComponentReady. This keeps ElemenxOnCreate about
+				 * the component itself while Ready may safely consume route state.
+				 */
+				if (options && options.RoutePacket) {
+					api.Path = options.RoutePacket.Path;
+					api.Params = options.RoutePacket.Params;
+					api.Query = options.RoutePacket.Query;
+					api.Hash = options.RoutePacket.Hash;
+				}
+				
+				/*
+				 * The component is now fully initialized. Declarative Title is applied
+				 * before lifecycle hooks, so Ready may replace it with a dynamic value.
+				 */
+				if (definition.ElemenxOnComponentReady)
+					definition.ElemenxOnComponentReady.call(api);
+				
 				return api;
 			}
 			
@@ -3746,7 +3765,7 @@
 						throw new Error('Elemenx route component not found: ' + route.Component);
 					
 					component = Runtime.WithRouter(api, function () {
-						return factory(packet, null, {Application: application()});
+						return factory(packet, null, {Application: application(), RoutePacket: packet});
 					});
 					
 					Runtime.AttachRouter(component, api);
@@ -3979,7 +3998,7 @@
 					destroyFrom(0);
 
 					var component = Runtime.WithRouter(api, function () {
-						return factory(packet, null, {Application: application()});
+						return factory(packet, null, {Application: application(), RoutePacket: packet});
 					});
 
 					Runtime.AttachRouter(component, api);
