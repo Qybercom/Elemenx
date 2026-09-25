@@ -1,7 +1,7 @@
 Elemenx.Application('ApplicationExample', {
 	Component: 'Layout',
 	Root: 'application',
-	Mount: '#app',
+	Mount: 'body',
 	Router: {
 		Waiting: 'PageLoading',
 		NotFound: 'PageNotFound',

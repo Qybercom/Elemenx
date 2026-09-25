@@ -1,3 +1,4 @@
 Elemenx.Component('Layout', {
-	TemplateURL: 'Layout.html'
+	TemplateURL: 'Layout.html',
+	StyleURL: 'Layout.css'
 });

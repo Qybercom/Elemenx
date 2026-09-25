@@ -1479,6 +1479,9 @@
 		var templateResources = {};
 		var templatePending = {};
 		var templateRevision = 0;
+		var styleResources = {};
+		var stylePending = {};
+		var styleSequence = 0;
 		
 		function loadTemplateURL (url, force, callback) {
 			var request;
@@ -1534,6 +1537,75 @@
 			request.send(null);
 		}
 		
+		function loadStyleURL (url, callback) {
+			var request;
+			var callbacks;
+			var i;
+			
+			if (styleResources[url] !== undefined) {
+				callback(null, styleResources[url]);
+				
+				return;
+			}
+			
+			if (stylePending[url]) {
+				stylePending[url].push(callback);
+				
+				return;
+			}
+			
+			callbacks = [callback];
+			stylePending[url] = callbacks;
+			request = new XMLHttpRequest();
+			request.open('GET', url, true);
+			request.onreadystatechange = function () {
+				var error = null;
+				
+				if (request.readyState !== 4) return;
+				
+				if (request.status >= 200 && request.status < 300) {
+					styleResources[url] = request.responseText;
+				}
+				else {
+					error = new Error('Elemenx StyleURL failed: ' + url + ' (' + request.status + ')');
+				}
+				
+				callbacks = stylePending[url] || [];
+				delete stylePending[url];
+				
+				i = 0;
+				while (i < callbacks.length) {
+					callbacks[i](error, styleResources[url]);
+					i++;
+				}
+			};
+			request.send(null);
+		}
+		
+		function installComponentStyle (name, definition, css) {
+			var key;
+			var style;
+			
+			if (!global.document || css === undefined || css === null) return;
+			
+			if (!definition.ElemenxStyleKey) {
+				styleSequence++;
+				definition.ElemenxStyleKey = name ? 'component:' + name : 'anonymous:' + styleSequence;
+			}
+			
+			key = definition.ElemenxStyleKey;
+			style = global.document.querySelector('style[data-elemenx-style="' + key.replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '"]');
+			
+			if (!style) {
+				style = global.document.createElement('style');
+				style.setAttribute('data-elemenx-style', key);
+				(global.document.head || global.document.documentElement).appendChild(style);
+			}
+			
+			if (style.textContent !== String(css))
+				style.textContent = String(css);
+		}
+
 		var liveComponentInstances = {};
 		
 		function trackComponentInstance (name, component) {
@@ -2194,44 +2266,75 @@
 			
 			definition = definition || {};
 			
-			if (name && definition.TemplateURL && global.document && global.document.currentScript && !definition.ElemenxDefinitionURL) {
+			if (name && (definition.TemplateURL || definition.StyleURL) && global.document && global.document.currentScript && !definition.ElemenxDefinitionURL) {
 				definition.ElemenxDefinitionURL = global.document.currentScript.src.split('?')[0].split('#')[0];
 			}
 			
-			if (definition.TemplateURL && definition.ElemenxDefinitionURL && !(/^(?:[a-z]+:)?\/\//i.test(definition.TemplateURL)) && definition.TemplateURL.charAt(0) !== '/') {
-				definition.TemplateURL = definition.ElemenxDefinitionURL.substring(0, definition.ElemenxDefinitionURL.lastIndexOf('/') + 1) + definition.TemplateURL.replace(/^\.\//, '');
+			function resolveDefinitionResourceURL (url) {
+				if (!url || !definition.ElemenxDefinitionURL || /^(?:[a-z]+:)?\/\//i.test(url) || url.charAt(0) === '/') return url;
+				
+				return definition.ElemenxDefinitionURL.substring(0, definition.ElemenxDefinitionURL.lastIndexOf('/') + 1) + url.replace(/^\.\//, '');
 			}
+			
+			definition.TemplateURL = resolveDefinitionResourceURL(definition.TemplateURL);
+			definition.StyleURL = resolveDefinitionResourceURL(definition.StyleURL);
 			
 			if (generationOverride === undefined && name && previousFactory && !previousFactory.ElemenxLazy) generation++;
 			if (name) componentGenerations[name] = generation;
 			
-			if (definition.TemplateURL && definition.Template === undefined) {
+			if ((definition.TemplateURL && definition.Template === undefined) || (definition.StyleURL && definition.Style === undefined)) {
 				var remoteFactory = function (data, slotProjection, options) {
 					var component = deferredComponent(function (ready) {
-						loadTemplateURL(definition.TemplateURL, false, function (error, html) {
-							var localDefinition;
+						function finish (html, css) {
+							var localDefinition = {};
 							var localFactory;
 							var key;
 							
-							if (error) {
-								ready(error);
-								
-								return;
-							}
-							
-							localDefinition = {};
-							
 							for (key in definition) {
-								if (own(definition, key) && key !== 'TemplateURL' && key !== 'ElemenxDefinitionURL') {
+								if (own(definition, key) && key !== 'TemplateURL' && key !== 'StyleURL' && key !== 'ElemenxDefinitionURL' && key !== 'ElemenxStyleKey') {
 									localDefinition[key] = definition[key];
 								}
 							}
 							
-							localDefinition.Template = html;
-							localFactory = CreateComponentFactory(null, localDefinition, generation);
+							if (html !== undefined) localDefinition.Template = html;
+							if (css !== undefined) {
+								definition.Style = css;
+								installComponentStyle(name, definition, css);
+							}
 							
+							localFactory = CreateComponentFactory(null, localDefinition, generation);
 							ready(null, localFactory);
-						});
+						}
+						
+						function loadStyle (html) {
+							if (!definition.StyleURL || definition.Style !== undefined) {
+								finish(html, definition.Style);
+								return;
+							}
+							
+							loadStyleURL(definition.StyleURL, function (error, css) {
+								if (error) {
+									ready(error);
+									return;
+								}
+								
+								finish(html, css);
+							});
+						}
+						
+						if (definition.TemplateURL && definition.Template === undefined) {
+							loadTemplateURL(definition.TemplateURL, false, function (error, html) {
+								if (error) {
+									ready(error);
+									return;
+								}
+								
+								loadStyle(html);
+							});
+						}
+						else {
+							loadStyle(definition.Template);
+						}
 					}, data, slotProjection, options);
 					
 					if (name && !Runtime.ComponentReloading)
@@ -2249,6 +2352,9 @@
 				return remoteFactory;
 			}
 			
+			if (definition.Style !== undefined)
+				installComponentStyle(name, definition, definition.Style);
+
 			if (name && definition.Template === undefined) {
 				templateID = definition.TemplateID || name;
 				definition.Template = '#' + templateID;
