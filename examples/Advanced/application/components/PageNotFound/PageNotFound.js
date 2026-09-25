@@ -1,3 +1,4 @@
 Elemenx.Component('PageNotFound', {
-	TemplateURL: 'PageNotFound.html'
+	TemplateURL: 'PageNotFound.html',
+	Title: 'Not Found - Elemenx'
 })

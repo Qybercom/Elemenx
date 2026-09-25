@@ -39,6 +39,15 @@
 		
 		global.Elemenx.RuntimeID = RuntimeID;
 		
+		global.Elemenx.Title = function (value) {
+			if (!Runtime.HasDOM) return arguments.length ? global.Elemenx : '';
+			if (!arguments.length) return global.document.title;
+			
+			global.document.title = value == null ? '' : String(value);
+			
+			return global.Elemenx;
+		};
+		
 		RuntimeID();
 	})(typeof globalThis !== 'undefined' ? globalThis : self);
 	
@@ -2778,6 +2787,7 @@
 					Parent: Parent,
 					Router: Router,
 					Service: Runtime.Service,
+					Title: Elemenx.Title,
 					State: values,
 					Batch: Batch,
 					Update: Update,
@@ -2847,6 +2857,9 @@
 				if (!directState && data && Object.keys(data).length) {
 					Update(data);
 				}
+				
+				if (definition.Title !== undefined)
+					api.Title(definition.Title);
 				
 				if (definition.ElemenxOnCreate)
 					definition.ElemenxOnCreate.call(api, data || {});
@@ -11351,6 +11364,11 @@
 			var api = {};
 			
 			definition = definition || {};
+			
+			api.Title = Elemenx.Title;
+			
+			if (definition.Title !== undefined)
+				api.Title(definition.Title);
 			
 			api.Name = function () {
 				return name;
