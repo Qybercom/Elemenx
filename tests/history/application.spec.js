@@ -90,3 +90,22 @@ test('official Advanced Application example supports guard redirect', async ({ p
 
 	expect(errors).toEqual([]);
 });
+test('official Advanced Application example demonstrates nested loops, components and conditions', async ({ page }) => {
+	var errors = captureErrors(page);
+	var telemetry;
+
+	await page.goto('http://127.0.0.1:4274/');
+	await expect(page.locator('.project-card')).toHaveCount(2);
+	await expect(page.locator('.environment-card')).toHaveCount(3);
+	await expect(page.locator('.service-badge')).toHaveCount(4);
+	await expect(page.getByText('No services in this environment.')).toBeVisible();
+
+	telemetry = page.locator('.service-badge').filter({hasText: 'Telemetry'});
+	await expect(telemetry).toContainText('Offline');
+	await expect(telemetry.getByText('Protected')).toHaveCount(0);
+	await telemetry.getByRole('button', {name: 'Toggle state'}).click();
+	await expect(telemetry).toContainText('Online');
+	await expect(telemetry.getByText('Protected')).toBeVisible();
+
+	expect(errors).toEqual([]);
+});

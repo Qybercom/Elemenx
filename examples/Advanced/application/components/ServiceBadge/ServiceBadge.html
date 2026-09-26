@@ -1,0 +1,18 @@
+<div class="service-badge">
+	<div class="service-copy">
+		<strong>{{name}}</strong>
+
+		<div class="service-state" data-if="online">
+			<span class="state-dot active"></span>
+			<span>Online</span>
+			<span class="protected-state" data-if="protected">Protected</span>
+		</div>
+
+		<div class="service-state" data-if="!online">
+			<span class="state-dot"></span>
+			<span>Offline</span>
+		</div>
+	</div>
+
+	<button class="mini-button" data-on-click="Toggle">Toggle state</button>
+</div>

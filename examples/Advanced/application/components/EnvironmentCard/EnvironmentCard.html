@@ -1,0 +1,12 @@
+<section class="environment-card">
+	<div class="environment-heading">
+		<strong>{{name}}</strong>
+		<span class="structure-label">loop #2 · component</span>
+	</div>
+
+	<div class="service-list" data-if="HasServices">
+		<ServiceBadge data-each="Services" data-key="id"></ServiceBadge>
+	</div>
+
+	<p class="empty-state" data-if="!HasServices">No services in this environment.</p>
+</section>

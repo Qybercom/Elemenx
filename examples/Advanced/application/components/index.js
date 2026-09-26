@@ -1,6 +1,10 @@
 [
 	'Layout/Layout.js',
 	'HomePage/HomePage.js',
+	'ProjectShowcase/ProjectShowcase.js',
+	'ProjectCard/ProjectCard.js',
+	'EnvironmentCard/EnvironmentCard.js',
+	'ServiceBadge/ServiceBadge.js',
 	'AuthorizedPage/AuthorizedPage.js',
 	'RedirectProtectedPage/RedirectProtectedPage.js',
 	'ProjectPage/ProjectPage.js',
