@@ -1963,9 +1963,51 @@
 			);
 		}
 
+		function protectExpressionAttributes (html) {
+			var expressions = [];
+			var source = String(html || '').replace(
+				/(\s(?:data-(?:if|each|while|show|hide)|data-bind-[A-Za-z0-9_.:-]+)\s*=\s*)(["'])([\s\S]*?)\2/gi,
+				function (match, prefix, quote, expression) {
+					var index = expressions.length;
+					expressions.push(expression);
+					return prefix + quote + '__ELEMENX_EXPRESSION_' + index + '__' + quote;
+				}
+			);
+			
+			return {
+				Source: source,
+				Expressions: expressions
+			};
+		}
+		
+		function restoreExpressionAttributes (fragment, expressions) {
+			var elements = fragment.querySelectorAll('*');
+			var i = 0;
+			var j;
+			var attributes;
+			var value;
+			var match;
+			
+			while (i < elements.length) {
+				attributes = elements[i].attributes;
+				j = 0;
+				while (j < attributes.length) {
+					value = attributes[j].value;
+					match = /^__ELEMENX_EXPRESSION_(\d+)__$/.exec(value);
+					if (match && expressions[Number(match[1])] !== undefined) {
+						attributes[j].value = expressions[Number(match[1])];
+					}
+					j++;
+				}
+				i++;
+			}
+		}
+		
 		function createFragment (html) {
 			var template = document.createElement('template');
-			template.innerHTML = normalizeSelfClosingComponents(html);
+			var protectedExpressions = protectExpressionAttributes(html);
+			template.innerHTML = normalizeSelfClosingComponents(protectedExpressions.Source);
+			restoreExpressionAttributes(template.content, protectedExpressions.Expressions);
 			
 			if (template.content.childNodes.length === 1)
 				return template.content.removeChild(template.content.firstChild);
