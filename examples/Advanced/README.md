@@ -39,3 +39,11 @@ The Home page also demonstrates structural composition. Component tags without p
 ```
 
 The expression is evaluated with `$index` starting at `0`. Its value is assigned to the local name on the left side and rendering stops when the expression returns a falsy value. Elemenx aborts a runaway structural loop after 10,000 iterations.
+
+`data-while` also supports a local counter form when direct numeric iteration is clearer:
+
+```html
+<span data-while="i = 0; i < 5; i++">Iteration {{i}}</span>
+```
+
+The initializer creates `i` in the loop-local scope, the condition is checked before each render, and the update expression runs after each iteration. The same 10,000-iteration runaway protection applies.

@@ -4887,13 +4887,22 @@
 			function compileWhile (node) {
 				var parent = node.parentNode;
 				var source = node.getAttribute(Runtime.Directive.Name('While')) || '';
-				var match = /^\s*([A-Za-z_$][A-Za-z0-9_$]*)\s*=\s*([\s\S]+)$/.exec(source);
+				var parts = source.split(';');
+				var counterMode = parts.length === 3;
+				var match = counterMode ? /^\s*([A-Za-z_$][A-Za-z0-9_$]*)\s*=\s*([\s\S]+)$/.exec(parts[0]) : /^\s*([A-Za-z_$][A-Za-z0-9_$]*)\s*=\s*([\s\S]+)$/.exec(source);
 				var variable = match ? match[1] : '$value';
 				var iterator = match ? match[2] : source;
+				var counterName = counterMode && match ? match[1] : null;
+				var counterInitial = counterMode && match ? match[2] : null;
+				var counterCondition = counterMode ? parts[1] : null;
+				var counterUpdate = counterMode ? parts[2] : null;
 				var template = blueprintFor(node).cloneNode(true);
 				var end = document.createComment('ui:while:' + source + ':end');
 				var children = [];
 				var limit = 10000;
+				
+				if (counterMode && !counterName)
+					throw new Error('Elemenx data-while counter initializer must assign a local variable: ' + source);
 				
 				template.removeAttribute(Runtime.Directive.Name('While'));
 				parent.insertBefore(end, node.nextSibling);
@@ -4938,22 +4947,36 @@
 					var index = 0;
 					var value;
 					var scope;
+					var loopScope;
 					var key;
 					var child;
 					
 					destroyChildren();
+					loopScope = {};
+					for (key in data) {
+						if (own(data, key)) loopScope[key] = data[key];
+					}
+					
+					if (counterMode)
+						loopScope[counterName] = expression(loopScope, counterInitial);
 					
 					while (index < limit) {
+						if (counterMode) {
+							if (!expression(loopScope, counterCondition)) break;
+							value = loopScope[counterName];
+						}
+						else {
+							loopScope.$index = index;
+							value = expression(loopScope, iterator);
+							if (!value) break;
+							loopScope[variable] = value;
+						}
+						
 						scope = {};
-						for (key in data) {
-							if (own(data, key)) scope[key] = data[key];
+						for (key in loopScope) {
+							if (own(loopScope, key)) scope[key] = loopScope[key];
 						}
 						scope.$index = index;
-						value = expression(scope, iterator);
-						
-						if (!value) break;
-						
-						scope[variable] = value;
 						child = Runtime.CreateComponent(iterationDefinition())(scope, null, {
 							DirectState: true,
 							Application: component.Application()
@@ -4962,6 +4985,8 @@
 						end.parentNode.insertBefore(child.Element(), end);
 						children.push(child);
 						index++;
+						
+						if (counterMode) expression(loopScope, counterUpdate);
 					}
 					
 					if (index >= limit)
@@ -4981,7 +5006,7 @@
 					}
 				});
 			}
-			
+
 			function compileIf (node) {
 				var parent = node.parentNode;
 				var field = node.getAttribute(Runtime.Directive.Name('If'));

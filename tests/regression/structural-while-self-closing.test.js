@@ -16,6 +16,19 @@ describe('Regression: self-closing components / data-while', function () {
 		c.Destroy();
 	});
 
+	it('data-while supports a local counter with initializer, condition and update', function () {
+		var root=unique('WhileCounterRoot');
+		Elemenx.Component(root,{
+			Template:'<section><span class="while-counter" data-while="i = 0; i &lt; 4; i++">{{i}}</span></section>'
+		});
+		var c=Elemenx.Component(root)();
+		document.getElementById('mount').appendChild(c.Element());
+		var rows=document.querySelectorAll('.while-counter');
+		expect(rows.length).toBe(4);
+		expect(Array.prototype.map.call(rows,function (row) { return row.textContent; })).toEqual(['0','1','2','3']);
+		c.Destroy();
+	});
+
 	it('data-while renders from an arbitrary iterator expression with local value and index', function () {
 		var root=unique('WhileRoot');
 		Elemenx.Component(root,{

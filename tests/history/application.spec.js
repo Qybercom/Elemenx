@@ -99,6 +99,9 @@ test('official Advanced Application example demonstrates nested loops, component
 	await expect(page.locator('.environment-card')).toHaveCount(3);
 	await expect(page.locator('.service-badge')).toHaveCount(4);
 	await expect(page.getByText('No services in this environment.')).toBeVisible();
+	await expect(page.locator('.counter-iteration')).toHaveCount(5);
+	await expect(page.locator('.counter-iteration').nth(0)).toHaveText('Iteration 0');
+	await expect(page.locator('.counter-iteration').nth(4)).toHaveText('Iteration 4');
 	await expect(page.locator('.iterator-badge')).toHaveCount(3);
 	await expect(page.locator('.iterator-badge').nth(0)).toContainText('Build image');
 	await expect(page.locator('.iterator-badge').nth(0)).toContainText('Protected');
