@@ -1,6 +1,8 @@
 [
 	'Layout/Layout.js',
 	'HomePage/HomePage.js',
+	'AuthorizedPage/AuthorizedPage.js',
+	'RedirectProtectedPage/RedirectProtectedPage.js',
 	'ProjectPage/ProjectPage.js',
 	'LoginRequired/LoginRequired.js',
 	'AccessDenied/AccessDenied.js',

@@ -8,6 +8,8 @@ Elemenx.Application('ApplicationExample', {
 		NotFound: 'PageNotFound',
 		Routes: [
 			{Path: '/', Component: 'HomePage'},
+			{Path: '/authorized', Component: 'AuthorizedPage', Guard: 'Authorized', GuardFailed: 'LoginRequired'},
+			{Path: '/redirect-protected', Component: 'RedirectProtectedPage', Guard: 'AuthorizedRedirect'},
 			{
 				Path: '/project/:id',
 				Component: 'ProjectPage',

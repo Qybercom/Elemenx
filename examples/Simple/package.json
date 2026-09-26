@@ -3,7 +3,7 @@
 	"private": true,
 	"version": "1.0.0",
 	"scripts": {
-		"start": "node node_modules/elemenx/tools/server.js ."
+		"start": "node node_modules/elemenx/tools/server.js . 4174"
 	},
 	"dependencies": {
 		"elemenx": "^1.0.0"

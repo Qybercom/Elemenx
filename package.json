@@ -16,7 +16,7 @@
 		"test:watch": "vitest",
 		"test:history": "playwright test",
 		"examples": "vite --host 127.0.0.1",
-		"example:simple": "node tools/server.js examples/Simple",
+		"example:simple": "node tools/server.js examples/Simple 4174",
 		"example:advanced": "node tools/server.js examples/Advanced"
 	},
 	"devDependencies": {

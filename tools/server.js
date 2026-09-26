@@ -4,7 +4,7 @@ var path = require('path');
 
 var Root = path.resolve(process.argv[2] || process.cwd());
 var Framework = path.resolve(__dirname, '..', 'elemenx.js');
-var Port = Number(process.env.PORT || 4173);
+var Port = Number(process.argv[3] || process.env.PORT || 4173);
 var Types = {
 	'.html': 'text/html; charset=utf-8',
 	'.js': 'text/javascript; charset=utf-8',
