@@ -5,18 +5,19 @@
 		<h1>Welcome to Elemenx</h1>
 
 		<p class="lead">
-			A small application demonstrating declarative routing, services, guards,
+			A small application demonstrating declarative routing, services, guard composition,
 			component resources and persistent storage.
 		</p>
 	</div>
 	<div class="card">
-		<h2 class="card-title">Protected route</h2>
+		<h2 class="card-title">Composed guards</h2>
 
 		<p>
-			The Project page is protected by the <b>Authorized</b> guard.
-			Enable the session first, then open the project from the navigation.
+			The Project page first checks <b>Authorized</b> and then <b>ProjectAccess</b>.
+			Each guard has its own fallback component while the protected URL stays unchanged.
 		</p>
 
-		<button class="button primary" data-ref="Login">Enable protected project</button>
+		<button class="button primary" data-ref="Login">Enable session</button>
+		<button class="button" data-ref="GrantProjectAccess">Grant project access</button>
 	</div>
 </section>

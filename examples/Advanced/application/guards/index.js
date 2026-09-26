@@ -1,3 +1,4 @@
 [
-	'Authorized.js'
+	'Authorized.js',
+	'ProjectAccess.js'
 ]

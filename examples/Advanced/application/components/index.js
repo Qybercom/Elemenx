@@ -2,6 +2,7 @@
 	'Layout/Layout.js',
 	'HomePage/HomePage.js',
 	'ProjectPage/ProjectPage.js',
+	'LoginRequired/LoginRequired.js',
 	'AccessDenied/AccessDenied.js',
 	'PageLoading/PageLoading.js',
 	'PageNotFound/PageNotFound.js'

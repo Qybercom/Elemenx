@@ -8,5 +8,9 @@ Elemenx.Component('HomePage', {
 		this.Ref('Login').addEventListener('click', function () {
 			session.Login();
 		});
+
+		this.Ref('GrantProjectAccess').addEventListener('click', function () {
+			session.GrantProjectAccess();
+		});
 	}
 });
