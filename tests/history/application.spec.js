@@ -102,6 +102,10 @@ test('official Advanced Application example demonstrates nested loops, component
 	await expect(page.locator('.counter-iteration')).toHaveCount(5);
 	await expect(page.locator('.counter-iteration').nth(0)).toHaveText('Iteration 0');
 	await expect(page.locator('.counter-iteration').nth(4)).toHaveText('Iteration 4');
+	await expect(page.getByText("It's", {exact: false})).toHaveCount(1);
+	await expect(page.locator('.counter-iteration').nth(3)).toContainText("It's 3");
+	await expect(page.locator('.counter-iteration').nth(2)).not.toContainText("It's 3");
+	await expect(page.locator('.counter-iteration').nth(4)).not.toContainText("It's 3");
 	await expect(page.locator('.iterator-badge')).toHaveCount(3);
 	await expect(page.locator('.iterator-badge').nth(0)).toContainText('Build image');
 	await expect(page.locator('.iterator-badge').nth(0)).toContainText('Protected');
