@@ -15,7 +15,26 @@
 			<a href="/project/42?tab=activity#latest">Project</a>
 		</nav>
 
-		<button class="theme-switch" data-ref="Theme">{{Theme}} theme</button>
+		<div class="header-actions">
+			<div class="status-list" aria-label="Demo access status">
+				<div class="status-pill" data-ref="SessionStatus">
+					<span class="status-icon" aria-hidden="true">●</span>
+					<span>
+						<small>Session</small>
+						<strong data-ref="SessionStatusText">Guest</strong>
+					</span>
+				</div>
+				<div class="status-pill" data-ref="AccessStatus">
+					<span class="status-icon" aria-hidden="true">◆</span>
+					<span>
+						<small>Project</small>
+						<strong data-ref="AccessStatusText">Denied</strong>
+					</span>
+				</div>
+			</div>
+
+			<button class="theme-switch" data-ref="Theme">{{Theme}} theme</button>
+		</div>
 	</header>
 
 	<main class="application-main" data-outlet="Content"></main>
