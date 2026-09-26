@@ -1428,6 +1428,7 @@
 		Names: {
 			If: 'data-if',
 			Each: 'data-each',
+			While: 'data-while',
 			Key: 'data-key',
 			Pending: 'data-pending',
 			Error: 'data-error',
@@ -1948,9 +1949,23 @@
 			return String(source);
 		}
 		
+		function normalizeSelfClosingComponents (html) {
+			/*
+			 * HTML does not treat <MyComponent /> as self-closing. Normalize
+			 * Elemenx-style component tags before the browser HTML parser sees
+			 * the template. Native lowercase/void elements are left untouched.
+			 */
+			return String(html || '').replace(
+				/<([A-Z][A-Za-z0-9_.:-]*)(\s[^<>]*?)?\s*\/>/g,
+				function (match, tag, attributes) {
+					return '<' + tag + (attributes || '') + '></' + tag + '>';
+				}
+			);
+		}
+
 		function createFragment (html) {
 			var template = document.createElement('template');
-			template.innerHTML = html;
+			template.innerHTML = normalizeSelfClosingComponents(html);
 			
 			if (template.content.childNodes.length === 1)
 				return template.content.removeChild(template.content.firstChild);
@@ -4489,6 +4504,12 @@
 				 */
 				if (node.hasAttribute('data-ui-slot-group') && node.__ElemenxProjectionOwner !== ownerToken) return;
 				
+				if (node.hasAttribute(Runtime.Directive.Name('While'))) {
+					compileWhile(node);
+					
+					return;
+				}
+				
 				var factory = factoryFor(node.tagName);
 				
 				if (factory) {
@@ -4861,6 +4882,104 @@
 				}
 				
 				return current || node;
+			}
+			
+			function compileWhile (node) {
+				var parent = node.parentNode;
+				var source = node.getAttribute(Runtime.Directive.Name('While')) || '';
+				var match = /^\s*([A-Za-z_$][A-Za-z0-9_$]*)\s*=\s*([\s\S]+)$/.exec(source);
+				var variable = match ? match[1] : '$value';
+				var iterator = match ? match[2] : source;
+				var template = blueprintFor(node).cloneNode(true);
+				var end = document.createComment('ui:while:' + source + ':end');
+				var children = [];
+				var limit = 10000;
+				
+				template.removeAttribute(Runtime.Directive.Name('While'));
+				parent.insertBefore(end, node.nextSibling);
+				parent.removeChild(node);
+				
+				function destroyChildren () {
+					var i = children.length - 1;
+					
+					while (i >= 0) {
+						children[i].Destroy();
+						i--;
+					}
+					
+					children = [];
+				}
+				
+				function iterationDefinition () {
+					var result = {Template: template.outerHTML};
+					var methodName;
+					
+					for (methodName in definition) {
+						if (
+							own(definition, methodName) &&
+							typeof definition[methodName] === 'function' &&
+							methodName !== 'Template' &&
+							methodName !== 'ElemenxOnCreate' &&
+							methodName !== 'ElemenxOnDestroy'
+						) {
+							(function (name) {
+								result[name] = function () {
+									return definition[name].apply(component, arguments);
+								};
+							})(methodName);
+						}
+					}
+					
+					return result;
+				}
+				
+				var whileEffect = Runtime.Effect(function () {
+					var data = component.State;
+					var index = 0;
+					var value;
+					var scope;
+					var key;
+					var child;
+					
+					destroyChildren();
+					
+					while (index < limit) {
+						scope = {};
+						for (key in data) {
+							if (own(data, key)) scope[key] = data[key];
+						}
+						scope.$index = index;
+						value = expression(scope, iterator);
+						
+						if (!value) break;
+						
+						scope[variable] = value;
+						child = Runtime.CreateComponent(iterationDefinition())(scope, null, {
+							DirectState: true,
+							Application: component.Application()
+						});
+						child.Parent(component);
+						end.parentNode.insertBefore(child.Element(), end);
+						children.push(child);
+						index++;
+					}
+					
+					if (index >= limit)
+						throw new Error('Elemenx structural loop exceeded iteration limit (' + limit + '): ' + source);
+					
+					return index;
+				}, true);
+				
+				records.push({
+					Update: function () {
+						whileEffect.Run();
+					},
+					
+					Destroy: function () {
+						whileEffect.Destroy();
+						destroyChildren();
+					}
+				});
 			}
 			
 			function compileIf (node) {

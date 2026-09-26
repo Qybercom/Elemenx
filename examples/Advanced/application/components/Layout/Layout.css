@@ -627,3 +627,38 @@ footer {
 		text-align: left;
 	}
 }
+.iterator-showcase {
+	margin-top: 20px;
+	padding-top: 20px;
+	border-top: 1px solid var(--border);
+}
+
+.showcase-heading.compact {
+	margin-bottom: 12px;
+}
+
+.iterator-list {
+	display: grid;
+	gap: 8px;
+}
+
+.iterator-badge {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 10px 12px;
+	border: 1px solid var(--border);
+	border-radius: 8px;
+	background: var(--surface-soft);
+}
+
+.iterator-index {
+	font-family: monospace;
+	color: var(--muted);
+}
+
+.iterator-state {
+	margin-left: auto;
+	font-size: 12px;
+	color: var(--muted);
+}

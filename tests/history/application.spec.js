@@ -99,6 +99,10 @@ test('official Advanced Application example demonstrates nested loops, component
 	await expect(page.locator('.environment-card')).toHaveCount(3);
 	await expect(page.locator('.service-badge')).toHaveCount(4);
 	await expect(page.getByText('No services in this environment.')).toBeVisible();
+	await expect(page.locator('.iterator-badge')).toHaveCount(3);
+	await expect(page.locator('.iterator-badge').nth(0)).toContainText('Build image');
+	await expect(page.locator('.iterator-badge').nth(0)).toContainText('Protected');
+	await expect(page.locator('.iterator-badge').nth(2)).toContainText('Waiting');
 
 	telemetry = page.locator('.service-badge').filter({hasText: 'Telemetry'});
 	await expect(telemetry).toContainText('Offline');

@@ -8,6 +8,22 @@
 	</div>
 
 	<div class="project-showcase">
-		<ProjectCard data-each="Projects" data-key="id"></ProjectCard>
+		<ProjectCard data-each="Projects" data-key="id" />
+	</div>
+
+	<div class="iterator-showcase">
+		<div class="showcase-heading compact">
+			<div>
+				<p class="eyebrow">In-place iterator</p>
+				<h3>Deployment queue</h3>
+			</div>
+			<p><code>data-while</code> asks the iterator for the next value until it returns a falsy value.</p>
+		</div>
+
+		<div class="iterator-list">
+			<div data-while="item = QueueItem($index)">
+				<IteratorBadge item="{{item}}" index="{{$index}}" />
+			</div>
+		</div>
 	</div>
 </section>

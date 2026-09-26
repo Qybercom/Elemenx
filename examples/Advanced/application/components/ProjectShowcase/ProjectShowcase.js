@@ -2,6 +2,16 @@ Elemenx.Component('ProjectShowcase', {
 	TemplateURL: 'ProjectShowcase.html',
 
 	ElemenxOnCreate: function () {
+		var queue = [
+			{name: 'Build image', ready: true, protected: true},
+			{name: 'Deploy staging', ready: true, protected: false},
+			{name: 'Promote production', ready: false, protected: true}
+		];
+
+		this.State.QueueItem = function (index) {
+			return queue[index] || null;
+		};
+
 		this.State.Projects = [
 			{
 				id: 'graphene',
