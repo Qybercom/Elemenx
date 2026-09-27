@@ -66,4 +66,4 @@ Elemenx.Directive('highlight', {
 });
 ```
 
-The Home page demonstrates both a reactive `*highlight="DirectiveHighlighted"` directive and a reactive `*tooltip="DirectiveTooltip"` directive. The examples intentionally use `context.Data` and the Create/Update/Destroy lifecycle so the Advanced project acts as a visible feature showcase rather than only a minimal syntax sample.
+The Home page demonstrates both a reactive `*highlight="DirectiveHighlighted"` directive and a reactive `*tooltip="DirectiveTooltip"` directive. The tooltip creates and owns a real floating DOM element, reacts to its expression value, supports mouse and keyboard focus, and removes its listeners and DOM node during directive destruction. The examples intentionally use `context.Data` and the Create/Update/Destroy lifecycle so the Advanced project acts as a visible feature showcase rather than only a minimal syntax sample.

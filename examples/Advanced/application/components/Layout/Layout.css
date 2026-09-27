@@ -781,3 +781,26 @@ footer {
 		grid-template-columns: 1fr;
 	}
 }
+
+.directive-tooltip {
+	position: fixed;
+	z-index: 1000;
+	max-width: 280px;
+	padding: 7px 10px;
+	pointer-events: none;
+	opacity: 0;
+	background: var(--text);
+	border: 1px solid var(--text);
+	border-radius: 6px;
+	color: var(--surface);
+	font-size: 12px;
+	line-height: 1.4;
+	white-space: normal;
+	transform: translate(-50%, calc(-100% - 4px));
+	transition: opacity 120ms ease, transform 120ms ease;
+}
+
+.directive-tooltip-visible {
+	opacity: 1;
+	transform: translate(-50%, -100%);
+}
