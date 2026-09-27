@@ -32,5 +32,36 @@
 		<button class="button primary" #Login>Enable session</button>
 		<button class="button" #GrantProjectAccess>Grant project access</button>
 	</div>
+	<div class="card two-way-showcase">
+		<h2 class="card-title">Two-way bindings</h2>
+		<p>Explicit two-way targets keep form controls and component State synchronized in both directions.</p>
+
+		<div class="two-way-grid">
+			<label>
+				<span>[(value)]</span>
+				<input type="text" [(value)]="BindingValue">
+			</label>
+
+			<label class="two-way-check">
+				<span>[(checked)]</span>
+				<input type="checkbox" [(checked)]="BindingChecked">
+			</label>
+
+			<label>
+				<span>[(selected)]</span>
+				<select [(selected)]="BindingSelected">
+					<option value="development">Development</option>
+					<option value="staging">Staging</option>
+					<option value="production">Production</option>
+				</select>
+			</label>
+		</div>
+
+		<div class="two-way-state">
+			<code>value = {{BindingValue}}</code>
+			<code>checked = {{BindingChecked}}</code>
+			<code>selected = {{BindingSelected}}</code>
+		</div>
+	</div>
 	<ProjectShowcase></ProjectShowcase>
 </section>

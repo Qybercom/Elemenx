@@ -1430,9 +1430,8 @@
 			For: '*for',
 			Key: '*key',
 			Outlet: '*outlet',
-			Pending: 'data-pending',
-			Error: 'data-error',
-			Model: 'data-model'
+			Pending: '*pending',
+			Error: '*error'
 		},
 		Prefixes: {},
 		Name: function (name) {
@@ -1464,6 +1463,10 @@
 			var match = /^\(([^\)]+)\)$/.exec(attribute);
 			return match ? match[1] : null;
 		},
+		TwoWay: function (attribute) {
+			var match = /^\[\(([^\)]+)\)\]$/.exec(attribute);
+			return match ? match[1] : null;
+		},
 		Ref: function (attribute) {
 			var match = /^#(.+)$/.exec(attribute);
 			return match ? match[1] : null;
@@ -1479,7 +1482,7 @@
 				if (Object.prototype.hasOwnProperty.call(this.Prefixes, name) && attribute.indexOf(this.Prefixes[name]) === 0) return true;
 			}
 			
-			return this.Binding(attribute) !== null || this.Event(attribute) !== null || this.Ref(attribute) !== null;
+			return this.TwoWay(attribute) !== null || this.Binding(attribute) !== null || this.Event(attribute) !== null || this.Ref(attribute) !== null;
 		}
 	};
 
@@ -2239,7 +2242,25 @@
 
 				while (j < attrs.length) {
 					attr=attrs[j];
-					target=Runtime.Directive.Binding(attr.name);
+					target=Runtime.Directive.TwoWay(attr.name);
+
+					if (target !== null) {
+						if (target !== 'value' && target !== 'checked' && target !== 'selected')
+							throw new Error('Invalid Elemenx two-way binding target: [('+target+')]');
+						
+						key=attr.value;
+						models.push({
+							key:key,
+							node:nodes[i],
+							type:target
+						});
+						
+						nodes[i].removeAttribute(attr.name);
+						target=null;
+					}
+					else {
+						target=Runtime.Directive.Binding(attr.name);
+					}
 
 					if (target !== null) {
 						key=attr.value;
@@ -2277,14 +2298,6 @@
 						}
 						
 						nodes[i].removeAttribute(attr.name);
-					}
-					else if (Runtime.Directive.Is(attr.name,'Model')) {
-						key=attr.value;
-						models.push({
-							key:key,
-							node:nodes[i],
-							type:nodes[i].type === 'checkbox' || nodes[i].type === 'radio' ? 'checked' : 'value'
-						});
 					}
 
 					j++;
@@ -2824,7 +2837,7 @@
 					
 					while (i < models.length) {
 						model = models[i];
-						eventName = model.node.type === 'checkbox' || model.node.type === 'radio' ? 'change' : 'input';
+						eventName = model.type === 'value' ? 'input' : 'change';
 						
 						(function (model) {
 							effects.push(Runtime.Effect(function () {
@@ -2836,7 +2849,7 @@
 							listen(model.node, eventName, function () {
 								var value;
 								
-								if (model.node.type === 'checkbox' || model.node.type === 'radio') {
+								if (model.type === 'checked') {
 									value = model.node.checked;
 								}
 								else {
@@ -3056,7 +3069,7 @@
 				/*
 				 * Models must bind before semantic DOM events.
 				 *
-				 * For controls where both data-model and (change) listen to
+				 * For controls where both [(checked)] and (change) listen to
 				 * the same native event (checkbox/radio), State must be updated
 				 * before the component method reads it.
 				 */
@@ -3076,6 +3089,10 @@
 				 * Components that actually receive props still get their initial
 				 * Update before ElemenxOnCreate, preserving the existing child lifecycle.
 				 */
+				
+				if (!directState && definition.State && typeof definition.State === 'object') {
+					Update(definition.State);
+				}
 				
 				if (!directState && data && Object.keys(data).length) {
 					Update(data);
@@ -3097,7 +3114,7 @@
 				/*
 				 * Structural() was compiled before ElemenxOnCreate(), but its lazy records
 				 * must see the populated initial state. One bootstrap pass creates
-				 * component conditions / collections / ordinary data-if. Reactive
+				 * component conditions / collections / ordinary *if. Reactive
 				 * data-if records then update from their own dependencies.
 				 */
 				
@@ -4792,7 +4809,7 @@
 				/*
 				 * Compile projected structure at declaration time. Delaying this until
 				 * the child becomes visible lets parent text bindings mutate the live
-				 * DOM first; a later data-if clone would then snapshot rendered text
+				 * DOM first; a later *if clone would then snapshot rendered text
 				 * instead of the original {{expression}} template.
 				 */
 				if (projected)
@@ -4818,7 +4835,7 @@
 					if (child) {
 						/*
 						 * Props are an input boundary. A retained child may mutate its own
-						 * state (for example through data-model); do not overwrite that
+						 * state (for example through a two-way binding); do not overwrite that
 						 * local state merely because the parent effect ran again with the
 						 * same prop value. Only values that actually changed at the parent
 						 * boundary are propagated.
@@ -5279,9 +5296,9 @@
 						token=null;
 						if (keySource) {
 							identity=expression(scope,keySource);
-							if (identity === null || identity === undefined) throw new Error('Elemenx data-key resolved to null/undefined: ' + keySource);
+							if (identity === null || identity === undefined) throw new Error('Elemenx *key resolved to null/undefined: ' + keySource);
 							token=typeof identity + ':' + String(identity);
-							if (used[token]) throw new Error('Elemenx duplicate data-key in data-for: ' + String(identity));
+							if (used[token]) throw new Error('Elemenx duplicate *key in *for: ' + String(identity));
 							used[token]=true;
 							record=keyed[token] || null;
 						}

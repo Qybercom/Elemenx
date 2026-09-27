@@ -73,4 +73,76 @@ describe('Regression: directive syntax', function () {
 		expect(child.Element().textContent).toBe('012');
 		child.Destroy();
 	});
+	test('[(value)], [(checked)] and [(selected)] are consumed and synchronize explicit targets', function () {
+		var name=unique('TwoWaySyntax');
+		var factory=Elemenx.Component(name,{
+			Template:'<div><input class="value" [(value)]="Text"><input class="checked" type="checkbox" [(checked)]="Enabled"><select class="selected" [(selected)]="Choice"><option value="one">One</option><option value="two">Two</option></select></div>'
+		});
+		var child=factory({Text:'A',Enabled:true,Choice:'two'});
+		var root=child.Element();
+		var value=root.querySelector('.value');
+		var checked=root.querySelector('.checked');
+		var selected=root.querySelector('.selected');
+		document.body.appendChild(root);
+
+		expect(value.value).toBe('A');
+		expect(checked.checked).toBe(true);
+		expect(selected.value).toBe('two');
+		expect(value.hasAttribute('[(value)]')).toBe(false);
+		expect(checked.hasAttribute('[(checked)]')).toBe(false);
+		expect(selected.hasAttribute('[(selected)]')).toBe(false);
+
+		value.value='B';
+		value.dispatchEvent(new Event('input',{bubbles:true}));
+		checked.checked=false;
+		checked.dispatchEvent(new Event('change',{bubbles:true}));
+		selected.value='one';
+		selected.dispatchEvent(new Event('change',{bubbles:true}));
+
+		expect(child.State.Text).toBe('B');
+		expect(child.State.Enabled).toBe(false);
+		expect(child.State.Choice).toBe('one');
+
+		child.State.Text='C';
+		child.State.Enabled=true;
+		child.State.Choice='two';
+		expect(value.value).toBe('C');
+		expect(checked.checked).toBe(true);
+		expect(selected.value).toBe('two');
+		child.Destroy();
+	});
+
+	test('explicit two-way bindings use component definition State as their initial reactive source', function () {
+		var name=unique('TwoWayDefinitionState');
+		var factory=Elemenx.Component(name,{
+			Template:'<div><input class="value" [(value)]="Text"><input class="checked" type="checkbox" [(checked)]="Enabled"><select class="selected" [(selected)]="Choice"><option value="one">One</option><option value="two">Two</option></select><span class="state">{{Text}}|{{Enabled}}|{{Choice}}</span></div>',
+			State:{
+				Text:'Initial',
+				Enabled:true,
+				Choice:'two'
+			}
+		});
+		var child=factory();
+		var root=child.Element();
+		var value=root.querySelector('.value');
+		var checked=root.querySelector('.checked');
+		var selected=root.querySelector('.selected');
+		document.body.appendChild(root);
+
+		expect(value.value).toBe('Initial');
+		expect(checked.checked).toBe(true);
+		expect(selected.value).toBe('two');
+		expect(root.querySelector('.state').textContent).toBe('Initial|true|two');
+
+		value.value='Changed';
+		value.dispatchEvent(new Event('input',{bubbles:true}));
+		checked.checked=false;
+		checked.dispatchEvent(new Event('change',{bubbles:true}));
+		selected.value='one';
+		selected.dispatchEvent(new Event('change',{bubbles:true}));
+
+		expect(root.querySelector('.state').textContent).toBe('Changed|false|one');
+		child.Destroy();
+	});
+
 });

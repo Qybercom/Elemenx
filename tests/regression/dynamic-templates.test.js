@@ -183,7 +183,7 @@ describe('Regression: dynamic templates / structural composition', function () {
 		var root=unique('DynamicTemplateDeep');
 		var owner;
 		var hits='';
-		var source='<div><input class="edit" data-model="title"><section *if="outer"><div *if="inner">'+
+		var source='<div><input class="edit" [(value)]="title"><section *if="outer"><div *if="inner">'+
 			'<'+row+' *for="item of items" *key="item.id" id="{{item.id}}" name="{{item.name}}"></'+row+'></div></section></div>';
 		Elemenx.Component(row,{
 			Template:'<button class="deep-row" (click)="Hit">{{name}}</button>',

@@ -58,7 +58,7 @@ describe('Regression: core / lifecycle / structural state', function () {
 	it('keyed reorder preserves surviving DOM identity', async function () {
 		var row = unique('KeyRow'), root = unique('KeyRoot');
 		Elemenx.Component(row, {
-			Template:'<input class="row" data-model="label">'
+			Template:'<input class="row" [(value)]="label">'
 		});
 		Elemenx.Component(root, {
 			Template:'<section><'+row+' *for="item of items" *key="item.id" id="{{item.id}}" label="{{item.label}}"></'+row+'></section>',
@@ -166,7 +166,7 @@ describe('Regression: core / lifecycle / structural state', function () {
 	it('deep keyed/if/model/event lifecycle composition remains coherent', async function () {
 		var row=unique('ComboRow'),root=unique('ComboRoot'),made=0,gone=0;
 		Elemenx.Component(row,{
-			Template:'<div class="combo-row"><input class="combo-input" data-model="label"><button (click)="Remove">x</button><i *if="enabled">{{label}}</i></div>',
+			Template:'<div class="combo-row"><input class="combo-input" [(value)]="label"><button (click)="Remove">x</button><i *if="enabled">{{label}}</i></div>',
 			Remove:function () {this.Emit('remove',{id:this.State.id});},
 			ElemenxOnCreate:function () {made++;},
 			ElemenxOnDestroy:function () {gone++;}
