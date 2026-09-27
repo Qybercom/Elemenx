@@ -780,4 +780,6 @@ describe('Regression: directive syntax', function () {
 		expect(innerDestroyed).toBe(2);
 	});
 
+
+
 });
