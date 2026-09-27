@@ -2881,9 +2881,9 @@
 				 * owner node. Structural() compiles children of Component.Element(),
 				 * so without this host a root *if would be skipped completely.
 				 * Keep the host transparent to layout while allowing the real root to
-				 * participate in the same destroy/recreate path as nested *if.
+				 * participate in the same structural ownership path as nested directives.
 				 */
-				if (root.nodeType === 1 && root.hasAttribute(Runtime.Directive.Name('If'))) {
+				if (root.nodeType === 1 && Runtime.Directive.Find(root,'structural')) {
 					var structuralRoot = document.createElement('span');
 					
 					structuralRoot.style.display = 'contents';

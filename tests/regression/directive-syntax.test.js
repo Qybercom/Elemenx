@@ -500,4 +500,37 @@ describe('Regression: directive syntax', function () {
 		component.Destroy();
 	});
 
+
+	test('component root accepts a custom Structural directive without built-in if knowledge', function () {
+		var directive=unique('rootgate').toLowerCase();
+		var name=unique('RootCustomStructural');
+
+		Elemenx.Directive(directive,{
+			Structural:true,
+			ElemenxOnUpdate:function (context) {
+				if (context.Value)
+					context.Mount();
+				else
+					context.Unmount();
+			}
+		});
+
+		var component=Elemenx.Component(name,{
+			Template:'<section *'+directive+'="Visible"><strong class="root-custom-structural">{{Label}}</strong></section>',
+			Visible:true,
+			Label:'One'
+		})();
+
+		expect(component.Element().querySelector('.root-custom-structural').textContent).toBe('One');
+
+		component.Visible=false;
+		expect(component.Element().querySelector('.root-custom-structural')).toBe(null);
+
+		component.Label='Two';
+		component.Visible=true;
+		expect(component.Element().querySelector('.root-custom-structural').textContent).toBe('Two');
+
+		component.Destroy();
+	});
+
 });
