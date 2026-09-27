@@ -6,7 +6,6 @@ import {createRequire} from 'module';
 
 var require=createRequire(import.meta.url);
 var Generator=require('../../tools/generator.js');
-
 var temporary=[];
 
 function project () {
@@ -26,28 +25,61 @@ afterEach(function () {
 	temporary=[];
 });
 
-describe('Elemenx CLI generator',function () {
-	it('generates a Component and registers it in the application graph',function () {
+describe('Elemenx graph-aware generator',function () {
+	it('registers a root Component directly in application/index.js',function () {
 		var root=project();
 
-		Generator.Generate(root,'component','UserCard',{});
+		Generator.Generate(root,'component','TestComponent',{});
 
-		expect(fs.existsSync(path.join(root,'application','components','UserCard','UserCard.js'))).toBe(true);
-		expect(fs.existsSync(path.join(root,'application','components','UserCard','UserCard.html'))).toBe(true);
-		expect(fs.readFileSync(path.join(root,'application','components','index.js'),'utf8')).toContain("'UserCard/UserCard.js'");
-		expect(fs.readFileSync(path.join(root,'application','index.js'),'utf8')).toContain("'components'");
+		expect(fs.existsSync(path.join(root,'application','TestComponent','TestComponent.js'))).toBe(true);
+		expect(fs.existsSync(path.join(root,'application','TestComponent','TestComponent.html'))).toBe(true);
+		expect(fs.readFileSync(path.join(root,'application','index.js'),'utf8')).toContain("'TestComponent/TestComponent.js'");
 	});
 
-	it('generates Service, Guard and Directive graph entries',function () {
+	it('uses the nearest existing index.js as graph owner',function () {
+		var root=project();
+		var nested=path.join(root,'application','foo','bar','nested');
+		fs.mkdirSync(nested,{recursive:true});
+		fs.writeFileSync(path.join(nested,'index.js'),'[]');
+
+		var result=Generator.Generate(root,'component','foo/bar/nested/TestComponent',{});
+
+		expect(result.Index).toBe(path.join(nested,'index.js'));
+		expect(fs.readFileSync(path.join(nested,'index.js'),'utf8')).toContain("'TestComponent/TestComponent.js'");
+		expect(fs.readFileSync(path.join(root,'application','index.js'),'utf8')).toBe('[]');
+	});
+
+	it('walks upward and registers relative to the nearest ancestor index.js',function () {
+		var root=project();
+		var owner=path.join(root,'application','foo');
+		fs.mkdirSync(path.join(owner,'bar','nested'),{recursive:true});
+		fs.writeFileSync(path.join(owner,'index.js'),'[]');
+
+		Generator.Generate(root,'service','foo/bar/nested/Session',{});
+
+		expect(fs.existsSync(path.join(owner,'bar','nested','Session.js'))).toBe(true);
+		expect(fs.readFileSync(path.join(owner,'index.js'),'utf8')).toContain("'bar/nested/Session.js'");
+	});
+
+	it('supports all entity types without type directories',function () {
 		var root=project();
 
 		Generator.Generate(root,'service','Session',{});
 		Generator.Generate(root,'guard','Authorized',{});
 		Generator.Generate(root,'directive','Tooltip',{});
 
-		expect(fs.readFileSync(path.join(root,'application','services','index.js'),'utf8')).toContain("'Session.js'");
-		expect(fs.readFileSync(path.join(root,'application','guards','index.js'),'utf8')).toContain("'Authorized.js'");
-		expect(fs.readFileSync(path.join(root,'application','directives','index.js'),'utf8')).toContain("'Tooltip.js'");
+		var index=fs.readFileSync(path.join(root,'application','index.js'),'utf8');
+		expect(index).toContain("'Session.js'");
+		expect(index).toContain("'Authorized.js'");
+		expect(index).toContain("'Tooltip.js'");
+	});
+
+	it('refuses destinations outside the application root',function () {
+		var root=project();
+
+		expect(function () {
+			Generator.Generate(root,'service','../Outside',{});
+		}).toThrow(/outside application root/);
 	});
 
 	it('refuses overwrite unless force is used',function () {

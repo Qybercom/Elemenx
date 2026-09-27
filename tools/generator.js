@@ -4,10 +4,10 @@ var fs=require('fs');
 var path=require('path');
 
 var Types={
-	component:{Directory:'components',Label:'Component'},
-	service:{Directory:'services',Label:'Service'},
-	guard:{Directory:'guards',Label:'Guard'},
-	directive:{Directory:'directives',Label:'Directive'}
+	component:{Label:'Component'},
+	service:{Label:'Service'},
+	guard:{Label:'Guard'},
+	directive:{Label:'Directive'}
 };
 
 function fail (message) {
@@ -16,6 +16,10 @@ function fail (message) {
 
 function validName (name) {
 	return /^[A-Za-z_$][A-Za-z0-9_$]*$/.test(name || '');
+}
+
+function normalize (value) {
+	return value.split(path.sep).join('/');
 }
 
 function readIndex (file) {
@@ -97,6 +101,53 @@ function filesFor (type,name) {
 	fail('unknown generator type: ' + type);
 }
 
+function ensureInside (root,target,label) {
+	var relative=path.relative(root,target);
+	if (relative === '..' || relative.indexOf('..' + path.sep) === 0 || path.isAbsolute(relative))
+		fail(label + ' is outside application root: ' + target);
+}
+
+function nearestIndex (application,destination) {
+	var current=destination;
+
+	while (true) {
+		var index=path.join(current,'index.js');
+		if (fs.existsSync(index)) return index;
+		if (current === application) break;
+
+		var parent=path.dirname(current);
+		if (parent === current) break;
+		current=parent;
+	}
+
+	var root=path.join(application,'index.js');
+	if (!fs.existsSync(root)) fail('application graph root not found: ' + root);
+	return root;
+}
+
+function resolveEntity (application,type,target) {
+	var requested=target || '';
+	var absolute=path.resolve(application,requested || '.');
+	var name=path.basename(absolute);
+
+	if (!requested || requested === '.' || requested === path.sep)
+		fail(type + ' destination must include an entity name');
+	if (!validName(name)) fail('invalid ' + type + ' name: ' + name);
+
+	if (type === 'component')
+		return {
+			Name:name,
+			Directory:absolute,
+			Entry:path.join(absolute,name + '.js')
+		};
+
+	return {
+		Name:name,
+		Directory:path.dirname(absolute),
+		Entry:absolute + '.js'
+	};
+}
+
 function ensureWritable (targets,force) {
 	var names=Object.keys(targets);
 	var i=0;
@@ -109,43 +160,37 @@ function ensureWritable (targets,force) {
 	}
 }
 
-function generate (project,type,name,options) {
+function generate (project,type,target,options) {
 	options=options || {};
 	type=String(type || '').toLowerCase();
 
 	if (!Types[type]) fail('unknown generator type: ' + type + '. Expected component, service, guard or directive');
-	if (!validName(name)) fail('invalid ' + type + ' name: ' + (name || ''));
 
-	var applicationName=options.application || 'application';
-	var application=path.join(project,applicationName);
-	var definition=Types[type];
-	var typeDirectory=path.join(application,definition.Directory);
-	var relative;
-	var directory;
-	var generated=filesFor(type,name);
+	var application=path.resolve(project,options.application || 'application');
+	if (!fs.existsSync(application)) fail('application directory not found: ' + application);
+
+	var entity=resolveEntity(application,type,target);
+	ensureInside(application,entity.Directory,'destination');
+	ensureInside(application,entity.Entry,'entity');
+
+	var generated=filesFor(type,entity.Name);
 	var fileNames=Object.keys(generated);
 	var targets={};
 	var i=0;
 
-	if (!fs.existsSync(application)) fail('application directory not found: ' + application);
-
-	if (type === 'component') {
-		directory=path.join(typeDirectory,name);
-		relative=name + '/' + name + '.js';
-	}
-	else {
-		directory=typeDirectory;
-		relative=name + '.js';
-	}
-
 	while (i < fileNames.length) {
-		targets[path.join(directory,fileNames[i])]=generated[fileNames[i]];
+		targets[path.join(entity.Directory,fileNames[i])]=generated[fileNames[i]];
 		i++;
 	}
 
 	ensureWritable(targets,options.force === true);
-	fs.mkdirSync(directory,{recursive:true});
 
+	// Ownership is resolved from the destination directory before creating it:
+	// an existing local index.js wins, otherwise walk upward to the graph root.
+	var owner=nearestIndex(application,entity.Directory);
+	var relative=normalize(path.relative(path.dirname(owner),entity.Entry));
+
+	fs.mkdirSync(entity.Directory,{recursive:true});
 	var targetNames=Object.keys(targets);
 	i=0;
 	while (i < targetNames.length) {
@@ -153,14 +198,17 @@ function generate (project,type,name,options) {
 		i++;
 	}
 
-	addIndexEntry(path.join(typeDirectory,'index.js'),relative);
-	addIndexEntry(path.join(application,'index.js'),definition.Directory);
-
-	process.stdout.write('Elemenx Generator: ' + definition.Label + ' ' + name + '\n');
-	return targetNames;
+	addIndexEntry(owner,relative);
+	process.stdout.write('Elemenx Generator: ' + Types[type].Label + ' ' + entity.Name + ' -> ' + normalize(path.relative(application,entity.Entry)) + '\n');
+	return {
+		Files:targetNames,
+		Index:owner,
+		Entry:relative
+	};
 }
 
 module.exports={
 	Generate:generate,
-	Types:Types
+	Types:Types,
+	NearestIndex:nearestIndex
 };

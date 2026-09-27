@@ -83,3 +83,17 @@ elemenx generate directive Tooltip
 `elemenx g ...` is an alias for `generate`. Components are created in `application/components/<Name>/` with a JavaScript definition and HTML template. Services, guards, and directives are created in their corresponding application directories. Missing type directories and `index.js` files are created automatically and the root `application/index.js` is updated when necessary.
 
 Existing generated files are never overwritten unless `--force` is supplied. Re-running registration does not duplicate graph entries.
+
+## Graph-aware generation
+
+Entity destinations are relative to the configured application root and are not forced into type-specific directories.
+
+```text
+elemenx g component TestComponent
+elemenx g component ./foo/bar/nested/TestComponent
+elemenx g service ./auth/Session
+```
+
+The generator resolves the destination first and then walks upward from that destination looking for the nearest existing `index.js`. That index becomes the graph owner. The generated entity is registered with a path relative to that index. If no nested owner exists, registration falls back to the application root `index.js`.
+
+Components use `<Name>/<Name>.js` plus `<Name>/<Name>.html`. Services, guards and directives use `<Name>.js` at their requested destination. Generated paths may not escape the configured application root.

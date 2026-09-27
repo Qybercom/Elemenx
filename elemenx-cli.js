@@ -89,14 +89,14 @@ function command (name,description,handler) {
 
 command('generate','Generate an application entity and register it in the application graph.',function (parsed) {
 	var type=parsed.Arguments.shift();
-	var name=parsed.Arguments.shift();
+	var target=parsed.Arguments.shift();
 	var project=projectPath(parsed.Arguments.shift());
 	var settings=config(project);
 
-	if (!type || !name)
-		fail('usage: elemenx generate <component|service|guard|directive> <Name> [project] [--force]');
+	if (!type || !target)
+		fail('usage: elemenx generate <component|service|guard|directive> <path/Name> [project] [--force]');
 
-	Generator.Generate(project,type,name,{
+	Generator.Generate(project,type,target,{
 		application:value(parsed.Options,'application',settings.Application,'application'),
 		force:parsed.Options.force === true
 	});
