@@ -132,13 +132,13 @@ describe('Regression: final public API gap contracts', function () {
 		expect(first).not.toBeNull();
 		expect(first.textContent).toBe('A');
 
-		component.State.show=false;
+		component.show=false;
 		await tick();
 		expect(component.Ref('value')).toBeNull();
 		expect(first.isConnected).toBe(false);
 
-		component.State.value='B';
-		component.State.show=true;
+		component.value='B';
+		component.show=true;
 		await tick();
 		var second=component.Ref('value');
 		expect(second).not.toBeNull();

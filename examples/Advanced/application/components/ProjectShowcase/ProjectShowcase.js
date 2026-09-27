@@ -8,11 +8,11 @@ Elemenx.Component('ProjectShowcase', {
 			{name: 'Promote production', ready: false, protected: true}
 		];
 
-		this.State.QueueItem = function (index) {
+		this.QueueItem = function (index) {
 			return queue[index] || null;
 		};
 
-		this.State.Projects = [
+		this.Projects = [
 			{
 				id: 'graphene',
 				name: 'Graphene',

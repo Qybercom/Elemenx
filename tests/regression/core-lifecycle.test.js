@@ -12,7 +12,7 @@ describe('Regression: core / lifecycle / structural state', function () {
 			ElemenxOnCreate:function () {
 				var self = this;
 				made++;
-				this.Ref('B').addEventListener('click', function () { hits++; self.State.x = hits; });
+				this.Ref('B').addEventListener('click', function () { hits++; self.x = hits; });
 			},
 			ElemenxOnDestroy:function () { gone++; }
 		});
@@ -38,16 +38,16 @@ describe('Regression: core / lifecycle / structural state', function () {
 		});
 		Elemenx.Component(root, {
 			Template:'<section><'+child+' *if="show" value="{{value}}"></'+child+'></section>',
-			ElemenxOnCreate:function () { this.State.show = true; this.State.value = 'A'; window.__root = this; }
+			ElemenxOnCreate:function () { this.show = true; this.value = 'A'; window.__root = this; }
 		});
 		var c = Elemenx.Component(root)();
 		document.getElementById('mount').appendChild(c.Element());
 		await tick();
 		expect(document.querySelector('.if-child').textContent).toBe('A');
-		window.__root.State.show = false;
+		window.__root.show = false;
 		await tick();
-		window.__root.State.value = 'B';
-		window.__root.State.show = true;
+		window.__root.value = 'B';
+		window.__root.show = true;
 		await tick();
 		expect(document.querySelector('.if-child').textContent).toBe('B');
 		expect(made).toBe(2);
@@ -63,7 +63,7 @@ describe('Regression: core / lifecycle / structural state', function () {
 		Elemenx.Component(root, {
 			Template:'<section><'+row+' *for="item of items" *key="item.id" id="{{item.id}}" label="{{item.label}}"></'+row+'></section>',
 			ElemenxOnCreate:function () {
-				this.State.items = [{id:'a',label:'A'},{id:'b',label:'B'}];
+				this.items = [{id:'a',label:'A'},{id:'b',label:'B'}];
 				window.__keyRoot = this;
 			}
 		});
@@ -72,7 +72,7 @@ describe('Regression: core / lifecycle / structural state', function () {
 		await tick();
 		var n = document.querySelectorAll('.row'), a = n[0], b = n[1];
 		expect(n.length).toBe(2);
-		window.__keyRoot.State.items = [{id:'b',label:'B2'},{id:'a',label:'A2'}];
+		window.__keyRoot.items = [{id:'b',label:'B2'},{id:'a',label:'A2'}];
 		await tick();
 		n = document.querySelectorAll('.row');
 		expect(n[0]).toBe(b);
@@ -86,7 +86,7 @@ describe('Regression: core / lifecycle / structural state', function () {
 		var root = unique('BatchRoot');
 		Elemenx.Component(root, {
 			Template:'<section><span *if="show" id="batch-value">{{value}}</span></section>',
-			ElemenxOnCreate:function () { this.State.show=false; this.State.value='A'; window.__batchRoot=this; }
+			ElemenxOnCreate:function () { this.show=false; this.value='A'; window.__batchRoot=this; }
 		});
 		var c=Elemenx.Component(root)();
 		document.getElementById('mount').appendChild(c.Element());
@@ -99,7 +99,7 @@ describe('Regression: core / lifecycle / structural state', function () {
 	it('parent Destroy recursively destroys structural descendants', async function () {
 		var child=unique('DeepChild'), root=unique('DeepRoot'), gone=0;
 		Elemenx.Component(child,{Template:'<i class="deep-child">{{label}}</i>',ElemenxOnDestroy:function () {gone++;}});
-		Elemenx.Component(root,{Template:'<div><'+child+' *for="item of items" *key="item.id" id="{{item.id}}" label="{{item.label}}"></'+child+'></div>',ElemenxOnCreate:function () {this.State.items=[{id:1,label:'A'},{id:2,label:'B'}];}});
+		Elemenx.Component(root,{Template:'<div><'+child+' *for="item of items" *key="item.id" id="{{item.id}}" label="{{item.label}}"></'+child+'></div>',ElemenxOnCreate:function () {this.items=[{id:1,label:'A'},{id:2,label:'B'}];}});
 		var c=Elemenx.Component(root)();
 		document.getElementById('mount').appendChild(c.Element());
 		await tick();
@@ -113,18 +113,18 @@ describe('Regression: core / lifecycle / structural state', function () {
 		var row=unique('ChurnRow'),root=unique('ChurnRoot'),made=0,gone=0,instances={};
 		Elemenx.Component(row,{
 			Template:'<span class="churn-row">{{label}}</span>',
-			ElemenxOnCreate:function () {made++;instances[this.State.id]=this;},
+			ElemenxOnCreate:function () {made++;instances[this.id]=this;},
 			ElemenxOnDestroy:function () {gone++;}
 		});
 		Elemenx.Component(root,{
 			Template:'<div><'+row+' *for="item of items" *key="item.id" id="{{item.id}}" label="{{item.label}}"></'+row+'></div>',
-			ElemenxOnCreate:function () {this.State.items=[{id:'a',label:'A'},{id:'b',label:'B'},{id:'c',label:'C'}];window.__churn=this;}
+			ElemenxOnCreate:function () {this.items=[{id:'a',label:'A'},{id:'b',label:'B'},{id:'c',label:'C'}];window.__churn=this;}
 		});
 		var c=Elemenx.Component(root)();
 		document.getElementById('mount').appendChild(c.Element());
 		await tick();
 		var a=instances.a,c0=instances.c;
-		window.__churn.State.items=[{id:'c',label:'C2'},{id:'a',label:'A2'},{id:'d',label:'D'}];
+		window.__churn.items=[{id:'c',label:'C2'},{id:'a',label:'A2'},{id:'d',label:'D'}];
 		await tick();
 		expect(instances.a).toBe(a);
 		expect(instances.c).toBe(c0);
@@ -139,23 +139,23 @@ describe('Regression: core / lifecycle / structural state', function () {
 		var child=unique('IsoChild'),root=unique('IsoRoot'),made=0,last=null;
 		Elemenx.Component(child,{
 			Template:'<div class="iso-child">{{value}}/{{local}}</div>',
-			ElemenxOnCreate:function () {made++;this.State.local='L'+made;last=this;}
+			ElemenxOnCreate:function () {made++;this.local='L'+made;last=this;}
 		});
 		Elemenx.Component(root,{
 			Template:'<section><'+child+' *if="show" value="{{value}}"></'+child+'><b id="iso-parent">{{value}}</b></section>',
-			ElemenxOnCreate:function () {this.State.show=true;this.State.value='P1';window.__iso=this;}
+			ElemenxOnCreate:function () {this.show=true;this.value='P1';window.__iso=this;}
 		});
 		var c=Elemenx.Component(root)();
 		document.getElementById('mount').appendChild(c.Element());
 		await tick();
 		var first=last;
-		first.State.value='CHILD';
+		first.value='CHILD';
 		await tick();
 		expect(document.getElementById('iso-parent').textContent).toBe('P1');
-		window.__iso.State.show=false;
+		window.__iso.show=false;
 		await tick();
-		window.__iso.State.value='P2';
-		window.__iso.State.show=true;
+		window.__iso.value='P2';
+		window.__iso.show=true;
 		await tick();
 		expect(last).not.toBe(first);
 		expect(document.querySelector('.iso-child').textContent).toBe('P2/L2');
@@ -167,14 +167,14 @@ describe('Regression: core / lifecycle / structural state', function () {
 		var row=unique('ComboRow'),root=unique('ComboRoot'),made=0,gone=0;
 		Elemenx.Component(row,{
 			Template:'<div class="combo-row"><input class="combo-input" [(value)]="label"><button (click)="Remove">x</button><i *if="enabled">{{label}}</i></div>',
-			Remove:function () {this.Emit('remove',{id:this.State.id});},
+			Remove:function () {this.Emit('remove',{id:this.id});},
 			ElemenxOnCreate:function () {made++;},
 			ElemenxOnDestroy:function () {gone++;}
 		});
 		Elemenx.Component(root,{
 			Template:'<section><'+row+' *for="item of items" *key="item.id" id="{{item.id}}" label="{{item.label}}" enabled="{{item.enabled}}" (remove)="Remove"></'+row+'></section>',
-			ElemenxOnCreate:function () {this.State.items=[{id:'a',label:'A',enabled:true},{id:'b',label:'B',enabled:false}];window.__combo=this;},
-			Remove:function (e) {var next=[],i=0;while (i<this.State.items.length) {if (this.State.items[i].id!==e.id)next.push(this.State.items[i]);i++;}this.State.items=next;}
+			ElemenxOnCreate:function () {this.items=[{id:'a',label:'A',enabled:true},{id:'b',label:'B',enabled:false}];window.__combo=this;},
+			Remove:function (e) {var next=[],i=0;while (i<this.items.length) {if (this.items[i].id!==e.id)next.push(this.items[i]);i++;}this.items=next;}
 		});
 		var c=Elemenx.Component(root)();
 		document.getElementById('mount').appendChild(c.Element());
@@ -183,7 +183,7 @@ describe('Regression: core / lifecycle / structural state', function () {
 		b.value='B2';
 		b.dispatchEvent(new Event('input',{bubbles:true}));
 		expect(b.value).toBe('B2');
-		window.__combo.State.items[1].enabled=true;
+		window.__combo.items[1].enabled=true;
 		await tick();
 		expect(document.querySelectorAll('.combo-row i').length).toBe(2);
 		document.querySelector('.combo-row button').click();

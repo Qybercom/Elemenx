@@ -9,7 +9,7 @@ describe('Regression: dynamic templates / structural composition', function () {
 		var name=unique('DynamicTemplateBasic'), source='<section class="remote">{{message}}</section>';
 		Elemenx.Component(name,{
 			Template:function () { return source; },
-			ElemenxOnCreate:function (data) { this.State.message=data.message; }
+			ElemenxOnCreate:function (data) { this.message=data.message; }
 		});
 		var factory=Elemenx.Component(name), a=factory({message:'A'}), b=factory({message:'B'}), mount=document.getElementById('mount');
 		mount.appendChild(a.Element());
@@ -19,7 +19,7 @@ describe('Regression: dynamic templates / structural composition', function () {
 		expect(nodes.length).toBe(2);
 		expect(nodes[0].textContent).toBe('A');
 		expect(nodes[1].textContent).toBe('B');
-		a.State.message='A2';
+		a.message='A2';
 		await tick();
 		expect(nodes[0].textContent).toBe('A2');
 		expect(nodes[1].textContent).toBe('B');
@@ -33,26 +33,26 @@ describe('Regression: dynamic templates / structural composition', function () {
 			Template:function () { return source; },
 			ElemenxOnCreate:function () {
 				owner=this;
-				this.State.outer=true;
-				this.State.inner=true;
-				this.State.text='A';
+				this.outer=true;
+				this.inner=true;
+				this.text='A';
 			}
 		});
 		var c=Elemenx.Component(name)({});
 		document.getElementById('mount').appendChild(c.Element());
 		await tick();
 		expect(document.querySelector('.leaf').textContent).toBe('A');
-		owner.State.inner=false;
+		owner.inner=false;
 		await tick();
 		expect(document.querySelector('.leaf')).toBeNull();
-		owner.State.inner=true;
-		owner.State.text='B';
+		owner.inner=true;
+		owner.text='B';
 		await tick();
 		expect(document.querySelector('.leaf').textContent).toBe('B');
-		owner.State.outer=false;
+		owner.outer=false;
 		await tick();
 		expect(document.querySelector('.leaf')).toBeNull();
-		owner.State.outer=true;
+		owner.outer=true;
 		await tick();
 		expect(document.querySelector('.leaf').textContent).toBe('B');
 		c.Destroy();
@@ -62,20 +62,20 @@ describe('Regression: dynamic templates / structural composition', function () {
 		var row=unique('DynamicTemplateRow'), root=unique('DynamicTemplateEach'), owner, hits='', source='<div><'+row+' *for="item of items" *key="item.id" id="{{item.id}}" name="{{item.name}}"></'+row+'></div>';
 		Elemenx.Component(row,{
 			Template:'<button class="row" (click)="Hit">{{name}}</button>',
-			Hit:function () { hits+=this.State.name; }
+			Hit:function () { hits+=this.name; }
 		});
 		Elemenx.Component(root,{
 			Template:function () { return source; },
 			ElemenxOnCreate:function () {
 				owner=this;
-				this.State.items=[{id:1,name:'A'},{id:2,name:'B'},{id:3,name:'C'}];
+				this.items=[{id:1,name:'A'},{id:2,name:'B'},{id:3,name:'C'}];
 			}
 		});
 		var c=Elemenx.Component(root)({});
 		document.getElementById('mount').appendChild(c.Element());
 		await tick();
 		var nodes=document.querySelectorAll('.row'), a=nodes[0], cc=nodes[2];
-		owner.State.items=[{id:3,name:'C2'},{id:4,name:'D'},{id:1,name:'A2'}];
+		owner.items=[{id:3,name:'C2'},{id:4,name:'D'},{id:1,name:'A2'}];
 		await tick();
 		nodes=document.querySelectorAll('.row');
 		expect(nodes.length).toBe(3);
@@ -100,19 +100,19 @@ describe('Regression: dynamic templates / structural composition', function () {
 			Template:function () { return source; },
 			ElemenxOnCreate:function () {
 				owner=this;
-				this.State.show=true;
-				this.State.items=[{id:1,name:'A'},{id:2,name:'B'}];
+				this.show=true;
+				this.items=[{id:1,name:'A'},{id:2,name:'B'}];
 			}
 		});
 		var c=Elemenx.Component(root)({});
 		document.getElementById('mount').appendChild(c.Element());
 		await tick();
 		expect(document.querySelectorAll('.cell').length).toBe(2);
-		owner.State.show=false;
+		owner.show=false;
 		await tick();
 		expect(document.querySelectorAll('.cell').length).toBe(0);
-		owner.State.items=[{id:2,name:'B2'},{id:3,name:'C'}];
-		owner.State.show=true;
+		owner.items=[{id:2,name:'B2'},{id:3,name:'C'}];
+		owner.show=true;
 		await tick();
 		var nodes=document.querySelectorAll('.cell');
 		expect(nodes.length).toBe(2);
@@ -127,7 +127,7 @@ describe('Regression: dynamic templates / structural composition', function () {
 		var name=unique('DynamicTemplateDead'), made=0, gone=0, hits=0, source='<button class="dead" (click)="Hit">{{text}}</button>';
 		Elemenx.Component(name,{
 			Template:function () { return source; },
-			ElemenxOnCreate:function (data) { made++; this.State.text=data.text; },
+			ElemenxOnCreate:function (data) { made++; this.text=data.text; },
 			ElemenxOnDestroy:function () { gone++; },
 			Hit:function () { hits++; }
 		});
@@ -157,8 +157,8 @@ describe('Regression: dynamic templates / structural composition', function () {
 			Template:function () { return source; },
 			ElemenxOnCreate:function () {
 				owner=this;
-				this.State.show=true;
-				this.State.text='A';
+				this.show=true;
+				this.text='A';
 			}
 		});
 		var c=Elemenx.Component(root)({});
@@ -166,11 +166,11 @@ describe('Regression: dynamic templates / structural composition', function () {
 		await tick();
 		var projected=document.querySelector('.projected');
 		expect(projected.closest('.box')).not.toBeNull();
-		owner.State.show=false;
+		owner.show=false;
 		await tick();
 		expect(document.querySelector('.projected')).toBeNull();
-		owner.State.text='B';
-		owner.State.show=true;
+		owner.text='B';
+		owner.show=true;
 		await tick();
 		projected=document.querySelector('.projected');
 		expect(projected).not.toBeNull();
@@ -187,16 +187,16 @@ describe('Regression: dynamic templates / structural composition', function () {
 			'<'+row+' *for="item of items" *key="item.id" id="{{item.id}}" name="{{item.name}}"></'+row+'></div></section></div>';
 		Elemenx.Component(row,{
 			Template:'<button class="deep-row" (click)="Hit">{{name}}</button>',
-			Hit:function () { hits+=this.State.name; }
+			Hit:function () { hits+=this.name; }
 		});
 		Elemenx.Component(root,{
 			Template:function () { return source; },
 			ElemenxOnCreate:function () {
 				owner=this;
-				this.State.title='T';
-				this.State.outer=true;
-				this.State.inner=true;
-				this.State.items=[{id:1,name:'A'},{id:2,name:'B'}];
+				this.title='T';
+				this.outer=true;
+				this.inner=true;
+				this.items=[{id:1,name:'A'},{id:2,name:'B'}];
 			}
 		});
 		var c=Elemenx.Component(root)({});
@@ -207,17 +207,17 @@ describe('Regression: dynamic templates / structural composition', function () {
 		input.value='T2';
 		input.dispatchEvent(new Event('input',{bubbles:true}));
 		await tick();
-		expect(owner.State.title).toBe('T2');
+		expect(owner.title).toBe('T2');
 		var rows=document.querySelectorAll('.deep-row'), a=rows[0];
-		owner.State.items=[{id:2,name:'B2'},{id:1,name:'A2'}];
+		owner.items=[{id:2,name:'B2'},{id:1,name:'A2'}];
 		await tick();
 		rows=document.querySelectorAll('.deep-row');
 		expect(rows[1]).toBe(a);
 		rows[1].click();
-		owner.State.inner=false;
+		owner.inner=false;
 		await tick();
 		expect(document.querySelectorAll('.deep-row').length).toBe(0);
-		owner.State.inner=true;
+		owner.inner=true;
 		await tick();
 		rows=document.querySelectorAll('.deep-row');
 		expect(rows.length).toBe(2);

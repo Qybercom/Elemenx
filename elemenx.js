@@ -1494,8 +1494,51 @@
 		Elemenx.Directive = Runtime.Directive;
 		
 		var componentRegistry = {};
+		var componentDefinitionReserved = {
+			Template: true,
+			TemplateID: true,
+			TemplateURL: true,
+			Style: true,
+			StyleURL: true,
+			Title: true,
+			Components: true,
+			ElemenxDefinitionURL: true,
+			ElemenxStyleKey: true,
+			ElemenxOnCreate: true,
+			ElemenxOnComponentReady: true,
+			ElemenxOnComponentPending: true,
+			ElemenxOnComponentError: true,
+			ElemenxOnDestroy: true
+		};
+		var componentAPIReserved = {
+			Generation: true,
+			Application: true,
+			Element: true,
+			Ref: true,
+			On: true,
+			Emit: true,
+			Parent: true,
+			Router: true,
+			Service: true,
+			Title: true,
+			Batch: true,
+			Update: true,
+			Destroy: true,
+			Network: true,
+			Storage: true,
+			WebWorker: true,
+			ServiceWorker: true,
+			Messaging: true,
+			Path: true,
+			Params: true,
+			Query: true,
+			Hash: true
+		};
+		var componentRouteContext = {Path:true, Params:true, Query:true, Hash:true};
 		var componentGenerations = {};
 		var componentOutlets = new WeakMap();
+		var componentValues = new WeakMap();
+		var componentRouteUpdaters = new WeakMap();
 		var templateResources = {};
 		var templatePending = {};
 		var templateRevision = 0;
@@ -2600,6 +2643,20 @@
 			
 			function factory (data, slotProjection, options) {
 				var directState = options && options.DirectState === true;
+				var definitionValues = {};
+				var definitionKey;
+				
+				if (!directState) {
+					for (definitionKey in definition) {
+						if (
+							own(definition, definitionKey) &&
+							!componentDefinitionReserved[definitionKey] &&
+							typeof definition[definitionKey] !== 'function'
+						) {
+							definitionValues[definitionKey] = definition[definitionKey];
+						}
+					}
+				}
 				var root = createFragment(resolveTemplate(definition.Template));
 				
 				/*
@@ -2633,7 +2690,12 @@
 				var models = [];
 				var values = directState
 					? (data && data.__raw__ ? data : Runtime.Reactive(data || {}))
-					: Runtime.Reactive({});
+					: Runtime.Reactive(
+						options && options.RoutePacket
+							? {Path: '', Params: {}, Query: {}, Hash: ''}
+							: {}
+					);
+				var routeContextReady = false;
 				var effects = [];
 				var children = [];
 				var listeners = [];
@@ -2876,6 +2938,17 @@
 					}
 				}
 				
+				function updateRouteContext (packet) {
+					if (!packet) return;
+					Runtime.BatchReactive(function () {
+						values.Path=packet.Path;
+						values.Params=packet.Params;
+						values.Query=packet.Query;
+						values.Hash=packet.Hash;
+						routeContextReady=true;
+					});
+				}
+
 				function Update (next) {
 					var key;
 					
@@ -2883,8 +2956,12 @@
 					
 					Runtime.BatchReactive(function () {
 						for (key in next) {
-							if (own(next, key))
+							if (own(next, key)) {
+								if (!directState && componentAPIReserved[key])
+									throw new Error('Elemenx component value conflicts with Component API: ' + key);
+								
 								values[key] = next[key];
+							}
 						}
 					});
 					
@@ -3026,11 +3103,38 @@
 					Router: Router,
 					Service: Runtime.Service,
 					Title: Elemenx.Title,
-					State: values,
 					Batch: Batch,
 					Update: Update,
 					Destroy: Destroy
 				};
+
+				if (!directState) {
+					api = new Proxy(api, {
+						get: function (target, key) {
+							if (componentRouteContext[key])
+								return routeContextReady ? values[key] : undefined;
+
+							if (key in target)
+								return target[key];
+
+							return values[key];
+						},
+						set: function (target, key, value) {
+							if (componentAPIReserved[key] || key in target) {
+								target[key] = value;
+
+								return true;
+							}
+
+							values[key] = value;
+
+							return true;
+						},
+						has: function (target, key) {
+							return key in target || key in values;
+						}
+					});
+				}
 				
 				api.Network = Runtime.NetworkFor ? Runtime.NetworkFor(api) : Elemenx.Network;
 				api.Storage = Runtime.StorageFor ? Runtime.StorageFor(api) : Elemenx.Storage;
@@ -3043,6 +3147,8 @@
 				api.Messaging = Runtime.MessagingFor ? Runtime.MessagingFor(api) : Elemenx.Messaging;
 				
 				componentOutlets.set(api, outlets);
+				componentValues.set(api, values);
+				componentRouteUpdaters.set(api, updateRouteContext);
 				
 				if (Runtime.ActiveRouter)
 					Runtime.AttachRouter(api, Runtime.ActiveRouter);
@@ -3072,7 +3178,7 @@
 				 * Models must bind before semantic DOM events.
 				 *
 				 * For controls where both [(checked)] and (change) listen to
-				 * the same native event (checkbox/radio), State must be updated
+				 * the same native event (checkbox/radio), component value must be updated
 				 * before the component method reads it.
 				 */
 				activateBindings(bindings, values, effects);
@@ -3092,11 +3198,16 @@
 				 * Update before ElemenxOnCreate, preserving the existing child lifecycle.
 				 */
 				
-				if (!directState && definition.State && typeof definition.State === 'object') {
-					Update(definition.State);
+				if (!directState && Object.keys(definitionValues).length) {
+					Update(definitionValues);
 				}
 				
-				if (!directState && data && Object.keys(data).length) {
+				if (
+					!directState &&
+					data &&
+					Object.keys(data).length &&
+					!(options && options.RoutePacket === data)
+				) {
 					Update(data);
 				}
 				
@@ -3126,7 +3237,7 @@
 				/*
 				 * Native controls have stateful DOM properties (checked/value).
 				 * Do one final bootstrap synchronization after Create() and the
-				 * structural pass so initial State is authoritative as well as
+				 * structural pass so initial component values are authoritative as well as
 				 * subsequent Proxy updates.
 				 */
 				syncModels();
@@ -3136,12 +3247,8 @@
 				 * completed, but before ComponentReady. This keeps ElemenxOnCreate about
 				 * the component itself while Ready may safely consume route state.
 				 */
-				if (options && options.RoutePacket) {
-					api.Path = options.RoutePacket.Path;
-					api.Params = options.RoutePacket.Params;
-					api.Query = options.RoutePacket.Query;
-					api.Hash = options.RoutePacket.Hash;
-				}
+				if (options && options.RoutePacket)
+					updateRouteContext(options.RoutePacket);
 				
 				if (options && options.GuardFailure)
 					api.GuardFailure = options.GuardFailure;
@@ -3241,6 +3348,14 @@
 				if (callback)
 					callback(error);
 			});
+		};
+		
+		Runtime.ComponentValues = function (component) {
+			return componentValues.get(component) || null;
+		};
+		Runtime.UpdateComponentRouteContext = function (component, packet) {
+			var update=componentRouteUpdaters.get(component);
+			if (update) update(packet);
 		};
 		
 		Runtime.CreateComponent = function (definition) {
@@ -3707,7 +3822,7 @@
 					}
 
 					waitingComponent = Runtime.WithRouter(api, function () {
-						return factory(prepared.Packet, null, {Application: application()});
+						return factory(prepared.Packet, null, {Application: application(), RoutePacket: prepared.Packet});
 					});
 
 					Runtime.AttachRouter(waitingComponent, api);
@@ -3985,8 +4100,7 @@
 				var i = 0;
 				
 				while (common > 0 && i < common) {
-					active[i].Component.Update(packet);
-					
+					Runtime.UpdateComponentRouteContext(active[i].Component, packet);
 					i++;
 				}
 				
@@ -4818,7 +4932,7 @@
 					compileProjection(projected);
 				
 				var effect = Runtime.Effect(function () {
-					var data = component.State;
+					var data = Runtime.ComponentValues(component);
 					var visible = condition ? expression(data, condition) : true;
 					var childProps;
 					
@@ -5016,7 +5130,7 @@
 				);
 				
 				effect = Runtime.Effect(function () {
-					var data = component.State;
+					var data = Runtime.ComponentValues(component);
 					var list = expression(data, field) || [];
 					
 					/*
@@ -5162,9 +5276,10 @@
 					var result={};
 					var name;
 					
-					for (name in component.State)
-						if (own(component.State,name))
-							result[name]=component.State[name];
+					var values = Runtime.ComponentValues(component);
+					for (name in values)
+						if (own(values,name))
+							result[name]=values[name];
 					
 					/*
 					 * Classic *for conditions are evaluated before an iteration
@@ -5346,7 +5461,7 @@
 				parent.removeChild(node);
 				
 				var conditionEffect = Runtime.Effect(function () {
-					var data = component.State;
+					var data = Runtime.ComponentValues(component);
 					
 					if (!expression(data, field)) {
 						if (child)

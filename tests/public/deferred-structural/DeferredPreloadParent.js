@@ -1,7 +1,7 @@
 Elemenx.Component('DeferredPreloadParent', {
 	Template: '<div><DeferredPreloadChild *for="item of items" *key="item.id" id="{{item.id}}" name="{{item.name}}"></DeferredPreloadChild></div>',
 	ElemenxOnCreate: function () {
-		this.State.items = [
+		this.items = [
 			{id: 1, name: 'A'},
 			{id: 2, name: 'B'}
 		];

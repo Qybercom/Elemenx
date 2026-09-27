@@ -1,4 +1,5 @@
 import {describe, expect, test, beforeEach} from 'vitest';
+import { tick } from '../setup.js';
 import '../../elemenx.js';
 
 var serial=0;
@@ -48,10 +49,10 @@ describe('Regression: directive syntax', function () {
 		var name=unique('ConsumedSyntax');
 		var hits=0;
 		var factory=Elemenx.Component(name,{
-			Template:'<button [title]="Title" (click)="Hit">hit</button>',
+			Template:'<button [title]="Tooltip" (click)="Hit">hit</button>',
 			Hit:function () { hits++; }
 		});
-		var child=factory({Title:'hello'});
+		var child=factory({Tooltip:'hello'});
 		document.body.appendChild(child.Element());
 
 		expect(child.Element().title).toBe('hello');
@@ -99,28 +100,26 @@ describe('Regression: directive syntax', function () {
 		selected.value='one';
 		selected.dispatchEvent(new Event('change',{bubbles:true}));
 
-		expect(child.State.Text).toBe('B');
-		expect(child.State.Enabled).toBe(false);
-		expect(child.State.Choice).toBe('one');
+		expect(child.Text).toBe('B');
+		expect(child.Enabled).toBe(false);
+		expect(child.Choice).toBe('one');
 
-		child.State.Text='C';
-		child.State.Enabled=true;
-		child.State.Choice='two';
+		child.Text='C';
+		child.Enabled=true;
+		child.Choice='two';
 		expect(value.value).toBe('C');
 		expect(checked.checked).toBe(true);
 		expect(selected.value).toBe('two');
 		child.Destroy();
 	});
 
-	test('explicit two-way bindings use component definition State as their initial reactive source', function () {
+	test('explicit two-way bindings use flat component definition values as their initial reactive source', function () {
 		var name=unique('TwoWayDefinitionState');
 		var factory=Elemenx.Component(name,{
 			Template:'<div><input class="value" [(value)]="Text"><input class="checked" type="checkbox" [(checked)]="Enabled"><select class="selected" [(selected)]="Choice"><option value="one">One</option><option value="two">Two</option></select><span class="state">{{Text}}|{{Enabled}}|{{Choice}}</span></div>',
-			State:{
-				Text:'Initial',
-				Enabled:true,
-				Choice:'two'
-			}
+			Text:'Initial',
+			Enabled:true,
+			Choice:'two'
 		});
 		var child=factory();
 		var root=child.Element();
@@ -169,6 +168,54 @@ describe('Regression: directive syntax', function () {
 		expect(component.Element().hasAttribute('data-ui-structural-root')).toBe(false);
 		expect(component.Element().querySelector('[data-ui-structural-root]')).toBeNull();
 		component.Destroy();
+	});
+
+	test('component definition values are reactive flat instance properties without public State', async function () {
+		var name=unique('FlatComponentValues');
+		var factory=Elemenx.Component(name,{
+			Template:'<button (click)="Increment">{{Count}} / {{Label}}</button>',
+			Count:1,
+			Label:'Ready',
+			Increment:function () {
+				this.Count++;
+				this.Label='Changed';
+			}
+		});
+		var component=factory();
+
+		expect(component.State).toBeUndefined();
+		expect(component.Count).toBe(1);
+		expect(component.Label).toBe('Ready');
+		component.Element().click();
+		await tick();
+		expect(component.Count).toBe(2);
+		expect(component.Label).toBe('Changed');
+		expect(component.Element().textContent).toBe('2 / Changed');
+		component.Destroy();
+	});
+
+	test('incoming component values override flat definition defaults and stay reactive', async function () {
+		var name=unique('FlatComponentProps');
+		var factory=Elemenx.Component(name,{
+			Template:'<span>{{Value}} / {{Extra}}</span>',
+			Value:'default'
+		});
+		var component=factory({Value:'prop',Extra:'extra'});
+
+		expect(component.Value).toBe('prop');
+		expect(component.Extra).toBe('extra');
+		component.Extra='changed';
+		await tick();
+		expect(component.Element().textContent).toBe('prop / changed');
+		component.Destroy();
+	});
+
+	test('component values cannot shadow the Component API', function () {
+		var name=unique('FlatComponentCollision');
+		var factory=Elemenx.Component(name,{Template:'<div></div>'});
+		expect(function () {
+			factory({Router:'value'});
+		}).toThrow(/conflicts with Component API: Router/);
 	});
 
 });

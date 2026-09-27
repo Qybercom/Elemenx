@@ -54,7 +54,7 @@ describe('Regression: self-closing components / data-for', function () {
 
 	it('*for supports for..of and nested structural conditions', function () {
 		var root=unique('ForOfRoot');
-		Elemenx.Component(root,{Template:'<section><div class="for-of-row" *for="item of Items"><span>{{$index}}:{{item.name}}</span><b *if="item.hot">HOT</b></div></section>',ElemenxOnCreate:function () { this.State.Items=[{name:'A',hot:false},{name:'B',hot:true},{name:'C',hot:false}]; }});
+		Elemenx.Component(root,{Template:'<section><div class="for-of-row" *for="item of Items"><span>{{$index}}:{{item.name}}</span><b *if="item.hot">HOT</b></div></section>',ElemenxOnCreate:function () { this.Items=[{name:'A',hot:false},{name:'B',hot:true},{name:'C',hot:false}]; }});
 		var c=Elemenx.Component(root)();
 		document.getElementById('mount').appendChild(c.Element());
 		var rows=document.querySelectorAll('.for-of-row');
@@ -67,7 +67,7 @@ describe('Regression: self-closing components / data-for', function () {
 
 	it('*for supports for..in', function () {
 		var root=unique('ForInRoot');
-		Elemenx.Component(root,{Template:'<section><span class="for-in-row" *for="key in Values">{{key}}={{Values[key]}}</span></section>',ElemenxOnCreate:function () { this.State.Values={a:1,b:2}; }});
+		Elemenx.Component(root,{Template:'<section><span class="for-in-row" *for="key in Values">{{key}}={{Values[key]}}</span></section>',ElemenxOnCreate:function () { this.Values={a:1,b:2}; }});
 		var c=Elemenx.Component(root)();
 		document.getElementById('mount').appendChild(c.Element());
 		expect(Array.prototype.map.call(document.querySelectorAll('.for-in-row'),function (row) { return row.textContent; })).toEqual(['a=1','b=2']);
@@ -76,12 +76,12 @@ describe('Regression: self-closing components / data-for', function () {
 
 	it('*key preserves identity and reorders retained data-for instances', function () {
 		var root=unique('KeyedForRoot');
-		Elemenx.Component(root,{Template:'<section><button class="keyed-row" *for="item of Items" *key="item.id">{{item.id}}</button></section>',ElemenxOnCreate:function () { this.State.Items=[{id:'a'},{id:'b'},{id:'c'}]; }});
+		Elemenx.Component(root,{Template:'<section><button class="keyed-row" *for="item of Items" *key="item.id">{{item.id}}</button></section>',ElemenxOnCreate:function () { this.Items=[{id:'a'},{id:'b'},{id:'c'}]; }});
 		var c=Elemenx.Component(root)();
 		document.getElementById('mount').appendChild(c.Element());
 		var before=document.querySelectorAll('.keyed-row');
 		var a=before[0],b=before[1],cNode=before[2];
-		c.State.Items=[{id:'c'},{id:'a'},{id:'b'}];
+		c.Items=[{id:'c'},{id:'a'},{id:'b'}];
 		var after=document.querySelectorAll('.keyed-row');
 		expect(after[0]).toBe(cNode);
 		expect(after[1]).toBe(a);

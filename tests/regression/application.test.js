@@ -155,7 +155,7 @@ describe('Regression: Application public facade and ownership', function () {
 
 		expect(a.Component().Application()).toBe(a);
 		expect(b.Component().Application()).toBe(b);
-		a.Component().State.value='A2';
+		a.Component().value='A2';
 		await tick();
 		expect(document.querySelector('.application-a').textContent).toBe('A2');
 		expect(document.querySelector('.application-b').textContent).toBe('B');

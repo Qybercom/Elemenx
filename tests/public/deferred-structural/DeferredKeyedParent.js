@@ -1,5 +1,5 @@
 Elemenx.Component('DeferredKeyedParent', {
-	Template: '<section><div *if="show"><DeferredKeyedChild *for="item of items" *key="item.id" id="{{item.id}}" name="{{item.name}}"></DeferredKeyedChild></div></section>',ElemenxOnCreate:function (data) {this.State.show = true;
-		this.State.items = data.items || [];
+	Template: '<section><div *if="show"><DeferredKeyedChild *for="item of items" *key="item.id" id="{{item.id}}" name="{{item.name}}"></DeferredKeyedChild></div></section>',ElemenxOnCreate:function (data) {this.show = true;
+		this.items = data.items || [];
 	}
 });

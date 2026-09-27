@@ -2,11 +2,9 @@ Elemenx.Component('HomePage', {
 	TemplateURL: 'HomePage.html',
 	Title: 'Home - Elemenx',
 
-	State: {
-		BindingValue: 'Elemenx',
-		BindingChecked: true,
-		BindingSelected: 'staging'
-	},
+	BindingValue: 'Elemenx',
+	BindingChecked: true,
+	BindingSelected: 'staging',
 
 	ElemenxOnCreate: function () {
 		var component = this;
