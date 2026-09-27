@@ -1,4 +1,11 @@
-<div class="service-badge">
+<div
+	class="service-badge"
+	[class]="BadgeClasses"
+	[class.offline]="!online"
+	[style]="BadgeStyle"
+	[style.--service-opacity]="online ? 1 : 0.65"
+	[property.title]="online ? 'Service online' : 'Service offline'"
+	[attribute.aria-label]="name + (online ? ' online' : ' offline')">
 	<div class="service-copy">
 		<strong>{{name}}</strong>
 
