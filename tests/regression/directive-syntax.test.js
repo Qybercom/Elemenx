@@ -821,4 +821,23 @@ describe('Regression: directive syntax', function () {
 		component.Destroy();
 	});
 
+
+	test('Component [prop] survives DOM binding collection before structural compilation', function () {
+		var childName=unique('BoundaryExpressionChild');
+		var parentName=unique('BoundaryExpressionParent');
+
+		Elemenx.Component(childName,{
+			Template:'<div class="boundary-expression-child">{{value}}</div>',
+			value:''
+		});
+
+		var parent=Elemenx.Component(parentName,{
+			Template:'<section><'+childName+' [value]="Source"></'+childName+'></section>',
+			Source:'preserved'
+		})();
+
+		expect(parent.Element().querySelector('.boundary-expression-child').textContent).toBe('preserved');
+		parent.Destroy();
+	});
+
 });

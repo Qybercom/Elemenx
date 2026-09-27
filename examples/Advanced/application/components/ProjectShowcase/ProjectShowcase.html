@@ -8,7 +8,7 @@
 	</div>
 
 	<div class="project-showcase">
-		<ProjectCard *for="project of Projects" *key="project.id" name="{{project.name}}" description="{{project.description}}" Environments="{{project.Environments}}" />
+		<ProjectCard *for="project of Projects" *key="project.id" [name]="project.name" [description]="project.description" [environments]="project.Environments" />
 	</div>
 
 	<div class="iterator-showcase">
@@ -36,7 +36,7 @@
 
 		<div class="iterator-list">
 			<div *for="i = 0; item = QueueItem(i); i++">
-				<IteratorBadge item="{{item}}" index="{{i}}" />
+				<IteratorBadge [item]="item" [index]="i" />
 			</div>
 		</div>
 	</div>

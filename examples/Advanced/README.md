@@ -34,7 +34,7 @@ The Home page also demonstrates structural composition. Component tags without p
 
 ```html
 <div *for="item = QueueItem($index)">
-	<IteratorBadge item="{{item}}" index="{{$index}}" />
+	<IteratorBadge [item]="item" [index]="$index" />
 </div>
 ```
 

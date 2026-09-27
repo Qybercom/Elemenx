@@ -2463,16 +2463,6 @@
 
 			i=0;
 			while (i < nodes.length) {
-				/*
-				 * Component declarations own their [prop] / [(prop)] surface.
-				 * DOM binding collection must leave those attributes intact for
-				 * Structural() to compile against the parent component scope.
-				 */
-				if (Runtime.ResolveComponentRegistered && Runtime.ResolveComponentRegistered(nodes[i].tagName)) {
-					i++;
-					continue;
-				}
-
 				attrs=Array.prototype.slice.call(nodes[i].attributes);
 				j=0;
 				classState=null;
@@ -5238,7 +5228,15 @@
 				var pristineNode = pristineNodeFor(node);
 				var pristineProjection = pristineNode ? slotProjection(pristineNode.cloneNode(true)) : null;
 				var projected = slotProjection(node);
-				var blueprint = node.cloneNode(true);
+
+				/*
+				 * Component input attributes belong to the declaration blueprint.
+				 * Generic DOM binding collection runs before Structural() and consumes
+				 * [property] attributes from the live DOM. Build the Component blueprint
+				 * from the pristine tree so [prop] remains available to props(), exactly
+				 * like plain attributes and {{...}} interpolation.
+				 */
+				var blueprint = pristineNode ? pristineNode.cloneNode(true) : node.cloneNode(true);
 				
 				if (projected && pristineProjection && pristineProjection.Blueprints)
 					projected.PrimeBlueprints(pristineProjection.Blueprints());
