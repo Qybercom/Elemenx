@@ -629,4 +629,32 @@ describe('Regression: directive syntax', function () {
 		expect(destroyed).toBe(1);
 	});
 
+
+	test('directive host dispatch remains generic after ownership audit', function () {
+		var directive=unique('hostregistry').toLowerCase();
+		var name=unique('DirectiveHostRegistry');
+
+		Elemenx.Directive(directive,{
+			Structural:true,
+			ElemenxOnUpdate:function (context) {
+				if (context.Value)
+					context.Mount();
+				else
+					context.Unmount();
+			}
+		});
+
+		var component=Elemenx.Component(name,{
+			Template:'<div><span *'+directive+'="Visible" class="host-registry-proof">OK</span></div>',
+			Visible:true
+		})();
+
+		expect(component.Element().querySelector('.host-registry-proof').textContent).toBe('OK');
+		component.Visible=false;
+		expect(component.Element().querySelector('.host-registry-proof')).toBe(null);
+		component.Visible=true;
+		expect(component.Element().querySelector('.host-registry-proof').textContent).toBe('OK');
+		component.Destroy();
+	});
+
 });

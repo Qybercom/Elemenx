@@ -4867,6 +4867,29 @@
 		var Elemenx = global.Elemenx;
 		
 		function Structural (component, definition, blueprintRoot) {
+			var directiveHosts={};
+
+			function directiveHost (name, compiler) {
+				if (compiler !== undefined) {
+					if (!name || typeof compiler !== 'function')
+						throw new Error('Elemenx directive host requires a name and compiler');
+
+					directiveHosts[name]=compiler;
+					return compiler;
+				}
+
+				return directiveHosts[name] || null;
+			}
+
+			function compileDirectiveHost (node, directive) {
+				var compiler=directiveHost(directive.Definition.Host);
+
+				if (!compiler)
+					throw new Error('Unknown Elemenx directive host: ' + directive.Definition.Host);
+
+				return compiler(node,directive);
+			}
+
 			var records = [];
 			var projectionBlueprintRoot = null;
 			var ownerToken = {};
@@ -5179,6 +5202,9 @@
 				return current || null;
 			}
 			
+			directiveHost('structural',compileStructural);
+			directiveHost('collection',compileCollectionDirective);
+
 			function compileComponent (node, factory, structuralDirective) {
 				var parent = node.parentNode;
 				var end = document.createComment('ui:' + node.tagName + ':end');
@@ -5545,22 +5571,6 @@
 				return current || node;
 			}
 			
-			function compileDirectiveHost (node, directive) {
-				var host=directive.Definition.Host;
-
-				if (host === 'collection') {
-					compileCollectionDirective(node,directive);
-					return;
-				}
-
-				if (host === 'structural') {
-					compileStructural(node,directive);
-					return;
-				}
-
-				throw new Error('Unknown Elemenx directive host: ' + host);
-			}
-
 			function compileCollectionDirective (node, directive) {
 				var parent=node.parentNode;
 				var template=blueprintFor(node).cloneNode(true);
