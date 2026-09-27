@@ -61,7 +61,7 @@ describe('Regression: dynamic templates / structural composition', function () {
 	it('Function Template preserves keyed data-for identity and events', async function () {
 		var row=unique('DynamicTemplateRow'), root=unique('DynamicTemplateEach'), owner, hits='', source='<div><'+row+' data-for="item of items" data-key="item.id" id="{{item.id}}" name="{{item.name}}"></'+row+'></div>';
 		Elemenx.Component(row,{
-			Template:'<button class="row" data-on-click="Hit">{{name}}</button>',
+			Template:'<button class="row" (click)="Hit">{{name}}</button>',
 			Hit:function () { hits+=this.State.name; }
 		});
 		Elemenx.Component(root,{
@@ -124,7 +124,7 @@ describe('Regression: dynamic templates / structural composition', function () {
 	});
 
 	it('Function Template destroy/recreate detaches dead listeners', async function () {
-		var name=unique('DynamicTemplateDead'), made=0, gone=0, hits=0, source='<button class="dead" data-on-click="Hit">{{text}}</button>';
+		var name=unique('DynamicTemplateDead'), made=0, gone=0, hits=0, source='<button class="dead" (click)="Hit">{{text}}</button>';
 		Elemenx.Component(name,{
 			Template:function () { return source; },
 			ElemenxOnCreate:function (data) { made++; this.State.text=data.text; },
@@ -186,7 +186,7 @@ describe('Regression: dynamic templates / structural composition', function () {
 		var source='<div><input class="edit" data-model="title"><section data-if="outer"><div data-if="inner">'+
 			'<'+row+' data-for="item of items" data-key="item.id" id="{{item.id}}" name="{{item.name}}"></'+row+'></div></section></div>';
 		Elemenx.Component(row,{
-			Template:'<button class="deep-row" data-on-click="Hit">{{name}}</button>',
+			Template:'<button class="deep-row" (click)="Hit">{{name}}</button>',
 			Hit:function () { hits+=this.State.name; }
 		});
 		Elemenx.Component(root,{

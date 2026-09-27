@@ -1433,10 +1433,7 @@
 			Error: 'data-error',
 			Model: 'data-model'
 		},
-		Prefixes: {
-			On: 'data-on-',
-			Bind: 'data-bind-'
-		},
+		Prefixes: {},
 		Name: function (name) {
 			return this.Names[name] || null;
 		},
@@ -1458,6 +1455,14 @@
 			
 			return attribute.substring(prefix.length);
 		},
+		Binding: function (attribute) {
+			var match = /^\[([^\]]+)\]$/.exec(attribute);
+			return match ? match[1] : null;
+		},
+		Event: function (attribute) {
+			var match = /^\(([^\)]+)\)$/.exec(attribute);
+			return match ? match[1] : null;
+		},
 		Reserved: function (attribute) {
 			var name;
 			
@@ -1469,7 +1474,7 @@
 				if (Object.prototype.hasOwnProperty.call(this.Prefixes, name) && attribute.indexOf(this.Prefixes[name]) === 0) return true;
 			}
 			
-			return false;
+			return this.Binding(attribute) !== null || this.Event(attribute) !== null;
 		}
 	};
 
@@ -1963,7 +1968,7 @@
 		function protectExpressionAttributes (html) {
 			var expressions = [];
 			var source = String(html || '').replace(
-				/(\s(?:data-(?:if|for|key)|data-bind-[A-Za-z0-9_.:-]+)\s*=\s*)(["'])([\s\S]*?)\2/gi,
+				/(\s(?:data-(?:if|for|key)|\[[^\]\s]+\])\s*=\s*)(["'])([\s\S]*?)\2/gi,
 				function (match, prefix, quote, expression) {
 					var index = expressions.length;
 					expressions.push(expression);
@@ -2112,8 +2117,9 @@
 				while (j < attrs.length) {
 					attr = attrs[j];
 					
-					if (Runtime.Directive.Match(attr.name, 'Bind')) {
-						type = Runtime.Directive.Argument(attr.name, 'Bind');
+					type = Runtime.Directive.Binding(attr.name);
+					
+					if (type !== null) {
 						key = attr.value;
 						
 						if (type === 'class') {
@@ -2629,8 +2635,9 @@
 						while (j < attrs.length) {
 							attr = attrs[j];
 							
-							if (Runtime.Directive.Match(attr.name, 'On')) {
-								eventName = Runtime.Directive.Argument(attr.name, 'On');
+							eventName = Runtime.Directive.Event(attr.name);
+							
+							if (eventName !== null) {
 								methodName = attr.value;
 								method = definition[methodName];
 								
@@ -2865,7 +2872,7 @@
 				
 				/*
 				 * Public component methods live on the instance as well as being
-				 * callable from data-on-* handlers. This makes internal calls such
+				 * callable from (event) handlers. This makes internal calls such
 				 * as this.Refresh() valid and keeps the definition object useful as
 				 * the component's method table.
 				 */
@@ -2887,7 +2894,7 @@
 				/*
 				 * Models must bind before semantic DOM events.
 				 *
-				 * For controls where both data-model and data-on-change listen to
+				 * For controls where both data-model and (change) listen to
 				 * the same native event (checkbox/radio), State must be updated
 				 * before the component method reads it.
 				 */
@@ -4457,8 +4464,9 @@
 				while (i < attrs.length) {
 					name = attrs[i].name;
 					
-					if (Runtime.Directive.Match(name, 'On'))
-						result[Runtime.Directive.Argument(name, 'On')] = attrs[i].value;
+					var eventName = Runtime.Directive.Event(name);
+					if (eventName !== null)
+						result[eventName] = attrs[i].value;
 					
 					i++;
 				}
@@ -5180,7 +5188,7 @@
 						 *
 						 * Without these delegates a root/nested data-if clones the markup
 						 * into an anonymous component whose definition contains Template
-						 * only. data-on-* listeners are then present in the DOM but have no
+						 * only. (event) listeners are then present in the DOM but have no
 						 * callable method, which is exactly what the deep event regression
 						 * exposed. Lifecycle hooks are deliberately not copied: toggling a
 						 * structural subtree must not create/destroy the owner component.

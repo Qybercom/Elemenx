@@ -166,13 +166,13 @@ describe('Regression: core / lifecycle / structural state', function () {
 	it('deep keyed/if/model/event lifecycle composition remains coherent', async function () {
 		var row=unique('ComboRow'),root=unique('ComboRoot'),made=0,gone=0;
 		Elemenx.Component(row,{
-			Template:'<div class="combo-row"><input class="combo-input" data-model="label"><button data-on-click="Remove">x</button><i data-if="enabled">{{label}}</i></div>',
+			Template:'<div class="combo-row"><input class="combo-input" data-model="label"><button (click)="Remove">x</button><i data-if="enabled">{{label}}</i></div>',
 			Remove:function () {this.Emit('remove',{id:this.State.id});},
 			ElemenxOnCreate:function () {made++;},
 			ElemenxOnDestroy:function () {gone++;}
 		});
 		Elemenx.Component(root,{
-			Template:'<section><'+row+' data-for="item of items" data-key="item.id" id="{{item.id}}" label="{{item.label}}" enabled="{{item.enabled}}" data-on-remove="Remove"></'+row+'></section>',
+			Template:'<section><'+row+' data-for="item of items" data-key="item.id" id="{{item.id}}" label="{{item.label}}" enabled="{{item.enabled}}" (remove)="Remove"></'+row+'></section>',
 			ElemenxOnCreate:function () {this.State.items=[{id:'a',label:'A',enabled:true},{id:'b',label:'B',enabled:false}];window.__combo=this;},
 			Remove:function (e) {var next=[],i=0;while (i<this.State.items.length) {if (this.State.items[i].id!==e.id)next.push(this.State.items[i]);i++;}this.State.items=next;}
 		});
