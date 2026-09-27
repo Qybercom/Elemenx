@@ -1430,17 +1430,12 @@
 	
 
 	Runtime.Directive = {
-		Names: {
-			If: '*if',
-			For: '*for',
-			Key: '*key',
-			Outlet: '*outlet',
-			Pending: '*pending',
-			Error: '*error'
-		},
+		Registry: {},
+		Aliases: {},
 		Prefixes: {},
 		Name: function (name) {
-			return this.Names[name] || null;
+			var directive=this.Aliases[name];
+			return directive ? '*' + directive : null;
 		},
 		Prefix: function (name) {
 			return this.Prefixes[name] || null;
@@ -1451,13 +1446,13 @@
 		Match: function (attribute, name) {
 			var prefix = this.Prefix(name);
 			if (!prefix) return false;
-			
+
 			return attribute.indexOf(prefix) === 0;
 		},
 		Argument: function (attribute, name) {
 			var prefix = this.Prefix(name);
 			if (!prefix || attribute.indexOf(prefix) !== 0) return null;
-			
+
 			return attribute.substring(prefix.length);
 		},
 		Binding: function (attribute) {
@@ -1476,44 +1471,70 @@
 			var match = /^#(.+)$/.exec(attribute);
 			return match ? match[1] : null;
 		},
-		Custom: {},
-		Register: function (name, definition) {
+		Register: function (name, definition, internal) {
+			var alias;
+
 			name=String(name || '').toLowerCase();
 			if (!/^[a-z][a-z0-9_-]*$/.test(name))
 				throw new Error('Invalid Elemenx directive name: ' + name);
-			if (this.Custom[name])
+			if (this.Registry[name])
 				throw new Error('Elemenx directive already registered: ' + name);
-			var builtIn;
-			for (builtIn in this.Names)
-				if (Object.prototype.hasOwnProperty.call(this.Names,builtIn) && this.Names[builtIn] === '*' + name)
-					throw new Error('Elemenx directive name is reserved: ' + name);
+
 			definition=definition || {};
 			if (typeof definition !== 'object')
 				throw new TypeError('Elemenx directive definition must be an Object');
-			this.Custom[name]=definition;
+
+			if (!internal && definition.Internal)
+				throw new Error('Elemenx directive Internal metadata is reserved');
+
+			if (!definition.Kind)
+				definition.Kind='behavioral';
+
+			definition.Name=name;
+			definition.Internal=internal === true;
+			this.Registry[name]=definition;
+
+			alias=definition.Alias;
+			if (alias) this.Aliases[alias]=name;
+
 			return definition;
 		},
 		Resolve: function (attribute) {
 			var match=/^\*([a-z][a-z0-9_-]*)$/i.exec(attribute);
 			var name;
+
 			if (!match) return null;
+
 			name=match[1].toLowerCase();
-			return this.Custom[name] ? {Name:name,Definition:this.Custom[name]} : null;
+
+			return this.Registry[name] ? {
+				Name:name,
+				Definition:this.Registry[name]
+			} : null;
 		},
 		Reserved: function (attribute) {
 			var name;
-			
-			for (name in this.Names) {
-				if (Object.prototype.hasOwnProperty.call(this.Names, name) && attribute === this.Names[name]) return true;
-			}
-			
+
 			for (name in this.Prefixes) {
-				if (Object.prototype.hasOwnProperty.call(this.Prefixes, name) && attribute.indexOf(this.Prefixes[name]) === 0) return true;
+				if (Object.prototype.hasOwnProperty.call(this.Prefixes,name) && attribute.indexOf(this.Prefixes[name]) === 0)
+					return true;
 			}
-			
+
 			return this.Resolve(attribute) !== null || this.TwoWay(attribute) !== null || this.Binding(attribute) !== null || this.Event(attribute) !== null || this.Ref(attribute) !== null;
 		}
 	};
+
+	/*
+	 * Built-ins use the same directive registry as application directives.
+	 * Alias exists only as a compatibility bridge for the current structural
+	 * engine while its handlers are moved behind generic directive capabilities.
+	 */
+	Runtime.Directive.Register('if',{Alias:'If',Kind:'structural'},true);
+	Runtime.Directive.Register('for',{Alias:'For',Kind:'structural'},true);
+	Runtime.Directive.Register('key',{Alias:'Key',Kind:'argument'},true);
+	Runtime.Directive.Register('outlet',{Alias:'Outlet',Kind:'behavior'},true);
+	Runtime.Directive.Register('pending',{Alias:'Pending',Kind:'status'},true);
+	Runtime.Directive.Register('error',{Alias:'Error',Kind:'status'},true);
 
 	(function (global) {
 		'use strict';
@@ -2408,7 +2429,7 @@
 					while (j < attrs.length) {
 						attr=attrs[j];
 						resolved=Runtime.Directive.Resolve(attr.name);
-						if (resolved) {
+						if (resolved && resolved.Definition.Kind === 'behavioral') {
 							directives.push({Name:resolved.Name,Definition:resolved.Definition,Element:nodes[i],Expression:attr.value || ''});
 							nodes[i].removeAttribute(attr.name);
 						}

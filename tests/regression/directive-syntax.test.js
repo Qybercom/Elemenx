@@ -279,4 +279,39 @@ describe('Regression: directive syntax', function () {
 		component.Destroy();
 	});
 
+
+	test('built-in and custom directives share one registry without public name hardcoding', function () {
+		var directive=unique('registry').toLowerCase();
+		var definition={ElemenxOnUpdate:function () {}};
+
+		expect(Elemenx.Directive(directive,definition)).toBe(definition);
+		expect(function () {
+			Elemenx.Directive(directive,{});
+		}).toThrow(/already registered/);
+		expect(function () {
+			Elemenx.Directive('if',{});
+		}).toThrow(/already registered/);
+	});
+
+	test('custom directive registration defaults to behavioral lifecycle', function () {
+		var directive=unique('behavioral').toLowerCase();
+		var name=unique('DirectiveRegistryBehavior');
+		var updated=0;
+
+		Elemenx.Directive(directive,{
+			ElemenxOnUpdate:function () {
+				updated++;
+			}
+		});
+
+		var factory=Elemenx.Component(name,{
+			Template:'<div *'+directive+'="Enabled"></div>',
+			Enabled:true
+		});
+		var component=factory();
+
+		expect(updated).toBe(1);
+		component.Destroy();
+	});
+
 });
