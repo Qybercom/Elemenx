@@ -430,4 +430,50 @@ describe('Regression: directive syntax', function () {
 		component.Destroy();
 	});
 
+
+	test('custom collection structural directive uses context.Render keyed reconciliation', function () {
+		var directive=unique('repeat').toLowerCase();
+		var name=unique('CustomCollectionRender');
+
+		Elemenx.Directive(directive,{
+			Structural:true,
+			Collection:true,
+			ElemenxOnUpdate:function (context) {
+				context.Render(context.Source(context.Expression),{
+					Mode:'of',
+					Variable:'row',
+					Key:context.Argument('key')
+				});
+			}
+		});
+
+		var component=Elemenx.Component(name,{
+			Template:'<ul><li *'+directive+'="Rows" *key="row.id">{{row.name}}</li></ul>',
+			Rows:[
+				{id:1,name:'One'},
+				{id:2,name:'Two'}
+			]
+		})();
+
+		var first=component.Element().querySelectorAll('li');
+		var one=first[0];
+		var two=first[1];
+		expect(first.length).toBe(2);
+		expect(first[0].textContent).toBe('One');
+		expect(first[1].textContent).toBe('Two');
+
+		component.Rows=[
+			{id:2,name:'Two updated'},
+			{id:1,name:'One updated'}
+		];
+
+		var second=component.Element().querySelectorAll('li');
+		expect(second.length).toBe(2);
+		expect(second[0]).toBe(two);
+		expect(second[1]).toBe(one);
+		expect(second[0].textContent).toBe('Two updated');
+		expect(second[1].textContent).toBe('One updated');
+		component.Destroy();
+	});
+
 });

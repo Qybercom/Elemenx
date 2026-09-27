@@ -1529,6 +1529,27 @@
 			}
 			return null;
 		},
+		Arguments: function (node, owner) {
+			var result={};
+			var attrs=node && node.attributes ? Array.prototype.slice.call(node.attributes) : [];
+			var i=0;
+			var resolved;
+
+			while (i < attrs.length) {
+				resolved=this.Resolve(attrs[i].name);
+				if (
+					resolved &&
+					resolved.Definition.Kind === 'argument' &&
+					(!resolved.Definition.For || resolved.Definition.For === owner)
+				) {
+					result[resolved.Name]=attrs[i].value || '';
+					node.removeAttribute(attrs[i].name);
+				}
+				i++;
+			}
+
+			return result;
+		},
 		Reserved: function (attribute) {
 			var name;
 
@@ -1559,23 +1580,54 @@
 		Structural:true,
 		Collection:true,
 		ElemenxOnCreate:function (context) {
-			var match=/^\s*([A-Za-z_$][\w$]*)\s+(of|in)\s+(.+?)\s*$/.exec(context.Expression);
-			if (!match)
-				throw new Error('Invalid *for expression: ' + context.Expression);
+			var classic=context.Expression.split(';');
+			var match=/^\s*([A-Za-z_$][\w$]*)\s+(of|in)\s+([\s\S]+)$/.exec(context.Expression);
+			var initializer;
 
+			if (classic.length === 3) {
+				initializer=/^\s*([A-Za-z_$][\w$]*)\s*=\s*([\s\S]+)$/.exec(classic[0]);
+				if (!initializer)
+					throw new Error('Elemenx *for initializer must assign a local variable: ' + context.Expression);
+
+				context.Data.Mode='classic';
+				context.Data.Variable=initializer[1];
+				context.Data.Initializer=initializer[2];
+				context.Data.Condition=classic[1];
+				context.Data.Step=classic[2];
+				return;
+			}
+
+			if (!match)
+				throw new Error('Elemenx *for expects classic for, for..of or for..in syntax: ' + context.Expression);
+
+			context.Data.Mode=match[2];
 			context.Data.Variable=match[1];
-			context.Data.Operator=match[2];
 			context.Data.Source=match[3];
 		},
 		ElemenxOnUpdate:function (context) {
-			context.Render(context.Source(context.Data.Source),{
-				Variable:context.Data.Variable,
-				Operator:context.Data.Operator,
-				Key:context.Argument('key')
-			});
+			if (context.Data.Mode === 'classic') {
+				context.Render(null,{
+					Mode:'classic',
+					Variable:context.Data.Variable,
+					Initializer:context.Data.Initializer,
+					Condition:context.Data.Condition,
+					Step:context.Data.Step,
+					Key:context.Argument('key')
+				});
+				return;
+			}
+
+			context.Render(
+				context.Source(context.Data.Source),
+				{
+					Mode:context.Data.Mode,
+					Variable:context.Data.Variable,
+					Key:context.Argument('key')
+				}
+			);
 		}
 	},true);
-	Runtime.Directive.Register('key',{Alias:'Key',Kind:'argument'},true);
+	Runtime.Directive.Register('key',{Alias:'Key',Kind:'argument',For:'collection'},true);
 	Runtime.Directive.Register('outlet',{Alias:'Outlet',Kind:'behavior'},true);
 	Runtime.Directive.Register('pending',{Alias:'Pending',Kind:'status'},true);
 	Runtime.Directive.Register('error',{Alias:'Error',Kind:'status'},true);
@@ -5416,71 +5468,54 @@
 			
 			function compileCollectionDirective (node, directive) {
 				var parent=node.parentNode;
-				var source=node.getAttribute(directive.Attribute) || '';
-				var keySource=node.getAttribute(Runtime.Directive.Name('Key'));
-				var classic=source.split(';');
-				var ofMatch=/^\s*([A-Za-z_$][A-Za-z0-9_$]*)\s+of\s+([\s\S]+)$/.exec(source);
-				var inMatch=/^\s*([A-Za-z_$][A-Za-z0-9_$]*)\s+in\s+([\s\S]+)$/.exec(source);
-				var mode=classic.length === 3 ? 'classic' : (ofMatch ? 'of' : (inMatch ? 'in' : null));
-				var initMatch=mode === 'classic' ? /^\s*([A-Za-z_$][A-Za-z0-9_$]*)\s*=\s*([\s\S]+)$/.exec(classic[0]) : null;
 				var template=blueprintFor(node).cloneNode(true);
-				var end=document.createComment('ui:for:' + source + ':end');
+				var end=document.createComment('ui:collection:' + directive.Name + ':end');
+				var argumentsMap=Runtime.Directive.Arguments(template,'collection');
 				var children=[];
 				var keyed={};
 				var limit=10000;
+				var context;
 
-				if (!mode) throw new Error('Elemenx *for expects classic for, for..of or for..in syntax: ' + source);
-				if (mode === 'classic' && !initMatch) throw new Error('Elemenx *for initializer must assign a local variable: ' + source);
 				template.removeAttribute(directive.Attribute);
-				template.removeAttribute(Runtime.Directive.Name('Key'));
 				parent.insertBefore(end,node.nextSibling);
 				parent.removeChild(node);
 
 				function iterationDefinition () {
-					/*
-					 * A structural iteration whose template root is itself an Elemenx
-					 * component needs one transparent DOM owner above that tag.
-					 *
-					 * Runtime.CreateComponent compiles descendants of its template root;
-					 * it does not reinterpret that root as another component. Native
-					 * elements can therefore remain the iteration root, while a custom
-					 * component tag must be placed one level below it.
-					 */
 					var componentRoot=factoryFor(template.tagName);
 					var templateSource=componentRoot
 						? '<span style="display:contents">' + template.outerHTML + '</span>'
 						: template.outerHTML;
 					var result={Template:templateSource};
 					var methodName;
+
 					for (methodName in definition) {
-						if (own(definition,methodName) && typeof definition[methodName] === 'function' && methodName !== 'Template' && methodName !== 'ElemenxOnCreate' && methodName !== 'ElemenxOnDestroy') {
+						if (
+							own(definition,methodName) &&
+							typeof definition[methodName] === 'function' &&
+							methodName !== 'Template' &&
+							methodName !== 'ElemenxOnCreate' &&
+							methodName !== 'ElemenxOnDestroy'
+						) {
 							(function (name) {
-								result[name]=function () { return definition[name].apply(component,arguments); };
+								result[name]=function () {
+									return definition[name].apply(component,arguments);
+								};
 							})(methodName);
 						}
 					}
+
 					return result;
 				}
 
 				function baseScope () {
 					var result={};
 					var name;
-					
-					var values = Runtime.ComponentValues(component);
+					var values=Runtime.ComponentValues(component);
+
 					for (name in values)
 						if (own(values,name))
 							result[name]=values[name];
-					
-					/*
-					 * Classic *for conditions are evaluated before an iteration
-					 * component exists, but they may call methods of the owning
-					 * component:
-					 *
-					 *     i = 0; item = QueueItem(i); i++
-					 *
-					 * Expose the same definition methods to the loop scope that the
-					 * generated iteration component receives below.
-					 */
+
 					for (name in definition) {
 						if (
 							own(definition,name) &&
@@ -5496,57 +5531,53 @@
 							})(name);
 						}
 					}
-					
+
 					return result;
 				}
 
-				function copyScope (sourceScope) {
+				function copyScope (source) {
 					var result={};
 					var name;
-					for (name in sourceScope) if (own(sourceScope,name)) result[name]=sourceScope[name];
+					for (name in source)
+						if (own(source,name))
+							result[name]=source[name];
 					return result;
 				}
 
-				function scopes () {
+				function scopes (items, options) {
 					var result=[];
 					var loopScope=baseScope();
-					var list,iterator,step,name,scope;
+					var mode=options.Mode || 'of';
+					var variable=options.Variable || 'item';
+					var source=items;
+					var iterator,step,name,scope;
+					var conditionAssignment;
 					var i=0;
 
 					if (mode === 'classic') {
-						/*
-						 * `with (scope)` can only keep an assignment local when the
-						 * assigned name already exists on that scope. A classic loop may
-						 * intentionally introduce another loop-local from its condition:
-						 *
-						 *     i = 0; item = QueueItem(i); i++
-						 *
-						 * Predeclare that simple assignment target before evaluation so it
-						 * cannot leak to globalThis and the captured iteration scope gets
-						 * the value produced by the condition.
-						 */
-						var conditionAssignment=/^\s*([A-Za-z_$][A-Za-z0-9_$]*)\s*=(?!=)/.exec(classic[1]);
-						loopScope[initMatch[1]]=expression(loopScope,initMatch[2]);
+						conditionAssignment=/^\s*([A-Za-z_$][A-Za-z0-9_$]*)\s*=(?!=)/.exec(options.Condition);
+						loopScope[variable]=expression(loopScope,options.Initializer);
 						if (conditionAssignment && !own(loopScope,conditionAssignment[1]))
 							loopScope[conditionAssignment[1]]=undefined;
-						while (i < limit && expression(loopScope,classic[1])) {
+
+						while (i < limit && expression(loopScope,options.Condition)) {
 							scope=copyScope(loopScope);
 							scope.$index=i;
 							result.push(scope);
-							expression(loopScope,classic[2]);
+							expression(loopScope,options.Step);
 							i++;
 						}
 					}
 					else if (mode === 'of') {
-						list=expression(loopScope,ofMatch[2]);
-						if (list == null) list=[];
-						Runtime.TrackIteration(list);
-						if (typeof Symbol !== 'undefined' && list[Symbol.iterator]) {
-							iterator=list[Symbol.iterator]();
+						if (source == null) source=[];
+						Runtime.TrackIteration(source);
+
+						if (typeof Symbol !== 'undefined' && source[Symbol.iterator]) {
+							iterator=source[Symbol.iterator]();
 							step=iterator.next();
 							while (!step.done && i < limit) {
 								scope=copyScope(loopScope);
-								scope[ofMatch[1]]=step.value;
+								scope[variable]=step.value;
 								scope.$index=i;
 								result.push(scope);
 								i++;
@@ -5554,88 +5585,146 @@
 							}
 						}
 						else {
-							while (i < list.length && i < limit) {
+							while (i < source.length && i < limit) {
 								scope=copyScope(loopScope);
-								scope[ofMatch[1]]=list[i];
+								scope[variable]=source[i];
 								scope.$index=i;
 								result.push(scope);
 								i++;
 							}
 						}
 					}
-					else {
-						list=expression(loopScope,inMatch[2]);
-						if (list == null) list={};
-						Runtime.TrackIteration(list);
-						for (name in list) {
-							if (!own(list,name)) continue;
+					else if (mode === 'in') {
+						if (source == null) source={};
+						Runtime.TrackIteration(source);
+						for (name in source) {
+							if (!own(source,name)) continue;
 							if (i >= limit) break;
 							scope=copyScope(loopScope);
-							scope[inMatch[1]]=name;
+							scope[variable]=name;
 							scope.$index=i;
 							result.push(scope);
 							i++;
 						}
 					}
+					else
+						throw new Error('Unknown Elemenx collection render mode: ' + mode);
 
-					if (i >= limit) throw new Error('Elemenx structural loop exceeded iteration limit (' + limit + '): ' + source);
+					if (i >= limit)
+						throw new Error('Elemenx structural collection exceeded iteration limit (' + limit + ')');
+
 					return result;
 				}
 
 				function destroyAll () {
 					var i=children.length - 1;
-					while (i >= 0) { children[i].Child.Destroy(); i--; }
+					while (i >= 0) {
+						children[i].Child.Destroy();
+						i--;
+					}
 					children=[];
 					keyed={};
 				}
 
-				var forEffect=Runtime.Effect(function () {
-					var nextScopes=scopes();
+				function render (items, options) {
+					var nextScopes=scopes(items,options || {});
+					var keySource=options && options.Key ? options.Key : null;
 					var nextChildren=[];
 					var nextKeyed={};
 					var used={};
-					var i=0,scope,identity,token,record,child;
+					var i=0;
+					var scope,identity,token,record,child;
 
-					if (!keySource) destroyAll();
+					if (!keySource)
+						destroyAll();
+
 					while (i < nextScopes.length) {
 						scope=nextScopes[i];
 						record=null;
 						token=null;
+
 						if (keySource) {
 							identity=expression(scope,keySource);
-							if (identity === null || identity === undefined) throw new Error('Elemenx *key resolved to null/undefined: ' + keySource);
+							if (identity === null || identity === undefined)
+								throw new Error('Elemenx *key resolved to null/undefined: ' + keySource);
+
 							token=typeof identity + ':' + String(identity);
-							if (used[token]) throw new Error('Elemenx duplicate *key in *for: ' + String(identity));
+							if (used[token])
+								throw new Error('Elemenx duplicate collection key: ' + String(identity));
+
 							used[token]=true;
 							record=keyed[token] || null;
 						}
-						if (record) record.Child.Update(scope);
+
+						if (record)
+							record.Child.Update(scope);
 						else {
-							child=Runtime.CreateComponent(iterationDefinition())(scope,null,{DirectState:true,Application:component.Application()});
+							child=Runtime.CreateComponent(iterationDefinition())(
+								scope,
+								null,
+								{DirectState:true,Application:component.Application()}
+							);
 							child.Parent(component);
 							record={Child:child,Key:token};
 						}
+
 						end.parentNode.insertBefore(record.Child.Element(),end);
 						nextChildren.push(record);
-						if (keySource) nextKeyed[token]=record;
+						if (keySource)
+							nextKeyed[token]=record;
 						i++;
 					}
+
 					if (keySource) {
 						i=children.length - 1;
 						while (i >= 0) {
 							record=children[i];
-							if (!nextKeyed[record.Key]) record.Child.Destroy();
+							if (!nextKeyed[record.Key])
+								record.Child.Destroy();
 							i--;
 						}
 					}
+
 					children=nextChildren;
 					keyed=nextKeyed;
+					return children.length;
+				}
+
+				context={
+					Name:directive.Name,
+					Element:node,
+					Component:component,
+					Expression:directive.Expression,
+					Value:undefined,
+					Data:{},
+					Argument:function (name) {
+						return argumentsMap[name] === undefined ? null : argumentsMap[name];
+					},
+					Source:function (source) {
+						return expression(baseScope(),source);
+					},
+					Render:render
+				};
+
+				if (typeof directive.Definition.ElemenxOnCreate === 'function')
+					directive.Definition.ElemenxOnCreate(context);
+
+				var collectionEffect=Runtime.Effect(function () {
+					if (typeof directive.Definition.ElemenxOnUpdate === 'function')
+						directive.Definition.ElemenxOnUpdate(context);
 					return children.length;
 				},true);
 
 				records.push({
-					Update:function () { forEffect.Run(); },
-					Destroy:function () { forEffect.Destroy(); destroyAll(); }
+					Update:function () {
+						collectionEffect.Run();
+					},
+					Destroy:function () {
+						collectionEffect.Destroy();
+						destroyAll();
+						if (typeof directive.Definition.ElemenxOnDestroy === 'function')
+							directive.Definition.ElemenxOnDestroy(context);
+					}
 				});
 			}
 
