@@ -17,7 +17,9 @@
 		"test:history": "playwright test",
 		"examples": "vite --host 127.0.0.1",
 		"example:simple": "node tools/server.js examples/Simple 4174",
-		"example:advanced": "node tools/server.js examples/Advanced"
+		"example:advanced": "node tools/builder.js dev examples/Advanced --port 4173",
+		"build:advanced": "node tools/builder.js build examples/Advanced",
+		"example:advanced:dist": "node tools/builder.js serve examples/Advanced/dist --port 4175"
 	},
 	"devDependencies": {
 		"@playwright/test": "1.63.0",

@@ -647,6 +647,69 @@
 		};
 	})(typeof globalThis !== 'undefined' ? globalThis : self);
 	
+	/* Bundle */
+	(function (global) {
+		'use strict';
+		var registry = {};
+		var loaded = {};
+		function bucket (type) {
+			if (!registry[type]) registry[type] = {};
+			if (!loaded[type]) loaded[type] = {};
+			return registry[type];
+		}
+		function install (bundle) {
+			var type, name, source;
+			bundle = bundle || {};
+			for (type in bundle) {
+				if (!Object.prototype.hasOwnProperty.call(bundle,type)) continue;
+				source = bundle[type] || {};
+				bucket(type);
+				for (name in source) {
+					if (!Object.prototype.hasOwnProperty.call(source,name)) continue;
+					if (typeof source[name] !== 'function') throw new Error('Elemenx Bundle entity loader must be a function: ' + type + ':' + name);
+					registry[type][name] = source[name];
+					loaded[type][name] = false;
+				}
+			}
+			return global.Elemenx;
+		}
+		function resolvedName (type, name) {
+			var source = registry[type], key;
+			if (!source) return null;
+			if (source[name]) return name;
+			for (key in source) {
+				if (Object.prototype.hasOwnProperty.call(source,key) && key.toLowerCase() === String(name).toLowerCase()) return key;
+			}
+			return null;
+		}
+		function load (type, name) {
+			var resolved = resolvedName(type,name), loader;
+			if (!resolved) return false;
+			if (loaded[type][resolved]) return true;
+			loader = registry[type][resolved];
+			loaded[type][resolved] = true;
+			try { loader(); }
+			catch (error) { loaded[type][resolved] = false; throw error; }
+			return true;
+		}
+		function loadType (type) {
+			var source = registry[type] || {}, name;
+			for (name in source) if (Object.prototype.hasOwnProperty.call(source,name)) load(type,name);
+		}
+		Runtime.Bundle = {
+			Install: install,
+			Ready: function () {
+				var type;
+				for (type in registry) if (Object.prototype.hasOwnProperty.call(registry,type)) return true;
+				return false;
+			},
+			ResolvedName: resolvedName,
+			Load: load,
+			LoadType: loadType
+		};
+		global.Elemenx.Bundle = install;
+	})(typeof globalThis !== 'undefined' ? globalThis : self);
+	
 	/* Discovery */
 	(function (global) {
 		'use strict';
@@ -3609,6 +3672,9 @@
 				}
 			}
 			
+			if (Runtime.Bundle && Runtime.Bundle.Load('Component', discoveryName))
+				return Runtime.ResolveComponentRegistered(discoveryName);
+			
 			if (Runtime.Discovery) {
 				var lazyFactory = function (data, slotProjection, options) {
 					return deferredComponent(function (ready) {
@@ -4042,13 +4108,24 @@
 				};
 			}
 			
+			function bundledComponent (reference) {
+				var factory;
+
+				if (typeof reference === 'function') return reference;
+
+				factory=Runtime.ResolveComponentRegistered(reference);
+				if (factory) return factory;
+
+				if (Runtime.Bundle && Runtime.Bundle.Load && Runtime.Bundle.Load('Component',reference))
+					return Runtime.ResolveComponentRegistered(reference);
+
+				return null;
+			}
+
 			function componentFactory (route) {
-				if (typeof route.Component === 'function') return route.Component;
-				
-				// Router preloads named route components before commit. Never fall back to
-				// ResolveComponent() here: that would create a second lazy/deferred wrapper
-				// and turn a preload/registration problem into a late render failure.
-				return Runtime.ResolveComponentRegistered(route.Component);
+				// Bundle resolution is synchronous and may register the factory here.
+				// Network Discovery remains owned by loadRouteComponents().
+				return bundledComponent(route.Component);
 			}
 			
 			function loadRouteComponents (chain, common, callback) {
@@ -4062,7 +4139,7 @@
 					}
 
 					var route = chain[index++];
-					if (typeof route.Component === 'function' || Runtime.ResolveComponentRegistered(route.Component)) {
+					if (bundledComponent(route.Component)) {
 						next(null);
 
 						return;
@@ -4125,7 +4202,7 @@
 				}
 
 				function render () {
-					var factory = typeof reference === 'function' ? reference : Runtime.ResolveComponentRegistered(reference);
+					var factory = bundledComponent(reference);
 					if (!factory) {
 						callback(new Error('Elemenx route waiting component not found: ' + reference));
 
@@ -4152,7 +4229,7 @@
 					callback(null);
 				}
 
-				if (typeof reference === 'function' || Runtime.ResolveComponentRegistered(reference)) {
+				if (bundledComponent(reference)) {
 					render();
 
 					return;
@@ -4712,7 +4789,7 @@
 				function render () {
 					if (id !== navigationID) return;
 
-					var factory = Runtime.ResolveComponentRegistered(reference);
+					var factory = bundledComponent(reference);
 					if (!factory)
 						throw new Error('Elemenx NotFound component not found: ' + reference);
 
@@ -4741,7 +4818,7 @@
 				else if (mode === 'replace')
 					global.history.replaceState(null, '', url.href);
 
-				if (Runtime.ResolveComponentRegistered(reference)) {
+				if (bundledComponent(reference)) {
 					render();
 
 					return true;
@@ -4967,6 +5044,12 @@
 				 * Discovery map explicitly contains that component entity.
 				 */
 				var application = component.Application();
+				var bundleName;
+				
+				if (Runtime.Bundle && Runtime.Bundle.ResolvedName) {
+					bundleName = Runtime.Bundle.ResolvedName('Component', tag);
+					if (bundleName) return Runtime.ResolveComponent(bundleName);
+				}
 				
 				if (Runtime.Discovery && application && Runtime.Discovery.Ready(application) && Runtime.Discovery.ResolvedName) {
 					var discoveryName = Runtime.Discovery.ResolvedName(application, tag);
@@ -12798,6 +12881,14 @@
 			
 			function startRoot () {
 				if (destroyed || !definition.Component || root) return;
+				
+				if (Runtime.Bundle && Runtime.Bundle.Ready()) {
+					Runtime.Bundle.LoadType('Directive');
+					Runtime.Bundle.LoadType('Service');
+					Runtime.Bundle.LoadType('Guard');
+					createRoot();
+					return;
+				}
 				
 				if (!definition.Root || !Runtime.Discovery) {
 					createRoot();
