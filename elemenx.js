@@ -2095,113 +2095,243 @@
 			}
 		}
 		
+		function classBindingState (node) {
+			var state={
+				node: node,
+				base: {},
+				list: [],
+				points: {}
+			};
+			var i=0;
+
+			while (i < node.classList.length) {
+				state.base[node.classList.item(i)]=true;
+				i++;
+			}
+
+			return state;
+		}
+
+		function renderClassBinding (state) {
+			var names={}, name, i=0;
+
+			for (name in state.base)
+				if (own(state.base,name))
+					names[name]=true;
+
+			while (i < state.list.length) {
+				names[state.list[i]]=true;
+				i++;
+			}
+
+			for (name in state.points) {
+				if (!own(state.points,name)) continue;
+
+				if (state.points[name])
+					names[name]=true;
+				else
+					delete names[name];
+			}
+
+			state.node.className='';
+
+			for (name in names)
+				if (own(names,name))
+					state.node.classList.add(name);
+		}
+
+		function styleBindingState (node) {
+			var state={
+				node: node,
+				base: {},
+				map: {},
+				points: {},
+				managed: {}
+			};
+			var i=0,name;
+
+			while (i < node.style.length) {
+				name=node.style.item(i);
+				state.base[name]={
+					value: node.style.getPropertyValue(name),
+					priority: node.style.getPropertyPriority(name)
+				};
+				i++;
+			}
+
+			return state;
+		}
+
+		function renderStyleBinding (state) {
+			var names={},name,item;
+
+			for (name in state.managed)
+				if (own(state.managed,name))
+					state.node.style.removeProperty(name);
+
+			for (name in state.base) {
+				if (!own(state.base,name)) continue;
+				item=state.base[name];
+				state.node.style.setProperty(name,item.value,item.priority);
+			}
+
+			for (name in state.map) {
+				if (!own(state.map,name)) continue;
+				names[name]=true;
+
+				if (state.map[name] == null)
+					state.node.style.removeProperty(name);
+				else
+					state.node.style.setProperty(name,String(state.map[name]));
+			}
+
+			for (name in state.points) {
+				if (!own(state.points,name)) continue;
+				names[name]=true;
+
+				if (state.points[name] == null)
+					state.node.style.removeProperty(name);
+				else
+					state.node.style.setProperty(name,String(state.points[name]));
+			}
+
+			state.managed=names;
+		}
+
 		function collectElementBindings (root, bindings, models) {
-			var nodes = [], all, i = 0, j, attrs, attr, key, type;
-			
+			var nodes=[],all,i=0,j,attrs,attr,key,target,separator,namespace,name;
+			var classState,styleState;
+
 			if (root.nodeType === 1) nodes.push(root);
 			if (root.querySelectorAll) {
-				all = root.querySelectorAll('*');
-				
+				all=root.querySelectorAll('*');
+
 				while (i < all.length) {
 					nodes.push(all[i]);
-					
 					i++;
 				}
 			}
-			
-			i = 0;
+
+			i=0;
 			while (i < nodes.length) {
-				attrs = nodes[i].attributes;
-				j = 0;
-				
+				attrs=nodes[i].attributes;
+				j=0;
+				classState=null;
+				styleState=null;
+
 				while (j < attrs.length) {
-					attr = attrs[j];
-					
-					type = Runtime.Directive.Binding(attr.name);
-					
-					if (type !== null) {
-						key = attr.value;
-						
-						if (type === 'class') {
-							addBinding(bindings, key, {type: 'class', node: nodes[i]});
+					attr=attrs[j];
+					target=Runtime.Directive.Binding(attr.name);
+
+					if (target !== null) {
+						key=attr.value;
+						separator=target.indexOf('.');
+						namespace=separator === -1 ? target : target.substring(0,separator);
+						name=separator === -1 ? null : target.substring(separator+1);
+
+						if (target === 'class') {
+							if (!classState) classState=classBindingState(nodes[i]);
+							addBinding(bindings,key,{type:'class-list',node:nodes[i],state:classState});
 						}
-						else if (type === 'value') {
-							addBinding(bindings, key, {type: 'value', node: nodes[i]});
+						else if (namespace === 'class' && name) {
+							if (!classState) classState=classBindingState(nodes[i]);
+							addBinding(bindings,key,{type:'class-name',name:name,node:nodes[i],state:classState});
 						}
-						else if (type === 'disabled') {
-							addBinding(bindings, key, {type: 'disabled', node: nodes[i]});
+						else if (target === 'style') {
+							if (!styleState) styleState=styleBindingState(nodes[i]);
+							addBinding(bindings,key,{type:'style-map',node:nodes[i],state:styleState});
 						}
-						else if (type === 'checked') {
-							addBinding(bindings, key, {type: 'checked', node: nodes[i]});
+						else if (namespace === 'style' && name) {
+							if (!styleState) styleState=styleBindingState(nodes[i]);
+							addBinding(bindings,key,{type:'style-property',name:name,node:nodes[i],state:styleState});
+						}
+						else if (namespace === 'property' && name) {
+							addBinding(bindings,key,{type:'property',name:name,node:nodes[i]});
+						}
+						else if (namespace === 'attribute' && name) {
+							addBinding(bindings,key,{type:'attribute',name:name,node:nodes[i]});
+						}
+						else if (separator === -1 && target) {
+							addBinding(bindings,key,{type:'property',name:target,node:nodes[i]});
 						}
 						else {
-							addBinding(bindings, key, {type: 'attribute', name: type, node: nodes[i]});
+							throw new Error('Invalid Elemenx binding target: ['+target+']');
 						}
 					}
-					else if (Runtime.Directive.Is(attr.name, 'Show')) {
-						addBinding(bindings, attr.value, {
-							type: 'show',
-							node: nodes[i],
-							display: nodes[i].style.display
-						});
-					}
-					else if (Runtime.Directive.Is(attr.name, 'Hide')) {
-						addBinding(bindings, attr.value, {
-							type: 'hide',
-							node: nodes[i],
-							display: nodes[i].style.display
-						});
-					}
-					else if (Runtime.Directive.Is(attr.name, 'Model')) {
-						key = attr.value;
+					else if (Runtime.Directive.Is(attr.name,'Model')) {
+						key=attr.value;
 						models.push({
-							key: key,
-							node: nodes[i],
-							type: nodes[i].type === 'checkbox' || nodes[i].type === 'radio' ? 'checked' : 'value'
+							key:key,
+							node:nodes[i],
+							type:nodes[i].type === 'checkbox' || nodes[i].type === 'radio' ? 'checked' : 'value'
 						});
 					}
-					
+
 					j++;
 				}
-				
+
 				i++;
 			}
 		}
-		
+
 		function applyBinding (binding, value) {
-			var truthy = !!value;
-			
+			var name;
+
 			if (binding.type === 'text') {
-				binding.node.nodeValue = value == null ? '' : String(value);
+				binding.node.nodeValue=value == null ? '' : String(value);
 			}
-			else if (binding.type === 'class') {
-				binding.node.className = value == null ? '' : String(value);
-			}
-			else if (binding.type === 'value') {
-				binding.node.value = value == null ? '' : String(value);
-			}
-			else if (binding.type === 'disabled') {
-				binding.node.disabled = truthy;
-			}
-			else if (binding.type === 'checked') {
-				binding.node.checked = truthy;
-			}
-			else if (binding.type === 'show') {
-				binding.node.style.display = truthy ? binding.display : 'none';
-			}
-			else if (binding.type === 'hide') {
-				binding.node.style.display = truthy ? 'none' : binding.display;
+			else if (binding.type === 'property') {
+				binding.node[binding.name]=value;
 			}
 			else if (binding.type === 'attribute') {
-				if (value == null || value === false) {
+				if (value == null)
 					binding.node.removeAttribute(binding.name);
+				else
+					binding.node.setAttribute(binding.name,String(value));
+			}
+			else if (binding.type === 'class-list') {
+				if (value == null)
+					value=[];
+
+				if (!Array.isArray(value))
+					throw new TypeError('[class] binding expects an Array');
+
+				binding.state.list=[];
+
+				var i=0;
+				while (i < value.length) {
+					if (value[i] != null && String(value[i]))
+						binding.state.list.push(String(value[i]));
+					i++;
 				}
-				else {
-					binding.node.setAttribute(binding.name, value === true ? '' : String(value));
-				}
+
+				renderClassBinding(binding.state);
+			}
+			else if (binding.type === 'class-name') {
+				binding.state.points[binding.name]=!!value;
+				renderClassBinding(binding.state);
+			}
+			else if (binding.type === 'style-map') {
+				if (value == null)
+					value={};
+
+				if (typeof value !== 'object' || Array.isArray(value))
+					throw new TypeError('[style] binding expects an Object');
+
+				binding.state.map={};
+
+				for (name in value)
+					if (own(value,name))
+						binding.state.map[name]=value[name];
+
+				renderStyleBinding(binding.state);
+			}
+			else if (binding.type === 'style-property') {
+				binding.state.points[binding.name]=value;
+				renderStyleBinding(binding.state);
 			}
 		}
-		
+
 		function activateBindings (bindings, state, effects) {
 			var i = 0;
 			

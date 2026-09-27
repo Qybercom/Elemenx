@@ -76,4 +76,98 @@ describe('Regression: binding and event syntax', function () {
 		expect(received).toBe('payload');
 		parent.Destroy();
 	});
+
+	test('binding target namespaces have explicit property and attribute semantics', function () {
+		var name=unique('BindingTargets');
+		var factory=Elemenx.Component(name,{
+			Template:'<button [disabled]="Disabled" [property.title]="PropertyTitle" [attribute.aria-hidden]="AriaHidden" [attribute.data-value]="DataValue">target</button>'
+		});
+
+		var child=factory({
+			Disabled:true,
+			PropertyTitle:'property',
+			AriaHidden:false,
+			DataValue:'one'
+		});
+		document.body.appendChild(child.Element());
+
+		expect(child.Element().disabled).toBe(true);
+		expect(child.Element().title).toBe('property');
+		expect(child.Element().getAttribute('aria-hidden')).toBe('false');
+		expect(child.Element().getAttribute('data-value')).toBe('one');
+
+		child.Update({Disabled:false,AriaHidden:null,DataValue:undefined});
+
+		expect(child.Element().disabled).toBe(false);
+		expect(child.Element().hasAttribute('aria-hidden')).toBe(false);
+		expect(child.Element().hasAttribute('data-value')).toBe(false);
+		child.Destroy();
+	});
+
+	test('[class] owns an array while [class.name] owns one class and static classes survive', function () {
+		var name=unique('ClassBindings');
+		var factory=Elemenx.Component(name,{
+			Template:'<div class="static" [class]="Classes" [class.selected]="Selected"></div>'
+		});
+
+		var child=factory({Classes:['card','selected'],Selected:false});
+		document.body.appendChild(child.Element());
+
+		expect(child.Element().classList.contains('static')).toBe(true);
+		expect(child.Element().classList.contains('card')).toBe(true);
+		expect(child.Element().classList.contains('selected')).toBe(false);
+
+		child.Update({Classes:['large'],Selected:true});
+
+		expect(child.Element().classList.contains('static')).toBe(true);
+		expect(child.Element().classList.contains('card')).toBe(false);
+		expect(child.Element().classList.contains('large')).toBe(true);
+		expect(child.Element().classList.contains('selected')).toBe(true);
+		child.Destroy();
+	});
+
+	test('[style] owns an object while [style.name] owns one property and static styles survive', function () {
+		var name=unique('StyleBindings');
+		var factory=Elemenx.Component(name,{
+			Template:'<div style="position: relative; height: 10px" [style]="Styles" [style.height]="Height"></div>'
+		});
+
+		var child=factory({
+			Styles:{width:'20px',height:'30px','--accent':'red'},
+			Height:null
+		});
+		document.body.appendChild(child.Element());
+
+		expect(child.Element().style.position).toBe('relative');
+		expect(child.Element().style.width).toBe('20px');
+		expect(child.Element().style.height).toBe('');
+		expect(child.Element().style.getPropertyValue('--accent')).toBe('red');
+
+		child.Update({
+			Styles:{width:'40px','background-color':'black'},
+			Height:'50px'
+		});
+
+		expect(child.Element().style.position).toBe('relative');
+		expect(child.Element().style.width).toBe('40px');
+		expect(child.Element().style.height).toBe('50px');
+		expect(child.Element().style.getPropertyValue('--accent')).toBe('');
+		expect(child.Element().style.backgroundColor).toBe('black');
+		child.Destroy();
+	});
+
+	test('[class] and [style] reject ambiguous value shapes', function () {
+		var className=unique('StrictClass');
+		var styleName=unique('StrictStyle');
+		var classFactory=Elemenx.Component(className,{Template:'<div [class]="Classes"></div>'});
+		var styleFactory=Elemenx.Component(styleName,{Template:'<div [style]="Styles"></div>'});
+
+		expect(function () {
+			classFactory({Classes:'card'});
+		}).toThrow();
+
+		expect(function () {
+			styleFactory({Styles:['width: 10px']});
+		}).toThrow();
+	});
 });
