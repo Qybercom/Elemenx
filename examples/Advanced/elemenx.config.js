@@ -1,0 +1,12 @@
+module.exports={
+	Application:'application',
+	Entry:'app.js',
+	Index:'index.html',
+	Output:'dist',
+	Server:{
+		DevelopmentPort:4173,
+		ProductionPort:4175,
+		Compression:true,
+		CompressionThreshold:1024
+	}
+};

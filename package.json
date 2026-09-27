@@ -5,6 +5,7 @@
 	"main": "elemenx.js",
 	"files": [
 		"elemenx.js",
+		"elemenx-cli.js",
 		"README.md",
 		"LICENSE",
 		"tools",
@@ -16,10 +17,10 @@
 		"test:watch": "vitest",
 		"test:history": "playwright test",
 		"examples": "vite --host 127.0.0.1",
-		"example:simple": "node tools/server.js examples/Simple 4174",
-		"example:advanced": "node tools/builder.js dev examples/Advanced --port 4173",
-		"build:advanced": "node tools/builder.js build examples/Advanced",
-		"example:advanced:dist": "node tools/builder.js serve examples/Advanced/dist --port 4175"
+		"example:simple": "node elemenx-cli.js dev examples/Simple --port 4174",
+		"example:advanced": "node elemenx-cli.js dev examples/Advanced",
+		"build:advanced": "node elemenx-cli.js build examples/Advanced",
+		"example:advanced:dist": "node elemenx-cli.js serve examples/Advanced"
 	},
 	"devDependencies": {
 		"@playwright/test": "1.63.0",
@@ -27,5 +28,8 @@
 		"playwright": "1.63.0",
 		"vite": "7.3.6",
 		"vitest": "5.0.1"
+	},
+	"bin": {
+		"elemenx": "elemenx-cli.js"
 	}
 }

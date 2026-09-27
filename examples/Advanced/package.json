@@ -3,7 +3,9 @@
 	"private": true,
 	"version": "1.0.0",
 	"scripts": {
-		"start": "node node_modules/elemenx/tools/server.js ."
+		"dev": "elemenx dev",
+		"build": "elemenx build",
+		"serve": "elemenx serve"
 	},
 	"dependencies": {
 		"elemenx": "^1.0.0"

@@ -50,3 +50,21 @@ npm run build:advanced
 npm run example:advanced
 npm run example:advanced:dist
 ```
+
+## Elemenx CLI
+
+`elemenx-cli.js` is the public toolchain entry point. When installed as a package it is exposed as `elemenx`.
+
+```text
+elemenx build [project]
+elemenx dev [project] [--port 4173]
+elemenx serve [project] [--port 4175]
+elemenx help
+elemenx version
+```
+
+The command registry is intentionally extensible for future command groups such as `generate component`, `generate service`, `generate guard`, `generate directive`, `inspect`, and other project operations.
+
+An optional `elemenx.config.js` may export `Application`, `Entry`, `Index`, `Output`, and `Server` settings. CLI options override configuration, and configuration overrides Elemenx defaults.
+
+Production `serve` enables gzip for compressible responses of at least 1024 bytes and sends `ETag`, `Last-Modified`, `Vary: Accept-Encoding`, and conditional `304` responses. Development serving does not compress by default.

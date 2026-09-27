@@ -4,8 +4,7 @@ var fs = require('fs');
 var path = require('path');
 
 function fail (message) {
-	process.stderr.write('Elemenx Builder: ' + message + '\n');
-	process.exit(1);
+	throw new Error(message);
 }
 
 function readIndex (directory) {
@@ -203,37 +202,43 @@ function usage () {
 		'       node tools/builder.js dev <project> [--port 4173]');
 }
 
-var args = process.argv.slice(2);
-var command = args.shift();
-var target = args.shift();
+module.exports={
+	Build:build,
+	Scan:scan,
+	Render:render
+};
 
-if (!command) usage();
+if (require.main === module) {
+	var args=process.argv.slice(2);
+	var command=args.shift();
+	var target=args.shift();
 
-/* Phase 1 compatibility: builder.js <application-root> <output.js>. */
-if (command !== 'build' && command !== 'serve' && command !== 'dev') {
-	if (!target) usage();
-	var legacyRoot = path.resolve(command);
-	var legacyOutput = path.resolve(target);
-	var legacyEntities = {};
-	scan(legacyRoot,legacyRoot,legacyEntities,{});
-	fs.mkdirSync(path.dirname(legacyOutput),{recursive:true});
-	fs.writeFileSync(legacyOutput,render(legacyEntities));
-	process.stdout.write('Elemenx Builder: ' + legacyOutput + '\n');
-}
-else if (command === 'build') {
-	if (!target) usage();
-	build(path.resolve(target),{
-		out:option(args,'out','dist'),
-		application:option(args,'application','application'),
-		entry:option(args,'entry','app.js'),
-		index:option(args,'index','index.html')
-	});
-}
-else if (command === 'serve') {
-	if (!target) usage();
-	serve(path.resolve(target),args);
-}
-else if (command === 'dev') {
-	if (!target) usage();
-	serve(path.resolve(target),args);
+	try {
+		if (!command)
+			throw new Error('usage: node tools/builder.js build <project>');
+
+		if (command !== 'build') {
+			if (!target) throw new Error('legacy output path is required');
+			var legacyRoot=path.resolve(command);
+			var legacyOutput=path.resolve(target);
+			var legacyEntities={};
+			scan(legacyRoot,legacyRoot,legacyEntities,{});
+			fs.mkdirSync(path.dirname(legacyOutput),{recursive:true});
+			fs.writeFileSync(legacyOutput,render(legacyEntities));
+			process.stdout.write('Elemenx Builder: ' + legacyOutput + '\n');
+		}
+		else {
+			if (!target) throw new Error('project path is required');
+			build(path.resolve(target),{
+				out:option(args,'out','dist'),
+				application:option(args,'application','application'),
+				entry:option(args,'entry','app.js'),
+				index:option(args,'index','index.html')
+			});
+		}
+	}
+	catch (error) {
+		process.stderr.write('Elemenx Builder: ' + error.message + '\n');
+		process.exitCode=1;
+	}
 }
