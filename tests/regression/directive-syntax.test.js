@@ -889,4 +889,82 @@ describe('Regression: directive syntax', function () {
 		parent.Destroy();
 	});
 
+
+	test('directive policy rejects multiple structural directives on one host', function () {
+		var first=unique('PolicyStructuralA').toLowerCase();
+		var second=unique('PolicyStructuralB').toLowerCase();
+
+		Elemenx.Directive(first,{Structural:true});
+		Elemenx.Directive(second,{Structural:true});
+
+		expect(function () {
+			Elemenx.Component(unique('PolicyStructuralOwner'),{
+				Template:'<main><span *'+first+'="true" *'+second+'="true">x</span></main>'
+			})();
+		}).toThrow(/one structural directive per host/);
+	});
+
+	test('directive policy composes structural directives explicitly through nesting', function () {
+		var name=unique('PolicyNestedStructural');
+		var component=Elemenx.Component(name,{
+			Template:'<main><section *if="Outer"><span *for="item of Items" *key="item.id">{{item.name}}</span></section></main>',
+			Outer:true,
+			Items:[{id:1,name:'one'},{id:2,name:'two'}]
+		})();
+
+		expect(component.Element().textContent).toContain('one');
+		expect(component.Element().textContent).toContain('two');
+		component.Outer=false;
+		expect(component.Element().textContent).not.toContain('one');
+		component.Destroy();
+	});
+
+	test('directive policy rejects orphan or incompatible directive arguments', function () {
+		expect(function () {
+			Elemenx.Component(unique('PolicyOrphanArgument'),{
+				Template:'<main><span *key="ID">x</span></main>'
+			})();
+		}).toThrow(/has no compatible structural host/);
+
+		expect(function () {
+			Elemenx.Component(unique('PolicyWrongArgumentHost'),{
+				Template:'<main><span *if="Visible" *key="ID">x</span></main>',
+				Visible:true,
+				ID:1
+			})();
+		}).toThrow(/has no compatible structural host/);
+	});
+
+	test('behavioral directives create and update in declaration order and destroy in reverse order', function () {
+		var first=unique('PolicyBehaviorA').toLowerCase();
+		var second=unique('PolicyBehaviorB').toLowerCase();
+		var log=[];
+
+		function behavior (name) {
+			return {
+				ElemenxOnCreate:function () {log.push('create:'+name);},
+				ElemenxOnUpdate:function () {log.push('update:'+name);},
+				ElemenxOnDestroy:function () {log.push('destroy:'+name);}
+			};
+		}
+
+		Elemenx.Directive(first,behavior(first));
+		Elemenx.Directive(second,behavior(second));
+
+		var component=Elemenx.Component(unique('PolicyBehaviorOwner'),{
+			Template:'<main><span *'+first+'="Value" *'+second+'="Value"></span></main>',
+			Value:1
+		})();
+
+		expect(log.slice(0,4)).toEqual([
+			'create:'+first,
+			'create:'+second,
+			'update:'+first,
+			'update:'+second
+		]);
+
+		component.Destroy();
+		expect(log.slice(-2)).toEqual(['destroy:'+second,'destroy:'+first]);
+	});
+
 });

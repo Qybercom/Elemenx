@@ -1537,6 +1537,41 @@
 			}
 			return null;
 		},
+		Policy: function (node) {
+			var attrs=node && node.attributes ? node.attributes : [];
+			var structural=null;
+			var directiveArguments=[];
+			var i=0;
+			var resolved;
+
+			while (i < attrs.length) {
+				resolved=this.Resolve(attrs[i].name);
+
+				if (resolved && resolved.Definition.Kind === 'structural') {
+					if (structural)
+						throw new Error('Elemenx allows one structural directive per host: *' + structural.Name + ', *' + resolved.Name);
+
+					structural={Name:resolved.Name,Definition:resolved.Definition};
+				}
+				else if (resolved && resolved.Definition.Kind === 'argument') {
+					directiveArguments.push(resolved);
+				}
+
+				i++;
+			}
+
+			i=0;
+			while (i < directiveArguments.length) {
+				resolved=directiveArguments[i];
+
+				if (!structural || (resolved.Definition.For && resolved.Definition.For !== structural.Definition.Host))
+					throw new Error('Elemenx directive argument *' + resolved.Name + ' has no compatible structural host');
+
+				i++;
+			}
+
+			return structural;
+		},
 		AttributeForRole: function (role) {
 			var name;
 			var definition;
@@ -5244,6 +5279,9 @@
 			
 			function compile (node) {
 				if (node.nodeType !== 1) return;
+
+				/* Directive composition policy is validated before host dispatch. */
+				Runtime.Directive.Policy(node);
 				
 				/*
 				 * Projection is an ownership boundary, not a traversal dead-end.
