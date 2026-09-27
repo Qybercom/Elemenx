@@ -145,4 +145,30 @@ describe('Regression: directive syntax', function () {
 		child.Destroy();
 	});
 
+	test('runtime structural and projection hosts do not expose internal data-* metadata', function () {
+		var childName=unique('ProjectionMetadataChild');
+		var parentName=unique('ProjectionMetadataParent');
+		Elemenx.Component(childName,{Template:'<section><slot></slot></section>'});
+		var factory=Elemenx.Component(parentName,{
+			Template:'<div><'+childName+'><span *if="Visible">Projected</span></'+childName+'></div>'
+		});
+		var component=factory({Visible:true});
+		document.body.appendChild(component.Element());
+
+		expect(component.Element().querySelector('[data-ui-slot-group]')).toBeNull();
+		expect(component.Element().querySelector('[data-ui-structural-root]')).toBeNull();
+		component.Destroy();
+	});
+
+	test('root structural host does not expose internal data-* metadata', function () {
+		var name=unique('StructuralRootMetadata');
+		var factory=Elemenx.Component(name,{Template:'<div *if="Visible">Visible</div>'});
+		var component=factory({Visible:true});
+		document.body.appendChild(component.Element());
+
+		expect(component.Element().hasAttribute('data-ui-structural-root')).toBe(false);
+		expect(component.Element().querySelector('[data-ui-structural-root]')).toBeNull();
+		component.Destroy();
+	});
+
 });

@@ -1502,6 +1502,7 @@
 		var styleResources = {};
 		var stylePending = {};
 		var styleSequence = 0;
+		var installedComponentStyles = {};
 		
 		function loadTemplateURL (url, force, callback) {
 			var request;
@@ -1614,11 +1615,12 @@
 			}
 			
 			key = definition.ElemenxStyleKey;
-			style = global.document.querySelector('style[data-elemenx-style="' + key.replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '"]');
+			style = installedComponentStyles[key] || null;
 			
-			if (!style) {
+			if (!style || !style.parentNode) {
 				style = global.document.createElement('style');
-				style.setAttribute('data-elemenx-style', key);
+				style.__ElemenxStyleKey = key;
+				installedComponentStyles[key] = style;
 				(global.document.head || global.document.documentElement).appendChild(style);
 			}
 			
@@ -2611,7 +2613,7 @@
 					var structuralRoot = document.createElement('span');
 					
 					structuralRoot.style.display = 'contents';
-					structuralRoot.setAttribute('data-ui-structural-root', '');
+					structuralRoot.__ElemenxStructuralRoot = true;
 					structuralRoot.appendChild(root);
 					
 					root = structuralRoot;
@@ -4581,13 +4583,13 @@
 					if (!group) {
 						group = document.createElement('span');
 						group.style.display = 'contents';
-						group.setAttribute('data-ui-slot-group', name);
+						group.__ElemenxSlotGroup = name;
 						group.__ElemenxProjectionOwner = ownerToken;
 						
 						groups[name] = group;
 						blueprints[name] = document.createElement('span');
 						blueprints[name].style.display = 'contents';
-						blueprints[name].setAttribute('data-ui-slot-group', name);
+						blueprints[name].__ElemenxSlotGroup = name;
 						host.appendChild(group);
 					}
 					
@@ -4728,7 +4730,7 @@
 				 * through it. A receiving component sees the same DOM after slot
 				 * placement, but must not compile the projected subtree a second time.
 				 */
-				if (node.hasAttribute('data-ui-slot-group') && node.__ElemenxProjectionOwner !== ownerToken) return;
+				if (node.__ElemenxSlotGroup !== undefined && node.__ElemenxProjectionOwner !== ownerToken) return;
 				
 				if (node.hasAttribute(Runtime.Directive.Name('For'))) {
 					compileFor(node);
@@ -5065,7 +5067,7 @@
 				if (projectionBlueprintRoot) {
 					current = node;
 					
-					while (current && !(current.nodeType === 1 && current.hasAttribute('data-ui-slot-group'))) {
+					while (current && !(current.nodeType === 1 && current.__ElemenxSlotGroup !== undefined)) {
 						parent = current.parentNode;
 						if (!parent) return node;
 						
@@ -5077,7 +5079,7 @@
 					if (!current) return node;
 					
 					group = current;
-					name = group.getAttribute('data-ui-slot-group') || '';
+					name = group.__ElemenxSlotGroup || '';
 					targetRoot = projectionBlueprintRoot[name];
 					
 					if (!targetRoot) return node;

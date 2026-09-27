@@ -13,9 +13,11 @@ describe('Regression: Component Style / StyleURL', function () {
 		var second=factory();
 		document.getElementById('mount').appendChild(first.Element());
 		document.getElementById('mount').appendChild(second.Element());
-		var styles=document.querySelectorAll('style[data-elemenx-style="component:'+name+'"]');
+		var styles=Array.prototype.filter.call(document.querySelectorAll('style'),function (style) {
+			return style.textContent === css;
+		});
 		expect(styles.length).toBe(1);
-		expect(styles[0].textContent).toBe(css);
+		expect(styles[0].hasAttribute('data-elemenx-style')).toBe(false);
 		first.Destroy(); second.Destroy();
 	});
 
@@ -29,9 +31,11 @@ describe('Regression: Component Style / StyleURL', function () {
 		var component=factory();
 		document.getElementById('mount').appendChild(component.Element());
 		expect(await waitFor(function () {return document.getElementById('remote-style-component');},1000)).not.toBe(false);
-		var style=document.querySelector('style[data-elemenx-style="component:'+name+'"]');
-		expect(style).not.toBeNull();
-		expect(style.textContent).toContain('.remote-style-test');
+		var styles=Array.prototype.filter.call(document.querySelectorAll('style'),function (item) {
+			return item.textContent.indexOf('.remote-style-test') !== -1;
+		});
+		expect(styles.length).toBe(1);
+		expect(styles[0].hasAttribute('data-elemenx-style')).toBe(false);
 		expect(factory.Definition.StyleURL).toBe('/tests/public/component-style/Component.css');
 		component.Destroy();
 	});
