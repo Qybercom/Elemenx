@@ -8,7 +8,7 @@
 	</div>
 
 	<div class="project-showcase">
-		<ProjectCard data-for="project of Projects" data-key="project.id" name="{{project.name}}" description="{{project.description}}" environments="{{project.Environments}}" />
+		<ProjectCard *for="project of Projects" *key="project.id" name="{{project.name}}" description="{{project.description}}" Environments="{{project.Environments}}" />
 	</div>
 
 	<div class="iterator-showcase">
@@ -17,11 +17,11 @@
 				<p class="eyebrow">Counter loop</p>
 				<h3>Ordinary i loop</h3>
 			</div>
-			<p><code>data-for="i = 0; i < 5; i++"</code> keeps <code>i</code> local to the structural loop.</p>
+			<p><code>*for="i = 0; i < 5; i++"</code> keeps <code>i</code> local to the structural loop.</p>
 		</div>
 
 		<div class="iterator-list counter-list">
-			<span class="counter-iteration" data-for="i = 0; i < 5; i++">Iteration {{i}} <span data-if="i == 3">It's <b>3</b></span></span>
+			<span class="counter-iteration" *for="i = 0; i < 5; i++">Iteration {{i}} <span *if="i == 3">It's <b>3</b></span></span>
 		</div>
 	</div>
 
@@ -35,7 +35,7 @@
 		</div>
 
 		<div class="iterator-list">
-			<div data-for="i = 0; item = QueueItem(i); i++">
+			<div *for="i = 0; item = QueueItem(i); i++">
 				<IteratorBadge item="{{item}}" index="{{i}}" />
 			</div>
 		</div>

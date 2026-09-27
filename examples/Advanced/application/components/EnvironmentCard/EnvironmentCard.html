@@ -4,9 +4,9 @@
 		<span class="structure-label">loop #2 · component</span>
 	</div>
 
-	<div class="service-list" data-if="HasServices">
-		<ServiceBadge data-for="service of services" data-key="service.id" name="{{service.name}}" online="{{service.online}}" protected="{{service.protected}}" />
+	<div class="service-list" *if="HasServices">
+		<ServiceBadge *for="service of services" *key="service.id" name="{{service.name}}" online="{{service.online}}" protected="{{service.protected}}" />
 	</div>
 
-	<p class="empty-state" data-if="!HasServices">No services in this environment.</p>
+	<p class="empty-state" *if="!HasServices">No services in this environment.</p>
 </section>

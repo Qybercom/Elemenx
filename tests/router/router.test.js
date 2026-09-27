@@ -14,7 +14,7 @@ describe('Router / Guards', function () {
 	it('reuses common route components while updating params', async function () {
 		var made = 0;
 
-		Elemenx.Component('PackageRoot', {Template:'<main data-outlet="Content"></main>'});
+		Elemenx.Component('PackageRoot', {Template:'<main *outlet="Content"></main>'});
 		Elemenx.Component('PackagePage', {
 			Template:'<div id="route-value">{{Params.id}}|{{Query.q}}|{{Hash}}</div>',
 			ElemenxOnCreate:function () { made++; }
@@ -42,7 +42,7 @@ describe('Router / Guards', function () {
 	});
 
 	it('supports asynchronous guard wait', async function () {
-		Elemenx.Component('PackageGuardRoot', {Template:'<main data-outlet="Content"></main>'});
+		Elemenx.Component('PackageGuardRoot', {Template:'<main *outlet="Content"></main>'});
 		Elemenx.Component('PackageGuardPage', {Template:'<div id="guard-ok">OK</div>'});
 
 		Elemenx.Guard('PackageAsyncGuard', function () {

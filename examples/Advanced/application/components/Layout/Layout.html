@@ -17,28 +17,28 @@
 
 		<div class="header-actions">
 			<div class="status-list" aria-label="Demo access status">
-				<div class="status-pill" data-ref="SessionStatus">
+				<div class="status-pill" #SessionStatus>
 					<span class="status-icon" aria-hidden="true">●</span>
 					<span>
 						<small>Session</small>
-						<strong data-ref="SessionStatusText">Guest</strong>
+						<strong #SessionStatusText>Guest</strong>
 					</span>
 				</div>
-				<div class="status-pill" data-ref="AccessStatus">
+				<div class="status-pill" #AccessStatus>
 					<span class="status-icon" aria-hidden="true">◆</span>
 					<span>
 						<small>Project</small>
-						<strong data-ref="AccessStatusText">Denied</strong>
+						<strong #AccessStatusText>Denied</strong>
 					</span>
 				</div>
 			</div>
 
-			<button class="theme-switch" data-ref="Theme">{{Theme}} theme</button>
+			<button class="theme-switch" #Theme>{{Theme}} theme</button>
 		</div>
 	</header>
 
-	<main class="application-main" data-outlet="Content"></main>
-	<div class="waiting-outlet" data-outlet="Waiting"></div>
+	<main class="application-main" *outlet="Content"></main>
+	<div class="waiting-outlet" *outlet="Waiting"></div>
 
 	<footer>Built with Elemenx · Router · Services · Guards · Storage</footer>
 </div>

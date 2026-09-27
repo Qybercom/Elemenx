@@ -8,7 +8,7 @@ describe('Regression: current component structural surface', function () {
 	it('does not expose removed imperative Outlet / Render / RenderAll / List methods', function () {
 		var name=unique('CurrentSurface');
 		var Component=Elemenx.Component(name,{
-			Template:'<main><div data-outlet="body"></div><div data-ref="rows"></div></main>'
+			Template:'<main><div *outlet="body"></div><div #rows></div></main>'
 		});
 		var component=Component();
 		expect(component.Outlet).toBeUndefined();
@@ -21,7 +21,7 @@ describe('Regression: current component structural surface', function () {
 	it('keeps Ref as the supported public DOM lookup helper', function () {
 		var name=unique('CurrentRef');
 		var Component=Elemenx.Component(name,{
-			Template:'<main><span data-ref="value">ok</span></main>'
+			Template:'<main><span #value>ok</span></main>'
 		});
 		var component=Component();
 		expect(component.Ref('value')).not.toBeNull();

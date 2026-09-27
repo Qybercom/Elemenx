@@ -2,10 +2,10 @@
 	<span class="iterator-index">#{{index + 1}}</span>
 	<strong>{{item.name}}</strong>
 
-	<span class="iterator-state" data-if="item.ready">
+	<span class="iterator-state" *if="item.ready">
 		Ready
-		<span class="protected-state" data-if="item.protected">Protected</span>
+		<span class="protected-state" *if="item.protected">Protected</span>
 	</span>
 
-	<span class="iterator-state" data-if="!item.ready">Waiting</span>
+	<span class="iterator-state" *if="!item.ready">Waiting</span>
 </div>

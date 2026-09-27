@@ -3,7 +3,7 @@ import { loadElemenx, resetDOM, tick, unique } from '../setup.js';
 
 function boot (routes, events, notFound) {
 	var root=unique('RouterRoot'), appName=unique('RouterApp'), trace=[];
-	Elemenx.Component(root,{Template:'<main data-outlet="Content"></main>'});
+	Elemenx.Component(root,{Template:'<main *outlet="Content"></main>'});
 	var app=Elemenx.Application(appName,{Component:root,Mount:'#mount'});
 	var router=Elemenx.Router({Root:app.Component(),Routes:routes,NotFound:notFound});
 	var i=0;
@@ -120,7 +120,7 @@ describe('Regression: Router / Guards', function () {
 		Elemenx.Component(page,{Template:'<div id="waiting-target">TARGET</div>'});
 		Elemenx.Component(waiting,{Template:'<div id="waiting-global">WAIT</div>'});
 		var root=unique('WaitingRoot'),appName=unique('WaitingApp');
-		Elemenx.Component(root,{Template:'<main data-outlet="Content"></main><aside data-outlet="Waiting"></aside>'});
+		Elemenx.Component(root,{Template:'<main *outlet="Content"></main><aside *outlet="Waiting"></aside>'});
 		var app=Elemenx.Application(appName,{Component:root,Mount:'#mount'});
 		var router=Elemenx.Router({Root:app.Component(),Waiting:waiting,Routes:[{Path:'/',Component:home},{Path:'/waiting',Component:page,Guard:guard}]});
 		router.Start();
@@ -128,7 +128,7 @@ describe('Regression: Router / Guards', function () {
 		router.Go('/waiting');
 		await tick(20);
 		expect(document.getElementById('waiting-global')).not.toBeNull();
-		expect(document.getElementById('waiting-global').parentNode.getAttribute('data-outlet')).toBe('Waiting');
+		expect(document.getElementById('waiting-global').parentNode.hasAttribute('*outlet')).toBe(false);
 		expect(document.getElementById('waiting-home')).not.toBeNull();
 		expect(document.getElementById('waiting-target')).toBeNull();
 		await tick(100);
@@ -144,7 +144,7 @@ describe('Regression: Router / Guards', function () {
 		Elemenx.Component(globalWaiting,{Template:'<div id="global-waiting">GLOBAL</div>'});
 		Elemenx.Component(routeWaiting,{Template:'<div id="route-waiting">ROUTE</div>'});
 		var root=unique('RouteWaitingRoot'),appName=unique('RouteWaitingApp');
-		Elemenx.Component(root,{Template:'<main data-outlet="Content"></main><aside data-outlet="Waiting"></aside>'});
+		Elemenx.Component(root,{Template:'<main *outlet="Content"></main><aside *outlet="Waiting"></aside>'});
 		var app=Elemenx.Application(appName,{Component:root,Mount:'#mount'});
 		var router=Elemenx.Router({Root:app.Component(),Waiting:globalWaiting,Routes:[{Path:'/route-waiting',Component:page,Guard:guard,Waiting:routeWaiting}]});
 		router.Start();
@@ -165,14 +165,14 @@ describe('Regression: Router / Guards', function () {
 		Elemenx.Component(page,{Template:'<div id="custom-waiting-target">TARGET</div>'});
 		Elemenx.Component(waiting,{Template:'<div id="custom-waiting-loader">WAIT</div>'});
 		var root=unique('CustomWaitingOutletRoot'),appName=unique('CustomWaitingOutletApp');
-		Elemenx.Component(root,{Template:'<main data-outlet="Content"></main><aside data-outlet="Busy"></aside>'});
+		Elemenx.Component(root,{Template:'<main *outlet="Content"></main><aside *outlet="Busy"></aside>'});
 		var app=Elemenx.Application(appName,{Component:root,Mount:'#mount'});
 		var router=Elemenx.Router({Root:app.Component(),Waiting:waiting,WaitingOutlet:'Busy',Routes:[{Path:'/custom-waiting',Component:page,Guard:guard}]});
 		router.Start();
 		router.Go('/custom-waiting');
 		await tick(20);
 		expect(document.getElementById('custom-waiting-loader')).not.toBeNull();
-		expect(document.getElementById('custom-waiting-loader').parentNode.getAttribute('data-outlet')).toBe('Busy');
+		expect(document.getElementById('custom-waiting-loader').parentNode.hasAttribute('*outlet')).toBe(false);
 		await tick(100);
 		expect(document.getElementById('custom-waiting-loader')).toBeNull();
 		expect(document.getElementById('custom-waiting-target')).not.toBeNull();
@@ -181,7 +181,7 @@ describe('Regression: Router / Guards', function () {
 
 	it('common-prefix navigation reuses nested component instances', async function () {
 		var parent=unique('Parent'), child=unique('Child'), pm=0, cm=0, pi, ci;
-		Elemenx.Component(parent,{Template:'<section id="parent">{{Params.id}}<div data-outlet="Content"></div></section>',ElemenxOnCreate:function () {pm++;pi=this;}});
+		Elemenx.Component(parent,{Template:'<section id="parent">{{Params.id}}<div *outlet="Content"></div></section>',ElemenxOnCreate:function () {pm++;pi=this;}});
 		Elemenx.Component(child,{Template:'<b id="child">{{Query.q}}|{{Hash}}</b>',ElemenxOnCreate:function () {cm++;ci=this;}});
 		var x=boot([{Path:'/reuse/:id',Component:parent,Routes:[{Path:'child',Component:child}]}]);
 		x.Router.Go('/reuse/1/child?q=a#x');

@@ -1426,9 +1426,10 @@
 
 	Runtime.Directive = {
 		Names: {
-			If: 'data-if',
-			For: 'data-for',
-			Key: 'data-key',
+			If: '*if',
+			For: '*for',
+			Key: '*key',
+			Outlet: '*outlet',
 			Pending: 'data-pending',
 			Error: 'data-error',
 			Model: 'data-model'
@@ -1463,6 +1464,10 @@
 			var match = /^\(([^\)]+)\)$/.exec(attribute);
 			return match ? match[1] : null;
 		},
+		Ref: function (attribute) {
+			var match = /^#(.+)$/.exec(attribute);
+			return match ? match[1] : null;
+		},
 		Reserved: function (attribute) {
 			var name;
 			
@@ -1474,7 +1479,7 @@
 				if (Object.prototype.hasOwnProperty.call(this.Prefixes, name) && attribute.indexOf(this.Prefixes[name]) === 0) return true;
 			}
 			
-			return this.Binding(attribute) !== null || this.Event(attribute) !== null;
+			return this.Binding(attribute) !== null || this.Event(attribute) !== null || this.Ref(attribute) !== null;
 		}
 	};
 
@@ -1968,7 +1973,7 @@
 		function protectExpressionAttributes (html) {
 			var expressions = [];
 			var source = String(html || '').replace(
-				/(\s(?:data-(?:if|for|key)|\[[^\]\s]+\])\s*=\s*)(["'])([\s\S]*?)\2/gi,
+				/(\s(?:\*(?:if|for|key)|\[[^\]\s]+\])\s*=\s*)(["'])([\s\S]*?)\2/gi,
 				function (match, prefix, quote, expression) {
 					var index = expressions.length;
 					expressions.push(expression);
@@ -2024,26 +2029,39 @@
 		}
 		
 		function collectRefs (root, refs) {
-			if (root.nodeType === 1 && root.hasAttribute('data-ref')) {
-				refs[root.getAttribute('data-ref')] = root;
+			var nodes=[],all,i=0,j,attrs,name;
+
+			if (root.nodeType === 1) nodes.push(root);
+			if (root.querySelectorAll) {
+				all=root.querySelectorAll('*');
+				while (i < all.length) {
+					nodes.push(all[i]);
+					i++;
+				}
 			}
-			
-			if (!root.querySelectorAll) return;
-			
-			var nodes = root.querySelectorAll('[data-ref]'),
-				name,
-				i = 0;
-			
+
+			i=0;
 			while (i < nodes.length) {
-				name = nodes[i].getAttribute('data-ref');
-				
-				if (name)
-					refs[name] = nodes[i];
-				
+				attrs=Array.prototype.slice.call(nodes[i].attributes);
+				j=0;
+
+				while (j < attrs.length) {
+					name=Runtime.Directive.Ref(attrs[j].name);
+
+					if (name) {
+						name=name.toLowerCase();
+						refs[name]=nodes[i];
+						nodes[i].__ElemenxRefName=name;
+						nodes[i].removeAttribute(attrs[j].name);
+					}
+
+					j++;
+				}
+
 				i++;
 			}
 		}
-		
+
 		function addBinding (bindings, source, binding) {
 			binding.expression = source;
 			binding.evaluate = Runtime.CompileExpression(source);
@@ -2214,7 +2232,7 @@
 
 			i=0;
 			while (i < nodes.length) {
-				attrs=nodes[i].attributes;
+				attrs=Array.prototype.slice.call(nodes[i].attributes);
 				j=0;
 				classState=null;
 				styleState=null;
@@ -2257,6 +2275,8 @@
 						else {
 							throw new Error('Invalid Elemenx binding target: ['+target+']');
 						}
+						
+						nodes[i].removeAttribute(attr.name);
 					}
 					else if (Runtime.Directive.Is(attr.name,'Model')) {
 						key=attr.value;
@@ -2361,29 +2381,33 @@
 		}
 		
 		function collectOutlets (root, outlets) {
-			var nodes, i = 0, name;
-			
-			if (root.nodeType === 1 && root.hasAttribute('data-outlet')) {
-				name = root.getAttribute('data-outlet');
-				
-				if (name)
-					outlets[name] = Runtime.Outlet(root);
+			var nodes=[],all,i=0,name,attribute=Runtime.Directive.Name('Outlet');
+
+			if (root.nodeType === 1 && root.hasAttribute(attribute))
+				nodes.push(root);
+
+			if (root.querySelectorAll) {
+				all=root.querySelectorAll('*');
+
+				while (i < all.length) {
+					if (all[i].hasAttribute(attribute))
+						nodes.push(all[i]);
+					i++;
+				}
 			}
-			
-			if (!root.querySelectorAll) return;
-			
-			nodes = root.querySelectorAll('[data-outlet]');
-			
+
+			i=0;
 			while (i < nodes.length) {
-				name = nodes[i].getAttribute('data-outlet');
-				
+				name=nodes[i].getAttribute(attribute);
+
 				if (name)
-					outlets[name] = Runtime.Outlet(nodes[i]);
-				
+					outlets[name]=Runtime.Outlet(nodes[i]);
+
+				nodes[i].removeAttribute(attribute);
 				i++;
 			}
 		}
-		
+
 		function projectSlots (root, projection) {
 			var slots = [];
 			var found;
@@ -2566,9 +2590,9 @@
 				/*
 				 * A component root carrying a structural directive needs a stable
 				 * owner node. Structural() compiles children of Component.Element(),
-				 * so without this host a root data-if would be skipped completely.
+				 * so without this host a root *if would be skipped completely.
 				 * Keep the host transparent to layout while allowing the real root to
-				 * participate in the same destroy/recreate path as nested data-if.
+				 * participate in the same destroy/recreate path as nested *if.
 				 */
 				if (root.nodeType === 1 && root.hasAttribute(Runtime.Directive.Name('If'))) {
 					var structuralRoot = document.createElement('span');
@@ -2661,37 +2685,38 @@
 				}
 				
 				function Ref (name) {
-					var ref = refs[name] || null;
-					var node;
-					
-					if (ref && ref.isConnected && root.contains(ref)) return ref;
-					
-					/*
-					 * Structural directives may destroy/recreate DOM that contained
-					 * data-ref nodes after the initial collectRefs() pass. Never expose
-					 * a detached stale node; resolve the current live ref lazily.
-					 */
-					if (root.nodeType === 1 && root.getAttribute('data-ref') === name) {
-						node = root;
+					var key=String(name).toLowerCase();
+					var ref=refs[key] || null;
+					var nodes;
+					var i=0;
+
+					if (ref && root.contains(ref))
+						return ref;
+
+					ref=null;
+
+					if (root.nodeType === 1 && root.__ElemenxRefName === key)
+						ref=root;
+					else if (root.querySelectorAll) {
+						nodes=root.querySelectorAll('*');
+						while (i < nodes.length) {
+							if (nodes[i].__ElemenxRefName === key) {
+								ref=nodes[i];
+								break;
+							}
+							i++;
+						}
 					}
-					else if (root.querySelector) {
-						node = root.querySelector('[data-ref="' + String(name)
-							.replace(/\\/g, '\\\\')
-							.replace(/"/g, '\\"') + '"]');
+
+					if (ref) {
+						refs[key]=ref;
+						return ref;
 					}
-					
-					if (node) {
-						refs[name] = node;
-						
-						return node;
-					}
-					
-					if (ref)
-						delete refs[name];
-					
+
+					delete refs[key];
 					return null;
 				}
-				
+
 				function Outlet (name) {
 					return outlets[name] || null;
 				}
@@ -2759,7 +2784,12 @@
 					
 					i = 0;
 					while (i < nodes.length) {
-						attrs = nodes[i].attributes;
+						if (Runtime.ResolveComponentRegistered && Runtime.ResolveComponentRegistered(nodes[i].tagName)) {
+							i++;
+							continue;
+						}
+
+						attrs = Array.prototype.slice.call(nodes[i].attributes);
 						j = 0;
 						
 						while (j < attrs.length) {
@@ -2778,6 +2808,8 @@
 										});
 									})(nodes[i], eventName, method);
 								}
+								
+								nodes[i].removeAttribute(attr.name);
 							}
 							
 							j++;
@@ -5074,8 +5106,8 @@
 				var keyed={};
 				var limit=10000;
 
-				if (!mode) throw new Error('Elemenx data-for expects classic for, for..of or for..in syntax: ' + source);
-				if (mode === 'classic' && !initMatch) throw new Error('Elemenx data-for initializer must assign a local variable: ' + source);
+				if (!mode) throw new Error('Elemenx *for expects classic for, for..of or for..in syntax: ' + source);
+				if (mode === 'classic' && !initMatch) throw new Error('Elemenx *for initializer must assign a local variable: ' + source);
 				template.removeAttribute(Runtime.Directive.Name('For'));
 				template.removeAttribute(Runtime.Directive.Name('Key'));
 				parent.insertBefore(end,node.nextSibling);
@@ -5116,7 +5148,7 @@
 							result[name]=component.State[name];
 					
 					/*
-					 * Classic data-for conditions are evaluated before an iteration
+					 * Classic *for conditions are evaluated before an iteration
 					 * component exists, but they may call methods of the owning
 					 * component:
 					 *
@@ -5311,12 +5343,12 @@
 						var methodName;
 						
 						/*
-						 * A data-if subtree is structural ownership of THIS component,
+						 * A *if subtree is structural ownership of THIS component,
 						 * not a new semantic component. Runtime.CreateComponent is used
 						 * only as the subtree binding engine, so event methods inside the
 						 * recreated subtree must continue to resolve against the owner.
 						 *
-						 * Without these delegates a root/nested data-if clones the markup
+						 * Without these delegates a root/nested *if clones the markup
 						 * into an anonymous component whose definition contains Template
 						 * only. (event) listeners are then present in the DOM but have no
 						 * callable method, which is exactly what the deep event regression

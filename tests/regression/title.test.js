@@ -70,7 +70,7 @@ describe('Regression: Document Title', function () {
 				this.Title('Project "' + this.Params.id + '" - Elemenx');
 			}
 		});
-		Elemenx.Component(root,{Template:'<main data-outlet="Content"></main>'});
+		Elemenx.Component(root,{Template:'<main *outlet="Content"></main>'});
 		var application=Elemenx.Application(applicationName,{
 			Component:root,
 			Mount:'#mount',

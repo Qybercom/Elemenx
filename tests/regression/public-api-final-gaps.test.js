@@ -123,7 +123,7 @@ describe('Regression: final public API gap contracts', function () {
 	it('Component.Ref follows conditional structural recreation and never returns the removed node', async function () {
 		var name=unique('RefLifecycle');
 		var Component=Elemenx.Component(name,{
-			Template:'<main><section data-if="show"><span data-ref="value">{{value}}</span></section></main>'
+			Template:'<main><section *if="show"><span #value>{{value}}</span></section></main>'
 		});
 		var component=Component({show:true,value:'A'});
 		document.getElementById('mount').appendChild(component.Element());
@@ -151,7 +151,7 @@ describe('Regression: final public API gap contracts', function () {
 		var rootName=unique('RouterFacadeRoot');
 		var pageName=unique('RouterFacadePage');
 		var events=0;
-		Elemenx.Component(rootName,{Template:'<main data-outlet="Content"></main>'});
+		Elemenx.Component(rootName,{Template:'<main *outlet="Content"></main>'});
 		Elemenx.Component(pageName,{Template:'<div class="router-facade-page">PAGE</div>'});
 
 		var app=application(unique('RouterFacadeApplication'),{Component:rootName,Mount:'#mount'});

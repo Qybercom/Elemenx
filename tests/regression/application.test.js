@@ -49,7 +49,7 @@ describe('Regression: Application public facade and ownership', function () {
 		var layout=unique('DeclarativeRouterLayout');
 		var home=unique('DeclarativeRouterHome');
 		var next=unique('DeclarativeRouterNext');
-		Elemenx.Component(layout,{Template:'<main data-outlet="Content"></main>'});
+		Elemenx.Component(layout,{Template:'<main *outlet="Content"></main>'});
 		Elemenx.Component(home,{Template:'<div id="declarative-router-home">HOME</div>'});
 		Elemenx.Component(next,{Template:'<div id="declarative-router-next">NEXT</div>'});
 
@@ -78,8 +78,8 @@ describe('Regression: Application public facade and ownership', function () {
 		var layout=unique('OwnedRouterLayout');
 		var wrong=unique('WrongRouterRoot');
 		var home=unique('OwnedRouterHome');
-		Elemenx.Component(layout,{Template:'<main id="owned-router-root" data-outlet="Content"></main>'});
-		Elemenx.Component(wrong,{Template:'<main id="wrong-router-root" data-outlet="Content"></main>'});
+		Elemenx.Component(layout,{Template:'<main id="owned-router-root" *outlet="Content"></main>'});
+		Elemenx.Component(wrong,{Template:'<main id="wrong-router-root" *outlet="Content"></main>'});
 		Elemenx.Component(home,{Template:'<div id="owned-router-home">HOME</div>'});
 		var wrongRoot=Elemenx.Component(wrong)({},null,{});
 
@@ -98,7 +98,7 @@ describe('Regression: Application public facade and ownership', function () {
 	it('Destroy tears down the declarative Router owned by Application', async function () {
 		var layout=unique('DestroyRouterLayout');
 		var home=unique('DestroyRouterHome');
-		Elemenx.Component(layout,{Template:'<main data-outlet="Content"></main>'});
+		Elemenx.Component(layout,{Template:'<main *outlet="Content"></main>'});
 		Elemenx.Component(home,{Template:'<div>HOME</div>'});
 		var app=createApplication(unique('DestroyRouterApplication'),{
 			Component:layout,

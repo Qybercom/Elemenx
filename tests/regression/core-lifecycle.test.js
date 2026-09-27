@@ -8,7 +8,7 @@ describe('Regression: core / lifecycle / structural state', function () {
 	it('Destroy is idempotent and removes owned DOM listeners', function () {
 		var made = 0, gone = 0, hits = 0, name = unique('Life');
 		Elemenx.Component(name, {
-			Template:'<button data-ref="B">go</button>',
+			Template:'<button #B>go</button>',
 			ElemenxOnCreate:function () {
 				var self = this;
 				made++;
@@ -37,7 +37,7 @@ describe('Regression: core / lifecycle / structural state', function () {
 			ElemenxOnDestroy:function () { gone++; }
 		});
 		Elemenx.Component(root, {
-			Template:'<section><'+child+' data-if="show" value="{{value}}"></'+child+'></section>',
+			Template:'<section><'+child+' *if="show" value="{{value}}"></'+child+'></section>',
 			ElemenxOnCreate:function () { this.State.show = true; this.State.value = 'A'; window.__root = this; }
 		});
 		var c = Elemenx.Component(root)();
@@ -61,7 +61,7 @@ describe('Regression: core / lifecycle / structural state', function () {
 			Template:'<input class="row" data-model="label">'
 		});
 		Elemenx.Component(root, {
-			Template:'<section><'+row+' data-for="item of items" data-key="item.id" id="{{item.id}}" label="{{item.label}}"></'+row+'></section>',
+			Template:'<section><'+row+' *for="item of items" *key="item.id" id="{{item.id}}" label="{{item.label}}"></'+row+'></section>',
 			ElemenxOnCreate:function () {
 				this.State.items = [{id:'a',label:'A'},{id:'b',label:'B'}];
 				window.__keyRoot = this;
@@ -85,7 +85,7 @@ describe('Regression: core / lifecycle / structural state', function () {
 	it('Batch applies structural and scalar state together', async function () {
 		var root = unique('BatchRoot');
 		Elemenx.Component(root, {
-			Template:'<section><span data-if="show" id="batch-value">{{value}}</span></section>',
+			Template:'<section><span *if="show" id="batch-value">{{value}}</span></section>',
 			ElemenxOnCreate:function () { this.State.show=false; this.State.value='A'; window.__batchRoot=this; }
 		});
 		var c=Elemenx.Component(root)();
@@ -99,7 +99,7 @@ describe('Regression: core / lifecycle / structural state', function () {
 	it('parent Destroy recursively destroys structural descendants', async function () {
 		var child=unique('DeepChild'), root=unique('DeepRoot'), gone=0;
 		Elemenx.Component(child,{Template:'<i class="deep-child">{{label}}</i>',ElemenxOnDestroy:function () {gone++;}});
-		Elemenx.Component(root,{Template:'<div><'+child+' data-for="item of items" data-key="item.id" id="{{item.id}}" label="{{item.label}}"></'+child+'></div>',ElemenxOnCreate:function () {this.State.items=[{id:1,label:'A'},{id:2,label:'B'}];}});
+		Elemenx.Component(root,{Template:'<div><'+child+' *for="item of items" *key="item.id" id="{{item.id}}" label="{{item.label}}"></'+child+'></div>',ElemenxOnCreate:function () {this.State.items=[{id:1,label:'A'},{id:2,label:'B'}];}});
 		var c=Elemenx.Component(root)();
 		document.getElementById('mount').appendChild(c.Element());
 		await tick();
@@ -117,7 +117,7 @@ describe('Regression: core / lifecycle / structural state', function () {
 			ElemenxOnDestroy:function () {gone++;}
 		});
 		Elemenx.Component(root,{
-			Template:'<div><'+row+' data-for="item of items" data-key="item.id" id="{{item.id}}" label="{{item.label}}"></'+row+'></div>',
+			Template:'<div><'+row+' *for="item of items" *key="item.id" id="{{item.id}}" label="{{item.label}}"></'+row+'></div>',
 			ElemenxOnCreate:function () {this.State.items=[{id:'a',label:'A'},{id:'b',label:'B'},{id:'c',label:'C'}];window.__churn=this;}
 		});
 		var c=Elemenx.Component(root)();
@@ -142,7 +142,7 @@ describe('Regression: core / lifecycle / structural state', function () {
 			ElemenxOnCreate:function () {made++;this.State.local='L'+made;last=this;}
 		});
 		Elemenx.Component(root,{
-			Template:'<section><'+child+' data-if="show" value="{{value}}"></'+child+'><b id="iso-parent">{{value}}</b></section>',
+			Template:'<section><'+child+' *if="show" value="{{value}}"></'+child+'><b id="iso-parent">{{value}}</b></section>',
 			ElemenxOnCreate:function () {this.State.show=true;this.State.value='P1';window.__iso=this;}
 		});
 		var c=Elemenx.Component(root)();
@@ -166,13 +166,13 @@ describe('Regression: core / lifecycle / structural state', function () {
 	it('deep keyed/if/model/event lifecycle composition remains coherent', async function () {
 		var row=unique('ComboRow'),root=unique('ComboRoot'),made=0,gone=0;
 		Elemenx.Component(row,{
-			Template:'<div class="combo-row"><input class="combo-input" data-model="label"><button (click)="Remove">x</button><i data-if="enabled">{{label}}</i></div>',
+			Template:'<div class="combo-row"><input class="combo-input" data-model="label"><button (click)="Remove">x</button><i *if="enabled">{{label}}</i></div>',
 			Remove:function () {this.Emit('remove',{id:this.State.id});},
 			ElemenxOnCreate:function () {made++;},
 			ElemenxOnDestroy:function () {gone++;}
 		});
 		Elemenx.Component(root,{
-			Template:'<section><'+row+' data-for="item of items" data-key="item.id" id="{{item.id}}" label="{{item.label}}" enabled="{{item.enabled}}" (remove)="Remove"></'+row+'></section>',
+			Template:'<section><'+row+' *for="item of items" *key="item.id" id="{{item.id}}" label="{{item.label}}" enabled="{{item.enabled}}" (remove)="Remove"></'+row+'></section>',
 			ElemenxOnCreate:function () {this.State.items=[{id:'a',label:'A',enabled:true},{id:'b',label:'B',enabled:false}];window.__combo=this;},
 			Remove:function (e) {var next=[],i=0;while (i<this.State.items.length) {if (this.State.items[i].id!==e.id)next.push(this.State.items[i]);i++;}this.State.items=next;}
 		});

@@ -27,8 +27,8 @@ describe('Regression: dynamic templates / structural composition', function () {
 		b.Destroy();
 	});
 
-	it('Function Template recreates nested data-if with current state', async function () {
-		var name=unique('DynamicTemplateIf'), owner, source='<div><section data-if="outer"><b data-if="inner" class="leaf">{{text}}</b></section></div>';
+	it('Function Template recreates nested *if with current state', async function () {
+		var name=unique('DynamicTemplateIf'), owner, source='<div><section *if="outer"><b *if="inner" class="leaf">{{text}}</b></section></div>';
 		Elemenx.Component(name,{
 			Template:function () { return source; },
 			ElemenxOnCreate:function () {
@@ -59,7 +59,7 @@ describe('Regression: dynamic templates / structural composition', function () {
 	});
 
 	it('Function Template preserves keyed data-for identity and events', async function () {
-		var row=unique('DynamicTemplateRow'), root=unique('DynamicTemplateEach'), owner, hits='', source='<div><'+row+' data-for="item of items" data-key="item.id" id="{{item.id}}" name="{{item.name}}"></'+row+'></div>';
+		var row=unique('DynamicTemplateRow'), root=unique('DynamicTemplateEach'), owner, hits='', source='<div><'+row+' *for="item of items" *key="item.id" id="{{item.id}}" name="{{item.name}}"></'+row+'></div>';
 		Elemenx.Component(row,{
 			Template:'<button class="row" (click)="Hit">{{name}}</button>',
 			Hit:function () { hits+=this.State.name; }
@@ -90,7 +90,7 @@ describe('Regression: dynamic templates / structural composition', function () {
 	});
 
 	it('Function Template composes data-if with keyed component collection', async function () {
-		var cell=unique('DynamicTemplateCell'), root=unique('DynamicTemplateMix'), owner, made=0, gone=0, source='<div><section data-if="show"><'+cell+' data-for="item of items" data-key="item.id" id="{{item.id}}" name="{{item.name}}"></'+cell+'></section></div>';
+		var cell=unique('DynamicTemplateCell'), root=unique('DynamicTemplateMix'), owner, made=0, gone=0, source='<div><section *if="show"><'+cell+' *for="item of items" *key="item.id" id="{{item.id}}" name="{{item.name}}"></'+cell+'></section></div>';
 		Elemenx.Component(cell,{
 			Template:'<span class="cell">{{name}}</span>',
 			ElemenxOnCreate:function () { made++; },
@@ -151,7 +151,7 @@ describe('Regression: dynamic templates / structural composition', function () {
 	});
 
 	it('Function Template composes slot projection with structural content', async function () {
-		var box=unique('DynamicTemplateBox'), root=unique('DynamicTemplateSlot'), owner, source='<div><'+box+'><b data-if="show" class="projected">{{text}}</b></'+box+'></div>';
+		var box=unique('DynamicTemplateBox'), root=unique('DynamicTemplateSlot'), owner, source='<div><'+box+'><b *if="show" class="projected">{{text}}</b></'+box+'></div>';
 		Elemenx.Component(box,{Template:'<div class="box"><slot></slot></div>'});
 		Elemenx.Component(root,{
 			Template:function () { return source; },
@@ -183,8 +183,8 @@ describe('Regression: dynamic templates / structural composition', function () {
 		var root=unique('DynamicTemplateDeep');
 		var owner;
 		var hits='';
-		var source='<div><input class="edit" data-model="title"><section data-if="outer"><div data-if="inner">'+
-			'<'+row+' data-for="item of items" data-key="item.id" id="{{item.id}}" name="{{item.name}}"></'+row+'></div></section></div>';
+		var source='<div><input class="edit" data-model="title"><section *if="outer"><div *if="inner">'+
+			'<'+row+' *for="item of items" *key="item.id" id="{{item.id}}" name="{{item.name}}"></'+row+'></div></section></div>';
 		Elemenx.Component(row,{
 			Template:'<button class="deep-row" (click)="Hit">{{name}}</button>',
 			Hit:function () { hits+=this.State.name; }

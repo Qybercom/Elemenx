@@ -51,7 +51,7 @@ describe('Regression: deferred structural composition', function () {
 	});
 
 	it('nested-concurrent: keyed deferred children coalesce both child and nested-grandchild loads', async function () {
-		var app=appWithTemplate('<div><DeferredConcurrentChild data-for="item of items" data-key="item.id" id="{{item.id}}" name="{{item.name}}"></DeferredConcurrentChild></div>',function () {
+		var app=appWithTemplate('<div><DeferredConcurrentChild *for="item of items" *key="item.id" id="{{item.id}}" name="{{item.name}}"></DeferredConcurrentChild></div>',function () {
 			this.State.items=[{id:'a',name:'A'},{id:'b',name:'B'},{id:'c',name:'C'}];
 		});
 		expect(await appReady(app)).not.toBe(false);
@@ -62,8 +62,8 @@ describe('Regression: deferred structural composition', function () {
 		destroy(app);
 	});
 
-	it('nested-keyed-structural: data-if owns container and unresolved keyed children preserve identity and refresh', async function () {
-		var app=appWithTemplate('<section data-if="show"><DeferredKeyedChild data-for="item of items" data-key="item.id" id="{{item.id}}" name="{{item.name}}"></DeferredKeyedChild></section>',function () {
+	it('nested-keyed-structural: *if owns container and unresolved keyed children preserve identity and refresh', async function () {
+		var app=appWithTemplate('<section *if="show"><DeferredKeyedChild *for="item of items" *key="item.id" id="{{item.id}}" name="{{item.name}}"></DeferredKeyedChild></section>',function () {
 			this.State.show=true;
 			this.State.items=[{id:'a',name:'A'},{id:'b',name:'B'}];
 		});
@@ -111,7 +111,7 @@ describe('Regression: deferred structural composition', function () {
 	});
 
 	it('deferred-for-direct: unresolved component works directly under keyed data-for', async function () {
-		var app=appWithTemplate('<div><DeferredDirectChild data-for="item of items" data-key="item.id" id="{{item.id}}" name="{{item.name}}"></DeferredDirectChild></div>',function () {
+		var app=appWithTemplate('<div><DeferredDirectChild *for="item of items" *key="item.id" id="{{item.id}}" name="{{item.name}}"></DeferredDirectChild></div>',function () {
 			this.State.items=[{id:1,name:'A'},{id:2,name:'B'}];
 		});
 		expect(await appReady(app)).not.toBe(false);
@@ -157,7 +157,7 @@ describe('Regression: deferred structural composition', function () {
 	});
 
 	it('public discovery path: second structural instance reuses loaded remote definition', async function () {
-		var app=appWithTemplate('<div><section data-if="show"><DeferredCacheRemote value="{{value}}"></DeferredCacheRemote></section></div>',function () {
+		var app=appWithTemplate('<div><section *if="show"><DeferredCacheRemote value="{{value}}"></DeferredCacheRemote></section></div>',function () {
 			this.State.show=true;
 			this.State.value='A';
 		});
