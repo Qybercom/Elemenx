@@ -1518,13 +1518,13 @@
 				Definition:this.Registry[name]
 			} : null;
 		},
-		Find: function (node, kind, engine) {
+		Find: function (node, kind) {
 			var attrs=node && node.attributes ? node.attributes : [];
 			var i=0;
 			var resolved;
 			while (i < attrs.length) {
 				resolved=this.Resolve(attrs[i].name);
-				if (resolved && (!kind || resolved.Definition.Kind === kind) && (!engine || resolved.Definition.Engine === engine)) {
+				if (resolved && (!kind || resolved.Definition.Kind === kind)) {
 					return {Name:resolved.Name,Definition:resolved.Definition,Attribute:attrs[i].name,Expression:attrs[i].value || ''};
 				}
 				i++;
@@ -5182,7 +5182,6 @@
 			function compileComponent (node, factory, structuralDirective) {
 				var parent = node.parentNode;
 				var end = document.createComment('ui:' + node.tagName + ':end');
-				var condition = structuralDirective ? structuralDirective.Expression : null;
 
 				if (structuralDirective)
 					node.removeAttribute(structuralDirective.Attribute);
@@ -5198,94 +5197,133 @@
 				
 				parent.insertBefore(end, node.nextSibling);
 				parent.removeChild(node);
-				records.push(componentRecord(end,factory,blueprint,condition,eventMap,projected));
+				records.push(componentRecord(end,factory,blueprint,structuralDirective,eventMap,projected));
 			}
 			
-			function componentRecord (end, factory, blueprint, condition, eventMap, projected) {
+			function componentRecord (end, factory, blueprint, structuralDirective, eventMap, projected) {
 				var child = null;
 				var previousProps = null;
-				
+				var currentData = null;
+				var context = structuralDirective ? {
+					Name: structuralDirective.Name,
+					Element: blueprint,
+					Component: component,
+					Expression: structuralDirective.Expression,
+					Value: undefined,
+					Data: {},
+					Mounted: function () {
+						return child !== null;
+					},
+					Mount: function () {
+						var childProps;
+
+						if (child) return child;
+
+						childProps = props(blueprint, currentData || Runtime.ComponentValues(component));
+						child = factory(childProps, projected, asyncOptions(blueprint, factory.ComponentName || blueprint.tagName));
+						connect(child, eventMap);
+						end.parentNode.insertBefore(child.Element(), end);
+						previousProps = childProps;
+
+						return child;
+					},
+					Unmount: function () {
+						if (!child) return;
+						child.Destroy();
+						child = null;
+						previousProps = null;
+					}
+				} : null;
+
 				/*
 				 * Compile projected structure at declaration time. Delaying this until
 				 * the child becomes visible lets parent text bindings mutate the live
-				 * DOM first; a later *if clone would then snapshot rendered text
+				 * DOM first; a later structural mount would then snapshot rendered text
 				 * instead of the original {{expression}} template.
 				 */
 				if (projected)
 					compileProjection(projected);
-				
+
+				if (context && typeof structuralDirective.Definition.ElemenxOnCreate === 'function')
+					structuralDirective.Definition.ElemenxOnCreate(context);
+
 				var effect = Runtime.Effect(function () {
 					var data = Runtime.ComponentValues(component);
-					var visible = condition ? expression(data, condition) : true;
 					var childProps;
-					
-					if (!visible) {
-						if (child) {
-							child.Destroy();
-							child = null;
-							previousProps = null;
-						}
-						
-						return false;
+
+					currentData = data;
+
+					if (context) {
+						context.Value = context.Expression ? expression(data, context.Expression) : undefined;
+
+						if (typeof structuralDirective.Definition.ElemenxOnUpdate === 'function')
+							structuralDirective.Definition.ElemenxOnUpdate(context);
 					}
-					
-					childProps = props(blueprint, data);
-					
-					if (child) {
-						/*
-						 * Props are an input boundary. A retained child may mutate its own
-						 * state (for example through a two-way binding); do not overwrite that
-						 * local state merely because the parent effect ran again with the
-						 * same prop value. Only values that actually changed at the parent
-						 * boundary are propagated.
-						 */
-						var changedProps = {};
-						var changed = false;
-						var propName;
-						
-						for (propName in childProps) {
-							if (
-								own(childProps, propName) &&
-								(!previousProps || previousProps[propName] !== childProps[propName])
-							) {
-								changedProps[propName] = childProps[propName];
-								changed = true;
-							}
-						}
-						
-						if (changed)
-							child.Update(changedProps);
-					}
-					else {
+					else if (!child) {
+						childProps = props(blueprint, data);
 						child = factory(childProps, projected, asyncOptions(blueprint, factory.ComponentName || blueprint.tagName));
-						
 						connect(child, eventMap);
-						
 						end.parentNode.insertBefore(child.Element(), end);
+						previousProps = childProps;
 					}
-					
+
+					if (!child)
+						return false;
+
+					childProps = props(blueprint, data);
+
+					/*
+					 * Props are an input boundary. A retained child may mutate its own
+					 * state; propagate only values that actually changed at the parent
+					 * boundary.
+					 */
+					var changedProps = {};
+					var changed = false;
+					var propName;
+
+					for (propName in childProps) {
+						if (
+							own(childProps, propName) &&
+							(!previousProps || previousProps[propName] !== childProps[propName])
+						) {
+							changedProps[propName] = childProps[propName];
+							changed = true;
+						}
+					}
+
+					if (changed)
+						child.Update(changedProps);
+
 					previousProps = childProps;
-					
+
 					return true;
 				}, true);
-				
+
 				return {
 					Update: function () {
 						effect.Run();
 					},
-					
+
 					Destroy: function () {
 						effect.Destroy();
-						
-						if (child)
+
+						if (context) {
+							context.Unmount();
+
+							if (typeof structuralDirective.Definition.ElemenxOnDestroy === 'function')
+								structuralDirective.Definition.ElemenxOnDestroy(context);
+						}
+						else if (child) {
 							child.Destroy();
-						
-						child = null;
-						previousProps = null;
+							child = null;
+							previousProps = null;
+						}
+
+						currentData = null;
 					}
 				};
 			}
-			
+
 			function collectionRecord (
 				end,
 				factory,

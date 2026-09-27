@@ -575,4 +575,58 @@ describe('Regression: directive syntax', function () {
 		component.Destroy();
 	});
 
+
+	test('custom Structural directive controls a child Component through its lifecycle', function () {
+		var directive=unique('componentgate').toLowerCase();
+		var childName=unique('StructuralLifecycleChild');
+		var parentName=unique('StructuralLifecycleParent');
+		var created=0;
+		var updated=0;
+		var destroyed=0;
+
+		Elemenx.Directive(directive,{
+			Structural:true,
+			ElemenxOnCreate:function () {
+				created++;
+			},
+			ElemenxOnUpdate:function (context) {
+				updated++;
+				if (context.Value === 'open')
+					context.Mount();
+				else
+					context.Unmount();
+			},
+			ElemenxOnDestroy:function () {
+				destroyed++;
+			}
+		});
+
+		Elemenx.Component(childName,{
+			Template:'<strong class="custom-component-host">{{value}}</strong>',
+			value:''
+		});
+
+		var parent=Elemenx.Component(parentName,{
+			Template:'<div><'+childName+' *'+directive+'="Gate" value="{{Value}}"></'+childName+'></div>',
+			Gate:'closed',
+			Value:'A'
+		})();
+
+		expect(parent.Element().querySelector('.custom-component-host')).toBe(null);
+		expect(created).toBe(1);
+
+		parent.Gate='open';
+		expect(parent.Element().querySelector('.custom-component-host').textContent).toBe('A');
+
+		parent.Value='B';
+		expect(parent.Element().querySelector('.custom-component-host').textContent).toBe('B');
+
+		parent.Gate='closed';
+		expect(parent.Element().querySelector('.custom-component-host')).toBe(null);
+		expect(updated).toBeGreaterThan(1);
+
+		parent.Destroy();
+		expect(destroyed).toBe(1);
+	});
+
 });
