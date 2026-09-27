@@ -657,4 +657,127 @@ describe('Regression: directive syntax', function () {
 		component.Destroy();
 	});
 
+
+	test('custom Structural host stops reactive updates after owner Destroy', function () {
+		var directive=unique('cleanupgate').toLowerCase();
+		var name=unique('StructuralCleanupOwner');
+		var updates=0;
+		var destroys=0;
+
+		Elemenx.Directive(directive,{
+			Structural:true,
+			ElemenxOnUpdate:function (context) {
+				updates++;
+				if (context.Value)
+					context.Mount();
+				else
+					context.Unmount();
+			},
+			ElemenxOnDestroy:function () {
+				destroys++;
+			}
+		});
+
+		var component=Elemenx.Component(name,{
+			Template:'<div><span *'+directive+'="Visible">Owned</span></div>',
+			Visible:true
+		})();
+
+		expect(component.Element().textContent).toContain('Owned');
+		var beforeDestroy=updates;
+		component.Destroy();
+		expect(destroys).toBe(1);
+		expect(updates).toBe(beforeDestroy);
+	});
+
+	test('custom collection host destroys removed keyed child Components exactly once', function () {
+		var directive=unique('cleanuprepeat').toLowerCase();
+		var childName=unique('CollectionCleanupChild');
+		var parentName=unique('CollectionCleanupParent');
+		var destroyed=[];
+
+		Elemenx.Directive(directive,{
+			Structural:true,
+			Collection:true,
+			ElemenxOnUpdate:function (context) {
+				context.Render(context.Source(context.Expression),{
+					Mode:'of',
+					Variable:'item',
+					Key:context.Argument('key')
+				});
+			}
+		});
+
+		Elemenx.Component(childName,{
+			Template:'<b class="collection-cleanup-child">{{id}}</b>',
+			id:'',
+			ElemenxOnDestroy:function () {
+				destroyed.push(this.id);
+			}
+		});
+
+		var parent=Elemenx.Component(parentName,{
+			Template:'<div><'+childName+' *'+directive+'="Items" *key="item.id" id="{{item.id}}"></'+childName+'></div>',
+			Items:[
+				{id:'a'},
+				{id:'b'}
+			]
+		})();
+
+		expect(parent.Element().querySelectorAll('.collection-cleanup-child').length).toBe(2);
+		parent.Items=[{id:'b'}];
+		expect(destroyed.filter(function (id) { return id === 'a'; }).length).toBe(1);
+		expect(parent.Element().querySelectorAll('.collection-cleanup-child').length).toBe(1);
+
+		parent.Destroy();
+		expect(destroyed.filter(function (id) { return id === 'a'; }).length).toBe(1);
+		expect(destroyed.filter(function (id) { return id === 'b'; }).length).toBe(1);
+	});
+
+	test('nested custom Structural hosts destroy inner directive once with their owner', function () {
+		var outerDirective=unique('outercleanup').toLowerCase();
+		var innerDirective=unique('innercleanup').toLowerCase();
+		var name=unique('NestedStructuralCleanup');
+		var outerDestroyed=0;
+		var innerDestroyed=0;
+
+		Elemenx.Directive(outerDirective,{
+			Structural:true,
+			ElemenxOnUpdate:function (context) {
+				if (context.Value) context.Mount();
+				else context.Unmount();
+			},
+			ElemenxOnDestroy:function () {
+				outerDestroyed++;
+			}
+		});
+
+		Elemenx.Directive(innerDirective,{
+			Structural:true,
+			ElemenxOnUpdate:function (context) {
+				if (context.Value) context.Mount();
+				else context.Unmount();
+			},
+			ElemenxOnDestroy:function () {
+				innerDestroyed++;
+			}
+		});
+
+		var component=Elemenx.Component(name,{
+			Template:'<div><section *'+outerDirective+'="Outer"><i *'+innerDirective+'="Inner">Nested</i></section></div>',
+			Outer:true,
+			Inner:true
+		})();
+
+		component.Outer=false;
+		expect(innerDestroyed).toBe(1);
+
+		component.Outer=true;
+		expect(component.Element().textContent).toContain('Nested');
+		component.Destroy();
+
+		expect(outerDestroyed).toBe(1);
+		expect(innerDestroyed).toBe(2);
+	});
+
 });
