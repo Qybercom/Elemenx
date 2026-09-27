@@ -5,7 +5,7 @@
 	</div>
 
 	<div class="service-list" data-if="HasServices">
-		<ServiceBadge data-each="Services" data-key="id"></ServiceBadge>
+		<ServiceBadge data-for="service of services" data-key="service.id" name="{{service.name}}" online="{{service.online}}" protected="{{service.protected}}"></ServiceBadge>
 	</div>
 
 	<p class="empty-state" data-if="!HasServices">No services in this environment.</p>

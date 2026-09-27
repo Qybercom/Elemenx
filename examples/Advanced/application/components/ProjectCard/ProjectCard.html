@@ -8,6 +8,6 @@
 	</header>
 
 	<div class="environment-list">
-		<EnvironmentCard data-each="Environments" data-key="id"></EnvironmentCard>
+		<EnvironmentCard data-for="environment of environments" data-key="environment.id" name="{{environment.name}}" services="{{environment.Services}}"></EnvironmentCard>
 	</div>
 </article>

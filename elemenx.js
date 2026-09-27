@@ -1427,14 +1427,11 @@
 	Runtime.Directive = {
 		Names: {
 			If: 'data-if',
-			Each: 'data-each',
-			While: 'data-while',
+			For: 'data-for',
 			Key: 'data-key',
 			Pending: 'data-pending',
 			Error: 'data-error',
-			Model: 'data-model',
-			Show: 'data-show',
-			Hide: 'data-hide'
+			Model: 'data-model'
 		},
 		Prefixes: {
 			On: 'data-on-',
@@ -1966,7 +1963,7 @@
 		function protectExpressionAttributes (html) {
 			var expressions = [];
 			var source = String(html || '').replace(
-				/(\s(?:data-(?:if|each|while|show|hide)|data-bind-[A-Za-z0-9_.:-]+)\s*=\s*)(["'])([\s\S]*?)\2/gi,
+				/(\s(?:data-(?:if|for|key)|data-bind-[A-Za-z0-9_.:-]+)\s*=\s*)(["'])([\s\S]*?)\2/gi,
 				function (match, prefix, quote, expression) {
 					var index = expressions.length;
 					expressions.push(expression);
@@ -4546,8 +4543,8 @@
 				 */
 				if (node.hasAttribute('data-ui-slot-group') && node.__ElemenxProjectionOwner !== ownerToken) return;
 				
-				if (node.hasAttribute(Runtime.Directive.Name('While'))) {
-					compileWhile(node);
+				if (node.hasAttribute(Runtime.Directive.Name('For'))) {
+					compileFor(node);
 					
 					return;
 				}
@@ -4603,8 +4600,6 @@
 			function compileComponent (node, factory) {
 				var parent = node.parentNode;
 				var end = document.createComment('ui:' + node.tagName + ':end');
-				var each = node.getAttribute(Runtime.Directive.Name('Each'));
-				var key = node.getAttribute(Runtime.Directive.Name('Key')) || 'id';
 				var condition = node.getAttribute(Runtime.Directive.Name('If'));
 				var eventMap = events(node);
 				var pristineNode = pristineNodeFor(node);
@@ -4612,43 +4607,17 @@
 				var projected = slotProjection(node);
 				var blueprint = node.cloneNode(true);
 				
-				if (projected && pristineProjection && pristineProjection.Blueprints) {
+				if (projected && pristineProjection && pristineProjection.Blueprints)
 					projected.PrimeBlueprints(pristineProjection.Blueprints());
-				}
 				
 				parent.insertBefore(end, node.nextSibling);
 				parent.removeChild(node);
-				
-				if (each) {
-					records.push(
-						collectionRecord(
-							end,
-							factory,
-							blueprint,
-							each,
-							key,
-							condition,
-							eventMap,
-							projected
-						)
-					);
-				}
-				else {
-					records.push(
-						componentRecord(
-							end,
-							factory,
-							blueprint,
-							condition,
-							eventMap,
-							projected
-						)
-					);
-				}
+				records.push(componentRecord(end,factory,blueprint,condition,eventMap,projected));
 			}
 			
 			function componentRecord (end, factory, blueprint, condition, eventMap, projected) {
 				var child = null;
+				var previousProps = null;
 				
 				/*
 				 * Compile projected structure at declaration time. Delaying this until
@@ -4668,6 +4637,7 @@
 						if (child) {
 							child.Destroy();
 							child = null;
+							previousProps = null;
 						}
 						
 						return false;
@@ -4676,7 +4646,29 @@
 					childProps = props(blueprint, data);
 					
 					if (child) {
-						child.Update(childProps);
+						/*
+						 * Props are an input boundary. A retained child may mutate its own
+						 * state (for example through data-model); do not overwrite that
+						 * local state merely because the parent effect ran again with the
+						 * same prop value. Only values that actually changed at the parent
+						 * boundary are propagated.
+						 */
+						var changedProps = {};
+						var changed = false;
+						var propName;
+						
+						for (propName in childProps) {
+							if (
+								own(childProps, propName) &&
+								(!previousProps || previousProps[propName] !== childProps[propName])
+							) {
+								changedProps[propName] = childProps[propName];
+								changed = true;
+							}
+						}
+						
+						if (changed)
+							child.Update(changedProps);
 					}
 					else {
 						child = factory(childProps, projected, asyncOptions(blueprint, factory.ComponentName || blueprint.tagName));
@@ -4685,6 +4677,8 @@
 						
 						end.parentNode.insertBefore(child.Element(), end);
 					}
+					
+					previousProps = childProps;
 					
 					return true;
 				}, true);
@@ -4701,6 +4695,7 @@
 							child.Destroy();
 						
 						child = null;
+						previousProps = null;
 					}
 				};
 			}
@@ -4926,126 +4921,227 @@
 				return current || node;
 			}
 			
-			function compileWhile (node) {
-				var parent = node.parentNode;
-				var source = node.getAttribute(Runtime.Directive.Name('While')) || '';
-				var parts = source.split(';');
-				var counterMode = parts.length === 3;
-				var match = counterMode ? /^\s*([A-Za-z_$][A-Za-z0-9_$]*)\s*=\s*([\s\S]+)$/.exec(parts[0]) : /^\s*([A-Za-z_$][A-Za-z0-9_$]*)\s*=\s*([\s\S]+)$/.exec(source);
-				var variable = match ? match[1] : '$value';
-				var iterator = match ? match[2] : source;
-				var counterName = counterMode && match ? match[1] : null;
-				var counterInitial = counterMode && match ? match[2] : null;
-				var counterCondition = counterMode ? parts[1] : null;
-				var counterUpdate = counterMode ? parts[2] : null;
-				var template = blueprintFor(node).cloneNode(true);
-				var end = document.createComment('ui:while:' + source + ':end');
-				var children = [];
-				var limit = 10000;
-				
-				if (counterMode && !counterName)
-					throw new Error('Elemenx data-while counter initializer must assign a local variable: ' + source);
-				
-				template.removeAttribute(Runtime.Directive.Name('While'));
-				parent.insertBefore(end, node.nextSibling);
+			function compileFor (node) {
+				var parent=node.parentNode;
+				var source=node.getAttribute(Runtime.Directive.Name('For')) || '';
+				var keySource=node.getAttribute(Runtime.Directive.Name('Key'));
+				var classic=source.split(';');
+				var ofMatch=/^\s*([A-Za-z_$][A-Za-z0-9_$]*)\s+of\s+([\s\S]+)$/.exec(source);
+				var inMatch=/^\s*([A-Za-z_$][A-Za-z0-9_$]*)\s+in\s+([\s\S]+)$/.exec(source);
+				var mode=classic.length === 3 ? 'classic' : (ofMatch ? 'of' : (inMatch ? 'in' : null));
+				var initMatch=mode === 'classic' ? /^\s*([A-Za-z_$][A-Za-z0-9_$]*)\s*=\s*([\s\S]+)$/.exec(classic[0]) : null;
+				var template=blueprintFor(node).cloneNode(true);
+				var end=document.createComment('ui:for:' + source + ':end');
+				var children=[];
+				var keyed={};
+				var limit=10000;
+
+				if (!mode) throw new Error('Elemenx data-for expects classic for, for..of or for..in syntax: ' + source);
+				if (mode === 'classic' && !initMatch) throw new Error('Elemenx data-for initializer must assign a local variable: ' + source);
+				template.removeAttribute(Runtime.Directive.Name('For'));
+				template.removeAttribute(Runtime.Directive.Name('Key'));
+				parent.insertBefore(end,node.nextSibling);
 				parent.removeChild(node);
-				
-				function destroyChildren () {
-					var i = children.length - 1;
-					
-					while (i >= 0) {
-						children[i].Destroy();
-						i--;
-					}
-					
-					children = [];
-				}
-				
+
 				function iterationDefinition () {
-					var result = {Template: template.outerHTML};
+					/*
+					 * A structural iteration whose template root is itself an Elemenx
+					 * component needs one transparent DOM owner above that tag.
+					 *
+					 * Runtime.CreateComponent compiles descendants of its template root;
+					 * it does not reinterpret that root as another component. Native
+					 * elements can therefore remain the iteration root, while a custom
+					 * component tag must be placed one level below it.
+					 */
+					var componentRoot=factoryFor(template.tagName);
+					var templateSource=componentRoot
+						? '<span style="display:contents">' + template.outerHTML + '</span>'
+						: template.outerHTML;
+					var result={Template:templateSource};
 					var methodName;
-					
 					for (methodName in definition) {
-						if (
-							own(definition, methodName) &&
-							typeof definition[methodName] === 'function' &&
-							methodName !== 'Template' &&
-							methodName !== 'ElemenxOnCreate' &&
-							methodName !== 'ElemenxOnDestroy'
-						) {
+						if (own(definition,methodName) && typeof definition[methodName] === 'function' && methodName !== 'Template' && methodName !== 'ElemenxOnCreate' && methodName !== 'ElemenxOnDestroy') {
 							(function (name) {
-								result[name] = function () {
-									return definition[name].apply(component, arguments);
-								};
+								result[name]=function () { return definition[name].apply(component,arguments); };
 							})(methodName);
+						}
+					}
+					return result;
+				}
+
+				function baseScope () {
+					var result={};
+					var name;
+					
+					for (name in component.State)
+						if (own(component.State,name))
+							result[name]=component.State[name];
+					
+					/*
+					 * Classic data-for conditions are evaluated before an iteration
+					 * component exists, but they may call methods of the owning
+					 * component:
+					 *
+					 *     i = 0; item = QueueItem(i); i++
+					 *
+					 * Expose the same definition methods to the loop scope that the
+					 * generated iteration component receives below.
+					 */
+					for (name in definition) {
+						if (
+							own(definition,name) &&
+							typeof definition[name] === 'function' &&
+							name !== 'Template' &&
+							name !== 'ElemenxOnCreate' &&
+							name !== 'ElemenxOnDestroy'
+						) {
+							(function (methodName) {
+								result[methodName]=function () {
+									return definition[methodName].apply(component,arguments);
+								};
+							})(name);
 						}
 					}
 					
 					return result;
 				}
-				
-				var whileEffect = Runtime.Effect(function () {
-					var data = component.State;
-					var index = 0;
-					var value;
-					var scope;
-					var loopScope;
-					var key;
-					var child;
-					
-					destroyChildren();
-					loopScope = {};
-					for (key in data) {
-						if (own(data, key)) loopScope[key] = data[key];
+
+				function copyScope (sourceScope) {
+					var result={};
+					var name;
+					for (name in sourceScope) if (own(sourceScope,name)) result[name]=sourceScope[name];
+					return result;
+				}
+
+				function scopes () {
+					var result=[];
+					var loopScope=baseScope();
+					var list,iterator,step,name,scope;
+					var i=0;
+
+					if (mode === 'classic') {
+						/*
+						 * `with (scope)` can only keep an assignment local when the
+						 * assigned name already exists on that scope. A classic loop may
+						 * intentionally introduce another loop-local from its condition:
+						 *
+						 *     i = 0; item = QueueItem(i); i++
+						 *
+						 * Predeclare that simple assignment target before evaluation so it
+						 * cannot leak to globalThis and the captured iteration scope gets
+						 * the value produced by the condition.
+						 */
+						var conditionAssignment=/^\s*([A-Za-z_$][A-Za-z0-9_$]*)\s*=(?!=)/.exec(classic[1]);
+						loopScope[initMatch[1]]=expression(loopScope,initMatch[2]);
+						if (conditionAssignment && !own(loopScope,conditionAssignment[1]))
+							loopScope[conditionAssignment[1]]=undefined;
+						while (i < limit && expression(loopScope,classic[1])) {
+							scope=copyScope(loopScope);
+							scope.$index=i;
+							result.push(scope);
+							expression(loopScope,classic[2]);
+							i++;
+						}
 					}
-					
-					if (counterMode)
-						loopScope[counterName] = expression(loopScope, counterInitial);
-					
-					while (index < limit) {
-						if (counterMode) {
-							if (!expression(loopScope, counterCondition)) break;
-							value = loopScope[counterName];
+					else if (mode === 'of') {
+						list=expression(loopScope,ofMatch[2]);
+						if (list == null) list=[];
+						Runtime.TrackIteration(list);
+						if (typeof Symbol !== 'undefined' && list[Symbol.iterator]) {
+							iterator=list[Symbol.iterator]();
+							step=iterator.next();
+							while (!step.done && i < limit) {
+								scope=copyScope(loopScope);
+								scope[ofMatch[1]]=step.value;
+								scope.$index=i;
+								result.push(scope);
+								i++;
+								step=iterator.next();
+							}
 						}
 						else {
-							loopScope.$index = index;
-							value = expression(loopScope, iterator);
-							if (!value) break;
-							loopScope[variable] = value;
+							while (i < list.length && i < limit) {
+								scope=copyScope(loopScope);
+								scope[ofMatch[1]]=list[i];
+								scope.$index=i;
+								result.push(scope);
+								i++;
+							}
 						}
-						
-						scope = {};
-						for (key in loopScope) {
-							if (own(loopScope, key)) scope[key] = loopScope[key];
-						}
-						scope.$index = index;
-						child = Runtime.CreateComponent(iterationDefinition())(scope, null, {
-							DirectState: true,
-							Application: component.Application()
-						});
-						child.Parent(component);
-						end.parentNode.insertBefore(child.Element(), end);
-						children.push(child);
-						index++;
-						
-						if (counterMode) expression(loopScope, counterUpdate);
 					}
-					
-					if (index >= limit)
-						throw new Error('Elemenx structural loop exceeded iteration limit (' + limit + '): ' + source);
-					
-					return index;
-				}, true);
-				
+					else {
+						list=expression(loopScope,inMatch[2]);
+						if (list == null) list={};
+						Runtime.TrackIteration(list);
+						for (name in list) {
+							if (!own(list,name)) continue;
+							if (i >= limit) break;
+							scope=copyScope(loopScope);
+							scope[inMatch[1]]=name;
+							scope.$index=i;
+							result.push(scope);
+							i++;
+						}
+					}
+
+					if (i >= limit) throw new Error('Elemenx structural loop exceeded iteration limit (' + limit + '): ' + source);
+					return result;
+				}
+
+				function destroyAll () {
+					var i=children.length - 1;
+					while (i >= 0) { children[i].Child.Destroy(); i--; }
+					children=[];
+					keyed={};
+				}
+
+				var forEffect=Runtime.Effect(function () {
+					var nextScopes=scopes();
+					var nextChildren=[];
+					var nextKeyed={};
+					var used={};
+					var i=0,scope,identity,token,record,child;
+
+					if (!keySource) destroyAll();
+					while (i < nextScopes.length) {
+						scope=nextScopes[i];
+						record=null;
+						token=null;
+						if (keySource) {
+							identity=expression(scope,keySource);
+							if (identity === null || identity === undefined) throw new Error('Elemenx data-key resolved to null/undefined: ' + keySource);
+							token=typeof identity + ':' + String(identity);
+							if (used[token]) throw new Error('Elemenx duplicate data-key in data-for: ' + String(identity));
+							used[token]=true;
+							record=keyed[token] || null;
+						}
+						if (record) record.Child.Update(scope);
+						else {
+							child=Runtime.CreateComponent(iterationDefinition())(scope,null,{DirectState:true,Application:component.Application()});
+							child.Parent(component);
+							record={Child:child,Key:token};
+						}
+						end.parentNode.insertBefore(record.Child.Element(),end);
+						nextChildren.push(record);
+						if (keySource) nextKeyed[token]=record;
+						i++;
+					}
+					if (keySource) {
+						i=children.length - 1;
+						while (i >= 0) {
+							record=children[i];
+							if (!nextKeyed[record.Key]) record.Child.Destroy();
+							i--;
+						}
+					}
+					children=nextChildren;
+					keyed=nextKeyed;
+					return children.length;
+				},true);
+
 				records.push({
-					Update: function () {
-						whileEffect.Run();
-					},
-					
-					Destroy: function () {
-						whileEffect.Destroy();
-						destroyChildren();
-					}
+					Update:function () { forEffect.Run(); },
+					Destroy:function () { forEffect.Destroy(); destroyAll(); }
 				});
 			}
 

@@ -51,7 +51,7 @@ describe('Regression: deferred structural composition', function () {
 	});
 
 	it('nested-concurrent: keyed deferred children coalesce both child and nested-grandchild loads', async function () {
-		var app=appWithTemplate('<div><DeferredConcurrentChild data-each="items" data-key="id"></DeferredConcurrentChild></div>',function () {
+		var app=appWithTemplate('<div><DeferredConcurrentChild data-for="item of items" data-key="item.id" id="{{item.id}}" name="{{item.name}}"></DeferredConcurrentChild></div>',function () {
 			this.State.items=[{id:'a',name:'A'},{id:'b',name:'B'},{id:'c',name:'C'}];
 		});
 		expect(await appReady(app)).not.toBe(false);
@@ -63,7 +63,7 @@ describe('Regression: deferred structural composition', function () {
 	});
 
 	it('nested-keyed-structural: data-if owns container and unresolved keyed children preserve identity and refresh', async function () {
-		var app=appWithTemplate('<section data-if="show"><DeferredKeyedChild data-each="items" data-key="id"></DeferredKeyedChild></section>',function () {
+		var app=appWithTemplate('<section data-if="show"><DeferredKeyedChild data-for="item of items" data-key="item.id" id="{{item.id}}" name="{{item.name}}"></DeferredKeyedChild></section>',function () {
 			this.State.show=true;
 			this.State.items=[{id:'a',name:'A'},{id:'b',name:'B'}];
 		});
@@ -110,8 +110,8 @@ describe('Regression: deferred structural composition', function () {
 		}
 	});
 
-	it('deferred-each-direct: unresolved component works directly under keyed data-each', async function () {
-		var app=appWithTemplate('<div><DeferredDirectChild data-each="items" data-key="id"></DeferredDirectChild></div>',function () {
+	it('deferred-for-direct: unresolved component works directly under keyed data-for', async function () {
+		var app=appWithTemplate('<div><DeferredDirectChild data-for="item of items" data-key="item.id" id="{{item.id}}" name="{{item.name}}"></DeferredDirectChild></div>',function () {
 			this.State.items=[{id:1,name:'A'},{id:2,name:'B'}];
 		});
 		expect(await appReady(app)).not.toBe(false);
@@ -127,7 +127,7 @@ describe('Regression: deferred structural composition', function () {
 		destroy(app);
 	});
 
-	it('deferred-each-after-preload: remote keyed parent uses an already registered child definition', async function () {
+	it('deferred-for-after-preload: remote keyed parent uses an already registered child definition', async function () {
 		var app=appWithTemplate('<div class="deferred-preload-host"></div>');
 		expect(await appReady(app)).not.toBe(false);
 

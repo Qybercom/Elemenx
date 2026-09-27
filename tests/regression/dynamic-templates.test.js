@@ -58,8 +58,8 @@ describe('Regression: dynamic templates / structural composition', function () {
 		c.Destroy();
 	});
 
-	it('Function Template preserves keyed data-each identity and events', async function () {
-		var row=unique('DynamicTemplateRow'), root=unique('DynamicTemplateEach'), owner, hits='', source='<div><'+row+' data-each="items" data-key="id"></'+row+'></div>';
+	it('Function Template preserves keyed data-for identity and events', async function () {
+		var row=unique('DynamicTemplateRow'), root=unique('DynamicTemplateEach'), owner, hits='', source='<div><'+row+' data-for="item of items" data-key="item.id" id="{{item.id}}" name="{{item.name}}"></'+row+'></div>';
 		Elemenx.Component(row,{
 			Template:'<button class="row" data-on-click="Hit">{{name}}</button>',
 			Hit:function () { hits+=this.State.name; }
@@ -90,7 +90,7 @@ describe('Regression: dynamic templates / structural composition', function () {
 	});
 
 	it('Function Template composes data-if with keyed component collection', async function () {
-		var cell=unique('DynamicTemplateCell'), root=unique('DynamicTemplateMix'), owner, made=0, gone=0, source='<div><section data-if="show"><'+cell+' data-each="items" data-key="id"></'+cell+'></section></div>';
+		var cell=unique('DynamicTemplateCell'), root=unique('DynamicTemplateMix'), owner, made=0, gone=0, source='<div><section data-if="show"><'+cell+' data-for="item of items" data-key="item.id" id="{{item.id}}" name="{{item.name}}"></'+cell+'></section></div>';
 		Elemenx.Component(cell,{
 			Template:'<span class="cell">{{name}}</span>',
 			ElemenxOnCreate:function () { made++; },
@@ -184,7 +184,7 @@ describe('Regression: dynamic templates / structural composition', function () {
 		var owner;
 		var hits='';
 		var source='<div><input class="edit" data-model="title"><section data-if="outer"><div data-if="inner">'+
-			'<'+row+' data-each="items" data-key="id"></'+row+'></div></section></div>';
+			'<'+row+' data-for="item of items" data-key="item.id" id="{{item.id}}" name="{{item.name}}"></'+row+'></div></section></div>';
 		Elemenx.Component(row,{
 			Template:'<button class="deep-row" data-on-click="Hit">{{name}}</button>',
 			Hit:function () { hits+=this.State.name; }
