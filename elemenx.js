@@ -1487,8 +1487,12 @@
 			if (!internal && definition.Internal)
 				throw new Error('Elemenx directive Internal metadata is reserved');
 
+			if (definition.Structural === true)
+				definition.Kind='structural';
 			if (!definition.Kind)
 				definition.Kind='behavioral';
+			if (definition.Kind === 'structural' && !definition.Engine)
+				definition.Engine='host';
 
 			definition.Name=name;
 			definition.Internal=internal === true;
@@ -1512,6 +1516,19 @@
 				Definition:this.Registry[name]
 			} : null;
 		},
+		Find: function (node, kind, engine) {
+			var attrs=node && node.attributes ? node.attributes : [];
+			var i=0;
+			var resolved;
+			while (i < attrs.length) {
+				resolved=this.Resolve(attrs[i].name);
+				if (resolved && (!kind || resolved.Definition.Kind === kind) && (!engine || resolved.Definition.Engine === engine)) {
+					return {Name:resolved.Name,Definition:resolved.Definition,Attribute:attrs[i].name,Expression:attrs[i].value || ''};
+				}
+				i++;
+			}
+			return null;
+		},
 		Reserved: function (attribute) {
 			var name;
 
@@ -1529,8 +1546,15 @@
 	 * Alias exists only as a compatibility bridge for the current structural
 	 * engine while its handlers are moved behind generic directive capabilities.
 	 */
-	Runtime.Directive.Register('if',{Alias:'If',Kind:'structural'},true);
-	Runtime.Directive.Register('for',{Alias:'For',Kind:'structural'},true);
+	Runtime.Directive.Register('if',{
+		Alias:'If',
+		Structural:true,
+		ElemenxOnUpdate:function (context) {
+			if (context.Value) context.Mount();
+			else context.Unmount();
+		}
+	},true);
+	Runtime.Directive.Register('for',{Alias:'For',Kind:'structural',Engine:'legacy-for'},true);
 	Runtime.Directive.Register('key',{Alias:'Key',Kind:'argument'},true);
 	Runtime.Directive.Register('outlet',{Alias:'Outlet',Kind:'behavior'},true);
 	Runtime.Directive.Register('pending',{Alias:'Pending',Kind:'status'},true);
@@ -2416,7 +2440,7 @@
 				skip=false;
 				parent=nodes[i];
 				while (parent) {
-					if (parent.nodeType === 1 && (parent.hasAttribute(Runtime.Directive.Name('If')) || parent.hasAttribute(Runtime.Directive.Name('For')))) {
+					if (parent.nodeType === 1 && (Runtime.Directive.Find(parent,'structural'))) {
 						skip=true;
 						break;
 					}
@@ -4990,26 +5014,24 @@
 				 */
 				if (node.__ElemenxSlotGroup !== undefined && node.__ElemenxProjectionOwner !== ownerToken) return;
 				
-				if (node.hasAttribute(Runtime.Directive.Name('For'))) {
+				var structuralDirective=Runtime.Directive.Find(node,'structural');
+
+				if (structuralDirective && structuralDirective.Definition.Engine === 'legacy-for') {
 					compileFor(node);
-					
 					return;
 				}
-				
-				var factory = factoryFor(node.tagName);
-				
+
+				var factory=factoryFor(node.tagName);
 				if (factory) {
-					compileComponent(node, factory);
-					
+					compileComponent(node,factory,structuralDirective);
 					return;
 				}
-				
-				if (node.hasAttribute(Runtime.Directive.Name('If'))) {
-					compileIf(node);
-					
+
+				if (structuralDirective) {
+					compileStructural(node,structuralDirective);
 					return;
 				}
-				
+
 				scan(node);
 			}
 			
@@ -5044,10 +5066,14 @@
 				return current || null;
 			}
 			
-			function compileComponent (node, factory) {
+			function compileComponent (node, factory, structuralDirective) {
 				var parent = node.parentNode;
 				var end = document.createComment('ui:' + node.tagName + ':end');
-				var condition = node.getAttribute(Runtime.Directive.Name('If'));
+				var condition = structuralDirective ? structuralDirective.Expression : null;
+
+				if (structuralDirective)
+					node.removeAttribute(structuralDirective.Attribute);
+
 				var eventMap = events(node);
 				var pristineNode = pristineNodeFor(node);
 				var pristineProjection = pristineNode ? slotProjection(pristineNode.cloneNode(true)) : null;
@@ -5593,93 +5619,71 @@
 				});
 			}
 
-			function compileIf (node) {
-				var parent = node.parentNode;
-				var field = node.getAttribute(Runtime.Directive.Name('If'));
-				var template = blueprintFor(node).cloneNode(true);
-				var end = document.createComment('ui:if:' + field + ':end');
-				var child = null;
-				
-				template.removeAttribute(Runtime.Directive.Name('If'));
-				parent.insertBefore(end, node.nextSibling);
-				parent.removeChild(node);
-				
-				var conditionEffect = Runtime.Effect(function () {
-					var data = Runtime.ComponentValues(component);
-					
-					if (!expression(data, field)) {
-						if (child)
-							child.Destroy();
-						
-						child = null;
-						
-						return false;
-					}
-					
-					if (!child) {
-						var conditionalDefinition = {Template: template.outerHTML};
+			function compileStructural (node, directive) {
+				var parent=node.parentNode;
+				var field=directive.Expression;
+				var template=blueprintFor(node).cloneNode(true);
+				var end=document.createComment('ui:structural:' + directive.Name + ':end');
+				var child=null;
+				var context={
+					Name:directive.Name,
+					Element:node,
+					Component:component,
+					Expression:field,
+					Value:undefined,
+					Data:{},
+					Mounted:function () { return child !== null; },
+					Mount:function () {
+						var subtreeDefinition;
 						var methodName;
-						
-						/*
-						 * A *if subtree is structural ownership of THIS component,
-						 * not a new semantic component. Runtime.CreateComponent is used
-						 * only as the subtree binding engine, so event methods inside the
-						 * recreated subtree must continue to resolve against the owner.
-						 *
-						 * Without these delegates a root/nested *if clones the markup
-						 * into an anonymous component whose definition contains Template
-						 * only. (event) listeners are then present in the DOM but have no
-						 * callable method, which is exactly what the deep event regression
-						 * exposed. Lifecycle hooks are deliberately not copied: toggling a
-						 * structural subtree must not create/destroy the owner component.
-						 */
+						var data;
+						if (child) return child;
+						data=Runtime.ComponentValues(component);
+						subtreeDefinition={Template:template.outerHTML};
 						for (methodName in definition) {
-							if (
-								own(definition, methodName) &&
-								typeof definition[methodName] === 'function' &&
-								methodName !== 'Template' &&
-								methodName !== 'ElemenxOnCreate' &&
-								methodName !== 'ElemenxOnDestroy'
-							) {
+							if (own(definition,methodName) && typeof definition[methodName] === 'function' && methodName !== 'Template' && methodName !== 'ElemenxOnCreate' && methodName !== 'ElemenxOnDestroy') {
 								(function (name) {
-									conditionalDefinition[name] = function () {
-										return definition[name].apply(component, arguments);
-									};
+									subtreeDefinition[name]=function () { return definition[name].apply(component,arguments); };
 								})(methodName);
 							}
 						}
-						
-						child = Runtime.CreateComponent(conditionalDefinition)(data, null, {
-							DirectState: true,
-							Application: component.Application()
-						});
+						child=Runtime.CreateComponent(subtreeDefinition)(data,null,{DirectState:true,Application:component.Application()});
 						child.Parent(component);
-						end.parentNode.insertBefore(child.Element(), end);
-					}
-					
-					return true;
-				}, true);
-				
-				records.push({
-					Update: function () {
-						/*
-						 * First run is driven by Structural.Update after ElemenxOnCreate().
-						 * After that the Effect is dependency-driven by Proxy.
-						 */
-						conditionEffect.Run();
+						end.parentNode.insertBefore(child.Element(),end);
+						return child;
 					},
-					
-					Destroy: function () {
-						conditionEffect.Destroy();
-						
-						if (child)
-							child.Destroy();
-						
-						child = null;
+					Unmount:function () {
+						if (!child) return;
+						child.Destroy();
+						child=null;
+					}
+				};
+
+				template.removeAttribute(directive.Attribute);
+				parent.insertBefore(end,node.nextSibling);
+				parent.removeChild(node);
+
+				if (typeof directive.Definition.ElemenxOnCreate === 'function')
+					directive.Definition.ElemenxOnCreate(context);
+
+				var structuralEffect=Runtime.Effect(function () {
+					context.Value=field ? expression(Runtime.ComponentValues(component),field) : undefined;
+					if (typeof directive.Definition.ElemenxOnUpdate === 'function')
+						directive.Definition.ElemenxOnUpdate(context);
+					return context.Value;
+				},true);
+
+				records.push({
+					Update:function () { structuralEffect.Run(); },
+					Destroy:function () {
+						structuralEffect.Destroy();
+						context.Unmount();
+						if (typeof directive.Definition.ElemenxOnDestroy === 'function')
+							directive.Definition.ElemenxOnDestroy(context);
 					}
 				});
 			}
-			
+
 			scan(component.Element());
 			
 			return {

@@ -314,4 +314,93 @@ describe('Regression: directive syntax', function () {
 		component.Destroy();
 	});
 
+
+	test('custom Structural directive uses the same Mount/Unmount host as built-in if', function () {
+		var directive=unique('visible').toLowerCase();
+		var name=unique('CustomStructuralHost');
+		var created=0;
+		var destroyed=0;
+		Elemenx.Directive(directive,{
+			Structural:true,
+			ElemenxOnCreate:function () { created++; },
+			ElemenxOnUpdate:function (context) {
+				if (context.Value) context.Mount();
+				else context.Unmount();
+			},
+			ElemenxOnDestroy:function () { destroyed++; }
+		});
+		var component=Elemenx.Component(name,{
+			Template:'<div><button *'+directive+'="Visible" (click)="Hit">Visible</button></div>',
+			Visible:false,
+			Hits:0,
+			Hit:function () { this.Hits++; }
+		})();
+		expect(created).toBe(1);
+		expect(component.Element().querySelector('button')).toBe(null);
+		component.Visible=true;
+		var button=component.Element().querySelector('button');
+		expect(button).not.toBe(null);
+		button.dispatchEvent(new MouseEvent('click',{bubbles:true}));
+		expect(component.Hits).toBe(1);
+		component.Visible=false;
+		expect(component.Element().querySelector('button')).toBe(null);
+		component.Destroy();
+		expect(destroyed).toBe(1);
+	});
+
+	test('built-in if remains compatible through Structural Host', function () {
+		var component=Elemenx.Component(unique('BuiltInIfStructuralHost'),{
+			Template:'<div><span *if="Visible">Hello</span></div>',
+			Visible:false
+		})();
+		expect(component.Element().querySelector('span')).toBe(null);
+		component.Visible=true;
+		expect(component.Element().querySelector('span').textContent).toBe('Hello');
+		component.Visible=false;
+		expect(component.Element().querySelector('span')).toBe(null);
+		component.Destroy();
+	});
+
+
+	test('structural child component is recreated with current parent props', function () {
+		var childName=unique('StructuralPropsChild');
+		var parentName=unique('StructuralPropsParent');
+		Elemenx.Component(childName,{Template:'<span class="structural-props-child">{{value}}</span>',value:''});
+		var parent=Elemenx.Component(parentName,{
+			Template:'<div><'+childName+' *if="Show" value="{{value}}"></'+childName+'></div>',
+			Show:true,
+			value:'A'
+		})();
+		expect(parent.Element().querySelector('.structural-props-child').textContent).toBe('A');
+		parent.Show=false;
+		parent.value='B';
+		parent.Show=true;
+		expect(parent.Element().querySelector('.structural-props-child').textContent).toBe('B');
+		parent.Destroy();
+	});
+
+	test('structural child component keeps local state isolated across recreate', function () {
+		var childName=unique('StructuralIsolationChild');
+		var parentName=unique('StructuralIsolationParent');
+		Elemenx.Component(childName,{
+			Template:'<input class="structural-isolation-child" [(value)]="Value">',
+			Value:'CHILD'
+		});
+		var parent=Elemenx.Component(parentName,{
+			Template:'<div><span class="structural-isolation-parent">{{Value}}</span><'+childName+' *if="Show"></'+childName+'></div>',
+			Show:true,
+			Value:'PARENT'
+		})();
+		var input=parent.Element().querySelector('.structural-isolation-child');
+		input.value='LOCAL';
+		input.dispatchEvent(new Event('input',{bubbles:true}));
+		expect(parent.Value).toBe('PARENT');
+		parent.Show=false;
+		parent.Show=true;
+		expect(parent.Value).toBe('PARENT');
+		expect(parent.Element().querySelector('.structural-isolation-parent').textContent).toBe('PARENT');
+		expect(parent.Element().querySelector('.structural-isolation-child').value).toBe('CHILD');
+		parent.Destroy();
+	});
+
 });
