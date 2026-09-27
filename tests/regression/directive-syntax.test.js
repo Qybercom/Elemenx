@@ -533,4 +533,46 @@ describe('Regression: directive syntax', function () {
 		component.Destroy();
 	});
 
+
+	test('directive host selection is registry metadata rather than compiler collection special-case', function () {
+		var directive=unique('hostrepeat').toLowerCase();
+		var name=unique('DirectiveHostMetadata');
+
+		Elemenx.Directive(directive,{
+			Structural:true,
+			Collection:true,
+			ElemenxOnUpdate:function (context) {
+				context.Render(context.Source(context.Expression),{
+					Mode:'of',
+					Variable:'entry',
+					Key:context.Argument('key')
+				});
+			}
+		});
+
+		var component=Elemenx.Component(name,{
+			Template:'<div><i *'+directive+'="Entries" *key="entry.id">{{entry.value}}</i></div>',
+			Entries:[
+				{id:'a',value:'A'},
+				{id:'b',value:'B'}
+			]
+		})();
+
+		var first=component.Element().querySelectorAll('i');
+		var a=first[0];
+		var b=first[1];
+
+		component.Entries=[
+			{id:'b',value:'B2'},
+			{id:'a',value:'A2'}
+		];
+
+		var second=component.Element().querySelectorAll('i');
+		expect(second[0]).toBe(b);
+		expect(second[1]).toBe(a);
+		expect(second[0].textContent).toBe('B2');
+		expect(second[1].textContent).toBe('A2');
+		component.Destroy();
+	});
+
 });

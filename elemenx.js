@@ -1491,8 +1491,10 @@
 				definition.Kind='structural';
 			if (!definition.Kind)
 				definition.Kind='behavioral';
-			if (definition.Kind === 'structural' && !definition.Engine)
-				definition.Engine='host';
+			if (definition.Kind === 'structural' && definition.Collection === true && !definition.Host)
+				definition.Host='collection';
+			if (definition.Kind === 'structural' && !definition.Host)
+				definition.Host='structural';
 
 			definition.Name=name;
 			definition.Internal=internal === true;
@@ -5121,8 +5123,14 @@
 				
 				var structuralDirective=Runtime.Directive.Find(node,'structural');
 
-				if (structuralDirective && structuralDirective.Definition.Collection) {
-					compileCollectionDirective(node,structuralDirective);
+				/*
+				 * A non-default structural host owns the node before component
+				 * resolution. The default structural host composes with a Component
+				 * boundary, so the Component keeps its own state/lifecycle and receives
+				 * the directive as its structural condition.
+				 */
+				if (structuralDirective && structuralDirective.Definition.Host !== 'structural') {
+					compileDirectiveHost(node,structuralDirective);
 					return;
 				}
 
@@ -5133,7 +5141,7 @@
 				}
 
 				if (structuralDirective) {
-					compileStructural(node,structuralDirective);
+					compileDirectiveHost(node,structuralDirective);
 					return;
 				}
 
@@ -5499,6 +5507,22 @@
 				return current || node;
 			}
 			
+			function compileDirectiveHost (node, directive) {
+				var host=directive.Definition.Host;
+
+				if (host === 'collection') {
+					compileCollectionDirective(node,directive);
+					return;
+				}
+
+				if (host === 'structural') {
+					compileStructural(node,directive);
+					return;
+				}
+
+				throw new Error('Unknown Elemenx directive host: ' + host);
+			}
+
 			function compileCollectionDirective (node, directive) {
 				var parent=node.parentNode;
 				var template=blueprintFor(node).cloneNode(true);
