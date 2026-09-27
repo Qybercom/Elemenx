@@ -403,4 +403,31 @@ describe('Regression: directive syntax', function () {
 		parent.Destroy();
 	});
 
+
+	test('built-in for is registered as a collection structural capability', function () {
+		var component=Elemenx.Component(unique('CollectionCapabilityFor'),{
+			Template:'<ul><li *for="item of Items" *key="item.id">{{item.name}}</li></ul>',
+			Items:[
+				{id:1,name:'One'},
+				{id:2,name:'Two'}
+			]
+		})();
+
+		var items=component.Element().querySelectorAll('li');
+		expect(items.length).toBe(2);
+		expect(items[0].textContent).toBe('One');
+		expect(items[1].textContent).toBe('Two');
+
+		component.Items=[
+			{id:2,name:'Two updated'},
+			{id:3,name:'Three'}
+		];
+
+		items=component.Element().querySelectorAll('li');
+		expect(items.length).toBe(2);
+		expect(items[0].textContent).toBe('Two updated');
+		expect(items[1].textContent).toBe('Three');
+		component.Destroy();
+	});
+
 });

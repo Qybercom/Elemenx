@@ -1554,7 +1554,27 @@
 			else context.Unmount();
 		}
 	},true);
-	Runtime.Directive.Register('for',{Alias:'For',Kind:'structural',Engine:'legacy-for'},true);
+	Runtime.Directive.Register('for',{
+		Alias:'For',
+		Structural:true,
+		Collection:true,
+		ElemenxOnCreate:function (context) {
+			var match=/^\s*([A-Za-z_$][\w$]*)\s+(of|in)\s+(.+?)\s*$/.exec(context.Expression);
+			if (!match)
+				throw new Error('Invalid *for expression: ' + context.Expression);
+
+			context.Data.Variable=match[1];
+			context.Data.Operator=match[2];
+			context.Data.Source=match[3];
+		},
+		ElemenxOnUpdate:function (context) {
+			context.Render(context.Source(context.Data.Source),{
+				Variable:context.Data.Variable,
+				Operator:context.Data.Operator,
+				Key:context.Argument('key')
+			});
+		}
+	},true);
 	Runtime.Directive.Register('key',{Alias:'Key',Kind:'argument'},true);
 	Runtime.Directive.Register('outlet',{Alias:'Outlet',Kind:'behavior'},true);
 	Runtime.Directive.Register('pending',{Alias:'Pending',Kind:'status'},true);
@@ -5016,8 +5036,8 @@
 				
 				var structuralDirective=Runtime.Directive.Find(node,'structural');
 
-				if (structuralDirective && structuralDirective.Definition.Engine === 'legacy-for') {
-					compileFor(node);
+				if (structuralDirective && structuralDirective.Definition.Collection) {
+					compileCollectionDirective(node,structuralDirective);
 					return;
 				}
 
@@ -5394,9 +5414,9 @@
 				return current || node;
 			}
 			
-			function compileFor (node) {
+			function compileCollectionDirective (node, directive) {
 				var parent=node.parentNode;
-				var source=node.getAttribute(Runtime.Directive.Name('For')) || '';
+				var source=node.getAttribute(directive.Attribute) || '';
 				var keySource=node.getAttribute(Runtime.Directive.Name('Key'));
 				var classic=source.split(';');
 				var ofMatch=/^\s*([A-Za-z_$][A-Za-z0-9_$]*)\s+of\s+([\s\S]+)$/.exec(source);
@@ -5411,7 +5431,7 @@
 
 				if (!mode) throw new Error('Elemenx *for expects classic for, for..of or for..in syntax: ' + source);
 				if (mode === 'classic' && !initMatch) throw new Error('Elemenx *for initializer must assign a local variable: ' + source);
-				template.removeAttribute(Runtime.Directive.Name('For'));
+				template.removeAttribute(directive.Attribute);
 				template.removeAttribute(Runtime.Directive.Name('Key'));
 				parent.insertBefore(end,node.nextSibling);
 				parent.removeChild(node);
