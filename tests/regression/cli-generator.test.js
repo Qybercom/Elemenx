@@ -2,6 +2,7 @@ import {afterEach,describe,expect,it} from 'vitest';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
+import childProcess from 'child_process';
 import {createRequire} from 'module';
 
 var require=createRequire(import.meta.url);
@@ -80,6 +81,54 @@ describe('Elemenx graph-aware generator',function () {
 		expect(function () {
 			Generator.Generate(root,'service','../Outside',{});
 		}).toThrow(/outside application root/);
+	});
+
+	it('chooses the closest owner when several index.js files exist',function () {
+		var root=project();
+		var foo=path.join(root,'application','foo');
+		var nested=path.join(foo,'bar','nested');
+		fs.mkdirSync(nested,{recursive:true});
+		fs.writeFileSync(path.join(foo,'index.js'),'[]');
+		fs.writeFileSync(path.join(nested,'index.js'),'[]');
+		var result=Generator.Generate(root,'guard','foo/bar/nested/Authorized',{});
+		expect(result.Index).toBe(path.join(nested,'index.js'));
+		expect(fs.readFileSync(path.join(foo,'index.js'),'utf8')).toBe('[]');
+	});
+
+	it('normalizes dot paths and Windows separators',function () {
+		var root=project();
+		Generator.Generate(root,'service','./foo/bar/Session',{});
+		Generator.Generate(root,'guard','foo\\bar\\Authorized',{});
+		expect(fs.existsSync(path.join(root,'application','foo','bar','Session.js'))).toBe(true);
+		expect(fs.existsSync(path.join(root,'application','foo','bar','Authorized.js'))).toBe(true);
+	});
+
+	it('does not duplicate an existing graph entry',function () {
+		var root=project();
+		var index=path.join(root,'application','index.js');
+		fs.writeFileSync(index,"[\n\t'Tooltip.js'\n]");
+		fs.writeFileSync(path.join(root,'application','Tooltip.js'),'old');
+		Generator.Generate(root,'directive','Tooltip',{force:true});
+		expect(fs.readFileSync(index,'utf8').match(/Tooltip\.js/g).length).toBe(1);
+	});
+
+	it('respects a custom application root',function () {
+		var root=project();
+		fs.mkdirSync(path.join(root,'source'),{recursive:true});
+		fs.writeFileSync(path.join(root,'source','index.js'),'[]');
+		Generator.Generate(root,'service','domain/Session',{application:'source'});
+		expect(fs.existsSync(path.join(root,'source','domain','Session.js'))).toBe(true);
+	});
+
+	it('works through the real CLI and configured application root',function () {
+		var root=project();
+		var cli=path.resolve(process.cwd(),'elemenx-cli.js');
+		fs.mkdirSync(path.join(root,'source'),{recursive:true});
+		fs.writeFileSync(path.join(root,'source','index.js'),'[]');
+		fs.writeFileSync(path.join(root,'elemenx.config.js'),"module.exports={Application:'source'};");
+		var result=childProcess.spawnSync(process.execPath,[cli,'g','component','feature/TestCard',root],{encoding:'utf8'});
+		expect(result.status).toBe(0);
+		expect(fs.existsSync(path.join(root,'source','feature','TestCard','TestCard.js'))).toBe(true);
 	});
 
 	it('refuses overwrite unless force is used',function () {

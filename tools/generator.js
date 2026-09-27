@@ -19,7 +19,7 @@ function validName (name) {
 }
 
 function normalize (value) {
-	return value.split(path.sep).join('/');
+	return value.split('\\').join('/').split(path.sep).join('/');
 }
 
 function readIndex (file) {
@@ -127,7 +127,8 @@ function nearestIndex (application,destination) {
 
 function resolveEntity (application,type,target) {
 	var requested=target || '';
-	var absolute=path.resolve(application,requested || '.');
+	var normalizedRequested=String(requested || '.').split('\\').join('/');
+	var absolute=path.resolve.apply(path,[application].concat(normalizedRequested.split('/')));
 	var name=path.basename(absolute);
 
 	if (!requested || requested === '.' || requested === path.sep)
