@@ -840,4 +840,53 @@ describe('Regression: directive syntax', function () {
 		parent.Destroy();
 	});
 
+
+	test('Component binding target supports nested property and array paths', function () {
+		var childName=unique('NestedBindingTargetChild');
+		var parentName=unique('NestedBindingTargetParent');
+
+		Elemenx.Component(childName,{
+			Template:'<div class="nested-binding-target">{{prop.foo.bar[0].baz}}</div>',
+			prop:{
+				foo:{
+					bar:[
+						{baz:'default'}
+					]
+				}
+			}
+		});
+
+		var parent=Elemenx.Component(parentName,{
+			Template:'<main><'+childName+' [prop.foo.bar[0].baz]="Value"></'+childName+'></main>',
+			Value:'first'
+		})();
+
+		expect(parent.Element().querySelector('.nested-binding-target').textContent).toBe('first');
+		parent.Value='second';
+		expect(parent.Element().querySelector('.nested-binding-target').textContent).toBe('second');
+		parent.Destroy();
+	});
+
+	test('Component binding target path may build its local prop patch graph', function () {
+		var childName=unique('NestedBindingPatchChild');
+		var parentName=unique('NestedBindingPatchParent');
+
+		Elemenx.Component(childName,{
+			Template:'<div class="nested-binding-patch">{{config.items[0].name}}</div>',
+			config:{
+				items:[
+					{name:'default'}
+				]
+			}
+		});
+
+		var parent=Elemenx.Component(parentName,{
+			Template:'<main><'+childName+' [config.items[0].name]="Name"></'+childName+'></main>',
+			Name:'created'
+		})();
+
+		expect(parent.Element().querySelector('.nested-binding-patch').textContent).toBe('created');
+		parent.Destroy();
+	});
+
 });

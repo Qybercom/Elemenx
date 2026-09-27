@@ -1456,8 +1456,14 @@
 			return attribute.substring(prefix.length);
 		},
 		Binding: function (attribute) {
-			var match = /^\[([^\]]+)\]$/.exec(attribute);
-			return match ? match[1] : null;
+			if (
+				attribute.length < 3 ||
+				attribute.charAt(0) !== '[' ||
+				attribute.charAt(attribute.length - 1) !== ']' ||
+				attribute.charAt(1) === '('
+			) return null;
+
+			return attribute.substring(1,attribute.length - 1);
 		},
 		Event: function (attribute) {
 			var match = /^\(([^\)]+)\)$/.exec(attribute);
@@ -2522,7 +2528,9 @@
 							addBinding(bindings,key,{type:'property',name:target,node:nodes[i]});
 						}
 						else {
-							throw new Error('Invalid Elemenx binding target: ['+target+']');
+							/* Preserve non-DOM target paths for Component ownership. */
+							j++;
+							continue;
 						}
 						
 						nodes[i].removeAttribute(attr.name);
@@ -4946,6 +4954,90 @@
 				return text;
 			}
 			
+			function bindingTarget (target) {
+				var parts=[];
+				var length=target.length;
+				var i=0;
+				var start;
+				var value;
+
+				function identifier () {
+					var code;
+
+					if (i >= length || !/[A-Za-z_$]/.test(target.charAt(i)))
+						throw new Error('Invalid Elemenx Component binding target: ['+target+']');
+
+					start=i++;
+
+					while (i < length) {
+						code=target.charAt(i);
+						if (!/[\w$]/.test(code)) break;
+						i++;
+					}
+
+					return target.substring(start,i);
+				}
+
+				parts.push(identifier().replace(/-([a-z])/g, function (match, letter) {
+					return letter.toUpperCase();
+				}));
+
+				while (i < length) {
+					if (target.charAt(i) === '.') {
+						i++;
+						parts.push(identifier());
+						continue;
+					}
+
+					if (target.charAt(i) === '[') {
+						i++;
+						start=i;
+
+						while (i < length && /\d/.test(target.charAt(i)))
+							i++;
+
+						if (start === i || target.charAt(i) !== ']')
+							throw new Error('Invalid Elemenx Component binding target: ['+target+']');
+
+						value=parseInt(target.substring(start,i),10);
+						parts.push(value);
+						i++;
+						continue;
+					}
+
+					throw new Error('Invalid Elemenx Component binding target: ['+target+']');
+				}
+
+				return parts;
+			}
+			
+			function bindingAssign (result, target, value) {
+				var path=bindingTarget(target);
+				var root=path[0];
+				var current;
+				var i=1;
+
+				if (path.length === 1) {
+					result[root]=value;
+					return;
+				}
+
+				if (!own(result,root))
+					result[root]={};
+
+				current=result[root];
+
+				while (i < path.length - 1) {
+					if (current[path[i]] === undefined || current[path[i]] === null)
+						current[path[i]]=typeof path[i + 1] === 'number' ? [] : {};
+
+					current=current[path[i]];
+					i++;
+				}
+
+				current[path[path.length - 1]]=value;
+			}
+
 			function props (node, data) {
 				var result = {};
 				var attrs = node.attributes;
@@ -4953,27 +5045,32 @@
 				var name;
 				var target;
 
+				/*
+				 * Plain attributes establish root values first. Path bindings then
+				 * overlay their target without depending on source attribute order.
+				 */
 				while (i < attrs.length) {
 					name = attrs[i].name;
 					target = Runtime.Directive.Binding(name);
 
-					if (target !== null) {
-						if (target.indexOf('.') !== -1)
-							throw new Error('Invalid Elemenx Component binding target: ['+target+']');
-
-						target = target.replace(/-([a-z])/g, function (match, letter) {
-							return letter.toUpperCase();
-						});
-
-						result[target] = expression(data, attrs[i].value);
-					}
-					else if (!Runtime.Directive.Reserved(name)) {
+					if (target === null && !Runtime.Directive.Reserved(name)) {
 						name = name.replace(/-([a-z])/g, function (match, letter) {
 							return letter.toUpperCase();
 						});
 
 						result[name] = propValue(attrs[i].value, data);
 					}
+
+					i++;
+				}
+
+				i=0;
+				while (i < attrs.length) {
+					name=attrs[i].name;
+					target=Runtime.Directive.Binding(name);
+
+					if (target !== null)
+						bindingAssign(result,target,expression(data,attrs[i].value));
 
 					i++;
 				}
