@@ -218,4 +218,65 @@ describe('Regression: directive syntax', function () {
 		}).toThrow(/conflicts with Component API: Router/);
 	});
 
+
+	test('custom directive runs Create, reactive Update and Destroy with private Data', async function () {
+		var directive=unique('custom').toLowerCase();
+		var name=unique('CustomDirectiveLifecycle');
+		var calls=[];
+		Elemenx.Directive(directive,{
+			ElemenxOnCreate:function (context) {context.Data.Created=true;calls.push('create:'+context.Expression);},
+			ElemenxOnUpdate:function (context) {calls.push('update:'+context.Value+':'+context.Data.Created);context.Element.textContent=String(context.Value);},
+			ElemenxOnDestroy:function (context) {calls.push('destroy:'+context.Data.Created);}
+		});
+		var factory=Elemenx.Component(name,{Template:'<div *'+directive+'="Label"></div>',Label:'one'});
+		var component=factory();
+		document.body.appendChild(component.Element());
+		expect(component.Element().hasAttribute('*'+directive)).toBe(false);
+		expect(component.Element().textContent).toBe('one');
+		expect(calls).toEqual(['create:Label','update:one:true']);
+		component.Label='two';
+		await tick();
+		expect(component.Element().textContent).toBe('two');
+		expect(calls).toEqual(['create:Label','update:one:true','update:two:true']);
+		component.Destroy();
+		expect(calls[calls.length-1]).toBe('destroy:true');
+	});
+
+	test('custom directive without expression follows structural recreation lifecycle', async function () {
+		var directive=unique('presence').toLowerCase();
+		var name=unique('CustomDirectiveStructural');
+		var created=0,destroyed=0,updates=0;
+		Elemenx.Directive(directive,{
+			ElemenxOnCreate:function (context) {created++;expect(context.Expression).toBe('');},
+			ElemenxOnUpdate:function (context) {updates++;expect(context.Value).toBeUndefined();},
+			ElemenxOnDestroy:function () {destroyed++;}
+		});
+		var factory=Elemenx.Component(name,{Template:'<section><span *if="Visible" *'+directive+'>visible</span></section>',Visible:true});
+		var component=factory();
+		document.body.appendChild(component.Element());
+		expect(created).toBe(1);
+		expect(updates).toBe(1);
+		expect(component.Element().querySelector('[\\*'+directive+']')).toBeNull();
+		component.Visible=false;
+		await tick();
+		expect(destroyed).toBe(1);
+		component.Visible=true;
+		await tick();
+		expect(created).toBe(2);
+		expect(updates).toBe(2);
+		component.Destroy();
+		expect(destroyed).toBe(2);
+	});
+
+	test('custom directive expression preserves raw comparison operators', function () {
+		var directive=unique('compare').toLowerCase();
+		var name=unique('CustomDirectiveExpression');
+		var seen;
+		Elemenx.Directive(directive,{ElemenxOnUpdate:function (context) {seen=context.Value;}});
+		var factory=Elemenx.Component(name,{Template:'<div *'+directive+'="Count < Limit"></div>',Count:1,Limit:2});
+		var component=factory();
+		expect(seen).toBe(true);
+		component.Destroy();
+	});
+
 });

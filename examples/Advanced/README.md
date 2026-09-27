@@ -47,3 +47,23 @@ The expression is evaluated with `$index` starting at `0`. Its value is assigned
 ```
 
 The initializer creates `i` in the loop-local scope, the condition is checked before each render, and the update expression runs after each iteration. The same 10,000-iteration runaway protection applies.
+
+The Advanced application also registers custom behavioral directives through the application discovery tree:
+
+```js
+Elemenx.Directive('highlight', {
+	ElemenxOnCreate: function (context) {
+		context.Data.ClassName = 'directive-highlighted';
+	},
+
+	ElemenxOnUpdate: function (context) {
+		context.Element.classList.toggle(context.Data.ClassName, !!context.Value);
+	},
+
+	ElemenxOnDestroy: function (context) {
+		context.Element.classList.remove(context.Data.ClassName);
+	}
+});
+```
+
+The Home page demonstrates both a reactive `*highlight="DirectiveHighlighted"` directive and a reactive `*tooltip="DirectiveTooltip"` directive. The examples intentionally use `context.Data` and the Create/Update/Destroy lifecycle so the Advanced project acts as a visible feature showcase rather than only a minimal syntax sample.

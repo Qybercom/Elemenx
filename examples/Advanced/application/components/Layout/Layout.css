@@ -724,3 +724,60 @@ footer {
 		grid-template-columns: 1fr;
 	}
 }
+
+.directive-showcase {
+	margin-top: 28px;
+}
+
+.directive-grid {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 14px;
+	margin-top: 18px;
+}
+
+.directive-example {
+	display: flex;
+	align-items: flex-start;
+	flex-direction: column;
+	gap: 10px;
+	padding: 16px;
+	background: var(--surface-soft);
+	border: 1px solid var(--border);
+	border-radius: 10px;
+}
+
+.directive-example > code {
+	color: var(--muted);
+	font: 600 11px/1.4 ui-monospace, SFMono-Regular, Consolas, monospace;
+}
+
+.directive-example > small {
+	color: var(--muted);
+	line-height: 1.45;
+}
+
+.directive-example .button {
+	margin-top: 0;
+}
+
+.directive-highlight-target {
+	width: 100%;
+	padding: 14px;
+	border: 1px solid var(--border);
+	border-radius: 8px;
+	transition: background 160ms ease, border-color 160ms ease, transform 160ms ease;
+}
+
+.directive-highlight-target.directive-highlighted {
+	background: var(--accent);
+	border-color: var(--accent);
+	color: var(--accent-text);
+	transform: translateY(-1px);
+}
+
+@media (max-width: 760px) {
+	.directive-grid {
+		grid-template-columns: 1fr;
+	}
+}

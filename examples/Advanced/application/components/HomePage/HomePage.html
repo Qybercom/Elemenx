@@ -63,5 +63,28 @@
 			<code>selected = {{BindingSelected}}</code>
 		</div>
 	</div>
+	<div class="card directive-showcase">
+		<h2 class="card-title">Custom directives</h2>
+		<p>
+			Behavioral directives use the same <b>*directive</b> grammar as built-in directives.
+			Their expressions are reactive and their lifecycle follows the DOM node that owns them.
+		</p>
+
+		<div class="directive-grid">
+			<div class="directive-example">
+				<code>*tooltip="DirectiveTooltip"</code>
+				<button class="button" *tooltip="DirectiveTooltip">Hover for directive tooltip</button>
+				<small>{{DirectiveTooltip}}</small>
+			</div>
+
+			<div class="directive-example">
+				<code>*highlight="DirectiveHighlighted"</code>
+				<div class="directive-highlight-target" *highlight="DirectiveHighlighted">
+					Reactive custom directive
+				</div>
+				<button class="button" (click)="ToggleDirectiveHighlight">Toggle highlight</button>
+			</div>
+		</div>
+	</div>
 	<ProjectShowcase></ProjectShowcase>
 </section>

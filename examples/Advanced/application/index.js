@@ -1,5 +1,6 @@
 [
 	'components',
+	'directives',
 	'guards',
 	'services'
 ]

@@ -951,54 +951,59 @@
 			return true;
 		}
 		
-		function loadServices (application, callback) {
+		function loadDirectory (application, directory, type, callback) {
 			var map = maps.get(application);
 			var names = [];
 			var name;
 			var remaining;
 			var failed = false;
 			var i = 0;
-			
+			var pattern = new RegExp('(?:^|/)' + directory + '(?:/|$)', 'i');
+
 			if (!map) {
 				callback(new Error('Elemenx Discovery is not ready'));
-				
 				return;
 			}
-			
+
 			for (name in map) {
-				if (Object.prototype.hasOwnProperty.call(map, name) && /(?:^|\/)services(?:\/|$)/i.test(map[name]))
+				if (Object.prototype.hasOwnProperty.call(map,name) && pattern.test(map[name]))
 					names.push(name);
 			}
-			
-			remaining = names.length;
+
+			remaining=names.length;
 			if (!remaining) {
 				callback(null);
-				
 				return;
 			}
-			
+
 			function complete (error) {
 				if (failed) return;
-				
 				if (error) {
-					failed = true;
+					failed=true;
 					callback(error);
-					
 					return;
 				}
-				
 				remaining--;
 				if (!remaining) callback(null);
 			}
-			
+
 			while (i < names.length) {
-				load(application, 'Service', names[i], false, complete);
+				load(application,type,names[i],false,complete);
 				i++;
 			}
 		}
-		
+
+		function loadDirectives (application, callback) {
+			loadDirectory(application,'directives','Directive',callback);
+		}
+
+		function loadServices (application, callback) {
+			loadDirectory(application,'services','Service',callback);
+		}
+
 		Runtime.Discovery = {
 			Build: build,
+			LoadDirectives: loadDirectives,
 			LoadServices: loadServices,
 			
 			Ready: function (application) {
@@ -1471,6 +1476,30 @@
 			var match = /^#(.+)$/.exec(attribute);
 			return match ? match[1] : null;
 		},
+		Custom: {},
+		Register: function (name, definition) {
+			name=String(name || '').toLowerCase();
+			if (!/^[a-z][a-z0-9_-]*$/.test(name))
+				throw new Error('Invalid Elemenx directive name: ' + name);
+			if (this.Custom[name])
+				throw new Error('Elemenx directive already registered: ' + name);
+			var builtIn;
+			for (builtIn in this.Names)
+				if (Object.prototype.hasOwnProperty.call(this.Names,builtIn) && this.Names[builtIn] === '*' + name)
+					throw new Error('Elemenx directive name is reserved: ' + name);
+			definition=definition || {};
+			if (typeof definition !== 'object')
+				throw new TypeError('Elemenx directive definition must be an Object');
+			this.Custom[name]=definition;
+			return definition;
+		},
+		Resolve: function (attribute) {
+			var match=/^\*([a-z][a-z0-9_-]*)$/i.exec(attribute);
+			var name;
+			if (!match) return null;
+			name=match[1].toLowerCase();
+			return this.Custom[name] ? {Name:name,Definition:this.Custom[name]} : null;
+		},
 		Reserved: function (attribute) {
 			var name;
 			
@@ -1482,7 +1511,7 @@
 				if (Object.prototype.hasOwnProperty.call(this.Prefixes, name) && attribute.indexOf(this.Prefixes[name]) === 0) return true;
 			}
 			
-			return this.TwoWay(attribute) !== null || this.Binding(attribute) !== null || this.Event(attribute) !== null || this.Ref(attribute) !== null;
+			return this.Resolve(attribute) !== null || this.TwoWay(attribute) !== null || this.Binding(attribute) !== null || this.Event(attribute) !== null || this.Ref(attribute) !== null;
 		}
 	};
 
@@ -1491,7 +1520,9 @@
 		
 		var Elemenx = global.Elemenx;
 		
-		Elemenx.Directive = Runtime.Directive;
+		Elemenx.Directive = function (name, definition) {
+			return Runtime.Directive.Register(name, definition);
+		};
 		
 		var componentRegistry = {};
 		var componentDefinitionReserved = {
@@ -2021,7 +2052,7 @@
 		function protectExpressionAttributes (html) {
 			var expressions = [];
 			var source = String(html || '').replace(
-				/(\s(?:\*(?:if|for|key)|\[[^\]\s]+\])\s*=\s*)(["'])([\s\S]*?)\2/gi,
+				/(\s(?:\*[A-Za-z][A-Za-z0-9_-]*|\[[^\]\s]+\])\s*=\s*)(["'])([\s\S]*?)\2/gi,
 				function (match, prefix, quote, expression) {
 					var index = expressions.length;
 					expressions.push(expression);
@@ -2348,6 +2379,42 @@
 					j++;
 				}
 
+				i++;
+			}
+		}
+
+		function collectCustomDirectives (root, directives) {
+			var nodes=[],all,i=0,j,attrs,attr,resolved,parent,skip;
+			if (root.nodeType === 1) nodes.push(root);
+			if (root.querySelectorAll) {
+				all=root.querySelectorAll('*');
+				while (i < all.length) {nodes.push(all[i]);i++;}
+			}
+			i=0;
+			while (i < nodes.length) {
+				skip=false;
+				parent=nodes[i];
+				while (parent) {
+					if (parent.nodeType === 1 && (parent.hasAttribute(Runtime.Directive.Name('If')) || parent.hasAttribute(Runtime.Directive.Name('For')))) {
+						skip=true;
+						break;
+					}
+					if (parent === root) break;
+					parent=parent.parentNode;
+				}
+				if (!skip) {
+					attrs=Array.prototype.slice.call(nodes[i].attributes);
+					j=0;
+					while (j < attrs.length) {
+						attr=attrs[j];
+						resolved=Runtime.Directive.Resolve(attr.name);
+						if (resolved) {
+							directives.push({Name:resolved.Name,Definition:resolved.Definition,Element:nodes[i],Expression:attr.value || ''});
+							nodes[i].removeAttribute(attr.name);
+						}
+						j++;
+					}
+				}
 				i++;
 			}
 		}
@@ -2688,6 +2755,7 @@
 				var collections = {};
 				var bindings = [];
 				var models = [];
+				var customDirectives = [];
 				var values = directState
 					? (data && data.__raw__ ? data : Runtime.Reactive(data || {}))
 					: Runtime.Reactive(
@@ -2717,6 +2785,7 @@
 				collectOutlets(root, outlets);
 				collectTextBindings(root, bindings);
 				collectElementBindings(root, bindings, models);
+				collectCustomDirectives(root, customDirectives);
 				
 				function syncModel (model) {
 					var value = values[model.key];
@@ -2928,6 +2997,50 @@
 					}
 				}
 				
+				function activateCustomDirectives () {
+					var i=0,record,context,effect;
+					while (i < customDirectives.length) {
+						record=customDirectives[i];
+						context={Name:record.Name,Element:record.Element,Component:api,Expression:record.Expression,Value:undefined,Data:{}};
+						record.Context=context;
+						if (typeof record.Definition.ElemenxOnCreate === 'function')
+							record.Definition.ElemenxOnCreate.call(api,context);
+						(function (record,context) {
+							var evaluate=record.Expression ? Runtime.CompileExpression(record.Expression) : null;
+							effect=Runtime.Effect(function () {
+								var value;
+								if (evaluate) {
+									try {value=evaluate(values);}
+									catch (error) {
+										value=undefined;
+										if (!(error && error.name === 'ReferenceError') && global.console && console.error)
+											console.error('Elemenx directive expression failed: *' + record.Name + '="' + record.Expression + '"',error);
+									}
+								}
+								context.Value=value;
+								if (typeof record.Definition.ElemenxOnUpdate === 'function')
+									record.Definition.ElemenxOnUpdate.call(api,context);
+								return value;
+							},true);
+							record.Effect=effect;
+							effects.push(effect);
+						})(record,context);
+						i++;
+					}
+				}
+
+				function destroyCustomDirectives () {
+					var i=customDirectives.length - 1;
+					var record;
+					while (i >= 0) {
+						record=customDirectives[i];
+						if (typeof record.Definition.ElemenxOnDestroy === 'function')
+							record.Definition.ElemenxOnDestroy.call(api,record.Context);
+						i--;
+					}
+					customDirectives.length=0;
+				}
+
 				function activateEffects () {
 					var i = 0;
 					
@@ -3045,6 +3158,8 @@
 					
 					if (Runtime.DestroyWebWorkerOwner)
 						Runtime.DestroyWebWorkerOwner(api);
+					
+					destroyCustomDirectives();
 					
 					if (definition.ElemenxOnDestroy)
 						definition.ElemenxOnDestroy.call(api);
@@ -3233,6 +3348,14 @@
 				
 				if (structural)
 					structural.Update(values);
+				
+				activateCustomDirectives();
+				var customDirectiveIndex=0;
+				while (customDirectiveIndex < customDirectives.length) {
+					if (customDirectives[customDirectiveIndex].Effect)
+						customDirectives[customDirectiveIndex].Effect.Run();
+					customDirectiveIndex++;
+				}
 				
 				/*
 				 * Native controls have stateful DOM properties (checked/value).
@@ -12307,17 +12430,26 @@
 						return;
 					}
 					
-					Runtime.Discovery.LoadServices(api, function (serviceError) {
+					Runtime.Discovery.LoadDirectives(api, function (directiveError) {
 						if (destroyed) return;
-						
-						if (serviceError) {
+
+						if (directiveError) {
 							applicationStatus(definition.Error || null);
-							applicationLifecycle('ElemenxOnComponentError', serviceError);
-							
+							applicationLifecycle('ElemenxOnComponentError', directiveError);
 							return;
 						}
-						
-						createRoot();
+
+						Runtime.Discovery.LoadServices(api, function (serviceError) {
+							if (destroyed) return;
+
+							if (serviceError) {
+								applicationStatus(definition.Error || null);
+								applicationLifecycle('ElemenxOnComponentError', serviceError);
+								return;
+							}
+
+							createRoot();
+						});
 					});
 				});
 			}

@@ -5,6 +5,8 @@ Elemenx.Component('HomePage', {
 	BindingValue: 'Elemenx',
 	BindingChecked: true,
 	BindingSelected: 'staging',
+	DirectiveTooltip: 'This title is maintained by a custom Elemenx directive.',
+	DirectiveHighlighted: true,
 
 	ElemenxOnCreate: function () {
 		var component = this;
@@ -30,6 +32,10 @@ Elemenx.Component('HomePage', {
 		this.Ref('GrantProjectAccess').addEventListener('click', function () {
 			session.GrantProjectAccess();
 		});
+	},
+
+	ToggleDirectiveHighlight: function () {
+		this.DirectiveHighlighted = !this.DirectiveHighlighted;
 	},
 
 	ElemenxOnDestroy: function () {
