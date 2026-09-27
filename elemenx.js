@@ -2463,6 +2463,16 @@
 
 			i=0;
 			while (i < nodes.length) {
+				/*
+				 * Component declarations own their [prop] / [(prop)] surface.
+				 * DOM binding collection must leave those attributes intact for
+				 * Structural() to compile against the parent component scope.
+				 */
+				if (Runtime.ResolveComponentRegistered && Runtime.ResolveComponentRegistered(nodes[i].tagName)) {
+					i++;
+					continue;
+				}
+
 				attrs=Array.prototype.slice.call(nodes[i].attributes);
 				j=0;
 				classState=null;
@@ -4951,21 +4961,33 @@
 				var attrs = node.attributes;
 				var i = 0;
 				var name;
-				
+				var target;
+
 				while (i < attrs.length) {
 					name = attrs[i].name;
-					
-					if (!Runtime.Directive.Reserved(name)) {
+					target = Runtime.Directive.Binding(name);
+
+					if (target !== null) {
+						if (target.indexOf('.') !== -1)
+							throw new Error('Invalid Elemenx Component binding target: ['+target+']');
+
+						target = target.replace(/-([a-z])/g, function (match, letter) {
+							return letter.toUpperCase();
+						});
+
+						result[target] = expression(data, attrs[i].value);
+					}
+					else if (!Runtime.Directive.Reserved(name)) {
 						name = name.replace(/-([a-z])/g, function (match, letter) {
 							return letter.toUpperCase();
 						});
-						
+
 						result[name] = propValue(attrs[i].value, data);
 					}
-					
+
 					i++;
 				}
-				
+
 				return result;
 			}
 			

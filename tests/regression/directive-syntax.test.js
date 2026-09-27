@@ -782,4 +782,43 @@ describe('Regression: directive syntax', function () {
 
 
 
+
+	test('Component [prop] uses the same full expression binding syntax as DOM bindings', function () {
+		var childName=unique('ExpressionBindingChild');
+		var parentName=unique('ExpressionBindingParent');
+
+		Elemenx.Component(childName,{
+			Template:'<div class="component-expression-binding">{{foo}}|{{flag}}</div>',
+			foo:'',
+			flag:''
+		});
+
+		var parent=Elemenx.Component(parentName,{
+			Template:'<main><'+childName+' [foo]="Value" [flag]="Enabled ? \'a\' : false"></'+childName+'></main>',
+			Value:'first',
+			Enabled:true
+		})();
+
+		expect(parent.Element().querySelector('.component-expression-binding').textContent).toBe('first|a');
+		parent.Value='second';
+		parent.Enabled=false;
+		expect(parent.Element().querySelector('.component-expression-binding').textContent).toBe('second|false');
+		parent.Destroy();
+	});
+
+	test('DOM [property] evaluates literals and conditional expressions', function () {
+		var name=unique('DOMExpressionBinding');
+		var component=Elemenx.Component(name,{
+			Template:'<div><input [value]="\'myString\'"><input class="conditional-expression" [disabled]="Enabled ? true : false"></div>',
+			Enabled:false
+		})();
+		var inputs=component.Element().querySelectorAll('input');
+
+		expect(inputs[0].value).toBe('myString');
+		expect(inputs[1].disabled).toBe(false);
+		component.Enabled=true;
+		expect(inputs[1].disabled).toBe(true);
+		component.Destroy();
+	});
+
 });
