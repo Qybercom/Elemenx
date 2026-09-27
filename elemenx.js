@@ -1529,6 +1529,39 @@
 			}
 			return null;
 		},
+		AttributeForRole: function (role) {
+			var name;
+			var definition;
+
+			for (name in this.Registry) {
+				if (!Object.prototype.hasOwnProperty.call(this.Registry,name)) continue;
+				definition=this.Registry[name];
+				if (definition.Role === role)
+					return '*' + name;
+			}
+
+			return null;
+		},
+		Role: function (node, role) {
+			var attrs=node && node.attributes ? node.attributes : [];
+			var i=0;
+			var resolved;
+
+			while (i < attrs.length) {
+				resolved=this.Resolve(attrs[i].name);
+				if (resolved && resolved.Definition.Role === role) {
+					return {
+						Name:resolved.Name,
+						Definition:resolved.Definition,
+						Attribute:attrs[i].name,
+						Expression:attrs[i].value || ''
+					};
+				}
+				i++;
+			}
+
+			return null;
+		},
 		Arguments: function (node, owner) {
 			var result={};
 			var attrs=node && node.attributes ? Array.prototype.slice.call(node.attributes) : [];
@@ -1627,10 +1660,10 @@
 			);
 		}
 	},true);
-	Runtime.Directive.Register('key',{Alias:'Key',Kind:'argument',For:'collection'},true);
-	Runtime.Directive.Register('outlet',{Alias:'Outlet',Kind:'behavior'},true);
-	Runtime.Directive.Register('pending',{Alias:'Pending',Kind:'status'},true);
-	Runtime.Directive.Register('error',{Alias:'Error',Kind:'status'},true);
+	Runtime.Directive.Register('key',{Alias:'Key',Kind:'argument',For:'collection',Role:'key'},true);
+	Runtime.Directive.Register('outlet',{Alias:'Outlet',Kind:'behavior',Role:'outlet'},true);
+	Runtime.Directive.Register('pending',{Alias:'Pending',Kind:'status',Role:'pending'},true);
+	Runtime.Directive.Register('error',{Alias:'Error',Kind:'status',Role:'error'},true);
 
 	(function (global) {
 		'use strict';
@@ -2623,7 +2656,7 @@
 		}
 		
 		function collectOutlets (root, outlets) {
-			var nodes=[],all,i=0,name,attribute=Runtime.Directive.Name('Outlet');
+			var nodes=[],all,i=0,name,attribute=Runtime.Directive.AttributeForRole('outlet');
 
 			if (root.nodeType === 1 && root.hasAttribute(attribute))
 				nodes.push(root);
@@ -5017,8 +5050,8 @@
 				result.AsyncLifecycle = {
 					Owner: component,
 					Name: name,
-					Pending: blueprint.getAttribute(Runtime.Directive.Name('Pending')),
-					Error: blueprint.getAttribute(Runtime.Directive.Name('Error'))
+					Pending: blueprint.getAttribute(Runtime.Directive.AttributeForRole('pending')),
+					Error: blueprint.getAttribute(Runtime.Directive.AttributeForRole('error'))
 				};
 				
 				return result;

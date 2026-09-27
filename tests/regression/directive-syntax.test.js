@@ -476,4 +476,28 @@ describe('Regression: directive syntax', function () {
 		component.Destroy();
 	});
 
+
+	test('collection key remains an argument after directive hardcode audit', function () {
+		var component=Elemenx.Component(unique('KeyArgumentAudit'),{
+			Template:'<div><span *for="item of Items" *key="item.id">{{item.name}}</span></div>',
+			Items:[
+				{id:1,name:'One'},
+				{id:2,name:'Two'}
+			]
+		})();
+		var first=component.Element().querySelectorAll('span');
+		var one=first[0];
+		var two=first[1];
+
+		component.Items=[
+			{id:2,name:'Two updated'},
+			{id:1,name:'One updated'}
+		];
+
+		var second=component.Element().querySelectorAll('span');
+		expect(second[0]).toBe(two);
+		expect(second[1]).toBe(one);
+		component.Destroy();
+	});
+
 });
