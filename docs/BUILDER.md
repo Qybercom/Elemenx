@@ -68,3 +68,18 @@ The command registry is intentionally extensible for future command groups such 
 An optional `elemenx.config.js` may export `Application`, `Entry`, `Index`, `Output`, and `Server` settings. CLI options override configuration, and configuration overrides Elemenx defaults.
 
 Production `serve` enables gzip for compressible responses of at least 1024 bytes and sends `ETag`, `Last-Modified`, `Vary: Accept-Encoding`, and conditional `304` responses. Development serving does not compress by default.
+
+## Generators
+
+The CLI can create the four application entity types and register them in the same `index.js` graph consumed by Discovery and Builder.
+
+```text
+elemenx generate component UserCard
+elemenx generate service Session
+elemenx generate guard Authorized
+elemenx generate directive Tooltip
+```
+
+`elemenx g ...` is an alias for `generate`. Components are created in `application/components/<Name>/` with a JavaScript definition and HTML template. Services, guards, and directives are created in their corresponding application directories. Missing type directories and `index.js` files are created automatically and the root `application/index.js` is updated when necessary.
+
+Existing generated files are never overwritten unless `--force` is supplied. Re-running registration does not duplicate graph entries.

@@ -5,6 +5,7 @@ var fs=require('fs');
 var path=require('path');
 var Builder=require('./tools/builder.js');
 var Server=require('./tools/server.js');
+var Generator=require('./tools/generator.js');
 var Package=require('./package.json');
 
 function fail (message) {
@@ -86,6 +87,21 @@ function command (name,description,handler) {
 	Commands[name]={Description:description,Handler:handler};
 }
 
+command('generate','Generate an application entity and register it in the application graph.',function (parsed) {
+	var type=parsed.Arguments.shift();
+	var name=parsed.Arguments.shift();
+	var project=projectPath(parsed.Arguments.shift());
+	var settings=config(project);
+
+	if (!type || !name)
+		fail('usage: elemenx generate <component|service|guard|directive> <Name> [project] [--force]');
+
+	Generator.Generate(project,type,name,{
+		application:value(parsed.Options,'application',settings.Application,'application'),
+		force:parsed.Options.force === true
+	});
+});
+
 command('build','Build an application into dist.',function (parsed) {
 	var project=projectPath(parsed.Arguments[0]);
 	var settings=config(project);
@@ -125,12 +141,13 @@ command('help','Show Elemenx CLI commands.',function () {
 		process.stdout.write('  ' + names[i] + Array(Math.max(2,14 - names[i].length)).join(' ') + Commands[names[i]].Description + '\n');
 		i++;
 	}
-	process.stdout.write('\nFuture command groups are reserved for generate, inspect and other toolchain operations.\n');
+	process.stdout.write('\nAlias: g = generate. Future command groups are reserved for inspect and other toolchain operations.\n');
 });
 
 function main (argv) {
 	var parsed=parse(argv);
 	var name=parsed.Arguments.shift() || 'help';
+	if (name === 'g') name='generate';
 	if (name === '--help' || name === '-h') name='help';
 	if (name === '--version' || name === '-v') name='version';
 	if (!Commands[name]) fail('unknown command: ' + name + ' (use elemenx help)');

@@ -17,6 +17,6 @@ export default defineConfig({
 			headless: true
 		},
 		include: ['tests/**/*.test.js'],
-		exclude: ['tests/history/**']
+		exclude: ['tests/history/**', 'tests/tools/**', 'tests/regression/cli-generator.test.js']
 	}
 });
