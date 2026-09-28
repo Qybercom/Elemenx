@@ -652,20 +652,22 @@
 		'use strict';
 		var registry = {};
 		var loaded = {};
+		
 		function bucket (type) {
 			if (!registry[type]) registry[type] = {};
 			if (!loaded[type]) loaded[type] = {};
 			return registry[type];
 		}
+		
 		function install (bundle) {
 			var type, name, source;
 			bundle = bundle || {};
 			for (type in bundle) {
-				if (!Object.prototype.hasOwnProperty.call(bundle,type)) continue;
+				if (!Object.prototype.hasOwnProperty.call(bundle, type)) continue;
 				source = bundle[type] || {};
 				bucket(type);
 				for (name in source) {
-					if (!Object.prototype.hasOwnProperty.call(source,name)) continue;
+					if (!Object.prototype.hasOwnProperty.call(source, name)) continue;
 					if (typeof source[name] !== 'function') throw new Error('Elemenx Bundle entity loader must be a function: ' + type + ':' + name);
 					registry[type][name] = source[name];
 					loaded[type][name] = false;
@@ -673,34 +675,43 @@
 			}
 			return global.Elemenx;
 		}
+		
 		function resolvedName (type, name) {
 			var source = registry[type], key;
 			if (!source) return null;
 			if (source[name]) return name;
 			for (key in source) {
-				if (Object.prototype.hasOwnProperty.call(source,key) && key.toLowerCase() === String(name).toLowerCase()) return key;
+				if (Object.prototype.hasOwnProperty.call(source, key) && key.toLowerCase() === String(name).toLowerCase()) return key;
 			}
 			return null;
 		}
+		
 		function load (type, name) {
-			var resolved = resolvedName(type,name), loader;
+			var resolved = resolvedName(type, name), loader;
 			if (!resolved) return false;
 			if (loaded[type][resolved]) return true;
 			loader = registry[type][resolved];
 			loaded[type][resolved] = true;
-			try { loader(); }
-			catch (error) { loaded[type][resolved] = false; throw error; }
+			try {
+				loader();
+			}
+			catch (error) {
+				loaded[type][resolved] = false;
+				throw error;
+			}
 			return true;
 		}
+		
 		function loadType (type) {
 			var source = registry[type] || {}, name;
-			for (name in source) if (Object.prototype.hasOwnProperty.call(source,name)) load(type,name);
+			for (name in source) if (Object.prototype.hasOwnProperty.call(source, name)) load(type, name);
 		}
+		
 		Runtime.Bundle = {
 			Install: install,
 			Ready: function () {
 				var type;
-				for (type in registry) if (Object.prototype.hasOwnProperty.call(registry,type)) return true;
+				for (type in registry) if (Object.prototype.hasOwnProperty.call(registry, type)) return true;
 				return false;
 			},
 			ResolvedName: resolvedName,
@@ -1022,48 +1033,48 @@
 			var failed = false;
 			var i = 0;
 			var pattern = new RegExp('(?:^|/)' + directory + '(?:/|$)', 'i');
-
+			
 			if (!map) {
 				callback(new Error('Elemenx Discovery is not ready'));
 				return;
 			}
-
+			
 			for (name in map) {
-				if (Object.prototype.hasOwnProperty.call(map,name) && pattern.test(map[name]))
+				if (Object.prototype.hasOwnProperty.call(map, name) && pattern.test(map[name]))
 					names.push(name);
 			}
-
-			remaining=names.length;
+			
+			remaining = names.length;
 			if (!remaining) {
 				callback(null);
 				return;
 			}
-
+			
 			function complete (error) {
 				if (failed) return;
 				if (error) {
-					failed=true;
+					failed = true;
 					callback(error);
 					return;
 				}
 				remaining--;
 				if (!remaining) callback(null);
 			}
-
+			
 			while (i < names.length) {
-				load(application,type,names[i],false,complete);
+				load(application, type, names[i], false, complete);
 				i++;
 			}
 		}
-
+		
 		function loadDirectives (application, callback) {
-			loadDirectory(application,'directives','Directive',callback);
+			loadDirectory(application, 'directives', 'Directive', callback);
 		}
-
+		
 		function loadServices (application, callback) {
-			loadDirectory(application,'services','Service',callback);
+			loadDirectory(application, 'services', 'Service', callback);
 		}
-
+		
 		Runtime.Discovery = {
 			Build: build,
 			LoadDirectives: loadDirectives,
@@ -1491,13 +1502,12 @@
 		return result;
 	};
 	
-
 	Runtime.Directive = {
 		Registry: {},
 		Aliases: {},
 		Prefixes: {},
 		Name: function (name) {
-			var directive=this.Aliases[name];
+			var directive = this.Aliases[name];
 			return directive ? '*' + directive : null;
 		},
 		Prefix: function (name) {
@@ -1509,13 +1519,13 @@
 		Match: function (attribute, name) {
 			var prefix = this.Prefix(name);
 			if (!prefix) return false;
-
+			
 			return attribute.indexOf(prefix) === 0;
 		},
 		Argument: function (attribute, name) {
 			var prefix = this.Prefix(name);
 			if (!prefix || attribute.indexOf(prefix) !== 0) return null;
-
+			
 			return attribute.substring(prefix.length);
 		},
 		Binding: function (attribute) {
@@ -1525,8 +1535,8 @@
 				attribute.charAt(attribute.length - 1) !== ']' ||
 				attribute.charAt(1) === '('
 			) return null;
-
-			return attribute.substring(1,attribute.length - 1);
+			
+			return attribute.substring(1, attribute.length - 1);
 		},
 		Event: function (attribute) {
 			var match = /^\(([^\)]+)\)$/.exec(attribute);
@@ -1542,235 +1552,240 @@
 		},
 		Register: function (name, definition, internal) {
 			var alias;
-
-			name=String(name || '').toLowerCase();
+			
+			name = String(name || '').toLowerCase();
 			if (!/^[a-z][a-z0-9_-]*$/.test(name))
 				throw new Error('Invalid Elemenx directive name: ' + name);
 			if (this.Registry[name])
 				throw new Error('Elemenx directive already registered: ' + name);
-
-			definition=definition || {};
+			
+			definition = definition || {};
 			if (typeof definition !== 'object')
 				throw new TypeError('Elemenx directive definition must be an Object');
-
+			
 			if (!internal && definition.Internal)
 				throw new Error('Elemenx directive Internal metadata is reserved');
-
+			
 			if (definition.Structural === true)
-				definition.Kind='structural';
+				definition.Kind = 'structural';
 			if (!definition.Kind)
-				definition.Kind='behavioral';
+				definition.Kind = 'behavioral';
 			if (definition.Kind === 'structural' && definition.Collection === true && !definition.Host)
-				definition.Host='collection';
+				definition.Host = 'collection';
 			if (definition.Kind === 'structural' && !definition.Host)
-				definition.Host='structural';
-
-			definition.Name=name;
-			definition.Internal=internal === true;
-			this.Registry[name]=definition;
-
-			alias=definition.Alias;
-			if (alias) this.Aliases[alias]=name;
-
+				definition.Host = 'structural';
+			
+			definition.Name = name;
+			definition.Internal = internal === true;
+			this.Registry[name] = definition;
+			
+			alias = definition.Alias;
+			if (alias) this.Aliases[alias] = name;
+			
 			return definition;
 		},
 		Resolve: function (attribute) {
-			var match=/^\*([a-z][a-z0-9_-]*)$/i.exec(attribute);
+			var match = /^\*([a-z][a-z0-9_-]*)$/i.exec(attribute);
 			var name;
-
+			
 			if (!match) return null;
-
-			name=match[1].toLowerCase();
-
+			
+			name = match[1].toLowerCase();
+			
 			return this.Registry[name] ? {
-				Name:name,
-				Definition:this.Registry[name]
+				Name: name,
+				Definition: this.Registry[name]
 			} : null;
 		},
 		Find: function (node, kind) {
-			var attrs=node && node.attributes ? node.attributes : [];
-			var i=0;
+			var attrs = node && node.attributes ? node.attributes : [];
+			var i = 0;
 			var resolved;
 			while (i < attrs.length) {
-				resolved=this.Resolve(attrs[i].name);
+				resolved = this.Resolve(attrs[i].name);
 				if (resolved && (!kind || resolved.Definition.Kind === kind)) {
-					return {Name:resolved.Name,Definition:resolved.Definition,Attribute:attrs[i].name,Expression:attrs[i].value || ''};
+					return {
+						Name: resolved.Name,
+						Definition: resolved.Definition,
+						Attribute: attrs[i].name,
+						Expression: attrs[i].value || ''
+					};
 				}
 				i++;
 			}
 			return null;
 		},
 		Policy: function (node) {
-			var attrs=node && node.attributes ? node.attributes : [];
-			var structural=null;
-			var directiveArguments=[];
-			var i=0;
+			var attrs = node && node.attributes ? node.attributes : [];
+			var structural = null;
+			var directiveArguments = [];
+			var i = 0;
 			var resolved;
-
+			
 			while (i < attrs.length) {
-				resolved=this.Resolve(attrs[i].name);
-
+				resolved = this.Resolve(attrs[i].name);
+				
 				if (resolved && resolved.Definition.Kind === 'structural') {
 					if (structural)
 						throw new Error('Elemenx allows one structural directive per host: *' + structural.Name + ', *' + resolved.Name);
-
-					structural={Name:resolved.Name,Definition:resolved.Definition};
+					
+					structural = {Name: resolved.Name, Definition: resolved.Definition};
 				}
 				else if (resolved && resolved.Definition.Kind === 'argument') {
 					directiveArguments.push(resolved);
 				}
-
+				
 				i++;
 			}
-
-			i=0;
+			
+			i = 0;
 			while (i < directiveArguments.length) {
-				resolved=directiveArguments[i];
-
+				resolved = directiveArguments[i];
+				
 				if (!structural || (resolved.Definition.For && resolved.Definition.For !== structural.Definition.Host))
 					throw new Error('Elemenx directive argument *' + resolved.Name + ' has no compatible structural host');
-
+				
 				i++;
 			}
-
+			
 			return structural;
 		},
 		AttributeForRole: function (role) {
 			var name;
 			var definition;
-
+			
 			for (name in this.Registry) {
-				if (!Object.prototype.hasOwnProperty.call(this.Registry,name)) continue;
-				definition=this.Registry[name];
+				if (!Object.prototype.hasOwnProperty.call(this.Registry, name)) continue;
+				definition = this.Registry[name];
 				if (definition.Role === role)
 					return '*' + name;
 			}
-
+			
 			return null;
 		},
 		Role: function (node, role) {
-			var attrs=node && node.attributes ? node.attributes : [];
-			var i=0;
+			var attrs = node && node.attributes ? node.attributes : [];
+			var i = 0;
 			var resolved;
-
+			
 			while (i < attrs.length) {
-				resolved=this.Resolve(attrs[i].name);
+				resolved = this.Resolve(attrs[i].name);
 				if (resolved && resolved.Definition.Role === role) {
 					return {
-						Name:resolved.Name,
-						Definition:resolved.Definition,
-						Attribute:attrs[i].name,
-						Expression:attrs[i].value || ''
+						Name: resolved.Name,
+						Definition: resolved.Definition,
+						Attribute: attrs[i].name,
+						Expression: attrs[i].value || ''
 					};
 				}
 				i++;
 			}
-
+			
 			return null;
 		},
 		Arguments: function (node, owner) {
-			var result={};
-			var attrs=node && node.attributes ? Array.prototype.slice.call(node.attributes) : [];
-			var i=0;
+			var result = {};
+			var attrs = node && node.attributes ? Array.prototype.slice.call(node.attributes) : [];
+			var i = 0;
 			var resolved;
-
+			
 			while (i < attrs.length) {
-				resolved=this.Resolve(attrs[i].name);
+				resolved = this.Resolve(attrs[i].name);
 				if (
 					resolved &&
 					resolved.Definition.Kind === 'argument' &&
 					(!resolved.Definition.For || resolved.Definition.For === owner)
 				) {
-					result[resolved.Name]=attrs[i].value || '';
+					result[resolved.Name] = attrs[i].value || '';
 					node.removeAttribute(attrs[i].name);
 				}
 				i++;
 			}
-
+			
 			return result;
 		},
 		Reserved: function (attribute) {
 			var name;
-
+			
 			for (name in this.Prefixes) {
-				if (Object.prototype.hasOwnProperty.call(this.Prefixes,name) && attribute.indexOf(this.Prefixes[name]) === 0)
+				if (Object.prototype.hasOwnProperty.call(this.Prefixes, name) && attribute.indexOf(this.Prefixes[name]) === 0)
 					return true;
 			}
-
+			
 			return this.Resolve(attribute) !== null || this.TwoWay(attribute) !== null || this.Binding(attribute) !== null || this.Event(attribute) !== null || this.Ref(attribute) !== null;
 		}
 	};
-
+	
 	/*
 	 * Built-ins use the same directive registry as application directives.
 	 * Alias exists only as a compatibility bridge for the current structural
 	 * engine while its handlers are moved behind generic directive capabilities.
 	 */
-	Runtime.Directive.Register('if',{
-		Alias:'If',
-		Structural:true,
-		ElemenxOnUpdate:function (context) {
+	Runtime.Directive.Register('if', {
+		Alias: 'If',
+		Structural: true,
+		ElemenxOnUpdate: function (context) {
 			if (context.Value) context.Mount();
 			else context.Unmount();
 		}
-	},true);
-	Runtime.Directive.Register('for',{
-		Alias:'For',
-		Structural:true,
-		Collection:true,
-		ElemenxOnCreate:function (context) {
-			var classic=context.Expression.split(';');
-			var match=/^\s*([A-Za-z_$][\w$]*)\s+(of|in)\s+([\s\S]+)$/.exec(context.Expression);
+	}, true);
+	Runtime.Directive.Register('for', {
+		Alias: 'For',
+		Structural: true,
+		Collection: true,
+		ElemenxOnCreate: function (context) {
+			var classic = context.Expression.split(';');
+			var match = /^\s*([A-Za-z_$][\w$]*)\s+(of|in)\s+([\s\S]+)$/.exec(context.Expression);
 			var initializer;
-
+			
 			if (classic.length === 3) {
-				initializer=/^\s*([A-Za-z_$][\w$]*)\s*=\s*([\s\S]+)$/.exec(classic[0]);
+				initializer = /^\s*([A-Za-z_$][\w$]*)\s*=\s*([\s\S]+)$/.exec(classic[0]);
 				if (!initializer)
 					throw new Error('Elemenx *for initializer must assign a local variable: ' + context.Expression);
-
-				context.Data.Mode='classic';
-				context.Data.Variable=initializer[1];
-				context.Data.Initializer=initializer[2];
-				context.Data.Condition=classic[1];
-				context.Data.Step=classic[2];
+				
+				context.Data.Mode = 'classic';
+				context.Data.Variable = initializer[1];
+				context.Data.Initializer = initializer[2];
+				context.Data.Condition = classic[1];
+				context.Data.Step = classic[2];
 				return;
 			}
-
+			
 			if (!match)
 				throw new Error('Elemenx *for expects classic for, for..of or for..in syntax: ' + context.Expression);
-
-			context.Data.Mode=match[2];
-			context.Data.Variable=match[1];
-			context.Data.Source=match[3];
+			
+			context.Data.Mode = match[2];
+			context.Data.Variable = match[1];
+			context.Data.Source = match[3];
 		},
-		ElemenxOnUpdate:function (context) {
+		ElemenxOnUpdate: function (context) {
 			if (context.Data.Mode === 'classic') {
-				context.Render(null,{
-					Mode:'classic',
-					Variable:context.Data.Variable,
-					Initializer:context.Data.Initializer,
-					Condition:context.Data.Condition,
-					Step:context.Data.Step,
-					Key:context.Argument('key')
+				context.Render(null, {
+					Mode: 'classic',
+					Variable: context.Data.Variable,
+					Initializer: context.Data.Initializer,
+					Condition: context.Data.Condition,
+					Step: context.Data.Step,
+					Key: context.Argument('key')
 				});
 				return;
 			}
-
+			
 			context.Render(
 				context.Source(context.Data.Source),
 				{
-					Mode:context.Data.Mode,
-					Variable:context.Data.Variable,
-					Key:context.Argument('key')
+					Mode: context.Data.Mode,
+					Variable: context.Data.Variable,
+					Key: context.Argument('key')
 				}
 			);
 		}
-	},true);
-	Runtime.Directive.Register('key',{Alias:'Key',Kind:'argument',For:'collection',Role:'key'},true);
-	Runtime.Directive.Register('outlet',{Alias:'Outlet',Kind:'behavior',Role:'outlet'},true);
-	Runtime.Directive.Register('pending',{Alias:'Pending',Kind:'status',Role:'pending'},true);
-	Runtime.Directive.Register('error',{Alias:'Error',Kind:'status',Role:'error'},true);
-
+	}, true);
+	Runtime.Directive.Register('key', {Alias: 'Key', Kind: 'argument', For: 'collection', Role: 'key'}, true);
+	Runtime.Directive.Register('outlet', {Alias: 'Outlet', Kind: 'behavior', Role: 'outlet'}, true);
+	Runtime.Directive.Register('pending', {Alias: 'Pending', Kind: 'status', Role: 'pending'}, true);
+	Runtime.Directive.Register('error', {Alias: 'Error', Kind: 'status', Role: 'error'}, true);
+	
 	(function (global) {
 		'use strict';
 		
@@ -1821,7 +1836,7 @@
 			Query: true,
 			Hash: true
 		};
-		var componentRouteContext = {Path:true, Params:true, Query:true, Hash:true};
+		var componentRouteContext = {Path: true, Params: true, Query: true, Hash: true};
 		var componentGenerations = {};
 		var componentOutlets = new WeakMap();
 		var componentValues = new WeakMap();
@@ -1957,7 +1972,7 @@
 			if (style.textContent !== String(css))
 				style.textContent = String(css);
 		}
-
+		
 		var liveComponentInstances = {};
 		
 		function trackComponentInstance (name, component) {
@@ -1979,7 +1994,6 @@
 				list.splice(index, 1);
 		}
 		
-
 		function deferredComponent (resolver, data, slotProjection, options) {
 			var placeholder = document.createElement('span');
 			var current = null;
@@ -2304,7 +2318,7 @@
 				}
 			);
 		}
-
+		
 		function protectExpressionAttributes (html) {
 			var expressions = [];
 			var source = String(html || '').replace(
@@ -2364,39 +2378,39 @@
 		}
 		
 		function collectRefs (root, refs) {
-			var nodes=[],all,i=0,j,attrs,name;
-
+			var nodes = [], all, i = 0, j, attrs, name;
+			
 			if (root.nodeType === 1) nodes.push(root);
 			if (root.querySelectorAll) {
-				all=root.querySelectorAll('*');
+				all = root.querySelectorAll('*');
 				while (i < all.length) {
 					nodes.push(all[i]);
 					i++;
 				}
 			}
-
-			i=0;
+			
+			i = 0;
 			while (i < nodes.length) {
-				attrs=Array.prototype.slice.call(nodes[i].attributes);
-				j=0;
-
+				attrs = Array.prototype.slice.call(nodes[i].attributes);
+				j = 0;
+				
 				while (j < attrs.length) {
-					name=Runtime.Directive.Ref(attrs[j].name);
-
+					name = Runtime.Directive.Ref(attrs[j].name);
+					
 					if (name) {
-						name=name.toLowerCase();
-						refs[name]=nodes[i];
-						nodes[i].__ElemenxRefName=name;
+						name = name.toLowerCase();
+						refs[name] = nodes[i];
+						nodes[i].__ElemenxRefName = name;
 						nodes[i].removeAttribute(attrs[j].name);
 					}
-
+					
 					j++;
 				}
-
+				
 				i++;
 			}
 		}
-
+		
 		function addBinding (bindings, source, binding) {
 			binding.expression = source;
 			binding.evaluate = Runtime.CompileExpression(source);
@@ -2449,181 +2463,191 @@
 		}
 		
 		function classBindingState (node) {
-			var state={
+			var state = {
 				node: node,
 				base: {},
 				list: [],
 				points: {}
 			};
-			var i=0;
-
+			var i = 0;
+			
 			while (i < node.classList.length) {
-				state.base[node.classList.item(i)]=true;
+				state.base[node.classList.item(i)] = true;
 				i++;
 			}
-
+			
 			return state;
 		}
-
+		
 		function renderClassBinding (state) {
-			var names={}, name, i=0;
-
+			var names = {}, name, i = 0;
+			
 			for (name in state.base)
-				if (own(state.base,name))
-					names[name]=true;
-
+				if (own(state.base, name))
+					names[name] = true;
+			
 			while (i < state.list.length) {
-				names[state.list[i]]=true;
+				names[state.list[i]] = true;
 				i++;
 			}
-
+			
 			for (name in state.points) {
-				if (!own(state.points,name)) continue;
-
+				if (!own(state.points, name)) continue;
+				
 				if (state.points[name])
-					names[name]=true;
+					names[name] = true;
 				else
 					delete names[name];
 			}
-
-			state.node.className='';
-
+			
+			state.node.className = '';
+			
 			for (name in names)
-				if (own(names,name))
+				if (own(names, name))
 					state.node.classList.add(name);
 		}
-
+		
 		function styleBindingState (node) {
-			var state={
+			var state = {
 				node: node,
 				base: {},
 				map: {},
 				points: {},
 				managed: {}
 			};
-			var i=0,name;
-
+			var i = 0, name;
+			
 			while (i < node.style.length) {
-				name=node.style.item(i);
-				state.base[name]={
+				name = node.style.item(i);
+				state.base[name] = {
 					value: node.style.getPropertyValue(name),
 					priority: node.style.getPropertyPriority(name)
 				};
 				i++;
 			}
-
+			
 			return state;
 		}
-
+		
 		function renderStyleBinding (state) {
-			var names={},name,item;
-
+			var names = {}, name, item;
+			
 			for (name in state.managed)
-				if (own(state.managed,name))
+				if (own(state.managed, name))
 					state.node.style.removeProperty(name);
-
+			
 			for (name in state.base) {
-				if (!own(state.base,name)) continue;
-				item=state.base[name];
-				state.node.style.setProperty(name,item.value,item.priority);
+				if (!own(state.base, name)) continue;
+				item = state.base[name];
+				state.node.style.setProperty(name, item.value, item.priority);
 			}
-
+			
 			for (name in state.map) {
-				if (!own(state.map,name)) continue;
-				names[name]=true;
-
+				if (!own(state.map, name)) continue;
+				names[name] = true;
+				
 				if (state.map[name] == null)
 					state.node.style.removeProperty(name);
 				else
-					state.node.style.setProperty(name,String(state.map[name]));
+					state.node.style.setProperty(name, String(state.map[name]));
 			}
-
+			
 			for (name in state.points) {
-				if (!own(state.points,name)) continue;
-				names[name]=true;
-
+				if (!own(state.points, name)) continue;
+				names[name] = true;
+				
 				if (state.points[name] == null)
 					state.node.style.removeProperty(name);
 				else
-					state.node.style.setProperty(name,String(state.points[name]));
+					state.node.style.setProperty(name, String(state.points[name]));
 			}
-
-			state.managed=names;
+			
+			state.managed = names;
 		}
-
+		
 		function collectElementBindings (root, bindings, models) {
-			var nodes=[],all,i=0,j,attrs,attr,key,target,separator,namespace,name;
-			var classState,styleState;
-
+			var nodes = [], all, i = 0, j, attrs, attr, key, target, separator, namespace, name;
+			var classState, styleState;
+			
 			if (root.nodeType === 1) nodes.push(root);
 			if (root.querySelectorAll) {
-				all=root.querySelectorAll('*');
-
+				all = root.querySelectorAll('*');
+				
 				while (i < all.length) {
 					nodes.push(all[i]);
 					i++;
 				}
 			}
-
-			i=0;
+			
+			i = 0;
 			while (i < nodes.length) {
-				attrs=Array.prototype.slice.call(nodes[i].attributes);
-				j=0;
-				classState=null;
-				styleState=null;
-
+				attrs = Array.prototype.slice.call(nodes[i].attributes);
+				j = 0;
+				classState = null;
+				styleState = null;
+				
 				while (j < attrs.length) {
-					attr=attrs[j];
-					target=Runtime.Directive.TwoWay(attr.name);
-
+					attr = attrs[j];
+					target = Runtime.Directive.TwoWay(attr.name);
+					
 					if (target !== null) {
 						if (target !== 'value' && target !== 'checked' && target !== 'selected')
-							throw new Error('Invalid Elemenx two-way binding target: [('+target+')]');
+							throw new Error('Invalid Elemenx two-way binding target: [(' + target + ')]');
 						
-						key=attr.value;
+						key = attr.value;
 						models.push({
-							key:key,
-							node:nodes[i],
-							type:target
+							key: key,
+							node: nodes[i],
+							type: target
 						});
 						
 						nodes[i].removeAttribute(attr.name);
-						target=null;
+						target = null;
 					}
 					else {
-						target=Runtime.Directive.Binding(attr.name);
+						target = Runtime.Directive.Binding(attr.name);
 					}
-
+					
 					if (target !== null) {
-						key=attr.value;
-						separator=target.indexOf('.');
-						namespace=separator === -1 ? target : target.substring(0,separator);
-						name=separator === -1 ? null : target.substring(separator+1);
-
+						key = attr.value;
+						separator = target.indexOf('.');
+						namespace = separator === -1 ? target : target.substring(0, separator);
+						name = separator === -1 ? null : target.substring(separator + 1);
+						
 						if (target === 'class') {
-							if (!classState) classState=classBindingState(nodes[i]);
-							addBinding(bindings,key,{type:'class-list',node:nodes[i],state:classState});
+							if (!classState) classState = classBindingState(nodes[i]);
+							addBinding(bindings, key, {type: 'class-list', node: nodes[i], state: classState});
 						}
 						else if (namespace === 'class' && name) {
-							if (!classState) classState=classBindingState(nodes[i]);
-							addBinding(bindings,key,{type:'class-name',name:name,node:nodes[i],state:classState});
+							if (!classState) classState = classBindingState(nodes[i]);
+							addBinding(bindings, key, {
+								type: 'class-name',
+								name: name,
+								node: nodes[i],
+								state: classState
+							});
 						}
 						else if (target === 'style') {
-							if (!styleState) styleState=styleBindingState(nodes[i]);
-							addBinding(bindings,key,{type:'style-map',node:nodes[i],state:styleState});
+							if (!styleState) styleState = styleBindingState(nodes[i]);
+							addBinding(bindings, key, {type: 'style-map', node: nodes[i], state: styleState});
 						}
 						else if (namespace === 'style' && name) {
-							if (!styleState) styleState=styleBindingState(nodes[i]);
-							addBinding(bindings,key,{type:'style-property',name:name,node:nodes[i],state:styleState});
+							if (!styleState) styleState = styleBindingState(nodes[i]);
+							addBinding(bindings, key, {
+								type: 'style-property',
+								name: name,
+								node: nodes[i],
+								state: styleState
+							});
 						}
 						else if (namespace === 'property' && name) {
-							addBinding(bindings,key,{type:'property',name:name,node:nodes[i]});
+							addBinding(bindings, key, {type: 'property', name: name, node: nodes[i]});
 						}
 						else if (namespace === 'attribute' && name) {
-							addBinding(bindings,key,{type:'attribute',name:name,node:nodes[i]});
+							addBinding(bindings, key, {type: 'attribute', name: name, node: nodes[i]});
 						}
 						else if (separator === -1 && target) {
-							addBinding(bindings,key,{type:'property',name:target,node:nodes[i]});
+							addBinding(bindings, key, {type: 'property', name: target, node: nodes[i]});
 						}
 						else {
 							/* Preserve non-DOM target paths for Component ownership. */
@@ -2633,41 +2657,49 @@
 						
 						nodes[i].removeAttribute(attr.name);
 					}
-
+					
 					j++;
 				}
-
+				
 				i++;
 			}
 		}
-
+		
 		function collectCustomDirectives (root, directives) {
-			var nodes=[],all,i=0,j,attrs,attr,resolved,parent,skip;
+			var nodes = [], all, i = 0, j, attrs, attr, resolved, parent, skip;
 			if (root.nodeType === 1) nodes.push(root);
 			if (root.querySelectorAll) {
-				all=root.querySelectorAll('*');
-				while (i < all.length) {nodes.push(all[i]);i++;}
+				all = root.querySelectorAll('*');
+				while (i < all.length) {
+					nodes.push(all[i]);
+					i++;
+				}
 			}
-			i=0;
+			i = 0;
 			while (i < nodes.length) {
-				skip=false;
-				parent=nodes[i];
+				skip = false;
+				parent = nodes[i];
 				while (parent) {
-					if (parent.nodeType === 1 && (Runtime.Directive.Find(parent,'structural'))) {
-						skip=true;
+					if (parent.nodeType === 1 && (Runtime.Directive.Find(parent, 'structural'))) {
+						skip = true;
 						break;
 					}
 					if (parent === root) break;
-					parent=parent.parentNode;
+					parent = parent.parentNode;
 				}
 				if (!skip) {
-					attrs=Array.prototype.slice.call(nodes[i].attributes);
-					j=0;
+					attrs = Array.prototype.slice.call(nodes[i].attributes);
+					j = 0;
 					while (j < attrs.length) {
-						attr=attrs[j];
-						resolved=Runtime.Directive.Resolve(attr.name);
+						attr = attrs[j];
+						resolved = Runtime.Directive.Resolve(attr.name);
 						if (resolved && resolved.Definition.Kind === 'behavioral') {
-							directives.push({Name:resolved.Name,Definition:resolved.Definition,Element:nodes[i],Expression:attr.value || ''});
+							directives.push({
+								Name: resolved.Name,
+								Definition: resolved.Definition,
+								Element: nodes[i],
+								Expression: attr.value || ''
+							});
 							nodes[i].removeAttribute(attr.name);
 						}
 						j++;
@@ -2676,65 +2708,65 @@
 				i++;
 			}
 		}
-
+		
 		function applyBinding (binding, value) {
 			var name;
-
+			
 			if (binding.type === 'text') {
-				binding.node.nodeValue=value == null ? '' : String(value);
+				binding.node.nodeValue = value == null ? '' : String(value);
 			}
 			else if (binding.type === 'property') {
-				binding.node[binding.name]=value;
+				binding.node[binding.name] = value;
 			}
 			else if (binding.type === 'attribute') {
 				if (value == null)
 					binding.node.removeAttribute(binding.name);
 				else
-					binding.node.setAttribute(binding.name,String(value));
+					binding.node.setAttribute(binding.name, String(value));
 			}
 			else if (binding.type === 'class-list') {
 				if (value == null)
-					value=[];
-
+					value = [];
+				
 				if (!Array.isArray(value))
 					throw new TypeError('[class] binding expects an Array');
-
-				binding.state.list=[];
-
-				var i=0;
+				
+				binding.state.list = [];
+				
+				var i = 0;
 				while (i < value.length) {
 					if (value[i] != null && String(value[i]))
 						binding.state.list.push(String(value[i]));
 					i++;
 				}
-
+				
 				renderClassBinding(binding.state);
 			}
 			else if (binding.type === 'class-name') {
-				binding.state.points[binding.name]=!!value;
+				binding.state.points[binding.name] = !!value;
 				renderClassBinding(binding.state);
 			}
 			else if (binding.type === 'style-map') {
 				if (value == null)
-					value={};
-
+					value = {};
+				
 				if (typeof value !== 'object' || Array.isArray(value))
 					throw new TypeError('[style] binding expects an Object');
-
-				binding.state.map={};
-
+				
+				binding.state.map = {};
+				
 				for (name in value)
-					if (own(value,name))
-						binding.state.map[name]=value[name];
-
+					if (own(value, name))
+						binding.state.map[name] = value[name];
+				
 				renderStyleBinding(binding.state);
 			}
 			else if (binding.type === 'style-property') {
-				binding.state.points[binding.name]=value;
+				binding.state.points[binding.name] = value;
 				renderStyleBinding(binding.state);
 			}
 		}
-
+		
 		function activateBindings (bindings, state, effects) {
 			var i = 0;
 			
@@ -2764,33 +2796,33 @@
 		}
 		
 		function collectOutlets (root, outlets) {
-			var nodes=[],all,i=0,name,attribute=Runtime.Directive.AttributeForRole('outlet');
-
+			var nodes = [], all, i = 0, name, attribute = Runtime.Directive.AttributeForRole('outlet');
+			
 			if (root.nodeType === 1 && root.hasAttribute(attribute))
 				nodes.push(root);
-
+			
 			if (root.querySelectorAll) {
-				all=root.querySelectorAll('*');
-
+				all = root.querySelectorAll('*');
+				
 				while (i < all.length) {
 					if (all[i].hasAttribute(attribute))
 						nodes.push(all[i]);
 					i++;
 				}
 			}
-
-			i=0;
+			
+			i = 0;
 			while (i < nodes.length) {
-				name=nodes[i].getAttribute(attribute);
-
+				name = nodes[i].getAttribute(attribute);
+				
 				if (name)
-					outlets[name]=Runtime.Outlet(nodes[i]);
-
+					outlets[name] = Runtime.Outlet(nodes[i]);
+				
 				nodes[i].removeAttribute(attribute);
 				i++;
 			}
 		}
-
+		
 		function projectSlots (root, projection) {
 			var slots = [];
 			var found;
@@ -2960,7 +2992,7 @@
 			
 			if (definition.Style !== undefined)
 				installComponentStyle(name, definition, definition.Style);
-
+			
 			if (name && definition.Template === undefined) {
 				templateID = definition.TemplateID || name;
 				definition.Template = '#' + templateID;
@@ -2991,7 +3023,7 @@
 				 * Keep the host transparent to layout while allowing the real root to
 				 * participate in the same structural ownership path as nested directives.
 				 */
-				if (root.nodeType === 1 && Runtime.Directive.Find(root,'structural')) {
+				if (root.nodeType === 1 && Runtime.Directive.Find(root, 'structural')) {
 					var structuralRoot = document.createElement('span');
 					
 					structuralRoot.style.display = 'contents';
@@ -3089,38 +3121,38 @@
 				}
 				
 				function Ref (name) {
-					var key=String(name).toLowerCase();
-					var ref=refs[key] || null;
+					var key = String(name).toLowerCase();
+					var ref = refs[key] || null;
 					var nodes;
-					var i=0;
-
+					var i = 0;
+					
 					if (ref && root.contains(ref))
 						return ref;
-
-					ref=null;
-
+					
+					ref = null;
+					
 					if (root.nodeType === 1 && root.__ElemenxRefName === key)
-						ref=root;
+						ref = root;
 					else if (root.querySelectorAll) {
-						nodes=root.querySelectorAll('*');
+						nodes = root.querySelectorAll('*');
 						while (i < nodes.length) {
 							if (nodes[i].__ElemenxRefName === key) {
-								ref=nodes[i];
+								ref = nodes[i];
 								break;
 							}
 							i++;
 						}
 					}
-
+					
 					if (ref) {
-						refs[key]=ref;
+						refs[key] = ref;
 						return ref;
 					}
-
+					
 					delete refs[key];
 					return null;
 				}
-
+				
 				function Outlet (name) {
 					return outlets[name] || null;
 				}
@@ -3192,7 +3224,7 @@
 							i++;
 							continue;
 						}
-
+						
 						attrs = Array.prototype.slice.call(nodes[i].attributes);
 						j = 0;
 						
@@ -3256,49 +3288,58 @@
 				}
 				
 				function activateCustomDirectives () {
-					var i=0,record,context,effect;
+					var i = 0, record, context, effect;
 					while (i < customDirectives.length) {
-						record=customDirectives[i];
-						context={Name:record.Name,Element:record.Element,Component:api,Expression:record.Expression,Value:undefined,Data:{}};
-						record.Context=context;
+						record = customDirectives[i];
+						context = {
+							Name: record.Name,
+							Element: record.Element,
+							Component: api,
+							Expression: record.Expression,
+							Value: undefined,
+							Data: {}
+						};
+						record.Context = context;
 						if (typeof record.Definition.ElemenxOnCreate === 'function')
-							record.Definition.ElemenxOnCreate.call(api,context);
-						(function (record,context) {
-							var evaluate=record.Expression ? Runtime.CompileExpression(record.Expression) : null;
-							effect=Runtime.Effect(function () {
+							record.Definition.ElemenxOnCreate.call(api, context);
+						(function (record, context) {
+							var evaluate = record.Expression ? Runtime.CompileExpression(record.Expression) : null;
+							effect = Runtime.Effect(function () {
 								var value;
 								if (evaluate) {
-									try {value=evaluate(values);}
+									try {
+										value = evaluate(values);
+									}
 									catch (error) {
-										value=undefined;
+										value = undefined;
 										if (!(error && error.name === 'ReferenceError') && global.console && console.error)
-											console.error('Elemenx directive expression failed: *' + record.Name + '="' + record.Expression + '"',error);
+											console.error('Elemenx directive expression failed: *' + record.Name + '="' + record.Expression + '"', error);
 									}
 								}
-								context.Value=value;
+								context.Value = value;
 								if (typeof record.Definition.ElemenxOnUpdate === 'function')
-									record.Definition.ElemenxOnUpdate.call(api,context);
+									record.Definition.ElemenxOnUpdate.call(api, context);
 								return value;
-							},true);
-							record.Effect=effect;
+							}, true);
+							record.Effect = effect;
 							effects.push(effect);
-						})(record,context);
+						})(record, context);
 						i++;
 					}
 				}
-
+				
 				function destroyCustomDirectives () {
-					var i=customDirectives.length - 1;
+					var i = customDirectives.length - 1;
 					var record;
 					while (i >= 0) {
-						record=customDirectives[i];
+						record = customDirectives[i];
 						if (typeof record.Definition.ElemenxOnDestroy === 'function')
-							record.Definition.ElemenxOnDestroy.call(api,record.Context);
+							record.Definition.ElemenxOnDestroy.call(api, record.Context);
 						i--;
 					}
-					customDirectives.length=0;
+					customDirectives.length = 0;
 				}
-
+				
 				function activateEffects () {
 					var i = 0;
 					
@@ -3312,14 +3353,14 @@
 				function updateRouteContext (packet) {
 					if (!packet) return;
 					Runtime.BatchReactive(function () {
-						values.Path=packet.Path;
-						values.Params=packet.Params;
-						values.Query=packet.Query;
-						values.Hash=packet.Hash;
-						routeContextReady=true;
+						values.Path = packet.Path;
+						values.Params = packet.Params;
+						values.Query = packet.Query;
+						values.Hash = packet.Hash;
+						routeContextReady = true;
 					});
 				}
-
+				
 				function Update (next) {
 					var key;
 					
@@ -3480,27 +3521,27 @@
 					Update: Update,
 					Destroy: Destroy
 				};
-
+				
 				if (!directState) {
 					api = new Proxy(api, {
 						get: function (target, key) {
 							if (componentRouteContext[key])
 								return routeContextReady ? values[key] : undefined;
-
+							
 							if (key in target)
 								return target[key];
-
+							
 							return values[key];
 						},
 						set: function (target, key, value) {
 							if (componentAPIReserved[key] || key in target) {
 								target[key] = value;
-
+								
 								return true;
 							}
-
+							
 							values[key] = value;
-
+							
 							return true;
 						},
 						has: function (target, key) {
@@ -3608,7 +3649,7 @@
 					structural.Update(values);
 				
 				activateCustomDirectives();
-				var customDirectiveIndex=0;
+				var customDirectiveIndex = 0;
 				while (customDirectiveIndex < customDirectives.length) {
 					if (customDirectives[customDirectiveIndex].Effect)
 						customDirectives[customDirectiveIndex].Effect.Run();
@@ -3738,7 +3779,7 @@
 			return componentValues.get(component) || null;
 		};
 		Runtime.UpdateComponentRouteContext = function (component, packet) {
-			var update=componentRouteUpdaters.get(component);
+			var update = componentRouteUpdaters.get(component);
 			if (update) update(packet);
 		};
 		
@@ -3815,7 +3856,7 @@
 			while (component._Component) {
 				var resolved = component._Component();
 				if (!resolved || resolved === component) return null;
-			
+				
 				component = resolved;
 			}
 			
@@ -4110,18 +4151,18 @@
 			
 			function bundledComponent (reference) {
 				var factory;
-
+				
 				if (typeof reference === 'function') return reference;
-
-				factory=Runtime.ResolveComponentRegistered(reference);
+				
+				factory = Runtime.ResolveComponentRegistered(reference);
 				if (factory) return factory;
-
-				if (Runtime.Bundle && Runtime.Bundle.Load && Runtime.Bundle.Load('Component',reference))
+				
+				if (Runtime.Bundle && Runtime.Bundle.Load && Runtime.Bundle.Load('Component', reference))
 					return Runtime.ResolveComponentRegistered(reference);
-
+				
 				return null;
 			}
-
+			
 			function componentFactory (route) {
 				// Bundle resolution is synchronous and may register the factory here.
 				// Network Discovery remains owned by loadRouteComponents().
@@ -4130,129 +4171,132 @@
 			
 			function loadRouteComponents (chain, common, callback) {
 				var index = common;
-
+				
 				function next (error) {
 					if (error || index >= chain.length) {
 						callback(error || null);
-
+						
 						return;
 					}
-
+					
 					var route = chain[index++];
 					if (bundledComponent(route.Component)) {
 						next(null);
-
+						
 						return;
 					}
-
+					
 					var currentApplication = application();
 					if (!Runtime.Discovery || !currentApplication || !Runtime.Discovery.Ready(currentApplication)) {
 						callback(new Error('Elemenx route component not found: ' + route.Component));
-
+						
 						return;
 					}
-
+					
 					Runtime.Discovery.Load(currentApplication, 'Component', route.Component, false, function (error) {
 						if (error) {
 							next(error);
-
+							
 							return;
 						}
-
+						
 						if (!Runtime.ResolveComponentRegistered(route.Component)) {
 							next(new Error('Elemenx route component did not register: ' + route.Component));
-
+							
 							return;
 						}
-
+						
 						next(null);
 					});
 				}
-
+				
 				next(null);
 			}
-
+			
 			var waitingComponent = null;
 			var waitingElement = null;
-
+			
 			function clearWaiting () {
 				if (!waitingComponent) return;
-
+				
 				if (waitingElement && waitingElement.parentNode)
 					waitingElement.parentNode.removeChild(waitingElement);
-
+				
 				if (waitingComponent.Destroy)
 					waitingComponent.Destroy();
-
+				
 				waitingComponent = null;
 				waitingElement = null;
 			}
-
+			
 			function showWaiting (prepared, callback) {
 				var chain = prepared.Found.Chain;
 				var route = chain.length ? chain[chain.length - 1] : null;
 				var reference = route && route.Wait !== undefined ? route.Wait : (route && route.Waiting !== undefined ? route.Waiting : (config.Wait !== undefined ? config.Wait : config.Waiting));
-
+				
 				clearWaiting();
-
+				
 				if (!reference) {
 					callback(null);
-
+					
 					return;
 				}
-
+				
 				function render () {
 					var factory = bundledComponent(reference);
 					if (!factory) {
 						callback(new Error('Elemenx route waiting component not found: ' + reference));
-
+						
 						return;
 					}
-
+					
 					var outlet = Runtime.ResolveOutlet(root, waitingOutletName);
 					if (!outlet) {
 						callback(new Error('Elemenx router waiting outlet not found: ' + waitingOutletName));
-
+						
 						return;
 					}
-
+					
 					waitingComponent = Runtime.WithRouter(api, function () {
-						return factory(prepared.Packet, null, {Application: application(), RoutePacket: prepared.Packet});
+						return factory(prepared.Packet, null, {
+							Application: application(),
+							RoutePacket: prepared.Packet
+						});
 					});
-
+					
 					Runtime.AttachRouter(waitingComponent, api);
 					waitingComponent.Parent(root);
 					waitingElement = waitingComponent.Element ? waitingComponent.Element() : waitingComponent;
 					outlet.Element().appendChild(waitingElement);
 					emit('NavigationWaiting', prepared.Packet);
-
+					
 					callback(null);
 				}
-
+				
 				if (bundledComponent(reference)) {
 					render();
-
+					
 					return;
 				}
-
+				
 				var currentApplication = application();
 				if (!Runtime.Discovery || !currentApplication || !Runtime.Discovery.Ready(currentApplication)) {
 					callback(new Error('Elemenx route waiting component not found: ' + reference));
-
+					
 					return;
 				}
-
+				
 				Runtime.Discovery.Load(currentApplication, 'Component', reference, false, function (error) {
 					if (error) {
 						callback(error);
-
+						
 						return;
 					}
-
+					
 					render();
 				});
 			}
-
+			
 			function guardsFor (route) {
 				if (route.Guards instanceof Array) return route.Guards;
 				if (route.Guard !== undefined) return [route.Guard];
@@ -4519,7 +4563,11 @@
 						throw new Error('Elemenx route component not found: ' + route.Component);
 					
 					component = Runtime.WithRouter(api, function () {
-						return factory(packet, null, {Application: application(), RoutePacket: packet, GuardFailure: route.GuardFailure || null});
+						return factory(packet, null, {
+							Application: application(),
+							RoutePacket: packet,
+							GuardFailure: route.GuardFailure || null
+						});
 					});
 					
 					Runtime.AttachRouter(component, api);
@@ -4542,48 +4590,48 @@
 			function currentURL () {
 				return new URL(global.location.href);
 			}
-
+			
 			function routeComponentsReady (from) {
 				var i = from;
-
+				
 				while (i < active.length) {
 					if (active[i].Component && active[i].Component._Component && !active[i].Component._Component())
 						return false;
-
+					
 					i++;
 				}
-
+				
 				return true;
 			}
-
+			
 			function finishWaitingAfterCommit (prepared, id, callback) {
 				var outlet;
-
+				
 				if (!waitingComponent || !waitingElement) {
 					callback();
-
+					
 					return;
 				}
-
+				
 				// Waiting has its own outlet, independent from the route Content outlet.
 				// Keep it mounted until every deferred route component has resolved.
 				outlet = Runtime.ResolveOutlet(root, waitingOutletName);
 				if (outlet && waitingElement && !waitingElement.parentNode)
 					outlet.Element().appendChild(waitingElement);
-
+				
 				function check () {
 					if (id !== navigationID) return;
-
+					
 					if (!routeComponentsReady(prepared.Common)) {
 						global.setTimeout(check, 0);
-
+						
 						return;
 					}
-
+					
 					clearWaiting();
 					callback();
 				}
-
+				
 				check();
 			}
 			
@@ -4697,12 +4745,12 @@
 					Route: null,
 					Guard: null
 				};
-
+				
 				emit('NavigationStart', context);
-
+				
 				runLeaveGuards(prepared.Common, context, function (leaveResult) {
 					if (id !== navigationID) return;
-
+					
 					if (leaveResult !== true && leaveResult !== undefined) {
 						if (typeof leaveResult === 'string') {
 							emit('NavigationCancel', context);
@@ -4712,24 +4760,24 @@
 							handleGuardFailure(leaveResult, context);
 							emit('NavigationCancel', context);
 						}
-
+						
 						return;
 					}
-
+					
 					showWaiting(prepared, function (waitingError) {
 						if (id !== navigationID) return;
 						if (waitingError) throw waitingError;
-
+						
 						runEnterGuards(
 							prepared.Found.Chain,
 							prepared.Common,
 							context,
 							function (enterResult) {
 								if (id !== navigationID) return;
-
+								
 								if (enterResult !== true && enterResult !== undefined) {
 									clearWaiting();
-
+									
 									if (typeof enterResult === 'string') {
 										emit('NavigationCancel', context);
 										navigate(enterResult, 'replace');
@@ -4741,103 +4789,103 @@
 										if (!failureComponent || !renderGuardFailure(prepared, failure, failureComponent, mode, id, context))
 											emit('NavigationCancel', context);
 									}
-
+									
 									return;
 								}
-
+								
 								// Guard success is the navigation commit point. Discovery URLs are
 								// absolute from Application bootstrap, so changing location here cannot
 								// retarget a deferred component request. This keeps browser history ahead
 								// of every target-page load and render operation.
 								if (mode === 'push') global.history.pushState(null, '', prepared.URL.href);
 								else if (mode === 'replace') global.history.replaceState(null, '', prepared.URL.href);
-
+								
 								emit('NavigationCommit', context);
-
+								
 								if (id !== navigationID) return;
-
-									loadRouteComponents(prepared.Found.Chain, prepared.Common, function (componentError) {
+								
+								loadRouteComponents(prepared.Found.Chain, prepared.Common, function (componentError) {
 									if (id !== navigationID) return;
 									if (componentError) {
 										if (mode === 'push' || mode === 'replace')
 											global.history.replaceState(null, '', previousURL.href);
-
+										
 										clearWaiting();
-
+										
 										throw componentError;
 									}
-
+									
 									commit(prepared);
-
+									
 									finishWaitingAfterCommit(prepared, id, function () {
-											emit('NavigationEnd', context);
-										});
+										emit('NavigationEnd', context);
 									});
+								});
 							}
 						);
 					});
 				});
 			}
-
+			
 			function notFound (url, mode) {
 				var reference = config.NotFound;
 				if (!reference) return false;
-
+				
 				var id = ++navigationID;
 				var packet = statePacket(url, {});
-
+				
 				function render () {
 					if (id !== navigationID) return;
-
+					
 					var factory = bundledComponent(reference);
 					if (!factory)
 						throw new Error('Elemenx NotFound component not found: ' + reference);
-
+					
 					var outlet = Runtime.ResolveOutlet(root, rootOutletName);
 					if (!outlet)
 						throw new Error('Elemenx router outlet not found: ' + rootOutletName);
-
+					
 					destroyFrom(0);
-
+					
 					var component = Runtime.WithRouter(api, function () {
 						return factory(packet, null, {Application: application(), RoutePacket: packet});
 					});
-
+					
 					Runtime.AttachRouter(component, api);
 					component.Parent(root);
 					outlet.Render(component);
-
+					
 					active.push({
 						Route: null,
 						Component: component
 					});
 				}
-
+				
 				if (mode === 'push')
 					global.history.pushState(null, '', url.href);
 				else if (mode === 'replace')
 					global.history.replaceState(null, '', url.href);
-
+				
 				if (bundledComponent(reference)) {
 					render();
-
+					
 					return true;
 				}
-
+				
 				var currentApplication = application();
 				if (!Runtime.Discovery || !currentApplication || !Runtime.Discovery.Ready(currentApplication))
 					throw new Error('Elemenx NotFound component not found: ' + reference);
-
+				
 				Runtime.Discovery.Load(currentApplication, 'Component', reference, false, function (error) {
 					if (id !== navigationID) return;
 					if (error) throw error;
-
+					
 					render();
 				});
-
+				
 				return true;
 			}
-
+			
 			function navigate (url, mode) {
 				var target = new URL(url, global.location.href);
 				if (target.origin !== global.location.origin) {
@@ -4987,29 +5035,29 @@
 		var Elemenx = global.Elemenx;
 		
 		function Structural (component, definition, blueprintRoot) {
-			var directiveHosts={};
-
+			var directiveHosts = {};
+			
 			function directiveHost (name, compiler) {
 				if (compiler !== undefined) {
 					if (!name || typeof compiler !== 'function')
 						throw new Error('Elemenx directive host requires a name and compiler');
-
-					directiveHosts[name]=compiler;
+					
+					directiveHosts[name] = compiler;
 					return compiler;
 				}
-
+				
 				return directiveHosts[name] || null;
 			}
-
+			
 			function compileDirectiveHost (node, directive) {
-				var compiler=directiveHost(directive.Definition.Host);
-
+				var compiler = directiveHost(directive.Definition.Host);
+				
 				if (!compiler)
 					throw new Error('Unknown Elemenx directive host: ' + directive.Definition.Host);
-
-				return compiler(node,directive);
+				
+				return compiler(node, directive);
 			}
-
+			
 			var records = [];
 			var projectionBlueprintRoot = null;
 			var ownerToken = {};
@@ -5048,7 +5096,8 @@
 				
 				if (Runtime.Bundle && Runtime.Bundle.ResolvedName) {
 					bundleName = Runtime.Bundle.ResolvedName('Component', tag);
-					if (bundleName) return Runtime.ResolveComponent(bundleName);
+					if (bundleName)
+						return Runtime.ResolveComponent(bundleName);
 				}
 				
 				if (Runtime.Discovery && application && Runtime.Discovery.Ready(application) && Runtime.Discovery.ResolvedName) {
@@ -5073,96 +5122,103 @@
 			}
 			
 			function bindingTarget (target) {
-				var parts=[];
-				var length=target.length;
-				var i=0;
+				var parts = [];
+				var length = target.length;
+				var i = 0;
 				var start;
 				var value;
-
+				
 				function identifier () {
 					var code;
-
+					
 					if (i >= length || !/[A-Za-z_$]/.test(target.charAt(i)))
-						throw new Error('Invalid Elemenx Component binding target: ['+target+']');
-
-					start=i++;
-
+						throw new Error('Invalid Elemenx Component binding target: [' + target + ']');
+					
+					start = i++;
+					
 					while (i < length) {
-						code=target.charAt(i);
+						code = target.charAt(i);
 						if (!/[\w$]/.test(code)) break;
+						
 						i++;
 					}
-
-					return target.substring(start,i);
+					
+					return target.substring(start, i);
 				}
-
+				
 				parts.push(identifier().replace(/-([a-z])/g, function (match, letter) {
 					return letter.toUpperCase();
 				}));
-
+				
 				while (i < length) {
 					if (target.charAt(i) === '.') {
 						i++;
+						
 						parts.push(identifier());
+						
 						continue;
 					}
-
+					
 					if (target.charAt(i) === '[') {
 						i++;
-						start=i;
-
+						start = i;
+						
 						while (i < length && /\d/.test(target.charAt(i)))
 							i++;
-
+						
 						if (start === i || target.charAt(i) !== ']')
-							throw new Error('Invalid Elemenx Component binding target: ['+target+']');
-
-						value=parseInt(target.substring(start,i),10);
+							throw new Error('Invalid Elemenx Component binding target: [' + target + ']');
+						
+						value = parseInt(target.substring(start, i), 10);
 						parts.push(value);
+						
 						i++;
+						
 						continue;
 					}
-
-					throw new Error('Invalid Elemenx Component binding target: ['+target+']');
+					
+					throw new Error('Invalid Elemenx Component binding target: [' + target + ']');
 				}
-
+				
 				return parts;
 			}
 			
 			function bindingAssign (result, target, value) {
-				var path=bindingTarget(target);
-				var root=path[0];
+				var path = bindingTarget(target);
+				var root = path[0];
 				var current;
-				var i=1;
-
+				var i = 1;
+				
 				if (path.length === 1) {
-					result[root]=value;
+					result[root] = value;
+					
 					return;
 				}
-
-				if (!own(result,root))
-					result[root]={};
-
-				current=result[root];
-
+				
+				if (!own(result, root))
+					result[root] = {};
+				
+				current = result[root];
+				
 				while (i < path.length - 1) {
 					if (current[path[i]] === undefined || current[path[i]] === null)
-						current[path[i]]=typeof path[i + 1] === 'number' ? [] : {};
-
-					current=current[path[i]];
+						current[path[i]] = typeof path[i + 1] === 'number' ? [] : {};
+					
+					current = current[path[i]];
+					
 					i++;
 				}
-
-				current[path[path.length - 1]]=value;
+				
+				current[path[path.length - 1]] = value;
 			}
-
+			
 			function props (node, data) {
 				var result = {};
 				var attrs = node.attributes;
 				var i = 0;
 				var name;
 				var target;
-
+				
 				/*
 				 * Plain attributes establish root values first. Path bindings then
 				 * overlay their target without depending on source attribute order.
@@ -5170,29 +5226,29 @@
 				while (i < attrs.length) {
 					name = attrs[i].name;
 					target = Runtime.Directive.Binding(name);
-
+					
 					if (target === null && !Runtime.Directive.Reserved(name)) {
 						name = name.replace(/-([a-z])/g, function (match, letter) {
 							return letter.toUpperCase();
 						});
-
+						
 						result[name] = propValue(attrs[i].value, data);
 					}
-
+					
 					i++;
 				}
-
-				i=0;
+				
+				i = 0;
 				while (i < attrs.length) {
-					name=attrs[i].name;
-					target=Runtime.Directive.Binding(name);
-
+					name = attrs[i].name;
+					target = Runtime.Directive.Binding(name);
+					
 					if (target !== null)
-						bindingAssign(result,target,expression(data,attrs[i].value));
-
+						bindingAssign(result, target, expression(data, attrs[i].value));
+					
 					i++;
 				}
-
+				
 				return result;
 			}
 			
@@ -5362,10 +5418,10 @@
 			
 			function compile (node) {
 				if (node.nodeType !== 1) return;
-
+				
 				/* A foreign Application mount owns its complete subtree. */
 				if (Runtime.ApplicationBoundary && Runtime.ApplicationBoundary(component.Application(), node)) return;
-
+				
 				/* Directive composition policy is validated before host dispatch. */
 				Runtime.Directive.Policy(node);
 				
@@ -5377,8 +5433,8 @@
 				 */
 				if (node.__ElemenxSlotGroup !== undefined && node.__ElemenxProjectionOwner !== ownerToken) return;
 				
-				var structuralDirective=Runtime.Directive.Find(node,'structural');
-
+				var structuralDirective = Runtime.Directive.Find(node, 'structural');
+				
 				/*
 				 * A non-default structural host owns the node before component
 				 * resolution. The default structural host composes with a Component
@@ -5386,21 +5442,21 @@
 				 * the directive as its structural condition.
 				 */
 				if (structuralDirective && structuralDirective.Definition.Host !== 'structural') {
-					compileDirectiveHost(node,structuralDirective);
+					compileDirectiveHost(node, structuralDirective);
 					return;
 				}
-
-				var factory=factoryFor(node.tagName);
+				
+				var factory = factoryFor(node.tagName);
 				if (factory) {
-					compileComponent(node,factory,structuralDirective);
+					compileComponent(node, factory, structuralDirective);
 					return;
 				}
-
+				
 				if (structuralDirective) {
-					compileDirectiveHost(node,structuralDirective);
+					compileDirectiveHost(node, structuralDirective);
 					return;
 				}
-
+				
 				scan(node);
 			}
 			
@@ -5435,21 +5491,21 @@
 				return current || null;
 			}
 			
-			directiveHost('structural',compileStructural);
-			directiveHost('collection',compileCollectionDirective);
-
+			directiveHost('structural', compileStructural);
+			directiveHost('collection', compileCollectionDirective);
+			
 			function compileComponent (node, factory, structuralDirective) {
 				var parent = node.parentNode;
 				var end = document.createComment('ui:' + node.tagName + ':end');
-
+				
 				if (structuralDirective)
 					node.removeAttribute(structuralDirective.Attribute);
-
+				
 				var eventMap = events(node);
 				var pristineNode = pristineNodeFor(node);
 				var pristineProjection = pristineNode ? slotProjection(pristineNode.cloneNode(true)) : null;
 				var projected = slotProjection(node);
-
+				
 				/*
 				 * Component input attributes belong to the declaration blueprint.
 				 * Generic DOM binding collection runs before Structural() and consumes
@@ -5464,7 +5520,7 @@
 				
 				parent.insertBefore(end, node.nextSibling);
 				parent.removeChild(node);
-				records.push(componentRecord(end,factory,blueprint,structuralDirective,eventMap,projected));
+				records.push(componentRecord(end, factory, blueprint, structuralDirective, eventMap, projected));
 			}
 			
 			function componentRecord (end, factory, blueprint, structuralDirective, eventMap, projected) {
@@ -5483,15 +5539,15 @@
 					},
 					Mount: function () {
 						var childProps;
-
+						
 						if (child) return child;
-
+						
 						childProps = props(blueprint, currentData || Runtime.ComponentValues(component));
 						child = factory(childProps, projected, asyncOptions(blueprint, factory.ComponentName || blueprint.tagName));
 						connect(child, eventMap);
 						end.parentNode.insertBefore(child.Element(), end);
 						previousProps = childProps;
-
+						
 						return child;
 					},
 					Unmount: function () {
@@ -5501,7 +5557,7 @@
 						previousProps = null;
 					}
 				} : null;
-
+				
 				/*
 				 * Compile projected structure at declaration time. Delaying this until
 				 * the child becomes visible lets parent text bindings mutate the live
@@ -5510,19 +5566,19 @@
 				 */
 				if (projected)
 					compileProjection(projected);
-
+				
 				if (context && typeof structuralDirective.Definition.ElemenxOnCreate === 'function')
 					structuralDirective.Definition.ElemenxOnCreate(context);
-
+				
 				var effect = Runtime.Effect(function () {
 					var data = Runtime.ComponentValues(component);
 					var childProps;
-
+					
 					currentData = data;
-
+					
 					if (context) {
 						context.Value = context.Expression ? expression(data, context.Expression) : undefined;
-
+						
 						if (typeof structuralDirective.Definition.ElemenxOnUpdate === 'function')
 							structuralDirective.Definition.ElemenxOnUpdate(context);
 					}
@@ -5533,12 +5589,12 @@
 						end.parentNode.insertBefore(child.Element(), end);
 						previousProps = childProps;
 					}
-
+					
 					if (!child)
 						return false;
-
+					
 					childProps = props(blueprint, data);
-
+					
 					/*
 					 * Props are an input boundary. A retained child may mutate its own
 					 * state; propagate only values that actually changed at the parent
@@ -5547,7 +5603,7 @@
 					var changedProps = {};
 					var changed = false;
 					var propName;
-
+					
 					for (propName in childProps) {
 						if (
 							own(childProps, propName) &&
@@ -5557,26 +5613,26 @@
 							changed = true;
 						}
 					}
-
+					
 					if (changed)
 						child.Update(changedProps);
-
+					
 					previousProps = childProps;
-
+					
 					return true;
 				}, true);
-
+				
 				return {
 					Update: function () {
 						effect.Run();
 					},
-
+					
 					Destroy: function () {
 						effect.Destroy();
-
+						
 						if (context) {
 							context.Unmount();
-
+							
 							if (typeof structuralDirective.Definition.ElemenxOnDestroy === 'function')
 								structuralDirective.Definition.ElemenxOnDestroy(context);
 						}
@@ -5585,12 +5641,12 @@
 							child = null;
 							previousProps = null;
 						}
-
+						
 						currentData = null;
 					}
 				};
 			}
-
+			
 			function collectionRecord (
 				end,
 				factory,
@@ -5813,259 +5869,259 @@
 			}
 			
 			function compileCollectionDirective (node, directive) {
-				var parent=node.parentNode;
-				var template=blueprintFor(node).cloneNode(true);
-				var end=document.createComment('ui:collection:' + directive.Name + ':end');
-				var argumentsMap=Runtime.Directive.Arguments(template,'collection');
-				var children=[];
-				var keyed={};
-				var limit=10000;
+				var parent = node.parentNode;
+				var template = blueprintFor(node).cloneNode(true);
+				var end = document.createComment('ui:collection:' + directive.Name + ':end');
+				var argumentsMap = Runtime.Directive.Arguments(template, 'collection');
+				var children = [];
+				var keyed = {};
+				var limit = 10000;
 				var context;
-
+				
 				template.removeAttribute(directive.Attribute);
-				parent.insertBefore(end,node.nextSibling);
+				parent.insertBefore(end, node.nextSibling);
 				parent.removeChild(node);
-
+				
 				function iterationDefinition () {
-					var componentRoot=factoryFor(template.tagName);
-					var templateSource=componentRoot
+					var componentRoot = factoryFor(template.tagName);
+					var templateSource = componentRoot
 						? '<span style="display:contents">' + template.outerHTML + '</span>'
 						: template.outerHTML;
-					var result={Template:templateSource};
+					var result = {Template: templateSource};
 					var methodName;
-
+					
 					for (methodName in definition) {
 						if (
-							own(definition,methodName) &&
+							own(definition, methodName) &&
 							typeof definition[methodName] === 'function' &&
 							methodName !== 'Template' &&
 							methodName !== 'ElemenxOnCreate' &&
 							methodName !== 'ElemenxOnDestroy'
 						) {
 							(function (name) {
-								result[name]=function () {
-									return definition[name].apply(component,arguments);
+								result[name] = function () {
+									return definition[name].apply(component, arguments);
 								};
 							})(methodName);
 						}
 					}
-
+					
 					return result;
 				}
-
+				
 				function baseScope () {
-					var result={};
+					var result = {};
 					var name;
-					var values=Runtime.ComponentValues(component);
-
+					var values = Runtime.ComponentValues(component);
+					
 					for (name in values)
-						if (own(values,name))
-							result[name]=values[name];
-
+						if (own(values, name))
+							result[name] = values[name];
+					
 					for (name in definition) {
 						if (
-							own(definition,name) &&
+							own(definition, name) &&
 							typeof definition[name] === 'function' &&
 							name !== 'Template' &&
 							name !== 'ElemenxOnCreate' &&
 							name !== 'ElemenxOnDestroy'
 						) {
 							(function (methodName) {
-								result[methodName]=function () {
-									return definition[methodName].apply(component,arguments);
+								result[methodName] = function () {
+									return definition[methodName].apply(component, arguments);
 								};
 							})(name);
 						}
 					}
-
+					
 					return result;
 				}
-
+				
 				function copyScope (source) {
-					var result={};
+					var result = {};
 					var name;
 					for (name in source)
-						if (own(source,name))
-							result[name]=source[name];
+						if (own(source, name))
+							result[name] = source[name];
 					return result;
 				}
-
+				
 				function scopes (items, options) {
-					var result=[];
-					var loopScope=baseScope();
-					var mode=options.Mode || 'of';
-					var variable=options.Variable || 'item';
-					var source=items;
-					var iterator,step,name,scope;
+					var result = [];
+					var loopScope = baseScope();
+					var mode = options.Mode || 'of';
+					var variable = options.Variable || 'item';
+					var source = items;
+					var iterator, step, name, scope;
 					var conditionAssignment;
-					var i=0;
-
+					var i = 0;
+					
 					if (mode === 'classic') {
-						conditionAssignment=/^\s*([A-Za-z_$][A-Za-z0-9_$]*)\s*=(?!=)/.exec(options.Condition);
-						loopScope[variable]=expression(loopScope,options.Initializer);
-						if (conditionAssignment && !own(loopScope,conditionAssignment[1]))
-							loopScope[conditionAssignment[1]]=undefined;
-
-						while (i < limit && expression(loopScope,options.Condition)) {
-							scope=copyScope(loopScope);
-							scope.$index=i;
+						conditionAssignment = /^\s*([A-Za-z_$][A-Za-z0-9_$]*)\s*=(?!=)/.exec(options.Condition);
+						loopScope[variable] = expression(loopScope, options.Initializer);
+						if (conditionAssignment && !own(loopScope, conditionAssignment[1]))
+							loopScope[conditionAssignment[1]] = undefined;
+						
+						while (i < limit && expression(loopScope, options.Condition)) {
+							scope = copyScope(loopScope);
+							scope.$index = i;
 							result.push(scope);
-							expression(loopScope,options.Step);
+							expression(loopScope, options.Step);
 							i++;
 						}
 					}
 					else if (mode === 'of') {
-						if (source == null) source=[];
+						if (source == null) source = [];
 						Runtime.TrackIteration(source);
-
+						
 						if (typeof Symbol !== 'undefined' && source[Symbol.iterator]) {
-							iterator=source[Symbol.iterator]();
-							step=iterator.next();
+							iterator = source[Symbol.iterator]();
+							step = iterator.next();
 							while (!step.done && i < limit) {
-								scope=copyScope(loopScope);
-								scope[variable]=step.value;
-								scope.$index=i;
+								scope = copyScope(loopScope);
+								scope[variable] = step.value;
+								scope.$index = i;
 								result.push(scope);
 								i++;
-								step=iterator.next();
+								step = iterator.next();
 							}
 						}
 						else {
 							while (i < source.length && i < limit) {
-								scope=copyScope(loopScope);
-								scope[variable]=source[i];
-								scope.$index=i;
+								scope = copyScope(loopScope);
+								scope[variable] = source[i];
+								scope.$index = i;
 								result.push(scope);
 								i++;
 							}
 						}
 					}
 					else if (mode === 'in') {
-						if (source == null) source={};
+						if (source == null) source = {};
 						Runtime.TrackIteration(source);
 						for (name in source) {
-							if (!own(source,name)) continue;
+							if (!own(source, name)) continue;
 							if (i >= limit) break;
-							scope=copyScope(loopScope);
-							scope[variable]=name;
-							scope.$index=i;
+							scope = copyScope(loopScope);
+							scope[variable] = name;
+							scope.$index = i;
 							result.push(scope);
 							i++;
 						}
 					}
 					else
 						throw new Error('Unknown Elemenx collection render mode: ' + mode);
-
+					
 					if (i >= limit)
 						throw new Error('Elemenx structural collection exceeded iteration limit (' + limit + ')');
-
+					
 					return result;
 				}
-
+				
 				function destroyAll () {
-					var i=children.length - 1;
+					var i = children.length - 1;
 					while (i >= 0) {
 						children[i].Child.Destroy();
 						i--;
 					}
-					children=[];
-					keyed={};
+					children = [];
+					keyed = {};
 				}
-
+				
 				function render (items, options) {
-					var nextScopes=scopes(items,options || {});
-					var keySource=options && options.Key ? options.Key : null;
-					var nextChildren=[];
-					var nextKeyed={};
-					var used={};
-					var i=0;
-					var scope,identity,token,record,child;
-
+					var nextScopes = scopes(items, options || {});
+					var keySource = options && options.Key ? options.Key : null;
+					var nextChildren = [];
+					var nextKeyed = {};
+					var used = {};
+					var i = 0;
+					var scope, identity, token, record, child;
+					
 					if (!keySource)
 						destroyAll();
-
+					
 					while (i < nextScopes.length) {
-						scope=nextScopes[i];
-						record=null;
-						token=null;
-
+						scope = nextScopes[i];
+						record = null;
+						token = null;
+						
 						if (keySource) {
-							identity=expression(scope,keySource);
+							identity = expression(scope, keySource);
 							if (identity === null || identity === undefined)
 								throw new Error('Elemenx *key resolved to null/undefined: ' + keySource);
-
-							token=typeof identity + ':' + String(identity);
+							
+							token = typeof identity + ':' + String(identity);
 							if (used[token])
 								throw new Error('Elemenx duplicate collection key: ' + String(identity));
-
-							used[token]=true;
-							record=keyed[token] || null;
+							
+							used[token] = true;
+							record = keyed[token] || null;
 						}
-
+						
 						if (record)
 							record.Child.Update(scope);
 						else {
-							child=Runtime.CreateComponent(iterationDefinition())(
+							child = Runtime.CreateComponent(iterationDefinition())(
 								scope,
 								null,
-								{DirectState:true,Application:component.Application()}
+								{DirectState: true, Application: component.Application()}
 							);
 							child.Parent(component);
-							record={Child:child,Key:token};
+							record = {Child: child, Key: token};
 						}
-
-						end.parentNode.insertBefore(record.Child.Element(),end);
+						
+						end.parentNode.insertBefore(record.Child.Element(), end);
 						nextChildren.push(record);
 						if (keySource)
-							nextKeyed[token]=record;
+							nextKeyed[token] = record;
 						i++;
 					}
-
+					
 					if (keySource) {
-						i=children.length - 1;
+						i = children.length - 1;
 						while (i >= 0) {
-							record=children[i];
+							record = children[i];
 							if (!nextKeyed[record.Key])
 								record.Child.Destroy();
 							i--;
 						}
 					}
-
-					children=nextChildren;
-					keyed=nextKeyed;
+					
+					children = nextChildren;
+					keyed = nextKeyed;
 					return children.length;
 				}
-
-				context={
-					Name:directive.Name,
-					Element:node,
-					Component:component,
-					Expression:directive.Expression,
-					Value:undefined,
-					Data:{},
-					Argument:function (name) {
+				
+				context = {
+					Name: directive.Name,
+					Element: node,
+					Component: component,
+					Expression: directive.Expression,
+					Value: undefined,
+					Data: {},
+					Argument: function (name) {
 						return argumentsMap[name] === undefined ? null : argumentsMap[name];
 					},
-					Source:function (source) {
-						return expression(baseScope(),source);
+					Source: function (source) {
+						return expression(baseScope(), source);
 					},
-					Render:render
+					Render: render
 				};
-
+				
 				if (typeof directive.Definition.ElemenxOnCreate === 'function')
 					directive.Definition.ElemenxOnCreate(context);
-
-				var collectionEffect=Runtime.Effect(function () {
+				
+				var collectionEffect = Runtime.Effect(function () {
 					if (typeof directive.Definition.ElemenxOnUpdate === 'function')
 						directive.Definition.ElemenxOnUpdate(context);
 					return children.length;
-				},true);
-
+				}, true);
+				
 				records.push({
-					Update:function () {
+					Update: function () {
 						collectionEffect.Run();
 					},
-					Destroy:function () {
+					Destroy: function () {
 						collectionEffect.Destroy();
 						destroyAll();
 						if (typeof directive.Definition.ElemenxOnDestroy === 'function')
@@ -6073,64 +6129,73 @@
 					}
 				});
 			}
-
+			
 			function compileStructural (node, directive) {
-				var parent=node.parentNode;
-				var field=directive.Expression;
-				var template=blueprintFor(node).cloneNode(true);
-				var end=document.createComment('ui:structural:' + directive.Name + ':end');
-				var child=null;
-				var context={
-					Name:directive.Name,
-					Element:node,
-					Component:component,
-					Expression:field,
-					Value:undefined,
-					Data:{},
-					Mounted:function () { return child !== null; },
-					Mount:function () {
+				var parent = node.parentNode;
+				var field = directive.Expression;
+				var template = blueprintFor(node).cloneNode(true);
+				var end = document.createComment('ui:structural:' + directive.Name + ':end');
+				var child = null;
+				var context = {
+					Name: directive.Name,
+					Element: node,
+					Component: component,
+					Expression: field,
+					Value: undefined,
+					Data: {},
+					Mounted: function () {
+						return child !== null;
+					},
+					Mount: function () {
 						var subtreeDefinition;
 						var methodName;
 						var data;
 						if (child) return child;
-						data=Runtime.ComponentValues(component);
-						subtreeDefinition={Template:template.outerHTML};
+						data = Runtime.ComponentValues(component);
+						subtreeDefinition = {Template: template.outerHTML};
 						for (methodName in definition) {
-							if (own(definition,methodName) && typeof definition[methodName] === 'function' && methodName !== 'Template' && methodName !== 'ElemenxOnCreate' && methodName !== 'ElemenxOnDestroy') {
+							if (own(definition, methodName) && typeof definition[methodName] === 'function' && methodName !== 'Template' && methodName !== 'ElemenxOnCreate' && methodName !== 'ElemenxOnDestroy') {
 								(function (name) {
-									subtreeDefinition[name]=function () { return definition[name].apply(component,arguments); };
+									subtreeDefinition[name] = function () {
+										return definition[name].apply(component, arguments);
+									};
 								})(methodName);
 							}
 						}
-						child=Runtime.CreateComponent(subtreeDefinition)(data,null,{DirectState:true,Application:component.Application()});
+						child = Runtime.CreateComponent(subtreeDefinition)(data, null, {
+							DirectState: true,
+							Application: component.Application()
+						});
 						child.Parent(component);
-						end.parentNode.insertBefore(child.Element(),end);
+						end.parentNode.insertBefore(child.Element(), end);
 						return child;
 					},
-					Unmount:function () {
+					Unmount: function () {
 						if (!child) return;
 						child.Destroy();
-						child=null;
+						child = null;
 					}
 				};
-
+				
 				template.removeAttribute(directive.Attribute);
-				parent.insertBefore(end,node.nextSibling);
+				parent.insertBefore(end, node.nextSibling);
 				parent.removeChild(node);
-
+				
 				if (typeof directive.Definition.ElemenxOnCreate === 'function')
 					directive.Definition.ElemenxOnCreate(context);
-
-				var structuralEffect=Runtime.Effect(function () {
-					context.Value=field ? expression(Runtime.ComponentValues(component),field) : undefined;
+				
+				var structuralEffect = Runtime.Effect(function () {
+					context.Value = field ? expression(Runtime.ComponentValues(component), field) : undefined;
 					if (typeof directive.Definition.ElemenxOnUpdate === 'function')
 						directive.Definition.ElemenxOnUpdate(context);
 					return context.Value;
-				},true);
-
+				}, true);
+				
 				records.push({
-					Update:function () { structuralEffect.Run(); },
-					Destroy:function () {
+					Update: function () {
+						structuralEffect.Run();
+					},
+					Destroy: function () {
 						structuralEffect.Destroy();
 						context.Unmount();
 						if (typeof directive.Definition.ElemenxOnDestroy === 'function')
@@ -6138,7 +6203,7 @@
 					}
 				});
 			}
-
+			
 			scan(component.Element());
 			
 			return {
@@ -6876,7 +6941,8 @@
 					controller = null;
 					
 					if (currentReader)
-						currentReader.cancel().catch(function () { });
+						currentReader.cancel().catch(function () {
+						});
 					
 					if (currentController)
 						currentController.abort();
@@ -8119,7 +8185,8 @@
 						try {
 							sendPacket({Type: 'Transfer', Action: 'Abort', ID: transferID});
 						}
-						catch (error) { }
+						catch (error) {
+						}
 					}
 					else if (transport && typeof transport.Abort === 'function') {
 						transport.Abort();
@@ -8363,7 +8430,7 @@
 					return value.length * 2;
 				}
 				
-				if (value instanceof global.ArrayBuffer)return value.byteLength;
+				if (value instanceof global.ArrayBuffer) return value.byteLength;
 				if (global.ArrayBuffer && global.ArrayBuffer.isView && global.ArrayBuffer.isView(value)) return value.byteLength;
 				if (global.Blob && value instanceof global.Blob) return value.size;
 				
@@ -10242,8 +10309,8 @@
 			if (name) resolving[name] = true;
 			
 			dependencies = context.Contexts || [];
-			
-			if (!Array.isArray(dependencies)) dependencies = [dependencies];
+			if (!Array.isArray(dependencies))
+				dependencies = [dependencies];
 			
 			i = 0;
 			
@@ -10445,7 +10512,8 @@
 				
 				Namespace: function (name) {
 					name = normalizeNamespace(name);
-					if (!name) return createWebStorage(storage, prefix);
+					if (!name)
+						return createWebStorage(storage, prefix);
 					
 					return createWebStorage(storage, prefix + name + '.');
 				}
@@ -10567,7 +10635,8 @@
 				
 				Namespace: function (name) {
 					name = normalizeNamespace(name);
-					if (!name) return createCookieStorage(prefix);
+					if (!name)
+						return createCookieStorage(prefix);
 					
 					return createCookieStorage(prefix + name + '.');
 				}
@@ -10595,7 +10664,8 @@
 			
 			var operation = {
 				On: function (name, callback) {
-					if (!listeners[name]) listeners[name] = [];
+					if (!listeners[name])
+						listeners[name] = [];
 					
 					listeners[name].push(callback);
 					
@@ -10785,7 +10855,8 @@
 				try {
 					db.close();
 				}
-				catch (closeError) { }
+				catch (closeError) {
+				}
 				
 				database = null;
 			}
@@ -10964,7 +11035,8 @@
 				
 				return {
 					On: function (name, callback) {
-						if (!listeners[name]) listeners[name] = [];
+						if (!listeners[name])
+							listeners[name] = [];
 						
 						listeners[name].push(callback);
 						
@@ -11051,7 +11123,8 @@
 							};
 							
 							transaction.oncomplete = function () {
-								if (!failed) success(true);
+								if (!failed)
+									success(true);
 							};
 							
 							transaction.onerror = function () {
@@ -11169,9 +11242,14 @@
 		function mergeIndexedDBDefinition (target, source) {
 			if (!source) return target;
 			
-			if (source.Name !== undefined) target.Name = source.Name;
-			if (source.Version !== undefined) target.Version = source.Version;
-			if (source.Upgrade !== undefined) target.Upgrade = source.Upgrade;
+			if (source.Name !== undefined)
+				target.Name = source.Name;
+			
+			if (source.Version !== undefined)
+				target.Version = source.Version;
+			
+			if (source.Upgrade !== undefined)
+				target.Upgrade = source.Upgrade;
 			
 			target.Stores = target.Stores || {};
 			
@@ -11185,8 +11263,12 @@
 				var targetStore = target.Stores[storeName] || {};
 				var mergedStore = copyObject(targetStore);
 				
-				if (sourceStore.KeyPath !== undefined) mergedStore.KeyPath = sourceStore.KeyPath;
-				if (sourceStore.AutoIncrement !== undefined) mergedStore.AutoIncrement = sourceStore.AutoIncrement;
+				if (sourceStore.KeyPath !== undefined)
+					mergedStore.KeyPath = sourceStore.KeyPath;
+				
+				if (sourceStore.AutoIncrement !== undefined)
+					mergedStore.AutoIncrement = sourceStore.AutoIncrement;
+				
 				mergedStore.Indexes = copyObject(targetStore.Indexes);
 				
 				for (indexName in sourceStore.Indexes) {
@@ -11233,8 +11315,11 @@
 			
 			stack.pop();
 			
-			if (definition.Namespace) result.Namespaces.push(normalizeNamespace(definition.Namespace));
-			if (definition.IndexedDB) mergeIndexedDBDefinition(result.IndexedDB, definition.IndexedDB);
+			if (definition.Namespace)
+				result.Namespaces.push(normalizeNamespace(definition.Namespace));
+			
+			if (definition.IndexedDB)
+				mergeIndexedDBDefinition(result.IndexedDB, definition.IndexedDB);
 		}
 		
 		function createStorageFacade (context) {
@@ -11569,9 +11654,11 @@
 				}
 				
 				i = list.indexOf(callback);
+				if (i !== -1)
+					list.splice(i, 1);
 				
-				if (i !== -1) list.splice(i, 1);
-				if (!list.length) delete subscriptions[channel];
+				if (!list.length)
+					delete subscriptions[channel];
 				
 				return api;
 			}
@@ -11778,7 +11865,8 @@
 		var manualStops = new WeakMap();
 		
 		function absoluteURL (url) {
-			if (!Runtime.HasDOM) return String(url);
+			if (!Runtime.HasDOM)
+				return String(url);
 			
 			return new URL(String(url), global.location.href).href;
 		}
@@ -11906,6 +11994,7 @@
 					throw new Error('Elemenx runtime script URL is unknown');
 				
 				frameworkURL = absoluteURL(frameworkURL);
+				
 				var scriptURL = absoluteURL(definition.Script);
 				var source = 'importScripts(' + JSON.stringify(frameworkURL) + ');\n'
 					+ 'self.ElemenxWorkerName = ' + JSON.stringify(name) + ';\n'
@@ -11962,6 +12051,7 @@
 			
 			function Stop () {
 				if (destroyed) return api;
+				
 				if (state === 'Stopped') {
 					manualStopped = true;
 					
@@ -11995,14 +12085,16 @@
 				listeners = {};
 				
 				var index = handles.indexOf(api);
-				if (index !== -1) handles.splice(index, 1);
+				if (index !== -1)
+					handles.splice(index, 1);
 				
 				if (owner) {
 					var list = owners.get(owner);
 					
 					if (list) {
 						index = list.indexOf(api);
-						if (index !== -1) list.splice(index, 1);
+						if (index !== -1)
+							list.splice(index, 1);
 					}
 				}
 			}
@@ -12252,11 +12344,9 @@
 					else serviceWorker.postMessage(packet);
 				},
 				addEventListener: function (event, callback) {
-					var wrapper;
-					
 					if (event !== 'message') return;
 					
-					wrapper = function (messageEvent) {
+					var wrapper = function (messageEvent) {
 						if (messageEvent.source !== serviceWorker) return;
 						
 						callback(messageEvent);
@@ -12374,7 +12464,9 @@
 				});
 				
 				global.navigator.serviceWorker.addEventListener('controllerchange', function () {
-					if (registration && registration.active) attachActive(registration.active);
+					if (registration && registration.active) {
+						attachActive(registration.active);
+					}
 				});
 			}
 			
@@ -12608,42 +12700,56 @@
 		
 		Runtime.ApplicationMountOwner = function (element) {
 			if (!mountOwners || !element) return null;
+			
 			return mountOwners.get(element) || null;
 		};
-
+		
 		Runtime.ApplicationBoundary = function (application, element) {
 			var owner = Runtime.ApplicationMountOwner(element);
+			
 			return !!(owner && owner !== application);
 		};
-
+		
 		function rememberMount (application, element) {
 			var i = 0;
+			
 			while (i < mountedApplications.length) {
 				if (mountedApplications[i].Application === application) {
 					mountedApplications[i].Mount = element;
+					
 					return;
 				}
+				
 				i++;
 			}
+			
 			mountedApplications.push({Application: application, Mount: element});
 		}
-
+		
 		function forgetMount (application) {
 			var i = mountedApplications.length - 1;
+			
 			while (i >= 0) {
-				if (mountedApplications[i].Application === application) mountedApplications.splice(i, 1);
+				if (mountedApplications[i].Application === application) {
+					mountedApplications.splice(i, 1);
+				}
+				
 				i--;
 			}
 		}
-
+		
 		function nestedMounts (application, element) {
 			var result = [];
 			var i = 0;
+			
 			while (i < mountedApplications.length) {
-				if (mountedApplications[i].Application !== application && element !== mountedApplications[i].Mount && element.contains(mountedApplications[i].Mount))
+				if (mountedApplications[i].Application !== application && element !== mountedApplications[i].Mount && element.contains(mountedApplications[i].Mount)) {
 					result.push(mountedApplications[i].Mount);
+				}
+				
 				i++;
 			}
+			
 			return result;
 		}
 		
@@ -12651,8 +12757,12 @@
 		
 		function mountElement (value) {
 			if (!Runtime.HasDOM) return null;
-			if (!value) return global.document.body;
-			if (typeof value === 'string') return global.document.querySelector(value);
+			
+			if (!value)
+				return global.document.body;
+			
+			if (typeof value === 'string')
+				return global.document.querySelector(value);
 			
 			return value;
 		}
@@ -12680,7 +12790,7 @@
 			api.Root = function () {
 				return definition.Root || null;
 			};
-
+			
 			api.Mount = function () {
 				return mountElement(definition.Mount);
 			};
@@ -12819,15 +12929,18 @@
 				
 				if (root && root.Destroy) root.Destroy();
 				root = null;
-
+				
 				if (mountOwners && ownedMount && mountOwners.get(ownedMount) === api)
 					mountOwners.delete(ownedMount);
+				
 				forgetMount(api);
+				
 				ownedMount = null;
 				
 				var workerName;
 				for (workerName in webWorkers) {
 					if (!Object.prototype.hasOwnProperty.call(webWorkers, workerName)) continue;
+					
 					if (Runtime.ApplicationWebWorkers[workerName] === webWorkers[workerName]) {
 						delete Runtime.ApplicationWebWorkers[workerName];
 					}
@@ -12839,6 +12952,7 @@
 				
 				for (workerName in serviceWorkers) {
 					if (!Object.prototype.hasOwnProperty.call(serviceWorkers, workerName)) continue;
+					
 					if (serviceWorkers[workerName] && serviceWorkers[workerName].Destroy) {
 						serviceWorkers[workerName].Destroy();
 					}
@@ -12917,13 +13031,17 @@
 				
 				if (!mount)
 					throw new Error('Elemenx Application mount not found: ' + definition.Mount);
-
+				
 				if (mountOwners) {
 					mountOwner = mountOwners.get(mount);
+					
 					if (mountOwner && mountOwner !== api)
 						throw new Error('Elemenx Application mount conflict: ' + name + ' cannot mount to an element owned by ' + mountOwner.Name());
+					
 					mountOwners.set(mount, api);
+					
 					ownedMount = mount;
+					
 					rememberMount(api, mount);
 				}
 				
@@ -12939,27 +13057,32 @@
 				
 				var preservedMounts = nestedMounts(api, mount);
 				var preservedIndex = 0;
+				
 				while (preservedIndex < preservedMounts.length) {
 					if (preservedMounts[preservedIndex].parentNode)
 						preservedMounts[preservedIndex].parentNode.removeChild(preservedMounts[preservedIndex]);
+					
 					preservedIndex++;
 				}
-
+				
 				root = factory(definition.State || {}, null, options);
 				
 				mount.appendChild(root.Element());
-
+				
 				preservedIndex = 0;
 				while (preservedIndex < preservedMounts.length) {
 					var preservedMount = preservedMounts[preservedIndex];
 					var placeholder = preservedMount.id ? mount.querySelector('#' + preservedMount.id) : null;
+					
 					if (placeholder && placeholder.parentNode) placeholder.parentNode.replaceChild(preservedMount, placeholder);
 					else mount.appendChild(preservedMount);
+					
 					preservedIndex++;
 				}
 				
-				if (!root._Component || root._Component())
+				if (!root._Component || root._Component()) {
 					startRouter();
+				}
 			}
 			
 			function startRoot () {
@@ -12969,7 +13092,9 @@
 					Runtime.Bundle.LoadType('Directive');
 					Runtime.Bundle.LoadType('Service');
 					Runtime.Bundle.LoadType('Guard');
+					
 					createRoot();
+					
 					return;
 				}
 				
@@ -12983,10 +13108,8 @@
 				applicationLifecycle('ElemenxOnComponentPending', null);
 				
 				var discoveryRoot = definition.Root;
-				
-				if (definition.ElemenxDefinitionURL && !(/^(?:[a-z]+:)?\/\//i.test(discoveryRoot)) && discoveryRoot.charAt(0) !== '/') {
+				if (definition.ElemenxDefinitionURL && !(/^(?:[a-z]+:)?\/\//i.test(discoveryRoot)) && discoveryRoot.charAt(0) !== '/')
 					discoveryRoot = definition.ElemenxDefinitionURL.substring(0, definition.ElemenxDefinitionURL.lastIndexOf('/') + 1) + discoveryRoot.replace(/^\.\//, '');
-				}
 				
 				Runtime.Discovery.Build(api, discoveryRoot, function (error) {
 					if (destroyed) return;
@@ -13000,22 +13123,24 @@
 					
 					Runtime.Discovery.LoadDirectives(api, function (directiveError) {
 						if (destroyed) return;
-
+						
 						if (directiveError) {
 							applicationStatus(definition.Error || null);
 							applicationLifecycle('ElemenxOnComponentError', directiveError);
+							
 							return;
 						}
-
+						
 						Runtime.Discovery.LoadServices(api, function (serviceError) {
 							if (destroyed) return;
-
+							
 							if (serviceError) {
 								applicationStatus(definition.Error || null);
 								applicationLifecycle('ElemenxOnComponentError', serviceError);
+								
 								return;
 							}
-
+							
 							createRoot();
 						});
 					});

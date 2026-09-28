@@ -219,4 +219,9 @@ describe('Elemenx graph-aware generator',function () {
 		expect(fs.existsSync(path.join(root,'MyApp\\n'))).toBe(false);
 	});
 
+	it('keeps --port ahead of the configured development port',function () {
+		var cli=fs.readFileSync(path.resolve(process.cwd(),'elemenx-cli.js'),'utf8');
+		expect(cli).toContain("value(parsed.Options, 'port', server.DevelopmentPort, 4173)");
+	});
+
 });
