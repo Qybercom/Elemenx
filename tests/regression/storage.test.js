@@ -43,4 +43,28 @@ describe('Regression: Storage', function () {
 		expect(storage.Get('value')).toBe('ok');
 		storage.Clear();
 	});
+
+	it('Storage Context accepts one named dependency without an array', function () {
+		var base=unique('StorageSingleBase'), child=unique('StorageSingleChild');
+		Elemenx.Storage.Context(base,{Namespace:'base'});
+		Elemenx.Storage.Context(child,{Contexts:base,Namespace:'child'});
+		var storage=Elemenx.Storage(child).Local;
+		storage.Set('value','named');
+		expect(localStorage.getItem('base.child.value')).not.toBeNull();
+		expect(storage.Get('value')).toBe('named');
+		storage.Clear();
+	});
+
+	it('Storage Context accepts one inline dependency without an array', function () {
+		var child=unique('StorageInlineChild');
+		Elemenx.Storage.Context(child,{
+			Contexts:{Namespace:'inline'},
+			Namespace:'child'
+		});
+		var storage=Elemenx.Storage(child).Session;
+		storage.Set('value','inline');
+		expect(sessionStorage.getItem('inline.child.value')).not.toBeNull();
+		expect(storage.Get('value')).toBe('inline');
+		storage.Clear();
+	});
 });

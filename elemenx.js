@@ -11452,6 +11452,8 @@
 			stack.push(definition);
 			
 			dependencies = definition.Contexts || [];
+			if (!Array.isArray(dependencies))
+				dependencies = [dependencies];
 			
 			while (i < dependencies.length) {
 				resolveContext(dependencies[i], result, stack);
