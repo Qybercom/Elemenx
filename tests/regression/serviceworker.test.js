@@ -246,4 +246,52 @@ describe('Regression: ServiceWorker registration, lifecycle and messaging bridge
 		expect(handle.Reachable()).toBe(false);
 		expect(function () { handle.Register(); }).toThrow();
 	});
+
+	it('component Destroy tears down ServiceWorker handles created through its owner accessor', async function () {
+		var env=fakeEnvironment();
+		var workerName=unique('OwnedComponentSW');
+		var componentName=unique('OwnedServiceWorkerComponent');
+		var owned=null;
+
+		Elemenx.Component(componentName,{
+			Template:'<div></div>',
+			ElemenxOnCreate:function () {
+				owned=this.ServiceWorker(workerName,{
+					Script:'/owned-component-worker.js',
+					Scope:'/owned-component/',
+					Channel:workerName
+				});
+			}
+		});
+
+		var component=Elemenx.Component(componentName)();
+		expect(await waitFor(function () { return owned && owned.Reachable(); },1000)).toBe(true);
+		component.Destroy();
+		expect(owned.Reachable()).toBe(false);
+		expect(function () { owned.Register(); }).toThrow();
+	});
+
+	it('service Destroy tears down ServiceWorker handles created through its owner accessor', async function () {
+		var env=fakeEnvironment();
+		var workerName=unique('OwnedServiceSW');
+		var serviceName=unique('ServiceWorkerOwnerService');
+		var owned=null;
+
+		Elemenx.Service(serviceName,{
+			ElemenxOnCreate:function () {
+				owned=this.ServiceWorker(workerName,{
+					Script:'/owned-service-worker.js',
+					Scope:'/owned-service/',
+					Channel:workerName
+				});
+			}
+		});
+
+		var serviceHandle=Elemenx.Service(serviceName);
+		serviceHandle.Application();
+		expect(await waitFor(function () { return owned && owned.Reachable(); },1000)).toBe(true);
+		serviceHandle.Destroy();
+		expect(owned.Reachable()).toBe(false);
+		expect(function () { owned.Register(); }).toThrow();
+	});
 });

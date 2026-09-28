@@ -1167,6 +1167,9 @@
 				if (Runtime.DestroyWebWorkerOwner)
 					Runtime.DestroyWebWorkerOwner(instance);
 				
+				if (Runtime.DestroyServiceWorkerOwner)
+					Runtime.DestroyServiceWorkerOwner(instance);
+				
 				if (typeof definition.ElemenxOnDestroy === 'function') {
 					definition.ElemenxOnDestroy.call(instance);
 				}
@@ -3498,6 +3501,9 @@
 					
 					if (Runtime.DestroyWebWorkerOwner)
 						Runtime.DestroyWebWorkerOwner(api);
+					
+					if (Runtime.DestroyServiceWorkerOwner)
+						Runtime.DestroyServiceWorkerOwner(api);
 					
 					destroyCustomDirectives();
 					
@@ -12453,6 +12459,7 @@
 		var Elemenx = global.Elemenx;
 		var definitions = {};
 		var handles = [];
+		var owners = new WeakMap();
 		
 		function absoluteURL (url) {
 			return new URL(String(url), global.location.href).href;
@@ -12524,7 +12531,7 @@
 			};
 		}
 		
-		function createHandle (name, definition) {
+		function createHandle (name, definition, owner) {
 			var registration = null;
 			var active = null;
 			var bridge = null;
@@ -12782,6 +12789,15 @@
 				var index = handles.indexOf(api);
 				if (index !== -1)
 					handles.splice(index, 1);
+				
+				if (owner) {
+					var owned = owners.get(owner);
+					if (owned) {
+						index = owned.indexOf(api);
+						if (index !== -1) owned.splice(index, 1);
+						if (!owned.length) owners.delete(owner);
+					}
+				}
 			}
 			
 			api = {
@@ -12813,6 +12829,15 @@
 			
 			handles.push(api);
 			
+			if (owner) {
+				var owned = owners.get(owner);
+				if (!owned) {
+					owned = [];
+					owners.set(owner, owned);
+				}
+				owned.push(api);
+			}
+			
 			Register();
 			
 			return api;
@@ -12831,11 +12856,30 @@
 			return createHandle(name, definition);
 		}
 		
+		function DestroyOwner (owner) {
+			var owned = owners.get(owner);
+			if (!owned) return;
+			
+			while (owned.length)
+				owned[0].Destroy();
+			
+			owners.delete(owner);
+		}
+		
 		Elemenx.ServiceWorker = Service;
 		
-		Runtime.ServiceWorkerFor = function () {
-			return Service;
+		Runtime.ServiceWorkerFor = function (owner) {
+			return function (name, definition) {
+				if (arguments.length === 2) definition = registerDefinition(name, definition);
+				else definition = definitions[name];
+				
+				if (!definition)
+					throw new Error('Elemenx ServiceWorker not found: ' + name);
+				
+				return createHandle(name, definition, owner);
+			};
 		};
+		Runtime.DestroyServiceWorkerOwner = DestroyOwner;
 		
 	})(typeof globalThis !== 'undefined' ? globalThis : self);
 	
@@ -13099,6 +13143,7 @@
 				if (Runtime.DestroyNetworkOwner) Runtime.DestroyNetworkOwner(api);
 				if (Runtime.DestroyMessagingOwner) Runtime.DestroyMessagingOwner(api);
 				if (Runtime.DestroyWebWorkerOwner) Runtime.DestroyWebWorkerOwner(api);
+				if (Runtime.DestroyServiceWorkerOwner) Runtime.DestroyServiceWorkerOwner(api);
 				if (Runtime.DestroyApplicationServices) Runtime.DestroyApplicationServices(api);
 				
 				for (workerName in serviceWorkers) {
