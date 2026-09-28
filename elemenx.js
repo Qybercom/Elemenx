@@ -1179,6 +1179,26 @@
 			return instance;
 		}
 		
+		function existingServiceTarget (name, application) {
+			var entry = serviceRegistry[name];
+			if (!entry) return null;
+			
+			if (application) {
+				if (!entry.ApplicationInstances || !entry.ApplicationInstances.has(application)) return null;
+				
+				return entry.ApplicationInstances.get(application);
+			}
+			
+			return entry.Instance || null;
+		}
+		
+		function removeApplicationInstance (entry, instance) {
+			if (!entry || !entry.ApplicationInstanceList || !instance) return;
+			
+			var i = entry.ApplicationInstanceList.indexOf(instance);
+			if (i !== -1) entry.ApplicationInstanceList.splice(i, 1);
+		}
+		
 		function serviceTarget (name, application) {
 			var entry = serviceRegistry[name];
 			if (!entry) return null;
@@ -1236,14 +1256,16 @@
 							var entry = serviceRegistry[name];
 							if (!entry) return;
 							
-							var target = serviceTarget(name, application);
+							var target = existingServiceTarget(name, application);
 							
 							queued = [];
 							
-							if (target && target.Destroy) target.Destroy();
+							if (!target) return;
+							if (target.Destroy) target.Destroy();
 							
 							if (application && entry.ApplicationInstances) {
 								entry.ApplicationInstances.delete(application);
+								removeApplicationInstance(entry, target);
 							}
 							else {
 								entry.Instance = null;
@@ -1351,6 +1373,25 @@
 		Runtime.Service = ServiceAccessor;
 		Runtime.ServiceForApplication = function (application, name) {
 			return serviceHandle(name, application || null);
+		};
+		Runtime.DestroyApplicationServices = function (application) {
+			var name;
+			var entry;
+			var target;
+			
+			for (name in serviceRegistry) {
+				if (!Object.prototype.hasOwnProperty.call(serviceRegistry, name)) continue;
+				
+				entry = serviceRegistry[name];
+				target = existingServiceTarget(name, application);
+				if (!target) continue;
+				
+				if (target.Destroy) target.Destroy();
+				entry.ApplicationInstances.delete(application);
+				removeApplicationInstance(entry, target);
+			}
+			
+			applicationServiceHandles.delete(application);
 		};
 		Runtime.RegisterServiceDefinition = function (name, definition) {
 			var previous = serviceRegistry[name];
@@ -13054,6 +13095,7 @@
 				if (Runtime.DestroyNetworkOwner) Runtime.DestroyNetworkOwner(api);
 				if (Runtime.DestroyMessagingOwner) Runtime.DestroyMessagingOwner(api);
 				if (Runtime.DestroyWebWorkerOwner) Runtime.DestroyWebWorkerOwner(api);
+				if (Runtime.DestroyApplicationServices) Runtime.DestroyApplicationServices(api);
 				
 				for (workerName in serviceWorkers) {
 					if (!Object.prototype.hasOwnProperty.call(serviceWorkers, workerName)) continue;
