@@ -9,8 +9,7 @@
 		"README.md",
 		"LICENSE",
 		"tools",
-		"examples",
-		"tools/generator.js"
+		"examples"
 	],
 	"scripts": {
 		"test": "npm run test:browser && npm run test:tools && npm run test:history",

@@ -57,8 +57,11 @@ npm run example:advanced:dist
 
 ```text
 elemenx build [project]
-elemenx dev [project] [--port 4173]
-elemenx serve [project] [--port 4175]
+elemenx dev [project] [--host 127.0.0.1] [--port 4173]
+elemenx serve [project] [--host 127.0.0.1] [--port 4175]
+              [--compression true|false]
+              [--compression-threshold 1024]
+              [--cache-control "public, max-age=0, must-revalidate"]
 elemenx help
 elemenx version
 ```
@@ -67,7 +70,7 @@ The command registry is intentionally extensible for future command groups such 
 
 An optional `elemenx.config.js` may export `Application`, `Entry`, `Index`, `Output`, and `Server` settings. CLI options override configuration, and configuration overrides Elemenx defaults.
 
-Production `serve` enables gzip for compressible responses of at least 1024 bytes and sends `ETag`, `Last-Modified`, `Vary: Accept-Encoding`, and conditional `304` responses. Development serving does not compress by default.
+Production `serve` enables gzip for compressible responses of at least 1024 bytes and sends `ETag`, `Last-Modified`, `Cache-Control`, `Vary: Accept-Encoding`, and conditional `304` responses. `HEAD` returns the same representation headers and `Content-Length` without a response body. Development serving does not compress by default. Server values follow the same precedence as the rest of the CLI: explicit CLI option, then `elemenx.config.js`, then Elemenx defaults.
 
 ## Generators
 

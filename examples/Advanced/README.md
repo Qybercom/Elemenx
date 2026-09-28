@@ -6,7 +6,7 @@ After copying the directory:
 
 ```bash
 npm install
-npm start
+npm run dev
 ```
 
 The installed `elemenx` package provides the shared `tools/server.js` and the framework exposed by that server as `/elemenx.js`.
@@ -30,17 +30,17 @@ components/
 `components/index.js` is the Elemenx Discovery enumerator. `Application.Root` points to `components`, so component scripts do not have to be listed manually in `index.html`.
 
 A component uses a template path local to its own definition script, for example `TemplateURL: 'project.html'`. Elemenx resolves that relative URL from the component script URL.
-The Home page also demonstrates structural composition. Component tags without projected children may use XML-style self-closing syntax such as `<ProjectCard />`. `*for` remains the keyed collection primitive, while `*for` performs in-place iteration from an arbitrary expression:
+The Home page also demonstrates structural composition. Component tags without projected children may use XML-style self-closing syntax such as `<ProjectCard />`. `*for` supports keyed collections as well as classic local-counter iteration. A counter can also assign an item expression on each iteration:
 
 ```html
-<div *for="item = QueueItem($index)">
-	<IteratorBadge [item]="item" [index]="$index" />
+<div *for="i = 0; item = QueueItem(i); i++">
+	<IteratorBadge [item]="item" [index]="i" />
 </div>
 ```
 
-The expression is evaluated with `$index` starting at `0`. Its value is assigned to the local name on the left side and rendering stops when the expression returns a falsy value. Elemenx aborts a runaway structural loop after 10,000 iterations.
+The initializer creates loop-local variables, the condition is checked before each render, and the update expression runs after each iteration. In the example above `item = QueueItem(i)` is the loop condition, so rendering stops when it becomes falsy. Elemenx aborts a runaway structural loop after 10,000 iterations.
 
-`*for` also supports a local counter form when direct numeric iteration is clearer:
+For direct numeric iteration the condition can be a normal comparison:
 
 ```html
 <span *for="i = 0; i < 5; i++">Iteration {{i}}</span>

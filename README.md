@@ -18,27 +18,25 @@ Run the complete suite:
 npm test
 ```
 
-`npm test` runs Vitest Browser Mode for browser-level contracts and Playwright Test for top-level History API behavior.
+`npm test` runs the browser contract suite, Node/tooling regressions, and real-browser Playwright end-to-end tests.
 
 ## Examples
 
-Every directory under `examples/` is a standalone project. Copy an example directory anywhere and run it independently from the Elemenx repository.
-
-Simple example:
+The maintained examples are `examples/Simple` and `examples/Advanced`. From the Elemenx repository they can be started with:
 
 ```bash
-cd examples/simple
-npm start
+npm run example:simple
+npm run example:advanced
 ```
 
-Application/router example:
+`Advanced` is also a standalone package consumer: after copying it outside the repository, run `npm install` and `npm run dev`. Its `elemenx` dependency provides the framework and CLI; the example does not carry a private copy of `elemenx.js` or the server.
+
+The production path is exercised with:
 
 ```bash
-cd examples/application
-npm start
+npm run build:advanced
+npm run example:advanced:dist
 ```
-
-Then open the URL printed by the example server. Each example contains its own `elemenx.js`, `package.json`, server and README.
 
 ## Regression coverage
 
