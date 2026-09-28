@@ -5363,6 +5363,9 @@
 			function compile (node) {
 				if (node.nodeType !== 1) return;
 
+				/* A foreign Application mount owns its complete subtree. */
+				if (Runtime.ApplicationBoundary && Runtime.ApplicationBoundary(component.Application(), node)) return;
+
 				/* Directive composition policy is validated before host dispatch. */
 				Runtime.Directive.Policy(node);
 				
@@ -12600,6 +12603,49 @@
 		
 		var Elemenx = global.Elemenx;
 		var applications = {};
+		var mountOwners = typeof WeakMap !== 'undefined' ? new WeakMap() : null;
+		var mountedApplications = [];
+		
+		Runtime.ApplicationMountOwner = function (element) {
+			if (!mountOwners || !element) return null;
+			return mountOwners.get(element) || null;
+		};
+
+		Runtime.ApplicationBoundary = function (application, element) {
+			var owner = Runtime.ApplicationMountOwner(element);
+			return !!(owner && owner !== application);
+		};
+
+		function rememberMount (application, element) {
+			var i = 0;
+			while (i < mountedApplications.length) {
+				if (mountedApplications[i].Application === application) {
+					mountedApplications[i].Mount = element;
+					return;
+				}
+				i++;
+			}
+			mountedApplications.push({Application: application, Mount: element});
+		}
+
+		function forgetMount (application) {
+			var i = mountedApplications.length - 1;
+			while (i >= 0) {
+				if (mountedApplications[i].Application === application) mountedApplications.splice(i, 1);
+				i--;
+			}
+		}
+
+		function nestedMounts (application, element) {
+			var result = [];
+			var i = 0;
+			while (i < mountedApplications.length) {
+				if (mountedApplications[i].Application !== application && element !== mountedApplications[i].Mount && element.contains(mountedApplications[i].Mount))
+					result.push(mountedApplications[i].Mount);
+				i++;
+			}
+			return result;
+		}
 		
 		Runtime.ApplicationWebWorkers = Runtime.ApplicationWebWorkers || {};
 		
@@ -12617,6 +12663,7 @@
 			var router = null;
 			var webWorkers = {};
 			var serviceWorkers = {};
+			var ownedMount = null;
 			var api = {};
 			
 			definition = definition || {};
@@ -12632,6 +12679,10 @@
 			
 			api.Root = function () {
 				return definition.Root || null;
+			};
+
+			api.Mount = function () {
+				return mountElement(definition.Mount);
 			};
 			
 			api.Application = function () {
@@ -12768,6 +12819,11 @@
 				
 				if (root && root.Destroy) root.Destroy();
 				root = null;
+
+				if (mountOwners && ownedMount && mountOwners.get(ownedMount) === api)
+					mountOwners.delete(ownedMount);
+				forgetMount(api);
+				ownedMount = null;
 				
 				var workerName;
 				for (workerName in webWorkers) {
@@ -12854,12 +12910,22 @@
 				
 				var factory = Elemenx.Component(definition.Component);
 				var mount = mountElement(definition.Mount);
+				var mountOwner;
 				
 				if (!factory)
 					throw new Error('Elemenx Application component not found: ' + definition.Component);
 				
 				if (!mount)
 					throw new Error('Elemenx Application mount not found: ' + definition.Mount);
+
+				if (mountOwners) {
+					mountOwner = mountOwners.get(mount);
+					if (mountOwner && mountOwner !== api)
+						throw new Error('Elemenx Application mount conflict: ' + name + ' cannot mount to an element owned by ' + mountOwner.Name());
+					mountOwners.set(mount, api);
+					ownedMount = mount;
+					rememberMount(api, mount);
+				}
 				
 				var options = {
 					Application: api,
@@ -12871,9 +12937,26 @@
 					}
 				};
 				
+				var preservedMounts = nestedMounts(api, mount);
+				var preservedIndex = 0;
+				while (preservedIndex < preservedMounts.length) {
+					if (preservedMounts[preservedIndex].parentNode)
+						preservedMounts[preservedIndex].parentNode.removeChild(preservedMounts[preservedIndex]);
+					preservedIndex++;
+				}
+
 				root = factory(definition.State || {}, null, options);
 				
 				mount.appendChild(root.Element());
+
+				preservedIndex = 0;
+				while (preservedIndex < preservedMounts.length) {
+					var preservedMount = preservedMounts[preservedIndex];
+					var placeholder = preservedMount.id ? mount.querySelector('#' + preservedMount.id) : null;
+					if (placeholder && placeholder.parentNode) placeholder.parentNode.replaceChild(preservedMount, placeholder);
+					else mount.appendChild(preservedMount);
+					preservedIndex++;
+				}
 				
 				if (!root._Component || root._Component())
 					startRouter();
