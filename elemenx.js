@@ -3893,6 +3893,9 @@
 			var popHandler;
 			var navigationID = 0;
 			var events = {};
+			var historyIndex = 0;
+			var committedURL = null;
+			var rollbackPop = false;
 			
 			function application () {
 				return root && root.Application ? root.Application() : null;
@@ -4703,11 +4706,15 @@
 					if (id !== navigationID) return;
 					if (error) throw error;
 					
-					if (mode === 'push') global.history.pushState(null, '', prepared.URL.href);
-					else if (mode === 'replace') global.history.replaceState(null, '', prepared.URL.href);
+					writeHistory(mode, prepared.URL);
 					
 					emit('NavigationCommit', context);
 					commit(failurePrepared);
+					committedURL = new URL(prepared.URL.href);
+					if (mode === 'pop' && id === navigationID) {
+						var state = global.history.state;
+						if (state && typeof state.ElemenxRouterIndex === 'number') historyIndex = state.ElemenxRouterIndex;
+					}
 					emit('NavigationEnd', context);
 				});
 				
@@ -4731,9 +4738,51 @@
 				return failure;
 			}
 			
-			function execute (prepared, mode) {
+			function historyState (index) {
+				var current = global.history.state;
+				var state = {};
+				var key;
+				
+				if (current && typeof current === 'object') {
+					for (key in current) {
+						if (Object.prototype.hasOwnProperty.call(current, key))
+							state[key] = current[key];
+					}
+				}
+				
+				state.ElemenxRouterIndex = index;
+				
+				return state;
+			}
+			
+			function writeHistory (mode, url) {
+				if (mode === 'push') {
+					historyIndex++;
+					global.history.pushState(historyState(historyIndex), '', url.href);
+				}
+				else if (mode === 'replace') {
+					global.history.replaceState(historyState(historyIndex), '', url.href);
+				}
+			}
+			
+			function rejectPop (targetIndex) {
+				var delta;
+				
+				if (targetIndex === null || targetIndex === undefined || targetIndex === historyIndex) {
+					if (committedURL)
+						global.history.replaceState(historyState(historyIndex), '', committedURL.href);
+					
+					return;
+				}
+				
+				delta = historyIndex - targetIndex;
+				rollbackPop = true;
+				global.history.go(delta);
+			}
+			
+			function execute (prepared, mode, targetHistoryIndex) {
 				var id = ++navigationID;
-				var previousURL = currentURL();
+				var previousURL = committedURL ? new URL(committedURL.href) : currentURL();
 				var context = {
 					Service: function (name) {
 						return Runtime.ServiceForApplication(application(), name);
@@ -4754,11 +4803,13 @@
 					if (leaveResult !== true && leaveResult !== undefined) {
 						if (typeof leaveResult === 'string') {
 							emit('NavigationCancel', context);
+							if (mode === 'pop' && targetHistoryIndex !== null && targetHistoryIndex !== undefined) historyIndex = targetHistoryIndex;
 							navigate(leaveResult, 'replace');
 						}
 						else {
 							handleGuardFailure(leaveResult, context);
 							emit('NavigationCancel', context);
+							if (mode === 'pop') rejectPop(targetHistoryIndex);
 						}
 						
 						return;
@@ -4780,14 +4831,17 @@
 									
 									if (typeof enterResult === 'string') {
 										emit('NavigationCancel', context);
+										if (mode === 'pop' && targetHistoryIndex !== null && targetHistoryIndex !== undefined) historyIndex = targetHistoryIndex;
 										navigate(enterResult, 'replace');
 									}
 									else {
 										var failure = handleGuardFailure(enterResult, context);
 										var failureComponent = guardFailureComponent(failure.Route, failure);
 										
-										if (!failureComponent || !renderGuardFailure(prepared, failure, failureComponent, mode, id, context))
+										if (!failureComponent || !renderGuardFailure(prepared, failure, failureComponent, mode, id, context)) {
 											emit('NavigationCancel', context);
+											if (mode === 'pop') rejectPop(targetHistoryIndex);
+										}
 									}
 									
 									return;
@@ -4797,8 +4851,7 @@
 								// absolute from Application bootstrap, so changing location here cannot
 								// retarget a deferred component request. This keeps browser history ahead
 								// of every target-page load and render operation.
-								if (mode === 'push') global.history.pushState(null, '', prepared.URL.href);
-								else if (mode === 'replace') global.history.replaceState(null, '', prepared.URL.href);
+								writeHistory(mode, prepared.URL);
 								
 								emit('NavigationCommit', context);
 								
@@ -4808,7 +4861,7 @@
 									if (id !== navigationID) return;
 									if (componentError) {
 										if (mode === 'push' || mode === 'replace')
-											global.history.replaceState(null, '', previousURL.href);
+											global.history.replaceState(historyState(historyIndex), '', previousURL.href);
 										
 										clearWaiting();
 										
@@ -4816,6 +4869,8 @@
 									}
 									
 									commit(prepared);
+									committedURL = new URL(prepared.URL.href);
+									if (mode === 'pop' && targetHistoryIndex !== null && targetHistoryIndex !== undefined) historyIndex = targetHistoryIndex;
 									
 									finishWaitingAfterCommit(prepared, id, function () {
 										emit('NavigationEnd', context);
@@ -4859,12 +4914,10 @@
 						Route: null,
 						Component: component
 					});
+					committedURL = new URL(url.href);
 				}
 				
-				if (mode === 'push')
-					global.history.pushState(null, '', url.href);
-				else if (mode === 'replace')
-					global.history.replaceState(null, '', url.href);
+				writeHistory(mode, url);
 				
 				if (bundledComponent(reference)) {
 					render();
@@ -4938,15 +4991,26 @@
 					navigate(target.href, 'push');
 				};
 				
-				popHandler = function () {
-					var url = currentURL();
-					var prepared = prepare(url);
+				popHandler = function (event) {
+					var url;
+					var prepared;
+					var targetIndex;
+					
+					if (rollbackPop) {
+						rollbackPop = false;
+						return;
+					}
+					
+					url = currentURL();
+					prepared = prepare(url);
+					targetIndex = event && event.state && typeof event.state.ElemenxRouterIndex === 'number' ? event.state.ElemenxRouterIndex : null;
 					
 					if (prepared) {
-						commit(prepared);
+						execute(prepared, 'pop', targetIndex);
 					}
 					else {
 						notFound(url, 'pop');
+						if (targetIndex !== null) historyIndex = targetIndex;
 					}
 				};
 				
@@ -4954,6 +5018,8 @@
 				global.addEventListener('popstate', popHandler);
 				
 				started = true;
+				global.history.replaceState(historyState(historyIndex), '', global.location.href);
+				committedURL = currentURL();
 				
 				var url = currentURL();
 				var prepared = prepare(url);
@@ -4976,6 +5042,7 @@
 				document.removeEventListener('click', clickHandler);
 				global.removeEventListener('popstate', popHandler);
 				
+				clearWaiting();
 				destroyFrom(0);
 				
 				started = false;

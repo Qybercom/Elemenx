@@ -281,3 +281,27 @@ describe('Regression: Router / Guards', function () {
 	});
 
 });
+describe('Regression: Router lifecycle hardening', function () {
+	beforeAll(async function () { await loadElemenx(); });
+	beforeEach(function () { resetDOM(); });
+
+	it('Destroy removes a mounted Waiting component while a guard is pending', async function () {
+		var guard=unique('DestroyWaitingGuard'),page=unique('DestroyWaitingPage'),waiting=unique('DestroyWaitingLoader');
+		Elemenx.Guard(guard,function () {return this.Wait(function (done) {setTimeout(function () {done(true);},100);});});
+		Elemenx.Component(page,{Template:'<div id="destroy-waiting-target">TARGET</div>'});
+		Elemenx.Component(waiting,{Template:'<div id="destroy-waiting-loader">WAIT</div>'});
+		var root=unique('DestroyWaitingRoot'),appName=unique('DestroyWaitingApp');
+		Elemenx.Component(root,{Template:'<main *outlet="Content"></main><aside *outlet="Waiting"></aside>'});
+		var app=Elemenx.Application(appName,{Component:root,Mount:'#mount'});
+		var router=Elemenx.Router({Root:app.Component(),Waiting:waiting,Routes:[{Path:'/destroy-waiting',Component:page,Guard:guard}]});
+		router.Start();
+		router.Go('/destroy-waiting');
+		await tick(20);
+		expect(document.getElementById('destroy-waiting-loader')).not.toBeNull();
+		router.Destroy();
+		expect(document.getElementById('destroy-waiting-loader')).toBeNull();
+		await tick(120);
+		expect(document.getElementById('destroy-waiting-target')).toBeNull();
+		app.Destroy();
+	});
+});
