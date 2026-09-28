@@ -99,3 +99,29 @@ The generator resolves the destination first and then walks upward from that des
 Components use `<Name>/<Name>.js` plus `<Name>/<Name>.html`. Services, guards and directives use `<Name>.js` at their requested destination. Generated paths may not escape the configured application root.
 
 Graph-aware generation is regression-tested for nearest-owner precedence, ancestor fallback, root registration, dot paths, Windows separators, duplicate graph entries, custom application roots, path escape rejection, overwrite protection, and real CLI invocation.
+
+## Named Applications
+
+Create an Application graph in the current directory:
+
+```
+elemenx generate application FooApp
+```
+
+Or choose the project/host directory explicitly:
+
+```
+elemenx generate application FooApp ./path
+```
+
+The Application graph root is named after the Application (`FooApp/index.js`). Host files such as `index.html`, `app.js`, `elemenx.config.js`, and `package.json` are created only when missing, so another Application can be added beside an existing one without overwriting the host:
+
+```
+elemenx generate application BarApp
+```
+
+Entities can address a named graph from the project root:
+
+```
+elemenx generate component BarApp/Pages/Home
+```

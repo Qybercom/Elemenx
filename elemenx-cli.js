@@ -87,17 +87,28 @@ function command (name,description,handler) {
 	Commands[name]={Description:description,Handler:handler};
 }
 
-command('generate','Generate an application entity and register it in the application graph.',function (parsed) {
-	var type=parsed.Arguments.shift();
+command('generate','Generate an Application or an entity and register it in the Application graph.',function (parsed) {
+	var type=String(parsed.Arguments.shift() || '').toLowerCase();
 	var target=parsed.Arguments.shift();
+
+	if (type === 'application') {
+		if (!target)
+			fail('usage: elemenx generate application <Name> [path] [--force]');
+
+		Generator.GenerateApplication(projectPath(parsed.Arguments.shift()),target,{
+			force:parsed.Options.force === true
+		});
+		return;
+	}
+
 	var project=projectPath(parsed.Arguments.shift());
 	var settings=config(project);
 
 	if (!type || !target)
-		fail('usage: elemenx generate <component|service|guard|directive> <path/Name> [project] [--force]');
+		fail('usage: elemenx generate <component|service|guard|directive> <path/Name> [project] [--application Name] [--force]');
 
 	Generator.Generate(project,type,target,{
-		application:value(parsed.Options,'application',settings.Application,'application'),
+		application:parsed.Options.application !== undefined ? parsed.Options.application : (settings.Application || null),
 		force:parsed.Options.force === true
 	});
 });

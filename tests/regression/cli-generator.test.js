@@ -141,4 +141,85 @@ describe('Elemenx graph-aware generator',function () {
 
 		Generator.Generate(root,'service','Session',{force:true});
 	});
+	it('generates a named Application directly into the current directory',function () {
+		var root=fs.mkdtempSync(path.join(os.tmpdir(),'elemenx-application-'));
+		temporary.push(root);
+		var cli=path.resolve(process.cwd(),'elemenx-cli.js');
+		var result=childProcess.spawnSync(process.execPath,[cli,'g','application','FooApp'],{cwd:root,encoding:'utf8'});
+		expect(result.status).toBe(0);
+		expect(fs.existsSync(path.join(root,'FooApp','index.js'))).toBe(true);
+		expect(fs.existsSync(path.join(root,'FooApp','App','App.js'))).toBe(true);
+		expect(fs.existsSync(path.join(root,'FooApp','App','App.html'))).toBe(true);
+		expect(fs.existsSync(path.join(root,'FooApp','FooApp'))).toBe(false);
+	});
+
+	it('uses the optional Application path without adding another name directory level',function () {
+		var root=fs.mkdtempSync(path.join(os.tmpdir(),'elemenx-application-path-'));
+		var destination=path.join(root,'host');
+		temporary.push(root);
+		var cli=path.resolve(process.cwd(),'elemenx-cli.js');
+		var result=childProcess.spawnSync(process.execPath,[cli,'g','application','FooApp',destination],{encoding:'utf8'});
+		expect(result.status).toBe(0);
+		expect(fs.existsSync(path.join(destination,'FooApp','index.js'))).toBe(true);
+		expect(fs.existsSync(path.join(destination,'FooApp','FooApp','index.js'))).toBe(false);
+	});
+
+	it('creates another named Application without touching existing host files',function () {
+		var root=fs.mkdtempSync(path.join(os.tmpdir(),'elemenx-multi-application-'));
+		temporary.push(root);
+		Generator.GenerateApplication(root,'FooApp',{});
+		var app=fs.readFileSync(path.join(root,'app.js'),'utf8');
+		var html=fs.readFileSync(path.join(root,'index.html'),'utf8');
+		var config=fs.readFileSync(path.join(root,'elemenx.config.js'),'utf8');
+		Generator.GenerateApplication(root,'BarApp',{});
+		expect(fs.existsSync(path.join(root,'FooApp','index.js'))).toBe(true);
+		expect(fs.existsSync(path.join(root,'BarApp','index.js'))).toBe(true);
+		expect(fs.readFileSync(path.join(root,'app.js'),'utf8')).toBe(app);
+		expect(fs.readFileSync(path.join(root,'index.html'),'utf8')).toBe(html);
+		expect(fs.readFileSync(path.join(root,'elemenx.config.js'),'utf8')).toBe(config);
+	});
+
+	it('resolves an entity to a named Application graph from its path',function () {
+		var root=fs.mkdtempSync(path.join(os.tmpdir(),'elemenx-named-graph-'));
+		temporary.push(root);
+		Generator.GenerateApplication(root,'FooApp',{});
+		Generator.GenerateApplication(root,'BarApp',{});
+		Generator.Generate(root,'component','BarApp/Pages/Home',{});
+		expect(fs.existsSync(path.join(root,'BarApp','Pages','Home','Home.js'))).toBe(true);
+		expect(fs.readFileSync(path.join(root,'BarApp','index.js'),'utf8')).toContain("'Pages/Home/Home.js'");
+		expect(fs.readFileSync(path.join(root,'FooApp','index.js'),'utf8')).not.toContain('Home');
+	});
+
+	it('refuses overwriting an existing named Application unless force is used',function () {
+		var root=fs.mkdtempSync(path.join(os.tmpdir(),'elemenx-application-force-'));
+		temporary.push(root);
+		Generator.GenerateApplication(root,'FooApp',{});
+		expect(function () {
+			Generator.GenerateApplication(root,'FooApp',{});
+		}).toThrow(/already exists/);
+		Generator.GenerateApplication(root,'FooApp',{force:true});
+	});
+
+	it('does not duplicate a configured Application root when target includes it',function () {
+		var root=fs.mkdtempSync(path.join(os.tmpdir(),'elemenx-configured-root-target-'));
+		temporary.push(root);
+		fs.mkdirSync(path.join(root,'source'),{recursive:true});
+		fs.writeFileSync(path.join(root,'source','index.js'),'[]');
+		Generator.Generate(root,'component','source/Feature/TestCard',{application:'source'});
+		expect(fs.existsSync(path.join(root,'source','Feature','TestCard','TestCard.js'))).toBe(true);
+		expect(fs.existsSync(path.join(root,'source','source','Feature','TestCard','TestCard.js'))).toBe(false);
+	});
+
+	it('passes elemenx.config.js Application through the real CLI',function () {
+		var root=fs.mkdtempSync(path.join(os.tmpdir(),'elemenx-cli-config-root-'));
+		temporary.push(root);
+		fs.mkdirSync(path.join(root,'source'),{recursive:true});
+		fs.writeFileSync(path.join(root,'source','index.js'),'[]');
+		fs.writeFileSync(path.join(root,'elemenx.config.js'),"module.exports={Application:'source'};");
+		var cli=path.resolve(process.cwd(),'elemenx-cli.js');
+		var result=childProcess.spawnSync(process.execPath,[cli,'g','component','Feature/TestCard',root],{encoding:'utf8'});
+		expect(result.status).toBe(0);
+		expect(fs.existsSync(path.join(root,'source','Feature','TestCard','TestCard.js'))).toBe(true);
+	});
+
 });
