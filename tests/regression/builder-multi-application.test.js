@@ -124,4 +124,35 @@ describe('Elemenx multi-Application Builder', function () {
 		expect(fs.existsSync(path.join(root, 'dist', 'elemenx.js'))).toBe(true);
 	});
 
+
+	it('supports a custom output directory without recursively copying it into itself', function () {
+		var root = project();
+		application(root, 'FooApp', 'FooRoot');
+		fs.writeFileSync(path.join(root, 'app.js'), "Elemenx.Application('FooApp', {Root:'FooApp'});");
+		fs.writeFileSync(path.join(root, 'asset.txt'), 'asset');
+
+		Builder.Build(root, {application: 'FooApp', entry: 'app.js', index: 'index.html', out: 'build'});
+
+		expect(fs.readFileSync(path.join(root, 'build', 'asset.txt'), 'utf8')).toBe('asset');
+		expect(fs.existsSync(path.join(root, 'build', 'build'))).toBe(false);
+	});
+
+	it('excludes custom entry and index sources while preserving same-named nested public assets', function () {
+		var root = project();
+		application(root, 'FooApp', 'FooRoot');
+		fs.writeFileSync(path.join(root, 'bootstrap.js'), "Elemenx.Application('FooApp', {Root:'FooApp'});");
+		fs.writeFileSync(path.join(root, 'shell.html'), '<!DOCTYPE html><html><body>shell</body></html>');
+		fs.mkdirSync(path.join(root, 'public'), {recursive: true});
+		fs.writeFileSync(path.join(root, 'public', 'index.html'), 'nested index');
+		fs.writeFileSync(path.join(root, 'public', 'app.js'), 'nested app');
+		fs.writeFileSync(path.join(root, 'public', 'package.json'), 'nested package');
+
+		Builder.Build(root, {application: 'FooApp', entry: 'bootstrap.js', index: 'shell.html', out: 'dist'});
+
+		expect(fs.existsSync(path.join(root, 'dist', 'bootstrap.js'))).toBe(false);
+		expect(fs.existsSync(path.join(root, 'dist', 'shell.html'))).toBe(false);
+		expect(fs.readFileSync(path.join(root, 'dist', 'public', 'index.html'), 'utf8')).toBe('nested index');
+		expect(fs.readFileSync(path.join(root, 'dist', 'public', 'app.js'), 'utf8')).toBe('nested app');
+		expect(fs.readFileSync(path.join(root, 'dist', 'public', 'package.json'), 'utf8')).toBe('nested package');
+	});
 });

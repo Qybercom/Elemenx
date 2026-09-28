@@ -149,53 +149,49 @@ function removeTree (target) {
 		fs.rmSync(target, {recursive: true, force: true});
 }
 
-function copyPublic (source, output, applicationDirectories) {
+function isInside (target, parent) {
+	var relative = path.relative(path.resolve(parent), path.resolve(target));
+	
+	return relative === '' || (relative.indexOf('..' + path.sep) !== 0 && relative !== '..' && !path.isAbsolute(relative));
+}
+
+function copyPublic (source, output, excludedPaths) {
 	var entries = fs.readdirSync(source, {withFileTypes: true});
 	var i = 0;
-	var excluded = {
-		'dist': true,
-		'node_modules': true,
-		'package.json': true,
-		'package-lock.json': true,
-		'elemenx.config.js': true,
-		'app.js': true,
-		'index.html': true,
-		'index.production.html': true
-	};
 	
-	applicationDirectories = applicationDirectories || [];
+	excludedPaths = excludedPaths || [];
 	
 	while (i < entries.length) {
 		var entry = entries[i];
 		var from = path.join(source, entry.name);
 		var to = path.join(output, entry.name);
-		var applicationSource = false;
-		var ai = 0;
+		var excluded = false;
+		var ei = 0;
 		
-		while (ai < applicationDirectories.length) {
-			if (path.resolve(from) === path.resolve(applicationDirectories[ai])) {
-				applicationSource = true;
+		while (ei < excludedPaths.length) {
+			if (isInside(from, excludedPaths[ei])) {
+				excluded = true;
 				
 				break;
 			}
 			
-			ai++;
+			ei++;
 		}
 		
-		if (!excluded[entry.name] && !applicationSource) {
+		if (!excluded) {
 			if (entry.isDirectory()) {
 				fs.mkdirSync(to, {recursive: true});
 				
-				copyPublic(from, to, applicationDirectories);
+				copyPublic(from, to, excludedPaths);
 			}
 			else if (entry.isFile()) {
 				fs.copyFileSync(from, to);
 			}
 		}
+		
 		i++;
 	}
 }
-
 function unique (values) {
 	var result = [];
 	var seen = {};
@@ -304,7 +300,17 @@ function build (project, options) {
 	removeTree(output);
 	fs.mkdirSync(output, {recursive: true});
 	
-	copyPublic(project, output, directories);
+	var excludedPaths = directories.concat([
+		output,
+		app,
+		index,
+		path.join(project, 'elemenx.config.js'),
+		path.join(project, 'package.json'),
+		path.join(project, 'package-lock.json'),
+		path.join(project, 'index.production.html')
+	]);
+	
+	copyPublic(project, output, excludedPaths);
 	
 	fs.copyFileSync(index, path.join(output, 'index.html'));
 	fs.copyFileSync(framework, path.join(output, 'elemenx.js'));
