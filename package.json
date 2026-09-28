@@ -8,8 +8,10 @@
 		"elemenx-cli.js",
 		"README.md",
 		"LICENSE",
+		"docs",
 		"tools",
-		"examples"
+		"examples",
+		"!examples/**/dist"
 	],
 	"scripts": {
 		"test": "npm run test:browser && npm run test:tools && npm run test:history",
