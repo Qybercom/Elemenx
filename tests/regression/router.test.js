@@ -304,4 +304,66 @@ describe('Regression: Router lifecycle hardening', function () {
 		expect(document.getElementById('destroy-waiting-target')).toBeNull();
 		app.Destroy();
 	});
+
+	it('Application.Destroy cancels a pending service-backed guard without resurrecting route state', async function () {
+		var service=unique('PendingGuardService'),guard=unique('PendingServiceGuard'),page=unique('PendingServicePage'),waiting=unique('PendingServiceWaiting'),destroyed=0;
+		Elemenx.Service(service,{
+			Authorized:true,
+			ElemenxOnDestroy:function () {destroyed++;}
+		});
+		Elemenx.Guard(guard,function () {
+			var session=this.Service(service);
+			var authorized=session.Authorized;
+			return this.Wait(function (done) {
+				setTimeout(function () {done(authorized);},100);
+			});
+		});
+		Elemenx.Component(page,{Template:'<div id="pending-service-target">TARGET</div>'});
+		Elemenx.Component(waiting,{Template:'<div id="pending-service-waiting">WAIT</div>'});
+		var root=unique('PendingServiceRoot'),appName=unique('PendingServiceApp');
+		Elemenx.Component(root,{Template:'<main *outlet="Content"></main><aside *outlet="Waiting"></aside>'});
+		var app=Elemenx.Application(appName,{Component:root,Mount:'#mount'});
+		var router=Elemenx.Router({Root:app.Component(),Waiting:waiting,Routes:[{Path:'/pending-service',Component:page,Guard:guard}]});
+		router.Start();
+		router.Go('/pending-service');
+		await tick(20);
+		expect(document.getElementById('pending-service-waiting')).not.toBeNull();
+		expect(destroyed).toBe(0);
+		app.Destroy();
+		expect(destroyed).toBe(1);
+		expect(document.getElementById('pending-service-waiting')).toBeNull();
+		await tick(120);
+		expect(document.getElementById('pending-service-target')).toBeNull();
+		expect(destroyed).toBe(1);
+	});
+
+	it('a lazy service handle retained by a pending guard cannot resurrect its Application service after Destroy', async function () {
+		var service=unique('LazyPendingGuardService'),guard=unique('LazyPendingServiceGuard'),page=unique('LazyPendingServicePage'),created=0,destroyed=0;
+		Elemenx.Service(service,{
+			Authorized:true,
+			ElemenxOnCreate:function () {created++;},
+			ElemenxOnDestroy:function () {destroyed++;}
+		});
+		Elemenx.Guard(guard,function () {
+			var session=this.Service(service);
+			return this.Wait(function (done) {
+				setTimeout(function () {done(session.Authorized);},100);
+			});
+		});
+		Elemenx.Component(page,{Template:'<div id="lazy-pending-service-target">TARGET</div>'});
+		var root=unique('LazyPendingServiceRoot'),appName=unique('LazyPendingServiceApp');
+		Elemenx.Component(root,{Template:'<main *outlet="Content"></main>'});
+		var app=Elemenx.Application(appName,{Component:root,Mount:'#mount'});
+		var router=Elemenx.Router({Root:app.Component(),Routes:[{Path:'/lazy-pending-service',Component:page,Guard:guard}]});
+		router.Start();
+		router.Go('/lazy-pending-service');
+		await tick(20);
+		expect(created).toBe(0);
+		app.Destroy();
+		await tick(120);
+		expect(created).toBe(0);
+		expect(destroyed).toBe(0);
+		expect(document.getElementById('lazy-pending-service-target')).toBeNull();
+		router.Destroy();
+	});
 });

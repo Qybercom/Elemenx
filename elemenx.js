@@ -1119,6 +1119,7 @@
 		var serviceRegistry = {};
 		var serviceHandles = {};
 		var applicationServiceHandles = new WeakMap();
+		var destroyedServiceApplications = new WeakSet();
 		var guardRegistry = {};
 		
 		function ServiceAccessor (name) {
@@ -1203,6 +1204,8 @@
 		}
 		
 		function serviceTarget (name, application) {
+			if (application && destroyedServiceApplications.has(application)) return null;
+
 			var entry = serviceRegistry[name];
 			if (!entry) return null;
 			
@@ -1285,7 +1288,7 @@
 						return target[property];
 					}
 					
-					if (Runtime.Discovery && application && Runtime.Discovery.Ready(application)) {
+					if (Runtime.Discovery && application && !destroyedServiceApplications.has(application) && Runtime.Discovery.Ready(application)) {
 						if (!loading) {
 							loading = true;
 							Runtime.Discovery.Load(application, 'Service', name, false, function (error) {
@@ -1378,6 +1381,7 @@
 			return serviceHandle(name, application || null);
 		};
 		Runtime.DestroyApplicationServices = function (application) {
+			destroyedServiceApplications.add(application);
 			var name;
 			var entry;
 			var target;
