@@ -5183,8 +5183,45 @@
 				return parts;
 			}
 			
-			function bindingAssign (result, target, value) {
+			function canonicalPropKey (source, key) {
+				var name;
+				var match = null;
+				var lower;
+				
+				if (!source || typeof key !== 'string') return key;
+				if (own(source, key)) return key;
+				
+				lower = key.toLowerCase();
+				for (name in source) {
+					if (!own(source, name) || name.toLowerCase() !== lower) continue;
+					if (match !== null) return key;
+					match = name;
+				}
+				
+				return match === null ? key : match;
+			}
+			
+			function canonicalBindingPath (target, definition) {
 				var path = bindingTarget(target);
+				var source = definition;
+				var i = 0;
+				var key;
+				
+				while (i < path.length && source != null) {
+					key = path[i];
+					if (typeof key === 'string') {
+						key = canonicalPropKey(source, key);
+						path[i] = key;
+					}
+					source = source[key];
+					i++;
+				}
+				
+				return path;
+			}
+			
+			function bindingAssign (result, target, value, definition) {
+				var path = canonicalBindingPath(target, definition);
 				var root = path[0];
 				var current;
 				var i = 1;
@@ -5212,7 +5249,7 @@
 				current[path[path.length - 1]] = value;
 			}
 			
-			function props (node, data) {
+			function props (node, data, definition) {
 				var result = {};
 				var attrs = node.attributes;
 				var i = 0;
@@ -5231,6 +5268,7 @@
 						name = name.replace(/-([a-z])/g, function (match, letter) {
 							return letter.toUpperCase();
 						});
+						name = canonicalPropKey(definition, name);
 						
 						result[name] = propValue(attrs[i].value, data);
 					}
@@ -5244,7 +5282,7 @@
 					target = Runtime.Directive.Binding(name);
 					
 					if (target !== null)
-						bindingAssign(result, target, expression(data, attrs[i].value));
+						bindingAssign(result, target, expression(data, attrs[i].value), definition);
 					
 					i++;
 				}
@@ -5542,7 +5580,7 @@
 						
 						if (child) return child;
 						
-						childProps = props(blueprint, currentData || Runtime.ComponentValues(component));
+						childProps = props(blueprint, currentData || Runtime.ComponentValues(component), factory.Definition);
 						child = factory(childProps, projected, asyncOptions(blueprint, factory.ComponentName || blueprint.tagName));
 						connect(child, eventMap);
 						end.parentNode.insertBefore(child.Element(), end);
@@ -5583,7 +5621,7 @@
 							structuralDirective.Definition.ElemenxOnUpdate(context);
 					}
 					else if (!child) {
-						childProps = props(blueprint, data);
+						childProps = props(blueprint, data, factory.Definition);
 						child = factory(childProps, projected, asyncOptions(blueprint, factory.ComponentName || blueprint.tagName));
 						connect(child, eventMap);
 						end.parentNode.insertBefore(child.Element(), end);
@@ -5593,7 +5631,7 @@
 					if (!child)
 						return false;
 					
-					childProps = props(blueprint, data);
+					childProps = props(blueprint, data, factory.Definition);
 					
 					/*
 					 * Props are an input boundary. A retained child may mutate its own
@@ -5679,7 +5717,7 @@
 						
 						function apply (current) {
 							var visible = condition ? expression(current, condition) : true;
-							var childProps = props(blueprint, current);
+							var childProps = props(blueprint, current, factory.Definition);
 							var hasProps = Object.keys(childProps).length > 0;
 							
 							if (!visible) {
