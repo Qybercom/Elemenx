@@ -2,7 +2,7 @@ import { defineConfig } from '@playwright/test';
 
 export default defineConfig({
 	testDir: './tests',
-	testMatch: ['history/**/*.spec.js', 'production/**/*.spec.js'],
+	testMatch: ['history/**/*.spec.js', 'production/**/*.spec.js', 'examples/**/*.spec.js'],
 	fullyParallel: false,
 	workers: 1,
 	use: {
@@ -30,6 +30,14 @@ export default defineConfig({
 			command: 'node tests/production/server.js',
 			url: 'http://127.0.0.1:4275/',
 			env: {PORT: '4275'},
+			reuseExistingServer: false,
+			stdout: 'pipe',
+			stderr: 'pipe'
+		},
+		{
+			command: 'node tests/examples/server.js',
+			url: 'http://127.0.0.1:4276/',
+			env: {PORT: '4276'},
 			reuseExistingServer: false,
 			stdout: 'pipe',
 			stderr: 'pipe'

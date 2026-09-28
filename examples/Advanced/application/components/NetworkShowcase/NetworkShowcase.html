@@ -1,0 +1,18 @@
+<section class="card network-showcase">
+	<h2 class="card-title">Network XHR</h2>
+	<p>A real same-origin request through <b>Elemenx.Network.XHR</b>, including the transport lifecycle.</p>
+
+	<div class="meta-grid">
+		<div class="meta-item">
+			<span class="meta-label">Status</span>
+			<span class="meta-value" #NetworkStatus>{{Status}}</span>
+		</div>
+		<div class="meta-item">
+			<span class="meta-label">Response</span>
+			<span class="meta-value" #NetworkResponse>{{Response}}</span>
+		</div>
+	</div>
+
+	<p class="network-events"><code #NetworkEvents>{{Events}}</code></p>
+	<button class="button" (click)="Load" #NetworkLoad>Run XHR request</button>
+</section>

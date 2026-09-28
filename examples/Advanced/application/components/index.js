@@ -6,6 +6,7 @@
 	'ProjectCard/ProjectCard.js',
 	'IteratorBadge/IteratorBadge.js',
 	'ProjectShowcase/ProjectShowcase.js',
+	'NetworkShowcase/NetworkShowcase.js',
 	'AuthorizedPage/AuthorizedPage.js',
 	'RedirectProtectedPage/RedirectProtectedPage.js',
 	'ProjectPage/ProjectPage.js',

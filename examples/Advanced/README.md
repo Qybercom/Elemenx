@@ -67,3 +67,5 @@ Elemenx.Directive('highlight', {
 ```
 
 The Home page demonstrates both a reactive `*highlight="DirectiveHighlighted"` directive and a reactive `*tooltip="DirectiveTooltip"` directive. The tooltip creates and owns a real floating DOM element, reacts to its expression value, supports mouse and keyboard focus, and removes its listeners and DOM node during directive destruction. The examples intentionally use `context.Data` and the Create/Update/Destroy lifecycle so the Advanced project acts as a visible feature showcase rather than only a minimal syntax sample.
+
+The Home page also includes a real Network showcase. `Elemenx.Network.XHR` requests `/data/network-showcase.json` and displays the transport lifecycle (`BeforeRequest`, `BeforeResponse`, `AfterResponse`, `Success`) together with the decoded demo response. The data file lives outside the Application graph so the production Builder copies it as a public asset and the same showcase runs in both development and production builds.
