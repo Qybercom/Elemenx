@@ -72,6 +72,8 @@ function projectPath (argument) {
 function buildOptions (parsed, settings) {
 	return {
 		application: value(parsed.Options, 'application', settings.Application, 'application'),
+		applicationExplicit: parsed.Options.application !== undefined,
+		applications: value(parsed.Options, 'applications', settings.Applications, undefined),
 		entry: value(parsed.Options, 'entry', settings.Entry, 'app.js'),
 		index: value(parsed.Options, 'index', settings.Index, 'index.html'),
 		out: value(parsed.Options, 'out', settings.Output, 'dist')

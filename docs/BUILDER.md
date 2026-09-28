@@ -125,3 +125,51 @@ Entities can address a named graph from the project root:
 ```
 elemenx generate component BarApp/Pages/Home
 ```
+## Multi-Application builds
+
+A host project may contain several named Application graphs:
+
+```text
+project/
+├── FooApp/
+│   └── index.js
+├── BarApp/
+│   └── index.js
+├── app.js
+├── index.html
+└── dist/
+```
+
+When `app.js` bootstraps named Applications with graph `Root` values, Builder discovers every existing graph root and bundles them into the same production `dist/app.js`:
+
+```js
+Elemenx.Application('FooApp', {
+	Component: 'FooRoot',
+	Root: 'FooApp',
+	Mount: 'body'
+});
+
+Elemenx.Application('BarApp', {
+	Component: 'BarRoot',
+	Root: 'BarApp',
+	Mount: '#bar'
+});
+```
+
+For an explicit list, `elemenx.config.js` may use:
+
+```js
+module.exports = {
+	Applications: ['FooApp', 'BarApp']
+};
+```
+
+The CLI equivalent is:
+
+```text
+elemenx build --applications FooApp,BarApp
+```
+
+An explicit `--application FooApp` keeps the single-graph build behavior. Application source graphs are excluded from `dist`, including nested configured graph paths. Entity type detection is graph-layout agnostic: Components, Services, Guards and Directives are classified from their Elemenx registration when they are not stored in the legacy type directories.
+
+The current Bundle Registry is global, so two bundled Application graphs may not define the same entity type/name pair. Builder reports that collision instead of silently overwriting one definition.
