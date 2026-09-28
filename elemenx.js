@@ -11705,6 +11705,8 @@
 			}
 			
 			dependencies = definition.Contexts || [];
+			if (!Array.isArray(dependencies))
+				dependencies = [dependencies];
 			
 			while (i < dependencies.length) {
 				resolveContexts(dependencies[i], output, stack);

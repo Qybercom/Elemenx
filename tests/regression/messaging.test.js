@@ -40,6 +40,29 @@ describe('Regression: Messaging', function () {
 		receiver.Destroy();
 	});
 
+	it('Messaging Context accepts a single named dependency without splitting its name into characters', function () {
+		var base=unique('MessageBase'), child=unique('MessageChild'), channel=unique('inherited'), received=[];
+		Elemenx.Messaging.Context(base,{Channels:[channel]});
+		Elemenx.Messaging.Context(child,{Contexts:base});
+		var sender=Elemenx.Messaging(), receiver=Elemenx.Messaging(child);
+		receiver.On(channel,function (event) {received.push(event.Data);});
+		sender.Send(channel,'inherited');
+		expect(received).toEqual(['inherited']);
+		sender.Destroy();
+		receiver.Destroy();
+	});
+
+	it('Messaging Context accepts a single inline dependency object', function () {
+		var child=unique('MessageInlineChild'), channel=unique('inline'), received=[];
+		Elemenx.Messaging.Context(child,{Contexts:{Channels:[channel]}});
+		var sender=Elemenx.Messaging(), receiver=Elemenx.Messaging(child);
+		receiver.On(channel,function (event) {received.push(event.Data);});
+		sender.Send(channel,11);
+		expect(received).toEqual([11]);
+		sender.Destroy();
+		receiver.Destroy();
+	});
+
 	it('Destroy makes a socket inert and rejects further sends', function () {
 		var socket=Elemenx.Messaging();
 		socket.Destroy();
