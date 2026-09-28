@@ -209,7 +209,7 @@ function generateApplication (project,name,options) {
 	if (writeIfMissing(configFile,"module.exports={\n\tApplication:'" + name + "',\n\tEntry:'app.js',\n\tIndex:'index.html',\n\tOutput:'dist',\n\tServer:{\n\t\tDevelopmentPort:4173,\n\t\tProductionPort:4175,\n\t\tCompression:true,\n\t\tCompressionThreshold:1024\n\t}\n};")) host.push(configFile);
 	if (writeIfMissing(packageFile,JSON.stringify({name:applicationPackageName(path.basename(project) || name),private:true,scripts:{dev:'elemenx dev',build:'elemenx build',serve:'elemenx serve'}},null,'\t'))) host.push(packageFile);
 
-	process.stdout.write('Elemenx Generator: Application ' + name + ' -> ' + normalize(path.relative(process.cwd(),application) || '.') + '\\n');
+	process.stdout.write('Elemenx Generator: Application ' + name + ' -> ' + normalize(path.relative(process.cwd(),application) || '.') + '\n');
 	return {Application:application,Files:files,HostFiles:host};
 }
 

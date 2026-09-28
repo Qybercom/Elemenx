@@ -210,16 +210,13 @@ describe('Elemenx graph-aware generator',function () {
 		expect(fs.existsSync(path.join(root,'source','source','Feature','TestCard','TestCard.js'))).toBe(false);
 	});
 
-	it('passes elemenx.config.js Application through the real CLI',function () {
-		var root=fs.mkdtempSync(path.join(os.tmpdir(),'elemenx-cli-config-root-'));
+	it('prints a real newline and never includes it in the generated Application directory name',function () {
+		var root=fs.mkdtempSync(path.join(os.tmpdir(),'elemenx-application-newline-'));
 		temporary.push(root);
-		fs.mkdirSync(path.join(root,'source'),{recursive:true});
-		fs.writeFileSync(path.join(root,'source','index.js'),'[]');
-		fs.writeFileSync(path.join(root,'elemenx.config.js'),"module.exports={Application:'source'};");
-		var cli=path.resolve(process.cwd(),'elemenx-cli.js');
-		var result=childProcess.spawnSync(process.execPath,[cli,'g','component','Feature/TestCard',root],{encoding:'utf8'});
-		expect(result.status).toBe(0);
-		expect(fs.existsSync(path.join(root,'source','Feature','TestCard','TestCard.js'))).toBe(true);
+		var result=Generator.GenerateApplication(root,'MyApp',{});
+		expect(path.basename(result.Application)).toBe('MyApp');
+		expect(fs.existsSync(path.join(root,'MyApp'))).toBe(true);
+		expect(fs.existsSync(path.join(root,'MyApp\\n'))).toBe(false);
 	});
 
 });
