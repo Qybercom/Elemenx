@@ -102,4 +102,95 @@ describe('Regression: Component / Binding / Directive integration', function () 
 		expect(updates).toContain('second');
 		parent.Destroy();
 	});
+
+	test('nested structural recreation keeps keyed Components and behavioral directives lifecycle-safe', function () {
+		var directive=unique('crosslifecycle').toLowerCase();
+		var rowName=unique('CrossLifecycleRow');
+		var parentName=unique('CrossLifecycleParent');
+		var rowCreated={};
+		var rowDestroyed={};
+		var directiveCreated={};
+		var directiveDestroyed={};
+		var hits=[];
+
+		function count (target,key) {
+			target[key]=(target[key] || 0)+1;
+		}
+
+		Elemenx.Directive(directive,{
+			ElemenxOnUpdate:function (context) {
+				if (context.Data.Key !== undefined) return;
+				context.Data.Key=String(context.Value);
+				count(directiveCreated,context.Data.Key);
+			},
+			ElemenxOnDestroy:function (context) {
+				count(directiveDestroyed,context.Data.Key);
+			}
+		});
+
+		Elemenx.Component(rowName,{
+			Template:'<button class="cross-row" *'+directive+'="ID" (click)="Select">{{ID}}:{{Label}}</button>',
+			ID:'',
+			Label:'',
+			ElemenxOnCreate:function () {
+				count(rowCreated,String(this.ID));
+			},
+			ElemenxOnDestroy:function () {
+				count(rowDestroyed,String(this.ID));
+			},
+			Select:function () {
+				this.Emit('select',this.ID);
+			}
+		});
+
+		var parent=Elemenx.Component(parentName,{
+			Template:'<main><section *if="Show"><'+rowName+' *for="item of Items" *key="item.id" [ID]="item.id" [Label]="item.label" (select)="Select"></'+rowName+'></section></main>',
+			Show:true,
+			Items:[{id:'a',label:'A'},{id:'b',label:'B'}],
+			Select:function (id) {
+				hits.push(id);
+			}
+		})();
+
+		document.body.appendChild(parent.Element());
+		var initial=parent.Element().querySelectorAll('.cross-row');
+		var oldA=initial[0];
+		var oldB=initial[1];
+		expect(rowCreated).toEqual({a:1,b:1});
+		expect(directiveCreated).toEqual({a:1,b:1});
+
+		parent.Items=[{id:'b',label:'B2'},{id:'a',label:'A2'}];
+		var reordered=parent.Element().querySelectorAll('.cross-row');
+		expect(reordered[0]).toBe(oldB);
+		expect(reordered[1]).toBe(oldA);
+		expect(reordered[0].textContent).toBe('b:B2');
+		expect(reordered[1].textContent).toBe('a:A2');
+		expect(rowCreated).toEqual({a:1,b:1});
+		expect(rowDestroyed).toEqual({});
+
+		parent.Show=false;
+		expect(parent.Element().querySelector('.cross-row')).toBeNull();
+		expect(rowDestroyed).toEqual({a:1,b:1});
+		expect(directiveDestroyed).toEqual({a:1,b:1});
+		oldA.click();
+		oldB.click();
+		expect(hits).toEqual([]);
+
+		parent.Items=[{id:'b',label:'B3'},{id:'c',label:'C3'}];
+		parent.Show=true;
+		var recreated=parent.Element().querySelectorAll('.cross-row');
+		expect(recreated.length).toBe(2);
+		expect(recreated[0].textContent).toBe('b:B3');
+		expect(recreated[1].textContent).toBe('c:C3');
+		expect(recreated[0]).not.toBe(oldB);
+		expect(rowCreated).toEqual({a:1,b:2,c:1});
+		expect(directiveCreated).toEqual({a:1,b:2,c:1});
+
+		recreated[0].click();
+		recreated[1].click();
+		expect(hits).toEqual(['b','c']);
+		parent.Destroy();
+		expect(rowDestroyed).toEqual({a:1,b:2,c:1});
+		expect(directiveDestroyed).toEqual({a:1,b:2,c:1});
+	});
 });
