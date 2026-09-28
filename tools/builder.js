@@ -62,6 +62,7 @@ function inlineResources (file, source) {
 	
 	replace('TemplateURL', 'Template');
 	replace('StyleURL', 'Style');
+	
 	return source;
 }
 
@@ -156,6 +157,7 @@ function copyPublic (source, output, applicationDirectories) {
 		'node_modules': true,
 		'package.json': true,
 		'package-lock.json': true,
+		'elemenx.config.js': true,
 		'app.js': true,
 		'index.html': true,
 		'index.production.html': true
@@ -254,6 +256,7 @@ function applicationDirectories (project, roots) {
 			fail('application graph root not found: ' + directory);
 		
 		result.push(directory);
+		
 		i++;
 	}
 	
@@ -356,7 +359,9 @@ if (require.main === module) {
 			throw new Error('usage: node tools/builder.js build <project>');
 		
 		if (command !== 'build') {
-			if (!target) throw new Error('legacy output path is required');
+			if (!target)
+				throw new Error('legacy output path is required');
+			
 			var legacyRoot = path.resolve(command);
 			var legacyOutput = path.resolve(target);
 			var legacyEntities = {};

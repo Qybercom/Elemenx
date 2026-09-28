@@ -1,7 +1,8 @@
 import { defineConfig } from '@playwright/test';
 
 export default defineConfig({
-	testDir: './tests/history',
+	testDir: './tests',
+	testMatch: ['history/**/*.spec.js', 'production/**/*.spec.js'],
 	fullyParallel: false,
 	workers: 1,
 	use: {
@@ -21,6 +22,14 @@ export default defineConfig({
 			command: 'node tools/server.js examples/Advanced',
 			url: 'http://127.0.0.1:4274/',
 			env: {PORT: '4274'},
+			reuseExistingServer: false,
+			stdout: 'pipe',
+			stderr: 'pipe'
+		},
+		{
+			command: 'node tests/production/server.js',
+			url: 'http://127.0.0.1:4275/',
+			env: {PORT: '4275'},
 			reuseExistingServer: false,
 			stdout: 'pipe',
 			stderr: 'pipe'
