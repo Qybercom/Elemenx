@@ -75,6 +75,8 @@ function create (options) {
 				'ETag':tag,
 				'Last-Modified':stat.mtime.toUTCString()
 			};
+
+			if (options.CacheControl) headers['Cache-Control']=String(options.CacheControl);
 			var useGzip=compression && Compressible[ext] && stat.size >= threshold && acceptsGzip(request);
 
 			if (Compressible[ext]) headers.Vary='Accept-Encoding';
@@ -85,7 +87,12 @@ function create (options) {
 				return;
 			}
 
-			if (useGzip) {
+			if (request.method === 'HEAD') {
+				headers['Content-Length']=stat.size;
+				response.writeHead(200,headers);
+				response.end();
+			}
+			else if (useGzip) {
 				headers['Content-Encoding']='gzip';
 				response.writeHead(200,headers);
 				fs.createReadStream(file).pipe(zlib.createGzip()).pipe(response);
@@ -143,7 +150,7 @@ function create (options) {
 	return {
 		Server:server,
 		Listen:function (port,host,callback) {
-			server.listen(Number(port || 4173),host || '127.0.0.1',callback);
+			server.listen(Number(port === undefined || port === null ? 4173 : port),host || '127.0.0.1',callback);
 			return this;
 		},
 		Close:function (callback) {

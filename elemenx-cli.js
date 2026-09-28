@@ -12,6 +12,8 @@ function fail (message) {
 	throw new Error(message);
 }
 
+var BooleanOptions = {force:true};
+
 function parse (argv) {
 	var result = {Arguments: [], Options: {}};
 	var i = 0;
@@ -23,7 +25,12 @@ function parse (argv) {
 			var name = value.substring(2);
 			
 			if (!name) fail('invalid option');
-			if (i + 1 < argv.length && argv[i + 1].indexOf('--') !== 0) {
+			if (BooleanOptions[name]) {
+				result.Options[name] = true;
+
+				i++;
+			}
+			else if (i + 1 < argv.length && argv[i + 1].indexOf('--') !== 0) {
 				result.Options[name] = argv[i + 1];
 				
 				i += 2;
@@ -80,17 +87,30 @@ function buildOptions (parsed, settings) {
 	};
 }
 
-function listen (directory, port, settings, production) {
+function booleanValue (input, fallback) {
+	if (input === undefined) return fallback;
+	if (input === true || input === false) return input;
+	if (String(input).toLowerCase() === 'true') return true;
+	if (String(input).toLowerCase() === 'false') return false;
+
+	fail('expected true or false, got: ' + input);
+}
+
+function listen (directory, port, settings, production, options) {
 	var serverSettings = settings.Server || {};
-	var compression = production ? value({}, 'compression', serverSettings.Compression, true) : false;
-	var threshold = value({}, 'compression-threshold', serverSettings.CompressionThreshold, 1024);
-	var host = serverSettings.Host || '127.0.0.1';
+	var compression = production ? booleanValue(value(options, 'compression', serverSettings.Compression, true), true) : false;
+	var threshold = Number(value(options, 'compression-threshold', serverSettings.CompressionThreshold, 1024));
+	var host = value(options, 'host', serverSettings.Host, '127.0.0.1');
+	var cacheControl = production ? value(options, 'cache-control', serverSettings.CacheControl, 'public, max-age=0, must-revalidate') : false;
+
+	if (!isFinite(threshold) || threshold < 0) fail('compression threshold must be a non-negative number');
 	
 	Server
 		.Create({
 			Root: directory,
 			Compression: compression,
 			CompressionThreshold: threshold,
+			CacheControl: cacheControl,
 			FrameworkFallback: !production
 		})
 		.Listen(port, host, function () {
@@ -145,7 +165,7 @@ command('dev', 'Serve application sources for development.', function (parsed) {
 	var server = settings.Server || {};
 	var port = Number(value(parsed.Options, 'port', server.DevelopmentPort, 4173));
 	
-	listen(project, port, settings, false);
+	listen(project, port, settings, false, parsed.Options);
 });
 
 command('serve', 'Serve the production dist with gzip and HTTP caching.', function (parsed) {
@@ -159,7 +179,7 @@ command('serve', 'Serve the production dist with gzip and HTTP caching.', functi
 	if (!fs.existsSync(directory))
 		fail('dist not found: ' + directory + ' (run elemenx build first)');
 	
-	listen(directory, port, settings, true);
+	listen(directory, port, settings, true, parsed.Options);
 });
 
 command('version', 'Print Elemenx version.', function () {

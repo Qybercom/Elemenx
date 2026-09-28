@@ -224,4 +224,20 @@ describe('Elemenx graph-aware generator',function () {
 		expect(cli).toContain("value(parsed.Options, 'port', server.DevelopmentPort, 4173)");
 	});
 
+
+	it('keeps boolean --force from consuming a following project path',function () {
+		var root=project();
+		var cli=path.resolve(process.cwd(),'elemenx-cli.js');
+		var result=childProcess.spawnSync(process.execPath,[cli,'g','service','Session','--force',root],{encoding:'utf8'});
+		expect(result.status).toBe(0);
+		expect(fs.existsSync(path.join(root,'application','Session.js'))).toBe(true);
+	});
+
+	it('keeps server CLI options ahead of configured values',function () {
+		var cli=fs.readFileSync(path.resolve(process.cwd(),'elemenx-cli.js'),'utf8');
+		expect(cli).toContain("value(options, 'host', serverSettings.Host, '127.0.0.1')");
+		expect(cli).toContain("value(options, 'compression-threshold', serverSettings.CompressionThreshold, 1024)");
+		expect(cli).toContain("value(options, 'cache-control', serverSettings.CacheControl");
+	});
+
 });
