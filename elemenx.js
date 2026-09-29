@@ -11619,6 +11619,7 @@
 		var Elemenx = global.Elemenx;
 		var contexts = {};
 		var owners = new WeakMap();
+		var destroyedOwners = new WeakSet();
 		var entities = new WeakMap();
 		var globalSequence = 0;
 		
@@ -12061,6 +12062,9 @@
 		
 		Runtime.MessagingFor = function (owner) {
 			return function (context) {
+				if (destroyedOwners.has(owner))
+					throw new Error('Elemenx Messaging owner is destroyed');
+				
 				return MessagingSocket(context, owner);
 			};
 		};
@@ -12077,6 +12081,10 @@
 		}
 		
 		Runtime.DestroyMessagingOwner = function (owner) {
+			if (!owner || destroyedOwners.has(owner)) return;
+			
+			destroyedOwners.add(owner);
+			
 			var list = owners.get(owner);
 			if (!list) return;
 			
@@ -12093,6 +12101,7 @@
 		var Elemenx = global.Elemenx;
 		var definitions = {};
 		var owners = new WeakMap();
+		var destroyedOwners = new WeakSet();
 		var handles = [];
 		var manualStops = new WeakMap();
 		
@@ -12467,6 +12476,10 @@
 		}
 		
 		function DestroyOwner (owner) {
+			if (!owner || destroyedOwners.has(owner)) return;
+			
+			destroyedOwners.add(owner);
+			
 			var list = owners.get(owner);
 			if (!list) return;
 			
@@ -12501,6 +12514,9 @@
 		
 		Runtime.WebWorkerFor = function (owner) {
 			return function (name, definition) {
+				if (destroyedOwners.has(owner))
+					throw new Error('Elemenx WebWorker owner is destroyed');
+				
 				if (arguments.length === 2) {
 					definition = register(name, definition);
 					
@@ -12536,6 +12552,7 @@
 		var definitions = {};
 		var handles = [];
 		var owners = new WeakMap();
+		var destroyedOwners = new WeakSet();
 		
 		function absoluteURL (url) {
 			return new URL(String(url), global.location.href).href;
@@ -12933,6 +12950,10 @@
 		}
 		
 		function DestroyOwner (owner) {
+			if (!owner || destroyedOwners.has(owner)) return;
+			
+			destroyedOwners.add(owner);
+			
 			var owned = owners.get(owner);
 			if (!owned) return;
 			
@@ -12946,6 +12967,9 @@
 		
 		Runtime.ServiceWorkerFor = function (owner) {
 			return function (name, definition) {
+				if (destroyedOwners.has(owner))
+					throw new Error('Elemenx ServiceWorker owner is destroyed');
+				
 				if (arguments.length === 2) definition = registerDefinition(name, definition);
 				else definition = definitions[name];
 				

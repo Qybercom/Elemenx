@@ -68,4 +68,15 @@ describe('Regression: Messaging', function () {
 		socket.Destroy();
 		expect(function () {socket.Send('x',1);}).toThrow();
 	});
+
+	it('owner Destroy invalidates a saved Messaging accessor and prevents socket resurrection', function () {
+		var name=unique('MessagingOwner');
+		Elemenx.Component(name,{Template:'<div></div>'});
+		var component=Elemenx.Component(name)();
+		var messaging=component.Messaging;
+		var socket=messaging();
+		socket.Destroy();
+		component.Destroy();
+		expect(function () { messaging(); }).toThrow();
+	});
 });

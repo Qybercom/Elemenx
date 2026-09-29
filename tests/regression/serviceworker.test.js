@@ -294,4 +294,48 @@ describe('Regression: ServiceWorker registration, lifecycle and messaging bridge
 		expect(owned.Reachable()).toBe(false);
 		expect(function () { owned.Register(); }).toThrow();
 	});
+
+	it('controller replacement detaches the previous worker Messaging route', async function () {
+		var env=fakeEnvironment();
+		var channel=unique('sw-replace');
+		var handle=service(env,{Script:'/sw-application.js',Scope:'/sw-replace/',Channel:channel});
+		expect(await waitFor(function () { return handle.Reachable(); },1000)).toBe(true);
+		var socket=Elemenx.Messaging(), received=[];
+		socket.On(channel,function (event) { received.push(event.Data); });
+		var first=env.Worker;
+		var second=emitter();
+		second.state='activated';
+		second.messages=[];
+		second.postMessage=function (packet) { second.messages.push(packet); };
+		env.Registration.active=second;
+		env.Container.controller=second;
+		env.Container.emit('controllerchange');
+		env.Container.emit('message',{
+			source:first,
+			data:{ElemenxMessaging:true,ElemenxMessagingProtocol:1,Source:'old',Channel:channel,Data:'stale'}
+		});
+		env.Container.emit('message',{
+			source:second,
+			data:{ElemenxMessaging:true,ElemenxMessagingProtocol:1,Source:'new',Channel:channel,Data:'fresh'}
+		});
+		expect(received).toEqual(['fresh']);
+		socket.Destroy();
+	});
+
+	it('owner Destroy invalidates a saved ServiceWorker accessor and prevents handle resurrection', async function () {
+		var env=fakeEnvironment();
+		var componentName=unique('ServiceWorkerOwner');
+		var workerName=unique('OwnedServiceWorker');
+		Elemenx.Component(componentName,{Template:'<div></div>'});
+		var component=Elemenx.Component(componentName)();
+		var serviceWorker=component.ServiceWorker;
+		var owned=serviceWorker(workerName,{Script:'/owned-worker.js',Scope:'/owned-recreate/',Channel:workerName});
+		expect(await waitFor(function () { return owned.Reachable(); },1000)).toBe(true);
+		component.Destroy();
+		expect(function () { owned.Register(); }).toThrow();
+		expect(function () {
+			serviceWorker(unique('ResurrectedServiceWorker'),{Script:'/owned-worker.js',Scope:'/owned-recreate-2/'});
+		}).toThrow();
+	});
+
 });

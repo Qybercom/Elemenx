@@ -189,4 +189,43 @@ describe('Regression: WebWorker real execution and Messaging bridge', function (
 		expect(worker.State()).toBe('Stopped');
 		expect(function () { worker.Start(); }).toThrow();
 	});
+
+	it('restart detaches the previous native Messaging bridge and ignores stale replies', async function () {
+		var channel=unique('worker-stale-bridge');
+		var worker=Elemenx.WebWorker(unique('WorkerStaleBridge'),{
+			Script:'/workers/webworker-bridge.js',
+			StartMode:'manual',
+			Channel:channel
+		});
+		var socket=Elemenx.Messaging(), replies=[];
+		socket.On(function (event) { replies.push(event.Data); });
+		worker.Start();
+		expect(await waitFor(function () { return worker.State()==='Running'; },2000)).toBe(true);
+		var first=worker.Native();
+		worker.Stop();
+		worker.Start();
+		expect(await waitFor(function () { return worker.State()==='Running'; },2000)).toBe(true);
+		first.dispatchEvent(new MessageEvent('message',{
+			data:{ElemenxMessaging:true,ElemenxMessagingProtocol:1,Source:'stale',Channel:socket.ID(),Data:'stale'}
+		}));
+		await tick();
+		expect(replies).toEqual([]);
+		socket.Destroy();
+		worker.Destroy();
+	});
+
+	it('owner Destroy invalidates a saved WebWorker accessor and prevents handle resurrection', function () {
+		var componentName=unique('WebWorkerOwner');
+		var workerName=unique('OwnedWorker');
+		Elemenx.Component(componentName,{Template:'<div></div>'});
+		var component=Elemenx.Component(componentName)();
+		var webWorker=component.WebWorker;
+		var owned=webWorker(workerName,{Script:'/workers/webworker-bridge.js',StartMode:'manual'});
+		component.Destroy();
+		expect(function () { owned.Start(); }).toThrow();
+		expect(function () {
+			webWorker(unique('ResurrectedWorker'),{Script:'/workers/webworker-bridge.js',StartMode:'manual'});
+		}).toThrow();
+	});
+
 });
