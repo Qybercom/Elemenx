@@ -80,4 +80,44 @@ describe('Regression: production bundle registry', function () {
 		root.Destroy();
 	});
 
+	test('two bundled Applications start independently when their source graphs are unavailable', async function () {
+		document.body.innerHTML='<div id="bundle-app-a"></div><div id="bundle-app-b"></div>';
+		var aName=unique('BundledApplicationA');
+		var bName=unique('BundledApplicationB');
+		var bundle={Component:{}};
+
+		bundle.Component[aName]=function () {
+			Elemenx.Component(aName,{Template:'<section class="bundle-app-a">A</section>'});
+		};
+		bundle.Component[bName]=function () {
+			Elemenx.Component(bName,{Template:'<section class="bundle-app-b">B</section>'});
+		};
+		Elemenx.Bundle(bundle);
+
+		var a=Elemenx.Application(unique('BundledApplicationInstanceA'),{
+			Component:aName,
+			Root:'/missing-bundle-source-a-'+Date.now(),
+			Mount:'#bundle-app-a'
+		});
+		var b=Elemenx.Application(unique('BundledApplicationInstanceB'),{
+			Component:bName,
+			Root:'/missing-bundle-source-b-'+Date.now(),
+			Mount:'#bundle-app-b'
+		});
+
+		await new Promise(function (resolve) {
+			setTimeout(resolve,100);
+		});
+
+		expect(document.querySelector('.bundle-app-a').textContent).toBe('A');
+		expect(document.querySelector('.bundle-app-b').textContent).toBe('B');
+		expect(a.Component().Application()).toBe(a);
+		expect(b.Component().Application()).toBe(b);
+
+		a.Destroy();
+		expect(document.querySelector('.bundle-app-a')).toBeNull();
+		expect(document.querySelector('.bundle-app-b').textContent).toBe('B');
+		b.Destroy();
+	});
+
 });

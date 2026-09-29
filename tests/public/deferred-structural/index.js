@@ -12,5 +12,9 @@
 	'DeferredCacheRemote.js',
 	'DeferredHeldChild.js',
 	'DeferredFinalHeldChild.js',
-	'DeferredRouterRoot.js'
+	'DeferredHybridRemoteChild.js',
+	'DeferredHybridRemoteParent.js',
+	'DeferredRouterRoot.js',
+	'DeferredMultiAppRemoteChild.js',
+	'DeferredMultiAppRemoteRoot.js'
 ]

@@ -15,12 +15,32 @@ function captureErrors (page) {
 	return errors;
 }
 
+async function expectBootstrapVisible (locator, errors) {
+	var deadline = Date.now() + 5000;
+
+	while (Date.now() < deadline) {
+		if (errors.length)
+			throw new Error('Elemenx bootstrap failed:\n' + errors.join('\n'));
+
+		if (await locator.isVisible()) return;
+
+		await new Promise(function (resolve) {
+			setTimeout(resolve, 50);
+		});
+	}
+
+	if (errors.length)
+		throw new Error('Elemenx bootstrap failed:\n' + errors.join('\n'));
+
+	await expect(locator).toBeVisible({timeout: 0});
+}
+
 test('official Advanced Application example supports a single Authorized guard', async ({ page }) => {
 	var errors = captureErrors(page);
 
 	await page.goto('http://127.0.0.1:4274/authorized');
 	await expect(page).toHaveURL(/\/authorized$/);
-	await expect(page.getByRole('heading', {name: 'Login required'})).toBeVisible();
+	await expectBootstrapVisible(page.getByRole('heading', {name: 'Login required'}), errors);
 
 	await page.getByRole('link', {name: 'Return home'}).click();
 	await page.getByRole('button', {name: 'Enable session'}).click();
@@ -36,7 +56,7 @@ test('official Advanced Application example composes guards and selects each Gua
 	var errors = captureErrors(page);
 
 	await page.goto('http://127.0.0.1:4274/');
-	await expect(page.getByRole('heading', {name: 'Welcome to Elemenx'})).toBeVisible();
+	await expectBootstrapVisible(page.getByRole('heading', {name: 'Welcome to Elemenx'}), errors);
 
 	await page.getByRole('link', {name: 'Project'}).click();
 	await expect(page).toHaveURL(/\/project\/42\?tab=activity#latest$/);
@@ -69,7 +89,7 @@ test('official Advanced Application example renders first GuardFailed component 
 
 	await page.goto('http://127.0.0.1:4274/project/42?tab=activity#latest');
 	await expect(page).toHaveURL(/\/project\/42\?tab=activity#latest$/);
-	await expect(page.getByRole('heading', {name: 'Login required'})).toBeVisible();
+	await expectBootstrapVisible(page.getByRole('heading', {name: 'Login required'}), errors);
 	await expect(page.getByRole('heading', {name: 'Project 42'})).toHaveCount(0);
 
 	expect(errors).toEqual([]);
@@ -80,7 +100,7 @@ test('official Advanced Application example supports guard redirect', async ({ p
 
 	await page.goto('http://127.0.0.1:4274/redirect-protected');
 	await expect(page).toHaveURL('http://127.0.0.1:4274/');
-	await expect(page.getByRole('heading', {name: 'Welcome to Elemenx'})).toBeVisible();
+	await expectBootstrapVisible(page.getByRole('heading', {name: 'Welcome to Elemenx'}), errors);
 
 	await page.getByRole('button', {name: 'Enable session'}).click();
 	await page.getByRole('link', {name: 'Redirect', exact: true}).click();
@@ -95,6 +115,7 @@ test('official Advanced Application example demonstrates nested loops, component
 	var telemetry;
 
 	await page.goto('http://127.0.0.1:4274/');
+	await expectBootstrapVisible(page.locator('.project-card').first(), errors);
 	await expect(page.locator('.project-card')).toHaveCount(2);
 	await expect(page.locator('.environment-card')).toHaveCount(3);
 	await expect(page.locator('.service-badge')).toHaveCount(4);

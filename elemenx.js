@@ -2042,6 +2042,53 @@
 				list.splice(index, 1);
 		}
 		
+		function canonicalDeferredInput (value, definition) {
+			if (!value || typeof value !== 'object' || !definition || typeof definition !== 'object') return value;
+			
+			var result = Array.isArray(value) ? [] : {};
+			var key;
+			var target;
+			var name;
+			var match;
+			var lower;
+			
+			for (key in value) {
+				if (!Object.prototype.hasOwnProperty.call(value, key)) continue;
+				
+				target = key;
+				if (!Object.prototype.hasOwnProperty.call(definition, target) && typeof key === 'string') {
+					lower = key.toLowerCase();
+					match = null;
+					
+					for (name in definition) {
+						if (!Object.prototype.hasOwnProperty.call(definition, name) || name.toLowerCase() !== lower) continue;
+						if (match !== null) {
+							match = key;
+							break;
+						}
+						match = name;
+					}
+					
+					if (match !== null) target = match;
+				}
+				
+				result[target] = canonicalDeferredInput(value[key], definition[target]);
+			}
+			
+			return result;
+		}
+		
+		function canonicalDeferredData (value, definition, options) {
+			/*
+			 * A Router packet is transport/context data, not Component props. Keep its
+			 * identity intact so CreateComponentFactory can recognize RoutePacket and
+			 * install Path/Params/Query/Hash through the dedicated route-context path.
+			 */
+			if (options && options.RoutePacket === value) return value;
+			
+			return canonicalDeferredInput(value, definition);
+		}
+		
 		function deferredComponent (resolver, data, slotProjection, options) {
 			var placeholder = document.createElement('span');
 			var current = null;
@@ -2206,7 +2253,7 @@
 				var nextSibling = reloadNext || (oldElement && oldElement.nextSibling);
 				
 				if (current) current.Destroy();
-				current = factory(data, slotProjection, options);
+				current = factory(canonicalDeferredData(data, factory.Definition, options), slotProjection, options);
 				
 				if (api._parent && current.Parent) current.Parent(api._parent);
 				
@@ -2219,7 +2266,7 @@
 				
 				i = 0;
 				while (i < updates.length) {
-					current.Update(updates[i]);
+					current.Update(canonicalDeferredInput(updates[i], factory.Definition));
 					i++;
 				}
 				
@@ -2256,7 +2303,7 @@
 					return;
 				}
 				
-				current = factory(data, slotProjection, options);
+				current = factory(canonicalDeferredData(data, factory.Definition, options), slotProjection, options);
 				
 				if (api._parent && current.Parent) current.Parent(api._parent);
 				
@@ -2269,7 +2316,7 @@
 				
 				i = 0;
 				while (i < updates.length) {
-					current.Update(updates[i]);
+					current.Update(canonicalDeferredInput(updates[i], factory.Definition));
 					i++;
 				}
 				
@@ -13285,6 +13332,18 @@
 				}
 			}
 			
+			function rootAvailableWithoutDiscovery () {
+				if (Runtime.ResolveComponentRegistered(definition.Component)) return true;
+				if (!Runtime.Bundle || !Runtime.Bundle.ResolvedName) return false;
+				
+				var bundled = Runtime.Bundle.ResolvedName('Component', definition.Component);
+				if (!bundled) return false;
+				
+				Runtime.Bundle.Load('Component', bundled);
+				
+				return !!Runtime.ResolveComponentRegistered(definition.Component);
+			}
+			
 			function startRoot () {
 				if (destroyed || !definition.Component || root) return;
 				
@@ -13292,12 +13351,13 @@
 					Runtime.Bundle.LoadType('Directive');
 					Runtime.Bundle.LoadType('Service');
 					Runtime.Bundle.LoadType('Guard');
-					
-					createRoot();
-					
-					return;
 				}
 				
+				/*
+				 * A Bundle is an entity source, not a replacement for the Application
+				 * Discovery map. Hybrid applications still need Discovery.Build() so
+				 * entities missing from the bundle can fall back to the configured Root.
+				 */
 				if (!definition.Root || !Runtime.Discovery) {
 					createRoot();
 					
@@ -13315,6 +13375,17 @@
 					if (destroyed) return;
 					
 					if (error) {
+						/*
+						 * Production bundles intentionally omit the source Application graph.
+						 * Discovery remains the preferred hybrid fallback when its Root exists,
+						 * but a failed Build must not prevent an independently bundled root from
+						 * starting. This decision is per Application, never global.
+						 */
+						if (rootAvailableWithoutDiscovery()) {
+							createRoot();
+							return;
+						}
+						
 						applicationStatus(definition.Error || null);
 						applicationLifecycle('ElemenxOnComponentError', error);
 						

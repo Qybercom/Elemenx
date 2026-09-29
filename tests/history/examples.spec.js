@@ -15,6 +15,26 @@ function captureErrors (page) {
 	return errors;
 }
 
+async function expectBootstrapVisible (locator, errors) {
+	var deadline = Date.now() + 5000;
+
+	while (Date.now() < deadline) {
+		if (errors.length)
+			throw new Error('Elemenx bootstrap failed:\n' + errors.join('\n'));
+
+		if (await locator.isVisible()) return;
+
+		await new Promise(function (resolve) {
+			setTimeout(resolve, 50);
+		});
+	}
+
+	if (errors.length)
+		throw new Error('Elemenx bootstrap failed:\n' + errors.join('\n'));
+
+	await expect(locator).toBeVisible({timeout: 0});
+}
+
 test('official Simple example runs state, events and persistent storage end to end', async ({ page }) => {
 	var errors = captureErrors(page);
 
@@ -37,7 +57,7 @@ test('official Advanced example executes a real Network XHR lifecycle', async ({
 	var errors = captureErrors(page);
 
 	await page.goto('http://127.0.0.1:4274/');
-	await expect(page.getByRole('heading', {name: 'Network XHR'})).toBeVisible();
+	await expectBootstrapVisible(page.getByRole('heading', {name: 'Network XHR'}), errors);
 	await page.getByRole('button', {name: 'Run XHR request'}).click();
 	await expect(page.getByText('Elemenx Network is online', {exact: true})).toBeVisible();
 	await expect(page.getByText('Success', {exact: true})).toBeVisible();

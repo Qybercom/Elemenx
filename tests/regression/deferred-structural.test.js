@@ -199,6 +199,90 @@ describe('Regression: deferred structural composition', function () {
 			head.appendChild=append;
 		}
 	});
+	it('hybrid bundle parent falls back to Discovery for an unbundled nested child', async function () {
+		var parent=unique('DeferredHybridBundledParent');
+		var bundle={Component:{}};
+		bundle.Component[parent]=function () {
+			Elemenx.Component(parent,{
+				Template:'<section class="deferred-hybrid-bundled-parent"><DeferredHybridRemoteChild value="{{value}}"></DeferredHybridRemoteChild></section>'
+			});
+		};
+		Elemenx.Bundle(bundle);
+		window.DeferredHybridRemoteChildLoads=0;
+
+		var app=appWithTemplate('<main><'+parent+' value="{{value}}"></'+parent+'></main>',function () {
+			this.value='HYBRID';
+		});
+		expect(await appReady(app)).not.toBe(false);
+		expect(await waitFor(function () { return document.querySelector('.deferred-hybrid-remote-child'); },1500)).not.toBe(false);
+		expect(document.querySelector('.deferred-hybrid-remote-child').textContent).toBe('HYBRID');
+		expect(window.DeferredHybridRemoteChildLoads).toBe(1);
+		destroy(app);
+	});
+
+	it('hybrid discovered parent resolves an unregistered nested child from Bundle without another Discovery request', async function () {
+		var bundle={Component:{}};
+		var bundledLoads=0;
+		bundle.Component.DeferredHybridBundledChild=function () {
+			bundledLoads++;
+			Elemenx.Component('DeferredHybridBundledChild',{
+				Template:'<strong class="deferred-hybrid-bundled-child">{{value}}</strong>'
+			});
+		};
+		Elemenx.Bundle(bundle);
+		window.DeferredHybridRemoteParentLoads=0;
+
+		var app=appWithTemplate('<main><DeferredHybridRemoteParent value="BUNDLE"></DeferredHybridRemoteParent></main>');
+		expect(await appReady(app)).not.toBe(false);
+		expect(await waitFor(function () { return document.querySelector('.deferred-hybrid-bundled-child'); },1500)).not.toBe(false);
+		expect(document.querySelector('.deferred-hybrid-bundled-child').textContent).toBe('BUNDLE');
+		expect(window.DeferredHybridRemoteParentLoads).toBe(1);
+		expect(bundledLoads).toBe(1);
+		destroy(app);
+	});
+
+	it('two Applications keep Bundle and Discovery resolution independent while sharing the global registries', async function () {
+		document.body.innerHTML='<div id="multi-app-a"></div><div id="multi-app-b"></div>';
+		var bundledRoot=unique('DeferredMultiAppBundledRoot');
+		var bundle={Component:{}};
+		bundle.Component[bundledRoot]=function () {
+			Elemenx.Component(bundledRoot,{
+				Template:'<section class="deferred-multi-app-a"><DeferredMultiAppRemoteChild value="A"></DeferredMultiAppRemoteChild></section>'
+			});
+		};
+		Elemenx.Bundle(bundle);
+		window.DeferredMultiAppRemoteChildLoads=0;
+		window.DeferredMultiAppRemoteRootLoads=0;
+
+		var a=Elemenx.Application(unique('DeferredMultiAppA'),{
+			Component:bundledRoot,
+			Root:'/deferred-structural',
+			Mount:'#multi-app-a'
+		});
+		var b=Elemenx.Application(unique('DeferredMultiAppB'),{
+			Component:'DeferredMultiAppRemoteRoot',
+			Root:'/deferred-structural',
+			Mount:'#multi-app-b'
+		});
+		live.push(a);
+		live.push(b);
+
+		expect(await waitFor(function () {
+			return document.querySelector('.deferred-multi-app-child') && document.querySelector('.deferred-multi-app-b');
+		},1500)).not.toBe(false);
+		expect(document.querySelector('.deferred-multi-app-child').textContent).toBe('A');
+		expect(document.querySelector('.deferred-multi-app-b').textContent).toBe('B');
+		expect(a.Component().Application()).toBe(a);
+		expect(b.Component().Application()).toBe(b);
+		expect(window.DeferredMultiAppRemoteChildLoads).toBe(1);
+		expect(window.DeferredMultiAppRemoteRootLoads).toBe(1);
+
+		destroy(a);
+		expect(document.querySelector('.deferred-multi-app-a')).toBeNull();
+		expect(document.querySelector('.deferred-multi-app-b').textContent).toBe('B');
+		destroy(b);
+	});
+
 	it('Application lazy TemplateURL root is ready before Router starts', async function () {
 		var route=unique('DeferredRouterRoute');
 		var router=null;
