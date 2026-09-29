@@ -36,3 +36,7 @@ The package exposes the `elemenx` CLI through `elemenx-cli.js`. Supported releas
 ## Release discipline
 
 A public API addition should include a direct contract test or a stronger end-to-end test. A reproduced bug remains in the regression suite after the fix. `npm test` is the release baseline.
+
+## Lifecycle hook naming
+
+Lifecycle hooks are named relative to their owner. Component own readiness is `ElemenxOnReady`; Application startup uses `ElemenxOnPending`, `ElemenxOnReady` and `ElemenxOnError`. `ElemenxOnChildPending`, `ElemenxOnChildReady` and `ElemenxOnChildError` on a Component describe deferred child Component lifecycle events.

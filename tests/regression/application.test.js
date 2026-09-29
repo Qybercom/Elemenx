@@ -45,6 +45,29 @@ describe('Regression: Application public facade and ownership', function () {
 		expect(document.querySelector('.application-root').textContent).toBe('ready');
 	});
 
+	it('uses owner-relative Ready lifecycle names for Component and Application', function () {
+		var component=unique('ReadyLifecycleRoot');
+		var componentReady=0;
+		var childComponentReady=0;
+		var applicationReady=0;
+		Elemenx.Component(component,{
+			Template:'<main class="ready-lifecycle-root"></main>',
+			ElemenxOnReady:function () { componentReady++; },
+			ElemenxOnChildReady:function () { childComponentReady++; }
+		});
+
+		var app=createApplication(unique('ReadyLifecycleApplication'),{
+			Component:component,
+			Mount:'#mount',
+			ElemenxOnReady:function () { applicationReady++; }
+		});
+
+		expect(componentReady).toBe(1);
+		expect(childComponentReady).toBe(0);
+		expect(applicationReady).toBe(1);
+		expect(app.ElemenxOnChildReady).toBeUndefined();
+	});
+
 	it('declarative Router is created, started and exposed by Application automatically', async function () {
 		var layout=unique('DeclarativeRouterLayout');
 		var home=unique('DeclarativeRouterHome');

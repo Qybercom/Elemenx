@@ -292,7 +292,7 @@ describe('Regression: deferred structural composition', function () {
 			Component:'DeferredRouterRoot',
 			Root:'/deferred-structural',
 			Mount:'#mount',
-			ElemenxOnComponentReady:function () {
+			ElemenxOnReady:function () {
 				if (router) return;
 
 				router=Elemenx.Router({

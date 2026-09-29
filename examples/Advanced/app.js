@@ -3,10 +3,6 @@ Elemenx.Application('ApplicationExample', {
 	Component: 'Layout',
 	Root: 'application',
 	Mount: 'body',
-	ElemenxOnComponentError: function (args) {
-		if (typeof console !== 'undefined' && console.error)
-			console.error('Elemenx Advanced Application bootstrap failed:', args.Error);
-	},
 	Router: {
 		Waiting: 'PageLoading',
 		NotFound: 'PageNotFound',

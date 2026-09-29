@@ -2,7 +2,7 @@ Elemenx.Component('ProjectPage', {
 	TemplateURL: 'ProjectPage.html',
 	Title: 'Project - Elemenx',
 	
-	ElemenxOnComponentReady: function () {
+	ElemenxOnReady: function () {
 		this.Title('Project "' + this.Params.id + '" - Elemenx');
 	}
 });

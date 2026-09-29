@@ -239,7 +239,7 @@ describe('Regression: Router / Guards', function () {
 		var guard=unique('FallbackGuard'),page=unique('FallbackPage'),denied=unique('FallbackDenied'),failure=null;
 		Elemenx.Guard(guard,function () {return this.Fail('blocked');});
 		Elemenx.Component(page,{Template:'<div id="fallback-page">PAGE</div>'});
-		Elemenx.Component(denied,{Template:'<div id="fallback-denied">DENIED</div>',ElemenxOnComponentReady:function () {failure=this.GuardFailure;}});
+		Elemenx.Component(denied,{Template:'<div id="fallback-denied">DENIED</div>',ElemenxOnReady:function () {failure=this.GuardFailure;}});
 		var x=boot([{Path:'/guard-fallback/:id',Component:page,Guard:guard,GuardFailed:denied}]);
 		x.Router.Go('/guard-fallback/42?q=yes#hash');
 		await tick(60);

@@ -1855,9 +1855,10 @@
 			ElemenxDefinitionURL: true,
 			ElemenxStyleKey: true,
 			ElemenxOnCreate: true,
-			ElemenxOnComponentReady: true,
-			ElemenxOnComponentPending: true,
-			ElemenxOnComponentError: true,
+			ElemenxOnReady: true,
+			ElemenxOnChildReady: true,
+			ElemenxOnChildPending: true,
+			ElemenxOnChildError: true,
 			ElemenxOnDestroy: true
 		};
 		var componentAPIReserved = {
@@ -2127,7 +2128,8 @@
 			
 			function lifecycleCall (name, error) {
 				var owner = lifecycle && lifecycle.Owner;
-				var method = owner && owner[name];
+				var hook = lifecycle && lifecycle.Hooks && lifecycle.Hooks[name] ? lifecycle.Hooks[name] : name;
+				var method = owner && owner[hook];
 				
 				if (typeof method !== 'function') return;
 				
@@ -2140,7 +2142,7 @@
 			
 			if (lifecycle) {
 				renderStatus(lifecycle.Pending);
-				lifecycleCall('ElemenxOnComponentPending', null);
+				lifecycleCall('ElemenxOnChildPending', null);
 			}
 			
 			api.Generation = function () {
@@ -2229,7 +2231,7 @@
 				}
 				
 				if (lifecycle)
-					lifecycleCall('ElemenxOnComponentPending', null);
+					lifecycleCall('ElemenxOnChildPending', null);
 				
 				return true;
 			};
@@ -2239,7 +2241,7 @@
 				
 				if (lifecycle) {
 					renderStatus(lifecycle.Error);
-					lifecycleCall('ElemenxOnComponentError', error);
+					lifecycleCall('ElemenxOnChildError', error);
 				}
 				
 				return true;
@@ -2282,7 +2284,7 @@
 				reloadNext = null;
 				
 				if (lifecycle)
-					lifecycleCall('ElemenxOnComponentReady', null);
+					lifecycleCall('ElemenxOnChildReady', null);
 				
 				return true;
 			};
@@ -2295,7 +2297,7 @@
 					
 					if (lifecycle) {
 						renderStatus(lifecycle.Error);
-						lifecycleCall('ElemenxOnComponentError', error);
+						lifecycleCall('ElemenxOnChildError', error);
 					}
 					
 					if (global.console && console.error) console.error(error);
@@ -2326,7 +2328,7 @@
 					placeholder.parentNode.replaceChild(element, placeholder);
 				
 				if (lifecycle && (!current._Component || current._Component()))
-					lifecycleCall('ElemenxOnComponentReady', null);
+					lifecycleCall('ElemenxOnChildReady', null);
 				
 				updates = [];
 				listeners = [];
@@ -3777,8 +3779,8 @@
 				 * The component is now fully initialized. Declarative Title is applied
 				 * before lifecycle hooks, so Ready may replace it with a dynamic value.
 				 */
-				if (definition.ElemenxOnComponentReady)
-					definition.ElemenxOnComponentReady.call(api);
+				if (definition.ElemenxOnReady)
+					definition.ElemenxOnReady.call(api);
 				
 				return api;
 			}
@@ -13256,7 +13258,7 @@
 			}
 			
 			function applicationLifecycle (method, error) {
-				if (method === 'ElemenxOnComponentReady') startRouter();
+				if (method === 'ElemenxOnReady') startRouter();
 				if (typeof api[method] !== 'function') return;
 				
 				api[method].call(api, {
@@ -13298,7 +13300,12 @@
 						Owner: api,
 						Name: definition.Component,
 						Pending: definition.Pending || null,
-						Error: definition.Error || null
+						Error: definition.Error || null,
+						Hooks: {
+							ElemenxOnChildPending: 'ElemenxOnPending',
+							ElemenxOnChildReady: 'ElemenxOnReady',
+							ElemenxOnChildError: 'ElemenxOnError'
+						}
 					}
 				};
 				
@@ -13328,7 +13335,7 @@
 				}
 				
 				if (!root._Component || root._Component()) {
-					startRouter();
+					applicationLifecycle('ElemenxOnReady', null);
 				}
 			}
 			
@@ -13365,7 +13372,7 @@
 				}
 				
 				applicationStatus(definition.Pending || null);
-				applicationLifecycle('ElemenxOnComponentPending', null);
+				applicationLifecycle('ElemenxOnPending', null);
 				
 				var discoveryRoot = definition.Root;
 				if (definition.ElemenxDefinitionURL && !(/^(?:[a-z]+:)?\/\//i.test(discoveryRoot)) && discoveryRoot.charAt(0) !== '/')
@@ -13387,7 +13394,7 @@
 						}
 						
 						applicationStatus(definition.Error || null);
-						applicationLifecycle('ElemenxOnComponentError', error);
+						applicationLifecycle('ElemenxOnError', error);
 						
 						return;
 					}
@@ -13397,7 +13404,7 @@
 						
 						if (directiveError) {
 							applicationStatus(definition.Error || null);
-							applicationLifecycle('ElemenxOnComponentError', directiveError);
+							applicationLifecycle('ElemenxOnError', directiveError);
 							
 							return;
 						}
@@ -13407,7 +13414,7 @@
 							
 							if (serviceError) {
 								applicationStatus(definition.Error || null);
-								applicationLifecycle('ElemenxOnComponentError', serviceError);
+								applicationLifecycle('ElemenxOnError', serviceError);
 								
 								return;
 							}
@@ -13418,14 +13425,14 @@
 				});
 			}
 			
-			api.ElemenxOnComponentPending = definition.ElemenxOnComponentPending || null;
-			api.ElemenxOnComponentReady = function (args) {
+			api.ElemenxOnPending = definition.ElemenxOnPending || null;
+			api.ElemenxOnReady = function (args) {
 				startRouter();
 				
-				if (typeof definition.ElemenxOnComponentReady === 'function')
-					definition.ElemenxOnComponentReady.call(api, args);
+				if (typeof definition.ElemenxOnReady === 'function')
+					definition.ElemenxOnReady.call(api, args);
 			};
-			api.ElemenxOnComponentError = definition.ElemenxOnComponentError || null;
+			api.ElemenxOnError = definition.ElemenxOnError || null;
 			
 			if (Runtime.HasDOM && global.document.readyState === 'loading') {
 				global.document.addEventListener('DOMContentLoaded', startRoot, {once: true});

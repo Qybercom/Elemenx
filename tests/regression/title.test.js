@@ -30,12 +30,12 @@ describe('Regression: Document Title', function () {
 	});
 
 
-	it('ElemenxOnComponentReady can override declarative Title', function () {
+	it('ElemenxOnReady can override declarative Title', function () {
 		var name=unique('TitleReadyComponent');
 		var factory=Elemenx.Component(name,{
 			Title:'Project - Elemenx',
 			Template:'<div></div>',
-			ElemenxOnComponentReady:function () {
+			ElemenxOnReady:function () {
 				this.Title('Project \"42\" - Elemenx');
 			}
 		});
@@ -56,7 +56,7 @@ describe('Regression: Document Title', function () {
 		application.Destroy();
 	});
 
-	it('route Params are available in ElemenxOnComponentReady after ElemenxOnCreate', async function () {
+	it('route Params are available in ElemenxOnReady after ElemenxOnCreate', async function () {
 		var page=unique('TitleRoutePage'),root=unique('TitleRouteRoot'),applicationName=unique('TitleRouteApplication');
 		var createParams=null,readyParams=null;
 		Elemenx.Component(page,{
@@ -65,7 +65,7 @@ describe('Regression: Document Title', function () {
 			ElemenxOnCreate:function () {
 				createParams=this.Params;
 			},
-			ElemenxOnComponentReady:function () {
+			ElemenxOnReady:function () {
 				readyParams=this.Params;
 				this.Title('Project "' + this.Params.id + '" - Elemenx');
 			}
