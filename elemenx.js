@@ -10626,6 +10626,9 @@
 			var plain = createNetworkFacade(owner, null);
 			
 			function NetworkAccessor (context) {
+				if (owner && DestroyedNetworkOwners.has(owner))
+					throw new Error('Elemenx Network owner is destroyed');
+				
 				if (!context) return plain;
 				
 				return createNetworkFacade(owner, context);
@@ -13243,6 +13246,9 @@
 						serviceWorkers[workerName].Destroy();
 					}
 				}
+				
+				if (applications[name] === api)
+					delete applications[name];
 			};
 			
 			if (typeof definition.Bootstrap === 'function') {
