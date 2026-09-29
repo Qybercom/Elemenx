@@ -12523,10 +12523,9 @@
 					return createHandle(name, definition, owner);
 				}
 				
-				if (Runtime.ApplicationWebWorkers) {
-					var shared = Runtime.ApplicationWebWorkers[name];
-					if (shared) return shared;
-				}
+				var application = owner && owner.Application ? owner.Application() : null;
+				var shared = application && application.WebWorker ? application.WebWorker(name) : null;
+				if (shared) return shared;
 				
 				definition = definitions[name];
 				if (!definition)
@@ -13047,8 +13046,6 @@
 			return result;
 		}
 		
-		Runtime.ApplicationWebWorkers = Runtime.ApplicationWebWorkers || {};
-		
 		function mountElement (value) {
 			if (!Runtime.HasDOM) return null;
 			
@@ -13130,25 +13127,25 @@
 				var handle = Runtime.WebWorkerFor(api)(workerName, value);
 				
 				webWorkers[workerName] = handle;
-				Runtime.ApplicationWebWorkers[workerName] = handle;
 				
 				return handle;
 			};
 			
 			api.ServiceWorker = function (workerName, value) {
 				var handle;
+				var serviceWorker = Runtime.ServiceWorkerFor ? Runtime.ServiceWorkerFor(api) : Elemenx.ServiceWorker;
 				
 				if (arguments.length === 1) {
 					if (serviceWorkers[workerName])
 						return serviceWorkers[workerName];
 					
-					handle = Elemenx.ServiceWorker(workerName);
+					handle = serviceWorker(workerName);
 					serviceWorkers[workerName] = handle;
 					
 					return handle;
 				}
 				
-				handle = Elemenx.ServiceWorker(workerName, value);
+				handle = serviceWorker(workerName, value);
 				serviceWorkers[workerName] = handle;
 				
 				return handle;
@@ -13232,13 +13229,6 @@
 				ownedMount = null;
 				
 				var workerName;
-				for (workerName in webWorkers) {
-					if (!Object.prototype.hasOwnProperty.call(webWorkers, workerName)) continue;
-					
-					if (Runtime.ApplicationWebWorkers[workerName] === webWorkers[workerName]) {
-						delete Runtime.ApplicationWebWorkers[workerName];
-					}
-				}
 				
 				if (Runtime.DestroyNetworkOwner) Runtime.DestroyNetworkOwner(api);
 				if (Runtime.DestroyMessagingOwner) Runtime.DestroyMessagingOwner(api);
