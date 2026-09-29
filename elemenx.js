@@ -10418,6 +10418,7 @@
 			Metrics: NetworkMetrics
 		};
 		var NetworkOwners = new WeakMap();
+		var DestroyedNetworkOwners = new WeakSet();
 		var NetworkContexts = {};
 		
 		function destroyNetworkResource (resource) {
@@ -10435,6 +10436,10 @@
 		
 		function registerNetworkResource (owner, resource) {
 			if (!owner || !resource) return resource;
+			if (DestroyedNetworkOwners.has(owner)) {
+				destroyNetworkResource(resource);
+				throw new Error('Elemenx Network owner is destroyed');
+			}
 			
 			var resources = NetworkOwners.get(owner);
 			
@@ -10450,6 +10455,10 @@
 		}
 		
 		function destroyNetworkOwner (owner) {
+			if (!owner || DestroyedNetworkOwners.has(owner)) return;
+			
+			DestroyedNetworkOwners.add(owner);
+			
 			var resources = NetworkOwners.get(owner);
 			if (!resources) return;
 			
@@ -10571,6 +10580,9 @@
 		
 		function createNetworkFacade (owner, inheritedContext) {
 			function create (type, configuration, localContext) {
+				if (owner && DestroyedNetworkOwners.has(owner))
+					throw new Error('Elemenx Network owner is destroyed');
+				
 				var resource = NetworkFactories[type](configuration);
 				
 				attachNetworkContext(resource, type);

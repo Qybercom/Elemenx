@@ -185,4 +185,28 @@ describe('Regression: Network XHR / Protocol', function () {
 		FakeXHR.Instances[0].Respond('ok');
 		expect(seen).toEqual(['BeforeRequest','Success']);
 	});
+
+	it('owner Destroy aborts an active XHR, ignores stale completion and prevents Network resurrection', function () {
+		var name=unique('NetworkOwner');
+		var success=0;
+		var abort=0;
+		Elemenx.Component(name,{Template:'<div></div>'});
+		var component=Elemenx.Component(name)();
+		var network=component.Network();
+		var xhr=network.XHR({URL:'/owned'});
+		xhr.On('Transport.Success',function () { success++; });
+		xhr.On('Transport.Abort',function () { abort++; });
+		xhr.Execute();
+		var native=FakeXHR.Instances[0];
+
+		component.Destroy();
+		expect(abort).toBe(1);
+
+		native.Emit('load',{});
+		native.Emit('error',{});
+		expect(success).toBe(0);
+		expect(abort).toBe(1);
+		expect(function () { network.XHR({URL:'/after-destroy'}); }).toThrow(/owner is destroyed/);
+		expect(FakeXHR.Instances.length).toBe(1);
+	});
 });
