@@ -116,4 +116,20 @@ describe('Regression: Network LongPolling', function () {
 		expect(FakeXHR.Instances.length).toBe(2);
 		lp.Close();
 	});
+	it('owner Destroy closes active polling, cancels retry and ignores stale completion', async function () {
+		var name=unique('LPOwner');
+		var data=[];
+		Elemenx.Component(name,{Template:'<div></div>'});
+		var component=Elemenx.Component(name)();
+		var lp=component.Network().LongPolling({URL:'/poll',Retry:1});
+		lp.On('Transport.Data',function (event) { data.push(event.Data.Data); });
+		lp.Connect();
+		var request=FakeXHR.Instances[0];
+
+		component.Destroy();
+		request.Respond('stale');
+		await tick(10);
+		expect(data).toEqual([]);
+		expect(FakeXHR.Instances.length).toBe(1);
+	});
 });

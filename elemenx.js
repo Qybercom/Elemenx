@@ -9110,6 +9110,7 @@
 			var drainInterval = config.DrainInterval === undefined ? 10 : config.DrainInterval;
 			var socket = null;
 			var connecting = false;
+			var closing = false;
 			var saturated = false;
 			var drainTimer = null;
 			var events;
@@ -9224,6 +9225,7 @@
 					if (connecting) return api;
 					
 					connecting = true;
+					closing = false;
 					saturated = false;
 					
 					stopDrainWatch();
@@ -9236,6 +9238,8 @@
 					transport('BeforeConnect', {URL: url, Protocols: protocols, Socket: socket});
 					
 					socket.addEventListener('open', function (event) {
+						if (closing) return;
+
 						transport('Open', {
 							Event: event,
 							Protocol: socket.protocol,
@@ -9245,6 +9249,8 @@
 					});
 					
 					socket.addEventListener('message', function (event) {
+						if (closing) return;
+
 						var packet = {Data: event.data, Origin: event.origin, Event: event, Socket: socket};
 						var dataEvent = transport('Data', packet);
 						
@@ -9252,6 +9258,8 @@
 					});
 					
 					socket.addEventListener('error', function (event) {
+						if (closing) return;
+
 						transport('Error', {Event: event, Socket: socket});
 					});
 					
@@ -9259,6 +9267,7 @@
 						var closedSocket = socket;
 						
 						connecting = false;
+						closing = false;
 						saturated = false;
 						
 						stopDrainWatch();
@@ -9351,6 +9360,8 @@
 					if (!socket) return api;
 					
 					if (socket.readyState === global.WebSocket.CONNECTING || socket.readyState === global.WebSocket.OPEN) {
+						closing = true;
+
 						transport('BeforeClose', {Code: code, Reason: reason, Socket: socket});
 						
 						socket.close(code, reason);

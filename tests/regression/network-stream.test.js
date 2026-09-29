@@ -162,4 +162,23 @@ describe('Regression: Network Stream', function () {
 		await tick(0);
 		expect(data).toEqual([]);
 	});
+	it('owner Destroy cancels an active stream and ignores stale reader data', async function () {
+		var name=unique('StreamOwner');
+		var reader=new Reader();
+		var data=[];
+		window.fetch=function () { return Promise.resolve(makeResponse(reader)); };
+		Elemenx.Component(name,{Template:'<div></div>'});
+		var component=Elemenx.Component(name)();
+		var stream=component.Network().Stream({URL:'/stream'});
+		stream.On('Transport.Data',function (event) { data.push(event.Data.Bytes); });
+		stream.Connect();
+		await tick(0);
+
+		component.Destroy();
+		expect(reader.Cancelled).toBe(true);
+		expect(FakeAbortController.Instances[0].aborted).toBe(true);
+		reader.Push(new Uint8Array([1,2,3]));
+		await tick(0);
+		expect(data).toEqual([]);
+	});
 });

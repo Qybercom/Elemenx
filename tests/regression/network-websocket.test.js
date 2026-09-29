@@ -194,4 +194,20 @@ describe('Regression: Network WebSocket', function () {
 		native.Message('hello');
 		expect(seen).toEqual(['before:BeforeConnect','open:Open','data:Data']);
 	});
+	it('owner Destroy closes an active socket and ignores stale socket events', function () {
+		var name=unique('WSOwner');
+		var data=[];
+		Elemenx.Component(name,{Template:'<div></div>'});
+		var component=Elemenx.Component(name)();
+		var ws=component.Network().WebSocket({URL:'ws://example.test'});
+		ws.On('Transport.Data',function (event) { data.push(event.Data.Data); });
+		ws.Connect();
+		var native=FakeWebSocket.Instances[0];
+		native.Open();
+
+		component.Destroy();
+		expect(native.readyState).toBe(FakeWebSocket.CLOSING);
+		native.Message('stale');
+		expect(data).toEqual([]);
+	});
 });

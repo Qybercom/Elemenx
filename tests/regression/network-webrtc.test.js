@@ -298,4 +298,22 @@ describe('Regression: Network WebRTC', function () {
 
 		expect(seen).toEqual(['before:BeforeConnect','open:Open','packet:hello']);
 	});
+	it('owner Destroy closes peer/channel and ignores stale WebRTC events', function () {
+		var name=unique('RTCOwner');
+		var data=[];
+		Elemenx.Component(name,{Template:'<div></div>'});
+		var component=Elemenx.Component(name)();
+		var rtc=component.Network().WebRTC();
+		rtc.On('Transport.Data',function (event) { data.push(event.Data.Data); });
+		rtc.Connect();
+		var peer=FakeRTCPeerConnection.Instances[0];
+		var channel=peer.Channels[0];
+		channel.Open();
+
+		component.Destroy();
+		expect(peer.Closed).toBe(true);
+		expect(channel.Closed).toBe(true);
+		channel.Message('stale');
+		expect(data).toEqual([]);
+	});
 });
