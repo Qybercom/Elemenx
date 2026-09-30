@@ -227,4 +227,105 @@ describe('Regression: dynamic templates / structural composition', function () {
 		expect(hits).toBe('A2B2');
 		c.Destroy();
 	});
+
+	it('TemplateID waits for a template parsed later and completes deferred lifecycle', async function () {
+		var child=unique('LateTemplateChild'), owner=unique('LateTemplateOwner'), pending=0, ready=0;
+		Elemenx.Component(child,{TemplateID:'LateTemplateID',Value:'ready'});
+		Elemenx.Component(owner,{
+			Template:'<div><'+child+' *pending="Waiting"></'+child+'></div>',
+			Waiting:'Loading late template',
+			ElemenxOnChildPending:function () { pending++; },
+			ElemenxOnChildReady:function () { ready++; }
+		});
+		var component=Elemenx.Component(owner)({});
+		document.getElementById('mount').appendChild(component.Element());
+		await tick();
+		expect(document.getElementById('mount').textContent).toContain('Waiting');
+		expect(pending).toBe(1);
+		var template=document.createElement('template');
+		template.id='LateTemplateID';
+		template.innerHTML='<strong class="late-template">{{Value}}</strong>';
+		document.body.appendChild(template);
+		await tick();
+		await tick();
+		expect(document.getElementById('LateTemplateID')).toBeNull();
+		expect(Elemenx.Template('LateTemplateID')).toContain('late-template');
+		expect(document.querySelector('.late-template').textContent).toBe('ready');
+		expect(ready).toBe(1);
+		component.Destroy();
+		template.remove();
+	});
+
+
+	it('Template registry supports an additional asynchronous loader for TemplateID', async function () {
+		var templateID=unique('LoadedTemplate');
+		var child=unique('LoadedTemplateChild');
+		var requested=0;
+		Elemenx.Template.Loader(function (name, ready) {
+			if (name !== templateID) return null;
+			requested++;
+			setTimeout(function () { ready('<em class="loaded-template">loaded</em>'); },0);
+			return null;
+		});
+		Elemenx.Component(child,{TemplateID:templateID});
+		var component=Elemenx.Component(child)({});
+		document.getElementById('mount').appendChild(component.Element());
+		await tick();
+		await tick();
+		expect(requested).toBe(1);
+		expect(Elemenx.Template(templateID)).toContain('loaded-template');
+		expect(document.querySelector('.loaded-template').textContent).toBe('loaded');
+		component.Destroy();
+	});
+
+	it('Template.Reload updates live TemplateID component instances from the registry', async function () {
+		var templateID=unique('ReloadTemplate');
+		var child=unique('ReloadTemplateChild');
+		Elemenx.Template(templateID,'<strong class="registry-reload">A</strong>');
+		Elemenx.Component(child,{TemplateID:templateID});
+		var component=Elemenx.Component(child)({});
+		document.getElementById('mount').appendChild(component.Element());
+		await tick();
+		expect(document.querySelector('.registry-reload').textContent).toBe('A');
+		var count=Elemenx.Template.Reload(templateID,'<strong class="registry-reload">B</strong>');
+		await tick();
+		await tick();
+		expect(count).toBeGreaterThan(0);
+		expect(document.querySelector('.registry-reload').textContent).toBe('B');
+		component.Destroy();
+	});
+
+	it('Application exposes the shared Template Registry without shadowing Component Template', async function () {
+		var templateID=unique('ApplicationTemplate');
+		var rootName=unique('ApplicationTemplateRoot');
+		var applicationName=unique('ApplicationTemplateApp');
+		var componentRead=null;
+		var bootstrapApplication=null;
+		Elemenx.Component(rootName,{
+			Template:'<div class="application-template-access">ready</div>',
+			ElemenxOnCreate:function () {
+				componentRead=this.Application().Template(templateID);
+			}
+		});
+		var application=Elemenx.Application(applicationName,{
+			Component:rootName,
+			Mount:'#mount',
+			Bootstrap:function () {
+				bootstrapApplication=this;
+				this.Template(templateID,'<span>from application</span>');
+			}
+		});
+		await tick();
+		expect(bootstrapApplication).toBe(application);
+		expect(application.Template(templateID)).toContain('from application');
+		expect(application.Template.Has(templateID)).toBe(true);
+		expect(componentRead).toContain('from application');
+		expect(Elemenx.Template(templateID)).toBe(application.Template(templateID));
+		application.Template.Reload(templateID,'<span>reloaded</span>');
+		expect(Elemenx.Template(templateID)).toContain('reloaded');
+		application.Template.Remove(templateID);
+		expect(Elemenx.Template.Has(templateID)).toBe(false);
+		application.Destroy();
+	});
+
 });

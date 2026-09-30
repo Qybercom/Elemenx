@@ -635,6 +635,18 @@
 		Runtime.Effect = Effect;
 		Runtime.BatchReactive = Batch;
 		Runtime.Raw = raw;
+		Runtime.Untracked = function (callback) {
+			var previousActive = activeConsumer;
+			
+			activeConsumer = null;
+			
+			try {
+				return callback();
+			}
+			finally {
+				activeConsumer = previousActive;
+			}
+		};
 		
 		Runtime.TrackIteration = function (value) {
 			var target = raw(value);
@@ -1897,6 +1909,161 @@
 		var stylePending = {};
 		var styleSequence = 0;
 		var installedComponentStyles = {};
+		var templateRegistry = {};
+		var templateRegistryPending = {};
+		var templateLoaders = [];
+		var templateDOMObserver = null;
+		
+		function templateRegistrySet (name, value) {
+			var pending;
+			var i = 0;
+			
+			name = String(name || '');
+			if (!name) throw new Error('Elemenx.Template expects a non-empty name');
+			
+			templateRegistry[name] = String(value === undefined || value === null ? '' : value);
+			pending = templateRegistryPending[name] || [];
+			delete templateRegistryPending[name];
+			
+			while (i < pending.length) {
+				pending[i](null, templateRegistry[name]);
+				i++;
+			}
+			
+			return templateRegistry[name];
+		}
+		
+		function harvestTemplateNode (node) {
+			if (!node || node.nodeType !== 1 || !node.tagName || node.tagName.toUpperCase() !== 'TEMPLATE') return false;
+			if (!node.id) return false;
+			
+			templateRegistrySet(node.id, node.innerHTML);
+			if (node.parentNode) node.parentNode.removeChild(node);
+			
+			return true;
+		}
+		
+		function harvestTemplates (root) {
+			var nodes;
+			var snapshot = [];
+			var i = 0;
+			
+			if (!root) return 0;
+			if (harvestTemplateNode(root)) return 1;
+			if (!root.querySelectorAll) return 0;
+			
+			nodes = root.querySelectorAll('template[id]');
+			while (i < nodes.length) {
+				snapshot.push(nodes[i]);
+				i++;
+			}
+			
+			i = 0;
+			while (i < snapshot.length) {
+				harvestTemplateNode(snapshot[i]);
+				i++;
+			}
+			
+			return snapshot.length;
+		}
+		
+		function requestTemplateLoaders (name) {
+			var i = 0;
+			var loader;
+			var result;
+			
+			while (i < templateLoaders.length) {
+				loader = templateLoaders[i];
+				result = loader(name, function (value) {
+					if (value !== undefined && value !== null)
+						templateRegistrySet(name, value);
+				});
+				
+				if (result !== undefined && result !== null)
+					templateRegistrySet(name, result);
+				
+				if (templateRegistry[name] !== undefined) return;
+				i++;
+			}
+		}
+		
+		function resolveTemplateID (name, callback) {
+			if (templateRegistry[name] === undefined && Runtime.HasDOM && global.document)
+				harvestTemplates(document);
+			
+			if (templateRegistry[name] !== undefined) {
+				callback(null, templateRegistry[name]);
+				return;
+			}
+			
+			if (!templateRegistryPending[name]) {
+				templateRegistryPending[name] = [];
+				templateRegistryPending[name].push(callback);
+				requestTemplateLoaders(name);
+				return;
+			}
+			
+			templateRegistryPending[name].push(callback);
+		}
+		
+		Runtime.Template = {
+			Set: templateRegistrySet,
+			Get: function (name) { return templateRegistry[name] !== undefined ? templateRegistry[name] : null; },
+			Has: function (name) { return templateRegistry[name] !== undefined; },
+			Remove: function (name) { delete templateRegistry[name]; },
+			Resolve: resolveTemplateID,
+			Harvest: harvestTemplates
+		};
+		
+		Elemenx.Template = function (name, value) {
+			if (arguments.length === 1) return Runtime.Template.Get(name);
+			if (arguments.length !== 2) throw new Error('Elemenx.Template expects (name) or (name, value)');
+			
+			return templateRegistrySet(name, value);
+		};
+		Elemenx.Template.Has = Runtime.Template.Has;
+		Elemenx.Template.Remove = Runtime.Template.Remove;
+		Elemenx.Template.Loader = function (loader) {
+			if (typeof loader !== 'function') throw new Error('Elemenx.Template.Loader expects a function');
+			templateLoaders.push(loader);
+			
+			return Elemenx.Template;
+		};
+		
+		if (Runtime.HasDOM && global.document) {
+			harvestTemplates(document);
+			
+			if (document.readyState === 'loading') {
+				document.addEventListener('DOMContentLoaded', function () {
+					harvestTemplates(document);
+				}, {once: true});
+			}
+			
+			if (global.MutationObserver && document.documentElement) {
+				templateDOMObserver = new MutationObserver(function (mutations) {
+					var i = 0;
+					var j;
+					var nodes;
+					
+					// The HTML parser inserts <template> before all of its child tokens have
+					// necessarily been consumed. Removing that node from a MutationObserver
+					// while parsing is still in progress can detach the parser's current
+					// insertion target. DOMContentLoaded performs the complete parser harvest.
+					if (document.readyState === 'loading') return;
+					
+					while (i < mutations.length) {
+						nodes = mutations[i].addedNodes;
+						j = 0;
+						while (j < nodes.length) {
+							harvestTemplates(nodes[j]);
+							j++;
+						}
+						i++;
+					}
+				});
+				templateDOMObserver.observe(document.documentElement, {childList: true, subtree: true});
+			}
+		}
 		
 		function loadTemplateURL (url, force, callback) {
 			var request;
@@ -2112,13 +2279,16 @@
 				while (placeholder.firstChild) placeholder.removeChild(placeholder.firstChild);
 				
 				if (typeof source === 'string' && source.charAt(0) === '#') {
-					template = document.querySelector(source);
+					var registered = Runtime.Template && Runtime.Template.Get(source.substring(1));
+					if (registered !== null && registered !== undefined) {
+						placeholder.innerHTML = registered;
+						return;
+					}
 					
+					template = document.querySelector(source);
 					if (template && template.tagName === 'TEMPLATE') {
 						fragment = template.content.cloneNode(true);
-						
 						placeholder.appendChild(fragment);
-						
 						return;
 					}
 				}
@@ -2161,7 +2331,17 @@
 			};
 			
 			api._Component = function () {
-				return current;
+				var component = current;
+				var resolved;
+
+				while (component && component._Component) {
+					resolved = component._Component();
+					if (!resolved) return null;
+					if (resolved === component) break;
+					component = resolved;
+				}
+
+				return component;
 			};
 			
 			api.Parent = function (value) {
@@ -2390,11 +2570,11 @@
 			}
 			
 			if (typeof source === 'string' && source.charAt(0) === '#') {
-				node = document.getElementById(source.substring(1));
+				var registered = Runtime.Template && Runtime.Template.Get(source.substring(1));
+				if (registered !== null && registered !== undefined) return registered;
 				
-				if (node && node.tagName === 'TEMPLATE') {
-					return node.innerHTML;
-				}
+				node = document.getElementById(source.substring(1));
+				if (node && node.tagName === 'TEMPLATE') return node.innerHTML;
 				
 				throw new Error('Elemenx template not found: ' + source);
 			}
@@ -3017,7 +3197,7 @@
 			if (generationOverride === undefined && name && previousFactory && !previousFactory.ElemenxLazy) generation++;
 			if (name) componentGenerations[name] = generation;
 			
-			if ((definition.TemplateURL && definition.Template === undefined) || (definition.StyleURL && definition.Style === undefined)) {
+			if ((definition.Template === undefined && (definition.TemplateURL || definition.TemplateID || name)) || (definition.StyleURL && definition.Style === undefined)) {
 				var remoteFactory = function (data, slotProjection, options) {
 					var component = deferredComponent(function (ready) {
 						function finish (html, css) {
@@ -3067,6 +3247,17 @@
 								loadStyle(html);
 							});
 						}
+						else if (definition.Template === undefined) {
+							templateID = definition.TemplateID || name;
+							Runtime.Template.Resolve(templateID, function (error, html) {
+								if (error) {
+									ready(error);
+									return;
+								}
+								
+								loadStyle(html);
+							});
+						}
 						else {
 							loadStyle(definition.Template);
 						}
@@ -3089,11 +3280,6 @@
 			
 			if (definition.Style !== undefined)
 				installComponentStyle(name, definition, definition.Style);
-			
-			if (name && definition.Template === undefined) {
-				templateID = definition.TemplateID || name;
-				definition.Template = '#' + templateID;
-			}
 			
 			function factory (data, slotProjection, options) {
 				var directState = options && options.DirectState === true;
@@ -3204,7 +3390,7 @@
 				}
 				
 				function Batch (callback) {
-					if (typeof callback !== 'function') return api;
+					if (destroyed || typeof callback !== 'function') return api;
 					
 					Runtime.BatchReactive(function () {
 						callback.call(api, values);
@@ -3460,6 +3646,8 @@
 				
 				function Update (next) {
 					var key;
+
+					if (destroyed) return api;
 					
 					next = next || {};
 					
@@ -3596,7 +3784,7 @@
 						root.parentNode.removeChild(root);
 				}
 				
-				api = {
+				var apiTarget = {
 					Generation: function () {
 						return generation;
 					},
@@ -3621,9 +3809,10 @@
 					Update: Update,
 					Destroy: Destroy
 				};
+				api = apiTarget;
 				
 				if (!directState) {
-					api = new Proxy(api, {
+					api = new Proxy(apiTarget, {
 						get: function (target, key) {
 							if (componentRouteContext[key])
 								return routeContextReady ? values[key] : undefined;
@@ -3634,6 +3823,8 @@
 							return values[key];
 						},
 						set: function (target, key, value) {
+							if (destroyed && !(componentAPIReserved[key] || key in target)) return true;
+
 							if (componentAPIReserved[key] || key in target) {
 								target[key] = value;
 								
@@ -3679,12 +3870,15 @@
 					if (
 						own(definition, methodName) &&
 						typeof definition[methodName] === 'function' &&
-						methodName !== 'Template' &&
-						methodName !== 'ElemenxOnCreate' &&
-						methodName !== 'ElemenxOnDestroy' &&
-						methodName !== 'Components'
+						(!componentDefinitionReserved[methodName] || methodName.indexOf('ElemenxOn') === 0)
 					) {
-						api[methodName] = definition[methodName];
+						/*
+						 * Methods belong to the Component API, never to reactive state.
+						 * This is critical for DirectState structural children: their values
+						 * object is the owner's reactive scope, so assigning through the API
+						 * Proxy would mutate that scope while its structural effect is running.
+						 */
+						apiTarget[methodName] = definition[methodName];
 					}
 				}
 				
@@ -3921,6 +4115,30 @@
 			}
 			
 			return snapshot.length;
+		};
+		
+		Runtime.ReloadTemplateInstances = function (templateName) {
+			var name;
+			var factory;
+			var definition;
+			var count = 0;
+			
+			for (name in componentRegistry) {
+				if (!own(componentRegistry, name)) continue;
+				factory = componentRegistry[name];
+				definition = factory && factory.Definition;
+				if (!definition || definition.Template !== undefined || definition.TemplateURL) continue;
+				if ((definition.TemplateID || name) !== templateName) continue;
+				
+				Runtime.BeginComponentReload(name);
+				count += Runtime.ReloadComponentInstances(name);
+			}
+			
+			return count;
+		};
+		Elemenx.Template.Reload = function (name, value) {
+			templateRegistrySet(name, value);
+			return Runtime.ReloadTemplateInstances(name);
 		};
 		
 		Runtime.ReloadComponentInstances = function (name) {
@@ -4619,10 +4837,23 @@
 			
 			function destroyFrom (index) {
 				var i = active.length - 1;
+				var entry;
+				var parent;
+				var outlet;
 				
 				while (i >= index) {
-					if (active[i].Component)
-						active[i].Component.Destroy();
+					entry = active[i];
+					parent = i > 0 ? active[i - 1].Component : root;
+					outlet = parent && entry.Route ? Runtime.ResolveOutlet(parent, entry.Route.Outlet || (i === 0 ? rootOutletName : 'Content')) : null;
+					
+					/*
+					 * Route components are owned by their Outlet. Clearing through the
+					 * Outlet keeps its Current() reference synchronized with Router
+					 * teardown. Direct Component.Destroy() leaves a stale Current and a
+					 * later Render() destroys the already-recreated route component.
+					 */
+					if (outlet && outlet.Current && outlet.Current() === entry.Component) outlet.Clear();
+					else if (entry.Component) entry.Component.Destroy();
 					
 					i--;
 				}
@@ -5748,7 +5979,9 @@
 						if (child) return child;
 						
 						childProps = props(blueprint, currentData || Runtime.ComponentValues(component), factory.Definition);
-						child = factory(childProps, projected, asyncOptions(blueprint, factory.ComponentName || blueprint.tagName));
+						child = Runtime.Untracked(function () {
+							return factory(childProps, projected, asyncOptions(blueprint, factory.ComponentName || blueprint.tagName));
+						});
 						connect(child, eventMap);
 						end.parentNode.insertBefore(child.Element(), end);
 						previousProps = childProps;
@@ -5789,7 +6022,9 @@
 					}
 					else if (!child) {
 						childProps = props(blueprint, data, factory.Definition);
-						child = factory(childProps, projected, asyncOptions(blueprint, factory.ComponentName || blueprint.tagName));
+						child = Runtime.Untracked(function () {
+							return factory(childProps, projected, asyncOptions(blueprint, factory.ComponentName || blueprint.tagName));
+						});
 						connect(child, eventMap);
 						end.parentNode.insertBefore(child.Element(), end);
 						previousProps = childProps;
@@ -6100,8 +6335,7 @@
 							own(definition, methodName) &&
 							typeof definition[methodName] === 'function' &&
 							methodName !== 'Template' &&
-							methodName !== 'ElemenxOnCreate' &&
-							methodName !== 'ElemenxOnDestroy'
+							methodName.indexOf('ElemenxOn') !== 0
 						) {
 							(function (name) {
 								result[name] = function () {
@@ -6128,8 +6362,7 @@
 							own(definition, name) &&
 							typeof definition[name] === 'function' &&
 							name !== 'Template' &&
-							name !== 'ElemenxOnCreate' &&
-							name !== 'ElemenxOnDestroy'
+							name.indexOf('ElemenxOn') !== 0
 						) {
 							(function (methodName) {
 								result[methodName] = function () {
@@ -6359,7 +6592,7 @@
 						data = Runtime.ComponentValues(component);
 						subtreeDefinition = {Template: template.outerHTML};
 						for (methodName in definition) {
-							if (own(definition, methodName) && typeof definition[methodName] === 'function' && methodName !== 'Template' && methodName !== 'ElemenxOnCreate' && methodName !== 'ElemenxOnDestroy') {
+							if (own(definition, methodName) && typeof definition[methodName] === 'function' && methodName !== 'Template' && methodName.indexOf('ElemenxOn') !== 0) {
 								(function (name) {
 									subtreeDefinition[name] = function () {
 										return definition[name].apply(component, arguments);
@@ -13093,6 +13326,15 @@
 				return api;
 			};
 			
+			api.Template = function (templateName, value) {
+				if (arguments.length === 1) return Elemenx.Template(templateName);
+				return Elemenx.Template(templateName, value);
+			};
+			api.Template.Has = Elemenx.Template.Has;
+			api.Template.Remove = Elemenx.Template.Remove;
+			api.Template.Loader = Elemenx.Template.Loader;
+			api.Template.Reload = Elemenx.Template.Reload;
+			
 			api.Network = function (context, value) {
 				if (arguments.length === 2) {
 					Elemenx.Network.Context(context, value);
@@ -13258,6 +13500,7 @@
 			function applicationStatus (source) {
 				var mount = mountElement(definition.Mount);
 				if (!mount) return;
+				if (Runtime.Template && Runtime.Template.Harvest) Runtime.Template.Harvest(mount);
 				
 				var template;
 				var fragment;
@@ -13268,13 +13511,16 @@
 				if (!source) return;
 				
 				if (typeof source === 'string' && source.charAt(0) === '#') {
-					template = document.querySelector(source);
+					var registered = Runtime.Template && Runtime.Template.Get(source.substring(1));
+					if (registered !== null && registered !== undefined) {
+						mount.innerHTML = registered;
+						return;
+					}
 					
+					template = document.querySelector(source);
 					if (template && template.tagName === 'TEMPLATE') {
 						fragment = template.content.cloneNode(true);
-						
 						mount.appendChild(fragment);
-						
 						return;
 					}
 				}
@@ -13323,6 +13569,8 @@
 				
 				if (!mount)
 					throw new Error('Elemenx Application mount not found: ' + definition.Mount);
+				
+				if (Runtime.Template && Runtime.Template.Harvest) Runtime.Template.Harvest(mount);
 				
 				if (mountOwners) {
 					mountOwner = mountOwners.get(mount);
@@ -13414,7 +13662,14 @@
 					return;
 				}
 				
-				applicationStatus(definition.Pending || null);
+				/*
+				 * Do not clear the Application mount merely because Discovery starts.
+				 * Pending UI belongs to an explicit Pending definition; without one the
+				 * existing host DOM (including parser-owned TemplateID resources) must
+				 * remain available until the root is ready.
+				 */
+				if (definition.Pending !== undefined && definition.Pending !== null)
+					applicationStatus(definition.Pending);
 				applicationLifecycle('ElemenxOnPending', null);
 				
 				var discoveryRoot = definition.Root;

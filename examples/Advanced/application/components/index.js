@@ -1,6 +1,8 @@
 [
 	'Layout/Layout.js',
 	'HomePage/HomePage.js',
+	'ComponentProbe/ComponentProbe.js',
+	'ComponentShowcase/ComponentShowcase.js',
 	'ServiceBadge/ServiceBadge.js',
 	'EnvironmentCard/EnvironmentCard.js',
 	'ProjectCard/ProjectCard.js',

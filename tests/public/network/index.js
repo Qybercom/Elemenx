@@ -1,5 +1,6 @@
 [
 	'RemoteBasic.js',
 	'RemoteConcurrent.js',
-	'RemoteDestroy.js'
+	'RemoteDestroy.js',
+	'RemoteNestedTemplate.js'
 ]

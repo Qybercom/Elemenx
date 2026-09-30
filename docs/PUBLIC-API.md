@@ -6,6 +6,7 @@ This document is the release-level map of the supported top-level Elemenx surfac
 
 - `Elemenx.Application` — application registration, ownership, mounting and lifecycle.
 - `Elemenx.Component` — component definitions, templates, styles, state, bindings and lifecycle.
+- `Elemenx.Template` — named Template Registry populated by DOM `<template id>` resources or application loaders; supports get/set, loaders and live `Reload`. The same registry is exposed as `Application.Template`; Components and Services access it through `this.Application().Template(...)`, leaving Component `Template` reserved for the component definition itself.
 - `Elemenx.Directive` — custom behavioral directives and their lifecycle.
 - `Elemenx.Service` — named services, including Application-owned instances.
 - `Elemenx.Guard` — named route guards used by Application routing.

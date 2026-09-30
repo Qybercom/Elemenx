@@ -366,4 +366,28 @@ describe('Regression: Router lifecycle hardening', function () {
 		expect(document.getElementById('lazy-pending-service-target')).toBeNull();
 		router.Destroy();
 	});
+	it('clears the owning Outlet when a route is destroyed so the same route can be recreated after a guard failure', async function () {
+		var guard=unique('OutletGuard'),home=unique('OutletHome'),protectedPage=unique('OutletProtected'),failed=unique('OutletFailed'),root=unique('OutletRoot'),allowed=false;
+		Elemenx.Guard(guard,function () {return allowed ? true : this.Fail();});
+		Elemenx.Component(home,{Template:'<section id="outlet-home">HOME</section>'});
+		Elemenx.Component(protectedPage,{Template:'<section id="outlet-protected">PROTECTED</section>'});
+		Elemenx.Component(failed,{Template:'<section id="outlet-failed"><a href="/">Return home</a></section>'});
+		Elemenx.Component(root,{Template:'<main *outlet="Content"></main>'});
+		var appName=unique('OutletApp');
+		var app=Elemenx.Application(appName,{Component:root,Mount:'#mount'});
+		var router=Elemenx.Router({Root:app.Component(),Routes:[{Path:'/',Component:home},{Path:'/protected',Component:protectedPage,Guard:guard,GuardFailed:failed}]});
+		router.Start();
+		await tick();
+		expect(document.getElementById('outlet-home')).not.toBeNull();
+		router.Go('/protected');
+		await tick();
+		expect(document.getElementById('outlet-failed')).not.toBeNull();
+		router.Go('/');
+		await tick();
+		expect(document.getElementById('outlet-home')).not.toBeNull();
+		expect(document.getElementById('outlet-failed')).toBeNull();
+		router.Destroy();
+		app.Destroy();
+	});
+
 });

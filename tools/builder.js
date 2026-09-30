@@ -144,6 +144,52 @@ function render (entities) {
 	return lines.join('\n');
 }
 
+function indexTemplates (source) {
+	var result = [];
+	var stack = [];
+	var pattern = /<\/?template\b[^>]*>/gi;
+	var match;
+	var opening;
+	var idMatch;
+	var frame;
+	
+	while ((match = pattern.exec(source))) {
+		opening = match[0].charAt(1) !== '/';
+		
+		if (opening) {
+			idMatch = /\bid\s*=\s*(["'])(.*?)\1/i.exec(match[0]);
+			stack.push({
+				ID: idMatch ? idMatch[2] : null,
+				Start: pattern.lastIndex
+			});
+		}
+		else if (stack.length) {
+			frame = stack.pop();
+			if (frame.ID) {
+				result.push({
+					ID: frame.ID,
+					HTML: source.substring(frame.Start, match.index)
+				});
+			}
+		}
+	}
+	
+	return result;
+}
+
+function renderTemplates (source) {
+	var templates = indexTemplates(source);
+	var lines = [];
+	var i = 0;
+	
+	while (i < templates.length) {
+		lines.push('Elemenx.Template(' + JSON.stringify(templates[i].ID) + ', ' + JSON.stringify(templates[i].HTML) + ');');
+		i++;
+	}
+	
+	return lines.join('\n');
+}
+
 function removeTree (target) {
 	if (fs.existsSync(target))
 		fs.rmSync(target, {recursive: true, force: true});
@@ -271,6 +317,8 @@ function build (project, options) {
 	var framework = path.resolve(__dirname, '..', 'elemenx.js');
 	var entities = {};
 	var appSource;
+	var indexSource;
+	var templateBundle;
 	var roots;
 	var directories;
 	var bundle;
@@ -286,6 +334,8 @@ function build (project, options) {
 		fail('elemenx.js not found: ' + framework);
 	
 	appSource = fs.readFileSync(app, 'utf8').replace(/^\uFEFF/, '');
+	indexSource = fs.readFileSync(index, 'utf8').replace(/^\uFEFF/, '');
+	templateBundle = renderTemplates(indexSource);
 	roots = applicationRoots(project, options, appSource);
 	directories = applicationDirectories(project, roots);
 	
@@ -314,7 +364,7 @@ function build (project, options) {
 	
 	fs.copyFileSync(index, path.join(output, 'index.html'));
 	fs.copyFileSync(framework, path.join(output, 'elemenx.js'));
-	fs.writeFileSync(path.join(output, 'app.js'), bundle + '\n' + appSource.replace(/^\s+/, ''));
+	fs.writeFileSync(path.join(output, 'app.js'), (templateBundle ? templateBundle + '\n' : '') + bundle + '\n' + appSource.replace(/^\s+/, ''));
 	
 	process.stdout.write('Elemenx Builder: ' + output + '\n');
 	
@@ -352,6 +402,8 @@ module.exports = {
 	Build: build,
 	Scan: scan,
 	Render: render,
+	IndexTemplates: indexTemplates,
+	RenderTemplates: renderTemplates,
 	ApplicationRoots: applicationRoots
 };
 

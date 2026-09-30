@@ -30,21 +30,22 @@ Status values:
 | Component registration | YES | Used throughout Advanced. |
 | `TemplateURL` | YES | Most components. |
 | inline `Template` | YES | `PageLoading`. |
-| `TemplateID` | MISSING | Add DOM-template component. |
+| `TemplateID` | YES | `ComponentProbe` resolves `AdvancedComponentProbeTemplate` through the Template Registry; the DOM `<template id>` is harvested automatically. Registry access is global through `Elemenx.Template` and Application-scoped ergonomically through `Application.Template` / `this.Application().Template(...)`. |
 | `StyleURL` | YES | `Layout`. |
-| inline `Style` | MISSING | Add a small styled component. |
+| inline `Style` | YES | `ComponentShowcase` carries its showcase CSS directly in the definition. |
 | reactive values / interpolation | YES | Home, Layout and nested showcases. |
-| `Update` | PARTIAL | Reactive updates occur, but public `Update()` should be explicit. |
+| `Update` | YES | `ComponentShowcase.UpdateHost()` calls the public `Update()` API explicitly. |
 | `Batch` | YES | Network showcase and state changes. |
-| `Ref` | PARTIAL | `#ref` is used internally; add explicit `this.Ref()` example. |
-| `On` / `Emit` component events | MISSING | Add parent-child event example. |
-| `Parent` | MISSING | Add child inspection example. |
-| `Application` | MISSING | Show owning Application from a component. |
+| `Ref` | YES | `ComponentShowcase` visibly resolves `#HostStatus` and mounts the probe through `#ProbeMount`. |
+| `On` / `Emit` component events | YES | The host subscribes with `probe.On()` and `ComponentProbe` emits `change` and lifecycle events. |
+| `Parent` | YES | The programmatic child is assigned to the host and reports its `Parent()`. |
+| `Application` | YES | `ComponentProbe.DescribeOwner()` reports the owning Application name. |
+| `Element` / `Generation` | YES | The showcase checks `Element()` and reports the child component generation. |
 | `Router` | PARTIAL | Router is used indirectly; expose component router access. |
 | `Service` | YES | Session service. |
 | `Title` | YES | `ProjectPage`. |
 | `Network`, `Storage`, `Messaging`, `WebWorker`, `ServiceWorker` owner accessors | PARTIAL | Storage is used; Network currently uses global API; add owner-aware examples. |
-| `ElemenxOnCreate` / `ElemenxOnUpdate` / `ElemenxOnReady` / `ElemenxOnDestroy` | PARTIAL | Several hooks exist, but add one visible lifecycle timeline. |
+| `ElemenxOnCreate` / `ElemenxOnReady` / `ElemenxOnDestroy` | YES | `ComponentShowcase` and `ComponentProbe` expose create/ready/destroy behavior visibly. |
 | `ElemenxOnChildPending` / `ElemenxOnChildReady` / `ElemenxOnChildError` | MISSING | Add deferred/discovered child lifecycle showcase. |
 | route `Path`, `Params`, `Query`, `Hash` context | YES | Project route exercises params/query/hash. |
 

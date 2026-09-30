@@ -155,4 +155,17 @@ describe('Elemenx multi-Application Builder', function () {
 		expect(fs.readFileSync(path.join(root, 'dist', 'public', 'app.js'), 'utf8')).toBe('nested app');
 		expect(fs.readFileSync(path.join(root, 'dist', 'public', 'package.json'), 'utf8')).toBe('nested package');
 	});
+
+	it('compiles named DOM templates from the host index into the production Template Registry bootstrap', function () {
+		var root = project();
+		application(root, 'FooApp', 'FooRoot');
+		fs.writeFileSync(path.join(root, 'index.html'), '<!DOCTYPE html><html><body><template id="Probe"><strong>{{Value}}</strong></template><div id="foo"></div><script src="/elemenx.js"></script><script src="/app.js"></script></body></html>');
+		fs.writeFileSync(path.join(root, 'app.js'), "Elemenx.Application('FooApp', {Component:'FooRoot', Root:'FooApp', Mount:'#foo'});");
+
+		Builder.Build(root, {application: 'FooApp', entry: 'app.js', index: 'index.html', out: 'dist'});
+
+		var output = fs.readFileSync(path.join(root, 'dist', 'app.js'), 'utf8');
+		expect(output).toContain('Elemenx.Template("Probe", "<strong>{{Value}}</strong>");');
+		expect(output.indexOf('Elemenx.Template("Probe"')).toBeLessThan(output.indexOf('Elemenx.Bundle({'));
+	});
 });

@@ -102,4 +102,37 @@ describe('Regression: full Application teardown and recreate',function () {
 		second.Component().Increment();
 		expect(document.querySelector('#app').textContent).toBe('1');
 	});
+
+	it('keeps reactive state inert when child teardown emits back into an owner that is already destroying',function () {
+		var childName=unique('DestroyEmitChild');
+		var parentName=unique('DestroyEmitParent');
+		Elemenx.Component(childName,{
+			Template:'<i>child</i>',
+			ElemenxOnDestroy:function () { this.Emit('lifecycle','Destroy'); }
+		});
+		Elemenx.Component(parentName,{
+			Template:'<div><span *for="item of Items">{{item}}</span><div #Child></div></div>',
+			Items:['Alive'],
+			ElemenxOnCreate:function () {
+				var owner=this;
+				var child=Elemenx.Component(childName)({});
+				child.On('lifecycle',function (value) {
+					owner.Items=owner.Items.concat([value]);
+				});
+				this.Child=child;
+				this.Ref('Child').appendChild(child.Element());
+			},
+			ElemenxOnDestroy:function () {
+				this.Child.Destroy();
+			}
+		});
+		var component=Elemenx.Component(parentName)({});
+		document.getElementById('app').appendChild(component.Element());
+		expect(component.Items).toEqual(['Alive']);
+		expect(function () { component.Destroy(); }).not.toThrow();
+		expect(component.Items).toEqual(['Alive']);
+		component.Update({Items:['Late']});
+		component.Batch(function (state) { state.Items=['Later']; });
+		expect(component.Items).toEqual(['Alive']);
+	});
 });

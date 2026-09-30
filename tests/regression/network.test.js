@@ -67,6 +67,45 @@ describe('Regression: deferred / network component discovery', function () {
 		app.Destroy();
 	});
 
+
+	it('unwraps discovery and TemplateID deferred layers to the resolved component', async function () {
+		var app=application('/network');
+		expect(await ready(app)).not.toBe(false);
+
+		var templateRequested=false;
+		var resolveTemplate=null;
+		Elemenx.Template.Loader(function (name,readyTemplate) {
+			if (name!=='RemoteNestedTemplateID') return;
+			templateRequested=true;
+			resolveTemplate=readyTemplate;
+		});
+
+		var c=Elemenx.Component('RemoteNestedTemplate')({},null,{Application:app});
+		document.getElementById('mount').appendChild(c.Element());
+
+		expect(await waitFor(function () {return templateRequested;},1500)).toBe(true);
+		expect(c._Component()).toBeNull();
+
+		resolveTemplate('<button class="remote-nested-template">{{Count}}</button>');
+
+		expect(await waitFor(function () {
+			var resolved=c._Component();
+			return resolved&&typeof resolved.Increment==='function';
+		},1500)).toBe(true);
+
+		var resolved=c._Component();
+		var changes=[];
+		resolved.On('change',function (value) {changes.push(value);});
+		resolved.Increment();
+		await tick();
+
+		expect(changes).toEqual([1]);
+		expect(document.querySelector('.remote-nested-template').textContent).toBe('1');
+
+		c.Destroy();
+		app.Destroy();
+	});
+
 	it('does not activate a deferred component after owner Destroy', async function () {
 		var app=application('/network');
 		expect(await ready(app)).not.toBe(false);
