@@ -10,6 +10,7 @@
 	'ProjectShowcase/ProjectShowcase.js',
 	'NetworkShowcase/NetworkShowcase.js',
 	'RouterShowcase/RouterShowcase.js',
+	'StorageMessagingShowcase/StorageMessagingShowcase.js',
 	'RouterLabPage/RouterLabPage.js',
 	'AsyncGuardedPage/AsyncGuardedPage.js',
 	'LeaveGuardPage/LeaveGuardPage.js',

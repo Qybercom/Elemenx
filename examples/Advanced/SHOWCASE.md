@@ -122,21 +122,21 @@ Status values:
 | --- | --- | --- |
 | Local storage | YES | Theme persistence. |
 | Namespace | YES | `AdvancedExample`. |
-| Session storage | MISSING | Add CRUD example. |
-| Cookie storage | MISSING | Add CRUD example. |
-| IndexedDB | MISSING | Add store/index/transaction example. |
-| Storage Context | MISSING | Add named/composed context example. |
-| Get/Set/Has/Remove/Clear | PARTIAL | Local Set/Get are visible indirectly; make CRUD operations explicit. |
+| Session storage | YES | Storage + Messaging card exposes Set/Get/Has/Remove/Clear behavior. |
+| Cookie storage | YES | Storage + Messaging card uses a namespaced cookie with explicit Path. |
+| IndexedDB | YES | Store Put/Get, index GetAll and a readwrite Transaction are executed live. |
+| Storage Context | YES | `AdvancedStorageShowcase` composes the base namespace and IndexedDB schema. |
+| Get/Set/Has/Remove/Clear | YES | Interactive Local/Session/Cookie CRUD and namespace Clear are explicit. |
 
 ## Messaging
 
 | Capability | Status | Current / required showcase |
 | --- | --- | --- |
-| socket creation | MISSING | Add page/component messaging demo. |
-| `ID` / own channel | MISSING | Show direct reply channel. |
-| `On` / `Off` / `Send` / `Channels` | MISSING | Add interactive channel example. |
-| Messaging Context | MISSING | Add named + composed context example. |
-| owner lifecycle | MISSING | Demonstrate with isolated child mount/unmount. |
+| socket creation | YES | Component-owned sender and receiver sockets are created live. |
+| `ID` / own channel | YES | Receiver owns `advanced:receiver` and accepts a direct message. |
+| `On` / `Off` / `Send` / `Channels` | YES | Interactive context/direct sends, channel listing and explicit Off are shown. |
+| Messaging Context | YES | `AdvancedMessagingShowcase` composes a base context and inherited channel. |
+| owner lifecycle | YES | Sockets are Component-owned and explicitly destroyed with the showcase Component. |
 | Worker Messaging bridge | MISSING | Add WebWorker and ServiceWorker bridge demos. |
 
 ## WebWorker
