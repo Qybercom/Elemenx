@@ -6,7 +6,7 @@ This document is the release-level map of the supported top-level Elemenx surfac
 
 - `Elemenx.Application` — application registration, ownership, mounting and lifecycle.
 - `Elemenx.Component` — component definitions, templates, styles, state, bindings and lifecycle.
-- `Elemenx.Template` — named Template Registry populated by DOM `<template id>` resources or application loaders; supports get/set, loaders and live `Reload`. The same registry is exposed as `Application.Template`; Components and Services access it through `this.Application().Template(...)`, leaving Component `Template` reserved for the component definition itself.
+- `Elemenx.Template` — named Template Registry populated by DOM `<template id>` resources or application loaders; supports get/set, loaders and live `Reload`. The same registry is exposed as `Application.$Template`; Components and Services access it through `this.$Application().$Template(...)`. Component template metadata is `$Template`, so ordinary `Template` belongs to application code.
 - `Elemenx.Directive` — custom behavioral directives and their lifecycle.
 - `Elemenx.Service` — named services, including Application-owned instances.
 - `Elemenx.Guard` — named route guards used by Application routing.
@@ -19,6 +19,10 @@ This document is the release-level map of the supported top-level Elemenx surfac
 - `Elemenx.Bundle` — production bundle registry used before normal Discovery fallback.
 - `Elemenx.Title` — document/application title facade.
 - `Elemenx.RuntimeID` — runtime identifier helper.
+
+## System namespace
+
+Inside Elemenx definitions and runtime-owned instances, every `$*` name is reserved for Elemenx. Framework metadata uses names such as `$Template`, `$TemplateURL`, `$Style`, `$Title`, `$Component`, `$Root`, `$Mount` and `$Router`; owner APIs use `this.$Application()`, `this.$Parent()`, `this.$Service()`, `this.$Router()`, `this.$Update()` and the other `$` facades. Lifecycle hooks use `$OnCreate`, `$OnReady`, `$OnDestroy` and related `$On*` names. Ordinary names such as `Template`, `Title`, `Application`, `Router` and `Update` are application-owned and are not legacy aliases.
 
 ## Confirmed contracts
 
@@ -40,4 +44,4 @@ A public API addition should include a direct contract test or a stronger end-to
 
 ## Lifecycle hook naming
 
-Lifecycle hooks are named relative to their owner. Component own readiness is `ElemenxOnReady`; Application startup uses `ElemenxOnPending`, `ElemenxOnReady` and `ElemenxOnError`. `ElemenxOnChildPending`, `ElemenxOnChildReady` and `ElemenxOnChildError` on a Component describe deferred child Component lifecycle events.
+Lifecycle hooks are named relative to their owner. Component own readiness is `$OnReady`; Application startup uses `$OnPending`, `$OnReady` and `$OnError`. `$OnChildPending`, `$OnChildReady` and `$OnChildError` on a Component describe deferred child Component lifecycle events.

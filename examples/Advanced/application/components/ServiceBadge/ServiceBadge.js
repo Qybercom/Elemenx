@@ -1,5 +1,5 @@
 Elemenx.Component('ServiceBadge', {
-	TemplateURL: 'ServiceBadge.html',
+	$TemplateURL: 'ServiceBadge.html',
 
 	BadgeClasses: ['binding-demo'],
 	BadgeStyle: {

@@ -1,4 +1,4 @@
 Elemenx.Component('AuthorizedPage', {
-	TemplateURL: 'AuthorizedPage.html',
-	Title: 'Authorized route - Elemenx'
+	$TemplateURL: 'AuthorizedPage.html',
+	$Title: 'Authorized route - Elemenx'
 });

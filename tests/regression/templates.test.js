@@ -7,11 +7,11 @@ describe('Regression: Template / TemplateID', function () {
 
 	it('Template is inline markup and does not require a DOM template', function () {
 		var name=unique('Inline');
-		Elemenx.Component(name,{Template:'<article class="inline-template">{{value}}</article>'});
+		Elemenx.Component(name,{$Template:'<article class="inline-template">{{value}}</article>'});
 		var c=Elemenx.Component(name)({value:'INLINE'});
-		document.getElementById('mount').appendChild(c.Element());
+		document.getElementById('mount').appendChild(c.$Element());
 		expect(document.querySelector('.inline-template').textContent).toBe('INLINE');
-		c.Destroy();
+		c.$Destroy();
 	});
 
 	it('TemplateID resolves the requested DOM template', function () {
@@ -20,11 +20,11 @@ describe('Regression: Template / TemplateID', function () {
 		t.id=id;
 		t.innerHTML='<article class="id-template">{{value}}</article>';
 		document.body.appendChild(t);
-		Elemenx.Component(name,{TemplateID:id});
+		Elemenx.Component(name,{$TemplateID:id});
 		var c=Elemenx.Component(name)({value:'DOM'});
-		document.getElementById('mount').appendChild(c.Element());
+		document.getElementById('mount').appendChild(c.$Element());
 		expect(document.querySelector('.id-template').textContent).toBe('DOM');
-		c.Destroy();
+		c.$Destroy();
 		t.remove();
 	});
 
@@ -34,12 +34,12 @@ describe('Regression: Template / TemplateID', function () {
 		t.id=id;
 		t.innerHTML='<div class="wrong">WRONG</div>';
 		document.body.appendChild(t);
-		Elemenx.Component(name,{Template:'<div class="right">RIGHT</div>',TemplateID:id});
+		Elemenx.Component(name,{$Template:'<div class="right">RIGHT</div>',$TemplateID:id});
 		var c=Elemenx.Component(name)();
-		document.getElementById('mount').appendChild(c.Element());
+		document.getElementById('mount').appendChild(c.$Element());
 		expect(document.querySelector('.right')).not.toBeNull();
 		expect(document.querySelector('.wrong')).toBeNull();
-		c.Destroy();
+		c.$Destroy();
 		t.remove();
 	});
 });

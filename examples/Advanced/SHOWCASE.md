@@ -16,7 +16,7 @@ Status values:
 | `Elemenx.Application` registration | YES | `app.js` registers `ApplicationExample`. |
 | `Title`, `Component`, `Root`, `Mount` | YES | Main application definition. |
 | Application Router configuration | YES | Routes, Waiting and NotFound are configured in `app.js`. |
-| Application `ElemenxOnPending` / `ElemenxOnReady` / `ElemenxOnError` | MISSING | Add visible startup lifecycle example without making startup fragile. |
+| Application `$OnPending` / `$OnReady` / `$OnError` | MISSING | Add visible startup lifecycle example without making startup fragile. |
 | Application `Bootstrap` | MISSING | Add a small visible bootstrap marker. |
 | `Application.Name/Root/Mount/Application/Component/Router` | MISSING | Add runtime metadata/inspection showcase. |
 | Application-owned `Service`, `Network`, `Storage`, `Messaging`, Workers | PARTIAL | Service/Storage are used; remaining ownership APIs need explicit examples. |
@@ -30,14 +30,14 @@ Status values:
 | Component registration | YES | Used throughout Advanced. |
 | `TemplateURL` | YES | Most components. |
 | inline `Template` | YES | `PageLoading`. |
-| `TemplateID` | YES | `ComponentProbe` resolves `AdvancedComponentProbeTemplate` through the Template Registry; the DOM `<template id>` is harvested automatically. Registry access is global through `Elemenx.Template` and Application-scoped ergonomically through `Application.Template` / `this.Application().Template(...)`. |
+| `TemplateID` | YES | `ComponentProbe` resolves `AdvancedComponentProbeTemplate` through the Template Registry; the DOM `<template id>` is harvested automatically. Registry access is global through `Elemenx.Template` and Application-scoped ergonomically through `Application.Template` / `this.$Application().Template(...)`. |
 | `StyleURL` | YES | `Layout`. |
 | inline `Style` | YES | `ComponentShowcase` carries its showcase CSS directly in the definition. |
 | reactive values / interpolation | YES | Home, Layout and nested showcases. |
 | `Update` | YES | `ComponentShowcase.UpdateHost()` calls the public `Update()` API explicitly. |
 | `Batch` | YES | Network showcase and state changes. |
 | `Ref` | YES | `ComponentShowcase` visibly resolves `#HostStatus` and mounts the probe through `#ProbeMount`. |
-| `On` / `Emit` component events | YES | The host subscribes with `probe.On()` and `ComponentProbe` emits `change` and lifecycle events. |
+| `On` / `Emit` component events | YES | The host subscribes with `probe.$On()` and `ComponentProbe` emits `change` and lifecycle events. |
 | `Parent` | YES | The programmatic child is assigned to the host and reports its `Parent()`. |
 | `Application` | YES | `ComponentProbe.DescribeOwner()` reports the owning Application name. |
 | `Element` / `Generation` | YES | The showcase checks `Element()` and reports the child component generation. |
@@ -45,8 +45,8 @@ Status values:
 | `Service` | YES | Session service. |
 | `Title` | YES | `ProjectPage`. |
 | `Network`, `Storage`, `Messaging`, `WebWorker`, `ServiceWorker` owner accessors | PARTIAL | Storage is used; Network currently uses global API; add owner-aware examples. |
-| `ElemenxOnCreate` / `ElemenxOnReady` / `ElemenxOnDestroy` | YES | `ComponentShowcase` and `ComponentProbe` expose create/ready/destroy behavior visibly. |
-| `ElemenxOnChildPending` / `ElemenxOnChildReady` / `ElemenxOnChildError` | MISSING | Add deferred/discovered child lifecycle showcase. |
+| `$OnCreate` / `$OnReady` / `$OnDestroy` | YES | `ComponentShowcase` and `ComponentProbe` expose create/ready/destroy behavior visibly. |
+| `$OnChildPending` / `$OnChildReady` / `$OnChildError` | MISSING | Add deferred/discovered child lifecycle showcase. |
 | route `Path`, `Params`, `Query`, `Hash` context | YES | Project route exercises params/query/hash. |
 
 ## Templates, bindings and directives
@@ -85,7 +85,7 @@ Status values:
 | NotFound component | YES | PageNotFound. |
 | route leave guard | YES | `LeaveGuardPage` visibly denies navigation until leave permission is enabled. |
 | async Guard / `Wait` | YES | `DelayedAccess` uses `this.Wait(...)`; the route shows the normal Waiting component until it resolves. |
-| Router programmatic navigation/history facade | YES | Router lab exposes Go, Replace, Back and Forward through `this.Router()`. |
+| Router programmatic navigation/history facade | YES | Router lab exposes Go, Replace, Back and Forward through `this.$Router()`. |
 | same-route Params/Query/Hash reuse | YES | Router lab changes Params/Query/Hash while showing stable Generation and Ready count. |
 
 ## Services

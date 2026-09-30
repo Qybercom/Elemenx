@@ -15,22 +15,22 @@ describe('Services', function () {
 			}
 		});
 
-		Elemenx.Component('PackageAppA', {Template:'<div>A</div>'});
-		Elemenx.Component('PackageAppB', {Template:'<div>B</div>'});
+		Elemenx.Component('PackageAppA', {$Template:'<div>A</div>'});
+		Elemenx.Component('PackageAppB', {$Template:'<div>B</div>'});
 
 		document.body.innerHTML = '<div id="a"></div><div id="b"></div>';
-		var a = Elemenx.Application('PackageA', {Component:'PackageAppA', Mount:'#a'});
-		var b = Elemenx.Application('PackageB', {Component:'PackageAppB', Mount:'#b'});
-		var sa = a.Service('PackageStore');
-		var sb = b.Service('PackageStore');
+		var a = Elemenx.Application('PackageA', {$Component:'PackageAppA', $Mount:'#a'});
+		var b = Elemenx.Application('PackageB', {$Component:'PackageAppB', $Mount:'#b'});
+		var sa = a.$Service('PackageStore');
+		var sb = b.$Service('PackageStore');
 
 		expect(sa.Inc()).toBe(1);
 		expect(sa.Inc()).toBe(2);
 		expect(sb.Inc()).toBe(1);
-		expect(sa.Application()).toBe(a);
-		expect(sb.Application()).toBe(b);
+		expect(sa.$Application()).toBe(a);
+		expect(sb.$Application()).toBe(b);
 
-		a.Destroy();
-		b.Destroy();
+		a.$Destroy();
+		b.$Destroy();
 	});
 });

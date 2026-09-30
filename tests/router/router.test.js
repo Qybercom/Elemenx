@@ -14,15 +14,15 @@ describe('Router / Guards', function () {
 	it('reuses common route components while updating params', async function () {
 		var made = 0;
 
-		Elemenx.Component('PackageRoot', {Template:'<main *outlet="Content"></main>'});
+		Elemenx.Component('PackageRoot', {$Template:'<main *outlet="Content"></main>'});
 		Elemenx.Component('PackagePage', {
-			Template:'<div id="route-value">{{Params.id}}|{{Query.q}}|{{Hash}}</div>',
-			ElemenxOnCreate:function () { made++; }
+			$Template:'<div id="route-value">{{$Params.id}}|{{$Query.q}}|{{$Hash}}</div>',
+			$OnCreate:function () { made++; }
 		});
 
-		var app = Elemenx.Application('PackageRouterApp', {Component:'PackageRoot', Mount:'#mount'});
+		var app = Elemenx.Application('PackageRouterApp', {$Component:'PackageRoot', $Mount:'#mount'});
 		var router = Elemenx.Router({
-			Root: app.Component(),
+			Root: app.$Component(),
 			Routes: [
 				{Path:'/package/:id', Component:'PackagePage'}
 			]
@@ -38,22 +38,22 @@ describe('Router / Guards', function () {
 		expect(made).toBe(1);
 
 		router.Destroy();
-		app.Destroy();
+		app.$Destroy();
 	});
 
 	it('supports asynchronous guard wait', async function () {
-		Elemenx.Component('PackageGuardRoot', {Template:'<main *outlet="Content"></main>'});
-		Elemenx.Component('PackageGuardPage', {Template:'<div id="guard-ok">OK</div>'});
+		Elemenx.Component('PackageGuardRoot', {$Template:'<main *outlet="Content"></main>'});
+		Elemenx.Component('PackageGuardPage', {$Template:'<div id="guard-ok">OK</div>'});
 
 		Elemenx.Guard('PackageAsyncGuard', function () {
-			return this.Wait(function (done) {
+			return this.$Wait(function (done) {
 				setTimeout(function () { done(true); }, 20);
 			});
 		});
 
-		var app = Elemenx.Application('PackageGuardApp', {Component:'PackageGuardRoot', Mount:'#mount'});
+		var app = Elemenx.Application('PackageGuardApp', {$Component:'PackageGuardRoot', $Mount:'#mount'});
 		var router = Elemenx.Router({
-			Root: app.Component(),
+			Root: app.$Component(),
 			Routes: [
 				{Path:'/guarded', Component:'PackageGuardPage', Guard:'PackageAsyncGuard'}
 			]
@@ -65,7 +65,7 @@ describe('Router / Guards', function () {
 		expect(document.getElementById('guard-ok')).not.toBeNull();
 
 		router.Destroy();
-		app.Destroy();
+		app.$Destroy();
 	});
 });
 // PLACEHOLDER

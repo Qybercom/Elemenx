@@ -254,9 +254,9 @@ describe('Regression: ServiceWorker registration, lifecycle and messaging bridge
 		var owned=null;
 
 		Elemenx.Component(componentName,{
-			Template:'<div></div>',
-			ElemenxOnCreate:function () {
-				owned=this.ServiceWorker(workerName,{
+			$Template:'<div></div>',
+			$OnCreate:function () {
+				owned=this.$ServiceWorker(workerName,{
 					Script:'/owned-component-worker.js',
 					Scope:'/owned-component/',
 					Channel:workerName
@@ -266,7 +266,7 @@ describe('Regression: ServiceWorker registration, lifecycle and messaging bridge
 
 		var component=Elemenx.Component(componentName)();
 		expect(await waitFor(function () { return owned && owned.Reachable(); },1000)).toBe(true);
-		component.Destroy();
+		component.$Destroy();
 		expect(owned.Reachable()).toBe(false);
 		expect(function () { owned.Register(); }).toThrow();
 	});
@@ -278,8 +278,8 @@ describe('Regression: ServiceWorker registration, lifecycle and messaging bridge
 		var owned=null;
 
 		Elemenx.Service(serviceName,{
-			ElemenxOnCreate:function () {
-				owned=this.ServiceWorker(workerName,{
+			$OnCreate:function () {
+				owned=this.$ServiceWorker(workerName,{
 					Script:'/owned-service-worker.js',
 					Scope:'/owned-service/',
 					Channel:workerName
@@ -288,9 +288,9 @@ describe('Regression: ServiceWorker registration, lifecycle and messaging bridge
 		});
 
 		var serviceHandle=Elemenx.Service(serviceName);
-		serviceHandle.Application();
+		serviceHandle.$Application();
 		expect(await waitFor(function () { return owned && owned.Reachable(); },1000)).toBe(true);
-		serviceHandle.Destroy();
+		serviceHandle.$Destroy();
 		expect(owned.Reachable()).toBe(false);
 		expect(function () { owned.Register(); }).toThrow();
 	});
@@ -326,12 +326,12 @@ describe('Regression: ServiceWorker registration, lifecycle and messaging bridge
 		var env=fakeEnvironment();
 		var componentName=unique('ServiceWorkerOwner');
 		var workerName=unique('OwnedServiceWorker');
-		Elemenx.Component(componentName,{Template:'<div></div>'});
+		Elemenx.Component(componentName,{$Template:'<div></div>'});
 		var component=Elemenx.Component(componentName)();
-		var serviceWorker=component.ServiceWorker;
+		var serviceWorker=component.$ServiceWorker;
 		var owned=serviceWorker(workerName,{Script:'/owned-worker.js',Scope:'/owned-recreate/',Channel:workerName});
 		expect(await waitFor(function () { return owned.Reachable(); },1000)).toBe(true);
-		component.Destroy();
+		component.$Destroy();
 		expect(function () { owned.Register(); }).toThrow();
 		expect(function () {
 			serviceWorker(unique('ResurrectedServiceWorker'),{Script:'/owned-worker.js',Scope:'/owned-recreate-2/'});

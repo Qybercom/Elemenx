@@ -217,11 +217,11 @@ describe('Regression: WebWorker real execution and Messaging bridge', function (
 	it('owner Destroy invalidates a saved WebWorker accessor and prevents handle resurrection', function () {
 		var componentName=unique('WebWorkerOwner');
 		var workerName=unique('OwnedWorker');
-		Elemenx.Component(componentName,{Template:'<div></div>'});
+		Elemenx.Component(componentName,{$Template:'<div></div>'});
 		var component=Elemenx.Component(componentName)();
-		var webWorker=component.WebWorker;
+		var webWorker=component.$WebWorker;
 		var owned=webWorker(workerName,{Script:'/workers/webworker-bridge.js',StartMode:'manual'});
-		component.Destroy();
+		component.$Destroy();
 		expect(function () { owned.Start(); }).toThrow();
 		expect(function () {
 			webWorker(unique('ResurrectedWorker'),{Script:'/workers/webworker-bridge.js',StartMode:'manual'});

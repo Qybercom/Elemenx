@@ -6,13 +6,13 @@ var live=[];
 function appWithTemplate (template, create) {
 	var root=unique('DeferredRoot');
 	Elemenx.Component(root,{
-		Template:template,
-		ElemenxOnCreate:create || function () {}
+		$Template:template,
+		$OnCreate:create || function () {}
 	});
 	var app=Elemenx.Application(unique('DeferredApp'),{
-		Component:root,
-		Root:'/deferred-structural',
-		Mount:'#mount'
+		$Component:root,
+		$Root:'/deferred-structural',
+		$Mount:'#mount'
 	});
 	live.push(app);
 	return app;
@@ -20,13 +20,13 @@ function appWithTemplate (template, create) {
 
 async function appReady (app) {
 	return await waitFor(function () {
-		return app.Component && app.Component();
+		return app.$Component();
 	},1500);
 }
 
 function destroy (app) {
 	var i=live.indexOf(app);
-	if (app && app.Destroy) app.Destroy();
+	if (app && app.$Destroy) app.$Destroy();
 	if (i!==-1) live.splice(i,1);
 }
 
@@ -69,7 +69,7 @@ describe('Regression: deferred structural composition', function () {
 		});
 		expect(await appReady(app)).not.toBe(false);
 		expect(await waitFor(function () { return document.querySelectorAll('.deferred-keyed-child').length===2; },1500)).toBe(true);
-		var root=app.Component(), nodes=document.querySelectorAll('.deferred-keyed-child'), a=nodes[0], b=nodes[1];
+		var root=app.$Component(), nodes=document.querySelectorAll('.deferred-keyed-child'), a=nodes[0], b=nodes[1];
 		root.items=[{id:'b',name:'B2'},{id:'a',name:'A2'}];
 		await tick();
 		nodes=document.querySelectorAll('.deferred-keyed-child');
@@ -117,7 +117,7 @@ describe('Regression: deferred structural composition', function () {
 		expect(await appReady(app)).not.toBe(false);
 		expect(await waitFor(function () { return document.querySelectorAll('.deferred-direct-child').length===2; },1500)).toBe(true);
 		var nodes=document.querySelectorAll('.deferred-direct-child'), a=nodes[0], b=nodes[1];
-		app.Component().items=[{id:2,name:'B2'},{id:1,name:'A2'},{id:3,name:'C'}];
+		app.$Component().items=[{id:2,name:'B2'},{id:1,name:'A2'},{id:3,name:'C'}];
 		await tick();
 		nodes=document.querySelectorAll('.deferred-direct-child');
 		expect(nodes[0]).toBe(b);
@@ -132,18 +132,18 @@ describe('Regression: deferred structural composition', function () {
 		expect(await appReady(app)).not.toBe(false);
 
 		var child=Elemenx.Component('DeferredPreloadChild')({name:'PRE'},null,{Application:app});
-		document.querySelector('.deferred-preload-host').appendChild(child.Element());
+		document.querySelector('.deferred-preload-host').appendChild(child.$Element());
 		expect(await waitFor(function () { return document.querySelector('.deferred-preload-child'); },1500)).not.toBe(false);
 		expect(window.DeferredPreloadChildLoads).toBe(1);
-		child.Destroy();
+		child.$Destroy();
 
 		var parent=Elemenx.Component('DeferredPreloadParent')({},null,{Application:app});
-		document.querySelector('.deferred-preload-host').appendChild(parent.Element());
+		document.querySelector('.deferred-preload-host').appendChild(parent.$Element());
 		expect(await waitFor(function () { return document.querySelectorAll('.deferred-preload-child').length===2; },1500)).toBe(true);
 		expect(window.DeferredPreloadChildLoads).toBe(1);
 		expect(Array.from(document.querySelectorAll('.deferred-preload-child')).map(function (n) { return n.textContent; })).toEqual(['A','B']);
 
-		parent.Destroy();
+		parent.$Destroy();
 		destroy(app);
 	});
 
@@ -164,10 +164,10 @@ describe('Regression: deferred structural composition', function () {
 		expect(await appReady(app)).not.toBe(false);
 		expect(await waitFor(function () { return document.querySelector('.deferred-cache-remote'); },1500)).not.toBe(false);
 		expect(window.DeferredCacheRemoteLoads).toBe(1);
-		app.Component().show=false;
+		app.$Component().show=false;
 		await tick();
-		app.Component().value='B';
-		app.Component().show=true;
+		app.$Component().value='B';
+		app.$Component().show=true;
 		await tick();
 		expect(document.querySelector('.deferred-cache-remote').textContent).toBe('B');
 		expect(window.DeferredCacheRemoteLoads).toBe(1);
@@ -204,7 +204,7 @@ describe('Regression: deferred structural composition', function () {
 		var bundle={Component:{}};
 		bundle.Component[parent]=function () {
 			Elemenx.Component(parent,{
-				Template:'<section class="deferred-hybrid-bundled-parent"><DeferredHybridRemoteChild value="{{value}}"></DeferredHybridRemoteChild></section>'
+				$Template:'<section class="deferred-hybrid-bundled-parent"><DeferredHybridRemoteChild value="{{value}}"></DeferredHybridRemoteChild></section>'
 			});
 		};
 		Elemenx.Bundle(bundle);
@@ -226,7 +226,7 @@ describe('Regression: deferred structural composition', function () {
 		bundle.Component.DeferredHybridBundledChild=function () {
 			bundledLoads++;
 			Elemenx.Component('DeferredHybridBundledChild',{
-				Template:'<strong class="deferred-hybrid-bundled-child">{{value}}</strong>'
+				$Template:'<strong class="deferred-hybrid-bundled-child">{{value}}</strong>'
 			});
 		};
 		Elemenx.Bundle(bundle);
@@ -247,7 +247,7 @@ describe('Regression: deferred structural composition', function () {
 		var bundle={Component:{}};
 		bundle.Component[bundledRoot]=function () {
 			Elemenx.Component(bundledRoot,{
-				Template:'<section class="deferred-multi-app-a"><DeferredMultiAppRemoteChild value="A"></DeferredMultiAppRemoteChild></section>'
+				$Template:'<section class="deferred-multi-app-a"><DeferredMultiAppRemoteChild value="A"></DeferredMultiAppRemoteChild></section>'
 			});
 		};
 		Elemenx.Bundle(bundle);
@@ -255,14 +255,14 @@ describe('Regression: deferred structural composition', function () {
 		window.DeferredMultiAppRemoteRootLoads=0;
 
 		var a=Elemenx.Application(unique('DeferredMultiAppA'),{
-			Component:bundledRoot,
-			Root:'/deferred-structural',
-			Mount:'#multi-app-a'
+			$Component:bundledRoot,
+			$Root:'/deferred-structural',
+			$Mount:'#multi-app-a'
 		});
 		var b=Elemenx.Application(unique('DeferredMultiAppB'),{
-			Component:'DeferredMultiAppRemoteRoot',
-			Root:'/deferred-structural',
-			Mount:'#multi-app-b'
+			$Component:'DeferredMultiAppRemoteRoot',
+			$Root:'/deferred-structural',
+			$Mount:'#multi-app-b'
 		});
 		live.push(a);
 		live.push(b);
@@ -272,8 +272,8 @@ describe('Regression: deferred structural composition', function () {
 		},1500)).not.toBe(false);
 		expect(document.querySelector('.deferred-multi-app-child').textContent).toBe('A');
 		expect(document.querySelector('.deferred-multi-app-b').textContent).toBe('B');
-		expect(a.Component().Application()).toBe(a);
-		expect(b.Component().Application()).toBe(b);
+		expect(a.$Component().$Application()).toBe(a);
+		expect(b.$Component().$Application()).toBe(b);
 		expect(window.DeferredMultiAppRemoteChildLoads).toBe(1);
 		expect(window.DeferredMultiAppRemoteRootLoads).toBe(1);
 
@@ -286,17 +286,17 @@ describe('Regression: deferred structural composition', function () {
 	it('Application lazy TemplateURL root is ready before Router starts', async function () {
 		var route=unique('DeferredRouterRoute');
 		var router=null;
-		Elemenx.Component(route,{Template:'<article class="deferred-router-route">Ready</article>'});
+		Elemenx.Component(route,{$Template:'<article class="deferred-router-route">Ready</article>'});
 
 		var app=Elemenx.Application(unique('DeferredRouterApp'),{
-			Component:'DeferredRouterRoot',
-			Root:'/deferred-structural',
-			Mount:'#mount',
-			ElemenxOnReady:function () {
+			$Component:'DeferredRouterRoot',
+			$Root:'/deferred-structural',
+			$Mount:'#mount',
+			$OnReady:function () {
 				if (router) return;
 
 				router=Elemenx.Router({
-					Root:this.Component(),
+					Root:this.$Component(),
 					Routes:[{Path:'/',Component:route}]
 				});
 				router.Start();

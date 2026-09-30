@@ -1,3 +1,3 @@
 Elemenx.Component('ProjectCard', {
-	TemplateURL: 'ProjectCard.html'
+	$TemplateURL: 'ProjectCard.html'
 });

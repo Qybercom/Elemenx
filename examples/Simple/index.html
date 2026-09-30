@@ -145,14 +145,14 @@
 	<script src="/elemenx.js"></script>
 	<script>
 		Elemenx.Component('SimpleApp', {
-			TemplateID: 'simple-app',
+			$TemplateID: 'simple-app',
 
-			ElemenxOnCreate: function () {
+			$OnCreate: function () {
 				var component = this;
-				var storage = this.Storage.Local.Namespace('SimpleExample');
+				var storage = this.$Storage.Local.Namespace('SimpleExample');
 				var theme = storage.Get('Theme') || 'light';
 
-				this.Batch(function (state) {
+				this.$Batch(function (state) {
 					state.Title = 'Hello from Elemenx';
 					state.Count = 0;
 					state.Theme = theme === 'dark' ? 'Dark' : 'Light';
@@ -160,20 +160,20 @@
 
 				document.body.setAttribute('data-theme', theme);
 
-				this.Ref('Increment').addEventListener('click', function () {
-					component.Batch(function (state) {
+				this.$Ref('Increment').addEventListener('click', function () {
+					component.$Batch(function (state) {
 						state.Count++;
 					});
 				});
 
-				this.Ref('Theme').addEventListener('click', function () {
+				this.$Ref('Theme').addEventListener('click', function () {
 					theme = theme === 'dark' ? 'light' : 'dark';
 
 					document.body.setAttribute('data-theme', theme);
 
 					storage.Set('Theme', theme);
 
-					component.Batch(function (state) {
+					component.$Batch(function (state) {
 						state.Theme = theme === 'dark' ? 'Dark' : 'Light';
 					});
 				});
@@ -181,8 +181,8 @@
 		});
 
 		Elemenx.Application('SimpleExample', {
-			Component: 'SimpleApp',
-			Mount: '#app'
+			$Component: 'SimpleApp',
+			$Mount: '#app'
 		});
 	</script>
 </head>

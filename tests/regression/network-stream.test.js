@@ -167,14 +167,14 @@ describe('Regression: Network Stream', function () {
 		var reader=new Reader();
 		var data=[];
 		window.fetch=function () { return Promise.resolve(makeResponse(reader)); };
-		Elemenx.Component(name,{Template:'<div></div>'});
+		Elemenx.Component(name,{$Template:'<div></div>'});
 		var component=Elemenx.Component(name)();
-		var stream=component.Network().Stream({URL:'/stream'});
+		var stream=component.$Network().Stream({URL:'/stream'});
 		stream.On('Transport.Data',function (event) { data.push(event.Data.Bytes); });
 		stream.Connect();
 		await tick(0);
 
-		component.Destroy();
+		component.$Destroy();
 		expect(reader.Cancelled).toBe(true);
 		expect(FakeAbortController.Instances[0].aborted).toBe(true);
 		reader.Push(new Uint8Array([1,2,3]));

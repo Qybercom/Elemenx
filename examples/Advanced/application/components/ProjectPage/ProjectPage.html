@@ -2,7 +2,7 @@
 	<div class="page-heading">
 		<p class="eyebrow">Protected route</p>
 
-		<h1>Project {{Params.id}}</h1>
+		<h1>Project {{$Params.id}}</h1>
 
 		<p class="lead">
 			Route parameters, query values and the URL hash are available directly from the component context.
@@ -13,15 +13,15 @@
 		<div class="meta-grid">
 			<div class="meta-item">
 				<span class="meta-label">Project ID</span>
-				<span class="meta-value">{{Params.id}}</span>
+				<span class="meta-value">{{$Params.id}}</span>
 			</div>
 			<div class="meta-item">
 				<span class="meta-label">Query · tab</span>
-				<span class="meta-value">{{Query.tab}}</span>
+				<span class="meta-value">{{$Query.tab}}</span>
 			</div>
 			<div class="meta-item">
 				<span class="meta-label">Hash</span>
-				<span class="meta-value">{{Hash}}</span>
+				<span class="meta-value">{{$Hash}}</span>
 			</div>
 			<div class="meta-item">
 				<span class="meta-label">Title</span>

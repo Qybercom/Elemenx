@@ -1,3 +1,3 @@
 Elemenx.Component('IteratorBadge', {
-	TemplateURL: 'IteratorBadge.html'
+	$TemplateURL: 'IteratorBadge.html'
 });

@@ -1,4 +1,4 @@
 Elemenx.Component('LoginRequired', {
-	TemplateURL: 'LoginRequired.html',
-	Title: 'Login required - Elemenx'
+	$TemplateURL: 'LoginRequired.html',
+	$Title: 'Login required - Elemenx'
 });

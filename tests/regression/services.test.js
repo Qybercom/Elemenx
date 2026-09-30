@@ -8,17 +8,17 @@ describe('Regression: Services / Application context', function () {
 	it('keeps service instances application-scoped', function () {
 		var service=unique('Store'), ca=unique('AppAComp'), cb=unique('AppBComp'), aa=unique('AppA'), ab=unique('AppB');
 		Elemenx.Service(service,{Value:0,Inc:function () {this.Value++;return this.Value;}});
-		Elemenx.Component(ca,{Template:'<div>A</div>'});
-		Elemenx.Component(cb,{Template:'<div>B</div>'});
+		Elemenx.Component(ca,{$Template:'<div>A</div>'});
+		Elemenx.Component(cb,{$Template:'<div>B</div>'});
 		document.body.innerHTML='<div id="a"></div><div id="b"></div>';
-		var a=Elemenx.Application(aa,{Component:ca,Mount:'#a'});
-		var b=Elemenx.Application(ab,{Component:cb,Mount:'#b'});
-		var sa=a.Service(service), sb=b.Service(service);
+		var a=Elemenx.Application(aa,{$Component:ca,$Mount:'#a'});
+		var b=Elemenx.Application(ab,{$Component:cb,$Mount:'#b'});
+		var sa=a.$Service(service), sb=b.$Service(service);
 		expect(sa.Inc()).toBe(1);
 		expect(sa.Inc()).toBe(2);
 		expect(sb.Inc()).toBe(1);
-		expect(sa.Application()).toBe(a);
-		expect(sb.Application()).toBe(b);
-		a.Destroy(); b.Destroy();
+		expect(sa.$Application()).toBe(a);
+		expect(sb.$Application()).toBe(b);
+		a.$Destroy(); b.$Destroy();
 	});
 });

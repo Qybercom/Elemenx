@@ -29,7 +29,7 @@ components/
 
 `components/index.js` is the Elemenx Discovery enumerator. `Application.Root` points to `components`, so component scripts do not have to be listed manually in `index.html`.
 
-A component uses a template path local to its own definition script, for example `TemplateURL: 'project.html'`. Elemenx resolves that relative URL from the component script URL.
+A component uses a template path local to its own definition script, for example `$TemplateURL: 'project.html'`. Elemenx resolves that relative URL from the component script URL.
 The Home page also demonstrates structural composition. Component tags without projected children may use XML-style self-closing syntax such as `<ProjectCard />`. `*for` supports keyed collections as well as classic local-counter iteration. A counter can also assign an item expression on each iteration:
 
 ```html
@@ -52,15 +52,15 @@ The Advanced application also registers custom behavioral directives through the
 
 ```js
 Elemenx.Directive('highlight', {
-	ElemenxOnCreate: function (context) {
+	$OnCreate: function (context) {
 		context.Data.ClassName = 'directive-highlighted';
 	},
 
-	ElemenxOnUpdate: function (context) {
+	$OnUpdate: function (context) {
 		context.Element.classList.toggle(context.Data.ClassName, !!context.Value);
 	},
 
-	ElemenxOnDestroy: function (context) {
+	$OnDestroy: function (context) {
 		context.Element.classList.remove(context.Data.ClassName);
 	}
 });

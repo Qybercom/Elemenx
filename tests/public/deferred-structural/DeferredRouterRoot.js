@@ -1,3 +1,3 @@
 Elemenx.Component('DeferredRouterRoot', {
-	TemplateURL: 'DeferredRouterRoot.html'
+	$TemplateURL: 'DeferredRouterRoot.html'
 });

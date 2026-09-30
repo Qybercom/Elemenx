@@ -20,4 +20,4 @@ components/
     simple-app.html
 ```
 
-`simple-app.js` uses `TemplateURL: 'simple-app.html'`, so the template is resolved next to the component definition script.
+`simple-app.js` uses `$TemplateURL: 'simple-app.html'`, so the template is resolved next to the component definition script.

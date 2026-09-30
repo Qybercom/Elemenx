@@ -301,16 +301,16 @@ describe('Regression: Network WebRTC', function () {
 	it('owner Destroy closes peer/channel and ignores stale WebRTC events', function () {
 		var name=unique('RTCOwner');
 		var data=[];
-		Elemenx.Component(name,{Template:'<div></div>'});
+		Elemenx.Component(name,{$Template:'<div></div>'});
 		var component=Elemenx.Component(name)();
-		var rtc=component.Network().WebRTC();
+		var rtc=component.$Network().WebRTC();
 		rtc.On('Transport.Data',function (event) { data.push(event.Data.Data); });
 		rtc.Connect();
 		var peer=FakeRTCPeerConnection.Instances[0];
 		var channel=peer.Channels[0];
 		channel.Open();
 
-		component.Destroy();
+		component.$Destroy();
 		expect(peer.Closed).toBe(true);
 		expect(channel.Closed).toBe(true);
 		channel.Message('stale');

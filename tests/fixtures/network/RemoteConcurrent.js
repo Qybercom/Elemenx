@@ -1,5 +1,5 @@
 window.RemoteConcurrentLoads = (window.RemoteConcurrentLoads || 0) + 1;
 
 Elemenx.Component('RemoteConcurrent', {
-	Template: '<span class="remote-concurrent">REMOTE:{{value}}</span>'
+	$Template: '<span class="remote-concurrent">REMOTE:{{value}}</span>'
 });

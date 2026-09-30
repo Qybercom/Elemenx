@@ -62,8 +62,8 @@
 			function Render (component) {
 				if (current === component) return component;
 				
-				if (current && current.Destroy) {
-					current.Destroy();
+				if (current && current.$Destroy) {
+					current.$Destroy();
 				}
 				else {
 					while (element.firstChild)
@@ -73,7 +73,7 @@
 				current = component || null;
 				
 				if (current)
-					element.appendChild(current.Element ? current.Element() : current);
+					element.appendChild(current.$Element ? current.$Element() : current);
 				
 				return current;
 			}
@@ -155,8 +155,8 @@
 			function updateEntry (entry, data) {
 				entry.data = data;
 				
-				if (entry.component && entry.component.Update) {
-					entry.component.Update(data);
+				if (entry.component && entry.component.$Update) {
+					entry.component.$Update(data);
 				}
 				
 				return entry;
@@ -205,7 +205,7 @@
 						entry = create(key, data[i]);
 					}
 					
-					node = entry.component.Element ? entry.component.Element() : entry.component;
+					node = entry.component.$Element ? entry.component.$Element() : entry.component;
 					
 					/*
 					 * Preserve DOM position for retained keyed items.
@@ -234,8 +234,8 @@
 					key = order[i];
 					
 					if (!wanted[key] && items[key]) {
-						if (items[key].component && items[key].component.Destroy) {
-							items[key].component.Destroy();
+						if (items[key].component && items[key].component.$Destroy) {
+							items[key].component.$Destroy();
 						}
 						
 						delete items[key];
@@ -309,8 +309,8 @@
 				var nextOrder = [];
 				var i = 0;
 				
-				if (entry.component && entry.component.Destroy) {
-					entry.component.Destroy();
+				if (entry.component && entry.component.$Destroy) {
+					entry.component.$Destroy();
 				}
 				
 				delete items[key];
@@ -350,8 +350,8 @@
 				while (i >= 0) {
 					key = order[i];
 					
-					if (items[key] && items[key].component && items[key].component.Destroy) {
-						items[key].component.Destroy();
+					if (items[key] && items[key].component && items[key].component.$Destroy) {
+						items[key].component.$Destroy();
 					}
 					
 					i--;
@@ -968,11 +968,25 @@
 		function load (application, type, name, force, callback) {
 			var map = maps.get(application);
 			var url = map && map[name];
+			var building = builds.get(application);
 			var key;
 			var target;
 			var script;
 			var callbacks;
 			var i;
+			
+			if (!url && building) {
+				building.push(function (error) {
+					if (error) {
+						if (callback) callback(error);
+						return;
+					}
+					
+					load(application, type, name, force, callback);
+				});
+				
+				return true;
+			}
 			
 			if (!url) {
 				if (callback)
@@ -1135,7 +1149,7 @@
 		var guardRegistry = {};
 		
 		function ServiceAccessor (name) {
-			var application = this && this.Application ? this.Application() : null;
+			var application = this && this.$Application ? this.$Application() : null;
 			
 			return serviceHandle(name, application);
 		}
@@ -1147,30 +1161,30 @@
 			definition = definition || {};
 			
 			for (key in definition) {
-				if (Object.prototype.hasOwnProperty.call(definition, key) && key !== 'ElemenxOnCreate' && key !== 'ElemenxOnDestroy') {
+				if (Object.prototype.hasOwnProperty.call(definition, key) && key.charAt(0) !== '$') {
 					instance[key] = definition[key];
 				}
 			}
 			
-			instance.Generation = function () {
+			instance.$Generation = function () {
 				return generation || 0;
 			};
-			instance.Application = function () {
+			instance.$Application = function () {
 				return application || null;
 			};
-			instance.Service = function (serviceName) {
+			instance.$Service = function (serviceName) {
 				return serviceHandle(serviceName, application);
 			};
-			instance.Network = Runtime.NetworkFor ? Runtime.NetworkFor(instance) : Elemenx.Network;
-			instance.Storage = Runtime.StorageFor ? Runtime.StorageFor(instance) : Elemenx.Storage;
-			instance.WebWorker = Runtime.WebWorkerFor ? Runtime.WebWorkerFor(instance) : null;
-			instance.ServiceWorker = Runtime.ServiceWorkerFor ? Runtime.ServiceWorkerFor(instance) : null;
+			instance.$Network = Runtime.NetworkFor ? Runtime.NetworkFor(instance) : Elemenx.Network;
+			instance.$Storage = Runtime.StorageFor ? Runtime.StorageFor(instance) : Elemenx.Storage;
+			instance.$WebWorker = Runtime.WebWorkerFor ? Runtime.WebWorkerFor(instance) : null;
+			instance.$ServiceWorker = Runtime.ServiceWorkerFor ? Runtime.ServiceWorkerFor(instance) : null;
 			
 			if (Runtime.SetMessagingEntity)
 				Runtime.SetMessagingEntity(instance, name, 0);
 			
-			instance.Messaging = Runtime.MessagingFor ? Runtime.MessagingFor(instance) : Elemenx.Messaging;
-			instance.Destroy = function () {
+			instance.$Messaging = Runtime.MessagingFor ? Runtime.MessagingFor(instance) : Elemenx.Messaging;
+			instance.$Destroy = function () {
 				if (Runtime.DestroyNetworkOwner)
 					Runtime.DestroyNetworkOwner(instance);
 				
@@ -1183,13 +1197,13 @@
 				if (Runtime.DestroyServiceWorkerOwner)
 					Runtime.DestroyServiceWorkerOwner(instance);
 				
-				if (typeof definition.ElemenxOnDestroy === 'function') {
-					definition.ElemenxOnDestroy.call(instance);
+				if (typeof definition.$OnDestroy === 'function') {
+					definition.$OnDestroy.call(instance);
 				}
 			};
 			
-			if (typeof definition.ElemenxOnCreate === 'function') {
-				definition.ElemenxOnCreate.call(instance);
+			if (typeof definition.$OnCreate === 'function') {
+				definition.$OnCreate.call(instance);
 			}
 			
 			return instance;
@@ -1269,7 +1283,7 @@
 					
 					if (property === 'ElemenxServiceHandle') return true;
 					if (property === 'ElemenxDeferred') return !serviceRegistry[name];
-					if (property === 'Destroy') {
+					if (property === '$Destroy') {
 						return function () {
 							var entry = serviceRegistry[name];
 							if (!entry) return;
@@ -1279,7 +1293,7 @@
 							queued = [];
 							
 							if (!target) return;
-							if (target.Destroy) target.Destroy();
+							if (target.$Destroy) target.$Destroy();
 							
 							if (application && entry.ApplicationInstances) {
 								entry.ApplicationInstances.delete(application);
@@ -1405,7 +1419,7 @@
 				target = existingServiceTarget(name, application);
 				if (!target) continue;
 				
-				if (target.Destroy) target.Destroy();
+				if (target.$Destroy) target.$Destroy();
 				entry.ApplicationInstances.delete(application);
 				removeApplicationInstance(entry, target);
 			}
@@ -1415,13 +1429,13 @@
 		Runtime.RegisterServiceDefinition = function (name, definition) {
 			var previous = serviceRegistry[name];
 			
-			if (previous && previous.Instance && previous.Instance.Destroy) previous.Instance.Destroy();
+			if (previous && previous.Instance && previous.Instance.$Destroy) previous.Instance.$Destroy();
 			
 			if (previous && previous.ApplicationInstanceList) {
 				var i = 0;
 				
 				while (i < previous.ApplicationInstanceList.length) {
-					if (previous.ApplicationInstanceList[i].Destroy) previous.ApplicationInstanceList[i].Destroy();
+					if (previous.ApplicationInstanceList[i].$Destroy) previous.ApplicationInstanceList[i].$Destroy();
 					
 					i++;
 				}
@@ -1790,7 +1804,7 @@
 	Runtime.Directive.Register('if', {
 		Alias: 'If',
 		Structural: true,
-		ElemenxOnUpdate: function (context) {
+		$OnUpdate: function (context) {
 			if (context.Value) context.Mount();
 			else context.Unmount();
 		}
@@ -1799,7 +1813,7 @@
 		Alias: 'For',
 		Structural: true,
 		Collection: true,
-		ElemenxOnCreate: function (context) {
+		$OnCreate: function (context) {
 			var classic = context.Expression.split(';');
 			var match = /^\s*([A-Za-z_$][\w$]*)\s+(of|in)\s+([\s\S]+)$/.exec(context.Expression);
 			var initializer;
@@ -1824,7 +1838,7 @@
 			context.Data.Variable = match[1];
 			context.Data.Source = match[3];
 		},
-		ElemenxOnUpdate: function (context) {
+		$OnUpdate: function (context) {
 			if (context.Data.Mode === 'classic') {
 				context.Render(null, {
 					Mode: 'classic',
@@ -1863,47 +1877,48 @@
 		
 		var componentRegistry = {};
 		var componentDefinitionReserved = {
-			Template: true,
-			TemplateID: true,
-			TemplateURL: true,
-			Style: true,
-			StyleURL: true,
-			Title: true,
-			Components: true,
-			ElemenxDefinitionURL: true,
-			ElemenxStyleKey: true,
-			ElemenxOnCreate: true,
-			ElemenxOnReady: true,
-			ElemenxOnChildReady: true,
-			ElemenxOnChildPending: true,
-			ElemenxOnChildError: true,
-			ElemenxOnDestroy: true
+			$Template: true,
+			$TemplateID: true,
+			$TemplateURL: true,
+			$Style: true,
+			$StyleURL: true,
+			$Title: true,
+			$Components: true,
+			$DefinitionURL: true,
+			$StyleKey: true,
+			$OnCreate: true,
+			$OnReady: true,
+			$OnChildReady: true,
+			$OnChildPending: true,
+			$OnChildError: true,
+			$OnDestroy: true
 		};
 		var componentAPIReserved = {
-			Generation: true,
-			Application: true,
-			Element: true,
-			Ref: true,
-			On: true,
-			Emit: true,
-			Parent: true,
-			Router: true,
-			Service: true,
-			Title: true,
-			Batch: true,
-			Update: true,
-			Destroy: true,
-			Network: true,
-			Storage: true,
-			WebWorker: true,
-			ServiceWorker: true,
-			Messaging: true,
-			Path: true,
-			Params: true,
-			Query: true,
-			Hash: true
+			$Generation: true,
+			$Application: true,
+			$Element: true,
+			$Ref: true,
+			$On: true,
+			$Emit: true,
+			$Parent: true,
+			$Router: true,
+			$Service: true,
+			$Title: true,
+			$Batch: true,
+			$Update: true,
+			$Destroy: true,
+			$Network: true,
+			$Storage: true,
+			$WebWorker: true,
+			$ServiceWorker: true,
+			$Messaging: true,
+			$Path: true,
+			$Params: true,
+			$Query: true,
+			$Hash: true,
+			$GuardFailure: true
 		};
-		var componentRouteContext = {Path: true, Params: true, Query: true, Hash: true};
+		var componentRouteContext = {$Path: true, $Params: true, $Query: true, $Hash: true};
 		var componentGenerations = {};
 		var componentOutlets = new WeakMap();
 		var componentValues = new WeakMap();
@@ -2176,12 +2191,12 @@
 			
 			if (!global.document || css === undefined || css === null) return;
 			
-			if (!definition.ElemenxStyleKey) {
+			if (!definition.$StyleKey) {
 				styleSequence++;
-				definition.ElemenxStyleKey = name ? 'component:' + name : 'anonymous:' + styleSequence;
+				definition.$StyleKey = name ? 'component:' + name : 'anonymous:' + styleSequence;
 			}
 			
-			key = definition.ElemenxStyleKey;
+			key = definition.$StyleKey;
 			style = installedComponentStyles[key] || null;
 			
 			if (!style || !style.parentNode) {
@@ -2311,29 +2326,29 @@
 				
 				method.call(owner, {
 					Name: lifecycle.Name || null,
-					Element: current && current.Element ? current.Element() : placeholder,
+					$Element: current && current.$Element ? current.$Element() : placeholder,
 					Error: error || null
 				});
 			}
 			
 			if (lifecycle) {
 				renderStatus(lifecycle.Pending);
-				lifecycleCall('ElemenxOnChildPending', null);
+				lifecycleCall('$OnChildPending', null);
 			}
 			
-			api.Generation = function () {
-				return current && current.Generation ? current.Generation() : 0;
+			api.$Generation = function () {
+				return current && current.$Generation ? current.$Generation() : 0;
 			};
 			
-			api.Application = function () {
-				if (current && current.Application) return current.Application();
-				if (api._parent && api._parent.Application) return api._parent.Application();
+			api.$Application = function () {
+				if (current && current.$Application) return current.$Application();
+				if (api._parent && api._parent.$Application) return api._parent.$Application();
 				
 				return options && options.Application ? options.Application : null;
 			};
 			
-			api.Element = function () {
-				return current ? current.Element() : placeholder;
+			api.$Element = function () {
+				return current ? current.$Element() : placeholder;
 			};
 			
 			api._Component = function () {
@@ -2350,38 +2365,38 @@
 				return component;
 			};
 			
-			api.Parent = function (value) {
+			api.$Parent = function (value) {
 				if (arguments.length) {
-					if (current) current.Parent(value);
+					if (current) current.$Parent(value);
 					else api._parent = value;
 					
 					return api;
 				}
 				
-				return current ? current.Parent() : api._parent;
+				return current ? current.$Parent() : api._parent;
 			};
 			
-			api.Ref = function (name) {
-				if (!current || !current.Ref) return null;
+			api.$Ref = function (name) {
+				if (!current || !current.$Ref) return null;
 				
-				return current.Ref(name);
+				return current.$Ref(name);
 			};
 			
-			api.Update = function (value) {
-				if (current) current.Update(value);
+			api.$Update = function (value) {
+				if (current) current.$Update(value);
 				else updates.push(value);
 				
 				return api;
 			};
 			
-			api.On = function (name, callback) {
-				if (current) current.On(name, callback);
+			api.$On = function (name, callback) {
+				if (current) current.$On(name, callback);
 				else listeners.push({Name: name, Callback: callback});
 				
 				return api;
 			};
 			
-			api.Destroy = function () {
+			api.$Destroy = function () {
 				destroyed = true;
 				updates = [];
 				listeners = [];
@@ -2389,7 +2404,7 @@
 				Runtime.DetachRouterOwner(api);
 				
 				if (current)
-					current.Destroy();
+					current.$Destroy();
 				
 				current = null;
 				
@@ -2400,13 +2415,13 @@
 			api._Pending = function () {
 				if (destroyed) return false;
 				
-				var oldElement = current ? current.Element() : placeholder;
+				var oldElement = current ? current.$Element() : placeholder;
 				
 				reloadParent = oldElement && oldElement.parentNode;
 				reloadNext = oldElement && oldElement.nextSibling;
 				
 				if (current)
-					current.Destroy();
+					current.$Destroy();
 				
 				current = null;
 				
@@ -2419,7 +2434,7 @@
 				}
 				
 				if (lifecycle)
-					lifecycleCall('ElemenxOnChildPending', null);
+					lifecycleCall('$OnChildPending', null);
 				
 				return true;
 			};
@@ -2429,7 +2444,7 @@
 				
 				if (lifecycle) {
 					renderStatus(lifecycle.Error);
-					lifecycleCall('ElemenxOnChildError', error);
+					lifecycleCall('$OnChildError', error);
 				}
 				
 				return true;
@@ -2438,32 +2453,32 @@
 			api._Reload = function (factory) {
 				if (destroyed || !factory) return false;
 				
-				var oldElement = current ? current.Element() : placeholder;
+				var oldElement = current ? current.$Element() : placeholder;
 				var parentNode = reloadParent || (oldElement && oldElement.parentNode);
 				var nextSibling = reloadNext || (oldElement && oldElement.nextSibling);
 				
-				if (current) current.Destroy();
+				if (current) current.$Destroy();
 				current = factory(canonicalDeferredData(data, factory.Definition, options), slotProjection, options);
 				
 				var currentRouter = Runtime.ComponentRouters.get(api);
 				if (currentRouter) Runtime.AttachRouter(current, currentRouter);
 				
-				if (api._parent && current.Parent) current.Parent(api._parent);
+				if (api._parent && current.$Parent) current.$Parent(api._parent);
 				
 				var i = 0;
 				while (i < listeners.length) {
-					current.On(listeners[i].Name, listeners[i].Callback);
+					current.$On(listeners[i].Name, listeners[i].Callback);
 					
 					i++;
 				}
 				
 				i = 0;
 				while (i < updates.length) {
-					current.Update(canonicalDeferredInput(updates[i], factory.Definition));
+					current.$Update(canonicalDeferredInput(updates[i], factory.Definition));
 					i++;
 				}
 				
-				var element = current.Element();
+				var element = current.$Element();
 				
 				if (placeholder.parentNode) placeholder.parentNode.replaceChild(element, placeholder);
 				else if (parentNode && !element.parentNode) {
@@ -2475,7 +2490,7 @@
 				reloadNext = null;
 				
 				if (lifecycle)
-					lifecycleCall('ElemenxOnChildReady', null);
+					lifecycleCall('$OnChildReady', null);
 				
 				return true;
 			};
@@ -2488,7 +2503,7 @@
 					
 					if (lifecycle) {
 						renderStatus(lifecycle.Error);
-						lifecycleCall('ElemenxOnChildError', error);
+						lifecycleCall('$OnChildError', error);
 					}
 					
 					if (global.console && console.error) console.error(error);
@@ -2501,28 +2516,28 @@
 				var currentRouter = Runtime.ComponentRouters.get(api);
 				if (currentRouter) Runtime.AttachRouter(current, currentRouter);
 				
-				if (api._parent && current.Parent) current.Parent(api._parent);
+				if (api._parent && current.$Parent) current.$Parent(api._parent);
 				
 				var i = 0;
 				while (i < listeners.length) {
-					current.On(listeners[i].Name, listeners[i].Callback);
+					current.$On(listeners[i].Name, listeners[i].Callback);
 					
 					i++;
 				}
 				
 				i = 0;
 				while (i < updates.length) {
-					current.Update(canonicalDeferredInput(updates[i], factory.Definition));
+					current.$Update(canonicalDeferredInput(updates[i], factory.Definition));
 					i++;
 				}
 				
-				var element = current.Element();
+				var element = current.$Element();
 				
 				if (placeholder.parentNode)
 					placeholder.parentNode.replaceChild(element, placeholder);
 				
 				if (lifecycle && (!current._Component || current._Component()))
-					lifecycleCall('ElemenxOnChildReady', null);
+					lifecycleCall('$OnChildReady', null);
 				
 				updates = [];
 				listeners = [];
@@ -3195,23 +3210,23 @@
 			
 			definition = definition || {};
 			
-			if (name && (definition.TemplateURL || definition.StyleURL) && global.document && global.document.currentScript && !definition.ElemenxDefinitionURL) {
-				definition.ElemenxDefinitionURL = global.document.currentScript.src.split('?')[0].split('#')[0];
+			if (name && (definition.$TemplateURL || definition.$StyleURL) && global.document && global.document.currentScript && !definition.$DefinitionURL) {
+				definition.$DefinitionURL = global.document.currentScript.src.split('?')[0].split('#')[0];
 			}
 			
 			function resolveDefinitionResourceURL (url) {
-				if (!url || !definition.ElemenxDefinitionURL || /^(?:[a-z]+:)?\/\//i.test(url) || url.charAt(0) === '/') return url;
+				if (!url || !definition.$DefinitionURL || /^(?:[a-z]+:)?\/\//i.test(url) || url.charAt(0) === '/') return url;
 				
-				return definition.ElemenxDefinitionURL.substring(0, definition.ElemenxDefinitionURL.lastIndexOf('/') + 1) + url.replace(/^\.\//, '');
+				return definition.$DefinitionURL.substring(0, definition.$DefinitionURL.lastIndexOf('/') + 1) + url.replace(/^\.\//, '');
 			}
 			
-			definition.TemplateURL = resolveDefinitionResourceURL(definition.TemplateURL);
-			definition.StyleURL = resolveDefinitionResourceURL(definition.StyleURL);
+			definition.$TemplateURL = resolveDefinitionResourceURL(definition.$TemplateURL);
+			definition.$StyleURL = resolveDefinitionResourceURL(definition.$StyleURL);
 			
 			if (generationOverride === undefined && name && previousFactory && !previousFactory.ElemenxLazy) generation++;
 			if (name) componentGenerations[name] = generation;
 			
-			if ((definition.Template === undefined && (definition.TemplateURL || definition.TemplateID || name)) || (definition.StyleURL && definition.Style === undefined)) {
+			if ((definition.$Template === undefined && (definition.$TemplateURL || definition.$TemplateID || name)) || (definition.$StyleURL && definition.$Style === undefined)) {
 				var remoteFactory = function (data, slotProjection, options) {
 					var component = deferredComponent(function (ready) {
 						function finish (html, css) {
@@ -3220,14 +3235,14 @@
 							var key;
 							
 							for (key in definition) {
-								if (own(definition, key) && key !== 'TemplateURL' && key !== 'StyleURL' && key !== 'ElemenxDefinitionURL' && key !== 'ElemenxStyleKey') {
+								if (own(definition, key) && key !== '$TemplateURL' && key !== '$StyleURL' && key !== '$DefinitionURL' && key !== '$StyleKey') {
 									localDefinition[key] = definition[key];
 								}
 							}
 							
-							if (html !== undefined) localDefinition.Template = html;
+							if (html !== undefined) localDefinition.$Template = html;
 							if (css !== undefined) {
-								definition.Style = css;
+								definition.$Style = css;
 								installComponentStyle(name, definition, css);
 							}
 							
@@ -3236,12 +3251,12 @@
 						}
 						
 						function loadStyle (html) {
-							if (!definition.StyleURL || definition.Style !== undefined) {
-								finish(html, definition.Style);
+							if (!definition.$StyleURL || definition.$Style !== undefined) {
+								finish(html, definition.$Style);
 								return;
 							}
 							
-							loadStyleURL(definition.StyleURL, function (error, css) {
+							loadStyleURL(definition.$StyleURL, function (error, css) {
 								if (error) {
 									ready(error);
 									return;
@@ -3251,8 +3266,8 @@
 							});
 						}
 						
-						if (definition.TemplateURL && definition.Template === undefined) {
-							loadTemplateURL(definition.TemplateURL, false, function (error, html) {
+						if (definition.$TemplateURL && definition.$Template === undefined) {
+							loadTemplateURL(definition.$TemplateURL, false, function (error, html) {
 								if (error) {
 									ready(error);
 									return;
@@ -3261,8 +3276,8 @@
 								loadStyle(html);
 							});
 						}
-						else if (definition.Template === undefined) {
-							templateID = definition.TemplateID || name;
+						else if (definition.$Template === undefined) {
+							templateID = definition.$TemplateID || name;
 							Runtime.Template.Resolve(templateID, function (error, html) {
 								if (error) {
 									ready(error);
@@ -3273,7 +3288,7 @@
 							});
 						}
 						else {
-							loadStyle(definition.Template);
+							loadStyle(definition.$Template);
 						}
 					}, data, slotProjection, options);
 					
@@ -3292,8 +3307,8 @@
 				return remoteFactory;
 			}
 			
-			if (definition.Style !== undefined)
-				installComponentStyle(name, definition, definition.Style);
+			if (definition.$Style !== undefined)
+				installComponentStyle(name, definition, definition.$Style);
 			
 			function factory (data, slotProjection, options) {
 				var directState = options && options.DirectState === true;
@@ -3304,14 +3319,14 @@
 					for (definitionKey in definition) {
 						if (
 							own(definition, definitionKey) &&
-							!componentDefinitionReserved[definitionKey] &&
+							definitionKey.charAt(0) !== '$' &&
 							typeof definition[definitionKey] !== 'function'
 						) {
 							definitionValues[definitionKey] = definition[definitionKey];
 						}
 					}
 				}
-				var root = createFragment(resolveTemplate(definition.Template));
+				var root = createFragment(resolveTemplate(definition.$Template));
 				
 				/*
 				 * A component root carrying a structural directive needs a stable
@@ -3347,7 +3362,7 @@
 					? (data && data.__raw__ ? data : Runtime.Reactive(data || {}))
 					: Runtime.Reactive(
 						options && options.RoutePacket
-							? {Path: '', Params: {}, Query: {}, Hash: ''}
+							? {$Path: '', $Params: {}, $Query: {}, $Hash: ''}
 							: {}
 					);
 				var routeContextReady = false;
@@ -3486,10 +3501,10 @@
 					
 					if (!target || !child) return api;
 					
-					element = child.Element ? child.Element() : child;
+					element = child.$Element ? child.$Element() : child;
 					target.appendChild(element);
 					
-					if (child.Destroy)
+					if (child.$Destroy)
 						children.push(child);
 					
 					return api;
@@ -3597,8 +3612,8 @@
 							Data: {}
 						};
 						record.Context = context;
-						if (typeof record.Definition.ElemenxOnCreate === 'function')
-							record.Definition.ElemenxOnCreate.call(api, context);
+						if (typeof record.Definition.$OnCreate === 'function')
+							record.Definition.$OnCreate.call(api, context);
 						(function (record, context) {
 							var evaluate = record.Expression ? Runtime.CompileExpression(record.Expression) : null;
 							effect = Runtime.Effect(function () {
@@ -3614,8 +3629,8 @@
 									}
 								}
 								context.Value = value;
-								if (typeof record.Definition.ElemenxOnUpdate === 'function')
-									record.Definition.ElemenxOnUpdate.call(api, context);
+								if (typeof record.Definition.$OnUpdate === 'function')
+									record.Definition.$OnUpdate.call(api, context);
 								return value;
 							}, true);
 							record.Effect = effect;
@@ -3630,8 +3645,8 @@
 					var record;
 					while (i >= 0) {
 						record = customDirectives[i];
-						if (typeof record.Definition.ElemenxOnDestroy === 'function')
-							record.Definition.ElemenxOnDestroy.call(api, record.Context);
+						if (typeof record.Definition.$OnDestroy === 'function')
+							record.Definition.$OnDestroy.call(api, record.Context);
 						i--;
 					}
 					customDirectives.length = 0;
@@ -3650,10 +3665,10 @@
 				function updateRouteContext (packet) {
 					if (!packet) return;
 					Runtime.BatchReactive(function () {
-						values.Path = packet.Path;
-						values.Params = packet.Params;
-						values.Query = packet.Query;
-						values.Hash = packet.Hash;
+						values.$Path = packet.Path;
+						values.$Params = packet.Params;
+						values.$Query = packet.Query;
+						values.$Hash = packet.Hash;
 						routeContextReady = true;
 					});
 				}
@@ -3668,8 +3683,8 @@
 					Runtime.BatchReactive(function () {
 						for (key in next) {
 							if (own(next, key)) {
-								if (!directState && componentAPIReserved[key])
-									throw new Error('Elemenx component value conflicts with Component API: ' + key);
+								if (!directState && String(key).charAt(0) === '$')
+									throw new Error('Elemenx component value uses reserved $ namespace: ' + key);
 								
 								values[key] = next[key];
 							}
@@ -3762,8 +3777,8 @@
 					
 					destroyCustomDirectives();
 					
-					if (definition.ElemenxOnDestroy)
-						definition.ElemenxOnDestroy.call(api);
+					if (definition.$OnDestroy)
+						definition.$OnDestroy.call(api);
 					
 					i = listeners.length - 1;
 					
@@ -3787,7 +3802,7 @@
 					i = children.length - 1;
 					
 					while (i >= 0) {
-						children[i].Destroy();
+						children[i].$Destroy();
 						
 						i--;
 					}
@@ -3799,29 +3814,29 @@
 				}
 				
 				var apiTarget = {
-					Generation: function () {
+					$Generation: function () {
 						return generation;
 					},
-					Application: function () {
+					$Application: function () {
 						var parent = Parent();
-						if (parent && parent.Application)
-							return parent.Application();
+						if (parent && parent.$Application)
+							return parent.$Application();
 						
 						return options && options.Application ? options.Application : null;
 					},
-					Element: function () {
+					$Element: function () {
 						return root;
 					},
-					Ref: Ref,
-					On: On,
-					Emit: Emit,
-					Parent: Parent,
-					Router: Router,
-					Service: Runtime.Service,
-					Title: Elemenx.Title,
-					Batch: Batch,
-					Update: Update,
-					Destroy: Destroy
+					$Ref: Ref,
+					$On: On,
+					$Emit: Emit,
+					$Parent: Parent,
+					$Router: Router,
+					$Service: Runtime.Service,
+					$Title: Elemenx.Title,
+					$Batch: Batch,
+					$Update: Update,
+					$Destroy: Destroy
 				};
 				api = apiTarget;
 				
@@ -3837,9 +3852,9 @@
 							return values[key];
 						},
 						set: function (target, key, value) {
-							if (destroyed && !(componentAPIReserved[key] || key in target)) return true;
+							if (destroyed && !(String(key).charAt(0) === '$' || key in target)) return true;
 
-							if (componentAPIReserved[key] || key in target) {
+							if (String(key).charAt(0) === '$' || key in target) {
 								target[key] = value;
 								
 								return true;
@@ -3855,15 +3870,15 @@
 					});
 				}
 				
-				api.Network = Runtime.NetworkFor ? Runtime.NetworkFor(api) : Elemenx.Network;
-				api.Storage = Runtime.StorageFor ? Runtime.StorageFor(api) : Elemenx.Storage;
-				api.WebWorker = Runtime.WebWorkerFor ? Runtime.WebWorkerFor(api) : null;
-				api.ServiceWorker = Runtime.ServiceWorkerFor ? Runtime.ServiceWorkerFor(api) : null;
+				api.$Network = Runtime.NetworkFor ? Runtime.NetworkFor(api) : Elemenx.Network;
+				api.$Storage = Runtime.StorageFor ? Runtime.StorageFor(api) : Elemenx.Storage;
+				api.$WebWorker = Runtime.WebWorkerFor ? Runtime.WebWorkerFor(api) : null;
+				api.$ServiceWorker = Runtime.ServiceWorkerFor ? Runtime.ServiceWorkerFor(api) : null;
 				
 				if (Runtime.SetMessagingEntity)
 					Runtime.SetMessagingEntity(api, name || 'Component', messagingInstanceSequence++);
 				
-				api.Messaging = Runtime.MessagingFor ? Runtime.MessagingFor(api) : Elemenx.Messaging;
+				api.$Messaging = Runtime.MessagingFor ? Runtime.MessagingFor(api) : Elemenx.Messaging;
 				
 				componentOutlets.set(api, outlets);
 				componentValues.set(api, values);
@@ -3884,7 +3899,7 @@
 					if (
 						own(definition, methodName) &&
 						typeof definition[methodName] === 'function' &&
-						(!componentDefinitionReserved[methodName] || methodName.indexOf('ElemenxOn') === 0)
+						(methodName.charAt(0) !== '$' || methodName.indexOf('$On') === 0)
 					) {
 						/*
 						 * Methods belong to the Component API, never to reactive state.
@@ -3913,11 +3928,11 @@
 				/*
 				 * Do not eagerly evaluate template expressions against an empty
 				 * bootstrap object. Application-style components commonly populate
-				 * their state in ElemenxOnCreate(); with real JavaScript expressions an
+				 * their state in $OnCreate(); with real JavaScript expressions an
 				 * absent identifier is a ReferenceError, unlike the old path lookup.
 				 *
 				 * Components that actually receive props still get their initial
-				 * Update before ElemenxOnCreate, preserving the existing child lifecycle.
+				 * Update before $OnCreate, preserving the existing child lifecycle.
 				 */
 				
 				if (!directState && Object.keys(definitionValues).length) {
@@ -3933,21 +3948,21 @@
 					Update(data);
 				}
 				
-				if (definition.Title !== undefined)
-					api.Title(definition.Title);
+				if (definition.$Title !== undefined)
+					api.$Title(definition.$Title);
 				
-				if (definition.ElemenxOnCreate)
-					definition.ElemenxOnCreate.call(api, data || {});
+				if (definition.$OnCreate)
+					definition.$OnCreate.call(api, data || {});
 				
 				/*
-				 * Bootstrap is intentionally delayed until after ElemenxOnCreate().
+				 * Bootstrap is intentionally delayed until after $OnCreate().
 				 * This preserves the established semantics: components may populate their
-				 * initial state in ElemenxOnCreate without expressions seeing an empty scope.
+				 * initial state in $OnCreate without expressions seeing an empty scope.
 				 */
 				activateEffects();
 				
 				/*
-				 * Structural() was compiled before ElemenxOnCreate(), but its lazy records
+				 * Structural() was compiled before $OnCreate(), but its lazy records
 				 * must see the populated initial state. One bootstrap pass creates
 				 * component conditions / collections / ordinary *if. Reactive
 				 * data-if records then update from their own dependencies.
@@ -3974,21 +3989,21 @@
 				
 				/*
 				 * Router context becomes part of the component only after Create has
-				 * completed, but before ComponentReady. This keeps ElemenxOnCreate about
+				 * completed, but before ComponentReady. This keeps $OnCreate about
 				 * the component itself while Ready may safely consume route state.
 				 */
 				if (options && options.RoutePacket)
 					updateRouteContext(options.RoutePacket);
 				
 				if (options && options.GuardFailure)
-					api.GuardFailure = options.GuardFailure;
+					api.$GuardFailure = options.GuardFailure;
 				
 				/*
 				 * The component is now fully initialized. Declarative Title is applied
 				 * before lifecycle hooks, so Ready may replace it with a dynamic value.
 				 */
-				if (definition.ElemenxOnReady)
-					definition.ElemenxOnReady.call(api);
+				if (definition.$OnReady)
+					definition.$OnReady.call(api);
 				
 				return api;
 			}
@@ -4070,14 +4085,14 @@
 			var factory = Runtime.ResolveComponentRegistered(name);
 			var definition = factory && factory.Definition;
 			
-			if (!definition || !definition.TemplateURL) {
+			if (!definition || !definition.$TemplateURL) {
 				if (callback)
 					callback(null);
 				
 				return;
 			}
 			
-			loadTemplateURL(definition.TemplateURL, true, function (error) {
+			loadTemplateURL(definition.$TemplateURL, true, function (error) {
 				if (callback)
 					callback(error);
 			});
@@ -4149,8 +4164,8 @@
 				if (!own(componentRegistry, name)) continue;
 				factory = componentRegistry[name];
 				definition = factory && factory.Definition;
-				if (!definition || definition.Template !== undefined || definition.TemplateURL) continue;
-				if ((definition.TemplateID || name) !== templateName) continue;
+				if (!definition || definition.$Template !== undefined || definition.$TemplateURL) continue;
+				if ((definition.$TemplateID || name) !== templateName) continue;
 				
 				Runtime.BeginComponentReload(name);
 				count += Runtime.ReloadComponentInstances(name);
@@ -4238,7 +4253,7 @@
 			var rollbackPop = false;
 			
 			function application () {
-				return root && root.Application ? root.Application() : null;
+				return root && root.$Application ? root.$Application() : null;
 			}
 			
 			function emit (name, data) {
@@ -4565,8 +4580,8 @@
 				if (waitingElement && waitingElement.parentNode)
 					waitingElement.parentNode.removeChild(waitingElement);
 				
-				if (waitingComponent.Destroy)
-					waitingComponent.Destroy();
+				if (waitingComponent.$Destroy)
+					waitingComponent.$Destroy();
 				
 				waitingComponent = null;
 				waitingElement = null;
@@ -4608,8 +4623,8 @@
 					});
 					
 					Runtime.AttachRouter(waitingComponent, api);
-					waitingComponent.Parent(root);
-					waitingElement = waitingComponent.Element ? waitingComponent.Element() : waitingComponent;
+					waitingComponent.$Parent(root);
+					waitingElement = waitingComponent.$Element ? waitingComponent.$Element() : waitingComponent;
 					outlet.Element().appendChild(waitingElement);
 					emit('NavigationWaiting', prepared.Packet);
 					
@@ -4664,11 +4679,11 @@
 			
 			function leaveArguments (context) {
 				return {
-					From: context.From,
-					To: context.To,
-					Route: context.Route,
-					Wait: waiter,
-					Fail: fail
+					$From: context.$From,
+					$To: context.$To,
+					$Route: context.$Route,
+					$Wait: waiter,
+					$Fail: fail
 				};
 			}
 			
@@ -4733,7 +4748,7 @@
 					}
 					
 					var route = chain[routeIndex];
-					context.FailureRoute = route;
+					context.$FailureRoute = route;
 					
 					var list = guardsFor(route);
 					var guardIndex = 0;
@@ -4778,8 +4793,8 @@
 							throw new Error('Elemenx route guard not found');
 						
 						(function (guardReference) {
-							context.Route = route;
-							context.Guard = guardReference;
+							context.$Route = route;
+							context.$Guard = guardReference;
 							emit('GuardStart', context);
 							
 							settleGuard(
@@ -4830,15 +4845,15 @@
 						if (resolvedComponent) component = resolvedComponent;
 					}
 					
-					var hook = component.ElemenxOnRouteLeave;
+					var hook = component.$OnRouteLeave;
 					if (typeof hook !== 'function') {
 						next(true);
 						
 						return;
 					}
 					
-					context.Route = active[index + 1].Route;
-					context.Guard = 'ElemenxOnRouteLeave';
+					context.$Route = active[index + 1].Route;
+					context.$Guard = '$OnRouteLeave';
 					
 					emit('GuardStart', context);
 					
@@ -4850,7 +4865,7 @@
 									result = fail();
 								}
 								
-								result.Guard = 'ElemenxOnRouteLeave';
+								result.$Guard = '$OnRouteLeave';
 							}
 							
 							next(result);
@@ -4880,7 +4895,7 @@
 					 * later Render() destroys the already-recreated route component.
 					 */
 					if (outlet && outlet.Current && outlet.Current() === entry.Component) outlet.Clear();
-					else if (entry.Component) entry.Component.Destroy();
+					else if (entry.Component) entry.Component.$Destroy();
 					
 					i--;
 				}
@@ -4932,7 +4947,7 @@
 					});
 					
 					Runtime.AttachRouter(component, api);
-					component.Parent(parent);
+					component.$Parent(parent);
 					outlet.Render(component);
 					
 					active.push({
@@ -5031,15 +5046,15 @@
 				if (typeof policy === 'string' || typeof policy === 'function') return policy;
 				if (typeof policy !== 'object') return null;
 				
-				if (failure.Guard !== undefined && policy[failure.Guard] !== undefined)
-					return policy[failure.Guard];
+				if (failure.$Guard !== undefined && policy[failure.$Guard] !== undefined)
+					return policy[failure.$Guard];
 				
 				return policy.Default !== undefined ? policy.Default : null;
 			}
 			
 			function renderGuardFailure (prepared, failure, reference, mode, id, context) {
 				var chain = prepared.Found.Chain;
-				var failureIndex = chain.indexOf(failure.Route);
+				var failureIndex = chain.indexOf(failure.$Route);
 				var failureRoute;
 				var failureChain;
 				var failurePrepared;
@@ -5048,7 +5063,7 @@
 				
 				failureRoute = {
 					Component: reference,
-					Outlet: failure.Route.Outlet,
+					Outlet: failure.$Route.Outlet,
 					GuardFailure: failure
 				};
 				failureChain = chain.slice(0, failureIndex);
@@ -5086,10 +5101,10 @@
 					failure = fail();
 				}
 				
-				failure.From = context.From;
-				failure.To = context.To;
-				failure.Route = context.Route;
-				failure.Guard = failure.Guard || context.Guard;
+				failure.$From = context.$From;
+				failure.$To = context.$To;
+				failure.$Route = context.$Route;
+				failure.$Guard = failure.$Guard || context.$Guard;
 				
 				emit('GuardFailed', failure);
 				
@@ -5142,15 +5157,15 @@
 				var id = ++navigationID;
 				var previousURL = committedURL ? new URL(committedURL.href) : currentURL();
 				var context = {
-					Service: function (name) {
+					$Service: function (name) {
 						return Runtime.ServiceForApplication(application(), name);
 					},
-					Wait: waiter,
-					Fail: fail,
-					From: navigationPacket(previousURL),
-					To: prepared.Packet,
-					Route: null,
-					Guard: null
+					$Wait: waiter,
+					$Fail: fail,
+					$From: navigationPacket(previousURL),
+					$To: prepared.Packet,
+					$Route: null,
+					$Guard: null
 				};
 				
 				emit('NavigationStart', context);
@@ -5194,7 +5209,7 @@
 									}
 									else {
 										var failure = handleGuardFailure(enterResult, context);
-										var failureComponent = guardFailureComponent(failure.Route, failure);
+										var failureComponent = guardFailureComponent(failure.$Route, failure);
 										
 										if (!failureComponent || !renderGuardFailure(prepared, failure, failureComponent, mode, id, context)) {
 											emit('NavigationCancel', context);
@@ -5265,7 +5280,7 @@
 					});
 					
 					Runtime.AttachRouter(component, api);
-					component.Parent(root);
+					component.$Parent(root);
 					outlet.Render(component);
 					
 					active.push({
@@ -5516,7 +5531,7 @@
 				 * normal-looking tag only when the current application's built
 				 * Discovery map explicitly contains that component entity.
 				 */
-				var application = component.Application();
+				var application = component.$Application();
 				var bundleName;
 				
 				if (Runtime.Bundle && Runtime.Bundle.ResolvedName) {
@@ -5816,7 +5831,7 @@
 			function asyncOptions (blueprint, name, extra) {
 				var result = extra || {};
 				
-				result.Application = component.Application();
+				result.Application = component.$Application();
 				
 				result.AsyncLifecycle = {
 					Owner: component,
@@ -5832,14 +5847,14 @@
 				var eventName;
 				var methodName;
 				
-				child.Parent(component);
+				child.$Parent(component);
 				
 				for (eventName in eventMap) {
 					if (own(eventMap, eventName)) {
 						methodName = eventMap[eventName];
 						
 						(function (name, method) {
-							child.On(name, function (data, source) {
+							child.$On(name, function (data, source) {
 								if (typeof component[method] === 'function') {
 									component[method](data, source);
 								}
@@ -5883,7 +5898,7 @@
 				if (node.nodeType !== 1) return;
 				
 				/* A foreign Application mount owns its complete subtree. */
-				if (Runtime.ApplicationBoundary && Runtime.ApplicationBoundary(component.Application(), node)) return;
+				if (Runtime.ApplicationBoundary && Runtime.ApplicationBoundary(component.$Application(), node)) return;
 				
 				/* Directive composition policy is validated before host dispatch. */
 				Runtime.Directive.Policy(node);
@@ -5931,7 +5946,7 @@
 				var parent;
 				var i;
 				
-				while (current && current !== component.Element()) {
+				while (current && current !== component.$Element()) {
 					parent = current.parentNode;
 					if (!parent) return null;
 					
@@ -5940,7 +5955,7 @@
 					current = parent;
 				}
 				
-				if (current !== component.Element()) return null;
+				if (current !== component.$Element()) return null;
 				
 				current = blueprintRoot;
 				i = 0;
@@ -5992,7 +6007,7 @@
 				var currentData = null;
 				var context = structuralDirective ? {
 					Name: structuralDirective.Name,
-					Element: blueprint,
+					$Element: blueprint,
 					Component: component,
 					Expression: structuralDirective.Expression,
 					Value: undefined,
@@ -6010,14 +6025,14 @@
 							return factory(childProps, projected, asyncOptions(blueprint, factory.ComponentName || blueprint.tagName));
 						});
 						connect(child, eventMap);
-						end.parentNode.insertBefore(child.Element(), end);
+						end.parentNode.insertBefore(child.$Element(), end);
 						previousProps = childProps;
 						
 						return child;
 					},
 					Unmount: function () {
 						if (!child) return;
-						child.Destroy();
+						child.$Destroy();
 						child = null;
 						previousProps = null;
 					}
@@ -6032,8 +6047,8 @@
 				if (projected)
 					compileProjection(projected);
 				
-				if (context && typeof structuralDirective.Definition.ElemenxOnCreate === 'function')
-					structuralDirective.Definition.ElemenxOnCreate(context);
+				if (context && typeof structuralDirective.Definition.$OnCreate === 'function')
+					structuralDirective.Definition.$OnCreate(context);
 				
 				var effect = Runtime.Effect(function () {
 					var data = Runtime.ComponentValues(component);
@@ -6044,8 +6059,8 @@
 					if (context) {
 						context.Value = context.Expression ? expression(data, context.Expression) : undefined;
 						
-						if (typeof structuralDirective.Definition.ElemenxOnUpdate === 'function')
-							structuralDirective.Definition.ElemenxOnUpdate(context);
+						if (typeof structuralDirective.Definition.$OnUpdate === 'function')
+							structuralDirective.Definition.$OnUpdate(context);
 					}
 					else if (!child) {
 						childProps = props(blueprint, data, factory.Definition);
@@ -6053,7 +6068,7 @@
 							return factory(childProps, projected, asyncOptions(blueprint, factory.ComponentName || blueprint.tagName));
 						});
 						connect(child, eventMap);
-						end.parentNode.insertBefore(child.Element(), end);
+						end.parentNode.insertBefore(child.$Element(), end);
 						previousProps = childProps;
 					}
 					
@@ -6082,7 +6097,7 @@
 					}
 					
 					if (changed)
-						child.Update(changedProps);
+						child.$Update(changedProps);
 					
 					previousProps = childProps;
 					
@@ -6090,21 +6105,21 @@
 				}, true);
 				
 				return {
-					Update: function () {
+					$Update: function () {
 						effect.Run();
 					},
 					
-					Destroy: function () {
+					$Destroy: function () {
 						effect.Destroy();
 						
 						if (context) {
 							context.Unmount();
 							
-							if (typeof structuralDirective.Definition.ElemenxOnDestroy === 'function')
-								structuralDirective.Definition.ElemenxOnDestroy(context);
+							if (typeof structuralDirective.Definition.$OnDestroy === 'function')
+								structuralDirective.Definition.$OnDestroy(context);
 						}
 						else if (child) {
-							child.Destroy();
+							child.$Destroy();
 							child = null;
 							previousProps = null;
 						}
@@ -6151,7 +6166,7 @@
 							
 							if (!visible) {
 								if (child) {
-									child.Destroy();
+									child.$Destroy();
 									child = null;
 								}
 								
@@ -6175,7 +6190,7 @@
 									 * values into that existing state just like explicit
 									 * component props are refreshed below.
 									 */
-									child.Update(childProps);
+									child.$Update(childProps);
 								}
 								else {
 									child = factory(
@@ -6190,12 +6205,12 @@
 									
 									connect(child, eventMap);
 									
-									slot.appendChild(child.Element());
+									slot.appendChild(child.$Element());
 								}
 							}
 							else {
 								if (child) {
-									child.Update(childProps);
+									child.$Update(childProps);
 								}
 								else {
 									child = factory(
@@ -6209,7 +6224,7 @@
 									
 									connect(child, eventMap);
 									
-									slot.appendChild(child.Element());
+									slot.appendChild(child.$Element());
 								}
 							}
 						}
@@ -6225,7 +6240,7 @@
 							
 							Destroy: function () {
 								if (child)
-									child.Destroy();
+									child.$Destroy();
 								
 								child = null;
 								
@@ -6266,11 +6281,11 @@
 				}, true);
 				
 				return {
-					Update: function () {
+					$Update: function () {
 						effect.Run();
 					},
 					
-					Destroy: function () {
+					$Destroy: function () {
 						effect.Destroy();
 						collection.Destroy();
 						
@@ -6313,7 +6328,7 @@
 					if (!targetRoot) return node;
 					current = node;
 					
-					while (current && current !== component.Element()) {
+					while (current && current !== component.$Element()) {
 						parent = current.parentNode;
 						if (!parent) return node;
 						
@@ -6354,15 +6369,14 @@
 					var templateSource = componentRoot
 						? '<span style="display:contents">' + template.outerHTML + '</span>'
 						: template.outerHTML;
-					var result = {Template: templateSource};
+					var result = {$Template: templateSource};
 					var methodName;
 					
 					for (methodName in definition) {
 						if (
 							own(definition, methodName) &&
 							typeof definition[methodName] === 'function' &&
-							methodName !== 'Template' &&
-							methodName.indexOf('ElemenxOn') !== 0
+							methodName.charAt(0) !== '$'
 						) {
 							(function (name) {
 								result[name] = function () {
@@ -6388,8 +6402,7 @@
 						if (
 							own(definition, name) &&
 							typeof definition[name] === 'function' &&
-							name !== 'Template' &&
-							name.indexOf('ElemenxOn') !== 0
+							name.charAt(0) !== '$'
 						) {
 							(function (methodName) {
 								result[methodName] = function () {
@@ -6486,7 +6499,7 @@
 				function destroyAll () {
 					var i = children.length - 1;
 					while (i >= 0) {
-						children[i].Child.Destroy();
+						children[i].Child.$Destroy();
 						i--;
 					}
 					children = [];
@@ -6524,18 +6537,18 @@
 						}
 						
 						if (record)
-							record.Child.Update(scope);
+							record.Child.$Update(scope);
 						else {
 							child = Runtime.CreateComponent(iterationDefinition())(
 								scope,
 								null,
-								{DirectState: true, Application: component.Application()}
+								{DirectState: true, Application: component.$Application()}
 							);
-							child.Parent(component);
+							child.$Parent(component);
 							record = {Child: child, Key: token};
 						}
 						
-						end.parentNode.insertBefore(record.Child.Element(), end);
+						end.parentNode.insertBefore(record.Child.$Element(), end);
 						nextChildren.push(record);
 						if (keySource)
 							nextKeyed[token] = record;
@@ -6547,7 +6560,7 @@
 						while (i >= 0) {
 							record = children[i];
 							if (!nextKeyed[record.Key])
-								record.Child.Destroy();
+								record.Child.$Destroy();
 							i--;
 						}
 					}
@@ -6559,7 +6572,7 @@
 				
 				context = {
 					Name: directive.Name,
-					Element: node,
+					$Element: node,
 					Component: component,
 					Expression: directive.Expression,
 					Value: undefined,
@@ -6573,24 +6586,24 @@
 					Render: render
 				};
 				
-				if (typeof directive.Definition.ElemenxOnCreate === 'function')
-					directive.Definition.ElemenxOnCreate(context);
+				if (typeof directive.Definition.$OnCreate === 'function')
+					directive.Definition.$OnCreate(context);
 				
 				var collectionEffect = Runtime.Effect(function () {
-					if (typeof directive.Definition.ElemenxOnUpdate === 'function')
-						directive.Definition.ElemenxOnUpdate(context);
+					if (typeof directive.Definition.$OnUpdate === 'function')
+						directive.Definition.$OnUpdate(context);
 					return children.length;
 				}, true);
 				
 				records.push({
-					Update: function () {
+					$Update: function () {
 						collectionEffect.Run();
 					},
-					Destroy: function () {
+					$Destroy: function () {
 						collectionEffect.Destroy();
 						destroyAll();
-						if (typeof directive.Definition.ElemenxOnDestroy === 'function')
-							directive.Definition.ElemenxOnDestroy(context);
+						if (typeof directive.Definition.$OnDestroy === 'function')
+							directive.Definition.$OnDestroy(context);
 					}
 				});
 			}
@@ -6603,7 +6616,7 @@
 				var child = null;
 				var context = {
 					Name: directive.Name,
-					Element: node,
+					$Element: node,
 					Component: component,
 					Expression: field,
 					Value: undefined,
@@ -6617,9 +6630,9 @@
 						var data;
 						if (child) return child;
 						data = Runtime.ComponentValues(component);
-						subtreeDefinition = {Template: template.outerHTML};
+						subtreeDefinition = {$Template: template.outerHTML};
 						for (methodName in definition) {
-							if (own(definition, methodName) && typeof definition[methodName] === 'function' && methodName !== 'Template' && methodName.indexOf('ElemenxOn') !== 0) {
+							if (own(definition, methodName) && typeof definition[methodName] === 'function' && methodName !== '$Template' && methodName.indexOf('$On') !== 0) {
 								(function (name) {
 									subtreeDefinition[name] = function () {
 										return definition[name].apply(component, arguments);
@@ -6629,15 +6642,15 @@
 						}
 						child = Runtime.CreateComponent(subtreeDefinition)(data, null, {
 							DirectState: true,
-							Application: component.Application()
+							Application: component.$Application()
 						});
-						child.Parent(component);
-						end.parentNode.insertBefore(child.Element(), end);
+						child.$Parent(component);
+						end.parentNode.insertBefore(child.$Element(), end);
 						return child;
 					},
 					Unmount: function () {
 						if (!child) return;
-						child.Destroy();
+						child.$Destroy();
 						child = null;
 					}
 				};
@@ -6646,30 +6659,30 @@
 				parent.insertBefore(end, node.nextSibling);
 				parent.removeChild(node);
 				
-				if (typeof directive.Definition.ElemenxOnCreate === 'function')
-					directive.Definition.ElemenxOnCreate(context);
+				if (typeof directive.Definition.$OnCreate === 'function')
+					directive.Definition.$OnCreate(context);
 				
 				var structuralEffect = Runtime.Effect(function () {
 					context.Value = field ? expression(Runtime.ComponentValues(component), field) : undefined;
-					if (typeof directive.Definition.ElemenxOnUpdate === 'function')
-						directive.Definition.ElemenxOnUpdate(context);
+					if (typeof directive.Definition.$OnUpdate === 'function')
+						directive.Definition.$OnUpdate(context);
 					return context.Value;
 				}, true);
 				
 				records.push({
-					Update: function () {
+					$Update: function () {
 						structuralEffect.Run();
 					},
-					Destroy: function () {
+					$Destroy: function () {
 						structuralEffect.Destroy();
 						context.Unmount();
-						if (typeof directive.Definition.ElemenxOnDestroy === 'function')
-							directive.Definition.ElemenxOnDestroy(context);
+						if (typeof directive.Definition.$OnDestroy === 'function')
+							directive.Definition.$OnDestroy(context);
 					}
 				});
 			}
 			
-			scan(component.Element());
+			scan(component.$Element());
 			
 			return {
 				Update: function (data) {
@@ -6677,7 +6690,7 @@
 					var count = records.length;
 					
 					while (i < count) {
-						records[i].Update(data || {});
+						records[i].$Update(data || {});
 						
 						i++;
 					}
@@ -6688,7 +6701,7 @@
 					 */
 					
 					while (i < records.length) {
-						records[i].Update(data || {});
+						records[i].$Update(data || {});
 						
 						i++;
 					}
@@ -6698,7 +6711,7 @@
 					var i = records.length - 1;
 					
 					while (i >= 0) {
-						records[i].Destroy();
+						records[i].$Destroy();
 						
 						i--;
 					}
@@ -12786,8 +12799,8 @@
 					return createHandle(name, definition, owner);
 				}
 				
-				var application = owner && owner.Application ? owner.Application() : null;
-				var shared = application && application.WebWorker ? application.WebWorker(name) : null;
+				var application = owner && owner.$Application ? owner.$Application() : null;
+				var shared = application && application.$WebWorker ? application.$WebWorker(name) : null;
 				if (shared) return shared;
 				
 				definition = definitions[name];
@@ -13332,37 +13345,37 @@
 			
 			definition = definition || {};
 			
-			api.Title = Elemenx.Title;
+			api.$Title = Elemenx.Title;
 			
-			if (definition.Title !== undefined)
-				api.Title(definition.Title);
+			if (definition.$Title !== undefined)
+				api.$Title(definition.$Title);
 			
-			api.Name = function () {
+			api.$Name = function () {
 				return name;
 			};
 			
-			api.Root = function () {
-				return definition.Root || null;
+			api.$Root = function () {
+				return definition.$Root || null;
 			};
 			
-			api.Mount = function () {
-				return mountElement(definition.Mount);
+			api.$Mount = function () {
+				return mountElement(definition.$Mount);
 			};
 			
-			api.Application = function () {
+			api.$Application = function () {
 				return api;
 			};
 			
-			api.Template = function (templateName, value) {
+			api.$Template = function (templateName, value) {
 				if (arguments.length === 1) return Elemenx.Template(templateName);
 				return Elemenx.Template(templateName, value);
 			};
-			api.Template.Has = Elemenx.Template.Has;
-			api.Template.Remove = Elemenx.Template.Remove;
-			api.Template.Loader = Elemenx.Template.Loader;
-			api.Template.Reload = Elemenx.Template.Reload;
+			api.$Template.Has = Elemenx.Template.Has;
+			api.$Template.Remove = Elemenx.Template.Remove;
+			api.$Template.Loader = Elemenx.Template.Loader;
+			api.$Template.Reload = Elemenx.Template.Reload;
 			
-			api.Network = function (context, value) {
+			api.$Network = function (context, value) {
 				if (arguments.length === 2) {
 					Elemenx.Network.Context(context, value);
 					
@@ -13372,7 +13385,7 @@
 				return Runtime.NetworkFor ? Runtime.NetworkFor(api)(context) : Elemenx.Network;
 			};
 			
-			api.Storage = function (context, value) {
+			api.$Storage = function (context, value) {
 				if (arguments.length === 2) {
 					Elemenx.Storage.Context(context, value);
 					
@@ -13382,7 +13395,7 @@
 				return Elemenx.Storage(context);
 			};
 			
-			api.Messaging = function (context, value) {
+			api.$Messaging = function (context, value) {
 				if (arguments.length === 2) {
 					Elemenx.Messaging.Context(context, value);
 					
@@ -13392,7 +13405,7 @@
 				return Runtime.MessagingFor ? Runtime.MessagingFor(api)(context) : Elemenx.Messaging(context);
 			};
 			
-			api.WebWorker = function (workerName, value) {
+			api.$WebWorker = function (workerName, value) {
 				if (arguments.length === 1)
 					return webWorkers[workerName] || null;
 				
@@ -13403,7 +13416,7 @@
 				return handle;
 			};
 			
-			api.ServiceWorker = function (workerName, value) {
+			api.$ServiceWorker = function (workerName, value) {
 				var handle;
 				var serviceWorker = Runtime.ServiceWorkerFor ? Runtime.ServiceWorkerFor(api) : Elemenx.ServiceWorker;
 				
@@ -13423,7 +13436,7 @@
 				return handle;
 			};
 			
-			api.Service = function (serviceName, value) {
+			api.$Service = function (serviceName, value) {
 				if (arguments.length === 2) {
 					Runtime.RegisterServiceDefinition(serviceName, value);
 					
@@ -13433,7 +13446,7 @@
 				return Runtime.ServiceForApplication(api, serviceName);
 			};
 			
-			api.Reload = function (type, entityName, callback) {
+			api.$Reload = function (type, entityName, callback) {
 				if (!Runtime.Discovery)
 					throw new Error('Elemenx Discovery is not available');
 				
@@ -13475,22 +13488,22 @@
 				});
 			};
 			
-			api.Component = function () {
+			api.$Component = function () {
 				return root;
 			};
 			
-			api.Router = function () {
+			api.$Router = function () {
 				return router;
 			};
 			
-			api.Destroy = function () {
+			api.$Destroy = function () {
 				if (destroyed) return;
 				destroyed = true;
 				
-				if (router && router.Destroy) router.Destroy();
+				if (router && router.$Destroy) router.$Destroy();
 				router = null;
 				
-				if (root && root.Destroy) root.Destroy();
+				if (root && root.$Destroy) root.$Destroy();
 				root = null;
 				
 				if (mountOwners && ownedMount && mountOwners.get(ownedMount) === api)
@@ -13520,12 +13533,12 @@
 					delete applications[name];
 			};
 			
-			if (typeof definition.Bootstrap === 'function') {
-				definition.Bootstrap.call(api);
+			if (typeof definition.$Bootstrap === 'function') {
+				definition.$Bootstrap.call(api);
 			}
 			
 			function applicationStatus (source) {
-				var mount = mountElement(definition.Mount);
+				var mount = mountElement(definition.$Mount);
 				if (!mount) return;
 				if (Runtime.Template && Runtime.Template.Harvest) Runtime.Template.Harvest(mount);
 				
@@ -13556,16 +13569,16 @@
 			}
 			
 			function startRouter () {
-				if (destroyed || router || !definition.Router || !root) return;
+				if (destroyed || router || !definition.$Router || !root) return;
 				
 				var routerDefinition = {};
 				var key;
 				
-				for (key in definition.Router) {
-					if (!Object.prototype.hasOwnProperty.call(definition.Router, key)) continue;
+				for (key in definition.$Router) {
+					if (!Object.prototype.hasOwnProperty.call(definition.$Router, key)) continue;
 					if (key === 'Root') continue;
 					
-					routerDefinition[key] = definition.Router[key];
+					routerDefinition[key] = definition.$Router[key];
 				}
 				
 				routerDefinition.Root = root;
@@ -13574,28 +13587,28 @@
 			}
 			
 			function applicationLifecycle (method, error) {
-				if (method === 'ElemenxOnReady') startRouter();
+				if (method === '$OnReady') startRouter();
 				if (typeof api[method] !== 'function') return;
 				
 				api[method].call(api, {
-					Name: definition.Component || null,
-					Element: mountElement(definition.Mount),
+					Name: definition.$Component || null,
+					$Element: mountElement(definition.$Mount),
 					Error: error || null
 				});
 			}
 			
 			function createRoot () {
-				if (destroyed || !definition.Component || root) return;
+				if (destroyed || !definition.$Component || root) return;
 				
-				var factory = Elemenx.Component(definition.Component);
-				var mount = mountElement(definition.Mount);
+				var factory = Elemenx.Component(definition.$Component);
+				var mount = mountElement(definition.$Mount);
 				var mountOwner;
 				
 				if (!factory)
-					throw new Error('Elemenx Application component not found: ' + definition.Component);
+					throw new Error('Elemenx Application component not found: ' + definition.$Component);
 				
 				if (!mount)
-					throw new Error('Elemenx Application mount not found: ' + definition.Mount);
+					throw new Error('Elemenx Application mount not found: ' + definition.$Mount);
 				
 				if (Runtime.Template && Runtime.Template.Harvest) Runtime.Template.Harvest(mount);
 				
@@ -13603,7 +13616,7 @@
 					mountOwner = mountOwners.get(mount);
 					
 					if (mountOwner && mountOwner !== api)
-						throw new Error('Elemenx Application mount conflict: ' + name + ' cannot mount to an element owned by ' + mountOwner.Name());
+						throw new Error('Elemenx Application mount conflict: ' + name + ' cannot mount to an element owned by ' + mountOwner.$Name());
 					
 					mountOwners.set(mount, api);
 					
@@ -13616,13 +13629,13 @@
 					Application: api,
 					AsyncLifecycle: {
 						Owner: api,
-						Name: definition.Component,
-						Pending: definition.Pending || null,
-						Error: definition.Error || null,
+						Name: definition.$Component,
+						Pending: definition.$Pending || null,
+						Error: definition.$Error || null,
 						Hooks: {
-							ElemenxOnChildPending: 'ElemenxOnPending',
-							ElemenxOnChildReady: 'ElemenxOnReady',
-							ElemenxOnChildError: 'ElemenxOnError'
+							$OnChildPending: '$OnPending',
+							$OnChildReady: '$OnReady',
+							$OnChildError: '$OnError'
 						}
 					}
 				};
@@ -13637,9 +13650,9 @@
 					preservedIndex++;
 				}
 				
-				root = factory(definition.State || {}, null, options);
+				root = factory(definition.$State || {}, null, options);
 				
-				mount.appendChild(root.Element());
+				mount.appendChild(root.$Element());
 				
 				preservedIndex = 0;
 				while (preservedIndex < preservedMounts.length) {
@@ -13653,24 +13666,77 @@
 				}
 				
 				if (!root._Component || root._Component()) {
-					applicationLifecycle('ElemenxOnReady', null);
+					applicationLifecycle('$OnReady', null);
 				}
 			}
 			
 			function rootAvailableWithoutDiscovery () {
-				if (Runtime.ResolveComponentRegistered(definition.Component)) return true;
-				if (!Runtime.Bundle || !Runtime.Bundle.ResolvedName) return false;
-				
-				var bundled = Runtime.Bundle.ResolvedName('Component', definition.Component);
-				if (!bundled) return false;
-				
-				Runtime.Bundle.Load('Component', bundled);
-				
-				return !!Runtime.ResolveComponentRegistered(definition.Component);
+				var factory = Runtime.ResolveComponentRegistered(definition.$Component);
+				var bundled;
+				var inspected = {};
+
+				function inspectFactory (currentFactory) {
+					var componentDefinition = currentFactory && currentFactory.Definition || {};
+					var template = componentDefinition.$Template;
+					var match;
+					var tag;
+					var childFactory;
+					var childBundle;
+					var expression;
+
+					if (typeof template !== 'string') return false;
+					expression = /<\s*([A-Za-z][A-Za-z0-9_-]*)\b/g;
+
+					while ((match = expression.exec(template))) {
+						tag = match[1];
+
+						/*
+						 * Preserve the source spelling here. DOM parsing lowercases custom
+						 * PascalCase tags, which makes an unbundled hybrid dependency
+						 * indistinguishable from an ordinary HTML element before Discovery
+						 * has built its map. Elemenx Components are candidates when their
+						 * source tag is PascalCase or a custom-element style name.
+						 */
+						if (tag.indexOf('-') === -1 && tag.charAt(0) === tag.charAt(0).toLowerCase())
+							continue;
+
+						childFactory = Runtime.ResolveComponentRegistered(tag);
+						if (!childFactory) {
+							childBundle = Runtime.Bundle && Runtime.Bundle.ResolvedName ? Runtime.Bundle.ResolvedName('Component', tag) : null;
+							if (!childBundle) return false;
+
+							Runtime.Bundle.Load('Component', childBundle);
+							childFactory = Runtime.ResolveComponentRegistered(childBundle);
+							if (!childFactory) return false;
+						}
+
+						if (childFactory.ComponentName && inspected[String(childFactory.ComponentName).toLowerCase()])
+							continue;
+
+						if (childFactory.ComponentName)
+							inspected[String(childFactory.ComponentName).toLowerCase()] = true;
+
+						if (!inspectFactory(childFactory)) return false;
+					}
+
+					return true;
+				}
+
+				if (!factory && Runtime.Bundle && Runtime.Bundle.ResolvedName) {
+					bundled = Runtime.Bundle.ResolvedName('Component', definition.$Component);
+					if (bundled) {
+						Runtime.Bundle.Load('Component', bundled);
+						factory = Runtime.ResolveComponentRegistered(definition.$Component);
+					}
+				}
+
+				if (!factory) return false;
+				if (factory.ComponentName) inspected[String(factory.ComponentName).toLowerCase()] = true;
+
+				return inspectFactory(factory);
 			}
-			
 			function startRoot () {
-				if (destroyed || !definition.Component || root) return;
+				if (destroyed || !definition.$Component || root) return;
 				
 				if (Runtime.Bundle && Runtime.Bundle.Ready()) {
 					Runtime.Bundle.LoadType('Directive');
@@ -13679,11 +13745,22 @@
 				}
 				
 				/*
-				 * A Bundle is an entity source, not a replacement for the Application
-				 * Discovery map. Hybrid applications still need Discovery.Build() so
-				 * entities missing from the bundle can fall back to the configured Root.
+				 * A bundled root must not wait for an unavailable source graph. The
+				 * bundle is already sufficient to start the Application; Discovery is
+				 * only the hybrid fallback for resources that are absent from it.
+				 *
+				 * Build the Discovery map in the background so a development/hybrid
+				 * Application may still resolve later resources from $Root, but never
+				 * turn a missing source graph into startup latency for a bundled root.
 				 */
-				if (!definition.Root || !Runtime.Discovery) {
+				if (definition.$Root && Runtime.Discovery && rootAvailableWithoutDiscovery()) {
+					createRoot();
+					Runtime.Discovery.Build(api, definition.$Root, function () {});
+					
+					return;
+				}
+				
+				if (!definition.$Root || !Runtime.Discovery) {
 					createRoot();
 					
 					return;
@@ -13695,13 +13772,13 @@
 				 * existing host DOM (including parser-owned TemplateID resources) must
 				 * remain available until the root is ready.
 				 */
-				if (definition.Pending !== undefined && definition.Pending !== null)
-					applicationStatus(definition.Pending);
-				applicationLifecycle('ElemenxOnPending', null);
+				if (definition.$Pending !== undefined && definition.$Pending !== null)
+					applicationStatus(definition.$Pending);
+				applicationLifecycle('$OnPending', null);
 				
-				var discoveryRoot = definition.Root;
-				if (definition.ElemenxDefinitionURL && !(/^(?:[a-z]+:)?\/\//i.test(discoveryRoot)) && discoveryRoot.charAt(0) !== '/')
-					discoveryRoot = definition.ElemenxDefinitionURL.substring(0, definition.ElemenxDefinitionURL.lastIndexOf('/') + 1) + discoveryRoot.replace(/^\.\//, '');
+				var discoveryRoot = definition.$Root;
+				if (definition.$DefinitionURL && !(/^(?:[a-z]+:)?\/\//i.test(discoveryRoot)) && discoveryRoot.charAt(0) !== '/')
+					discoveryRoot = definition.$DefinitionURL.substring(0, definition.$DefinitionURL.lastIndexOf('/') + 1) + discoveryRoot.replace(/^\.\//, '');
 				
 				Runtime.Discovery.Build(api, discoveryRoot, function (error) {
 					if (destroyed) return;
@@ -13718,8 +13795,8 @@
 							return;
 						}
 						
-						applicationStatus(definition.Error || null);
-						applicationLifecycle('ElemenxOnError', error);
+						applicationStatus(definition.$Error || null);
+						applicationLifecycle('$OnError', error);
 						
 						return;
 					}
@@ -13728,8 +13805,8 @@
 						if (destroyed) return;
 						
 						if (directiveError) {
-							applicationStatus(definition.Error || null);
-							applicationLifecycle('ElemenxOnError', directiveError);
+							applicationStatus(definition.$Error || null);
+							applicationLifecycle('$OnError', directiveError);
 							
 							return;
 						}
@@ -13738,8 +13815,8 @@
 							if (destroyed) return;
 							
 							if (serviceError) {
-								applicationStatus(definition.Error || null);
-								applicationLifecycle('ElemenxOnError', serviceError);
+								applicationStatus(definition.$Error || null);
+								applicationLifecycle('$OnError', serviceError);
 								
 								return;
 							}
@@ -13750,14 +13827,14 @@
 				});
 			}
 			
-			api.ElemenxOnPending = definition.ElemenxOnPending || null;
-			api.ElemenxOnReady = function (args) {
+			api.$OnPending = definition.$OnPending || null;
+			api.$OnReady = function (args) {
 				startRouter();
 				
-				if (typeof definition.ElemenxOnReady === 'function')
-					definition.ElemenxOnReady.call(api, args);
+				if (typeof definition.$OnReady === 'function')
+					definition.$OnReady.call(api, args);
 			};
-			api.ElemenxOnError = definition.ElemenxOnError || null;
+			api.$OnError = definition.$OnError || null;
 			
 			if (Runtime.HasDOM && global.document.readyState === 'loading') {
 				global.document.addEventListener('DOMContentLoaded', startRoot, {once: true});
@@ -13778,8 +13855,8 @@
 			if (applications[name])
 				throw new Error('Elemenx Application already exists: ' + name);
 			
-			if (definition && global.document && global.document.currentScript && !definition.ElemenxDefinitionURL)
-				definition.ElemenxDefinitionURL = global.document.currentScript.src.split('?')[0].split('#')[0];
+			if (definition && global.document && global.document.currentScript && !definition.$DefinitionURL)
+				definition.$DefinitionURL = global.document.currentScript.src.split('?')[0].split('#')[0];
 			
 			applications[name] = createApplication(name, definition);
 			

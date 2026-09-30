@@ -1,9 +1,9 @@
 Elemenx.Application('ApplicationExample', {
-	Title: 'Elemenx advanced application example',
-	Component: 'Layout',
-	Root: 'application',
-	Mount: 'body',
-	Router: {
+	$Title: 'Elemenx advanced application example',
+	$Component: 'Layout',
+	$Root: 'application',
+	$Mount: 'body',
+	$Router: {
 		Waiting: 'PageLoading',
 		NotFound: 'PageNotFound',
 		Routes: [

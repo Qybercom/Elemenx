@@ -18,14 +18,14 @@ fs.mkdirSync(path.join(root, 'FooApp', 'FooRoot'), {recursive: true});
 fs.mkdirSync(path.join(root, 'BarApp', 'BarRoot'), {recursive: true});
 
 fs.writeFileSync(path.join(root, 'FooApp', 'index.js'), "['FooRoot/FooRoot.js']");
-fs.writeFileSync(path.join(root, 'FooApp', 'FooRoot', 'FooRoot.js'), "Elemenx.Component('FooRoot', {TemplateURL: 'FooRoot.html'});");
+fs.writeFileSync(path.join(root, 'FooApp', 'FooRoot', 'FooRoot.js'), "Elemenx.Component('FooRoot', {$TemplateURL: 'FooRoot.html'});");
 fs.writeFileSync(path.join(root, 'FooApp', 'FooRoot', 'FooRoot.html'), '<main id="foo-root">Foo production<div id="bar"></div></main>');
 
 fs.writeFileSync(path.join(root, 'BarApp', 'index.js'), "['BarRoot/BarRoot.js']");
-fs.writeFileSync(path.join(root, 'BarApp', 'BarRoot', 'BarRoot.js'), "Elemenx.Component('BarRoot', {TemplateURL: 'BarRoot.html'});");
+fs.writeFileSync(path.join(root, 'BarApp', 'BarRoot', 'BarRoot.js'), "Elemenx.Component('BarRoot', {$TemplateURL: 'BarRoot.html'});");
 fs.writeFileSync(path.join(root, 'BarApp', 'BarRoot', 'BarRoot.html'), '<section id="bar-root">Bar production</section>');
 
-fs.writeFileSync(path.join(root, 'app.js'), "Elemenx.Application('FooApp', {Component: 'FooRoot', Root: 'FooApp', Mount: 'body'});\nElemenx.Application('BarApp', {Component: 'BarRoot', Root: 'BarApp', Mount: '#bar'});");
+fs.writeFileSync(path.join(root, 'app.js'), "Elemenx.Application('FooApp', {$Component: 'FooRoot', $Root: 'FooApp', $Mount: 'body'});\nElemenx.Application('BarApp', {$Component: 'BarRoot', $Root: 'BarApp', $Mount: '#bar'});");
 fs.writeFileSync(path.join(root, 'index.html'), '<!DOCTYPE html><html><head><script src="/elemenx.js"></script><script src="/app.js"></script></head><body></body></html>');
 
 Builder.Build(root, {

@@ -1,6 +1,6 @@
 Elemenx.Component('HomePage', {
-	TemplateURL: 'HomePage.html',
-	Title: 'Home - Elemenx',
+	$TemplateURL: 'HomePage.html',
+	$Title: 'Home - Elemenx',
 
 	BindingValue: 'Elemenx',
 	BindingChecked: true,
@@ -8,13 +8,13 @@ Elemenx.Component('HomePage', {
 	DirectiveTooltip: 'This title is maintained by a custom Elemenx directive.',
 	DirectiveHighlighted: true,
 
-	ElemenxOnCreate: function () {
+	$OnCreate: function () {
 		var component = this;
-		var session = this.Service('Session');
+		var session = this.$Service('Session');
 
 		function status () {
-			var login = component.Ref('Login');
-			var grant = component.Ref('GrantProjectAccess');
+			var login = component.$Ref('Login');
+			var grant = component.$Ref('GrantProjectAccess');
 
 			login.textContent = session.Authorized ? 'Session enabled' : 'Enable session';
 			login.disabled = session.Authorized;
@@ -25,11 +25,11 @@ Elemenx.Component('HomePage', {
 		this.SessionStatusListener = session.OnChange(status);
 		status();
 
-		this.Ref('Login').addEventListener('click', function () {
+		this.$Ref('Login').addEventListener('click', function () {
 			session.Login();
 		});
 
-		this.Ref('GrantProjectAccess').addEventListener('click', function () {
+		this.$Ref('GrantProjectAccess').addEventListener('click', function () {
 			session.GrantProjectAccess();
 		});
 	},
@@ -38,7 +38,7 @@ Elemenx.Component('HomePage', {
 		this.DirectiveHighlighted = !this.DirectiveHighlighted;
 	},
 
-	ElemenxOnDestroy: function () {
-		this.Service('Session').OffChange(this.SessionStatusListener);
+	$OnDestroy: function () {
+		this.$Service('Session').OffChange(this.SessionStatusListener);
 	}
 });

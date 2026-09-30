@@ -1,15 +1,15 @@
 Elemenx.Component('RouterShowcase', {
-	TemplateURL: 'RouterShowcase.html',
+	$TemplateURL: 'RouterShowcase.html',
 
 	OpenLab: function () {
-		this.Application().Router().Go('/router/1?mode=push#start');
+		this.$Application().$Router().Go('/router/1?mode=push#start');
 	},
 
 	OpenAsyncGuard: function () {
-		this.Application().Router().Go('/async-guard');
+		this.$Application().$Router().Go('/async-guard');
 	},
 
 	OpenLeaveGuard: function () {
-		this.Application().Router().Go('/leave-guard');
+		this.$Application().$Router().Go('/leave-guard');
 	}
 });

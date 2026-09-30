@@ -8,12 +8,12 @@ describe('Regression: dynamic templates / structural composition', function () {
 	it('Function Template creates independent reactive instances', async function () {
 		var name=unique('DynamicTemplateBasic'), source='<section class="remote">{{message}}</section>';
 		Elemenx.Component(name,{
-			Template:function () { return source; },
-			ElemenxOnCreate:function (data) { this.message=data.message; }
+			$Template:function () { return source; },
+			$OnCreate:function (data) { this.message=data.message; }
 		});
 		var factory=Elemenx.Component(name), a=factory({message:'A'}), b=factory({message:'B'}), mount=document.getElementById('mount');
-		mount.appendChild(a.Element());
-		mount.appendChild(b.Element());
+		mount.appendChild(a.$Element());
+		mount.appendChild(b.$Element());
 		await tick();
 		var nodes=document.querySelectorAll('.remote');
 		expect(nodes.length).toBe(2);
@@ -23,15 +23,15 @@ describe('Regression: dynamic templates / structural composition', function () {
 		await tick();
 		expect(nodes[0].textContent).toBe('A2');
 		expect(nodes[1].textContent).toBe('B');
-		a.Destroy();
-		b.Destroy();
+		a.$Destroy();
+		b.$Destroy();
 	});
 
 	it('Function Template recreates nested *if with current state', async function () {
 		var name=unique('DynamicTemplateIf'), owner, source='<div><section *if="outer"><b *if="inner" class="leaf">{{text}}</b></section></div>';
 		Elemenx.Component(name,{
-			Template:function () { return source; },
-			ElemenxOnCreate:function () {
+			$Template:function () { return source; },
+			$OnCreate:function () {
 				owner=this;
 				this.outer=true;
 				this.inner=true;
@@ -39,7 +39,7 @@ describe('Regression: dynamic templates / structural composition', function () {
 			}
 		});
 		var c=Elemenx.Component(name)({});
-		document.getElementById('mount').appendChild(c.Element());
+		document.getElementById('mount').appendChild(c.$Element());
 		await tick();
 		expect(document.querySelector('.leaf').textContent).toBe('A');
 		owner.inner=false;
@@ -55,24 +55,24 @@ describe('Regression: dynamic templates / structural composition', function () {
 		owner.outer=true;
 		await tick();
 		expect(document.querySelector('.leaf').textContent).toBe('B');
-		c.Destroy();
+		c.$Destroy();
 	});
 
 	it('Function Template preserves keyed data-for identity and events', async function () {
 		var row=unique('DynamicTemplateRow'), root=unique('DynamicTemplateEach'), owner, hits='', source='<div><'+row+' *for="item of items" *key="item.id" id="{{item.id}}" name="{{item.name}}"></'+row+'></div>';
 		Elemenx.Component(row,{
-			Template:'<button class="row" (click)="Hit">{{name}}</button>',
+			$Template:'<button class="row" (click)="Hit">{{name}}</button>',
 			Hit:function () { hits+=this.name; }
 		});
 		Elemenx.Component(root,{
-			Template:function () { return source; },
-			ElemenxOnCreate:function () {
+			$Template:function () { return source; },
+			$OnCreate:function () {
 				owner=this;
 				this.items=[{id:1,name:'A'},{id:2,name:'B'},{id:3,name:'C'}];
 			}
 		});
 		var c=Elemenx.Component(root)({});
-		document.getElementById('mount').appendChild(c.Element());
+		document.getElementById('mount').appendChild(c.$Element());
 		await tick();
 		var nodes=document.querySelectorAll('.row'), a=nodes[0], cc=nodes[2];
 		owner.items=[{id:3,name:'C2'},{id:4,name:'D'},{id:1,name:'A2'}];
@@ -86,26 +86,26 @@ describe('Regression: dynamic templates / structural composition', function () {
 		nodes[0].click();
 		nodes[2].click();
 		expect(hits).toBe('C2A2');
-		c.Destroy();
+		c.$Destroy();
 	});
 
 	it('Function Template composes data-if with keyed component collection', async function () {
 		var cell=unique('DynamicTemplateCell'), root=unique('DynamicTemplateMix'), owner, made=0, gone=0, source='<div><section *if="show"><'+cell+' *for="item of items" *key="item.id" id="{{item.id}}" name="{{item.name}}"></'+cell+'></section></div>';
 		Elemenx.Component(cell,{
-			Template:'<span class="cell">{{name}}</span>',
-			ElemenxOnCreate:function () { made++; },
-			ElemenxOnDestroy:function () { gone++; }
+			$Template:'<span class="cell">{{name}}</span>',
+			$OnCreate:function () { made++; },
+			$OnDestroy:function () { gone++; }
 		});
 		Elemenx.Component(root,{
-			Template:function () { return source; },
-			ElemenxOnCreate:function () {
+			$Template:function () { return source; },
+			$OnCreate:function () {
 				owner=this;
 				this.show=true;
 				this.items=[{id:1,name:'A'},{id:2,name:'B'}];
 			}
 		});
 		var c=Elemenx.Component(root)({});
-		document.getElementById('mount').appendChild(c.Element());
+		document.getElementById('mount').appendChild(c.$Element());
 		await tick();
 		expect(document.querySelectorAll('.cell').length).toBe(2);
 		owner.show=false;
@@ -120,26 +120,26 @@ describe('Regression: dynamic templates / structural composition', function () {
 		expect(nodes[1].textContent).toBe('C');
 		expect(made).toBe(4);
 		expect(gone).toBe(2);
-		c.Destroy();
+		c.$Destroy();
 	});
 
 	it('Function Template destroy/recreate detaches dead listeners', async function () {
 		var name=unique('DynamicTemplateDead'), made=0, gone=0, hits=0, source='<button class="dead" (click)="Hit">{{text}}</button>';
 		Elemenx.Component(name,{
-			Template:function () { return source; },
-			ElemenxOnCreate:function (data) { made++; this.text=data.text; },
-			ElemenxOnDestroy:function () { gone++; },
+			$Template:function () { return source; },
+			$OnCreate:function (data) { made++; this.text=data.text; },
+			$OnDestroy:function () { gone++; },
 			Hit:function () { hits++; }
 		});
 		var factory=Elemenx.Component(name), mount=document.getElementById('mount'), a=factory({text:'A'});
-		mount.appendChild(a.Element());
+		mount.appendChild(a.$Element());
 		await tick();
 		var old=document.querySelector('.dead');
 		old.click();
-		a.Destroy();
+		a.$Destroy();
 		old.click();
 		var b=factory({text:'B'});
-		mount.appendChild(b.Element());
+		mount.appendChild(b.$Element());
 		await tick();
 		document.querySelector('.dead').click();
 		expect(made).toBe(2);
@@ -147,22 +147,22 @@ describe('Regression: dynamic templates / structural composition', function () {
 		expect(hits).toBe(2);
 		expect(old.isConnected).toBe(false);
 		expect(document.querySelector('.dead').textContent).toBe('B');
-		b.Destroy();
+		b.$Destroy();
 	});
 
 	it('Function Template composes slot projection with structural content', async function () {
 		var box=unique('DynamicTemplateBox'), root=unique('DynamicTemplateSlot'), owner, source='<div><'+box+'><b *if="show" class="projected">{{text}}</b></'+box+'></div>';
-		Elemenx.Component(box,{Template:'<div class="box"><slot></slot></div>'});
+		Elemenx.Component(box,{$Template:'<div class="box"><slot></slot></div>'});
 		Elemenx.Component(root,{
-			Template:function () { return source; },
-			ElemenxOnCreate:function () {
+			$Template:function () { return source; },
+			$OnCreate:function () {
 				owner=this;
 				this.show=true;
 				this.text='A';
 			}
 		});
 		var c=Elemenx.Component(root)({});
-		document.getElementById('mount').appendChild(c.Element());
+		document.getElementById('mount').appendChild(c.$Element());
 		await tick();
 		var projected=document.querySelector('.projected');
 		expect(projected.closest('.box')).not.toBeNull();
@@ -175,7 +175,7 @@ describe('Regression: dynamic templates / structural composition', function () {
 		projected=document.querySelector('.projected');
 		expect(projected).not.toBeNull();
 		expect(projected.textContent).toBe('B');
-		c.Destroy();
+		c.$Destroy();
 	});
 
 	it('Function Template survives deep model / nested-if / keyed / event composition', async function () {
@@ -186,12 +186,12 @@ describe('Regression: dynamic templates / structural composition', function () {
 		var source='<div><input class="edit" [(value)]="title"><section *if="outer"><div *if="inner">'+
 			'<'+row+' *for="item of items" *key="item.id" id="{{item.id}}" name="{{item.name}}"></'+row+'></div></section></div>';
 		Elemenx.Component(row,{
-			Template:'<button class="deep-row" (click)="Hit">{{name}}</button>',
+			$Template:'<button class="deep-row" (click)="Hit">{{name}}</button>',
 			Hit:function () { hits+=this.name; }
 		});
 		Elemenx.Component(root,{
-			Template:function () { return source; },
-			ElemenxOnCreate:function () {
+			$Template:function () { return source; },
+			$OnCreate:function () {
 				owner=this;
 				this.title='T';
 				this.outer=true;
@@ -200,7 +200,7 @@ describe('Regression: dynamic templates / structural composition', function () {
 			}
 		});
 		var c=Elemenx.Component(root)({});
-		document.getElementById('mount').appendChild(c.Element());
+		document.getElementById('mount').appendChild(c.$Element());
 		await tick();
 		var input=document.querySelector('.edit');
 		expect(input.value).toBe('T');
@@ -225,20 +225,20 @@ describe('Regression: dynamic templates / structural composition', function () {
 		expect(rows[1].textContent).toBe('A2');
 		rows[0].click();
 		expect(hits).toBe('A2B2');
-		c.Destroy();
+		c.$Destroy();
 	});
 
 	it('TemplateID waits for a template parsed later and completes deferred lifecycle', async function () {
 		var child=unique('LateTemplateChild'), owner=unique('LateTemplateOwner'), pending=0, ready=0;
-		Elemenx.Component(child,{TemplateID:'LateTemplateID',Value:'ready'});
+		Elemenx.Component(child,{$TemplateID:'LateTemplateID',Value:'ready'});
 		Elemenx.Component(owner,{
-			Template:'<div><'+child+' *pending="Waiting"></'+child+'></div>',
+			$Template:'<div><'+child+' *pending="Waiting"></'+child+'></div>',
 			Waiting:'Loading late template',
-			ElemenxOnChildPending:function () { pending++; },
-			ElemenxOnChildReady:function () { ready++; }
+			$OnChildPending:function () { pending++; },
+			$OnChildReady:function () { ready++; }
 		});
 		var component=Elemenx.Component(owner)({});
-		document.getElementById('mount').appendChild(component.Element());
+		document.getElementById('mount').appendChild(component.$Element());
 		await tick();
 		expect(document.getElementById('mount').textContent).toContain('Waiting');
 		expect(pending).toBe(1);
@@ -252,7 +252,7 @@ describe('Regression: dynamic templates / structural composition', function () {
 		expect(Elemenx.Template('LateTemplateID')).toContain('late-template');
 		expect(document.querySelector('.late-template').textContent).toBe('ready');
 		expect(ready).toBe(1);
-		component.Destroy();
+		component.$Destroy();
 		template.remove();
 	});
 
@@ -267,24 +267,24 @@ describe('Regression: dynamic templates / structural composition', function () {
 			setTimeout(function () { ready('<em class="loaded-template">loaded</em>'); },0);
 			return null;
 		});
-		Elemenx.Component(child,{TemplateID:templateID});
+		Elemenx.Component(child,{$TemplateID:templateID});
 		var component=Elemenx.Component(child)({});
-		document.getElementById('mount').appendChild(component.Element());
+		document.getElementById('mount').appendChild(component.$Element());
 		await tick();
 		await tick();
 		expect(requested).toBe(1);
 		expect(Elemenx.Template(templateID)).toContain('loaded-template');
 		expect(document.querySelector('.loaded-template').textContent).toBe('loaded');
-		component.Destroy();
+		component.$Destroy();
 	});
 
 	it('Template.Reload updates live TemplateID component instances from the registry', async function () {
 		var templateID=unique('ReloadTemplate');
 		var child=unique('ReloadTemplateChild');
 		Elemenx.Template(templateID,'<strong class="registry-reload">A</strong>');
-		Elemenx.Component(child,{TemplateID:templateID});
+		Elemenx.Component(child,{$TemplateID:templateID});
 		var component=Elemenx.Component(child)({});
-		document.getElementById('mount').appendChild(component.Element());
+		document.getElementById('mount').appendChild(component.$Element());
 		await tick();
 		expect(document.querySelector('.registry-reload').textContent).toBe('A');
 		var count=Elemenx.Template.Reload(templateID,'<strong class="registry-reload">B</strong>');
@@ -292,7 +292,7 @@ describe('Regression: dynamic templates / structural composition', function () {
 		await tick();
 		expect(count).toBeGreaterThan(0);
 		expect(document.querySelector('.registry-reload').textContent).toBe('B');
-		component.Destroy();
+		component.$Destroy();
 	});
 
 	it('Application exposes the shared Template Registry without shadowing Component Template', async function () {
@@ -302,30 +302,30 @@ describe('Regression: dynamic templates / structural composition', function () {
 		var componentRead=null;
 		var bootstrapApplication=null;
 		Elemenx.Component(rootName,{
-			Template:'<div class="application-template-access">ready</div>',
-			ElemenxOnCreate:function () {
-				componentRead=this.Application().Template(templateID);
+			$Template:'<div class="application-template-access">ready</div>',
+			$OnCreate:function () {
+				componentRead=this.$Application().$Template(templateID);
 			}
 		});
 		var application=Elemenx.Application(applicationName,{
-			Component:rootName,
-			Mount:'#mount',
-			Bootstrap:function () {
+			$Component:rootName,
+			$Mount:'#mount',
+			$Bootstrap:function () {
 				bootstrapApplication=this;
-				this.Template(templateID,'<span>from application</span>');
+				this.$Template(templateID,'<span>from application</span>');
 			}
 		});
 		await tick();
 		expect(bootstrapApplication).toBe(application);
-		expect(application.Template(templateID)).toContain('from application');
-		expect(application.Template.Has(templateID)).toBe(true);
+		expect(application.$Template(templateID)).toContain('from application');
+		expect(application.$Template.Has(templateID)).toBe(true);
 		expect(componentRead).toContain('from application');
-		expect(Elemenx.Template(templateID)).toBe(application.Template(templateID));
-		application.Template.Reload(templateID,'<span>reloaded</span>');
+		expect(Elemenx.Template(templateID)).toBe(application.$Template(templateID));
+		application.$Template.Reload(templateID,'<span>reloaded</span>');
 		expect(Elemenx.Template(templateID)).toContain('reloaded');
-		application.Template.Remove(templateID);
+		application.$Template.Remove(templateID);
 		expect(Elemenx.Template.Has(templateID)).toBe(false);
-		application.Destroy();
+		application.$Destroy();
 	});
 
 });

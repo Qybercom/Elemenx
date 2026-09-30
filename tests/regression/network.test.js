@@ -3,17 +3,17 @@ import { loadElemenx, resetDOM, tick, waitFor, unique } from '../setup.js';
 
 function application (root) {
 	var shell=unique('NetworkShell');
-	Elemenx.Component(shell,{Template:'<div class="network-shell"></div>'});
+	Elemenx.Component(shell,{$Template:'<div class="network-shell"></div>'});
 	return Elemenx.Application(unique('NetworkApp'),{
-		Component:shell,
-		Root:root,
-		Mount:'#mount'
+		$Component:shell,
+		$Root:root,
+		$Mount:'#mount'
 	});
 }
 
 async function ready (app) {
 	return await waitFor(function () {
-		return app.Component && app.Component();
+		return app.$Component();
 	},1500);
 }
 
@@ -32,13 +32,13 @@ describe('Regression: deferred / network component discovery', function () {
 		expect(await ready(app)).not.toBe(false);
 
 		var c=Elemenx.Component('RemoteBasic')({value:'A'},null,{Application:app});
-		document.getElementById('mount').appendChild(c.Element());
+		document.getElementById('mount').appendChild(c.$Element());
 
 		expect(await waitFor(function () {return document.querySelector('.remote-basic');},1500)).not.toBe(false);
 		expect(document.querySelector('.remote-basic').textContent).toBe('REMOTE:A');
 
-		c.Destroy();
-		app.Destroy();
+		c.$Destroy();
+		app.$Destroy();
 	});
 
 	it('coalesces concurrent discovery and caches the resolved component', async function () {
@@ -48,23 +48,23 @@ describe('Regression: deferred / network component discovery', function () {
 		var a=Elemenx.Component('RemoteConcurrent')({value:'A'},null,{Application:app});
 		var b=Elemenx.Component('RemoteConcurrent')({value:'B'},null,{Application:app});
 
-		document.getElementById('mount').appendChild(a.Element());
-		document.getElementById('mount').appendChild(b.Element());
+		document.getElementById('mount').appendChild(a.$Element());
+		document.getElementById('mount').appendChild(b.$Element());
 
 		expect(await waitFor(function () {return document.querySelectorAll('.remote-concurrent').length===2;},1500)).toBe(true);
 		expect(window.RemoteConcurrentLoads).toBe(1);
 
 		var c=Elemenx.Component('RemoteConcurrent')({value:'C'},null,{Application:app});
-		document.getElementById('mount').appendChild(c.Element());
+		document.getElementById('mount').appendChild(c.$Element());
 		await tick(40);
 
 		expect(document.querySelectorAll('.remote-concurrent').length).toBe(3);
 		expect(window.RemoteConcurrentLoads).toBe(1);
 
-		a.Destroy();
-		b.Destroy();
-		c.Destroy();
-		app.Destroy();
+		a.$Destroy();
+		b.$Destroy();
+		c.$Destroy();
+		app.$Destroy();
 	});
 
 
@@ -81,7 +81,7 @@ describe('Regression: deferred / network component discovery', function () {
 		});
 
 		var c=Elemenx.Component('RemoteNestedTemplate')({},null,{Application:app});
-		document.getElementById('mount').appendChild(c.Element());
+		document.getElementById('mount').appendChild(c.$Element());
 
 		expect(await waitFor(function () {return templateRequested;},1500)).toBe(true);
 		expect(c._Component()).toBeNull();
@@ -95,15 +95,15 @@ describe('Regression: deferred / network component discovery', function () {
 
 		var resolved=c._Component();
 		var changes=[];
-		resolved.On('change',function (value) {changes.push(value);});
+		resolved.$On('change',function (value) {changes.push(value);});
 		resolved.Increment();
 		await tick();
 
 		expect(changes).toEqual([1]);
 		expect(document.querySelector('.remote-nested-template').textContent).toBe('1');
 
-		c.Destroy();
-		app.Destroy();
+		c.$Destroy();
+		app.$Destroy();
 	});
 
 	it('does not activate a deferred component after owner Destroy', async function () {
@@ -124,11 +124,11 @@ describe('Regression: deferred / network component discovery', function () {
 		};
 
 		var c=Elemenx.Component('RemoteDestroy')({value:'X'},null,{Application:app});
-		document.getElementById('mount').appendChild(c.Element());
+		document.getElementById('mount').appendChild(c.$Element());
 
 		expect(await waitFor(function () {return held;},500)).not.toBe(false);
 
-		c.Destroy();
+		c.$Destroy();
 		head.appendChild=append;
 		append.call(head,held);
 		await tick(120);
@@ -136,6 +136,6 @@ describe('Regression: deferred / network component discovery', function () {
 		expect(document.querySelector('.remote-destroy')).toBeNull();
 		expect(window.RemoteDestroyHits).toBe(0);
 
-		app.Destroy();
+		app.$Destroy();
 	});
 });

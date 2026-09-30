@@ -15,7 +15,7 @@ Application/
     └── elemenx.js
 ```
 
-`dist/app.js` contains the generated Bundle Registry followed by the original application bootstrap from `app.js`. Component `TemplateURL` and `StyleURL` resources are inlined into the bundle.
+`dist/app.js` contains the generated Bundle Registry followed by the original application bootstrap from `app.js`. Component `$TemplateURL` and `$StyleURL` resources are inlined into the bundle.
 
 `dist/index.html` is copied from the normal development `index.html`; a separate production HTML file is not required. `elemenx.js` is copied into `dist`, so the result can be served independently of the source tree.
 

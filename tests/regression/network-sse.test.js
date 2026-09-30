@@ -200,15 +200,15 @@ describe('Regression: Network SSE', function () {
 	it('owner Destroy closes an active source and ignores stale source events', function () {
 		var name=unique('SSEOwner');
 		var data=[];
-		Elemenx.Component(name,{Template:'<div></div>'});
+		Elemenx.Component(name,{$Template:'<div></div>'});
 		var component=Elemenx.Component(name)();
-		var sse=component.Network().SSE({URL:'/events'});
+		var sse=component.$Network().SSE({URL:'/events'});
 		sse.On('Transport.Data',function (event) { data.push(event.Data.Data); });
 		sse.Connect();
 		var source=FakeEventSource.Instances[0];
 		source.Open();
 
-		component.Destroy();
+		component.$Destroy();
 		expect(source.Closed).toBe(true);
 		source.Message('stale');
 		expect(data).toEqual([]);

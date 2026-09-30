@@ -1,7 +1,7 @@
 Elemenx.Component('EnvironmentCard', {
-	TemplateURL: 'EnvironmentCard.html',
+	$TemplateURL: 'EnvironmentCard.html',
 
-	ElemenxOnCreate: function () {
+	$OnCreate: function () {
 		this.HasServices = this.services && this.services.length > 0;
 	}
 });

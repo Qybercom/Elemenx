@@ -17,7 +17,7 @@ describe('Regression: final public API contract edges', function () {
 	});
 
 	afterEach(function () {
-		while (components.length) components.pop().Destroy();
+		while (components.length) components.pop().$Destroy();
 		while (messaging.length) messaging.pop().Destroy();
 		Elemenx.Storage.Cookie.Clear({Path:'/'});
 	});
@@ -27,21 +27,21 @@ describe('Regression: final public API contract edges', function () {
 		var parentName=unique('FinalAPIParent');
 		var childComponent=null;
 		Elemenx.Component(childName,{
-			Template:'<b class="final-api-child">child</b>',
-			ElemenxOnCreate:function () { childComponent=this; }
+			$Template:'<b class="final-api-child">child</b>',
+			$OnCreate:function () { childComponent=this; }
 		});
-		var Parent=Elemenx.Component(parentName,{Template:'<section><'+childName+'></'+childName+'></section>'});
+		var Parent=Elemenx.Component(parentName,{$Template:'<section><'+childName+'></'+childName+'></section>'});
 		var parent=Parent();
 		components.push(parent);
-		document.getElementById('mount').appendChild(parent.Element());
+		document.getElementById('mount').appendChild(parent.$Element());
 		await tick();
 
-		expect(typeof parent.Generation()).toBe('number');
-		expect(parent.Generation()).toBeGreaterThanOrEqual(0);
-		expect(parent.Parent()).toBeNull();
+		expect(typeof parent.$Generation()).toBe('number');
+		expect(parent.$Generation()).toBeGreaterThanOrEqual(0);
+		expect(parent.$Parent()).toBeNull();
 		expect(childComponent).not.toBeNull();
-		expect(childComponent.Parent()).toBe(parent);
-		expect(childComponent.Element()).toBe(parent.Element().querySelector('.final-api-child'));
+		expect(childComponent.$Parent()).toBe(parent);
+		expect(childComponent.$Element()).toBe(parent.$Element().querySelector('.final-api-child'));
 	});
 
 	it('Messaging Deliver injects only subscribed channels and preserves source/data', function () {

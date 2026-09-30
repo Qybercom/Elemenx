@@ -1,5 +1,5 @@
 Elemenx.Directive('tooltip', {
-	ElemenxOnCreate: function (context) {
+	$OnCreate: function (context) {
 		var tooltip = document.createElement('span');
 		var show = function () {
 			var rect = context.Element.getBoundingClientRect();
@@ -25,11 +25,11 @@ Elemenx.Directive('tooltip', {
 		context.Element.addEventListener('blur', hide);
 	},
 
-	ElemenxOnUpdate: function (context) {
+	$OnUpdate: function (context) {
 		context.Data.Tooltip.textContent = context.Value || '';
 	},
 
-	ElemenxOnDestroy: function (context) {
+	$OnDestroy: function (context) {
 		context.Element.removeEventListener('mouseenter', context.Data.Show);
 		context.Element.removeEventListener('mouseleave', context.Data.Hide);
 		context.Element.removeEventListener('focus', context.Data.Show);

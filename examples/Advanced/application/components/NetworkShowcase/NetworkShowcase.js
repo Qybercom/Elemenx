@@ -1,5 +1,5 @@
 Elemenx.Component('NetworkShowcase', {
-	TemplateURL: 'NetworkShowcase.html',
+	$TemplateURL: 'NetworkShowcase.html',
 
 	Status: 'Idle',
 	Response: 'No request yet.',
@@ -13,7 +13,7 @@ Elemenx.Component('NetworkShowcase', {
 
 		var events = [];
 
-		component.Batch(function (state) {
+		component.$Batch(function (state) {
 			state.Status = 'Loading';
 			state.Response = 'Waiting for response...';
 			state.Events = 'BeforeRequest';
@@ -27,7 +27,7 @@ Elemenx.Component('NetworkShowcase', {
 		component.Request.On('Transport', function (event) {
 			events.push(event.Type);
 
-			component.Batch(function (state) {
+			component.$Batch(function (state) {
 				state.Events = events.join(' → ');
 			});
 		});
@@ -42,7 +42,7 @@ Elemenx.Component('NetworkShowcase', {
 				payload = null;
 			}
 
-			component.Batch(function (state) {
+			component.$Batch(function (state) {
 				state.Status = payload && payload.ok ? 'Success' : 'Invalid response';
 				state.Response = payload ? payload.message : 'Response was not valid JSON.';
 			});
@@ -51,7 +51,7 @@ Elemenx.Component('NetworkShowcase', {
 		});
 
 		component.Request.On('Transport.Error', function () {
-			component.Batch(function (state) {
+			component.$Batch(function (state) {
 				state.Status = 'Error';
 				state.Response = 'Network request failed.';
 			});
@@ -62,7 +62,7 @@ Elemenx.Component('NetworkShowcase', {
 		component.Request.Execute();
 	},
 
-	ElemenxOnDestroy: function () {
+	$OnDestroy: function () {
 		if (this.Request && this.Request.Abort)
 			this.Request.Abort();
 	}

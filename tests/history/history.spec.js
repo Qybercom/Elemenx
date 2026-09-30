@@ -8,10 +8,10 @@ test.describe('Regression: real browser session history', function () {
 	test('Params / Query / Hash survive multi-step back/forward', async function ({ page }) {
 		await boot(page);
 		await page.evaluate(function () {
-			Elemenx.Component('HRoot',{Template:'<main *outlet="Content"></main>'});
-			Elemenx.Component('HPage',{Template:'<div id="v">{{Params.id}}|{{Query.q}}|{{Hash}}</div>'});
-			window.App=Elemenx.Application('HApp',{Component:'HRoot',Mount:'#mount'});
-			window.Router=Elemenx.Router({Root:App.Component(),Routes:[{Path:'/hs/:id',Component:'HPage'}]});
+			Elemenx.Component('HRoot',{$Template:'<main *outlet="Content"></main>'});
+			Elemenx.Component('HPage',{$Template:'<div id="v">{{$Params.id}}|{{$Query.q}}|{{$Hash}}</div>'});
+			window.App=Elemenx.Application('HApp',{$Component:'HRoot',$Mount:'#mount'});
+			window.Router=Elemenx.Router({Root:App.$Component(),Routes:[{Path:'/hs/:id',Component:'HPage'}]});
 			Router.Start();
 		});
 		await page.evaluate(function () {Router.Go('/hs/1?q=a#x');});
@@ -32,11 +32,11 @@ test.describe('Regression: real browser session history', function () {
 			window.CMade = 0;
 			window.PGone = 0;
 			window.CGone = 0;
-			Elemenx.Component('HRRoot',{Template:'<main *outlet="Content"></main>'});
-			Elemenx.Component('HRParent',{Template:'<section id="p">{{Params.id}}<div *outlet="Content"></div></section>',ElemenxOnCreate:function () {PMade++;window.P=this;},ElemenxOnDestroy:function () {PGone++;}});
-			Elemenx.Component('HRChild',{Template:'<b id="c">{{Query.q}}|{{Hash}}</b>',ElemenxOnCreate:function () {CMade++;window.C=this;},ElemenxOnDestroy:function () {CGone++;}});
-			window.App=Elemenx.Application('HRApp',{Component:'HRRoot',Mount:'#mount'});
-			window.Router=Elemenx.Router({Root:App.Component(),Routes:[{Path:'/hr/:id',Component:'HRParent',Routes:[{Path:'child',Component:'HRChild'}]}]});
+			Elemenx.Component('HRRoot',{$Template:'<main *outlet="Content"></main>'});
+			Elemenx.Component('HRParent',{$Template:'<section id="p">{{$Params.id}}<div *outlet="Content"></div></section>',$OnCreate:function () {PMade++;window.P=this;},$OnDestroy:function () {PGone++;}});
+			Elemenx.Component('HRChild',{$Template:'<b id="c">{{$Query.q}}|{{$Hash}}</b>',$OnCreate:function () {CMade++;window.C=this;},$OnDestroy:function () {CGone++;}});
+			window.App=Elemenx.Application('HRApp',{$Component:'HRRoot',$Mount:'#mount'});
+			window.Router=Elemenx.Router({Root:App.$Component(),Routes:[{Path:'/hr/:id',Component:'HRParent',Routes:[{Path:'child',Component:'HRChild'}]}]});
 			Router.Start();
 		});
 		await page.evaluate(function () {
@@ -54,10 +54,10 @@ test.describe('Regression: real browser session history', function () {
 	test('Replace mutates current history entry', async function ({ page }) {
 		await boot(page);
 		await page.evaluate(function () {
-			Elemenx.Component('XRRoot',{Template:'<main *outlet="Content"></main>'});
-			Elemenx.Component('XRPage',{Template:'<div id="x">{{Params.id}}|{{Query.q}}</div>'});
-			window.App=Elemenx.Application('XRApp',{Component:'XRRoot',Mount:'#mount'});
-			window.Router=Elemenx.Router({Root:App.Component(),Routes:[{Path:'/rx/:id',Component:'XRPage'}]});
+			Elemenx.Component('XRRoot',{$Template:'<main *outlet="Content"></main>'});
+			Elemenx.Component('XRPage',{$Template:'<div id="x">{{$Params.id}}|{{$Query.q}}</div>'});
+			window.App=Elemenx.Application('XRApp',{$Component:'XRRoot',$Mount:'#mount'});
+			window.Router=Elemenx.Router({Root:App.$Component(),Routes:[{Path:'/rx/:id',Component:'XRPage'}]});
 			Router.Start();
 			Router.Go('/rx/1?q=a');Router.Replace('/rx/2?q=b');Router.Go('/rx/3?q=c');
 		});
@@ -71,14 +71,14 @@ test.describe('Regression: real browser session history', function () {
 		await page.evaluate(function () {
 			window.CycleMade = 0;
 			window.CycleGone = 0;
-			Elemenx.Component('CYRoot',{Template:'<main *outlet="Content"></main>'});
+			Elemenx.Component('CYRoot',{$Template:'<main *outlet="Content"></main>'});
 			Elemenx.Component('CYPage',{
-				Template:'<div id="cycle">{{Params.id}}</div>',
-				ElemenxOnCreate:function () {CycleMade++;},
-				ElemenxOnDestroy:function () {CycleGone++;}
+				$Template:'<div id="cycle">{{$Params.id}}</div>',
+				$OnCreate:function () {CycleMade++;},
+				$OnDestroy:function () {CycleGone++;}
 			});
-			window.App=Elemenx.Application('CYApp',{Component:'CYRoot',Mount:'#mount'});
-			window.Router=Elemenx.Router({Root:App.Component(),Routes:[{Path:'/cycle/:id',Component:'CYPage'}]});
+			window.App=Elemenx.Application('CYApp',{$Component:'CYRoot',$Mount:'#mount'});
+			window.Router=Elemenx.Router({Root:App.$Component(),Routes:[{Path:'/cycle/:id',Component:'CYPage'}]});
 			Router.Start();
 			Router.Go('/cycle/1');
 			Router.Go('/cycle/2');
@@ -101,10 +101,10 @@ test.describe('Regression: Router public history facade', function () {
 	test('Router.Back and Router.Forward drive real browser session history', async function ({ page }) {
 		await boot(page);
 		await page.evaluate(function () {
-			Elemenx.Component('FBRoot',{Template:'<main *outlet="Content"></main>'});
-			Elemenx.Component('FBPage',{Template:'<div id="fb">{{Params.id}}</div>'});
-			window.App=Elemenx.Application('FBApp',{Component:'FBRoot',Mount:'#mount'});
-			window.Router=Elemenx.Router({Root:App.Component(),Routes:[{Path:'/fb/:id',Component:'FBPage'}]});
+			Elemenx.Component('FBRoot',{$Template:'<main *outlet="Content"></main>'});
+			Elemenx.Component('FBPage',{$Template:'<div id="fb">{{$Params.id}}</div>'});
+			window.App=Elemenx.Application('FBApp',{$Component:'FBRoot',$Mount:'#mount'});
+			window.Router=Elemenx.Router({Root:App.$Component(),Routes:[{Path:'/fb/:id',Component:'FBPage'}]});
 			Router.Start();
 			Router.Go('/fb/1');
 			Router.Go('/fb/2');
@@ -125,14 +125,14 @@ test.describe('Regression: guarded browser history navigation', function () {
 		await page.evaluate(function () {
 			window.LeaveChecks = 0;
 			window.AllowLeave = true;
-			Elemenx.Component('GBRoot',{Template:'<main *outlet="Content"></main>'});
-			Elemenx.Component('GBPageA',{Template:'<div id="guarded-back">A</div>'});
+			Elemenx.Component('GBRoot',{$Template:'<main *outlet="Content"></main>'});
+			Elemenx.Component('GBPageA',{$Template:'<div id="guarded-back">A</div>'});
 			Elemenx.Component('GBPageB',{
-				Template:'<div id="guarded-back">B</div>',
-				ElemenxOnRouteLeave:function () {LeaveChecks++;return AllowLeave;}
+				$Template:'<div id="guarded-back">B</div>',
+				$OnRouteLeave:function () {LeaveChecks++;return AllowLeave;}
 			});
-			window.App=Elemenx.Application('GBApp',{Component:'GBRoot',Mount:'#mount'});
-			window.Router=Elemenx.Router({Root:App.Component(),Routes:[{Path:'/guarded-back/a',Component:'GBPageA'},{Path:'/guarded-back/b',Component:'GBPageB'}]});
+			window.App=Elemenx.Application('GBApp',{$Component:'GBRoot',$Mount:'#mount'});
+			window.Router=Elemenx.Router({Root:App.$Component(),Routes:[{Path:'/guarded-back/a',Component:'GBPageA'},{Path:'/guarded-back/b',Component:'GBPageB'}]});
 			Router.Start();
 			Router.Go('/guarded-back/a');
 			Router.Go('/guarded-back/b');
@@ -152,11 +152,11 @@ test.describe('Regression: guarded browser history navigation', function () {
 			window.EnterChecks = 0;
 			window.AllowProtected = true;
 			Elemenx.Guard('HistoryEnterGuard',function () {EnterChecks++;return AllowProtected;});
-			Elemenx.Component('GERoot',{Template:'<main *outlet="Content"></main>'});
-			Elemenx.Component('GEProtected',{Template:'<div id="history-protected">PROTECTED</div>'});
-			Elemenx.Component('GEOpen',{Template:'<div id="history-open">OPEN</div>'});
-			window.App=Elemenx.Application('GEApp',{Component:'GERoot',Mount:'#mount'});
-			window.Router=Elemenx.Router({Root:App.Component(),Routes:[{Path:'/history-protected',Component:'GEProtected',Guard:'HistoryEnterGuard'},{Path:'/history-open',Component:'GEOpen'}]});
+			Elemenx.Component('GERoot',{$Template:'<main *outlet="Content"></main>'});
+			Elemenx.Component('GEProtected',{$Template:'<div id="history-protected">PROTECTED</div>'});
+			Elemenx.Component('GEOpen',{$Template:'<div id="history-open">OPEN</div>'});
+			window.App=Elemenx.Application('GEApp',{$Component:'GERoot',$Mount:'#mount'});
+			window.Router=Elemenx.Router({Root:App.$Component(),Routes:[{Path:'/history-protected',Component:'GEProtected',Guard:'HistoryEnterGuard'},{Path:'/history-open',Component:'GEOpen'}]});
 			Router.Start();
 			Router.Go('/history-protected');
 			Router.Go('/history-open');

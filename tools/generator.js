@@ -76,7 +76,7 @@ function addIndexEntry (file, entry) {
 
 function componentFiles (name) {
 	return {
-		[name + '.js']:"Elemenx.Component('" + name + "', {\n\tTemplateURL: '" + name + ".html'\n});",
+		[name + '.js']:"Elemenx.Component('" + name + "', {\n\t$TemplateURL: '" + name + ".html'\n});",
 		[name + '.html']:'<div class = "' + name + '"></div>'
 	};
 }
@@ -95,7 +95,7 @@ function guardFiles (name) {
 
 function directiveFiles (name) {
 	return {
-		[name + '.js']:"Elemenx.Directive('" + name + "', {\n\tElemenxOnCreate: function (context) {\n\t},\n\n\tElemenxOnUpdate: function (context) {\n\t},\n\n\tElemenxOnDestroy: function (context) {\n\t}\n});"
+		[name + '.js']:"Elemenx.Directive('" + name + "', {\n\t$OnCreate: function (context) {\n\t},\n\n\t$OnUpdate: function (context) {\n\t},\n\n\t$OnDestroy: function (context) {\n\t}\n});"
 	};
 }
 
@@ -203,7 +203,7 @@ function generateApplication (project, name, options) {
 	var targets = {};
 
 	targets[index]="[\n\t'App/App.js'\n]";
-	targets[path.join(componentDirectory,'App.js')]="Elemenx.Component('App', {\n\tTemplateURL: 'App.html'\n});";
+	targets[path.join(componentDirectory,'App.js')]="Elemenx.Component('App', {\n\t$TemplateURL: 'App.html'\n});";
 	targets[path.join(componentDirectory,'App.html')]='<main class = "' + name + '"></main>';
 
 	ensureWritable(targets, options.force === true);
@@ -225,7 +225,7 @@ function generateApplication (project, name, options) {
 	var configFile = path.join(project,'elemenx.config.js');
 	var packageFile = path.join(project,'package.json');
 
-	if (writeIfMissing(appFile,"Elemenx.Application('" + name + "', {\n\tComponent: 'App',\n\tRoot: '" + name + "',\n\tMount: 'body'\n});")) {
+	if (writeIfMissing(appFile,"Elemenx.Application('" + name + "', {\n\t$Component: 'App',\n\t$Root: '" + name + "',\n\t$Mount: 'body'\n});")) {
 		host.push(appFile);
 	}
 	

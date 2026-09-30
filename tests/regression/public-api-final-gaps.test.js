@@ -70,7 +70,7 @@ describe('Regression: final public API gap contracts', function () {
 	});
 
 	afterEach(function () {
-		while (applications.length) applications.pop().Destroy();
+		while (applications.length) applications.pop().$Destroy();
 		if (originalServiceWorker) Object.defineProperty(navigator,'serviceWorker',originalServiceWorker);
 		else delete navigator.serviceWorker;
 	});
@@ -79,18 +79,18 @@ describe('Regression: final public API gap contracts', function () {
 		serviceWorkerEnvironment();
 		var component=unique('ApplicationServiceWorkerRoot');
 		var workerName=unique('ApplicationServiceWorker');
-		Elemenx.Component(component,{Template:'<div></div>'});
-		var app=application(unique('ApplicationServiceWorkerApp'),{Component:component,Mount:'#mount'});
-		var handle=app.ServiceWorker(workerName,{
+		Elemenx.Component(component,{$Template:'<div></div>'});
+		var app=application(unique('ApplicationServiceWorkerApp'),{$Component:component,$Mount:'#mount'});
+		var handle=app.$ServiceWorker(workerName,{
 			Script:'/application-owned-service-worker.js',
 			Scope:'/application-owned-service-worker/',
 			Channel:unique('application-owned-service-worker-channel')
 		});
 
-		expect(app.ServiceWorker(workerName)).toBe(handle);
+		expect(app.$ServiceWorker(workerName)).toBe(handle);
 		expect(await waitFor(function () { return handle.State()==='Active'; },1000)).toBe(true);
 
-		app.Destroy();
+		app.$Destroy();
 		applications.splice(applications.indexOf(app),1);
 
 		expect(handle.Reachable()).toBe(false);
@@ -100,18 +100,18 @@ describe('Regression: final public API gap contracts', function () {
 
 	it('Application.Reload validates its public contract and reloads a discovered Component', async function () {
 		var root=unique('ReloadApplicationRoot');
-		Elemenx.Component(root,{Template:'<div class="reload-application-root"></div>'});
+		Elemenx.Component(root,{$Template:'<div class="reload-application-root"></div>'});
 		var app=application(unique('ReloadApplication'),{
-			Component:root,
-			Mount:'#mount',
-			Root:'/final-gap'
+			$Component:root,
+			$Mount:'#mount',
+			$Root:'/final-gap'
 		});
 
-		expect(await waitFor(function () { return app.Component()!==null; },1000)).toBe(true);
-		expect(function () { app.Reload('Unknown','ReloadProbe'); }).toThrow();
+		expect(await waitFor(function () { return app.$Component()!==null; },1000)).toBe(true);
+		expect(function () { app.$Reload('Unknown','ReloadProbe'); }).toThrow();
 
 		var result='pending';
-		app.Reload('Component','ReloadProbe',function (error) {
+		app.$Reload('Component','ReloadProbe',function (error) {
 			result=error || null;
 		});
 
@@ -123,42 +123,42 @@ describe('Regression: final public API gap contracts', function () {
 	it('Component.Ref follows conditional structural recreation and never returns the removed node', async function () {
 		var name=unique('RefLifecycle');
 		var Component=Elemenx.Component(name,{
-			Template:'<main><section *if="show"><span #value>{{value}}</span></section></main>'
+			$Template:'<main><section *if="show"><span #value>{{value}}</span></section></main>'
 		});
 		var component=Component({show:true,value:'A'});
-		document.getElementById('mount').appendChild(component.Element());
+		document.getElementById('mount').appendChild(component.$Element());
 
-		var first=component.Ref('value');
+		var first=component.$Ref('value');
 		expect(first).not.toBeNull();
 		expect(first.textContent).toBe('A');
 
 		component.show=false;
 		await tick();
-		expect(component.Ref('value')).toBeNull();
+		expect(component.$Ref('value')).toBeNull();
 		expect(first.isConnected).toBe(false);
 
 		component.value='B';
 		component.show=true;
 		await tick();
-		var second=component.Ref('value');
+		var second=component.$Ref('value');
 		expect(second).not.toBeNull();
 		expect(second).not.toBe(first);
 		expect(second.textContent).toBe('B');
-		component.Destroy();
+		component.$Destroy();
 	});
 
 	it('Component.Router facade survives pre-attachment listeners and resolves the attached Router', async function () {
 		var rootName=unique('RouterFacadeRoot');
 		var pageName=unique('RouterFacadePage');
 		var events=0;
-		Elemenx.Component(rootName,{Template:'<main *outlet="Content"></main>'});
-		Elemenx.Component(pageName,{Template:'<div class="router-facade-page">PAGE</div>'});
+		Elemenx.Component(rootName,{$Template:'<main *outlet="Content"></main>'});
+		Elemenx.Component(pageName,{$Template:'<div class="router-facade-page">PAGE</div>'});
 
-		var app=application(unique('RouterFacadeApplication'),{Component:rootName,Mount:'#mount'});
-		var component=app.Component();
-		var facade=component.Router();
+		var app=application(unique('RouterFacadeApplication'),{$Component:rootName,$Mount:'#mount'});
+		var component=app.$Component();
+		var facade=component.$Router();
 
-		expect(component.Router()).toBe(facade);
+		expect(component.$Router()).toBe(facade);
 		expect(facade.Current()).toEqual([]);
 		facade.On('NavigationEnd',function () { events++; });
 
@@ -167,7 +167,7 @@ describe('Regression: final public API gap contracts', function () {
 			Routes:[{Path:'/final-router-facade',Component:pageName}]
 		});
 		router.Start();
-		expect(component.Router()).toBe(facade);
+		expect(component.$Router()).toBe(facade);
 
 		facade.Go('/final-router-facade');
 		await tick(60);

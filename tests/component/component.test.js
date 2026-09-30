@@ -12,15 +12,15 @@ describe('Component / State / Lifecycle', function () {
 
 	it('renders reactive state and batches changes', async function () {
 		Elemenx.Component('PackageCounter', {
-			Template: '<div><b id="value">{{Count}}</b><span id="label">{{Label}}</span></div>'
+			$Template: '<div><b id="value">{{Count}}</b><span id="label">{{Label}}</span></div>'
 		});
 
 		var component = Elemenx.Component('PackageCounter')({Count: 1, Label: 'one'}, null, {DirectState:true});
-		document.getElementById('mount').appendChild(component.Element());
+		document.getElementById('mount').appendChild(component.$Element());
 
 		expect(document.getElementById('value').textContent).toBe('1');
 
-		component.Batch(function (state) {
+		component.$Batch(function (state) {
 			state.Count = 2;
 			state.Label = 'two';
 		});
@@ -35,15 +35,15 @@ describe('Component / State / Lifecycle', function () {
 		var gone = 0;
 
 		Elemenx.Component('PackageLifecycle', {
-			Template: '<div>life</div>',
-			ElemenxOnCreate: function () { made++; },
-			ElemenxOnDestroy: function () { gone++; }
+			$Template: '<div>life</div>',
+			$OnCreate: function () { made++; },
+			$OnDestroy: function () { gone++; }
 		});
 
 		var component = Elemenx.Component('PackageLifecycle')();
-		document.getElementById('mount').appendChild(component.Element());
-		component.Destroy();
-		component.Destroy();
+		document.getElementById('mount').appendChild(component.$Element());
+		component.$Destroy();
+		component.$Destroy();
 
 		expect(made).toBe(1);
 		expect(gone).toBe(1);

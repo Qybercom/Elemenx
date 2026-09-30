@@ -190,16 +190,16 @@ describe('Regression: Network XHR / Protocol', function () {
 		var name=unique('NetworkOwner');
 		var success=0;
 		var abort=0;
-		Elemenx.Component(name,{Template:'<div></div>'});
+		Elemenx.Component(name,{$Template:'<div></div>'});
 		var component=Elemenx.Component(name)();
-		var network=component.Network();
+		var network=component.$Network();
 		var xhr=network.XHR({URL:'/owned'});
 		xhr.On('Transport.Success',function () { success++; });
 		xhr.On('Transport.Abort',function () { abort++; });
 		xhr.Execute();
 		var native=FakeXHR.Instances[0];
 
-		component.Destroy();
+		component.$Destroy();
 		expect(abort).toBe(1);
 
 		native.Emit('load',{});

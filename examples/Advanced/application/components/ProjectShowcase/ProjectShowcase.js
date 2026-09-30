@@ -1,7 +1,7 @@
 Elemenx.Component('ProjectShowcase', {
-	TemplateURL: 'ProjectShowcase.html',
+	$TemplateURL: 'ProjectShowcase.html',
 
-	ElemenxOnCreate: function () {
+	$OnCreate: function () {
 		var queue = [
 			{name: 'Build image', ready: true, protected: true},
 			{name: 'Deploy staging', ready: true, protected: false},

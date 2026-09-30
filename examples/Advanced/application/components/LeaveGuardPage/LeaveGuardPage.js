@@ -1,6 +1,6 @@
 Elemenx.Component('LeaveGuardPage', {
-	TemplateURL: 'LeaveGuardPage.html',
-	Title: 'Leave guard - Elemenx',
+	$TemplateURL: 'LeaveGuardPage.html',
+	$Title: 'Leave guard - Elemenx',
 	AllowLeave: false,
 	LeaveAttempts: 0,
 	LeaveStatus: 'Leaving is blocked.',
@@ -11,10 +11,10 @@ Elemenx.Component('LeaveGuardPage', {
 	},
 
 	GoHome: function () {
-		this.Router().Go('/');
+		this.$Router().Go('/');
 	},
 
-	ElemenxOnRouteLeave: function () {
+	$OnRouteLeave: function () {
 		this.LeaveAttempts++;
 		if (this.AllowLeave) return true;
 		this.LeaveStatus = 'Leave denied. Enable leaving and try again.';

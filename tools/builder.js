@@ -49,19 +49,20 @@ function inlineResources (file, source) {
 	var directory = path.dirname(file);
 	
 	function replace (key, inlineKey) {
-		var pattern = new RegExp('\\b' + key + '\\s*:\\s*([\\\'\"])([^\\\'\"]+)\\1', 'g');
+		var escaped = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+		var pattern = new RegExp('(^|[^A-Za-z0-9_$])' + escaped + '\\s*:\\s*([\'"])([^\'"]+)\\2', 'g');
 		
-		source = source.replace(pattern, function (all, quote, target) {
+		source = source.replace(pattern, function (all, prefix, quote, target) {
 			var resource = path.resolve(directory, target);
 			if (!fs.existsSync(resource))
 				fail(key + ' not found for ' + file + ': ' + target);
 			
-			return inlineKey + ': ' + JSON.stringify(fs.readFileSync(resource, 'utf8'));
+			return prefix + inlineKey + ': ' + JSON.stringify(fs.readFileSync(resource, 'utf8'));
 		});
 	}
 	
-	replace('TemplateURL', 'Template');
-	replace('StyleURL', 'Style');
+	replace('$TemplateURL', '$Template');
+	replace('$StyleURL', '$Style');
 	
 	return source;
 }

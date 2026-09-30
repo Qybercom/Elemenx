@@ -1,5 +1,5 @@
 Elemenx.Component('StorageMessagingShowcase', {
-	TemplateURL: 'StorageMessagingShowcase.html',
+	$TemplateURL: 'StorageMessagingShowcase.html',
 	LocalValue: 'not set',
 	SessionValue: 'not set',
 	CookieValue: 'not set',
@@ -14,13 +14,13 @@ Elemenx.Component('StorageMessagingShowcase', {
 	_MessageReceiver: null,
 	_MessageHandler: null,
 
-	ElemenxOnCreate: function () {
-		var app = this.Application();
+	$OnCreate: function () {
+		var app = this.$Application();
 
-		app.Storage('AdvancedStorageBase', {
+		app.$Storage('AdvancedStorageBase', {
 			Namespace: 'AdvancedExample'
 		});
-		app.Storage('AdvancedStorageShowcase', {
+		app.$Storage('AdvancedStorageShowcase', {
 			Contexts: 'AdvancedStorageBase',
 			Namespace: 'StorageMessaging',
 			IndexedDB: {
@@ -36,10 +36,10 @@ Elemenx.Component('StorageMessagingShowcase', {
 			}
 		});
 
-		app.Messaging('AdvancedMessagingBase', {
+		app.$Messaging('AdvancedMessagingBase', {
 			Channels: ['advanced:events']
 		});
-		app.Messaging('AdvancedMessagingShowcase', {
+		app.$Messaging('AdvancedMessagingShowcase', {
 			Contexts: 'AdvancedMessagingBase',
 			Channels: ['advanced:storage']
 		});
@@ -49,7 +49,7 @@ Elemenx.Component('StorageMessagingShowcase', {
 	},
 
 	StorageFacade: function () {
-		return this.Storage('AdvancedStorageShowcase');
+		return this.$Storage('AdvancedStorageShowcase');
 	},
 
 	RefreshStorage: function () {
@@ -120,8 +120,8 @@ Elemenx.Component('StorageMessagingShowcase', {
 	ConnectMessaging: function () {
 		var self = this;
 
-		this._MessageSender = this.Messaging();
-		this._MessageReceiver = this.Messaging('AdvancedMessagingShowcase').ID('advanced:receiver');
+		this._MessageSender = this.$Messaging();
+		this._MessageReceiver = this.$Messaging('AdvancedMessagingShowcase').ID('advanced:receiver');
 		this._MessageHandler = function (event) {
 			self.MessageCount++;
 			self.MessageValue = event.Channel + ': ' + event.Data;

@@ -1,3 +1,3 @@
 Elemenx.Component('DeferredHeldParent', {
-	Template: '<div class="deferred-held-parent"><DeferredHeldChild value="{{value}}"></DeferredHeldChild></div>'
+	$Template: '<div class="deferred-held-parent"><DeferredHeldChild value="{{value}}"></DeferredHeldChild></div>'
 });
