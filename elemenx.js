@@ -1516,6 +1516,12 @@
 		
 		Runtime.ComponentRouters.set(component, router);
 		
+		if (component._Component) {
+			var resolvedComponent = component._Component();
+			if (resolvedComponent && resolvedComponent !== component)
+				Runtime.AttachRouter(resolvedComponent, router);
+		}
+		
 		var facade = Runtime.RouterFor(component);
 		var pending = facade.Pending.slice(0);
 		
@@ -2380,6 +2386,8 @@
 				updates = [];
 				listeners = [];
 				
+				Runtime.DetachRouterOwner(api);
+				
 				if (current)
 					current.Destroy();
 				
@@ -2437,6 +2445,9 @@
 				if (current) current.Destroy();
 				current = factory(canonicalDeferredData(data, factory.Definition, options), slotProjection, options);
 				
+				var currentRouter = Runtime.ComponentRouters.get(api);
+				if (currentRouter) Runtime.AttachRouter(current, currentRouter);
+				
 				if (api._parent && current.Parent) current.Parent(api._parent);
 				
 				var i = 0;
@@ -2486,6 +2497,9 @@
 				}
 				
 				current = factory(canonicalDeferredData(data, factory.Definition, options), slotProjection, options);
+				
+				var currentRouter = Runtime.ComponentRouters.get(api);
+				if (currentRouter) Runtime.AttachRouter(current, currentRouter);
 				
 				if (api._parent && current.Parent) current.Parent(api._parent);
 				
@@ -4073,6 +4087,14 @@
 			return componentValues.get(component) || null;
 		};
 		Runtime.UpdateComponentRouteContext = function (component, packet) {
+			var resolved;
+
+			while (component && component._Component) {
+				resolved = component._Component();
+				if (!resolved || resolved === component) return;
+				component = resolved;
+			}
+
 			var update = componentRouteUpdaters.get(component);
 			if (update) update(packet);
 		};
@@ -4802,6 +4824,11 @@
 					
 					var component = active[index].Component;
 					index--;
+					
+					if (component && component._Component) {
+						var resolvedComponent = component._Component();
+						if (resolvedComponent) component = resolvedComponent;
+					}
 					
 					var hook = component.ElemenxOnRouteLeave;
 					if (typeof hook !== 'function') {

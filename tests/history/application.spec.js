@@ -110,6 +110,61 @@ test('official Advanced Application example supports guard redirect', async ({ p
 
 	expect(errors).toEqual([]);
 });
+test('official Advanced Application example demonstrates programmatic Router navigation and same-route reuse', async ({ page }) => {
+	var errors = captureErrors(page);
+
+	await page.goto('http://127.0.0.1:4274/');
+	await expectBootstrapVisible(page.getByRole('heading', {name: 'Welcome to Elemenx'}), errors);
+	await page.getByRole('button', {name: 'Open Router lab'}).click();
+	await expect(page).toHaveURL(/\/router\/1\?mode=push#start$/);
+	await expect(page.getByRole('heading', {name: 'Router lab'})).toBeVisible();
+	await expect(page.locator('main')).toContainText('Params.id = 1');
+	await expect(page.locator('main')).toContainText('Ready count = 1');
+
+	await page.getByRole('button', {name: 'Go next ID'}).click();
+	await expect(page).toHaveURL(/\/router\/2\?mode=push#step-2$/);
+	await expect(page.locator('main')).toContainText('Params.id = 2');
+	await expect(page.locator('main')).toContainText('Ready count = 1');
+
+	await page.getByRole('button', {name: 'Replace with +10'}).click();
+	await expect(page).toHaveURL(/\/router\/12\?mode=replace#step-12$/);
+	await expect(page.locator('main')).toContainText('Params.id = 12');
+
+	await page.getByRole('button', {name: 'Back'}).click();
+	await expect(page).toHaveURL(/\/router\/1\?mode=push#start$/);
+	await expect(page.locator('main')).toContainText('Params.id = 1');
+	await page.getByRole('button', {name: 'Forward'}).click();
+	await expect(page).toHaveURL(/\/router\/12\?mode=replace#step-12$/);
+	await expect(page.locator('main')).toContainText('Params.id = 12');
+
+	expect(errors).toEqual([]);
+});
+
+test('official Advanced Application example demonstrates async and leave guards', async ({ page }) => {
+	var errors = captureErrors(page);
+
+	await page.goto('http://127.0.0.1:4274/');
+	await expectBootstrapVisible(page.getByRole('heading', {name: 'Welcome to Elemenx'}), errors);
+	await page.getByRole('button', {name: 'Run async guard'}).click();
+	await expect(page.getByText('Loading page...')).toBeVisible();
+	await expect(page).toHaveURL(/\/async-guard$/);
+	await expect(page.getByRole('heading', {name: 'Async guard completed'})).toBeVisible();
+
+	await page.getByRole('link', {name: 'Return home'}).click();
+	await page.getByRole('button', {name: 'Open leave guard'}).click();
+	await expect(page).toHaveURL(/\/leave-guard$/);
+	await page.getByRole('button', {name: 'Go home programmatically'}).click();
+	await expect(page).toHaveURL(/\/leave-guard$/);
+	await expect(page.getByText('Leave denied. Enable leaving and try again.')).toBeVisible();
+	await expect(page.getByText('Leave attempts: 1')).toBeVisible();
+	await page.getByRole('button', {name: 'Toggle leave permission'}).click();
+	await page.getByRole('button', {name: 'Go home programmatically'}).click();
+	await expect(page).toHaveURL('http://127.0.0.1:4274/');
+	await expect(page.getByRole('heading', {name: 'Welcome to Elemenx'})).toBeVisible();
+
+	expect(errors).toEqual([]);
+});
+
 test('official Advanced Application example demonstrates nested loops, components and conditions', async ({ page }) => {
 	var errors = captureErrors(page);
 	var telemetry;

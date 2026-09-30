@@ -1,5 +1,6 @@
 [
 	'Authorized.js',
 	'AuthorizedRedirect.js',
-	'ProjectAccess.js'
+	'ProjectAccess.js',
+	'DelayedAccess.js'
 ]

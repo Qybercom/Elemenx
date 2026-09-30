@@ -41,7 +41,7 @@ Status values:
 | `Parent` | YES | The programmatic child is assigned to the host and reports its `Parent()`. |
 | `Application` | YES | `ComponentProbe.DescribeOwner()` reports the owning Application name. |
 | `Element` / `Generation` | YES | The showcase checks `Element()` and reports the child component generation. |
-| `Router` | PARTIAL | Router is used indirectly; expose component router access. |
+| `Router` | YES | `RouterShowcase` reaches the Application Router from a nested Component; route-owned `RouterLabPage` and `LeaveGuardPage` use their attached Component Router facade directly. |
 | `Service` | YES | Session service. |
 | `Title` | YES | `ProjectPage`. |
 | `Network`, `Storage`, `Messaging`, `WebWorker`, `ServiceWorker` owner accessors | PARTIAL | Storage is used; Network currently uses global API; add owner-aware examples. |
@@ -83,10 +83,10 @@ Status values:
 | Guard redirect | YES | AuthorizedRedirect. |
 | Waiting component | YES | PageLoading. |
 | NotFound component | YES | PageNotFound. |
-| route leave guard | MISSING | Add a page with visible leave confirmation/deny toggle. |
-| async Guard / `Wait` | MISSING | Add deterministic delayed guard example. |
-| Router programmatic navigation/history facade | MISSING | Add controls demonstrating Router API. |
-| same-route Params/Query/Hash reuse | PARTIAL | Contract exists in tests; add visible same-route navigation example. |
+| route leave guard | YES | `LeaveGuardPage` visibly denies navigation until leave permission is enabled. |
+| async Guard / `Wait` | YES | `DelayedAccess` uses `this.Wait(...)`; the route shows the normal Waiting component until it resolves. |
+| Router programmatic navigation/history facade | YES | Router lab exposes Go, Replace, Back and Forward through `this.Router()`. |
+| same-route Params/Query/Hash reuse | YES | Router lab changes Params/Query/Hash while showing stable Generation and Ready count. |
 
 ## Services
 

@@ -1,0 +1,25 @@
+<section>
+	<div class="page-heading">
+		<p class="eyebrow">Router showcase</p>
+		<h1>Router lab</h1>
+		<p class="lead">Programmatic navigation through the public Router facade.</p>
+	</div>
+	<div class="card">
+		<h2 class="card-title">Current route packet</h2>
+		<div class="router-state">
+			<code>Params.id = {{Params.id}}</code>
+			<code>Query.mode = {{Query.mode}}</code>
+			<code>Hash = {{Hash}}</code>
+			<code>Generation = {{Generation()}}</code>
+			<code>Ready count = {{ReadyCount}}</code>
+		</div>
+		<p>Changing only Params, Query or Hash reuses this route Component instead of creating lifecycle churn.</p>
+		<div class="button-row">
+			<button class="button primary" (click)="GoNext">Go next ID</button>
+			<button class="button" (click)="ReplaceCurrent">Replace with +10</button>
+			<button class="button" (click)="Back">Back</button>
+			<button class="button" (click)="Forward">Forward</button>
+			<button class="button" (click)="Home">Home</button>
+		</div>
+	</div>
+</section>

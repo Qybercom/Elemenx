@@ -1,0 +1,15 @@
+<section>
+	<div class="page-heading">
+		<p class="eyebrow">Router showcase</p>
+		<h1>Route leave guard</h1>
+		<p class="lead">ElemenxOnRouteLeave can keep the current committed route active until leaving is allowed.</p>
+	</div>
+	<div class="card">
+		<p><strong>{{LeaveStatus}}</strong></p>
+		<p>Leave attempts: {{LeaveAttempts}}</p>
+		<div class="button-row">
+			<button class="button" (click)="ToggleLeave">Toggle leave permission</button>
+			<button class="button primary" (click)="GoHome">Go home programmatically</button>
+		</div>
+	</div>
+</section>

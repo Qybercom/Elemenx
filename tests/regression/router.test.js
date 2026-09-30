@@ -390,4 +390,65 @@ describe('Regression: Router lifecycle hardening', function () {
 		app.Destroy();
 	});
 
+	it('attaches the Router facade to a route Component resolved through a deferred TemplateID', async function () {
+		var home=unique('DeferredRouterHome'),page=unique('DeferredRouterPage'),template=unique('DeferredRouterTemplate');
+		Elemenx.Template.Loader(function (name,ready) {
+			if (name !== template) return;
+			setTimeout(function () {ready('<button id="deferred-router-next" (click)="GoNext">NEXT</button><span id="deferred-router-id">{{Params.id}}</span>');},20);
+		});
+		Elemenx.Component(home,{Template:'<div id="deferred-router-home">HOME</div>'});
+		Elemenx.Component(page,{
+			TemplateID:template,
+			GoNext:function () {
+				var id=Number(this.Params.id || 0)+1;
+				this.Router().Go('/deferred-router/'+id);
+			}
+		});
+		var x=boot([{Path:'/',Component:home},{Path:'/deferred-router/:id',Component:page}]);
+		x.Router.Go('/deferred-router/1');
+		await tick(60);
+		expect(document.getElementById('deferred-router-id').textContent).toBe('1');
+		document.getElementById('deferred-router-next').click();
+		await tick();
+		expect(location.pathname).toBe('/deferred-router/2');
+		expect(document.getElementById('deferred-router-id').textContent).toBe('2');
+		x.Router.Destroy(); x.App.Destroy();
+	});
+
+	it('runs a deferred route Component leave hook on the resolved Component instance', async function () {
+		var home=unique('DeferredLeaveHome'),page=unique('DeferredLeavePage'),template=unique('DeferredLeaveTemplate');
+		Elemenx.Template.Loader(function (name,ready) {
+			if (name !== template) return;
+			setTimeout(function () {ready('<button id="deferred-leave-home" (click)="GoHome">HOME</button><button id="deferred-leave-toggle" (click)="Toggle">TOGGLE</button><span id="deferred-leave-status">{{Status}}:{{Attempts}}</span>');},20);
+		});
+		Elemenx.Component(home,{Template:'<div id="deferred-leave-home-page">HOME</div>'});
+		Elemenx.Component(page,{
+			TemplateID:template,
+			Allow:false,
+			Attempts:0,
+			Status:'READY',
+			GoHome:function () {this.Router().Go('/');},
+			Toggle:function () {this.Allow=!this.Allow;},
+			ElemenxOnRouteLeave:function () {
+				this.Attempts++;
+				if (this.Allow) return true;
+				this.Status='DENIED';
+				return false;
+			}
+		});
+		var x=boot([{Path:'/',Component:home},{Path:'/deferred-leave',Component:page}]);
+		x.Router.Go('/deferred-leave');
+		await tick(60);
+		document.getElementById('deferred-leave-home').click();
+		await tick();
+		expect(location.pathname).toBe('/deferred-leave');
+		expect(document.getElementById('deferred-leave-status').textContent).toBe('DENIED:1');
+		document.getElementById('deferred-leave-toggle').click();
+		document.getElementById('deferred-leave-home').click();
+		await tick();
+		expect(location.pathname).toBe('/');
+		expect(document.getElementById('deferred-leave-home-page')).not.toBeNull();
+		x.Router.Destroy(); x.App.Destroy();
+	});
+
 });

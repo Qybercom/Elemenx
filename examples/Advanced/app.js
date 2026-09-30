@@ -10,6 +10,9 @@ Elemenx.Application('ApplicationExample', {
 			{Path: '/', Component: 'HomePage'},
 			{Path: '/authorized', Component: 'AuthorizedPage', Guard: 'Authorized', GuardFailed: 'LoginRequired'},
 			{Path: '/redirect-protected', Component: 'RedirectProtectedPage', Guard: 'AuthorizedRedirect'},
+			{Path: '/router/:id', Component: 'RouterLabPage'},
+			{Path: '/async-guard', Component: 'AsyncGuardedPage', Guard: 'DelayedAccess', Waiting: 'PageLoading'},
+			{Path: '/leave-guard', Component: 'LeaveGuardPage'},
 			{
 				Path: '/project/:id',
 				Component: 'ProjectPage',
