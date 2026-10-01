@@ -11714,10 +11714,6 @@
 						request.onerror = function () {
 							error(request.error || new Error('IndexedDB delete failed'));
 						};
-						
-						request.onblocked = function () {
-							error(new Error('IndexedDB delete blocked'));
-						};
 					});
 				}
 			};
@@ -11909,25 +11905,178 @@
 		var destroyedOwners = new WeakSet();
 		var sockets = [];
 		var sequence = 0;
+		var pipeTypes = {};
+		
+		function Pipe (name, factory) {
+			name = String(name);
+			if (arguments.length === 1) return pipeTypes[name] || null;
+			if (typeof factory !== 'function') throw new Error('Elemenx Pipe factory must be a function');
+			pipeTypes[name] = factory;
+			return Elemenx;
+		}
+		
+		function pipeDescriptor (descriptor) {
+			if (!descriptor || typeof descriptor !== 'object' || Array.isArray(descriptor))
+				throw new Error('Elemenx Event.Is pipe descriptor must be an object');
+			var names = Object.keys(descriptor);
+			if (names.length !== 1) throw new Error('Elemenx Event.Is pipe descriptor must contain exactly one Pipe');
+			var name = names[0];
+			var factory = pipeTypes[name];
+			if (!factory) throw new Error('Elemenx Pipe is not registered: ' + name);
+			var instance = factory(descriptor[name]);
+			if (!instance || typeof instance.Use !== 'function') throw new Error('Elemenx Pipe must provide Use(value, pass)');
+			return instance;
+		}
+		
+		function Pipeline (descriptors) {
+			var pipes = [];
+			var destroyed = false;
+			var i = 0;
+			while (i < descriptors.length) {
+				pipes.push(pipeDescriptor(descriptors[i]));
+				i++;
+			}
+			return {
+				Use: function (value, pass) {
+					if (destroyed) return;
+					function next (index, current) {
+						if (destroyed) return;
+						if (index >= pipes.length) {
+							pass(current);
+							return;
+						}
+						pipes[index].Use(current, function (output) { next(index + 1, output); });
+					}
+					next(0, value);
+				},
+				Destroy: function () {
+					if (destroyed) return;
+					destroyed = true;
+					var j = 0;
+					while (j < pipes.length) {
+						if (typeof pipes[j].Destroy === 'function') pipes[j].Destroy();
+						j++;
+					}
+					pipes = [];
+				}
+			};
+		}
+		
+		Pipe('Debouncer', function (threshold) {
+			threshold = Math.max(1, Number(threshold) || 1);
+			var hasCurrent = false;
+			var current;
+			var target;
+			var targetCount = 0;
+			return {Use:function (event, pass) {
+				var value = event.Data;
+				if (hasCurrent && value === current) {
+					target = undefined;
+					targetCount = 0;
+					return;
+				}
+				if (value !== target) {
+					target = value;
+					targetCount = 1;
+				}
+				else targetCount++;
+				if (targetCount < threshold) return;
+				hasCurrent = true;
+				current = target;
+				target = undefined;
+				targetCount = 0;
+				pass(event);
+			}};
+		});
+		
+		Pipe('Filter', function (size) {
+			size = Math.max(1, Number(size) || 1);
+			var samples = [];
+			return {Use:function (event, pass) {
+				samples.push(event);
+				if (samples.length < size) return;
+				var best = samples[0];
+				var bestCount = 0;
+				var i = 0;
+				while (i < samples.length) {
+					var count = 0;
+					var j = 0;
+					while (j < samples.length) {
+						if (samples[j].Data === samples[i].Data) count++;
+						j++;
+					}
+					if (count > bestCount) {
+						best = samples[i];
+						bestCount = count;
+					}
+					i++;
+				}
+				samples = [];
+				pass(best);
+			}};
+		});
+		
+		Pipe('Gate', function (timeout) {
+			timeout = Math.max(0, Number(timeout) || 0);
+			var timer = null;
+			var pending = null;
+			return {
+				Use:function (event, pass) {
+					if (!event.Data) {
+						if (timer !== null) clearTimeout(timer);
+						timer = null;
+						pending = null;
+						return;
+					}
+					if (timer !== null) return;
+					pending = event;
+					timer = setTimeout(function () {
+						var output = pending;
+						timer = null;
+						pending = null;
+						if (output) pass(output);
+					}, timeout);
+				},
+				Destroy:function () {
+					if (timer !== null) clearTimeout(timer);
+					timer = null;
+					pending = null;
+				}
+			};
+		});
 		
 		function Event (source, channel, data) {
+			var context = null;
 			var event = {
 				Source: source,
 				Channel: String(channel),
 				Data: data
 			};
 			
-			event.Is = function (name, handler) {
+			event.Is = function (name, pipes, handler) {
 				if (event.Channel !== String(name)) return false;
-				if (typeof handler === 'function') handler(event);
+				if (typeof pipes === 'function') {
+					handler = pipes;
+					pipes = null;
+				}
+				if (!pipes) {
+					if (typeof handler === 'function') handler(event);
+					return true;
+				}
+				if (!Array.isArray(pipes)) pipes = [pipes];
+				if (typeof handler !== 'function') throw new Error('Elemenx Event.Is pipeline requires a handler');
+				if (!context || !context.Socket) throw new Error('Elemenx Event.Is pipeline requires an Events delivery context');
+				var index = context.Index++;
+				context.Socket.Pipe(context.Slot + ':' + index, pipes, event, handler);
 				return true;
 			};
-			
+			event._Context = function (value) { context = value; };
 			return event;
 		}
 		
 		function EventsSocket (owner) {
 			var subscriptions = {};
+			var pipelines = {};
 			var id = 'elemenx:Events:' + sequence++;
 			var destroyed = false;
 			var api;
@@ -11972,6 +12121,12 @@
 				return api;
 			}
 			
+			function PipeEvent (rule, descriptors, event, handler) {
+				var key = event.Channel + ':' + rule;
+				if (!pipelines[key]) pipelines[key] = Pipeline(descriptors);
+				pipelines[key].Use(event, handler);
+			}
+			
 			function Deliver (event) {
 				if (destroyed) return;
 				var list = subscriptions[event.Channel];
@@ -11979,7 +12134,9 @@
 				var copy = list.slice(0);
 				var i = 0;
 				while (i < copy.length) {
+					event._Context({Socket:api, Slot:i, Index:0});
 					copy[i](event);
+					event._Context(null);
 					i++;
 				}
 			}
@@ -11998,10 +12155,17 @@
 					index = list.indexOf(api);
 					if (index !== -1) list.splice(index, 1);
 				}
+				var keys = Object.keys(pipelines);
+				var i = 0;
+				while (i < keys.length) {
+					pipelines[keys[i]].Destroy();
+					i++;
+				}
+				pipelines = {};
 				subscriptions = {};
 			}
 			
-			api = {ID:id, On:On, Off:Off, Emit:Emit, Channels:Channels, Destroy:Destroy, Deliver:Deliver};
+			api = {ID:id, On:On, Off:Off, Emit:Emit, Channels:Channels, Destroy:Destroy, Deliver:Deliver, Pipe:PipeEvent};
 			sockets.push(api);
 			if (owner) {
 				if (!owners.has(owner)) owners.set(owner, []);
@@ -12014,6 +12178,7 @@
 			return EventsSocket(null);
 		}
 		
+		Elemenx.Pipe = Pipe;
 		Elemenx.Events = Events;
 		Runtime.EventsFor = function (owner) {
 			return function () {
@@ -12048,7 +12213,7 @@
 			owners.delete(owner);
 		};
 	})(typeof globalThis !== 'undefined' ? globalThis : self);
-	
+
 	(function (global) {
 		'use strict';
 		

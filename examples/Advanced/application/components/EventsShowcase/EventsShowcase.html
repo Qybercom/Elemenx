@@ -1,7 +1,11 @@
 <div class="card events-showcase">
 	<h2 class="card-title">Events</h2>
-	<p>Same-runtime synchronous events with declarative <code>$Events</code> subscriptions and one <code>$OnEvent</code> dispatcher.</p>
+	<p>Same-runtime synchronous events with declarative <code>$Events</code>, one <code>$OnEvent</code> dispatcher and persistent <code>event.Is()</code> Pipes.</p>
 	<p>Received: <b>{{EventValue}}</b></p><p>Event count: <b>{{EventCount}}</b></p>
 	<button class="button primary" (click)="EmitEvent">Emit local event</button>
 	<button class="button" (click)="EmitTelemetry">Emit telemetry event</button>
+	<button class="button" (click)="EmitDebouncedSignal">Run Debouncer A/B/B/B</button>
+	<p>Debouncer threshold check: emit the same value 3 times. The first 2 samples stay silent; the 3rd confirms the value; further repeats stay silent.</p>
+	<input class="input" type="text" [(value)]="DebouncerSample">
+	<button class="button" (click)="EmitDebouncerSample">Emit one Debouncer sample</button>
 </div>

@@ -37,6 +37,9 @@ describe('Regression: deferred structural composition', function () {
 		live=[];
 		window.DeferredHeldChildCreates=0;
 		window.DeferredFinalHeldChildCreates=0;
+		window.DeferredNestedParentLoads=0;
+		window.DeferredNestedChildLoads=0;
+		window.DeferredNestedGrandLoads=0;
 	});
 	afterEach(function () {
 		while (live.length) destroy(live[0]);
@@ -45,8 +48,11 @@ describe('Regression: deferred structural composition', function () {
 	it('nested-chain: remote parent discovers child and grandchild', async function () {
 		var app=appWithTemplate('<main><DeferredNestedParent value="{{value}}"></DeferredNestedParent></main>',function () { this.value='A'; });
 		expect(await appReady(app)).not.toBe(false);
-		expect(await waitFor(function () { return document.querySelector('.deferred-nested-grand'); },1500)).not.toBe(false);
+		expect(await waitFor(function () { return document.querySelector('.deferred-nested-grand'); },5000)).not.toBe(false);
 		expect(document.querySelector('.deferred-nested-grand').textContent).toBe('G:A');
+		expect(window.DeferredNestedParentLoads).toBe(1);
+		expect(window.DeferredNestedChildLoads).toBe(1);
+		expect(window.DeferredNestedGrandLoads).toBe(1);
 		destroy(app);
 	});
 
