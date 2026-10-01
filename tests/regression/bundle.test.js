@@ -120,4 +120,81 @@ describe('Regression: production bundle registry', function () {
 		b.$Destroy();
 	});
 
+	test('bundled Application does not probe Discovery when its graph is satisfied by registry and Bundle', async function () {
+		document.body.innerHTML='<div id="bundled-no-discovery-app"></div>';
+		var name=unique('BundledNoDiscoveryRoot');
+		var bundle={Component:{}};
+		var requests=[];
+		var open=XMLHttpRequest.prototype.open;
+
+		bundle.Component[name]=function () {
+			Elemenx.Component(name,{$Template:'<section class="bundled-no-discovery-root">bundle</section>'});
+		};
+
+		XMLHttpRequest.prototype.open=function (method,url) {
+			requests.push(String(url));
+			return open.apply(this,arguments);
+		};
+
+		try {
+			Elemenx.Bundle(bundle);
+			var app=Elemenx.Application(unique('BundledNoDiscoveryApplication'),{
+				$Component:name,
+				$Root:'/bundled-no-discovery-source-'+Date.now(),
+				$Mount:'#bundled-no-discovery-app'
+			});
+
+			await new Promise(function (resolve) { setTimeout(resolve,20); });
+			expect(document.querySelector('.bundled-no-discovery-root').textContent).toBe('bundle');
+			expect(requests).toEqual([]);
+			app.$Destroy();
+		}
+		finally {
+			XMLHttpRequest.prototype.open=open;
+		}
+	});
+
+
+	test('builds Discovery lazily only when an explicit missing Component is requested', async function () {
+		document.body.innerHTML='<div id="bundle-lazy-mount"></div>';
+		var shell=unique('BundleLazyRoot');
+		var requests=[];
+		var open=XMLHttpRequest.prototype.open;
+
+		Elemenx.Component(shell,{$Template:'<main class="bundle-lazy-root"></main>'});
+		XMLHttpRequest.prototype.open=function (method,url) {
+			requests.push(String(url));
+			return open.apply(this,arguments);
+		};
+
+		try {
+			var app=Elemenx.Application(unique('BundleLazyApplication'),{
+				$Component:shell,
+				$Root:'/network',
+				$Mount:'#bundle-lazy-mount'
+			});
+
+			await new Promise(function (resolve) { setTimeout(resolve,20); });
+			expect(document.querySelector('.bundle-lazy-root')).not.toBeNull();
+			expect(requests.some(function (url) { return /network\/index\.js/.test(url); })).toBe(false);
+
+			var remote=Elemenx.Component('RemoteBasic')({value:'L'},null,{Application:app});
+			document.querySelector('.bundle-lazy-root').appendChild(remote.$Element());
+
+			var found=false;
+			var started=Date.now();
+			while (!found && Date.now()-started<1500) {
+				found=!!document.querySelector('.remote-basic');
+				if (!found) await new Promise(function (resolve) { setTimeout(resolve,10); });
+			}
+
+			expect(found).toBe(true);
+			expect(requests.some(function (url) { return /network\/index\.js/.test(url); })).toBe(true);
+			remote.$Destroy();
+			app.$Destroy();
+		}
+		finally {
+			XMLHttpRequest.prototype.open=open;
+		}
+	});
 });

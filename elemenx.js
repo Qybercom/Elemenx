@@ -738,6 +738,7 @@
 		'use strict';
 		
 		var maps = new WeakMap();
+		var roots = new WeakMap();
 		var builds = new WeakMap();
 		var scripts = {};
 		var pending = {};
@@ -919,6 +920,7 @@
 			// Route navigation may change location.href later; entity URLs must not
 			// change their meaning with the current browser route.
 			root = new URL(String(root), global.location.href).href;
+			roots.set(application, root);
 			
 			if (map) {
 				callback(null, map);
@@ -977,6 +979,19 @@
 			
 			if (!url && building) {
 				building.push(function (error) {
+					if (error) {
+						if (callback) callback(error);
+						return;
+					}
+					
+					load(application, type, name, force, callback);
+				});
+				
+				return true;
+			}
+			
+			if (!url && !map && application && roots.get(application)) {
+				build(application, roots.get(application), function (error) {
 					if (error) {
 						if (callback) callback(error);
 						return;
@@ -1102,6 +1117,12 @@
 		}
 		
 		Runtime.Discovery = {
+			Root: function (application, root) {
+				if (!application || !root) return null;
+				root = new URL(String(root), global.location.href).href;
+				roots.set(application, root);
+				return root;
+			},
 			Build: build,
 			LoadDirectives: loadDirectives,
 			LoadServices: loadServices,
@@ -14074,18 +14095,20 @@
 					Runtime.Bundle.LoadType('Guard');
 				}
 				
+				var discoveryRoot = definition.$Root;
+				if (discoveryRoot && definition.$DefinitionURL && !(/^(?:[a-z]+:)?\/\//i.test(discoveryRoot)) && discoveryRoot.charAt(0) !== '/')
+					discoveryRoot = definition.$DefinitionURL.substring(0, definition.$DefinitionURL.lastIndexOf('/') + 1) + discoveryRoot.replace(/^\.\//, '');
+				
+				if (discoveryRoot && Runtime.Discovery && Runtime.Discovery.Root)
+					Runtime.Discovery.Root(api, discoveryRoot);
+				
 				/*
-				 * A bundled root must not wait for an unavailable source graph. The
-				 * bundle is already sufficient to start the Application; Discovery is
-				 * only the hybrid fallback for resources that are absent from it.
-				 *
-				 * Build the Discovery map in the background so a development/hybrid
-				 * Application may still resolve later resources from $Root, but never
-				 * turn a missing source graph into startup latency for a bundled root.
+				 * A fully resolvable registry/bundle graph starts without touching the
+				 * source tree. The Discovery root is only remembered here; the map is
+				 * built lazily by Discovery.Load if a later explicit resource is absent.
 				 */
 				if (definition.$Root && Runtime.Discovery && rootAvailableWithoutDiscovery()) {
 					createRoot();
-					Runtime.Discovery.Build(api, definition.$Root, function () {});
 					
 					return;
 				}
@@ -14105,10 +14128,6 @@
 				if (definition.$Pending !== undefined && definition.$Pending !== null)
 					applicationStatus(definition.$Pending);
 				applicationLifecycle('$OnPending', null);
-				
-				var discoveryRoot = definition.$Root;
-				if (definition.$DefinitionURL && !(/^(?:[a-z]+:)?\/\//i.test(discoveryRoot)) && discoveryRoot.charAt(0) !== '/')
-					discoveryRoot = definition.$DefinitionURL.substring(0, definition.$DefinitionURL.lastIndexOf('/') + 1) + discoveryRoot.replace(/^\.\//, '');
 				
 				Runtime.Discovery.Build(api, discoveryRoot, function (error) {
 					if (destroyed) return;

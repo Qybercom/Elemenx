@@ -17,18 +17,20 @@ function captureErrors (page) {
 
 test('official Advanced production bundle runs without its source application graph', async ({ page }) => {
 	var errors = captureErrors(page);
+	var sourceRequests = [];
+
+	page.on('request', function (request) {
+		if (request.url().indexOf('/application/') !== -1) sourceRequests.push(request.url());
+	});
 
 	await page.goto('http://127.0.0.1:4276/');
 	await expect(page.getByRole('heading', {name: 'Welcome to Elemenx'})).toBeVisible();
 	await expect(page.locator('.project-card')).toHaveCount(2);
 
-	var source = await page.request.get('http://127.0.0.1:4276/application/index.js');
-	expect(source.status()).toBe(200);
-	expect(await source.text()).toContain('<!DOCTYPE html>');
-
 	await page.getByRole('button', {name: 'Run XHR request'}).click();
 	await expect(page.getByText('Elemenx Network is online', {exact: true})).toBeVisible();
 	await expect(page.getByText('Success', {exact: true})).toBeVisible();
 
+	expect(sourceRequests).toEqual([]);
 	expect(errors).toEqual([]);
 });
