@@ -1,0 +1,17 @@
+<div class="card storage-showcase">
+	<h2 class="card-title">Storage</h2>
+	<p>Owner-aware storage contexts, explicit CRUD and IndexedDB transactions.</p>
+	<div class="showcase-grid">
+		<div>
+			<h3>Storage context</h3>
+			<p>Local: <b>{{LocalValue}}</b></p><p>Session: <b>{{SessionValue}}</b></p><p>Cookie: <b>{{CookieValue}}</b></p>
+			<button class="button primary" (click)="WriteStorage">Write storage values</button>
+			<button class="button" (click)="RemoveStorage">Remove values</button>
+			<button class="button" (click)="ClearStorage">Clear namespace</button>
+		</div>
+		<div>
+			<h3>IndexedDB</h3><p>Index matches: <b>{{IndexedDBCount}}</b></p><p>Transaction result: <b>{{IndexedDBValue}}</b></p>
+			<button class="button primary" (click)="RunIndexedDB">Run IndexedDB roundtrip</button>
+		</div>
+	</div>
+</div>

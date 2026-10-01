@@ -122,11 +122,21 @@ Status values:
 | --- | --- | --- |
 | Local storage | YES | Theme persistence. |
 | Namespace | YES | `AdvancedExample`. |
-| Session storage | YES | Storage + Messaging card exposes Set/Get/Has/Remove/Clear behavior. |
-| Cookie storage | YES | Storage + Messaging card uses a namespaced cookie with explicit Path. |
+| Session storage | YES | Storage card exposes Set/Get/Has/Remove/Clear behavior. |
+| Cookie storage | YES | Storage card uses a namespaced cookie with explicit Path. |
 | IndexedDB | YES | Store Put/Get, index GetAll and a readwrite Transaction are executed live. |
 | Storage Context | YES | `AdvancedStorageShowcase` composes the base namespace and IndexedDB schema. |
 | Get/Set/Has/Remove/Clear | YES | Interactive Local/Session/Cookie CRUD and namespace Clear are explicit. |
+
+## Events
+
+| Capability | Status | Advanced evidence |
+| --- | --- | --- |
+| Same-runtime event bus | YES | Events card emits and receives local events synchronously. |
+| Declarative `$Events` | YES | `EventsShowcase` declares two channel names. |
+| `$OnEvent` dispatcher + `event.Is()` | YES | One dispatcher routes both channels through `event.Is()`. |
+| Owner cleanup | YES | Runtime regression covers destroyed Component subscriptions. |
+| Pipes | MISSING | Next phase: persistent pipelines attached at `event.Is(...)`. |
 
 ## Messaging
 
@@ -195,7 +205,7 @@ Status values:
 
 1. Component completeness: TemplateID, inline Style, explicit instance API, lifecycle, events and child lifecycle.
 2. Router completeness: async/leave guards, programmatic navigation and same-route reuse.
-3. Storage + Messaging completeness.
+3. Storage + Events + Messaging separation and Events core.
 4. WebWorker + ServiceWorker completeness and Messaging bridges.
 5. Network completeness: Context/Protocol first, then long-lived transports, WebRTC, Transfer and Metrics.
 6. Application/runtime inspection, isolated destroy/recreate and development Reload.

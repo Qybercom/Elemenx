@@ -1184,12 +1184,16 @@
 				Runtime.SetMessagingEntity(instance, name, 0);
 			
 			instance.$Messaging = Runtime.MessagingFor ? Runtime.MessagingFor(instance) : Elemenx.Messaging;
+			instance.$Events = Runtime.EventsFor ? Runtime.EventsFor(instance) : Elemenx.Events;
+			if (Runtime.InitializeEventsOwner) Runtime.InitializeEventsOwner(instance, definition);
 			instance.$Destroy = function () {
 				if (Runtime.DestroyNetworkOwner)
 					Runtime.DestroyNetworkOwner(instance);
 				
 				if (Runtime.DestroyMessagingOwner)
 					Runtime.DestroyMessagingOwner(instance);
+				if (Runtime.DestroyEventsOwner)
+					Runtime.DestroyEventsOwner(instance);
 				
 				if (Runtime.DestroyWebWorkerOwner)
 					Runtime.DestroyWebWorkerOwner(instance);
@@ -1884,6 +1888,7 @@
 			$StyleURL: true,
 			$Title: true,
 			$Components: true,
+			$Events: true,
 			$DefinitionURL: true,
 			$StyleKey: true,
 			$OnCreate: true,
@@ -1891,7 +1896,8 @@
 			$OnChildReady: true,
 			$OnChildPending: true,
 			$OnChildError: true,
-			$OnDestroy: true
+			$OnDestroy: true,
+			$OnEvent: true
 		};
 		var componentAPIReserved = {
 			$Generation: true,
@@ -1912,6 +1918,7 @@
 			$WebWorker: true,
 			$ServiceWorker: true,
 			$Messaging: true,
+			$Events: true,
 			$Path: true,
 			$Params: true,
 			$Query: true,
@@ -3768,6 +3775,8 @@
 					
 					if (Runtime.DestroyMessagingOwner)
 						Runtime.DestroyMessagingOwner(api);
+					if (Runtime.DestroyEventsOwner)
+						Runtime.DestroyEventsOwner(api);
 					
 					if (Runtime.DestroyWebWorkerOwner)
 						Runtime.DestroyWebWorkerOwner(api);
@@ -3879,6 +3888,7 @@
 					Runtime.SetMessagingEntity(api, name || 'Component', messagingInstanceSequence++);
 				
 				api.$Messaging = Runtime.MessagingFor ? Runtime.MessagingFor(api) : Elemenx.Messaging;
+				api.$Events = Runtime.EventsFor ? Runtime.EventsFor(api) : Elemenx.Events;
 				
 				componentOutlets.set(api, outlets);
 				componentValues.set(api, values);
@@ -3950,6 +3960,8 @@
 				
 				if (definition.$Title !== undefined)
 					api.$Title(definition.$Title);
+				
+				if (Runtime.InitializeEventsOwner) Runtime.InitializeEventsOwner(api, definition);
 				
 				if (definition.$OnCreate)
 					definition.$OnCreate.call(api, data || {});
@@ -11893,6 +11905,154 @@
 		'use strict';
 		
 		var Elemenx = global.Elemenx;
+		var owners = new WeakMap();
+		var destroyedOwners = new WeakSet();
+		var sockets = [];
+		var sequence = 0;
+		
+		function Event (source, channel, data) {
+			var event = {
+				Source: source,
+				Channel: String(channel),
+				Data: data
+			};
+			
+			event.Is = function (name, handler) {
+				if (event.Channel !== String(name)) return false;
+				if (typeof handler === 'function') handler(event);
+				return true;
+			};
+			
+			return event;
+		}
+		
+		function EventsSocket (owner) {
+			var subscriptions = {};
+			var id = 'elemenx:Events:' + sequence++;
+			var destroyed = false;
+			var api;
+			
+			function ensure () {
+				if (destroyed) throw new Error('Elemenx Events Socket is destroyed');
+			}
+			
+			function On (channel, callback) {
+				ensure();
+				channel = String(channel);
+				if (typeof callback !== 'function') throw new Error('Elemenx Events.On callback must be a function');
+				if (!subscriptions[channel]) subscriptions[channel] = [];
+				if (subscriptions[channel].indexOf(callback) === -1) subscriptions[channel].push(callback);
+				return api;
+			}
+			
+			function Off (channel, callback) {
+				ensure();
+				channel = String(channel);
+				var list = subscriptions[channel];
+				if (!list) return api;
+				if (!callback) {
+					delete subscriptions[channel];
+					return api;
+				}
+				var index = list.indexOf(callback);
+				if (index !== -1) list.splice(index, 1);
+				if (!list.length) delete subscriptions[channel];
+				return api;
+			}
+			
+			function Emit (channel, data) {
+				ensure();
+				var event = Event(api, channel, data);
+				var copy = sockets.slice(0);
+				var i = 0;
+				while (i < copy.length) {
+					copy[i].Deliver(event);
+					i++;
+				}
+				return api;
+			}
+			
+			function Deliver (event) {
+				if (destroyed) return;
+				var list = subscriptions[event.Channel];
+				if (!list || !list.length) return;
+				var copy = list.slice(0);
+				var i = 0;
+				while (i < copy.length) {
+					copy[i](event);
+					i++;
+				}
+			}
+			
+			function Channels () {
+				return Object.keys(subscriptions);
+			}
+			
+			function Destroy () {
+				if (destroyed) return;
+				destroyed = true;
+				var index = sockets.indexOf(api);
+				if (index !== -1) sockets.splice(index, 1);
+				if (owner && owners.has(owner)) {
+					var list = owners.get(owner);
+					index = list.indexOf(api);
+					if (index !== -1) list.splice(index, 1);
+				}
+				subscriptions = {};
+			}
+			
+			api = {ID:id, On:On, Off:Off, Emit:Emit, Channels:Channels, Destroy:Destroy, Deliver:Deliver};
+			sockets.push(api);
+			if (owner) {
+				if (!owners.has(owner)) owners.set(owner, []);
+				owners.get(owner).push(api);
+			}
+			return api;
+		}
+		
+		function Events () {
+			return EventsSocket(null);
+		}
+		
+		Elemenx.Events = Events;
+		Runtime.EventsFor = function (owner) {
+			return function () {
+				if (destroyedOwners.has(owner)) throw new Error('Elemenx Events owner is destroyed');
+				return EventsSocket(owner);
+			};
+		};
+		Runtime.InitializeEventsOwner = function (owner, definition) {
+			var channels = definition && definition.$Events;
+			var handler = definition && definition.$OnEvent;
+			if (!channels) return null;
+			if (!Array.isArray(channels)) channels = [channels];
+			var socket = Runtime.EventsFor(owner)();
+			var i = 0;
+			while (i < channels.length) {
+				if (typeof channels[i] !== 'string') throw new Error('Elemenx $Events expects channel names as strings');
+				(function (channel) {
+					socket.On(channel, function (event) {
+						if (typeof handler === 'function') handler.call(owner, event);
+					});
+				})(channels[i]);
+				i++;
+			}
+			return socket;
+		};
+		Runtime.DestroyEventsOwner = function (owner) {
+			if (!owner || destroyedOwners.has(owner)) return;
+			destroyedOwners.add(owner);
+			var list = owners.get(owner);
+			if (!list) return;
+			while (list.length) list[0].Destroy();
+			owners.delete(owner);
+		};
+	})(typeof globalThis !== 'undefined' ? globalThis : self);
+	
+	(function (global) {
+		'use strict';
+		
+		var Elemenx = global.Elemenx;
 		var contexts = {};
 		var owners = new WeakMap();
 		var destroyedOwners = new WeakSet();
@@ -13395,6 +13555,8 @@
 				return Elemenx.Storage(context);
 			};
 			
+			api.$Events = Runtime.EventsFor ? Runtime.EventsFor(api) : Elemenx.Events;
+			
 			api.$Messaging = function (context, value) {
 				if (arguments.length === 2) {
 					Elemenx.Messaging.Context(context, value);
@@ -13517,6 +13679,7 @@
 				
 				if (Runtime.DestroyNetworkOwner) Runtime.DestroyNetworkOwner(api);
 				if (Runtime.DestroyMessagingOwner) Runtime.DestroyMessagingOwner(api);
+				if (Runtime.DestroyEventsOwner) Runtime.DestroyEventsOwner(api);
 				if (Runtime.DestroyWebWorkerOwner) Runtime.DestroyWebWorkerOwner(api);
 				if (Runtime.DestroyServiceWorkerOwner) Runtime.DestroyServiceWorkerOwner(api);
 				if (Runtime.DestroyApplicationServices) Runtime.DestroyApplicationServices(api);
@@ -13532,6 +13695,8 @@
 				if (applications[name] === api)
 					delete applications[name];
 			};
+			
+			if (Runtime.InitializeEventsOwner) Runtime.InitializeEventsOwner(api, definition);
 			
 			if (typeof definition.$Bootstrap === 'function') {
 				definition.$Bootstrap.call(api);

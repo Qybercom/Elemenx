@@ -1,0 +1,7 @@
+<div class="card events-showcase">
+	<h2 class="card-title">Events</h2>
+	<p>Same-runtime synchronous events with declarative <code>$Events</code> subscriptions and one <code>$OnEvent</code> dispatcher.</p>
+	<p>Received: <b>{{EventValue}}</b></p><p>Event count: <b>{{EventCount}}</b></p>
+	<button class="button primary" (click)="EmitEvent">Emit local event</button>
+	<button class="button" (click)="EmitTelemetry">Emit telemetry event</button>
+</div>

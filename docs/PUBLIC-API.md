@@ -13,7 +13,8 @@ This document is the release-level map of the supported top-level Elemenx surfac
 - `Elemenx.Router` — routing and browser-history facade.
 - `Elemenx.Network` — transports, protocols, transfer helpers and network contexts.
 - `Elemenx.Storage` — storage providers and composable storage contexts.
-- `Elemenx.Messaging` — channels and composable messaging contexts.
+- `Elemenx.Events` — synchronous same-runtime event channels.
+- `Elemenx.Messaging` — cross-context message channels and composable messaging contexts.
 - `Elemenx.WebWorker` — Web Worker lifecycle and Messaging bridge.
 - `Elemenx.ServiceWorker` — Service Worker lifecycle and registration helpers.
 - `Elemenx.Bundle` — production bundle registry used before normal Discovery fallback.
@@ -45,3 +46,7 @@ A public API addition should include a direct contract test or a stronger end-to
 ## Lifecycle hook naming
 
 Lifecycle hooks are named relative to their owner. Component own readiness is `$OnReady`; Application startup uses `$OnPending`, `$OnReady` and `$OnError`. `$OnChildPending`, `$OnChildReady` and `$OnChildError` on a Component describe deferred child Component lifecycle events.
+
+## Events
+
+`Elemenx.Events()` creates an imperative same-runtime event socket. Components, Services and Applications expose owner-aware `$Events()`. Definitions may declare `$Events: ['channel']` and receive subscribed events through one `$OnEvent(event)` dispatcher. `event.Is(name)`, `event.Is(name, handler)` provide channel matching. Events are synchronous and preserve JavaScript object identity; cross-context delivery belongs to Messaging.

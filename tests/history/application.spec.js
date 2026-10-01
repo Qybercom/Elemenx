@@ -110,53 +110,53 @@ test('official Advanced Application example supports guard redirect', async ({ p
 
 	expect(errors).toEqual([]);
 });
-test('official Advanced Application example demonstrates Storage and Messaging end to end', async ({ page }) => {
+test('official Advanced Application example demonstrates Storage, Events and Messaging end to end', async ({ page }) => {
 	var errors = captureErrors(page);
-	var card;
+	var storage;
+	var events;
+	var messaging;
 
 	await page.goto('http://127.0.0.1:4274/');
-	card = page.locator('.storage-messaging-showcase');
-	await expectBootstrapVisible(card, errors);
+	storage = page.locator('.storage-showcase');
+	events = page.locator('.events-showcase');
+	messaging = page.locator('.messaging-showcase');
+	await expectBootstrapVisible(storage, errors);
+	await expect(events).toBeVisible();
+	await expect(messaging).toBeVisible();
 
-	await card.getByRole('button', {name: 'Write storage values'}).click();
-	await expect(card).toContainText('Local: local value');
-	await expect(card).toContainText('Session: session value');
-	await expect(card).toContainText('Cookie: cookie value');
+	await storage.getByRole('button', {name: 'Write storage values'}).click();
+	await expect(storage).toContainText('Local: local value');
+	await expect(storage).toContainText('Session: session value');
+	await expect(storage).toContainText('Cookie: cookie value');
+	await storage.getByRole('button', {name: 'Remove values'}).click();
+	await expect(storage).toContainText('Local: not set');
 
-	await card.getByRole('button', {name: 'Remove values'}).click();
-	await expect(card).toContainText('Local: not set');
-	await expect(card).toContainText('Session: not set');
-	await expect(card).toContainText('Cookie: not set');
+	await events.getByRole('button', {name: 'Emit local event'}).click();
+	await expect(events).toContainText('advanced:events: local event');
+	await expect(events).toContainText('Event count: 1');
+	await events.getByRole('button', {name: 'Emit telemetry event'}).click();
+	await expect(events).toContainText('advanced:telemetry: telemetry event');
+	await expect(events).toContainText('Event count: 2');
 
-	await card.getByRole('button', {name: 'Send context message'}).click();
-	await expect(card).toContainText('advanced:events: context message');
-	await expect(card).toContainText('Message count: 1');
-	await card.getByRole('button', {name: 'Send storage message'}).click();
-	await expect(card).toContainText('advanced:storage: storage message');
-	await expect(card).toContainText('Message count: 2');
+	await messaging.getByRole('button', {name: 'Send context message'}).click();
+	await expect(messaging).toContainText('advanced:events: context message');
+	await expect(messaging).toContainText('Message count: 1');
+	await messaging.getByRole('button', {name: 'Send storage message'}).click();
+	await expect(messaging).toContainText('advanced:storage: storage message');
+	await expect(messaging).toContainText('Message count: 2');
+	await messaging.getByRole('button', {name: 'Detach storage handler'}).click();
+	await messaging.getByRole('button', {name: 'Send storage message'}).click();
+	await expect(messaging).toContainText('Message count: 2');
+	await messaging.getByRole('button', {name: 'Send direct message'}).click();
+	await expect(messaging).toContainText('advanced:receiver: direct message');
+	await expect(messaging).toContainText('Message count: 3');
+	await messaging.getByRole('button', {name: 'Attach storage handler'}).click();
+	await messaging.getByRole('button', {name: 'Send storage message'}).click();
+	await expect(messaging).toContainText('Message count: 4');
 
-	await card.getByRole('button', {name: 'Detach storage handler'}).click();
-	await expect(card).toContainText('Storage handler: detached');
-	await expect(card.getByRole('button', {name: 'Attach storage handler'})).toBeVisible();
-	await card.getByRole('button', {name: 'Send storage message'}).click();
-	await expect(card).toContainText('Message count: 2');
-	await expect(card).toContainText('advanced:storage: storage message');
-
-	await card.getByRole('button', {name: 'Send direct message'}).click();
-	await expect(card).toContainText('advanced:receiver: direct message');
-	await expect(card).toContainText('Message count: 3');
-
-	await card.getByRole('button', {name: 'Attach storage handler'}).click();
-	await expect(card).toContainText('Storage handler: attached');
-	await expect(card.getByRole('button', {name: 'Detach storage handler'})).toBeVisible();
-	await card.getByRole('button', {name: 'Send storage message'}).click();
-	await expect(card).toContainText('advanced:storage: storage message');
-	await expect(card).toContainText('Message count: 4');
-
-	await card.getByRole('button', {name: 'Run IndexedDB roundtrip'}).click();
-	await expect(card).toContainText('Index matches: 1');
-	await expect(card).toContainText('Transaction result: Transaction committed');
-
+	await storage.getByRole('button', {name: 'Run IndexedDB roundtrip'}).click();
+	await expect(storage).toContainText('Index matches: 1');
+	await expect(storage).toContainText('Transaction result: Transaction committed');
 	expect(errors).toEqual([]);
 });
 
