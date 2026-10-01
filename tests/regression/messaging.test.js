@@ -79,4 +79,73 @@ describe('Regression: Messaging', function () {
 		component.$Destroy();
 		expect(function () { messaging(); }).toThrow();
 	});
+
+	it('Message exposes Is() for imperative subscribers', function () {
+		var channel=unique('message-is'), matched=false, missed=false;
+		var sender=Elemenx.Messaging(), receiver=Elemenx.Messaging();
+		receiver.On(channel,function (message) {
+			matched=message.Is(channel);
+			missed=message.Is('other');
+		});
+		sender.Send(channel,1);
+		expect(matched).toBe(true);
+		expect(missed).toBe(false);
+		sender.Destroy();
+		receiver.Destroy();
+	});
+
+	it('$Messaging string declares the custom ID and $OnMessage receives direct messages', function () {
+		var name=unique('MessagingDeclarativeID'), id=unique('declarative-id'), received=[];
+		Elemenx.Component(name,{
+			$Template:'<div></div>',
+			$Messaging:id,
+			$OnMessage:function (message) {
+				if (message.Is(id)) received.push(message.Data);
+			}
+		});
+		var component=Elemenx.Component(name)(), sender=Elemenx.Messaging();
+		sender.Send(id,'direct');
+		expect(received).toEqual(['direct']);
+		sender.Destroy();
+		component.$Destroy();
+	});
+
+	it('$Messaging array declares Channels and $OnMessage receives them through Is()', function () {
+		var name=unique('MessagingDeclarativeChannels'), foo=unique('foo'), bar=unique('bar'), received=[];
+		Elemenx.Component(name,{
+			$Template:'<div></div>',
+			$Messaging:[foo,bar],
+			$OnMessage:function (message) {
+				if (message.Is(foo) || message.Is(bar)) received.push(message.Channel + ':' + message.Data);
+			}
+		});
+		var component=Elemenx.Component(name)(), sender=Elemenx.Messaging();
+		sender.Send(foo,1).Send(bar,2);
+		expect(received).toEqual([foo + ':1',bar + ':2']);
+		sender.Destroy();
+		component.$Destroy();
+	});
+
+	it('$Messaging object composes Context Channels and allows a shared Context ID', function () {
+		var context=unique('DeclarativeContext'), id=unique('shared-id'), base=unique('base'), local=unique('local');
+		var first=[], second=[];
+		Elemenx.Messaging.Context(context,{ID:id,Channels:[base]});
+		function definition (target) {
+			return {
+				$Template:'<div></div>',
+				$Messaging:{Context:context,Channels:[local]},
+				$OnMessage:function (message) { target.push(message.Channel); }
+			};
+		}
+		var firstName=unique('MessagingFirst'), secondName=unique('MessagingSecond');
+		Elemenx.Component(firstName,definition(first));
+		Elemenx.Component(secondName,definition(second));
+		var firstComponent=Elemenx.Component(firstName)(), secondComponent=Elemenx.Component(secondName)(), sender=Elemenx.Messaging();
+		sender.Send(id,'direct').Send(base,'base').Send(local,'local');
+		expect(first).toEqual([id,base,local]);
+		expect(second).toEqual([id,base,local]);
+		sender.Destroy();
+		firstComponent.$Destroy();
+		secondComponent.$Destroy();
+	});
 });

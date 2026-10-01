@@ -1,10 +1,18 @@
 <div class="card messaging-showcase">
 	<h2 class="card-title">Messaging</h2>
-	<p>Message channels, direct addressing, contexts and explicit handler attachment.</p>
-	<p>Channels: <code>{{MessageChannels}}</code></p><p>Received: <b>{{MessageValue}}</b></p><p>Message count: <b>{{MessageCount}}</b></p>
-	<p>Storage handler: <b>{{StorageHandler}}</b></p>
-	<button class="button primary" (click)="SendContextMessage">Send context message</button>
-	<button class="button" (click)="SendStorageMessage">Send storage message</button>
-	<button class="button" (click)="SendDirectMessage">Send direct message</button>
-	<button class="button" (click)="ToggleStorageHandler">{{StorageHandlerAction}} storage handler</button>
+	<p>Declarative <code>$Messaging</code> and <code>$OnMessage</code> with custom IDs, channels, contexts and <code>Message.Is()</code>.</p>
+	<MessagingIDReceiver></MessagingIDReceiver>
+	<MessagingChannelsReceiver></MessagingChannelsReceiver>
+	<MessagingContextReceiver></MessagingContextReceiver>
+	<p>
+		<button class="button primary" (click)="SendIDMessage">Send to custom ID</button>
+		<button class="button" (click)="SendFooMessage">Send foo</button>
+		<button class="button" (click)="SendBarMessage">Send bar</button>
+	</p>
+	<p>
+		<button class="button" (click)="SendContextMessage">Send context channel</button>
+		<button class="button" (click)="SendStorageMessage">Send context storage channel</button>
+		<button class="button" (click)="SendLocalMessage">Send local channel</button>
+		<button class="button" (click)="SendSharedIDMessage">Send shared ID</button>
+	</p>
 </div>

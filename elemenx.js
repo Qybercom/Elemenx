@@ -1207,6 +1207,7 @@
 			instance.$Messaging = Runtime.MessagingFor ? Runtime.MessagingFor(instance) : Elemenx.Messaging;
 			instance.$Events = Runtime.EventsFor ? Runtime.EventsFor(instance) : Elemenx.Events;
 			if (Runtime.InitializeEventsOwner) Runtime.InitializeEventsOwner(instance, definition);
+			if (Runtime.InitializeMessagingOwner) Runtime.InitializeMessagingOwner(instance, definition);
 			instance.$Destroy = function () {
 				if (Runtime.DestroyNetworkOwner)
 					Runtime.DestroyNetworkOwner(instance);
@@ -1910,6 +1911,7 @@
 			$Title: true,
 			$Components: true,
 			$Events: true,
+			$Messaging: true,
 			$DefinitionURL: true,
 			$StyleKey: true,
 			$OnCreate: true,
@@ -1918,7 +1920,8 @@
 			$OnChildPending: true,
 			$OnChildError: true,
 			$OnDestroy: true,
-			$OnEvent: true
+			$OnEvent: true,
+			$OnMessage: true
 		};
 		var componentAPIReserved = {
 			$Generation: true,
@@ -3983,6 +3986,7 @@
 					api.$Title(definition.$Title);
 				
 				if (Runtime.InitializeEventsOwner) Runtime.InitializeEventsOwner(api, definition);
+				if (Runtime.InitializeMessagingOwner) Runtime.InitializeMessagingOwner(api, definition);
 				
 				if (definition.$OnCreate)
 					definition.$OnCreate.call(api, data || {});
@@ -12587,6 +12591,11 @@
 					Source: source,
 					Data: data
 				};
+				event.Is = function (name, handler) {
+					if (event.Channel !== String(name)) return false;
+					if (typeof handler === 'function') handler(event);
+					return true;
+				};
 				
 				while (i < callbacks.length) {
 					callbacks[i](event);
@@ -12689,6 +12698,47 @@
 				
 				return MessagingSocket(context, owner);
 			};
+		};
+		
+		Runtime.InitializeMessagingOwner = function (owner, definition) {
+			var declaration = definition && definition.$Messaging;
+			var handler = definition && definition.$OnMessage;
+			var context;
+			var socket;
+			var channels;
+			var i = 0;
+			
+			if (declaration === undefined || declaration === null || declaration === false) return null;
+			
+			if (typeof declaration === 'string') {
+				context = {ID: declaration};
+			}
+			else if (Array.isArray(declaration)) {
+				context = {Channels: declaration};
+			}
+			else if (typeof declaration === 'object') {
+				context = {
+					Contexts: declaration.Context !== undefined ? declaration.Context : declaration.Contexts,
+					Channels: declaration.Channels || []
+				};
+				if (declaration.ID !== undefined) context.ID = declaration.ID;
+			}
+			else {
+				throw new Error('Elemenx $Messaging expects an ID string, Channels array or configuration object');
+			}
+			
+			socket = Runtime.MessagingFor(owner)(context);
+			if (typeof handler !== 'function') return socket;
+			
+			channels = socket.Channels();
+			while (i < channels.length) {
+				socket.On(channels[i], function (message) {
+					handler.call(owner, message);
+				});
+				i++;
+			}
+			
+			return socket;
 		};
 		
 		Runtime.AttachMessagingBridge = function (endpoint, options) {
@@ -13883,6 +13933,7 @@
 			};
 			
 			if (Runtime.InitializeEventsOwner) Runtime.InitializeEventsOwner(api, definition);
+			if (Runtime.InitializeMessagingOwner) Runtime.InitializeMessagingOwner(api, definition);
 			
 			if (typeof definition.$Bootstrap === 'function') {
 				definition.$Bootstrap.call(api);

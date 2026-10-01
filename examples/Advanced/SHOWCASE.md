@@ -142,11 +142,13 @@ Status values:
 
 | Capability | Status | Current / required showcase |
 | --- | --- | --- |
-| socket creation | YES | Component-owned sender and receiver sockets are created live. |
-| `ID` / own channel | YES | Receiver owns `advanced:receiver` and accepts a direct message. |
-| `On` / `Off` / `Send` / `Channels` | YES | Interactive context/direct sends, channel listing and explicit Off are shown. |
-| Messaging Context | YES | `AdvancedMessagingShowcase` composes a base context and inherited channel. |
-| owner lifecycle | YES | Sockets are Component-owned and explicitly destroyed with the showcase Component. |
+| declarative `$Messaging` ID | YES | `MessagingIDReceiver` uses the string overload and accepts a direct message. |
+| declarative `$Messaging` Channels | YES | `MessagingChannelsReceiver` uses the array overload for `advanced:foo` and `advanced:bar`. |
+| declarative Context composition | YES | `MessagingContextReceiver` composes inherited Context channels with a local channel and shared custom ID. |
+| `$OnMessage` / `Message.Is()` | YES | All declarative receivers route delivered messages through one `$OnMessage` handler using `Message.Is()`. |
+| imperative `Send` | YES | The showcase sender drives direct, channel, Context and shared-ID deliveries. |
+| owner lifecycle | YES | Declarative receiver sockets and the sender are Component-owned and cleaned up with their owners. |
+| Messaging Pipes | MISSING | Next phase: apply the Events/Pipes model to Message processing. |
 | Worker Messaging bridge | MISSING | Add WebWorker and ServiceWorker bridge demos. |
 
 ## WebWorker

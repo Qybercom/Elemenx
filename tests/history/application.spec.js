@@ -138,21 +138,20 @@ test('official Advanced Application example demonstrates Storage, Events and Mes
 	await expect(events).toContainText('advanced:telemetry: telemetry event');
 	await expect(events).toContainText('Event count: 2');
 
-	await messaging.getByRole('button', {name: 'Send context message'}).click();
-	await expect(messaging).toContainText('advanced:events: context message');
-	await expect(messaging).toContainText('Message count: 1');
-	await messaging.getByRole('button', {name: 'Send storage message'}).click();
-	await expect(messaging).toContainText('advanced:storage: storage message');
-	await expect(messaging).toContainText('Message count: 2');
-	await messaging.getByRole('button', {name: 'Detach storage handler'}).click();
-	await messaging.getByRole('button', {name: 'Send storage message'}).click();
-	await expect(messaging).toContainText('Message count: 2');
-	await messaging.getByRole('button', {name: 'Send direct message'}).click();
-	await expect(messaging).toContainText('advanced:receiver: direct message');
-	await expect(messaging).toContainText('Message count: 3');
-	await messaging.getByRole('button', {name: 'Attach storage handler'}).click();
-	await messaging.getByRole('button', {name: 'Send storage message'}).click();
-	await expect(messaging).toContainText('Message count: 4');
+	await messaging.getByRole('button', {name: 'Send to custom ID'}).click();
+	await expect(messaging).toContainText('received: direct message');
+	await messaging.getByRole('button', {name: 'Send foo'}).click();
+	await expect(messaging).toContainText('advanced:foo: foo message');
+	await messaging.getByRole('button', {name: 'Send bar'}).click();
+	await expect(messaging).toContainText('advanced:bar: bar message');
+	await messaging.getByRole('button', {name: 'Send context channel'}).click();
+	await expect(messaging).toContainText('context: context message');
+	await messaging.getByRole('button', {name: 'Send context storage channel'}).click();
+	await expect(messaging).toContainText('context storage: storage message');
+	await messaging.getByRole('button', {name: 'Send local channel'}).click();
+	await expect(messaging).toContainText('local: local message');
+	await messaging.getByRole('button', {name: 'Send shared ID'}).click();
+	await expect(messaging).toContainText('shared ID: shared ID message');
 
 	await storage.getByRole('button', {name: 'Run IndexedDB roundtrip'}).click();
 	await expect(storage).toContainText('Index matches: 1');
