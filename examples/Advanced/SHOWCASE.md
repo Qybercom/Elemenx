@@ -149,7 +149,7 @@ Status values:
 | Messaging Pipes | YES | `Message.Is(channel, pipes, handler)` demonstrates the shared `Debouncer`, `Filter` and `Gate` pipeline semantics. |
 | imperative `Send` | YES | The showcase sender drives direct, channel, Context and shared-ID deliveries. |
 | owner lifecycle | YES | Declarative receiver sockets and the sender are Component-owned and cleaned up with their owners. |
-| Window / iframe bridge | YES | `MessagingShowcase` connects its iframe with `$Messaging.Window('.messaging-frame')`; the iframe uses `Elemenx.Messaging.Window(window.parent)` and replies over the same Messaging fabric. |
+| Window / iframe bridge | YES | `MessagingShowcase` uses automatic Window discovery: the iframe announces itself to its parent at runtime and replies over the same Messaging fabric without application-level bridge setup. |
 | Worker Messaging bridge | MISSING | Add WebWorker and ServiceWorker bridge demos. |
 
 ## WebWorker

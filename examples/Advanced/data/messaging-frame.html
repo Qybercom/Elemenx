@@ -7,7 +7,6 @@
 <body>
 	<small id="status">iframe Messaging ready</small>
 	<script>
-		var bridge = Elemenx.Messaging.Window(window.parent);
 		var messaging = Elemenx.Messaging(['advanced:window']);
 		messaging.On('advanced:window', function (message) {
 			document.getElementById('status').textContent = 'received: ' + message.Data;

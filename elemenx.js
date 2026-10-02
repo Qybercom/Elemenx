@@ -12249,6 +12249,8 @@
 		var destroyedOwners = new WeakSet();
 		var entities = new WeakMap();
 		var globalSequence = 0;
+		var windowBridges = typeof WeakMap === 'function' ? new WeakMap() : null;
+		var messagingContexts = {};
 		
 		function MessagingFabric () {
 			var sockets = [];
@@ -12713,6 +12715,7 @@
 			var bridge;
 			var handle;
 			var destroyed = false;
+			var registry;
 			
 			if (!Runtime.HasDOM)
 				throw new Error('Elemenx Messaging Window is only available in a DOM runtime');
@@ -12735,6 +12738,11 @@
 				if (origin === 'null') origin = '*';
 			}
 			origin = String(origin);
+			
+			if (windowBridges) {
+				registry = windowBridges.get(target);
+				if (registry && registry[origin]) return registry[origin];
+			}
 			
 			var endpoint = {
 				postMessage: function (packet, transfer) {
@@ -12777,6 +12785,10 @@
 					destroyed = true;
 					bridge.Destroy();
 					bridge = null;
+					if (windowBridges) {
+						registry = windowBridges.get(target);
+						if (registry && registry[origin] === handle) delete registry[origin];
+					}
 					if (owner) {
 						list = owners.get(owner);
 						if (list) {
@@ -12787,6 +12799,15 @@
 				}
 			};
 			
+			if (windowBridges) {
+				registry = windowBridges.get(target);
+				if (!registry) {
+					registry = {};
+					windowBridges.set(target, registry);
+				}
+				registry[origin] = handle;
+			}
+			
 			if (owner) {
 				if (!owners.has(owner)) owners.set(owner, []);
 				owners.get(owner).push(handle);
@@ -12795,6 +12816,41 @@
 			return handle;
 		}
 		
+		function WindowAnnouncement (target) {
+			if (!target || target === global || typeof target.postMessage !== 'function') return;
+			WindowBridge(target, null, null);
+			target.postMessage({
+				ElemenxMessagingWindow: 'HELLO',
+				ElemenxMessagingProtocol: 1,
+				Runtime: Elemenx.RuntimeID()
+			}, '*');
+		}
+		
+		function InitializeWindowDiscovery () {
+			if (!Runtime.HasDOM) return;
+			
+			global.addEventListener('message', function (event) {
+				var packet = event.data;
+				var ownOrigin = global.location && global.location.origin ? global.location.origin : null;
+				if (!packet || !packet.ElemenxMessagingWindow) return;
+				if (packet.ElemenxMessagingProtocol !== 1) return;
+				if (!event.source || typeof event.source.postMessage !== 'function') return;
+				if (ownOrigin && ownOrigin !== 'null' && event.origin !== ownOrigin) return;
+				
+				if (packet.ElemenxMessagingWindow === 'HELLO') {
+					WindowBridge(event.source, {Origin:event.origin}, null);
+					event.source.postMessage({
+						ElemenxMessagingWindow: 'WELCOME',
+						ElemenxMessagingProtocol: 1,
+						Runtime: Elemenx.RuntimeID()
+					}, event.origin);
+				}
+			});
+			
+			if (global.parent && global.parent !== global) WindowAnnouncement(global.parent);
+			if (global.opener) WindowAnnouncement(global.opener);
+		}
+
 		function Messaging (context) {
 			return MessagingSocket(context, null);
 		}
@@ -12870,10 +12926,33 @@
 			return messagingFabric.Bridge(endpoint, options);
 		};
 		
+		InitializeWindowDiscovery();
+		
 		if (Runtime.HasDOM && typeof global.BroadcastChannel === 'function') {
 			Runtime.MessagingBroadcastChannel = new global.BroadcastChannel('Elemenx:Messaging');
+			Runtime.MessagingBroadcastChannel.addEventListener('message', function (event) {
+				var packet = event.data;
+				if (!packet || packet.ElemenxMessagingContext !== true) return;
+				if (packet.ElemenxMessagingProtocol !== 1 || !packet.Runtime) return;
+				if (packet.Runtime === Elemenx.RuntimeID()) return;
+				messagingContexts[packet.Runtime] = true;
+				if (packet.Type === 'HELLO') {
+					Runtime.MessagingBroadcastChannel.postMessage({
+						ElemenxMessagingContext: true,
+						ElemenxMessagingProtocol: 1,
+						Type: 'WELCOME',
+						Runtime: Elemenx.RuntimeID()
+					});
+				}
+			});
 			Runtime.MessagingBroadcastBridge = Runtime.AttachMessagingBridge(Runtime.MessagingBroadcastChannel, {
 				Transferable: false
+			});
+			Runtime.MessagingBroadcastChannel.postMessage({
+				ElemenxMessagingContext: true,
+				ElemenxMessagingProtocol: 1,
+				Type: 'HELLO',
+				Runtime: Elemenx.RuntimeID()
 			});
 		}
 		

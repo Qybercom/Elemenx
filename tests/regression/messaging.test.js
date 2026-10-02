@@ -223,6 +223,31 @@ describe('Regression: Messaging', function () {
 			component.$Destroy();
 		});
 
+		it('deduplicates repeated Window bridge registration for the same target and origin', function () {
+			var frame=document.createElement('iframe');
+			document.body.appendChild(frame);
+			var first=Elemenx.Messaging.Window(frame);
+			var second=Elemenx.Messaging.Window(frame.contentWindow);
+			expect(second).toBe(first);
+			first.Destroy();
+			frame.remove();
+		});
+
+		it('automatically accepts a same-origin Window HELLO announcement', function () {
+			var channel=unique('window-auto'), received=[];
+			var frame=document.createElement('iframe');
+			document.body.appendChild(frame);
+			var target=frame.contentWindow;
+			var receiver=Elemenx.Messaging();
+			receiver.On(channel,function (message) { received.push(message.Data); });
+			window.dispatchEvent(new MessageEvent('message',{data:{ElemenxMessagingWindow:'HELLO',ElemenxMessagingProtocol:1,Runtime:'child'},origin:window.location.origin,source:target}));
+			window.dispatchEvent(new MessageEvent('message',{data:{ElemenxMessaging:true,ElemenxMessagingProtocol:1,MessageID:unique('auto-message'),Source:'child',Channel:channel,Data:'automatic'},origin:window.location.origin,source:target}));
+			expect(received).toEqual(['automatic']);
+			Elemenx.Messaging.Window(target).Destroy();
+			receiver.Destroy();
+			frame.remove();
+		});
+
 		it('accepts only messages from the attached Window and configured origin', function () {
 			var channel=unique('window-inbound'), received=[];
 			var frame=document.createElement('iframe'), other=document.createElement('iframe');

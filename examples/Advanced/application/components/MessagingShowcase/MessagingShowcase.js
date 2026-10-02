@@ -1,7 +1,6 @@
 Elemenx.Component('MessagingShowcase', {
 	$TemplateURL: 'MessagingShowcase.html',
 	_MessageSender: null,
-	_WindowBridge: null,
 	WindowMessage: 'waiting for iframe',
 
 	$OnCreate: function () {
@@ -10,10 +9,6 @@ Elemenx.Component('MessagingShowcase', {
 		this._MessageSender.On('advanced:window-reply', function (message) {
 			component.WindowMessage = message.Data;
 		});
-	},
-
-	$OnComponentReady: function () {
-		this._WindowBridge = this.$Messaging.Window('.messaging-frame');
 	},
 
 	SendWindowMessage: function () {
