@@ -16,9 +16,16 @@
 		<button class="button" (click)="RunMessageGate">Message Gate 300 ms</button>
 	</p>
 	<div class="messaging-window-showcase">
-		<p>Automatic iframe Messaging — iframe reply: <b>{{WindowMessage}}</b></p>
+		<h3>Automatic browser contexts</h3>
+		<p>iframe / parent — zero-config discovery: <b>{{WindowMessage}}</b></p>
 		<iframe class="messaging-frame" src="/data/messaging-frame.html" title="Messaging iframe" style="width:100%;height:72px;border:1px solid rgba(127,127,127,.25);border-radius:4px"></iframe>
 		<p><button class="button" (click)="SendWindowMessage">Send through iframe Window</button></p>
+		<p>child window / opener — zero-config discovery: <b>{{ChildWindowMessage}}</b></p>
+		<p><button class="button" (click)="OpenChildWindow">Open child window</button> <button class="button" (click)="SendChildWindowMessage">Send to child window</button></p>
+		<p>independent same-origin tabs — open another copy without an opener. Runtime: <code>{{RuntimeID}}</code>; <b>{{TabMessage}}</b></p>
+		<p><button class="button" (click)="OpenIndependentTab">Open independent tab</button> <button class="button" (click)="PingTabs">Ping independent tabs</button></p>
+		<p>cross-origin child window — automatic Window discovery after mutual <code>Messaging.Origins()</code> trust: <b>{{CrossOriginMessage}}</b></p>
+		<p><button class="button" (click)="OpenCrossOriginWindow">Open cross-origin child</button> <button class="button" (click)="SendCrossOriginMessage">Send cross-origin message</button></p>
 	</div>
 	<p>
 		<button class="button" (click)="SendContextMessage">Send context channel</button>

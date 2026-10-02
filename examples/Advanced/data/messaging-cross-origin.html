@@ -1,0 +1,23 @@
+<!doctype html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Elemenx cross-origin Messaging child</title>
+	<script src="../elemenx.js"></script>
+</head>
+<body>
+	<p>Cross-origin opener Messaging ready.</p>
+	<small id="status">waiting</small>
+	<script>
+		var params = new URLSearchParams(location.search);
+		var origin = params.get('origin');
+		if (origin) Elemenx.Messaging.Origins(origin);
+		var messaging = Elemenx.Messaging(['advanced:cross-origin']);
+	messaging.Send('advanced:cross-origin-ready', 'cross-origin child ready');
+		messaging.On('advanced:cross-origin', function (message) {
+			document.getElementById('status').textContent = 'received: ' + message.Data;
+			messaging.Send('advanced:cross-origin-reply', 'cross-origin child received: ' + message.Data);
+		});
+	</script>
+</body>
+</html>

@@ -191,6 +191,18 @@ describe('Regression: Messaging', function () {
 			bridge.Destroy();
 		});
 
+		it('does not inspect contentWindow on a Window-like target', function () {
+			var calls=[];
+			var target={postMessage:function () { calls.push(Array.prototype.slice.call(arguments)); }};
+			Object.defineProperty(target,'contentWindow',{get:function () { throw new Error('cross-origin property access'); }});
+			var bridge=Elemenx.Messaging.Window(target,{Origin:'https://foreign.example'});
+			var sender=Elemenx.Messaging();
+			sender.Send(unique('window-cross-origin-target'),'payload');
+			expect(calls.length).toBe(1);
+			sender.Destroy();
+			bridge.Destroy();
+		});
+
 		it('accepts an iframe directly instead of requiring contentWindow boilerplate', function () {
 			var frame=document.createElement('iframe');
 			document.body.appendChild(frame);
@@ -245,6 +257,47 @@ describe('Regression: Messaging', function () {
 			expect(received).toEqual(['automatic']);
 			Elemenx.Messaging.Window(target).Destroy();
 			receiver.Destroy();
+			frame.remove();
+		});
+
+		it('requires explicit mutual trust before accepting a cross-origin Window announcement', function () {
+			var frame=document.createElement('iframe');
+			document.body.appendChild(frame);
+			var target=frame.contentWindow, calls=[];
+			var postMessage=target.postMessage;
+			target.postMessage=function () { calls.push(Array.prototype.slice.call(arguments)); };
+			window.dispatchEvent(new MessageEvent('message',{data:{ElemenxMessagingWindow:'HELLO',ElemenxMessagingProtocol:1,Runtime:'foreign'},origin:'https://foreign.example',source:target}));
+			expect(calls.length).toBe(0);
+			Elemenx.Messaging.Origins('https://foreign.example');
+			window.dispatchEvent(new MessageEvent('message',{data:{ElemenxMessagingWindow:'HELLO',ElemenxMessagingProtocol:1,Runtime:'foreign'},origin:'https://foreign.example',source:target}));
+			expect(calls.length).toBe(1);
+			expect(calls[0][0].ElemenxMessagingWindow).toBe('WELCOME');
+			expect(calls[0][1]).toBe('https://foreign.example');
+			target.postMessage=postMessage;
+			Elemenx.Messaging.Window(target,{Origin:'https://foreign.example'}).Destroy();
+			frame.remove();
+		});
+
+		it('queues Window Messaging until a trusted discovery bridge becomes active', function () {
+			var frame=document.createElement('iframe');
+			document.body.appendChild(frame);
+			var target=frame.contentWindow, calls=[];
+			var postMessage=target.postMessage;
+			target.postMessage=function () { calls.push(Array.prototype.slice.call(arguments)); };
+			var origin='https://queued.example';
+			Elemenx.Messaging.Origins(origin);
+			var bridge=Elemenx.Messaging.Window(target,{Origin:origin,Active:false});
+			var sender=Elemenx.Messaging();
+			sender.Send(unique('queued-window'),'before welcome');
+			expect(calls.length).toBe(0);
+			window.dispatchEvent(new MessageEvent('message',{data:{ElemenxMessagingWindow:'WELCOME',ElemenxMessagingProtocol:1,Runtime:'foreign'},origin:origin,source:target}));
+			expect(calls.length).toBe(1);
+			expect(calls[0][0].ElemenxMessaging).toBe(true);
+			expect(calls[0][0].Data).toBe('before welcome');
+			expect(calls[0][1]).toBe(origin);
+			sender.Destroy();
+			bridge.Destroy();
+			target.postMessage=postMessage;
 			frame.remove();
 		});
 

@@ -149,7 +149,7 @@ Status values:
 | Messaging Pipes | YES | `Message.Is(channel, pipes, handler)` demonstrates the shared `Debouncer`, `Filter` and `Gate` pipeline semantics. |
 | imperative `Send` | YES | The showcase sender drives direct, channel, Context and shared-ID deliveries. |
 | owner lifecycle | YES | Declarative receiver sockets and the sender are Component-owned and cleaned up with their owners. |
-| Window / iframe bridge | YES | `MessagingShowcase` uses automatic Window discovery: the iframe announces itself to its parent at runtime and replies over the same Messaging fabric without application-level bridge setup. |
+| Browser context discovery | YES | `MessagingShowcase` demonstrates zero-config iframe/parent and child/opener discovery, independent same-origin tabs through BroadcastChannel (opened with `noopener`), and an explicitly trusted cross-origin child through `Messaging.Origins()`. No normal same-origin example calls `.Window()` manually. |
 | Worker Messaging bridge | MISSING | Add WebWorker and ServiceWorker bridge demos. |
 
 ## WebWorker

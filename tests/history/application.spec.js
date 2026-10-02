@@ -110,7 +110,7 @@ test('official Advanced Application example supports guard redirect', async ({ p
 
 	expect(errors).toEqual([]);
 });
-test('official Advanced Application example demonstrates Storage, Events and Messaging end to end', async ({ page }) => {
+test('official Advanced Application example demonstrates Storage, Events and Messaging end to end', async ({ page, context }) => {
 	var errors = captureErrors(page);
 	var storage;
 	var events;
@@ -168,7 +168,37 @@ test('official Advanced Application example demonstrates Storage, Events and Mes
 	await messaging.getByRole('button', {name: 'Send shared ID'}).click();
 	await expect(messaging).toContainText('shared ID: shared ID message');
 	await messaging.getByRole('button', {name: 'Send through iframe Window'}).click();
-	await expect(messaging).toContainText('iframe reply: iframe received: hello iframe');
+	await expect(messaging).toContainText('iframe / parent — zero-config discovery: iframe received: hello iframe');
+
+	var childPromise = context.waitForEvent('page');
+	await messaging.getByRole('button', {name: 'Open child window'}).click();
+	var child = await childPromise;
+	await child.waitForLoadState('domcontentloaded');
+	await expect(child.getByText('Automatic opener Messaging ready.')).toBeVisible();
+	await messaging.getByRole('button', {name: 'Send to child window'}).click();
+	await expect(child.locator('#status')).toContainText('received: hello child window');
+	await expect(messaging).toContainText('child window / opener — zero-config discovery: child received: hello child window');
+	await child.close();
+
+	var tabPromise = context.waitForEvent('page');
+	await messaging.getByRole('button', {name: 'Open independent tab'}).click();
+	var tab = await tabPromise;
+	await tab.waitForLoadState('domcontentloaded');
+	await expectBootstrapVisible(tab.locator('.messaging-showcase'), errors);
+	await messaging.getByRole('button', {name: 'Ping independent tabs'}).click();
+	await expect(messaging).toContainText('pong from runtime-');
+	await tab.close();
+
+	var crossOriginPromise = context.waitForEvent('page');
+	await messaging.getByRole('button', {name: 'Open cross-origin child'}).click();
+	var crossOrigin = await crossOriginPromise;
+	await crossOrigin.waitForLoadState('domcontentloaded');
+	await expect(crossOrigin.getByText('Cross-origin opener Messaging ready.')).toBeVisible();
+	await expect(messaging).toContainText('cross-origin child window — automatic Window discovery after mutual Messaging.Origins() trust: cross-origin child ready');
+	await messaging.getByRole('button', {name: 'Send cross-origin message'}).click();
+	await expect(crossOrigin.locator('#status')).toContainText('received: hello cross-origin window');
+	await expect(messaging).toContainText('cross-origin child window — automatic Window discovery after mutual Messaging.Origins() trust: cross-origin child received: hello cross-origin window');
+	await crossOrigin.close();
 
 	await storage.getByRole('button', {name: 'Run IndexedDB roundtrip'}).click();
 	await expect(storage).toContainText('Index matches: 1');

@@ -12251,6 +12251,7 @@
 		var globalSequence = 0;
 		var windowBridges = typeof WeakMap === 'function' ? new WeakMap() : null;
 		var messagingContexts = {};
+		var messagingOrigins = {};
 		
 		function MessagingFabric () {
 			var sockets = [];
@@ -12716,6 +12717,9 @@
 			var handle;
 			var destroyed = false;
 			var registry;
+			var active;
+			var pending = [];
+			var announcementTimer = null;
 			
 			if (!Runtime.HasDOM)
 				throw new Error('Elemenx Messaging Window is only available in a DOM runtime');
@@ -12726,7 +12730,7 @@
 				else target = root && root.querySelector ? root.querySelector(target) : null;
 			}
 			
-			if (target && target.contentWindow) target = target.contentWindow;
+			if (target && typeof target.postMessage !== 'function' && target.contentWindow) target = target.contentWindow;
 			
 			if (!target || typeof target.postMessage !== 'function')
 				throw new Error('Elemenx Messaging Window expects a Window, iframe or selector');
@@ -12738,6 +12742,7 @@
 				if (origin === 'null') origin = '*';
 			}
 			origin = String(origin);
+			active = options.Active !== false;
 			
 			if (windowBridges) {
 				registry = windowBridges.get(target);
@@ -12746,6 +12751,10 @@
 			
 			var endpoint = {
 				postMessage: function (packet, transfer) {
+					if (!active) {
+						pending.push({Packet:packet,Transfer:transfer});
+						return;
+					}
 					if (transfer && transfer.length) target.postMessage(packet, origin, transfer);
 					else target.postMessage(packet, origin);
 				},
@@ -12775,14 +12784,51 @@
 			
 			bridge = messagingFabric.Bridge(endpoint, {Transferable:options.Transferable !== false});
 			
+			function Activate () {
+				var item;
+				if (destroyed || active) return handle;
+				active = true;
+				if (announcementTimer !== null) {
+					global.clearTimeout(announcementTimer);
+					announcementTimer = null;
+				}
+				while (pending.length) {
+					item = pending.shift();
+					if (item.Transfer && item.Transfer.length) target.postMessage(item.Packet, origin, item.Transfer);
+					else target.postMessage(item.Packet, origin);
+				}
+				return handle;
+			}
+
+			function Announce () {
+				if (destroyed || active) return handle;
+				WindowAnnouncement(target);
+				if (announcementTimer === null) {
+					announcementTimer = global.setTimeout(function RetryAnnouncement () {
+						announcementTimer = null;
+						if (destroyed || active) return;
+						Announce();
+					}, 50);
+				}
+				return handle;
+			}
+
 			handle = {
 				Target: function () { return target; },
 				Origin: function () { return origin; },
+				Active: function () { return active; },
+				Activate: Activate,
+				Announce: Announce,
 				Destroy: function () {
 					var list;
 					var index;
 					if (destroyed) return;
 					destroyed = true;
+					if (announcementTimer !== null) {
+						global.clearTimeout(announcementTimer);
+						announcementTimer = null;
+					}
+					pending = [];
 					bridge.Destroy();
 					bridge = null;
 					if (windowBridges) {
@@ -12816,37 +12862,64 @@
 			return handle;
 		}
 		
+		function MessagingOriginAllowed (origin) {
+			var ownOrigin = global.location && global.location.origin ? global.location.origin : null;
+			if (!origin) return false;
+			if (ownOrigin && ownOrigin !== 'null' && origin === ownOrigin) return true;
+			return messagingOrigins['*'] === true || messagingOrigins[String(origin)] === true;
+		}
+
+		function MessagingOrigins (origins) {
+			var list;
+			var i = 0;
+			if (origins === undefined) return Object.keys(messagingOrigins);
+			list = Array.isArray(origins) ? origins : [origins];
+			while (i < list.length) {
+				if (list[i] !== undefined && list[i] !== null && String(list[i])) {
+					var trustedOrigin = String(list[i]);
+					messagingOrigins[trustedOrigin] = true;
+					if (Runtime.HasDOM) {
+						if (global.parent && global.parent !== global) WindowBridge(global.parent, {Origin:trustedOrigin,Active:false}, null).Announce();
+						if (global.opener) WindowBridge(global.opener, {Origin:trustedOrigin,Active:false}, null).Announce();
+					}
+				}
+				i++;
+			}
+			return Messaging;
+		}
+
 		function WindowAnnouncement (target) {
 			if (!target || target === global || typeof target.postMessage !== 'function') return;
-			WindowBridge(target, null, null);
 			target.postMessage({
 				ElemenxMessagingWindow: 'HELLO',
 				ElemenxMessagingProtocol: 1,
 				Runtime: Elemenx.RuntimeID()
 			}, '*');
 		}
-		
+
 		function InitializeWindowDiscovery () {
 			if (!Runtime.HasDOM) return;
-			
+
 			global.addEventListener('message', function (event) {
 				var packet = event.data;
-				var ownOrigin = global.location && global.location.origin ? global.location.origin : null;
 				if (!packet || !packet.ElemenxMessagingWindow) return;
 				if (packet.ElemenxMessagingProtocol !== 1) return;
 				if (!event.source || typeof event.source.postMessage !== 'function') return;
-				if (ownOrigin && ownOrigin !== 'null' && event.origin !== ownOrigin) return;
-				
+				if (!MessagingOriginAllowed(event.origin)) return;
+
 				if (packet.ElemenxMessagingWindow === 'HELLO') {
-					WindowBridge(event.source, {Origin:event.origin}, null);
+					WindowBridge(event.source, {Origin:event.origin}, null).Activate();
 					event.source.postMessage({
 						ElemenxMessagingWindow: 'WELCOME',
 						ElemenxMessagingProtocol: 1,
 						Runtime: Elemenx.RuntimeID()
 					}, event.origin);
 				}
+				else if (packet.ElemenxMessagingWindow === 'WELCOME') {
+					WindowBridge(event.source, {Origin:event.origin}, null).Activate();
+				}
 			});
-			
+
 			if (global.parent && global.parent !== global) WindowAnnouncement(global.parent);
 			if (global.opener) WindowAnnouncement(global.opener);
 		}
@@ -12856,6 +12929,7 @@
 		}
 		
 		Messaging.Context = Context;
+		Messaging.Origins = MessagingOrigins;
 		Messaging.Window = function (target, options) { return WindowBridge(target, options, null); };
 		Elemenx.Messaging = Messaging;
 		
