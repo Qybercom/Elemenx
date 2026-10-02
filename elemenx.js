@@ -11942,9 +11942,9 @@
 		
 		function pipeDescriptor (descriptor) {
 			if (!descriptor || typeof descriptor !== 'object' || Array.isArray(descriptor))
-				throw new Error('Elemenx Event.Is pipe descriptor must be an object');
+				throw new Error('Elemenx Pipe descriptor must be an object');
 			var names = Object.keys(descriptor);
-			if (names.length !== 1) throw new Error('Elemenx Event.Is pipe descriptor must contain exactly one Pipe');
+			if (names.length !== 1) throw new Error('Elemenx Pipe descriptor must contain exactly one Pipe');
 			var name = names[0];
 			var factory = pipeTypes[name];
 			if (!factory) throw new Error('Elemenx Pipe is not registered: ' + name);
@@ -12204,6 +12204,7 @@
 		}
 		
 		Elemenx.Pipe = Pipe;
+		Runtime.CreatePipeline = Pipeline;
 		Elemenx.Events = Events;
 		Runtime.EventsFor = function (owner) {
 			return function () {
@@ -12434,6 +12435,7 @@
 			var id = null;
 			var subscriptions = {};
 			var automatic = {};
+			var pipelines = {};
 			var ownCallbacks = [];
 			var destroyed = false;
 			var internalID = 'elemenx:Messaging:' + globalSequence++;
@@ -12571,10 +12573,17 @@
 				return result;
 			}
 			
+			function PipeMessage (rule, descriptors, message, handler) {
+				var key = message.Channel + ':' + rule;
+				if (!pipelines[key]) pipelines[key] = Runtime.CreatePipeline(descriptors);
+				pipelines[key].Use(message, handler);
+			}
+			
 			function Deliver (source, channel, data) {
 				var callbacks = [];
 				var explicit = subscriptions[channel];
-				var event;
+				var context = null;
+				var message;
 				var i = 0;
 				var own = channel === OwnChannel();
 				var member = own || channel === entityChannel || channel === entityInstanceChannel || automatic[channel] || explicit;
@@ -12586,20 +12595,33 @@
 				
 				if (!callbacks.length) return;
 				
-				event = {
+				message = {
 					Channel: channel,
 					Source: source,
 					Data: data
 				};
-				event.Is = function (name, handler) {
-					if (event.Channel !== String(name)) return false;
-					if (typeof handler === 'function') handler(event);
+				message.Is = function (name, pipes, handler) {
+					if (message.Channel !== String(name)) return false;
+					if (typeof pipes === 'function') {
+						handler = pipes;
+						pipes = null;
+					}
+					if (!pipes) {
+						if (typeof handler === 'function') handler(message);
+						return true;
+					}
+					if (!Array.isArray(pipes)) pipes = [pipes];
+					if (typeof handler !== 'function') throw new Error('Elemenx Message.Is pipeline requires a handler');
+					if (!context || !context.Socket) throw new Error('Elemenx Message.Is pipeline requires a Messaging delivery context');
+					var index = context.Index++;
+					context.Socket.Pipe(context.Slot + ':' + index, pipes, message, handler);
 					return true;
 				};
 				
 				while (i < callbacks.length) {
-					callbacks[i](event);
-					
+					context = {Socket:api, Slot:i, Index:0};
+					callbacks[i](message);
+					context = null;
 					i++;
 				}
 			}
@@ -12608,6 +12630,13 @@
 				if (destroyed) return;
 				destroyed = true;
 				
+				var keys = Object.keys(pipelines);
+				var p = 0;
+				while (p < keys.length) {
+					pipelines[keys[p]].Destroy();
+					p++;
+				}
+				pipelines = {};
 				subscriptions = {};
 				automatic = {};
 				ownCallbacks = [];
@@ -12659,7 +12688,8 @@
 				Send: Send,
 				Channels: Channels,
 				Destroy: Destroy,
-				Deliver: Deliver
+				Deliver: Deliver,
+				Pipe: PipeMessage
 			};
 			
 			messagingFabric.Add(api);

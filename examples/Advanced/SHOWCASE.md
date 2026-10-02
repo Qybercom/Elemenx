@@ -146,6 +146,7 @@ Status values:
 | declarative `$Messaging` Channels | YES | `MessagingChannelsReceiver` uses the array overload for `advanced:foo` and `advanced:bar`. |
 | declarative Context composition | YES | `MessagingContextReceiver` composes inherited Context channels with a local channel and shared custom ID. |
 | `$OnMessage` / `Message.Is()` | YES | All declarative receivers route delivered messages through one `$OnMessage` handler using `Message.Is()`. |
+| Messaging Pipes | YES | `Message.Is(channel, pipes, handler)` demonstrates the shared `Debouncer`, `Filter` and `Gate` pipeline semantics. |
 | imperative `Send` | YES | The showcase sender drives direct, channel, Context and shared-ID deliveries. |
 | owner lifecycle | YES | Declarative receiver sockets and the sender are Component-owned and cleaned up with their owners. |
 | Messaging Pipes | MISSING | Next phase: apply the Events/Pipes model to Message processing. |

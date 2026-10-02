@@ -15,6 +15,7 @@
 	'MessagingShowcase/MessagingIDReceiver.js',
 	'MessagingShowcase/MessagingChannelsReceiver.js',
 	'MessagingShowcase/MessagingContextReceiver.js',
+	'MessagingShowcase/MessagingPipesReceiver.js',
 	'MessagingShowcase/MessagingShowcase.js',
 	'RouterLabPage/RouterLabPage.js',
 	'AsyncGuardedPage/AsyncGuardedPage.js',

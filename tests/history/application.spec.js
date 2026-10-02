@@ -153,6 +153,12 @@ test('official Advanced Application example demonstrates Storage, Events and Mes
 	await expect(messaging).toContainText('advanced:foo: foo message');
 	await messaging.getByRole('button', {name: 'Send bar'}).click();
 	await expect(messaging).toContainText('advanced:bar: bar message');
+	await messaging.getByRole('button', {name: 'Message Debouncer A/A/A'}).click();
+	await expect(messaging).toContainText('Debouncer: A');
+	await messaging.getByRole('button', {name: 'Message Filter A/B/A/A/B'}).click();
+	await expect(messaging).toContainText('Filter: A');
+	await messaging.getByRole('button', {name: 'Message Gate 300 ms'}).click();
+	await expect(messaging).toContainText('Gate: passed');
 	await messaging.getByRole('button', {name: 'Send context channel'}).click();
 	await expect(messaging).toContainText('context: context message');
 	await messaging.getByRole('button', {name: 'Send context storage channel'}).click();

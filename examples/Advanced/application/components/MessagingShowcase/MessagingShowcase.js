@@ -18,6 +18,19 @@ Elemenx.Component('MessagingShowcase', {
 		this._MessageSender.Send('advanced:bar', 'bar message');
 	},
 
+
+	RunMessageDebouncer: function () {
+		this._MessageSender.Send('advanced:message-debouncer', 'A').Send('advanced:message-debouncer', 'A').Send('advanced:message-debouncer', 'A');
+	},
+
+	RunMessageFilter: function () {
+		this._MessageSender.Send('advanced:message-filter', 'A').Send('advanced:message-filter', 'B').Send('advanced:message-filter', 'A').Send('advanced:message-filter', 'A').Send('advanced:message-filter', 'B');
+	},
+
+	RunMessageGate: function () {
+		this._MessageSender.Send('advanced:message-gate', true);
+	},
+
 	SendContextMessage: function () {
 		this._MessageSender.Send('advanced:events', 'context message');
 	},

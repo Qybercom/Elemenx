@@ -1,4 +1,4 @@
-import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { loadElemenx, resetDOM, unique } from '../setup.js';
 
 describe('Regression: Messaging', function () {
@@ -148,4 +148,30 @@ describe('Regression: Messaging', function () {
 		firstComponent.$Destroy();
 		secondComponent.$Destroy();
 	});
+
+	it('Message.Is runs Debouncer, Filter and Gate through the shared Pipe pipeline', function () {
+		var debounced=unique('message-debouncer'), filtered=unique('message-filter'), gated=unique('message-gate');
+		var accepted=[];
+		var sender=Elemenx.Messaging(), receiver=Elemenx.Messaging();
+		receiver.On(debounced,function (message) {
+			message.Is(debounced,{Debouncer:3},function (output) { accepted.push('debouncer:' + output.Data); });
+		});
+		receiver.On(filtered,function (message) {
+			message.Is(filtered,{Filter:5},function (output) { accepted.push('filter:' + output.Data); });
+		});
+		receiver.On(gated,function (message) {
+			message.Is(gated,{Gate:300},function () { accepted.push('gate:passed'); });
+		});
+		sender.Send(debounced,'A').Send(debounced,'A').Send(debounced,'A');
+		sender.Send(filtered,'A').Send(filtered,'B').Send(filtered,'A').Send(filtered,'A').Send(filtered,'B');
+		expect(accepted).toEqual(['debouncer:A','filter:A']);
+		vi.useFakeTimers();
+		sender.Send(gated,true);
+		vi.advanceTimersByTime(300);
+		expect(accepted).toEqual(['debouncer:A','filter:A','gate:passed']);
+		vi.useRealTimers();
+		sender.Destroy();
+		receiver.Destroy();
+	});
+
 });

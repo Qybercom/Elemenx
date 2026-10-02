@@ -4,10 +4,16 @@
 	<MessagingIDReceiver></MessagingIDReceiver>
 	<MessagingChannelsReceiver></MessagingChannelsReceiver>
 	<MessagingContextReceiver></MessagingContextReceiver>
+	<MessagingPipesReceiver></MessagingPipesReceiver>
 	<p>
 		<button class="button primary" (click)="SendIDMessage">Send to custom ID</button>
 		<button class="button" (click)="SendFooMessage">Send foo</button>
 		<button class="button" (click)="SendBarMessage">Send bar</button>
+	</p>
+	<p>
+		<button class="button" (click)="RunMessageDebouncer">Message Debouncer A/A/A</button>
+		<button class="button" (click)="RunMessageFilter">Message Filter A/B/A/A/B</button>
+		<button class="button" (click)="RunMessageGate">Message Gate 300 ms</button>
 	</p>
 	<p>
 		<button class="button" (click)="SendContextMessage">Send context channel</button>
