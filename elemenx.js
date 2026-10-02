@@ -12717,13 +12717,16 @@
 			if (!Runtime.HasDOM)
 				throw new Error('Elemenx Messaging Window is only available in a DOM runtime');
 			
-			if (typeof target === 'string' && owner && typeof owner.$Ref === 'function')
-				target = owner.$Ref(target);
+			if (typeof target === 'string') {
+				var root = owner && typeof owner.$Element === 'function' ? owner.$Element() : global.document;
+				if (root && root.matches && root.matches(target)) target = root;
+				else target = root && root.querySelector ? root.querySelector(target) : null;
+			}
 			
 			if (target && target.contentWindow) target = target.contentWindow;
 			
 			if (!target || typeof target.postMessage !== 'function')
-				throw new Error('Elemenx Messaging Window expects a Window, iframe or owner Ref');
+				throw new Error('Elemenx Messaging Window expects a Window, iframe or selector');
 			
 			options = options || {};
 			origin = options.Origin;

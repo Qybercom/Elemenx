@@ -201,15 +201,24 @@ describe('Regression: Messaging', function () {
 			frame.remove();
 		});
 
-		it('owner-aware $Messaging.Window resolves an iframe Ref by name', function () {
-			var name=unique('WindowBridgeRefOwner');
-			Elemenx.Component(name,{$Template:'<iframe #Frame></iframe>'});
+		it('accepts a document selector directly', function () {
+			var frame=document.createElement('iframe');
+			frame.className='messaging-window-selector';
+			document.body.appendChild(frame);
+			var bridge=Elemenx.Messaging.Window('.messaging-window-selector');
+			expect(bridge.Target()).toBe(frame.contentWindow);
+			bridge.Destroy();
+			frame.remove();
+		});
+
+		it('owner-aware $Messaging.Window resolves an iframe selector inside its owner', function () {
+			var name=unique('WindowBridgeSelectorOwner');
+			Elemenx.Component(name,{$Template:'<iframe class="messaging-frame"></iframe>'});
 			var component=Elemenx.Component(name)();
 			document.body.appendChild(component.$Element());
-			var frame=component.$Ref('Frame');
-			var bridge=component.$Messaging.Window('Frame');
-			expect(frame.contentWindow).not.toBe(null);
-			expect(bridge.Target()).toBe(frame.contentWindow);
+			var bridge=component.$Messaging.Window('.messaging-frame');
+			expect(bridge.Target()).not.toBe(null);
+			expect(bridge.Target().frameElement.classList.contains('messaging-frame')).toBe(true);
 			expect(bridge.Origin()).toBe(window.location.origin);
 			component.$Destroy();
 		});

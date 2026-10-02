@@ -16,8 +16,8 @@
 		<button class="button" (click)="RunMessageGate">Message Gate 300 ms</button>
 	</p>
 	<div class="messaging-window-showcase">
-		<p><code>$Messaging.Window('MessagingFrame')</code> — iframe reply: <b>{{WindowMessage}}</b></p>
-		<iframe #MessagingFrame src="/data/messaging-frame.html" title="Messaging iframe" style="width:100%;height:72px;border:1px solid rgba(127,127,127,.25);border-radius:4px"></iframe>
+		<p><code>$Messaging.Window('.messaging-frame')</code> — iframe reply: <b>{{WindowMessage}}</b></p>
+		<iframe class="messaging-frame" src="/data/messaging-frame.html" title="Messaging iframe" style="width:100%;height:72px;border:1px solid rgba(127,127,127,.25);border-radius:4px"></iframe>
 		<p><button class="button" (click)="SendWindowMessage">Send through iframe Window</button></p>
 	</div>
 	<p>

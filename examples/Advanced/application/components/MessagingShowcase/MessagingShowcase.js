@@ -13,7 +13,7 @@ Elemenx.Component('MessagingShowcase', {
 	},
 
 	$OnComponentReady: function () {
-		this._WindowBridge = this.$Messaging.Window('MessagingFrame');
+		this._WindowBridge = this.$Messaging.Window('.messaging-frame');
 	},
 
 	SendWindowMessage: function () {
