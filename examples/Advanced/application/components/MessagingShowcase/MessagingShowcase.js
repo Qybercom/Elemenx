@@ -1,9 +1,23 @@
 Elemenx.Component('MessagingShowcase', {
 	$TemplateURL: 'MessagingShowcase.html',
 	_MessageSender: null,
+	_WindowBridge: null,
+	WindowMessage: 'waiting for iframe',
 
 	$OnCreate: function () {
+		var component = this;
 		this._MessageSender = this.$Messaging();
+		this._MessageSender.On('advanced:window-reply', function (message) {
+			component.WindowMessage = message.Data;
+		});
+	},
+
+	$OnComponentReady: function () {
+		this._WindowBridge = this.$Messaging.Window('MessagingFrame');
+	},
+
+	SendWindowMessage: function () {
+		this._MessageSender.Send('advanced:window', 'hello iframe');
 	},
 
 	SendIDMessage: function () {

@@ -1,0 +1,18 @@
+<!doctype html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<script src="../elemenx.js"></script>
+</head>
+<body>
+	<small id="status">iframe Messaging ready</small>
+	<script>
+		var bridge = Elemenx.Messaging.Window(window.parent);
+		var messaging = Elemenx.Messaging(['advanced:window']);
+		messaging.On('advanced:window', function (message) {
+			document.getElementById('status').textContent = 'received: ' + message.Data;
+			messaging.Send('advanced:window-reply', 'iframe received: ' + message.Data);
+		});
+	</script>
+</body>
+</html>

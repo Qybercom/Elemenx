@@ -191,6 +191,29 @@ describe('Regression: Messaging', function () {
 			bridge.Destroy();
 		});
 
+		it('accepts an iframe directly instead of requiring contentWindow boilerplate', function () {
+			var frame=document.createElement('iframe');
+			document.body.appendChild(frame);
+			var bridge=Elemenx.Messaging.Window(frame);
+			expect(bridge.Target()).toBe(frame.contentWindow);
+			expect(bridge.Origin()).toBe(window.location.origin);
+			bridge.Destroy();
+			frame.remove();
+		});
+
+		it('owner-aware $Messaging.Window resolves an iframe Ref by name', function () {
+			var name=unique('WindowBridgeRefOwner');
+			Elemenx.Component(name,{$Template:'<iframe #Frame></iframe>'});
+			var component=Elemenx.Component(name)();
+			document.body.appendChild(component.$Element());
+			var frame=component.$Ref('Frame');
+			var bridge=component.$Messaging.Window('Frame');
+			expect(frame.contentWindow).not.toBe(null);
+			expect(bridge.Target()).toBe(frame.contentWindow);
+			expect(bridge.Origin()).toBe(window.location.origin);
+			component.$Destroy();
+		});
+
 		it('accepts only messages from the attached Window and configured origin', function () {
 			var channel=unique('window-inbound'), received=[];
 			var frame=document.createElement('iframe'), other=document.createElement('iframe');

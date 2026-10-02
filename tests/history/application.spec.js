@@ -167,6 +167,8 @@ test('official Advanced Application example demonstrates Storage, Events and Mes
 	await expect(messaging).toContainText('local: local message');
 	await messaging.getByRole('button', {name: 'Send shared ID'}).click();
 	await expect(messaging).toContainText('shared ID: shared ID message');
+	await messaging.getByRole('button', {name: 'Send through iframe Window'}).click();
+	await expect(messaging).toContainText('iframe reply: iframe received: hello iframe');
 
 	await storage.getByRole('button', {name: 'Run IndexedDB roundtrip'}).click();
 	await expect(storage).toContainText('Index matches: 1');

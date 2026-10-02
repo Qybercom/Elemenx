@@ -12716,8 +12716,14 @@
 			
 			if (!Runtime.HasDOM)
 				throw new Error('Elemenx Messaging Window is only available in a DOM runtime');
+			
+			if (typeof target === 'string' && owner && typeof owner.$Ref === 'function')
+				target = owner.$Ref(target);
+			
+			if (target && target.contentWindow) target = target.contentWindow;
+			
 			if (!target || typeof target.postMessage !== 'function')
-				throw new Error('Elemenx Messaging Window expects a Window endpoint');
+				throw new Error('Elemenx Messaging Window expects a Window, iframe or owner Ref');
 			
 			options = options || {};
 			origin = options.Origin;
