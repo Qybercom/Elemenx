@@ -215,4 +215,4 @@ Status values:
 
 The end condition is simple: every supported public runtime capability is either `YES`, or is explicitly classified as `WORKFLOW` because its real demonstration is the Advanced build/dev/serve workflow itself. `PARTIAL` and `MISSING` are temporary states only.
 
-- Events + Pipes: declarative `$Events` / `$OnEvent`, imperative emit, persistent `event.Is()` pipeline and Debouncer showcase.
+- Events + Pipes: declarative `$Events` / `$OnEvent`, imperative emit, persistent `event.Is()` pipelines with interactive Debouncer, Filter and Gate showcases.

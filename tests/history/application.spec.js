@@ -138,6 +138,15 @@ test('official Advanced Application example demonstrates Storage, Events and Mes
 	await expect(events).toContainText('advanced:telemetry: telemetry event');
 	await expect(events).toContainText('Event count: 2');
 
+	await events.getByRole('button', {name: 'Run A/B/B/B'}).click();
+	await expect(events).toContainText('Accepted: B');
+	await events.getByRole('button', {name: 'Run A/B/A/A/B'}).click();
+	await expect(events).toContainText('Filtered: A');
+	await events.getByRole('button', {name: 'Hold true for 300 ms'}).click();
+	await expect(events).toContainText('Gate: passed');
+	await events.getByRole('button', {name: 'Cancel after 100 ms'}).click();
+	await expect(events).toContainText('Gate: cancelled');
+
 	await messaging.getByRole('button', {name: 'Send to custom ID'}).click();
 	await expect(messaging).toContainText('received: direct message');
 	await messaging.getByRole('button', {name: 'Send foo'}).click();

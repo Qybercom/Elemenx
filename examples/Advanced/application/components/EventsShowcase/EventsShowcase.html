@@ -4,8 +4,22 @@
 	<p>Received: <b>{{EventValue}}</b></p><p>Event count: <b>{{EventCount}}</b></p>
 	<button class="button primary" (click)="EmitEvent">Emit local event</button>
 	<button class="button" (click)="EmitTelemetry">Emit telemetry event</button>
-	<button class="button" (click)="EmitDebouncedSignal">Run Debouncer A/B/B/B</button>
-	<p>Debouncer threshold check: emit the same value 3 times. The first 2 samples stay silent; the 3rd confirms the value; further repeats stay silent.</p>
+
+	<h3>Debouncer</h3>
+	<p>Accepts a new value only after 3 consecutive equal samples. Further repeats of the accepted value stay silent.</p>
+	<p>Accepted: <b>{{DebouncerValue}}</b></p>
 	<input class="input" type="text" [(value)]="DebouncerSample">
 	<button class="button" (click)="EmitDebouncerSample">Emit one Debouncer sample</button>
+	<button class="button" (click)="EmitDebouncedSignal">Run A/B/B/B</button>
+
+	<h3>Filter</h3>
+	<p>Collects a 5-sample window and emits the dominant value from that window.</p>
+	<p>Filtered: <b>{{FilterValue}}</b></p>
+	<button class="button" (click)="RunFilter">Run A/B/A/A/B</button>
+
+	<h3>Gate</h3>
+	<p>Passes only when a true condition remains asserted for 300 ms. A false sample closes the gate and cancels the pending pass.</p>
+	<p>Gate: <b>{{GateValue}}</b></p>
+	<button class="button" (click)="RunGatePass">Hold true for 300 ms</button>
+	<button class="button" (click)="RunGateCancel">Cancel after 100 ms</button>
 </div>
