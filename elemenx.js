@@ -12707,11 +12707,91 @@
 			return api;
 		}
 		
+		function WindowBridge (target, options, owner) {
+			var origin;
+			var handlers = [];
+			var bridge;
+			var handle;
+			var destroyed = false;
+			
+			if (!Runtime.HasDOM)
+				throw new Error('Elemenx Messaging Window is only available in a DOM runtime');
+			if (!target || typeof target.postMessage !== 'function')
+				throw new Error('Elemenx Messaging Window expects a Window endpoint');
+			
+			options = options || {};
+			origin = options.Origin;
+			if (origin === undefined || origin === null || origin === '') {
+				origin = global.location && global.location.origin ? global.location.origin : '*';
+				if (origin === 'null') origin = '*';
+			}
+			origin = String(origin);
+			
+			var endpoint = {
+				postMessage: function (packet, transfer) {
+					if (transfer && transfer.length) target.postMessage(packet, origin, transfer);
+					else target.postMessage(packet, origin);
+				},
+				addEventListener: function (event, callback) {
+					var wrapper;
+					if (event !== 'message') return;
+					wrapper = function (messageEvent) {
+						if (messageEvent.source !== target) return;
+						if (origin !== '*' && messageEvent.origin !== origin) return;
+						callback(messageEvent);
+					};
+					handlers.push({Callback:callback,Wrapper:wrapper});
+					global.addEventListener('message', wrapper);
+				},
+				removeEventListener: function (event, callback) {
+					var i = handlers.length - 1;
+					if (event !== 'message') return;
+					while (i >= 0) {
+						if (handlers[i].Callback === callback) {
+							global.removeEventListener('message', handlers[i].Wrapper);
+							handlers.splice(i, 1);
+						}
+						i--;
+					}
+				}
+			};
+			
+			bridge = messagingFabric.Bridge(endpoint, {Transferable:options.Transferable !== false});
+			
+			handle = {
+				Target: function () { return target; },
+				Origin: function () { return origin; },
+				Destroy: function () {
+					var list;
+					var index;
+					if (destroyed) return;
+					destroyed = true;
+					bridge.Destroy();
+					bridge = null;
+					if (owner) {
+						list = owners.get(owner);
+						if (list) {
+							index = list.indexOf(handle);
+							if (index !== -1) list.splice(index, 1);
+						}
+					}
+				}
+			};
+			
+			if (owner) {
+				if (!owners.has(owner)) owners.set(owner, []);
+				owners.get(owner).push(handle);
+			}
+			
+			return handle;
+		}
+		
 		function Messaging (context) {
 			return MessagingSocket(context, null);
 		}
 		
 		Messaging.Context = Context;
+		Messaging.Window = function (target, options) { return WindowBridge(target, options, null); };
 		Elemenx.Messaging = Messaging;
 		
 		Runtime.SetMessagingEntity = function (owner, name, index) {
@@ -12722,12 +12802,18 @@
 		};
 		
 		Runtime.MessagingFor = function (owner) {
-			return function (context) {
+			var accessor = function (context) {
 				if (destroyedOwners.has(owner))
 					throw new Error('Elemenx Messaging owner is destroyed');
 				
 				return MessagingSocket(context, owner);
 			};
+			accessor.Window = function (target, options) {
+				if (destroyedOwners.has(owner))
+					throw new Error('Elemenx Messaging owner is destroyed');
+				return WindowBridge(target, options, owner);
+			};
+			return accessor;
 		};
 		
 		Runtime.InitializeMessagingOwner = function (owner, definition) {

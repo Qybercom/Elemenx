@@ -174,4 +174,58 @@ describe('Regression: Messaging', function () {
 		receiver.Destroy();
 	});
 
+
+	describe('Window bridge', function () {
+		it('posts Messaging packets to a Window with the configured target origin', function () {
+			var channel=unique('window-outbound'), calls=[];
+			var target={postMessage:function () { calls.push(Array.prototype.slice.call(arguments)); }};
+			var bridge=Elemenx.Messaging.Window(target,{Origin:'https://frame.example'});
+			var sender=Elemenx.Messaging();
+			sender.Send(channel,{Value:17});
+			expect(calls.length).toBe(1);
+			expect(calls[0][0].ElemenxMessaging).toBe(true);
+			expect(calls[0][0].Channel).toBe(channel);
+			expect(calls[0][0].Data).toEqual({Value:17});
+			expect(calls[0][1]).toBe('https://frame.example');
+			sender.Destroy();
+			bridge.Destroy();
+		});
+
+		it('accepts only messages from the attached Window and configured origin', function () {
+			var channel=unique('window-inbound'), received=[];
+			var frame=document.createElement('iframe'), other=document.createElement('iframe');
+			document.body.appendChild(frame);
+			document.body.appendChild(other);
+			var target=frame.contentWindow;
+			var bridge=Elemenx.Messaging.Window(target,{Origin:window.location.origin});
+			var receiver=Elemenx.Messaging();
+			receiver.On(channel,function (message) { received.push(message.Data); });
+			function packet (id, data) {
+				return {ElemenxMessaging:true,ElemenxMessagingProtocol:1,MessageID:id,Source:'frame',Channel:channel,Data:data};
+			}
+			window.dispatchEvent(new MessageEvent('message',{data:packet(unique('wrong-source'),'source'),origin:window.location.origin,source:other.contentWindow}));
+			window.dispatchEvent(new MessageEvent('message',{data:packet(unique('wrong-origin'),'origin'),origin:'https://wrong.example',source:target}));
+			window.dispatchEvent(new MessageEvent('message',{data:packet(unique('accepted'),'accepted'),origin:window.location.origin,source:target}));
+			expect(received).toEqual(['accepted']);
+			bridge.Destroy();
+			window.dispatchEvent(new MessageEvent('message',{data:packet(unique('destroyed'),'destroyed'),origin:window.location.origin,source:target}));
+			expect(received).toEqual(['accepted']);
+			receiver.Destroy();
+			frame.remove();
+			other.remove();
+		});
+
+		it('owner-aware $Messaging.Window is destroyed with its Component', function () {
+			var name=unique('WindowBridgeOwner'), target={postMessage:function () {}};
+			Elemenx.Component(name,{$Template:'<div></div>'});
+			var component=Elemenx.Component(name)();
+			var messaging=component.$Messaging;
+			var bridge=messaging.Window(target,{Origin:'*'});
+			expect(bridge.Target()).toBe(target);
+			expect(bridge.Origin()).toBe('*');
+			component.$Destroy();
+			expect(function () { messaging.Window(target,{Origin:'*'}); }).toThrow();
+			bridge.Destroy();
+		});
+	});
 });
