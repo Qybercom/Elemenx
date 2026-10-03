@@ -262,6 +262,7 @@ Elemenx.Network.Context('AdvancedNetworkAPI', {
 
 Elemenx.Component('NetworkShowcase', {
 	$TemplateURL: 'NetworkShowcase.html',
+	$Style: '.network-universal-transfer-showcase .universal-metrics{display:block;min-height:9.6em;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);white-space:pre-line;overflow-wrap:normal;font-size:11px;line-height:1.45;font-variant-numeric:tabular-nums}.network-universal-transfer-showcase .universal-result{display:block;min-height:4.3em}.network-universal-transfer-showcase .meta-item{min-width:0}',
 
 	Status: 'Idle',
 	Response: 'No request yet.',
@@ -314,6 +315,7 @@ Elemenx.Component('NetworkShowcase', {
 	UniversalWebRTC: 'Idle',
 	UniversalWebRTCMetrics: 'TX 0 bytes · RX 0 bytes · ↑ 0 B/s · ↓ 0 B/s',
 	UniversalResources: null,
+	UniversalMetricInstances: null,
 
 	RTCInitiator: null,
 	RTCResponder: null,
@@ -881,16 +883,27 @@ Elemenx.Component('NetworkShowcase', {
 		var a=data.Files&&data.Files.A?data.Files.A:null;
 		var b=data.Files&&data.Files.B?data.Files.B:null;
 		var size=(a&&a.size?a.size:0)+(b&&b.size?b.size:0);
+		var metrics=this.UniversalMetricInstances&&this.UniversalMetricInstances[name]?this.UniversalMetricInstances[name]:null;
+		if (metrics&&metrics.Active()) metrics.End();
 		this[name]='Complete · '+data.Title+' · '+(a&&a.name?a.name:'File A')+' + '+(b&&b.name?b.name:'File B')+' · '+size+' bytes';
 	},
 
 	_UniversalMetricText: function (snapshot) {
-		return 'TX '+this._FormatMetricBytes(snapshot.TX.Bytes)+' · RX '+this._FormatMetricBytes(snapshot.RX.Bytes)+' · ↑ '+this._FormatMetricSpeed(snapshot.TX.Speed)+' · ↓ '+this._FormatMetricSpeed(snapshot.RX.Speed);
+		return 'TX       '+this._FormatMetricBytes(snapshot.TX.Bytes)+'\n'+
+			'RX       '+this._FormatMetricBytes(snapshot.RX.Bytes)+'\n'+
+			'Current  ↑ '+this._FormatMetricSpeed(snapshot.TX.Speed)+' / ↓ '+this._FormatMetricSpeed(snapshot.RX.Speed)+'\n'+
+			'Average  ↑ '+this._FormatMetricSpeed(snapshot.TX.SpeedAvg)+' / ↓ '+this._FormatMetricSpeed(snapshot.RX.SpeedAvg)+'\n'+
+			'Minimum  ↑ '+this._FormatMetricSpeed(snapshot.TX.SpeedMin)+' / ↓ '+this._FormatMetricSpeed(snapshot.RX.SpeedMin)+'\n'+
+			'Maximum  ↑ '+this._FormatMetricSpeed(snapshot.TX.SpeedMax)+' / ↓ '+this._FormatMetricSpeed(snapshot.RX.SpeedMax);
 	},
 
 	_UniversalMetrics: function (name, transport) {
 		var component=this;
-		var metrics=component.$Network().Metrics({Transport:transport});
+		var metrics=component.$Network().Metrics({Transport:transport,Interval:50,Window:1000});
+		if (!component.UniversalMetricInstances) component.UniversalMetricInstances={};
+		if (component.UniversalMetricInstances[name]) component.UniversalMetricInstances[name].Destroy();
+		component.UniversalMetricInstances[name]=metrics;
+		metrics.Begin();
 		component[name+'Metrics']=component._UniversalMetricText(metrics.Snapshot());
 		metrics.On('Metrics.Update',function (event) {
 			component[name+'Metrics']=component._UniversalMetricText(event.Data);

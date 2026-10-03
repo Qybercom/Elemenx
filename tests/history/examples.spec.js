@@ -198,7 +198,7 @@ test('official Advanced example moves the same two-file structured object throug
 	while (i < results.length) {
 		await expect(page.locator('.universal-' + results[i])).toContainText('Complete · Elemenx structured media object', {timeout: 20000});
 		await expect(page.locator('.universal-' + results[i])).toContainText('alpha.bin + beta.bin · 163840 bytes');
-		await expect(page.locator('.universal-' + results[i] + '-metrics')).toContainText(/(?:TX|RX) [1-9][0-9.]* (?:bytes|KiB|MiB)/, {timeout: 20000});
+		await expect(page.locator('.universal-' + results[i] + '-metrics')).toContainText(/(?:TX|RX)\s+[1-9][0-9.]*\s+(?:bytes|KiB|MiB)/, {timeout: 20000});
 		i++;
 	}
 

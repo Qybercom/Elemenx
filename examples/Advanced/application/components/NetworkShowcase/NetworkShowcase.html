@@ -133,12 +133,12 @@
 		<div class="meta-item"><span class="meta-label">File B</span><span class="meta-value"><input type="file" #UniversalFileB></span></div>
 	</div>
 	<div class="meta-grid">
-		<div class="meta-item"><span class="meta-label">XHR · upload</span><span class="meta-value universal-xhr">{{UniversalXHR}}</span><span class="meta-value universal-xhr-metrics">{{UniversalXHRMetrics}}</span></div>
-		<div class="meta-item"><span class="meta-label">WebSocket · Quark + Base64</span><span class="meta-value universal-websocket">{{UniversalWebSocket}}</span><span class="meta-value universal-websocket-metrics">{{UniversalWebSocketMetrics}}</span></div>
-		<div class="meta-item"><span class="meta-label">SSE · server → client</span><span class="meta-value universal-sse">{{UniversalSSE}}</span><span class="meta-value universal-sse-metrics">{{UniversalSSEMetrics}}</span></div>
-		<div class="meta-item"><span class="meta-label">LongPolling · server → client</span><span class="meta-value universal-longpolling">{{UniversalLongPolling}}</span><span class="meta-value universal-longpolling-metrics">{{UniversalLongPollingMetrics}}</span></div>
-		<div class="meta-item"><span class="meta-label">Stream · server → client</span><span class="meta-value universal-stream">{{UniversalStream}}</span><span class="meta-value universal-stream-metrics">{{UniversalStreamMetrics}}</span></div>
-		<div class="meta-item"><span class="meta-label">WebRTC · native binary duplex</span><span class="meta-value universal-webrtc">{{UniversalWebRTC}}</span><span class="meta-value universal-webrtc-metrics">{{UniversalWebRTCMetrics}}</span></div>
+		<div class="meta-item"><span class="meta-label">XHR · upload</span><span class="meta-value universal-result universal-xhr">{{UniversalXHR}}</span><span class="meta-value universal-metrics universal-xhr-metrics">{{UniversalXHRMetrics}}</span></div>
+		<div class="meta-item"><span class="meta-label">WebSocket · Quark + Base64</span><span class="meta-value universal-result universal-websocket">{{UniversalWebSocket}}</span><span class="meta-value universal-metrics universal-websocket-metrics">{{UniversalWebSocketMetrics}}</span></div>
+		<div class="meta-item"><span class="meta-label">SSE · server → client</span><span class="meta-value universal-result universal-sse">{{UniversalSSE}}</span><span class="meta-value universal-metrics universal-sse-metrics">{{UniversalSSEMetrics}}</span></div>
+		<div class="meta-item"><span class="meta-label">LongPolling · server → client</span><span class="meta-value universal-result universal-longpolling">{{UniversalLongPolling}}</span><span class="meta-value universal-metrics universal-longpolling-metrics">{{UniversalLongPollingMetrics}}</span></div>
+		<div class="meta-item"><span class="meta-label">Stream · server → client</span><span class="meta-value universal-result universal-stream">{{UniversalStream}}</span><span class="meta-value universal-metrics universal-stream-metrics">{{UniversalStreamMetrics}}</span></div>
+		<div class="meta-item"><span class="meta-label">WebRTC · native binary duplex</span><span class="meta-value universal-result universal-webrtc">{{UniversalWebRTC}}</span><span class="meta-value universal-metrics universal-webrtc-metrics">{{UniversalWebRTCMetrics}}</span></div>
 	</div>
 	<p><code>Transfer({ Transport: transport, Data: object }).Send()</code> for outbound transports; <code>TransferReceiver({ Transport: transport })</code> for receive-only transports. Metrics in every row observes that row's actual transport in real time.</p>
 	<button class="button universal-all" (click)="RunUniversalAll">Run all transports</button>
