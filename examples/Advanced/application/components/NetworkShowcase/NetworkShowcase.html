@@ -126,17 +126,21 @@
 		<div class="meta-item"><span class="meta-label">Monitoring</span><span class="meta-value metrics-elapsed">{{MetricsElapsed}}</span></div>
 	</div>
 </section><section class="card network-universal-transfer-showcase">
-	<h2 class="card-title">Universal Transfer · one business object, every transport</h2>
-	<p>The same nested object contains ordinary business fields plus a 2 MiB video Blob. Transfer/TransferReceiver adapt it to every Networking transport; application code never handles chunks, Base64, ACKs or reconstruction.</p>
+	<h2 class="card-title">Universal Transfer · two files, every transport</h2>
+	<p>The old structured-transfer experiment is restored at the high level: choose both files yourself. They stay inside the same arbitrary nested business object and the same object is moved through every Networking transport.</p>
 	<div class="meta-grid">
-		<div class="meta-item"><span class="meta-label">XHR · upload</span><span class="meta-value universal-xhr">{{UniversalXHR}}</span></div>
-		<div class="meta-item"><span class="meta-label">WebSocket · duplex</span><span class="meta-value universal-websocket">{{UniversalWebSocket}}</span></div>
-		<div class="meta-item"><span class="meta-label">SSE · server → client</span><span class="meta-value universal-sse">{{UniversalSSE}}</span></div>
-		<div class="meta-item"><span class="meta-label">LongPolling · server → client</span><span class="meta-value universal-longpolling">{{UniversalLongPolling}}</span></div>
-		<div class="meta-item"><span class="meta-label">Stream · server → client</span><span class="meta-value universal-stream">{{UniversalStream}}</span></div>
-		<div class="meta-item"><span class="meta-label">WebRTC · native binary duplex</span><span class="meta-value universal-webrtc">{{UniversalWebRTC}}</span></div>
+		<div class="meta-item"><span class="meta-label">File A</span><span class="meta-value"><input type="file" #UniversalFileA></span></div>
+		<div class="meta-item"><span class="meta-label">File B</span><span class="meta-value"><input type="file" #UniversalFileB></span></div>
 	</div>
-	<p><code>Transfer({ Transport: transport, Data: object }).Send()</code> for outbound transports; <code>TransferReceiver({ Transport: transport })</code> for receive-only transports. The business object is identical in every row.</p>
+	<div class="meta-grid">
+		<div class="meta-item"><span class="meta-label">XHR · upload</span><span class="meta-value universal-xhr">{{UniversalXHR}}</span><span class="meta-value universal-xhr-metrics">{{UniversalXHRMetrics}}</span></div>
+		<div class="meta-item"><span class="meta-label">WebSocket · Quark + Base64</span><span class="meta-value universal-websocket">{{UniversalWebSocket}}</span><span class="meta-value universal-websocket-metrics">{{UniversalWebSocketMetrics}}</span></div>
+		<div class="meta-item"><span class="meta-label">SSE · server → client</span><span class="meta-value universal-sse">{{UniversalSSE}}</span><span class="meta-value universal-sse-metrics">{{UniversalSSEMetrics}}</span></div>
+		<div class="meta-item"><span class="meta-label">LongPolling · server → client</span><span class="meta-value universal-longpolling">{{UniversalLongPolling}}</span><span class="meta-value universal-longpolling-metrics">{{UniversalLongPollingMetrics}}</span></div>
+		<div class="meta-item"><span class="meta-label">Stream · server → client</span><span class="meta-value universal-stream">{{UniversalStream}}</span><span class="meta-value universal-stream-metrics">{{UniversalStreamMetrics}}</span></div>
+		<div class="meta-item"><span class="meta-label">WebRTC · native binary duplex</span><span class="meta-value universal-webrtc">{{UniversalWebRTC}}</span><span class="meta-value universal-webrtc-metrics">{{UniversalWebRTCMetrics}}</span></div>
+	</div>
+	<p><code>Transfer({ Transport: transport, Data: object }).Send()</code> for outbound transports; <code>TransferReceiver({ Transport: transport })</code> for receive-only transports. Metrics in every row observes that row's actual transport in real time.</p>
 	<button class="button universal-all" (click)="RunUniversalAll">Run all transports</button>
 	<button class="button" (click)="RunUniversalXHR">XHR</button>
 	<button class="button" (click)="RunUniversalWebSocket">WebSocket</button>

@@ -302,11 +302,17 @@ Elemenx.Component('NetworkShowcase', {
 	_StreamRunning: false,
 
 	UniversalXHR: 'Idle',
+	UniversalXHRMetrics: 'TX 0 bytes · RX 0 bytes · ↑ 0 B/s · ↓ 0 B/s',
 	UniversalWebSocket: 'Idle',
+	UniversalWebSocketMetrics: 'TX 0 bytes · RX 0 bytes · ↑ 0 B/s · ↓ 0 B/s',
 	UniversalSSE: 'Idle',
+	UniversalSSEMetrics: 'TX 0 bytes · RX 0 bytes · ↑ 0 B/s · ↓ 0 B/s',
 	UniversalLongPolling: 'Idle',
+	UniversalLongPollingMetrics: 'TX 0 bytes · RX 0 bytes · ↑ 0 B/s · ↓ 0 B/s',
 	UniversalStream: 'Idle',
+	UniversalStreamMetrics: 'TX 0 bytes · RX 0 bytes · ↑ 0 B/s · ↓ 0 B/s',
 	UniversalWebRTC: 'Idle',
+	UniversalWebRTCMetrics: 'TX 0 bytes · RX 0 bytes · ↑ 0 B/s · ↓ 0 B/s',
 	UniversalResources: null,
 
 	RTCInitiator: null,
@@ -838,23 +844,60 @@ Elemenx.Component('NetworkShowcase', {
 	},
 
 
+	_UniversalFiles: function () {
+		var fileA=this.$Ref('UniversalFileA');
+		var fileB=this.$Ref('UniversalFileB');
+		fileA=fileA&&fileA.files?fileA.files[0]:null;
+		fileB=fileB&&fileB.files?fileB.files[0]:null;
+		if (!fileA||!fileB) return null;
+		return {FileA:fileA,FileB:fileB};
+	},
+
 	_BuildUniversalPayload: function () {
-		var bytes=new Uint8Array(2*1024*1024);
-		var i=0;
-		while (i<bytes.length) { bytes[i]=i%251; i++; }
+		var files=this._UniversalFiles();
+		if (!files) return null;
 		return {
 			ID:42,
 			Title:'Elemenx structured media object',
-			Description:'Business object transferred without manual chunk handling',
+			Description:'Two user-selected files inside one arbitrary structured object',
 			Published:true,
 			Tags:['advanced','network','media'],
 			Author:{ID:7,Name:'Elemenx Advanced'},
-			Media:new Blob([bytes],{type:'video/mp4'})
+			Files:{
+				A:files.FileA,
+				B:files.FileB
+			}
 		};
 	},
 
+	_UniversalRequirePayload: function (name) {
+		var payload=this._BuildUniversalPayload();
+		if (payload) return payload;
+		this[name]='Choose both files first';
+		return null;
+	},
+
 	_UniversalResult: function (name, data) {
-		this[name]='Complete · '+data.Title+' · '+data.Author.Name+' · '+data.Media.size+' bytes';
+		var a=data.Files&&data.Files.A?data.Files.A:null;
+		var b=data.Files&&data.Files.B?data.Files.B:null;
+		var size=(a&&a.size?a.size:0)+(b&&b.size?b.size:0);
+		this[name]='Complete · '+data.Title+' · '+(a&&a.name?a.name:'File A')+' + '+(b&&b.name?b.name:'File B')+' · '+size+' bytes';
+	},
+
+	_UniversalMetricText: function (snapshot) {
+		return 'TX '+this._FormatMetricBytes(snapshot.TX.Bytes)+' · RX '+this._FormatMetricBytes(snapshot.RX.Bytes)+' · ↑ '+this._FormatMetricSpeed(snapshot.TX.Speed)+' · ↓ '+this._FormatMetricSpeed(snapshot.RX.Speed);
+	},
+
+	_UniversalMetrics: function (name, transport) {
+		var component=this;
+		var metrics=component.$Network().Metrics({Transport:transport});
+		component[name+'Metrics']=component._UniversalMetricText(metrics.Snapshot());
+		metrics.On('Metrics.Update',function (event) {
+			component[name+'Metrics']=component._UniversalMetricText(event.Data);
+		});
+		if (!component.UniversalResources) component.UniversalResources=[];
+		component.UniversalResources.push(metrics);
+		return metrics;
 	},
 
 	_UniversalReceive: function (name, transport, close) {
@@ -869,14 +912,39 @@ Elemenx.Component('NetworkShowcase', {
 		receiver.On('Transfer.Error',function (event) { component[name]='Error · '+(event.Data.Error?event.Data.Error.message:'receive failed'); });
 	},
 
+	_StageUniversalPayload: function (name, callback) {
+		var component=this;
+		var payload=component._UniversalRequirePayload(name);
+		var transport;
+		var transfer;
+		if (!payload) return;
+		transport=component.$Network().XHR({Method:'POST',URL:'/elemenx-network-transfer-stage',ResponseType:'json'});
+		transfer=component.$Network().Transfer({Transport:transport,Data:payload});
+		if (!component.UniversalResources) component.UniversalResources=[];
+		component.UniversalResources.push(transfer);
+		transfer.On('Transfer.Complete',function () {
+			transfer.Destroy();
+			callback();
+		});
+		transfer.On('Transfer.Error',function (event) {
+			component[name]='Error · '+(event.Data.Error?event.Data.Error.message:'staging failed');
+		});
+		transfer.Send();
+	},
+
 	RunUniversalXHR: function () {
 		var component=this;
-		var transport=component.$Network().XHR({Method:'POST',URL:'/elemenx-network-transfer-xhr',ResponseType:'json'});
-		var transfer=component.$Network().Transfer({Transport:transport,Data:component._BuildUniversalPayload()});
+		var payload=component._UniversalRequirePayload('UniversalXHR');
+		var transport;
+		var transfer;
+		if (!payload) return;
+		transport=component.$Network().XHR({Method:'POST',URL:'/elemenx-network-transfer-xhr',ResponseType:'json'});
+		component._UniversalMetrics('UniversalXHR',transport);
+		transfer=component.$Network().Transfer({Transport:transport,Data:payload});
 		component.UniversalXHR='Sending...';
 		transfer.On('Transfer.Complete',function (event) {
 			var response=event.Data.Response&&event.Data.Response.Response;
-			if (response&&response.ok&&response.data) component._UniversalResult('UniversalXHR',{Title:response.data.Title,Author:response.data.Author,Media:{size:response.data.Media.size}});
+			if (response&&response.ok&&response.data) component._UniversalResult('UniversalXHR',response.data);
 			else component.UniversalXHR='Error · invalid server reconstruction';
 			transfer.Destroy();
 		});
@@ -894,6 +962,8 @@ Elemenx.Component('NetworkShowcase', {
 		var receiverReady=false;
 		var registerSent=false;
 		var started=false;
+		var payload=component._UniversalRequirePayload('UniversalWebSocket');
+		if (!payload) return;
 
 		function start () {
 			var transfer;
@@ -906,7 +976,7 @@ Elemenx.Component('NetworkShowcase', {
 			});
 			transfer=component.$Network().Transfer({
 				Transport:sender,
-				Data:component._BuildUniversalPayload(),
+				Data:payload,
 				ChunkSize:128*1024,
 				WindowSize:8,
 				Retry:1500,
@@ -921,6 +991,7 @@ Elemenx.Component('NetworkShowcase', {
 		if (!component.UniversalResources) component.UniversalResources=[];
 		component.UniversalResources.push(sender);
 		component.UniversalResources.push(receiver);
+		component._UniversalMetrics('UniversalWebSocket',sender);
 		sender.On('Transport.Open',function () { senderOpen=true; start(); });
 		receiver.On('Transport.Open',function () {
 			receiverOpen=true;
@@ -941,41 +1012,57 @@ Elemenx.Component('NetworkShowcase', {
 	},
 
 	RunUniversalSSE: function () {
-		var transport=this.$Network().SSE({URL:'/elemenx-network-transfer-sse',Protocol:'AdvancedTransferJSON'});
-		this.UniversalSSE='Receiving...';
-		this._UniversalReceive('UniversalSSE',transport,false);
-		if (!this.UniversalResources) this.UniversalResources=[];
-		this.UniversalResources.push(transport);
-		transport.Connect();
+		var component=this;
+		component.UniversalSSE='Preparing selected files...';
+		component._StageUniversalPayload('UniversalSSE',function () {
+			var transport=component.$Network().SSE({URL:'/elemenx-network-transfer-sse',Protocol:'AdvancedTransferJSON'});
+			component.UniversalSSE='Receiving...';
+			component._UniversalMetrics('UniversalSSE',transport);
+			component._UniversalReceive('UniversalSSE',transport,false);
+			component.UniversalResources.push(transport);
+			transport.Connect();
+		});
 	},
 
 	RunUniversalLongPolling: function () {
-		var transport=this.$Network().LongPolling({URL:'/elemenx-network-transfer-longpolling',Protocol:'AdvancedTransferJSON',Retry:1});
-		this.UniversalLongPolling='Receiving...';
-		this._UniversalReceive('UniversalLongPolling',transport,false);
-		transport.On('Protocol.Transfer',function (event) {
-			if (event.Data&&event.Data.Action==='End') transport.Close();
+		var component=this;
+		component.UniversalLongPolling='Preparing selected files...';
+		component._StageUniversalPayload('UniversalLongPolling',function () {
+			var transport=component.$Network().LongPolling({URL:'/elemenx-network-transfer-longpolling',Protocol:'AdvancedTransferJSON',Retry:1});
+			component.UniversalLongPolling='Receiving...';
+			component._UniversalMetrics('UniversalLongPolling',transport);
+			component._UniversalReceive('UniversalLongPolling',transport,false);
+			transport.On('Protocol.Transfer',function (event) {
+				if (event.Data&&event.Data.Action==='End') transport.Close();
+			});
+			component.UniversalResources.push(transport);
+			transport.Connect();
 		});
-		if (!this.UniversalResources) this.UniversalResources=[];
-		this.UniversalResources.push(transport);
-		transport.Connect();
 	},
 
 	RunUniversalStream: function () {
-		var transport=this.$Network().Stream({URL:'/elemenx-network-transfer-stream',Protocol:'AdvancedTransferJSON'});
-		this.UniversalStream='Receiving...';
-		this._UniversalReceive('UniversalStream',transport,false);
-		if (!this.UniversalResources) this.UniversalResources=[];
-		this.UniversalResources.push(transport);
-		transport.Connect();
+		var component=this;
+		component.UniversalStream='Preparing selected files...';
+		component._StageUniversalPayload('UniversalStream',function () {
+			var transport=component.$Network().Stream({URL:'/elemenx-network-transfer-stream',Protocol:'AdvancedTransferJSON'});
+			component.UniversalStream='Receiving...';
+			component._UniversalMetrics('UniversalStream',transport);
+			component._UniversalReceive('UniversalStream',transport,false);
+			component.UniversalResources.push(transport);
+			transport.Connect();
+		});
 	},
 
 	RunUniversalWebRTC: function () {
 		var component=this;
+		var payload=component._UniversalRequirePayload('UniversalWebRTC');
+		if (!payload) return;
 		function send () {
+			var transfer;
 			if (!component.RTCInitiator||!component.RTCResponder||!component.RTCInitiator.Writable()||!component.RTCResponder.Writable()) { setTimeout(send,25); return; }
+			component._UniversalMetrics('UniversalWebRTC',component.RTCInitiator);
 			component._UniversalReceive('UniversalWebRTC',component.RTCResponder);
-			var transfer=component.$Network().Transfer({Transport:component.RTCInitiator,Data:component._BuildUniversalPayload()});
+			transfer=component.$Network().Transfer({Transport:component.RTCInitiator,Data:payload});
 			if (!component.UniversalResources) component.UniversalResources=[];
 			component.UniversalResources.push(transfer);
 			transfer.Send();

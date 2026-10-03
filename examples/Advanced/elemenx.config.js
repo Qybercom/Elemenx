@@ -1,7 +1,9 @@
 var transferLongPollingIndex=0;
+var transferEnvelopeCurrent=null;
 var transferWebSocketReceivers=[];
 
 function transferEnvelope () {
+	if (transferEnvelopeCurrent) return transferEnvelopeCurrent;
 	var size=2*1024*1024;
 	var media=Buffer.alloc(size);
 	var i=0;
@@ -33,11 +35,20 @@ function transferPackets () {
 function inspectEnvelope (buffer) {
 	if (!buffer || buffer.length<8 || buffer.readUInt32BE(0)!==0x45585354) return null;
 	var manifestLength=buffer.readUInt32BE(4);
+	var manifest;
+	var value;
+	var parts;
+	var files={};
+	var i=0;
 	if (8+manifestLength>buffer.length) return null;
-	var manifest=JSON.parse(buffer.subarray(8,8+manifestLength).toString('utf8'));
-	var value=manifest.Value || {};
-	var media=manifest.Parts && manifest.Parts[0] ? manifest.Parts[0] : {};
-	return {ID:value.ID,Title:value.Title,Author:value.Author,Tags:value.Tags,Media:{size:media.Size,type:media.Mime}};
+	manifest=JSON.parse(buffer.subarray(8,8+manifestLength).toString('utf8'));
+	value=manifest.Value || {};
+	parts=manifest.Parts || [];
+	while (i<parts.length) {
+		files[i===0?'A':'B']={name:parts[i].Name,size:parts[i].Size,type:parts[i].Mime};
+		i++;
+	}
+	return {ID:value.ID,Title:value.Title,Author:value.Author,Tags:value.Tags,Files:files};
 }
 
 module.exports={
@@ -51,11 +62,27 @@ module.exports={
 		Compression:true,
 		CompressionThreshold:1024,
 		Request:function (request,response,pathname) {
+			if (pathname === '/elemenx-network-transfer-stage') {
+				var staged=[];
+				request.on('data',function (chunk) { staged.push(chunk); });
+				request.on('end',function () {
+					var buffer=Buffer.concat(staged);
+					var data=inspectEnvelope(buffer);
+					if (data) transferEnvelopeCurrent=buffer;
+					transferLongPollingIndex=0;
+					response.writeHead(data?200:400,{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-cache'});
+					response.end(JSON.stringify({ok:!!data}));
+				});
+				return true;
+			}
 			if (pathname === '/elemenx-network-transfer-xhr') {
 				var body=[];
 				request.on('data',function (chunk) { body.push(chunk); });
 				request.on('end',function () {
-					var data=inspectEnvelope(Buffer.concat(body));
+					var buffer=Buffer.concat(body);
+					var data=inspectEnvelope(buffer);
+					if (data) transferEnvelopeCurrent=buffer;
+					transferLongPollingIndex=0;
 					response.writeHead(data?200:400,{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-cache'});
 					response.end(JSON.stringify({ok:!!data,data:data}));
 				});

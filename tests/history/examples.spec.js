@@ -174,40 +174,33 @@ test('official Advanced example completes a real Transfer / TransferReceiver rou
 
 	expect(errors).toEqual([]);
 });
-test('official Advanced example moves the same structured media object through every Network transport', async ({ page }) => {
+test('official Advanced example moves the same two-file structured object through every Network transport with live Metrics', async ({ page }) => {
 	var errors = captureErrors(page);
-	var quarkTransferPackets = [];
-
-	page.on('websocket', function (socket) {
-		socket.on('framesent', function (event) {
-			var wire;
-			if (typeof event.payload !== 'string') return;
-			try { wire = JSON.parse(event.payload); }
-			catch (error) { return; }
-			if (wire && wire.url === '/api/media' && wire.data && wire.data.type === 'Transfer') quarkTransferPackets.push(wire);
-		});
-	});
+	var fileA = Buffer.alloc(64 * 1024, 0x41);
+	var fileB = Buffer.alloc(96 * 1024, 0x42);
+	var results = ['xhr', 'websocket', 'sse', 'longpolling', 'stream', 'webrtc'];
+	var i = 0;
 
 	await page.goto('http://127.0.0.1:4274/');
-	await expectBootstrapVisible(page.getByRole('heading', {name: 'Universal Transfer · one business object, every transport'}), errors);
+	await expectBootstrapVisible(page.getByRole('heading', {name: 'Universal Transfer · two files, every transport'}), errors);
+	await page.locator('.network-universal-transfer-showcase input[type=file]').nth(0).setInputFiles({
+		name: 'alpha.bin',
+		mimeType: 'application/octet-stream',
+		buffer: fileA
+	});
+	await page.locator('.network-universal-transfer-showcase input[type=file]').nth(1).setInputFiles({
+		name: 'beta.bin',
+		mimeType: 'application/octet-stream',
+		buffer: fileB
+	});
 	await page.getByRole('button', {name: 'Run all transports'}).click();
-	await expect(page.locator('.universal-xhr')).toContainText('Complete · Elemenx structured media object', {timeout: 20000});
-	await expect(page.locator('.universal-websocket')).toContainText('Complete · Elemenx structured media object', {timeout: 20000});
-	await expect(page.locator('.universal-sse')).toContainText('Complete · Elemenx structured media object', {timeout: 20000});
-	await expect(page.locator('.universal-longpolling')).toContainText('Complete · Elemenx structured media object', {timeout: 20000});
-	await expect(page.locator('.universal-stream')).toContainText('Complete · Elemenx structured media object', {timeout: 20000});
-	await expect(page.locator('.universal-webrtc')).toContainText('Complete · Elemenx structured media object', {timeout: 20000});
-	await expect(page.locator('.universal-xhr')).toContainText('2097152 bytes');
-	await expect(page.locator('.universal-websocket')).toContainText('2097152 bytes');
-	await expect(page.locator('.universal-sse')).toContainText('2097152 bytes');
-	await expect(page.locator('.universal-longpolling')).toContainText('2097152 bytes');
-	await expect(page.locator('.universal-stream')).toContainText('2097152 bytes');
-	await expect(page.locator('.universal-webrtc')).toContainText('2097152 bytes');
 
-	expect(quarkTransferPackets.length).toBeGreaterThan(2);
-	expect(quarkTransferPackets.every(function (wire) { return wire.url === '/api/media' && wire.data.type === 'Transfer' && wire.data.correlationID; })).toBe(true);
-	expect(quarkTransferPackets.some(function (wire) { return wire.data.action === 'Chunk' && wire.data.encoding === 'Base64' && typeof wire.data.data === 'string' && wire.data.data.length > 0; })).toBe(true);
-	expect(quarkTransferPackets.some(function (wire) { return wire.data.action === 'End'; })).toBe(true);
+	while (i < results.length) {
+		await expect(page.locator('.universal-' + results[i])).toContainText('Complete · Elemenx structured media object', {timeout: 20000});
+		await expect(page.locator('.universal-' + results[i])).toContainText('alpha.bin + beta.bin · 163840 bytes');
+		await expect(page.locator('.universal-' + results[i] + '-metrics')).toContainText(/(?:TX|RX) [1-9][0-9.]* (?:bytes|KiB|MiB)/, {timeout: 20000});
+		i++;
+	}
 
 	expect(errors).toEqual([]);
 });
