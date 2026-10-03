@@ -9,6 +9,21 @@ module.exports={
 		Compression:true,
 		CompressionThreshold:1024,
 		Request:function (request,response,pathname) {
+			if (pathname === '/elemenx-network-stream') {
+				response.writeHead(200,{
+					'Content-Type':'application/x-ndjson; charset=utf-8',
+					'Cache-Control':'no-cache, no-transform',
+					'Connection':'keep-alive'
+				});
+				var sequence=0;
+				var timer=setInterval(function () {
+					sequence++;
+					response.write(JSON.stringify({sequence:sequence,message:'Elemenx Stream packet #' + sequence}) + '\n');
+					if (sequence >= 3) { clearInterval(timer); timer=null; response.end(); }
+				},250);
+				request.on('close',function () { if (timer) { clearInterval(timer); timer=null; } });
+				return true;
+			}
 			if (pathname === '/elemenx-network-longpolling') {
 				var closed=false;
 				var timer=setTimeout(function () {

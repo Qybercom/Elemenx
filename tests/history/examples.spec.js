@@ -103,3 +103,22 @@ test('official Advanced example runs a real LongPolling request loop through Pro
 
 	expect(errors).toEqual([]);
 });
+
+test('official Advanced example consumes one real chunked HTTP Stream through Protocol', async ({ page }) => {
+	var errors = captureErrors(page);
+
+	await page.goto('http://127.0.0.1:4274/');
+	await expectBootstrapVisible(page.getByRole('heading', {name: 'Network Stream · chunked HTTP response'}), errors);
+	await page.getByRole('button', {name: 'Open HTTP stream'}).click();
+	await page.getByRole('button', {name: 'Open HTTP stream'}).click();
+	await page.getByRole('button', {name: 'Open HTTP stream'}).click();
+	await expect(page.locator('.stream-status')).toHaveText('Completed');
+	await expect(page.locator('.network-stream-showcase').getByText('3 / 3', {exact: true})).toBeVisible();
+	await expect(page.locator('.network-stream-events')).toContainText('BeforeConnect');
+	await expect(page.locator('.network-stream-events')).toContainText('Open');
+	await expect(page.locator('.network-stream-events')).toContainText('Data');
+	await expect(page.locator('.network-stream-events')).toContainText('End');
+	await expect(page.getByText('Elemenx Stream packet #3 · sequence 3', {exact: true})).toBeVisible();
+
+	expect(errors).toEqual([]);
+});

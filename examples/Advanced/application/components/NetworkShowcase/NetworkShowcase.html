@@ -71,3 +71,17 @@
 	<button class="button" (click)="ConnectLongPolling">Start LongPolling</button>
 	<button class="button" (click)="DisconnectLongPolling">Stop LongPolling</button>
 </section>
+
+<section class="card network-stream-showcase">
+	<h2 class="card-title">Network Stream · chunked HTTP response</h2>
+	<p>One real same-origin HTTP response stays open while the server writes three NDJSON packets in separate chunks. <b>this.$Network().Stream()</b> reads the response body incrementally and <b>AdvancedNDJSON</b> reconstructs complete protocol packets across arbitrary chunk boundaries.</p>
+	<div class="meta-grid">
+		<div class="meta-item"><span class="meta-label">Status</span><span class="meta-value stream-status">{{StreamStatus}}</span></div>
+		<div class="meta-item"><span class="meta-label">Packets</span><span class="meta-value">{{StreamCount}} / 3</span></div>
+		<div class="meta-item"><span class="meta-label">Bytes</span><span class="meta-value">{{StreamBytes}}</span></div>
+		<div class="meta-item"><span class="meta-label">Latest packet</span><span class="meta-value">{{StreamData}}</span></div>
+	</div>
+	<p class="network-events network-stream-events"><code>{{StreamEvents}}</code></p>
+	<button class="button" (click)="ConnectStream">Open HTTP stream</button>
+	<button class="button" (click)="DisconnectStream">Close HTTP stream</button>
+</section>

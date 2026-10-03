@@ -28,6 +28,32 @@ Elemenx.Network.Protocol('AdvancedJSON', {
 	}
 });
 
+Elemenx.Network.Protocol('AdvancedNDJSON', {
+	Push: function (value) {
+		var text;
+		var lines;
+		var packets = [];
+		var i = 0;
+
+		if (!this.AdvancedNDJSONDecoder) this.AdvancedNDJSONDecoder = new TextDecoder();
+		if (this.AdvancedNDJSONBuffer === undefined) this.AdvancedNDJSONBuffer = '';
+
+		text = this.AdvancedNDJSONDecoder.decode(value, {stream: true});
+		lines = (this.AdvancedNDJSONBuffer + text).split('\n');
+		this.AdvancedNDJSONBuffer = lines.pop();
+
+		while (i < lines.length) {
+			if (lines[i]) {
+				try { packets.push({Type: 'JSON', Data: JSON.parse(lines[i])}); }
+				catch (error) { packets.push({Type: 'InvalidJSON', Data: lines[i]}); }
+			}
+			i++;
+		}
+
+		return packets;
+	}
+});
+
 Elemenx.Network.Context('AdvancedNetworkBase', {
 	Configure: function (resource, type) {
 		resource.AdvancedBaseContext = type;
@@ -76,6 +102,15 @@ Elemenx.Component('NetworkShowcase', {
 	LongPollingData: 'No responses yet.',
 	LongPollingCount: 0,
 	_LongPollingEvents: null,
+
+	Stream: null,
+	StreamStatus: 'Disconnected',
+	StreamEvents: '—',
+	StreamData: 'No chunks yet.',
+	StreamCount: 0,
+	StreamBytes: 0,
+	_StreamEvents: null,
+	_StreamRunning: false,
 
 	Load: function () {
 		var component = this;
@@ -265,11 +300,58 @@ Elemenx.Component('NetworkShowcase', {
 		if (this.LongPolling) this.LongPolling.Close();
 	},
 
+	ConnectStream: function () {
+		var component = this;
+
+		if (component._StreamRunning) return;
+
+		if (!component.Stream) {
+			component.Stream = component.$Network().Stream({
+				URL: '/elemenx-network-stream',
+				Protocol: 'AdvancedNDJSON'
+			});
+			component.Stream.On('Transport', function (event) {
+				component._StreamEvents.push(event.Type);
+				component.StreamEvents = component._StreamEvents.join(' → ');
+			});
+			component.Stream.On('Transport.Open', function () { component.StreamStatus = 'Streaming'; });
+			component.Stream.On('Transport.Data', function (event) { component.StreamBytes += event.Data.Bytes; });
+			component.Stream.On('Transport.End', function () { component._StreamRunning = false; component.StreamStatus = 'Completed'; });
+			component.Stream.On('Transport.Close', function () { component._StreamRunning = false; component.StreamStatus = 'Disconnected'; });
+			component.Stream.On('Transport.Error', function () { component._StreamRunning = false; component.StreamStatus = 'Error'; });
+			component.Stream.On('Protocol.JSON', function (event) {
+				var data = event.Data || {};
+				component.$Batch(function (state) {
+					state.StreamCount++;
+					state.StreamData = (data.message || 'Stream packet') + ' · sequence ' + data.sequence;
+				});
+			});
+		}
+
+		component._StreamRunning = true;
+		component.Stream.AdvancedNDJSONDecoder = null;
+		component.Stream.AdvancedNDJSONBuffer = '';
+		component._StreamEvents = [];
+		component.$Batch(function (state) {
+			state.StreamStatus = 'Connecting';
+			state.StreamEvents = '—';
+			state.StreamData = 'Waiting for streamed chunks...';
+			state.StreamCount = 0;
+			state.StreamBytes = 0;
+		});
+		component.Stream.Connect();
+	},
+
+	DisconnectStream: function () {
+		if (this.Stream) this.Stream.Close();
+	},
+
 	$OnDestroy: function () {
 		if (this.Request && this.Request.Abort)
 			this.Request.Abort();
 		if (this.Socket) this.Socket.Close(1000, 'destroy');
 		if (this.EventStream) this.EventStream.Close();
 		if (this.LongPolling) this.LongPolling.Close();
+		if (this.Stream) this.Stream.Close();
 	}
 });
