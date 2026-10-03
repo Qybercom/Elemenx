@@ -22,9 +22,10 @@
 	<p><b>Handle:</b> <code>{{ServiceMeta}}</code></p>
 	<p><b>State:</b> {{ServiceState}} · <b>Registration:</b> {{ServiceRegistration}} · <b>Registered:</b> {{ServiceRegistered}} · <b>Controlled:</b> {{ServiceControlled}} · <b>Reachable:</b> {{ServiceReachable}}</p>
 	<p>Lifecycle: <b>{{ServiceLifecycle}}</b></p>
+	<p>Status check: <b>{{ServiceRefresh}}</b></p>
 	<p>Reply: <b>{{ServiceReply}}</b></p>
 	<button class="button primary" (click)="RegisterServiceWorker">Register</button>
-	<button class="button" (click)="RefreshServiceWorker">Refresh status</button>
+	<button class="button" (click)="RefreshServiceWorkerStatus">Refresh status</button>
 	<button class="button" (click)="UpdateServiceWorker">Update</button>
 	<button class="button" (click)="UnregisterServiceWorker">Unregister</button>
 	<button class="button" (click)="PingServiceWorker">Ping through Messaging</button>

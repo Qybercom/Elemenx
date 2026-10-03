@@ -21,6 +21,8 @@ Elemenx.Component('WorkerShowcase', {
 	ServiceReachable: 'no',
 	ServiceReply: 'waiting',
 	ServiceLifecycle: 'not started',
+	ServiceRefresh: 'not refreshed manually',
+	_ServiceRefreshCount: 0,
 
 	$OnCreate: function () {
 		var component = this;
@@ -134,6 +136,17 @@ Elemenx.Component('WorkerShowcase', {
 		this.ServiceMeta = this._Service.Name() + ' / ' + this._Service.Channel() + ' / ' + this._Service.Scope();
 		this.ServiceLifecycle = 'Register requested';
 		this.RefreshServiceWorker();
+	},
+
+	RefreshServiceWorkerStatus: function () {
+		var now = new Date();
+		this._ServiceRefreshCount++;
+		this.RefreshServiceWorker();
+		this.ServiceRefresh = 'Refresh #' + this._ServiceRefreshCount + ' · ' +
+			String(now.getHours()).padStart(2, '0') + ':' +
+			String(now.getMinutes()).padStart(2, '0') + ':' +
+			String(now.getSeconds()).padStart(2, '0') + '.' +
+			String(now.getMilliseconds()).padStart(3, '0');
 	},
 
 	RefreshServiceWorker: function () {
