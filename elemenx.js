@@ -3,6 +3,7 @@
 	
 	Runtime.ScriptURL = typeof document !== 'undefined' && document.currentScript ? document.currentScript.src : null;
 	Runtime.HasDOM = typeof document !== 'undefined';
+	Runtime.StartedAt = new Date();
 	
 	(function (global) {
 		'use strict';
@@ -38,6 +39,9 @@
 		}
 		
 		global.Elemenx.RuntimeID = RuntimeID;
+		global.Elemenx.StartedAt = function () {
+			return new Date(Runtime.StartedAt.getTime());
+		};
 		
 		global.Elemenx.Title = function (value) {
 			if (!Runtime.HasDOM) return arguments.length ? global.Elemenx : '';
@@ -1177,6 +1181,7 @@
 		
 		function createService (name, definition, generation, application) {
 			var instance = {};
+			var startedAt = new Date();
 			var key;
 			
 			definition = definition || {};
@@ -1189,6 +1194,9 @@
 			
 			instance.$Generation = function () {
 				return generation || 0;
+			};
+			instance.$StartedAt = function () {
+				return new Date(startedAt.getTime());
 			};
 			instance.$Application = function () {
 				return application || null;
@@ -3342,6 +3350,7 @@
 				installComponentStyle(name, definition, definition.$Style);
 			
 			function factory (data, slotProjection, options) {
+				var startedAt = new Date();
 				var directState = options && options.DirectState === true;
 				var definitionValues = {};
 				var definitionKey;
@@ -3849,6 +3858,9 @@
 				var apiTarget = {
 					$Generation: function () {
 						return generation;
+					},
+					$StartedAt: function () {
+						return new Date(startedAt.getTime());
 					},
 					$Application: function () {
 						var parent = Parent();
@@ -6765,6 +6777,42 @@
 		var Elemenx = global.Elemenx;
 		var NetworkProtocols = {};
 		
+		function NetworkStarted (target) {
+			var startedAt = new Date();
+			
+			target.$StartedAt = function () {
+				return new Date(startedAt.getTime());
+			};
+			
+			return target;
+		}
+		
+		function NetworkLifecycle (target) {
+			var connectedAt = null;
+			var closedAt = null;
+			
+			NetworkStarted(target);
+			
+			target.$ConnectedAt = function () {
+				return connectedAt ? new Date(connectedAt.getTime()) : null;
+			};
+			
+			target.$ClosedAt = function () {
+				return closedAt ? new Date(closedAt.getTime()) : null;
+			};
+			
+			target._LifecycleConnected = function () {
+				connectedAt = new Date();
+				closedAt = null;
+			};
+			
+			target._LifecycleClosed = function () {
+				closedAt = new Date();
+			};
+			
+			return target;
+		}
+		
 		function NetworkStructuredPack (value) {
 			var parts = [];
 			var descriptors = [];
@@ -7111,6 +7159,7 @@
 					var responseStarted = false;
 					
 					executing = true;
+					if (api._LifecycleConnected) api._LifecycleConnected();
 					
 					var currentExecution = ++execution;
 					var currentXHR = new global.XMLHttpRequest();
@@ -7125,6 +7174,7 @@
 						
 						terminal = true;
 						executing = false;
+						if (api._LifecycleClosed) api._LifecycleClosed();
 						
 						transport(type, value);
 					}
@@ -7215,6 +7265,7 @@
 				}
 			};
 			
+			NetworkLifecycle(api);
 			events = NetworkEvents(api);
 			return api;
 		}
@@ -7260,6 +7311,8 @@
 			}
 			
 			function transport (type, value) {
+				if (type === 'Open' && api && api._LifecycleConnected) api._LifecycleConnected();
+				if (type === 'Close' && api && api._LifecycleClosed) api._LifecycleClosed();
 				return events.Emit('Transport', type, value);
 			}
 			
@@ -7573,6 +7626,7 @@
 				}
 			};
 			
+			NetworkLifecycle(api);
 			events = NetworkEvents(api);
 			
 			return api;
@@ -7617,6 +7671,8 @@
 			}
 			
 			function transport (type, value) {
+				if (type === 'Open' && api && api._LifecycleConnected) api._LifecycleConnected();
+				if (type === 'Close' && api && api._LifecycleClosed) api._LifecycleClosed();
 				return events.Emit('Transport', type, value);
 			}
 			
@@ -7879,6 +7935,7 @@
 				}
 			};
 			
+			NetworkLifecycle(api);
 			events = NetworkEvents(api);
 			
 			return api;
@@ -7896,6 +7953,8 @@
 			var api;
 			
 			function transport (type, data) {
+				if (type === 'Open' && api && api._LifecycleConnected) api._LifecycleConnected();
+				if (type === 'Close' && api && api._LifecycleClosed) api._LifecycleClosed();
 				return events.Emit('Transport', type, data);
 			}
 			
@@ -8028,6 +8087,7 @@
 				}
 			};
 			
+			NetworkLifecycle(api);
 			events = NetworkEvents(api);
 			
 			return api;
@@ -8938,6 +8998,7 @@
 				if (!expected) expected = loaded;
 				
 				setPhase('Complete');
+				if (api._LifecycleClosed) api._LifecycleClosed();
 				clearListeners();
 				
 				emit('Complete', {
@@ -8960,6 +9021,7 @@
 			}
 			
 			function fail (type, value) {
+				if (api && api._LifecycleClosed) api._LifecycleClosed();
 				if (!active) return;
 				
 				active = false;
@@ -8991,6 +9053,7 @@
 					loaded = 0;
 					
 					setPhase('Receiving', packet);
+					if (api._LifecycleConnected) api._LifecycleConnected();
 					
 					emit('Start', {
 						ID: transferID,
@@ -9350,6 +9413,7 @@
 				}
 			};
 			
+			NetworkLifecycle(api);
 			events = NetworkEvents(api);
 			
 			return api;
@@ -9530,6 +9594,7 @@
 				
 			};
 			
+			NetworkStarted(api);
 			events = NetworkEvents(api);
 			
 			bindTransport();
@@ -9555,6 +9620,8 @@
 			var api;
 			
 			function transport (type, data) {
+				if (type === 'Open' && api && api._LifecycleConnected) api._LifecycleConnected();
+				if (type === 'Close' && api && api._LifecycleClosed) api._LifecycleClosed();
 				return events.Emit('Transport', type, data);
 			}
 			
@@ -9812,6 +9879,7 @@
 				}
 			};
 			
+			NetworkLifecycle(api);
 			events = NetworkEvents(api);
 			
 			return api;
@@ -9839,6 +9907,8 @@
 			var api;
 			
 			function transport (type, data) {
+				if (type === 'Open' && api && api._LifecycleConnected) api._LifecycleConnected();
+				if (type === 'Close' && api && api._LifecycleClosed) api._LifecycleClosed();
 				return events.Emit('Transport', type, data);
 			}
 			
@@ -10366,6 +10436,7 @@
 				}
 			};
 			
+			NetworkLifecycle(api);
 			events = NetworkEvents(api);
 			
 			return api;
@@ -10848,6 +10919,7 @@
 				}
 			};
 			
+			NetworkStarted(api);
 			events = NetworkEvents(api);
 			
 			attach();
@@ -14139,6 +14211,7 @@
 		}
 		
 		function createApplication (name, definition) {
+			var startedAt = new Date();
 			var destroyed = false;
 			var root = null;
 			var router = null;
@@ -14156,6 +14229,10 @@
 			
 			api.$Name = function () {
 				return name;
+			};
+			
+			api.$StartedAt = function () {
+				return new Date(startedAt.getTime());
 			};
 			
 			api.$Root = function () {

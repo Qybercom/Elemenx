@@ -44,7 +44,7 @@ Status values:
 | `Router` | YES | `RouterShowcase` reaches the Application Router from a nested Component; route-owned `RouterLabPage` and `LeaveGuardPage` use their attached Component Router facade directly. |
 | `Service` | YES | Session service. |
 | `Title` | YES | `ProjectPage`. |
-| `Network`, `Storage`, `Messaging`, `WebWorker`, `ServiceWorker` owner accessors | PARTIAL | Storage, Messaging and both Worker accessors are demonstrated; Network currently uses global API and still needs an owner-aware example. |
+| `Network`, `Storage`, `Messaging`, `WebWorker`, `ServiceWorker` owner accessors | PARTIAL | Storage is used; Network currently uses global API; add owner-aware examples. |
 | `$OnCreate` / `$OnReady` / `$OnDestroy` | YES | `ComponentShowcase` and `ComponentProbe` expose create/ready/destroy behavior visibly. |
 | `$OnChildPending` / `$OnChildReady` / `$OnChildError` | MISSING | Add deferred/discovered child lifecycle showcase. |
 | route `Path`, `Params`, `Query`, `Hash` context | YES | Project route exercises params/query/hash. |
@@ -105,17 +105,16 @@ Status values:
 | --- | --- | --- |
 | XHR | YES | Real same-origin request. |
 | XHR transport lifecycle/events | YES | Visible event timeline. |
-| owner-aware Component/Application Network | YES | `NetworkShowcase` creates its XHR through the Component-owned `this.$Network()` facade. |
-| Network Context | YES | `AdvancedNetworkAPI` composes `AdvancedNetworkBase`; the live XHR reports both Context definitions applied. |
-| Protocol | YES | `AdvancedJSON` decodes the XHR response and emits the visible `Protocol.JSON` event. |
-| WebSocket | YES | Real local WebSocket lifecycle plus the original Quark-style `/api/media` request → response ACK + event payload flow. |
-| SSE | YES | Real same-origin EventSource lifecycle; the local endpoint emits three JSON events decoded through `AdvancedJSON`, then the showcase closes the stream. |
-| LongPolling | YES | Real same-origin held-request loop; each JSON response is decoded through `AdvancedJSON`, followed immediately by the next poll, with visible lifecycle and Start/Stop. |
-| Stream | YES | Real same-origin chunked HTTP response; `Stream` reads one open response incrementally and `AdvancedNDJSON` reconstructs protocol packets across response chunks. |
-| WebRTC | YES | Real local peer-to-peer DataChannel negotiation; Quark-style `/api/media` control packet + 512 KiB binary/chunked transfer + structured ACK/event, with visible Backpressure/Drain behavior. |
-| Transfer / TransferReceiver | YES | High-level 1 MiB roundtrip over the live WebRTC DataChannel: application code only supplies Transport/Data, observes Progress/Receive, and calls Send(); chunking, ACK/retry, windowing, backpressure and Blob reconstruction are handled by Elemenx. |
-| Metrics | YES | Live Metrics attaches to the WebRTC transport, starts automatically and continuously exposes TX/RX bytes and live transfer rates for any DataChannel traffic; no manual measurement lifecycle is required. |
-| Universal structured Transfer | YES | One nested business object containing a 2 MiB media Blob is exercised through XHR, WebSocket, SSE, LongPolling, Stream and WebRTC. XHR demonstrates whole upload/server reconstruction; WebSocket and WebRTC use duplex Transfer/TransferReceiver; SSE, LongPolling and Stream use their natural server-to-client direction. Transport-specific framing/Base64/native binary stays below the application API.
+| owner-aware Component/Application Network | MISSING | Existing XHR uses global `Elemenx.Network`; migrate/show ownership. |
+| Network Context | MISSING | Add named + composed context example. |
+| Protocol | MISSING | Add a small protocol transform example. |
+| WebSocket | MISSING | Add showcase with local/demo endpoint support and clear unavailable state. |
+| SSE | MISSING | Add showcase with demo endpoint support and clear unavailable state. |
+| LongPolling | MISSING | Add showcase with demo endpoint support and clear unavailable state. |
+| Stream | MISSING | Add same-origin streaming demo if server endpoint is available; otherwise self-contained browser fixture. |
+| WebRTC | MISSING | Add local peer/data-channel demo without requiring external infrastructure. |
+| Transfer / TransferReceiver | MISSING | Add in-browser transfer roundtrip example. |
+| Metrics | MISSING | Add metrics display around a demonstrable transport. |
 
 ## Storage
 
@@ -137,7 +136,7 @@ Status values:
 | Declarative `$Events` | YES | `EventsShowcase` declares two channel names. |
 | `$OnEvent` dispatcher + `event.Is()` | YES | One dispatcher routes both channels through `event.Is()`. |
 | Owner cleanup | YES | Runtime regression covers destroyed Component subscriptions. |
-| Pipes | YES | Persistent `event.Is(...)` pipelines demonstrate Debouncer, Filter and Gate interactively. |
+| Pipes | MISSING | Next phase: persistent pipelines attached at `event.Is(...)`. |
 
 ## Messaging
 
@@ -151,29 +150,29 @@ Status values:
 | imperative `Send` | YES | The showcase sender drives direct, channel, Context and shared-ID deliveries. |
 | owner lifecycle | YES | Declarative receiver sockets and the sender are Component-owned and cleaned up with their owners. |
 | Browser context discovery | YES | `MessagingShowcase` demonstrates zero-config iframe/parent and child/opener discovery, independent same-origin tabs through BroadcastChannel (opened with `noopener`), and an explicitly trusted cross-origin child through `Messaging.Origins()`. No normal same-origin example calls `.Window()` manually. |
-| Worker Messaging bridge | YES | `WorkerShowcase` sends page Messaging through both WebWorker and ServiceWorker bridges and receives replies through the same fabric. |
+| Worker Messaging bridge | MISSING | Add WebWorker and ServiceWorker bridge demos. |
 
 ## WebWorker
 
 | Capability | Status | Current / required showcase |
 | --- | --- | --- |
-| definition / handle metadata | YES | `WorkerShowcase` exposes named owner-aware handles, channels, start modes, state and native availability. |
-| manual/lazy/auto start modes | YES | Three workers demonstrate manual, lazy-on-first-message and automatic start modes. |
-| Start / Stop / restart / Destroy | YES | Manual worker controls expose Start, Stop, restart, Destroy and recreation. |
-| lifecycle events / State / Native | YES | The card displays State/Native and the Starting/Running/Stop/Error lifecycle. |
-| Messaging bridge | YES | Ping/pong travels through the normal Messaging fabric for manual, lazy and auto workers. |
-| Application/component ownership | YES | Workers are created through the Component `$WebWorker` owner accessor and are therefore tied to its lifecycle. |
+| definition / handle metadata | MISSING | Add worker card. |
+| manual/lazy/auto start modes | MISSING | Demonstrate all supported start modes. |
+| Start / Stop / restart / Destroy | MISSING | Interactive controls. |
+| lifecycle events / State / Native | MISSING | Visible status/event timeline. |
+| Messaging bridge | MISSING | Echo/transform worker example. |
+| Application/component ownership | MISSING | Use owner-aware API. |
 
 ## ServiceWorker
 
 | Capability | Status | Current / required showcase |
 | --- | --- | --- |
-| registration / metadata | YES | `WorkerShowcase` registers `AdvancedServiceWorker` in an isolated `/elemenx-worker-showcase/` scope and displays its metadata/state. |
-| Register / Update / Unregister | YES | Interactive controls register, update and unregister the isolated worker. |
-| Registered / Controlled / Reachable / State | YES | All four values are displayed explicitly; Controlled is intentionally false for the isolated showcase scope. |
-| lifecycle events | YES | Installing/Waiting/Active/Unregistering/Unregistered/Error transitions are surfaced visibly. |
-| Messaging bridge | YES | A reachable active worker answers a page ping through the shared Messaging bridge. |
-| Application/component ownership | YES | The worker handle is created through the Component `$ServiceWorker` owner accessor. |
+| registration / metadata | MISSING | Add isolated-scope demo worker. |
+| Register / Update / Unregister | MISSING | Interactive controls. |
+| Registered / Controlled / Reachable / State | MISSING | Visible status. |
+| lifecycle events | MISSING | Visible event timeline. |
+| Messaging bridge | MISSING | Roundtrip message example when controlled/reachable. |
+| Application/component ownership | MISSING | Use owner-aware API. |
 
 ## Bundle, Discovery and production
 
@@ -185,14 +184,22 @@ Status values:
 | Bundle → Discovery fallback | WORKFLOW | Covered by regression/E2E; add explanatory Advanced documentation rather than artificial UI. |
 | public asset copy | WORKFLOW | `/data/network-showcase.json` is copied to `dist`. |
 | production server | WORKFLOW | `npm run serve`. |
-| component/service reload | MISSING | Add development showcase where meaningful. |
+| component/service reload | YES | `RuntimeShowcase` reloads the discovered `RuntimeProbe` definition through `Application.$Reload()` and reports completion without replacing the application. |
+
+## Application / runtime lifecycle
+
+| Capability | Status | Current / required showcase |
+| --- | --- | --- |
+| runtime inspection | YES | `RuntimeShowcase` displays `RuntimeID`, runtime/Application `StartedAt`, their uptimes, Application name, current root, Router presence and mount through public APIs. |
+| isolated destroy / recreate | YES | A manually owned `RuntimeProbe` can be destroyed and recreated without disturbing the Application or sibling showcases. |
+| development Component reload | YES | `Application.$Reload('Component', 'RuntimeProbe', ...)` reloads the discovered definition and refreshes live instances. |
 
 ## Global helpers
 
 | Capability | Status | Current / required showcase |
 | --- | --- | --- |
 | `Elemenx.Title` | YES | Application and Project page. |
-| `Elemenx.RuntimeID` | MISSING | Add runtime metadata card. |
+| `Elemenx.RuntimeID` | YES | `RuntimeShowcase` displays the current runtime ID, runtime/Application start timestamps and uptimes together with Application/root/router/mount metadata; the inspection sequence and uptimes visibly change on refresh. |
 | `Elemenx.Bundle` | WORKFLOW | Production build/runtime concern; document and expose read-only status only if useful. |
 
 ## Tooling
@@ -212,11 +219,11 @@ Status values:
 3. Storage + Events + Messaging separation and Events core.
 4. WebWorker + ServiceWorker completeness and Messaging bridges.
 5. Network completeness: Context/Protocol first, then long-lived transports, WebRTC, Transfer and Metrics.
-6. Application/runtime inspection, isolated destroy/recreate and development Reload.
+6. Application/runtime inspection, isolated destroy/recreate and development Reload. — DONE
 7. Final UI/navigation cleanup, Advanced README rewrite and E2E coverage for every stable showcase section.
-
-Current execution point: item 4 is now represented in Advanced; the next large subsystem is item 5 (Network). Earlier remaining `MISSING`/`PARTIAL` rows are still tracked above and must also be closed before the final cleanup.
 
 The end condition is simple: every supported public runtime capability is either `YES`, or is explicitly classified as `WORKFLOW` because its real demonstration is the Advanced build/dev/serve workflow itself. `PARTIAL` and `MISSING` are temporary states only.
 
 - Events + Pipes: declarative `$Events` / `$OnEvent`, imperative emit, persistent `event.Is()` pipelines with interactive Debouncer, Filter and Gate showcases.
+
+Lifecycle timestamps: Component and Service instances expose `$StartedAt()`. Networking runtime instances expose `$StartedAt()`. XHR, Stream, LongPolling, SSE, WebSocket and WebRTC additionally expose `$ConnectedAt()` / `$ClosedAt()` for their latest connection/exchange. Transfer exposes all three for its own transfer lifecycle; its timestamps are independent from the underlying transport.

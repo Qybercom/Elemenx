@@ -45,6 +45,30 @@ describe('Regression: Application public facade and ownership', function () {
 		expect(document.querySelector('.application-root').textContent).toBe('ready');
 	});
 
+	it('exposes immutable runtime and Application start timestamps', async function () {
+		var runtimeStarted=Elemenx.StartedAt();
+		var name=unique('StartedAtApplication');
+		var before=Date.now();
+		var app=createApplication(name,{$Mount:'#mount'});
+		var applicationStarted=app.$StartedAt();
+		var after=Date.now();
+
+		expect(runtimeStarted).toBeInstanceOf(Date);
+		expect(applicationStarted).toBeInstanceOf(Date);
+		expect(runtimeStarted.getTime()).toBeLessThanOrEqual(applicationStarted.getTime());
+		expect(applicationStarted.getTime()).toBeGreaterThanOrEqual(before);
+		expect(applicationStarted.getTime()).toBeLessThanOrEqual(after);
+
+		runtimeStarted.setTime(0);
+		applicationStarted.setTime(0);
+		expect(Elemenx.StartedAt().getTime()).toBeGreaterThan(0);
+		expect(app.$StartedAt().getTime()).toBeGreaterThan(0);
+
+		var original=app.$StartedAt().getTime();
+		await tick(5);
+		expect(app.$StartedAt().getTime()).toBe(original);
+	});
+
 	it('uses owner-relative Ready lifecycle names for Component and Application', function () {
 		var component=unique('ReadyLifecycleRoot');
 		var componentReady=0;
