@@ -1,6 +1,6 @@
 <section class="card network-showcase">
 	<h2 class="card-title">Network XHR</h2>
-	<p>A real same-origin request through <b>Elemenx.Network.XHR</b>, including the transport lifecycle.</p>
+	<p>A real same-origin request through the Component-owned <b>this.$Network()</b> facade, with composed Network Contexts, Protocol decoding and the transport lifecycle.</p>
 
 	<div class="meta-grid">
 		<div class="meta-item">
@@ -10,6 +10,18 @@
 		<div class="meta-item">
 			<span class="meta-label">Response</span>
 			<span class="meta-value" #NetworkResponse>{{Response}}</span>
+		</div>
+		<div class="meta-item">
+			<span class="meta-label">Ownership</span>
+			<span class="meta-value">{{Ownership}}</span>
+		</div>
+		<div class="meta-item">
+			<span class="meta-label">Context</span>
+			<span class="meta-value" #NetworkContextStatus>{{ContextStatus}}</span>
+		</div>
+		<div class="meta-item">
+			<span class="meta-label">Protocol</span>
+			<span class="meta-value" #NetworkProtocolStatus>{{ProtocolStatus}}</span>
 		</div>
 	</div>
 

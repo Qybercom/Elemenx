@@ -105,9 +105,9 @@ Status values:
 | --- | --- | --- |
 | XHR | YES | Real same-origin request. |
 | XHR transport lifecycle/events | YES | Visible event timeline. |
-| owner-aware Component/Application Network | MISSING | Existing XHR uses global `Elemenx.Network`; migrate/show ownership. |
-| Network Context | MISSING | Add named + composed context example. |
-| Protocol | MISSING | Add a small protocol transform example. |
+| owner-aware Component/Application Network | YES | `NetworkShowcase` creates its XHR through the Component-owned `this.$Network()` facade. |
+| Network Context | YES | `AdvancedNetworkAPI` composes `AdvancedNetworkBase`; the live XHR reports both Context definitions applied. |
+| Protocol | YES | `AdvancedJSON` decodes the XHR response and emits the visible `Protocol.JSON` event. |
 | WebSocket | MISSING | Add showcase with local/demo endpoint support and clear unavailable state. |
 | SSE | MISSING | Add showcase with demo endpoint support and clear unavailable state. |
 | LongPolling | MISSING | Add showcase with demo endpoint support and clear unavailable state. |
