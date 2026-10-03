@@ -61,9 +61,9 @@ test('official Advanced example executes a real Network XHR lifecycle', async ({
 	await page.getByRole('button', {name: 'Run XHR request'}).click();
 	await expect(page.getByText('Elemenx Network is online', {exact: true})).toBeVisible();
 	await expect(page.getByText('Success', {exact: true})).toBeVisible();
-	await expect(page.locator('.network-events')).toContainText('BeforeRequest');
-	await expect(page.locator('.network-events')).toContainText('BeforeResponse');
-	await expect(page.locator('.network-events')).toContainText('Success');
+	await expect(page.locator('.network-xhr-events')).toContainText('BeforeRequest');
+	await expect(page.locator('.network-xhr-events')).toContainText('BeforeResponse');
+	await expect(page.locator('.network-xhr-events')).toContainText('Success');
 
 	expect(errors).toEqual([]);
 });

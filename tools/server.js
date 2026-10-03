@@ -4,6 +4,7 @@ var http = require('http');
 var fs = require('fs');
 var path = require('path');
 var zlib = require('zlib');
+var crypto = require('crypto');
 
 var Types = {
 	'.html':'text/html; charset=utf-8',
@@ -51,6 +52,42 @@ function notModified (request, stat, tag) {
 
 function acceptsGzip (request) {
 	return /(?:^|,|\s)gzip(?:\s*;|\s*,|$)/i.test(request.headers['accept-encoding'] || '');
+}
+
+
+function websocketFrame (payload, opcode) {
+	var data=Buffer.isBuffer(payload) ? payload : Buffer.from(String(payload));
+	var length=data.length;
+	var header;
+	if (length < 126) { header=Buffer.alloc(2); header[1]=length; }
+	else if (length <= 65535) { header=Buffer.alloc(4); header[1]=126; header.writeUInt16BE(length,2); }
+	else { header=Buffer.alloc(10); header[1]=127; header.writeUInt32BE(0,2); header.writeUInt32BE(length,6); }
+	header[0]=0x80 | (opcode === undefined ? 1 : opcode);
+	return Buffer.concat([header,data]);
+}
+
+function websocketConnection (socket, request, handler) {
+	var buffer=Buffer.alloc(0);
+	var closed=false;
+	var connection={Request:request,Send:function (data) { if (!closed && socket.writable) socket.write(websocketFrame(data,1)); return connection; },Close:function () { if (!closed) { closed=true; if (socket.writable) socket.end(websocketFrame('',8)); } return connection; }};
+	function consume () {
+		while (buffer.length >= 2) {
+			var opcode=buffer[0] & 15; var masked=(buffer[1] & 128) !== 0; var length=buffer[1] & 127; var offset=2; var mask; var payload; var i;
+			if (length === 126) { if (buffer.length < 4) return; length=buffer.readUInt16BE(2); offset=4; }
+			else if (length === 127) { if (buffer.length < 10 || buffer.readUInt32BE(2) !== 0) { connection.Close(); return; } length=buffer.readUInt32BE(6); offset=10; }
+			if (masked) { if (buffer.length < offset + 4) return; mask=buffer.subarray(offset,offset + 4); offset+=4; }
+			if (buffer.length < offset + length) return;
+			payload=Buffer.from(buffer.subarray(offset,offset + length)); buffer=buffer.subarray(offset + length);
+			if (masked) { i=0; while (i < payload.length) { payload[i]^=mask[i % 4]; i++; } }
+			if (opcode === 8) { connection.Close(); return; }
+			if (opcode === 9) { if (!closed && socket.writable) socket.write(websocketFrame(payload,10)); continue; }
+			if ((opcode === 1 || opcode === 2) && typeof handler.Message === 'function') handler.Message(connection,opcode === 1 ? payload.toString('utf8') : payload);
+		}
+	}
+	socket.on('data',function (data) { if (!closed) { buffer=Buffer.concat([buffer,data]); consume(); } });
+	socket.on('close',function () { closed=true; if (typeof handler.Close === 'function') handler.Close(connection); });
+	socket.on('error',function () { closed=true; });
+	if (typeof handler.Open === 'function') handler.Open(connection);
 }
 
 function create (options) {
@@ -147,6 +184,18 @@ function create (options) {
 		});
 	});
 
+
+	if (options.WebSocket) {
+		server.on('upgrade',function (request,socket) {
+			var handler=options.WebSocket; var pathname; var key=request.headers['sec-websocket-key']; var expected=handler.Path || null;
+			try { pathname=decodeURIComponent(request.url.split('?')[0]); } catch (error) { socket.destroy(); return; }
+			if ((expected && pathname !== expected) || !key || String(request.headers.upgrade || '').toLowerCase() !== 'websocket') { socket.destroy(); return; }
+			var accept=crypto.createHash('sha1').update(key + '258EAFA5-E914-47DA-95CA-C5AB0DC85B11').digest('base64');
+			socket.write('HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: ' + accept + '\r\n\r\n');
+			websocketConnection(socket,request,handler);
+		});
+	}
+
 	return {
 		Server:server,
 		Listen:function (port,host,callback) {
@@ -166,7 +215,10 @@ module.exports={
 if (require.main === module) {
 	var root=path.resolve(process.argv[2] || process.cwd());
 	var port=Number(process.argv[3] || process.env.PORT || 4173);
-	create({Root:root}).Listen(port,'127.0.0.1',function () {
+	var configFile=path.join(root,'elemenx.config.js');
+	var settings=fs.existsSync(configFile) ? require(configFile) : {};
+	var serverSettings=settings.Server || {};
+	create({Root:root,WebSocket:serverSettings.WebSocket || null}).Listen(port,'127.0.0.1',function () {
 		console.log('Elemenx server: http://127.0.0.1:' + port + '/');
 	});
 }

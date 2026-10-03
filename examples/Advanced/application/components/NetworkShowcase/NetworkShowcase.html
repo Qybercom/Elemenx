@@ -25,6 +25,21 @@
 		</div>
 	</div>
 
-	<p class="network-events"><code #NetworkEvents>{{Events}}</code></p>
+	<p class="network-events network-xhr-events"><code #NetworkEvents>{{Events}}</code></p>
 	<button class="button" (click)="Load" #NetworkLoad>Run XHR request</button>
+</section>
+
+<section class="card network-websocket-showcase">
+	<h2 class="card-title">Network WebSocket · Quark packet flow</h2>
+	<p>The old structured transport scenario: a real WebSocket sends <code>{url:'/api/media',data}</code>; the local server returns a Quark <code>response</code> ACK and a separate <code>event</code> carrying the payload.</p>
+	<div class="meta-grid">
+		<div class="meta-item"><span class="meta-label">Status</span><span class="meta-value" #WebSocketStatus>{{WebSocketStatus}}</span></div>
+		<div class="meta-item"><span class="meta-label">Request</span><span class="meta-value">{{QuarkRequest}}</span></div>
+		<div class="meta-item"><span class="meta-label">Response</span><span class="meta-value">{{QuarkResponse}}</span></div>
+		<div class="meta-item"><span class="meta-label">Event</span><span class="meta-value">{{QuarkEvent}}</span></div>
+	</div>
+	<p class="network-events"><code #WebSocketEvents>{{WebSocketEvents}}</code></p>
+	<button class="button" (click)="ConnectWebSocket">Connect WebSocket</button>
+	<button class="button" (click)="SendWebSocket">Send Quark packet</button>
+	<button class="button" (click)="DisconnectWebSocket">Disconnect</button>
 </section>

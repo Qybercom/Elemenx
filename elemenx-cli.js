@@ -111,7 +111,8 @@ function listen (directory, port, settings, production, options) {
 			Compression: compression,
 			CompressionThreshold: threshold,
 			CacheControl: cacheControl,
-			FrameworkFallback: !production
+			FrameworkFallback: !production,
+			WebSocket: serverSettings.WebSocket || null
 		})
 		.Listen(port, host, function () {
 			process.stdout.write('Elemenx ' + (production ? 'serve' : 'dev') + ': http://' + host + ':' + port + '/\n');

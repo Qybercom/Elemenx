@@ -108,11 +108,11 @@ Status values:
 | owner-aware Component/Application Network | YES | `NetworkShowcase` creates its XHR through the Component-owned `this.$Network()` facade. |
 | Network Context | YES | `AdvancedNetworkAPI` composes `AdvancedNetworkBase`; the live XHR reports both Context definitions applied. |
 | Protocol | YES | `AdvancedJSON` decodes the XHR response and emits the visible `Protocol.JSON` event. |
-| WebSocket | MISSING | Add showcase with local/demo endpoint support and clear unavailable state. |
+| WebSocket | YES | Real local WebSocket lifecycle plus the original Quark-style `/api/media` request → response ACK + event payload flow. |
 | SSE | MISSING | Add showcase with demo endpoint support and clear unavailable state. |
 | LongPolling | MISSING | Add showcase with demo endpoint support and clear unavailable state. |
 | Stream | MISSING | Add same-origin streaming demo if server endpoint is available; otherwise self-contained browser fixture. |
-| WebRTC | MISSING | Add local peer/data-channel demo without requiring external infrastructure. |
+| WebRTC | MISSING | Recreate the original local DataChannel counterpart to the Quark WebSocket structured-transfer scenario, including the binary/chunked path and backpressure-visible behavior, without external infrastructure. |
 | Transfer / TransferReceiver | MISSING | Add in-browser transfer roundtrip example. |
 | Metrics | MISSING | Add metrics display around a demonstrable transport. |
 

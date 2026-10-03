@@ -4,6 +4,7 @@ var Server = require('../../tools/server.js');
 
 var project = path.resolve(__dirname, '../../examples/Advanced');
 var port = Number(process.env.PORT || 4276);
+var settings = require('../../examples/Advanced/elemenx.config.js');
 
 Builder.Build(project, {
 	application: 'application',
@@ -15,7 +16,8 @@ Builder.Build(project, {
 var server = Server.Create({
 	Root: path.join(project, 'dist'),
 	Compression: true,
-	CacheControl: 'public, max-age=0, must-revalidate'
+	CacheControl: 'public, max-age=0, must-revalidate',
+	WebSocket: settings.Server.WebSocket
 });
 
 function cleanup () {
