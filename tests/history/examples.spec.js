@@ -122,3 +122,21 @@ test('official Advanced example consumes one real chunked HTTP Stream through Pr
 
 	expect(errors).toEqual([]);
 });
+test('official Advanced example transfers Quark control and binary chunks over a real local WebRTC DataChannel', async ({ page }) => {
+	var errors = captureErrors(page);
+
+	await page.goto('http://127.0.0.1:4274/');
+	await expectBootstrapVisible(page.getByRole('heading', {name: 'Network WebRTC · Quark + binary DataChannel'}), errors);
+	await page.getByRole('button', {name: 'Connect local WebRTC peers'}).click();
+	await expect(page.locator('.rtc-status')).toHaveText('Connected', {timeout: 10000});
+	await page.getByRole('button', {name: 'Send 512 KiB media transfer'}).click();
+	await expect(page.locator('.rtc-received')).toHaveText('524288 bytes · 32 chunks', {timeout: 10000});
+	await expect(page.locator('.rtc-ack')).toContainText('ACK 200 · 524288 bytes · 32 chunks');
+	await expect(page.locator('.rtc-transfer')).toHaveText('Binary media received over RTCDataChannel');
+	await expect(page.locator('.network-webrtc-events')).toContainText('A.BeforeConnect');
+	await expect(page.locator('.network-webrtc-events')).toContainText('B.Channel');
+	await expect(page.locator('.network-webrtc-events')).toContainText('A.Open');
+	await expect(page.locator('.network-webrtc-events')).toContainText('B.Open');
+
+	expect(errors).toEqual([]);
+});

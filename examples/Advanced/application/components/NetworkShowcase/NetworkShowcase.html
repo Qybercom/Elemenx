@@ -85,3 +85,19 @@
 	<button class="button" (click)="ConnectStream">Open HTTP stream</button>
 	<button class="button" (click)="DisconnectStream">Close HTTP stream</button>
 </section>
+<section class="card network-webrtc-showcase">
+	<h2 class="card-title">Network WebRTC · Quark + binary DataChannel</h2>
+	<p>Two real local <b>RTCPeerConnection</b> instances negotiate without external infrastructure. The initiator sends a Quark-style <code>/api/media</code> request followed by a 512 KiB binary payload split into 32 chunks. The peer returns a structured ACK and event; Elemenx exposes queue pressure through <b>Backpressure</b> and <b>Drain</b>.</p>
+	<div class="meta-grid">
+		<div class="meta-item"><span class="meta-label">Status</span><span class="meta-value rtc-status">{{RTCStatus}}</span></div>
+		<div class="meta-item"><span class="meta-label">Received</span><span class="meta-value rtc-received">{{RTCBytes}} bytes · {{RTCChunks}} chunks</span></div>
+		<div class="meta-item"><span class="meta-label">Backpressure</span><span class="meta-value rtc-backpressure">{{RTCBackpressure}}</span></div>
+		<div class="meta-item"><span class="meta-label">ACK</span><span class="meta-value rtc-ack">{{RTCAck}}</span></div>
+		<div class="meta-item"><span class="meta-label">Transfer</span><span class="meta-value rtc-transfer">{{RTCTransfer}}</span></div>
+		<div class="meta-item"><span class="meta-label">Protocol</span><span class="meta-value">AdvancedRTC · Quark control + ArrayBuffer</span></div>
+	</div>
+	<p class="network-events network-webrtc-events"><code>{{RTCEvents}}</code></p>
+	<button class="button" (click)="ConnectWebRTC">Connect local WebRTC peers</button>
+	<button class="button" (click)="SendWebRTCTransfer">Send 512 KiB media transfer</button>
+	<button class="button" (click)="DisconnectWebRTC">Disconnect WebRTC</button>
+</section>

@@ -112,7 +112,7 @@ Status values:
 | SSE | YES | Real same-origin EventSource lifecycle; the local endpoint emits three JSON events decoded through `AdvancedJSON`, then the showcase closes the stream. |
 | LongPolling | YES | Real same-origin held-request loop; each JSON response is decoded through `AdvancedJSON`, followed immediately by the next poll, with visible lifecycle and Start/Stop. |
 | Stream | YES | Real same-origin chunked HTTP response; `Stream` reads one open response incrementally and `AdvancedNDJSON` reconstructs protocol packets across response chunks. |
-| WebRTC | MISSING | Recreate the original local DataChannel counterpart to the Quark WebSocket structured-transfer scenario, including the binary/chunked path and backpressure-visible behavior, without external infrastructure. |
+| WebRTC | YES | Real local peer-to-peer DataChannel negotiation; Quark-style `/api/media` control packet + 512 KiB binary/chunked transfer + structured ACK/event, with visible Backpressure/Drain behavior. |
 | Transfer / TransferReceiver | MISSING | Add in-browser transfer roundtrip example. |
 | Metrics | MISSING | Add metrics display around a demonstrable transport. |
 

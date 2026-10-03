@@ -13,6 +13,26 @@ Elemenx.Network.Protocol('AdvancedQuark', {
 	}
 });
 
+
+
+Elemenx.Network.Protocol('AdvancedRTC', {
+	Encode: function (value) {
+		if (value instanceof ArrayBuffer || (ArrayBuffer.isView && ArrayBuffer.isView(value))) return value;
+		return JSON.stringify(value);
+	},
+	Decode: function (value) {
+		var packet;
+		if (value instanceof ArrayBuffer) return {Type: 'Binary', Data: value};
+		if (ArrayBuffer.isView && ArrayBuffer.isView(value)) return {Type: 'Binary', Data: value.buffer};
+		try { packet = JSON.parse(value); }
+		catch (error) { return {Type: 'Invalid', Data: value}; }
+		if (packet.response) return {Type: 'Response', Data: packet};
+		if (packet.event) return {Type: 'Event', Data: packet};
+		if (packet.url) return {Type: 'Request', Data: packet};
+		return {Type: 'Packet', Data: packet};
+	}
+});
+
 Elemenx.Network.Protocol('AdvancedJSON', {
 	Decode: function (value) {
 		var data;
@@ -111,6 +131,21 @@ Elemenx.Component('NetworkShowcase', {
 	StreamBytes: 0,
 	_StreamEvents: null,
 	_StreamRunning: false,
+
+	RTCInitiator: null,
+	RTCResponder: null,
+	RTCStatus: 'Disconnected',
+	RTCEvents: '—',
+	RTCTransfer: 'No transfer yet.',
+	RTCAck: '—',
+	RTCBackpressure: '0 events',
+	RTCBytes: 0,
+	RTCChunks: 0,
+	_RTCEvents: null,
+	_RTCBackpressureCount: 0,
+	_RTCOutgoing: null,
+	_RTCOutgoingIndex: 0,
+	_RTCIncoming: null,
 
 	Load: function () {
 		var component = this;
@@ -346,6 +381,187 @@ Elemenx.Component('NetworkShowcase', {
 		if (this.Stream) this.Stream.Close();
 	},
 
+	_WaitRTCIce: function (connection) {
+		return new Promise(function (resolve) {
+			var timer;
+			var done = function () {
+				if (timer) clearTimeout(timer);
+				connection.removeEventListener('icegatheringstatechange', check);
+				resolve();
+			};
+			var check = function () {
+				if (connection.iceGatheringState === 'complete') done();
+			};
+			if (connection.iceGatheringState === 'complete') return resolve();
+			connection.addEventListener('icegatheringstatechange', check);
+			timer = setTimeout(done, 1500);
+		});
+	},
+
+	ConnectWebRTC: function () {
+		var component = this;
+		var initiator;
+		var responder;
+		var offer;
+
+		if (component.RTCInitiator || component.RTCResponder) return;
+		component._RTCEvents = [];
+		component._RTCBackpressureCount = 0;
+		component.$Batch(function (state) {
+			state.RTCStatus = 'Negotiating';
+			state.RTCEvents = '—';
+			state.RTCTransfer = 'No transfer yet.';
+			state.RTCAck = '—';
+			state.RTCBackpressure = '0 events';
+			state.RTCBytes = 0;
+			state.RTCChunks = 0;
+		});
+
+		initiator = component.$Network().WebRTC({
+			Protocol: 'AdvancedRTC',
+			ChannelName: 'elemenx-media',
+			Channel: {ordered: true, protocol: 'elemenx-quark-binary'},
+			BufferHighWaterMark: 64 * 1024,
+			BufferLowWaterMark: 16 * 1024,
+			QueueHighWaterMark: 128 * 1024,
+			QueueLowWaterMark: 16 * 1024
+		});
+		responder = component.$Network().WebRTC({
+			Protocol: 'AdvancedRTC',
+			BufferHighWaterMark: 64 * 1024,
+			BufferLowWaterMark: 16 * 1024,
+			QueueHighWaterMark: 128 * 1024,
+			QueueLowWaterMark: 16 * 1024
+		});
+		component.RTCInitiator = initiator;
+		component.RTCResponder = responder;
+
+		initiator.On('Transport', function (event) {
+			if (event.Type === 'BeforeSend' || event.Type === 'AfterSend' || event.Type === 'Queued') return;
+			component._RTCEvents.push('A.' + event.Type);
+			component.RTCEvents = component._RTCEvents.join(' → ');
+		});
+		responder.On('Transport', function (event) {
+			if (event.Type === 'BeforeSend' || event.Type === 'AfterSend' || event.Type === 'Queued') return;
+			component._RTCEvents.push('B.' + event.Type);
+			component.RTCEvents = component._RTCEvents.join(' → ');
+		});
+		initiator.On('Transport.Channel', function () {
+			if (initiator.DataChannel()) initiator.DataChannel().binaryType = 'arraybuffer';
+		});
+		responder.On('Transport.Channel', function () {
+			if (responder.DataChannel()) responder.DataChannel().binaryType = 'arraybuffer';
+		});
+		initiator.On('Transport.Open', function () { component.RTCStatus = 'Connected'; });
+		initiator.On('Transport.Backpressure', function () {
+			component._RTCBackpressureCount++;
+			component.RTCBackpressure = component._RTCBackpressureCount + ' events · waiting for Drain';
+		});
+		initiator.On('Transport.Drain', function () {
+			component.RTCBackpressure = component._RTCBackpressureCount + ' events · drained';
+			component._PumpRTCTransfer();
+		});
+		responder.On('Protocol.Request', function (event) {
+			var data = event.Data && event.Data.data ? event.Data.data : {};
+			component._RTCIncoming = {CorrelationID: data.correlationID, Size: data.size || 0, Bytes: 0, Chunks: 0};
+		});
+		responder.On('Protocol.Binary', function (event) {
+			var incoming = component._RTCIncoming;
+			if (!incoming) return;
+			incoming.Bytes += event.Data.byteLength;
+			incoming.Chunks++;
+			component.$Batch(function (state) {
+				state.RTCBytes = incoming.Bytes;
+				state.RTCChunks = incoming.Chunks;
+			});
+			if (incoming.Bytes >= incoming.Size) {
+				responder.Send({response:'/api/media',data:{status:200,correlationID:incoming.CorrelationID,bytes:incoming.Bytes,chunks:incoming.Chunks}});
+				responder.Send({event:'/api/media',data:{correlationID:incoming.CorrelationID,message:'Binary media received over RTCDataChannel'}});
+				component._RTCIncoming = null;
+			}
+		});
+		initiator.On('Protocol.Response', function (event) {
+			var data = event.Data && event.Data.data ? event.Data.data : {};
+			component.RTCAck = 'ACK ' + data.status + ' · ' + data.bytes + ' bytes · ' + data.chunks + ' chunks';
+		});
+		initiator.On('Protocol.Event', function (event) {
+			var data = event.Data && event.Data.data ? event.Data.data : {};
+			component.RTCTransfer = data.message || 'Transfer completed';
+		});
+
+		initiator.CreateOffer().then(function (description) {
+			offer = description;
+			return component._WaitRTCIce(initiator.Connection());
+		}).then(function () {
+			offer = initiator.Connection().localDescription || offer;
+			return responder.AcceptOffer(offer);
+		}).then(function () {
+			return component._WaitRTCIce(responder.Connection());
+		}).then(function () {
+			return initiator.AcceptAnswer(responder.Connection().localDescription);
+		}).catch(function (error) {
+			component.RTCStatus = 'Error: ' + error.message;
+		});
+	},
+
+	_PumpRTCTransfer: function () {
+		var rtc = this.RTCInitiator;
+		var chunks = this._RTCOutgoing;
+		if (!rtc || !chunks) return;
+		while (this._RTCOutgoingIndex < chunks.length) {
+			if (!rtc.Send(chunks[this._RTCOutgoingIndex])) return;
+			this._RTCOutgoingIndex++;
+		}
+		this.RTCTransfer = 'All binary chunks accepted by the Elemenx send queue; waiting for peer ACK...';
+		this._RTCOutgoing = null;
+	},
+
+	SendWebRTCTransfer: function () {
+		var rtc = this.RTCInitiator;
+		var correlationID;
+		var chunks = [];
+		var total = 512 * 1024;
+		var chunkSize = 16 * 1024;
+		var offset = 0;
+		var chunk;
+		var i;
+
+		if (!rtc || !rtc.Writable() || this._RTCOutgoing) return;
+		correlationID = 'rtc-' + Date.now();
+		while (offset < total) {
+			chunk = new Uint8Array(Math.min(chunkSize, total - offset));
+			i = 0;
+			while (i < chunk.length) {
+				chunk[i] = (offset + i) % 251;
+				i++;
+			}
+			chunks.push(chunk);
+			offset += chunk.length;
+		}
+		this._RTCOutgoing = chunks;
+		this._RTCOutgoingIndex = 0;
+		this._RTCBackpressureCount = 0;
+		this.$Batch(function (state) {
+			state.RTCTransfer = 'Sending 512 KiB binary payload · 32 chunks...';
+			state.RTCAck = 'Waiting for ACK...';
+			state.RTCBackpressure = '0 events';
+			state.RTCBytes = 0;
+			state.RTCChunks = 0;
+		});
+		if (!rtc.Send({url:'/api/media',data:{correlationID:correlationID,name:'advanced-media.bin',size:total,chunkSize:chunkSize}})) return;
+		this._PumpRTCTransfer();
+	},
+
+	DisconnectWebRTC: function () {
+		if (this.RTCInitiator) this.RTCInitiator.Close();
+		if (this.RTCResponder) this.RTCResponder.Close();
+		this.RTCInitiator = null;
+		this.RTCResponder = null;
+		this._RTCOutgoing = null;
+		this._RTCIncoming = null;
+		this.RTCStatus = 'Disconnected';
+	},
+
 	$OnDestroy: function () {
 		if (this.Request && this.Request.Abort)
 			this.Request.Abort();
@@ -353,5 +569,7 @@ Elemenx.Component('NetworkShowcase', {
 		if (this.EventStream) this.EventStream.Close();
 		if (this.LongPolling) this.LongPolling.Close();
 		if (this.Stream) this.Stream.Close();
+		if (this.RTCInitiator) this.RTCInitiator.Close();
+		if (this.RTCResponder) this.RTCResponder.Close();
 	}
 });
