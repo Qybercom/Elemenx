@@ -57,3 +57,17 @@
 	<button class="button" (click)="ConnectSSE">Open SSE stream</button>
 	<button class="button" (click)="DisconnectSSE">Close SSE stream</button>
 </section>
+
+<section class="card network-longpolling-showcase">
+	<h2 class="card-title">Network LongPolling · held request loop</h2>
+	<p>A real same-origin long-poll loop through <b>this.$Network().LongPolling()</b>. Each request stays pending until the local server has an event, then the client immediately opens the next poll. <b>AdvancedJSON</b> decodes every response.</p>
+	<div class="meta-grid">
+		<div class="meta-item"><span class="meta-label">Status</span><span class="meta-value longpolling-status">{{LongPollingStatus}}</span></div>
+		<div class="meta-item"><span class="meta-label">Received</span><span class="meta-value">{{LongPollingCount}} / 3</span></div>
+		<div class="meta-item"><span class="meta-label">Latest response</span><span class="meta-value">{{LongPollingData}}</span></div>
+		<div class="meta-item"><span class="meta-label">Protocol</span><span class="meta-value">AdvancedJSON → Protocol.JSON</span></div>
+	</div>
+	<p class="network-events network-longpolling-events"><code>{{LongPollingEvents}}</code></p>
+	<button class="button" (click)="ConnectLongPolling">Start LongPolling</button>
+	<button class="button" (click)="DisconnectLongPolling">Stop LongPolling</button>
+</section>

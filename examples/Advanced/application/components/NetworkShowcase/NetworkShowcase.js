@@ -70,6 +70,13 @@ Elemenx.Component('NetworkShowcase', {
 	SSECount: 0,
 	_SSEEvents: null,
 
+	LongPolling: null,
+	LongPollingStatus: 'Disconnected',
+	LongPollingEvents: '—',
+	LongPollingData: 'No responses yet.',
+	LongPollingCount: 0,
+	_LongPollingEvents: null,
+
 	Load: function () {
 		var component = this;
 		var network;
@@ -213,6 +220,49 @@ Elemenx.Component('NetworkShowcase', {
 
 	DisconnectSSE: function () {
 		if (this.EventStream) this.EventStream.Close();
+		if (this.LongPolling) this.LongPolling.Close();
+	},
+
+
+	ConnectLongPolling: function () {
+		var component = this;
+		if (!component.LongPolling) {
+			component.LongPolling = component.$Network().LongPolling({
+				URL: '/elemenx-network-longpolling',
+				Protocol: 'AdvancedJSON',
+				Retry: 500
+			});
+			component.LongPolling.On('Transport', function (event) {
+				component._LongPollingEvents.push(event.Type);
+				component.LongPollingEvents = component._LongPollingEvents.join(' → ');
+			});
+			component.LongPolling.On('Transport.Open', function () { component.LongPollingStatus = 'Polling'; });
+			component.LongPolling.On('Transport.Error', function () { component.LongPollingStatus = 'Error / retrying'; });
+			component.LongPolling.On('Transport.Timeout', function () { component.LongPollingStatus = 'Timeout / retrying'; });
+			component.LongPolling.On('Transport.Close', function () {
+				component.LongPollingStatus = component.LongPollingCount >= 3 ? 'Completed' : 'Disconnected';
+			});
+			component.LongPolling.On('Protocol.JSON', function (event) {
+				var data = event.Data || {};
+				component.$Batch(function (state) {
+					state.LongPollingCount++;
+					state.LongPollingData = (data.message || 'LongPolling response') + ' #' + state.LongPollingCount;
+				});
+				if (component.LongPollingCount >= 3) component.LongPolling.Close();
+			});
+		}
+		component._LongPollingEvents = [];
+		component.$Batch(function (state) {
+			state.LongPollingStatus = 'Connecting';
+			state.LongPollingEvents = '—';
+			state.LongPollingData = 'Waiting for held response...';
+			state.LongPollingCount = 0;
+		});
+		component.LongPolling.Connect();
+	},
+
+	DisconnectLongPolling: function () {
+		if (this.LongPolling) this.LongPolling.Close();
 	},
 
 	$OnDestroy: function () {
@@ -220,5 +270,6 @@ Elemenx.Component('NetworkShowcase', {
 			this.Request.Abort();
 		if (this.Socket) this.Socket.Close(1000, 'destroy');
 		if (this.EventStream) this.EventStream.Close();
+		if (this.LongPolling) this.LongPolling.Close();
 	}
 });

@@ -9,6 +9,17 @@ module.exports={
 		Compression:true,
 		CompressionThreshold:1024,
 		Request:function (request,response,pathname) {
+			if (pathname === '/elemenx-network-longpolling') {
+				var closed=false;
+				var timer=setTimeout(function () {
+					if (closed) return;
+					timer=null;
+					response.writeHead(200,{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-cache'});
+					response.end(JSON.stringify({message:'Elemenx LongPolling event',time:Date.now()}));
+				},250);
+				response.on('close',function () { closed=true; if (timer) { clearTimeout(timer); timer=null; } });
+				return true;
+			}
 			if (pathname !== '/elemenx-network-sse') return false;
 			response.writeHead(200,{
 				'Content-Type':'text/event-stream; charset=utf-8',

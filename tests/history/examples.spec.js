@@ -84,3 +84,22 @@ test('official Advanced example receives a real SSE stream through Protocol', as
 
 	expect(errors).toEqual([]);
 });
+
+test('official Advanced example runs a real LongPolling request loop through Protocol', async ({ page }) => {
+	var errors = captureErrors(page);
+
+	await page.goto('http://127.0.0.1:4274/');
+	await expectBootstrapVisible(page.getByRole('heading', {name: 'Network LongPolling · held request loop'}), errors);
+	await page.getByRole('button', {name: 'Start LongPolling'}).click();
+	await expect(page.locator('.longpolling-status')).toHaveText('Completed');
+	await expect(page.locator('.network-longpolling-showcase').getByText('3 / 3', {exact: true})).toBeVisible();
+	await expect(page.locator('.network-longpolling-events')).toContainText('BeforeConnect');
+	await expect(page.locator('.network-longpolling-events')).toContainText('BeforeRequest');
+	await expect(page.locator('.network-longpolling-events')).toContainText('BeforeResponse');
+	await expect(page.locator('.network-longpolling-events')).toContainText('Data');
+	await expect(page.locator('.network-longpolling-events')).toContainText('AfterResponse');
+	await expect(page.locator('.network-longpolling-events')).toContainText('Close');
+	await expect(page.getByText('Elemenx LongPolling event #3', {exact: true})).toBeVisible();
+
+	expect(errors).toEqual([]);
+});

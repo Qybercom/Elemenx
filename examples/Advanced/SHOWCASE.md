@@ -110,7 +110,7 @@ Status values:
 | Protocol | YES | `AdvancedJSON` decodes the XHR response and emits the visible `Protocol.JSON` event. |
 | WebSocket | YES | Real local WebSocket lifecycle plus the original Quark-style `/api/media` request → response ACK + event payload flow. |
 | SSE | YES | Real same-origin EventSource lifecycle; the local endpoint emits three JSON events decoded through `AdvancedJSON`, then the showcase closes the stream. |
-| LongPolling | MISSING | Add showcase with demo endpoint support and clear unavailable state. |
+| LongPolling | YES | Real same-origin held-request loop; each JSON response is decoded through `AdvancedJSON`, followed immediately by the next poll, with visible lifecycle and Start/Stop. |
 | Stream | MISSING | Add same-origin streaming demo if server endpoint is available; otherwise self-contained browser fixture. |
 | WebRTC | MISSING | Recreate the original local DataChannel counterpart to the Quark WebSocket structured-transfer scenario, including the binary/chunked path and backpressure-visible behavior, without external infrastructure. |
 | Transfer / TransferReceiver | MISSING | Add in-browser transfer roundtrip example. |
