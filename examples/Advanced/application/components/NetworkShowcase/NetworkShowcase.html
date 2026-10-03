@@ -101,3 +101,17 @@
 	<button class="button" (click)="SendWebRTCTransfer">Send 512 KiB media transfer</button>
 	<button class="button" (click)="DisconnectWebRTC">Disconnect WebRTC</button>
 </section>
+<section class="card network-transfer-showcase">
+	<h2 class="card-title">Network Transfer · TransferReceiver over WebRTC</h2>
+	<p>The high-level <b>Transfer</b> API sends a 1 MiB binary payload over the already connected WebRTC transport. <b>TransferReceiver</b> acknowledges every 32 KiB chunk, Transfer keeps a four-chunk window with retry support, and the receiver reconstructs and verifies the final Blob byte-for-byte.</p>
+	<div class="meta-grid">
+		<div class="meta-item"><span class="meta-label">Sender phase</span><span class="meta-value transfer-status">{{TransferStatus}}</span></div>
+		<div class="meta-item"><span class="meta-label">Progress</span><span class="meta-value transfer-progress">{{TransferProgress}}</span></div>
+		<div class="meta-item"><span class="meta-label">Receiver</span><span class="meta-value transfer-receiver-status">{{TransferReceiverStatus}}</span></div>
+		<div class="meta-item"><span class="meta-label">Result</span><span class="meta-value transfer-result">{{TransferResult}}</span></div>
+		<div class="meta-item"><span class="meta-label">Chunking</span><span class="meta-value">1 MiB · 32 KiB chunks · window 4</span></div>
+		<div class="meta-item"><span class="meta-label">Reliability</span><span class="meta-value">ACK per chunk · retry 500 ms · max 8</span></div>
+	</div>
+	<p class="network-events network-transfer-events"><code>{{TransferEvents}}</code></p>
+	<button class="button" (click)="RunTransfer">Run Transfer roundtrip</button>
+</section>
