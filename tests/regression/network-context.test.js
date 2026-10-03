@@ -47,6 +47,20 @@ describe('Regression: Network contexts / ownership', function () {
 		metrics.Destroy();
 	});
 
+	it('Metrics with a Transport starts monitoring automatically', function () {
+		var callbacks={};
+		var transport={
+			On:function (name,callback) { callbacks[name]=callback; },
+			Off:function (name,callback) { if (callbacks[name]===callback) delete callbacks[name]; }
+		};
+		var metrics=Elemenx.Network.Metrics({Transport:transport});
+
+		expect(metrics.Snapshot().Running).toBe(true);
+		callbacks['Transport.AfterSend']({Data:{Data:'hello'}});
+		expect(metrics.Snapshot().TX.Bytes).toBe(5);
+		metrics.Destroy();
+	});
+
 	it('Metrics emits namespaced lifecycle events and tracks Active state', function () {
 		var metrics=Elemenx.Network.Metrics();
 		var events=[];

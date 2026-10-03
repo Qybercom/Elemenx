@@ -114,7 +114,7 @@ Status values:
 | Stream | YES | Real same-origin chunked HTTP response; `Stream` reads one open response incrementally and `AdvancedNDJSON` reconstructs protocol packets across response chunks. |
 | WebRTC | YES | Real local peer-to-peer DataChannel negotiation; Quark-style `/api/media` control packet + 512 KiB binary/chunked transfer + structured ACK/event, with visible Backpressure/Drain behavior. |
 | Transfer / TransferReceiver | YES | High-level 1 MiB roundtrip over the live WebRTC DataChannel: application code only supplies Transport/Data, observes Progress/Receive, and calls Send(); chunking, ACK/retry, windowing, backpressure and Blob reconstruction are handled by Elemenx. |
-| Metrics | MISSING | Add metrics display around a demonstrable transport. |
+| Metrics | YES | Live Metrics attaches to the WebRTC transport, starts automatically and continuously exposes TX/RX bytes and live transfer rates for any DataChannel traffic; no manual measurement lifecycle is required. |
 
 ## Storage
 

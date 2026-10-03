@@ -194,6 +194,14 @@ Elemenx.Component('NetworkShowcase', {
 	TransferEvents: '—',
 	_TransferEvents: null,
 
+	Metrics: null,
+	MetricsStatus: 'Idle',
+	MetricsTX: '0 bytes',
+	MetricsRX: '0 bytes',
+	MetricsTXSpeed: '0 B/s',
+	MetricsRXSpeed: '0 B/s',
+	MetricsElapsed: '0 ms',
+
 	Load: function () {
 		var component = this;
 		var network;
@@ -445,6 +453,30 @@ Elemenx.Component('NetworkShowcase', {
 		});
 	},
 
+	_FormatMetricBytes: function (value) {
+		if (value >= 1024 * 1024) return (value / (1024 * 1024)).toFixed(2) + ' MiB';
+		if (value >= 1024) return (value / 1024).toFixed(2) + ' KiB';
+		return Math.round(value) + ' bytes';
+	},
+
+	_FormatMetricSpeed: function (value) {
+		if (value >= 1024 * 1024) return (value / (1024 * 1024)).toFixed(2) + ' MiB/s';
+		if (value >= 1024) return (value / 1024).toFixed(2) + ' KiB/s';
+		return Math.round(value) + ' B/s';
+	},
+
+	_UpdateMetrics: function (snapshot) {
+		var component = this;
+		if (!snapshot) return;
+		component.$Batch(function (state) {
+			state.MetricsTX = component._FormatMetricBytes(snapshot.TX.Bytes);
+			state.MetricsRX = component._FormatMetricBytes(snapshot.RX.Bytes);
+			state.MetricsTXSpeed = component._FormatMetricSpeed(snapshot.TX.Speed);
+			state.MetricsRXSpeed = component._FormatMetricSpeed(snapshot.RX.Speed);
+			state.MetricsElapsed = Math.round(snapshot.Elapsed) + ' ms';
+		});
+	},
+
 	ConnectWebRTC: function () {
 		var component = this;
 		var initiator;
@@ -482,6 +514,11 @@ Elemenx.Component('NetworkShowcase', {
 		});
 		component.RTCInitiator = initiator;
 		component.RTCResponder = responder;
+
+		component.Metrics = component.$Network().Metrics({Transport: initiator});
+		component.MetricsStatus = 'Live';
+		component._UpdateMetrics(component.Metrics.Snapshot());
+		component.Metrics.On('Metrics.Update', function (event) { component._UpdateMetrics(event.Data); });
 
 		initiator.On('Transport', function (event) {
 			if (event.Type === 'BeforeSend' || event.Type === 'AfterSend' || event.Type === 'Queued') return;
@@ -534,6 +571,7 @@ Elemenx.Component('NetworkShowcase', {
 		initiator.On('Protocol.Event', function (event) {
 			var data = event.Data && event.Data.data ? event.Data.data : {};
 			component.RTCTransfer = data.message || 'Transfer completed';
+		
 		});
 
 		initiator.CreateOffer().then(function (description) {
@@ -652,6 +690,8 @@ Elemenx.Component('NetworkShowcase', {
 	},
 
 	DisconnectWebRTC: function () {
+		if (this.Metrics) this.Metrics.Destroy();
+		this.Metrics = null;
 		if (this.Transfer) this.Transfer.Destroy();
 		if (this.TransferReceiver) this.TransferReceiver.Destroy();
 		this.Transfer = null;
@@ -666,6 +706,7 @@ Elemenx.Component('NetworkShowcase', {
 	},
 
 	$OnDestroy: function () {
+		if (this.Metrics) this.Metrics.Destroy();
 		if (this.Request && this.Request.Abort)
 			this.Request.Abort();
 		if (this.Socket) this.Socket.Close(1000, 'destroy');

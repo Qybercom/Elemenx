@@ -10737,6 +10737,8 @@
 			
 			attach();
 			
+			if (transport && config.AutoStart !== false) api.Start();
+			
 			return api;
 		}
 		

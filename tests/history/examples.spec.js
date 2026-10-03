@@ -141,6 +141,23 @@ test('official Advanced example transfers Quark control and binary chunks over a
 	expect(errors).toEqual([]);
 });
 
+test('official Advanced example reports WebRTC Network Metrics automatically', async ({ page }) => {
+	var errors = captureErrors(page);
+
+	await page.goto('http://127.0.0.1:4274/');
+	await expectBootstrapVisible(page.getByRole('heading', {name: 'Network Metrics · automatic WebRTC telemetry'}), errors);
+	await page.getByRole('button', {name: 'Connect local WebRTC peers'}).click();
+	await expect(page.locator('.rtc-status')).toHaveText('Connected', {timeout: 10000});
+	await expect(page.locator('.metrics-status')).toHaveText('Live');
+	await page.getByRole('button', {name: 'Send 512 KiB media transfer'}).click();
+	await expect(page.locator('.rtc-received')).toHaveText('524288 bytes · 32 chunks', {timeout: 10000});
+	await expect(page.locator('.metrics-tx')).not.toHaveText('0 bytes');
+	await expect(page.locator('.metrics-rx')).not.toHaveText('0 bytes');
+
+	expect(errors).toEqual([]);
+});
+
+
 test('official Advanced example completes a real Transfer / TransferReceiver roundtrip over WebRTC', async ({ page }) => {
 	var errors = captureErrors(page);
 
