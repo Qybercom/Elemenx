@@ -1069,20 +1069,62 @@ Elemenx.Component('NetworkShowcase', {
 	RunUniversalWebRTC: function () {
 		var component=this;
 		var payload=component._UniversalRequirePayload('UniversalWebRTC');
+		var initiator;
+		var responder;
+		var offer;
 		if (!payload) return;
-		function send () {
-			var transfer;
-			if (!component.RTCInitiator||!component.RTCResponder||!component.RTCInitiator.Writable()||!component.RTCResponder.Writable()) { setTimeout(send,25); return; }
-			component._UniversalMetrics('UniversalWebRTC',component.RTCInitiator);
-			component._UniversalReceive('UniversalWebRTC',component.RTCResponder);
-			transfer=component.$Network().Transfer({Transport:component.RTCInitiator,Data:payload});
-			if (!component.UniversalResources) component.UniversalResources=[];
-			component.UniversalResources.push(transfer);
-			transfer.Send();
-		}
+
+		initiator=component.$Network().WebRTC({
+			Protocol:'AdvancedRTC',
+			ChannelName:'elemenx-universal-transfer',
+			Channel:{ordered:true,protocol:'elemenx-transfer-binary'},
+			BufferHighWaterMark:64*1024,
+			BufferLowWaterMark:16*1024,
+			QueueHighWaterMark:128*1024,
+			QueueLowWaterMark:16*1024
+		});
+		responder=component.$Network().WebRTC({
+			Protocol:'AdvancedRTC',
+			BufferHighWaterMark:64*1024,
+			BufferLowWaterMark:16*1024,
+			QueueHighWaterMark:128*1024,
+			QueueLowWaterMark:16*1024
+		});
+		if (!component.UniversalResources) component.UniversalResources=[];
+		component.UniversalResources.push(initiator);
+		component.UniversalResources.push(responder);
+		component._UniversalMetrics('UniversalWebRTC',initiator);
+		component._UniversalReceive('UniversalWebRTC',responder);
+		initiator.On('Transport.Channel',function () {
+			if (initiator.DataChannel()) initiator.DataChannel().binaryType='arraybuffer';
+		});
+		responder.On('Transport.Channel',function () {
+			if (responder.DataChannel()) responder.DataChannel().binaryType='arraybuffer';
+		});
 		component.UniversalWebRTC='Connecting...';
-		if (!component.RTCInitiator||!component.RTCInitiator.Writable()) component.ConnectWebRTC();
-		send();
+		initiator.CreateOffer().then(function (description) {
+			offer=description;
+			return component._WaitRTCIce(initiator.Connection());
+		}).then(function () {
+			offer=initiator.Connection().localDescription||offer;
+			return responder.AcceptOffer(offer);
+		}).then(function () {
+			return component._WaitRTCIce(responder.Connection());
+		}).then(function () {
+			return initiator.AcceptAnswer(responder.Connection().localDescription);
+		}).then(function () {
+			function send () {
+				var transfer;
+				if (!initiator.Writable()||!responder.Writable()) { setTimeout(send,25); return; }
+				transfer=component.$Network().Transfer({Transport:initiator,Data:payload});
+				component.UniversalResources.push(transfer);
+				component.UniversalWebRTC='Sending...';
+				transfer.Send();
+			}
+			send();
+		}).catch(function (error) {
+			component.UniversalWebRTC='Error · '+error.message;
+		});
 	},
 
 	RunUniversalAll: function () {
