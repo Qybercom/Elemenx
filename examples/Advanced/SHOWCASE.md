@@ -113,7 +113,7 @@ Status values:
 | LongPolling | YES | Real same-origin held-request loop; each JSON response is decoded through `AdvancedJSON`, followed immediately by the next poll, with visible lifecycle and Start/Stop. |
 | Stream | YES | Real same-origin chunked HTTP response; `Stream` reads one open response incrementally and `AdvancedNDJSON` reconstructs protocol packets across response chunks. |
 | WebRTC | YES | Real local peer-to-peer DataChannel negotiation; Quark-style `/api/media` control packet + 512 KiB binary/chunked transfer + structured ACK/event, with visible Backpressure/Drain behavior. |
-| Transfer / TransferReceiver | YES | Real 1 MiB in-browser roundtrip over the live WebRTC DataChannel; Transfer uses 32 KiB chunks, windowed ACK/retry flow, and TransferReceiver reconstructs and verifies the final Blob byte-for-byte. |
+| Transfer / TransferReceiver | YES | High-level 1 MiB roundtrip over the live WebRTC DataChannel: application code only supplies Transport/Data, observes Progress/Receive, and calls Send(); chunking, ACK/retry, windowing, backpressure and Blob reconstruction are handled by Elemenx. |
 | Metrics | MISSING | Add metrics display around a demonstrable transport. |
 
 ## Storage

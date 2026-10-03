@@ -9161,6 +9161,16 @@
 					
 					return api;
 				},
+				Send: function (value) {
+					if (active) return api;
+					
+					if (arguments.length) {
+						sourceSet = true;
+						source = value;
+					}
+					
+					return api.Execute();
+				},
 				Receive: function (packet) {
 					if (outbound) outbound.Receive(packet);
 					else receivePacket(packet);
@@ -9350,13 +9360,16 @@
 					
 					delete transfers[packet.ID];
 					
-					emit('Complete', {
+					var result = {
 						ID: packet.ID,
 						Name: transfer.Name,
 						Mime: transfer.Mime,
 						Size: transfer.Size,
 						Blob: new Blob(chunks, {type: transfer.Mime || 'application/octet-stream'})
-					});
+					};
+					
+					emit('Complete', result);
+					emit('Receive', result);
 					
 					return;
 				}

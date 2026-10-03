@@ -604,8 +604,7 @@ Elemenx.Component('NetworkShowcase', {
 		var component = this;
 		var rtc = component.RTCInitiator;
 		var peer = component.RTCResponder;
-		var payload;
-		var i;
+		var payload = new Uint8Array(1024 * 1024);
 
 		if (!rtc || !peer || !rtc.Writable() || !peer.Writable()) {
 			component.TransferStatus = 'Connect WebRTC peers first';
@@ -616,66 +615,29 @@ Elemenx.Component('NetworkShowcase', {
 		if (component.Transfer) component.Transfer.Destroy();
 		if (component.TransferReceiver) component.TransferReceiver.Destroy();
 
-		payload = new Uint8Array(1024 * 1024);
-		i = 0;
-		while (i < payload.length) {
-			payload[i] = i % 251;
-			i++;
-		}
-
-		component._TransferEvents = [];
 		component.$Batch(function (state) {
 			state.TransferStatus = 'Preparing';
 			state.TransferProgress = '0 / 1048576 bytes';
 			state.TransferReceiverStatus = 'Waiting';
-			state.TransferResult = 'Sending 1 MiB through Transfer / TransferReceiver...';
+			state.TransferResult = 'Sending 1 MiB through the high-level Transfer API...';
 			state.TransferEvents = '—';
 		});
 
 		component.TransferReceiver = component.$Network().TransferReceiver({Transport: peer});
-		component.TransferReceiver.On('Transfer.Start', function (event) {
-			component.TransferReceiverStatus = 'Receiving ' + event.Data.Size + ' bytes';
-		});
-		component.TransferReceiver.On('Transfer.Chunk', function (event) {
-			component._TransferEvents.push('RX.Chunk#' + event.Data.Index);
-			component.TransferEvents = component._TransferEvents.join(' → ');
-		});
-		component.TransferReceiver.On('Transfer.Complete', function (event) {
-			var data = event.Data;
-			data.Blob.arrayBuffer().then(function (buffer) {
-				var bytes = new Uint8Array(buffer);
-				var valid = bytes.byteLength === payload.byteLength;
-				var index = 0;
-				while (valid && index < bytes.length) {
-					if (bytes[index] !== index % 251) valid = false;
-					index++;
-				}
-				component.$Batch(function (state) {
-					state.TransferReceiverStatus = 'Complete';
-					state.TransferResult = valid ? '1048576 bytes reconstructed byte-for-byte' : 'Payload verification failed';
-				});
+		component.TransferReceiver.On('Transfer.Receive', function (event) {
+			component.$Batch(function (state) {
+				state.TransferReceiverStatus = 'Received';
+				state.TransferResult = event.Data.Blob.size + ' bytes received as Blob';
+				state.TransferEvents = 'Receive';
 			});
 		});
 
 		component.Transfer = component.$Network().Transfer({
 			Transport: rtc,
-			Data: payload.buffer,
-			ChunkSize: 32 * 1024,
-			WindowSize: 4,
-			Retry: 500,
-			MaxRetries: 8
-		});
-		component.Transfer.On('Transfer.Phase', function (event) {
-			component.TransferStatus = event.Data.Phase;
-			component._TransferEvents.push('TX.' + event.Data.Phase);
-			component.TransferEvents = component._TransferEvents.join(' → ');
+			Data: payload.buffer
 		});
 		component.Transfer.On('Transfer.Progress', function (event) {
 			component.TransferProgress = event.Data.Loaded + ' / ' + event.Data.Total + ' bytes';
-		});
-		component.Transfer.On('Transfer.Retry', function (event) {
-			component._TransferEvents.push('TX.Retry#' + event.Data.Index);
-			component.TransferEvents = component._TransferEvents.join(' → ');
 		});
 		component.Transfer.On('Transfer.Complete', function (event) {
 			component.$Batch(function (state) {
@@ -686,7 +648,7 @@ Elemenx.Component('NetworkShowcase', {
 		component.Transfer.On('Transfer.Error', function (event) {
 			component.TransferStatus = 'Error: ' + (event.Data.Error ? event.Data.Error.message : 'transfer failed');
 		});
-		component.Transfer.Execute();
+		component.Transfer.Send();
 	},
 
 	DisconnectWebRTC: function () {

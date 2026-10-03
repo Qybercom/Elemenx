@@ -151,11 +151,9 @@ test('official Advanced example completes a real Transfer / TransferReceiver rou
 	await page.getByRole('button', {name: 'Run Transfer roundtrip'}).click();
 	await expect(page.locator('.transfer-status')).toHaveText('Complete', {timeout: 15000});
 	await expect(page.locator('.transfer-progress')).toHaveText('1048576 / 1048576 bytes');
-	await expect(page.locator('.transfer-receiver-status')).toHaveText('Complete');
-	await expect(page.locator('.transfer-result')).toHaveText('1048576 bytes reconstructed byte-for-byte');
-	await expect(page.locator('.network-transfer-events')).toContainText('TX.Sending');
-	await expect(page.locator('.network-transfer-events')).toContainText('RX.Chunk#0');
-	await expect(page.locator('.network-transfer-events')).toContainText('TX.Complete');
+	await expect(page.locator('.transfer-receiver-status')).toHaveText('Received');
+	await expect(page.locator('.transfer-result')).toHaveText('1048576 bytes received as Blob');
+	await expect(page.locator('.network-transfer-events')).toHaveText('Receive');
 
 	expect(errors).toEqual([]);
 });

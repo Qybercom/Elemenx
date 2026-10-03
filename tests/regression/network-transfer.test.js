@@ -128,6 +128,29 @@ describe('Regression: Network Transfer / TransferReceiver', function () {
 		expect(link.B.Sent.filter(function (packet) { return packet.Action === 'Ack'; }).length).toBe(3);
 	});
 
+
+	it('high-level Send and Receive API hides transfer mechanics from application code', async function () {
+		var link=pair();
+		var received=[];
+		var progress=[];
+		var receiver=Elemenx.Network.TransferReceiver({Transport:link.B});
+		var transfer=Elemenx.Network.Transfer({
+			Transport:link.A,
+			Data:new Uint8Array([11,22,33]).buffer
+		});
+
+		receiver.On('Transfer.Receive',function (event) { received.push(event.Data); });
+		transfer.On('Transfer.Progress',function (event) { progress.push(event.Data); });
+		transfer.Send();
+		await tick(30);
+
+		expect(received.length).toBe(1);
+		expect(received[0].Size).toBe(3);
+		expect(received[0].Blob.size).toBe(3);
+		expect(progress.length).toBeGreaterThan(0);
+		expect(transfer.Phase()).toBe('Complete');
+	});
+
 	it('TransferReceiver acknowledges duplicate chunks but stores them only once', async function () {
 		var transport=new EventTransport();
 		var chunks=[];
