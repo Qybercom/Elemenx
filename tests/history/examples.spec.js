@@ -67,3 +67,20 @@ test('official Advanced example executes a real Network XHR lifecycle', async ({
 
 	expect(errors).toEqual([]);
 });
+
+test('official Advanced example receives a real SSE stream through Protocol', async ({ page }) => {
+	var errors = captureErrors(page);
+
+	await page.goto('http://127.0.0.1:4274/');
+	await expectBootstrapVisible(page.getByRole('heading', {name: 'Network SSE · live server events'}), errors);
+	await page.getByRole('button', {name: 'Open SSE stream'}).click();
+	await expect(page.locator('.sse-status')).toHaveText('Completed');
+	await expect(page.getByText('3 / 3', {exact: true})).toBeVisible();
+	await expect(page.locator('.network-sse-events')).toContainText('BeforeConnect');
+	await expect(page.locator('.network-sse-events')).toContainText('Open');
+	await expect(page.locator('.network-sse-events')).toContainText('Data');
+	await expect(page.locator('.network-sse-events')).toContainText('Close');
+	await expect(page.getByText('Elemenx SSE event #3 · id 3', {exact: true})).toBeVisible();
+
+	expect(errors).toEqual([]);
+});

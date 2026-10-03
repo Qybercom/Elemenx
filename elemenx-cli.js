@@ -112,6 +112,7 @@ function listen (directory, port, settings, production, options) {
 			CompressionThreshold: threshold,
 			CacheControl: cacheControl,
 			FrameworkFallback: !production,
+			Request: serverSettings.Request || null,
 			WebSocket: serverSettings.WebSocket || null
 		})
 		.Listen(port, host, function () {

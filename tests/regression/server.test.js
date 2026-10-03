@@ -66,4 +66,30 @@ describe('Elemenx production server',function () {
 		}
 		finally { fs.rmSync(root,{recursive:true,force:true}); }
 	});
+
+	it('allows a configured request handler to serve dynamic endpoints before static files',async function () {
+		var root=fs.mkdtempSync(path.join(os.tmpdir(),'elemenx-server-request-'));
+		fs.writeFileSync(path.join(root,'index.html'),'<main>fallback</main>');
+		try {
+			await withServer({Root:root,Request:function (request,response,pathname) {
+				if (pathname !== '/dynamic') return false;
+				response.writeHead(200,{'Content-Type':'application/json'});
+				response.end(JSON.stringify({ok:true}));
+				return true;
+			}},async function (port) {
+				var result=await new Promise(function (resolve,reject) {
+					var req=http.request({host:'127.0.0.1',port:port,path:'/dynamic',method:'GET'},function (response) {
+						var chunks=[];
+						response.on('data',function (chunk) { chunks.push(chunk); });
+						response.on('end',function () { resolve({Status:response.statusCode,Body:Buffer.concat(chunks).toString('utf8')}); });
+					});
+					req.on('error',reject);
+					req.end();
+				});
+				expect(result.Status).toBe(200);
+				expect(JSON.parse(result.Body)).toEqual({ok:true});
+			});
+		}
+		finally { fs.rmSync(root,{recursive:true,force:true}); }
+	});
 });

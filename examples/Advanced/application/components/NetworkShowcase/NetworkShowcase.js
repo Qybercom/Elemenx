@@ -63,6 +63,13 @@ Elemenx.Component('NetworkShowcase', {
 	QuarkResponse: '—',
 	QuarkEvent: '—',
 
+	EventStream: null,
+	SSEStatus: 'Disconnected',
+	SSEEvents: '—',
+	SSEData: 'No events yet.',
+	SSECount: 0,
+	_SSEEvents: null,
+
 	Load: function () {
 		var component = this;
 		var network;
@@ -168,9 +175,50 @@ Elemenx.Component('NetworkShowcase', {
 		if (this.Socket) this.Socket.Close(1000, 'showcase');
 	},
 
+	ConnectSSE: function () {
+		var component = this;
+		if (!component.EventStream) {
+			component.EventStream = component.$Network().SSE({
+				URL: '/elemenx-network-sse',
+				Protocol: 'AdvancedJSON'
+			});
+			component.EventStream.On('Transport', function (event) {
+				component._SSEEvents.push(event.Type);
+				component.SSEEvents = component._SSEEvents.join(' → ');
+			});
+			component.EventStream.On('Transport.Open', function () { component.SSEStatus = 'Connected'; });
+			component.EventStream.On('Transport.Error', function () { component.SSEStatus = 'Error / reconnecting'; });
+			component.EventStream.On('Transport.Close', function () {
+				component.SSEStatus = component.SSECount >= 3 ? 'Completed' : 'Disconnected';
+			});
+			component.EventStream.On('Protocol.JSON', function (event) {
+				var data = event.Data || {};
+				component.$Batch(function (state) {
+					state.SSECount++;
+					state.SSEData = (data.message || 'SSE event') + ' · id ' + state.SSECount;
+				});
+				if (component.SSECount >= 3) component.EventStream.Close();
+			});
+		}
+		if (component.EventStream.Source()) return;
+		component._SSEEvents = [];
+		component.$Batch(function (state) {
+			state.SSEStatus = 'Connecting';
+			state.SSEEvents = '—';
+			state.SSEData = 'Waiting for server events...';
+			state.SSECount = 0;
+		});
+		component.EventStream.Connect();
+	},
+
+	DisconnectSSE: function () {
+		if (this.EventStream) this.EventStream.Close();
+	},
+
 	$OnDestroy: function () {
 		if (this.Request && this.Request.Abort)
 			this.Request.Abort();
 		if (this.Socket) this.Socket.Close(1000, 'destroy');
+		if (this.EventStream) this.EventStream.Close();
 	}
 });

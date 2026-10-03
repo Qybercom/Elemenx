@@ -8,6 +8,23 @@ module.exports={
 		ProductionPort:4175,
 		Compression:true,
 		CompressionThreshold:1024,
+		Request:function (request,response,pathname) {
+			if (pathname !== '/elemenx-network-sse') return false;
+			response.writeHead(200,{
+				'Content-Type':'text/event-stream; charset=utf-8',
+				'Cache-Control':'no-cache, no-transform',
+				'Connection':'keep-alive'
+			});
+			var sequence=0;
+			var timer=setInterval(function () {
+				sequence++;
+				response.write('id: ' + sequence + '\n');
+				response.write('data: ' + JSON.stringify({sequence:sequence,message:'Elemenx SSE event #' + sequence}) + '\n\n');
+				if (sequence >= 3) { clearInterval(timer); timer=null; }
+			},250);
+			request.on('close',function () { if (timer) { clearInterval(timer); timer=null; } });
+			return true;
+		},
 		WebSocket:{
 			Path:'/elemenx-network-showcase',
 			Message:function (connection,message) {

@@ -153,6 +153,8 @@ function create (options) {
 			return;
 		}
 
+		if (typeof options.Request === 'function' && options.Request(request,response,pathname) === true) return;
+
 		if (pathname === '/elemenx.js' && options.FrameworkFallback !== false && !fs.existsSync(path.join(root,'elemenx.js'))) {
 			send(request,response,framework);
 			return;
@@ -218,7 +220,7 @@ if (require.main === module) {
 	var configFile=path.join(root,'elemenx.config.js');
 	var settings=fs.existsSync(configFile) ? require(configFile) : {};
 	var serverSettings=settings.Server || {};
-	create({Root:root,WebSocket:serverSettings.WebSocket || null}).Listen(port,'127.0.0.1',function () {
+	create({Root:root,Request:serverSettings.Request || null,WebSocket:serverSettings.WebSocket || null}).Listen(port,'127.0.0.1',function () {
 		console.log('Elemenx server: http://127.0.0.1:' + port + '/');
 	});
 }

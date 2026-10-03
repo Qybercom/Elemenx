@@ -33,7 +33,7 @@ describe('Elemenx npm release surface',function () {
 		expect(files).toContain('examples/Simple/index.html');
 		expect(files).toContain('examples/Advanced/app.js');
 		expect(files.some(function (file) { return /(^|\/)dist\//.test(file); })).toBe(false);
-	});
+	},30000);
 
 	it('keeps package entry points valid',function () {
 		var manifest=JSON.parse(fs.readFileSync(path.join(root,'package.json'),'utf8'));

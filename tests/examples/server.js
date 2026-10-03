@@ -17,6 +17,7 @@ var server = Server.Create({
 	Root: path.join(project, 'dist'),
 	Compression: true,
 	CacheControl: 'public, max-age=0, must-revalidate',
+	Request: settings.Server.Request,
 	WebSocket: settings.Server.WebSocket
 });
 

@@ -43,3 +43,17 @@
 	<button class="button" (click)="SendWebSocket">Send Quark packet</button>
 	<button class="button" (click)="DisconnectWebSocket">Disconnect</button>
 </section>
+
+<section class="card network-sse-showcase">
+	<h2 class="card-title">Network SSE · live server events</h2>
+	<p>A real same-origin <b>EventSource</b> through <b>this.$Network().SSE()</b>. The local server emits three JSON events; <b>AdvancedJSON</b> decodes each one and the showcase closes the stream after the third event.</p>
+	<div class="meta-grid">
+		<div class="meta-item"><span class="meta-label">Status</span><span class="meta-value sse-status" #SSEStatus>{{SSEStatus}}</span></div>
+		<div class="meta-item"><span class="meta-label">Received</span><span class="meta-value">{{SSECount}} / 3</span></div>
+		<div class="meta-item"><span class="meta-label">Latest event</span><span class="meta-value" #SSEData>{{SSEData}}</span></div>
+		<div class="meta-item"><span class="meta-label">Protocol</span><span class="meta-value">AdvancedJSON → Protocol.JSON</span></div>
+	</div>
+	<p class="network-events network-sse-events"><code #SSEEvents>{{SSEEvents}}</code></p>
+	<button class="button" (click)="ConnectSSE">Open SSE stream</button>
+	<button class="button" (click)="DisconnectSSE">Close SSE stream</button>
+</section>
