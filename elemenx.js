@@ -6765,6 +6765,109 @@
 		var Elemenx = global.Elemenx;
 		var NetworkProtocols = {};
 		
+		function NetworkStructuredPack (value) {
+			var parts = [];
+			var descriptors = [];
+			var encoder = new TextEncoder();
+			var header;
+			var manifest;
+			var manifestBytes;
+			var view;
+			var i;
+			
+			function walk (item) {
+				var descriptor;
+				var output;
+				var keys;
+				var i;
+				
+				if (item instanceof Blob || item instanceof ArrayBuffer || ArrayBuffer.isView(item)) {
+					descriptor = {
+						Index: parts.length,
+						Name: item && item.name ? item.name : null,
+						Mime: item && item.type ? item.type : 'application/octet-stream',
+						File: typeof global.File === 'function' && item instanceof global.File
+					};
+					if (item instanceof Blob) descriptor.Size = item.size;
+					else if (item instanceof ArrayBuffer) descriptor.Size = item.byteLength;
+					else descriptor.Size = item.byteLength;
+					parts.push(item);
+					descriptors.push(descriptor);
+					return {$ElemenxBinary: descriptor.Index};
+				}
+				if (!item || typeof item !== 'object') return item;
+				if (item instanceof Date) return {$ElemenxDate: item.toISOString()};
+				if (Array.isArray(item)) {
+					output = [];
+					i = 0;
+					while (i < item.length) { output.push(walk(item[i])); i++; }
+					return output;
+				}
+				output = {};
+				keys = Object.keys(item);
+				i = 0;
+				while (i < keys.length) { output[keys[i]] = walk(item[keys[i]]); i++; }
+				return output;
+			}
+			
+			manifest = {Value: walk(value), Parts: descriptors};
+			manifestBytes = encoder.encode(JSON.stringify(manifest));
+			header = new ArrayBuffer(8);
+			view = new DataView(header);
+			view.setUint32(0, 0x45585354);
+			view.setUint32(4, manifestBytes.byteLength);
+			var blobParts = [header, manifestBytes];
+			i = 0;
+			while (i < parts.length) { blobParts.push(parts[i]); i++; }
+			return new Blob(blobParts, {type: 'application/x-elemenx-structured'});
+		}
+		
+		function NetworkStructuredUnpack (blob) {
+			if (!blob || blob.type !== 'application/x-elemenx-structured') return global.Promise.resolve(null);
+			return blob.arrayBuffer().then(function (buffer) {
+				var view = new DataView(buffer);
+				var manifestLength;
+				var manifest;
+				var offsets = [];
+				var offset;
+				var i;
+				if (buffer.byteLength < 8 || view.getUint32(0) !== 0x45585354) throw new Error('Invalid Elemenx structured transfer envelope');
+				manifestLength = view.getUint32(4);
+				if (8 + manifestLength > buffer.byteLength) throw new Error('Invalid Elemenx structured transfer manifest');
+				manifest = JSON.parse(new TextDecoder().decode(new Uint8Array(buffer, 8, manifestLength)));
+				offset = 8 + manifestLength;
+				i = 0;
+				while (i < manifest.Parts.length) { offsets.push(offset); offset += manifest.Parts[i].Size; i++; }
+				function restore (item) {
+					var descriptor;
+					var bytes;
+					var output;
+					var keys;
+					var i;
+					if (!item || typeof item !== 'object') return item;
+					if (Object.prototype.hasOwnProperty.call(item, '$ElemenxBinary')) {
+						descriptor = manifest.Parts[item.$ElemenxBinary];
+						bytes = buffer.slice(offsets[item.$ElemenxBinary], offsets[item.$ElemenxBinary] + descriptor.Size);
+						if (descriptor.File && typeof global.File === 'function') return new global.File([bytes], descriptor.Name || 'file', {type: descriptor.Mime});
+						return new Blob([bytes], {type: descriptor.Mime});
+					}
+					if (Object.prototype.hasOwnProperty.call(item, '$ElemenxDate')) return new Date(item.$ElemenxDate);
+					if (Array.isArray(item)) {
+						output = [];
+						i = 0;
+						while (i < item.length) { output.push(restore(item[i])); i++; }
+						return output;
+					}
+					output = {};
+					keys = Object.keys(item);
+					i = 0;
+					while (i < keys.length) { output[keys[i]] = restore(item[keys[i]]); i++; }
+					return output;
+				}
+				return restore(manifest.Value);
+			});
+		}
+		
 		function NetworkEvents (target) {
 			var events = {};
 			
@@ -8608,6 +8711,9 @@
 						return api;
 					}
 					
+					if (source && typeof source === 'object' && !(source instanceof Blob) && !(source instanceof ArrayBuffer) && !ArrayBuffer.isView(source))
+						source = NetworkStructuredPack(source);
+					
 					mode = transport && typeof transport.Send === 'function' ? 'Chunked' : 'Whole';
 					
 					if (mode === 'Whole' && (!transport || typeof transport.Data !== 'function' || typeof transport.Execute !== 'function')) {
@@ -9069,6 +9175,9 @@
 			}
 			
 			function executeOutbound () {
+				if (source && typeof source === 'object' && !(source instanceof Blob) && !(source instanceof ArrayBuffer) && !ArrayBuffer.isView(source))
+					source = NetworkStructuredPack(source);
+				
 				outbound = NetworkTransferOutbound({
 					Transport: transport,
 					Data: source,
@@ -9369,7 +9478,13 @@
 					};
 					
 					emit('Complete', result);
-					emit('Receive', result);
+					if (result.Blob.type === 'application/x-elemenx-structured') {
+						NetworkStructuredUnpack(result.Blob).then(function (value) {
+							result.Data = value;
+							emit('Receive', result);
+						}).catch(function (error) { emit('Error', {ID: result.ID, Error: error}); });
+					}
+					else emit('Receive', result);
 					
 					return;
 				}

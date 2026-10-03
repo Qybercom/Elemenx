@@ -151,6 +151,29 @@ describe('Regression: Network Transfer / TransferReceiver', function () {
 		expect(transfer.Phase()).toBe('Complete');
 	});
 
+	it('high-level Transfer preserves structured data with nested binary media', async function () {
+		var link=pair();
+		var received=[];
+		var receiver=Elemenx.Network.TransferReceiver({Transport:link.B});
+		var media=new Blob([new Uint8Array([1,2,3,4])],{type:'video/mp4'});
+		var transfer=Elemenx.Network.Transfer({
+			Transport:link.A,
+			Data:{ID:42,Title:'Structured media',Meta:{Tags:['demo','media']},Media:media}
+		});
+
+		receiver.On('Transfer.Receive',function (event) { received.push(event.Data); });
+		transfer.Send();
+		await tick(50);
+
+		expect(received.length).toBe(1);
+		expect(received[0].Data.ID).toBe(42);
+		expect(received[0].Data.Title).toBe('Structured media');
+		expect(received[0].Data.Meta.Tags).toEqual(['demo','media']);
+		expect(received[0].Data.Media).toBeInstanceOf(Blob);
+		expect(received[0].Data.Media.type).toBe('video/mp4');
+		expect(Array.from(new Uint8Array(await received[0].Data.Media.arrayBuffer()))).toEqual([1,2,3,4]);
+	});
+
 	it('TransferReceiver acknowledges duplicate chunks but stores them only once', async function () {
 		var transport=new EventTransport();
 		var chunks=[];
@@ -201,6 +224,23 @@ describe('Regression: Network Transfer / TransferReceiver', function () {
 
 		expect(aborts).toEqual(['abort-me']);
 		expect(completes).toEqual([]);
+	});
+
+	it('whole Transfer packs structured data before delegating it to the transport', async function () {
+		var transport=new WholeTransport();
+		var transfer=Elemenx.Network.Transfer({
+			Transport:transport,
+			Data:{ID:42,Title:'Structured media',Media:new Blob([new Uint8Array([1,2,3,4])],{type:'video/mp4'})}
+		});
+		transfer.Execute();
+		await tick(0);
+
+		expect(transport.Executed).toBe(1);
+		expect(transport.DataValue).toBeInstanceOf(Blob);
+		expect(transport.DataValue.type).toBe('application/x-elemenx-structured');
+		var buffer=await transport.DataValue.arrayBuffer();
+		var view=new DataView(buffer);
+		expect(view.getUint32(0)).toBe(0x45585354);
 	});
 
 	it('whole Transfer delegates payload to Execute transport and follows response lifecycle', async function () {

@@ -1,18 +1,90 @@
+var AdvancedQuarkCorrelation = 0;
+var AdvancedQuarkCorrelations = {};
+
+function AdvancedQuarkNextCorrelation () {
+	AdvancedQuarkCorrelation++;
+	return 'q-' + Date.now().toString(36) + '-' + AdvancedQuarkCorrelation;
+}
+
 Elemenx.Network.Protocol('AdvancedQuark', {
 	Encode: function (value) {
+		var correlationID;
+		var data;
+		var name;
+
+		if (value && value.Type === 'Transfer') {
+			correlationID = AdvancedQuarkNextCorrelation();
+			data = {
+				type: 'Transfer',
+				action: value.Action,
+				id: value.ID,
+				correlationID: correlationID
+			};
+
+			name = 'Name'; if (value[name] !== undefined) data.name = value[name];
+			name = 'Mime'; if (value[name] !== undefined) data.mime = value[name];
+			name = 'Size'; if (value[name] !== undefined) data.size = value[name];
+			name = 'ChunkSize'; if (value[name] !== undefined) data.chunkSize = value[name];
+			name = 'Chunks'; if (value[name] !== undefined) data.chunks = value[name];
+			name = 'Index'; if (value[name] !== undefined) data.index = value[name];
+			name = 'Offset'; if (value[name] !== undefined) data.offset = value[name];
+			name = 'Bytes'; if (value[name] !== undefined) data.bytes = value[name];
+
+			if (value.Data instanceof ArrayBuffer || (ArrayBuffer.isView && ArrayBuffer.isView(value.Data))) {
+				data.data = AdvancedTransferBase64Encode(value.Data);
+				data.encoding = 'Base64';
+			}
+
+			AdvancedQuarkCorrelations[correlationID] = value;
+			return JSON.stringify({url: '/api/media', data: data});
+		}
+
 		return JSON.stringify(value);
 	},
 	Decode: function (value) {
+		var wire;
+		var data;
+		var original;
 		var packet;
-		try { packet = JSON.parse(value); }
+
+		try { wire = JSON.parse(value); }
 		catch (error) { return {Type: 'Invalid', Data: value}; }
-		if (packet.response) return {Type: 'Response', Data: packet};
-		if (packet.event) return {Type: 'Event', Data: packet};
-		if (packet.url) return {Type: 'Request', Data: packet};
-		return {Type: 'Packet', Data: packet};
+
+		data = wire && wire.data ? wire.data : {};
+
+		if (wire && wire.response !== undefined) {
+			original = AdvancedQuarkCorrelations[data.correlationID];
+			delete AdvancedQuarkCorrelations[data.correlationID];
+
+			if (original && original.Type === 'Transfer') {
+				if (data.status !== 200) return {Type: 'TransferError', Data: data};
+				if (original.Action === 'Chunk') return {Type: 'Transfer', Data: {Type: 'Transfer', Action: 'Ack', ID: original.ID, Index: original.Index}};
+				if (original.Action === 'End') return {Type: 'Transfer', Data: {Type: 'Transfer', Action: 'Complete', ID: original.ID}};
+				return null;
+			}
+
+			return {Type: 'Response', Data: wire};
+		}
+
+		if (wire && wire.event !== undefined && data.type === 'Transfer') {
+			packet = {Type: 'Transfer', Action: data.action, ID: data.id};
+			if (data.name !== undefined) packet.Name = data.name;
+			if (data.mime !== undefined) packet.Mime = data.mime;
+			if (data.size !== undefined) packet.Size = data.size;
+			if (data.chunkSize !== undefined) packet.ChunkSize = data.chunkSize;
+			if (data.chunks !== undefined) packet.Chunks = data.chunks;
+			if (data.index !== undefined) packet.Index = data.index;
+			if (data.offset !== undefined) packet.Offset = data.offset;
+			if (data.bytes !== undefined) packet.Bytes = data.bytes;
+			if (data.encoding === 'Base64' && typeof data.data === 'string') packet.Data = AdvancedTransferBase64Decode(data.data);
+			return {Type: 'Transfer', Data: packet};
+		}
+
+		if (wire && wire.event !== undefined) return {Type: 'Event', Data: wire};
+		if (wire && wire.url !== undefined) return {Type: 'Request', Data: wire};
+		return {Type: 'Packet', Data: wire};
 	}
 });
-
 
 
 Elemenx.Network.Protocol('AdvancedRTC', {
@@ -68,6 +140,65 @@ Elemenx.Network.Protocol('AdvancedRTC', {
 		if (packet.event) return {Type: 'Event', Data: packet};
 		if (packet.url) return {Type: 'Request', Data: packet};
 		return {Type: 'Packet', Data: packet};
+	}
+});
+
+function AdvancedTransferBase64Encode (buffer) {
+	var bytes=buffer instanceof ArrayBuffer?new Uint8Array(buffer):new Uint8Array(buffer.buffer,buffer.byteOffset,buffer.byteLength);
+	var result='';
+	var i=0;
+	var block=0x8000;
+	while (i<bytes.length) {
+		result+=String.fromCharCode.apply(null,bytes.subarray(i,Math.min(i+block,bytes.length)));
+		i+=block;
+	}
+	return btoa(result);
+}
+
+function AdvancedTransferBase64Decode (value) {
+	var binary=atob(value);
+	var bytes=new Uint8Array(binary.length);
+	var i=0;
+	while (i<binary.length) { bytes[i]=binary.charCodeAt(i); i++; }
+	return bytes.buffer;
+}
+
+function AdvancedTransferDecodePacket (value) {
+	var packet;
+	try { packet=typeof value==='string'?JSON.parse(value):value; }
+	catch (error) { return {Type:'Invalid',Data:value}; }
+	if (packet&&packet.Type==='Transfer') {
+		if (packet.Action==='Chunk'&&typeof packet.Data==='string') packet.Data=AdvancedTransferBase64Decode(packet.Data);
+		return {Type:'Transfer',Data:packet};
+	}
+	return {Type:'Packet',Data:packet};
+}
+
+Elemenx.Network.Protocol('AdvancedTransferJSON', {
+	Encode: function (value) {
+		var packet;
+		if (value&&value.Type==='Transfer'&&value.Action==='Chunk'&&value.Data) {
+			packet={};
+			Object.keys(value).forEach(function (name) { packet[name]=name==='Data'?AdvancedTransferBase64Encode(value[name]):value[name]; });
+			return JSON.stringify(packet);
+		}
+		return JSON.stringify(value);
+	},
+	Decode: function (value) {
+		return AdvancedTransferDecodePacket(value);
+	},
+	Push: function (value) {
+		var text;
+		var lines;
+		var packets=[];
+		var i=0;
+		if (!this.AdvancedTransferDecoder) this.AdvancedTransferDecoder=new TextDecoder();
+		if (this.AdvancedTransferBuffer===undefined) this.AdvancedTransferBuffer='';
+		text=this.AdvancedTransferDecoder.decode(value,{stream:true});
+		lines=(this.AdvancedTransferBuffer+text).split('\n');
+		this.AdvancedTransferBuffer=lines.pop();
+		while (i<lines.length) { if (lines[i]) packets.push(AdvancedTransferDecodePacket(lines[i])); i++; }
+		return packets;
 	}
 });
 
@@ -170,6 +301,14 @@ Elemenx.Component('NetworkShowcase', {
 	_StreamEvents: null,
 	_StreamRunning: false,
 
+	UniversalXHR: 'Idle',
+	UniversalWebSocket: 'Idle',
+	UniversalSSE: 'Idle',
+	UniversalLongPolling: 'Idle',
+	UniversalStream: 'Idle',
+	UniversalWebRTC: 'Idle',
+	UniversalResources: null,
+
 	RTCInitiator: null,
 	RTCResponder: null,
 	RTCStatus: 'Disconnected',
@@ -201,6 +340,13 @@ Elemenx.Component('NetworkShowcase', {
 	MetricsTXSpeed: '0 B/s',
 	MetricsRXSpeed: '0 B/s',
 	MetricsElapsed: '0 ms',
+
+	StructuredTransfer: null,
+	StructuredReceiver: null,
+	StructuredStatus: 'Disconnected',
+	StructuredControl: '—',
+	StructuredProgress: '0 / 0 bytes',
+	StructuredResult: 'No object received yet.',
 
 	Load: function () {
 		var component = this;
@@ -283,6 +429,8 @@ Elemenx.Component('NetworkShowcase', {
 		component.Socket.On('Protocol.Response', function (event) {
 			var data = event.Data && event.Data.data ? event.Data.data : {};
 			component.QuarkResponse = 'response /api/media · status ' + data.status + ' · ' + data.correlationID;
+			if (data.correlationID && data.correlationID.indexOf('structured-') === 0)
+				component.StructuredControl = 'Quark ACK ' + data.status + ' · ' + data.correlationID;
 		});
 		component.Socket.On('Protocol.Event', function (event) {
 			var data = event.Data && event.Data.data ? event.Data.data : {};
@@ -689,7 +837,236 @@ Elemenx.Component('NetworkShowcase', {
 		component.Transfer.Send();
 	},
 
+
+	_BuildUniversalPayload: function () {
+		var bytes=new Uint8Array(2*1024*1024);
+		var i=0;
+		while (i<bytes.length) { bytes[i]=i%251; i++; }
+		return {
+			ID:42,
+			Title:'Elemenx structured media object',
+			Description:'Business object transferred without manual chunk handling',
+			Published:true,
+			Tags:['advanced','network','media'],
+			Author:{ID:7,Name:'Elemenx Advanced'},
+			Media:new Blob([bytes],{type:'video/mp4'})
+		};
+	},
+
+	_UniversalResult: function (name, data) {
+		this[name]='Complete · '+data.Title+' · '+data.Author.Name+' · '+data.Media.size+' bytes';
+	},
+
+	_UniversalReceive: function (name, transport, close) {
+		var component=this;
+		var receiver=component.$Network().TransferReceiver({Transport:transport});
+		if (!component.UniversalResources) component.UniversalResources=[];
+		component.UniversalResources.push(receiver);
+		receiver.On('Transfer.Receive',function (event) {
+			component._UniversalResult(name,event.Data.Data);
+			if (close!==false&&transport&&typeof transport.Close==='function') transport.Close();
+		});
+		receiver.On('Transfer.Error',function (event) { component[name]='Error · '+(event.Data.Error?event.Data.Error.message:'receive failed'); });
+	},
+
+	RunUniversalXHR: function () {
+		var component=this;
+		var transport=component.$Network().XHR({Method:'POST',URL:'/elemenx-network-transfer-xhr',ResponseType:'json'});
+		var transfer=component.$Network().Transfer({Transport:transport,Data:component._BuildUniversalPayload()});
+		component.UniversalXHR='Sending...';
+		transfer.On('Transfer.Complete',function (event) {
+			var response=event.Data.Response&&event.Data.Response.Response;
+			if (response&&response.ok&&response.data) component._UniversalResult('UniversalXHR',{Title:response.data.Title,Author:response.data.Author,Media:{size:response.data.Media.size}});
+			else component.UniversalXHR='Error · invalid server reconstruction';
+			transfer.Destroy();
+		});
+		transfer.On('Transfer.Error',function (event) { component.UniversalXHR='Error · '+(event.Data.Error?event.Data.Error.message:'transfer failed'); });
+		transfer.Send();
+	},
+
+	RunUniversalWebSocket: function () {
+		var component=this;
+		var scheme=location.protocol==='https:'?'wss://':'ws://';
+		var sender=component.$Network().WebSocket({URL:scheme+location.host+'/elemenx-network-showcase',Protocol:'AdvancedQuark'});
+		var receiver=component.$Network().WebSocket({URL:scheme+location.host+'/elemenx-network-showcase',Protocol:'AdvancedQuark'});
+		var senderOpen=false;
+		var receiverOpen=false;
+		var receiverReady=false;
+		var registerSent=false;
+		var started=false;
+
+		function start () {
+			var transfer;
+			if (started||!senderOpen||!receiverReady) return;
+			started=true;
+			component._UniversalReceive('UniversalWebSocket',{
+				On:function (name,callback) { receiver.On(name,callback); return this; },
+				Off:function (name,callback) { receiver.Off(name,callback); return this; },
+				Send:function () { return true; }
+			});
+			transfer=component.$Network().Transfer({
+				Transport:sender,
+				Data:component._BuildUniversalPayload(),
+				ChunkSize:128*1024,
+				WindowSize:8,
+				Retry:1500,
+				MaxRetries:8
+			});
+			component.UniversalResources.push(transfer);
+			component.UniversalWebSocket='Sending...';
+			transfer.Send();
+		}
+
+		component.UniversalWebSocket='Connecting...';
+		if (!component.UniversalResources) component.UniversalResources=[];
+		component.UniversalResources.push(sender);
+		component.UniversalResources.push(receiver);
+		sender.On('Transport.Open',function () { senderOpen=true; start(); });
+		receiver.On('Transport.Open',function () {
+			receiverOpen=true;
+			if (registerSent) return;
+			registerSent=true;
+			receiver.Send({url:'/api/media',data:{type:'TransferReceiver',action:'Register',correlationID:AdvancedQuarkNextCorrelation()}});
+		});
+		receiver.On('Protocol.Response',function (event) {
+			var wire=event.Data;
+			if (!receiverOpen||receiverReady||!wire||!wire.data||wire.data.status!==200) return;
+			receiverReady=true;
+			start();
+		});
+		sender.On('Transport.Error',function () { component.UniversalWebSocket='Error · sender WebSocket'; });
+		receiver.On('Transport.Error',function () { component.UniversalWebSocket='Error · receiver WebSocket'; });
+		receiver.Connect();
+		sender.Connect();
+	},
+
+	RunUniversalSSE: function () {
+		var transport=this.$Network().SSE({URL:'/elemenx-network-transfer-sse',Protocol:'AdvancedTransferJSON'});
+		this.UniversalSSE='Receiving...';
+		this._UniversalReceive('UniversalSSE',transport,false);
+		if (!this.UniversalResources) this.UniversalResources=[];
+		this.UniversalResources.push(transport);
+		transport.Connect();
+	},
+
+	RunUniversalLongPolling: function () {
+		var transport=this.$Network().LongPolling({URL:'/elemenx-network-transfer-longpolling',Protocol:'AdvancedTransferJSON',Retry:1});
+		this.UniversalLongPolling='Receiving...';
+		this._UniversalReceive('UniversalLongPolling',transport,false);
+		transport.On('Protocol.Transfer',function (event) {
+			if (event.Data&&event.Data.Action==='End') transport.Close();
+		});
+		if (!this.UniversalResources) this.UniversalResources=[];
+		this.UniversalResources.push(transport);
+		transport.Connect();
+	},
+
+	RunUniversalStream: function () {
+		var transport=this.$Network().Stream({URL:'/elemenx-network-transfer-stream',Protocol:'AdvancedTransferJSON'});
+		this.UniversalStream='Receiving...';
+		this._UniversalReceive('UniversalStream',transport,false);
+		if (!this.UniversalResources) this.UniversalResources=[];
+		this.UniversalResources.push(transport);
+		transport.Connect();
+	},
+
+	RunUniversalWebRTC: function () {
+		var component=this;
+		function send () {
+			if (!component.RTCInitiator||!component.RTCResponder||!component.RTCInitiator.Writable()||!component.RTCResponder.Writable()) { setTimeout(send,25); return; }
+			component._UniversalReceive('UniversalWebRTC',component.RTCResponder);
+			var transfer=component.$Network().Transfer({Transport:component.RTCInitiator,Data:component._BuildUniversalPayload()});
+			if (!component.UniversalResources) component.UniversalResources=[];
+			component.UniversalResources.push(transfer);
+			transfer.Send();
+		}
+		component.UniversalWebRTC='Connecting...';
+		if (!component.RTCInitiator||!component.RTCInitiator.Writable()) component.ConnectWebRTC();
+		send();
+	},
+
+	RunUniversalAll: function () {
+		this.RunUniversalXHR();
+		this.RunUniversalWebSocket();
+		this.RunUniversalSSE();
+		this.RunUniversalLongPolling();
+		this.RunUniversalStream();
+		this.RunUniversalWebRTC();
+	},
+
+	ConnectStructuredTransfer: function () {
+		this.ConnectWebSocket();
+		this.ConnectWebRTC();
+		this.StructuredStatus = 'Connecting WebSocket control + WebRTC data planes...';
+	},
+
+	SendStructuredTransfer: function () {
+		var component = this;
+		var rtc = component.RTCInitiator;
+		var peer = component.RTCResponder;
+		var socket = component.Socket;
+		var media;
+		var bytes;
+		var payload;
+		var correlationID;
+		var i;
+
+		if (!socket || !socket.Writable() || !rtc || !peer || !rtc.Writable() || !peer.Writable()) {
+			component.StructuredStatus = 'Connect WebSocket + WebRTC first';
+			return;
+		}
+		if (component.StructuredTransfer && component.StructuredTransfer.Active()) return;
+		if (component.StructuredTransfer) component.StructuredTransfer.Destroy();
+		if (component.StructuredReceiver) component.StructuredReceiver.Destroy();
+
+		bytes = new Uint8Array(2 * 1024 * 1024);
+		i = 0;
+		while (i < bytes.length) { bytes[i] = i % 251; i++; }
+		media = new Blob([bytes], {type: 'video/mp4'});
+		payload = {
+			ID: 42,
+			Title: 'Elemenx structured media object',
+			Description: 'Business object transferred without manual chunk handling',
+			Published: true,
+			Tags: ['advanced', 'network', 'media'],
+			Author: {ID: 7, Name: 'Elemenx Advanced'},
+			Media: media
+		};
+		correlationID = 'structured-' + Date.now();
+
+		component.$Batch(function (state) {
+			state.StructuredStatus = 'Sending';
+			state.StructuredControl = 'Quark /api/media request · ' + correlationID;
+			state.StructuredProgress = '0 / preparing envelope';
+			state.StructuredResult = 'Waiting for reconstructed object...';
+		});
+
+		socket.Send({url:'/api/media',data:{correlationID:correlationID,entityID:payload.ID,title:payload.Title,mediaSize:media.size,transport:'webrtc'}});
+
+		component.StructuredReceiver = component.$Network().TransferReceiver({Transport: peer});
+		component.StructuredReceiver.On('Transfer.Receive', function (event) {
+			var data = event.Data.Data;
+			component.$Batch(function (state) {
+				state.StructuredStatus = 'Complete';
+				state.StructuredResult = data.Title + ' · author ' + data.Author.Name + ' · ' + data.Tags.length + ' tags · media ' + data.Media.size + ' bytes (' + data.Media.type + ')';
+			});
+		});
+
+		component.StructuredTransfer = component.$Network().Transfer({Transport: rtc, Data: payload});
+		component.StructuredTransfer.On('Transfer.Progress', function (event) {
+			component.StructuredProgress = event.Data.Loaded + ' / ' + event.Data.Total + ' bytes';
+		});
+		component.StructuredTransfer.On('Transfer.Error', function (event) {
+			component.StructuredStatus = 'Error: ' + (event.Data.Error ? event.Data.Error.message : 'transfer failed');
+		});
+		component.StructuredTransfer.Send();
+	},
+
 	DisconnectWebRTC: function () {
+		if (this.StructuredTransfer) this.StructuredTransfer.Destroy();
+		if (this.StructuredReceiver) this.StructuredReceiver.Destroy();
+		this.StructuredTransfer = null;
+		this.StructuredReceiver = null;
 		if (this.Metrics) this.Metrics.Destroy();
 		this.Metrics = null;
 		if (this.Transfer) this.Transfer.Destroy();

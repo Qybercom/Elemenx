@@ -3,6 +3,8 @@ import fs from 'fs';
 import http from 'http';
 import os from 'os';
 import path from 'path';
+import net from 'net';
+import crypto from 'crypto';
 import {createRequire} from 'module';
 
 var require=createRequire(import.meta.url);
@@ -88,6 +90,56 @@ describe('Elemenx production server',function () {
 				});
 				expect(result.Status).toBe(200);
 				expect(JSON.parse(result.Body)).toEqual({ok:true});
+			});
+		}
+		finally { fs.rmSync(root,{recursive:true,force:true}); }
+	});
+	it('reassembles fragmented WebSocket messages before dispatching them',async function () {
+		var root=fs.mkdtempSync(path.join(os.tmpdir(),'elemenx-server-websocket-fragment-'));
+		fs.writeFileSync(path.join(root,'index.html'),'<main>websocket</main>');
+		try {
+			await withServer({Root:root,WebSocket:{Path:'/ws',Message:function (connection,message) { connection.Send(message); connection.Close(); }}},async function (port) {
+				var value='A'.repeat(128 * 1024);
+				var received=await new Promise(function (resolve,reject) {
+					var socket=net.connect(port,'127.0.0.1');
+					var key=crypto.randomBytes(16).toString('base64');
+					var response=Buffer.alloc(0);
+					var upgraded=false;
+					function frame (payload,opcode,final) {
+						var data=Buffer.from(payload);
+						var mask=Buffer.from([1,2,3,4]);
+						var header=Buffer.alloc(data.length < 126 ? 2 : data.length <= 65535 ? 4 : 10);
+						var i=0;
+						header[0]=(final ? 128 : 0) | opcode;
+						if (data.length < 126) header[1]=128 | data.length;
+						else if (data.length <= 65535) { header[1]=128 | 126; header.writeUInt16BE(data.length,2); }
+						else { header[1]=128 | 127; header.writeUInt32BE(0,2); header.writeUInt32BE(data.length,6); }
+						while (i < data.length) { data[i]^=mask[i % 4]; i++; }
+						return Buffer.concat([header,mask,data]);
+					}
+					socket.on('connect',function () {
+						socket.write('GET /ws HTTP/1.1\r\nHost: 127.0.0.1:' + port + '\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Version: 13\r\nSec-WebSocket-Key: ' + key + '\r\n\r\n');
+					});
+					socket.on('data',function (chunk) {
+						response=Buffer.concat([response,chunk]);
+						if (!upgraded) {
+							var split=response.indexOf('\r\n\r\n');
+							if (split === -1) return;
+							upgraded=true; response=response.subarray(split + 4);
+							socket.write(frame(value.slice(0,60000),1,false));
+							socket.write(frame(value.slice(60000),0,true));
+						}
+						if (response.length < 10) return;
+						var length=response[1] & 127; var offset=2;
+						if (length === 126) { if (response.length < 4) return; length=response.readUInt16BE(2); offset=4; }
+						else if (length === 127) { if (response.length < 10) return; length=response.readUInt32BE(6); offset=10; }
+						if (response.length < offset + length) return;
+						var result=response.subarray(offset,offset + length).toString('utf8');
+						socket.end(); resolve(result);
+					});
+					socket.on('error',reject);
+				});
+				expect(received).toBe(value);
 			});
 		}
 		finally { fs.rmSync(root,{recursive:true,force:true}); }

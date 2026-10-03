@@ -69,10 +69,16 @@ function websocketFrame (payload, opcode) {
 function websocketConnection (socket, request, handler) {
 	var buffer=Buffer.alloc(0);
 	var closed=false;
+	var fragmentOpcode=0;
+	var fragments=[];
 	var connection={Request:request,Send:function (data) { if (!closed && socket.writable) socket.write(websocketFrame(data,1)); return connection; },Close:function () { if (!closed) { closed=true; if (socket.writable) socket.end(websocketFrame('',8)); } return connection; }};
+	function message (opcode,payload) {
+		if (typeof handler.Message !== 'function') return;
+		handler.Message(connection,opcode === 1 ? payload.toString('utf8') : payload);
+	}
 	function consume () {
 		while (buffer.length >= 2) {
-			var opcode=buffer[0] & 15; var masked=(buffer[1] & 128) !== 0; var length=buffer[1] & 127; var offset=2; var mask; var payload; var i;
+			var final=(buffer[0] & 128) !== 0; var opcode=buffer[0] & 15; var masked=(buffer[1] & 128) !== 0; var length=buffer[1] & 127; var offset=2; var mask; var payload; var i;
 			if (length === 126) { if (buffer.length < 4) return; length=buffer.readUInt16BE(2); offset=4; }
 			else if (length === 127) { if (buffer.length < 10 || buffer.readUInt32BE(2) !== 0) { connection.Close(); return; } length=buffer.readUInt32BE(6); offset=10; }
 			if (masked) { if (buffer.length < offset + 4) return; mask=buffer.subarray(offset,offset + 4); offset+=4; }
@@ -81,7 +87,18 @@ function websocketConnection (socket, request, handler) {
 			if (masked) { i=0; while (i < payload.length) { payload[i]^=mask[i % 4]; i++; } }
 			if (opcode === 8) { connection.Close(); return; }
 			if (opcode === 9) { if (!closed && socket.writable) socket.write(websocketFrame(payload,10)); continue; }
-			if ((opcode === 1 || opcode === 2) && typeof handler.Message === 'function') handler.Message(connection,opcode === 1 ? payload.toString('utf8') : payload);
+			if (opcode === 10) continue;
+			if (opcode === 1 || opcode === 2) {
+				if (fragmentOpcode) { connection.Close(); return; }
+				if (final) message(opcode,payload);
+				else { fragmentOpcode=opcode; fragments=[payload]; }
+				continue;
+			}
+			if (opcode === 0) {
+				if (!fragmentOpcode) { connection.Close(); return; }
+				fragments.push(payload);
+				if (final) { payload=Buffer.concat(fragments); opcode=fragmentOpcode; fragmentOpcode=0; fragments=[]; message(opcode,payload); }
+			}
 		}
 	}
 	socket.on('data',function (data) { if (!closed) { buffer=Buffer.concat([buffer,data]); consume(); } });
