@@ -1,0 +1,31 @@
+<div class="card worker-showcase">
+	<h2 class="card-title">Workers</h2>
+	<p>Owner-aware WebWorker and ServiceWorker handles use the same Messaging fabric as the page.</p>
+
+	<h3>WebWorker</h3>
+	<p><b>Manual:</b> <code>{{ManualMeta}}</code> — {{ManualState}}</p>
+	<p><b>Lazy:</b> <code>{{LazyMeta}}</code> — {{LazyState}}</p>
+	<p><b>Auto:</b> <code>{{AutoMeta}}</code> — {{AutoState}}</p>
+	<p>Lifecycle: <b>{{WebLifecycle}}</b></p>
+	<p>Reply: <b>{{WebReply}}</b></p>
+	<button class="button" (click)="StartManual">Start manual</button>
+	<button class="button" (click)="StopManual">Stop manual</button>
+	<button class="button" (click)="RestartManual">Restart manual</button>
+	<button class="button" (click)="DestroyManual">Destroy manual</button>
+	<button class="button" (click)="CreateWebWorkers">Recreate all</button>
+	<button class="button primary" (click)="PingManual">Ping manual</button>
+	<button class="button" (click)="PingLazy">Ping lazy</button>
+	<button class="button" (click)="PingAuto">Ping auto</button>
+
+	<h3>ServiceWorker</h3>
+	<p>The demo uses the isolated <code>/elemenx-worker-showcase/</code> scope, so it does not take control of the Advanced page itself.</p>
+	<p><b>Handle:</b> <code>{{ServiceMeta}}</code></p>
+	<p><b>State:</b> {{ServiceState}} · <b>Registration:</b> {{ServiceRegistration}} · <b>Registered:</b> {{ServiceRegistered}} · <b>Controlled:</b> {{ServiceControlled}} · <b>Reachable:</b> {{ServiceReachable}}</p>
+	<p>Lifecycle: <b>{{ServiceLifecycle}}</b></p>
+	<p>Reply: <b>{{ServiceReply}}</b></p>
+	<button class="button primary" (click)="RegisterServiceWorker">Register</button>
+	<button class="button" (click)="RefreshServiceWorker">Refresh status</button>
+	<button class="button" (click)="UpdateServiceWorker">Update</button>
+	<button class="button" (click)="UnregisterServiceWorker">Unregister</button>
+	<button class="button" (click)="PingServiceWorker">Ping through Messaging</button>
+</div>

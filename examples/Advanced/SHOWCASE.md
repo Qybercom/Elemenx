@@ -44,7 +44,7 @@ Status values:
 | `Router` | YES | `RouterShowcase` reaches the Application Router from a nested Component; route-owned `RouterLabPage` and `LeaveGuardPage` use their attached Component Router facade directly. |
 | `Service` | YES | Session service. |
 | `Title` | YES | `ProjectPage`. |
-| `Network`, `Storage`, `Messaging`, `WebWorker`, `ServiceWorker` owner accessors | PARTIAL | Storage is used; Network currently uses global API; add owner-aware examples. |
+| `Network`, `Storage`, `Messaging`, `WebWorker`, `ServiceWorker` owner accessors | PARTIAL | Storage, Messaging and both Worker accessors are demonstrated; Network currently uses global API and still needs an owner-aware example. |
 | `$OnCreate` / `$OnReady` / `$OnDestroy` | YES | `ComponentShowcase` and `ComponentProbe` expose create/ready/destroy behavior visibly. |
 | `$OnChildPending` / `$OnChildReady` / `$OnChildError` | MISSING | Add deferred/discovered child lifecycle showcase. |
 | route `Path`, `Params`, `Query`, `Hash` context | YES | Project route exercises params/query/hash. |
@@ -136,7 +136,7 @@ Status values:
 | Declarative `$Events` | YES | `EventsShowcase` declares two channel names. |
 | `$OnEvent` dispatcher + `event.Is()` | YES | One dispatcher routes both channels through `event.Is()`. |
 | Owner cleanup | YES | Runtime regression covers destroyed Component subscriptions. |
-| Pipes | MISSING | Next phase: persistent pipelines attached at `event.Is(...)`. |
+| Pipes | YES | Persistent `event.Is(...)` pipelines demonstrate Debouncer, Filter and Gate interactively. |
 
 ## Messaging
 
@@ -150,29 +150,29 @@ Status values:
 | imperative `Send` | YES | The showcase sender drives direct, channel, Context and shared-ID deliveries. |
 | owner lifecycle | YES | Declarative receiver sockets and the sender are Component-owned and cleaned up with their owners. |
 | Browser context discovery | YES | `MessagingShowcase` demonstrates zero-config iframe/parent and child/opener discovery, independent same-origin tabs through BroadcastChannel (opened with `noopener`), and an explicitly trusted cross-origin child through `Messaging.Origins()`. No normal same-origin example calls `.Window()` manually. |
-| Worker Messaging bridge | MISSING | Add WebWorker and ServiceWorker bridge demos. |
+| Worker Messaging bridge | YES | `WorkerShowcase` sends page Messaging through both WebWorker and ServiceWorker bridges and receives replies through the same fabric. |
 
 ## WebWorker
 
 | Capability | Status | Current / required showcase |
 | --- | --- | --- |
-| definition / handle metadata | MISSING | Add worker card. |
-| manual/lazy/auto start modes | MISSING | Demonstrate all supported start modes. |
-| Start / Stop / restart / Destroy | MISSING | Interactive controls. |
-| lifecycle events / State / Native | MISSING | Visible status/event timeline. |
-| Messaging bridge | MISSING | Echo/transform worker example. |
-| Application/component ownership | MISSING | Use owner-aware API. |
+| definition / handle metadata | YES | `WorkerShowcase` exposes named owner-aware handles, channels, start modes, state and native availability. |
+| manual/lazy/auto start modes | YES | Three workers demonstrate manual, lazy-on-first-message and automatic start modes. |
+| Start / Stop / restart / Destroy | YES | Manual worker controls expose Start, Stop, restart, Destroy and recreation. |
+| lifecycle events / State / Native | YES | The card displays State/Native and the Starting/Running/Stop/Error lifecycle. |
+| Messaging bridge | YES | Ping/pong travels through the normal Messaging fabric for manual, lazy and auto workers. |
+| Application/component ownership | YES | Workers are created through the Component `$WebWorker` owner accessor and are therefore tied to its lifecycle. |
 
 ## ServiceWorker
 
 | Capability | Status | Current / required showcase |
 | --- | --- | --- |
-| registration / metadata | MISSING | Add isolated-scope demo worker. |
-| Register / Update / Unregister | MISSING | Interactive controls. |
-| Registered / Controlled / Reachable / State | MISSING | Visible status. |
-| lifecycle events | MISSING | Visible event timeline. |
-| Messaging bridge | MISSING | Roundtrip message example when controlled/reachable. |
-| Application/component ownership | MISSING | Use owner-aware API. |
+| registration / metadata | YES | `WorkerShowcase` registers `AdvancedServiceWorker` in an isolated `/elemenx-worker-showcase/` scope and displays its metadata/state. |
+| Register / Update / Unregister | YES | Interactive controls register, update and unregister the isolated worker. |
+| Registered / Controlled / Reachable / State | YES | All four values are displayed explicitly; Controlled is intentionally false for the isolated showcase scope. |
+| lifecycle events | YES | Installing/Waiting/Active/Unregistering/Unregistered/Error transitions are surfaced visibly. |
+| Messaging bridge | YES | A reachable active worker answers a page ping through the shared Messaging bridge. |
+| Application/component ownership | YES | The worker handle is created through the Component `$ServiceWorker` owner accessor. |
 
 ## Bundle, Discovery and production
 
@@ -213,6 +213,8 @@ Status values:
 5. Network completeness: Context/Protocol first, then long-lived transports, WebRTC, Transfer and Metrics.
 6. Application/runtime inspection, isolated destroy/recreate and development Reload.
 7. Final UI/navigation cleanup, Advanced README rewrite and E2E coverage for every stable showcase section.
+
+Current execution point: item 4 is now represented in Advanced; the next large subsystem is item 5 (Network). Earlier remaining `MISSING`/`PARTIAL` rows are still tracked above and must also be closed before the final cleanup.
 
 The end condition is simple: every supported public runtime capability is either `YES`, or is explicitly classified as `WORKFLOW` because its real demonstration is the Advanced build/dev/serve workflow itself. `PARTIAL` and `MISSING` are temporary states only.
 
