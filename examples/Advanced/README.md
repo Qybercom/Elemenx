@@ -1,36 +1,75 @@
-# Elemenx application example
+# Elemenx Advanced
 
-This directory can be copied as a standalone project. It contains neither a copy of `elemenx.js` nor a private copy of the development server.
+`Advanced` is the canonical executable Elemenx showcase. It is intentionally larger than `Simple`: the goal is to exercise the stable public runtime in a real Application, including ownership, lifecycle, routing, storage, cross-context messaging, workers and live Network transports.
 
-After copying the directory:
+`SHOWCASE.md` is the coverage ledger. A runtime feature is complete here when it has a meaningful executable demonstration (`YES`) or is explicitly a build/tooling workflow (`WORKFLOW`).
+
+## Run it
+
+This directory is a standalone example project. It uses the published `elemenx` package for the CLI, development server and `/elemenx.js` runtime.
 
 ```bash
 npm install
 npm run dev
 ```
 
-The installed `elemenx` package provides the shared `tools/server.js` and the framework exposed by that server as `/elemenx.js`.
+Production workflow:
 
-Components keep source and markup together:
-
-```text
-components/
-  index.js
-  layout/
-    Layout.js
-    layout.html
-  home/
-    HomePage.js
-    home.html
-  project/
-    ProjectPage.js
-    project.html
+```bash
+npm run build
+npm run serve
 ```
 
-`components/index.js` is the Elemenx Discovery enumerator. `Application.Root` points to `components`, so component scripts do not have to be listed manually in `index.html`.
+The Builder writes `dist/`. Production resolves bundled resources first and keeps normal Discovery as the fallback for resources that are not present in the bundle.
 
-A component uses a template path local to its own definition script, for example `$TemplateURL: 'project.html'`. Elemenx resolves that relative URL from the component script URL.
-The Home page also demonstrates structural composition. Component tags without projected children may use XML-style self-closing syntax such as `<ProjectCard />`. `*for` supports keyed collections as well as classic local-counter iteration. A counter can also assign an item expression on each iteration:
+## Application structure
+
+```text
+Advanced/
+  app.js
+  index.html
+  elemenx.config.js
+  application/
+    index.js
+    components/
+    directives/
+    guards/
+    services/
+  data/
+  SHOWCASE.md
+```
+
+`app.js` owns the Application definition and Router. `application/index.js` is the root Discovery graph; the entity `index.js` files below it enumerate Components, Directives, Guards and Services. Components normally keep their JS, template and style resources together and resolve `$TemplateURL` / `$StyleURL` relative to the definition script.
+
+Advanced deliberately uses both discovered resources and inline definitions. `PageLoading` demonstrates an inline template, `ComponentShowcase` uses inline Template/Style, `ComponentProbe` uses the Template Registry through `$TemplateID`, and `Layout` uses an external stylesheet.
+
+## What the application demonstrates
+
+The Home route is a collection of independent showcase sections rather than one monolithic demo. The current stable sections cover Component APIs and lifecycle, Router/Guards, Storage, Events + Pipes, Messaging, Workers, Network, runtime inspection/reload and the Project route context.
+
+The Network section is intentionally extensive. It exercises owner-aware `$Network()`, Network Contexts and Protocols with real XHR, WebSocket, SSE, LongPolling and chunked Stream endpoints supplied by the local example server. WebRTC uses a local peer pair, so it needs no external signaling service. Transfer/TransferReceiver and Metrics are demonstrated both directly and by the universal two-file structured Transfer that sends the same business object through every supported transport.
+
+Messaging demonstrates declarative IDs/channels/contexts and `Message.Is()` Pipes, then crosses browser contexts through automatic iframe/parent, opener/child and same-origin BroadcastChannel discovery. The cross-origin example requires explicit mutual `Messaging.Origins()` trust. Normal same-origin relationships do not manually create a Window bridge.
+
+Workers use the same Messaging fabric. WebWorker demonstrates manual, lazy and automatic start modes plus Start/Stop/restart/Destroy. ServiceWorker uses the isolated `/elemenx-worker-showcase/` scope so the showcase does not take control of the Advanced page itself.
+
+## Runtime and ownership
+
+The examples prefer owner-aware APIs (`this.$Service()`, `this.$Storage()`, `this.$Network()`, `this.$Messaging()`, `this.$WebWorker()` and `this.$ServiceWorker()`) so resources participate in Component/Application cleanup naturally.
+
+`RuntimeShowcase` exposes runtime/Application start timestamps and uptimes, Application/root/router/mount metadata, an isolated child destroy/recreate cycle and development Component reload. Network objects additionally expose their own lifecycle timestamps where the entity has a meaningful active/closed session.
+
+## Templates, directives and structural composition
+
+Advanced uses interpolation, one-way property/attribute/class/style bindings, explicit two-way form bindings, refs, outlets, `*if` and all supported `*for` forms. Self-closing Component tags are supported when no projected children are required.
+
+A classic loop is written normally:
+
+```html
+<span *for="i = 0; i < 5; i++">Iteration {{i}}</span>
+```
+
+The condition may also assign a loop-local value:
 
 ```html
 <div *for="i = 0; item = QueueItem(i); i++">
@@ -38,34 +77,16 @@ The Home page also demonstrates structural composition. Component tags without p
 </div>
 ```
 
-The initializer creates loop-local variables, the condition is checked before each render, and the update expression runs after each iteration. In the example above `item = QueueItem(i)` is the loop condition, so rendering stops when it becomes falsy. Elemenx aborts a runaway structural loop after 10,000 iterations.
+Elemenx aborts runaway structural loops after 10,000 iterations.
 
-For direct numeric iteration the condition can be a normal comparison:
+Custom behavioral directives are discovered with the Application graph. `highlight` and `tooltip` demonstrate Create/Update/Destroy and directive-owned `context.Data`; the tooltip also owns real DOM and browser event listeners and removes them on destruction.
 
-```html
-<span *for="i = 0; i < 5; i++">Iteration {{i}}</span>
-```
+## Tooling
 
-The initializer creates `i` in the loop-local scope, the condition is checked before each render, and the update expression runs after each iteration. The same 10,000-iteration runaway protection applies.
+The package CLI is the real tooling showcase; browser UI does not imitate build commands. Advanced supports `elemenx dev`, `elemenx build` and `elemenx serve`. Entity generation is available through `elemenx generate` / `elemenx g` for Application, Component, Service, Guard and Directive entities.
 
-The Advanced application also registers custom behavioral directives through the application discovery tree:
+Repository-level tests exercise the development example and the production bundle. In particular, production E2E verifies that Advanced runs without requesting its source `/application/` graph.
 
-```js
-Elemenx.Directive('highlight', {
-	$OnCreate: function (context) {
-		context.Data.ClassName = 'directive-highlighted';
-	},
+## Coverage status
 
-	$OnUpdate: function (context) {
-		context.Element.classList.toggle(context.Data.ClassName, !!context.Value);
-	},
-
-	$OnDestroy: function (context) {
-		context.Element.classList.remove(context.Data.ClassName);
-	}
-});
-```
-
-The Home page demonstrates both a reactive `*highlight="DirectiveHighlighted"` directive and a reactive `*tooltip="DirectiveTooltip"` directive. The tooltip creates and owns a real floating DOM element, reacts to its expression value, supports mouse and keyboard focus, and removes its listeners and DOM node during directive destruction. The examples intentionally use `context.Data` and the Create/Update/Destroy lifecycle so the Advanced project acts as a visible feature showcase rather than only a minimal syntax sample.
-
-The Home page also includes a real Network showcase. `Elemenx.Network.XHR` requests `/data/network-showcase.json` and displays the transport lifecycle (`BeforeRequest`, `BeforeResponse`, `AfterResponse`, `Success`) together with the decoded demo response. The data file lives outside the Application graph so the production Builder copies it as a public asset and the same showcase runs in both development and production builds.
+See `SHOWCASE.md` before adding another demo. It records what is already represented and the small set of phase-7 gaps still worth implementing. This prevents Advanced from accumulating duplicate cards for behavior that is already covered elsewhere.

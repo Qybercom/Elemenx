@@ -18,9 +18,9 @@ Status values:
 | Application Router configuration | YES | Routes, Waiting and NotFound are configured in `app.js`. |
 | Application `$OnPending` / `$OnReady` / `$OnError` | MISSING | Add visible startup lifecycle example without making startup fragile. |
 | Application `Bootstrap` | MISSING | Add a small visible bootstrap marker. |
-| `Application.Name/Root/Mount/Application/Component/Router` | MISSING | Add runtime metadata/inspection showcase. |
-| Application-owned `Service`, `Network`, `Storage`, `Messaging`, Workers | PARTIAL | Service/Storage are used; remaining ownership APIs need explicit examples. |
-| `Application.Reload(Component/Service)` | MISSING | Add development-only reload showcase and explain production limitations. |
+| `Application.Name/Root/Mount/Application/Component/Router` | YES | `RuntimeShowcase` inspects the current Application, root, Router and mount through the public facade. |
+| Application-owned `Service`, `Network`, `Storage`, `Messaging`, Workers | YES | Advanced uses owner-aware facades throughout the component tree; owner cleanup is regression-covered. |
+| `Application.Reload(Component/Service)` | PARTIAL | `RuntimeShowcase` demonstrates Component reload. Service reload remains intentionally visible in the coverage backlog. |
 | `Application.Destroy` / recreate | MISSING | Contract is regression-covered; add a safe isolated secondary-Application demo rather than destroying the main showcase. |
 
 ## Component
@@ -44,7 +44,7 @@ Status values:
 | `Router` | YES | `RouterShowcase` reaches the Application Router from a nested Component; route-owned `RouterLabPage` and `LeaveGuardPage` use their attached Component Router facade directly. |
 | `Service` | YES | Session service. |
 | `Title` | YES | `ProjectPage`. |
-| `Network`, `Storage`, `Messaging`, `WebWorker`, `ServiceWorker` owner accessors | PARTIAL | Storage is used; Network currently uses global API; add owner-aware examples. |
+| `Network`, `Storage`, `Messaging`, `WebWorker`, `ServiceWorker` owner accessors | YES | Network, Storage, Messaging and Worker showcases use their Component-owned `$*` facades. |
 | `$OnCreate` / `$OnReady` / `$OnDestroy` | YES | `ComponentShowcase` and `ComponentProbe` expose create/ready/destroy behavior visibly. |
 | `$OnChildPending` / `$OnChildReady` / `$OnChildError` | MISSING | Add deferred/discovered child lifecycle showcase. |
 | route `Path`, `Params`, `Query`, `Hash` context | YES | Project route exercises params/query/hash. |
@@ -105,16 +105,16 @@ Status values:
 | --- | --- | --- |
 | XHR | YES | Real same-origin request. |
 | XHR transport lifecycle/events | YES | Visible event timeline. |
-| owner-aware Component/Application Network | MISSING | Existing XHR uses global `Elemenx.Network`; migrate/show ownership. |
-| Network Context | MISSING | Add named + composed context example. |
-| Protocol | MISSING | Add a small protocol transform example. |
-| WebSocket | MISSING | Add showcase with local/demo endpoint support and clear unavailable state. |
-| SSE | MISSING | Add showcase with demo endpoint support and clear unavailable state. |
-| LongPolling | MISSING | Add showcase with demo endpoint support and clear unavailable state. |
-| Stream | MISSING | Add same-origin streaming demo if server endpoint is available; otherwise self-contained browser fixture. |
-| WebRTC | MISSING | Add local peer/data-channel demo without requiring external infrastructure. |
-| Transfer / TransferReceiver | MISSING | Add in-browser transfer roundtrip example. |
-| Metrics | MISSING | Add metrics display around a demonstrable transport. |
+| owner-aware Component/Application Network | YES | `NetworkShowcase` uses `this.$Network()` and a named owner-aware Network Context. |
+| Network Context | YES | `AdvancedNetworkAPI` composes Network configuration used by the live showcase. |
+| Protocol | YES | Advanced JSON, NDJSON, Quark and transfer protocols are exercised by live transports. |
+| WebSocket | YES | Local Quark packet flow against the Advanced server. |
+| SSE | YES | Live three-event server stream decoded through Protocol. |
+| LongPolling | YES | Held-request loop against the Advanced server. |
+| Stream | YES | Real chunked HTTP response with NDJSON reconstruction. |
+| WebRTC | YES | Local peer pair and binary RTCDataChannel transfer without external infrastructure. |
+| Transfer / TransferReceiver | YES | High-level roundtrip plus the universal two-file structured Transfer showcase. |
+| Metrics | YES | Automatic WebRTC telemetry and per-transport universal Transfer metrics. |
 
 ## Storage
 
@@ -136,7 +136,7 @@ Status values:
 | Declarative `$Events` | YES | `EventsShowcase` declares two channel names. |
 | `$OnEvent` dispatcher + `event.Is()` | YES | One dispatcher routes both channels through `event.Is()`. |
 | Owner cleanup | YES | Runtime regression covers destroyed Component subscriptions. |
-| Pipes | MISSING | Next phase: persistent pipelines attached at `event.Is(...)`. |
+| Pipes | YES | Interactive Debouncer, Filter and Gate pipelines are attached through `event.Is(...)`. |
 
 ## Messaging
 
@@ -150,29 +150,29 @@ Status values:
 | imperative `Send` | YES | The showcase sender drives direct, channel, Context and shared-ID deliveries. |
 | owner lifecycle | YES | Declarative receiver sockets and the sender are Component-owned and cleaned up with their owners. |
 | Browser context discovery | YES | `MessagingShowcase` demonstrates zero-config iframe/parent and child/opener discovery, independent same-origin tabs through BroadcastChannel (opened with `noopener`), and an explicitly trusted cross-origin child through `Messaging.Origins()`. No normal same-origin example calls `.Window()` manually. |
-| Worker Messaging bridge | MISSING | Add WebWorker and ServiceWorker bridge demos. |
+| Worker Messaging bridge | YES | `WorkerShowcase` sends and receives worker traffic through the same Messaging fabric. |
 
 ## WebWorker
 
 | Capability | Status | Current / required showcase |
 | --- | --- | --- |
-| definition / handle metadata | MISSING | Add worker card. |
-| manual/lazy/auto start modes | MISSING | Demonstrate all supported start modes. |
-| Start / Stop / restart / Destroy | MISSING | Interactive controls. |
-| lifecycle events / State / Native | MISSING | Visible status/event timeline. |
-| Messaging bridge | MISSING | Echo/transform worker example. |
-| Application/component ownership | MISSING | Use owner-aware API. |
+| definition / handle metadata | YES | Worker card exposes names, channels, start modes, state and native handle availability. |
+| manual/lazy/auto start modes | YES | Three owner-aware workers demonstrate all start modes. |
+| Start / Stop / restart / Destroy | YES | Interactive manual-worker controls plus handle recreation. |
+| lifecycle events / State / Native | YES | Worker lifecycle and current State/Native status are visible. |
+| Messaging bridge | YES | Manual/lazy/auto workers reply through Messaging. |
+| Application/component ownership | YES | `WorkerShowcase` creates workers through `this.$WebWorker()`. |
 
 ## ServiceWorker
 
 | Capability | Status | Current / required showcase |
 | --- | --- | --- |
-| registration / metadata | MISSING | Add isolated-scope demo worker. |
-| Register / Update / Unregister | MISSING | Interactive controls. |
-| Registered / Controlled / Reachable / State | MISSING | Visible status. |
-| lifecycle events | MISSING | Visible event timeline. |
-| Messaging bridge | MISSING | Roundtrip message example when controlled/reachable. |
-| Application/component ownership | MISSING | Use owner-aware API. |
+| registration / metadata | YES | Isolated `/elemenx-worker-showcase/` ServiceWorker exposes handle metadata. |
+| Register / Update / Unregister | YES | Interactive controls call the public ServiceWorker handle. |
+| Registered / Controlled / Reachable / State | YES | All four values are displayed and refreshable. |
+| lifecycle events | YES | Installing/Waiting/Active/Unregistering/Unregistered/Error are surfaced visibly. |
+| Messaging bridge | YES | Reachable worker roundtrip uses the common Messaging sender. |
+| Application/component ownership | YES | `WorkerShowcase` creates workers through `this.$WebWorker()`. |
 
 ## Bundle, Discovery and production
 
@@ -224,6 +224,10 @@ Status values:
 
 The end condition is simple: every supported public runtime capability is either `YES`, or is explicitly classified as `WORKFLOW` because its real demonstration is the Advanced build/dev/serve workflow itself. `PARTIAL` and `MISSING` are temporary states only.
 
-- Events + Pipes: declarative `$Events` / `$OnEvent`, imperative emit, persistent `event.Is()` pipelines with interactive Debouncer, Filter and Gate showcases.
+## Current phase-7 audit
 
-Lifecycle timestamps: Component and Service instances expose `$StartedAt()`. Networking runtime instances expose `$StartedAt()`. XHR, Stream, LongPolling, SSE, WebSocket and WebRTC additionally expose `$ConnectedAt()` / `$ClosedAt()` for their latest connection/exchange. Transfer exposes all three for its own transfer lifecycle; its timestamps are independent from the underlying transport.
+The showcase is now substantially ahead of the older checklist: Network, Events Pipes, Messaging browser contexts and both Worker APIs are already represented by executable cards. The remaining runtime gaps are deliberately narrow: Application startup hooks/Bootstrap, full Application destroy/recreate, Service lifecycle/integration/dynamic registration, deferred child pending/error UI and a custom structural Directive. Component reload is demonstrated; Service reload is still outstanding.
+
+Lifecycle timestamps are part of the current runtime contract: Component and Service instances expose `$StartedAt()`. Networking runtime instances expose `$StartedAt()`; XHR, Stream, LongPolling, SSE, WebSocket and WebRTC additionally expose `$ConnectedAt()` / `$ClosedAt()` for their latest connection/exchange. Transfer owns an independent set of all three timestamps.
+
+Phase 7 should close those remaining rows, then perform the final visual/navigation pass. README and E2E coverage are maintained alongside the executable showcase rather than after it.

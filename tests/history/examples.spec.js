@@ -204,3 +204,38 @@ test('official Advanced example moves the same two-file structured object throug
 
 	expect(errors).toEqual([]);
 });
+
+test('official Advanced example exercises stable non-network showcase sections end to end', async ({ page }) => {
+	var errors = captureErrors(page);
+
+	await page.goto('http://127.0.0.1:4274/');
+	await expectBootstrapVisible(page.getByRole('heading', {name: 'Component lifecycle and public methods'}), errors);
+
+	await page.getByRole('button', {name: 'Update()'}).click();
+	await expect(page.getByText('Updated through Component.$Update()', {exact: true})).toBeVisible();
+	await page.getByRole('button', {name: 'Emit change'}).click();
+	await expect(page.locator('.component-lifecycle')).toContainText('Emit change=1');
+
+	await page.getByRole('button', {name: 'Write storage values'}).click();
+	await expect(page.locator('.storage-showcase')).toContainText('local value');
+	await expect(page.locator('.storage-showcase')).toContainText('session value');
+
+	await page.getByRole('button', {name: 'Emit local event'}).click();
+	await expect(page.locator('.events-showcase')).toContainText('Event count: 1');
+	await page.getByRole('button', {name: 'Run A/B/B/B'}).click();
+	await expect(page.locator('.events-showcase')).toContainText('Accepted: B');
+
+	await page.getByRole('button', {name: 'Send to custom ID'}).click();
+	await expect(page.locator('.messaging-showcase')).toContainText('received: direct message');
+
+	var inspection = page.locator('.runtime-status').first();
+	await expect(inspection).toContainText('Inspection #1');
+	await page.getByRole('button', {name: 'Refresh inspection'}).click();
+	await expect(inspection).toContainText('Inspection #2');
+	await page.getByRole('button', {name: 'Destroy child'}).click();
+	await expect(page.locator('.runtime-showcase')).toContainText('Child destroyed');
+	await page.getByRole('button', {name: 'Recreate child'}).click();
+	await expect(page.locator('.runtime-showcase')).toContainText('Child mounted');
+
+	expect(errors).toEqual([]);
+});
