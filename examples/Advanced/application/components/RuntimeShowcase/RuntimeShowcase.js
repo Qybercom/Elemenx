@@ -1,5 +1,5 @@
 Elemenx.Component('RuntimeShowcase', {
-	$Template: '<section class="showcase-section runtime-showcase"><div class="showcase-heading"><div><p class="eyebrow">Application / runtime</p><h2>Runtime inspection, isolated lifecycle and development Reload</h2></div><p>The card uses only public Application and Component APIs: inspect the current runtime, destroy/recreate an isolated child and reload its discovered Component definition.</p></div><div class="runtime-grid"><div class="runtime-panel"><h3>Runtime</h3><dl class="runtime-values"><dt>Runtime ID</dt><dd>{{RuntimeID}}</dd><dt>Runtime started</dt><dd>{{RuntimeStarted}}</dd><dt>Runtime uptime</dt><dd>{{RuntimeUptime}}</dd><dt>Application</dt><dd>{{ApplicationName}}</dd><dt>App started</dt><dd>{{ApplicationStarted}}</dd><dt>App uptime</dt><dd>{{ApplicationUptime}}</dd><dt>Root</dt><dd>{{RootName}}</dd><dt>Router</dt><dd>{{RouterStatus}}</dd><dt>Mount</dt><dd>{{MountStatus}}</dd></dl><p class="runtime-status">{{InspectionStatus}}</p><button class="button" (click)="RefreshRuntime">Refresh inspection</button></div><div class="runtime-panel"><h3>Isolated child lifecycle</h3><div #RuntimeProbe></div><p class="runtime-status">{{LifecycleStatus}}</p><div class="runtime-actions"><button class="button" (click)="DestroyProbe">Destroy child</button><button class="button" (click)="RecreateProbe">Recreate child</button></div></div><div class="runtime-panel runtime-reload"><h3>Development Reload</h3><p>Reloads <b>RuntimeProbe</b> through Application.$Reload(). Existing instances are refreshed by the runtime after Discovery loads the definition again.</p><p class="runtime-status">{{ReloadStatus}}</p><button class="button primary" (click)="ReloadProbe">Reload RuntimeProbe</button></div></div></section>',
+	$Template: '<section class="showcase-section runtime-showcase"><div class="showcase-heading"><div><p class="eyebrow">Application / runtime</p><h2>Runtime inspection, isolated lifecycle and development Reload</h2></div><p>The card uses only public Application and Component APIs: inspect the current runtime, destroy/recreate an isolated child and reload its discovered Component definition.</p></div><div class="runtime-grid"><div class="runtime-panel"><h3>Runtime</h3><dl class="runtime-values"><dt>Runtime ID</dt><dd>{{RuntimeID}}</dd><dt>Runtime started</dt><dd>{{RuntimeStarted}}</dd><dt>Runtime uptime</dt><dd>{{RuntimeUptime}}</dd><dt>Application</dt><dd>{{ApplicationName}}</dd><dt>App started</dt><dd>{{ApplicationStarted}}</dd><dt>App uptime</dt><dd>{{ApplicationUptime}}</dd><dt>Root</dt><dd>{{RootName}}</dd><dt>Router</dt><dd>{{RouterStatus}}</dd><dt>Mount</dt><dd>{{MountStatus}}</dd></dl><p class="runtime-status">{{InspectionStatus}}</p><button class="button" (click)="RefreshRuntime">Refresh inspection</button></div><div class="runtime-panel"><h3>Application startup lifecycle</h3><dl class="runtime-values startup-lifecycle"><dt>Bootstrap</dt><dd>{{BootstrapStatus}}</dd><dt>Pending</dt><dd>{{PendingStatus}}</dd><dt>Ready</dt><dd>{{ReadyStatus}}</dd><dt>Error</dt><dd>{{ErrorStatus}}</dd></dl><p class="runtime-status">$Bootstrap initializes this marker before root construction; the three Application lifecycle hooks update the counters as startup progresses.</p></div><div class="runtime-panel"><h3>Isolated child lifecycle</h3><div #RuntimeProbe></div><p class="runtime-status">{{LifecycleStatus}}</p><div class="runtime-actions"><button class="button" (click)="DestroyProbe">Destroy child</button><button class="button" (click)="RecreateProbe">Recreate child</button></div></div><div class="runtime-panel runtime-reload"><h3>Development Reload</h3><p>Reloads <b>RuntimeProbe</b> through Application.$Reload(). Existing instances are refreshed by the runtime after Discovery loads the definition again.</p><p class="runtime-status">{{ReloadStatus}}</p><button class="button primary" (click)="ReloadProbe">Reload RuntimeProbe</button></div></div></section>',
 	$Style: '.runtime-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.runtime-panel{padding:16px;border:1px solid var(--border);border-radius:10px;background:var(--surface-soft)}.runtime-panel h3{margin-top:0}.runtime-reload{grid-column:1/-1}.runtime-values{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:7px 14px;margin:0 0 14px}.runtime-values dt{color:var(--text-soft)}.runtime-values dd{margin:0;font:600 12px/1.4 ui-monospace,SFMono-Regular,Consolas,monospace;overflow-wrap:anywhere}.runtime-actions{display:flex;flex-wrap:wrap;gap:8px}.runtime-status{min-height:20px;font:600 12px/1.4 ui-monospace,SFMono-Regular,Consolas,monospace}@media(max-width:760px){.runtime-grid{grid-template-columns:1fr}.runtime-reload{grid-column:auto}}',
 
 	RuntimeID: '-',
@@ -11,6 +11,10 @@ Elemenx.Component('RuntimeShowcase', {
 	RootName: '-',
 	RouterStatus: '-',
 	MountStatus: '-',
+	BootstrapStatus: 'not called',
+	PendingStatus: '0 calls',
+	ReadyStatus: '0 calls',
+	ErrorStatus: '0 calls · hook armed',
 	LifecycleStatus: 'Child not created',
 	InspectionStatus: 'Not inspected yet',
 	ReloadStatus: 'Not reloaded yet',
@@ -19,8 +23,33 @@ Elemenx.Component('RuntimeShowcase', {
 		this.RuntimeProbe = null;
 		this.RuntimeProbeSequence = 0;
 		this.InspectionSequence = 0;
+		this.AttachStartupLifecycle();
 		this.RefreshRuntime();
 		this.CreateProbe();
+	},
+
+
+	AttachStartupLifecycle: function () {
+		var application = this.$Application();
+		var startup = application ? application.$ShowcaseStartup : null;
+		var component = this;
+
+		if (!startup) return;
+		startup.Listener = function () {
+			component.RefreshStartupLifecycle();
+		};
+		this.RefreshStartupLifecycle();
+	},
+
+	RefreshStartupLifecycle: function () {
+		var application = this.$Application();
+		var startup = application ? application.$ShowcaseStartup : null;
+
+		if (!startup) return;
+		this.BootstrapStatus = 'called · ' + this.FormatStartedAt(startup.BootstrapAt);
+		this.PendingStatus = startup.Pending + (startup.Pending === 1 ? ' call' : ' calls');
+		this.ReadyStatus = startup.Ready + (startup.Ready === 1 ? ' call' : ' calls');
+		this.ErrorStatus = startup.Error + (startup.Error === 1 ? ' call' : ' calls') + (startup.LastError ? ' · ' + (startup.LastError.message || startup.LastError) : ' · hook armed');
 	},
 
 	FormatStartedAt: function (value) {
@@ -120,6 +149,9 @@ Elemenx.Component('RuntimeShowcase', {
 	},
 
 	$OnDestroy: function () {
+		var application = this.$Application();
+		if (application && application.$ShowcaseStartup && application.$ShowcaseStartup.Listener)
+			application.$ShowcaseStartup.Listener = null;
 		if (this.RuntimeProbe) this.RuntimeProbe.$Destroy();
 		this.RuntimeProbe = null;
 	}

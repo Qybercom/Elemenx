@@ -16,8 +16,8 @@ Status values:
 | `Elemenx.Application` registration | YES | `app.js` registers `ApplicationExample`. |
 | `Title`, `Component`, `Root`, `Mount` | YES | Main application definition. |
 | Application Router configuration | YES | Routes, Waiting and NotFound are configured in `app.js`. |
-| Application `$OnPending` / `$OnReady` / `$OnError` | MISSING | Add visible startup lifecycle example without making startup fragile. |
-| Application `Bootstrap` | MISSING | Add a small visible bootstrap marker. |
+| Application `$OnPending` / `$OnReady` / `$OnError` | YES | `ApplicationExample` records startup hook calls and `RuntimeShowcase` displays Pending/Ready/Error counters without forcing an error. |
+| Application `$Bootstrap` | YES | `ApplicationExample.$Bootstrap` creates the startup marker before root construction; `RuntimeShowcase` displays its timestamp. |
 | `Application.Name/Root/Mount/Application/Component/Router` | YES | `RuntimeShowcase` inspects the current Application, root, Router and mount through the public facade. |
 | Application-owned `Service`, `Network`, `Storage`, `Messaging`, Workers | YES | Advanced uses owner-aware facades throughout the component tree; owner cleanup is regression-covered. |
 | `Application.Reload(Component/Service)` | PARTIAL | `RuntimeShowcase` demonstrates Component reload. Service reload remains intentionally visible in the coverage backlog. |

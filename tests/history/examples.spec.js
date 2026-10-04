@@ -239,3 +239,17 @@ test('official Advanced example exercises stable non-network showcase sections e
 
 	expect(errors).toEqual([]);
 });
+
+test('official Advanced example exposes Application bootstrap and startup lifecycle', async ({ page }) => {
+	var errors = captureErrors(page);
+	var runtime;
+
+	await page.goto('http://127.0.0.1:4274/');
+	runtime = page.locator('.runtime-showcase');
+	await expectBootstrapVisible(runtime.getByRole('heading', {name: 'Application startup lifecycle'}), errors);
+	await expect(runtime.locator('.startup-lifecycle')).toContainText('called ·');
+	await expect(runtime.locator('.startup-lifecycle')).toContainText('1 call');
+	await expect(runtime.locator('.startup-lifecycle')).toContainText('0 calls · hook armed');
+
+	expect(errors).toEqual([]);
+});
