@@ -21,7 +21,7 @@ Status values:
 | `Application.Name/Root/Mount/Application/Component/Router` | YES | `RuntimeShowcase` inspects the current Application, root, Router and mount through the public facade. |
 | Application-owned `Service`, `Network`, `Storage`, `Messaging`, Workers | YES | Advanced uses owner-aware facades throughout the component tree; owner cleanup is regression-covered. |
 | `Application.Reload(Component/Service)` | YES | `RuntimeShowcase` demonstrates both Component and Service definition reload through `Application.$Reload()`. |
-| `Application.Destroy` / recreate | MISSING | Contract is regression-covered; add a safe isolated secondary-Application demo rather than destroying the main showcase. |
+| `Application.Destroy` / recreate | YES | `RuntimeShowcase` mounts a secondary Application into an isolated mount, destroys it completely and recreates the same registered Application name with a fresh root instance. |
 
 ## Component
 

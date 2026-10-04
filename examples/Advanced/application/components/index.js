@@ -10,6 +10,7 @@
 	'ProjectShowcase/ProjectShowcase.js',
 	'NetworkShowcase/NetworkShowcase.js',
 	'RuntimeProbe/RuntimeProbe.js',
+	'IsolatedApplicationRoot/IsolatedApplicationRoot.js',
 	'RuntimeShowcase/RuntimeShowcase.js',
 	'RouterShowcase/RouterShowcase.js',
 	'StorageShowcase/StorageShowcase.js',

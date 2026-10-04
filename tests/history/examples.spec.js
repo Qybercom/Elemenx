@@ -275,3 +275,21 @@ test('official Advanced example demonstrates lazy Service lifecycle and Service 
 
 	expect(errors).toEqual([]);
 });
+test('official Advanced example destroys and recreates an isolated Application', async ({ page }) => {
+	var errors = captureErrors(page);
+	var runtime;
+
+	await page.goto('http://127.0.0.1:4274/');
+	runtime = page.locator('.runtime-showcase');
+	await expectBootstrapVisible(runtime.getByRole('heading', {name: 'Isolated Application lifecycle'}), errors);
+	await expect(runtime.locator('.runtime-application-state')).toHaveText('Mounted · root instance 1');
+	await expect(runtime).toContainText('Instance 1');
+	await page.getByRole('button', {name: 'Destroy Application'}).click();
+	await expect(runtime.locator('.runtime-application-state')).toHaveText('Destroyed · registry released');
+	await expect(runtime).not.toContainText('Isolated Application root');
+	await page.getByRole('button', {name: 'Recreate Application'}).click();
+	await expect(runtime.locator('.runtime-application-state')).toHaveText('Mounted · root instance 2');
+	await expect(runtime).toContainText('Instance 2');
+
+	expect(errors).toEqual([]);
+});
