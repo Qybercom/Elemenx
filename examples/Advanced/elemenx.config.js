@@ -62,6 +62,11 @@ module.exports={
 		Compression:true,
 		CompressionThreshold:1024,
 		Request:function (request,response,pathname) {
+			if (pathname === '/elemenx-runtime-deferred-error') {
+				response.writeHead(404,{'Content-Type':'text/plain; charset=utf-8','Cache-Control':'no-cache'});
+				response.end('Deferred child showcase error');
+				return true;
+			}
 			if (pathname === '/elemenx-network-transfer-stage') {
 				var staged=[];
 				request.on('data',function (chunk) { staged.push(chunk); });

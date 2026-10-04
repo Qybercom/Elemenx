@@ -46,7 +46,7 @@ Status values:
 | `Title` | YES | `ProjectPage`. |
 | `Network`, `Storage`, `Messaging`, `WebWorker`, `ServiceWorker` owner accessors | YES | Network, Storage, Messaging and Worker showcases use their Component-owned `$*` facades. |
 | `$OnCreate` / `$OnReady` / `$OnDestroy` | YES | `ComponentShowcase` and `ComponentProbe` expose create/ready/destroy behavior visibly. |
-| `$OnChildPending` / `$OnChildReady` / `$OnChildError` | MISSING | Add deferred/discovered child lifecycle showcase. |
+| `$OnChildPending` / `$OnChildReady` / `$OnChildError` | YES | `RuntimeShowcase` observes real deferred TemplateID Pending → Ready and missing TemplateURL Error transitions. |
 | route `Path`, `Params`, `Query`, `Hash` context | YES | Project route exercises params/query/hash. |
 
 ## Templates, bindings and directives
@@ -65,7 +65,7 @@ Status values:
 | classic counter `*for` | YES | Iterator showcase. |
 | assignment-condition `*for` | YES | Deployment queue. |
 | `*outlet` | YES | Content and Waiting outlets. |
-| `*pending` / `*error` status directives | MISSING | Add deferred resource status example. |
+| `*pending` / `*error` status directives | YES | `RuntimeShowcase` renders live pending/error placeholders on deferred child Components. |
 | custom behavioral Directive | YES | `highlight`, `tooltip`. |
 | Directive Create/Update/Destroy + `context.Data` | YES | Existing custom directives. |
 | custom structural Directive | MISSING | Add one intentionally small structural directive example. |
@@ -226,7 +226,7 @@ The end condition is simple: every supported public runtime capability is either
 
 ## Current phase-7 audit
 
-The showcase is now substantially ahead of the older checklist: Network, Events Pipes, Messaging browser contexts and both Worker APIs are already represented by executable cards. The remaining runtime gaps are deliberately narrow: Application startup hooks/Bootstrap, full Application destroy/recreate, Service lifecycle/integration/dynamic registration, deferred child pending/error UI and a custom structural Directive. Component and Service reload are both demonstrated.
+The showcase is now substantially ahead of the older checklist: Network, Events Pipes, Messaging browser contexts and both Worker APIs are already represented by executable cards. The remaining runtime gaps are deliberately narrow: Application startup hooks/Bootstrap, full Application destroy/recreate, Service lifecycle/integration/dynamic registration, a custom structural Directive. Component and Service reload are both demonstrated.
 
 Lifecycle timestamps are part of the current runtime contract: Component and Service instances expose `$StartedAt()`. Networking runtime instances expose `$StartedAt()`; XHR, Stream, LongPolling, SSE, WebSocket and WebRTC additionally expose `$ConnectedAt()` / `$ClosedAt()` for their latest connection/exchange. Transfer owns an independent set of all three timestamps.
 

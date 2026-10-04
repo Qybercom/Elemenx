@@ -293,3 +293,24 @@ test('official Advanced example destroys and recreates an isolated Application',
 
 	expect(errors).toEqual([]);
 });
+test('official Advanced example demonstrates deferred child Pending, Ready and Error lifecycle', async ({ page }) => {
+	var errors = captureErrors(page);
+	var runtime;
+
+	await page.goto('http://127.0.0.1:4274/');
+	runtime = page.locator('.runtime-showcase');
+	await expectBootstrapVisible(runtime.getByRole('heading', {name: 'Deferred child lifecycle'}), errors);
+	await expect(runtime).toContainText('Waiting for RuntimeDeferredReadyTemplate...');
+	await expect(runtime.locator('.deferred-child-pending')).toContainText('RuntimeDeferredReadyChild');
+	await page.getByRole('button', {name: 'Resolve pending child'}).click();
+	await expect(runtime).toContainText('Deferred child ready');
+	await expect(runtime.locator('.deferred-child-ready')).toContainText('RuntimeDeferredReadyChild');
+
+	await page.getByRole('button', {name: 'Trigger error child'}).click();
+	await expect(runtime).toContainText('Missing TemplateURL · child error rendered');
+	await expect(runtime.locator('.deferred-child-error')).toContainText('RuntimeDeferredErrorChild');
+	await expect(runtime.locator('.deferred-child-error')).toContainText('Elemenx TemplateURL failed');
+	expect(errors.some(function (error) {
+		return error.indexOf('Elemenx TemplateURL failed') !== -1;
+	})).toBe(true);
+});
