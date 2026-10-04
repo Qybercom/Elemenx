@@ -253,3 +253,25 @@ test('official Advanced example exposes Application bootstrap and startup lifecy
 
 	expect(errors).toEqual([]);
 });
+
+test('official Advanced example demonstrates lazy Service lifecycle and Service Reload', async ({ page }) => {
+	var errors = captureErrors(page);
+	var generation;
+
+	await page.goto('http://127.0.0.1:4274/');
+	await expectBootstrapVisible(page.getByRole('heading', {name: 'Service lifecycle'}), errors);
+	await expect(page.locator('.runtime-service-state')).toHaveText('Lazy · not instantiated');
+	await page.getByRole('button', {name: 'Create / inspect service'}).click();
+	await expect(page.locator('.runtime-service-state')).toHaveText('created · Application-owned');
+	generation = Number(await page.locator('.runtime-service-generation').textContent());
+	await page.getByRole('button', {name: 'Destroy service'}).click();
+	await expect(page.locator('.runtime-service-state')).toContainText('Destroyed');
+	await page.getByRole('button', {name: 'Create / inspect service'}).click();
+	await expect(page.locator('.runtime-service-generation')).toHaveText(String(generation));
+	await page.getByRole('button', {name: 'Reload RuntimeService'}).click();
+	await expect(page.locator('.runtime-service-reload-status')).toContainText('Reload complete', {timeout: 10000});
+	await expect(page.locator('.runtime-service-generation')).toHaveText(String(generation + 1));
+	await expect(page.locator('.runtime-service-state')).toHaveText('created · re-created after reload');
+
+	expect(errors).toEqual([]);
+});

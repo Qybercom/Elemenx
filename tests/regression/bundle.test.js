@@ -197,4 +197,61 @@ describe('Regression: production bundle registry', function () {
 			XMLHttpRequest.prototype.open=open;
 		}
 	});
+
+	test('Application Reload uses Bundle in dist without probing Discovery', function () {
+		document.body.innerHTML='<div id="bundle-reload-mount"></div>';
+		var rootName=unique('BundleReloadRoot');
+		var componentName=unique('BundleReloadComponent');
+		var serviceName=unique('BundleReloadService');
+		var componentRevision=0;
+		var serviceRevision=0;
+		var bundle={Component:{},Service:{}};
+		var requests=[];
+		var open=XMLHttpRequest.prototype.open;
+
+		Elemenx.Component(rootName,{$Template:'<main class="bundle-reload-root"></main>'});
+		bundle.Component[componentName]=function () {
+			componentRevision++;
+			Elemenx.Component(componentName,{$Template:'<span class="bundle-reload-child">component '+componentRevision+'</span>'});
+		};
+		bundle.Service[serviceName]=function () {
+			serviceRevision++;
+			Elemenx.Service(serviceName,{Revision:serviceRevision});
+		};
+		Elemenx.Bundle(bundle);
+
+		XMLHttpRequest.prototype.open=function (method,url) {
+			requests.push(String(url));
+			return open.apply(this,arguments);
+		};
+
+		try {
+			var app=Elemenx.Application(unique('BundleReloadApplication'),{
+				$Component:rootName,
+				$Root:'/missing-bundle-reload-source-'+Date.now(),
+				$Mount:'#bundle-reload-mount'
+			});
+			var child=Elemenx.Component(componentName)({},null,{Application:app});
+			app.$Component().$Element().appendChild(child.$Element());
+			var service=app.$Service(serviceName);
+
+			expect(child.$Element().textContent).toBe('component 1');
+			expect(service.Revision).toBe(1);
+
+			app.$Reload('Component',componentName);
+			app.$Reload('Service',serviceName);
+
+			expect(child.$Element().textContent).toBe('component 1');
+			var reloadedChild=Elemenx.Component(componentName)({},null,{Application:app});
+			expect(reloadedChild.$Element().textContent).toBe('component 2');
+			expect(app.$Service(serviceName).Revision).toBe(2);
+			expect(requests).toEqual([]);
+			reloadedChild.$Destroy();
+			child.$Destroy();
+			app.$Destroy();
+		}
+		finally {
+			XMLHttpRequest.prototype.open=open;
+		}
+	});
 });

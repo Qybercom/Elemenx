@@ -20,7 +20,7 @@ Status values:
 | Application `$Bootstrap` | YES | `ApplicationExample.$Bootstrap` creates the startup marker before root construction; `RuntimeShowcase` displays its timestamp. |
 | `Application.Name/Root/Mount/Application/Component/Router` | YES | `RuntimeShowcase` inspects the current Application, root, Router and mount through the public facade. |
 | Application-owned `Service`, `Network`, `Storage`, `Messaging`, Workers | YES | Advanced uses owner-aware facades throughout the component tree; owner cleanup is regression-covered. |
-| `Application.Reload(Component/Service)` | PARTIAL | `RuntimeShowcase` demonstrates Component reload. Service reload remains intentionally visible in the coverage backlog. |
+| `Application.Reload(Component/Service)` | YES | `RuntimeShowcase` demonstrates both Component and Service definition reload through `Application.$Reload()`. |
 | `Application.Destroy` / recreate | MISSING | Contract is regression-covered; add a safe isolated secondary-Application demo rather than destroying the main showcase. |
 
 ## Component
@@ -95,7 +95,7 @@ Status values:
 | `Elemenx.Service` definition | YES | Session. |
 | Application-owned service instance | YES | Session is resolved through components/guards. |
 | service methods/state | YES | Authorization/project access. |
-| Service lifecycle | PARTIAL | Add visible Create/Destroy/lazy-instantiation information. |
+| Service lifecycle | YES | `RuntimeService` visibly demonstrates lazy Application-owned creation, `$StartedAt()`, `$Generation()`, destroy/recreate and reload-driven redefinition. |
 | Service access to Network/Storage/Messaging/Workers | MISSING | Add a dedicated integration service example. |
 | dynamic Application `Service(name, definition)` | MISSING | Demonstrate in isolated runtime showcase. |
 
@@ -226,7 +226,7 @@ The end condition is simple: every supported public runtime capability is either
 
 ## Current phase-7 audit
 
-The showcase is now substantially ahead of the older checklist: Network, Events Pipes, Messaging browser contexts and both Worker APIs are already represented by executable cards. The remaining runtime gaps are deliberately narrow: Application startup hooks/Bootstrap, full Application destroy/recreate, Service lifecycle/integration/dynamic registration, deferred child pending/error UI and a custom structural Directive. Component reload is demonstrated; Service reload is still outstanding.
+The showcase is now substantially ahead of the older checklist: Network, Events Pipes, Messaging browser contexts and both Worker APIs are already represented by executable cards. The remaining runtime gaps are deliberately narrow: Application startup hooks/Bootstrap, full Application destroy/recreate, Service lifecycle/integration/dynamic registration, deferred child pending/error UI and a custom structural Directive. Component and Service reload are both demonstrated.
 
 Lifecycle timestamps are part of the current runtime contract: Component and Service instances expose `$StartedAt()`. Networking runtime instances expose `$StartedAt()`; XHR, Stream, LongPolling, SSE, WebSocket and WebRTC additionally expose `$ConnectedAt()` / `$ClosedAt()` for their latest connection/exchange. Transfer owns an independent set of all three timestamps.
 

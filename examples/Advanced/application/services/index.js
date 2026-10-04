@@ -1,3 +1,4 @@
 [
-	'Session.js'
+	'Session.js',
+	'RuntimeService.js'
 ]

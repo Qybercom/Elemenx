@@ -725,6 +725,12 @@
 		
 		Runtime.Bundle = {
 			Install: install,
+			Reload: function (type, name) {
+				var resolved = resolvedName(type, name);
+				if (!resolved) return false;
+				loaded[type][resolved] = false;
+				return load(type, resolved);
+			},
 			Ready: function () {
 				var type;
 				for (type in registry) if (Object.prototype.hasOwnProperty.call(registry, type)) return true;
@@ -14330,47 +14336,74 @@
 			};
 			
 			api.$Reload = function (type, entityName, callback) {
-				if (!Runtime.Discovery)
-					throw new Error('Elemenx Discovery is not available');
-				
+				var bundled = Runtime.Bundle && Runtime.Bundle.ResolvedName(type, entityName);
+
 				if (type !== 'Component' && type !== 'Service')
 					throw new Error('Elemenx Reload expects Component or Service');
-				
+
 				if (type === 'Component' && Runtime.BeginComponentReload) {
 					Runtime.BeginComponentReload(entityName);
 				}
-				
+
+				if (bundled) {
+					try {
+						Runtime.Bundle.Reload(type, bundled);
+
+						if (type === 'Service' && Runtime.RefreshDeferredService) {
+							Runtime.RefreshDeferredService(entityName);
+						}
+
+						if (type === 'Component' && Runtime.ReloadComponentInstances) {
+							Runtime.ReloadComponentInstances(entityName);
+						}
+
+						if (callback) callback(null);
+					}
+					catch (error) {
+						if (type === 'Component' && Runtime.FailComponentReload) {
+							Runtime.FailComponentReload(entityName, error);
+						}
+
+						if (callback) callback(error);
+					}
+
+					return api;
+				}
+
+				if (!Runtime.Discovery)
+					throw new Error('Elemenx Discovery is not available');
+
 				return Runtime.Discovery.Reload(api, type, entityName, function (error) {
 					if (error && type === 'Component' && Runtime.FailComponentReload) {
 						Runtime.FailComponentReload(entityName, error);
 					}
-					
+
 					if (!error && type === 'Service' && Runtime.RefreshDeferredService) {
 						Runtime.RefreshDeferredService(entityName);
 					}
-					
+
 					if (!error && type === 'Component' && Runtime.ReloadComponentTemplate) {
 						Runtime.ReloadComponentTemplate(entityName, function (templateError) {
 							if (templateError && Runtime.FailComponentReload) {
 								Runtime.FailComponentReload(entityName, templateError);
 							}
-							
+
 							if (!templateError && Runtime.ReloadComponentInstances) {
 								Runtime.ReloadComponentInstances(entityName);
 							}
-							
+
 							if (callback)
 								callback(templateError);
 						});
-						
+
 						return;
 					}
-					
+
 					if (callback)
 						callback(error);
 				});
 			};
-			
+
 			api.$Component = function () {
 				return root;
 			};
