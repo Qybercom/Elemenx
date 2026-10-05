@@ -44,7 +44,7 @@ Elemenx.Component('RuntimeDeferredErrorHost', {
 });
 
 Elemenx.Component('RuntimeShowcase', {
-	$Template: '<section class="showcase-section runtime-showcase"><div class="showcase-heading"><div><p class="eyebrow">Application / runtime</p><h2>Runtime inspection, isolated lifecycle and development Reload</h2></div><p>The card uses only public Application and Component APIs: inspect the current runtime, destroy/recreate an isolated child and reload its discovered Component definition.</p></div><div class="runtime-grid"><div class="runtime-panel"><h3>Runtime</h3><dl class="runtime-values"><dt>Runtime ID</dt><dd>{{RuntimeID}}</dd><dt>Runtime started</dt><dd>{{RuntimeStarted}}</dd><dt>Runtime uptime</dt><dd>{{RuntimeUptime}}</dd><dt>Application</dt><dd>{{ApplicationName}}</dd><dt>App started</dt><dd>{{ApplicationStarted}}</dd><dt>App uptime</dt><dd>{{ApplicationUptime}}</dd><dt>Root</dt><dd>{{RootName}}</dd><dt>Router</dt><dd>{{RouterStatus}}</dd><dt>Mount</dt><dd>{{MountStatus}}</dd></dl><p class="runtime-status">{{InspectionStatus}}</p><button class="button" (click)="RefreshRuntime">Refresh inspection</button></div><div class="runtime-panel"><h3>Application startup lifecycle</h3><dl class="runtime-values startup-lifecycle"><dt>Bootstrap</dt><dd>{{BootstrapStatus}}</dd><dt>Pending</dt><dd>{{PendingStatus}}</dd><dt>Ready</dt><dd>{{ReadyStatus}}</dd><dt>Error</dt><dd>{{ErrorStatus}}</dd></dl><p class="runtime-status">$Bootstrap initializes this marker before root construction; the three Application lifecycle hooks update the counters as startup progresses.</p></div><div class="runtime-panel"><h3>Isolated child lifecycle</h3><div #RuntimeProbe></div><p class="runtime-status">{{LifecycleStatus}}</p><div class="runtime-actions"><button class="button" (click)="DestroyProbe">Destroy child</button><button class="button" (click)="RecreateProbe">Recreate child</button></div></div><div class="runtime-panel"><h3>Isolated Application lifecycle</h3><p>A secondary Application owns only the mount below, so its complete teardown can be demonstrated without destroying the Advanced showcase itself.</p><div #IsolatedApplicationMount class="runtime-application-mount"></div><dl class="runtime-values"><dt>State</dt><dd class="runtime-application-state">{{IsolatedApplicationStatus}}</dd><dt>Started</dt><dd>{{IsolatedApplicationStarted}}</dd></dl><div class="runtime-actions"><button class="button" (click)="DestroyIsolatedApplication">Destroy Application</button><button class="button" (click)="RecreateIsolatedApplication">Recreate Application</button></div></div><div class="runtime-panel runtime-deferred-lifecycle"><h3>Deferred child lifecycle</h3><p>The first child waits for a real TemplateID resource. Resolve it to see Pending → Ready. The second child requests a deliberately missing TemplateURL to demonstrate the real Error path.</p><dl class="runtime-values deferred-child-lifecycle"><dt>Pending</dt><dd class="deferred-child-pending">{{ChildPendingStatus}}</dd><dt>Ready</dt><dd class="deferred-child-ready">{{ChildReadyStatus}}</dd><dt>Error</dt><dd class="deferred-child-error">{{ChildErrorStatus}}</dd></dl><div class="runtime-deferred-child"><RuntimeDeferredReadyChild *pending="Waiting for RuntimeDeferredReadyTemplate..." *error="Ready child failed"></RuntimeDeferredReadyChild></div><div #DeferredErrorMount></div><div class="runtime-actions"><button class="button" [disabled]="DeferredReadyResolved" (click)="ResolveDeferredChild">Resolve pending child</button><button class="button" [disabled]="DeferredErrorTriggered" (click)="TriggerDeferredError">Trigger error child</button></div></div><div class="runtime-panel runtime-service-integration"><h3>Service runtime integration</h3><p><b>IntegrationService</b> uses its own public owner-aware facades for Network, Storage, Messaging, WebWorker and ServiceWorker. Its WebWorker stays alive until the owning Service is destroyed.</p><dl class="runtime-values"><dt>Service</dt><dd class="service-integration-instance">{{IntegrationServiceStatus}}</dd><dt>Network</dt><dd class="service-integration-network">{{IntegrationNetwork}}</dd><dt>Storage</dt><dd class="service-integration-storage">{{IntegrationStorage}}</dd><dt>Messaging</dt><dd class="service-integration-messaging">{{IntegrationMessaging}}</dd><dt>WebWorker</dt><dd class="service-integration-webworker">{{IntegrationWebWorker}}</dd><dt>ServiceWorker</dt><dd class="service-integration-serviceworker">{{IntegrationServiceWorker}}</dd></dl><div class="runtime-actions"><button class="button" (click)="ExerciseServiceIntegration">Exercise service facades</button><button class="button" (click)="DestroyIntegrationService">Destroy integration service</button></div></div><div class="runtime-panel"><h3>Service lifecycle</h3><p><b>RuntimeService</b> stays lazy until the first property access. Destroy removes the current Application-owned instance; the next access creates a fresh instance.</p><dl class="runtime-values"><dt>State</dt><dd class="runtime-service-state">{{ServiceStatus}}</dd><dt>Generation</dt><dd class="runtime-service-generation">{{ServiceGeneration}}</dd><dt>Started</dt><dd>{{ServiceStarted}}</dd></dl><div class="runtime-actions"><button class="button" (click)="CreateService">Create / inspect service</button><button class="button" (click)="DestroyService">Destroy service</button></div></div><div class="runtime-panel runtime-reload"><h3>Development Reload</h3><p>Reloads discovered definitions through Application.$Reload(). Component reload refreshes the existing <b>RuntimeProbe</b>; Service reload destroys its current instance and the next access creates the new generation.</p><div class="runtime-reload-actions"><div><p class="runtime-status">{{ReloadStatus}}</p><button class="button primary" (click)="ReloadProbe">Reload RuntimeProbe</button></div><div><p class="runtime-status runtime-service-reload-status">{{ServiceReloadStatus}}</p><button class="button primary" (click)="ReloadService">Reload RuntimeService</button></div></div></div></div></section>',
+	$Template: '<section class="showcase-section runtime-showcase"><div class="showcase-heading"><div><p class="eyebrow">Application / runtime</p><h2>Runtime inspection, isolated lifecycle and development Reload</h2></div><p>The card uses only public Application and Component APIs: inspect the current runtime, destroy/recreate an isolated child and reload its discovered Component definition.</p></div><div class="runtime-grid"><div class="runtime-panel"><h3>Runtime</h3><dl class="runtime-values"><dt>Runtime ID</dt><dd>{{RuntimeID}}</dd><dt>Runtime started</dt><dd>{{RuntimeStarted}}</dd><dt>Runtime uptime</dt><dd>{{RuntimeUptime}}</dd><dt>Application</dt><dd>{{ApplicationName}}</dd><dt>App started</dt><dd>{{ApplicationStarted}}</dd><dt>App uptime</dt><dd>{{ApplicationUptime}}</dd><dt>Root</dt><dd>{{RootName}}</dd><dt>Router</dt><dd>{{RouterStatus}}</dd><dt>Mount</dt><dd>{{MountStatus}}</dd></dl><p class="runtime-status">{{InspectionStatus}}</p><button class="button" (click)="RefreshRuntime">Refresh inspection</button></div><div class="runtime-panel"><h3>Application startup lifecycle</h3><dl class="runtime-values startup-lifecycle"><dt>Bootstrap</dt><dd>{{BootstrapStatus}}</dd><dt>Pending</dt><dd>{{PendingStatus}}</dd><dt>Ready</dt><dd>{{ReadyStatus}}</dd><dt>Error</dt><dd>{{ErrorStatus}}</dd></dl><p class="runtime-status">$Bootstrap initializes this marker before root construction; the three Application lifecycle hooks update the counters as startup progresses.</p></div><div class="runtime-panel"><h3>Isolated child lifecycle</h3><div #RuntimeProbe></div><p class="runtime-status">{{LifecycleStatus}}</p><div class="runtime-actions"><button class="button" (click)="DestroyProbe">Destroy child</button><button class="button" (click)="RecreateProbe">Recreate child</button></div></div><div class="runtime-panel"><h3>Isolated Application lifecycle</h3><p>A secondary Application owns only the mount below, so its complete teardown can be demonstrated without destroying the Advanced showcase itself.</p><div #IsolatedApplicationMount class="runtime-application-mount"></div><dl class="runtime-values"><dt>State</dt><dd class="runtime-application-state">{{IsolatedApplicationStatus}}</dd><dt>Started</dt><dd>{{IsolatedApplicationStarted}}</dd></dl><div class="runtime-actions"><button class="button" (click)="DestroyIsolatedApplication">Destroy Application</button><button class="button" (click)="RecreateIsolatedApplication">Recreate Application</button></div></div><div class="runtime-panel runtime-deferred-lifecycle"><h3>Deferred child lifecycle</h3><p>The first child waits for a real TemplateID resource. Resolve it to see Pending → Ready. The second child requests a deliberately missing TemplateURL to demonstrate the real Error path.</p><dl class="runtime-values deferred-child-lifecycle"><dt>Pending</dt><dd class="deferred-child-pending">{{ChildPendingStatus}}</dd><dt>Ready</dt><dd class="deferred-child-ready">{{ChildReadyStatus}}</dd><dt>Error</dt><dd class="deferred-child-error">{{ChildErrorStatus}}</dd></dl><div class="runtime-deferred-child"><RuntimeDeferredReadyChild *pending="Waiting for RuntimeDeferredReadyTemplate..." *error="Ready child failed"></RuntimeDeferredReadyChild></div><div #DeferredErrorMount></div><div class="runtime-actions"><button class="button" [disabled]="DeferredReadyResolved" (click)="ResolveDeferredChild">Resolve pending child</button><button class="button" [disabled]="DeferredErrorTriggered" (click)="TriggerDeferredError">Trigger error child</button></div></div><div class="runtime-panel runtime-service-integration"><h3>Service runtime integration</h3><p><b>IntegrationService</b> uses its own public owner-aware facades for Network, Storage, Messaging, WebWorker and ServiceWorker. Its WebWorker stays alive until the owning Service is destroyed.</p><dl class="runtime-values"><dt>Service</dt><dd class="service-integration-instance">{{IntegrationServiceStatus}}</dd><dt>Network</dt><dd class="service-integration-network">{{IntegrationNetwork}}</dd><dt>Storage</dt><dd class="service-integration-storage">{{IntegrationStorage}}</dd><dt>Messaging</dt><dd class="service-integration-messaging">{{IntegrationMessaging}}</dd><dt>WebWorker</dt><dd class="service-integration-webworker">{{IntegrationWebWorker}}</dd><dt>ServiceWorker</dt><dd class="service-integration-serviceworker">{{IntegrationServiceWorker}}</dd></dl><div class="runtime-actions"><button class="button" (click)="ExerciseServiceIntegration">Exercise service facades</button><button class="button" (click)="DestroyIntegrationService">Destroy integration service</button></div></div><div class="runtime-panel runtime-dynamic-service"><h3>Dynamic Application Service</h3><p>Registers a Service definition at runtime through <b>Application.$Service(name, definition)</b>. Registration stays lazy; the first inspection creates the Application-owned instance.</p><dl class="runtime-values"><dt>Registration</dt><dd class="dynamic-service-registration">{{DynamicServiceRegistration}}</dd><dt>Instance</dt><dd class="dynamic-service-instance">{{DynamicServiceInstance}}</dd><dt>Started</dt><dd>{{DynamicServiceStarted}}</dd></dl><div class="runtime-actions"><button class="button" [disabled]="DynamicServiceRegistered" (click)="RegisterDynamicService">Register dynamic Service</button><button class="button" [disabled]="!DynamicServiceRegistered" (click)="InspectDynamicService">Create / inspect dynamic Service</button><button class="button" [disabled]="!DynamicServiceCreated" (click)="DestroyDynamicService">Destroy dynamic Service</button></div></div><div class="runtime-panel"><h3>Service lifecycle</h3><p><b>RuntimeService</b> stays lazy until the first property access. Destroy removes the current Application-owned instance; the next access creates a fresh instance.</p><dl class="runtime-values"><dt>State</dt><dd class="runtime-service-state">{{ServiceStatus}}</dd><dt>Generation</dt><dd class="runtime-service-generation">{{ServiceGeneration}}</dd><dt>Started</dt><dd>{{ServiceStarted}}</dd></dl><div class="runtime-actions"><button class="button" (click)="CreateService">Create / inspect service</button><button class="button" (click)="DestroyService">Destroy service</button></div></div><div class="runtime-panel runtime-reload"><h3>Development Reload</h3><p>Reloads discovered definitions through Application.$Reload(). Component reload refreshes the existing <b>RuntimeProbe</b>; Service reload destroys its current instance and the next access creates the new generation.</p><div class="runtime-reload-actions"><div><p class="runtime-status">{{ReloadStatus}}</p><button class="button primary" (click)="ReloadProbe">Reload RuntimeProbe</button></div><div><p class="runtime-status runtime-service-reload-status">{{ServiceReloadStatus}}</p><button class="button primary" (click)="ReloadService">Reload RuntimeService</button></div></div></div></div></section>',
 	$Style: '.runtime-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.runtime-panel{padding:16px;border:1px solid var(--border);border-radius:10px;background:var(--surface-soft)}.runtime-panel h3{margin-top:0}.runtime-reload{grid-column:1/-1}.runtime-values{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:7px 14px;margin:0 0 14px}.runtime-values dt{color:var(--text-soft)}.runtime-values dd{margin:0;font:600 12px/1.4 ui-monospace,SFMono-Regular,Consolas,monospace;overflow-wrap:anywhere}.runtime-actions{display:flex;flex-wrap:wrap;gap:8px}.runtime-application-mount{min-height:42px;margin:0 0 12px}.runtime-reload-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.runtime-status{min-height:20px;font:600 12px/1.4 ui-monospace,SFMono-Regular,Consolas,monospace}@media(max-width:760px){.runtime-grid,.runtime-reload-actions{grid-template-columns:1fr}.runtime-reload{grid-column:auto}}',
 
 	RuntimeID: '-',
@@ -73,6 +73,11 @@ Elemenx.Component('RuntimeShowcase', {
 	IntegrationMessaging: 'not exercised',
 	IntegrationWebWorker: 'not exercised',
 	IntegrationServiceWorker: 'not exercised',
+	DynamicServiceRegistration: 'Unregistered',
+	DynamicServiceInstance: 'No instance',
+	DynamicServiceStarted: '-',
+	DynamicServiceRegistered: false,
+	DynamicServiceCreated: false,
 	IsolatedApplicationStatus: 'Not created',
 	IsolatedApplicationStarted: '-',
 	ChildPendingStatus: '0 calls',
@@ -93,6 +98,7 @@ Elemenx.Component('RuntimeShowcase', {
 		this.ChildErrorCount = 0;
 		this.RuntimeDeferredErrorHost = null;
 		this.IntegrationWorker = null;
+		this.DynamicServiceSequence = 0;
 		this.AttachStartupLifecycle();
 		this.RefreshRuntime();
 		this.CreateProbe();
@@ -329,6 +335,51 @@ Elemenx.Component('RuntimeShowcase', {
 		this.IntegrationWorker = null;
 	},
 
+
+	RegisterDynamicService: function () {
+		var component = this;
+		var application = this.$Application();
+
+		if (this.DynamicServiceRegistered) return;
+
+		application.$Service('RuntimeDynamicService', {
+			Instance: 0,
+			$OnCreate: function () {
+				this.Instance = ++component.DynamicServiceSequence;
+			},
+			Snapshot: function () {
+				return {
+					Instance: this.Instance,
+					StartedAt: this.$StartedAt(),
+					Generation: this.$Generation()
+				};
+			}
+		});
+
+		this.DynamicServiceRegistered = true;
+		this.DynamicServiceRegistration = 'Registered at runtime · lazy';
+	},
+
+	InspectDynamicService: function () {
+		var snapshot;
+
+		if (!this.DynamicServiceRegistered) return;
+		snapshot = this.$Application().$Service('RuntimeDynamicService').Snapshot();
+		this.DynamicServiceCreated = true;
+		this.DynamicServiceRegistration = 'Registered at runtime · Application-owned';
+		this.DynamicServiceInstance = 'Instance ' + snapshot.Instance + ' · generation ' + snapshot.Generation;
+		this.DynamicServiceStarted = this.FormatStartedAt(snapshot.StartedAt);
+	},
+
+	DestroyDynamicService: function () {
+		if (!this.DynamicServiceRegistered || !this.DynamicServiceCreated) return;
+		this.$Application().$Service('RuntimeDynamicService').$Destroy();
+		this.DynamicServiceCreated = false;
+		this.DynamicServiceRegistration = 'Registered at runtime · lazy';
+		this.DynamicServiceInstance = 'Destroyed · next access creates a new instance';
+		this.DynamicServiceStarted = '-';
+	},
+
 	CreateService: function () {
 		var service = this.$Application().$Service('RuntimeService');
 		var snapshot = service.Snapshot();
@@ -396,6 +447,9 @@ Elemenx.Component('RuntimeShowcase', {
 		this.RuntimeProbe = null;
 		if (this.RuntimeDeferredErrorHost) this.RuntimeDeferredErrorHost.$Destroy();
 		this.RuntimeDeferredErrorHost = null;
+		if (this.DynamicServiceRegistered && this.DynamicServiceCreated)
+			application.$Service('RuntimeDynamicService').$Destroy();
+		this.DynamicServiceCreated = false;
 		this.IntegrationWorker = null;
 	}
 });

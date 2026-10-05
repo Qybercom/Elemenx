@@ -309,6 +309,31 @@ test('official Advanced Service accesses Network, Storage, Messaging and Workers
 	expect(errors).toEqual([]);
 });
 
+
+test('official Advanced example registers a dynamic Application Service at runtime', async ({ page }) => {
+	var errors = captureErrors(page);
+	var runtime;
+
+	await page.goto('http://127.0.0.1:4274/');
+	runtime = page.locator('.runtime-showcase');
+	await expectBootstrapVisible(runtime.getByRole('heading', {name: 'Dynamic Application Service'}), errors);
+	await expect(runtime.locator('.dynamic-service-registration')).toHaveText('Unregistered');
+	await expect(runtime.locator('.dynamic-service-instance')).toHaveText('No instance');
+
+	await runtime.getByRole('button', {name: 'Register dynamic Service'}).click();
+	await expect(runtime.locator('.dynamic-service-registration')).toHaveText('Registered at runtime · lazy');
+	await expect(runtime.locator('.dynamic-service-instance')).toHaveText('No instance');
+
+	await runtime.getByRole('button', {name: 'Create / inspect dynamic Service'}).click();
+	await expect(runtime.locator('.dynamic-service-instance')).toHaveText('Instance 1 · generation 0');
+	await runtime.getByRole('button', {name: 'Destroy dynamic Service'}).click();
+	await expect(runtime.locator('.dynamic-service-instance')).toHaveText('Destroyed · next access creates a new instance');
+	await runtime.getByRole('button', {name: 'Create / inspect dynamic Service'}).click();
+	await expect(runtime.locator('.dynamic-service-instance')).toHaveText('Instance 2 · generation 0');
+
+	expect(errors).toEqual([]);
+});
+
 test('official Advanced example destroys and recreates an isolated Application', async ({ page }) => {
 	var errors = captureErrors(page);
 	var runtime;
