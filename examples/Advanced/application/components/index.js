@@ -1,6 +1,7 @@
 [
 	'Layout/Layout.js',
 	'HomePage/HomePage.js',
+	'DirectiveStructuralProbe/DirectiveStructuralProbe.js',
 	'ComponentProbe/ComponentProbe.js',
 	'ComponentShowcase/ComponentShowcase.js',
 	'ServiceBadge/ServiceBadge.js',

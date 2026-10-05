@@ -220,6 +220,16 @@ test('official Advanced example exercises stable non-network showcase sections e
 	await expect(page.locator('.storage-showcase')).toContainText('local value');
 	await expect(page.locator('.storage-showcase')).toContainText('session value');
 
+	var structuralProbe = page.locator('.directive-structural-probe');
+	var structuralInstance;
+	await expect(structuralProbe).toBeVisible();
+	structuralInstance = await structuralProbe.textContent();
+	await page.getByRole('button', {name: 'Unmount structural child'}).click();
+	await expect(structuralProbe).toHaveCount(0);
+	await page.getByRole('button', {name: 'Mount structural child'}).click();
+	await expect(structuralProbe).toBeVisible();
+	expect(await structuralProbe.textContent()).not.toBe(structuralInstance);
+
 	await page.getByRole('button', {name: 'Emit local event'}).click();
 	await expect(page.locator('.events-showcase')).toContainText('Event count: 1');
 	await page.getByRole('button', {name: 'Run A/B/B/B'}).click();

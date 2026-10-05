@@ -7,6 +7,8 @@ Elemenx.Component('HomePage', {
 	BindingSelected: 'staging',
 	DirectiveTooltip: 'This title is maintained by a custom Elemenx directive.',
 	DirectiveHighlighted: true,
+	DirectiveBlocked: false,
+	DirectiveStructuralAction: 'Unmount structural child',
 
 	$OnCreate: function () {
 		var component = this;
@@ -36,6 +38,11 @@ Elemenx.Component('HomePage', {
 
 	ToggleDirectiveHighlight: function () {
 		this.DirectiveHighlighted = !this.DirectiveHighlighted;
+	},
+
+	ToggleDirectiveStructural: function () {
+		this.DirectiveBlocked = !this.DirectiveBlocked;
+		this.DirectiveStructuralAction = this.DirectiveBlocked ? 'Mount structural child' : 'Unmount structural child';
 	},
 
 	$OnDestroy: function () {

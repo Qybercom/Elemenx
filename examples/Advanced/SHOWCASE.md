@@ -68,7 +68,7 @@ Status values:
 | `*pending` / `*error` status directives | YES | `RuntimeShowcase` renders live pending/error placeholders on deferred child Components. |
 | custom behavioral Directive | YES | `highlight`, `tooltip`. |
 | Directive Create/Update/Destroy + `context.Data` | YES | Existing custom directives. |
-| custom structural Directive | MISSING | Add one intentionally small structural directive example. |
+| custom structural Directive | YES | `unless` uses the public Structural host (`Mount` / `Unmount`) and owns a nested Component instance. |
 
 ## Router and guards
 
@@ -226,7 +226,7 @@ The end condition is simple: every supported public runtime capability is either
 
 ## Current phase-7 audit
 
-The showcase is now substantially ahead of the older checklist: Network, Events Pipes, Messaging browser contexts and both Worker APIs are already represented by executable cards. The remaining runtime gaps are deliberately narrow: Application startup hooks/Bootstrap, full Application destroy/recreate, Service lifecycle/integration/dynamic registration, a custom structural Directive. Component and Service reload are both demonstrated.
+The showcase is now substantially ahead of the older checklist: Network, Events Pipes, Messaging browser contexts and both Worker APIs are already represented by executable cards. The remaining runtime gaps are deliberately narrow: Application startup hooks/Bootstrap, full Application destroy/recreate, Service integration/dynamic registration. Custom behavioral and structural Directives are both demonstrated. Component and Service reload are both demonstrated.
 
 Lifecycle timestamps are part of the current runtime contract: Component and Service instances expose `$StartedAt()`. Networking runtime instances expose `$StartedAt()`; XHR, Stream, LongPolling, SSE, WebSocket and WebRTC additionally expose `$ConnectedAt()` / `$ClosedAt()` for their latest connection/exchange. Transfer owns an independent set of all three timestamps.
 

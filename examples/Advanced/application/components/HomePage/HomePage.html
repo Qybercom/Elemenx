@@ -84,6 +84,13 @@
 				</div>
 				<button class="button" (click)="ToggleDirectiveHighlight">Toggle highlight</button>
 			</div>
+
+			<div class="directive-example directive-structural-example">
+				<code>*unless="DirectiveBlocked"</code>
+				<DirectiveStructuralProbe *unless="DirectiveBlocked"></DirectiveStructuralProbe>
+				<small>The custom structural directive owns the child: unmount destroys it, mount creates a fresh instance.</small>
+				<button class="button" (click)="ToggleDirectiveStructural">{{DirectiveStructuralAction}}</button>
+			</div>
 		</div>
 	</div>
 	<RouterShowcase></RouterShowcase>
