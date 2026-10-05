@@ -177,6 +177,13 @@ function create (options) {
 			return;
 		}
 
+		if (pathname.indexOf('/libraries/') === 0) {
+			var libraryRoot=path.resolve(path.dirname(framework),'libraries');
+			var libraryFile=path.resolve(libraryRoot,pathname.substring('/libraries/'.length));
+			var libraryPrefix=libraryRoot.charAt(libraryRoot.length - 1) === path.sep ? libraryRoot : libraryRoot + path.sep;
+			if (libraryFile.indexOf(libraryPrefix) === 0 && fs.existsSync(libraryFile)) { send(request,response,libraryFile); return; }
+		}
+
 		var relative=pathname === '/' ? 'index.html' : pathname.replace(/^\/+/,'');
 		var file=path.resolve(root,relative);
 		var prefix=root.charAt(root.length - 1) === path.sep ? root : root + path.sep;

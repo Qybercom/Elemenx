@@ -3,6 +3,7 @@ Elemenx.Application('ApplicationExample', {
 	$Component: 'Layout',
 	$Root: 'application',
 	$Mount: 'body',
+	$Use: ['UI'],
 	$Bootstrap: function () {
 		this.$ShowcaseStartup = {
 			BootstrapAt: new Date(),
@@ -31,6 +32,7 @@ Elemenx.Application('ApplicationExample', {
 		NotFound: 'PageNotFound',
 		Routes: [
 			{Path: '/', Component: 'HomePage'},
+			{Path: '/ui', Component: 'UIKitPage'},
 			{Path: '/authorized', Component: 'AuthorizedPage', Guard: 'Authorized', GuardFailed: 'LoginRequired'},
 			{Path: '/redirect-protected', Component: 'RedirectProtectedPage', Guard: 'AuthorizedRedirect'},
 			{Path: '/router/:id', Component: 'RouterLabPage'},

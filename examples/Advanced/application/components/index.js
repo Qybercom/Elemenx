@@ -1,6 +1,7 @@
 [
 	'Layout/Layout.js',
 	'HomePage/HomePage.js',
+	'UIKitPage/UIKitPage.js',
 	'DirectiveStructuralProbe/DirectiveStructuralProbe.js',
 	'ComponentProbe/ComponentProbe.js',
 	'ComponentShowcase/ComponentShowcase.js',

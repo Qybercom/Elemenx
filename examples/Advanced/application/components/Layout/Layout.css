@@ -363,6 +363,7 @@ footer {
 	margin-top: 20px;
 	font-weight: 700;
 }
+
 .header-actions {
 	justify-self: end;
 	display: flex;
@@ -429,7 +430,7 @@ footer {
 	.application-header {
 		grid-template-columns: 1fr auto;
 	}
-
+	
 	nav {
 		grid-column: 1 / -1;
 		grid-row: 2;
@@ -442,15 +443,16 @@ footer {
 		align-items: stretch;
 		flex-direction: column-reverse;
 	}
-
+	
 	.status-pill {
 		min-width: 0;
 	}
-
+	
 	.status-pill small {
 		display: none;
 	}
 }
+
 .showcase-section {
 	margin-top: 28px;
 }
@@ -617,16 +619,17 @@ footer {
 	.project-showcase {
 		grid-template-columns: 1fr;
 	}
-
+	
 	.showcase-heading {
 		align-items: start;
 		flex-direction: column;
 	}
-
+	
 	.showcase-heading > p {
 		text-align: left;
 	}
 }
+
 .iterator-showcase {
 	margin-top: 20px;
 	padding-top: 20px;

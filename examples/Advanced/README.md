@@ -90,3 +90,7 @@ Repository-level tests exercise the development example and the production bundl
 ## Coverage status
 
 See `SHOWCASE.md` before adding another demo. Phase 7 is complete: every tracked public runtime capability is either an executable `YES` showcase or an explicit `WORKFLOW` concern. The ledger remains the source of truth so future additions do not duplicate behavior already covered elsewhere.
+
+## Standard UI library
+
+Advanced registers the package `libraries/UI` graph through `Elemenx.Library()` and opts into it with Application `$Use`. Open `/ui` for the executable UI Kit catalogue. Development resolves the canonical package library through the Elemenx server; production Builder bundles only reachable Library Components and copies declared public style assets.

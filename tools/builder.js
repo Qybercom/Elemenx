@@ -67,7 +67,7 @@ function inlineResources (file, source) {
 	return source;
 }
 
-function scan (directory, root, entities, visited) {
+function scan (directory, root, entities, visited, declaredNames) {
 	var absolute = path.resolve(directory);
 	
 	if (visited[absolute]) return;
@@ -82,10 +82,17 @@ function scan (directory, root, entities, visited) {
 		
 		var target = path.resolve(absolute, entries[i]);
 		
+		if (/\.css$/i.test(entries[i])) {
+			i++;
+			continue;
+		}
+
 		if (/\.js$/i.test(entries[i])) {
 			var name = path.basename(target, '.js');
 			var source = fs.readFileSync(target, 'utf8');
 			var type = entityType(target, root, source);
+			var declared = declaredNames ? /\bElemenx\.(?:Component|Service|Guard|Directive)\s*\(\s*(['\"])([^'\"]+)\1/.exec(source) : null;
+			if (declared) name = declared[2];
 			
 			if (type === 'Component')
 				source = inlineResources(target, source);
@@ -99,7 +106,7 @@ function scan (directory, root, entities, visited) {
 			entities[type][name] = source;
 		}
 		else {
-			scan(target, root, entities, visited);
+			scan(target, root, entities, visited, declaredNames);
 		}
 		
 		i++;
@@ -271,12 +278,10 @@ function applicationRoots (project, options, appSource) {
 	if (Array.isArray(configured) && configured.length) roots = configured.slice();
 	else if (options.applicationExplicit && options.application) roots = [options.application];
 	else {
-		pattern = /\bRoot\s*:\s*(['"])([^'"]+)\1/g;
+		pattern = /\bElemenx\.Application\s*\(\s*[^,]+,\s*\{[\s\S]*?\$Root\s*:\s*(['"])([^'"]+)\1[\s\S]*?\}\s*\)/g;
 		
 		while ((match = pattern.exec(appSource))) {
-			if (fs.existsSync(path.resolve(project, match[2], 'index.js'))) {
-				roots.push(match[2]);
-			}
+			if (fs.existsSync(path.resolve(project, match[2], 'index.js'))) roots.push(match[2]);
 		}
 		
 		if (!roots.length && options.application) roots.push(options.application);
@@ -288,6 +293,123 @@ function applicationRoots (project, options, appSource) {
 	return unique(roots);
 }
 
+function libraryDeclarations (project, appSource) {
+	var result = [];
+	var names = {};
+	var pattern = /\bElemenx\.Library\s*\(\s*(['"])([^'"]+)\1\s*,\s*\{([\s\S]*?)(?:\$Root|Root)\s*:\s*(['"])([^'"]+)\4([\s\S]*?)\}\s*\)/g;
+	var match;
+	var packageRoot = path.resolve(__dirname, '..');
+	while ((match = pattern.exec(appSource))) {
+		var configured = match[5];
+		var directory = path.resolve(project, configured);
+		if (!fs.existsSync(path.join(directory, 'index.js'))) directory = path.resolve(packageRoot, configured);
+		if (!fs.existsSync(path.join(directory, 'index.js'))) continue;
+		result.push({Name: match[2], Root: configured, Directory: directory});
+		names[match[2]] = true;
+	}
+	var usePattern = /(?:\$Use|Use)\s*:\s*(?:\[([\s\S]*?)\]|(['"])([^'"]+)\2)/g;
+	while ((match = usePattern.exec(appSource))) {
+		var body = match[1] || (match[3] ? JSON.stringify(match[3]) : '');
+		var itemPattern = /(['"])([^'"]+)\1/g;
+		var item;
+		while ((item = itemPattern.exec(body))) {
+			if (item[2] === 'UI' && !names.UI) {
+				result.push({Name: 'UI', Root: 'libraries/UI', Directory: path.resolve(packageRoot, 'libraries/UI')});
+				names.UI = true;
+			}
+		}
+	}
+	return result;
+}
+function libraryRoots (project, appSource) {
+	var declarations = libraryDeclarations(project, appSource);
+	var roots = [];
+	var i = 0;
+	while (i < declarations.length) { roots.push(declarations[i].Root); i++; }
+	return unique(roots);
+}
+
+function sourceUsesComponent (source, name) {
+	var escaped = String(name).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+	return new RegExp('<\\s*' + escaped + '(?:\\s|/?>)').test(source || '');
+}
+
+function selectLibraryEntities (entities, catalog) {
+	var type;
+	for (type in catalog) {
+		if (!Object.prototype.hasOwnProperty.call(catalog, type) || type === 'Component') continue;
+		if (!entities[type]) entities[type] = {};
+		var names = Object.keys(catalog[type]);
+		var ni = 0;
+		while (ni < names.length) { if (!entities[type][names[ni]]) entities[type][names[ni]] = catalog[type][names[ni]]; ni++; }
+	}
+	if (!catalog.Component) return;
+	var changed = true;
+	while (changed) {
+		changed = false;
+		var available = Object.keys(catalog.Component);
+		var sources = [];
+		var types = Object.keys(entities);
+		var ti = 0;
+		while (ti < types.length) {
+			var current = entities[types[ti]];
+			var currentNames = Object.keys(current);
+			var ci = 0;
+			while (ci < currentNames.length) { sources.push(current[currentNames[ci]]); ci++; }
+			ti++;
+		}
+		var ai = 0;
+		while (ai < available.length) {
+			var name = available[ai];
+			if (!entities.Component || !entities.Component[name]) {
+				var si = 0;
+				while (si < sources.length) {
+					if (sourceUsesComponent(sources[si], name)) {
+						if (!entities.Component) entities.Component = {};
+						entities.Component[name] = catalog.Component[name]; changed = true; break;
+					}
+					si++;
+				}
+			}
+			ai++;
+		}
+	}
+}
+
+function libraryStyles (directory, root, result, visited) {
+	var absolute = path.resolve(directory);
+	if (visited[absolute]) return;
+	visited[absolute] = true;
+	var entries = readIndex(absolute);
+	var i = 0;
+	while (i < entries.length) {
+		var target = path.resolve(absolute, entries[i]);
+		if (/\.css$/i.test(entries[i])) result.push({Source: target, Relative: path.relative(root, target)});
+		else if (!/\.js$/i.test(entries[i])) libraryStyles(target, root, result, visited);
+		i++;
+	}
+}
+
+function copyLibraryStyles (output, declarations) {
+	var hrefs = [];
+	var i = 0;
+	while (i < declarations.length) {
+		var declaration = declarations[i];
+		var styles = [];
+		libraryStyles(declaration.Directory, declaration.Directory, styles, {});
+		var si = 0;
+		while (si < styles.length) {
+			if (!fs.existsSync(styles[si].Source)) fail('Library style not found: ' + styles[si].Source);
+			var target = path.resolve(output, declaration.Root, styles[si].Relative);
+			fs.mkdirSync(path.dirname(target), {recursive: true});
+			fs.copyFileSync(styles[si].Source, target);
+			hrefs.push('/' + declaration.Root.replace(/^\/+|\/+$/g, '') + '/' + styles[si].Relative.replace(/\\/g, '/'));
+			si++;
+		}
+		i++;
+	}
+	return unique(hrefs);
+}
 function applicationDirectories (project, roots) {
 	var result = [];
 	var i = 0;
@@ -338,11 +460,18 @@ function build (project, options) {
 	indexSource = fs.readFileSync(index, 'utf8').replace(/^\uFEFF/, '');
 	templateBundle = renderTemplates(indexSource);
 	roots = applicationRoots(project, options, appSource);
+	var libraries = libraryDeclarations(project, appSource);
 	directories = applicationDirectories(project, roots);
 	
 	while (i < directories.length) {
-		scan(directories[i], directories[i], entities, {});
-		
+		scan(directories[i], directories[i], entities, {}, false);
+		i++;
+	}
+	i = 0;
+	while (i < libraries.length) {
+		var catalog = {};
+		scan(libraries[i].Directory, libraries[i].Directory, catalog, {}, true);
+		selectLibraryEntities(entities, catalog);
 		i++;
 	}
 	
@@ -351,7 +480,7 @@ function build (project, options) {
 	removeTree(output);
 	fs.mkdirSync(output, {recursive: true});
 	
-	var excludedPaths = directories.concat([
+	var excludedPaths = applicationDirectories(project, roots).concat([
 		output,
 		app,
 		index,
@@ -362,8 +491,15 @@ function build (project, options) {
 	]);
 	
 	copyPublic(project, output, excludedPaths);
+	var libraryStyleHrefs = copyLibraryStyles(output, libraries);
+	var productionIndex = fs.readFileSync(index, 'utf8');
+	if (libraryStyleHrefs.length) {
+		var styleMarkup = libraryStyleHrefs.map(function (href) { return '<link rel="stylesheet" href="' + href + '">'; }).join('\n');
+		if (/<\/head>/i.test(productionIndex)) productionIndex = productionIndex.replace(/<\/head>/i, styleMarkup + '\n</head>');
+		else productionIndex = styleMarkup + '\n' + productionIndex;
+	}
 	
-	fs.copyFileSync(index, path.join(output, 'index.html'));
+	fs.writeFileSync(path.join(output, 'index.html'), productionIndex);
 	fs.copyFileSync(framework, path.join(output, 'elemenx.js'));
 	fs.writeFileSync(path.join(output, 'app.js'), (templateBundle ? templateBundle + '\n' : '') + bundle + '\n' + appSource.replace(/^\s+/, ''));
 	
@@ -405,7 +541,10 @@ module.exports = {
 	Render: render,
 	IndexTemplates: indexTemplates,
 	RenderTemplates: renderTemplates,
-	ApplicationRoots: applicationRoots
+	ApplicationRoots: applicationRoots,
+	LibraryRoots: libraryRoots,
+	LibraryDeclarations: libraryDeclarations,
+	SelectLibraryEntities: selectLibraryEntities
 };
 
 if (require.main === module) {

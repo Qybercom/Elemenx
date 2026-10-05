@@ -670,57 +670,76 @@
 		var loaded = {};
 		
 		function bucket (type) {
-			if (!registry[type]) registry[type] = {};
-			if (!loaded[type]) loaded[type] = {};
+			if (!registry[type])
+				registry[type] = {};
+			
+			if (!loaded[type])
+				loaded[type] = {};
+			
 			return registry[type];
 		}
 		
 		function install (bundle) {
 			var type, name, source;
+			
 			bundle = bundle || {};
+			
 			for (type in bundle) {
 				if (!Object.prototype.hasOwnProperty.call(bundle, type)) continue;
+				
 				source = bundle[type] || {};
+				
 				bucket(type);
+				
 				for (name in source) {
 					if (!Object.prototype.hasOwnProperty.call(source, name)) continue;
-					if (typeof source[name] !== 'function') throw new Error('Elemenx Bundle entity loader must be a function: ' + type + ':' + name);
+					
+					if (typeof source[name] !== 'function')
+						throw new Error('Elemenx Bundle entity loader must be a function: ' + type + ':' + name);
+					
 					registry[type][name] = source[name];
 					loaded[type][name] = false;
 				}
 			}
+			
 			return global.Elemenx;
 		}
 		
 		function resolvedName (type, name) {
-			var source = registry[type], key;
+			var source = registry[type];
 			if (!source) return null;
-			if (source[name]) return name;
-			for (key in source) {
-				if (Object.prototype.hasOwnProperty.call(source, key) && key.toLowerCase() === String(name).toLowerCase()) return key;
-			}
-			return null;
+			
+			return Object.prototype.hasOwnProperty.call(source, name) ? name : null;
 		}
 		
 		function load (type, name) {
 			var resolved = resolvedName(type, name), loader;
 			if (!resolved) return false;
 			if (loaded[type][resolved]) return true;
+			
 			loader = registry[type][resolved];
 			loaded[type][resolved] = true;
+			
 			try {
 				loader();
 			}
 			catch (error) {
 				loaded[type][resolved] = false;
+				
 				throw error;
 			}
+			
 			return true;
 		}
 		
 		function loadType (type) {
 			var source = registry[type] || {}, name;
-			for (name in source) if (Object.prototype.hasOwnProperty.call(source, name)) load(type, name);
+			
+			for (name in source) {
+				if (Object.prototype.hasOwnProperty.call(source, name)) {
+					load(type, name);
+				}
+			}
 		}
 		
 		Runtime.Bundle = {
@@ -728,12 +747,20 @@
 			Reload: function (type, name) {
 				var resolved = resolvedName(type, name);
 				if (!resolved) return false;
+				
 				loaded[type][resolved] = false;
+				
 				return load(type, resolved);
 			},
 			Ready: function () {
 				var type;
-				for (type in registry) if (Object.prototype.hasOwnProperty.call(registry, type)) return true;
+				
+				for (type in registry) {
+					if (Object.prototype.hasOwnProperty.call(registry, type)) {
+						return true;
+					}
+				}
+				
 				return false;
 			},
 			ResolvedName: resolvedName,
@@ -884,6 +911,23 @@
 						value = entry.replace(/^\.\//, '');
 						target = absolute(directory, value);
 						
+						if (/\.css(?:[?#].*)?$/i.test(value)) {
+							if (Runtime.HasDOM && !global.document.querySelector('link[data-elemenx-resource="' + target.replace(/"/g, '&quot;') + '"]')) {
+								var link = global.document.createElement('link');
+								
+								link.rel = 'stylesheet';
+								link.href = target;
+								
+								link.setAttribute('data-elemenx-resource', target);
+								
+								(global.document.head || global.document.documentElement).appendChild(link);
+							}
+							
+							complete(null);
+							
+							return;
+						}
+
 						if (/\.js(?:[?#].*)?$/i.test(value)) {
 							name = basename(value);
 							
@@ -980,6 +1024,7 @@
 		function load (application, type, name, force, callback) {
 			var map = maps.get(application);
 			var url = map && map[name];
+			if (!url && Runtime.Library && Runtime.Library.ResolvedURL) url = Runtime.Library.ResolvedURL(application, name);
 			var building = builds.get(application);
 			var key;
 			var target;
@@ -1087,6 +1132,7 @@
 			
 			if (!map) {
 				callback(new Error('Elemenx Discovery is not ready'));
+				
 				return;
 			}
 			
@@ -1098,22 +1144,30 @@
 			remaining = names.length;
 			if (!remaining) {
 				callback(null);
+				
 				return;
 			}
 			
 			function complete (error) {
 				if (failed) return;
+				
 				if (error) {
 					failed = true;
+					
 					callback(error);
+					
 					return;
 				}
+				
 				remaining--;
-				if (!remaining) callback(null);
+				
+				if (!remaining)
+					callback(null);
 			}
 			
 			while (i < names.length) {
 				load(application, type, names[i], false, complete);
+				
 				i++;
 			}
 		}
@@ -1129,8 +1183,11 @@
 		Runtime.Discovery = {
 			Root: function (application, root) {
 				if (!application || !root) return null;
+				
 				root = new URL(String(root), global.location.href).href;
+				
 				roots.set(application, root);
+				
 				return root;
 			},
 			Build: build,
@@ -1150,22 +1207,190 @@
 			ResolvedName: function (application, name) {
 				var map = maps.get(application);
 				if (!map) return null;
-				if (map[name]) return name;
 				
-				var key;
-				for (key in map) {
-					if (Object.prototype.hasOwnProperty.call(map, key) && key.toLowerCase() === String(name).toLowerCase()) {
-						return key;
-					}
-				}
-				
-				return null;
+				return Object.prototype.hasOwnProperty.call(map, name) ? name : null;
 			},
 			
 			ResolvedURL: function (application, name) {
 				var map = maps.get(application);
 				
 				return map ? map[name] || null : null;
+			}
+		};
+	})(typeof globalThis !== 'undefined' ? globalThis : self);
+	
+	(function (global) {
+		'use strict';
+		var Elemenx = global.Elemenx;
+		var definitions = {ElemenxUI: {$Root: '/libraries/UI'}};
+		var applications = new WeakMap();
+		var styles = {};
+		
+		function list (value) {
+			if (!value) return [];
+			if (typeof value === 'string') return [value];
+			
+			if (!Array.isArray(value))
+				throw new Error('Elemenx Library Use must be a string or Array');
+			
+			return value.slice();
+		}
+		
+		function root (definition) {
+			var value = definition.$Root || definition.Root;
+			
+			if (!value) return null;
+			if (definition.$DefinitionURL && !(/^(?:[a-z]+:)?\/\//i.test(value)) && value.charAt(0) !== '/')
+				value = definition.$DefinitionURL.substring(0, definition.$DefinitionURL.lastIndexOf('/') + 1) + value.replace(/^\.\//, '');
+			
+			return value;
+		}
+		
+		function loadStyles (name, definition) {
+			if (!Runtime.HasDOM || styles[name]) return;
+			
+			var values = definition.$Styles || definition.Styles || [];
+			if (typeof values === 'string') values = [values];
+			
+			var base = root(definition) || '';
+			var i = 0;
+			
+			while (i < values.length) {
+				var href = values[i];
+				
+				if (!(/^(?:[a-z]+:)?\/\//i.test(href)) && href.charAt(0) !== '/')
+					href = String(base).replace(/\/$/, '') + '/' + href.replace(/^\.\//, '');
+				
+				var link = global.document.createElement('link');
+				
+				link.rel = 'stylesheet'; link.href = href; link.setAttribute('data-elemenx-library', name);
+				
+				(global.document.head || global.document.documentElement).appendChild(link);
+				
+				i++;
+			}
+			
+			styles[name] = true;
+		}
+		
+		function use (application, value, callback) {
+			var values = list(value);
+			var entries = [];
+			var i = 0;
+			
+			while (i < values.length) {
+				var name = values[i];
+				var definition = definitions[name];
+				
+				if (!definition) {
+					callback(new Error('Elemenx unknown Library: ' + name));
+					
+					return;
+				}
+				
+				entries.push({Name: name, Definition: definition, Owner: {}});
+				
+				i++;
+			}
+			
+			applications.set(application, entries);
+			
+			if (!entries.length) {
+				callback(null);
+				
+				return;
+			}
+			
+			if (Runtime.Bundle && Runtime.Bundle.Ready()) {
+				Runtime.Bundle.LoadType('Directive'); Runtime.Bundle.LoadType('Service'); Runtime.Bundle.LoadType('Guard'); callback(null); return;
+			}
+			
+			var remaining = entries.length;
+			var failed = false;
+			
+			function complete (error) {
+				if (failed) return;
+				
+				if (error) {
+					failed = true;
+					
+					callback(error);
+					
+					return;
+				}
+				
+				remaining--;
+				if (!remaining)
+					callback(null);
+			}
+			
+			i = 0;
+			
+			while (i < entries.length) {
+				(function (entry) {
+					var base = root(entry.Definition);
+					
+					if (!base) {
+						complete(new Error('Elemenx Library Root is not configured: ' + entry.Name));
+						
+						return;
+					}
+					
+					Runtime.Discovery.Build(entry.Owner, base, function (error) {
+						if (error) {
+							complete(error);
+							
+							return;
+						}
+						
+						Runtime.Discovery.LoadDirectives(entry.Owner, function (directiveError) {
+							if (directiveError) {
+								complete(directiveError);
+								
+								return;
+							}
+							
+							Runtime.Discovery.LoadServices(entry.Owner, complete);
+						});
+					});
+				})(entries[i]); i++;
+			}
+		}
+		
+		Elemenx.Library = function (name, definition) {
+			if (arguments.length === 2) {
+				if (!name || !definition || typeof definition !== 'object')
+					throw new Error('Elemenx.Library expects (name, definition)');
+				
+				if (global.document && global.document.currentScript && global.document.currentScript.src)
+					definition.$DefinitionURL = global.document.currentScript.src.split('?')[0].split('#')[0];
+				
+				definitions[name] = definition; return definition;
+			}
+			
+			if (arguments.length !== 1)
+				throw new Error('Elemenx.Library expects (name) or (name, definition)');
+			
+			return definitions[name] || null;
+		};
+		
+		Runtime.Library = {
+			Use: use,
+			ResolvedURL: function (application, name) {
+				var entries = applications.get(application) || [];
+				var i = 0;
+				
+				while (i < entries.length) {
+					var entry = entries[i];
+					var resolved = Runtime.Discovery.ResolvedName(entry.Owner, name);
+					
+					if (resolved)
+						return Runtime.Discovery.ResolvedURL(entry.Owner, resolved);
+					
+					i++;
+				}
+				
+				return null;
 			}
 		};
 	})(typeof globalThis !== 'undefined' ? globalThis : self);
@@ -1201,15 +1426,19 @@
 			instance.$Generation = function () {
 				return generation || 0;
 			};
+			
 			instance.$StartedAt = function () {
 				return new Date(startedAt.getTime());
 			};
+			
 			instance.$Application = function () {
 				return application || null;
 			};
+			
 			instance.$Service = function (serviceName) {
 				return serviceHandle(serviceName, application);
 			};
+			
 			instance.$Network = Runtime.NetworkFor ? Runtime.NetworkFor(instance) : Elemenx.Network;
 			instance.$Storage = Runtime.StorageFor ? Runtime.StorageFor(instance) : Elemenx.Storage;
 			instance.$WebWorker = Runtime.WebWorkerFor ? Runtime.WebWorkerFor(instance) : null;
@@ -1220,8 +1449,13 @@
 			
 			instance.$Messaging = Runtime.MessagingFor ? Runtime.MessagingFor(instance) : Elemenx.Messaging;
 			instance.$Events = Runtime.EventsFor ? Runtime.EventsFor(instance) : Elemenx.Events;
-			if (Runtime.InitializeEventsOwner) Runtime.InitializeEventsOwner(instance, definition);
-			if (Runtime.InitializeMessagingOwner) Runtime.InitializeMessagingOwner(instance, definition);
+			
+			if (Runtime.InitializeEventsOwner)
+				Runtime.InitializeEventsOwner(instance, definition);
+			
+			if (Runtime.InitializeMessagingOwner)
+				Runtime.InitializeMessagingOwner(instance, definition);
+			
 			instance.$Destroy = function () {
 				if (Runtime.DestroyNetworkOwner)
 					Runtime.DestroyNetworkOwner(instance);
@@ -1443,9 +1677,11 @@
 		};
 		
 		Runtime.Service = ServiceAccessor;
+		
 		Runtime.ServiceForApplication = function (application, name) {
 			return serviceHandle(name, application || null);
 		};
+		
 		Runtime.DestroyApplicationServices = function (application) {
 			destroyedServiceApplications.add(application);
 			var name;
@@ -1459,13 +1695,17 @@
 				target = existingServiceTarget(name, application);
 				if (!target) continue;
 				
-				if (target.$Destroy) target.$Destroy();
+				if (target.$Destroy)
+					target.$Destroy();
+				
 				entry.ApplicationInstances.delete(application);
+				
 				removeApplicationInstance(entry, target);
 			}
 			
 			applicationServiceHandles.delete(application);
 		};
+		
 		Runtime.RegisterServiceDefinition = function (name, definition) {
 			var previous = serviceRegistry[name];
 			
@@ -1674,8 +1914,10 @@
 			var alias;
 			
 			name = String(name || '').toLowerCase();
+			
 			if (!/^[a-z][a-z0-9_-]*$/.test(name))
 				throw new Error('Invalid Elemenx directive name: ' + name);
+			
 			if (this.Registry[name])
 				throw new Error('Elemenx directive already registered: ' + name);
 			
@@ -1688,15 +1930,19 @@
 			
 			if (definition.Structural === true)
 				definition.Kind = 'structural';
+			
 			if (!definition.Kind)
 				definition.Kind = 'behavioral';
+			
 			if (definition.Kind === 'structural' && definition.Collection === true && !definition.Host)
 				definition.Host = 'collection';
+			
 			if (definition.Kind === 'structural' && !definition.Host)
 				definition.Host = 'structural';
 			
 			definition.Name = name;
 			definition.Internal = internal === true;
+			
 			this.Registry[name] = definition;
 			
 			alias = definition.Alias;
@@ -1721,8 +1967,10 @@
 			var attrs = node && node.attributes ? node.attributes : [];
 			var i = 0;
 			var resolved;
+			
 			while (i < attrs.length) {
 				resolved = this.Resolve(attrs[i].name);
+				
 				if (resolved && (!kind || resolved.Definition.Kind === kind)) {
 					return {
 						Name: resolved.Name,
@@ -1731,8 +1979,10 @@
 						Expression: attrs[i].value || ''
 					};
 				}
+				
 				i++;
 			}
+			
 			return null;
 		},
 		Policy: function (node) {
@@ -1776,9 +2026,12 @@
 			
 			for (name in this.Registry) {
 				if (!Object.prototype.hasOwnProperty.call(this.Registry, name)) continue;
+				
 				definition = this.Registry[name];
-				if (definition.Role === role)
+				
+				if (definition.Role === role) {
 					return '*' + name;
+				}
 			}
 			
 			return null;
@@ -1790,6 +2043,7 @@
 			
 			while (i < attrs.length) {
 				resolved = this.Resolve(attrs[i].name);
+				
 				if (resolved && resolved.Definition.Role === role) {
 					return {
 						Name: resolved.Name,
@@ -1798,6 +2052,7 @@
 						Expression: attrs[i].value || ''
 					};
 				}
+				
 				i++;
 			}
 			
@@ -1811,14 +2066,13 @@
 			
 			while (i < attrs.length) {
 				resolved = this.Resolve(attrs[i].name);
-				if (
-					resolved &&
-					resolved.Definition.Kind === 'argument' &&
-					(!resolved.Definition.For || resolved.Definition.For === owner)
-				) {
+				
+				if (resolved && resolved.Definition.Kind === 'argument' && (!resolved.Definition.For || resolved.Definition.For === owner)) {
 					result[resolved.Name] = attrs[i].value || '';
+					
 					node.removeAttribute(attrs[i].name);
 				}
+				
 				i++;
 			}
 			
@@ -1827,12 +2081,19 @@
 		Reserved: function (attribute) {
 			var name;
 			
+			if (attribute === 'data-elemenx-component') return true;
+			
 			for (name in this.Prefixes) {
-				if (Object.prototype.hasOwnProperty.call(this.Prefixes, name) && attribute.indexOf(this.Prefixes[name]) === 0)
+				if (Object.prototype.hasOwnProperty.call(this.Prefixes, name) && attribute.indexOf(this.Prefixes[name]) === 0) {
 					return true;
+				}
 			}
 			
-			return this.Resolve(attribute) !== null || this.TwoWay(attribute) !== null || this.Binding(attribute) !== null || this.Event(attribute) !== null || this.Ref(attribute) !== null;
+			return this.Resolve(attribute) !== null
+				|| this.TwoWay(attribute) !== null
+				|| this.Binding(attribute) !== null
+				|| this.Event(attribute) !== null
+				|| this.Ref(attribute) !== null;
 		}
 	};
 	
@@ -1868,6 +2129,7 @@
 				context.Data.Initializer = initializer[2];
 				context.Data.Condition = classic[1];
 				context.Data.Step = classic[2];
+				
 				return;
 			}
 			
@@ -1888,17 +2150,15 @@
 					Step: context.Data.Step,
 					Key: context.Argument('key')
 				});
+				
 				return;
 			}
 			
-			context.Render(
-				context.Source(context.Data.Source),
-				{
-					Mode: context.Data.Mode,
-					Variable: context.Data.Variable,
-					Key: context.Argument('key')
-				}
-			);
+			context.Render(context.Source(context.Data.Source), {
+				Mode: context.Data.Mode,
+				Variable: context.Data.Variable,
+				Key: context.Argument('key')
+			});
 		}
 	}, true);
 	Runtime.Directive.Register('key', {Alias: 'Key', Kind: 'argument', For: 'collection', Role: 'key'}, true);
@@ -1985,7 +2245,8 @@
 			var i = 0;
 			
 			name = String(name || '');
-			if (!name) throw new Error('Elemenx.Template expects a non-empty name');
+			if (!name)
+				throw new Error('Elemenx.Template expects a non-empty name');
 			
 			templateRegistry[name] = String(value === undefined || value === null ? '' : value);
 			pending = templateRegistryPending[name] || [];
@@ -1993,6 +2254,7 @@
 			
 			while (i < pending.length) {
 				pending[i](null, templateRegistry[name]);
+				
 				i++;
 			}
 			
@@ -2004,7 +2266,9 @@
 			if (!node.id) return false;
 			
 			templateRegistrySet(node.id, node.innerHTML);
-			if (node.parentNode) node.parentNode.removeChild(node);
+			
+			if (node.parentNode)
+				node.parentNode.removeChild(node);
 			
 			return true;
 		}
@@ -2019,14 +2283,17 @@
 			if (!root.querySelectorAll) return 0;
 			
 			nodes = root.querySelectorAll('template[id]');
+			
 			while (i < nodes.length) {
 				snapshot.push(nodes[i]);
+				
 				i++;
 			}
 			
 			i = 0;
 			while (i < snapshot.length) {
 				harvestTemplateNode(snapshot[i]);
+				
 				i++;
 			}
 			
@@ -2041,14 +2308,17 @@
 			while (i < templateLoaders.length) {
 				loader = templateLoaders[i];
 				result = loader(name, function (value) {
-					if (value !== undefined && value !== null)
+					if (value !== undefined && value !== null) {
 						templateRegistrySet(name, value);
+					}
 				});
 				
-				if (result !== undefined && result !== null)
+				if (result !== undefined && result !== null) {
 					templateRegistrySet(name, result);
+				}
 				
 				if (templateRegistry[name] !== undefined) return;
+				
 				i++;
 			}
 		}
@@ -2059,13 +2329,16 @@
 			
 			if (templateRegistry[name] !== undefined) {
 				callback(null, templateRegistry[name]);
+				
 				return;
 			}
 			
 			if (!templateRegistryPending[name]) {
 				templateRegistryPending[name] = [];
 				templateRegistryPending[name].push(callback);
+				
 				requestTemplateLoaders(name);
+				
 				return;
 			}
 			
@@ -2082,15 +2355,20 @@
 		};
 		
 		Elemenx.Template = function (name, value) {
-			if (arguments.length === 1) return Runtime.Template.Get(name);
-			if (arguments.length !== 2) throw new Error('Elemenx.Template expects (name) or (name, value)');
+			if (arguments.length === 1)
+				return Runtime.Template.Get(name);
+			
+			if (arguments.length !== 2)
+				throw new Error('Elemenx.Template expects (name) or (name, value)');
 			
 			return templateRegistrySet(name, value);
 		};
 		Elemenx.Template.Has = Runtime.Template.Has;
 		Elemenx.Template.Remove = Runtime.Template.Remove;
 		Elemenx.Template.Loader = function (loader) {
-			if (typeof loader !== 'function') throw new Error('Elemenx.Template.Loader expects a function');
+			if (typeof loader !== 'function')
+				throw new Error('Elemenx.Template.Loader expects a function');
+			
 			templateLoaders.push(loader);
 			
 			return Elemenx.Template;
@@ -2120,13 +2398,17 @@
 					while (i < mutations.length) {
 						nodes = mutations[i].addedNodes;
 						j = 0;
+						
 						while (j < nodes.length) {
 							harvestTemplates(nodes[j]);
+							
 							j++;
 						}
+						
 						i++;
 					}
 				});
+				
 				templateDOMObserver.observe(document.documentElement, {childList: true, subtree: true});
 			}
 		}
@@ -2154,6 +2436,7 @@
 			
 			if (force) {
 				templateRevision++;
+				
 				target += (target.indexOf('?') === -1 ? '?' : '&') + 'elemenx-reload=' + templateRevision;
 			}
 			
@@ -2224,25 +2507,25 @@
 				i = 0;
 				while (i < callbacks.length) {
 					callbacks[i](error, styleResources[url]);
+					
 					i++;
 				}
 			};
+			
 			request.send(null);
 		}
 		
 		function installComponentStyle (name, definition, css) {
-			var key;
-			var style;
-			
 			if (!global.document || css === undefined || css === null) return;
 			
 			if (!definition.$StyleKey) {
 				styleSequence++;
+				
 				definition.$StyleKey = name ? 'component:' + name : 'anonymous:' + styleSequence;
 			}
 			
-			key = definition.$StyleKey;
-			style = installedComponentStyles[key] || null;
+			var key = definition.$StyleKey;
+			var style = installedComponentStyles[key] || null;
 			
 			if (!style || !style.parentNode) {
 				style = global.document.createElement('style');
@@ -2290,16 +2573,20 @@
 				if (!Object.prototype.hasOwnProperty.call(value, key)) continue;
 				
 				target = key;
+				
 				if (!Object.prototype.hasOwnProperty.call(definition, target) && typeof key === 'string') {
 					lower = key.toLowerCase();
 					match = null;
 					
 					for (name in definition) {
 						if (!Object.prototype.hasOwnProperty.call(definition, name) || name.toLowerCase() !== lower) continue;
+						
 						if (match !== null) {
 							match = key;
+							
 							break;
 						}
+						
 						match = name;
 					}
 					
@@ -2346,15 +2633,20 @@
 				
 				if (typeof source === 'string' && source.charAt(0) === '#') {
 					var registered = Runtime.Template && Runtime.Template.Get(source.substring(1));
+					
 					if (registered !== null && registered !== undefined) {
 						placeholder.innerHTML = registered;
+						
 						return;
 					}
 					
 					template = document.querySelector(source);
+					
 					if (template && template.tagName === 'TEMPLATE') {
 						fragment = template.content.cloneNode(true);
+						
 						placeholder.appendChild(fragment);
+						
 						return;
 					}
 				}
@@ -2403,7 +2695,9 @@
 				while (component && component._Component) {
 					resolved = component._Component();
 					if (!resolved) return null;
+					
 					if (resolved === component) break;
+					
 					component = resolved;
 				}
 
@@ -2502,13 +2796,18 @@
 				var parentNode = reloadParent || (oldElement && oldElement.parentNode);
 				var nextSibling = reloadNext || (oldElement && oldElement.nextSibling);
 				
-				if (current) current.$Destroy();
+				if (current)
+					current.$Destroy();
+				
 				current = factory(canonicalDeferredData(data, factory.Definition, options), slotProjection, options);
 				
 				var currentRouter = Runtime.ComponentRouters.get(api);
-				if (currentRouter) Runtime.AttachRouter(current, currentRouter);
+				if (currentRouter)
+					Runtime.AttachRouter(current, currentRouter);
 				
-				if (api._parent && current.$Parent) current.$Parent(api._parent);
+				if (api._parent && current.$Parent) {
+					current.$Parent(api._parent);
+				}
 				
 				var i = 0;
 				while (i < listeners.length) {
@@ -2520,6 +2819,7 @@
 				i = 0;
 				while (i < updates.length) {
 					current.$Update(canonicalDeferredInput(updates[i], factory.Definition));
+					
 					i++;
 				}
 				
@@ -2559,9 +2859,12 @@
 				current = factory(canonicalDeferredData(data, factory.Definition, options), slotProjection, options);
 				
 				var currentRouter = Runtime.ComponentRouters.get(api);
-				if (currentRouter) Runtime.AttachRouter(current, currentRouter);
+				if (currentRouter)
+					Runtime.AttachRouter(current, currentRouter);
 				
-				if (api._parent && current.$Parent) current.$Parent(api._parent);
+				if (api._parent && current.$Parent) {
+					current.$Parent(api._parent);
+				}
 				
 				var i = 0;
 				while (i < listeners.length) {
@@ -2573,6 +2876,7 @@
 				i = 0;
 				while (i < updates.length) {
 					current.$Update(canonicalDeferredInput(updates[i], factory.Definition));
+					
 					i++;
 				}
 				
@@ -2676,7 +2980,9 @@
 				/(\s(?:\*[A-Za-z][A-Za-z0-9_-]*|\[[^\]\s]+\])\s*=\s*)(["'])([\s\S]*?)\2/gi,
 				function (match, prefix, quote, expression) {
 					var index = expressions.length;
+					
 					expressions.push(expression);
+					
 					return prefix + quote + '__ELEMENX_EXPRESSION_' + index + '__' + quote;
 				}
 			);
@@ -2697,23 +3003,36 @@
 			
 			while (i < elements.length) {
 				attributes = elements[i].attributes;
+				
 				j = 0;
+				
 				while (j < attributes.length) {
 					value = attributes[j].value;
 					match = /^__ELEMENX_EXPRESSION_(\d+)__$/.exec(value);
+					
 					if (match && expressions[Number(match[1])] !== undefined) {
 						attributes[j].value = expressions[Number(match[1])];
 					}
+					
 					j++;
 				}
+				
 				i++;
 			}
 		}
 		
+		function preserveComponentNames (html) {
+			return String(html || '').replace(/<([A-Z][A-Za-z0-9_.:-]*)(?=\s|\/?>)/g, function (match, name) {
+				return '<' + name + ' data-elemenx-component="' + name + '"';
+			});
+		}
+
 		function createFragment (html) {
 			var template = document.createElement('template');
 			var protectedExpressions = protectExpressionAttributes(html);
-			template.innerHTML = normalizeSelfClosingComponents(protectedExpressions.Source);
+			
+			template.innerHTML = preserveComponentNames(normalizeSelfClosingComponents(protectedExpressions.Source));
+			
 			restoreExpressionAttributes(template.content, protectedExpressions.Expressions);
 			
 			if (template.content.childNodes.length === 1)
@@ -2732,10 +3051,13 @@
 			var nodes = [], all, i = 0, j, attrs, name;
 			
 			if (root.nodeType === 1) nodes.push(root);
+			
 			if (root.querySelectorAll) {
 				all = root.querySelectorAll('*');
+				
 				while (i < all.length) {
 					nodes.push(all[i]);
+					
 					i++;
 				}
 			}
@@ -2750,7 +3072,9 @@
 					
 					if (name) {
 						name = name.toLowerCase();
+						
 						refs[name] = nodes[i];
+						
 						nodes[i].__ElemenxRefName = name;
 						nodes[i].removeAttribute(attrs[j].name);
 					}
@@ -2765,6 +3089,7 @@
 		function addBinding (bindings, source, binding) {
 			binding.expression = source;
 			binding.evaluate = Runtime.CompileExpression(source);
+			
 			bindings.push(binding);
 		}
 		
@@ -2820,10 +3145,11 @@
 				list: [],
 				points: {}
 			};
-			var i = 0;
 			
+			var i = 0;
 			while (i < node.classList.length) {
 				state.base[node.classList.item(i)] = true;
+				
 				i++;
 			}
 			
@@ -2839,16 +3165,15 @@
 			
 			while (i < state.list.length) {
 				names[state.list[i]] = true;
+				
 				i++;
 			}
 			
 			for (name in state.points) {
 				if (!own(state.points, name)) continue;
 				
-				if (state.points[name])
-					names[name] = true;
-				else
-					delete names[name];
+				if (state.points[name]) names[name] = true;
+				else delete names[name];
 			}
 			
 			state.node.className = '';
@@ -2866,14 +3191,16 @@
 				points: {},
 				managed: {}
 			};
-			var i = 0, name;
 			
+			var i = 0, name;
 			while (i < node.style.length) {
 				name = node.style.item(i);
+				
 				state.base[name] = {
 					value: node.style.getPropertyValue(name),
 					priority: node.style.getPropertyPriority(name)
 				};
+				
 				i++;
 			}
 			
@@ -2889,28 +3216,28 @@
 			
 			for (name in state.base) {
 				if (!own(state.base, name)) continue;
+				
 				item = state.base[name];
+				
 				state.node.style.setProperty(name, item.value, item.priority);
 			}
 			
 			for (name in state.map) {
 				if (!own(state.map, name)) continue;
+				
 				names[name] = true;
 				
-				if (state.map[name] == null)
-					state.node.style.removeProperty(name);
-				else
-					state.node.style.setProperty(name, String(state.map[name]));
+				if (state.map[name] == null) state.node.style.removeProperty(name);
+				else state.node.style.setProperty(name, String(state.map[name]));
 			}
 			
 			for (name in state.points) {
 				if (!own(state.points, name)) continue;
+				
 				names[name] = true;
 				
-				if (state.points[name] == null)
-					state.node.style.removeProperty(name);
-				else
-					state.node.style.setProperty(name, String(state.points[name]));
+				if (state.points[name] == null) state.node.style.removeProperty(name);
+				else state.node.style.setProperty(name, String(state.points[name]));
 			}
 			
 			state.managed = names;
@@ -2926,6 +3253,7 @@
 				
 				while (i < all.length) {
 					nodes.push(all[i]);
+					
 					i++;
 				}
 			}
@@ -2946,6 +3274,7 @@
 							throw new Error('Invalid Elemenx two-way binding target: [(' + target + ')]');
 						
 						key = attr.value;
+						
 						models.push({
 							key: key,
 							node: nodes[i],
@@ -2953,6 +3282,7 @@
 						});
 						
 						nodes[i].removeAttribute(attr.name);
+						
 						target = null;
 					}
 					else {
@@ -2966,11 +3296,15 @@
 						name = separator === -1 ? null : target.substring(separator + 1);
 						
 						if (target === 'class') {
-							if (!classState) classState = classBindingState(nodes[i]);
+							if (!classState)
+								classState = classBindingState(nodes[i]);
+							
 							addBinding(bindings, key, {type: 'class-list', node: nodes[i], state: classState});
 						}
 						else if (namespace === 'class' && name) {
-							if (!classState) classState = classBindingState(nodes[i]);
+							if (!classState)
+								classState = classBindingState(nodes[i]);
+							
 							addBinding(bindings, key, {
 								type: 'class-name',
 								name: name,
@@ -2979,11 +3313,15 @@
 							});
 						}
 						else if (target === 'style') {
-							if (!styleState) styleState = styleBindingState(nodes[i]);
+							if (!styleState)
+								styleState = styleBindingState(nodes[i]);
+							
 							addBinding(bindings, key, {type: 'style-map', node: nodes[i], state: styleState});
 						}
 						else if (namespace === 'style' && name) {
-							if (!styleState) styleState = styleBindingState(nodes[i]);
+							if (!styleState)
+								styleState = styleBindingState(nodes[i]);
+							
 							addBinding(bindings, key, {
 								type: 'style-property',
 								name: name,
@@ -3003,6 +3341,7 @@
 						else {
 							/* Preserve non-DOM target paths for Component ownership. */
 							j++;
+							
 							continue;
 						}
 						
@@ -3018,32 +3357,43 @@
 		
 		function collectCustomDirectives (root, directives) {
 			var nodes = [], all, i = 0, j, attrs, attr, resolved, parent, skip;
+			
 			if (root.nodeType === 1) nodes.push(root);
 			if (root.querySelectorAll) {
 				all = root.querySelectorAll('*');
+				
 				while (i < all.length) {
 					nodes.push(all[i]);
+					
 					i++;
 				}
 			}
+			
 			i = 0;
 			while (i < nodes.length) {
 				skip = false;
 				parent = nodes[i];
+				
 				while (parent) {
 					if (parent.nodeType === 1 && (Runtime.Directive.Find(parent, 'structural'))) {
 						skip = true;
+						
 						break;
 					}
+					
 					if (parent === root) break;
+					
 					parent = parent.parentNode;
 				}
+				
 				if (!skip) {
 					attrs = Array.prototype.slice.call(nodes[i].attributes);
 					j = 0;
+					
 					while (j < attrs.length) {
 						attr = attrs[j];
 						resolved = Runtime.Directive.Resolve(attr.name);
+						
 						if (resolved && resolved.Definition.Kind === 'behavioral') {
 							directives.push({
 								Name: resolved.Name,
@@ -3051,11 +3401,14 @@
 								Element: nodes[i],
 								Expression: attr.value || ''
 							});
+							
 							nodes[i].removeAttribute(attr.name);
 						}
+						
 						j++;
 					}
 				}
+				
 				i++;
 			}
 		}
@@ -3070,14 +3423,11 @@
 				binding.node[binding.name] = value;
 			}
 			else if (binding.type === 'attribute') {
-				if (value == null)
-					binding.node.removeAttribute(binding.name);
-				else
-					binding.node.setAttribute(binding.name, String(value));
+				if (value == null) binding.node.removeAttribute(binding.name);
+				else binding.node.setAttribute(binding.name, String(value));
 			}
 			else if (binding.type === 'class-list') {
-				if (value == null)
-					value = [];
+				if (value == null) value = [];
 				
 				if (!Array.isArray(value))
 					throw new TypeError('[class] binding expects an Array');
@@ -3088,6 +3438,7 @@
 				while (i < value.length) {
 					if (value[i] != null && String(value[i]))
 						binding.state.list.push(String(value[i]));
+					
 					i++;
 				}
 				
@@ -3095,11 +3446,11 @@
 			}
 			else if (binding.type === 'class-name') {
 				binding.state.points[binding.name] = !!value;
+				
 				renderClassBinding(binding.state);
 			}
 			else if (binding.type === 'style-map') {
-				if (value == null)
-					value = {};
+				if (value == null) value = {};
 				
 				if (typeof value !== 'object' || Array.isArray(value))
 					throw new TypeError('[style] binding expects an Object');
@@ -3114,6 +3465,7 @@
 			}
 			else if (binding.type === 'style-property') {
 				binding.state.points[binding.name] = value;
+				
 				renderStyleBinding(binding.state);
 			}
 		}
@@ -3158,6 +3510,7 @@
 				while (i < all.length) {
 					if (all[i].hasAttribute(attribute))
 						nodes.push(all[i]);
+					
 					i++;
 				}
 			}
@@ -3170,6 +3523,7 @@
 					outlets[name] = Runtime.Outlet(nodes[i]);
 				
 				nodes[i].removeAttribute(attribute);
+				
 				i++;
 			}
 		}
@@ -3195,6 +3549,7 @@
 			}
 			else if (typeof root.length === 'number') {
 				i = 0;
+				
 				while (i < root.length) {
 					if (root[i] && root[i].nodeType) {
 						roots.push(root[i]);
@@ -3285,25 +3640,31 @@
 								}
 							}
 							
-							if (html !== undefined) localDefinition.$Template = html;
+							if (html !== undefined)
+								localDefinition.$Template = html;
+							
 							if (css !== undefined) {
 								definition.$Style = css;
+								
 								installComponentStyle(name, definition, css);
 							}
 							
 							localFactory = CreateComponentFactory(null, localDefinition, generation);
+							
 							ready(null, localFactory);
 						}
 						
 						function loadStyle (html) {
 							if (!definition.$StyleURL || definition.$Style !== undefined) {
 								finish(html, definition.$Style);
+								
 								return;
 							}
 							
 							loadStyleURL(definition.$StyleURL, function (error, css) {
 								if (error) {
 									ready(error);
+									
 									return;
 								}
 								
@@ -3315,6 +3676,7 @@
 							loadTemplateURL(definition.$TemplateURL, false, function (error, html) {
 								if (error) {
 									ready(error);
+									
 									return;
 								}
 								
@@ -3323,6 +3685,7 @@
 						}
 						else if (definition.$Template === undefined) {
 							templateID = definition.$TemplateID || name;
+							
 							Runtime.Template.Resolve(templateID, function (error, html) {
 								if (error) {
 									ready(error);
@@ -3363,11 +3726,7 @@
 				
 				if (!directState) {
 					for (definitionKey in definition) {
-						if (
-							own(definition, definitionKey) &&
-							definitionKey.charAt(0) !== '$' &&
-							typeof definition[definitionKey] !== 'function'
-						) {
+						if (own(definition, definitionKey) && definitionKey.charAt(0) !== '$' && typeof definition[definitionKey] !== 'function') {
 							definitionValues[definitionKey] = definition[definitionKey];
 						}
 					}
@@ -3481,33 +3840,36 @@
 				function Ref (name) {
 					var key = String(name).toLowerCase();
 					var ref = refs[key] || null;
+					if (ref && root.contains(ref)) return ref;
+					
 					var nodes;
 					var i = 0;
 					
-					if (ref && root.contains(ref))
-						return ref;
-					
 					ref = null;
 					
-					if (root.nodeType === 1 && root.__ElemenxRefName === key)
-						ref = root;
+					if (root.nodeType === 1 && root.__ElemenxRefName === key) ref = root;
 					else if (root.querySelectorAll) {
 						nodes = root.querySelectorAll('*');
+						
 						while (i < nodes.length) {
 							if (nodes[i].__ElemenxRefName === key) {
 								ref = nodes[i];
+								
 								break;
 							}
+							
 							i++;
 						}
 					}
 					
 					if (ref) {
 						refs[key] = ref;
+						
 						return ref;
 					}
 					
 					delete refs[key];
+					
 					return null;
 				}
 				
@@ -3543,11 +3905,10 @@
 				
 				function Append (ref, child) {
 					var target = typeof ref === 'string' ? Ref(ref) : ref;
-					var element;
-					
 					if (!target || !child) return api;
 					
-					element = child.$Element ? child.$Element() : child;
+					var element = child.$Element ? child.$Element() : child;
+					
 					target.appendChild(element);
 					
 					if (child.$Destroy)
@@ -3578,8 +3939,9 @@
 					
 					i = 0;
 					while (i < nodes.length) {
-						if (Runtime.ResolveComponentRegistered && Runtime.ResolveComponentRegistered(nodes[i].tagName)) {
+						if (Runtime.ResolveComponentRegistered && Runtime.ResolveComponentRegistered(nodes[i].getAttribute('data-elemenx-component') || nodes[i].tagName)) {
 							i++;
+							
 							continue;
 						}
 						
@@ -3657,29 +4019,42 @@
 							Value: undefined,
 							Data: {}
 						};
+						
 						record.Context = context;
-						if (typeof record.Definition.$OnCreate === 'function')
+						
+						if (typeof record.Definition.$OnCreate === 'function') {
 							record.Definition.$OnCreate.call(api, context);
+						}
+						
 						(function (record, context) {
 							var evaluate = record.Expression ? Runtime.CompileExpression(record.Expression) : null;
+							
 							effect = Runtime.Effect(function () {
 								var value;
+								
 								if (evaluate) {
 									try {
 										value = evaluate(values);
 									}
 									catch (error) {
 										value = undefined;
+										
 										if (!(error && error.name === 'ReferenceError') && global.console && console.error)
 											console.error('Elemenx directive expression failed: *' + record.Name + '="' + record.Expression + '"', error);
 									}
 								}
+								
 								context.Value = value;
-								if (typeof record.Definition.$OnUpdate === 'function')
+								
+								if (typeof record.Definition.$OnUpdate === 'function') {
 									record.Definition.$OnUpdate.call(api, context);
+								}
+								
 								return value;
 							}, true);
+							
 							record.Effect = effect;
+							
 							effects.push(effect);
 						})(record, context);
 						i++;
@@ -3689,12 +4064,16 @@
 				function destroyCustomDirectives () {
 					var i = customDirectives.length - 1;
 					var record;
+					
 					while (i >= 0) {
 						record = customDirectives[i];
+						
 						if (typeof record.Definition.$OnDestroy === 'function')
 							record.Definition.$OnDestroy.call(api, record.Context);
+						
 						i--;
 					}
+					
 					customDirectives.length = 0;
 				}
 				
@@ -3710,22 +4089,24 @@
 				
 				function updateRouteContext (packet) {
 					if (!packet) return;
+					
 					Runtime.BatchReactive(function () {
 						values.$Path = packet.Path;
 						values.$Params = packet.Params;
 						values.$Query = packet.Query;
 						values.$Hash = packet.Hash;
+						
 						routeContextReady = true;
 					});
 				}
 				
 				function Update (next) {
-					var key;
-
 					if (destroyed) return api;
 					
 					next = next || {};
 					
+					var key;
+
 					Runtime.BatchReactive(function () {
 						for (key in next) {
 							if (own(next, key)) {
@@ -3758,12 +4139,10 @@
 				
 				function Emit (name, data) {
 					var list = componentEvents[name];
-					var copy;
-					var i = 0;
-					
 					if (!list || !list.length) return api;
 					
-					copy = list.slice(0);
+					var i = 0;
+					var copy = list.slice(0);
 					
 					while (i < copy.length) {
 						copy[i].call(api, data, api);
@@ -3835,6 +4214,7 @@
 						
 						i--;
 					}
+					
 					listeners.length = 0;
 					
 					var collectionName;
@@ -3948,11 +4328,7 @@
 				var methodName;
 				
 				for (methodName in definition) {
-					if (
-						own(definition, methodName) &&
-						typeof definition[methodName] === 'function' &&
-						(methodName.charAt(0) !== '$' || methodName.indexOf('$On') === 0)
-					) {
+					if (own(definition, methodName) && typeof definition[methodName] === 'function' && (methodName.charAt(0) !== '$' || methodName.indexOf('$On') === 0)) {
 						/*
 						 * Methods belong to the Component API, never to reactive state.
 						 * This is critical for DirectState structural children: their values
@@ -3991,12 +4367,7 @@
 					Update(definitionValues);
 				}
 				
-				if (
-					!directState &&
-					data &&
-					Object.keys(data).length &&
-					!(options && options.RoutePacket === data)
-				) {
+				if (!directState && data && Object.keys(data).length && !(options && options.RoutePacket === data)) {
 					Update(data);
 				}
 				
@@ -4027,10 +4398,13 @@
 					structural.Update(values);
 				
 				activateCustomDirectives();
+				
 				var customDirectiveIndex = 0;
+				
 				while (customDirectiveIndex < customDirectives.length) {
 					if (customDirectives[customDirectiveIndex].Effect)
 						customDirectives[customDirectiveIndex].Effect.Run();
+					
 					customDirectiveIndex++;
 				}
 				
@@ -4073,37 +4447,19 @@
 		}
 		
 		Runtime.ResolveComponent = function (name) {
-			var key;
-			var discoveryName = String(name);
+			name = String(name);
+			if (componentRegistry[name]) return componentRegistry[name];
 			
-			if (discoveryName.indexOf('-') !== -1) {
-				discoveryName = discoveryName.toLowerCase().replace(/(^|-)([a-z0-9])/g, function (all, separator, character) {
-					return character.toUpperCase();
-				});
+			if (Runtime.Bundle && Runtime.Bundle.Load('Component', name)) {
+				return Runtime.ResolveComponentRegistered(name);
 			}
-			
-			if (componentRegistry[name])
-				return componentRegistry[name];
-			
-			for (key in componentRegistry) {
-				if (own(componentRegistry, key) && key.toLowerCase() === String(name).toLowerCase()) {
-					return componentRegistry[key];
-				}
-			}
-			
-			if (Runtime.Bundle && Runtime.Bundle.Load('Component', discoveryName))
-				return Runtime.ResolveComponentRegistered(discoveryName);
 			
 			if (Runtime.Discovery) {
 				var lazyFactory = function (data, slotProjection, options) {
 					return deferredComponent(function (ready) {
-						var application = null;
-						
-						if (options && options.Application)
-							application = options.Application;
-						
-						Runtime.Discovery.Load(application, 'Component', discoveryName, false, function (error) {
-							var factory = componentRegistry[discoveryName] || Runtime.ResolveComponentRegistered(discoveryName);
+						var application = options && options.Application ? options.Application : null;
+						Runtime.Discovery.Load(application, 'Component', name, false, function (error) {
+							var factory = componentRegistry[name] || Runtime.ResolveComponentRegistered(name);
 							if (factory === lazyFactory) factory = null;
 							
 							ready(error, factory);
@@ -4111,31 +4467,20 @@
 					}, data, slotProjection, options);
 				};
 				
-				lazyFactory.ComponentName = discoveryName;
+				lazyFactory.ComponentName = name;
 				lazyFactory.ElemenxLazy = true;
 				
 				componentRegistry[name] = lazyFactory;
 				
 				return lazyFactory;
 			}
-			
 			return null;
 		};
-		
+
 		Runtime.ResolveComponentRegistered = function (name) {
-			if (componentRegistry[name] && !componentRegistry[name].ElemenxLazy) return componentRegistry[name];
-			
-			var key;
-			
-			for (key in componentRegistry) {
-				if (own(componentRegistry, key) && !componentRegistry[key].ElemenxLazy && key.toLowerCase() === String(name).toLowerCase()) {
-					return componentRegistry[key];
-				}
-			}
-			
-			return null;
+			return componentRegistry[name] && !componentRegistry[name].ElemenxLazy ? componentRegistry[name] : null;
 		};
-		
+
 		Runtime.ReloadComponentTemplate = function (name, callback) {
 			var factory = Runtime.ResolveComponentRegistered(name);
 			var definition = factory && factory.Definition;
@@ -4162,6 +4507,7 @@
 			while (component && component._Component) {
 				resolved = component._Component();
 				if (!resolved || resolved === component) return;
+				
 				component = resolved;
 			}
 
@@ -4178,8 +4524,8 @@
 			if (!list) return 0;
 			
 			var snapshot = list.slice();
-			
 			var i = 0;
+			
 			while (i < snapshot.length) {
 				if (snapshot[i] && snapshot[i]._Pending) {
 					snapshot[i]._Pending();
@@ -4217,12 +4563,15 @@
 			
 			for (name in componentRegistry) {
 				if (!own(componentRegistry, name)) continue;
+				
 				factory = componentRegistry[name];
 				definition = factory && factory.Definition;
+				
 				if (!definition || definition.$Template !== undefined || definition.$TemplateURL) continue;
 				if ((definition.$TemplateID || name) !== templateName) continue;
 				
 				Runtime.BeginComponentReload(name);
+				
 				count += Runtime.ReloadComponentInstances(name);
 			}
 			
@@ -4230,6 +4579,7 @@
 		};
 		Elemenx.Template.Reload = function (name, value) {
 			templateRegistrySet(name, value);
+			
 			return Runtime.ReloadTemplateInstances(name);
 		};
 		
@@ -4239,12 +4589,14 @@
 			
 			var factory = Runtime.ResolveComponentRegistered(name);
 			if (!factory) return 0;
+			
 			var snapshot = list.slice();
 			
 			Runtime.ComponentReloading = true;
 			
 			try {
 				var i = 0;
+				
 				while (i < snapshot.length) {
 					if (snapshot[i] && snapshot[i]._Reload) {
 						snapshot[i]._Reload(factory);
@@ -4316,8 +4668,8 @@
 				if (!list || !list.length) return;
 				
 				var copy = list.slice(0);
-				
 				var i = 0;
+				
 				while (i < copy.length) {
 					copy[i].Callback.call(copy[i].Owner || api, data, api);
 					
@@ -4563,15 +4915,14 @@
 			}
 			
 			function bundledComponent (reference) {
-				var factory;
-				
 				if (typeof reference === 'function') return reference;
 				
-				factory = Runtime.ResolveComponentRegistered(reference);
+				var factory = Runtime.ResolveComponentRegistered(reference);
 				if (factory) return factory;
 				
-				if (Runtime.Bundle && Runtime.Bundle.Load && Runtime.Bundle.Load('Component', reference))
+				if (Runtime.Bundle && Runtime.Bundle.Load && Runtime.Bundle.Load('Component', reference)) {
 					return Runtime.ResolveComponentRegistered(reference);
+				}
 				
 				return null;
 			}
@@ -4678,9 +5029,13 @@
 					});
 					
 					Runtime.AttachRouter(waitingComponent, api);
+					
 					waitingComponent.$Parent(root);
+					
 					waitingElement = waitingComponent.$Element ? waitingComponent.$Element() : waitingComponent;
+					
 					outlet.Element().appendChild(waitingElement);
+					
 					emit('NavigationWaiting', prepared.Packet);
 					
 					callback(null);
@@ -4811,8 +5166,6 @@
 					routeIndex++;
 					
 					function nextGuard (guardResult) {
-						var guard;
-						
 						if (guardResult !== true && guardResult !== undefined) {
 							done(guardResult);
 							
@@ -4826,7 +5179,7 @@
 						}
 						
 						var guardReference = list[guardIndex];
-						guard = Runtime.ResolveGuard(guardReference);
+						var guard = Runtime.ResolveGuard(guardReference);
 						
 						if (!guard && typeof guardReference === 'string') {
 							var currentApplication = application();
@@ -4893,6 +5246,7 @@
 					}
 					
 					var component = active[index].Component;
+					
 					index--;
 					
 					if (component && component._Component) {
@@ -4941,7 +5295,9 @@
 				while (i >= index) {
 					entry = active[i];
 					parent = i > 0 ? active[i - 1].Component : root;
-					outlet = parent && entry.Route ? Runtime.ResolveOutlet(parent, entry.Route.Outlet || (i === 0 ? rootOutletName : 'Content')) : null;
+					outlet = parent && entry.Route
+						? Runtime.ResolveOutlet(parent, entry.Route.Outlet || (i === 0 ? rootOutletName : 'Content'))
+						: null;
 					
 					/*
 					 * Route components are owned by their Outlet. Clearing through the
@@ -4971,6 +5327,7 @@
 				
 				while (common > 0 && i < common) {
 					Runtime.UpdateComponentRouteContext(active[i].Component, packet);
+					
 					i++;
 				}
 				
@@ -5121,8 +5478,10 @@
 					Outlet: failure.$Route.Outlet,
 					GuardFailure: failure
 				};
+				
 				failureChain = chain.slice(0, failureIndex);
 				failureChain.push(failureRoute);
+				
 				failurePrepared = {
 					URL: prepared.URL,
 					Found: {Chain: failureChain, Params: prepared.Found.Params},
@@ -5138,11 +5497,17 @@
 					
 					emit('NavigationCommit', context);
 					commit(failurePrepared);
+					
 					committedURL = new URL(prepared.URL.href);
+					
 					if (mode === 'pop' && id === navigationID) {
 						var state = global.history.state;
-						if (state && typeof state.ElemenxRouterIndex === 'number') historyIndex = state.ElemenxRouterIndex;
+						
+						if (state && typeof state.ElemenxRouterIndex === 'number') {
+							historyIndex = state.ElemenxRouterIndex;
+						}
 					}
+					
 					emit('NavigationEnd', context);
 				});
 				
@@ -5173,8 +5538,9 @@
 				
 				if (current && typeof current === 'object') {
 					for (key in current) {
-						if (Object.prototype.hasOwnProperty.call(current, key))
+						if (Object.prototype.hasOwnProperty.call(current, key)) {
 							state[key] = current[key];
+						}
 					}
 				}
 				
@@ -5186,6 +5552,7 @@
 			function writeHistory (mode, url) {
 				if (mode === 'push') {
 					historyIndex++;
+					
 					global.history.pushState(historyState(historyIndex), '', url.href);
 				}
 				else if (mode === 'replace') {
@@ -5205,6 +5572,7 @@
 				
 				delta = historyIndex - targetIndex;
 				rollbackPop = true;
+				
 				global.history.go(delta);
 			}
 			
@@ -5231,13 +5599,19 @@
 					if (leaveResult !== true && leaveResult !== undefined) {
 						if (typeof leaveResult === 'string') {
 							emit('NavigationCancel', context);
-							if (mode === 'pop' && targetHistoryIndex !== null && targetHistoryIndex !== undefined) historyIndex = targetHistoryIndex;
+							
+							if (mode === 'pop' && targetHistoryIndex !== null && targetHistoryIndex !== undefined) {
+								historyIndex = targetHistoryIndex;
+							}
+							
 							navigate(leaveResult, 'replace');
 						}
 						else {
 							handleGuardFailure(leaveResult, context);
 							emit('NavigationCancel', context);
-							if (mode === 'pop') rejectPop(targetHistoryIndex);
+							
+							if (mode === 'pop')
+								rejectPop(targetHistoryIndex);
 						}
 						
 						return;
@@ -5245,7 +5619,9 @@
 					
 					showWaiting(prepared, function (waitingError) {
 						if (id !== navigationID) return;
-						if (waitingError) throw waitingError;
+						
+						if (waitingError)
+							throw waitingError;
 						
 						runEnterGuards(
 							prepared.Found.Chain,
@@ -5259,7 +5635,11 @@
 									
 									if (typeof enterResult === 'string') {
 										emit('NavigationCancel', context);
-										if (mode === 'pop' && targetHistoryIndex !== null && targetHistoryIndex !== undefined) historyIndex = targetHistoryIndex;
+										
+										if (mode === 'pop' && targetHistoryIndex !== null && targetHistoryIndex !== undefined) {
+											historyIndex = targetHistoryIndex;
+										}
+										
 										navigate(enterResult, 'replace');
 									}
 									else {
@@ -5268,7 +5648,9 @@
 										
 										if (!failureComponent || !renderGuardFailure(prepared, failure, failureComponent, mode, id, context)) {
 											emit('NavigationCancel', context);
-											if (mode === 'pop') rejectPop(targetHistoryIndex);
+											
+											if (mode === 'pop')
+												rejectPop(targetHistoryIndex);
 										}
 									}
 									
@@ -5297,8 +5679,12 @@
 									}
 									
 									commit(prepared);
+									
 									committedURL = new URL(prepared.URL.href);
-									if (mode === 'pop' && targetHistoryIndex !== null && targetHistoryIndex !== undefined) historyIndex = targetHistoryIndex;
+									
+									if (mode === 'pop' && targetHistoryIndex !== null && targetHistoryIndex !== undefined) {
+										historyIndex = targetHistoryIndex;
+									}
 									
 									finishWaitingAfterCommit(prepared, id, function () {
 										emit('NavigationEnd', context);
@@ -5342,6 +5728,7 @@
 						Route: null,
 						Component: component
 					});
+					
 					committedURL = new URL(url.href);
 				}
 				
@@ -5426,6 +5813,7 @@
 					
 					if (rollbackPop) {
 						rollbackPop = false;
+						
 						return;
 					}
 					
@@ -5438,7 +5826,9 @@
 					}
 					else {
 						notFound(url, 'pop');
-						if (targetIndex !== null) historyIndex = targetIndex;
+						
+						if (targetIndex !== null)
+							historyIndex = targetIndex;
 					}
 				};
 				
@@ -5516,6 +5906,7 @@
 			
 			api.Owner = ownerFacade;
 			api.OffOwner = offOwner;
+			
 			Runtime.AttachRouter(root, api);
 			
 			return api;
@@ -5538,6 +5929,7 @@
 						throw new Error('Elemenx directive host requires a name and compiler');
 					
 					directiveHosts[name] = compiler;
+					
 					return compiler;
 				}
 				
@@ -5575,38 +5967,32 @@
 			}
 			
 			function factoryFor (tag) {
-				var factory = Runtime.ResolveComponentRegistered(tag);
-				
+				var name = String(tag);
+				var factory = Runtime.ResolveComponentRegistered(name);
 				if (factory) return factory;
-				if (String(tag).indexOf('-') !== -1)
-					return Runtime.ResolveComponent(tag);
 				
-				/*
-				 * HTML normalizes <RemoteChild> to REMOTECHILD. Promote an otherwise
-				 * normal-looking tag only when the current application's built
-				 * Discovery map explicitly contains that component entity.
-				 */
 				var application = component.$Application();
-				var bundleName;
 				
-				if (Runtime.Bundle && Runtime.Bundle.ResolvedName) {
-					bundleName = Runtime.Bundle.ResolvedName('Component', tag);
-					if (bundleName)
-						return Runtime.ResolveComponent(bundleName);
+				if (Runtime.Bundle && Runtime.Bundle.ResolvedName && Runtime.Bundle.ResolvedName('Component', name)) {
+					return Runtime.ResolveComponent(name);
 				}
 				
-				if (Runtime.Discovery && application && Runtime.Discovery.Ready(application) && Runtime.Discovery.ResolvedName) {
-					var discoveryName = Runtime.Discovery.ResolvedName(application, tag);
-					if (discoveryName)
-						return Runtime.ResolveComponent(discoveryName);
+				if (Runtime.Discovery && application && Runtime.Discovery.Ready(application) && Runtime.Discovery.ResolvedName(application, name)) {
+					return Runtime.ResolveComponent(name);
+				}
+				
+				if (Runtime.Library && Runtime.Library.ResolvedURL && Runtime.Library.ResolvedURL(application, name)) {
+					return Runtime.ResolveComponent(name);
 				}
 				
 				return null;
 			}
-			
+
 			function propValue (text, data) {
 				var match = /^{{\s*([\s\S]+?)\s*}}$/.exec(text);
-				if (match) return expression(data, match[1]);
+				
+				if (match)
+					return expression(data, match[1]);
 				
 				if (text === '') return true;
 				if (text === 'true') return true;
@@ -5665,6 +6051,7 @@
 							throw new Error('Invalid Elemenx Component binding target: [' + target + ']');
 						
 						value = parseInt(target.substring(start, i), 10);
+						
 						parts.push(value);
 						
 						i++;
@@ -5687,9 +6074,11 @@
 				if (own(source, key)) return key;
 				
 				lower = key.toLowerCase();
+				
 				for (name in source) {
 					if (!own(source, name) || name.toLowerCase() !== lower) continue;
 					if (match !== null) return key;
+					
 					match = name;
 				}
 				
@@ -5704,11 +6093,14 @@
 				
 				while (i < path.length && source != null) {
 					key = path[i];
+					
 					if (typeof key === 'string') {
 						key = canonicalPropKey(source, key);
 						path[i] = key;
 					}
+					
 					source = source[key];
+					
 					i++;
 				}
 				
@@ -5763,6 +6155,7 @@
 						name = name.replace(/-([a-z])/g, function (match, letter) {
 							return letter.toUpperCase();
 						});
+						
 						name = canonicalPropKey(definition, name);
 						
 						result[name] = propValue(attrs[i].value, data);
@@ -5815,9 +6208,11 @@
 						group.__ElemenxProjectionOwner = ownerToken;
 						
 						groups[name] = group;
+						
 						blueprints[name] = document.createElement('span');
 						blueprints[name].style.display = 'contents';
 						blueprints[name].__ElemenxSlotGroup = name;
+						
 						host.appendChild(group);
 					}
 					
@@ -5976,17 +6371,20 @@
 				 */
 				if (structuralDirective && structuralDirective.Definition.Host !== 'structural') {
 					compileDirectiveHost(node, structuralDirective);
+					
 					return;
 				}
 				
-				var factory = factoryFor(node.tagName);
+				var factory = factoryFor(node.getAttribute('data-elemenx-component') || node.tagName);
 				if (factory) {
 					compileComponent(node, factory, structuralDirective);
+					
 					return;
 				}
 				
 				if (structuralDirective) {
 					compileDirectiveHost(node, structuralDirective);
+					
 					return;
 				}
 				
@@ -6029,7 +6427,7 @@
 			
 			function compileComponent (node, factory, structuralDirective) {
 				var parent = node.parentNode;
-				var end = document.createComment('ui:' + node.tagName + ':end');
+				var end = document.createComment('elemenx:component:' + (node.getAttribute('data-elemenx-component') || node.tagName) + ':end');
 				
 				if (structuralDirective)
 					node.removeAttribute(structuralDirective.Attribute);
@@ -6053,6 +6451,7 @@
 				
 				parent.insertBefore(end, node.nextSibling);
 				parent.removeChild(node);
+				
 				records.push(componentRecord(end, factory, blueprint, structuralDirective, eventMap, projected));
 			}
 			
@@ -6076,19 +6475,25 @@
 						if (child) return child;
 						
 						childProps = props(blueprint, currentData || Runtime.ComponentValues(component), factory.Definition);
+						
 						child = Runtime.Untracked(function () {
 							return factory(childProps, projected, asyncOptions(blueprint, factory.ComponentName || blueprint.tagName));
 						});
+						
 						connect(child, eventMap);
+						
 						end.parentNode.insertBefore(child.$Element(), end);
+						
 						previousProps = childProps;
 						
 						return child;
 					},
 					Unmount: function () {
 						if (!child) return;
+						
 						child.$Destroy();
 						child = null;
+						
 						previousProps = null;
 					}
 				} : null;
@@ -6119,11 +6524,16 @@
 					}
 					else if (!child) {
 						childProps = props(blueprint, data, factory.Definition);
+						
 						child = Runtime.Untracked(function () {
 							return factory(childProps, projected, asyncOptions(blueprint, factory.ComponentName || blueprint.tagName));
 						});
+						
 						connect(child, eventMap);
+						
 						end.parentNode.insertBefore(child.$Element(), end);
+						end.parentNode.removeChild(end);
+						
 						previousProps = childProps;
 					}
 					
@@ -6142,11 +6552,9 @@
 					var propName;
 					
 					for (propName in childProps) {
-						if (
-							own(childProps, propName) &&
-							(!previousProps || previousProps[propName] !== childProps[propName])
-						) {
+						if (own(childProps, propName) && (!previousProps || previousProps[propName] !== childProps[propName])) {
 							changedProps[propName] = childProps[propName];
+							
 							changed = true;
 						}
 					}
@@ -6176,6 +6584,7 @@
 						else if (child) {
 							child.$Destroy();
 							child = null;
+							
 							previousProps = null;
 						}
 						
@@ -6248,15 +6657,7 @@
 									child.$Update(childProps);
 								}
 								else {
-									child = factory(
-										childProps,
-										projected,
-										asyncOptions(
-											blueprint,
-											factory.ComponentName || blueprint.tagName,
-											{DirectState: true}
-										)
-									);
+									child = factory(childProps, projected, asyncOptions(blueprint, factory.ComponentName || blueprint.tagName, {DirectState: true}));
 									
 									connect(child, eventMap);
 									
@@ -6268,14 +6669,7 @@
 									child.$Update(childProps);
 								}
 								else {
-									child = factory(
-										childProps,
-										projected,
-										asyncOptions(
-											blueprint,
-											factory.ComponentName || blueprint.tagName
-										)
-									);
+									child = factory(childProps, projected, asyncOptions(blueprint, factory.ComponentName || blueprint.tagName));
 									
 									connect(child, eventMap);
 									
@@ -6408,7 +6802,7 @@
 			function compileCollectionDirective (node, directive) {
 				var parent = node.parentNode;
 				var template = blueprintFor(node).cloneNode(true);
-				var end = document.createComment('ui:collection:' + directive.Name + ':end');
+				var end = document.createComment('elemenx:collection:' + directive.Name + ':end');
 				var argumentsMap = Runtime.Directive.Arguments(template, 'collection');
 				var children = [];
 				var keyed = {};
@@ -6416,11 +6810,12 @@
 				var context;
 				
 				template.removeAttribute(directive.Attribute);
+				
 				parent.insertBefore(end, node.nextSibling);
 				parent.removeChild(node);
 				
 				function iterationDefinition () {
-					var componentRoot = factoryFor(template.tagName);
+					var componentRoot = factoryFor(template.getAttribute('data-elemenx-component') || template.tagName);
 					var templateSource = componentRoot
 						? '<span style="display:contents">' + template.outerHTML + '</span>'
 						: template.outerHTML;
@@ -6428,11 +6823,7 @@
 					var methodName;
 					
 					for (methodName in definition) {
-						if (
-							own(definition, methodName) &&
-							typeof definition[methodName] === 'function' &&
-							methodName.charAt(0) !== '$'
-						) {
+						if (own(definition, methodName) && typeof definition[methodName] === 'function' && methodName.charAt(0) !== '$') {
 							(function (name) {
 								result[name] = function () {
 									return definition[name].apply(component, arguments);
@@ -6454,11 +6845,7 @@
 							result[name] = values[name];
 					
 					for (name in definition) {
-						if (
-							own(definition, name) &&
-							typeof definition[name] === 'function' &&
-							name.charAt(0) !== '$'
-						) {
+						if (own(definition, name) && typeof definition[name] === 'function' && name.charAt(0) !== '$') {
 							(function (methodName) {
 								result[methodName] = function () {
 									return definition[methodName].apply(component, arguments);
@@ -6498,8 +6885,11 @@
 						while (i < limit && expression(loopScope, options.Condition)) {
 							scope = copyScope(loopScope);
 							scope.$index = i;
+							
 							result.push(scope);
+							
 							expression(loopScope, options.Step);
+							
 							i++;
 						}
 					}
@@ -6510,12 +6900,16 @@
 						if (typeof Symbol !== 'undefined' && source[Symbol.iterator]) {
 							iterator = source[Symbol.iterator]();
 							step = iterator.next();
+							
 							while (!step.done && i < limit) {
 								scope = copyScope(loopScope);
 								scope[variable] = step.value;
 								scope.$index = i;
+								
 								result.push(scope);
+								
 								i++;
+								
 								step = iterator.next();
 							}
 						}
@@ -6524,26 +6918,34 @@
 								scope = copyScope(loopScope);
 								scope[variable] = source[i];
 								scope.$index = i;
+								
 								result.push(scope);
+								
 								i++;
 							}
 						}
 					}
 					else if (mode === 'in') {
 						if (source == null) source = {};
+						
 						Runtime.TrackIteration(source);
+						
 						for (name in source) {
 							if (!own(source, name)) continue;
 							if (i >= limit) break;
+							
 							scope = copyScope(loopScope);
 							scope[variable] = name;
 							scope.$index = i;
+							
 							result.push(scope);
+							
 							i++;
 						}
 					}
-					else
+					else {
 						throw new Error('Unknown Elemenx collection render mode: ' + mode);
+					}
 					
 					if (i >= limit)
 						throw new Error('Elemenx structural collection exceeded iteration limit (' + limit + ')');
@@ -6591,37 +6993,41 @@
 							record = keyed[token] || null;
 						}
 						
-						if (record)
-							record.Child.$Update(scope);
+						if (record) record.Child.$Update(scope);
 						else {
-							child = Runtime.CreateComponent(iterationDefinition())(
-								scope,
-								null,
-								{DirectState: true, Application: component.$Application()}
-							);
+							child = Runtime.CreateComponent(iterationDefinition())(scope, null, {DirectState: true, Application: component.$Application()});
+							
 							child.$Parent(component);
+							
 							record = {Child: child, Key: token};
 						}
 						
 						end.parentNode.insertBefore(record.Child.$Element(), end);
+						
 						nextChildren.push(record);
+						
 						if (keySource)
 							nextKeyed[token] = record;
+						
 						i++;
 					}
 					
 					if (keySource) {
 						i = children.length - 1;
+						
 						while (i >= 0) {
 							record = children[i];
+							
 							if (!nextKeyed[record.Key])
 								record.Child.$Destroy();
+							
 							i--;
 						}
 					}
 					
 					children = nextChildren;
 					keyed = nextKeyed;
+					
 					return children.length;
 				}
 				
@@ -6641,12 +7047,15 @@
 					Render: render
 				};
 				
-				if (typeof directive.Definition.$OnCreate === 'function')
+				if (typeof directive.Definition.$OnCreate === 'function') {
 					directive.Definition.$OnCreate(context);
+				}
 				
 				var collectionEffect = Runtime.Effect(function () {
-					if (typeof directive.Definition.$OnUpdate === 'function')
+					if (typeof directive.Definition.$OnUpdate === 'function') {
 						directive.Definition.$OnUpdate(context);
+					}
+					
 					return children.length;
 				}, true);
 				
@@ -6656,9 +7065,12 @@
 					},
 					$Destroy: function () {
 						collectionEffect.Destroy();
+						
 						destroyAll();
-						if (typeof directive.Definition.$OnDestroy === 'function')
+						
+						if (typeof directive.Definition.$OnDestroy === 'function') {
 							directive.Definition.$OnDestroy(context);
+						}
 					}
 				});
 			}
@@ -6667,7 +7079,7 @@
 				var parent = node.parentNode;
 				var field = directive.Expression;
 				var template = blueprintFor(node).cloneNode(true);
-				var end = document.createComment('ui:structural:' + directive.Name + ':end');
+				var end = document.createComment('elemenx:structural:' + directive.Name + ':end');
 				var child = null;
 				var context = {
 					Name: directive.Name,
@@ -6680,12 +7092,15 @@
 						return child !== null;
 					},
 					Mount: function () {
+						if (child) return child;
+						
 						var subtreeDefinition;
 						var methodName;
 						var data;
-						if (child) return child;
+						
 						data = Runtime.ComponentValues(component);
 						subtreeDefinition = {$Template: template.outerHTML};
+						
 						for (methodName in definition) {
 							if (own(definition, methodName) && typeof definition[methodName] === 'function' && methodName !== '$Template' && methodName.indexOf('$On') !== 0) {
 								(function (name) {
@@ -6695,32 +7110,42 @@
 								})(methodName);
 							}
 						}
+						
 						child = Runtime.CreateComponent(subtreeDefinition)(data, null, {
 							DirectState: true,
 							Application: component.$Application()
 						});
+						
 						child.$Parent(component);
+						
 						end.parentNode.insertBefore(child.$Element(), end);
+						
 						return child;
 					},
 					Unmount: function () {
 						if (!child) return;
+						
 						child.$Destroy();
 						child = null;
 					}
 				};
 				
 				template.removeAttribute(directive.Attribute);
+				
 				parent.insertBefore(end, node.nextSibling);
 				parent.removeChild(node);
 				
-				if (typeof directive.Definition.$OnCreate === 'function')
+				if (typeof directive.Definition.$OnCreate === 'function') {
 					directive.Definition.$OnCreate(context);
+				}
 				
 				var structuralEffect = Runtime.Effect(function () {
 					context.Value = field ? expression(Runtime.ComponentValues(component), field) : undefined;
-					if (typeof directive.Definition.$OnUpdate === 'function')
+					
+					if (typeof directive.Definition.$OnUpdate === 'function') {
 						directive.Definition.$OnUpdate(context);
+					}
+					
 					return context.Value;
 				}, true);
 				
@@ -6730,9 +7155,12 @@
 					},
 					$Destroy: function () {
 						structuralEffect.Destroy();
+						
 						context.Unmount();
-						if (typeof directive.Definition.$OnDestroy === 'function')
+						
+						if (typeof directive.Definition.$OnDestroy === 'function') {
 							directive.Definition.$OnDestroy(context);
+						}
 					}
 				});
 			}
@@ -6842,19 +7270,30 @@
 						Mime: item && item.type ? item.type : 'application/octet-stream',
 						File: typeof global.File === 'function' && item instanceof global.File
 					};
+					
 					if (item instanceof Blob) descriptor.Size = item.size;
 					else if (item instanceof ArrayBuffer) descriptor.Size = item.byteLength;
 					else descriptor.Size = item.byteLength;
+					
 					parts.push(item);
 					descriptors.push(descriptor);
+					
 					return {$ElemenxBinary: descriptor.Index};
 				}
+				
 				if (!item || typeof item !== 'object') return item;
 				if (item instanceof Date) return {$ElemenxDate: item.toISOString()};
+				
 				if (Array.isArray(item)) {
 					output = [];
 					i = 0;
-					while (i < item.length) { output.push(walk(item[i])); i++; }
+					
+					while (i < item.length) {
+						output.push(walk(item[i]));
+						
+						i++;
+					}
+					
 					return output;
 				}
 				output = {};
@@ -6866,58 +7305,100 @@
 			
 			manifest = {Value: walk(value), Parts: descriptors};
 			manifestBytes = encoder.encode(JSON.stringify(manifest));
+			
 			header = new ArrayBuffer(8);
 			view = new DataView(header);
+			
 			view.setUint32(0, 0x45585354);
 			view.setUint32(4, manifestBytes.byteLength);
+			
 			var blobParts = [header, manifestBytes];
+			
 			i = 0;
-			while (i < parts.length) { blobParts.push(parts[i]); i++; }
+			while (i < parts.length) {
+				blobParts.push(parts[i]);
+				
+				i++;
+			}
+			
 			return new Blob(blobParts, {type: 'application/x-elemenx-structured'});
 		}
 		
 		function NetworkStructuredUnpack (blob) {
-			if (!blob || blob.type !== 'application/x-elemenx-structured') return global.Promise.resolve(null);
+			if (!blob || blob.type !== 'application/x-elemenx-structured') {
+				return global.Promise.resolve(null);
+			}
+			
 			return blob.arrayBuffer().then(function (buffer) {
 				var view = new DataView(buffer);
-				var manifestLength;
-				var manifest;
+				if (buffer.byteLength < 8 || view.getUint32(0) !== 0x45585354) {
+					throw new Error('Invalid Elemenx structured transfer envelope');
+				}
+				
+				var manifestLength = view.getUint32(4);
+				if (8 + manifestLength > buffer.byteLength)
+					throw new Error('Invalid Elemenx structured transfer manifest');
+				
 				var offsets = [];
-				var offset;
-				var i;
-				if (buffer.byteLength < 8 || view.getUint32(0) !== 0x45585354) throw new Error('Invalid Elemenx structured transfer envelope');
-				manifestLength = view.getUint32(4);
-				if (8 + manifestLength > buffer.byteLength) throw new Error('Invalid Elemenx structured transfer manifest');
-				manifest = JSON.parse(new TextDecoder().decode(new Uint8Array(buffer, 8, manifestLength)));
-				offset = 8 + manifestLength;
-				i = 0;
-				while (i < manifest.Parts.length) { offsets.push(offset); offset += manifest.Parts[i].Size; i++; }
+				var manifest = JSON.parse(new TextDecoder().decode(new Uint8Array(buffer, 8, manifestLength)));
+				var offset = 8 + manifestLength;
+				var i = 0;
+				
+				while (i < manifest.Parts.length) {
+					offsets.push(offset);
+					
+					offset += manifest.Parts[i].Size;
+					
+					i++;
+				}
+				
 				function restore (item) {
 					var descriptor;
 					var bytes;
 					var output;
 					var keys;
 					var i;
+					
 					if (!item || typeof item !== 'object') return item;
+					
 					if (Object.prototype.hasOwnProperty.call(item, '$ElemenxBinary')) {
 						descriptor = manifest.Parts[item.$ElemenxBinary];
 						bytes = buffer.slice(offsets[item.$ElemenxBinary], offsets[item.$ElemenxBinary] + descriptor.Size);
-						if (descriptor.File && typeof global.File === 'function') return new global.File([bytes], descriptor.Name || 'file', {type: descriptor.Mime});
+						
+						if (descriptor.File && typeof global.File === 'function')
+							return new global.File([bytes], descriptor.Name || 'file', {type: descriptor.Mime});
+						
 						return new Blob([bytes], {type: descriptor.Mime});
 					}
+					
 					if (Object.prototype.hasOwnProperty.call(item, '$ElemenxDate')) return new Date(item.$ElemenxDate);
+					
 					if (Array.isArray(item)) {
 						output = [];
 						i = 0;
-						while (i < item.length) { output.push(restore(item[i])); i++; }
+						
+						while (i < item.length) {
+							output.push(restore(item[i]));
+							
+							i++;
+						}
+						
 						return output;
 					}
+					
 					output = {};
 					keys = Object.keys(item);
 					i = 0;
-					while (i < keys.length) { output[keys[i]] = restore(item[keys[i]]); i++; }
+					
+					while (i < keys.length) {
+						output[keys[i]] = restore(item[keys[i]]);
+						
+						i++;
+					}
+					
 					return output;
 				}
+				
 				return restore(manifest.Value);
 			});
 		}
@@ -6963,7 +7444,9 @@
 					
 					var i = list.length - 1;
 					while (i >= 0) {
-						if (list[i] === callback) list.splice(i, 1);
+						if (list[i] === callback) {
+							list.splice(i, 1);
+						}
 						
 						i--;
 					}
@@ -13257,7 +13740,7 @@
 		'use strict';
 		
 		var Elemenx = global.Elemenx;
-		var definitions = {};
+		var definitions = {UI: {$Root: '/libraries/UI'}};
 		var owners = new WeakMap();
 		var destroyedOwners = new WeakSet();
 		var handles = [];
@@ -13706,7 +14189,7 @@
 		'use strict';
 		
 		var Elemenx = global.Elemenx;
-		var definitions = {};
+		var definitions = {UI: {$Root: '/libraries/UI'}};
 		var handles = [];
 		var owners = new WeakMap();
 		var destroyedOwners = new WeakSet();
@@ -14244,6 +14727,10 @@
 			api.$Root = function () {
 				return definition.$Root || null;
 			};
+
+			api.$Libraries = function () {
+				return Runtime.Library ? (typeof (definition.$Use || definition.Use) === 'string' ? [definition.$Use || definition.Use] : (definition.$Use || definition.Use || []).slice()) : [];
+			};
 			
 			api.$Mount = function () {
 				return mountElement(definition.$Mount);
@@ -14655,7 +15142,7 @@
 
 				return inspectFactory(factory);
 			}
-			function startRoot () {
+			function startApplicationRoot () {
 				if (destroyed || !definition.$Component || root) return;
 				
 				if (Runtime.Bundle && Runtime.Bundle.Ready()) {
@@ -14754,6 +15241,16 @@
 			};
 			api.$OnError = definition.$OnError || null;
 			
+			function startRoot () {
+				var use = definition.$Use || definition.Use;
+				if (!use || !Runtime.Library) { startApplicationRoot(); return; }
+				Runtime.Library.Use(api, use, function (error) {
+					if (destroyed) return;
+					if (error) { applicationStatus(definition.$Error || null); applicationLifecycle('$OnError', error); return; }
+					startApplicationRoot();
+				});
+			}
+
 			if (Runtime.HasDOM && global.document.readyState === 'loading') {
 				global.document.addEventListener('DOMContentLoaded', startRoot, {once: true});
 			}

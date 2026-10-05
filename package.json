@@ -10,6 +10,7 @@
 		"LICENSE",
 		"docs",
 		"tools",
+		"libraries",
 		"examples",
 		"!examples/**/dist"
 	],

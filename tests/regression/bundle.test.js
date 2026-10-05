@@ -33,14 +33,19 @@ describe('Regression: production bundle registry', function () {
 		child.$Destroy();
 	});
 
-	test('bundle lookup is case-insensitive like Component registry lookup', function () {
+	test('bundle Component lookup is case-sensitive', function () {
 		var name=unique('BundledCase');
 		var bundle={Component:{}};
+		var calls=0;
 		bundle.Component[name]=function () {
+			calls++;
 			Elemenx.Component(name,{$Template:'<span>case</span>'});
 		};
 		Elemenx.Bundle(bundle);
-		expect(Elemenx.Component(name.toLowerCase())).not.toBeNull();
+		Elemenx.Component(name.toLowerCase());
+		expect(calls).toBe(0);
+		expect(Elemenx.Component(name)).not.toBeNull();
+		expect(calls).toBe(1);
 	});
 
 	test('Router resolves bundled NotFound Component without Discovery', async function () {
