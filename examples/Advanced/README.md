@@ -57,7 +57,7 @@ Workers use the same Messaging fabric. WebWorker demonstrates manual, lazy and a
 
 The examples prefer owner-aware APIs (`this.$Service()`, `this.$Storage()`, `this.$Network()`, `this.$Messaging()`, `this.$WebWorker()` and `this.$ServiceWorker()`) so resources participate in Component/Application cleanup naturally.
 
-`RuntimeShowcase` exposes runtime/Application start timestamps and uptimes, Application/root/router/mount metadata, an isolated child destroy/recreate cycle and development Component reload. Network objects additionally expose their own lifecycle timestamps where the entity has a meaningful active/closed session.
+`RuntimeShowcase` exposes runtime/Application start timestamps and uptimes, Application/root/router/mount metadata, Application startup hooks/Bootstrap, deferred child Pending/Ready/Error, isolated child and Application destroy/recreate cycles, Service lifecycle/integration, dynamic Application Service registration and development Component/Service reload. Component reload updates the definition without replacing an already-created ordinary instance; a recreated probe uses the new generation. Network objects additionally expose their own lifecycle timestamps where the entity has a meaningful active/closed session.
 
 ## Templates, directives and structural composition
 
@@ -79,7 +79,7 @@ The condition may also assign a loop-local value:
 
 Elemenx aborts runaway structural loops after 10,000 iterations.
 
-Custom behavioral directives are discovered with the Application graph. `highlight` and `tooltip` demonstrate Create/Update/Destroy and directive-owned `context.Data`; the tooltip also owns real DOM and browser event listeners and removes them on destruction.
+Custom behavioral directives are discovered with the Application graph. `highlight` and `tooltip` demonstrate Create/Update/Destroy and directive-owned `context.Data`; the tooltip also owns real DOM and browser event listeners and removes them on destruction. `unless` demonstrates the public structural Directive contract with real subtree Mount/Unmount and nested Component lifecycle ownership.
 
 ## Tooling
 
@@ -89,4 +89,4 @@ Repository-level tests exercise the development example and the production bundl
 
 ## Coverage status
 
-See `SHOWCASE.md` before adding another demo. It records what is already represented and the small set of phase-7 gaps still worth implementing. This prevents Advanced from accumulating duplicate cards for behavior that is already covered elsewhere.
+See `SHOWCASE.md` before adding another demo. Phase 7 is complete: every tracked public runtime capability is either an executable `YES` showcase or an explicit `WORKFLOW` concern. The ledger remains the source of truth so future additions do not duplicate behavior already covered elsewhere.

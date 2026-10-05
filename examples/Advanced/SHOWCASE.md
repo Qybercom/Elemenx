@@ -192,7 +192,7 @@ Status values:
 | --- | --- | --- |
 | runtime inspection | YES | `RuntimeShowcase` displays `RuntimeID`, runtime/Application `StartedAt`, their uptimes, Application name, current root, Router presence and mount through public APIs. |
 | isolated destroy / recreate | YES | A manually owned `RuntimeProbe` can be destroyed and recreated without disturbing the Application or sibling showcases. |
-| development Component reload | YES | `Application.$Reload('Component', 'RuntimeProbe', ...)` reloads the discovered definition and refreshes live instances. |
+| development Component reload | YES | `Application.$Reload('Component', 'RuntimeProbe', ...)` reloads the discovered definition without replacing the existing ordinary instance; recreating the probe then uses the new definition generation. |
 
 ## Global helpers
 
@@ -212,22 +212,12 @@ Status values:
 | `elemenx generate` | WORKFLOW | Document commands in Advanced README; do not fake them inside browser UI. |
 | `public/` → build output | WORKFLOW | Existing network data asset demonstrates the behavior. |
 
-## Implementation order
+## Phase 7 status
 
-1. Component completeness: TemplateID, inline Style, explicit instance API, lifecycle, events and child lifecycle.
-2. Router completeness: async/leave guards, programmatic navigation and same-route reuse.
-3. Storage + Events + Messaging separation and Events core.
-4. WebWorker + ServiceWorker completeness and Messaging bridges.
-5. Network completeness: Context/Protocol first, then long-lived transports, WebRTC, Transfer and Metrics.
-6. Application/runtime inspection, isolated destroy/recreate and development Reload. — DONE
-7. Final UI/navigation cleanup, Advanced README rewrite and E2E coverage for every stable showcase section.
+Phase 7 is complete. Every supported public runtime capability tracked by this ledger is represented either by an executable `YES` showcase or by a real `WORKFLOW` build/tooling path. There are no remaining `PARTIAL` or `MISSING` rows.
 
-The end condition is simple: every supported public runtime capability is either `YES`, or is explicitly classified as `WORKFLOW` because its real demonstration is the Advanced build/dev/serve workflow itself. `PARTIAL` and `MISSING` are temporary states only.
-
-## Current phase-7 audit
-
-The showcase is now substantially ahead of the older checklist: Network, Events Pipes, Messaging browser contexts and both Worker APIs are already represented by executable cards. The runtime checklist is now fully represented: dynamic Application Service registration, Application startup hooks/Bootstrap, full Application destroy/recreate and Service integration are demonstrated. Custom behavioral and structural Directives are both demonstrated. Component and Service reload are both demonstrated.
+The final audit covers Component and Application lifecycle, Router/Guards, behavioral and structural Directives, Services (including runtime registration and owner-aware integrations), Storage, Events/Pipes, Messaging/browser contexts, Workers, Network/Transfer/Metrics, Discovery/Bundle workflow and production E2E.
 
 Lifecycle timestamps are part of the current runtime contract: Component and Service instances expose `$StartedAt()`. Networking runtime instances expose `$StartedAt()`; XHR, Stream, LongPolling, SSE, WebSocket and WebRTC additionally expose `$ConnectedAt()` / `$ClosedAt()` for their latest connection/exchange. Transfer owns an independent set of all three timestamps.
 
-Phase 7 should close those remaining rows, then perform the final visual/navigation pass. README and E2E coverage are maintained alongside the executable showcase rather than after it.
+`Application.$Reload()` reloads definitions. Service reload destroys the current Application-owned Service instance and the next access creates the new generation. Component reload does not replace an already-created ordinary Component instance; a subsequently created instance uses the reloaded definition generation. README and E2E coverage are maintained alongside the executable showcase.

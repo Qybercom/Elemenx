@@ -250,6 +250,26 @@ test('official Advanced example exercises stable non-network showcase sections e
 	expect(errors).toEqual([]);
 });
 
+test('official Advanced Component Reload keeps the live instance and applies the new generation after recreate', async ({ page }) => {
+	var errors = captureErrors(page);
+	var probe;
+	var before;
+
+	await page.goto('http://127.0.0.1:4274/');
+	probe = page.locator('.runtime-showcase .component-probe').filter({hasText: 'Runtime child'});
+	await expectBootstrapVisible(page.getByRole('heading', {name: 'Development Reload', exact: true}), errors);
+	await expect(probe).toBeVisible();
+	before = await probe.textContent();
+	await page.getByRole('button', {name: 'Reload RuntimeProbe'}).click();
+	await expect(page.locator('.runtime-reload').getByText('Reload complete', {exact: true})).toBeVisible({timeout: 10000});
+	expect(await probe.textContent()).toBe(before);
+	await page.getByRole('button', {name: 'Recreate child'}).click();
+	await expect(probe).toContainText('generation 1');
+	expect(await probe.textContent()).not.toBe(before);
+
+	expect(errors).toEqual([]);
+});
+
 test('official Advanced example exposes Application bootstrap and startup lifecycle', async ({ page }) => {
 	var errors = captureErrors(page);
 	var runtime;
