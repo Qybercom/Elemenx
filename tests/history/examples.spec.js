@@ -285,6 +285,30 @@ test('official Advanced example demonstrates lazy Service lifecycle and Service 
 
 	expect(errors).toEqual([]);
 });
+test('official Advanced Service accesses Network, Storage, Messaging and Workers', async ({ page }) => {
+	var errors = captureErrors(page);
+	await page.goto('http://127.0.0.1:4274/');
+	await expectBootstrapVisible(page.locator('.runtime-showcase'), errors);
+	var runtime = page.locator('.runtime-showcase');
+
+	await runtime.getByRole('button', {name: 'Exercise service facades'}).click();
+	await expect(runtime.locator('.service-integration-instance')).toHaveText('Instance 1 · active');
+	await expect(runtime.locator('.service-integration-network')).toHaveText('XHR handle created');
+	await expect(runtime.locator('.service-integration-storage')).toHaveText('storage roundtrip');
+	await expect(runtime.locator('.service-integration-messaging')).toHaveText('message roundtrip');
+	await expect(runtime.locator('.service-integration-webworker')).toHaveText('AdvancedIntegrationServiceWorker · Running');
+	await expect(runtime.locator('.service-integration-serviceworker')).toHaveText('AdvancedIntegrationServiceWorker');
+
+	await runtime.getByRole('button', {name: 'Destroy integration service'}).click();
+	await expect(runtime.locator('.service-integration-instance')).toHaveText('Instance 1 · destroyed');
+	await expect(runtime.locator('.service-integration-webworker')).toHaveText('AdvancedIntegrationServiceWorker · Stopped · owner destroyed');
+
+	await runtime.getByRole('button', {name: 'Exercise service facades'}).click();
+	await expect(runtime.locator('.service-integration-instance')).toHaveText('Instance 2 · active');
+	await expect(runtime.locator('.service-integration-webworker')).toHaveText('AdvancedIntegrationServiceWorker · Running');
+	expect(errors).toEqual([]);
+});
+
 test('official Advanced example destroys and recreates an isolated Application', async ({ page }) => {
 	var errors = captureErrors(page);
 	var runtime;

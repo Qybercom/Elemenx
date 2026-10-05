@@ -1,4 +1,5 @@
 [
 	'Session.js',
-	'RuntimeService.js'
+	'RuntimeService.js',
+	'IntegrationService.js'
 ]

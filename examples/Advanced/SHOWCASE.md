@@ -96,7 +96,7 @@ Status values:
 | Application-owned service instance | YES | Session is resolved through components/guards. |
 | service methods/state | YES | Authorization/project access. |
 | Service lifecycle | YES | `RuntimeService` visibly demonstrates lazy Application-owned creation, `$StartedAt()`, `$Generation()`, destroy/recreate and reload-driven redefinition. |
-| Service access to Network/Storage/Messaging/Workers | MISSING | Add a dedicated integration service example. |
+| Service access to Network/Storage/Messaging/Workers | YES | `IntegrationService` exercises its own `$Network()`, `$Storage()`, `$Messaging()`, `$WebWorker()` and `$ServiceWorker()` owner-aware facades; the showcase also proves that destroying the Service stops its owned WebWorker and recreating the Service creates a fresh running Worker. |
 | dynamic Application `Service(name, definition)` | MISSING | Demonstrate in isolated runtime showcase. |
 
 ## Network
@@ -226,7 +226,7 @@ The end condition is simple: every supported public runtime capability is either
 
 ## Current phase-7 audit
 
-The showcase is now substantially ahead of the older checklist: Network, Events Pipes, Messaging browser contexts and both Worker APIs are already represented by executable cards. The remaining runtime gaps are deliberately narrow: Application startup hooks/Bootstrap, full Application destroy/recreate, Service integration/dynamic registration. Custom behavioral and structural Directives are both demonstrated. Component and Service reload are both demonstrated.
+The showcase is now substantially ahead of the older checklist: Network, Events Pipes, Messaging browser contexts and both Worker APIs are already represented by executable cards. The remaining runtime gap is deliberately narrow: dynamic Application Service registration. Application startup hooks/Bootstrap, full Application destroy/recreate and Service integration are demonstrated. Custom behavioral and structural Directives are both demonstrated. Component and Service reload are both demonstrated.
 
 Lifecycle timestamps are part of the current runtime contract: Component and Service instances expose `$StartedAt()`. Networking runtime instances expose `$StartedAt()`; XHR, Stream, LongPolling, SSE, WebSocket and WebRTC additionally expose `$ConnectedAt()` / `$ClosedAt()` for their latest connection/exchange. Transfer owns an independent set of all three timestamps.
 
