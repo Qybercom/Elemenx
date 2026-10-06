@@ -45,6 +45,30 @@ describe('Regression: Application public facade and ownership', function () {
 		expect(document.querySelector('.application-root').textContent).toBe('ready');
 	});
 
+	it('skips unknown Libraries without blocking Application startup', function () {
+		var component=unique('UnknownLibraryRoot');
+		var name=unique('UnknownLibraryApplication');
+		var library=unique('MissingLibrary');
+		var warning=null;
+		var warn=console.warn;
+		Elemenx.Component(component,{$Template:'<main class="unknown-library-root">ready</main>'});
+		console.warn=function (message) { warning=message; };
+
+		try {
+			createApplication(name,{
+				$Component:component,
+				$Mount:'#mount',
+				$Use:[library]
+			});
+		}
+		finally {
+			console.warn=warn;
+		}
+
+		expect(document.querySelector('.unknown-library-root').textContent).toBe('ready');
+		expect(warning).toBe('Elemenx unknown Library: '+library);
+	});
+
 	it('exposes immutable runtime and Application start timestamps', async function () {
 		var runtimeStarted=Elemenx.StartedAt();
 		var name=unique('StartedAtApplication');

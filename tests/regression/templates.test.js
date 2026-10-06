@@ -44,13 +44,12 @@ describe('Regression: Template / TemplateID', function () {
 	});
 	it('Component tags preserve case and do not capture native HTML tags', function () {
 		var buttonName='Button';
-		Elemenx.Component(buttonName, {$Template:'<strong class="custom-button">component</strong>'});
+		Elemenx.Component(buttonName,{$Template:'<strong class="custom-button">component</strong>'});
 		var hostName=unique('CaseHost');
-		Elemenx.Component(hostName, {$Template:'<section><Button /><button class="native-button">native</button></section>'});
+		Elemenx.Component(hostName,{$Template:'<section><Button /><button class="native-button">native</button></section>'});
 		var host=Elemenx.Component(hostName)();
 		expect(host.$Element().querySelector('.custom-button').textContent).toBe('component');
 		expect(host.$Element().querySelector('button.native-button').textContent).toBe('native');
 		host.$Destroy();
 	});
-
 });

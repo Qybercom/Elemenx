@@ -1224,7 +1224,6 @@
 		var Elemenx = global.Elemenx;
 		var definitions = {ElemenxUI: {$Root: '/libraries/UI'}};
 		var applications = new WeakMap();
-		var styles = {};
 		
 		function list (value) {
 			if (!value) return [];
@@ -1246,33 +1245,6 @@
 			return value;
 		}
 		
-		function loadStyles (name, definition) {
-			if (!Runtime.HasDOM || styles[name]) return;
-			
-			var values = definition.$Styles || definition.Styles || [];
-			if (typeof values === 'string') values = [values];
-			
-			var base = root(definition) || '';
-			var i = 0;
-			
-			while (i < values.length) {
-				var href = values[i];
-				
-				if (!(/^(?:[a-z]+:)?\/\//i.test(href)) && href.charAt(0) !== '/')
-					href = String(base).replace(/\/$/, '') + '/' + href.replace(/^\.\//, '');
-				
-				var link = global.document.createElement('link');
-				
-				link.rel = 'stylesheet'; link.href = href; link.setAttribute('data-elemenx-library', name);
-				
-				(global.document.head || global.document.documentElement).appendChild(link);
-				
-				i++;
-			}
-			
-			styles[name] = true;
-		}
-		
 		function use (application, value, callback) {
 			var values = list(value);
 			var entries = [];
@@ -1283,9 +1255,12 @@
 				var definition = definitions[name];
 				
 				if (!definition) {
-					callback(new Error('Elemenx unknown Library: ' + name));
+					if (global.console && typeof global.console.warn === 'function')
+						global.console.warn('Elemenx unknown Library: ' + name);
 					
-					return;
+					i++;
+					
+					continue;
 				}
 				
 				entries.push({Name: name, Definition: definition, Owner: {}});

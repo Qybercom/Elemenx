@@ -168,27 +168,37 @@ describe('Elemenx multi-Application Builder', function () {
 		expect(output).toContain('Elemenx.Template("Probe", "<strong>{{Value}}</strong>");');
 		expect(output.indexOf('Elemenx.Template("Probe"')).toBeLessThan(output.indexOf('Elemenx.Bundle({'));
 	});
-});
-it('tree-shakes unused Library Components and keeps transitive Component dependencies', function () {
-	var root = project();
-	application(root, 'FooApp', 'FooRoot');
-	fs.writeFileSync(path.join(root, 'FooApp', 'FooRoot', 'FooRoot.html'), '<div><Field /></div>');
-	var library = path.join(root, 'libraries', 'UI');
-	fs.mkdirSync(path.join(library, 'components', 'Field'), {recursive: true});
-	fs.mkdirSync(path.join(library, 'components', 'Input'), {recursive: true});
-	fs.mkdirSync(path.join(library, 'components', 'Unused'), {recursive: true});
-	fs.writeFileSync(path.join(library, 'index.js'), "['ui.css','components/Field/Field.js','components/Input/Input.js','components/Unused/Unused.js']");
-	fs.writeFileSync(path.join(library, 'components', 'Field', 'Field.js'), "Elemenx.Component('Field', {$Template:'<label><Input /></label>'});");
-	fs.writeFileSync(path.join(library, 'components', 'Input', 'Input.js'), "Elemenx.Component('Input', {$Template:'<input>'});");
-	fs.writeFileSync(path.join(library, 'components', 'Unused', 'Unused.js'), "Elemenx.Component('Unused', {$Template:'<aside>unused</aside>'});");
-	fs.writeFileSync(path.join(library, 'ui.css'), ':root{--ui:1}');
-	fs.writeFileSync(path.join(root, 'app.js'), "Elemenx.Library('UI', {$Root:'libraries/UI'});\nElemenx.Application('FooApp', {$Use:['UI'],$Component:'FooRoot',$Root:'FooApp',$Mount:'#foo'});");
 
-	Builder.Build(root, {application: 'FooApp', entry: 'app.js', index: 'index.html', out: 'dist'});
+	it('tree-shakes unused Library Components and keeps transitive Component dependencies', function () {
+		var root = project();
+		application(root, 'FooApp', 'FooRoot');
+		fs.writeFileSync(path.join(root, 'FooApp', 'FooRoot', 'FooRoot.html'), '<div><Field /></div>');
+		var library = path.join(root, 'libraries', 'UI');
+		fs.mkdirSync(path.join(library, 'components', 'Field'), {recursive: true});
+		fs.mkdirSync(path.join(library, 'components', 'Input'), {recursive: true});
+		fs.mkdirSync(path.join(library, 'components', 'Unused'), {recursive: true});
+		fs.writeFileSync(path.join(library, 'index.js'), "['ui.css','components/Field/Field.js','components/Input/Input.js','components/Unused/Unused.js']");
+		fs.writeFileSync(path.join(library, 'components', 'Field', 'Field.js'), "Elemenx.Component('Field', {$Template:'<label><Input /></label>'});");
+		fs.writeFileSync(path.join(library, 'components', 'Input', 'Input.js'), "Elemenx.Component('Input', {$Template:'<input>'});");
+		fs.writeFileSync(path.join(library, 'components', 'Unused', 'Unused.js'), "Elemenx.Component('Unused', {$Template:'<aside>unused</aside>'});");
+		fs.writeFileSync(path.join(library, 'ui.css'), ':root{--ui:1}');
+		fs.writeFileSync(path.join(root, 'app.js'), "Elemenx.Library('UI', {$Root:'libraries/UI'});\nElemenx.Application('FooApp', {$Use:['UI'],$Component:'FooRoot',$Root:'FooApp',$Mount:'#foo'});");
 
-	var bundle = fs.readFileSync(path.join(root, 'dist', 'app.js'), 'utf8');
-	expect(bundle).toContain('"Field"');
-	expect(bundle).toContain('"Input"');
-	expect(bundle).not.toContain('"Unused"');
-	expect(fs.existsSync(path.join(root, 'dist', 'libraries', 'UI', 'ui.css'))).toBe(true);
+		Builder.Build(root, {application: 'FooApp', entry: 'app.js', index: 'index.html', out: 'dist'});
+
+		var bundle = fs.readFileSync(path.join(root, 'dist', 'app.js'), 'utf8');
+		expect(bundle).toContain('"Field"');
+		expect(bundle).toContain('"Input"');
+		expect(bundle).not.toContain('"Unused"');
+		expect(fs.existsSync(path.join(root, 'dist', 'libraries', 'UI', 'ui.css'))).toBe(true);
+	});
+
+	it('resolves the built-in ElemenxUI Library from $Use without an explicit declaration', function () {
+		var declarations=Builder.LibraryDeclarations(project(), "Elemenx.Application('FooApp', {$Use:['ElemenxUI']});");
+
+		expect(declarations.length).toBe(1);
+		expect(declarations[0].Name).toBe('ElemenxUI');
+		expect(declarations[0].Root).toBe('libraries/UI');
+		expect(fs.existsSync(path.join(declarations[0].Directory,'index.js'))).toBe(true);
+	});
 });

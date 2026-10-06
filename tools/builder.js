@@ -299,78 +299,124 @@ function libraryDeclarations (project, appSource) {
 	var pattern = /\bElemenx\.Library\s*\(\s*(['"])([^'"]+)\1\s*,\s*\{([\s\S]*?)(?:\$Root|Root)\s*:\s*(['"])([^'"]+)\4([\s\S]*?)\}\s*\)/g;
 	var match;
 	var packageRoot = path.resolve(__dirname, '..');
+	
 	while ((match = pattern.exec(appSource))) {
 		var configured = match[5];
 		var directory = path.resolve(project, configured);
-		if (!fs.existsSync(path.join(directory, 'index.js'))) directory = path.resolve(packageRoot, configured);
+		
+		if (!fs.existsSync(path.join(directory, 'index.js')))
+			directory = path.resolve(packageRoot, configured);
+		
 		if (!fs.existsSync(path.join(directory, 'index.js'))) continue;
+		
 		result.push({Name: match[2], Root: configured, Directory: directory});
 		names[match[2]] = true;
 	}
+	
 	var usePattern = /(?:\$Use|Use)\s*:\s*(?:\[([\s\S]*?)\]|(['"])([^'"]+)\2)/g;
+	
 	while ((match = usePattern.exec(appSource))) {
 		var body = match[1] || (match[3] ? JSON.stringify(match[3]) : '');
 		var itemPattern = /(['"])([^'"]+)\1/g;
 		var item;
+		
 		while ((item = itemPattern.exec(body))) {
-			if (item[2] === 'UI' && !names.UI) {
-				result.push({Name: 'UI', Root: 'libraries/UI', Directory: path.resolve(packageRoot, 'libraries/UI')});
-				names.UI = true;
+			if (item[2] === 'ElemenxUI' && !names.ElemenxUI) {
+				result.push({Name: 'ElemenxUI', Root: 'libraries/UI', Directory: path.resolve(packageRoot, 'libraries/UI')});
+				names.ElemenxUI = true;
 			}
 		}
 	}
+	
 	return result;
 }
+
 function libraryRoots (project, appSource) {
 	var declarations = libraryDeclarations(project, appSource);
 	var roots = [];
 	var i = 0;
-	while (i < declarations.length) { roots.push(declarations[i].Root); i++; }
+	
+	while (i < declarations.length) {
+		roots.push(declarations[i].Root);
+		
+		i++;
+	}
+	
 	return unique(roots);
 }
 
 function sourceUsesComponent (source, name) {
 	var escaped = String(name).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+	
 	return new RegExp('<\\s*' + escaped + '(?:\\s|/?>)').test(source || '');
 }
 
 function selectLibraryEntities (entities, catalog) {
 	var type;
+	
 	for (type in catalog) {
 		if (!Object.prototype.hasOwnProperty.call(catalog, type) || type === 'Component') continue;
 		if (!entities[type]) entities[type] = {};
+		
 		var names = Object.keys(catalog[type]);
 		var ni = 0;
-		while (ni < names.length) { if (!entities[type][names[ni]]) entities[type][names[ni]] = catalog[type][names[ni]]; ni++; }
+		
+		while (ni < names.length) {
+			if (!entities[type][names[ni]])
+				entities[type][names[ni]] = catalog[type][names[ni]];
+			
+			ni++;
+		}
 	}
+	
 	if (!catalog.Component) return;
+	
 	var changed = true;
+	
 	while (changed) {
 		changed = false;
+		
 		var available = Object.keys(catalog.Component);
 		var sources = [];
 		var types = Object.keys(entities);
 		var ti = 0;
+		
 		while (ti < types.length) {
 			var current = entities[types[ti]];
 			var currentNames = Object.keys(current);
 			var ci = 0;
-			while (ci < currentNames.length) { sources.push(current[currentNames[ci]]); ci++; }
+			
+			while (ci < currentNames.length) {
+				sources.push(current[currentNames[ci]]);
+				
+				ci++;
+			}
+			
 			ti++;
 		}
+		
 		var ai = 0;
+		
 		while (ai < available.length) {
 			var name = available[ai];
+			
 			if (!entities.Component || !entities.Component[name]) {
 				var si = 0;
+				
 				while (si < sources.length) {
 					if (sourceUsesComponent(sources[si], name)) {
 						if (!entities.Component) entities.Component = {};
-						entities.Component[name] = catalog.Component[name]; changed = true; break;
+						
+						entities.Component[name] = catalog.Component[name];
+						changed = true;
+						
+						break;
 					}
+					
 					si++;
 				}
 			}
+			
 			ai++;
 		}
 	}
@@ -378,14 +424,21 @@ function selectLibraryEntities (entities, catalog) {
 
 function libraryStyles (directory, root, result, visited) {
 	var absolute = path.resolve(directory);
+	
 	if (visited[absolute]) return;
 	visited[absolute] = true;
+	
 	var entries = readIndex(absolute);
 	var i = 0;
+	
 	while (i < entries.length) {
 		var target = path.resolve(absolute, entries[i]);
-		if (/\.css$/i.test(entries[i])) result.push({Source: target, Relative: path.relative(root, target)});
-		else if (!/\.js$/i.test(entries[i])) libraryStyles(target, root, result, visited);
+		
+		if (/\.css$/i.test(entries[i]))
+			result.push({Source: target, Relative: path.relative(root, target)});
+		else if (!/\.js$/i.test(entries[i]))
+			libraryStyles(target, root, result, visited);
+		
 		i++;
 	}
 }
@@ -393,23 +446,34 @@ function libraryStyles (directory, root, result, visited) {
 function copyLibraryStyles (output, declarations) {
 	var hrefs = [];
 	var i = 0;
+	
 	while (i < declarations.length) {
 		var declaration = declarations[i];
 		var styles = [];
+		
 		libraryStyles(declaration.Directory, declaration.Directory, styles, {});
+		
 		var si = 0;
+		
 		while (si < styles.length) {
-			if (!fs.existsSync(styles[si].Source)) fail('Library style not found: ' + styles[si].Source);
+			if (!fs.existsSync(styles[si].Source))
+				fail('Library style not found: ' + styles[si].Source);
+			
 			var target = path.resolve(output, declaration.Root, styles[si].Relative);
+			
 			fs.mkdirSync(path.dirname(target), {recursive: true});
 			fs.copyFileSync(styles[si].Source, target);
 			hrefs.push('/' + declaration.Root.replace(/^\/+|\/+$/g, '') + '/' + styles[si].Relative.replace(/\\/g, '/'));
+			
 			si++;
 		}
+		
 		i++;
 	}
+	
 	return unique(hrefs);
 }
+
 function applicationDirectories (project, roots) {
 	var result = [];
 	var i = 0;
