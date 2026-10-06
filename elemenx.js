@@ -7755,7 +7755,9 @@
 			};
 			
 			NetworkLifecycle(api);
+			
 			events = NetworkEvents(api);
+			
 			return api;
 		}
 		
@@ -7802,6 +7804,7 @@
 			function transport (type, value) {
 				if (type === 'Open' && api && api._LifecycleConnected) api._LifecycleConnected();
 				if (type === 'Close' && api && api._LifecycleClosed) api._LifecycleClosed();
+				
 				return events.Emit('Transport', type, value);
 			}
 			
@@ -8101,8 +8104,7 @@
 					controller = null;
 					
 					if (currentReader)
-						currentReader.cancel().catch(function () {
-						});
+						currentReader.cancel().catch(function () { });
 					
 					if (currentController)
 						currentController.abort();
@@ -8370,8 +8372,8 @@
 				
 				Connect: function () {
 					if (active) return api;
-					
 					active = true;
+					
 					var currentGeneration = ++generation;
 					
 					transport('BeforeConnect', {
@@ -8444,6 +8446,7 @@
 			function transport (type, data) {
 				if (type === 'Open' && api && api._LifecycleConnected) api._LifecycleConnected();
 				if (type === 'Close' && api && api._LifecycleClosed) api._LifecycleClosed();
+				
 				return events.Emit('Transport', type, data);
 			}
 			
@@ -8621,6 +8624,7 @@
 				if (phase === value) return;
 				
 				phase = value;
+				
 				emit('Phase', {
 					ID: transferID,
 					Phase: value,
@@ -8741,6 +8745,7 @@
 				if (!transport || typeof transport.On !== 'function') return;
 				
 				transport.On(name, callback);
+				
 				wholeListeners.push({Name: name, Callback: callback});
 			}
 			
@@ -8978,7 +8983,9 @@
 										});
 										
 										scheduleRetry(flight, currentGeneration);
+										
 										pump(currentGeneration);
+										
 										chunkProgress();
 									});
 								}
@@ -9008,16 +9015,18 @@
 				
 				if (packet.Action === 'Ack') {
 					flight = inFlight[packet.Index];
-					
 					if (!flight) return;
 					
 					clearFlight(flight);
 					
 					delete inFlight[packet.Index];
+					
 					acknowledged += flight.Bytes;
+					
 					loaded = acknowledged;
 					
 					chunkProgress();
+					
 					pump(generation);
 					
 					return;
@@ -9035,6 +9044,7 @@
 					loaded = total;
 					
 					responseCompletedAt = Date.now();
+					
 					if (!sendCompletedAt)
 						sendCompletedAt = responseCompletedAt;
 					
@@ -9133,11 +9143,18 @@
 							
 							loaded = total;
 							active = false;
+							
 							clearWholeListeners();
 							
-							if (!sendCompletedAt) sendCompletedAt = Date.now();
-							if (!responseStartedAt) responseStartedAt = Date.now();
-							if (!responseCompletedAt) responseCompletedAt = Date.now();
+							if (!sendCompletedAt)
+								sendCompletedAt = Date.now();
+							
+							if (!responseStartedAt)
+								responseStartedAt = Date.now();
+							
+							if (!responseCompletedAt)
+								responseCompletedAt = Date.now();
+							
 							setPhase('Complete');
 							
 							emit('Complete', {
@@ -9434,6 +9451,7 @@
 				if (!transport || typeof transport.On !== 'function') return;
 				
 				transport.On(name, callback);
+				
 				listeners.push({Name: name, Callback: callback});
 			}
 			
@@ -9447,6 +9465,7 @@
 				var i = 0;
 				while (i < listeners.length) {
 					transport.Off(listeners[i].Name, listeners[i].Callback);
+					
 					i++;
 				}
 				
@@ -9484,10 +9503,14 @@
 				active = false;
 				paused = false;
 				
-				if (!expected) expected = loaded;
+				if (!expected)
+					expected = loaded;
 				
 				setPhase('Complete');
-				if (api._LifecycleClosed) api._LifecycleClosed();
+				
+				if (api._LifecycleClosed)
+					api._LifecycleClosed();
+				
 				clearListeners();
 				
 				emit('Complete', {
@@ -9517,6 +9540,7 @@
 				paused = false;
 				
 				setPhase(type, value);
+				
 				clearListeners();
 				
 				emit(type, {
@@ -9542,7 +9566,9 @@
 					loaded = 0;
 					
 					setPhase('Receiving', packet);
-					if (api._LifecycleConnected) api._LifecycleConnected();
+					
+					if (api._LifecycleConnected)
+						api._LifecycleConnected();
 					
 					emit('Start', {
 						ID: transferID,
@@ -9644,6 +9670,7 @@
 					if (nativeEvent.lengthComputable && typeof nativeEvent.total === 'number') expected = nativeEvent.total;
 					
 					setPhase('Receiving', event);
+					
 					progress();
 				});
 				
@@ -9743,6 +9770,7 @@
 				outbound.On('Transfer', function (event) {
 					phase = outbound.Phase();
 					active = outbound.Active();
+					
 					events.Emit('Transfer', event.Type, event.Data);
 				});
 				
@@ -9842,6 +9870,7 @@
 					if (outbound || !active || paused || !transport || typeof transport.Pause !== 'function') return api;
 					
 					paused = true;
+					
 					transport.Pause();
 					
 					emit('Pause', {
@@ -10031,9 +10060,11 @@
 					};
 					
 					emit('Complete', result);
+					
 					if (result.Blob.type === 'application/x-elemenx-structured') {
 						NetworkStructuredUnpack(result.Blob).then(function (value) {
 							result.Data = value;
+							
 							emit('Receive', result);
 						}).catch(function (error) { emit('Error', {ID: result.ID, Error: error}); });
 					}
@@ -10052,7 +10083,9 @@
 			api = {
 				Transport: function (value) {
 					unbindTransport();
+					
 					transport = value;
+					
 					bindTransport();
 					
 					return api;
@@ -10111,6 +10144,7 @@
 			function transport (type, data) {
 				if (type === 'Open' && api && api._LifecycleConnected) api._LifecycleConnected();
 				if (type === 'Close' && api && api._LifecycleClosed) api._LifecycleClosed();
+				
 				return events.Emit('Transport', type, data);
 			}
 			
@@ -10398,6 +10432,7 @@
 			function transport (type, data) {
 				if (type === 'Open' && api && api._LifecycleConnected) api._LifecycleConnected();
 				if (type === 'Close' && api && api._LifecycleClosed) api._LifecycleClosed();
+				
 				return events.Emit('Transport', type, data);
 			}
 			
@@ -10448,6 +10483,7 @@
 				
 				if (saturated && pressure <= queueLowWaterMark) {
 					saturated = false;
+					
 					transport('Drain', {
 						BufferedAmount: channel ? channel.bufferedAmount : 0,
 						Queued: sendQueue.length,
@@ -10486,7 +10522,9 @@
 						});
 						
 						channel.send(item.Data);
+						
 						sendQueue.shift();
+						
 						queuedBytes -= item.Bytes;
 						
 						transport('AfterSend', {
@@ -10704,13 +10742,8 @@
 					
 					var currentConnection = createConnection();
 					
-					if (initiator !== false) {
-						attachChannel(
-							currentConnection.createDataChannel(channelName, channelConfig),
-							generation,
-							currentConnection
-						);
-					}
+					if (initiator !== false)
+						attachChannel(currentConnection.createDataChannel(channelName, channelConfig), generation, currentConnection);
 					
 					return api;
 				},
@@ -10719,13 +10752,8 @@
 					var currentConnection = createConnection();
 					var currentGeneration = generation;
 					
-					if (!channel) {
-						attachChannel(
-							currentConnection.createDataChannel(channelName, channelConfig),
-							currentGeneration,
-							currentConnection
-						);
-					}
+					if (!channel)
+						attachChannel(currentConnection.createDataChannel(channelName, channelConfig), currentGeneration, currentConnection);
 					
 					return currentConnection.createOffer().then(function (description) {
 						if (!current(currentGeneration, currentConnection)) return null;
@@ -10747,29 +10775,32 @@
 					var currentConnection = createConnection();
 					var currentGeneration = generation;
 					
-					return currentConnection.setRemoteDescription(description).then(function () {
-						if (!current(currentGeneration, currentConnection)) return null;
-						
-						transport('RemoteDescription', {
-							Description: currentConnection.remoteDescription,
-							Connection: currentConnection
-						});
-						
-						return currentConnection.createAnswer();
-					}).then(function (answer) {
-						if (!answer || !current(currentGeneration, currentConnection)) return null;
-						
-						return currentConnection.setLocalDescription(answer).then(function () {
+					return currentConnection
+						.setRemoteDescription(description)
+						.then(function () {
 							if (!current(currentGeneration, currentConnection)) return null;
 							
-							transport('LocalDescription', {
-								Description: currentConnection.localDescription,
+							transport('RemoteDescription', {
+								Description: currentConnection.remoteDescription,
 								Connection: currentConnection
 							});
 							
-							return currentConnection.localDescription;
+							return currentConnection.createAnswer();
+						})
+						.then(function (answer) {
+							if (!answer || !current(currentGeneration, currentConnection)) return null;
+							
+							return currentConnection.setLocalDescription(answer).then(function () {
+								if (!current(currentGeneration, currentConnection)) return null;
+								
+								transport('LocalDescription', {
+									Description: currentConnection.localDescription,
+									Connection: currentConnection
+								});
+								
+								return currentConnection.localDescription;
+							});
 						});
-					});
 				},
 				
 				AcceptAnswer: function (description) {
@@ -10800,9 +10831,7 @@
 				},
 				
 				Send: function (data) {
-					if (!channel || channel.readyState !== 'open') {
-						return false;
-					}
+					if (!channel || channel.readyState !== 'open') return false;
 					
 					var encoded = encode(data);
 					var bytes = dataSize(encoded);
@@ -10826,6 +10855,7 @@
 					}
 					
 					sendQueue.push({Data: encoded, Bytes: bytes});
+					
 					queuedBytes += bytes;
 					
 					transport('Queued', {
@@ -11173,6 +11203,7 @@
 				if (!transport || typeof transport.On !== 'function') return;
 				
 				transport.On(name, callback);
+				
 				bindings.push({Name: name, Callback: callback});
 			}
 			
@@ -11216,7 +11247,9 @@
 					tx += delta;
 					
 					addSample(delta, 0);
+					
 					recordExtrema(now());
+					
 					emit();
 				});
 				bind('Transport.ResponseProgress', function (event) {
@@ -11233,19 +11266,23 @@
 					rx += delta;
 					
 					addSample(0, delta);
+					
 					recordExtrema(now());
+					
 					emit();
 				});
 				bind('Transport.AfterRequest', function () {
 					if (!running) return;
 					
 					endDirection('TX', now());
+					
 					clearRates('TX');
 				});
 				bind('Transport.AfterResponse', function () {
 					if (!running) return;
 					
 					endDirection('RX', now());
+					
 					clearRates('RX');
 				});
 				bind('Transport.AfterSend', function (event) {
@@ -11257,7 +11294,9 @@
 					tx += delta;
 					
 					addSample(delta, 0);
+					
 					recordExtrema(now());
+					
 					emit();
 				});
 				bind('Transport.Data', function (event) {
@@ -11450,6 +11489,7 @@
 			if (!owner || !resource) return resource;
 			if (DestroyedNetworkOwners.has(owner)) {
 				destroyNetworkResource(resource);
+				
 				throw new Error('Elemenx Network owner is destroyed');
 			}
 			
@@ -11744,10 +11784,8 @@
 				
 				Namespace: function (name) {
 					name = normalizeNamespace(name);
-					if (!name)
-						return createWebStorage(storage, prefix);
 					
-					return createWebStorage(storage, prefix + name + '.');
+					return createWebStorage(storage, prefix + (name ? (name + '.') : ''));
 				}
 			};
 		}
@@ -11867,10 +11905,8 @@
 				
 				Namespace: function (name) {
 					name = normalizeNamespace(name);
-					if (!name)
-						return createCookieStorage(prefix);
 					
-					return createCookieStorage(prefix + name + '.');
+					return createCookieStorage(prefix + (name ? (name + '.') : ''));
 				}
 			};
 		}
@@ -12421,6 +12457,7 @@
 					
 					return createStorageOperation(function (success, error) {
 						self.Close();
+						
 						var request = global.indexedDB.deleteDatabase(name);
 						
 						request.onsuccess = function () {
@@ -12625,22 +12662,35 @@
 		
 		function Pipe (name, factory) {
 			name = String(name);
-			if (arguments.length === 1) return pipeTypes[name] || null;
-			if (typeof factory !== 'function') throw new Error('Elemenx Pipe factory must be a function');
+			
+			if (arguments.length === 1)
+				return pipeTypes[name] || null;
+			
+			if (typeof factory !== 'function')
+				throw new Error('Elemenx Pipe factory must be a function');
+			
 			pipeTypes[name] = factory;
+			
 			return Elemenx;
 		}
 		
 		function pipeDescriptor (descriptor) {
 			if (!descriptor || typeof descriptor !== 'object' || Array.isArray(descriptor))
 				throw new Error('Elemenx Pipe descriptor must be an object');
+			
 			var names = Object.keys(descriptor);
-			if (names.length !== 1) throw new Error('Elemenx Pipe descriptor must contain exactly one Pipe');
+			if (names.length !== 1)
+				throw new Error('Elemenx Pipe descriptor must contain exactly one Pipe');
+			
 			var name = names[0];
 			var factory = pipeTypes[name];
-			if (!factory) throw new Error('Elemenx Pipe is not registered: ' + name);
+			if (!factory)
+				throw new Error('Elemenx Pipe is not registered: ' + name);
+			
 			var instance = factory(descriptor[name]);
-			if (!instance || typeof instance.Use !== 'function') throw new Error('Elemenx Pipe must provide Use(value, pass)');
+			if (!instance || typeof instance.Use !== 'function')
+				throw new Error('Elemenx Pipe must provide Use(value, pass)');
+			
 			return instance;
 		}
 		
@@ -12648,31 +12698,45 @@
 			var pipes = [];
 			var destroyed = false;
 			var i = 0;
+			
 			while (i < descriptors.length) {
 				pipes.push(pipeDescriptor(descriptors[i]));
+				
 				i++;
 			}
+			
 			return {
 				Use: function (value, pass) {
 					if (destroyed) return;
+					
 					function next (index, current) {
 						if (destroyed) return;
+						
 						if (index >= pipes.length) {
 							pass(current);
+							
 							return;
 						}
+						
 						pipes[index].Use(current, function (output) { next(index + 1, output); });
 					}
+					
 					next(0, value);
 				},
 				Destroy: function () {
 					if (destroyed) return;
+					
 					destroyed = true;
+					
 					var j = 0;
 					while (j < pipes.length) {
-						if (typeof pipes[j].Destroy === 'function') pipes[j].Destroy();
+						if (typeof pipes[j].Destroy === 'function') {
+							pipes[j].Destroy();
+						}
+						
 						j++;
 					}
+					
 					pipes = [];
 				}
 			};
@@ -12680,81 +12744,112 @@
 		
 		Pipe('Debouncer', function (threshold) {
 			threshold = Math.max(1, Number(threshold) || 1);
+			
 			var hasCurrent = false;
 			var current;
 			var target;
 			var targetCount = 0;
+			
 			return {Use:function (event, pass) {
 				var value = event.Data;
+				
 				if (hasCurrent && value === current) {
 					target = undefined;
 					targetCount = 0;
+					
 					return;
 				}
+				
 				if (value !== target) {
 					target = value;
 					targetCount = 1;
 				}
 				else targetCount++;
+				
 				if (targetCount < threshold) return;
+				
 				hasCurrent = true;
 				current = target;
 				target = undefined;
 				targetCount = 0;
+				
 				pass(event);
 			}};
 		});
 		
 		Pipe('Filter', function (size) {
 			size = Math.max(1, Number(size) || 1);
+			
 			var samples = [];
+			
 			return {Use:function (event, pass) {
 				samples.push(event);
 				if (samples.length < size) return;
+				
 				var best = samples[0];
 				var bestCount = 0;
 				var i = 0;
+				
 				while (i < samples.length) {
 					var count = 0;
 					var j = 0;
+					
 					while (j < samples.length) {
-						if (samples[j].Data === samples[i].Data) count++;
+						if (samples[j].Data === samples[i].Data) {
+							count++;
+						}
+						
 						j++;
 					}
+					
 					if (count > bestCount) {
 						best = samples[i];
 						bestCount = count;
 					}
+					
 					i++;
 				}
+				
 				samples = [];
+				
 				pass(best);
 			}};
 		});
 		
 		Pipe('Gate', function (timeout) {
 			timeout = Math.max(0, Number(timeout) || 0);
+			
 			var timer = null;
 			var pending = null;
+			
 			return {
 				Use:function (event, pass) {
 					if (!event.Data) {
-						if (timer !== null) clearTimeout(timer);
+						if (timer !== null)
+							clearTimeout(timer);
+						
 						timer = null;
 						pending = null;
+						
 						return;
 					}
+					
 					if (timer !== null) return;
+					
 					pending = event;
 					timer = setTimeout(function () {
 						var output = pending;
 						timer = null;
 						pending = null;
-						if (output) pass(output);
+						
+						if (output)
+							pass(output);
 					}, timeout);
 				},
 				Destroy:function () {
-					if (timer !== null) clearTimeout(timer);
+					if (timer !== null)
+						clearTimeout(timer);
+					
 					timer = null;
 					pending = null;
 				}
@@ -12771,22 +12866,39 @@
 			
 			event.Is = function (name, pipes, handler) {
 				if (event.Channel !== String(name)) return false;
+				
 				if (typeof pipes === 'function') {
 					handler = pipes;
 					pipes = null;
 				}
+				
 				if (!pipes) {
-					if (typeof handler === 'function') handler(event);
+					if (typeof handler === 'function') {
+						handler(event);
+					}
+					
 					return true;
 				}
-				if (!Array.isArray(pipes)) pipes = [pipes];
-				if (typeof handler !== 'function') throw new Error('Elemenx Event.Is pipeline requires a handler');
-				if (!context || !context.Socket) throw new Error('Elemenx Event.Is pipeline requires an Events delivery context');
+				
+				if (!Array.isArray(pipes)) {
+					pipes = [pipes];
+				}
+				
+				if (typeof handler !== 'function')
+					throw new Error('Elemenx Event.Is pipeline requires a handler');
+				
+				if (!context || !context.Socket)
+					throw new Error('Elemenx Event.Is pipeline requires an Events delivery context');
+				
 				var index = context.Index++;
+				
 				context.Socket.Pipe(context.Slot + ':' + index, pipes, event, handler);
+				
 				return true;
 			};
+			
 			event._Context = function (value) { context = value; };
+			
 			return event;
 		}
 		
@@ -12798,61 +12910,94 @@
 			var api;
 			
 			function ensure () {
-				if (destroyed) throw new Error('Elemenx Events Socket is destroyed');
+				if (destroyed)
+					throw new Error('Elemenx Events Socket is destroyed');
 			}
 			
 			function On (channel, callback) {
 				ensure();
+				
 				channel = String(channel);
-				if (typeof callback !== 'function') throw new Error('Elemenx Events.On callback must be a function');
-				if (!subscriptions[channel]) subscriptions[channel] = [];
-				if (subscriptions[channel].indexOf(callback) === -1) subscriptions[channel].push(callback);
+				
+				if (typeof callback !== 'function')
+					throw new Error('Elemenx Events.On callback must be a function');
+				
+				if (!subscriptions[channel])
+					subscriptions[channel] = [];
+				
+				if (subscriptions[channel].indexOf(callback) === -1) {
+					subscriptions[channel].push(callback);
+				}
+				
 				return api;
 			}
 			
 			function Off (channel, callback) {
 				ensure();
+				
 				channel = String(channel);
+				
 				var list = subscriptions[channel];
 				if (!list) return api;
+				
 				if (!callback) {
 					delete subscriptions[channel];
+					
 					return api;
 				}
+				
 				var index = list.indexOf(callback);
-				if (index !== -1) list.splice(index, 1);
-				if (!list.length) delete subscriptions[channel];
+				
+				if (index !== -1)
+					list.splice(index, 1);
+				
+				if (!list.length)
+					delete subscriptions[channel];
+				
 				return api;
 			}
 			
 			function Emit (channel, data) {
 				ensure();
+				
 				var event = Event(api, channel, data);
 				var copy = sockets.slice(0);
 				var i = 0;
+				
 				while (i < copy.length) {
 					copy[i].Deliver(event);
+					
 					i++;
 				}
+				
 				return api;
 			}
 			
 			function PipeEvent (rule, descriptors, event, handler) {
 				var key = event.Channel + ':' + rule;
-				if (!pipelines[key]) pipelines[key] = Pipeline(descriptors);
+				
+				if (!pipelines[key])
+					pipelines[key] = Pipeline(descriptors);
+				
 				pipelines[key].Use(event, handler);
 			}
 			
 			function Deliver (event) {
 				if (destroyed) return;
+				
 				var list = subscriptions[event.Channel];
 				if (!list || !list.length) return;
+				
 				var copy = list.slice(0);
 				var i = 0;
+				
 				while (i < copy.length) {
 					event._Context({Socket:api, Slot:i, Index:0});
+					
 					copy[i](event);
+					
 					event._Context(null);
+					
 					i++;
 				}
 			}
@@ -12863,28 +13008,42 @@
 			
 			function Destroy () {
 				if (destroyed) return;
+				
 				destroyed = true;
+				
 				var index = sockets.indexOf(api);
 				if (index !== -1) sockets.splice(index, 1);
+				
 				if (owner && owners.has(owner)) {
 					var list = owners.get(owner);
+					
 					index = list.indexOf(api);
-					if (index !== -1) list.splice(index, 1);
+					
+					if (index !== -1)
+						list.splice(index, 1);
 				}
+				
 				var keys = Object.keys(pipelines);
 				var i = 0;
+				
 				while (i < keys.length) {
 					pipelines[keys[i]].Destroy();
+					
 					i++;
 				}
+				
 				pipelines = {};
 				subscriptions = {};
 			}
 			
 			api = {ID:id, On:On, Off:Off, Emit:Emit, Channels:Channels, Destroy:Destroy, Deliver:Deliver, Pipe:PipeEvent};
+			
 			sockets.push(api);
+			
 			if (owner) {
-				if (!owners.has(owner)) owners.set(owner, []);
+				if (!owners.has(owner))
+					owners.set(owner, []);
+				
 				owners.get(owner).push(api);
 			}
 			return api;
@@ -12899,7 +13058,9 @@
 		Elemenx.Events = Events;
 		Runtime.EventsFor = function (owner) {
 			return function () {
-				if (destroyedOwners.has(owner)) throw new Error('Elemenx Events owner is destroyed');
+				if (destroyedOwners.has(owner))
+					throw new Error('Elemenx Events owner is destroyed');
+				
 				return EventsSocket(owner);
 			};
 		};
@@ -12907,26 +13068,42 @@
 			var channels = definition && definition.$Events;
 			var handler = definition && definition.$OnEvent;
 			if (!channels) return null;
-			if (!Array.isArray(channels)) channels = [channels];
+			
+			if (!Array.isArray(channels)) {
+				channels = [channels];
+			}
+			
 			var socket = Runtime.EventsFor(owner)();
 			var i = 0;
+			
 			while (i < channels.length) {
-				if (typeof channels[i] !== 'string') throw new Error('Elemenx $Events expects channel names as strings');
+				if (typeof channels[i] !== 'string')
+					throw new Error('Elemenx $Events expects channel names as strings');
+				
 				(function (channel) {
 					socket.On(channel, function (event) {
-						if (typeof handler === 'function') handler.call(owner, event);
+						if (typeof handler === 'function') {
+							handler.call(owner, event);
+						}
 					});
 				})(channels[i]);
+				
 				i++;
 			}
+			
 			return socket;
 		};
 		Runtime.DestroyEventsOwner = function (owner) {
 			if (!owner || destroyedOwners.has(owner)) return;
+			
 			destroyedOwners.add(owner);
+			
 			var list = owners.get(owner);
 			if (!list) return;
-			while (list.length) list[0].Destroy();
+			
+			while (list.length)
+				list[0].Destroy();
+			
 			owners.delete(owner);
 		};
 	})(typeof globalThis !== 'undefined' ? globalThis : self);
@@ -12992,7 +13169,9 @@
 				
 				if (transfer && transfer.length) {
 					while (i < bridgeCopy.length) {
-						if (bridgeCopy[i] !== origin && bridgeCopy[i].Transferable !== false) remoteCount++;
+						if (bridgeCopy[i] !== origin && bridgeCopy[i].Transferable !== false) {
+							remoteCount++;
+						}
 						
 						i++;
 					}
@@ -13296,26 +13475,44 @@
 				};
 				message.Is = function (name, pipes, handler) {
 					if (message.Channel !== String(name)) return false;
+					
 					if (typeof pipes === 'function') {
 						handler = pipes;
 						pipes = null;
 					}
+					
 					if (!pipes) {
-						if (typeof handler === 'function') handler(message);
+						if (typeof handler === 'function') {
+							handler(message);
+						}
+						
 						return true;
 					}
-					if (!Array.isArray(pipes)) pipes = [pipes];
-					if (typeof handler !== 'function') throw new Error('Elemenx Message.Is pipeline requires a handler');
-					if (!context || !context.Socket) throw new Error('Elemenx Message.Is pipeline requires a Messaging delivery context');
+					
+					if (!Array.isArray(pipes)) {
+						pipes = [pipes];
+					}
+					
+					if (typeof handler !== 'function')
+						throw new Error('Elemenx Message.Is pipeline requires a handler');
+					
+					if (!context || !context.Socket)
+						throw new Error('Elemenx Message.Is pipeline requires a Messaging delivery context');
+					
 					var index = context.Index++;
+					
 					context.Socket.Pipe(context.Slot + ':' + index, pipes, message, handler);
+					
 					return true;
 				};
 				
 				while (i < callbacks.length) {
 					context = {Socket:api, Slot:i, Index:0};
+					
 					callbacks[i](message);
+					
 					context = null;
+					
 					i++;
 				}
 			}
@@ -13326,14 +13523,18 @@
 				
 				var keys = Object.keys(pipelines);
 				var p = 0;
+				
 				while (p < keys.length) {
 					pipelines[keys[p]].Destroy();
+					
 					p++;
 				}
+				
 				pipelines = {};
 				subscriptions = {};
 				automatic = {};
 				ownCallbacks = [];
+				
 				messagingFabric.Remove(api);
 				
 				if (owner) {
@@ -13341,7 +13542,9 @@
 					
 					if (list) {
 						var i = list.indexOf(api);
-						if (i !== -1) list.splice(i, 1);
+						
+						if (i !== -1)
+							list.splice(i, 1);
 					}
 				}
 			}
@@ -13417,6 +13620,7 @@
 			
 			if (typeof target === 'string') {
 				var root = owner && typeof owner.$Element === 'function' ? owner.$Element() : global.document;
+				
 				if (root && root.matches && root.matches(target)) target = root;
 				else target = root && root.querySelector ? root.querySelector(target) : null;
 			}
@@ -13428,10 +13632,12 @@
 			
 			options = options || {};
 			origin = options.Origin;
+			
 			if (origin === undefined || origin === null || origin === '') {
 				origin = global.location && global.location.origin ? global.location.origin : '*';
 				if (origin === 'null') origin = '*';
 			}
+			
 			origin = String(origin);
 			active = options.Active !== false;
 			
@@ -13444,30 +13650,40 @@
 				postMessage: function (packet, transfer) {
 					if (!active) {
 						pending.push({Packet:packet,Transfer:transfer});
+						
 						return;
 					}
+					
 					if (transfer && transfer.length) target.postMessage(packet, origin, transfer);
 					else target.postMessage(packet, origin);
 				},
 				addEventListener: function (event, callback) {
 					var wrapper;
 					if (event !== 'message') return;
+					
 					wrapper = function (messageEvent) {
 						if (messageEvent.source !== target) return;
 						if (origin !== '*' && messageEvent.origin !== origin) return;
+						
 						callback(messageEvent);
 					};
+					
 					handlers.push({Callback:callback,Wrapper:wrapper});
+					
 					global.addEventListener('message', wrapper);
 				},
 				removeEventListener: function (event, callback) {
-					var i = handlers.length - 1;
 					if (event !== 'message') return;
+					
+					var i = handlers.length - 1;
+					
 					while (i >= 0) {
 						if (handlers[i].Callback === callback) {
 							global.removeEventListener('message', handlers[i].Wrapper);
+							
 							handlers.splice(i, 1);
 						}
+						
 						i--;
 					}
 				}
@@ -13476,28 +13692,39 @@
 			bridge = messagingFabric.Bridge(endpoint, {Transferable:options.Transferable !== false});
 			
 			function Activate () {
-				var item;
 				if (destroyed || active) return handle;
+				
 				active = true;
+				
+				var item;
+				
 				if (announcementTimer !== null) {
 					global.clearTimeout(announcementTimer);
+					
 					announcementTimer = null;
 				}
+				
 				while (pending.length) {
 					item = pending.shift();
+					
 					if (item.Transfer && item.Transfer.length) target.postMessage(item.Packet, origin, item.Transfer);
 					else target.postMessage(item.Packet, origin);
 				}
+				
 				return handle;
 			}
 
 			function Announce () {
 				if (destroyed || active) return handle;
+				
 				WindowAnnouncement(target);
+				
 				if (announcementTimer === null) {
 					announcementTimer = global.setTimeout(function RetryAnnouncement () {
 						announcementTimer = null;
+						
 						if (destroyed || active) return;
+						
 						Announce();
 					}, 50);
 				}
@@ -13511,26 +13738,37 @@
 				Activate: Activate,
 				Announce: Announce,
 				Destroy: function () {
-					var list;
-					var index;
 					if (destroyed) return;
 					destroyed = true;
+					
 					if (announcementTimer !== null) {
 						global.clearTimeout(announcementTimer);
+						
 						announcementTimer = null;
 					}
+					
 					pending = [];
+					
 					bridge.Destroy();
+					
 					bridge = null;
+					
 					if (windowBridges) {
 						registry = windowBridges.get(target);
-						if (registry && registry[origin] === handle) delete registry[origin];
+						
+						if (registry && registry[origin] === handle) {
+							delete registry[origin];
+						}
 					}
+					
 					if (owner) {
-						list = owners.get(owner);
+						var list = owners.get(owner);
+						
 						if (list) {
-							index = list.indexOf(handle);
-							if (index !== -1) list.splice(index, 1);
+							var index = list.indexOf(handle);
+							
+							if (index !== -1)
+								list.splice(index, 1);
 						}
 					}
 				}
@@ -13538,15 +13776,20 @@
 			
 			if (windowBridges) {
 				registry = windowBridges.get(target);
+				
 				if (!registry) {
 					registry = {};
+					
 					windowBridges.set(target, registry);
 				}
+				
 				registry[origin] = handle;
 			}
 			
 			if (owner) {
-				if (!owners.has(owner)) owners.set(owner, []);
+				if (!owners.has(owner))
+					owners.set(owner, []);
+				
 				owners.get(owner).push(handle);
 			}
 			
@@ -13554,33 +13797,45 @@
 		}
 		
 		function MessagingOriginAllowed (origin) {
-			var ownOrigin = global.location && global.location.origin ? global.location.origin : null;
 			if (!origin) return false;
+			
+			var ownOrigin = global.location && global.location.origin ? global.location.origin : null;
 			if (ownOrigin && ownOrigin !== 'null' && origin === ownOrigin) return true;
+			
 			return messagingOrigins['*'] === true || messagingOrigins[String(origin)] === true;
 		}
 
 		function MessagingOrigins (origins) {
-			var list;
+			if (origins === undefined)
+				return Object.keys(messagingOrigins);
+			
+			var list = Array.isArray(origins) ? origins : [origins];
 			var i = 0;
-			if (origins === undefined) return Object.keys(messagingOrigins);
-			list = Array.isArray(origins) ? origins : [origins];
+			
 			while (i < list.length) {
 				if (list[i] !== undefined && list[i] !== null && String(list[i])) {
 					var trustedOrigin = String(list[i]);
+					
 					messagingOrigins[trustedOrigin] = true;
+					
 					if (Runtime.HasDOM) {
-						if (global.parent && global.parent !== global) WindowBridge(global.parent, {Origin:trustedOrigin,Active:false}, null).Announce();
-						if (global.opener) WindowBridge(global.opener, {Origin:trustedOrigin,Active:false}, null).Announce();
+						if (global.parent && global.parent !== global)
+							WindowBridge(global.parent, {Origin:trustedOrigin,Active:false}, null).Announce();
+						
+						if (global.opener)
+							WindowBridge(global.opener, {Origin:trustedOrigin,Active:false}, null).Announce();
 					}
 				}
+				
 				i++;
 			}
+			
 			return Messaging;
 		}
 
 		function WindowAnnouncement (target) {
 			if (!target || target === global || typeof target.postMessage !== 'function') return;
+			
 			target.postMessage({
 				ElemenxMessagingWindow: 'HELLO',
 				ElemenxMessagingProtocol: 1,
@@ -13600,6 +13855,7 @@
 
 				if (packet.ElemenxMessagingWindow === 'HELLO') {
 					WindowBridge(event.source, {Origin:event.origin}, null).Activate();
+					
 					event.source.postMessage({
 						ElemenxMessagingWindow: 'WELCOME',
 						ElemenxMessagingProtocol: 1,
@@ -13611,8 +13867,12 @@
 				}
 			});
 
-			if (global.parent && global.parent !== global) WindowAnnouncement(global.parent);
-			if (global.opener) WindowAnnouncement(global.opener);
+			if (global.parent && global.parent !== global) {
+				WindowAnnouncement(global.parent);
+			}
+			
+			if (global.opener)
+				WindowAnnouncement(global.opener);
 		}
 
 		function Messaging (context) {
@@ -13622,6 +13882,7 @@
 		Messaging.Context = Context;
 		Messaging.Origins = MessagingOrigins;
 		Messaging.Window = function (target, options) { return WindowBridge(target, options, null); };
+		
 		Elemenx.Messaging = Messaging;
 		
 		Runtime.SetMessagingEntity = function (owner, name, index) {
@@ -13638,23 +13899,24 @@
 				
 				return MessagingSocket(context, owner);
 			};
+			
 			accessor.Window = function (target, options) {
 				if (destroyedOwners.has(owner))
 					throw new Error('Elemenx Messaging owner is destroyed');
+				
 				return WindowBridge(target, options, owner);
 			};
+			
 			return accessor;
 		};
 		
 		Runtime.InitializeMessagingOwner = function (owner, definition) {
 			var declaration = definition && definition.$Messaging;
 			var handler = definition && definition.$OnMessage;
-			var context;
-			var socket;
-			var channels;
-			var i = 0;
 			
 			if (declaration === undefined || declaration === null || declaration === false) return null;
+			
+			var context;
 			
 			if (typeof declaration === 'string') {
 				context = {ID: declaration};
@@ -13667,20 +13929,26 @@
 					Contexts: declaration.Context !== undefined ? declaration.Context : declaration.Contexts,
 					Channels: declaration.Channels || []
 				};
-				if (declaration.ID !== undefined) context.ID = declaration.ID;
+				
+				if (declaration.ID !== undefined) {
+					context.ID = declaration.ID;
+				}
 			}
 			else {
 				throw new Error('Elemenx $Messaging expects an ID string, Channels array or configuration object');
 			}
 			
-			socket = Runtime.MessagingFor(owner)(context);
+			var socket = Runtime.MessagingFor(owner)(context);
 			if (typeof handler !== 'function') return socket;
 			
-			channels = socket.Channels();
+			var channels = socket.Channels();
+			
+			var i = 0;
 			while (i < channels.length) {
 				socket.On(channels[i], function (message) {
 					handler.call(owner, message);
 				});
+				
 				i++;
 			}
 			
@@ -13700,19 +13968,22 @@
 				if (!packet || packet.ElemenxMessagingContext !== true) return;
 				if (packet.ElemenxMessagingProtocol !== 1 || !packet.Runtime) return;
 				if (packet.Runtime === Elemenx.RuntimeID()) return;
+				
 				messagingContexts[packet.Runtime] = true;
-				if (packet.Type === 'HELLO') {
+				
+				if (packet.Type === 'HELLO')
 					Runtime.MessagingBroadcastChannel.postMessage({
 						ElemenxMessagingContext: true,
 						ElemenxMessagingProtocol: 1,
 						Type: 'WELCOME',
 						Runtime: Elemenx.RuntimeID()
 					});
-				}
 			});
+			
 			Runtime.MessagingBroadcastBridge = Runtime.AttachMessagingBridge(Runtime.MessagingBroadcastChannel, {
 				Transferable: false
 			});
+			
 			Runtime.MessagingBroadcastChannel.postMessage({
 				ElemenxMessagingContext: true,
 				ElemenxMessagingProtocol: 1,
@@ -13765,12 +14036,17 @@
 				}
 			}
 			
-			if (result.StartMode === undefined) result.StartMode = 'auto';
+			if (result.StartMode === undefined) {
+				result.StartMode = 'auto';
+			}
+			
 			if (result.StartMode !== 'auto' && result.StartMode !== 'manual' && result.StartMode !== 'lazy') {
 				throw new Error('Elemenx WebWorker StartMode must be auto, manual or lazy: ' + name);
 			}
 			
-			if (result.Channel === undefined) result.Channel = name;
+			if (result.Channel === undefined) {
+				result.Channel = name;
+			}
 			
 			return result;
 		}
@@ -13866,7 +14142,9 @@
 				cleanupNative();
 				
 				manualStopped = false;
+				
 				manualStops.set(api, false);
+				
 				state = 'Starting';
 				
 				Emit('Starting');
@@ -14070,19 +14348,12 @@
 							});
 					},
 					addEventListener: function (event, callback) {
-						var wrapper;
-						
 						if (event !== 'message') return;
 						
-						wrapper = function (messageEvent) {
+						var wrapper = function (messageEvent) {
 							var packet = messageEvent.data;
 							
-							if (
-								packet &&
-								packet.ElemenxMessaging === true &&
-								(packet.ElemenxMessagingProtocol === undefined || packet.ElemenxMessagingProtocol === 1) &&
-								messageEvent.source
-							) {
+							if (packet && packet.ElemenxMessaging === true && (packet.ElemenxMessagingProtocol === undefined || packet.ElemenxMessagingProtocol === 1) && messageEvent.source) {
 								routes[String(packet.Source)] = messageEvent.source.id;
 							}
 							
@@ -14094,9 +14365,9 @@
 						global.addEventListener('message', wrapper);
 					},
 					removeEventListener: function (event, callback) {
-						var i = handlers.length - 1;
-						
 						if (event !== 'message') return;
+						
+						var i = handlers.length - 1;
 						
 						while (i >= 0) {
 							if (handlers[i].Callback === callback) {
@@ -14138,12 +14409,7 @@
 			while (i < copy.length) {
 				handle = copy[i];
 				
-				if (
-					handle.StartMode() === 'lazy' &&
-					handle.State() === 'Stopped' &&
-					handle.Channel() === String(channel) &&
-					manualStops.get(handle) !== true
-				) {
+				if (handle.StartMode() === 'lazy' && handle.State() === 'Stopped' && handle.Channel() === String(channel) && manualStops.get(handle) !== true) {
 					handle.Start();
 				}
 				
@@ -14181,7 +14447,9 @@
 		
 		Runtime.AttachWorkerMessaging = Attach;
 		
-		if (!Runtime.HasDOM && !global.clients) Attach();
+		if (!Runtime.HasDOM && !global.clients) {
+			Attach();
+		}
 		
 	})(typeof globalThis !== 'undefined' ? globalThis : self);
 	
@@ -14247,9 +14515,9 @@
 					global.navigator.serviceWorker.addEventListener('message', wrapper);
 				},
 				removeEventListener: function (event, callback) {
-					var i = handlers.length - 1;
-					
 					if (event !== 'message') return;
+					
+					var i = handlers.length - 1;
 					
 					while (i >= 0) {
 						if (handlers[i].Callback === callback) {
@@ -14361,11 +14629,6 @@
 			}
 			
 			function Register () {
-				var frameworkURL;
-				var scriptURL;
-				var serviceURL;
-				var separator;
-				
 				if (destroyed)
 					throw new Error('Elemenx ServiceWorker handle is destroyed: ' + name);
 				
@@ -14374,10 +14637,11 @@
 				
 				if (state !== 'Unregistered' && state !== 'Error') return api;
 				
-				frameworkURL = absoluteURL(definition.Framework || Runtime.ScriptURL);
-				scriptURL = absoluteURL(definition.Script);
-				serviceURL = frameworkURL;
-				separator = serviceURL.indexOf('?') === -1 ? '?' : '&';
+				var frameworkURL = absoluteURL(definition.Framework || Runtime.ScriptURL);
+				var scriptURL = absoluteURL(definition.Script);
+				var serviceURL = frameworkURL;
+				var separator = serviceURL.indexOf('?') === -1 ? '?' : '&';
+				
 				serviceURL += separator
 					+ 'elemenx_service_worker=1&elemenx_script=' + encodeURIComponent(scriptURL)
 					+ '&elemenx_name=' + encodeURIComponent(name)
@@ -14525,10 +14789,15 @@
 				
 				if (owner) {
 					var owned = owners.get(owner);
+					
 					if (owned) {
 						index = owned.indexOf(api);
-						if (index !== -1) owned.splice(index, 1);
-						if (!owned.length) owners.delete(owner);
+						
+						if (index !== -1)
+							owned.splice(index, 1);
+						
+						if (!owned.length)
+							owners.delete(owner);
 					}
 				}
 			}
@@ -14564,10 +14833,13 @@
 			
 			if (owner) {
 				var owned = owners.get(owner);
+				
 				if (!owned) {
 					owned = [];
+					
 					owners.set(owner, owned);
 				}
+				
 				owned.push(api);
 			}
 			
@@ -14619,6 +14891,7 @@
 				return createHandle(name, definition, owner);
 			};
 		};
+		
 		Runtime.DestroyServiceWorkerOwner = DestroyOwner;
 		
 	})(typeof globalThis !== 'undefined' ? globalThis : self);
@@ -14713,8 +14986,9 @@
 			
 			api.$Title = Elemenx.Title;
 			
-			if (definition.$Title !== undefined)
+			if (definition.$Title !== undefined) {
 				api.$Title(definition.$Title);
+			}
 			
 			api.$Name = function () {
 				return name;
@@ -14741,7 +15015,9 @@
 			};
 			
 			api.$Template = function (templateName, value) {
-				if (arguments.length === 1) return Elemenx.Template(templateName);
+				if (arguments.length === 1)
+					return Elemenx.Template(templateName);
+				
 				return Elemenx.Template(templateName, value);
 			};
 			api.$Template.Has = Elemenx.Template.Has;
@@ -14959,15 +15235,20 @@
 				
 				if (typeof source === 'string' && source.charAt(0) === '#') {
 					var registered = Runtime.Template && Runtime.Template.Get(source.substring(1));
+					
 					if (registered !== null && registered !== undefined) {
 						mount.innerHTML = registered;
+						
 						return;
 					}
 					
 					template = document.querySelector(source);
+					
 					if (template && template.tagName === 'TEMPLATE') {
 						fragment = template.content.cloneNode(true);
+						
 						mount.appendChild(fragment);
+						
 						return;
 					}
 				}
@@ -15092,6 +15373,7 @@
 					var expression;
 
 					if (typeof template !== 'string') return false;
+					
 					expression = /<\s*([A-Za-z][A-Za-z0-9_-]*)\b/g;
 
 					while ((match = expression.exec(template))) {
@@ -15108,17 +15390,18 @@
 							continue;
 
 						childFactory = Runtime.ResolveComponentRegistered(tag);
+						
 						if (!childFactory) {
 							childBundle = Runtime.Bundle && Runtime.Bundle.ResolvedName ? Runtime.Bundle.ResolvedName('Component', tag) : null;
 							if (!childBundle) return false;
 
 							Runtime.Bundle.Load('Component', childBundle);
+							
 							childFactory = Runtime.ResolveComponentRegistered(childBundle);
 							if (!childFactory) return false;
 						}
 
-						if (childFactory.ComponentName && inspected[String(childFactory.ComponentName).toLowerCase()])
-							continue;
+						if (childFactory.ComponentName && inspected[String(childFactory.ComponentName).toLowerCase()]) continue;
 
 						if (childFactory.ComponentName)
 							inspected[String(childFactory.ComponentName).toLowerCase()] = true;
@@ -15131,14 +15414,18 @@
 
 				if (!factory && Runtime.Bundle && Runtime.Bundle.ResolvedName) {
 					bundled = Runtime.Bundle.ResolvedName('Component', definition.$Component);
+					
 					if (bundled) {
 						Runtime.Bundle.Load('Component', bundled);
+						
 						factory = Runtime.ResolveComponentRegistered(definition.$Component);
 					}
 				}
 
 				if (!factory) return false;
-				if (factory.ComponentName) inspected[String(factory.ComponentName).toLowerCase()] = true;
+				
+				if (factory.ComponentName)
+					inspected[String(factory.ComponentName).toLowerCase()] = true;
 
 				return inspectFactory(factory);
 			}
@@ -15155,8 +15442,9 @@
 				if (discoveryRoot && definition.$DefinitionURL && !(/^(?:[a-z]+:)?\/\//i.test(discoveryRoot)) && discoveryRoot.charAt(0) !== '/')
 					discoveryRoot = definition.$DefinitionURL.substring(0, definition.$DefinitionURL.lastIndexOf('/') + 1) + discoveryRoot.replace(/^\.\//, '');
 				
-				if (discoveryRoot && Runtime.Discovery && Runtime.Discovery.Root)
+				if (discoveryRoot && Runtime.Discovery && Runtime.Discovery.Root) {
 					Runtime.Discovery.Root(api, discoveryRoot);
+				}
 				
 				/*
 				 * A fully resolvable registry/bundle graph starts without touching the
@@ -15181,8 +15469,10 @@
 				 * existing host DOM (including parser-owned TemplateID resources) must
 				 * remain available until the root is ready.
 				 */
-				if (definition.$Pending !== undefined && definition.$Pending !== null)
+				if (definition.$Pending !== undefined && definition.$Pending !== null) {
 					applicationStatus(definition.$Pending);
+				}
+				
 				applicationLifecycle('$OnPending', null);
 				
 				Runtime.Discovery.Build(api, discoveryRoot, function (error) {
@@ -15197,6 +15487,7 @@
 						 */
 						if (rootAvailableWithoutDiscovery()) {
 							createRoot();
+							
 							return;
 						}
 						
@@ -15239,14 +15530,28 @@
 				if (typeof definition.$OnReady === 'function')
 					definition.$OnReady.call(api, args);
 			};
+			
 			api.$OnError = definition.$OnError || null;
 			
 			function startRoot () {
 				var use = definition.$Use || definition.Use;
-				if (!use || !Runtime.Library) { startApplicationRoot(); return; }
+				
+				if (!use || !Runtime.Library) {
+					startApplicationRoot();
+					
+					return;
+				}
+				
 				Runtime.Library.Use(api, use, function (error) {
 					if (destroyed) return;
-					if (error) { applicationStatus(definition.$Error || null); applicationLifecycle('$OnError', error); return; }
+					
+					if (error) {
+						applicationStatus(definition.$Error || null);
+						applicationLifecycle('$OnError', error);
+						
+						return;
+					}
+					
 					startApplicationRoot();
 				});
 			}
@@ -15262,7 +15567,8 @@
 		}
 		
 		Elemenx.Application = function (name, definition) {
-			if (arguments.length === 1) return applications[name] || null;
+			if (arguments.length === 1)
+				return applications[name] || null;
 			
 			if (arguments.length !== 2 || typeof name !== 'string')
 				throw new Error('Elemenx.Application expects (name) or (name, definition)');

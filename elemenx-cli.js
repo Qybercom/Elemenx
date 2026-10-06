@@ -12,7 +12,7 @@ function fail (message) {
 	throw new Error(message);
 }
 
-var BooleanOptions = {force:true};
+var BooleanOptions = {force: true};
 
 function parse (argv) {
 	var result = {Arguments: [], Options: {}};
@@ -23,11 +23,12 @@ function parse (argv) {
 		
 		if (value.indexOf('--') === 0) {
 			var name = value.substring(2);
+			if (!name)
+				fail('invalid option');
 			
-			if (!name) fail('invalid option');
 			if (BooleanOptions[name]) {
 				result.Options[name] = true;
-
+				
 				i++;
 			}
 			else if (i + 1 < argv.length && argv[i + 1].indexOf('--') !== 0) {
@@ -92,7 +93,7 @@ function booleanValue (input, fallback) {
 	if (input === true || input === false) return input;
 	if (String(input).toLowerCase() === 'true') return true;
 	if (String(input).toLowerCase() === 'false') return false;
-
+	
 	fail('expected true or false, got: ' + input);
 }
 
@@ -102,7 +103,7 @@ function listen (directory, port, settings, production, options) {
 	var threshold = Number(value(options, 'compression-threshold', serverSettings.CompressionThreshold, 1024));
 	var host = value(options, 'host', serverSettings.Host, '127.0.0.1');
 	var cacheControl = production ? value(options, 'cache-control', serverSettings.CacheControl, 'public, max-age=0, must-revalidate') : false;
-
+	
 	if (!isFinite(threshold) || threshold < 0) fail('compression threshold must be a non-negative number');
 	
 	Server
