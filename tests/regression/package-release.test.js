@@ -16,7 +16,17 @@ function packFiles () {
 		stdio:['ignore','pipe','pipe']
 	});
 	var result=JSON.parse(output);
-	return result[0].files.map(function (file) { return file.path; });
+	var pack=result;
+
+	if (!Array.isArray(pack)) {
+		var keys=Object.keys(pack);
+		pack=keys.length ? pack[keys[0]] : null;
+	}
+	else pack=pack[0];
+
+	if (!pack || !Array.isArray(pack.files)) throw new Error('npm pack returned an unsupported JSON format');
+
+	return pack.files.map(function (file) { return file.path; });
 }
 
 describe('Elemenx npm release surface',function () {
