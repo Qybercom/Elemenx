@@ -3,17 +3,10 @@ Elemenx.Component('Icon', {
 	Name: '',
 	Label: '',
 
-	Glyph: function () {
-		var glyphs = {
-			add: '+',
-			remove: '−',
-			check: '✓',
-			close: '×',
-			left: '←',
-			right: '→',
-			up: '↑',
-			down: '↓'
-		};
-		return glyphs[this.Name] || this.Label || this.Name;
+	Href: function () {
+		var library = Elemenx.Library('ElemenxUI');
+		var root = library ? library.$Root || library.Root : '';
+		
+		return String(root || '').replace(/\/$/, '') + '/icons.svg#' + this.Name;
 	}
 });

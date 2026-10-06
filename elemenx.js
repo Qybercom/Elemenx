@@ -944,6 +944,13 @@
 							return;
 						}
 						
+
+						if (/\.[a-z0-9]+(?:[?#].*)?$/i.test(value)) {
+							complete(null);
+							
+							return;
+						}
+						
 						buildDirectory(target, map, visited, complete);
 					})(entries[i]);
 					

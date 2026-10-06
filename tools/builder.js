@@ -105,7 +105,7 @@ function scan (directory, root, entities, visited, declaredNames) {
 			
 			entities[type][name] = source;
 		}
-		else {
+		else if (fs.existsSync(target) && fs.statSync(target).isDirectory()) {
 			scan(target, root, entities, visited, declaredNames);
 		}
 		
@@ -422,7 +422,7 @@ function selectLibraryEntities (entities, catalog) {
 	}
 }
 
-function libraryStyles (directory, root, result, visited) {
+function libraryResources (directory, root, result, visited) {
 	var absolute = path.resolve(directory);
 	
 	if (visited[absolute]) return;
@@ -434,38 +434,45 @@ function libraryStyles (directory, root, result, visited) {
 	while (i < entries.length) {
 		var target = path.resolve(absolute, entries[i]);
 		
-		if (/\.css$/i.test(entries[i]))
-			result.push({Source: target, Relative: path.relative(root, target)});
-		else if (!/\.js$/i.test(entries[i]))
-			libraryStyles(target, root, result, visited);
+		if (/\.js$/i.test(entries[i])) {
+			i++;
+			continue;
+		}
+		
+		if (fs.existsSync(target) && fs.statSync(target).isDirectory())
+			libraryResources(target, root, result, visited);
+		else
+			result.push({Source: target, Relative: path.relative(root, target), Style: /\.css$/i.test(entries[i])});
 		
 		i++;
 	}
 }
 
-function copyLibraryStyles (output, declarations) {
+function copyLibraryResources (output, declarations) {
 	var hrefs = [];
 	var i = 0;
 	
 	while (i < declarations.length) {
 		var declaration = declarations[i];
-		var styles = [];
+		var resources = [];
 		
-		libraryStyles(declaration.Directory, declaration.Directory, styles, {});
+		libraryResources(declaration.Directory, declaration.Directory, resources, {});
 		
-		var si = 0;
+		var ri = 0;
 		
-		while (si < styles.length) {
-			if (!fs.existsSync(styles[si].Source))
-				fail('Library style not found: ' + styles[si].Source);
+		while (ri < resources.length) {
+			if (!fs.existsSync(resources[ri].Source))
+				fail('Library resource not found: ' + resources[ri].Source);
 			
-			var target = path.resolve(output, declaration.Root, styles[si].Relative);
+			var target = path.resolve(output, declaration.Root, resources[ri].Relative);
 			
 			fs.mkdirSync(path.dirname(target), {recursive: true});
-			fs.copyFileSync(styles[si].Source, target);
-			hrefs.push('/' + declaration.Root.replace(/^\/+|\/+$/g, '') + '/' + styles[si].Relative.replace(/\\/g, '/'));
+			fs.copyFileSync(resources[ri].Source, target);
 			
-			si++;
+			if (resources[ri].Style)
+				hrefs.push('/' + declaration.Root.replace(/^\/+|\/+$/g, '') + '/' + resources[ri].Relative.replace(/\\/g, '/'));
+			
+			ri++;
 		}
 		
 		i++;
@@ -555,7 +562,7 @@ function build (project, options) {
 	]);
 	
 	copyPublic(project, output, excludedPaths);
-	var libraryStyleHrefs = copyLibraryStyles(output, libraries);
+	var libraryStyleHrefs = copyLibraryResources(output, libraries);
 	var productionIndex = fs.readFileSync(index, 'utf8');
 	if (libraryStyleHrefs.length) {
 		var styleMarkup = libraryStyleHrefs.map(function (href) { return '<link rel="stylesheet" href="' + href + '">'; }).join('\n');
