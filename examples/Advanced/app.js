@@ -3,7 +3,7 @@ Elemenx.Application('ApplicationExample', {
 	$Component: 'Layout',
 	$Root: 'application',
 	$Mount: 'body',
-	$Use: ['UI'],
+	$Use: ['ElemenxUI'],
 	$Bootstrap: function () {
 		this.$ShowcaseStartup = {
 			BootstrapAt: new Date(),
