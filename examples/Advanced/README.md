@@ -93,4 +93,4 @@ See `SHOWCASE.md` before adding another demo. Phase 7 is complete: every tracked
 
 ## Standard UI library
 
-Advanced registers the package `libraries/UI` graph through `Elemenx.Library()` and opts into it with Application `$Use`. Open `/ui` for the executable UI Kit catalogue. Development resolves the canonical package library through the Elemenx server; production Builder bundles only reachable Library Components and copies declared public style assets.
+Advanced registers the built-in `libraries/ElemenxUI` graph through Application `$Use`. Open `/ui` for the executable UI Kit catalogue. Development resolves the canonical package library through the Elemenx server; production Builder bundles only reachable Library Components and copies declared public style assets.

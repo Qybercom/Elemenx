@@ -1222,7 +1222,7 @@
 	(function (global) {
 		'use strict';
 		var Elemenx = global.Elemenx;
-		var definitions = {ElemenxUI: {$Root: '/libraries/UI'}};
+		var definitions = {ElemenxUI: {$Root: '/libraries/ElemenxUI'}};
 		var applications = new WeakMap();
 		
 		function list (value) {
@@ -13986,7 +13986,7 @@
 		'use strict';
 		
 		var Elemenx = global.Elemenx;
-		var definitions = {UI: {$Root: '/libraries/UI'}};
+		var definitions = {};
 		var owners = new WeakMap();
 		var destroyedOwners = new WeakSet();
 		var handles = [];
@@ -14432,7 +14432,7 @@
 		'use strict';
 		
 		var Elemenx = global.Elemenx;
-		var definitions = {UI: {$Root: '/libraries/UI'}};
+		var definitions = {};
 		var handles = [];
 		var owners = new WeakMap();
 		var destroyedOwners = new WeakSet();
@@ -15251,7 +15251,12 @@
 			
 			function applicationLifecycle (method, error) {
 				if (method === '$OnReady') startRouter();
-				if (typeof api[method] !== 'function') return;
+				if (typeof api[method] !== 'function') {
+					if (method === '$OnError' && error && global.console && typeof global.console.error === 'function')
+						global.console.error(error);
+					
+					return;
+				}
 				
 				api[method].call(api, {
 					Name: definition.$Component || null,

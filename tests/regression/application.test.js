@@ -1,5 +1,5 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { loadElemenx, resetDOM, tick, unique } from '../setup.js';
+import { loadElemenx, resetDOM, tick, waitFor, unique } from '../setup.js';
 
 var applications=[];
 
@@ -67,6 +67,33 @@ describe('Regression: Application public facade and ownership', function () {
 
 		expect(document.querySelector('.unknown-library-root').textContent).toBe('ready');
 		expect(warning).toBe('Elemenx unknown Library: '+library);
+	});
+
+	it('reports Library load errors when Application has no $OnError handler', async function () {
+		var component=unique('BrokenLibraryRoot');
+		var name=unique('BrokenLibraryApplication');
+		var library=unique('BrokenLibrary');
+		var reported=null;
+		var error=console.error;
+		Elemenx.Component(component,{$Template:'<main class="broken-library-root">ready</main>'});
+		Elemenx.Library(library,{$Root:'/missing-library-'+library});
+		console.error=function (value) { reported=value; };
+
+		try {
+			createApplication(name,{
+				$Component:component,
+				$Mount:'#mount',
+				$Use:[library]
+			});
+			expect(await waitFor(function () { return reported !== null; },2000)).toBe(true);
+		}
+		finally {
+			console.error=error;
+		}
+
+		expect(reported).toBeInstanceOf(Error);
+		expect(reported.message).toContain('/missing-library-'+library+'/index.js');
+		expect(document.querySelector('.broken-library-root')).toBeNull();
 	});
 
 	it('exposes immutable runtime and Application start timestamps', async function () {

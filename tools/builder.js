@@ -322,7 +322,7 @@ function libraryDeclarations (project, appSource) {
 		
 		while ((item = itemPattern.exec(body))) {
 			if (item[2] === 'ElemenxUI' && !names.ElemenxUI) {
-				result.push({Name: 'ElemenxUI', Root: 'libraries/UI', Directory: path.resolve(packageRoot, 'libraries/UI')});
+				result.push({Name: 'ElemenxUI', Root: 'libraries/ElemenxUI', Directory: path.resolve(packageRoot, 'libraries/ElemenxUI')});
 				names.ElemenxUI = true;
 			}
 		}

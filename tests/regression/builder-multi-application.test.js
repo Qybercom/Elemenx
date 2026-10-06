@@ -198,7 +198,7 @@ describe('Elemenx multi-Application Builder', function () {
 
 		expect(declarations.length).toBe(1);
 		expect(declarations[0].Name).toBe('ElemenxUI');
-		expect(declarations[0].Root).toBe('libraries/UI');
+		expect(declarations[0].Root).toBe('libraries/ElemenxUI');
 		expect(fs.existsSync(path.join(declarations[0].Directory,'index.js'))).toBe(true);
 	});
 });
