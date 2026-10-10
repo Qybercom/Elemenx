@@ -248,28 +248,111 @@ describe('Regression: Router contracts', function () {
 		expect(document.getElementById('contract-elsewhere')).not.toBeNull();
 	});
 
-	it('current behavior: a route Component that is not registered throws from Go after NavigationCommit and restores the URL', async function () {
+	it('a route Component that is not registered ends the navigation with NavigationError and restores the URL', async function () {
 		var trace = [];
+		var errors = [];
 		var x = boot([{Path: '/', Component: page('contract-home')}, {Path: '/ghost', Component: unique('NeverRegistered')}]);
-		var thrown = null;
 
-		['NavigationStart', 'NavigationCommit', 'NavigationEnd', 'NavigationCancel'].forEach(function (name) {
+		['NavigationStart', 'NavigationCommit', 'NavigationEnd', 'NavigationCancel', 'NavigationError'].forEach(function (name) {
 			x.Router.On(name, function () {
 				trace.push(name);
 			});
 		});
+		x.Router.On('NavigationError', function (context) {
+			errors.push([context.$Error.message, context.$To.Path, context.$From.Path]);
+		});
 
-		try {
-			x.Router.Go('/ghost');
-		}
-		catch (error) {
-			thrown = error.message;
-		}
+		await tick(20);
+
+		trace.length = 0;
+
+		expect(x.Router.Go('/ghost')).toBe(x.Router);
 
 		await tick(40);
 
-		expect(thrown).toMatch(/^Elemenx route component not found: NeverRegistered/);
-		expect(trace).toEqual(['NavigationStart', 'NavigationCommit']);
+		expect(trace).toEqual(['NavigationStart', 'NavigationCommit', 'NavigationError']);
+		expect(errors.length).toBe(1);
+		expect(errors[0][0]).toMatch(/^Elemenx route component not found: NeverRegistered/);
+		expect(errors[0].slice(1)).toEqual(['/ghost', '/']);
 		expect(location.pathname).toBe('/');
+		expect(document.getElementById('contract-home')).not.toBeNull();
+	});
+
+	it('without a NavigationError listener the error is reported as uncaught, and Go does not throw', async function () {
+		var reported = [];
+		var consoleError = console.error;
+		var x = boot([{Path: '/', Component: page('contract-home')}, {Path: '/ghost', Component: unique('NeverRegistered')}]);
+
+		function capture (event) {
+			reported.push(event.error.message);
+
+			event.preventDefault();
+		}
+
+		/* the Vitest browser runner echoes window errors to console.error once a test listens for them */
+		console.error = function () {};
+
+		window.addEventListener('error', capture);
+
+		try {
+			x.Router.Go('/ghost');
+
+			await tick(40);
+		}
+		finally {
+			window.removeEventListener('error', capture);
+
+			console.error = consoleError;
+		}
+
+		expect(reported.length).toBe(1);
+		expect(reported[0]).toMatch(/^Elemenx route component not found/);
+		expect(location.pathname).toBe('/');
+	});
+
+	it('a missing guard, Waiting component, GuardFailed fallback or NotFound component ends with NavigationError', async function () {
+		var denied = unique('ContractDenied');
+		var x;
+		var errors = [];
+
+		Elemenx.Guard(denied, function () {
+			return this.$Fail('blocked');
+		});
+
+		x = boot([
+			{Path: '/', Component: page('contract-home')},
+			{Path: '/guarded', Component: page('contract-guarded'), Guard: unique('NoSuchGuard')},
+			{Path: '/waiting', Component: page('contract-waiting'), Wait: unique('NoSuchWaiting')},
+			{Path: '/fallback', Component: page('contract-fallback'), Guard: denied, GuardFailed: unique('NoSuchFallback')}
+		], unique('NoSuchNotFound'));
+
+		x.Router.On('NavigationError', function (context) {
+			errors.push(context.$Error.message);
+		});
+
+		await tick(20);
+
+		x.Router.Go('/guarded');
+
+		await tick(20);
+
+		x.Router.Go('/waiting');
+
+		await tick(20);
+
+		x.Router.Go('/fallback');
+
+		await tick(20);
+
+		x.Router.Go('/nowhere');
+
+		await tick(20);
+
+		expect(errors.length).toBe(4);
+		expect(errors[0]).toBe('Elemenx route guard not found');
+		expect(errors[1]).toMatch(/^Elemenx route waiting component not found: NoSuchWaiting/);
+		expect(errors[2]).toMatch(/^Elemenx route component not found: NoSuchFallback/);
+		expect(errors[3]).toMatch(/^Elemenx NotFound component not found: NoSuchNotFound/);
+		expect(document.getElementById('contract-home')).not.toBeNull();
 	});
 });

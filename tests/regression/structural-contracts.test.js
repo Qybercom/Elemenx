@@ -106,6 +106,7 @@ describe('Regression: Structural collections and Component props', function () {
 		})();
 
 		expect(received.user).toEqual({name: 'Ann'});
+		expect(Array.isArray(received.list)).toBe(true);
 		expect(received.list[1]).toBe('Ann');
 
 		parent.$Destroy();
@@ -122,4 +123,36 @@ describe('Regression: Structural collections and Component props', function () {
 		});
 	});
 
+	it('a kebab-case binding target is read as camelCase in every segment, like a plain attribute name', function () {
+		var child = unique('KebabChild');
+		var received = null;
+
+		Elemenx.Component(child, {
+			$Template: '<span>child</span>',
+			$OnCreate: function (data) {
+				received = data;
+			}
+		});
+
+		var parent = Elemenx.Component(unique('KebabParent'), {
+			$Template: '<div><' + child + ' [user-name]="Name" [user-info.first-name]="Name" [items[0].item-id]="Count"></' + child + '></div>',
+			Name: 'Ann',
+			Count: 7
+		})();
+
+		expect(received).toEqual({userName: 'Ann', userInfo: {firstName: 'Ann'}, items: [{itemId: 7}]});
+
+		parent.$Destroy();
+
+		['[user-]', '[user--name]', '[-user]'].forEach(function (target) {
+			var invalid = Elemenx.Component(unique('KebabInvalid'), {
+				$Template: '<div><' + child + ' ' + target + '="Name"></' + child + '></div>',
+				Name: 'Ann'
+			});
+
+			expect(function () {
+				invalid();
+			}).toThrow('Elemenx invalid Component binding target');
+		});
+	});
 });

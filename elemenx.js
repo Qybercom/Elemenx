@@ -5003,29 +5003,28 @@
 				}
 			}
 
+			/* Listeners added on behalf of a Component, removed together by OffOwner when the Component is destroyed. */
 			function ownerFacade (owner) {
 				return {
 					On: function (name, callback) {
 						on(name, callback, owner);
 
 						return this;
-					},
-					Go: function (url) {
-						return api.Go(url);
-					},
-					Replace: function (url) {
-						return api.Replace(url);
-					},
-					Back: function () {
-						return api.Back();
-					},
-					Forward: function () {
-						return api.Forward();
-					},
-					Current: function () {
-						return api.Current();
 					}
 				};
+			}
+
+			/* A navigation that cannot load or render its target ends with NavigationError; unheard, the error is reported. */
+			function reportNavigationError (context, error) {
+				context.$Error = error;
+
+				if (events.NavigationError && events.NavigationError.length) {
+					emit('NavigationError', context);
+
+					return;
+				}
+
+				Runtime.Report(error);
 			}
 
 			/* Navigation: route matching and loading */
@@ -5261,8 +5260,11 @@
 
 							if (currentApplication && Runtime.Discovery.Ready(currentApplication)) {
 								Runtime.Discovery.Load(currentApplication, 'Guard', guardReference, false, function (error) {
-									if (error)
-										throw error;
+									if (error) {
+										done({ElemenxNavigationError: error});
+
+										return;
+									}
 
 									nextGuard(true);
 								});
@@ -5273,8 +5275,11 @@
 
 						guardIndex++;
 
-						if (!guard)
-							throw new Error('Elemenx route guard not found');
+						if (!guard) {
+							done({ElemenxNavigationError: new Error('Elemenx route guard not found')});
+
+							return;
+						}
 
 						(function (guardReference) {
 							context.$Route = route;
@@ -5561,14 +5566,24 @@
 				loadRouteComponents(failureChain, failurePrepared.Common, function (error) {
 					if (id !== navigationID) return;
 
-					if (error)
-						throw error;
+					if (error) {
+						reportNavigationError(context, error);
+
+						return;
+					}
 
 					writeHistory(mode, prepared.URL);
 
 					emit('NavigationCommit', context);
 
-					commit(failurePrepared);
+					try {
+						commit(failurePrepared);
+					}
+					catch (commitError) {
+						reportNavigationError(context, commitError);
+
+						return;
+					}
 
 					committedURL = new URL(prepared.URL.href);
 
@@ -5651,6 +5666,20 @@
 					$Guard: null
 				};
 
+				/* The target could not be loaded or rendered: the URL returns to the committed route. */
+				function failed (error) {
+					clearWaiting();
+
+					if (mode === 'push' || mode === 'replace') {
+						global.history.replaceState(historyState(historyIndex), '', previousURL.href);
+					}
+					else if (mode === 'pop') {
+						rejectPop(targetHistoryIndex);
+					}
+
+					reportNavigationError(context, error);
+				}
+
 				emit('NavigationStart', context);
 
 				(redirect ? leaveDecided : runLeaveGuards)(prepared.Common, context, function (leaveResult) {
@@ -5681,8 +5710,11 @@
 					showWaiting(prepared, function (waitingError) {
 						if (id !== navigationID) return;
 
-						if (waitingError)
-							throw waitingError;
+						if (waitingError) {
+							failed(waitingError);
+
+							return;
+						}
 
 						runEnterGuards(
 							prepared.Found.Chain,
@@ -5690,6 +5722,12 @@
 							context,
 							function (enterResult) {
 								if (id !== navigationID) return;
+
+								if (enterResult && enterResult.ElemenxNavigationError) {
+									failed(enterResult.ElemenxNavigationError);
+
+									return;
+								}
 
 								if (enterResult !== true && enterResult !== undefined) {
 									clearWaiting();
@@ -5732,15 +5770,19 @@
 									if (id !== navigationID) return;
 
 									if (componentError) {
-										if (mode === 'push' || mode === 'replace')
-											global.history.replaceState(historyState(historyIndex), '', previousURL.href);
+										failed(componentError);
 
-										clearWaiting();
-
-										throw componentError;
+										return;
 									}
 
-									commit(prepared);
+									try {
+										commit(prepared);
+									}
+									catch (commitError) {
+										failed(commitError);
+
+										return;
+									}
 
 									committedURL = new URL(prepared.URL.href);
 
@@ -5764,6 +5806,21 @@
 
 				var id = ++navigationID;
 				var packet = statePacket(url, {});
+				var context = {
+					$From: navigationPacket(committedURL || currentURL()),
+					$To: packet,
+					$Route: null,
+					$Guard: null
+				};
+
+				function attempt () {
+					try {
+						render();
+					}
+					catch (error) {
+						reportNavigationError(context, error);
+					}
+				}
 
 				function render () {
 					if (id !== navigationID) return;
@@ -5799,22 +5856,29 @@
 				writeHistory(mode, url);
 
 				if (bundledComponent(reference)) {
-					render();
+					attempt();
 
 					return true;
 				}
 
 				var currentApplication = application();
-				if (!Runtime.Discovery || !currentApplication || !Runtime.Discovery.Ready(currentApplication))
-					throw new Error('Elemenx NotFound component not found: ' + reference);
+
+				if (!Runtime.Discovery || !currentApplication || !Runtime.Discovery.Ready(currentApplication)) {
+					reportNavigationError(context, new Error('Elemenx NotFound component not found: ' + reference));
+
+					return true;
+				}
 
 				Runtime.Discovery.Load(currentApplication, 'Component', reference, false, function (error) {
 					if (id !== navigationID) return;
 
-					if (error)
-						throw error;
+					if (error) {
+						reportNavigationError(context, error);
 
-					render();
+						return;
+					}
+
+					attempt();
 				});
 
 				return true;
@@ -6018,6 +6082,7 @@
 			var start;
 			var value;
 
+			/* A name segment; kebab-case is read as camelCase, like the name of a plain attribute. */
 			function identifier () {
 				var code;
 
@@ -6029,17 +6094,23 @@
 				while (i < length) {
 					code = target.charAt(i);
 
+					if (code === '-' && /[a-z]/.test(target.charAt(i + 1))) {
+						i += 2;
+
+						continue;
+					}
+
 					if (!/[\w$]/.test(code)) break;
 
 					i++;
 				}
 
-				return target.substring(start, i);
+				return target.substring(start, i).replace(/-([a-z])/g, function (match, letter) {
+					return letter.toUpperCase();
+				});
 			}
 
-			parts.push(identifier().replace(/-([a-z])/g, function (match, letter) {
-				return letter.toUpperCase();
-			}));
+			parts.push(identifier());
 
 			while (i < length) {
 				if (target.charAt(i) === '.') {
@@ -6130,7 +6201,7 @@
 			}
 
 			if (!own(result, root))
-				result[root] = {};
+				result[root] = typeof path[1] === 'number' ? [] : {};
 
 			current = result[root];
 

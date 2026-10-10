@@ -74,6 +74,12 @@ The methods return the WebRTC object, like its other methods, and never a Promis
 
 A guard that needs time returns `this.$Wait(function (done) { ... })` and calls `done(result)` later, with the same results a synchronous guard returns. `$Wait` also accepts a ready value. A Promise is refused: the navigation is denied and `GuardFailed` receives a failure whose `Reason` is `'InvalidWait'` and whose `Data` is the error.
 
+## Redirects and navigation errors
+
+A guard or an `$OnRouteLeave` hook that returns a path redirects the navigation there. The redirect does not ask the leave hooks of the current routes again: they already agreed to leave.
+
+A navigation whose target cannot be loaded or rendered (a missing route, Waiting, GuardFailed or NotFound component, a missing guard or outlet) ends with the Router event `NavigationError`. Its data is the navigation context with `$Error` set to the error; the URL returns to the committed route, and `Go()` / `Replace()` never throw for it. Without a `NavigationError` listener the error is reported as an uncaught error.
+
 ## Exceptions in listeners and callbacks
 
 Elemenx calls event listeners the way the DOM does. An exception thrown by a listener (`On(...)` of Events, Messaging, Network objects, Storage operations, workers, `$On` of Components, Router events) is reported as an uncaught error during the dispatch, before the next listener runs: it reaches `window.onerror` and `error` listeners with its original stack, and the console unless a listener calls `preventDefault()`. The remaining listeners still receive the event, and the code that dispatched it is not interrupted. The same applies to callbacks Elemenx calls from asynchronous browser operations, such as WebRTC negotiation callbacks.

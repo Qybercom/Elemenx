@@ -243,6 +243,11 @@ describe('Regression: public API surface', function () {
 
 		expect(names(application.$Network())).toEqual(['LongPolling', 'Metrics', 'Protocol', 'SSE', 'Stream', 'Transfer', 'TransferReceiver', 'WebRTC', 'WebSocket', 'XHR']);
 		expect(names(application.$Template)).toEqual(['Has', 'Loader', 'Reload', 'Remove']);
+
+		var router = Elemenx.Router({Root: application.$Component(), Routes: []});
+
+		expect(names(router)).toEqual(['Back', 'Current', 'Destroy', 'Forward', 'Go', 'OffOwner', 'On', 'Owner', 'Replace', 'Start']);
+		expect(names(router.Owner(local))).toEqual(['On']);
 	});
 
 });
