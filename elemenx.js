@@ -5631,7 +5631,12 @@
 				global.history.go(delta);
 			}
 
-			function execute (prepared, mode, targetHistoryIndex) {
+			/* A redirect keeps the decision of the navigation it replaces: the current routes already agreed to leave. */
+			function leaveDecided (common, context, done) {
+				done(true);
+			}
+
+			function execute (prepared, mode, targetHistoryIndex, redirect) {
 				var id = ++navigationID;
 				var previousURL = committedURL ? new URL(committedURL.href) : currentURL();
 				var context = {
@@ -5648,7 +5653,7 @@
 
 				emit('NavigationStart', context);
 
-				runLeaveGuards(prepared.Common, context, function (leaveResult) {
+				(redirect ? leaveDecided : runLeaveGuards)(prepared.Common, context, function (leaveResult) {
 					if (id !== navigationID) return;
 
 					if (leaveResult !== true && leaveResult !== undefined) {
@@ -5659,7 +5664,7 @@
 								historyIndex = targetHistoryIndex;
 							}
 
-							navigate(leaveResult, 'replace');
+							navigate(leaveResult, 'replace', true);
 						}
 						else {
 							handleGuardFailure(leaveResult, context);
@@ -5696,7 +5701,7 @@
 											historyIndex = targetHistoryIndex;
 										}
 
-										navigate(enterResult, 'replace');
+										navigate(enterResult, 'replace', true);
 									}
 									else {
 										var failure = handleGuardFailure(enterResult, context);
@@ -5815,7 +5820,7 @@
 				return true;
 			}
 
-			function navigate (url, mode) {
+			function navigate (url, mode, redirect) {
 				var target = new URL(url, global.location.href);
 
 				if (target.origin !== global.location.origin) {
@@ -5833,7 +5838,7 @@
 					return api;
 				}
 
-				execute(prepared, mode);
+				execute(prepared, mode, undefined, redirect);
 
 				return api;
 			}
@@ -6294,7 +6299,7 @@
 			}
 
 			if (i >= collectionIterationLimit)
-				throw new Error('Elemenx structural collection exceeded iteration collectionIterationLimit (' + collectionIterationLimit + ')');
+				throw new Error('Elemenx structural collection exceeded the iteration limit (' + collectionIterationLimit + ')');
 
 			return result;
 		}
