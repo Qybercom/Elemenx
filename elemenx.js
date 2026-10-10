@@ -8430,6 +8430,101 @@
 			return api;
 		}
 
+		/* Network: Transfer helpers */
+		/* Subscriptions made on a transport, so that all of them can be released at once. */
+		function NetworkTransportListeners () {
+			var listeners = [];
+
+			return {
+				On: function (transport, name, callback) {
+					if (!transport || typeof transport.On !== 'function') return;
+
+					transport.On(name, callback);
+
+					listeners.push({Name: name, Callback: callback});
+				},
+				Clear: function (transport) {
+					var i = 0;
+
+					if (transport && typeof transport.Off === 'function') {
+						while (i < listeners.length) {
+							transport.Off(listeners[i].Name, listeners[i].Callback);
+
+							i++;
+						}
+					}
+
+					listeners = [];
+				}
+			};
+		}
+
+		/* Network: Transfer sources and chunks */
+		function makeID () {
+			return Date.now().toString(36) + '-' + Math.floor(Math.random() * 0x100000000).toString(36);
+		}
+
+		function sourceSize (source) {
+			if (!source) return 0;
+
+			if (typeof source.size === 'number') return source.size;
+			if (typeof source.byteLength === 'number') return source.byteLength;
+			if (ArrayBuffer.isView(source)) return source.byteLength;
+			if (typeof source === 'string') return source.length;
+
+			return 0;
+		}
+
+		function sourceName (source) {
+			return source && source.name ? source.name : null;
+		}
+
+		function sourceType (source) {
+			return source && source.type ? source.type : 'application/octet-stream';
+		}
+
+		function sliceSource (source, start, end) {
+			var view;
+
+			if (source instanceof Blob)
+				return source.slice(start, end);
+
+			if (source instanceof ArrayBuffer) return source.slice(start, end);
+
+			if (ArrayBuffer.isView(source)) {
+				view = new Uint8Array(
+					source.buffer,
+					source.byteOffset + start,
+					Math.min(end - start, source.byteLength - start)
+				);
+
+				return view.slice().buffer;
+			}
+
+			throw new Error('Elemenx unsupported chunked transfer source');
+		}
+
+		function toArrayBuffer (value) {
+			if (value instanceof ArrayBuffer)
+				return global.Promise.resolve(value);
+
+			if (ArrayBuffer.isView(value))
+				return global.Promise.resolve(value.buffer.slice(value.byteOffset, value.byteOffset + value.byteLength));
+
+			if (value instanceof Blob)
+				return value.arrayBuffer();
+
+			return global.Promise.reject(new Error('Elemenx unsupported transfer chunk'));
+		}
+
+		function clearFlight (flight) {
+			if (!flight || !flight.Timer) return;
+
+			global.clearTimeout(flight.Timer);
+
+			flight.Timer = null;
+		}
+
 		/* Network: Transfer outbound engine */
 		function NetworkTransferOutbound (configuration) {
 			var config = configuration || {};
@@ -8455,13 +8550,14 @@
 			var phase = 'Idle';
 			var loaded = 0;
 			var total = 0;
-			var wholeListeners = [];
-			var transportListeners = [];
+			var wholeListeners = NetworkTransportListeners();
+			var transportListeners = NetworkTransportListeners();
 			var sendQueue = [];
 			var draining = false;
 			var events;
 			var api;
 
+			/* Outbound: events and phase */
 			function emit (type, data) {
 				return events.Emit('Transfer', type, data);
 			}
@@ -8479,63 +8575,6 @@
 				});
 			}
 
-			function makeID () {
-				return Date.now().toString(36) + '-' + Math.floor(Math.random() * 0x100000000).toString(36);
-			}
-
-			function sourceSize () {
-				if (!source) return 0;
-
-				if (typeof source.size === 'number') return source.size;
-				if (typeof source.byteLength === 'number') return source.byteLength;
-				if (ArrayBuffer.isView(source)) return source.byteLength;
-				if (typeof source === 'string') return source.length;
-
-				return 0;
-			}
-
-			function sourceName () {
-				return source && source.name ? source.name : null;
-			}
-
-			function sourceType () {
-				return source && source.type ? source.type : 'application/octet-stream';
-			}
-
-			function sliceSource (start, end) {
-				var view;
-
-				if (source instanceof Blob)
-					return source.slice(start, end);
-
-				if (source instanceof ArrayBuffer) return source.slice(start, end);
-
-				if (ArrayBuffer.isView(source)) {
-					view = new Uint8Array(
-						source.buffer,
-						source.byteOffset + start,
-						Math.min(end - start, source.byteLength - start)
-					);
-
-					return view.slice().buffer;
-				}
-
-				throw new Error('Elemenx unsupported chunked transfer source');
-			}
-
-			function toArrayBuffer (value) {
-				if (value instanceof ArrayBuffer)
-					return global.Promise.resolve(value);
-
-				if (ArrayBuffer.isView(value))
-					return global.Promise.resolve(value.buffer.slice(value.byteOffset, value.byteOffset + value.byteLength));
-
-				if (value instanceof Blob)
-					return value.arrayBuffer();
-
-				return global.Promise.reject(new Error('Elemenx unsupported transfer chunk'));
-			}
-
 			function transform (value, context) {
 				if (typeof encoder !== 'function')
 					return global.Promise.resolve(value);
@@ -8548,16 +8587,9 @@
 				}
 			}
 
+			/* Outbound: flights and progress */
 			function flightCount () {
 				return Object.keys(inFlight).length;
-			}
-
-			function clearFlight (flight) {
-				if (!flight || !flight.Timer) return;
-
-				global.clearTimeout(flight.Timer);
-
-				flight.Timer = null;
 			}
 
 			function clearFlights () {
@@ -8589,31 +8621,7 @@
 				});
 			}
 
-			function wholeOn (name, callback) {
-				if (!transport || typeof transport.On !== 'function') return;
-
-				transport.On(name, callback);
-
-				wholeListeners.push({Name: name, Callback: callback});
-			}
-
-			function clearWholeListeners () {
-				if (!transport || typeof transport.Off !== 'function') {
-					wholeListeners = [];
-
-					return;
-				}
-
-				var i = 0;
-				while (i < wholeListeners.length) {
-					transport.Off(wholeListeners[i].Name, wholeListeners[i].Callback);
-
-					i++;
-				}
-
-				wholeListeners = [];
-			}
-
+			/* Outbound: failure */
 			function fail (type, value) {
 				if (!active) return;
 
@@ -8624,9 +8632,9 @@
 
 				clearFlights();
 
-				clearWholeListeners();
+				wholeListeners.Clear(transport);
 
-				clearTransportListeners();
+				transportListeners.Clear(transport);
 
 				sendQueue = [];
 
@@ -8644,31 +8652,7 @@
 				});
 			}
 
-			function transportOn (name, callback) {
-				if (!transport || typeof transport.On !== 'function') return;
-
-				transport.On(name, callback);
-
-				transportListeners.push({Name: name, Callback: callback});
-			}
-
-			function clearTransportListeners () {
-				if (!transport || typeof transport.Off !== 'function') {
-					transportListeners = [];
-
-					return;
-				}
-
-				var i = 0;
-				while (i < transportListeners.length) {
-					transport.Off(transportListeners[i].Name, transportListeners[i].Callback);
-
-					i++;
-				}
-
-				transportListeners = [];
-			}
-
+			/* Outbound: send queue and retries */
 			function drainSendQueue () {
 				if (!active || draining) return;
 
@@ -8735,6 +8719,7 @@
 				}, retry);
 			}
 
+			/* Outbound: chunk pump */
 			function finishChunked () {
 				if (!active || ending || flightCount() || offset < total) return;
 
@@ -8776,7 +8761,7 @@
 					end = Math.min(start + chunkSize, total);
 					index = nextIndex++;
 					offset = end;
-					chunk = sliceSource(start, end);
+					chunk = sliceSource(source, start, end);
 					inFlight[index] = {
 						Index: index,
 						Bytes: end - start,
@@ -8861,6 +8846,7 @@
 				finishChunked();
 			}
 
+			/* Outbound: acknowledgements */
 			function receivePacket (packet) {
 				if (!packet || packet.Type !== 'Transfer' || packet.ID !== transferID) return;
 
@@ -8893,7 +8879,7 @@
 
 					clearFlights();
 
-					clearTransportListeners();
+					transportListeners.Clear(transport);
 
 					sendQueue = [];
 					loaded = total;
@@ -8921,14 +8907,15 @@
 				}
 			}
 
+			/* Outbound: whole transport */
 			function executeWhole () {
 				var payload;
 
 				transform(source, {
 					Mode: 'Whole',
 					Transport: transport,
-					Name: sourceName(),
-					Type: sourceType(),
+					Name: sourceName(source),
+					Type: sourceType(source),
 					Size: total
 				})
 					.then(function (value) {
@@ -8936,7 +8923,7 @@
 
 						payload = value;
 
-						wholeOn('Transport.RequestProgress', function (event) {
+						wholeListeners.On(transport, 'Transport.RequestProgress', function (event) {
 							var nativeEvent;
 							var elapsed;
 
@@ -8968,7 +8955,7 @@
 							}
 						});
 
-						wholeOn('Transport.BeforeResponse', function (event) {
+						wholeListeners.On(transport, 'Transport.BeforeResponse', function (event) {
 							if (!active) return;
 
 							if (!sendCompletedAt)
@@ -8979,7 +8966,7 @@
 							setPhase('Receiving', event);
 						});
 
-						wholeOn('Transport.ResponseProgress', function (event) {
+						wholeListeners.On(transport, 'Transport.ResponseProgress', function (event) {
 							if (!active) return;
 
 							if (!responseStartedAt)
@@ -8988,19 +8975,19 @@
 							setPhase('Receiving', event);
 						});
 
-						wholeOn('Transport.AfterResponse', function (event) {
+						wholeListeners.On(transport, 'Transport.AfterResponse', function (event) {
 							if (!active) return;
 
 							responseCompletedAt = Date.now();
 						});
 
-						wholeOn('Transport.Success', function (event) {
+						wholeListeners.On(transport, 'Transport.Success', function (event) {
 							if (!active) return;
 
 							loaded = total;
 							active = false;
 
-							clearWholeListeners();
+							wholeListeners.Clear(transport);
 
 							if (!sendCompletedAt)
 								sendCompletedAt = Date.now();
@@ -9029,15 +9016,15 @@
 							});
 						});
 
-						wholeOn('Transport.Error', function (event) {
+						wholeListeners.On(transport, 'Transport.Error', function (event) {
 							fail('Error', event);
 						});
 
-						wholeOn('Transport.Timeout', function (event) {
+						wholeListeners.On(transport, 'Transport.Timeout', function (event) {
 							fail('Timeout', event);
 						});
 
-						wholeOn('Transport.Abort', function (event) {
+						wholeListeners.On(transport, 'Transport.Abort', function (event) {
 							fail('Abort', event);
 						});
 
@@ -9049,70 +9036,8 @@
 					});
 			}
 
+			/* Outbound: engine API */
 			api = {
-				Transport: function (value) {
-					if (active)
-						return api;
-
-					transport = value;
-
-					return api;
-				},
-
-				Data: function (value) {
-					if (active)
-						return api;
-
-					source = value;
-
-					return api;
-				},
-
-				Encoder: function (value) {
-					if (active)
-						return api;
-
-					encoder = value;
-
-					return api;
-				},
-
-				ChunkSize: function (value) {
-					if (active)
-						return api;
-
-					chunkSize = Math.max(1, Number(value) || 1);
-
-					return api;
-				},
-
-				WindowSize: function (value) {
-					if (active)
-						return api;
-
-					windowSize = Math.max(1, Number(value) || 1);
-
-					return api;
-				},
-
-				Retry: function (value) {
-					if (active)
-						return api;
-
-					retry = Math.max(1, Number(value) || 1);
-
-					return api;
-				},
-
-				MaxRetries: function (value) {
-					if (active)
-						return api;
-
-					maxRetries = Math.max(0, Number(value) || 0);
-
-					return api;
-				},
-
 				Phase: function () {
 					return phase;
 				},
@@ -9123,10 +9048,6 @@
 
 				On: function (name, callback) {
 					return events.On(name, callback);
-				},
-
-				Off: function (name, callback) {
-					return events.Off(name, callback);
 				},
 
 				Execute: function () {
@@ -9153,7 +9074,7 @@
 					}
 
 					transferID = makeID();
-					total = sourceSize();
+					total = sourceSize(source);
 					loaded = 0;
 					startedAt = Date.now();
 					sendCompletedAt = 0;
@@ -9164,8 +9085,8 @@
 
 					emit('Start', {
 						ID: transferID,
-						Name: sourceName(),
-						Type: sourceType(),
+						Name: sourceName(source),
+						Type: sourceType(source),
 						Size: total,
 						Mode: mode,
 						ChunkSize: mode === 'Chunked' ? chunkSize : null,
@@ -9189,11 +9110,11 @@
 					ending = false;
 					generation++;
 
-					transportOn('Transport.Drain', function () {
+					transportListeners.On(transport, 'Transport.Drain', function () {
 						drainSendQueue();
 					});
 
-					transportOn('Protocol.Transfer', function (event) {
+					transportListeners.On(transport, 'Protocol.Transfer', function (event) {
 						receivePacket(event.Data);
 					});
 
@@ -9203,8 +9124,8 @@
 								Type: 'Transfer',
 								Action: 'Start',
 								ID: transferID,
-								Name: sourceName(),
-								Mime: sourceType(),
+								Name: sourceName(source),
+								Mime: sourceType(source),
 								Size: total,
 								ChunkSize: chunkSize
 							},
@@ -9257,9 +9178,9 @@
 
 					clearFlights();
 
-					clearWholeListeners();
+					wholeListeners.Clear(transport);
 
-					clearTransportListeners();
+					transportListeners.Clear(transport);
 
 					sendQueue = [];
 					transport = null;
@@ -9272,6 +9193,33 @@
 			events = NetworkEvents(api);
 
 			return api;
+		}
+
+		/* Network: inbound Transfer payloads */
+		function binary (value) {
+			if (value instanceof ArrayBuffer) return value;
+
+			if (ArrayBuffer.isView(value))
+				return value.buffer.slice(value.byteOffset, value.byteOffset + value.byteLength);
+
+			return null;
+		}
+
+		function payloadBytes (value) {
+			if (value === null || value === undefined) return 0;
+
+			if (typeof value === 'string') {
+				if (global.TextEncoder)
+					return new global.TextEncoder().encode(value).byteLength;
+
+				return value.length * 2;
+			}
+
+			if (value instanceof global.ArrayBuffer) return value.byteLength;
+			if (global.ArrayBuffer && global.ArrayBuffer.isView && global.ArrayBuffer.isView(value)) return value.byteLength;
+			if (global.Blob && value instanceof global.Blob) return value.size;
+
+			return 0;
 		}
 
 		/* Network: Transfer */
@@ -9295,10 +9243,11 @@
 			var paused = false;
 			var name = null;
 			var mime = 'application/octet-stream';
-			var listeners = [];
+			var listeners = NetworkTransportListeners();
 			var events;
 			var api;
 
+			/* Inbound: events and phase */
 			function emit (type, data) {
 				return events.Emit('Transfer', type, data);
 			}
@@ -9316,40 +9265,7 @@
 				});
 			}
 
-			function onTransport (name, callback) {
-				if (!transport || typeof transport.On !== 'function') return;
-
-				transport.On(name, callback);
-
-				listeners.push({Name: name, Callback: callback});
-			}
-
-			function clearListeners () {
-				if (!transport || typeof transport.Off !== 'function') {
-					listeners = [];
-
-					return;
-				}
-
-				var i = 0;
-				while (i < listeners.length) {
-					transport.Off(listeners[i].Name, listeners[i].Callback);
-
-					i++;
-				}
-
-				listeners = [];
-			}
-
-			function binary (value) {
-				if (value instanceof ArrayBuffer) return value;
-
-				if (ArrayBuffer.isView(value))
-					return value.buffer.slice(value.byteOffset, value.byteOffset + value.byteLength);
-
-				return null;
-			}
-
+			/* Inbound: progress, completion and failure */
 			function progress () {
 				var elapsed = Math.max(1, Date.now() - startedAt);
 
@@ -9380,7 +9296,7 @@
 				if (api._LifecycleClosed)
 					api._LifecycleClosed();
 
-				clearListeners();
+				listeners.Clear(transport);
 
 				emit('Complete', {
 					ID: transferID,
@@ -9412,7 +9328,7 @@
 
 				setPhase(type, value);
 
-				clearListeners();
+				listeners.Clear(transport);
 
 				emit(type, {
 					ID: transferID,
@@ -9426,6 +9342,7 @@
 				});
 			}
 
+			/* Inbound: protocol packets */
 			function receivePacket (packet) {
 				if (!active || !packet || packet.Type !== 'Transfer') return;
 
@@ -9490,23 +9407,7 @@
 					fail('Abort', packet);
 			}
 
-			function payloadBytes (value) {
-				if (value === null || value === undefined) return 0;
-
-				if (typeof value === 'string') {
-					if (global.TextEncoder)
-						return new global.TextEncoder().encode(value).byteLength;
-
-					return value.length * 2;
-				}
-
-				if (value instanceof global.ArrayBuffer) return value.byteLength;
-				if (global.ArrayBuffer && global.ArrayBuffer.isView && global.ArrayBuffer.isView(value)) return value.byteLength;
-				if (global.Blob && value instanceof global.Blob) return value.size;
-
-				return 0;
-			}
-
+			/* Inbound: transport events */
 			function executeInbound () {
 				if (!transport || typeof transport.On !== 'function') {
 					emit('Error', {Error: new Error('Elemenx inbound transfer transport must provide On()')});
@@ -9526,13 +9427,13 @@
 				name = null;
 				mime = 'application/octet-stream';
 
-				onTransport('Protocol.Transfer', function (event) {
+				listeners.On(transport, 'Protocol.Transfer', function (event) {
 					hasProtocol = true;
 
 					receivePacket(event.Data);
 				});
 
-				onTransport('Transport.ResponseProgress', function (event) {
+				listeners.On(transport, 'Transport.ResponseProgress', function (event) {
 					var nativeEvent = event.Data;
 					if (!active || !nativeEvent) return;
 
@@ -9546,7 +9447,7 @@
 					progress();
 				});
 
-				onTransport('Transport.Success', function (event) {
+				listeners.On(transport, 'Transport.Success', function (event) {
 					if (!active) return;
 
 					var response = event.Data ? event.Data.Response : null;
@@ -9574,7 +9475,7 @@
 					complete(event.Data);
 				});
 
-				onTransport('Transport.Data', function (event) {
+				listeners.On(transport, 'Transport.Data', function (event) {
 					if (!active || hasProtocol || !event.Data) return;
 
 					var value = binary(event.Data.Data);
@@ -9596,21 +9497,21 @@
 					progress();
 				});
 
-				onTransport('Transport.End', function () {
+				listeners.On(transport, 'Transport.End', function () {
 					if (!active || hasProtocol) return;
 
 					complete();
 				});
 
-				onTransport('Transport.Error', function (event) {
+				listeners.On(transport, 'Transport.Error', function (event) {
 					fail('Error', event);
 				});
 
-				onTransport('Transport.Timeout', function (event) {
+				listeners.On(transport, 'Transport.Timeout', function (event) {
 					fail('Timeout', event);
 				});
 
-				onTransport('Transport.Abort', function (event) {
+				listeners.On(transport, 'Transport.Abort', function (event) {
 					fail('Abort', event);
 				});
 
@@ -9627,6 +9528,7 @@
 				}
 			}
 
+			/* Transfer: outbound delegation */
 			function executeOutbound () {
 				if (source && typeof source === 'object' && !(source instanceof Blob) && !(source instanceof ArrayBuffer) && !ArrayBuffer.isView(source))
 					source = NetworkStructuredPack(source);
@@ -9653,6 +9555,7 @@
 				outbound.Execute();
 			}
 
+			/* Transfer: public API */
 			api = {
 				Transport: function (value) {
 					if (active)
@@ -9804,7 +9707,7 @@
 					if (outbound) outbound.Destroy();
 					else if (active) api.Abort();
 
-					clearListeners();
+					listeners.Clear(transport);
 
 					outbound = null;
 					transport = null;
