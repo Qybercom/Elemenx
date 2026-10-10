@@ -32,7 +32,8 @@ Tests (`tests/`) and the root tool configs (`*.config.js`, `*.config.mjs`) are t
 	})(typeof globalThis !== 'undefined' ? globalThis : self);
 ```
 
-- Every module starts with a `/* Name */` section header.
+- Every section starts with a one-line `/* Name */` header and is listed in the table of contents at the top of the file. Large sections are split by `/* Section: part */` sub-headers.
+- Every `Runtime.*` field is documented in `docs/RUNTIME-INTERNALS.md` under the section that assigns it.
 - Modules talk to each other only through `Runtime.*`. Public members are attached to `global.Elemenx` and nothing else is global.
 
 ## Formatting

@@ -27,4 +27,8 @@ npm test
 
 ## Navigating `elemenx.js`
 
-The file is about 15 600 lines. Each subsystem is an inner IIFE module. Modules share state only through the private `Runtime` object and expose public members on `global.Elemenx`. Work on one module at a time, and keep the surrounding style.
+The file is about 16 000 lines. The table of contents at its top lists every section. Each section starts with a header comment: search for `/* Router` to jump to the Router, `/* Network: WebRTC` to a part of a large section.
+
+Sections share private state only through the `Runtime` object; `docs/RUNTIME-INTERNALS.md` lists every `Runtime.*` field, its owner section and its users. Read it before touching a field, and update it in the same change when a field is added, moved or removed (`tests/regression/runtime-internals.test.js` enforces this). New sections must get a header and a line in the table of contents.
+
+Work on one section at a time, and keep the surrounding style.

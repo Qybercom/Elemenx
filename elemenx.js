@@ -1,10 +1,43 @@
+/*
+ * Elemenx: a self-contained ES5 browser UI framework in one file.
+ * Code style: docs/CODE-STYLE.md. Shared private state: docs/RUNTIME-INTERNALS.md.
+ *
+ * Every section starts with a one-line header comment holding its name: search for "/* Router" to jump to Router.
+ * Large sections have sub-headers "Section: part", for example "/* Network: WebRTC".
+ *
+ * Sections, top to bottom:
+ *   Runtime                  private state shared by all modules through the Runtime object
+ *   Identity                 Elemenx.RuntimeID, StartedAt, Title
+ *   Outlet                   render slot that swaps one component for another
+ *   Collection               keyed list rendering used by collection hosts
+ *   Reactive                 reactive state: proxies, dependency tracking, effects, batching
+ *   Bundle                   Elemenx.Bundle: production bundle registry, resolved before Discovery
+ *   Discovery                development loading of index.js graphs and entity scripts
+ *   Library                  Elemenx.Library and the Application $Use declaration
+ *   Service and Guard        Elemenx.Service, Elemenx.Guard and Application-owned service instances
+ *   Router ownership         which Router a component belongs to
+ *   Directive registry       directive metadata and the built-in if, for, key, outlet, pending, error
+ *   Template and Component   Elemenx.Template, Elemenx.Directive, Elemenx.Component: compiler, bindings, factory
+ *   Router                   Elemenx.Router: routes, guards, browser history
+ *   Structural               structural hosts: conditional and collection mounting, deferred children
+ *   Network                  Elemenx.Network: XHR, Stream, LongPolling, SSE, Transfer, WebSocket, WebRTC, Metrics, Context
+ *   Storage                  Elemenx.Storage: Local, Session, Cookie, IndexedDB, Context
+ *   Events                   Elemenx.Events and Elemenx.Pipe
+ *   Messaging                Elemenx.Messaging: channels, Window bridges, BroadcastChannel discovery
+ *   WebWorker                Elemenx.WebWorker
+ *   ServiceWorker            Elemenx.ServiceWorker
+ *   Application              Elemenx.Application: ownership, mounting, startup lifecycle
+ *   ServiceWorker bootstrap  runs inside a service worker started by Elemenx.ServiceWorker
+ */
 (function () {
+	/* Runtime */
 	var Runtime = {};
 
 	Runtime.ScriptURL = typeof document !== 'undefined' && document.currentScript ? document.currentScript.src : null;
 	Runtime.HasDOM = typeof document !== 'undefined';
 	Runtime.StartedAt = new Date();
 
+	/* Identity */
 	(function (global) {
 		'use strict';
 
@@ -60,6 +93,7 @@
 		RuntimeID();
 	})(typeof globalThis !== 'undefined' ? globalThis : self);
 
+	/* Outlet */
 	(function (global) {
 		'use strict';
 
@@ -113,6 +147,7 @@
 		Runtime.Outlet = Outlet;
 	})(typeof globalThis !== 'undefined' ? globalThis : self);
 
+	/* Collection */
 	(function (global) {
 		'use strict';
 
@@ -407,6 +442,7 @@
 		Runtime.Collection = Collection;
 	})(typeof globalThis !== 'undefined' ? globalThis : self);
 
+	/* Reactive */
 	(function (global) {
 		'use strict';
 
@@ -1259,6 +1295,7 @@
 		};
 	})(typeof globalThis !== 'undefined' ? globalThis : self);
 
+	/* Library */
 	(function (global) {
 		'use strict';
 		var Elemenx = global.Elemenx;
@@ -1420,6 +1457,8 @@
 			}
 		};
 	})(typeof globalThis !== 'undefined' ? globalThis : self);
+
+	/* Service and Guard */
 	(function (global) {
 		'use strict';
 
@@ -1783,6 +1822,7 @@
 		};
 	})(typeof globalThis !== 'undefined' ? globalThis : self);
 
+	/* Router ownership */
 	Runtime.ComponentRouters = new WeakMap();
 	Runtime.ComponentRouterFacades = new WeakMap();
 	Runtime.ActiveRouter = null;
@@ -1904,6 +1944,7 @@
 		return result;
 	};
 
+	/* Directive registry */
 	Runtime.Directive = {
 		Registry: {},
 		Aliases: {},
@@ -2218,15 +2259,18 @@
 	Runtime.Directive.Register('pending', {Alias: 'Pending', Kind: 'status', Role: 'pending'}, true);
 	Runtime.Directive.Register('error', {Alias: 'Error', Kind: 'status', Role: 'error'}, true);
 
+	/* Template and Component */
 	(function (global) {
 		'use strict';
 
 		var Elemenx = global.Elemenx;
 
+		/* Component: Directive API */
 		Elemenx.Directive = function (name, definition) {
 			return Runtime.Directive.Register(name, definition);
 		};
 
+		/* Component: state */
 		var componentRegistry = {};
 		var componentDefinitionReserved = {
 			$Template: true,
@@ -2292,6 +2336,7 @@
 		var templateLoaders = [];
 		var templateDOMObserver = null;
 
+		/* Component: Template registry */
 		function templateRegistrySet (name, value) {
 			var pending;
 			var i = 0;
@@ -2469,6 +2514,7 @@
 			}
 		}
 
+		/* Component: template and style resources */
 		function loadTemplateURL (url, force, callback) {
 			var request;
 			var callbacks;
@@ -2599,6 +2645,7 @@
 				style.textContent = String(css);
 		}
 
+		/* Component: live and deferred instances */
 		var liveComponentInstances = {};
 
 		function trackComponentInstance (name, component) {
@@ -2963,6 +3010,7 @@
 			return api;
 		}
 
+		/* Component: template compiler */
 		/*
 		 * Compile expressions from trusted TEMPLATE SOURCE only.
 		 * Runtime state is supplied as scope and is never concatenated into code.
@@ -3719,6 +3767,7 @@
 			}
 		}
 
+		/* Component: factory */
 		function CreateComponentFactory (name, definition, generationOverride) {
 			var templateID;
 			var messagingInstanceSequence = 0;
@@ -4598,6 +4647,7 @@
 			return factory;
 		}
 
+		/* Component: runtime bridge and public API */
 		Runtime.ResolveComponent = function (name) {
 			name = String(name);
 
@@ -4797,6 +4847,7 @@
 		};
 	})(typeof globalThis !== 'undefined' ? globalThis : self);
 
+	/* Router */
 	(function (global) {
 		'use strict';
 
@@ -6107,6 +6158,7 @@
 		Elemenx.Router = Router;
 	})(typeof globalThis !== 'undefined' ? globalThis : self);
 
+	/* Structural */
 	(function (global) {
 		'use strict';
 
@@ -7429,10 +7481,12 @@
 		Runtime.Structural = Structural;
 	})(typeof globalThis !== 'undefined' ? globalThis : self);
 
+	/* Network */
 	(function (global) {
 		var Elemenx = global.Elemenx;
 		var NetworkProtocols = {};
 
+		/* Network: lifecycle and structured envelope */
 		function NetworkStarted (target) {
 			var startedAt = new Date();
 
@@ -7705,6 +7759,7 @@
 			};
 		}
 
+		/* Network: Protocol */
 		function NetworkProtocol (name, definition) {
 			if (arguments.length === 1)
 				return NetworkProtocols[name] || null;
@@ -7723,6 +7778,7 @@
 			return protocol;
 		}
 
+		/* Network: XHR */
 		function NetworkXHR (configuration) {
 			var config = configuration || {};
 			var method = config.Method || 'GET';
@@ -7998,6 +8054,7 @@
 			return api;
 		}
 
+		/* Network: Stream */
 		function NetworkStream (configuration) {
 			var config = configuration || {};
 			var method = config.Method || 'GET';
@@ -8374,6 +8431,7 @@
 			return api;
 		}
 
+		/* Network: LongPolling */
 		function NetworkLongPolling (configuration) {
 			var config = configuration || {};
 			var method = config.Method || 'GET';
@@ -8701,6 +8759,7 @@
 			return api;
 		}
 
+		/* Network: SSE */
 		function NetworkSSE (configuration) {
 			var config = configuration || {};
 			var url = config.URL || '';
@@ -8859,6 +8918,7 @@
 			return api;
 		}
 
+		/* Network: Transfer outbound engine */
 		function NetworkTransferOutbound (configuration) {
 			var config = configuration || {};
 			var transport = config.Transport || null;
@@ -9702,6 +9762,7 @@
 			return api;
 		}
 
+		/* Network: Transfer */
 		function NetworkTransfer (configuration) {
 			var config = configuration || {};
 			var transport = config.Transport || null;
@@ -10248,6 +10309,7 @@
 			return api;
 		}
 
+		/* Network: TransferReceiver */
 		function NetworkTransferReceiver (configuration) {
 			var config = configuration || {};
 			var transport = config.Transport || null;
@@ -10440,6 +10502,7 @@
 			return api;
 		}
 
+		/* Network: WebSocket */
 		function NetworkWebSocket (configuration) {
 			var config = configuration || {};
 			var url = config.URL || '';
@@ -10729,6 +10792,7 @@
 			return api;
 		}
 
+		/* Network: WebRTC */
 		function NetworkWebRTC (configuration) {
 			var config = configuration || {};
 			var rtcConfig = config.Configuration || {};
@@ -11307,6 +11371,7 @@
 			return api;
 		}
 
+		/* Network: Metrics */
 		function NetworkMetrics (configuration) {
 			var config = configuration || {};
 			var transport = config.Transport || null;
@@ -11840,6 +11905,7 @@
 		var DestroyedNetworkOwners = new WeakSet();
 		var NetworkContexts = {};
 
+		/* Network: ownership */
 		function destroyNetworkResource (resource) {
 			if (!resource) return;
 
@@ -11898,6 +11964,7 @@
 			resources.length = 0;
 		}
 
+		/* Network: Context */
 		function NetworkContext (name, definition) {
 			if (arguments.length === 1) {
 				if (typeof name !== 'string') return name || null;
@@ -12007,6 +12074,7 @@
 			return resource;
 		}
 
+		/* Network: facade and public API */
 		function createNetworkFacade (owner, inheritedContext) {
 			function create (type, configuration, localContext) {
 				if (owner && DestroyedNetworkOwners.has(owner))
@@ -13063,6 +13131,7 @@
 		};
 	})(typeof globalThis !== 'undefined' ? globalThis : self);
 
+	/* Events */
 	(function (global) {
 		'use strict';
 
@@ -13527,6 +13596,7 @@
 		};
 	})(typeof globalThis !== 'undefined' ? globalThis : self);
 
+	/* Messaging */
 	(function (global) {
 		'use strict';
 
@@ -14451,6 +14521,7 @@
 		};
 	})(typeof globalThis !== 'undefined' ? globalThis : self);
 
+	/* WebWorker */
 	(function (global) {
 		'use strict';
 
@@ -14909,6 +14980,7 @@
 
 	})(typeof globalThis !== 'undefined' ? globalThis : self);
 
+	/* ServiceWorker */
 	(function (global) {
 		'use strict';
 
@@ -16087,6 +16159,7 @@
 		};
 	})(typeof globalThis !== 'undefined' ? globalThis : self);
 
+	/* ServiceWorker bootstrap */
 	(function (global) {
 		'use strict';
 
