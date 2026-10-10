@@ -80,6 +80,10 @@ A guard or an `$OnRouteLeave` hook that returns a path redirects the navigation 
 
 A navigation whose target cannot be loaded or rendered (a missing route, Waiting, GuardFailed or NotFound component, a missing guard or outlet) ends with the Router event `NavigationError`. Its data is the navigation context with `$Error` set to the error; the URL returns to the committed route, and `Go()` / `Replace()` never throw for it. Without a `NavigationError` listener the error is reported as an uncaught error.
 
+## Deferred component failures
+
+A Component whose template or style cannot be loaded renders the `*error` status of its declaration and calls `$OnChildError` of its owner (an Application root reports to the Application `$OnError`). The error is logged to the console only when no such hook received it.
+
 ## Exceptions in listeners and callbacks
 
 Elemenx calls event listeners the way the DOM does. An exception thrown by a listener (`On(...)` of Events, Messaging, Network objects, Storage operations, workers, `$On` of Components, Router events) is reported as an uncaught error during the dispatch, before the next listener runs: it reaches `window.onerror` and `error` listeners with its original stack, and the console unless a listener calls `preventDefault()`. The remaining listeners still receive the event, and the code that dispatched it is not interrupted. The same applies to callbacks Elemenx calls from asynchronous browser operations, such as WebRTC negotiation callbacks.

@@ -1,5 +1,5 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { loadElemenx, resetDOM, tick, unique } from '../setup.js';
+import { loadElemenx, resetDOM, tick, unique, waitFor } from '../setup.js';
 
 var running = [];
 
@@ -124,13 +124,17 @@ describe('Regression: Router contracts', function () {
 		expect(location.pathname).toBe('/third');
 		expect(facade.Back()).toBe(x.Router);
 
-		await tick(60);
+		await waitFor(function () {
+			return location.pathname === '/first' && !!document.getElementById('contract-first');
+		}, 2000);
 
 		expect(location.pathname).toBe('/first');
 		expect(document.getElementById('contract-first')).not.toBeNull();
 		expect(facade.Forward()).toBe(x.Router);
 
-		await tick(60);
+		await waitFor(function () {
+			return location.pathname === '/third' && !!document.getElementById('contract-third');
+		}, 2000);
 
 		expect(location.pathname).toBe('/third');
 		expect(document.getElementById('contract-third')).not.toBeNull();
@@ -184,7 +188,9 @@ describe('Regression: Router contracts', function () {
 
 		history.back();
 
-		await tick(60);
+		await waitFor(function () {
+			return location.pathname === '/unknown' && !!document.getElementById('contract-missing');
+		}, 2000);
 
 		expect(location.pathname).toBe('/unknown');
 		expect(document.getElementById('contract-missing')).not.toBeNull();

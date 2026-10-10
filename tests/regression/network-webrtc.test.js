@@ -491,4 +491,136 @@ describe('Regression: Network WebRTC', function () {
 
 		expect(data).toEqual([]);
 	});
+
+	it('setters and water marks configure the next connection and are ignored while it is active', function () {
+		var rtc = Elemenx.Network.WebRTC();
+
+		expect(rtc.Configuration({iceServers: []}).ChannelName('files').Channel({ordered: false})).toBe(rtc);
+		expect(rtc.QueueHighWaterMark(-1).QueueLowWaterMark('5').BufferHighWaterMark(20).BufferLowWaterMark(null)).toBe(rtc);
+		expect([rtc.QueueHighWaterMark(), rtc.QueueLowWaterMark(), rtc.BufferHighWaterMark(), rtc.BufferLowWaterMark()]).toEqual([0, 5, 20, 0]);
+		expect(rtc.Close()).toBe(rtc);
+		expect(rtc.Send('idle')).toBe(false);
+
+		rtc.Connect();
+
+		expect(rtc.Configuration({}).ChannelName('other').Channel({}).Protocol(null)).toBe(rtc);
+		expect(rtc.QueueHighWaterMark(1).QueueLowWaterMark(1).BufferHighWaterMark(1).BufferLowWaterMark(1)).toBe(rtc);
+		expect([rtc.QueueHighWaterMark(), rtc.QueueLowWaterMark(), rtc.BufferHighWaterMark(), rtc.BufferLowWaterMark()]).toEqual([0, 5, 20, 0]);
+
+		var peer = FakeRTCPeerConnection.Instances[0];
+
+		expect(peer.Configuration).toEqual({iceServers: []});
+		expect([peer.Channels[0].label, peer.Channels[0].ordered]).toEqual(['files', false]);
+		expect(rtc.Send('not open yet')).toBe(false);
+
+		rtc.Close();
+	});
+
+	it('a failed negotiation step goes to its callback, or becomes Transport.Error without one', async function () {
+		var results = [];
+		var errors = [];
+		var rtc = Elemenx.Network.WebRTC();
+
+		rtc.On('Transport.Error', function (event) {
+			errors.push([event.Data.Operation, event.Data.Error.message]);
+		});
+		rtc.Connect();
+
+		var peer = FakeRTCPeerConnection.Instances[0];
+
+		peer.setRemoteDescription = function () {
+			return Promise.reject(new Error('bad description'));
+		};
+
+		rtc.AcceptOffer({type: 'offer', sdp: 'x'}, function (error, value) {
+			results.push([error && error.message, value]);
+		});
+		rtc.AcceptOffer({type: 'offer', sdp: 'x'});
+
+		await waitFor(function () {
+			return results.length && errors.length;
+		});
+
+		expect(results).toEqual([['bad description', undefined]]);
+		expect(errors).toEqual([['AcceptOffer', 'bad description']]);
+
+		rtc.Close();
+
+		rtc.AddICECandidate({candidate: 'late'}, function (error, value) {
+			results.push(['ice', error, value]);
+		});
+
+		await tick(10);
+
+		expect(results[1]).toEqual(['ice', null, undefined]);
+	});
+
+	it('a negotiation that finishes after Close delivers null and publishes nothing', async function () {
+		var results = [];
+		var descriptions = [];
+		var rtc = Elemenx.Network.WebRTC();
+
+		rtc.On('Transport', function (event) {
+			if (event.Type === 'LocalDescription' || event.Type === 'RemoteDescription')
+				descriptions.push(event.Type);
+		});
+
+		function record (name) {
+			return function (error, value) {
+				results.push([name, error, value]);
+			};
+		}
+
+		rtc.CreateOffer(record('offer'));
+		rtc.Close();
+		rtc.AcceptOffer({type: 'offer', sdp: 'x'}, record('accept'));
+		rtc.Close();
+		rtc.Connect();
+		rtc.AcceptAnswer({type: 'answer', sdp: 'x'}, record('answer'));
+		rtc.Close();
+
+		await waitFor(function () {
+			return results.length === 3;
+		});
+
+		expect(results.sort()).toEqual([['accept', null, null], ['answer', null, null], ['offer', null, null]]);
+		expect(descriptions).toEqual([]);
+	});
+
+	it('a channel.send that throws reports Backpressure and the queue is retried later', async function () {
+		var backpressure = [];
+		var rtc = Elemenx.Network.WebRTC();
+
+		rtc.On('Transport.Backpressure', function (event) {
+			backpressure.push(event.Data.Error ? event.Data.Error.message : null);
+		});
+		rtc.Connect();
+
+		var channel = FakeRTCPeerConnection.Instances[0].Channels[0];
+		var failures = 2;
+
+		channel.send = function (data) {
+			if (failures > 0) {
+				failures--;
+
+				throw new Error('busy');
+			}
+
+			this.Sent.push(data);
+		};
+
+		channel.Open();
+
+		expect(rtc.Send('payload')).toBe(true);
+		expect(rtc.Send('second')).toBe(true);
+
+		await waitFor(function () {
+			return channel.Sent.length === 2;
+		});
+
+		expect(backpressure).toEqual(['busy', 'busy']);
+		expect(channel.Sent).toEqual(['payload', 'second']);
+
+		rtc.Close();
+	});
 });

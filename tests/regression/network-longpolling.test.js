@@ -196,4 +196,89 @@ describe('Regression: Network LongPolling', function () {
 		expect(data).toEqual([]);
 		expect(FakeXHR.Instances.length).toBe(1);
 	});
+
+	it('setters configure the next Connect, are ignored while polling, and Timeout reaches the request', function () {
+		var name = unique('PollSetterProtocol');
+		var lp = Elemenx.Network.LongPolling({Timeout: 500});
+
+		Elemenx.Network.Protocol(name, {
+			Encode: function (value) {
+				return 'enc:' + value;
+			}
+		});
+
+		expect(lp.Method('POST').URL('/first').Data('body').Header('X-A', '1').Protocol(name).Retry(5)).toBe(lp);
+
+		lp.Connect();
+
+		expect(lp.Method('PUT').URL('/second').Data('other').Header('X-B', '2').Protocol(null).Retry(9)).toBe(lp);
+
+		var request = FakeXHR.Instances[0];
+
+		expect([request.Method, request.URL, request.Body, request.HeadersCopy(), request.timeout]).toEqual(['POST', '/first', 'enc:body', [['X-A', '1']], 500]);
+
+		lp.Close();
+		lp.Connect();
+
+		request = FakeXHR.Instances[1];
+
+		expect([request.Method, request.URL, request.Body, request.HeadersCopy()]).toEqual(['POST', '/first', 'enc:body', [['X-A', '1']]]);
+
+		lp.Close();
+	});
+
+	it('Close cancels a scheduled retry, stale request events are ignored, and Off and Close are safe when idle', async function () {
+		var types = [];
+		var lp = Elemenx.Network.LongPolling({URL: '/poll', Retry: 20});
+
+		function listener (event) {
+			types.push(event.Type);
+		}
+
+		expect(lp.Close()).toBe(lp);
+
+		lp.On('Transport', listener);
+		lp.Connect();
+
+		var first = FakeXHR.Instances[0];
+
+		first.Fail();
+
+		expect(types).toContain('Error');
+
+		lp.Close();
+
+		await tick(40);
+
+		expect(FakeXHR.Instances.length).toBe(1);
+
+		types.length = 0;
+
+		first.Fail();
+		first.Timeout();
+
+		expect(types).toEqual([]);
+
+		lp.Off('Transport', listener);
+		lp.Connect();
+		lp.Close();
+
+		expect(types).toEqual([]);
+	});
+
+	it('a request aborted from outside leaves no current request behind', function () {
+		var lp = Elemenx.Network.LongPolling({URL: '/poll'});
+
+		lp.Connect();
+
+		var request = lp.XHR();
+
+		expect(request).toBe(FakeXHR.Instances[0]);
+
+		request.abort();
+
+		expect(lp.XHR()).toBeNull();
+
+		lp.Close();
+	});
 });

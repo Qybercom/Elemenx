@@ -1,0 +1,2 @@
+['Root.js'];
+['Other.js'];

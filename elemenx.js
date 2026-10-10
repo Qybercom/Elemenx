@@ -327,7 +327,6 @@
 	(function (global) {
 		'use strict';
 
-		var Elemenx = global.Elemenx;
 
 		function Outlet (element) {
 			var current = null;
@@ -381,7 +380,6 @@
 	(function (global) {
 		'use strict';
 
-		var Elemenx = global.Elemenx;
 		var own = Runtime.Own;
 		var targetMap = new WeakMap();
 		var proxyCache = new WeakMap();
@@ -1810,30 +1808,6 @@
 			Registry: {},
 			Aliases: {},
 			Prefixes: {},
-			Name: function (name) {
-				var directive = this.Aliases[name];
-
-				return directive ? '*' + directive : null;
-			},
-			Prefix: function (name) {
-				return this.Prefixes[name] || null;
-			},
-			Is: function (attribute, name) {
-				return attribute === this.Name(name);
-			},
-			Match: function (attribute, name) {
-				var prefix = this.Prefix(name);
-				if (!prefix)
-					return false;
-
-				return attribute.indexOf(prefix) === 0;
-			},
-			Argument: function (attribute, name) {
-				var prefix = this.Prefix(name);
-				if (!prefix || attribute.indexOf(prefix) !== 0) return null;
-
-				return attribute.substring(prefix.length);
-			},
 			Binding: function (attribute) {
 				if (
 					attribute.length < 3 ||
@@ -1989,28 +1963,6 @@
 
 				return null;
 			},
-			Role: function (node, role) {
-				var attrs = node && node.attributes ? node.attributes : [];
-				var i = 0;
-				var resolved;
-
-				while (i < attrs.length) {
-					resolved = this.Resolve(attrs[i].name);
-
-					if (resolved && resolved.Definition.Role === role) {
-						return {
-							Name: resolved.Name,
-							Definition: resolved.Definition,
-							Attribute: attrs[i].name,
-							Expression: attrs[i].value || ''
-						};
-					}
-
-					i++;
-				}
-
-				return null;
-			},
 			Arguments: function (node, owner) {
 				var result = {};
 				var attrs = node && node.attributes ? Array.prototype.slice.call(node.attributes) : [];
@@ -2135,53 +2087,6 @@
 
 		/* Component: state */
 		var componentRegistry = {};
-		var componentDefinitionReserved = {
-			$Template: true,
-			$TemplateID: true,
-			$TemplateURL: true,
-			$Style: true,
-			$StyleURL: true,
-			$Title: true,
-			$Components: true,
-			$Events: true,
-			$Messaging: true,
-			$DefinitionURL: true,
-			$StyleKey: true,
-			$OnCreate: true,
-			$OnReady: true,
-			$OnChildReady: true,
-			$OnChildPending: true,
-			$OnChildError: true,
-			$OnDestroy: true,
-			$OnEvent: true,
-			$OnMessage: true
-		};
-		var componentAPIReserved = {
-			$Generation: true,
-			$Application: true,
-			$Element: true,
-			$Ref: true,
-			$On: true,
-			$Emit: true,
-			$Parent: true,
-			$Router: true,
-			$Service: true,
-			$Title: true,
-			$Batch: true,
-			$Update: true,
-			$Destroy: true,
-			$Network: true,
-			$Storage: true,
-			$WebWorker: true,
-			$ServiceWorker: true,
-			$Messaging: true,
-			$Events: true,
-			$Path: true,
-			$Params: true,
-			$Query: true,
-			$Hash: true,
-			$GuardFailure: true
-		};
 		var componentRouteContext = {$Path: true, $Params: true, $Query: true, $Hash: true};
 		var componentGenerations = {};
 		var componentOutlets = new WeakMap();
@@ -2627,17 +2532,20 @@
 				placeholder.innerHTML = String(source);
 			}
 
+			/* Calls the lifecycle hook of the owner; false when the owner has none. */
 			function lifecycleCall (name, error) {
 				var owner = lifecycle && lifecycle.Owner;
 				var hook = lifecycle && lifecycle.Hooks && lifecycle.Hooks[name] ? lifecycle.Hooks[name] : name;
 				var method = owner && owner[hook];
-				if (typeof method !== 'function') return;
+				if (typeof method !== 'function') return false;
 
 				method.call(owner, {
 					Name: lifecycle.Name || null,
 					$Element: current && current.$Element ? current.$Element() : placeholder,
 					Error: error || null
 				});
+
+				return true;
 			}
 
 			if (lifecycle) {
@@ -2821,15 +2729,18 @@
 				if (destroyed) return;
 
 				if (error || !factory) {
+					var handled = false;
+
 					error = error || new Error('Elemenx deferred component failed');
 
 					if (lifecycle) {
 						renderStatus(lifecycle.Error);
 
-						lifecycleCall('$OnChildError', error);
+						handled = lifecycleCall('$OnChildError', error);
 					}
 
-					if (global.console && console.error)
+					/* Like the Application: an error that no owner hook received reaches the console. */
+					if (!handled && global.console && console.error)
 						console.error(error);
 
 					return;
@@ -4096,12 +4007,6 @@
 				/* Instance: template compilation */
 				projectSlots(root, slotProjection);
 
-				/*
-				 * Binding collection mutates the live DOM (notably {{...}} text).
-				 * Keep a pristine structural blueprint before that happens.
-				 */
-				var structuralBlueprint = root.cloneNode(true);
-
 				collectRefs(root, refs);
 
 				collectOutlets(root, outlets);
@@ -4125,10 +4030,6 @@
 
 				function Ref (name) {
 					return findRef(root, refs, name);
-				}
-
-				function Outlet (name) {
-					return outlets[name] || null;
 				}
 
 				function listen (node, name, callback) {
@@ -6022,7 +5923,6 @@
 	(function (global) {
 		'use strict';
 
-		var Elemenx = global.Elemenx;
 		var own = Runtime.Own;
 
 		/* Structural: bindings and props */
@@ -13849,7 +13749,6 @@
 		'use strict';
 
 		var Elemenx = global.Elemenx;
-		var own = Runtime.Own;
 		var definitions = {};
 		var ownedResources = Runtime.OwnerRegistry();
 		var handles = [];
@@ -13885,7 +13784,6 @@
 			var blobURL = null;
 			var state = 'Stopped';
 			var destroyed = false;
-			var manualStopped = false;
 			var listeners = Runtime.EventList();
 			var api;
 
@@ -13944,8 +13842,6 @@
 					throw new Error('Elemenx WebWorker Script is required: ' + name);
 
 				cleanupNative();
-
-				manualStopped = false;
 
 				manualStops.set(api, false);
 
@@ -14013,14 +13909,10 @@
 				if (destroyed) return api;
 
 				if (state === 'Stopped') {
-					manualStopped = true;
-
 					manualStops.set(api, true);
 
 					return api;
 				}
-
-				manualStopped = true;
 
 				manualStops.set(api, true);
 
@@ -14227,7 +14119,6 @@
 		'use strict';
 
 		var Elemenx = global.Elemenx;
-		var own = Runtime.Own;
 		var definitions = {};
 		var handles = [];
 		var ownedResources = Runtime.OwnerRegistry();

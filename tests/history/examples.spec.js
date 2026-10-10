@@ -497,7 +497,9 @@ test('official Advanced example demonstrates deferred child Pending, Ready and E
 	await expect(runtime).toContainText('Missing TemplateURL · child error rendered');
 	await expect(runtime.locator('.deferred-child-error')).toContainText('RuntimeDeferredErrorChild');
 	await expect(runtime.locator('.deferred-child-error')).toContainText('Elemenx TemplateURL failed');
+
+	/* the owner handles the failure in $OnChildError, so it does not reach the console */
 	expect(errors.some(function (error) {
 		return error.indexOf('Elemenx TemplateURL failed') !== -1;
-	})).toBe(true);
+	})).toBe(false);
 });

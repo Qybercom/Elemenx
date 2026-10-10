@@ -265,4 +265,120 @@ describe('Regression: Network WebSocket', function () {
 
 		expect(data).toEqual([]);
 	});
+
+	it('connection setters are ignored while connected; water marks and DrainInterval apply at any time', function () {
+		var name = unique('SocketSetterProtocol');
+		var ws = Elemenx.Network.WebSocket();
+
+		Elemenx.Network.Protocol(name, {
+			Encode: function (value) {
+				return 'enc:' + value;
+			}
+		});
+
+		expect(ws.URL('ws://first.test').Protocols(['chat']).BinaryType('arraybuffer').Protocol(name)).toBe(ws);
+		expect([ws.BufferHighWaterMark(), ws.BufferLowWaterMark(), ws.DrainInterval()]).toEqual([4 * 1024 * 1024, 1024 * 1024, 10]);
+		expect(ws.Writable()).toBe(false);
+		expect(ws.Close()).toBe(ws);
+
+		ws.Connect();
+
+		expect(ws.URL('ws://second.test').Protocols(['other']).BinaryType('blob').Protocol(null)).toBe(ws);
+		expect(ws.BufferHighWaterMark(-5).BufferLowWaterMark('7').DrainInterval(0)).toBe(ws);
+		expect([ws.BufferHighWaterMark(), ws.BufferLowWaterMark(), ws.DrainInterval()]).toEqual([0, 7, 1]);
+
+		var native = FakeWebSocket.Instances[0];
+
+		native.Open();
+
+		ws.BufferHighWaterMark(100);
+		ws.Send('x');
+
+		expect([native.url, native.protocols, native.binaryType, native.Sent]).toEqual(['ws://first.test', ['chat'], 'arraybuffer', ['enc:x']]);
+
+		ws.Close();
+
+		native.FinishClose();
+
+		ws.Connect();
+
+		expect([FakeWebSocket.Instances[1].url, FakeWebSocket.Instances[1].protocols]).toEqual(['ws://first.test', ['chat']]);
+
+		ws.Close();
+	});
+
+	it('a socket that is closing ignores its open, message and error events', function () {
+		var types = [];
+		var ws = Elemenx.Network.WebSocket({URL: 'ws://example.test'});
+
+		ws.On('Transport', function (event) {
+			types.push(event.Type);
+		});
+		ws.Connect();
+
+		var native = FakeWebSocket.Instances[0];
+
+		ws.Close(4000, 'bye');
+
+		native.Emit('open', {});
+		native.Message('late');
+		native.Emit('error', {});
+		native.FinishClose(4000, 'bye');
+
+		expect(types).toEqual(['BeforeConnect', 'BeforeClose', 'Close']);
+		expect([native.CloseCode, native.CloseReason]).toEqual([4000, 'bye']);
+	});
+
+	it('a send that fills the buffer reports Backpressure, and Drain waits until the buffer is low again', async function () {
+		var types = [];
+		var backpressure = [];
+		var ws = Elemenx.Network.WebSocket({URL: 'ws://example.test', BufferHighWaterMark: 10, BufferLowWaterMark: 3, DrainInterval: 1});
+
+		ws.On('Transport', function (event) {
+			types.push(event.Type);
+		});
+		ws.On('Transport.Backpressure', function (event) {
+			backpressure.push(event.Data.Bytes);
+		});
+		ws.Connect();
+
+		var native = FakeWebSocket.Instances[0];
+
+		native.send = function (data) {
+			this.Sent.push(data);
+
+			this.bufferedAmount = 12;
+		};
+
+		native.Open();
+
+		expect(ws.Send('abc')).toBe(true);
+		expect(backpressure).toEqual([0]);
+		expect(ws.Writable()).toBe(false);
+
+		native.bufferedAmount = 6;
+
+		await tick(10);
+
+		expect(types).not.toContain('Drain');
+
+		native.bufferedAmount = 2;
+
+		await tick(10);
+
+		expect(types).toContain('Drain');
+		expect(ws.Writable()).toBe(true);
+
+		native.bufferedAmount = 12;
+
+		ws.Send('more');
+
+		native.FinishClose();
+
+		await tick(10);
+
+		expect(types.filter(function (type) {
+			return type === 'Drain';
+		}).length).toBe(1);
+	});
 });

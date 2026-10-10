@@ -56,7 +56,10 @@ export default [
 			sourceType: 'script'
 		},
 		plugins: plugins,
-		rules: formatting
+		rules: Object.assign({}, formatting, {
+			/* shipped code carries no dead declarations; an empty catch still needs its ES5 parameter */
+			'no-unused-vars': ['error', {vars: 'all', args: 'none', caughtErrors: 'none'}]
+		})
 	},
 	{
 		files: ['tests/**/*.js'],

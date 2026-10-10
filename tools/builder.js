@@ -599,23 +599,6 @@ function option (args, name, fallback) {
 	return args[i + 1];
 }
 
-function serve (directory, args) {
-	var childProcess = require('child_process');
-	var port = option(args, 'port', process.env.PORT || '4173');
-	var server = path.resolve(__dirname, 'server.js');
-	var child = childProcess.spawn(process.execPath, [server, directory, String(port)], {stdio: 'inherit'});
-
-	child.on('exit', function (code) {
-		process.exit(code === null ? 1 : code);
-	});
-}
-
-function usage () {
-	fail('usage: node tools/builder.js build <project> [--out dist] [--application application] [--entry app.js] [--index index.html]\n' +
-		'       node tools/builder.js serve <directory> [--port 4173]\n' +
-		'       node tools/builder.js dev <project> [--port 4173]');
-}
-
 module.exports = {
 	Build: build,
 	Scan: scan,

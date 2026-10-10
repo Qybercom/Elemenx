@@ -283,4 +283,144 @@ describe('Regression: Network Stream', function () {
 
 		expect(data).toEqual([]);
 	});
+
+	it('setters configure the next Connect and are ignored while the stream is active', async function () {
+		var calls = [];
+		var name = unique('StreamSetterProtocol');
+		var stream = Elemenx.Network.Stream();
+
+		window.fetch = function (url, options) {
+			calls.push({URL: url, Method: options.method, Headers: options.headers, Body: options.body});
+
+			return Promise.resolve(makeResponse(new Reader()));
+		};
+
+		Elemenx.Network.Protocol(name, {
+			Encode: function (value) {
+				return 'enc:' + value;
+			}
+		});
+
+		expect(stream.Method('POST').URL('/first').Data('body').Header('X-A', '1').Protocol(name)).toBe(stream);
+
+		stream.Connect();
+
+		expect(stream.Method('PUT').URL('/second').Data('other').Header('X-B', '2').Protocol(null)).toBe(stream);
+
+		await tick(0);
+
+		stream.Close();
+		stream.Connect();
+
+		await tick(0);
+
+		expect(calls).toEqual([
+			{URL: '/first', Method: 'POST', Headers: {'X-A': '1'}, Body: 'enc:body'},
+			{URL: '/first', Method: 'POST', Headers: {'X-A': '1'}, Body: 'enc:body'}
+		]);
+
+		stream.Close();
+	});
+
+	it('a failed fetch, a response without a readable body and a failed read end the stream with Error', async function () {
+		var errors = [];
+		var reader = new Reader();
+		var responses = [
+			function () {
+				return Promise.reject(new Error('offline'));
+			},
+			function () {
+				var response = makeResponse(reader);
+
+				response.body = null;
+
+				return Promise.resolve(response);
+			},
+			function () {
+				return Promise.resolve(makeResponse(reader));
+			}
+		];
+		var stream = Elemenx.Network.Stream({URL: '/stream'});
+
+		window.fetch = function () {
+			return responses.shift()();
+		};
+
+		stream.On('Transport.Error', function (event) {
+			errors.push(event.Data.Reason || event.Data.Error.message);
+		});
+
+		stream.Connect();
+
+		await tick(0);
+
+		stream.Connect();
+
+		await tick(0);
+
+		stream.Connect();
+
+		await tick(0);
+
+		reader.Fail(new Error('read failed'));
+
+		await tick(0);
+
+		expect(errors).toEqual(['offline', 'ReadableStreamUnavailable', 'read failed']);
+		expect(responses.length).toBe(0);
+	});
+
+	it('Protocol Push may return one packet or nothing, and Pause, Resume, Close and Off are safe on an idle stream', async function () {
+		var reader = new Reader();
+		var name = unique('StreamSinglePush');
+		var packets = [];
+		var types = [];
+		var stream;
+
+		window.fetch = function () {
+			return Promise.resolve(makeResponse(reader));
+		};
+
+		Elemenx.Network.Protocol(name, {
+			Push: function (value) {
+				return value[0] ? {Type: 'Packet', Data: value[0]} : null;
+			}
+		});
+
+		stream = Elemenx.Network.Stream({URL: '/stream', Protocol: name});
+
+		function listener (event) {
+			types.push(event.Type);
+		}
+
+		stream.On('Transport', listener);
+
+		expect(stream.Pause().Resume().Close()).toBe(stream);
+		expect(types).toEqual([]);
+
+		stream.On('Protocol.Packet', function (event) {
+			packets.push(event.Data);
+		});
+		stream.Connect();
+
+		await tick(0);
+
+		stream.Pause().Pause().Resume().Resume();
+
+		expect(types.filter(function (type) {
+			return type === 'Pause' || type === 'Resume';
+		})).toEqual(['Pause', 'Resume']);
+
+		reader.Push(new Uint8Array([4]));
+		reader.Push(new Uint8Array([0]));
+
+		await tick(0);
+
+		expect(packets).toEqual([4]);
+
+		stream.Off('Transport', listener);
+		stream.Close();
+
+		expect(types.indexOf('Close')).toBe(-1);
+	});
 });
