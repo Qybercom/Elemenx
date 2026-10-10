@@ -158,6 +158,39 @@ describe('Regression: Network Stream', function () {
 		stream.Close();
 	});
 
+	it('Protocol Decode turns each chunk into one packet and skips chunks without a Type', async function () {
+		var reader = new Reader();
+		var name = unique('StreamDecode');
+		var packets = [];
+
+		window.fetch = function () { return Promise.resolve(makeResponse(reader)); };
+
+		Elemenx.Network.Protocol(name, {
+			Decode: function (value) {
+				return value[0] ? {Type: 'Packet', Data: value[0]} : null;
+			}
+		});
+
+		var stream = Elemenx.Network.Stream({URL: '/stream', Protocol: name});
+
+		stream.On('Protocol.Packet', function (event, transportEvent) {
+			packets.push([event.Data, transportEvent.Type]);
+		});
+		stream.Connect();
+
+		await tick(0);
+
+		reader.Push(new Uint8Array([5]));
+		reader.Push(new Uint8Array([0]));
+		reader.Push(new Uint8Array([9]));
+
+		await tick(0);
+
+		expect(packets).toEqual([[5, 'Data'], [9, 'Data']]);
+
+		stream.Close();
+	});
+
 	it('Pause stops the read loop and Resume continues it', async function () {
 		var reader = new Reader();
 		var types = [];

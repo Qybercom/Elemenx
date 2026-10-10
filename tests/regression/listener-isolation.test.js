@@ -7,6 +7,7 @@ import { loadElemenx, resetDOM, tick, unique, waitFor } from '../setup.js';
  */
 
 var reported = [];
+var consoleError = console.error;
 
 function capture (event) {
 	if (event.error && /^listener broke/.test(event.error.message)) {
@@ -14,6 +15,15 @@ function capture (event) {
 
 		event.preventDefault();
 	}
+}
+
+/* The Vitest browser runner echoes every window error to console.error once a test listens for errors itself. */
+function quietConsole () {
+	console.error = function (value) {
+		if (value && /listener broke/.test(value.message)) return;
+
+		consoleError.apply(console, arguments);
+	};
 }
 
 function breaking (label) {
@@ -52,11 +62,15 @@ describe('Regression: listener isolation', function () {
 
 		reported = [];
 
+		quietConsole();
+
 		window.addEventListener('error', capture);
 	});
 
 	afterEach(function () {
 		window.removeEventListener('error', capture);
+
+		console.error = consoleError;
 	});
 
 	it('Elemenx.Events', async function () {
@@ -71,6 +85,22 @@ describe('Regression: listener isolation', function () {
 		await expectIsolated('events', function () {
 			socket.Emit('isolation', 1);
 		}, received);
+
+		socket.Destroy();
+	});
+
+	it('the exception is reported during dispatch, before the next listener runs, like in the DOM', function () {
+		var socket = Elemenx.Events();
+		var seen = [];
+
+		socket.On('order', breaking('order'));
+		socket.On('order', function () {
+			seen.push(reported.slice());
+		});
+
+		socket.Emit('order', 1);
+
+		expect(seen).toEqual([['listener broke: order']]);
 
 		socket.Destroy();
 	});

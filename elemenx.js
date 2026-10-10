@@ -7,7 +7,7 @@
  *
  * Sections, top to bottom:
  *   Runtime                  private state shared by all modules through the Runtime object
- *   Utilities                small helpers shared by every module (Own, Assign, AbsoluteURL, OwnerRegistry, EventList, Countdown, MessageListeners, Report, Notify, Invoke)
+ *   Utilities                small helpers shared by every module (Own, Assign, AbsoluteURL, CurrentScriptURL, DefinitionURL, OwnerRegistry, EventList, Countdown, MessageListeners, Report, Notify, Invoke)
  *   Identity                 Elemenx.RuntimeID, StartedAt, Title
  *   Outlet                   render slot that swaps one component for another
  *   Reactive                 reactive state: proxies, dependency tracking, effects, batching
@@ -46,9 +46,18 @@
 			return Object.prototype.hasOwnProperty.call(object, key);
 		};
 
-		/* Copies the own enumerable properties of source into target and returns target. */
-		/* Reports an exception as an uncaught error, like the DOM does for an exception thrown by an event listener. */
+		/*
+		 * Reports an exception as an uncaught error, like the DOM does for an exception thrown by an event listener:
+		 * reportError dispatches the error event at once, so a handler that calls preventDefault() keeps it out of the console.
+		 * Without reportError the exception is rethrown from a timer.
+		 */
 		Runtime.Report = function (exception) {
+			if (typeof global.reportError === 'function') {
+				global.reportError(exception);
+
+				return;
+			}
+
 			setTimeout(function () {
 				throw exception;
 			}, 0);
@@ -83,6 +92,20 @@
 			if (!Runtime.HasDOM) return String(url);
 
 			return new URL(String(url), global.location.href).href;
+		};
+
+		/* The URL of the script being executed, without query and hash: the base of the relative paths of its definitions. */
+		Runtime.CurrentScriptURL = function () {
+			var script = Runtime.HasDOM ? global.document.currentScript : null;
+
+			return script && script.src ? script.src.split('?')[0].split('#')[0] : null;
+		};
+
+		/* Resolves a relative path of a definition against $DefinitionURL; absolute and root paths are kept as they are. */
+		Runtime.DefinitionURL = function (definition, url) {
+			if (!url || !definition.$DefinitionURL || /^(?:[a-z]+:)?\/\//i.test(url) || url.charAt(0) === '/') return url;
+
+			return definition.$DefinitionURL.substring(0, definition.$DefinitionURL.lastIndexOf('/') + 1) + url.replace(/^\.\//, '');
 		};
 
 		/*
@@ -229,6 +252,7 @@
 			};
 		};
 
+		/* Copies the own enumerable properties of source into target and returns target. */
 		Runtime.Assign = function (target, source) {
 			var key;
 
@@ -1190,14 +1214,7 @@
 		}
 
 		function root (definition) {
-			var value = definition.$Root || definition.Root;
-			if (!value)
-				return null;
-
-			if (definition.$DefinitionURL && !(/^(?:[a-z]+:)?\/\//i.test(value)) && value.charAt(0) !== '/')
-				value = definition.$DefinitionURL.substring(0, definition.$DefinitionURL.lastIndexOf('/') + 1) + value.replace(/^\.\//, '');
-
-			return value;
+			return Runtime.DefinitionURL(definition, definition.$Root || definition.Root) || null;
 		}
 
 		function use (application, value, callback) {
@@ -1285,8 +1302,8 @@
 				if (!name || !definition || typeof definition !== 'object')
 					throw new Error('Elemenx.Library expects (name, definition)');
 
-				if (global.document && global.document.currentScript && global.document.currentScript.src)
-					definition.$DefinitionURL = global.document.currentScript.src.split('?')[0].split('#')[0];
+				if (Runtime.CurrentScriptURL())
+					definition.$DefinitionURL = Runtime.CurrentScriptURL();
 
 				definitions[name] = definition;
 
@@ -3827,6 +3844,86 @@
 			}
 		}
 
+		/* Plain definition values (not $ keys, not methods): the initial state of an instance. */
+		function definitionValues (definition) {
+			var values = {};
+			var key;
+
+			for (key in definition) {
+				if (own(definition, key) && key.charAt(0) !== '$' && typeof definition[key] !== 'function') {
+					values[key] = definition[key];
+				}
+			}
+
+			return values;
+		}
+
+		/* Definition methods and $On* hooks become methods of the instance API. */
+		function copyComponentMethods (definition, target) {
+			var methodName;
+
+			for (methodName in definition) {
+				if (own(definition, methodName) && typeof definition[methodName] === 'function' && (methodName.charAt(0) !== '$' || methodName.indexOf('$On') === 0)) {
+					/*
+					 * Methods belong to the Component API, never to reactive state.
+					 * This is critical for DirectState structural children: their values
+					 * object is the owner's reactive scope, so assigning through the API
+					 * Proxy would mutate that scope while its structural effect is running.
+					 */
+					target[methodName] = definition[methodName];
+				}
+			}
+		}
+
+		/*
+		 * A component root carrying a structural directive needs a stable
+		 * owner node. Structural() compiles children of Component.Element(),
+		 * so without this host a root *if would be skipped completely.
+		 * Keep the host transparent to layout while allowing the real root to
+		 * participate in the same structural ownership path as nested directives.
+		 */
+		function componentRoot (template) {
+			var root = createFragment(resolveTemplate(template));
+			var structuralRoot;
+
+			if (root.nodeType !== 1 || !Runtime.Directive.Find(root, 'structural')) return root;
+
+			structuralRoot = document.createElement('span');
+			structuralRoot.style.display = 'contents';
+			structuralRoot.__ElemenxStructuralRoot = true;
+
+			structuralRoot.appendChild(root);
+
+			return structuralRoot;
+		}
+
+		/* Runs the effects in order: Run evaluates each one and starts tracking its dependencies. */
+		function runEffects (effects) {
+			var i = 0;
+
+			while (i < effects.length) {
+				effects[i].Run();
+
+				i++;
+			}
+		}
+
+		function destroyCustomDirectives (customDirectives, api) {
+			var i = customDirectives.length - 1;
+			var record;
+
+			while (i >= 0) {
+				record = customDirectives[i];
+
+				if (typeof record.Definition.$OnDestroy === 'function')
+					record.Definition.$OnDestroy.call(api, record.Context);
+
+				i--;
+			}
+
+			customDirectives.length = 0;
+		}
+
 		/* Component: factory */
 		/* A component whose template or style is not inline: resources load on first use, then a regular factory takes over. */
 		function needsRemoteResources (name, definition) {
@@ -3940,18 +4037,12 @@
 
 			definition = definition || {};
 
-			if (name && (definition.$TemplateURL || definition.$StyleURL) && global.document && global.document.currentScript && !definition.$DefinitionURL) {
-				definition.$DefinitionURL = global.document.currentScript.src.split('?')[0].split('#')[0];
+			if (name && (definition.$TemplateURL || definition.$StyleURL) && !definition.$DefinitionURL && Runtime.CurrentScriptURL()) {
+				definition.$DefinitionURL = Runtime.CurrentScriptURL();
 			}
 
-			function resolveDefinitionResourceURL (url) {
-				if (!url || !definition.$DefinitionURL || /^(?:[a-z]+:)?\/\//i.test(url) || url.charAt(0) === '/') return url;
-
-				return definition.$DefinitionURL.substring(0, definition.$DefinitionURL.lastIndexOf('/') + 1) + url.replace(/^\.\//, '');
-			}
-
-			definition.$TemplateURL = resolveDefinitionResourceURL(definition.$TemplateURL);
-			definition.$StyleURL = resolveDefinitionResourceURL(definition.$StyleURL);
+			definition.$TemplateURL = Runtime.DefinitionURL(definition, definition.$TemplateURL);
+			definition.$StyleURL = Runtime.DefinitionURL(definition, definition.$StyleURL);
 
 			if (generationOverride === undefined && name && previousFactory && !previousFactory.ElemenxLazy)
 				generation++;
@@ -3969,36 +4060,8 @@
 				/* Instance: definition values and template */
 				var startedAt = new Date();
 				var directState = options && options.DirectState === true;
-				var definitionValues = {};
-				var definitionKey;
-
-				if (!directState) {
-					for (definitionKey in definition) {
-						if (own(definition, definitionKey) && definitionKey.charAt(0) !== '$' && typeof definition[definitionKey] !== 'function') {
-							definitionValues[definitionKey] = definition[definitionKey];
-						}
-					}
-				}
-
-				var root = createFragment(resolveTemplate(definition.$Template));
-
-				/*
-				 * A component root carrying a structural directive needs a stable
-				 * owner node. Structural() compiles children of Component.Element(),
-				 * so without this host a root *if would be skipped completely.
-				 * Keep the host transparent to layout while allowing the real root to
-				 * participate in the same structural ownership path as nested directives.
-				 */
-				if (root.nodeType === 1 && Runtime.Directive.Find(root, 'structural')) {
-					var structuralRoot = document.createElement('span');
-
-					structuralRoot.style.display = 'contents';
-					structuralRoot.__ElemenxStructuralRoot = true;
-
-					structuralRoot.appendChild(root);
-
-					root = structuralRoot;
-				}
+				var initialValues = directState ? {} : definitionValues(definition);
+				var root = componentRoot(definition.$Template);
 
 				/*
 				 * Preserve the untouched component DOM before projection/binding/
@@ -4072,32 +4135,6 @@
 					node.addEventListener(name, callback);
 
 					listeners.push({node: node, name: name, callback: callback});
-				}
-
-				function destroyCustomDirectives () {
-					var i = customDirectives.length - 1;
-					var record;
-
-					while (i >= 0) {
-						record = customDirectives[i];
-
-						if (typeof record.Definition.$OnDestroy === 'function')
-							record.Definition.$OnDestroy.call(api, record.Context);
-
-						i--;
-					}
-
-					customDirectives.length = 0;
-				}
-
-				function activateEffects () {
-					var i = 0;
-
-					while (i < effects.length) {
-						effects[i].Run();
-
-						i++;
-					}
 				}
 
 				function updateRouteContext (packet) {
@@ -4203,7 +4240,7 @@
 
 					Runtime.DestroyOwnerResources(api);
 
-					destroyCustomDirectives();
+					destroyCustomDirectives(customDirectives, api);
 
 					if (definition.$OnDestroy)
 						definition.$OnDestroy.call(api);
@@ -4313,19 +4350,7 @@
 				 * as this.Refresh() valid and keeps the definition object useful as
 				 * the component's method table.
 				 */
-				var methodName;
-
-				for (methodName in definition) {
-					if (own(definition, methodName) && typeof definition[methodName] === 'function' && (methodName.charAt(0) !== '$' || methodName.indexOf('$On') === 0)) {
-						/*
-						 * Methods belong to the Component API, never to reactive state.
-						 * This is critical for DirectState structural children: their values
-						 * object is the owner's reactive scope, so assigning through the API
-						 * Proxy would mutate that scope while its structural effect is running.
-						 */
-						apiTarget[methodName] = definition[methodName];
-					}
-				}
+				copyComponentMethods(definition, apiTarget);
 
 				/* Instance: bindings and structural hosts */
 				/*
@@ -4354,8 +4379,8 @@
 				 */
 
 				/* Instance: initial state and lifecycle */
-				if (!directState && Object.keys(definitionValues).length) {
-					Update(definitionValues);
+				if (!directState && Object.keys(initialValues).length) {
+					Update(initialValues);
 				}
 
 				if (!directState && data && Object.keys(data).length && !(options && options.RoutePacket === data)) {
@@ -4375,7 +4400,7 @@
 				 * This preserves the established semantics: components may populate their
 				 * initial state in $OnCreate without expressions seeing an empty scope.
 				 */
-				activateEffects();
+				runEffects(effects);
 
 				/*
 				 * Structural() was compiled before $OnCreate(), but its lazy records
@@ -4389,14 +4414,11 @@
 
 				activateCustomDirectives(customDirectives, api, values, effects);
 
-				var customDirectiveIndex = 0;
-
-				while (customDirectiveIndex < customDirectives.length) {
-					if (customDirectives[customDirectiveIndex].Effect)
-						customDirectives[customDirectiveIndex].Effect.Run();
-
-					customDirectiveIndex++;
-				}
+				runEffects(customDirectives.filter(function (record) {
+					return !!record.Effect;
+				}).map(function (record) {
+					return record.Effect;
+				}));
 
 				/*
 				 * Native controls have stateful DOM properties (checked/value).
@@ -7181,6 +7203,34 @@
 			return decoded && decoded.Type ? decoded : null;
 		}
 
+		/* Decodes an inbound value and emits it as a Protocol event of the resource. */
+		function NetworkDispatch (protocol, api, events, input, transportEvent) {
+			var decoded = NetworkDecode(protocol, api, input);
+			if (decoded)
+				events.Emit('Protocol', decoded.Type, decoded.Data, transportEvent);
+		}
+
+		/* Sets every value of every request header on a native XMLHttpRequest. */
+		function NetworkApplyHeaders (nativeXHR, headers) {
+			var names = Object.keys(headers);
+			var i = 0;
+			var j;
+			var values;
+
+			while (i < names.length) {
+				values = headers[names[i]];
+				j = 0;
+
+				while (j < values.length) {
+					nativeXHR.setRequestHeader(names[i], values[j]);
+
+					j++;
+				}
+
+				i++;
+			}
+		}
+
 		/* Network: lifecycle and structured envelope */
 		function NetworkStarted (target) {
 			var startedAt = new Date();
@@ -7517,14 +7567,8 @@
 				return events.Emit('Transport', type, data);
 			}
 
-			function protocolEvent (type, data, transportEvent) {
-				return events.Emit('Protocol', type, data, transportEvent);
-			}
-
 			function decode (input, transportEvent) {
-				var decoded = NetworkDecode(protocol, api, input);
-				if (decoded)
-					protocolEvent(decoded.Type, decoded.Data, transportEvent);
+				NetworkDispatch(protocol, api, events, input, transportEvent);
 			}
 
 			function encode (input) {
@@ -7553,25 +7597,6 @@
 				};
 			}
 
-			function applyHeaders (nativeXHR) {
-				var names = Object.keys(headers);
-				var i = 0;
-				var j;
-				var values;
-
-				while (i < names.length) {
-					values = headers[names[i]];
-					j = 0;
-
-					while (j < values.length) {
-						nativeXHR.setRequestHeader(names[i], values[j]);
-
-						j++;
-					}
-
-					i++;
-				}
-			}
 
 			if (config.Headers) {
 				Object.keys(config.Headers).forEach(function (key) {
@@ -7719,7 +7744,7 @@
 
 					currentXHR.open(method, url, true);
 
-					applyHeaders(currentXHR);
+					NetworkApplyHeaders(currentXHR, headers);
 
 					requestData = encode(data);
 
@@ -7770,14 +7795,6 @@
 			var reading = false;
 			var resumeRead = null;
 			var generation = 0;
-			var sendQueue = [];
-			var bufferHighWaterMark = config.BufferHighWaterMark === undefined ? 1024 * 1024 : config.BufferHighWaterMark;
-			var bufferLowWaterMark = config.BufferLowWaterMark === undefined ? 256 * 1024 : config.BufferLowWaterMark;
-			var queueHighWaterMark = config.QueueHighWaterMark === undefined ? 4 * 1024 * 1024 : config.QueueHighWaterMark;
-			var queueLowWaterMark = config.QueueLowWaterMark === undefined ? 1024 * 1024 : config.QueueLowWaterMark;
-			var queuedBytes = 0;
-			var saturated = false;
-			var drainTimer = null;
 			var events;
 			var api;
 
@@ -7796,7 +7813,6 @@
 			function protocolData (input, transportEvent) {
 				if (!protocol) return;
 
-				var decoded;
 				var packets;
 				var i = 0;
 
@@ -7819,13 +7835,7 @@
 					return;
 				}
 
-				if (typeof protocol.Decode !== 'function') return;
-
-				decoded = protocol.Decode.call(api, input, api);
-
-				if (!decoded || !decoded.Type) return;
-
-				protocolEvent(decoded.Type, decoded.Data, transportEvent);
+				NetworkDispatch(protocol, api, events, input, transportEvent);
 			}
 
 			function encode (input) {
@@ -8070,13 +8080,6 @@
 					var currentReader = reader;
 					var currentController = controller;
 
-					sendQueue = [];
-
-					if (drainTimer !== null) {
-						global.clearTimeout(drainTimer);
-						drainTimer = null;
-					}
-
 					transport('BeforeClose', {
 						URL: url
 					});
@@ -8086,9 +8089,6 @@
 					reading = false;
 					resumeRead = null;
 					generation++;
-					sendQueue = [];
-					queuedBytes = 0;
-					saturated = false;
 					reader = null;
 					controller = null;
 
@@ -8126,14 +8126,6 @@
 			var request = null;
 			var retryTimer = null;
 			var generation = 0;
-			var sendQueue = [];
-			var bufferHighWaterMark = config.BufferHighWaterMark === undefined ? 1024 * 1024 : config.BufferHighWaterMark;
-			var bufferLowWaterMark = config.BufferLowWaterMark === undefined ? 256 * 1024 : config.BufferLowWaterMark;
-			var queueHighWaterMark = config.QueueHighWaterMark === undefined ? 4 * 1024 * 1024 : config.QueueHighWaterMark;
-			var queueLowWaterMark = config.QueueLowWaterMark === undefined ? 1024 * 1024 : config.QueueLowWaterMark;
-			var queuedBytes = 0;
-			var saturated = false;
-			var drainTimer = null;
 			var events;
 			var api;
 
@@ -8145,20 +8137,8 @@
 				return NetworkTransportEvent(api, events, type, value);
 			}
 
-			function protocolEvent (type, value, transportEvent) {
-				return events.Emit('Protocol', type, value, transportEvent);
-			}
-
 			function decode (input, transportEvent) {
-				var decoded;
-
-				if (!protocol || typeof protocol.Decode !== 'function') return;
-
-				decoded = protocol.Decode.call(api, input, api);
-
-				if (!decoded || !decoded.Type) return;
-
-				protocolEvent(decoded.Type, decoded.Data, transportEvent);
+				NetworkDispatch(protocol, api, events, input, transportEvent);
 			}
 
 			function encode (input) {
@@ -8177,11 +8157,6 @@
 
 			function poll (currentGeneration) {
 				if (!active || currentGeneration !== generation || request) return;
-
-				var names;
-				var i;
-				var j;
-				var values;
 
 				var current = new global.XMLHttpRequest();
 
@@ -8268,21 +8243,7 @@
 				if (config.Timeout !== undefined)
 					current.timeout = config.Timeout;
 
-				names = Object.keys(headers);
-				i = 0;
-
-				while (i < names.length) {
-					values = headers[names[i]];
-					j = 0;
-
-					while (j < values.length) {
-						current.setRequestHeader(names[i], values[j]);
-
-						j++;
-					}
-
-					i++;
-				}
+				NetworkApplyHeaders(current, headers);
 
 				current.send(body);
 			}
@@ -8386,9 +8347,6 @@
 
 					active = false;
 					generation++;
-					sendQueue = [];
-					queuedBytes = 0;
-					saturated = false;
 
 					if (retryTimer !== null) {
 						global.clearTimeout(retryTimer);
@@ -8438,14 +8396,8 @@
 				return NetworkTransportEvent(api, events, type, value);
 			}
 
-			function protocolEvent (type, data, transportEvent) {
-				return events.Emit('Protocol', type, data, transportEvent);
-			}
-
 			function decode (input, transportEvent) {
-				var decoded = NetworkDecode(protocol, api, input);
-				if (decoded)
-					protocolEvent(decoded.Type, decoded.Data, transportEvent);
+				NetworkDispatch(protocol, api, events, input, transportEvent);
 			}
 
 			api = {
@@ -8676,12 +8628,61 @@
 			defer(callback, new Error('Elemenx unsupported transfer chunk'));
 		}
 
+		/* A plain object or array travels as a structured Blob; binary values and strings travel as they are. */
+		function transferSource (source) {
+			if (source && typeof source === 'object' && !(source instanceof Blob) && !(source instanceof ArrayBuffer) && !ArrayBuffer.isView(source)) return NetworkStructuredPack(source);
+
+			return source;
+		}
+
 		function clearFlight (flight) {
 			if (!flight || !flight.Timer) return;
 
 			global.clearTimeout(flight.Timer);
 
 			flight.Timer = null;
+		}
+
+		/*
+		 * Encoder (value, context) returns the encoded value. Encoder (value, context, done) encodes asynchronously
+		 * and calls done (error, value) once. Either way the result reaches callback (error, value) asynchronously.
+		 */
+		function transferEncode (encoder, self, value, context, callback) {
+			var settled = false;
+			var result;
+
+			function done (error, encoded) {
+				if (settled) return;
+
+				settled = true;
+
+				defer(callback, error || null, encoded);
+			}
+
+			if (typeof encoder !== 'function') {
+				done(null, value);
+
+				return;
+			}
+
+			try {
+				result = encoder.length >= 3 ? encoder.call(self, value, context, done) : encoder.call(self, value, context);
+			}
+			catch (error) {
+				done(error);
+
+				return;
+			}
+
+			if (encoder.length >= 3) return;
+
+			if (result && typeof result.then === 'function') {
+				done(new Error('Elemenx Transfer Encoder must return a value or call done (error, value), not return a Promise'));
+
+				return;
+			}
+
+			done(null, result);
 		}
 
 		/* Network: Transfer outbound engine */
@@ -8734,48 +8735,6 @@
 				});
 			}
 
-			/*
-			 * Encoder (value, context) returns the encoded value. Encoder (value, context, done) encodes asynchronously
-			 * and calls done (error, value) once. Either way the result reaches callback (error, value) asynchronously.
-			 */
-			function transform (value, context, callback) {
-				var settled = false;
-				var result;
-
-				function done (error, encoded) {
-					if (settled) return;
-
-					settled = true;
-
-					defer(callback, error || null, encoded);
-				}
-
-				if (typeof encoder !== 'function') {
-					done(null, value);
-
-					return;
-				}
-
-				try {
-					result = encoder.length >= 3 ? encoder.call(api, value, context, done) : encoder.call(api, value, context);
-				}
-				catch (error) {
-					done(error);
-
-					return;
-				}
-
-				if (encoder.length >= 3) return;
-
-				if (result && typeof result.then === 'function') {
-					done(new Error('Elemenx Transfer Encoder must return a value or call done (error, value), not return a Promise'));
-
-					return;
-				}
-
-				done(null, result);
-			}
-
 			/* Outbound: flights and progress */
 			function flightCount () {
 				return Object.keys(inFlight).length;
@@ -8810,7 +8769,59 @@
 				});
 			}
 
-			/* Outbound: failure */
+			/* Outbound: completion and failure */
+			/* Releases the flights, the transport listeners and the queued packets of the current transfer. */
+			function release () {
+				clearFlights();
+
+				wholeListeners.Clear(transport);
+				transportListeners.Clear(transport);
+
+				sendQueue = [];
+			}
+
+			/* A successful transfer: the times not observed (a chunked transfer has no response phase) collapse to now. */
+			function complete (mode, response) {
+				var now = Date.now();
+				var data;
+
+				active = false;
+				loaded = total;
+
+				release();
+
+				if (!sendCompletedAt)
+					sendCompletedAt = now;
+
+				if (!responseStartedAt)
+					responseStartedAt = now;
+
+				if (!responseCompletedAt)
+					responseCompletedAt = now;
+
+				setPhase('Complete');
+
+				data = {
+					ID: transferID,
+					Loaded: loaded,
+					Total: total,
+					Elapsed: responseCompletedAt - startedAt,
+					Metrics: {
+						SendElapsed: sendCompletedAt - startedAt,
+						WaitElapsed: Math.max(0, responseStartedAt - sendCompletedAt),
+						ResponseElapsed: Math.max(0, responseCompletedAt - responseStartedAt),
+						TotalElapsed: responseCompletedAt - startedAt
+					}
+				};
+
+				if (mode === 'Whole')
+					data.Response = response;
+
+				data.Mode = mode;
+
+				emit('Complete', data);
+			}
+
 			function fail (type, value) {
 				if (!active) return;
 
@@ -8819,13 +8830,7 @@
 				active = false;
 				generation++;
 
-				clearFlights();
-
-				wholeListeners.Clear(transport);
-
-				transportListeners.Clear(transport);
-
-				sendQueue = [];
+				release();
 
 				setPhase(type, value);
 
@@ -8937,110 +8942,109 @@
 				}
 			}
 
+			/* Sends an encoded chunk; it stays in flight, with a retry timer, until its Ack arrives. */
+			function sendChunk (packet, currentGeneration) {
+				var flight = {
+					Index: packet.Index,
+					Bytes: packet.Bytes,
+					Packet: packet,
+					Retries: 0,
+					Timer: null
+				};
+
+				inFlight[packet.Index] = flight;
+
+				try {
+					sendPacket(packet, function () {
+						if (!active || currentGeneration !== generation || !inFlight[packet.Index]) return;
+
+						emit('Chunk', {
+							ID: transferID,
+							Index: packet.Index,
+							Offset: packet.Offset,
+							Bytes: packet.Bytes
+						});
+
+						scheduleRetry(flight, currentGeneration);
+
+						pump(currentGeneration);
+
+						chunkProgress();
+					});
+				}
+				catch (error) {
+					delete inFlight[packet.Index];
+					fail('Error', error);
+				}
+			}
+
+			/* Reads and encodes one chunk; its flight is reserved from the start, so the window counts it. */
+			function prepareChunk (chunkStart, chunkEnd, chunkIndex, chunkValue, currentGeneration) {
+				function chunkFailed (error) {
+					if (!active || currentGeneration !== generation) return;
+
+					delete inFlight[chunkIndex];
+
+					fail('Error', error);
+				}
+
+				inFlight[chunkIndex] = {
+					Index: chunkIndex,
+					Bytes: chunkEnd - chunkStart,
+					Packet: null,
+					Retries: 0,
+					Timer: null,
+					Preparing: true
+				};
+
+				toArrayBuffer(chunkValue, function (bufferError, buffer) {
+					if (bufferError) {
+						chunkFailed(bufferError);
+
+						return;
+					}
+
+					transferEncode(encoder, api, buffer, {
+						Mode: 'Chunked',
+						ID: transferID,
+						Index: chunkIndex,
+						Offset: chunkStart,
+						Size: buffer.byteLength,
+						Transport: transport
+					}, function (encodeError, payload) {
+						if (encodeError) {
+							chunkFailed(encodeError);
+
+							return;
+						}
+
+						if (!active || currentGeneration !== generation) return;
+
+						sendChunk({
+							Type: 'Transfer',
+							Action: 'Chunk',
+							ID: transferID,
+							Index: chunkIndex,
+							Offset: chunkStart,
+							Bytes: chunkEnd - chunkStart,
+							Data: payload
+						}, currentGeneration);
+					});
+				});
+			}
+
 			function pump (currentGeneration) {
 				if (!active || currentGeneration !== generation) return;
 
 				var start;
 				var end;
-				var index;
-				var chunk;
 
 				while (flightCount() < windowSize && offset < total) {
 					start = offset;
 					end = Math.min(start + chunkSize, total);
-					index = nextIndex++;
 					offset = end;
-					chunk = sliceSource(source, start, end);
-					inFlight[index] = {
-						Index: index,
-						Bytes: end - start,
-						Packet: null,
-						Retries: 0,
-						Timer: null,
-						Preparing: true
-					};
 
-					(function (chunkStart, chunkEnd, chunkIndex, chunkValue) {
-						toArrayBuffer(chunkValue, function (bufferError, buffer) {
-							if (bufferError) {
-								chunkFailed(bufferError);
-
-								return;
-							}
-
-							transform(buffer, {
-								Mode: 'Chunked',
-								ID: transferID,
-								Index: chunkIndex,
-								Offset: chunkStart,
-								Size: buffer.byteLength,
-								Transport: transport
-							}, function (encodeError, payload) {
-								var packet;
-								var flight;
-
-								if (encodeError) {
-									chunkFailed(encodeError);
-
-									return;
-								}
-
-								if (!active || currentGeneration !== generation) return;
-
-								packet = {
-									Type: 'Transfer',
-									Action: 'Chunk',
-									ID: transferID,
-									Index: chunkIndex,
-									Offset: chunkStart,
-									Bytes: chunkEnd - chunkStart,
-									Data: payload
-								};
-
-								flight = {
-									Index: chunkIndex,
-									Bytes: chunkEnd - chunkStart,
-									Packet: packet,
-									Retries: 0,
-									Timer: null
-								};
-
-								inFlight[chunkIndex] = flight;
-
-								try {
-									sendPacket(packet, function () {
-										if (!active || currentGeneration !== generation || !inFlight[chunkIndex]) return;
-
-										emit('Chunk', {
-											ID: transferID,
-											Index: chunkIndex,
-											Offset: chunkStart,
-											Bytes: chunkEnd - chunkStart
-										});
-
-										scheduleRetry(flight, currentGeneration);
-
-										pump(currentGeneration);
-
-										chunkProgress();
-									});
-								}
-								catch (error) {
-									delete inFlight[chunkIndex];
-									fail('Error', error);
-								}
-
-							});
-						});
-
-						function chunkFailed (error) {
-							if (!active || currentGeneration !== generation) return;
-
-							delete inFlight[chunkIndex];
-
-							fail('Error', error);
-						}
-					})(start, end, index, chunk);
+					prepareChunk(start, end, nextIndex++, sliceSource(source, start, end), currentGeneration);
 				}
 
 				finishChunked();
@@ -9075,49 +9079,51 @@
 				if (packet.Action === 'Complete') {
 					if (!active) return;
 
-					active = false;
-
-					clearFlights();
-
-					transportListeners.Clear(transport);
-
-					sendQueue = [];
-					loaded = total;
-
-					responseCompletedAt = Date.now();
-
-					if (!sendCompletedAt)
-						sendCompletedAt = responseCompletedAt;
-
-					setPhase('Complete');
-
-					emit('Complete', {
-						ID: transferID,
-						Loaded: loaded,
-						Total: total,
-						Elapsed: responseCompletedAt - startedAt,
-						Metrics: {
-							SendElapsed: sendCompletedAt - startedAt,
-							WaitElapsed: Math.max(0, responseCompletedAt - sendCompletedAt),
-							ResponseElapsed: 0,
-							TotalElapsed: responseCompletedAt - startedAt
-						},
-						Mode: 'Chunked'
-					});
+					complete('Chunked', null);
 				}
 			}
 
 			/* Outbound: whole transport */
-			function executeWhole () {
-				var payload;
+			function wholeProgress (event) {
+				var nativeEvent;
+				var elapsed;
 
-				transform(source, {
+				if (!active) return;
+
+				nativeEvent = event.Data;
+				loaded = nativeEvent && typeof nativeEvent.loaded === 'number' ? nativeEvent.loaded : loaded;
+
+				if (nativeEvent && nativeEvent.lengthComputable && typeof nativeEvent.total === 'number')
+					total = nativeEvent.total;
+
+				elapsed = Math.max(1, Date.now() - startedAt);
+
+				emit('Progress', {
+					ID: transferID,
+					Loaded: loaded,
+					Total: total,
+					Progress: total ? loaded / total : 0,
+					Speed: loaded * 1000 / elapsed,
+					Elapsed: elapsed,
+					Event: nativeEvent || null,
+					Mode: 'Whole'
+				});
+
+				if (total && loaded >= total && !sendCompletedAt) {
+					sendCompletedAt = Date.now();
+
+					setPhase('WaitingResponse');
+				}
+			}
+
+			function executeWhole () {
+				transferEncode(encoder, api, source, {
 					Mode: 'Whole',
 					Transport: transport,
 					Name: sourceName(source),
 					Type: sourceType(source),
 					Size: total
-				}, function (error, value) {
+				}, function (error, payload) {
 					if (error) {
 						fail('Error', error);
 
@@ -9126,39 +9132,7 @@
 
 					if (!active) return;
 
-					payload = value;
-
-					wholeListeners.On(transport, 'Transport.RequestProgress', function (event) {
-						var nativeEvent;
-						var elapsed;
-
-						if (!active) return;
-
-						nativeEvent = event.Data;
-						loaded = nativeEvent && typeof nativeEvent.loaded === 'number' ? nativeEvent.loaded : loaded;
-
-						if (nativeEvent && nativeEvent.lengthComputable && typeof nativeEvent.total === 'number')
-							total = nativeEvent.total;
-
-						elapsed = Math.max(1, Date.now() - startedAt);
-
-						emit('Progress', {
-							ID: transferID,
-							Loaded: loaded,
-							Total: total,
-							Progress: total ? loaded / total : 0,
-							Speed: loaded * 1000 / elapsed,
-							Elapsed: elapsed,
-							Event: nativeEvent || null,
-							Mode: 'Whole'
-						});
-
-						if (total && loaded >= total && !sendCompletedAt) {
-							sendCompletedAt = Date.now();
-
-							setPhase('WaitingResponse');
-						}
-					});
+					wholeListeners.On(transport, 'Transport.RequestProgress', wholeProgress);
 
 					wholeListeners.On(transport, 'Transport.BeforeResponse', function (event) {
 						if (!active) return;
@@ -9180,7 +9154,7 @@
 						setPhase('Receiving', event);
 					});
 
-					wholeListeners.On(transport, 'Transport.AfterResponse', function (event) {
+					wholeListeners.On(transport, 'Transport.AfterResponse', function () {
 						if (!active) return;
 
 						responseCompletedAt = Date.now();
@@ -9189,36 +9163,7 @@
 					wholeListeners.On(transport, 'Transport.Success', function (event) {
 						if (!active) return;
 
-						loaded = total;
-						active = false;
-
-						wholeListeners.Clear(transport);
-
-						if (!sendCompletedAt)
-							sendCompletedAt = Date.now();
-
-						if (!responseStartedAt)
-							responseStartedAt = Date.now();
-
-						if (!responseCompletedAt)
-							responseCompletedAt = Date.now();
-
-						setPhase('Complete');
-
-						emit('Complete', {
-							ID: transferID,
-							Loaded: loaded,
-							Total: total,
-							Elapsed: responseCompletedAt - startedAt,
-							Metrics: {
-								SendElapsed: sendCompletedAt - startedAt,
-								WaitElapsed: Math.max(0, responseStartedAt - sendCompletedAt),
-								ResponseElapsed: Math.max(0, responseCompletedAt - responseStartedAt),
-								TotalElapsed: responseCompletedAt - startedAt
-							},
-							Response: event.Data,
-							Mode: 'Whole'
-						});
+						complete('Whole', event.Data);
 					});
 
 					wholeListeners.On(transport, 'Transport.Error', function (event) {
@@ -9269,8 +9214,7 @@
 						return api;
 					}
 
-					if (source && typeof source === 'object' && !(source instanceof Blob) && !(source instanceof ArrayBuffer) && !ArrayBuffer.isView(source))
-						source = NetworkStructuredPack(source);
+					source = transferSource(source);
 
 					mode = transport && typeof transport.Send === 'function' ? 'Chunked' : 'Whole';
 
@@ -9383,13 +9327,8 @@
 					if (active)
 						api.Abort();
 
-					clearFlights();
+					release();
 
-					wholeListeners.Clear(transport);
-
-					transportListeners.Clear(transport);
-
-					sendQueue = [];
 					transport = null;
 					source = null;
 
@@ -9456,6 +9395,26 @@
 			}
 
 			/* Inbound: progress, completion and failure */
+			function emitData (value, bytes) {
+				emit('Data', {
+					ID: transferID,
+					Data: value,
+					Bytes: bytes,
+					Loaded: loaded,
+					Total: expected,
+					Mode: 'Inbound'
+				});
+			}
+
+			/* A received binary chunk: counted, delivered as a Data event, then reported as progress. */
+			function receiveBytes (value) {
+				loaded += value.byteLength;
+
+				emitData(value, value.byteLength);
+
+				progress();
+			}
+
 			function progress () {
 				var elapsed = Math.max(1, Date.now() - startedAt);
 
@@ -9571,18 +9530,7 @@
 						return;
 					}
 
-					loaded += value.byteLength;
-
-					emit('Data', {
-						ID: transferID,
-						Data: value,
-						Bytes: value.byteLength,
-						Loaded: loaded,
-						Total: expected,
-						Mode: 'Inbound'
-					});
-
-					progress();
+					receiveBytes(value);
 
 					return;
 				}
@@ -9641,26 +9589,14 @@
 					if (!active) return;
 
 					var response = event.Data ? event.Data.Response : null;
-					var bytes = 0;
-
-					if (response instanceof Blob) bytes = response.size;
-					else if (response instanceof ArrayBuffer) bytes = response.byteLength;
-					else if (ArrayBuffer.isView(response)) bytes = response.byteLength;
-					else if (response !== null && response !== undefined) bytes = NetworkByteLength(response);
+					var bytes = NetworkByteLength(response);
 
 					loaded = bytes || loaded;
 
 					if (!expected)
 						expected = loaded;
 
-					emit('Data', {
-						ID: transferID,
-						Data: response,
-						Bytes: bytes,
-						Loaded: loaded,
-						Total: expected,
-						Mode: 'Inbound'
-					});
+					emitData(response, bytes);
 
 					complete(event.Data);
 				});
@@ -9673,18 +9609,7 @@
 
 					setPhase('Receiving', event);
 
-					loaded += value.byteLength;
-
-					emit('Data', {
-						ID: transferID,
-						Data: value,
-						Bytes: value.byteLength,
-						Loaded: loaded,
-						Total: expected,
-						Mode: 'Inbound'
-					});
-
-					progress();
+					receiveBytes(value);
 				});
 
 				listeners.On(transport, 'Transport.End', function () {
@@ -9720,8 +9645,7 @@
 
 			/* Transfer: outbound delegation */
 			function executeOutbound () {
-				if (source && typeof source === 'object' && !(source instanceof Blob) && !(source instanceof ArrayBuffer) && !ArrayBuffer.isView(source))
-					source = NetworkStructuredPack(source);
+				source = transferSource(source);
 
 				outbound = NetworkTransferOutbound({
 					Transport: transport,
@@ -9915,6 +9839,18 @@
 		}
 
 		/* Network: TransferReceiver */
+		/* The received chunks in index order, or null when their count differs from the announced one. */
+		function orderedChunks (chunks, count) {
+			var keys = Object.keys(chunks).map(Number).sort(function (a, b) {
+				return a - b;
+			});
+			if (keys.length !== count) return null;
+
+			return keys.map(function (key) {
+				return chunks[key];
+			});
+		}
+
 		function NetworkTransferReceiver (configuration) {
 			var config = configuration || {};
 			var transport = config.Transport || null;
@@ -9963,9 +9899,7 @@
 
 				var transfer;
 				var chunk;
-				var keys;
 				var chunks;
-				var i;
 
 				if (packet.Action === 'Start') {
 					transfers[packet.ID] = {
@@ -10007,23 +9941,12 @@
 				}
 
 				if (packet.Action === 'End') {
-					keys = Object.keys(transfer.Chunks).map(Number).sort(function (a, b) {
-						return a - b;
-					});
+					chunks = orderedChunks(transfer.Chunks, packet.Chunks);
 
-					if (keys.length !== packet.Chunks) {
+					if (!chunks) {
 						emit('Error', {ID: packet.ID, Error: new Error('Elemenx Transfer ended with missing chunks')});
 
 						return;
-					}
-
-					chunks = [];
-					i = 0;
-
-					while (i < keys.length) {
-						chunks.push(transfer.Chunks[keys[i]]);
-
-						i++;
 					}
 
 					send({Type: 'Transfer', Action: 'Complete', ID: packet.ID});
@@ -10134,29 +10057,12 @@
 				return NetworkTransportEvent(api, events, type, value);
 			}
 
-			function protocolEvent (type, data, transportEvent) {
-				return events.Emit('Protocol', type, data, transportEvent);
-			}
-
 			function decode (input, transportEvent) {
-				var decoded = NetworkDecode(protocol, api, input);
-				if (decoded)
-					protocolEvent(decoded.Type, decoded.Data, transportEvent);
+				NetworkDispatch(protocol, api, events, input, transportEvent);
 			}
 
 			function encode (input) {
 				return NetworkEncode(protocol, api, input);
-			}
-
-			function encodedBytes (value) {
-				if (typeof value === 'string')
-					return new Blob([value]).size;
-
-				if (value instanceof ArrayBuffer) return value.byteLength;
-				if (global.ArrayBuffer && global.ArrayBuffer.isView && global.ArrayBuffer.isView(value)) return value.byteLength;
-				if (value instanceof Blob) return value.size;
-
-				return 0;
 			}
 
 			function stopDrainWatch () {
@@ -10300,7 +10206,7 @@
 					if (!socket || socket.readyState !== global.WebSocket.OPEN) return false;
 
 					var encoded = encode(data);
-					var bytes = encodedBytes(encoded);
+					var bytes = NetworkByteLength(encoded);
 
 					if (pressure() || socket.bufferedAmount + bytes > bufferHighWaterMark) {
 						if (!saturated) {
@@ -10439,14 +10345,8 @@
 				return NetworkTransportEvent(api, events, type, value);
 			}
 
-			function protocolEvent (type, data, transportEvent) {
-				return events.Emit('Protocol', type, data, transportEvent);
-			}
-
 			function decode (input, transportEvent) {
-				var decoded = NetworkDecode(protocol, api, input);
-				if (decoded)
-					protocolEvent(decoded.Type, decoded.Data, transportEvent);
+				NetworkDispatch(protocol, api, events, input, transportEvent);
 			}
 
 			function encode (input) {
@@ -14884,14 +14784,6 @@
 		}
 
 		/* Application: discovery */
-		/* A relative $Root is resolved against the script that declared the Application. */
-		function applicationDiscoveryRoot (definition) {
-			var discoveryRoot = definition.$Root;
-			if (discoveryRoot && definition.$DefinitionURL && !(/^(?:[a-z]+:)?\/\//i.test(discoveryRoot)) && discoveryRoot.charAt(0) !== '/')
-				discoveryRoot = definition.$DefinitionURL.substring(0, definition.$DefinitionURL.lastIndexOf('/') + 1) + discoveryRoot.replace(/^\.\//, '');
-
-			return discoveryRoot;
-		}
 
 		/* True when the root Component and every Component of its templates are registered or bundled. */
 		function componentGraphAvailable (componentName) {
@@ -15336,7 +15228,7 @@
 					Runtime.Bundle.LoadType('Guard');
 				}
 
-				var discoveryRoot = applicationDiscoveryRoot(definition);
+				var discoveryRoot = Runtime.DefinitionURL(definition, definition.$Root);
 
 				if (discoveryRoot) {
 					Runtime.Discovery.Root(api, discoveryRoot);
@@ -15435,8 +15327,8 @@
 			if (applications[name])
 				throw new Error('Elemenx Application already exists: ' + name);
 
-			if (definition && global.document && global.document.currentScript && !definition.$DefinitionURL)
-				definition.$DefinitionURL = global.document.currentScript.src.split('?')[0].split('#')[0];
+			if (definition && !definition.$DefinitionURL && Runtime.CurrentScriptURL())
+				definition.$DefinitionURL = Runtime.CurrentScriptURL();
 
 			applications[name] = createApplication(name, definition);
 

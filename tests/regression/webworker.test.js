@@ -121,6 +121,9 @@ describe('Regression: WebWorker real execution and Messaging bridge', function (
 		var worker = Elemenx.WebWorker(unique('WorkerBroken'), {Script: script, StartMode: 'manual'});
 
 		worker.On('Error', function (event) {
+			/* handled here, like in a DOM error listener: the browser does not report it as uncaught */
+			event.Data.preventDefault();
+
 			errors.push(event.Data);
 		});
 		worker.Start();

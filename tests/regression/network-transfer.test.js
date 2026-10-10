@@ -1,4 +1,4 @@
-import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { loadElemenx, resetDOM, tick, waitFor } from '../setup.js';
 
 function EventTransport () {
@@ -233,6 +233,28 @@ describe('Regression: Network Transfer / TransferReceiver', function () {
 		expect(transport.Sent.length).toBe(0);
 	});
 
+	it('TransferReceiver assembles chunks by Index, whatever their arrival order', async function () {
+		var transport = new EventTransport();
+		var received = [];
+		var receiver = Elemenx.Network.TransferReceiver({Transport: transport});
+
+		receiver.On('Transfer.Receive', function (event) {
+			received.push(event.Data);
+		});
+
+		receiver.Receive({Type: 'Transfer', Action: 'Start', ID: 'order', Size: 12, Mime: 'application/octet-stream'});
+
+		[10, 2, 0, 11, 1, 3, 4, 5, 6, 7, 8, 9].forEach(function (index) {
+			receiver.Receive({Type: 'Transfer', Action: 'Chunk', ID: 'order', Index: index, Data: new Uint8Array([index]).buffer});
+		});
+
+		receiver.Receive({Type: 'Transfer', Action: 'End', ID: 'order', Chunks: 12, Size: 12});
+
+		expect(received.length).toBe(1);
+		expect(Array.from(new Uint8Array(await received[0].Blob.arrayBuffer()))).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]);
+		expect(actions(transport, 'Complete').length).toBe(1);
+	});
+
 	it('TransferReceiver Abort discards the partial transfer', function () {
 		var transport = new EventTransport();
 		var aborts = [];
@@ -355,6 +377,12 @@ function errorsOf (transfer) {
 	return errors;
 }
 
+function listenerCount (transport) {
+	return Object.keys(transport.Listeners).reduce(function (count, name) {
+		return count + transport.Listeners[name].length;
+	}, 0);
+}
+
 describe('Regression: Network Transfer edge cases', function () {
 	beforeAll(async function () {
 		await loadElemenx();
@@ -428,6 +456,130 @@ describe('Regression: Network Transfer edge cases', function () {
 		expect(phases).toContain('WaitingComplete');
 		expect(transfer.Phase()).toBe('Complete');
 		expect(transfer.Active()).toBe(false);
+	});
+
+	it('whole Transfer Complete reports send, wait and response times and releases the transport', async function () {
+		var clock = 1000;
+		var spy = vi.spyOn(Date, 'now').mockImplementation(function () {
+			return clock;
+		});
+		var transport = new WholeTransport();
+		var complete = [];
+		var phases = [];
+		var transfer = Elemenx.Network.Transfer({Transport: transport, Data: new Uint8Array([1, 2, 3]).buffer});
+
+		transfer.On('Transfer.Phase', function (event) {
+			phases.push([event.Data.Phase, event.Data.Elapsed]);
+		});
+		transfer.On('Transfer.Complete', function (event) {
+			complete.push(event.Data);
+		});
+		transfer.Execute();
+
+		await tick(0);
+
+		clock = 1100;
+
+		transport.Emit('Transport.RequestProgress', {loaded: 3, total: 3, lengthComputable: true});
+
+		clock = 1300;
+
+		transport.Emit('Transport.BeforeResponse', {});
+
+		clock = 1400;
+
+		transport.Emit('Transport.ResponseProgress', {loaded: 1, total: 2, lengthComputable: true});
+
+		clock = 1600;
+
+		transport.Emit('Transport.AfterResponse', {});
+
+		clock = 1700;
+
+		transport.Emit('Transport.Success', {Response: 'ok'});
+
+		spy.mockRestore();
+
+		expect(complete).toEqual([{
+			ID: expect.any(String),
+			Loaded: 3,
+			Total: 3,
+			Elapsed: 600,
+			Metrics: {SendElapsed: 100, WaitElapsed: 200, ResponseElapsed: 300, TotalElapsed: 600},
+			Response: {Response: 'ok'},
+			Mode: 'Whole'
+		}]);
+		expect(phases).toEqual([['Sending', 0], ['WaitingResponse', 100], ['Receiving', 300], ['Complete', 700]]);
+		expect(listenerCount(transport)).toBe(0);
+	});
+
+	it('chunked Transfer Complete reports send and wait times and releases the transport', async function () {
+		var clock = 1000;
+		var spy = vi.spyOn(Date, 'now').mockImplementation(function () {
+			return clock;
+		});
+		var transport = new EventTransport();
+		var complete = [];
+		var transfer = Elemenx.Network.Transfer({Transport: transport, Data: new Uint8Array([1, 2, 3, 4]).buffer, ChunkSize: 2, Retry: 1000});
+
+		transfer.On('Transfer.Complete', function (event) {
+			complete.push(event.Data);
+		});
+		transfer.Execute();
+
+		await waitFor(function () {
+			return actions(transport, 'Chunk').length === 2;
+		});
+
+		var id = transport.Sent[0].ID;
+
+		clock = 1200;
+
+		transfer.Receive({Type: 'Transfer', Action: 'Ack', ID: id, Index: 0});
+		transfer.Receive({Type: 'Transfer', Action: 'Ack', ID: id, Index: 1});
+
+		await waitFor(function () {
+			return transfer.Phase() === 'WaitingComplete';
+		});
+
+		clock = 1500;
+
+		transfer.Receive({Type: 'Transfer', Action: 'Complete', ID: id});
+
+		spy.mockRestore();
+
+		expect(complete).toEqual([{
+			ID: id,
+			Loaded: 4,
+			Total: 4,
+			Elapsed: 500,
+			Metrics: {SendElapsed: 200, WaitElapsed: 300, ResponseElapsed: 0, TotalElapsed: 500},
+			Mode: 'Chunked'
+		}]);
+		expect('Response' in complete[0]).toBe(false);
+		expect(listenerCount(transport)).toBe(0);
+	});
+
+	it('a failed or destroyed Transfer releases every transport listener', async function () {
+		var chunked = new EventTransport();
+		var whole = new WholeTransport();
+		var failing = Elemenx.Network.Transfer({Transport: chunked, Data: new Uint8Array([1, 2]).buffer, Retry: 1000});
+		var destroyed = Elemenx.Network.Transfer({Transport: whole, Data: new Uint8Array([1]).buffer});
+
+		failing.Execute();
+		destroyed.Execute();
+
+		await tick(0);
+
+		expect(listenerCount(chunked)).toBeGreaterThan(0);
+		expect(listenerCount(whole)).toBeGreaterThan(0);
+
+		failing.Abort();
+
+		destroyed.Destroy();
+
+		expect(listenerCount(chunked)).toBe(0);
+		expect(listenerCount(whole)).toBe(0);
 	});
 
 	it('chunked Transfer waits for Transport.Drain while the transport is not writable', async function () {

@@ -20,14 +20,16 @@ To find a section in `elemenx.js`, search for its header, for example `/* Router
 |---|---|---|
 | `Own` | `Object.prototype.hasOwnProperty.call(object, key)`; modules alias it as `var own = Runtime.Own;` | Reactive, Bundle, Discovery, Service and Guard, Directive registry, Template and Component, Router, Structural, Network, Storage, Messaging, WebWorker, ServiceWorker, Application |
 | `AbsoluteURL` | resolves a URL against the document; in a worker the value is kept as it is | WebWorker, ServiceWorker |
+| `CurrentScriptURL` | the URL of the executing script without query and hash, or `null`: the base of the relative paths of its definitions | Library, Template and Component, Application |
+| `DefinitionURL` | resolves a relative path of a definition against its `$DefinitionURL`; absolute and root paths are kept | Library, Template and Component, Application |
 | `OwnerRegistry` | registry of the resources an owner created: `Add`, `Remove`, `Destroyed`, `Destroy` (destroys the rest with the owner) | Events, Messaging, WebWorker, ServiceWorker |
 | `EventList` | listeners of the named events of one object: `Add`, `Remove`, `Emit` (each listener isolated, one shared event), `Clear` | Storage, WebWorker, ServiceWorker |
 | `Countdown` | waits for N asynchronous steps: the callback gets the first error, or `null` once all succeeded | Discovery, Library |
 | `MessageListeners` | listeners of the global `message` event added through a wrapper, removable by their own callback | Messaging, WebWorker |
 | `Assign` | copies the own enumerable properties of a source into a target and returns the target | Template and Component, Router, Structural, Storage, WebWorker, ServiceWorker |
-| `Report` | reports an exception as an uncaught error, asynchronously, like the DOM does for event listeners | Utilities only |
+| `Report` | reports an exception as an uncaught error at once, like the DOM does for event listeners (`reportError`; without it, rethrown from a timer) | Utilities only |
 | `Notify` | calls one event listener in isolation: its exception is reported and the dispatch continues | Template and Component, Router, Network, Events, Messaging |
-| `Invoke` | calls a callback `(error, value)` from a promise handler; an exception thrown by the callback is rethrown asynchronously instead of being swallowed | Network, ServiceWorker |
+| `Invoke` | calls a callback `(error, value)` from a promise handler; an exception thrown by the callback is reported instead of being swallowed | Network, ServiceWorker |
 
 ## Outlet
 
