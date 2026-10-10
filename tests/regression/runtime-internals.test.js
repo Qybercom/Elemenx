@@ -2,12 +2,23 @@ import { describe, expect, it } from 'vitest';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import * as espree from 'espree';
+import * as eslintScope from 'eslint-scope';
 
 /*
  * Keeps docs/RUNTIME-INTERNALS.md and the table of contents of elemenx.js in sync with the code:
  * every Runtime field is documented under the section that assigns it, with the sections that use it,
  * and every section header is listed in the table of contents.
+ * Also guards the structure: strict modules, and no free name outside the known runtime globals.
  */
+
+var KnownGlobals = [
+	'Array', 'ArrayBuffer', 'Blob', 'DataView', 'Date', 'Error', 'Function', 'JSON', 'Map', 'Math',
+	'MutationObserver', 'NodeFilter', 'Number', 'Object', 'Proxy', 'Reflect', 'RegExp', 'Set', 'String', 'Symbol',
+	'TextDecoder', 'TextEncoder', 'TypeError', 'URL', 'Uint32Array', 'Uint8Array', 'WeakMap', 'WeakSet', 'XMLHttpRequest',
+	'clearTimeout', 'console', 'decodeURIComponent', 'document', 'encodeURIComponent', 'globalThis', 'parseInt', 'self',
+	'setTimeout', 'undefined'
+];
 
 var root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 var source = fs.readFileSync(path.join(root, 'elemenx.js'), 'utf8');
@@ -130,5 +141,19 @@ describe('Regression: Runtime internals documentation', function () {
 		});
 
 		expect(loose).toEqual([]);
+	});
+});
+
+describe('Regression: elemenx.js free names', function () {
+	it('references no global beyond the known runtime globals', function () {
+		var ast = espree.parse(source, {ecmaVersion: 5, sourceType: 'script', loc: true, range: true});
+		var manager = eslintScope.analyze(ast, {ecmaVersion: 5});
+		var unknown = manager.globalScope.through.filter(function (reference) {
+			return KnownGlobals.indexOf(reference.identifier.name) === -1;
+		}).map(function (reference) {
+			return reference.identifier.name + ' at line ' + reference.identifier.loc.start.line;
+		});
+
+		expect(unknown).toEqual([]);
 	});
 });

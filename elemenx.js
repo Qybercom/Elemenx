@@ -3289,8 +3289,6 @@
 		}
 
 		function applyBinding (binding, value) {
-			var name;
-
 			if (binding.type === 'text') {
 				binding.node.nodeValue = value == null ? '' : String(value);
 			}
@@ -3332,11 +3330,7 @@
 				if (typeof value !== 'object' || Array.isArray(value))
 					throw new TypeError('[style] binding expects an Object');
 
-				binding.state.map = {};
-
-				for (name in value)
-					if (own(value, name))
-						binding.state.map[name] = value[name];
+				binding.state.map = Runtime.Assign({}, value);
 
 				renderStyleBinding(binding.state);
 			}
@@ -3482,6 +3476,229 @@
 			}
 		}
 
+		/* Component: instance helpers */
+		function syncModel (values, model) {
+			var value = values[model.key];
+
+			if (model.type === 'checked') {
+				value = !!value;
+
+				if (model.node.checked !== value) {
+					model.node.checked = value;
+				}
+			}
+			else {
+				value = value == null ? '' : String(value);
+
+				if (model.node.value !== value) {
+					model.node.value = value;
+				}
+			}
+		}
+
+		function syncModels (models, values) {
+			var i = 0;
+
+			while (i < models.length) {
+				syncModel(values, models[i]);
+
+				i++;
+			}
+		}
+
+		function findRef (root, refs, name) {
+			var key = String(name).toLowerCase();
+			var ref = refs[key] || null;
+			if (ref && root.contains(ref)) return ref;
+
+			var nodes;
+			var i = 0;
+
+			ref = null;
+
+			if (root.nodeType === 1 && root.__ElemenxRefName === key) {
+				ref = root;
+			}
+			else if (root.querySelectorAll) {
+				nodes = root.querySelectorAll('*');
+
+				while (i < nodes.length) {
+					if (nodes[i].__ElemenxRefName === key) {
+						ref = nodes[i];
+
+						break;
+					}
+
+					i++;
+				}
+			}
+
+			if (ref) {
+				refs[key] = ref;
+
+				return ref;
+			}
+
+			delete refs[key];
+
+			return null;
+		}
+
+		function bindEvents (root, api, listen, definition) {
+			var nodes = [];
+			var all;
+			var i = 0;
+			var j;
+			var attrs;
+			var attr;
+			var eventName;
+			var methodName;
+			var method;
+
+			if (root.nodeType === 1)
+				nodes.push(root);
+
+			if (root.querySelectorAll) {
+				all = root.querySelectorAll('*');
+
+				while (i < all.length) {
+					nodes.push(all[i]);
+
+					i++;
+				}
+			}
+
+			i = 0;
+			while (i < nodes.length) {
+				if (Runtime.ResolveComponentRegistered(nodes[i].getAttribute('data-elemenx-component') || nodes[i].tagName)) {
+					i++;
+
+					continue;
+				}
+
+				attrs = Array.prototype.slice.call(nodes[i].attributes);
+				j = 0;
+
+				while (j < attrs.length) {
+					attr = attrs[j];
+
+					eventName = Runtime.Directive.Event(attr.name);
+
+					if (eventName !== null) {
+						methodName = attr.value;
+						method = definition[methodName];
+
+						if (typeof method === 'function') {
+							(function (node, eventName, method) {
+								listen(node, eventName, function (e) {
+									method.call(api, e, node);
+								});
+							})(nodes[i], eventName, method);
+						}
+
+						nodes[i].removeAttribute(attr.name);
+					}
+
+					j++;
+				}
+
+				i++;
+			}
+		}
+
+		function bindModels (models, values, effects, listen) {
+			var i = 0;
+			var model;
+			var eventName;
+
+			while (i < models.length) {
+				model = models[i];
+				eventName = model.type === 'value' ? 'input' : 'change';
+
+				(function (model) {
+					effects.push(Runtime.Effect(function () {
+						syncModel(values, model);
+
+						return values[model.key];
+					}, true));
+
+					listen(model.node, eventName, function () {
+						var value;
+
+						if (model.type === 'checked') {
+							value = model.node.checked;
+						}
+						else {
+							value = model.node.value;
+						}
+
+						values[model.key] = value;
+					});
+				})(model);
+
+				i++;
+			}
+		}
+
+		function activateCustomDirectives (customDirectives, api, values, effects) {
+			var i = 0;
+			var record;
+			var context;
+			var effect;
+
+			while (i < customDirectives.length) {
+				record = customDirectives[i];
+				context = {
+					Name: record.Name,
+					Element: record.Element,
+					Component: api,
+					Expression: record.Expression,
+					Value: undefined,
+					Data: {}
+				};
+
+				record.Context = context;
+
+				if (typeof record.Definition.$OnCreate === 'function') {
+					record.Definition.$OnCreate.call(api, context);
+				}
+
+				(function (record, context) {
+					var evaluate = record.Expression ? compileExpression(record.Expression) : null;
+
+					effect = Runtime.Effect(function () {
+						var value;
+
+						if (evaluate) {
+							try {
+								value = evaluate(values);
+							}
+							catch (error) {
+								value = undefined;
+
+								if (!(error && error.name === 'ReferenceError') && global.console && console.error)
+									console.error('Elemenx directive expression failed: *' + record.Name + '="' + record.Expression + '"', error);
+							}
+						}
+
+						context.Value = value;
+
+						if (typeof record.Definition.$OnUpdate === 'function') {
+							record.Definition.$OnUpdate.call(api, context);
+						}
+
+						return value;
+					}, true);
+
+					record.Effect = effect;
+
+					effects.push(effect);
+				})(record, context);
+
+				i++;
+			}
+		}
+
 		/* Component: factory */
 		/* A component whose template or style is not inline: resources load on first use, then a regular factory takes over. */
 		function needsRemoteResources (name, definition) {
@@ -3567,10 +3784,23 @@
 				}, data, slotProjection, options);
 
 				if (name && !componentReloading)
-					trackComponentInstance(name, component);
+					track(component);
 
 				return component;
 			};
+
+			/* Reload walks the live instances of a name, so a destroyed instance must leave that list. */
+			function track (component) {
+				var destroy = component.$Destroy;
+
+				trackComponentInstance(name, component);
+
+				component.$Destroy = function () {
+					untrackComponentInstance(name, component);
+
+					return destroy.apply(component, arguments);
+				};
+			}
 
 			remoteFactory.ComponentName = name;
 			remoteFactory.Definition = definition;
@@ -3614,6 +3844,7 @@
 				installComponentStyle(name, definition, definition.$Style);
 
 			function factory (data, slotProjection, options) {
+				/* Instance: definition values and template */
 				var startedAt = new Date();
 				var directState = options && options.DirectState === true;
 				var definitionValues = {};
@@ -3654,6 +3885,7 @@
 				 */
 				var pristineRoot = root.cloneNode(true);
 
+				/* Instance: state */
 				var refs = {};
 				var outlets = {};
 				var bindings = [];
@@ -3676,6 +3908,7 @@
 				var componentEvents = {};
 				var api;
 
+				/* Instance: template compilation */
 				projectSlots(root, slotProjection);
 
 				/*
@@ -3694,35 +3927,7 @@
 
 				collectCustomDirectives(root, customDirectives);
 
-				function syncModel (model) {
-					var value = values[model.key];
-
-					if (model.type === 'checked') {
-						value = !!value;
-
-						if (model.node.checked !== value) {
-							model.node.checked = value;
-						}
-					}
-					else {
-						value = value == null ? '' : String(value);
-
-						if (model.node.value !== value) {
-							model.node.value = value;
-						}
-					}
-				}
-
-				function syncModels () {
-					var i = 0;
-
-					while (i < models.length) {
-						syncModel(models[i]);
-
-						i++;
-					}
-				}
-
+				/* Instance: API methods */
 				function Batch (callback) {
 					if (destroyed || typeof callback !== 'function') return api;
 
@@ -3734,41 +3939,7 @@
 				}
 
 				function Ref (name) {
-					var key = String(name).toLowerCase();
-					var ref = refs[key] || null;
-					if (ref && root.contains(ref)) return ref;
-
-					var nodes;
-					var i = 0;
-
-					ref = null;
-
-					if (root.nodeType === 1 && root.__ElemenxRefName === key) {
-						ref = root;
-					}
-					else if (root.querySelectorAll) {
-						nodes = root.querySelectorAll('*');
-
-						while (i < nodes.length) {
-							if (nodes[i].__ElemenxRefName === key) {
-								ref = nodes[i];
-
-								break;
-							}
-
-							i++;
-						}
-					}
-
-					if (ref) {
-						refs[key] = ref;
-
-						return ref;
-					}
-
-					delete refs[key];
-
-					return null;
+					return findRef(root, refs, name);
 				}
 
 				function Outlet (name) {
@@ -3779,161 +3950,6 @@
 					node.addEventListener(name, callback);
 
 					listeners.push({node: node, name: name, callback: callback});
-				}
-
-				function bindEvents () {
-					var nodes = [];
-					var all;
-					var i = 0;
-					var j;
-					var attrs;
-					var attr;
-					var eventName;
-					var methodName;
-					var method;
-
-					if (root.nodeType === 1)
-						nodes.push(root);
-
-					if (root.querySelectorAll) {
-						all = root.querySelectorAll('*');
-
-						while (i < all.length) {
-							nodes.push(all[i]);
-
-							i++;
-						}
-					}
-
-					i = 0;
-					while (i < nodes.length) {
-						if (Runtime.ResolveComponentRegistered(nodes[i].getAttribute('data-elemenx-component') || nodes[i].tagName)) {
-							i++;
-
-							continue;
-						}
-
-						attrs = Array.prototype.slice.call(nodes[i].attributes);
-						j = 0;
-
-						while (j < attrs.length) {
-							attr = attrs[j];
-
-							eventName = Runtime.Directive.Event(attr.name);
-
-							if (eventName !== null) {
-								methodName = attr.value;
-								method = definition[methodName];
-
-								if (typeof method === 'function') {
-									(function (node, eventName, method) {
-										listen(node, eventName, function (e) {
-											method.call(api, e, node);
-										});
-									})(nodes[i], eventName, method);
-								}
-
-								nodes[i].removeAttribute(attr.name);
-							}
-
-							j++;
-						}
-
-						i++;
-					}
-				}
-
-				function bindModels () {
-					var i = 0;
-					var model;
-					var eventName;
-
-					while (i < models.length) {
-						model = models[i];
-						eventName = model.type === 'value' ? 'input' : 'change';
-
-						(function (model) {
-							effects.push(Runtime.Effect(function () {
-								syncModel(model);
-
-								return values[model.key];
-							}, true));
-
-							listen(model.node, eventName, function () {
-								var value;
-
-								if (model.type === 'checked') {
-									value = model.node.checked;
-								}
-								else {
-									value = model.node.value;
-								}
-
-								values[model.key] = value;
-							});
-						})(model);
-
-						i++;
-					}
-				}
-
-				function activateCustomDirectives () {
-					var i = 0;
-					var record;
-					var context;
-					var effect;
-
-					while (i < customDirectives.length) {
-						record = customDirectives[i];
-						context = {
-							Name: record.Name,
-							Element: record.Element,
-							Component: api,
-							Expression: record.Expression,
-							Value: undefined,
-							Data: {}
-						};
-
-						record.Context = context;
-
-						if (typeof record.Definition.$OnCreate === 'function') {
-							record.Definition.$OnCreate.call(api, context);
-						}
-
-						(function (record, context) {
-							var evaluate = record.Expression ? compileExpression(record.Expression) : null;
-
-							effect = Runtime.Effect(function () {
-								var value;
-
-								if (evaluate) {
-									try {
-										value = evaluate(values);
-									}
-									catch (error) {
-										value = undefined;
-
-										if (!(error && error.name === 'ReferenceError') && global.console && console.error)
-											console.error('Elemenx directive expression failed: *' + record.Name + '="' + record.Expression + '"', error);
-									}
-								}
-
-								context.Value = value;
-
-								if (typeof record.Definition.$OnUpdate === 'function') {
-									record.Definition.$OnUpdate.call(api, context);
-								}
-
-								return value;
-							}, true);
-
-							record.Effect = effect;
-
-							effects.push(effect);
-						})(record, context);
-
-						i++;
-					}
 				}
 
 				function destroyCustomDirectives () {
@@ -4098,6 +4114,7 @@
 						root.parentNode.removeChild(root);
 				}
 
+				/* Instance: API object */
 				var apiTarget = {
 					$Generation: function () {
 						return generation;
@@ -4158,6 +4175,7 @@
 					});
 				}
 
+				/* Instance: ownership and router */
 				Runtime.AttachOwnerFacades(api, name || 'Component', messagingInstanceSequence++);
 
 				componentOutlets.set(api, outlets);
@@ -4187,6 +4205,7 @@
 					}
 				}
 
+				/* Instance: bindings and structural hosts */
 				/*
 				 * Models must bind before semantic DOM events.
 				 *
@@ -4196,9 +4215,9 @@
 				 */
 				activateBindings(bindings, values, effects);
 
-				bindModels();
+				bindModels(models, values, effects, listen);
 
-				bindEvents();
+				bindEvents(root, api, listen, definition);
 
 				structural = Runtime.Structural(api, definition, pristineRoot);
 
@@ -4212,6 +4231,7 @@
 				 * Update before $OnCreate, preserving the existing child lifecycle.
 				 */
 
+				/* Instance: initial state and lifecycle */
 				if (!directState && Object.keys(definitionValues).length) {
 					Update(definitionValues);
 				}
@@ -4245,7 +4265,7 @@
 				if (structural)
 					structural.Update(values);
 
-				activateCustomDirectives();
+				activateCustomDirectives(customDirectives, api, values, effects);
 
 				var customDirectiveIndex = 0;
 
@@ -4262,7 +4282,7 @@
 				 * structural pass so initial component values are authoritative as well as
 				 * subsequent Proxy updates.
 				 */
-				syncModels();
+				syncModels(models, values);
 
 				/*
 				 * Router context becomes part of the component only after Create has
@@ -4502,6 +4522,270 @@
 		var Elemenx = global.Elemenx;
 		var own = Runtime.Own;
 
+		/* Router: paths and query */
+		function trimPath (path) {
+			path = String(path || '/');
+
+			if (path.charAt(0) !== '/') {
+				path = '/' + path;
+			}
+
+			if (path.length > 1 && path.charAt(path.length - 1) === '/') {
+				path = path.substring(0, path.length - 1);
+			}
+
+			return path;
+		}
+
+		function splitPath (path) {
+			var clean = trimPath(path);
+			var result = [];
+
+			if (clean === '/') return result;
+
+			var parts = clean.substring(1).split('/');
+			var i = 0;
+
+			while (i < parts.length) {
+				if (parts[i])
+					result.push(decodeURIComponent(parts[i]));
+
+				i++;
+			}
+
+			return result;
+		}
+
+		function routeParts (path) {
+			var value = String(path || '');
+			var parts = [];
+
+			if (!value || value === '/') return parts;
+
+			if (value.charAt(0) === '/')
+				value = value.substring(1);
+
+			if (value.charAt(value.length - 1) === '/')
+				value = value.substring(0, value.length - 1);
+
+			if (!value)
+				return parts;
+
+			var raw = value.split('/');
+			var i = 0;
+
+			while (i < raw.length) {
+				if (raw[i])
+					parts.push(raw[i]);
+
+				i++;
+			}
+
+			return parts;
+		}
+
+		function matchLevel (list, segments, offset, params, chain) {
+			var i = 0;
+			var route;
+			var pattern;
+			var nextParams;
+			var nextChain;
+			var j;
+			var value;
+			var child;
+
+			while (i < list.length) {
+				route = list[i];
+				pattern = routeParts(route.Path);
+				nextParams = {};
+				nextChain = chain.slice(0);
+
+				Runtime.Assign(nextParams, params);
+
+				if (offset + pattern.length <= segments.length) {
+					j = 0;
+
+					while (j < pattern.length) {
+						value = pattern[j];
+
+						if (value.charAt(0) === ':') {
+							nextParams[value.substring(1)] = segments[offset + j];
+						}
+						else if (value !== segments[offset + j]) {
+							break;
+						}
+
+						j++;
+					}
+
+					if (j === pattern.length) {
+						nextChain.push(route);
+
+						if (route.Routes && route.Routes.length) {
+							child = matchLevel(route.Routes, segments, offset + pattern.length, nextParams, nextChain);
+
+							if (child)
+								return child;
+						}
+
+						if (offset + pattern.length === segments.length) {
+							return {
+								Chain: nextChain,
+								Params: nextParams
+							};
+						}
+					}
+				}
+
+				i++;
+			}
+
+			return null;
+		}
+
+		function parseQuery (search) {
+			var result = {};
+			var value = String(search || '');
+			var pair;
+			var i = 0;
+			var index;
+			var key;
+
+			if (value.charAt(0) === '?')
+				value = value.substring(1);
+
+			if (!value)
+				return result;
+
+			var pairs = value.split('&');
+
+			while (i < pairs.length) {
+				pair = pairs[i];
+				index = pair.indexOf('=');
+
+				if (index === -1) {
+					key = pair;
+					value = '';
+				}
+				else {
+					key = pair.substring(0, index);
+					value = pair.substring(index + 1);
+				}
+
+				key = decodeURIComponent(key.replace(/\+/g, ' '));
+				value = decodeURIComponent(value.replace(/\+/g, ' '));
+
+				result[key] = value;
+
+				i++;
+			}
+
+			return result;
+		}
+
+		function statePacket (url, params) {
+			return {
+				Path: trimPath(url.pathname),
+				Params: params,
+				Query: parseQuery(url.search),
+				Hash: url.hash ? url.hash.substring(1) : ''
+			};
+		}
+
+		/* Router: guards and waiting */
+		function guardsFor (route) {
+			if (route.Guards instanceof Array) return route.Guards;
+			if (route.Guard !== undefined) return [route.Guard];
+
+			return [];
+		}
+
+		function waiter (operation) {
+			return {
+				ElemenxWaiter: true,
+				Operation: operation
+			};
+		}
+
+		function fail (reason, data) {
+			return {
+				ElemenxGuardFailure: true,
+				Reason: reason,
+				Data: data
+			};
+		}
+
+		function leaveArguments (context) {
+			return {
+				$From: context.$From,
+				$To: context.$To,
+				$Route: context.$Route,
+				$Wait: waiter,
+				$Fail: fail
+			};
+		}
+
+		function guardFailureComponent (route, failure) {
+			var policy = route && route.GuardFailed;
+			if (!policy)
+				return null;
+
+			if (typeof policy === 'string' || typeof policy === 'function') return policy;
+			if (typeof policy !== 'object') return null;
+
+			if (failure.$Guard !== undefined && policy[failure.$Guard] !== undefined) return policy[failure.$Guard];
+
+			return policy.Default !== undefined ? policy.Default : null;
+		}
+
+		/* Router: components and history */
+		function bundledComponent (reference) {
+			if (typeof reference === 'function') return reference;
+
+			var factory = Runtime.ResolveComponentRegistered(reference);
+			if (factory)
+				return factory;
+
+			if (Runtime.Bundle.Load('Component', reference)) {
+				return Runtime.ResolveComponentRegistered(reference);
+			}
+
+			return null;
+		}
+
+		function componentFactory (route) {
+			// Bundle resolution is synchronous and may register the factory here.
+			// Network Discovery remains owned by loadRouteComponents().
+			return bundledComponent(route.Component);
+		}
+
+		function currentURL () {
+			return new URL(global.location.href);
+		}
+
+		function historyState (index) {
+			var current = global.history.state;
+			var state = {};
+
+			if (current && typeof current === 'object')
+				Runtime.Assign(state, current);
+
+			state.ElemenxRouterIndex = index;
+
+			return state;
+		}
+
+		function findAnchor (node) {
+			while (node && node !== document) {
+				if (node.tagName === 'A') return node;
+
+				node = node.parentNode;
+			}
+
+			return null;
+		}
+
+		/* Router: navigation engine */
 		function Router (config) {
 			var root = config.Root;
 			var rootOutletName = config.Outlet || 'Content';
@@ -4517,6 +4801,7 @@
 			var committedURL = null;
 			var rollbackPop = false;
 
+			/* Navigation: events and owners */
 			function application () {
 				return root && root.$Application ? root.$Application() : null;
 			}
@@ -4599,197 +4884,9 @@
 				};
 			}
 
-			function trimPath (path) {
-				path = String(path || '/');
-
-				if (path.charAt(0) !== '/') {
-					path = '/' + path;
-				}
-
-				if (path.length > 1 && path.charAt(path.length - 1) === '/') {
-					path = path.substring(0, path.length - 1);
-				}
-
-				return path;
-			}
-
-			function splitPath (path) {
-				var clean = trimPath(path);
-				var result = [];
-
-				if (clean === '/') return result;
-
-				var parts = clean.substring(1).split('/');
-				var i = 0;
-
-				while (i < parts.length) {
-					if (parts[i])
-						result.push(decodeURIComponent(parts[i]));
-
-					i++;
-				}
-
-				return result;
-			}
-
-			function routeParts (path) {
-				var value = String(path || '');
-				var parts = [];
-
-				if (!value || value === '/') return parts;
-
-				if (value.charAt(0) === '/')
-					value = value.substring(1);
-
-				if (value.charAt(value.length - 1) === '/')
-					value = value.substring(0, value.length - 1);
-
-				if (!value)
-					return parts;
-
-				var raw = value.split('/');
-				var i = 0;
-
-				while (i < raw.length) {
-					if (raw[i])
-						parts.push(raw[i]);
-
-					i++;
-				}
-
-				return parts;
-			}
-
-			function matchLevel (list, segments, offset, params, chain) {
-				var i = 0;
-				var route;
-				var pattern;
-				var nextParams;
-				var nextChain;
-				var j;
-				var value;
-				var child;
-
-				while (i < list.length) {
-					route = list[i];
-					pattern = routeParts(route.Path);
-					nextParams = {};
-					nextChain = chain.slice(0);
-
-					Runtime.Assign(nextParams, params);
-
-					if (offset + pattern.length <= segments.length) {
-						j = 0;
-
-						while (j < pattern.length) {
-							value = pattern[j];
-
-							if (value.charAt(0) === ':') {
-								nextParams[value.substring(1)] = segments[offset + j];
-							}
-							else if (value !== segments[offset + j]) {
-								break;
-							}
-
-							j++;
-						}
-
-						if (j === pattern.length) {
-							nextChain.push(route);
-
-							if (route.Routes && route.Routes.length) {
-								child = matchLevel(route.Routes, segments, offset + pattern.length, nextParams, nextChain);
-
-								if (child)
-									return child;
-							}
-
-							if (offset + pattern.length === segments.length) {
-								return {
-									Chain: nextChain,
-									Params: nextParams
-								};
-							}
-						}
-					}
-
-					i++;
-				}
-
-				return null;
-			}
-
+			/* Navigation: route matching and loading */
 			function match (path) {
 				return matchLevel(routes, splitPath(path), 0, {}, []);
-			}
-
-			function parseQuery (search) {
-				var result = {};
-				var value = String(search || '');
-				var pair;
-				var i = 0;
-				var index;
-				var key;
-
-				if (value.charAt(0) === '?')
-					value = value.substring(1);
-
-				if (!value)
-					return result;
-
-				var pairs = value.split('&');
-
-				while (i < pairs.length) {
-					pair = pairs[i];
-					index = pair.indexOf('=');
-
-					if (index === -1) {
-						key = pair;
-						value = '';
-					}
-					else {
-						key = pair.substring(0, index);
-						value = pair.substring(index + 1);
-					}
-
-					key = decodeURIComponent(key.replace(/\+/g, ' '));
-					value = decodeURIComponent(value.replace(/\+/g, ' '));
-
-					result[key] = value;
-
-					i++;
-				}
-
-				return result;
-			}
-
-			function statePacket (url, params) {
-				return {
-					Path: trimPath(url.pathname),
-					Params: params,
-					Query: parseQuery(url.search),
-					Hash: url.hash ? url.hash.substring(1) : ''
-				};
-			}
-
-			function bundledComponent (reference) {
-				if (typeof reference === 'function') return reference;
-
-				var factory = Runtime.ResolveComponentRegistered(reference);
-				if (factory)
-					return factory;
-
-				if (Runtime.Bundle.Load('Component', reference)) {
-					return Runtime.ResolveComponentRegistered(reference);
-				}
-
-				return null;
-			}
-
-			function componentFactory (route) {
-				// Bundle resolution is synchronous and may register the factory here.
-				// Network Discovery remains owned by loadRouteComponents().
-				return bundledComponent(route.Component);
 			}
 
 			function loadRouteComponents (chain, common, callback) {
@@ -4841,6 +4938,7 @@
 			var waitingComponent = null;
 			var waitingElement = null;
 
+			/* Navigation: waiting component */
 			function clearWaiting () {
 				if (!waitingComponent) return;
 
@@ -4929,38 +5027,7 @@
 				});
 			}
 
-			function guardsFor (route) {
-				if (route.Guards instanceof Array) return route.Guards;
-				if (route.Guard !== undefined) return [route.Guard];
-
-				return [];
-			}
-
-			function waiter (operation) {
-				return {
-					ElemenxWaiter: true,
-					Operation: operation
-				};
-			}
-
-			function fail (reason, data) {
-				return {
-					ElemenxGuardFailure: true,
-					Reason: reason,
-					Data: data
-				};
-			}
-
-			function leaveArguments (context) {
-				return {
-					$From: context.$From,
-					$To: context.$To,
-					$Route: context.$Route,
-					$Wait: waiter,
-					$Fail: fail
-				};
-			}
-
+			/* Navigation: guards */
 			function settleWaiter (operation, done, context) {
 				var settled = false;
 
@@ -5155,6 +5222,7 @@
 				next(true);
 			}
 
+			/* Navigation: commit */
 			function destroyFrom (index) {
 				var i = active.length - 1;
 				var entry;
@@ -5246,10 +5314,6 @@
 				return true;
 			}
 
-			function currentURL () {
-				return new URL(global.location.href);
-			}
-
 			function routeComponentsReady (from) {
 				var i = from;
 
@@ -5295,6 +5359,7 @@
 				check();
 			}
 
+			/* Navigation: preparation and guard failures */
 			function commonPrefix (chain) {
 				var common = 0;
 
@@ -5322,19 +5387,6 @@
 				var found = match(url.pathname);
 
 				return statePacket(url, found ? found.Params : {});
-			}
-
-			function guardFailureComponent (route, failure) {
-				var policy = route && route.GuardFailed;
-				if (!policy)
-					return null;
-
-				if (typeof policy === 'string' || typeof policy === 'function') return policy;
-				if (typeof policy !== 'object') return null;
-
-				if (failure.$Guard !== undefined && policy[failure.$Guard] !== undefined) return policy[failure.$Guard];
-
-				return policy.Default !== undefined ? policy.Default : null;
 			}
 
 			function renderGuardFailure (prepared, failure, reference, mode, id, context) {
@@ -5408,18 +5460,7 @@
 				return failure;
 			}
 
-			function historyState (index) {
-				var current = global.history.state;
-				var state = {};
-
-				if (current && typeof current === 'object')
-					Runtime.Assign(state, current);
-
-				state.ElemenxRouterIndex = index;
-
-				return state;
-			}
-
+			/* Navigation: history and execution */
 			function writeHistory (mode, url) {
 				if (mode === 'push') {
 					historyIndex++;
@@ -5654,16 +5695,7 @@
 				return api;
 			}
 
-			function findAnchor (node) {
-				while (node && node !== document) {
-					if (node.tagName === 'A') return node;
-
-					node = node.parentNode;
-				}
-
-				return null;
-			}
-
+			/* Navigation: public API */
 			function Start () {
 				if (started) return api;
 
@@ -6023,6 +6055,103 @@
 
 				i++;
 			}
+
+			return result;
+		}
+
+		/* Structural: collection scopes */
+		/* A collection never renders more iterations than this, so a wrong loop condition cannot freeze the page. */
+		var collectionIterationLimit = 10000;
+
+		function collectionScopes (loopScope, items, options) {
+			var result = [];
+			var mode = options.Mode || 'of';
+			var variable = options.Variable || 'item';
+			var source = items;
+			var iterator;
+			var step;
+			var name;
+			var scope;
+			var conditionAssignment;
+			var i = 0;
+
+			if (mode === 'classic') {
+				conditionAssignment = /^\s*([A-Za-z_$][A-Za-z0-9_$]*)\s*=(?!=)/.exec(options.Condition);
+				loopScope[variable] = expression(loopScope, options.Initializer);
+
+				if (conditionAssignment && !own(loopScope, conditionAssignment[1]))
+					loopScope[conditionAssignment[1]] = undefined;
+
+				while (i < collectionIterationLimit && expression(loopScope, options.Condition)) {
+					scope = Runtime.Assign({}, loopScope);
+					scope.$index = i;
+
+					result.push(scope);
+
+					expression(loopScope, options.Step);
+
+					i++;
+				}
+			}
+			else if (mode === 'of') {
+				if (source == null)
+					source = [];
+
+				Runtime.TrackIteration(source);
+
+				if (typeof Symbol !== 'undefined' && source[Symbol.iterator]) {
+					iterator = source[Symbol.iterator]();
+					step = iterator.next();
+
+					while (!step.done && i < collectionIterationLimit) {
+						scope = Runtime.Assign({}, loopScope);
+						scope[variable] = step.value;
+						scope.$index = i;
+
+						result.push(scope);
+
+						i++;
+
+						step = iterator.next();
+					}
+				}
+				else {
+					while (i < source.length && i < collectionIterationLimit) {
+						scope = Runtime.Assign({}, loopScope);
+						scope[variable] = source[i];
+						scope.$index = i;
+
+						result.push(scope);
+
+						i++;
+					}
+				}
+			}
+			else if (mode === 'in') {
+				if (source == null)
+					source = {};
+
+				Runtime.TrackIteration(source);
+
+				for (name in source) {
+					if (!own(source, name)) continue;
+					if (i >= collectionIterationLimit) break;
+
+					scope = Runtime.Assign({}, loopScope);
+					scope[variable] = name;
+					scope.$index = i;
+
+					result.push(scope);
+
+					i++;
+				}
+			}
+			else {
+				throw new Error('Elemenx unknown collection render mode: ' + mode);
+			}
+
+			if (i >= collectionIterationLimit)
+				throw new Error('Elemenx structural collection exceeded iteration collectionIterationLimit (' + collectionIterationLimit + ')');
 
 			return result;
 		}
@@ -6547,7 +6676,6 @@
 				var argumentsMap = Runtime.Directive.Arguments(template, 'collection');
 				var children = [];
 				var keyed = {};
-				var limit = 10000;
 				var context;
 
 				template.removeAttribute(directive.Attribute);
@@ -6581,9 +6709,7 @@
 					var name;
 					var values = Runtime.ComponentValues(component);
 
-					for (name in values)
-						if (own(values, name))
-							result[name] = values[name];
+					Runtime.Assign(result, values);
 
 					for (name in definition) {
 						if (own(definition, name) && typeof definition[name] === 'function' && name.charAt(0) !== '$') {
@@ -6594,110 +6720,6 @@
 							})(name);
 						}
 					}
-
-					return result;
-				}
-
-				function copyScope (source) {
-					var result = {};
-					var name;
-					for (name in source)
-						if (own(source, name))
-							result[name] = source[name];
-
-					return result;
-				}
-
-				function scopes (items, options) {
-					var result = [];
-					var loopScope = baseScope();
-					var mode = options.Mode || 'of';
-					var variable = options.Variable || 'item';
-					var source = items;
-					var iterator;
-					var step;
-					var name;
-					var scope;
-					var conditionAssignment;
-					var i = 0;
-
-					if (mode === 'classic') {
-						conditionAssignment = /^\s*([A-Za-z_$][A-Za-z0-9_$]*)\s*=(?!=)/.exec(options.Condition);
-						loopScope[variable] = expression(loopScope, options.Initializer);
-
-						if (conditionAssignment && !own(loopScope, conditionAssignment[1]))
-							loopScope[conditionAssignment[1]] = undefined;
-
-						while (i < limit && expression(loopScope, options.Condition)) {
-							scope = copyScope(loopScope);
-							scope.$index = i;
-
-							result.push(scope);
-
-							expression(loopScope, options.Step);
-
-							i++;
-						}
-					}
-					else if (mode === 'of') {
-						if (source == null)
-							source = [];
-
-						Runtime.TrackIteration(source);
-
-						if (typeof Symbol !== 'undefined' && source[Symbol.iterator]) {
-							iterator = source[Symbol.iterator]();
-							step = iterator.next();
-
-							while (!step.done && i < limit) {
-								scope = copyScope(loopScope);
-								scope[variable] = step.value;
-								scope.$index = i;
-
-								result.push(scope);
-
-								i++;
-
-								step = iterator.next();
-							}
-						}
-						else {
-							while (i < source.length && i < limit) {
-								scope = copyScope(loopScope);
-								scope[variable] = source[i];
-								scope.$index = i;
-
-								result.push(scope);
-
-								i++;
-							}
-						}
-					}
-					else if (mode === 'in') {
-						if (source == null)
-							source = {};
-
-						Runtime.TrackIteration(source);
-
-						for (name in source) {
-							if (!own(source, name)) continue;
-							if (i >= limit) break;
-
-							scope = copyScope(loopScope);
-							scope[variable] = name;
-							scope.$index = i;
-
-							result.push(scope);
-
-							i++;
-						}
-					}
-					else {
-						throw new Error('Elemenx unknown collection render mode: ' + mode);
-					}
-
-					if (i >= limit)
-						throw new Error('Elemenx structural collection exceeded iteration limit (' + limit + ')');
 
 					return result;
 				}
@@ -6715,7 +6737,7 @@
 				}
 
 				function render (items, options) {
-					var nextScopes = scopes(items, options || {});
+					var nextScopes = collectionScopes(baseScope(), items, options || {});
 					var keySource = options && options.Key ? options.Key : null;
 					var nextChildren = [];
 					var nextKeyed = {};

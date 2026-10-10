@@ -466,6 +466,38 @@ describe('Regression: dynamic templates / structural composition', function () {
 		component.$Destroy();
 	});
 
+	it('Template.Reload releases destroyed TemplateID instances instead of keeping them alive', async function () {
+		var templateID = unique('ReleasedTemplate');
+		var child = unique('ReleasedTemplateChild');
+
+		Elemenx.Template(templateID, '<em class="released-reload">A</em>');
+		Elemenx.Component(child, {$TemplateID: templateID});
+
+		var destroyed = Elemenx.Component(child)({});
+		var alive = Elemenx.Component(child)({});
+
+		document.getElementById('mount').appendChild(destroyed.$Element());
+		document.getElementById('mount').appendChild(alive.$Element());
+
+		await tick();
+
+		destroyed.$Destroy();
+
+		var count = Elemenx.Template.Reload(templateID, '<em class="released-reload">B</em>');
+
+		await tick();
+		await tick();
+
+		expect(count).toBe(1);
+		expect(Array.prototype.map.call(document.querySelectorAll('.released-reload'), function (node) {
+			return node.textContent;
+		})).toEqual(['B']);
+
+		alive.$Destroy();
+
+		expect(Elemenx.Template.Reload(templateID, '<em class="released-reload">C</em>')).toBe(0);
+	});
+
 	it('Application exposes the shared Template Registry without shadowing Component Template', async function () {
 		var templateID = unique('ApplicationTemplate');
 		var rootName = unique('ApplicationTemplateRoot');
