@@ -7,7 +7,7 @@
  *
  * Sections, top to bottom:
  *   Runtime                  private state shared by all modules through the Runtime object
- *   Utilities                small helpers shared by every module (Runtime.Own, Runtime.Assign)
+ *   Utilities                small helpers shared by every module (Runtime.Own, Runtime.Assign, Runtime.Invoke)
  *   Identity                 Elemenx.RuntimeID, StartedAt, Title
  *   Outlet                   render slot that swaps one component for another
  *   Reactive                 reactive state: proxies, dependency tracking, effects, batching
@@ -47,6 +47,22 @@
 		};
 
 		/* Copies the own enumerable properties of source into target and returns target. */
+		/*
+		 * Calls a callback (error, value) from inside a promise handler. An exception thrown by the callback is
+		 * rethrown asynchronously, so it is reported as an uncaught error instead of being swallowed by the promise.
+		 */
+		Runtime.Invoke = function (callback, error, value) {
+			try {
+				if (error) callback(error);
+				else callback(null, value);
+			}
+			catch (exception) {
+				setTimeout(function () {
+					throw exception;
+				}, 0);
+			}
+		};
+
 		Runtime.Assign = function (target, source) {
 			var key;
 
@@ -5049,10 +5065,9 @@
 					return;
 				}
 
+				/* Guards wait through a callback: a Promise is refused, the navigation is denied and the failure says why. */
 				if (operation && typeof operation.then === 'function') {
-					operation.then(finish, function () {
-						finish(false);
-					});
+					finish(fail('InvalidWait', new Error('Elemenx $Wait expects a function (done), not a Promise')));
 
 					return;
 				}
@@ -6995,6 +7010,7 @@
 
 		var Elemenx = global.Elemenx;
 		var own = Runtime.Own;
+		var invoke = Runtime.Invoke;
 		var NetworkProtocols = {};
 
 		/* Network: lifecycle and structured envelope */
@@ -7119,76 +7135,85 @@
 			return new Blob(blobParts, {type: 'application/x-elemenx-structured'});
 		}
 
-		function NetworkStructuredUnpack (blob) {
+		/* Reads a structured envelope through the Promise-based Blob API and reports the value to callback (error, value). */
+		function NetworkStructuredUnpack (blob, callback) {
 			if (!blob || blob.type !== 'application/x-elemenx-structured') {
-				return global.Promise.resolve(null);
+				invoke(callback, null, null);
+
+				return;
 			}
 
-			return blob.arrayBuffer().then(function (buffer) {
-				var view = new DataView(buffer);
+			blob.arrayBuffer().then(function (buffer) {
+				var value;
 
-				if (buffer.byteLength < 8 || view.getUint32(0) !== 0x45585354) {
-					throw new Error('Elemenx invalid structured transfer envelope');
+				try {
+					value = NetworkStructuredRead(buffer);
+				}
+				catch (error) {
+					invoke(callback, error);
+
+					return;
 				}
 
-				var manifestLength = view.getUint32(4);
-				if (8 + manifestLength > buffer.byteLength)
-					throw new Error('Elemenx invalid structured transfer manifest');
+				invoke(callback, null, value);
+			}, function (error) {
+				invoke(callback, error);
+			});
+		}
 
-				var offsets = [];
-				var manifest = JSON.parse(new TextDecoder().decode(new Uint8Array(buffer, 8, manifestLength)));
-				var offset = 8 + manifestLength;
-				var i = 0;
+		/* Restores the value packed by NetworkStructuredPack from the bytes of its envelope. */
+		function NetworkStructuredRead (buffer) {
+			var view = new DataView(buffer);
 
-				while (i < manifest.Parts.length) {
-					offsets.push(offset);
+			if (buffer.byteLength < 8 || view.getUint32(0) !== 0x45585354) {
+				throw new Error('Elemenx invalid structured transfer envelope');
+			}
 
-					offset += manifest.Parts[i].Size;
+			var manifestLength = view.getUint32(4);
+			if (8 + manifestLength > buffer.byteLength)
+				throw new Error('Elemenx invalid structured transfer manifest');
 
-					i++;
+			var offsets = [];
+			var manifest = JSON.parse(new TextDecoder().decode(new Uint8Array(buffer, 8, manifestLength)));
+			var offset = 8 + manifestLength;
+			var i = 0;
+
+			while (i < manifest.Parts.length) {
+				offsets.push(offset);
+
+				offset += manifest.Parts[i].Size;
+
+				i++;
+			}
+
+			function restore (item) {
+				var descriptor;
+				var bytes;
+				var output;
+				var keys;
+				var i;
+
+				if (!item || typeof item !== 'object') return item;
+
+				if (own(item, '$ElemenxBinary')) {
+					descriptor = manifest.Parts[item.$ElemenxBinary];
+					bytes = buffer.slice(offsets[item.$ElemenxBinary], offsets[item.$ElemenxBinary] + descriptor.Size);
+
+					if (descriptor.File && typeof global.File === 'function')
+						return new global.File([bytes], descriptor.Name || 'file', {type: descriptor.Mime});
+
+					return new Blob([bytes], {type: descriptor.Mime});
 				}
 
-				function restore (item) {
-					var descriptor;
-					var bytes;
-					var output;
-					var keys;
-					var i;
+				if (own(item, '$ElemenxDate'))
+					return new Date(item.$ElemenxDate);
 
-					if (!item || typeof item !== 'object') return item;
-
-					if (own(item, '$ElemenxBinary')) {
-						descriptor = manifest.Parts[item.$ElemenxBinary];
-						bytes = buffer.slice(offsets[item.$ElemenxBinary], offsets[item.$ElemenxBinary] + descriptor.Size);
-
-						if (descriptor.File && typeof global.File === 'function')
-							return new global.File([bytes], descriptor.Name || 'file', {type: descriptor.Mime});
-
-						return new Blob([bytes], {type: descriptor.Mime});
-					}
-
-					if (own(item, '$ElemenxDate'))
-						return new Date(item.$ElemenxDate);
-
-					if (Array.isArray(item)) {
-						output = [];
-						i = 0;
-
-						while (i < item.length) {
-							output.push(restore(item[i]));
-
-							i++;
-						}
-
-						return output;
-					}
-
-					output = {};
-					keys = Object.keys(item);
+				if (Array.isArray(item)) {
+					output = [];
 					i = 0;
 
-					while (i < keys.length) {
-						output[keys[i]] = restore(item[keys[i]]);
+					while (i < item.length) {
+						output.push(restore(item[i]));
 
 						i++;
 					}
@@ -7196,8 +7221,20 @@
 					return output;
 				}
 
-				return restore(manifest.Value);
-			});
+				output = {};
+				keys = Object.keys(item);
+				i = 0;
+
+				while (i < keys.length) {
+					output[keys[i]] = restore(item[keys[i]]);
+
+					i++;
+				}
+
+				return output;
+			}
+
+			return restore(manifest.Value);
 		}
 
 		function NetworkEvents (target) {
@@ -8431,6 +8468,13 @@
 		}
 
 		/* Network: Transfer helpers */
+		/* Delivers callback (error, value) in a microtask: never synchronously, and as soon as a resolved Promise would. */
+		function defer (callback, error, value) {
+			global.queueMicrotask(function () {
+				invoke(callback, error, value);
+			});
+		}
+
 		/* Subscriptions made on a transport, so that all of them can be released at once. */
 		function NetworkTransportListeners () {
 			var listeners = [];
@@ -8504,17 +8548,31 @@
 			throw new Error('Elemenx unsupported chunked transfer source');
 		}
 
-		function toArrayBuffer (value) {
-			if (value instanceof ArrayBuffer)
-				return global.Promise.resolve(value);
+		/* Hands a chunk to callback (error, buffer) as an ArrayBuffer, always asynchronously. */
+		function toArrayBuffer (value, callback) {
+			if (value instanceof ArrayBuffer) {
+				defer(callback, null, value);
 
-			if (ArrayBuffer.isView(value))
-				return global.Promise.resolve(value.buffer.slice(value.byteOffset, value.byteOffset + value.byteLength));
+				return;
+			}
 
-			if (value instanceof Blob)
-				return value.arrayBuffer();
+			if (ArrayBuffer.isView(value)) {
+				defer(callback, null, value.buffer.slice(value.byteOffset, value.byteOffset + value.byteLength));
 
-			return global.Promise.reject(new Error('Elemenx unsupported transfer chunk'));
+				return;
+			}
+
+			if (value instanceof Blob) {
+				value.arrayBuffer().then(function (buffer) {
+					invoke(callback, null, buffer);
+				}, function (error) {
+					invoke(callback, error);
+				});
+
+				return;
+			}
+
+			defer(callback, new Error('Elemenx unsupported transfer chunk'));
 		}
 
 		function clearFlight (flight) {
@@ -8575,16 +8633,46 @@
 				});
 			}
 
-			function transform (value, context) {
-				if (typeof encoder !== 'function')
-					return global.Promise.resolve(value);
+			/*
+			 * Encoder (value, context) returns the encoded value. Encoder (value, context, done) encodes asynchronously
+			 * and calls done (error, value) once. Either way the result reaches callback (error, value) asynchronously.
+			 */
+			function transform (value, context, callback) {
+				var settled = false;
+				var result;
+
+				function done (error, encoded) {
+					if (settled) return;
+
+					settled = true;
+
+					defer(callback, error || null, encoded);
+				}
+
+				if (typeof encoder !== 'function') {
+					done(null, value);
+
+					return;
+				}
 
 				try {
-					return global.Promise.resolve(encoder.call(api, value, context));
+					result = encoder.length >= 3 ? encoder.call(api, value, context, done) : encoder.call(api, value, context);
 				}
 				catch (error) {
-					return global.Promise.reject(error);
+					done(error);
+
+					return;
 				}
+
+				if (encoder.length >= 3) return;
+
+				if (result && typeof result.then === 'function') {
+					done(new Error('Elemenx Transfer Encoder must return a value or call done (error, value), not return a Promise'));
+
+					return;
+				}
+
+				done(null, result);
 			}
 
 			/* Outbound: flights and progress */
@@ -8772,20 +8860,29 @@
 					};
 
 					(function (chunkStart, chunkEnd, chunkIndex, chunkValue) {
-						toArrayBuffer(chunkValue)
-							.then(function (buffer) {
-								return transform(buffer, {
-									Mode: 'Chunked',
-									ID: transferID,
-									Index: chunkIndex,
-									Offset: chunkStart,
-									Size: buffer.byteLength,
-									Transport: transport
-								});
-							})
-							.then(function (payload) {
+						toArrayBuffer(chunkValue, function (bufferError, buffer) {
+							if (bufferError) {
+								chunkFailed(bufferError);
+
+								return;
+							}
+
+							transform(buffer, {
+								Mode: 'Chunked',
+								ID: transferID,
+								Index: chunkIndex,
+								Offset: chunkStart,
+								Size: buffer.byteLength,
+								Transport: transport
+							}, function (encodeError, payload) {
 								var packet;
 								var flight;
+
+								if (encodeError) {
+									chunkFailed(encodeError);
+
+									return;
+								}
 
 								if (!active || currentGeneration !== generation) return;
 
@@ -8832,14 +8929,16 @@
 									fail('Error', error);
 								}
 
-							})
-							.catch(function (error) {
-								if (!active || currentGeneration !== generation) return;
-
-								delete inFlight[chunkIndex];
-
-								fail('Error', error);
 							});
+						});
+
+						function chunkFailed (error) {
+							if (!active || currentGeneration !== generation) return;
+
+							delete inFlight[chunkIndex];
+
+							fail('Error', error);
+						}
 					})(start, end, index, chunk);
 				}
 
@@ -8917,123 +9016,130 @@
 					Name: sourceName(source),
 					Type: sourceType(source),
 					Size: total
-				})
-					.then(function (value) {
+				}, function (error, value) {
+					if (error) {
+						fail('Error', error);
+
+						return;
+					}
+
+					if (!active) return;
+
+					payload = value;
+
+					wholeListeners.On(transport, 'Transport.RequestProgress', function (event) {
+						var nativeEvent;
+						var elapsed;
+
 						if (!active) return;
 
-						payload = value;
+						nativeEvent = event.Data;
+						loaded = nativeEvent && typeof nativeEvent.loaded === 'number' ? nativeEvent.loaded : loaded;
 
-						wholeListeners.On(transport, 'Transport.RequestProgress', function (event) {
-							var nativeEvent;
-							var elapsed;
+						if (nativeEvent && nativeEvent.lengthComputable && typeof nativeEvent.total === 'number')
+							total = nativeEvent.total;
 
-							if (!active) return;
+						elapsed = Math.max(1, Date.now() - startedAt);
 
-							nativeEvent = event.Data;
-							loaded = nativeEvent && typeof nativeEvent.loaded === 'number' ? nativeEvent.loaded : loaded;
-
-							if (nativeEvent && nativeEvent.lengthComputable && typeof nativeEvent.total === 'number')
-								total = nativeEvent.total;
-
-							elapsed = Math.max(1, Date.now() - startedAt);
-
-							emit('Progress', {
-								ID: transferID,
-								Loaded: loaded,
-								Total: total,
-								Progress: total ? loaded / total : 0,
-								Speed: loaded * 1000 / elapsed,
-								Elapsed: elapsed,
-								Event: nativeEvent || null,
-								Mode: 'Whole'
-							});
-
-							if (total && loaded >= total && !sendCompletedAt) {
-								sendCompletedAt = Date.now();
-
-								setPhase('WaitingResponse');
-							}
+						emit('Progress', {
+							ID: transferID,
+							Loaded: loaded,
+							Total: total,
+							Progress: total ? loaded / total : 0,
+							Speed: loaded * 1000 / elapsed,
+							Elapsed: elapsed,
+							Event: nativeEvent || null,
+							Mode: 'Whole'
 						});
 
-						wholeListeners.On(transport, 'Transport.BeforeResponse', function (event) {
-							if (!active) return;
+						if (total && loaded >= total && !sendCompletedAt) {
+							sendCompletedAt = Date.now();
 
-							if (!sendCompletedAt)
-								sendCompletedAt = Date.now();
+							setPhase('WaitingResponse');
+						}
+					});
 
+					wholeListeners.On(transport, 'Transport.BeforeResponse', function (event) {
+						if (!active) return;
+
+						if (!sendCompletedAt)
+							sendCompletedAt = Date.now();
+
+						responseStartedAt = Date.now();
+
+						setPhase('Receiving', event);
+					});
+
+					wholeListeners.On(transport, 'Transport.ResponseProgress', function (event) {
+						if (!active) return;
+
+						if (!responseStartedAt)
 							responseStartedAt = Date.now();
 
-							setPhase('Receiving', event);
-						});
+						setPhase('Receiving', event);
+					});
 
-						wholeListeners.On(transport, 'Transport.ResponseProgress', function (event) {
-							if (!active) return;
+					wholeListeners.On(transport, 'Transport.AfterResponse', function (event) {
+						if (!active) return;
 
-							if (!responseStartedAt)
-								responseStartedAt = Date.now();
+						responseCompletedAt = Date.now();
+					});
 
-							setPhase('Receiving', event);
-						});
+					wholeListeners.On(transport, 'Transport.Success', function (event) {
+						if (!active) return;
 
-						wholeListeners.On(transport, 'Transport.AfterResponse', function (event) {
-							if (!active) return;
+						loaded = total;
+						active = false;
 
+						wholeListeners.Clear(transport);
+
+						if (!sendCompletedAt)
+							sendCompletedAt = Date.now();
+
+						if (!responseStartedAt)
+							responseStartedAt = Date.now();
+
+						if (!responseCompletedAt)
 							responseCompletedAt = Date.now();
+
+						setPhase('Complete');
+
+						emit('Complete', {
+							ID: transferID,
+							Loaded: loaded,
+							Total: total,
+							Elapsed: responseCompletedAt - startedAt,
+							Metrics: {
+								SendElapsed: sendCompletedAt - startedAt,
+								WaitElapsed: Math.max(0, responseStartedAt - sendCompletedAt),
+								ResponseElapsed: Math.max(0, responseCompletedAt - responseStartedAt),
+								TotalElapsed: responseCompletedAt - startedAt
+							},
+							Response: event.Data,
+							Mode: 'Whole'
 						});
+					});
 
-						wholeListeners.On(transport, 'Transport.Success', function (event) {
-							if (!active) return;
+					wholeListeners.On(transport, 'Transport.Error', function (event) {
+						fail('Error', event);
+					});
 
-							loaded = total;
-							active = false;
+					wholeListeners.On(transport, 'Transport.Timeout', function (event) {
+						fail('Timeout', event);
+					});
 
-							wholeListeners.Clear(transport);
+					wholeListeners.On(transport, 'Transport.Abort', function (event) {
+						fail('Abort', event);
+					});
 
-							if (!sendCompletedAt)
-								sendCompletedAt = Date.now();
-
-							if (!responseStartedAt)
-								responseStartedAt = Date.now();
-
-							if (!responseCompletedAt)
-								responseCompletedAt = Date.now();
-
-							setPhase('Complete');
-
-							emit('Complete', {
-								ID: transferID,
-								Loaded: loaded,
-								Total: total,
-								Elapsed: responseCompletedAt - startedAt,
-								Metrics: {
-									SendElapsed: sendCompletedAt - startedAt,
-									WaitElapsed: Math.max(0, responseStartedAt - sendCompletedAt),
-									ResponseElapsed: Math.max(0, responseCompletedAt - responseStartedAt),
-									TotalElapsed: responseCompletedAt - startedAt
-								},
-								Response: event.Data,
-								Mode: 'Whole'
-							});
-						});
-
-						wholeListeners.On(transport, 'Transport.Error', function (event) {
-							fail('Error', event);
-						});
-
-						wholeListeners.On(transport, 'Transport.Timeout', function (event) {
-							fail('Timeout', event);
-						});
-
-						wholeListeners.On(transport, 'Transport.Abort', function (event) {
-							fail('Abort', event);
-						});
-
+					try {
 						transport.Data(payload);
 						transport.Execute();
-					})
-					.catch(function (error) {
-						fail('Error', error);
-					});
+					}
+					catch (transportError) {
+						fail('Error', transportError);
+					}
+				});
 			}
 
 			/* Outbound: engine API */
@@ -9852,11 +9958,17 @@
 					emit('Complete', result);
 
 					if (result.Blob.type === 'application/x-elemenx-structured') {
-						NetworkStructuredUnpack(result.Blob).then(function (value) {
+						NetworkStructuredUnpack(result.Blob, function (error, value) {
+							if (error) {
+								emit('Error', {ID: result.ID, Error: error});
+
+								return;
+							}
+
 							result.Data = value;
 
 							emit('Receive', result);
-						}).catch(function (error) { emit('Error', {ID: result.ID, Error: error}); });
+						});
 					}
 					else {
 						emit('Receive', result);
@@ -10209,32 +10321,17 @@
 
 		/* Network: WebRTC */
 		/*
-		 * RTCPeerConnection is Promise-based. WebRTC negotiation methods take an optional callback (error, result);
-		 * the Promise they still return is deprecated and kept only for compatibility.
+		 * RTCPeerConnection is Promise-based; WebRTC adapts it to callbacks (error, result) and events, and returns no Promise.
 		 * The callback runs outside the promise chain, so an exception thrown by it is reported instead of swallowed.
 		 */
-		function settle (promise, callback) {
-			if (typeof callback !== 'function') return promise;
-
+		function settle (promise, callback, unhandled) {
 			promise.then(function (value) {
-				invoke(callback, null, value);
+				if (callback)
+					invoke(callback, null, value);
 			}, function (error) {
-				invoke(callback, error);
+				if (callback) invoke(callback, error);
+				else unhandled(error);
 			});
-
-			return promise;
-		}
-
-		function invoke (callback, error, value) {
-			try {
-				if (error) callback(error);
-				else callback(null, value);
-			}
-			catch (exception) {
-				global.setTimeout(function () {
-					throw exception;
-				}, 0);
-			}
 		}
 
 		function NetworkWebRTC (configuration) {
@@ -10532,6 +10629,33 @@
 				return currentConnection;
 			}
 
+			/* A negotiation result goes to the callback; without one, a failure becomes a Transport.Error event. */
+			function negotiationError (operation, error) {
+				transport('Error', {
+					Error: error,
+					Operation: operation,
+					Connection: connection
+				});
+			}
+
+			function negotiate (operation, callback, promise) {
+				settle(promise, typeof callback === 'function' ? callback : null, function (error) {
+					negotiationError(operation, error);
+				});
+
+				return api;
+			}
+
+			/* Settles without a browser call, still after the method has returned. */
+			function later (operation, callback, error) {
+				global.setTimeout(function () {
+					if (typeof callback === 'function') invoke(callback, error, undefined);
+					else if (error) negotiationError(operation, error);
+				}, 0);
+
+				return api;
+			}
+
 			api = {
 				Configuration: function (value) {
 					if (active)
@@ -10596,7 +10720,7 @@
 					if (!channel)
 						attachChannel(currentConnection.createDataChannel(channelName, channelConfig), currentGeneration, currentConnection);
 
-					return settle(currentConnection.createOffer().then(function (description) {
+					return negotiate('CreateOffer', callback, currentConnection.createOffer().then(function (description) {
 						if (!current(currentGeneration, currentConnection)) return null;
 
 						return currentConnection.setLocalDescription(description).then(function () {
@@ -10609,14 +10733,14 @@
 
 							return currentConnection.localDescription;
 						});
-					}), callback);
+					}));
 				},
 
 				AcceptOffer: function (description, callback) {
 					var currentConnection = createConnection();
 					var currentGeneration = generation;
 
-					return settle(currentConnection
+					return negotiate('AcceptOffer', callback, currentConnection
 						.setRemoteDescription(description)
 						.then(function () {
 							if (!current(currentGeneration, currentConnection)) return null;
@@ -10641,7 +10765,7 @@
 
 								return currentConnection.localDescription;
 							});
-						}), callback);
+						}));
 				},
 
 				AcceptAnswer: function (description, callback) {
@@ -10649,9 +10773,9 @@
 					var currentGeneration = generation;
 
 					if (!currentConnection || !active)
-						return settle(global.Promise.reject(new Error('Elemenx WebRTC connection is not active')), callback);
+						return later('AcceptAnswer', callback, new Error('Elemenx WebRTC connection is not active'));
 
-					return settle(currentConnection.setRemoteDescription(description).then(function () {
+					return negotiate('AcceptAnswer', callback, currentConnection.setRemoteDescription(description).then(function () {
 						if (!current(currentGeneration, currentConnection)) return null;
 
 						transport('RemoteDescription', {
@@ -10660,14 +10784,14 @@
 						});
 
 						return currentConnection.remoteDescription;
-					}), callback);
+					}));
 				},
 
 				AddICECandidate: function (candidate, callback) {
 					if (!connection || !active || !candidate)
-						return settle(global.Promise.resolve(), callback);
+						return later('AddICECandidate', callback, null);
 
-					return settle(connection.addIceCandidate(candidate), callback);
+					return negotiate('AddICECandidate', callback, connection.addIceCandidate(candidate));
 				},
 
 				Send: function (data) {
@@ -14623,8 +14747,13 @@
 				return api;
 			}
 
-			function registrationForScope () {
-				return global.navigator.serviceWorker.getRegistration(absoluteURL(definition.Scope));
+			/* The registration of this scope, read through the Promise-based browser API: callback (error, registration). */
+			function registrationForScope (callback) {
+				global.navigator.serviceWorker.getRegistration(absoluteURL(definition.Scope)).then(function (value) {
+					Runtime.Invoke(callback, null, value);
+				}, function (error) {
+					Runtime.Invoke(callback, error);
+				});
 			}
 
 			function Unregister () {
@@ -14635,25 +14764,25 @@
 				setState('Unregistering');
 
 				if (!current) {
-					registrationForScope()
-						.then(function (value) {
-							if (destroyed) return;
+					registrationForScope(function (error, value) {
+						if (destroyed) return;
 
-							if (!value) {
-								setState('Unregistered', {Result: false, Registered: false});
-
-								return;
-							}
-
-							registration = value;
-
-							Unregister();
-						})
-						.catch(function (error) {
-							if (destroyed) return;
-
+						if (error) {
 							setState('Error', error);
-						});
+
+							return;
+						}
+
+						if (!value) {
+							setState('Unregistered', {Result: false, Registered: false});
+
+							return;
+						}
+
+						registration = value;
+
+						Unregister();
+					});
 
 					return api;
 				}
@@ -14663,27 +14792,27 @@
 					.then(function (result) {
 						if (destroyed) return;
 
-						registrationForScope()
-							.then(function (value) {
-								if (destroyed) return;
+						registrationForScope(function (error, value) {
+							if (destroyed) return;
 
-								registration = value || null;
-
-								if (value) {
-									observeRegistration(value);
-
-									setState('Active', {Result: result, Registered: true});
-
-									return;
-								}
-
-								setState('Unregistered', {Result: result, Registered: false});
-							})
-							.catch(function (error) {
-								if (destroyed) return;
-
+							if (error) {
 								setState('Error', error);
-							});
+
+								return;
+							}
+
+							registration = value || null;
+
+							if (value) {
+								observeRegistration(value);
+
+								setState('Active', {Result: result, Registered: true});
+
+								return;
+							}
+
+							setState('Unregistered', {Result: result, Registered: false});
+						});
 					})
 					.catch(function (error) {
 						if (destroyed) return;
@@ -14698,13 +14827,9 @@
 				if (typeof callback !== 'function')
 					throw new Error('Elemenx ServiceWorker.Registered callback must be a function');
 
-				registrationForScope()
-					.then(function (value) {
-						callback(!!value);
-					})
-					.catch(function () {
-						callback(false);
-					});
+				registrationForScope(function (error, value) {
+					callback(!error && !!value);
+				});
 
 				return api;
 			}

@@ -500,6 +500,69 @@ describe('Regression: Network Transfer edge cases', function () {
 		expect(broken.Phase()).toBe('Error');
 	});
 
+	it('an Encoder with done (error, value) encodes asynchronously, and done (error) fails the transfer', async function () {
+		var transport = new EventTransport();
+		var transfer = Elemenx.Network.Transfer({
+			Transport: transport,
+			Data: new Uint8Array([1, 2]).buffer,
+			Retry: 1000,
+			Encoder: function (value, context, done) {
+				setTimeout(function () {
+					done(null, new Uint8Array(value).map(function (byte) {
+						return byte * 10;
+					}).buffer);
+				}, 5);
+			}
+		});
+
+		transfer.Execute();
+
+		await waitFor(function () {
+			return actions(transport, 'Chunk').length;
+		});
+
+		expect(Array.from(new Uint8Array(actions(transport, 'Chunk')[0].Data))).toEqual([10, 20]);
+
+		transfer.Destroy();
+
+		var failing = Elemenx.Network.Transfer({
+			Transport: new EventTransport(),
+			Data: new Uint8Array([1]).buffer,
+			Encoder: function (value, context, done) {
+				done(new Error('async encoder broke'));
+			}
+		});
+		var errors = errorsOf(failing);
+
+		failing.Execute();
+
+		await waitFor(function () {
+			return errors.length;
+		});
+
+		expect(errors).toEqual(['async encoder broke']);
+	});
+
+	it('an Encoder that returns a Promise fails the transfer with an explicit error', async function () {
+		var transfer = Elemenx.Network.Transfer({
+			Transport: new EventTransport(),
+			Data: new Uint8Array([1]).buffer,
+			Encoder: function (value) {
+				return Promise.resolve(value);
+			}
+		});
+		var errors = errorsOf(transfer);
+
+		transfer.Execute();
+
+		await waitFor(function () {
+			return errors.length;
+		});
+
+		expect(errors).toEqual(['Elemenx Transfer Encoder must return a value or call done (error, value), not return a Promise']);
+		expect(transfer.Phase()).toBe('Error');
+	});
+
 	it('Transfer reports configuration errors as Error events', function () {
 		var missingSource = Elemenx.Network.Transfer({Transport: new EventTransport(), Data: null});
 		var wholeWithoutExecute = Elemenx.Network.Transfer({Transport: {}, Data: new ArrayBuffer(1)});

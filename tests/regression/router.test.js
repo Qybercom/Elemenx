@@ -369,6 +369,34 @@ describe('Regression: Router / Guards', function () {
 		x.App.$Destroy();
 	});
 
+	it('$Wait refuses a Promise: navigation is denied with an InvalidWait failure', async function () {
+		var page = unique('WaitPromisePage');
+		var guard = unique('WaitPromiseGuard');
+		var failures = [];
+
+		Elemenx.Component(page, {$Template: '<div id="wait-promise">page</div>'});
+		Elemenx.Guard(guard, function () {
+			return this.$Wait(Promise.resolve(true));
+		});
+
+		var x = boot([{Path: '/wait-promise', Component: page, Guard: guard}]);
+
+		x.Router.On('GuardFailed', function (failure) {
+			failures.push(failure);
+		});
+		x.Router.Go('/wait-promise');
+
+		await tick(60);
+
+		expect(document.getElementById('wait-promise')).toBeNull();
+		expect(failures.length).toBe(1);
+		expect(failures[0].Reason).toBe('InvalidWait');
+		expect(failures[0].Data.message).toBe('Elemenx $Wait expects a function (done), not a Promise');
+
+		x.Router.Destroy();
+		x.App.$Destroy();
+	});
+
 	it('stale async redirect cannot override a newer navigation', async function () {
 		var guard = unique('RedirectGuard');
 		var home = unique('RedirectHome');

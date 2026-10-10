@@ -157,3 +157,14 @@ describe('Regression: elemenx.js free names', function () {
 		expect(unknown).toEqual([]);
 	});
 });
+
+describe('Regression: elemenx.js and Promises', function () {
+	it('creates no Promise of its own: Promises only come from browser APIs and never reach the caller', function () {
+		var code = source.replace(/\/\*[\s\S]*?\*\//g, '').replace(/'(?:[^'\\n]|\.)*'/g, '\'\'');
+		var found = code.split('\n').map(function (line, index) {
+			return /\bnew\s+(global\.)?Promise\b|\bPromise\s*\.|global\.Promise\b/.test(line) ? 'line ' + (index + 1) + ': ' + line.trim() : null;
+		}).filter(Boolean);
+
+		expect(found).toEqual([]);
+	});
+});

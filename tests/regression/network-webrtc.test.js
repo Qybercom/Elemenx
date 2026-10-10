@@ -1,5 +1,5 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { loadElemenx, resetDOM, tick, unique } from '../setup.js';
+import { loadElemenx, resetDOM, tick, unique, waitFor } from '../setup.js';
 
 var NativeRTCPeerConnection;
 
@@ -185,25 +185,16 @@ describe('Regression: Network WebRTC', function () {
 		expect(types).toEqual(['BeforeConnect', 'Channel', 'Open']);
 	});
 
-	it('CreateOffer / AcceptOffer / AcceptAnswer implement the signaling contract', async function () {
-		var initiator = Elemenx.Network.WebRTC({ChannelName: 'data'});
-		var offer = await initiator.CreateOffer();
+	it('negotiation methods return the WebRTC object and no Promise', function () {
+		var rtc = Elemenx.Network.WebRTC({ChannelName: 'data'});
+		var returned = [rtc.CreateOffer(), rtc.AcceptOffer({type: 'offer', sdp: 'x'}), rtc.AcceptAnswer({type: 'answer', sdp: 'x'}), rtc.AddICECandidate({candidate: 'x'})];
 
-		expect(offer).toEqual({type: 'offer', sdp: 'fake-offer'});
-		expect(initiator.Connection().localDescription).toEqual(offer);
-		expect(initiator.DataChannel().label).toBe('data');
-
-		var responder = Elemenx.Network.WebRTC();
-		var answer = await responder.AcceptOffer(offer);
-
-		expect(responder.Connection().remoteDescription).toEqual(offer);
-		expect(answer).toEqual({type: 'answer', sdp: 'fake-answer'});
-		expect(responder.Connection().localDescription).toEqual(answer);
-
-		var accepted = await initiator.AcceptAnswer(answer);
-
-		expect(accepted).toEqual(answer);
-		expect(initiator.Connection().remoteDescription).toEqual(answer);
+		expect(returned.filter(function (value) {
+			return value === rtc;
+		}).length).toBe(4);
+		expect(returned.some(function (value) {
+			return typeof value.then === 'function';
+		})).toBe(false);
 	});
 
 	it('CreateOffer / AcceptOffer / AcceptAnswer deliver results through (error, result) callbacks', async function () {
@@ -236,19 +227,30 @@ describe('Regression: Network WebRTC', function () {
 		expect(initiator.Connection().remoteDescription).toEqual({type: 'answer', sdp: 'fake-answer'});
 	});
 
-	it('WebRTC callbacks receive errors, and the deprecated Promise is still returned', async function () {
-		var rtc = Elemenx.Network.WebRTC();
-		var returned;
-		var error = await new Promise(function (resolve) {
-			returned = rtc.AcceptAnswer({type: 'answer', sdp: 'early'}, function (callbackError, result) {
-				resolve({Error: callbackError, Result: result});
+	it('negotiation failures go to the callback, or to Transport.Error without one', async function () {
+		var withCallback = Elemenx.Network.WebRTC();
+		var withoutCallback = Elemenx.Network.WebRTC();
+		var events = [];
+		var result = await new Promise(function (resolve) {
+			withCallback.AcceptAnswer({type: 'answer', sdp: 'early'}, function (error, value) {
+				resolve({Error: error, Value: value});
 			});
 		});
 
-		expect(error.Error.message).toContain('not active');
-		expect(error.Result).toBeUndefined();
-		expect(typeof returned.then).toBe('function');
-		await expect(returned).rejects.toThrow('not active');
+		expect(result.Error.message).toContain('not active');
+		expect(result.Value).toBeUndefined();
+
+		withoutCallback.On('Transport.Error', function (event) {
+			events.push(event.Data);
+		});
+		withoutCallback.AcceptAnswer({type: 'answer', sdp: 'early'});
+
+		await waitFor(function () {
+			return events.length;
+		});
+
+		expect(events[0].Operation).toBe('AcceptAnswer');
+		expect(events[0].Error.message).toContain('not active');
 	});
 
 	it('AddICECandidate reports completion through its callback', async function () {
@@ -292,7 +294,9 @@ describe('Regression: Network WebRTC', function () {
 		peer.ICE(candidate);
 		peer.State('connected', 'completed', 'stable');
 
-		await rtc.AddICECandidate(candidate);
+		await new Promise(function (resolve) {
+			rtc.AddICECandidate(candidate, resolve);
+		});
 
 		expect(peer.Candidates).toEqual([candidate]);
 		expect(seen).toEqual([

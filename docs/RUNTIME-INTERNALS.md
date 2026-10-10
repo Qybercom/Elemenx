@@ -20,6 +20,7 @@ To find a section in `elemenx.js`, search for its header, for example `/* Router
 |---|---|---|
 | `Own` | `Object.prototype.hasOwnProperty.call(object, key)`; modules alias it as `var own = Runtime.Own;` | Reactive, Bundle, Discovery, Service and Guard, Directive registry, Template and Component, Router, Structural, Network, Storage, Messaging, WebWorker, ServiceWorker, Application |
 | `Assign` | copies the own enumerable properties of a source into a target and returns the target | Template and Component, Router, Structural, Storage, WebWorker, ServiceWorker |
+| `Invoke` | calls a callback `(error, value)` from a promise handler; an exception thrown by the callback is rethrown asynchronously instead of being swallowed | Network, ServiceWorker |
 
 ## Outlet
 

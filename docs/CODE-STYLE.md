@@ -9,7 +9,6 @@ Tests (`tests/`) and the root tool configs (`*.config.js`, `*.config.mjs`) are t
 - **ES5 syntax only.** No `let`, `const`, arrow functions, classes, template literals, destructuring, spread, default parameters, computed object keys, `for...of`, `async`/`await`, modules.
 - **Runtime APIs are not restricted by ES5.** Browser and Node APIs already used by the code (`WeakMap`, `WeakSet`, `Map`, `Set`, `Symbol`, `URL`, `TextEncoder`, `fetch`, `Proxy`...) stay allowed.
 - **No Promise in the public API.** Public asynchronous APIs use callbacks `(error, result)` or event subscriptions (`On(name, handler)`). A Promise may appear only internally, as a short adapter over a Promise-based browser API (`RTCPeerConnection`, `Blob.arrayBuffer`, `fetch`), and must not leak to the caller.
-  - Known exception being migrated: the WebRTC `CreateOffer`, `AcceptOffer`, `AcceptAnswer` and `AddICECandidate` take a callback `(error, result)` but still return a deprecated Promise for compatibility (see `docs/PUBLIC-API.md`). Examples and new code use the callback. New code must not add more Promise-returning API.
 
 ## File structure
 
