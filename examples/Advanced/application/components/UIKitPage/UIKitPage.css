@@ -77,11 +77,11 @@
 		align-items: start;
 		flex-direction: column;
 	}
-	
+
 	.ui-kit-heading p {
 		text-align: left;
 	}
-	
+
 	.ui-kit-grid, .ui-kit-form {
 		grid-template-columns: 1fr;
 	}

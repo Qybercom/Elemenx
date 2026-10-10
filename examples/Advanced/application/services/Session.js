@@ -15,8 +15,8 @@ Elemenx.Service('Session', {
 
 	OffChange: function (callback) {
 		var index = this.Listeners.indexOf(callback);
-
-		if (index !== -1) this.Listeners.splice(index, 1);
+		if (index !== -1)
+			this.Listeners.splice(index, 1);
 	},
 
 	Changed: function () {
@@ -34,6 +34,7 @@ Elemenx.Service('Session', {
 		if (this.Authorized) return;
 
 		this.Authorized = true;
+
 		this.Changed();
 	},
 
@@ -41,6 +42,7 @@ Elemenx.Service('Session', {
 		if (!this.Authorized) return;
 
 		this.Authorized = false;
+
 		this.Changed();
 	},
 
@@ -48,6 +50,7 @@ Elemenx.Service('Session', {
 		if (this.ProjectAccess) return;
 
 		this.ProjectAccess = true;
+
 		this.Changed();
 	},
 
@@ -55,6 +58,7 @@ Elemenx.Service('Session', {
 		if (!this.ProjectAccess) return;
 
 		this.ProjectAccess = false;
+
 		this.Changed();
 	}
 });

@@ -1,0 +1,8 @@
+root = true
+
+[*]
+charset = utf-8
+indent_style = tab
+indent_size = 4
+# Blank lines carry no whitespace (docs/CODE-STYLE.md).
+trim_trailing_whitespace = true

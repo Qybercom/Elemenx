@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
 <head>
-	<meta charset="utf-8">
+	<meta charset="utf-8" />
 	<title>Elemenx Messaging child</title>
 	<script src="../elemenx.js"></script>
 </head>
@@ -10,8 +10,10 @@
 	<small id="status">waiting</small>
 	<script>
 		var messaging = Elemenx.Messaging(['advanced:child']);
+
 		messaging.On('advanced:child', function (message) {
 			document.getElementById('status').textContent = 'received: ' + message.Data;
+
 			messaging.Send('advanced:child-reply', 'child received: ' + message.Data);
 		});
 	</script>

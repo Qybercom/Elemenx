@@ -3,4 +3,4 @@
 	'RemoteConcurrent.js',
 	'RemoteDestroy.js',
 	'RemoteNestedTemplate.js'
-]
+];

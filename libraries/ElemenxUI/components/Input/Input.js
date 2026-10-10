@@ -10,6 +10,7 @@ Elemenx.Component('Input', {
 
 	Input: function (event) {
 		this.Value = event && event.target ? event.target.value : this.Value;
+
 		this.$Emit('change', this.Value);
 	}
 });

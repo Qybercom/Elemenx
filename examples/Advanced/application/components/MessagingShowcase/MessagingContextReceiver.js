@@ -17,13 +17,9 @@ Elemenx.Component('MessagingContextReceiver', {
 	MessageValue: 'nothing received',
 
 	$OnMessage: function (message) {
-		if (message.Is('advanced:shared'))
-			this.MessageValue = 'shared ID: ' + message.Data;
-		else if (message.Is('advanced:events'))
-			this.MessageValue = 'context: ' + message.Data;
-		else if (message.Is('advanced:storage'))
-			this.MessageValue = 'context storage: ' + message.Data;
-		else if (message.Is('advanced:local'))
-			this.MessageValue = 'local: ' + message.Data;
+		if (message.Is('advanced:shared')) this.MessageValue = 'shared ID: ' + message.Data;
+		else if (message.Is('advanced:events')) this.MessageValue = 'context: ' + message.Data;
+		else if (message.Is('advanced:storage')) this.MessageValue = 'context storage: ' + message.Data;
+		else if (message.Is('advanced:local')) this.MessageValue = 'local: ' + message.Data;
 	}
 });

@@ -15,19 +15,22 @@ function captureErrors (page) {
 	return errors;
 }
 
-test('official Advanced production bundle runs without its source application graph', async ({ page }) => {
+test('official Advanced production bundle runs without its source application graph', async function ({ page }) {
 	var errors = captureErrors(page);
 	var sourceRequests = [];
 
 	page.on('request', function (request) {
-		if (request.url().indexOf('/application/') !== -1) sourceRequests.push(request.url());
+		if (request.url().indexOf('/application/') !== -1)
+			sourceRequests.push(request.url());
 	});
 
 	await page.goto('http://127.0.0.1:4276/');
+
 	await expect(page.getByRole('heading', {name: 'Welcome to Elemenx'})).toBeVisible();
 	await expect(page.locator('.project-card')).toHaveCount(2);
 
 	await page.getByRole('button', {name: 'Run XHR request'}).click();
+
 	await expect(page.getByText('Elemenx Network is online', {exact: true})).toBeVisible();
 	await expect(page.getByText('Success', {exact: true})).toBeVisible();
 

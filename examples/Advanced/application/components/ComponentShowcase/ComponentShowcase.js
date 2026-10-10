@@ -14,6 +14,7 @@ Elemenx.Component('ComponentShowcase', {
 		this.Lifecycle = ['Host Create'];
 		this.RefStatus = this.$Ref('HostStatus') ? '#HostStatus resolved' : '#HostStatus missing';
 		this.ElementStatus = this.$Element() ? 'Element() available' : 'Element() missing';
+
 		this.CreateProbe();
 	},
 
@@ -33,11 +34,14 @@ Elemenx.Component('ComponentShowcase', {
 		probe.$On('change', function (count) {
 			component.Lifecycle = component.Lifecycle.concat(['Emit change=' + count]);
 		});
+
 		this.$Ref('ProbeMount').appendChild(probe.$Element());
+
 		this.Probe = probe;
 
 		var parent = probe.$Parent();
 		var application = probe.$Application();
+
 		this.OwnerStatus = 'Parent: ' + (parent ? 'ComponentShowcase' : 'none') + ' · Application: ' + (application ? application.$Name() : 'none') + ' · Generation: ' + probe.$Generation();
 	},
 
@@ -54,17 +58,23 @@ Elemenx.Component('ComponentShowcase', {
 
 	IncrementProbe: function () {
 		var probe = this.Probe && this.Probe._Component ? this.Probe._Component() : this.Probe;
-		if (probe && typeof probe.Increment === 'function') probe.Increment();
+		if (probe && typeof probe.Increment === 'function')
+			probe.Increment();
 	},
 
 	RecreateProbe: function () {
-		if (this.Probe) this.Probe.$Destroy();
+		if (this.Probe)
+			this.Probe.$Destroy();
+
 		this.Probe = null;
+
 		this.CreateProbe();
 	},
 
 	$OnDestroy: function () {
-		if (this.Probe) this.Probe.$Destroy();
+		if (this.Probe)
+			this.Probe.$Destroy();
+
 		this.Probe = null;
 	}
 });

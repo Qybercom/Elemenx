@@ -50,6 +50,7 @@ var server = Server.Create({
 function cleanup () {
 	server.Close(function () {
 		fs.rmSync(root, {recursive: true, force: true});
+
 		process.exit(0);
 	});
 }

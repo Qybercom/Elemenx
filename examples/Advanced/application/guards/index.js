@@ -3,4 +3,4 @@
 	'AuthorizedRedirect.js',
 	'ProjectAccess.js',
 	'DelayedAccess.js'
-]
+];

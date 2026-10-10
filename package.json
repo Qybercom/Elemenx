@@ -15,7 +15,7 @@
 		"!examples/**/dist"
 	],
 	"scripts": {
-		"test": "npm run test:browser && npm run test:tools && npm run test:history",
+		"test": "npm run lint && npm run test:browser && npm run test:tools && npm run test:history",
 		"test:browser": "vitest run",
 		"test:watch": "vitest",
 		"test:history": "playwright test",
@@ -24,12 +24,22 @@
 		"example:advanced": "node elemenx-cli.js dev examples/Advanced",
 		"build:advanced": "node elemenx-cli.js build examples/Advanced",
 		"example:advanced:dist": "node elemenx-cli.js serve examples/Advanced",
-		"test:tools": "vitest run --config vitest.node.config.mjs"
+		"test:tools": "vitest run --config vitest.node.config.mjs",
+		"lint": "eslint && stylelint \"**/*.{css,html}\""
 	},
 	"devDependencies": {
+		"@html-eslint/eslint-plugin": "0.66.1",
+		"@html-eslint/parser": "0.66.1",
 		"@playwright/test": "1.63.0",
+		"@stylistic/eslint-plugin": "5.10.0",
+		"@stylistic/stylelint-plugin": "5.3.1",
 		"@vitest/browser-playwright": "5.0.1",
+		"eslint": "10.12.0",
+		"eslint-plugin-html": "8.2.1",
+		"espree": "11.2.0",
 		"playwright": "1.63.0",
+		"postcss-html": "2.0.0",
+		"stylelint": "17.16.0",
 		"vite": "7.3.6",
 		"vitest": "5.0.1"
 	},

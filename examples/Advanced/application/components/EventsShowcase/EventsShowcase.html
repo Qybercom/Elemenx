@@ -8,7 +8,7 @@
 	<h3>Debouncer</h3>
 	<p>Accepts a new value only after 3 consecutive equal samples. Further repeats of the accepted value stay silent.</p>
 	<p>Accepted: <b>{{DebouncerValue}}</b></p>
-	<input class="input" type="text" [(value)]="DebouncerSample">
+	<input class="input" type="text" [(value)]="DebouncerSample" />
 	<button class="button" (click)="EmitDebouncerSample">Emit one Debouncer sample</button>
 	<button class="button" (click)="EmitDebouncedSignal">Run A/B/B/B</button>
 

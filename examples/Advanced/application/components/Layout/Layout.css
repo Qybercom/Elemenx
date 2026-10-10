@@ -271,22 +271,22 @@ footer {
 		grid-template-columns: 1fr auto;
 		gap: 12px;
 	}
-	
+
 	nav {
 		grid-column: 1 / -1;
 		grid-row: 2;
 		justify-content: center;
 	}
-	
+
 	.theme-switch {
 		grid-column: 2;
 		grid-row: 1;
 	}
-	
+
 	.application-main {
 		padding: 42px 0;
 	}
-	
+
 	.meta-grid {
 		grid-template-columns: 1fr;
 	}
@@ -388,7 +388,7 @@ footer {
 	.application-header {
 		grid-template-columns: 1fr auto;
 	}
-	
+
 	nav {
 		grid-column: 1 / -1;
 		grid-row: 2;
@@ -401,11 +401,11 @@ footer {
 		align-items: stretch;
 		flex-direction: column-reverse;
 	}
-	
+
 	.status-pill {
 		min-width: 0;
 	}
-	
+
 	.status-pill small {
 		display: none;
 	}
@@ -577,12 +577,12 @@ footer {
 	.project-showcase {
 		grid-template-columns: 1fr;
 	}
-	
+
 	.showcase-heading {
 		align-items: start;
 		flex-direction: column;
 	}
-	
+
 	.showcase-heading > p {
 		text-align: left;
 	}

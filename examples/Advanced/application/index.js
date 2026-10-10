@@ -3,4 +3,4 @@
 	'directives',
 	'guards',
 	'services'
-]
+];

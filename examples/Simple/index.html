@@ -188,35 +188,35 @@
 	</script>
 </head>
 <body>
-<div id="app"></div>
+	<div id="app"></div>
 
-<template id="simple-app">
-	<main class="simple-card">
-		<header class="simple-header">
-			<div>
-				<div class="brand">Elemenx</div>
-				<div class="badge">Simple example</div>
-			</div>
-
-			<button #Theme>{{Theme}} theme</button>
-		</header>
-		<section class="simple-content">
-			<h1>{{Title}}</h1>
-
-			<p class="description">
-				A tiny reactive component with state, refs, events and persistent theme selection.
-			</p>
-
-			<div class="counter">
+	<template id="simple-app">
+		<main class="simple-card">
+			<header class="simple-header">
 				<div>
-					<div class="counter-label">Current counter</div>
-					<div class="counter-value">{{Count}}</div>
+					<div class="brand">Elemenx</div>
+					<div class="badge">Simple example</div>
 				</div>
 
-				<button class="primary" #Increment>Increment</button>
-			</div>
-		</section>
-	</main>
-</template>
+				<button #Theme>{{Theme}} theme</button>
+			</header>
+			<section class="simple-content">
+				<h1>{{Title}}</h1>
+
+				<p class="description">
+					A tiny reactive component with state, refs, events and persistent theme selection.
+				</p>
+
+				<div class="counter">
+					<div>
+						<div class="counter-label">Current counter</div>
+						<div class="counter-value">{{Count}}</div>
+					</div>
+
+					<button class="primary" #Increment>Increment</button>
+				</div>
+			</section>
+		</main>
+	</template>
 </body>
 </html>

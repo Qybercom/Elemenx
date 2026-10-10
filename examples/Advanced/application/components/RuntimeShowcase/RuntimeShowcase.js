@@ -21,7 +21,9 @@ Elemenx.Component('RuntimeDeferredReadyChild', {
 });
 
 var RuntimeDeferredErrorDefinition = {};
+
 RuntimeDeferredErrorDefinition['$TemplateURL'] = '/elemenx-runtime-deferred-error';
+
 Elemenx.Component('RuntimeDeferredErrorChild', RuntimeDeferredErrorDefinition);
 
 Elemenx.Component('RuntimeDeferredErrorHost', {
@@ -31,15 +33,18 @@ Elemenx.Component('RuntimeDeferredErrorHost', {
 	OnError: null,
 
 	$OnChildPending: function (args) {
-		if (typeof this.OnPending === 'function') this.OnPending(args);
+		if (typeof this.OnPending === 'function')
+			this.OnPending(args);
 	},
 
 	$OnChildReady: function (args) {
-		if (typeof this.OnReady === 'function') this.OnReady(args);
+		if (typeof this.OnReady === 'function')
+			this.OnReady(args);
 	},
 
 	$OnChildError: function (args) {
-		if (typeof this.OnError === 'function') this.OnError(args);
+		if (typeof this.OnError === 'function')
+			this.OnError(args);
 	}
 });
 
@@ -99,6 +104,7 @@ Elemenx.Component('RuntimeShowcase', {
 		this.RuntimeDeferredErrorHost = null;
 		this.IntegrationWorker = null;
 		this.DynamicServiceSequence = 0;
+
 		this.AttachStartupLifecycle();
 		this.RefreshRuntime();
 		this.CreateProbe();
@@ -135,8 +141,10 @@ Elemenx.Component('RuntimeShowcase', {
 
 	ResolveDeferredChild: function () {
 		if (this.DeferredReadyResolved) return;
+
 		if (!Elemenx.Template.Has('RuntimeDeferredReadyTemplate'))
 			Elemenx.Template('RuntimeDeferredReadyTemplate', '<div class="component-probe deferred-ready-child"><strong>Deferred child ready</strong><span>{{Message}}</span></div>');
+
 		this.DeferredReadyResolved = true;
 	},
 
@@ -146,6 +154,7 @@ Elemenx.Component('RuntimeShowcase', {
 		var host;
 
 		if (this.DeferredErrorTriggered) return;
+
 		this.DeferredErrorTriggered = true;
 		factory = Elemenx.Component('RuntimeDeferredErrorHost');
 		host = factory({
@@ -153,8 +162,11 @@ Elemenx.Component('RuntimeShowcase', {
 			OnReady: function (args) { component.RecordChildReady(args); },
 			OnError: function (args) { component.RecordChildError(args); }
 		}, null, {Application: this.$Application()});
+
 		host.$Parent(this);
+
 		this.$Ref('DeferredErrorMount').appendChild(host.$Element());
+
 		this.RuntimeDeferredErrorHost = host;
 	},
 
@@ -165,17 +177,19 @@ Elemenx.Component('RuntimeShowcase', {
 		var component = this;
 
 		if (!startup) return;
+
 		startup.Listener = function () {
 			component.RefreshStartupLifecycle();
 		};
+
 		this.RefreshStartupLifecycle();
 	},
 
 	RefreshStartupLifecycle: function () {
 		var application = this.$Application();
 		var startup = application ? application.$ShowcaseStartup : null;
-
 		if (!startup) return;
+
 		this.BootstrapStatus = 'called · ' + this.FormatStartedAt(startup.BootstrapAt);
 		this.PendingStatus = startup.Pending + (startup.Pending === 1 ? ' call' : ' calls');
 		this.ReadyStatus = startup.Ready + (startup.Ready === 1 ? ' call' : ' calls');
@@ -184,24 +198,28 @@ Elemenx.Component('RuntimeShowcase', {
 
 	FormatStartedAt: function (value) {
 		function pad (number, length) {
-			var result=String(number);
-			while (result.length<length) result='0'+result;
+			var result = String(number);
+			while (result.length < length) result = '0' + result;
+
 			return result;
 		}
-		return value.getFullYear()+'-'+pad(value.getMonth()+1,2)+'-'+pad(value.getDate(),2)+' '+pad(value.getHours(),2)+':'+pad(value.getMinutes(),2)+':'+pad(value.getSeconds(),2)+'.'+pad(value.getMilliseconds(),3);
+
+		return value.getFullYear() + '-' + pad(value.getMonth() + 1, 2) + '-' + pad(value.getDate(), 2) + ' ' + pad(value.getHours(), 2) + ':' + pad(value.getMinutes(), 2) + ':' + pad(value.getSeconds(), 2) + '.' + pad(value.getMilliseconds(), 3);
 	},
 
 	FormatUptime: function (milliseconds) {
-		var hours=Math.floor(milliseconds/3600000);
-		var minutes=Math.floor((milliseconds%3600000)/60000);
-		var seconds=Math.floor((milliseconds%60000)/1000);
-		var ms=Math.floor(milliseconds%1000);
+		var hours = Math.floor(milliseconds / 3600000);
+		var minutes = Math.floor((milliseconds % 3600000) / 60000);
+		var seconds = Math.floor((milliseconds % 60000) / 1000);
+		var ms = Math.floor(milliseconds % 1000);
 		function pad (number, length) {
-			var result=String(number);
-			while (result.length<length) result='0'+result;
+			var result = String(number);
+			while (result.length < length) result = '0' + result;
+
 			return result;
 		}
-		return pad(hours,2)+':'+pad(minutes,2)+':'+pad(seconds,2)+'.'+pad(ms,3);
+
+		return pad(hours, 2) + ':' + pad(minutes, 2) + ':' + pad(seconds, 2) + '.' + pad(ms, 3);
 	},
 
 	RefreshRuntime: function () {
@@ -215,10 +233,10 @@ Elemenx.Component('RuntimeShowcase', {
 
 		this.RuntimeID = Elemenx.RuntimeID();
 		this.RuntimeStarted = this.FormatStartedAt(runtimeStarted);
-		this.RuntimeUptime = this.FormatUptime(now-runtimeStarted.getTime());
+		this.RuntimeUptime = this.FormatUptime(now - runtimeStarted.getTime());
 		this.ApplicationName = application && application.$Name ? application.$Name() : 'none';
 		this.ApplicationStarted = applicationStarted ? this.FormatStartedAt(applicationStarted) : 'none';
-		this.ApplicationUptime = applicationStarted ? this.FormatUptime(now-applicationStarted.getTime()) : 'none';
+		this.ApplicationUptime = applicationStarted ? this.FormatUptime(now - applicationStarted.getTime()) : 'none';
 		this.RootName = root && root.$Name ? root.$Name() : (root ? 'mounted' : 'none');
 		this.RouterStatus = router ? 'active' : 'none';
 		this.MountStatus = mount ? (mount.id ? '#' + mount.id : mount.tagName.toLowerCase()) : 'none';
@@ -231,17 +249,21 @@ Elemenx.Component('RuntimeShowcase', {
 		var component = this;
 
 		if (this.RuntimeProbe) return;
+
 		factory = Elemenx.Component('RuntimeProbe');
 		this.RuntimeProbeSequence++;
 		probe = factory({
 			Label: 'Runtime child',
 			Instance: this.RuntimeProbeSequence
 		}, null, {Application: this.$Application()});
+
 		probe.$Parent(this);
 		probe.$On('lifecycle', function (name) {
 			component.LifecycleStatus = 'Child ' + name + ' · generation ' + probe.$Generation();
 		});
+
 		this.$Ref('RuntimeProbe').appendChild(probe.$Element());
+
 		this.RuntimeProbe = probe;
 		this.LifecycleStatus = 'Child mounted · generation ' + probe.$Generation();
 	},
@@ -249,6 +271,7 @@ Elemenx.Component('RuntimeShowcase', {
 	DestroyProbe: function () {
 		if (!this.RuntimeProbe) {
 			this.LifecycleStatus = 'Child already destroyed';
+
 			return;
 		}
 
@@ -270,6 +293,7 @@ Elemenx.Component('RuntimeShowcase', {
 		var token;
 
 		if (this.IsolatedApplication) return;
+
 		instance = ++this.IsolatedApplicationSequence;
 		token = ++this.IsolatedApplicationToken;
 		this.IsolatedApplicationStatus = 'Pending · creating root';
@@ -281,10 +305,12 @@ Elemenx.Component('RuntimeShowcase', {
 				var root = this.$Component();
 
 				if (component.IsolatedApplicationToken !== token) return;
+
 				component.IsolatedApplicationStatus = 'Mounted · root instance ' + root.Instance;
 			},
 			$OnError: function (args) {
 				if (component.IsolatedApplicationToken !== token) return;
+
 				component.IsolatedApplicationStatus = 'Error · ' + (args && args.Error ? (args.Error.message || args.Error) : 'unknown');
 			}
 		});
@@ -295,10 +321,12 @@ Elemenx.Component('RuntimeShowcase', {
 	DestroyIsolatedApplication: function () {
 		if (!this.IsolatedApplication) {
 			this.IsolatedApplicationStatus = 'Destroyed · registry released';
+
 			return;
 		}
 
 		this.IsolatedApplicationToken++;
+
 		this.IsolatedApplication.$Destroy();
 		this.IsolatedApplication = null;
 		this.IsolatedApplicationStatus = 'Destroyed · registry released';
@@ -330,6 +358,7 @@ Elemenx.Component('RuntimeShowcase', {
 		var instance = service.Instance;
 
 		service.$Destroy();
+
 		this.IntegrationServiceStatus = instance ? 'Instance ' + instance + ' · destroyed' : 'Destroyed';
 		this.IntegrationWebWorker = this.IntegrationWorker ? this.IntegrationWorker.Name() + ' · ' + this.IntegrationWorker.State() + ' · owner destroyed' : 'not created';
 		this.IntegrationWorker = null;
@@ -364,6 +393,7 @@ Elemenx.Component('RuntimeShowcase', {
 		var snapshot;
 
 		if (!this.DynamicServiceRegistered) return;
+
 		snapshot = this.$Application().$Service('RuntimeDynamicService').Snapshot();
 		this.DynamicServiceCreated = true;
 		this.DynamicServiceRegistration = 'Registered at runtime · Application-owned';
@@ -373,7 +403,9 @@ Elemenx.Component('RuntimeShowcase', {
 
 	DestroyDynamicService: function () {
 		if (!this.DynamicServiceRegistered || !this.DynamicServiceCreated) return;
+
 		this.$Application().$Service('RuntimeDynamicService').$Destroy();
+
 		this.DynamicServiceCreated = false;
 		this.DynamicServiceRegistration = 'Registered at runtime · lazy';
 		this.DynamicServiceInstance = 'Destroyed · next access creates a new instance';
@@ -393,6 +425,7 @@ Elemenx.Component('RuntimeShowcase', {
 		var service = this.$Application().$Service('RuntimeService');
 
 		service.$Destroy();
+
 		this.ServiceStatus = 'Destroyed · next access is lazy create';
 		this.ServiceGeneration = '-';
 		this.ServiceStarted = '-';
@@ -403,12 +436,14 @@ Elemenx.Component('RuntimeShowcase', {
 		var application = this.$Application();
 
 		this.ServiceReloadStatus = 'Reloading RuntimeService...';
+
 		application.$Reload('Service', 'RuntimeService', function (error) {
 			var service;
 			var snapshot;
 
 			if (error) {
 				component.ServiceReloadStatus = 'Reload failed · ' + (error.message || error);
+
 				return;
 			}
 
@@ -426,29 +461,44 @@ Elemenx.Component('RuntimeShowcase', {
 		var application = this.$Application();
 
 		this.ReloadStatus = 'Reloading RuntimeProbe...';
+
 		application.$Reload('Component', 'RuntimeProbe', function (error) {
 			if (error) {
 				component.ReloadStatus = 'Reload failed · ' + (error.message || error);
+
 				return;
 			}
 
 			component.ReloadStatus = 'Reload complete';
+
 			component.RefreshRuntime();
 		});
 	},
 
 	$OnDestroy: function () {
 		var application = this.$Application();
-		if (this.IsolatedApplication) this.IsolatedApplication.$Destroy();
+
+		if (this.IsolatedApplication)
+			this.IsolatedApplication.$Destroy();
+
 		this.IsolatedApplication = null;
+
 		if (application && application.$ShowcaseStartup && application.$ShowcaseStartup.Listener)
 			application.$ShowcaseStartup.Listener = null;
-		if (this.RuntimeProbe) this.RuntimeProbe.$Destroy();
+
+		if (this.RuntimeProbe)
+			this.RuntimeProbe.$Destroy();
+
 		this.RuntimeProbe = null;
-		if (this.RuntimeDeferredErrorHost) this.RuntimeDeferredErrorHost.$Destroy();
+
+		if (this.RuntimeDeferredErrorHost)
+			this.RuntimeDeferredErrorHost.$Destroy();
+
 		this.RuntimeDeferredErrorHost = null;
+
 		if (this.DynamicServiceRegistered && this.DynamicServiceCreated)
 			application.$Service('RuntimeDynamicService').$Destroy();
+
 		this.DynamicServiceCreated = false;
 		this.IntegrationWorker = null;
 	}

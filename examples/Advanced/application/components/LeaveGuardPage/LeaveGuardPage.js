@@ -16,8 +16,11 @@ Elemenx.Component('LeaveGuardPage', {
 
 	$OnRouteLeave: function () {
 		this.LeaveAttempts++;
+
 		if (this.AllowLeave) return true;
+
 		this.LeaveStatus = 'Leave denied. Enable leaving and try again.';
+
 		return false;
 	}
 });

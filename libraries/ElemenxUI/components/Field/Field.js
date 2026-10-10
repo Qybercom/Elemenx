@@ -12,6 +12,7 @@ Elemenx.Component('Field', {
 
 	Changed: function (event) {
 		this.Value = event && event.Data !== undefined ? event.Data : this.Value;
+
 		this.$Emit('change', this.Value);
 	}
 });

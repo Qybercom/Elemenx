@@ -14,6 +14,7 @@ Elemenx.Service('IntegrationService', {
 
 	$OnMessage: function (message) {
 		if (!message.Is('advanced:service-integration')) return;
+
 		this.LastMessage = message.Data;
 	},
 
@@ -26,16 +27,19 @@ Elemenx.Service('IntegrationService', {
 		var worker;
 
 		storage.Local.Set(key, 'storage roundtrip');
+
 		messaging.Send('advanced:service-integration', 'message roundtrip');
 
 		if (!this.WebWorker) {
 			this.WebWorker = this.$WebWorker('AdvancedIntegrationServiceWorker', {Script: '/data/worker-showcase.js', StartMode: 'auto', Channel: 'advanced:service-integration-worker'});
 			worker = this.WebWorker;
+
 			if (typeof onWorkerState === 'function') {
 				worker.On('Running', function () { onWorkerState(worker); });
 				worker.On('Error', function () { onWorkerState(worker); });
 			}
 		}
+
 		if (!this.ServiceWorker)
 			this.ServiceWorker = this.$ServiceWorker('AdvancedIntegrationServiceWorker', {Script: '/data/worker-showcase.js', Scope: '/elemenx-service-integration/', Channel: 'advanced:service-integration-serviceworker'});
 

@@ -6,7 +6,7 @@ Elemenx.Component('Icon', {
 	Href: function () {
 		var library = Elemenx.Library('ElemenxUI');
 		var root = library ? library.$Root || library.Root : '';
-		
+
 		return String(root || '').replace(/\/$/, '') + '/icons.svg#' + this.Name;
 	}
 });

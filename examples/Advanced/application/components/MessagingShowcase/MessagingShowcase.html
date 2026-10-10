@@ -18,7 +18,7 @@
 	<div class="messaging-window-showcase">
 		<h3>Automatic browser contexts</h3>
 		<p>iframe / parent — zero-config discovery: <b>{{WindowMessage}}</b></p>
-		<iframe class="messaging-frame" src="/data/messaging-frame.html" title="Messaging iframe" style="width:100%;height:72px;border:1px solid rgba(127,127,127,.25);border-radius:4px"></iframe>
+		<iframe class="messaging-frame" src="/data/messaging-frame.html" title="Messaging iframe" style="width: 100%;height: 72px;border: 1px solid rgba(127,127,127,0.25);border-radius: 4px"></iframe>
 		<p><button class="button" (click)="SendWindowMessage">Send through iframe Window</button></p>
 		<p>child window / opener — zero-config discovery: <b>{{ChildWindowMessage}}</b></p>
 		<p><button class="button" (click)="OpenChildWindow">Open child window</button> <button class="button" (click)="SendChildWindowMessage">Send to child window</button></p>

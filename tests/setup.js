@@ -1,11 +1,14 @@
 export async function loadElemenx () {
-	if (window.Elemenx) return window.Elemenx;
+	if (window.Elemenx)
+		return window.Elemenx;
 
 	await new Promise(function (resolve, reject) {
 		var script = document.createElement('script');
+
 		script.src = '/elemenx.js';
 		script.onload = resolve;
 		script.onerror = reject;
+
 		document.head.appendChild(script);
 	});
 
@@ -14,11 +17,13 @@ export async function loadElemenx () {
 
 export function mount () {
 	resetDOM();
+
 	return document.getElementById('mount');
 }
 
 export function resetDOM () {
 	document.body.innerHTML = '<div id="mount"></div>';
+
 	history.replaceState({}, '', '/');
 }
 
@@ -34,7 +39,10 @@ export async function waitFor (test, timeout) {
 
 	while (Date.now() - started < (timeout || 1500)) {
 		value = test();
-		if (value) return value;
+
+		if (value)
+			return value;
+
 		await tick(15);
 	}
 
@@ -43,5 +51,6 @@ export async function waitFor (test, timeout) {
 
 export function unique (prefix) {
 	unique.ID = (unique.ID || 0) + 1;
+
 	return prefix + unique.ID;
 }

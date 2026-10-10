@@ -25,6 +25,7 @@ Elemenx.Component('HomePage', {
 		}
 
 		this.SessionStatusListener = session.OnChange(status);
+
 		status();
 
 		this.$Ref('Login').addEventListener('click', function () {

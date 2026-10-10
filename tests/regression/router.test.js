@@ -2,90 +2,146 @@ import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { loadElemenx, resetDOM, tick, unique } from '../setup.js';
 
 function boot (routes, events, notFound) {
-	var root=unique('RouterRoot'), appName=unique('RouterApp'), trace=[];
-	Elemenx.Component(root,{$Template:'<main *outlet="Content"></main>'});
-	var app=Elemenx.Application(appName,{$Component:root,$Mount:'#mount'});
-	var router=Elemenx.Router({Root:app.$Component(),Routes:routes,NotFound:notFound});
-	var i=0;
-	while (events && i<events.length) {
-		(function (n) { router.On(n,function () {trace.push(n);}); })(events[i]);
+	var root = unique('RouterRoot');
+	var appName = unique('RouterApp');
+	var trace = [];
+
+	Elemenx.Component(root, {$Template: '<main *outlet="Content"></main>'});
+
+	var app = Elemenx.Application(appName, {$Component: root, $Mount: '#mount'});
+	var router = Elemenx.Router({Root: app.$Component(), Routes: routes, NotFound: notFound});
+	var i = 0;
+	while (events && i < events.length) {
+		(function (n) { router.On(n, function () {trace.push(n);}); })(events[i]);
+
 		i++;
 	}
+
 	router.Start();
-	return {App:app,Router:router,Trace:trace};
+
+	return {App: app, Router: router, Trace: trace};
 }
 
 describe('Regression: Router / Guards', function () {
 	beforeAll(async function () { await loadElemenx(); });
+
 	beforeEach(function () { resetDOM(); });
 
 	it('stale pending guard cannot override a newer navigation', async function () {
-		var slow=unique('Slow'), home=unique('Home'), sp=unique('SlowPage'), fp=unique('FastPage');
-		Elemenx.Guard(slow,function () {return this.$Wait(function (done) {setTimeout(function () {done(true);},120);});});
-		Elemenx.Component(home,{$Template:'<div>HOME</div>'});
-		Elemenx.Component(sp,{$Template:'<div id="slow">SLOW</div>'});
-		Elemenx.Component(fp,{$Template:'<div id="fast">FAST</div>'});
-		var x=boot([{Path:'/',Component:home},{Path:'/slow',Component:sp,Guard:slow},{Path:'/fast',Component:fp}]);
+		var slow = unique('Slow');
+		var home = unique('Home');
+		var sp = unique('SlowPage');
+		var fp = unique('FastPage');
+
+		Elemenx.Guard(slow, function () {return this.$Wait(function (done) {setTimeout(function () {done(true);}, 120);});});
+		Elemenx.Component(home, {$Template: '<div>HOME</div>'});
+		Elemenx.Component(sp, {$Template: '<div id="slow">SLOW</div>'});
+		Elemenx.Component(fp, {$Template: '<div id="fast">FAST</div>'});
+
+		var x = boot([{Path: '/', Component: home}, {Path: '/slow', Component: sp, Guard: slow}, {Path: '/fast', Component: fp}]);
+
 		x.Router.Go('/slow');
-		setTimeout(function () {x.Router.Go('/fast');},20);
+
+		setTimeout(function () {x.Router.Go('/fast');}, 20);
+
 		await tick(220);
+
 		expect(document.getElementById('fast')).not.toBeNull();
 		expect(document.getElementById('slow')).toBeNull();
 		expect(location.pathname).toBe('/fast');
-		x.Router.Destroy(); x.App.$Destroy();
+
+		x.Router.Destroy();
+		x.App.$Destroy();
 	});
 
 	it('Destroy invalidates a pending guarded navigation', async function () {
-		var guard=unique('DestroyGuard'), page=unique('DestroyPage');
-		Elemenx.Guard(guard,function () {return this.$Wait(function (done) {setTimeout(function () {done(true);},100);});});
-		Elemenx.Component(page,{$Template:'<div id="destroy-page">PAGE</div>'});
-		var x=boot([{Path:'/destroy-pending',Component:page,Guard:guard}]);
+		var guard = unique('DestroyGuard');
+		var page = unique('DestroyPage');
+
+		Elemenx.Guard(guard, function () {return this.$Wait(function (done) {setTimeout(function () {done(true);}, 100);});});
+		Elemenx.Component(page, {$Template: '<div id="destroy-page">PAGE</div>'});
+
+		var x = boot([{Path: '/destroy-pending', Component: page, Guard: guard}]);
+
 		x.Router.Go('/destroy-pending');
+
 		await tick(20);
+
 		x.Router.Destroy();
+
 		await tick(130);
+
 		expect(document.getElementById('destroy-page')).toBeNull();
+
 		x.App.$Destroy();
 	});
 
 	it('emits navigation event order around a guard', async function () {
-		var guard=unique('OrderGuard'), page=unique('OrderPage');
-		Elemenx.Guard(guard,function () {return true;});
-		Elemenx.Component(page,{$Template:'<div id="order-page">OK</div>'});
-		var events=['NavigationStart','GuardStart','GuardEnd','NavigationCommit','NavigationEnd'];
-		var x=boot([{Path:'/order',Component:page,Guard:guard}],events);
+		var guard = unique('OrderGuard');
+		var page = unique('OrderPage');
+
+		Elemenx.Guard(guard, function () {return true;});
+		Elemenx.Component(page, {$Template: '<div id="order-page">OK</div>'});
+
+		var events = ['NavigationStart', 'GuardStart', 'GuardEnd', 'NavigationCommit', 'NavigationEnd'];
+		var x = boot([{Path: '/order', Component: page, Guard: guard}], events);
+
 		x.Router.Go('/order');
+
 		await tick(60);
+
 		expect(x.Trace.join('|')).toBe(events.join('|'));
-		x.Router.Destroy(); x.App.$Destroy();
+
+		x.Router.Destroy();
+		x.App.$Destroy();
 	});
 
 	it('guard Context.Service resolves the Router Application service instance', async function () {
-		var service=unique('GuardService'),guard=unique('GuardServiceCheck'),page=unique('GuardServicePage');
-		Elemenx.Service(service,{Authorized:false});
-		Elemenx.Guard(guard,function () {return this.$Service(service).Authorized;});
-		Elemenx.Component(page,{$Template:'<div id="guard-service-page">OK</div>'});
-		var x=boot([{Path:'/guard-service',Component:page,Guard:guard}]);
-		x.App.$Service(service).Authorized=true;
+		var service = unique('GuardService');
+		var guard = unique('GuardServiceCheck');
+		var page = unique('GuardServicePage');
+
+		Elemenx.Service(service, {Authorized: false});
+		Elemenx.Guard(guard, function () {return this.$Service(service).Authorized;});
+		Elemenx.Component(page, {$Template: '<div id="guard-service-page">OK</div>'});
+
+		var x = boot([{Path: '/guard-service', Component: page, Guard: guard}]);
+
+		x.App.$Service(service).Authorized = true;
+
 		x.Router.Go('/guard-service');
+
 		await tick(40);
+
 		expect(document.getElementById('guard-service-page')).not.toBeNull();
 		expect(location.pathname).toBe('/guard-service');
-		x.Router.Destroy();x.App.$Destroy();
+
+		x.Router.Destroy();
+		x.App.$Destroy();
 	});
 
 	it('guard uses this as its complete execution context and receives no args', async function () {
-		var guard=unique('GuardContext'),page=unique('GuardContextPage'),received=-1,context=null;
-		Elemenx.Guard(guard,function () {
-			received=arguments.length;
-			context=this;
+		var guard = unique('GuardContext');
+		var page = unique('GuardContextPage');
+		var received = -1;
+		var context = null;
+
+		Elemenx.Guard(guard, function () {
+			received = arguments.length;
+			context = this;
+
 			if (!this.$From || !this.$To || !this.$Route || !this.$Guard) return this.$Fail('missing context');
+
 			return true;
 		});
-		Elemenx.Component(page,{$Template:'<div id="guard-context-page">OK</div>'});
-		var x=boot([{Path:'/guard-context/:id',Component:page,Guard:guard}]);
+		Elemenx.Component(page, {$Template: '<div id="guard-context-page">OK</div>'});
+
+		var x = boot([{Path: '/guard-context/:id', Component: page, Guard: guard}]);
+
 		x.Router.Go('/guard-context/42?q=yes#hash');
+
 		await tick(40);
+
 		expect(received).toBe(0);
 		expect(context.$To.Params.id).toBe('42');
 		expect(context.$To.Query.q).toBe('yes');
@@ -94,155 +150,271 @@ describe('Regression: Router / Guards', function () {
 		expect(typeof context.$Wait).toBe('function');
 		expect(typeof context.$Fail).toBe('function');
 		expect(document.getElementById('guard-context-page')).not.toBeNull();
-		x.Router.Destroy();x.App.$Destroy();
+
+		x.Router.Destroy();
+		x.App.$Destroy();
 	});
 
 	it('NotFound and Replace preserve expected route semantics', async function () {
-		var home=unique('NFHome'), nf=unique('NFPage'), next=unique('NFNext');
-		Elemenx.Component(home,{$Template:'<div>HOME</div>'});
-		Elemenx.Component(nf,{$Template:'<div id="not-found">NF</div>'});
-		Elemenx.Component(next,{$Template:'<div id="replace-page">NEXT</div>'});
-		var x=boot([{Path:'/',Component:home},{Path:'/next',Component:next}],null,nf);
+		var home = unique('NFHome');
+		var nf = unique('NFPage');
+		var next = unique('NFNext');
+
+		Elemenx.Component(home, {$Template: '<div>HOME</div>'});
+		Elemenx.Component(nf, {$Template: '<div id="not-found">NF</div>'});
+		Elemenx.Component(next, {$Template: '<div id="replace-page">NEXT</div>'});
+
+		var x = boot([{Path: '/', Component: home}, {Path: '/next', Component: next}], null, nf);
+
 		x.Router.Go('/missing');
+
 		await tick(40);
+
 		expect(document.getElementById('not-found')).not.toBeNull();
+
 		x.Router.Replace('/next');
+
 		await tick(40);
+
 		expect(document.getElementById('replace-page')).not.toBeNull();
 		expect(location.pathname).toBe('/next');
-		x.Router.Destroy(); x.App.$Destroy();
+
+		x.Router.Destroy();
+		x.App.$Destroy();
 	});
 
 	it('Waiting uses the Router component while an async guard is pending', async function () {
-		var guard=unique('WaitingGuard'),home=unique('WaitingHome'),page=unique('WaitingPage'),waiting=unique('WaitingPageLoading');
-		Elemenx.Guard(guard,function () {return this.$Wait(function (done) {setTimeout(function () {done(true);},80);});});
-		Elemenx.Component(home,{$Template:'<div id="waiting-home">HOME</div>'});
-		Elemenx.Component(page,{$Template:'<div id="waiting-target">TARGET</div>'});
-		Elemenx.Component(waiting,{$Template:'<div id="waiting-global">WAIT</div>'});
-		var root=unique('WaitingRoot'),appName=unique('WaitingApp');
-		Elemenx.Component(root,{$Template:'<main *outlet="Content"></main><aside *outlet="Waiting"></aside>'});
-		var app=Elemenx.Application(appName,{$Component:root,$Mount:'#mount'});
-		var router=Elemenx.Router({Root:app.$Component(),Waiting:waiting,Routes:[{Path:'/',Component:home},{Path:'/waiting',Component:page,Guard:guard}]});
+		var guard = unique('WaitingGuard');
+		var home = unique('WaitingHome');
+		var page = unique('WaitingPage');
+		var waiting = unique('WaitingPageLoading');
+
+		Elemenx.Guard(guard, function () {return this.$Wait(function (done) {setTimeout(function () {done(true);}, 80);});});
+		Elemenx.Component(home, {$Template: '<div id="waiting-home">HOME</div>'});
+		Elemenx.Component(page, {$Template: '<div id="waiting-target">TARGET</div>'});
+		Elemenx.Component(waiting, {$Template: '<div id="waiting-global">WAIT</div>'});
+
+		var root = unique('WaitingRoot');
+		var appName = unique('WaitingApp');
+
+		Elemenx.Component(root, {$Template: '<main *outlet="Content"></main><aside *outlet="Waiting"></aside>'});
+
+		var app = Elemenx.Application(appName, {$Component: root, $Mount: '#mount'});
+		var router = Elemenx.Router({Root: app.$Component(), Waiting: waiting, Routes: [{Path: '/', Component: home}, {Path: '/waiting', Component: page, Guard: guard}]});
+
 		router.Start();
+
 		await tick(20);
+
 		router.Go('/waiting');
+
 		await tick(20);
+
 		expect(document.getElementById('waiting-global')).not.toBeNull();
 		expect(document.getElementById('waiting-global').parentNode.hasAttribute('*outlet')).toBe(false);
 		expect(document.getElementById('waiting-home')).not.toBeNull();
 		expect(document.getElementById('waiting-target')).toBeNull();
+
 		await tick(100);
+
 		expect(document.getElementById('waiting-global')).toBeNull();
 		expect(document.getElementById('waiting-target')).not.toBeNull();
-		router.Destroy(); app.$Destroy();
+
+		router.Destroy();
+
+		app.$Destroy();
 	});
 
 	it('route Waiting overrides Router Waiting', async function () {
-		var guard=unique('RouteWaitingGuard'),page=unique('RouteWaitingPage'),globalWaiting=unique('GlobalWaiting'),routeWaiting=unique('RouteWaiting');
-		Elemenx.Guard(guard,function () {return this.$Wait(function (done) {setTimeout(function () {done(true);},80);});});
-		Elemenx.Component(page,{$Template:'<div id="route-waiting-target">TARGET</div>'});
-		Elemenx.Component(globalWaiting,{$Template:'<div id="global-waiting">GLOBAL</div>'});
-		Elemenx.Component(routeWaiting,{$Template:'<div id="route-waiting">ROUTE</div>'});
-		var root=unique('RouteWaitingRoot'),appName=unique('RouteWaitingApp');
-		Elemenx.Component(root,{$Template:'<main *outlet="Content"></main><aside *outlet="Waiting"></aside>'});
-		var app=Elemenx.Application(appName,{$Component:root,$Mount:'#mount'});
-		var router=Elemenx.Router({Root:app.$Component(),Waiting:globalWaiting,Routes:[{Path:'/route-waiting',Component:page,Guard:guard,Waiting:routeWaiting}]});
+		var guard = unique('RouteWaitingGuard');
+		var page = unique('RouteWaitingPage');
+		var globalWaiting = unique('GlobalWaiting');
+		var routeWaiting = unique('RouteWaiting');
+
+		Elemenx.Guard(guard, function () {return this.$Wait(function (done) {setTimeout(function () {done(true);}, 80);});});
+		Elemenx.Component(page, {$Template: '<div id="route-waiting-target">TARGET</div>'});
+		Elemenx.Component(globalWaiting, {$Template: '<div id="global-waiting">GLOBAL</div>'});
+		Elemenx.Component(routeWaiting, {$Template: '<div id="route-waiting">ROUTE</div>'});
+
+		var root = unique('RouteWaitingRoot');
+		var appName = unique('RouteWaitingApp');
+
+		Elemenx.Component(root, {$Template: '<main *outlet="Content"></main><aside *outlet="Waiting"></aside>'});
+
+		var app = Elemenx.Application(appName, {$Component: root, $Mount: '#mount'});
+		var router = Elemenx.Router({Root: app.$Component(), Waiting: globalWaiting, Routes: [{Path: '/route-waiting', Component: page, Guard: guard, Waiting: routeWaiting}]});
+
 		router.Start();
 		router.Go('/route-waiting');
+
 		await tick(20);
+
 		expect(document.getElementById('route-waiting')).not.toBeNull();
 		expect(document.getElementById('global-waiting')).toBeNull();
+
 		await tick(100);
+
 		expect(document.getElementById('route-waiting')).toBeNull();
 		expect(document.getElementById('route-waiting-target')).not.toBeNull();
-		router.Destroy(); app.$Destroy();
+
+		router.Destroy();
+
+		app.$Destroy();
 	});
 
 
 	it('WaitingOutlet overrides the default Waiting outlet name', async function () {
-		var guard=unique('CustomWaitingOutletGuard'),page=unique('CustomWaitingOutletPage'),waiting=unique('CustomWaitingOutletLoading');
-		Elemenx.Guard(guard,function () {return this.$Wait(function (done) {setTimeout(function () {done(true);},80);});});
-		Elemenx.Component(page,{$Template:'<div id="custom-waiting-target">TARGET</div>'});
-		Elemenx.Component(waiting,{$Template:'<div id="custom-waiting-loader">WAIT</div>'});
-		var root=unique('CustomWaitingOutletRoot'),appName=unique('CustomWaitingOutletApp');
-		Elemenx.Component(root,{$Template:'<main *outlet="Content"></main><aside *outlet="Busy"></aside>'});
-		var app=Elemenx.Application(appName,{$Component:root,$Mount:'#mount'});
-		var router=Elemenx.Router({Root:app.$Component(),Waiting:waiting,WaitingOutlet:'Busy',Routes:[{Path:'/custom-waiting',Component:page,Guard:guard}]});
+		var guard = unique('CustomWaitingOutletGuard');
+		var page = unique('CustomWaitingOutletPage');
+		var waiting = unique('CustomWaitingOutletLoading');
+
+		Elemenx.Guard(guard, function () {return this.$Wait(function (done) {setTimeout(function () {done(true);}, 80);});});
+		Elemenx.Component(page, {$Template: '<div id="custom-waiting-target">TARGET</div>'});
+		Elemenx.Component(waiting, {$Template: '<div id="custom-waiting-loader">WAIT</div>'});
+
+		var root = unique('CustomWaitingOutletRoot');
+		var appName = unique('CustomWaitingOutletApp');
+
+		Elemenx.Component(root, {$Template: '<main *outlet="Content"></main><aside *outlet="Busy"></aside>'});
+
+		var app = Elemenx.Application(appName, {$Component: root, $Mount: '#mount'});
+		var router = Elemenx.Router({Root: app.$Component(), Waiting: waiting, WaitingOutlet: 'Busy', Routes: [{Path: '/custom-waiting', Component: page, Guard: guard}]});
+
 		router.Start();
 		router.Go('/custom-waiting');
+
 		await tick(20);
+
 		expect(document.getElementById('custom-waiting-loader')).not.toBeNull();
 		expect(document.getElementById('custom-waiting-loader').parentNode.hasAttribute('*outlet')).toBe(false);
+
 		await tick(100);
+
 		expect(document.getElementById('custom-waiting-loader')).toBeNull();
 		expect(document.getElementById('custom-waiting-target')).not.toBeNull();
-		router.Destroy(); app.$Destroy();
+
+		router.Destroy();
+
+		app.$Destroy();
 	});
 
 	it('common-prefix navigation reuses nested component instances', async function () {
-		var parent=unique('Parent'), child=unique('Child'), pm=0, cm=0, pi, ci;
-		Elemenx.Component(parent,{$Template:'<section id="parent">{{$Params.id}}<div *outlet="Content"></div></section>',$OnCreate:function () {pm++;pi=this;}});
-		Elemenx.Component(child,{$Template:'<b id="child">{{$Query.q}}|{{$Hash}}</b>',$OnCreate:function () {cm++;ci=this;}});
-		var x=boot([{Path:'/reuse/:id',Component:parent,Routes:[{Path:'child',Component:child}]}]);
+		var parent = unique('Parent');
+		var child = unique('Child');
+		var pm = 0;
+		var cm = 0;
+		var pi;
+		var ci;
+
+		Elemenx.Component(parent, {$Template: '<section id="parent">{{$Params.id}}<div *outlet="Content"></div></section>', $OnCreate: function () {
+			pm++;
+			pi = this;
+		}});
+		Elemenx.Component(child, {$Template: '<b id="child">{{$Query.q}}|{{$Hash}}</b>', $OnCreate: function () {
+			cm++;
+			ci = this;
+		}});
+
+		var x = boot([{Path: '/reuse/:id', Component: parent, Routes: [{Path: 'child', Component: child}]}]);
+
 		x.Router.Go('/reuse/1/child?q=a#x');
+
 		await tick(50);
-		var p=pi,c=ci;
+
+		var p = pi;
+		var c = ci;
+
 		x.Router.Go('/reuse/2/child?q=b#y');
+
 		await tick(50);
+
 		expect(pi).toBe(p);
 		expect(ci).toBe(c);
 		expect(pm).toBe(1);
 		expect(cm).toBe(1);
 		expect(document.getElementById('child').textContent).toBe('b|y');
-		x.Router.Destroy(); x.App.$Destroy();
+
+		x.Router.Destroy();
+		x.App.$Destroy();
 	});
 
 	it('failed leave guard cancels navigation and keeps current route', async function () {
-		var a=unique('LeaveA'),b=unique('LeaveB'),failed=0;
-		Elemenx.Component(a,{
-			$Template:'<div id="leave-a">A</div>',
-			$OnRouteLeave:function (x) {return x.$Fail('stay');}
+		var a = unique('LeaveA');
+		var b = unique('LeaveB');
+		var failed = 0;
+
+		Elemenx.Component(a, {
+			$Template: '<div id="leave-a">A</div>',
+			$OnRouteLeave: function (x) {return x.$Fail('stay');}
 		});
-		Elemenx.Component(b,{$Template:'<div id="leave-b">B</div>'});
-		var x=boot([{Path:'/leave-a',Component:a},{Path:'/leave-b',Component:b}]);
-		x.Router.On('GuardFailed',function () {failed++;});
+		Elemenx.Component(b, {$Template: '<div id="leave-b">B</div>'});
+
+		var x = boot([{Path: '/leave-a', Component: a}, {Path: '/leave-b', Component: b}]);
+
+		x.Router.On('GuardFailed', function () {failed++;});
 		x.Router.Go('/leave-a');
+
 		await tick(40);
+
 		x.Router.Go('/leave-b');
+
 		await tick(60);
+
 		expect(document.getElementById('leave-a')).not.toBeNull();
 		expect(document.getElementById('leave-b')).toBeNull();
 		expect(location.pathname).toBe('/leave-a');
 		expect(failed).toBe(1);
-		x.Router.Destroy();x.App.$Destroy();
+
+		x.Router.Destroy();
+		x.App.$Destroy();
 	});
 
 	it('stale async redirect cannot override a newer navigation', async function () {
-		var guard=unique('RedirectGuard'),home=unique('RedirectHome'),slow=unique('RedirectSlow'),fast=unique('RedirectFast'),target=unique('RedirectTarget');
-		Elemenx.Guard(guard,function () {return this.$Wait(function (done) {setTimeout(function () {done('/redirect-target');},120);});});
-		Elemenx.Component(home,{$Template:'<div>HOME</div>'});
-		Elemenx.Component(slow,{$Template:'<div id="redirect-slow">SLOW</div>'});
-		Elemenx.Component(fast,{$Template:'<div id="redirect-fast">FAST</div>'});
-		Elemenx.Component(target,{$Template:'<div id="redirect-target">TARGET</div>'});
-		var x=boot([{Path:'/',Component:home},{Path:'/redirect-slow',Component:slow,Guard:guard},{Path:'/redirect-fast',Component:fast},{Path:'/redirect-target',Component:target}]);
+		var guard = unique('RedirectGuard');
+		var home = unique('RedirectHome');
+		var slow = unique('RedirectSlow');
+		var fast = unique('RedirectFast');
+		var target = unique('RedirectTarget');
+
+		Elemenx.Guard(guard, function () {return this.$Wait(function (done) {setTimeout(function () {done('/redirect-target');}, 120);});});
+		Elemenx.Component(home, {$Template: '<div>HOME</div>'});
+		Elemenx.Component(slow, {$Template: '<div id="redirect-slow">SLOW</div>'});
+		Elemenx.Component(fast, {$Template: '<div id="redirect-fast">FAST</div>'});
+		Elemenx.Component(target, {$Template: '<div id="redirect-target">TARGET</div>'});
+
+		var x = boot([{Path: '/', Component: home}, {Path: '/redirect-slow', Component: slow, Guard: guard}, {Path: '/redirect-fast', Component: fast}, {Path: '/redirect-target', Component: target}]);
+
 		x.Router.Go('/redirect-slow');
-		setTimeout(function () {x.Router.Go('/redirect-fast');},20);
+
+		setTimeout(function () {x.Router.Go('/redirect-fast');}, 20);
+
 		await tick(220);
+
 		expect(document.getElementById('redirect-fast')).not.toBeNull();
 		expect(document.getElementById('redirect-target')).toBeNull();
 		expect(location.pathname).toBe('/redirect-fast');
-		x.Router.Destroy();x.App.$Destroy();
+
+		x.Router.Destroy();
+		x.App.$Destroy();
 	});
 
 
 	it('GuardFailed renders a route fallback at the protected URL and exposes failure context', async function () {
-		var guard=unique('FallbackGuard'),page=unique('FallbackPage'),denied=unique('FallbackDenied'),failure=null;
-		Elemenx.Guard(guard,function () {return this.$Fail('blocked');});
-		Elemenx.Component(page,{$Template:'<div id="fallback-page">PAGE</div>'});
-		Elemenx.Component(denied,{$Template:'<div id="fallback-denied">DENIED</div>',$OnReady:function () {failure=this.$GuardFailure;}});
-		var x=boot([{Path:'/guard-fallback/:id',Component:page,Guard:guard,GuardFailed:denied}]);
+		var guard = unique('FallbackGuard');
+		var page = unique('FallbackPage');
+		var denied = unique('FallbackDenied');
+		var failure = null;
+
+		Elemenx.Guard(guard, function () {return this.$Fail('blocked');});
+		Elemenx.Component(page, {$Template: '<div id="fallback-page">PAGE</div>'});
+		Elemenx.Component(denied, {$Template: '<div id="fallback-denied">DENIED</div>', $OnReady: function () {failure = this.$GuardFailure;}});
+
+		var x = boot([{Path: '/guard-fallback/:id', Component: page, Guard: guard, GuardFailed: denied}]);
+
 		x.Router.Go('/guard-fallback/42?q=yes#hash');
+
 		await tick(60);
+
 		expect(location.pathname).toBe('/guard-fallback/42');
 		expect(location.search).toBe('?q=yes');
 		expect(location.hash).toBe('#hash');
@@ -251,204 +423,328 @@ describe('Regression: Router / Guards', function () {
 		expect(failure.Reason).toBe('blocked');
 		expect(failure.$Guard).toBe(guard);
 		expect(failure.$To.Params.id).toBe('42');
-		x.Router.Destroy();x.App.$Destroy();
+
+		x.Router.Destroy();
+		x.App.$Destroy();
 	});
 
 	it('GuardFailed map selects the fallback for the first failing guard in a composition', async function () {
-		var auth=unique('MapAuth'),access=unique('MapAccess'),page=unique('MapPage'),login=unique('MapLogin'),denied=unique('MapDenied');
-		var authorized=false,allowed=false;
-		Elemenx.Guard(auth,function () {return authorized ? true : this.$Fail('login');});
-		Elemenx.Guard(access,function () {return allowed ? true : this.$Fail('access');});
-		Elemenx.Component(page,{$Template:'<div id="map-page">PAGE</div>'});
-		Elemenx.Component(login,{$Template:'<div id="map-login">LOGIN</div>'});
-		Elemenx.Component(denied,{$Template:'<div id="map-denied">DENIED</div>'});
-		var route={Path:'/guard-map',Component:page,Guards:[auth,access],GuardFailed:{}};
-		route.GuardFailed[auth]=login;
-		route.GuardFailed[access]=denied;
-		var x=boot([route]);
+		var auth = unique('MapAuth');
+		var access = unique('MapAccess');
+		var page = unique('MapPage');
+		var login = unique('MapLogin');
+		var denied = unique('MapDenied');
+		var authorized = false;
+		var allowed = false;
+
+		Elemenx.Guard(auth, function () {return authorized ? true : this.$Fail('login');});
+		Elemenx.Guard(access, function () {return allowed ? true : this.$Fail('access');});
+		Elemenx.Component(page, {$Template: '<div id="map-page">PAGE</div>'});
+		Elemenx.Component(login, {$Template: '<div id="map-login">LOGIN</div>'});
+		Elemenx.Component(denied, {$Template: '<div id="map-denied">DENIED</div>'});
+
+		var route = {Path: '/guard-map', Component: page, Guards: [auth, access], GuardFailed: {}};
+
+		route.GuardFailed[auth] = login;
+		route.GuardFailed[access] = denied;
+
+		var x = boot([route]);
+
 		x.Router.Go('/guard-map');
+
 		await tick(50);
+
 		expect(document.getElementById('map-login')).not.toBeNull();
-		authorized=true;
+
+		authorized = true;
+
 		x.Router.Replace('/guard-map');
+
 		await tick(50);
+
 		expect(document.getElementById('map-denied')).not.toBeNull();
-		allowed=true;
+
+		allowed = true;
+
 		x.Router.Replace('/guard-map');
+
 		await tick(50);
+
 		expect(document.getElementById('map-page')).not.toBeNull();
-		x.Router.Destroy();x.App.$Destroy();
+
+		x.Router.Destroy();
+		x.App.$Destroy();
 	});
 
 });
 describe('Regression: Router lifecycle hardening', function () {
 	beforeAll(async function () { await loadElemenx(); });
+
 	beforeEach(function () { resetDOM(); });
 
 	it('Destroy removes a mounted Waiting component while a guard is pending', async function () {
-		var guard=unique('DestroyWaitingGuard'),page=unique('DestroyWaitingPage'),waiting=unique('DestroyWaitingLoader');
-		Elemenx.Guard(guard,function () {return this.$Wait(function (done) {setTimeout(function () {done(true);},100);});});
-		Elemenx.Component(page,{$Template:'<div id="destroy-waiting-target">TARGET</div>'});
-		Elemenx.Component(waiting,{$Template:'<div id="destroy-waiting-loader">WAIT</div>'});
-		var root=unique('DestroyWaitingRoot'),appName=unique('DestroyWaitingApp');
-		Elemenx.Component(root,{$Template:'<main *outlet="Content"></main><aside *outlet="Waiting"></aside>'});
-		var app=Elemenx.Application(appName,{$Component:root,$Mount:'#mount'});
-		var router=Elemenx.Router({Root:app.$Component(),Waiting:waiting,Routes:[{Path:'/destroy-waiting',Component:page,Guard:guard}]});
+		var guard = unique('DestroyWaitingGuard');
+		var page = unique('DestroyWaitingPage');
+		var waiting = unique('DestroyWaitingLoader');
+
+		Elemenx.Guard(guard, function () {return this.$Wait(function (done) {setTimeout(function () {done(true);}, 100);});});
+		Elemenx.Component(page, {$Template: '<div id="destroy-waiting-target">TARGET</div>'});
+		Elemenx.Component(waiting, {$Template: '<div id="destroy-waiting-loader">WAIT</div>'});
+
+		var root = unique('DestroyWaitingRoot');
+		var appName = unique('DestroyWaitingApp');
+
+		Elemenx.Component(root, {$Template: '<main *outlet="Content"></main><aside *outlet="Waiting"></aside>'});
+
+		var app = Elemenx.Application(appName, {$Component: root, $Mount: '#mount'});
+		var router = Elemenx.Router({Root: app.$Component(), Waiting: waiting, Routes: [{Path: '/destroy-waiting', Component: page, Guard: guard}]});
+
 		router.Start();
 		router.Go('/destroy-waiting');
+
 		await tick(20);
+
 		expect(document.getElementById('destroy-waiting-loader')).not.toBeNull();
+
 		router.Destroy();
+
 		expect(document.getElementById('destroy-waiting-loader')).toBeNull();
+
 		await tick(120);
+
 		expect(document.getElementById('destroy-waiting-target')).toBeNull();
+
 		app.$Destroy();
 	});
 
 	it('Application.Destroy cancels a pending service-backed guard without resurrecting route state', async function () {
-		var service=unique('PendingGuardService'),guard=unique('PendingServiceGuard'),page=unique('PendingServicePage'),waiting=unique('PendingServiceWaiting'),destroyed=0;
-		Elemenx.Service(service,{
-			Authorized:true,
-			$OnDestroy:function () {destroyed++;}
+		var service = unique('PendingGuardService');
+		var guard = unique('PendingServiceGuard');
+		var page = unique('PendingServicePage');
+		var waiting = unique('PendingServiceWaiting');
+		var destroyed = 0;
+
+		Elemenx.Service(service, {
+			Authorized: true,
+			$OnDestroy: function () {destroyed++;}
 		});
-		Elemenx.Guard(guard,function () {
-			var session=this.$Service(service);
-			var authorized=session.Authorized;
+		Elemenx.Guard(guard, function () {
+			var session = this.$Service(service);
+			var authorized = session.Authorized;
+
 			return this.$Wait(function (done) {
-				setTimeout(function () {done(authorized);},100);
+				setTimeout(function () {done(authorized);}, 100);
 			});
 		});
-		Elemenx.Component(page,{$Template:'<div id="pending-service-target">TARGET</div>'});
-		Elemenx.Component(waiting,{$Template:'<div id="pending-service-waiting">WAIT</div>'});
-		var root=unique('PendingServiceRoot'),appName=unique('PendingServiceApp');
-		Elemenx.Component(root,{$Template:'<main *outlet="Content"></main><aside *outlet="Waiting"></aside>'});
-		var app=Elemenx.Application(appName,{$Component:root,$Mount:'#mount'});
-		var router=Elemenx.Router({Root:app.$Component(),Waiting:waiting,Routes:[{Path:'/pending-service',Component:page,Guard:guard}]});
+		Elemenx.Component(page, {$Template: '<div id="pending-service-target">TARGET</div>'});
+		Elemenx.Component(waiting, {$Template: '<div id="pending-service-waiting">WAIT</div>'});
+
+		var root = unique('PendingServiceRoot');
+		var appName = unique('PendingServiceApp');
+
+		Elemenx.Component(root, {$Template: '<main *outlet="Content"></main><aside *outlet="Waiting"></aside>'});
+
+		var app = Elemenx.Application(appName, {$Component: root, $Mount: '#mount'});
+		var router = Elemenx.Router({Root: app.$Component(), Waiting: waiting, Routes: [{Path: '/pending-service', Component: page, Guard: guard}]});
+
 		router.Start();
 		router.Go('/pending-service');
+
 		await tick(20);
+
 		expect(document.getElementById('pending-service-waiting')).not.toBeNull();
 		expect(destroyed).toBe(0);
+
 		app.$Destroy();
+
 		expect(destroyed).toBe(1);
 		expect(document.getElementById('pending-service-waiting')).toBeNull();
+
 		await tick(120);
+
 		expect(document.getElementById('pending-service-target')).toBeNull();
 		expect(destroyed).toBe(1);
 	});
 
 	it('a lazy service handle retained by a pending guard cannot resurrect its Application service after Destroy', async function () {
-		var service=unique('LazyPendingGuardService'),guard=unique('LazyPendingServiceGuard'),page=unique('LazyPendingServicePage'),created=0,destroyed=0;
-		Elemenx.Service(service,{
-			Authorized:true,
-			$OnCreate:function () {created++;},
-			$OnDestroy:function () {destroyed++;}
+		var service = unique('LazyPendingGuardService');
+		var guard = unique('LazyPendingServiceGuard');
+		var page = unique('LazyPendingServicePage');
+		var created = 0;
+		var destroyed = 0;
+
+		Elemenx.Service(service, {
+			Authorized: true,
+			$OnCreate: function () {created++;},
+			$OnDestroy: function () {destroyed++;}
 		});
-		Elemenx.Guard(guard,function () {
-			var session=this.$Service(service);
+		Elemenx.Guard(guard, function () {
+			var session = this.$Service(service);
+
 			return this.$Wait(function (done) {
-				setTimeout(function () {done(session.Authorized);},100);
+				setTimeout(function () {done(session.Authorized);}, 100);
 			});
 		});
-		Elemenx.Component(page,{$Template:'<div id="lazy-pending-service-target">TARGET</div>'});
-		var root=unique('LazyPendingServiceRoot'),appName=unique('LazyPendingServiceApp');
-		Elemenx.Component(root,{$Template:'<main *outlet="Content"></main>'});
-		var app=Elemenx.Application(appName,{$Component:root,$Mount:'#mount'});
-		var router=Elemenx.Router({Root:app.$Component(),Routes:[{Path:'/lazy-pending-service',Component:page,Guard:guard}]});
+		Elemenx.Component(page, {$Template: '<div id="lazy-pending-service-target">TARGET</div>'});
+
+		var root = unique('LazyPendingServiceRoot');
+		var appName = unique('LazyPendingServiceApp');
+
+		Elemenx.Component(root, {$Template: '<main *outlet="Content"></main>'});
+
+		var app = Elemenx.Application(appName, {$Component: root, $Mount: '#mount'});
+		var router = Elemenx.Router({Root: app.$Component(), Routes: [{Path: '/lazy-pending-service', Component: page, Guard: guard}]});
+
 		router.Start();
 		router.Go('/lazy-pending-service');
+
 		await tick(20);
+
 		expect(created).toBe(0);
+
 		app.$Destroy();
+
 		await tick(120);
+
 		expect(created).toBe(0);
 		expect(destroyed).toBe(0);
 		expect(document.getElementById('lazy-pending-service-target')).toBeNull();
+
 		router.Destroy();
 	});
 	it('clears the owning Outlet when a route is destroyed so the same route can be recreated after a guard failure', async function () {
-		var guard=unique('OutletGuard'),home=unique('OutletHome'),protectedPage=unique('OutletProtected'),failed=unique('OutletFailed'),root=unique('OutletRoot'),allowed=false;
-		Elemenx.Guard(guard,function () {return allowed ? true : this.$Fail();});
-		Elemenx.Component(home,{$Template:'<section id="outlet-home">HOME</section>'});
-		Elemenx.Component(protectedPage,{$Template:'<section id="outlet-protected">PROTECTED</section>'});
-		Elemenx.Component(failed,{$Template:'<section id="outlet-failed"><a href="/">Return home</a></section>'});
-		Elemenx.Component(root,{$Template:'<main *outlet="Content"></main>'});
-		var appName=unique('OutletApp');
-		var app=Elemenx.Application(appName,{$Component:root,$Mount:'#mount'});
-		var router=Elemenx.Router({Root:app.$Component(),Routes:[{Path:'/',Component:home},{Path:'/protected',Component:protectedPage,Guard:guard,GuardFailed:failed}]});
+		var guard = unique('OutletGuard');
+		var home = unique('OutletHome');
+		var protectedPage = unique('OutletProtected');
+		var failed = unique('OutletFailed');
+		var root = unique('OutletRoot');
+		var allowed = false;
+
+		Elemenx.Guard(guard, function () {return allowed ? true : this.$Fail();});
+		Elemenx.Component(home, {$Template: '<section id="outlet-home">HOME</section>'});
+		Elemenx.Component(protectedPage, {$Template: '<section id="outlet-protected">PROTECTED</section>'});
+		Elemenx.Component(failed, {$Template: '<section id="outlet-failed"><a href="/">Return home</a></section>'});
+		Elemenx.Component(root, {$Template: '<main *outlet="Content"></main>'});
+
+		var appName = unique('OutletApp');
+		var app = Elemenx.Application(appName, {$Component: root, $Mount: '#mount'});
+		var router = Elemenx.Router({Root: app.$Component(), Routes: [{Path: '/', Component: home}, {Path: '/protected', Component: protectedPage, Guard: guard, GuardFailed: failed}]});
+
 		router.Start();
+
 		await tick();
+
 		expect(document.getElementById('outlet-home')).not.toBeNull();
+
 		router.Go('/protected');
+
 		await tick();
+
 		expect(document.getElementById('outlet-failed')).not.toBeNull();
+
 		router.Go('/');
+
 		await tick();
+
 		expect(document.getElementById('outlet-home')).not.toBeNull();
 		expect(document.getElementById('outlet-failed')).toBeNull();
+
 		router.Destroy();
+
 		app.$Destroy();
 	});
 
 	it('attaches the Router facade to a route Component resolved through a deferred TemplateID', async function () {
-		var home=unique('DeferredRouterHome'),page=unique('DeferredRouterPage'),template=unique('DeferredRouterTemplate');
-		Elemenx.Template.Loader(function (name,ready) {
+		var home = unique('DeferredRouterHome');
+		var page = unique('DeferredRouterPage');
+		var template = unique('DeferredRouterTemplate');
+
+		Elemenx.Template.Loader(function (name, ready) {
 			if (name !== template) return;
-			setTimeout(function () {ready('<button id="deferred-router-next" (click)="GoNext">NEXT</button><span id="deferred-router-id">{{$Params.id}}</span>');},20);
+
+			setTimeout(function () {ready('<button id="deferred-router-next" (click)="GoNext">NEXT</button><span id="deferred-router-id">{{$Params.id}}</span>');}, 20);
 		});
-		Elemenx.Component(home,{$Template:'<div id="deferred-router-home">HOME</div>'});
-		Elemenx.Component(page,{
-			$TemplateID:template,
-			GoNext:function () {
-				var id=Number(this.$Params.id || 0)+1;
-				this.$Router().Go('/deferred-router/'+id);
+		Elemenx.Component(home, {$Template: '<div id="deferred-router-home">HOME</div>'});
+		Elemenx.Component(page, {
+			$TemplateID: template,
+			GoNext: function () {
+				var id = Number(this.$Params.id || 0) + 1;
+
+				this.$Router().Go('/deferred-router/' + id);
 			}
 		});
-		var x=boot([{Path:'/',Component:home},{Path:'/deferred-router/:id',Component:page}]);
+
+		var x = boot([{Path: '/', Component: home}, {Path: '/deferred-router/:id', Component: page}]);
+
 		x.Router.Go('/deferred-router/1');
+
 		await tick(60);
+
 		expect(document.getElementById('deferred-router-id').textContent).toBe('1');
+
 		document.getElementById('deferred-router-next').click();
+
 		await tick();
+
 		expect(location.pathname).toBe('/deferred-router/2');
 		expect(document.getElementById('deferred-router-id').textContent).toBe('2');
-		x.Router.Destroy(); x.App.$Destroy();
+
+		x.Router.Destroy();
+		x.App.$Destroy();
 	});
 
 	it('runs a deferred route Component leave hook on the resolved Component instance', async function () {
-		var home=unique('DeferredLeaveHome'),page=unique('DeferredLeavePage'),template=unique('DeferredLeaveTemplate');
-		Elemenx.Template.Loader(function (name,ready) {
+		var home = unique('DeferredLeaveHome');
+		var page = unique('DeferredLeavePage');
+		var template = unique('DeferredLeaveTemplate');
+
+		Elemenx.Template.Loader(function (name, ready) {
 			if (name !== template) return;
-			setTimeout(function () {ready('<button id="deferred-leave-home" (click)="GoHome">HOME</button><button id="deferred-leave-toggle" (click)="Toggle">TOGGLE</button><span id="deferred-leave-status">{{Status}}:{{Attempts}}</span>');},20);
+
+			setTimeout(function () {ready('<button id="deferred-leave-home" (click)="GoHome">HOME</button><button id="deferred-leave-toggle" (click)="Toggle">TOGGLE</button><span id="deferred-leave-status">{{Status}}:{{Attempts}}</span>');}, 20);
 		});
-		Elemenx.Component(home,{$Template:'<div id="deferred-leave-home-page">HOME</div>'});
-		Elemenx.Component(page,{
-			$TemplateID:template,
-			Allow:false,
-			Attempts:0,
-			Status:'READY',
-			GoHome:function () {this.$Router().Go('/');},
-			Toggle:function () {this.Allow=!this.Allow;},
-			$OnRouteLeave:function () {
+		Elemenx.Component(home, {$Template: '<div id="deferred-leave-home-page">HOME</div>'});
+		Elemenx.Component(page, {
+			$TemplateID: template,
+			Allow: false,
+			Attempts: 0,
+			Status: 'READY',
+			GoHome: function () {this.$Router().Go('/');},
+			Toggle: function () {this.Allow = !this.Allow;},
+			$OnRouteLeave: function () {
 				this.Attempts++;
+
 				if (this.Allow) return true;
-				this.Status='DENIED';
+
+				this.Status = 'DENIED';
+
 				return false;
 			}
 		});
-		var x=boot([{Path:'/',Component:home},{Path:'/deferred-leave',Component:page}]);
+
+		var x = boot([{Path: '/', Component: home}, {Path: '/deferred-leave', Component: page}]);
+
 		x.Router.Go('/deferred-leave');
+
 		await tick(60);
+
 		document.getElementById('deferred-leave-home').click();
+
 		await tick();
+
 		expect(location.pathname).toBe('/deferred-leave');
 		expect(document.getElementById('deferred-leave-status').textContent).toBe('DENIED:1');
+
 		document.getElementById('deferred-leave-toggle').click();
 		document.getElementById('deferred-leave-home').click();
+
 		await tick();
+
 		expect(location.pathname).toBe('/');
 		expect(document.getElementById('deferred-leave-home-page')).not.toBeNull();
-		x.Router.Destroy(); x.App.$Destroy();
+
+		x.Router.Destroy();
+		x.App.$Destroy();
 	});
 
 });

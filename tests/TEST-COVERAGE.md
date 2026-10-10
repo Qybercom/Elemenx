@@ -11,7 +11,8 @@ It covers:
 - Application ownership and public facades;
 - Storage, IndexedDB and Messaging;
 - XHR, Protocol, WebSocket, SSE, LongPolling, Stream, Transfer, WebRTC and network contexts;
-- WebWorker and ServiceWorker lifecycle and messaging integration.
+- WebWorker and ServiceWorker lifecycle and messaging integration;
+- the frozen public API surface (`public-api-surface.test.js`) and ES5 syntax of all shipped code (`es5-syntax.test.js`).
 
 When a bug is found, add a regression test that reproduces it before changing runtime behavior. New public API should ship with a direct contract test or a stronger end-to-end test.
 

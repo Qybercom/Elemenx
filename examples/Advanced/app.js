@@ -16,16 +16,22 @@ Elemenx.Application('ApplicationExample', {
 	},
 	$OnPending: function () {
 		this.$ShowcaseStartup.Pending++;
-		if (this.$ShowcaseStartup.Listener) this.$ShowcaseStartup.Listener();
+
+		if (this.$ShowcaseStartup.Listener)
+			this.$ShowcaseStartup.Listener();
 	},
 	$OnReady: function () {
 		this.$ShowcaseStartup.Ready++;
-		if (this.$ShowcaseStartup.Listener) this.$ShowcaseStartup.Listener();
+
+		if (this.$ShowcaseStartup.Listener)
+			this.$ShowcaseStartup.Listener();
 	},
 	$OnError: function (args) {
 		this.$ShowcaseStartup.Error++;
 		this.$ShowcaseStartup.LastError = args && args.Error ? args.Error : null;
-		if (this.$ShowcaseStartup.Listener) this.$ShowcaseStartup.Listener();
+
+		if (this.$ShowcaseStartup.Listener)
+			this.$ShowcaseStartup.Listener();
 	},
 	$Router: {
 		Waiting: 'PageLoading',

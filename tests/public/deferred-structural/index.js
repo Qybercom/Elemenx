@@ -17,4 +17,4 @@
 	'DeferredRouterRoot.js',
 	'DeferredMultiAppRemoteChild.js',
 	'DeferredMultiAppRemoteRoot.js'
-]
+];

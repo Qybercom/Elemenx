@@ -15,6 +15,7 @@ Elemenx.Component('ComponentProbe', {
 
 	Increment: function () {
 		this.Count++;
+
 		this.$Emit('change', this.Count);
 	},
 

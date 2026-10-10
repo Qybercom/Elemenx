@@ -32,4 +32,4 @@
 	'AccessDenied/AccessDenied.js',
 	'PageLoading/PageLoading.js',
 	'PageNotFound/PageNotFound.js'
-]
+];

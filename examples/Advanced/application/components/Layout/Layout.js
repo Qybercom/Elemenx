@@ -26,6 +26,7 @@ Elemenx.Component('Layout', {
 		document.body.setAttribute('data-theme', theme);
 
 		this.SessionStatusListener = session.OnChange(status);
+
 		status();
 
 		this.$Ref('Theme').addEventListener('click', function () {

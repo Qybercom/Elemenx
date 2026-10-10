@@ -9,11 +9,13 @@ Elemenx.Component('RouterLabPage', {
 
 	GoNext: function () {
 		var id = Number(this.$Params.id || 0) + 1;
+
 		this.$Router().Go('/router/' + id + '?mode=push#step-' + id);
 	},
 
 	ReplaceCurrent: function () {
 		var id = Number(this.$Params.id || 0) + 10;
+
 		this.$Router().Replace('/router/' + id + '?mode=replace#step-' + id);
 	},
 

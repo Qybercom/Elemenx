@@ -10,6 +10,7 @@ Elemenx.Component('EventsShowcase', {
 
 	$OnEvent: function (event) {
 		var self = this;
+
 		event.Is('advanced:events', function (matched) {
 			self.EventCount++;
 			self.EventValue = matched.Channel + ': ' + matched.Data;
@@ -39,11 +40,13 @@ Elemenx.Component('EventsShowcase', {
 	EmitTelemetry: function () { this.$Events().Emit('advanced:telemetry', 'telemetry event').Destroy(); },
 	EmitDebouncerSample: function () {
 		var events = this.$Events();
+
 		events.Emit('advanced:debouncer', this.DebouncerSample);
 		events.Destroy();
 	},
 	EmitDebouncedSignal: function () {
 		var events = this.$Events();
+
 		events.Emit('advanced:debouncer', 'A');
 		events.Emit('advanced:debouncer', 'B');
 		events.Emit('advanced:debouncer', 'B');
@@ -52,6 +55,7 @@ Elemenx.Component('EventsShowcase', {
 	},
 	RunFilter: function () {
 		var events = this.$Events();
+
 		events.Emit('advanced:filter', 'A');
 		events.Emit('advanced:filter', 'B');
 		events.Emit('advanced:filter', 'A');
@@ -61,16 +65,21 @@ Elemenx.Component('EventsShowcase', {
 	},
 	RunGatePass: function () {
 		this.GateValue = 'waiting 300 ms';
+
 		this.$Events().Emit('advanced:gate', true).Destroy();
 	},
 	RunGateCancel: function () {
 		var self = this;
 		var events = this.$Events();
+
 		this.GateValue = 'waiting 300 ms';
+
 		events.Emit('advanced:gate', true);
+
 		setTimeout(function () {
 			events.Emit('advanced:gate', false);
 			events.Destroy();
+
 			self.GateValue = 'cancelled';
 		}, 100);
 	}

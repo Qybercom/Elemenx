@@ -6,6 +6,7 @@ Elemenx.Directive('tooltip', {
 
 			tooltip.style.left = (rect.left + rect.width / 2) + 'px';
 			tooltip.style.top = (rect.top - 10) + 'px';
+
 			tooltip.classList.add('directive-tooltip-visible');
 		};
 		var hide = function () {
@@ -13,6 +14,7 @@ Elemenx.Directive('tooltip', {
 		};
 
 		tooltip.className = 'directive-tooltip';
+
 		document.body.appendChild(tooltip);
 
 		context.Data.Tooltip = tooltip;

@@ -1,37 +1,42 @@
-import {describe,expect,it} from 'vitest';
+import { describe, expect, it } from 'vitest';
 import childProcess from 'child_process';
 import fs from 'fs';
 import path from 'path';
-import {fileURLToPath} from 'url';
+import { fileURLToPath } from 'url';
 
-var root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../..');
+var root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 
 function packFiles () {
-	var npm=process.env.npm_execpath;
-	if (!npm) throw new Error('npm_execpath is not available; run this test through an npm script');
+	var npm = process.env.npm_execpath;
+	if (!npm)
+		throw new Error('npm_execpath is not available; run this test through an npm script');
 
-	var output=childProcess.execFileSync(process.execPath,[npm,'pack','--dry-run','--json'],{
-		cwd:root,
-		encoding:'utf8',
-		stdio:['ignore','pipe','pipe']
+	var output = childProcess.execFileSync(process.execPath, [npm, 'pack', '--dry-run', '--json'], {
+		cwd: root,
+		encoding: 'utf8',
+		stdio: ['ignore', 'pipe', 'pipe']
 	});
-	var result=JSON.parse(output);
-	var pack=result;
+	var result = JSON.parse(output);
+	var pack = result;
 
 	if (!Array.isArray(pack)) {
-		var keys=Object.keys(pack);
-		pack=keys.length ? pack[keys[0]] : null;
-	}
-	else pack=pack[0];
+		var keys = Object.keys(pack);
 
-	if (!pack || !Array.isArray(pack.files)) throw new Error('npm pack returned an unsupported JSON format');
+		pack = keys.length ? pack[keys[0]] : null;
+	}
+	else {
+		pack = pack[0];
+	}
+
+	if (!pack || !Array.isArray(pack.files))
+		throw new Error('npm pack returned an unsupported JSON format');
 
 	return pack.files.map(function (file) { return file.path; });
 }
 
-describe('Elemenx npm release surface',function () {
-	it('ships runtime, CLI, tooling, documentation and official examples without generated dist',function () {
-		var files=packFiles();
+describe('Elemenx npm release surface', function () {
+	it('ships runtime, CLI, tooling, documentation and official examples without generated dist', function () {
+		var files = packFiles();
 
 		expect(files).toContain('elemenx.js');
 		expect(files).toContain('elemenx-cli.js');
@@ -43,14 +48,14 @@ describe('Elemenx npm release surface',function () {
 		expect(files).toContain('examples/Simple/index.html');
 		expect(files).toContain('examples/Advanced/app.js');
 		expect(files.some(function (file) { return /(^|\/)dist\//.test(file); })).toBe(false);
-	},30000);
+	}, 30000);
 
-	it('keeps package entry points valid',function () {
-		var manifest=JSON.parse(fs.readFileSync(path.join(root,'package.json'),'utf8'));
+	it('keeps package entry points valid', function () {
+		var manifest = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
 
 		expect(manifest.main).toBe('elemenx.js');
-		expect(manifest.bin).toEqual({elemenx:'elemenx-cli.js'});
-		expect(fs.existsSync(path.join(root,manifest.main))).toBe(true);
-		expect(fs.existsSync(path.join(root,manifest.bin.elemenx))).toBe(true);
+		expect(manifest.bin).toEqual({elemenx: 'elemenx-cli.js'});
+		expect(fs.existsSync(path.join(root, manifest.main))).toBe(true);
+		expect(fs.existsSync(path.join(root, manifest.bin.elemenx))).toBe(true);
 	});
 });

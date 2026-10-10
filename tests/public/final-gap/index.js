@@ -1,3 +1,3 @@
 [
 	'ReloadProbe.js'
-]
+];

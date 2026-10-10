@@ -7,6 +7,7 @@ Elemenx.Component('MessagingPipesReceiver', {
 
 	$OnMessage: function (message) {
 		var self = this;
+
 		message.Is('advanced:message-debouncer', {Debouncer: 3}, function (output) {
 			self.DebouncerValue = output.Data;
 		});
