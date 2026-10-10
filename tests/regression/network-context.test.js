@@ -235,9 +235,11 @@ describe('Regression: Network contexts / ownership', function () {
 			RX: direction(53, 0, 53 * 1000 / 90, 331.25, 333.3333333333333, 90, false)
 		}, totals(353, 200, 200, false, true)));
 
-		/* traffic after End still counts bytes */
-		expect(snapshots[2].TX.Bytes).toBe(302);
-		expect(snapshots[2].Total).toBe(355);
+		/* traffic after End still counts bytes, but the finished measurement does not change */
+		expect(snapshots[2]).toEqual(Object.assign({
+			TX: direction(302, 0, 300 * 1000 / 90, 2000, 3000, 90, false),
+			RX: direction(53, 0, 53 * 1000 / 90, 331.25, 333.3333333333333, 90, false)
+		}, totals(355, 200, 200, false, true)));
 
 		/* Reset clears everything but keeps the meter running; Stop freezes Elapsed */
 		expect(snapshots[3]).toEqual(Object.assign({
@@ -249,5 +251,57 @@ describe('Regression: Network contexts / ownership', function () {
 			RX: direction(0, 0, 0, 0, 0, 0, false)
 		}, totals(0, 0, 0, false, false), {Elapsed: 100}));
 		expect(updates).toBe(6);
+	});
+
+	it('Metrics Begin after End starts a new measurement from zero', function () {
+		var clock = 1000;
+		var callbacks = {};
+		var spy = vi.spyOn(performance, 'now').mockImplementation(function () {
+			return clock;
+		});
+		var metrics = Elemenx.Network.Metrics({Window: 250, Interval: 50, Transport: {
+			On: function (name, callback) {
+				callbacks[name] = callback;
+			},
+			Off: function () {}
+		}});
+
+		metrics.Begin();
+
+		callbacks['Transport.AfterSend']({Data: 'abcd'});
+
+		clock = 1100;
+
+		metrics.End();
+
+		var first = metrics.Snapshot().TX;
+
+		clock = 1200;
+
+		callbacks['Transport.AfterSend']({Data: 'ignored'});
+
+		expect(metrics.Snapshot().TX.SpeedAvg).toBe(first.SpeedAvg);
+
+		clock = 1300;
+
+		metrics.Begin();
+
+		var restarted = metrics.Snapshot().TX;
+
+		expect([restarted.SpeedAvg, restarted.SpeedMin, restarted.SpeedMax, restarted.MeasureElapsed]).toEqual([0, 0, 0, 0]);
+
+		callbacks['Transport.AfterSend']({Data: 'xy'});
+
+		clock = 1400;
+
+		metrics.End();
+
+		expect(first.SpeedAvg).toBe(4 * 1000 / 100);
+		expect(metrics.Snapshot().TX.SpeedAvg).toBe(2 * 1000 / 100);
+		expect(metrics.Snapshot().TX.Bytes).toBe(13);
+
+		metrics.Destroy();
+
+		spy.mockRestore();
 	});
 });

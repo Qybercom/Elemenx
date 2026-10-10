@@ -10992,12 +10992,13 @@
 			return global.performance && typeof global.performance.now === 'function' ? global.performance.now() : Date.now();
 		}
 
-		/* Counters of one direction (TX or RX); Measure* fields describe the current Begin..End measurement. */
+		/* Counters of one direction (TX or RX); Measure* fields describe the current Begin..End measurement, MeasureEnd freezes it at End. */
 		function metricsDirection () {
 			return {
 				Bytes: 0,
 				Loaded: 0,
 				MeasureStart: 0,
+				MeasureEnd: null,
 				MeasureStarted: 0,
 				MeasureElapsed: 0,
 				MeasureActive: false,
@@ -11008,6 +11009,7 @@
 
 		function metricsBeginMeasure (direction) {
 			direction.MeasureStart = direction.Bytes;
+			direction.MeasureEnd = null;
 			direction.MeasureStarted = 0;
 			direction.MeasureElapsed = 0;
 			direction.MeasureActive = false;
@@ -11032,6 +11034,13 @@
 			direction.MeasureActive = false;
 		}
 
+		/* End closes the measurement: bytes transferred later no longer change it. */
+		function metricsEndMeasure (direction, time, interval) {
+			metricsPause(direction, time, interval);
+
+			direction.MeasureEnd = direction.Bytes;
+		}
+
 		function metricsSpeed (direction, speed) {
 			if (speed <= 0) return;
 
@@ -11045,10 +11054,11 @@
 		function metricsDirectionSnapshot (direction, speed, time, measured) {
 			var elapsed = 0;
 			var bytes = 0;
+			var end = direction.MeasureEnd === null ? direction.Bytes : direction.MeasureEnd;
 
 			if (measured) {
 				elapsed = direction.MeasureElapsed + (direction.MeasureActive ? Math.max(0, time - direction.MeasureStarted) : 0);
-				bytes = Math.max(0, direction.Bytes - direction.MeasureStart);
+				bytes = Math.max(0, end - direction.MeasureStart);
 			}
 
 			return {
@@ -11356,8 +11366,8 @@
 
 					measureStopped = metricsNow();
 
-					metricsPause(directions.TX, measureStopped, sampleInterval);
-					metricsPause(directions.RX, measureStopped, sampleInterval);
+					metricsEndMeasure(directions.TX, measureStopped, sampleInterval);
+					metricsEndMeasure(directions.RX, measureStopped, sampleInterval);
 
 					measuring = false;
 					samples = [];
