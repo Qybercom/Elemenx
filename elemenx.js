@@ -10,7 +10,6 @@
  *   Utilities                small helpers shared by every module (Runtime.Own, Runtime.Assign)
  *   Identity                 Elemenx.RuntimeID, StartedAt, Title
  *   Outlet                   render slot that swaps one component for another
- *   Collection               keyed list rendering used by collection hosts
  *   Reactive                 reactive state: proxies, dependency tracking, effects, batching
  *   Bundle                   Elemenx.Bundle: production bundle registry, resolved before Discovery
  *   Discovery                development loading of index.js graphs and entity scripts
@@ -170,290 +169,6 @@
 		}
 
 		Runtime.Outlet = Outlet;
-	})(typeof globalThis !== 'undefined' ? globalThis : self);
-
-	/* Collection */
-	(function (global) {
-		'use strict';
-
-		var Elemenx = global.Elemenx;
-		var own = Runtime.Own;
-
-		function valueByPath (object, path) {
-			var parts = String(path).split('.');
-			var value = object;
-
-			var i = 0;
-			while (i < parts.length) {
-				if (value == null) return undefined;
-
-				value = value[parts[i]];
-
-				i++;
-			}
-
-			return value;
-		}
-
-		function Collection (element, factory, options) {
-			options = options || {};
-
-			var keyOption = options.Key || options.key || 'id';
-			var items = {};
-			var order = [];
-
-			function keyOf (data, index) {
-				if (typeof keyOption === 'function')
-					return String(keyOption(data, index));
-
-				return String(valueByPath(data, keyOption));
-			}
-
-			function create (key, data) {
-				var component = factory(data, key);
-
-				items[key] = {
-					key: key,
-					data: data,
-					component: component
-				};
-
-				return items[key];
-			}
-
-			function updateEntry (entry, data) {
-				entry.data = data;
-
-				if (entry.component && entry.component.$Update) {
-					entry.component.$Update(data);
-				}
-
-				return entry;
-			}
-
-			function Set (data) {
-				data = data || [];
-
-				var wanted = {};
-				var nextOrder = [];
-				var i = 0;
-				var key;
-				var entry;
-				var node;
-				var active = null;
-				var selectionStart = null;
-				var selectionEnd = null;
-				var selectionDirection = null;
-
-				if (global.document && element.contains(global.document.activeElement)) {
-					active = global.document.activeElement;
-
-					if (typeof active.selectionStart === 'number') {
-						selectionStart = active.selectionStart;
-						selectionEnd = active.selectionEnd;
-						selectionDirection = active.selectionDirection;
-					}
-				}
-
-				while (i < data.length) {
-					key = keyOf(data[i], i);
-
-					if (key === 'undefined' || key === 'null')
-						throw new Error('Elemenx Collection item has no key at index ' + i);
-
-					if (wanted[key])
-						throw new Error('Elemenx duplicate collection key: ' + key);
-
-					wanted[key] = true;
-
-					nextOrder.push(key);
-
-					entry = items[key];
-
-					if (entry) {
-						updateEntry(entry, data[i]);
-					}
-					else {
-						entry = create(key, data[i]);
-					}
-
-					node = entry.component.$Element ? entry.component.$Element() : entry.component;
-
-					/*
-					 * Preserve DOM position for retained keyed items.
-					 *
-					 * Moving an existing focused subtree with appendChild()
-					 * keeps component identity but the browser can still drop
-					 * focus/selection. Only move a node when ordering actually
-					 * differs.
-					 */
-
-					if (element.children[i] !== node) {
-						if (element.children[i]) {
-							element.insertBefore(node, element.children[i]);
-						}
-						else {
-							element.appendChild(node);
-						}
-					}
-
-					i++;
-				}
-
-				i = order.length - 1;
-
-				while (i >= 0) {
-					key = order[i];
-
-					if (!wanted[key] && items[key]) {
-						if (items[key].component && items[key].component.$Destroy) {
-							items[key].component.$Destroy();
-						}
-
-						delete items[key];
-					}
-
-					i--;
-				}
-
-				order = nextOrder;
-
-				/*
-				 * Moving an ancestor of the active element can make browsers blur it
-				 * even though the keyed DOM node itself is retained. Restore focus and
-				 * text selection after the complete reorder, never between moves.
-				 */
-
-				if (active && element.contains(active) && global.document.activeElement !== active) {
-					active.focus();
-
-					if (selectionStart !== null && typeof active.setSelectionRange === 'function')
-						active.setSelectionRange(selectionStart, selectionEnd, selectionDirection);
-				}
-
-				return api;
-			}
-
-			function Update (key, data) {
-				key = String(key);
-
-				var entry = items[key];
-				if (!entry)
-					return false;
-
-				updateEntry(entry, data);
-
-				return true;
-			}
-
-			function Patch (key, patch) {
-				key = String(key);
-
-				var entry = items[key];
-				if (!entry)
-					return false;
-
-				var next = {};
-
-				Runtime.Assign(next, entry.data);
-				Runtime.Assign(next, patch || {});
-
-				updateEntry(entry, next);
-
-				return true;
-			}
-
-			function Remove (key) {
-				key = String(key);
-
-				var entry = items[key];
-				if (!entry)
-					return false;
-
-				var nextOrder = [];
-				var i = 0;
-
-				if (entry.component && entry.component.$Destroy) {
-					entry.component.$Destroy();
-				}
-
-				delete items[key];
-
-				while (i < order.length) {
-					if (order[i] !== key)
-						nextOrder.push(order[i]);
-
-					i++;
-				}
-
-				order = nextOrder;
-
-				return true;
-			}
-
-			function Get (key) {
-				key = String(key);
-
-				return items[key] ? items[key].component : null;
-			}
-
-			function Data (key) {
-				key = String(key);
-
-				return items[key] ? items[key].data : null;
-			}
-
-			function Keys () {
-				return order.slice(0);
-			}
-
-			function Clear () {
-				var i = order.length - 1;
-				var key;
-
-				while (i >= 0) {
-					key = order[i];
-
-					if (items[key] && items[key].component && items[key].component.$Destroy) {
-						items[key].component.$Destroy();
-					}
-
-					i--;
-				}
-
-				items = {};
-				order = [];
-
-				while (element.firstChild) {
-					element.removeChild(element.firstChild);
-				}
-
-				return api;
-			}
-
-			function Destroy () {
-				Clear();
-			}
-
-			var api = {
-				Element: function () {
-					return element;
-				},
-				Set: Set,
-				Update: Update,
-				Patch: Patch,
-				Remove: Remove,
-				Get: Get,
-				Data: Data,
-				Keys: Keys,
-				Clear: Clear,
-				Destroy: Destroy
-			};
-
-			return api;
-		}
-
-		Runtime.Collection = Collection;
 	})(typeof globalThis !== 'undefined' ? globalThis : self);
 
 	/* Reactive */
@@ -3768,8 +3483,105 @@
 		}
 
 		/* Component: factory */
-		function CreateComponentFactory (name, definition, generationOverride) {
+		/* A component whose template or style is not inline: resources load on first use, then a regular factory takes over. */
+		function needsRemoteResources (name, definition) {
+			if (definition.$Template === undefined && (definition.$TemplateURL || definition.$TemplateID || name)) return true;
+
+			return !!(definition.$StyleURL && definition.$Style === undefined);
+		}
+
+		function createRemoteFactory (name, definition, generation) {
 			var templateID;
+			var remoteFactory = function (data, slotProjection, options) {
+				var component = deferredComponent(function (ready) {
+					function finish (html, css) {
+						var localDefinition = {};
+						var localFactory;
+						var key;
+
+						for (key in definition) {
+							if (own(definition, key) && key !== '$TemplateURL' && key !== '$StyleURL' && key !== '$DefinitionURL' && key !== '$StyleKey') {
+								localDefinition[key] = definition[key];
+							}
+						}
+
+						if (html !== undefined)
+							localDefinition.$Template = html;
+
+						if (css !== undefined) {
+							definition.$Style = css;
+
+							installComponentStyle(name, definition, css);
+						}
+
+						localFactory = CreateComponentFactory(null, localDefinition, generation);
+
+						ready(null, localFactory);
+					}
+
+					function loadStyle (html) {
+						if (!definition.$StyleURL || definition.$Style !== undefined) {
+							finish(html, definition.$Style);
+
+							return;
+						}
+
+						loadStyleURL(definition.$StyleURL, function (error, css) {
+							if (error) {
+								ready(error);
+
+								return;
+							}
+
+							finish(html, css);
+						});
+					}
+
+					if (definition.$TemplateURL && definition.$Template === undefined) {
+						loadTemplateURL(definition.$TemplateURL, false, function (error, html) {
+							if (error) {
+								ready(error);
+
+								return;
+							}
+
+							loadStyle(html);
+						});
+					}
+					else if (definition.$Template === undefined) {
+						templateID = definition.$TemplateID || name;
+
+						Runtime.Template.Resolve(templateID, function (error, html) {
+							if (error) {
+								ready(error);
+
+								return;
+							}
+
+							loadStyle(html);
+						});
+					}
+					else {
+						loadStyle(definition.$Template);
+					}
+				}, data, slotProjection, options);
+
+				if (name && !componentReloading)
+					trackComponentInstance(name, component);
+
+				return component;
+			};
+
+			remoteFactory.ComponentName = name;
+			remoteFactory.Definition = definition;
+
+			if (name)
+				componentRegistry[name] = remoteFactory;
+
+			return remoteFactory;
+		}
+
+		function CreateComponentFactory (name, definition, generationOverride) {
 			var messagingInstanceSequence = 0;
 			var previousFactory = name ? componentRegistry[name] : null;
 			var generation = generationOverride !== undefined ? generationOverride : (name ? (componentGenerations[name] || 0) : 0);
@@ -3795,95 +3607,8 @@
 			if (name)
 				componentGenerations[name] = generation;
 
-			if ((definition.$Template === undefined && (definition.$TemplateURL || definition.$TemplateID || name)) || (definition.$StyleURL && definition.$Style === undefined)) {
-				var remoteFactory = function (data, slotProjection, options) {
-					var component = deferredComponent(function (ready) {
-						function finish (html, css) {
-							var localDefinition = {};
-							var localFactory;
-							var key;
-
-							for (key in definition) {
-								if (own(definition, key) && key !== '$TemplateURL' && key !== '$StyleURL' && key !== '$DefinitionURL' && key !== '$StyleKey') {
-									localDefinition[key] = definition[key];
-								}
-							}
-
-							if (html !== undefined)
-								localDefinition.$Template = html;
-
-							if (css !== undefined) {
-								definition.$Style = css;
-
-								installComponentStyle(name, definition, css);
-							}
-
-							localFactory = CreateComponentFactory(null, localDefinition, generation);
-
-							ready(null, localFactory);
-						}
-
-						function loadStyle (html) {
-							if (!definition.$StyleURL || definition.$Style !== undefined) {
-								finish(html, definition.$Style);
-
-								return;
-							}
-
-							loadStyleURL(definition.$StyleURL, function (error, css) {
-								if (error) {
-									ready(error);
-
-									return;
-								}
-
-								finish(html, css);
-							});
-						}
-
-						if (definition.$TemplateURL && definition.$Template === undefined) {
-							loadTemplateURL(definition.$TemplateURL, false, function (error, html) {
-								if (error) {
-									ready(error);
-
-									return;
-								}
-
-								loadStyle(html);
-							});
-						}
-						else if (definition.$Template === undefined) {
-							templateID = definition.$TemplateID || name;
-
-							Runtime.Template.Resolve(templateID, function (error, html) {
-								if (error) {
-									ready(error);
-
-									return;
-								}
-
-								loadStyle(html);
-							});
-						}
-						else {
-							loadStyle(definition.$Template);
-						}
-					}, data, slotProjection, options);
-
-					if (name && !componentReloading)
-						trackComponentInstance(name, component);
-
-					return component;
-				};
-
-				remoteFactory.ComponentName = name;
-				remoteFactory.Definition = definition;
-
-				if (name)
-					componentRegistry[name] = remoteFactory;
-
-				return remoteFactory;
-			}
+			if (needsRemoteResources(name, definition))
+				return createRemoteFactory(name, definition, generation);
 
 			if (definition.$Style !== undefined)
 				installComponentStyle(name, definition, definition.$Style);
@@ -3931,7 +3656,6 @@
 
 				var refs = {};
 				var outlets = {};
-				var collections = {};
 				var bindings = [];
 				var models = [];
 				var customDirectives = [];
@@ -4009,10 +3733,6 @@
 					return api;
 				}
 
-				function Values () {
-					return values;
-				}
-
 				function Ref (name) {
 					var key = String(name).toLowerCase();
 					var ref = refs[key] || null;
@@ -4053,46 +3773,6 @@
 
 				function Outlet (name) {
 					return outlets[name] || null;
-				}
-
-				function List (name, factory, options) {
-					var target;
-
-					if (arguments.length === 1) {
-						return collections[name] || null;
-					}
-
-					if (collections[name]) {
-						collections[name].Destroy();
-					}
-
-					target = Ref(name);
-
-					if (!target && outlets[name]) {
-						target = outlets[name].Element();
-					}
-
-					if (!target) {
-						throw new Error('Elemenx Collection target not found: ' + name);
-					}
-
-					collections[name] = Runtime.Collection(target, factory, options || {});
-
-					return collections[name];
-				}
-
-				function Append (ref, child) {
-					var target = typeof ref === 'string' ? Ref(ref) : ref;
-					if (!target || !child) return api;
-
-					var element = child.$Element ? child.$Element() : child;
-
-					target.appendChild(element);
-
-					if (child.$Destroy)
-						children.push(child);
-
-					return api;
 				}
 
 				function listen (node, name, callback) {
@@ -4399,12 +4079,6 @@
 					}
 
 					listeners.length = 0;
-
-					var collectionName;
-
-					for (collectionName in collections)
-						if (own(collections, collectionName))
-							collections[collectionName].Destroy();
 
 					for (var outletName in outlets)
 						if (own(outlets, outletName))
@@ -6130,6 +5804,230 @@
 		var Elemenx = global.Elemenx;
 		var own = Runtime.Own;
 
+		/* Structural: bindings and props */
+		function expression (data, source) {
+			try {
+				return Runtime.EvaluateExpression(source, data);
+			}
+			catch (error) {
+				if (!(error && error.name === 'ReferenceError') && global.console && console.error) {
+					console.error('Elemenx structural expression failed: ' + source, error);
+				}
+
+				return undefined;
+			}
+		}
+
+		function propValue (text, data) {
+			var match = /^{{\s*([\s\S]+?)\s*}}$/.exec(text);
+			if (match)
+				return expression(data, match[1]);
+
+			if (text === '') return true;
+			if (text === 'true') return true;
+			if (text === 'false') return false;
+			if (text === 'null') return null;
+
+			return text;
+		}
+
+		function bindingTarget (target) {
+			var parts = [];
+			var length = target.length;
+			var i = 0;
+			var start;
+			var value;
+
+			function identifier () {
+				var code;
+
+				if (i >= length || !/[A-Za-z_$]/.test(target.charAt(i)))
+					throw new Error('Elemenx invalid Component binding target: [' + target + ']');
+
+				start = i++;
+
+				while (i < length) {
+					code = target.charAt(i);
+
+					if (!/[\w$]/.test(code)) break;
+
+					i++;
+				}
+
+				return target.substring(start, i);
+			}
+
+			parts.push(identifier().replace(/-([a-z])/g, function (match, letter) {
+				return letter.toUpperCase();
+			}));
+
+			while (i < length) {
+				if (target.charAt(i) === '.') {
+					i++;
+
+					parts.push(identifier());
+
+					continue;
+				}
+
+				if (target.charAt(i) === '[') {
+					i++;
+					start = i;
+
+					while (i < length && /\d/.test(target.charAt(i)))
+						i++;
+
+					if (start === i || target.charAt(i) !== ']')
+						throw new Error('Elemenx invalid Component binding target: [' + target + ']');
+
+					value = parseInt(target.substring(start, i), 10);
+
+					parts.push(value);
+
+					i++;
+
+					continue;
+				}
+
+				throw new Error('Elemenx invalid Component binding target: [' + target + ']');
+			}
+
+			return parts;
+		}
+
+		function canonicalPropKey (source, key) {
+			var name;
+			var match = null;
+			var lower;
+
+			if (!source || typeof key !== 'string') return key;
+			if (own(source, key)) return key;
+
+			lower = key.toLowerCase();
+
+			for (name in source) {
+				if (!own(source, name) || name.toLowerCase() !== lower) continue;
+				if (match !== null) return key;
+
+				match = name;
+			}
+
+			return match === null ? key : match;
+		}
+
+		function canonicalBindingPath (target, definition) {
+			var path = bindingTarget(target);
+			var source = definition;
+			var i = 0;
+			var key;
+
+			while (i < path.length && source != null) {
+				key = path[i];
+
+				if (typeof key === 'string') {
+					key = canonicalPropKey(source, key);
+					path[i] = key;
+				}
+
+				source = source[key];
+
+				i++;
+			}
+
+			return path;
+		}
+
+		function bindingAssign (result, target, value, definition) {
+			var path = canonicalBindingPath(target, definition);
+			var root = path[0];
+			var current;
+			var i = 1;
+
+			if (path.length === 1) {
+				result[root] = value;
+
+				return;
+			}
+
+			if (!own(result, root))
+				result[root] = {};
+
+			current = result[root];
+
+			while (i < path.length - 1) {
+				if (current[path[i]] === undefined || current[path[i]] === null)
+					current[path[i]] = typeof path[i + 1] === 'number' ? [] : {};
+
+				current = current[path[i]];
+
+				i++;
+			}
+
+			current[path[path.length - 1]] = value;
+		}
+
+		function props (node, data, definition) {
+			var result = {};
+			var attrs = node.attributes;
+			var i = 0;
+			var name;
+			var target;
+
+			/*
+			 * Plain attributes establish root values first. Path bindings then
+			 * overlay their target without depending on source attribute order.
+			 */
+			while (i < attrs.length) {
+				name = attrs[i].name;
+				target = Runtime.Directive.Binding(name);
+
+				if (target === null && !Runtime.Directive.Reserved(name)) {
+					name = name.replace(/-([a-z])/g, function (match, letter) {
+						return letter.toUpperCase();
+					});
+
+					name = canonicalPropKey(definition, name);
+
+					result[name] = propValue(attrs[i].value, data);
+				}
+
+				i++;
+			}
+
+			i = 0;
+			while (i < attrs.length) {
+				name = attrs[i].name;
+				target = Runtime.Directive.Binding(name);
+
+				if (target !== null)
+					bindingAssign(result, target, expression(data, attrs[i].value), definition);
+
+				i++;
+			}
+
+			return result;
+		}
+
+		function events (node) {
+			var result = {};
+			var attrs = node.attributes;
+			var i = 0;
+			var name;
+
+			while (i < attrs.length) {
+				name = attrs[i].name;
+
+				var eventName = Runtime.Directive.Event(name);
+				if (eventName !== null)
+					result[eventName] = attrs[i].value;
+
+				i++;
+			}
+
+			return result;
+		}
+
+		/* Structural: host engine */
 		function Structural (component, definition, blueprintRoot) {
 			var directiveHosts = {};
 
@@ -6158,19 +6056,6 @@
 			var projectionBlueprintRoot = null;
 			var ownerToken = {};
 
-			function expression (data, source) {
-				try {
-					return Runtime.EvaluateExpression(source, data);
-				}
-				catch (error) {
-					if (!(error && error.name === 'ReferenceError') && global.console && console.error) {
-						console.error('Elemenx structural expression failed: ' + source, error);
-					}
-
-					return undefined;
-				}
-			}
-
 			function factoryFor (tag) {
 				var name = String(tag);
 				var factory = Runtime.ResolveComponentRegistered(name);
@@ -6192,196 +6077,6 @@
 				}
 
 				return null;
-			}
-
-			function propValue (text, data) {
-				var match = /^{{\s*([\s\S]+?)\s*}}$/.exec(text);
-				if (match)
-					return expression(data, match[1]);
-
-				if (text === '') return true;
-				if (text === 'true') return true;
-				if (text === 'false') return false;
-				if (text === 'null') return null;
-
-				return text;
-			}
-
-			function bindingTarget (target) {
-				var parts = [];
-				var length = target.length;
-				var i = 0;
-				var start;
-				var value;
-
-				function identifier () {
-					var code;
-
-					if (i >= length || !/[A-Za-z_$]/.test(target.charAt(i)))
-						throw new Error('Elemenx invalid Component binding target: [' + target + ']');
-
-					start = i++;
-
-					while (i < length) {
-						code = target.charAt(i);
-
-						if (!/[\w$]/.test(code)) break;
-
-						i++;
-					}
-
-					return target.substring(start, i);
-				}
-
-				parts.push(identifier().replace(/-([a-z])/g, function (match, letter) {
-					return letter.toUpperCase();
-				}));
-
-				while (i < length) {
-					if (target.charAt(i) === '.') {
-						i++;
-
-						parts.push(identifier());
-
-						continue;
-					}
-
-					if (target.charAt(i) === '[') {
-						i++;
-						start = i;
-
-						while (i < length && /\d/.test(target.charAt(i)))
-							i++;
-
-						if (start === i || target.charAt(i) !== ']')
-							throw new Error('Elemenx invalid Component binding target: [' + target + ']');
-
-						value = parseInt(target.substring(start, i), 10);
-
-						parts.push(value);
-
-						i++;
-
-						continue;
-					}
-
-					throw new Error('Elemenx invalid Component binding target: [' + target + ']');
-				}
-
-				return parts;
-			}
-
-			function canonicalPropKey (source, key) {
-				var name;
-				var match = null;
-				var lower;
-
-				if (!source || typeof key !== 'string') return key;
-				if (own(source, key)) return key;
-
-				lower = key.toLowerCase();
-
-				for (name in source) {
-					if (!own(source, name) || name.toLowerCase() !== lower) continue;
-					if (match !== null) return key;
-
-					match = name;
-				}
-
-				return match === null ? key : match;
-			}
-
-			function canonicalBindingPath (target, definition) {
-				var path = bindingTarget(target);
-				var source = definition;
-				var i = 0;
-				var key;
-
-				while (i < path.length && source != null) {
-					key = path[i];
-
-					if (typeof key === 'string') {
-						key = canonicalPropKey(source, key);
-						path[i] = key;
-					}
-
-					source = source[key];
-
-					i++;
-				}
-
-				return path;
-			}
-
-			function bindingAssign (result, target, value, definition) {
-				var path = canonicalBindingPath(target, definition);
-				var root = path[0];
-				var current;
-				var i = 1;
-
-				if (path.length === 1) {
-					result[root] = value;
-
-					return;
-				}
-
-				if (!own(result, root))
-					result[root] = {};
-
-				current = result[root];
-
-				while (i < path.length - 1) {
-					if (current[path[i]] === undefined || current[path[i]] === null)
-						current[path[i]] = typeof path[i + 1] === 'number' ? [] : {};
-
-					current = current[path[i]];
-
-					i++;
-				}
-
-				current[path[path.length - 1]] = value;
-			}
-
-			function props (node, data, definition) {
-				var result = {};
-				var attrs = node.attributes;
-				var i = 0;
-				var name;
-				var target;
-
-				/*
-				 * Plain attributes establish root values first. Path bindings then
-				 * overlay their target without depending on source attribute order.
-				 */
-				while (i < attrs.length) {
-					name = attrs[i].name;
-					target = Runtime.Directive.Binding(name);
-
-					if (target === null && !Runtime.Directive.Reserved(name)) {
-						name = name.replace(/-([a-z])/g, function (match, letter) {
-							return letter.toUpperCase();
-						});
-
-						name = canonicalPropKey(definition, name);
-
-						result[name] = propValue(attrs[i].value, data);
-					}
-
-					i++;
-				}
-
-				i = 0;
-				while (i < attrs.length) {
-					name = attrs[i].name;
-					target = Runtime.Directive.Binding(name);
-
-					if (target !== null)
-						bindingAssign(result, target, expression(data, attrs[i].value), definition);
-
-					i++;
-				}
-
-				return result;
 			}
 
 			function slotProjection (node) {
@@ -6463,25 +6158,6 @@
 						return this;
 					}
 				};
-			}
-
-			function events (node) {
-				var result = {};
-				var attrs = node.attributes;
-				var i = 0;
-				var name;
-
-				while (i < attrs.length) {
-					name = attrs[i].name;
-
-					var eventName = Runtime.Directive.Event(name);
-					if (eventName !== null)
-						result[eventName] = attrs[i].value;
-
-					i++;
-				}
-
-				return result;
 			}
 
 			function asyncOptions (blueprint, name, extra) {
@@ -6800,158 +6476,6 @@
 						}
 
 						currentData = null;
-					}
-				};
-			}
-
-			function collectionRecord (
-				end,
-				factory,
-				blueprint,
-				field,
-				key,
-				condition,
-				eventMap,
-				projected
-			) {
-				var host = document.createElement('span');
-
-				if (projected)
-					compileProjection(projected);
-
-				var collection;
-				var effect;
-
-				host.style.display = 'contents';
-
-				end.parentNode.insertBefore(host, end);
-
-				collection = Runtime.Collection(
-					host,
-
-					function (item) {
-						var slot = document.createElement('span');
-						var child = null;
-
-						slot.style.display = 'contents';
-
-						function apply (current) {
-							var visible = condition ? expression(current, condition) : true;
-							var childProps = props(blueprint, current, factory.Definition);
-							var hasProps = Object.keys(childProps).length > 0;
-
-							if (!visible) {
-								if (child) {
-									child.$Destroy();
-									child = null;
-								}
-
-								return;
-							}
-
-							/*
-							 * No explicit props means the keyed item itself is the
-							 * child state source. Because it came from a reactive
-							 * array, nested objects remain Proxy-backed.
-							 */
-
-							if (!hasProps) {
-								childProps = current;
-
-								if (child) {
-									/*
-									 * A retained keyed component keeps its DirectState
-									 * object/DOM identity, but the collection may replace
-									 * the item object for the same key. Merge the new item
-									 * values into that existing state just like explicit
-									 * component props are refreshed below.
-									 */
-									child.$Update(childProps);
-								}
-								else {
-									child = factory(childProps, projected, asyncOptions(blueprint, factory.ComponentName || blueprint.tagName, {DirectState: true}));
-
-									connect(child, eventMap);
-
-									slot.appendChild(child.$Element());
-								}
-							}
-							else {
-								if (child) {
-									child.$Update(childProps);
-								}
-								else {
-									child = factory(childProps, projected, asyncOptions(blueprint, factory.ComponentName || blueprint.tagName));
-
-									connect(child, eventMap);
-
-									slot.appendChild(child.$Element());
-								}
-							}
-						}
-
-						apply(item);
-
-						return {
-							Element: function () {
-								return slot;
-							},
-
-							Update: apply,
-
-							Destroy: function () {
-								if (child)
-									child.$Destroy();
-
-								child = null;
-
-								if (slot.parentNode)
-									slot.parentNode.removeChild(slot);
-							}
-						};
-					},
-
-					{
-						Key: key
-					}
-				);
-
-				effect = Runtime.Effect(function () {
-					var data = Runtime.ComponentValues(component);
-					var list = expression(data, field) || [];
-
-					/*
-					 * A collection depends on the STRUCTURE of the resulting list,
-					 * not merely on the property that returned that list.
-					 */
-					Runtime.TrackIteration(list);
-
-					var i = 0;
-					var count = list.length;
-
-					while (i < count) {
-						if (list[i])
-							list[i][key];
-
-						i++;
-					}
-
-					collection.Set(list);
-
-					return count;
-				}, true);
-
-				return {
-					$Update: function () {
-						effect.Run();
-					},
-
-					$Destroy: function () {
-						effect.Destroy();
-						collection.Destroy();
-
-						if (host.parentNode)
-							host.parentNode.removeChild(host);
 					}
 				};
 			}

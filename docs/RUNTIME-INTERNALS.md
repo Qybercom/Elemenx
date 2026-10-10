@@ -18,20 +18,14 @@ To find a section in `elemenx.js`, search for its header, for example `/* Router
 
 | Field | Purpose | Used by |
 |---|---|---|
-| `Own` | `Object.prototype.hasOwnProperty.call(object, key)`; modules alias it as `var own = Runtime.Own;` | Collection, Reactive, Bundle, Discovery, Service and Guard, Directive registry, Template and Component, Router, Structural, Network, Storage, Messaging, WebWorker, ServiceWorker, Application |
-| `Assign` | copies the own enumerable properties of a source into a target and returns the target | Collection, Router, Storage, WebWorker, ServiceWorker |
+| `Own` | `Object.prototype.hasOwnProperty.call(object, key)`; modules alias it as `var own = Runtime.Own;` | Reactive, Bundle, Discovery, Service and Guard, Directive registry, Template and Component, Router, Structural, Network, Storage, Messaging, WebWorker, ServiceWorker, Application |
+| `Assign` | copies the own enumerable properties of a source into a target and returns the target | Router, Storage, WebWorker, ServiceWorker |
 
 ## Outlet
 
 | Field | Purpose | Used by |
 |---|---|---|
 | `Outlet` | factory of a render slot that swaps one component for another | Template and Component |
-
-## Collection
-
-| Field | Purpose | Used by |
-|---|---|---|
-| `Collection` | keyed list renderer used by collection hosts | Template and Component, Structural |
 
 ## Reactive
 
