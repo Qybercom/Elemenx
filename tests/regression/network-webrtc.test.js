@@ -215,6 +215,17 @@ describe('Regression: Network WebRTC', function () {
 		var initiator = Elemenx.Network.WebRTC({ChannelName: 'data'});
 		var responder = Elemenx.Network.WebRTC();
 		var results = [];
+		var descriptions = [];
+
+		function record (side) {
+			return function (event) {
+				if (event.Type === 'LocalDescription' || event.Type === 'RemoteDescription')
+					descriptions.push([side, event.Type, event.Data.Description.type]);
+			};
+		}
+
+		initiator.On('Transport', record('initiator'));
+		responder.On('Transport', record('responder'));
 
 		await new Promise(function (resolve) {
 			initiator.CreateOffer(function (offerError, offer) {
@@ -239,6 +250,12 @@ describe('Regression: Network WebRTC', function () {
 		]);
 		expect(responder.Connection().remoteDescription).toEqual({type: 'offer', sdp: 'fake-offer'});
 		expect(initiator.Connection().remoteDescription).toEqual({type: 'answer', sdp: 'fake-answer'});
+		expect(descriptions).toEqual([
+			['initiator', 'LocalDescription', 'offer'],
+			['responder', 'RemoteDescription', 'offer'],
+			['responder', 'LocalDescription', 'answer'],
+			['initiator', 'RemoteDescription', 'answer']
+		]);
 	});
 
 	it('negotiation failures go to the callback, or to Transport.Error without one', async function () {

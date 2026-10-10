@@ -111,6 +111,79 @@ describe('Regression: Application public facade and ownership', function () {
 		expect(document.querySelector('.broken-library-root')).toBeNull();
 	});
 
+	it('$Pending is shown while Discovery runs, and a failure shows $Error and calls $OnError', async function () {
+		var component = unique('StatusRoot');
+		var name = unique('StatusApplication');
+		var calls = [];
+		var pendingShown = null;
+
+		createApplication(name, {
+			$Component: component,
+			$Mount: '#mount',
+			$Root: '/missing-root-' + name,
+			$Pending: '<p class="status-pending">loading</p>',
+			$Error: '<p class="status-error">failed</p>',
+			$OnPending: function (args) {
+				pendingShown = !!document.querySelector('#mount .status-pending');
+
+				calls.push(['pending', args.Name, args.$Element, args.Error]);
+			},
+			$OnError: function (args) {
+				calls.push(['error', args.Name, args.$Element, args.Error instanceof Error]);
+			}
+		});
+
+		expect(await waitFor(function () {
+			return calls.length === 2;
+		}, 2000)).toBe(true);
+
+		var mountElement = document.getElementById('mount');
+
+		expect(pendingShown).toBe(true);
+		expect(calls).toEqual([
+			['pending', component, mountElement, null],
+			['error', component, mountElement, true]
+		]);
+		expect(mountElement.innerHTML).toBe('<p class="status-error">failed</p>');
+	});
+
+	it('$Error may name a registered Template or a template element', async function () {
+		var registered = unique('StatusTemplate');
+		var element = unique('StatusElement');
+		var cases = [['#' + registered, 'status-registered'], ['#' + element, 'status-element']];
+		var i = 0;
+
+		Elemenx.Template(registered, '<p class="status-registered">registered</p>');
+
+		while (i < cases.length) {
+			var library = unique('StatusLibrary');
+			var failed = false;
+
+			resetDOM();
+
+			document.body.insertAdjacentHTML('beforeend', '<template id="' + element + '"><p class="status-element">element</p></template>');
+
+			Elemenx.Library(library, {$Root: '/missing-library-' + library});
+
+			createApplication(unique('StatusApplication'), {
+				$Component: unique('StatusRoot'),
+				$Mount: '#mount',
+				$Use: [library],
+				$Error: cases[i][0],
+				$OnError: function () {
+					failed = true;
+				}
+			});
+
+			expect(await waitFor(function () {
+				return failed;
+			}, 2000)).toBe(true);
+			expect(document.querySelector('#mount .' + cases[i][1])).not.toBeNull();
+
+			i++;
+		}
+	});
+
 	it('exposes immutable runtime and Application start timestamps', async function () {
 		var runtimeStarted = Elemenx.StartedAt();
 		var name = unique('StartedAtApplication');

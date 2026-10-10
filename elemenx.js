@@ -10406,6 +10406,13 @@
 			});
 		}
 
+		/* Native state change events of a peer connection: the event, the Transport event and the property that holds the state. */
+		var webRTCStateEvents = [
+			['connectionstatechange', 'ConnectionState', 'connectionState'],
+			['iceconnectionstatechange', 'ICEConnectionState', 'iceConnectionState'],
+			['signalingstatechange', 'SignalingState', 'signalingState']
+		];
+
 		function NetworkWebRTC (configuration) {
 			var config = configuration || {};
 			var rtcConfig = config.Configuration || {};
@@ -10427,6 +10434,7 @@
 			var events;
 			var api;
 
+			/* WebRTC: events and protocol */
 			function transport (type, value) {
 				return NetworkTransportEvent(api, events, type, value);
 			}
@@ -10445,6 +10453,16 @@
 				return NetworkEncode(protocol, api, input);
 			}
 
+			/* WebRTC: generations */
+			/* Every Connect starts a new generation: callbacks of an older connection see that they are stale and do nothing. */
+			function sameGeneration (currentGeneration, currentConnection) {
+				return currentGeneration === generation && connection === currentConnection;
+			}
+
+			function current (currentGeneration, currentConnection) {
+				return active && sameGeneration(currentGeneration, currentConnection);
+			}
+
 			/* After setLocalDescription: publishes the local description of a connection that is still the current one. */
 			function localDescriptionSet (currentGeneration, currentConnection) {
 				return function () {
@@ -10459,10 +10477,19 @@
 				};
 			}
 
-			function current (currentGeneration, currentConnection) {
-				return (active && currentGeneration === generation && connection === currentConnection);
+			/* After setRemoteDescription: publishes the remote description of a connection that is still the current one. */
+			function remoteDescriptionSet (currentGeneration, currentConnection) {
+				if (!current(currentGeneration, currentConnection)) return false;
+
+				transport('RemoteDescription', {
+					Description: currentConnection.remoteDescription,
+					Connection: currentConnection
+				});
+
+				return true;
 			}
 
+			/* WebRTC: send queue */
 			function pressureBytes () {
 				return queuedBytes + (channel ? channel.bufferedAmount : 0);
 			}
@@ -10543,14 +10570,19 @@
 				updateWritable();
 			}
 
+			/* WebRTC: data channel */
 			function attachChannel (value, currentGeneration, currentConnection) {
 				var currentChannel = value;
+
+				function live () {
+					return current(currentGeneration, currentConnection) && channel === currentChannel;
+				}
 
 				channel = currentChannel;
 				currentChannel.bufferedAmountLowThreshold = bufferLowWaterMark;
 
 				currentChannel.addEventListener('bufferedamountlow', function () {
-					if (!current(currentGeneration, currentConnection) || channel !== currentChannel) return;
+					if (!live()) return;
 
 					transport('BufferedAmountLow', {
 						BufferedAmount: currentChannel.bufferedAmount,
@@ -10572,7 +10604,7 @@
 				});
 
 				currentChannel.addEventListener('open', function (event) {
-					if (!current(currentGeneration, currentConnection) || channel !== currentChannel) return;
+					if (!live()) return;
 
 					transport('Open', {
 						Event: event,
@@ -10586,7 +10618,7 @@
 				});
 
 				currentChannel.addEventListener('message', function (event) {
-					if (!current(currentGeneration, currentConnection) || channel !== currentChannel) return;
+					if (!live()) return;
 
 					var dataEvent = transport('Data', {
 						Data: event.data,
@@ -10599,7 +10631,7 @@
 				});
 
 				currentChannel.addEventListener('error', function (event) {
-					if (!current(currentGeneration, currentConnection) || channel !== currentChannel) return;
+					if (!live()) return;
 
 					transport('Error', {
 						Event: event,
@@ -10609,7 +10641,7 @@
 				});
 
 				currentChannel.addEventListener('close', function (event) {
-					if (currentGeneration !== generation || connection !== currentConnection) return;
+					if (!sameGeneration(currentGeneration, currentConnection)) return;
 
 					if (channel === currentChannel)
 						channel = null;
@@ -10624,6 +10656,7 @@
 				});
 			}
 
+			/* WebRTC: connection */
 			function createConnection () {
 				if (active)
 					return connection;
@@ -10650,33 +10683,15 @@
 					});
 				});
 
-				currentConnection.addEventListener('connectionstatechange', function (event) {
-					if (currentGeneration !== generation || connection !== currentConnection) return;
+				webRTCStateEvents.forEach(function (entry) {
+					currentConnection.addEventListener(entry[0], function (event) {
+						if (!sameGeneration(currentGeneration, currentConnection)) return;
 
-					transport('ConnectionState', {
-						State: currentConnection.connectionState,
-						Event: event,
-						Connection: currentConnection
-					});
-				});
-
-				currentConnection.addEventListener('iceconnectionstatechange', function (event) {
-					if (currentGeneration !== generation || connection !== currentConnection) return;
-
-					transport('ICEConnectionState', {
-						State: currentConnection.iceConnectionState,
-						Event: event,
-						Connection: currentConnection
-					});
-				});
-
-				currentConnection.addEventListener('signalingstatechange', function (event) {
-					if (currentGeneration !== generation || connection !== currentConnection) return;
-
-					transport('SignalingState', {
-						State: currentConnection.signalingState,
-						Event: event,
-						Connection: currentConnection
+						transport(entry[1], {
+							State: currentConnection[entry[2]],
+							Event: event,
+							Connection: currentConnection
+						});
 					});
 				});
 
@@ -10689,6 +10704,7 @@
 				return currentConnection;
 			}
 
+			/* WebRTC: negotiation */
 			/* A negotiation result goes to the callback; without one, a failure becomes a Transport.Error event. */
 			function negotiationError (operation, error) {
 				transport('Error', {
@@ -10716,6 +10732,7 @@
 				return api;
 			}
 
+			/* WebRTC: public API */
 			api = {
 				Configuration: function (value) {
 					if (active)
@@ -10794,12 +10811,7 @@
 					return negotiate('AcceptOffer', callback, currentConnection
 						.setRemoteDescription(description)
 						.then(function () {
-							if (!current(currentGeneration, currentConnection)) return null;
-
-							transport('RemoteDescription', {
-								Description: currentConnection.remoteDescription,
-								Connection: currentConnection
-							});
+							if (!remoteDescriptionSet(currentGeneration, currentConnection)) return null;
 
 							return currentConnection.createAnswer();
 						})
@@ -10818,12 +10830,7 @@
 						return later('AcceptAnswer', callback, new Error('Elemenx WebRTC connection is not active'));
 
 					return negotiate('AcceptAnswer', callback, currentConnection.setRemoteDescription(description).then(function () {
-						if (!current(currentGeneration, currentConnection)) return null;
-
-						transport('RemoteDescription', {
-							Description: currentConnection.remoteDescription,
-							Connection: currentConnection
-						});
+						if (!remoteDescriptionSet(currentGeneration, currentConnection)) return null;
 
 						return currentConnection.remoteDescription;
 					}));
@@ -10981,6 +10988,85 @@
 		}
 
 		/* Network: Metrics */
+		function metricsNow () {
+			return global.performance && typeof global.performance.now === 'function' ? global.performance.now() : Date.now();
+		}
+
+		/* Counters of one direction (TX or RX); Measure* fields describe the current Begin..End measurement. */
+		function metricsDirection () {
+			return {
+				Bytes: 0,
+				Loaded: 0,
+				MeasureStart: 0,
+				MeasureStarted: 0,
+				MeasureElapsed: 0,
+				MeasureActive: false,
+				SpeedMin: 0,
+				SpeedMax: 0
+			};
+		}
+
+		function metricsBeginMeasure (direction) {
+			direction.MeasureStart = direction.Bytes;
+			direction.MeasureStarted = 0;
+			direction.MeasureElapsed = 0;
+			direction.MeasureActive = false;
+			direction.SpeedMin = 0;
+			direction.SpeedMax = 0;
+		}
+
+		/* The first transferred bytes of a measurement start the time of their direction. */
+		function metricsResume (direction, time) {
+			if (direction.MeasureActive) return;
+
+			direction.MeasureStarted = time;
+			direction.MeasureActive = true;
+		}
+
+		/* A finished transfer adds its time, never less than one sample interval. */
+		function metricsPause (direction, time, interval) {
+			if (!direction.MeasureActive) return;
+
+			direction.MeasureElapsed += Math.max(interval, time - direction.MeasureStarted);
+			direction.MeasureStarted = 0;
+			direction.MeasureActive = false;
+		}
+
+		function metricsSpeed (direction, speed) {
+			if (speed <= 0) return;
+
+			if (direction.SpeedMin === 0 || speed < direction.SpeedMin)
+				direction.SpeedMin = speed;
+
+			if (speed > direction.SpeedMax)
+				direction.SpeedMax = speed;
+		}
+
+		function metricsDirectionSnapshot (direction, speed, time, measured) {
+			var elapsed = 0;
+			var bytes = 0;
+
+			if (measured) {
+				elapsed = direction.MeasureElapsed + (direction.MeasureActive ? Math.max(0, time - direction.MeasureStarted) : 0);
+				bytes = Math.max(0, direction.Bytes - direction.MeasureStart);
+			}
+
+			return {
+				Bytes: direction.Bytes,
+				Speed: speed,
+				SpeedAvg: elapsed > 0 ? bytes * 1000 / elapsed : 0,
+				SpeedMin: direction.SpeedMin,
+				SpeedMax: direction.SpeedMax,
+				MeasureElapsed: elapsed,
+				Active: direction.MeasureActive
+			};
+		}
+
+		/* Bytes of a message event: Data.Data of a Transport event, or the event data itself. */
+		function metricsMessageBytes (event) {
+			return NetworkByteLength(event && event.Data && own(event.Data, 'Data') ? event.Data.Data : event ? event.Data : null);
+		}
+
 		function NetworkMetrics (configuration) {
 			var config = configuration || {};
 			var transport = config.Transport || null;
@@ -10991,36 +11077,18 @@
 			var stopped = 0;
 			var measureStarted = 0;
 			var measureStopped = 0;
-			var measureTXStart = 0;
-			var measureRXStart = 0;
-			var txMeasureStarted = 0;
-			var txMeasureElapsed = 0;
-			var txMeasureActive = false;
-			var rxMeasureStarted = 0;
-			var rxMeasureElapsed = 0;
-			var rxMeasureActive = false;
-			var tx = 0;
-			var rx = 0;
-			var txSpeedMin = 0;
-			var txSpeedMax = 0;
-			var rxSpeedMin = 0;
-			var rxSpeedMax = 0;
-			var requestLoaded = 0;
-			var responseLoaded = 0;
+			var directions = {TX: metricsDirection(), RX: metricsDirection()};
 			var bindings = [];
 			var samples = [];
 			var sampleWindow = typeof config.Window === 'number' && config.Window > 0 ? config.Window : 250;
 			var sampleInterval = typeof config.Interval === 'number' && config.Interval > 0 ? config.Interval : 50;
 			var timer = null;
 
-			function now () {
-				return global.performance && typeof global.performance.now === 'function' ? global.performance.now() : Date.now();
-			}
-
+			/* Metrics: samples and rates */
 			function elapsed () {
 				if (!started) return 0;
 
-				var end = running ? now() : stopped;
+				var end = running ? metricsNow() : stopped;
 
 				return Math.max(0, end - started);
 			}
@@ -11031,23 +11099,12 @@
 				while (samples.length && samples[0].Time < threshold) samples.shift();
 			}
 
-			function clearRates (direction) {
-				if (!direction) {
-					samples = [];
-
-					emit();
-
-					return;
-				}
-
+			/* A finished transfer no longer counts towards the live speed of its direction. */
+			function clearRates (name) {
 				var i = 0;
 
 				while (i < samples.length) {
-					if (direction === 'TX')
-						samples[i].TX = 0;
-
-					if (direction === 'RX')
-						samples[i].RX = 0;
+					samples[i][name] = 0;
 
 					i++;
 				}
@@ -11055,52 +11112,17 @@
 				emit();
 			}
 
-			function addSample (txDelta, rxDelta) {
-				if (!txDelta && !rxDelta) return;
+			function addSample (name, delta) {
+				if (!delta) return;
 
-				var time = now();
+				var time = metricsNow();
+				var sample = {Time: time, TX: 0, RX: 0};
 
-				samples.push({Time: time, TX: txDelta || 0, RX: rxDelta || 0});
+				sample[name] = delta;
+
+				samples.push(sample);
 
 				prune(time);
-			}
-
-			function beginDirection (direction, time) {
-				if (!measuring) return;
-
-				if (direction === 'TX' && !txMeasureActive) {
-					txMeasureStarted = time;
-					txMeasureActive = true;
-				}
-
-				if (direction === 'RX' && !rxMeasureActive) {
-					rxMeasureStarted = time;
-					rxMeasureActive = true;
-				}
-			}
-
-			function endDirection (direction, time) {
-				if (direction === 'TX' && txMeasureActive) {
-					txMeasureElapsed += Math.max(sampleInterval, time - txMeasureStarted);
-					txMeasureStarted = 0;
-					txMeasureActive = false;
-				}
-
-				if (direction === 'RX' && rxMeasureActive) {
-					rxMeasureElapsed += Math.max(sampleInterval, time - rxMeasureStarted);
-					rxMeasureStarted = 0;
-					rxMeasureActive = false;
-				}
-			}
-
-			function directionElapsed (direction, time) {
-				if (direction === 'TX')
-					return txMeasureElapsed + (txMeasureActive ? Math.max(0, time - txMeasureStarted) : 0);
-
-				if (direction === 'RX')
-					return rxMeasureElapsed + (rxMeasureActive ? Math.max(0, time - rxMeasureStarted) : 0);
-
-				return 0;
 			}
 
 			function rates (time) {
@@ -11133,61 +11155,27 @@
 				if (!measuring) return;
 
 				var live = rates(time);
-				var speed = live.TX;
 
-				if (speed > 0) {
-					if (txSpeedMin === 0 || speed < txSpeedMin)
-						txSpeedMin = speed;
-
-					if (speed > txSpeedMax)
-						txSpeedMax = speed;
-				}
-
-				speed = live.RX;
-
-				if (speed > 0) {
-					if (rxSpeedMin === 0 || speed < rxSpeedMin)
-						rxSpeedMin = speed;
-
-					if (speed > rxSpeedMax)
-						rxSpeedMax = speed;
-				}
+				metricsSpeed(directions.TX, live.TX);
+				metricsSpeed(directions.RX, live.RX);
 			}
 
+			/* Metrics: snapshots and timer */
 			function snapshot () {
-				var time = now();
+				var time = metricsNow();
 				var totalElapsed = elapsed();
 				var live = rates(time);
 				var measureEnd = measuring ? time : measureStopped;
 				var measureElapsed = measureStarted ? Math.max(0, measureEnd - measureStarted) : 0;
-				var measureTX = measureStarted ? Math.max(0, tx - measureTXStart) : 0;
-				var measureRX = measureStarted ? Math.max(0, rx - measureRXStart) : 0;
-				var txElapsed = measureStarted ? directionElapsed('TX', time) : 0;
-				var rxElapsed = measureStarted ? directionElapsed('RX', time) : 0;
+				var measured = !!measureStarted;
 
 				if (measureStarted && !measuring)
 					live = {TX: 0, RX: 0};
 
 				return {
-					TX: {
-						Bytes: tx,
-						Speed: live.TX,
-						SpeedAvg: txElapsed > 0 ? measureTX * 1000 / txElapsed : 0,
-						SpeedMin: txSpeedMin,
-						SpeedMax: txSpeedMax,
-						MeasureElapsed: txElapsed,
-						Active: txMeasureActive
-					},
-					RX: {
-						Bytes: rx,
-						Speed: live.RX,
-						SpeedAvg: rxElapsed > 0 ? measureRX * 1000 / rxElapsed : 0,
-						SpeedMin: rxSpeedMin,
-						SpeedMax: rxSpeedMax,
-						MeasureElapsed: rxElapsed,
-						Active: rxMeasureActive
-					},
-					Total: tx + rx,
+					TX: metricsDirectionSnapshot(directions.TX, live.TX, time, measured),
+					RX: metricsDirectionSnapshot(directions.RX, live.RX, time, measured),
+					Total: directions.TX.Bytes + directions.RX.Bytes,
 					Elapsed: totalElapsed,
 					MeasureElapsed: measureElapsed,
 					Active: measuring,
@@ -11205,9 +11193,9 @@
 				timer = global.setInterval(function () {
 					if (!running) return;
 
-					recordExtrema(now());
+					recordExtrema(metricsNow());
 
-					events.Emit('Metrics', 'Update', snapshot());
+					emit();
 				}, sampleInterval);
 			}
 
@@ -11216,6 +11204,53 @@
 
 				global.clearInterval(timer);
 				timer = null;
+			}
+
+			/* Metrics: transport listeners */
+			function count (name, delta) {
+				if (delta > 0 && measuring)
+					metricsResume(directions[name], metricsNow());
+
+				directions[name].Bytes += delta;
+
+				addSample(name, delta);
+
+				recordExtrema(metricsNow());
+
+				emit();
+			}
+
+			/* Progress events report the bytes loaded so far: only the growth is counted. */
+			function progress (name) {
+				return function (event) {
+					if (!running) return;
+
+					var direction = directions[name];
+					var loaded = event.Data && typeof event.Data.loaded === 'number' ? event.Data.loaded : 0;
+					var delta = Math.max(0, loaded - direction.Loaded);
+
+					direction.Loaded = loaded;
+
+					count(name, delta);
+				};
+			}
+
+			function finished (name) {
+				return function () {
+					if (!running) return;
+
+					metricsPause(directions[name], metricsNow(), sampleInterval);
+
+					clearRates(name);
+				};
+			}
+
+			function message (name) {
+				return function (event) {
+					if (!running) return;
+
+					count(name, metricsMessageBytes(event));
+				};
 			}
 
 			function bind (name, callback) {
@@ -11249,93 +11284,18 @@
 				if (!transport) return;
 
 				bind('Transport.BeforeRequest', function () {
-					requestLoaded = 0;
-					responseLoaded = 0;
+					directions.TX.Loaded = 0;
+					directions.RX.Loaded = 0;
 				});
-				bind('Transport.RequestProgress', function (event) {
-					if (!running) return;
-
-					var loaded = event.Data && typeof event.Data.loaded === 'number' ? event.Data.loaded : 0;
-					var delta = Math.max(0, loaded - requestLoaded);
-
-					requestLoaded = loaded;
-
-					if (delta > 0)
-						beginDirection('TX', now());
-
-					tx += delta;
-
-					addSample(delta, 0);
-
-					recordExtrema(now());
-
-					emit();
-				});
-				bind('Transport.ResponseProgress', function (event) {
-					if (!running) return;
-
-					var loaded = event.Data && typeof event.Data.loaded === 'number' ? event.Data.loaded : 0;
-					var delta = Math.max(0, loaded - responseLoaded);
-
-					responseLoaded = loaded;
-
-					if (delta > 0)
-						beginDirection('RX', now());
-
-					rx += delta;
-
-					addSample(0, delta);
-
-					recordExtrema(now());
-
-					emit();
-				});
-				bind('Transport.AfterRequest', function () {
-					if (!running) return;
-
-					endDirection('TX', now());
-
-					clearRates('TX');
-				});
-				bind('Transport.AfterResponse', function () {
-					if (!running) return;
-
-					endDirection('RX', now());
-
-					clearRates('RX');
-				});
-				bind('Transport.AfterSend', function (event) {
-					if (!running) return;
-
-					var delta = NetworkByteLength(event && event.Data && own(event.Data, 'Data') ? event.Data.Data : event ? event.Data : null);
-					if (delta > 0)
-						beginDirection('TX', now());
-
-					tx += delta;
-
-					addSample(delta, 0);
-
-					recordExtrema(now());
-
-					emit();
-				});
-				bind('Transport.Data', function (event) {
-					if (!running) return;
-
-					var delta = NetworkByteLength(event && event.Data && own(event.Data, 'Data') ? event.Data.Data : event ? event.Data : null);
-					if (delta > 0)
-						beginDirection('RX', now());
-
-					rx += delta;
-
-					addSample(0, delta);
-
-					recordExtrema(now());
-
-					emit();
-				});
+				bind('Transport.RequestProgress', progress('TX'));
+				bind('Transport.ResponseProgress', progress('RX'));
+				bind('Transport.AfterRequest', finished('TX'));
+				bind('Transport.AfterResponse', finished('RX'));
+				bind('Transport.AfterSend', message('TX'));
+				bind('Transport.Data', message('RX'));
 			}
 
+			/* Metrics: public API */
 			var api = {
 				Transport: function (value) {
 					if (!arguments.length) return transport;
@@ -11351,7 +11311,7 @@
 					if (running) return api;
 
 					running = true;
-					started = now();
+					started = metricsNow();
 					stopped = 0;
 					samples = [];
 
@@ -11367,7 +11327,7 @@
 					if (measuring)
 						api.End();
 
-					stopped = now();
+					stopped = metricsNow();
 					running = false;
 
 					stopTimer();
@@ -11380,21 +11340,12 @@
 					if (!running || measuring) return api;
 
 					measuring = true;
-					measureStarted = now();
+					measureStarted = metricsNow();
 					measureStopped = 0;
-					measureTXStart = tx;
-					measureRXStart = rx;
-					txMeasureStarted = 0;
-					txMeasureElapsed = 0;
-					txMeasureActive = false;
-					rxMeasureStarted = 0;
-					rxMeasureElapsed = 0;
-					rxMeasureActive = false;
-					txSpeedMin = 0;
-					txSpeedMax = 0;
-					rxSpeedMin = 0;
-					rxSpeedMax = 0;
 					samples = [];
+
+					metricsBeginMeasure(directions.TX);
+					metricsBeginMeasure(directions.RX);
 
 					events.Emit('Metrics', 'Begin', snapshot());
 
@@ -11403,10 +11354,10 @@
 				End: function () {
 					if (!running || !measuring) return api;
 
-					measureStopped = now();
+					measureStopped = metricsNow();
 
-					endDirection('TX', measureStopped);
-					endDirection('RX', measureStopped);
+					metricsPause(directions.TX, measureStopped, sampleInterval);
+					metricsPause(directions.RX, measureStopped, sampleInterval);
 
 					measuring = false;
 					samples = [];
@@ -11419,27 +11370,12 @@
 					return measuring;
 				},
 				Reset: function () {
-					tx = 0;
-					rx = 0;
-					requestLoaded = 0;
-					responseLoaded = 0;
+					directions = {TX: metricsDirection(), RX: metricsDirection()};
 					measuring = false;
 					measureStarted = 0;
 					measureStopped = 0;
-					measureTXStart = 0;
-					measureRXStart = 0;
-					txMeasureStarted = 0;
-					txMeasureElapsed = 0;
-					txMeasureActive = false;
-					rxMeasureStarted = 0;
-					rxMeasureElapsed = 0;
-					rxMeasureActive = false;
-					txSpeedMin = 0;
-					txSpeedMax = 0;
-					rxSpeedMin = 0;
-					rxSpeedMax = 0;
 					samples = [];
-					started = running ? now() : 0;
+					started = running ? metricsNow() : 0;
 					stopped = 0;
 
 					events.Emit('Metrics', 'Reset', snapshot());
@@ -12015,6 +11951,143 @@
 			return operation;
 		}
 
+		/* Storage: IndexedDB schema */
+		function createIndexes (store, indexes) {
+			indexes = indexes || {};
+
+			var indexName;
+
+			for (indexName in indexes) {
+				if (!own(indexes, indexName)) continue;
+				if (store.indexNames.contains(indexName)) continue;
+
+				var options = indexes[indexName] || {};
+				var nativeOptions = {};
+				var keyPath = options.KeyPath !== undefined ? options.KeyPath : indexName;
+
+				if (options.Unique)
+					nativeOptions.unique = true;
+
+				if (options.MultiEntry)
+					nativeOptions.multiEntry = true;
+
+				store.createIndex(indexName, keyPath, nativeOptions);
+			}
+		}
+
+		function applySchema (db, transaction, stores) {
+			var storeName;
+
+			for (storeName in stores) {
+				if (!own(stores, storeName)) continue;
+
+				var options = stores[storeName] || {};
+				var store;
+
+				if (!db.objectStoreNames.contains(storeName)) {
+					var nativeOptions = {};
+
+					if (options.KeyPath !== undefined && options.KeyPath !== null)
+						nativeOptions.keyPath = options.KeyPath;
+
+					if (options.AutoIncrement)
+						nativeOptions.autoIncrement = true;
+
+					store = db.createObjectStore(storeName, nativeOptions);
+				}
+				else {
+					store = transaction.objectStore(storeName);
+				}
+
+				createIndexes(store, options.Indexes);
+			}
+		}
+
+		/* A connection closed under a waiting operation: the database is reopened once. */
+		function recoverableConnectionError (error) {
+			if (!error)
+				return false;
+
+			return error.name === 'InvalidStateError';
+		}
+
+		/* Storage: IndexedDB transaction requests */
+		function createTransactionRequest (request) {
+			var listeners = Runtime.EventList();
+			var settled = false;
+			var succeeded = false;
+			var result;
+
+			function emit (name, data) {
+				listeners.Emit(name, {Type: name, Data: data});
+			}
+
+			request.onsuccess = function () {
+				settled = true;
+				succeeded = true;
+				result = request.result;
+
+				emit('Success', result);
+			};
+
+			request.onerror = function () {
+				settled = true;
+
+				emit('Error', request.error);
+			};
+
+			return {
+				On: function (name, callback) {
+					listeners.Add(name, callback);
+
+					if (settled && name === 'Success' && succeeded)
+						callback({Type: name, Data: result});
+
+					if (settled && name === 'Error' && !succeeded)
+						callback({Type: name, Data: request.error});
+
+					return this;
+				}
+			};
+		}
+
+		function createTransactionStore (transaction, storeName) {
+			var store = transaction.objectStore(storeName);
+
+			return {
+				Get: function (key) {
+					return createTransactionRequest(store.get(key));
+				},
+
+				Put: function (key, value) {
+					return createTransactionRequest(store.put(value, key));
+				},
+
+				Remove: function (key) {
+					return createTransactionRequest(store.delete(key));
+				},
+
+				Clear: function () {
+					return createTransactionRequest(store.clear());
+				},
+
+				Index: function (indexName) {
+					var index = store.index(indexName);
+
+					return {
+						Get: function (key) {
+							return createTransactionRequest(index.get(key));
+						},
+
+						GetAll: function (key) {
+							return createTransactionRequest(key === undefined ? index.getAll() : index.getAll(key));
+						}
+					};
+				}
+			};
+		}
+
+		/* Storage: IndexedDB database */
 		function createIndexedDB (name, definition) {
 			definition = definition || {};
 
@@ -12024,7 +12097,8 @@
 			var opening = false;
 			var waiting = [];
 
-			function failWaiting (error) {
+			/* IndexedDB: connection */
+			function settleWaiting (error) {
 				var copy = waiting.slice();
 
 				waiting = [];
@@ -12032,74 +12106,10 @@
 
 				var i = 0;
 				while (i < copy.length) {
-					copy[i].Error(error);
+					if (error) copy[i].Error(error);
+					else copy[i].Success(database);
 
 					i++;
-				}
-			}
-
-			function readyWaiting () {
-				var copy = waiting.slice();
-
-				waiting = [];
-				opening = false;
-
-				var i = 0;
-				while (i < copy.length) {
-					copy[i].Success(database);
-
-					i++;
-				}
-			}
-
-			function createIndexes (store, indexes) {
-				indexes = indexes || {};
-
-				var indexName;
-
-				for (indexName in indexes) {
-					if (!own(indexes, indexName)) continue;
-					if (store.indexNames.contains(indexName)) continue;
-
-					var options = indexes[indexName] || {};
-					var nativeOptions = {};
-					var keyPath = options.KeyPath !== undefined ? options.KeyPath : indexName;
-
-					if (options.Unique)
-						nativeOptions.unique = true;
-
-					if (options.MultiEntry)
-						nativeOptions.multiEntry = true;
-
-					store.createIndex(indexName, keyPath, nativeOptions);
-				}
-			}
-
-			function applySchema (db, transaction) {
-				var storeName;
-
-				for (storeName in stores) {
-					if (!own(stores, storeName)) continue;
-
-					var options = stores[storeName] || {};
-					var store;
-
-					if (!db.objectStoreNames.contains(storeName)) {
-						var nativeOptions = {};
-
-						if (options.KeyPath !== undefined && options.KeyPath !== null)
-							nativeOptions.keyPath = options.KeyPath;
-
-						if (options.AutoIncrement)
-							nativeOptions.autoIncrement = true;
-
-						store = db.createObjectStore(storeName, nativeOptions);
-					}
-					else {
-						store = transaction.objectStore(storeName);
-					}
-
-					createIndexes(store, options.Indexes);
 				}
 			}
 
@@ -12125,7 +12135,7 @@
 					var db = event.target.result;
 					var transaction = event.target.transaction;
 
-					applySchema(db, transaction);
+					applySchema(db, transaction, stores);
 
 					if (typeof definition.Upgrade === 'function') {
 						definition.Upgrade({
@@ -12151,15 +12161,15 @@
 							database = null;
 					};
 
-					readyWaiting();
+					settleWaiting(null);
 				};
 
 				request.onerror = function () {
-					failWaiting(request.error || new Error('Elemenx IndexedDB open failed'));
+					settleWaiting(request.error || new Error('Elemenx IndexedDB open failed'));
 				};
 
 				request.onblocked = function () {
-					failWaiting(new Error('Elemenx IndexedDB open blocked'));
+					settleWaiting(new Error('Elemenx IndexedDB open blocked'));
 				};
 			}
 
@@ -12175,70 +12185,74 @@
 				database = null;
 			}
 
-			function recoverableConnectionError (error) {
-				if (!error)
-					return false;
+			/* Opens the database and a native transaction on it; ready (transaction) runs once the transaction exists. */
+			function openTransaction (storeNames, mode, requireStores, error, ready) {
+				var attempt = 0;
 
-				return error.name === 'InvalidStateError';
+				function execute () {
+					open(function (db) {
+						var transaction;
+						var i = 0;
+
+						while (requireStores && i < storeNames.length) {
+							if (!db.objectStoreNames.contains(storeNames[i])) {
+								error(new Error('Elemenx IndexedDB store not found: ' + storeNames[i]));
+
+								return;
+							}
+
+							i++;
+						}
+
+						try {
+							transaction = db.transaction(storeNames, mode);
+						}
+						catch (transactionError) {
+							if (attempt === 0 && recoverableConnectionError(transactionError)) {
+								attempt++;
+
+								invalidateDatabase(db);
+
+								execute();
+
+								return;
+							}
+
+							error(transactionError);
+
+							return;
+						}
+
+						ready(transaction);
+					}, error);
+				}
+
+				execute();
 			}
 
+			/* IndexedDB: operations */
 			function storeOperation (storeName, mode, action) {
 				return createStorageOperation(function (success, error) {
-					var attempt = 0;
+					openTransaction([storeName], mode, true, error, function (transaction) {
+						var request;
 
-					function execute () {
-						open(function (db) {
-							var transaction;
-							var store;
-							var request;
+						try {
+							request = action(transaction.objectStore(storeName));
+						}
+						catch (operationError) {
+							error(operationError);
 
-							if (!db.objectStoreNames.contains(storeName)) {
-								error(new Error('Elemenx IndexedDB store not found: ' + storeName));
+							return;
+						}
 
-								return;
-							}
+						request.onsuccess = function () {
+							success(request.result);
+						};
 
-							try {
-								transaction = db.transaction([storeName], mode);
-							}
-							catch (transactionError) {
-								if (attempt === 0 && recoverableConnectionError(transactionError)) {
-									attempt++;
-
-									invalidateDatabase(db);
-
-									execute();
-
-									return;
-								}
-
-								error(transactionError);
-
-								return;
-							}
-
-							store = transaction.objectStore(storeName);
-
-							try {
-								request = action(store);
-							}
-							catch (operationError) {
-								error(operationError);
-
-								return;
-							}
-
-							request.onsuccess = function () {
-								success(request.result);
-							};
-
-							request.onerror = function () {
-								error(request.error || transaction.error || new Error('Elemenx IndexedDB operation failed'));
-							};
-						}, error);
-					}
-
-					execute();
+						request.onerror = function () {
+							error(request.error || transaction.error || new Error('Elemenx IndexedDB operation failed'));
+						};
+					});
 				});
 			}
 
@@ -12314,158 +12328,61 @@
 				};
 			}
 
-			function createTransactionRequest (request) {
-				var listeners = Runtime.EventList();
-				var settled = false;
-				var succeeded = false;
-				var result;
-
-				function emit (name, data) {
-					listeners.Emit(name, {Type: name, Data: data});
-				}
-
-				request.onsuccess = function () {
-					settled = true;
-					succeeded = true;
-					result = request.result;
-
-					emit('Success', result);
-				};
-
-				request.onerror = function () {
-					settled = true;
-
-					emit('Error', request.error);
-				};
-
-				return {
-					On: function (name, callback) {
-						listeners.Add(name, callback);
-
-						if (settled && name === 'Success' && succeeded)
-							callback({Type: name, Data: result});
-
-						if (settled && name === 'Error' && !succeeded)
-							callback({Type: name, Data: request.error});
-
-						return this;
-					}
-				};
-			}
-
-			function createTransactionStore (transaction, storeName) {
-				var store = transaction.objectStore(storeName);
-
-				return {
-					Get: function (key) {
-						return createTransactionRequest(store.get(key));
-					},
-
-					Put: function (key, value) {
-						return createTransactionRequest(store.put(value, key));
-					},
-
-					Remove: function (key) {
-						return createTransactionRequest(store.delete(key));
-					},
-
-					Clear: function () {
-						return createTransactionRequest(store.clear());
-					},
-
-					Index: function (indexName) {
-						var index = store.index(indexName);
-
-						return {
-							Get: function (key) {
-								return createTransactionRequest(index.get(key));
-							},
-
-							GetAll: function (key) {
-								return createTransactionRequest(key === undefined ? index.getAll() : index.getAll(key));
-							}
-						};
-					}
-				};
-			}
-
 			function transactionOperation (storeNames, mode, callback) {
 				return createStorageOperation(function (success, error) {
-					var attempt = 0;
+					openTransaction(storeNames, mode || 'readonly', false, error, function (transaction) {
+						var failed = false;
+						var api = {
+							Store: function (storeName) {
+								return createTransactionStore(transaction, String(storeName));
+							},
 
-					function execute () {
-						open(function (db) {
-							var transaction;
-							var failed = false;
-							var api;
-
-							try {
-								transaction = db.transaction(storeNames, mode || 'readonly');
-							}
-							catch (transactionError) {
-								if (attempt === 0 && recoverableConnectionError(transactionError)) {
-									attempt++;
-
-									invalidateDatabase(db);
-
-									execute();
-
-									return;
-								}
-
-								error(transactionError);
-
-								return;
-							}
-
-							api = {
-								Store: function (storeName) {
-									return createTransactionStore(transaction, String(storeName));
-								},
-
-								Abort: function () {
-									transaction.abort();
-								}
-							};
-
-							transaction.oncomplete = function () {
-								if (!failed)
-									success(true);
-							};
-
-							transaction.onerror = function () {
-								if (failed) return;
-
-								failed = true;
-
-								error(transaction.error || new Error('Elemenx IndexedDB transaction failed'));
-							};
-
-							transaction.onabort = function () {
-								if (failed) return;
-
-								failed = true;
-
-								error(transaction.error || new Error('Elemenx IndexedDB transaction aborted'));
-							};
-
-							try {
-								callback(api);
-							}
-							catch (callbackError) {
-								failed = true;
-
+							Abort: function () {
 								transaction.abort();
-
-								error(callbackError);
 							}
-						}, error);
-					}
+						};
 
-					execute();
+						transaction.oncomplete = function () {
+							if (!failed)
+								success(true);
+						};
+
+						transaction.onerror = function (event) {
+							var source = event && event.target;
+
+							if (failed) return;
+
+							/* Requests pending at Abort() fail with AbortError first; the abort itself is reported by onabort. */
+							if (source && source !== transaction && source.error && source.error.name === 'AbortError') return;
+
+							failed = true;
+
+							error(transaction.error || new Error('Elemenx IndexedDB transaction failed'));
+						};
+
+						transaction.onabort = function () {
+							if (failed) return;
+
+							failed = true;
+
+							error(transaction.error || new Error('Elemenx IndexedDB transaction aborted'));
+						};
+
+						try {
+							callback(api);
+						}
+						catch (callbackError) {
+							failed = true;
+
+							transaction.abort();
+
+							error(callbackError);
+						}
+					});
 				});
 			}
 
+			/* IndexedDB: public API */
 			return {
 				Store: function (storeName) {
 					return createStore(String(storeName));
@@ -14876,6 +14793,241 @@
 			return value;
 		}
 
+		/* Application: status, router and nested mounts */
+		/* Replaces the mount content with a status: HTML, a registered Template '#name' or a <template> element '#id'. */
+		function renderApplicationStatus (mount, source) {
+			Runtime.Template.Harvest(mount);
+
+			var template;
+			var fragment;
+
+			while (mount.firstChild)
+				mount.removeChild(mount.firstChild);
+
+			if (!source) return;
+
+			if (typeof source === 'string' && source.charAt(0) === '#') {
+				var registered = Runtime.Template.Get(source.substring(1));
+
+				if (registered !== null && registered !== undefined) {
+					mount.innerHTML = registered;
+
+					return;
+				}
+
+				template = document.querySelector(source);
+
+				if (template && template.tagName === 'TEMPLATE') {
+					fragment = template.content.cloneNode(true);
+
+					mount.appendChild(fragment);
+
+					return;
+				}
+			}
+
+			mount.innerHTML = String(source);
+		}
+
+		/* The declarative $Router without Root: the Router always belongs to the root Component. */
+		function applicationRouterDefinition (value, root) {
+			var routerDefinition = {};
+			var key;
+
+			for (key in value) {
+				if (!own(value, key)) continue;
+				if (key === 'Root') continue;
+
+				routerDefinition[key] = value[key];
+			}
+
+			routerDefinition.Root = root;
+
+			return routerDefinition;
+		}
+
+		/* Mounts of other Applications inside this mount survive the render of the root Component. */
+		function detachMounts (mounts) {
+			var i = 0;
+
+			while (i < mounts.length) {
+				if (mounts[i].parentNode)
+					mounts[i].parentNode.removeChild(mounts[i]);
+
+				i++;
+			}
+		}
+
+		/* A detached mount returns in place of its placeholder with the same id, or at the end of the mount. */
+		function restoreMounts (mount, mounts) {
+			var i = 0;
+
+			while (i < mounts.length) {
+				var preservedMount = mounts[i];
+				var placeholder = preservedMount.id ? mount.querySelector('#' + preservedMount.id) : null;
+
+				if (placeholder && placeholder.parentNode) placeholder.parentNode.replaceChild(preservedMount, placeholder);
+				else mount.appendChild(preservedMount);
+
+				i++;
+			}
+		}
+
+		/* Application: discovery */
+		/* A relative $Root is resolved against the script that declared the Application. */
+		function applicationDiscoveryRoot (definition) {
+			var discoveryRoot = definition.$Root;
+			if (discoveryRoot && definition.$DefinitionURL && !(/^(?:[a-z]+:)?\/\//i.test(discoveryRoot)) && discoveryRoot.charAt(0) !== '/')
+				discoveryRoot = definition.$DefinitionURL.substring(0, definition.$DefinitionURL.lastIndexOf('/') + 1) + discoveryRoot.replace(/^\.\//, '');
+
+			return discoveryRoot;
+		}
+
+		/* True when the root Component and every Component of its templates are registered or bundled. */
+		function componentGraphAvailable (componentName) {
+			var factory = Runtime.ResolveComponentRegistered(componentName);
+			var bundled;
+			var inspected = {};
+
+			function inspectFactory (currentFactory) {
+				var componentDefinition = currentFactory && currentFactory.Definition || {};
+				var template = componentDefinition.$Template;
+				var match;
+				var tag;
+				var childFactory;
+				var childBundle;
+				var expression;
+
+				if (typeof template !== 'string') return false;
+
+				expression = /<\s*([A-Za-z][A-Za-z0-9_-]*)\b/g;
+
+				while ((match = expression.exec(template))) {
+					tag = match[1];
+
+					/*
+					 * Preserve the source spelling here. DOM parsing lowercases custom
+					 * PascalCase tags, which makes an unbundled hybrid dependency
+					 * indistinguishable from an ordinary HTML element before Discovery
+					 * has built its map. Elemenx Components are candidates when their
+					 * source tag is PascalCase or a custom-element style name.
+					 */
+					if (tag.indexOf('-') === -1 && tag.charAt(0) === tag.charAt(0).toLowerCase()) continue;
+
+					childFactory = Runtime.ResolveComponentRegistered(tag);
+
+					if (!childFactory) {
+						childBundle = Runtime.Bundle.ResolvedName('Component', tag);
+
+						if (!childBundle) return false;
+
+						Runtime.Bundle.Load('Component', childBundle);
+
+						childFactory = Runtime.ResolveComponentRegistered(childBundle);
+
+						if (!childFactory) return false;
+					}
+
+					if (childFactory.ComponentName && inspected[String(childFactory.ComponentName).toLowerCase()]) continue;
+
+					if (childFactory.ComponentName)
+						inspected[String(childFactory.ComponentName).toLowerCase()] = true;
+
+					if (!inspectFactory(childFactory)) return false;
+				}
+
+				return true;
+			}
+
+			if (!factory) {
+				bundled = Runtime.Bundle.ResolvedName('Component', componentName);
+
+				if (bundled) {
+					Runtime.Bundle.Load('Component', bundled);
+
+					factory = Runtime.ResolveComponentRegistered(componentName);
+				}
+			}
+
+			if (!factory)
+				return false;
+
+			if (factory.ComponentName)
+				inspected[String(factory.ComponentName).toLowerCase()] = true;
+
+			return inspectFactory(factory);
+		}
+
+		/* Application: reload */
+		function reloadApplicationEntity (application, type, entityName, callback) {
+			var bundled = Runtime.Bundle.ResolvedName(type, entityName);
+
+			if (type !== 'Component' && type !== 'Service')
+				throw new Error('Elemenx Reload expects Component or Service');
+
+			if (type === 'Component' && Runtime.BeginComponentReload) {
+				Runtime.BeginComponentReload(entityName);
+			}
+
+			if (bundled) {
+				try {
+					Runtime.Bundle.Reload(type, bundled);
+
+					if (type === 'Service' && Runtime.RefreshDeferredService) {
+						Runtime.RefreshDeferredService(entityName);
+					}
+
+					if (type === 'Component' && Runtime.ReloadComponentInstances) {
+						Runtime.ReloadComponentInstances(entityName);
+					}
+
+					if (callback)
+						callback(null);
+				}
+				catch (error) {
+					if (type === 'Component' && Runtime.FailComponentReload) {
+						Runtime.FailComponentReload(entityName, error);
+					}
+
+					if (callback)
+						callback(error);
+				}
+
+				return application;
+			}
+
+			return Runtime.Discovery.Reload(application, type, entityName, function (error) {
+				if (error && type === 'Component' && Runtime.FailComponentReload) {
+					Runtime.FailComponentReload(entityName, error);
+				}
+
+				if (!error && type === 'Service' && Runtime.RefreshDeferredService) {
+					Runtime.RefreshDeferredService(entityName);
+				}
+
+				if (!error && type === 'Component' && Runtime.ReloadComponentTemplate) {
+					Runtime.ReloadComponentTemplate(entityName, function (templateError) {
+						if (templateError && Runtime.FailComponentReload) {
+							Runtime.FailComponentReload(entityName, templateError);
+						}
+
+						if (!templateError && Runtime.ReloadComponentInstances) {
+							Runtime.ReloadComponentInstances(entityName);
+						}
+
+						if (callback)
+							callback(templateError);
+					});
+
+					return;
+				}
+
+				if (callback)
+					callback(error);
+			});
+		}
+
+		/* Application: instance */
 		function createApplication (name, definition) {
 			var startedAt = new Date();
 			var destroyed = false;
@@ -14888,6 +15040,7 @@
 
 			definition = definition || {};
 
+			/* Instance: public API */
 			api.$Title = Elemenx.Title;
 
 			if (definition.$Title !== undefined) {
@@ -14973,23 +15126,13 @@
 			};
 
 			api.$ServiceWorker = function (workerName, value) {
-				var handle;
 				var serviceWorker = Runtime.ServiceWorkerFor(api);
 
-				if (arguments.length === 1) {
-					if (serviceWorkers[workerName])
-						return serviceWorkers[workerName];
+				if (arguments.length === 1 && serviceWorkers[workerName]) return serviceWorkers[workerName];
 
-					handle = serviceWorker(workerName);
-					serviceWorkers[workerName] = handle;
+				serviceWorkers[workerName] = arguments.length === 1 ? serviceWorker(workerName) : serviceWorker(workerName, value);
 
-					return handle;
-				}
-
-				handle = serviceWorker(workerName, value);
-				serviceWorkers[workerName] = handle;
-
-				return handle;
+				return serviceWorkers[workerName];
 			};
 
 			api.$Service = function (serviceName, value) {
@@ -15003,71 +15146,7 @@
 			};
 
 			api.$Reload = function (type, entityName, callback) {
-				var bundled = Runtime.Bundle.ResolvedName(type, entityName);
-
-				if (type !== 'Component' && type !== 'Service')
-					throw new Error('Elemenx Reload expects Component or Service');
-
-				if (type === 'Component' && Runtime.BeginComponentReload) {
-					Runtime.BeginComponentReload(entityName);
-				}
-
-				if (bundled) {
-					try {
-						Runtime.Bundle.Reload(type, bundled);
-
-						if (type === 'Service' && Runtime.RefreshDeferredService) {
-							Runtime.RefreshDeferredService(entityName);
-						}
-
-						if (type === 'Component' && Runtime.ReloadComponentInstances) {
-							Runtime.ReloadComponentInstances(entityName);
-						}
-
-						if (callback)
-							callback(null);
-					}
-					catch (error) {
-						if (type === 'Component' && Runtime.FailComponentReload) {
-							Runtime.FailComponentReload(entityName, error);
-						}
-
-						if (callback)
-							callback(error);
-					}
-
-					return api;
-				}
-
-				return Runtime.Discovery.Reload(api, type, entityName, function (error) {
-					if (error && type === 'Component' && Runtime.FailComponentReload) {
-						Runtime.FailComponentReload(entityName, error);
-					}
-
-					if (!error && type === 'Service' && Runtime.RefreshDeferredService) {
-						Runtime.RefreshDeferredService(entityName);
-					}
-
-					if (!error && type === 'Component' && Runtime.ReloadComponentTemplate) {
-						Runtime.ReloadComponentTemplate(entityName, function (templateError) {
-							if (templateError && Runtime.FailComponentReload) {
-								Runtime.FailComponentReload(entityName, templateError);
-							}
-
-							if (!templateError && Runtime.ReloadComponentInstances) {
-								Runtime.ReloadComponentInstances(entityName);
-							}
-
-							if (callback)
-								callback(templateError);
-						});
-
-						return;
-					}
-
-					if (callback)
-						callback(error);
-				});
+				return reloadApplicationEntity(api, type, entityName, callback);
 			};
 
 			api.$Component = function () {
@@ -15124,58 +15203,18 @@
 				definition.$Bootstrap.call(api);
 			}
 
+			/* Instance: status and lifecycle */
 			function applicationStatus (source) {
 				var mount = mountElement(definition.$Mount);
 				if (!mount) return;
 
-				Runtime.Template.Harvest(mount);
-
-				var template;
-				var fragment;
-
-				while (mount.firstChild)
-					mount.removeChild(mount.firstChild);
-
-				if (!source) return;
-
-				if (typeof source === 'string' && source.charAt(0) === '#') {
-					var registered = Runtime.Template.Get(source.substring(1));
-
-					if (registered !== null && registered !== undefined) {
-						mount.innerHTML = registered;
-
-						return;
-					}
-
-					template = document.querySelector(source);
-
-					if (template && template.tagName === 'TEMPLATE') {
-						fragment = template.content.cloneNode(true);
-
-						mount.appendChild(fragment);
-
-						return;
-					}
-				}
-
-				mount.innerHTML = String(source);
+				renderApplicationStatus(mount, source);
 			}
 
 			function startRouter () {
 				if (destroyed || router || !definition.$Router || !root) return;
 
-				var routerDefinition = {};
-				var key;
-
-				for (key in definition.$Router) {
-					if (!own(definition.$Router, key)) continue;
-					if (key === 'Root') continue;
-
-					routerDefinition[key] = definition.$Router[key];
-				}
-
-				routerDefinition.Root = root;
-				router = Elemenx.Router(routerDefinition);
+				router = Elemenx.Router(applicationRouterDefinition(definition.$Router, root));
 
 				router.Start();
 			}
@@ -15198,6 +15237,28 @@
 				});
 			}
 
+			function fail (error) {
+				applicationStatus(definition.$Error || null);
+
+				applicationLifecycle('$OnError', error);
+			}
+
+			/* A loading step of a living Application: its failure fails the Application, its success runs next. */
+			function loaded (next) {
+				return function (error) {
+					if (destroyed) return;
+
+					if (error) {
+						fail(error);
+
+						return;
+					}
+
+					next();
+				};
+			}
+
+			/* Instance: root */
 			function createRoot () {
 				if (destroyed || !definition.$Component || root) return;
 
@@ -15240,110 +15301,22 @@
 						}
 					}
 				};
-
 				var preservedMounts = nestedMounts(api, mount);
-				var preservedIndex = 0;
 
-				while (preservedIndex < preservedMounts.length) {
-					if (preservedMounts[preservedIndex].parentNode)
-						preservedMounts[preservedIndex].parentNode.removeChild(preservedMounts[preservedIndex]);
-
-					preservedIndex++;
-				}
+				detachMounts(preservedMounts);
 
 				root = factory(definition.$State || {}, null, options);
 
 				mount.appendChild(root.$Element());
 
-				preservedIndex = 0;
-				while (preservedIndex < preservedMounts.length) {
-					var preservedMount = preservedMounts[preservedIndex];
-					var placeholder = preservedMount.id ? mount.querySelector('#' + preservedMount.id) : null;
-
-					if (placeholder && placeholder.parentNode) placeholder.parentNode.replaceChild(preservedMount, placeholder);
-					else mount.appendChild(preservedMount);
-
-					preservedIndex++;
-				}
+				restoreMounts(mount, preservedMounts);
 
 				if (!root._Component || root._Component()) {
 					applicationLifecycle('$OnReady', null);
 				}
 			}
 
-			function rootAvailableWithoutDiscovery () {
-				var factory = Runtime.ResolveComponentRegistered(definition.$Component);
-				var bundled;
-				var inspected = {};
-
-				function inspectFactory (currentFactory) {
-					var componentDefinition = currentFactory && currentFactory.Definition || {};
-					var template = componentDefinition.$Template;
-					var match;
-					var tag;
-					var childFactory;
-					var childBundle;
-					var expression;
-
-					if (typeof template !== 'string') return false;
-
-					expression = /<\s*([A-Za-z][A-Za-z0-9_-]*)\b/g;
-
-					while ((match = expression.exec(template))) {
-						tag = match[1];
-
-						/*
-						 * Preserve the source spelling here. DOM parsing lowercases custom
-						 * PascalCase tags, which makes an unbundled hybrid dependency
-						 * indistinguishable from an ordinary HTML element before Discovery
-						 * has built its map. Elemenx Components are candidates when their
-						 * source tag is PascalCase or a custom-element style name.
-						 */
-						if (tag.indexOf('-') === -1 && tag.charAt(0) === tag.charAt(0).toLowerCase()) continue;
-
-						childFactory = Runtime.ResolveComponentRegistered(tag);
-
-						if (!childFactory) {
-							childBundle = Runtime.Bundle.ResolvedName('Component', tag);
-
-							if (!childBundle) return false;
-
-							Runtime.Bundle.Load('Component', childBundle);
-
-							childFactory = Runtime.ResolveComponentRegistered(childBundle);
-
-							if (!childFactory) return false;
-						}
-
-						if (childFactory.ComponentName && inspected[String(childFactory.ComponentName).toLowerCase()]) continue;
-
-						if (childFactory.ComponentName)
-							inspected[String(childFactory.ComponentName).toLowerCase()] = true;
-
-						if (!inspectFactory(childFactory)) return false;
-					}
-
-					return true;
-				}
-
-				if (!factory) {
-					bundled = Runtime.Bundle.ResolvedName('Component', definition.$Component);
-
-					if (bundled) {
-						Runtime.Bundle.Load('Component', bundled);
-
-						factory = Runtime.ResolveComponentRegistered(definition.$Component);
-					}
-				}
-
-				if (!factory)
-					return false;
-
-				if (factory.ComponentName)
-					inspected[String(factory.ComponentName).toLowerCase()] = true;
-
-				return inspectFactory(factory);
-			}
+			/* Instance: start */
 			function startApplicationRoot () {
 				if (destroyed || !definition.$Component || root) return;
 
@@ -15353,9 +15326,7 @@
 					Runtime.Bundle.LoadType('Guard');
 				}
 
-				var discoveryRoot = definition.$Root;
-				if (discoveryRoot && definition.$DefinitionURL && !(/^(?:[a-z]+:)?\/\//i.test(discoveryRoot)) && discoveryRoot.charAt(0) !== '/')
-					discoveryRoot = definition.$DefinitionURL.substring(0, definition.$DefinitionURL.lastIndexOf('/') + 1) + discoveryRoot.replace(/^\.\//, '');
+				var discoveryRoot = applicationDiscoveryRoot(definition);
 
 				if (discoveryRoot) {
 					Runtime.Discovery.Root(api, discoveryRoot);
@@ -15366,7 +15337,7 @@
 				 * source tree. The Discovery root is only remembered here; the map is
 				 * built lazily by Discovery.Load if a later explicit resource is absent.
 				 */
-				if (definition.$Root && rootAvailableWithoutDiscovery()) {
+				if (definition.$Root && componentGraphAvailable(definition.$Component)) {
 					createRoot();
 
 					return;
@@ -15393,51 +15364,22 @@
 				Runtime.Discovery.Build(api, discoveryRoot, function (error) {
 					if (destroyed) return;
 
+					/*
+					 * Production bundles intentionally omit the source Application graph.
+					 * Discovery remains the preferred hybrid fallback when its Root exists,
+					 * but a failed Build must not prevent an independently bundled root from
+					 * starting. This decision is per Application, never global.
+					 */
 					if (error) {
-						/*
-						 * Production bundles intentionally omit the source Application graph.
-						 * Discovery remains the preferred hybrid fallback when its Root exists,
-						 * but a failed Build must not prevent an independently bundled root from
-						 * starting. This decision is per Application, never global.
-						 */
-						if (rootAvailableWithoutDiscovery()) {
-							createRoot();
-
-							return;
-						}
-
-						applicationStatus(definition.$Error || null);
-
-						applicationLifecycle('$OnError', error);
+						if (componentGraphAvailable(definition.$Component)) createRoot();
+						else fail(error);
 
 						return;
 					}
 
-					Runtime.Discovery.LoadDirectives(api, function (directiveError) {
-						if (destroyed) return;
-
-						if (directiveError) {
-							applicationStatus(definition.$Error || null);
-
-							applicationLifecycle('$OnError', directiveError);
-
-							return;
-						}
-
-						Runtime.Discovery.LoadServices(api, function (serviceError) {
-							if (destroyed) return;
-
-							if (serviceError) {
-								applicationStatus(definition.$Error || null);
-
-								applicationLifecycle('$OnError', serviceError);
-
-								return;
-							}
-
-							createRoot();
-						});
-					});
+					Runtime.Discovery.LoadDirectives(api, loaded(function () {
+						Runtime.Discovery.LoadServices(api, loaded(createRoot));
+					}));
 				});
 			}
 
@@ -15460,19 +15402,7 @@
 					return;
 				}
 
-				Runtime.Library.Use(api, use, function (error) {
-					if (destroyed) return;
-
-					if (error) {
-						applicationStatus(definition.$Error || null);
-
-						applicationLifecycle('$OnError', error);
-
-						return;
-					}
-
-					startApplicationRoot();
-				});
+				Runtime.Library.Use(api, use, loaded(startApplicationRoot));
 			}
 
 			if (Runtime.HasDOM && global.document.readyState === 'loading') {

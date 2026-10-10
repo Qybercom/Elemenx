@@ -45,6 +45,38 @@ describe('Regression: WebWorker definitions and lifecycle', function () {
 		}).toThrow();
 	});
 
+	it('On requires a function, and Off removes a listener', function () {
+		var worker = Elemenx.WebWorker(unique('WorkerListeners'), {Script: '/workers/webworker-bridge.js', StartMode: 'manual'});
+		var calls = 0;
+		var listener = function () {
+			calls++;
+		};
+
+		expect(function () {
+			worker.On('Starting', 'not a function');
+		}).toThrow('Elemenx WebWorker.On callback must be a function');
+		expect(worker.On('Starting', listener)).toBe(worker);
+		expect(worker.Off('Starting', listener)).toBe(worker);
+
+		worker.Start();
+
+		expect(calls).toBe(0);
+
+		worker.Destroy();
+	});
+
+	it('Start without a Script throws an explicit error', function () {
+		var name = unique('WorkerNoScript');
+		var worker = Elemenx.WebWorker(name, {StartMode: 'manual'});
+
+		expect(function () {
+			worker.Start();
+		}).toThrow('Elemenx WebWorker Script is required: ' + name);
+		expect(worker.State()).toBe('Stopped');
+
+		worker.Destroy();
+	});
+
 	it('Destroy is idempotent and a destroyed handle cannot Start', function () {
 		var name = unique('WorkerDestroyed');
 		var worker = Elemenx.WebWorker(name, {Script: '/worker.js', StartMode: 'manual'});
@@ -81,6 +113,27 @@ describe('Regression: WebWorker real execution and Messaging bridge', function (
 		expect(states).toEqual(['Starting', 'Running']);
 
 		worker.Destroy();
+	});
+
+	it('a Worker script that throws while loading turns the handle into the Error state', async function () {
+		var script = URL.createObjectURL(new Blob(['throw new Error("worker script broke");'], {type: 'application/javascript'}));
+		var errors = [];
+		var worker = Elemenx.WebWorker(unique('WorkerBroken'), {Script: script, StartMode: 'manual'});
+
+		worker.On('Error', function (event) {
+			errors.push(event.Data);
+		});
+		worker.Start();
+
+		expect(await waitFor(function () {
+			return worker.State() === 'Error';
+		}, 2000)).toBe(true);
+		expect(errors.length).toBe(1);
+		expect(String(errors[0].message)).toContain('worker script broke');
+
+		worker.Destroy();
+
+		URL.revokeObjectURL(script);
 	});
 
 	it('bridges page Messaging to the real Worker and routes its reply to the sender own channel', async function () {
