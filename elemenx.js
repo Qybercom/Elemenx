@@ -4859,6 +4859,18 @@
 			};
 		}
 
+		/* A denying guard result as a failure object (false becomes a default failure) that records the guard in field. */
+		function guardDenial (result, field, guard) {
+			if (result !== false && !(result && result.ElemenxGuardFailure === true)) return result;
+
+			if (result === false)
+				result = fail();
+
+			result[field] = guard;
+
+			return result;
+		}
+
 		function leaveArguments (context) {
 			return {
 				$From: context.$From,
@@ -5028,6 +5040,43 @@
 			}
 
 			/* Navigation: route matching and loading */
+			/* The outlet of a route: its own, else the Router outlet for the first level and Content below it. */
+			function outletName (route, index) {
+				return route.Outlet || (index === 0 ? rootOutletName : 'Content');
+			}
+
+			/* Loads a definition through the Discovery of the Router Application; callback (missing) when it has none. */
+			function discover (type, reference, missing, callback) {
+				var currentApplication = application();
+
+				if (!Runtime.Discovery || !currentApplication || !Runtime.Discovery.Ready(currentApplication)) {
+					callback(missing);
+
+					return;
+				}
+
+				Runtime.Discovery.Load(currentApplication, type, reference, false, callback);
+			}
+
+			/* Creates a route Component under the Router and renders it into outlet. */
+			function mountRouteComponent (factory, packet, parent, outlet, guardFailure) {
+				var component = Runtime.WithRouter(api, function () {
+					return factory(packet, null, {
+						Application: application(),
+						RoutePacket: packet,
+						GuardFailure: guardFailure || null
+					});
+				});
+
+				Runtime.AttachRouter(component, api);
+
+				component.$Parent(parent);
+
+				outlet.Render(component);
+
+				return component;
+			}
+
 			function match (path) {
 				return matchLevel(routes, splitPath(path), 0, {}, []);
 			}
@@ -5050,15 +5099,7 @@
 						return;
 					}
 
-					var currentApplication = application();
-
-					if (!Runtime.Discovery || !currentApplication || !Runtime.Discovery.Ready(currentApplication)) {
-						callback(new Error('Elemenx route component not found: ' + route.Component));
-
-						return;
-					}
-
-					Runtime.Discovery.Load(currentApplication, 'Component', route.Component, false, function (error) {
+					discover('Component', route.Component, new Error('Elemenx route component not found: ' + route.Component), function (error) {
 						if (error) {
 							next(error);
 
@@ -5151,15 +5192,7 @@
 					return;
 				}
 
-				var currentApplication = application();
-
-				if (!Runtime.Discovery || !currentApplication || !Runtime.Discovery.Ready(currentApplication)) {
-					callback(new Error('Elemenx route waiting component not found: ' + reference));
-
-					return;
-				}
-
-				Runtime.Discovery.Load(currentApplication, 'Component', reference, false, function (error) {
+				discover('Component', reference, new Error('Elemenx route waiting component not found: ' + reference), function (error) {
 					if (error) {
 						callback(error);
 
@@ -5255,31 +5288,27 @@
 						var guardReference = list[guardIndex];
 						var guard = Runtime.ResolveGuard(guardReference);
 
-						if (!guard && typeof guardReference === 'string') {
-							var currentApplication = application();
-
-							if (currentApplication && Runtime.Discovery.Ready(currentApplication)) {
-								Runtime.Discovery.Load(currentApplication, 'Guard', guardReference, false, function (error) {
-									if (error) {
-										done({ElemenxNavigationError: error});
-
-										return;
-									}
-
-									nextGuard(true);
-								});
+						if (!guard) {
+							if (typeof guardReference !== 'string') {
+								done({ElemenxNavigationError: new Error('Elemenx route guard not found')});
 
 								return;
 							}
-						}
 
-						guardIndex++;
+							discover('Guard', guardReference, new Error('Elemenx route guard not found'), function (error) {
+								if (error) {
+									done({ElemenxNavigationError: error});
 
-						if (!guard) {
-							done({ElemenxNavigationError: new Error('Elemenx route guard not found')});
+									return;
+								}
+
+								nextGuard(true);
+							});
 
 							return;
 						}
+
+						guardIndex++;
 
 						(function (guardReference) {
 							context.$Route = route;
@@ -5290,15 +5319,7 @@
 							settleGuard(
 								guard.call(context),
 								function (result) {
-									if (result === false || (result && result.ElemenxGuardFailure === true)) {
-										if (result === false) {
-											result = fail();
-										}
-
-										result.Guard = guardReference;
-									}
-
-									nextGuard(result);
+									nextGuard(guardDenial(result, 'Guard', guardReference));
 								},
 								context
 							);
@@ -5353,15 +5374,7 @@
 					settleGuard(
 						hook.call(component, leaveArguments(context)),
 						function (result) {
-							if (result === false || (result && result.ElemenxGuardFailure === true)) {
-								if (result === false) {
-									result = fail();
-								}
-
-								result.$Guard = '$OnRouteLeave';
-							}
-
-							next(result);
+							next(guardDenial(result, '$Guard', '$OnRouteLeave'));
 						},
 						context
 					);
@@ -5380,9 +5393,7 @@
 				while (i >= index) {
 					entry = active[i];
 					parent = i > 0 ? active[i - 1].Component : root;
-					outlet = parent && entry.Route
-						? Runtime.ResolveOutlet(parent, entry.Route.Outlet || (i === 0 ? rootOutletName : 'Content'))
-						: null;
+					outlet = parent && entry.Route ? Runtime.ResolveOutlet(parent, outletName(entry.Route, i)) : null;
 
 					/*
 					 * Route components are owned by their Outlet. Clearing through the
@@ -5407,7 +5418,6 @@
 				var outlet;
 				var route;
 				var factory;
-				var component;
 				var i = 0;
 
 				while (common > 0 && i < common) {
@@ -5425,36 +5435,22 @@
 
 				while (i < found.Chain.length) {
 					route = found.Chain[i];
-					outlet = Runtime.ResolveOutlet(parent, route.Outlet || (i === 0 ? rootOutletName : 'Content'));
+					outlet = Runtime.ResolveOutlet(parent, outletName(route, i));
 
 					if (!outlet)
-						throw new Error('Elemenx router outlet not found: ' + (route.Outlet || (i === 0 ? rootOutletName : 'Content')));
+						throw new Error('Elemenx router outlet not found: ' + outletName(route, i));
 
 					factory = componentFactory(route);
 
 					if (!factory)
 						throw new Error('Elemenx route component not found: ' + route.Component);
 
-					component = Runtime.WithRouter(api, function () {
-						return factory(packet, null, {
-							Application: application(),
-							RoutePacket: packet,
-							GuardFailure: route.GuardFailure || null
-						});
-					});
-
-					Runtime.AttachRouter(component, api);
-
-					component.$Parent(parent);
-
-					outlet.Render(component);
+					parent = mountRouteComponent(factory, packet, parent, outlet, route.GuardFailure);
 
 					active.push({
 						Route: route,
-						Component: component
+						Component: parent
 					});
-
-					parent = component;
 
 					i++;
 				}
@@ -5680,6 +5676,27 @@
 					reportNavigationError(context, error);
 				}
 
+				/* A history step that reached its target keeps the index of its entry. */
+				function adoptPopIndex () {
+					if (mode === 'pop' && targetHistoryIndex !== null && targetHistoryIndex !== undefined)
+						historyIndex = targetHistoryIndex;
+				}
+
+				function redirectTo (path) {
+					emit('NavigationCancel', context);
+
+					adoptPopIndex();
+
+					navigate(path, 'replace', true);
+				}
+
+				function cancel () {
+					emit('NavigationCancel', context);
+
+					if (mode === 'pop')
+						rejectPop(targetHistoryIndex);
+				}
+
 				emit('NavigationStart', context);
 
 				(redirect ? leaveDecided : runLeaveGuards)(prepared.Common, context, function (leaveResult) {
@@ -5687,21 +5704,12 @@
 
 					if (leaveResult !== true && leaveResult !== undefined) {
 						if (typeof leaveResult === 'string') {
-							emit('NavigationCancel', context);
-
-							if (mode === 'pop' && targetHistoryIndex !== null && targetHistoryIndex !== undefined) {
-								historyIndex = targetHistoryIndex;
-							}
-
-							navigate(leaveResult, 'replace', true);
+							redirectTo(leaveResult);
 						}
 						else {
 							handleGuardFailure(leaveResult, context);
 
-							emit('NavigationCancel', context);
-
-							if (mode === 'pop')
-								rejectPop(targetHistoryIndex);
+							cancel();
 						}
 
 						return;
@@ -5733,24 +5741,13 @@
 									clearWaiting();
 
 									if (typeof enterResult === 'string') {
-										emit('NavigationCancel', context);
-
-										if (mode === 'pop' && targetHistoryIndex !== null && targetHistoryIndex !== undefined) {
-											historyIndex = targetHistoryIndex;
-										}
-
-										navigate(enterResult, 'replace', true);
+										redirectTo(enterResult);
 									}
 									else {
 										var failure = handleGuardFailure(enterResult, context);
 										var failureComponent = guardFailureComponent(failure.$Route, failure);
-
-										if (!failureComponent || !renderGuardFailure(prepared, failure, failureComponent, mode, id, context)) {
-											emit('NavigationCancel', context);
-
-											if (mode === 'pop')
-												rejectPop(targetHistoryIndex);
-										}
+										if (!failureComponent || !renderGuardFailure(prepared, failure, failureComponent, mode, id, context))
+											cancel();
 									}
 
 									return;
@@ -5786,9 +5783,7 @@
 
 									committedURL = new URL(prepared.URL.href);
 
-									if (mode === 'pop' && targetHistoryIndex !== null && targetHistoryIndex !== undefined) {
-										historyIndex = targetHistoryIndex;
-									}
+									adoptPopIndex();
 
 									finishWaitingAfterCommit(prepared, id, function () {
 										emit('NavigationEnd', context);
@@ -5835,19 +5830,9 @@
 
 					destroyFrom(0);
 
-					var component = Runtime.WithRouter(api, function () {
-						return factory(packet, null, {Application: application(), RoutePacket: packet});
-					});
-
-					Runtime.AttachRouter(component, api);
-
-					component.$Parent(root);
-
-					outlet.Render(component);
-
 					active.push({
 						Route: null,
-						Component: component
+						Component: mountRouteComponent(factory, packet, root, outlet, null)
 					});
 
 					committedURL = new URL(url.href);
@@ -5861,15 +5846,7 @@
 					return true;
 				}
 
-				var currentApplication = application();
-
-				if (!Runtime.Discovery || !currentApplication || !Runtime.Discovery.Ready(currentApplication)) {
-					reportNavigationError(context, new Error('Elemenx NotFound component not found: ' + reference));
-
-					return true;
-				}
-
-				Runtime.Discovery.Load(currentApplication, 'Component', reference, false, function (error) {
+				discover('Component', reference, new Error('Elemenx NotFound component not found: ' + reference), function (error) {
 					if (id !== navigationID) return;
 
 					if (error) {
@@ -6375,6 +6352,178 @@
 			return result;
 		}
 
+		/* Structural: DOM helpers */
+		function contentsHost () {
+			var host = document.createElement('span');
+
+			host.style.display = 'contents';
+
+			return host;
+		}
+
+		/* Replaces node by an end marker comment: the place where its rendered content goes. */
+		function replaceWithMarker (node, text) {
+			var end = document.createComment(text);
+
+			node.parentNode.insertBefore(end, node.nextSibling);
+			node.parentNode.removeChild(node);
+
+			return end;
+		}
+
+		/* The child indexes from the first ancestor accepted by isTop down to node, or null when node is detached before it. */
+		function nodePath (node, isTop) {
+			var path = [];
+			var current = node;
+
+			while (current && !isTop(current)) {
+				if (!current.parentNode) return null;
+
+				path.unshift(Array.prototype.indexOf.call(current.parentNode.childNodes, current));
+
+				current = current.parentNode;
+			}
+
+			return current ? {Path: path, Top: current} : null;
+		}
+
+		function nodeAt (root, path) {
+			var current = root;
+			var i = 0;
+
+			while (i < path.length && current) {
+				current = current.childNodes[path[i]];
+
+				i++;
+			}
+
+			return current || null;
+		}
+
+		/* Moves the children of a Component declaration into slot groups; ownerToken marks the Structural that declared them. */
+		function slotProjection (node, ownerToken) {
+			var host = contentsHost();
+			var groups = {};
+			var blueprints = {};
+			var child;
+			var name;
+			var group;
+
+			while (node.firstChild) {
+				child = node.firstChild;
+				name = '';
+
+				if (child.nodeType === 1) {
+					name = child.getAttribute('slot') || '';
+
+					if (child.hasAttribute('slot'))
+						child.removeAttribute('slot');
+				}
+
+				group = groups[name];
+
+				if (!group) {
+					group = contentsHost();
+					group.__ElemenxSlotGroup = name;
+					group.__ElemenxProjectionOwner = ownerToken;
+
+					groups[name] = group;
+
+					blueprints[name] = contentsHost();
+					blueprints[name].__ElemenxSlotGroup = name;
+
+					host.appendChild(group);
+				}
+
+				blueprints[name].appendChild(child.cloneNode(true));
+
+				/*
+				 * Move the ORIGINAL node into a stable group host.
+				 * Bindings keep DOM identity, while Structural() may freely
+				 * replace descendants inside this host.
+				 */
+				group.appendChild(child);
+			}
+
+			if (!host.childNodes.length) return null;
+
+			return {
+				Host: function () {
+					return host;
+				},
+
+				Groups: function () {
+					var result = {};
+					var groupName;
+
+					for (groupName in groups) {
+						if (own(groups, groupName)) {
+							result[groupName] = [groups[groupName]];
+						}
+					}
+
+					return result;
+				},
+
+				Blueprints: function () {
+					return blueprints;
+				},
+
+				PrimeBlueprints: function (value) {
+					if (value)
+						blueprints = value;
+
+					return this;
+				}
+			};
+		}
+
+		/* Structural: definition methods */
+		function boundMethod (definition, component, name) {
+			return function () {
+				return definition[name].apply(component, arguments);
+			};
+		}
+
+		/* Copies the methods of definition accepted by include into target, called on the owning component. */
+		function bindMethods (definition, component, target, include) {
+			var name;
+
+			for (name in definition) {
+				if (own(definition, name) && typeof definition[name] === 'function' && include(name))
+					target[name] = boundMethod(definition, component, name);
+			}
+
+			return target;
+		}
+
+		/* Collection items see the plain methods of their owner. */
+		function plainMethod (name) {
+			return name.charAt(0) !== '$';
+		}
+
+		/* A structural subtree sees every method of its owner except the template and the lifecycle hooks. */
+		function subtreeMethod (name) {
+			return name !== '$Template' && name.indexOf('$On') !== 0;
+		}
+
+		/* The props whose values differ from the previous ones, or null when none changed. */
+		function changedValues (previous, next) {
+			var result = {};
+			var changed = false;
+			var name;
+
+			for (name in next) {
+				if (own(next, name) && (!previous || previous[name] !== next[name])) {
+					result[name] = next[name];
+
+					changed = true;
+				}
+			}
+
+			return changed ? result : null;
+		}
+
 		/* Structural: host engine */
 		function Structural (component, definition, blueprintRoot) {
 			var directiveHosts = {};
@@ -6425,87 +6574,6 @@
 				}
 
 				return null;
-			}
-
-			function slotProjection (node) {
-				var host = document.createElement('span');
-				var groups = {};
-				var blueprints = {};
-				var child;
-				var name;
-				var group;
-
-				host.style.display = 'contents';
-
-				while (node.firstChild) {
-					child = node.firstChild;
-					name = '';
-
-					if (child.nodeType === 1) {
-						name = child.getAttribute('slot') || '';
-
-						if (child.hasAttribute('slot'))
-							child.removeAttribute('slot');
-					}
-
-					group = groups[name];
-
-					if (!group) {
-						group = document.createElement('span');
-						group.style.display = 'contents';
-						group.__ElemenxSlotGroup = name;
-						group.__ElemenxProjectionOwner = ownerToken;
-
-						groups[name] = group;
-
-						blueprints[name] = document.createElement('span');
-						blueprints[name].style.display = 'contents';
-						blueprints[name].__ElemenxSlotGroup = name;
-
-						host.appendChild(group);
-					}
-
-					blueprints[name].appendChild(child.cloneNode(true));
-
-					/*
-					 * Move the ORIGINAL node into a stable group host.
-					 * Bindings keep DOM identity, while Structural() may freely
-					 * replace descendants inside this host.
-					 */
-					group.appendChild(child);
-				}
-
-				if (!host.childNodes.length) return null;
-
-				return {
-					Host: function () {
-						return host;
-					},
-
-					Groups: function () {
-						var result = {};
-						var groupName;
-
-						for (groupName in groups) {
-							if (own(groups, groupName)) {
-								result[groupName] = [groups[groupName]];
-							}
-						}
-
-						return result;
-					},
-
-					Blueprints: function () {
-						return blueprints;
-					},
-
-					PrimeBlueprints: function (value) {
-						if (value)
-							blueprints = value;
-
-						return this;
-					}
-				};
 			}
 
 			function asyncOptions (blueprint, name, extra) {
@@ -6623,53 +6691,32 @@
 				scan(node);
 			}
 
+			function isComponentElement (node) {
+				return node === component.$Element();
+			}
+
+			/* The node at the same place in the untouched component DOM. */
 			function pristineNodeFor (node) {
 				if (!blueprintRoot) return null;
 
-				var path = [];
-				var current = node;
-				var parent;
-				var i;
+				var found = nodePath(node, isComponentElement);
 
-				while (current && current !== component.$Element()) {
-					parent = current.parentNode;
-
-					if (!parent)
-						return null;
-
-					path.unshift(Array.prototype.indexOf.call(parent.childNodes, current));
-
-					current = parent;
-				}
-
-				if (current !== component.$Element()) return null;
-
-				current = blueprintRoot;
-				i = 0;
-
-				while (i < path.length && current) {
-					current = current.childNodes[path[i]];
-
-					i++;
-				}
-
-				return current || null;
+				return found ? nodeAt(blueprintRoot, found.Path) : null;
 			}
 
 			directiveHost('structural', compileStructural);
 			directiveHost('collection', compileCollectionDirective);
 
 			function compileComponent (node, factory, structuralDirective) {
-				var parent = node.parentNode;
-				var end = document.createComment('elemenx:component:' + (node.getAttribute('data-elemenx-component') || node.tagName) + ':end');
+				var markerText = 'elemenx:component:' + (node.getAttribute('data-elemenx-component') || node.tagName) + ':end';
 
 				if (structuralDirective)
 					node.removeAttribute(structuralDirective.Attribute);
 
 				var eventMap = events(node);
 				var pristineNode = pristineNodeFor(node);
-				var pristineProjection = pristineNode ? slotProjection(pristineNode.cloneNode(true)) : null;
-				var projected = slotProjection(node);
+				var pristineProjection = pristineNode ? slotProjection(pristineNode.cloneNode(true), ownerToken) : null;
+				var projected = slotProjection(node, ownerToken);
 
 				/*
 				 * Component input attributes belong to the declaration blueprint.
@@ -6683,17 +6730,30 @@
 				if (projected && pristineProjection && pristineProjection.Blueprints)
 					projected.PrimeBlueprints(pristineProjection.Blueprints());
 
-				parent.insertBefore(end, node.nextSibling);
-				parent.removeChild(node);
-
-				records.push(componentRecord(end, factory, blueprint, structuralDirective, eventMap, projected));
+				records.push(componentRecord(replaceWithMarker(node, markerText), factory, blueprint, structuralDirective, eventMap, projected));
 			}
 
 			function componentRecord (end, factory, blueprint, structuralDirective, eventMap, projected) {
 				var child = null;
 				var previousProps = null;
 				var currentData = null;
-				var context = structuralDirective ? {
+				var context;
+
+				function createChild (data) {
+					var childProps = props(blueprint, data, factory.Definition);
+
+					child = Runtime.Untracked(function () {
+						return factory(childProps, projected, asyncOptions(blueprint, factory.ComponentName || blueprint.tagName));
+					});
+
+					connect(child, eventMap);
+
+					end.parentNode.insertBefore(child.$Element(), end);
+
+					previousProps = childProps;
+				}
+
+				context = structuralDirective ? {
 					Name: structuralDirective.Name,
 					$Element: blueprint,
 					Component: component,
@@ -6704,22 +6764,8 @@
 						return child !== null;
 					},
 					Mount: function () {
-						var childProps;
-
-						if (child)
-							return child;
-
-						childProps = props(blueprint, currentData || Runtime.ComponentValues(component), factory.Definition);
-
-						child = Runtime.Untracked(function () {
-							return factory(childProps, projected, asyncOptions(blueprint, factory.ComponentName || blueprint.tagName));
-						});
-
-						connect(child, eventMap);
-
-						end.parentNode.insertBefore(child.$Element(), end);
-
-						previousProps = childProps;
+						if (!child)
+							createChild(currentData || Runtime.ComponentValues(component));
 
 						return child;
 					},
@@ -6758,18 +6804,10 @@
 							structuralDirective.Definition.$OnUpdate(context);
 					}
 					else if (!child) {
-						childProps = props(blueprint, data, factory.Definition);
+						createChild(data);
 
-						child = Runtime.Untracked(function () {
-							return factory(childProps, projected, asyncOptions(blueprint, factory.ComponentName || blueprint.tagName));
-						});
-
-						connect(child, eventMap);
-
-						end.parentNode.insertBefore(child.$Element(), end);
+						/* without a structural directive the child stays for good: the marker is no longer needed */
 						end.parentNode.removeChild(end);
-
-						previousProps = childProps;
 					}
 
 					if (!child)
@@ -6782,19 +6820,8 @@
 					 * state; propagate only values that actually changed at the parent
 					 * boundary.
 					 */
-					var changedProps = {};
-					var changed = false;
-					var propName;
-
-					for (propName in childProps) {
-						if (own(childProps, propName) && (!previousProps || previousProps[propName] !== childProps[propName])) {
-							changedProps[propName] = childProps[propName];
-
-							changed = true;
-						}
-					}
-
-					if (changed)
+					var changedProps = changedValues(previousProps, childProps);
+					if (changedProps)
 						child.$Update(changedProps);
 
 					previousProps = childProps;
@@ -6828,119 +6855,52 @@
 				};
 			}
 
+			function isSlotGroup (node) {
+				return node.nodeType === 1 && node.__ElemenxSlotGroup !== undefined;
+			}
+
+			/* The untouched declaration of node: in its slot blueprint while compiling a projection, else in the component DOM. */
 			function blueprintFor (node) {
-				var path = [];
-				var current = node;
-				var targetRoot = blueprintRoot;
-				var group;
-				var name;
-				var parent;
-				var i;
+				var found;
+				var targetRoot;
 
 				if (projectionBlueprintRoot) {
-					current = node;
-
-					while (current && !(current.nodeType === 1 && current.__ElemenxSlotGroup !== undefined)) {
-						parent = current.parentNode;
-
-						if (!parent)
-							return node;
-
-						path.unshift(Array.prototype.indexOf.call(parent.childNodes, current));
-
-						current = parent;
-					}
-
-					if (!current) return node;
-
-					group = current;
-					name = group.__ElemenxSlotGroup || '';
-					targetRoot = projectionBlueprintRoot[name];
-
-					if (!targetRoot) return node;
+					found = nodePath(node, isSlotGroup);
+					targetRoot = found ? projectionBlueprintRoot[found.Top.__ElemenxSlotGroup || ''] : null;
 				}
 				else {
-					if (!targetRoot) return node;
-
-					current = node;
-
-					while (current && current !== component.$Element()) {
-						parent = current.parentNode;
-
-						if (!parent)
-							return node;
-
-						path.unshift(Array.prototype.indexOf.call(parent.childNodes, current));
-
-						current = parent;
-					}
+					found = blueprintRoot ? nodePath(node, isComponentElement) : null;
+					targetRoot = blueprintRoot;
 				}
 
-				current = targetRoot;
-				i = 0;
+				if (!found || !targetRoot) return node;
 
-				while (i < path.length && current) {
-					current = current.childNodes[path[i]];
-
-					i++;
-				}
-
-				return current || node;
+				return nodeAt(targetRoot, found.Path) || node;
 			}
 
 			function compileCollectionDirective (node, directive) {
-				var parent = node.parentNode;
 				var template = blueprintFor(node).cloneNode(true);
-				var end = document.createComment('elemenx:collection:' + directive.Name + ':end');
 				var argumentsMap = Runtime.Directive.Arguments(template, 'collection');
 				var children = [];
 				var keyed = {};
 				var context;
+				var end;
 
 				template.removeAttribute(directive.Attribute);
 
-				parent.insertBefore(end, node.nextSibling);
-				parent.removeChild(node);
+				end = replaceWithMarker(node, 'elemenx:collection:' + directive.Name + ':end');
 
 				function iterationDefinition () {
 					var componentRoot = factoryFor(template.getAttribute('data-elemenx-component') || template.tagName);
 					var templateSource = componentRoot
 						? '<span style="display:contents">' + template.outerHTML + '</span>'
 						: template.outerHTML;
-					var result = {$Template: templateSource};
-					var methodName;
 
-					for (methodName in definition) {
-						if (own(definition, methodName) && typeof definition[methodName] === 'function' && methodName.charAt(0) !== '$') {
-							(function (name) {
-								result[name] = function () {
-									return definition[name].apply(component, arguments);
-								};
-							})(methodName);
-						}
-					}
-
-					return result;
+					return bindMethods(definition, component, {$Template: templateSource}, plainMethod);
 				}
 
 				function baseScope () {
-					var result = {};
-					var name;
-					var values = Runtime.ComponentValues(component);
-
-					Runtime.Assign(result, values);
-
-					for (name in definition) {
-						if (own(definition, name) && typeof definition[name] === 'function' && name.charAt(0) !== '$') {
-							(function (methodName) {
-								result[methodName] = function () {
-									return definition[methodName].apply(component, arguments);
-								};
-							})(name);
-						}
-					}
-
-					return result;
+					return bindMethods(definition, component, Runtime.Assign({}, Runtime.ComponentValues(component)), plainMethod);
 				}
 
 				function destroyAll () {
@@ -7076,10 +7036,9 @@
 			}
 
 			function compileStructural (node, directive) {
-				var parent = node.parentNode;
 				var field = directive.Expression;
 				var template = blueprintFor(node).cloneNode(true);
-				var end = document.createComment('elemenx:structural:' + directive.Name + ':end');
+				var end;
 				var child = null;
 				var context = {
 					Name: directive.Name,
@@ -7095,24 +7054,9 @@
 						if (child)
 							return child;
 
-						var subtreeDefinition;
-						var methodName;
-						var data;
+						var subtreeDefinition = bindMethods(definition, component, {$Template: template.outerHTML}, subtreeMethod);
 
-						data = Runtime.ComponentValues(component);
-						subtreeDefinition = {$Template: template.outerHTML};
-
-						for (methodName in definition) {
-							if (own(definition, methodName) && typeof definition[methodName] === 'function' && methodName !== '$Template' && methodName.indexOf('$On') !== 0) {
-								(function (name) {
-									subtreeDefinition[name] = function () {
-										return definition[name].apply(component, arguments);
-									};
-								})(methodName);
-							}
-						}
-
-						child = Runtime.CreateComponent(subtreeDefinition)(data, null, {
+						child = Runtime.CreateComponent(subtreeDefinition)(Runtime.ComponentValues(component), null, {
 							DirectState: true,
 							Application: component.$Application()
 						});
@@ -7133,8 +7077,7 @@
 
 				template.removeAttribute(directive.Attribute);
 
-				parent.insertBefore(end, node.nextSibling);
-				parent.removeChild(node);
+				end = replaceWithMarker(node, 'elemenx:structural:' + directive.Name + ':end');
 
 				if (typeof directive.Definition.$OnCreate === 'function') {
 					directive.Definition.$OnCreate(context);
