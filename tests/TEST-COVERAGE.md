@@ -29,3 +29,9 @@ The suite is split into three layers:
 - real-browser E2E (`npm run test:history`) covers session history plus the official Simple/Advanced examples and production bundles.
 
 The Examples E2E path verifies reactive state/events, persistent Storage, Application discovery, nested structural composition, Router/Guards, real Network XHR, Builder output, public assets and the production server.
+## Measuring coverage
+
+- `npm run test:coverage` measures `elemenx.js` under the browser contracts (Vitest). Report: `coverage/`.
+- `npm run test:coverage:all` adds the real-browser Playwright scenarios (history, official examples, production bundles) and writes the combined report to `coverage/all/` (`index.html`, `coverage-summary.json`). Playwright pages collect V8 coverage only in this mode; `npm test` runs them unchanged.
+
+Coverage is a map of what the tests do not touch yet, not a goal by itself: before refactoring a function, check that its paths are covered and add contract tests where they are not.

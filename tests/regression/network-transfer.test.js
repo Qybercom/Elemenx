@@ -636,6 +636,21 @@ describe('Regression: Network Transfer edge cases', function () {
 		expect(transfer.Phase()).toBe('Complete');
 	});
 
+	it('inbound Transfer counts a string response as UTF-8 bytes', function () {
+		var transport = new EventTransport();
+		var data = [];
+		var transfer = Elemenx.Network.Transfer({Transport: transport});
+
+		transfer.On('Transfer.Data', function (event) {
+			data.push(event.Data.Bytes);
+		});
+		transfer.Execute();
+
+		transport.Emit('Transport.Success', {Response: 'ыы'});
+
+		expect(data).toEqual([4]);
+	});
+
 	it('inbound Transfer collects a binary stream until Transport.End and ignores non-binary data', function () {
 		var transport = new EventTransport();
 		var bytes = [];

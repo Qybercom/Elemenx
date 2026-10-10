@@ -185,6 +185,20 @@ describe('Regression: Network WebRTC', function () {
 		expect(types).toEqual(['BeforeConnect', 'Channel', 'Open']);
 	});
 
+	it('Send measures strings as UTF-8 bytes for backpressure', function () {
+		var pressure = [];
+		var rtc = Elemenx.Network.WebRTC({QueueHighWaterMark: 3});
+
+		rtc.On('Transport.Backpressure', function (event) {
+			pressure.push(event.Data.Bytes);
+		});
+		rtc.Connect();
+		rtc.DataChannel().Open();
+
+		expect(rtc.Send('ыы')).toBe(false);
+		expect(pressure).toEqual([4]);
+	});
+
 	it('negotiation methods return the WebRTC object and no Promise', function () {
 		var rtc = Elemenx.Network.WebRTC({ChannelName: 'data'});
 		var returned = [rtc.CreateOffer(), rtc.AcceptOffer({type: 'offer', sdp: 'x'}), rtc.AcceptAnswer({type: 'answer', sdp: 'x'}), rtc.AddICECandidate({candidate: 'x'})];

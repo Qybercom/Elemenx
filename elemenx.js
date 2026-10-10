@@ -7,7 +7,7 @@
  *
  * Sections, top to bottom:
  *   Runtime                  private state shared by all modules through the Runtime object
- *   Utilities                small helpers shared by every module (Own, Assign, Report, Notify, Invoke)
+ *   Utilities                small helpers shared by every module (Own, Assign, AbsoluteURL, OwnerRegistry, EventList, Countdown, MessageListeners, Report, Notify, Invoke)
  *   Identity                 Elemenx.RuntimeID, StartedAt, Title
  *   Outlet                   render slot that swaps one component for another
  *   Reactive                 reactive state: proxies, dependency tracking, effects, batching
@@ -39,7 +39,7 @@
 	Runtime.StartedAt = new Date();
 
 	/* Utilities */
-	(function () {
+	(function (global) {
 		'use strict';
 
 		Runtime.Own = function (object, key) {
@@ -78,6 +78,157 @@
 			}
 		};
 
+		/* Resolves a URL against the document; outside a document (in a worker) the value is kept as it is. */
+		Runtime.AbsoluteURL = function (url) {
+			if (!Runtime.HasDOM) return String(url);
+
+			return new URL(String(url), global.location.href).href;
+		};
+
+		/*
+		 * Resources created on behalf of an owner (a Service, Component or Application). They leave the registry when
+		 * they are destroyed themselves, and the rest is destroyed with the owner. A destroyed owner cannot get new ones.
+		 */
+		Runtime.OwnerRegistry = function () {
+			var owners = new WeakMap();
+			var destroyed = new WeakSet();
+
+			return {
+				Add: function (owner, resource) {
+					var list;
+
+					if (!owner) return;
+
+					list = owners.get(owner);
+
+					if (!list) {
+						list = [];
+
+						owners.set(owner, list);
+					}
+
+					list.push(resource);
+				},
+				Remove: function (owner, resource) {
+					var list = owner ? owners.get(owner) : null;
+					var index;
+
+					if (!list) return;
+
+					index = list.indexOf(resource);
+
+					if (index !== -1)
+						list.splice(index, 1);
+				},
+				Destroyed: function (owner) {
+					return !!owner && destroyed.has(owner);
+				},
+				Destroy: function (owner) {
+					var list;
+
+					if (!owner || destroyed.has(owner)) return;
+
+					destroyed.add(owner);
+
+					list = owners.get(owner);
+
+					if (!list) return;
+
+					while (list.length)
+						list[0].Destroy();
+
+					owners.delete(owner);
+				}
+			};
+		};
+
+		/* Listeners of the named events of one object. Emit calls each of them in isolation (see Notify) with one shared event. */
+		Runtime.EventList = function () {
+			var listeners = {};
+
+			return {
+				Add: function (name, callback) {
+					if (!listeners[name])
+						listeners[name] = [];
+
+					listeners[name].push(callback);
+				},
+				Remove: function (name, callback) {
+					var list = listeners[name];
+					var index;
+
+					if (!list) return;
+
+					index = list.indexOf(callback);
+
+					if (index !== -1)
+						list.splice(index, 1);
+				},
+				Emit: function (name, event) {
+					var copy = (listeners[name] || []).slice();
+					var i = 0;
+
+					while (i < copy.length) {
+						Runtime.Notify(copy[i], undefined, [event]);
+
+						i++;
+					}
+				},
+				Clear: function () {
+					listeners = {};
+				}
+			};
+		};
+
+		/* Waits for count asynchronous steps: callback (error) on the first failure, or callback (null) once all succeeded. */
+		Runtime.Countdown = function (count, callback) {
+			var remaining = count;
+			var failed = false;
+
+			return function (error) {
+				if (failed) return;
+
+				if (error) {
+					failed = true;
+
+					callback(error);
+
+					return;
+				}
+
+				remaining--;
+
+				if (!remaining)
+					callback(null);
+			};
+		};
+
+		/* Listeners of the global message event added through a wrapper, removable by their own callback. */
+		Runtime.MessageListeners = function () {
+			var handlers = [];
+
+			return {
+				Add: function (callback, wrapper) {
+					handlers.push({Callback: callback, Wrapper: wrapper});
+
+					global.addEventListener('message', wrapper);
+				},
+				Remove: function (callback) {
+					var i = handlers.length - 1;
+
+					while (i >= 0) {
+						if (handlers[i].Callback === callback) {
+							global.removeEventListener('message', handlers[i].Wrapper);
+
+							handlers.splice(i, 1);
+						}
+
+						i--;
+					}
+				}
+			};
+		};
+
 		Runtime.Assign = function (target, source) {
 			var key;
 
@@ -88,7 +239,7 @@
 
 			return target;
 		};
-	})();
+	})(typeof globalThis !== 'undefined' ? globalThis : self);
 
 	/* Identity */
 	(function (global) {
@@ -676,7 +827,6 @@
 
 				var entries;
 				var remaining;
-				var failed = false;
 				var i = 0;
 
 				try {
@@ -702,22 +852,7 @@
 					return;
 				}
 
-				function complete (entryError) {
-					if (failed) return;
-
-					if (entryError) {
-						failed = true;
-
-						callback(entryError);
-
-						return;
-					}
-
-					remaining--;
-
-					if (!remaining)
-						callback(null);
-				}
+				var complete = Runtime.Countdown(remaining, callback);
 
 				while (i < entries.length) {
 					(function (entry) {
@@ -866,32 +1001,26 @@
 			var callbacks;
 			var i;
 
+			/* Retries this load once the Discovery graph of the owner is built. */
+			function retry (error) {
+				if (error) {
+					if (callback)
+						callback(error);
+
+					return;
+				}
+
+				load(application, type, name, force, callback);
+			}
+
 			if (!url && building) {
-				building.push(function (error) {
-					if (error) {
-						if (callback)
-							callback(error);
-
-						return;
-					}
-
-					load(application, type, name, force, callback);
-				});
+				building.push(retry);
 
 				return true;
 			}
 
 			if (!url && !map && application && roots.get(application)) {
-				build(application, roots.get(application), function (error) {
-					if (error) {
-						if (callback)
-							callback(error);
-
-						return;
-					}
-
-					load(application, type, name, force, callback);
-				});
+				build(application, roots.get(application), retry);
 
 				return true;
 			}
@@ -964,7 +1093,6 @@
 			var names = [];
 			var name;
 			var remaining;
-			var failed = false;
 			var i = 0;
 			var pattern = new RegExp('(?:^|/)' + directory + '(?:/|$)', 'i');
 
@@ -987,22 +1115,7 @@
 				return;
 			}
 
-			function complete (error) {
-				if (failed) return;
-
-				if (error) {
-					failed = true;
-
-					callback(error);
-
-					return;
-				}
-
-				remaining--;
-
-				if (!remaining)
-					callback(null);
-			}
+			var complete = Runtime.Countdown(remaining, callback);
 
 			while (i < names.length) {
 				load(application, type, names[i], false, complete);
@@ -1129,24 +1242,8 @@
 			}
 
 			var remaining = entries.length;
-			var failed = false;
 
-			function complete (error) {
-				if (failed) return;
-
-				if (error) {
-					failed = true;
-
-					callback(error);
-
-					return;
-				}
-
-				remaining--;
-
-				if (!remaining)
-					callback(null);
-			}
+			var complete = Runtime.Countdown(remaining, callback);
 
 			i = 0;
 
@@ -3767,6 +3864,16 @@
 						ready(null, localFactory);
 					}
 
+					function withTemplate (error, html) {
+						if (error) {
+							ready(error);
+
+							return;
+						}
+
+						loadStyle(html);
+					}
+
 					function loadStyle (html) {
 						if (!definition.$StyleURL || definition.$Style !== undefined) {
 							finish(html, definition.$Style);
@@ -3786,28 +3893,12 @@
 					}
 
 					if (definition.$TemplateURL && definition.$Template === undefined) {
-						loadTemplateURL(definition.$TemplateURL, false, function (error, html) {
-							if (error) {
-								ready(error);
-
-								return;
-							}
-
-							loadStyle(html);
-						});
+						loadTemplateURL(definition.$TemplateURL, false, withTemplate);
 					}
 					else if (definition.$Template === undefined) {
 						templateID = definition.$TemplateID || name;
 
-						Runtime.Template.Resolve(templateID, function (error, html) {
-							if (error) {
-								ready(error);
-
-								return;
-							}
-
-							loadStyle(html);
-						});
+						Runtime.Template.Resolve(templateID, withTemplate);
 					}
 					else {
 						loadStyle(definition.$Template);
@@ -7028,6 +7119,68 @@
 		var invoke = Runtime.Invoke;
 		var NetworkProtocols = {};
 
+		/* Network: shared helpers */
+		var textEncoder = global.TextEncoder ? new global.TextEncoder() : null;
+
+		/* Size of a payload in bytes: a string counts as UTF-8, a binary value by its length. */
+		function NetworkByteLength (value) {
+			if (value === null || value === undefined) return 0;
+
+			if (typeof value === 'string')
+				return textEncoder ? textEncoder.encode(value).byteLength : value.length * 2;
+
+			if (value instanceof global.ArrayBuffer) return value.byteLength;
+			if (global.ArrayBuffer.isView(value)) return value.byteLength;
+			if (global.Blob && value instanceof global.Blob) return value.size;
+
+			return 0;
+		}
+
+		/* Adds one or several values of a request header. */
+		function NetworkAddHeader (headers, key, value) {
+			var name = String(key);
+			var values = Array.isArray(value) ? value : [value];
+			var i = 0;
+
+			if (!headers[name])
+				headers[name] = [];
+
+			while (i < values.length) {
+				headers[name].push(values[i]);
+
+				i++;
+			}
+		}
+
+		/* Emits a Transport event of a resource; Open and Close also stamp its lifecycle. */
+		function NetworkTransportEvent (api, events, type, value) {
+			if (type === 'Open' && api && api._LifecycleConnected)
+				api._LifecycleConnected();
+
+			if (type === 'Close' && api && api._LifecycleClosed)
+				api._LifecycleClosed();
+
+			return events.Emit('Transport', type, value);
+		}
+
+		/* Encodes an outbound value with the Protocol of a resource, if it has one. */
+		function NetworkEncode (protocol, api, input) {
+			if (!protocol || typeof protocol.Encode !== 'function') return input;
+
+			return protocol.Encode.call(api, input, api);
+		}
+
+		/* Decodes an inbound value with the Protocol of a resource: the decoded {Type, Data}, or null. */
+		function NetworkDecode (protocol, api, input) {
+			var decoded;
+
+			if (!protocol || typeof protocol.Decode !== 'function') return null;
+
+			decoded = protocol.Decode.call(api, input, api);
+
+			return decoded && decoded.Type ? decoded : null;
+		}
+
 		/* Network: lifecycle and structured envelope */
 		function NetworkStarted (target) {
 			var startedAt = new Date();
@@ -7357,18 +7510,7 @@
 			var api;
 
 			function addHeader (key, value) {
-				var name = String(key);
-				var values = Array.isArray(value) ? value : [value];
-				var i = 0;
-
-				if (!headers[name])
-					headers[name] = [];
-
-				while (i < values.length) {
-					headers[name].push(values[i]);
-
-					i++;
-				}
+				NetworkAddHeader(headers, key, value);
 			}
 
 			function transport (type, data) {
@@ -7380,18 +7522,13 @@
 			}
 
 			function decode (input, transportEvent) {
-				if (!protocol || typeof protocol.Decode !== 'function') return;
-
-				var decoded = protocol.Decode.call(api, input, api);
-				if (!decoded || !decoded.Type) return;
-
-				protocolEvent(decoded.Type, decoded.Data, transportEvent);
+				var decoded = NetworkDecode(protocol, api, input);
+				if (decoded)
+					protocolEvent(decoded.Type, decoded.Data, transportEvent);
 			}
 
 			function encode (input) {
-				if (!protocol || typeof protocol.Encode !== 'function') return input;
-
-				return protocol.Encode.call(api, input, api);
+				return NetworkEncode(protocol, api, input);
 			}
 
 			function responseHeaders (nativeXHR) {
@@ -7645,28 +7782,11 @@
 			var api;
 
 			function addHeader (key, value) {
-				var name = String(key);
-				var values = Array.isArray(value) ? value : [value];
-				var i = 0;
-
-				if (!headers[name])
-					headers[name] = [];
-
-				while (i < values.length) {
-					headers[name].push(values[i]);
-
-					i++;
-				}
+				NetworkAddHeader(headers, key, value);
 			}
 
 			function transport (type, value) {
-				if (type === 'Open' && api && api._LifecycleConnected)
-					api._LifecycleConnected();
-
-				if (type === 'Close' && api && api._LifecycleClosed)
-					api._LifecycleClosed();
-
-				return events.Emit('Transport', type, value);
+				return NetworkTransportEvent(api, events, type, value);
 			}
 
 			function protocolEvent (type, value, transportEvent) {
@@ -7709,9 +7829,7 @@
 			}
 
 			function encode (input) {
-				if (!protocol || typeof protocol.Encode !== 'function') return input;
-
-				return protocol.Encode.call(api, input, api);
+				return NetworkEncode(protocol, api, input);
 			}
 
 			function fetchHeaders () {
@@ -8020,28 +8138,11 @@
 			var api;
 
 			function addHeader (key, value) {
-				var name = String(key);
-				var values = Array.isArray(value) ? value : [value];
-				var i = 0;
-
-				if (!headers[name])
-					headers[name] = [];
-
-				while (i < values.length) {
-					headers[name].push(values[i]);
-
-					i++;
-				}
+				NetworkAddHeader(headers, key, value);
 			}
 
 			function transport (type, value) {
-				if (type === 'Open' && api && api._LifecycleConnected)
-					api._LifecycleConnected();
-
-				if (type === 'Close' && api && api._LifecycleClosed)
-					api._LifecycleClosed();
-
-				return events.Emit('Transport', type, value);
+				return NetworkTransportEvent(api, events, type, value);
 			}
 
 			function protocolEvent (type, value, transportEvent) {
@@ -8061,9 +8162,7 @@
 			}
 
 			function encode (input) {
-				if (!protocol || typeof protocol.Encode !== 'function') return input;
-
-				return protocol.Encode.call(api, input, api);
+				return NetworkEncode(protocol, api, input);
 			}
 
 			function schedule (currentGeneration) {
@@ -8335,14 +8434,8 @@
 			var events;
 			var api;
 
-			function transport (type, data) {
-				if (type === 'Open' && api && api._LifecycleConnected)
-					api._LifecycleConnected();
-
-				if (type === 'Close' && api && api._LifecycleClosed)
-					api._LifecycleClosed();
-
-				return events.Emit('Transport', type, data);
+			function transport (type, value) {
+				return NetworkTransportEvent(api, events, type, value);
 			}
 
 			function protocolEvent (type, data, transportEvent) {
@@ -8350,12 +8443,9 @@
 			}
 
 			function decode (input, transportEvent) {
-				if (!protocol || typeof protocol.Decode !== 'function') return;
-
-				var decoded = protocol.Decode.call(api, input, api);
-				if (!decoded || !decoded.Type) return;
-
-				protocolEvent(decoded.Type, decoded.Data, transportEvent);
+				var decoded = NetworkDecode(protocol, api, input);
+				if (decoded)
+					protocolEvent(decoded.Type, decoded.Data, transportEvent);
 			}
 
 			api = {
@@ -8565,14 +8655,10 @@
 
 		/* Hands a chunk to callback (error, buffer) as an ArrayBuffer, always asynchronously. */
 		function toArrayBuffer (value, callback) {
-			if (value instanceof ArrayBuffer) {
-				defer(callback, null, value);
+			var buffer = binary(value);
 
-				return;
-			}
-
-			if (ArrayBuffer.isView(value)) {
-				defer(callback, null, value.buffer.slice(value.byteOffset, value.byteOffset + value.byteLength));
+			if (buffer) {
+				defer(callback, null, buffer);
 
 				return;
 			}
@@ -9326,23 +9412,6 @@
 			return null;
 		}
 
-		function payloadBytes (value) {
-			if (value === null || value === undefined) return 0;
-
-			if (typeof value === 'string') {
-				if (global.TextEncoder)
-					return new global.TextEncoder().encode(value).byteLength;
-
-				return value.length * 2;
-			}
-
-			if (value instanceof global.ArrayBuffer) return value.byteLength;
-			if (global.ArrayBuffer && global.ArrayBuffer.isView && global.ArrayBuffer.isView(value)) return value.byteLength;
-			if (global.Blob && value instanceof global.Blob) return value.size;
-
-			return 0;
-		}
-
 		/* Network: Transfer */
 		function NetworkTransfer (configuration) {
 			var config = configuration || {};
@@ -9577,7 +9646,7 @@
 					if (response instanceof Blob) bytes = response.size;
 					else if (response instanceof ArrayBuffer) bytes = response.byteLength;
 					else if (ArrayBuffer.isView(response)) bytes = response.byteLength;
-					else if (response !== null && response !== undefined) bytes = payloadBytes(response);
+					else if (response !== null && response !== undefined) bytes = NetworkByteLength(response);
 
 					loaded = bytes || loaded;
 
@@ -9882,12 +9951,11 @@
 			}
 
 			function bytes (value) {
-				if (value instanceof ArrayBuffer) return value;
+				var buffer = binary(value);
+				if (!buffer)
+					throw new Error('Elemenx Protocol must decode transfer chunk Data to binary');
 
-				if (ArrayBuffer.isView(value))
-					return value.buffer.slice(value.byteOffset, value.byteOffset + value.byteLength);
-
-				throw new Error('Elemenx Protocol must decode transfer chunk Data to binary');
+				return buffer;
 			}
 
 			function receivePacket (packet) {
@@ -10062,14 +10130,8 @@
 			var events;
 			var api;
 
-			function transport (type, data) {
-				if (type === 'Open' && api && api._LifecycleConnected)
-					api._LifecycleConnected();
-
-				if (type === 'Close' && api && api._LifecycleClosed)
-					api._LifecycleClosed();
-
-				return events.Emit('Transport', type, data);
+			function transport (type, value) {
+				return NetworkTransportEvent(api, events, type, value);
 			}
 
 			function protocolEvent (type, data, transportEvent) {
@@ -10077,18 +10139,13 @@
 			}
 
 			function decode (input, transportEvent) {
-				if (!protocol || typeof protocol.Decode !== 'function') return;
-
-				var decoded = protocol.Decode.call(api, input, api);
-				if (!decoded || !decoded.Type) return;
-
-				protocolEvent(decoded.Type, decoded.Data, transportEvent);
+				var decoded = NetworkDecode(protocol, api, input);
+				if (decoded)
+					protocolEvent(decoded.Type, decoded.Data, transportEvent);
 			}
 
 			function encode (input) {
-				if (!protocol || typeof protocol.Encode !== 'function') return input;
-
-				return protocol.Encode.call(api, input, api);
+				return NetworkEncode(protocol, api, input);
 			}
 
 			function encodedBytes (value) {
@@ -10370,14 +10427,8 @@
 			var events;
 			var api;
 
-			function transport (type, data) {
-				if (type === 'Open' && api && api._LifecycleConnected)
-					api._LifecycleConnected();
-
-				if (type === 'Close' && api && api._LifecycleClosed)
-					api._LifecycleClosed();
-
-				return events.Emit('Transport', type, data);
+			function transport (type, value) {
+				return NetworkTransportEvent(api, events, type, value);
 			}
 
 			function protocolEvent (type, data, transportEvent) {
@@ -10385,37 +10436,31 @@
 			}
 
 			function decode (input, transportEvent) {
-				if (!protocol || typeof protocol.Decode !== 'function') return;
-
-				var decoded = protocol.Decode.call(api, input, api);
-				if (!decoded || !decoded.Type) return;
-
-				protocolEvent(decoded.Type, decoded.Data, transportEvent);
+				var decoded = NetworkDecode(protocol, api, input);
+				if (decoded)
+					protocolEvent(decoded.Type, decoded.Data, transportEvent);
 			}
 
 			function encode (input) {
-				if (!protocol || typeof protocol.Encode !== 'function') return input;
+				return NetworkEncode(protocol, api, input);
+			}
 
-				return protocol.Encode.call(api, input, api);
+			/* After setLocalDescription: publishes the local description of a connection that is still the current one. */
+			function localDescriptionSet (currentGeneration, currentConnection) {
+				return function () {
+					if (!current(currentGeneration, currentConnection)) return null;
+
+					transport('LocalDescription', {
+						Description: currentConnection.localDescription,
+						Connection: currentConnection
+					});
+
+					return currentConnection.localDescription;
+				};
 			}
 
 			function current (currentGeneration, currentConnection) {
 				return (active && currentGeneration === generation && connection === currentConnection);
-			}
-
-			function dataSize (data) {
-				if (typeof data === 'string') {
-					if (global.TextEncoder)
-						return new global.TextEncoder().encode(data).byteLength;
-
-					return data.length * 2;
-				}
-
-				if (data instanceof global.ArrayBuffer) return data.byteLength;
-				if (global.ArrayBuffer && global.ArrayBuffer.isView && global.ArrayBuffer.isView(data)) return data.byteLength;
-				if (global.Blob && data instanceof global.Blob) return data.size;
-
-				return 0;
 			}
 
 			function pressureBytes () {
@@ -10738,16 +10783,7 @@
 					return negotiate('CreateOffer', callback, currentConnection.createOffer().then(function (description) {
 						if (!current(currentGeneration, currentConnection)) return null;
 
-						return currentConnection.setLocalDescription(description).then(function () {
-							if (!current(currentGeneration, currentConnection)) return null;
-
-							transport('LocalDescription', {
-								Description: currentConnection.localDescription,
-								Connection: currentConnection
-							});
-
-							return currentConnection.localDescription;
-						});
+						return currentConnection.setLocalDescription(description).then(localDescriptionSet(currentGeneration, currentConnection));
 					}));
 				},
 
@@ -10770,16 +10806,7 @@
 						.then(function (answer) {
 							if (!answer || !current(currentGeneration, currentConnection)) return null;
 
-							return currentConnection.setLocalDescription(answer).then(function () {
-								if (!current(currentGeneration, currentConnection)) return null;
-
-								transport('LocalDescription', {
-									Description: currentConnection.localDescription,
-									Connection: currentConnection
-								});
-
-								return currentConnection.localDescription;
-							});
+							return currentConnection.setLocalDescription(answer).then(localDescriptionSet(currentGeneration, currentConnection));
 						}));
 				},
 
@@ -10813,7 +10840,7 @@
 					if (!channel || channel.readyState !== 'open') return false;
 
 					var encoded = encode(data);
-					var bytes = dataSize(encoded);
+					var bytes = NetworkByteLength(encoded);
 					var pressure = pressureBytes();
 
 					if (saturated || pressure + bytes > queueHighWaterMark) {
@@ -10985,23 +11012,9 @@
 			var sampleWindow = typeof config.Window === 'number' && config.Window > 0 ? config.Window : 250;
 			var sampleInterval = typeof config.Interval === 'number' && config.Interval > 0 ? config.Interval : 50;
 			var timer = null;
-			var encoder = global.TextEncoder ? new global.TextEncoder() : null;
 
 			function now () {
 				return global.performance && typeof global.performance.now === 'function' ? global.performance.now() : Date.now();
-			}
-
-			function bytes (value) {
-				if (value === null || value === undefined) return 0;
-
-				if (typeof value === 'string')
-					return encoder ? encoder.encode(value).byteLength : new Blob([value]).size;
-
-				if (value instanceof ArrayBuffer) return value.byteLength;
-				if (global.ArrayBuffer && global.ArrayBuffer.isView && global.ArrayBuffer.isView(value)) return value.byteLength;
-				if (value instanceof Blob) return value.size;
-
-				return 0;
 			}
 
 			function elapsed () {
@@ -11294,7 +11307,7 @@
 				bind('Transport.AfterSend', function (event) {
 					if (!running) return;
 
-					var delta = bytes(event && event.Data && own(event.Data, 'Data') ? event.Data.Data : event ? event.Data : null);
+					var delta = NetworkByteLength(event && event.Data && own(event.Data, 'Data') ? event.Data.Data : event ? event.Data : null);
 					if (delta > 0)
 						beginDirection('TX', now());
 
@@ -11309,7 +11322,7 @@
 				bind('Transport.Data', function (event) {
 					if (!running) return;
 
-					var delta = bytes(event && event.Data && own(event.Data, 'Data') ? event.Data.Data : event ? event.Data : null);
+					var delta = NetworkByteLength(event && event.Data && own(event.Data, 'Data') ? event.Data.Data : event ? event.Data : null);
 					if (delta > 0)
 						beginDirection('RX', now());
 
@@ -11949,31 +11962,17 @@
 		}
 
 		function createStorageOperation (executor) {
-			var listeners = {};
+			var listeners = Runtime.EventList();
 			var executed = false;
 			var finished = false;
 
 			function emit (name, data) {
-				var copy = (listeners[name] || []).slice();
-				var event = {
-					Type: name,
-					Data: data
-				};
-				var i = 0;
-
-				while (i < copy.length) {
-					Runtime.Notify(copy[i], undefined, [event]);
-
-					i++;
-				}
+				listeners.Emit(name, {Type: name, Data: data});
 			}
 
 			var operation = {
 				On: function (name, callback) {
-					if (!listeners[name])
-						listeners[name] = [];
-
-					listeners[name].push(callback);
+					listeners.Add(name, callback);
 
 					return this;
 				},
@@ -12316,24 +12315,13 @@
 			}
 
 			function createTransactionRequest (request) {
-				var listeners = {};
+				var listeners = Runtime.EventList();
 				var settled = false;
 				var succeeded = false;
 				var result;
 
 				function emit (name, data) {
-					var copy = (listeners[name] || []).slice();
-					var event = {
-						Type: name,
-						Data: data
-					};
-					var i = 0;
-
-					while (i < copy.length) {
-						Runtime.Notify(copy[i], undefined, [event]);
-
-						i++;
-					}
+					listeners.Emit(name, {Type: name, Data: data});
 				}
 
 				request.onsuccess = function () {
@@ -12352,10 +12340,7 @@
 
 				return {
 					On: function (name, callback) {
-						if (!listeners[name])
-							listeners[name] = [];
-
-						listeners[name].push(callback);
+						listeners.Add(name, callback);
 
 						if (settled && name === 'Success' && succeeded)
 							callback({Type: name, Data: result});
@@ -12701,8 +12686,7 @@
 		'use strict';
 
 		var Elemenx = global.Elemenx;
-		var owners = new WeakMap();
-		var destroyedOwners = new WeakSet();
+		var ownedResources = Runtime.OwnerRegistry();
 		var sockets = [];
 		var sequence = 0;
 		var pipeTypes = {};
@@ -13065,14 +13049,7 @@
 				if (index !== -1)
 					sockets.splice(index, 1);
 
-				if (owner && owners.has(owner)) {
-					var list = owners.get(owner);
-
-					index = list.indexOf(api);
-
-					if (index !== -1)
-						list.splice(index, 1);
-				}
+				ownedResources.Remove(owner, api);
 
 				var keys = Object.keys(pipelines);
 				var i = 0;
@@ -13091,12 +13068,7 @@
 
 			sockets.push(api);
 
-			if (owner) {
-				if (!owners.has(owner))
-					owners.set(owner, []);
-
-				owners.get(owner).push(api);
-			}
+			ownedResources.Add(owner, api);
 
 			return api;
 		}
@@ -13110,7 +13082,7 @@
 		Elemenx.Events = Events;
 		Runtime.EventsFor = function (owner) {
 			return function () {
-				if (destroyedOwners.has(owner))
+				if (ownedResources.Destroyed(owner))
 					throw new Error('Elemenx Events owner is destroyed');
 
 				return EventsSocket(owner);
@@ -13147,17 +13119,7 @@
 			return socket;
 		};
 		Runtime.DestroyEventsOwner = function (owner) {
-			if (!owner || destroyedOwners.has(owner)) return;
-
-			destroyedOwners.add(owner);
-
-			var list = owners.get(owner);
-			if (!list) return;
-
-			while (list.length)
-				list[0].Destroy();
-
-			owners.delete(owner);
+			ownedResources.Destroy(owner);
 		};
 	})(typeof globalThis !== 'undefined' ? globalThis : self);
 
@@ -13168,8 +13130,7 @@
 		var Elemenx = global.Elemenx;
 		var own = Runtime.Own;
 		var contexts = {};
-		var owners = new WeakMap();
-		var destroyedOwners = new WeakSet();
+		var ownedResources = Runtime.OwnerRegistry();
 		var entities = new WeakMap();
 		var globalSequence = 0;
 		var windowBridges = typeof WeakMap === 'function' ? new WeakMap() : null;
@@ -13606,15 +13567,7 @@
 
 				messagingFabric.Remove(api);
 
-				if (owner) {
-					var list = owners.get(owner);
-
-					if (list) {
-						var i = list.indexOf(api);
-						if (i !== -1)
-							list.splice(i, 1);
-					}
-				}
+				ownedResources.Remove(owner, api);
 			}
 
 			function applyContext (input) {
@@ -13661,12 +13614,7 @@
 
 			messagingFabric.Add(api);
 
-			if (owner) {
-				if (!owners.has(owner))
-					owners.set(owner, []);
-
-				owners.get(owner).push(api);
-			}
+			ownedResources.Add(owner, api);
 
 			if (context)
 				applyContext(context);
@@ -13676,7 +13624,7 @@
 
 		function WindowBridge (target, options, owner) {
 			var origin;
-			var handlers = [];
+			var handlers = Runtime.MessageListeners();
 			var bridge;
 			var handle;
 			var destroyed = false;
@@ -13743,24 +13691,11 @@
 						callback(messageEvent);
 					};
 
-					handlers.push({Callback: callback, Wrapper: wrapper});
-
-					global.addEventListener('message', wrapper);
+					handlers.Add(callback, wrapper);
 				},
 				removeEventListener: function (event, callback) {
-					if (event !== 'message') return;
-
-					var i = handlers.length - 1;
-
-					while (i >= 0) {
-						if (handlers[i].Callback === callback) {
-							global.removeEventListener('message', handlers[i].Wrapper);
-
-							handlers.splice(i, 1);
-						}
-
-						i--;
-					}
+					if (event === 'message')
+						handlers.Remove(callback);
 				}
 			};
 
@@ -13838,15 +13773,7 @@
 						}
 					}
 
-					if (owner) {
-						var list = owners.get(owner);
-
-						if (list) {
-							var index = list.indexOf(handle);
-							if (index !== -1)
-								list.splice(index, 1);
-						}
-					}
+					ownedResources.Remove(owner, handle);
 				}
 			};
 
@@ -13862,12 +13789,7 @@
 				registry[origin] = handle;
 			}
 
-			if (owner) {
-				if (!owners.has(owner))
-					owners.set(owner, []);
-
-				owners.get(owner).push(handle);
-			}
+			ownedResources.Add(owner, handle);
 
 			return handle;
 		}
@@ -13971,14 +13893,14 @@
 
 		Runtime.MessagingFor = function (owner) {
 			var accessor = function (context) {
-				if (destroyedOwners.has(owner))
+				if (ownedResources.Destroyed(owner))
 					throw new Error('Elemenx Messaging owner is destroyed');
 
 				return MessagingSocket(context, owner);
 			};
 
 			accessor.Window = function (target, options) {
-				if (destroyedOwners.has(owner))
+				if (ownedResources.Destroyed(owner))
 					throw new Error('Elemenx Messaging owner is destroyed');
 
 				return WindowBridge(target, options, owner);
@@ -14072,17 +13994,7 @@
 		}
 
 		Runtime.DestroyMessagingOwner = function (owner) {
-			if (!owner || destroyedOwners.has(owner)) return;
-
-			destroyedOwners.add(owner);
-
-			var list = owners.get(owner);
-			if (!list) return;
-
-			while (list.length)
-				list[0].Destroy();
-
-			owners.delete(owner);
+			ownedResources.Destroy(owner);
 		};
 	})(typeof globalThis !== 'undefined' ? globalThis : self);
 
@@ -14093,16 +14005,9 @@
 		var Elemenx = global.Elemenx;
 		var own = Runtime.Own;
 		var definitions = {};
-		var owners = new WeakMap();
-		var destroyedOwners = new WeakSet();
+		var ownedResources = Runtime.OwnerRegistry();
 		var handles = [];
 		var manualStops = new WeakMap();
-
-		function absoluteURL (url) {
-			if (!Runtime.HasDOM) return String(url);
-
-			return new URL(String(url), global.location.href).href;
-		}
 
 		function normalizeDefinition (name, definition) {
 			var result = Runtime.Assign({}, definition || {});
@@ -14135,48 +14040,24 @@
 			var state = 'Stopped';
 			var destroyed = false;
 			var manualStopped = false;
-			var listeners = {};
+			var listeners = Runtime.EventList();
 			var api;
 
 			function Emit (event, data) {
-				var list = listeners[event];
-				if (!list) return;
-
-				var copy = list.slice();
-				var i = 0;
-
-				while (i < copy.length) {
-					Runtime.Notify(copy[i], undefined, [{
-						Type: event,
-						Worker: api,
-						State: state,
-						Data: data
-					}]);
-
-					i++;
-				}
+				listeners.Emit(event, {Type: event, Worker: api, State: state, Data: data});
 			}
 
 			function On (event, callback) {
 				if (typeof callback !== 'function')
 					throw new Error('Elemenx WebWorker.On callback must be a function');
 
-				if (!listeners[event])
-					listeners[event] = [];
-
-				listeners[event].push(callback);
+				listeners.Add(event, callback);
 
 				return api;
 			}
 
 			function Off (event, callback) {
-				var list = listeners[event];
-				if (!list)
-					return api;
-
-				var index = list.indexOf(callback);
-				if (index !== -1)
-					list.splice(index, 1);
+				listeners.Remove(event, callback);
 
 				return api;
 			}
@@ -14230,9 +14111,9 @@
 				if (!frameworkURL)
 					throw new Error('Elemenx runtime script URL is unknown');
 
-				frameworkURL = absoluteURL(frameworkURL);
+				frameworkURL = Runtime.AbsoluteURL(frameworkURL);
 
-				var scriptURL = absoluteURL(definition.Script);
+				var scriptURL = Runtime.AbsoluteURL(definition.Script);
 				var source = 'importScripts(' + JSON.stringify(frameworkURL) + ');\n'
 					+ 'self.ElemenxWorkerName = ' + JSON.stringify(name) + ';\n'
 					+ 'self.ElemenxWorkerChannel = ' + JSON.stringify(String(definition.Channel)) + ';\n'
@@ -14242,6 +14123,14 @@
 				var blob = new Blob([source], {type: 'application/javascript'});
 
 				blobURL = URL.createObjectURL(blob);
+
+				function failed (event) {
+					if (destroyed) return;
+
+					state = 'Error';
+
+					Emit('Error', event);
+				}
 
 				try {
 					worker = new global.Worker(blobURL);
@@ -14258,21 +14147,8 @@
 						Emit('Running');
 					});
 
-					worker.addEventListener('error', function (event) {
-						if (destroyed) return;
-
-						state = 'Error';
-
-						Emit('Error', event);
-					});
-
-					worker.addEventListener('messageerror', function (event) {
-						if (destroyed) return;
-
-						state = 'Error';
-
-						Emit('Error', event);
-					});
+					worker.addEventListener('error', failed);
+					worker.addEventListener('messageerror', failed);
 				}
 				catch (error) {
 					cleanupNative();
@@ -14321,22 +14197,13 @@
 
 				Emit('Stop');
 
-				listeners = {};
+				listeners.Clear();
 
 				var index = handles.indexOf(api);
 				if (index !== -1)
 					handles.splice(index, 1);
 
-				if (owner) {
-					var list = owners.get(owner);
-
-					if (list) {
-						index = list.indexOf(api);
-
-						if (index !== -1)
-							list.splice(index, 1);
-					}
-				}
+				ownedResources.Remove(owner, api);
 			}
 
 			api = {
@@ -14362,12 +14229,7 @@
 
 			manualStops.set(api, false);
 
-			if (owner) {
-				if (!owners.has(owner))
-					owners.set(owner, []);
-
-				owners.get(owner).push(api);
-			}
+			ownedResources.Add(owner, api);
 
 			if (definition.StartMode === 'auto')
 				Start();
@@ -14391,7 +14253,7 @@
 
 			if (global.clients && typeof global.clients.matchAll === 'function') {
 				var routes = {};
-				var handlers = [];
+				var handlers = Runtime.MessageListeners();
 				var endpoint = {
 					postMessage: function (packet, transfer) {
 						var channel = String(packet.Channel);
@@ -14442,24 +14304,11 @@
 							callback(messageEvent);
 						};
 
-						handlers.push({Callback: callback, Wrapper: wrapper});
-
-						global.addEventListener('message', wrapper);
+						handlers.Add(callback, wrapper);
 					},
 					removeEventListener: function (event, callback) {
-						if (event !== 'message') return;
-
-						var i = handlers.length - 1;
-
-						while (i >= 0) {
-							if (handlers[i].Callback === callback) {
-								global.removeEventListener('message', handlers[i].Wrapper);
-
-								handlers.splice(i, 1);
-							}
-
-							i--;
-						}
+						if (event === 'message')
+							handlers.Remove(callback);
 					}
 				};
 
@@ -14470,17 +14319,7 @@
 		}
 
 		function DestroyOwner (owner) {
-			if (!owner || destroyedOwners.has(owner)) return;
-
-			destroyedOwners.add(owner);
-
-			var list = owners.get(owner);
-			if (!list) return;
-
-			while (list.length)
-				list[0].Destroy();
-
-			owners.delete(owner);
+			ownedResources.Destroy(owner);
 		}
 
 		function PrepareMessagingSend (channel) {
@@ -14503,7 +14342,7 @@
 
 		Runtime.WebWorkerFor = function (owner) {
 			return function (name, definition) {
-				if (destroyedOwners.has(owner))
+				if (ownedResources.Destroyed(owner))
 					throw new Error('Elemenx WebWorker owner is destroyed');
 
 				if (arguments.length === 2) {
@@ -14545,12 +14384,7 @@
 		var own = Runtime.Own;
 		var definitions = {};
 		var handles = [];
-		var owners = new WeakMap();
-		var destroyedOwners = new WeakSet();
-
-		function absoluteURL (url) {
-			return new URL(String(url), global.location.href).href;
-		}
+		var ownedResources = Runtime.OwnerRegistry();
 
 		function normalizeDefinition (name, definition) {
 			var result = Runtime.Assign({}, definition || {});
@@ -14617,21 +14451,11 @@
 			var bridge = null;
 			var state = 'Unregistered';
 			var destroyed = false;
-			var listeners = {};
+			var listeners = Runtime.EventList();
 			var api;
 
 			function Emit (event, data) {
-				var list = listeners[event];
-				if (!list) return;
-
-				var copy = list.slice();
-				var i = 0;
-
-				while (i < copy.length) {
-					Runtime.Notify(copy[i], undefined, [{Type: event, Worker: api, State: state, Data: data}]);
-
-					i++;
-				}
+				listeners.Emit(event, {Type: event, Worker: api, State: state, Data: data});
 			}
 
 			function setState (value, data) {
@@ -14646,22 +14470,13 @@
 				if (typeof callback !== 'function')
 					throw new Error('Elemenx ServiceWorker.On callback must be a function');
 
-				if (!listeners[event])
-					listeners[event] = [];
-
-				listeners[event].push(callback);
+				listeners.Add(event, callback);
 
 				return api;
 			}
 
 			function Off (event, callback) {
-				var list = listeners[event];
-				if (!list)
-					return api;
-
-				var index = list.indexOf(callback);
-				if (index !== -1)
-					list.splice(index, 1);
+				listeners.Remove(event, callback);
 
 				return api;
 			}
@@ -14719,8 +14534,8 @@
 
 				if (state !== 'Unregistered' && state !== 'Error') return api;
 
-				var frameworkURL = absoluteURL(definition.Framework || Runtime.ScriptURL);
-				var scriptURL = absoluteURL(definition.Script);
+				var frameworkURL = Runtime.AbsoluteURL(definition.Framework || Runtime.ScriptURL);
+				var scriptURL = Runtime.AbsoluteURL(definition.Script);
 				var serviceURL = frameworkURL;
 				var separator = serviceURL.indexOf('?') === -1 ? '?' : '&';
 
@@ -14764,7 +14579,7 @@
 
 			/* The registration of this scope, read through the Promise-based browser API: callback (error, registration). */
 			function registrationForScope (callback) {
-				global.navigator.serviceWorker.getRegistration(absoluteURL(definition.Scope)).then(function (value) {
+				global.navigator.serviceWorker.getRegistration(Runtime.AbsoluteURL(definition.Scope)).then(function (value) {
 					Runtime.Invoke(callback, null, value);
 				}, function (error) {
 					Runtime.Invoke(callback, error);
@@ -14866,25 +14681,14 @@
 				bridge = null;
 				active = null;
 				destroyed = true;
-				listeners = {};
+
+				listeners.Clear();
 
 				var index = handles.indexOf(api);
 				if (index !== -1)
 					handles.splice(index, 1);
 
-				if (owner) {
-					var owned = owners.get(owner);
-
-					if (owned) {
-						index = owned.indexOf(api);
-
-						if (index !== -1)
-							owned.splice(index, 1);
-
-						if (!owned.length)
-							owners.delete(owner);
-					}
-				}
+				ownedResources.Remove(owner, api);
 			}
 
 			api = {
@@ -14916,17 +14720,7 @@
 
 			handles.push(api);
 
-			if (owner) {
-				var owned = owners.get(owner);
-
-				if (!owned) {
-					owned = [];
-
-					owners.set(owner, owned);
-				}
-
-				owned.push(api);
-			}
+			ownedResources.Add(owner, api);
 
 			Register();
 
@@ -14947,24 +14741,14 @@
 		}
 
 		function DestroyOwner (owner) {
-			if (!owner || destroyedOwners.has(owner)) return;
-
-			destroyedOwners.add(owner);
-
-			var owned = owners.get(owner);
-			if (!owned) return;
-
-			while (owned.length)
-				owned[0].Destroy();
-
-			owners.delete(owner);
+			ownedResources.Destroy(owner);
 		}
 
 		Elemenx.ServiceWorker = Service;
 
 		Runtime.ServiceWorkerFor = function (owner) {
 			return function (name, definition) {
-				if (destroyedOwners.has(owner))
+				if (ownedResources.Destroyed(owner))
 					throw new Error('Elemenx ServiceWorker owner is destroyed');
 
 				if (arguments.length === 2) definition = registerDefinition(name, definition);

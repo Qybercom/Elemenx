@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../coverage/playwright.js';
 
 test('runs multi-Application dist without source graphs', async function ({ page }) {
 	await page.goto('http://127.0.0.1:4275/');

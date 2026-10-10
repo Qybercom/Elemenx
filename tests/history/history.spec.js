@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../coverage/playwright.js';
 
 async function boot (page) {
 	await page.goto('/tests/history/fixture.html');

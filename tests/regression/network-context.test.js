@@ -77,6 +77,24 @@ describe('Regression: Network contexts / ownership', function () {
 		metrics.Destroy();
 	});
 
+	it('Metrics counts strings as UTF-8 bytes', function () {
+		var callbacks = {};
+		var metrics = Elemenx.Network.Metrics({Transport: {
+			On: function (name, callback) {
+				callbacks[name] = callback;
+			},
+			Off: function () {}
+		}});
+
+		callbacks['Transport.AfterSend']({Data: {Data: 'ыы'}});
+		callbacks['Transport.Data']({Data: {Data: new Uint8Array(3)}});
+
+		expect(metrics.Snapshot().TX.Bytes).toBe(4);
+		expect(metrics.Snapshot().RX.Bytes).toBe(3);
+
+		metrics.Destroy();
+	});
+
 	it('Metrics emits namespaced lifecycle events and tracks Active state', function () {
 		var metrics = Elemenx.Network.Metrics();
 		var events = [];
