@@ -10902,6 +10902,7 @@
 			var events;
 			var running = false;
 			var measuring = false;
+			var ended = false;
 			var started = 0;
 			var stopped = 0;
 			var measureStarted = 0;
@@ -11036,7 +11037,10 @@
 			}
 
 			/* Metrics: transport listeners */
+			/* An ended measurement freezes every counter until the next Begin. */
 			function count (name, delta) {
+				if (ended) return;
+
 				if (delta > 0 && measuring)
 					metricsResume(directions[name], metricsNow());
 
@@ -11140,6 +11144,7 @@
 					if (running) return api;
 
 					running = true;
+					ended = false;
 					started = metricsNow();
 					stopped = 0;
 					samples = [];
@@ -11169,6 +11174,7 @@
 					if (!running || measuring) return api;
 
 					measuring = true;
+					ended = false;
 					measureStarted = metricsNow();
 					measureStopped = 0;
 					samples = [];
@@ -11189,6 +11195,7 @@
 					metricsEndMeasure(directions.RX, measureStopped, sampleInterval);
 
 					measuring = false;
+					ended = true;
 					samples = [];
 
 					events.Emit('Metrics', 'End', snapshot());
@@ -11201,6 +11208,7 @@
 				Reset: function () {
 					directions = {TX: metricsDirection(), RX: metricsDirection()};
 					measuring = false;
+					ended = false;
 					measureStarted = 0;
 					measureStopped = 0;
 					samples = [];

@@ -412,4 +412,117 @@ describe('Regression: ServiceWorker registration, lifecycle and messaging bridge
 		}).toThrow();
 	});
 
+	it('validates its definition and callbacks, and defaults Scope to the current directory', function () {
+		fakeEnvironment();
+
+		var handle = service(null, {Script: '/sw-application.js', Channel: unique('DefaultScope')});
+		var listener = function () {};
+
+		expect(handle.Scope()).toBe('./');
+		expect(handle.On('Error', listener).Off('Error', listener)).toBe(handle);
+		expect(function () {
+			handle.On('Error', 'not a function');
+		}).toThrow('Elemenx ServiceWorker.On callback must be a function');
+		expect(function () {
+			handle.Registered('not a function');
+		}).toThrow('Elemenx ServiceWorker.Registered callback must be a function');
+		expect(function () {
+			Elemenx.ServiceWorker(unique('UnknownServiceWorker'));
+		}).toThrow('Elemenx ServiceWorker not found: UnknownServiceWorker');
+		expect(function () {
+			Elemenx.ServiceWorker(unique('NoScript'), {Scope: '/x/'});
+		}).toThrow('Elemenx ServiceWorker Script is required');
+	});
+
+	it('a runtime without service workers refuses to register', function () {
+		Object.defineProperty(navigator, 'serviceWorker', {configurable: true, value: undefined});
+
+		expect(function () {
+			service();
+		}).toThrow('Elemenx ServiceWorker is not available in this runtime');
+	});
+
+	it('failed register, update, unregister and scope lookups move the handle to Error', async function () {
+		var env = fakeEnvironment();
+		var failing = function () {
+			return Promise.reject(new Error('browser refused'));
+		};
+		var errors = [];
+
+		env.Container.register = failing;
+
+		var handle = service(env);
+
+		handle.On('Error', function (event) {
+			errors.push(event.Data.message);
+		});
+
+		expect(await waitFor(function () { return handle.State() === 'Error'; }, 1000)).toBe(true);
+
+		env.Container.register = function () {
+			return Promise.resolve(env.Registration);
+		};
+
+		handle.Register();
+
+		expect(await waitFor(function () { return handle.State() === 'Active'; }, 1000)).toBe(true);
+
+		env.Registration.update = failing;
+
+		handle.Update();
+
+		expect(await waitFor(function () { return handle.State() === 'Error'; }, 1000)).toBe(true);
+
+		env.Registration.unregister = failing;
+
+		handle.Unregister();
+
+		expect(await waitFor(function () { return errors.length === 3; }, 1000)).toBe(true);
+
+		env.Registration.unregister = function () {
+			return Promise.resolve(true);
+		};
+		env.Container.getRegistration = failing;
+
+		handle.Unregister();
+
+		expect(await waitFor(function () { return errors.length === 4; }, 1000)).toBe(true);
+		expect(errors).toEqual(['browser refused', 'browser refused', 'browser refused', 'browser refused']);
+	});
+
+	it('Unregister without a known registration looks it up by scope', async function () {
+		var env = fakeEnvironment();
+		var registered = true;
+
+		env.Container.register = function () {
+			return Promise.reject(new Error('not now'));
+		};
+		env.Container.getRegistration = function () {
+			return Promise.resolve(registered ? env.Registration : undefined);
+		};
+
+		var handle = service(env);
+
+		expect(await waitFor(function () { return handle.State() === 'Error'; }, 1000)).toBe(true);
+
+		handle.Unregister();
+
+		/* the scope still has a registration: it is unregistered, but it stays registered, so the handle stays Active */
+		expect(await waitFor(function () { return handle.State() === 'Active'; }, 1000)).toBe(true);
+		expect(env.Registration.unregisterCalls).toBe(1);
+
+		registered = false;
+
+		handle.Unregister();
+
+		expect(await waitFor(function () { return handle.State() === 'Unregistered'; }, 1000)).toBe(true);
+
+		var other = service(env, {Script: '/sw-application.js', Scope: '/sw-other/', Channel: unique('Other')});
+
+		expect(await waitFor(function () { return other.State() === 'Error'; }, 1000)).toBe(true);
+
+		other.Unregister();
+
+		expect(await waitFor(function () { return other.State() === 'Unregistered'; }, 1000)).toBe(true);
+	});
 });

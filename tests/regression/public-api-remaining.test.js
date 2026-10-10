@@ -159,15 +159,12 @@ describe('Regression: remaining public methods', function () {
 		await operation(db.Delete());
 	});
 
-	it('WebWorker and ServiceWorker Off return the handle and stop the removed listener', function () {
+	it('WebWorker Off returns the handle', function () {
 		var worker = Elemenx.WebWorker(unique('OffWorker'), {Script: '/workers/webworker-bridge.js', StartMode: 'manual'});
-		var serviceWorker = Elemenx.ServiceWorker(unique('OffServiceWorker'), {Script: '/sw-application.js', Scope: '/sw-scope/', StartMode: 'manual'});
 		var listener = function () {};
 
-		owned.push(worker, serviceWorker);
+		owned.push(worker);
 
 		expect(worker.On('Error', listener).Off('Error', listener)).toBe(worker);
-		expect(serviceWorker.On('Error', listener).Off('Error', listener)).toBe(serviceWorker);
-		expect(serviceWorker.Off('Unknown', listener)).toBe(serviceWorker);
 	});
 });

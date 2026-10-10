@@ -235,11 +235,8 @@ describe('Regression: Network contexts / ownership', function () {
 			RX: direction(53, 0, 53 * 1000 / 90, 331.25, 333.3333333333333, 90, false)
 		}, totals(353, 200, 200, false, true)));
 
-		/* traffic after End still counts bytes, but the finished measurement does not change */
-		expect(snapshots[2]).toEqual(Object.assign({
-			TX: direction(302, 0, 300 * 1000 / 90, 2000, 3000, 90, false),
-			RX: direction(53, 0, 53 * 1000 / 90, 331.25, 333.3333333333333, 90, false)
-		}, totals(355, 200, 200, false, true)));
+		/* traffic after End changes nothing: the counters stay frozen until the next Begin */
+		expect(snapshots[2]).toEqual(snapshots[1]);
 
 		/* Reset clears everything but keeps the meter running; Stop freezes Elapsed */
 		expect(snapshots[3]).toEqual(Object.assign({
@@ -250,7 +247,8 @@ describe('Regression: Network contexts / ownership', function () {
 			TX: direction(0, 0, 0, 0, 0, 0, false),
 			RX: direction(0, 0, 0, 0, 0, 0, false)
 		}, totals(0, 0, 0, false, false), {Elapsed: 100}));
-		expect(updates).toBe(6);
+		/* one Update per counted transfer event; the send after End is not counted */
+		expect(updates).toBe(5);
 	});
 
 	it('Metrics Begin after End starts a new measurement from zero', function () {
@@ -298,7 +296,8 @@ describe('Regression: Network contexts / ownership', function () {
 
 		expect(first.SpeedAvg).toBe(4 * 1000 / 100);
 		expect(metrics.Snapshot().TX.SpeedAvg).toBe(2 * 1000 / 100);
-		expect(metrics.Snapshot().TX.Bytes).toBe(13);
+		/* 'ignored' was sent between End and Begin, so it is not counted */
+		expect(metrics.Snapshot().TX.Bytes).toBe(6);
 
 		metrics.Destroy();
 
