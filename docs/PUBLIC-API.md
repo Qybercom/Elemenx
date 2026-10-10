@@ -73,3 +73,7 @@ The methods return the WebRTC object, like its other methods, and never a Promis
 ## Guard waiting
 
 A guard that needs time returns `this.$Wait(function (done) { ... })` and calls `done(result)` later, with the same results a synchronous guard returns. `$Wait` also accepts a ready value. A Promise is refused: the navigation is denied and `GuardFailed` receives a failure whose `Reason` is `'InvalidWait'` and whose `Data` is the error.
+
+## Exceptions in listeners and callbacks
+
+Elemenx calls event listeners the way the DOM does. An exception thrown by a listener (`On(...)` of Events, Messaging, Network objects, Storage operations, workers, `$On` of Components, Router events) is reported as an uncaught error: it reaches the console, `window.onerror` and `error` listeners with its original stack. The remaining listeners still receive the event, and the code that dispatched it is not interrupted. The same applies to callbacks Elemenx calls from asynchronous browser operations, such as WebRTC negotiation callbacks.

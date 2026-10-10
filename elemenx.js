@@ -7,7 +7,7 @@
  *
  * Sections, top to bottom:
  *   Runtime                  private state shared by all modules through the Runtime object
- *   Utilities                small helpers shared by every module (Runtime.Own, Runtime.Assign, Runtime.Invoke)
+ *   Utilities                small helpers shared by every module (Own, Assign, Report, Notify, Invoke)
  *   Identity                 Elemenx.RuntimeID, StartedAt, Title
  *   Outlet                   render slot that swaps one component for another
  *   Reactive                 reactive state: proxies, dependency tracking, effects, batching
@@ -47,19 +47,34 @@
 		};
 
 		/* Copies the own enumerable properties of source into target and returns target. */
+		/* Reports an exception as an uncaught error, like the DOM does for an exception thrown by an event listener. */
+		Runtime.Report = function (exception) {
+			setTimeout(function () {
+				throw exception;
+			}, 0);
+		};
+
 		/*
-		 * Calls a callback (error, value) from inside a promise handler. An exception thrown by the callback is
-		 * rethrown asynchronously, so it is reported as an uncaught error instead of being swallowed by the promise.
+		 * Calls one event listener in isolation: an exception it throws is reported, and the dispatch
+		 * (the next listeners and the code that emitted the event) continues.
 		 */
+		Runtime.Notify = function (listener, self, args) {
+			try {
+				listener.apply(self, args);
+			}
+			catch (exception) {
+				Runtime.Report(exception);
+			}
+		};
+
+		/* Calls a callback (error, value) from inside a promise handler, so an exception it throws is reported, not swallowed. */
 		Runtime.Invoke = function (callback, error, value) {
 			try {
 				if (error) callback(error);
 				else callback(null, value);
 			}
 			catch (exception) {
-				setTimeout(function () {
-					throw exception;
-				}, 0);
+				Runtime.Report(exception);
 			}
 		};
 
@@ -4052,7 +4067,7 @@
 					var copy = list.slice(0);
 
 					while (i < copy.length) {
-						copy[i].call(api, data, api);
+						Runtime.Notify(copy[i], api, [data, api]);
 
 						i++;
 					}
@@ -4830,7 +4845,7 @@
 				var i = 0;
 
 				while (i < copy.length) {
-					copy[i].Callback.call(copy[i].Owner || api, data, api);
+					Runtime.Notify(copy[i].Callback, copy[i].Owner || api, [data, api]);
 
 					i++;
 				}
@@ -7248,7 +7263,7 @@
 				var i = 0;
 
 				while (i < copy.length) {
-					copy[i].call(target, event, context || target);
+					Runtime.Notify(copy[i], target, [event, context || target]);
 
 					i++;
 				}
@@ -11947,7 +11962,7 @@
 				var i = 0;
 
 				while (i < copy.length) {
-					copy[i](event);
+					Runtime.Notify(copy[i], undefined, [event]);
 
 					i++;
 				}
@@ -12315,7 +12330,7 @@
 					var i = 0;
 
 					while (i < copy.length) {
-						copy[i](event);
+						Runtime.Notify(copy[i], undefined, [event]);
 
 						i++;
 					}
@@ -13029,7 +13044,7 @@
 				while (i < copy.length) {
 					event._Context({Socket: api, Slot: i, Index: 0});
 
-					copy[i](event);
+					Runtime.Notify(copy[i], undefined, [event]);
 
 					event._Context(null);
 
@@ -13562,7 +13577,7 @@
 				while (i < callbacks.length) {
 					context = {Socket: api, Slot: i, Index: 0};
 
-					callbacks[i](message);
+					Runtime.Notify(callbacks[i], undefined, [message]);
 
 					context = null;
 
@@ -14131,12 +14146,12 @@
 				var i = 0;
 
 				while (i < copy.length) {
-					copy[i]({
+					Runtime.Notify(copy[i], undefined, [{
 						Type: event,
 						Worker: api,
 						State: state,
 						Data: data
-					});
+					}]);
 
 					i++;
 				}
@@ -14613,7 +14628,7 @@
 				var i = 0;
 
 				while (i < copy.length) {
-					copy[i]({Type: event, Worker: api, State: state, Data: data});
+					Runtime.Notify(copy[i], undefined, [{Type: event, Worker: api, State: state, Data: data}]);
 
 					i++;
 				}
