@@ -782,27 +782,56 @@ Elemenx.Component('NetworkShowcase', {
 			this.Stream.Close();
 	},
 
-	_WaitRTCIce: function (connection) {
-		return new Promise(function (resolve) {
-			var timer;
-			var done = function () {
-				if (timer)
-					clearTimeout(timer);
+	_WaitRTCIce: function (connection, callback) {
+		var timer;
+		var done = function () {
+			if (timer)
+				clearTimeout(timer);
 
-				connection.removeEventListener('icegatheringstatechange', check);
+			connection.removeEventListener('icegatheringstatechange', check);
 
-				resolve();
-			};
-			var check = function () {
-				if (connection.iceGatheringState === 'complete')
-					done();
-			};
+			callback();
+		};
+		var check = function () {
+			if (connection.iceGatheringState === 'complete')
+				done();
+		};
 
-			if (connection.iceGatheringState === 'complete') return resolve();
+		if (connection.iceGatheringState === 'complete') {
+			callback();
 
-			connection.addEventListener('icegatheringstatechange', check);
+			return;
+		}
 
-			timer = setTimeout(done, 1500);
+		connection.addEventListener('icegatheringstatechange', check);
+
+		timer = setTimeout(done, 1500);
+	},
+
+	/* Offer, ICE gathering, answer: the WebRTC negotiation shared by the showcase sections. */
+	_NegotiateRTC: function (initiator, responder, callback) {
+		var component = this;
+
+		initiator.CreateOffer(function (offerError, offer) {
+			if (offerError) {
+				callback(offerError);
+
+				return;
+			}
+
+			component._WaitRTCIce(initiator.Connection(), function () {
+				responder.AcceptOffer(initiator.Connection().localDescription || offer, function (answerError) {
+					if (answerError) {
+						callback(answerError);
+
+						return;
+					}
+
+					component._WaitRTCIce(responder.Connection(), function () {
+						initiator.AcceptAnswer(responder.Connection().localDescription, callback);
+					});
+				});
+			});
 		});
 	},
 
@@ -844,7 +873,6 @@ Elemenx.Component('NetworkShowcase', {
 		var component = this;
 		var initiator;
 		var responder;
-		var offer;
 
 		if (component.RTCInitiator || component.RTCResponder) return;
 
@@ -954,20 +982,9 @@ Elemenx.Component('NetworkShowcase', {
 
 		});
 
-		initiator.CreateOffer().then(function (description) {
-			offer = description;
-
-			return component._WaitRTCIce(initiator.Connection());
-		}).then(function () {
-			offer = initiator.Connection().localDescription || offer;
-
-			return responder.AcceptOffer(offer);
-		}).then(function () {
-			return component._WaitRTCIce(responder.Connection());
-		}).then(function () {
-			return initiator.AcceptAnswer(responder.Connection().localDescription);
-		}).catch(function (error) {
-			component.RTCStatus = 'Error: ' + error.message;
+		component._NegotiateRTC(initiator, responder, function (error) {
+			if (error)
+				component.RTCStatus = 'Error: ' + error.message;
 		});
 	},
 
@@ -1404,7 +1421,6 @@ Elemenx.Component('NetworkShowcase', {
 		var payload = component._UniversalRequirePayload('UniversalWebRTC');
 		var initiator;
 		var responder;
-		var offer;
 
 		if (!payload) return;
 
@@ -1444,19 +1460,13 @@ Elemenx.Component('NetworkShowcase', {
 
 		component.UniversalWebRTC = 'Connecting...';
 
-		initiator.CreateOffer().then(function (description) {
-			offer = description;
+		component._NegotiateRTC(initiator, responder, function (error) {
+			if (error) {
+				component.UniversalWebRTC = 'Error · ' + error.message;
 
-			return component._WaitRTCIce(initiator.Connection());
-		}).then(function () {
-			offer = initiator.Connection().localDescription || offer;
+				return;
+			}
 
-			return responder.AcceptOffer(offer);
-		}).then(function () {
-			return component._WaitRTCIce(responder.Connection());
-		}).then(function () {
-			return initiator.AcceptAnswer(responder.Connection().localDescription);
-		}).then(function () {
 			function send () {
 				var transfer;
 
@@ -1475,8 +1485,6 @@ Elemenx.Component('NetworkShowcase', {
 				transfer.Send();
 			}
 			send();
-		}).catch(function (error) {
-			component.UniversalWebRTC = 'Error · ' + error.message;
 		});
 	},
 

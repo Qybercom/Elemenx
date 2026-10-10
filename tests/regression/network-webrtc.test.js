@@ -206,6 +206,67 @@ describe('Regression: Network WebRTC', function () {
 		expect(initiator.Connection().remoteDescription).toEqual(answer);
 	});
 
+	it('CreateOffer / AcceptOffer / AcceptAnswer deliver results through (error, result) callbacks', async function () {
+		var initiator = Elemenx.Network.WebRTC({ChannelName: 'data'});
+		var responder = Elemenx.Network.WebRTC();
+		var results = [];
+
+		await new Promise(function (resolve) {
+			initiator.CreateOffer(function (offerError, offer) {
+				results.push(['offer', offerError, offer]);
+
+				responder.AcceptOffer(offer, function (answerError, answer) {
+					results.push(['answer', answerError, answer]);
+
+					initiator.AcceptAnswer(answer, function (acceptError, accepted) {
+						results.push(['accepted', acceptError, accepted]);
+
+						resolve();
+					});
+				});
+			});
+		});
+
+		expect(results).toEqual([
+			['offer', null, {type: 'offer', sdp: 'fake-offer'}],
+			['answer', null, {type: 'answer', sdp: 'fake-answer'}],
+			['accepted', null, {type: 'answer', sdp: 'fake-answer'}]
+		]);
+		expect(responder.Connection().remoteDescription).toEqual({type: 'offer', sdp: 'fake-offer'});
+		expect(initiator.Connection().remoteDescription).toEqual({type: 'answer', sdp: 'fake-answer'});
+	});
+
+	it('WebRTC callbacks receive errors, and the deprecated Promise is still returned', async function () {
+		var rtc = Elemenx.Network.WebRTC();
+		var returned;
+		var error = await new Promise(function (resolve) {
+			returned = rtc.AcceptAnswer({type: 'answer', sdp: 'early'}, function (callbackError, result) {
+				resolve({Error: callbackError, Result: result});
+			});
+		});
+
+		expect(error.Error.message).toContain('not active');
+		expect(error.Result).toBeUndefined();
+		expect(typeof returned.then).toBe('function');
+		await expect(returned).rejects.toThrow('not active');
+	});
+
+	it('AddICECandidate reports completion through its callback', async function () {
+		var rtc = Elemenx.Network.WebRTC();
+		var candidate = {candidate: 'candidate:1'};
+
+		rtc.Connect(false);
+
+		var result = await new Promise(function (resolve) {
+			rtc.AddICECandidate(candidate, function (error) {
+				resolve(error);
+			});
+		});
+
+		expect(result).toBeNull();
+		expect(rtc.Connection().Candidates).toEqual([candidate]);
+	});
+
 	it('ICE/state events and AddICECandidate are surfaced while the generation is active', async function () {
 		var seen = [];
 		var rtc = Elemenx.Network.WebRTC();

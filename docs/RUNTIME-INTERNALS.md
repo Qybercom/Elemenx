@@ -1,6 +1,6 @@
 # Elemenx Runtime Internals
 
-`elemenx.js` is one self-contained file made of sections: inner IIFE modules plus two sections at the top level of the outer function. The sections share private state only through the `Runtime` object created at the top of the file. This document lists every `Runtime.*` field, the section that owns it (assigns it) and the sections that use it.
+`elemenx.js` is one self-contained file made of sections; every section is an inner IIFE module of the outer function. The sections share private state only through the `Runtime` object created at the top of the file. This document lists every `Runtime.*` field, the section that owns it (assigns it) and the sections that use it.
 
 `Runtime` is not public API. Fields can be added, renamed or removed freely, as long as this document is updated in the same change. `tests/regression/runtime-internals.test.js` fails when the code and this list disagree.
 
@@ -77,7 +77,6 @@ To find a section in `elemenx.js`, search for its header, for example `/* Router
 | Field | Purpose | Used by |
 |---|---|---|
 | `ComponentRouters` | `WeakMap` component → Router attached to it | Template and Component |
-| `ComponentRouterFacades` | `WeakMap` component → cached `$Router()` facade | Router ownership only |
 | `ActiveRouter` | Router currently creating components (set by `WithRouter`) | Template and Component |
 | `RouterFor` | `$Router()` facade of a component | Template and Component |
 | `AttachRouter` | attaches a Router to a component | Template and Component, Router |
@@ -176,7 +175,5 @@ To find a section in `elemenx.js`, search for its header, for example `/* Router
 | `ApplicationBoundary` | tells whether an element is the mount of another Application, so traversal stops there | Structural |
 
 ## Notes
-
-`ComponentRouterFacades` is read only by its own section, but Router ownership and Directive registry are written at the top level of the outer function, without a module of their own, so they cannot hold private state yet.
 
 State that only one section needs is kept as a private variable of that section, not as a `Runtime` field.

@@ -1816,441 +1816,450 @@
 	})(typeof globalThis !== 'undefined' ? globalThis : self);
 
 	/* Router ownership */
-	Runtime.ComponentRouters = new WeakMap();
-	Runtime.ComponentRouterFacades = new WeakMap();
-	Runtime.ActiveRouter = null;
+	(function () {
+		'use strict';
 
-	Runtime.RouterFor = function (component) {
-		var facade = Runtime.ComponentRouterFacades.get(component);
-		if (facade)
-			return facade;
+		var componentRouterFacades = new WeakMap();
 
-		facade = {
-			Pending: [],
+		Runtime.ComponentRouters = new WeakMap();
+		Runtime.ActiveRouter = null;
 
-			On: function (name, callback) {
-				var router = Runtime.ComponentRouters.get(component);
-
-				if (router) {
-					router.Owner(component).On(name, callback);
-				}
-				else {
-					facade.Pending.push({
-						Name: name,
-						Callback: callback
-					});
-				}
-
+		Runtime.RouterFor = function (component) {
+			var facade = componentRouterFacades.get(component);
+			if (facade)
 				return facade;
-			},
 
-			Go: function (url) {
-				var router = Runtime.ComponentRouters.get(component);
+			facade = {
+				Pending: [],
 
-				return router ? router.Go(url) : facade;
-			},
+				On: function (name, callback) {
+					var router = Runtime.ComponentRouters.get(component);
 
-			Replace: function (url) {
-				var router = Runtime.ComponentRouters.get(component);
+					if (router) {
+						router.Owner(component).On(name, callback);
+					}
+					else {
+						facade.Pending.push({
+							Name: name,
+							Callback: callback
+						});
+					}
 
-				return router ? router.Replace(url) : facade;
-			},
+					return facade;
+				},
 
-			Back: function () {
-				var router = Runtime.ComponentRouters.get(component);
+				Go: function (url) {
+					var router = Runtime.ComponentRouters.get(component);
 
-				return router ? router.Back() : facade;
-			},
+					return router ? router.Go(url) : facade;
+				},
 
-			Forward: function () {
-				var router = Runtime.ComponentRouters.get(component);
+				Replace: function (url) {
+					var router = Runtime.ComponentRouters.get(component);
 
-				return router ? router.Forward() : facade;
-			},
+					return router ? router.Replace(url) : facade;
+				},
 
-			Current: function () {
-				var router = Runtime.ComponentRouters.get(component);
+				Back: function () {
+					var router = Runtime.ComponentRouters.get(component);
 
-				return router ? router.Current() : [];
+					return router ? router.Back() : facade;
+				},
+
+				Forward: function () {
+					var router = Runtime.ComponentRouters.get(component);
+
+					return router ? router.Forward() : facade;
+				},
+
+				Current: function () {
+					var router = Runtime.ComponentRouters.get(component);
+
+					return router ? router.Current() : [];
+				}
+			};
+
+			componentRouterFacades.set(component, facade);
+
+			return facade;
+		};
+
+		Runtime.AttachRouter = function (component, router) {
+			if (!component) return;
+
+			Runtime.ComponentRouters.set(component, router);
+
+			if (component._Component) {
+				var resolvedComponent = component._Component();
+				if (resolvedComponent && resolvedComponent !== component)
+					Runtime.AttachRouter(resolvedComponent, router);
+			}
+
+			var facade = Runtime.RouterFor(component);
+			var pending = facade.Pending.slice(0);
+
+			facade.Pending.length = 0;
+
+			var i = 0;
+			while (i < pending.length) {
+				router.Owner(component).On(pending[i].Name, pending[i].Callback);
+
+				i++;
 			}
 		};
 
-		Runtime.ComponentRouterFacades.set(component, facade);
+		Runtime.DetachRouterOwner = function (component) {
+			var router = Runtime.ComponentRouters.get(component);
+			var facade = componentRouterFacades.get(component);
 
-		return facade;
-	};
+			if (router) {
+				router.OffOwner(component);
 
-	Runtime.AttachRouter = function (component, router) {
-		if (!component) return;
-
-		Runtime.ComponentRouters.set(component, router);
-
-		if (component._Component) {
-			var resolvedComponent = component._Component();
-			if (resolvedComponent && resolvedComponent !== component)
-				Runtime.AttachRouter(resolvedComponent, router);
-		}
-
-		var facade = Runtime.RouterFor(component);
-		var pending = facade.Pending.slice(0);
-
-		facade.Pending.length = 0;
-
-		var i = 0;
-		while (i < pending.length) {
-			router.Owner(component).On(pending[i].Name, pending[i].Callback);
-
-			i++;
-		}
-	};
-
-	Runtime.DetachRouterOwner = function (component) {
-		var router = Runtime.ComponentRouters.get(component);
-		var facade = Runtime.ComponentRouterFacades.get(component);
-
-		if (router) {
-			router.OffOwner(component);
-
-			Runtime.ComponentRouters.delete(component);
-		}
-
-		if (facade) {
-			facade.Pending.length = 0;
-
-			Runtime.ComponentRouterFacades.delete(component);
-		}
-	};
-
-	Runtime.WithRouter = function (router, callback) {
-		var previous = Runtime.ActiveRouter;
-		var result;
-
-		Runtime.ActiveRouter = router;
-
-		try {
-			result = callback();
-		}
-		finally {
-			Runtime.ActiveRouter = previous;
-		}
-
-		return result;
-	};
-
-	/* Directive registry */
-	Runtime.Directive = {
-		Registry: {},
-		Aliases: {},
-		Prefixes: {},
-		Name: function (name) {
-			var directive = this.Aliases[name];
-
-			return directive ? '*' + directive : null;
-		},
-		Prefix: function (name) {
-			return this.Prefixes[name] || null;
-		},
-		Is: function (attribute, name) {
-			return attribute === this.Name(name);
-		},
-		Match: function (attribute, name) {
-			var prefix = this.Prefix(name);
-			if (!prefix)
-				return false;
-
-			return attribute.indexOf(prefix) === 0;
-		},
-		Argument: function (attribute, name) {
-			var prefix = this.Prefix(name);
-			if (!prefix || attribute.indexOf(prefix) !== 0) return null;
-
-			return attribute.substring(prefix.length);
-		},
-		Binding: function (attribute) {
-			if (
-				attribute.length < 3 ||
-				attribute.charAt(0) !== '[' ||
-				attribute.charAt(attribute.length - 1) !== ']' ||
-				attribute.charAt(1) === '('
-			) return null;
-
-			return attribute.substring(1, attribute.length - 1);
-		},
-		Event: function (attribute) {
-			var match = /^\(([^\)]+)\)$/.exec(attribute);
-
-			return match ? match[1] : null;
-		},
-		TwoWay: function (attribute) {
-			var match = /^\[\(([^\)]+)\)\]$/.exec(attribute);
-
-			return match ? match[1] : null;
-		},
-		Ref: function (attribute) {
-			var match = /^#(.+)$/.exec(attribute);
-
-			return match ? match[1] : null;
-		},
-		Register: function (name, definition, internal) {
-			var alias;
-
-			name = String(name || '').toLowerCase();
-
-			if (!/^[a-z][a-z0-9_-]*$/.test(name))
-				throw new Error('Elemenx invalid directive name: ' + name);
-
-			if (this.Registry[name])
-				throw new Error('Elemenx directive already registered: ' + name);
-
-			definition = definition || {};
-
-			if (typeof definition !== 'object')
-				throw new TypeError('Elemenx directive definition must be an Object');
-
-			if (!internal && definition.Internal)
-				throw new Error('Elemenx directive Internal metadata is reserved');
-
-			if (definition.Structural === true)
-				definition.Kind = 'structural';
-
-			if (!definition.Kind)
-				definition.Kind = 'behavioral';
-
-			if (definition.Kind === 'structural' && definition.Collection === true && !definition.Host)
-				definition.Host = 'collection';
-
-			if (definition.Kind === 'structural' && !definition.Host)
-				definition.Host = 'structural';
-
-			definition.Name = name;
-			definition.Internal = internal === true;
-
-			this.Registry[name] = definition;
-
-			alias = definition.Alias;
-
-			if (alias)
-				this.Aliases[alias] = name;
-
-			return definition;
-		},
-		Resolve: function (attribute) {
-			var match = /^\*([a-z][a-z0-9_-]*)$/i.exec(attribute);
-			var name;
-
-			if (!match)
-				return null;
-
-			name = match[1].toLowerCase();
-
-			return this.Registry[name] ? {
-				Name: name,
-				Definition: this.Registry[name]
-			} : null;
-		},
-		Find: function (node, kind) {
-			var attrs = node && node.attributes ? node.attributes : [];
-			var i = 0;
-			var resolved;
-
-			while (i < attrs.length) {
-				resolved = this.Resolve(attrs[i].name);
-
-				if (resolved && (!kind || resolved.Definition.Kind === kind)) {
-					return {
-						Name: resolved.Name,
-						Definition: resolved.Definition,
-						Attribute: attrs[i].name,
-						Expression: attrs[i].value || ''
-					};
-				}
-
-				i++;
+				Runtime.ComponentRouters.delete(component);
 			}
 
-			return null;
-		},
-		Policy: function (node) {
-			var attrs = node && node.attributes ? node.attributes : [];
-			var structural = null;
-			var directiveArguments = [];
-			var i = 0;
-			var resolved;
+			if (facade) {
+				facade.Pending.length = 0;
 
-			while (i < attrs.length) {
-				resolved = this.Resolve(attrs[i].name);
-
-				if (resolved && resolved.Definition.Kind === 'structural') {
-					if (structural)
-						throw new Error('Elemenx allows one structural directive per host: *' + structural.Name + ', *' + resolved.Name);
-
-					structural = {Name: resolved.Name, Definition: resolved.Definition};
-				}
-				else if (resolved && resolved.Definition.Kind === 'argument') {
-					directiveArguments.push(resolved);
-				}
-
-				i++;
+				componentRouterFacades.delete(component);
 			}
+		};
 
-			i = 0;
-			while (i < directiveArguments.length) {
-				resolved = directiveArguments[i];
+		Runtime.WithRouter = function (router, callback) {
+			var previous = Runtime.ActiveRouter;
+			var result;
 
-				if (!structural || (resolved.Definition.For && resolved.Definition.For !== structural.Definition.Host))
-					throw new Error('Elemenx directive argument *' + resolved.Name + ' has no compatible structural host');
+			Runtime.ActiveRouter = router;
 
-				i++;
+			try {
+				result = callback();
 			}
-
-			return structural;
-		},
-		AttributeForRole: function (role) {
-			var name;
-			var definition;
-
-			for (name in this.Registry) {
-				if (!Runtime.Own(this.Registry, name)) continue;
-
-				definition = this.Registry[name];
-
-				if (definition.Role === role) {
-					return '*' + name;
-				}
-			}
-
-			return null;
-		},
-		Role: function (node, role) {
-			var attrs = node && node.attributes ? node.attributes : [];
-			var i = 0;
-			var resolved;
-
-			while (i < attrs.length) {
-				resolved = this.Resolve(attrs[i].name);
-
-				if (resolved && resolved.Definition.Role === role) {
-					return {
-						Name: resolved.Name,
-						Definition: resolved.Definition,
-						Attribute: attrs[i].name,
-						Expression: attrs[i].value || ''
-					};
-				}
-
-				i++;
-			}
-
-			return null;
-		},
-		Arguments: function (node, owner) {
-			var result = {};
-			var attrs = node && node.attributes ? Array.prototype.slice.call(node.attributes) : [];
-			var i = 0;
-			var resolved;
-
-			while (i < attrs.length) {
-				resolved = this.Resolve(attrs[i].name);
-
-				if (resolved && resolved.Definition.Kind === 'argument' && (!resolved.Definition.For || resolved.Definition.For === owner)) {
-					result[resolved.Name] = attrs[i].value || '';
-
-					node.removeAttribute(attrs[i].name);
-				}
-
-				i++;
+			finally {
+				Runtime.ActiveRouter = previous;
 			}
 
 			return result;
-		},
-		Reserved: function (attribute) {
-			var name;
+		};
+	})();
 
-			if (attribute === 'data-elemenx-component') return true;
+	/* Directive registry */
+	(function () {
+		'use strict';
 
-			for (name in this.Prefixes) {
-				if (Runtime.Own(this.Prefixes, name) && attribute.indexOf(this.Prefixes[name]) === 0) {
-					return true;
+		Runtime.Directive = {
+			Registry: {},
+			Aliases: {},
+			Prefixes: {},
+			Name: function (name) {
+				var directive = this.Aliases[name];
+
+				return directive ? '*' + directive : null;
+			},
+			Prefix: function (name) {
+				return this.Prefixes[name] || null;
+			},
+			Is: function (attribute, name) {
+				return attribute === this.Name(name);
+			},
+			Match: function (attribute, name) {
+				var prefix = this.Prefix(name);
+				if (!prefix)
+					return false;
+
+				return attribute.indexOf(prefix) === 0;
+			},
+			Argument: function (attribute, name) {
+				var prefix = this.Prefix(name);
+				if (!prefix || attribute.indexOf(prefix) !== 0) return null;
+
+				return attribute.substring(prefix.length);
+			},
+			Binding: function (attribute) {
+				if (
+					attribute.length < 3 ||
+					attribute.charAt(0) !== '[' ||
+					attribute.charAt(attribute.length - 1) !== ']' ||
+					attribute.charAt(1) === '('
+				) return null;
+
+				return attribute.substring(1, attribute.length - 1);
+			},
+			Event: function (attribute) {
+				var match = /^\(([^\)]+)\)$/.exec(attribute);
+
+				return match ? match[1] : null;
+			},
+			TwoWay: function (attribute) {
+				var match = /^\[\(([^\)]+)\)\]$/.exec(attribute);
+
+				return match ? match[1] : null;
+			},
+			Ref: function (attribute) {
+				var match = /^#(.+)$/.exec(attribute);
+
+				return match ? match[1] : null;
+			},
+			Register: function (name, definition, internal) {
+				var alias;
+
+				name = String(name || '').toLowerCase();
+
+				if (!/^[a-z][a-z0-9_-]*$/.test(name))
+					throw new Error('Elemenx invalid directive name: ' + name);
+
+				if (this.Registry[name])
+					throw new Error('Elemenx directive already registered: ' + name);
+
+				definition = definition || {};
+
+				if (typeof definition !== 'object')
+					throw new TypeError('Elemenx directive definition must be an Object');
+
+				if (!internal && definition.Internal)
+					throw new Error('Elemenx directive Internal metadata is reserved');
+
+				if (definition.Structural === true)
+					definition.Kind = 'structural';
+
+				if (!definition.Kind)
+					definition.Kind = 'behavioral';
+
+				if (definition.Kind === 'structural' && definition.Collection === true && !definition.Host)
+					definition.Host = 'collection';
+
+				if (definition.Kind === 'structural' && !definition.Host)
+					definition.Host = 'structural';
+
+				definition.Name = name;
+				definition.Internal = internal === true;
+
+				this.Registry[name] = definition;
+
+				alias = definition.Alias;
+
+				if (alias)
+					this.Aliases[alias] = name;
+
+				return definition;
+			},
+			Resolve: function (attribute) {
+				var match = /^\*([a-z][a-z0-9_-]*)$/i.exec(attribute);
+				var name;
+
+				if (!match)
+					return null;
+
+				name = match[1].toLowerCase();
+
+				return this.Registry[name] ? {
+					Name: name,
+					Definition: this.Registry[name]
+				} : null;
+			},
+			Find: function (node, kind) {
+				var attrs = node && node.attributes ? node.attributes : [];
+				var i = 0;
+				var resolved;
+
+				while (i < attrs.length) {
+					resolved = this.Resolve(attrs[i].name);
+
+					if (resolved && (!kind || resolved.Definition.Kind === kind)) {
+						return {
+							Name: resolved.Name,
+							Definition: resolved.Definition,
+							Attribute: attrs[i].name,
+							Expression: attrs[i].value || ''
+						};
+					}
+
+					i++;
 				}
+
+				return null;
+			},
+			Policy: function (node) {
+				var attrs = node && node.attributes ? node.attributes : [];
+				var structural = null;
+				var directiveArguments = [];
+				var i = 0;
+				var resolved;
+
+				while (i < attrs.length) {
+					resolved = this.Resolve(attrs[i].name);
+
+					if (resolved && resolved.Definition.Kind === 'structural') {
+						if (structural)
+							throw new Error('Elemenx allows one structural directive per host: *' + structural.Name + ', *' + resolved.Name);
+
+						structural = {Name: resolved.Name, Definition: resolved.Definition};
+					}
+					else if (resolved && resolved.Definition.Kind === 'argument') {
+						directiveArguments.push(resolved);
+					}
+
+					i++;
+				}
+
+				i = 0;
+				while (i < directiveArguments.length) {
+					resolved = directiveArguments[i];
+
+					if (!structural || (resolved.Definition.For && resolved.Definition.For !== structural.Definition.Host))
+						throw new Error('Elemenx directive argument *' + resolved.Name + ' has no compatible structural host');
+
+					i++;
+				}
+
+				return structural;
+			},
+			AttributeForRole: function (role) {
+				var name;
+				var definition;
+
+				for (name in this.Registry) {
+					if (!Runtime.Own(this.Registry, name)) continue;
+
+					definition = this.Registry[name];
+
+					if (definition.Role === role) {
+						return '*' + name;
+					}
+				}
+
+				return null;
+			},
+			Role: function (node, role) {
+				var attrs = node && node.attributes ? node.attributes : [];
+				var i = 0;
+				var resolved;
+
+				while (i < attrs.length) {
+					resolved = this.Resolve(attrs[i].name);
+
+					if (resolved && resolved.Definition.Role === role) {
+						return {
+							Name: resolved.Name,
+							Definition: resolved.Definition,
+							Attribute: attrs[i].name,
+							Expression: attrs[i].value || ''
+						};
+					}
+
+					i++;
+				}
+
+				return null;
+			},
+			Arguments: function (node, owner) {
+				var result = {};
+				var attrs = node && node.attributes ? Array.prototype.slice.call(node.attributes) : [];
+				var i = 0;
+				var resolved;
+
+				while (i < attrs.length) {
+					resolved = this.Resolve(attrs[i].name);
+
+					if (resolved && resolved.Definition.Kind === 'argument' && (!resolved.Definition.For || resolved.Definition.For === owner)) {
+						result[resolved.Name] = attrs[i].value || '';
+
+						node.removeAttribute(attrs[i].name);
+					}
+
+					i++;
+				}
+
+				return result;
+			},
+			Reserved: function (attribute) {
+				var name;
+
+				if (attribute === 'data-elemenx-component') return true;
+
+				for (name in this.Prefixes) {
+					if (Runtime.Own(this.Prefixes, name) && attribute.indexOf(this.Prefixes[name]) === 0) {
+						return true;
+					}
+				}
+
+				return this.Resolve(attribute) !== null
+					|| this.TwoWay(attribute) !== null
+					|| this.Binding(attribute) !== null
+					|| this.Event(attribute) !== null
+					|| this.Ref(attribute) !== null;
 			}
+		};
 
-			return this.Resolve(attribute) !== null
-				|| this.TwoWay(attribute) !== null
-				|| this.Binding(attribute) !== null
-				|| this.Event(attribute) !== null
-				|| this.Ref(attribute) !== null;
-		}
-	};
-
-	/*
-	 * Built-ins use the same directive registry as application directives.
-	 * Alias exists only as a compatibility bridge for the current structural
-	 * engine while its handlers are moved behind generic directive capabilities.
-	 */
-	Runtime.Directive.Register('if', {
-		Alias: 'If',
-		Structural: true,
-		$OnUpdate: function (context) {
-			if (context.Value) context.Mount();
-			else context.Unmount();
-		}
-	}, true);
-	Runtime.Directive.Register('for', {
-		Alias: 'For',
-		Structural: true,
-		Collection: true,
-		$OnCreate: function (context) {
-			var classic = context.Expression.split(';');
-			var match = /^\s*([A-Za-z_$][\w$]*)\s+(of|in)\s+([\s\S]+)$/.exec(context.Expression);
-			var initializer;
-
-			if (classic.length === 3) {
-				initializer = /^\s*([A-Za-z_$][\w$]*)\s*=\s*([\s\S]+)$/.exec(classic[0]);
-
-				if (!initializer)
-					throw new Error('Elemenx *for initializer must assign a local variable: ' + context.Expression);
-
-				context.Data.Mode = 'classic';
-				context.Data.Variable = initializer[1];
-				context.Data.Initializer = initializer[2];
-				context.Data.Condition = classic[1];
-				context.Data.Step = classic[2];
-
-				return;
+		/*
+		 * Built-ins use the same directive registry as application directives.
+		 * Alias exists only as a compatibility bridge for the current structural
+		 * engine while its handlers are moved behind generic directive capabilities.
+		 */
+		Runtime.Directive.Register('if', {
+			Alias: 'If',
+			Structural: true,
+			$OnUpdate: function (context) {
+				if (context.Value) context.Mount();
+				else context.Unmount();
 			}
+		}, true);
+		Runtime.Directive.Register('for', {
+			Alias: 'For',
+			Structural: true,
+			Collection: true,
+			$OnCreate: function (context) {
+				var classic = context.Expression.split(';');
+				var match = /^\s*([A-Za-z_$][\w$]*)\s+(of|in)\s+([\s\S]+)$/.exec(context.Expression);
+				var initializer;
 
-			if (!match)
-				throw new Error('Elemenx *for expects classic for, for..of or for..in syntax: ' + context.Expression);
+				if (classic.length === 3) {
+					initializer = /^\s*([A-Za-z_$][\w$]*)\s*=\s*([\s\S]+)$/.exec(classic[0]);
 
-			context.Data.Mode = match[2];
-			context.Data.Variable = match[1];
-			context.Data.Source = match[3];
-		},
-		$OnUpdate: function (context) {
-			if (context.Data.Mode === 'classic') {
-				context.Render(null, {
-					Mode: 'classic',
+					if (!initializer)
+						throw new Error('Elemenx *for initializer must assign a local variable: ' + context.Expression);
+
+					context.Data.Mode = 'classic';
+					context.Data.Variable = initializer[1];
+					context.Data.Initializer = initializer[2];
+					context.Data.Condition = classic[1];
+					context.Data.Step = classic[2];
+
+					return;
+				}
+
+				if (!match)
+					throw new Error('Elemenx *for expects classic for, for..of or for..in syntax: ' + context.Expression);
+
+				context.Data.Mode = match[2];
+				context.Data.Variable = match[1];
+				context.Data.Source = match[3];
+			},
+			$OnUpdate: function (context) {
+				if (context.Data.Mode === 'classic') {
+					context.Render(null, {
+						Mode: 'classic',
+						Variable: context.Data.Variable,
+						Initializer: context.Data.Initializer,
+						Condition: context.Data.Condition,
+						Step: context.Data.Step,
+						Key: context.Argument('key')
+					});
+
+					return;
+				}
+
+				context.Render(context.Source(context.Data.Source), {
+					Mode: context.Data.Mode,
 					Variable: context.Data.Variable,
-					Initializer: context.Data.Initializer,
-					Condition: context.Data.Condition,
-					Step: context.Data.Step,
 					Key: context.Argument('key')
 				});
-
-				return;
 			}
-
-			context.Render(context.Source(context.Data.Source), {
-				Mode: context.Data.Mode,
-				Variable: context.Data.Variable,
-				Key: context.Argument('key')
-			});
-		}
-	}, true);
-	Runtime.Directive.Register('key', {Alias: 'Key', Kind: 'argument', For: 'collection', Role: 'key'}, true);
-	Runtime.Directive.Register('outlet', {Alias: 'Outlet', Kind: 'behavior', Role: 'outlet'}, true);
-	Runtime.Directive.Register('pending', {Alias: 'Pending', Kind: 'status', Role: 'pending'}, true);
-	Runtime.Directive.Register('error', {Alias: 'Error', Kind: 'status', Role: 'error'}, true);
+		}, true);
+		Runtime.Directive.Register('key', {Alias: 'Key', Kind: 'argument', For: 'collection', Role: 'key'}, true);
+		Runtime.Directive.Register('outlet', {Alias: 'Outlet', Kind: 'behavior', Role: 'outlet'}, true);
+		Runtime.Directive.Register('pending', {Alias: 'Pending', Kind: 'status', Role: 'pending'}, true);
+		Runtime.Directive.Register('error', {Alias: 'Error', Kind: 'status', Role: 'error'}, true);
+	})();
 
 	/* Template and Component */
 	(function (global) {
@@ -7436,6 +7445,8 @@
 
 	/* Network */
 	(function (global) {
+		'use strict';
+
 		var Elemenx = global.Elemenx;
 		var own = Runtime.Own;
 		var NetworkProtocols = {};
@@ -10748,6 +10759,35 @@
 		}
 
 		/* Network: WebRTC */
+		/*
+		 * RTCPeerConnection is Promise-based. WebRTC negotiation methods take an optional callback (error, result);
+		 * the Promise they still return is deprecated and kept only for compatibility.
+		 * The callback runs outside the promise chain, so an exception thrown by it is reported instead of swallowed.
+		 */
+		function settle (promise, callback) {
+			if (typeof callback !== 'function') return promise;
+
+			promise.then(function (value) {
+				invoke(callback, null, value);
+			}, function (error) {
+				invoke(callback, error);
+			});
+
+			return promise;
+		}
+
+		function invoke (callback, error, value) {
+			try {
+				if (error) callback(error);
+				else callback(null, value);
+			}
+			catch (exception) {
+				global.setTimeout(function () {
+					throw exception;
+				}, 0);
+			}
+		}
+
 		function NetworkWebRTC (configuration) {
 			var config = configuration || {};
 			var rtcConfig = config.Configuration || {};
@@ -11100,14 +11140,14 @@
 					return api;
 				},
 
-				CreateOffer: function () {
+				CreateOffer: function (callback) {
 					var currentConnection = createConnection();
 					var currentGeneration = generation;
 
 					if (!channel)
 						attachChannel(currentConnection.createDataChannel(channelName, channelConfig), currentGeneration, currentConnection);
 
-					return currentConnection.createOffer().then(function (description) {
+					return settle(currentConnection.createOffer().then(function (description) {
 						if (!current(currentGeneration, currentConnection)) return null;
 
 						return currentConnection.setLocalDescription(description).then(function () {
@@ -11120,14 +11160,14 @@
 
 							return currentConnection.localDescription;
 						});
-					});
+					}), callback);
 				},
 
-				AcceptOffer: function (description) {
+				AcceptOffer: function (description, callback) {
 					var currentConnection = createConnection();
 					var currentGeneration = generation;
 
-					return currentConnection
+					return settle(currentConnection
 						.setRemoteDescription(description)
 						.then(function () {
 							if (!current(currentGeneration, currentConnection)) return null;
@@ -11152,17 +11192,17 @@
 
 								return currentConnection.localDescription;
 							});
-						});
+						}), callback);
 				},
 
-				AcceptAnswer: function (description) {
+				AcceptAnswer: function (description, callback) {
 					var currentConnection = connection;
 					var currentGeneration = generation;
 
 					if (!currentConnection || !active)
-						return global.Promise.reject(new Error('Elemenx WebRTC connection is not active'));
+						return settle(global.Promise.reject(new Error('Elemenx WebRTC connection is not active')), callback);
 
-					return currentConnection.setRemoteDescription(description).then(function () {
+					return settle(currentConnection.setRemoteDescription(description).then(function () {
 						if (!current(currentGeneration, currentConnection)) return null;
 
 						transport('RemoteDescription', {
@@ -11171,15 +11211,14 @@
 						});
 
 						return currentConnection.remoteDescription;
-					});
+					}), callback);
 				},
 
-				AddICECandidate: function (candidate) {
-					if (!connection || !active || !candidate) {
-						return global.Promise.resolve();
-					}
+				AddICECandidate: function (candidate, callback) {
+					if (!connection || !active || !candidate)
+						return settle(global.Promise.resolve(), callback);
 
-					return connection.addIceCandidate(candidate);
+					return settle(connection.addIceCandidate(candidate), callback);
 				},
 
 				Send: function (data) {

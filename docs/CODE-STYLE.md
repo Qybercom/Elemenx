@@ -9,7 +9,7 @@ Tests (`tests/`) and the root tool configs (`*.config.js`, `*.config.mjs`) are t
 - **ES5 syntax only.** No `let`, `const`, arrow functions, classes, template literals, destructuring, spread, default parameters, computed object keys, `for...of`, `async`/`await`, modules.
 - **Runtime APIs are not restricted by ES5.** Browser and Node APIs already used by the code (`WeakMap`, `WeakSet`, `Map`, `Set`, `Symbol`, `URL`, `TextEncoder`, `fetch`, `Proxy`...) stay allowed.
 - **No Promise in the public API.** Public asynchronous APIs use callbacks `(error, result)` or event subscriptions (`On(name, handler)`). A Promise may appear only internally, as a short adapter over a Promise-based browser API (`RTCPeerConnection`, `Blob.arrayBuffer`, `fetch`), and must not leak to the caller.
-  - Known exception being migrated: the WebRTC `CreateOffer`, `AcceptOffer`, `AcceptAnswer` and `AddICECandidate` still return a Promise. New code must not add more.
+  - Known exception being migrated: the WebRTC `CreateOffer`, `AcceptOffer`, `AcceptAnswer` and `AddICECandidate` take a callback `(error, result)` but still return a deprecated Promise for compatibility (see `docs/PUBLIC-API.md`). Examples and new code use the callback. New code must not add more Promise-returning API.
 
 ## File structure
 
@@ -32,6 +32,7 @@ Tests (`tests/`) and the root tool configs (`*.config.js`, `*.config.mjs`) are t
 	})(typeof globalThis !== 'undefined' ? globalThis : self);
 ```
 
+- Every section except `Runtime` is a strict module: `(function (global) {` or `(function () {` followed by `'use strict';` (checked by `tests/regression/runtime-internals.test.js`).
 - Every section starts with a one-line `/* Name */` header and is listed in the table of contents at the top of the file. Large sections are split by `/* Section: part */` sub-headers.
 - Every `Runtime.*` field is documented in `docs/RUNTIME-INTERNALS.md` under the section that assigns it.
 - Modules talk to each other only through `Runtime.*`. Public members are attached to `global.Elemenx` and nothing else is global.

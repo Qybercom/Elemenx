@@ -119,4 +119,16 @@ describe('Regression: Runtime internals documentation', function () {
 
 		expect(missing).toEqual([]);
 	});
+
+	it('wraps every section except Runtime in a strict module', function () {
+		var loose = sections().filter(function (section) {
+			if (section.Name === 'Runtime') return false;
+
+			return !/^\t\(function \((global)?\) \{$/.test(lines[section.Line]) || lines[section.Line + 1] !== '\t\t\'use strict\';';
+		}).map(function (section) {
+			return section.Name;
+		});
+
+		expect(loose).toEqual([]);
+	});
 });
