@@ -14,11 +14,12 @@ To find a section in `elemenx.js`, search for its header, for example `/* Router
 | `HasDOM` | `true` in a document, `false` inside workers | Identity, Discovery, Template and Component, Messaging, WebWorker, ServiceWorker, Application, ServiceWorker bootstrap |
 | `StartedAt` | time this runtime started | Identity |
 
-## Identity
+## Utilities
 
 | Field | Purpose | Used by |
 |---|---|---|
-| `ID` | identifier of this runtime, created once by `Elemenx.RuntimeID()` | Identity only |
+| `Own` | `Object.prototype.hasOwnProperty.call(object, key)`; modules alias it as `var own = Runtime.Own;` | Collection, Reactive, Bundle, Discovery, Service and Guard, Directive registry, Template and Component, Router, Structural, Network, Storage, Messaging, WebWorker, ServiceWorker, Application |
+| `Assign` | copies the own enumerable properties of a source into a target and returns the target | Collection, Router, Storage, WebWorker, ServiceWorker |
 
 ## Outlet
 
@@ -39,7 +40,6 @@ To find a section in `elemenx.js`, search for its header, for example `/* Router
 | `Reactive` | wraps a value into a tracked reactive proxy | Template and Component |
 | `Effect` | runs a callback and re-runs it when its tracked dependencies change | Template and Component, Structural |
 | `BatchReactive` | groups changes and flushes effects once | Template and Component |
-| `Raw` | returns the original object behind a reactive proxy | not used yet |
 | `Untracked` | runs a callback without recording dependencies | Structural |
 | `TrackIteration` | records a dependency on the iteration of a collection | Structural |
 
@@ -95,7 +95,6 @@ To find a section in `elemenx.js`, search for its header, for example `/* Router
 | Field | Purpose | Used by |
 |---|---|---|
 | `Template` | named Template Registry behind `Elemenx.Template`: `Set`, `Get`, `Has`, `Remove`, `Resolve`, `Harvest` | Application |
-| `CompileExpression` | compiles a template expression into a cached function of a scope | Template and Component only |
 | `EvaluateExpression` | evaluates a template expression against a scope | Structural |
 | `ResolveComponent` | resolves a component factory by name, through Bundle, Discovery and Libraries | Structural |
 | `ResolveComponentRegistered` | returns a factory only if it is already registered and loaded | Router, Structural, Application |
@@ -105,9 +104,7 @@ To find a section in `elemenx.js`, search for its header, for example `/* Router
 | `CreateComponent` | creates an anonymous component factory from a definition | Structural |
 | `BeginComponentReload` | starts a component reload: remembers live instances | Application |
 | `FailComponentReload` | ends a failed component reload | Application |
-| `ReloadTemplateInstances` | re-renders the components that use a reloaded named template | Template and Component only |
 | `ReloadComponentInstances` | recreates live instances after a component reload | Application |
-| `ComponentReloading` | `true` while instances are recreated by a reload | Template and Component only |
 | `ResolveOutlet` | finds a named outlet of a component | Router |
 
 ## Structural
@@ -120,59 +117,66 @@ To find a section in `elemenx.js`, search for its header, for example `/* Router
 
 | Field | Purpose | Used by |
 |---|---|---|
-| `NetworkFor` | owner-aware `$Network` accessor | Service and Guard, Template and Component, Application |
-| `DestroyNetworkOwner` | destroys the Network resources created by an owner | Service and Guard, Template and Component, Application |
+| `NetworkFor` | owner-aware `$Network` accessor | Owner resources, Application |
+| `DestroyNetworkOwner` | destroys the Network resources created by an owner | Owner resources |
 
 ## Storage
 
 | Field | Purpose | Used by |
 |---|---|---|
-| `StorageFor` | owner-aware `$Storage` accessor | Service and Guard, Template and Component |
+| `StorageFor` | owner-aware `$Storage` accessor | Owner resources |
 
 ## Events
 
 | Field | Purpose | Used by |
 |---|---|---|
 | `CreatePipeline` | creates a Pipe pipeline (shared with Messaging) | Messaging |
-| `EventsFor` | owner-aware `$Events` accessor | Service and Guard, Template and Component, Application |
-| `InitializeEventsOwner` | subscribes the `$Events` channels of a definition and routes them to `$OnEvent` | Service and Guard, Template and Component, Application |
-| `DestroyEventsOwner` | destroys the Events sockets of an owner | Service and Guard, Template and Component, Application |
+| `EventsFor` | owner-aware `$Events` accessor | Owner resources, Application |
+| `InitializeEventsOwner` | subscribes the `$Events` channels of a definition and routes them to `$OnEvent` | Owner resources |
+| `DestroyEventsOwner` | destroys the Events sockets of an owner | Owner resources |
 
 ## Messaging
 
 | Field | Purpose | Used by |
 |---|---|---|
-| `SetMessagingEntity` | records the name and index of a Messaging owner, used in message sources | Service and Guard, Template and Component |
-| `MessagingFor` | owner-aware `$Messaging` accessor | Service and Guard, Template and Component, Application |
-| `InitializeMessagingOwner` | subscribes the `$Messaging` channels of a definition and routes them to `$OnMessage` | Service and Guard, Template and Component, Application |
+| `SetMessagingEntity` | records the name and index of a Messaging owner, used in message sources | Owner resources |
+| `MessagingFor` | owner-aware `$Messaging` accessor | Owner resources, Application |
+| `InitializeMessagingOwner` | subscribes the `$Messaging` channels of a definition and routes them to `$OnMessage` | Owner resources |
 | `AttachMessagingBridge` | connects an endpoint (worker, window, channel) to the Messaging fabric | WebWorker, ServiceWorker |
-| `MessagingBroadcastChannel` | `BroadcastChannel` shared by same-origin tabs | Messaging only |
-| `MessagingBroadcastBridge` | Messaging bridge over `MessagingBroadcastChannel` | not read; keeps the bridge referenced |
-| `DestroyMessagingOwner` | destroys the Messaging sockets and bridges of an owner | Service and Guard, Template and Component, Application |
+| `DestroyMessagingOwner` | destroys the Messaging sockets and bridges of an owner | Owner resources |
 
 ## WebWorker
 
 | Field | Purpose | Used by |
 |---|---|---|
-| `WebWorkerFor` | owner-aware `$WebWorker` accessor | Service and Guard, Template and Component, Application |
+| `WebWorkerFor` | owner-aware `$WebWorker` accessor | Owner resources, Application |
 | `PrepareMessagingSend` | starts lazy workers that listen to a channel before a message is sent to it | Messaging |
-| `DestroyWebWorkerOwner` | terminates the workers created by an owner | Service and Guard, Template and Component, Application |
+| `DestroyWebWorkerOwner` | terminates the workers created by an owner | Owner resources |
 | `AttachWorkerMessaging` | inside a worker: connects the worker scope to Messaging | ServiceWorker bootstrap |
 
 ## ServiceWorker
 
 | Field | Purpose | Used by |
 |---|---|---|
-| `ServiceWorkerFor` | owner-aware `$ServiceWorker` accessor | Service and Guard, Template and Component, Application |
-| `DestroyServiceWorkerOwner` | releases the service worker handles of an owner | Service and Guard, Template and Component, Application |
+| `ServiceWorkerFor` | owner-aware `$ServiceWorker` accessor | Owner resources, Application |
+| `DestroyServiceWorkerOwner` | releases the service worker handles of an owner | Owner resources |
+
+## Owner resources
+
+| Field | Purpose | Used by |
+|---|---|---|
+| `AttachOwnerFacades` | sets `$Network`, `$Storage`, `$WebWorker`, `$ServiceWorker`, `$Messaging`, `$Events` and the Messaging identity of a Service or Component | Service and Guard, Template and Component |
+| `InitializeOwnerSubscriptions` | subscribes the `$Events` and `$Messaging` channels declared by a definition | Service and Guard, Template and Component, Application |
+| `DestroyOwnerResources` | releases everything an owner created, in this order: Network, Messaging, Events, WebWorker, ServiceWorker | Service and Guard, Template and Component, Application |
 
 ## Application
 
 | Field | Purpose | Used by |
 |---|---|---|
-| `ApplicationMountOwner` | Application mounted on a given element | Application only |
 | `ApplicationBoundary` | tells whether an element is the mount of another Application, so traversal stops there | Structural |
 
-## Candidates for cleanup
+## Notes
 
-Fields that no other section reads could become private variables of their section: `Raw` (unused), `MessagingBroadcastBridge` (never read), `CompileExpression`, `ComponentReloading`, `ComponentRouterFacades`, `ReloadTemplateInstances`, `ApplicationMountOwner`, `MessagingBroadcastChannel`, `ID`.
+`ComponentRouterFacades` is read only by its own section, but Router ownership and Directive registry are written at the top level of the outer function, without a module of their own, so they cannot hold private state yet.
+
+State that only one section needs is kept as a private variable of that section, not as a `Runtime` field.

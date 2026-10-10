@@ -7,6 +7,7 @@
  *
  * Sections, top to bottom:
  *   Runtime                  private state shared by all modules through the Runtime object
+ *   Utilities                small helpers shared by every module (Runtime.Own, Runtime.Assign)
  *   Identity                 Elemenx.RuntimeID, StartedAt, Title
  *   Outlet                   render slot that swaps one component for another
  *   Collection               keyed list rendering used by collection hosts
@@ -26,6 +27,7 @@
  *   Messaging                Elemenx.Messaging: channels, Window bridges, BroadcastChannel discovery
  *   WebWorker                Elemenx.WebWorker
  *   ServiceWorker            Elemenx.ServiceWorker
+ *   Owner resources          wiring and release of the facades owned by Services, Components and Applications
  *   Application              Elemenx.Application: ownership, mounting, startup lifecycle
  *   ServiceWorker bootstrap  runs inside a service worker started by Elemenx.ServiceWorker
  */
@@ -37,15 +39,38 @@
 	Runtime.HasDOM = typeof document !== 'undefined';
 	Runtime.StartedAt = new Date();
 
+	/* Utilities */
+	(function () {
+		'use strict';
+
+		Runtime.Own = function (object, key) {
+			return Object.prototype.hasOwnProperty.call(object, key);
+		};
+
+		/* Copies the own enumerable properties of source into target and returns target. */
+		Runtime.Assign = function (target, source) {
+			var key;
+
+			for (key in source) {
+				if (Runtime.Own(source, key))
+					target[key] = source[key];
+			}
+
+			return target;
+		};
+	})();
+
 	/* Identity */
 	(function (global) {
 		'use strict';
 
+		var runtimeID = null;
+
 		global.Elemenx = global.Elemenx || {};
 
 		function RuntimeID () {
-			if (Runtime.ID)
-				return Runtime.ID;
+			if (runtimeID)
+				return runtimeID;
 
 			var crypto = global.crypto;
 			var result = '';
@@ -68,9 +93,9 @@
 				result = Date.now().toString(16) + '-' + Math.floor(Math.random() * 0x100000000).toString(16);
 			}
 
-			Runtime.ID = 'runtime-' + result;
+			runtimeID = 'runtime-' + result;
 
-			return Runtime.ID;
+			return runtimeID;
 		}
 
 		global.Elemenx.RuntimeID = RuntimeID;
@@ -152,6 +177,7 @@
 		'use strict';
 
 		var Elemenx = global.Elemenx;
+		var own = Runtime.Own;
 
 		function valueByPath (object, path) {
 			var parts = String(path).split('.');
@@ -233,10 +259,10 @@
 					key = keyOf(data[i], i);
 
 					if (key === 'undefined' || key === 'null')
-						throw new Error('Collection item has no key at index ' + i);
+						throw new Error('Elemenx Collection item has no key at index ' + i);
 
 					if (wanted[key])
-						throw new Error('Duplicate collection key: ' + key);
+						throw new Error('Elemenx duplicate collection key: ' + key);
 
 					wanted[key] = true;
 
@@ -328,21 +354,9 @@
 					return false;
 
 				var next = {};
-				var name;
 
-				for (name in entry.data) {
-					if (Object.prototype.hasOwnProperty.call(entry.data, name)) {
-						next[name] = entry.data[name];
-					}
-				}
-
-				patch = patch || {};
-
-				for (name in patch) {
-					if (Object.prototype.hasOwnProperty.call(patch, name)) {
-						next[name] = patch[name];
-					}
-				}
+				Runtime.Assign(next, entry.data);
+				Runtime.Assign(next, patch || {});
 
 				updateEntry(entry, next);
 
@@ -447,6 +461,7 @@
 		'use strict';
 
 		var Elemenx = global.Elemenx;
+		var own = Runtime.Own;
 		var targetMap = new WeakMap();
 		var proxyCache = new WeakMap();
 		var rawCache = new WeakMap();
@@ -603,7 +618,7 @@
 
 				set: function (target, key, value, receiver) {
 					var next = raw(value);
-					var had = Object.prototype.hasOwnProperty.call(target, key);
+					var had = own(target, key);
 					var previous = target[key];
 					var oldLength = Array.isArray(target) ? target.length : 0;
 					var result = Reflect.set(target, key, next, receiver);
@@ -630,7 +645,7 @@
 				},
 
 				deleteProperty: function (target, key) {
-					var had = Object.prototype.hasOwnProperty.call(target, key);
+					var had = own(target, key);
 					var result = Reflect.deleteProperty(target, key);
 
 					if (had && result) {
@@ -690,7 +705,6 @@
 		Runtime.Reactive = wrap;
 		Runtime.Effect = Effect;
 		Runtime.BatchReactive = Batch;
-		Runtime.Raw = raw;
 		Runtime.Untracked = function (callback) {
 			var previousActive = activeConsumer;
 
@@ -718,6 +732,8 @@
 	/* Bundle */
 	(function (global) {
 		'use strict';
+
+		var own = Runtime.Own;
 		var registry = {};
 		var loaded = {};
 
@@ -739,14 +755,14 @@
 			bundle = bundle || {};
 
 			for (type in bundle) {
-				if (!Object.prototype.hasOwnProperty.call(bundle, type)) continue;
+				if (!own(bundle, type)) continue;
 
 				source = bundle[type] || {};
 
 				bucket(type);
 
 				for (name in source) {
-					if (!Object.prototype.hasOwnProperty.call(source, name)) continue;
+					if (!own(source, name)) continue;
 
 					if (typeof source[name] !== 'function')
 						throw new Error('Elemenx Bundle entity loader must be a function: ' + type + ':' + name);
@@ -764,7 +780,7 @@
 			if (!source)
 				return null;
 
-			return Object.prototype.hasOwnProperty.call(source, name) ? name : null;
+			return own(source, name) ? name : null;
 		}
 
 		function load (type, name) {
@@ -794,7 +810,7 @@
 			var name;
 
 			for (name in source) {
-				if (Object.prototype.hasOwnProperty.call(source, name)) {
+				if (own(source, name)) {
 					load(type, name);
 				}
 			}
@@ -814,7 +830,7 @@
 				var type;
 
 				for (type in registry) {
-					if (Object.prototype.hasOwnProperty.call(registry, type)) {
+					if (own(registry, type)) {
 						return true;
 					}
 				}
@@ -831,6 +847,8 @@
 	/* Discovery */
 	(function (global) {
 		'use strict';
+
+		var own = Runtime.Own;
 
 		var maps = new WeakMap();
 		var roots = new WeakMap();
@@ -1092,7 +1110,7 @@
 		function load (application, type, name, force, callback) {
 			var map = maps.get(application);
 			var url = map && map[name];
-			if (!url && Runtime.Library && Runtime.Library.ResolvedURL)
+			if (!url)
 				url = Runtime.Library.ResolvedURL(application, name);
 
 			var building = builds.get(application);
@@ -1211,7 +1229,7 @@
 			}
 
 			for (name in map) {
-				if (Object.prototype.hasOwnProperty.call(map, name) && pattern.test(map[name]))
+				if (own(map, name) && pattern.test(map[name]))
 					names.push(name);
 			}
 
@@ -1284,7 +1302,7 @@
 				if (!map)
 					return null;
 
-				return Object.prototype.hasOwnProperty.call(map, name) ? name : null;
+				return own(map, name) ? name : null;
 			},
 
 			ResolvedURL: function (application, name) {
@@ -1354,7 +1372,7 @@
 				return;
 			}
 
-			if (Runtime.Bundle && Runtime.Bundle.Ready()) {
+			if (Runtime.Bundle.Ready()) {
 				Runtime.Bundle.LoadType('Directive');
 				Runtime.Bundle.LoadType('Service');
 				Runtime.Bundle.LoadType('Guard');
@@ -1463,6 +1481,7 @@
 		'use strict';
 
 		var Elemenx = global.Elemenx;
+		var own = Runtime.Own;
 		var serviceRegistry = {};
 		var serviceHandles = {};
 		var applicationServiceHandles = new WeakMap();
@@ -1483,7 +1502,7 @@
 			definition = definition || {};
 
 			for (key in definition) {
-				if (Object.prototype.hasOwnProperty.call(definition, key) && key.charAt(0) !== '$') {
+				if (own(definition, key) && key.charAt(0) !== '$') {
 					instance[key] = definition[key];
 				}
 			}
@@ -1504,38 +1523,12 @@
 				return serviceHandle(serviceName, application);
 			};
 
-			instance.$Network = Runtime.NetworkFor ? Runtime.NetworkFor(instance) : Elemenx.Network;
-			instance.$Storage = Runtime.StorageFor ? Runtime.StorageFor(instance) : Elemenx.Storage;
-			instance.$WebWorker = Runtime.WebWorkerFor ? Runtime.WebWorkerFor(instance) : null;
-			instance.$ServiceWorker = Runtime.ServiceWorkerFor ? Runtime.ServiceWorkerFor(instance) : null;
+			Runtime.AttachOwnerFacades(instance, name, 0);
 
-			if (Runtime.SetMessagingEntity)
-				Runtime.SetMessagingEntity(instance, name, 0);
-
-			instance.$Messaging = Runtime.MessagingFor ? Runtime.MessagingFor(instance) : Elemenx.Messaging;
-			instance.$Events = Runtime.EventsFor ? Runtime.EventsFor(instance) : Elemenx.Events;
-
-			if (Runtime.InitializeEventsOwner)
-				Runtime.InitializeEventsOwner(instance, definition);
-
-			if (Runtime.InitializeMessagingOwner)
-				Runtime.InitializeMessagingOwner(instance, definition);
+			Runtime.InitializeOwnerSubscriptions(instance, definition);
 
 			instance.$Destroy = function () {
-				if (Runtime.DestroyNetworkOwner)
-					Runtime.DestroyNetworkOwner(instance);
-
-				if (Runtime.DestroyMessagingOwner)
-					Runtime.DestroyMessagingOwner(instance);
-
-				if (Runtime.DestroyEventsOwner)
-					Runtime.DestroyEventsOwner(instance);
-
-				if (Runtime.DestroyWebWorkerOwner)
-					Runtime.DestroyWebWorkerOwner(instance);
-
-				if (Runtime.DestroyServiceWorkerOwner)
-					Runtime.DestroyServiceWorkerOwner(instance);
+				Runtime.DestroyOwnerResources(instance);
 
 				if (typeof definition.$OnDestroy === 'function') {
 					definition.$OnDestroy.call(instance);
@@ -1662,7 +1655,7 @@
 						return target[property];
 					}
 
-					if (Runtime.Discovery && application && !destroyedServiceApplications.has(application) && Runtime.Discovery.Ready(application)) {
+					if (application && !destroyedServiceApplications.has(application) && Runtime.Discovery.Ready(application)) {
 						if (!loading) {
 							loading = true;
 
@@ -1767,7 +1760,7 @@
 			var target;
 
 			for (name in serviceRegistry) {
-				if (!Object.prototype.hasOwnProperty.call(serviceRegistry, name)) continue;
+				if (!own(serviceRegistry, name)) continue;
 
 				entry = serviceRegistry[name];
 				target = existingServiceTarget(name, application);
@@ -2004,7 +1997,7 @@
 			name = String(name || '').toLowerCase();
 
 			if (!/^[a-z][a-z0-9_-]*$/.test(name))
-				throw new Error('Invalid Elemenx directive name: ' + name);
+				throw new Error('Elemenx invalid directive name: ' + name);
 
 			if (this.Registry[name])
 				throw new Error('Elemenx directive already registered: ' + name);
@@ -2117,7 +2110,7 @@
 			var definition;
 
 			for (name in this.Registry) {
-				if (!Object.prototype.hasOwnProperty.call(this.Registry, name)) continue;
+				if (!Runtime.Own(this.Registry, name)) continue;
 
 				definition = this.Registry[name];
 
@@ -2176,7 +2169,7 @@
 			if (attribute === 'data-elemenx-component') return true;
 
 			for (name in this.Prefixes) {
-				if (Object.prototype.hasOwnProperty.call(this.Prefixes, name) && attribute.indexOf(this.Prefixes[name]) === 0) {
+				if (Runtime.Own(this.Prefixes, name) && attribute.indexOf(this.Prefixes[name]) === 0) {
 					return true;
 				}
 			}
@@ -2264,6 +2257,7 @@
 		'use strict';
 
 		var Elemenx = global.Elemenx;
+		var own = Runtime.Own;
 
 		/* Component: Directive API */
 		Elemenx.Directive = function (name, definition) {
@@ -2324,6 +2318,7 @@
 		var componentOutlets = new WeakMap();
 		var componentValues = new WeakMap();
 		var componentRouteUpdaters = new WeakMap();
+		var componentReloading = false;
 		var templateResources = {};
 		var templatePending = {};
 		var templateRevision = 0;
@@ -2678,16 +2673,16 @@
 			var lower;
 
 			for (key in value) {
-				if (!Object.prototype.hasOwnProperty.call(value, key)) continue;
+				if (!own(value, key)) continue;
 
 				target = key;
 
-				if (!Object.prototype.hasOwnProperty.call(definition, target) && typeof key === 'string') {
+				if (!own(definition, target) && typeof key === 'string') {
 					lower = key.toLowerCase();
 					match = null;
 
 					for (name in definition) {
-						if (!Object.prototype.hasOwnProperty.call(definition, name) || name.toLowerCase() !== lower) continue;
+						if (!own(definition, name) || name.toLowerCase() !== lower) continue;
 
 						if (match !== null) {
 							match = key;
@@ -2741,7 +2736,7 @@
 				while (placeholder.firstChild) placeholder.removeChild(placeholder.firstChild);
 
 				if (typeof source === 'string' && source.charAt(0) === '#') {
-					var registered = Runtime.Template && Runtime.Template.Get(source.substring(1));
+					var registered = Runtime.Template.Get(source.substring(1));
 
 					if (registered !== null && registered !== undefined) {
 						placeholder.innerHTML = registered;
@@ -3029,7 +3024,7 @@
 			return String(source || '').replace(/^\s+|\s+$/g, '');
 		}
 
-		Runtime.CompileExpression = function (source) {
+		function compileExpression (source) {
 			source = expressionNames(source);
 
 			if (!source) {
@@ -3042,15 +3037,11 @@
 				expressionCache[source] = new Function('$scope', 'with ($scope || {}) { return (' + source + '); }');
 
 			return expressionCache[source];
-		};
+		}
 
 		Runtime.EvaluateExpression = function (source, scope) {
-			return Runtime.CompileExpression(source)(scope || {});
+			return compileExpression(source)(scope || {});
 		};
-
-		function own (object, key) {
-			return Object.prototype.hasOwnProperty.call(object, key);
-		}
 
 		function resolveTemplate (template) {
 			var source;
@@ -3064,7 +3055,7 @@
 			}
 
 			if (typeof source === 'string' && source.charAt(0) === '#') {
-				var registered = Runtime.Template && Runtime.Template.Get(source.substring(1));
+				var registered = Runtime.Template.Get(source.substring(1));
 				if (registered !== null && registered !== undefined) return registered;
 
 				node = document.getElementById(source.substring(1));
@@ -3212,7 +3203,7 @@
 
 		function addBinding (bindings, source, binding) {
 			binding.expression = source;
-			binding.evaluate = Runtime.CompileExpression(source);
+			binding.evaluate = compileExpression(source);
 
 			bindings.push(binding);
 		}
@@ -3421,7 +3412,7 @@
 
 					if (target !== null) {
 						if (target !== 'value' && target !== 'checked' && target !== 'selected')
-							throw new Error('Invalid Elemenx two-way binding target: [(' + target + ')]');
+							throw new Error('Elemenx invalid two-way binding target: [(' + target + ')]');
 
 						key = attr.value;
 
@@ -3870,7 +3861,7 @@
 						}
 					}, data, slotProjection, options);
 
-					if (name && !Runtime.ComponentReloading)
+					if (name && !componentReloading)
 						trackComponentInstance(name, component);
 
 					return component;
@@ -4073,7 +4064,7 @@
 					}
 
 					if (!target) {
-						throw new Error('Collection target not found: ' + name);
+						throw new Error('Elemenx Collection target not found: ' + name);
 					}
 
 					collections[name] = Runtime.Collection(target, factory, options || {});
@@ -4127,7 +4118,7 @@
 
 					i = 0;
 					while (i < nodes.length) {
-						if (Runtime.ResolveComponentRegistered && Runtime.ResolveComponentRegistered(nodes[i].getAttribute('data-elemenx-component') || nodes[i].tagName)) {
+						if (Runtime.ResolveComponentRegistered(nodes[i].getAttribute('data-elemenx-component') || nodes[i].tagName)) {
 							i++;
 
 							continue;
@@ -4221,7 +4212,7 @@
 						}
 
 						(function (record, context) {
-							var evaluate = record.Expression ? Runtime.CompileExpression(record.Expression) : null;
+							var evaluate = record.Expression ? compileExpression(record.Expression) : null;
 
 							effect = Runtime.Effect(function () {
 								var value;
@@ -4383,20 +4374,7 @@
 
 					effects.length = 0;
 
-					if (Runtime.DestroyNetworkOwner)
-						Runtime.DestroyNetworkOwner(api);
-
-					if (Runtime.DestroyMessagingOwner)
-						Runtime.DestroyMessagingOwner(api);
-
-					if (Runtime.DestroyEventsOwner)
-						Runtime.DestroyEventsOwner(api);
-
-					if (Runtime.DestroyWebWorkerOwner)
-						Runtime.DestroyWebWorkerOwner(api);
-
-					if (Runtime.DestroyServiceWorkerOwner)
-						Runtime.DestroyServiceWorkerOwner(api);
+					Runtime.DestroyOwnerResources(api);
 
 					destroyCustomDirectives();
 
@@ -4497,16 +4475,7 @@
 					});
 				}
 
-				api.$Network = Runtime.NetworkFor ? Runtime.NetworkFor(api) : Elemenx.Network;
-				api.$Storage = Runtime.StorageFor ? Runtime.StorageFor(api) : Elemenx.Storage;
-				api.$WebWorker = Runtime.WebWorkerFor ? Runtime.WebWorkerFor(api) : null;
-				api.$ServiceWorker = Runtime.ServiceWorkerFor ? Runtime.ServiceWorkerFor(api) : null;
-
-				if (Runtime.SetMessagingEntity)
-					Runtime.SetMessagingEntity(api, name || 'Component', messagingInstanceSequence++);
-
-				api.$Messaging = Runtime.MessagingFor ? Runtime.MessagingFor(api) : Elemenx.Messaging;
-				api.$Events = Runtime.EventsFor ? Runtime.EventsFor(api) : Elemenx.Events;
+				Runtime.AttachOwnerFacades(api, name || 'Component', messagingInstanceSequence++);
 
 				componentOutlets.set(api, outlets);
 				componentValues.set(api, values);
@@ -4548,8 +4517,7 @@
 
 				bindEvents();
 
-				if (Runtime.Structural)
-					structural = Runtime.Structural(api, definition, pristineRoot);
+				structural = Runtime.Structural(api, definition, pristineRoot);
 
 				/*
 				 * Do not eagerly evaluate template expressions against an empty
@@ -4572,11 +4540,7 @@
 				if (definition.$Title !== undefined)
 					api.$Title(definition.$Title);
 
-				if (Runtime.InitializeEventsOwner)
-					Runtime.InitializeEventsOwner(api, definition);
-
-				if (Runtime.InitializeMessagingOwner)
-					Runtime.InitializeMessagingOwner(api, definition);
+				Runtime.InitializeOwnerSubscriptions(api, definition);
 
 				if (definition.$OnCreate)
 					definition.$OnCreate.call(api, data || {});
@@ -4654,7 +4618,7 @@
 			if (componentRegistry[name])
 				return componentRegistry[name];
 
-			if (Runtime.Bundle && Runtime.Bundle.Load('Component', name)) {
+			if (Runtime.Bundle.Load('Component', name)) {
 				return Runtime.ResolveComponentRegistered(name);
 			}
 
@@ -4764,7 +4728,7 @@
 			return snapshot.length;
 		};
 
-		Runtime.ReloadTemplateInstances = function (templateName) {
+		function reloadTemplateInstances (templateName) {
 			var name;
 			var factory;
 			var definition;
@@ -4785,11 +4749,12 @@
 			}
 
 			return count;
-		};
+		}
+
 		Elemenx.Template.Reload = function (name, value) {
 			templateRegistrySet(name, value);
 
-			return Runtime.ReloadTemplateInstances(name);
+			return reloadTemplateInstances(name);
 		};
 
 		Runtime.ReloadComponentInstances = function (name) {
@@ -4801,7 +4766,7 @@
 
 			var snapshot = list.slice();
 
-			Runtime.ComponentReloading = true;
+			componentReloading = true;
 
 			try {
 				var i = 0;
@@ -4815,7 +4780,7 @@
 				}
 			}
 			finally {
-				Runtime.ComponentReloading = false;
+				componentReloading = false;
 			}
 
 			return snapshot.length;
@@ -4852,6 +4817,7 @@
 		'use strict';
 
 		var Elemenx = global.Elemenx;
+		var own = Runtime.Own;
 
 		function Router (config) {
 			var root = config.Root;
@@ -4907,7 +4873,7 @@
 				var i;
 
 				for (name in events) {
-					if (!Object.prototype.hasOwnProperty.call(events, name)) continue;
+					if (!own(events, name)) continue;
 
 					list = events[name];
 					next = [];
@@ -5027,11 +4993,7 @@
 					nextParams = {};
 					nextChain = chain.slice(0);
 
-					for (value in params) {
-						if (Object.prototype.hasOwnProperty.call(params, value)) {
-							nextParams[value] = params[value];
-						}
-					}
+					Runtime.Assign(nextParams, params);
 
 					if (offset + pattern.length <= segments.length) {
 						j = 0;
@@ -5134,7 +5096,7 @@
 				if (factory)
 					return factory;
 
-				if (Runtime.Bundle && Runtime.Bundle.Load && Runtime.Bundle.Load('Component', reference)) {
+				if (Runtime.Bundle.Load('Component', reference)) {
 					return Runtime.ResolveComponentRegistered(reference);
 				}
 
@@ -5404,7 +5366,7 @@
 						if (!guard && typeof guardReference === 'string') {
 							var currentApplication = application();
 
-							if (Runtime.Discovery && currentApplication && Runtime.Discovery.Ready(currentApplication)) {
+							if (currentApplication && Runtime.Discovery.Ready(currentApplication)) {
 								Runtime.Discovery.Load(currentApplication, 'Guard', guardReference, false, function (error) {
 									if (error)
 										throw error;
@@ -5766,15 +5728,9 @@
 			function historyState (index) {
 				var current = global.history.state;
 				var state = {};
-				var key;
 
-				if (current && typeof current === 'object') {
-					for (key in current) {
-						if (Object.prototype.hasOwnProperty.call(current, key)) {
-							state[key] = current[key];
-						}
-					}
-				}
+				if (current && typeof current === 'object')
+					Runtime.Assign(state, current);
 
 				state.ElemenxRouterIndex = index;
 
@@ -6163,6 +6119,7 @@
 		'use strict';
 
 		var Elemenx = global.Elemenx;
+		var own = Runtime.Own;
 
 		function Structural (component, definition, blueprintRoot) {
 			var directiveHosts = {};
@@ -6183,7 +6140,7 @@
 			function compileDirectiveHost (node, directive) {
 				var compiler = directiveHost(directive.Definition.Host);
 				if (!compiler)
-					throw new Error('Unknown Elemenx directive host: ' + directive.Definition.Host);
+					throw new Error('Elemenx unknown directive host: ' + directive.Definition.Host);
 
 				return compiler(node, directive);
 			}
@@ -6191,10 +6148,6 @@
 			var records = [];
 			var projectionBlueprintRoot = null;
 			var ownerToken = {};
-
-			function own (object, name) {
-				return Object.prototype.hasOwnProperty.call(object, name);
-			}
 
 			function expression (data, source) {
 				try {
@@ -6217,15 +6170,15 @@
 
 				var application = component.$Application();
 
-				if (Runtime.Bundle && Runtime.Bundle.ResolvedName && Runtime.Bundle.ResolvedName('Component', name)) {
+				if (Runtime.Bundle.ResolvedName('Component', name)) {
 					return Runtime.ResolveComponent(name);
 				}
 
-				if (Runtime.Discovery && application && Runtime.Discovery.Ready(application) && Runtime.Discovery.ResolvedName(application, name)) {
+				if (application && Runtime.Discovery.Ready(application) && Runtime.Discovery.ResolvedName(application, name)) {
 					return Runtime.ResolveComponent(name);
 				}
 
-				if (Runtime.Library && Runtime.Library.ResolvedURL && Runtime.Library.ResolvedURL(application, name)) {
+				if (Runtime.Library.ResolvedURL(application, name)) {
 					return Runtime.ResolveComponent(name);
 				}
 
@@ -6256,7 +6209,7 @@
 					var code;
 
 					if (i >= length || !/[A-Za-z_$]/.test(target.charAt(i)))
-						throw new Error('Invalid Elemenx Component binding target: [' + target + ']');
+						throw new Error('Elemenx invalid Component binding target: [' + target + ']');
 
 					start = i++;
 
@@ -6292,7 +6245,7 @@
 							i++;
 
 						if (start === i || target.charAt(i) !== ']')
-							throw new Error('Invalid Elemenx Component binding target: [' + target + ']');
+							throw new Error('Elemenx invalid Component binding target: [' + target + ']');
 
 						value = parseInt(target.substring(start, i), 10);
 
@@ -6303,7 +6256,7 @@
 						continue;
 					}
 
-					throw new Error('Invalid Elemenx Component binding target: [' + target + ']');
+					throw new Error('Elemenx invalid Component binding target: [' + target + ']');
 				}
 
 				return parts;
@@ -6482,7 +6435,7 @@
 						var groupName;
 
 						for (groupName in groups) {
-							if (Object.prototype.hasOwnProperty.call(groups, groupName)) {
+							if (own(groups, groupName)) {
 								result[groupName] = [groups[groupName]];
 							}
 						}
@@ -6593,7 +6546,7 @@
 				if (node.nodeType !== 1) return;
 
 				/* A foreign Application mount owns its complete subtree. */
-				if (Runtime.ApplicationBoundary && Runtime.ApplicationBoundary(component.$Application(), node)) return;
+				if (Runtime.ApplicationBoundary(component.$Application(), node)) return;
 
 				/* Directive composition policy is validated before host dispatch. */
 				Runtime.Directive.Policy(node);
@@ -7207,7 +7160,7 @@
 						}
 					}
 					else {
-						throw new Error('Unknown Elemenx collection render mode: ' + mode);
+						throw new Error('Elemenx unknown collection render mode: ' + mode);
 					}
 
 					if (i >= limit)
@@ -7484,6 +7437,7 @@
 	/* Network */
 	(function (global) {
 		var Elemenx = global.Elemenx;
+		var own = Runtime.Own;
 		var NetworkProtocols = {};
 
 		/* Network: lifecycle and structured envelope */
@@ -7617,12 +7571,12 @@
 				var view = new DataView(buffer);
 
 				if (buffer.byteLength < 8 || view.getUint32(0) !== 0x45585354) {
-					throw new Error('Invalid Elemenx structured transfer envelope');
+					throw new Error('Elemenx invalid structured transfer envelope');
 				}
 
 				var manifestLength = view.getUint32(4);
 				if (8 + manifestLength > buffer.byteLength)
-					throw new Error('Invalid Elemenx structured transfer manifest');
+					throw new Error('Elemenx invalid structured transfer manifest');
 
 				var offsets = [];
 				var manifest = JSON.parse(new TextDecoder().decode(new Uint8Array(buffer, 8, manifestLength)));
@@ -7646,7 +7600,7 @@
 
 					if (!item || typeof item !== 'object') return item;
 
-					if (Object.prototype.hasOwnProperty.call(item, '$ElemenxBinary')) {
+					if (own(item, '$ElemenxBinary')) {
 						descriptor = manifest.Parts[item.$ElemenxBinary];
 						bytes = buffer.slice(offsets[item.$ElemenxBinary], offsets[item.$ElemenxBinary] + descriptor.Size);
 
@@ -7656,7 +7610,8 @@
 						return new Blob([bytes], {type: descriptor.Mime});
 					}
 
-					if (Object.prototype.hasOwnProperty.call(item, '$ElemenxDate')) return new Date(item.$ElemenxDate);
+					if (own(item, '$ElemenxDate'))
+						return new Date(item.$ElemenxDate);
 
 					if (Array.isArray(item)) {
 						output = [];
@@ -7783,7 +7738,7 @@
 			var config = configuration || {};
 			var method = config.Method || 'GET';
 			var url = config.URL || '';
-			var data = Object.prototype.hasOwnProperty.call(config, 'Data') ? config.Data : null;
+			var data = own(config, 'Data') ? config.Data : null;
 			var headers = {};
 			var protocol = ResolveNetworkProtocol(config.Protocol);
 			var xhr = null;
@@ -8059,7 +8014,7 @@
 			var config = configuration || {};
 			var method = config.Method || 'GET';
 			var url = config.URL || '';
-			var data = Object.prototype.hasOwnProperty.call(config, 'Data') ? config.Data : null;
+			var data = own(config, 'Data') ? config.Data : null;
 			var headers = {};
 			var protocol = ResolveNetworkProtocol(config.Protocol);
 			var controller = null;
@@ -8436,7 +8391,7 @@
 			var config = configuration || {};
 			var method = config.Method || 'GET';
 			var url = config.URL || '';
-			var data = Object.prototype.hasOwnProperty.call(config, 'Data') ? config.Data : null;
+			var data = own(config, 'Data') ? config.Data : null;
 			var headers = {};
 			var protocol = ResolveNetworkProtocol(config.Protocol);
 			var retry = config.Retry !== undefined ? config.Retry : 1000;
@@ -8922,12 +8877,12 @@
 		function NetworkTransferOutbound (configuration) {
 			var config = configuration || {};
 			var transport = config.Transport || null;
-			var source = Object.prototype.hasOwnProperty.call(config, 'Data') ? config.Data : null;
+			var source = own(config, 'Data') ? config.Data : null;
 			var encoder = config.Encoder || null;
 			var chunkSize = config.ChunkSize || (64 * 1024);
 			var windowSize = config.WindowSize || 8;
 			var retry = config.Retry || 1500;
-			var maxRetries = Object.prototype.hasOwnProperty.call(config, 'MaxRetries') ? config.MaxRetries : 8;
+			var maxRetries = own(config, 'MaxRetries') ? config.MaxRetries : 8;
 			var transferID = null;
 			var offset = 0;
 			var nextIndex = 0;
@@ -9008,7 +8963,7 @@
 					return view.slice().buffer;
 				}
 
-				throw new Error('Unsupported chunked transfer source');
+				throw new Error('Elemenx unsupported chunked transfer source');
 			}
 
 			function toArrayBuffer (value) {
@@ -9021,7 +8976,7 @@
 				if (value instanceof Blob)
 					return value.arrayBuffer();
 
-				return global.Promise.reject(new Error('Unsupported transfer chunk'));
+				return global.Promise.reject(new Error('Elemenx unsupported transfer chunk'));
 			}
 
 			function transform (value, context) {
@@ -9182,7 +9137,7 @@
 
 			function sendPacket (packet, accepted) {
 				if (!transport || typeof transport.Send !== 'function')
-					throw new Error('Chunked transfer transport must provide Send(data)');
+					throw new Error('Elemenx chunked transfer transport must provide Send(data)');
 
 				sendQueue.push({Packet: packet, Accepted: accepted || null});
 
@@ -9196,7 +9151,7 @@
 					if (!active || currentGeneration !== generation || !inFlight[flight.Index]) return;
 
 					if (flight.Retries >= maxRetries) {
-						fail('Error', new Error('Transfer chunk acknowledgement timeout: ' + flight.Index));
+						fail('Error', new Error('Elemenx Transfer chunk acknowledgement timeout: ' + flight.Index));
 
 						return;
 					}
@@ -9624,7 +9579,7 @@
 						return api;
 
 					if (source === null || source === undefined) {
-						emit('Error', {Error: new Error('Transfer source is not set')});
+						emit('Error', {Error: new Error('Elemenx Transfer source is not set')});
 
 						return api;
 					}
@@ -9635,7 +9590,7 @@
 					mode = transport && typeof transport.Send === 'function' ? 'Chunked' : 'Whole';
 
 					if (mode === 'Whole' && (!transport || typeof transport.Data !== 'function' || typeof transport.Execute !== 'function')) {
-						emit('Error', {Error: new Error('Whole transfer transport must provide Data(data) and Execute()')});
+						emit('Error', {Error: new Error('Elemenx whole transfer transport must provide Data(data) and Execute()')});
 
 						return api;
 					}
@@ -9766,13 +9721,13 @@
 		function NetworkTransfer (configuration) {
 			var config = configuration || {};
 			var transport = config.Transport || null;
-			var sourceSet = Object.prototype.hasOwnProperty.call(config, 'Data');
+			var sourceSet = own(config, 'Data');
 			var source = sourceSet ? config.Data : null;
 			var encoder = config.Encoder || null;
 			var chunkSize = config.ChunkSize || (64 * 1024);
 			var windowSize = config.WindowSize || 8;
 			var retry = config.Retry || 1500;
-			var maxRetries = Object.prototype.hasOwnProperty.call(config, 'MaxRetries') ? config.MaxRetries : 8;
+			var maxRetries = own(config, 'MaxRetries') ? config.MaxRetries : 8;
 			var outbound = null;
 			var active = false;
 			var phase = 'Idle';
@@ -9947,7 +9902,7 @@
 					var value = binary(packet.Data);
 
 					if (!value) {
-						fail('Error', new Error('Protocol must decode inbound Transfer chunk Data to binary'));
+						fail('Error', new Error('Elemenx Protocol must decode inbound Transfer chunk Data to binary'));
 
 						return;
 					}
@@ -9997,7 +9952,7 @@
 
 			function executeInbound () {
 				if (!transport || typeof transport.On !== 'function') {
-					emit('Error', {Error: new Error('Inbound transfer transport must provide On()')});
+					emit('Error', {Error: new Error('Elemenx inbound transfer transport must provide On()')});
 
 					return;
 				}
@@ -10351,7 +10306,7 @@
 				if (ArrayBuffer.isView(value))
 					return value.buffer.slice(value.byteOffset, value.byteOffset + value.byteLength);
 
-				throw new Error('Protocol must decode transfer chunk Data to binary');
+				throw new Error('Elemenx Protocol must decode transfer chunk Data to binary');
 			}
 
 			function receivePacket (packet) {
@@ -10391,7 +10346,7 @@
 						return;
 					}
 
-					if (!Object.prototype.hasOwnProperty.call(transfer.Chunks, packet.Index)) {
+					if (!own(transfer.Chunks, packet.Index)) {
 						transfer.Chunks[packet.Index] = chunk;
 					}
 
@@ -10408,7 +10363,7 @@
 					});
 
 					if (keys.length !== packet.Chunks) {
-						emit('Error', {ID: packet.ID, Error: new Error('Transfer ended with missing chunks')});
+						emit('Error', {ID: packet.ID, Error: new Error('Elemenx Transfer ended with missing chunks')});
 
 						return;
 					}
@@ -11205,7 +11160,7 @@
 					var currentGeneration = generation;
 
 					if (!currentConnection || !active)
-						return global.Promise.reject(new Error('WebRTC connection is not active'));
+						return global.Promise.reject(new Error('Elemenx WebRTC connection is not active'));
 
 					return currentConnection.setRemoteDescription(description).then(function () {
 						if (!current(currentGeneration, currentConnection)) return null;
@@ -11712,7 +11667,7 @@
 				bind('Transport.AfterSend', function (event) {
 					if (!running) return;
 
-					var delta = bytes(event && event.Data && Object.prototype.hasOwnProperty.call(event.Data, 'Data') ? event.Data.Data : event ? event.Data : null);
+					var delta = bytes(event && event.Data && own(event.Data, 'Data') ? event.Data.Data : event ? event.Data : null);
 					if (delta > 0)
 						beginDirection('TX', now());
 
@@ -11727,7 +11682,7 @@
 				bind('Transport.Data', function (event) {
 					if (!running) return;
 
-					var delta = bytes(event && event.Data && Object.prototype.hasOwnProperty.call(event.Data, 'Data') ? event.Data.Data : event ? event.Data : null);
+					var delta = bytes(event && event.Data && own(event.Data, 'Data') ? event.Data.Data : event ? event.Data : null);
 					if (delta > 0)
 						beginDirection('RX', now());
 
@@ -12038,7 +11993,7 @@
 
 			if (listeners && typeof resource.On === 'function') {
 				for (key in listeners) {
-					if (!Object.prototype.hasOwnProperty.call(listeners, key)) continue;
+					if (!own(listeners, key)) continue;
 
 					resource.On(key, listeners[key]);
 				}
@@ -12140,6 +12095,7 @@
 		'use strict';
 
 		var Elemenx = global.Elemenx;
+		var own = Runtime.Own;
 
 		function encodeValue (value) {
 			return JSON.stringify({
@@ -12159,7 +12115,7 @@
 				return null;
 			}
 
-			if (!parsed || !Object.prototype.hasOwnProperty.call(parsed, 'Value')) return null;
+			if (!parsed || !own(parsed, 'Value')) return null;
 
 			return parsed.Value;
 		}
@@ -12315,7 +12271,7 @@
 
 					name = key(name);
 
-					return Object.prototype.hasOwnProperty.call(values, name) ? values[name] : null;
+					return own(values, name) ? values[name] : null;
 				},
 
 				Set: function (name, value, options) {
@@ -12327,20 +12283,13 @@
 				Has: function (name) {
 					var values = all();
 
-					return Object.prototype.hasOwnProperty.call(values, key(name));
+					return own(values, key(name));
 				},
 
 				Remove: function (name, options) {
 					options = options || {};
 
-					var removeOptions = {};
-					var optionName;
-
-					for (optionName in options) {
-						if (Object.prototype.hasOwnProperty.call(options, optionName)) {
-							removeOptions[optionName] = options[optionName];
-						}
-					}
+					var removeOptions = Runtime.Assign({}, options);
 
 					removeOptions.MaxAge = 0;
 					removeOptions.Expires = new Date(0);
@@ -12355,7 +12304,7 @@
 					var name;
 
 					for (name in values) {
-						if (!Object.prototype.hasOwnProperty.call(values, name)) continue;
+						if (!own(values, name)) continue;
 						if (prefix && name.indexOf(prefix) !== 0) continue;
 
 						this.Remove(prefix ? name.substring(prefix.length) : name, options);
@@ -12483,7 +12432,7 @@
 				var indexName;
 
 				for (indexName in indexes) {
-					if (!Object.prototype.hasOwnProperty.call(indexes, indexName)) continue;
+					if (!own(indexes, indexName)) continue;
 					if (store.indexNames.contains(indexName)) continue;
 
 					var options = indexes[indexName] || {};
@@ -12504,7 +12453,7 @@
 				var storeName;
 
 				for (storeName in stores) {
-					if (!Object.prototype.hasOwnProperty.call(stores, storeName)) continue;
+					if (!own(stores, storeName)) continue;
 
 					var options = stores[storeName] || {};
 					var store;
@@ -12580,11 +12529,11 @@
 				};
 
 				request.onerror = function () {
-					failWaiting(request.error || new Error('IndexedDB open failed'));
+					failWaiting(request.error || new Error('Elemenx IndexedDB open failed'));
 				};
 
 				request.onblocked = function () {
-					failWaiting(new Error('IndexedDB open blocked'));
+					failWaiting(new Error('Elemenx IndexedDB open blocked'));
 				};
 			}
 
@@ -12618,7 +12567,7 @@
 							var request;
 
 							if (!db.objectStoreNames.contains(storeName)) {
-								error(new Error('IndexedDB store not found: ' + storeName));
+								error(new Error('Elemenx IndexedDB store not found: ' + storeName));
 
 								return;
 							}
@@ -12658,7 +12607,7 @@
 							};
 
 							request.onerror = function () {
-								error(request.error || transaction.error || new Error('IndexedDB operation failed'));
+								error(request.error || transaction.error || new Error('Elemenx IndexedDB operation failed'));
 							};
 						}, error);
 					}
@@ -12877,7 +12826,7 @@
 
 								failed = true;
 
-								error(transaction.error || new Error('IndexedDB transaction failed'));
+								error(transaction.error || new Error('Elemenx IndexedDB transaction failed'));
 							};
 
 							transaction.onabort = function () {
@@ -12885,7 +12834,7 @@
 
 								failed = true;
 
-								error(transaction.error || new Error('IndexedDB transaction aborted'));
+								error(transaction.error || new Error('Elemenx IndexedDB transaction aborted'));
 							};
 
 							try {
@@ -12944,7 +12893,7 @@
 						};
 
 						request.onerror = function () {
-							error(request.error || new Error('IndexedDB delete failed'));
+							error(request.error || new Error('Elemenx IndexedDB delete failed'));
 						};
 					});
 				}
@@ -12963,24 +12912,13 @@
 			}
 
 			if (arguments.length === 1)
-				return Object.prototype.hasOwnProperty.call(contextRegistry, name) ? contextRegistry[name] : null;
+				return own(contextRegistry, name) ? contextRegistry[name] : null;
 
 			throw new Error('Elemenx.Storage.Context expects (name) or (name, definition)');
 		}
 
 		function copyObject (source) {
-			var output = {};
-			var key;
-
-			source = source || {};
-
-			for (key in source) {
-				if (Object.prototype.hasOwnProperty.call(source, key)) {
-					output[key] = source[key];
-				}
-			}
-
-			return output;
+			return Runtime.Assign({}, source || {});
 		}
 
 		function mergeIndexedDBDefinition (target, source) {
@@ -13002,7 +12940,7 @@
 			var indexName;
 
 			for (storeName in source.Stores) {
-				if (!Object.prototype.hasOwnProperty.call(source.Stores, storeName)) continue;
+				if (!own(source.Stores, storeName)) continue;
 
 				var sourceStore = source.Stores[storeName] || {};
 				var targetStore = target.Stores[storeName] || {};
@@ -13017,7 +12955,7 @@
 				mergedStore.Indexes = copyObject(targetStore.Indexes);
 
 				for (indexName in sourceStore.Indexes) {
-					if (!Object.prototype.hasOwnProperty.call(sourceStore.Indexes, indexName)) continue;
+					if (!own(sourceStore.Indexes, indexName)) continue;
 
 					mergedStore.Indexes[indexName] = copyObject(sourceStore.Indexes[indexName]);
 				}
@@ -13039,14 +12977,14 @@
 				definition = StorageContext(context);
 
 				if (!definition)
-					throw new Error('Unknown Elemenx Storage Context: ' + context);
+					throw new Error('Elemenx unknown Storage Context: ' + context);
 			}
 			else {
 				definition = context;
 			}
 
 			if (stack.indexOf(definition) !== -1)
-				throw new Error('Circular Elemenx Storage Context dependency');
+				throw new Error('Elemenx circular Storage Context dependency');
 
 			stack.push(definition);
 
@@ -13097,7 +13035,7 @@
 
 				if (arguments.length === 0) {
 					if (!configured.Name)
-						throw new Error('Storage Context does not define IndexedDB.Name');
+						throw new Error('Elemenx Storage Context does not define IndexedDB.Name');
 
 					return createIndexedDB(configured.Name, configured);
 				}
@@ -13601,6 +13539,7 @@
 		'use strict';
 
 		var Elemenx = global.Elemenx;
+		var own = Runtime.Own;
 		var contexts = {};
 		var owners = new WeakMap();
 		var destroyedOwners = new WeakSet();
@@ -13901,8 +13840,7 @@
 
 				ensure();
 
-				if (Runtime.PrepareMessagingSend)
-					Runtime.PrepareMessagingSend(String(channel));
+				Runtime.PrepareMessagingSend(String(channel));
 
 				if (options && options.Transferable === true) {
 					transfer = [data];
@@ -13931,13 +13869,13 @@
 				add(entityInstanceChannel);
 
 				for (channel in automatic) {
-					if (Object.prototype.hasOwnProperty.call(automatic, channel)) {
+					if (own(automatic, channel)) {
 						add(channel);
 					}
 				}
 
 				for (channel in subscriptions) {
-					if (Object.prototype.hasOwnProperty.call(subscriptions, channel)) {
+					if (own(subscriptions, channel)) {
 						add(channel);
 					}
 				}
@@ -13959,11 +13897,11 @@
 				var context = null;
 				var message;
 				var i = 0;
-				var own = channel === OwnChannel();
-				var member = own || channel === entityChannel || channel === entityInstanceChannel || automatic[channel] || explicit;
+				var ownChannel = channel === OwnChannel();
+				var member = ownChannel || channel === entityChannel || channel === entityInstanceChannel || automatic[channel] || explicit;
 				if (destroyed || !member) return;
 
-				if (own)
+				if (ownChannel)
 					callbacks = callbacks.concat(ownCallbacks);
 
 				if (explicit)
@@ -14475,9 +14413,9 @@
 		InitializeWindowDiscovery();
 
 		if (Runtime.HasDOM && typeof global.BroadcastChannel === 'function') {
-			Runtime.MessagingBroadcastChannel = new global.BroadcastChannel('Elemenx:Messaging');
+			var broadcastChannel = new global.BroadcastChannel('Elemenx:Messaging');
 
-			Runtime.MessagingBroadcastChannel.addEventListener('message', function (event) {
+			broadcastChannel.addEventListener('message', function (event) {
 				var packet = event.data;
 				if (!packet || packet.ElemenxMessagingContext !== true) return;
 				if (packet.ElemenxMessagingProtocol !== 1 || !packet.Runtime) return;
@@ -14486,7 +14424,7 @@
 				messagingContexts[packet.Runtime] = true;
 
 				if (packet.Type === 'HELLO')
-					Runtime.MessagingBroadcastChannel.postMessage({
+					broadcastChannel.postMessage({
 						ElemenxMessagingContext: true,
 						ElemenxMessagingProtocol: 1,
 						Type: 'WELCOME',
@@ -14494,11 +14432,11 @@
 					});
 			});
 
-			Runtime.MessagingBroadcastBridge = Runtime.AttachMessagingBridge(Runtime.MessagingBroadcastChannel, {
+			Runtime.AttachMessagingBridge(broadcastChannel, {
 				Transferable: false
 			});
 
-			Runtime.MessagingBroadcastChannel.postMessage({
+			broadcastChannel.postMessage({
 				ElemenxMessagingContext: true,
 				ElemenxMessagingProtocol: 1,
 				Type: 'HELLO',
@@ -14526,6 +14464,7 @@
 		'use strict';
 
 		var Elemenx = global.Elemenx;
+		var own = Runtime.Own;
 		var definitions = {};
 		var owners = new WeakMap();
 		var destroyedOwners = new WeakSet();
@@ -14539,16 +14478,7 @@
 		}
 
 		function normalizeDefinition (name, definition) {
-			var result = {};
-			var key;
-
-			definition = definition || {};
-
-			for (key in definition) {
-				if (Object.prototype.hasOwnProperty.call(definition, key)) {
-					result[key] = definition[key];
-				}
-			}
+			var result = Runtime.Assign({}, definition || {});
 
 			if (result.StartMode === undefined) {
 				result.StartMode = 'auto';
@@ -14985,6 +14915,7 @@
 		'use strict';
 
 		var Elemenx = global.Elemenx;
+		var own = Runtime.Own;
 		var definitions = {};
 		var handles = [];
 		var owners = new WeakMap();
@@ -14995,17 +14926,7 @@
 		}
 
 		function normalizeDefinition (name, definition) {
-			var result = {};
-			var key;
-
-			definition = definition || {};
-
-			for (key in definition) {
-				if (Object.prototype.hasOwnProperty.call(definition, key)) {
-					result[key] = definition[key];
-				}
-			}
-
+			var result = Runtime.Assign({}, definition || {});
 			if (!result.Script)
 				throw new Error('Elemenx ServiceWorker Script is required: ' + name);
 
@@ -15432,23 +15353,58 @@
 
 	})(typeof globalThis !== 'undefined' ? globalThis : self);
 
+	/* Owner resources */
+	(function (global) {
+		'use strict';
+
+		/*
+		 * Services, Components and Applications own Network resources, Messaging and Events sockets and workers.
+		 * These helpers wire and release them in one place; the release order is part of the lifecycle contract.
+		 */
+		Runtime.AttachOwnerFacades = function (owner, name, index) {
+			owner.$Network = Runtime.NetworkFor(owner);
+			owner.$Storage = Runtime.StorageFor(owner);
+			owner.$WebWorker = Runtime.WebWorkerFor(owner);
+			owner.$ServiceWorker = Runtime.ServiceWorkerFor(owner);
+
+			Runtime.SetMessagingEntity(owner, name, index);
+
+			owner.$Messaging = Runtime.MessagingFor(owner);
+			owner.$Events = Runtime.EventsFor(owner);
+		};
+
+		Runtime.InitializeOwnerSubscriptions = function (owner, definition) {
+			Runtime.InitializeEventsOwner(owner, definition);
+			Runtime.InitializeMessagingOwner(owner, definition);
+		};
+
+		Runtime.DestroyOwnerResources = function (owner) {
+			Runtime.DestroyNetworkOwner(owner);
+			Runtime.DestroyMessagingOwner(owner);
+			Runtime.DestroyEventsOwner(owner);
+			Runtime.DestroyWebWorkerOwner(owner);
+			Runtime.DestroyServiceWorkerOwner(owner);
+		};
+	})(typeof globalThis !== 'undefined' ? globalThis : self);
+
 	/* Application */
 	(function (global) {
 		'use strict';
 
 		var Elemenx = global.Elemenx;
+		var own = Runtime.Own;
 		var applications = {};
 		var mountOwners = typeof WeakMap !== 'undefined' ? new WeakMap() : null;
 		var mountedApplications = [];
 
-		Runtime.ApplicationMountOwner = function (element) {
+		function applicationMountOwner (element) {
 			if (!mountOwners || !element) return null;
 
 			return mountOwners.get(element) || null;
-		};
+		}
 
 		Runtime.ApplicationBoundary = function (application, element) {
-			var owner = Runtime.ApplicationMountOwner(element);
+			var owner = applicationMountOwner(element);
 
 			return !!(owner && owner !== application);
 		};
@@ -15539,7 +15495,7 @@
 			};
 
 			api.$Libraries = function () {
-				return Runtime.Library ? (typeof (definition.$Use || definition.Use) === 'string' ? [definition.$Use || definition.Use] : (definition.$Use || definition.Use || []).slice()) : [];
+				return typeof (definition.$Use || definition.Use) === 'string' ? [definition.$Use || definition.Use] : (definition.$Use || definition.Use || []).slice();
 			};
 
 			api.$Mount = function () {
@@ -15568,7 +15524,7 @@
 					return api;
 				}
 
-				return Runtime.NetworkFor ? Runtime.NetworkFor(api)(context) : Elemenx.Network;
+				return Runtime.NetworkFor(api)(context);
 			};
 
 			api.$Storage = function (context, value) {
@@ -15581,7 +15537,7 @@
 				return Elemenx.Storage(context);
 			};
 
-			api.$Events = Runtime.EventsFor ? Runtime.EventsFor(api) : Elemenx.Events;
+			api.$Events = Runtime.EventsFor(api);
 
 			api.$Messaging = function (context, value) {
 				if (arguments.length === 2) {
@@ -15590,7 +15546,7 @@
 					return api;
 				}
 
-				return Runtime.MessagingFor ? Runtime.MessagingFor(api)(context) : Elemenx.Messaging(context);
+				return Runtime.MessagingFor(api)(context);
 			};
 
 			api.$WebWorker = function (workerName, value) {
@@ -15606,7 +15562,7 @@
 
 			api.$ServiceWorker = function (workerName, value) {
 				var handle;
-				var serviceWorker = Runtime.ServiceWorkerFor ? Runtime.ServiceWorkerFor(api) : Elemenx.ServiceWorker;
+				var serviceWorker = Runtime.ServiceWorkerFor(api);
 
 				if (arguments.length === 1) {
 					if (serviceWorkers[workerName])
@@ -15635,7 +15591,7 @@
 			};
 
 			api.$Reload = function (type, entityName, callback) {
-				var bundled = Runtime.Bundle && Runtime.Bundle.ResolvedName(type, entityName);
+				var bundled = Runtime.Bundle.ResolvedName(type, entityName);
 
 				if (type !== 'Component' && type !== 'Service')
 					throw new Error('Elemenx Reload expects Component or Service');
@@ -15670,9 +15626,6 @@
 
 					return api;
 				}
-
-				if (!Runtime.Discovery)
-					throw new Error('Elemenx Discovery is not available');
 
 				return Runtime.Discovery.Reload(api, type, entityName, function (error) {
 					if (error && type === 'Component' && Runtime.FailComponentReload) {
@@ -15737,26 +15690,12 @@
 
 				var workerName;
 
-				if (Runtime.DestroyNetworkOwner)
-					Runtime.DestroyNetworkOwner(api);
+				Runtime.DestroyOwnerResources(api);
 
-				if (Runtime.DestroyMessagingOwner)
-					Runtime.DestroyMessagingOwner(api);
-
-				if (Runtime.DestroyEventsOwner)
-					Runtime.DestroyEventsOwner(api);
-
-				if (Runtime.DestroyWebWorkerOwner)
-					Runtime.DestroyWebWorkerOwner(api);
-
-				if (Runtime.DestroyServiceWorkerOwner)
-					Runtime.DestroyServiceWorkerOwner(api);
-
-				if (Runtime.DestroyApplicationServices)
-					Runtime.DestroyApplicationServices(api);
+				Runtime.DestroyApplicationServices(api);
 
 				for (workerName in serviceWorkers) {
-					if (!Object.prototype.hasOwnProperty.call(serviceWorkers, workerName)) continue;
+					if (!own(serviceWorkers, workerName)) continue;
 
 					if (serviceWorkers[workerName] && serviceWorkers[workerName].Destroy) {
 						serviceWorkers[workerName].Destroy();
@@ -15767,11 +15706,7 @@
 					delete applications[name];
 			};
 
-			if (Runtime.InitializeEventsOwner)
-				Runtime.InitializeEventsOwner(api, definition);
-
-			if (Runtime.InitializeMessagingOwner)
-				Runtime.InitializeMessagingOwner(api, definition);
+			Runtime.InitializeOwnerSubscriptions(api, definition);
 
 			if (typeof definition.$Bootstrap === 'function') {
 				definition.$Bootstrap.call(api);
@@ -15781,8 +15716,7 @@
 				var mount = mountElement(definition.$Mount);
 				if (!mount) return;
 
-				if (Runtime.Template && Runtime.Template.Harvest)
-					Runtime.Template.Harvest(mount);
+				Runtime.Template.Harvest(mount);
 
 				var template;
 				var fragment;
@@ -15793,7 +15727,7 @@
 				if (!source) return;
 
 				if (typeof source === 'string' && source.charAt(0) === '#') {
-					var registered = Runtime.Template && Runtime.Template.Get(source.substring(1));
+					var registered = Runtime.Template.Get(source.substring(1));
 
 					if (registered !== null && registered !== undefined) {
 						mount.innerHTML = registered;
@@ -15822,7 +15756,7 @@
 				var key;
 
 				for (key in definition.$Router) {
-					if (!Object.prototype.hasOwnProperty.call(definition.$Router, key)) continue;
+					if (!own(definition.$Router, key)) continue;
 					if (key === 'Root') continue;
 
 					routerDefinition[key] = definition.$Router[key];
@@ -15865,8 +15799,7 @@
 				if (!mount)
 					throw new Error('Elemenx Application mount not found: ' + definition.$Mount);
 
-				if (Runtime.Template && Runtime.Template.Harvest)
-					Runtime.Template.Harvest(mount);
+				Runtime.Template.Harvest(mount);
 
 				if (mountOwners) {
 					mountOwner = mountOwners.get(mount);
@@ -15959,7 +15892,7 @@
 						childFactory = Runtime.ResolveComponentRegistered(tag);
 
 						if (!childFactory) {
-							childBundle = Runtime.Bundle && Runtime.Bundle.ResolvedName ? Runtime.Bundle.ResolvedName('Component', tag) : null;
+							childBundle = Runtime.Bundle.ResolvedName('Component', tag);
 
 							if (!childBundle) return false;
 
@@ -15981,7 +15914,7 @@
 					return true;
 				}
 
-				if (!factory && Runtime.Bundle && Runtime.Bundle.ResolvedName) {
+				if (!factory) {
 					bundled = Runtime.Bundle.ResolvedName('Component', definition.$Component);
 
 					if (bundled) {
@@ -16002,7 +15935,7 @@
 			function startApplicationRoot () {
 				if (destroyed || !definition.$Component || root) return;
 
-				if (Runtime.Bundle && Runtime.Bundle.Ready()) {
+				if (Runtime.Bundle.Ready()) {
 					Runtime.Bundle.LoadType('Directive');
 					Runtime.Bundle.LoadType('Service');
 					Runtime.Bundle.LoadType('Guard');
@@ -16012,7 +15945,7 @@
 				if (discoveryRoot && definition.$DefinitionURL && !(/^(?:[a-z]+:)?\/\//i.test(discoveryRoot)) && discoveryRoot.charAt(0) !== '/')
 					discoveryRoot = definition.$DefinitionURL.substring(0, definition.$DefinitionURL.lastIndexOf('/') + 1) + discoveryRoot.replace(/^\.\//, '');
 
-				if (discoveryRoot && Runtime.Discovery && Runtime.Discovery.Root) {
+				if (discoveryRoot) {
 					Runtime.Discovery.Root(api, discoveryRoot);
 				}
 
@@ -16021,7 +15954,7 @@
 				 * source tree. The Discovery root is only remembered here; the map is
 				 * built lazily by Discovery.Load if a later explicit resource is absent.
 				 */
-				if (definition.$Root && Runtime.Discovery && rootAvailableWithoutDiscovery()) {
+				if (definition.$Root && rootAvailableWithoutDiscovery()) {
 					createRoot();
 
 					return;

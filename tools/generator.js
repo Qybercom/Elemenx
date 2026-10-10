@@ -2,6 +2,8 @@
 
 var fs = require('fs');
 var path = require('path');
+var common = require('./common.js');
+var fail = common.fail;
 
 var Types = {
 	component: {Label: 'Component'},
@@ -9,10 +11,6 @@ var Types = {
 	guard: {Label: 'Guard'},
 	directive: {Label: 'Directive'}
 };
-
-function fail (message) {
-	throw new Error(message);
-}
 
 function validName (name) {
 	return /^[A-Za-z_$][A-Za-z0-9_$]*$/.test(name || '');
@@ -25,20 +23,7 @@ function normalize (value) {
 function readIndex (file) {
 	if (!fs.existsSync(file)) return [];
 
-	var value;
-	var source = fs.readFileSync(file, 'utf8').replace(/;\s*$/, '');
-
-	try {
-		value = Function('return (' + source + ');')();
-	}
-	catch (error) {
-		fail('invalid index ' + file + ': ' + error.message);
-	}
-
-	if (!Array.isArray(value))
-		fail('index must return an Array: ' + file);
-
-	return value;
+	return common.parseIndex(file);
 }
 
 function writeIndex (file, entries) {

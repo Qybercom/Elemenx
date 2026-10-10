@@ -7,10 +7,7 @@ var Builder = require('./tools/builder.js');
 var Server = require('./tools/server.js');
 var Generator = require('./tools/generator.js');
 var Package = require('./package.json');
-
-function fail (message) {
-	throw new Error(message);
-}
+var fail = require('./tools/common.js').fail;
 
 var BooleanOptions = {force: true};
 

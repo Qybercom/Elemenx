@@ -5,7 +5,8 @@ import { fileURLToPath } from 'url';
 
 /*
  * Keeps docs/RUNTIME-INTERNALS.md and the table of contents of elemenx.js in sync with the code:
- * every Runtime field is documented under the section that assigns it, and every section header is listed.
+ * every Runtime field is documented under the section that assigns it, with the sections that use it,
+ * and every section header is listed in the table of contents.
  */
 
 var root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
@@ -36,28 +37,35 @@ function sectionAt (list, line) {
 	return name;
 }
 
-function codeOwners () {
+function codeFields () {
 	var list = sections();
-	var owners = {};
+	var fields = {};
 
 	lines.forEach(function (line, index) {
 		var pattern = /Runtime\.([A-Za-z]+)(\s*=(?!=))?/g;
+		var section = sectionAt(list, index + 1);
 		var match;
 
 		if (/^\s*\*/.test(line)) return;
 
 		while ((match = pattern.exec(line))) {
-			owners[match[1]] = owners[match[1]] || {};
+			fields[match[1]] = fields[match[1]] || {Owner: {}, Users: {}};
 
-			if (match[2])
-				owners[match[1]][sectionAt(list, index + 1)] = true;
+			if (match[2]) fields[match[1]].Owner[section] = true;
+			else fields[match[1]].Users[section] = true;
 		}
 	});
 
-	return owners;
+	return fields;
 }
 
-function documentedOwners () {
+function users (column) {
+	if (/^not /.test(column) || / only$/.test(column)) return [];
+
+	return column.split(', ').sort();
+}
+
+function documentedFields () {
 	var result = {};
 	var section = null;
 
@@ -69,28 +77,32 @@ function documentedOwners () {
 			section = heading[1];
 
 		if (row)
-			result[row[1]] = section;
+			result[row[1]] = {Section: section, Users: users(line.split('|')[3].trim())};
 	});
 
 	return result;
 }
 
 describe('Regression: Runtime internals documentation', function () {
-	it('documents every Runtime field under the section that assigns it, and nothing else', function () {
-		var owners = codeOwners();
-		var documented = documentedOwners();
+	it('documents every Runtime field under the section that assigns it, with its users, and nothing else', function () {
+		var fields = codeFields();
+		var documented = documentedFields();
 		var problems = [];
 
-		Object.keys(owners).forEach(function (field) {
-			var assigned = Object.keys(owners[field]);
+		Object.keys(fields).forEach(function (field) {
+			var assigned = Object.keys(fields[field].Owner);
+			var used = Object.keys(fields[field].Users).filter(function (name) {
+				return !fields[field].Owner[name];
+			}).sort();
 
 			if (!documented[field]) problems.push('undocumented: Runtime.' + field);
 			else if (assigned.length !== 1) problems.push('Runtime.' + field + ' is assigned in several sections: ' + assigned.join(', '));
-			else if (assigned[0] !== documented[field]) problems.push('Runtime.' + field + ' is assigned in "' + assigned[0] + '" but documented under "' + documented[field] + '"');
+			else if (assigned[0] !== documented[field].Section) problems.push('Runtime.' + field + ' is assigned in "' + assigned[0] + '" but documented under "' + documented[field].Section + '"');
+			else if (used.join(', ') !== documented[field].Users.join(', ')) problems.push('Runtime.' + field + ' is used by "' + used.join(', ') + '" but documented as used by "' + documented[field].Users.join(', ') + '"');
 		});
 
 		Object.keys(documented).forEach(function (field) {
-			if (!owners[field])
+			if (!fields[field])
 				problems.push('documented but missing in code: Runtime.' + field);
 		});
 

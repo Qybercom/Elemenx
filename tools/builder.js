@@ -2,32 +2,15 @@
 
 var fs = require('fs');
 var path = require('path');
-
-function fail (message) {
-	throw new Error(message);
-}
+var common = require('./common.js');
+var fail = common.fail;
 
 function readIndex (directory) {
 	var file = path.join(directory, 'index.js');
-	var source;
-	var value;
-
 	if (!fs.existsSync(file))
 		fail('index.js not found: ' + directory);
 
-	source = fs.readFileSync(file, 'utf8').replace(/;\s*$/, '');
-
-	try {
-		value = Function('return (' + source + ');')();
-	}
-	catch (error) {
-		fail('invalid index ' + file + ': ' + error.message);
-	}
-
-	if (!Array.isArray(value))
-		fail('index must return an Array: ' + file);
-
-	return value;
+	return common.parseIndex(file);
 }
 
 function entityType (file, root, source) {

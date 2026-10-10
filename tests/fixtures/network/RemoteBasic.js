@@ -1,5 +1,0 @@
-window.RemoteBasicLoads = (window.RemoteBasicLoads || 0) + 1;
-
-Elemenx.Component('RemoteBasic', {
-	$Template: '<span class="remote-basic">REMOTE:{{value}}</span>'
-});
