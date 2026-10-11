@@ -1,0 +1,19 @@
+<div class="elemenx-screen elemenx-settings">
+	<div class="elemenx-container fill elemenx-settings-body">
+		<aside class="elemenx-column elemenx-settings-nav elemenx-layout-area" *resizable="{Edges: 'right', MinWidth: 160, MaxWidth: 480}"><slot name="nav"></slot></aside>
+		<section class="elemenx-column fill elemenx-settings-page">
+			<header class="elemenx-container elemenx-settings-header">
+				<div class="elemenx-column elemenx-settings-heading">
+					<div class="elemenx-settings-path" role="navigation" aria-label="Path" *if="Path.length > 1">
+						<span class="elemenx-settings-crumb" *for="part of Path.slice(0, -1)" *key="$index">{{part}}<Icon Name="chevron-right" Size="12" /></span>
+					</div>
+					<h2 class="elemenx-settings-title">{{Path.length ? Path[Path.length - 1] : ''}}</h2>
+					<p class="elemenx-caption" *if="Description">{{Description}}</p>
+				</div>
+				<span class="elemenx-settings-actions"><slot name="actions"></slot></span>
+			</header>
+			<div class="elemenx-column fill elemenx-settings-content"><slot></slot></div>
+		</section>
+	</div>
+	<footer class="elemenx-container elemenx-settings-footer elemenx-layout-area"><slot name="footer"></slot></footer>
+</div>

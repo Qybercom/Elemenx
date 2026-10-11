@@ -1,0 +1,14 @@
+<ol class="elemenx-timeline" [class.compact]="Compact">
+	<li class="elemenx-timeline-item" *for="item of Items" *key="item.ID" [class]="[item.Variant || 'default', item.Text || item.Element || item.Render ? 'with-body' : '']">
+		<span class="elemenx-timeline-node"><Icon [name]="item.Icon || 'commit'" Size="12" /></span>
+		<div class="elemenx-timeline-content">
+			<div class="elemenx-timeline-head">
+				<strong *if="item.Author">{{item.Author}}</strong>
+				<span>{{item.Action}}</span>
+				<time class="elemenx-caption" *if="item.Time">{{item.Time}}</time>
+			</div>
+			<div class="elemenx-timeline-body" *if="item.Text">{{item.Text}}</div>
+			<div class="elemenx-timeline-body" *if="item.Element || item.Render" *mount="item"></div>
+		</div>
+	</li>
+</ol>

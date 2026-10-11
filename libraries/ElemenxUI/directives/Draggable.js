@@ -86,9 +86,11 @@ Elemenx.Directive('draggable', {
 
 			ghost.style.width = rect.width + 'px';
 			ghost.style.height = rect.height + 'px';
+			ghost.style.transform = 'translate3d(' + rect.left + 'px, ' + rect.top + 'px, 0)';
 
 			document.body.appendChild(ghost);
-			document.body.classList.add('elemenx-dragging');
+			document.addEventListener('selectstart', data.Prevent, true);
+
 			element.classList.add('dragging');
 
 			data.Ghost = ghost;
@@ -109,16 +111,26 @@ Elemenx.Directive('draggable', {
 			document.removeEventListener('pointercancel', data.Cancel, true);
 			document.removeEventListener('keydown', data.Key, true);
 
+			window.cancelAnimationFrame(data.Frame);
+
+			data.Frame = 0;
+
 			if (!data.Active) return;
 
 			data.Active = false;
+
+			if (dropped)
+				over(targetAt(event.clientX, event.clientY), event);
+
+			target = data.Over;
 
 			if (data.Ghost && data.Ghost.parentNode)
 				data.Ghost.parentNode.removeChild(data.Ghost);
 
 			data.Ghost = null;
 
-			document.body.classList.remove('elemenx-dragging');
+			document.removeEventListener('selectstart', data.Prevent, true);
+
 			element.classList.remove('dragging');
 
 			if (target)
@@ -140,6 +152,11 @@ Elemenx.Directive('draggable', {
 				document.removeEventListener('click', data.Swallow, true);
 			}, 0);
 		}
+
+		/* Text selection is blocked by an event, not by a style on the whole document, which costs a full repaint per move. */
+		data.Prevent = function (event) {
+			event.preventDefault();
+		};
 
 		data.Swallow = function (event) {
 			event.stopPropagation();
@@ -174,10 +191,25 @@ Elemenx.Directive('draggable', {
 
 			event.preventDefault();
 
-			data.Ghost.style.left = event.clientX - data.OffsetX + 'px';
-			data.Ghost.style.top = event.clientY - data.OffsetY + 'px';
+			data.Last = event;
 
-			over(targetAt(event.clientX, event.clientY), event);
+			/*
+			 * The ghost moves by transform (no layout) and the target is looked up once a frame: elementFromPoint
+			 * forces a layout, which is slow on a large page when it runs for every pointer event.
+			 */
+			data.Ghost.style.transform = 'translate3d(' + (event.clientX - data.OffsetX) + 'px, ' + (event.clientY - data.OffsetY) + 'px, 0)';
+
+			if (!data.Frame)
+				data.Frame = window.requestAnimationFrame(data.Track);
+		};
+
+		data.Track = function () {
+			var event = data.Last;
+
+			data.Frame = 0;
+
+			if (data.Active && event)
+				over(targetAt(event.clientX, event.clientY), event);
 		};
 
 		data.Up = function (event) {

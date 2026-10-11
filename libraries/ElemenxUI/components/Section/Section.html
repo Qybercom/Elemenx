@@ -1,6 +1,7 @@
 <section class="elemenx-section" [class.collapsible]="Collapsible" [class.collapsed]="Collapsible && Collapsed">
 	<header class="elemenx-section-header">
 		<div class="elemenx-section-heading">
+			<span class="elemenx-section-slot"><slot name="before"></slot></span>
 			<button class="elemenx-section-toggle" type="button" *if="Collapsible" [attribute.aria-expanded]="String(!Collapsed)" (click)="Toggle">
 				<Icon Name="chevron-down" />
 				<Icon *if="Icon" [name]="Icon" />
@@ -10,10 +11,14 @@
 				<Icon *if="Icon" [name]="Icon" />
 				<span class="elemenx-section-title" role="heading" [attribute.aria-level]="Level" [class]="['level-' + Level]">{{Title}}</span>
 			</span>
-			<span class="elemenx-caption" *if="Note">{{Note}}</span>
-			<slot name="note"></slot>
+			<span class="elemenx-section-slot"><slot name="after"></slot></span>
 		</div>
-		<div class="elemenx-section-actions"><slot name="actions"></slot></div>
+		<div class="elemenx-section-aside">
+			<span class="elemenx-caption" *if="Note && NotePlacement !== 'below'">{{Note}}</span>
+			<slot name="note"></slot>
+			<span class="elemenx-section-actions"><slot name="actions"></slot></span>
+		</div>
 	</header>
+	<p class="elemenx-caption elemenx-section-note" *if="Note && NotePlacement === 'below'">{{Note}}</p>
 	<div class="elemenx-section-body" [attribute.hidden]="Collapsible && Collapsed ? '' : null"><slot></slot></div>
 </section>

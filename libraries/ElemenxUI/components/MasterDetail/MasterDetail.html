@@ -1,0 +1,19 @@
+<div class="elemenx-master-detail-frame">
+	<div class="elemenx-container elemenx-master-detail">
+		<aside class="elemenx-column elemenx-master" *resizable="{Edges: 'right', MinWidth: 200, MaxWidth: 560}">
+			<header class="elemenx-container elemenx-master-header elemenx-layout-area"><slot name="list-header"></slot></header>
+			<div class="elemenx-column fill elemenx-master-list"><slot name="list"></slot></div>
+		</aside>
+		<section class="elemenx-column fill elemenx-detail">
+			<header class="elemenx-container elemenx-detail-header">
+				<span class="elemenx-detail-back"><Button Icon="arrow-left" Title="Back" Variant="ghost" Size="small" (click)="Back" /></span>
+				<span class="elemenx-detail-title"><slot name="detail-header"></slot></span>
+			</header>
+			<div class="elemenx-column fill elemenx-detail-content elemenx-layout-area"><slot name="detail"></slot></div>
+			<div class="elemenx-column elemenx-detail-empty">
+				<Icon [name]="EmptyIcon" Size="32" />
+				<span>{{Empty}}</span>
+			</div>
+		</section>
+	</div>
+</div>

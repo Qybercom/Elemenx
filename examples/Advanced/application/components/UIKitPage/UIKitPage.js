@@ -141,9 +141,73 @@ Elemenx.Component('UIKitPage', {
 	Dropped: '',
 	Messages: [
 		{ID: 1, Author: 'Grace Hopper', Text: 'The build is green again.', Time: '10:02'},
-		{ID: 2, Author: 'Grace Hopper', Text: 'Can you check the new table?', Time: '10:02', Grouped: true},
-		{ID: 3, Author: 'Me', Text: 'Looks good, merging it now.', Time: '10:05', Own: true, Status: 'read'}
+		{ID: 2, Author: 'Grace Hopper', Text: 'Can you check the new table?', Time: '10:02'},
+		{ID: 3, Author: 'Grace Hopper', Text: 'The sorting looks right to me.', Time: '10:03'},
+		{ID: 4, Author: 'Me', Text: 'Looks good, merging it now.', Time: '10:05', Own: true, Status: 'read'}
 	],
+	StepItems: [
+		{ID: 'plan', Label: 'Plan', Description: 'Scope and design', Icon: 'edit'},
+		{ID: 'build', Label: 'Build', Description: 'Code and tests', Icon: 'code'},
+		{ID: 'review', Label: 'Review', Description: 'Two approvals', Icon: 'users'},
+		{ID: 'deploy', Label: 'Deploy', Description: 'Staging, then production', Icon: 'cloud'}
+	],
+	ActiveSteps: ['build', 'review'],
+	DoneSteps: ['plan'],
+	Activity: [
+		{ID: 1, Icon: 'branch', Author: 'Ada Lovelace', Action: 'opened the merge request', Time: '2 days ago'},
+		{ID: 2, Icon: 'commit', Author: 'Ada Lovelace', Action: 'added 3 commits', Time: '1 day ago', Variant: 'info'},
+		{ID: 3, Icon: 'edit', Author: 'Grace Hopper', Action: 'commented', Time: '20 hours ago', Text: 'The table should keep its header while scrolling.'},
+		{ID: 4, Icon: 'check', Author: 'Alan Turing', Action: 'approved this merge request', Time: '3 hours ago', Variant: 'success'},
+		{ID: 5, Icon: 'merge', Author: 'Ada Lovelace', Action: 'merged into main', Time: 'just now', Variant: 'accent'}
+	],
+	Lines: [
+		{ID: 1, Kind: 'info', Text: 'Elemenx terminal. Type help.'}
+	],
+	Busy: false,
+	LineCount: 1,
+	TileGroups: [
+		{ID: 'work', Title: 'Work', Tiles: [
+			{ID: 'mail', Title: 'Mail', Icon: 'mail', Size: 'wide', Text: '3 unread', Badge: 3, Color: '#2b5797'},
+			{ID: 'calendar', Title: 'Calendar', Icon: 'calendar', Size: 'medium', Color: '#7a4fb0'},
+			{ID: 'tasks', Title: 'Tasks', Icon: 'check', Size: 'medium', Color: '#3d7a54'},
+			{ID: 'chat', Title: 'Chat', Icon: 'send', Size: 'small', Color: '#c2477f'},
+			{ID: 'phone', Title: 'Phone', Icon: 'phone', Size: 'small', Color: '#0f8fae'}
+		]},
+		{ID: 'tools', Title: 'Tools', Tiles: [
+			{ID: 'terminal', Title: 'Terminal', Icon: 'terminal', Size: 'medium'},
+			{ID: 'settings', Title: 'Settings', Icon: 'settings', Size: 'small', Color: '#5f5a54'},
+			{ID: 'database', Title: 'Database', Icon: 'database', Size: 'small', Color: '#2f8f83'},
+			{ID: 'cloud', Title: 'Deployments', Icon: 'cloud', Size: 'large', Text: 'All 12 services are healthy.', Color: '#3f6c9e'}
+		]}
+	],
+	OpenedTile: '',
+	DashboardNav: [
+		{ID: 'overview', Label: 'Overview', Icon: 'home'},
+		{ID: 'projects', Label: 'Projects', Icon: 'folder', Badge: 12},
+		{ID: 'builds', Label: 'Builds', Icon: 'play'},
+		{ID: 'people', Label: 'People', Icon: 'users'},
+		{ID: 'settings', Label: 'Settings', Icon: 'settings'}
+	],
+	DashboardPage: 'overview',
+	NavCollapsed: false,
+	SettingsNav: [
+		{ID: 'appearance', Label: 'Appearance', Icon: 'monitor'},
+		{ID: 'editor', Label: 'Editor', Icon: 'code', Items: [
+			{ID: 'general', Label: 'General'},
+			{ID: 'font', Label: 'Font'},
+			{ID: 'scheme', Label: 'Color Scheme'}
+		]},
+		{ID: 'plugins', Label: 'Plugins', Icon: 'grid'},
+		{ID: 'vcs', Label: 'Version Control', Icon: 'branch', Items: [
+			{ID: 'git', Label: 'Git'},
+			{ID: 'commit', Label: 'Commit'}
+		]}
+	],
+	SettingsPage: 'general',
+	SettingsPath: ['Editor', 'General'],
+	PersonID: null,
+	PersonName: '',
+	PersonCommits: 0,
 
 	Clicked: function () {
 		this.Clicks++;
@@ -288,6 +352,30 @@ Elemenx.Component('UIKitPage', {
 		this.$Service('Toast').Show({Title: 'Saved', Message: 'The project settings were saved.', Variant: 'success'});
 	},
 
+	ShowSticky: function () {
+		this.$Service('Toast').Show({Title: 'Stays until closed', Message: 'AutoHide: false keeps this toast.', AutoHide: false, Variant: 'warning'});
+	},
+
+	ShowCustom: function () {
+		this.$Service('Toast').Show({
+			Title: 'Uploading 3 files',
+			Icon: 'upload',
+			Class: 'ui-kit-upload-toast',
+			Duration: 8000,
+			Actions: [{Label: 'Open folder', Variant: 'primary'}, {Label: 'Cancel'}],
+			Render: function (container) {
+				var bar = document.createElement('div');
+				var fill = document.createElement('div');
+
+				bar.className = 'ui-kit-toast-bar';
+				fill.className = 'ui-kit-toast-fill';
+
+				bar.appendChild(fill);
+				container.appendChild(bar);
+			}
+		});
+	},
+
 	ShowToast: function () {
 		var toast = this.$Service('Toast');
 
@@ -330,5 +418,114 @@ Elemenx.Component('UIKitPage', {
 
 	SendMessage: function (text) {
 		this.Messages = this.Messages.concat([{ID: this.Messages.length + 1, Author: 'Me', Text: text, Time: 'now', Own: true, Status: 'sent'}]);
+	},
+
+	$OnCreate: function () {
+		/* The position of every message in its run of messages from one author. */
+		this.Thread = function (messages) {
+			return messages.map(function (message, index) {
+				var before = messages[index - 1];
+				var after = messages[index + 1];
+				var joinsBefore = !!before && before.Author === message.Author;
+				var joinsAfter = !!after && after.Author === message.Author;
+				var copy = {};
+				var key;
+
+				for (key in message) {
+					if (Object.prototype.hasOwnProperty.call(message, key))
+						copy[key] = message[key];
+				}
+
+				copy.Position = joinsBefore ? (joinsAfter ? 'middle' : 'last') : (joinsAfter ? 'first' : 'single');
+
+				return copy;
+			});
+		};
+	},
+
+	StepSelected: function (item) {
+		var order = this.StepItems.map(function (step) {
+			return step.ID;
+		});
+		var index = order.indexOf(item.ID);
+
+		this.DoneSteps = order.slice(0, index);
+		this.ActiveSteps = [item.ID];
+	},
+
+	Say: function (kind, text) {
+		this.LineCount++;
+		this.Lines = this.Lines.concat([{ID: this.LineCount, Kind: kind, Text: text}]);
+	},
+
+	RunCommand: function (command) {
+		var self = this;
+
+		this.Say('input', command);
+
+		if (command.trim() === 'help') {
+			this.Say('output', 'help   show this help\ndate   print the date\nclear  clear the screen');
+		}
+		else if (command.trim() === 'date') {
+			this.Say('success', new Date().toString());
+		}
+		else if (command.trim() === 'clear') {
+			this.ClearTerminal();
+		}
+		else if (command.trim()) {
+			this.Busy = true;
+
+			window.setTimeout(function () {
+				self.Busy = false;
+
+				self.Say('error', command.trim().split(' ')[0] + ': command not found');
+			}, 400);
+		}
+	},
+
+	ClearTerminal: function () {
+		this.Lines = [];
+	},
+
+	TileOpened: function (tile) {
+		this.OpenedTile = tile.Title;
+	},
+
+	TilesChanged: function (groups) {
+		this.TileGroups = groups;
+	},
+
+	DashboardSelected: function (item) {
+		this.DashboardPage = item.ID;
+	},
+
+	ToggleNav: function () {
+		this.NavCollapsed = !this.NavCollapsed;
+	},
+
+	SettingsSelected: function (item) {
+		var parent = this.SettingsNav.filter(function (entry) {
+			return (entry.Items || []).some(function (child) {
+				return child.ID === item.ID;
+			});
+		})[0];
+
+		this.SettingsPage = item.ID;
+		this.SettingsPath = parent ? [parent.Label, item.Label] : [item.Label];
+	},
+
+	PickPerson: function (event, node) {
+		var id = Number(node.getAttribute('data-id'));
+		var person = this.People.filter(function (entry) {
+			return entry.ID === id;
+		})[0];
+
+		this.PersonID = id;
+		this.PersonName = person.Name;
+		this.PersonCommits = person.Commits;
+	},
+
+	ClearPerson: function () {
+		this.PersonID = null;
 	}
 });

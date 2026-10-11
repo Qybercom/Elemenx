@@ -1,9 +1,38 @@
 .elemenx-section-heading {
 	display: flex;
-	align-items: baseline;
+	align-items: center;
 	flex-wrap: wrap;
-	gap: 4px 12px;
+	gap: 4px 8px;
 	min-width: 0;
+}
+
+.elemenx-section-slot,
+.elemenx-section-actions {
+	display: inline-flex;
+	align-items: center;
+	flex: none;
+	gap: 4px;
+}
+
+.elemenx-section-slot:empty,
+.elemenx-section-actions:empty {
+	display: none;
+}
+
+.elemenx-section-aside {
+	display: flex;
+	align-items: center;
+	flex: 0 1 auto;
+	gap: 12px;
+	min-width: 0;
+}
+
+.elemenx-section-aside .elemenx-caption {
+	text-align: right;
+}
+
+.elemenx-section-note {
+	margin: -8px 0 0;
 }
 
 .elemenx-section-toggle,
@@ -66,17 +95,6 @@
 .elemenx-section-title.level-4 {
 	font-size: 14px;
 	line-height: 20px;
-}
-
-.elemenx-section-actions {
-	display: flex;
-	align-items: center;
-	flex: none;
-	gap: 4px;
-}
-
-.elemenx-section-actions:empty {
-	display: none;
 }
 
 .elemenx-section-body {

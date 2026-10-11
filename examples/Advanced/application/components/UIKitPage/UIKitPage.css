@@ -132,8 +132,7 @@
 	background: var(--elemenx-surface-hover);
 }
 
-.ui-kit-code,
-.ui-kit-terminal {
+.ui-kit-code {
 	flex: 1;
 	margin: 0;
 	padding: 16px;
@@ -142,11 +141,6 @@
 	font-size: 12px;
 	line-height: 20px;
 	tab-size: 4;
-}
-
-.ui-kit-terminal {
-	padding: 0;
-	color: var(--elemenx-text-muted);
 }
 
 .ui-kit-status {
@@ -266,4 +260,38 @@
 	.ui-kit-grid.four {
 		grid-template-columns: 1fr;
 	}
+}
+
+.ui-kit-frame.terminal {
+	height: 280px;
+}
+
+.ui-kit-frame.small {
+	height: 360px;
+}
+
+.ui-kit-frame.centered {
+	height: 440px;
+}
+
+.ui-kit-metric {
+	font-size: 32px;
+	line-height: 40px;
+	font-weight: 700;
+	font-variant-numeric: tabular-nums;
+}
+
+.ui-kit-toast-bar {
+	height: 4px;
+	margin-top: 4px;
+	overflow: hidden;
+	background: var(--elemenx-border);
+	border-radius: 999px;
+}
+
+.ui-kit-toast-fill {
+	width: 40%;
+	height: 100%;
+	background: var(--elemenx-accent);
+	border-radius: 999px;
 }

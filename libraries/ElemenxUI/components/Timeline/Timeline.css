@@ -1,0 +1,109 @@
+.elemenx-timeline {
+	display: flex;
+	flex-direction: column;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.elemenx-timeline-item {
+	--elemenx-timeline-color: var(--elemenx-text-muted);
+	position: relative;
+	display: flex;
+	gap: 12px;
+	padding-bottom: 16px;
+}
+
+.elemenx-timeline-item::before {
+	content: '';
+	position: absolute;
+	top: 24px;
+	bottom: 0;
+	left: 11px;
+	width: 2px;
+	background: var(--elemenx-border);
+}
+
+.elemenx-timeline-item:last-child {
+	padding-bottom: 0;
+}
+
+.elemenx-timeline-item:last-child::before {
+	display: none;
+}
+
+.elemenx-timeline-item.accent {
+	--elemenx-timeline-color: var(--elemenx-accent);
+}
+
+.elemenx-timeline-item.info {
+	--elemenx-timeline-color: var(--elemenx-info);
+}
+
+.elemenx-timeline-item.success {
+	--elemenx-timeline-color: var(--elemenx-success);
+}
+
+.elemenx-timeline-item.warning {
+	--elemenx-timeline-color: var(--elemenx-warning);
+}
+
+.elemenx-timeline-item.danger {
+	--elemenx-timeline-color: var(--elemenx-danger);
+}
+
+.elemenx-timeline-node {
+	position: relative;
+	z-index: 1;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex: none;
+	width: 24px;
+	height: 24px;
+	background: var(--elemenx-surface);
+	border: 1px solid var(--elemenx-border-strong);
+	border-radius: 50%;
+	color: var(--elemenx-timeline-color);
+}
+
+.elemenx-timeline-item:not(.default) .elemenx-timeline-node {
+	border-color: color-mix(in srgb, var(--elemenx-timeline-color) 48%, transparent);
+	background: color-mix(in srgb, var(--elemenx-timeline-color) 12%, var(--elemenx-surface));
+}
+
+.elemenx-timeline-content {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	gap: 8px;
+	min-width: 0;
+	padding-top: 2px;
+}
+
+.elemenx-timeline-head {
+	display: flex;
+	align-items: baseline;
+	flex-wrap: wrap;
+	gap: 4px 8px;
+}
+
+.elemenx-timeline-head > span {
+	color: var(--elemenx-text-muted);
+}
+
+.elemenx-timeline-body {
+	padding: 12px;
+	background: var(--elemenx-surface);
+	border: 1px solid var(--elemenx-border);
+	border-radius: 8px;
+	white-space: pre-wrap;
+}
+
+.elemenx-timeline.compact .elemenx-timeline-item {
+	padding-bottom: 8px;
+}
+
+.elemenx-timeline.compact .elemenx-timeline-body {
+	padding: 8px;
+}

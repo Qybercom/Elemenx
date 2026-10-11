@@ -1,0 +1,16 @@
+<div class="elemenx-screen elemenx-centered">
+	<div class="elemenx-column fill elemenx-centered-middle">
+		<div class="elemenx-column elemenx-centered-brand elemenx-layout-area"><slot name="brand"></slot></div>
+		<div class="elemenx-column elemenx-centered-box" [class]="[Width || 'medium', Card ? 'card' : '']">
+			<div class="elemenx-column elemenx-centered-state" *if="Icon || Code || Title || Description">
+				<span class="elemenx-centered-code" *if="Code">{{Code}}</span>
+				<span class="elemenx-centered-icon" *if="Icon && !Code"><Icon [name]="Icon" Size="32" /></span>
+				<h1 class="elemenx-centered-title" *if="Title">{{Title}}</h1>
+				<p class="elemenx-centered-description" *if="Description">{{Description}}</p>
+			</div>
+			<slot></slot>
+			<div class="elemenx-container elemenx-centered-actions elemenx-layout-area"><slot name="actions"></slot></div>
+		</div>
+	</div>
+	<footer class="elemenx-container elemenx-centered-footer elemenx-layout-area"><slot name="footer"></slot></footer>
+</div>

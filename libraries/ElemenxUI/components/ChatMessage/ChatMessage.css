@@ -3,11 +3,12 @@
 	align-items: flex-end;
 	gap: 8px;
 	max-width: 80%;
-	margin-top: 8px;
+	margin-top: 2px;
 }
 
-.elemenx-chat-message.grouped {
-	margin-top: 0;
+.elemenx-chat-message.single,
+.elemenx-chat-message.first {
+	margin-top: 12px;
 }
 
 .elemenx-chat-message.own {
@@ -30,7 +31,8 @@
 	font-weight: 600;
 }
 
-.elemenx-chat-message.grouped .elemenx-chat-avatar {
+.elemenx-chat-message.first .elemenx-chat-avatar,
+.elemenx-chat-message.middle .elemenx-chat-avatar {
 	background: transparent;
 }
 
@@ -52,23 +54,48 @@
 	padding: 8px 12px;
 	background: var(--elemenx-surface-raised);
 	border: 1px solid var(--elemenx-border);
-	border-radius: 16px 16px 16px 4px;
+	border-radius: 16px;
 	overflow-wrap: anywhere;
 }
 
-.elemenx-chat-message.grouped .elemenx-chat-bubble {
-	border-radius: 4px 16px 16px 4px;
+.elemenx-chat-message.single .elemenx-chat-bubble,
+.elemenx-chat-message.last .elemenx-chat-bubble {
+	border-bottom-left-radius: 4px;
+}
+
+.elemenx-chat-message.first .elemenx-chat-bubble {
+	border-bottom-left-radius: 4px;
+}
+
+.elemenx-chat-message.middle .elemenx-chat-bubble,
+.elemenx-chat-message.last .elemenx-chat-bubble {
+	border-top-left-radius: 4px;
 }
 
 .elemenx-chat-message.own .elemenx-chat-bubble {
 	background: var(--elemenx-accent);
 	border-color: var(--elemenx-accent);
-	border-radius: 16px 16px 4px 16px;
+	border-radius: 16px;
 	color: var(--elemenx-accent-text);
 }
 
-.elemenx-chat-message.own.grouped .elemenx-chat-bubble {
-	border-radius: 16px 4px 4px 16px;
+.elemenx-chat-message.own.single .elemenx-chat-bubble,
+.elemenx-chat-message.own.first .elemenx-chat-bubble,
+.elemenx-chat-message.own.last .elemenx-chat-bubble {
+	border-bottom-right-radius: 4px;
+}
+
+.elemenx-chat-message.own.middle .elemenx-chat-bubble,
+.elemenx-chat-message.own.last .elemenx-chat-bubble {
+	border-top-right-radius: 4px;
+}
+
+.elemenx-chat-message.own.middle .elemenx-chat-bubble {
+	border-bottom-right-radius: 4px;
+}
+
+.elemenx-chat-message.middle:not(.own) .elemenx-chat-bubble {
+	border-bottom-left-radius: 4px;
 }
 
 .elemenx-chat-author {

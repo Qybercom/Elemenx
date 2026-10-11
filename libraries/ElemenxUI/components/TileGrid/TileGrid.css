@@ -1,0 +1,150 @@
+.elemenx-tile-grid {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-start;
+	gap: 32px;
+}
+
+.elemenx-tile-group {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	min-width: 208px;
+	border-radius: 8px;
+}
+
+.elemenx-tile-group-title {
+	margin: 0;
+	padding: 0 4px;
+	color: var(--elemenx-text-muted);
+	font-size: 14px;
+	line-height: 20px;
+	font-weight: 600;
+}
+
+.elemenx-tile-cells {
+	display: grid;
+	grid-auto-flow: row dense;
+	grid-template-columns: repeat(4, 48px);
+	grid-auto-rows: 48px;
+	gap: 8px;
+}
+
+.elemenx-tile {
+	--elemenx-tile-color: #4b5f7a;
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	justify-content: flex-end;
+	gap: 4px;
+	min-width: 0;
+	padding: 8px;
+	overflow: hidden;
+	background: var(--elemenx-tile-color);
+	border-radius: 4px;
+	color: #ffffff;
+	cursor: pointer;
+	outline: none;
+	user-select: none;
+	transition: transform 120ms ease,
+		filter 120ms ease;
+}
+
+.elemenx-tile:hover {
+	filter: brightness(1.08);
+}
+
+.elemenx-tile:active {
+	transform: scale(0.97);
+}
+
+.elemenx-tile:focus-visible {
+	outline: 2px solid var(--elemenx-text);
+	outline-offset: 2px;
+}
+
+.elemenx-tile > .elemenx-icon {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -60%);
+}
+
+.elemenx-tile.small {
+	justify-content: center;
+	align-items: center;
+	padding: 0;
+}
+
+.elemenx-tile.small > .elemenx-icon {
+	position: static;
+	transform: none;
+}
+
+.elemenx-tile.medium {
+	grid-column: span 2;
+	grid-row: span 2;
+}
+
+.elemenx-tile.wide {
+	grid-column: span 4;
+	grid-row: span 2;
+}
+
+.elemenx-tile.large {
+	grid-column: span 4;
+	grid-row: span 4;
+}
+
+.elemenx-tile.wide > .elemenx-icon,
+.elemenx-tile.large > .elemenx-icon {
+	top: 12px;
+	left: 12px;
+	transform: none;
+}
+
+.elemenx-tile-text {
+	position: relative;
+	overflow: hidden;
+	font-size: 12px;
+	line-height: 16px;
+	opacity: 0.88;
+}
+
+.elemenx-tile.large .elemenx-tile-text {
+	font-size: 14px;
+	line-height: 20px;
+}
+
+.elemenx-tile-title {
+	position: relative;
+	overflow: hidden;
+	font-size: 12px;
+	line-height: 16px;
+	font-weight: 600;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.elemenx-tile-badge {
+	position: absolute;
+	top: 4px;
+	right: 4px;
+	min-width: 20px;
+	padding: 0 4px;
+	background: rgba(0, 0, 0, 0.24);
+	border-radius: 999px;
+	font-size: 12px;
+	line-height: 20px;
+	font-weight: 700;
+	text-align: center;
+}
+
+.elemenx-tile-grid.editable .elemenx-tile {
+	cursor: grab;
+}
+
+.elemenx-tile.drop-over {
+	outline: 2px solid var(--elemenx-text);
+	outline-offset: 2px;
+}

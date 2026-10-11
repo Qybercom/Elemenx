@@ -4,7 +4,6 @@ Elemenx.Component('ToastHost', {
 	$StyleURL: 'ToastHost.css',
 	Placement: 'bottom-right',
 	Items: [],
-	Icons: {info: 'info', success: 'success', warning: 'warning', danger: 'error'},
 
 	$OnCreate: function () {
 		var self = this;
@@ -30,7 +29,7 @@ Elemenx.Component('ToastHost', {
 	},
 
 	Act: function (event, node) {
-		this.$Service('Toast').Run(this.Id(node));
+		this.$Service('Toast').Run(this.Id(node), Number(node.getAttribute('data-index')));
 	},
 
 	Hold: function (event, node) {

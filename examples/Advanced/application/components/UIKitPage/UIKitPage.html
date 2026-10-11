@@ -77,9 +77,15 @@
 
 	<Section Title="Section" Note="Collapsible, with actions in the header">
 		<Section Title="Project settings" Icon="settings" Level="3" Collapsible="true" [collapsed]="Collapsed" Note="Folds its body" (toggle)="SectionToggled">
+			<span slot="before" class="elemenx-badge accent">Before</span>
+			<span slot="after" class="elemenx-badge">After</span>
 			<Button slot="actions" Icon="edit" Title="Edit" Variant="ghost" Size="small" />
 			<Button slot="actions" Icon="delete" Title="Delete" Variant="ghost" Size="small" />
 			<p class="elemenx-text">The body of a collapsible section. State: {{Collapsed ? 'collapsed' : 'expanded'}}.</p>
+		</Section>
+		<Section Title="Caption under the line" Level="3" Note="NotePlacement=&quot;below&quot; puts the caption under the header line." NotePlacement="below">
+			<Button slot="actions" Label="Action" Size="small" />
+			<p class="elemenx-text">Body.</p>
 		</Section>
 	</Section>
 
@@ -173,6 +179,7 @@
 	<Section Title="Payment, phone and money" Note="Strict masks: typing, paste and drop">
 		<div class="ui-kit-grid">
 			<Field Label="Card number" [hint]="CardState || 'Try 4242 4242 4242 4242'"><CardNumberInput (validate)="CardValidated" /></Field>
+			<Field Label="Saved card" Hint="Conceal=&quot;xxxx ???? ???? xxxx&quot;: the full number shows while the field is edited"><CardNumberInput Value="5555555555554444" Conceal="xxxx ???? ???? xxxx" /></Field>
 			<div class="ui-kit-pair">
 				<Field Label="Expires"><CardExpiryInput /></Field>
 				<Field Label="CVV"><CVVInput /></Field>
@@ -251,6 +258,8 @@
 			</Popover>
 			<Button Label="Open dialog" Variant="primary" (click)="OpenDialog" />
 			<Button Label="Show toast" Icon="bell" (click)="ShowToast" />
+			<Button Label="Sticky toast" (click)="ShowSticky" />
+			<Button Label="Custom toast" (click)="ShowCustom" />
 		</div>
 		<Dialog Title="Project settings" Description="Changes apply to every member." Icon="settings" [open]="DialogOpen" (close)="CloseDialog">
 			<div class="ui-kit-stack">
@@ -323,9 +332,9 @@
 		</div>
 	</Section>
 
-	<Section Title="Workspace" Note="IDE frame: drag or focus the splitters and use the arrow keys">
+	<Section Title="Workspace" Note="IDE frame: an area shows while its slot has content; drag or focus the edges and use the arrow keys">
 		<div class="ui-kit-frame">
-			<Workspace [leftOpen]="LeftOpen" [bottomOpen]="BottomOpen" [rightOpen]="RightOpen" LeftWidth="240" BottomHeight="160">
+			<Workspace>
 				<WorkspaceToolbar slot="header" Label="Main toolbar">
 					<span class="ui-kit-logo">E</span>
 					<Menu Label="Elemenx" Variant="ghost" Size="small" [items]="MenuItems" (select)="MenuSelected" />
@@ -344,7 +353,7 @@
 				<Button slot="left-stripe" Icon="commit" Title="Commit" Variant="ghost" Pressed="false" />
 				<span slot="left-stripe" class="elemenx-spacer"></span>
 				<Button slot="left-stripe" Icon="terminal" Title="Terminal" Variant="ghost" [pressed]="BottomOpen" (click)="ToggleBottom" />
-				<WorkspaceToolWindow slot="left" Title="Project" Icon="folder" Closable="true" (close)="ToggleLeft">
+				<WorkspaceToolWindow slot="left" *if="LeftOpen" Title="Project" Icon="folder" Closable="true" (close)="ToggleLeft">
 					<Button slot="actions" Icon="refresh" Title="Refresh" Variant="ghost" Size="small" />
 					<ul class="ui-kit-tree">
 						<li><Icon Name="folder-open" />application</li>
@@ -362,11 +371,13 @@
 	$Component: 'Root'
 });</pre>
 				</div>
-				<WorkspaceToolWindow slot="bottom" Title="Terminal" Icon="terminal" Closable="true" Padded="true" (close)="ToggleBottom">
-					<pre class="ui-kit-terminal">$ npm test
- Test Files  52 passed (52)</pre>
-				</WorkspaceToolWindow>
-				<WorkspaceToolWindow slot="right" Title="Database" Icon="database" Closable="true" Padded="true" (close)="ToggleRight">
+				<div slot="bottom" class="elemenx-column fill" *if="BottomOpen">
+					<Terminal Title="Terminal" [lines]="Lines" [busy]="Busy" (command)="RunCommand" (clear)="ClearTerminal">
+						<Button slot="actions" Icon="delete" Title="Clear" Variant="ghost" Size="small" (click)="ClearTerminal" />
+						<Button slot="actions" Icon="remove" Title="Hide" Variant="ghost" Size="small" (click)="ToggleBottom" />
+					</Terminal>
+				</div>
+				<WorkspaceToolWindow slot="right" *if="RightOpen" Title="Database" Icon="database" Closable="true" Padded="true" (close)="ToggleRight">
 					<p class="elemenx-text small muted">No data sources yet.</p>
 				</WorkspaceToolWindow>
 				<Button slot="right-stripe" Icon="bell" Title="Notifications" Variant="ghost" Pressed="false" />
@@ -391,9 +402,112 @@
 				</div>
 				<div slot="header" class="elemenx-container ui-kit-chat-header"><span class="elemenx-chat-avatar">GH</span><div><strong>Grace Hopper</strong><p class="elemenx-text small muted">online</p></div><span class="elemenx-spacer"></span><Button Icon="phone" Title="Call" Variant="ghost" /><Button Icon="more-vertical" Title="More" Variant="ghost" /></div>
 				<div class="elemenx-chat-divider">Today</div>
-				<ChatMessage *for="message of Messages" *key="message.ID" [author]="message.Author" [text]="message.Text" [time]="message.Time" [own]="!!message.Own" [grouped]="!!message.Grouped" [status]="message.Status || ''" />
+				<ChatMessage *for="message of Thread(Messages)" *key="message.ID" [author]="message.Author" [text]="message.Text" [time]="message.Time" [own]="!!message.Own" [position]="message.Position" [status]="message.Status || ''" />
 				<ChatComposer slot="composer" (send)="SendMessage" />
 			</Chat>
+		</div>
+	</Section>
+
+	<Section Title="Steps and timeline" Note="Steps · Timeline">
+		<Steps [items]="StepItems" [active]="ActiveSteps" [done]="DoneSteps" Clickable="true" (select)="StepSelected" />
+		<div class="ui-kit-grid">
+			<Steps Direction="vertical" Size="small" [items]="StepItems" [active]="['review', 'deploy']" [done]="['plan']" />
+			<Timeline [items]="Activity" />
+		</div>
+	</Section>
+
+	<Section Title="Terminal" Note="Type help, date or anything else; Arrow Up recalls the history">
+		<div class="ui-kit-frame terminal">
+			<Terminal Title="Shell" Prompt="elemenx $" [lines]="Lines" [busy]="Busy" (command)="RunCommand" (clear)="ClearTerminal">
+				<Button slot="actions" Icon="delete" Title="Clear" Variant="ghost" Size="small" (click)="ClearTerminal" />
+			</Terminal>
+		</div>
+	</Section>
+
+	<Section Title="Tiles" [note]="'TileGrid · drag tiles to arrange them' + (OpenedTile ? ' · Opened: ' + OpenedTile : '')">
+		<TileGrid [groups]="TileGroups" Editable="true" (open)="TileOpened" (change)="TilesChanged" />
+	</Section>
+
+	<Section Title="Layouts" Note="Dashboard · Settings · MasterDetail · Centered">
+		<h4>Dashboard</h4>
+		<div class="ui-kit-frame">
+			<Dashboard>
+				<NavList slot="nav" [items]="DashboardNav" [value]="DashboardPage" [collapsed]="NavCollapsed" (select)="DashboardSelected" />
+				<div slot="header" class="elemenx-container ui-kit-chat-header">
+					<Button Icon="menu" Title="Collapse the navigation" Variant="ghost" (click)="ToggleNav" />
+					<strong>Overview</strong>
+					<span class="elemenx-spacer"></span>
+					<Input Shape="round" Icon="search" Placeholder="Search" Size="small" />
+				</div>
+				<DashboardWidget Title="Revenue" Icon="cart" Note="This month">
+					<span class="ui-kit-metric">$48,200</span>
+					<Meter Value="72" Low="30" High="80" Optimum="100" Label="Target" Unit="%" />
+				</DashboardWidget>
+				<DashboardWidget Title="Users" Icon="users">
+					<span class="ui-kit-metric">1,284</span>
+					<span class="elemenx-text small muted">+12% since last week</span>
+				</DashboardWidget>
+				<DashboardWidget Title="Builds" Icon="play" Span="2">
+					<Progress Value="84" Label="Passing" ShowValue="true" Tone="success" />
+					<Progress Value="12" Label="Flaky" ShowValue="true" Tone="warning" />
+				</DashboardWidget>
+				<DashboardWidget Title="Activity" Icon="history" Span="2" Rows="2">
+					<Timeline [items]="Activity" Compact="true" />
+				</DashboardWidget>
+				<DashboardWidget Title="Team" Icon="user" Span="2">
+					<Button slot="actions" Icon="add" Title="Invite" Variant="ghost" Size="small" />
+					<Table [columns]="Columns" [rows]="People" Compact="true" />
+				</DashboardWidget>
+			</Dashboard>
+		</div>
+		<h4>Settings</h4>
+		<div class="ui-kit-frame">
+			<Settings [path]="SettingsPath" Description="Options of the code editor">
+				<NavList slot="nav" [items]="SettingsNav" [value]="SettingsPage" [expanded]="['editor']" Searchable="true" (select)="SettingsSelected" />
+				<Button slot="actions" Icon="refresh" Title="Reset" Variant="ghost" Size="small" />
+				<Field Label="Font size" Horizontal="true"><NumberInput Value="14" Min="8" Max="32" Suffix="px" /></Field>
+				<Field Label="Theme" Horizontal="true"><ThemeSwitch Size="medium" /></Field>
+				<Field Label="Show line numbers" Horizontal="true"><Toggle Checked="true" /></Field>
+				<Field Label="Soft wrap" Horizontal="true"><Select [options]="Views" Value="list" /></Field>
+				<Button slot="footer" Label="Cancel" />
+				<Button slot="footer" Label="Apply" />
+				<Button slot="footer" Label="OK" Variant="primary" />
+			</Settings>
+		</div>
+		<h4>MasterDetail</h4>
+		<div class="ui-kit-frame small">
+			<MasterDetail Empty="Select a person" (back)="ClearPerson">
+				<Input slot="list-header" Icon="search" Placeholder="Filter" Size="small" />
+				<div slot="list" class="elemenx-master-row" *for="person of People" *key="person.ID" [class.active]="person.ID === PersonID" [attribute.data-id]="person.ID" (click)="PickPerson"><span class="elemenx-chat-avatar">{{person.Name.charAt(0)}}</span><div><strong>{{person.Name}}</strong><p class="elemenx-text small muted">{{person.Role}}</p></div></div>
+				<strong slot="detail-header" *if="PersonID">{{PersonName}}</strong>
+				<div slot="detail" class="ui-kit-stack" *if="PersonID">
+					<p class="elemenx-text">Commits: {{PersonCommits}}</p>
+					<Steps Size="small" [items]="StepItems" [done]="['plan', 'build']" [active]="['review']" />
+				</div>
+			</MasterDetail>
+		</div>
+		<h4>Centered</h4>
+		<div class="ui-kit-grid three">
+			<div class="ui-kit-frame centered">
+				<Centered Width="small" Card="true" Title="Sign in" Description="Use your work account">
+					<span slot="brand" class="ui-kit-logo">E</span>
+					<Field Label="Email"><Input Type="email" Placeholder="name@example.com" /></Field>
+					<Field Label="Password"><Input Type="password" /></Field>
+					<Button slot="actions" Label="Sign in" Variant="primary" Block="true" />
+					<span slot="footer">Privacy · Terms</span>
+				</Centered>
+			</div>
+			<div class="ui-kit-frame centered">
+				<Centered Code="404" Title="Page not found" Description="The page was moved or never existed.">
+					<Button slot="actions" Label="Go home" Icon="home" Variant="primary" />
+				</Centered>
+			</div>
+			<div class="ui-kit-frame centered">
+				<Centered Icon="folder-open" Title="No projects yet" Description="Create a project to start.">
+					<Button slot="actions" Label="New project" Icon="add" Variant="primary" />
+					<Button slot="actions" Label="Import" />
+				</Centered>
+			</div>
 		</div>
 	</Section>
 </section>

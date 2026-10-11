@@ -39,9 +39,9 @@ The theme policy is the `data-theme` attribute of `body`: `system` (or no attrib
 ### Services
 
 - `Theme`: `Policy()` returns the policy, `Policy('dark')` sets it, `Next()` cycles it, `Resolved()` returns the theme shown; `OnChange(callback)`/`OffChange(callback)` report `{Policy, Theme}`, including system changes under `system`. The policy is remembered in `localStorage` (`Persist`, `StorageKey`); the first one comes from storage, then from the page's `data-theme`, then from `Default` (`system`).
-- `Countries`: `List(locale)` returns every country with `Code`, localized `Name`, dialling code `Dial`, national number `Mask` and `Currency`, sorted by name; `Find(code)`, `Match(digits, preferred)`.
-- `Currencies`: `List(locale)` returns every ISO 4217 currency with `Code`, localized `Name`, `Symbol` and fraction `Digits`; `Find(code)`, `Format(amount, code)`.
-- `Toast`: `Show({Title, Message, Variant, Duration, Action})`, `Dismiss(id)`, `Clear()`; a `ToastHost` in the layout shows the toasts.
+- `Countries`: `List(locale)` returns every country with `Code`, localized `Name`, dialling code `Dial`, national number `Mask` and `Currency`, sorted by code; `Find(code)`, `Match(digits, preferred)`.
+- `Currencies`: `List(locale)` returns every ISO 4217 currency with `Code`, localized `Name`, `Symbol` and fraction `Digits`, sorted by code; `Find(code)`, `Format(amount, code)`.
+- `Toast`: `Show({Title, Message, Variant, Icon, Class, AutoHide, Duration, Actions, Closable, Element, Render})` returns the ID; a toast closes by itself after `Duration` unless `AutoHide` is false, and its timer pauses while it is hovered or focused. `Actions` is a list of `{Label, Run, Variant, Keep}`; `Element` (a DOM node) or `Render(container, toast)` gives the toast custom content. `Configure({Duration, AutoHide, Limit})`, `Dismiss(id)`, `Clear()`; a `ToastHost` in the layout shows the toasts.
 
 ### Directives
 
@@ -50,17 +50,18 @@ The theme policy is the `data-theme` attribute of `body`: `system` (or no attrib
 - `*mask` keeps an input inside a mask (`#` digit, `A` letter, `*` both) whatever way the text arrives; `Guide` shows the whole template, `Backspace: 'skip'` moves over separators.
 - `*resizable` adds resize handles (`right`, `left`, `bottom`, `top`, `corner`) with limits and keyboard support.
 - `*draggable` and `*droppable` drag items by pointer onto targets that accept their `Type`; a target can also take files and text dragged from outside the browser.
+- `*mount` puts custom content into an element: a DOM node, or an object with `Render(container, item)`.
 
 ### Components
 
 Components take their data as props and report changes by events; the event of a value change carries the new value.
 
 - Actions: `Button` (`Variant`: primary, secondary, ghost, danger, link; `Size`; `Shape`; `Icon`, `IconRight`; `Loading`, `Pressed`, `Block`), `ButtonGroup`, `Menu` and `MenuList` (multi-level menus).
-- Text input: `Field` (label, hint and error around a control), `Input` (`Type`, `Icon`, `Prefix`, `Suffix`, `Clearable`, `Mask`), `TextArea` (resizable or `AutoSize`), `NumberInput`, `DateInput` (own calendar; `Mode` date or month, `Format` from the locale or `DD`/`MM`/`YYYY`, `Min`, `Max`, `FirstDay`), `TimeInput` (own picker; `Seconds`, `MinuteStep`, `Min`, `Max`), `ColorInput` (own picker; `Alpha`, `Swatches`, eyedropper where supported), `CardNumberInput`, `CardExpiryInput`, `CVVInput`, `PhoneInput` (every country by default; `Guide`, `Backspace`), `MoneyInput`, `CurrencySelect`.
+- Text input: `Field` (label, hint and error around a control), `Input` (`Type`, `Icon`, `Prefix`, `Suffix`, `Clearable`, `Mask`), `TextArea` (resizable or `AutoSize`), `NumberInput`, `DateInput` (own calendar; `Mode` date or month, `Format` from the locale or `DD`/`MM`/`YYYY`, `Min`, `Max`, `FirstDay`), `TimeInput` (own picker; `Seconds`, `MinuteStep`, `Min`, `Max`), `ColorInput` (own picker; `Alpha`, `Swatches`, eyedropper where supported), `CardExpiryInput`, `CVVInput`, `CardNumberInput` (`Conceal`: a template such as `xxxx ???? ???? xxxx` hides the middle digits until the field is edited), `PhoneInput` (every country by default; `Guide`, `Backspace`), `MoneyInput`, `CurrencySelect`.
 - Choice: `Checkbox` (`Variant`: default, chip, tile; `Indeterminate`), `Radio`, `RadioGroup` (`Variant`: default, horizontal, tile, segmented), `Toggle`, `Select`, `MultiSelect`, `Tabs` (`Variant`: line, pill, editor), `Slider` (one value or a range).
-- Data: `Table` (columns, sorting, row selection, sticky header, resizable columns), `Section` (collapsible, with header actions).
+- Data: `Table` (columns, sorting, row selection, sticky header, resizable columns), `Section` (collapsible; slots `before` and `after` around the title, `note` and `actions` on the right; `NotePlacement: 'below'` moves the caption under the header line), `Steps` (horizontal or vertical; several steps may be active), `Timeline` (an activity feed like a merge request history), `TileGrid` (start-screen tiles in groups, reordered by dragging when `Editable`), `NavList` (a navigation list or tree with search and a collapsed icon mode), `Terminal` (output lines and a command line with history).
 - Overlays: `Popover`, `Dialog`, `ToastHost`.
 - Feedback: `Progress` (bar or ring, determinate or not), `Meter`, `Spinner`, `Skeleton`.
 - Files: `FileUpload` (`Variant`: dropzone, inline, gallery, avatar): it picks files and previews images; uploading is up to the Application. `FileIcon`.
 - Theme: `ThemeSwitch`.
-- Layout: `Splitter`; `Workspace`, an IDE-like frame with the slots `header`, `top-stripe`, `left-stripe`, `left`, `main`, `bottom`, `right`, `right-stripe`, `bottom-stripe` and `status` and resizable tool window areas, with `WorkspaceToolbar` and `WorkspaceToolWindow`; `Chat` with `ChatMessage` and `ChatComposer`.
+- Layout: `Splitter`; `Workspace`, an IDE-like frame with the slots `header`, `top-stripe`, `left-stripe`, `left`, `main`, `bottom`, `right`, `right-stripe`, `bottom-stripe` and `status`, with `WorkspaceToolbar` and `WorkspaceToolWindow`. The layout does not decide its content: an area is shown while its slot has content (use `*if` on the slotted element to open and close a tool window), and the `left`, `right` and `bottom` areas are resizable and report `resize` with `{Panel, Size}`. `Dashboard` (navigation, header and a grid of `DashboardWidget` with `Span` and `Rows`), `Settings` (navigation tree, `Path` breadcrumb, page and footer buttons), `MasterDetail` (list and detail that stack on narrow screens; `back` event), `Centered` (sign-in, error and empty pages; `Code`, `Icon`, `Card`, `Width`). `Chat` with `ChatMessage` (`Position`: single, first, middle or last in a run of messages from one author; the avatar shows on the newest one) and `ChatComposer`.

@@ -1,0 +1,159 @@
+.elemenx-steps {
+	--elemenx-step-size: 32px;
+	display: flex;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.elemenx-steps.small {
+	--elemenx-step-size: 24px;
+}
+
+.elemenx-steps.large {
+	--elemenx-step-size: 40px;
+}
+
+.elemenx-step {
+	--elemenx-step-color: var(--elemenx-border-strong);
+	position: relative;
+	display: flex;
+	min-width: 0;
+}
+
+.elemenx-step.active {
+	--elemenx-step-color: var(--elemenx-accent);
+}
+
+.elemenx-step.done {
+	--elemenx-step-color: var(--elemenx-success);
+}
+
+.elemenx-step.error {
+	--elemenx-step-color: var(--elemenx-danger);
+}
+
+.elemenx-step-node {
+	position: relative;
+	z-index: 1;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex: none;
+	width: var(--elemenx-step-size);
+	height: var(--elemenx-step-size);
+	padding: 0;
+	background: var(--elemenx-surface);
+	border: 2px solid var(--elemenx-step-color);
+	border-radius: 50%;
+	color: var(--elemenx-text-muted);
+	font: inherit;
+	font-size: 12px;
+	font-weight: 700;
+	font-variant-numeric: tabular-nums;
+	cursor: default;
+}
+
+.elemenx-step.active .elemenx-step-node {
+	background: var(--elemenx-accent);
+	color: var(--elemenx-accent-text);
+	box-shadow: 0 0 0 4px color-mix(in srgb, var(--elemenx-accent) 16%, transparent);
+}
+
+.elemenx-step.done .elemenx-step-node,
+.elemenx-step.error .elemenx-step-node {
+	background: var(--elemenx-step-color);
+	color: var(--elemenx-surface);
+}
+
+.elemenx-step .elemenx-step-node .elemenx-icon {
+	stroke-width: 2;
+}
+
+.elemenx-steps.clickable .elemenx-step-node {
+	cursor: pointer;
+}
+
+.elemenx-steps.clickable .elemenx-step-node:hover {
+	box-shadow: 0 0 0 4px color-mix(in srgb, var(--elemenx-step-color) 24%, transparent);
+}
+
+.elemenx-step-node:focus-visible {
+	outline: 2px solid color-mix(in srgb, var(--elemenx-accent) 48%, transparent);
+	outline-offset: 2px;
+}
+
+.elemenx-step-text {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+}
+
+.elemenx-step-label {
+	font-weight: 600;
+}
+
+.elemenx-step.pending .elemenx-step-label {
+	color: var(--elemenx-text-muted);
+	font-weight: 400;
+}
+
+.elemenx-step::after {
+	content: '';
+	position: absolute;
+	background: var(--elemenx-border-strong);
+}
+
+.elemenx-step.done::after {
+	background: var(--elemenx-success);
+}
+
+.elemenx-step:last-child::after {
+	display: none;
+}
+
+
+
+.elemenx-steps.horizontal {
+	align-items: flex-start;
+}
+
+.elemenx-steps.horizontal .elemenx-step {
+	flex: 1;
+	flex-direction: column;
+	align-items: center;
+	gap: 8px;
+	padding: 0 4px;
+	text-align: center;
+}
+
+.elemenx-steps.horizontal .elemenx-step::after {
+	top: calc(var(--elemenx-step-size) / 2 - 1px);
+	right: calc(-50% + var(--elemenx-step-size) / 2 + 8px);
+	left: calc(50% + var(--elemenx-step-size) / 2 + 8px);
+	height: 2px;
+}
+
+.elemenx-steps.vertical {
+	flex-direction: column;
+}
+
+.elemenx-steps.vertical .elemenx-step {
+	gap: 12px;
+	padding-bottom: 24px;
+}
+
+.elemenx-steps.vertical .elemenx-step:last-child {
+	padding-bottom: 0;
+}
+
+.elemenx-steps.vertical .elemenx-step-text {
+	padding-top: calc(var(--elemenx-step-size) / 2 - 10px);
+}
+
+.elemenx-steps.vertical .elemenx-step::after {
+	top: calc(var(--elemenx-step-size) + 4px);
+	bottom: 4px;
+	left: calc(var(--elemenx-step-size) / 2 - 1px);
+	width: 2px;
+}

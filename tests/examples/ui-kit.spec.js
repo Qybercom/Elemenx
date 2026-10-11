@@ -42,7 +42,7 @@ for (const origin of origins) {
 
 			await open(page, origin);
 
-			await expect(page.locator('.ui-kit > .elemenx-section')).toHaveCount(18);
+			await expect(page.locator('.ui-kit > .elemenx-section')).toHaveCount(22);
 
 			sprite = await page.locator('.ui-kit-icon svg use').first().getAttribute('href');
 
@@ -105,6 +105,7 @@ for (const origin of origins) {
 		test('card inputs format, detect the brand and validate', async function ({ page }) {
 			var card;
 			var expiry;
+			var saved;
 
 			await open(page, origin);
 
@@ -131,6 +132,21 @@ for (const origin of origins) {
 			await expiry.pressSequentially('530');
 
 			await expect(expiry).toHaveValue('05/30');
+
+			saved = field(page, 'Saved card');
+
+			await expect(saved.locator('.elemenx-card-conceal')).toHaveText('5555 •••• •••• 4444');
+			await expect(saved.locator('input')).toHaveClass(/concealed/);
+
+			await saved.locator('.elemenx-card-conceal').click();
+
+			await expect(saved.locator('input')).toBeFocused();
+			await expect(saved.locator('input')).toHaveValue('5555 5555 5555 4444');
+			await expect(saved.locator('.elemenx-card-conceal')).toHaveCount(0);
+
+			await saved.locator('input').blur();
+
+			await expect(saved.locator('.elemenx-card-conceal')).toHaveText('5555 •••• •••• 4444');
 		});
 
 		test('number input steps inside its bounds', async function ({ page }) {
@@ -506,6 +522,8 @@ for (const origin of origins) {
 
 		test('section folds its body and keeps its actions', async function ({ page }) {
 			var outer;
+			var heading;
+			var below;
 
 			await open(page, origin);
 
@@ -522,6 +540,19 @@ for (const origin of origins) {
 			await outer.getByRole('button', {name: 'Project settings'}).click();
 
 			await expect(outer.getByText('State: expanded')).toBeVisible();
+
+			heading = outer.locator('.elemenx-section', {hasText: 'Project settings'}).locator('.elemenx-section-heading').first();
+
+			expect(await heading.evaluate(function (node) {
+				return Array.prototype.map.call(node.querySelectorAll('.elemenx-badge, .elemenx-section-toggle'), function (child) {
+					return child.textContent.trim();
+				});
+			})).toEqual(['Before', 'Project settings', 'After']);
+
+			below = outer.locator('.elemenx-section', {hasText: 'Caption under the line'});
+
+			await expect(below.locator('.elemenx-section-note').last()).toContainText('puts the caption under the header line');
+			expect((await below.locator('p.elemenx-section-note').boundingBox()).y).toBeGreaterThan((await below.getByRole('button', {name: 'Action'}).boundingBox()).y);
 		});
 
 		test('table sorts, selects and opens rows', async function ({ page }) {
@@ -592,6 +623,27 @@ for (const origin of origins) {
 
 			await expect(page.locator('.elemenx-toast', {hasText: 'Build failed'})).toHaveCount(0);
 			await expect(page.locator('.elemenx-toast', {hasText: 'Retrying'})).toBeVisible();
+			await expect(page.locator('.elemenx-toast', {hasText: 'Retrying'}).locator('.elemenx-toast-timer')).toHaveCount(1);
+
+			await overlays.getByRole('button', {name: 'Sticky toast'}).click();
+
+			await expect(page.locator('.elemenx-toast', {hasText: 'Stays until closed'})).toBeVisible();
+			await expect(page.locator('.elemenx-toast', {hasText: 'Stays until closed'}).locator('.elemenx-toast-timer')).toHaveCount(0);
+
+			await overlays.getByRole('button', {name: 'Custom toast'}).click();
+
+			await expect(page.locator('.elemenx-toast', {hasText: 'Uploading 3 files'}).locator('.ui-kit-toast-bar')).toBeVisible();
+			await expect(page.locator('.elemenx-toast', {hasText: 'Uploading 3 files'})).toHaveClass(/ui-kit-upload-toast/);
+
+			await page.locator('.elemenx-toast', {hasText: 'Uploading 3 files'}).getByRole('button', {name: 'Cancel'}).click();
+
+			await expect(page.locator('.elemenx-toast', {hasText: 'Uploading 3 files'})).toHaveCount(0);
+			await expect(page.locator('.elemenx-toast', {hasText: 'Retrying'})).toHaveCount(0, {timeout: 8000});
+			await expect(page.locator('.elemenx-toast', {hasText: 'Stays until closed'})).toBeVisible();
+
+			await page.locator('.elemenx-toast', {hasText: 'Stays until closed'}).getByRole('button', {name: 'Close'}).click();
+
+			await expect(page.locator('.elemenx-toast', {hasText: 'Stays until closed'})).toHaveCount(0);
 
 			await overlays.getByRole('button', {name: 'Click popover'}).click();
 
@@ -687,6 +739,7 @@ for (const origin of origins) {
 			var skip;
 			var input;
 			var phone;
+			var codes;
 
 			await open(page, origin);
 
@@ -727,6 +780,21 @@ for (const origin of origins) {
 
 			await expect(phone.locator('.elemenx-phone-country')).toContainText('JP');
 			await expect(phone.locator('input[type="tel"]')).toHaveValue(/^\+81 /);
+
+			await phone.locator('.elemenx-phone-country').click();
+
+			codes = await phone.locator('.elemenx-popup .elemenx-option .elemenx-phone-code').allTextContents();
+
+			expect(codes.length).toBeGreaterThan(200);
+			expect(codes.slice().sort()).toEqual(codes);
+
+			await page.keyboard.type('Moldova');
+			await page.keyboard.press('Enter');
+
+			await phone.locator('input[type="tel"]').fill('');
+			await phone.locator('input[type="tel"]').pressSequentially('69123456');
+
+			await expect(phone.locator('input[type="tel"]')).toHaveValue('+373 69 12 34 56');
 		});
 
 		test('money input formats the amount of its currency and file icons follow the format', async function ({ page }) {
@@ -756,48 +824,212 @@ for (const origin of origins) {
 			await expect(icons.locator('.ui-kit-icon[title="unknown.xyz"] use')).toHaveAttribute('href', /#file$/);
 		});
 
-		test('workspace toggles tool windows and resizes them with the keyboard and the pointer', async function ({ page }) {
+		test('workspace shows the tool windows the page puts in it and resizes them', async function ({ page }) {
 			var workspace;
 			var left;
-			var splitter;
+			var handle;
 			var box;
 
 			await open(page, origin);
 
 			workspace = page.locator('.elemenx-workspace');
 			left = workspace.locator('.elemenx-workspace-panel.left');
-			splitter = workspace.locator('.elemenx-workspace-splitter[data-panel="left"]');
+			handle = left.locator(':scope > .elemenx-resize-handle.right');
 
 			await expect(left).toBeVisible();
-			expect((await left.boundingBox()).width).toBe(240);
+			expect((await left.boundingBox()).width).toBe(280);
 
-			await splitter.focus();
+			await handle.focus();
 
 			await page.keyboard.press('ArrowRight');
 
-			expect((await left.boundingBox()).width).toBe(256);
+			expect((await left.boundingBox()).width).toBe(288);
 
-			box = await splitter.boundingBox();
+			box = await handle.boundingBox();
 
-			await page.mouse.move(box.x + 1, box.y + 100);
+			await page.mouse.move(box.x + 2, box.y + 100);
 			await page.mouse.down();
-			await page.mouse.move(box.x + 41, box.y + 100, {steps: 4});
+			await page.mouse.move(box.x + 42, box.y + 100, {steps: 4});
 			await page.mouse.up();
 
-			expect((await left.boundingBox()).width).toBe(296);
+			expect((await left.boundingBox()).width).toBe(328);
 
 			await workspace.getByRole('button', {name: 'Project'}).click();
 
 			await expect(left).toBeHidden();
-			await expect(splitter).toBeHidden();
 
 			await workspace.getByRole('button', {name: 'Database'}).click();
 
 			await expect(workspace.locator('.elemenx-workspace-panel.right')).toBeVisible();
 
-			await workspace.locator('.elemenx-workspace-tool-window', {hasText: 'Terminal'}).getByRole('button', {name: 'Hide'}).click();
+			await workspace.locator('.elemenx-terminal').getByRole('button', {name: 'Hide'}).click();
 
 			await expect(workspace.locator('.elemenx-workspace-panel.bottom')).toBeHidden();
+		});
+
+		test('tables fit their container without a horizontal scroll', async function ({ page }) {
+			var wrap;
+
+			await open(page, origin);
+
+			wrap = page.locator('.elemenx-table-wrap').first();
+
+			expect(await wrap.evaluate(function (node) {
+				return node.scrollWidth - node.clientWidth;
+			})).toBe(0);
+		});
+
+		test('chat shows the avatar on the newest message of a run from one author', async function ({ page }) {
+			var messages;
+
+			await open(page, origin);
+
+			messages = section(page, 'Chat').locator('.elemenx-chat-message:not(.own)');
+
+			await expect(messages).toHaveCount(3);
+			await expect(messages.nth(0)).toHaveClass(/first/);
+			await expect(messages.nth(2)).toHaveClass(/last/);
+			await expect(messages.nth(0).locator('.elemenx-chat-author')).toHaveText('Grace Hopper');
+			await expect(messages.nth(0).locator('.elemenx-chat-avatar')).toHaveText('');
+			await expect(messages.nth(1).locator('.elemenx-chat-avatar')).toHaveText('');
+			await expect(messages.nth(2).locator('.elemenx-chat-avatar')).toHaveText('GH');
+			await expect(messages.nth(2).locator('.elemenx-chat-author')).toHaveCount(0);
+		});
+
+		test('steps show several active steps and timeline lists the activity', async function ({ page }) {
+			var block;
+			var steps;
+
+			await open(page, origin);
+
+			block = section(page, 'Steps and timeline');
+			steps = block.locator('.elemenx-steps').first().locator('.elemenx-step');
+
+			await expect(steps).toHaveClass([/done/, /active/, /active/, /pending/]);
+			await expect(block.locator('.elemenx-steps.vertical')).toHaveCount(1);
+
+			await steps.nth(3).locator('.elemenx-step-node').click();
+
+			await expect(steps).toHaveClass([/done/, /done/, /done/, /active/]);
+			await expect(steps.nth(3)).toHaveAttribute('aria-current', 'step');
+
+			await expect(block.locator('.elemenx-timeline-item')).toHaveCount(5);
+			await expect(block.locator('.elemenx-timeline-item').nth(2)).toContainText('The table should keep its header while scrolling.');
+		});
+
+		test('terminal runs commands and recalls its history', async function ({ page }) {
+			var terminal;
+			var input;
+
+			await open(page, origin);
+
+			terminal = section(page, 'Terminal').locator('.elemenx-terminal');
+			input = terminal.locator('.elemenx-terminal-input');
+
+			await input.fill('help');
+			await input.press('Enter');
+
+			await expect(terminal.locator('.elemenx-terminal-line')).toContainText(['Elemenx terminal. Type help.', 'help', /date\s+print the date/]);
+
+			await input.fill('make coffee');
+			await input.press('Enter');
+
+			await expect(terminal.locator('.elemenx-terminal-line').last()).toHaveText('make: command not found');
+
+			await input.press('ArrowUp');
+
+			await expect(input).toHaveValue('make coffee');
+
+			await input.press('ArrowUp');
+
+			await expect(input).toHaveValue('help');
+
+			await input.press('ArrowDown');
+			await input.press('ArrowDown');
+
+			await expect(input).toHaveValue('');
+
+			await terminal.getByRole('button', {name: 'Clear'}).click();
+
+			await expect(terminal.locator('.elemenx-terminal-line')).toHaveCount(0);
+		});
+
+		test('tile grid opens tiles and moves them by dragging', async function ({ page }) {
+			var tiles;
+			var from;
+			var to;
+
+			await open(page, origin);
+
+			tiles = section(page, 'Tiles').locator('.elemenx-tile');
+
+			await tiles.first().scrollIntoViewIfNeeded();
+			await tiles.nth(1).click();
+
+			await expect(section(page, 'Tiles').locator('.elemenx-section-header')).toContainText('Opened: Calendar');
+
+			from = await tiles.nth(4).boundingBox();
+			to = await tiles.nth(1).boundingBox();
+
+			await page.mouse.move(from.x + 8, from.y + 8);
+			await page.mouse.down();
+			await page.mouse.move(to.x + 24, to.y + 24, {steps: 8});
+			await page.mouse.up();
+
+			expect(await tiles.evaluateAll(function (nodes) {
+				return nodes.map(function (node) {
+					return node.getAttribute('data-id');
+				});
+			})).toEqual(['mail', 'phone', 'calendar', 'tasks', 'chat', 'terminal', 'settings', 'database', 'cloud']);
+		});
+
+		test('layouts: dashboard, settings, master-detail and centered pages', async function ({ page }) {
+			var layouts;
+			var nav;
+			var settings;
+			var master;
+
+			await open(page, origin);
+
+			layouts = section(page, 'Layouts');
+			nav = layouts.locator('.elemenx-dashboard .elemenx-nav');
+
+			await expect(layouts.locator('.elemenx-dashboard-widget')).toHaveCount(5);
+
+			await nav.locator('.elemenx-nav-row', {hasText: 'Builds'}).click();
+
+			await expect(nav.locator('.elemenx-nav-row.active')).toHaveText('Builds');
+
+			await layouts.getByRole('button', {name: 'Collapse the navigation'}).click();
+
+			await expect(nav).toHaveClass(/collapsed/);
+			expect((await layouts.locator('.elemenx-dashboard-nav').boundingBox()).width).toBe(64);
+
+			settings = layouts.locator('.elemenx-settings');
+
+			await expect(settings.locator('.elemenx-settings-title')).toHaveText('General');
+
+			await settings.locator('.elemenx-nav-row', {hasText: 'Version Control'}).click();
+			await settings.locator('.elemenx-nav-row', {hasText: 'Git'}).click();
+
+			await expect(settings.locator('.elemenx-settings-path')).toHaveText('Version Control');
+			await expect(settings.locator('.elemenx-settings-title')).toHaveText('Git');
+
+			await settings.locator('.elemenx-nav-search input').fill('scheme');
+
+			await expect(settings.locator('.elemenx-nav-row')).toHaveText(['Editor', 'Color Scheme']);
+
+			master = layouts.locator('.elemenx-master-detail');
+
+			await expect(master).toContainText('Select a person');
+
+			await master.locator('.elemenx-master-row', {hasText: 'Grace Hopper'}).click();
+
+			await expect(master).toContainText('Commits: 2048');
+			await expect(master.locator('.elemenx-master-row.active')).toContainText('Grace Hopper');
+
+			await expect(layouts.locator('.elemenx-centered')).toHaveCount(3);
+			await expect(layouts.locator('.elemenx-centered', {hasText: 'Page not found'}).locator('.elemenx-centered-code')).toHaveText('404');
 		});
 	});
 }

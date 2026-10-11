@@ -45,6 +45,8 @@
 
 .elemenx-toast {
 	--elemenx-toast-color: var(--elemenx-info);
+	position: relative;
+	overflow: hidden;
 	display: flex;
 	align-items: flex-start;
 	gap: 8px;
@@ -87,6 +89,17 @@
 	color: var(--elemenx-text-muted);
 }
 
+.elemenx-toast-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 4px 12px;
+	margin-top: 4px;
+}
+
+.elemenx-toast-custom:empty {
+	display: none;
+}
+
 .elemenx-toast-action {
 	flex: none;
 	padding: 0 4px;
@@ -103,6 +116,36 @@
 
 .elemenx-toast-action:focus-visible {
 	outline: 2px solid color-mix(in srgb, var(--elemenx-accent) 48%, transparent);
+}
+
+.elemenx-toast-action.primary {
+	padding: 0 8px;
+	background: var(--elemenx-accent);
+	color: var(--elemenx-accent-text);
+	text-decoration: none;
+}
+
+.elemenx-toast-timer {
+	position: absolute;
+	right: 0;
+	bottom: 0;
+	left: 0;
+	height: 2px;
+	background: var(--elemenx-toast-color);
+	opacity: 0.48;
+	transform-origin: left;
+	animation: elemenx-toast-timer var(--elemenx-toast-duration) linear forwards;
+}
+
+.elemenx-toast:hover .elemenx-toast-timer,
+.elemenx-toast:focus-within .elemenx-toast-timer {
+	animation-play-state: paused;
+}
+
+@keyframes elemenx-toast-timer {
+	to {
+		transform: scaleX(0);
+	}
 }
 
 @keyframes elemenx-toast-in {

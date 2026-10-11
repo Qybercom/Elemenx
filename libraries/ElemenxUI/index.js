@@ -7,6 +7,7 @@
 	'directives/Modal.js',
 	'directives/Draggable.js',
 	'directives/Droppable.js',
+	'directives/Mount.js',
 	'services/Theme.js',
 	'services/Countries.js',
 	'services/Currencies.js',
@@ -55,5 +56,15 @@
 	'components/Splitter/Splitter.js',
 	'components/Chat/Chat.js',
 	'components/ChatMessage/ChatMessage.js',
-	'components/ChatComposer/ChatComposer.js'
+	'components/ChatComposer/ChatComposer.js',
+	'components/Steps/Steps.js',
+	'components/Timeline/Timeline.js',
+	'components/Terminal/Terminal.js',
+	'components/TileGrid/TileGrid.js',
+	'components/NavList/NavList.js',
+	'components/Dashboard/Dashboard.js',
+	'components/DashboardWidget/DashboardWidget.js',
+	'components/Settings/Settings.js',
+	'components/MasterDetail/MasterDetail.js',
+	'components/Centered/Centered.js'
 ];

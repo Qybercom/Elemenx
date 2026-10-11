@@ -1,7 +1,8 @@
 /*
  * One message of a Chat. Text, or the default slot for rich content. Own puts the message on the reader's side.
- * Avatar is an image URL; without it the initials of Author are shown. Grouped hides the author and avatar of a
- * message that continues the previous one. Status: sending, sent, read or error.
+ * Avatar is an image URL; without it the initials of Author are shown. Position places the message in a run of
+ * messages from one author: single, first, middle or last. The author name shows on the first message of a run and
+ * the avatar on the last (the newest) one. Status: sending, sent, read or error.
  */
 Elemenx.Component('ChatMessage', {
 	$TemplateURL: 'ChatMessage.html',
@@ -11,7 +12,7 @@ Elemenx.Component('ChatMessage', {
 	Text: '',
 	Time: '',
 	Own: false,
-	Grouped: false,
+	Position: 'single',
 	Status: '',
 
 	$OnCreate: function () {

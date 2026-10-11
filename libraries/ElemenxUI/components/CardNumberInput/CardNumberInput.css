@@ -3,6 +3,30 @@
 	letter-spacing: 0.02em;
 }
 
+.elemenx-card-field {
+	position: relative;
+	display: flex;
+	flex: 1;
+	align-self: stretch;
+	min-width: 0;
+}
+
+.elemenx-card-input .elemenx-input-control.concealed {
+	color: transparent;
+}
+
+.elemenx-card-conceal {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	overflow: hidden;
+	font-variant-numeric: tabular-nums;
+	letter-spacing: 0.02em;
+	white-space: nowrap;
+	cursor: text;
+}
+
 .elemenx-card-brand {
 	flex: none;
 	padding: 0 8px;

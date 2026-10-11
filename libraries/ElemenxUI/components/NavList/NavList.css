@@ -1,0 +1,77 @@
+.elemenx-nav {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	min-width: 0;
+}
+
+.elemenx-nav-search {
+	flex: none;
+}
+
+.elemenx-nav-rows {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.elemenx-nav-row {
+	--elemenx-nav-depth: 0;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	min-height: 32px;
+	padding: 0 8px 0 calc(8px + var(--elemenx-nav-depth) * 20px);
+	border-radius: 4px;
+	color: var(--elemenx-text);
+	cursor: pointer;
+	outline: none;
+	user-select: none;
+}
+
+.elemenx-nav-row:hover {
+	background: var(--elemenx-surface-hover);
+}
+
+.elemenx-nav-row:focus-visible {
+	box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--elemenx-accent) 48%, transparent);
+}
+
+.elemenx-nav-row.active {
+	background: color-mix(in srgb, var(--elemenx-accent) 12%, var(--elemenx-surface));
+	font-weight: 600;
+}
+
+.elemenx-nav-row.disabled {
+	opacity: 0.48;
+	cursor: default;
+}
+
+.elemenx-nav-row > .elemenx-icon {
+	color: var(--elemenx-text-muted);
+}
+
+.elemenx-nav-twisty {
+	display: inline-flex;
+	flex: none;
+	width: 12px;
+	color: var(--elemenx-text-muted);
+}
+
+.elemenx-nav-label {
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.elemenx-nav.collapsed .elemenx-nav-row {
+	justify-content: center;
+	padding: 0;
+}
+
+.elemenx-nav.collapsed .elemenx-nav-twisty,
+.elemenx-nav.collapsed .elemenx-nav-label {
+	display: none;
+}

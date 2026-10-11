@@ -1,5 +1,8 @@
 <div class="elemenx-input elemenx-card-input" [class]="[Size || 'medium', Shape === 'round' ? 'round' : '', Invalid || (Touched && Value && !Valid(Value)) ? 'invalid' : '', Disabled ? 'disabled' : '']">
 	<Icon Name="credit-card" />
-	<input class="elemenx-input-control" type="text" inputmode="numeric" autocomplete="cc-number" *mask="{Mask: MaskFor(Value), Value: Value}" [placeholder]="Placeholder" [disabled]="Disabled" [attribute.name]="Name" [attribute.aria-invalid]="Invalid || (Touched && Value && !Valid(Value)) ? 'true' : null" (mask)="Masked" (change)="Committed" />
+	<span class="elemenx-card-field">
+		<input class="elemenx-input-control" type="text" inputmode="numeric" autocomplete="cc-number" *mask="{Mask: MaskFor(Value), Value: Value}" [placeholder]="Placeholder" [disabled]="Disabled" [attribute.name]="Name" [attribute.aria-invalid]="Invalid || (Touched && Value && !Valid(Value)) ? 'true' : null" [class.concealed]="!!Conceal && !Focused && !!Value" (mask)="Masked" (change)="Committed" (focus)="Focus" (blur)="Blur" />
+		<span class="elemenx-card-conceal" aria-hidden="true" *if="Conceal && !Focused && Value" (mousedown)="Reveal">{{Concealed(Value, Conceal)}}</span>
+	</span>
 	<span class="elemenx-card-brand" *if="Brand(Value)" [attribute.data-brand]="(Brand(Value) || {}).ID">{{(Brand(Value) || {}).Label}}</span>
 </div>

@@ -1,0 +1,121 @@
+.elemenx-master-detail-frame {
+	width: 100%;
+	height: 100%;
+	min-height: 0;
+	container-type: inline-size;
+}
+
+.elemenx-master-detail {
+	width: 100%;
+	height: 100%;
+	min-height: 0;
+	overflow: hidden;
+	background: var(--elemenx-surface);
+	border-radius: 0;
+}
+
+.elemenx-master {
+	flex: none;
+	width: 320px;
+	min-height: 0;
+	border-right: 1px solid var(--elemenx-border);
+}
+
+.elemenx-master-header,
+.elemenx-detail-header {
+	flex: none;
+	align-items: center;
+	gap: 8px;
+	min-height: 48px;
+	padding: 8px 12px;
+	border-bottom: 1px solid var(--elemenx-border);
+	border-radius: 0;
+}
+
+.elemenx-master-list {
+	min-height: 0;
+	padding: 4px;
+	overflow: auto;
+}
+
+.elemenx-detail {
+	min-width: 0;
+	min-height: 0;
+}
+
+.elemenx-detail-title {
+	display: flex;
+	flex: 1;
+	align-items: center;
+	gap: 8px;
+	min-width: 0;
+}
+
+.elemenx-detail-back {
+	display: none;
+}
+
+.elemenx-detail-content {
+	gap: 16px;
+	min-height: 0;
+	padding: 16px;
+	overflow: auto;
+}
+
+.elemenx-detail-empty {
+	flex: 1;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	color: var(--elemenx-text-muted);
+}
+
+.elemenx-detail:has(.elemenx-detail-content > span > *) .elemenx-detail-empty,
+.elemenx-detail:not(:has(.elemenx-detail-content > span > *)) .elemenx-detail-header {
+	display: none;
+}
+
+.elemenx-master-row {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 8px;
+	border-radius: 4px;
+	cursor: pointer;
+}
+
+.elemenx-master-row:hover {
+	background: var(--elemenx-surface-hover);
+}
+
+.elemenx-master-row.active {
+	background: color-mix(in srgb, var(--elemenx-accent) 12%, var(--elemenx-surface));
+}
+
+@container (max-width: 640px) {
+	.elemenx-master {
+		flex: 1;
+		width: auto !important;
+		border-right: 0;
+	}
+
+	.elemenx-master > .elemenx-resize-handle {
+		display: none;
+	}
+
+	.elemenx-detail {
+		display: none;
+	}
+
+	.elemenx-master-detail:has(.elemenx-detail-content > span > *) .elemenx-master {
+		display: none;
+	}
+
+	.elemenx-master-detail:has(.elemenx-detail-content > span > *) .elemenx-detail {
+		display: flex;
+	}
+
+	.elemenx-detail-back {
+		display: inline-flex;
+	}
+}

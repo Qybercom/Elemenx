@@ -99,3 +99,13 @@
 .elemenx-table-wrap.scrolling .elemenx-table tbody tr:last-child td {
 	border-bottom: 0;
 }
+
+.elemenx-table th:last-child > .elemenx-resize-handle.right {
+	right: 0;
+	width: 4px;
+}
+
+.elemenx-table th:last-child > .elemenx-resize-handle.right::after {
+	left: auto;
+	right: 0;
+}

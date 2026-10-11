@@ -1,19 +1,16 @@
-<div class="elemenx-screen elemenx-workspace" [class.resizing]="!!Drag">
-	<div class="elemenx-container elemenx-workspace-header"><slot name="header"></slot></div>
-	<div class="elemenx-container elemenx-workspace-band top"><slot name="top-stripe"></slot></div>
+<div class="elemenx-screen elemenx-workspace">
+	<div class="elemenx-container elemenx-workspace-header elemenx-layout-area"><slot name="header"></slot></div>
+	<div class="elemenx-container elemenx-workspace-band top elemenx-layout-area"><slot name="top-stripe"></slot></div>
 	<div class="elemenx-container fill elemenx-workspace-body">
-		<div class="elemenx-column elemenx-workspace-stripe left"><slot name="left-stripe"></slot></div>
-		<div class="elemenx-column elemenx-workspace-panel left" [attribute.hidden]="LeftOpen ? null : ''" [style.width]="LeftWidth + 'px'"><slot name="left"></slot></div>
-		<div class="elemenx-workspace-splitter vertical" role="separator" tabindex="0" aria-orientation="vertical" aria-label="Resize the left panel" data-panel="left" [attribute.hidden]="LeftOpen ? null : ''" [attribute.aria-valuenow]="LeftWidth" (pointerdown)="StartResize" (pointermove)="MoveResize" (pointerup)="EndResize" (pointercancel)="EndResize" (keydown)="KeyResize"></div>
+		<div class="elemenx-column elemenx-workspace-stripe left elemenx-layout-area"><slot name="left-stripe"></slot></div>
+		<div class="elemenx-column elemenx-workspace-panel left elemenx-layout-area" data-panel="left" *resizable="{Edges: 'right', MinWidth: 160, MaxWidth: 640}" (resizeend)="Resized"><slot name="left"></slot></div>
 		<div class="elemenx-column fill elemenx-workspace-center">
 			<div class="elemenx-column fill elemenx-workspace-main"><slot name="main"></slot></div>
-			<div class="elemenx-workspace-splitter horizontal" role="separator" tabindex="0" aria-orientation="horizontal" aria-label="Resize the bottom panel" data-panel="bottom" [attribute.hidden]="BottomOpen ? null : ''" [attribute.aria-valuenow]="BottomHeight" (pointerdown)="StartResize" (pointermove)="MoveResize" (pointerup)="EndResize" (pointercancel)="EndResize" (keydown)="KeyResize"></div>
-			<div class="elemenx-column elemenx-workspace-panel bottom" [attribute.hidden]="BottomOpen ? null : ''" [style.height]="BottomHeight + 'px'"><slot name="bottom"></slot></div>
+			<div class="elemenx-column elemenx-workspace-panel bottom elemenx-layout-area" data-panel="bottom" *resizable="{Edges: 'top', MinHeight: 80, MaxHeight: 640}" (resizeend)="Resized"><slot name="bottom"></slot></div>
 		</div>
-		<div class="elemenx-workspace-splitter vertical" role="separator" tabindex="0" aria-orientation="vertical" aria-label="Resize the right panel" data-panel="right" [attribute.hidden]="RightOpen ? null : ''" [attribute.aria-valuenow]="RightWidth" (pointerdown)="StartResize" (pointermove)="MoveResize" (pointerup)="EndResize" (pointercancel)="EndResize" (keydown)="KeyResize"></div>
-		<div class="elemenx-column elemenx-workspace-panel right" [attribute.hidden]="RightOpen ? null : ''" [style.width]="RightWidth + 'px'"><slot name="right"></slot></div>
-		<div class="elemenx-column elemenx-workspace-stripe right"><slot name="right-stripe"></slot></div>
+		<div class="elemenx-column elemenx-workspace-panel right elemenx-layout-area" data-panel="right" *resizable="{Edges: 'left', MinWidth: 160, MaxWidth: 640}" (resizeend)="Resized"><slot name="right"></slot></div>
+		<div class="elemenx-column elemenx-workspace-stripe right elemenx-layout-area"><slot name="right-stripe"></slot></div>
 	</div>
-	<div class="elemenx-container elemenx-workspace-band bottom"><slot name="bottom-stripe"></slot></div>
-	<div class="elemenx-container elemenx-workspace-status"><slot name="status"></slot></div>
+	<div class="elemenx-container elemenx-workspace-band bottom elemenx-layout-area"><slot name="bottom-stripe"></slot></div>
+	<div class="elemenx-container elemenx-workspace-status elemenx-layout-area"><slot name="status"></slot></div>
 </div>

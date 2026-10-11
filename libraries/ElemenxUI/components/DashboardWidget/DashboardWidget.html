@@ -1,0 +1,12 @@
+<article class="elemenx-column elemenx-dashboard-widget" [class]="['span-' + (Span || 1), 'rows-' + (Rows || 1)]">
+	<header class="elemenx-container elemenx-dashboard-widget-header" [class.bare]="!Title && !Icon">
+		<Icon *if="Icon" [name]="Icon" />
+		<div class="elemenx-dashboard-widget-heading">
+			<h3 class="elemenx-dashboard-widget-title" *if="Title">{{Title}}</h3>
+			<span class="elemenx-caption" *if="Note">{{Note}}</span>
+		</div>
+		<span class="elemenx-dashboard-widget-actions"><slot name="actions"></slot></span>
+	</header>
+	<div class="elemenx-column fill elemenx-dashboard-widget-body"><slot></slot></div>
+	<footer class="elemenx-container elemenx-dashboard-widget-footer elemenx-layout-area"><slot name="footer"></slot></footer>
+</article>

@@ -1,6 +1,6 @@
 /*
  * The active ISO 4217 currencies. List(locale) returns [{Code, Name, Symbol, Digits}] with the name and the symbol
- * of the locale (Intl), sorted by name; Find(code) returns one currency; Format(amount, code) formats an amount.
+ * of the locale (Intl), sorted by code; Find(code) returns one currency; Format(amount, code) formats an amount.
  * Without Intl support a currency still lists with its code as the name and the symbol.
  */
 Elemenx.Service('Currencies', {
@@ -77,7 +77,7 @@ Elemenx.Service('Currencies', {
 		}
 
 		list.sort(function (a, b) {
-			return a.Name.localeCompare(b.Name, locale);
+			return a.Code < b.Code ? -1 : a.Code > b.Code ? 1 : 0;
 		});
 
 		this.Cache[locale] = list;

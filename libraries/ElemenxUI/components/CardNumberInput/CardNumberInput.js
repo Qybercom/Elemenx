@@ -1,4 +1,9 @@
-/* Value holds digits only. Brand, mask and validity follow from it; Valid is the Luhn check of a complete number. */
+/*
+ * Value holds digits only. Brand, mask and validity follow from it; Valid is the Luhn check of a complete number.
+ * Conceal hides the middle of the number while the field is not edited: in its template x is a shown digit and ? a
+ * hidden one ('xxxx ???? ???? xxxx' shows the first four and the last four digits); the groups follow the brand.
+ * ConcealChar is the character of a hidden digit. Value is never changed by concealing.
+ */
 Elemenx.Component('CardNumberInput', {
 	$TemplateURL: 'CardNumberInput.html',
 	$StyleURL: 'CardNumberInput.css',
@@ -10,6 +15,9 @@ Elemenx.Component('CardNumberInput', {
 	Disabled: false,
 	Invalid: false,
 	Touched: false,
+	Conceal: '',
+	ConcealChar: '•',
+	Focused: false,
 	Brands: [
 		{ID: 'mir', Label: 'Mir', Pattern: '^220[0-4]', Mask: '#### #### #### #### ###', Lengths: [16, 17, 18, 19]},
 		{ID: 'visa', Label: 'Visa', Pattern: '^4', Mask: '#### #### #### #### ###', Lengths: [13, 16, 19]},
@@ -51,6 +59,34 @@ Elemenx.Component('CardNumberInput', {
 			return brand ? brand.Lengths.indexOf(length) !== -1 : length >= 16;
 		};
 
+		this.Concealed = function (value, conceal) {
+			var template = String(conceal || '');
+			var digits = String(value || '');
+			var lead = (/^[^?]*/.exec(template)[0].match(/x/gi) || []).length;
+			var tail = (/[^?]*$/.exec(template)[0].match(/x/gi) || []).length;
+			var mask = self.MaskFor(value);
+			var text = '';
+			var d = 0;
+			var m = 0;
+
+			if (template.indexOf('?') === -1)
+				tail = 0;
+
+			while (m < mask.length && d < digits.length) {
+				if (mask.charAt(m) === '#') {
+					text += d < lead || d >= digits.length - tail ? digits.charAt(d) : self.ConcealChar;
+					d++;
+				}
+				else {
+					text += mask.charAt(m);
+				}
+
+				m++;
+			}
+
+			return text;
+		};
+
 		this.Valid = function (value) {
 			return self.Complete(value) && self.Luhn(value);
 		};
@@ -90,6 +126,20 @@ Elemenx.Component('CardNumberInput', {
 
 		this.$Emit('input', this.Value);
 		this.$Emit('validate', {Value: this.Value, Brand: brand ? brand.ID : '', Complete: this.Complete(this.Value), Valid: this.Valid(this.Value)});
+	},
+
+	Focus: function () {
+		this.Focused = true;
+	},
+
+	Blur: function () {
+		this.Focused = false;
+	},
+
+	Reveal: function (event, node) {
+		event.preventDefault();
+
+		node.parentNode.querySelector('input').focus();
 	},
 
 	Committed: function () {

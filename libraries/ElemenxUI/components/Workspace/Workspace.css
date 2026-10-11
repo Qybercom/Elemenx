@@ -7,10 +7,6 @@
 	color: var(--elemenx-text);
 }
 
-.elemenx-workspace.resizing {
-	user-select: none;
-}
-
 .elemenx-workspace-header,
 .elemenx-workspace-status,
 .elemenx-workspace-body {
@@ -51,9 +47,7 @@
 	border-top: 1px solid var(--elemenx-border);
 }
 
-.elemenx-workspace-band:empty {
-	display: none;
-}
+
 
 .elemenx-workspace-stripe {
 	flex: none;
@@ -72,10 +66,6 @@
 	border-left: 1px solid var(--elemenx-border);
 }
 
-.elemenx-workspace-stripe:empty {
-	display: none;
-}
-
 .elemenx-workspace-stripe .elemenx-divider {
 	width: 24px;
 	margin: 4px 0;
@@ -85,13 +75,25 @@
 	flex: none;
 	min-width: 0;
 	min-height: 0;
-	overflow: hidden;
 	background: var(--elemenx-surface);
 }
 
-.elemenx-workspace-panel[hidden],
-.elemenx-workspace-splitter[hidden] {
-	display: none;
+.elemenx-workspace-panel.left,
+.elemenx-workspace-panel.right {
+	width: 280px;
+}
+
+.elemenx-workspace-panel.left {
+	border-right: 1px solid var(--elemenx-border);
+}
+
+.elemenx-workspace-panel.right {
+	border-left: 1px solid var(--elemenx-border);
+}
+
+.elemenx-workspace-panel.bottom {
+	height: 240px;
+	border-top: 1px solid var(--elemenx-border);
 }
 
 .elemenx-workspace-center {
@@ -103,50 +105,6 @@
 	min-height: 0;
 	overflow: hidden;
 	background: var(--elemenx-surface);
-}
-
-.elemenx-workspace-splitter {
-	position: relative;
-	z-index: 1;
-	flex: none;
-	background: var(--elemenx-border);
-	outline: none;
-	touch-action: none;
-}
-
-.elemenx-workspace-splitter::after {
-	content: '';
-	position: absolute;
-}
-
-.elemenx-workspace-splitter.vertical {
-	width: 1px;
-	cursor: col-resize;
-}
-
-.elemenx-workspace-splitter.vertical::after {
-	top: 0;
-	bottom: 0;
-	left: -4px;
-	width: 8px;
-}
-
-.elemenx-workspace-splitter.horizontal {
-	height: 1px;
-	cursor: row-resize;
-}
-
-.elemenx-workspace-splitter.horizontal::after {
-	top: -4px;
-	right: 0;
-	left: 0;
-	height: 8px;
-}
-
-.elemenx-workspace-splitter:hover,
-.elemenx-workspace-splitter:focus-visible,
-.elemenx-workspace.resizing .elemenx-workspace-splitter:active {
-	background: var(--elemenx-accent);
 }
 
 .elemenx-workspace-status {

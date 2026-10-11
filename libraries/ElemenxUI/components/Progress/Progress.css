@@ -57,6 +57,7 @@
 .elemenx-progress.indeterminate .elemenx-progress-fill {
 	width: 32%;
 	animation: elemenx-progress-slide 1200ms ease-in-out infinite;
+	will-change: transform;
 }
 
 .elemenx-progress-value {
@@ -130,11 +131,11 @@
 
 @keyframes elemenx-progress-slide {
 	from {
-		left: -32%;
+		transform: translateX(-100%);
 	}
 
 	to {
-		left: 100%;
+		transform: translateX(312.5%);
 	}
 }
 

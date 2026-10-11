@@ -1519,11 +1519,20 @@ a {
 }
 
 .elemenx-skeleton-line {
+	position: relative;
 	display: block;
 	height: 12px;
-	background: linear-gradient(90deg, var(--elemenx-surface-hover) 0%, color-mix(in srgb, var(--elemenx-surface-hover) 40%, var(--elemenx-surface)) 50%, var(--elemenx-surface-hover) 100%);
-	background-size: 200% 100%;
+	overflow: hidden;
+	background: var(--elemenx-surface-hover);
 	border-radius: 4px;
+}
+
+.elemenx-skeleton-line::after {
+	content: '';
+	position: absolute;
+	inset: 0;
+	background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--elemenx-surface) 64%, transparent), transparent);
+	transform: translateX(-100%);
 	animation: elemenx-skeleton 1400ms ease-in-out infinite;
 }
 
@@ -1553,17 +1562,13 @@ a {
 }
 
 @keyframes elemenx-skeleton {
-	from {
-		background-position: 100% 0;
-	}
-
 	to {
-		background-position: -100% 0;
+		transform: translateX(100%);
 	}
 }
 
 @media (prefers-reduced-motion: reduce) {
-	.elemenx-skeleton-line {
+	.elemenx-skeleton-line::after {
 		animation: none;
 	}
 }
@@ -1579,17 +1584,19 @@ a {
 
 .elemenx-drag-ghost {
 	position: fixed;
+	top: 0;
+	left: 0;
 	z-index: 1300;
 	margin: 0;
 	opacity: 0.92;
 	box-shadow: var(--elemenx-shadow);
 	pointer-events: none;
-	transform: rotate(1deg);
+	will-change: transform;
+	contain: layout style paint;
 }
 
-body.elemenx-dragging {
-	cursor: grabbing;
-	user-select: none;
+.elemenx-draggable:not(.disabled) {
+	cursor: grab;
 }
 
 .elemenx-droppable {
@@ -1606,4 +1613,11 @@ body.elemenx-dragging {
 	background: color-mix(in srgb, var(--elemenx-accent) 6%, transparent);
 	outline: 2px solid var(--elemenx-accent);
 	outline-offset: 2px;
+}
+
+
+
+/* A layout area shows only while its slot renders an element: an empty slot, or one whose *if is false, hides it. */
+.elemenx-layout-area:not(:has(> span:not(.elemenx-resize-handle) > *)) {
+	display: none;
 }

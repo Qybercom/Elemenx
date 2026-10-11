@@ -1,7 +1,7 @@
 /*
  * Countries and territories with their dialling code, the mask of the national number (# is a digit) and currency.
  * List(locale) returns [{Code, Name, Dial, Mask, Currency}] with names in the locale (Intl.DisplayNames, English
- * otherwise), sorted by that name. Find(code) returns one country; Match(digits, preferred) the country of an
+ * otherwise), sorted by code. Find(code) returns one country; Match(digits, preferred) the country of an
  * international number: the longest dialling code, then the preferred country, then the main country of a shared code.
  */
 Elemenx.Service('Countries', {
@@ -146,7 +146,7 @@ Elemenx.Service('Countries', {
 		'YT|Mayotte|262|### ## ## ##|EUR',
 		'MX|Mexico|52|## #### ####|MXN',
 		'FM|Micronesia|691|### ####|USD',
-		'MD|Moldova|373|### ## ###|MDL',
+		'MD|Moldova|373|## ## ## ##|MDL',
 		'MC|Monaco|377|## ## ## ##|EUR',
 		'MN|Mongolia|976|#### ####|MNT',
 		'ME|Montenegro|382|## ### ###|EUR',
@@ -315,7 +315,7 @@ Elemenx.Service('Countries', {
 		}
 
 		list.sort(function (a, b) {
-			return a.Name.localeCompare(b.Name, locale);
+			return a.Code < b.Code ? -1 : a.Code > b.Code ? 1 : 0;
 		});
 
 		this.Cache[locale] = list;
