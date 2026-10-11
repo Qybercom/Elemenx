@@ -14,14 +14,19 @@
 	padding-bottom: 16px;
 }
 
+/* The line runs through every item behind the nodes, from the center of the first node to the center of the last. */
 .elemenx-timeline-item::before {
 	content: '';
 	position: absolute;
-	top: 24px;
+	top: 0;
 	bottom: 0;
 	left: 11px;
 	width: 2px;
 	background: var(--elemenx-border);
+}
+
+.elemenx-timeline-item:first-child::before {
+	top: 12px;
 }
 
 .elemenx-timeline-item:last-child {
@@ -29,6 +34,11 @@
 }
 
 .elemenx-timeline-item:last-child::before {
+	bottom: auto;
+	height: 12px;
+}
+
+.elemenx-timeline-item:only-child::before {
 	display: none;
 }
 
@@ -92,6 +102,35 @@
 	color: var(--elemenx-text-muted);
 }
 
+.elemenx-timeline-item.small {
+	padding-bottom: 12px;
+}
+
+.elemenx-timeline-item.small .elemenx-timeline-node {
+	width: 16px;
+	height: 16px;
+	margin: 4px;
+}
+
+.elemenx-timeline-item.dot .elemenx-timeline-node {
+	width: 8px;
+	height: 8px;
+	margin: 8px;
+	background: var(--elemenx-border-strong);
+	border: 0;
+	box-shadow: 0 0 0 4px var(--elemenx-surface);
+}
+
+.elemenx-timeline-item.dot:not(.default) .elemenx-timeline-node {
+	background: var(--elemenx-timeline-color);
+}
+
+.elemenx-timeline-item.small .elemenx-timeline-content {
+	padding-top: 4px;
+	font-size: 12px;
+	line-height: 16px;
+}
+
 .elemenx-timeline-body {
 	padding: 12px;
 	background: var(--elemenx-surface);
@@ -102,6 +141,10 @@
 
 .elemenx-timeline.compact .elemenx-timeline-item {
 	padding-bottom: 8px;
+}
+
+.elemenx-timeline.compact .elemenx-timeline-item.small {
+	padding-bottom: 4px;
 }
 
 .elemenx-timeline.compact .elemenx-timeline-body {

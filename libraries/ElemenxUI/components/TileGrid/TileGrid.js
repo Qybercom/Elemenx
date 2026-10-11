@@ -79,7 +79,13 @@ Elemenx.Component('TileGrid', {
 		this.Move(event.detail.Data, node.getAttribute('data-group'), node.getAttribute('data-id'));
 	},
 
+	/* A tile dropped where it already stands stays there instead of moving to the end of its group. */
 	DropOnGroup: function (event, node) {
+		var rect = event.detail.Source.getBoundingClientRect();
+		var x = event.detail.ClientX;
+		var y = event.detail.ClientY;
+		if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) return;
+
 		this.Move(event.detail.Data, node.getAttribute('data-group'), null);
 	}
 });

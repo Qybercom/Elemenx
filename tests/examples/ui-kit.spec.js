@@ -558,6 +558,9 @@ for (const origin of origins) {
 		test('table sorts, selects and opens rows', async function ({ page }) {
 			var table;
 			var header;
+			var striped;
+			var stripe;
+			var plain;
 			var firstName = function () {
 				return table.locator('tbody tr').first().locator('td').nth(1);
 			};
@@ -566,6 +569,20 @@ for (const origin of origins) {
 
 			table = section(page, 'Table').locator('.elemenx-table').first();
 			header = section(page, 'Table').locator('.elemenx-section-header');
+			striped = section(page, 'Table').locator('.elemenx-table.striped');
+			stripe = striped.locator('tbody tr').nth(1).locator('td').nth(1);
+
+			await striped.scrollIntoViewIfNeeded();
+
+			plain = await stripe.evaluate(function (node) {
+				return getComputedStyle(node).backgroundColor;
+			});
+
+			await stripe.hover();
+
+			expect(await stripe.evaluate(function (node) {
+				return getComputedStyle(node).backgroundColor;
+			})).not.toBe(plain);
 
 			await table.getByRole('button', {name: 'Commits'}).click();
 
@@ -707,6 +724,14 @@ for (const origin of origins) {
 			await page.mouse.move(to.x + to.width / 2, to.y + to.height / 2, {steps: 8});
 
 			await expect(done).toHaveClass(/drop-over/);
+			expect(await page.evaluate(function () {
+				return String(window.getSelection());
+			})).toBe('');
+
+			box = await page.locator('.elemenx-drag-ghost').boundingBox();
+
+			expect(Math.round(box.x)).toBe(Math.round(to.x + to.width / 2 - 20));
+			expect(Math.round(box.height)).toBe(Math.round(from.height));
 
 			await page.mouse.up();
 
@@ -822,6 +847,9 @@ for (const origin of origins) {
 			await expect(icons.locator('.ui-kit-icon[title="pack.tar.gz"] use')).toHaveAttribute('href', /#file-tar-gz$/);
 			await expect(icons.locator('.ui-kit-icon[title="Dockerfile"] use')).toHaveAttribute('href', /#file-dockerfile$/);
 			await expect(icons.locator('.ui-kit-icon[title="unknown.xyz"] use')).toHaveAttribute('href', /#file$/);
+			await expect(icons.locator('.ui-kit-icon[title="file.rb"] use')).toHaveAttribute('href', /#file-rb$/);
+			await expect(icons.locator('.ui-kit-icon[title="CMakeLists.txt"] use')).toHaveAttribute('href', /#file-cmake$/);
+			expect(await icons.locator('.ui-kit-icon:has(use[href*="#file-"])').count()).toBeGreaterThan(170);
 		});
 
 		test('workspace shows the tool windows the page puts in it and resizes them', async function ({ page }) {
@@ -861,6 +889,15 @@ for (const origin of origins) {
 			await workspace.getByRole('button', {name: 'Database'}).click();
 
 			await expect(workspace.locator('.elemenx-workspace-panel.right')).toBeVisible();
+
+			for (const command of ['one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight']) {
+				await workspace.locator('.elemenx-terminal-input').fill(command);
+				await workspace.locator('.elemenx-terminal-input').press('Enter');
+			}
+
+			await expect(workspace.locator('.elemenx-terminal-line').last()).toHaveText('eight: command not found');
+			expect((await workspace.locator('.elemenx-terminal').boundingBox()).height).toBeLessThanOrEqual((await workspace.locator('.elemenx-workspace-panel.bottom').boundingBox()).height);
+			await expect(section(page, 'Terminal').locator('.elemenx-terminal-line')).toHaveText(['Elemenx terminal. Type help.']);
 
 			await workspace.locator('.elemenx-terminal').getByRole('button', {name: 'Hide'}).click();
 
@@ -913,8 +950,12 @@ for (const origin of origins) {
 			await expect(steps).toHaveClass([/done/, /done/, /done/, /active/]);
 			await expect(steps.nth(3)).toHaveAttribute('aria-current', 'step');
 
-			await expect(block.locator('.elemenx-timeline-item')).toHaveCount(5);
-			await expect(block.locator('.elemenx-timeline-item').nth(2)).toContainText('The table should keep its header while scrolling.');
+			await expect(block.locator('.elemenx-timeline-item')).toHaveCount(8);
+			await expect(block.locator('.elemenx-timeline-item').nth(4)).toContainText('The table should keep its header while scrolling.');
+			await expect(block.locator('.elemenx-timeline-item.small')).toHaveCount(3);
+			await expect(block.locator('.elemenx-timeline-item.dot')).toHaveCount(2);
+			await expect(block.locator('.elemenx-timeline-item.dot .elemenx-icon')).toHaveCount(0);
+			expect((await block.locator('.elemenx-timeline-item.dot .elemenx-timeline-node').first().boundingBox()).width).toBe(8);
 		});
 
 		test('terminal runs commands and recalls its history', async function ({ page }) {
@@ -981,6 +1022,15 @@ for (const origin of origins) {
 					return node.getAttribute('data-id');
 				});
 			})).toEqual(['mail', 'phone', 'calendar', 'tasks', 'chat', 'terminal', 'settings', 'database', 'cloud']);
+
+			from = await tiles.nth(2).boundingBox();
+
+			await page.mouse.move(from.x + 8, from.y + 8);
+			await page.mouse.down();
+			await page.mouse.move(from.x + 40, from.y + 40, {steps: 4});
+			await page.mouse.up();
+
+			await expect(tiles.nth(2)).toHaveAttribute('data-id', 'calendar');
 		});
 
 		test('layouts: dashboard, settings, master-detail and centered pages', async function ({ page }) {

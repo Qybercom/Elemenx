@@ -1,6 +1,6 @@
 <ol class="elemenx-timeline" [class.compact]="Compact">
-	<li class="elemenx-timeline-item" *for="item of Items" *key="item.ID" [class]="[item.Variant || 'default', item.Text || item.Element || item.Render ? 'with-body' : '']">
-		<span class="elemenx-timeline-node"><Icon [name]="item.Icon || 'commit'" Size="12" /></span>
+	<li class="elemenx-timeline-item" *for="item of Items" *key="item.ID" [class]="[item.Variant || 'default', item.Size === 'small' ? 'small' : '', item.Size === 'small' && !item.Icon ? 'dot' : '', item.Text || item.Element || item.Render ? 'with-body' : '']">
+		<span class="elemenx-timeline-node"><Icon *if="item.Icon || item.Size !== 'small'" [name]="item.Icon || 'commit'" [size]="item.Size === 'small' ? 8 : 12" /></span>
 		<div class="elemenx-timeline-content">
 			<div class="elemenx-timeline-head">
 				<strong *if="item.Author">{{item.Author}}</strong>

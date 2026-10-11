@@ -155,4 +155,56 @@ describe('Regression: Structural collections and Component props', function () {
 			}).toThrow('Elemenx invalid Component binding target');
 		});
 	});
+
+	it('*for renders its iterations again only for the values its template and expressions name', function () {
+		var calls = 0;
+		var component = Elemenx.Component(unique('ForNamed'), {
+			$Template: '<div><i *for="item of Items" *key="Key(item)">{{item}}{{Label}}{{Format(item)}}</i></div>',
+			Items: ['a', 'b'],
+			Label: '!',
+			Unit: 'px',
+			Other: 0,
+			$OnCreate: function () {
+				var self = this;
+
+				/* *key runs on every render of the collection. */
+				this.Key = function (item) {
+					calls++;
+
+					return item;
+				};
+
+				/* A function reads the values of the Component itself, so its own reads keep it current. */
+				this.Format = function () {
+					return self.Unit;
+				};
+			}
+		})();
+		var first = component.$Element().querySelector('i');
+		var before;
+
+		expect(texts(component, 'i')).toEqual(['a!px', 'b!px']);
+
+		before = calls;
+		component.Other = 1;
+		component.Other = 2;
+
+		expect(calls).toBe(before);
+		expect(component.$Element().querySelector('i')).toBe(first);
+
+		component.Label = '?';
+
+		expect(texts(component, 'i')).toEqual(['a?px', 'b?px']);
+
+		component.Unit = 'em';
+
+		expect(texts(component, 'i')).toEqual(['a?em', 'b?em']);
+
+		component.Items = ['b', 'a', 'c'];
+
+		expect(texts(component, 'i')).toEqual(['b?em', 'a?em', 'c?em']);
+		expect(component.$Element().querySelectorAll('i')[1]).toBe(first);
+
+		component.$Destroy();
+	});
 });

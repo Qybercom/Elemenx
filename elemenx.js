@@ -6845,6 +6845,7 @@
 				var argumentsMap = Runtime.Directive.Arguments(template, 'collection');
 				var children = [];
 				var keyed = {};
+				var referencedNames = null;
 				var context;
 				var end;
 
@@ -6861,8 +6862,71 @@
 					return bindMethods(definition, component, {$Template: templateSource}, plainMethod);
 				}
 
-				function baseScope () {
-					return bindMethods(definition, component, Runtime.Assign({}, Runtime.ComponentValues(component)), plainMethod);
+				/* Adds the names that source mentions to the names the iterations may read. */
+				function reference (source) {
+					var pattern = /[A-Za-z_$][A-Za-z0-9_$]*/g;
+					var match;
+
+					while ((match = pattern.exec(String(source || '')))) {
+						referencedNames[match[0]] = true;
+					}
+				}
+
+				/*
+				 * The scope of the iterations copies every value of the Component, but depends only on the values
+				 * that the template and the expressions name: a value they never name cannot reach an iteration,
+				 * and depending on it would render the whole collection again on every change of the Component.
+				 */
+				function baseScope (source) {
+					var values = Runtime.ComponentValues(component);
+					var scope = {};
+					var name;
+					var value;
+
+					if (!referencedNames) {
+						referencedNames = {};
+
+						reference(templateHTML(template));
+						reference(directive.Expression);
+
+						for (name in argumentsMap) {
+							if (own(argumentsMap, name))
+								reference(argumentsMap[name]);
+						}
+					}
+
+					reference(source);
+
+					Runtime.Untracked(function () {
+						Runtime.Assign(scope, values);
+					});
+
+					/* A tracked read, also of a name that is not a value yet, so that adding it renders again. */
+					for (name in referencedNames) {
+						if (own(referencedNames, name)) {
+							value = values[name];
+
+							if (own(scope, name))
+								scope[name] = value;
+						}
+					}
+
+					return bindMethods(definition, component, scope, plainMethod);
+				}
+
+				/* The values of next that differ from previous, or null when none does. */
+				function changedScope (previous, next) {
+					var changed = null;
+					var key;
+
+					for (key in next) {
+						if (own(next, key) && (!own(previous, key) || !Object.is(previous[key], next[key]))) {
+							changed = changed || {};
+							changed[key] = next[key];
+						}
+					}
+
+					return changed;
 				}
 
 				function destroyAll () {
@@ -6889,8 +6953,9 @@
 					var token;
 					var record;
 					var child;
-					var reference;
+					var placeBefore;
 					var element;
+					var changed;
 
 					if (!keySource)
 						destroyAll();
@@ -6916,14 +6981,19 @@
 						}
 
 						if (record) {
-							record.Child.$Update(scope);
+							changed = changedScope(record.Scope, scope);
+
+							if (changed)
+								record.Child.$Update(changed);
+
+							record.Scope = scope;
 						}
 						else {
 							child = Runtime.CreateComponent(iterationDefinition())(scope, null, {DirectState: true, Application: component.$Application()});
 
 							child.$Parent(component);
 
-							record = {Child: child, Key: token};
+							record = {Child: child, Key: token, Scope: scope};
 						}
 
 						nextChildren.push(record);
@@ -6951,16 +7021,16 @@
 					 * Place the iterations from the end, moving only the ones out of place: moving an element
 					 * that is already in place would take the focus (and the caret) away from it.
 					 */
-					reference = end;
+					placeBefore = end;
 					i = nextChildren.length - 1;
 
 					while (i >= 0) {
 						element = nextChildren[i].Child.$Element();
 
-						if (element.nextSibling !== reference)
-							end.parentNode.insertBefore(element, reference);
+						if (element.nextSibling !== placeBefore)
+							end.parentNode.insertBefore(element, placeBefore);
 
-						reference = element;
+						placeBefore = element;
 
 						i--;
 					}
@@ -6982,7 +7052,7 @@
 						return argumentsMap[name] === undefined ? null : argumentsMap[name];
 					},
 					Source: function (source) {
-						return expression(baseScope(), source);
+						return expression(baseScope(source), source);
 					},
 					Render: render
 				};

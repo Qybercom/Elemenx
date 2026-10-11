@@ -84,12 +84,21 @@ Elemenx.Directive('draggable', {
 			ghost.classList.add('elemenx-drag-ghost');
 			ghost.removeAttribute('id');
 
+			/* Inline, so that the own styles of the element (position: relative, a grid span...) cannot move the ghost. */
+			ghost.style.position = 'fixed';
+			ghost.style.top = '0';
+			ghost.style.left = '0';
+			ghost.style.margin = '0';
+			ghost.style.pointerEvents = 'none';
 			ghost.style.width = rect.width + 'px';
 			ghost.style.height = rect.height + 'px';
 			ghost.style.transform = 'translate3d(' + rect.left + 'px, ' + rect.top + 'px, 0)';
 
 			document.body.appendChild(ghost);
-			document.addEventListener('selectstart', data.Prevent, true);
+
+			/* A selection made before the pointer moved far enough would otherwise grow under the ghost. */
+			if (window.getSelection)
+				window.getSelection().removeAllRanges();
 
 			element.classList.add('dragging');
 
@@ -110,6 +119,7 @@ Elemenx.Directive('draggable', {
 			document.removeEventListener('pointerup', data.Up, true);
 			document.removeEventListener('pointercancel', data.Cancel, true);
 			document.removeEventListener('keydown', data.Key, true);
+			document.removeEventListener('selectstart', data.Prevent, true);
 
 			window.cancelAnimationFrame(data.Frame);
 
@@ -128,8 +138,6 @@ Elemenx.Directive('draggable', {
 				data.Ghost.parentNode.removeChild(data.Ghost);
 
 			data.Ghost = null;
-
-			document.removeEventListener('selectstart', data.Prevent, true);
 
 			element.classList.remove('dragging');
 
@@ -180,6 +188,7 @@ Elemenx.Directive('draggable', {
 			document.addEventListener('pointerup', data.Up, true);
 			document.addEventListener('pointercancel', data.Cancel, true);
 			document.addEventListener('keydown', data.Key, true);
+			document.addEventListener('selectstart', data.Prevent, true);
 		};
 
 		data.Move = function (event) {
@@ -250,6 +259,7 @@ Elemenx.Directive('draggable', {
 		document.removeEventListener('pointerup', context.Data.Up, true);
 		document.removeEventListener('pointercancel', context.Data.Cancel, true);
 		document.removeEventListener('keydown', context.Data.Key, true);
+		document.removeEventListener('selectstart', context.Data.Prevent, true);
 
 		if (context.Data.Ghost && context.Data.Ghost.parentNode)
 			context.Data.Ghost.parentNode.removeChild(context.Data.Ghost);

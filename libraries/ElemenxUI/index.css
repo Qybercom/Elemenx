@@ -1433,8 +1433,13 @@ a {
 	padding: 0 8px;
 }
 
-.elemenx-table.striped tbody tr:nth-child(even) td {
+/* :where keeps the stripes below the hovered and the selected rows. */
+.elemenx-table.striped tbody tr:where(:nth-child(even)) td {
 	background: var(--elemenx-surface-raised);
+}
+
+.elemenx-table.striped tbody tr:hover td {
+	background: color-mix(in srgb, var(--elemenx-surface-hover) 64%, transparent);
 }
 
 .elemenx-table.bordered {
@@ -1620,4 +1625,10 @@ a {
 /* A layout area shows only while its slot renders an element: an empty slot, or one whose *if is false, hides it. */
 .elemenx-layout-area:not(:has(> span:not(.elemenx-resize-handle) > *)) {
 	display: none;
+}
+
+/* Slotted content may shrink below its own size, so a long list or log scrolls inside its area instead of overflowing it. */
+.elemenx-layout-area > span > * {
+	min-width: 0;
+	min-height: 0;
 }

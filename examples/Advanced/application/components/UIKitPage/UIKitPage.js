@@ -21,7 +21,15 @@ Elemenx.Component('UIKitPage', {
 		'setup.exe', 'core.lib', 'libz.a', 'main.o', 'core.dll', 'photo.jpg', 'logo.png', 'icon.svg', 'cover.webp', 'favicon.ico', 'report.pdf', 'poster.psd', 'logo.ai', 'scan.tiff', 'loop.gif',
 		'data.json', 'events.jsonl', 'table.csv', 'feed.xml', 'index.html', 'config.yaml', 'php.ini', 'app.properties', '.htaccess', 'nginx.conf', 'Shortcut.lnk',
 		'letter.doc', 'letter.docx', 'sheet.xls', 'sheet.xlsx', 'slides.ppt', 'slides.pptx', 'notes.txt', 'README.md', 'Dockerfile',
-		'pack.zip', 'pack.rar', 'pack.ar', 'pack.tar', 'pack.tar.gz', 'app.jar', 'model.3mf', 'song.mp3', 'clip.mp4', 'clip.webm', 'clip.avi', 'voice.aac', 'film.ac3', 'unknown.xyz'
+		'pack.zip', 'pack.rar', 'pack.ar', 'pack.tar', 'pack.tar.gz', 'app.jar', 'model.3mf', 'song.mp3', 'clip.mp4', 'clip.webm', 'clip.avi', 'voice.aac', 'film.ac3',
+		'file.rb', 'file.swift', 'file.scala', 'file.dart', 'file.lua', 'file.pl', 'file.r', 'file.sql', 'file.sh', 'file.bat', 'file.ps1', 'file.cs', 'file.vb', 'file.fs', 'file.m', 'file.vue',
+		'file.svelte', 'file.scss', 'file.sass', 'file.less', 'file.erl', 'file.ex', 'file.hs', 'file.clj', 'file.zig', 'file.asm', 'file.wasm', 'file.toml', '.env', 'yarn.lock', 'file.log', 'file.gradle',
+		'Makefile', 'CMakeLists.txt', 'file.proto', 'file.graphql', '.editorconfig', '.gitignore', 'file.7z', 'file.bz2', 'file.xz', 'file.gz', 'file.apk', 'file.ipa', 'file.dmg', 'file.iso', 'file.deb', 'file.rpm',
+		'file.msi', 'file.bin', 'file.img', 'file.so', 'file.dylib', 'file.class', 'file.odt', 'file.ods', 'file.odp', 'file.rtf', 'file.epub', 'file.pages', 'file.numbers', 'file.key', 'file.tex', 'file.ics',
+		'file.vcf', 'file.eml', 'file.jpeg', 'file.heic', 'file.avif', 'file.bmp', 'file.raw', 'file.eps', 'file.fig', 'file.sketch', 'file.xd', 'file.blend', 'file.fbx', 'file.obj', 'file.stl', 'file.glb',
+		'file.gltf', 'file.ttf', 'file.otf', 'file.woff', 'file.woff2', 'file.flac', 'file.wav', 'file.ogg', 'file.m4a', 'file.opus', 'file.mid', 'file.mkv', 'file.mov', 'file.wmv', 'file.flv', 'file.srt',
+		'file.vtt', 'file.tsv', 'file.parquet', 'file.db', 'file.sqlite', 'file.ipynb', 'file.xlsm', 'file.xsd', 'file.pem', 'file.crt', 'file.p12', 'file.pub',
+		'unknown.xyz'
 	],
 	Text: 'Elemenx',
 	Clicks: 0,
@@ -156,7 +164,10 @@ Elemenx.Component('UIKitPage', {
 	Activity: [
 		{ID: 1, Icon: 'branch', Author: 'Ada Lovelace', Action: 'opened the merge request', Time: '2 days ago'},
 		{ID: 2, Icon: 'commit', Author: 'Ada Lovelace', Action: 'added 3 commits', Time: '1 day ago', Variant: 'info'},
+		{ID: 6, Size: 'small', Author: 'Ada Lovelace', Action: 'added the label ui-kit', Time: '1 day ago'},
+		{ID: 7, Size: 'small', Icon: 'user', Author: 'Ada Lovelace', Action: 'requested a review from Grace Hopper', Time: '1 day ago'},
 		{ID: 3, Icon: 'edit', Author: 'Grace Hopper', Action: 'commented', Time: '20 hours ago', Text: 'The table should keep its header while scrolling.'},
+		{ID: 8, Size: 'small', Variant: 'success', Author: 'CI', Action: 'pipeline passed', Time: '4 hours ago'},
 		{ID: 4, Icon: 'check', Author: 'Alan Turing', Action: 'approved this merge request', Time: '3 hours ago', Variant: 'success'},
 		{ID: 5, Icon: 'merge', Author: 'Ada Lovelace', Action: 'merged into main', Time: 'just now', Variant: 'accent'}
 	],
@@ -164,7 +175,12 @@ Elemenx.Component('UIKitPage', {
 		{ID: 1, Kind: 'info', Text: 'Elemenx terminal. Type help.'}
 	],
 	Busy: false,
-	LineCount: 1,
+	WorkspaceLines: [
+		{ID: 2, Kind: 'input', Text: 'npm test'},
+		{ID: 3, Kind: 'success', Text: 'Test Files  52 passed (52)'}
+	],
+	WorkspaceBusy: false,
+	LineCount: 3,
 	TileGroups: [
 		{ID: 'work', Title: 'Work', Tiles: [
 			{ID: 'mail', Title: 'Mail', Icon: 'mail', Size: 'wide', Text: '3 unread', Badge: 3, Color: '#2b5797'},
@@ -453,38 +469,53 @@ Elemenx.Component('UIKitPage', {
 		this.ActiveSteps = [item.ID];
 	},
 
-	Say: function (kind, text) {
+	/* Adds a line to the terminal whose lines are in the value named target. */
+	Say: function (target, kind, text) {
 		this.LineCount++;
-		this.Lines = this.Lines.concat([{ID: this.LineCount, Kind: kind, Text: text}]);
+		this[target] = this[target].concat([{ID: this.LineCount, Kind: kind, Text: text}]);
 	},
 
-	RunCommand: function (command) {
+	/* Each terminal keeps its own lines and busy state: target and busy name them. */
+	Execute: function (target, busy, command) {
 		var self = this;
+		var text = command.trim();
 
-		this.Say('input', command);
+		this.Say(target, 'input', command);
 
-		if (command.trim() === 'help') {
-			this.Say('output', 'help   show this help\ndate   print the date\nclear  clear the screen');
+		if (text === 'help') {
+			this.Say(target, 'output', 'help   show this help\ndate   print the date\nclear  clear the screen');
 		}
-		else if (command.trim() === 'date') {
-			this.Say('success', new Date().toString());
+		else if (text === 'date') {
+			this.Say(target, 'success', new Date().toString());
 		}
-		else if (command.trim() === 'clear') {
-			this.ClearTerminal();
+		else if (text === 'clear') {
+			this[target] = [];
 		}
-		else if (command.trim()) {
-			this.Busy = true;
+		else if (text) {
+			this[busy] = true;
 
 			window.setTimeout(function () {
-				self.Busy = false;
+				self[busy] = false;
 
-				self.Say('error', command.trim().split(' ')[0] + ': command not found');
+				self.Say(target, 'error', text.split(' ')[0] + ': command not found');
 			}, 400);
 		}
 	},
 
+	RunCommand: function (command) {
+		this.Execute('Lines', 'Busy', command);
+	},
+
 	ClearTerminal: function () {
 		this.Lines = [];
+	},
+
+	RunWorkspaceCommand: function (command) {
+		this.Execute('WorkspaceLines', 'WorkspaceBusy', command);
+	},
+
+	ClearWorkspaceTerminal: function () {
+		this.WorkspaceLines = [];
 	},
 
 	TileOpened: function (tile) {

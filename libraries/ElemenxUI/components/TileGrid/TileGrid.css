@@ -144,7 +144,17 @@
 	cursor: grab;
 }
 
-.elemenx-tile.drop-over {
-	outline: 2px solid var(--elemenx-text);
-	outline-offset: 2px;
+/* While a tile is dragged, the groups show where it may go and a bar marks the tile it would be placed before. */
+.elemenx-tile.elemenx-droppable.drop-target {
+	outline: none;
+}
+
+.elemenx-tile.elemenx-droppable.drop-over {
+	background: var(--elemenx-tile-color);
+	outline: none;
+	box-shadow: -6px 0 0 0 var(--elemenx-accent);
+}
+
+.elemenx-tile.elemenx-drag-ghost {
+	transition: none;
 }

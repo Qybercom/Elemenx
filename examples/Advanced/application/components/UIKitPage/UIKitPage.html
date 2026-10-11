@@ -372,8 +372,8 @@
 });</pre>
 				</div>
 				<div slot="bottom" class="elemenx-column fill" *if="BottomOpen">
-					<Terminal Title="Terminal" [lines]="Lines" [busy]="Busy" (command)="RunCommand" (clear)="ClearTerminal">
-						<Button slot="actions" Icon="delete" Title="Clear" Variant="ghost" Size="small" (click)="ClearTerminal" />
+					<Terminal Title="Terminal" [lines]="WorkspaceLines" [busy]="WorkspaceBusy" (command)="RunWorkspaceCommand" (clear)="ClearWorkspaceTerminal">
+						<Button slot="actions" Icon="delete" Title="Clear" Variant="ghost" Size="small" (click)="ClearWorkspaceTerminal" />
 						<Button slot="actions" Icon="remove" Title="Hide" Variant="ghost" Size="small" (click)="ToggleBottom" />
 					</Terminal>
 				</div>
