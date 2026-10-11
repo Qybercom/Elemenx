@@ -409,23 +409,33 @@ Elemenx.Component('UIKitPage', {
 	},
 
 	DropTodo: function (event) {
-		this.Move(event.detail.Data, 'Done', 'Todo');
+		this.Move(event.detail.Data, 'Todo', event.detail.Index);
 	},
 
 	DropDone: function (event) {
-		this.Move(event.detail.Data, 'Todo', 'Done');
+		this.Move(event.detail.Data, 'Done', event.detail.Index);
 	},
 
-	Move: function (item, from, to) {
-		if (!item || this[to].some(function (entry) {
-			return entry.ID === item.ID;
-		})) return;
-
-		this[from] = this[from].filter(function (entry) {
+	/* Moves item to the place index of the list named to, from whichever list holds it (also within one list). */
+	Move: function (item, to, index) {
+		var others = function (entry) {
 			return entry.ID !== item.ID;
-		});
-		this[to] = this[to].concat([{ID: item.ID, Title: item.Title}]);
-		this.Dropped = item.Title + ' → ' + to;
+		};
+		var target;
+		var at;
+
+		if (!item) return;
+
+		this.Todo = this.Todo.filter(others);
+		this.Done = this.Done.filter(others);
+
+		target = this[to].slice();
+		at = index < 0 ? target.length : Math.min(index, target.length);
+
+		target.splice(at, 0, {ID: item.ID, Title: item.Title});
+
+		this[to] = target;
+		this.Dropped = item.Title + ' → ' + to + ' #' + (at + 1);
 	},
 
 	DropFiles: function (event) {

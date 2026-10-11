@@ -1,8 +1,9 @@
 /*
  * Value holds digits only. Brand, mask and validity follow from it; Valid is the Luhn check of a complete number.
- * Conceal hides the middle of the number while the field is not edited: in its template x is a shown digit and ? a
- * hidden one ('xxxx ???? ???? xxxx' shows the first four and the last four digits); the groups follow the brand.
- * ConcealChar is the character of a hidden digit. Value is never changed by concealing.
+ * Conceal hides the middle of the number: in its template x is a shown digit and ? a hidden one ('xxxx ???? ???? xxxx'
+ * shows the first four and the last four digits); the groups follow the brand. The number stays hidden while it is
+ * edited; an eye button, as in a password field, shows it (Revealed). ConcealChar is the character of a hidden digit.
+ * Value is never changed by concealing.
  */
 Elemenx.Component('CardNumberInput', {
 	$TemplateURL: 'CardNumberInput.html',
@@ -17,7 +18,7 @@ Elemenx.Component('CardNumberInput', {
 	Touched: false,
 	Conceal: '',
 	ConcealChar: '•',
-	Focused: false,
+	Revealed: false,
 	Brands: [
 		{ID: 'mir', Label: 'Mir', Pattern: '^220[0-4]', Mask: '#### #### #### #### ###', Lengths: [16, 17, 18, 19]},
 		{ID: 'visa', Label: 'Visa', Pattern: '^4', Mask: '#### #### #### #### ###', Lengths: [13, 16, 19]},
@@ -128,18 +129,8 @@ Elemenx.Component('CardNumberInput', {
 		this.$Emit('validate', {Value: this.Value, Brand: brand ? brand.ID : '', Complete: this.Complete(this.Value), Valid: this.Valid(this.Value)});
 	},
 
-	Focus: function () {
-		this.Focused = true;
-	},
-
-	Blur: function () {
-		this.Focused = false;
-	},
-
-	Reveal: function (event, node) {
-		event.preventDefault();
-
-		node.parentNode.querySelector('input').focus();
+	Reveal: function () {
+		this.Revealed = !this.Revealed;
 	},
 
 	Committed: function () {

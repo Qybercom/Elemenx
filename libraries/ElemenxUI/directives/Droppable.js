@@ -3,8 +3,10 @@
  * Accept lists the Types of *draggable items it takes (true takes every item). Files and Text accept files and
  * text dragged from outside the browser (native drag and drop). During a drag the element gets the class
  * drop-target when it accepts the item and drop-over while the item is over it.
- * The element dispatches "dropenter", "dropleave" and "dropped" with {Kind ('item', 'files' or 'text'), Type,
- * Data, Files, Text, Source, ClientX, ClientY}.
+ * Sort ('vertical', 'horizontal' or 'grid') makes the element an ordered list of its *draggable items: a line marks the
+ * place a dragged item would take (Marker: false hides it) and Index in the detail tells it.
+ * The element dispatches "dropenter", "dropleave", "dropmove" (items only) and "dropped" with {Kind ('item', 'files'
+ * or 'text'), Type, Data, Files, Text, Source, ClientX, ClientY, Index (-1 without Sort)}.
  */
 Elemenx.Directive('droppable', {
 	$OnCreate: function (context) {
@@ -35,7 +37,8 @@ Elemenx.Directive('droppable', {
 				Text: name === 'dropped' && transfer ? transfer.getData('text/plain') : '',
 				Source: null,
 				ClientX: event.clientX,
-				ClientY: event.clientY
+				ClientY: event.clientY,
+				Index: -1
 			}}));
 		}
 
@@ -103,7 +106,9 @@ Elemenx.Directive('droppable', {
 			Accept: options.Accept === true || Array.isArray(options.Accept) ? options.Accept : options.Accept ? [options.Accept] : [],
 			Files: !!options.Files,
 			Text: !!options.Text,
-			Disabled: !!options.Disabled
+			Disabled: !!options.Disabled,
+			Sort: options.Sort === true ? 'vertical' : options.Sort || '',
+			Marker: options.Marker !== false
 		};
 
 		context.Element.classList.add('elemenx-droppable');

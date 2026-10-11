@@ -179,7 +179,7 @@
 	<Section Title="Payment, phone and money" Note="Strict masks: typing, paste and drop">
 		<div class="ui-kit-grid">
 			<Field Label="Card number" [hint]="CardState || 'Try 4242 4242 4242 4242'"><CardNumberInput (validate)="CardValidated" /></Field>
-			<Field Label="Saved card" Hint="Conceal=&quot;xxxx ???? ???? xxxx&quot;: the full number shows while the field is edited"><CardNumberInput Value="5555555555554444" Conceal="xxxx ???? ???? xxxx" /></Field>
+			<Field Label="Saved card" Hint="Conceal=&quot;xxxx ???? ???? xxxx&quot;: the eye shows the whole number"><CardNumberInput Value="5555555555554444" Conceal="xxxx ???? ???? xxxx" /></Field>
 			<div class="ui-kit-pair">
 				<Field Label="Expires"><CardExpiryInput /></Field>
 				<Field Label="CVV"><CVVInput /></Field>
@@ -305,11 +305,11 @@
 			<FileUpload Variant="avatar" Accept="image/*" Label="Change avatar" />
 		</div>
 		<div class="ui-kit-grid three">
-			<div class="elemenx-panel compact ui-kit-board" *droppable="{Accept: ['task']}" (dropped)="DropTodo">
+			<div class="elemenx-panel compact ui-kit-board" *droppable="{Accept: ['task'], Sort: 'vertical'}" (dropped)="DropTodo">
 				<h5>To do</h5>
 				<div class="elemenx-card compact ui-kit-task" *for="task of Todo" *key="task.ID" *draggable="{Data: task, Type: 'task'}"><Icon Name="grip" />{{task.Title}}</div>
 			</div>
-			<div class="elemenx-panel compact ui-kit-board" *droppable="{Accept: ['task']}" (dropped)="DropDone">
+			<div class="elemenx-panel compact ui-kit-board" *droppable="{Accept: ['task'], Sort: 'vertical'}" (dropped)="DropDone">
 				<h5>Done</h5>
 				<div class="elemenx-card compact ui-kit-task" *for="task of Done" *key="task.ID" *draggable="{Data: task, Type: 'task'}"><Icon Name="grip" />{{task.Title}}</div>
 			</div>

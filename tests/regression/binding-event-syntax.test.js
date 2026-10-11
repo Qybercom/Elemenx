@@ -139,6 +139,28 @@ describe('Regression: binding and event syntax', function () {
 		child.$Destroy();
 	});
 
+	test('class bindings leave alone the classes that a script or a Directive put on the element', function () {
+		var name = unique('ForeignClasses');
+		var factory = Elemenx.Component(name, {
+			$Template: '<div class="static" [class]="Classes" [class.on]="On"></div>'
+		});
+
+		var child = factory({Classes: ['card'], On: false});
+		var element = child.$Element();
+
+		element.classList.add('foreign');
+
+		child.$Update({Classes: ['large'], On: true});
+
+		expect(element.className.split(' ').sort()).toEqual(['foreign', 'large', 'on', 'static']);
+
+		child.$Update({Classes: [], On: false});
+
+		expect(element.className.split(' ').sort()).toEqual(['foreign', 'static']);
+
+		child.$Destroy();
+	});
+
 	test('expressions with & < > keep working inside structural subtrees', function () {
 		var name = unique('StructuralOperators');
 		var factory = Elemenx.Component(name, {

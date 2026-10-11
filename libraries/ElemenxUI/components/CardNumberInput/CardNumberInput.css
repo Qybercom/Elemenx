@@ -11,7 +11,13 @@
 	min-width: 0;
 }
 
+/* The digits under the concealed copy stay editable: only their text is hidden, the caret still shows. */
 .elemenx-card-input .elemenx-input-control.concealed {
+	color: transparent;
+	caret-color: var(--elemenx-text);
+}
+
+.elemenx-card-input .elemenx-input-control.concealed::selection {
 	color: transparent;
 }
 
@@ -24,7 +30,7 @@
 	font-variant-numeric: tabular-nums;
 	letter-spacing: 0.02em;
 	white-space: nowrap;
-	cursor: text;
+	pointer-events: none;
 }
 
 .elemenx-card-brand {

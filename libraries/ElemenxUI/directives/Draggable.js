@@ -1,8 +1,11 @@
 /*
  * *draggable="{Data: item, Type: 'task', Handle: '.grip'}" (or just *draggable="item") lets the element be dragged
  * with the pointer onto *droppable elements that accept Type. A ghost copy follows the pointer; Escape cancels.
- * The element dispatches "dragbegin" and "dragfinish" ({Dropped, Target}); the target dispatches "dropped".
- * Disabled turns dragging off; Handle limits where the drag may start.
+ * The element dispatches "dragbegin" and "dragfinish" ({Dropped, Target}); the target dispatches "dropmove" (once a
+ * frame while the item is over it) and "dropped". Over a target with Sort, Index in their detail is the place the item
+ * would take among the draggable items of that target (the dragged item left out), and a line marks it.
+ * Disabled turns dragging off; Handle limits where the drag may start. A drag outlives a new rendering of its element
+ * (a list that moves the item to another place while it is dragged): it ends on the release of the pointer.
  */
 Elemenx.Directive('draggable', {
 	$OnCreate: function (context) {
@@ -37,15 +40,131 @@ Elemenx.Directive('draggable', {
 			return null;
 		}
 
-		function detail (event) {
+		function detail (event, index) {
 			return {
 				Kind: 'item',
 				Type: data.Options.Type || '',
 				Data: data.Options.Data,
 				Source: element,
 				ClientX: event.clientX,
-				ClientY: event.clientY
+				ClientY: event.clientY,
+				Index: index === undefined ? -1 : index
 			};
+		}
+
+		/*
+		 * The draggable items of target itself (not of a target inside it), without the dragged one, and the place the
+		 * dragged item holds among them when it is in target (its own element, or a new rendering of it).
+		 */
+		function items (target) {
+			var nodes = target.querySelectorAll('.elemenx-draggable');
+			var list = [];
+			var own = null;
+			var i = 0;
+			var owner;
+
+			while (i < nodes.length) {
+				owner = nodes[i].parentNode ? nodes[i].parentNode.closest('.elemenx-droppable') : null;
+
+				if (owner === target && (nodes[i] === element || nodes[i].classList.contains('dragging'))) own = {Node: nodes[i], Index: list.length};
+				else if (owner === target) list.push(nodes[i]);
+
+				i++;
+			}
+
+			return {List: list, Own: own};
+		}
+
+		function inside (rect, event) {
+			return event.clientX >= rect.left && event.clientX <= rect.right && event.clientY >= rect.top && event.clientY <= rect.bottom;
+		}
+
+		/*
+		 * The place of the item in a sorted target: over its own place it stays; else next to the item nearest to the
+		 * pointer, before or after it by the side of its middle the pointer is on (vertical lists compare heights,
+		 * horizontal lists widths, grids heights for a pointer above or below the item and widths beside it).
+		 */
+		function place (target, event) {
+			var sort = target.ElemenxDrop && target.ElemenxDrop.Sort;
+			var found;
+			var list;
+			var nearest = -1;
+			var best = Infinity;
+			var rect;
+			var dx;
+			var dy;
+			var distance;
+			var after;
+			var i = 0;
+
+			if (!sort)
+				return {Index: -1};
+
+			found = items(target);
+			list = found.List;
+
+			if (found.Own && inside(found.Own.Node.getBoundingClientRect(), event)) return {Index: found.Own.Index, Sort: sort, Rect: null, After: false};
+
+			while (i < list.length) {
+				rect = list[i].getBoundingClientRect();
+				dx = Math.max(rect.left - event.clientX, 0, event.clientX - rect.right);
+				dy = Math.max(rect.top - event.clientY, 0, event.clientY - rect.bottom);
+				distance = dx * dx + dy * dy;
+
+				if (distance < best) {
+					best = distance;
+					nearest = i;
+				}
+
+				i++;
+			}
+
+			if (nearest === -1)
+				return {Index: 0, Sort: sort, Rect: null, After: false};
+
+			rect = list[nearest].getBoundingClientRect();
+
+			if (sort === 'vertical') after = event.clientY > rect.top + rect.height / 2;
+			else if (sort === 'grid' && (event.clientY < rect.top || event.clientY > rect.bottom)) after = event.clientY > rect.bottom;
+			else after = event.clientX > rect.left + rect.width / 2;
+
+			return {Index: nearest + (after ? 1 : 0), Sort: sort, Rect: rect, After: after};
+		}
+
+		/* A line in the gap before or after the nearest item; none for an empty target or without Marker. */
+		function mark (target, spot) {
+			var marker = data.Marker;
+			var rect = spot && spot.Rect;
+			var show = !!rect && target.ElemenxDrop.Marker !== false;
+
+			if (!show) {
+				if (marker)
+					marker.style.display = 'none';
+
+				return;
+			}
+
+			if (!marker) {
+				marker = document.createElement('div');
+				marker.className = 'elemenx-drop-marker';
+
+				document.body.appendChild(marker);
+
+				data.Marker = marker;
+			}
+
+			marker.style.display = '';
+
+			if (spot.Sort === 'vertical') {
+				marker.style.width = rect.width + 'px';
+				marker.style.height = '2px';
+				marker.style.transform = 'translate3d(' + rect.left + 'px, ' + (spot.After ? rect.bottom + 1 : rect.top - 3) + 'px, 0)';
+			}
+			else {
+				marker.style.width = '2px';
+				marker.style.height = rect.height + 'px';
+				marker.style.transform = 'translate3d(' + (spot.After ? rect.right + 1 : rect.left - 3) + 'px, ' + rect.top + 'px, 0)';
+			}
 		}
 
 		function highlight (on) {
@@ -134,6 +253,11 @@ Elemenx.Directive('draggable', {
 
 			target = data.Over;
 
+			if (data.Marker && data.Marker.parentNode)
+				data.Marker.parentNode.removeChild(data.Marker);
+
+			data.Marker = null;
+
 			if (data.Ghost && data.Ghost.parentNode)
 				data.Ghost.parentNode.removeChild(data.Ghost);
 
@@ -149,7 +273,7 @@ Elemenx.Directive('draggable', {
 			highlight(false);
 
 			if (dropped && target)
-				emit(target, 'dropped', detail(event));
+				emit(target, 'dropped', detail(event, place(target, event).Index));
 
 			emit(element, 'dragfinish', {Dropped: !!(dropped && target), Target: dropped ? target : null});
 
@@ -214,11 +338,20 @@ Elemenx.Directive('draggable', {
 
 		data.Track = function () {
 			var event = data.Last;
+			var spot;
 
 			data.Frame = 0;
 
-			if (data.Active && event)
-				over(targetAt(event.clientX, event.clientY), event);
+			if (!data.Active || !event) return;
+
+			over(targetAt(event.clientX, event.clientY), event);
+
+			spot = data.Over ? place(data.Over, event) : null;
+
+			mark(data.Over, spot);
+
+			if (data.Over)
+				emit(data.Over, 'dropmove', detail(event, spot.Index));
 		};
 
 		data.Up = function (event) {
@@ -254,6 +387,9 @@ Elemenx.Directive('draggable', {
 
 	$OnDestroy: function (context) {
 		context.Element.removeEventListener('pointerdown', context.Data.Down);
+
+		/* A drag in progress keeps its listeners and ghost until the pointer is released. */
+		if (context.Data.Active) return;
 
 		document.removeEventListener('pointermove', context.Data.Move, true);
 		document.removeEventListener('pointerup', context.Data.Up, true);

@@ -44,10 +44,20 @@ for (const origin of origins) {
 
 			await expect(page.locator('.ui-kit > .elemenx-section')).toHaveCount(22);
 
-			sprite = await page.locator('.ui-kit-icon svg use').first().getAttribute('href');
+			await expect(page.locator('#elemenx-icons')).toHaveAttribute('data-ready', 'true');
+			await expect(page.locator('.ui-kit-icon svg use').first()).toHaveAttribute('href', '#elemenx-icon-add');
+			await expect(page.locator('#elemenx-icons symbol#elemenx-icon-add')).toHaveCount(1);
+			await expect(page.locator('svg.elemenx-icon use[href*="icons.svg"]')).toHaveCount(0);
 
-			expect(sprite).toMatch(/icons\.svg#add$/);
-			expect((await page.request.get(origin.URL + sprite.split('#')[0])).status()).toBe(200);
+			sprite = await page.evaluate(function () {
+				return performance.getEntriesByType('resource').map(function (entry) {
+					return entry.name;
+				}).filter(function (name) {
+					return /icons\.svg$/.test(name);
+				})[0];
+			});
+
+			expect((await page.request.get(sprite)).status()).toBe(200);
 
 			expect(await page.locator('.elemenx-button.primary').first().evaluate(function (node) {
 				return getComputedStyle(node).backgroundColor;
@@ -138,13 +148,19 @@ for (const origin of origins) {
 			await expect(saved.locator('.elemenx-card-conceal')).toHaveText('5555 •••• •••• 4444');
 			await expect(saved.locator('input')).toHaveClass(/concealed/);
 
-			await saved.locator('.elemenx-card-conceal').click();
+			await saved.locator('input').click();
 
 			await expect(saved.locator('input')).toBeFocused();
 			await expect(saved.locator('input')).toHaveValue('5555 5555 5555 4444');
-			await expect(saved.locator('.elemenx-card-conceal')).toHaveCount(0);
+			await expect(saved.locator('.elemenx-card-conceal')).toHaveText('5555 •••• •••• 4444');
 
-			await saved.locator('input').blur();
+			await saved.getByRole('button', {name: 'Show number'}).click();
+
+			await expect(saved.locator('.elemenx-card-conceal')).toHaveCount(0);
+			await expect(saved.locator('input')).not.toHaveClass(/concealed/);
+			await expect(saved.getByRole('button', {name: 'Hide number'})).toHaveAttribute('aria-pressed', 'true');
+
+			await saved.getByRole('button', {name: 'Hide number'}).click();
 
 			await expect(saved.locator('.elemenx-card-conceal')).toHaveText('5555 •••• •••• 4444');
 		});
@@ -707,6 +723,7 @@ for (const origin of origins) {
 			var handle;
 			var before;
 			var box;
+			var todo;
 
 			await open(page, origin);
 
@@ -737,6 +754,22 @@ for (const origin of origins) {
 
 			await expect(done.locator('.ui-kit-task', {hasText: 'Design tokens'})).toBeVisible();
 			await expect(files.locator('.elemenx-section-header')).toContainText('Dropped: Design tokens → Done');
+
+			todo = files.locator('.ui-kit-board', {hasText: 'To do'});
+			from = await todo.locator('.ui-kit-task').last().boundingBox();
+			to = await todo.locator('.ui-kit-task').first().boundingBox();
+
+			await page.mouse.move(from.x + 20, from.y + from.height / 2);
+			await page.mouse.down();
+			await page.mouse.move(to.x + 40, to.y + 4, {steps: 8});
+
+			await expect(page.locator('.elemenx-drop-marker')).toBeVisible();
+
+			await page.mouse.up();
+
+			await expect(todo.locator('.ui-kit-task')).toHaveText(['Chat layout', 'Table component']);
+			await expect(files.locator('.elemenx-section-header')).toContainText('Dropped: Chat layout → Todo #1');
+			await expect(page.locator('.elemenx-drop-marker')).toHaveCount(0);
 
 			notes = field(page, 'Notes \\(resizable\\)').locator('.elemenx-textarea');
 			handle = notes.locator('.elemenx-resize-handle.bottom');
@@ -844,12 +877,12 @@ for (const origin of origins) {
 
 			await expect(money.locator('.elemenx-caption')).toHaveText('JPY 1235');
 
-			await expect(icons.locator('.ui-kit-icon[title="pack.tar.gz"] use')).toHaveAttribute('href', /#file-tar-gz$/);
-			await expect(icons.locator('.ui-kit-icon[title="Dockerfile"] use')).toHaveAttribute('href', /#file-dockerfile$/);
-			await expect(icons.locator('.ui-kit-icon[title="unknown.xyz"] use')).toHaveAttribute('href', /#file$/);
-			await expect(icons.locator('.ui-kit-icon[title="file.rb"] use')).toHaveAttribute('href', /#file-rb$/);
-			await expect(icons.locator('.ui-kit-icon[title="CMakeLists.txt"] use')).toHaveAttribute('href', /#file-cmake$/);
-			expect(await icons.locator('.ui-kit-icon:has(use[href*="#file-"])').count()).toBeGreaterThan(170);
+			await expect(icons.locator('.ui-kit-icon[title="pack.tar.gz"] use')).toHaveAttribute('href', /-file-tar-gz$/);
+			await expect(icons.locator('.ui-kit-icon[title="Dockerfile"] use')).toHaveAttribute('href', /-file-dockerfile$/);
+			await expect(icons.locator('.ui-kit-icon[title="unknown.xyz"] use')).toHaveAttribute('href', /-file$/);
+			await expect(icons.locator('.ui-kit-icon[title="file.rb"] use')).toHaveAttribute('href', /-file-rb$/);
+			await expect(icons.locator('.ui-kit-icon[title="CMakeLists.txt"] use')).toHaveAttribute('href', /-file-cmake$/);
+			expect(await icons.locator('.ui-kit-icon:has(use[href*="-file-"])').count()).toBeGreaterThan(170);
 		});
 
 		test('workspace shows the tool windows the page puts in it and resizes them', async function ({ page }) {
@@ -995,42 +1028,73 @@ for (const origin of origins) {
 			await expect(terminal.locator('.elemenx-terminal-line')).toHaveCount(0);
 		});
 
-		test('tile grid opens tiles and moves them by dragging', async function ({ page }) {
+		test('tile grid opens tiles, moves them with a live preview and starts new groups', async function ({ page }) {
+			var grid;
 			var tiles;
+			var order;
 			var from;
 			var to;
 
 			await open(page, origin);
 
-			tiles = section(page, 'Tiles').locator('.elemenx-tile');
+			grid = section(page, 'Tiles').locator('.elemenx-tile-grid');
+			tiles = grid.locator('.elemenx-tile');
+			order = function () {
+				return grid.locator('.elemenx-tile-group').evaluateAll(function (groups) {
+					return groups.map(function (group) {
+						return group.querySelector('.elemenx-tile-group-title').textContent + ':' + Array.prototype.map.call(group.querySelectorAll('.elemenx-tile'), function (tile) {
+							return tile.getAttribute('data-id');
+						}).join(',');
+					});
+				});
+			};
 
 			await tiles.first().scrollIntoViewIfNeeded();
 			await tiles.nth(1).click();
 
 			await expect(section(page, 'Tiles').locator('.elemenx-section-header')).toContainText('Opened: Calendar');
 
-			from = await tiles.nth(4).boundingBox();
-			to = await tiles.nth(1).boundingBox();
+			from = await grid.locator('.elemenx-tile[data-id="tasks"]').boundingBox();
+			to = await grid.locator('.elemenx-tile[data-id="calendar"]').boundingBox();
 
 			await page.mouse.move(from.x + 8, from.y + 8);
 			await page.mouse.down();
-			await page.mouse.move(to.x + 24, to.y + 24, {steps: 8});
+			await page.mouse.move(to.x + 8, to.y + 24, {steps: 8});
+
+			expect(await order()).toEqual(['Work:mail,tasks,calendar,chat,phone', 'Tools:terminal,settings,database,cloud', 'New group:']);
+			await expect(grid.locator('.elemenx-tile[data-id="tasks"]')).toHaveClass(/dragging/);
+
 			await page.mouse.up();
 
-			expect(await tiles.evaluateAll(function (nodes) {
-				return nodes.map(function (node) {
-					return node.getAttribute('data-id');
-				});
-			})).toEqual(['mail', 'phone', 'calendar', 'tasks', 'chat', 'terminal', 'settings', 'database', 'cloud']);
+			expect(await order()).toEqual(['Work:mail,tasks,calendar,chat,phone', 'Tools:terminal,settings,database,cloud']);
 
-			from = await tiles.nth(2).boundingBox();
+			from = await grid.locator('.elemenx-tile[data-id="phone"]').boundingBox();
 
 			await page.mouse.move(from.x + 8, from.y + 8);
 			await page.mouse.down();
-			await page.mouse.move(from.x + 40, from.y + 40, {steps: 4});
+			await page.mouse.move(from.x + 16, from.y + 16, {steps: 2});
+
+			to = await grid.locator('.elemenx-tile-new').boundingBox();
+
+			await page.mouse.move(to.x + to.width / 2, to.y + to.height / 2, {steps: 8});
 			await page.mouse.up();
 
-			await expect(tiles.nth(2)).toHaveAttribute('data-id', 'calendar');
+			expect(await order()).toEqual(['Work:mail,tasks,calendar,chat', 'Tools:terminal,settings,database,cloud', 'New group:phone']);
+
+			from = await grid.locator('.elemenx-tile[data-id="calendar"]').boundingBox();
+			to = await grid.locator('.elemenx-tile[data-id="terminal"]').boundingBox();
+
+			await page.mouse.move(from.x + 8, from.y + 8);
+			await page.mouse.down();
+			await page.mouse.move(to.x + 8, to.y + 8, {steps: 8});
+
+			expect((await order())[1]).toMatch(/^Tools:calendar,/);
+
+			await page.keyboard.press('Escape');
+			await page.mouse.up();
+
+			expect(await order()).toEqual(['Work:mail,tasks,calendar,chat', 'Tools:terminal,settings,database,cloud', 'New group:phone']);
+			await expect(page.locator('.elemenx-drag-ghost')).toHaveCount(0);
 		});
 
 		test('layouts: dashboard, settings, master-detail and centered pages', async function ({ page }) {

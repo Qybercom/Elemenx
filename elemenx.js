@@ -3071,12 +3071,14 @@
 				node: node,
 				base: {},
 				list: [],
-				points: {}
+				points: {},
+				applied: {}
 			};
 
 			var i = 0;
 			while (i < node.classList.length) {
 				state.base[node.classList.item(i)] = true;
+				state.applied[node.classList.item(i)] = true;
 
 				i++;
 			}
@@ -3106,11 +3108,20 @@
 				else delete names[name];
 			}
 
-			state.node.setAttribute('class', '');
+			/*
+			 * Only the classes of the template and its bindings change: a class that a Directive or a script put on
+			 * the element (elemenx-draggable, an open state...) stays when the bindings render again.
+			 */
+			for (name in state.applied) {
+				if (own(state.applied, name) && !own(names, name))
+					state.node.classList.remove(name);
+			}
 
 			for (name in names)
 				if (own(names, name))
 					state.node.classList.add(name);
+
+			state.applied = names;
 		}
 
 		function styleBindingState (node) {

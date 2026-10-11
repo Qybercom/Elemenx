@@ -144,17 +144,68 @@
 	cursor: grab;
 }
 
-/* While a tile is dragged, the groups show where it may go and a bar marks the tile it would be placed before. */
-.elemenx-tile.elemenx-droppable.drop-target {
-	outline: none;
-}
-
-.elemenx-tile.elemenx-droppable.drop-over {
-	background: var(--elemenx-tile-color);
-	outline: none;
-	box-shadow: -6px 0 0 0 var(--elemenx-accent);
-}
-
 .elemenx-tile.elemenx-drag-ghost {
 	transition: none;
+}
+
+/* The group under a dragged tile: a quiet frame, the tiles themselves already show the new place. */
+.elemenx-tile-group.elemenx-droppable.drop-target {
+	outline-offset: 4px;
+}
+
+.elemenx-tile-group.elemenx-droppable.drop-over {
+	background: none;
+	outline: 1px dashed var(--elemenx-accent);
+	outline-offset: 4px;
+}
+
+/* The place a dragged tile holds in the grid: an outline of its size, while the ghost follows the pointer. */
+.elemenx-tile.elemenx-draggable.dragging {
+	background: transparent;
+	outline: 2px dashed var(--elemenx-border-strong);
+	outline-offset: -2px;
+	opacity: 1;
+}
+
+.elemenx-tile.dragging > * {
+	visibility: hidden;
+}
+
+/* While a tile is dragged, the space beside the groups starts a new group; the grid itself is not highlighted. */
+.elemenx-tile-grid.elemenx-droppable.drop-target,
+.elemenx-tile-grid.elemenx-droppable.drop-over {
+	background: none;
+	outline: none;
+}
+
+.elemenx-tile-new {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 208px;
+	height: 104px;
+	padding: 8px;
+	border: 2px dashed var(--elemenx-border-strong);
+	border-radius: 8px;
+	color: var(--elemenx-text-muted);
+	font-size: 12px;
+	line-height: 16px;
+	text-align: center;
+}
+
+.elemenx-tile-group.new.drop-target {
+	outline: none;
+}
+
+.elemenx-tile-group.new.drop-over,
+.elemenx-tile-grid.drop-over > span > .elemenx-tile-group.new {
+	background: none;
+	outline: none;
+}
+
+.elemenx-tile-group.new.drop-over .elemenx-tile-new,
+.elemenx-tile-grid.drop-over .elemenx-tile-new {
+	border-color: var(--elemenx-accent);
+	background: color-mix(in srgb, var(--elemenx-accent) 6%, transparent);
+	color: var(--elemenx-text);
 }

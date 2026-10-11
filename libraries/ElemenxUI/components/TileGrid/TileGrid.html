@@ -1,13 +1,17 @@
-<div class="elemenx-tile-grid" [class.editable]="Editable">
-	<section class="elemenx-tile-group" *for="group of Groups" *key="group.ID" *droppable="{Accept: ['tile'], Disabled: !Editable}" [attribute.data-group]="group.ID" (dropped)="DropOnGroup">
+<div class="elemenx-tile-grid" [class.editable]="Editable" [class.sorting]="!!Dragging" *droppable="{Accept: ['tile'], Disabled: !Editable}" (dropped)="DropOnNew">
+	<section class="elemenx-tile-group" *for="group of Groups" *key="group.ID" *droppable="{Accept: ['tile'], Disabled: !Editable, Sort: 'grid', Marker: false}" [attribute.data-group]="group.ID" (dropmove)="Preview" (dropped)="Preview">
 		<h3 class="elemenx-tile-group-title" *if="group.Title">{{group.Title}}</h3>
 		<div class="elemenx-tile-cells">
-			<div class="elemenx-tile" role="button" tabindex="0" *for="tile of group.Tiles" *key="tile.ID" *draggable="{Data: tile.ID, Type: 'tile', Disabled: !Editable}" *droppable="{Accept: ['tile'], Disabled: !Editable}" [class]="[tile.Size || 'medium']" [style.--elemenx-tile-color]="tile.Color || null" [attribute.data-id]="tile.ID" [attribute.data-group]="group.ID" [attribute.aria-label]="tile.Title" (click)="Open" (keydown)="Key" (dropped)="DropOnTile">
+			<div class="elemenx-tile" role="button" tabindex="0" *for="tile of group.Tiles" *key="tile.ID" *draggable="{Data: tile.ID, Type: 'tile', Disabled: !Editable}" [class]="[tile.Size || 'medium', String(tile.ID) === Dragging ? 'dragging' : '']" [style.--elemenx-tile-color]="tile.Color || null" [attribute.data-id]="tile.ID" [attribute.aria-label]="tile.Title" (click)="Open" (keydown)="Key" (dragbegin)="Begin">
 				<Icon *if="tile.Icon" [name]="tile.Icon" Size="24" />
 				<span class="elemenx-tile-text" *if="tile.Text && tile.Size !== 'small'">{{tile.Text}}</span>
 				<span class="elemenx-tile-title" *if="tile.Size !== 'small'">{{tile.Title}}</span>
 				<span class="elemenx-tile-badge" *if="tile.Badge">{{tile.Badge}}</span>
 			</div>
 		</div>
+	</section>
+	<section class="elemenx-tile-group new" *if="Dragging" *droppable="{Accept: ['tile']}" (dropped)="DropOnNew">
+		<h3 class="elemenx-tile-group-title">{{NewGroupTitle}}</h3>
+		<div class="elemenx-tile-new">Drop here to start a group</div>
 	</section>
 </div>

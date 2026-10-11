@@ -1614,6 +1614,17 @@ a {
 	outline-offset: 2px;
 }
 
+.elemenx-drop-marker {
+	position: fixed;
+	top: 0;
+	left: 0;
+	z-index: 1300;
+	background: var(--elemenx-accent);
+	border-radius: 1px;
+	pointer-events: none;
+	will-change: transform;
+}
+
 .elemenx-droppable.drop-over {
 	background: color-mix(in srgb, var(--elemenx-accent) 6%, transparent);
 	outline: 2px solid var(--elemenx-accent);
