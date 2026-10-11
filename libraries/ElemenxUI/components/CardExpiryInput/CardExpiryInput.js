@@ -4,6 +4,7 @@ Elemenx.Component('CardExpiryInput', {
 	Value: '',
 	Placeholder: 'MM/YY',
 	Size: 'medium',
+	Shape: 'default',
 	Name: null,
 	Disabled: false,
 	Invalid: false,

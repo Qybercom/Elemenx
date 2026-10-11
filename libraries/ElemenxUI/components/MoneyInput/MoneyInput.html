@@ -1,0 +1,7 @@
+<div class="elemenx-money">
+	<div class="elemenx-input elemenx-money-input" [class]="[Size || 'medium', Shape === 'round' ? 'round' : '', Invalid ? 'invalid' : '', Disabled ? 'disabled' : '']">
+		<span class="elemenx-input-affix">{{Info(Currency, Locale).Symbol}}</span>
+		<input class="elemenx-input-control" type="text" inputmode="decimal" autocomplete="off" [value]="Display(Amount, Text, Currency, Locale)" [placeholder]="Placeholder" [disabled]="Disabled" [attribute.name]="Name" [attribute.aria-invalid]="Invalid ? 'true' : null" (focus)="Edit" (input)="Typed" (change)="Committed" />
+	</div>
+	<CurrencySelect *if="!Fixed" [value]="Currency" [codes]="Codes" [locale]="Locale" [size]="Size" [shape]="Shape" [disabled]="Disabled" (change)="CurrencyChanged" />
+</div>

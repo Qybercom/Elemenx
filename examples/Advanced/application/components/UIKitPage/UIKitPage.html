@@ -6,10 +6,27 @@
 		<div class="ui-kit-row"><ThemeSwitch /><span class="elemenx-caption">System, light or dark: remembered in localStorage</span></div>
 	</header>
 
-	<section class="elemenx-section">
-		<div class="elemenx-section-header"><h2>Typography and blocks</h2><span class="elemenx-caption">common.css</span></div>
+	<Section Title="Layout primitives" Note="elemenx-screen · elemenx-container · elemenx-column">
+		<div class="elemenx-screen ui-kit-demo">
+			<span class="ui-kit-tag">elemenx-screen</span>
+			<div class="elemenx-container ui-kit-demo">
+				<span class="ui-kit-tag">elemenx-container</span>
+				<div class="elemenx-column fill ui-kit-demo"><span class="ui-kit-tag">elemenx-column fill</span><div class="ui-kit-box">A</div><div class="ui-kit-box">B</div></div>
+				<div class="elemenx-column non-fill ui-kit-demo"><span class="ui-kit-tag">elemenx-column non-fill</span><div class="ui-kit-box wide">C</div><div class="ui-kit-box wide">wide box</div></div>
+				<div class="elemenx-container centered ui-kit-demo"><span class="ui-kit-tag">elemenx-container centered</span><div class="ui-kit-box">D</div></div>
+			</div>
+			<div class="elemenx-container wrappable ui-kit-demo">
+				<span class="ui-kit-tag">elemenx-container wrappable</span>
+				<div class="ui-kit-box wide">1</div><div class="ui-kit-box wide">2</div><div class="ui-kit-box wide">3</div><div class="ui-kit-box wide">4</div><div class="ui-kit-box wide">5</div>
+			</div>
+		</div>
+	</Section>
+
+	<Section Title="Typography and blocks" Note="index.css">
 		<div class="ui-kit-grid">
 			<div class="elemenx-panel ui-kit-stack">
+				<h1>Heading 1</h1>
+				<h2>Heading 2</h2>
 				<h3>Heading 3</h3>
 				<h4>Heading 4</h4>
 				<h5>Heading 5</h5>
@@ -35,10 +52,38 @@
 				<div class="elemenx-card"><h4>Card</h4><p class="elemenx-text small muted">Raised surface for grouped content.</p></div>
 			</div>
 		</div>
-	</section>
+	</Section>
 
-	<section class="elemenx-section">
-		<div class="elemenx-section-header"><h2>Buttons</h2><span class="elemenx-caption">Clicks: {{Clicks}}</span></div>
+	<Section Title="Lists" Note="elemenx-ul · elemenx-ol · outline · check · elemenx-list divided">
+		<div class="ui-kit-grid four">
+			<ul class="elemenx-ul">
+				<li>Components<ul><li>Inputs<ul><li>PhoneInput</li><li>MoneyInput</li></ul></li><li>Overlays</li></ul></li>
+				<li>Directives</li>
+			</ul>
+			<ol class="elemenx-ol">
+				<li>Install<ol><li>Download<ol><li>Unpack</li></ol></li><li>Link</li></ol></li>
+				<li>Configure</li>
+			</ol>
+			<ol class="elemenx-ol outline">
+				<li>Scope<ol><li>Goals</li><li>Limits<ol><li>Budget</li></ol></li></ol></li>
+				<li>Plan</li>
+			</ol>
+			<div class="ui-kit-stack">
+				<ul class="elemenx-ul check"><li>Light theme</li><li>Dark theme</li><li>Tests</li></ul>
+				<ul class="elemenx-list divided"><li>Divided item</li><li>Another item</li><li>Last item</li></ul>
+			</div>
+		</div>
+	</Section>
+
+	<Section Title="Section" Note="Collapsible, with actions in the header">
+		<Section Title="Project settings" Icon="settings" Level="3" Collapsible="true" [collapsed]="Collapsed" Note="Folds its body" (toggle)="SectionToggled">
+			<Button slot="actions" Icon="edit" Title="Edit" Variant="ghost" Size="small" />
+			<Button slot="actions" Icon="delete" Title="Delete" Variant="ghost" Size="small" />
+			<p class="elemenx-text">The body of a collapsible section. State: {{Collapsed ? 'collapsed' : 'expanded'}}.</p>
+		</Section>
+	</Section>
+
+	<Section Title="Buttons" [note]="'Clicks: ' + Clicks">
 		<div class="ui-kit-row">
 			<Button Label="Primary" Variant="primary" (click)="Clicked" />
 			<Button Label="Secondary" (click)="Clicked" />
@@ -55,6 +100,12 @@
 			<Button Label="Giant" Size="giant" Variant="primary" IconRight="arrow-right" />
 		</div>
 		<div class="ui-kit-row">
+			<Button Label="Round" Shape="round" Variant="primary" />
+			<Button Label="Round" Shape="round" Icon="add" />
+			<Button Icon="settings" Title="Round icon" Shape="round" />
+			<Button Label="Large round" Shape="round" Size="large" IconRight="arrow-right" />
+		</div>
+		<div class="ui-kit-row">
 			<Button Icon="settings" Title="Settings" Variant="ghost" Size="small" />
 			<Button Icon="settings" Title="Settings" Variant="ghost" />
 			<Button Icon="settings" Title="Settings" />
@@ -68,17 +119,23 @@
 			<Menu Icon="more" Title="More actions" Variant="ghost" [items]="MenuItems" (select)="MenuSelected" />
 			<span class="elemenx-caption" *if="MenuChoice">Menu: {{MenuChoice}}</span>
 		</div>
-	</section>
+	</Section>
 
-	<section class="elemenx-section">
-		<div class="elemenx-section-header"><h2>Icons</h2><span class="elemenx-caption">&lt;Icon Name="..." /&gt;</span></div>
+	<Section Title="Icons" Note="&lt;Icon Name=&quot;...&quot; /&gt; · &lt;FileIcon Name=&quot;report.pdf&quot; /&gt;">
 		<div class="ui-kit-icons">
 			<div class="ui-kit-icon" *for="name of Icons" *key="name" [attribute.title]="name"><Icon [name]="name" Size="24" /><span>{{name}}</span></div>
 		</div>
-	</section>
+		<h4>Alignment, position and fit</h4>
+		<div class="ui-kit-icons">
+			<div class="ui-kit-icon" *for="name of LayoutIcons" *key="name" [attribute.title]="name"><Icon [name]="name" Size="24" /><span>{{name}}</span></div>
+		</div>
+		<h4>File formats</h4>
+		<div class="ui-kit-icons">
+			<div class="ui-kit-icon" *for="file of Files" *key="file" [attribute.title]="file"><FileIcon [name]="file" Size="32" /><span>{{file}}</span></div>
+		</div>
+	</Section>
 
-	<section class="elemenx-section">
-		<div class="elemenx-section-header"><h2>Inputs</h2><span class="elemenx-caption">Value: {{Text}}</span></div>
+	<Section Title="Inputs" [note]="'Value: ' + Text">
 		<div class="ui-kit-grid">
 			<Field Label="Project name" Hint="Text input with a hint." Required="true"><Input [value]="Text" Placeholder="Name" Clearable="true" (input)="TextChanged" /></Field>
 			<Field Label="Search"><Input Icon="search" Placeholder="Search everywhere" Clearable="true" /></Field>
@@ -88,14 +145,10 @@
 			<Field Label="Disabled"><Input Value="Read only for now" Disabled="true" /></Field>
 			<Field Label="Amount" [hint]="'Value: ' + Amount"><NumberInput [value]="Amount" Min="0" Max="100" Step="1" Suffix="items" (input)="AmountChanged" /></Field>
 			<Field Label="Color" [hint]="'Value: ' + Color"><ColorInput [value]="Color" (input)="ColorChanged" /></Field>
-			<Field Label="Date" [hint]="'Value: ' + (Date || '—')"><DateInput [value]="Date" (input)="DateChanged" /></Field>
-			<Field Label="Time" [hint]="'Value: ' + (Time || '—')"><TimeInput [value]="Time" MinuteStep="5" (input)="TimeChanged" /></Field>
-			<Field Label="Month, 2024–2026"><DateInput Mode="month" Min="2024-01" Max="2026-12" /></Field>
-			<Field Label="Time with seconds"><TimeInput Seconds="true" Min="08:00:00" Max="20:00:00" /></Field>
-			<Field Label="Color with opacity"><ColorInput Value="#3f6c9e80" Alpha="true" /></Field>
-			<Field Label="ISO date, Monday first"><DateInput Format="YYYY-MM-DD" FirstDay="1" Min="2020-01-01" /></Field>
 			<Field Label="Description"><TextArea Placeholder="Write something…" MaxLength="200" AutoSize="true" /></Field>
-			<Field Label="Notes (resizable)"><TextArea Rows="3" Value="Plain multi-line input." /></Field>
+			<Field Label="Notes (resizable)" Hint="Drag the bottom edge or focus it and use the arrow keys."><TextArea Rows="3" Value="Plain multi-line input." /></Field>
+			<Field Label="Round search"><Input Shape="round" Icon="search" Placeholder="Search" Clearable="true" /></Field>
+			<Field Label="Round select"><Select Shape="round" [options]="Languages" Placeholder="Language" /></Field>
 		</div>
 		<div class="ui-kit-row">
 			<Input Size="small" Placeholder="Small" />
@@ -104,10 +157,20 @@
 			<Input Size="giant" Placeholder="Giant" Icon="search" />
 		</div>
 		<Field Label="Horizontal label" Horizontal="true" Hint="Settings-style layout."><Input Placeholder="Value" /></Field>
-	</section>
+	</Section>
 
-	<section class="elemenx-section">
-		<div class="elemenx-section-header"><h2>Payment and phone</h2><span class="elemenx-caption">Strict masks: typing, paste and drop</span></div>
+	<Section Title="Dates and time" Note="Own pickers, locale formats">
+		<div class="ui-kit-grid">
+			<Field Label="Date" [hint]="'Value: ' + (Date || '—')"><DateInput [value]="Date" (input)="DateChanged" /></Field>
+			<Field Label="Time" [hint]="'Value: ' + (Time || '—')"><TimeInput [value]="Time" MinuteStep="5" (input)="TimeChanged" /></Field>
+			<Field Label="Month, 2024–2026"><DateInput Mode="month" Min="2024-01" Max="2026-12" /></Field>
+			<Field Label="Time with seconds"><TimeInput Seconds="true" Min="08:00:00" Max="20:00:00" /></Field>
+			<Field Label="Color with opacity"><ColorInput Value="#3f6c9e80" Alpha="true" /></Field>
+			<Field Label="ISO date, Monday first"><DateInput Format="YYYY-MM-DD" FirstDay="1" Min="2020-01-01" /></Field>
+		</div>
+	</Section>
+
+	<Section Title="Payment, phone and money" Note="Strict masks: typing, paste and drop">
 		<div class="ui-kit-grid">
 			<Field Label="Card number" [hint]="CardState || 'Try 4242 4242 4242 4242'"><CardNumberInput (validate)="CardValidated" /></Field>
 			<div class="ui-kit-pair">
@@ -115,12 +178,15 @@
 				<Field Label="CVV"><CVVInput /></Field>
 			</div>
 			<Field Label="Phone" [hint]="Phone + (PhoneState ? ' · ' + PhoneState : '')"><PhoneInput [value]="Phone" (input)="PhoneChanged" (validate)="PhoneValidated" /></Field>
+			<Field Label="Phone, skip separators" Hint="Backspace jumps over a separator"><PhoneInput Country="US" Backspace="skip" /></Field>
+			<Field Label="Phone without guide"><PhoneInput Country="DE" Guide="false" /></Field>
 			<Field Label="Phone (US only)"><PhoneInput Country="US" [countries]="[{Code: 'US', Name: 'United States', Dial: '1', Mask: '(###) ###-####'}]" /></Field>
+			<Field Label="Money" [hint]="Money"><MoneyInput [amount]="Price" Currency="USD" (change)="MoneyChanged" /></Field>
+			<Field Label="Currency"><CurrencySelect Value="EUR" /></Field>
 		</div>
-	</section>
+	</Section>
 
-	<section class="elemenx-section">
-		<div class="elemenx-section-header"><h2>Selection</h2><span class="elemenx-caption">Plan: {{Plan}} · View: {{View}} · Language: {{Language}} · Tags: {{Tags.join(', ')}}</span></div>
+	<Section Title="Selection" [note]="'Plan: ' + Plan + ' · View: ' + View + ' · Language: ' + Language + ' · Tags: ' + Tags.join(', ')">
 		<div class="ui-kit-grid">
 			<Field Label="Language"><Select [options]="Languages" [value]="Language" Searchable="true" (change)="LanguageChanged" /></Field>
 			<Field Label="Optional"><Select [options]="Languages" Placeholder="None" Clearable="true" /></Field>
@@ -149,10 +215,9 @@
 			</div>
 		</div>
 		<RadioGroup Variant="tile" [options]="Plans" Value="free" />
-	</section>
+	</Section>
 
-	<section class="elemenx-section">
-		<div class="elemenx-section-header"><h2>Tabs</h2><span class="elemenx-caption">Active: {{Tab}} · {{Section}}</span></div>
+	<Section Title="Tabs" [note]="'Active: ' + Tab + ' · ' + Section">
 		<Tabs [tabs]="SectionTabs" [value]="Section" (change)="SectionChanged" />
 		<Tabs Variant="pill" [tabs]="SectionTabs" Value="billing" />
 		<div class="elemenx-panel compact ui-kit-editor">
@@ -161,25 +226,107 @@
 			</Tabs>
 			<p class="elemenx-text small muted ui-kit-editor-body">Content of {{Tab || 'nothing'}}. Close tabs with the cross, the middle button or Delete.</p>
 		</div>
-	</section>
+	</Section>
 
-	<section class="elemenx-section">
-		<div class="elemenx-section-header"><h2>File upload</h2><span class="elemenx-caption">Selected: {{FileCount}}</span></div>
+	<Section Title="Table" [note]="'Selected: ' + Selected.join(', ') + (Activated ? ' · Opened: ' + Activated : '')">
+		<Table [columns]="Columns" [rows]="People" [selected]="Selected" Selectable="multiple" Caption="Sort by a header, select with a click, Ctrl+click or the checkboxes, open with a double click or Enter." (select)="PeopleSelected" (activate)="PersonActivated" />
+		<Table [columns]="Columns" [rows]="People" Compact="true" Striped="true" Bordered="true" Selectable="single" Height="160px" />
+		<table class="elemenx-table bordered">
+			<caption>A plain table with the elemenx-table class</caption>
+			<thead><tr><th>Key</th><th>Value</th></tr></thead>
+			<tbody><tr><td>Theme</td><td>System</td></tr><tr><td>Size</td><td>Medium</td></tr></tbody>
+		</table>
+	</Section>
+
+	<Section Title="Overlays" [note]="'Dialog: ' + (DialogResult || '—')">
+		<div class="ui-kit-row">
+			<Popover Title="Popover">
+				<Button slot="trigger" Label="Click popover" IconRight="chevron-down" />
+				<p class="elemenx-text small">Any content: text, forms or lists.</p>
+				<Input Placeholder="Inside a popover" />
+			</Popover>
+			<Popover Trigger="hover" Placement="top-start">
+				<Button slot="trigger" Label="Hover popover" Variant="ghost" />
+				<p class="elemenx-text small">Shown while the pointer is over the trigger.</p>
+			</Popover>
+			<Button Label="Open dialog" Variant="primary" (click)="OpenDialog" />
+			<Button Label="Show toast" Icon="bell" (click)="ShowToast" />
+		</div>
+		<Dialog Title="Project settings" Description="Changes apply to every member." Icon="settings" [open]="DialogOpen" (close)="CloseDialog">
+			<div class="ui-kit-stack">
+				<Field Label="Name"><Input Value="Elemenx" /></Field>
+				<Field Label="Visibility"><RadioGroup Variant="segmented" [options]="Views" Value="list" /></Field>
+			</div>
+			<Button slot="footer" Label="Cancel" (click)="CloseDialog" />
+			<Button slot="footer" Label="Save" Variant="primary" (click)="ConfirmDialog" />
+		</Dialog>
+		<ToastHost />
+	</Section>
+
+	<Section Title="Feedback" [note]="'Volume: ' + Volume + ' · Budget: ' + Budget.join('–')">
+		<div class="ui-kit-grid">
+			<Field Label="Volume"><Slider [value]="Volume" Label="Volume" Unit="%" (input)="VolumeChanged" /></Field>
+			<Field Label="Budget"><Slider Range="true" [value]="Budget" Min="0" Max="1000" Step="50" Marks="100" ShowValue="always" Label="Budget" (input)="BudgetChanged" /></Field>
+			<Progress Value="64" Label="Uploading" ShowValue="true" />
+			<Progress Label="Indexing" />
+			<Meter Value="72" Low="30" High="80" Optimum="100" Label="Battery" Unit="%" />
+			<Meter Value="91" Low="60" High="85" Optimum="0" Label="Disk usage" Unit="%" />
+			<div class="ui-kit-row">
+				<Progress Variant="ring" Value="40" ShowValue="true" />
+				<Progress Variant="ring" Tone="success" Value="100" ShowValue="true" Size="large" />
+				<Progress Variant="ring" Size="small" />
+				<Spinner Size="small" />
+				<Spinner />
+				<Spinner Size="large" Label="Loading data" ShowLabel="true" />
+			</div>
+			<div class="ui-kit-row">
+				<Skeleton Shape="circle" />
+				<div class="ui-kit-stack fill"><Skeleton Lines="3" /></div>
+			</div>
+		</div>
+	</Section>
+
+	<Section Title="Files and drag and drop" [note]="'Selected: ' + FileCount + (Dropped ? ' · Dropped: ' + Dropped : '')">
 		<div class="ui-kit-grid">
 			<FileUpload Hint="Any file up to 5 MB" MaxSize="5242880" (change)="FilesChanged" />
 			<FileUpload Variant="gallery" Accept="image/*" Label="Drop images here" Hint="Images only, previews below" />
 		</div>
 		<div class="ui-kit-row">
-			<FileUpload Variant="chip" Label="Attach files" Hint="PDF or text" Accept=".pdf,.txt" />
+			<FileUpload Variant="inline" Label="Attach files" Hint="PDF or text" Accept=".pdf,.txt" />
 			<FileUpload Variant="avatar" Accept="image/*" Label="Change avatar" />
 		</div>
-	</section>
+		<div class="ui-kit-grid three">
+			<div class="elemenx-panel compact ui-kit-board" *droppable="{Accept: ['task']}" (dropped)="DropTodo">
+				<h5>To do</h5>
+				<div class="elemenx-card compact ui-kit-task" *for="task of Todo" *key="task.ID" *draggable="{Data: task, Type: 'task'}"><Icon Name="grip" />{{task.Title}}</div>
+			</div>
+			<div class="elemenx-panel compact ui-kit-board" *droppable="{Accept: ['task']}" (dropped)="DropDone">
+				<h5>Done</h5>
+				<div class="elemenx-card compact ui-kit-task" *for="task of Done" *key="task.ID" *draggable="{Data: task, Type: 'task'}"><Icon Name="grip" />{{task.Title}}</div>
+			</div>
+			<div class="elemenx-panel compact ui-kit-board centered" *droppable="{Files: true, Text: true}" (dropped)="DropFiles">
+				<Icon Name="download" Size="24" />
+				<span class="elemenx-caption">Drop files or text from outside the browser</span>
+			</div>
+		</div>
+	</Section>
 
-	<section class="elemenx-section">
-		<div class="elemenx-section-header"><h2>Workspace</h2><span class="elemenx-caption">IDE frame: drag or focus the splitters and use the arrow keys</span></div>
+	<Section Title="Resizing" Note="*resizable and Splitter">
+		<div class="ui-kit-grid">
+			<div class="elemenx-panel ui-kit-resizable" *resizable="{Edges: 'right bottom corner', MinWidth: 160, MinHeight: 80}">Drag an edge or the corner</div>
+			<div class="ui-kit-splitter">
+				<Splitter Size="160" Min="80">
+					<div slot="first" class="elemenx-block compact">First pane</div>
+					<div slot="second" class="elemenx-block compact">Second pane</div>
+				</Splitter>
+			</div>
+		</div>
+	</Section>
+
+	<Section Title="Workspace" Note="IDE frame: drag or focus the splitters and use the arrow keys">
 		<div class="ui-kit-frame">
 			<Workspace [leftOpen]="LeftOpen" [bottomOpen]="BottomOpen" [rightOpen]="RightOpen" LeftWidth="240" BottomHeight="160">
-				<Toolbar slot="header" Label="Main toolbar">
+				<WorkspaceToolbar slot="header" Label="Main toolbar">
 					<span class="ui-kit-logo">E</span>
 					<Menu Label="Elemenx" Variant="ghost" Size="small" [items]="MenuItems" (select)="MenuSelected" />
 					<Button Label="main" Icon="branch" IconRight="chevron-down" Variant="ghost" Size="small" />
@@ -190,23 +337,24 @@
 					<span class="elemenx-divider vertical"></span>
 					<Button Icon="search" Title="Search everywhere" Variant="ghost" Size="small" />
 					<Button Icon="settings" Title="Settings" Variant="ghost" Size="small" />
-				</Toolbar>
+				</WorkspaceToolbar>
+				<span slot="top-stripe" class="ui-kit-crumbs"><Icon Name="folder" Size="12" />application<Icon Name="chevron-right" Size="12" />components<Icon Name="chevron-right" Size="12" /><FileIcon Name="app.js" Size="12" />app.js</span>
 				<Button slot="left-stripe" Icon="folder" Title="Project" Variant="ghost" [pressed]="LeftOpen" (click)="ToggleLeft" />
 				<Button slot="left-stripe" Icon="structure" Title="Structure" Variant="ghost" Pressed="false" />
 				<Button slot="left-stripe" Icon="commit" Title="Commit" Variant="ghost" Pressed="false" />
 				<span slot="left-stripe" class="elemenx-spacer"></span>
 				<Button slot="left-stripe" Icon="terminal" Title="Terminal" Variant="ghost" [pressed]="BottomOpen" (click)="ToggleBottom" />
-				<ToolWindow slot="left" Title="Project" Icon="folder" Closable="true" (close)="ToggleLeft">
+				<WorkspaceToolWindow slot="left" Title="Project" Icon="folder" Closable="true" (close)="ToggleLeft">
 					<Button slot="actions" Icon="refresh" Title="Refresh" Variant="ghost" Size="small" />
 					<ul class="ui-kit-tree">
 						<li><Icon Name="folder-open" />application</li>
 						<li class="nested"><Icon Name="folder" />components</li>
 						<li class="nested"><Icon Name="folder" />services</li>
-						<li class="nested active"><Icon Name="file-code" />app.js</li>
+						<li class="nested active"><FileIcon Name="app.js" />app.js</li>
 						<li><Icon Name="folder" />libraries</li>
-						<li><Icon Name="file-text" />README.md</li>
+						<li><FileIcon Name="README.md" />README.md</li>
 					</ul>
-				</ToolWindow>
+				</WorkspaceToolWindow>
 				<div slot="main" class="elemenx-column fill">
 					<Tabs Variant="editor" [tabs]="WorkspaceTabs" [value]="WorkspaceTab" (change)="WorkspaceTabChanged" (close)="WorkspaceTabClosed" />
 					<pre class="ui-kit-code">Elemenx.Application('Application', {
@@ -214,15 +362,16 @@
 	$Component: 'Root'
 });</pre>
 				</div>
-				<ToolWindow slot="bottom" Title="Terminal" Icon="terminal" Closable="true" Padded="true" (close)="ToggleBottom">
+				<WorkspaceToolWindow slot="bottom" Title="Terminal" Icon="terminal" Closable="true" Padded="true" (close)="ToggleBottom">
 					<pre class="ui-kit-terminal">$ npm test
  Test Files  52 passed (52)</pre>
-				</ToolWindow>
-				<ToolWindow slot="right" Title="Database" Icon="database" Closable="true" Padded="true" (close)="ToggleRight">
+				</WorkspaceToolWindow>
+				<WorkspaceToolWindow slot="right" Title="Database" Icon="database" Closable="true" Padded="true" (close)="ToggleRight">
 					<p class="elemenx-text small muted">No data sources yet.</p>
-				</ToolWindow>
+				</WorkspaceToolWindow>
 				<Button slot="right-stripe" Icon="bell" Title="Notifications" Variant="ghost" Pressed="false" />
 				<Button slot="right-stripe" Icon="database" Title="Database" Variant="ghost" [pressed]="RightOpen" (click)="ToggleRight" />
+				<span slot="bottom-stripe" class="ui-kit-crumbs"><Icon Name="warning" Size="12" />2 warnings<Icon Name="error" Size="12" />0 errors</span>
 				<span slot="status" class="elemenx-container ui-kit-status"><Icon Name="branch" />main</span>
 				<span slot="status" class="elemenx-spacer"></span>
 				<span slot="status">12:4</span>
@@ -230,5 +379,21 @@
 				<span slot="status">UTF-8</span>
 			</Workspace>
 		</div>
-	</section>
+	</Section>
+
+	<Section Title="Chat" Note="Chat, ChatMessage, ChatComposer">
+		<div class="ui-kit-frame chat">
+			<Chat>
+				<div slot="sidebar" class="ui-kit-stack ui-kit-conversations">
+					<Input Shape="round" Icon="search" Placeholder="Search" Size="small" />
+					<div class="elemenx-chat-conversation active"><span class="elemenx-chat-avatar">GH</span><div><strong>Grace Hopper</strong><p class="elemenx-text small muted">Can you check the new table?</p></div></div>
+					<div class="elemenx-chat-conversation"><span class="elemenx-chat-avatar">AT</span><div><strong>Alan Turing</strong><p class="elemenx-text small muted">See you tomorrow</p></div></div>
+				</div>
+				<div slot="header" class="elemenx-container ui-kit-chat-header"><span class="elemenx-chat-avatar">GH</span><div><strong>Grace Hopper</strong><p class="elemenx-text small muted">online</p></div><span class="elemenx-spacer"></span><Button Icon="phone" Title="Call" Variant="ghost" /><Button Icon="more-vertical" Title="More" Variant="ghost" /></div>
+				<div class="elemenx-chat-divider">Today</div>
+				<ChatMessage *for="message of Messages" *key="message.ID" [author]="message.Author" [text]="message.Text" [time]="message.Time" [own]="!!message.Own" [grouped]="!!message.Grouped" [status]="message.Status || ''" />
+				<ChatComposer slot="composer" (send)="SendMessage" />
+			</Chat>
+		</div>
+	</Section>
 </section>

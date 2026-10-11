@@ -1,0 +1,119 @@
+.elemenx-toast-host {
+	position: fixed;
+	z-index: 1200;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	width: min(360px, calc(100% - 32px));
+	pointer-events: none;
+}
+
+.elemenx-toast-host.bottom-right {
+	right: 16px;
+	bottom: 16px;
+}
+
+.elemenx-toast-host.bottom-left {
+	bottom: 16px;
+	left: 16px;
+}
+
+.elemenx-toast-host.top-right {
+	top: 16px;
+	right: 16px;
+	flex-direction: column-reverse;
+}
+
+.elemenx-toast-host.top-left {
+	top: 16px;
+	left: 16px;
+	flex-direction: column-reverse;
+}
+
+.elemenx-toast-host.top {
+	top: 16px;
+	left: 50%;
+	flex-direction: column-reverse;
+	transform: translateX(-50%);
+}
+
+.elemenx-toast-host.bottom {
+	bottom: 16px;
+	left: 50%;
+	transform: translateX(-50%);
+}
+
+.elemenx-toast {
+	--elemenx-toast-color: var(--elemenx-info);
+	display: flex;
+	align-items: flex-start;
+	gap: 8px;
+	padding: 12px;
+	background: var(--elemenx-surface);
+	border: 1px solid var(--elemenx-border);
+	border-left: 4px solid var(--elemenx-toast-color);
+	border-radius: 8px;
+	box-shadow: var(--elemenx-shadow);
+	color: var(--elemenx-text);
+	pointer-events: auto;
+	animation: elemenx-toast-in 160ms ease;
+}
+
+.elemenx-toast > .elemenx-icon {
+	margin-top: 2px;
+	color: var(--elemenx-toast-color);
+}
+
+.elemenx-toast.success {
+	--elemenx-toast-color: var(--elemenx-success);
+}
+
+.elemenx-toast.warning {
+	--elemenx-toast-color: var(--elemenx-warning);
+}
+
+.elemenx-toast.danger {
+	--elemenx-toast-color: var(--elemenx-danger);
+}
+
+.elemenx-toast-text {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	min-width: 0;
+}
+
+.elemenx-toast-text span {
+	color: var(--elemenx-text-muted);
+}
+
+.elemenx-toast-action {
+	flex: none;
+	padding: 0 4px;
+	background: transparent;
+	border: 0;
+	border-radius: 4px;
+	color: var(--elemenx-text);
+	font: inherit;
+	font-weight: 600;
+	text-decoration: underline;
+	text-underline-offset: 2px;
+	cursor: pointer;
+}
+
+.elemenx-toast-action:focus-visible {
+	outline: 2px solid color-mix(in srgb, var(--elemenx-accent) 48%, transparent);
+}
+
+@keyframes elemenx-toast-in {
+	from {
+		opacity: 0;
+		transform: translateY(8px);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.elemenx-toast {
+		animation: none;
+	}
+}

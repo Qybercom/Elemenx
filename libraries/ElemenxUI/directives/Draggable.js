@@ -1,0 +1,225 @@
+/*
+ * *draggable="{Data: item, Type: 'task', Handle: '.grip'}" (or just *draggable="item") lets the element be dragged
+ * with the pointer onto *droppable elements that accept Type. A ghost copy follows the pointer; Escape cancels.
+ * The element dispatches "dragbegin" and "dragfinish" ({Dropped, Target}); the target dispatches "dropped".
+ * Disabled turns dragging off; Handle limits where the drag may start.
+ */
+Elemenx.Directive('draggable', {
+	$OnCreate: function (context) {
+		var element = context.Element;
+		var data = context.Data;
+
+		data.Options = {};
+
+		function emit (target, name, detail) {
+			target.dispatchEvent(new CustomEvent(name, {detail: detail}));
+		}
+
+		function accepts (target) {
+			var drop = target && target.ElemenxDrop;
+			var type = data.Options.Type || '';
+
+			if (!drop || drop.Disabled) return false;
+			if (drop.Accept === true) return true;
+
+			return Array.isArray(drop.Accept) && drop.Accept.indexOf(type) !== -1;
+		}
+
+		function targetAt (x, y) {
+			var node = document.elementFromPoint(x, y);
+
+			while (node && node !== document.documentElement) {
+				if (node.classList && node.classList.contains('elemenx-droppable') && accepts(node)) return node;
+
+				node = node.parentNode;
+			}
+
+			return null;
+		}
+
+		function detail (event) {
+			return {
+				Kind: 'item',
+				Type: data.Options.Type || '',
+				Data: data.Options.Data,
+				Source: element,
+				ClientX: event.clientX,
+				ClientY: event.clientY
+			};
+		}
+
+		function highlight (on) {
+			var targets = document.querySelectorAll('.elemenx-droppable');
+			var i = 0;
+
+			while (i < targets.length) {
+				targets[i].classList.toggle('drop-target', on && accepts(targets[i]));
+
+				i++;
+			}
+		}
+
+		function over (target, event) {
+			if (target === data.Over) return;
+
+			if (data.Over) {
+				data.Over.classList.remove('drop-over');
+
+				emit(data.Over, 'dropleave', detail(event));
+			}
+
+			data.Over = target;
+
+			if (target) {
+				target.classList.add('drop-over');
+
+				emit(target, 'dropenter', detail(event));
+			}
+		}
+
+		function begin (event) {
+			var rect = element.getBoundingClientRect();
+			var ghost = element.cloneNode(true);
+
+			ghost.classList.add('elemenx-drag-ghost');
+			ghost.removeAttribute('id');
+
+			ghost.style.width = rect.width + 'px';
+			ghost.style.height = rect.height + 'px';
+
+			document.body.appendChild(ghost);
+			document.body.classList.add('elemenx-dragging');
+			element.classList.add('dragging');
+
+			data.Ghost = ghost;
+			data.OffsetX = data.StartX - rect.left;
+			data.OffsetY = data.StartY - rect.top;
+			data.Active = true;
+
+			highlight(true);
+
+			emit(element, 'dragbegin', detail(event));
+		}
+
+		function finish (event, dropped) {
+			var target = data.Over;
+
+			document.removeEventListener('pointermove', data.Move, true);
+			document.removeEventListener('pointerup', data.Up, true);
+			document.removeEventListener('pointercancel', data.Cancel, true);
+			document.removeEventListener('keydown', data.Key, true);
+
+			if (!data.Active) return;
+
+			data.Active = false;
+
+			if (data.Ghost && data.Ghost.parentNode)
+				data.Ghost.parentNode.removeChild(data.Ghost);
+
+			data.Ghost = null;
+
+			document.body.classList.remove('elemenx-dragging');
+			element.classList.remove('dragging');
+
+			if (target)
+				target.classList.remove('drop-over');
+
+			data.Over = null;
+
+			highlight(false);
+
+			if (dropped && target)
+				emit(target, 'dropped', detail(event));
+
+			emit(element, 'dragfinish', {Dropped: !!(dropped && target), Target: dropped ? target : null});
+
+			/* The click that ends a drag is not a click on the element. */
+			document.addEventListener('click', data.Swallow, true);
+
+			window.setTimeout(function () {
+				document.removeEventListener('click', data.Swallow, true);
+			}, 0);
+		}
+
+		data.Swallow = function (event) {
+			event.stopPropagation();
+			event.preventDefault();
+
+			document.removeEventListener('click', data.Swallow, true);
+		};
+
+		data.Down = function (event) {
+			var handle = data.Options.Handle;
+
+			if (data.Options.Disabled || event.button !== 0) return;
+			if (handle && !(event.target.closest && event.target.closest(handle) && element.contains(event.target.closest(handle)))) return;
+			if (!handle && event.target.closest && event.target.closest('input, textarea, select, [contenteditable="true"]')) return;
+
+			data.StartX = event.clientX;
+			data.StartY = event.clientY;
+			data.Active = false;
+
+			document.addEventListener('pointermove', data.Move, true);
+			document.addEventListener('pointerup', data.Up, true);
+			document.addEventListener('pointercancel', data.Cancel, true);
+			document.addEventListener('keydown', data.Key, true);
+		};
+
+		data.Move = function (event) {
+			if (!data.Active) {
+				if (Math.abs(event.clientX - data.StartX) + Math.abs(event.clientY - data.StartY) < 4) return;
+
+				begin(event);
+			}
+
+			event.preventDefault();
+
+			data.Ghost.style.left = event.clientX - data.OffsetX + 'px';
+			data.Ghost.style.top = event.clientY - data.OffsetY + 'px';
+
+			over(targetAt(event.clientX, event.clientY), event);
+		};
+
+		data.Up = function (event) {
+			finish(event, true);
+		};
+
+		data.Cancel = function (event) {
+			finish(event, false);
+		};
+
+		data.Key = function (event) {
+			if (event.key !== 'Escape' || !data.Active) return;
+
+			event.preventDefault();
+			event.stopPropagation();
+
+			finish({clientX: data.StartX, clientY: data.StartY}, false);
+		};
+
+		element.addEventListener('pointerdown', data.Down);
+	},
+
+	$OnUpdate: function (context) {
+		var value = context.Value;
+		var options = value && typeof value === 'object' && !Array.isArray(value) && Object.prototype.hasOwnProperty.call(value, 'Data') ? value : {Data: value};
+
+		context.Data.Options = options;
+
+		context.Element.classList.add('elemenx-draggable');
+		context.Element.classList.toggle('disabled', !!options.Disabled);
+		context.Element.setAttribute('aria-roledescription', 'draggable');
+	},
+
+	$OnDestroy: function (context) {
+		context.Element.removeEventListener('pointerdown', context.Data.Down);
+
+		document.removeEventListener('pointermove', context.Data.Move, true);
+		document.removeEventListener('pointerup', context.Data.Up, true);
+		document.removeEventListener('pointercancel', context.Data.Cancel, true);
+		document.removeEventListener('keydown', context.Data.Key, true);
+
+		if (context.Data.Ghost && context.Data.Ghost.parentNode)
+			context.Data.Ghost.parentNode.removeChild(context.Data.Ghost);
+	}
+});

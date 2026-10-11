@@ -1,0 +1,19 @@
+<section class="elemenx-section" [class.collapsible]="Collapsible" [class.collapsed]="Collapsible && Collapsed">
+	<header class="elemenx-section-header">
+		<div class="elemenx-section-heading">
+			<button class="elemenx-section-toggle" type="button" *if="Collapsible" [attribute.aria-expanded]="String(!Collapsed)" (click)="Toggle">
+				<Icon Name="chevron-down" />
+				<Icon *if="Icon" [name]="Icon" />
+				<span class="elemenx-section-title" role="heading" [attribute.aria-level]="Level" [class]="['level-' + Level]">{{Title}}</span>
+			</button>
+			<span class="elemenx-section-static" *if="!Collapsible">
+				<Icon *if="Icon" [name]="Icon" />
+				<span class="elemenx-section-title" role="heading" [attribute.aria-level]="Level" [class]="['level-' + Level]">{{Title}}</span>
+			</span>
+			<span class="elemenx-caption" *if="Note">{{Note}}</span>
+			<slot name="note"></slot>
+		</div>
+		<div class="elemenx-section-actions"><slot name="actions"></slot></div>
+	</header>
+	<div class="elemenx-section-body" [attribute.hidden]="Collapsible && Collapsed ? '' : null"><slot></slot></div>
+</section>

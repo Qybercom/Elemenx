@@ -1,4 +1,4 @@
-<div class="elemenx-input elemenx-number-input" [class]="[Size || 'medium', Invalid ? 'invalid' : '', Disabled ? 'disabled' : '', ReadOnly ? 'readonly' : '']">
+<div class="elemenx-input elemenx-number-input" [class]="[Size || 'medium', Shape === 'round' ? 'round' : '', Invalid ? 'invalid' : '', Disabled ? 'disabled' : '', ReadOnly ? 'readonly' : '']">
 	<span class="elemenx-input-affix" *if="Prefix">{{Prefix}}</span>
 	<input class="elemenx-input-control" type="text" inputmode="decimal" autocomplete="off" role="spinbutton" [value]="Display(Value, Text)" [placeholder]="Placeholder" [disabled]="Disabled" [attribute.readonly]="ReadOnly ? '' : null" [attribute.name]="Name" [attribute.aria-valuenow]="Value" [attribute.aria-valuemin]="Min" [attribute.aria-valuemax]="Max" [attribute.aria-invalid]="Invalid ? 'true' : null" (input)="Typed" (change)="Committed" (keydown)="Key" />
 	<span class="elemenx-input-affix" *if="Suffix">{{Suffix}}</span>

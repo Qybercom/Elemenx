@@ -1,5 +1,5 @@
 <div class="elemenx-color elemenx-popup-anchor">
-	<div class="elemenx-input elemenx-color-input" [class]="[Size || 'medium', Invalid ? 'invalid' : '', Disabled ? 'disabled' : '']">
+	<div class="elemenx-input elemenx-color-input" [class]="[Size || 'medium', Shape === 'round' ? 'round' : '', Invalid ? 'invalid' : '', Disabled ? 'disabled' : '']">
 		<button class="elemenx-color-swatch" type="button" aria-haspopup="dialog" aria-label="Pick a color" [attribute.aria-expanded]="String(Open)" [disabled]="Disabled" (click)="Toggle"><span [style.background-color]="Value"></span></button>
 		<input class="elemenx-input-control" type="text" spellcheck="false" autocomplete="off" [attribute.maxlength]="Alpha ? 9 : 7" [value]="Text === null ? Value : Text" [disabled]="Disabled" [attribute.name]="Name" (input)="Typed" (change)="Committed" />
 	</div>

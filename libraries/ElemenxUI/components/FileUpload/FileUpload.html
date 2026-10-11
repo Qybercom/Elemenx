@@ -16,7 +16,7 @@
 	</div>
 	<ul class="elemenx-upload-list" *if="(Variant === 'dropzone' || Variant === 'inline') && Files.length">
 		<li class="elemenx-upload-item" *for="file of Files" *key="file.ID">
-			<span class="elemenx-upload-thumb"><img *if="file.URL" [src]="file.URL" alt="" /><Icon *if="!file.URL" Name="file" /></span>
+			<span class="elemenx-upload-thumb"><img *if="file.URL" [src]="file.URL" alt="" /><FileIcon *if="!file.URL" [name]="file.Name" Size="24" /></span>
 			<span class="elemenx-upload-name" [attribute.title]="file.Name">{{file.Name}}</span>
 			<span class="elemenx-caption">{{FormatSize(file.Size)}}</span>
 			<button class="elemenx-input-action" type="button" [attribute.aria-label]="'Remove ' + file.Name" [attribute.data-index]="$index" *if="!Disabled" (click)="Remove"><Icon Name="close" /></button>
@@ -25,7 +25,7 @@
 	<div class="elemenx-upload-gallery" *if="Variant === 'gallery' && Files.length">
 		<figure class="elemenx-upload-tile" *for="file of Files" *key="file.ID">
 			<img *if="file.URL" [src]="file.URL" [alt]="file.Name" />
-			<Icon *if="!file.URL" Name="file" Size="32" />
+			<FileIcon *if="!file.URL" [name]="file.Name" Size="40" />
 			<figcaption [attribute.title]="file.Name">{{file.Name}}</figcaption>
 			<button class="elemenx-upload-tile-remove" type="button" [attribute.aria-label]="'Remove ' + file.Name" [attribute.data-index]="$index" *if="!Disabled" (click)="Remove"><Icon Name="close" Size="12" /></button>
 		</figure>

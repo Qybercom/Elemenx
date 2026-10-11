@@ -8,7 +8,20 @@ Elemenx.Component('UIKitPage', {
 		'file', 'file-text', 'file-code', 'folder', 'folder-open', 'image', 'attachment', 'archive',
 		'info', 'success', 'warning', 'error', 'help', 'bell', 'loader',
 		'calendar', 'clock', 'history', 'user', 'users', 'mail', 'phone', 'credit-card', 'cart', 'globe', 'map-pin', 'tag', 'color', 'sun', 'moon', 'monitor',
-		'terminal', 'code', 'branch', 'commit', 'merge', 'play', 'pause', 'stop', 'debug', 'database', 'server', 'cloud', 'layout', 'panel-left', 'panel-right', 'panel-bottom', 'columns', 'list', 'grid', 'tree', 'structure'
+		'terminal', 'code', 'branch', 'commit', 'merge', 'play', 'pause', 'stop', 'debug', 'database', 'server', 'cloud', 'layout', 'panel-left', 'panel-right', 'panel-bottom', 'columns', 'list', 'grid', 'tree', 'structure',
+		'sort-ascending', 'sort-descending'
+	],
+	LayoutIcons: [
+		'align-left', 'align-center-horizontal', 'align-right', 'align-stretch-horizontal', 'align-top', 'align-center-vertical', 'align-bottom', 'align-stretch-vertical',
+		'position-top-left', 'position-top', 'position-top-right', 'position-left', 'position-center', 'position-right', 'position-bottom-left', 'position-bottom', 'position-bottom-right',
+		'fit-stretch-horizontal', 'fit-stretch-vertical', 'fit-stretch', 'fit-contain', 'fit-cover'
+	],
+	Files: [
+		'index.php', 'app.js', 'View.jsx', 'main.cpp', 'main.hpp', 'main.c', 'main.h', 'style.css', 'script.py', 'App.java', 'App.kt', 'ledger.cbl', 'lib.rs', 'app.ts', 'View.tsx', 'main.go',
+		'setup.exe', 'core.lib', 'libz.a', 'main.o', 'core.dll', 'photo.jpg', 'logo.png', 'icon.svg', 'cover.webp', 'favicon.ico', 'report.pdf', 'poster.psd', 'logo.ai', 'scan.tiff', 'loop.gif',
+		'data.json', 'events.jsonl', 'table.csv', 'feed.xml', 'index.html', 'config.yaml', 'php.ini', 'app.properties', '.htaccess', 'nginx.conf', 'Shortcut.lnk',
+		'letter.doc', 'letter.docx', 'sheet.xls', 'sheet.xlsx', 'slides.ppt', 'slides.pptx', 'notes.txt', 'README.md', 'Dockerfile',
+		'pack.zip', 'pack.rar', 'pack.ar', 'pack.tar', 'pack.tar.gz', 'app.jar', 'model.3mf', 'song.mp3', 'clip.mp4', 'clip.webm', 'clip.avi', 'voice.aac', 'film.ac3', 'unknown.xyz'
 	],
 	Text: 'Elemenx',
 	Clicks: 0,
@@ -95,6 +108,42 @@ Elemenx.Component('UIKitPage', {
 	LeftOpen: true,
 	BottomOpen: true,
 	RightOpen: false,
+	Collapsed: false,
+	Price: 1250.5,
+	Money: 'USD 1250.5',
+	Volume: 40,
+	Budget: [200, 800],
+	DialogOpen: false,
+	DialogResult: '',
+	Columns: [
+		{Key: 'Name', Title: 'Name', Sortable: true, Width: '32%'},
+		{Key: 'Role', Title: 'Role', Sortable: true},
+		{Key: 'Commits', Title: 'Commits', Sortable: true, Align: 'right'},
+		{Key: 'Joined', Title: 'Joined', Sortable: true}
+	],
+	People: [
+		{ID: 1, Name: 'Ada Lovelace', Role: 'Maintainer', Commits: 1280, Joined: '2019-03-14'},
+		{ID: 2, Name: 'Alan Turing', Role: 'Reviewer', Commits: 642, Joined: '2020-06-23'},
+		{ID: 3, Name: 'Grace Hopper', Role: 'Maintainer', Commits: 2048, Joined: '2018-12-09'},
+		{ID: 4, Name: 'Linus Torvalds', Role: 'Contributor', Commits: 96, Joined: '2023-01-05'},
+		{ID: 5, Name: 'Margaret Hamilton', Role: 'Reviewer', Commits: 517, Joined: '2021-08-17'}
+	],
+	Selected: [3],
+	Activated: '',
+	Todo: [
+		{ID: 'a', Title: 'Design tokens'},
+		{ID: 'b', Title: 'Table component'},
+		{ID: 'c', Title: 'Chat layout'}
+	],
+	Done: [
+		{ID: 'd', Title: 'Icons'}
+	],
+	Dropped: '',
+	Messages: [
+		{ID: 1, Author: 'Grace Hopper', Text: 'The build is green again.', Time: '10:02'},
+		{ID: 2, Author: 'Grace Hopper', Text: 'Can you check the new table?', Time: '10:02', Grouped: true},
+		{ID: 3, Author: 'Me', Text: 'Looks good, merging it now.', Time: '10:05', Own: true, Status: 'read'}
+	],
 
 	Clicked: function () {
 		this.Clicks++;
@@ -205,5 +254,81 @@ Elemenx.Component('UIKitPage', {
 
 	ToggleRight: function () {
 		this.RightOpen = !this.RightOpen;
+	},
+
+	SectionToggled: function (collapsed) {
+		this.Collapsed = collapsed;
+	},
+
+	MoneyChanged: function (value) {
+		this.Money = value.Currency + ' ' + value.Amount;
+	},
+
+	VolumeChanged: function (value) {
+		this.Volume = value;
+	},
+
+	BudgetChanged: function (value) {
+		this.Budget = value;
+	},
+
+	OpenDialog: function () {
+		this.DialogOpen = true;
+	},
+
+	CloseDialog: function (reason) {
+		this.DialogOpen = false;
+		this.DialogResult = typeof reason === 'string' ? reason : 'close';
+	},
+
+	ConfirmDialog: function () {
+		this.DialogOpen = false;
+		this.DialogResult = 'confirmed';
+
+		this.$Service('Toast').Show({Title: 'Saved', Message: 'The project settings were saved.', Variant: 'success'});
+	},
+
+	ShowToast: function () {
+		var toast = this.$Service('Toast');
+
+		toast.Show({Title: 'Build failed', Message: '2 tests failed in ui-kit.spec.js.', Variant: 'danger', Duration: 0, Action: {Label: 'Retry', Run: function () {
+			toast.Show({Message: 'Retrying…', Variant: 'info'});
+		}}});
+	},
+
+	PeopleSelected: function (keys) {
+		this.Selected = keys;
+	},
+
+	PersonActivated: function (row) {
+		this.Activated = row.Name;
+	},
+
+	DropTodo: function (event) {
+		this.Move(event.detail.Data, 'Done', 'Todo');
+	},
+
+	DropDone: function (event) {
+		this.Move(event.detail.Data, 'Todo', 'Done');
+	},
+
+	Move: function (item, from, to) {
+		if (!item || this[to].some(function (entry) {
+			return entry.ID === item.ID;
+		})) return;
+
+		this[from] = this[from].filter(function (entry) {
+			return entry.ID !== item.ID;
+		});
+		this[to] = this[to].concat([{ID: item.ID, Title: item.Title}]);
+		this.Dropped = item.Title + ' → ' + to;
+	},
+
+	DropFiles: function (event) {
+		this.Dropped = event.detail.Kind === 'files' ? event.detail.Files.length + ' file(s) from outside' : 'text: ' + event.detail.Text.slice(0, 32);
+	},
+
+	SendMessage: function (text) {
+		this.Messages = this.Messages.concat([{ID: this.Messages.length + 1, Author: 'Me', Text: text, Time: 'now', Own: true, Status: 'sent'}]);
 	}
 });

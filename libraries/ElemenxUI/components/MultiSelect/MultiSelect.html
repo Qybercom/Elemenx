@@ -1,5 +1,5 @@
 <div class="elemenx-select elemenx-popup-anchor">
-	<div class="elemenx-input elemenx-select-trigger" role="combobox" aria-haspopup="listbox" aria-multiselectable="true" [attribute.tabindex]="Disabled ? null : 0" [class]="[Size || 'medium', Display === 'count' ? '' : 'multiple', Invalid ? 'invalid' : '', Disabled ? 'disabled' : '', Open ? 'open' : '']" [attribute.aria-expanded]="String(Open)" (click)="Toggle" (keydown)="Key">
+	<div class="elemenx-input elemenx-select-trigger" role="combobox" aria-haspopup="listbox" aria-multiselectable="true" [attribute.tabindex]="Disabled ? null : 0" [class]="[Size || 'medium', Shape === 'round' ? 'round' : '', Display === 'count' ? '' : 'multiple', Invalid ? 'invalid' : '', Disabled ? 'disabled' : '', Open ? 'open' : '']" [attribute.aria-expanded]="String(Open)" (click)="Toggle" (keydown)="Key">
 		<span class="elemenx-select-value placeholder" *if="!Selected(Options, Value).length">{{Placeholder}}</span>
 		<span class="elemenx-select-value" *if="Display === 'count' && Selected(Options, Value).length">{{Selected(Options, Value).length === 1 ? Selected(Options, Value)[0].Label : Selected(Options, Value).length + ' selected'}}</span>
 		<span class="elemenx-chips" *if="Display !== 'count' && Selected(Options, Value).length">

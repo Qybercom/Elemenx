@@ -17,6 +17,7 @@ Elemenx.Component('DateInput', {
 	TodayLabel: '',
 	ClearLabel: 'Clear',
 	Size: 'medium',
+	Shape: 'default',
 	Name: null,
 	Disabled: false,
 	ReadOnly: false,

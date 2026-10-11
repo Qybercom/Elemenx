@@ -1,0 +1,105 @@
+.elemenx-slider {
+	display: flex;
+	align-items: center;
+	width: 100%;
+	min-width: 96px;
+	height: 32px;
+	padding: 0 8px;
+	cursor: pointer;
+	touch-action: none;
+	user-select: none;
+}
+
+.elemenx-slider.disabled {
+	opacity: 0.48;
+	cursor: default;
+	pointer-events: none;
+}
+
+.elemenx-slider-track {
+	position: relative;
+	flex: 1;
+	height: 4px;
+	background: var(--elemenx-border);
+	border-radius: 999px;
+}
+
+.elemenx-slider-fill {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	background: var(--elemenx-accent);
+	border-radius: 999px;
+}
+
+.elemenx-slider-tick {
+	position: absolute;
+	top: 50%;
+	width: 4px;
+	height: 4px;
+	background: var(--elemenx-border-strong);
+	border-radius: 50%;
+	transform: translate(-50%, -50%);
+}
+
+.elemenx-slider-thumb {
+	position: absolute;
+	top: 50%;
+	z-index: 1;
+	width: 16px;
+	height: 16px;
+	background: var(--elemenx-surface);
+	border: 2px solid var(--elemenx-accent);
+	border-radius: 50%;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.16);
+	transform: translate(-50%, -50%);
+	outline: none;
+	transition: box-shadow 120ms ease;
+}
+
+.elemenx-slider-thumb:hover,
+.elemenx-slider-thumb.active {
+	box-shadow: 0 0 0 4px color-mix(in srgb, var(--elemenx-accent) 16%, transparent);
+}
+
+.elemenx-slider-thumb:focus-visible {
+	box-shadow: 0 0 0 4px color-mix(in srgb, var(--elemenx-accent) 32%, transparent);
+}
+
+.elemenx-slider-value {
+	position: absolute;
+	bottom: calc(100% + 8px);
+	left: 50%;
+	padding: 0 8px;
+	background: var(--elemenx-accent);
+	border-radius: 4px;
+	color: var(--elemenx-accent-text);
+	font-size: 12px;
+	line-height: 20px;
+	font-variant-numeric: tabular-nums;
+	white-space: nowrap;
+	transform: translateX(-50%);
+	pointer-events: none;
+}
+
+.elemenx-slider.small {
+	height: 24px;
+}
+
+.elemenx-slider.small .elemenx-slider-thumb {
+	width: 12px;
+	height: 12px;
+}
+
+.elemenx-slider.large {
+	height: 40px;
+}
+
+.elemenx-slider.large .elemenx-slider-track {
+	height: 8px;
+}
+
+.elemenx-slider.large .elemenx-slider-thumb {
+	width: 24px;
+	height: 24px;
+}

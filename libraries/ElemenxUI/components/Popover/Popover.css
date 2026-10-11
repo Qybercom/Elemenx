@@ -1,0 +1,21 @@
+.elemenx-popover-root {
+	position: relative;
+	display: inline-flex;
+}
+
+.elemenx-popover-trigger {
+	display: inline-flex;
+}
+
+.elemenx-popover {
+	gap: 8px;
+	min-width: 200px;
+	max-width: 360px;
+	max-height: none;
+	padding: 12px;
+	overflow: visible;
+}
+
+.elemenx-popover-title {
+	font-weight: 600;
+}

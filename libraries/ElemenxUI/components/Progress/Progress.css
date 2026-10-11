@@ -1,0 +1,146 @@
+.elemenx-progress {
+	--elemenx-progress-color: var(--elemenx-accent);
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 4px 8px;
+	width: 100%;
+	min-width: 0;
+}
+
+.elemenx-progress.success {
+	--elemenx-progress-color: var(--elemenx-success);
+}
+
+.elemenx-progress.warning {
+	--elemenx-progress-color: var(--elemenx-warning);
+}
+
+.elemenx-progress.danger {
+	--elemenx-progress-color: var(--elemenx-danger);
+}
+
+.elemenx-progress-label {
+	flex: 1 0 100%;
+	color: var(--elemenx-text-muted);
+	font-size: 12px;
+	line-height: 16px;
+}
+
+.elemenx-progress-track {
+	position: relative;
+	flex: 1;
+	height: 4px;
+	overflow: hidden;
+	background: var(--elemenx-border);
+	border-radius: 999px;
+}
+
+.elemenx-progress.small .elemenx-progress-track {
+	height: 2px;
+}
+
+.elemenx-progress.large .elemenx-progress-track {
+	height: 8px;
+}
+
+.elemenx-progress-fill {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	background: var(--elemenx-progress-color);
+	border-radius: 999px;
+	transition: width 200ms ease;
+}
+
+.elemenx-progress.indeterminate .elemenx-progress-fill {
+	width: 32%;
+	animation: elemenx-progress-slide 1200ms ease-in-out infinite;
+}
+
+.elemenx-progress-value {
+	flex: none;
+	min-width: 32px;
+	color: var(--elemenx-text-muted);
+	font-size: 12px;
+	line-height: 16px;
+	font-variant-numeric: tabular-nums;
+	text-align: right;
+}
+
+.elemenx-progress.ring {
+	position: relative;
+	display: inline-flex;
+	justify-content: center;
+	width: 40px;
+	height: 40px;
+}
+
+.elemenx-progress.ring.small {
+	width: 24px;
+	height: 24px;
+}
+
+.elemenx-progress.ring.large {
+	width: 64px;
+	height: 64px;
+}
+
+.elemenx-progress-ring {
+	width: 100%;
+	height: 100%;
+	transform: rotate(-90deg);
+}
+
+.elemenx-progress-ring circle {
+	fill: none;
+	stroke-width: 4;
+}
+
+.elemenx-progress-ring-track {
+	stroke: var(--elemenx-border);
+}
+
+.elemenx-progress-ring-fill {
+	stroke: var(--elemenx-progress-color);
+	stroke-linecap: round;
+	transition: stroke-dasharray 200ms ease;
+}
+
+.elemenx-progress.ring.indeterminate .elemenx-progress-ring {
+	animation: elemenx-spin 900ms linear infinite;
+}
+
+.elemenx-progress.ring .elemenx-progress-value {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 0;
+	color: var(--elemenx-text);
+	font-size: 12px;
+	text-align: center;
+}
+
+.elemenx-progress.ring.small .elemenx-progress-value {
+	display: none;
+}
+
+@keyframes elemenx-progress-slide {
+	from {
+		left: -32%;
+	}
+
+	to {
+		left: 100%;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.elemenx-progress.indeterminate .elemenx-progress-fill,
+	.elemenx-progress.ring.indeterminate .elemenx-progress-ring {
+		animation-duration: 3000ms;
+	}
+}

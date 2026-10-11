@@ -16,6 +16,7 @@ Elemenx.Component('TimeInput', {
 	NowLabel: '',
 	DoneLabel: 'OK',
 	Size: 'medium',
+	Shape: 'default',
 	Name: null,
 	Disabled: false,
 	ReadOnly: false,

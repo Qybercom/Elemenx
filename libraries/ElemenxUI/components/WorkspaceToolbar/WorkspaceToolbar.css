@@ -1,4 +1,4 @@
-.elemenx-toolbar {
+.elemenx-workspace-toolbar {
 	flex: 1;
 	align-items: center;
 	gap: 4px;
@@ -6,13 +6,13 @@
 	border-radius: 0;
 }
 
-.elemenx-toolbar .elemenx-divider.vertical {
+.elemenx-workspace-toolbar .elemenx-divider.vertical {
 	height: 16px;
 	margin: 0 4px;
 	align-self: center;
 }
 
-.elemenx-toolbar.elemenx-column .elemenx-divider.vertical {
+.elemenx-workspace-toolbar.elemenx-column .elemenx-divider.vertical {
 	width: 16px;
 	height: 1px;
 	margin: 4px 0;

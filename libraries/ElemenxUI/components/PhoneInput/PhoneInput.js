@@ -1,6 +1,9 @@
 /*
  * Value is the international number: "+" with the dialling code and the local digits ("+79991234567").
- * Countries is configurable: [{Code, Name, Dial, Mask}], where Mask describes the local part (# is a digit).
+ * Countries defaults to every country of the Countries Service, named and sorted in Locale; it may be replaced by
+ * [{Code, Name, Dial, Mask}], where Mask describes the national part (# is a digit).
+ * Guide keeps the whole template visible ('+7 (99_) ___-__-__'); Backspace 'skip' moves over a separator instead of
+ * deleting the digit before it.
  * Only digits that fit the mask of the selected country are accepted, by typing, paste, drop or autofill.
  */
 Elemenx.Component('PhoneInput', {
@@ -10,42 +13,22 @@ Elemenx.Component('PhoneInput', {
 	Country: 'RU',
 	Placeholder: '',
 	Size: 'medium',
+	Shape: 'default',
 	Name: null,
 	Disabled: false,
 	Invalid: false,
 	Open: false,
 	Filter: '',
 	Active: 0,
-	Countries: [
-		{Code: 'AM', Name: 'Armenia', Dial: '374', Mask: '(##) ###-###'},
-		{Code: 'AE', Name: 'United Arab Emirates', Dial: '971', Mask: '## ### ####'},
-		{Code: 'AZ', Name: 'Azerbaijan', Dial: '994', Mask: '(##) ###-##-##'},
-		{Code: 'BR', Name: 'Brazil', Dial: '55', Mask: '(##) #####-####'},
-		{Code: 'BY', Name: 'Belarus', Dial: '375', Mask: '(##) ###-##-##'},
-		{Code: 'CA', Name: 'Canada', Dial: '1', Mask: '(###) ###-####'},
-		{Code: 'CN', Name: 'China', Dial: '86', Mask: '### #### ####'},
-		{Code: 'DE', Name: 'Germany', Dial: '49', Mask: '#### #######'},
-		{Code: 'ES', Name: 'Spain', Dial: '34', Mask: '### ### ###'},
-		{Code: 'FR', Name: 'France', Dial: '33', Mask: '# ## ## ## ##'},
-		{Code: 'GB', Name: 'United Kingdom', Dial: '44', Mask: '#### ######'},
-		{Code: 'GE', Name: 'Georgia', Dial: '995', Mask: '(###) ##-##-##'},
-		{Code: 'IL', Name: 'Israel', Dial: '972', Mask: '##-###-####'},
-		{Code: 'IN', Name: 'India', Dial: '91', Mask: '##### #####'},
-		{Code: 'IT', Name: 'Italy', Dial: '39', Mask: '### ### ####'},
-		{Code: 'JP', Name: 'Japan', Dial: '81', Mask: '##-####-####'},
-		{Code: 'KG', Name: 'Kyrgyzstan', Dial: '996', Mask: '(###) ###-###'},
-		{Code: 'KZ', Name: 'Kazakhstan', Dial: '7', Mask: '(###) ###-##-##'},
-		{Code: 'NL', Name: 'Netherlands', Dial: '31', Mask: '# ########'},
-		{Code: 'PL', Name: 'Poland', Dial: '48', Mask: '### ### ###'},
-		{Code: 'RS', Name: 'Serbia', Dial: '381', Mask: '## ### ####'},
-		{Code: 'RU', Name: 'Russia', Dial: '7', Mask: '(###) ###-##-##'},
-		{Code: 'TR', Name: 'Turkey', Dial: '90', Mask: '(###) ###-##-##'},
-		{Code: 'UA', Name: 'Ukraine', Dial: '380', Mask: '(##) ###-##-##'},
-		{Code: 'US', Name: 'United States', Dial: '1', Mask: '(###) ###-####'},
-		{Code: 'UZ', Name: 'Uzbekistan', Dial: '998', Mask: '(##) ###-##-##'}
-	],
+	Countries: null,
+	Locale: '',
+	Guide: true,
+	Backspace: 'delete',
 
 	$OnCreate: function () {
+		if (!this.Countries)
+			this.Countries = this.$Service('Countries').List(this.Locale);
+
 		this.Current = function (countries, code) {
 			var i = 0;
 
@@ -95,18 +78,18 @@ Elemenx.Component('PhoneInput', {
 		this.$Emit('change', this.Value);
 	},
 
-	/* A pasted international number selects its country: the longest matching code wins, the current country on a tie. */
+	/* A pasted international number selects its country: the longest code, then the current country, then the main one. */
 	Pasted: function (event) {
 		var text = event.clipboardData ? event.clipboardData.getData('text') : '';
 		var digits = text.replace(/\D/g, '');
-		var current = this.Current(this.Countries, this.Country);
+		var countries = this.$Service('Countries');
 		var best = null;
 		var i = 0;
 
 		if (!/^\s*\+/.test(text) || !digits) return;
 
 		while (i < this.Countries.length) {
-			if (digits.indexOf(this.Countries[i].Dial) === 0 && (!best || this.Countries[i].Dial.length > best.Dial.length || (this.Countries[i].Dial.length === best.Dial.length && this.Countries[i].Code === current.Code)))
+			if (digits.indexOf(this.Countries[i].Dial) === 0 && countries.Better(this.Countries[i], best, this.Country))
 				best = this.Countries[i];
 
 			i++;

@@ -31,6 +31,30 @@
 	min-height: 0;
 }
 
+.elemenx-workspace-band {
+	flex: none;
+	align-items: center;
+	gap: 8px;
+	min-height: 32px;
+	padding: 0 8px;
+	border-radius: 0;
+	background: var(--elemenx-surface);
+	font-size: 12px;
+	line-height: 16px;
+}
+
+.elemenx-workspace-band.top {
+	border-bottom: 1px solid var(--elemenx-border);
+}
+
+.elemenx-workspace-band.bottom {
+	border-top: 1px solid var(--elemenx-border);
+}
+
+.elemenx-workspace-band:empty {
+	display: none;
+}
+
 .elemenx-workspace-stripe {
 	flex: none;
 	align-items: center;

@@ -10,6 +10,7 @@ Elemenx.Component('MultiSelect', {
 	Empty: 'Nothing found',
 	Display: 'chips',
 	Size: 'medium',
+	Shape: 'default',
 	Searchable: true,
 	SelectAll: false,
 	Disabled: false,

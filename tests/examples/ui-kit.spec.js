@@ -20,6 +20,10 @@ function captureErrors (page) {
 	return errors;
 }
 
+function section (page, title) {
+	return page.locator('.ui-kit > .elemenx-section').filter({has: page.locator(':scope > .elemenx-section-header .elemenx-section-title', {hasText: new RegExp('^' + title + '$')})});
+}
+
 function field (page, label) {
 	return page.locator('.elemenx-field').filter({has: page.locator('.elemenx-field-label', {hasText: new RegExp('^' + label + '$')})});
 }
@@ -38,7 +42,7 @@ for (const origin of origins) {
 
 			await open(page, origin);
 
-			await expect(page.locator('.ui-kit > .elemenx-section')).toHaveCount(9);
+			await expect(page.locator('.ui-kit > .elemenx-section')).toHaveCount(18);
 
 			sprite = await page.locator('.ui-kit-icon svg use').first().getAttribute('href');
 
@@ -286,27 +290,27 @@ for (const origin of origins) {
 			]);
 
 			await expect(page.locator('.elemenx-upload.dropzone .elemenx-upload-item')).toHaveCount(2);
-			await expect(page.locator('.elemenx-section-header', {hasText: 'File upload'})).toContainText('Selected: 2');
+			await expect(page.locator('.elemenx-section-header', {hasText: 'Files and drag and drop'})).toContainText('Selected: 2');
 		});
 
 		test('radio groups and tab strips with their own state do not affect each other', async function ({ page }) {
 			var checked = function (group) {
-				return page.locator('.elemenx-radio-group.' + group + ' .elemenx-radio.checked .elemenx-check-label');
+				return section(page, 'Selection').locator('.elemenx-radio-group.' + group + ' .elemenx-radio.checked .elemenx-check-label');
 			};
 
 			await open(page, origin);
 
-			await page.locator('.elemenx-radio-group.default').getByText('Free', {exact: true}).click();
+			await section(page, 'Selection').locator('.elemenx-radio-group.default').getByText('Free', {exact: true}).click();
 
 			await expect(checked('default')).toHaveText('Free');
 			await expect(checked('tile')).toHaveText('Free');
 
-			await page.locator('.elemenx-radio-group.tile').getByText('Team', {exact: true}).click();
+			await section(page, 'Selection').locator('.elemenx-radio-group.tile').getByText('Team', {exact: true}).click();
 
 			await expect(checked('tile')).toHaveText('Team');
 			await expect(checked('default')).toHaveText('Free');
 
-			await page.locator('.elemenx-radio-group.horizontal').getByText('Tree', {exact: true}).click();
+			await section(page, 'Selection').locator('.elemenx-radio-group.horizontal').getByText('Tree', {exact: true}).click();
 
 			await expect(checked('horizontal')).toHaveText('Tree');
 			await expect(checked('segmented')).toHaveText('List');
@@ -500,6 +504,258 @@ for (const origin of origins) {
 			await expect(color.locator('input[type="text"]')).toHaveValue('#12ab34');
 		});
 
+		test('section folds its body and keeps its actions', async function ({ page }) {
+			var outer;
+
+			await open(page, origin);
+
+			outer = section(page, 'Section');
+
+			await expect(outer.getByText('The body of a collapsible section.')).toBeVisible();
+			await expect(outer.getByRole('button', {name: 'Edit'})).toBeVisible();
+
+			await outer.getByRole('button', {name: 'Project settings'}).click();
+
+			await expect(outer.getByText('The body of a collapsible section.')).toBeHidden();
+			await expect(outer.getByRole('button', {name: 'Project settings'})).toHaveAttribute('aria-expanded', 'false');
+
+			await outer.getByRole('button', {name: 'Project settings'}).click();
+
+			await expect(outer.getByText('State: expanded')).toBeVisible();
+		});
+
+		test('table sorts, selects and opens rows', async function ({ page }) {
+			var table;
+			var header;
+			var firstName = function () {
+				return table.locator('tbody tr').first().locator('td').nth(1);
+			};
+
+			await open(page, origin);
+
+			table = section(page, 'Table').locator('.elemenx-table').first();
+			header = section(page, 'Table').locator('.elemenx-section-header');
+
+			await table.getByRole('button', {name: 'Commits'}).click();
+
+			await expect(firstName()).toHaveText('Linus Torvalds');
+			await expect(table.locator('th[aria-sort="ascending"]')).toContainText('Commits');
+
+			await table.getByRole('button', {name: 'Commits'}).click();
+
+			await expect(firstName()).toHaveText('Grace Hopper');
+
+			await table.locator('tbody tr', {hasText: 'Alan Turing'}).locator('label.elemenx-check').click();
+
+			await expect(header).toContainText('Selected: 3, 2');
+
+			await table.locator('tbody tr', {hasText: 'Ada Lovelace'}).click();
+
+			await expect(header).toContainText('Selected: 1');
+
+			await table.locator('tbody tr', {hasText: 'Ada Lovelace'}).dblclick();
+
+			await expect(header).toContainText('Opened: Ada Lovelace');
+
+			await table.locator('thead label.elemenx-check').click();
+
+			await expect(header).toContainText('Selected: 1, 2, 3, 4, 5');
+		});
+
+		test('dialog, toast and popover open and close', async function ({ page }) {
+			var overlays;
+			var dialog;
+
+			await open(page, origin);
+
+			overlays = section(page, 'Overlays');
+			dialog = page.getByRole('dialog', {name: 'Project settings'});
+
+			await overlays.getByRole('button', {name: 'Open dialog'}).click();
+
+			await expect(dialog).toBeVisible();
+
+			await page.keyboard.press('Escape');
+
+			await expect(dialog).toBeHidden();
+			await expect(overlays.locator('.elemenx-section-header')).toContainText('Dialog: escape');
+			await expect(overlays.getByRole('button', {name: 'Open dialog'})).toBeFocused();
+
+			await overlays.getByRole('button', {name: 'Open dialog'}).click();
+			await dialog.getByRole('button', {name: 'Save'}).click();
+
+			await expect(dialog).toBeHidden();
+			await expect(page.locator('.elemenx-toast', {hasText: 'Saved'})).toBeVisible();
+
+			await overlays.getByRole('button', {name: 'Show toast'}).click();
+			await page.locator('.elemenx-toast', {hasText: 'Build failed'}).getByRole('button', {name: 'Retry'}).click();
+
+			await expect(page.locator('.elemenx-toast', {hasText: 'Build failed'})).toHaveCount(0);
+			await expect(page.locator('.elemenx-toast', {hasText: 'Retrying'})).toBeVisible();
+
+			await overlays.getByRole('button', {name: 'Click popover'}).click();
+
+			await expect(page.getByPlaceholder('Inside a popover')).toBeVisible();
+
+			await page.mouse.click(5, 5);
+
+			await expect(page.getByPlaceholder('Inside a popover')).toBeHidden();
+		});
+
+		test('slider moves with the keyboard and keeps a range ordered', async function ({ page }) {
+			var feedback;
+			var header;
+
+			await open(page, origin);
+
+			feedback = section(page, 'Feedback');
+			header = feedback.locator('.elemenx-section-header');
+
+			await feedback.getByRole('slider', {name: 'Volume'}).focus();
+
+			await page.keyboard.press('ArrowRight');
+
+			await expect(header).toContainText('Volume: 41');
+
+			await page.keyboard.press('End');
+
+			await expect(header).toContainText('Volume: 100');
+
+			await feedback.getByRole('slider', {name: 'Budget (from)'}).focus();
+
+			await page.keyboard.press('End');
+
+			await expect(header).toContainText('Budget: 800–800');
+		});
+
+		test('drag and drop moves items and resizable elements grow', async function ({ page }) {
+			var files;
+			var task;
+			var done;
+			var from;
+			var to;
+			var notes;
+			var handle;
+			var before;
+			var box;
+
+			await open(page, origin);
+
+			files = section(page, 'Files and drag and drop');
+			task = files.locator('.ui-kit-task', {hasText: 'Design tokens'});
+			done = files.locator('.ui-kit-board', {hasText: 'Done'});
+
+			await task.scrollIntoViewIfNeeded();
+
+			from = await task.boundingBox();
+			to = await done.boundingBox();
+
+			await page.mouse.move(from.x + 20, from.y + from.height / 2);
+			await page.mouse.down();
+			await page.mouse.move(to.x + to.width / 2, to.y + to.height / 2, {steps: 8});
+
+			await expect(done).toHaveClass(/drop-over/);
+
+			await page.mouse.up();
+
+			await expect(done.locator('.ui-kit-task', {hasText: 'Design tokens'})).toBeVisible();
+			await expect(files.locator('.elemenx-section-header')).toContainText('Dropped: Design tokens → Done');
+
+			notes = field(page, 'Notes \\(resizable\\)').locator('.elemenx-textarea');
+			handle = notes.locator('.elemenx-resize-handle.bottom');
+
+			await notes.scrollIntoViewIfNeeded();
+
+			before = (await notes.boundingBox()).height;
+			box = await handle.boundingBox();
+
+			await page.mouse.move(box.x + 40, box.y + box.height / 2);
+			await page.mouse.down();
+			await page.mouse.move(box.x + 40, box.y + box.height / 2 + 48, {steps: 4});
+			await page.mouse.up();
+
+			expect((await notes.boundingBox()).height).toBeGreaterThan(before + 40);
+
+			await handle.focus();
+
+			await page.keyboard.press('ArrowUp');
+
+			expect((await notes.boundingBox()).height).toBeLessThan(before + 48);
+		});
+
+		test('phone guide keeps the template and lists every country', async function ({ page }) {
+			var skip;
+			var input;
+			var phone;
+
+			await open(page, origin);
+
+			skip = field(page, 'Phone, skip separators');
+			input = skip.locator('input[type="tel"]');
+
+			await input.click();
+
+			await expect(input).toHaveValue('+1 (___) ___-____');
+
+			await input.pressSequentially('5551234');
+
+			await expect(input).toHaveValue('+1 (555) 123-4___');
+
+			await input.evaluate(function (node) {
+				node.setSelectionRange(9, 9);
+			});
+			await input.press('Backspace');
+
+			await expect(input).toHaveValue('+1 (555) 123-4___');
+			expect(await input.evaluate(function (node) {
+				return node.selectionStart;
+			})).toBe(8);
+
+			await input.fill('');
+			await input.blur();
+
+			await expect(input).toHaveValue('');
+
+			phone = field(page, 'Phone');
+
+			await phone.locator('.elemenx-phone-country').click();
+
+			expect(await phone.locator('.elemenx-popup .elemenx-option').count()).toBeGreaterThan(200);
+
+			await page.keyboard.type('Japan');
+			await page.keyboard.press('Enter');
+
+			await expect(phone.locator('.elemenx-phone-country')).toContainText('JP');
+			await expect(phone.locator('input[type="tel"]')).toHaveValue(/^\+81 /);
+		});
+
+		test('money input formats the amount of its currency and file icons follow the format', async function ({ page }) {
+			var money;
+			var icons;
+
+			await open(page, origin);
+
+			money = field(page, 'Money');
+			icons = section(page, 'Icons');
+
+			await money.locator('.elemenx-money-input input').fill('1234.567');
+			await money.locator('.elemenx-money-input input').blur();
+
+			await expect(money.locator('.elemenx-money-input input')).toHaveValue(/1.?234[.,]56/);
+			await expect(money.locator('.elemenx-caption')).toHaveText('USD 1234.56');
+
+			await money.locator('.elemenx-select-trigger').click();
+
+			await page.keyboard.type('JPY');
+			await page.keyboard.press('Enter');
+
+			await expect(money.locator('.elemenx-caption')).toHaveText('JPY 1235');
+
+			await expect(icons.locator('.ui-kit-icon[title="pack.tar.gz"] use')).toHaveAttribute('href', /#file-tar-gz$/);
+			await expect(icons.locator('.ui-kit-icon[title="Dockerfile"] use')).toHaveAttribute('href', /#file-dockerfile$/);
+			await expect(icons.locator('.ui-kit-icon[title="unknown.xyz"] use')).toHaveAttribute('href', /#file$/);
+		});
+
 		test('workspace toggles tool windows and resizes them with the keyboard and the pointer', async function ({ page }) {
 			var workspace;
 			var left;
@@ -539,7 +795,7 @@ for (const origin of origins) {
 
 			await expect(workspace.locator('.elemenx-workspace-panel.right')).toBeVisible();
 
-			await workspace.locator('.elemenx-tool-window', {hasText: 'Terminal'}).getByRole('button', {name: 'Hide'}).click();
+			await workspace.locator('.elemenx-workspace-tool-window', {hasText: 'Terminal'}).getByRole('button', {name: 'Hide'}).click();
 
 			await expect(workspace.locator('.elemenx-workspace-panel.bottom')).toBeHidden();
 		});

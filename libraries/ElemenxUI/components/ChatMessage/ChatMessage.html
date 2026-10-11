@@ -1,0 +1,15 @@
+<article class="elemenx-chat-message" [class.own]="Own" [class.grouped]="Grouped">
+	<span class="elemenx-chat-avatar" aria-hidden="true">
+		<img *if="Avatar && !Grouped" [src]="Avatar" alt="" />
+		<span *if="!Avatar && !Grouped">{{Initials(Author)}}</span>
+	</span>
+	<div class="elemenx-chat-bubble">
+		<span class="elemenx-chat-author" *if="Author && !Grouped && !Own">{{Author}}</span>
+		<span class="elemenx-chat-text" *if="Text">{{Text}}</span>
+		<slot></slot>
+		<span class="elemenx-chat-meta" *if="Time || Status">
+			<time *if="Time">{{Time}}</time>
+			<Icon *if="StatusIcon(Status)" [name]="StatusIcon(Status)" Size="12" [label]="Status" />
+		</span>
+	</div>
+</article>

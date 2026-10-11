@@ -169,3 +169,20 @@
 	display: flex;
 	width: 100%;
 }
+
+
+.elemenx-button.round {
+	border-radius: 999px;
+}
+
+.elemenx-button.round:not(.icon-only) {
+	padding: 0 16px;
+}
+
+.elemenx-button.round.small:not(.icon-only) {
+	padding: 0 12px;
+}
+
+.elemenx-button.round.giant:not(.icon-only) {
+	padding: 0 32px;
+}

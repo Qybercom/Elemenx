@@ -5,6 +5,7 @@ Elemenx.Component('CVVInput', {
 	Length: 3,
 	Placeholder: '',
 	Size: 'medium',
+	Shape: 'default',
 	Name: null,
 	Disabled: false,
 	Invalid: false,

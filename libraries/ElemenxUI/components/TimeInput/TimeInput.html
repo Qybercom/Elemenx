@@ -1,5 +1,5 @@
 <div class="elemenx-time elemenx-popup-anchor">
-	<div class="elemenx-input" [class]="[Size || 'medium', Invalid || Bad ? 'invalid' : '', Disabled ? 'disabled' : '', ReadOnly ? 'readonly' : '']">
+	<div class="elemenx-input" [class]="[Size || 'medium', Shape === 'round' ? 'round' : '', Invalid || Bad ? 'invalid' : '', Disabled ? 'disabled' : '', ReadOnly ? 'readonly' : '']">
 		<input class="elemenx-input-control" type="text" inputmode="numeric" autocomplete="off" *mask="{Mask: Seconds ? '##:##:##' : '##:##', Value: Text !== null ? Text : String(Value || '').replace(/:/g, '')}" [placeholder]="Placeholder || (Seconds ? '00:00:00' : '00:00')" [disabled]="Disabled" [attribute.readonly]="ReadOnly ? '' : null" [attribute.aria-invalid]="Invalid || Bad ? 'true' : null" (mask)="Masked" (change)="Committed" (keydown)="InputKey" />
 		<button class="elemenx-input-action" type="button" aria-haspopup="dialog" aria-label="Choose a time" [attribute.aria-expanded]="String(Open)" [disabled]="Disabled || ReadOnly" (click)="Toggle"><Icon Name="clock" /></button>
 	</div>

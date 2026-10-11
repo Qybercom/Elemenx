@@ -1,0 +1,21 @@
+.elemenx-money {
+	display: flex;
+	gap: 8px;
+	width: 100%;
+	min-width: 0;
+}
+
+.elemenx-money-input {
+	flex: 1;
+	min-width: 96px;
+}
+
+.elemenx-money-input .elemenx-input-control {
+	font-variant-numeric: tabular-nums;
+	text-align: right;
+}
+
+.elemenx-money .elemenx-select {
+	flex: none;
+	width: 128px;
+}

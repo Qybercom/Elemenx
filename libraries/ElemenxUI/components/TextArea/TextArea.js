@@ -1,3 +1,4 @@
+/* Resize: vertical (the bottom edge), both (the corner) or none; AutoSize grows the field with its text instead. */
 Elemenx.Component('TextArea', {
 	$TemplateURL: 'TextArea.html',
 	$StyleURL: 'TextArea.css',
@@ -7,6 +8,7 @@ Elemenx.Component('TextArea', {
 	MaxLength: null,
 	AutoSize: false,
 	Resize: 'vertical',
+	Shape: 'default',
 	Name: null,
 	Disabled: false,
 	ReadOnly: false,

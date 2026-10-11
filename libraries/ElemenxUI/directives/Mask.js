@@ -4,6 +4,10 @@
  * Value holds only the slot characters. After every input (typing, paste, drop, autofill) the text is rebuilt
  * from the accepted characters, so nothing outside the mask survives. The element then dispatches a "mask"
  * DOM event whose detail is {Value, Text, Complete}; a listener may rewrite detail.Value.
+ *
+ * Guide: a character ('_', or true for '_') shown in the empty slots while the field is focused or filled, so the
+ * whole template stays in place and a deleted character is visible. Backspace: 'delete' (default) deletes the
+ * character before a literal under the caret; 'skip' only moves the caret over the literal.
  */
 Elemenx.Directive('mask', {
 	$OnCreate: function (context) {
@@ -11,6 +15,8 @@ Elemenx.Directive('mask', {
 		var data = context.Data;
 
 		data.Mask = '';
+		data.Guide = '';
+		data.Backspace = 'delete';
 		data.Raw = '';
 		data.Text = '';
 
@@ -62,18 +68,14 @@ Elemenx.Directive('mask', {
 			var m = 0;
 			var i = 0;
 			var character;
-			var matched;
 
 			while (i < text.length && m < mask.length) {
 				character = text.charAt(i);
-				matched = false;
 
 				if (!slot(mask.charAt(m)) && mask.charAt(m) === character) {
 					m++;
-					matched = true;
 				}
-
-				if (!matched) {
+				else {
 					while (m < mask.length && !slot(mask.charAt(m))) {
 						m++;
 					}
@@ -90,14 +92,15 @@ Elemenx.Directive('mask', {
 			return raw;
 		}
 
-		function format (raw, mask) {
+		/* The text of raw: without a guide it stops after the last character, with a guide it shows the whole mask. */
+		function format (raw, mask, guide) {
 			var text = '';
 			var r = 0;
 			var m = 0;
 
-			while (m < mask.length && r < raw.length) {
+			while (m < mask.length && (guide || r < raw.length)) {
 				if (slot(mask.charAt(m))) {
-					text += raw.charAt(r);
+					text += r < raw.length ? raw.charAt(r) : guide;
 					r++;
 				}
 				else {
@@ -137,7 +140,22 @@ Elemenx.Directive('mask', {
 			return raw.substring(0, limit);
 		}
 
-		/* A listener may correct detail.Value (a month above 12, for example); the correction is applied at once. */
+		function focused () {
+			return document.activeElement === element;
+		}
+
+		/* The guide shows only while the field is focused or holds characters; an empty idle field shows its placeholder. */
+		function render (raw) {
+			if (!raw && !focused()) return '';
+
+			return format(raw, data.Mask, data.Guide);
+		}
+
+		function place (position) {
+			if (focused())
+				element.setSelectionRange(position, position);
+		}
+
 		function notify () {
 			var detail = {
 				Value: data.Raw,
@@ -151,13 +169,12 @@ Elemenx.Directive('mask', {
 
 			data.Apply(String(detail.Value || ''));
 
-			if (document.activeElement === element)
-				element.setSelectionRange(data.Text.length, data.Text.length);
+			place(data.Guide ? caret(data.Text, data.Mask, data.Raw.length) : data.Text.length);
 		}
 
 		data.Apply = function (raw) {
 			data.Raw = normalize(extract(raw, data.Mask), data.Mask);
-			data.Text = format(data.Raw, data.Mask);
+			data.Text = render(data.Raw);
 
 			if (element.value !== data.Text)
 				element.value = data.Text;
@@ -178,6 +195,14 @@ Elemenx.Directive('mask', {
 			before = Math.min(extract(text.substring(0, position), mask).length, raw.length);
 
 			if (type.indexOf('delete') === 0 && raw === previous && text.length < data.Text.length) {
+				if (data.Backspace === 'skip') {
+					element.value = data.Text;
+
+					place(type === 'deleteContentForward' ? position + 1 : position);
+
+					return;
+				}
+
 				if (type === 'deleteContentBackward' && before > 0) {
 					raw = previous.substring(0, before - 1) + previous.substring(before);
 					before--;
@@ -188,21 +213,36 @@ Elemenx.Directive('mask', {
 			}
 
 			data.Raw = raw;
-			data.Text = format(raw, mask);
+			data.Text = render(raw);
 			element.value = data.Text;
 
-			if (document.activeElement === element) {
-				position = before >= raw.length ? data.Text.length : caret(data.Text, mask, before);
-
-				element.setSelectionRange(position, position);
-			}
+			place(!data.Guide && before >= raw.length ? data.Text.length : caret(data.Text, mask, before));
 
 			notify();
+		};
+
+		/* Only an empty field changes on focus (it shows the guide); a filled one keeps its text and the user's selection. */
+		data.Focus = function () {
+			if (!data.Mask || !data.Guide || data.Raw) return;
+
+			data.Text = render('');
+			element.value = data.Text;
+
+			place(caret(data.Text, data.Mask, 0));
+		};
+
+		data.Blur = function () {
+			if (!data.Mask || !data.Guide || data.Raw) return;
+
+			data.Text = '';
+			element.value = '';
 		};
 
 		data.Notify = notify;
 
 		element.addEventListener('input', data.Input, true);
+		element.addEventListener('focus', data.Focus);
+		element.addEventListener('blur', data.Blur);
 	},
 
 	$OnUpdate: function (context) {
@@ -211,6 +251,8 @@ Elemenx.Directive('mask', {
 		var raw = options.Value == null ? '' : String(options.Value);
 
 		data.Mask = String(options.Mask || '');
+		data.Guide = options.Guide === true ? '_' : String(options.Guide || '').charAt(0);
+		data.Backspace = options.Backspace === 'skip' ? 'skip' : 'delete';
 
 		if (!data.Mask) return;
 
@@ -222,5 +264,7 @@ Elemenx.Directive('mask', {
 
 	$OnDestroy: function (context) {
 		context.Element.removeEventListener('input', context.Data.Input, true);
+		context.Element.removeEventListener('focus', context.Data.Focus);
+		context.Element.removeEventListener('blur', context.Data.Blur);
 	}
 });

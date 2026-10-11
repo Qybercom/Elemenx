@@ -1,6 +1,7 @@
 /*
  * An IDE-like application frame built on elemenx-screen, elemenx-container and elemenx-column.
- * Slots: header, left-stripe, left, main, bottom, right, right-stripe, status.
+ * Slots: header, top-stripe (a band under the header), left-stripe, left, main, bottom, right, right-stripe,
+ * bottom-stripe (a band above the status bar) and status.
  * LeftOpen, RightOpen and BottomOpen show the tool window areas; their sizes are resized by the splitters
  * (pointer or arrow keys) and reported by the resize event as {Panel, Size}.
  */

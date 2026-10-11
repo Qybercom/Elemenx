@@ -13,9 +13,3 @@
 .elemenx-icon.spin {
 	animation: elemenx-spin 800ms linear infinite;
 }
-
-@keyframes elemenx-spin {
-	to {
-		transform: rotate(360deg);
-	}
-}

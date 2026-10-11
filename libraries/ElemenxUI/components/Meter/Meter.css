@@ -1,0 +1,69 @@
+.elemenx-meter {
+	--elemenx-meter-color: var(--elemenx-success);
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	width: 100%;
+	min-width: 0;
+}
+
+.elemenx-meter.warning {
+	--elemenx-meter-color: var(--elemenx-warning);
+}
+
+.elemenx-meter.danger {
+	--elemenx-meter-color: var(--elemenx-danger);
+}
+
+.elemenx-meter-head {
+	display: flex;
+	justify-content: space-between;
+	gap: 8px;
+	font-size: 12px;
+	line-height: 16px;
+}
+
+.elemenx-meter-label {
+	color: var(--elemenx-text-muted);
+}
+
+.elemenx-meter-value {
+	font-weight: 600;
+	font-variant-numeric: tabular-nums;
+}
+
+.elemenx-meter-track {
+	position: relative;
+	height: 8px;
+	overflow: hidden;
+	background: var(--elemenx-border);
+	border-radius: 999px;
+}
+
+.elemenx-meter.small .elemenx-meter-track {
+	height: 4px;
+}
+
+.elemenx-meter.large .elemenx-meter-track {
+	height: 12px;
+}
+
+.elemenx-meter-fill {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	background: var(--elemenx-meter-color);
+	border-radius: 999px;
+	transition: width 200ms ease,
+		background 200ms ease;
+}
+
+.elemenx-meter-mark {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	width: 2px;
+	background: var(--elemenx-surface);
+	transform: translateX(-1px);
+}

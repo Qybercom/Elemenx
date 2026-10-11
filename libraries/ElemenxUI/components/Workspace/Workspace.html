@@ -1,5 +1,6 @@
 <div class="elemenx-screen elemenx-workspace" [class.resizing]="!!Drag">
 	<div class="elemenx-container elemenx-workspace-header"><slot name="header"></slot></div>
+	<div class="elemenx-container elemenx-workspace-band top"><slot name="top-stripe"></slot></div>
 	<div class="elemenx-container fill elemenx-workspace-body">
 		<div class="elemenx-column elemenx-workspace-stripe left"><slot name="left-stripe"></slot></div>
 		<div class="elemenx-column elemenx-workspace-panel left" [attribute.hidden]="LeftOpen ? null : ''" [style.width]="LeftWidth + 'px'"><slot name="left"></slot></div>
@@ -13,5 +14,6 @@
 		<div class="elemenx-column elemenx-workspace-panel right" [attribute.hidden]="RightOpen ? null : ''" [style.width]="RightWidth + 'px'"><slot name="right"></slot></div>
 		<div class="elemenx-column elemenx-workspace-stripe right"><slot name="right-stripe"></slot></div>
 	</div>
+	<div class="elemenx-container elemenx-workspace-band bottom"><slot name="bottom-stripe"></slot></div>
 	<div class="elemenx-container elemenx-workspace-status"><slot name="status"></slot></div>
 </div>

@@ -13,6 +13,7 @@ Elemenx.Component('ColorInput', {
 		'#2f9e8f', '#3f6c9e', '#5b5fc7', '#8a4fb0', '#c2477f', '#4b443d', '#1d2025', '#eef0f3'
 	],
 	Size: 'medium',
+	Shape: 'default',
 	Name: null,
 	Disabled: false,
 	Invalid: false,

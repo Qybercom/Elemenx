@@ -1,0 +1,101 @@
+.elemenx-table-wrap {
+	width: 100%;
+	min-width: 0;
+	overflow: auto;
+}
+
+.elemenx-table-wrap .elemenx-table {
+	table-layout: fixed;
+}
+
+.elemenx-table-sort {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	max-width: 100%;
+	margin: 0 -4px;
+	padding: 2px 4px;
+	background: transparent;
+	border: 0;
+	border-radius: 4px;
+	color: inherit;
+	font: inherit;
+	cursor: pointer;
+}
+
+.elemenx-table-sort span {
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.elemenx-table-sort:hover {
+	background: var(--elemenx-surface-hover);
+	color: var(--elemenx-text);
+}
+
+.elemenx-table-sort:focus-visible {
+	outline: 2px solid color-mix(in srgb, var(--elemenx-accent) 48%, transparent);
+}
+
+.elemenx-table th[aria-sort='ascending'],
+.elemenx-table th[aria-sort='descending'] {
+	color: var(--elemenx-text);
+}
+
+.elemenx-table th .elemenx-icon {
+	flex: none;
+}
+
+.elemenx-table td {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.elemenx-table .elemenx-table-check {
+	width: 40px;
+	padding: 0 12px;
+}
+
+.elemenx-table.compact .elemenx-table-check {
+	width: 32px;
+	padding: 0 8px;
+}
+
+.elemenx-table-check .elemenx-check {
+	vertical-align: middle;
+}
+
+.elemenx-table-check .elemenx-check-box {
+	margin-top: 0;
+}
+
+.elemenx-table.selectable tbody tr {
+	cursor: default;
+	outline: none;
+}
+
+.elemenx-table.selectable tbody tr:focus-visible td {
+	box-shadow: inset 0 1px 0 color-mix(in srgb, var(--elemenx-accent) 48%, transparent),
+		inset 0 -1px 0 color-mix(in srgb, var(--elemenx-accent) 48%, transparent);
+}
+
+.elemenx-table tbody tr.selected td,
+.elemenx-table tbody tr.selected:hover td {
+	background: color-mix(in srgb, var(--elemenx-accent) 12%, var(--elemenx-surface));
+}
+
+.elemenx-table-empty td {
+	height: 80px;
+	color: var(--elemenx-text-muted);
+	text-align: center;
+}
+
+.elemenx-table-wrap.scrolling {
+	border: 1px solid var(--elemenx-border);
+	border-radius: 8px;
+}
+
+.elemenx-table-wrap.scrolling .elemenx-table tbody tr:last-child td {
+	border-bottom: 0;
+}

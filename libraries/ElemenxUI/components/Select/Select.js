@@ -10,6 +10,7 @@ Elemenx.Component('Select', {
 	Empty: 'Nothing found',
 	Icon: '',
 	Size: 'medium',
+	Shape: 'default',
 	Name: null,
 	Searchable: false,
 	Clearable: false,

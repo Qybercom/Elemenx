@@ -1,0 +1,33 @@
+<div class="elemenx-table-wrap" [style.max-height]="Height || null" [class.scrolling]="!!Height">
+	<table class="elemenx-table" [class]="[Compact ? 'compact' : '', Striped ? 'striped' : '', Bordered ? 'bordered' : '', Sticky ? 'sticky' : '', Selectable !== 'none' ? 'selectable' : '']" [attribute.aria-multiselectable]="Selectable === 'multiple' ? 'true' : null">
+		<caption *if="Caption">{{Caption}}</caption>
+		<thead>
+			<tr>
+				<th class="elemenx-table-check" *if="Selectable === 'multiple'">
+					<label class="elemenx-check" [class.checked]="AllSelected(Rows, Selected)" [class.indeterminate]="!AllSelected(Rows, Selected) && (Selected || []).length > 0">
+						<input class="elemenx-check-input" type="checkbox" aria-label="Select all rows" [checked]="AllSelected(Rows, Selected)" (change)="CheckAll" />
+						<span class="elemenx-check-box"><Icon Name="check" Size="12" /><Icon Name="remove" Size="12" /></span>
+					</label>
+				</th>
+				<th *for="column of Columns" *key="column.Key" *resizable="column.Resizable === false ? '' : {Edges: 'right', MinWidth: column.MinWidth || 48}" scope="col" [class]="['align-' + (column.Align || 'left')]" [style.width]="Widths[column.Key] || column.Width || null" [attribute.aria-sort]="AriaSort(Sort, column)" [attribute.data-key]="column.Key" (resizeend)="Resized">
+					<button class="elemenx-table-sort" type="button" *if="column.Sortable" [attribute.data-key]="column.Key" (click)="SortBy"><span>{{column.Title}}</span><Icon [name]="SortIcon(Sort, column)" Size="12" /></button>
+					<span *if="!column.Sortable">{{column.Title}}</span>
+				</th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr *for="row of View(Rows, Sort, SortLocal)" *key="String(row[RowKey])" [class.selected]="IsSelected(Selected, row)" [attribute.tabindex]="Selectable === 'none' ? null : 0" [attribute.aria-selected]="Selectable === 'none' ? null : String(IsSelected(Selected, row))" [attribute.data-key]="String(row[RowKey])" (click)="RowClick" (dblclick)="Activate" (keydown)="Key">
+				<td class="elemenx-table-check" *if="Selectable === 'multiple'">
+					<label class="elemenx-check" [class.checked]="IsSelected(Selected, row)" (click)="Stop">
+						<input class="elemenx-check-input" type="checkbox" aria-label="Select row" [checked]="IsSelected(Selected, row)" (change)="CheckRow" />
+						<span class="elemenx-check-box"><Icon Name="check" Size="12" /><Icon Name="remove" Size="12" /></span>
+					</label>
+				</td>
+				<td *for="column of Columns" *key="column.Key" [class]="['align-' + (column.Align || 'left')]">{{Cell(row, column)}}</td>
+			</tr>
+			<tr class="elemenx-table-empty" *if="!Rows.length">
+				<td [attribute.colspan]="Columns.length + (Selectable === 'multiple' ? 1 : 0)">{{Empty}}</td>
+			</tr>
+		</tbody>
+	</table>
+</div>

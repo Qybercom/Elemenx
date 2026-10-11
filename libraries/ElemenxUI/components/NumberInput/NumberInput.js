@@ -8,6 +8,7 @@ Elemenx.Component('NumberInput', {
 	Precision: null,
 	Placeholder: '',
 	Size: 'medium',
+	Shape: 'default',
 	Prefix: '',
 	Suffix: '',
 	Name: null,

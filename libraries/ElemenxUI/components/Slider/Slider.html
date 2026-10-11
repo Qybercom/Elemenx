@@ -1,0 +1,9 @@
+<div class="elemenx-slider" [class]="[Size || 'medium', Disabled ? 'disabled' : '', Range ? 'range' : '']" (pointerdown)="Down" (pointermove)="Move" (pointerup)="Up" (pointercancel)="Up">
+	<div class="elemenx-slider-track">
+		<div class="elemenx-slider-fill" [style.left]="(Range ? Percent(Values(Value, Range)[0]) : 0) + '%'" [style.right]="(100 - Percent(Values(Value, Range)[Range ? 1 : 0])) + '%'"></div>
+		<span class="elemenx-slider-tick" *for="tick of Ticks(Marks, Min, Max)" *key="tick" [style.left]="Percent(tick) + '%'"></span>
+		<span class="elemenx-slider-thumb" role="slider" *for="value of Values(Value, Range)" *key="$index" [attribute.tabindex]="Disabled ? null : 0" [attribute.aria-label]="Label + (Range ? ($index === 0 ? ' (from)' : ' (to)') : '') || null" [attribute.aria-valuemin]="Min" [attribute.aria-valuemax]="Max" [attribute.aria-valuenow]="value" [attribute.aria-valuetext]="value + Unit" [attribute.aria-disabled]="Disabled ? 'true' : null" [attribute.data-thumb]="$index" [class.active]="Active === $index" [style.left]="Percent(value) + '%'" (focus)="Focus" (blur)="Blur" (keydown)="Key">
+			<span class="elemenx-slider-value" *if="ShowValue === 'always' || (ShowValue === 'active' && Active === $index)">{{value}}{{Unit}}</span>
+		</span>
+	</div>
+</div>

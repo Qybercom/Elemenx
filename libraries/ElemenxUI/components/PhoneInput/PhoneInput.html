@@ -1,10 +1,10 @@
 <div class="elemenx-phone elemenx-popup-anchor">
-	<div class="elemenx-input elemenx-phone-input" [class]="[Size || 'medium', Invalid ? 'invalid' : '', Disabled ? 'disabled' : '']">
+	<div class="elemenx-input elemenx-phone-input" [class]="[Size || 'medium', Shape === 'round' ? 'round' : '', Invalid ? 'invalid' : '', Disabled ? 'disabled' : '']">
 		<button class="elemenx-phone-country" type="button" aria-haspopup="listbox" [disabled]="Disabled || Countries.length < 2" [attribute.aria-expanded]="String(Open)" [attribute.aria-label]="'Country: ' + Current(Countries, Country).Name" (click)="Toggle">
 			<span class="elemenx-phone-code">{{Current(Countries, Country).Code}}</span>
 			<Icon Name="chevron-down" Size="12" *if="Countries.length > 1" />
 		</button>
-		<input class="elemenx-input-control" type="tel" autocomplete="tel" *mask="{Mask: '+' + Current(Countries, Country).Dial + ' ' + Current(Countries, Country).Mask, Value: Local(Value, Current(Countries, Country))}" [placeholder]="Placeholder || Example(Current(Countries, Country))" [disabled]="Disabled" [attribute.name]="Name" [attribute.aria-invalid]="Invalid ? 'true' : null" (mask)="Masked" (paste)="Pasted" (change)="Committed" />
+		<input class="elemenx-input-control" type="tel" autocomplete="tel" *mask="{Mask: '+' + Current(Countries, Country).Dial + ' ' + Current(Countries, Country).Mask, Value: Local(Value, Current(Countries, Country)), Guide: Guide, Backspace: Backspace}" [placeholder]="Placeholder || Example(Current(Countries, Country))" [disabled]="Disabled" [attribute.name]="Name" [attribute.aria-invalid]="Invalid ? 'true' : null" (mask)="Masked" (paste)="Pasted" (change)="Committed" />
 	</div>
 	<div class="elemenx-popup elemenx-phone-popup" role="listbox" data-match-width="true" *popup="Open" (dismiss)="Dismissed" (keydown)="ListKey">
 		<div class="elemenx-input small elemenx-popup-search">

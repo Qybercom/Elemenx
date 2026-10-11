@@ -4,6 +4,7 @@ Elemenx.Component('Input', {
 	Value: '',
 	Placeholder: '',
 	Size: 'medium',
+	Shape: 'default',
 	Icon: '',
 	IconRight: '',
 	Prefix: '',

@@ -1,0 +1,30 @@
+.elemenx-splitter {
+	width: 100%;
+	height: 100%;
+	min-width: 0;
+	min-height: 0;
+	border-radius: 0;
+}
+
+.elemenx-splitter-pane {
+	min-width: 0;
+	min-height: 0;
+	overflow: auto;
+}
+
+.elemenx-splitter-pane.first {
+	flex: none;
+	overflow: visible;
+}
+
+.elemenx-splitter-pane.second {
+	flex: 1;
+}
+
+.elemenx-splitter.horizontal > .elemenx-splitter-pane.first {
+	border-right: 1px solid var(--elemenx-border);
+}
+
+.elemenx-splitter.vertical > .elemenx-splitter-pane.first {
+	border-bottom: 1px solid var(--elemenx-border);
+}

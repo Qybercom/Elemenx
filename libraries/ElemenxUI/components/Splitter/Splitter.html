@@ -1,0 +1,4 @@
+<div [class]="[Direction === 'vertical' ? 'elemenx-column' : 'elemenx-container', 'elemenx-splitter', Direction || 'horizontal']">
+	<div class="elemenx-splitter-pane first" *resizable="Direction === 'vertical' ? {Edges: 'bottom', MinHeight: Min, MaxHeight: Max} : {Edges: 'right', MinWidth: Min, MaxWidth: Max}" [style.width]="Direction === 'vertical' ? null : Size + 'px'" [style.height]="Direction === 'vertical' ? Size + 'px' : null" (resizeend)="Resized"><slot name="first"></slot></div>
+	<div class="elemenx-splitter-pane second"><slot name="second"></slot></div>
+</div>

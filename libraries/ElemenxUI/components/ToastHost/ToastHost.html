@@ -1,0 +1,11 @@
+<section class="elemenx-toast-host" aria-live="polite" aria-label="Notifications" [class]="[Placement || 'bottom-right']">
+	<div class="elemenx-toast" role="status" *for="item of Items" *key="item.ID" [class]="[item.Variant]" [attribute.data-id]="item.ID" (mouseenter)="Hold" (mouseleave)="Release" (focusin)="Hold" (focusout)="Release">
+		<Icon [name]="Icons[item.Variant] || 'info'" />
+		<div class="elemenx-toast-text">
+			<strong *if="item.Title">{{item.Title}}</strong>
+			<span *if="item.Message">{{item.Message}}</span>
+		</div>
+		<button class="elemenx-toast-action" type="button" *if="item.Action" (click)="Act">{{(item.Action || {}).Label}}</button>
+		<button class="elemenx-input-action" type="button" aria-label="Close" (click)="Close"><Icon Name="close" /></button>
+	</div>
+</section>

@@ -5,6 +5,7 @@ Elemenx.Component('CardNumberInput', {
 	Value: '',
 	Placeholder: '0000 0000 0000 0000',
 	Size: 'medium',
+	Shape: 'default',
 	Name: null,
 	Disabled: false,
 	Invalid: false,

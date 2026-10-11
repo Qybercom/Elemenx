@@ -1,0 +1,4 @@
+<span class="elemenx-spinner" role="status" [class]="[Size || 'medium']" [attribute.aria-label]="ShowLabel ? null : Label">
+	<svg class="elemenx-spinner-ring" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5"></circle></svg>
+	<span class="elemenx-spinner-label" *if="ShowLabel">{{Label}}</span>
+</span>

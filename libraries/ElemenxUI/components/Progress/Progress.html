@@ -1,0 +1,9 @@
+<div class="elemenx-progress" role="progressbar" aria-valuemin="0" [attribute.aria-valuemax]="Max" [attribute.aria-valuenow]="Percent(Value, Max) === null ? null : Value" [attribute.aria-label]="Label || null" [class]="[Variant || 'bar', Tone || 'accent', Size || 'medium', Percent(Value, Max) === null ? 'indeterminate' : '']">
+	<span class="elemenx-progress-label" *if="Label && Variant !== 'ring'">{{Label}}</span>
+	<span class="elemenx-progress-track" *if="Variant !== 'ring'"><span class="elemenx-progress-fill" [style.width]="Percent(Value, Max) === null ? null : Percent(Value, Max) + '%'"></span></span>
+	<svg class="elemenx-progress-ring" viewBox="0 0 36 36" *if="Variant === 'ring'" aria-hidden="true">
+		<circle class="elemenx-progress-ring-track" cx="18" cy="18" r="15"></circle>
+		<circle class="elemenx-progress-ring-fill" cx="18" cy="18" r="15" pathLength="100" [attribute.stroke-dasharray]="(Percent(Value, Max) === null ? 25 : Percent(Value, Max)) + ' 100'"></circle>
+	</svg>
+	<span class="elemenx-progress-value" *if="ShowValue && Percent(Value, Max) !== null">{{Math.round(Percent(Value, Max))}}%</span>
+</div>

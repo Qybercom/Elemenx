@@ -1,0 +1,16 @@
+.elemenx-input.elemenx-chat-composer {
+	align-items: flex-end;
+	height: auto;
+	min-height: 40px;
+	padding: 7px 7px 7px 8px;
+	border-radius: 20px;
+}
+
+.elemenx-chat-composer .elemenx-input-control {
+	align-self: center;
+	max-height: 160px;
+	padding: 2px 0;
+	overflow-y: auto;
+	resize: none;
+	line-height: 20px;
+}

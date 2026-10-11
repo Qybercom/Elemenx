@@ -1,0 +1,11 @@
+<div class="elemenx-meter" role="meter" [attribute.aria-valuemin]="Min" [attribute.aria-valuemax]="Max" [attribute.aria-valuenow]="Value" [attribute.aria-valuetext]="Value + Unit" [attribute.aria-label]="Label || null" [class]="[Size || 'medium', Zone(Value)]">
+	<div class="elemenx-meter-head" *if="Label || ShowValue">
+		<span class="elemenx-meter-label">{{Label}}</span>
+		<span class="elemenx-meter-value" *if="ShowValue">{{Value}}{{Unit}}</span>
+	</div>
+	<span class="elemenx-meter-track">
+		<span class="elemenx-meter-fill" [style.width]="Percent(Value) + '%'"></span>
+		<span class="elemenx-meter-mark" *if="Low !== null && Low !== ''" [style.left]="Percent(Low) + '%'"></span>
+		<span class="elemenx-meter-mark" *if="High !== null && High !== ''" [style.left]="Percent(High) + '%'"></span>
+	</span>
+</div>

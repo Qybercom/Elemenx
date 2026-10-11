@@ -1,9 +1,0 @@
-<section class="elemenx-column fill elemenx-tool-window" [attribute.aria-label]="Title || null">
-	<header class="elemenx-container elemenx-tool-window-header">
-		<Icon *if="Icon" [name]="Icon" />
-		<span class="elemenx-tool-window-title">{{Title}}</span>
-		<span class="elemenx-container elemenx-tool-window-actions"><slot name="actions"></slot></span>
-		<Button *if="Closable" Icon="remove" Title="Hide" Variant="ghost" Size="small" (click)="Close" />
-	</header>
-	<div class="elemenx-column fill elemenx-tool-window-body" [class.padded]="Padded"><slot></slot></div>
-</section>

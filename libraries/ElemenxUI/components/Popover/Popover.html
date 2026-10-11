@@ -1,0 +1,7 @@
+<span class="elemenx-popover-root elemenx-popup-anchor" (mouseenter)="Enter" (mouseleave)="Leave" (focusin)="Enter" (focusout)="Leave">
+	<span class="elemenx-popover-trigger" [attribute.aria-expanded]="String(Open)" (click)="Toggle" (keydown)="Key"><slot name="trigger"></slot></span>
+	<div class="elemenx-popup elemenx-popover" role="dialog" data-match-width="false" *popup="Open" [attribute.data-placement]="Placement" [attribute.aria-label]="Title || null" [style.width]="Width || null" (dismiss)="Dismissed">
+		<div class="elemenx-popover-title" *if="Title">{{Title}}</div>
+		<slot></slot>
+	</div>
+</span>

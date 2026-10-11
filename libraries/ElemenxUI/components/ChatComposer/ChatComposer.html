@@ -1,0 +1,5 @@
+<div class="elemenx-input elemenx-chat-composer" [class.disabled]="Disabled">
+	<Button *if="Attach" Icon="attachment" Title="Attach" Variant="ghost" Size="small" [disabled]="Disabled" (click)="Attached" />
+	<textarea class="elemenx-input-control" rows="1" [value]="Value" [placeholder]="Placeholder" [disabled]="Disabled" aria-label="Message" (input)="Typed" (keydown)="Key"></textarea>
+	<Button Icon="send" Title="Send" Variant="primary" Size="small" Shape="round" [disabled]="Disabled || !String(Value || '').trim()" (click)="Send" />
+</div>
