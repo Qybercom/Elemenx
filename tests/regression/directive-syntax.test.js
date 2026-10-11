@@ -288,6 +288,109 @@ describe('Regression: directive syntax', function () {
 		component.$Destroy();
 	});
 
+	test('bindings under a false *if are not evaluated', function () {
+		var name = unique('FalseIfBindings');
+		var errors = [];
+		var original = console.error;
+		var component;
+
+		console.error = function () {
+			errors.push(Array.prototype.join.call(arguments, ' '));
+		};
+
+		try {
+			component = Elemenx.Component(name, {
+				$Template: '<section><p *if="User" [title]="User.Name">{{User.Name}}<i [class.admin]="User.Admin"></i></p><ul *if="User"><li *for="item of User.Items">{{item}}</li></ul></section>',
+				User: null
+			})({});
+		}
+		finally {
+			console.error = original;
+		}
+
+		document.body.appendChild(component.$Element());
+
+		expect(errors).toEqual([]);
+		expect(component.$Element().querySelector('p')).toBeNull();
+
+		component.$Update({User: {Name: 'Ada', Admin: true, Items: ['a']}});
+
+		expect(component.$Element().querySelector('p').title).toBe('Ada');
+		expect(component.$Element().querySelector('p').textContent).toBe('Ada');
+		expect(component.$Element().querySelector('i').classList.contains('admin')).toBe(true);
+		expect(component.$Element().querySelector('li').textContent).toBe('a');
+
+		component.$Destroy();
+	});
+
+	test('content projected into a component under *if keeps the bindings of its owner', function () {
+		var frameName = unique('ConditionalFrame');
+
+		Elemenx.Component(frameName, {$Template: '<section><slot></slot></section>'});
+
+		var parent = Elemenx.Component(unique('ConditionalFrameHost'), {
+			$Template: '<div><' + frameName + ' *if="Show"><b [title]="Text">{{Text}}</b></' + frameName + '></div>',
+			Show: true,
+			Text: 'first'
+		})({});
+
+		document.body.appendChild(parent.$Element());
+
+		expect(parent.$Element().querySelector('b').textContent).toBe('first');
+
+		parent.$Update({Text: 'second'});
+
+		expect(parent.$Element().querySelector('b').textContent).toBe('second');
+		expect(parent.$Element().querySelector('b').title).toBe('second');
+
+		parent.$Destroy();
+	});
+
+	test('a component may be the root of a template', function () {
+		var innerName = unique('RootInner');
+		var outerName = unique('RootOuter');
+		var picked = [];
+
+		Elemenx.Component(innerName, {
+			$Template: '<button class="root-inner" (click)="Hit">{{Text}}</button>',
+			Text: '',
+
+			Hit: function () {
+				this.$Emit('pick', this.Text);
+			}
+		});
+
+		Elemenx.Component(outerName, {
+			$Template: '<' + innerName + ' [text]="Value" (pick)="Picked"></' + innerName + '>',
+			Value: 'first',
+
+			Picked: function (value) {
+				this.$Emit('pick', value);
+			}
+		});
+
+		var host = Elemenx.Component(unique('RootHost'), {
+			$Template: '<div><' + outerName + ' [value]="Label" (pick)="Picked"></' + outerName + '></div>',
+			Label: 'one',
+
+			Picked: function (value) {
+				picked.push(value);
+			}
+		})({});
+
+		document.body.appendChild(host.$Element());
+
+		expect(host.$Element().querySelector('.root-inner').textContent).toBe('one');
+
+		host.$Update({Label: 'two'});
+		host.$Element().querySelector('.root-inner').click();
+
+		expect(host.$Element().querySelector('.root-inner').textContent).toBe('two');
+		expect(picked).toEqual(['two']);
+
+		host.$Destroy();
+	});
+
 	test('root structural host does not expose internal data-* metadata', function () {
 		var name = unique('StructuralRootMetadata');
 		var factory = Elemenx.Component(name, {$Template: '<div *if="Visible">Visible</div>'});

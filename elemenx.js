@@ -2992,6 +2992,27 @@
 			bindings.push(binding);
 		}
 
+		/*
+		 * True when node belongs to a structural subtree of root: Structural rebuilds that subtree from the pristine
+		 * template, so its live bindings would only be evaluated in vain (against state the condition excludes).
+		 * The children of a Component under the default structural host are its projection and stay with the owner.
+		 */
+		function structuralOwned (node, root) {
+			var current = node.nodeType === 1 ? node : node.parentNode;
+			var directive;
+
+			while (current && current.nodeType === 1) {
+				directive = Runtime.Directive.Find(current, 'structural');
+
+				if (directive && (directive.Definition.Host !== 'structural' || !current.hasAttribute('data-elemenx-component'))) return true;
+				if (current === root) return false;
+
+				current = current.parentNode;
+			}
+
+			return false;
+		}
+
 		function collectTextBindings (root, bindings) {
 			var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null);
 			var nodes = [];
@@ -3005,7 +3026,8 @@
 			var bindingNode;
 
 			while ((node = walker.nextNode())) {
-				nodes.push(node);
+				if (!structuralOwned(node, root))
+					nodes.push(node);
 			}
 
 			var i = 0;
@@ -3185,6 +3207,12 @@
 
 			i = 0;
 			while (i < nodes.length) {
+				if (structuralOwned(nodes[i], root)) {
+					i++;
+
+					continue;
+				}
+
 				attrs = Array.prototype.slice.call(nodes[i].attributes);
 				j = 0;
 				classState = null;
@@ -3808,17 +3836,18 @@
 		 */
 		function componentRoot (template) {
 			var root = createFragment(resolveTemplate(template));
-			var structuralRoot;
+			var host;
 
-			if (root.nodeType !== 1 || !Runtime.Directive.Find(root, 'structural')) return root;
+			/* A structural host or a Component declaration at the root gets a host of its own, so it is compiled like a child. */
+			if (root.nodeType !== 1 || (!Runtime.Directive.Find(root, 'structural') && !root.hasAttribute('data-elemenx-component'))) return root;
 
-			structuralRoot = document.createElement('span');
-			structuralRoot.style.display = 'contents';
-			structuralRoot.__ElemenxStructuralRoot = true;
+			host = document.createElement('span');
+			host.style.display = 'contents';
+			host.__ElemenxStructuralRoot = true;
 
-			structuralRoot.appendChild(root);
+			host.appendChild(root);
 
-			return structuralRoot;
+			return host;
 		}
 
 		/* Runs the effects in order: Run evaluates each one and starts tracking its dependencies. */
