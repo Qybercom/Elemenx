@@ -381,9 +381,25 @@ for (const origin of origins) {
 			await expect(page.locator('body')).toHaveAttribute('data-theme', 'system');
 			expect(await surface()).toBe('rgb(29, 32, 37)');
 
+			/* The change goes through a view transition: the old picture stays until the new one is drawn whole. */
+			await page.evaluate(function () {
+				var start = document.startViewTransition.bind(document);
+
+				window.ThemeTransitions = 0;
+
+				document.startViewTransition = function (callback) {
+					window.ThemeTransitions++;
+
+					return start(callback);
+				};
+			});
+
 			await page.locator('.ui-kit-intro').getByRole('button', {name: 'Light theme'}).click();
 
 			await expect(page.locator('body')).toHaveAttribute('data-theme', 'light');
+			expect(await page.evaluate(function () {
+				return window.ThemeTransitions;
+			})).toBe(1);
 			expect(await surface()).toBe('rgb(255, 255, 255)');
 
 			await page.reload();
@@ -1042,7 +1058,7 @@ for (const origin of origins) {
 
 			await open(page, origin);
 
-			grid = section(page, 'Tiles').locator('.elemenx-tile-grid');
+			grid = section(page, 'Tiles').locator('.elemenx-tile-grid').first();
 			state = function () {
 				return grid.locator('.elemenx-tile-group').evaluateAll(function (groups) {
 					return groups.map(function (group) {
@@ -1142,6 +1158,64 @@ for (const origin of origins) {
 
 			await expect(section(page, 'Tiles').locator('.elemenx-section-header')).toContainText('Opened: Rename Tools');
 			await expect(page.locator('.elemenx-drag-ghost')).toHaveCount(0);
+		});
+
+		test('tile grid takes groups and tiles declared in the template and follows the template', async function ({ page }) {
+			var grid;
+			var tiles;
+			var from;
+
+			await open(page, origin);
+
+			grid = section(page, 'Tiles').locator('.elemenx-tile-grid').nth(1);
+			tiles = function () {
+				return grid.locator('.elemenx-tile').evaluateAll(function (nodes) {
+					return nodes.map(function (node) {
+						return node.getAttribute('data-id') + '@' + node.style.gridArea.split(' / ').slice(0, 2).join(',');
+					});
+				});
+			};
+
+			await grid.scrollIntoViewIfNeeded();
+
+			await expect(grid.locator('.elemenx-tile-group-title')).toHaveText(['Media']);
+			expect(await tiles()).toEqual(['music@1,1', 'photos@3,1', 'player@1,3']);
+			await expect(grid.locator('.elemenx-tile[data-id="photos"]')).toContainText('128 new');
+			await expect(grid.locator('.elemenx-tile[data-id="player"]')).toHaveClass(/custom/);
+			await expect(grid.locator('.elemenx-tile[data-id="player"]')).toHaveClass(/ui-kit-player-tile/);
+			await expect(grid.locator('.elemenx-tile[data-id="music"] .elemenx-tile-badge')).toHaveCount(0);
+
+			/* The markup inside a declared tile keeps its bindings, and its controls do not open the tile. */
+			await grid.getByRole('button', {name: 'Play', exact: true}).click();
+			await grid.getByRole('button', {name: 'Play', exact: true}).click();
+
+			await expect(grid.locator('.elemenx-tile[data-id="player"]')).toContainText('2 plays');
+			await expect(grid.locator('.elemenx-tile[data-id="music"] .elemenx-tile-badge')).toHaveText('2');
+			await expect(section(page, 'Tiles').locator('.elemenx-section-header')).not.toContainText('Opened: Player');
+
+			/* A tile moved by the user keeps its place when the template changes. */
+			from = await grid.locator('.elemenx-tile[data-id="music"]').boundingBox();
+
+			await page.mouse.move(from.x + 8, from.y + 8);
+			await page.mouse.down();
+			await page.mouse.move(from.x + 8, from.y + 8 + 112 + 112, {steps: 10});
+			await page.mouse.up();
+
+			expect(await tiles()).toEqual(['player@1,3', 'photos@3,1', 'music@5,1']);
+
+			await section(page, 'Tiles').getByText('News tile').click();
+
+			expect(await tiles()).toEqual(['player@1,3', 'photos@3,1', 'music@5,1', 'news@1,1']);
+			await expect(grid.locator('.elemenx-tile[data-id="news"]')).toHaveAttribute('aria-label', 'News');
+
+			await grid.getByRole('button', {name: 'Play', exact: true}).click();
+
+			await expect(grid.locator('.elemenx-tile[data-id="music"] .elemenx-tile-badge')).toHaveText('3');
+			expect(await tiles()).toEqual(['player@1,3', 'photos@3,1', 'music@5,1', 'news@1,1']);
+
+			await section(page, 'Tiles').getByText('News tile').click();
+
+			expect(await tiles()).toEqual(['player@1,3', 'photos@3,1', 'music@5,1']);
 		});
 
 		test('steps take custom content and a disabled step is not clickable', async function ({ page }) {

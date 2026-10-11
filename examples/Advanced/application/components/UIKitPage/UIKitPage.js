@@ -194,21 +194,12 @@ Elemenx.Component('UIKitPage', {
 			{ID: 'settings', Title: 'Settings', Icon: 'settings', Size: 'small', Color: '#5f5a54', Locked: true},
 			{ID: 'database', Title: 'Database', Icon: 'database', Size: 'small', Color: '#2f8f83'},
 			{ID: 'cloud', Title: 'Deployments', Icon: 'cloud', Size: 'large', Text: 'All 12 services are healthy.', Color: '#3f6c9e'}
-		]},
-		{ID: 'pinned', Title: 'Pinned', Locked: true, Tiles: [
-			{ID: 'clock', Title: 'Clock', Size: 'wide', Color: '#1f2a37', Class: 'ui-kit-clock-tile', Render: function (container) {
-				var time = document.createElement('strong');
-				var date = document.createElement('span');
-				var now = new Date();
-
-				time.textContent = now.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
-				date.textContent = now.toLocaleDateString([], {weekday: 'long', day: 'numeric', month: 'long'});
-
-				container.appendChild(time);
-				container.appendChild(date);
-			}}
 		]}
 	],
+	ClockTime: '',
+	ClockDate: '',
+	Plays: 0,
+	ShowNews: false,
 	CustomSteps: [
 		{ID: 'upload', Label: 'Upload', Icon: 'upload', Class: 'ui-kit-upload-step', Render: function (container) {
 			var bar = document.createElement('div');
@@ -475,6 +466,11 @@ Elemenx.Component('UIKitPage', {
 	},
 
 	$OnCreate: function () {
+		var now = new Date();
+
+		this.ClockTime = now.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+		this.ClockDate = now.toLocaleDateString([], {weekday: 'long', day: 'numeric', month: 'long'});
+
 		/* The position of every message in its run of messages from one author. */
 		this.Thread = function (messages) {
 			return messages.map(function (message, index) {
@@ -562,6 +558,14 @@ Elemenx.Component('UIKitPage', {
 
 	CustomStepSelected: function (item) {
 		this.CustomStep = item.ID;
+	},
+
+	Play: function () {
+		this.Plays++;
+	},
+
+	NewsToggled: function (checked) {
+		this.ShowNews = checked;
 	},
 
 	TileGroupAction: function (event) {

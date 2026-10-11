@@ -62,6 +62,8 @@
 	'components/Timeline/Timeline.js',
 	'components/Terminal/Terminal.js',
 	'components/TileGrid/TileGrid.js',
+	'components/TileGroup/TileGroup.js',
+	'components/Tile/Tile.js',
 	'components/NavList/NavList.js',
 	'components/Dashboard/Dashboard.js',
 	'components/DashboardWidget/DashboardWidget.js',

@@ -428,7 +428,27 @@
 	</Section>
 
 	<Section Title="Tiles" [note]="'TileGrid · drag tiles to arrange them' + (OpenedTile ? ' · Opened: ' + OpenedTile : '')">
-		<TileGrid [groups]="TileGroups" Editable="true" GroupPolicy="between" (open)="TileOpened" (change)="TilesChanged" (groupaction)="TileGroupAction" />
+		<TileGrid [groups]="TileGroups" Editable="true" GroupPolicy="between" (open)="TileOpened" (change)="TilesChanged" (groupaction)="TileGroupAction">
+			<TileGroup ID="pinned" Title="Pinned" Locked="true">
+				<Tile ID="clock" Title="Clock" Size="wide" Color="#1f2a37" Class="ui-kit-clock-tile">
+					<strong>{{ClockTime}}</strong>
+					<span>{{ClockDate}}</span>
+				</Tile>
+			</TileGroup>
+		</TileGrid>
+		<h4>Declared in the template</h4>
+		<Toggle Label="News tile" [checked]="ShowNews" (change)="NewsToggled" />
+		<TileGrid Editable="true" GroupPolicy="none" (open)="TileOpened">
+			<TileGroup ID="media" Title="Media">
+				<Tile ID="music" Title="Music" Icon="play" Color="#c2477f" [badge]="Plays || null" />
+				<Tile ID="photos" Title="Photos" Icon="image" Size="wide" Color="#2f8f83" Text="128 new" />
+				<Tile ID="player" Title="Player" Color="#5f5a54" Class="ui-kit-player-tile">
+					<Button Label="Play" Size="small" (click)="Play" />
+					<span>{{Plays}} plays</span>
+				</Tile>
+				<Tile *if="ShowNews" ID="news" Title="News" Icon="globe" Size="small" Color="#9a6514" />
+			</TileGroup>
+		</TileGrid>
 	</Section>
 
 	<Section Title="Layouts" Note="Dashboard · Settings · MasterDetail · Centered">

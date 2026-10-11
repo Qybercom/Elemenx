@@ -212,6 +212,11 @@
 	min-height: 0;
 }
 
+/* The markup of a declared <Tile> lays out in the tile itself. */
+.elemenx-tile-source-content {
+	display: contents;
+}
+
 /* The space between two groups starts a new group there (GroupPolicy 'between'). */
 .elemenx-tile-gap {
 	position: absolute;

@@ -312,3 +312,12 @@
 	line-height: 16px;
 	opacity: 0.8;
 }
+
+.ui-kit-player-tile .elemenx-tile-content {
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 4px;
+	padding: 8px;
+	font-size: 12px;
+	line-height: 16px;
+}

@@ -14,6 +14,11 @@
  * between the groups) or 'none'; the new group is named NewGroupTitle and reported by groupcreate ({Group, Tile}).
  * A group left empty by a drag goes away. The change event carries the new Groups, every tile of a changed group with
  * its Row and Column; Escape puts everything back.
+ * The groups and tiles may also be declared in the template: <TileGroup ID Title Locked> with <Tile> children that
+ * take the props of a tile; the markup inside a <Tile> is its custom content, bound to the page like any markup.
+ * Declarations add to Groups (a <Tile> with the ID of a tile of Groups gives it its props and content) and follow
+ * the template: a new <Tile> joins its group, a removed one leaves, a changed prop shows; the places of the tiles
+ * stay with the grid once they are set.
  */
 Elemenx.Component('TileGrid', {
 	$TemplateURL: 'TileGrid.html',
@@ -28,6 +33,8 @@ Elemenx.Component('TileGrid', {
 	Target: '',
 	Created: '',
 	Sequence: 0,
+	Declared: '',
+	Pending: false,
 
 	$OnCreate: function () {
 		var self = this;
@@ -48,14 +55,45 @@ Elemenx.Component('TileGrid', {
 		/* The grid-area of a tile: its place in the layout of its group. */
 		this.Area = function (tiles, tile) {
 			var spot = self.Layout(tiles).filter(function (entry) {
-				return entry.Tile === tile;
+				return String(entry.Tile.ID) === String(tile.ID);
 			})[0];
 
 			return spot ? (spot.Row + 1) + ' / ' + (spot.Column + 1) + ' / span ' + spot.Height + ' / span ' + spot.Width : null;
 		};
 	},
 
+	$OnReady: function () {
+		var self = this;
+		var sources = this.$Element().querySelector('.elemenx-tile-sources');
+
+		function source (node) {
+			return node.nodeType === 1 && (node.matches('.elemenx-tile-source, .elemenx-tile-group-source') || !!node.querySelector('.elemenx-tile-source, .elemenx-tile-group-source'));
+		}
+
+		/* Only declarations count: the content of a tile is moved into the tile and changes there freely. */
+		function relevant (record) {
+			if (record.type === 'attributes')
+				return record.target.matches('.elemenx-tile-source, .elemenx-tile-group-source');
+
+			return Array.prototype.some.call(record.addedNodes, source) || Array.prototype.some.call(record.removedNodes, source);
+		}
+
+		if (!sources) return;
+
+		this.Watcher = new MutationObserver(function (records) {
+			if (records.some(relevant))
+				self.Sync();
+		});
+
+		this.Watcher.observe(sources, {subtree: true, childList: true, attributes: true});
+
+		this.Sync();
+	},
+
 	$OnDestroy: function () {
+		if (this.Watcher)
+			this.Watcher.disconnect();
+
 		this.Unlisten();
 	},
 
@@ -85,8 +123,13 @@ Elemenx.Component('TileGrid', {
 		}).indexOf(String(id));
 	},
 
+	/* A click on a control inside a custom tile is the control's, not an opening of the tile. */
 	Open: function (event, node) {
+		var control = event.target.closest && event.target.closest('a, button, input, select, textarea, label, [role="button"], [contenteditable="true"]');
 		var found = this.Find(node.getAttribute('data-id'));
+
+		if (control && control !== node && node.contains(control)) return;
+
 		if (found)
 			this.$Emit('open', found.Tile);
 	},
@@ -278,7 +321,7 @@ Elemenx.Component('TileGrid', {
 
 		/* The tiles left in the source group keep their places; the hole stays. */
 		groups[source].Tiles = this.Layout(groups[source].Tiles).filter(function (spot) {
-			return spot.Tile !== tile;
+			return String(spot.Tile.ID) !== String(tile.ID);
 		}).map(function (spot) {
 			return self.Moved(spot.Tile, spot.Row, spot.Column);
 		});
@@ -424,6 +467,152 @@ Elemenx.Component('TileGrid', {
 		document.removeEventListener('keydown', this.Escaped, true);
 	},
 
+	/* The tile that a <Tile> declares; its content (moved into the tile once shown) is kept on the declaration. */
+	Read: function (node) {
+		var content = node.ElemenxContent || node.querySelector('.elemenx-tile-source-content');
+		var tile = {Declared: true};
+		var names = ['ID', 'Title', 'Icon', 'Size', 'Row', 'Column', 'Color', 'Badge', 'Text', 'Class'];
+
+		node.ElemenxContent = content;
+
+		names.forEach(function (name) {
+			var value = node.getAttribute('data-' + name.toLowerCase());
+			if (value === null) return;
+
+			tile[name] = name === 'Row' || name === 'Column' ? Number(value) : value;
+		});
+
+		tile.Locked = node.getAttribute('data-locked') === 'true';
+		tile.Element = content && (content.textContent.trim() !== '' || content.querySelector('*')) ? content : null;
+
+		return tile;
+	},
+
+	/* The declarations of the template as groups: [{ID, Title, Locked, Tiles}]. */
+	Declarations: function () {
+		var self = this;
+		var sources = this.$Element().querySelector('.elemenx-tile-sources');
+		var nodes = sources ? sources.querySelectorAll('.elemenx-tile-group-source') : [];
+
+		return Array.prototype.map.call(nodes, function (node) {
+			var tiles = Array.prototype.filter.call(node.querySelectorAll('.elemenx-tile-source'), function (tile) {
+				return tile.closest('.elemenx-tile-group-source') === node;
+			});
+
+			return {
+				ID: node.getAttribute('data-id'),
+				Title: node.getAttribute('data-title') || '',
+				Locked: node.getAttribute('data-locked') === 'true',
+				Declared: true,
+				Tiles: tiles.map(function (tile) {
+					return self.Read(tile);
+				})
+			};
+		});
+	},
+
+	/*
+	 * Brings the declarations into Groups: declared props and content replace those of the tile with the same ID, the
+	 * tile keeping its group and place; a new declared tile joins its group (made when missing); a tile or a group
+	 * whose declaration is gone leaves. Waits for the end of a drag.
+	 */
+	Sync: function () {
+		var declared = this.Declarations();
+		var key = JSON.stringify(declared, function (name, value) {
+			return name === 'Element' ? !!value : value;
+		});
+		var tiles = {};
+		var placed = {};
+		var groups;
+
+		if (this.Dragging) {
+			this.Pending = true;
+
+			return;
+		}
+
+		if (key === this.Declared) return;
+
+		this.Declared = key;
+
+		declared.forEach(function (group) {
+			group.Tiles.forEach(function (tile) {
+				tiles[String(tile.ID)] = {Tile: tile, Group: group};
+			});
+		});
+
+		function merge (tile, source) {
+			var copy = {};
+			var name;
+
+			for (name in tile) {
+				if (Object.prototype.hasOwnProperty.call(tile, name))
+					copy[name] = tile[name];
+			}
+
+			for (name in source) {
+				if (Object.prototype.hasOwnProperty.call(source, name) && (name !== 'Row' && name !== 'Column' || copy[name] == null))
+					copy[name] = source[name];
+			}
+
+			return copy;
+		}
+
+		groups = (this.Groups || []).map(function (group) {
+			var copy = {};
+			var name;
+			var own = declared.filter(function (entry) {
+				return String(entry.ID) === String(group.ID);
+			})[0];
+
+			for (name in group) {
+				if (Object.prototype.hasOwnProperty.call(group, name))
+					copy[name] = group[name];
+			}
+
+			if (own) {
+				copy.Title = own.Title;
+				copy.Locked = own.Locked;
+				copy.Declared = true;
+			}
+
+			copy.Tiles = group.Tiles.filter(function (tile) {
+				return !tile.Declared || tiles[String(tile.ID)];
+			}).map(function (tile) {
+				var found = tiles[String(tile.ID)];
+
+				placed[String(tile.ID)] = true;
+
+				return found ? merge(tile, found.Tile) : tile;
+			});
+
+			return copy;
+		}).filter(function (group) {
+			return !group.Declared || group.Tiles.length || declared.some(function (entry) {
+				return String(entry.ID) === String(group.ID);
+			});
+		});
+
+		declared.forEach(function (entry) {
+			var target = groups.filter(function (group) {
+				return String(group.ID) === String(entry.ID);
+			})[0];
+
+			if (!target) {
+				target = {ID: entry.ID, Title: entry.Title, Locked: entry.Locked, Declared: true, Tiles: []};
+
+				groups.push(target);
+			}
+
+			entry.Tiles.forEach(function (tile) {
+				if (!placed[String(tile.ID)])
+					target.Tiles = target.Tiles.concat([tile]);
+			});
+		});
+
+		this.Groups = groups;
+	},
+
 	/* Ends a drag: a cancel restores the groups, a drop removes the groups it emptied and reports the change. */
 	End: function (cancel) {
 		var snapshot = this.Snapshot;
@@ -450,6 +639,13 @@ Elemenx.Component('TileGrid', {
 		this.Target = '';
 		this.Created = '';
 		this.Groups = groups;
+
+		if (this.Pending) {
+			this.Pending = false;
+			this.Declared = '';
+
+			this.Sync();
+		}
 
 		if (cancel || this.Signature(groups) === this.Signature(snapshot)) return;
 
