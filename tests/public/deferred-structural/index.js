@@ -16,5 +16,6 @@
 	'DeferredHybridRemoteParent.js',
 	'DeferredRouterRoot.js',
 	'DeferredMultiAppRemoteChild.js',
-	'DeferredMultiAppRemoteRoot.js'
+	'DeferredMultiAppRemoteRoot.js',
+	'DeferredInputChild.js'
 ];

@@ -1,1 +1,11 @@
-<input class="elemenx-input" [type]="Type" [value]="Value" [placeholder]="Placeholder" [disabled]="Disabled" [attribute.min]="Min" [attribute.max]="Max" [attribute.step]="Step" (input)="Input" />
+<div class="elemenx-input" [class]="[Size || 'medium', Invalid ? 'invalid' : '', Disabled ? 'disabled' : '', ReadOnly ? 'readonly' : '']">
+	<Icon *if="Icon" [name]="Icon" />
+	<span class="elemenx-input-affix" *if="Prefix">{{Prefix}}</span>
+	<input class="elemenx-input-control" *if="!Mask" [type]="Type === 'password' && Revealed ? 'text' : Type" [value]="Value" [placeholder]="Placeholder" [disabled]="Disabled" [attribute.readonly]="ReadOnly ? '' : null" [attribute.name]="Name" [attribute.autocomplete]="Autocomplete" [attribute.inputmode]="InputMode" [attribute.maxlength]="MaxLength" [attribute.min]="Min" [attribute.max]="Max" [attribute.step]="Step" [attribute.aria-invalid]="Invalid ? 'true' : null" (input)="Typed" (change)="Committed" />
+	<input class="elemenx-input-control" *if="Mask" type="text" *mask="{Mask: Mask, Value: Value}" [placeholder]="Placeholder" [disabled]="Disabled" [attribute.readonly]="ReadOnly ? '' : null" [attribute.name]="Name" [attribute.autocomplete]="Autocomplete" [attribute.inputmode]="InputMode || 'numeric'" [attribute.aria-invalid]="Invalid ? 'true' : null" (mask)="Masked" (change)="Committed" />
+	<span class="elemenx-input-affix" *if="Suffix">{{Suffix}}</span>
+	<button class="elemenx-input-action" type="button" tabindex="-1" aria-label="Clear" *if="Clearable && Value && !Disabled && !ReadOnly" (click)="Clear"><Icon Name="close" /></button>
+	<button class="elemenx-input-action" type="button" *if="Type === 'password'" [attribute.aria-label]="Revealed ? 'Hide password' : 'Show password'" [attribute.aria-pressed]="String(Revealed)" (click)="Reveal"><Icon [name]="Revealed ? 'eye-off' : 'eye'" /></button>
+	<Icon *if="IconRight" [name]="IconRight" />
+	<slot></slot>
+</div>

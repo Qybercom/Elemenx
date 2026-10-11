@@ -2491,6 +2491,7 @@
 		function deferredComponent (resolver, data, slotProjection, options) {
 			var placeholder = document.createElement('span');
 			var current = null;
+			var currentDefinition = null;
 			var destroyed = false;
 			var updates = [];
 			var listeners = [];
@@ -2603,8 +2604,9 @@
 				return current.$Ref(name);
 			};
 
+			/* Inputs keep the declaration spelling ([hint]); the resolved Definition knows the real name (Hint). */
 			api.$Update = function (value) {
-				if (current) current.$Update(value);
+				if (current) current.$Update(canonicalDeferredInput(value, currentDefinition));
 				else updates.push(value);
 
 				return api;
@@ -2683,6 +2685,7 @@
 					current.$Destroy();
 
 				current = factory(canonicalDeferredData(data, factory.Definition, options), slotProjection, options);
+				currentDefinition = factory.Definition;
 
 				var currentRouter = Runtime.ComponentRouters.get(api);
 				if (currentRouter)
@@ -2747,6 +2750,7 @@
 				}
 
 				current = factory(canonicalDeferredData(data, factory.Definition, options), slotProjection, options);
+				currentDefinition = factory.Definition;
 
 				var currentRouter = Runtime.ComponentRouters.get(api);
 				if (currentRouter)
@@ -3080,7 +3084,7 @@
 				else delete names[name];
 			}
 
-			state.node.className = '';
+			state.node.setAttribute('class', '');
 
 			for (name in names)
 				if (own(names, name))
@@ -3256,11 +3260,15 @@
 						else if (namespace === 'attribute' && name) {
 							addBinding(bindings, key, {type: 'attribute', name: name, node: nodes[i]});
 						}
-						else if (separator === -1 && target) {
+						else if (separator === -1 && target && !nodes[i].hasAttribute('data-elemenx-component')) {
 							addBinding(bindings, key, {type: 'property', name: target, node: nodes[i]});
 						}
 						else {
-							/* Preserve non-DOM target paths for Component ownership. */
+							/*
+							 * Preserve non-DOM target paths for Component ownership. A plain [prop] on a Component
+							 * declaration is a Component input, never a property of the placeholder element
+							 * (<Select [options]> is parsed as a native <select>, whose options are read-only).
+							 */
 							j++;
 
 							continue;
@@ -3525,6 +3533,10 @@
 						k++;
 					}
 
+					/* An empty slot leaves a placeholder: Structural maps live nodes to the pristine template by child index. */
+					if (!nodes.length)
+						parent.insertBefore(document.createComment('elemenx:slot'), slot);
+
 					parent.removeChild(slot);
 				}
 
@@ -3626,7 +3638,8 @@
 
 			i = 0;
 			while (i < nodes.length) {
-				if (Runtime.ResolveComponentRegistered(nodes[i].getAttribute('data-elemenx-component') || nodes[i].tagName)) {
+				/* A Component declaration keeps its (events) for Structural, also while the Component is still loading. */
+				if (nodes[i].hasAttribute('data-elemenx-component') || Runtime.ResolveComponentRegistered(nodes[i].tagName)) {
 					i++;
 
 					continue;
@@ -6287,6 +6300,28 @@
 			return current ? {Path: path, Top: current} : null;
 		}
 
+		/*
+		 * The template source of a structural subtree. outerHTML escapes & < > " in attribute values, while
+		 * Elemenx expressions are read raw (never HTML-decoded), so expression attributes are written back unescaped.
+		 */
+		function templateHTML (element) {
+			var entities = {amp: '&', lt: '<', gt: '>', quot: '"'};
+
+			return element.outerHTML.replace(/(\s(?:\*[A-Za-z][A-Za-z0-9_-]*|\[[^\]\s]+\])=)"([^"]*)"/g, function (match, prefix, value) {
+				value = value.replace(/&(amp|lt|gt|quot);/g, function (entity, name) {
+					return entities[name];
+				});
+
+				if (value.indexOf('"') === -1)
+					return prefix + '"' + value + '"';
+
+				if (value.indexOf("'") === -1)
+					return prefix + "'" + value + "'";
+
+				return match;
+			});
+		}
+
 		function nodeAt (root, path) {
 			var current = root;
 			var i = 0;
@@ -6595,13 +6630,11 @@
 				return node === component.$Element();
 			}
 
-			/* The node at the same place in the untouched component DOM. */
+			/* The untouched declaration of node, also inside a projection (where the component DOM is not its source), or null. */
 			function pristineNodeFor (node) {
-				if (!blueprintRoot) return null;
+				var found = blueprintFor(node);
 
-				var found = nodePath(node, isComponentElement);
-
-				return found ? nodeAt(blueprintRoot, found.Path) : null;
+				return found === node ? null : found;
 			}
 
 			directiveHost('structural', compileStructural);
@@ -6793,8 +6826,8 @@
 				function iterationDefinition () {
 					var componentRoot = factoryFor(template.getAttribute('data-elemenx-component') || template.tagName);
 					var templateSource = componentRoot
-						? '<span style="display:contents">' + template.outerHTML + '</span>'
-						: template.outerHTML;
+						? '<span style="display:contents">' + templateHTML(template) + '</span>'
+						: templateHTML(template);
 
 					return bindMethods(definition, component, {$Template: templateSource}, plainMethod);
 				}
@@ -6827,6 +6860,8 @@
 					var token;
 					var record;
 					var child;
+					var reference;
+					var element;
 
 					if (!keySource)
 						destroyAll();
@@ -6862,8 +6897,6 @@
 							record = {Child: child, Key: token};
 						}
 
-						end.parentNode.insertBefore(record.Child.$Element(), end);
-
 						nextChildren.push(record);
 
 						if (keySource)
@@ -6883,6 +6916,24 @@
 
 							i--;
 						}
+					}
+
+					/*
+					 * Place the iterations from the end, moving only the ones out of place: moving an element
+					 * that is already in place would take the focus (and the caret) away from it.
+					 */
+					reference = end;
+					i = nextChildren.length - 1;
+
+					while (i >= 0) {
+						element = nextChildren[i].Child.$Element();
+
+						if (element.nextSibling !== reference)
+							end.parentNode.insertBefore(element, reference);
+
+						reference = element;
+
+						i--;
 					}
 
 					children = nextChildren;
@@ -6954,7 +7005,7 @@
 						if (child)
 							return child;
 
-						var subtreeDefinition = bindMethods(definition, component, {$Template: template.outerHTML}, subtreeMethod);
+						var subtreeDefinition = bindMethods(definition, component, {$Template: templateHTML(template)}, subtreeMethod);
 
 						child = Runtime.CreateComponent(subtreeDefinition)(Runtime.ComponentValues(component), null, {
 							DirectState: true,

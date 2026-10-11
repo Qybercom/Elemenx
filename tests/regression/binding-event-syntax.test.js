@@ -139,6 +139,42 @@ describe('Regression: binding and event syntax', function () {
 		child.$Destroy();
 	});
 
+	test('expressions with & < > keep working inside structural subtrees', function () {
+		var name = unique('StructuralOperators');
+		var factory = Elemenx.Component(name, {
+			$Template: '<div><i *if="Show" [title]="A && B ? \'both\' : \'none\'" [attribute.data-less]="A < 2 && C > 2"></i><p *if="Show"><b [title]="A && B"></b></p></div>'
+		});
+
+		var child = factory({Show: true, A: 1, B: 'b', C: 3});
+
+		document.body.appendChild(child.$Element());
+
+		expect(child.$Element().querySelector('i').title).toBe('both');
+		expect(child.$Element().querySelector('i').getAttribute('data-less')).toBe('true');
+		expect(child.$Element().querySelector('b').title).toBe('b');
+
+		child.$Destroy();
+	});
+
+	test('class bindings render on SVG elements, whose className is read-only', function () {
+		var name = unique('SVGClassBindings');
+		var factory = Elemenx.Component(name, {
+			$Template: '<svg class="icon" [class.spin]="Spin" [class]="Classes"><use></use></svg>'
+		});
+
+		var child = factory({Spin: true, Classes: ['large']});
+
+		document.body.appendChild(child.$Element());
+
+		expect(child.$Element().getAttribute('class').split(' ').sort()).toEqual(['icon', 'large', 'spin']);
+
+		child.$Update({Spin: false, Classes: []});
+
+		expect(child.$Element().getAttribute('class')).toBe('icon');
+
+		child.$Destroy();
+	});
+
 	test('[style] owns an object while [style.name] owns one property and static styles survive', function () {
 		var name = unique('StyleBindings');
 		var factory = Elemenx.Component(name, {

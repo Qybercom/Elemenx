@@ -1,0 +1,4 @@
+<div class="elemenx-input elemenx-textarea" [class]="[Invalid ? 'invalid' : '', Disabled ? 'disabled' : '', ReadOnly ? 'readonly' : '']">
+	<textarea class="elemenx-input-control" [value]="Value" [placeholder]="Placeholder" [disabled]="Disabled" [attribute.readonly]="ReadOnly ? '' : null" [attribute.rows]="Rows" [attribute.maxlength]="MaxLength" [attribute.name]="Name" [attribute.aria-invalid]="Invalid ? 'true' : null" [style.resize]="AutoSize ? 'none' : Resize" (input)="Typed" (change)="Committed"></textarea>
+	<span class="elemenx-textarea-counter" *if="MaxLength">{{String(Value || '').length}} / {{MaxLength}}</span>
+</div>

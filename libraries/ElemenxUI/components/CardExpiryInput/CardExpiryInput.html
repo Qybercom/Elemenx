@@ -1,0 +1,4 @@
+<div class="elemenx-input elemenx-card-input" [class]="[Size || 'medium', Invalid || (Touched && Value && !Valid(Value)) ? 'invalid' : '', Disabled ? 'disabled' : '']">
+	<Icon Name="calendar" />
+	<input class="elemenx-input-control" type="text" inputmode="numeric" autocomplete="cc-exp" *mask="{Mask: '##/##', Value: Value}" [placeholder]="Placeholder" [disabled]="Disabled" [attribute.name]="Name" [attribute.aria-invalid]="Invalid || (Touched && Value && !Valid(Value)) ? 'true' : null" (mask)="Masked" (change)="Committed" />
+</div>

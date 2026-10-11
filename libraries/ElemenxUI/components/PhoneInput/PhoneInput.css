@@ -1,0 +1,54 @@
+.elemenx-phone {
+	position: relative;
+	width: 100%;
+	min-width: 0;
+}
+
+.elemenx-input.elemenx-phone-input {
+	padding-left: 0;
+}
+
+.elemenx-phone-country {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	flex: none;
+	align-self: stretch;
+	padding: 0 8px;
+	background: transparent;
+	border: 0;
+	border-right: 1px solid var(--elemenx-border);
+	border-radius: 3px 0 0 3px;
+	color: var(--elemenx-text);
+	font: inherit;
+	cursor: pointer;
+}
+
+.elemenx-phone-country:hover {
+	background: var(--elemenx-surface-hover);
+}
+
+.elemenx-phone-country:focus-visible {
+	outline: 2px solid color-mix(in srgb, var(--elemenx-accent) 48%, transparent);
+	outline-offset: -2px;
+}
+
+.elemenx-phone-country:disabled {
+	cursor: default;
+}
+
+.elemenx-phone-country .elemenx-icon {
+	color: var(--elemenx-text-muted);
+}
+
+.elemenx-phone-code {
+	display: inline-block;
+	min-width: 24px;
+	font-family: var(--elemenx-font-mono), monospace;
+	font-size: 12px;
+	font-weight: 600;
+}
+
+.elemenx-phone-input .elemenx-input-control {
+	font-variant-numeric: tabular-nums;
+}

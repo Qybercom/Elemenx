@@ -1,0 +1,75 @@
+.elemenx-toggle {
+	position: relative;
+	display: inline-flex;
+	align-items: flex-start;
+	gap: 8px;
+	min-height: 20px;
+	color: var(--elemenx-text);
+	cursor: pointer;
+	user-select: none;
+}
+
+.elemenx-toggle.disabled {
+	opacity: 0.48;
+	cursor: default;
+	pointer-events: none;
+}
+
+.elemenx-toggle-track {
+	position: relative;
+	flex: none;
+	width: 32px;
+	height: 20px;
+	background: var(--elemenx-border-strong);
+	border-radius: 999px;
+	transition: background 120ms ease;
+}
+
+.elemenx-toggle-thumb {
+	position: absolute;
+	top: 2px;
+	left: 2px;
+	width: 16px;
+	height: 16px;
+	background: var(--elemenx-surface);
+	border-radius: 50%;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.24);
+	transition: transform 120ms ease;
+}
+
+.elemenx-toggle:hover .elemenx-toggle-track {
+	background: color-mix(in srgb, var(--elemenx-text) 40%, var(--elemenx-border-strong));
+}
+
+.elemenx-toggle.checked .elemenx-toggle-track {
+	background: var(--elemenx-accent);
+}
+
+.elemenx-toggle.checked .elemenx-toggle-thumb {
+	background: var(--elemenx-accent-text);
+	transform: translateX(12px);
+}
+
+.elemenx-check-input:focus-visible + .elemenx-toggle-track {
+	outline: 2px solid color-mix(in srgb, var(--elemenx-accent) 48%, transparent);
+	outline-offset: 2px;
+}
+
+.elemenx-toggle.small {
+	font-size: 12px;
+	line-height: 16px;
+}
+
+.elemenx-toggle.small .elemenx-toggle-track {
+	width: 24px;
+	height: 16px;
+}
+
+.elemenx-toggle.small .elemenx-toggle-thumb {
+	width: 12px;
+	height: 12px;
+}
+
+.elemenx-toggle.small.checked .elemenx-toggle-thumb {
+	transform: translateX(8px);
+}

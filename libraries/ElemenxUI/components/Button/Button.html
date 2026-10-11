@@ -1,5 +1,7 @@
-<button [class]="Classes()" [disabled]="Disabled">
-	<Icon *if="Icon" [name]="Icon" />
-	{{Label}}
+<button class="elemenx-button" [class]="[Variant || 'secondary', Size || 'medium', Label ? '' : 'icon-only', Block ? 'block' : '', Loading ? 'loading' : '', Pressed === true ? 'pressed' : '']" [attribute.type]="Type || 'button'" [disabled]="Disabled || Loading" [attribute.aria-pressed]="Pressed === true || Pressed === false ? String(Pressed) : null" [attribute.aria-busy]="Loading ? 'true' : null" [attribute.aria-label]="Label ? null : Title || Icon || null" [attribute.title]="Title || null" (click)="Clicked">
+	<Icon *if="Loading" Name="loader" Spin="true" />
+	<Icon *if="Icon && !Loading" [name]="Icon" />
+	<span class="elemenx-button-label" *if="Label">{{Label}}</span>
+	<slot></slot>
 	<Icon *if="IconRight" [name]="IconRight" />
 </button>

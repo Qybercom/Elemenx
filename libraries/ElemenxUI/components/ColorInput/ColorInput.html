@@ -1,0 +1,4 @@
+<div class="elemenx-input elemenx-color-input" [class]="[Size || 'medium', Invalid ? 'invalid' : '', Disabled ? 'disabled' : '']">
+	<label class="elemenx-color-swatch" [style.background]="Value"><input type="color" [value]="Value" [disabled]="Disabled" aria-label="Pick a color" (input)="Picked" (change)="Committed" /></label>
+	<input class="elemenx-input-control" type="text" maxlength="7" spellcheck="false" autocomplete="off" [value]="Text === null ? Value : Text" [disabled]="Disabled" [attribute.name]="Name" (input)="Typed" (change)="Committed" />
+</div>

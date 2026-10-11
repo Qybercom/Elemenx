@@ -1,0 +1,259 @@
+.elemenx-check {
+	position: relative;
+	display: inline-flex;
+	align-items: flex-start;
+	gap: 8px;
+	min-height: 20px;
+	color: var(--elemenx-text);
+	cursor: pointer;
+	user-select: none;
+}
+
+.elemenx-check.disabled {
+	opacity: 0.48;
+	cursor: default;
+	pointer-events: none;
+}
+
+.elemenx-check-input {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	margin: 0;
+	opacity: 0;
+	pointer-events: none;
+}
+
+.elemenx-check-box {
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex: none;
+	width: 16px;
+	height: 16px;
+	margin-top: 2px;
+	background: var(--elemenx-surface);
+	border: 1px solid var(--elemenx-border-strong);
+	border-radius: 4px;
+	color: var(--elemenx-accent-text);
+	transition: background 120ms ease,
+		border-color 120ms ease;
+}
+
+.elemenx-check-box .elemenx-icon {
+	display: none;
+	stroke-width: 2.5;
+}
+
+.elemenx-check:hover .elemenx-check-box {
+	border-color: color-mix(in srgb, var(--elemenx-text) 48%, var(--elemenx-border-strong));
+}
+
+.elemenx-check.checked .elemenx-check-box,
+.elemenx-check.indeterminate .elemenx-check-box {
+	background: var(--elemenx-accent);
+	border-color: var(--elemenx-accent);
+}
+
+.elemenx-check.checked .elemenx-check-box .elemenx-icon:first-child,
+.elemenx-check.indeterminate .elemenx-check-box .elemenx-icon:last-child {
+	display: block;
+}
+
+.elemenx-check.invalid .elemenx-check-box {
+	border-color: var(--elemenx-danger);
+}
+
+.elemenx-check-input:focus-visible + .elemenx-check-box {
+	outline: 2px solid color-mix(in srgb, var(--elemenx-accent) 48%, transparent);
+	outline-offset: 2px;
+}
+
+.elemenx-check-text {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+}
+
+.elemenx-check > .elemenx-icon {
+	margin-top: 2px;
+	color: var(--elemenx-text-muted);
+}
+
+.elemenx-check.small {
+	gap: 4px;
+	font-size: 12px;
+	line-height: 16px;
+}
+
+.elemenx-check.small .elemenx-check-box {
+	width: 12px;
+	height: 12px;
+	border-radius: 2px;
+}
+
+.elemenx-check.small .elemenx-check-box .elemenx-icon {
+	width: 8px;
+	height: 8px;
+}
+
+
+
+.elemenx-check.chip {
+	align-items: center;
+	height: 32px;
+	padding: 0 12px;
+	background: var(--elemenx-surface);
+	border: 1px solid var(--elemenx-border-strong);
+	border-radius: 999px;
+}
+
+.elemenx-check.chip .elemenx-check-box {
+	display: none;
+}
+
+.elemenx-check.chip > .elemenx-icon {
+	margin-top: 0;
+}
+
+.elemenx-check.chip:hover {
+	background: var(--elemenx-surface-hover);
+}
+
+.elemenx-check.chip.checked {
+	background: var(--elemenx-accent);
+	border-color: var(--elemenx-accent);
+	color: var(--elemenx-accent-text);
+}
+
+.elemenx-check.chip.checked > .elemenx-icon {
+	color: inherit;
+}
+
+.elemenx-check.chip:has(.elemenx-check-input:focus-visible) {
+	outline: 2px solid color-mix(in srgb, var(--elemenx-accent) 48%, transparent);
+	outline-offset: 2px;
+}
+
+.elemenx-check.chip.small {
+	height: 24px;
+	padding: 0 8px;
+}
+
+
+
+.elemenx-check.tile {
+	display: flex;
+	padding: 12px;
+	background: var(--elemenx-surface);
+	border: 1px solid var(--elemenx-border);
+	border-radius: 8px;
+}
+
+.elemenx-check.tile:hover {
+	border-color: var(--elemenx-border-strong);
+}
+
+.elemenx-check.tile.checked {
+	background: color-mix(in srgb, var(--elemenx-accent) 6%, var(--elemenx-surface));
+	border-color: var(--elemenx-accent);
+}
+
+.elemenx-check.tile .elemenx-check-label {
+	font-weight: 600;
+}
+
+.elemenx-check.tile:has(.elemenx-check-input:focus-visible) {
+	outline: 2px solid color-mix(in srgb, var(--elemenx-accent) 48%, transparent);
+	outline-offset: 2px;
+}
+
+
+
+.elemenx-radio .elemenx-check-box {
+	border-radius: 50%;
+}
+
+.elemenx-radio.checked .elemenx-check-box {
+	background: var(--elemenx-surface);
+	border-color: var(--elemenx-accent);
+	box-shadow: inset 0 0 0 4px var(--elemenx-accent);
+}
+
+.elemenx-radio.small.checked .elemenx-check-box {
+	box-shadow: inset 0 0 0 3px var(--elemenx-accent);
+}
+
+.elemenx-radio.small .elemenx-check-box {
+	border-radius: 50%;
+}
+
+.elemenx-radio-group {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.elemenx-radio-group.horizontal {
+	flex-direction: row;
+	flex-wrap: wrap;
+	gap: 16px;
+}
+
+.elemenx-radio-group.tile {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+	gap: 8px;
+}
+
+.elemenx-radio-group.segmented {
+	display: inline-flex;
+	flex-direction: row;
+	gap: 0;
+	padding: 2px;
+	background: var(--elemenx-surface-hover);
+	border-radius: 8px;
+}
+
+.elemenx-radio.segment {
+	align-items: center;
+	height: 28px;
+	padding: 0 12px;
+	border-radius: 6px;
+	color: var(--elemenx-text-muted);
+}
+
+.elemenx-radio.segment .elemenx-check-box {
+	display: none;
+}
+
+.elemenx-radio.segment:hover {
+	color: var(--elemenx-text);
+}
+
+.elemenx-radio.segment.checked {
+	background: var(--elemenx-surface);
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.16);
+	color: var(--elemenx-text);
+}
+
+.elemenx-radio.segment:has(.elemenx-check-input:focus-visible) {
+	outline: 2px solid color-mix(in srgb, var(--elemenx-accent) 48%, transparent);
+}
+
+.elemenx-radio-group.segmented.small .elemenx-radio.segment {
+	height: 20px;
+	padding: 0 8px;
+	border-radius: 4px;
+	font-size: 12px;
+	line-height: 16px;
+}
+.elemenx-option .elemenx-check {
+	align-items: center;
+	pointer-events: none;
+}
+
+.elemenx-option .elemenx-check-box {
+	margin-top: 0;
+}

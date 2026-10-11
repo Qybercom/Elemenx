@@ -1,12 +1,19 @@
 Elemenx.Component('Icon', {
 	$TemplateURL: 'Icon.html',
+	$StyleURL: 'Icon.css',
 	Name: '',
+	Size: 16,
 	Label: '',
+	Sprite: '',
+	Spin: false,
 
-	Href: function () {
-		var library = Elemenx.Library('ElemenxUI');
-		var root = library ? library.$Root || library.Root : '';
+	$OnCreate: function () {
+		var library;
 
-		return String(root || '').replace(/\/$/, '') + '/icons.svg#' + this.Name;
+		if (this.Sprite) return;
+
+		library = Elemenx.Library('ElemenxUI');
+
+		this.Sprite = String(library && library.$Root || '').replace(/\/$/, '') + '/icons.svg';
 	}
 });

@@ -1,0 +1,17 @@
+<div class="elemenx-screen elemenx-workspace" [class.resizing]="!!Drag">
+	<div class="elemenx-container elemenx-workspace-header"><slot name="header"></slot></div>
+	<div class="elemenx-container fill elemenx-workspace-body">
+		<div class="elemenx-column elemenx-workspace-stripe left"><slot name="left-stripe"></slot></div>
+		<div class="elemenx-column elemenx-workspace-panel left" [attribute.hidden]="LeftOpen ? null : ''" [style.width]="LeftWidth + 'px'"><slot name="left"></slot></div>
+		<div class="elemenx-workspace-splitter vertical" role="separator" tabindex="0" aria-orientation="vertical" aria-label="Resize the left panel" data-panel="left" [attribute.hidden]="LeftOpen ? null : ''" [attribute.aria-valuenow]="LeftWidth" (pointerdown)="StartResize" (pointermove)="MoveResize" (pointerup)="EndResize" (pointercancel)="EndResize" (keydown)="KeyResize"></div>
+		<div class="elemenx-column fill elemenx-workspace-center">
+			<div class="elemenx-column fill elemenx-workspace-main"><slot name="main"></slot></div>
+			<div class="elemenx-workspace-splitter horizontal" role="separator" tabindex="0" aria-orientation="horizontal" aria-label="Resize the bottom panel" data-panel="bottom" [attribute.hidden]="BottomOpen ? null : ''" [attribute.aria-valuenow]="BottomHeight" (pointerdown)="StartResize" (pointermove)="MoveResize" (pointerup)="EndResize" (pointercancel)="EndResize" (keydown)="KeyResize"></div>
+			<div class="elemenx-column elemenx-workspace-panel bottom" [attribute.hidden]="BottomOpen ? null : ''" [style.height]="BottomHeight + 'px'"><slot name="bottom"></slot></div>
+		</div>
+		<div class="elemenx-workspace-splitter vertical" role="separator" tabindex="0" aria-orientation="vertical" aria-label="Resize the right panel" data-panel="right" [attribute.hidden]="RightOpen ? null : ''" [attribute.aria-valuenow]="RightWidth" (pointerdown)="StartResize" (pointermove)="MoveResize" (pointerup)="EndResize" (pointercancel)="EndResize" (keydown)="KeyResize"></div>
+		<div class="elemenx-column elemenx-workspace-panel right" [attribute.hidden]="RightOpen ? null : ''" [style.width]="RightWidth + 'px'"><slot name="right"></slot></div>
+		<div class="elemenx-column elemenx-workspace-stripe right"><slot name="right-stripe"></slot></div>
+	</div>
+	<div class="elemenx-container elemenx-workspace-status"><slot name="status"></slot></div>
+</div>

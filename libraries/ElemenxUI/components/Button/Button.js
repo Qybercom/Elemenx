@@ -1,12 +1,18 @@
 Elemenx.Component('Button', {
 	$TemplateURL: 'Button.html',
-	Label: 'Button',
-	Variant: '',
+	Label: '',
+	Variant: 'secondary',
+	Size: 'medium',
 	Icon: '',
 	IconRight: '',
+	Type: 'button',
+	Title: '',
 	Disabled: false,
+	Loading: false,
+	Block: false,
+	Pressed: null,
 
-	Classes: function () {
-		return 'elemenx-button' + (this.Variant ? ' ' + this.Variant : '');
+	Clicked: function (event) {
+		this.$Emit('click', event);
 	}
 });

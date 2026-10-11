@@ -1,0 +1,145 @@
+.elemenx-workspace {
+	flex: 1;
+	height: 100%;
+	min-height: 0;
+	overflow: hidden;
+	background: var(--elemenx-background);
+	color: var(--elemenx-text);
+}
+
+.elemenx-workspace.resizing {
+	user-select: none;
+}
+
+.elemenx-workspace-header,
+.elemenx-workspace-status,
+.elemenx-workspace-body {
+	border-radius: 0;
+}
+
+.elemenx-workspace-header {
+	flex: none;
+	align-items: center;
+	gap: 8px;
+	height: 40px;
+	padding: 0 8px;
+	background: var(--elemenx-surface-raised);
+	border-bottom: 1px solid var(--elemenx-border);
+}
+
+.elemenx-workspace-body {
+	min-height: 0;
+}
+
+.elemenx-workspace-stripe {
+	flex: none;
+	align-items: center;
+	gap: 4px;
+	width: 40px;
+	padding: 8px 0;
+	background: var(--elemenx-surface-raised);
+}
+
+.elemenx-workspace-stripe.left {
+	border-right: 1px solid var(--elemenx-border);
+}
+
+.elemenx-workspace-stripe.right {
+	border-left: 1px solid var(--elemenx-border);
+}
+
+.elemenx-workspace-stripe:empty {
+	display: none;
+}
+
+.elemenx-workspace-stripe .elemenx-divider {
+	width: 24px;
+	margin: 4px 0;
+}
+
+.elemenx-workspace-panel {
+	flex: none;
+	min-width: 0;
+	min-height: 0;
+	overflow: hidden;
+	background: var(--elemenx-surface);
+}
+
+.elemenx-workspace-panel[hidden],
+.elemenx-workspace-splitter[hidden] {
+	display: none;
+}
+
+.elemenx-workspace-center {
+	min-width: 0;
+	min-height: 0;
+}
+
+.elemenx-workspace-main {
+	min-height: 0;
+	overflow: hidden;
+	background: var(--elemenx-surface);
+}
+
+.elemenx-workspace-splitter {
+	position: relative;
+	z-index: 1;
+	flex: none;
+	background: var(--elemenx-border);
+	outline: none;
+	touch-action: none;
+}
+
+.elemenx-workspace-splitter::after {
+	content: '';
+	position: absolute;
+}
+
+.elemenx-workspace-splitter.vertical {
+	width: 1px;
+	cursor: col-resize;
+}
+
+.elemenx-workspace-splitter.vertical::after {
+	top: 0;
+	bottom: 0;
+	left: -4px;
+	width: 8px;
+}
+
+.elemenx-workspace-splitter.horizontal {
+	height: 1px;
+	cursor: row-resize;
+}
+
+.elemenx-workspace-splitter.horizontal::after {
+	top: -4px;
+	right: 0;
+	left: 0;
+	height: 8px;
+}
+
+.elemenx-workspace-splitter:hover,
+.elemenx-workspace-splitter:focus-visible,
+.elemenx-workspace.resizing .elemenx-workspace-splitter:active {
+	background: var(--elemenx-accent);
+}
+
+.elemenx-workspace-status {
+	flex: none;
+	align-items: center;
+	gap: 16px;
+	height: 24px;
+	padding: 0 8px;
+	background: var(--elemenx-surface-raised);
+	border-top: 1px solid var(--elemenx-border);
+	color: var(--elemenx-text-muted);
+	font-size: 12px;
+	line-height: 16px;
+	white-space: nowrap;
+}
+
+.elemenx-workspace-status .elemenx-icon {
+	width: 12px;
+	height: 12px;
+}

@@ -1,0 +1,55 @@
+.elemenx-input.elemenx-number-input {
+	padding-right: 0;
+}
+
+.elemenx-number-controls {
+	display: flex;
+	flex-direction: column;
+	flex: none;
+	align-self: stretch;
+	width: 24px;
+	border-left: 1px solid var(--elemenx-border);
+}
+
+.elemenx-number-step {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex: 1;
+	padding: 0;
+	background: transparent;
+	border: 0;
+	color: var(--elemenx-text-muted);
+	cursor: pointer;
+}
+
+.elemenx-number-step + .elemenx-number-step {
+	border-top: 1px solid var(--elemenx-border);
+}
+
+.elemenx-number-step:hover {
+	background: var(--elemenx-surface-hover);
+	color: var(--elemenx-text);
+}
+
+.elemenx-number-step:disabled {
+	opacity: 0.32;
+	cursor: default;
+}
+
+.elemenx-number-input .elemenx-number-step:first-child {
+	border-top-right-radius: 3px;
+}
+
+.elemenx-number-input .elemenx-number-step:last-child {
+	border-bottom-right-radius: 3px;
+}
+
+.elemenx-input.small .elemenx-number-controls {
+	width: 16px;
+}
+
+.elemenx-input.large .elemenx-number-controls,
+.elemenx-input.giant .elemenx-number-controls {
+	width: 32px;
+}

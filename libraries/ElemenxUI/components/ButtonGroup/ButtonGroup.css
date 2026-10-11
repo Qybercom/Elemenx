@@ -1,0 +1,31 @@
+.elemenx-button-group {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.elemenx-button-group.vertical {
+	flex-direction: column;
+	align-items: stretch;
+}
+
+.elemenx-button-group.attached {
+	gap: 0;
+}
+
+.elemenx-button-group.attached .elemenx-button:not(:first-of-type) {
+	margin-left: -1px;
+	border-top-left-radius: 0;
+	border-bottom-left-radius: 0;
+}
+
+.elemenx-button-group.attached .elemenx-button:not(:last-of-type) {
+	border-top-right-radius: 0;
+	border-bottom-right-radius: 0;
+}
+
+.elemenx-button-group.attached .elemenx-button:hover,
+.elemenx-button-group.attached .elemenx-button:focus-visible {
+	position: relative;
+	z-index: 1;
+}

@@ -1,0 +1,5 @@
+<div class="elemenx-input elemenx-card-input" [class]="[Size || 'medium', Invalid || (Touched && Value && !Valid(Value)) ? 'invalid' : '', Disabled ? 'disabled' : '']">
+	<Icon Name="credit-card" />
+	<input class="elemenx-input-control" type="text" inputmode="numeric" autocomplete="cc-number" *mask="{Mask: MaskFor(Value), Value: Value}" [placeholder]="Placeholder" [disabled]="Disabled" [attribute.name]="Name" [attribute.aria-invalid]="Invalid || (Touched && Value && !Valid(Value)) ? 'true' : null" (mask)="Masked" (change)="Committed" />
+	<span class="elemenx-card-brand" *if="Brand(Value)" [attribute.data-brand]="(Brand(Value) || {}).ID">{{(Brand(Value) || {}).Label}}</span>
+</div>

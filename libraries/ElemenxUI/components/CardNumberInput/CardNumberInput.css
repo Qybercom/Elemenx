@@ -1,0 +1,21 @@
+.elemenx-card-input .elemenx-input-control {
+	font-variant-numeric: tabular-nums;
+	letter-spacing: 0.02em;
+}
+
+.elemenx-card-brand {
+	flex: none;
+	padding: 0 8px;
+	background: var(--elemenx-surface-hover);
+	border-radius: 4px;
+	color: var(--elemenx-text);
+	font-size: 12px;
+	line-height: 20px;
+	font-weight: 600;
+	white-space: nowrap;
+}
+
+.elemenx-input.small .elemenx-card-brand {
+	padding: 0 4px;
+	line-height: 16px;
+}

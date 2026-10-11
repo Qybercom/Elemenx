@@ -1,50 +1,229 @@
-<section class="elemenx-screen">
-	<div class="elemenx-page-heading">
+<section class="ui-kit">
+	<header class="ui-kit-intro">
 		<p class="elemenx-eyebrow">Standard library</p>
-		<h1>Elemenx UI Kit</h1>
-		<p class="elemenx-lead">The executable catalogue for the standard Elemenx UI library. Every public component and foundation primitive gets verified here as the library grows.</p>
-	</div>
+		<h1 class="elemenx-title">Elemenx UI</h1>
+		<p class="elemenx-subtitle">The executable catalogue of the ElemenxUI library. Switch the theme in the header to check both palettes.</p>
+	</header>
 
 	<section class="elemenx-section">
-		<div class="elemenx-section-heading">
-			<div class="elemenx-section-title"><span class="elemenx-section-index">01</span><h2>Foundation</h2></div>
-			<p class="elemenx-section-note">Typography, layout helpers, blocks, cards, notes and lists come from the shared UI foundation stylesheet.</p>
-		</div>
-		<div class="elemenx-grid">
-			<div class="elemenx-card"><h3>Card</h3><p>Raised surface for grouped application content.</p><small class="elemenx-note">Muted supporting note</small></div>
-			<div class="elemenx-block"><h3>Block</h3><ul class="elemenx-list"><li>Compact list item</li><li>Another list item</li><li><a href="/ui">Standard link</a></li></ul></div>
+		<div class="elemenx-section-header"><h2>Typography and blocks</h2><span class="elemenx-caption">common.css</span></div>
+		<div class="ui-kit-grid">
+			<div class="elemenx-panel ui-kit-stack">
+				<h3>Heading 3</h3>
+				<h4>Heading 4</h4>
+				<h5>Heading 5</h5>
+				<h6>Heading 6</h6>
+				<p class="elemenx-text">Body text with a <a class="elemenx-link" href="/ui">link</a>, <code class="elemenx-code">inline code</code> and <kbd class="elemenx-kbd">Ctrl</kbd> <kbd class="elemenx-kbd">K</kbd>.<sup class="elemenx-footnote-mark">1</sup></p>
+				<p class="elemenx-text small muted">Small muted text for secondary details.</p>
+				<span class="elemenx-label required">Label</span>
+				<p class="elemenx-footnote"><span>1</span><span>A footnote explains a marked statement.</span></p>
+			</div>
+			<div class="ui-kit-stack">
+				<div class="elemenx-callout"><Icon Name="info" /><span>Info callout for neutral guidance.</span></div>
+				<div class="elemenx-callout success"><Icon Name="success" /><span>Changes were saved.</span></div>
+				<div class="elemenx-callout warning"><Icon Name="warning" /><span>The token expires in 3 days.</span></div>
+				<div class="elemenx-callout danger"><Icon Name="error" /><span>The build failed.</span></div>
+				<div class="ui-kit-row">
+					<span class="elemenx-badge">Neutral</span>
+					<span class="elemenx-badge accent">Accent</span>
+					<span class="elemenx-badge info">Info</span>
+					<span class="elemenx-badge success">Success</span>
+					<span class="elemenx-badge warning">Warning</span>
+					<span class="elemenx-badge danger">Danger</span>
+				</div>
+				<div class="elemenx-card"><h4>Card</h4><p class="elemenx-text small muted">Raised surface for grouped content.</p></div>
+			</div>
 		</div>
 	</section>
 
 	<section class="elemenx-section">
-		<div class="elemenx-section-heading">
-			<div class="elemenx-section-title"><span class="elemenx-section-index">02</span><h2>Buttons & icons</h2></div>
-			<p class="elemenx-section-note">Current button variants and both icon positions. Icon is pulled transitively by Button.</p>
-		</div>
-		<div class="elemenx-preview elemenx-row elemenx-wrap">
-			<Button Label="Default" />
-			<Button Label="Primary" Variant="primary" />
+		<div class="elemenx-section-header"><h2>Buttons</h2><span class="elemenx-caption">Clicks: {{Clicks}}</span></div>
+		<div class="ui-kit-row">
+			<Button Label="Primary" Variant="primary" (click)="Clicked" />
+			<Button Label="Secondary" (click)="Clicked" />
 			<Button Label="Ghost" Variant="ghost" />
-			<Button Label="Danger" Variant="danger" />
-			<Button Label="Add item" Icon="add" />
-			<Button Label="Continue" IconRight="right" />
+			<Button Label="Danger" Variant="danger" Icon="delete" />
+			<Button Label="Link" Variant="link" />
 			<Button Label="Disabled" Disabled="true" />
+			<Button Label="Loading" Variant="primary" Loading="true" />
 		</div>
-		<div class="elemenx-preview elemenx-row elemenx-wrap">
-			<Icon Name="add" /><Icon Name="remove" /><Icon Name="check" /><Icon Name="close" /><Icon Name="left" /><Icon Name="right" /><Icon Name="up" /><Icon Name="down" />
+		<div class="ui-kit-row">
+			<Button Label="Small" Size="small" Icon="add" />
+			<Button Label="Medium" Icon="add" />
+			<Button Label="Large" Size="large" Icon="add" />
+			<Button Label="Giant" Size="giant" Variant="primary" IconRight="arrow-right" />
+		</div>
+		<div class="ui-kit-row">
+			<Button Icon="settings" Title="Settings" Variant="ghost" Size="small" />
+			<Button Icon="settings" Title="Settings" Variant="ghost" />
+			<Button Icon="settings" Title="Settings" />
+			<Button Icon="play" Title="Run" Variant="primary" Size="large" />
+			<ButtonGroup Attached="true">
+				<Button Label="Left" Icon="panel-left" Pressed="true" />
+				<Button Label="Bottom" Icon="panel-bottom" Pressed="false" />
+				<Button Label="Right" Icon="panel-right" Pressed="false" />
+			</ButtonGroup>
+			<Menu Label="File" Icon="file" [items]="MenuItems" (select)="MenuSelected" />
+			<Menu Icon="more" Title="More actions" Variant="ghost" [items]="MenuItems" (select)="MenuSelected" />
+			<span class="elemenx-caption" *if="MenuChoice">Menu: {{MenuChoice}}</span>
 		</div>
 	</section>
 
 	<section class="elemenx-section">
-		<div class="elemenx-section-heading">
-			<div class="elemenx-section-title"><span class="elemenx-section-index">03</span><h2>Inputs & fields</h2></div>
-			<p class="elemenx-section-note">Low-level Input and composed Field. Field pulls Input as its own library dependency.</p>
+		<div class="elemenx-section-header"><h2>Icons</h2><span class="elemenx-caption">&lt;Icon Name="..." /&gt;</span></div>
+		<div class="ui-kit-icons">
+			<div class="ui-kit-icon" *for="name of Icons" *key="name" [attribute.title]="name"><Icon [name]="name" Size="24" /><span>{{name}}</span></div>
 		</div>
-		<div class="elemenx-preview elemenx-grid">
-			<Input Placeholder="Standalone input" />
-			<Field Label="Project name" Hint="A normal text field with supporting copy." Placeholder="Elemenx" />
-			<Field Label="Build number" Type="number" Hint="Numeric input using the same field contract." Placeholder="1" />
-			<Field Label="Disabled field" Value="Read only for now" Disabled="true" />
+	</section>
+
+	<section class="elemenx-section">
+		<div class="elemenx-section-header"><h2>Inputs</h2><span class="elemenx-caption">Value: {{Text}}</span></div>
+		<div class="ui-kit-grid">
+			<Field Label="Project name" Hint="Text input with a hint." Required="true"><Input [value]="Text" Placeholder="Name" Clearable="true" (input)="TextChanged" /></Field>
+			<Field Label="Search"><Input Icon="search" Placeholder="Search everywhere" Clearable="true" /></Field>
+			<Field Label="Password"><Input Type="password" Value="secret" /></Field>
+			<Field Label="Invalid" Error="This value is not allowed."><Input Value="wrong" Invalid="true" /></Field>
+			<Field Label="Price"><Input Prefix="$" Suffix="USD" Placeholder="0.00" /></Field>
+			<Field Label="Disabled"><Input Value="Read only for now" Disabled="true" /></Field>
+			<Field Label="Amount" [hint]="'Value: ' + Amount"><NumberInput [value]="Amount" Min="0" Max="100" Step="1" Suffix="items" (input)="AmountChanged" /></Field>
+			<Field Label="Color" [hint]="'Value: ' + Color"><ColorInput [value]="Color" (input)="ColorChanged" /></Field>
+			<Field Label="Date"><DateInput /></Field>
+			<Field Label="Time"><TimeInput /></Field>
+			<Field Label="Description"><TextArea Placeholder="Write something…" MaxLength="200" AutoSize="true" /></Field>
+			<Field Label="Notes (resizable)"><TextArea Rows="3" Value="Plain multi-line input." /></Field>
+		</div>
+		<div class="ui-kit-row">
+			<Input Size="small" Placeholder="Small" />
+			<Input Placeholder="Medium" />
+			<Input Size="large" Placeholder="Large" />
+			<Input Size="giant" Placeholder="Giant" Icon="search" />
+		</div>
+		<Field Label="Horizontal label" Horizontal="true" Hint="Settings-style layout."><Input Placeholder="Value" /></Field>
+	</section>
+
+	<section class="elemenx-section">
+		<div class="elemenx-section-header"><h2>Payment and phone</h2><span class="elemenx-caption">Strict masks: typing, paste and drop</span></div>
+		<div class="ui-kit-grid">
+			<Field Label="Card number" [hint]="CardState || 'Try 4242 4242 4242 4242'"><CardNumberInput (validate)="CardValidated" /></Field>
+			<div class="ui-kit-pair">
+				<Field Label="Expires"><CardExpiryInput /></Field>
+				<Field Label="CVV"><CVVInput /></Field>
+			</div>
+			<Field Label="Phone" [hint]="Phone + (PhoneState ? ' · ' + PhoneState : '')"><PhoneInput [value]="Phone" (input)="PhoneChanged" (validate)="PhoneValidated" /></Field>
+			<Field Label="Phone (US only)"><PhoneInput Country="US" [countries]="[{Code: 'US', Name: 'United States', Dial: '1', Mask: '(###) ###-####'}]" /></Field>
+		</div>
+	</section>
+
+	<section class="elemenx-section">
+		<div class="elemenx-section-header"><h2>Selection</h2><span class="elemenx-caption">Language: {{Language}} · Tags: {{Tags.join(', ')}}</span></div>
+		<div class="ui-kit-grid">
+			<Field Label="Language"><Select [options]="Languages" [value]="Language" Searchable="true" (change)="LanguageChanged" /></Field>
+			<Field Label="Optional"><Select [options]="Languages" Placeholder="None" Clearable="true" /></Field>
+			<Field Label="Tags"><MultiSelect [options]="TagOptions" [value]="Tags" SelectAll="true" (change)="TagsChanged" /></Field>
+			<Field Label="Tags (count)"><MultiSelect [options]="TagOptions" [value]="Tags" Display="count" Searchable="false" /></Field>
+		</div>
+		<div class="ui-kit-grid">
+			<div class="ui-kit-stack">
+				<Checkbox Label="I agree to the terms" [checked]="Agree" (change)="AgreeChanged" />
+				<Checkbox Label="Partially selected" Indeterminate="true" />
+				<Checkbox Label="Disabled" Disabled="true" Checked="true" />
+				<Checkbox Label="Small" Size="small" Checked="true" />
+				<div class="ui-kit-row">
+					<Checkbox Variant="chip" Label="Bug" Icon="debug" Checked="true" />
+					<Checkbox Variant="chip" Label="Feature" Icon="star" />
+					<Checkbox Variant="chip" Label="Docs" Icon="file-text" />
+				</div>
+				<Checkbox Variant="tile" Label="Email notifications" Description="Receive a digest every morning." Checked="true" />
+			</div>
+			<div class="ui-kit-stack">
+				<RadioGroup [options]="Plans" [value]="Plan" (change)="PlanChanged" />
+				<RadioGroup Variant="segmented" [options]="Views" [value]="View" (change)="ViewChanged" />
+				<RadioGroup Variant="horizontal" [options]="Views" [value]="View" (change)="ViewChanged" />
+				<Toggle Label="Notifications" Description="Show desktop notifications." [checked]="Notifications" />
+				<Toggle Label="Small toggle" Size="small" />
+			</div>
+		</div>
+		<RadioGroup Variant="tile" [options]="Plans" [value]="Plan" (change)="PlanChanged" />
+	</section>
+
+	<section class="elemenx-section">
+		<div class="elemenx-section-header"><h2>Tabs</h2><span class="elemenx-caption">Active: {{Tab}} · {{Section}}</span></div>
+		<Tabs [tabs]="SectionTabs" [value]="Section" (change)="SectionChanged" />
+		<Tabs Variant="pill" [tabs]="SectionTabs" [value]="Section" (change)="SectionChanged" />
+		<div class="elemenx-panel compact ui-kit-editor">
+			<Tabs Variant="editor" [tabs]="EditorTabs" [value]="Tab" (change)="TabChanged" (close)="TabClosed">
+				<Button Icon="more-vertical" Title="Tab actions" Variant="ghost" Size="small" />
+			</Tabs>
+			<p class="elemenx-text small muted ui-kit-editor-body">Content of {{Tab || 'nothing'}}. Close tabs with the cross, the middle button or Delete.</p>
+		</div>
+	</section>
+
+	<section class="elemenx-section">
+		<div class="elemenx-section-header"><h2>File upload</h2><span class="elemenx-caption">Selected: {{FileCount}}</span></div>
+		<div class="ui-kit-grid">
+			<FileUpload Hint="Any file up to 5 MB" MaxSize="5242880" (change)="FilesChanged" />
+			<FileUpload Variant="gallery" Accept="image/*" Label="Drop images here" Hint="Images only, previews below" />
+		</div>
+		<div class="ui-kit-row">
+			<FileUpload Variant="chip" Label="Attach files" Hint="PDF or text" Accept=".pdf,.txt" />
+			<FileUpload Variant="avatar" Accept="image/*" Label="Change avatar" />
+		</div>
+	</section>
+
+	<section class="elemenx-section">
+		<div class="elemenx-section-header"><h2>Workspace</h2><span class="elemenx-caption">IDE frame: drag or focus the splitters and use the arrow keys</span></div>
+		<div class="ui-kit-frame">
+			<Workspace [leftOpen]="LeftOpen" [bottomOpen]="BottomOpen" [rightOpen]="RightOpen" LeftWidth="240" BottomHeight="160">
+				<Toolbar slot="header" Label="Main toolbar">
+					<span class="ui-kit-logo">E</span>
+					<Menu Label="Elemenx" Variant="ghost" Size="small" [items]="MenuItems" (select)="MenuSelected" />
+					<Button Label="main" Icon="branch" IconRight="chevron-down" Variant="ghost" Size="small" />
+					<span class="elemenx-spacer"></span>
+					<Button Icon="play" Title="Run" Variant="ghost" Size="small" />
+					<Button Icon="debug" Title="Debug" Variant="ghost" Size="small" />
+					<Button Icon="stop" Title="Stop" Variant="ghost" Size="small" Disabled="true" />
+					<span class="elemenx-divider vertical"></span>
+					<Button Icon="search" Title="Search everywhere" Variant="ghost" Size="small" />
+					<Button Icon="settings" Title="Settings" Variant="ghost" Size="small" />
+				</Toolbar>
+				<Button slot="left-stripe" Icon="folder" Title="Project" Variant="ghost" [pressed]="LeftOpen" (click)="ToggleLeft" />
+				<Button slot="left-stripe" Icon="structure" Title="Structure" Variant="ghost" Pressed="false" />
+				<Button slot="left-stripe" Icon="commit" Title="Commit" Variant="ghost" Pressed="false" />
+				<span slot="left-stripe" class="elemenx-spacer"></span>
+				<Button slot="left-stripe" Icon="terminal" Title="Terminal" Variant="ghost" [pressed]="BottomOpen" (click)="ToggleBottom" />
+				<ToolWindow slot="left" Title="Project" Icon="folder" Closable="true" (close)="ToggleLeft">
+					<Button slot="actions" Icon="refresh" Title="Refresh" Variant="ghost" Size="small" />
+					<ul class="ui-kit-tree">
+						<li><Icon Name="folder-open" />application</li>
+						<li class="nested"><Icon Name="folder" />components</li>
+						<li class="nested"><Icon Name="folder" />services</li>
+						<li class="nested active"><Icon Name="file-code" />app.js</li>
+						<li><Icon Name="folder" />libraries</li>
+						<li><Icon Name="file-text" />README.md</li>
+					</ul>
+				</ToolWindow>
+				<div slot="main" class="elemenx-column fill">
+					<Tabs Variant="editor" [tabs]="EditorTabs" [value]="Tab" (change)="TabChanged" (close)="TabClosed" />
+					<pre class="ui-kit-code">Elemenx.Application('Application', {
+	$Use: ['ElemenxUI'],
+	$Component: 'Root'
+});</pre>
+				</div>
+				<ToolWindow slot="bottom" Title="Terminal" Icon="terminal" Closable="true" Padded="true" (close)="ToggleBottom">
+					<pre class="ui-kit-terminal">$ npm test
+ Test Files  52 passed (52)</pre>
+				</ToolWindow>
+				<ToolWindow slot="right" Title="Database" Icon="database" Closable="true" Padded="true" (close)="ToggleRight">
+					<p class="elemenx-text small muted">No data sources yet.</p>
+				</ToolWindow>
+				<Button slot="right-stripe" Icon="bell" Title="Notifications" Variant="ghost" Pressed="false" />
+				<Button slot="right-stripe" Icon="database" Title="Database" Variant="ghost" [pressed]="RightOpen" (click)="ToggleRight" />
+				<span slot="status" class="elemenx-container ui-kit-status"><Icon Name="branch" />main</span>
+				<span slot="status" class="elemenx-spacer"></span>
+				<span slot="status">12:4</span>
+				<span slot="status">LF</span>
+				<span slot="status">UTF-8</span>
+			</Workspace>
 		</div>
 	</section>
 </section>

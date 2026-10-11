@@ -1,0 +1,46 @@
+.elemenx-field {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	min-width: 0;
+}
+
+.elemenx-field-label {
+	cursor: default;
+}
+
+.elemenx-field-body {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	min-width: 0;
+}
+
+.elemenx-field-error {
+	color: var(--elemenx-danger);
+	font-size: 12px;
+	line-height: 16px;
+}
+
+.elemenx-field.disabled .elemenx-field-label {
+	color: var(--elemenx-text-muted);
+}
+
+.elemenx-field.horizontal {
+	flex-direction: row;
+	align-items: flex-start;
+	gap: 16px;
+}
+
+.elemenx-field.horizontal .elemenx-field-label {
+	flex: none;
+	width: 160px;
+	min-height: 32px;
+	font-size: 14px;
+	line-height: 20px;
+	font-weight: 400;
+}
+
+.elemenx-field.horizontal .elemenx-field-body {
+	flex: 1;
+}

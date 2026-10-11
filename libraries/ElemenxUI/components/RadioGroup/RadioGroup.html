@@ -1,0 +1,10 @@
+<div class="elemenx-radio-group" role="radiogroup" [class]="[Variant || 'default', Size || 'medium']" [attribute.aria-label]="Label || null" [attribute.aria-invalid]="Invalid ? 'true' : null">
+	<label class="elemenx-check elemenx-radio" *for="option of Options" *key="String(option.Value)" [class]="[Variant === 'tile' ? 'tile' : Variant === 'segmented' ? 'segment' : 'default', Size || 'medium', option.Value === Value ? 'checked' : '', Disabled || option.Disabled ? 'disabled' : '', Invalid ? 'invalid' : '']">
+		<input class="elemenx-check-input" type="radio" [attribute.name]="Name" [checked]="option.Value === Value" [disabled]="Disabled || option.Disabled" [attribute.data-index]="$index" (change)="Picked" />
+		<span class="elemenx-check-box" aria-hidden="true"></span>
+		<span class="elemenx-check-text">
+			<span class="elemenx-check-label">{{option.Label}}</span>
+			<span class="elemenx-caption" *if="option.Description && Variant !== 'segmented'">{{option.Description}}</span>
+		</span>
+	</label>
+</div>

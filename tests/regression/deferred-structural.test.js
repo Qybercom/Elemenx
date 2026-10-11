@@ -69,6 +69,43 @@ describe('Regression: deferred structural composition', function () {
 		destroy(app);
 	});
 
+	it('discovered child keeps its (events) and receives later [prop] updates under the declared spelling', async function () {
+		var root = unique('DeferredInputRoot');
+		var received = [];
+		var app;
+
+		Elemenx.Component(root, {
+			$Template: '<main><DeferredInputChild [label]="Text" (ping)="Pinged"></DeferredInputChild></main>',
+			Text: 'first',
+
+			Pinged: function (value) {
+				received.push(value);
+			}
+		});
+
+		app = Elemenx.Application(unique('DeferredInputApp'), {
+			$Component: root,
+			$Root: '/deferred-structural',
+			$Mount: '#mount'
+		});
+
+		live.push(app);
+
+		expect(await appReady(app)).not.toBe(false);
+		expect(await waitFor(function () { return document.querySelector('.deferred-input-label'); }, 1500)).not.toBe(false);
+		expect(document.querySelector('.deferred-input-label').textContent).toBe('first');
+
+		app.$Component().$Update({Text: 'second'});
+
+		expect(document.querySelector('.deferred-input-label').textContent).toBe('second');
+
+		document.querySelector('.deferred-input-ping').click();
+
+		expect(received).toEqual(['second']);
+
+		destroy(app);
+	});
+
 	it('nested-concurrent: keyed deferred children coalesce both child and nested-grandchild loads', async function () {
 		var app = appWithTemplate('<div><DeferredConcurrentChild *for="item of items" *key="item.id" id="{{item.id}}" name="{{item.name}}"></DeferredConcurrentChild></div>', function () {
 			this.items = [{id: 'a', name: 'A'}, {id: 'b', name: 'B'}, {id: 'c', name: 'C'}];

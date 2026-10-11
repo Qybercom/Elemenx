@@ -189,6 +189,105 @@ describe('Regression: directive syntax', function () {
 		component.$Destroy();
 	});
 
+	test('an empty slot keeps the structural hosts that follow it in place', function () {
+		var badgeName = unique('SlotSiblingBadge');
+		var childName = unique('SlotSiblingChild');
+
+		Elemenx.Component(badgeName, {$Template: '<em>{{Text}}</em>', Text: ''});
+		Elemenx.Component(childName, {
+			$Template: '<div><slot></slot><b *if="Show">after</b><' + badgeName + ' *if="Show" [text]="Label"></' + badgeName + '></div>',
+			Show: true,
+			Label: 'badge'
+		});
+
+		var empty = Elemenx.Component(childName)({});
+		var parent = Elemenx.Component(unique('SlotSiblingParent'), {
+			$Template: '<section><' + childName + '><i>projected</i></' + childName + '></section>'
+		})({});
+
+		document.body.appendChild(empty.$Element());
+		document.body.appendChild(parent.$Element());
+
+		expect(empty.$Element().querySelector('slot')).toBeNull();
+		expect(empty.$Element().querySelector('b').textContent).toBe('after');
+		expect(empty.$Element().querySelector('em').textContent).toBe('badge');
+		expect(parent.$Element().querySelector('i').textContent).toBe('projected');
+		expect(parent.$Element().querySelector('b').textContent).toBe('after');
+
+		empty.$Destroy();
+		parent.$Destroy();
+	});
+
+	test('a component projected into a slot receives its [prop] bindings', function () {
+		var leafName = unique('ProjectedLeaf');
+		var frameName = unique('ProjectedFrame');
+
+		Elemenx.Component(leafName, {$Template: '<em>{{Text}}:{{Fixed}}</em>', Text: '', Fixed: ''});
+		Elemenx.Component(frameName, {$Template: '<section><slot></slot></section>'});
+
+		var parent = Elemenx.Component(unique('ProjectedHost'), {
+			$Template: '<div><' + frameName + '><' + leafName + ' [text]="Value" Fixed="static"></' + leafName + '></' + frameName + '></div>',
+			Value: 'bound'
+		})({});
+
+		document.body.appendChild(parent.$Element());
+
+		expect(parent.$Element().querySelector('em').textContent).toBe('bound:static');
+
+		parent.$Update({Value: 'next'});
+
+		expect(parent.$Element().querySelector('em').textContent).toBe('next:static');
+
+		parent.$Destroy();
+	});
+
+	test('a component named like a native element receives [prop] inputs that the element would refuse', function () {
+		var parentName = unique('NativeNamedParent');
+
+		Elemenx.Component('Select', {$Template: '<ul><li *for="option of Options">{{option}}</li></ul>', Options: []});
+
+		var parent = Elemenx.Component(parentName, {
+			$Template: '<div><Select [options]="Items" /></div>',
+			Items: ['a', 'b']
+		})({});
+
+		document.body.appendChild(parent.$Element());
+
+		expect(parent.$Element().querySelectorAll('li').length).toBe(2);
+
+		parent.$Destroy();
+	});
+
+	test('a keyed collection keeps its elements in place, so the focus survives an update', function () {
+		var name = unique('KeyedFocus');
+		var component = Elemenx.Component(name, {
+			$Template: '<ul><li *for="item of Items" *key="item"><input [class.active]="item === Active" [value]="item" /></li></ul>',
+			Items: ['a', 'b', 'c'],
+			Active: 'a'
+		})({});
+		var inputs;
+
+		document.body.appendChild(component.$Element());
+
+		inputs = component.$Element().querySelectorAll('input');
+
+		inputs[1].focus();
+
+		component.$Update({Active: 'b'});
+
+		expect(document.activeElement).toBe(inputs[1]);
+		expect(inputs[1].classList.contains('active')).toBe(true);
+
+		component.$Update({Items: ['c', 'a', 'b']});
+
+		expect(Array.prototype.map.call(component.$Element().querySelectorAll('input'), function (input) {
+			return input.value;
+		})).toEqual(['c', 'a', 'b']);
+		expect(component.$Element().querySelectorAll('input')[2]).toBe(inputs[1]);
+
+		component.$Destroy();
+	});
+
 	test('root structural host does not expose internal data-* metadata', function () {
 		var name = unique('StructuralRootMetadata');
 		var factory = Elemenx.Component(name, {$Template: '<div *if="Visible">Visible</div>'});

@@ -1,0 +1,10 @@
+<label class="elemenx-check" [class]="[Variant || 'default', Size || 'medium', Checked && !Indeterminate ? 'checked' : '', Indeterminate ? 'indeterminate' : '', Disabled ? 'disabled' : '', Invalid ? 'invalid' : '']">
+	<input class="elemenx-check-input" type="checkbox" [checked]="Checked" [indeterminate]="Indeterminate" [disabled]="Disabled" [attribute.name]="Name" [attribute.value]="Value" [attribute.aria-invalid]="Invalid ? 'true' : null" (change)="Toggled" />
+	<span class="elemenx-check-box" aria-hidden="true"><Icon Name="check" Size="12" /><Icon Name="remove" Size="12" /></span>
+	<Icon *if="Icon" [name]="Icon" />
+	<span class="elemenx-check-text" *if="Label || Description">
+		<span class="elemenx-check-label" *if="Label">{{Label}}</span>
+		<span class="elemenx-caption" *if="Description">{{Description}}</span>
+	</span>
+	<slot></slot>
+</label>

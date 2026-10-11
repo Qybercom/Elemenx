@@ -1,0 +1,171 @@
+.elemenx-button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	flex: none;
+	height: 32px;
+	padding: 0 12px;
+	background: var(--elemenx-surface);
+	border: 1px solid var(--elemenx-border-strong);
+	border-radius: 4px;
+	color: var(--elemenx-text);
+	font: inherit;
+	font-size: 14px;
+	line-height: 20px;
+	white-space: nowrap;
+	text-decoration: none;
+	cursor: pointer;
+	user-select: none;
+	transition: background 120ms ease,
+		border-color 120ms ease,
+		color 120ms ease;
+}
+
+.elemenx-button:hover {
+	background: var(--elemenx-surface-hover);
+}
+
+.elemenx-button:active {
+	background: color-mix(in srgb, var(--elemenx-text) 12%, var(--elemenx-surface));
+}
+
+.elemenx-button:focus-visible {
+	outline: 2px solid color-mix(in srgb, var(--elemenx-accent) 48%, transparent);
+	outline-offset: 2px;
+}
+
+.elemenx-button:disabled {
+	opacity: 0.48;
+	cursor: default;
+	pointer-events: none;
+}
+
+.elemenx-button.loading {
+	opacity: 0.72;
+}
+
+.elemenx-button-label {
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+
+
+.elemenx-button.primary {
+	background: var(--elemenx-accent);
+	border-color: var(--elemenx-accent);
+	color: var(--elemenx-accent-text);
+}
+
+.elemenx-button.primary:hover {
+	background: var(--elemenx-accent-hover);
+	border-color: var(--elemenx-accent-hover);
+}
+
+.elemenx-button.primary:active {
+	background: color-mix(in srgb, var(--elemenx-accent) 80%, var(--elemenx-background));
+}
+
+.elemenx-button.ghost {
+	background: transparent;
+	border-color: transparent;
+}
+
+.elemenx-button.ghost:hover {
+	background: var(--elemenx-surface-hover);
+}
+
+.elemenx-button.danger {
+	background: var(--elemenx-danger);
+	border-color: var(--elemenx-danger);
+	color: var(--elemenx-surface);
+}
+
+.elemenx-button.danger:hover {
+	background: color-mix(in srgb, var(--elemenx-danger) 88%, var(--elemenx-text));
+	border-color: color-mix(in srgb, var(--elemenx-danger) 88%, var(--elemenx-text));
+}
+
+.elemenx-button.link {
+	height: auto;
+	padding: 0;
+	background: transparent;
+	border-color: transparent;
+	text-decoration: underline;
+	text-decoration-color: var(--elemenx-border-strong);
+	text-underline-offset: 2px;
+}
+
+.elemenx-button.link:hover {
+	text-decoration-color: currentColor;
+}
+
+.elemenx-button.pressed,
+.elemenx-button.ghost.pressed {
+	background: color-mix(in srgb, var(--elemenx-text) 12%, var(--elemenx-surface));
+	border-color: var(--elemenx-border-strong);
+}
+
+.elemenx-button.primary.pressed {
+	background: var(--elemenx-accent-hover);
+}
+
+
+
+.elemenx-button.small {
+	gap: 4px;
+	height: 24px;
+	padding: 0 8px;
+	font-size: 12px;
+	line-height: 16px;
+}
+
+.elemenx-button.large {
+	height: 40px;
+	padding: 0 16px;
+	font-size: 16px;
+	line-height: 24px;
+}
+
+.elemenx-button.large .elemenx-icon {
+	width: 20px;
+	height: 20px;
+}
+
+.elemenx-button.giant {
+	gap: 12px;
+	height: 56px;
+	padding: 0 24px;
+	border-radius: 8px;
+	font-size: 20px;
+	line-height: 24px;
+	font-weight: 600;
+}
+
+.elemenx-button.giant .elemenx-icon {
+	width: 24px;
+	height: 24px;
+}
+
+.elemenx-button.icon-only {
+	width: 32px;
+	padding: 0;
+}
+
+.elemenx-button.icon-only.small {
+	width: 24px;
+}
+
+.elemenx-button.icon-only.large {
+	width: 40px;
+}
+
+.elemenx-button.icon-only.giant {
+	width: 56px;
+}
+
+.elemenx-button.block {
+	display: flex;
+	width: 100%;
+}

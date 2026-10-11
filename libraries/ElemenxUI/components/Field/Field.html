@@ -1,5 +1,8 @@
-<label class="elemenx-field">
-	<span class="elemenx-field-label">{{Label}}</span>
-	<Input [type]="Type" [value]="Value" [placeholder]="Placeholder" [disabled]="Disabled" [min]="Min" [max]="Max" [step]="Step" (change)="Changed" />
-	<span class="elemenx-field-hint" *if="Hint">{{Hint}}</span>
-</label>
+<div class="elemenx-field" [class.horizontal]="Horizontal" [class.invalid]="!!Error" [class.disabled]="Disabled">
+	<label class="elemenx-label elemenx-field-label" *if="Label" [class.required]="Required" (click)="Focus">{{Label}}</label>
+	<div class="elemenx-field-body">
+		<slot></slot>
+		<span class="elemenx-field-error" role="alert" *if="Error">{{Error}}</span>
+		<span class="elemenx-caption" *if="Hint && !Error">{{Hint}}</span>
+	</div>
+</div>

@@ -1,0 +1,19 @@
+.elemenx-toolbar {
+	flex: 1;
+	align-items: center;
+	gap: 4px;
+	min-width: 0;
+	border-radius: 0;
+}
+
+.elemenx-toolbar .elemenx-divider.vertical {
+	height: 16px;
+	margin: 0 4px;
+	align-self: center;
+}
+
+.elemenx-toolbar.elemenx-column .elemenx-divider.vertical {
+	width: 16px;
+	height: 1px;
+	margin: 4px 0;
+}

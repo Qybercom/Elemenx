@@ -1,18 +1,16 @@
 Elemenx.Component('Field', {
 	$TemplateURL: 'Field.html',
+	$StyleURL: 'Field.css',
 	Label: '',
 	Hint: '',
-	Type: 'text',
-	Value: '',
-	Placeholder: '',
+	Error: '',
+	Required: false,
+	Horizontal: false,
 	Disabled: false,
-	Min: null,
-	Max: null,
-	Step: null,
 
-	Changed: function (event) {
-		this.Value = event && event.Data !== undefined ? event.Data : this.Value;
-
-		this.$Emit('change', this.Value);
+	Focus: function (event, node) {
+		var control = node.parentNode.querySelector('input:not([type="hidden"]):not([tabindex="-1"]), textarea, select, button:not([tabindex="-1"]), [tabindex="0"]');
+		if (control)
+			control.focus();
 	}
 });

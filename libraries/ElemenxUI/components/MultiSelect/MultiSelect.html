@@ -1,0 +1,34 @@
+<div class="elemenx-select elemenx-popup-anchor">
+	<div class="elemenx-input elemenx-select-trigger" role="combobox" aria-haspopup="listbox" aria-multiselectable="true" [attribute.tabindex]="Disabled ? null : 0" [class]="[Size || 'medium', Display === 'count' ? '' : 'multiple', Invalid ? 'invalid' : '', Disabled ? 'disabled' : '', Open ? 'open' : '']" [attribute.aria-expanded]="String(Open)" (click)="Toggle" (keydown)="Key">
+		<span class="elemenx-select-value placeholder" *if="!Selected(Options, Value).length">{{Placeholder}}</span>
+		<span class="elemenx-select-value" *if="Display === 'count' && Selected(Options, Value).length">{{Selected(Options, Value).length === 1 ? Selected(Options, Value)[0].Label : Selected(Options, Value).length + ' selected'}}</span>
+		<span class="elemenx-chips" *if="Display !== 'count' && Selected(Options, Value).length">
+			<span class="elemenx-chip" *for="option of Selected(Options, Value)" *key="String(option.Value)">
+				<span class="elemenx-chip-label">{{option.Label}}</span>
+				<button class="elemenx-input-action" type="button" tabindex="-1" [attribute.aria-label]="'Remove ' + option.Label" [attribute.data-index]="$index" *if="!Disabled" (click)="Remove"><Icon Name="close" Size="12" /></button>
+			</span>
+		</span>
+		<Icon Name="chevron-down" />
+	</div>
+	<div class="elemenx-popup" role="listbox" aria-multiselectable="true" *popup="Open" (dismiss)="Dismissed" (keydown)="Key">
+		<div class="elemenx-input small elemenx-popup-search" *if="Searchable">
+			<Icon Name="search" />
+			<input class="elemenx-input-control" type="text" placeholder="Search" autocomplete="off" [value]="Filter" (input)="Search" />
+		</div>
+		<div class="elemenx-option" role="option" *if="SelectAll && !Filter" [attribute.aria-selected]="String(AllSelected(Options, Value))" (mousedown)="Prevent" (click)="FlipAll">
+			<span class="elemenx-check" [class.checked]="AllSelected(Options, Value)" [class.indeterminate]="!AllSelected(Options, Value) && Selected(Options, Value).length > 0"><span class="elemenx-check-box"><Icon Name="check" Size="12" /><Icon Name="remove" Size="12" /></span></span>
+			<span class="elemenx-option-label">Select all</span>
+		</div>
+		<div class="elemenx-popup-separator" *if="SelectAll && !Filter"></div>
+		<div class="elemenx-popup-entry" *for="option of Visible(Options, Filter)" *key="String(option.Value)">
+			<div class="elemenx-popup-group" *if="option.Group && ($index === 0 || Visible(Options, Filter)[$index - 1].Group !== option.Group)">{{option.Group}}</div>
+			<div class="elemenx-option" role="option" [class.active]="$index === Active" [class.disabled]="!!option.Disabled" [attribute.aria-selected]="String(Has(Value, option.Value))" [attribute.data-index]="$index" (mousedown)="Prevent" (mousemove)="Hover" (click)="Pick">
+				<span class="elemenx-check" [class.checked]="Has(Value, option.Value)"><span class="elemenx-check-box"><Icon Name="check" Size="12" /><Icon Name="remove" Size="12" /></span></span>
+				<Icon *if="option.Icon" [name]="option.Icon" />
+				<span class="elemenx-option-label">{{option.Label}}</span>
+				<span class="elemenx-option-hint" *if="option.Hint">{{option.Hint}}</span>
+			</div>
+		</div>
+		<div class="elemenx-popup-empty" *if="!Visible(Options, Filter).length">{{Empty}}</div>
+	</div>
+</div>
