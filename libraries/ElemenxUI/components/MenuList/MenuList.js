@@ -11,11 +11,27 @@ Elemenx.Component('MenuList', {
 	Active: -1,
 	Expanded: -1,
 
+	/*
+	 * Focuses an item of the list root at once when it is visible, so a fast key sequence never meets a stale focus;
+	 * a list that has just been opened becomes visible on the next task.
+	 */
 	Focus: function (root, index) {
+		function find () {
+			return root && (root.querySelector(':scope > .elemenx-menu-entry > .elemenx-option[data-index="' + index + '"]') || root.querySelector(':scope > .elemenx-menu-entry > .elemenx-option:not(.disabled)'));
+		}
+
+		var item = root && !root.hidden ? find() : null;
+
+		if (item) {
+			item.focus();
+
+			return;
+		}
+
 		window.setTimeout(function () {
-			var item = root && (root.querySelector(':scope > .elemenx-menu-entry > .elemenx-option[data-index="' + index + '"]') || root.querySelector(':scope > .elemenx-menu-entry > .elemenx-option:not(.disabled)'));
-			if (item)
-				item.focus();
+			var later = find();
+			if (later)
+				later.focus();
 		}, 0);
 	},
 

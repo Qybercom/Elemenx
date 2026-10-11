@@ -66,6 +66,30 @@ body[data-theme='dark'] {
 	color-scheme: dark;
 }
 
+/* Without data-theme, or with data-theme='system', the theme follows the system. Keep these colors equal to the block above. */
+@media (prefers-color-scheme: dark) {
+	body:not([data-theme]),
+	body[data-theme='system'] {
+		--elemenx-background: #15171b;
+		--elemenx-surface: #1d2025;
+		--elemenx-surface-raised: #24282e;
+		--elemenx-surface-hover: #2c3138;
+		--elemenx-text: #eef0f3;
+		--elemenx-text-muted: #9da4ae;
+		--elemenx-accent: #eef0f3;
+		--elemenx-accent-hover: #ffffff;
+		--elemenx-accent-text: #181a1e;
+		--elemenx-danger: #d56a6a;
+		--elemenx-success: #75b798;
+		--elemenx-warning: #d8a64e;
+		--elemenx-info: #7fa8d6;
+		--elemenx-border: #353a43;
+		--elemenx-border-strong: #4a515c;
+		--elemenx-shadow: 0 8px 24px rgba(0, 0, 0, 0.48);
+		color-scheme: dark;
+	}
+}
+
 
 
 * {

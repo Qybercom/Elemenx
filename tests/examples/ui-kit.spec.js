@@ -289,6 +289,217 @@ for (const origin of origins) {
 			await expect(page.locator('.elemenx-section-header', {hasText: 'File upload'})).toContainText('Selected: 2');
 		});
 
+		test('radio groups and tab strips with their own state do not affect each other', async function ({ page }) {
+			var checked = function (group) {
+				return page.locator('.elemenx-radio-group.' + group + ' .elemenx-radio.checked .elemenx-check-label');
+			};
+
+			await open(page, origin);
+
+			await page.locator('.elemenx-radio-group.default').getByText('Free', {exact: true}).click();
+
+			await expect(checked('default')).toHaveText('Free');
+			await expect(checked('tile')).toHaveText('Free');
+
+			await page.locator('.elemenx-radio-group.tile').getByText('Team', {exact: true}).click();
+
+			await expect(checked('tile')).toHaveText('Team');
+			await expect(checked('default')).toHaveText('Free');
+
+			await page.locator('.elemenx-radio-group.horizontal').getByText('Tree', {exact: true}).click();
+
+			await expect(checked('horizontal')).toHaveText('Tree');
+			await expect(checked('segmented')).toHaveText('List');
+			await expect(page.locator('.elemenx-section-header', {hasText: 'Selection'})).toContainText('Plan: free · View: list');
+
+			await page.locator('.elemenx-tabs.line').getByRole('tab', {name: 'Members'}).click();
+
+			await expect(page.locator('.elemenx-tabs.line .elemenx-tab.active')).toContainText('Members');
+			await expect(page.locator('.elemenx-tabs.pill .elemenx-tab.active')).toContainText('Billing');
+
+			await page.locator('.ui-kit-editor').getByRole('tab', {name: 'index.html'}).click();
+
+			await expect(page.locator('.ui-kit-editor .elemenx-tab.active')).toContainText('index.html');
+			await expect(page.locator('.elemenx-workspace .elemenx-tab.active')).toContainText('app.js');
+		});
+
+		test('theme follows the system unless a policy is chosen, and remembers the policy', async function ({ page }) {
+			var surface = function () {
+				return page.locator('.elemenx-input').first().evaluate(function (node) {
+					return getComputedStyle(node).backgroundColor;
+				});
+			};
+			var css = await (await page.request.get(origin.URL + '/libraries/ElemenxUI/index.css')).text();
+			var forced = css.match(/body\[data-theme='dark'\] \{([^}]*)\}/)[1];
+			var system = css.match(/body\[data-theme='system'\] \{([^}]*)\}/)[1];
+
+			expect(system.replace(/\s+/g, ' ')).toBe(forced.replace(/\s+/g, ' '));
+
+			await page.emulateMedia({colorScheme: 'dark'});
+
+			await open(page, origin);
+
+			await expect(page.locator('body')).toHaveAttribute('data-theme', 'system');
+			expect(await surface()).toBe('rgb(29, 32, 37)');
+
+			await page.locator('.ui-kit-intro').getByRole('button', {name: 'Light theme'}).click();
+
+			await expect(page.locator('body')).toHaveAttribute('data-theme', 'light');
+			expect(await surface()).toBe('rgb(255, 255, 255)');
+
+			await page.reload();
+
+			await expect(page.locator('body')).toHaveAttribute('data-theme', 'light');
+			await expect(page.locator('.ui-kit-intro').getByRole('button', {name: 'Light theme'})).toHaveAttribute('aria-pressed', 'true');
+
+			await page.locator('.ui-kit-intro').getByRole('button', {name: 'System theme'}).click();
+
+			expect(await surface()).toBe('rgb(29, 32, 37)');
+
+			await page.emulateMedia({colorScheme: 'light'});
+
+			expect(await surface()).toBe('rgb(255, 255, 255)');
+			await expect(page.getByRole('button', {name: 'System theme'}).first()).toBeVisible();
+		});
+
+		test('date input picks from its calendar with the keyboard and refuses impossible dates', async function ({ page }) {
+			var date;
+			var iso;
+
+			await open(page, origin);
+
+			date = field(page, 'Date');
+			iso = field(page, 'ISO date, Monday first');
+
+			await date.getByRole('button', {name: 'Choose a date'}).click();
+
+			await expect(date.locator('.elemenx-calendar-day[data-cursor="true"]')).toBeFocused();
+			await expect(date.locator('.elemenx-calendar-day[data-cursor="true"]')).toHaveText('22');
+
+			await page.keyboard.press('ArrowRight');
+			await page.keyboard.press('ArrowDown');
+
+			await expect(date.locator('.elemenx-calendar-day[data-cursor="true"]')).toBeFocused();
+
+			await page.keyboard.press('Enter');
+
+			await expect(date.locator('.elemenx-caption')).toHaveText('Value: 2024-11-30');
+			await expect(date.locator('.elemenx-calendar')).toBeHidden();
+
+			await date.getByRole('button', {name: 'Choose a date'}).click();
+
+			await page.keyboard.press('PageDown');
+
+			await expect(date.locator('.elemenx-calendar-title')).toContainText('2024');
+			await expect(date.locator('.elemenx-calendar-day[data-cursor="true"]')).toHaveAttribute('data-date', '2024-12-30');
+
+			await date.locator('.elemenx-calendar-title').click();
+			await date.locator('.elemenx-calendar-cell[data-month="2024-03"]').click();
+			await date.locator('.elemenx-calendar-day[data-date="2024-03-08"]').click();
+
+			await expect(date.locator('.elemenx-caption')).toHaveText('Value: 2024-03-08');
+
+			await iso.locator('input').pressSequentially('2024a0231');
+
+			await expect(iso.locator('input')).toHaveValue('2024-02-31');
+			await expect(iso.locator('input')).toHaveAttribute('aria-invalid', 'true');
+
+			await iso.locator('input').press('Backspace');
+			await iso.locator('input').press('Backspace');
+			await iso.locator('input').pressSequentially('29');
+
+			await expect(iso.locator('input')).toHaveValue('2024-02-29');
+			await expect(iso.locator('input')).not.toHaveAttribute('aria-invalid', 'true');
+
+			await iso.locator('input').fill('');
+			await iso.locator('input').pressSequentially('20191231');
+
+			await expect(iso.locator('input')).toHaveAttribute('aria-invalid', 'true');
+		});
+
+		test('time input keeps its digits in range and limits its picker', async function ({ page }) {
+			var time;
+			var bounded;
+
+			await open(page, origin);
+
+			time = field(page, 'Time');
+			bounded = field(page, 'Time with seconds');
+
+			await time.locator('input').fill('');
+			await time.locator('input').pressSequentially('7');
+
+			await expect(time.locator('input')).toHaveValue('07');
+
+			await time.locator('input').pressSequentially('92');
+
+			await expect(time.locator('input')).toHaveValue('07:09');
+
+			await time.locator('input').fill('');
+			await time.locator('input').pressSequentially('2915');
+
+			await expect(time.locator('input')).toHaveValue('21:5');
+
+			await time.locator('input').fill('');
+			await time.locator('input').pressSequentially('2345');
+
+			await expect(time.locator('.elemenx-caption')).toHaveText('Value: 23:45');
+
+			await time.getByRole('button', {name: 'Choose a time'}).click();
+			await time.locator('.elemenx-time-column[aria-label="Minutes"] button[data-unit="05"]').click();
+
+			await expect(time.locator('.elemenx-caption')).toHaveText('Value: 23:05');
+			await expect(time.locator('.elemenx-time-column[aria-label="Minutes"] button')).toHaveCount(12);
+
+			await page.keyboard.press('Escape');
+
+			await bounded.getByRole('button', {name: 'Choose a time'}).click();
+
+			await expect(bounded.locator('.elemenx-time-column[aria-label="Hours"] button[data-unit="07"]')).toBeDisabled();
+			await expect(bounded.locator('.elemenx-time-column[aria-label="Hours"] button[data-unit="21"]')).toBeDisabled();
+			await expect(bounded.locator('.elemenx-time-column[aria-label="Hours"] button[data-unit="12"]')).toBeEnabled();
+
+			await bounded.locator('.elemenx-time-column[aria-label="Hours"] button[data-unit="20"]').click();
+
+			await expect(bounded.locator('input')).toHaveValue('20:00:00');
+			await expect(bounded.locator('.elemenx-time-column[aria-label="Minutes"] button[data-unit="01"]')).toBeDisabled();
+		});
+
+		test('color input picks from swatches, sliders and text', async function ({ page }) {
+			var color;
+			var before;
+
+			await open(page, origin);
+
+			color = field(page, 'Color with opacity');
+
+			await color.getByRole('button', {name: 'Pick a color'}).click();
+			await color.locator('.elemenx-color-preset[data-color="#3d7a54"]').click();
+
+			await expect(color.locator('input[type="text"]')).toHaveValue('#3d7a54ff');
+
+			await color.getByRole('slider', {name: 'Opacity'}).focus();
+
+			await page.keyboard.press('Shift+ArrowLeft');
+
+			await expect(color.locator('input[type="text"]')).toHaveValue(/^#[0-9a-f]{6}e6$/);
+
+			before = await color.locator('input[type="text"]').inputValue();
+
+			await color.getByRole('slider', {name: 'Hue'}).click();
+
+			expect(await color.locator('input[type="text"]').inputValue()).not.toBe(before);
+
+			await page.keyboard.press('Escape');
+
+			await expect(color.locator('.elemenx-color-popup')).toBeHidden();
+
+			await color.locator('input[type="text"]').fill('');
+			await color.locator('input[type="text"]').pressSequentially('zz12ab34');
+
+			await expect(color.locator('input[type="text"]')).toHaveValue('#12ab34');
+		});
+
 		test('workspace toggles tool windows and resizes them with the keyboard and the pointer', async function ({ page }) {
 			var workspace;
 			var left;

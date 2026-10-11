@@ -350,6 +350,15 @@ a {
 	background: var(--elemenx-border);
 }
 
+.elemenx-picker-footer {
+	display: flex;
+	justify-content: space-between;
+	gap: 8px;
+	margin-top: 8px;
+	padding-top: 8px;
+	border-top: 1px solid var(--elemenx-border);
+}
+
 .elemenx-option {
 	position: relative;
 	display: flex;

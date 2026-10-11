@@ -34,7 +34,7 @@ The Library `index.js` attaches these stylesheets to every Application that uses
 - `common.css`: typography (`elemenx-title`, `elemenx-text`, `elemenx-label`, `elemenx-caption`, `elemenx-footnote`, `elemenx-link`, `elemenx-code`, `elemenx-kbd`), blocks (`elemenx-panel`, `elemenx-card`, `elemenx-block`, `elemenx-section`, `elemenx-callout`, `elemenx-badge`, `elemenx-divider`, `elemenx-spacer`) and the floating panels and options shared by the dropdowns;
 - `button.css`, `input.css`, `choice.css`: the controls that several Components share, so they stay available when only one of those Components is bundled.
 
-The theme follows `body[data-theme='dark']`. Every color is a `--elemenx-*` variable of the theme, so a Component never names a color directly. Sizes follow the 8-4-2-1 grid: controls are `small` (24px), `medium` (32px, the default), `large` (40px) and `giant` (56px), the base font is 14/20px.
+The theme policy is the `data-theme` attribute of `body`: `system` (or no attribute) follows the operating system through `prefers-color-scheme`, `light` and `dark` force a theme. `index.css` applies the policy before any script runs. The `Theme` Service changes it at runtime: `Policy()` returns it, `Policy('dark')` sets it, `Next()` cycles it, `Resolved()` returns the theme actually shown and `OnChange(callback)`/`OffChange(callback)` report `{Policy, Theme}`, including system changes under `system`. The policy is remembered in `localStorage` (`Persist`, `StorageKey`); the first policy comes from storage, then from the page's `data-theme`, then from `Default` (`system`). `ThemeSwitch` is a ready control for it. Every color is a `--elemenx-*` variable of the theme, so a Component never names a color directly. Sizes follow the 8-4-2-1 grid: controls are `small` (24px), `medium` (32px, the default), `large` (40px) and `giant` (56px), the base font is 14/20px.
 
 ### Icons
 
@@ -45,9 +45,10 @@ The theme follows `body[data-theme='dark']`. Every color is a `--elemenx-*` vari
 Components take their data as props and report changes by events; the event of a value change carries the new value.
 
 - Actions: `Button` (`Variant`: primary, secondary, ghost, danger, link; `Size`; `Icon`, `IconRight`; `Loading`, `Pressed`, `Block`), `ButtonGroup`, `Menu` and `MenuList` (multi-level menus), `Toolbar`.
-- Text input: `Field` (label, hint and error around a control), `Input` (`Type`, `Icon`, `Prefix`, `Suffix`, `Clearable`, `Mask`), `TextArea`, `NumberInput`, `DateInput`, `TimeInput`, `ColorInput`, `CardNumberInput`, `CardExpiryInput`, `CVVInput`, `PhoneInput` (configurable `Countries`).
+- Text input: `Field` (label, hint and error around a control), `Input` (`Type`, `Icon`, `Prefix`, `Suffix`, `Clearable`, `Mask`), `TextArea`, `NumberInput`, `DateInput` (own calendar; `Mode` date or month, `Format` from the locale or `DD`/`MM`/`YYYY`, `Min`, `Max`, `FirstDay`), `TimeInput` (own picker; `Seconds`, `MinuteStep`, `Min`, `Max`), `ColorInput` (own picker; `Alpha`, `Swatches`, eyedropper where supported), `CardNumberInput`, `CardExpiryInput`, `CVVInput`, `PhoneInput` (configurable `Countries`).
 - Choice: `Checkbox` (`Variant`: default, chip, tile; `Indeterminate`), `Radio`, `RadioGroup` (`Variant`: default, horizontal, tile, segmented), `Toggle`, `Select`, `MultiSelect`, `Tabs` (`Variant`: line, pill, editor).
 - Files: `FileUpload` (`Variant`: dropzone, inline, gallery, avatar): it picks files and previews images; uploading is up to the Application.
+- Theme: `ThemeSwitch`.
 - Layout: `Workspace`, an IDE-like frame with the slots `header`, `left-stripe`, `left`, `main`, `bottom`, `right`, `right-stripe` and `status` and resizable tool window areas; `ToolWindow` for the content of an area.
 
 Two Directives support them: `*popup` places a floating panel next to its anchor and dismisses it on an outside press or Escape; `*mask` keeps an input inside a mask (`#` digit, `A` letter, `*` both) whatever way the text arrives.

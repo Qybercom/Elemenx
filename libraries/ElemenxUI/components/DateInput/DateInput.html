@@ -1,3 +1,28 @@
-<div class="elemenx-field-control">
-	<Input [type]="Mode || 'date'" [value]="Value" [min]="Min" [max]="Max" [size]="Size" [name]="Name" [disabled]="Disabled" [readOnly]="ReadOnly" [invalid]="Invalid" (input)="Typed" (change)="Committed" />
+<div class="elemenx-date elemenx-popup-anchor">
+	<div class="elemenx-input" [class]="[Size || 'medium', Invalid || Bad ? 'invalid' : '', Disabled ? 'disabled' : '', ReadOnly ? 'readonly' : '']">
+		<input class="elemenx-input-control" type="text" inputmode="numeric" autocomplete="off" *mask="{Mask: MaskFor(Mode), Value: Text !== null ? Text : DigitsOf(Value, Mode)}" [placeholder]="PlaceholderFor(Mode)" [disabled]="Disabled" [attribute.readonly]="ReadOnly ? '' : null" [attribute.aria-invalid]="Invalid || Bad ? 'true' : null" (mask)="Masked" (change)="Committed" (keydown)="InputKey" />
+		<button class="elemenx-input-action" type="button" aria-haspopup="dialog" [attribute.aria-expanded]="String(Open)" aria-label="Choose a date" [disabled]="Disabled || ReadOnly" (click)="Toggle"><Icon Name="calendar" /></button>
+	</div>
+	<input type="hidden" *if="Name" [attribute.name]="Name" [value]="Value" />
+	<div class="elemenx-popup elemenx-calendar" role="dialog" aria-label="Calendar" data-match-width="false" *popup="Open" (dismiss)="Dismissed" (keydown)="CalendarKey">
+		<div class="elemenx-calendar-header">
+			<button class="elemenx-calendar-nav" type="button" aria-label="Previous" (click)="Previous"><Icon Name="chevron-left" /></button>
+			<button class="elemenx-calendar-title" type="button" [disabled]="View === 'years'" (click)="Zoom">{{Title(Cursor, View)}}</button>
+			<button class="elemenx-calendar-nav" type="button" aria-label="Next" (click)="Following"><Icon Name="chevron-right" /></button>
+		</div>
+		<div class="elemenx-calendar-days" role="grid" *if="View === 'days'">
+			<span class="elemenx-calendar-weekday" *for="name of Weekdays()" *key="name">{{name}}</span>
+			<button class="elemenx-calendar-day" type="button" *for="day of Days(Cursor, Value, Min, Max)" *key="day.ISO" [class.outside]="day.Outside" [class.today]="day.Today" [class.selected]="day.Selected" [disabled]="!!day.Disabled" [attribute.tabindex]="day.ISO === Cursor ? 0 : -1" [attribute.data-cursor]="day.ISO === Cursor ? 'true' : null" [attribute.data-date]="day.ISO" [attribute.aria-selected]="String(day.Selected)" [attribute.aria-current]="day.Today ? 'date' : null" (click)="PickDay">{{day.Day}}</button>
+		</div>
+		<div class="elemenx-calendar-grid" *if="View === 'months'">
+			<button class="elemenx-calendar-cell" type="button" *for="month of Months(Cursor, Value, Min, Max)" *key="month.Key" [class.today]="month.Current" [class.selected]="month.Selected" [disabled]="!!month.Disabled" [attribute.data-cursor]="month.Key === String(Cursor).substring(0, 7) ? 'true' : null" [attribute.data-month]="month.Key" (click)="PickMonth">{{month.Label}}</button>
+		</div>
+		<div class="elemenx-calendar-grid" *if="View === 'years'">
+			<button class="elemenx-calendar-cell" type="button" *for="year of Years(Cursor, Value)" *key="year.Year" [class.today]="year.Current" [class.selected]="year.Selected" [attribute.data-cursor]="String(year.Year) === String(Cursor).substring(0, 4) ? 'true' : null" [attribute.data-year]="year.Year" (click)="PickYear">{{year.Year}}</button>
+		</div>
+		<div class="elemenx-picker-footer">
+			<Button [label]="TodayText" Variant="ghost" Size="small" (click)="Now" />
+			<Button [label]="ClearLabel" Variant="ghost" Size="small" (click)="Clear" />
+		</div>
+	</div>
 </div>

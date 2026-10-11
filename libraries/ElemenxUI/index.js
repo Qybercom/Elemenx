@@ -7,6 +7,7 @@
 	'icons.svg',
 	'directives/Popup.js',
 	'directives/Mask.js',
+	'services/Theme.js',
 	'components/Icon/Icon.js',
 	'components/Button/Button.js',
 	'components/ButtonGroup/ButtonGroup.js',
@@ -33,5 +34,6 @@
 	'components/Tabs/Tabs.js',
 	'components/Toolbar/Toolbar.js',
 	'components/ToolWindow/ToolWindow.js',
-	'components/Workspace/Workspace.js'
+	'components/Workspace/Workspace.js',
+	'components/ThemeSwitch/ThemeSwitch.js'
 ];

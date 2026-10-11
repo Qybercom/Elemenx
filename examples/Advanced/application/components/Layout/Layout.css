@@ -7,6 +7,12 @@
 body[data-theme='dark'] .application-shell {
 	--shadow: 0 14px 42px rgba(0, 0, 0, 0.2);
 }
+@media (prefers-color-scheme: dark) {
+	body:not([data-theme]) .application-shell,
+	body[data-theme='system'] .application-shell {
+		--shadow: 0 14px 42px rgba(0, 0, 0, 0.2);
+	}
+}
 
 
 .application-header {

@@ -4,9 +4,9 @@ Elemenx.Component('Layout', {
 
 	$OnCreate: function () {
 		var component = this;
-		var storage = this.$Storage.Local.Namespace('AdvancedExample');
 		var session = this.$Service('Session');
-		var theme = storage.Get('Theme') || 'light';
+		var theme = this.$Service('Theme');
+		var names = {system: 'System', light: 'Light', dark: 'Dark'};
 
 		function status () {
 			var sessionStatus = component.$Ref('SessionStatus');
@@ -20,29 +20,26 @@ Elemenx.Component('Layout', {
 		}
 
 		this.$Batch(function (state) {
-			state.Theme = theme === 'dark' ? 'Dark' : 'Light';
+			state.Theme = names[theme.Policy()];
 		});
 
-		document.body.setAttribute('data-theme', theme);
+		this.ThemeListener = theme.OnChange(function (state) {
+			component.$Batch(function (values) {
+				values.Theme = names[state.Policy];
+			});
+		});
 
 		this.SessionStatusListener = session.OnChange(status);
 
 		status();
 
 		this.$Ref('Theme').addEventListener('click', function () {
-			theme = theme === 'dark' ? 'light' : 'dark';
-
-			document.body.setAttribute('data-theme', theme);
-
-			storage.Set('Theme', theme);
-
-			component.$Batch(function (state) {
-				state.Theme = theme === 'dark' ? 'Dark' : 'Light';
-			});
+			theme.Next();
 		});
 	},
 
 	$OnDestroy: function () {
 		this.$Service('Session').OffChange(this.SessionStatusListener);
+		this.$Service('Theme').OffChange(this.ThemeListener);
 	}
 });

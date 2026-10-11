@@ -1,3 +1,24 @@
-<div class="elemenx-field-control">
-	<Input Type="time" [value]="Value" [step]="Seconds ? 1 : null" [min]="Min" [max]="Max" [size]="Size" [name]="Name" [disabled]="Disabled" [readOnly]="ReadOnly" [invalid]="Invalid" (input)="Typed" (change)="Committed" />
+<div class="elemenx-time elemenx-popup-anchor">
+	<div class="elemenx-input" [class]="[Size || 'medium', Invalid || Bad ? 'invalid' : '', Disabled ? 'disabled' : '', ReadOnly ? 'readonly' : '']">
+		<input class="elemenx-input-control" type="text" inputmode="numeric" autocomplete="off" *mask="{Mask: Seconds ? '##:##:##' : '##:##', Value: Text !== null ? Text : String(Value || '').replace(/:/g, '')}" [placeholder]="Placeholder || (Seconds ? '00:00:00' : '00:00')" [disabled]="Disabled" [attribute.readonly]="ReadOnly ? '' : null" [attribute.aria-invalid]="Invalid || Bad ? 'true' : null" (mask)="Masked" (change)="Committed" (keydown)="InputKey" />
+		<button class="elemenx-input-action" type="button" aria-haspopup="dialog" aria-label="Choose a time" [attribute.aria-expanded]="String(Open)" [disabled]="Disabled || ReadOnly" (click)="Toggle"><Icon Name="clock" /></button>
+	</div>
+	<input type="hidden" *if="Name" [attribute.name]="Name" [value]="Value" />
+	<div class="elemenx-popup elemenx-time-popup" role="dialog" aria-label="Time" data-match-width="false" *popup="Open" (dismiss)="Dismissed" (keydown)="ColumnKey">
+		<div class="elemenx-time-columns">
+			<div class="elemenx-time-column" role="listbox" aria-label="Hours">
+				<button type="button" *for="unit of Units(24, 1)" *key="unit" [class.selected]="unit === Part(Value, 0)" [disabled]="Blocked(0, unit, Value, Min, Max)" [attribute.aria-selected]="String(unit === Part(Value, 0))" data-part="0" [attribute.data-unit]="unit" (click)="Pick">{{unit}}</button>
+			</div>
+			<div class="elemenx-time-column" role="listbox" aria-label="Minutes">
+				<button type="button" *for="unit of Units(60, MinuteStep)" *key="unit" [class.selected]="unit === Part(Value, 1)" [disabled]="Blocked(1, unit, Value, Min, Max)" [attribute.aria-selected]="String(unit === Part(Value, 1))" data-part="1" [attribute.data-unit]="unit" (click)="Pick">{{unit}}</button>
+			</div>
+			<div class="elemenx-time-column" role="listbox" aria-label="Seconds" *if="Seconds">
+				<button type="button" *for="unit of Units(60, 1)" *key="unit" [class.selected]="unit === Part(Value, 2)" [disabled]="Blocked(2, unit, Value, Min, Max)" [attribute.aria-selected]="String(unit === Part(Value, 2))" data-part="2" [attribute.data-unit]="unit" (click)="Pick">{{unit}}</button>
+			</div>
+		</div>
+		<div class="elemenx-picker-footer">
+			<Button [label]="NowText" Variant="ghost" Size="small" (click)="Now" />
+			<Button [label]="DoneLabel" Variant="primary" Size="small" (click)="Done" />
+		</div>
+	</div>
 </div>

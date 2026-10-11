@@ -1,0 +1,72 @@
+.elemenx-time {
+	position: relative;
+	width: 100%;
+	min-width: 0;
+}
+
+.elemenx-time .elemenx-input-control {
+	font-variant-numeric: tabular-nums;
+}
+
+.elemenx-time-popup {
+	max-height: none;
+	padding: 8px;
+	overflow: visible;
+}
+
+.elemenx-time-columns {
+	display: flex;
+	gap: 4px;
+}
+
+.elemenx-time-column {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	width: 48px;
+	height: 224px;
+	overflow-y: auto;
+	scrollbar-width: none;
+}
+
+.elemenx-time-column::-webkit-scrollbar {
+	display: none;
+}
+
+.elemenx-time-column + .elemenx-time-column {
+	padding-left: 4px;
+	border-left: 1px solid var(--elemenx-border);
+}
+
+.elemenx-time-column button {
+	flex: none;
+	height: 28px;
+	padding: 0;
+	background: transparent;
+	border: 0;
+	border-radius: 4px;
+	color: var(--elemenx-text);
+	font: inherit;
+	font-variant-numeric: tabular-nums;
+	cursor: pointer;
+	outline: none;
+}
+
+.elemenx-time-column button:hover {
+	background: var(--elemenx-surface-hover);
+}
+
+.elemenx-time-column button:focus-visible {
+	box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--elemenx-accent) 48%, transparent);
+}
+
+.elemenx-time-column button.selected {
+	background: var(--elemenx-accent);
+	color: var(--elemenx-accent-text);
+	font-weight: 600;
+}
+
+.elemenx-time-column button:disabled {
+	opacity: 0.32;
+	cursor: default;
+}

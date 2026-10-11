@@ -14,6 +14,8 @@ Elemenx.Component('UIKitPage', {
 	Clicks: 0,
 	Amount: 42,
 	Color: '#4b443d',
+	Date: '2024-11-22',
+	Time: '09:30',
 	Card: '',
 	CardState: '',
 	Phone: '+79991234567',
@@ -76,6 +78,12 @@ Elemenx.Component('UIKitPage', {
 		{ID: 'index', Label: 'index.html', Icon: 'file-code', Closable: true},
 		{ID: 'readme', Label: 'README.md', Icon: 'file-text', Closable: true}
 	],
+	WorkspaceTab: 'app',
+	WorkspaceTabs: [
+		{ID: 'app', Label: 'app.js', Icon: 'file-code', Closable: true},
+		{ID: 'index', Label: 'index.html', Icon: 'file-code', Closable: true},
+		{ID: 'readme', Label: 'README.md', Icon: 'file-text', Closable: true}
+	],
 	Section: 'general',
 	SectionTabs: [
 		{ID: 'general', Label: 'General'},
@@ -102,6 +110,14 @@ Elemenx.Component('UIKitPage', {
 
 	ColorChanged: function (value) {
 		this.Color = value;
+	},
+
+	DateChanged: function (value) {
+		this.Date = value;
+	},
+
+	TimeChanged: function (value) {
+		this.Time = value;
 	},
 
 	CardValidated: function (state) {
@@ -154,6 +170,21 @@ Elemenx.Component('UIKitPage', {
 
 		if (this.Tab === id)
 			this.Tab = tabs.length ? tabs[0].ID : null;
+	},
+
+	WorkspaceTabChanged: function (id) {
+		this.WorkspaceTab = id;
+	},
+
+	WorkspaceTabClosed: function (id) {
+		var tabs = this.WorkspaceTabs.filter(function (tab) {
+			return tab.ID !== id;
+		});
+
+		this.WorkspaceTabs = tabs;
+
+		if (this.WorkspaceTab === id)
+			this.WorkspaceTab = tabs.length ? tabs[0].ID : null;
 	},
 
 	SectionChanged: function (id) {

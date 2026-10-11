@@ -2,7 +2,8 @@
 	<header class="ui-kit-intro">
 		<p class="elemenx-eyebrow">Standard library</p>
 		<h1 class="elemenx-title">Elemenx UI</h1>
-		<p class="elemenx-subtitle">The executable catalogue of the ElemenxUI library. Switch the theme in the header to check both palettes.</p>
+		<p class="elemenx-subtitle">The executable catalogue of the ElemenxUI library. The theme follows the system unless a policy is chosen.</p>
+		<div class="ui-kit-row"><ThemeSwitch /><span class="elemenx-caption">System, light or dark: remembered in localStorage</span></div>
 	</header>
 
 	<section class="elemenx-section">
@@ -87,8 +88,12 @@
 			<Field Label="Disabled"><Input Value="Read only for now" Disabled="true" /></Field>
 			<Field Label="Amount" [hint]="'Value: ' + Amount"><NumberInput [value]="Amount" Min="0" Max="100" Step="1" Suffix="items" (input)="AmountChanged" /></Field>
 			<Field Label="Color" [hint]="'Value: ' + Color"><ColorInput [value]="Color" (input)="ColorChanged" /></Field>
-			<Field Label="Date"><DateInput /></Field>
-			<Field Label="Time"><TimeInput /></Field>
+			<Field Label="Date" [hint]="'Value: ' + (Date || '—')"><DateInput [value]="Date" (input)="DateChanged" /></Field>
+			<Field Label="Time" [hint]="'Value: ' + (Time || '—')"><TimeInput [value]="Time" MinuteStep="5" (input)="TimeChanged" /></Field>
+			<Field Label="Month, 2024–2026"><DateInput Mode="month" Min="2024-01" Max="2026-12" /></Field>
+			<Field Label="Time with seconds"><TimeInput Seconds="true" Min="08:00:00" Max="20:00:00" /></Field>
+			<Field Label="Color with opacity"><ColorInput Value="#3f6c9e80" Alpha="true" /></Field>
+			<Field Label="ISO date, Monday first"><DateInput Format="YYYY-MM-DD" FirstDay="1" Min="2020-01-01" /></Field>
 			<Field Label="Description"><TextArea Placeholder="Write something…" MaxLength="200" AutoSize="true" /></Field>
 			<Field Label="Notes (resizable)"><TextArea Rows="3" Value="Plain multi-line input." /></Field>
 		</div>
@@ -115,7 +120,7 @@
 	</section>
 
 	<section class="elemenx-section">
-		<div class="elemenx-section-header"><h2>Selection</h2><span class="elemenx-caption">Language: {{Language}} · Tags: {{Tags.join(', ')}}</span></div>
+		<div class="elemenx-section-header"><h2>Selection</h2><span class="elemenx-caption">Plan: {{Plan}} · View: {{View}} · Language: {{Language}} · Tags: {{Tags.join(', ')}}</span></div>
 		<div class="ui-kit-grid">
 			<Field Label="Language"><Select [options]="Languages" [value]="Language" Searchable="true" (change)="LanguageChanged" /></Field>
 			<Field Label="Optional"><Select [options]="Languages" Placeholder="None" Clearable="true" /></Field>
@@ -138,18 +143,18 @@
 			<div class="ui-kit-stack">
 				<RadioGroup [options]="Plans" [value]="Plan" (change)="PlanChanged" />
 				<RadioGroup Variant="segmented" [options]="Views" [value]="View" (change)="ViewChanged" />
-				<RadioGroup Variant="horizontal" [options]="Views" [value]="View" (change)="ViewChanged" />
+				<RadioGroup Variant="horizontal" [options]="Views" Value="grid" />
 				<Toggle Label="Notifications" Description="Show desktop notifications." [checked]="Notifications" />
 				<Toggle Label="Small toggle" Size="small" />
 			</div>
 		</div>
-		<RadioGroup Variant="tile" [options]="Plans" [value]="Plan" (change)="PlanChanged" />
+		<RadioGroup Variant="tile" [options]="Plans" Value="free" />
 	</section>
 
 	<section class="elemenx-section">
 		<div class="elemenx-section-header"><h2>Tabs</h2><span class="elemenx-caption">Active: {{Tab}} · {{Section}}</span></div>
 		<Tabs [tabs]="SectionTabs" [value]="Section" (change)="SectionChanged" />
-		<Tabs Variant="pill" [tabs]="SectionTabs" [value]="Section" (change)="SectionChanged" />
+		<Tabs Variant="pill" [tabs]="SectionTabs" Value="billing" />
 		<div class="elemenx-panel compact ui-kit-editor">
 			<Tabs Variant="editor" [tabs]="EditorTabs" [value]="Tab" (change)="TabChanged" (close)="TabClosed">
 				<Button Icon="more-vertical" Title="Tab actions" Variant="ghost" Size="small" />
@@ -203,7 +208,7 @@
 					</ul>
 				</ToolWindow>
 				<div slot="main" class="elemenx-column fill">
-					<Tabs Variant="editor" [tabs]="EditorTabs" [value]="Tab" (change)="TabChanged" (close)="TabClosed" />
+					<Tabs Variant="editor" [tabs]="WorkspaceTabs" [value]="WorkspaceTab" (change)="WorkspaceTabChanged" (close)="WorkspaceTabClosed" />
 					<pre class="ui-kit-code">Elemenx.Application('Application', {
 	$Use: ['ElemenxUI'],
 	$Component: 'Root'
