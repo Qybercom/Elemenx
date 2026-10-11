@@ -1,8 +1,9 @@
 /*
- * Steps joined by lines. Items: [{ID, Label, Description, Icon, Status}]; Status is done, active, error or pending,
- * or comes from Active and Done (lists of IDs): several steps may be active at once. Without an Icon a step shows
- * its number (a check when done). Direction: horizontal or vertical. Clickable makes the steps buttons that emit
- * select with the item.
+ * Steps joined by lines. Items: [{ID, Label, Description, Icon, Status, Class, Disabled, Element, Render}]; Status is
+ * done, active, error or pending, or comes from Active and Done (lists of IDs): several steps may be active at once.
+ * Without an Icon a step shows its number (a check when done). Element (a DOM node) or Render(container, item) add
+ * custom content under the label; Class adds classes to the step. Direction: horizontal or vertical. Clickable (off
+ * by default) makes the steps buttons that emit select with the item; a Disabled step does not.
  */
 Elemenx.Component('Steps', {
 	$TemplateURL: 'Steps.html',
@@ -35,7 +36,7 @@ Elemenx.Component('Steps', {
 
 	Pick: function (event, node) {
 		var item = this.Items[Number(node.getAttribute('data-index'))];
-		if (item && this.Clickable)
+		if (item && this.Clickable && !item.Disabled)
 			this.$Emit('select', item);
 	}
 });

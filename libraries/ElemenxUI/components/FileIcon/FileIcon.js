@@ -16,13 +16,13 @@ Elemenx.Component('FileIcon', {
 		'ods', 'odp', 'rtf', 'epub', 'pages', 'numbers', 'key', 'tex', 'ics', 'vcf', 'eml', 'jpeg', 'heic', 'avif', 'bmp',
 		'raw', 'eps', 'fig', 'sketch', 'xd', 'blend', 'fbx', 'obj', 'stl', 'glb', 'gltf', 'ttf', 'otf', 'woff', 'woff2',
 		'flac', 'wav', 'ogg', 'm4a', 'opus', 'mid', 'mkv', 'mov', 'wmv', 'flv', 'srt', 'vtt', 'tsv', 'parquet', 'db',
-		'sqlite', 'ipynb', 'xlsm', 'xsd', 'pem', 'crt', 'p12', 'pub'
+		'sqlite', 'ipynb', 'xlsm', 'xsd', 'pem', 'crt', 'p12', 'pub', 'ino'
 	],
 	Aliases: {
 		tif: 'tiff', jpe: 'jpeg', midi: 'mid', pfx: 'p12', cer: 'crt', mjs: 'js', cjs: 'js', mts: 'ts', cts: 'ts',
 		bash: 'sh', zsh: 'sh', cmd: 'bat', psm1: 'ps1', mm: 'm', exs: 'ex', hrl: 'erl', cljs: 'clj', s: 'asm',
 		tgz: 'tar-gz', db3: 'sqlite', yml: 'yaml', htm: 'html', cc: 'cpp', cxx: 'cpp', hh: 'hpp', hxx: 'hpp',
-		markdown: 'md', cob: 'cbl', cobol: 'cbl', kts: 'kt', cfg: 'conf'
+		markdown: 'md', cob: 'cbl', cobol: 'cbl', kts: 'kt', cfg: 'conf', pde: 'ino'
 	},
 
 	$OnCreate: function () {

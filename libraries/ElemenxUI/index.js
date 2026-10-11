@@ -8,6 +8,7 @@
 	'directives/Draggable.js',
 	'directives/Droppable.js',
 	'directives/Mount.js',
+	'directives/Glyph.js',
 	'services/Theme.js',
 	'services/Countries.js',
 	'services/Currencies.js',

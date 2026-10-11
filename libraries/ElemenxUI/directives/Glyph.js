@@ -1,0 +1,40 @@
+/*
+ * *glyph="reference" draws a sprite symbol inside an <svg>. A reference to a symbol of the page ('#elemenx-icon-add')
+ * copies the shapes of the symbol into the element, with its viewBox: no <use>, so a restyle of the page (a theme
+ * change) does not rebuild one shadow tree per icon, which blanks every icon while the developer tools are open.
+ * Any other reference ('sprite.svg#add') is drawn with <use>. Used by Icon.
+ */
+Elemenx.Directive('glyph', {
+	$OnUpdate: function (context) {
+		var element = context.Element;
+		var reference = String(context.Value || '');
+		var symbol = reference.charAt(0) === '#' ? document.getElementById(reference.substring(1)) : null;
+		var use;
+
+		if (context.Data.Reference === reference) return;
+
+		context.Data.Reference = reference;
+
+		while (element.firstChild) {
+			element.removeChild(element.firstChild);
+		}
+
+		if (symbol) {
+			element.setAttribute('viewBox', symbol.getAttribute('viewBox') || '0 0 24 24');
+
+			element.innerHTML = symbol.innerHTML;
+
+			return;
+		}
+
+		element.removeAttribute('viewBox');
+
+		if (!reference || reference.charAt(0) === '#') return;
+
+		use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+
+		use.setAttribute('href', reference);
+
+		element.appendChild(use);
+	}
+});

@@ -28,7 +28,7 @@ Elemenx.Component('UIKitPage', {
 		'file.msi', 'file.bin', 'file.img', 'file.so', 'file.dylib', 'file.class', 'file.odt', 'file.ods', 'file.odp', 'file.rtf', 'file.epub', 'file.pages', 'file.numbers', 'file.key', 'file.tex', 'file.ics',
 		'file.vcf', 'file.eml', 'file.jpeg', 'file.heic', 'file.avif', 'file.bmp', 'file.raw', 'file.eps', 'file.fig', 'file.sketch', 'file.xd', 'file.blend', 'file.fbx', 'file.obj', 'file.stl', 'file.glb',
 		'file.gltf', 'file.ttf', 'file.otf', 'file.woff', 'file.woff2', 'file.flac', 'file.wav', 'file.ogg', 'file.m4a', 'file.opus', 'file.mid', 'file.mkv', 'file.mov', 'file.wmv', 'file.flv', 'file.srt',
-		'file.vtt', 'file.tsv', 'file.parquet', 'file.db', 'file.sqlite', 'file.ipynb', 'file.xlsm', 'file.xsd', 'file.pem', 'file.crt', 'file.p12', 'file.pub',
+		'file.vtt', 'file.tsv', 'file.parquet', 'file.db', 'file.sqlite', 'file.ipynb', 'file.xlsm', 'file.xsd', 'file.pem', 'file.crt', 'file.p12', 'file.pub', 'sketch.ino',
 		'unknown.xyz'
 	],
 	Text: 'Elemenx',
@@ -189,13 +189,41 @@ Elemenx.Component('UIKitPage', {
 			{ID: 'chat', Title: 'Chat', Icon: 'send', Size: 'small', Color: '#c2477f'},
 			{ID: 'phone', Title: 'Phone', Icon: 'phone', Size: 'small', Color: '#0f8fae'}
 		]},
-		{ID: 'tools', Title: 'Tools', Tiles: [
+		{ID: 'tools', Title: 'Tools', Actions: [{ID: 'rename', Icon: 'edit', Title: 'Rename'}, {ID: 'add', Icon: 'add', Title: 'Add a tile'}], Tiles: [
 			{ID: 'terminal', Title: 'Terminal', Icon: 'terminal', Size: 'medium'},
-			{ID: 'settings', Title: 'Settings', Icon: 'settings', Size: 'small', Color: '#5f5a54'},
+			{ID: 'settings', Title: 'Settings', Icon: 'settings', Size: 'small', Color: '#5f5a54', Locked: true},
 			{ID: 'database', Title: 'Database', Icon: 'database', Size: 'small', Color: '#2f8f83'},
 			{ID: 'cloud', Title: 'Deployments', Icon: 'cloud', Size: 'large', Text: 'All 12 services are healthy.', Color: '#3f6c9e'}
+		]},
+		{ID: 'pinned', Title: 'Pinned', Locked: true, Tiles: [
+			{ID: 'clock', Title: 'Clock', Size: 'wide', Color: '#1f2a37', Class: 'ui-kit-clock-tile', Render: function (container) {
+				var time = document.createElement('strong');
+				var date = document.createElement('span');
+				var now = new Date();
+
+				time.textContent = now.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+				date.textContent = now.toLocaleDateString([], {weekday: 'long', day: 'numeric', month: 'long'});
+
+				container.appendChild(time);
+				container.appendChild(date);
+			}}
 		]}
 	],
+	CustomSteps: [
+		{ID: 'upload', Label: 'Upload', Icon: 'upload', Class: 'ui-kit-upload-step', Render: function (container) {
+			var bar = document.createElement('div');
+			var fill = document.createElement('div');
+
+			bar.className = 'ui-kit-toast-bar';
+			fill.className = 'ui-kit-toast-fill';
+
+			bar.appendChild(fill);
+			container.appendChild(bar);
+		}},
+		{ID: 'scan', Label: 'Scan', Description: 'Disabled: not clickable', Icon: 'search', Disabled: true},
+		{ID: 'publish', Label: 'Publish', Icon: 'send'}
+	],
+	CustomStep: 'upload',
 	OpenedTile: '',
 	DashboardNav: [
 		{ID: 'overview', Label: 'Overview', Icon: 'home'},
@@ -530,6 +558,14 @@ Elemenx.Component('UIKitPage', {
 
 	TileOpened: function (tile) {
 		this.OpenedTile = tile.Title;
+	},
+
+	CustomStepSelected: function (item) {
+		this.CustomStep = item.ID;
+	},
+
+	TileGroupAction: function (event) {
+		this.OpenedTile = event.Action.Title + ' ' + event.Group.Title;
 	},
 
 	TilesChanged: function (groups) {

@@ -1,19 +1,32 @@
 /*
- * Groups of tiles on a grid of 48px cells, like a start screen. Groups: [{ID, Title, Tiles}], where a tile is
- * {ID, Title, Icon, Size (small 1x1, medium 2x2, wide 4x2, large 4x4), Color, Badge, Text}.
- * Events: open (the tile, on click or Enter). Editable lets the user move tiles by dragging: the other tiles make
- * room while the tile is dragged, as the grid will look after the drop. A tile dropped beside the groups starts a new
- * group (NewGroupTitle); a group left empty by a drag goes away. The change event then carries the new Groups;
- * Escape puts everything back.
+ * Groups of tiles on a grid of 48px cells, like a start screen.
+ * Groups: [{ID, Title, Tiles, Locked, Actions, Element, Render}]. A group header shows Actions ([{ID, Icon, Label,
+ * Title, Run}], buttons that emit groupaction with {Group, Action} and call Run(group)) and custom content: Element
+ * (a DOM node) or Render(container, group). A Locked group keeps its tiles and takes no others.
+ * A tile is {ID, Title, Icon, Size (small 1x1, medium 2x2, wide 4x2, large 4x4), Row, Column, Color, Badge, Text,
+ * Class, Locked, Element, Render}. Row and Column place the tile on the cells of its group (from 0); a tile without
+ * them takes the first free place. Element or Render(container, tile) replace the icon and the text with custom
+ * content, Class adds classes, Locked keeps the tile in its place. Columns is the width of a group in cells.
+ * Events: open (the tile, on click or Enter). Editable lets the user move tiles by dragging: the tile goes to the cell
+ * under the top left corner of its ghost and pushes down the tiles in its way, while it moves, as the grid will look
+ * after the drop; places left empty stay empty.
+ * GroupPolicy decides where a dragged tile may start a new group: 'end' (beside the last group), 'between' (also
+ * between the groups) or 'none'; the new group is named NewGroupTitle and reported by groupcreate ({Group, Tile}).
+ * A group left empty by a drag goes away. The change event carries the new Groups, every tile of a changed group with
+ * its Row and Column; Escape puts everything back.
  */
 Elemenx.Component('TileGrid', {
 	$TemplateURL: 'TileGrid.html',
 	$StyleURL: 'TileGrid.css',
 	Groups: [],
 	Editable: false,
+	Columns: 4,
+	GroupPolicy: 'end',
 	NewGroupTitle: 'New group',
 	Dragging: '',
 	Snapshot: null,
+	Target: '',
+	Created: '',
 	Sequence: 0,
 
 	$OnCreate: function () {
@@ -30,6 +43,15 @@ Elemenx.Component('TileGrid', {
 		this.Escaped = function (event) {
 			if (event.key === 'Escape')
 				self.End(true);
+		};
+
+		/* The grid-area of a tile: its place in the layout of its group. */
+		this.Area = function (tiles, tile) {
+			var spot = self.Layout(tiles).filter(function (entry) {
+				return entry.Tile === tile;
+			})[0];
+
+			return spot ? (spot.Row + 1) + ' / ' + (spot.Column + 1) + ' / span ' + spot.Height + ' / span ' + spot.Width : null;
 		};
 	},
 
@@ -57,6 +79,12 @@ Elemenx.Component('TileGrid', {
 		return null;
 	},
 
+	GroupIndex: function (id) {
+		return this.Groups.map(function (group) {
+			return String(group.ID);
+		}).indexOf(String(id));
+	},
+
 	Open: function (event, node) {
 		var found = this.Find(node.getAttribute('data-id'));
 		if (found)
@@ -71,34 +99,199 @@ Elemenx.Component('TileGrid', {
 		this.Open(event, node);
 	},
 
-	/* The order of every group and tile, to tell whether a drag changed anything. */
+	Act: function (event, node) {
+		var group = this.Groups[this.GroupIndex(node.getAttribute('data-group'))];
+		var action = group && (group.Actions || []).filter(function (entry) {
+			return String(entry.ID) === node.getAttribute('data-action');
+		})[0];
+		if (!action) return;
+
+		if (typeof action.Run === 'function')
+			action.Run(group);
+
+		this.$Emit('groupaction', {Group: group, Action: action});
+	},
+
+	/* The groups, their tiles and the places of the tiles, to tell whether a drag changed anything. */
 	Signature: function (groups) {
+		var self = this;
+
 		return (groups || []).map(function (group) {
-			return group.ID + ':' + group.Tiles.map(function (tile) {
-				return tile.ID;
+			return group.ID + ':' + self.Layout(group.Tiles).map(function (spot) {
+				return spot.Tile.ID + '@' + spot.Row + ',' + spot.Column;
 			}).join(',');
 		}).join('|');
 	},
 
-	/* Puts the tile id at index of the group with the ID group (a new group when group is null). */
-	Place: function (id, group, index) {
-		var from = this.Find(id);
-		var groups;
+	/* The cells of a tile: [columns, rows]. */
+	Span: function (tile) {
+		var span = {small: [1, 1], medium: [2, 2], wide: [4, 2], large: [4, 4]}[tile.Size || 'medium'] || [2, 2];
+
+		return [Math.min(span[0], Number(this.Columns) || 4), span[1]];
+	},
+
+	Overlaps: function (a, b) {
+		return a.Row < b.Row + b.Height && b.Row < a.Row + a.Height && a.Column < b.Column + b.Width && b.Column < a.Column + a.Width;
+	},
+
+	/*
+	 * The places of tiles: [{Tile, Row, Column, Width, Height}] in their order. A tile keeps its Row and Column when
+	 * they fit and are free; the others take the first free place, row by row.
+	 */
+	Layout: function (tiles) {
+		var columns = Number(this.Columns) || 4;
+		var placed = [];
+		var spots = [];
+		var self = this;
+
+		function fits (spot) {
+			return spot.Column >= 0 && spot.Row >= 0 && spot.Column + spot.Width <= columns && !placed.some(function (other) {
+				return self.Overlaps(spot, other);
+			});
+		}
+
+		(tiles || []).forEach(function (tile, index) {
+			var span = self.Span(tile);
+			var spot = {Tile: tile, Row: Number(tile.Row), Column: Number(tile.Column), Width: span[0], Height: span[1]};
+
+			if (tile.Row != null && tile.Column != null && fits(spot)) placed.push(spot);
+			else spot.Row = -1;
+
+			spots[index] = spot;
+		});
+
+		spots.forEach(function (spot) {
+			if (spot.Row !== -1) return;
+
+			spot.Row = 0;
+			spot.Column = 0;
+
+			while (!fits(spot)) {
+				spot.Column++;
+
+				if (spot.Column + spot.Width > columns) {
+					spot.Column = 0;
+					spot.Row++;
+				}
+			}
+
+			placed.push(spot);
+		});
+
+		return spots;
+	},
+
+	/* A copy of tile at a place. */
+	Moved: function (tile, row, column) {
+		var copy = {};
+		var key;
+
+		for (key in tile) {
+			if (Object.prototype.hasOwnProperty.call(tile, key))
+				copy[key] = tile[key];
+		}
+
+		copy.Row = row;
+		copy.Column = column;
+
+		return copy;
+	},
+
+	/*
+	 * The tiles of a group with tile put at row and column: locked tiles stay, the dragged tile takes its place
+	 * (null when a locked tile is there) and every other tile in its way moves down until it is free.
+	 */
+	Settle: function (tiles, tile, row, column) {
+		var self = this;
+		var columns = Number(this.Columns) || 4;
+		var span = this.Span(tile);
+		var spots = this.Layout(tiles);
+		var dragged = {Tile: tile, Row: Math.max(0, row), Column: Math.max(0, Math.min(columns - span[0], column)), Width: span[0], Height: span[1]};
+		var settled = spots.filter(function (spot) {
+			return spot.Tile.Locked;
+		});
+		var moving = spots.filter(function (spot) {
+			return !spot.Tile.Locked;
+		}).sort(function (a, b) {
+			return a.Row - b.Row || a.Column - b.Column;
+		});
+
+		if (settled.some(function (spot) {
+			return self.Overlaps(spot, dragged);
+		})) return null;
+
+		settled.push(dragged);
+
+		moving.forEach(function (spot) {
+			while (settled.some(function (other) {
+				return self.Overlaps(spot, other);
+			})) {
+				spot.Row++;
+			}
+
+			settled.push(spot);
+		});
+
+		return settled.sort(function (a, b) {
+			return a.Row - b.Row || a.Column - b.Column;
+		}).map(function (spot) {
+			return self.Moved(spot.Tile, spot.Row, spot.Column);
+		});
+	},
+
+	/*
+	 * The groups of base with the tile id at row and column of the group with the ID group, or at the start of a new
+	 * group made at position at (group null); null when the tile cannot go there.
+	 */
+	Arrange: function (base, id, group, row, column, at) {
+		var self = this;
+		var source = -1;
 		var target;
-		var tile;
+		var tile = null;
+		var groups;
+		var tiles;
+		var created;
 
-		if (!from) return;
+		groups = base.map(function (entry, index) {
+			var copy = {};
+			var key;
 
-		groups = this.Groups.map(function (entry) {
-			return {ID: entry.ID, Title: entry.Title, Tiles: entry.Tiles.slice()};
+			for (key in entry) {
+				if (Object.prototype.hasOwnProperty.call(entry, key))
+					copy[key] = entry[key];
+			}
+
+			copy.Tiles = entry.Tiles;
+
+			entry.Tiles.forEach(function (candidate) {
+				if (String(candidate.ID) === String(id)) {
+					source = index;
+					tile = candidate;
+				}
+			});
+
+			return copy;
+		});
+
+		if (!tile)
+			return null;
+
+		/* The tiles left in the source group keep their places; the hole stays. */
+		groups[source].Tiles = this.Layout(groups[source].Tiles).filter(function (spot) {
+			return spot.Tile !== tile;
+		}).map(function (spot) {
+			return self.Moved(spot.Tile, spot.Row, spot.Column);
 		});
 
 		if (group === null) {
 			this.Sequence++;
 
-			groups.push({ID: 'group-' + Date.now() + '-' + this.Sequence, Title: this.NewGroupTitle, Tiles: []});
+			created = {ID: 'group-' + Date.now() + '-' + this.Sequence, Title: this.NewGroupTitle, Tiles: []};
+			target = at == null || at < 0 || at > groups.length ? groups.length : at;
 
-			target = groups.length - 1;
+			groups.splice(target, 0, created);
+
+			this.Created = String(created.ID);
 		}
 		else {
 			target = groups.map(function (entry) {
@@ -106,18 +299,16 @@ Elemenx.Component('TileGrid', {
 			}).indexOf(String(group));
 		}
 
-		if (target === -1) return;
+		if (target === -1 || (groups[target].Locked && target !== source)) return null;
 
-		if (index < 0 || index > groups[target].Tiles.length - (target === from.Group ? 1 : 0))
-			index = groups[target].Tiles.length - (target === from.Group ? 1 : 0);
+		tiles = this.Settle(groups[target].Tiles, tile, row, column);
 
-		if (target === from.Group && index === from.Index) return;
+		if (!tiles)
+			return null;
 
-		tile = groups[from.Group].Tiles.splice(from.Index, 1)[0];
+		groups[target].Tiles = tiles;
 
-		groups[target].Tiles.splice(index, 0, tile);
-
-		this.Groups = groups;
+		return groups;
 	},
 
 	Begin: function (event, node) {
@@ -125,23 +316,106 @@ Elemenx.Component('TileGrid', {
 
 		this.Dragging = String(node.getAttribute('data-id'));
 		this.Snapshot = this.Groups;
+		this.Target = '';
+		this.Created = '';
 
 		document.addEventListener('pointerup', this.Released);
 		document.addEventListener('pointercancel', this.Cancelled);
 		document.addEventListener('keydown', this.Escaped, true);
 	},
 
-	/* While a tile is dragged over a group, it takes its place there at once; the drop keeps the last place. */
+	/*
+	 * While a tile is dragged over a group, it takes the cell under the top left corner of its ghost there at once,
+	 * worked out from the groups as they were before the drag, so the tiles it pushed come back when it moves on.
+	 */
 	Preview: function (event, node) {
-		if (!this.Dragging || event.detail.Type !== 'tile') return;
+		var detail = event.detail;
+		var found;
+		var cells;
+		var rect;
+		var row;
+		var column;
+		var key;
+		var groups;
 
-		this.Place(event.detail.Data, node.getAttribute('data-group'), event.detail.Index);
+		if (!this.Dragging || detail.Type !== 'tile') return;
+
+		found = this.Find(detail.Data);
+		cells = node.querySelector('.elemenx-tile-cells');
+
+		if (!found || !cells) return;
+
+		rect = cells.getBoundingClientRect();
+		row = Math.round((detail.ClientY - detail.OffsetY - rect.top) / 56);
+		column = Math.round((detail.ClientX - detail.OffsetX - rect.left) / 56);
+		key = node.getAttribute('data-group') + ':' + row + ':' + column;
+
+		if (key === this.Target) return;
+
+		groups = this.Arrange(this.Snapshot, detail.Data, node.getAttribute('data-group'), row, column, null);
+
+		if (!groups) return;
+
+		this.Target = key;
+		this.Groups = groups;
+	},
+
+	/* A tile that leaves the group it is shown in goes back to its place, until a group takes it again. */
+	Leave: function (event, node) {
+		if (!this.Dragging || this.Target.indexOf(node.getAttribute('data-group') + ':') !== 0) return;
+
+		this.Target = '';
+		this.Groups = this.Snapshot;
+	},
+
+	/*
+	 * Over the grid but outside the groups (below the last row of a group, or between groups), the tile goes to the
+	 * group whose column the pointer is in, so a tile can be put under the lowest tile of a group.
+	 */
+	Beside: function (event, node) {
+		var groups = node.querySelectorAll('.elemenx-tile-group[data-group]');
+		var x = event.detail.ClientX;
+		var y = event.detail.ClientY;
+		var best = null;
+		var distance = Infinity;
+		var rect;
+		var gap;
+		var i = 0;
+
+		while (i < groups.length) {
+			rect = groups[i].getBoundingClientRect();
+			gap = Math.max(rect.left - x, 0, x - rect.right);
+
+			if (rect.top <= y && gap < distance && !groups[i].classList.contains('locked')) {
+				distance = gap;
+				best = groups[i];
+			}
+
+			i++;
+		}
+
+		if (best && distance <= 16)
+			this.Preview(event, best);
 	},
 
 	DropOnNew: function (event) {
-		if (!this.Dragging || event.detail.Type !== 'tile') return;
+		this.Start(event, null);
+	},
 
-		this.Place(event.detail.Data, null, 0);
+	DropBetween: function (event, node) {
+		this.Start(event, Number(node.getAttribute('data-index')));
+	},
+
+	/* A new group for the dropped tile, at position at (null: after the last group). */
+	Start: function (event, at) {
+		var groups;
+
+		if (!this.Dragging || event.detail.Type !== 'tile' || this.GroupPolicy === 'none') return;
+
+		groups = this.Arrange(this.Snapshot, event.detail.Data, null, 0, 0, at);
+
+		if (groups)
+			this.Groups = groups;
 	},
 
 	Unlisten: function () {
@@ -153,27 +427,39 @@ Elemenx.Component('TileGrid', {
 	/* Ends a drag: a cancel restores the groups, a drop removes the groups it emptied and reports the change. */
 	End: function (cancel) {
 		var snapshot = this.Snapshot;
+		var created = this.Created;
 		var empty = {};
 		var groups;
+		var group;
 
 		this.Unlisten();
 
 		if (!this.Dragging) return;
 
-		(snapshot || []).forEach(function (group) {
-			if (!group.Tiles.length)
-				empty[String(group.ID)] = true;
+		(snapshot || []).forEach(function (entry) {
+			if (!entry.Tiles.length)
+				empty[String(entry.ID)] = true;
 		});
 
-		groups = cancel ? snapshot : this.Groups.filter(function (group) {
-			return group.Tiles.length || empty[String(group.ID)];
+		groups = cancel ? snapshot : this.Groups.filter(function (entry) {
+			return entry.Tiles.length || empty[String(entry.ID)];
 		});
 
 		this.Dragging = '';
 		this.Snapshot = null;
+		this.Target = '';
+		this.Created = '';
 		this.Groups = groups;
 
-		if (!cancel && this.Signature(groups) !== this.Signature(snapshot))
-			this.$Emit('change', groups);
+		if (cancel || this.Signature(groups) === this.Signature(snapshot)) return;
+
+		group = groups.filter(function (entry) {
+			return String(entry.ID) === created;
+		})[0];
+
+		if (group)
+			this.$Emit('groupcreate', {Group: group, Tile: group.Tiles[0]});
+
+		this.$Emit('change', groups);
 	}
 });

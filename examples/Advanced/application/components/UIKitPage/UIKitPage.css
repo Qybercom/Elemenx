@@ -295,3 +295,20 @@
 	background: var(--elemenx-accent);
 	border-radius: 999px;
 }
+
+.ui-kit-clock-tile .elemenx-tile-content {
+	justify-content: center;
+	padding: 8px 12px;
+}
+
+.ui-kit-clock-tile strong {
+	font-size: 32px;
+	line-height: 40px;
+	font-variant-numeric: tabular-nums;
+}
+
+.ui-kit-clock-tile span {
+	font-size: 12px;
+	line-height: 16px;
+	opacity: 0.8;
+}

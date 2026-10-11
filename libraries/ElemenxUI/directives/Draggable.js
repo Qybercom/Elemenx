@@ -3,7 +3,8 @@
  * with the pointer onto *droppable elements that accept Type. A ghost copy follows the pointer; Escape cancels.
  * The element dispatches "dragbegin" and "dragfinish" ({Dropped, Target}); the target dispatches "dropmove" (once a
  * frame while the item is over it) and "dropped". Over a target with Sort, Index in their detail is the place the item
- * would take among the draggable items of that target (the dragged item left out), and a line marks it.
+ * would take among the draggable items of that target (the dragged item left out), and a line marks it. OffsetX and
+ * OffsetY are the point of the element that the pointer holds, so ClientX - OffsetX is the left edge of the ghost.
  * Disabled turns dragging off; Handle limits where the drag may start. A drag outlives a new rendering of its element
  * (a list that moves the item to another place while it is dragged): it ends on the release of the pointer.
  */
@@ -48,6 +49,8 @@ Elemenx.Directive('draggable', {
 				Source: element,
 				ClientX: event.clientX,
 				ClientY: event.clientY,
+				OffsetX: data.OffsetX || 0,
+				OffsetY: data.OffsetY || 0,
 				Index: index === undefined ? -1 : index
 			};
 		}

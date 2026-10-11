@@ -31,7 +31,8 @@ function field (page, label) {
 async function open (page, origin) {
 	await page.goto(origin.URL + '/ui');
 
-	await expect(page.locator('.elemenx-workspace')).toBeVisible();
+	/* The catalogue is a large page: under a full parallel run its development build may take more than 5 seconds. */
+	await expect(page.locator('.elemenx-workspace')).toBeVisible({timeout: 20000});
 }
 
 for (const origin of origins) {
@@ -45,9 +46,11 @@ for (const origin of origins) {
 			await expect(page.locator('.ui-kit > .elemenx-section')).toHaveCount(22);
 
 			await expect(page.locator('#elemenx-icons')).toHaveAttribute('data-ready', 'true');
-			await expect(page.locator('.ui-kit-icon svg use').first()).toHaveAttribute('href', '#elemenx-icon-add');
+			await expect(page.locator('.ui-kit-icon svg').first()).toHaveAttribute('data-icon', 'add');
+			await expect(page.locator('.ui-kit-icon svg').first()).toHaveAttribute('viewBox', '0 0 24 24');
+			await expect(page.locator('.ui-kit-icon svg').first().locator('path')).toHaveCount(1);
 			await expect(page.locator('#elemenx-icons symbol#elemenx-icon-add')).toHaveCount(1);
-			await expect(page.locator('svg.elemenx-icon use[href*="icons.svg"]')).toHaveCount(0);
+			await expect(page.locator('svg.elemenx-icon use')).toHaveCount(0);
 
 			sprite = await page.evaluate(function () {
 				return performance.getEntriesByType('resource').map(function (entry) {
@@ -877,12 +880,14 @@ for (const origin of origins) {
 
 			await expect(money.locator('.elemenx-caption')).toHaveText('JPY 1235');
 
-			await expect(icons.locator('.ui-kit-icon[title="pack.tar.gz"] use')).toHaveAttribute('href', /-file-tar-gz$/);
-			await expect(icons.locator('.ui-kit-icon[title="Dockerfile"] use')).toHaveAttribute('href', /-file-dockerfile$/);
-			await expect(icons.locator('.ui-kit-icon[title="unknown.xyz"] use')).toHaveAttribute('href', /-file$/);
-			await expect(icons.locator('.ui-kit-icon[title="file.rb"] use')).toHaveAttribute('href', /-file-rb$/);
-			await expect(icons.locator('.ui-kit-icon[title="CMakeLists.txt"] use')).toHaveAttribute('href', /-file-cmake$/);
-			expect(await icons.locator('.ui-kit-icon:has(use[href*="-file-"])').count()).toBeGreaterThan(170);
+			await expect(icons.locator('.ui-kit-icon[title="pack.tar.gz"] svg')).toHaveAttribute('data-icon', 'file-tar-gz');
+			await expect(icons.locator('.ui-kit-icon[title="Dockerfile"] svg')).toHaveAttribute('data-icon', 'file-dockerfile');
+			await expect(icons.locator('.ui-kit-icon[title="unknown.xyz"] svg')).toHaveAttribute('data-icon', 'file');
+			await expect(icons.locator('.ui-kit-icon[title="file.rb"] svg')).toHaveAttribute('data-icon', 'file-rb');
+			await expect(icons.locator('.ui-kit-icon[title="CMakeLists.txt"] svg')).toHaveAttribute('data-icon', 'file-cmake');
+			await expect(icons.locator('.ui-kit-icon[title="sketch.ino"] svg')).toHaveAttribute('data-icon', 'file-ino');
+			await expect(icons.locator('.ui-kit-icon[title="sketch.ino"] svg text')).toHaveText('INO');
+			expect(await icons.locator('.ui-kit-icon svg[data-icon^="file-"]').count()).toBeGreaterThan(170);
 		});
 
 		test('workspace shows the tool windows the page puts in it and resizes them', async function ({ page }) {
@@ -1028,73 +1033,136 @@ for (const origin of origins) {
 			await expect(terminal.locator('.elemenx-terminal-line')).toHaveCount(0);
 		});
 
-		test('tile grid opens tiles, moves them with a live preview and starts new groups', async function ({ page }) {
+		test('tile grid places tiles in cells, keeps locked ones, starts groups and runs group actions', async function ({ page }) {
 			var grid;
-			var tiles;
-			var order;
+			var state;
+			var drag;
 			var from;
 			var to;
 
 			await open(page, origin);
 
 			grid = section(page, 'Tiles').locator('.elemenx-tile-grid');
-			tiles = grid.locator('.elemenx-tile');
-			order = function () {
+			state = function () {
 				return grid.locator('.elemenx-tile-group').evaluateAll(function (groups) {
 					return groups.map(function (group) {
 						return group.querySelector('.elemenx-tile-group-title').textContent + ':' + Array.prototype.map.call(group.querySelectorAll('.elemenx-tile'), function (tile) {
-							return tile.getAttribute('data-id');
-						}).join(',');
+							return tile.getAttribute('data-id') + '@' + tile.style.gridArea.split(' / ').slice(0, 2).join(',');
+						}).join(' ');
 					});
 				});
 			};
+			drag = async function (id, x, y) {
+				var box = await grid.locator('.elemenx-tile[data-id="' + id + '"]').boundingBox();
 
-			await tiles.first().scrollIntoViewIfNeeded();
-			await tiles.nth(1).click();
+				await page.mouse.move(box.x + 8, box.y + 8);
+				await page.mouse.down();
+				await page.mouse.move(x + 8, y + 8, {steps: 10});
+			};
+
+			await grid.scrollIntoViewIfNeeded();
+			await grid.locator('.elemenx-tile[data-id="calendar"]').click();
 
 			await expect(section(page, 'Tiles').locator('.elemenx-section-header')).toContainText('Opened: Calendar');
+			await expect(grid.locator('.elemenx-tile[data-id="clock"] .elemenx-tile-content strong')).toHaveText(/\d/);
 
-			from = await grid.locator('.elemenx-tile[data-id="tasks"]').boundingBox();
-			to = await grid.locator('.elemenx-tile[data-id="calendar"]').boundingBox();
+			expect(await state()).toEqual([
+				'Work:mail@1,1 calendar@3,1 tasks@3,3 chat@5,1 phone@5,2',
+				'Tools:terminal@1,1 settings@1,3 database@1,4 cloud@3,1',
+				'Pinned:clock@1,1'
+			]);
 
-			await page.mouse.move(from.x + 8, from.y + 8);
-			await page.mouse.down();
-			await page.mouse.move(to.x + 8, to.y + 24, {steps: 8});
-
-			expect(await order()).toEqual(['Work:mail,tasks,calendar,chat,phone', 'Tools:terminal,settings,database,cloud', 'New group:']);
-			await expect(grid.locator('.elemenx-tile[data-id="tasks"]')).toHaveClass(/dragging/);
-
-			await page.mouse.up();
-
-			expect(await order()).toEqual(['Work:mail,tasks,calendar,chat,phone', 'Tools:terminal,settings,database,cloud']);
-
+			/* Under the tile at the right edge of the group: the cell stays where the ghost is, a hole is left. */
 			from = await grid.locator('.elemenx-tile[data-id="phone"]').boundingBox();
 
-			await page.mouse.move(from.x + 8, from.y + 8);
-			await page.mouse.down();
-			await page.mouse.move(from.x + 16, from.y + 16, {steps: 2});
+			await drag('phone', from.x + 112, from.y);
 
-			to = await grid.locator('.elemenx-tile-new').boundingBox();
+			await expect(grid.locator('.elemenx-tile[data-id="phone"]')).toHaveClass(/dragging/);
 
-			await page.mouse.move(to.x + to.width / 2, to.y + to.height / 2, {steps: 8});
 			await page.mouse.up();
 
-			expect(await order()).toEqual(['Work:mail,tasks,calendar,chat', 'Tools:terminal,settings,database,cloud', 'New group:phone']);
+			expect((await state())[0]).toBe('Work:mail@1,1 calendar@3,1 tasks@3,3 chat@5,1 phone@5,4');
 
-			from = await grid.locator('.elemenx-tile[data-id="calendar"]').boundingBox();
-			to = await grid.locator('.elemenx-tile[data-id="terminal"]').boundingBox();
+			/* Into another group under its right edge tile: the tiles in the way move down; Escape restores. */
+			to = await grid.locator('.elemenx-tile[data-id="database"]').boundingBox();
 
-			await page.mouse.move(from.x + 8, from.y + 8);
-			await page.mouse.down();
-			await page.mouse.move(to.x + 8, to.y + 8, {steps: 8});
+			await drag('calendar', to.x - 56, to.y + 56);
 
-			expect((await order())[1]).toMatch(/^Tools:calendar,/);
+			expect((await state())[1]).toBe('Tools:terminal@1,1 settings@1,3 database@1,4 calendar@2,3 cloud@4,1');
 
 			await page.keyboard.press('Escape');
 			await page.mouse.up();
 
-			expect(await order()).toEqual(['Work:mail,tasks,calendar,chat', 'Tools:terminal,settings,database,cloud', 'New group:phone']);
+			expect((await state())[1]).toBe('Tools:terminal@1,1 settings@1,3 database@1,4 cloud@3,1');
+
+			await drag('calendar', to.x - 56, to.y + 56);
+
+			await page.mouse.up();
+
+			expect(await state()).toEqual([
+				'Work:mail@1,1 tasks@3,3 chat@5,1 phone@5,4',
+				'Tools:terminal@1,1 settings@1,3 database@1,4 calendar@2,3 cloud@4,1',
+				'Pinned:clock@1,1'
+			]);
+
+			/* A locked tile does not move, and a locked group takes no tiles. */
+			await expect(grid.locator('.elemenx-tile[data-id="settings"]')).toHaveCSS('cursor', 'pointer');
+
+			to = await grid.locator('.elemenx-tile[data-id="cloud"]').boundingBox();
+
+			await drag('settings', to.x, to.y);
+
+			await page.mouse.up();
+
+			to = await grid.locator('.elemenx-tile[data-id="clock"]').boundingBox();
+
+			await drag('chat', to.x, to.y + 56);
+
+			await page.mouse.up();
+
+			expect((await state())[1]).toBe('Tools:terminal@1,1 settings@1,3 database@1,4 calendar@2,3 cloud@4,1');
+			expect((await state())[2]).toBe('Pinned:clock@1,1');
+
+			/* GroupPolicy between: a new group between two groups. */
+			await drag('chat', from.x, from.y);
+
+			to = await grid.locator('.elemenx-tile-gap').nth(1).boundingBox();
+
+			await page.mouse.move(to.x + to.width / 2, to.y + 40, {steps: 10});
+			await page.mouse.up();
+
+			expect(await state()).toEqual([
+				'Work:mail@1,1 tasks@3,3 phone@5,4',
+				'New group:chat@1,1',
+				'Tools:terminal@1,1 settings@1,3 database@1,4 calendar@2,3 cloud@4,1',
+				'Pinned:clock@1,1'
+			]);
+
+			await grid.locator('.elemenx-tile-group', {hasText: 'Tools'}).getByRole('button', {name: 'Rename'}).click();
+
+			await expect(section(page, 'Tiles').locator('.elemenx-section-header')).toContainText('Opened: Rename Tools');
 			await expect(page.locator('.elemenx-drag-ghost')).toHaveCount(0);
+		});
+
+		test('steps take custom content and a disabled step is not clickable', async function ({ page }) {
+			var custom;
+
+			await open(page, origin);
+
+			custom = section(page, 'Steps and timeline').locator('.elemenx-steps').nth(2);
+
+			await expect(custom.locator('.elemenx-step.custom .elemenx-step-content .ui-kit-toast-bar')).toHaveCount(1);
+			await expect(custom.locator('.elemenx-step').nth(0)).toHaveClass(/ui-kit-upload-step/);
+			await expect(custom.locator('.elemenx-step').nth(1)).toHaveClass(/disabled/);
+
+			await custom.locator('.elemenx-step-node').nth(1).click({force: true});
+
+			await expect(custom.locator('.elemenx-step').nth(0)).toHaveClass(/active/);
+
+			await custom.locator('.elemenx-step-node').nth(2).click();
+
+			await expect(custom.locator('.elemenx-step').nth(2)).toHaveClass(/active/);
+			await expect(custom.locator('.elemenx-step').nth(0)).toHaveClass(/pending/);
 		});
 
 		test('layouts: dashboard, settings, master-detail and centered pages', async function ({ page }) {

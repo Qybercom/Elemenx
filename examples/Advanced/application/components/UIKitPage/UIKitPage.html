@@ -411,7 +411,10 @@
 	<Section Title="Steps and timeline" Note="Steps · Timeline">
 		<Steps [items]="StepItems" [active]="ActiveSteps" [done]="DoneSteps" Clickable="true" (select)="StepSelected" />
 		<div class="ui-kit-grid">
-			<Steps Direction="vertical" Size="small" [items]="StepItems" [active]="['review', 'deploy']" [done]="['plan']" />
+			<div class="ui-kit-stack">
+				<Steps Direction="vertical" Size="small" [items]="StepItems" [active]="['review', 'deploy']" [done]="['plan']" />
+				<Steps Size="small" [items]="CustomSteps" [active]="[CustomStep]" Clickable="true" (select)="CustomStepSelected" />
+			</div>
 			<Timeline [items]="Activity" />
 		</div>
 	</Section>
@@ -425,7 +428,7 @@
 	</Section>
 
 	<Section Title="Tiles" [note]="'TileGrid · drag tiles to arrange them' + (OpenedTile ? ' · Opened: ' + OpenedTile : '')">
-		<TileGrid [groups]="TileGroups" Editable="true" (open)="TileOpened" (change)="TilesChanged" />
+		<TileGrid [groups]="TileGroups" Editable="true" GroupPolicy="between" (open)="TileOpened" (change)="TilesChanged" (groupaction)="TileGroupAction" />
 	</Section>
 
 	<Section Title="Layouts" Note="Dashboard · Settings · MasterDetail · Centered">

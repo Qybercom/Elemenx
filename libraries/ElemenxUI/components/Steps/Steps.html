@@ -1,12 +1,13 @@
 <ol class="elemenx-steps" [class]="[Direction || 'horizontal', Size || 'medium', Clickable ? 'clickable' : '']">
-	<li class="elemenx-step" *for="item of Items" *key="item.ID" [class]="[StatusOf(item, Active, Done)]" [attribute.aria-current]="StatusOf(item, Active, Done) === 'active' ? 'step' : null">
-		<button class="elemenx-step-node" type="button" [attribute.tabindex]="Clickable ? 0 : -1" [attribute.aria-label]="item.Label + ': ' + StatusOf(item, Active, Done)" [attribute.data-index]="$index" (click)="Pick">
+	<li class="elemenx-step" *for="item of Items" *key="item.ID" [class]="[StatusOf(item, Active, Done), item.Disabled ? 'disabled' : '', item.Element || item.Render ? 'custom' : ''].concat(String(item.Class || '').split(' '))" [attribute.aria-current]="StatusOf(item, Active, Done) === 'active' ? 'step' : null">
+		<button class="elemenx-step-node" type="button" [attribute.tabindex]="Clickable && !item.Disabled ? 0 : -1" [attribute.aria-disabled]="Clickable && item.Disabled ? 'true' : null" [attribute.aria-label]="item.Label + ': ' + StatusOf(item, Active, Done)" [attribute.data-index]="$index" (click)="Pick">
 			<Icon *if="IconOf(item, StatusOf(item, Active, Done))" [name]="IconOf(item, StatusOf(item, Active, Done))" />
 			<span *if="!IconOf(item, StatusOf(item, Active, Done))">{{$index + 1}}</span>
 		</button>
 		<span class="elemenx-step-text">
 			<span class="elemenx-step-label">{{item.Label}}</span>
 			<span class="elemenx-caption" *if="item.Description">{{item.Description}}</span>
+			<span class="elemenx-step-content" *if="item.Element || item.Render" *mount="item"></span>
 		</span>
 	</li>
 </ol>

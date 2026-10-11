@@ -1,8 +1,8 @@
 /*
- * An icon of a sprite: <Icon Name="add" />. The icons of the library sprite are copied into the page once, so every
- * icon refers to a symbol of the document itself: an icon in an external file is drawn again from that file whenever
- * the page restyles (a theme change), and blinks while the file loads (with the cache of the developer tools off).
- * The copied symbols are named elemenx-icon-<name>. Sprite names another sprite file, used as it is.
+ * An icon of a sprite: <Icon Name="add" />. The symbols of the library sprite are copied into the page once (as
+ * elemenx-icon-<name>), and every icon draws the shapes of its symbol itself (*glyph), with no <use>: Chrome rebuilds
+ * the shadow tree of every <use> on a restyle of the page, and with the developer tools open all the icons stay blank
+ * until a theme change is over. data-icon names the icon. Sprite names another sprite file, drawn with <use>.
  */
 Elemenx.Component('Icon', {
 	$TemplateURL: 'Icon.html',
