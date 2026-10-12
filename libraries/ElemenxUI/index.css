@@ -1572,19 +1572,8 @@ a {
 	}
 }
 
-/* The theme change of the Theme Service: a short cross-fade of the whole page. */
-::view-transition-old(root),
-::view-transition-new(root) {
-	animation-duration: 160ms;
-}
-
 @media (prefers-reduced-motion: reduce) {
 	.elemenx-skeleton-line::after {
-		animation: none;
-	}
-
-	::view-transition-old(root),
-	::view-transition-new(root) {
 		animation: none;
 	}
 }

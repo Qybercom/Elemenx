@@ -17,9 +17,13 @@
 	text-decoration: none;
 	cursor: pointer;
 	user-select: none;
+
+	/*
+	 * No transition of color: the icons draw with currentColor, and Chrome with the developer tools open leaves an SVG
+	 * blank while its currentColor is in a transition (a theme change would blank every icon in a button).
+	 */
 	transition: background 120ms ease,
-		border-color 120ms ease,
-		color 120ms ease;
+		border-color 120ms ease;
 }
 
 .elemenx-button:hover {

@@ -1,7 +1,7 @@
 <div class="elemenx-tile-grid" [class.editable]="Editable" [class.sorting]="!!Dragging" [style.--elemenx-tile-columns]="Columns" *droppable="{Accept: ['tile'], Disabled: !Editable}" (dropmove)="Beside" (dropped)="Beside">
 	<div class="elemenx-tile-lane" *for="group of Groups" *key="group.ID">
 		<div class="elemenx-tile-gap" *if="Dragging && GroupPolicy === 'between'" *droppable="{Accept: ['tile']}" [attribute.data-index]="$index" (dropped)="DropBetween"></div>
-		<section class="elemenx-tile-group" [class.locked]="!!group.Locked" *droppable="{Accept: ['tile'], Disabled: !Editable || !!group.Locked}" [attribute.data-group]="group.ID" (dropmove)="Preview" (dropleave)="Leave" (dropped)="Preview">
+		<section class="elemenx-tile-group" [class.locked]="!!group.Locked" [style.--elemenx-tile-columns]="group.Columns || null" *droppable="{Accept: ['tile'], Disabled: !Editable || !!group.Locked}" [attribute.data-group]="group.ID" (dropmove)="Preview" (dropleave)="Leave" (dropped)="Preview">
 			<header class="elemenx-tile-group-header">
 				<h3 class="elemenx-tile-group-title">{{group.Title || ''}}</h3>
 				<span class="elemenx-tile-group-actions">
@@ -10,7 +10,7 @@
 				</span>
 			</header>
 			<div class="elemenx-tile-cells">
-				<div class="elemenx-tile" role="button" tabindex="0" *for="tile of group.Tiles" *key="tile.ID" *draggable="{Data: tile.ID, Type: 'tile', Disabled: !Editable || !!tile.Locked || !!group.Locked}" [class]="[tile.Size || 'medium', tile.Locked || group.Locked ? 'locked' : '', tile.Element || tile.Render ? 'custom' : '', String(tile.ID) === Dragging ? 'dragging' : ''].concat(String(tile.Class || '').split(' '))" [style.--elemenx-tile-color]="tile.Color || null" [style.grid-area]="Area(group.Tiles, tile)" [attribute.data-id]="tile.ID" [attribute.aria-label]="tile.Title" (click)="Open" (keydown)="Key" (dragbegin)="Begin">
+				<div class="elemenx-tile" role="button" tabindex="0" *for="tile of group.Tiles" *key="tile.ID" *draggable="{Data: tile.ID, Type: 'tile', Disabled: !Editable || !!tile.Locked || !!group.Locked}" [class]="[tile.Size || 'medium', tile.Locked || group.Locked ? 'locked' : '', tile.Element || tile.Render ? 'custom' : '', String(tile.ID) === Dragging ? 'dragging' : ''].concat(String(tile.Class || '').split(' '))" [style.--elemenx-tile-color]="tile.Color || null" [style.grid-area]="Area(group, tile)" [attribute.data-id]="tile.ID" [attribute.aria-label]="tile.Title" (click)="Open" (keydown)="Key" (dragbegin)="Begin">
 					<Icon *if="tile.Icon && !tile.Element && !tile.Render" [name]="tile.Icon" Size="24" />
 					<span class="elemenx-tile-text" *if="tile.Text && tile.Size !== 'small' && !tile.Element && !tile.Render">{{tile.Text}}</span>
 					<span class="elemenx-tile-title" *if="tile.Size !== 'small' && !tile.Element && !tile.Render">{{tile.Title}}</span>
@@ -18,6 +18,7 @@
 					<span class="elemenx-tile-badge" *if="tile.Badge">{{tile.Badge}}</span>
 				</div>
 			</div>
+			<span class="elemenx-tile-group-resize" role="separator" tabindex="0" aria-orientation="vertical" aria-label="Group width" *if="Editable && !group.Locked" [attribute.aria-valuenow]="ColumnsOf(group)" [attribute.aria-valuemax]="MaxColumns" [attribute.data-group]="group.ID" (pointerdown)="ResizeStart" (pointermove)="ResizeMove" (pointerup)="ResizeEnd" (pointercancel)="ResizeEnd" (keydown)="ResizeKey"></span>
 		</section>
 	</div>
 	<div class="elemenx-tile-lane" *if="Dragging && GroupPolicy !== 'none'">

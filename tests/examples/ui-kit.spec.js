@@ -381,25 +381,12 @@ for (const origin of origins) {
 			await expect(page.locator('body')).toHaveAttribute('data-theme', 'system');
 			expect(await surface()).toBe('rgb(29, 32, 37)');
 
-			/* The change goes through a view transition: the old picture stays until the new one is drawn whole. */
-			await page.evaluate(function () {
-				var start = document.startViewTransition.bind(document);
-
-				window.ThemeTransitions = 0;
-
-				document.startViewTransition = function (callback) {
-					window.ThemeTransitions++;
-
-					return start(callback);
-				};
-			});
-
 			await page.locator('.ui-kit-intro').getByRole('button', {name: 'Light theme'}).click();
 
 			await expect(page.locator('body')).toHaveAttribute('data-theme', 'light');
-			expect(await page.evaluate(function () {
-				return window.ThemeTransitions;
-			})).toBe(1);
+			expect(await page.locator('.elemenx-button').first().evaluate(function (node) {
+				return getComputedStyle(node).transitionProperty;
+			})).not.toMatch(/(^|, )color/);
 			expect(await surface()).toBe('rgb(255, 255, 255)');
 
 			await page.reload();
@@ -1216,6 +1203,67 @@ for (const origin of origins) {
 			await section(page, 'Tiles').getByText('News tile').click();
 
 			expect(await tiles()).toEqual(['player@1,3', 'photos@3,1', 'music@5,1']);
+		});
+
+		test('tile groups stretch by whole columns, and a press on a control inside a tile does not press the tile', async function ({ page }) {
+			var grid;
+			var tools;
+			var handle;
+			var width;
+			var box;
+			var play;
+
+			await open(page, origin);
+
+			grid = section(page, 'Tiles').locator('.elemenx-tile-grid').first();
+			tools = grid.locator('.elemenx-tile-group[data-group="tools"]');
+			handle = tools.locator('.elemenx-tile-group-resize');
+			width = async function () {
+				return Math.round((await tools.locator('.elemenx-tile-cells').boundingBox()).width);
+			};
+
+			await grid.scrollIntoViewIfNeeded();
+
+			expect(await width()).toBe(216);
+			await expect(grid.locator('.elemenx-tile-group[data-group="pinned"] .elemenx-tile-group-resize')).toHaveCount(0);
+
+			box = await handle.boundingBox();
+
+			await page.mouse.move(box.x + 4, box.y + 20);
+			await page.mouse.down();
+			await page.mouse.move(box.x + 4 + 112, box.y + 20, {steps: 8});
+			await page.mouse.up();
+
+			expect(await width()).toBe(328);
+			await expect(handle).toHaveAttribute('aria-valuenow', '6');
+
+			await handle.focus();
+
+			await page.keyboard.press('ArrowLeft');
+
+			expect(await width()).toBe(272);
+
+			/* Not narrower than the widest tile (Deployments, four columns). */
+			await page.keyboard.press('ArrowLeft');
+			await page.keyboard.press('ArrowLeft');
+
+			await expect(handle).toHaveAttribute('aria-valuenow', '4');
+			expect(await width()).toBe(216);
+
+			play = section(page, 'Tiles').locator('.elemenx-tile-grid').nth(1).getByRole('button', {name: 'Play', exact: true});
+
+			await play.scrollIntoViewIfNeeded();
+
+			box = await play.boundingBox();
+
+			await page.mouse.move(box.x + 5, box.y + 5);
+			await page.mouse.down();
+
+			expect(await grid.page().locator('.elemenx-tile[data-id="player"]').evaluate(function (node) {
+				return getComputedStyle(node).transform;
+			})).toBe('none');
+
+			await page.mouse.up();
 		});
 
 		test('steps take custom content and a disabled step is not clickable', async function ({ page }) {

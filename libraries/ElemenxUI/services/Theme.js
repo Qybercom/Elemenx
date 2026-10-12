@@ -3,16 +3,12 @@
  * The policy lives in body[data-theme], so index.css applies it before any script runs; this Service changes it,
  * remembers it in localStorage (StorageKey, Persist) and reports changes, including system changes under 'system'.
  * The first policy comes from localStorage, then from the data-theme of the page, then from Default.
- * Transition: a change of policy repaints the page through a view transition where the browser has one, so the old
- * picture stays until the new one is drawn whole and then fades into it (without it, Chrome with the developer tools
- * open shows frames in which the icons are blank). The attribute then changes a frame later; Changed reports at once.
  */
 Elemenx.Service('Theme', {
 	Default: 'system',
 	Persist: true,
 	StorageKey: 'elemenx-theme',
 	Policies: ['system', 'light', 'dark'],
-	Transition: true,
 
 	$OnCreate: function () {
 		var self = this;
@@ -71,7 +67,7 @@ Elemenx.Service('Theme', {
 			/* Storage may be unavailable (private mode); the policy still applies to this page. */
 		}
 
-		this.Apply(true);
+		this.Apply();
 		this.Changed();
 
 		return value;
@@ -89,27 +85,8 @@ Elemenx.Service('Theme', {
 		return this.Policy(this.Policies[(this.Policies.indexOf(this.Current) + 1) % this.Policies.length]);
 	},
 
-	Apply: function (animate) {
-		var self = this;
-		var body = document.body;
-
-		/* The policy at the time the page changes: a quick second change must not be undone by the first one. */
-		function apply () {
-			body.setAttribute('data-theme', self.Current);
-		}
-
-		if (animate && this.Transition && typeof document.startViewTransition === 'function' && body.getAttribute('data-theme') !== this.Current) {
-			try {
-				document.startViewTransition(apply);
-
-				return;
-			}
-			catch (error) {
-				/* A transition that cannot start (another one is running) leaves the change to the plain way. */
-			}
-		}
-
-		apply();
+	Apply: function () {
+		document.body.setAttribute('data-theme', this.Current);
 	},
 
 	OnChange: function (callback) {

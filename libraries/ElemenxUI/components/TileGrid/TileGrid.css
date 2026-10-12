@@ -17,6 +17,7 @@
 }
 
 .elemenx-tile-group {
+	position: relative;
 	display: flex;
 	flex-direction: column;
 	gap: 8px;
@@ -77,6 +78,47 @@
 	outline-offset: 1px;
 }
 
+/* The handle on the right edge of a group, in the gap beside it: drag it to stretch the group by whole columns. */
+.elemenx-tile-group-resize {
+	position: absolute;
+	top: 28px;
+	right: -12px;
+	bottom: 0;
+	width: 8px;
+	border-radius: 4px;
+	cursor: ew-resize;
+	touch-action: none;
+}
+
+.elemenx-tile-group-resize::after {
+	content: '';
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: 3px;
+	width: 2px;
+	border-radius: 1px;
+	background: transparent;
+	transition: background 120ms ease;
+}
+
+.elemenx-tile-group:hover > .elemenx-tile-group-resize::after {
+	background: var(--elemenx-border);
+}
+
+.elemenx-tile-group-resize:hover::after,
+.elemenx-tile-group-resize:focus-visible::after {
+	background: var(--elemenx-accent);
+}
+
+.elemenx-tile-group-resize:focus-visible {
+	outline: none;
+}
+
+.elemenx-tile-grid.sorting .elemenx-tile-group-resize {
+	display: none;
+}
+
 .elemenx-tile-cells {
 	display: grid;
 	grid-template-columns: repeat(var(--elemenx-tile-columns), 48px);
@@ -108,7 +150,8 @@
 	filter: brightness(1.08);
 }
 
-.elemenx-tile:active {
+/* A press on a control inside a custom tile is the control's: the tile does not show it. */
+.elemenx-tile:active:not(:has(.elemenx-tile-content :is(a, button, input, select, textarea, label, [role="button"]):active)) {
 	transform: scale(0.97);
 }
 
