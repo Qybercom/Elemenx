@@ -39,6 +39,7 @@ Elemenx.Component('UIKitPage', {
 	Time: '09:30',
 	Card: '',
 	CardState: '',
+	OTPState: '',
 	Phone: '+79991234567',
 	PhoneState: '',
 	Agree: true,
@@ -266,6 +267,14 @@ Elemenx.Component('UIKitPage', {
 
 	TimeChanged: function (value) {
 		this.Time = value;
+	},
+
+	OTPTyped: function (value) {
+		this.OTPState = value ? value.length + ' of 6' : '';
+	},
+
+	OTPCompleted: function (value) {
+		this.OTPState = 'Complete: ' + value;
 	},
 
 	CardValidated: function (state) {

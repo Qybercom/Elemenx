@@ -260,13 +260,33 @@
 	display: contents;
 }
 
+/*
+ * While a tile is dragged, the strip beside the right edge of a group still belongs to the group, so a tile taken to
+ * the edge does not fall out of it; the strip lights up while the group is about to grow.
+ */
+.elemenx-tile-grid.sorting .elemenx-tile-group:not(.locked, .new)::after {
+	content: '';
+	position: absolute;
+	top: 28px;
+	bottom: 0;
+	left: 100%;
+	width: 12px;
+	border-radius: 0 4px 4px 0;
+	transition: background 120ms ease;
+}
+
+.elemenx-tile-grid.sorting .elemenx-tile-group.growing::after {
+	background: color-mix(in srgb, var(--elemenx-accent) 24%, transparent);
+	box-shadow: inset -2px 0 0 var(--elemenx-accent);
+}
+
 /* The space between two groups starts a new group there (GroupPolicy 'between'). */
 .elemenx-tile-gap {
 	position: absolute;
 	top: 0;
 	bottom: 0;
-	left: -28px;
-	width: 24px;
+	left: -20px;
+	width: 16px;
 	border: 2px dashed transparent;
 	border-radius: 8px;
 }

@@ -1266,6 +1266,156 @@ for (const origin of origins) {
 			await page.mouse.up();
 		});
 
+		test('a tile dragged past the right edge of its group widens the group after a pause, and the drop keeps only the width it needs', async function ({ page }) {
+			var grid;
+			var work;
+			var columns;
+			var box;
+
+			await open(page, origin);
+
+			grid = section(page, 'Tiles').locator('.elemenx-tile-grid').first();
+			work = grid.locator('.elemenx-tile-group[data-group="work"]');
+			columns = function () {
+				return work.locator('.elemenx-tile-cells').evaluate(function (node) {
+					return getComputedStyle(node).gridTemplateColumns.split(' ').length;
+				});
+			};
+
+			await grid.scrollIntoViewIfNeeded();
+
+			box = await grid.locator('.elemenx-tile[data-id="tasks"]').boundingBox();
+
+			await page.mouse.move(box.x + 10, box.y + 10);
+			await page.mouse.down();
+			await page.mouse.move(box.x + 70, box.y + 10, {steps: 6});
+
+			await expect(work).toHaveClass(/growing/);
+
+			await expect.poll(columns).toBe(5);
+			await expect(grid.locator('.elemenx-tile[data-id="tasks"]')).toHaveAttribute('style', /grid-area: 3 \/ 4 \//);
+
+			await page.mouse.up();
+
+			expect(await columns()).toBe(5);
+
+			/* Taken back inside before the drop, the group keeps the width it had before this drag, no more. */
+			box = await grid.locator('.elemenx-tile[data-id="tasks"]').boundingBox();
+
+			await page.mouse.move(box.x + 10, box.y + 10);
+			await page.mouse.down();
+			await page.mouse.move(box.x + 70, box.y + 10, {steps: 6});
+
+			await expect.poll(columns).toBe(6);
+
+			await page.mouse.move(box.x - 106, box.y + 10, {steps: 6});
+			await page.mouse.up();
+
+			expect(await columns()).toBe(5);
+		});
+
+		test('one-time code takes its pattern from typing and paste, fills cells, masks and completes', async function ({ page }) {
+			var otp;
+			var input;
+			var cells;
+			var tap;
+			var pin;
+			var recovery;
+
+			await open(page, origin);
+
+			otp = field(page, 'One-time code');
+			input = otp.locator('input');
+			cells = function () {
+				return otp.locator('.elemenx-otp-cell').allTextContents();
+			};
+			tap = async function (locator) {
+				var box = await locator.boundingBox();
+
+				await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+			};
+
+			await otp.scrollIntoViewIfNeeded();
+
+			await expect(otp.locator('.elemenx-otp-cell')).toHaveCount(6);
+			await expect(otp.locator('.elemenx-otp-separator')).toHaveCount(1);
+			await expect(input).toHaveAttribute('autocomplete', 'one-time-code');
+			await expect(input).toHaveAttribute('inputmode', 'numeric');
+
+			await tap(otp.locator('.elemenx-otp-cell').nth(0));
+
+			await page.keyboard.type('12a3');
+
+			await expect(input).toHaveValue('123');
+			expect(await cells()).toEqual(['1', '2', '3', '', '', '']);
+			await expect(otp.locator('.elemenx-otp-cell').nth(3)).toHaveClass(/active/);
+			await expect(otp.locator('.elemenx-caption')).toHaveText('3 of 6');
+
+			await input.evaluate(function (node) {
+				var data = new DataTransfer();
+
+				data.setData('text/plain', ' 987-654 ');
+
+				node.setSelectionRange(0, node.value.length);
+				node.dispatchEvent(new ClipboardEvent('paste', {clipboardData: data, bubbles: true, cancelable: true}));
+			});
+
+			await expect(input).toHaveValue('987654');
+			await expect(otp.locator('.elemenx-caption')).toHaveText('Complete: 987654');
+
+			await tap(otp.locator('.elemenx-otp-cell').nth(2));
+
+			await page.keyboard.type('0');
+
+			await expect(input).toHaveValue('980654');
+
+			await page.keyboard.press('Backspace');
+
+			await expect(input).toHaveValue('98654');
+
+			await page.locator('body').click({position: {x: 5, y: 5}});
+
+			await expect(otp.locator('.elemenx-otp')).toHaveClass(/invalid/);
+
+			pin = field(page, 'PIN');
+
+			await pin.scrollIntoViewIfNeeded();
+
+			await tap(pin.locator('.elemenx-otp-cell').first());
+
+			await page.keyboard.type('43210');
+
+			await expect(pin.locator('input')).toHaveValue('4321');
+			expect(await pin.locator('.elemenx-otp-cell').allTextContents()).toEqual(['•', '•', '•', '•']);
+			expect(await pin.locator('input').evaluate(function (node) {
+				var event = new ClipboardEvent('copy', {bubbles: true, cancelable: true});
+
+				node.dispatchEvent(event);
+
+				return event.defaultPrevented;
+			})).toBe(true);
+
+			await pin.getByRole('button', {name: 'Show code'}).click();
+
+			expect(await pin.locator('.elemenx-otp-cell').allTextContents()).toEqual(['4', '3', '2', '1']);
+
+			recovery = field(page, 'Recovery code');
+
+			await recovery.locator('input').click();
+
+			await page.keyboard.type('ab-cd ef12345');
+
+			await expect(recovery.locator('input')).toHaveValue('ABCDEF12');
+			await expect(recovery.locator('.elemenx-otp-cell')).toHaveCount(0);
+
+			await field(page, 'Hex code').locator('input').click();
+
+			await page.keyboard.type('fgz09a');
+
+			await expect(field(page, 'Hex code').locator('input')).toHaveValue('F09A');
+			await expect(field(page, 'Hex code').locator('input')).toHaveAttribute('type', 'password');
+		});
+
 		test('steps take custom content and a disabled step is not clickable', async function ({ page }) {
 			var custom;
 

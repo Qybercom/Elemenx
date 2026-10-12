@@ -184,6 +184,10 @@
 				<Field Label="Expires"><CardExpiryInput /></Field>
 				<Field Label="CVV"><CVVInput /></Field>
 			</div>
+			<Field Label="One-time code" [hint]="OTPState || 'Six digits; paste 123-456'"><OTPInput Group="3" (input)="OTPTyped" (complete)="OTPCompleted" /></Field>
+			<Field Label="PIN" Hint="Masked, four digits, round cells"><OTPInput Length="4" Masked="true" Shape="round" Size="small" /></Field>
+			<Field Label="Recovery code" Hint="Single field, letters and digits in upper case"><OTPInput Variant="single" Length="8" Pattern="alphanumeric" Case="upper" Placeholder="XXXXXXXX" /></Field>
+			<Field Label="Hex code" Hint="Pattern=&quot;[0-9A-F]&quot;, masked single field"><OTPInput Variant="single" Length="6" Pattern="[0-9A-F]" Case="upper" Masked="true" /></Field>
 			<Field Label="Phone" [hint]="Phone + (PhoneState ? ' · ' + PhoneState : '')"><PhoneInput [value]="Phone" (input)="PhoneChanged" (validate)="PhoneValidated" /></Field>
 			<Field Label="Phone, skip separators" Hint="Backspace jumps over a separator"><PhoneInput Country="US" Backspace="skip" /></Field>
 			<Field Label="Phone without guide"><PhoneInput Country="DE" Guide="false" /></Field>

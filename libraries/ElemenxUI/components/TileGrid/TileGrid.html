@@ -1,7 +1,7 @@
 <div class="elemenx-tile-grid" [class.editable]="Editable" [class.sorting]="!!Dragging" [style.--elemenx-tile-columns]="Columns" *droppable="{Accept: ['tile'], Disabled: !Editable}" (dropmove)="Beside" (dropped)="Beside">
 	<div class="elemenx-tile-lane" *for="group of Groups" *key="group.ID">
 		<div class="elemenx-tile-gap" *if="Dragging && GroupPolicy === 'between'" *droppable="{Accept: ['tile']}" [attribute.data-index]="$index" (dropped)="DropBetween"></div>
-		<section class="elemenx-tile-group" [class.locked]="!!group.Locked" [style.--elemenx-tile-columns]="group.Columns || null" *droppable="{Accept: ['tile'], Disabled: !Editable || !!group.Locked}" [attribute.data-group]="group.ID" (dropmove)="Preview" (dropleave)="Leave" (dropped)="Preview">
+		<section class="elemenx-tile-group" [class.locked]="!!group.Locked" [style.--elemenx-tile-columns]="group.Columns || null" [class.growing]="Growing === String(group.ID)" *droppable="{Accept: ['tile'], Disabled: !Editable || !!group.Locked}" [attribute.data-group]="group.ID" (dropmove)="Preview" (dropleave)="Leave" (dropped)="Preview">
 			<header class="elemenx-tile-group-header">
 				<h3 class="elemenx-tile-group-title">{{group.Title || ''}}</h3>
 				<span class="elemenx-tile-group-actions">

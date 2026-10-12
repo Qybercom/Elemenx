@@ -27,6 +27,7 @@
 	'components/CardNumberInput/CardNumberInput.js',
 	'components/CardExpiryInput/CardExpiryInput.js',
 	'components/CVVInput/CVVInput.js',
+	'components/OTPInput/OTPInput.js',
 	'components/PhoneInput/PhoneInput.js',
 	'components/Checkbox/Checkbox.js',
 	'components/Radio/Radio.js',

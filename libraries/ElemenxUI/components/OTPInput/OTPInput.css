@@ -1,0 +1,151 @@
+.elemenx-otp {
+	--elemenx-otp-cell: 40px;
+	--elemenx-otp-font: 18px;
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	max-width: 100%;
+}
+
+.elemenx-otp.small {
+	--elemenx-otp-cell: 32px;
+	--elemenx-otp-font: 14px;
+}
+
+.elemenx-otp.large {
+	--elemenx-otp-cell: 48px;
+	--elemenx-otp-font: 20px;
+}
+
+.elemenx-otp-field {
+	position: relative;
+	display: flex;
+	flex: 1;
+	min-width: 0;
+}
+
+/* Cells take the room they need, with the eye button right after them. */
+.elemenx-otp.split {
+	align-self: flex-start;
+}
+
+.elemenx-otp.split .elemenx-otp-field {
+	flex: none;
+}
+
+/* One field: the characters spaced like cells. */
+.elemenx-otp.single {
+	width: calc(var(--elemenx-otp-length) * 1.4em + 56px);
+}
+
+.elemenx-otp.single .elemenx-otp-control {
+	font-family: var(--elemenx-font-mono), monospace;
+	font-variant-numeric: tabular-nums;
+	letter-spacing: 0.4em;
+}
+
+/* Cells: the real field lies over them, its text and caret invisible; the cells show the characters and the caret. */
+.elemenx-otp.split .elemenx-otp-control {
+	position: absolute;
+	inset: 0;
+	z-index: 1;
+	width: 100%;
+	height: 100%;
+	color: transparent;
+	caret-color: transparent;
+	font-size: 16px;
+	cursor: text;
+}
+
+.elemenx-otp.split .elemenx-otp-control::selection {
+	background: transparent;
+	color: transparent;
+}
+
+.elemenx-otp-cells {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.elemenx-otp-cell {
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex: none;
+	width: var(--elemenx-otp-cell);
+	height: var(--elemenx-otp-cell);
+	background: var(--elemenx-surface);
+	border: 1px solid var(--elemenx-border-strong);
+	border-radius: 8px;
+	color: var(--elemenx-text);
+	font-family: var(--elemenx-font-mono), monospace;
+	font-size: var(--elemenx-otp-font);
+	line-height: 1;
+	font-weight: 600;
+	font-variant-numeric: tabular-nums;
+	transition: border-color 120ms ease,
+		box-shadow 120ms ease;
+}
+
+.elemenx-otp.round .elemenx-otp-cell {
+	border-radius: 50%;
+}
+
+.elemenx-otp-separator {
+	flex: none;
+	width: 8px;
+	height: 2px;
+	background: var(--elemenx-border-strong);
+	border-radius: 1px;
+}
+
+.elemenx-otp.split:hover .elemenx-otp-cell {
+	border-color: color-mix(in srgb, var(--elemenx-text) 40%, var(--elemenx-border-strong));
+}
+
+.elemenx-otp-cell.active,
+.elemenx-otp-cell.selected {
+	border-color: var(--elemenx-accent);
+	box-shadow: 0 0 0 2px color-mix(in srgb, var(--elemenx-accent) 24%, transparent);
+}
+
+.elemenx-otp-cell.selected {
+	background: color-mix(in srgb, var(--elemenx-accent) 12%, var(--elemenx-surface));
+}
+
+/* The caret in an empty cell. */
+.elemenx-otp-cell.active.empty::after {
+	content: '';
+	width: 2px;
+	height: 50%;
+	background: var(--elemenx-text);
+	border-radius: 1px;
+	animation: elemenx-otp-caret 1s step-end infinite;
+}
+
+@keyframes elemenx-otp-caret {
+	50% {
+		opacity: 0;
+	}
+}
+
+.elemenx-otp.invalid .elemenx-otp-cell {
+	border-color: var(--elemenx-danger);
+}
+
+.elemenx-otp.invalid .elemenx-otp-cell.active {
+	box-shadow: 0 0 0 2px color-mix(in srgb, var(--elemenx-danger) 24%, transparent);
+}
+
+.elemenx-otp.split.disabled {
+	opacity: 0.48;
+	pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.elemenx-otp-cell.active.empty::after {
+		animation: none;
+	}
+}

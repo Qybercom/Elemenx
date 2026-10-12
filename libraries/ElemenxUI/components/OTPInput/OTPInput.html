@@ -1,0 +1,9 @@
+<div class="elemenx-otp" [class]="[Variant === 'single' ? 'single' : 'split', Variant === 'single' ? 'elemenx-input' : '', Size || 'medium', Shape === 'round' ? 'round' : '', Invalid || (Touched && Value && !Complete(Value)) ? 'invalid' : '', Disabled ? 'disabled' : '', Focused ? 'focused' : '', Masked && !Revealed ? 'masked' : '']" [style.--elemenx-otp-length]="Length">
+	<div class="elemenx-otp-field">
+		<input class="elemenx-otp-control elemenx-input-control" autocomplete="one-time-code" spellcheck="false" [type]="Masked && !Revealed && Variant === 'single' ? 'password' : 'text'" [attribute.inputmode]="Pattern === 'digits' ? 'numeric' : 'text'" [attribute.autocapitalize]="Case === 'upper' ? 'characters' : 'off'" [attribute.aria-label]="Label || null" [attribute.aria-invalid]="Invalid || (Touched && Value && !Complete(Value)) ? 'true' : null" [attribute.name]="Name" [attribute.placeholder]="Variant === 'single' ? (Placeholder || null) : null" [value]="Value" [disabled]="Disabled" (input)="Typed" (paste)="Pasted" (keydown)="Key" (keyup)="Track" (select)="Track" (copy)="Guard" (cut)="Guard" (mousedown)="Point" (focus)="Focus" (blur)="Blur" (change)="Committed" />
+		<div class="elemenx-otp-cells" aria-hidden="true" *if="Variant !== 'single'">
+			<span *for="cell of Cells(Value, Length, Group)" *key="cell.Key" [class]="cell.Separator ? ['elemenx-otp-separator'] : CellClass(cell, Value, Focused, Start, End, Length)">{{cell.Separator ? '' : Shown(cell, Masked, Revealed)}}</span>
+		</div>
+	</div>
+	<button class="elemenx-input-action elemenx-otp-reveal" type="button" *if="Masked" [attribute.aria-label]="Revealed ? 'Hide code' : 'Show code'" [attribute.aria-pressed]="String(Revealed)" [disabled]="Disabled" (click)="Reveal"><Icon [name]="Revealed ? 'eye-off' : 'eye'" /></button>
+</div>
