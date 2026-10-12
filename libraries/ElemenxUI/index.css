@@ -1643,3 +1643,123 @@ a {
 	min-width: 0;
 	min-height: 0;
 }
+
+/* Calendars: the month grid of DateInput, DateRangeInput and Calendar. */
+.elemenx-calendar {
+	width: 272px;
+	max-height: none;
+	padding: 8px;
+	overflow: visible;
+}
+
+.elemenx-calendar-header {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	margin-bottom: 8px;
+}
+
+.elemenx-calendar-title,
+.elemenx-calendar-nav,
+.elemenx-calendar-day,
+.elemenx-calendar-cell {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0;
+	background: transparent;
+	border: 0;
+	border-radius: 4px;
+	color: var(--elemenx-text);
+	font: inherit;
+	cursor: pointer;
+	outline: none;
+}
+
+.elemenx-calendar-title {
+	flex: 1;
+	height: 32px;
+	font-weight: 600;
+}
+
+.elemenx-calendar-title:disabled {
+	cursor: default;
+}
+
+.elemenx-calendar-nav {
+	width: 32px;
+	height: 32px;
+	color: var(--elemenx-text-muted);
+}
+
+.elemenx-calendar-title:hover:not(:disabled),
+.elemenx-calendar-nav:hover,
+.elemenx-calendar-day:hover:not(:disabled),
+.elemenx-calendar-cell:hover:not(:disabled) {
+	background: var(--elemenx-surface-hover);
+}
+
+.elemenx-calendar-title:focus-visible,
+.elemenx-calendar-nav:focus-visible,
+.elemenx-calendar-day:focus-visible,
+.elemenx-calendar-cell:focus-visible {
+	box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--elemenx-accent) 48%, transparent);
+}
+
+.elemenx-calendar-days {
+	display: grid;
+	grid-template-columns: repeat(7, 1fr);
+	gap: 2px;
+}
+
+.elemenx-calendar-weekday {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 24px;
+	color: var(--elemenx-text-muted);
+	font-size: 12px;
+	line-height: 16px;
+}
+
+.elemenx-calendar-day {
+	height: 32px;
+	font-variant-numeric: tabular-nums;
+}
+
+.elemenx-calendar-day.outside {
+	color: var(--elemenx-text-muted);
+}
+
+.elemenx-calendar-day.today,
+.elemenx-calendar-cell.today {
+	box-shadow: inset 0 0 0 1px var(--elemenx-border-strong);
+}
+
+.elemenx-calendar-day.selected,
+.elemenx-calendar-cell.selected {
+	background: var(--elemenx-accent);
+	color: var(--elemenx-accent-text);
+	font-weight: 600;
+}
+
+.elemenx-calendar-day.selected:hover,
+.elemenx-calendar-cell.selected:hover {
+	background: var(--elemenx-accent-hover);
+}
+
+.elemenx-calendar-day:disabled,
+.elemenx-calendar-cell:disabled {
+	opacity: 0.32;
+	cursor: default;
+}
+
+.elemenx-calendar-grid {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 4px;
+}
+
+.elemenx-calendar-cell {
+	height: 48px;
+}

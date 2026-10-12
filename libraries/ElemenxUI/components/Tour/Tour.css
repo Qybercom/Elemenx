@@ -1,0 +1,74 @@
+.elemenx-tour {
+	display: contents;
+}
+
+.elemenx-tour-layer {
+	position: fixed;
+	inset: 0;
+	z-index: 1200;
+}
+
+/* Takes the presses meant for the page behind. */
+.elemenx-tour-block {
+	position: absolute;
+	inset: 0;
+}
+
+/* The hole around the target: everything else is shaded by its shadow. */
+.elemenx-tour-hole {
+	position: fixed;
+	border-radius: 8px;
+	box-shadow: 0 0 0 100vmax rgba(15, 17, 20, 0.56);
+	outline: 2px solid var(--elemenx-accent);
+	outline-offset: 0;
+	pointer-events: none;
+	transition: left 200ms ease,
+		top 200ms ease,
+		width 200ms ease,
+		height 200ms ease;
+}
+
+.elemenx-tour-shade {
+	position: absolute;
+	inset: 0;
+	background: rgba(15, 17, 20, 0.56);
+}
+
+.elemenx-tour-card {
+	position: fixed;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	width: min(320px, calc(100vw - 24px));
+	padding: 16px;
+	background: var(--elemenx-surface);
+	border: 1px solid var(--elemenx-border);
+	border-radius: 12px;
+	box-shadow: var(--elemenx-shadow);
+	color: var(--elemenx-text);
+}
+
+.elemenx-tour-title {
+	margin: 0;
+	font-size: 16px;
+	line-height: 24px;
+	font-weight: 700;
+}
+
+.elemenx-tour-text {
+	margin: 0;
+	color: var(--elemenx-text-muted);
+}
+
+.elemenx-tour-footer {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin-top: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.elemenx-tour-hole {
+		transition: none;
+	}
+}

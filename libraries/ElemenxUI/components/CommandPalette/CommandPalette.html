@@ -1,0 +1,19 @@
+<dialog class="elemenx-palette" *modal="Track(Open)" aria-label="Command palette" (dismiss)="Dismissed">
+	<div class="elemenx-input large elemenx-palette-search">
+		<Icon Name="search" />
+		<input class="elemenx-input-control" type="text" role="combobox" aria-expanded="true" aria-autocomplete="list" aria-label="Command" autocomplete="off" spellcheck="false" [placeholder]="Placeholder" [value]="Query" (input)="Search" (keydown)="Key" />
+		<kbd class="elemenx-kbd">Esc</kbd>
+	</div>
+	<div class="elemenx-palette-list" role="listbox">
+		<div class="elemenx-palette-entry" *for="row of Rows(Commands, Bound, Query, Recent)" *key="row.Key">
+			<div class="elemenx-popup-group" *if="row.Heading">{{row.Heading}}</div>
+			<div class="elemenx-option" role="option" *if="row.Command" [class.active]="row.Index === Active" [class.disabled]="!!row.Command.Disabled" [attribute.aria-selected]="String(row.Index === Active)" [attribute.aria-disabled]="row.Command.Disabled ? 'true' : null" [attribute.data-index]="row.Index" (mousemove)="Hover" (mousedown)="Prevent" (click)="Pick">
+				<Icon [name]="row.Command.Icon || 'chevron-right'" />
+				<span class="elemenx-option-label"><span *for="part of row.Parts" *key="$index" [class.match]="part.Match">{{part.Text}}</span></span>
+				<span class="elemenx-option-hint" *if="row.Command.Hint">{{row.Command.Hint}}</span>
+				<kbd class="elemenx-kbd" *if="row.Shortcut">{{row.Shortcut}}</kbd>
+			</div>
+		</div>
+		<div class="elemenx-popup-empty" *if="!Count(Rows(Commands, Bound, Query, Recent))">{{Empty}}</div>
+	</div>
+</dialog>

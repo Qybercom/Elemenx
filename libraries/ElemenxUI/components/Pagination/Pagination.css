@@ -1,0 +1,70 @@
+.elemenx-pagination {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.elemenx-pagination-size {
+	height: 28px;
+	margin-right: 8px;
+	padding: 0 4px;
+	background: var(--elemenx-surface);
+	border: 1px solid var(--elemenx-border-strong);
+	border-radius: 4px;
+	color: var(--elemenx-text);
+	font: inherit;
+	font-size: 12px;
+}
+
+.elemenx-pagination-size:focus-visible {
+	border-color: var(--elemenx-accent);
+	outline: none;
+}
+
+.elemenx-pagination-pages {
+	display: inline-flex;
+	align-items: center;
+	gap: 2px;
+}
+
+.elemenx-pagination-page {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 28px;
+	height: 28px;
+	padding: 0 6px;
+	background: transparent;
+	border: 0;
+	border-radius: 4px;
+	color: var(--elemenx-text);
+	font: inherit;
+	font-variant-numeric: tabular-nums;
+	cursor: pointer;
+}
+
+.elemenx-pagination-page:hover:not(:disabled) {
+	background: var(--elemenx-surface-hover);
+}
+
+.elemenx-pagination-page.current {
+	background: var(--elemenx-accent);
+	color: var(--elemenx-accent-text);
+	font-weight: 600;
+}
+
+.elemenx-pagination-page:disabled {
+	opacity: 0.32;
+	cursor: default;
+}
+
+.elemenx-pagination-page:focus-visible {
+	outline: 2px solid color-mix(in srgb, var(--elemenx-accent) 48%, transparent);
+}
+
+.elemenx-pagination-gap {
+	display: inline-flex;
+	justify-content: center;
+	min-width: 20px;
+	color: var(--elemenx-text-muted);
+}

@@ -1,0 +1,4 @@
+<div class="elemenx-context" (contextmenu)="Pressed" (keydown)="Key">
+	<slot></slot>
+	<span class="elemenx-context-point elemenx-popup-anchor" [style.left]="X + 'px'" [style.top]="Y + 'px'"><MenuList [items]="Items" [open]="Open" (select)="Picked" (dismiss)="Close" /></span>
+</div>

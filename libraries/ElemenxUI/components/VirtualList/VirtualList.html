@@ -1,0 +1,13 @@
+<div class="elemenx-virtual">
+	<div class="elemenx-virtual-viewport" role="listbox" tabindex="0" [attribute.aria-label]="Label" [attribute.aria-activedescendant]="Items.length ? 'elemenx-virtual-' + Active : null" [style.height]="Height" (scroll)="Scroll" (keydown)="Key">
+		<div class="elemenx-virtual-space" [style.height]="(Items.length * ItemHeight) + 'px'">
+			<div class="elemenx-virtual-row" role="option" *for="row of Window(Items, Start, Visible, ItemHeight)" *key="row.Key" [attribute.id]="'elemenx-virtual-' + row.Index" [class.active]="row.Index === Active" [class.selected]="row.Key === String(Value)" [attribute.aria-selected]="String(row.Key === String(Value))" [attribute.aria-setsize]="Items.length" [attribute.aria-posinset]="row.Index + 1" [attribute.data-index]="row.Index" [style.height]="ItemHeight + 'px'" [style.transform]="'translateY(' + row.Top + 'px)'" (click)="Pick">
+				<div class="elemenx-virtual-content" *if="Render" *mount="Mounted(Render, row.Item, row.Index)"></div>
+				<Icon *if="!Render && row.Item && row.Item.Icon" [name]="row.Item.Icon" />
+				<span class="elemenx-virtual-label" *if="!Render">{{LabelOf(row.Item)}}</span>
+				<span class="elemenx-option-hint" *if="!Render && row.Item && row.Item.Hint">{{row.Item.Hint}}</span>
+			</div>
+		</div>
+		<div class="elemenx-popup-empty" *if="!Items.length">{{Empty}}</div>
+	</div>
+</div>

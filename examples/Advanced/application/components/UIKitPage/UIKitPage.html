@@ -203,6 +203,11 @@
 			<Field Label="Optional"><Select [options]="Languages" Placeholder="None" Clearable="true" /></Field>
 			<Field Label="Tags"><MultiSelect [options]="TagOptions" [value]="Tags" SelectAll="true" (change)="TagsChanged" /></Field>
 			<Field Label="Tags (count)"><MultiSelect [options]="TagOptions" [value]="Tags" Display="count" Searchable="false" /></Field>
+			<Field Label="Topics" [hint]="Topics.length + ' topics · Enter, comma or paste a list'"><TagInput [value]="Topics" [suggestions]="TopicSuggestions" Max="6" Case="lower" (change)="TopicsChanged" /></Field>
+			<Field Label="Invite" [hint]="InviteState || 'E-mail addresses only'"><TagInput Placeholder="name@example.com" Pattern="^[^@\s]+@[^@\s]+\.[^@\s]+$" (change)="InvitesChanged" (invalid)="InviteRefused" /></Field>
+			<Field Label="Framework" [hint]="'Value: ' + (Framework == null ? '—' : Framework)"><Combobox [options]="Frameworks" [value]="Framework" AllowCustom="true" Clearable="true" Placeholder="Type or pick" (change)="FrameworkChanged" /></Field>
+			<Field Label="City" Hint="Options come from a (simulated) server as you type"><Combobox [options]="Cities" [loading]="CitiesLoading" Filter="false" Icon="map-pin" Placeholder="Start typing a city" (search)="SearchCities" /></Field>
+			<Field Label="Period" [hint]="Period.length ? Period.join(' → ') : 'Presets on the left'"><DateRangeInput [value]="Period" (change)="PeriodChanged" /></Field>
 		</div>
 		<div class="ui-kit-grid">
 			<div class="ui-kit-stack">
@@ -276,6 +281,103 @@
 		<ToastHost />
 	</Section>
 
+	<Section Title="Commands and overlays" [note]="'Last: ' + (LastCommand || '—')">
+		<div class="ui-kit-row" id="ui-kit-commands">
+			<Button Label="Command palette" Icon="search" (click)="OpenPalette" />
+			<kbd class="elemenx-kbd" id="ui-kit-palette-keys">{{PaletteKeys}}</kbd>
+			<button class="elemenx-button secondary medium" type="button" *hotkey="{Keys: 'Alt+N', Description: 'Show a toast', Group: 'Demo'}" (click)="HotkeyToast">New toast</button>
+			<Button Label="Open drawer" Icon="panel-right" (click)="OpenDrawer" />
+			<Button Label="Take the tour" Icon="help" (click)="StartTour" />
+		</div>
+		<div class="ui-kit-grid">
+			<div class="ui-kit-stack" id="ui-kit-context">
+				<h5>Context menu</h5>
+				<p class="elemenx-text small muted">Right click a file, or focus it and press Shift+F10</p>
+				<ContextMenu [items]="FileMenu" (open)="ContextOpened" (select)="ContextPicked">
+					<ul class="elemenx-list divided ui-kit-files">
+						<li *for="file of ContextFiles" *key="file" tabindex="0" [attribute.data-file]="file"><FileIcon [name]="file" />{{file}}</li>
+					</ul>
+				</ContextMenu>
+			</div>
+			<div class="ui-kit-stack">
+				<h5>Copy</h5>
+				<div class="elemenx-container ui-kit-copy" id="ui-kit-copy">
+					<Input [value]="ApiToken" ReadOnly="true" />
+					<button class="elemenx-button secondary medium" type="button" aria-label="Copy the token" *copy="{Text: ApiToken, Toast: 'Token copied'}"><Icon Name="copy" /></button>
+				</div>
+				<h5>Shortcuts</h5>
+				<ul class="elemenx-list ui-kit-shortcuts">
+					<li *for="hotkey of Shortcuts" *key="hotkey.ID"><span>{{hotkey.Description}}</span><kbd class="elemenx-kbd">{{hotkey.Label}}</kbd></li>
+				</ul>
+			</div>
+		</div>
+		<CommandPalette [commands]="Commands" [open]="PaletteOpen" IncludeHotkeys="true" Remember="ui-kit-palette" (run)="CommandRun" (close)="PaletteClosed" />
+		<Drawer [open]="DrawerOpen" Title="Filters" Description="A drawer from the right" Icon="filter" (close)="CloseDrawer">
+			<div class="ui-kit-stack">
+				<Field Label="Search"><Input Icon="search" Placeholder="Name or role" /></Field>
+				<Field Label="Role"><Select [options]="Views" Value="list" /></Field>
+				<Checkbox Label="Only maintainers" />
+			</div>
+			<Button slot="footer" Label="Reset" (click)="CloseDrawer" />
+			<Button slot="footer" Label="Apply" Variant="primary" (click)="CloseDrawer" />
+		</Drawer>
+		<Tour [steps]="TourSteps" [open]="TourOpen" [step]="TourStep" (change)="TourChanged" (close)="TourClosed" />
+	</Section>
+
+	<Section Title="Security and device" Note="Biometric · Idle · Permissions">
+		<div class="ui-kit-grid three">
+			<div class="ui-kit-stack">
+				<h5>Biometric</h5>
+				<p class="elemenx-text small muted" id="ui-kit-biometric-state">{{BiometricState}}</p>
+				<div class="ui-kit-row">
+					<Button Label="Check this device" Icon="lock" (click)="CheckBiometric" />
+					<Button Label="Forget" Variant="ghost" (click)="ForgetBiometric" />
+				</div>
+				<Toggle Label="Ask it for the guarded card fields" [checked]="UseBiometric" (change)="BiometricToggled" />
+			</div>
+			<div class="ui-kit-stack">
+				<h5>Inactivity</h5>
+				<p class="elemenx-text small muted" id="ui-kit-idle-state">State: {{IdleState}}</p>
+				<div class="ui-kit-row">
+					<Button Label="Watch 6 s" (click)="StartIdle" />
+					<Button Label="Stop" Variant="ghost" (click)="StopIdle" />
+				</div>
+			</div>
+			<div class="ui-kit-stack">
+				<h5>Permissions</h5>
+				<ul class="elemenx-list divided ui-kit-permissions">
+					<li *for="permission of PermissionList" *key="permission.Name">
+						<span>{{permission.Name}}</span>
+						<span [class]="['elemenx-badge', permission.State === 'granted' ? 'success' : permission.State === 'denied' ? 'danger' : '']">{{permission.State}}</span>
+						<button class="elemenx-button ghost small" type="button" [attribute.data-name]="permission.Name" (click)="AskPermission">Ask</button>
+					</li>
+				</ul>
+			</div>
+		</div>
+	</Section>
+
+	<Section Title="Trees, tables and long lists" Note="Tree · VirtualList · Table with filters, pages and tree rows">
+		<div class="ui-kit-grid">
+			<div class="ui-kit-stack">
+				<h5>Tree</h5>
+				<p class="elemenx-text small muted" id="ui-kit-tree-state">{{TreeState}}</p>
+				<Tree [items]="TreeItems" [value]="TreeValue" [expanded]="TreeExpanded" [checked]="TreeChecked" [loading]="TreeLoading" Checkable="true" Searchable="true" Label="Project" (select)="TreeSelected" (expand)="TreeExpandedChanged" (check)="TreeCheckedChanged" (load)="TreeLoad" />
+			</div>
+			<div class="ui-kit-stack">
+				<h5>A hundred thousand rows</h5>
+				<p class="elemenx-text small muted" id="ui-kit-virtual-state">{{VirtualState}}</p>
+				<VirtualList [items]="LongList" Height="320px" Label="Long list" (select)="LongPicked" />
+			</div>
+		</div>
+		<h5>Filters and pages</h5>
+		<Table [columns]="FilterColumns" [rows]="ManyPeople" PageSize="10" Compact="true" Striped="true" [page]="PeoplePage" (page)="PeoplePaged" />
+		<h5>Pagination on its own</h5>
+		<Pagination [count]="240" [page]="ResultsPage" PageSize="20" [page-sizes]="[]" Label="Search results" (page)="ResultsPaged" />
+		<p class="elemenx-text small muted" id="ui-kit-results-page">Results page {{ResultsPage}}</p>
+		<h5>Tree rows</h5>
+		<Table [columns]="SizeColumns" [rows]="FileRows" Tree="true" [expanded]="['src']" Compact="true" [sort]="{Key: 'Name', Direction: 'asc'}" />
+	</Section>
+
 	<Section Title="Feedback" [note]="'Volume: ' + Volume + ' · Budget: ' + Budget.join('–')">
 		<div class="ui-kit-grid">
 			<Field Label="Volume"><Slider [value]="Volume" Label="Volume" Unit="%" (input)="VolumeChanged" /></Field>
@@ -297,6 +399,38 @@
 				<div class="ui-kit-stack fill"><Skeleton Lines="3" /></div>
 			</div>
 		</div>
+		<div class="ui-kit-grid">
+			<div class="ui-kit-stack">
+				<h5>Rating</h5>
+				<div class="ui-kit-row"><Rating [value]="Stars" Half="true" (change)="StarsChanged" /><span class="elemenx-text small muted" id="ui-kit-stars">{{Stars}} / 5</span></div>
+				<div class="ui-kit-row"><Rating Value="3.5" ReadOnly="true" Size="small" /><span class="elemenx-text small muted">Read-only, 3.5</span></div>
+				<Rating Value="2" Max="3" Icon="heart" Size="large" Label="Love" />
+			</div>
+			<div class="ui-kit-frame ui-kit-empties">
+				<EmptyState Variant="search" Size="small" Title="Nothing found" Description="No file matches “invoice-2019”." />
+				<EmptyState Variant="error" Size="small" Title="Could not load" Description="The server did not answer.">
+					<Button slot="actions" Label="Retry" Icon="refresh" Size="small" />
+				</EmptyState>
+			</div>
+		</div>
+	</Section>
+
+	<Section Title="Charts and calendar" [note]="CalendarNote || 'Chart · Sparkline · Calendar'">
+		<div class="ui-kit-grid">
+			<Chart Type="line" [labels]="Months" [series]="Revenue" Unit="k$" Label="Revenue and costs" />
+			<Chart Type="bar" [labels]="Quarters" [series]="Products" Stacked="true" Label="Sales by product" />
+		</div>
+		<div class="ui-kit-grid three">
+			<Chart Type="donut" [labels]="Browsers" [series]="BrowserShare" Height="200" Unit="%" Label="Browsers" />
+			<Chart Type="area" [labels]="Weeks" [series]="Traffic" Height="200" Label="Traffic" />
+			<div class="ui-kit-stack">
+				<h5>Sparklines</h5>
+				<div class="ui-kit-row"><Sparkline [values]="Spark" /><span class="elemenx-text small">Line</span></div>
+				<div class="ui-kit-row"><Sparkline [values]="Spark" Type="area" Color="#2f8f83" /><span class="elemenx-text small">Area</span></div>
+				<div class="ui-kit-row"><Sparkline [values]="Spark" Type="bar" Color="#c2477f" /><span class="elemenx-text small">Bars</span></div>
+			</div>
+		</div>
+		<Calendar [events]="Agenda" [view]="CalendarView" [date]="CalendarDate" Editable="true" (move)="AgendaMoved" (change)="CalendarChanged" (select)="AgendaPicked" (day)="DayPicked" (slot)="SlotPicked" />
 	</Section>
 
 	<Section Title="Files and drag and drop" [note]="'Selected: ' + FileCount + (Dropped ? ' · Dropped: ' + Dropped : '')">

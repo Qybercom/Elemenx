@@ -1,0 +1,30 @@
+.elemenx-sparkline {
+	--elemenx-spark-color: var(--elemenx-accent);
+	display: inline-block;
+	flex: none;
+	overflow: visible;
+	vertical-align: middle;
+}
+
+.elemenx-sparkline-line {
+	fill: none;
+	stroke: var(--elemenx-spark-color);
+	stroke-width: 1.5;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+}
+
+.elemenx-sparkline-area {
+	fill: color-mix(in srgb, var(--elemenx-spark-color) 16%, transparent);
+	stroke: none;
+}
+
+.elemenx-sparkline-bar {
+	fill: var(--elemenx-spark-color);
+}
+
+.elemenx-sparkline-dot {
+	fill: var(--elemenx-spark-color);
+	stroke: var(--elemenx-surface);
+	stroke-width: 1;
+}

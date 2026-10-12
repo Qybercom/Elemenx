@@ -1,0 +1,76 @@
+/* The rows stand out of the flow, so the list takes the width of its container rather than of its content. */
+.elemenx-virtual {
+	display: flex;
+	flex-direction: column;
+	width: 100%;
+	min-width: 0;
+	background: var(--elemenx-surface);
+	border: 1px solid var(--elemenx-border);
+	border-radius: 8px;
+	overflow: hidden;
+}
+
+.elemenx-virtual-viewport {
+	position: relative;
+	overflow: auto;
+	outline: none;
+	overscroll-behavior: contain;
+}
+
+.elemenx-virtual-viewport:focus-visible {
+	box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--elemenx-accent) 48%, transparent);
+}
+
+.elemenx-virtual-space {
+	position: relative;
+}
+
+/* Every row stands at its place by a transform: scrolling moves no layout. */
+.elemenx-virtual-row {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 0 12px;
+	border-bottom: 1px solid var(--elemenx-border);
+	color: var(--elemenx-text);
+	cursor: pointer;
+	will-change: transform;
+}
+
+.elemenx-virtual-row:hover {
+	background: var(--elemenx-surface-hover);
+}
+
+.elemenx-virtual-row.active {
+	box-shadow: inset 2px 0 0 var(--elemenx-accent);
+}
+
+.elemenx-virtual-row.selected {
+	background: color-mix(in srgb, var(--elemenx-accent) 12%, var(--elemenx-surface));
+	font-weight: 600;
+}
+
+.elemenx-virtual-row > .elemenx-icon {
+	color: var(--elemenx-text-muted);
+}
+
+.elemenx-virtual-label {
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-variant-numeric: tabular-nums;
+}
+
+.elemenx-virtual-content {
+	display: flex;
+	flex: 1;
+	align-items: center;
+	gap: 8px;
+	min-width: 0;
+}

@@ -4,6 +4,7 @@
  */
 Elemenx.Component('MenuList', {
 	$TemplateURL: 'MenuList.html',
+	$StyleURL: 'MenuList.css',
 	Items: [],
 	Open: false,
 	Placement: 'bottom-start',

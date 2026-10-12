@@ -2919,16 +2919,37 @@
 			});
 		}
 
+		/* The HTML parser writes attribute names in lower case; the SVG attributes that have capitals get them back. */
+		var svgAttributeNames = {};
+
+		['viewBox', 'preserveAspectRatio', 'textLength', 'lengthAdjust', 'gradientUnits', 'gradientTransform', 'patternUnits',
+			'patternContentUnits', 'patternTransform', 'markerWidth', 'markerHeight', 'markerUnits', 'refX', 'refY', 'pathLength',
+			'startOffset', 'spreadMethod', 'clipPathUnits', 'maskUnits', 'maskContentUnits', 'filterUnits', 'primitiveUnits',
+			'stdDeviation', 'baseFrequency', 'numOctaves', 'tableValues', 'kernelMatrix', 'edgeMode', 'attributeName',
+			'keyTimes', 'keySplines', 'repeatCount', 'calcMode'].forEach(function (name) {
+			svgAttributeNames[name.toLowerCase()] = name;
+		});
+
+		function attributeName (node, name) {
+			return node.namespaceURI === 'http://www.w3.org/2000/svg' && svgAttributeNames[name] ? svgAttributeNames[name] : name;
+		}
+
 		function createFragment (html) {
 			var template = document.createElement('template');
 			var protectedExpressions = protectExpressionAttributes(html);
+			var only;
 
 			template.innerHTML = preserveComponentNames(normalizeSelfClosingComponents(protectedExpressions.Source));
 
 			restoreExpressionAttributes(template.content, protectedExpressions.Expressions);
 
-			if (template.content.childNodes.length === 1)
-				return template.content.removeChild(template.content.firstChild);
+			only = template.content.childNodes.length === 1 ? template.content.firstChild : null;
+
+			/* An element of an SVG drawing, parsed inside the <svg> of svgSource and taken out of it. */
+			if (only && only.nodeType === 1 && only.hasAttribute('data-elemenx-svg') && only.firstElementChild) return only.removeChild(only.firstElementChild);
+
+			if (only)
+				return template.content.removeChild(only);
 
 			var root = document.createElement('div');
 
@@ -3297,7 +3318,7 @@
 							addBinding(bindings, key, {type: 'property', name: name, node: nodes[i]});
 						}
 						else if (namespace === 'attribute' && name) {
-							addBinding(bindings, key, {type: 'attribute', name: name, node: nodes[i]});
+							addBinding(bindings, key, {type: 'attribute', name: attributeName(nodes[i], name), node: nodes[i]});
 						}
 						else if (separator === -1 && target && !nodes[i].hasAttribute('data-elemenx-component')) {
 							addBinding(bindings, key, {type: 'property', name: target, node: nodes[i]});
@@ -6344,6 +6365,18 @@
 		 * The template source of a structural subtree. outerHTML escapes & < > " in attribute values, while
 		 * Elemenx expressions are read raw (never HTML-decoded), so expression attributes are written back unescaped.
 		 */
+		var svgNamespace = 'http://www.w3.org/2000/svg';
+
+		/*
+		 * The source of a structural template: an element of an SVG drawing (a <circle> of a *for) is parsed inside an
+		 * <svg>, or it would come out as an unknown HTML element; createFragment takes it out again.
+		 */
+		function svgSource (element, html) {
+			if (element.namespaceURI !== svgNamespace || element.localName === 'svg') return html;
+
+			return '<svg data-elemenx-svg="">' + html + '</svg>';
+		}
+
 		function templateHTML (element) {
 			var entities = {amp: '&', lt: '<', gt: '>', quot: '"'};
 
@@ -6868,7 +6901,7 @@
 					var componentRoot = factoryFor(template.getAttribute('data-elemenx-component') || template.tagName);
 					var templateSource = componentRoot
 						? '<span style="display:contents">' + templateHTML(template) + '</span>'
-						: templateHTML(template);
+						: svgSource(template, templateHTML(template));
 
 					return bindMethods(definition, component, {$Template: templateSource}, plainMethod);
 				}
@@ -7115,7 +7148,7 @@
 						if (child)
 							return child;
 
-						var subtreeDefinition = bindMethods(definition, component, {$Template: templateHTML(template)}, subtreeMethod);
+						var subtreeDefinition = bindMethods(definition, component, {$Template: svgSource(template, templateHTML(template))}, subtreeMethod);
 
 						child = Runtime.CreateComponent(subtreeDefinition)(Runtime.ComponentValues(component), null, {
 							DirectState: true,

@@ -1,0 +1,36 @@
+<div class="elemenx-chart" [class]="[Type || 'line', Stacked ? 'stacked' : '']" (mouseleave)="Leave">
+	<svg class="elemenx-chart-plot" role="img" [attribute.aria-label]="Label" [attribute.width]="Width" [attribute.height]="Height" [attribute.viewBox]="'0 0 ' + Width + ' ' + Height" (mousemove)="Track">
+		<g *if="!G().Round">
+			<line class="elemenx-chart-grid" *for="tick of G().Ticks" *key="tick.Key" [attribute.x1]="G().Plot.X" [attribute.x2]="G().Plot.X + G().Plot.W" [attribute.y1]="tick.Y" [attribute.y2]="tick.Y"></line>
+			<text class="elemenx-chart-tick" *for="tick of G().Ticks" *key="tick.Key" [attribute.x]="G().Plot.X - 8" [attribute.y]="tick.Y" text-anchor="end" dominant-baseline="middle">{{tick.Label}}</text>
+			<text class="elemenx-chart-label" *for="label of G().Labels" *key="label.Key" [attribute.x]="label.X" [attribute.y]="G().Plot.Y + G().Plot.H + 18" text-anchor="middle">{{label.Label}}</text>
+			<line class="elemenx-chart-guide" *if="Hover >= 0 && !G().Banded" [attribute.x1]="TipX(Hover)" [attribute.x2]="TipX(Hover)" [attribute.y1]="G().Plot.Y" [attribute.y2]="G().Plot.Y + G().Plot.H"></line>
+			<rect class="elemenx-chart-band" *if="Hover >= 0 && G().Banded" [attribute.x]="G().Plot.X + G().Band * Hover" [attribute.y]="G().Plot.Y" [attribute.width]="G().Band" [attribute.height]="G().Plot.H"></rect>
+			<g class="elemenx-chart-series" *for="line of G().Lines" *key="line.Key" [style.--elemenx-chart-color]="line.Color">
+				<path class="elemenx-chart-area" *if="Type === 'area'" [attribute.d]="line.Area"></path>
+				<path class="elemenx-chart-line" [attribute.d]="line.D"></path>
+				<circle class="elemenx-chart-point" r="4" *if="Hover >= 0 && line.Points[Hover]" [attribute.cx]="line.Points[Hover] && line.Points[Hover].X" [attribute.cy]="line.Points[Hover] && line.Points[Hover].Y"></circle>
+			</g>
+			<rect class="elemenx-chart-bar" *for="bar of G().Bars" *key="bar.Key" rx="2" [class.dim]="Hover >= 0 && bar.Index !== Hover" [attribute.x]="bar.X" [attribute.y]="bar.Y" [attribute.width]="bar.Width" [attribute.height]="bar.Height" [style.fill]="bar.Color"></rect>
+		</g>
+		<g *if="G().Round">
+			<path class="elemenx-chart-slice" *for="slice of G().Slices" *key="slice.Key" [class.dim]="Hover >= 0 && slice.Index !== Hover" [attribute.d]="slice.D" [style.fill]="slice.Color" [attribute.data-index]="slice.Index" (mouseenter)="Slice"></path>
+			<text class="elemenx-chart-total" *if="Type === 'donut'" [attribute.x]="G().Center.X" [attribute.y]="G().Center.Y" text-anchor="middle" dominant-baseline="middle">{{Text(G().Total)}}</text>
+		</g>
+	</svg>
+	<div class="elemenx-chart-tooltip" role="status" *if="Hover >= 0" [class]="[TipSide(Hover)]" [style.left]="TipX(Hover) + 'px'">
+		<strong>{{Labels[Hover]}}</strong>
+		<span class="elemenx-chart-tip-rows" *if="!G().Round">
+			<span class="elemenx-chart-tip-row" *for="entry of At(Hover, Series, Hidden)" *key="entry.Name"><i class="elemenx-chart-swatch" [style.background]="entry.Color"></i>{{entry.Name}}<b>{{Text(entry.Value)}}</b></span>
+		</span>
+		<span class="elemenx-chart-tip-row" *if="G().Round"><b>{{Text((Series[0] && Series[0].Values || [])[Hover])}}</b><span>{{Percent((Series[0] && Series[0].Values || [])[Hover])}}</span></span>
+	</div>
+	<div class="elemenx-chart-legend" *if="Legend">
+		<button class="elemenx-chart-key" type="button" *for="item of Legend(Type, Labels, Series)" *key="item.Name" [class.off]="IsHidden(Hidden, item.Name)" [attribute.aria-pressed]="String(!IsHidden(Hidden, item.Name))" [attribute.data-name]="item.Name" (click)="Toggle"><i class="elemenx-chart-swatch" [style.background]="item.Color"></i>{{item.Name}}</button>
+	</div>
+	<table class="elemenx-chart-data">
+		<caption>{{Label}}</caption>
+		<thead><tr><th scope="col"></th><th scope="col" *for="label of Labels" *key="$index">{{label}}</th></tr></thead>
+		<tbody><tr *for="entry of Series" *key="entry.Name"><th scope="row">{{entry.Name}}</th><td *for="value of entry.Values || []" *key="$index">{{Text(value)}}</td></tr></tbody>
+	</table>
+</div>

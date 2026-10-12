@@ -1,0 +1,32 @@
+.elemenx-menu {
+	min-width: 200px;
+	overflow: visible;
+}
+
+.elemenx-menu .elemenx-option {
+	min-height: 28px;
+	outline: none;
+}
+
+.elemenx-menu .elemenx-option:focus-visible {
+	background: var(--elemenx-surface-hover);
+}
+
+.elemenx-menu .elemenx-option.danger {
+	color: var(--elemenx-danger);
+}
+
+.elemenx-menu .elemenx-option > .elemenx-icon {
+	color: var(--elemenx-text-muted);
+}
+
+.elemenx-menu-icon {
+	display: inline-flex;
+	flex: none;
+	width: 16px;
+	color: var(--elemenx-text-muted);
+}
+
+.elemenx-menu .elemenx-option.danger .elemenx-menu-icon {
+	color: inherit;
+}

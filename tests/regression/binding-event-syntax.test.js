@@ -139,6 +139,32 @@ describe('Regression: binding and event syntax', function () {
 		child.$Destroy();
 	});
 
+	test('structural directives inside SVG make SVG elements, and SVG attributes keep their capitals', function () {
+		var name = unique('SVGStructural');
+		var factory = Elemenx.Component(name, {
+			$Template: '<svg [attribute.viewBox]="Box"><circle *for="r of Radii" *key="r" [attribute.r]="r"></circle><text *if="Show" [attribute.textLength]="Length">label</text></svg>'
+		});
+		var namespace = 'http://www.w3.org/2000/svg';
+		var child = factory({Box: '0 0 40 20', Radii: [2, 4], Show: true, Length: 30});
+		var svg = child.$Element();
+
+		document.body.appendChild(svg);
+
+		expect(svg.querySelectorAll('circle').length).toBe(2);
+		expect(svg.querySelector('circle').namespaceURI).toBe(namespace);
+		expect(svg.querySelector('circle').r.baseVal.value).toBe(2);
+		expect(svg.querySelector('text').namespaceURI).toBe(namespace);
+		expect(svg.querySelector('text').textLength.baseVal.value).toBe(30);
+		expect(svg.viewBox.baseVal.width).toBe(40);
+
+		child.$Update({Radii: [2, 4, 6], Box: '0 0 80 20'});
+
+		expect(svg.querySelectorAll('circle')[2].namespaceURI).toBe(namespace);
+		expect(svg.viewBox.baseVal.width).toBe(80);
+
+		child.$Destroy();
+	});
+
 	test('class bindings leave alone the classes that a script or a Directive put on the element', function () {
 		var name = unique('ForeignClasses');
 		var factory = Elemenx.Component(name, {

@@ -1,0 +1,407 @@
+.elemenx-cal {
+	--elemenx-cal-color: var(--elemenx-accent);
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	width: 100%;
+	min-width: 0;
+}
+
+.elemenx-cal-header {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.elemenx-cal-title {
+	flex: 1;
+	margin: 0 0 0 8px;
+	font-size: 16px;
+	line-height: 24px;
+	font-weight: 700;
+	text-transform: capitalize;
+}
+
+.elemenx-cal-nav,
+.elemenx-cal-view {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	height: 28px;
+	padding: 0 8px;
+	background: transparent;
+	border: 0;
+	border-radius: 4px;
+	color: var(--elemenx-text);
+	font: inherit;
+	cursor: pointer;
+}
+
+.elemenx-cal-nav:hover,
+.elemenx-cal-view:hover {
+	background: var(--elemenx-surface-hover);
+}
+
+.elemenx-cal-nav:focus-visible,
+.elemenx-cal-view:focus-visible,
+.elemenx-cal-event:focus-visible,
+.elemenx-cal-block:focus-visible,
+.elemenx-cal-more:focus-visible {
+	outline: 2px solid color-mix(in srgb, var(--elemenx-accent) 48%, transparent);
+	outline-offset: 1px;
+}
+
+.elemenx-cal-views {
+	display: inline-flex;
+	padding: 2px;
+	background: var(--elemenx-surface-raised);
+	border: 1px solid var(--elemenx-border);
+	border-radius: 6px;
+}
+
+.elemenx-cal-view.current {
+	background: var(--elemenx-surface);
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+	font-weight: 600;
+}
+
+/* Month: seven columns of days. */
+.elemenx-cal-month {
+	display: grid;
+	grid-template-columns: repeat(7, minmax(0, 1fr));
+	overflow: hidden;
+	border: 1px solid var(--elemenx-border);
+	border-radius: 8px;
+}
+
+.elemenx-cal-weekday {
+	padding: 6px 8px;
+	background: var(--elemenx-surface-raised);
+	border-bottom: 1px solid var(--elemenx-border);
+	color: var(--elemenx-text-muted);
+	font-size: 12px;
+	line-height: 16px;
+	font-weight: 600;
+	text-transform: capitalize;
+}
+
+.elemenx-cal-day {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	min-width: 0;
+	min-height: 96px;
+	padding: 4px;
+	background: var(--elemenx-surface);
+	border-right: 1px solid var(--elemenx-border);
+	border-bottom: 1px solid var(--elemenx-border);
+	cursor: pointer;
+}
+
+.elemenx-cal-day:nth-child(7n) {
+	border-right: 0;
+}
+
+.elemenx-cal-day:nth-last-child(-n + 7) {
+	border-bottom: 0;
+}
+
+.elemenx-cal-day:hover {
+	background: color-mix(in srgb, var(--elemenx-surface-hover) 48%, var(--elemenx-surface));
+}
+
+.elemenx-cal-day.outside {
+	background: var(--elemenx-surface-raised);
+}
+
+.elemenx-cal-day.outside .elemenx-cal-date {
+	color: var(--elemenx-text-muted);
+}
+
+.elemenx-cal-date {
+	align-self: flex-end;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 24px;
+	height: 24px;
+	padding: 0 4px;
+	border-radius: 12px;
+	font-size: 12px;
+	font-weight: 600;
+	font-variant-numeric: tabular-nums;
+}
+
+.elemenx-cal-day.today .elemenx-cal-date {
+	background: var(--elemenx-accent);
+	color: var(--elemenx-accent-text);
+}
+
+/* An event in a day: a line with a mark of its color, or a filled bar for a whole day. */
+.elemenx-cal-event {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	width: 100%;
+	min-width: 0;
+	height: 20px;
+	padding: 0 6px;
+	overflow: hidden;
+	background: transparent;
+	border: 0;
+	border-left: 3px solid var(--elemenx-cal-color);
+	border-radius: 3px;
+	color: var(--elemenx-text);
+	font: inherit;
+	font-size: 12px;
+	line-height: 16px;
+	text-align: left;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	cursor: pointer;
+}
+
+.elemenx-cal-event:hover {
+	background: color-mix(in srgb, var(--elemenx-cal-color) 12%, transparent);
+}
+
+.elemenx-cal-event.whole {
+	background: color-mix(in srgb, var(--elemenx-cal-color) 20%, var(--elemenx-surface));
+}
+
+.elemenx-cal-time {
+	flex: none;
+	color: var(--elemenx-text-muted);
+	font-variant-numeric: tabular-nums;
+}
+
+.elemenx-cal-more {
+	align-self: flex-start;
+	padding: 0 6px;
+	background: transparent;
+	border: 0;
+	border-radius: 3px;
+	color: var(--elemenx-text-muted);
+	font: inherit;
+	font-size: 12px;
+	font-weight: 600;
+	cursor: pointer;
+}
+
+.elemenx-cal-more:hover {
+	color: var(--elemenx-text);
+	background: var(--elemenx-surface-hover);
+}
+
+/* Week: a gutter of hours and seven columns. */
+.elemenx-cal-week {
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+	border: 1px solid var(--elemenx-border);
+	border-radius: 8px;
+}
+
+.elemenx-cal-week-head,
+.elemenx-cal-week-allday,
+.elemenx-cal-week-body {
+	display: grid;
+	grid-template-columns: 56px repeat(7, minmax(0, 1fr));
+}
+
+.elemenx-cal-week-head {
+	background: var(--elemenx-surface-raised);
+	border-bottom: 1px solid var(--elemenx-border);
+}
+
+.elemenx-cal-week-day {
+	display: flex;
+	align-items: baseline;
+	gap: 6px;
+	padding: 6px 8px;
+	color: var(--elemenx-text-muted);
+	font-size: 12px;
+	text-transform: capitalize;
+}
+
+.elemenx-cal-week-day strong {
+	color: var(--elemenx-text);
+	font-size: 16px;
+}
+
+.elemenx-cal-week-day.today strong {
+	color: var(--elemenx-accent);
+}
+
+.elemenx-cal-week-allday {
+	border-bottom: 1px solid var(--elemenx-border);
+}
+
+.elemenx-cal-allday {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	min-height: 24px;
+	padding: 2px;
+	border-left: 1px solid var(--elemenx-border);
+}
+
+.elemenx-cal-week-body {
+	max-height: 480px;
+	overflow-y: auto;
+}
+
+.elemenx-cal-hours {
+	display: flex;
+	flex-direction: column;
+}
+
+.elemenx-cal-hour {
+	flex: none;
+	padding: 0 8px;
+	color: var(--elemenx-text-muted);
+	font-size: 11px;
+	line-height: 16px;
+	text-align: right;
+	transform: translateY(-8px);
+}
+
+.elemenx-cal-hour:first-child {
+	transform: none;
+}
+
+/* A day column: hour lines from a gradient, the events at their places. */
+.elemenx-cal-column {
+	position: relative;
+	border-left: 1px solid var(--elemenx-border);
+	background-image: linear-gradient(to bottom, var(--elemenx-border) 1px, transparent 1px);
+	background-size: 100% var(--elemenx-cal-hour);
+	cursor: pointer;
+}
+
+.elemenx-cal-column.today {
+	background-color: color-mix(in srgb, var(--elemenx-accent) 4%, transparent);
+}
+
+.elemenx-cal-block {
+	position: absolute;
+	display: flex;
+	flex-direction: column;
+	gap: 0;
+	margin-left: 2px;
+	padding: 2px 6px;
+	overflow: hidden;
+	background: color-mix(in srgb, var(--elemenx-cal-color) 20%, var(--elemenx-surface));
+	border: 0;
+	border-left: 3px solid var(--elemenx-cal-color);
+	border-radius: 4px;
+	color: var(--elemenx-text);
+	font: inherit;
+	font-size: 12px;
+	line-height: 16px;
+	text-align: left;
+	cursor: pointer;
+}
+
+/* Moving events: a grab cursor, the event being dragged faded, the day or the place it goes to marked. */
+.elemenx-cal.editable .elemenx-cal-event,
+.elemenx-cal.editable .elemenx-cal-block {
+	cursor: grab;
+	touch-action: none;
+}
+
+.elemenx-cal.dragging,
+.elemenx-cal.dragging .elemenx-cal-event,
+.elemenx-cal.dragging .elemenx-cal-block,
+.elemenx-cal.dragging .elemenx-cal-column,
+.elemenx-cal.dragging .elemenx-cal-day {
+	cursor: grabbing;
+	user-select: none;
+}
+
+.elemenx-cal-event.dragged,
+.elemenx-cal-block.dragged {
+	opacity: 0.4;
+}
+
+.elemenx-cal-day.drop,
+.elemenx-cal-allday.drop {
+	background: color-mix(in srgb, var(--elemenx-accent) 12%, var(--elemenx-surface));
+	box-shadow: inset 0 0 0 2px var(--elemenx-accent);
+}
+
+.elemenx-cal-shadow {
+	position: absolute;
+	left: 2px;
+	right: 4px;
+	z-index: 2;
+	padding: 2px 6px;
+	background: color-mix(in srgb, var(--elemenx-accent) 16%, transparent);
+	border: 2px dashed var(--elemenx-accent);
+	border-radius: 4px;
+	color: var(--elemenx-text);
+	font-size: 12px;
+	line-height: 16px;
+	font-weight: 600;
+	font-variant-numeric: tabular-nums;
+	pointer-events: none;
+}
+
+/* The lower edge of a timed event: drag it to change the end. */
+.elemenx-cal-resize {
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	height: 6px;
+	cursor: ns-resize;
+}
+
+.elemenx-cal-resize::after {
+	content: '';
+	position: absolute;
+	left: 50%;
+	bottom: 2px;
+	width: 16px;
+	height: 2px;
+	margin-left: -8px;
+	border-radius: 1px;
+	background: currentColor;
+	opacity: 0;
+}
+
+.elemenx-cal-block:hover .elemenx-cal-resize::after {
+	opacity: 0.48;
+}
+
+/* A short event: its time and title on one line. */
+.elemenx-cal-block.short {
+	flex-direction: row;
+	align-items: center;
+	gap: 6px;
+	white-space: nowrap;
+}
+
+.elemenx-cal-block:hover {
+	background: color-mix(in srgb, var(--elemenx-cal-color) 32%, var(--elemenx-surface));
+}
+
+.elemenx-cal-now {
+	position: absolute;
+	left: 0;
+	right: 0;
+	height: 2px;
+	background: var(--elemenx-danger);
+	pointer-events: none;
+}
+
+.elemenx-cal-now::before {
+	content: '';
+	position: absolute;
+	top: -3px;
+	left: -4px;
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	background: var(--elemenx-danger);
+}

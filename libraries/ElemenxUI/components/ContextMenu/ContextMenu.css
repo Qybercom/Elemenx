@@ -1,0 +1,15 @@
+.elemenx-context {
+	display: contents;
+}
+
+/* The point the menu opens at: an anchor without size at the pointer. */
+.elemenx-context-point {
+	position: fixed;
+	width: 0;
+	height: 0;
+	pointer-events: none;
+}
+
+.elemenx-context-point .elemenx-menu {
+	pointer-events: auto;
+}

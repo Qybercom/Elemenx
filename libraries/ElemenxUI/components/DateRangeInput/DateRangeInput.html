@@ -1,0 +1,32 @@
+<div class="elemenx-range elemenx-popup-anchor">
+	<div class="elemenx-input" [class]="[Size || 'medium', Shape === 'round' ? 'round' : '', Invalid ? 'invalid' : '', Disabled ? 'disabled' : '']">
+		<button class="elemenx-range-toggle" type="button" aria-haspopup="dialog" [attribute.aria-expanded]="String(Open)" [disabled]="Disabled" (click)="Toggle">
+			<span class="elemenx-range-text" [class.placeholder]="!Text(Value, Locale)">{{Text(Value, Locale) || Placeholder}}</span>
+			<Icon Name="calendar" />
+		</button>
+	</div>
+	<input type="hidden" *if="Name" [attribute.name]="Name" [value]="(Value || []).join('/')" />
+	<div class="elemenx-popup elemenx-range-panel" role="dialog" aria-label="Choose a range" data-match-width="false" *popup="Open" (dismiss)="Dismissed" (keydown)="Key">
+		<div class="elemenx-range-presets" *if="Presets.length">
+			<button class="elemenx-option" type="button" *for="preset of Presets" *key="preset.Label" [attribute.data-index]="$index" (click)="Preset">{{preset.Label}}</button>
+		</div>
+		<div class="elemenx-range-months">
+			<div class="elemenx-calendar elemenx-range-month" *for="month of Months(Cursor)" *key="month">
+				<div class="elemenx-calendar-header">
+					<button class="elemenx-calendar-nav" type="button" aria-label="Previous month" *if="$index === 0" (click)="Previous"><Icon Name="chevron-left" /></button>
+					<span class="elemenx-calendar-title">{{Title(month, Locale)}}</span>
+					<button class="elemenx-calendar-nav" type="button" aria-label="Next month" *if="$index === 1" (click)="Following"><Icon Name="chevron-right" /></button>
+				</div>
+				<div class="elemenx-calendar-days" role="grid">
+					<span class="elemenx-calendar-weekday" *for="name of Weekdays(Locale)" *key="name">{{name}}</span>
+					<button class="elemenx-calendar-day" type="button" *for="day of Days(month, Value, Pending, Hover, Min, Max)" *key="day.ISO" [class.outside]="day.Outside" [class.today]="day.Today" [class.start]="day.Start" [class.end]="day.End" [class.within]="day.Within" [class.selected]="day.Start || day.End" [disabled]="!!day.Disabled" [attribute.tabindex]="day.ISO === Cursor && !day.Outside ? 0 : -1" [attribute.data-cursor]="day.ISO === Cursor && !day.Outside ? 'true' : null" [attribute.data-date]="day.ISO" [attribute.aria-selected]="String(day.Start || day.End || day.Within)" [attribute.aria-current]="day.Today ? 'date' : null" (mouseenter)="Over" (click)="PickDay">{{day.Day}}</button>
+				</div>
+			</div>
+			<div class="elemenx-picker-footer">
+				<span class="elemenx-caption">{{Pending ? 'Pick the end' : Text(Value, Locale)}}</span>
+				<span class="elemenx-spacer"></span>
+				<Button [label]="ClearLabel" Variant="ghost" Size="small" (click)="Clear" />
+			</div>
+		</div>
+	</div>
+</div>

@@ -1,0 +1,70 @@
+.elemenx-tree {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	min-width: 0;
+}
+
+.elemenx-tree-rows {
+	display: flex;
+	flex-direction: column;
+	gap: 1px;
+}
+
+.elemenx-tree-row {
+	--elemenx-tree-depth: 0;
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	min-height: 28px;
+	padding: 0 8px 0 calc(4px + var(--elemenx-tree-depth) * 20px);
+	border-radius: 4px;
+	color: var(--elemenx-text);
+	cursor: pointer;
+	outline: none;
+	user-select: none;
+}
+
+.elemenx-tree-row:hover {
+	background: var(--elemenx-surface-hover);
+}
+
+.elemenx-tree-row:focus-visible {
+	box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--elemenx-accent) 48%, transparent);
+}
+
+.elemenx-tree-row.active {
+	background: color-mix(in srgb, var(--elemenx-accent) 12%, var(--elemenx-surface));
+	font-weight: 600;
+}
+
+.elemenx-tree-row.disabled {
+	opacity: 0.48;
+	cursor: default;
+}
+
+.elemenx-tree-row > .elemenx-icon {
+	color: var(--elemenx-text-muted);
+}
+
+.elemenx-tree-twisty {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex: none;
+	width: 16px;
+	height: 16px;
+	color: var(--elemenx-text-muted);
+}
+
+.elemenx-tree-row .elemenx-check {
+	flex: none;
+}
+
+.elemenx-tree-label {
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}

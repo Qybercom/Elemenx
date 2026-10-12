@@ -1,0 +1,135 @@
+.elemenx-range {
+	position: relative;
+	width: 100%;
+	min-width: 0;
+}
+
+.elemenx-range .elemenx-input {
+	padding: 0;
+}
+
+.elemenx-range-toggle {
+	display: flex;
+	flex: 1;
+	align-items: center;
+	align-self: stretch;
+	gap: 8px;
+	min-width: 0;
+	padding: 0 8px 0 12px;
+	background: transparent;
+	border: 0;
+	color: var(--elemenx-text);
+	font: inherit;
+	text-align: left;
+	cursor: pointer;
+	outline: none;
+}
+
+.elemenx-range-toggle > .elemenx-icon {
+	color: var(--elemenx-text-muted);
+}
+
+.elemenx-range-text {
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-variant-numeric: tabular-nums;
+}
+
+.elemenx-range-text.placeholder {
+	color: var(--elemenx-text-muted);
+}
+
+.elemenx-range-panel {
+	flex-direction: row;
+	max-height: none;
+	padding: 0;
+	overflow: visible;
+}
+
+.elemenx-range-presets {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	min-width: 136px;
+	padding: 8px;
+	border-right: 1px solid var(--elemenx-border);
+}
+
+.elemenx-range-presets .elemenx-option {
+	width: 100%;
+	background: transparent;
+	border: 0;
+	color: var(--elemenx-text);
+	font: inherit;
+	text-align: left;
+}
+
+.elemenx-range-months {
+	display: grid;
+	grid-template-columns: repeat(2, 256px);
+	gap: 0 16px;
+	padding: 8px;
+}
+
+.elemenx-range-months > .elemenx-picker-footer {
+	grid-column: 1 / -1;
+}
+
+.elemenx-range-month {
+	width: auto;
+	padding: 0;
+}
+
+.elemenx-range-month .elemenx-calendar-title {
+	height: 32px;
+}
+
+/* The range: its days joined in one band, its ends filled. */
+.elemenx-range-month .elemenx-calendar-days {
+	gap: 2px 0;
+}
+
+.elemenx-calendar-day.within {
+	background: color-mix(in srgb, var(--elemenx-accent) 12%, transparent);
+	border-radius: 0;
+}
+
+.elemenx-calendar-day.start:not(.end) {
+	border-radius: 4px 0 0 4px;
+}
+
+.elemenx-calendar-day.end:not(.start) {
+	border-radius: 0 4px 4px 0;
+}
+
+.elemenx-calendar-day.outside.within,
+.elemenx-calendar-day.outside.start,
+.elemenx-calendar-day.outside.end {
+	background: transparent;
+	color: var(--elemenx-text-muted);
+	font-weight: 400;
+}
+
+@media (max-width: 640px) {
+	.elemenx-range-panel {
+		flex-direction: column;
+	}
+
+	.elemenx-range-presets {
+		flex-direction: row;
+		flex-wrap: wrap;
+		border-right: 0;
+		border-bottom: 1px solid var(--elemenx-border);
+	}
+
+	.elemenx-range-presets .elemenx-option {
+		width: auto;
+	}
+
+	.elemenx-range-months {
+		grid-template-columns: 256px;
+	}
+}

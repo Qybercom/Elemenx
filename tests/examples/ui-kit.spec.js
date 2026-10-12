@@ -43,7 +43,7 @@ for (const origin of origins) {
 
 			await open(page, origin);
 
-			await expect(page.locator('.ui-kit > .elemenx-section')).toHaveCount(22);
+			await expect(page.locator('.ui-kit > .elemenx-section')).toHaveCount(26);
 
 			await expect(page.locator('#elemenx-icons')).toHaveAttribute('data-ready', 'true');
 			await expect(page.locator('.ui-kit-icon svg').first()).toHaveAttribute('data-icon', 'add');
@@ -1485,6 +1485,934 @@ for (const origin of origins) {
 			await field(page, 'PIN').getByRole('button', {name: 'Show code'}).click();
 
 			await expect(field(page, 'PIN').getByRole('button', {name: 'Hide code'})).toBeVisible();
+		});
+
+		test('command palette finds commands fuzzily, runs them, keeps the recent ones and lists the shortcuts', async function ({ page }) {
+			var commands;
+			var palette;
+			var options;
+
+			await open(page, origin);
+
+			commands = section(page, 'Commands and overlays');
+			palette = page.locator('dialog.elemenx-palette');
+			options = function () {
+				return palette.locator('.elemenx-option .elemenx-option-label').allInnerTexts();
+			};
+
+			await commands.scrollIntoViewIfNeeded();
+
+			await expect(commands.locator('.ui-kit-shortcuts li')).toHaveText([/Toggle the theme\s*Alt\+T/, /Go to the tiles\s*G T/, /Show a toast\s*Alt\+N/]);
+
+			await page.keyboard.press('Control+K');
+
+			await expect(palette).toHaveJSProperty('open', true);
+			await expect(palette.getByRole('combobox')).toBeFocused();
+			expect(await options()).toEqual(['Toggle the theme', 'Open the filters drawer', 'Take the tour', 'Show a success toast', 'Copy the API token', 'Publish (needs a reviewer)', 'Go to the tiles', 'Show a toast']);
+
+			/* Fuzzy: the letters in order, marked; keywords count too. */
+			await page.keyboard.type('tgth');
+
+			expect(await options()).toEqual(['Toggle the theme']);
+			await expect(palette.locator('.match')).toHaveText(['T', 'g', 'th']);
+
+			await palette.getByRole('combobox').fill('onboarding');
+
+			expect(await options()).toEqual(['Take the tour']);
+
+			await palette.getByRole('combobox').fill('zzz');
+
+			await expect(palette.locator('.elemenx-popup-empty')).toHaveText('No matching commands');
+
+			await palette.getByRole('combobox').fill('show a toast');
+
+			expect((await options())[0]).toBe('Show a toast');
+
+			await page.keyboard.press('Enter');
+
+			await expect(palette).toHaveJSProperty('open', false);
+			await expect(commands.locator('.elemenx-section-header')).toContainText('Last: Show a toast');
+			await expect(page.locator('.elemenx-toast', {hasText: 'A toast from Alt+N'})).toBeVisible();
+
+			await commands.getByRole('button', {name: 'Command palette'}).click();
+
+			await expect(palette.locator('.elemenx-popup-group').first()).toHaveText('Recent');
+			expect((await options())[0]).toBe('Show a toast');
+
+			/* A disabled command does not run. */
+			await palette.getByRole('combobox').fill('publish');
+
+			await page.keyboard.press('Enter');
+
+			await expect(palette).toHaveJSProperty('open', true);
+
+			await page.keyboard.press('Escape');
+
+			await expect(palette).toHaveJSProperty('open', false);
+		});
+
+		test('shortcuts fire by their keys, also in another keyboard layout, sequences included, but not while typing', async function ({ page }) {
+			var commands;
+
+			await open(page, origin);
+
+			commands = section(page, 'Commands and overlays');
+
+			await commands.scrollIntoViewIfNeeded();
+
+			await page.locator('body').click({position: {x: 5, y: 300}});
+
+			await page.keyboard.press('Alt+N');
+
+			await expect(commands.locator('.elemenx-section-header')).toContainText('Last: Show a toast');
+
+			/* Alt+N with a Cyrillic layout: the key reports 'т', its code still says KeyN. */
+			await page.evaluate(function () {
+				window.ThemeBefore = document.body.getAttribute('data-theme');
+
+				document.body.dispatchEvent(new KeyboardEvent('keydown', {key: 'е', code: 'KeyT', altKey: true, bubbles: true}));
+			});
+
+			await expect(page.locator('body')).not.toHaveAttribute('data-theme', await page.evaluate(function () {
+				return window.ThemeBefore;
+			}));
+
+			await page.keyboard.press('g');
+			await page.keyboard.press('t');
+
+			await expect.poll(function () {
+				return section(page, 'Tiles').evaluate(function (node) {
+					return Math.abs(node.getBoundingClientRect().top) < 200;
+				});
+			}).toBe(true);
+
+			await field(page, 'Card number').locator('input').click();
+
+			await page.keyboard.type('gt');
+
+			await expect(field(page, 'Card number').locator('input')).toBeFocused();
+		});
+
+		test('context menu opens at the pointer and by the keyboard, and tells which item it was opened for', async function ({ page }) {
+			var commands;
+			var menu;
+
+			await open(page, origin);
+
+			commands = section(page, 'Commands and overlays');
+			menu = commands.locator('.elemenx-context-point .elemenx-menu');
+
+			await commands.scrollIntoViewIfNeeded();
+			await commands.locator('[data-file="app.js"]').click({button: 'right'});
+
+			await expect(menu).toBeVisible();
+			await expect(menu.getByRole('menuitem', {name: /Open/})).toBeFocused();
+
+			await page.keyboard.press('ArrowDown');
+			await page.keyboard.press('Enter');
+
+			await expect(menu).toBeHidden();
+			await expect(commands.locator('.elemenx-section-header')).toContainText('Last: Rename app.js');
+
+			await commands.locator('[data-file="logo.svg"]').focus();
+
+			await page.keyboard.press('Shift+F10');
+
+			await expect(menu).toBeVisible();
+
+			await page.keyboard.press('Escape');
+
+			await expect(menu).toBeHidden();
+			await expect(commands.locator('[data-file="logo.svg"]')).toBeFocused();
+		});
+
+		test('copy, drawer and tour', async function ({ context, page }) {
+			var commands;
+			var tour;
+
+			await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+
+			await open(page, origin);
+
+			commands = section(page, 'Commands and overlays');
+
+			await commands.scrollIntoViewIfNeeded();
+			await commands.getByRole('button', {name: 'Copy the token'}).click();
+
+			await expect(commands.getByRole('button', {name: 'Copy the token'})).toHaveAttribute('data-copied', 'true');
+			await expect(page.locator('.elemenx-toast', {hasText: 'Token copied'})).toBeVisible();
+			expect(await page.evaluate(function () {
+				return navigator.clipboard.readText();
+			})).toBe('exn_live_7f3a9c21b8d04e65');
+
+			await commands.getByRole('button', {name: 'Open drawer'}).click();
+
+			await expect(page.getByRole('dialog', {name: 'Filters'})).toBeVisible();
+
+			await page.keyboard.press('Escape');
+
+			await expect(page.getByRole('dialog', {name: 'Filters'})).toBeHidden();
+
+			await commands.getByRole('button', {name: 'Take the tour'}).click();
+
+			tour = page.locator('.elemenx-tour-card');
+
+			await expect(tour).toContainText('1 / 3');
+			await expect(tour).toContainText('Commands');
+			await expect(tour.getByRole('button', {name: 'Next'})).toBeFocused();
+			await expect.poll(async function () {
+				var hole = await page.locator('.elemenx-tour-hole').boundingBox();
+				var target = await page.locator('#ui-kit-commands').boundingBox();
+
+				return Math.round(hole.x + 6) === Math.round(target.x) && Math.round(hole.width - 12) === Math.round(target.width);
+			}).toBe(true);
+
+			await page.keyboard.press('ArrowRight');
+
+			await expect(tour).toContainText('2 / 3');
+
+			await tour.getByRole('button', {name: 'Back'}).click();
+
+			await expect(tour).toContainText('1 / 3');
+
+			await tour.getByRole('button', {name: 'Next'}).click();
+			await tour.getByRole('button', {name: 'Next'}).click();
+			await tour.getByRole('button', {name: 'Done'}).click();
+
+			await expect(tour).toHaveCount(0);
+			await expect(commands.locator('.elemenx-section-header')).toContainText('Last: Tour: done');
+		});
+
+		test('biometric check, inactivity and permissions', async function ({ context, page }) {
+			var cdp = await context.newCDPSession(page);
+			var device;
+
+			await cdp.send('WebAuthn.enable');
+			await cdp.send('WebAuthn.addVirtualAuthenticator', {options: {protocol: 'ctap2', transport: 'internal', hasResidentKey: true, hasUserVerification: true, isUserVerified: true}});
+
+			/* WebAuthn takes a domain, not an IP address, as the site: the page opens on localhost. */
+			await page.goto(origin.URL.replace('127.0.0.1', 'localhost') + '/ui');
+
+			await expect(page.locator('.elemenx-workspace')).toBeVisible({timeout: 20000});
+
+			device = section(page, 'Security and device');
+
+			await device.scrollIntoViewIfNeeded();
+
+			await expect(page.locator('#ui-kit-biometric-state')).toHaveText('This device has a fingerprint, face or PIN check');
+
+			/* The first check registers the device, the next ones verify it. */
+			await device.getByRole('button', {name: 'Check this device'}).click();
+
+			await expect(page.locator('#ui-kit-biometric-state')).toHaveText('Passed');
+
+			await device.getByRole('button', {name: 'Check this device'}).click();
+
+			await expect(page.locator('#ui-kit-biometric-state')).toHaveText('Passed');
+
+			/* The fingerprint as the guard of the guarded card fields. */
+			await device.getByText('Ask it for the guarded card fields').click();
+
+			await field(page, 'CVV').scrollIntoViewIfNeeded();
+			await field(page, 'CVV').getByRole('button', {name: 'Show code'}).click();
+
+			await expect(field(page, 'CVV').locator('input')).toHaveAttribute('type', 'text');
+			await expect(page.locator('.elemenx-toast', {hasText: 'Confirm it is you'})).toHaveCount(0);
+
+			await device.scrollIntoViewIfNeeded();
+
+			await expect(device.locator('.ui-kit-permissions li')).toHaveCount(4);
+			await expect(device.locator('.ui-kit-permissions li').first().locator('.elemenx-badge')).not.toHaveText('…');
+
+			await device.getByRole('button', {name: 'Watch 6 s'}).click();
+
+			await expect(page.locator('#ui-kit-idle-state')).toHaveText(/warning: [1-3] s left/, {timeout: 6000});
+			await expect(page.locator('#ui-kit-idle-state')).toHaveText(/idle/, {timeout: 6000});
+
+			await page.mouse.click(5, 300);
+
+			await expect(page.locator('#ui-kit-idle-state')).toHaveText('State: active');
+
+			await device.getByRole('button', {name: 'Stop'}).click();
+
+			await expect(page.locator('#ui-kit-idle-state')).toHaveText('State: stopped');
+		});
+
+		test('tag input adds tags by keys, separators, suggestions and paste, and refuses what it must not take', async function ({ page }) {
+			var topics;
+			var input;
+			var chips;
+			var invite;
+
+			await open(page, origin);
+
+			topics = field(page, 'Topics');
+			input = topics.locator('input.elemenx-tags-control');
+			chips = function (owner) {
+				return owner.locator('.elemenx-chip-label').allInnerTexts();
+			};
+
+			await topics.scrollIntoViewIfNeeded();
+
+			await input.click();
+
+			await page.keyboard.type('Perf');
+
+			await expect(page.locator('.elemenx-popup:not([hidden]) .elemenx-option')).toHaveText(['performance']);
+
+			await page.keyboard.press('Enter');
+
+			expect(await chips(topics)).toEqual(['design', 'tokens', 'performance']);
+
+			/* Case lower; a comma ends a tag. */
+			await page.keyboard.type('API, Docs,');
+
+			expect(await chips(topics)).toEqual(['design', 'tokens', 'performance', 'api', 'docs']);
+			await expect(input).toHaveValue('');
+
+			await page.keyboard.press('Backspace');
+
+			expect(await chips(topics)).toEqual(['design', 'tokens', 'performance', 'api']);
+
+			/* A pasted list, up to Max (6); what does not fit stays in the field. */
+			await input.evaluate(function (node) {
+				var data = new DataTransfer();
+
+				data.setData('text/plain', 'x; y\nz');
+
+				node.dispatchEvent(new ClipboardEvent('paste', {clipboardData: data, bubbles: true, cancelable: true}));
+			});
+
+			expect(await chips(topics)).toEqual(['design', 'tokens', 'performance', 'api', 'x', 'y']);
+			await expect(input).toHaveValue('z');
+			await expect(topics.locator('.elemenx-tags-field')).toHaveClass(/invalid/);
+
+			await topics.getByRole('button', {name: 'Remove x'}).click();
+
+			expect(await chips(topics)).toEqual(['design', 'tokens', 'performance', 'api', 'y']);
+
+			invite = field(page, 'Invite');
+
+			await invite.locator('input.elemenx-tags-control').click();
+
+			await page.keyboard.type('bad-address');
+			await page.keyboard.press('Enter');
+
+			expect(await chips(invite)).toEqual([]);
+			await expect(invite.locator('.elemenx-caption')).toHaveText('“bad-address”: not an e-mail address');
+
+			await invite.locator('input.elemenx-tags-control').fill('');
+
+			await page.keyboard.type('a@b.io');
+			await page.keyboard.press('Enter');
+			await page.keyboard.type('a@b.io');
+			await page.keyboard.press('Enter');
+
+			expect(await chips(invite)).toEqual(['a@b.io']);
+			await expect(invite.locator('.elemenx-caption')).toHaveText('“a@b.io”: already there');
+		});
+
+		test('combobox filters, picks, creates a value, restores on Escape and loads options from a server', async function ({ page }) {
+			var framework;
+			var input;
+			var options;
+			var city;
+
+			await open(page, origin);
+
+			framework = field(page, 'Framework');
+			input = framework.locator('input[role="combobox"]');
+			options = function () {
+				return page.locator('.elemenx-popup:not([hidden]) .elemenx-option').allInnerTexts();
+			};
+
+			await framework.scrollIntoViewIfNeeded();
+
+			await expect(input).toHaveValue('Elemenx');
+
+			await input.click();
+
+			await page.keyboard.type('v');
+
+			expect(await options()).toEqual(['Vue', 'Svelte', 'Create “v”']);
+
+			await page.keyboard.press('Enter');
+
+			await expect(input).toHaveValue('Vue');
+			await expect(framework.locator('.elemenx-caption')).toHaveText('Value: vue');
+
+			/* A disabled option cannot be picked; a new text can be created. */
+			await input.click();
+
+			await page.keyboard.press('Control+A');
+			await page.keyboard.type('ang');
+
+			await expect(page.locator('.elemenx-popup:not([hidden]) .elemenx-option.disabled')).toHaveText('Angular');
+
+			await page.keyboard.press('Control+A');
+			await page.keyboard.type('Solid');
+
+			expect(await options()).toEqual(['Create “Solid”']);
+
+			await page.keyboard.press('Enter');
+
+			await expect(input).toHaveValue('Solid');
+			await expect(framework.locator('.elemenx-caption')).toHaveText('Value: Solid');
+
+			await page.keyboard.press('Control+A');
+			await page.keyboard.type('zz');
+			await page.keyboard.press('Escape');
+			await page.keyboard.press('Escape');
+
+			await expect(input).toHaveValue('Solid');
+
+			await framework.getByRole('button', {name: 'Clear'}).click();
+
+			await expect(framework.locator('.elemenx-caption')).toHaveText('Value: —');
+
+			city = field(page, 'City');
+
+			await city.locator('input').click();
+
+			await page.keyboard.type('ri');
+
+			await expect(page.locator('.elemenx-popup:not([hidden]) .elemenx-option')).toHaveText(['Madrid', 'Paris', 'Riga']);
+
+			await page.keyboard.press('ArrowDown');
+			await page.keyboard.press('ArrowDown');
+			await page.keyboard.press('Enter');
+
+			await expect(city.locator('input')).toHaveValue('Riga');
+		});
+
+		test('date range picks two days in either order, by pointer or keys, and from presets', async function ({ page }) {
+			var period;
+			var iso;
+			var today;
+			var later;
+
+			await open(page, origin);
+
+			period = field(page, 'Period');
+			iso = function (date) {
+				return date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0') + '-' + String(date.getDate()).padStart(2, '0');
+			};
+			today = new Date();
+			later = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 9);
+
+			await period.scrollIntoViewIfNeeded();
+			await period.locator('.elemenx-range-toggle').click();
+
+			await expect(page.locator('.elemenx-range-month')).toHaveCount(2);
+			await expect(page.locator('.elemenx-calendar-day[data-cursor="true"]')).toBeFocused();
+			await expect(page.locator('.elemenx-calendar-day[data-cursor="true"]')).toHaveAttribute('data-date', iso(today));
+
+			/* Keys: Enter on today, two days right and a week down, Enter. */
+			await page.keyboard.press('Enter');
+			await page.keyboard.press('ArrowRight');
+			await page.keyboard.press('ArrowRight');
+			await page.keyboard.press('ArrowDown');
+
+			await expect(page.locator('.elemenx-range-month .elemenx-calendar-day.within').first()).toBeVisible();
+
+			await page.keyboard.press('Enter');
+
+			await expect(period.locator('.elemenx-caption').last()).toHaveText(iso(today) + ' → ' + iso(later));
+
+			/* The end first, then the start: the range comes out in order. */
+			await period.locator('.elemenx-range-toggle').click();
+			await page.locator('.elemenx-range-month .elemenx-calendar-day[data-date="' + iso(later) + '"]:not(.outside)').click();
+			await page.locator('.elemenx-range-month .elemenx-calendar-day[data-date="' + iso(today) + '"]:not(.outside)').click();
+
+			await expect(period.locator('.elemenx-caption').last()).toHaveText(iso(today) + ' → ' + iso(later));
+
+			await period.locator('.elemenx-range-toggle').click();
+			await page.locator('.elemenx-range-presets .elemenx-option', {hasText: 'Last 7 days'}).click();
+
+			await expect(period.locator('.elemenx-caption').last()).toHaveText(iso(new Date(today.getFullYear(), today.getMonth(), today.getDate() - 6)) + ' → ' + iso(today));
+		});
+
+		test('tree opens, selects, checks with parents, loads lazily, filters and moves by the keys', async function ({ page }) {
+			var data;
+			var tree;
+			var rows;
+			var row;
+
+			await open(page, origin);
+
+			data = section(page, 'Trees, tables and long lists');
+			tree = data.locator('.elemenx-tree');
+			rows = function () {
+				return tree.locator('.elemenx-tree-row').evaluateAll(function (nodes) {
+					return nodes.map(function (node) {
+						var state = node.getAttribute('aria-checked');
+
+						return node.getAttribute('aria-level') + ':' + node.querySelector('.elemenx-tree-label').textContent + (state && state !== 'false' ? ' ' + state : '');
+					});
+				});
+			};
+			row = function (label) {
+				return tree.locator('.elemenx-tree-row').filter({has: page.locator('.elemenx-tree-label', {hasText: new RegExp('^' + label + '$')})});
+			};
+
+			await tree.scrollIntoViewIfNeeded();
+
+			expect(await rows()).toEqual(['1:src', '2:components', '2:services', '2:index.js', '1:remote (loads on open)', '1:locked.bin', '1:README.md']);
+
+			await row('components').locator('.elemenx-tree-twisty').click();
+			await row('Table.js').click();
+
+			await expect(page.locator('#ui-kit-tree-state')).toHaveText('Selected: Table.js');
+			await expect(row('Table.js')).toHaveAttribute('tabindex', '0');
+
+			/* Keys: up to Button.js, Left twice (to the parent, then closes it), Right opens it again. */
+			await page.keyboard.press('ArrowUp');
+
+			await expect(row('Button.js')).toBeFocused();
+
+			await page.keyboard.press('ArrowLeft');
+
+			await expect(row('components')).toBeFocused();
+
+			await page.keyboard.press('ArrowLeft');
+
+			await expect(row('components')).toHaveAttribute('aria-expanded', 'false');
+
+			await page.keyboard.press('ArrowRight');
+			await page.keyboard.press('i');
+
+			await expect(row('index.js')).toBeFocused();
+
+			/* Check boxes: two children make the parent mixed, the parent checks the rest. */
+			await row('Button.js').locator('.elemenx-check').click();
+			await row('Tree.js').locator('.elemenx-check').click();
+
+			await expect(row('components')).toHaveAttribute('aria-checked', 'mixed');
+			await expect(row('src')).toHaveAttribute('aria-checked', 'mixed');
+
+			await row('components').focus();
+
+			await page.keyboard.press(' ');
+
+			await expect(row('components')).toHaveAttribute('aria-checked', 'true');
+			await expect(row('Table.js')).toHaveAttribute('aria-checked', 'true');
+			await expect(page.locator('#ui-kit-tree-state')).toHaveText('Checked: 4');
+
+			/* A disabled item takes no check and no selection. */
+			await row('locked.bin').click({force: true});
+
+			await expect(page.locator('#ui-kit-tree-state')).toHaveText('Checked: 4');
+
+			await row('remote \\(loads on open\\)').locator('.elemenx-tree-twisty').click();
+
+			await expect(tree.locator('.elemenx-tree-row[aria-busy="true"]')).toHaveCount(1);
+			await expect(row('backup-1.zip')).toBeVisible();
+			await expect(row('remote')).toHaveAttribute('aria-expanded', 'true');
+
+			await tree.locator('.elemenx-tree-search input').fill('toast');
+
+			expect(await rows()).toEqual(['1:src mixed', '2:services', '3:Toast.js']);
+		});
+
+		test('virtual list draws only the rows in view of a hundred thousand and follows the keys', async function ({ page }) {
+			var data;
+			var list;
+			var box;
+
+			await open(page, origin);
+
+			data = section(page, 'Trees, tables and long lists');
+			list = data.locator('.elemenx-virtual-viewport');
+
+			await list.scrollIntoViewIfNeeded();
+
+			expect(await list.locator('.elemenx-virtual-row').count()).toBeLessThan(30);
+			expect(await list.evaluate(function (node) {
+				return node.scrollHeight;
+			})).toBe(3200000);
+			expect((await list.boundingBox()).width).toBeGreaterThan(200);
+
+			await list.evaluate(function (node) {
+				node.scrollTop = 32 * 50000;
+			});
+
+			await expect(list.locator('.elemenx-virtual-row', {hasText: 'Row 50003'})).toHaveCount(1);
+			expect(await list.locator('.elemenx-virtual-row').count()).toBeLessThan(30);
+
+			box = await list.locator('.elemenx-virtual-row', {hasText: 'Row 50003'}).boundingBox();
+
+			await page.mouse.click(box.x + 20, box.y + box.height / 2);
+
+			await expect(page.locator('#ui-kit-virtual-state')).toHaveText('Picked: Row 50003');
+
+			await list.focus();
+
+			await page.keyboard.press('End');
+
+			await expect(list.locator('.elemenx-virtual-row.active')).toContainText('Row 100000');
+			await expect(list.locator('.elemenx-virtual-row.active')).toHaveAttribute('aria-posinset', '100000');
+
+			await page.keyboard.press('Enter');
+
+			await expect(page.locator('#ui-kit-virtual-state')).toHaveText('Picked: Row 100000');
+		});
+
+		test('table filters by text, list and number, pages its rows and shows tree rows', async function ({ page }) {
+			var data;
+			var table;
+			var tree;
+			var levels;
+			var results;
+
+			await open(page, origin);
+
+			data = section(page, 'Trees, tables and long lists');
+			table = data.locator('.elemenx-table-box').first();
+			tree = data.locator('.elemenx-table-box').nth(1);
+			levels = function () {
+				return tree.locator('tbody tr').evaluateAll(function (rows) {
+					return rows.map(function (row) {
+						return row.getAttribute('aria-level') + ':' + row.querySelector('td').textContent.trim();
+					});
+				});
+			};
+
+			await table.scrollIntoViewIfNeeded();
+
+			await expect(table.locator('.elemenx-pagination-range')).toHaveText('1–10 of 57');
+			await expect(table.locator('tbody tr')).toHaveCount(10);
+			await expect(table.locator('.elemenx-pagination-page:not([aria-label])')).toHaveText(['1', '2', '6']);
+
+			await table.locator('.elemenx-pagination-page', {hasText: /^6$/}).click();
+
+			await expect(table.locator('.elemenx-pagination-range')).toHaveText('51–57 of 57');
+			await expect(table.locator('tbody tr')).toHaveCount(7);
+			await expect(table.getByRole('button', {name: 'Next page'})).toBeDisabled();
+			await expect(table.getByRole('button', {name: 'Last page'})).toBeDisabled();
+
+			await table.getByRole('button', {name: 'First page'}).click();
+
+			await expect(table.locator('.elemenx-pagination-range')).toHaveText('1–10 of 57');
+			await expect(table.getByRole('button', {name: 'First page'})).toBeDisabled();
+			await expect(table.getByRole('button', {name: 'Previous page'})).toBeDisabled();
+
+			await table.getByRole('button', {name: 'Last page'}).click();
+
+			await expect(table.locator('.elemenx-pagination-range')).toHaveText('51–57 of 57');
+
+			/* The same Pagination on its own, under any list. */
+			results = data.getByRole('navigation', {name: 'Search results'});
+
+			await expect(results.locator('.elemenx-pagination-range')).toHaveText('1–20 of 240');
+			await expect(results.locator('select')).toHaveCount(0);
+
+			await results.getByRole('button', {name: 'Last page'}).click();
+
+			await expect(page.locator('#ui-kit-results-page')).toHaveText('Results page 12');
+			await expect(results.locator('.elemenx-pagination-range')).toHaveText('221–240 of 240');
+			await expect(results.locator('.elemenx-pagination-page:not([aria-label])')).toHaveText(['1', '11', '12']);
+
+			await results.locator('.elemenx-pagination-page', {hasText: /^11$/}).click();
+
+			await expect(page.locator('#ui-kit-results-page')).toHaveText('Results page 11');
+
+			await table.locator('select[aria-label="Filter Role"]').selectOption('Reviewer');
+
+			await expect(table.locator('.elemenx-pagination-range')).toHaveText('1–10 of 19');
+
+			await table.locator('input[aria-label="Filter Commits"]').fill('>500');
+
+			await expect(table.locator('.elemenx-pagination-range')).toHaveText('1–9 of 9');
+
+			for (const cell of await table.locator('tbody tr td:nth-child(3)').allInnerTexts())
+				expect(Number(cell)).toBeGreaterThan(500);
+
+			await table.locator('input[aria-label="Filter Commits"]').fill('100..300');
+			await table.locator('select[aria-label="Filter Role"]').selectOption('');
+			await table.locator('select[aria-label="Rows per page"]').selectOption('25');
+
+			for (const cell of await table.locator('tbody tr td:nth-child(3)').allInnerTexts()) {
+				expect(Number(cell)).toBeGreaterThanOrEqual(100);
+				expect(Number(cell)).toBeLessThanOrEqual(300);
+			}
+
+			await table.locator('input[aria-label="Filter Name"]').fill('nobody');
+
+			await expect(table.locator('.elemenx-table-empty')).toHaveText('No data');
+
+			expect(await levels()).toEqual(['1:docs', '1:package.json', '1:src', '2:components', '2:index.js']);
+
+			await tree.locator('tbody tr', {hasText: 'components'}).locator('.elemenx-table-twisty').click();
+			await tree.getByRole('button', {name: 'Size'}).click();
+
+			expect(await levels()).toEqual(['1:package.json', '1:docs', '1:src', '2:index.js', '2:components', '3:Button.js', '3:Tree.js', '3:Table.js']);
+
+			await tree.locator('tbody tr', {hasText: 'docs'}).focus();
+
+			await page.keyboard.press('ArrowRight');
+
+			expect(await levels()).toContain('2:STYLE.md');
+			await expect(tree.locator('tbody tr', {hasText: 'docs'})).toHaveAttribute('aria-expanded', 'true');
+		});
+
+		test('rating gives halves by pointer and keys; empty states show their variant', async function ({ page }) {
+			var feedback;
+			var rating;
+			var stars;
+			var box;
+
+			await open(page, origin);
+
+			feedback = section(page, 'Feedback');
+			rating = feedback.locator('.elemenx-rating').first();
+			stars = rating.locator('.elemenx-rating-star');
+
+			await rating.scrollIntoViewIfNeeded();
+
+			await expect(rating).toHaveAttribute('aria-valuenow', '3.5');
+			await expect(stars.nth(3)).toHaveClass(/half/);
+
+			box = await stars.nth(1).boundingBox();
+
+			await page.mouse.click(box.x + 4, box.y + box.height / 2);
+
+			await expect(page.locator('#ui-kit-stars')).toHaveText('1.5 / 5');
+
+			await page.mouse.click(box.x + box.width - 4, box.y + box.height / 2);
+
+			await expect(page.locator('#ui-kit-stars')).toHaveText('2 / 5');
+
+			/* The same rating again clears it. */
+			await page.mouse.click(box.x + box.width - 4, box.y + box.height / 2);
+
+			await expect(page.locator('#ui-kit-stars')).toHaveText('0 / 5');
+
+			await rating.focus();
+
+			await page.keyboard.press('ArrowRight');
+			await page.keyboard.press('ArrowRight');
+			await page.keyboard.press('ArrowRight');
+
+			await expect(page.locator('#ui-kit-stars')).toHaveText('1.5 / 5');
+
+			await page.keyboard.press('End');
+
+			await expect(page.locator('#ui-kit-stars')).toHaveText('5 / 5');
+			await expect(feedback.locator('.elemenx-rating.readonly')).not.toHaveAttribute('tabindex', '0');
+
+			await expect(feedback.locator('.elemenx-empty.search .elemenx-icon')).toHaveAttribute('data-icon', 'search');
+			await expect(feedback.locator('.elemenx-empty.error')).toContainText('Could not load');
+			await expect(feedback.locator('.elemenx-empty.error').getByRole('button', {name: 'Retry'})).toBeVisible();
+			await expect(feedback.locator('.elemenx-empty.search .elemenx-empty-actions')).toBeHidden();
+		});
+
+		test('charts draw SVG, tell the values under the pointer, turn series off and keep a table for screen readers', async function ({ page }) {
+			var charts;
+			var line;
+			var bars;
+			var box;
+			var errors;
+			var svg = 'http://www.w3.org/2000/svg';
+
+			await open(page, origin);
+
+			charts = section(page, 'Charts and calendar');
+			line = charts.locator('.elemenx-chart').nth(0);
+			bars = charts.locator('.elemenx-chart').nth(1);
+
+			await line.scrollIntoViewIfNeeded();
+
+			await expect(line.locator('path.elemenx-chart-line')).toHaveCount(2);
+			expect(await line.locator('path.elemenx-chart-line').first().evaluate(function (node) {
+				return node.namespaceURI + ' ' + (node.getTotalLength() > 100);
+			})).toBe(svg + ' true');
+			expect(await line.locator('svg').evaluate(function (node) {
+				return node.viewBox.baseVal.width === node.width.baseVal.value;
+			})).toBe(true);
+			await expect(line.locator('.elemenx-chart-tick').first()).toHaveText('0 k$');
+
+			box = await line.locator('svg').boundingBox();
+
+			await page.mouse.move(box.x + 48 + (box.width - 56) * 8 / 11, box.y + 60);
+
+			await expect(line.locator('.elemenx-chart-tooltip')).toContainText('Sep');
+			await expect(line.locator('.elemenx-chart-tooltip')).toContainText('72 k$');
+			await expect(line.locator('.elemenx-chart-point')).toHaveCount(2);
+
+			await page.mouse.move(box.x + box.width / 2, box.y + box.height + 120);
+
+			await expect(line.locator('.elemenx-chart-tooltip')).toHaveCount(0);
+
+			await expect(bars.locator('.elemenx-chart-bar')).toHaveCount(12);
+
+			await bars.locator('.elemenx-chart-key', {hasText: 'Desktop'}).click();
+
+			await expect(bars.locator('.elemenx-chart-bar')).toHaveCount(8);
+			await expect(bars.locator('.elemenx-chart-key', {hasText: 'Desktop'})).toHaveAttribute('aria-pressed', 'false');
+
+			await expect(charts.locator('.elemenx-chart.donut .elemenx-chart-slice')).toHaveCount(5);
+
+			/* The pointer over a donut: the slice under it shows in the tooltip, and nothing fails. */
+			errors = captureErrors(page);
+			box = await charts.locator('.elemenx-chart.donut svg').boundingBox();
+
+			await page.mouse.move(box.x + 4, box.y + 4);
+			await page.mouse.move(box.x + box.width * 0.75, box.y + box.height / 2, {steps: 6});
+
+			await expect(charts.locator('.elemenx-chart.donut .elemenx-chart-tooltip')).toContainText('Chrome');
+			await expect(charts.locator('.elemenx-chart.donut .elemenx-chart-tooltip')).toContainText('64 %');
+			expect(errors).toEqual([]);
+			await expect(charts.locator('.elemenx-chart.area .elemenx-chart-area')).toHaveCount(2);
+			await expect(line.locator('table.elemenx-chart-data caption')).toHaveText('Revenue and costs');
+			await expect(line.locator('table.elemenx-chart-data tbody tr')).toHaveCount(2);
+
+			await expect(charts.locator('.elemenx-sparkline')).toHaveCount(3);
+			await expect(charts.locator('.elemenx-sparkline.bar .elemenx-sparkline-bar')).toHaveCount(12);
+			expect(await charts.locator('.elemenx-sparkline-line').first().getAttribute('d')).toMatch(/^M[\d.]+ [\d.]+ L/);
+		});
+
+		test('calendar lists the events of each day, switches to the week, places timed events and reports presses', async function ({ page }) {
+			var charts;
+			var calendar;
+			var today;
+			var iso;
+
+			await open(page, origin);
+
+			charts = section(page, 'Charts and calendar');
+			calendar = charts.locator('.elemenx-cal');
+			iso = function (date) {
+				return date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0') + '-' + String(date.getDate()).padStart(2, '0');
+			};
+			today = calendar.locator('.elemenx-cal-day[data-date="' + iso(new Date()) + '"]');
+
+			await calendar.scrollIntoViewIfNeeded();
+
+			await expect(today).toHaveClass(/today/);
+			await expect(today.locator('.elemenx-cal-event')).toHaveText([/09:30\s*Stand-up/, /10:00\s*Design review/, /10:30\s*Pairing/]);
+			await expect(today.locator('.elemenx-cal-more')).toHaveText('+2 more');
+
+			await today.locator('.elemenx-cal-event', {hasText: 'Pairing'}).click();
+
+			await expect(charts.locator('.elemenx-section-header')).toContainText('Event: Pairing');
+
+			await today.click({position: {x: 6, y: 8}});
+
+			await expect(charts.locator('.elemenx-section-header')).toContainText('Day: ' + iso(new Date()));
+
+			await today.locator('.elemenx-cal-more').click();
+
+			await expect(calendar).toHaveClass(/week/);
+			await expect(calendar.getByRole('button', {name: 'Week'})).toHaveAttribute('aria-pressed', 'true');
+			await expect(calendar.locator('.elemenx-cal-column.today .elemenx-cal-block')).toHaveCount(5);
+
+			/* Design review and Pairing overlap: they share the column in two lanes. */
+			expect(await calendar.locator('.elemenx-cal-block', {hasText: 'Pairing'}).evaluate(function (node) {
+				return node.style.left;
+			})).toBe('50%');
+
+			await calendar.locator('.elemenx-cal-column').first().click({position: {x: 10, y: 4}});
+
+			await expect(charts.locator('.elemenx-section-header')).toContainText(/Slot: \d{4}-\d{2}-\d{2} 07:00/);
+
+			await calendar.getByRole('button', {name: 'Next'}).click();
+
+			await expect(calendar.locator('.elemenx-cal-column.today')).toHaveCount(0);
+
+			await calendar.getByRole('button', {name: 'Today'}).click();
+
+			await expect(calendar.locator('.elemenx-cal-column.today')).toHaveCount(1);
+		});
+
+		test('calendar moves events by dragging and by Alt with the arrows, stretches their end and cancels on Escape', async function ({ page }) {
+			var charts;
+			var calendar;
+			var note;
+			var iso;
+			var day;
+			var box;
+
+			await open(page, origin);
+
+			charts = section(page, 'Charts and calendar');
+			calendar = charts.locator('.elemenx-cal');
+			note = charts.locator('.elemenx-section-header');
+			iso = function (offset) {
+				var date = new Date();
+
+				date = new Date(date.getFullYear(), date.getMonth(), date.getDate() + offset);
+
+				return date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0') + '-' + String(date.getDate()).padStart(2, '0');
+			};
+			day = function (title) {
+				return calendar.locator('.elemenx-cal-event', {hasText: title}).locator('xpath=ancestor::div[contains(@class, "elemenx-cal-day")]').getAttribute('data-date');
+			};
+
+			await calendar.scrollIntoViewIfNeeded();
+
+			/* Month: a day to the right keeps the times. */
+			box = await calendar.locator('.elemenx-cal-event', {hasText: 'Retrospective'}).boundingBox();
+
+			await page.mouse.move(box.x + 20, box.y + 8);
+			await page.mouse.down();
+			await page.mouse.move(box.x + 20 + box.width + 12, box.y + 8, {steps: 8});
+
+			await expect(calendar.locator('.elemenx-cal-day.drop')).toHaveAttribute('data-date', iso(3));
+			await expect(calendar.locator('.elemenx-cal-event.dragged')).toHaveCount(1);
+
+			await page.mouse.up();
+
+			await expect(note).toContainText('Moved: Retrospective → ' + iso(3) + ' 15:00 – ' + iso(3) + ' 16:00');
+			expect(await day('Retrospective')).toBe(iso(3));
+
+			/* Week: another day and time, in quarters of an hour, with a shadow while dragging. */
+			await calendar.getByRole('button', {name: 'Week'}).click();
+			await calendar.locator('.elemenx-cal-week-body').scrollIntoViewIfNeeded();
+
+			box = await calendar.locator('.elemenx-cal-block', {hasText: 'Lunch talk'}).boundingBox();
+
+			await page.mouse.move(box.x + 20, box.y + 6);
+			await page.mouse.down();
+			await page.mouse.move(box.x + 20 + box.width + 12, box.y + 6 + 96, {steps: 10});
+
+			await expect(calendar.locator('.elemenx-cal-shadow')).toHaveText('14:30 – 15:15');
+
+			await page.mouse.up();
+
+			await expect(note).toContainText('Moved: Lunch talk → ' + iso(1) + ' 14:30 – ' + iso(1) + ' 15:15');
+			await expect(calendar.locator('.elemenx-cal-shadow')).toHaveCount(0);
+
+			/* The lower edge: the end moves, the start stays. */
+			box = await calendar.locator('.elemenx-cal-block', {hasText: 'Design review'}).boundingBox();
+
+			await page.mouse.move(box.x + box.width / 2, box.y + box.height - 2);
+			await page.mouse.down();
+			await page.mouse.move(box.x + box.width / 2, box.y + box.height - 2 + 48, {steps: 6});
+			await page.mouse.up();
+
+			await expect(note).toContainText('Moved: Design review → ' + iso(0) + ' 10:00 – ' + iso(0) + ' 12:30');
+
+			/* Escape cancels: nothing moves and the release does not select the event. */
+			box = await calendar.locator('.elemenx-cal-block', {hasText: 'Pairing'}).boundingBox();
+
+			await page.mouse.move(box.x + 10, box.y + 10);
+			await page.mouse.down();
+			await page.mouse.move(box.x + 10, box.y + 150, {steps: 5});
+			await page.keyboard.press('Escape');
+			await page.mouse.up();
+
+			await expect(note).toContainText('Moved: Design review');
+			await expect(calendar.locator('.elemenx-cal-shadow')).toHaveCount(0);
+
+			await calendar.locator('.elemenx-cal-block', {hasText: 'Pairing'}).focus();
+
+			await page.keyboard.press('Alt+ArrowDown');
+
+			await expect(note).toContainText('Moved: Pairing → ' + iso(0) + ' 10:45 – ' + iso(0) + ' 12:15');
+
+			await calendar.locator('.elemenx-cal-block', {hasText: 'Pairing'}).click();
+
+			await expect(note).toContainText('Event: Pairing');
 		});
 
 		test('steps take custom content and a disabled step is not clickable', async function ({ page }) {

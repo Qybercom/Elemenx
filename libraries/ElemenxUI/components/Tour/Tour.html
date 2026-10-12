@@ -1,0 +1,18 @@
+<div class="elemenx-tour" [attribute.data-step]="Track(Open, Step)">
+	<div class="elemenx-tour-layer" *if="Open && Current(Steps, Step)" (keydown)="Key">
+		<div class="elemenx-tour-block"></div>
+		<div class="elemenx-tour-hole" *if="Hole" [style.left]="Hole.X + 'px'" [style.top]="Hole.Y + 'px'" [style.width]="Hole.Width + 'px'" [style.height]="Hole.Height + 'px'"></div>
+		<div class="elemenx-tour-shade" *if="!Hole"></div>
+		<section class="elemenx-tour-card" role="dialog" aria-modal="true" [attribute.aria-label]="Current(Steps, Step).Title || null" [style.left]="CardX + 'px'" [style.top]="CardY + 'px'">
+			<span class="elemenx-caption">{{Number(Step) + 1}} / {{Steps.length}}</span>
+			<h3 class="elemenx-tour-title" *if="Current(Steps, Step).Title">{{Current(Steps, Step).Title}}</h3>
+			<p class="elemenx-tour-text" *if="Current(Steps, Step).Text">{{Current(Steps, Step).Text}}</p>
+			<div class="elemenx-tour-footer">
+				<Button [label]="SkipLabel" Variant="link" Size="small" (click)="Skip" />
+				<span class="elemenx-spacer"></span>
+				<Button *if="Number(Step) > 0" [label]="BackLabel" Size="small" (click)="Back" />
+				<Button [label]="Number(Step) >= Steps.length - 1 ? DoneLabel : NextLabel" Variant="primary" Size="small" (click)="Next" />
+			</div>
+		</section>
+	</div>
+</div>

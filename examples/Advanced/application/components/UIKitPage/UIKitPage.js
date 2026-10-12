@@ -4,7 +4,7 @@ Elemenx.Component('UIKitPage', {
 	$Title: 'UI Kit - Elemenx',
 	Icons: [
 		'add', 'remove', 'close', 'check', 'edit', 'delete', 'save', 'copy', 'paste', 'search', 'filter', 'sort', 'refresh', 'undo', 'redo', 'settings', 'sliders', 'more', 'more-vertical', 'link', 'external', 'download', 'upload', 'send', 'share', 'eye', 'eye-off', 'lock', 'unlock', 'pin', 'star', 'heart', 'bookmark', 'zoom-in', 'zoom-out', 'maximize', 'minimize', 'grip', 'login', 'logout',
-		'chevron-left', 'chevron-right', 'chevron-up', 'chevron-down', 'chevrons-up-down', 'arrow-left', 'arrow-right', 'arrow-up', 'arrow-down', 'menu', 'home',
+		'chevron-left', 'chevron-right', 'chevron-up', 'chevron-down', 'chevrons-left', 'chevrons-right', 'chevrons-up-down', 'page-first', 'page-last', 'arrow-left', 'arrow-right', 'arrow-up', 'arrow-down', 'menu', 'home',
 		'file', 'file-text', 'file-code', 'folder', 'folder-open', 'image', 'attachment', 'archive',
 		'info', 'success', 'warning', 'error', 'help', 'bell', 'loader',
 		'calendar', 'clock', 'history', 'user', 'users', 'mail', 'phone', 'credit-card', 'cart', 'globe', 'map-pin', 'tag', 'color', 'sun', 'moon', 'monitor',
@@ -198,6 +198,130 @@ Elemenx.Component('UIKitPage', {
 		]}
 	],
 	ClockTime: '',
+	Stars: 3.5,
+	CalendarNote: '',
+	CalendarView: 'month',
+	CalendarDate: '',
+	Agenda: [],
+	Months: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+	Revenue: [
+		{Name: 'Revenue', Values: [42, 48, 51, 49, 58, 64, 61, 67, 72, 70, 78, 86]},
+		{Name: 'Costs', Values: [30, 31, 35, 34, 38, 40, 42, 41, 45, 47, 49, 52]}
+	],
+	Quarters: ['Q1', 'Q2', 'Q3', 'Q4'],
+	Products: [
+		{Name: 'Cloud', Values: [32, 41, 46, 58]},
+		{Name: 'Desktop', Values: [24, 22, 25, 21]},
+		{Name: 'Support', Values: [8, 11, 12, 15]}
+	],
+	Browsers: ['Chrome', 'Safari', 'Edge', 'Firefox', 'Other'],
+	BrowserShare: [{Name: 'Share', Values: [64, 19, 6, 4, 7]}],
+	Weeks: ['W1', 'W2', 'W3', 'W4', 'W5', 'W6', 'W7', 'W8'],
+	Traffic: [
+		{Name: 'Visits', Values: [120, 132, 101, 154, 190, 230, 210, 260]},
+		{Name: 'Sign-ups', Values: [12, 18, 9, 21, 30, 41, 33, 48]}
+	],
+	Spark: [4, 6, 5, 8, 7, 9, 12, 10, 13, 15, 14, 18],
+	TreeState: 'Nothing selected',
+	TreeValue: null,
+	TreeExpanded: ['src'],
+	TreeChecked: [],
+	TreeLoading: [],
+	TreeItems: [
+		{ID: 'src', Label: 'src', Icon: 'folder-open', Items: [
+			{ID: 'components', Label: 'components', Icon: 'folder', Items: [
+				{ID: 'button', Label: 'Button.js', Icon: 'file-code'},
+				{ID: 'table', Label: 'Table.js', Icon: 'file-code'},
+				{ID: 'tree', Label: 'Tree.js', Icon: 'file-code', Badge: 'new'}
+			]},
+			{ID: 'services', Label: 'services', Icon: 'folder', Items: [
+				{ID: 'theme', Label: 'Theme.js', Icon: 'file-code'},
+				{ID: 'toast', Label: 'Toast.js', Icon: 'file-code'}
+			]},
+			{ID: 'index', Label: 'index.js', Icon: 'file-code'}
+		]},
+		{ID: 'remote', Label: 'remote (loads on open)', Icon: 'cloud', Lazy: true},
+		{ID: 'locked', Label: 'locked.bin', Icon: 'lock', Disabled: true},
+		{ID: 'readme', Label: 'README.md', Icon: 'file-text'}
+	],
+	VirtualState: 'Pick a row',
+	LongList: [],
+	PeoplePage: 1,
+	ResultsPage: 1,
+	FilterColumns: [
+		{Key: 'Name', Title: 'Name', Sortable: true, Filter: 'text'},
+		{Key: 'Role', Title: 'Role', Sortable: true, Filter: 'select'},
+		{Key: 'Commits', Title: 'Commits', Sortable: true, Align: 'right', Filter: 'number'}
+	],
+	ManyPeople: [],
+	SizeColumns: [
+		{Key: 'Name', Title: 'Name', Sortable: true},
+		{Key: 'Kind', Title: 'Kind'},
+		{Key: 'Size', Title: 'Size', Align: 'right', Sortable: true, Format: function (value) {
+			return value == null ? '' : value + ' KB';
+		}}
+	],
+	FileRows: [
+		{ID: 'src', Name: 'src', Kind: 'Folder', Size: 184, Items: [
+			{ID: 'src-components', Name: 'components', Kind: 'Folder', Size: 120, Items: [
+				{ID: 'src-button', Name: 'Button.js', Kind: 'Script', Size: 12},
+				{ID: 'src-table', Name: 'Table.js', Kind: 'Script', Size: 96},
+				{ID: 'src-tree', Name: 'Tree.js', Kind: 'Script', Size: 12}
+			]},
+			{ID: 'src-index', Name: 'index.js', Kind: 'Script', Size: 64}
+		]},
+		{ID: 'docs', Name: 'docs', Kind: 'Folder', Size: 40, Items: [
+			{ID: 'docs-api', Name: 'API.md', Kind: 'Text', Size: 32},
+			{ID: 'docs-style', Name: 'STYLE.md', Kind: 'Text', Size: 8}
+		]},
+		{ID: 'package', Name: 'package.json', Kind: 'Data', Size: 2}
+	],
+	Topics: ['design', 'tokens'],
+	TopicSuggestions: ['accessibility', 'animation', 'api', 'components', 'design', 'docs', 'performance', 'testing', 'theming', 'tokens'],
+	InviteState: '',
+	Framework: 'elemenx',
+	Frameworks: [
+		{Value: 'elemenx', Label: 'Elemenx', Hint: 'ES5', Group: 'Ours'},
+		{Value: 'react', Label: 'React', Group: 'Others'},
+		{Value: 'vue', Label: 'Vue', Group: 'Others'},
+		{Value: 'svelte', Label: 'Svelte', Group: 'Others'},
+		{Value: 'angular', Label: 'Angular', Group: 'Others', Disabled: true}
+	],
+	Cities: [],
+	CitiesLoading: false,
+	Period: [],
+	LastCommand: '',
+	PaletteOpen: false,
+	PaletteKeys: '',
+	DrawerOpen: false,
+	TourOpen: false,
+	TourStep: 0,
+	TourSteps: [
+		{Target: '#ui-kit-commands', Title: 'Commands', Text: 'Every action of the page is one search away: open the palette with its button or its keys.', Placement: 'bottom'},
+		{Target: '#ui-kit-context', Title: 'Context menu', Text: 'Right click a file to act on it; the keyboard opens it too.', Placement: 'right'},
+		{Target: '#ui-kit-copy', Title: 'Copy', Text: 'The button copies the token and says so.', Placement: 'left'}
+	],
+	ContextFiles: ['README.md', 'app.js', 'styles.css', 'logo.svg'],
+	ContextFile: '',
+	FileMenu: [
+		{ID: 'open', Label: 'Open', Icon: 'external', Shortcut: 'Enter'},
+		{ID: 'rename', Label: 'Rename', Icon: 'edit', Shortcut: 'F2'},
+		{ID: 'copy-path', Label: 'Copy path', Icon: 'copy'},
+		{Separator: true, ID: 'separator'},
+		{ID: 'delete', Label: 'Delete', Icon: 'delete', Danger: true, Shortcut: 'Delete'}
+	],
+	ApiToken: 'exn_live_7f3a9c21b8d04e65',
+	Shortcuts: [],
+	Commands: [],
+	BiometricState: 'Checking…',
+	UseBiometric: false,
+	IdleState: 'stopped',
+	PermissionList: [
+		{Name: 'notifications', State: '…'},
+		{Name: 'geolocation', State: '…'},
+		{Name: 'camera', State: '…'},
+		{Name: 'clipboard-read', State: '…'}
+	],
 	ClockDate: '',
 	Plays: 0,
 	ShowNews: false,
@@ -271,6 +395,8 @@ Elemenx.Component('UIKitPage', {
 
 	/* Asks before a guarded field shows what it hides, as a banking application asks for a fingerprint. */
 	ConfirmReveal: function (request) {
+		if (this.UseBiometric) return;
+
 		this.$Service('Toast').Show({
 			Title: 'Confirm it is you',
 			Message: 'Touch the sensor to show the ' + ({card: 'card number', cvv: 'security code'}[request.Kind] || 'value') + '.',
@@ -279,6 +405,322 @@ Elemenx.Component('UIKitPage', {
 			Closable: false,
 			Actions: [{Label: 'Use fingerprint', Variant: 'primary', Run: request.Allow}, {Label: 'Cancel', Run: request.Deny}]
 		});
+	},
+
+	$OnDestroy: function () {
+		var hotkeys = this.$Service('Hotkeys');
+
+		hotkeys.Unbind(this.ThemeKey);
+		hotkeys.Unbind(this.TilesKey);
+
+		this.$Service('Idle').Stop();
+		this.$Service('Reveal').Guard(null);
+	},
+
+	GoTo: function (title) {
+		var sections = document.querySelectorAll('.ui-kit > .elemenx-section');
+		var i = 0;
+
+		while (i < sections.length) {
+			if (sections[i].querySelector('.elemenx-section-title').textContent === title)
+				sections[i].scrollIntoView({block: 'start'});
+
+			i++;
+		}
+	},
+
+	OpenPalette: function () {
+		this.PaletteOpen = true;
+	},
+
+	PaletteClosed: function () {
+		this.PaletteOpen = false;
+	},
+
+	CommandRun: function (command) {
+		this.LastCommand = command.Label;
+	},
+
+	HotkeyToast: function () {
+		this.LastCommand = 'Show a toast';
+
+		this.$Service('Toast').Show({Message: 'A toast from Alt+N', Variant: 'info'});
+	},
+
+	OpenDrawer: function () {
+		this.DrawerOpen = true;
+	},
+
+	CloseDrawer: function () {
+		this.DrawerOpen = false;
+	},
+
+	StartTour: function () {
+		this.TourStep = 0;
+		this.TourOpen = true;
+	},
+
+	TourChanged: function (step) {
+		this.TourStep = step;
+	},
+
+	TourClosed: function (reason) {
+		this.TourOpen = false;
+		this.LastCommand = 'Tour: ' + reason;
+	},
+
+	ContextOpened: function (event) {
+		var row = event.Target && event.Target.closest('[data-file]');
+
+		this.ContextFile = row ? row.getAttribute('data-file') : '';
+	},
+
+	ContextPicked: function (event) {
+		this.LastCommand = event.Item.Label + (this.ContextFile ? ' ' + this.ContextFile : '');
+	},
+
+	CheckBiometric: function () {
+		var self = this;
+
+		this.BiometricState = 'Waiting for the check…';
+
+		this.$Service('Biometric').Check(function (error, passed) {
+			self.BiometricState = passed ? 'Passed' : 'Not passed' + (error ? ': ' + error.name : '');
+		});
+	},
+
+	ForgetBiometric: function () {
+		this.$Service('Biometric').Forget();
+
+		this.BiometricState = 'This device is not registered';
+	},
+
+	BiometricToggled: function (checked) {
+		this.UseBiometric = checked;
+
+		this.$Service('Reveal').Guard(checked ? this.$Service('Biometric').Guard() : null);
+	},
+
+	StartIdle: function () {
+		var self = this;
+
+		this.IdleState = 'active';
+
+		this.$Service('Idle').Start({
+			Timeout: 6000,
+			Warning: 3000,
+			OnWarn: function (remaining) {
+				self.IdleState = 'warning: ' + Math.ceil(remaining / 1000) + ' s left';
+			},
+			OnIdle: function () {
+				self.IdleState = 'idle (here the session would end)';
+			},
+			OnActive: function () {
+				self.IdleState = 'active';
+			}
+		});
+	},
+
+	StopIdle: function () {
+		this.$Service('Idle').Stop();
+
+		this.IdleState = 'stopped';
+	},
+
+	QueryPermission: function (name) {
+		var self = this;
+
+		this.$Service('Permissions').Query(name, function (error, state) {
+			self.PermissionList = self.PermissionList.map(function (entry) {
+				return entry.Name === name ? {Name: name, State: state} : entry;
+			});
+		});
+	},
+
+	AskPermission: function (event, node) {
+		var self = this;
+		var name = node.getAttribute('data-name');
+
+		this.$Service('Permissions').Request(name, function () {
+			self.QueryPermission(name);
+		});
+	},
+
+	TopicsChanged: function (topics) {
+		this.Topics = topics;
+	},
+
+	InvitesChanged: function (invites) {
+		this.InviteState = invites.length + ' invited';
+	},
+
+	InviteRefused: function (event) {
+		this.InviteState = '“' + event.Text + '”: ' + {pattern: 'not an e-mail address', duplicate: 'already there', max: 'too many'}[event.Reason];
+	},
+
+	FrameworkChanged: function (value) {
+		this.Framework = value;
+	},
+
+	/* A pretend server: the cities that hold the text, after a short wait; the last request wins. */
+	SearchCities: function (text) {
+		var self = this;
+		var names = ['Amsterdam', 'Athens', 'Berlin', 'Bucharest', 'Chisinau', 'Kyiv', 'Lisbon', 'London', 'Madrid', 'Paris', 'Prague', 'Riga', 'Rome', 'Vienna', 'Warsaw'];
+
+		this.CitiesLoading = true;
+		this.CitySearch = text;
+
+		window.setTimeout(function () {
+			if (self.CitySearch !== text) return;
+
+			self.CitiesLoading = false;
+			self.Cities = names.filter(function (name) {
+				return name.toLowerCase().indexOf(String(text).trim().toLowerCase()) !== -1;
+			}).map(function (name) {
+				return {Value: name.toLowerCase(), Label: name};
+			});
+		}, 250);
+	},
+
+	PeriodChanged: function (range) {
+		this.Period = range;
+	},
+
+	/* Events around today, so that the calendar always has some to show. */
+	Schedule: function (now) {
+		function day (offset) {
+			var date = new Date(now.getFullYear(), now.getMonth(), now.getDate() + offset);
+
+			return date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0') + '-' + String(date.getDate()).padStart(2, '0');
+		}
+
+		return [
+			{ID: 'standup', Title: 'Stand-up', Start: day(0) + 'T09:30', End: day(0) + 'T09:45', Color: '#2f8f83'},
+			{ID: 'review', Title: 'Design review', Start: day(0) + 'T10:00', End: day(0) + 'T11:30', Color: '#7a4fb0'},
+			{ID: 'pairing', Title: 'Pairing', Start: day(0) + 'T10:30', End: day(0) + 'T12:00', Color: '#c2477f'},
+			{ID: 'release', Title: 'Release 2.0', Start: day(1), AllDay: true, Color: '#d25f3a'},
+			{ID: 'offsite', Title: 'Team offsite', Start: day(3), End: day(5), Color: '#3f6c9e'},
+			{ID: 'retro', Title: 'Retrospective', Start: day(2) + 'T15:00', End: day(2) + 'T16:00'},
+			{ID: 'one', Title: 'One-to-one', Start: day(0) + 'T14:00', End: day(0) + 'T14:30'},
+			{ID: 'lunch', Title: 'Lunch talk', Start: day(0) + 'T12:30', End: day(0) + 'T13:15', Color: '#5f7d2e'}
+		];
+	},
+
+	StarsChanged: function (value) {
+		this.Stars = value;
+	},
+
+	CalendarChanged: function (state) {
+		this.CalendarView = state.View;
+		this.CalendarDate = state.Date;
+	},
+
+	/* The calendar asks; the page moves the event in its list. */
+	AgendaMoved: function (change) {
+		this.Agenda = this.Agenda.map(function (event) {
+			var moved = {};
+			var key;
+
+			if (event.ID !== change.Event.ID) return event;
+
+			for (key in event) {
+				if (Object.prototype.hasOwnProperty.call(event, key))
+					moved[key] = event[key];
+			}
+
+			moved.Start = change.Start;
+			moved.End = change.End;
+
+			return moved;
+		});
+
+		this.CalendarNote = 'Moved: ' + change.Event.Title + ' → ' + change.Start.replace('T', ' ') + (change.End ? ' – ' + String(change.End).replace('T', ' ') : '');
+	},
+
+	AgendaPicked: function (event) {
+		this.CalendarNote = 'Event: ' + event.Title;
+	},
+
+	DayPicked: function (date) {
+		this.CalendarNote = 'Day: ' + date;
+	},
+
+	SlotPicked: function (slot) {
+		this.CalendarNote = 'Slot: ' + slot.Date + ' ' + slot.Time;
+	},
+
+	/* Items 1 to count, for the long list. */
+	Numbers: function (count) {
+		var items = [];
+		var i = 1;
+
+		while (i <= count) {
+			items.push({ID: i, Label: 'Row ' + i, Hint: '#' + (i * 7919 % 100000), Icon: i % 10 === 0 ? 'star' : 'file'});
+
+			i++;
+		}
+
+		return items;
+	},
+
+	/* count people with names, roles and commits that look real enough. */
+	Staff: function (count) {
+		var first = ['Ada', 'Alan', 'Grace', 'Linus', 'Margaret', 'Ken', 'Barbara', 'Donald', 'Edsger', 'Frances'];
+		var last = ['Lovelace', 'Turing', 'Hopper', 'Torvalds', 'Hamilton', 'Thompson', 'Liskov', 'Knuth', 'Dijkstra', 'Allen'];
+		var roles = ['Maintainer', 'Reviewer', 'Contributor'];
+		var people = [];
+		var i = 0;
+
+		while (i < count) {
+			people.push({ID: i + 1, Name: first[i % 10] + ' ' + last[(i * 3 + 1) % 10], Role: roles[i % 3], Commits: (i * 137) % 1000});
+
+			i++;
+		}
+
+		return people;
+	},
+
+	TreeSelected: function (item) {
+		this.TreeValue = item.ID;
+		this.TreeState = 'Selected: ' + item.Label;
+	},
+
+	TreeExpandedChanged: function (ids) {
+		this.TreeExpanded = ids;
+	},
+
+	TreeCheckedChanged: function (ids) {
+		this.TreeChecked = ids;
+		this.TreeState = 'Checked: ' + ids.length;
+	},
+
+	/* A pretend server: the children of a lazy item come after a moment. */
+	TreeLoad: function (item) {
+		var self = this;
+
+		this.TreeLoading = [item.ID];
+
+		window.setTimeout(function () {
+			self.TreeLoading = [];
+			self.TreeItems = self.TreeItems.map(function (entry) {
+				return entry.ID !== item.ID ? entry : {ID: entry.ID, Label: 'remote', Icon: 'cloud', Items: [
+					{ID: 'remote-a', Label: 'backup-1.zip', Icon: 'archive'},
+					{ID: 'remote-b', Label: 'backup-2.zip', Icon: 'archive'}
+				]};
+			});
+		}, 300);
+	},
+
+	LongPicked: function (item) {
+		this.VirtualState = 'Picked: ' + item.Label;
+	},
+
+	ResultsPaged: function (state) {
+		this.ResultsPage = state.Page;
+	},
+
+	PeoplePaged: function (state) {
+		this.PeoplePage = state.Page;
 	},
 
 	OTPTyped: function (value) {
@@ -488,6 +930,55 @@ Elemenx.Component('UIKitPage', {
 
 	$OnCreate: function () {
 		var now = new Date();
+		var self = this;
+		var hotkeys = this.$Service('Hotkeys');
+
+		this.PaletteKeys = hotkeys.Format('Mod+K');
+		this.Agenda = this.Schedule(now);
+		this.LongList = this.Numbers(100000);
+		this.ManyPeople = this.Staff(57);
+		this.Commands = [
+			{ID: 'theme', Label: 'Toggle the theme', Icon: 'moon', Group: 'View', Keys: 'Alt+T', Run: function () {
+				self.$Service('Theme').Next();
+			}},
+			{ID: 'drawer', Label: 'Open the filters drawer', Icon: 'panel-right', Group: 'View', Run: function () {
+				self.DrawerOpen = true;
+			}},
+			{ID: 'tour', Label: 'Take the tour', Icon: 'help', Group: 'Help', Keywords: ['guide', 'onboarding'], Run: function () {
+				self.StartTour();
+			}},
+			{ID: 'toast', Label: 'Show a success toast', Icon: 'bell', Group: 'Notifications', Run: function () {
+				self.$Service('Toast').Show({Message: 'Done from the palette', Variant: 'success'});
+			}},
+			{ID: 'copy-token', Label: 'Copy the API token', Icon: 'copy', Group: 'Edit', Run: function () {
+				self.$Service('Clipboard').Copy(self.ApiToken, null, {Toast: 'Token copied'});
+			}},
+			{ID: 'tiles', Label: 'Go to the tiles', Icon: 'grid', Group: 'Navigate', Keys: 'g t', Run: function () {
+				self.GoTo('Tiles');
+			}},
+			{ID: 'disabled', Label: 'Publish (needs a reviewer)', Icon: 'send', Group: 'Edit', Disabled: true}
+		];
+
+		this.ThemeKey = hotkeys.Bind('Alt+T', function () {
+			self.$Service('Theme').Next();
+		}, {Description: 'Toggle the theme', Group: 'View'});
+		this.TilesKey = hotkeys.Bind('g t', function () {
+			self.GoTo('Tiles');
+		}, {Description: 'Go to the tiles', Group: 'Navigate'});
+
+		window.setTimeout(function () {
+			self.Shortcuts = hotkeys.List().filter(function (entry) {
+				return entry.Description;
+			});
+		}, 0);
+
+		this.$Service('Biometric').Available(function (error, state) {
+			self.BiometricState = !state.Supported ? 'WebAuthn is not supported here' : state.Platform ? 'This device has a fingerprint, face or PIN check' : 'No check built into this device';
+		});
+
+		this.PermissionList.forEach(function (entry) {
+			self.QueryPermission(entry.Name);
+		});
 
 		this.ClockTime = now.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
 		this.ClockDate = now.toLocaleDateString([], {weekday: 'long', day: 'numeric', month: 'long'});

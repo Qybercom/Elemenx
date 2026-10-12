@@ -1,0 +1,32 @@
+.elemenx-tags {
+	position: relative;
+	width: 100%;
+	min-width: 0;
+}
+
+/* The field grows with its tags: they wrap, and the text takes the rest of the last line. */
+.elemenx-tags-field {
+	flex-wrap: wrap;
+	height: auto;
+	min-height: 32px;
+	padding-top: 3px;
+	padding-bottom: 3px;
+	cursor: text;
+}
+
+.elemenx-tags-field.small {
+	min-height: 24px;
+	padding-top: 1px;
+	padding-bottom: 1px;
+}
+
+.elemenx-tags-field.large {
+	min-height: 40px;
+	padding-top: 7px;
+	padding-bottom: 7px;
+}
+
+.elemenx-tags-control {
+	flex: 1 0 96px;
+	min-height: 24px;
+}

@@ -1,0 +1,79 @@
+.elemenx-palette {
+	display: none;
+	flex-direction: column;
+	width: calc(100% - 32px);
+	max-width: 640px;
+	max-height: min(480px, calc(100% - 128px));
+	margin: 12vh auto auto;
+	padding: 0;
+	overflow: hidden;
+	background: var(--elemenx-surface);
+	border: 1px solid var(--elemenx-border);
+	border-radius: 12px;
+	box-shadow: var(--elemenx-shadow);
+	color: var(--elemenx-text);
+}
+
+.elemenx-palette[open] {
+	display: flex;
+	animation: elemenx-palette-in 120ms ease;
+}
+
+@keyframes elemenx-palette-in {
+	from {
+		opacity: 0;
+		transform: translateY(-8px);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.elemenx-palette[open] {
+		animation: none;
+	}
+}
+
+.elemenx-palette::backdrop {
+	background: rgba(15, 17, 20, 0.32);
+}
+
+.elemenx-palette-search {
+	flex: none;
+	height: 48px;
+	padding: 0 16px;
+	border: 0;
+	border-bottom: 1px solid var(--elemenx-border);
+	border-radius: 0;
+	box-shadow: none;
+}
+
+.elemenx-palette-search:focus-within {
+	border-color: var(--elemenx-border);
+	box-shadow: none;
+}
+
+.elemenx-palette-search .elemenx-input-control {
+	font-size: 16px;
+}
+
+.elemenx-palette-list {
+	flex: 1;
+	min-height: 0;
+	padding: 4px;
+	overflow: auto;
+}
+
+.elemenx-palette-list .elemenx-option {
+	min-height: 32px;
+}
+
+.elemenx-palette-list .elemenx-option .match {
+	color: var(--elemenx-accent);
+	font-weight: 700;
+	text-decoration: underline;
+	text-decoration-thickness: 1px;
+	text-underline-offset: 2px;
+}
+
+.elemenx-palette-list .elemenx-kbd {
+	flex: none;
+}

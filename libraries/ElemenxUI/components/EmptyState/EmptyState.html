@@ -1,0 +1,7 @@
+<div class="elemenx-empty" role="status" [class]="[Variant || 'empty', Size || 'medium']">
+	<span class="elemenx-empty-icon"><Icon [name]="IconOf(Icon, Variant)" [size]="Size === 'small' ? 20 : 28" /></span>
+	<strong class="elemenx-empty-title" *if="Title">{{Title}}</strong>
+	<p class="elemenx-empty-description" *if="Description">{{Description}}</p>
+	<slot></slot>
+	<div class="elemenx-empty-actions"><slot name="actions"></slot></div>
+</div>

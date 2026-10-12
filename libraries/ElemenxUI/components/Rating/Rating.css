@@ -1,0 +1,46 @@
+.elemenx-rating {
+	--elemenx-rating-color: #e0a526;
+	display: inline-flex;
+	align-items: center;
+	gap: 2px;
+	border-radius: 4px;
+	outline: none;
+}
+
+.elemenx-rating:focus-visible {
+	box-shadow: 0 0 0 2px color-mix(in srgb, var(--elemenx-accent) 48%, transparent);
+}
+
+/* A star: its outline, and over it the filled shape cut to the part it is worth. */
+.elemenx-rating-star {
+	position: relative;
+	display: inline-flex;
+	color: var(--elemenx-border-strong);
+	cursor: pointer;
+}
+
+.elemenx-rating-fill {
+	position: absolute;
+	display: flex;
+	inset: 0 auto 0 0;
+	overflow: hidden;
+	color: var(--elemenx-rating-color);
+	pointer-events: none;
+}
+
+.elemenx-rating-fill .elemenx-icon {
+	fill: currentColor;
+}
+
+.elemenx-rating-star.preview .elemenx-rating-fill {
+	opacity: 0.72;
+}
+
+.elemenx-rating.readonly .elemenx-rating-star,
+.elemenx-rating.disabled .elemenx-rating-star {
+	cursor: default;
+}
+
+.elemenx-rating.disabled {
+	opacity: 0.48;
+}

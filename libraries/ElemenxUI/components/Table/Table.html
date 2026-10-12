@@ -1,33 +1,54 @@
-<div class="elemenx-table-wrap" [style.max-height]="Height || null" [class.scrolling]="!!Height">
-	<table class="elemenx-table" [class]="[Compact ? 'compact' : '', Striped ? 'striped' : '', Bordered ? 'bordered' : '', Sticky ? 'sticky' : '', Selectable !== 'none' ? 'selectable' : '']" [attribute.aria-multiselectable]="Selectable === 'multiple' ? 'true' : null">
-		<caption *if="Caption">{{Caption}}</caption>
-		<thead>
-			<tr>
-				<th class="elemenx-table-check" *if="Selectable === 'multiple'">
-					<label class="elemenx-check" [class.checked]="AllSelected(Rows, Selected)" [class.indeterminate]="!AllSelected(Rows, Selected) && (Selected || []).length > 0">
-						<input class="elemenx-check-input" type="checkbox" aria-label="Select all rows" [checked]="AllSelected(Rows, Selected)" (change)="CheckAll" />
-						<span class="elemenx-check-box"><Icon Name="check" Size="12" /><Icon Name="remove" Size="12" /></span>
-					</label>
-				</th>
-				<th *for="column of Columns" *key="column.Key" *resizable="column.Resizable === false ? '' : {Edges: 'right', MinWidth: column.MinWidth || 48}" scope="col" [class]="['align-' + (column.Align || 'left')]" [style.width]="Widths[column.Key] || column.Width || null" [attribute.aria-sort]="AriaSort(Sort, column)" [attribute.data-key]="column.Key" (resizeend)="Resized">
-					<button class="elemenx-table-sort" type="button" *if="column.Sortable" [attribute.data-key]="column.Key" (click)="SortBy"><span>{{column.Title}}</span><Icon [name]="SortIcon(Sort, column)" Size="12" /></button>
-					<span *if="!column.Sortable">{{column.Title}}</span>
-				</th>
-			</tr>
-		</thead>
-		<tbody>
-			<tr *for="row of View(Rows, Sort, SortLocal)" *key="String(row[RowKey])" [class.selected]="IsSelected(Selected, row)" [attribute.tabindex]="Selectable === 'none' ? null : 0" [attribute.aria-selected]="Selectable === 'none' ? null : String(IsSelected(Selected, row))" [attribute.data-key]="String(row[RowKey])" (click)="RowClick" (dblclick)="Activate" (keydown)="Key">
-				<td class="elemenx-table-check" *if="Selectable === 'multiple'">
-					<label class="elemenx-check" [class.checked]="IsSelected(Selected, row)" (click)="Stop">
-						<input class="elemenx-check-input" type="checkbox" aria-label="Select row" [checked]="IsSelected(Selected, row)" (change)="CheckRow" />
-						<span class="elemenx-check-box"><Icon Name="check" Size="12" /><Icon Name="remove" Size="12" /></span>
-					</label>
-				</td>
-				<td *for="column of Columns" *key="column.Key" [class]="['align-' + (column.Align || 'left')]">{{Cell(row, column)}}</td>
-			</tr>
-			<tr class="elemenx-table-empty" *if="!Rows.length">
-				<td [attribute.colspan]="Columns.length + (Selectable === 'multiple' ? 1 : 0)">{{Empty}}</td>
-			</tr>
-		</tbody>
-	</table>
+<div class="elemenx-table-box">
+	<div class="elemenx-table-wrap" [style.max-height]="Height || null" [class.scrolling]="!!Height">
+		<table class="elemenx-table" [class]="[Compact ? 'compact' : '', Striped ? 'striped' : '', Bordered ? 'bordered' : '', Sticky ? 'sticky' : '', Selectable !== 'none' ? 'selectable' : '', Tree ? 'tree' : '']" [attribute.role]="Tree ? 'treegrid' : null" [attribute.aria-multiselectable]="Selectable === 'multiple' ? 'true' : null">
+			<caption *if="Caption">{{Caption}}</caption>
+			<thead>
+				<tr>
+					<th class="elemenx-table-check" *if="Selectable === 'multiple'">
+						<label class="elemenx-check" [class.checked]="AllSelected(Paged(Entries(Rows, Sort, SortLocal, Filters, FilterLocal, Expanded, Tree), Page, PageSize, PageLocal), Selected)" [class.indeterminate]="!AllSelected(Paged(Entries(Rows, Sort, SortLocal, Filters, FilterLocal, Expanded, Tree), Page, PageSize, PageLocal), Selected) && (Selected || []).length > 0">
+							<input class="elemenx-check-input" type="checkbox" aria-label="Select all rows" [checked]="AllSelected(Paged(Entries(Rows, Sort, SortLocal, Filters, FilterLocal, Expanded, Tree), Page, PageSize, PageLocal), Selected)" (change)="CheckAll" />
+							<span class="elemenx-check-box"><Icon Name="check" Size="12" /><Icon Name="remove" Size="12" /></span>
+						</label>
+					</th>
+					<th *for="column of Columns" *key="column.Key" *resizable="column.Resizable === false ? '' : {Edges: 'right', MinWidth: column.MinWidth || 48}" scope="col" [class]="['align-' + (column.Align || 'left')]" [style.width]="Widths[column.Key] || column.Width || null" [attribute.aria-sort]="AriaSort(Sort, column)" [attribute.data-key]="column.Key" (resizeend)="Resized">
+						<button class="elemenx-table-sort" type="button" *if="column.Sortable" [attribute.data-key]="column.Key" (click)="SortBy"><span>{{column.Title}}</span><Icon [name]="SortIcon(Sort, column)" Size="12" /></button>
+						<span *if="!column.Sortable">{{column.Title}}</span>
+					</th>
+				</tr>
+				<tr class="elemenx-table-filters" *if="HasFilters(Columns)">
+					<th class="elemenx-table-check" *if="Selectable === 'multiple'"></th>
+					<th *for="column of Columns" *key="column.Key">
+						<div class="elemenx-input small" *if="column.Filter === 'text' || column.Filter === 'number'">
+							<Icon Name="filter" Size="12" />
+							<input class="elemenx-input-control" type="text" autocomplete="off" [attribute.inputmode]="column.Filter === 'number' ? 'decimal' : null" [attribute.aria-label]="'Filter ' + column.Title" [attribute.placeholder]="column.Filter === 'number' ? '>10, 5..10' : 'Filter'" [attribute.data-key]="column.Key" [value]="FilterOf(Filters, column.Key)" (input)="FilterBy" />
+						</div>
+						<select class="elemenx-table-filter-select" *if="column.Filter === 'select'" [attribute.aria-label]="'Filter ' + column.Title" [attribute.data-key]="column.Key" (change)="FilterBy">
+							<option value="" [selected]="FilterOf(Filters, column.Key) === ''">All</option>
+							<option *for="option of FilterOptions(column, Rows)" *key="option" [value]="option" [selected]="FilterOf(Filters, column.Key) === option">{{option}}</option>
+						</select>
+					</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr *for="entry of Paged(Entries(Rows, Sort, SortLocal, Filters, FilterLocal, Expanded, Tree), Page, PageSize, PageLocal)" *key="String(entry.Row[RowKey])" [class.selected]="IsSelected(Selected, entry.Row)" [attribute.tabindex]="Selectable === 'none' && !Tree ? null : 0" [attribute.aria-selected]="Selectable === 'none' ? null : String(IsSelected(Selected, entry.Row))" [attribute.aria-level]="Tree ? entry.Depth + 1 : null" [attribute.aria-expanded]="Tree && entry.Children ? String(entry.Open) : null" [attribute.data-key]="String(entry.Row[RowKey])" (click)="RowClick" (dblclick)="Activate" (keydown)="Key">
+					<td class="elemenx-table-check" *if="Selectable === 'multiple'">
+						<label class="elemenx-check" [class.checked]="IsSelected(Selected, entry.Row)" (click)="Stop">
+							<input class="elemenx-check-input" type="checkbox" aria-label="Select row" [checked]="IsSelected(Selected, entry.Row)" (change)="CheckRow" />
+							<span class="elemenx-check-box"><Icon Name="check" Size="12" /><Icon Name="remove" Size="12" /></span>
+						</label>
+					</td>
+					<td *for="column of Columns" *key="column.Key" [class]="['align-' + (column.Align || 'left')]">
+						<span class="elemenx-table-tree" *if="Tree && $index === 0" [style.--elemenx-table-depth]="entry.Depth">
+							<button class="elemenx-table-twisty" type="button" tabindex="-1" *if="entry.Children" [attribute.aria-label]="entry.Open ? 'Collapse' : 'Expand'" (click)="Twist"><Icon [name]="entry.Open ? 'chevron-down' : 'chevron-right'" Size="12" /></button>
+							<span class="elemenx-table-twisty" *if="!entry.Children"></span>
+						</span>{{Cell(entry.Row, column)}}
+					</td>
+				</tr>
+				<tr class="elemenx-table-empty" *if="!Entries(Rows, Sort, SortLocal, Filters, FilterLocal, Expanded, Tree).length">
+					<td [attribute.colspan]="Columns.length + (Selectable === 'multiple' ? 1 : 0)">{{Empty}}</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+	<Pagination *if="Number(PageSize) > 0" [page]="Clamp(Page, Count(Entries(Rows, Sort, SortLocal, Filters, FilterLocal, Expanded, Tree), Total, PageLocal), PageSize)" [count]="Count(Entries(Rows, Sort, SortLocal, Filters, FilterLocal, Expanded, Tree), Total, PageLocal)" [page-size]="PageSize" [page-sizes]="PageSizes" [of-label]="OfLabel" (page)="PageChosen" />
 </div>

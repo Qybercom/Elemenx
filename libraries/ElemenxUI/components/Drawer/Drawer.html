@@ -1,0 +1,13 @@
+<dialog class="elemenx-drawer" *modal="Open" [class]="[Side || 'right', Size || 'medium']" [attribute.aria-label]="Title || null" (dismiss)="Dismissed">
+	<header class="elemenx-drawer-header" *if="Title || Closable">
+		<Icon *if="Icon" [name]="Icon" Size="20" />
+		<div class="elemenx-drawer-heading">
+			<h2 class="elemenx-drawer-title" *if="Title">{{Title}}</h2>
+			<p class="elemenx-caption" *if="Description">{{Description}}</p>
+		</div>
+		<span class="elemenx-drawer-actions"><slot name="actions"></slot></span>
+		<Button *if="Closable" Icon="close" Title="Close" Variant="ghost" Size="small" (click)="Close" />
+	</header>
+	<div class="elemenx-drawer-body" [class.padded]="Padded"><slot></slot></div>
+	<footer class="elemenx-drawer-footer"><slot name="footer"></slot></footer>
+</dialog>

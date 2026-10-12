@@ -1,0 +1,298 @@
+/*
+ * A tree. Items: [{ID, Label, Icon, Badge, Items, Disabled, Lazy}]; Value is the ID of the selected item; Expanded
+ * holds the open IDs. A Lazy item without Items asks for its children with the load event (the item): the owner gives
+ * it Items (Loading holds the IDs being loaded, shown with a spinner). Checkable adds check boxes: a parent is
+ * checked when all its children are, mixed when some are; checking it checks all of them. Checked holds the checked
+ * IDs (parents included). Filter (or a search field with Searchable) keeps the items that match and their parents,
+ * open. Keys: arrows (Right opens or goes to the first child, Left closes or goes to the parent), Home, End, Enter
+ * selects, Space checks, '*' opens the siblings, a letter goes to the next item that starts with it.
+ * Events: select (the item), expand (the open IDs), check (the checked IDs), load (the item).
+ */
+Elemenx.Component('Tree', {
+	$TemplateURL: 'Tree.html',
+	$StyleURL: 'Tree.css',
+	Items: [],
+	Value: null,
+	Expanded: [],
+	Checkable: false,
+	Checked: [],
+	Loading: [],
+	Searchable: false,
+	Filter: '',
+	Label: 'Tree',
+	Empty: 'Nothing found',
+	Focused: null,
+
+	$OnCreate: function () {
+		var self = this;
+
+		/* The visible rows: [{Item, Depth, Group, Open, Parent, Check ('true', 'false', 'mixed')}]. */
+		this.Rows = function (items, expanded, filter, checked) {
+			var rows = [];
+			var query = String(filter || '').trim().toLowerCase();
+
+			function matches (item) {
+				if (String(item.Label).toLowerCase().indexOf(query) !== -1) return true;
+
+				return (item.Items || []).some(matches);
+			}
+
+			function walk (list, depth, parent) {
+				(list || []).forEach(function (item) {
+					var group = !!(item.Items && item.Items.length) || !!item.Lazy && !item.Items;
+					var open;
+
+					if (query && !matches(item)) return;
+
+					open = group && (!!query && !!item.Items || (expanded || []).indexOf(item.ID) !== -1);
+
+					rows.push({Item: item, Depth: depth, Group: group, Open: open, Parent: parent, Check: self.Checkable ? self.State(item, checked) : null});
+
+					if (open && item.Items)
+						walk(item.Items, depth + 1, item.ID);
+				});
+			}
+
+			walk(items, 0, null);
+
+			return rows;
+		};
+
+		this.IsLoading = function (loading, item) {
+			return (loading || []).indexOf(item.ID) !== -1;
+		};
+
+		/* The row that takes the focus of the keys: the focused one, else the selected one, else the first. */
+		this.Current = function (rows, focused, value) {
+			var ids = rows.map(function (row) {
+				return String(row.Item.ID);
+			});
+			if (focused != null && ids.indexOf(String(focused)) !== -1) return String(focused);
+			if (value != null && ids.indexOf(String(value)) !== -1) return String(value);
+
+			return ids[0];
+		};
+	},
+
+	/* The leaves under item (itself when it has no children). */
+	Leaves: function (item) {
+		var self = this;
+		var leaves = [];
+
+		if (!item.Items || !item.Items.length) return [item.ID];
+
+		item.Items.forEach(function (child) {
+			leaves = leaves.concat(self.Leaves(child));
+		});
+
+		return leaves;
+	},
+
+	State: function (item, checked) {
+		var leaves = this.Leaves(item);
+		var count = leaves.filter(function (id) {
+			return (checked || []).indexOf(id) !== -1;
+		}).length;
+		if (!count)
+			return 'false';
+
+		return count === leaves.length ? 'true' : 'mixed';
+	},
+
+	Find: function (id) {
+		var found = null;
+
+		(function walk (list) {
+			(list || []).forEach(function (item) {
+				if (found) return;
+
+				if (String(item.ID) === String(id)) found = item;
+				else walk(item.Items);
+			});
+		})(this.Items);
+
+		return found;
+	},
+
+	/* The checked leaves, and every parent whose leaves are all checked. */
+	Normalize: function (leaves) {
+		var self = this;
+		var checked = [];
+
+		(function walk (list) {
+			(list || []).forEach(function (item) {
+				var all = self.Leaves(item);
+				if (all.every(function (id) {
+					return leaves.indexOf(id) !== -1;
+				}))
+					checked.push(item.ID);
+
+				walk(item.Items);
+			});
+		})(this.Items);
+
+		return checked;
+	},
+
+	Check: function (item) {
+		var leaves = this.Leaves(item);
+		var current = this.Checked || [];
+		var on = this.State(item, current) !== 'true';
+		var all = [];
+
+		(function walk (list, self) {
+			(list || []).forEach(function (entry) {
+				all = all.concat(self.Leaves(entry).filter(function (id) {
+					return current.indexOf(id) !== -1;
+				}));
+			});
+		})(this.Items, this);
+
+		all = all.filter(function (id, index) {
+			return all.indexOf(id) === index && leaves.indexOf(id) === -1;
+		});
+
+		if (on)
+			all = all.concat(leaves);
+
+		this.Checked = this.Normalize(all);
+
+		this.$Emit('check', this.Checked.slice());
+	},
+
+	Toggle: function (id, open) {
+		var expanded = (this.Expanded || []).slice();
+		var index = expanded.indexOf(id);
+		var item = this.Find(id);
+
+		if (open === undefined)
+			open = index === -1;
+
+		if (open && index === -1) expanded.push(id);
+		else if (!open && index !== -1) expanded.splice(index, 1);
+		else return;
+
+		this.Expanded = expanded;
+
+		this.$Emit('expand', expanded.slice());
+
+		if (open && item && item.Lazy && !item.Items && !this.IsLoading(this.Loading, item))
+			this.$Emit('load', item);
+	},
+
+	Select: function (item) {
+		if (!item || item.Disabled) return;
+
+		this.Value = item.ID;
+		this.Focused = item.ID;
+
+		this.$Emit('select', item);
+	},
+
+	Pick: function (event, node) {
+		var item = this.Find(node.getAttribute('data-id'));
+
+		this.Focused = item ? item.ID : null;
+
+		this.Select(item);
+	},
+
+	Twist: function (event, node) {
+		var row = node.closest('[data-id]');
+
+		event.stopPropagation();
+
+		this.Toggle(this.Find(row.getAttribute('data-id')).ID);
+	},
+
+	Tick: function (event, node) {
+		var row = node.closest('[data-id]');
+		var item = this.Find(row.getAttribute('data-id'));
+
+		event.stopPropagation();
+
+		if (item && !item.Disabled)
+			this.Check(item);
+	},
+
+	Search: function (event, node) {
+		this.Filter = node.value;
+	},
+
+	Move: function (node, rows, index) {
+		var target = rows[Math.max(0, Math.min(rows.length - 1, index))];
+		var element;
+
+		if (!target) return;
+
+		this.Focused = target.Item.ID;
+
+		element = node.closest('.elemenx-tree').querySelector('.elemenx-tree-row[data-id="' + String(target.Item.ID).replace(/"/g, '\\"') + '"]');
+
+		if (element)
+			element.focus();
+	},
+
+	Key: function (event, node) {
+		var self = this;
+		var rows = this.Rows(this.Items, this.Expanded, this.Filter, this.Checked);
+		var id = node.getAttribute('data-id');
+		var index = rows.map(function (row) {
+			return String(row.Item.ID);
+		}).indexOf(id);
+		var row = rows[index];
+		var next;
+
+		if (!row) return;
+
+		if (event.key === 'ArrowDown') {
+			this.Move(node, rows, index + 1);
+		}
+		else if (event.key === 'ArrowUp') {
+			this.Move(node, rows, index - 1);
+		}
+		else if (event.key === 'Home') {
+			this.Move(node, rows, 0);
+		}
+		else if (event.key === 'End') {
+			this.Move(node, rows, rows.length - 1);
+		}
+		else if (event.key === 'ArrowRight') {
+			if (row.Group && !row.Open) this.Toggle(row.Item.ID, true);
+			else if (row.Open) this.Move(node, rows, index + 1);
+		}
+		else if (event.key === 'ArrowLeft') {
+			if (row.Open) this.Toggle(row.Item.ID, false);
+			else if (row.Parent != null) this.Move(node, rows, rows.map(function (entry) {
+				return entry.Item.ID;
+			}).indexOf(row.Parent));
+		}
+		else if (event.key === 'Enter') {
+			this.Select(row.Item);
+		}
+		else if (event.key === ' ' && this.Checkable) {
+			if (!row.Item.Disabled)
+				this.Check(row.Item);
+		}
+		else if (event.key === '*') {
+			rows.filter(function (entry) {
+				return entry.Parent === row.Parent && entry.Group && !entry.Open;
+			}).forEach(function (entry) {
+				self.Toggle(entry.Item.ID, true);
+			});
+		}
+		else if (event.key.length === 1 && /\S/.test(event.key) && !event.ctrlKey && !event.metaKey && !event.altKey) {
+			next = rows.slice(index + 1).concat(rows.slice(0, index + 1)).filter(function (entry) {
+				return String(entry.Item.Label).toLowerCase().indexOf(event.key.toLowerCase()) === 0;
+			})[0];
+
+			if (next)
+				this.Move(node, rows, rows.indexOf(next));
+		}
+		else {
+			return;
+		}
+
+		event.preventDefault();
+	}
+});

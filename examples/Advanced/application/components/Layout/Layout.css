@@ -63,7 +63,8 @@ body[data-theme='dark'] .application-shell {
 	font-weight: 500;
 }
 
-nav {
+/* The rules of the shell reach its own nav and footer only, not the ones inside the pages. */
+.application-header > nav {
 	display: flex;
 	gap: 4px;
 	padding: 4px;
@@ -72,7 +73,7 @@ nav {
 	border-radius: 10px;
 }
 
-nav a {
+.application-header > nav a {
 	padding: 7px 12px;
 	border-radius: 7px;
 	color: var(--elemenx-text-muted);
@@ -81,7 +82,7 @@ nav a {
 	font-weight: 600;
 }
 
-nav a:hover {
+.application-header > nav a:hover {
 	background: var(--elemenx-surface);
 	color: var(--elemenx-text);
 }
@@ -264,7 +265,7 @@ nav a:hover {
 	font-weight: 700;
 }
 
-footer {
+.application-shell > footer {
 	padding: 22px;
 	border-top: 1px solid var(--elemenx-border);
 	color: var(--elemenx-text-muted);
@@ -278,7 +279,7 @@ footer {
 		gap: 12px;
 	}
 
-	nav {
+	.application-header > nav {
 		grid-column: 1 / -1;
 		grid-row: 2;
 		justify-content: center;
@@ -395,7 +396,7 @@ footer {
 		grid-template-columns: 1fr auto;
 	}
 
-	nav {
+	.application-header > nav {
 		grid-column: 1 / -1;
 		grid-row: 2;
 		justify-content: center;

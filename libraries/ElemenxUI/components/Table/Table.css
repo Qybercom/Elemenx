@@ -109,3 +109,77 @@
 	left: auto;
 	right: 0;
 }
+
+.elemenx-table-box {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	min-width: 0;
+}
+
+/* The filters under the titles. */
+.elemenx-table-filters th {
+	height: auto;
+	padding-top: 0;
+	padding-bottom: 8px;
+	background: var(--elemenx-surface-raised);
+	font-weight: 400;
+}
+
+.elemenx-table-filters .elemenx-input {
+	width: 100%;
+}
+
+.elemenx-table-filter-select {
+	width: 100%;
+	height: 24px;
+	padding: 0 4px;
+	background: var(--elemenx-surface);
+	border: 1px solid var(--elemenx-border-strong);
+	border-radius: 4px;
+	color: var(--elemenx-text);
+	font: inherit;
+	font-size: 12px;
+}
+
+.elemenx-table-filter-select:focus-visible {
+	border-color: var(--elemenx-accent);
+	outline: none;
+}
+
+/* Tree rows: the first cell steps in by the depth of the row. */
+.elemenx-table-tree {
+	display: inline-flex;
+	align-items: center;
+	vertical-align: middle;
+	margin-left: calc(var(--elemenx-table-depth, 0) * 20px);
+	margin-right: 4px;
+}
+
+.elemenx-table-twisty {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 20px;
+	height: 20px;
+	padding: 0;
+	background: transparent;
+	border: 0;
+	border-radius: 4px;
+	color: var(--elemenx-text-muted);
+	cursor: pointer;
+}
+
+button.elemenx-table-twisty:hover {
+	background: var(--elemenx-surface-hover);
+	color: var(--elemenx-text);
+}
+
+.elemenx-table.tree tbody tr:focus-visible td {
+	box-shadow: inset 0 1px 0 color-mix(in srgb, var(--elemenx-accent) 48%, transparent),
+		inset 0 -1px 0 color-mix(in srgb, var(--elemenx-accent) 48%, transparent);
+}
+
+.elemenx-table.tree tbody tr {
+	outline: none;
+}

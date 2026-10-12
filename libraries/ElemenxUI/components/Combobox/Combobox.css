@@ -1,0 +1,10 @@
+.elemenx-combobox {
+	position: relative;
+	width: 100%;
+	min-width: 0;
+}
+
+.elemenx-combobox-create .elemenx-option-label {
+	color: var(--elemenx-accent);
+	font-weight: 600;
+}
