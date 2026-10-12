@@ -1,3 +1,7 @@
+/*
+ * A text field. A password field has an eye button: Guarded asks before it shows the password, HideAfter hides it
+ * again (see the Reveal Service).
+ */
 Elemenx.Component('Input', {
 	$TemplateURL: 'Input.html',
 	Type: 'text',
@@ -22,6 +26,10 @@ Elemenx.Component('Input', {
 	Invalid: false,
 	Clearable: false,
 	Revealed: false,
+	Guarded: false,
+	HideAfter: 0,
+	Asking: 0,
+	RevealTimer: 0,
 	Complete: false,
 
 	Typed: function (event, node) {
@@ -54,6 +62,10 @@ Elemenx.Component('Input', {
 	},
 
 	Reveal: function () {
-		this.Revealed = !this.Revealed;
+		this.$Service('Reveal').Toggle(this, 'password');
+	},
+
+	$OnDestroy: function () {
+		this.$Service('Reveal').Forget(this);
 	}
 });

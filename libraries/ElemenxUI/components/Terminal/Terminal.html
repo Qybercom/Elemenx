@@ -9,7 +9,7 @@
 	</div>
 	<label class="elemenx-container elemenx-terminal-command">
 		<span class="elemenx-terminal-prompt">{{Prompt}}</span>
-		<input class="elemenx-terminal-input" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Command" [placeholder]="Placeholder" [disabled]="Busy" (keydown)="Key" />
+		<input class="elemenx-terminal-input" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Command" [placeholder]="Placeholder" [attribute.readonly]="Busy ? '' : null" [attribute.aria-busy]="Busy ? 'true' : null" (keydown)="Key" />
 		<Spinner *if="Busy" Size="small" Label="Running" />
 	</label>
 </section>

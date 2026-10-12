@@ -134,9 +134,10 @@ Elemenx.Component('FileUpload', {
 		}));
 	},
 
-	Browse: function (event, node) {
+	/* Also the click event of the Button, which carries no node: the field is found from the root of the Component. */
+	Browse: function () {
 		if (!this.Disabled)
-			node.closest('.elemenx-upload').querySelector('input[type="file"]').click();
+			this.$Element().querySelector('input[type="file"]').click();
 	},
 
 	ZoneKey: function (event, node) {

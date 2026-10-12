@@ -3,7 +3,8 @@
  * Conceal hides the middle of the number: in its template x is a shown digit and ? a hidden one ('xxxx ???? ???? xxxx'
  * shows the first four and the last four digits); the groups follow the brand. The number stays hidden while it is
  * edited; an eye button, as in a password field, shows it (Revealed). ConcealChar is the character of a hidden digit.
- * Value is never changed by concealing.
+ * Value is never changed by concealing. Guarded asks before the eye shows the number, HideAfter hides it again (see
+ * the Reveal Service).
  */
 Elemenx.Component('CardNumberInput', {
 	$TemplateURL: 'CardNumberInput.html',
@@ -19,6 +20,10 @@ Elemenx.Component('CardNumberInput', {
 	Conceal: '',
 	ConcealChar: '•',
 	Revealed: false,
+	Guarded: false,
+	HideAfter: 0,
+	Asking: 0,
+	RevealTimer: 0,
 	Brands: [
 		{ID: 'mir', Label: 'Mir', Pattern: '^220[0-4]', Mask: '#### #### #### #### ###', Lengths: [16, 17, 18, 19]},
 		{ID: 'visa', Label: 'Visa', Pattern: '^4', Mask: '#### #### #### #### ###', Lengths: [13, 16, 19]},
@@ -130,7 +135,11 @@ Elemenx.Component('CardNumberInput', {
 	},
 
 	Reveal: function () {
-		this.Revealed = !this.Revealed;
+		this.$Service('Reveal').Toggle(this, 'card');
+	},
+
+	$OnDestroy: function () {
+		this.$Service('Reveal').Forget(this);
 	},
 
 	Committed: function () {

@@ -5,5 +5,5 @@
 		<span class="elemenx-card-conceal" aria-hidden="true" *if="Conceal && !Revealed && Value">{{Concealed(Value, Conceal)}}</span>
 	</span>
 	<span class="elemenx-card-brand" *if="Brand(Value)" [attribute.data-brand]="(Brand(Value) || {}).ID">{{(Brand(Value) || {}).Label}}</span>
-	<button class="elemenx-input-action" type="button" *if="Conceal" [attribute.aria-label]="Revealed ? 'Hide number' : 'Show number'" [attribute.aria-pressed]="String(Revealed)" [disabled]="Disabled" (click)="Reveal"><Icon [name]="Revealed ? 'eye-off' : 'eye'" /></button>
+	<button class="elemenx-input-action" type="button" *if="Conceal" [attribute.aria-label]="Revealed ? 'Hide number' : 'Show number'" [attribute.aria-pressed]="String(Revealed)" [attribute.aria-busy]="Asking ? 'true' : null" [disabled]="Disabled" (click)="Reveal"><Icon [name]="Asking ? 'loader' : Revealed ? 'eye-off' : 'eye'" [spin]="!!Asking" /></button>
 </div>

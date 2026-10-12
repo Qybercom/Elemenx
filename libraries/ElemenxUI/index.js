@@ -13,6 +13,7 @@
 	'services/Countries.js',
 	'services/Currencies.js',
 	'services/Toast.js',
+	'services/Reveal.js',
 	'components/Icon/Icon.js',
 	'components/FileIcon/FileIcon.js',
 	'components/Button/Button.js',

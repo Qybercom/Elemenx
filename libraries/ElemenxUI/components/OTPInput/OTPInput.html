@@ -5,5 +5,5 @@
 			<span *for="cell of Cells(Value, Length, Group)" *key="cell.Key" [class]="cell.Separator ? ['elemenx-otp-separator'] : CellClass(cell, Value, Focused, Start, End, Length)">{{cell.Separator ? '' : Shown(cell, Masked, Revealed)}}</span>
 		</div>
 	</div>
-	<button class="elemenx-input-action elemenx-otp-reveal" type="button" *if="Masked" [attribute.aria-label]="Revealed ? 'Hide code' : 'Show code'" [attribute.aria-pressed]="String(Revealed)" [disabled]="Disabled" (click)="Reveal"><Icon [name]="Revealed ? 'eye-off' : 'eye'" /></button>
+	<button class="elemenx-input-action elemenx-otp-reveal" type="button" *if="Masked" [attribute.aria-label]="Revealed ? 'Hide code' : 'Show code'" [attribute.aria-pressed]="String(Revealed)" [attribute.aria-busy]="Asking ? 'true' : null" [disabled]="Disabled" (click)="Reveal"><Icon [name]="Asking ? 'loader' : Revealed ? 'eye-off' : 'eye'" [spin]="!!Asking" /></button>
 </div>

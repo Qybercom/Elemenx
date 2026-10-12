@@ -159,6 +159,11 @@ for (const origin of origins) {
 
 			await saved.getByRole('button', {name: 'Show number'}).click();
 
+			/* The saved card is Guarded: the number shows once the page allows it. */
+			await expect(saved.locator('.elemenx-card-conceal')).toHaveCount(1);
+
+			await page.locator('.elemenx-toast', {hasText: 'card number'}).getByRole('button', {name: 'Use fingerprint'}).click();
+
 			await expect(saved.locator('.elemenx-card-conceal')).toHaveCount(0);
 			await expect(saved.locator('input')).not.toHaveClass(/concealed/);
 			await expect(saved.getByRole('button', {name: 'Hide number'})).toHaveAttribute('aria-pressed', 'true');
@@ -301,10 +306,18 @@ for (const origin of origins) {
 		test('file upload previews images and rejects files it does not accept', async function ({ page }) {
 			var png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64');
 			var gallery;
+			var chooser;
 
 			await open(page, origin);
 
 			gallery = page.locator('.elemenx-upload.gallery');
+
+			/* The Button of the inline variant opens the file dialog: its click event carries no node. */
+			chooser = page.waitForEvent('filechooser');
+
+			await page.locator('.elemenx-upload.inline').getByRole('button', {name: /Attach/}).click();
+
+			expect(await chooser).toBeTruthy();
 
 			await gallery.locator('input[type="file"]').setInputFiles([
 				{name: 'pixel.png', mimeType: 'image/png', buffer: png},
@@ -1016,7 +1029,12 @@ for (const origin of origins) {
 			await input.fill('make coffee');
 			await input.press('Enter');
 
+			/* While the command runs, the command line is read-only and keeps the focus. */
+			await expect(input).toHaveAttribute('readonly', '');
+			await expect(input).toBeFocused();
 			await expect(terminal.locator('.elemenx-terminal-line').last()).toHaveText('make: command not found');
+			await expect(input).not.toHaveAttribute('readonly', '');
+			await expect(input).toBeFocused();
 
 			await input.press('ArrowUp');
 
@@ -1414,6 +1432,59 @@ for (const origin of origins) {
 
 			await expect(field(page, 'Hex code').locator('input')).toHaveValue('F09A');
 			await expect(field(page, 'Hex code').locator('input')).toHaveAttribute('type', 'password');
+		});
+
+		test('a guarded field asks before the eye shows its value, and hides it again after HideAfter', async function ({ page }) {
+			var cvv;
+			var eye;
+			var input;
+			var ask;
+
+			await open(page, origin);
+
+			cvv = field(page, 'CVV');
+			eye = cvv.locator('.elemenx-input-action');
+			input = cvv.locator('input');
+			ask = page.locator('.elemenx-toast', {hasText: 'security code'});
+
+			await cvv.scrollIntoViewIfNeeded();
+			await cvv.getByRole('button', {name: 'Show code'}).click();
+
+			await expect(ask).toBeVisible();
+			await expect(eye).toHaveAttribute('aria-busy', 'true');
+			await expect(input).toHaveAttribute('type', 'password');
+
+			/* A second press while the request is open asks nothing more. */
+			await eye.click();
+
+			await expect(ask).toHaveCount(1);
+
+			await ask.getByRole('button', {name: 'Cancel'}).click();
+
+			await expect(input).toHaveAttribute('type', 'password');
+			await expect(eye).not.toHaveAttribute('aria-busy', 'true');
+
+			await cvv.getByRole('button', {name: 'Show code'}).click();
+			await ask.getByRole('button', {name: 'Use fingerprint'}).click();
+
+			await expect(input).toHaveAttribute('type', 'text');
+			await expect(input).toHaveValue('123');
+
+			/* Hiding needs no question; HideAfter would hide it anyway. */
+			await cvv.getByRole('button', {name: 'Hide code'}).click();
+
+			await expect(input).toHaveAttribute('type', 'password');
+
+			await cvv.getByRole('button', {name: 'Show code'}).click();
+			await ask.getByRole('button', {name: 'Use fingerprint'}).click();
+
+			await expect(input).toHaveAttribute('type', 'text');
+			await expect(input).toHaveAttribute('type', 'password', {timeout: 8000});
+
+			/* An unguarded field shows at once. */
+			await field(page, 'PIN').getByRole('button', {name: 'Show code'}).click();
+
+			await expect(field(page, 'PIN').getByRole('button', {name: 'Hide code'})).toBeVisible();
 		});
 
 		test('steps take custom content and a disabled step is not clickable', async function ({ page }) {

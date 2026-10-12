@@ -269,6 +269,18 @@ Elemenx.Component('UIKitPage', {
 		this.Time = value;
 	},
 
+	/* Asks before a guarded field shows what it hides, as a banking application asks for a fingerprint. */
+	ConfirmReveal: function (request) {
+		this.$Service('Toast').Show({
+			Title: 'Confirm it is you',
+			Message: 'Touch the sensor to show the ' + ({card: 'card number', cvv: 'security code'}[request.Kind] || 'value') + '.',
+			Icon: 'lock',
+			AutoHide: false,
+			Closable: false,
+			Actions: [{Label: 'Use fingerprint', Variant: 'primary', Run: request.Allow}, {Label: 'Cancel', Run: request.Deny}]
+		});
+	},
+
 	OTPTyped: function (value) {
 		this.OTPState = value ? value.length + ' of 6' : '';
 	},

@@ -1,7 +1,8 @@
 /*
  * A terminal: a scrolling output above a command line. Lines: [{ID, Kind, Text}] where Kind is input, output, error,
  * info or success. Enter emits command with the text; Arrow Up and Down walk the history of this terminal; Ctrl+L
- * emits clear. Busy disables the command line. Slots: actions (in the title bar, shown with Title or actions).
+ * emits clear. Busy makes the command line read-only: it keeps the focus, so the next command can follow at once.
+ * Slots: actions (in the title bar, shown with Title or actions).
  * The output follows new lines while the reader is at its end.
  */
 Elemenx.Component('Terminal', {

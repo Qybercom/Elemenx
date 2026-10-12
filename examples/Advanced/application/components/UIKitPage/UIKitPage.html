@@ -179,10 +179,10 @@
 	<Section Title="Payment, phone and money" Note="Strict masks: typing, paste and drop">
 		<div class="ui-kit-grid">
 			<Field Label="Card number" [hint]="CardState || 'Try 4242 4242 4242 4242'"><CardNumberInput (validate)="CardValidated" /></Field>
-			<Field Label="Saved card" Hint="Conceal=&quot;xxxx ???? ???? xxxx&quot;: the eye shows the whole number"><CardNumberInput Value="5555555555554444" Conceal="xxxx ???? ???? xxxx" /></Field>
+			<Field Label="Saved card" Hint="Conceal=&quot;xxxx ???? ???? xxxx&quot;; Guarded: the eye asks first, HideAfter 5 s"><CardNumberInput Value="5555555555554444" Conceal="xxxx ???? ???? xxxx" Guarded="true" HideAfter="5000" (reveal)="ConfirmReveal" /></Field>
 			<div class="ui-kit-pair">
 				<Field Label="Expires"><CardExpiryInput /></Field>
-				<Field Label="CVV"><CVVInput /></Field>
+				<Field Label="CVV" Hint="Guarded"><CVVInput Value="123" Guarded="true" HideAfter="5000" (reveal)="ConfirmReveal" /></Field>
 			</div>
 			<Field Label="One-time code" [hint]="OTPState || 'Six digits; paste 123-456'"><OTPInput Group="3" (input)="OTPTyped" (complete)="OTPCompleted" /></Field>
 			<Field Label="PIN" Hint="Masked, four digits, round cells"><OTPInput Length="4" Masked="true" Shape="round" Size="small" /></Field>

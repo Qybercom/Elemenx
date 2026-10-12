@@ -1,4 +1,7 @@
-/* Value holds the 3 or 4 security code digits (Length). The code is hidden unless Revealed. */
+/*
+ * Value holds the 3 or 4 security code digits (Length). The code is hidden unless Revealed; Guarded asks before the
+ * eye shows it and HideAfter hides it again (see the Reveal Service).
+ */
 Elemenx.Component('CVVInput', {
 	$TemplateURL: 'CVVInput.html',
 	Value: '',
@@ -11,6 +14,10 @@ Elemenx.Component('CVVInput', {
 	Invalid: false,
 	Touched: false,
 	Revealed: false,
+	Guarded: false,
+	HideAfter: 0,
+	Asking: 0,
+	RevealTimer: 0,
 
 	Masked: function (event) {
 		this.Value = event.detail.Value;
@@ -20,7 +27,11 @@ Elemenx.Component('CVVInput', {
 	},
 
 	Reveal: function () {
-		this.Revealed = !this.Revealed;
+		this.$Service('Reveal').Toggle(this, 'cvv');
+	},
+
+	$OnDestroy: function () {
+		this.$Service('Reveal').Forget(this);
 	},
 
 	Committed: function () {

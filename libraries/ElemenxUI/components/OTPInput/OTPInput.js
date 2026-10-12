@@ -6,7 +6,8 @@
  * Pattern says which characters are taken: 'digits', 'letters', 'alphanumeric' or a character class ('[0-9A-F]');
  * Case 'upper' or 'lower' changes letters as they come. Anything else typed or pasted is dropped ('123-456' gives
  * '123456'), and the code never grows past Length (a character typed over a filled cell takes its place); a pasted code fills from the caret, or replaces all of it when long
- * enough. Masked hides the characters (an eye button shows them, Revealed) and keeps them from being copied.
+ * enough. Masked hides the characters (an eye button shows them, Revealed) and keeps them from being copied; Guarded
+ * asks before the eye shows them, HideAfter hides them again (see the Reveal Service).
  * Events: input (Value), change (on leaving the field), complete (Value, when the last character comes), validate
  * ({Value, Complete, Valid}). Invalid marks the field; a field left incomplete is marked too.
  */
@@ -21,6 +22,10 @@ Elemenx.Component('OTPInput', {
 	Group: 0,
 	Masked: false,
 	Revealed: false,
+	Guarded: false,
+	HideAfter: 0,
+	Asking: 0,
+	RevealTimer: 0,
 	MaskChar: '•',
 	Placeholder: '',
 	Label: 'One-time code',
@@ -242,6 +247,10 @@ Elemenx.Component('OTPInput', {
 	},
 
 	Reveal: function () {
-		this.Revealed = !this.Revealed;
+		this.$Service('Reveal').Toggle(this, 'code');
+	},
+
+	$OnDestroy: function () {
+		this.$Service('Reveal').Forget(this);
 	}
 });
