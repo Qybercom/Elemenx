@@ -43,8 +43,20 @@ async function open (page, origin) {
 
 	await page.goto(origin.URL + '/ui');
 
-	/* The catalogue is a large page: under a full parallel run its development build may take more than 5 seconds. */
-	await expect(page.locator('.elemenx-workspace').first()).toBeVisible({timeout: 20000});
+	await ready(page);
+}
+
+/* The catalogue is a large page: beside the other workers its development build may take more than 10 seconds. */
+async function ready (page) {
+	await expect(page.locator('.elemenx-workspace').first()).toBeVisible({timeout: 30000});
+	await expect(page.locator('.ui-kit-intro')).toBeVisible({timeout: 30000});
+}
+
+/* Reloads the catalogue and waits for it, as open does. */
+async function reload (page) {
+	await page.reload();
+
+	await ready(page);
 }
 
 for (const origin of origins) {
@@ -223,7 +235,7 @@ for (const origin of origins) {
 			expect(await style(input, 'height')).toBe('36px');
 			expect(await style(button, 'backgroundColor')).toBe('rgb(11, 110, 153)');
 
-			await page.reload();
+			await reload(page);
 
 			await expect(page.locator('.elemenx-workspace').first()).toBeVisible({timeout: 20000});
 
@@ -547,7 +559,7 @@ for (const origin of origins) {
 			await expect(note).toContainText('Picked: 🚀 Rocket');
 
 			/* The tone and the emoji used last are remembered. */
-			await page.reload();
+			await reload(page);
 
 			await expect(page.locator('.elemenx-workspace').first()).toBeVisible({timeout: 20000});
 
@@ -1143,7 +1155,7 @@ for (const origin of origins) {
 			})).not.toMatch(/(^|, )color/);
 			expect(await surface()).toBe('rgb(255, 255, 255)');
 
-			await page.reload();
+			await reload(page);
 
 			await expect(page.locator('body')).toHaveAttribute('data-theme', 'light');
 			await expect(page.locator('.ui-kit-intro').getByRole('button', {name: 'Light theme'})).toHaveAttribute('aria-pressed', 'true');

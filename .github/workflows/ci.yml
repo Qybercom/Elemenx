@@ -2,8 +2,8 @@
 # the end-to-end tests. The tests run in the Google Chrome of the runner image (channel chrome): no browser download.
 #
 # A push runs the fast checks (a few minutes). The end-to-end tests run on a pull request, by hand (Run workflow), every
-# night when main has new commits, and before every release (publish.yml runs the whole npm test). A change of the
-# documentation alone runs nothing.
+# night when main has new commits, and before every release (publish.yml calls this workflow with e2e). They are split
+# by test between three jobs of two workers each. A change of the documentation alone runs nothing.
 name: CI
 
 on:
@@ -15,12 +15,18 @@ on:
   schedule:
     - cron: '0 2 * * *'
   workflow_dispatch:
+  workflow_call:
+    inputs:
+      e2e:
+        description: Run the end-to-end tests too
+        type: boolean
+        default: false
 
 permissions:
   contents: read
 
 concurrency:
-  group: ci-${{ github.ref }}
+  group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -92,7 +98,7 @@ jobs:
   e2e:
     name: End-to-end ${{ matrix.shard }}/3
     needs: recent
-    if: ${{ !cancelled() && (github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch' || needs.recent.outputs.changed == 'true') }}
+    if: ${{ !cancelled() && (github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch' || needs.recent.outputs.changed == 'true' || inputs.e2e) }}
     runs-on: ubuntu-latest
     timeout-minutes: 40
     strategy:

@@ -3,9 +3,15 @@ import { defineConfig } from '@playwright/test';
 export default defineConfig({
 	testDir: './tests',
 	testMatch: ['history/**/*.spec.js', 'production/**/*.spec.js', 'examples/**/*.spec.js', 'dist/**/*.spec.js'],
-	/* In CI the tests, not the files, are split between the shards: most of them are in ui-kit.spec.js. */
-	fullyParallel: !!process.env.CI,
-	workers: 1,
+	/*
+	 * The tests, not the files, are split between the workers and the shards of CI: most of them are in ui-kit.spec.js.
+	 * ELEMENX_WORKERS sets the number of workers; by default half of the processors, and 2 on a runner of CI.
+	 */
+	fullyParallel: true,
+	/* The long tests of the catalogue take 15 seconds alone and more beside the other workers. */
+	timeout: 90000,
+	expect: {timeout: 10000},
+	workers: process.env.ELEMENX_WORKERS ? Number(process.env.ELEMENX_WORKERS) : (process.env.CI ? 2 : '50%'),
 	forbidOnly: !!process.env.CI,
 	reporter: process.env.CI ? [['list'], ['html', {open: 'never'}]] : 'list',
 	use: {

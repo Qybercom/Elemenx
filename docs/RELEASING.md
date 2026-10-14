@@ -1,6 +1,6 @@
 # Releasing
 
-A release publishes two packages of the same version to npm: `@qybercom/elemenx` (the repository root) and `elemenx`, its short name (`packages/elemenx`: it depends on exactly that version of `@qybercom/elemenx` and runs its CLI). The tag `v<version>` starts `.github/workflows/publish.yml`: it checks that the tag is the version of both packages, runs `npm test`, publishes `@qybercom/elemenx` (its `prepack` builds `dist/` into it), then `elemenx`. A prerelease version (`0.9.1-beta.1`) goes to the dist-tag `next`, any other to `latest`. Last, the workflow creates the GitHub release of the tag (a pre-release for a prerelease version): its notes list the changes since the last release, and it carries the files of `dist/` (every script, `manifest.json` with the sizes and the integrity, and `elemenx-<version>.zip` with all of `dist/`).
+A release publishes two packages of the same version to npm: `@qybercom/elemenx` (the repository root) and `elemenx`, its short name (`packages/elemenx`: it depends on exactly that version of `@qybercom/elemenx` and runs its CLI). The tag `v<version>` starts `.github/workflows/publish.yml`: it checks that the tag is the version of both packages, runs the whole CI (`ci.yml` with the end-to-end tests, about 10 minutes), publishes `@qybercom/elemenx` (its `prepack` builds `dist/` into it), then `elemenx`. A prerelease version (`0.9.1-beta.1`) goes to the dist-tag `next`, any other to `latest`. Last, the workflow creates the GitHub release of the tag (a pre-release for a prerelease version): its notes list the changes since the last release, and it carries the files of `dist/` (every script, `manifest.json` with the sizes and the integrity, and `elemenx-<version>.zip` with all of `dist/`).
 
 Every command below starts from a working tree with nothing to commit, untracked files included; the version commands stop otherwise.
 
@@ -44,7 +44,7 @@ Every command below starts from a working tree with nothing to commit, untracked
 
 ## When the workflow fails
 
-Before `npm publish` (the tag check or `npm test`): nothing is published. Fix the cause, then move the tag to the new commit:
+Before `npm publish` (the tag check or the CI): nothing is published. Fix the cause, then move the tag to the new commit:
 
 ```bash
 git tag -d v0.9.1
@@ -82,6 +82,15 @@ npm sets the trusted publisher of a package in its settings, so the first versio
    ```
 
    The tag starts the workflow, which then fails at `npm publish` as the version exists already; this once it is expected. Create the GitHub release of `v0.9.0` by hand, as in "When the workflow fails".
-3. On npmjs.com, in the settings of `@qybercom/elemenx` and of `elemenx`, add a trusted publisher: GitHub Actions, the repository `Qybercom/Elemenx`, the workflow `publish.yml`, the environment `npm`.
+3. On npmjs.com, in the settings of `@qybercom/elemenx` and of `elemenx`, add a trusted publisher (it cannot be changed later):
+
+   | Field | Value |
+   |---|---|
+   | Publisher | GitHub Actions |
+   | Organization or user / Repository | `Qybercom` / `Elemenx` |
+   | Workflow filename | `publish.yml` |
+   | Environment name | `npm` |
+   | Allow npm publish | checked (the workflow runs `npm publish`) |
+   | Allow npm dist-tag | not needed (`npm publish --tag` sets the dist-tag) |
 
 From then on a release is the section above. npm adds provenance to a release from a public repository.

@@ -24,6 +24,9 @@ function errors (page) {
 }
 
 test.describe('elemenx build --single', function () {
+	/* One build into single-output for the tests of the file: they run one after the other, in one worker. */
+	test.describe.configure({mode: 'serial'});
+
 	test.beforeAll(function () {
 		Builder.Build(project, {single: true, out: '../single-output'});
 	});

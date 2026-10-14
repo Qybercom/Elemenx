@@ -100,7 +100,7 @@ describe('Elemenx npm release surface', function () {
 		})).toEqual([]);
 	});
 
-	it('runs in CI every step of npm test, and publishes a version tag after npm test', function () {
+	it('runs in CI every step of npm test, and publishes a version tag after the whole CI with the end-to-end tests', function () {
 		var ci = fs.readFileSync(path.join(root, '.github', 'workflows', 'ci.yml'), 'utf8');
 		var publish = fs.readFileSync(path.join(root, '.github', 'workflows', 'publish.yml'), 'utf8');
 		var steps = manifest.scripts.test.split('&&').map(function (step) {
@@ -115,8 +115,12 @@ describe('Elemenx npm release surface', function () {
 
 		expect(publish).toContain('tags: [\'v*\']');
 		expect(publish).toContain('id-token: write');
-		expect(publish.indexOf('run: npm test')).toBeGreaterThan(-1);
-		expect(publish.indexOf('run: npm test')).toBeLessThan(publish.indexOf('npm publish --access public'));
+		expect(publish).toContain('uses: ./.github/workflows/ci.yml');
+		expect(publish).toContain('e2e: true');
+		expect(publish).toContain('needs: test');
+		expect(publish.indexOf('uses: ./.github/workflows/ci.yml')).toBeLessThan(publish.indexOf('npm publish --access public'));
+		expect(ci).toContain('workflow_call:');
+		expect(ci).toContain('|| inputs.e2e)');
 		expect(publish.indexOf('npm publish --access public')).toBeLessThan(publish.indexOf('cd packages/elemenx'));
 		expect(publish).toContain('contents: write');
 		expect(publish.indexOf('cd packages/elemenx')).toBeLessThan(publish.indexOf('gh release create'));
