@@ -210,6 +210,10 @@ describe('Regression: Router contracts', function () {
 		history.pushState(null, '', '#own');
 		history.back();
 
+		await waitFor(function () {
+			return location.hash === '';
+		}, 2000);
+
 		await tick(50);
 
 		expect(location.hash).toBe('');

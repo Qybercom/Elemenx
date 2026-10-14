@@ -91,6 +91,15 @@ describe('Elemenx npm release surface', function () {
 		expect(files).toContain(manifest.unpkg);
 	});
 
+	it('ignores in git no source of the repository: a CI checkout has every file the tests and the tools need', function () {
+		var outputs = /^(tests\/dist\/single(-cli|-packs)?-output|examples\/[^/]+\/dist)\//;
+		var ignored = childProcess.execFileSync('git', ['ls-files', '--others', '--ignored', '--exclude-standard', '--', 'tests', 'tools', 'libraries', 'scripts', 'packages', 'docs', 'examples', 'eslint', 'stylelint', '.github'], {cwd: root, encoding: 'utf8'});
+
+		expect(ignored.split('\n').filter(function (file) {
+			return file && !outputs.test(file);
+		})).toEqual([]);
+	});
+
 	it('runs in CI every step of npm test, and publishes a version tag after npm test', function () {
 		var ci = fs.readFileSync(path.join(root, '.github', 'workflows', 'ci.yml'), 'utf8');
 		var publish = fs.readFileSync(path.join(root, '.github', 'workflows', 'publish.yml'), 'utf8');

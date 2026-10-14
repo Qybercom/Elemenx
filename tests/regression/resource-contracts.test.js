@@ -34,7 +34,7 @@ describe('Regression: Elemenx.Resource', function () {
 			});
 		});
 
-		expect(fetched).toEqual([null, 'elemenx']);
+		expect(fetched).toEqual([null, '@qybercom/elemenx']);
 
 		failed = await new Promise(function (resolve) {
 			Elemenx.Resource.Load('/' + unique('absent') + '.json', function (error, text) {

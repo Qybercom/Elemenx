@@ -21,9 +21,10 @@ var KnownGlobals = [
 ];
 
 var root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
-var source = fs.readFileSync(path.join(root, 'elemenx.js'), 'utf8');
+/* A checkout on Windows may have CRLF line breaks (core.autocrlf). */
+var source = fs.readFileSync(path.join(root, 'elemenx.js'), 'utf8').replace(/\r\n/g, '\n');
 var lines = source.split('\n');
-var documentation = fs.readFileSync(path.join(root, 'docs/RUNTIME-INTERNALS.md'), 'utf8');
+var documentation = fs.readFileSync(path.join(root, 'docs/RUNTIME-INTERNALS.md'), 'utf8').replace(/\r\n/g, '\n');
 
 function sections () {
 	var result = [];

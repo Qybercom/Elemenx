@@ -34,7 +34,7 @@ jobs:
       - run: npm run dist
       - name: Browser contracts against dist/elemenx.min.js
         run: npm run test:min
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: dist
           path: dist/
@@ -80,7 +80,7 @@ jobs:
       - run: npm ci
       - run: npm run dist
       - run: npx playwright test --shard=${{ matrix.shard }}/3
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         if: failure()
         with:
           name: playwright-report-${{ matrix.shard }}

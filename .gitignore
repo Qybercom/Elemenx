@@ -1,7 +1,7 @@
 /.idea
 /.vitest
 node_modules/
-coverage/
+/coverage/
 playwright-report/
 test-results/
 /elemenx.zip
