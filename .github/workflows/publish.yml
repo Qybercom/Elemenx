@@ -1,7 +1,8 @@
-# Publishes the package to npm when a version tag (v0.9.1) is pushed: the full npm test first, then npm publish, whose
-# prepack builds dist. It signs in with npm trusted publishing (OpenID Connect, no token): on npmjs.com, the settings
-# of the package name this repository and this workflow file as its trusted publisher. A version with a prerelease
-# part (0.9.1-beta.1) goes to the dist-tag next, not latest.
+# Publishes @qybercom/elemenx and its short name elemenx (packages/elemenx) to npm when a version tag (v0.9.1) is
+# pushed: the full npm test first, then npm publish, whose prepack builds dist. It signs in with npm trusted publishing
+# (OpenID Connect, no token): on npmjs.com, the settings of each package name this repository, this workflow file and
+# the environment npm as its trusted publisher. A version with a prerelease part (0.9.1-beta.1) goes to the dist-tag
+# next, not latest.
 name: Publish
 
 on:
@@ -30,21 +31,25 @@ jobs:
           cache: npm
       - name: npm with trusted publishing
         run: npm install -g npm@^11.5.1
-      - name: The tag is the version of package.json
+      - name: The tag is the version of both packages
         run: |
           version="$(node -p "require('./package.json').version")"
-          if [ "v$version" != "$GITHUB_REF_NAME" ]; then
-            echo "The tag $GITHUB_REF_NAME is not v$version of package.json" >&2
+          wrapper="$(node -p "require('./packages/elemenx/package.json').version")"
+          if [ "v$version" != "$GITHUB_REF_NAME" ] || [ "$wrapper" != "$version" ]; then
+            echo "The tag $GITHUB_REF_NAME is not v$version of package.json, or packages/elemenx has $wrapper (npm version runs scripts/version.js)" >&2
             exit 1
           fi
       - name: Install the color emoji font
         run: sudo apt-get update && sudo apt-get install -y fonts-noto-color-emoji
       - run: npm ci
       - run: npm test
-      - name: Publish
+      - name: Publish @qybercom/elemenx, then elemenx that depends on it
         run: |
           version="$(node -p "require('./package.json').version")"
+          tag=latest
           case "$version" in
-            *-*) npm publish --tag next ;;
-            *) npm publish ;;
+            *-*) tag=next ;;
           esac
+          npm publish --access public --tag "$tag"
+          cd packages/elemenx
+          npm publish --tag "$tag"

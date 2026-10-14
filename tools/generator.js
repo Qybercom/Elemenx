@@ -186,6 +186,15 @@ function writeIfMissing (file, source) {
 	return true;
 }
 
+/* The dependency of a generated host on this Elemenx: the package and the versions of its minor release. */
+function dependency () {
+	var result = {};
+
+	result[Package.name] = '^' + Package.version;
+
+	return result;
+}
+
 function applicationPackageName (name) {
 	return String(name).replace(/([a-z0-9])([A-Z])/g, '$1-$2').replace(/[^A-Za-z0-9._-]+/g, '-').toLowerCase();
 }
@@ -237,7 +246,7 @@ function generateApplication (project, name, options) {
 		host.push(configFile);
 	}
 
-	if (writeIfMissing(packageFile, JSON.stringify({name: applicationPackageName(path.basename(project) || name), private: true, scripts: {dev: 'elemenx dev', build: 'elemenx build', serve: 'elemenx serve'}, devDependencies: {elemenx: '^' + Package.version}}, null, '\t') + '\n')) {
+	if (writeIfMissing(packageFile, JSON.stringify({name: applicationPackageName(path.basename(project) || name), private: true, scripts: {dev: 'elemenx dev', build: 'elemenx build', serve: 'elemenx serve'}, devDependencies: dependency()}, null, '\t') + '\n')) {
 		host.push(packageFile);
 	}
 

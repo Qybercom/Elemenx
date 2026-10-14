@@ -245,9 +245,10 @@ function main (argv) {
 	Commands[name].Handler(parsed);
 }
 
-if (require.main === module) {
+/* Runs the CLI as a command: an error is a message and the exit code 1 (the bin of the package elemenx runs it too). */
+function run (argv) {
 	try {
-		main(process.argv.slice(2));
+		main(argv);
 	}
 	catch (error) {
 		process.stderr.write('Elemenx CLI: ' + error.message + '\n');
@@ -256,7 +257,11 @@ if (require.main === module) {
 	}
 }
 
+if (require.main === module)
+	run(process.argv.slice(2));
+
 module.exports = {
 	Main: main,
+	Run: run,
 	Commands: Commands
 };

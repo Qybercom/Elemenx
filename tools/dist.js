@@ -155,7 +155,7 @@ function Build (output) {
 	var target = path.resolve(output || path.join(Root, 'dist'));
 	var framework = fs.readFileSync(path.join(Root, 'elemenx.js'), 'utf8');
 	var outputs = {};
-	var manifest = {Name: 'elemenx', Version: Package.version, Files: {}};
+	var manifest = {Name: Package.name, Version: Package.version, Files: {}};
 
 	outputs['elemenx.js'] = banner('Elemenx') + framework;
 	outputs['elemenx.min.js'] = banner('Elemenx') + Minify.JavaScript(framework);

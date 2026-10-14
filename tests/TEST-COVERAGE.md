@@ -25,7 +25,7 @@ Contract files grouped by subsystem (`tests/regression/`):
 - Network transports: `network-*.test.js`: setters, backpressure, error branches, stale generations; `network-context.test.js` pins `Metrics` against a fake clock (counters freeze at `End()`);
 - Storage, Events, Messaging: `storage-contracts.test.js`, `events-contracts.test.js`, `messaging-contracts.test.js`;
 - public methods reached by no other test: `public-api-remaining.test.js`.
-- the distribution and the release: `dist.test.js` (the bundles, the packs of ElemenxUI, `elemenx build --single` and the packs it embeds), `tests/dist/*.spec.js` (the bundles and a single file from `file://`), `package-release.test.js` (the files npm publishes, the package fields, the CI and publish workflows against `npm test`);
+- the distribution and the release: `dist.test.js` (the bundles, the packs of ElemenxUI, `elemenx build --single` and the packs it embeds), `tests/dist/*.spec.js` (the bundles and a single file from `file://`), `package-release.test.js` (the files npm publishes, the package fields, the short name `elemenx` and its CLI, the CI and publish workflows against `npm test`);
 - the ElemenxUI library: `tests/examples/ui-kit.spec.js` drives the `/ui` catalogue of the Advanced example in development and in the production bundle (masks, dropdowns, menus, tabs, file upload, Workspace splitters).
 
 When a bug is found, add a regression test that reproduces it before changing runtime behavior. New public API should ship with a direct contract test or a stronger end-to-end test.

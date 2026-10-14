@@ -1,0 +1,37 @@
+{
+	"name": "elemenx",
+	"version": "0.9.0",
+	"description": "The short name of @qybercom/elemenx, the Elemenx browser UI framework: installs it and runs its CLI",
+	"keywords": [
+		"ui",
+		"framework",
+		"components",
+		"ui-kit",
+		"elemenx"
+	],
+	"homepage": "https://github.com/Qybercom/Elemenx#readme",
+	"bugs": {
+		"url": "https://github.com/Qybercom/Elemenx/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/Qybercom/Elemenx.git",
+		"directory": "packages/elemenx"
+	},
+	"license": "LGPL-3.0-only",
+	"author": "Alex Furnica",
+	"main": "index.js",
+	"bin": {
+		"elemenx": "bin/elemenx.js"
+	},
+	"files": [
+		"index.js",
+		"bin"
+	],
+	"engines": {
+		"node": ">=20"
+	},
+	"dependencies": {
+		"@qybercom/elemenx": "0.9.0"
+	}
+}
