@@ -118,6 +118,10 @@ describe('Elemenx npm release surface', function () {
 		expect(publish.indexOf('run: npm test')).toBeGreaterThan(-1);
 		expect(publish.indexOf('run: npm test')).toBeLessThan(publish.indexOf('npm publish --access public'));
 		expect(publish.indexOf('npm publish --access public')).toBeLessThan(publish.indexOf('cd packages/elemenx'));
+		expect(publish).toContain('contents: write');
+		expect(publish.indexOf('cd packages/elemenx')).toBeLessThan(publish.indexOf('gh release create'));
+		expect(publish).toContain('gh release create "$GITHUB_REF_NAME" --verify-tag');
+		expect(publish).toContain('dist/*.js dist/manifest.json');
 	});
 
 	it('describes the package: name, license, author, repository, Node version', function () {

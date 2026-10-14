@@ -2,7 +2,8 @@
 # pushed: the full npm test first, then npm publish, whose prepack builds dist. It signs in with npm trusted publishing
 # (OpenID Connect, no token): on npmjs.com, the settings of each package name this repository, this workflow file and
 # the environment npm as its trusted publisher. A version with a prerelease part (0.9.1-beta.1) goes to the dist-tag
-# next, not latest.
+# next, not latest. Then it creates the GitHub release of the tag, with notes made of the changes since the last
+# release and the files of dist attached: every script, manifest.json, and all of dist in one zip.
 name: Publish
 
 on:
@@ -10,7 +11,7 @@ on:
     tags: ['v*']
 
 permissions:
-  contents: read
+  contents: write
   id-token: write
 
 concurrency:
@@ -53,3 +54,14 @@ jobs:
           npm publish --access public --tag "$tag"
           cd packages/elemenx
           npm publish --tag "$tag"
+      - name: GitHub release with the files of dist
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version="$(node -p "require('./package.json').version")"
+          prerelease=""
+          case "$version" in
+            *-*) prerelease="--prerelease" ;;
+          esac
+          (cd dist && zip -qr "../elemenx-$version.zip" .)
+          gh release create "$GITHUB_REF_NAME" --verify-tag --title "Elemenx $version" --generate-notes $prerelease dist/*.js dist/manifest.json "elemenx-$version.zip"
