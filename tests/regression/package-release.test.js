@@ -274,17 +274,32 @@ describe('Elemenx npm release surface', function () {
 		expect(run.status).not.toBe(0);
 		expect(run.stderr).toContain('Elemenx version: the tag v0.9.8 exists already: set a new version first');
 
-		/* A wrapper with another version is not tagged. */
-		fs.writeFileSync(path.join(site, 'packages', 'elemenx', 'package.json'), JSON.stringify(Object.assign(read('packages/elemenx/package.json'), {version: '0.9.0'}), null, '\t') + '\n');
+		/* The versions changed by hand, the dependency of the wrapper forgotten: no tag, the message names the dependency. */
+		fs.writeFileSync(path.join(site, 'packages', 'elemenx', 'package.json'), JSON.stringify(Object.assign(read('packages/elemenx/package.json'), {version: '0.9.9'}), null, '\t') + '\n');
 		fs.writeFileSync(path.join(site, 'package.json'), JSON.stringify(Object.assign(read('package.json'), {version: '0.9.9'}), null, '\t') + '\n');
 
-		git(['commit', '-q', '-am', 'Forgot version:set']);
+		git(['commit', '-q', '-am', 'Versions by hand']);
 
 		run = script('version:tag');
 
 		expect(run.status).not.toBe(0);
-		expect(run.stderr).toContain('Elemenx version: packages/elemenx has 0.9.0, not 0.9.9: npm run version:set -- 0.9.9, then commit');
+		expect(run.stderr).toContain('Elemenx version: package.json has the version 0.9.9, but packages/elemenx/package.json depends on @qybercom/elemenx 0.9.8. Run npm run version:set (it puts 0.9.9 everywhere), commit, then npm run version:tag');
 		expect(git(['tag', '--list', 'v0.9.9'])).toBe('');
+
+		/* version:set without a version puts the one of package.json everywhere. */
+		run = script('version:set');
+
+		expect(run.status, run.stderr).toBe(0);
+		expect(read('package.json').version).toBe('0.9.9');
+		expect(read('packages/elemenx/package.json').version).toBe('0.9.9');
+		expect(read('packages/elemenx/package.json').dependencies).toEqual({'@qybercom/elemenx': '0.9.9'});
+
+		git(['commit', '-q', '-am', 'version:set']);
+
+		run = script('version:tag');
+
+		expect(run.status, run.stderr).toBe(0);
+		expect(git(['tag', '--list', 'v0.9.9'])).toBe('v0.9.9');
 	}, 60000);
 
 	afterAll(function () {

@@ -32,6 +32,6 @@
 		"node": ">=20"
 	},
 	"dependencies": {
-		"@qybercom/elemenx": "0.9.0"
+		"@qybercom/elemenx": "0.9.1"
 	}
 }

@@ -28,8 +28,9 @@ jobs:
       - run: |
           version="$(node -p "require('./package.json').version")"
           wrapper="$(node -p "require('./packages/elemenx/package.json').version")"
-          if [ "v$version" != "$GITHUB_REF_NAME" ] || [ "$wrapper" != "$version" ]; then
-            echo "The tag $GITHUB_REF_NAME is not v$version of package.json, or packages/elemenx has $wrapper (npm version runs scripts/version.js)" >&2
+          dependency="$(node -p "require('./packages/elemenx/package.json').dependencies['@qybercom/elemenx']")"
+          if [ "v$version" != "$GITHUB_REF_NAME" ] || [ "$wrapper" != "$version" ] || [ "$dependency" != "$version" ]; then
+            echo "The tag $GITHUB_REF_NAME is not v$version of package.json, or packages/elemenx has the version $wrapper and depends on $dependency (npm run version:set puts the version everywhere)" >&2
             exit 1
           fi
 

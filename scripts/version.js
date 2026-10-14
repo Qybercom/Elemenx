@@ -9,8 +9,9 @@
  *   node scripts/version.js sync          version: gives packages/elemenx the version of package.json and makes it
  *                                         depend on exactly that version
  * The version in a commit of its own author, then a tag on it:
- *   npm run version:set -- 0.9.1          sets the version of package.json, package-lock.json and packages/elemenx,
- *                                         and commits and tags nothing
+ *   npm run version:set -- 0.9.1          puts the version in every place: package.json, package-lock.json and
+ *                                         packages/elemenx (its version and its dependency); without a version, puts
+ *                                         the one of package.json everywhere. It commits and tags nothing
  *   npm run version:tag                   tags the last commit v0.9.1, when the working tree is clean and both
  *                                         packages have that version
  * Then git push --follow-tags sends the commit and the tag, and the tag starts the publish workflow.
@@ -24,6 +25,13 @@ var Wrapper = path.join(Root, 'packages', 'elemenx', 'package.json');
 
 function read (file) {
 	return JSON.parse(fs.readFileSync(file, 'utf8'));
+}
+
+/* package-lock.json, or the version of package.json when there is none. */
+function lock () {
+	var file = path.join(Root, 'package-lock.json');
+
+	return fs.existsSync(file) ? read(file) : read(path.join(Root, 'package.json'));
 }
 
 function git (args) {
@@ -59,14 +67,19 @@ function sync () {
 	return true;
 }
 
-/* npm version without its commit and tag: it takes a version or patch, minor, major, prerelease (npm_execpath: run through npm). */
+/*
+ * Puts a version in every place that holds it: package.json, package-lock.json, packages/elemenx (its version and its
+ * dependency on @qybercom/elemenx). It takes a version or patch, minor, major, prerelease; without one it puts the
+ * version of package.json everywhere (after package.json was changed by hand). It commits and tags nothing.
+ */
 function set (value) {
 	var npm = process.env.npm_execpath;
 
-	if (!value) return stop('usage: npm run version:set -- <version | patch | minor | major | prerelease>');
-	if (!npm) return stop('run it through npm: npm run version:set -- ' + value);
+	if (!npm) return stop('run it through npm: npm run version:set -- ' + (value || '<version>'));
 
-	childProcess.execFileSync(process.execPath, [npm, 'version', value, '--no-git-tag-version', '--ignore-scripts'], {cwd: Root, stdio: 'inherit'});
+	value = value || read(path.join(Root, 'package.json')).version;
+
+	childProcess.execFileSync(process.execPath, [npm, 'version', value, '--no-git-tag-version', '--ignore-scripts', '--allow-same-version'], {cwd: Root, stdio: ['ignore', 'ignore', 'inherit']});
 
 	return sync();
 }
@@ -78,8 +91,19 @@ function tag () {
 
 	if (!check()) return false;
 
-	if (wrapper.version !== main.version || wrapper.dependencies[main.name] !== main.version)
-		return stop('packages/elemenx has ' + wrapper.version + ', not ' + main.version + ': npm run version:set -- ' + main.version + ', then commit');
+	var wrong = [];
+
+	if (wrapper.version !== main.version)
+		wrong.push('packages/elemenx/package.json has the version ' + wrapper.version);
+
+	if (wrapper.dependencies[main.name] !== main.version)
+		wrong.push('packages/elemenx/package.json depends on ' + main.name + ' ' + wrapper.dependencies[main.name]);
+
+	if (lock().version !== main.version)
+		wrong.push('package-lock.json has the version ' + lock().version);
+
+	if (wrong.length)
+		return stop('package.json has the version ' + main.version + ', but ' + wrong.join(', ') + '. Run npm run version:set (it puts ' + main.version + ' everywhere), commit, then npm run version:tag');
 
 	if (git(['tag', '--list', name]).trim())
 		return stop('the tag ' + name + ' exists already: set a new version first');
