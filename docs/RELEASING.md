@@ -53,6 +53,8 @@ git push origin :refs/tags/v0.9.1
 
 then commit the fix and tag it again (`npm run version:tag`, as the version stays 0.9.1) and push with `git push --follow-tags`.
 
+After `npm publish`: the publishing steps skip what is done already (a published version, an existing GitHub release), so fix the cause (a trusted publisher of `elemenx` that is missing or different gives `404 Not Found` on `PUT`) and use Re-run failed jobs on the run of the workflow. A re-run takes the workflow of the tagged commit: for a tag made before this behavior, finish by hand as below.
+
 After `@qybercom/elemenx` is published but `elemenx` is not: npm never takes a version twice, so do not move the tag. Publish `elemenx` by hand from the tagged commit:
 
 ```bash

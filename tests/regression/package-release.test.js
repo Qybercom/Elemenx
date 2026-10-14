@@ -122,6 +122,9 @@ describe('Elemenx npm release surface', function () {
 		expect(ci).toContain('workflow_call:');
 		expect(ci).toContain('|| inputs.e2e)');
 		expect(publish.indexOf('npm publish --access public')).toBeLessThan(publish.indexOf('cd packages/elemenx'));
+		expect(publish).toContain('if [ -n "$(npm view "@qybercom/elemenx@$version" version 2>/dev/null)" ]; then');
+		expect(publish).toContain('if [ -n "$(npm view "elemenx@$version" version 2>/dev/null)" ]; then');
+		expect(publish).toContain('if gh release view "$GITHUB_REF_NAME"');
 		expect(publish).toContain('contents: write');
 		expect(publish.indexOf('cd packages/elemenx')).toBeLessThan(publish.indexOf('gh release create'));
 		expect(publish).toContain('gh release create "$GITHUB_REF_NAME" --verify-tag');
