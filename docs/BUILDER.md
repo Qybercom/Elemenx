@@ -79,7 +79,9 @@ Production `serve` enables gzip for compressible responses of at least 1024 byte
 
 `elemenx build [project] --single` (or `Single: true` in `elemenx.config.js`) builds the whole Application into one `index.html`: the framework, the code of the Application, its templates and styles, and the Libraries it uses (their stylesheets, and their sprites and data through `Elemenx.Resource`), inline and minified. Images and the other public files of the project are copied next to it. `index.html` must load `elemenx.js` and the entry (`app.js`) with `<script src>`: they take the places of those scripts. The framework stays a script of its own (`<script id="elemenx">`), so a `WebWorker` loads it from a `blob:` copy of its text.
 
-The page runs from any static server and from a file (`file://`), with these limits: a browser runs no worker from a file (open the page from a server to use workers); a `ServiceWorker` needs a script file of its own; the Router uses the History API, which a page opened from a file cannot change, so an Application with routes runs from a server; a Content Security Policy must allow inline scripts and styles, and `blob:` workers.
+The packs of a Library (its `packs.json`, see `docs/LIBRARIES.md`) go in only when the Application uses them: when its code, its templates or the Library Components it renders hold a text of the pack's `Uses` (`'Emoji'`, `brands:`, `files:`, `FileIcon` for ElemenxUI), and a pack of a language when it is the `lang` of `<html>` too. `--packs emoji,brands` (or `Packs: ['emoji', 'brands']` in `elemenx.config.js`; `all` for all of them) embeds packs the code cannot show, as an icon name built at run time. A file of a pack left out is not copied: from a file the page cannot load it.
+
+The page runs from any static server and from a file (`file://`), with these limits: a browser runs no worker from a file (open the page from a server to use workers); a `ServiceWorker` needs a script file of its own; the Router keeps the route in the history entries there (Router `Mode` `'memory'`, the default for a file), so the URL of the page does not show it: use `Mode: 'hash'` for routes in the URL; a Content Security Policy must allow inline scripts and styles, and `blob:` workers.
 
 ## Distribution of the framework
 
@@ -88,17 +90,19 @@ The page runs from any static server and from a file (`file://`), with these lim
 | File | Content |
 |---|---|
 | `elemenx.js`, `elemenx.min.js` | the framework |
-| `elemenx-ui.js`, `elemenx-ui.min.js` | ElemenxUI standalone: every component with its template and style, the stylesheets, the sprites and the data, embedded |
-| `elemenx.all.js`, `elemenx.all.min.js` | both in one file |
+| `elemenx-ui.js`, `elemenx-ui.min.js` | ElemenxUI standalone: every component with its template and style, the stylesheets, the sprites and the data, embedded, but its packs |
+| `elemenx-ui.<pack>.js`, `elemenx-ui.<pack>.min.js` | a pack of ElemenxUI: `emoji` (the emoji with their English names and keywords), `emoji.ru` (the Russian ones), `brands` and `files` (the icon sets) |
+| `elemenx.all.js`, `elemenx.all.min.js` | the framework and ElemenxUI in one file |
 | `elemenx-ui/` | ElemenxUI as files, for the Discovery of a project (`Elemenx.Library('ElemenxUI', {$Root: ...})`) |
 | `manifest.json` | the version, and the size, the gzip size and the integrity (SRI) of every file |
 
 The minifier (`tools/minify.js`) has no dependencies and renames nothing, so no public name can break: it drops comments (but `/*!` licenses) and the blanks that carry no meaning, and keeps a line break where a statement could end. Templates and stylesheets are minified the same way.
 
-The standalone files need no build and no server, `file://` included: ElemenxUI registers itself, injects its styles and carries its files through `Elemenx.Resource`.
+The standalone files need no build and no server, `file://` included: ElemenxUI registers itself, injects its styles and carries its files through `Elemenx.Resource`. The packs are large and few pages need them, so they stay out of `elemenx-ui.js`: a page adds the scripts of the ones it uses after the framework (the emoji pickers need `emoji`, the icons `brands:` and `files:` and `FileIcon` theirs). From a server a page may skip them: ElemenxUI loads the files of a pack from `elemenx-ui/` next to the script when they are first needed; a page from a file cannot.
 
 ```html
 <script src="elemenx.all.min.js"></script>
+<script src="elemenx-ui.emoji.min.js"></script>
 <script>
 	Elemenx.Component('Root', {$Template: '<Button Label="Save" Icon="save" Variant="primary" />'});
 	Elemenx.Application('App', {$Use: ['ElemenxUI'], $Component: 'Root', $Mount: '#app'});

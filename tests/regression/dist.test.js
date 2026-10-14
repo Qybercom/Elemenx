@@ -49,13 +49,89 @@ describe('Elemenx dist', function () {
 		expect(ui).toContain('Elemenx.Library(\'ElemenxUI\',{$Root:root});');
 		expect(ui).toContain('Elemenx.Resource(root+"/index.svg",');
 		expect(ui).toContain('Elemenx.Resource(root+"/icons/weather.svg",');
-		expect(ui).toContain('Elemenx.Resource(root+"/data/emoji.json",');
+		expect(ui).not.toContain('"/data/emoji');
+		expect(ui).not.toContain('"/icons/brands.svg"');
+		expect(ui).not.toContain('"/icons/files.svg"');
 		expect(ui).toContain('"Ribbon":function(){');
 		expect(ui).toContain('"Emoji":function(){');
 		expect(ui).toContain('"glyph":function(){');
 		expect(ui).toContain('--elemenx-accent-rgb');
 		expect(ui).not.toContain('$TemplateURL');
 		expect(ui).not.toContain('$StyleURL');
+	});
+
+	it('leaves the packs of ElemenxUI (packs.json) to scripts of their own that put their files next to the script', function () {
+		var packs = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), 'libraries', 'ElemenxUI', 'packs.json'), 'utf8'));
+
+		expect(Object.keys(packs)).toEqual(['emoji', 'emoji.ru', 'brands', 'files']);
+
+		Object.keys(packs).forEach(function (name) {
+			['elemenx-ui.' + name + '.js', 'elemenx-ui.' + name + '.min.js'].forEach(function (file) {
+				var registered = {};
+
+				new vm.Script(read(file)).runInNewContext({
+					document: {currentScript: {src: 'file:///D:/site/dist/' + file + '?v=1'}},
+					Elemenx: {
+						Resource: function (url, text) {
+							registered[url] = text;
+						}
+					}
+				});
+
+				expect(Object.keys(registered), file).toEqual(packs[name].Files.map(function (relative) {
+					return 'file:///D:/site/dist/elemenx-ui/' + relative;
+				}));
+				expect(registered['file:///D:/site/dist/elemenx-ui/' + packs[name].Files[0]].length, file).toBeGreaterThan(1000);
+			});
+		});
+	});
+
+	it('writes no Unicode noncharacter, which an HTML parser reports in an inline script', function () {
+		['elemenx-ui.js', 'elemenx-ui.emoji.js', 'elemenx-ui.emoji.ru.js', 'elemenx-ui.brands.js', 'elemenx-ui.files.js'].forEach(function (name) {
+			var source = read(name);
+			var found = [];
+
+			for (var char of source) {
+				var code = char.codePointAt(0);
+				if ((code >= 0xFDD0 && code <= 0xFDEF) || (code & 0xFFFE) === 0xFFFE)
+					found.push(code.toString(16));
+			}
+
+			expect(found, name).toEqual([]);
+		});
+	});
+
+	it('embeds in a single file the packs the Application uses, and the ones of --packs', function () {
+		var project = path.resolve(process.cwd(), 'tests', 'dist', 'single-project');
+		var target = path.join(project, '..', 'single-packs-output');
+		var html;
+
+		function embedded (relative) {
+			return html.indexOf('Elemenx.Resource("/libraries/ElemenxUI/' + relative + '"') !== -1;
+		}
+
+		try {
+			Builder.Build(project, {single: true, out: '../single-packs-output'});
+
+			html = fs.readFileSync(path.join(target, 'index.html'), 'utf8');
+
+			expect(embedded('icons/brands.svg')).toBe(true);
+			expect(embedded('icons/weather.svg')).toBe(true);
+			expect(embedded('icons/files.svg')).toBe(false);
+			expect(embedded('data/emoji.json')).toBe(false);
+
+			Builder.Build(project, {single: true, out: '../single-packs-output', packs: ['emoji', 'files']});
+
+			html = fs.readFileSync(path.join(target, 'index.html'), 'utf8');
+
+			expect(embedded('icons/files.svg')).toBe(true);
+			expect(embedded('data/emoji.json')).toBe(true);
+			expect(embedded('data/emoji-en.json')).toBe(true);
+			expect(embedded('data/emoji-ru.json')).toBe(false);
+		}
+		finally {
+			fs.rmSync(target, {recursive: true, force: true});
+		}
 	});
 
 	it('builds an Application into one index.html with elemenx build --single, its scripts safe inside a <script>', function () {
@@ -66,12 +142,14 @@ describe('Elemenx dist', function () {
 		var html;
 
 		try {
-			run = childProcess.spawnSync(process.execPath, [cli, 'build', project, '--single', '--out', '../single-cli-output'], {encoding: 'utf8'});
+			run = childProcess.spawnSync(process.execPath, [cli, 'build', project, '--single', '--out', '../single-cli-output', '--packs', 'files, emoji'], {encoding: 'utf8'});
 			html = fs.readFileSync(path.join(target, 'index.html'), 'utf8');
 
 			expect(run.status).toBe(0);
 			expect(run.stdout).toMatch(/^Elemenx Builder: .+index\.html \(\d+ KB\)\n$/);
 			expect(html.match(/<script/g).length).toBe(2);
+			expect(html).toContain('Elemenx.Resource("/libraries/ElemenxUI/icons/files.svg"');
+			expect(html).toContain('Elemenx.Resource("/libraries/ElemenxUI/data/emoji.json"');
 			expect(fs.existsSync(path.join(target, 'app.js'))).toBe(false);
 			expect(fs.existsSync(path.join(target, 'elemenx.js'))).toBe(false);
 		}
@@ -89,7 +167,10 @@ describe('Elemenx dist', function () {
 		expect(fs.existsSync(path.join(output, 'elemenx-ui', 'index.js'))).toBe(true);
 		expect(fs.existsSync(path.join(output, 'elemenx-ui', 'icons', 'brands.svg'))).toBe(true);
 		expect(manifest.Version).toBe(Package.version);
-		expect(Object.keys(manifest.Files).sort()).toEqual(['elemenx-ui.js', 'elemenx-ui.min.js', 'elemenx.all.js', 'elemenx.all.min.js', 'elemenx.js', 'elemenx.min.js']);
+		expect(Object.keys(manifest.Files).sort()).toEqual([
+			'elemenx-ui.brands.js', 'elemenx-ui.brands.min.js', 'elemenx-ui.emoji.js', 'elemenx-ui.emoji.min.js', 'elemenx-ui.emoji.ru.js', 'elemenx-ui.emoji.ru.min.js',
+			'elemenx-ui.files.js', 'elemenx-ui.files.min.js', 'elemenx-ui.js', 'elemenx-ui.min.js', 'elemenx.all.js', 'elemenx.all.min.js', 'elemenx.js', 'elemenx.min.js'
+		]);
 		expect(manifest.Files['elemenx.min.js'].Integrity).toBe('sha384-' + crypto.createHash('sha384').update(fs.readFileSync(path.join(output, 'elemenx.min.js'))).digest('base64'));
 		expect(manifest.Files['elemenx.min.js'].Gzip).toBeLessThan(manifest.Files['elemenx.min.js'].Size);
 		expect(result.Output).toBe(path.resolve(output));

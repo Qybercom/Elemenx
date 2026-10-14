@@ -18,13 +18,14 @@ It covers:
 
 Contract files grouped by subsystem (`tests/regression/`):
 
-- Router: `router-contracts.test.js`: path normalization, the `$Router()` facade, link interception, NotFound through links and history, redirects from guards and `$OnRouteLeave` (asked once), `NavigationError`;
+- Router: `router-contracts.test.js`: path normalization, the `$Router()` facade, link interception, NotFound through links and history, redirects from guards and `$OnRouteLeave` (asked once), `NavigationError`, the URL modes `hash` and `memory` (`tests/dist/single.spec.js` routes a page from a file in `memory`);
 - Structural: `structural-contracts.test.js`: `*for` over own keys and empty sources, the iteration limit, `*key` errors, Component props (literals, kebab-case, `{{...}}`, path bindings);
 - Template and Component: `component-contracts.test.js`: `Elemenx.Template` arguments, `$Template: '#name'`, deferred Components before they are ready, `*error` and `$OnChildError` when resources fail, console logging only of unhandled failures;
 - Discovery: `discovery-errors.test.js` with fixtures in `tests/public/discovery-errors/`: index and entity failures;
 - Network transports: `network-*.test.js`: setters, backpressure, error branches, stale generations; `network-context.test.js` pins `Metrics` against a fake clock (counters freeze at `End()`);
 - Storage, Events, Messaging: `storage-contracts.test.js`, `events-contracts.test.js`, `messaging-contracts.test.js`;
 - public methods reached by no other test: `public-api-remaining.test.js`.
+- the distribution and the release: `dist.test.js` (the bundles, the packs of ElemenxUI, `elemenx build --single` and the packs it embeds), `tests/dist/*.spec.js` (the bundles and a single file from `file://`), `package-release.test.js` (the files npm publishes, the package fields, the CI and publish workflows against `npm test`);
 - the ElemenxUI library: `tests/examples/ui-kit.spec.js` drives the `/ui` catalogue of the Advanced example in development and in the production bundle (masks, dropdowns, menus, tabs, file upload, Workspace splitters).
 
 When a bug is found, add a regression test that reproduces it before changing runtime behavior. New public API should ship with a direct contract test or a stronger end-to-end test.

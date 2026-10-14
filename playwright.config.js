@@ -5,6 +5,8 @@ export default defineConfig({
 	testMatch: ['history/**/*.spec.js', 'production/**/*.spec.js', 'examples/**/*.spec.js', 'dist/**/*.spec.js'],
 	fullyParallel: false,
 	workers: 1,
+	forbidOnly: !!process.env.CI,
+	reporter: process.env.CI ? [['list'], ['html', {open: 'never'}]] : 'list',
 	use: {
 		baseURL: 'http://127.0.0.1:4273',
 		channel: 'chrome',

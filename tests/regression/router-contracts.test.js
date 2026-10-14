@@ -3,7 +3,7 @@ import { loadElemenx, resetDOM, tick, unique, waitFor } from '../setup.js';
 
 var running = [];
 
-function boot (routes, notFound) {
+function boot (routes, notFound, mode) {
 	var root = unique('ContractRoot');
 	var app;
 	var router;
@@ -11,7 +11,7 @@ function boot (routes, notFound) {
 	Elemenx.Component(root, {$Template: '<main *outlet="Content"></main>'});
 
 	app = Elemenx.Application(unique('ContractApp'), {$Component: root, $Mount: '#mount'});
-	router = Elemenx.Router({Root: app.$Component(), Routes: routes, NotFound: notFound});
+	router = Elemenx.Router({Root: app.$Component(), Routes: routes, NotFound: notFound, Mode: mode});
 
 	running.push({App: app, Router: router});
 
@@ -78,6 +78,148 @@ describe('Regression: Router contracts', function () {
 		await tick(20);
 
 		expect(document.getElementById('contract-about').textContent).toBe('/about|{"flag":"","x":"1"}');
+	});
+
+	it('Mode hash keeps the route after the # of the page: #/path?query#hash, links to #/path and to a #name of the route', async function () {
+		var first = page('contract-hash-first', {$Template: '<div id="contract-hash-first">{{$Path}}|{{JSON.stringify($Query)}}|{{$Hash}}</div>'});
+		var second = page('contract-hash-second', {$Template: '<div id="contract-hash-second">{{$Path}}|{{JSON.stringify($Query)}}|{{$Hash}}</div>'});
+		var x;
+		var link;
+
+		history.replaceState({}, '', '/page?app=1#/first?x=1#part');
+
+		x = boot([{Path: '/first', Component: first}, {Path: '/second', Component: second}], undefined, 'hash');
+
+		await tick(20);
+
+		expect(document.getElementById('contract-hash-first').textContent).toBe('/first|{"x":"1"}|part');
+
+		x.Router.Go('/second?y=2');
+
+		await tick(20);
+
+		expect(location.pathname + location.search + location.hash).toBe('/page?app=1#/second?y=2');
+		expect(document.getElementById('contract-hash-second').textContent).toBe('/second|{"y":"2"}|');
+
+		link = document.createElement('a');
+
+		link.setAttribute('href', '#comments');
+
+		document.body.appendChild(link);
+
+		expect(click(link)).toBe(true);
+
+		await tick(20);
+
+		expect(location.hash).toBe('#/second?y=2#comments');
+		expect(document.getElementById('contract-hash-second').textContent).toBe('/second|{"y":"2"}|comments');
+
+		link.setAttribute('href', '#/first');
+
+		expect(click(link)).toBe(true);
+
+		await tick(20);
+
+		expect(location.hash).toBe('#/first');
+		expect(document.getElementById('contract-hash-first')).not.toBeNull();
+
+		x.Router.Back();
+
+		await waitFor(function () {
+			return !!document.getElementById('contract-hash-second');
+		}, 2000);
+
+		expect(location.hash).toBe('#/second?y=2#comments');
+
+		link.remove();
+	});
+
+	it('Mode hash reads a page URL without a route as /, and a # alone as the Hash of /', async function () {
+		var home = page('contract-hash-home', {$Template: '<div id="contract-hash-home">{{$Path}}|{{$Hash}}</div>'});
+
+		history.replaceState({}, '', '/page#top');
+
+		boot([{Path: '/', Component: home}], undefined, 'hash');
+
+		await tick(20);
+
+		expect(document.getElementById('contract-hash-home').textContent).toBe('/|top');
+		expect(location.pathname + location.hash).toBe('/page#/#top');
+	});
+
+	it('Mode memory keeps the route in the history entry: the page URL and its hash belong to the Application', async function () {
+		var first = page('contract-memory-first');
+		var second = page('contract-memory-second');
+		var x;
+		var link;
+
+		history.replaceState({}, '', '/page?app=1#own');
+
+		x = boot([{Path: '/page', Component: first}, {Path: '/second', Component: second}], undefined, 'memory');
+
+		await tick(20);
+
+		expect(document.getElementById('contract-memory-first').textContent).toBe('/page|{"app":"1"}');
+
+		x.Router.Go('second?y=2');
+
+		await tick(20);
+
+		expect(location.pathname + location.search + location.hash).toBe('/page?app=1#own');
+		expect(history.state.ElemenxRouterURL).toBe('/second?y=2');
+		expect(document.getElementById('contract-memory-second').textContent).toBe('/second|{"y":"2"}');
+
+		link = document.createElement('a');
+
+		link.setAttribute('href', '#section');
+
+		document.body.appendChild(link);
+
+		expect(click(link)).toBe(false);
+
+		link.setAttribute('href', '/page?app=2');
+
+		expect(click(link)).toBe(true);
+
+		await tick(20);
+
+		expect(document.getElementById('contract-memory-first').textContent).toBe('/page|{"app":"2"}');
+		expect(location.search).toBe('?app=1');
+
+		x.Router.Back();
+
+		await waitFor(function () {
+			return !!document.getElementById('contract-memory-second');
+		}, 2000);
+
+		expect(location.pathname + location.search + location.hash).toBe('/page?app=1#own');
+
+		link.remove();
+	});
+
+	it('Mode memory leaves a history entry made by the Application with its own # to the page', async function () {
+		var first = page('contract-memory-own');
+		var x = boot([{Path: '/', Component: first}, {Path: '/second', Component: page('contract-memory-own-second')}], undefined, 'memory');
+
+		await tick(20);
+
+		x.Router.Go('/second');
+
+		await tick(20);
+
+		history.pushState(null, '', '#own');
+		history.back();
+
+		await tick(50);
+
+		expect(location.hash).toBe('');
+		expect(document.getElementById('contract-memory-own-second')).not.toBeNull();
+	});
+
+	it('Mode is history, hash or memory', function () {
+		expect(function () {
+			Elemenx.Router({Routes: [], Mode: 'path'});
+		}).toThrow('Elemenx.Router Mode must be history, hash or memory');
 	});
 
 	it('Start is idempotent and requires a Root component', function () {

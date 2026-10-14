@@ -6,4 +6,6 @@
 	<Icon Name="brands:github" Size="24" Colored="true" />
 	<Button Label="Start the worker" Icon="play" (click)="StartWorker" />
 	<span class="single-worker">{{Worker}}</span>
+	<a class="single-about" href="/about">About</a>
+	<div *outlet="Content"></div>
 </main>

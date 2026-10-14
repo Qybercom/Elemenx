@@ -350,6 +350,32 @@ function sourceUsesComponent (source, name) {
 	return new RegExp('<\\s*' + escaped + '(?:\\s|/?>)').test(source || '');
 }
 
+/* Marks in shared the Services, Guards and Directives of a Library that the Application does not define: every Application gets them. */
+function markShared (entities, catalog, shared) {
+	Object.keys(catalog).forEach(function (type) {
+		if (type === 'Component') return;
+
+		Object.keys(catalog[type]).forEach(function (name) {
+			if (!entities[type] || !entities[type][name])
+				shared[type + ':' + name] = true;
+		});
+	});
+}
+
+/* The code of the entities an Application uses of its own: its entities and the Library Components it renders, not the shared ones. */
+function ownCode (entities, shared) {
+	var parts = [];
+
+	Object.keys(entities).forEach(function (type) {
+		Object.keys(entities[type]).forEach(function (name) {
+			if (!shared[type + ':' + name])
+				parts.push(entities[type][name]);
+		});
+	});
+
+	return parts.join('\n');
+}
+
 function selectLibraryEntities (entities, catalog) {
 	var type;
 
@@ -516,6 +542,7 @@ function build (project, options) {
 	var roots;
 	var directories;
 	var bundle;
+	var shared = {};
 	var i = 0;
 
 	if (!fs.existsSync(app))
@@ -548,6 +575,8 @@ function build (project, options) {
 
 		scan(libraries[i].Directory, libraries[i].Directory, catalog, {}, true, options.single);
 
+		markShared(entities, catalog, shared);
+
 		selectLibraryEntities(entities, catalog);
 
 		i++;
@@ -555,8 +584,20 @@ function build (project, options) {
 
 	bundle = render(entities);
 
-	if (options.single)
-		return single({Project: project, Output: output, Index: index, Entry: app, Framework: framework, Roots: roots, Libraries: libraries, Code: (templateBundle ? templateBundle + '\n' : '') + bundle + '\n' + appSource});
+	if (options.single) {
+		return single({
+			Project: project,
+			Output: output,
+			Index: index,
+			Entry: app,
+			Framework: framework,
+			Roots: roots,
+			Libraries: libraries,
+			Code: (templateBundle ? templateBundle + '\n' : '') + bundle + '\n' + appSource,
+			Uses: ownCode(entities, shared) + '\n' + indexSource + '\n' + appSource,
+			Packs: options.packs || []
+		});
+	}
 
 	removeTree(output);
 
@@ -610,16 +651,31 @@ function single (job) {
 	var framework = scriptText(Minify.JavaScript(fs.readFileSync(job.Framework, 'utf8')));
 	var code;
 	var replaced = {Framework: false, Entry: false};
+	var language = (/<html\b[^>]*\blang\s*=\s*["']?([A-Za-z]+)/i.exec(page) || [])[1];
+
+	/* A pack of a Library goes in when the Application asks for it (Packs) or uses it: its code has a text of Uses. */
+	function needed (name, pack) {
+		if (job.Packs.indexOf(name) !== -1 || job.Packs.indexOf('all') !== -1) return true;
+		if (pack.Language && pack.Language !== String(language || '').toLowerCase()) return false;
+
+		return (pack.Uses || []).some(function (text) {
+			return job.Uses.indexOf(text) !== -1;
+		});
+	}
 
 	job.Libraries.forEach(function (declaration) {
 		var list = [];
 		var root = '/' + String(declaration.Root).replace(/^\/+|\/+$/g, '');
+		var packs = common.readPacks(declaration.Directory);
 
 		libraryResources(declaration.Directory, declaration.Directory, list, {});
 
 		list.forEach(function (item) {
-			var text = fs.readFileSync(item.Source, 'utf8');
 			var relative = item.Relative.replace(/\\/g, '/');
+			var pack = common.packOf(packs, relative);
+			if (pack && !needed(pack, packs[pack])) return;
+
+			var text = fs.readFileSync(item.Source, 'utf8');
 
 			if (item.Style) styles.push(Minify.CSS(text));
 			else resources.push('Elemenx.Resource(' + JSON.stringify(root + '/' + relative) + ', ' + JSON.stringify(/\.json$/i.test(relative) ? Minify.JSON(text) : Minify.HTML(text)) + ');');

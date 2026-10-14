@@ -1,3 +1,4 @@
 [
-	'SingleRoot/SingleRoot.js'
+	'SingleRoot/SingleRoot.js',
+	'SinglePage/SinglePage.js'
 ];

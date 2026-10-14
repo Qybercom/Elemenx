@@ -57,6 +57,25 @@ test.describe('elemenx build --single', function () {
 		expect(list).toEqual([]);
 	});
 
+	test('routes from a file in Mode memory: the page URL stays, Back returns to the previous route', async function ({ page }) {
+		var url = pathToFileURL(path.join(output, 'index.html')).href;
+		var list = errors(page);
+
+		await page.goto(url);
+
+		await expect(page.locator('.single-page')).toHaveText('/');
+
+		await page.locator('.single-about').click();
+
+		await expect(page.locator('.single-page')).toHaveText('/about');
+		expect(page.url()).toBe(url);
+
+		await page.goBack();
+
+		await expect(page.locator('.single-page')).toHaveText('/');
+		expect(list).toEqual([]);
+	});
+
 	test('starts a worker from the framework inline in the page', async function ({ page }) {
 		var list = errors(page);
 

@@ -9,3 +9,4 @@ test-results/
 /dist
 /tests/dist/single-output
 /tests/dist/single-cli-output
+/tests/dist/single-packs-output

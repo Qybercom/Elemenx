@@ -1,0 +1,6 @@
+{
+	"emoji": {"Files": ["data/emoji.json", "data/emoji-en.json"], "Uses": ["'Emoji'", "\"Emoji\""]},
+	"emoji.ru": {"Files": ["data/emoji-ru.json"], "Uses": ["'Emoji'", "\"Emoji\""], "Language": "ru"},
+	"brands": {"Files": ["icons/brands.svg"], "Uses": ["brands:"]},
+	"files": {"Files": ["icons/files.svg"], "Uses": ["files:", "FileIcon"]}
+}

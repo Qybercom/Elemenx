@@ -4967,11 +4967,8 @@
 			return bundledComponent(route.Component);
 		}
 
-		function currentURL () {
-			return new URL(global.location.href);
-		}
-
-		function historyState (index) {
+		/* The state of a Router entry of the browser history; route is the URL of the route when the page URL does not hold it (Mode memory). */
+		function historyState (index, route) {
 			var current = global.history.state;
 			var state = {};
 
@@ -4979,6 +4976,9 @@
 				Runtime.Assign(state, current);
 
 			state.ElemenxRouterIndex = index;
+
+			if (route !== undefined)
+				state.ElemenxRouterURL = route;
 
 			return state;
 		}
@@ -5008,6 +5008,9 @@
 			var historyIndex = 0;
 			var committedURL = null;
 			var rollbackPop = false;
+			var urlMode = config.Mode === undefined ? (global.location.protocol === 'file:' ? 'memory' : 'history') : config.Mode;
+			if (urlMode !== 'history' && urlMode !== 'hash' && urlMode !== 'memory')
+				throw new Error('Elemenx.Router Mode must be history, hash or memory');
 
 			/* Navigation: events and owners */
 			function application () {
@@ -5666,15 +5669,76 @@
 				return failure;
 			}
 
+			/* Navigation: modes */
+			/*
+			 * The URL of the current route. Mode history: the URL of the page. Mode hash: the part of the page URL after its
+			 * #, which starts with a slash (a # without one is the Hash of the route /). Mode memory: the URL kept in the
+			 * history entry, the page URL never changes and its hash belongs to the Application.
+			 */
+			function routeURL () {
+				var hash = global.location.hash;
+				var state = global.history.state;
+
+				if (urlMode === 'hash')
+					return new URL(hash.charAt(1) === '/' ? hash.substring(1) : '/' + hash, routeBase());
+
+				if (urlMode === 'history')
+					return new URL(global.location.href);
+
+				if (state && typeof state.ElemenxRouterURL === 'string') return new URL(state.ElemenxRouterURL, routeBase());
+
+				return new URL(global.location.protocol === 'file:' ? '/' : global.location.pathname + global.location.search, routeBase());
+			}
+
+			/* The base of the route URLs outside Mode history: a file URL of a page has the path of the file (and a drive letter on Windows). */
+			function routeBase () {
+				return global.location.protocol === 'file:' ? 'file:///' : global.location.origin + '/';
+			}
+
+			function writeState (method, url) {
+				var page = url.href;
+
+				if (urlMode === 'hash') page = global.location.href.replace(/#[\s\S]*$/, '') + '#' + url.pathname + url.search + url.hash;
+				else if (urlMode === 'memory') page = global.location.href;
+
+				global.history[method](historyState(historyIndex, urlMode === 'memory' ? url.pathname + url.search + url.hash : undefined), '', page);
+			}
+
+			/*
+			 * The route URL of a link, or null when the Router leaves the link to the page. Outside Mode history the href is
+			 * read against the current route; in Mode hash #/path is a route and #name the Hash of the current one, in
+			 * Mode memory a link to a # is the Application's own.
+			 */
+			function linkURL (anchor) {
+				var href = anchor.getAttribute('href');
+
+				if (urlMode === 'history')
+					return new URL(anchor.href, global.location.href);
+
+				if (href === null) return null;
+
+				if (href.charAt(0) === '#') {
+					if (urlMode === 'memory') return null;
+
+					if (href.charAt(1) === '/')
+						return new URL(href.substring(1), routeBase());
+				}
+
+				var target = new URL(href, (committedURL || routeURL()).href);
+				if (target.protocol !== global.location.protocol) return null;
+
+				return target;
+			}
+
 			/* Navigation: history and execution */
 			function writeHistory (mode, url) {
 				if (mode === 'push') {
 					historyIndex++;
 
-					global.history.pushState(historyState(historyIndex), '', url.href);
+					writeState('pushState', url);
 				}
 				else if (mode === 'replace') {
-					global.history.replaceState(historyState(historyIndex), '', url.href);
+					writeState('replaceState', url);
 				}
 			}
 
@@ -5683,7 +5747,7 @@
 
 				if (targetIndex === null || targetIndex === undefined || targetIndex === historyIndex) {
 					if (committedURL)
-						global.history.replaceState(historyState(historyIndex), '', committedURL.href);
+						writeState('replaceState', committedURL);
 
 					return;
 				}
@@ -5701,7 +5765,7 @@
 
 			function execute (prepared, mode, targetHistoryIndex, redirect) {
 				var id = ++navigationID;
-				var previousURL = committedURL ? new URL(committedURL.href) : currentURL();
+				var previousURL = committedURL ? new URL(committedURL.href) : routeURL();
 				var context = {
 					$Service: function (name) {
 						return Runtime.ServiceForApplication(application(), name);
@@ -5719,7 +5783,7 @@
 					clearWaiting();
 
 					if (mode === 'push' || mode === 'replace') {
-						global.history.replaceState(historyState(historyIndex), '', previousURL.href);
+						writeState('replaceState', previousURL);
 					}
 					else if (mode === 'pop') {
 						rejectPop(targetHistoryIndex);
@@ -5854,7 +5918,7 @@
 				var id = ++navigationID;
 				var packet = statePacket(url, {});
 				var context = {
-					$From: navigationPacket(committedURL || currentURL()),
+					$From: navigationPacket(committedURL || routeURL()),
 					$To: packet,
 					$Route: null,
 					$Guard: null
@@ -5914,9 +5978,9 @@
 			}
 
 			function navigate (url, mode, redirect) {
-				var target = new URL(url, global.location.href);
+				var target = new URL(url, urlMode === 'history' ? global.location.href : (committedURL || routeURL()).href);
 
-				if (target.origin !== global.location.origin) {
+				if (target.origin !== global.location.origin || target.protocol !== global.location.protocol) {
 					global.location.href = target.href;
 
 					return api;
@@ -5949,8 +6013,8 @@
 					var anchor = findAnchor(event.target);
 					if (!anchor || anchor.target || anchor.hasAttribute('download')) return;
 
-					var target = new URL(anchor.href, global.location.href);
-					if (target.origin !== global.location.origin) return;
+					var target = linkURL(anchor);
+					if (!target || target.origin !== global.location.origin) return;
 					if (!match(target.pathname) && !config.NotFound) return;
 
 					event.preventDefault();
@@ -5969,7 +6033,10 @@
 						return;
 					}
 
-					url = currentURL();
+					/* Mode memory: an entry without a route is a # of the Application, the route stays. */
+					if (urlMode === 'memory' && !(event && event.state && typeof event.state.ElemenxRouterURL === 'string')) return;
+
+					url = routeURL();
 					prepared = prepare(url);
 					targetIndex = event && event.state && typeof event.state.ElemenxRouterIndex === 'number' ? event.state.ElemenxRouterIndex : null;
 
@@ -5989,11 +6056,11 @@
 
 				started = true;
 
-				global.history.replaceState(historyState(historyIndex), '', global.location.href);
+				committedURL = routeURL();
 
-				committedURL = currentURL();
+				writeState('replaceState', committedURL);
 
-				var url = currentURL();
+				var url = routeURL();
 				var prepared = prepare(url);
 
 				if (prepared) {

@@ -3,6 +3,7 @@
 var fs = require('fs');
 var path = require('path');
 var common = require('./common.js');
+var Package = require('../package.json');
 var fail = common.fail;
 
 var Types = {
@@ -228,7 +229,7 @@ function generateApplication (project, name, options) {
 		host.push(appFile);
 	}
 
-	if (writeIfMissing(indexFile, '<!DOCTYPE html>\\n<html>\\n<head>\\n\\t<meta charset="utf-8">\\n\\n\\t<script src="/elemenx.js"></script>\\n\\t<script src="/app.js"></script>\\n</head>\\n<body>\\n</body>\\n</html>')) {
+	if (writeIfMissing(indexFile, '<!DOCTYPE html>\n<html>\n<head>\n\t<meta charset="utf-8">\n\n\t<script src="/elemenx.js"></script>\n\t<script src="/app.js"></script>\n</head>\n<body>\n</body>\n</html>\n')) {
 		host.push(indexFile);
 	}
 
@@ -236,7 +237,7 @@ function generateApplication (project, name, options) {
 		host.push(configFile);
 	}
 
-	if (writeIfMissing(packageFile, JSON.stringify({name: applicationPackageName(path.basename(project) || name), private: true, scripts: {dev: 'elemenx dev', build: 'elemenx build', serve: 'elemenx serve'}}, null, '\t'))) {
+	if (writeIfMissing(packageFile, JSON.stringify({name: applicationPackageName(path.basename(project) || name), private: true, scripts: {dev: 'elemenx dev', build: 'elemenx build', serve: 'elemenx serve'}, devDependencies: {elemenx: '^' + Package.version}}, null, '\t') + '\n')) {
 		host.push(packageFile);
 	}
 

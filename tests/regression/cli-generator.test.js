@@ -193,6 +193,21 @@ describe('Elemenx graph-aware generator', function () {
 		expect(fs.existsSync(path.join(destination, 'FooApp', 'FooApp', 'index.js'))).toBe(false);
 	});
 
+	it('writes the host index.html with real line breaks and a package.json that depends on this elemenx', function () {
+		var root = fs.mkdtempSync(path.join(os.tmpdir(), 'elemenx-application-host-'));
+		var version = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), 'package.json'), 'utf8')).version;
+
+		temporary.push(root);
+
+		Generator.GenerateApplication(root, 'FooApp', {});
+
+		var html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+
+		expect(html).not.toContain('\\n');
+		expect(html.split('\n')).toEqual(['<!DOCTYPE html>', '<html>', '<head>', '\t<meta charset="utf-8">', '', '\t<script src="/elemenx.js"></script>', '\t<script src="/app.js"></script>', '</head>', '<body>', '</body>', '</html>', '']);
+		expect(JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8')).devDependencies).toEqual({elemenx: '^' + version});
+	});
+
 	it('creates another named Application without touching existing host files', function () {
 		var root = fs.mkdtempSync(path.join(os.tmpdir(), 'elemenx-multi-application-'));
 

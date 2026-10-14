@@ -30,6 +30,14 @@ Inside Elemenx definitions and runtime-owned instances, every `$*` name is reser
 
 Router reuse preserves the existing route/component instance when only Params, Query or Hash change within the same matched Route; this does not create artificial lifecycle churn. Guards still participate when navigation crosses guarded route boundaries, including browser back/forward navigation.
 
+The Router option `Mode` sets where the route lives (`Elemenx.Router({Mode: ...})` or `$Router: {Mode: ...}`):
+
+- `'history'`: in the URL of the page, through the History API. The default for a page from a server.
+- `'hash'`: after the `#` of the page URL, as `index.html#/orders/5?tab=2#comments`; the route of a URL without `#/` is `/`. A link to `#/path` goes to a route and a link to `#name` sets the Hash of the current route (`$Hash` is `comments` here). The `#` of the page belongs to the Router: `location.hash`, `hashchange` and CSS `:target` no longer carry the Application's own anchors.
+- `'memory'`: in the entries of the browser history, which keep the URL of the page; Back and Forward and a reload keep the route, and the `#` of the page and its links stay the Application's own. A page opened from a file (`file://`) can change no URL but its `#`, so `'memory'` is the default there. The first route is `/` for a file and the path and query of the page otherwise.
+
+Outside `'history'` a relative link or `Go()` URL is read against the current route. Any other value throws `Elemenx.Router Mode must be history, hash or memory`.
+
 Application-owned Services, Network resources and Workers participate in owner lifecycle cleanup. Context composition accepts the supported single-context and multi-context forms consistently across Network, Messaging and Storage.
 
 Production bundles resolve statically bundled resources from the Bundle Registry first and retain normal Discovery as the fallback for resources not present in the bundle. This permits hybrid applications with bundled and dynamically discovered resources.

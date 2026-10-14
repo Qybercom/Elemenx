@@ -11,6 +11,10 @@ var Package = require('../package.json');
 
 var Root = path.resolve(__dirname, '..');
 var Library = path.join(Root, 'libraries', 'ElemenxUI');
+var Packs = common.readPacks(Library);
+
+/* The line of a script of ElemenxUI that sets root, the URL of the files of the Library next to the script (dist/elemenx-ui). */
+var RootLine = '\tvar root = script && script.src ? script.src.replace(/[?#].*$/, \'\').replace(/\\/[^\\/]*$/, \'\') + \'/elemenx-ui\' : \'/libraries/ElemenxUI\';';
 
 function banner (name) {
 	return '/*! ' + name + ' ' + Package.version + ' | LGPL-3.0 */\n';
@@ -55,7 +59,30 @@ function entity (file, min) {
 	return source;
 }
 
-/* The standalone bundle of ElemenxUI: its stylesheets, its files (sprites, data) and every entity, embedded. */
+/* A file of the Library (its path from the root) embedded for Elemenx.Resource. */
+function resource (relative, min) {
+	var text = fs.readFileSync(path.join(Library, relative), 'utf8');
+
+	if (min)
+		text = /\.json$/i.test(relative) ? Minify.JSON(text) : Minify.HTML(text);
+
+	return '\tElemenx.Resource(root + ' + JSON.stringify('/' + relative) + ', ' + JSON.stringify(text) + ');';
+}
+
+/* A pack of ElemenxUI (packs.json) as a script of its own: its files, embedded. */
+function pack (name, min) {
+	var lines = ['(function () {', '\tvar script = document.currentScript;', RootLine, ''];
+
+	Packs[name].Files.forEach(function (relative) {
+		lines.push(resource(relative, min));
+	});
+
+	lines.push('})();');
+
+	return lines.join('\n') + '\n';
+}
+
+/* The standalone bundle of ElemenxUI: its stylesheets, its files (sprites, data) but the packs, and every entity, embedded. */
 function library (min) {
 	var list = files(Library);
 	var entities = {};
@@ -78,7 +105,7 @@ function library (min) {
 
 	lines.push('(function () {');
 	lines.push('\tvar script = document.currentScript;');
-	lines.push('\tvar root = script && script.src ? script.src.replace(/[?#].*$/, \'\').replace(/\\/[^\\/]*$/, \'\') + \'/elemenx-ui\' : \'/libraries/ElemenxUI\';');
+	lines.push(RootLine);
 	lines.push('\tvar style = document.createElement(\'style\');');
 	lines.push('');
 	lines.push('\tstyle.setAttribute(\'data-elemenx-library\', \'ElemenxUI\');');
@@ -91,12 +118,8 @@ function library (min) {
 
 	list.Other.forEach(function (file) {
 		var relative = path.relative(Library, file).replace(/\\/g, '/');
-		var text = fs.readFileSync(file, 'utf8');
-
-		if (min)
-			text = /\.json$/i.test(file) ? Minify.JSON(text) : Minify.HTML(text);
-
-		lines.push('\tElemenx.Resource(root + ' + JSON.stringify('/' + relative) + ', ' + JSON.stringify(text) + ');');
+		if (!common.packOf(Packs, relative))
+			lines.push(resource(relative, min));
 	});
 
 	lines.push('})();');
@@ -121,7 +144,10 @@ function copy (source, target) {
  *   elemenx.js, elemenx.min.js            the framework
  *   elemenx-ui.js, elemenx-ui.min.js      ElemenxUI standalone: components, templates, styles, sprites and data
  *                                         embedded, for a page with no build and no server (file:// too)
- *   elemenx.all.js, elemenx.all.min.js    both in one file
+ *   elemenx-ui.<pack>.js, .min.js         a pack of ElemenxUI (packs.json: the emoji data and its languages, the large
+ *                                         icon sets), left out of elemenx-ui.js: a page adds the scripts of the packs
+ *                                         it uses, or ElemenxUI loads their files from elemenx-ui/ (not from a file)
+ *   elemenx.all.js, elemenx.all.min.js    the framework and ElemenxUI in one file
  *   elemenx-ui/                           ElemenxUI as files, for the Discovery of a project (Library $Root)
  *   manifest.json                         the version, and the size, gzip size and integrity (SRI) of every file
  */
@@ -137,6 +163,11 @@ function Build (output) {
 	outputs['elemenx-ui.min.js'] = banner('ElemenxUI') + Minify.JavaScript(library(true));
 	outputs['elemenx.all.js'] = outputs['elemenx.js'] + '\n' + outputs['elemenx-ui.js'];
 	outputs['elemenx.all.min.js'] = outputs['elemenx.min.js'] + outputs['elemenx-ui.min.js'];
+
+	Object.keys(Packs).forEach(function (name) {
+		outputs['elemenx-ui.' + name + '.js'] = banner('ElemenxUI') + pack(name, false);
+		outputs['elemenx-ui.' + name + '.min.js'] = banner('ElemenxUI') + Minify.JavaScript(pack(name, true));
+	});
 
 	if (fs.existsSync(target))
 		fs.rmSync(target, {recursive: true, force: true});
@@ -172,7 +203,7 @@ if (require.main === module) {
 			Object.keys(result.Manifest.Files).forEach(function (name) {
 				var file = result.Manifest.Files[name];
 
-				process.stdout.write('  ' + name + Array(Math.max(2, 22 - name.length)).join(' ') + Math.round(file.Size / 1024) + ' KB, gzip ' + Math.round(file.Gzip / 1024) + ' KB\n');
+				process.stdout.write('  ' + name + Array(Math.max(2, 28 - name.length)).join(' ') + Math.round(file.Size / 1024) + ' KB, gzip ' + Math.round(file.Gzip / 1024) + ' KB\n');
 			});
 
 			process.stdout.write('Elemenx dist ' + result.Manifest.Version + ': ' + result.Output + '\n');

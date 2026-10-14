@@ -1,8 +1,34 @@
 {
 	"name": "elemenx",
-	"version": "1.0.0",
-	"description": "Elemenx browser UI framework",
+	"version": "0.9.0",
+	"description": "A browser UI framework in one ES5 file: components, reactive state, routing, services, storage, messaging and network, with its CLI and the ElemenxUI component library",
+	"keywords": [
+		"ui",
+		"framework",
+		"components",
+		"ui-kit",
+		"router",
+		"reactive",
+		"spa",
+		"es5",
+		"no-build",
+		"cli"
+	],
+	"homepage": "https://github.com/Qybercom/Elemenx#readme",
+	"bugs": {
+		"url": "https://github.com/Qybercom/Elemenx/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/Qybercom/Elemenx.git"
+	},
+	"license": "LGPL-3.0-only",
 	"main": "elemenx.js",
+	"unpkg": "dist/elemenx.min.js",
+	"jsdelivr": "dist/elemenx.min.js",
+	"bin": {
+		"elemenx": "elemenx-cli.js"
+	},
 	"files": [
 		"elemenx.js",
 		"elemenx-cli.js",
@@ -11,9 +37,11 @@
 		"docs",
 		"tools",
 		"libraries",
-		"examples",
-		"!examples/**/dist"
+		"dist"
 	],
+	"engines": {
+		"node": ">=20"
+	},
 	"scripts": {
 		"test": "npm run lint && npm run test:browser && npm run test:tools && npm run dist && npm run test:min && npm run test:history",
 		"dist": "node tools/dist.js",
@@ -29,7 +57,8 @@
 		"build:advanced": "node elemenx-cli.js build examples/Advanced",
 		"example:advanced:dist": "node elemenx-cli.js serve examples/Advanced",
 		"test:tools": "vitest run --config vitest.node.config.mjs",
-		"lint": "eslint && stylelint \"**/*.{css,html}\""
+		"lint": "eslint && stylelint \"**/*.{css,html}\"",
+		"prepack": "npm run dist"
 	},
 	"devDependencies": {
 		"@html-eslint/eslint-plugin": "0.66.1",
@@ -51,8 +80,5 @@
 		"stylelint": "17.16.0",
 		"vite": "7.3.6",
 		"vitest": "5.0.1"
-	},
-	"bin": {
-		"elemenx": "elemenx-cli.js"
 	}
 }

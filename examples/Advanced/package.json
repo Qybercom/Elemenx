@@ -8,6 +8,6 @@
 		"serve": "elemenx serve"
 	},
 	"dependencies": {
-		"elemenx": "^1.0.0"
+		"elemenx": "^0.9.0"
 	}
 }

@@ -82,8 +82,18 @@ function buildOptions (parsed, settings) {
 		entry: value(parsed.Options, 'entry', settings.Entry, 'app.js'),
 		index: value(parsed.Options, 'index', settings.Index, 'index.html'),
 		out: value(parsed.Options, 'out', settings.Output, 'dist'),
-		single: parsed.Options.single === true || settings.Single === true
+		single: parsed.Options.single === true || settings.Single === true,
+		packs: listValue(value(parsed.Options, 'packs', settings.Packs, []))
 	};
+}
+
+/* A list option: an Array of the config, or the names of the command line separated by commas. */
+function listValue (input) {
+	if (Array.isArray(input)) return input;
+
+	return String(input === true ? '' : input).split(',').map(function (item) {
+		return item.trim();
+	}).filter(Boolean);
 }
 
 function booleanValue (input, fallback) {
@@ -154,7 +164,7 @@ command('generate', 'Generate an Application or an entity and register it in the
 	});
 });
 
-command('build', 'Build an application into dist (--single: all of it in one index.html).', function (parsed) {
+command('build', 'Build an application into dist (--single: all of it in one index.html; --packs a,b: Library packs it always embeds).', function (parsed) {
 	var project = projectPath(parsed.Arguments[0]);
 	var settings = config(project);
 

@@ -466,7 +466,7 @@ Elemenx.Service('Emoji', {
 		context.textBaseline = 'top';
 
 		this.Drawing = context;
-		this.Missing = this.Draw(context, '󯿾');
+		this.Missing = this.Draw(context, '\uDB7F\uDFFE');
 		this.Width = context.measureText('😀').width || 20;
 
 		return context;
