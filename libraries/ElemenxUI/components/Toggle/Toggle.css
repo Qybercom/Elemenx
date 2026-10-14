@@ -21,8 +21,8 @@
 	width: 32px;
 	height: 20px;
 	background: var(--elemenx-border-strong);
-	border-radius: 999px;
-	transition: background 120ms ease;
+	border-radius: var(--elemenx-radius-pill);
+	transition: background var(--elemenx-duration) var(--elemenx-easing);
 }
 
 .elemenx-toggle-thumb {
@@ -33,8 +33,8 @@
 	height: 16px;
 	background: var(--elemenx-surface);
 	border-radius: 50%;
-	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.24);
-	transition: transform 120ms ease;
+	box-shadow: var(--elemenx-shadow-small);
+	transition: transform var(--elemenx-duration) var(--elemenx-easing);
 }
 
 .elemenx-toggle:hover .elemenx-toggle-track {
@@ -51,13 +51,13 @@
 }
 
 .elemenx-check-input:focus-visible + .elemenx-toggle-track {
-	outline: 2px solid color-mix(in srgb, var(--elemenx-accent) 48%, transparent);
+	outline: 2px solid var(--elemenx-focus);
 	outline-offset: 2px;
 }
 
 .elemenx-toggle.small {
-	font-size: 12px;
-	line-height: 16px;
+	font-size: var(--elemenx-font-size-small);
+	line-height: var(--elemenx-line-height-small);
 }
 
 .elemenx-toggle.small .elemenx-toggle-track {

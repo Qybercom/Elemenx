@@ -52,7 +52,7 @@
 .elemenx-section-toggle {
 	margin-left: -4px;
 	padding: 0 4px;
-	border-radius: 4px;
+	border-radius: var(--elemenx-radius);
 	cursor: pointer;
 }
 
@@ -61,12 +61,12 @@
 }
 
 .elemenx-section-toggle:focus-visible {
-	outline: 2px solid color-mix(in srgb, var(--elemenx-accent) 48%, transparent);
+	outline: 2px solid var(--elemenx-focus);
 }
 
 .elemenx-section-toggle > .elemenx-icon:first-child {
 	color: var(--elemenx-text-muted);
-	transition: transform 120ms ease;
+	transition: transform var(--elemenx-duration) var(--elemenx-easing);
 }
 
 .elemenx-section.collapsed .elemenx-section-toggle > .elemenx-icon:first-child {
@@ -74,7 +74,7 @@
 }
 
 .elemenx-section-title {
-	font-weight: 700;
+	font-weight: var(--elemenx-font-weight-bold);
 }
 
 .elemenx-section-title.level-1 {
@@ -84,17 +84,17 @@
 
 .elemenx-section-title.level-2 {
 	font-size: 20px;
-	line-height: 24px;
+	line-height: var(--elemenx-line-height-large);
 }
 
 .elemenx-section-title.level-3 {
-	font-size: 16px;
-	line-height: 24px;
+	font-size: var(--elemenx-font-size-large);
+	line-height: var(--elemenx-line-height-large);
 }
 
 .elemenx-section-title.level-4 {
-	font-size: 14px;
-	line-height: 20px;
+	font-size: var(--elemenx-font-size);
+	line-height: var(--elemenx-line-height);
 }
 
 .elemenx-section-body {

@@ -42,13 +42,13 @@
 }
 
 .elemenx-empty-title {
-	font-size: 16px;
-	line-height: 24px;
+	font-size: var(--elemenx-font-size-large);
+	line-height: var(--elemenx-line-height-large);
 }
 
 .elemenx-empty.small .elemenx-empty-title {
-	font-size: 14px;
-	line-height: 20px;
+	font-size: var(--elemenx-font-size);
+	line-height: var(--elemenx-line-height);
 }
 
 .elemenx-empty-description {
@@ -58,8 +58,8 @@
 }
 
 .elemenx-empty.small .elemenx-empty-description {
-	font-size: 12px;
-	line-height: 16px;
+	font-size: var(--elemenx-font-size-small);
+	line-height: var(--elemenx-line-height-small);
 }
 
 .elemenx-empty-actions {

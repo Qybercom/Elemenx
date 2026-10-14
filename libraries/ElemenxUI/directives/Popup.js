@@ -3,6 +3,7 @@
  * The anchor is the closest .elemenx-popup-anchor ancestor, or the parent element.
  * data-placement: bottom-start (default), bottom-end, top-start, right-start.
  * The panel dispatches a "dismiss" DOM event on an outside pointer press and on Escape; the owner closes it.
+ * The panel keeps to its anchor while the page scrolls or resizes and while its own size changes.
  */
 Elemenx.Directive('popup', {
 	$OnCreate: function (context) {
@@ -59,7 +60,8 @@ Elemenx.Directive('popup', {
 				left = placement.indexOf('end') !== -1 ? rect.right - width : rect.left;
 				top = rect.bottom + gap;
 
-				if (placement.indexOf('top') === 0 || (top + height > window.innerHeight - margin && rect.top - gap - height >= margin))
+				/* Above the anchor when asked or when there is no room below; below it when there is no room above. */
+				if (placement.indexOf('top') === 0 ? rect.top - gap - height >= margin || top + height > window.innerHeight - margin : top + height > window.innerHeight - margin && rect.top - gap - height >= margin)
 					top = rect.top - gap - height;
 			}
 
@@ -103,6 +105,16 @@ Elemenx.Directive('popup', {
 
 			window[method]('scroll', data.Position, true);
 			window[method]('resize', data.Position);
+
+			/* Content that shows after the panel opens (a list that loads, a component behind *if) moves it again. */
+			if (typeof ResizeObserver === 'undefined') return;
+
+			data.Sizer = data.Sizer || new ResizeObserver(function () {
+				data.Position();
+			});
+
+			if (on) data.Sizer.observe(element);
+			else data.Sizer.disconnect();
 		};
 	},
 

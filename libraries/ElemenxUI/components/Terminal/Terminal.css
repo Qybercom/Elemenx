@@ -6,8 +6,8 @@
 	background: var(--elemenx-surface);
 	border-radius: 0;
 	font-family: var(--elemenx-font-mono), monospace;
-	font-size: 12px;
-	line-height: 20px;
+	font-size: var(--elemenx-font-size-small);
+	line-height: var(--elemenx-line-height);
 }
 
 .elemenx-terminal-header {
@@ -20,7 +20,7 @@
 	border-radius: 0;
 	color: var(--elemenx-text-muted);
 	font-family: var(--elemenx-font), sans-serif;
-	font-weight: 600;
+	font-weight: var(--elemenx-font-weight-strong);
 }
 
 .elemenx-terminal-title {
@@ -51,7 +51,7 @@
 
 .elemenx-terminal-line.input {
 	color: var(--elemenx-text);
-	font-weight: 600;
+	font-weight: var(--elemenx-font-weight-strong);
 }
 
 .elemenx-terminal-line.output {
@@ -73,7 +73,7 @@
 .elemenx-terminal-prompt {
 	margin-right: 8px;
 	color: var(--elemenx-accent);
-	font-weight: 700;
+	font-weight: var(--elemenx-font-weight-bold);
 	user-select: none;
 }
 

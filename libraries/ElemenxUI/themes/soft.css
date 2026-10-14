@@ -1,0 +1,61 @@
+/*
+ * Soft: round corners, roomier controls and a violet accent, for consumer Applications. Every rule starts with
+ * body[data-theme='soft'].
+ */
+body[data-theme='soft'] {
+	--elemenx-font: Inter, 'Segoe UI', Arial, sans-serif;
+	--elemenx-control-small: 28px;
+	--elemenx-control: 36px;
+	--elemenx-control-large: 44px;
+	--elemenx-control-giant: 56px;
+	--elemenx-radius-small: 4px;
+	--elemenx-radius: 8px;
+	--elemenx-radius-large: 12px;
+	--elemenx-radius-huge: 16px;
+	--elemenx-radius-giant: 24px;
+	--elemenx-duration: 160ms;
+	--elemenx-duration-slow: 260ms;
+	--elemenx-easing: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+body[data-theme='soft'][data-scheme='light'] {
+	--elemenx-background: #f5f4fb;
+	--elemenx-surface: #ffffff;
+	--elemenx-surface-raised: #f8f7fd;
+	--elemenx-surface-hover: #efedfa;
+	--elemenx-text: #1f1b2e;
+	--elemenx-text-muted: #6c6782;
+	--elemenx-accent: #6b4eff;
+	--elemenx-accent-hover: #5838f0;
+	--elemenx-accent-text: #ffffff;
+	--elemenx-danger: #d64560;
+	--elemenx-success: #1f9d72;
+	--elemenx-warning: #c27b12;
+	--elemenx-info: #3d7be0;
+	--elemenx-border: #e3e0f0;
+	--elemenx-border-strong: #c9c4df;
+	--elemenx-shadow: 0 12px 32px rgba(52, 40, 120, 0.14);
+}
+
+body[data-theme='soft'][data-scheme='dark'] {
+	--elemenx-background: #16141f;
+	--elemenx-surface: #1e1b2a;
+	--elemenx-surface-raised: #252234;
+	--elemenx-surface-hover: #2e2a40;
+	--elemenx-text: #efedf7;
+	--elemenx-text-muted: #a19cb8;
+	--elemenx-accent: #a594ff;
+	--elemenx-accent-hover: #b8aaff;
+	--elemenx-accent-text: #16141f;
+	--elemenx-danger: #f07a8f;
+	--elemenx-success: #5fd0a5;
+	--elemenx-warning: #f0b45a;
+	--elemenx-info: #82aaf5;
+	--elemenx-border: #332f46;
+	--elemenx-border-strong: #484262;
+	--elemenx-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+}
+
+body[data-theme='soft'] .elemenx-button {
+	border-radius: var(--elemenx-radius-pill);
+}

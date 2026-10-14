@@ -1,9 +1,9 @@
 .elemenx-input.elemenx-chat-composer {
 	align-items: flex-end;
 	height: auto;
-	min-height: 40px;
+	min-height: var(--elemenx-control-large);
 	padding: 7px 7px 7px 8px;
-	border-radius: 20px;
+	border-radius: calc(var(--elemenx-control-large) / 2);
 }
 
 .elemenx-chat-composer .elemenx-input-control {
@@ -12,5 +12,9 @@
 	padding: 2px 0;
 	overflow-y: auto;
 	resize: none;
-	line-height: 20px;
+	line-height: var(--elemenx-line-height);
+}
+.elemenx-chat-picker {
+	padding: 0;
+	overflow: hidden;
 }

@@ -21,7 +21,7 @@
 }
 
 .elemenx-drawer::backdrop {
-	background: rgba(15, 17, 20, 0.4);
+	background: var(--elemenx-backdrop, rgba(15, 17, 20, 0.48));
 }
 
 .elemenx-drawer.small {
@@ -39,13 +39,13 @@
 .elemenx-drawer.right {
 	inset: 0 0 0 auto;
 	border-left: 1px solid var(--elemenx-border);
-	animation: elemenx-drawer-right 200ms ease;
+	animation: elemenx-drawer-right var(--elemenx-duration-slow) var(--elemenx-easing);
 }
 
 .elemenx-drawer.left {
 	inset: 0 auto 0 0;
 	border-right: 1px solid var(--elemenx-border);
-	animation: elemenx-drawer-left 200ms ease;
+	animation: elemenx-drawer-left var(--elemenx-duration-slow) var(--elemenx-easing);
 }
 
 .elemenx-drawer.top,
@@ -57,14 +57,14 @@
 .elemenx-drawer.top {
 	inset: 0 0 auto;
 	border-bottom: 1px solid var(--elemenx-border);
-	animation: elemenx-drawer-top 200ms ease;
+	animation: elemenx-drawer-top var(--elemenx-duration-slow) var(--elemenx-easing);
 }
 
 .elemenx-drawer.bottom {
 	inset: auto 0 0;
 	border-top: 1px solid var(--elemenx-border);
-	border-radius: 12px 12px 0 0;
-	animation: elemenx-drawer-bottom 200ms ease;
+	border-radius: var(--elemenx-radius-huge) var(--elemenx-radius-huge) 0 0;
+	animation: elemenx-drawer-bottom var(--elemenx-duration-slow) var(--elemenx-easing);
 }
 
 .elemenx-drawer.top.medium,
@@ -95,9 +95,9 @@
 
 .elemenx-drawer-title {
 	margin: 0;
-	font-size: 16px;
-	line-height: 24px;
-	font-weight: 700;
+	font-size: var(--elemenx-font-size-large);
+	line-height: var(--elemenx-line-height-large);
+	font-weight: var(--elemenx-font-weight-bold);
 }
 
 .elemenx-drawer-actions {

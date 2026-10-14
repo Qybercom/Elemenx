@@ -38,11 +38,11 @@
 }
 
 .elemenx-number-input .elemenx-number-step:first-child {
-	border-top-right-radius: 3px;
+	border-top-right-radius: calc(var(--elemenx-radius) - 1px);
 }
 
 .elemenx-number-input .elemenx-number-step:last-child {
-	border-bottom-right-radius: 3px;
+	border-bottom-right-radius: calc(var(--elemenx-radius) - 1px);
 }
 
 .elemenx-input.small .elemenx-number-controls {

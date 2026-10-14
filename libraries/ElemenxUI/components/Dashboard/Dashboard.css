@@ -65,7 +65,7 @@
 	border-top: 1px solid var(--elemenx-border);
 	border-radius: 0;
 	color: var(--elemenx-text-muted);
-	font-size: 12px;
+	font-size: var(--elemenx-font-size-small);
 }
 
 @container (max-width: 960px) {

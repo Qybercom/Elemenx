@@ -1,0 +1,59 @@
+/*
+ * High contrast: black on white and white on black, strong borders and a solid focus ring, for low vision and bright
+ * rooms. Every rule starts with body[data-theme='contrast'], so the stylesheet may stay on the page: it applies only
+ * while the theme is on (the Theme Service: Use('contrast')).
+ */
+body[data-theme='contrast'] {
+	--elemenx-focus: var(--elemenx-accent);
+	--elemenx-hairline: var(--elemenx-text);
+	--elemenx-scrollbar: var(--elemenx-text-muted);
+}
+
+body[data-theme='contrast'][data-scheme='light'] {
+	--elemenx-background: #ffffff;
+	--elemenx-surface: #ffffff;
+	--elemenx-surface-raised: #f2f2f2;
+	--elemenx-surface-hover: #e0e0e0;
+	--elemenx-text: #000000;
+	--elemenx-text-muted: #333333;
+	--elemenx-accent: #0038a8;
+	--elemenx-accent-hover: #002a80;
+	--elemenx-accent-text: #ffffff;
+	--elemenx-danger: #b00020;
+	--elemenx-success: #0b6b2b;
+	--elemenx-warning: #8a4b00;
+	--elemenx-info: #00509e;
+	--elemenx-border: #595959;
+	--elemenx-border-strong: #000000;
+	--elemenx-shadow: 0 0 0 2px #000000;
+}
+
+body[data-theme='contrast'][data-scheme='dark'] {
+	--elemenx-background: #000000;
+	--elemenx-surface: #000000;
+	--elemenx-surface-raised: #121212;
+	--elemenx-surface-hover: #2a2a2a;
+	--elemenx-text: #ffffff;
+	--elemenx-text-muted: #d6d6d6;
+	--elemenx-accent: #ffd500;
+	--elemenx-accent-hover: #ffe34d;
+	--elemenx-accent-text: #000000;
+	--elemenx-danger: #ff6b6b;
+	--elemenx-success: #5ee08a;
+	--elemenx-warning: #ffb347;
+	--elemenx-info: #6cb6ff;
+	--elemenx-border: #a6a6a6;
+	--elemenx-border-strong: #ffffff;
+	--elemenx-shadow: 0 0 0 2px #ffffff;
+}
+
+body[data-theme='contrast'] .elemenx-link,
+body[data-theme='contrast'] a {
+	text-decoration: underline;
+}
+
+body[data-theme='contrast'] .elemenx-button:focus-visible,
+body[data-theme='contrast'] .elemenx-input:focus-within {
+	outline: 3px solid var(--elemenx-accent);
+	outline-offset: 2px;
+}

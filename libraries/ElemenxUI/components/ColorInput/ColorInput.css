@@ -28,29 +28,29 @@
 	overflow: hidden;
 	background: var(--elemenx-color-checker);
 	border: 0;
-	border-radius: 4px;
-	box-shadow: inset 0 0 0 1px rgba(128, 128, 128, 0.32);
+	border-radius: var(--elemenx-radius);
+	box-shadow: inset 0 0 0 1px var(--elemenx-hairline);
 	cursor: pointer;
 }
 
 .elemenx-color-swatch span {
 	position: absolute;
 	inset: 0;
-	box-shadow: inset 0 0 0 1px rgba(128, 128, 128, 0.32);
+	box-shadow: inset 0 0 0 1px var(--elemenx-hairline);
 }
 
 .elemenx-color-swatch:focus-visible,
 .elemenx-color-area:focus-visible,
 .elemenx-color-slider:focus-visible,
 .elemenx-color-preset:focus-visible {
-	outline: 2px solid color-mix(in srgb, var(--elemenx-accent) 48%, transparent);
+	outline: 2px solid var(--elemenx-focus);
 	outline-offset: 2px;
 }
 
 .elemenx-input.small .elemenx-color-swatch {
 	width: 16px;
 	height: 16px;
-	border-radius: 2px;
+	border-radius: var(--elemenx-radius-small);
 }
 
 .elemenx-input.large .elemenx-color-swatch {
@@ -61,7 +61,7 @@
 .elemenx-input.giant .elemenx-color-swatch {
 	width: 40px;
 	height: 40px;
-	border-radius: 8px;
+	border-radius: var(--elemenx-radius-large);
 }
 
 .elemenx-color-popup {
@@ -78,7 +78,7 @@
 	background-image:
 		linear-gradient(to top, #000000, rgba(0, 0, 0, 0)),
 		linear-gradient(to right, #ffffff, rgba(255, 255, 255, 0));
-	border-radius: 4px;
+	border-radius: var(--elemenx-radius);
 	cursor: crosshair;
 	touch-action: none;
 }
@@ -86,7 +86,7 @@
 .elemenx-color-slider {
 	position: relative;
 	height: 12px;
-	border-radius: 999px;
+	border-radius: var(--elemenx-radius-pill);
 	cursor: pointer;
 	touch-action: none;
 }
@@ -124,8 +124,8 @@
 	aspect-ratio: 1;
 	padding: 0;
 	border: 0;
-	border-radius: 4px;
-	box-shadow: inset 0 0 0 1px rgba(128, 128, 128, 0.32);
+	border-radius: var(--elemenx-radius);
+	box-shadow: inset 0 0 0 1px var(--elemenx-hairline);
 	cursor: pointer;
 }
 
@@ -137,5 +137,5 @@
 .elemenx-color-value {
 	align-self: center;
 	color: var(--elemenx-text-muted);
-	font-size: 12px;
+	font-size: var(--elemenx-font-size-small);
 }

@@ -8,20 +8,20 @@
 .elemenx-tags-field {
 	flex-wrap: wrap;
 	height: auto;
-	min-height: 32px;
+	min-height: var(--elemenx-control);
 	padding-top: 3px;
 	padding-bottom: 3px;
 	cursor: text;
 }
 
 .elemenx-tags-field.small {
-	min-height: 24px;
+	min-height: var(--elemenx-control-small);
 	padding-top: 1px;
 	padding-bottom: 1px;
 }
 
 .elemenx-tags-field.large {
-	min-height: 40px;
+	min-height: var(--elemenx-control-large);
 	padding-top: 7px;
 	padding-bottom: 7px;
 }

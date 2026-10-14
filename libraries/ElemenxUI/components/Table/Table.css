@@ -17,7 +17,7 @@
 	padding: 2px 4px;
 	background: transparent;
 	border: 0;
-	border-radius: 4px;
+	border-radius: var(--elemenx-radius);
 	color: inherit;
 	font: inherit;
 	cursor: pointer;
@@ -34,7 +34,7 @@
 }
 
 .elemenx-table-sort:focus-visible {
-	outline: 2px solid color-mix(in srgb, var(--elemenx-accent) 48%, transparent);
+	outline: 2px solid var(--elemenx-focus);
 }
 
 .elemenx-table th[aria-sort='ascending'],
@@ -76,8 +76,8 @@
 }
 
 .elemenx-table.selectable tbody tr:focus-visible td {
-	box-shadow: inset 0 1px 0 color-mix(in srgb, var(--elemenx-accent) 48%, transparent),
-		inset 0 -1px 0 color-mix(in srgb, var(--elemenx-accent) 48%, transparent);
+	box-shadow: inset 0 1px 0 var(--elemenx-focus),
+		inset 0 -1px 0 var(--elemenx-focus);
 }
 
 .elemenx-table tbody tr.selected td,
@@ -93,7 +93,7 @@
 
 .elemenx-table-wrap.scrolling {
 	border: 1px solid var(--elemenx-border);
-	border-radius: 8px;
+	border-radius: var(--elemenx-radius-large);
 }
 
 .elemenx-table-wrap.scrolling .elemenx-table tbody tr:last-child td {
@@ -136,10 +136,10 @@
 	padding: 0 4px;
 	background: var(--elemenx-surface);
 	border: 1px solid var(--elemenx-border-strong);
-	border-radius: 4px;
+	border-radius: var(--elemenx-radius);
 	color: var(--elemenx-text);
 	font: inherit;
-	font-size: 12px;
+	font-size: var(--elemenx-font-size-small);
 }
 
 .elemenx-table-filter-select:focus-visible {
@@ -165,7 +165,7 @@
 	padding: 0;
 	background: transparent;
 	border: 0;
-	border-radius: 4px;
+	border-radius: var(--elemenx-radius);
 	color: var(--elemenx-text-muted);
 	cursor: pointer;
 }
@@ -176,8 +176,8 @@ button.elemenx-table-twisty:hover {
 }
 
 .elemenx-table.tree tbody tr:focus-visible td {
-	box-shadow: inset 0 1px 0 color-mix(in srgb, var(--elemenx-accent) 48%, transparent),
-		inset 0 -1px 0 color-mix(in srgb, var(--elemenx-accent) 48%, transparent);
+	box-shadow: inset 0 1px 0 var(--elemenx-focus),
+		inset 0 -1px 0 var(--elemenx-focus);
 }
 
 .elemenx-table.tree tbody tr {

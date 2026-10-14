@@ -23,8 +23,8 @@
 .elemenx-progress-label {
 	flex: 1 0 100%;
 	color: var(--elemenx-text-muted);
-	font-size: 12px;
-	line-height: 16px;
+	font-size: var(--elemenx-font-size-small);
+	line-height: var(--elemenx-line-height-small);
 }
 
 .elemenx-progress-track {
@@ -33,7 +33,7 @@
 	height: 4px;
 	overflow: hidden;
 	background: var(--elemenx-border);
-	border-radius: 999px;
+	border-radius: var(--elemenx-radius-pill);
 }
 
 .elemenx-progress.small .elemenx-progress-track {
@@ -50,8 +50,8 @@
 	bottom: 0;
 	left: 0;
 	background: var(--elemenx-progress-color);
-	border-radius: 999px;
-	transition: width 200ms ease;
+	border-radius: var(--elemenx-radius-pill);
+	transition: width var(--elemenx-duration-slow) var(--elemenx-easing);
 }
 
 .elemenx-progress.indeterminate .elemenx-progress-fill {
@@ -64,8 +64,8 @@
 	flex: none;
 	min-width: 32px;
 	color: var(--elemenx-text-muted);
-	font-size: 12px;
-	line-height: 16px;
+	font-size: var(--elemenx-font-size-small);
+	line-height: var(--elemenx-line-height-small);
 	font-variant-numeric: tabular-nums;
 	text-align: right;
 }
@@ -106,7 +106,7 @@
 .elemenx-progress-ring-fill {
 	stroke: var(--elemenx-progress-color);
 	stroke-linecap: round;
-	transition: stroke-dasharray 200ms ease;
+	transition: stroke-dasharray var(--elemenx-duration-slow) var(--elemenx-easing);
 }
 
 .elemenx-progress.ring.indeterminate .elemenx-progress-ring {
@@ -121,7 +121,7 @@
 	justify-content: center;
 	min-width: 0;
 	color: var(--elemenx-text);
-	font-size: 12px;
+	font-size: var(--elemenx-font-size-small);
 	text-align: center;
 }
 

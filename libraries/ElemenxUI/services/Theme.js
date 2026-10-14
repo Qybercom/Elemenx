@@ -1,25 +1,50 @@
 /*
- * The theme policy of the page: 'system' follows the operating system, 'light' and 'dark' force a theme.
- * The policy lives in body[data-theme], so index.css applies it before any script runs; this Service changes it,
- * remembers it in localStorage (StorageKey, Persist) and reports changes, including system changes under 'system'.
- * The first policy comes from localStorage, then from the data-theme of the page, then from Default.
+ * The theme of the page: a policy of the color scheme and a named theme.
+ * The policy is 'system' (follows the operating system), 'light' or 'dark'. The theme is 'default' (index.css) or a
+ * named one: the Library brings 'contrast', 'darcula' and 'soft' (themes/), and Register adds the themes of the
+ * Application. A theme is plain CSS whose rules start with its attribute: body[data-theme='ocean'] { ... } for both
+ * schemes, body[data-theme='ocean'][data-scheme='dark'] { ... } for the dark one; such a rule is more specific than
+ * the rule of a Component it overrides, so the order of the stylesheets does not matter.
+ * body[data-theme] holds the policy under the default theme (so index.css applies it before any script runs) and the
+ * name of a named theme; body[data-scheme] always holds the scheme shown, 'light' or 'dark'.
+ * The policy and the theme are remembered in localStorage (StorageKey, Persist) and changes are reported, including
+ * system changes under 'system'. The first policy comes from localStorage, then from the data-theme of the page,
+ * then from Default.
  */
 Elemenx.Service('Theme', {
 	Default: 'system',
 	Persist: true,
 	StorageKey: 'elemenx-theme',
 	Policies: ['system', 'light', 'dark'],
+	Library: 'ElemenxUI',
+	Builtin: {
+		contrast: {Label: 'High contrast', Schemes: ['light', 'dark']},
+		darcula: {Label: 'Darcula', Schemes: ['dark']},
+		soft: {Label: 'Soft', Schemes: ['light', 'dark']}
+	},
 
 	$OnCreate: function () {
 		var self = this;
+		var attribute = document.body.getAttribute('data-theme');
 		var stored = null;
+		var name = null;
+		var key;
 
 		this.Listeners = [];
+		this.Registry = {default: {Name: 'default', Label: 'Default', Schemes: ['light', 'dark'], URL: '', Link: null, State: 'ready', Callbacks: []}};
+		this.Name = 'default';
 		this.Media = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
 
+		for (key in this.Builtin) {
+			if (this.Builtin.hasOwnProperty(key))
+				this.Register(key, this.Builtin[key]);
+		}
+
 		this.SystemChanged = function () {
-			if (self.Current === 'system')
-				self.Changed();
+			if (self.Current !== 'system') return;
+
+			self.Apply();
+			self.Changed();
 		};
 
 		if (this.Media && this.Media.addEventListener)
@@ -27,19 +52,33 @@ Elemenx.Service('Theme', {
 
 		try {
 			stored = this.Persist ? window.localStorage.getItem(this.StorageKey) : null;
+			name = this.Persist ? window.localStorage.getItem(this.StorageKey + '-name') : null;
 		}
 		catch (error) {
 			stored = null;
 		}
 
-		this.Current = this.Valid(stored) ? stored : this.Valid(document.body.getAttribute('data-theme')) ? document.body.getAttribute('data-theme') : this.Default;
+		this.Current = this.Valid(stored) ? stored : this.Valid(attribute) ? attribute : this.Default;
+
+		/* A page may name its theme in its markup: <body data-theme="darcula">. */
+		if (!name && attribute && !this.Valid(attribute) && this.Registry[attribute])
+			name = attribute;
 
 		this.Apply();
+
+		/* A remembered theme of the Application shows as soon as the Application registers it. */
+		this.Wanted = name && name !== 'default' ? name : '';
+
+		if (this.Wanted && this.Registry[this.Wanted])
+			this.Use(this.Wanted);
 	},
 
 	$OnDestroy: function () {
 		if (this.Media && this.Media.removeEventListener)
 			this.Media.removeEventListener('change', this.SystemChanged);
+
+		if (this.Observer)
+			this.Observer.disconnect();
 
 		this.Listeners = [];
 	},
@@ -59,25 +98,19 @@ Elemenx.Service('Theme', {
 
 		this.Current = value;
 
-		try {
-			if (this.Persist)
-				window.localStorage.setItem(this.StorageKey, value);
-		}
-		catch (error) {
-			/* Storage may be unavailable (private mode); the policy still applies to this page. */
-		}
-
+		this.Store(this.StorageKey, value);
 		this.Apply();
 		this.Changed();
 
 		return value;
 	},
 
-	/* The theme actually shown: 'light' or 'dark'. */
+	/* The scheme actually shown: 'light' or 'dark'. A theme made for one scheme only always shows it. */
 	Resolved: function () {
-		if (this.Current !== 'system') return this.Current;
+		var schemes = this.Registry[this.Name].Schemes;
+		var scheme = this.Current !== 'system' ? this.Current : this.Media && this.Media.matches ? 'dark' : 'light';
 
-		return this.Media && this.Media.matches ? 'dark' : 'light';
+		return schemes.indexOf(scheme) !== -1 ? scheme : schemes[0];
 	},
 
 	/* Moves to the next policy: system, light, dark, system... */
@@ -85,8 +118,178 @@ Elemenx.Service('Theme', {
 		return this.Policy(this.Policies[(this.Policies.indexOf(this.Current) + 1) % this.Policies.length]);
 	},
 
+	/*
+	 * Adds a named theme: {URL, Label, Schemes}. With a URL, the stylesheet is loaded when the theme is first used;
+	 * without one, the stylesheet is already on the page (an index.js of the Application, a <link> of its page).
+	 * Schemes lists the schemes the theme is made for, ['light', 'dark'] by default.
+	 */
+	Register: function (name, options) {
+		var old = this.Registry[name];
+
+		options = options || {};
+
+		if (!/^[a-z][a-z0-9-]*$/.test(String(name)) || name === 'default' || this.Valid(name))
+			throw new Error('Elemenx Theme name must be a lowercase word other than default, system, light and dark: ' + name);
+
+		if (old && old.Link && old.Link.parentNode)
+			old.Link.parentNode.removeChild(old.Link);
+
+		this.Registry[name] = {
+			Name: name,
+			Label: options.Label || name,
+			Schemes: options.Schemes && options.Schemes.length ? options.Schemes.slice() : ['light', 'dark'],
+			URL: options.URL || '',
+			Link: null,
+			State: options.URL ? 'idle' : 'ready',
+			Callbacks: []
+		};
+
+		if (this.Wanted === name && this.Name === 'default')
+			this.Use(name);
+
+		return name;
+	},
+
+	/* The themes: [{Name, Label, Schemes}], the default one first. */
+	Themes: function () {
+		var list = [];
+		var name;
+
+		for (name in this.Registry) {
+			if (this.Registry.hasOwnProperty(name))
+				list.push({Name: name, Label: this.Registry[name].Label, Schemes: this.Registry[name].Schemes.slice()});
+		}
+
+		return list;
+	},
+
+	/* The name of the theme shown: 'default' or a named theme. */
+	Theme: function () {
+		return this.Name;
+	},
+
+	/*
+	 * Shows the theme name ('default' goes back to index.css). Its stylesheet loads first if it has to; then the theme
+	 * applies and callback gets (error). A stylesheet that fails to load leaves the theme as it was.
+	 */
+	Use: function (name, callback) {
+		var self = this;
+		var theme = this.Registry[name];
+		if (!theme)
+			throw new Error('Elemenx Theme is not registered: ' + name);
+
+		this.Load(theme, function (error) {
+			if (!error && self.Registry[name] === theme) {
+				self.Name = name;
+				self.Wanted = '';
+
+				self.Store(self.StorageKey + '-name', name);
+				self.Apply();
+				self.Changed();
+			}
+
+			if (callback)
+				self.Notify(callback, error || null);
+		});
+	},
+
+	Load: function (theme, callback) {
+		var self = this;
+		var link;
+
+		if (theme.State === 'ready') {
+			callback(null);
+
+			return;
+		}
+
+		theme.Callbacks.push(callback);
+
+		if (theme.State === 'loading') return;
+
+		theme.State = 'loading';
+
+		link = document.createElement('link');
+
+		link.rel = 'stylesheet';
+		link.href = theme.URL;
+
+		link.setAttribute('data-elemenx-theme', theme.Name);
+
+		link.onload = function () {
+			self.Settle(theme, 'ready', null);
+		};
+
+		link.onerror = function () {
+			if (link.parentNode)
+				link.parentNode.removeChild(link);
+
+			theme.Link = null;
+
+			self.Settle(theme, 'idle', new Error('Elemenx Theme ' + theme.Name + ' failed to load: ' + theme.URL));
+		};
+
+		theme.Link = link;
+
+		(document.head || document.documentElement).appendChild(link);
+
+		this.Last();
+	},
+
+	Settle: function (theme, state, error) {
+		var callbacks = theme.Callbacks;
+		var i = 0;
+
+		theme.State = state;
+		theme.Callbacks = [];
+
+		while (i < callbacks.length) {
+			callbacks[i](error);
+
+			i++;
+		}
+	},
+
+	/*
+	 * Keeps the stylesheets of the themes after every other one of the head, also after the styles that Components add
+	 * when they first show: a rule of a theme then wins over a rule of a Component as specific as itself.
+	 */
+	Last: function () {
+		var self = this;
+		var head = document.head;
+		if (this.Observer || !head || typeof MutationObserver === 'undefined') return;
+
+		this.Observer = new MutationObserver(function () {
+			var links = head.querySelectorAll('link[data-elemenx-theme]');
+			var i = 0;
+
+			if (!links.length || head.lastElementChild === links[links.length - 1]) return;
+
+			while (i < links.length) {
+				head.appendChild(links[i]);
+
+				i++;
+			}
+
+			self.Observer.takeRecords();
+		});
+
+		this.Observer.observe(head, {childList: true});
+	},
+
+	Store: function (key, value) {
+		try {
+			if (this.Persist)
+				window.localStorage.setItem(key, value);
+		}
+		catch (error) {
+			/* Storage may be unavailable (private mode); the theme still applies to this page. */
+		}
+	},
+
 	Apply: function () {
-		document.body.setAttribute('data-theme', this.Current);
+		document.body.setAttribute('data-theme', this.Name === 'default' ? this.Current : this.Name);
+		document.body.setAttribute('data-scheme', this.Resolved());
 	},
 
 	OnChange: function (callback) {
@@ -103,7 +306,7 @@ Elemenx.Service('Theme', {
 
 	Changed: function () {
 		var listeners = this.Listeners.slice();
-		var state = {Policy: this.Current, Theme: this.Resolved()};
+		var state = {Policy: this.Current, Theme: this.Resolved(), Name: this.Name};
 		var i = 0;
 
 		while (i < listeners.length) {

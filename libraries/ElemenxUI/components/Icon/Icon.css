@@ -10,6 +10,47 @@
 	overflow: visible;
 }
 
+/* A colored icon paints the parts of a set that names them (the weather set) with the theme colors. */
+.elemenx-icon.colored .sun {
+	stroke: var(--elemenx-weather-sun);
+}
+
+.elemenx-icon.colored .moon {
+	stroke: var(--elemenx-weather-moon);
+}
+
+.elemenx-icon.colored .moon.lit {
+	fill: var(--elemenx-weather-moon);
+}
+
+.elemenx-icon.colored .cloud {
+	stroke: var(--elemenx-weather-cloud);
+}
+
+.elemenx-icon.colored .rain {
+	stroke: var(--elemenx-weather-rain);
+}
+
+.elemenx-icon.colored .snow {
+	stroke: var(--elemenx-weather-snow);
+}
+
+.elemenx-icon.colored .bolt {
+	stroke: var(--elemenx-weather-bolt);
+}
+
+.elemenx-icon.colored .wind {
+	stroke: var(--elemenx-weather-wind);
+}
+
+.elemenx-icon.colored .fog {
+	stroke: var(--elemenx-weather-fog);
+}
+
+.elemenx-icon.colored .thermometer {
+	stroke: var(--elemenx-weather-thermometer);
+}
+
 .elemenx-icon.spin {
 	animation: elemenx-spin 800ms linear infinite;
 }

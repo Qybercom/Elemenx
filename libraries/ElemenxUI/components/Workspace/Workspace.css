@@ -27,6 +27,26 @@
 	min-height: 0;
 }
 
+.elemenx-workspace-ribbon {
+	flex: none;
+	position: relative;
+	z-index: 2;
+}
+
+.elemenx-workspace-ribbon > span {
+	display: contents;
+}
+
+/* The ribbon variant: a slim title bar over the Ribbon, in one piece with it. */
+.elemenx-workspace.ribbon .elemenx-workspace-header {
+	height: var(--elemenx-control);
+	border-bottom: none;
+}
+
+.elemenx-workspace.ribbon .elemenx-workspace-header + .elemenx-workspace-ribbon .elemenx-ribbon-bar {
+	border-top: 1px solid var(--elemenx-border);
+}
+
 .elemenx-workspace-band {
 	flex: none;
 	align-items: center;
@@ -35,8 +55,8 @@
 	padding: 0 8px;
 	border-radius: 0;
 	background: var(--elemenx-surface);
-	font-size: 12px;
-	line-height: 16px;
+	font-size: var(--elemenx-font-size-small);
+	line-height: var(--elemenx-line-height-small);
 }
 
 .elemenx-workspace-band.top {
@@ -116,8 +136,8 @@
 	background: var(--elemenx-surface-raised);
 	border-top: 1px solid var(--elemenx-border);
 	color: var(--elemenx-text-muted);
-	font-size: 12px;
-	line-height: 16px;
+	font-size: var(--elemenx-font-size-small);
+	line-height: var(--elemenx-line-height-small);
 	white-space: nowrap;
 }
 

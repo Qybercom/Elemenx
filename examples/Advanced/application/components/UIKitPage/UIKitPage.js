@@ -11,6 +11,100 @@ Elemenx.Component('UIKitPage', {
 		'terminal', 'code', 'branch', 'commit', 'merge', 'play', 'pause', 'stop', 'debug', 'database', 'server', 'cloud', 'layout', 'panel-left', 'panel-right', 'panel-bottom', 'columns', 'list', 'grid', 'tree', 'structure',
 		'sort-ascending', 'sort-descending'
 	],
+	MediaIcons: [
+		'mic', 'mic-off', 'video', 'video-off', 'camera', 'camera-off', 'volume', 'volume-low', 'volume-high', 'volume-off', 'speaker', 'speaker-off', 'headphones', 'headphones-off',
+		'screen-share', 'screen-share-off', 'call-end', 'record', 'hand',
+		'smile', 'laugh', 'wink', 'neutral', 'sad', 'reaction', 'sticker'
+	],
+	ThemeOptions: [],
+	ThemeName: 'default',
+	ThemePolicy: 'system',
+	ThemeScheme: 'light',
+	ThemeSchemes: [
+		{Value: 'system', Label: 'System', Icon: 'monitor'},
+		{Value: 'light', Label: 'Light', Icon: 'sun'},
+		{Value: 'dark', Label: 'Dark', Icon: 'moon'}
+	],
+	MineAccent: '#0b6e99',
+	MineBackground: '#eef4f7',
+	MineRadius: 6,
+	MineControl: 36,
+	RibbonTab: 'home',
+	RibbonCollapsed: false,
+	RibbonNote: '',
+	TableSelected: false,
+	Bold: false,
+	Font: 'segoe',
+	Fonts: [
+		{Value: 'segoe', Label: 'Segoe UI'},
+		{Value: 'inter', Label: 'Inter'},
+		{Value: 'georgia', Label: 'Georgia'},
+		{Value: 'consolas', Label: 'Consolas'}
+	],
+	FontSize: '11',
+	FontSizes: [
+		{Value: '9', Label: '9'},
+		{Value: '11', Label: '11'},
+		{Value: '14', Label: '14'},
+		{Value: '18', Label: '18'},
+		{Value: '24', Label: '24'}
+	],
+	PasteItems: [
+		{ID: 'paste-keep', Label: 'Keep source formatting', Icon: 'paste'},
+		{ID: 'paste-text', Label: 'Keep text only', Icon: 'file-text'},
+		{Separator: true},
+		{ID: 'paste-special', Label: 'Paste special…', Shortcut: 'Ctrl+Alt+V'}
+	],
+	HighlightItems: [
+		{ID: 'yellow', Label: 'Yellow'},
+		{ID: 'green', Label: 'Green'},
+		{ID: 'blue', Label: 'Blue'},
+		{Separator: true},
+		{ID: 'none', Label: 'No color'}
+	],
+	SelectItems: [
+		{ID: 'select-all', Label: 'Select all', Shortcut: 'Ctrl+A'},
+		{ID: 'select-objects', Label: 'Select objects'}
+	],
+	TableItems: [
+		{ID: 'table-insert', Label: 'Insert table…', Icon: 'table'},
+		{ID: 'table-draw', Label: 'Draw table', Icon: 'edit'},
+		{ID: 'table-convert', Label: 'Convert text to table…'}
+	],
+	DictateItems: [
+		{ID: 'dictate-english', Label: 'English'},
+		{ID: 'dictate-russian', Label: 'Russian'}
+	],
+	DeleteTableItems: [
+		{ID: 'delete-rows', Label: 'Delete rows'},
+		{ID: 'delete-columns', Label: 'Delete columns'},
+		{ID: 'delete-whole', Label: 'Delete table', Danger: true}
+	],
+	TextStyle: 'normal',
+	TextStyles: [
+		{ID: 'normal', Label: 'Normal', Preview: 'AaBbCc'},
+		{ID: 'no-spacing', Label: 'No spacing', Preview: 'AaBbCc'},
+		{ID: 'heading-1', Label: 'Heading 1', Preview: 'AaBb', Style: 'font-size: 16px; font-weight: 600; color: var(--elemenx-info)'},
+		{ID: 'heading-2', Label: 'Heading 2', Preview: 'AaBbC', Style: 'font-size: 14px; font-weight: 600; color: var(--elemenx-info)'},
+		{ID: 'title', Label: 'Title', Preview: 'Aa', Style: 'font-size: 20px'},
+		{ID: 'subtitle', Label: 'Subtitle', Preview: 'AaBbC', Style: 'color: var(--elemenx-text-muted)'},
+		{ID: 'quote', Label: 'Quote', Preview: 'AaBbC', Style: 'font-style: italic'},
+		{ID: 'strong', Label: 'Strong', Preview: 'AaBbC', Style: 'font-weight: 700'}
+	],
+	TableStyles: [
+		{ID: 'plain', Label: 'Plain', Icon: 'table'},
+		{ID: 'grid', Label: 'Grid', Icon: 'grid'},
+		{ID: 'list', Label: 'List', Icon: 'list'},
+		{ID: 'columns', Label: 'Columns', Icon: 'columns'}
+	],
+	MusicIcons: [],
+	WeatherIcons: [],
+	WeatherColored: true,
+	BrandIcons: '<svg xmlns="http://www.w3.org/2000/svg">' +
+		'<symbol id="disk" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M4 3h13l4 4v13a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zm3 2v5h9V5zm5 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/></symbol>' +
+		'<symbol id="spark" viewBox="0 0 24 24"><path fill="#e8a33d" d="M12 2l2.6 7.4L22 12l-7.4 2.6L12 22l-2.6-7.4L2 12l7.4-2.6z"/><circle cx="12" cy="12" r="2.5" fill="#fff"/></symbol>' +
+		'</svg>',
+	BrandSave: false,
 	LayoutIcons: [
 		'align-left', 'align-center-horizontal', 'align-right', 'align-stretch-horizontal', 'align-top', 'align-center-vertical', 'align-bottom', 'align-stretch-vertical',
 		'position-top-left', 'position-top', 'position-top-right', 'position-left', 'position-center', 'position-right', 'position-bottom-left', 'position-bottom', 'position-bottom-right',
@@ -152,8 +246,26 @@ Elemenx.Component('UIKitPage', {
 		{ID: 1, Author: 'Grace Hopper', Text: 'The build is green again.', Time: '10:02'},
 		{ID: 2, Author: 'Grace Hopper', Text: 'Can you check the new table?', Time: '10:02'},
 		{ID: 3, Author: 'Grace Hopper', Text: 'The sorting looks right to me.', Time: '10:03'},
-		{ID: 4, Author: 'Me', Text: 'Looks good, merging it now.', Time: '10:05', Own: true, Status: 'read'}
+		{ID: 4, Author: 'Me', Text: 'Looks good, merging it now.', Time: '10:05', Own: true, Status: 'read', Reactions: [{Emoji: '🎉', Count: 2, Mine: false}, {Emoji: '👍', Count: 1, Mine: true}]}
 	],
+	Picked: '',
+	PickedEmoji: '',
+	PickedSticker: '',
+	StickerPack: {
+		ID: 'pals',
+		Title: 'Elemenx pals',
+		Icon: '/data/stickers/hello.svg',
+		Items: [
+			{ID: 'hello', URL: '/data/stickers/hello.svg', Title: 'Hello', Keywords: 'hi wave cat привет'},
+			{ID: 'love', URL: '/data/stickers/love.svg', Title: 'Love', Keywords: 'heart like любовь сердце'},
+			{ID: 'thumbs-up', URL: '/data/stickers/thumbs-up.svg', Title: 'Thumbs up', Keywords: 'ok yes like класс'},
+			{ID: 'party', URL: '/data/stickers/party.svg', Title: 'Party', Keywords: 'celebrate congrats праздник'},
+			{ID: 'coffee', URL: '/data/stickers/coffee.svg', Title: 'Coffee', Keywords: 'break morning кофе'},
+			{ID: 'rocket', URL: '/data/stickers/rocket.svg', Title: 'Rocket', Keywords: 'launch ship ракета'},
+			{ID: 'thinking', URL: '/data/stickers/thinking.svg', Title: 'Thinking', Keywords: 'hmm question думаю'},
+			{ID: 'sleepy', URL: '/data/stickers/sleepy.svg', Title: 'Sleepy', Keywords: 'night tired сон'}
+		]
+	},
 	StepItems: [
 		{ID: 'plan', Label: 'Plan', Description: 'Scope and design', Icon: 'edit'},
 		{ID: 'build', Label: 'Build', Description: 'Code and tests', Icon: 'code'},
@@ -415,6 +527,183 @@ Elemenx.Component('UIKitPage', {
 
 		this.$Service('Idle').Stop();
 		this.$Service('Reveal').Guard(null);
+		this.$Service('Icons').Override('save', null);
+		this.$Service('Theme').OffChange(this.ThemeListener);
+
+		if (this.$Service('Theme').Theme() === 'mine')
+			this.$Service('Theme').Use('default');
+
+		this.MineStyle.parentNode.removeChild(this.MineStyle);
+	},
+
+	/* The theme picker follows the Theme Service; Mine is a theme of the page, written by the editor into a <style>. */
+	WatchTheme: function () {
+		var self = this;
+		var theme = this.$Service('Theme');
+
+		this.MineCSS = function (accent, background, radius, control) {
+			return "body[data-theme='mine'] {\n" +
+				'\t--elemenx-accent: ' + accent + ';\n' +
+				'\t--elemenx-accent-hover: color-mix(in srgb, ' + accent + ' 84%, black);\n' +
+				'\t--elemenx-background: ' + background + ';\n' +
+				'\t--elemenx-surface-raised: color-mix(in srgb, ' + background + ' 50%, white);\n' +
+				'\t--elemenx-radius-small: ' + Math.round(radius / 2) + 'px;\n' +
+				'\t--elemenx-radius: ' + radius + 'px;\n' +
+				'\t--elemenx-radius-large: ' + radius * 2 + 'px;\n' +
+				'\t--elemenx-control-small: ' + (control - 8) + 'px;\n' +
+				'\t--elemenx-control: ' + control + 'px;\n' +
+				'\t--elemenx-control-large: ' + (control + 8) + 'px;\n' +
+				'}\n';
+		};
+
+		this.MineStyle = document.createElement('style');
+
+		this.MineStyle.setAttribute('data-ui-kit-theme', 'mine');
+
+		document.head.appendChild(this.MineStyle);
+
+		this.WriteMine();
+
+		theme.Register('mine', {Label: 'Mine', Schemes: ['light']});
+
+		this.ThemeOptions = theme.Themes().map(function (item) {
+			return {Value: item.Name, Label: item.Label, Hint: item.Schemes.join(', ')};
+		});
+
+		this.ThemeListener = theme.OnChange(function (state) {
+			self.ShowTheme(state.Name, state.Policy, state.Theme);
+		});
+
+		this.ShowTheme(theme.Theme(), theme.Policy(), theme.Resolved());
+	},
+
+	ShowTheme: function (name, policy, scheme) {
+		this.ThemeName = name;
+		this.ThemePolicy = policy;
+		this.ThemeScheme = scheme;
+	},
+
+	WriteMine: function () {
+		this.MineStyle.textContent = this.MineCSS(this.MineAccent, this.MineBackground, this.MineRadius, this.MineControl);
+	},
+
+	ThemeChosen: function (value) {
+		this.$Service('Theme').Use(value);
+	},
+
+	PolicyChosen: function (value) {
+		this.$Service('Theme').Policy(value);
+	},
+
+	MineAccentEdited: function (value) {
+		this.MineAccent = value;
+
+		this.WriteMine();
+	},
+
+	MineBackgroundEdited: function (value) {
+		this.MineBackground = value;
+
+		this.WriteMine();
+	},
+
+	MineRadiusEdited: function (value) {
+		this.MineRadius = value;
+
+		this.WriteMine();
+	},
+
+	MineControlEdited: function (value) {
+		this.MineControl = value;
+
+		this.WriteMine();
+	},
+
+	UseMine: function () {
+		this.$Service('Theme').Use('mine');
+	},
+
+	TableToggled: function (value) {
+		this.TableSelected = value;
+
+		if (value)
+			this.RibbonTab = 'table-design';
+	},
+
+	RibbonTabChanged: function (tab) {
+		this.RibbonTab = tab.ID;
+	},
+
+	RibbonCommand: function (command) {
+		this.RibbonNote = command.ID + (command.Item ? ' → ' + (command.Item.Label || command.Item.ID) : '');
+	},
+
+	RibbonCollapseChanged: function (state) {
+		this.RibbonCollapsed = state.Collapsed;
+	},
+
+	RibbonLaunched: function (group) {
+		this.RibbonNote = group.Title + ' options';
+	},
+
+	FontChanged: function (value) {
+		this.Font = value;
+	},
+
+	FontSizeChanged: function (value) {
+		this.FontSize = value;
+	},
+
+	BoldToggled: function (state) {
+		this.Bold = state.Pressed;
+	},
+
+	TextStyleChosen: function (choice) {
+		this.TextStyle = choice.ID;
+	},
+
+	/* The music and weather sets list their names once they load; the brand set comes from markup. */
+	LoadIcons: function () {
+		var self = this;
+		var icons = this.$Service('Icons');
+
+		icons.Register('brand', this.BrandIcons);
+
+		this.$Service('Stickers').Register(this.StickerPack);
+
+		icons.Load('music', function (error, names) {
+			if (!error)
+				self.MusicIcons = self.Prefixed('music', names);
+		});
+
+		icons.Load('weather', function (error, names) {
+			if (!error)
+				self.WeatherIcons = self.Prefixed('weather', names);
+		});
+	},
+
+	Prefixed: function (set, names) {
+		var list = [];
+		var i = 0;
+
+		while (i < names.length) {
+			list.push(set + ':' + names[i]);
+
+			i++;
+		}
+
+		return list;
+	},
+
+	ToggleWeatherColors: function () {
+		this.WeatherColored = !this.WeatherColored;
+	},
+
+	/* Every save icon of the page draws the brand disk instead, and back. */
+	ToggleBrandSave: function () {
+		this.BrandSave = !this.BrandSave;
+
+		this.$Service('Icons').Override('save', this.BrandSave ? 'brand:disk' : null);
 	},
 
 	GoTo: function (title) {
@@ -924,6 +1213,45 @@ Elemenx.Component('UIKitPage', {
 		this.Dropped = event.detail.Kind === 'files' ? event.detail.Files.length + ' file(s) from outside' : 'text: ' + event.detail.Text.slice(0, 32);
 	},
 
+	SendSticker: function (detail) {
+		this.Messages = this.Messages.concat([{ID: this.Messages.length + 1, Author: 'Me', Text: detail.Sticker.Title, Sticker: detail.Sticker.URL, Time: 'now', Own: true, Status: 'sent'}]);
+	},
+
+	/* A reaction of the reader: added, counted once, or taken back. */
+	MessageReacted: function (detail) {
+		this.Messages = this.Messages.map(function (message) {
+			var reactions;
+			var found = false;
+
+			if (message.ID !== detail.ID) return message;
+
+			reactions = (message.Reactions || []).map(function (reaction) {
+				if (reaction.Emoji !== detail.Emoji) return reaction;
+
+				found = true;
+
+				return {Emoji: reaction.Emoji, Count: reaction.Count + (detail.Mine ? 1 : -1), Mine: detail.Mine};
+			}).filter(function (reaction) {
+				return reaction.Count > 0;
+			});
+
+			if (!found && detail.Mine)
+				reactions.push({Emoji: detail.Emoji, Count: 1, Mine: true});
+
+			return Object.assign({}, message, {Reactions: reactions});
+		});
+	},
+
+	EmojiPicked: function (detail) {
+		this.Picked = detail.Emoji + ' ' + detail.Name;
+		this.PickedEmoji = this.PickedEmoji + detail.Emoji;
+	},
+
+	StickerPicked: function (detail) {
+		this.Picked = 'sticker ' + detail.Sticker.Title;
+		this.PickedSticker = detail.Sticker.URL;
+	},
+
 	SendMessage: function (text) {
 		this.Messages = this.Messages.concat([{ID: this.Messages.length + 1, Author: 'Me', Text: text, Time: 'now', Own: true, Status: 'sent'}]);
 	},
@@ -934,6 +1262,10 @@ Elemenx.Component('UIKitPage', {
 		var hotkeys = this.$Service('Hotkeys');
 
 		this.PaletteKeys = hotkeys.Format('Mod+K');
+
+		this.LoadIcons();
+		this.WatchTheme();
+
 		this.Agenda = this.Schedule(now);
 		this.LongList = this.Numbers(100000);
 		this.ManyPeople = this.Staff(57);

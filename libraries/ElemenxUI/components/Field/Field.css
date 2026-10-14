@@ -18,8 +18,8 @@
 
 .elemenx-field-error {
 	color: var(--elemenx-danger);
-	font-size: 12px;
-	line-height: 16px;
+	font-size: var(--elemenx-font-size-small);
+	line-height: var(--elemenx-line-height-small);
 }
 
 .elemenx-field.disabled .elemenx-field-label {
@@ -35,9 +35,9 @@
 .elemenx-field.horizontal .elemenx-field-label {
 	flex: none;
 	width: 160px;
-	min-height: 32px;
-	font-size: 14px;
-	line-height: 20px;
+	min-height: var(--elemenx-control);
+	font-size: var(--elemenx-font-size);
+	line-height: var(--elemenx-line-height);
 	font-weight: 400;
 }
 

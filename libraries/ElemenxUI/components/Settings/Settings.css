@@ -43,8 +43,8 @@
 	display: flex;
 	flex-wrap: wrap;
 	color: var(--elemenx-text-muted);
-	font-size: 12px;
-	line-height: 16px;
+	font-size: var(--elemenx-font-size-small);
+	line-height: var(--elemenx-line-height-small);
 }
 
 .elemenx-settings-crumb {
@@ -56,9 +56,9 @@
 
 .elemenx-settings-title {
 	margin: 0;
-	font-size: 16px;
-	line-height: 24px;
-	font-weight: 700;
+	font-size: var(--elemenx-font-size-large);
+	line-height: var(--elemenx-line-height-large);
+	font-weight: var(--elemenx-font-weight-bold);
 }
 
 .elemenx-settings-actions {

@@ -1,0 +1,1 @@
+<div class="elemenx-column elemenx-ribbon-page" [attribute.data-id]="ID" [attribute.data-title]="Title" [attribute.data-icon]="Icon || null" [attribute.data-command]="Command && Command !== 'false' ? 'true' : null"><h2 class="elemenx-ribbon-page-title" *if="!(Command && Command !== 'false')">{{Title}}</h2><slot></slot></div>

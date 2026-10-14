@@ -2,14 +2,18 @@
  * *glyph="reference" draws a sprite symbol inside an <svg>. A reference to a symbol of the page ('#elemenx-icon-add')
  * copies the shapes of the symbol into the element, with its viewBox: no <use>, so a restyle of the page (a theme
  * change) does not rebuild one shadow tree per icon, which blanks every icon while the developer tools are open.
- * Any other reference ('sprite.svg#add') is drawn with <use>. Used by Icon.
+ * The fill and stroke attributes of the symbol go to a <g> around the shapes, so a filled or a colored set draws as it
+ * is made. Any other reference ('sprite.svg#add') is drawn with <use>. Used by Icon.
  */
 Elemenx.Directive('glyph', {
 	$OnUpdate: function (context) {
 		var element = context.Element;
 		var reference = String(context.Value || '');
 		var symbol = reference.charAt(0) === '#' ? document.getElementById(reference.substring(1)) : null;
+		var painted = ['fill', 'stroke', 'stroke-width', 'stroke-linecap', 'stroke-linejoin', 'style'];
+		var group;
 		var use;
+		var i = 0;
 
 		if (context.Data.Reference === reference) return;
 
@@ -23,6 +27,24 @@ Elemenx.Directive('glyph', {
 			element.setAttribute('viewBox', symbol.getAttribute('viewBox') || '0 0 24 24');
 
 			element.innerHTML = symbol.innerHTML;
+
+			while (i < painted.length) {
+				if (symbol.hasAttribute(painted[i])) {
+					group = group || document.createElementNS('http://www.w3.org/2000/svg', 'g');
+
+					group.setAttribute(painted[i], symbol.getAttribute(painted[i]));
+				}
+
+				i++;
+			}
+
+			if (!group) return;
+
+			while (element.firstChild) {
+				group.appendChild(element.firstChild);
+			}
+
+			element.appendChild(group);
 
 			return;
 		}

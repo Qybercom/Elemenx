@@ -3,13 +3,21 @@
 		<img *if="Avatar && (Position === 'single' || Position === 'last')" [src]="Avatar" alt="" />
 		<span *if="!Avatar && (Position === 'single' || Position === 'last')">{{Initials(Author)}}</span>
 	</span>
-	<div class="elemenx-chat-bubble">
-		<span class="elemenx-chat-author" *if="Author && !Own && (Position === 'single' || Position === 'first')">{{Author}}</span>
-		<span class="elemenx-chat-text" *if="Text">{{Text}}</span>
-		<slot></slot>
-		<span class="elemenx-chat-meta" *if="Time || Status">
-			<time *if="Time">{{Time}}</time>
-			<Icon *if="StatusIcon(Status)" [name]="StatusIcon(Status)" Size="12" [label]="Status" />
-		</span>
+	<div class="elemenx-chat-body elemenx-popup-anchor">
+		<div class="elemenx-chat-bubble" [class.sticker]="!!Sticker">
+			<span class="elemenx-chat-author" *if="Author && !Own && (Position === 'single' || Position === 'first')">{{Author}}</span>
+			<img class="elemenx-chat-sticker" *if="Sticker" [src]="Sticker" [attribute.alt]="Text || 'Sticker'" draggable="false" />
+			<span class="elemenx-chat-text" *if="Text && !Sticker">{{Text}}</span>
+			<slot></slot>
+			<span class="elemenx-chat-meta" *if="Time || Status">
+				<time *if="Time">{{Time}}</time>
+				<Icon *if="StatusIcon(Status)" [name]="StatusIcon(Status)" Size="12" [label]="Status" />
+			</span>
+		</div>
+		<div class="elemenx-chat-reactions" *if="Reactions && Reactions.length">
+			<button class="elemenx-chat-reaction" type="button" *for="reaction of Reactions" *key="reaction.Emoji" [class.mine]="!!reaction.Mine" [attribute.aria-pressed]="String(!!reaction.Mine)" [attribute.aria-label]="reaction.Emoji + ' ' + reaction.Count" [attribute.data-emoji]="reaction.Emoji" (click)="Toggled"><span class="elemenx-chat-reaction-emoji">{{reaction.Emoji}}</span><span>{{reaction.Count}}</span></button>
+		</div>
+		<button class="elemenx-chat-react" type="button" *if="React && React !== 'false'" aria-label="Add a reaction" title="Add a reaction" [attribute.aria-expanded]="String(Picking)" (click)="Pick"><Icon Name="reaction" /></button>
+		<div class="elemenx-popup elemenx-chat-react-picker" data-placement="top-start" data-match-width="false" *popup="Picking" (dismiss)="Dismissed"><EmojiPicker *if="Picking" Columns="8" (pick)="Reacted" (dismiss)="Dismissed" /></div>
 	</div>
 </article>

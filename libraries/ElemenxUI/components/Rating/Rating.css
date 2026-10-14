@@ -1,14 +1,13 @@
 .elemenx-rating {
-	--elemenx-rating-color: #e0a526;
 	display: inline-flex;
 	align-items: center;
 	gap: 2px;
-	border-radius: 4px;
+	border-radius: var(--elemenx-radius);
 	outline: none;
 }
 
 .elemenx-rating:focus-visible {
-	box-shadow: 0 0 0 2px color-mix(in srgb, var(--elemenx-accent) 48%, transparent);
+	box-shadow: 0 0 0 2px var(--elemenx-focus);
 }
 
 /* A star: its outline, and over it the filled shape cut to the part it is worth. */

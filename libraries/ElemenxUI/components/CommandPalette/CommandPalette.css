@@ -9,14 +9,14 @@
 	overflow: hidden;
 	background: var(--elemenx-surface);
 	border: 1px solid var(--elemenx-border);
-	border-radius: 12px;
+	border-radius: var(--elemenx-radius-huge);
 	box-shadow: var(--elemenx-shadow);
 	color: var(--elemenx-text);
 }
 
 .elemenx-palette[open] {
 	display: flex;
-	animation: elemenx-palette-in 120ms ease;
+	animation: elemenx-palette-in var(--elemenx-duration) var(--elemenx-easing);
 }
 
 @keyframes elemenx-palette-in {
@@ -33,7 +33,7 @@
 }
 
 .elemenx-palette::backdrop {
-	background: rgba(15, 17, 20, 0.32);
+	background: var(--elemenx-backdrop, rgba(15, 17, 20, 0.48));
 }
 
 .elemenx-palette-search {
@@ -52,7 +52,7 @@
 }
 
 .elemenx-palette-search .elemenx-input-control {
-	font-size: 16px;
+	font-size: var(--elemenx-font-size-large);
 }
 
 .elemenx-palette-list {
@@ -63,12 +63,12 @@
 }
 
 .elemenx-palette-list .elemenx-option {
-	min-height: 32px;
+	min-height: var(--elemenx-control);
 }
 
 .elemenx-palette-list .elemenx-option .match {
 	color: var(--elemenx-accent);
-	font-weight: 700;
+	font-weight: var(--elemenx-font-weight-bold);
 	text-decoration: underline;
 	text-decoration-thickness: 1px;
 	text-underline-offset: 2px;

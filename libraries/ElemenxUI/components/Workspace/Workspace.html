@@ -1,5 +1,6 @@
-<div class="elemenx-screen elemenx-workspace">
+<div class="elemenx-screen elemenx-workspace" [class.ribbon]="Variant === 'ribbon'">
 	<div class="elemenx-container elemenx-workspace-header elemenx-layout-area"><slot name="header"></slot></div>
+	<div class="elemenx-column elemenx-workspace-ribbon elemenx-layout-area"><slot name="ribbon"></slot></div>
 	<div class="elemenx-container elemenx-workspace-band top elemenx-layout-area"><slot name="top-stripe"></slot></div>
 	<div class="elemenx-container fill elemenx-workspace-body">
 		<div class="elemenx-column elemenx-workspace-stripe left elemenx-layout-area"><slot name="left-stripe"></slot></div>

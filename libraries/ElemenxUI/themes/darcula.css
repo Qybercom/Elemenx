@@ -1,0 +1,37 @@
+/*
+ * Darcula: the dark theme of the JetBrains IDEs, for IDE-like Applications. It is made for the dark scheme only, so
+ * it stays dark whatever the policy. Every rule starts with body[data-theme='darcula'].
+ */
+/* With [data-scheme] as well, the colors win over the dark colors of index.css (body[data-scheme='dark']). */
+body[data-theme='darcula'],
+body[data-theme='darcula'][data-scheme] {
+	--elemenx-font-mono: 'JetBrains Mono', Consolas, 'Cascadia Code', monospace;
+	--elemenx-background: #2b2b2b;
+	--elemenx-surface: #3c3f41;
+	--elemenx-surface-raised: #45494a;
+	--elemenx-surface-hover: #4b5052;
+	--elemenx-text: #bbbbbb;
+	--elemenx-text-muted: #8c8c8c;
+	--elemenx-accent: #4a88c7;
+	--elemenx-accent-hover: #5394d4;
+	--elemenx-accent-text: #ffffff;
+	--elemenx-danger: #c75450;
+	--elemenx-success: #5f9e60;
+	--elemenx-warning: #c9a43a;
+	--elemenx-info: #589df6;
+	--elemenx-border: #4b4d4f;
+	--elemenx-border-strong: #5e6060;
+	--elemenx-shadow: 0 8px 24px rgba(0, 0, 0, 0.56);
+	--elemenx-radius: 3px;
+	--elemenx-radius-large: 6px;
+	color-scheme: dark;
+}
+
+body[data-theme='darcula'] .elemenx-button.primary {
+	background: #365880;
+	border-color: #4c708c;
+}
+
+body[data-theme='darcula'] .elemenx-button.primary:hover {
+	background: #3e6491;
+}

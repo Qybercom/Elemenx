@@ -6,5 +6,5 @@
 
 .elemenx-combobox-create .elemenx-option-label {
 	color: var(--elemenx-accent);
-	font-weight: 600;
+	font-weight: var(--elemenx-font-weight-strong);
 }

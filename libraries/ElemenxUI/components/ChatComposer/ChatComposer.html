@@ -1,5 +1,7 @@
-<div class="elemenx-input elemenx-chat-composer" [class.disabled]="Disabled">
+<div class="elemenx-input elemenx-chat-composer elemenx-popup-anchor" [class.disabled]="Disabled">
 	<Button *if="Attach" Icon="attachment" Title="Attach" Variant="ghost" Size="small" [disabled]="Disabled" (click)="Attached" />
 	<textarea class="elemenx-input-control" rows="1" [value]="Value" [placeholder]="Placeholder" [disabled]="Disabled" aria-label="Message" (input)="Typed" (keydown)="Key"></textarea>
+	<Button *if="Emoji && Emoji !== 'false'" Icon="smile" Title="Emoji and stickers" Variant="ghost" Size="small" [disabled]="Disabled" [pressed]="Picking ? true : null" (click)="Pick" />
 	<Button Icon="send" Title="Send" Variant="primary" Size="small" Shape="round" [disabled]="Disabled || !String(Value || '').trim()" (click)="Send" />
+	<div class="elemenx-popup elemenx-chat-picker" data-placement="top-start" data-match-width="false" *popup="Picking" (dismiss)="Dismissed"><ExpressionPicker *if="Picking" [stickers]="Stickers" (pick)="Picked" (dismiss)="Dismissed" /></div>
 </div>

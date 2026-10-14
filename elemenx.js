@@ -3867,7 +3867,8 @@
 		 * participate in the same structural ownership path as nested directives.
 		 */
 		function componentRoot (template) {
-			var root = createFragment(resolveTemplate(template));
+			/* The blank around a template (the final newline of its file) is not content: the element alone is the root. */
+			var root = createFragment(resolveTemplate(template).replace(/^\s+|\s+$/g, ''));
 			var host;
 
 			/* A structural host or a Component declaration at the root gets a host of its own, so it is compiled like a child. */

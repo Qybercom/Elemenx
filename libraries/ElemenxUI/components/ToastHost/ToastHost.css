@@ -54,7 +54,7 @@
 	background: var(--elemenx-surface);
 	border: 1px solid var(--elemenx-border);
 	border-left: 4px solid var(--elemenx-toast-color);
-	border-radius: 8px;
+	border-radius: var(--elemenx-radius-large);
 	box-shadow: var(--elemenx-shadow);
 	color: var(--elemenx-text);
 	pointer-events: auto;
@@ -105,17 +105,17 @@
 	padding: 0 4px;
 	background: transparent;
 	border: 0;
-	border-radius: 4px;
+	border-radius: var(--elemenx-radius);
 	color: var(--elemenx-text);
 	font: inherit;
-	font-weight: 600;
+	font-weight: var(--elemenx-font-weight-strong);
 	text-decoration: underline;
 	text-underline-offset: 2px;
 	cursor: pointer;
 }
 
 .elemenx-toast-action:focus-visible {
-	outline: 2px solid color-mix(in srgb, var(--elemenx-accent) 48%, transparent);
+	outline: 2px solid var(--elemenx-focus);
 }
 
 .elemenx-toast-action.primary {

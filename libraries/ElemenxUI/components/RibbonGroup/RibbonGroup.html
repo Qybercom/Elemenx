@@ -1,0 +1,14 @@
+<div class="elemenx-ribbon-group" role="group" [attribute.aria-label]="Title" [attribute.data-priority]="Priority" [class.open]="Open">
+	<button class="elemenx-ribbon-group-toggle" type="button" aria-haspopup="true" [attribute.aria-expanded]="String(Open)" [attribute.data-keytip]="KeyTip || null" (click)="Toggle">
+		<Icon [name]="Icon || 'more'" Size="24" />
+		<span class="elemenx-ribbon-label">{{Title}}</span>
+		<Icon Name="chevron-down" Size="12" />
+	</button>
+	<div class="elemenx-ribbon-group-popup" (keydown)="Key">
+		<div class="elemenx-ribbon-group-body"><slot></slot></div>
+		<div class="elemenx-ribbon-group-footer">
+			<span class="elemenx-ribbon-group-title">{{Title}}</span>
+			<button class="elemenx-ribbon-launcher" type="button" *if="Launcher" [attribute.aria-label]="Title + ' options'" [attribute.title]="Title + ' options'" (click)="Launch"><Icon Name="launcher" Size="12" /></button>
+		</div>
+	</div>
+</div>

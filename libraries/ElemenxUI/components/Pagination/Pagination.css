@@ -10,10 +10,10 @@
 	padding: 0 4px;
 	background: var(--elemenx-surface);
 	border: 1px solid var(--elemenx-border-strong);
-	border-radius: 4px;
+	border-radius: var(--elemenx-radius);
 	color: var(--elemenx-text);
 	font: inherit;
-	font-size: 12px;
+	font-size: var(--elemenx-font-size-small);
 }
 
 .elemenx-pagination-size:focus-visible {
@@ -36,7 +36,7 @@
 	padding: 0 6px;
 	background: transparent;
 	border: 0;
-	border-radius: 4px;
+	border-radius: var(--elemenx-radius);
 	color: var(--elemenx-text);
 	font: inherit;
 	font-variant-numeric: tabular-nums;
@@ -50,7 +50,7 @@
 .elemenx-pagination-page.current {
 	background: var(--elemenx-accent);
 	color: var(--elemenx-accent-text);
-	font-weight: 600;
+	font-weight: var(--elemenx-font-weight-strong);
 }
 
 .elemenx-pagination-page:disabled {
@@ -59,7 +59,7 @@
 }
 
 .elemenx-pagination-page:focus-visible {
-	outline: 2px solid color-mix(in srgb, var(--elemenx-accent) 48%, transparent);
+	outline: 2px solid var(--elemenx-focus);
 }
 
 .elemenx-pagination-gap {

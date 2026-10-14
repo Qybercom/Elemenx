@@ -16,9 +16,9 @@
 .elemenx-cal-title {
 	flex: 1;
 	margin: 0 0 0 8px;
-	font-size: 16px;
-	line-height: 24px;
-	font-weight: 700;
+	font-size: var(--elemenx-font-size-large);
+	line-height: var(--elemenx-line-height-large);
+	font-weight: var(--elemenx-font-weight-bold);
 	text-transform: capitalize;
 }
 
@@ -31,7 +31,7 @@
 	padding: 0 8px;
 	background: transparent;
 	border: 0;
-	border-radius: 4px;
+	border-radius: var(--elemenx-radius);
 	color: var(--elemenx-text);
 	font: inherit;
 	cursor: pointer;
@@ -47,7 +47,7 @@
 .elemenx-cal-event:focus-visible,
 .elemenx-cal-block:focus-visible,
 .elemenx-cal-more:focus-visible {
-	outline: 2px solid color-mix(in srgb, var(--elemenx-accent) 48%, transparent);
+	outline: 2px solid var(--elemenx-focus);
 	outline-offset: 1px;
 }
 
@@ -56,13 +56,13 @@
 	padding: 2px;
 	background: var(--elemenx-surface-raised);
 	border: 1px solid var(--elemenx-border);
-	border-radius: 6px;
+	border-radius: calc(var(--elemenx-radius) * 1.5);
 }
 
 .elemenx-cal-view.current {
 	background: var(--elemenx-surface);
-	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
-	font-weight: 600;
+	box-shadow: var(--elemenx-shadow-small);
+	font-weight: var(--elemenx-font-weight-strong);
 }
 
 /* Month: seven columns of days. */
@@ -71,7 +71,7 @@
 	grid-template-columns: repeat(7, minmax(0, 1fr));
 	overflow: hidden;
 	border: 1px solid var(--elemenx-border);
-	border-radius: 8px;
+	border-radius: var(--elemenx-radius-large);
 }
 
 .elemenx-cal-weekday {
@@ -79,9 +79,9 @@
 	background: var(--elemenx-surface-raised);
 	border-bottom: 1px solid var(--elemenx-border);
 	color: var(--elemenx-text-muted);
-	font-size: 12px;
-	line-height: 16px;
-	font-weight: 600;
+	font-size: var(--elemenx-font-size-small);
+	line-height: var(--elemenx-line-height-small);
+	font-weight: var(--elemenx-font-weight-strong);
 	text-transform: capitalize;
 }
 
@@ -126,9 +126,9 @@
 	min-width: 24px;
 	height: 24px;
 	padding: 0 4px;
-	border-radius: 12px;
-	font-size: 12px;
-	font-weight: 600;
+	border-radius: var(--elemenx-radius-huge);
+	font-size: var(--elemenx-font-size-small);
+	font-weight: var(--elemenx-font-weight-strong);
 	font-variant-numeric: tabular-nums;
 }
 
@@ -150,11 +150,11 @@
 	background: transparent;
 	border: 0;
 	border-left: 3px solid var(--elemenx-cal-color);
-	border-radius: 3px;
+	border-radius: calc(var(--elemenx-radius) - 1px);
 	color: var(--elemenx-text);
 	font: inherit;
-	font-size: 12px;
-	line-height: 16px;
+	font-size: var(--elemenx-font-size-small);
+	line-height: var(--elemenx-line-height-small);
 	text-align: left;
 	text-overflow: ellipsis;
 	white-space: nowrap;
@@ -180,11 +180,11 @@
 	padding: 0 6px;
 	background: transparent;
 	border: 0;
-	border-radius: 3px;
+	border-radius: calc(var(--elemenx-radius) - 1px);
 	color: var(--elemenx-text-muted);
 	font: inherit;
-	font-size: 12px;
-	font-weight: 600;
+	font-size: var(--elemenx-font-size-small);
+	font-weight: var(--elemenx-font-weight-strong);
 	cursor: pointer;
 }
 
@@ -199,7 +199,7 @@
 	flex-direction: column;
 	overflow: hidden;
 	border: 1px solid var(--elemenx-border);
-	border-radius: 8px;
+	border-radius: var(--elemenx-radius-large);
 }
 
 .elemenx-cal-week-head,
@@ -220,13 +220,13 @@
 	gap: 6px;
 	padding: 6px 8px;
 	color: var(--elemenx-text-muted);
-	font-size: 12px;
+	font-size: var(--elemenx-font-size-small);
 	text-transform: capitalize;
 }
 
 .elemenx-cal-week-day strong {
 	color: var(--elemenx-text);
-	font-size: 16px;
+	font-size: var(--elemenx-font-size-large);
 }
 
 .elemenx-cal-week-day.today strong {
@@ -261,7 +261,7 @@
 	padding: 0 8px;
 	color: var(--elemenx-text-muted);
 	font-size: 11px;
-	line-height: 16px;
+	line-height: var(--elemenx-line-height-small);
 	text-align: right;
 	transform: translateY(-8px);
 }
@@ -294,11 +294,11 @@
 	background: color-mix(in srgb, var(--elemenx-cal-color) 20%, var(--elemenx-surface));
 	border: 0;
 	border-left: 3px solid var(--elemenx-cal-color);
-	border-radius: 4px;
+	border-radius: var(--elemenx-radius);
 	color: var(--elemenx-text);
 	font: inherit;
-	font-size: 12px;
-	line-height: 16px;
+	font-size: var(--elemenx-font-size-small);
+	line-height: var(--elemenx-line-height-small);
 	text-align: left;
 	cursor: pointer;
 }
@@ -338,11 +338,11 @@
 	padding: 2px 6px;
 	background: color-mix(in srgb, var(--elemenx-accent) 16%, transparent);
 	border: 2px dashed var(--elemenx-accent);
-	border-radius: 4px;
+	border-radius: var(--elemenx-radius);
 	color: var(--elemenx-text);
-	font-size: 12px;
-	line-height: 16px;
-	font-weight: 600;
+	font-size: var(--elemenx-font-size-small);
+	line-height: var(--elemenx-line-height-small);
+	font-weight: var(--elemenx-font-weight-strong);
 	font-variant-numeric: tabular-nums;
 	pointer-events: none;
 }

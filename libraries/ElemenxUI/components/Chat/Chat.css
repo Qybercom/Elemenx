@@ -69,8 +69,8 @@
 	gap: 12px;
 	margin: 12px 0;
 	color: var(--elemenx-text-muted);
-	font-size: 12px;
-	line-height: 16px;
+	font-size: var(--elemenx-font-size-small);
+	line-height: var(--elemenx-line-height-small);
 }
 
 .elemenx-chat-divider::before,
@@ -86,7 +86,7 @@
 	align-items: center;
 	gap: 12px;
 	padding: 8px 12px;
-	border-radius: 8px;
+	border-radius: var(--elemenx-radius-large);
 	cursor: pointer;
 }
 

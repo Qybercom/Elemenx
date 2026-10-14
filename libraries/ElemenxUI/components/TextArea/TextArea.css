@@ -9,13 +9,13 @@
 .elemenx-textarea .elemenx-input-control {
 	min-height: 20px;
 	overflow: auto;
-	line-height: 20px;
+	line-height: var(--elemenx-line-height);
 	resize: none;
 }
 
 .elemenx-textarea-counter {
 	align-self: flex-end;
 	color: var(--elemenx-text-muted);
-	font-size: 12px;
-	line-height: 16px;
+	font-size: var(--elemenx-font-size-small);
+	line-height: var(--elemenx-line-height-small);
 }

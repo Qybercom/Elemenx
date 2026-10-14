@@ -48,8 +48,8 @@
 	border-radius: 50%;
 	color: var(--elemenx-text-muted);
 	font: inherit;
-	font-size: 12px;
-	font-weight: 700;
+	font-size: var(--elemenx-font-size-small);
+	font-weight: var(--elemenx-font-weight-bold);
 	font-variant-numeric: tabular-nums;
 	cursor: default;
 }
@@ -79,7 +79,7 @@
 }
 
 .elemenx-step-node:focus-visible {
-	outline: 2px solid color-mix(in srgb, var(--elemenx-accent) 48%, transparent);
+	outline: 2px solid var(--elemenx-focus);
 	outline-offset: 2px;
 }
 
@@ -90,7 +90,7 @@
 }
 
 .elemenx-step-label {
-	font-weight: 600;
+	font-weight: var(--elemenx-font-weight-strong);
 }
 
 .elemenx-step.pending .elemenx-step-label {

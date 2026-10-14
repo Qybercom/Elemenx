@@ -1,0 +1,18 @@
+.elemenx-expressions {
+	min-height: 0;
+	background: var(--elemenx-surface);
+}
+
+.elemenx-expressions-kinds {
+	padding-top: 4px;
+}
+
+.elemenx-expressions-kinds .elemenx-picker-tab {
+	gap: 8px;
+	font: inherit;
+	font-size: var(--elemenx-font-size-small);
+}
+
+.elemenx-expressions .elemenx-stickers {
+	width: 314px;
+}

@@ -1,0 +1,118 @@
+/*
+ * The template of an ElemenxUI theme: every token of index.css with its default value. Copy it, rename my-theme, keep
+ * the tokens you change and delete the rest. Register the file with the Theme Service:
+ *
+ *     this.$Service('Theme').Register('my-theme', {URL: 'themes/my-theme.css', Label: 'My theme'});
+ *     this.$Service('Theme').Use('my-theme');
+ *
+ * or list it in an index.js of the Application (it then loads with the Application) and Register it without a URL.
+ * Every rule starts with body[data-theme='my-theme'], so the theme applies only while it is on and wins over the rules
+ * of the Components it overrides whatever the order of the stylesheets. A Component is restyled by its classes,
+ * prefixed the same way (docs/THEMING-CLASSES.md lists them):
+ *
+ *     body[data-theme='my-theme'] .elemenx-button.primary { text-transform: uppercase; }
+ *
+ * A theme made for one scheme only is registered with Schemes: ['dark'] (or ['light']) and keeps one color block.
+ */
+
+/* Geometry, type, motion and the colors that do not depend on the scheme. */
+body[data-theme='my-theme'] {
+	--elemenx-font: 'Segoe UI', Inter, Arial, sans-serif;
+	--elemenx-font-mono: Consolas, 'Cascadia Code', monospace;
+	--elemenx-font-size-small: 12px;
+	--elemenx-font-size: 14px;
+	--elemenx-font-size-large: 16px;
+	--elemenx-line-height-small: 16px;
+	--elemenx-line-height: 20px;
+	--elemenx-line-height-large: 24px;
+	--elemenx-font-weight-strong: 600;
+	--elemenx-font-weight-bold: 700;
+	--elemenx-control-small: 24px;
+	--elemenx-control: 32px;
+	--elemenx-control-large: 40px;
+	--elemenx-control-giant: 56px;
+	--elemenx-radius-small: 2px;
+	--elemenx-radius: 4px;
+	--elemenx-radius-large: 8px;
+	--elemenx-radius-huge: 12px;
+	--elemenx-radius-giant: 16px;
+	--elemenx-radius-pill: 999px;
+	--elemenx-duration: 120ms;
+	--elemenx-duration-slow: 200ms;
+	--elemenx-easing: ease;
+	--elemenx-shadow-small: 0 1px 2px rgba(0, 0, 0, 0.16);
+	--elemenx-shadow-subtle: 0 1px 2px rgba(0, 0, 0, 0.04);
+	--elemenx-backdrop: rgba(15, 17, 20, 0.48);
+	--elemenx-overlay: rgba(0, 0, 0, 0.56);
+	--elemenx-overlay-soft: rgba(0, 0, 0, 0.24);
+	--elemenx-overlay-text: #ffffff;
+	--elemenx-hairline: rgba(128, 128, 128, 0.32);
+	--elemenx-scrollbar: rgba(128, 128, 128, 0.44);
+	--elemenx-scrollbar-hover: rgba(128, 128, 128, 0.64);
+	--elemenx-scrollbar-active: rgba(128, 128, 128, 0.8);
+	--elemenx-scrollbar-track: rgba(128, 128, 128, 0.12);
+}
+
+/* The colors of the light scheme. */
+body[data-theme='my-theme'][data-scheme='light'] {
+	--elemenx-background: #f2f1ef;
+	--elemenx-surface: #ffffff;
+	--elemenx-surface-raised: #f7f6f4;
+	--elemenx-surface-hover: #ebe9e6;
+	--elemenx-text: #23211e;
+	--elemenx-text-muted: #6f6a64;
+	--elemenx-accent: #4b443d;
+	--elemenx-accent-hover: #37312c;
+	--elemenx-accent-text: #ffffff;
+	--elemenx-danger: #b4483f;
+	--elemenx-success: #3d7a54;
+	--elemenx-warning: #9a6514;
+	--elemenx-info: #3f6c9e;
+	--elemenx-border: #dcd9d4;
+	--elemenx-border-strong: #c2bdb6;
+	--elemenx-shadow: 0 8px 24px rgba(35, 33, 30, 0.12);
+	--elemenx-focus: color-mix(in srgb, var(--elemenx-accent) 48%, transparent);
+	--elemenx-rating-color: #e0a526;
+	--elemenx-tile-color: #4b5f7a;
+	--elemenx-weather-sun: #d9921a;
+	--elemenx-weather-moon: #6f78a8;
+	--elemenx-weather-cloud: var(--elemenx-text-muted);
+	--elemenx-weather-rain: var(--elemenx-info);
+	--elemenx-weather-snow: #4f9fcc;
+	--elemenx-weather-bolt: #d4a017;
+	--elemenx-weather-wind: var(--elemenx-text-muted);
+	--elemenx-weather-fog: var(--elemenx-text-muted);
+	--elemenx-weather-thermometer: var(--elemenx-danger);
+}
+
+/* The colors of the dark scheme. */
+body[data-theme='my-theme'][data-scheme='dark'] {
+	--elemenx-background: #15171b;
+	--elemenx-surface: #1d2025;
+	--elemenx-surface-raised: #24282e;
+	--elemenx-surface-hover: #2c3138;
+	--elemenx-text: #eef0f3;
+	--elemenx-text-muted: #9da4ae;
+	--elemenx-accent: #eef0f3;
+	--elemenx-accent-hover: #ffffff;
+	--elemenx-accent-text: #181a1e;
+	--elemenx-danger: #d56a6a;
+	--elemenx-success: #75b798;
+	--elemenx-warning: #d8a64e;
+	--elemenx-info: #7fa8d6;
+	--elemenx-border: #353a43;
+	--elemenx-border-strong: #4a515c;
+	--elemenx-shadow: 0 8px 24px rgba(0, 0, 0, 0.48);
+	--elemenx-focus: color-mix(in srgb, var(--elemenx-accent) 48%, transparent);
+	--elemenx-rating-color: #e0a526;
+	--elemenx-tile-color: #4b5f7a;
+	--elemenx-weather-sun: #f0b440;
+	--elemenx-weather-moon: #b4bce6;
+	--elemenx-weather-cloud: var(--elemenx-text-muted);
+	--elemenx-weather-rain: var(--elemenx-info);
+	--elemenx-weather-snow: #8ccbef;
+	--elemenx-weather-bolt: #f2c94c;
+	--elemenx-weather-wind: var(--elemenx-text-muted);
+	--elemenx-weather-fog: var(--elemenx-text-muted);
+	--elemenx-weather-thermometer: var(--elemenx-danger);
+}

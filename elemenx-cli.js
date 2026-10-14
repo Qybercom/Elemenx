@@ -6,10 +6,11 @@ var path = require('path');
 var Builder = require('./tools/builder.js');
 var Server = require('./tools/server.js');
 var Generator = require('./tools/generator.js');
+var Icons = require('./tools/icons.js');
 var Package = require('./package.json');
 var fail = require('./tools/common.js').fail;
 
-var BooleanOptions = {force: true};
+var BooleanOptions = {force: true, 'current-color': true};
 
 function parse (argv) {
 	var result = {Arguments: [], Options: {}};
@@ -180,6 +181,19 @@ command('serve', 'Serve the production dist with gzip and HTTP caching.', functi
 		fail('dist not found: ' + directory + ' (run elemenx build first)');
 
 	listen(directory, port, settings, true, parsed.Options);
+});
+
+command('icons', 'Build an icon set (a sprite) from a directory of SVG files.', function (parsed) {
+	var directory = parsed.Arguments[0];
+	var output = parsed.Arguments[1];
+	var result;
+
+	if (!directory || !output)
+		fail('usage: elemenx icons <directory> <output.svg> [--current-color]');
+
+	result = Icons.Build(directory, output, {CurrentColor: parsed.Options['current-color'] === true});
+
+	process.stdout.write('Elemenx icons: ' + result.Names.length + ' icons in ' + result.Output + '\n');
 });
 
 command('version', 'Print Elemenx version.', function () {

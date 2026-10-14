@@ -1,0 +1,18 @@
+<div class="elemenx-ribbon-gallery elemenx-popup-anchor" [attribute.style]="'--elemenx-gallery-columns: ' + Columns">
+	<div class="elemenx-ribbon-gallery-items" role="listbox" [attribute.aria-label]="Label">
+		<button class="elemenx-ribbon-gallery-item" type="button" role="option" *for="item of Items" *key="item.ID" [class.selected]="String(item.ID) === String(Value)" [attribute.aria-selected]="String(String(item.ID) === String(Value))" [attribute.title]="item.Label" [attribute.aria-label]="item.Label" [attribute.data-id]="item.ID" (click)="Choose">
+			<span class="elemenx-ribbon-gallery-preview" [attribute.style]="item.Style || null"><Icon *if="item.Icon" [name]="item.Icon" Size="24" /><span *if="!item.Icon">{{item.Preview || item.Label}}</span></span>
+		</button>
+	</div>
+	<div class="elemenx-ribbon-gallery-scroll">
+		<button class="elemenx-ribbon-gallery-step" type="button" tabindex="-1" aria-label="Previous row" (click)="Up"><Icon Name="chevron-up" Size="12" /></button>
+		<button class="elemenx-ribbon-gallery-step" type="button" tabindex="-1" aria-label="Next row" (click)="Down"><Icon Name="chevron-down" Size="12" /></button>
+		<button class="elemenx-ribbon-gallery-more" type="button" aria-haspopup="listbox" [attribute.aria-expanded]="String(Open)" [attribute.aria-label]="'All ' + Label" [attribute.data-keytip]="KeyTip || null" (click)="More"><Icon Name="more" Size="12" /></button>
+	</div>
+	<div class="elemenx-popup elemenx-ribbon-gallery-popup" role="listbox" data-placement="bottom-end" [attribute.aria-label]="Label" *popup="Open" (dismiss)="Dismissed">
+		<button class="elemenx-ribbon-gallery-item" type="button" role="option" *for="item of Items" *key="item.ID" [class.selected]="String(item.ID) === String(Value)" [attribute.aria-selected]="String(String(item.ID) === String(Value))" [attribute.aria-label]="item.Label" [attribute.data-id]="item.ID" (click)="Choose">
+			<span class="elemenx-ribbon-gallery-preview" [attribute.style]="item.Style || null"><Icon *if="item.Icon" [name]="item.Icon" Size="24" /><span *if="!item.Icon">{{item.Preview || item.Label}}</span></span>
+			<span class="elemenx-ribbon-gallery-label">{{item.Label}}</span>
+		</button>
+	</div>
+</div>

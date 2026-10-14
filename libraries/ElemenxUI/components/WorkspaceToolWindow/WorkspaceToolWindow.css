@@ -13,9 +13,9 @@
 	padding: 0 4px 0 12px;
 	border-radius: 0;
 	color: var(--elemenx-text);
-	font-size: 12px;
-	line-height: 16px;
-	font-weight: 600;
+	font-size: var(--elemenx-font-size-small);
+	line-height: var(--elemenx-line-height-small);
+	font-weight: var(--elemenx-font-weight-strong);
 }
 
 .elemenx-workspace-tool-window-header > .elemenx-icon {

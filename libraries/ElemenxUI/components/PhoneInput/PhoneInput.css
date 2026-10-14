@@ -18,7 +18,7 @@
 	background: transparent;
 	border: 0;
 	border-right: 1px solid var(--elemenx-border);
-	border-radius: 3px 0 0 3px;
+	border-radius: calc(var(--elemenx-radius) - 1px) 0 0 calc(var(--elemenx-radius) - 1px);
 	color: var(--elemenx-text);
 	font: inherit;
 	cursor: pointer;
@@ -29,7 +29,7 @@
 }
 
 .elemenx-phone-country:focus-visible {
-	outline: 2px solid color-mix(in srgb, var(--elemenx-accent) 48%, transparent);
+	outline: 2px solid var(--elemenx-focus);
 	outline-offset: -2px;
 }
 
@@ -45,8 +45,8 @@
 	display: inline-block;
 	min-width: 24px;
 	font-family: var(--elemenx-font-mono), monospace;
-	font-size: 12px;
-	font-weight: 600;
+	font-size: var(--elemenx-font-size-small);
+	font-weight: var(--elemenx-font-weight-strong);
 }
 
 .elemenx-phone-input .elemenx-input-control {

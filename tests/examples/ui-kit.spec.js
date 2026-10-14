@@ -29,10 +29,15 @@ function field (page, label) {
 }
 
 async function open (page, origin) {
+	/* The catalogue loads more resources than the default buffer of Resource Timing (250) keeps. */
+	await page.addInitScript(function () {
+		performance.setResourceTimingBufferSize(4000);
+	});
+
 	await page.goto(origin.URL + '/ui');
 
 	/* The catalogue is a large page: under a full parallel run its development build may take more than 5 seconds. */
-	await expect(page.locator('.elemenx-workspace')).toBeVisible({timeout: 20000});
+	await expect(page.locator('.elemenx-workspace').first()).toBeVisible({timeout: 20000});
 }
 
 for (const origin of origins) {
@@ -43,7 +48,7 @@ for (const origin of origins) {
 
 			await open(page, origin);
 
-			await expect(page.locator('.ui-kit > .elemenx-section')).toHaveCount(26);
+			await expect(page.locator('.ui-kit > .elemenx-section')).toHaveCount(29);
 
 			await expect(page.locator('#elemenx-icons')).toHaveAttribute('data-ready', 'true');
 			await expect(page.locator('.ui-kit-icon svg').first()).toHaveAttribute('data-icon', 'add');
@@ -75,6 +80,584 @@ for (const origin of origins) {
 			})).toBe('rgb(29, 32, 37)');
 
 			expect(errors).toEqual([]);
+		});
+
+		test('icon sets load on demand, paint with the theme colors, come from markup and override library icons', async function ({ page }) {
+			var icons;
+			var weather;
+			var sun;
+			var save;
+
+			await open(page, origin);
+
+			icons = section(page, 'Icons');
+			weather = icons.locator('.ui-kit-set-weather');
+			sun = weather.locator('[data-icon="weather:clear-day"] .sun').first();
+			save = page.locator('svg[data-icon="save"]').first();
+
+			await expect(icons.locator('svg[data-icon="mic-off"] path')).toHaveCount(1);
+			await expect(icons.locator('svg[data-icon="headphones"] rect')).toHaveCount(2);
+
+			await expect(icons.locator('.ui-kit-set-music .ui-kit-icon')).toHaveCount(32);
+			await expect(weather.locator('.ui-kit-icon')).toHaveCount(44);
+			await expect(page.locator('#elemenx-icons symbol#elemenx-icon-weather-rain[data-set="weather"]')).toHaveCount(1);
+			await expect(icons.locator('svg[data-icon="music:guitar"]')).toHaveAttribute('viewBox', '0 0 24 24');
+			await expect(weather.locator('.ui-kit-icon').first().locator('span')).toHaveText('clear-day');
+
+			/* Colored: the parts take the weather colors of the theme; without it, the color of the text. */
+			expect(await sun.evaluate(function (node) {
+				return getComputedStyle(node).stroke;
+			})).toBe('rgb(217, 146, 26)');
+
+			await page.evaluate(function () {
+				document.body.setAttribute('data-theme', 'dark');
+			});
+
+			expect(await sun.evaluate(function (node) {
+				return getComputedStyle(node).stroke;
+			})).toBe('rgb(240, 180, 64)');
+
+			await icons.getByRole('button', {name: 'Theme colors'}).click();
+
+			await expect(weather.locator('svg.colored')).toHaveCount(0);
+			expect(await sun.evaluate(function (node) {
+				return getComputedStyle(node).stroke === getComputedStyle(node).color;
+			})).toBe(true);
+
+			/* A filled set keeps the paint of its symbols. */
+			await expect(icons.locator('svg[data-icon="brand:disk"] > g')).toHaveAttribute('fill', 'currentColor');
+			await expect(icons.locator('svg[data-icon="brand:spark"] path')).toHaveAttribute('fill', '#e8a33d');
+
+			/* An override redraws every icon of the name, and lets it go again. */
+			await icons.getByRole('button', {name: 'Draw save as brand:disk'}).click();
+
+			await expect(save.locator('g > path')).toHaveCount(1);
+			await expect(save).toHaveAttribute('data-icon', 'save');
+
+			await icons.getByRole('button', {name: 'Draw save as brand:disk'}).click();
+
+			await expect(save.locator('g')).toHaveCount(0);
+			await expect(save.locator('path')).toHaveCount(1);
+			await expect(page.locator('svg.elemenx-icon use')).toHaveCount(0);
+		});
+
+		test('themes switch the tokens and the rules of the Components, keep to their schemes and are remembered', async function ({ page }) {
+			var themes;
+			var picker;
+			var body;
+			var input;
+			var button;
+			var style;
+
+			await open(page, origin);
+
+			themes = section(page, 'Themes');
+			picker = field(page, 'Theme');
+			body = page.locator('body');
+			input = section(page, 'Inputs').locator('.elemenx-input').first();
+			button = themes.getByRole('button', {name: 'Show Mine'});
+			style = function (locator, name) {
+				return locator.evaluate(function (node, property) {
+					return getComputedStyle(node)[property];
+				}, name);
+			};
+
+			await themes.locator('.elemenx-check-label', {hasText: /^Light$/}).click();
+
+			await expect(body).toHaveAttribute('data-theme', 'light');
+			await expect(body).toHaveAttribute('data-scheme', 'light');
+			expect(await style(input, 'height')).toBe('32px');
+
+			/* A Library theme: its tokens and its rules of the Components. */
+			await picker.locator('.elemenx-select-trigger').click();
+			await picker.locator('.elemenx-option', {hasText: 'Soft'}).click();
+
+			await expect(body).toHaveAttribute('data-theme', 'soft');
+			await expect(body).toHaveAttribute('data-scheme', 'light');
+			await expect(themes.locator('.elemenx-section-header')).toContainText('Theme: soft · Scheme: light');
+			expect(await style(input, 'height')).toBe('36px');
+			expect(await style(input, 'borderTopLeftRadius')).toBe('8px');
+			expect(await style(button, 'borderTopLeftRadius')).toBe('999px');
+			expect(await style(button, 'backgroundColor')).toBe('rgb(107, 78, 255)');
+
+			await themes.locator('.elemenx-check-label', {hasText: /^Dark$/}).click();
+
+			await expect(body).toHaveAttribute('data-theme', 'soft');
+			await expect(body).toHaveAttribute('data-scheme', 'dark');
+			expect(await style(button, 'backgroundColor')).toBe('rgb(165, 148, 255)');
+
+			/* A theme made for the dark scheme stays dark under the light policy. */
+			await picker.locator('.elemenx-select-trigger').click();
+			await picker.locator('.elemenx-option', {hasText: 'Darcula'}).click();
+			await themes.locator('.elemenx-check-label', {hasText: /^Light$/}).click();
+
+			await expect(body).toHaveAttribute('data-theme', 'darcula');
+			await expect(body).toHaveAttribute('data-scheme', 'dark');
+			expect(await style(input, 'backgroundColor')).toBe('rgb(60, 63, 65)');
+			expect(await style(button, 'backgroundColor')).toBe('rgb(54, 88, 128)');
+
+			/* A theme of the page, written by the editor, follows its edits and is remembered. */
+			await themes.getByRole('slider', {name: 'Corners'}).focus();
+
+			await page.keyboard.press('ArrowRight');
+
+			await button.click();
+
+			await page.mouse.move(0, 0);
+
+			await expect(body).toHaveAttribute('data-theme', 'mine');
+			await expect(themes.locator('.ui-kit-theme-css')).toContainText('--elemenx-radius: 7px;');
+			expect(await style(input, 'borderTopLeftRadius')).toBe('7px');
+			expect(await style(input, 'height')).toBe('36px');
+			expect(await style(button, 'backgroundColor')).toBe('rgb(11, 110, 153)');
+
+			await page.reload();
+
+			await expect(page.locator('.elemenx-workspace').first()).toBeVisible({timeout: 20000});
+
+			await expect(body).toHaveAttribute('data-theme', 'mine');
+			await expect(body).toHaveAttribute('data-scheme', 'light');
+
+			/* Back to the default theme: the policy shows in data-theme again. */
+			await picker.locator('.elemenx-select-trigger').click();
+			await picker.locator('.elemenx-option', {hasText: 'Default'}).click();
+
+			await expect(body).toHaveAttribute('data-theme', 'light');
+			expect(await style(input, 'height')).toBe('32px');
+		});
+
+		test('ribbon switches tabs, runs commands, menus and galleries, and shows a contextual tab', async function ({ page }) {
+			var ribbon;
+			var note;
+			var tab;
+			var panel;
+
+			await open(page, origin);
+
+			ribbon = section(page, 'Ribbon').locator('.elemenx-ribbon');
+			note = section(page, 'Ribbon').locator('.elemenx-section-header');
+			tab = function (title) {
+				return ribbon.getByRole('tab', {name: title, exact: true});
+			};
+			panel = function (id) {
+				return ribbon.locator('.elemenx-ribbon-panel[data-id="' + id + '"]');
+			};
+
+			await ribbon.scrollIntoViewIfNeeded();
+
+			await expect(ribbon.getByRole('tab')).toHaveText(['Home', 'Insert', 'Review', 'View']);
+			await expect(tab('Home')).toHaveAttribute('aria-selected', 'true');
+			await expect(panel('home')).toBeVisible();
+			await expect(panel('insert')).toBeHidden();
+
+			await ribbon.getByRole('button', {name: 'Cut', exact: true}).click();
+
+			await expect(note).toContainText('Last: cut');
+
+			/* A split button: the button pastes, the arrow opens its menu. */
+			await ribbon.getByRole('button', {name: 'More Paste'}).click();
+			await ribbon.getByRole('menuitem', {name: 'Keep text only'}).click();
+
+			await expect(note).toContainText('Last: paste → Keep text only');
+
+			await ribbon.getByRole('button', {name: 'Bold'}).click();
+
+			await expect(ribbon.getByRole('button', {name: 'Bold'})).toHaveAttribute('aria-pressed', 'true');
+			await expect(note).toContainText('Last: bold');
+
+			/* The gallery: a sample of the strip, and every sample in the panel of its last button. */
+			await ribbon.locator('.elemenx-ribbon-gallery-items').getByRole('option', {name: 'Heading 1'}).click();
+
+			await expect(note).toContainText('Last: style → Heading 1');
+
+			await ribbon.getByRole('button', {name: 'All Styles'}).click();
+			await page.locator('.elemenx-ribbon-gallery-popup').getByRole('option', {name: /Quote/}).click();
+
+			await expect(note).toContainText('Last: style → Quote');
+			await expect(ribbon.locator('.elemenx-ribbon-gallery-items [aria-selected="true"]')).toHaveAttribute('data-id', 'quote');
+
+			await tab('Insert').click();
+
+			await expect(tab('Insert')).toHaveAttribute('aria-selected', 'true');
+			await expect(panel('insert')).toBeVisible();
+			await expect(panel('home')).toBeHidden();
+
+			/* A contextual tab shows with its object, in its color, and goes with it. */
+			await section(page, 'Ribbon').getByText('A table is selected (contextual tab)').click();
+
+			await expect(tab('Table design')).toHaveClass(/contextual/);
+			await expect(tab('Table design')).toHaveAttribute('aria-selected', 'true');
+			await expect(tab('Table design')).toHaveAttribute('title', 'Table tools');
+			await expect(panel('table-design')).toBeVisible();
+
+			await section(page, 'Ribbon').getByText('A table is selected (contextual tab)').click();
+
+			await expect(tab('Table design')).toHaveCount(0);
+			await expect(tab('Home')).toHaveAttribute('aria-selected', 'true');
+		});
+
+		test('ribbon shrinks its groups to fit, folds them into buttons and collapses to its tabs', async function ({ page }) {
+			var ribbon;
+			var frame;
+			var note;
+			var clipboard;
+
+			await open(page, origin);
+
+			ribbon = section(page, 'Ribbon').locator('.elemenx-ribbon');
+			frame = section(page, 'Ribbon').locator('.ui-kit-frame.ribbon');
+			note = section(page, 'Ribbon').locator('.elemenx-section-header');
+			clipboard = ribbon.locator('.elemenx-ribbon-group[aria-label="Clipboard"]');
+
+			await ribbon.scrollIntoViewIfNeeded();
+
+			await expect(ribbon.locator('.elemenx-ribbon-group.collapsed')).toHaveCount(0);
+
+			/* The lowest priority first: Paragraph and Editing fold before Font, Font before Clipboard and Styles. */
+			await frame.evaluate(function (node) {
+				node.style.width = '760px';
+			});
+
+			await expect(ribbon.locator('.elemenx-ribbon-group.collapsed')).toHaveCount(3);
+			await expect(ribbon.locator('.elemenx-ribbon-group[aria-label="Editing"]')).toHaveClass(/collapsed/);
+			await expect(clipboard).not.toHaveClass(/collapsed/);
+
+			await frame.evaluate(function (node) {
+				node.style.width = '520px';
+			});
+
+			await expect(clipboard).toHaveClass(/collapsed/);
+			await expect(ribbon).toHaveClass(/narrow/);
+
+			await clipboard.getByRole('button', {name: 'Clipboard'}).click();
+
+			await expect(clipboard.locator('.elemenx-ribbon-group-popup')).toBeVisible();
+
+			await clipboard.getByRole('button', {name: 'Copy'}).click();
+
+			await expect(note).toContainText('Last: copy');
+			await expect(clipboard.locator('.elemenx-ribbon-group-popup')).toBeHidden();
+
+			await frame.evaluate(function (node) {
+				node.style.width = '';
+			});
+
+			await expect(ribbon.locator('.elemenx-ribbon-group.collapsed')).toHaveCount(0);
+
+			/* Collapsed: the tabs only; a tab opens its panel over the page until a command runs. */
+			await ribbon.getByRole('tab', {name: 'Home'}).dblclick();
+
+			await expect(ribbon).toHaveClass(/collapsed/);
+			await expect(ribbon.locator('.elemenx-ribbon-panels')).toBeHidden();
+
+			await ribbon.getByRole('tab', {name: 'Insert'}).click();
+
+			await expect(ribbon.locator('.elemenx-ribbon-panels')).toBeVisible();
+
+			await ribbon.getByRole('button', {name: 'Pictures'}).click();
+
+			await expect(note).toContainText('Last: picture');
+			await expect(ribbon.locator('.elemenx-ribbon-panels')).toBeHidden();
+
+			await ribbon.getByRole('button', {name: 'Pin the ribbon'}).click();
+
+			await expect(ribbon).not.toHaveClass(/collapsed/);
+			await expect(ribbon.locator('.elemenx-ribbon-panels')).toBeVisible();
+
+			await ribbon.getByRole('tab', {name: 'Insert'}).focus();
+
+			await page.keyboard.press('Control+F1');
+
+			await expect(ribbon).toHaveClass(/collapsed/);
+
+			await page.keyboard.press('Control+F1');
+
+			await expect(ribbon).not.toHaveClass(/collapsed/);
+		});
+
+		test('ribbon key tips open tabs and run commands from the keyboard, and the backstage opens over the window', async function ({ page }) {
+			var ribbon;
+			var note;
+			var backstage;
+			var tips;
+
+			await open(page, origin);
+
+			ribbon = section(page, 'Ribbon').locator('.elemenx-ribbon');
+			note = section(page, 'Ribbon').locator('.elemenx-section-header');
+			backstage = page.locator('.elemenx-ribbon-backstage');
+			tips = ribbon.locator('.elemenx-ribbon-keytip');
+
+			await ribbon.scrollIntoViewIfNeeded();
+
+			await section(page, 'Ribbon').locator('.ui-kit-page').click();
+
+			/* Alt: the tabs, the File button and the quick access commands. */
+			await page.keyboard.press('Alt');
+
+			await expect(tips.filter({hasText: /^H$/})).toHaveCount(1);
+			await expect(tips.filter({hasText: /^N$/})).toHaveCount(1);
+			await expect(tips.filter({hasText: /^F$/})).toHaveCount(1);
+			await expect(tips).toHaveCount(8);
+
+			/* A letter opens its tab and shows the letters of its commands; Escape goes back. */
+			await page.keyboard.press('n');
+
+			await expect(ribbon.getByRole('tab', {name: 'Insert'})).toHaveAttribute('aria-selected', 'true');
+			await expect(tips.filter({hasText: /^H$/})).toHaveCount(0);
+			await expect(tips).toHaveCount(7);
+
+			await page.keyboard.press('Escape');
+
+			await expect(tips.filter({hasText: /^H$/})).toHaveCount(1);
+
+			/* Two letters: H opens Home, F narrows to the commands of F (FP, FD), P runs Format painter. */
+			await page.keyboard.press('h');
+
+			await expect(tips.filter({hasText: /^X$/})).toHaveCount(1);
+
+			await page.keyboard.press('f');
+
+			await expect(tips.filter({hasText: /^FP$/})).not.toHaveClass(/dim/);
+			await expect(tips.filter({hasText: /^X$/})).toHaveClass(/dim/);
+
+			await page.keyboard.press('p');
+
+			await expect(note).toContainText('Last: format-painter');
+			await expect(tips).toHaveCount(0);
+
+			await page.keyboard.press('Alt');
+			await page.keyboard.press('h');
+
+			await expect(tips.filter({hasText: /^X$/})).toHaveCount(1);
+
+			await page.keyboard.press('x');
+
+			await expect(note).toContainText('Last: cut');
+
+			await page.keyboard.press('Alt');
+			await page.keyboard.press('Escape');
+
+			await expect(tips).toHaveCount(0);
+
+			/* The backstage: pages on the side, commands that close it, Escape. */
+			await ribbon.getByRole('button', {name: 'File'}).click();
+
+			await expect(backstage).toBeVisible();
+			await expect(backstage.getByRole('button', {name: 'Info'})).toHaveAttribute('aria-current', 'page');
+			await expect(backstage.getByText('Report.docx · 12 KB')).toBeVisible();
+
+			await backstage.getByRole('button', {name: 'Open'}).click();
+
+			await expect(backstage.getByRole('button', {name: 'Open'})).toHaveAttribute('aria-current', 'page');
+			await expect(backstage.locator('.elemenx-ribbon-page[data-id="open"]')).toBeVisible();
+			await expect(backstage.locator('.elemenx-ribbon-page[data-id="info"]')).toBeHidden();
+
+			await backstage.getByRole('button', {name: 'Save'}).click();
+
+			await expect(backstage).toBeHidden();
+			await expect(note).toContainText('Last: file-save');
+
+			await ribbon.getByRole('button', {name: 'File'}).click();
+
+			await page.keyboard.press('Escape');
+
+			await expect(backstage).toBeHidden();
+			await expect(ribbon.getByRole('button', {name: 'File'})).toBeFocused();
+		});
+
+		test('emoji picker searches in English and Russian, keeps a skin tone and the emoji used last', async function ({ page }) {
+			var pickers;
+			var picker;
+			var search;
+			var note;
+
+			await open(page, origin);
+
+			pickers = section(page, 'Emoji and stickers');
+			picker = pickers.locator('.elemenx-emoji').first();
+			search = picker.locator('.elemenx-picker-search input');
+			note = pickers.locator('.elemenx-section-header');
+
+			await picker.scrollIntoViewIfNeeded();
+
+			await expect(picker.locator('.elemenx-emoji-item[data-char="😀"]')).toBeVisible();
+			await expect(picker.getByRole('tab', {name: 'Smileys & emotion'})).toHaveAttribute('aria-selected', 'true');
+			expect(await picker.getByRole('tab').count()).toBeGreaterThan(7);
+
+			await search.fill('cat');
+
+			await expect(picker.locator('.elemenx-emoji-group')).toHaveCount(1);
+			await expect(picker.locator('.elemenx-emoji-item[data-char="🐈"]')).toBeVisible();
+			await expect(picker.getByRole('tab')).toHaveCount(0);
+
+			await search.fill('кот');
+
+			await expect(picker.locator('.elemenx-emoji-item[data-char="🐱"]')).toBeVisible();
+
+			await search.fill('zzzxq');
+
+			await expect(picker.locator('.elemenx-picker-empty')).toHaveText('No emoji found');
+
+			await search.press('Escape');
+
+			await expect(search).toHaveValue('');
+			await expect(picker.locator('.elemenx-emoji-group').first()).toHaveAttribute('data-group', 'smileys');
+
+			await picker.locator('.elemenx-emoji-item[data-char="😀"]').click();
+
+			await expect(note).toContainText('Picked: 😀 Grinning face');
+			await expect(picker.locator('.elemenx-emoji-group').first()).toHaveAttribute('data-group', 'recent');
+			await expect(picker.locator('.elemenx-emoji-group[data-group="recent"] .elemenx-emoji-item').first()).toHaveAttribute('data-char', '😀');
+
+			/* A skin tone shows on the emoji that take one and goes with the emoji picked. */
+			await picker.getByRole('button', {name: 'Skin tone'}).click();
+			await page.getByRole('option', {name: 'Medium skin tone'}).click();
+
+			await expect(picker.locator('.elemenx-emoji-group[data-group="people"] .elemenx-emoji-item[data-char="👍"]')).toHaveText('👍🏽');
+			await expect(picker.locator('.elemenx-emoji-group[data-group="smileys"] .elemenx-emoji-item[data-char="😀"]')).toHaveText('😀');
+
+			await picker.locator('.elemenx-emoji-group[data-group="people"] .elemenx-emoji-item[data-char="👍"]').click();
+
+			await expect(note).toContainText('Picked: 👍🏽 Thumbs up sign');
+
+			/* Keys: Down from the search, Enter on an emoji. */
+			await search.fill('rocket');
+
+			await expect(picker.locator('.elemenx-emoji-group')).toHaveCount(1);
+
+			await search.press('ArrowDown');
+
+			await expect(picker.locator('.elemenx-emoji-item[data-char="🚀"]')).toBeFocused();
+
+			await page.keyboard.press('Enter');
+
+			await expect(note).toContainText('Picked: 🚀 Rocket');
+
+			/* The tone and the emoji used last are remembered. */
+			await page.reload();
+
+			await expect(page.locator('.elemenx-workspace').first()).toBeVisible({timeout: 20000});
+
+			picker = section(page, 'Emoji and stickers').locator('.elemenx-emoji').first();
+
+			await expect(picker.locator('.elemenx-emoji-group[data-group="recent"] .elemenx-emoji-item')).toHaveText(['🚀', '👍🏽', '😀']);
+		});
+
+		test('sticker picker shows the packs, stars favorites and remembers the stickers sent', async function ({ page }) {
+			var pickers;
+			var stickers;
+			var note;
+
+			await open(page, origin);
+
+			pickers = section(page, 'Emoji and stickers');
+			stickers = pickers.locator('.elemenx-stickers');
+			note = pickers.locator('.elemenx-section-header');
+
+			await stickers.scrollIntoViewIfNeeded();
+
+			await expect(stickers.getByRole('tab', {name: 'Elemenx pals'})).toHaveAttribute('aria-selected', 'true');
+			await expect(stickers.locator('.elemenx-sticker')).toHaveCount(8);
+			expect(await stickers.getByRole('option', {name: 'Party'}).locator('img').evaluate(function (node) {
+				return node.complete && node.naturalWidth;
+			})).toBe(128);
+
+			await stickers.getByRole('option', {name: 'Party'}).click();
+
+			await expect(note).toContainText('Picked: sticker Party');
+			await expect(pickers.locator('.ui-kit-picked-sticker')).toHaveAttribute('src', '/data/stickers/party.svg');
+
+			await stickers.getByRole('tab', {name: 'Recently sent'}).click();
+
+			await expect(stickers.locator('.elemenx-sticker')).toHaveCount(1);
+
+			await stickers.getByRole('tab', {name: 'Favorites'}).click();
+
+			await expect(stickers.locator('.elemenx-picker-empty')).toHaveText('Star a sticker to keep it here');
+
+			await stickers.getByRole('tab', {name: 'Elemenx pals'}).click();
+			await stickers.getByRole('option', {name: 'Love'}).hover();
+			await stickers.locator('.elemenx-sticker', {has: page.getByRole('option', {name: 'Love'})}).getByRole('button', {name: 'Add to favorites'}).click();
+			await stickers.getByRole('tab', {name: 'Favorites'}).click();
+
+			await expect(stickers.locator('.elemenx-sticker')).toHaveCount(1);
+			await expect(stickers.getByRole('button', {name: 'Remove from favorites'})).toHaveAttribute('aria-pressed', 'true');
+
+			await stickers.locator('.elemenx-picker-search input').fill('кофе');
+
+			await expect(stickers.locator('.elemenx-sticker')).toHaveCount(1);
+			await expect(stickers.getByRole('option', {name: 'Coffee'})).toBeVisible();
+		});
+
+		test('chat composer puts emoji at the caret and sends stickers; messages take reactions', async function ({ page }) {
+			var chat;
+			var composer;
+			var field;
+			var popup;
+			var mine;
+			var box;
+			var area;
+
+			await open(page, origin);
+
+			chat = section(page, 'Chat');
+			composer = chat.locator('.elemenx-chat-composer');
+			field = composer.locator('textarea');
+			popup = composer.locator('.elemenx-chat-picker');
+			mine = chat.locator('.elemenx-chat-message.own').last();
+
+			await composer.scrollIntoViewIfNeeded();
+
+			await field.fill('Hello world');
+			await field.press('Home');
+
+			for (var step = 0; step < 5; step++)
+				await field.press('ArrowRight');
+
+			await composer.getByRole('button', {name: 'Emoji and stickers'}).click();
+
+			await expect(popup.locator('.elemenx-emoji-item[data-char="😀"]')).toBeVisible();
+
+			/* The picker opens above the field, at its full size. */
+			box = await popup.boundingBox();
+			area = await composer.boundingBox();
+
+			expect(box.y + box.height).toBeLessThanOrEqual(area.y);
+			expect(box.height).toBeGreaterThan(300);
+
+			await popup.locator('.elemenx-picker-search input').fill('waving');
+			await popup.locator('.elemenx-emoji-item[data-char="👋"]').click();
+
+			await expect(field).toHaveValue('Hello👋 world');
+			await expect(popup).toBeHidden();
+			await expect(field).toBeFocused();
+
+			await composer.getByRole('button', {name: 'Emoji and stickers'}).click();
+			await popup.getByRole('tab', {name: 'Stickers'}).click();
+			await popup.getByRole('option', {name: 'Rocket'}).click();
+
+			await expect(mine.locator('img.elemenx-chat-sticker')).toHaveAttribute('src', '/data/stickers/rocket.svg');
+			await expect(mine.locator('.elemenx-chat-bubble')).toHaveClass(/sticker/);
+
+			/* Reactions: take one back, add to another, add a new one with the picker of the message. */
+			mine = chat.locator('.elemenx-chat-message.own', {hasText: 'Looks good'});
+
+			await mine.getByRole('button', {name: '👍 1'}).click();
+
+			await expect(mine.locator('.elemenx-chat-reaction')).toHaveCount(1);
+
+			await mine.getByRole('button', {name: '🎉 2'}).click();
+
+			await expect(mine.getByRole('button', {name: '🎉 3'})).toHaveAttribute('aria-pressed', 'true');
+
+			await mine.hover();
+			await mine.getByRole('button', {name: 'Add a reaction'}).click();
+			await mine.locator('.elemenx-chat-react-picker .elemenx-picker-search input').fill('fire');
+			await mine.locator('.elemenx-chat-react-picker .elemenx-emoji-item[data-char="🔥"]').click();
+
+			await expect(mine.getByRole('button', {name: '🔥 1'})).toHaveAttribute('aria-pressed', 'true');
+			await expect(mine.locator('.elemenx-chat-react-picker')).toBeHidden();
 		});
 
 		test('phone input keeps to its mask and picks the country of a pasted number', async function ({ page }) {
@@ -382,7 +965,7 @@ for (const origin of origins) {
 				});
 			};
 			var css = await (await page.request.get(origin.URL + '/libraries/ElemenxUI/index.css')).text();
-			var forced = css.match(/body\[data-theme='dark'\] \{([^}]*)\}/)[1];
+			var forced = css.match(/body\[data-theme='dark'\],\s*body\[data-scheme='dark'\] \{([^}]*)\}/)[1];
 			var system = css.match(/body\[data-theme='system'\] \{([^}]*)\}/)[1];
 
 			expect(system.replace(/\s+/g, ' ')).toBe(forced.replace(/\s+/g, ' '));
@@ -392,6 +975,7 @@ for (const origin of origins) {
 			await open(page, origin);
 
 			await expect(page.locator('body')).toHaveAttribute('data-theme', 'system');
+			await expect(page.locator('body')).toHaveAttribute('data-scheme', 'dark');
 			expect(await surface()).toBe('rgb(29, 32, 37)');
 
 			await page.locator('.ui-kit-intro').getByRole('button', {name: 'Light theme'}).click();
@@ -914,7 +1498,7 @@ for (const origin of origins) {
 
 			await open(page, origin);
 
-			workspace = page.locator('.elemenx-workspace');
+			workspace = section(page, 'Workspace').locator('.elemenx-workspace');
 			left = workspace.locator('.elemenx-workspace-panel.left');
 			handle = left.locator(':scope > .elemenx-resize-handle.right');
 
@@ -1693,7 +2277,7 @@ for (const origin of origins) {
 			/* WebAuthn takes a domain, not an IP address, as the site: the page opens on localhost. */
 			await page.goto(origin.URL.replace('127.0.0.1', 'localhost') + '/ui');
 
-			await expect(page.locator('.elemenx-workspace')).toBeVisible({timeout: 20000});
+			await expect(page.locator('.elemenx-workspace').first()).toBeVisible({timeout: 20000});
 
 			device = section(page, 'Security and device');
 

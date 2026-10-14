@@ -54,6 +54,17 @@ describe('Regression: Template and Component contracts', function () {
 		}).toThrow('Elemenx template not found: #Absent');
 	});
 
+	it('a template with blank lines around its element (the final newline of a file) has that element as its root', function () {
+		var spaced = mounted(Elemenx.Component(unique('Spaced'), {$Template: '\n\t<section class="spaced"><b>{{Text}}</b></section>\n\n', Text: 'root'})());
+		var several = mounted(Elemenx.Component(unique('Several'), {$Template: '<i class="one"></i>\n<i class="two"></i>\n'})());
+
+		expect(spaced.$Element().tagName).toBe('SECTION');
+		expect(spaced.$Element().className).toBe('spaced');
+		expect(spaced.$Element().textContent).toBe('root');
+		expect(several.$Element().tagName).toBe('DIV');
+		expect(several.$Element().children.length).toBe(2);
+	});
+
 	it('a deferred Component queues $Update before it is ready and resolves $Ref afterwards', async function () {
 		var panel = mounted(Elemenx.Component(unique('DeferredPanel'), {$TemplateURL: '/component-contracts/Panel.html'})({Title: 'first'}));
 

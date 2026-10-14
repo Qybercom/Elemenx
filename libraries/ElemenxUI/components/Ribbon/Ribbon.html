@@ -1,0 +1,14 @@
+<div class="elemenx-ribbon" [class.collapsed]="Collapsed" [class.floating]="Collapsed && Floating" (keydown)="Key">
+	<div class="elemenx-container elemenx-ribbon-bar">
+		<button class="elemenx-ribbon-file" type="button" aria-haspopup="dialog" *if="HasBackstage" [attribute.data-keytip]="FileKeyTip || null" (click)="OpenBackstage">{{FileLabel}}</button>
+		<div class="elemenx-ribbon-quick" role="toolbar" aria-label="Quick access"><slot name="quick"></slot></div>
+		<div class="elemenx-ribbon-tabs" role="tablist" [attribute.aria-label]="Label" (keydown)="TabKey">
+			<div class="elemenx-ribbon-tab" role="tab" *for="tab of Tabs" *key="tab.ID" [class.active]="tab.ID === Active(Tab, Tabs)" [class.contextual]="tab.Contextual" [class.disabled]="tab.Disabled" [attribute.style]="tab.Color ? '--elemenx-ribbon-context: ' + tab.Color : null" [attribute.title]="tab.Context || null" [attribute.aria-selected]="String(tab.ID === Active(Tab, Tabs))" [attribute.aria-disabled]="tab.Disabled ? 'true' : null" [attribute.tabindex]="tab.ID === Active(Tab, Tabs) ? 0 : -1" [attribute.data-id]="tab.ID" [attribute.data-keytip]="tab.KeyTip || null" (click)="Pick" (dblclick)="Toggle">{{tab.Title}}</div>
+		</div>
+		<span class="elemenx-spacer"></span>
+		<div class="elemenx-container elemenx-ribbon-end"><slot name="end"></slot></div>
+		<button class="elemenx-ribbon-pin" type="button" *if="Collapsible" [attribute.aria-label]="Collapsed ? 'Pin the ribbon' : 'Collapse the ribbon'" [attribute.title]="Collapsed ? 'Pin the ribbon (Ctrl+F1)' : 'Collapse the ribbon (Ctrl+F1)'" (click)="Toggle"><Icon [name]="Collapsed ? 'chevron-down' : 'chevron-up'" /></button>
+	</div>
+	<div class="elemenx-ribbon-panels" [attribute.data-tab]="Active(Tab, Tabs)"><slot></slot></div>
+	<div class="elemenx-ribbon-backstage-host"><slot name="backstage"></slot></div>
+</div>

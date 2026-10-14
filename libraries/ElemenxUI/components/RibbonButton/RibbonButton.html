@@ -1,0 +1,9 @@
+<span class="elemenx-ribbon-item elemenx-popup-anchor" [class]="[Size || 'small', Split && Split !== 'false' ? 'split' : '']">
+	<button class="elemenx-ribbon-button" type="button" [attribute.data-command]="ID || null" [attribute.data-keytip]="KeyTip || null" [attribute.title]="Title || (Size === 'icon' ? Label : null)" [attribute.aria-label]="Size === 'icon' ? Label : null" [attribute.aria-pressed]="Toggle && Toggle !== 'false' ? String(!!Pressed) : null" [attribute.aria-haspopup]="HasMenu(Items, Split) ? 'menu' : null" [attribute.aria-expanded]="HasMenu(Items, Split) ? String(Open) : null" [class.pressed]="!!Pressed && Toggle && Toggle !== 'false'" [disabled]="Disabled" (click)="Press">
+		<Icon *if="Icon" [name]="Icon" [size]="Size === 'large' ? 32 : 16" />
+		<span class="elemenx-ribbon-label" *if="Size !== 'icon'">{{Label}}</span>
+		<Icon *if="HasMenu(Items, Split)" Name="chevron-down" Size="12" />
+	</button>
+	<button class="elemenx-ribbon-split" type="button" *if="Split && Split !== 'false'" [attribute.aria-label]="'More ' + Label" aria-haspopup="menu" [attribute.aria-expanded]="String(Open)" [disabled]="Disabled" (click)="Menu"><Icon Name="chevron-down" Size="12" /></button>
+	<MenuList *if="Items && Items.length" [items]="Items" [open]="Open" Placement="bottom-start" (select)="Picked" (dismiss)="Dismissed" />
+</span>

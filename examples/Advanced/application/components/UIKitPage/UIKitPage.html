@@ -89,6 +89,29 @@
 		</Section>
 	</Section>
 
+	<Section Title="Themes" [note]="'Theme: ' + ThemeName + ' · Scheme: ' + ThemeScheme">
+		<div class="ui-kit-grid">
+			<div class="elemenx-column ui-kit-themes">
+				<Field Label="Theme" Hint="contrast, darcula and soft come with the Library; Mine is made by the editor."><Select [options]="ThemeOptions" [value]="ThemeName" (change)="ThemeChosen" /></Field>
+				<Field Label="Scheme"><RadioGroup Variant="segmented" [options]="ThemeSchemes" [value]="ThemePolicy" (change)="PolicyChosen" /></Field>
+				<p class="elemenx-text">A theme is one CSS file whose rules start with <code class="elemenx-code">body[data-theme='name']</code>: tokens of the theme, and the rules of any Component by its classes. The whole page is its preview.</p>
+			</div>
+			<div class="elemenx-column ui-kit-theme-editor">
+				<div class="ui-kit-grid">
+					<Field Label="Accent"><ColorInput [value]="MineAccent" (input)="MineAccentEdited" /></Field>
+					<Field Label="Background"><ColorInput [value]="MineBackground" (input)="MineBackgroundEdited" /></Field>
+					<Field Label="Corners"><Slider [value]="MineRadius" Min="0" Max="16" Unit="px" Label="Corners" (input)="MineRadiusEdited" /></Field>
+					<Field Label="Control height"><Slider [value]="MineControl" Min="24" Max="48" Step="4" Unit="px" Label="Control height" (input)="MineControlEdited" /></Field>
+				</div>
+				<div class="elemenx-container ui-kit-theme-actions">
+					<Button Label="Show Mine" Icon="color" Variant="primary" (click)="UseMine" />
+					<button class="elemenx-button secondary medium" type="button" *copy="{Text: MineCSS(MineAccent, MineBackground, MineRadius, MineControl), Toast: 'Theme copied'}"><Icon Name="copy" /><span>Copy CSS</span></button>
+				</div>
+				<pre class="elemenx-code ui-kit-theme-css">{{MineCSS(MineAccent, MineBackground, MineRadius, MineControl)}}</pre>
+			</div>
+		</div>
+	</Section>
+
 	<Section Title="Buttons" [note]="'Clicks: ' + Clicks">
 		<div class="ui-kit-row">
 			<Button Label="Primary" Variant="primary" (click)="Clicked" />
@@ -130,6 +153,29 @@
 	<Section Title="Icons" Note="&lt;Icon Name=&quot;...&quot; /&gt; · &lt;FileIcon Name=&quot;report.pdf&quot; /&gt;">
 		<div class="ui-kit-icons">
 			<div class="ui-kit-icon" *for="name of Icons" *key="name" [attribute.title]="name"><Icon [name]="name" Size="24" /><span>{{name}}</span></div>
+		</div>
+		<h4>Media, calls and faces</h4>
+		<div class="ui-kit-icons">
+			<div class="ui-kit-icon" *for="name of MediaIcons" *key="name" [attribute.title]="name"><Icon [name]="name" Size="24" /><span>{{name}}</span></div>
+		</div>
+		<h4>Music set: &lt;Icon Name=&quot;music:guitar&quot; /&gt;</h4>
+		<div class="ui-kit-icons ui-kit-set-music">
+			<div class="ui-kit-icon" *for="name of MusicIcons" *key="name" [attribute.title]="name"><Icon [name]="name" Size="24" /><span>{{name.substring(6)}}</span></div>
+		</div>
+		<div class="elemenx-container ui-kit-set-header">
+			<h4>Weather set: &lt;Icon Name=&quot;weather:rain&quot; Colored=&quot;true&quot; /&gt;</h4>
+			<Button Label="Theme colors" Icon="color" Size="small" Variant="ghost" [pressed]="WeatherColored" (click)="ToggleWeatherColors" />
+		</div>
+		<div class="ui-kit-icons ui-kit-set-weather">
+			<div class="ui-kit-icon" *for="name of WeatherIcons" *key="name" [attribute.title]="name"><Icon [name]="name" Size="24" [colored]="WeatherColored" /><span>{{name.substring(8)}}</span></div>
+		</div>
+		<div class="elemenx-container ui-kit-set-header">
+			<h4>A set of the Application, from markup: Icons.Register('brand', '&lt;svg&gt;...')</h4>
+			<Button Label="Draw save as brand:disk" Icon="save" Size="small" Variant="ghost" [pressed]="BrandSave" (click)="ToggleBrandSave" />
+		</div>
+		<div class="ui-kit-icons ui-kit-set-brand">
+			<div class="ui-kit-icon" title="brand:disk"><Icon Name="brand:disk" Size="24" /><span>brand:disk</span></div>
+			<div class="ui-kit-icon" title="brand:spark"><Icon Name="brand:spark" Size="24" /><span>brand:spark</span></div>
 		</div>
 		<h4>Alignment, position and fit</h4>
 		<div class="ui-kit-icons">
@@ -530,6 +576,182 @@
 		</div>
 	</Section>
 
+	<Section Title="Ribbon" [note]="'Last: ' + (RibbonNote || '—') + ' · Alt shows the key tips'">
+		<div class="elemenx-container ui-kit-row">
+			<Checkbox Label="A table is selected (contextual tab)" [checked]="TableSelected" (change)="TableToggled" />
+			<span class="elemenx-caption">Drag the right edge of the frame to see the groups shrink.</span>
+		</div>
+		<div class="ui-kit-frame ribbon" *resizable="{Edges: 'right', MinWidth: 320}">
+			<Workspace Variant="ribbon">
+				<div slot="header" class="elemenx-container fill ui-kit-titlebar">
+					<Icon Name="file-docx" Size="16" />
+					<span class="elemenx-spacer"></span>
+					<span class="elemenx-label">Report.docx — Writer</span>
+					<span class="elemenx-spacer"></span>
+					<span class="elemenx-caption">Saved</span>
+				</div>
+				<Ribbon slot="ribbon" [tab]="RibbonTab" [collapsed]="RibbonCollapsed" (tab)="RibbonTabChanged" (command)="RibbonCommand" (collapse)="RibbonCollapseChanged">
+					<RibbonButton slot="quick" ID="save" Label="Save" Icon="save" Size="icon" />
+					<RibbonButton slot="quick" ID="undo" Label="Undo" Icon="undo" Size="icon" />
+					<RibbonButton slot="quick" ID="redo" Label="Redo" Icon="redo" Size="icon" />
+					<RibbonButton slot="end" ID="comments" Label="Comments" Icon="comment" />
+					<RibbonButton slot="end" ID="share" Label="Share" Icon="share" />
+
+					<RibbonTab ID="home" Title="Home" KeyTip="H">
+						<RibbonGroup Title="Clipboard" Icon="paste" KeyTip="ZC" Launcher="true" Priority="2" (launch)="RibbonLaunched">
+							<RibbonButton ID="paste" Label="Paste" Icon="paste" Size="large" KeyTip="V" Split="true" [items]="PasteItems" />
+							<RibbonButton ID="cut" Label="Cut" Icon="cut" KeyTip="X" />
+							<RibbonButton ID="copy" Label="Copy" Icon="copy" KeyTip="C" />
+							<RibbonButton ID="format-painter" Label="Format painter" Icon="format-painter" KeyTip="FP" />
+						</RibbonGroup>
+						<RibbonGroup Title="Font" Icon="text-color" KeyTip="ZF" Launcher="true" Priority="1" (launch)="RibbonLaunched">
+							<div class="elemenx-ribbon-row">
+								<Select Size="small" [options]="Fonts" [value]="Font" (change)="FontChanged" />
+								<Select Size="small" [options]="FontSizes" [value]="FontSize" (change)="FontSizeChanged" />
+							</div>
+							<div class="elemenx-ribbon-row">
+								<RibbonButton ID="bold" Label="Bold" Icon="bold" Size="icon" Toggle="true" KeyTip="1" [pressed]="Bold" (click)="BoldToggled" />
+								<RibbonButton ID="italic" Label="Italic" Icon="italic" Size="icon" Toggle="true" KeyTip="2" />
+								<RibbonButton ID="underline" Label="Underline" Icon="underline" Size="icon" Toggle="true" KeyTip="3" />
+								<RibbonButton ID="strikethrough" Label="Strikethrough" Icon="strikethrough" Size="icon" Toggle="true" KeyTip="4" />
+							</div>
+							<div class="elemenx-ribbon-row">
+								<RibbonButton ID="highlight" Label="Highlight" Icon="highlight" Size="icon" Split="true" [items]="HighlightItems" />
+								<RibbonButton ID="text-color" Label="Text color" Icon="text-color" Size="icon" Split="true" [items]="HighlightItems" />
+							</div>
+						</RibbonGroup>
+						<RibbonGroup Title="Paragraph" Icon="text-align-left" KeyTip="ZP">
+							<div class="elemenx-ribbon-row">
+								<RibbonButton ID="bullets" Label="Bullets" Icon="list-bulleted" Size="icon" Toggle="true" />
+								<RibbonButton ID="numbering" Label="Numbering" Icon="list-ordered" Size="icon" Toggle="true" />
+								<RibbonButton ID="outdent" Label="Decrease indent" Icon="outdent" Size="icon" />
+								<RibbonButton ID="indent" Label="Increase indent" Icon="indent" Size="icon" />
+							</div>
+							<div class="elemenx-ribbon-row">
+								<RibbonButton ID="align-left" Label="Align left" Icon="text-align-left" Size="icon" Toggle="true" Pressed="true" />
+								<RibbonButton ID="align-center" Label="Center" Icon="text-align-center" Size="icon" Toggle="true" />
+								<RibbonButton ID="align-right" Label="Align right" Icon="text-align-right" Size="icon" Toggle="true" />
+								<RibbonButton ID="justify" Label="Justify" Icon="text-align-justify" Size="icon" Toggle="true" />
+							</div>
+						</RibbonGroup>
+						<RibbonGroup Title="Styles" Icon="color" KeyTip="ZS" Priority="3">
+							<RibbonGallery ID="style" Label="Styles" KeyTip="L" Columns="4" [items]="TextStyles" [value]="TextStyle" (select)="TextStyleChosen" />
+						</RibbonGroup>
+						<RibbonGroup Title="Editing" Icon="search" KeyTip="ZE">
+							<RibbonButton ID="find" Label="Find" Icon="search" KeyTip="FD" />
+							<RibbonButton ID="replace" Label="Replace" Icon="refresh" KeyTip="R" />
+							<RibbonButton ID="select" Label="Select" Icon="check" KeyTip="SL" [items]="SelectItems" />
+						</RibbonGroup>
+					</RibbonTab>
+
+					<RibbonTab ID="insert" Title="Insert" KeyTip="N">
+						<RibbonGroup Title="Tables" Icon="table">
+							<RibbonButton ID="table" Label="Table" Icon="table" Size="large" [items]="TableItems" />
+						</RibbonGroup>
+						<RibbonGroup Title="Illustrations" Icon="image">
+							<RibbonButton ID="picture" Label="Pictures" Icon="image" Size="large" />
+							<RibbonButton ID="shapes" Label="Shapes" Icon="shapes" Size="large" />
+							<RibbonButton ID="chart" Label="Chart" Icon="chart" Size="large" />
+						</RibbonGroup>
+						<RibbonGroup Title="Links" Icon="link">
+							<RibbonButton ID="link" Label="Link" Icon="link" Size="large" />
+							<RibbonButton ID="bookmark" Label="Bookmark" Icon="bookmark" />
+						</RibbonGroup>
+						<RibbonGroup Title="Comments" Icon="comment">
+							<RibbonButton ID="comment" Label="Comment" Icon="comment" Size="large" />
+						</RibbonGroup>
+					</RibbonTab>
+
+					<RibbonTab ID="review" Title="Review" KeyTip="R">
+						<RibbonGroup Title="Proofing" Icon="spellcheck">
+							<RibbonButton ID="spelling" Label="Spelling" Icon="spellcheck" Size="large" />
+							<RibbonButton ID="words" Label="Word count" Icon="list-ordered" />
+						</RibbonGroup>
+						<RibbonGroup Title="Speech" Icon="volume-high">
+							<RibbonButton ID="read-aloud" Label="Read aloud" Icon="volume-high" Size="large" />
+							<RibbonButton ID="dictate" Label="Dictate" Icon="mic" Size="large" Split="true" [items]="DictateItems" />
+						</RibbonGroup>
+					</RibbonTab>
+
+					<RibbonTab ID="view" Title="View" KeyTip="W">
+						<RibbonGroup Title="Show" Icon="eye">
+							<RibbonButton ID="ruler" Label="Ruler" Icon="layout" Toggle="true" />
+							<RibbonButton ID="gridlines" Label="Gridlines" Icon="grid" Toggle="true" />
+							<RibbonButton ID="navigation" Label="Navigation pane" Icon="panel-left" Toggle="true" Pressed="true" />
+						</RibbonGroup>
+						<RibbonGroup Title="Zoom" Icon="zoom-in">
+							<RibbonButton ID="zoom" Label="Zoom" Icon="zoom-in" Size="large" />
+							<RibbonButton ID="zoom-100" Label="100%" Icon="search" />
+							<RibbonButton ID="page-width" Label="Page width" Icon="fit-stretch-horizontal" />
+						</RibbonGroup>
+					</RibbonTab>
+
+					<RibbonTab ID="table-design" Title="Table design" KeyTip="JT" Contextual="true" Context="Table tools" Color="#2f8a7e" *if="TableSelected">
+						<RibbonGroup Title="Table styles" Icon="table">
+							<RibbonGallery ID="table-style" Label="Table styles" Columns="3" [items]="TableStyles" Value="plain" />
+						</RibbonGroup>
+						<RibbonGroup Title="Rows and columns" Icon="columns">
+							<RibbonButton ID="row-above" Label="Insert above" Icon="arrow-up" />
+							<RibbonButton ID="row-below" Label="Insert below" Icon="arrow-down" />
+							<RibbonButton ID="delete-table" Label="Delete" Icon="delete" [items]="DeleteTableItems" />
+						</RibbonGroup>
+					</RibbonTab>
+
+					<RibbonBackstage slot="backstage" Title="File">
+						<RibbonPage ID="info" Title="Info" Icon="info">
+							<p class="elemenx-text">Report.docx · 12 KB · edited 5 minutes ago by you.</p>
+							<div class="elemenx-container ui-kit-row">
+								<Button Label="Protect document" Icon="lock" />
+								<Button Label="Check for issues" Icon="search" />
+							</div>
+						</RibbonPage>
+						<RibbonPage ID="new" Title="New" Icon="add">
+							<div class="ui-kit-icons">
+								<div class="ui-kit-icon"><FileIcon Name="blank.docx" Size="32" /><span>Blank document</span></div>
+								<div class="ui-kit-icon"><FileIcon Name="letter.docx" Size="32" /><span>Letter</span></div>
+								<div class="ui-kit-icon"><FileIcon Name="report.pdf" Size="32" /><span>Report</span></div>
+							</div>
+						</RibbonPage>
+						<RibbonPage ID="open" Title="Open" Icon="folder-open">
+							<ul class="elemenx-list divided">
+								<li><FileIcon Name="Report.docx" /> Report.docx</li>
+								<li><FileIcon Name="Budget.xlsx" /> Budget.xlsx</li>
+								<li><FileIcon Name="Slides.pptx" /> Slides.pptx</li>
+							</ul>
+						</RibbonPage>
+						<RibbonPage ID="file-save" Title="Save" Icon="save" Command="true" />
+						<RibbonPage ID="file-print" Title="Print" Icon="print" Command="true" />
+					</RibbonBackstage>
+				</Ribbon>
+				<div slot="main" class="elemenx-column fill ui-kit-document">
+					<div class="ui-kit-page">
+						<h2 class="elemenx-title">Quarterly report</h2>
+						<p class="elemenx-text">The Ribbon gathers the commands of the Application in tabs and groups. Shrink the frame: the groups give up their large buttons, then their labels, and at last fold into one button each.</p>
+					</div>
+				</div>
+				<span slot="status">Page 1 of 1</span>
+				<span slot="status">48 words</span>
+				<span slot="status" class="elemenx-spacer"></span>
+				<span slot="status">{{RibbonNote || 'Ready'}}</span>
+			</Workspace>
+		</div>
+	</Section>
+
+	<Section Title="Emoji and stickers" [note]="'Picked: ' + (Picked || '—')">
+		<div class="elemenx-container wrappable ui-kit-pickers">
+			<div class="elemenx-card ui-kit-picker"><EmojiPicker Autofocus="false" (pick)="EmojiPicked" /></div>
+			<div class="elemenx-card ui-kit-picker"><StickerPicker (pick)="StickerPicked" /></div>
+			<div class="elemenx-column ui-kit-picker-notes">
+				<p class="elemenx-text">Emoji are the characters of Unicode, drawn by the fonts of the system; the ones a system cannot draw are left out. Search works with English names and with keywords in English and Russian; flags are named in the language of the browser.</p>
+				<p class="elemenx-text">Stickers are images of the packs the Application registers with the Stickers Service; star one to keep it in the favorites. The chat below has both in its composer, and reactions on its messages.</p>
+				<div class="elemenx-container ui-kit-row ui-kit-picked" *if="PickedEmoji || PickedSticker">
+					<span class="ui-kit-picked-emoji" *if="PickedEmoji">{{PickedEmoji}}</span>
+					<img class="ui-kit-picked-sticker" *if="PickedSticker" [src]="PickedSticker" alt="" />
+				</div>
+			</div>
+		</div>
+	</Section>
+
 	<Section Title="Chat" Note="Chat, ChatMessage, ChatComposer">
 		<div class="ui-kit-frame chat">
 			<Chat>
@@ -540,8 +762,8 @@
 				</div>
 				<div slot="header" class="elemenx-container ui-kit-chat-header"><span class="elemenx-chat-avatar">GH</span><div><strong>Grace Hopper</strong><p class="elemenx-text small muted">online</p></div><span class="elemenx-spacer"></span><Button Icon="phone" Title="Call" Variant="ghost" /><Button Icon="more-vertical" Title="More" Variant="ghost" /></div>
 				<div class="elemenx-chat-divider">Today</div>
-				<ChatMessage *for="message of Thread(Messages)" *key="message.ID" [author]="message.Author" [text]="message.Text" [time]="message.Time" [own]="!!message.Own" [position]="message.Position" [status]="message.Status || ''" />
-				<ChatComposer slot="composer" (send)="SendMessage" />
+				<ChatMessage *for="message of Thread(Messages)" *key="message.ID" [id]="message.ID" [author]="message.Author" [text]="message.Text" [time]="message.Time" [own]="!!message.Own" [position]="message.Position" [status]="message.Status || ''" [sticker]="message.Sticker || ''" [reactions]="message.Reactions || []" React="true" (react)="MessageReacted" />
+				<ChatComposer slot="composer" (send)="SendMessage" (sticker)="SendSticker" />
 			</Chat>
 		</div>
 	</Section>

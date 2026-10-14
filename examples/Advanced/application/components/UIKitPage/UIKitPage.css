@@ -39,6 +39,85 @@
 	border-radius: 8px;
 }
 
+.ui-kit-themes,
+.ui-kit-theme-editor {
+	gap: 16px;
+}
+
+.ui-kit-theme-actions {
+	gap: 8px;
+}
+
+.ui-kit-theme-css {
+	margin: 0;
+	padding: 8px 12px;
+	white-space: pre;
+	tab-size: 4;
+	overflow: auto;
+}
+
+.ui-kit-frame.ribbon {
+	height: 440px;
+	max-width: 100%;
+}
+
+.ui-kit-titlebar {
+	align-items: center;
+	gap: 8px;
+}
+
+.ui-kit-document {
+	align-items: center;
+	padding: 24px;
+	overflow: auto;
+	background: var(--elemenx-background);
+}
+
+.ui-kit-page {
+	width: min(100%, 560px);
+	padding: 32px;
+	background: var(--elemenx-surface);
+	border: 1px solid var(--elemenx-border);
+	box-shadow: var(--elemenx-shadow-subtle);
+}
+
+.ui-kit-pickers {
+	align-items: flex-start;
+	gap: 16px;
+}
+
+.ui-kit-picker {
+	padding: 0;
+	overflow: hidden;
+}
+
+.ui-kit-picker-notes {
+	flex: 1;
+	gap: 8px;
+	min-width: 240px;
+}
+
+.ui-kit-picked {
+	align-items: center;
+	gap: 16px;
+}
+
+.ui-kit-picked-emoji {
+	font-size: 32px;
+	line-height: 40px;
+	overflow-wrap: anywhere;
+}
+
+.ui-kit-picked-sticker {
+	width: 72px;
+	height: 72px;
+}
+
+.ui-kit-set-header {
+	align-items: center;
+	gap: 8px;
+}
+
 .ui-kit-icon span {
 	max-width: 100%;
 	overflow: hidden;
