@@ -31,6 +31,13 @@ Elemenx.Component('Ribbon', {
 	HasBackstage: false,
 
 	$OnCreate: function () {
+		var self = this;
+
+		/* The channels of the color of a contextual tab, for its tint. */
+		this.Channels = function (color) {
+			return self.$Service('Theme').Channels(color);
+		};
+
 		/* The current tab: Tab when it is shown and enabled, otherwise the first tab that is not contextual. */
 		this.Active = function (tab, tabs) {
 			var first = '';

@@ -38,7 +38,7 @@
 }
 
 .elemenx-toggle:hover .elemenx-toggle-track {
-	background: color-mix(in srgb, var(--elemenx-text) 40%, var(--elemenx-border-strong));
+	background: linear-gradient(rgba(var(--elemenx-text-rgb), 0.4), rgba(var(--elemenx-text-rgb), 0.4)), var(--elemenx-border-strong);
 }
 
 .elemenx-toggle.checked .elemenx-toggle-track {

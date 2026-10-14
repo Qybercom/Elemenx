@@ -143,7 +143,7 @@ describe('ElemenxUI theming', function () {
 			if (path.basename(file) === 'ColorInput.css') return;
 
 			declarations(read(file)).forEach(function (declaration) {
-				var value = declaration.Value.replace(/var\(--[a-z0-9-]+,\s*(?:[^()]|\([^()]*\))*\)/g, '');
+				var value = declaration.Value.replace(/rgba\(var\(--elemenx-[a-z0-9-]+-rgb(?:, var\(--elemenx-[a-z0-9-]+-rgb\))?\), [\d.]+\)/g, '').replace(/var\(--[a-z0-9-]+,\s*(?:[^()]|\([^()]*\))*\)/g, '');
 				if (/#[0-9a-fA-F]{3,8}\b|\b(?:rgba?|hsla?)\(|\b(?:white|black)\b/.test(value))
 					found.push(path.basename(file) + ': ' + declaration.Property + ': ' + declaration.Value);
 			});
@@ -170,6 +170,34 @@ describe('ElemenxUI theming', function () {
 		});
 
 		expect(found).toEqual([]);
+	});
+
+	it('mixes no colors with color-mix(), and gives every color with channels channels that match it', function () {
+		var files = [path.join(library, 'index.css')].concat(componentStyles()).concat(fs.readdirSync(path.join(library, 'themes')).map(function (file) {
+			return path.join(library, 'themes', file);
+		}));
+		var mixed = [];
+		var wrong = [];
+
+		files.forEach(function (file) {
+			var source = read(file);
+			if (source.indexOf('color-mix(') !== -1)
+				mixed.push(path.basename(file));
+
+			Array.from(source.matchAll(/([^{}]+)\{([^{}]*)\}/g), function (block) {
+				Array.from(block[2].matchAll(/(--elemenx-[a-z-]+): #([0-9a-fA-F]{6});/g), function (color) {
+					var channels = new RegExp(color[1] + '-rgb: ([0-9, ]+);').exec(block[2]);
+					var expected = [0, 2, 4].map(function (start) {
+						return parseInt(color[2].substring(start, start + 2), 16);
+					}).join(', ');
+					if (/^--elemenx-(background|surface|surface-hover|text|text-muted|accent|accent-text|danger|success|warning|info|border-strong)$/.test(color[1]) && (!channels || channels[1] !== expected))
+						wrong.push(path.basename(file) + ' ' + block[1].trim() + ' ' + color[1]);
+				});
+			});
+		});
+
+		expect(mixed).toEqual([]);
+		expect(wrong).toEqual([]);
 	});
 
 	it('starts every rule of a Library theme with the attribute of the theme, and loads every theme with the Library', function () {

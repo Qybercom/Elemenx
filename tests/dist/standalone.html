@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8" />
+	<link rel="icon" href="data:," />
+	<title>Elemenx standalone</title>
+	<script src="../../dist/elemenx.all.min.js"></script>
+	<script>
+		Elemenx.Component('StandaloneApp', {
+			$Template: '<main class="elemenx-column" id="standalone">' +
+				'<Button Label="Save" Icon="save" Variant="primary" (click)="Saved" />' +
+				'<span id="clicks">{{Clicks}}</span>' +
+				'<Icon Name="weather:rain" Size="24" />' +
+				'<FileIcon Name="report.pdf" Size="24" />' +
+				'<EmojiPicker Autofocus="false" (pick)="Picked" />' +
+				'<span id="picked">{{Emoji}}</span>' +
+				'</main>',
+			Clicks: 0,
+			Emoji: '',
+
+			Saved: function () {
+				this.Clicks++;
+			},
+
+			Picked: function (detail) {
+				this.Emoji = detail.Emoji;
+			}
+		});
+
+		Elemenx.Application('Standalone', {
+			$Use: ['ElemenxUI'],
+			$Component: 'StandaloneApp',
+			$Mount: '#app'
+		});
+	</script>
+</head>
+<body>
+	<div id="app"></div>
+</body>
+</html>

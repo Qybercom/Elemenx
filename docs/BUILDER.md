@@ -56,7 +56,7 @@ npm run example:advanced:dist
 `elemenx-cli.js` is the public toolchain entry point. When installed as a package it is exposed as `elemenx`.
 
 ```text
-elemenx build [project]
+elemenx build [project] [--single]
 elemenx dev [project] [--host 127.0.0.1] [--port 4173]
 elemenx serve [project] [--host 127.0.0.1] [--port 4175]
               [--compression true|false]
@@ -74,6 +74,36 @@ The command registry is intentionally extensible for future command groups such 
 An optional `elemenx.config.js` may export `Application`, `Entry`, `Index`, `Output`, and `Server` settings. CLI options override configuration, and configuration overrides Elemenx defaults.
 
 Production `serve` enables gzip for compressible responses of at least 1024 bytes and sends `ETag`, `Last-Modified`, `Cache-Control`, `Vary: Accept-Encoding`, and conditional `304` responses. `HEAD` returns the same representation headers and `Content-Length` without a response body. Development serving does not compress by default. Server values follow the same precedence as the rest of the CLI: explicit CLI option, then `elemenx.config.js`, then Elemenx defaults.
+
+## A single file
+
+`elemenx build [project] --single` (or `Single: true` in `elemenx.config.js`) builds the whole Application into one `index.html`: the framework, the code of the Application, its templates and styles, and the Libraries it uses (their stylesheets, and their sprites and data through `Elemenx.Resource`), inline and minified. Images and the other public files of the project are copied next to it. `index.html` must load `elemenx.js` and the entry (`app.js`) with `<script src>`: they take the places of those scripts. The framework stays a script of its own (`<script id="elemenx">`), so a `WebWorker` loads it from a `blob:` copy of its text.
+
+The page runs from any static server and from a file (`file://`), with these limits: a browser runs no worker from a file (open the page from a server to use workers); a `ServiceWorker` needs a script file of its own; the Router uses the History API, which a page opened from a file cannot change, so an Application with routes runs from a server; a Content Security Policy must allow inline scripts and styles, and `blob:` workers.
+
+## Distribution of the framework
+
+`npm run dist` (`tools/dist.js`) builds the distribution of Elemenx into `dist/` (`npm test` builds it too, before it runs the browser contracts against the minified framework and the end-to-end tests):
+
+| File | Content |
+|---|---|
+| `elemenx.js`, `elemenx.min.js` | the framework |
+| `elemenx-ui.js`, `elemenx-ui.min.js` | ElemenxUI standalone: every component with its template and style, the stylesheets, the sprites and the data, embedded |
+| `elemenx.all.js`, `elemenx.all.min.js` | both in one file |
+| `elemenx-ui/` | ElemenxUI as files, for the Discovery of a project (`Elemenx.Library('ElemenxUI', {$Root: ...})`) |
+| `manifest.json` | the version, and the size, the gzip size and the integrity (SRI) of every file |
+
+The minifier (`tools/minify.js`) has no dependencies and renames nothing, so no public name can break: it drops comments (but `/*!` licenses) and the blanks that carry no meaning, and keeps a line break where a statement could end. Templates and stylesheets are minified the same way.
+
+The standalone files need no build and no server, `file://` included: ElemenxUI registers itself, injects its styles and carries its files through `Elemenx.Resource`.
+
+```html
+<script src="elemenx.all.min.js"></script>
+<script>
+	Elemenx.Component('Root', {$Template: '<Button Label="Save" Icon="save" Variant="primary" />'});
+	Elemenx.Application('App', {$Use: ['ElemenxUI'], $Component: 'Root', $Mount: '#app'});
+</script>
+```
 
 ## Generators
 

@@ -3,6 +3,7 @@
 var fs = require('fs');
 var path = require('path');
 var common = require('./common.js');
+var Minify = require('./minify.js');
 var fail = common.fail;
 
 function readIndex (directory) {
@@ -30,10 +31,11 @@ function entityType (file, root, source) {
 	return 'Entity';
 }
 
-function inlineResources (file, source) {
+/* Puts the template and the style of a Component into its definition; min minifies them (a single-file build). */
+function inlineResources (file, source, min) {
 	var directory = path.dirname(file);
 
-	function replace (key, inlineKey) {
+	function replace (key, inlineKey, minify) {
 		var escaped = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 		var pattern = new RegExp('(^|[^A-Za-z0-9_$])' + escaped + '\\s*:\\s*([\'"])([^\'"]+)\\2', 'g');
 
@@ -42,17 +44,17 @@ function inlineResources (file, source) {
 			if (!fs.existsSync(resource))
 				fail(key + ' not found for ' + file + ': ' + target);
 
-			return prefix + inlineKey + ': ' + JSON.stringify(fs.readFileSync(resource, 'utf8'));
+			return prefix + inlineKey + ': ' + JSON.stringify(min ? minify(fs.readFileSync(resource, 'utf8')) : fs.readFileSync(resource, 'utf8'));
 		});
 	}
 
-	replace('$TemplateURL', '$Template');
-	replace('$StyleURL', '$Style');
+	replace('$TemplateURL', '$Template', Minify.HTML);
+	replace('$StyleURL', '$Style', Minify.CSS);
 
 	return source;
 }
 
-function scan (directory, root, entities, visited, declaredNames) {
+function scan (directory, root, entities, visited, declaredNames, min) {
 	var absolute = path.resolve(directory);
 	if (visited[absolute]) return;
 
@@ -82,7 +84,7 @@ function scan (directory, root, entities, visited, declaredNames) {
 				name = declared[2];
 
 			if (type === 'Component')
-				source = inlineResources(target, source);
+				source = inlineResources(target, source, min);
 
 			if (!entities[type])
 				entities[type] = {};
@@ -93,7 +95,7 @@ function scan (directory, root, entities, visited, declaredNames) {
 			entities[type][name] = source;
 		}
 		else if (fs.existsSync(target) && fs.statSync(target).isDirectory()) {
-			scan(target, root, entities, visited, declaredNames);
+			scan(target, root, entities, visited, declaredNames, min);
 		}
 
 		i++;
@@ -535,7 +537,7 @@ function build (project, options) {
 	directories = applicationDirectories(project, roots);
 
 	while (i < directories.length) {
-		scan(directories[i], directories[i], entities, {}, false);
+		scan(directories[i], directories[i], entities, {}, false, options.single);
 
 		i++;
 	}
@@ -544,7 +546,7 @@ function build (project, options) {
 	while (i < libraries.length) {
 		var catalog = {};
 
-		scan(libraries[i].Directory, libraries[i].Directory, catalog, {}, true);
+		scan(libraries[i].Directory, libraries[i].Directory, catalog, {}, true, options.single);
 
 		selectLibraryEntities(entities, catalog);
 
@@ -552,6 +554,9 @@ function build (project, options) {
 	}
 
 	bundle = render(entities);
+
+	if (options.single)
+		return single({Project: project, Output: output, Index: index, Entry: app, Framework: framework, Roots: roots, Libraries: libraries, Code: (templateBundle ? templateBundle + '\n' : '') + bundle + '\n' + appSource});
 
 	removeTree(output);
 
@@ -588,6 +593,89 @@ function build (project, options) {
 	return output;
 }
 
+/* Text for a <script> of the page: the HTML parser ends a script at </script and changes state at <!--. */
+function scriptText (source) {
+	return source.replace(/<\/(script)/gi, '<\\/$1').replace(/<!--/g, '<\\!--');
+}
+
+/*
+ * A build of the whole Application into one index.html: the framework, the code of the Application, its templates and
+ * styles and the Libraries it uses (their stylesheets, and their other files through Elemenx.Resource), inline and
+ * minified. Images and the other public files of the project are copied next to it.
+ */
+function single (job) {
+	var page = fs.readFileSync(job.Index, 'utf8').replace(/^\uFEFF/, '');
+	var styles = [];
+	var resources = [];
+	var framework = scriptText(Minify.JavaScript(fs.readFileSync(job.Framework, 'utf8')));
+	var code;
+	var replaced = {Framework: false, Entry: false};
+
+	job.Libraries.forEach(function (declaration) {
+		var list = [];
+		var root = '/' + String(declaration.Root).replace(/^\/+|\/+$/g, '');
+
+		libraryResources(declaration.Directory, declaration.Directory, list, {});
+
+		list.forEach(function (item) {
+			var text = fs.readFileSync(item.Source, 'utf8');
+			var relative = item.Relative.replace(/\\/g, '/');
+
+			if (item.Style) styles.push(Minify.CSS(text));
+			else resources.push('Elemenx.Resource(' + JSON.stringify(root + '/' + relative) + ', ' + JSON.stringify(/\.json$/i.test(relative) ? Minify.JSON(text) : Minify.HTML(text)) + ');');
+		});
+	});
+
+	code = scriptText(Minify.JavaScript(resources.join('\n') + '\n' + job.Code));
+
+	/* The framework and the Application take the places of their <script src>: the framework stays one script of its own, so the workers can load it. */
+	page = page.replace(/<script\b[^>]*\bsrc\s*=\s*(["'])([^"']*)\1[^>]*>\s*<\/script>/gi, function (tag, quote, src) {
+		var name = src.replace(/[?#].*$/, '').split('/').pop();
+
+		if (name === 'elemenx.js' || name === 'elemenx.min.js') {
+			replaced.Framework = true;
+
+			return '<script id="elemenx">' + framework + '</script>';
+		}
+
+		if (name === path.basename(job.Entry)) {
+			replaced.Entry = true;
+
+			return '<script>' + code + '</script>';
+		}
+
+		return tag;
+	});
+
+	if (!replaced.Framework || !replaced.Entry)
+		fail('index.html must load elemenx.js and ' + path.basename(job.Entry) + ' with <script src> for a single-file build');
+
+	if (styles.length) {
+		if (/<\/head>/i.test(page)) page = page.replace(/<\/head>/i, '<style>' + styles.join('') + '</style>\n</head>');
+		else page = '<style>' + styles.join('') + '</style>\n' + page;
+	}
+
+	removeTree(job.Output);
+
+	fs.mkdirSync(job.Output, {recursive: true});
+
+	copyPublic(job.Project, job.Output, applicationDirectories(job.Project, job.Roots).concat([
+		job.Output,
+		job.Entry,
+		job.Index,
+		path.join(job.Project, 'elemenx.config.js'),
+		path.join(job.Project, 'package.json'),
+		path.join(job.Project, 'package-lock.json'),
+		path.join(job.Project, 'index.production.html')
+	]));
+
+	fs.writeFileSync(path.join(job.Output, 'index.html'), page);
+
+	process.stdout.write('Elemenx Builder: ' + path.join(job.Output, 'index.html') + ' (' + Math.round(Buffer.byteLength(page) / 1024) + ' KB)\n');
+
+	return job.Output;
+}
+
 function option (args, name, fallback) {
 	var i = args.indexOf('--' + name);
 	if (i === -1)
@@ -601,6 +689,7 @@ function option (args, name, fallback) {
 
 module.exports = {
 	Build: build,
+	ScriptText: scriptText,
 	Scan: scan,
 	Render: render,
 	IndexTemplates: indexTemplates,

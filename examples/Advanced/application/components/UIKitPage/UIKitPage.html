@@ -170,6 +170,13 @@
 			<div class="ui-kit-icon" *for="name of WeatherIcons" *key="name" [attribute.title]="name"><Icon [name]="name" Size="24" [colored]="WeatherColored" /><span>{{name.substring(8)}}</span></div>
 		</div>
 		<div class="elemenx-container ui-kit-set-header">
+			<h4>Brands set (Simple Icons): &lt;Icon Name=&quot;brands:github&quot; Colored=&quot;true&quot; /&gt;</h4>
+			<Button Label="Brand colors" Icon="color" Size="small" Variant="ghost" [pressed]="BrandsColored" (click)="ToggleBrandColors" />
+		</div>
+		<div class="ui-kit-icons ui-kit-set-brands">
+			<div class="ui-kit-icon" *for="name of BrandLogos" *key="name" [attribute.title]="name"><Icon [name]="name" Size="24" [colored]="BrandsColored" /><span>{{name.substring(7)}}</span></div>
+		</div>
+		<div class="elemenx-container ui-kit-set-header">
 			<h4>A set of the Application, from markup: Icons.Register('brand', '&lt;svg&gt;...')</h4>
 			<Button Label="Draw save as brand:disk" Icon="save" Size="small" Variant="ghost" [pressed]="BrandSave" (click)="ToggleBrandSave" />
 		</div>
@@ -333,6 +340,8 @@
 			<kbd class="elemenx-kbd" id="ui-kit-palette-keys">{{PaletteKeys}}</kbd>
 			<button class="elemenx-button secondary medium" type="button" *hotkey="{Keys: 'Alt+N', Description: 'Show a toast', Group: 'Demo'}" (click)="HotkeyToast">New toast</button>
 			<Button Label="Open drawer" Icon="panel-right" (click)="OpenDrawer" />
+			<Button Icon="menu" Title="Menu" Variant="ghost" (click)="OpenMenu" />
+			<RadioGroup Variant="segmented" [options]="MenuSides" [value]="MenuSide" (change)="MenuSideChanged" />
 			<Button Label="Take the tour" Icon="help" (click)="StartTour" />
 		</div>
 		<div class="ui-kit-grid">
@@ -366,6 +375,10 @@
 			</div>
 			<Button slot="footer" Label="Reset" (click)="CloseDrawer" />
 			<Button slot="footer" Label="Apply" Variant="primary" (click)="CloseDrawer" />
+		</Drawer>
+		<Drawer [open]="MenuOpen" [side]="MenuSide" Size="small" Title="Elemenx" Icon="menu" Padded="false" (close)="CloseMenu">
+			<NavList [items]="DashboardNav" [value]="MenuPage" (select)="MenuPicked" />
+			<Button slot="footer" Label="Filters" Icon="filter" (click)="OpenDrawer" />
 		</Drawer>
 		<Tour [steps]="TourSteps" [open]="TourOpen" [step]="TourStep" (change)="TourChanged" (close)="TourClosed" />
 	</Section>
@@ -584,7 +597,7 @@
 		<div class="ui-kit-frame ribbon" *resizable="{Edges: 'right', MinWidth: 320}">
 			<Workspace Variant="ribbon">
 				<div slot="header" class="elemenx-container fill ui-kit-titlebar">
-					<Icon Name="file-docx" Size="16" />
+					<Icon Name="files:docx" Size="16" />
 					<span class="elemenx-spacer"></span>
 					<span class="elemenx-label">Report.docx — Writer</span>
 					<span class="elemenx-spacer"></span>
@@ -735,6 +748,47 @@
 				<span slot="status">{{RibbonNote || 'Ready'}}</span>
 			</Workspace>
 		</div>
+	</Section>
+
+	<Section Title="Cards" [note]="'Last: ' + (CardNote || '—')">
+		<h4>Posts: vertical, with the date badge, overlay and horizontal</h4>
+		<div class="elemenx-container grid">
+			<PostCard Title="Ten passes through the Caucasus" Excerpt="A week on foot from one valley to the next: the routes, the huts and what to pack." Image="/data/cards/mountains.svg" Category="Travel" Author="Ada Lovelace" Date="2026-10-02" ReadTime="6" Likes="1240" Comments="38" DateBadge="true" Href="#ui-kit-post" (like)="PostLiked" (comment)="PostCommented" (share)="PostShared" />
+			<PostCard Title="Lights of the night city" Excerpt="How to photograph a city after dark with a phone." Image="/data/cards/city.svg" Category="Photo" Author="Grace Hopper" Date="2026-09-18" ReadTime="4" Likes="86" Comments="5" Layout="overlay" (like)="PostLiked" />
+			<PostCard Title="The sea in October" Excerpt="Warm water, empty beaches and cheap tickets: the best month for the coast." Image="/data/cards/sea.svg" Author="Alan Turing" Date="2026-10-11" ReadTime="3" [tags]="['sea', 'autumn']" Variant="elevated" (like)="PostLiked" />
+		</div>
+		<PostCard Title="A wide card for a feed" Excerpt="The image beside the text; on a narrow window it goes back above it." Image="/data/cards/mountains.svg" Category="Layout" Author="Barbara Liskov" Date="2026-10-12" ReadTime="2" Likes="12" Comments="0" Layout="horizontal" (like)="PostLiked" />
+
+		<h4>People</h4>
+		<div class="elemenx-container grid">
+			<ProfileCard Name="Ada Lovelace" Role="Analyst of engines" Bio="Writes the first programs for machines that do not exist yet." Cover="/data/cards/cover.svg" Status="online" Verified="true" [stats]="ProfileStats" (follow)="ProfileFollowed" (message)="ProfileMessaged" />
+			<ProfileCard Name="Grace Hopper" Role="Rear admiral" Bio="Compilers, COBOL and a moth in a relay." Color="#b4483f" Status="busy" [stats]="[{Label: 'Posts', Value: 312}, {Label: 'Followers', Value: 8800}]" Following="true" (follow)="ProfileFollowed" />
+			<div class="elemenx-column ui-kit-stack">
+				<ProfileCard Layout="compact" Name="Alan Turing" Role="Mathematician" Status="away" (follow)="ProfileFollowed" />
+				<ProfileCard Layout="compact" Name="Barbara Liskov" Role="Computer scientist" Status="offline" Following="true" (follow)="ProfileFollowed" />
+				<ProfileCard Layout="compact" Name="Edsger Dijkstra" Role="Shortest paths" (follow)="ProfileFollowed" />
+			</div>
+		</div>
+
+		<h4>Comments and posts of a social network</h4>
+		<div class="elemenx-container grid ui-kit-comments">
+			<div class="elemenx-column">
+				<CommentCard Author="Grace Hopper" Handle="grace" Verified="true" [time]="CommentTime(5)" Text="The #ElemenxUI cards are in! Thanks @ada for the review. Notes: https://example.com/elemenx/cards" Replies="4" Reposts="12" Likes="240" Thread="true" (reply)="CommentReplied" (repost)="CommentReposted" (like)="CommentLiked" (mention)="CommentMention" (tag)="CommentTag" />
+				<CommentCard Author="Ada Lovelace" Handle="ada" [time]="CommentTime(2)" Text="They look right. The overlay layout is my favorite." Replies="0" Reposts="1" Likes="18" Liked="true" (like)="CommentLiked" (mention)="CommentMention" />
+			</div>
+			<CommentCard Variant="outlined" Author="Alan Turing" Handle="turing" [time]="CommentTime(90)" Text="Sunset at the sea, and a city at night. #photo" [media]="['/data/cards/sea.svg', '/data/cards/city.svg']" Replies="2" Reposts="5" Likes="64" (like)="CommentLiked" (tag)="CommentTag" />
+		</div>
+
+		<h4>Products: a price under the title, or on the image</h4>
+		<div class="elemenx-container grid">
+			<ProductCard Title="Studio headphones" Brand="Elemenx Audio" [images]="['/data/cards/headphones.svg', '/data/cards/watch.svg']" Badge="−20%" Rating="4.5" Reviews="1280" Price="79.99" OldPrice="99.99" [colors]="ProductColors" Color="coral" (add)="ProductAdded" (favorite)="ProductFavorite" (color)="ProductColor" />
+			<ProductCard Title="Field watch" Brand="Elemenx Time" Image="/data/cards/watch.svg" Badge="New" BadgeVariant="success" Rating="5" Reviews="42" Price="149" (add)="ProductAdded" (favorite)="ProductFavorite" />
+			<ProductCard Title="Running shoes" Image="/data/cards/sneaker.svg" Rating="4" Reviews="310" Price="120" [sizes]="['39', '40', '41', '42', '43']" Size="41" (add)="ProductAdded" (size)="ProductSize" />
+			<ProductCard Title="City backpack" Image="/data/cards/backpack.svg" Price="64.5" PriceStyle="corner" Cart="false" Favorite="true" (favorite)="ProductFavorite" />
+		</div>
+
+		<h4>Plans</h4>
+		<PlanPicker [plans]="Subscriptions" [value]="Subscription" [period]="SubscriptionPeriod" Discount="Save 20%" (change)="SubscriptionChosen" (period)="SubscriptionPeriodChosen" />
 	</Section>
 
 	<Section Title="Emoji and stickers" [note]="'Picked: ' + (Picked || '—')">

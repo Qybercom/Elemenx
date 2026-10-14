@@ -42,6 +42,11 @@ Elemenx.Component('Calendar', {
 
 		this.Now = Date.now();
 
+		/* The channels of the color of an event, for its tints. */
+		this.Channels = function (color) {
+			return self.$Service('Theme').Channels(color);
+		};
+
 		this.Cursor = function (date) {
 			return date || self.ISO(new Date(self.Now));
 		};

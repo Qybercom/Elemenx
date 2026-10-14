@@ -89,7 +89,7 @@
 }
 
 .elemenx-master-row.active {
-	background: color-mix(in srgb, var(--elemenx-accent) 12%, var(--elemenx-surface));
+	background: linear-gradient(rgba(var(--elemenx-accent-rgb), 0.12), rgba(var(--elemenx-accent-rgb), 0.12)), var(--elemenx-surface);
 }
 
 @container (max-width: 640px) {

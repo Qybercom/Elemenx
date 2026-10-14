@@ -12,6 +12,7 @@
  *   Outlet                   render slot that swaps one component for another
  *   Reactive                 reactive state: proxies, dependency tracking, effects, batching
  *   Bundle                   Elemenx.Bundle: production bundle registry, resolved before Discovery
+ *   Resource                 Elemenx.Resource: files embedded by a bundle, fetched otherwise
  *   Discovery                development loading of index.js graphs and entity scripts
  *   Library                  Elemenx.Library and the Application $Use declaration
  *   Service and Guard        Elemenx.Service, Elemenx.Guard and Application-owned service instances
@@ -34,7 +35,11 @@
 	/* Runtime */
 	var Runtime = {};
 
-	Runtime.ScriptURL = typeof document !== 'undefined' && document.currentScript ? document.currentScript.src : null;
+	/*
+	 * The URL the workers load the framework from; a framework inline in its page (a single-file build) gives them a
+	 * copy of its text.
+	 */
+	Runtime.ScriptURL = typeof document !== 'undefined' && document.currentScript ? document.currentScript.src || (typeof Blob !== 'undefined' && typeof URL !== 'undefined' && URL.createObjectURL ? URL.createObjectURL(new Blob([document.currentScript.textContent], {type: 'application/javascript'})) : null) : null;
 	Runtime.HasDOM = typeof document !== 'undefined';
 	Runtime.StartedAt = new Date();
 
@@ -761,6 +766,77 @@
 			LoadType: loadType
 		};
 		global.Elemenx.Bundle = install;
+	})(typeof globalThis !== 'undefined' ? globalThis : self);
+
+	/* Resource */
+	(function (global) {
+		'use strict';
+
+		var embedded = {};
+
+		function key (url) {
+			return Runtime.AbsoluteURL(url);
+		}
+
+		/*
+		 * Elemenx.Resource(url, text) embeds the text of a file (a sprite, a data file) under its URL, so a bundle carries
+		 * it and nothing is fetched; Elemenx.Resource(url) returns the embedded text, or null. Elemenx.Resource.Load(url,
+		 * callback) calls back (error, text) with the embedded text, otherwise with the text fetched from the URL.
+		 */
+		function resource (url, text) {
+			if (arguments.length === 2) {
+				if (!url || typeof text !== 'string')
+					throw new Error('Elemenx.Resource expects (url, text)');
+
+				embedded[key(url)] = text;
+
+				return text;
+			}
+
+			if (arguments.length !== 1 || !url)
+				throw new Error('Elemenx.Resource expects (url) or (url, text)');
+
+			return Object.prototype.hasOwnProperty.call(embedded, key(url)) ? embedded[key(url)] : null;
+		}
+
+		resource.Load = function (url, callback) {
+			var text;
+			var request;
+
+			if (typeof callback !== 'function')
+				throw new Error('Elemenx.Resource.Load expects (url, callback)');
+
+			text = resource(url);
+
+			if (text !== null) {
+				callback(null, text);
+
+				return;
+			}
+
+			if (typeof XMLHttpRequest === 'undefined') {
+				callback(new Error('Elemenx Resource cannot load: ' + url));
+
+				return;
+			}
+
+			request = new XMLHttpRequest();
+
+			request.open('GET', url);
+
+			request.onload = function () {
+				if (request.status >= 200 && request.status < 300) callback(null, request.responseText);
+				else callback(new Error('Elemenx Resource failed: ' + url + ' [' + request.status + ']'));
+			};
+
+			request.onerror = function () {
+				callback(new Error('Elemenx Resource failed: ' + url));
+			};
+
+			request.send();
+		};
+
+		global.Elemenx.Resource = resource;
 	})(typeof globalThis !== 'undefined' ? globalThis : self);
 
 	/* Discovery */

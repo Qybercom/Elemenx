@@ -48,7 +48,7 @@ for (const origin of origins) {
 
 			await open(page, origin);
 
-			await expect(page.locator('.ui-kit > .elemenx-section')).toHaveCount(29);
+			await expect(page.locator('.ui-kit > .elemenx-section')).toHaveCount(30);
 
 			await expect(page.locator('#elemenx-icons')).toHaveAttribute('data-ready', 'true');
 			await expect(page.locator('.ui-kit-icon svg').first()).toHaveAttribute('data-icon', 'add');
@@ -61,7 +61,7 @@ for (const origin of origins) {
 				return performance.getEntriesByType('resource').map(function (entry) {
 					return entry.name;
 				}).filter(function (name) {
-					return /icons\.svg$/.test(name);
+					return /ElemenxUI\/index\.svg$/.test(name);
 				})[0];
 			});
 
@@ -100,6 +100,11 @@ for (const origin of origins) {
 
 			await expect(icons.locator('.ui-kit-set-music .ui-kit-icon')).toHaveCount(32);
 			await expect(weather.locator('.ui-kit-icon')).toHaveCount(44);
+			await expect(icons.locator('.ui-kit-set-brands .ui-kit-icon')).toHaveCount(133);
+			expect(await icons.locator('.ui-kit-set-brands svg[data-icon="brands:telegram"] .brand').evaluate(function (node) {
+				return getComputedStyle(node).fill;
+			})).toBe('rgb(38, 165, 228)');
+			await expect(icons.locator('svg[data-icon="files:docx"], .ui-kit-icon[title="letter.docx"] svg[data-icon="files:docx"]').first()).toBeAttached();
 			await expect(page.locator('#elemenx-icons symbol#elemenx-icon-weather-rain[data-set="weather"]')).toHaveCount(1);
 			await expect(icons.locator('svg[data-icon="music:guitar"]')).toHaveAttribute('viewBox', '0 0 24 24');
 			await expect(weather.locator('.ui-kit-icon').first().locator('span')).toHaveText('clear-day');
@@ -519,7 +524,7 @@ for (const origin of origins) {
 
 			await picker.locator('.elemenx-emoji-group[data-group="people"] .elemenx-emoji-item[data-char="👍"]').click();
 
-			await expect(note).toContainText('Picked: 👍🏽 Thumbs up sign');
+			await expect(note).toContainText('Picked: 👍🏽 Thumbs up');
 
 			/* Keys: Down from the search, Enter on an emoji. */
 			await search.fill('rocket');
@@ -658,6 +663,149 @@ for (const origin of origins) {
 
 			await expect(mine.getByRole('button', {name: '🔥 1'})).toHaveAttribute('aria-pressed', 'true');
 			await expect(mine.locator('.elemenx-chat-react-picker')).toBeHidden();
+		});
+
+		test('cards: posts, people and comments count what the reader does, comments keep their text as text', async function ({ page }) {
+			var cards;
+			var note;
+			var post;
+			var profile;
+			var comment;
+			var box;
+
+			await open(page, origin);
+
+			cards = section(page, 'Cards');
+			note = cards.locator('.elemenx-section-header');
+			post = cards.locator('.elemenx-post', {hasText: 'Ten passes through the Caucasus'});
+			profile = cards.locator('.elemenx-profile.card', {hasText: 'Ada Lovelace'});
+			comment = cards.locator('.elemenx-comment', {hasText: 'cards are in'});
+
+			await post.scrollIntoViewIfNeeded();
+
+			/* A post: the date badge, the link over the whole card, likes that count. */
+			await expect(post.locator('.elemenx-card-date strong')).toHaveText('2');
+			await expect(post.locator('.elemenx-card-media .elemenx-post-category')).toHaveText('Travel');
+			await expect(post.locator('a.elemenx-card-link')).toHaveAttribute('href', '#ui-kit-post');
+
+			await post.getByRole('button', {name: 'Like (1240)'}).click();
+
+			await expect(note).toContainText('Last: liked · 1241');
+			await expect(post.getByRole('button', {name: 'Like (1241)'})).toHaveAttribute('aria-pressed', 'true');
+
+			await post.getByRole('button', {name: 'Like (1241)'}).click();
+
+			await expect(note).toContainText('Last: unliked · 1240');
+			await expect(page).not.toHaveURL(/#ui-kit-post$/);
+
+			/* The link covers the card: a press on its title follows it. */
+			box = await post.getByRole('heading', {name: 'Ten passes through the Caucasus'}).boundingBox();
+
+			await page.mouse.click(box.x + 10, box.y + box.height / 2);
+
+			await expect(page).toHaveURL(/#ui-kit-post$/);
+
+			/* A person: the stats shortened, follow and message. */
+			await expect(profile.locator('.elemenx-profile-stat dt')).toHaveText(['Posts', 'Followers', 'Following']);
+			await expect(profile.locator('.elemenx-profile-status')).toHaveClass(/online/);
+
+			await profile.getByRole('button', {name: 'Follow'}).click();
+
+			await expect(note).toContainText('Last: following');
+			await expect(profile.getByRole('button', {name: 'Following'})).toBeVisible();
+
+			await profile.getByRole('button', {name: 'Message'}).click();
+
+			await expect(note).toContainText('Last: message to Ada Lovelace');
+
+			/* A comment: mentions and tags are buttons, links are links, nothing is markup. */
+			await expect(comment.locator('.elemenx-comment-token')).toHaveText(['#ElemenxUI', '@ada', 'example.com/elemenx/cards']);
+			await expect(comment.locator('a.elemenx-comment-token')).toHaveAttribute('href', 'https://example.com/elemenx/cards');
+			await expect(comment.locator('a.elemenx-comment-token')).toHaveAttribute('rel', 'noopener noreferrer');
+			await expect(comment.locator('.elemenx-comment-time')).toHaveText(/5/);
+			await expect(comment.locator('.elemenx-comment-line')).toBeVisible();
+
+			await comment.getByRole('button', {name: '@ada'}).click();
+
+			await expect(note).toContainText('Last: mention @ada');
+
+			await comment.getByRole('button', {name: '#ElemenxUI'}).click();
+
+			await expect(note).toContainText('Last: tag #ElemenxUI');
+
+			await comment.getByRole('button', {name: 'Repost (12)'}).click();
+
+			await expect(note).toContainText('Last: reposted · 13');
+		});
+
+		test('cards: products take a color, a size and the cart; plans are chosen as radios, by the month or the year', async function ({ page }) {
+			var cards;
+			var note;
+			var headphones;
+			var shoes;
+			var plans;
+			var standard;
+
+			await open(page, origin);
+
+			cards = section(page, 'Cards');
+			note = cards.locator('.elemenx-section-header');
+			headphones = cards.locator('.elemenx-product', {hasText: 'Studio headphones'});
+			shoes = cards.locator('.elemenx-product', {hasText: 'Running shoes'});
+			plans = cards.locator('.elemenx-plans');
+			standard = plans.getByRole('radio', {name: 'Standard'});
+
+			await headphones.scrollIntoViewIfNeeded();
+
+			await expect(headphones.locator('.elemenx-product-price s')).toBeVisible();
+			await expect(headphones.locator('.elemenx-product-badge')).toHaveText('−20%');
+			await expect(headphones.locator('img').first()).toHaveAttribute('src', '/data/cards/headphones.svg');
+
+			await headphones.getByRole('tab', {name: 'Image 2'}).click();
+
+			await expect(headphones.locator('img').first()).toHaveAttribute('src', '/data/cards/watch.svg');
+
+			await headphones.getByRole('radio', {name: 'Sky'}).click();
+
+			await expect(note).toContainText('Last: color sky');
+
+			await headphones.getByRole('button', {name: 'Add to cart'}).click();
+
+			await expect(note).toContainText('Last: added to the cart · sky');
+			await expect(headphones.getByRole('button', {name: 'In the cart'})).toBeVisible();
+
+			await shoes.getByRole('radio', {name: '43'}).click();
+
+			await expect(note).toContainText('Last: size 43');
+
+			await headphones.getByRole('button', {name: 'Favorite'}).click();
+
+			await expect(note).toContainText('Last: favorite');
+			await expect(cards.locator('.elemenx-product', {hasText: 'City backpack'}).locator('.elemenx-product-corner')).toBeVisible();
+
+			/* Plans: the current one cannot be chosen; the arrows move the choice; the year changes the prices. */
+			await plans.scrollIntoViewIfNeeded();
+
+			await expect(standard).toHaveAttribute('aria-checked', 'true');
+			await expect(plans.getByRole('radio', {name: 'Basic'}).getByRole('button', {name: 'Current plan'})).toBeDisabled();
+			await expect(standard.locator('.elemenx-plan-price strong')).toContainText('12');
+
+			await standard.focus();
+
+			await page.keyboard.press('ArrowRight');
+
+			await expect(plans.getByRole('radio', {name: 'Premium'})).toHaveAttribute('aria-checked', 'true');
+			await expect(plans.getByRole('radio', {name: 'Premium'})).toBeFocused();
+			await expect(note).toContainText('Last: plan team · month');
+
+			await plans.locator('.elemenx-check-label', {hasText: /^Yearly$/}).click();
+
+			await expect(standard.locator('.elemenx-plan-price strong')).toContainText('115');
+			await expect(standard.locator('.elemenx-plan-price span')).toHaveText('/ year');
+
+			await standard.click({position: {x: 20, y: 140}});
+
+			await expect(note).toContainText('Last: plan pro · year');
 		});
 
 		test('phone input keeps to its mask and picks the country of a pasted number', async function ({ page }) {
@@ -1480,14 +1628,14 @@ for (const origin of origins) {
 
 			await expect(money.locator('.elemenx-caption')).toHaveText('JPY 1235');
 
-			await expect(icons.locator('.ui-kit-icon[title="pack.tar.gz"] svg')).toHaveAttribute('data-icon', 'file-tar-gz');
-			await expect(icons.locator('.ui-kit-icon[title="Dockerfile"] svg')).toHaveAttribute('data-icon', 'file-dockerfile');
+			await expect(icons.locator('.ui-kit-icon[title="pack.tar.gz"] svg')).toHaveAttribute('data-icon', 'files:tar-gz');
+			await expect(icons.locator('.ui-kit-icon[title="Dockerfile"] svg')).toHaveAttribute('data-icon', 'files:dockerfile');
 			await expect(icons.locator('.ui-kit-icon[title="unknown.xyz"] svg')).toHaveAttribute('data-icon', 'file');
-			await expect(icons.locator('.ui-kit-icon[title="file.rb"] svg')).toHaveAttribute('data-icon', 'file-rb');
-			await expect(icons.locator('.ui-kit-icon[title="CMakeLists.txt"] svg')).toHaveAttribute('data-icon', 'file-cmake');
-			await expect(icons.locator('.ui-kit-icon[title="sketch.ino"] svg')).toHaveAttribute('data-icon', 'file-ino');
+			await expect(icons.locator('.ui-kit-icon[title="file.rb"] svg')).toHaveAttribute('data-icon', 'files:rb');
+			await expect(icons.locator('.ui-kit-icon[title="CMakeLists.txt"] svg')).toHaveAttribute('data-icon', 'files:cmake');
+			await expect(icons.locator('.ui-kit-icon[title="sketch.ino"] svg')).toHaveAttribute('data-icon', 'files:ino');
 			await expect(icons.locator('.ui-kit-icon[title="sketch.ino"] svg text')).toHaveText('INO');
-			expect(await icons.locator('.ui-kit-icon svg[data-icon^="file-"]').count()).toBeGreaterThan(170);
+			expect(await icons.locator('.ui-kit-icon svg[data-icon^="files:"]').count()).toBeGreaterThan(170);
 		});
 
 		test('workspace shows the tool windows the page puts in it and resizes them', async function ({ page }) {
@@ -2208,6 +2356,62 @@ for (const origin of origins) {
 
 			await expect(menu).toBeHidden();
 			await expect(commands.locator('[data-file="logo.svg"]')).toBeFocused();
+		});
+
+		test('a drawer is a side menu from either side, and drawers stack: Escape closes the top one', async function ({ page }) {
+			var commands;
+			var menu;
+			var filters;
+			var box = null;
+
+			await open(page, origin);
+
+			commands = section(page, 'Commands and overlays');
+			menu = page.getByRole('dialog', {name: 'Elemenx'});
+			filters = page.getByRole('dialog', {name: 'Filters'});
+
+			await commands.scrollIntoViewIfNeeded();
+			await commands.getByRole('button', {name: 'Menu', exact: true}).click();
+
+			await expect(menu).toBeVisible();
+			await expect(menu).toHaveClass(/left/);
+
+			/* The drawer slides in: its place is checked once it is there. */
+			await expect.poll(async function () {
+				box = await menu.boundingBox();
+
+				return Math.round(box.x);
+			}).toBe(0);
+
+			/* A second drawer opens over the menu; Escape closes it and leaves the menu open. */
+			await menu.getByRole('button', {name: 'Filters'}).click();
+
+			await expect(filters).toBeVisible();
+
+			await page.keyboard.press('Escape');
+
+			await expect(filters).toBeHidden();
+			await expect(menu).toBeVisible();
+
+			await menu.getByText('Builds').click();
+
+			await expect(menu).toBeHidden();
+			await expect(commands.locator('.elemenx-section-header')).toContainText('Last: Menu: Builds');
+
+			await commands.locator('.elemenx-check-label', {hasText: /^Right$/}).click();
+			await commands.getByRole('button', {name: 'Menu', exact: true}).click();
+
+			await expect(menu).toHaveClass(/right/);
+
+			await expect.poll(async function () {
+				box = await menu.boundingBox();
+
+				return Math.round(box.x + box.width);
+			}).toBe(page.viewportSize().width);
+
+			await page.keyboard.press('Escape');
+
+			await expect(menu).toBeHidden();
 		});
 
 		test('copy, drawer and tour', async function ({ context, page }) {

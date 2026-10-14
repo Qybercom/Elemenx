@@ -275,7 +275,7 @@
 }
 
 .elemenx-tile-grid.sorting .elemenx-tile-group.growing::after {
-	background: color-mix(in srgb, var(--elemenx-accent) 24%, transparent);
+	background: rgba(var(--elemenx-accent-rgb), 0.24);
 	box-shadow: inset -2px 0 0 var(--elemenx-accent);
 }
 
@@ -298,7 +298,7 @@
 
 .elemenx-tile-gap.elemenx-droppable.drop-over {
 	border-color: var(--elemenx-accent);
-	background: color-mix(in srgb, var(--elemenx-accent) 6%, transparent);
+	background: rgba(var(--elemenx-accent-rgb), 0.06);
 	outline: none;
 }
 
@@ -362,6 +362,6 @@
 
 .elemenx-tile-group.new.drop-over .elemenx-tile-new {
 	border-color: var(--elemenx-accent);
-	background: color-mix(in srgb, var(--elemenx-accent) 6%, transparent);
+	background: rgba(var(--elemenx-accent-rgb), 0.06);
 	color: var(--elemenx-text);
 }

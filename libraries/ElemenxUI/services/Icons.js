@@ -1,8 +1,8 @@
 /*
- * The icon sets of the page. The library sprite (icons.svg) is the set without a name: <Icon Name="save" />. Another
- * set is named before the icon name: <Icon Name="weather:rain" />. The library sets 'music' and 'weather' are known
- * already; Register(name, source) adds a set from a sprite file (a URL, relative to the page) or from the markup of a
- * sprite ('<svg>...</svg>'). A set is a sprite of <symbol id> elements; a symbol keeps its own fill and stroke
+ * The icon sets of the page. The library sprite (index.svg) is the set without a name: <Icon Name="save" />. Another
+ * set is named before the icon name: <Icon Name="weather:rain" />. The library sets 'brands', 'files', 'music' and
+ * 'weather' are known already; Register(name, source) adds a set from a sprite file (a URL, relative to the page) or
+ * from the markup of a sprite ('<svg>...</svg>'). A set is a sprite of <symbol id> elements; a symbol keeps its own fill and stroke
  * attributes, so a filled or a colored set draws as it is made.
  * A set loads once, when an icon first needs it (or by Load). Its symbols are copied into the hidden
  * <svg id="elemenx-icons"> of the page: elemenx-icon-<name> for the library sprite, elemenx-icon-<set>-<name> for a set.
@@ -14,7 +14,27 @@
  */
 Elemenx.Service('Icons', {
 	Library: 'ElemenxUI',
-	Builtin: {music: 'icons/music.svg', weather: 'icons/weather.svg'},
+	Builtin: {brands: 'icons/brands.svg', files: 'icons/files.svg', music: 'icons/music.svg', weather: 'icons/weather.svg'},
+	Formats: [
+		'js', 'jsx', 'ts', 'tsx', 'php', 'cpp', 'hpp', 'c', 'h', 'css', 'html', 'py', 'java', 'kt', 'cbl',
+		'rs', 'go', 'exe', 'lib', 'a', 'o', 'dll', 'jpg', 'png', 'svg', 'webp', 'ico', 'gif', 'tiff', 'psd', 'ai', 'pdf',
+		'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'md', 'json', 'jsonl', 'csv', 'xml', 'yaml', 'ini',
+		'properties', 'htaccess', 'conf', 'lnk', 'dockerfile', 'zip', 'rar', 'ar', 'tar', 'tar-gz', 'jar', '3mf', 'mp3',
+		'aac', 'ac3', 'mp4', 'webm', 'avi', 'rb', 'swift', 'scala', 'dart', 'lua', 'pl', 'r', 'sql', 'sh', 'bat', 'ps1',
+		'cs', 'vb', 'fs', 'm', 'vue', 'svelte', 'scss', 'sass', 'less', 'erl', 'ex', 'hs', 'clj', 'zig', 'asm', 'wasm',
+		'toml', 'env', 'lock', 'log', 'gradle', 'makefile', 'cmake', 'proto', 'graphql', 'editorconfig', 'gitignore', '7z',
+		'bz2', 'xz', 'gz', 'apk', 'ipa', 'dmg', 'iso', 'deb', 'rpm', 'msi', 'bin', 'img', 'so', 'dylib', 'class', 'odt',
+		'ods', 'odp', 'rtf', 'epub', 'pages', 'numbers', 'key', 'tex', 'ics', 'vcf', 'eml', 'jpeg', 'heic', 'avif', 'bmp',
+		'raw', 'eps', 'fig', 'sketch', 'xd', 'blend', 'fbx', 'obj', 'stl', 'glb', 'gltf', 'ttf', 'otf', 'woff', 'woff2',
+		'flac', 'wav', 'ogg', 'm4a', 'opus', 'mid', 'mkv', 'mov', 'wmv', 'flv', 'srt', 'vtt', 'tsv', 'parquet', 'db',
+		'sqlite', 'ipynb', 'xlsm', 'xsd', 'pem', 'crt', 'p12', 'pub', 'ino'
+	],
+	Aliases: {
+		tif: 'tiff', jpe: 'jpeg', midi: 'mid', pfx: 'p12', cer: 'crt', mjs: 'js', cjs: 'js', mts: 'ts', cts: 'ts',
+		bash: 'sh', zsh: 'sh', cmd: 'bat', psm1: 'ps1', mm: 'm', exs: 'ex', hrl: 'erl', cljs: 'clj', s: 'asm',
+		tgz: 'tar-gz', db3: 'sqlite', yml: 'yaml', htm: 'html', cc: 'cpp', cxx: 'cpp', hh: 'hpp', hxx: 'hpp',
+		markdown: 'md', cob: 'cbl', cobol: 'cbl', kts: 'kt', cfg: 'conf', pde: 'ino'
+	},
 
 	$OnCreate: function () {
 		var library = Elemenx.Library(this.Library);
@@ -26,7 +46,7 @@ Elemenx.Service('Icons', {
 		if (!this.Shared) return;
 
 		if (!this.Shared.Sets[''])
-			this.Shared.Sets[''] = this.Entry('', root + '/icons.svg', '');
+			this.Shared.Sets[''] = this.Entry('', root + '/index.svg', '');
 
 		for (name in this.Builtin) {
 			if (this.Builtin.hasOwnProperty(name) && !this.Shared.Sets[name])
@@ -135,7 +155,7 @@ Elemenx.Service('Icons', {
 
 	/*
 	 * The reference an Icon draws for a name: the symbol of the page once its set is loaded ('#elemenx-icon-...'), the
-	 * symbol of the file while it loads ('icons.svg#add'), '' for an unknown set. Starts the load of the set.
+	 * symbol of the file while it loads ('index.svg#add'), '' for an unknown set. Starts the load of the set.
 	 */
 	Href: function (name) {
 		var parts = this.Parse(name);
@@ -166,7 +186,30 @@ Elemenx.Service('Icons', {
 		return set ? set.Names.slice() : [];
 	},
 
-	/* The names of the known sets: '' (the library sprite), 'music', 'weather' and the registered ones. */
+	/*
+	 * The icon of a file name in the files set: 'report.pdf' -> 'files:pdf', 'archive.tar.gz' -> 'files:tar-gz',
+	 * 'Dockerfile' -> 'files:dockerfile'; an unknown format -> 'file', the plain sheet. Formats lists the formats of the
+	 * set, Aliases the other extensions of a format (yml -> yaml).
+	 */
+	File: function (name) {
+		var file = String(name || '').toLowerCase().split(/[\\/]/).pop();
+		var extension;
+
+		if (file === 'dockerfile' || file.indexOf('dockerfile.') === 0) return 'files:dockerfile';
+		if (file === 'makefile' || file === 'gnumakefile') return 'files:makefile';
+		if (file === 'cmakelists.txt') return 'files:cmake';
+		if (file === '.env' || file.indexOf('.env.') === 0) return 'files:env';
+		if (file === '.htaccess' || file === '.gitignore' || file === '.editorconfig') return 'files:' + file.substring(1);
+		if (/\.tar\.gz$/.test(file)) return 'files:tar-gz';
+		if (/\.lock$/.test(file) || file === 'package-lock.json') return 'files:lock';
+
+		extension = file.indexOf('.') === -1 ? '' : file.substring(file.lastIndexOf('.') + 1);
+		extension = this.Aliases[extension] || extension;
+
+		return this.Formats.indexOf(extension) === -1 ? 'file' : 'files:' + extension;
+	},
+
+	/* The names of the known sets: '' (the library sprite), 'brands', 'files', 'music', 'weather' and the registered ones. */
 	Sets: function () {
 		var list = [];
 		var name;
@@ -185,7 +228,6 @@ Elemenx.Service('Icons', {
 	Load: function (name, callback) {
 		var self = this;
 		var set = this.Shared && this.Shared.Sets[name || ''];
-		var request;
 
 		if (!set) {
 			if (callback)
@@ -214,34 +256,24 @@ Elemenx.Service('Icons', {
 			return;
 		}
 
-		if (typeof XMLHttpRequest === 'undefined' || typeof DOMParser === 'undefined') {
+		if (typeof DOMParser === 'undefined') {
 			this.Failed(set, new Error('Elemenx Icons cannot load a set here: ' + set.URL));
 
 			return;
 		}
 
-		request = new XMLHttpRequest();
-
-		request.open('GET', set.URL);
-
-		request.onload = function () {
+		/* A bundle may carry the sprite (Elemenx.Resource); otherwise it is fetched. */
+		Elemenx.Resource.Load(set.URL, function (error, markup) {
 			if (self.Shared.Sets[set.Name] !== set) return;
 
-			if (request.status < 200 || request.status >= 300) {
-				self.Failed(set, new Error('Elemenx Icons set ' + (set.Name || 'icons') + ' failed to load: ' + request.status));
+			if (error) {
+				self.Failed(set, new Error('Elemenx Icons set ' + (set.Name || 'icons') + ' failed to load: ' + set.URL));
 
 				return;
 			}
 
-			self.Loaded(set, request.responseText);
-		};
-
-		request.onerror = function () {
-			if (self.Shared.Sets[set.Name] === set)
-				self.Failed(set, new Error('Elemenx Icons set ' + (set.Name || 'icons') + ' failed to load: ' + set.URL));
-		};
-
-		request.send();
+			self.Loaded(set, markup);
+		});
 	},
 
 	Loaded: function (set, markup) {

@@ -45,12 +45,13 @@
 }
 
 .elemenx-chart-area {
-	fill: color-mix(in srgb, var(--elemenx-chart-color) 20%, transparent);
+	fill: var(--elemenx-chart-color);
+	fill-opacity: 0.2;
 	stroke: none;
 }
 
 .elemenx-chart.stacked .elemenx-chart-area {
-	fill: color-mix(in srgb, var(--elemenx-chart-color) 48%, transparent);
+	fill-opacity: 0.48;
 }
 
 .elemenx-chart-point {

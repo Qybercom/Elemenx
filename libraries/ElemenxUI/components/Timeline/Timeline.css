@@ -8,6 +8,7 @@
 
 .elemenx-timeline-item {
 	--elemenx-timeline-color: var(--elemenx-text-muted);
+	--elemenx-timeline-rgb: var(--elemenx-text-muted-rgb);
 	position: relative;
 	display: flex;
 	gap: 12px;
@@ -44,22 +45,27 @@
 
 .elemenx-timeline-item.accent {
 	--elemenx-timeline-color: var(--elemenx-accent);
+	--elemenx-timeline-rgb: var(--elemenx-accent-rgb);
 }
 
 .elemenx-timeline-item.info {
 	--elemenx-timeline-color: var(--elemenx-info);
+	--elemenx-timeline-rgb: var(--elemenx-info-rgb);
 }
 
 .elemenx-timeline-item.success {
 	--elemenx-timeline-color: var(--elemenx-success);
+	--elemenx-timeline-rgb: var(--elemenx-success-rgb);
 }
 
 .elemenx-timeline-item.warning {
 	--elemenx-timeline-color: var(--elemenx-warning);
+	--elemenx-timeline-rgb: var(--elemenx-warning-rgb);
 }
 
 .elemenx-timeline-item.danger {
 	--elemenx-timeline-color: var(--elemenx-danger);
+	--elemenx-timeline-rgb: var(--elemenx-danger-rgb);
 }
 
 .elemenx-timeline-node {
@@ -78,8 +84,8 @@
 }
 
 .elemenx-timeline-item:not(.default) .elemenx-timeline-node {
-	border-color: color-mix(in srgb, var(--elemenx-timeline-color) 48%, transparent);
-	background: color-mix(in srgb, var(--elemenx-timeline-color) 12%, var(--elemenx-surface));
+	border-color: rgba(var(--elemenx-timeline-rgb), 0.48);
+	background: linear-gradient(rgba(var(--elemenx-timeline-rgb), 0.12), rgba(var(--elemenx-timeline-rgb), 0.12)), var(--elemenx-surface);
 }
 
 .elemenx-timeline-content {

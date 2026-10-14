@@ -1,0 +1,10 @@
+.elemenx-plans {
+	--elemenx-grid-min: 220px;
+	gap: 16px;
+}
+
+.elemenx-plans-period {
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+}

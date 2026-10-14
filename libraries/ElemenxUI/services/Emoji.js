@@ -1,10 +1,14 @@
 /*
  * The emoji of Unicode, drawn by the fonts of the system: their groups, names and keywords for search, skin tones and
- * the emoji used last. The data (data/emoji.json, data/emoji-keywords.json) loads once, when it is first needed:
- * Load(callback) calls back (error, groups). A group is {ID, Label, Icon, Emoji: [{Char, Name, Tone, Region}]};
- * Tone is true for an emoji that takes a skin tone, Region is the region of a flag.
- * Search(text, limit) finds emoji by every word of the text: the English name, the keywords of every language
- * (Keywords(locale, map) adds more: {'😀': 'words'}) and the name of the region of a flag in Locale.
+ * the emoji used last. The data loads once, when it is first needed: data/emoji.json (the groups of emoji-test.txt of
+ * Unicode, with the English names) and the names and keywords of CLDR in English and in the language of the user,
+ * data/emoji-<locale>.json (Locales lists the ones there are; Locale, the language of the page by default).
+ * Load(callback) calls back (error, groups). A group is {ID, Label, Icon, Emoji: [{Char, Name, Version, Tone, Region}]};
+ * Version is the version of Emoji that brought it, Tone is true for an emoji that takes a skin tone, Region is the
+ * region of a flag. Name(emoji) is its name in Locale.
+ * Search(text, limit) finds emoji by every word of the text: the names and the keywords of the loaded languages
+ * (LoadLanguage(locale, callback) adds the keywords of one more language of Locales; Keywords(locale, map) adds any:
+ * {'😀': 'words'}).
  * Tone(value) is the skin tone of the user, 0 (none) to 5, remembered; Toned(char, tone) applies it.
  * Recent(limit) lists the emoji used last, Used(char) records one (remembered as well).
  * Supported(char) tells whether the system draws an emoji as one picture: a font without it draws a box or its parts
@@ -15,6 +19,7 @@ Elemenx.Service('Emoji', {
 	StorageKey: 'elemenx-emoji',
 	Persist: true,
 	Locale: '',
+	Locales: ['en', 'ru'],
 	Limit: 32,
 	Tones: ['', '🏻', '🏼', '🏽', '🏾', '🏿'],
 
@@ -28,6 +33,8 @@ Elemenx.Service('Emoji', {
 		this.Data = null;
 		this.Index = {};
 		this.Words = {};
+		this.Names = {};
+		this.Extra = [];
 		this.Support = {};
 		this.Current = 0;
 		this.Last = [];
@@ -45,13 +52,23 @@ Elemenx.Service('Emoji', {
 		}
 	},
 
-	/* Loads the emoji and the keywords once; callback (error, groups). */
+	/* The language of the names: Locale, or the language of the page, when there are names in it; English otherwise. */
+	Language: function () {
+		var locale = String(this.Locale || (typeof navigator !== 'undefined' && navigator.language) || 'en').toLowerCase().split('-')[0];
+
+		return this.Locales.indexOf(locale) !== -1 ? locale : 'en';
+	},
+
+	/* Loads the emoji, and the names and keywords in English and in Language(), once; callback (error, groups). */
 	Load: function (callback) {
 		var self = this;
-		var remaining = 2;
+		var locales = ['en'].concat(this.Language() === 'en' ? [] : [this.Language()]).concat(this.Extra.filter(function (locale) {
+			return locale !== 'en' && locale !== self.Language();
+		}));
+		var remaining = locales.length + 1;
 		var failed = null;
 		var data = null;
-		var words = null;
+		var words = {};
 
 		if (this.State === 'ready') {
 			if (callback)
@@ -96,53 +113,49 @@ Elemenx.Service('Emoji', {
 			done(error);
 		});
 
-		this.Fetch(this.Root + '/data/emoji-keywords.json', function (error, value) {
-			words = value || {};
+		locales.forEach(function (locale) {
+			self.Fetch(self.Root + '/data/emoji-' + locale + '.json', function (error, value) {
+				words[locale] = value || {};
 
-			done(null);
+				done(null);
+			});
 		});
 	},
 
+	/* Reads a data file, carried by a bundle (Elemenx.Resource) or fetched. */
 	Fetch: function (url, callback) {
-		var request = new XMLHttpRequest();
-
-		request.open('GET', url);
-
-		request.onload = function () {
+		Elemenx.Resource.Load(url, function (error, text) {
 			var value;
 
-			if (request.status < 200 || request.status >= 300) {
+			if (error) {
 				callback(new Error('Elemenx Emoji data failed to load: ' + url));
 
 				return;
 			}
 
 			try {
-				value = JSON.parse(request.responseText);
+				value = JSON.parse(text);
 			}
-			catch (error) {
-				callback(error);
+			catch (exception) {
+				callback(exception);
 
 				return;
 			}
 
 			callback(null, value);
-		};
-
-		request.onerror = function () {
-			callback(new Error('Elemenx Emoji data failed to load: ' + url));
-		};
-
-		request.send();
+		});
 	},
 
-	/* Turns the rows of the data into emoji and indexes them by their character without variation selectors. */
+
+	/* Turns the rows of the data into emoji, indexes them by their character without variation selectors, and reads names. */
 	Prepare: function (data, words) {
+		var language = this.Language();
 		var groups = [];
 		var group;
 		var row;
 		var emoji;
 		var locale;
+		var char;
 		var i = 0;
 		var j;
 
@@ -152,7 +165,7 @@ Elemenx.Service('Emoji', {
 
 			while (j < data.Groups[i].Emoji.length) {
 				row = data.Groups[i].Emoji[j];
-				emoji = {Char: row[0], Name: row[1], Tone: row[2] === 1, Region: row[3] || '', Group: group.ID};
+				emoji = {Char: row[0], Name: row[1], Version: row[2], Tone: row[3] === 1, Region: row[4] || '', Group: group.ID};
 
 				group.Emoji.push(emoji);
 
@@ -169,9 +182,68 @@ Elemenx.Service('Emoji', {
 		this.Data = {Version: data.Version, Groups: groups};
 
 		for (locale in words) {
-			if (words.hasOwnProperty(locale))
-				this.Keywords(locale, words[locale]);
+			if (!words.hasOwnProperty(locale)) continue;
+
+			for (char in words[locale]) {
+				if (!words[locale].hasOwnProperty(char)) continue;
+
+				this.Keywords(locale, this.Pair(char, words[locale][char][0] + '|' + words[locale][char][1]));
+
+				if (locale === language && words[locale][char][0])
+					this.Names[this.Plain(char)] = words[locale][char][0];
+			}
 		}
+	},
+
+	/* Adds the keywords of one more language to the search; callback (error). */
+	LoadLanguage: function (locale, callback) {
+		var self = this;
+
+		if (this.Locales.indexOf(locale) === -1) {
+			if (callback)
+				callback(new Error('Elemenx Emoji has no keywords in ' + locale));
+
+			return;
+		}
+
+		if (this.Extra.indexOf(locale) !== -1 || locale === 'en' || locale === this.Language()) {
+			if (callback)
+				this.Load(function (error) {
+					callback(error || null);
+				});
+
+			return;
+		}
+
+		this.Extra.push(locale);
+
+		if (this.State !== 'ready') {
+			this.Load(callback ? function (error) {
+				callback(error || null);
+			} : null);
+
+			return;
+		}
+
+		this.Fetch(this.Root + '/data/emoji-' + locale + '.json', function (error, value) {
+			var char;
+
+			for (char in value || {}) {
+				if (value.hasOwnProperty(char))
+					self.Keywords(locale, self.Pair(char, value[char][0] + '|' + value[char][1]));
+			}
+
+			if (callback)
+				callback(error || null);
+		});
+	},
+
+	Pair: function (key, value) {
+		var pair = {};
+
+		pair[key] = value;
+
+		return pair;
 	},
 
 	Plain: function (char) {
@@ -202,11 +274,14 @@ Elemenx.Service('Emoji', {
 		return locale;
 	},
 
-	/* The name of an emoji: the name of the region of a flag in Locale, otherwise its English name. */
+	/* The name of an emoji in Locale (CLDR), otherwise the name of the region of a flag, otherwise its English name. */
 	Name: function (emoji) {
 		var regions;
 
 		if (!emoji) return '';
+
+		if (this.Names[this.Plain(emoji.Char)])
+			return this.Names[this.Plain(emoji.Char)];
 
 		if (emoji.Region && typeof Intl !== 'undefined' && Intl.DisplayNames) {
 			try {
@@ -354,12 +429,12 @@ Elemenx.Service('Emoji', {
 	 */
 	Supported: function (char) {
 		var emoji = this.Find(char);
-		var point = String(char).codePointAt ? String(char).codePointAt(0) : 0;
 		var context;
 
 		if (this.Support.hasOwnProperty(char)) return this.Support[char];
 
-		if (emoji && !emoji.Region && this.Plain(emoji.Char).length <= 2 && point < 0x1F6D5) return true;
+		/* The emoji of Emoji 11 and before are drawn by every system in use. */
+		if (emoji && !emoji.Region && emoji.Version <= 11) return true;
 
 		context = this.Context();
 

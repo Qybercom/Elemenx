@@ -15,7 +15,8 @@
 }
 
 .elemenx-sparkline-area {
-	fill: color-mix(in srgb, var(--elemenx-spark-color) 16%, transparent);
+	fill: var(--elemenx-spark-color);
+	fill-opacity: 0.16;
 	stroke: none;
 }
 

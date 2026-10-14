@@ -10,7 +10,7 @@ var Icons = require('./tools/icons.js');
 var Package = require('./package.json');
 var fail = require('./tools/common.js').fail;
 
-var BooleanOptions = {force: true, 'current-color': true};
+var BooleanOptions = {force: true, 'current-color': true, single: true};
 
 function parse (argv) {
 	var result = {Arguments: [], Options: {}};
@@ -81,7 +81,8 @@ function buildOptions (parsed, settings) {
 		applications: value(parsed.Options, 'applications', settings.Applications, undefined),
 		entry: value(parsed.Options, 'entry', settings.Entry, 'app.js'),
 		index: value(parsed.Options, 'index', settings.Index, 'index.html'),
-		out: value(parsed.Options, 'out', settings.Output, 'dist')
+		out: value(parsed.Options, 'out', settings.Output, 'dist'),
+		single: parsed.Options.single === true || settings.Single === true
 	};
 }
 
@@ -153,7 +154,7 @@ command('generate', 'Generate an Application or an entity and register it in the
 	});
 });
 
-command('build', 'Build an application into dist.', function (parsed) {
+command('build', 'Build an application into dist (--single: all of it in one index.html).', function (parsed) {
 	var project = projectPath(parsed.Arguments[0]);
 	var settings = config(project);
 

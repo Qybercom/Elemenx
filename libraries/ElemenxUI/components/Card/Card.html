@@ -1,0 +1,17 @@
+<article class="elemenx-card structured" [class]="[Variant || 'outlined', Orientation || 'vertical', Href ? 'linked' : '']" [attribute.style]="Color ? '--elemenx-card-color: ' + Color : null" [attribute.aria-label]="Label || null" [attribute.aria-busy]="Loading ? 'true' : null">
+	<div class="elemenx-card-media" [attribute.style]="Ratio ? 'aspect-ratio: ' + String(Ratio).replace(':', ' / ') : null">
+		<img *if="Image" [src]="Image" [attribute.alt]="ImageAlt || ''" loading="lazy" />
+		<slot name="media"></slot>
+	</div>
+	<div class="elemenx-card-content">
+		<div class="elemenx-card-header"><slot name="header"></slot></div>
+		<div class="elemenx-card-body">
+			<h3 class="elemenx-card-title" *if="Title && !Loading">{{Title}}</h3>
+			<p class="elemenx-card-text" *if="Text && !Loading">{{Text}}</p>
+			<div class="elemenx-skeleton text" *if="Loading" aria-hidden="true"><span class="elemenx-skeleton-line"></span><span class="elemenx-skeleton-line"></span><span class="elemenx-skeleton-line"></span></div>
+			<slot></slot>
+		</div>
+		<div class="elemenx-card-footer"><slot name="footer"></slot><span class="elemenx-spacer"></span><slot name="actions"></slot></div>
+	</div>
+	<a class="elemenx-card-link" *if="Href" [href]="Href" [attribute.target]="Target || null" [attribute.aria-label]="Label || Title || null"></a>
+</article>

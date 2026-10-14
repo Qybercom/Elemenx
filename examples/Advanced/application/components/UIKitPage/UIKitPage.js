@@ -100,6 +100,8 @@ Elemenx.Component('UIKitPage', {
 	MusicIcons: [],
 	WeatherIcons: [],
 	WeatherColored: true,
+	BrandLogos: [],
+	BrandsColored: true,
 	BrandIcons: '<svg xmlns="http://www.w3.org/2000/svg">' +
 		'<symbol id="disk" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M4 3h13l4 4v13a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zm3 2v5h9V5zm5 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/></symbol>' +
 		'<symbol id="spark" viewBox="0 0 24 24"><path fill="#e8a33d" d="M12 2l2.6 7.4L22 12l-7.4 2.6L12 22l-2.6-7.4L2 12l7.4-2.6z"/><circle cx="12" cy="12" r="2.5" fill="#fff"/></symbol>' +
@@ -247,6 +249,24 @@ Elemenx.Component('UIKitPage', {
 		{ID: 2, Author: 'Grace Hopper', Text: 'Can you check the new table?', Time: '10:02'},
 		{ID: 3, Author: 'Grace Hopper', Text: 'The sorting looks right to me.', Time: '10:03'},
 		{ID: 4, Author: 'Me', Text: 'Looks good, merging it now.', Time: '10:05', Own: true, Status: 'read', Reactions: [{Emoji: '🎉', Count: 2, Mine: false}, {Emoji: '👍', Count: 1, Mine: true}]}
+	],
+	CardNote: '',
+	ProfileStats: [
+		{Label: 'Posts', Value: 128},
+		{Label: 'Followers', Value: 12400},
+		{Label: 'Following', Value: 310}
+	],
+	ProductColors: [
+		{Value: 'coral', Color: '#ff6b6b', Label: 'Coral'},
+		{Value: 'ink', Color: '#2b2f3a', Label: 'Ink'},
+		{Value: 'sky', Color: '#4f7dff', Label: 'Sky'}
+	],
+	Subscription: 'pro',
+	SubscriptionPeriod: 'month',
+	Subscriptions: [
+		{ID: 'free', Name: 'Basic', Description: 'For a start', Price: 0, Features: ['3 projects', '1 GB of storage', {Label: 'Custom themes', Included: false}, {Label: 'Priority support', Included: false}], Current: true, Color: '#3f6c9e'},
+		{ID: 'pro', Name: 'Standard', Description: 'For a team', Price: 12, YearlyPrice: 115, Features: ['Unlimited projects', '100 GB of storage', 'Custom themes', {Label: 'Priority support', Included: false}], Popular: 'Most popular', Color: '#b4483f'},
+		{ID: 'team', Name: 'Premium', Description: 'For a company', Price: 29, YearlyPrice: 278, Features: ['Unlimited projects', '1 TB of storage', 'Custom themes', {Label: 'Priority support', Hint: 'An answer within an hour'}], Color: '#3d7a54'}
 	],
 	Picked: '',
 	PickedEmoji: '',
@@ -461,6 +481,13 @@ Elemenx.Component('UIKitPage', {
 		{ID: 'settings', Label: 'Settings', Icon: 'settings'}
 	],
 	DashboardPage: 'overview',
+	MenuOpen: false,
+	MenuPage: 'overview',
+	MenuSide: 'left',
+	MenuSides: [
+		{Value: 'left', Label: 'Left'},
+		{Value: 'right', Label: 'Right'}
+	],
 	NavCollapsed: false,
 	SettingsNav: [
 		{ID: 'appearance', Label: 'Appearance', Icon: 'monitor'},
@@ -542,11 +569,15 @@ Elemenx.Component('UIKitPage', {
 		var theme = this.$Service('Theme');
 
 		this.MineCSS = function (accent, background, radius, control) {
+			var theme = self.$Service('Theme');
+
 			return "body[data-theme='mine'] {\n" +
 				'\t--elemenx-accent: ' + accent + ';\n' +
-				'\t--elemenx-accent-hover: color-mix(in srgb, ' + accent + ' 84%, black);\n' +
+				'\t--elemenx-accent-rgb: ' + theme.Channels(accent) + ';\n' +
+				'\t--elemenx-accent-hover: ' + self.Mix(accent, '#000000', 0.84) + ';\n' +
 				'\t--elemenx-background: ' + background + ';\n' +
-				'\t--elemenx-surface-raised: color-mix(in srgb, ' + background + ' 50%, white);\n' +
+				'\t--elemenx-background-rgb: ' + theme.Channels(background) + ';\n' +
+				'\t--elemenx-surface-raised: ' + self.Mix(background, '#ffffff', 0.5) + ';\n' +
 				'\t--elemenx-radius-small: ' + Math.round(radius / 2) + 'px;\n' +
 				'\t--elemenx-radius: ' + radius + 'px;\n' +
 				'\t--elemenx-radius-large: ' + radius * 2 + 'px;\n' +
@@ -575,6 +606,16 @@ Elemenx.Component('UIKitPage', {
 		});
 
 		this.ShowTheme(theme.Theme(), theme.Policy(), theme.Resolved());
+	},
+
+	/* A mix of two hex colors: weight of the first, the rest of the second. */
+	Mix: function (first, second, weight) {
+		var a = this.$Service('Theme').Channels(first).split(', ');
+		var b = this.$Service('Theme').Channels(second).split(', ');
+
+		return '#' + a.map(function (channel, index) {
+			return ('0' + Math.round(Number(channel) * weight + Number(b[index]) * (1 - weight)).toString(16)).slice(-2);
+		}).join('');
 	},
 
 	ShowTheme: function (name, policy, scheme) {
@@ -670,10 +711,16 @@ Elemenx.Component('UIKitPage', {
 		icons.Register('brand', this.BrandIcons);
 
 		this.$Service('Stickers').Register(this.StickerPack);
+		this.$Service('Emoji').LoadLanguage('ru');
 
 		icons.Load('music', function (error, names) {
 			if (!error)
 				self.MusicIcons = self.Prefixed('music', names);
+		});
+
+		icons.Load('brands', function (error, names) {
+			if (!error)
+				self.BrandLogos = self.Prefixed('brands', names);
 		});
 
 		icons.Load('weather', function (error, names) {
@@ -693,6 +740,10 @@ Elemenx.Component('UIKitPage', {
 		}
 
 		return list;
+	},
+
+	ToggleBrandColors: function () {
+		this.BrandsColored = !this.BrandsColored;
 	},
 
 	ToggleWeatherColors: function () {
@@ -742,6 +793,25 @@ Elemenx.Component('UIKitPage', {
 
 	CloseDrawer: function () {
 		this.DrawerOpen = false;
+	},
+
+	/* The side menu: a Drawer with a NavList; a page closes it, Filters opens another Drawer over it. */
+	OpenMenu: function () {
+		this.MenuOpen = true;
+	},
+
+	CloseMenu: function () {
+		this.MenuOpen = false;
+	},
+
+	MenuSideChanged: function (value) {
+		this.MenuSide = value;
+	},
+
+	MenuPicked: function (item) {
+		this.MenuPage = item.ID;
+		this.MenuOpen = false;
+		this.LastCommand = 'Menu: ' + item.Label;
 	},
 
 	StartTour: function () {
@@ -1242,6 +1312,71 @@ Elemenx.Component('UIKitPage', {
 		});
 	},
 
+	PostLiked: function (detail) {
+		this.CardNote = (detail.Liked ? 'liked' : 'unliked') + ' · ' + detail.Likes;
+	},
+
+	PostCommented: function (detail) {
+		this.CardNote = 'comments of ' + detail.Title;
+	},
+
+	PostShared: function (detail) {
+		this.CardNote = 'share ' + detail.Title;
+	},
+
+	ProfileFollowed: function (detail) {
+		this.CardNote = detail.Following ? 'following' : 'unfollowed';
+	},
+
+	ProfileMessaged: function (detail) {
+		this.CardNote = 'message to ' + detail.Name;
+	},
+
+	CommentReplied: function (detail) {
+		this.CardNote = 'reply to @' + detail.Handle;
+	},
+
+	CommentReposted: function (detail) {
+		this.CardNote = (detail.Reposted ? 'reposted' : 'repost taken back') + ' · ' + detail.Reposts;
+	},
+
+	CommentLiked: function (detail) {
+		this.CardNote = (detail.Liked ? 'liked' : 'unliked') + ' · ' + detail.Likes;
+	},
+
+	CommentMention: function (detail) {
+		this.CardNote = 'mention @' + detail.Handle;
+	},
+
+	CommentTag: function (detail) {
+		this.CardNote = 'tag #' + detail.Tag;
+	},
+
+	ProductAdded: function (detail) {
+		this.CardNote = 'added to the cart' + (detail.Color ? ' · ' + detail.Color : '') + (detail.Size ? ' · ' + detail.Size : '');
+	},
+
+	ProductFavorite: function (detail) {
+		this.CardNote = detail.Favorite ? 'favorite' : 'not a favorite';
+	},
+
+	ProductColor: function (detail) {
+		this.CardNote = 'color ' + detail.Color;
+	},
+
+	ProductSize: function (detail) {
+		this.CardNote = 'size ' + detail.Size;
+	},
+
+	SubscriptionChosen: function (detail) {
+		this.Subscription = detail.ID;
+		this.CardNote = 'plan ' + detail.ID + ' · ' + detail.Period;
+	},
+
+	SubscriptionPeriodChosen: function (detail) {
+		this.SubscriptionPeriod = detail.Period;
+	},
+
 	EmojiPicked: function (detail) {
 		this.Picked = detail.Emoji + ' ' + detail.Name;
 		this.PickedEmoji = this.PickedEmoji + detail.Emoji;
@@ -1262,6 +1397,11 @@ Elemenx.Component('UIKitPage', {
 		var hotkeys = this.$Service('Hotkeys');
 
 		this.PaletteKeys = hotkeys.Format('Mod+K');
+
+		/* A comment written minutes ago. */
+		this.CommentTime = function (minutes) {
+			return new Date(Date.now() - minutes * 60000);
+		};
 
 		this.LoadIcons();
 		this.WatchTheme();

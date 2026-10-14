@@ -177,7 +177,7 @@
 }
 
 .elemenx-chat-reaction.mine {
-	background: color-mix(in srgb, var(--elemenx-accent) 14%, var(--elemenx-surface));
+	background: linear-gradient(rgba(var(--elemenx-accent-rgb), 0.14), rgba(var(--elemenx-accent-rgb), 0.14)), var(--elemenx-surface);
 	border-color: var(--elemenx-accent);
 }
 

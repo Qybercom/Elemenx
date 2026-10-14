@@ -10,7 +10,7 @@ To find a section in `elemenx.js`, search for its header, for example `/* Router
 
 | Field | Purpose | Used by |
 |---|---|---|
-| `ScriptURL` | URL of the loaded `elemenx.js`; workers load the same file from it | WebWorker, ServiceWorker |
+| `ScriptURL` | URL of the loaded `elemenx.js` (a `blob:` URL of its text when it is inline in its page); workers load the same file from it | WebWorker, ServiceWorker |
 | `HasDOM` | `true` in a document, `false` inside workers | Utilities, Identity, Discovery, Template and Component, Messaging, WebWorker, ServiceWorker, Application, ServiceWorker bootstrap |
 | `StartedAt` | time this runtime started | Identity |
 
@@ -19,7 +19,7 @@ To find a section in `elemenx.js`, search for its header, for example `/* Router
 | Field | Purpose | Used by |
 |---|---|---|
 | `Own` | `Object.prototype.hasOwnProperty.call(object, key)`; modules alias it as `var own = Runtime.Own;` | Reactive, Bundle, Discovery, Service and Guard, Directive registry, Template and Component, Router, Structural, Network, Storage, Messaging, Application |
-| `AbsoluteURL` | resolves a URL against the document; in a worker the value is kept as it is | WebWorker, ServiceWorker |
+| `AbsoluteURL` | resolves a URL against the document; in a worker the value is kept as it is | Resource, WebWorker, ServiceWorker |
 | `CurrentScriptURL` | the URL of the executing script without query and hash, or `null`: the base of the relative paths of its definitions | Library, Template and Component, Application |
 | `DefinitionURL` | resolves a relative path of a definition against its `$DefinitionURL`; absolute and root paths are kept | Library, Template and Component, Application |
 | `OwnerRegistry` | registry of the resources an owner created: `Add`, `Remove`, `Destroyed`, `Destroy` (destroys the rest with the owner) | Events, Messaging, WebWorker, ServiceWorker |

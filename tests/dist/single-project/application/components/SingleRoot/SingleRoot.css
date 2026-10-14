@@ -1,0 +1,9 @@
+/* A comment the build removes. */
+.single-root {
+	gap: 8px;
+	padding: 16px;
+}
+
+.single-title {
+	color: rgb(61, 122, 84);
+}

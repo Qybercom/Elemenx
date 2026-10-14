@@ -16,6 +16,7 @@
 
 .elemenx-step {
 	--elemenx-step-color: var(--elemenx-border-strong);
+	--elemenx-step-rgb: var(--elemenx-border-strong-rgb);
 	position: relative;
 	display: flex;
 	min-width: 0;
@@ -23,14 +24,17 @@
 
 .elemenx-step.active {
 	--elemenx-step-color: var(--elemenx-accent);
+	--elemenx-step-rgb: var(--elemenx-accent-rgb);
 }
 
 .elemenx-step.done {
 	--elemenx-step-color: var(--elemenx-success);
+	--elemenx-step-rgb: var(--elemenx-success-rgb);
 }
 
 .elemenx-step.error {
 	--elemenx-step-color: var(--elemenx-danger);
+	--elemenx-step-rgb: var(--elemenx-danger-rgb);
 }
 
 .elemenx-step-node {
@@ -57,7 +61,7 @@
 .elemenx-step.active .elemenx-step-node {
 	background: var(--elemenx-accent);
 	color: var(--elemenx-accent-text);
-	box-shadow: 0 0 0 4px color-mix(in srgb, var(--elemenx-accent) 16%, transparent);
+	box-shadow: 0 0 0 4px rgba(var(--elemenx-accent-rgb), 0.16);
 }
 
 .elemenx-step.done .elemenx-step-node,
@@ -75,7 +79,7 @@
 }
 
 .elemenx-steps.clickable .elemenx-step:not(.disabled) .elemenx-step-node:hover {
-	box-shadow: 0 0 0 4px color-mix(in srgb, var(--elemenx-step-color) 24%, transparent);
+	box-shadow: 0 0 0 4px rgba(var(--elemenx-step-rgb), 0.24);
 }
 
 .elemenx-step-node:focus-visible {

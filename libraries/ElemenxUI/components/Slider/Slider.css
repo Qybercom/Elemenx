@@ -59,11 +59,11 @@
 
 .elemenx-slider-thumb:hover,
 .elemenx-slider-thumb.active {
-	box-shadow: 0 0 0 4px color-mix(in srgb, var(--elemenx-accent) 16%, transparent);
+	box-shadow: 0 0 0 4px rgba(var(--elemenx-accent-rgb), 0.16);
 }
 
 .elemenx-slider-thumb:focus-visible {
-	box-shadow: 0 0 0 4px color-mix(in srgb, var(--elemenx-accent) 32%, transparent);
+	box-shadow: 0 0 0 4px rgba(var(--elemenx-accent-rgb), 0.32);
 }
 
 .elemenx-slider-value {

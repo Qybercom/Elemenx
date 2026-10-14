@@ -1,0 +1,28 @@
+<article class="elemenx-card structured elemenx-profile" [class]="[Layout || 'card', Variant || 'outlined', Href ? 'linked' : '']" [attribute.aria-label]="Name">
+	<div class="elemenx-profile-cover" *if="Layout !== 'compact'" [attribute.style]="Cover ? null : 'background: ' + (Color || 'var(--elemenx-accent)')"><img *if="Cover" [src]="Cover" alt="" loading="lazy" /></div>
+	<div class="elemenx-card-content">
+		<div class="elemenx-profile-head">
+			<span class="elemenx-profile-avatar" aria-hidden="true">
+				<img *if="Avatar" [src]="Avatar" alt="" />
+				<span *if="!Avatar">{{Initials(Name)}}</span>
+				<span class="elemenx-profile-status" *if="Status" [class]="[Status]"></span>
+			</span>
+			<span class="elemenx-profile-names">
+				<span class="elemenx-card-title elemenx-profile-name">{{Name}}<Icon *if="Verified" Name="success" [label]="VerifiedLabel" /></span>
+				<span class="elemenx-card-text" *if="Role">{{Role}}</span>
+				<span class="elemenx-profile-status-label" *if="Status && StatusLabels[Status]">{{StatusLabels[Status]}}</span>
+			</span>
+			<Button *if="Layout === 'compact' && Follow" [label]="Following ? FollowingLabel : FollowLabel" [variant]="Following ? 'secondary' : 'primary'" Size="small" [pressed]="Following ? true : false" (click)="Toggle" />
+		</div>
+		<p class="elemenx-card-text elemenx-profile-bio" *if="Bio && Layout !== 'compact'">{{Bio}}</p>
+		<slot></slot>
+		<dl class="elemenx-profile-stats" *if="Stats && Stats.length && Layout !== 'compact'">
+			<div class="elemenx-profile-stat" *for="stat of Stats" *key="stat.Label"><dt>{{stat.Label}}</dt><dd>{{Stat(stat.Value)}}</dd></div>
+		</dl>
+		<div class="elemenx-container elemenx-profile-actions" *if="Layout !== 'compact' && (Follow || Message)">
+			<Button *if="Follow" [label]="Following ? FollowingLabel : FollowLabel" [icon]="Following ? 'check' : 'add'" [variant]="Following ? 'secondary' : 'primary'" [pressed]="Following ? true : false" (click)="Toggle" />
+			<Button *if="Message" [label]="MessageLabel" Icon="mail" (click)="Write" />
+		</div>
+	</div>
+	<a class="elemenx-card-link" *if="Href" [href]="Href" [attribute.aria-label]="Name"></a>
+</article>

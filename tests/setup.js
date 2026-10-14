@@ -5,7 +5,8 @@ export async function loadElemenx () {
 	await new Promise(function (resolve, reject) {
 		var script = document.createElement('script');
 
-		script.src = '/elemenx.js';
+
+		script.src = typeof __ELEMENX_SCRIPT__ === 'string' ? __ELEMENX_SCRIPT__ : '/elemenx.js';
 		script.onload = resolve;
 		script.onerror = reject;
 

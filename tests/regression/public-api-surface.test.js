@@ -79,6 +79,8 @@ describe('Regression: public API surface', function () {
 			'Elemenx.Network.WebSocket:function',
 			'Elemenx.Network.XHR:function',
 			'Elemenx.Pipe:function',
+			'Elemenx.Resource:function',
+			'Elemenx.Resource.Load:function',
 			'Elemenx.Router:function',
 			'Elemenx.RuntimeID:function',
 			'Elemenx.Service:function',

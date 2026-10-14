@@ -1,0 +1,83 @@
+.elemenx-post-category {
+	align-self: flex-start;
+}
+
+.elemenx-card-media .elemenx-post-category {
+	position: absolute;
+	bottom: 8px;
+	left: 8px;
+	z-index: 1;
+	background: var(--elemenx-accent);
+	color: var(--elemenx-accent-text);
+}
+
+.elemenx-post-excerpt {
+	display: -webkit-box;
+	overflow: hidden;
+	-webkit-line-clamp: 3;
+	-webkit-box-orient: vertical;
+}
+
+/* The author takes the room it needs; the actions go to the next line when there is none left. */
+.elemenx-post .elemenx-card-footer {
+	flex-wrap: wrap;
+	row-gap: 4px;
+}
+
+.elemenx-post .elemenx-person {
+	flex: 1 1 160px;
+}
+
+.elemenx-post .elemenx-card-meta {
+	flex-wrap: nowrap;
+	white-space: nowrap;
+}
+
+.elemenx-post-tags {
+	gap: 4px;
+}
+
+/* Overlay: the text over the image, on a shade that keeps it readable. */
+.elemenx-post.overlay {
+	min-height: 280px;
+	border-color: transparent;
+	color: var(--elemenx-overlay-text);
+}
+
+.elemenx-post.overlay .elemenx-card-media {
+	position: absolute;
+	inset: 0;
+	aspect-ratio: auto;
+}
+
+.elemenx-post.overlay .elemenx-card-media::after {
+	content: '';
+	position: absolute;
+	inset: 0;
+	background: linear-gradient(transparent 30%, var(--elemenx-overlay));
+}
+
+.elemenx-post.overlay .elemenx-card-content {
+	position: relative;
+	justify-content: flex-end;
+	margin-top: auto;
+}
+
+.elemenx-post.overlay .elemenx-card-body {
+	flex: none;
+}
+
+.elemenx-post.overlay .elemenx-card-text,
+.elemenx-post.overlay .elemenx-card-meta,
+.elemenx-post.overlay .elemenx-card-action {
+	color: inherit;
+}
+
+.elemenx-post.overlay .elemenx-card-footer {
+	border-top-color: rgba(var(--elemenx-accent-text-rgb), 0.24);
+}
+
+.elemenx-post.overlay .elemenx-card-media .elemenx-post-category {
+	top: 8px;
+	bottom: auto;
+}

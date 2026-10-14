@@ -32,12 +32,12 @@
 }
 
 .elemenx-empty.error .elemenx-empty-icon {
-	background: color-mix(in srgb, var(--elemenx-danger) 12%, var(--elemenx-surface));
+	background: linear-gradient(rgba(var(--elemenx-danger-rgb), 0.12), rgba(var(--elemenx-danger-rgb), 0.12)), var(--elemenx-surface);
 	color: var(--elemenx-danger);
 }
 
 .elemenx-empty.search .elemenx-empty-icon {
-	background: color-mix(in srgb, var(--elemenx-info) 12%, var(--elemenx-surface));
+	background: linear-gradient(rgba(var(--elemenx-info-rgb), 0.12), rgba(var(--elemenx-info-rgb), 0.12)), var(--elemenx-surface);
 	color: var(--elemenx-info);
 }
 

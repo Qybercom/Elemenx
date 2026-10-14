@@ -95,5 +95,5 @@
 }
 
 .elemenx-chat-conversation.active {
-	background: color-mix(in srgb, var(--elemenx-accent) 10%, var(--elemenx-surface));
+	background: linear-gradient(rgba(var(--elemenx-accent-rgb), 0.1), rgba(var(--elemenx-accent-rgb), 0.1)), var(--elemenx-surface);
 }

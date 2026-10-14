@@ -1,5 +1,6 @@
 .elemenx-cal {
 	--elemenx-cal-color: var(--elemenx-accent);
+	--elemenx-cal-rgb: var(--elemenx-accent-rgb);
 	display: flex;
 	flex-direction: column;
 	gap: 12px;
@@ -107,7 +108,7 @@
 }
 
 .elemenx-cal-day:hover {
-	background: color-mix(in srgb, var(--elemenx-surface-hover) 48%, var(--elemenx-surface));
+	background: linear-gradient(rgba(var(--elemenx-surface-hover-rgb), 0.48), rgba(var(--elemenx-surface-hover-rgb), 0.48)), var(--elemenx-surface);
 }
 
 .elemenx-cal-day.outside {
@@ -162,11 +163,11 @@
 }
 
 .elemenx-cal-event:hover {
-	background: color-mix(in srgb, var(--elemenx-cal-color) 12%, transparent);
+	background: rgba(var(--elemenx-cal-rgb), 0.12);
 }
 
 .elemenx-cal-event.whole {
-	background: color-mix(in srgb, var(--elemenx-cal-color) 20%, var(--elemenx-surface));
+	background: linear-gradient(rgba(var(--elemenx-cal-rgb), 0.2), rgba(var(--elemenx-cal-rgb), 0.2)), var(--elemenx-surface);
 }
 
 .elemenx-cal-time {
@@ -280,7 +281,7 @@
 }
 
 .elemenx-cal-column.today {
-	background-color: color-mix(in srgb, var(--elemenx-accent) 4%, transparent);
+	background-color: rgba(var(--elemenx-accent-rgb), 0.04);
 }
 
 .elemenx-cal-block {
@@ -291,7 +292,7 @@
 	margin-left: 2px;
 	padding: 2px 6px;
 	overflow: hidden;
-	background: color-mix(in srgb, var(--elemenx-cal-color) 20%, var(--elemenx-surface));
+	background: linear-gradient(rgba(var(--elemenx-cal-rgb), 0.2), rgba(var(--elemenx-cal-rgb), 0.2)), var(--elemenx-surface);
 	border: 0;
 	border-left: 3px solid var(--elemenx-cal-color);
 	border-radius: var(--elemenx-radius);
@@ -326,7 +327,7 @@
 
 .elemenx-cal-day.drop,
 .elemenx-cal-allday.drop {
-	background: color-mix(in srgb, var(--elemenx-accent) 12%, var(--elemenx-surface));
+	background: linear-gradient(rgba(var(--elemenx-accent-rgb), 0.12), rgba(var(--elemenx-accent-rgb), 0.12)), var(--elemenx-surface);
 	box-shadow: inset 0 0 0 2px var(--elemenx-accent);
 }
 
@@ -336,7 +337,7 @@
 	right: 4px;
 	z-index: 2;
 	padding: 2px 6px;
-	background: color-mix(in srgb, var(--elemenx-accent) 16%, transparent);
+	background: rgba(var(--elemenx-accent-rgb), 0.16);
 	border: 2px dashed var(--elemenx-accent);
 	border-radius: var(--elemenx-radius);
 	color: var(--elemenx-text);
@@ -383,7 +384,7 @@
 }
 
 .elemenx-cal-block:hover {
-	background: color-mix(in srgb, var(--elemenx-cal-color) 32%, var(--elemenx-surface));
+	background: linear-gradient(rgba(var(--elemenx-cal-rgb), 0.32), rgba(var(--elemenx-cal-rgb), 0.32)), var(--elemenx-surface);
 }
 
 .elemenx-cal-now {

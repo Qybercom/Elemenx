@@ -93,7 +93,7 @@
 }
 
 .elemenx-calendar-day.within {
-	background: color-mix(in srgb, var(--elemenx-accent) 12%, transparent);
+	background: rgba(var(--elemenx-accent-rgb), 0.12);
 	border-radius: 0;
 }
 

@@ -74,6 +74,7 @@ Type:
 Geometry:
 
 - `--elemenx-control-small`, `--elemenx-control`, `--elemenx-control-large`, `--elemenx-control-giant`: the heights of buttons, fields, tabs, sliders and options, 24, 32, 40 and 56px. Change them together to make an Application more compact or roomier.
+- `--elemenx-grid-min` (240px): the narrowest column of `elemenx-container grid`; set it on a grid to change its columns.
 - `--elemenx-radius-small` (2px), `--elemenx-radius` (4px: controls), `--elemenx-radius-large` (8px: cards, panels, menus), `--elemenx-radius-huge` (12px: the command palette, a tour, a drawer), `--elemenx-radius-giant` (16px: chat bubbles), `--elemenx-radius-pill` (999px: pills and badges).
 
 Motion:
@@ -88,7 +89,8 @@ Colors of a scheme:
 - `--elemenx-danger`, `--elemenx-success`, `--elemenx-warning`, `--elemenx-info`: the variants of buttons, badges, callouts, toasts, progress.
 - `--elemenx-border`, `--elemenx-border-strong`: borders, and the borders of hovered or emphasized controls.
 - `--elemenx-shadow`: menus, popovers, dialogs.
-- `--elemenx-focus`: the focus ring (by default the accent at 48%).
+- `--elemenx-focus`: the focus ring (by default the accent at 48%: `rgba(var(--elemenx-accent-rgb), 0.48)`).
+- Channels: `--elemenx-background-rgb`, `--elemenx-surface-rgb`, `--elemenx-surface-hover-rgb`, `--elemenx-text-rgb`, `--elemenx-text-muted-rgb`, `--elemenx-accent-rgb`, `--elemenx-accent-text-rgb`, `--elemenx-danger-rgb`, `--elemenx-success-rgb`, `--elemenx-warning-rgb`, `--elemenx-info-rgb`, `--elemenx-border-strong-rgb`: the same colors as three numbers (`75, 68, 61`), for the tints of the Components (`rgba(var(--elemenx-accent-rgb), 0.12)`). A theme that changes one of these colors gives its channels too; `Theme.Channels('#4b443d')` computes them.
 - `--elemenx-rating-color`: the stars of `Rating`. `--elemenx-tile-color`: a `Tile` without a color of its own.
 - `--elemenx-weather-sun`, `--elemenx-weather-moon`, `--elemenx-weather-cloud`, `--elemenx-weather-rain`, `--elemenx-weather-snow`, `--elemenx-weather-bolt`, `--elemenx-weather-wind`, `--elemenx-weather-fog`, `--elemenx-weather-thermometer`: the parts of a weather icon with `Colored="true"`.
 
@@ -106,4 +108,4 @@ Components also have their own variables, set by their variants (`--elemenx-prog
 
 ## Browsers
 
-Themes use CSS custom properties and attribute selectors, nothing else. The focus ring and a few tints of the Components mix colors with `color-mix()` (Chrome 111, Safari 16.2, Firefox 113); a theme may set `--elemenx-focus` to a plain color.
+Themes use CSS custom properties and attribute selectors, nothing else. The tints of the Components are `rgba()` of the channel tokens and layers of `linear-gradient()`, so ElemenxUI needs no `color-mix()` and works in every browser with custom properties.

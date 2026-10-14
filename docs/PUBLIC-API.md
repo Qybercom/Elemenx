@@ -18,6 +18,7 @@ This document is the release-level map of the supported top-level Elemenx surfac
 - `Elemenx.WebWorker` — Web Worker lifecycle and Messaging bridge.
 - `Elemenx.ServiceWorker` — Service Worker lifecycle and registration helpers.
 - `Elemenx.Bundle` — production bundle registry used before normal Discovery fallback.
+- `Elemenx.Resource` — files embedded by a bundle (sprites, data): `Elemenx.Resource(url, text)` embeds, `Elemenx.Resource(url)` returns the embedded text or `null`, `Elemenx.Resource.Load(url, callback)` calls back `(error, text)` with the embedded text or the text fetched from the URL.
 - `Elemenx.Title` — document/application title facade.
 - `Elemenx.RuntimeID` — runtime identifier helper.
 

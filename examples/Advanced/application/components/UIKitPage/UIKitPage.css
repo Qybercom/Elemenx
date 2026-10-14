@@ -81,6 +81,10 @@
 	box-shadow: var(--elemenx-shadow-subtle);
 }
 
+.ui-kit-comments {
+	--elemenx-grid-min: 360px;
+}
+
 .ui-kit-pickers {
 	align-items: flex-start;
 	gap: 16px;

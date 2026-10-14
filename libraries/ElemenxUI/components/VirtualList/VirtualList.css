@@ -50,7 +50,7 @@
 }
 
 .elemenx-virtual-row.selected {
-	background: color-mix(in srgb, var(--elemenx-accent) 12%, var(--elemenx-surface));
+	background: linear-gradient(rgba(var(--elemenx-accent-rgb), 0.12), rgba(var(--elemenx-accent-rgb), 0.12)), var(--elemenx-surface);
 	font-weight: var(--elemenx-font-weight-strong);
 }
 

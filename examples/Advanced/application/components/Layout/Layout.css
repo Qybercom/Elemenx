@@ -25,7 +25,7 @@ body[data-scheme='dark'] .application-shell {
 	align-items: center;
 	gap: 24px;
 	padding: 14px max(22px, calc((100vw - 1040px) / 2));
-	background: color-mix(in srgb, var(--elemenx-surface) 92%, transparent);
+	background: rgba(var(--elemenx-surface-rgb), 0.92);
 	border-bottom: 1px solid var(--elemenx-border);
 	backdrop-filter: blur(14px);
 }

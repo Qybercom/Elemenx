@@ -51,6 +51,11 @@
 	stroke: var(--elemenx-weather-thermometer);
 }
 
+/* The logos of the brands set take the color of their brand. */
+.elemenx-icon.colored .brand {
+	fill: var(--elemenx-brand);
+}
+
 .elemenx-icon.spin {
 	animation: elemenx-spin 800ms linear infinite;
 }

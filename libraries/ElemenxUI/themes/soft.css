@@ -20,39 +20,63 @@ body[data-theme='soft'] {
 
 body[data-theme='soft'][data-scheme='light'] {
 	--elemenx-background: #f5f4fb;
+	--elemenx-background-rgb: 245, 244, 251;
 	--elemenx-surface: #ffffff;
+	--elemenx-surface-rgb: 255, 255, 255;
 	--elemenx-surface-raised: #f8f7fd;
 	--elemenx-surface-hover: #efedfa;
+	--elemenx-surface-hover-rgb: 239, 237, 250;
 	--elemenx-text: #1f1b2e;
+	--elemenx-text-rgb: 31, 27, 46;
 	--elemenx-text-muted: #6c6782;
+	--elemenx-text-muted-rgb: 108, 103, 130;
 	--elemenx-accent: #6b4eff;
+	--elemenx-accent-rgb: 107, 78, 255;
 	--elemenx-accent-hover: #5838f0;
 	--elemenx-accent-text: #ffffff;
+	--elemenx-accent-text-rgb: 255, 255, 255;
 	--elemenx-danger: #d64560;
+	--elemenx-danger-rgb: 214, 69, 96;
 	--elemenx-success: #1f9d72;
+	--elemenx-success-rgb: 31, 157, 114;
 	--elemenx-warning: #c27b12;
+	--elemenx-warning-rgb: 194, 123, 18;
 	--elemenx-info: #3d7be0;
+	--elemenx-info-rgb: 61, 123, 224;
 	--elemenx-border: #e3e0f0;
 	--elemenx-border-strong: #c9c4df;
+	--elemenx-border-strong-rgb: 201, 196, 223;
 	--elemenx-shadow: 0 12px 32px rgba(52, 40, 120, 0.14);
 }
 
 body[data-theme='soft'][data-scheme='dark'] {
 	--elemenx-background: #16141f;
+	--elemenx-background-rgb: 22, 20, 31;
 	--elemenx-surface: #1e1b2a;
+	--elemenx-surface-rgb: 30, 27, 42;
 	--elemenx-surface-raised: #252234;
 	--elemenx-surface-hover: #2e2a40;
+	--elemenx-surface-hover-rgb: 46, 42, 64;
 	--elemenx-text: #efedf7;
+	--elemenx-text-rgb: 239, 237, 247;
 	--elemenx-text-muted: #a19cb8;
+	--elemenx-text-muted-rgb: 161, 156, 184;
 	--elemenx-accent: #a594ff;
+	--elemenx-accent-rgb: 165, 148, 255;
 	--elemenx-accent-hover: #b8aaff;
 	--elemenx-accent-text: #16141f;
+	--elemenx-accent-text-rgb: 22, 20, 31;
 	--elemenx-danger: #f07a8f;
+	--elemenx-danger-rgb: 240, 122, 143;
 	--elemenx-success: #5fd0a5;
+	--elemenx-success-rgb: 95, 208, 165;
 	--elemenx-warning: #f0b45a;
+	--elemenx-warning-rgb: 240, 180, 90;
 	--elemenx-info: #82aaf5;
+	--elemenx-info-rgb: 130, 170, 245;
 	--elemenx-border: #332f46;
 	--elemenx-border-strong: #484262;
+	--elemenx-border-strong-rgb: 72, 66, 98;
 	--elemenx-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
 }
 

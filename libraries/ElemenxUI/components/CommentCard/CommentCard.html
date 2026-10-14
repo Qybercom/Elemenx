@@ -1,0 +1,26 @@
+<article class="elemenx-comment" [class]="[Variant || 'flat', Thread ? 'thread' : '']" [attribute.aria-label]="Author">
+	<div class="elemenx-comment-side">
+		<span class="elemenx-person-avatar elemenx-comment-avatar" aria-hidden="true"><img *if="Avatar" [src]="Avatar" alt="" /><span *if="!Avatar">{{Initials(Author)}}</span></span>
+		<span class="elemenx-comment-line" *if="Thread" aria-hidden="true"></span>
+	</div>
+	<div class="elemenx-comment-main">
+		<div class="elemenx-comment-head">
+			<span class="elemenx-person-name">{{Author}}</span>
+			<Icon *if="Verified" Name="success" [label]="VerifiedLabel" />
+			<span class="elemenx-comment-handle" *if="Handle">@{{Handle}}</span>
+			<span class="elemenx-comment-dot" *if="Format().When(Time)" aria-hidden="true">·</span>
+			<time class="elemenx-comment-time" *if="Format().When(Time)" [attribute.datetime]="Format().When(Time).toISOString()" [attribute.title]="Format().Date(Time, 'long')">{{Format().Relative(Time, Now)}}</time>
+		</div>
+		<p class="elemenx-comment-text"><span *for="part of Parts(Text)" *key="part.Key"><span *if="part.Kind === 'text'">{{part.Text}}</span><button class="elemenx-comment-token" type="button" *if="part.Kind === 'mention' || part.Kind === 'tag'" [attribute.data-kind]="part.Kind" [attribute.data-value]="part.Value" (click)="Token">{{part.Text}}</button><a class="elemenx-comment-token" *if="part.Kind === 'link'" [href]="part.Text" target="_blank" rel="noopener noreferrer">{{part.Short}}</a></span></p>
+		<div class="elemenx-comment-media" *if="Media && Media.length" [class]="[MediaClass(Media)]">
+			<img *for="image of Media.slice(0, 4)" *key="image" [src]="image" alt="" loading="lazy" />
+		</div>
+		<div class="elemenx-comment-actions">
+			<button class="elemenx-card-action" type="button" *if="Replies !== null" [attribute.aria-label]="ReplyLabel + ' (' + Replies + ')'" (click)="Reply"><Icon Name="comment" /><span>{{Format().Count(Replies)}}</span></button>
+			<button class="elemenx-card-action repost" type="button" *if="Reposts !== null" [class.on]="!!Reposted" [attribute.aria-pressed]="String(!!Reposted)" [attribute.aria-label]="RepostLabel + ' (' + Reposts + ')'" (click)="Repost"><Icon Name="repost" /><span>{{Format().Count(Reposts)}}</span></button>
+			<button class="elemenx-card-action" type="button" *if="Likes !== null" [class.on]="!!Liked" [attribute.aria-pressed]="String(!!Liked)" [attribute.aria-label]="LikeLabel + ' (' + Likes + ')'" (click)="Like"><Icon Name="heart" /><span>{{Format().Count(Likes)}}</span></button>
+			<button class="elemenx-card-action" type="button" [attribute.aria-label]="ShareLabel" (click)="Share"><Icon Name="share" /></button>
+		</div>
+		<div class="elemenx-comment-replies"><slot></slot></div>
+	</div>
+</article>

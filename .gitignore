@@ -6,3 +6,6 @@ playwright-report/
 test-results/
 /elemenx.zip
 /examples/*/dist
+/dist
+/tests/dist/single-output
+/tests/dist/single-cli-output

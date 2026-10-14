@@ -292,6 +292,46 @@ Elemenx.Service('Theme', {
 		document.body.setAttribute('data-scheme', this.Resolved());
 	},
 
+	/*
+	 * The channels of a CSS color, 'r, g, b', for the rgba() of the -rgb tokens of a theme
+	 * (rgba(var(--elemenx-accent-rgb), 0.12)); null for no color or an unknown one. Hex colors and rgb() are read
+	 * directly, any other color through a canvas.
+	 */
+	Channels: function (color) {
+		var value = String(color || '').trim();
+		var context;
+		var hex;
+		var match;
+
+		if (!value)
+			return null;
+
+		if (!/^#|^rgba?\(/i.test(value)) {
+			context = this.Painter || (this.Painter = document.createElement('canvas').getContext('2d'));
+
+			if (!context) return null;
+
+			context.fillStyle = '#010203';
+			context.fillStyle = value;
+
+			if (context.fillStyle === '#010203' && value.toLowerCase() !== '#010203') return null;
+
+			value = context.fillStyle;
+		}
+
+		match = /^#([0-9a-f]{3,8})$/i.exec(value);
+
+		if (match) {
+			hex = match[1].length < 6 ? match[1].replace(/./g, '$&$&') : match[1];
+
+			return parseInt(hex.substring(0, 2), 16) + ', ' + parseInt(hex.substring(2, 4), 16) + ', ' + parseInt(hex.substring(4, 6), 16);
+		}
+
+		match = /^rgba?\(\s*(\d+)[\s,]+(\d+)[\s,]+(\d+)/i.exec(value);
+
+		return match ? match[1] + ', ' + match[2] + ', ' + match[3] : null;
+	},
+
 	OnChange: function (callback) {
 		this.Listeners.push(callback);
 

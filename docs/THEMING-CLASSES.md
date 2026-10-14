@@ -17,7 +17,18 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-calendar-weekday`
 - `elemenx-callout`: `danger`, `neutral`, `success`, `warning`
 - `elemenx-caption`
-- `elemenx-card`: `compact`, `spacious`
+- `elemenx-card`: `compact`, `elevated`, `filled`, `flat`, `horizontal`, `linked`, `spacious`, `structured`
+- `elemenx-card-action`: `on`, `repost`
+- `elemenx-card-body`
+- `elemenx-card-content`
+- `elemenx-card-date`
+- `elemenx-card-footer`
+- `elemenx-card-header`
+- `elemenx-card-link`
+- `elemenx-card-media`
+- `elemenx-card-meta`
+- `elemenx-card-text`
+- `elemenx-card-title`
 - `elemenx-check`: `checked`, `chip`, `disabled`, `indeterminate`, `invalid`, `small`, `tile`
 - `elemenx-check-box`
 - `elemenx-check-input`
@@ -30,7 +41,7 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-color-input`: `round`
 - `elemenx-color-swatch`
 - `elemenx-column`: `fill`, `fill-fixed`, `non-fill`
-- `elemenx-container`: `block`, `centered`, `fill`, `fill-fixed`, `non-fill`, `wrappable`
+- `elemenx-container`: `block`, `centered`, `fill`, `fill-fixed`, `grid`, `non-fill`, `wrappable`
 - `elemenx-divider`: `vertical`
 - `elemenx-drag-ghost`
 - `elemenx-draggable`: `dragging`
@@ -58,6 +69,10 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-option-hint`
 - `elemenx-option-label`
 - `elemenx-panel`: `compact`, `spacious`
+- `elemenx-person`
+- `elemenx-person-avatar`
+- `elemenx-person-name`
+- `elemenx-person-text`
 - `elemenx-phone-country`
 - `elemenx-phone-input`: `round`
 - `elemenx-picker-empty`
@@ -230,6 +245,22 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-palette`
 - `elemenx-palette-list`
 - `elemenx-palette-search`
+
+## CommentCard
+
+- `elemenx-comment`: `elevated`, `outlined`, `thread`
+- `elemenx-comment-actions`
+- `elemenx-comment-dot`
+- `elemenx-comment-handle`
+- `elemenx-comment-head`
+- `elemenx-comment-line`
+- `elemenx-comment-main`
+- `elemenx-comment-media`: `count-1`, `count-3`
+- `elemenx-comment-replies`
+- `elemenx-comment-side`
+- `elemenx-comment-text`
+- `elemenx-comment-time`
+- `elemenx-comment-token`
 
 ## ContextMenu
 
@@ -417,12 +448,69 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-phone`
 - `elemenx-phone-code`
 
+## PlanCard
+
+- `elemenx-plan`: `disabled`, `popular`, `selected`
+- `elemenx-plan-description`
+- `elemenx-plan-features`
+- `elemenx-plan-footer`
+- `elemenx-plan-header`
+- `elemenx-plan-name`
+- `elemenx-plan-note`
+- `elemenx-plan-popular`
+- `elemenx-plan-price`
+
+## PlanPicker
+
+- `elemenx-plans`
+- `elemenx-plans-period`
+
 ## Popover
 
 - `elemenx-popover`
 - `elemenx-popover-root`
 - `elemenx-popover-title`
 - `elemenx-popover-trigger`
+
+## PostCard
+
+- `elemenx-post`: `overlay`
+- `elemenx-post-category`
+- `elemenx-post-excerpt`
+- `elemenx-post-tags`
+
+## ProductCard
+
+- `elemenx-product`: `corner`
+- `elemenx-product-badge`
+- `elemenx-product-brand`
+- `elemenx-product-color`: `active`
+- `elemenx-product-corner`
+- `elemenx-product-dot`: `active`
+- `elemenx-product-dots`
+- `elemenx-product-favorite`: `on`
+- `elemenx-product-footer`
+- `elemenx-product-media`
+- `elemenx-product-options`
+- `elemenx-product-price`
+- `elemenx-product-rating`
+- `elemenx-product-size`: `active`
+- `elemenx-product-title`
+
+## ProfileCard
+
+- `elemenx-profile`: `card`, `compact`
+- `elemenx-profile-actions`
+- `elemenx-profile-avatar`
+- `elemenx-profile-bio`
+- `elemenx-profile-cover`
+- `elemenx-profile-head`
+- `elemenx-profile-name`
+- `elemenx-profile-names`
+- `elemenx-profile-stat`
+- `elemenx-profile-stats`
+- `elemenx-profile-status`: `away`, `busy`, `online`
+- `elemenx-profile-status-label`
 
 ## Progress
 

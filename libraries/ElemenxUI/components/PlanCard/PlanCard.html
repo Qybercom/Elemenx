@@ -1,0 +1,25 @@
+<article class="elemenx-card structured elemenx-plan" [class]="[Variant || 'outlined', Popular ? 'popular' : '', Selected ? 'selected' : '', Disabled ? 'disabled' : '']" [attribute.style]="Color ? '--elemenx-plan-color: ' + Color : null" [attribute.role]="Selectable ? 'radio' : null" [attribute.aria-checked]="Selectable ? String(!!Selected) : null" [attribute.aria-disabled]="Disabled ? 'true' : null" [attribute.tabindex]="Selectable ? (Selected || Tabbable ? 0 : -1) : null" [attribute.aria-label]="Name" [attribute.data-id]="ID" (click)="Pressed" (keydown)="Key">
+	<header class="elemenx-plan-header">
+		<span class="elemenx-plan-popular" *if="Popular">{{Popular}}</span>
+		<h3 class="elemenx-plan-name">{{Name}}</h3>
+		<p class="elemenx-plan-description" *if="Description">{{Description}}</p>
+	</header>
+	<div class="elemenx-card-content">
+		<div class="elemenx-plan-price">
+			<strong>{{Amount(Price, YearlyPrice, Period, Currency)}}</strong>
+			<span *if="Number(Price) > 0">/ {{Period === 'year' ? YearLabel : MonthLabel}}</span>
+		</div>
+		<p class="elemenx-caption elemenx-plan-note" *if="Note">{{Note}}</p>
+		<ul class="elemenx-plan-features">
+			<li *for="feature of Features" *key="feature.Label || feature" [class.excluded]="feature.Included === false">
+				<Icon [name]="feature.Included === false ? 'close' : 'check'" [label]="feature.Included === false ? ExcludedLabel : IncludedLabel" />
+				<span>{{feature.Label || feature}}</span>
+				<span class="elemenx-caption" *if="feature.Hint">{{feature.Hint}}</span>
+			</li>
+		</ul>
+		<slot></slot>
+		<div class="elemenx-card-footer elemenx-plan-footer">
+			<Button [label]="Current ? CurrentLabel : (Selected ? SelectedLabel : Action)" [icon]="Selected || Current ? 'check' : ''" [variant]="Selected || Popular ? 'primary' : 'secondary'" Block="true" [disabled]="Disabled || Current" (click)="Choose" />
+		</div>
+	</div>
+</article>
