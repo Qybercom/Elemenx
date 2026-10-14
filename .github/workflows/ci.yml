@@ -1,11 +1,19 @@
 # The checks of npm test, split into parallel jobs: lint, the browser contracts, the tooling, the minified build and
 # the end-to-end tests. The tests run in the Google Chrome of the runner image (channel chrome): no browser download.
+#
+# A push runs the fast checks (a few minutes). The end-to-end tests run on a pull request, by hand (Run workflow), every
+# night when main has new commits, and before every release (publish.yml runs the whole npm test). A change of the
+# documentation alone runs nothing.
 name: CI
 
 on:
   push:
     branches: [main]
+    paths-ignore: ['**.md', 'docs/**']
   pull_request:
+    paths-ignore: ['**.md', 'docs/**']
+  schedule:
+    - cron: '0 2 * * *'
   workflow_dispatch:
 
 permissions:
@@ -18,6 +26,7 @@ concurrency:
 jobs:
   checks:
     name: Lint, contracts, dist
+    if: github.event_name != 'schedule'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -42,6 +51,7 @@ jobs:
 
   tools:
     name: Tooling, Node ${{ matrix.node }} on ${{ matrix.os }}
+    if: github.event_name != 'schedule'
     runs-on: ${{ matrix.os }}
     timeout-minutes: 15
     strategy:
@@ -61,8 +71,28 @@ jobs:
       - run: npm ci
       - run: npm run test:tools
 
+  recent:
+    name: New commits for the nightly run
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.log.outputs.changed }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 100
+      - id: log
+        run: |
+          if [ -n "$(git log --since='25 hours ago' --format=%H -n 1)" ]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
   e2e:
     name: End-to-end ${{ matrix.shard }}/3
+    needs: recent
+    if: ${{ !cancelled() && (github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch' || needs.recent.outputs.changed == 'true') }}
     runs-on: ubuntu-latest
     timeout-minutes: 40
     strategy:

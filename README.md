@@ -64,7 +64,7 @@ npm run example:advanced:dist
 
 ## Continuous integration and releases
 
-`.github/workflows/ci.yml` runs the checks of `npm test` on every push to `main` and every pull request, in parallel jobs: lint, the browser contracts against `elemenx.js` and against `dist/elemenx.min.js`, the tooling on Node 20, 22 and 24 (and on Windows), and the end-to-end tests in three shards. The built `dist/` is kept as an artifact of the run.
+`.github/workflows/ci.yml` runs the checks of `npm test` in parallel jobs. Every push to `main` and every pull request run the fast ones, in a few minutes: lint, the browser contracts against `elemenx.js` and against `dist/elemenx.min.js`, the tooling on Node 20, 22 and 24 (and on Windows). The end-to-end tests, three shards of Playwright, run on a pull request, by hand (Actions, CI, Run workflow), every night when `main` has new commits, and before every release. A change of the documentation alone runs nothing. The built `dist/` is kept as an artifact of the run.
 
 `.github/workflows/publish.yml` publishes a release of `@qybercom/elemenx` and of its short name `elemenx` (`packages/elemenx`) when a tag `v<version>` is pushed. The steps of a release, and of the first one, are in `docs/RELEASING.md`; in short:
 

@@ -28,6 +28,13 @@ function field (page, label) {
 	return page.locator('.elemenx-field').filter({has: page.locator('.elemenx-field-label', {hasText: new RegExp('^' + label + '$')})});
 }
 
+/* Types into the search field of the open popup of scope: the field takes the focus a task after the popup opens. */
+async function search (page, scope, text) {
+	await expect(scope.locator('.elemenx-popup-search input')).toBeFocused();
+
+	await page.keyboard.type(text);
+}
+
 async function open (page, origin) {
 	/* The catalogue loads more resources than the default buffer of Resource Timing (250) keeps. */
 	await page.addInitScript(function () {
@@ -839,7 +846,8 @@ for (const origin of origins) {
 
 			await phone.locator('.elemenx-phone-country').click();
 
-			await page.keyboard.type('serb');
+			await search(page, phone, 'serb');
+
 			await page.keyboard.press('Enter');
 
 			await expect(phone.locator('.elemenx-phone-country')).toContainText('RS');
@@ -942,7 +950,8 @@ for (const origin of origins) {
 
 			await language.locator('.elemenx-select-trigger').click();
 
-			await page.keyboard.type('kot');
+			await search(page, language, 'kot');
+
 			await page.keyboard.press('Enter');
 
 			await expect(page.locator('.elemenx-section-header', {hasText: 'Selection'})).toContainText('Language: kotlin');
@@ -1584,7 +1593,8 @@ for (const origin of origins) {
 
 			expect(await phone.locator('.elemenx-popup .elemenx-option').count()).toBeGreaterThan(200);
 
-			await page.keyboard.type('Japan');
+			await search(page, phone, 'Japan');
+
 			await page.keyboard.press('Enter');
 
 			await expect(phone.locator('.elemenx-phone-country')).toContainText('JP');
@@ -1597,7 +1607,8 @@ for (const origin of origins) {
 			expect(codes.length).toBeGreaterThan(200);
 			expect(codes.slice().sort()).toEqual(codes);
 
-			await page.keyboard.type('Moldova');
+			await search(page, phone, 'Moldova');
+
 			await page.keyboard.press('Enter');
 
 			await phone.locator('input[type="tel"]').fill('');
@@ -1623,7 +1634,8 @@ for (const origin of origins) {
 
 			await money.locator('.elemenx-select-trigger').click();
 
-			await page.keyboard.type('JPY');
+			await search(page, money, 'JPY');
+
 			await page.keyboard.press('Enter');
 
 			await expect(money.locator('.elemenx-caption')).toHaveText('JPY 1235');
