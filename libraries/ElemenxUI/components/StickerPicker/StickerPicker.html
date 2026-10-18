@@ -1,24 +1,24 @@
-<div class="elemenx-column elemenx-stickers" role="dialog" [attribute.aria-label]="Label" [attribute.style]="'--elemenx-sticker-columns: ' + Columns" (keydown)="Key">
+<div class="elemenx-column elemenx-stickers" role="dialog" [attribute.aria-label]="(Label || $T('ui.stickerPicker.label'))" [attribute.style]="'--elemenx-sticker-columns: ' + Columns" (keydown)="Key">
 	<div class="elemenx-container elemenx-picker-head">
 		<div class="elemenx-input small elemenx-picker-search">
 			<Icon Name="search" />
-			<input class="elemenx-input-control" type="text" autocomplete="off" spellcheck="false" [placeholder]="Placeholder" [value]="Query" aria-label="Search stickers" (input)="Typed" />
-			<button class="elemenx-input-action" type="button" tabindex="-1" aria-label="Clear" *if="Query" (click)="Clear"><Icon Name="close" /></button>
+			<input class="elemenx-input-control" type="text" autocomplete="off" spellcheck="false" [placeholder]="(Placeholder || $T('ui.stickerPicker.placeholder'))" [value]="Query" [attribute.aria-label]="$T('ui.stickerPicker.searchLabel')" (input)="Typed" />
+			<button class="elemenx-input-action" type="button" tabindex="-1" [attribute.aria-label]="$T('ui.common.clear')" *if="Query" (click)="Clear"><Icon Name="close" /></button>
 		</div>
 	</div>
-	<div class="elemenx-container elemenx-picker-tabs" role="tablist" aria-label="Packs" *if="!Query">
-		<button class="elemenx-picker-tab" type="button" role="tab" *for="tab of Tabs" *key="tab.ID" [class.active]="tab.ID === Shown(Tab, Tabs)" [attribute.aria-selected]="String(tab.ID === Shown(Tab, Tabs))" [attribute.aria-label]="tab.Title" [attribute.title]="tab.Title" [attribute.data-tab]="tab.ID" (click)="Choose">
+	<div class="elemenx-container elemenx-picker-tabs" role="tablist" [attribute.aria-label]="$T('ui.stickerPicker.packs')" *if="!Query">
+		<button class="elemenx-picker-tab" type="button" role="tab" *for="tab of Tabs" *key="tab.ID" [class.active]="tab.ID === Shown(Tab, Tabs)" [attribute.aria-selected]="String(tab.ID === Shown(Tab, Tabs))" [attribute.aria-label]="tab.Key ? $T(tab.Key) : tab.Title" [attribute.title]="tab.Key ? $T(tab.Key) : tab.Title" [attribute.data-tab]="tab.ID" (click)="Choose">
 			<Icon *if="tab.Icon && tab.Icon.indexOf('/') === -1 && tab.Icon.indexOf('.') === -1" [name]="tab.Icon" />
 			<img class="elemenx-stickers-tab-image" *if="tab.Icon && (tab.Icon.indexOf('/') !== -1 || tab.Icon.indexOf('.') !== -1)" [src]="tab.Icon" alt="" />
 		</button>
 	</div>
 	<div class="elemenx-stickers-body">
-		<div class="elemenx-stickers-grid" role="listbox" [attribute.aria-label]="Label">
+		<div class="elemenx-stickers-grid" role="listbox" [attribute.aria-label]="(Label || $T('ui.stickerPicker.label'))">
 			<div class="elemenx-sticker" *for="sticker of Items(Tab, Tabs, Query, Version)" *key="sticker.Pack + '/' + sticker.ID">
 				<button class="elemenx-sticker-pick" type="button" role="option" [attribute.aria-label]="sticker.Title || sticker.ID" [attribute.title]="sticker.Title || null" [attribute.data-key]="sticker.Pack + '/' + sticker.ID" (click)="Pick"><img [src]="sticker.URL" alt="" loading="lazy" draggable="false" /></button>
-				<button class="elemenx-sticker-star" type="button" tabindex="-1" [class.on]="Starred(sticker, Version)" [attribute.aria-label]="Starred(sticker, Version) ? 'Remove from favorites' : 'Add to favorites'" [attribute.aria-pressed]="String(Starred(sticker, Version))" [attribute.data-key]="sticker.Pack + '/' + sticker.ID" (click)="Star"><Icon Name="star" Size="12" /></button>
+				<button class="elemenx-sticker-star" type="button" tabindex="-1" [class.on]="Starred(sticker, Version)" [attribute.aria-label]="Starred(sticker, Version) ? $T('ui.stickerPicker.unstar') : $T('ui.stickerPicker.star')" [attribute.aria-pressed]="String(Starred(sticker, Version))" [attribute.data-key]="sticker.Pack + '/' + sticker.ID" (click)="Star"><Icon Name="star" Size="12" /></button>
 			</div>
 		</div>
-		<p class="elemenx-caption elemenx-picker-empty" *if="!Items(Tab, Tabs, Query, Version).length">{{Query ? Nothing : (Shown(Tab, Tabs) === 'favorites' ? NoFavorites : (Shown(Tab, Tabs) === 'recent' ? NoRecent : NoPacks))}}</p>
+		<p class="elemenx-caption elemenx-picker-empty" *if="!Items(Tab, Tabs, Query, Version).length">{{Query ? (Nothing || $T('ui.stickerPicker.nothing')) : (Shown(Tab, Tabs) === 'favorites' ? (NoFavorites || $T('ui.stickerPicker.noFavorites')) : (Shown(Tab, Tabs) === 'recent' ? (NoRecent || $T('ui.stickerPicker.noRecent')) : (NoPacks || $T('ui.stickerPicker.noPacks'))))}}</p>
 	</div>
 </div>

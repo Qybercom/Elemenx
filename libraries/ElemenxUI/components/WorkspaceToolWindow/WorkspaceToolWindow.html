@@ -3,7 +3,7 @@
 		<Icon *if="Icon" [name]="Icon" />
 		<span class="elemenx-workspace-tool-window-title">{{Title}}</span>
 		<span class="elemenx-container elemenx-workspace-tool-window-actions"><slot name="actions"></slot></span>
-		<Button *if="Closable" Icon="remove" Title="Hide" Variant="ghost" Size="small" (click)="Close" />
+		<Button *if="Closable" Icon="remove" [title]="$T('ui.common.hide')" Variant="ghost" Size="small" (click)="Close" />
 	</header>
 	<div class="elemenx-column fill elemenx-workspace-tool-window-body" [class.padded]="Padded"><slot></slot></div>
 </section>

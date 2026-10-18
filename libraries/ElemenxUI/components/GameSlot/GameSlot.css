@@ -1,0 +1,170 @@
+.elemenx-game-slot {
+	position: relative;
+	display: inline-flex;
+	flex: none;
+	align-items: center;
+	justify-content: center;
+	width: 52px;
+	height: 52px;
+	padding: 0;
+	overflow: hidden;
+	background: var(--elemenx-game-cell);
+	border: var(--elemenx-game-cell-frame);
+	border-radius: var(--elemenx-game-cell-radius);
+	color: var(--elemenx-game-text);
+	font-family: var(--elemenx-game-font);
+	cursor: pointer;
+}
+
+.elemenx-game-slot.small {
+	width: 36px;
+	height: 36px;
+}
+
+.elemenx-game-slot.large {
+	width: 72px;
+	height: 72px;
+}
+
+/*
+ * A slot under the pointer brightens: through a layer over it, not a filter on the slot, which would hold the card of
+ * its item (fixed to the viewport) inside the slot.
+ */
+.elemenx-game-slot:hover::after,
+.elemenx-game-slot.drop-over::after {
+	position: absolute;
+	inset: 0;
+	border-radius: inherit;
+	backdrop-filter: brightness(1.15);
+	content: '';
+	pointer-events: none;
+}
+
+.elemenx-game-slot:focus-visible {
+	outline: none;
+	box-shadow: var(--elemenx-game-glow);
+}
+
+.elemenx-game-slot:disabled {
+	opacity: 0.48;
+	cursor: default;
+}
+
+.elemenx-game-slot.empty {
+	cursor: default;
+}
+
+.elemenx-game-slot.uncommon {
+	border-color: var(--elemenx-game-uncommon);
+	box-shadow: inset 0 0 0 1px var(--elemenx-game-uncommon), var(--elemenx-game-item-bevel);
+}
+
+.elemenx-game-slot.rare {
+	border-color: var(--elemenx-game-rare);
+	box-shadow: inset 0 0 0 1px var(--elemenx-game-rare), var(--elemenx-game-item-bevel);
+}
+
+.elemenx-game-slot.epic {
+	border-color: var(--elemenx-game-epic);
+	box-shadow: inset 0 0 0 1px var(--elemenx-game-epic), var(--elemenx-game-item-bevel);
+}
+
+.elemenx-game-slot.legendary {
+	border-color: var(--elemenx-game-legendary);
+	box-shadow: inset 0 0 0 1px var(--elemenx-game-legendary), var(--elemenx-game-item-bevel);
+}
+
+.elemenx-game-slot.drop-over {
+	box-shadow: var(--elemenx-game-glow);
+}
+
+/* An action lies on glass of its color under the gloss of the theme. */
+.elemenx-game-slot.filled {
+	box-shadow: var(--elemenx-game-item-bevel);
+}
+
+/* The active slot: a fill and a frame of the theme, over the bevel of a filled one. */
+.elemenx-game-slot.active {
+	outline: none;
+	background: var(--elemenx-game-item-active-fill);
+	box-shadow: var(--elemenx-game-item-active);
+}
+
+.elemenx-game-slot-glass,
+.elemenx-game-slot-gloss {
+	position: absolute;
+	inset: var(--elemenx-game-item-inset);
+	border-radius: inherit;
+	pointer-events: none;
+}
+
+.elemenx-game-slot-glass {
+	opacity: var(--elemenx-game-item-tint);
+}
+
+.elemenx-game-slot-gloss {
+	background: var(--elemenx-game-item-gloss);
+}
+
+.elemenx-game-slot > .elemenx-icon,
+.elemenx-game-slot > .elemenx-game-slot-image {
+	position: relative;
+}
+
+.elemenx-game-slot.filled > .elemenx-icon {
+	color: var(--elemenx-game-item-icon);
+	filter: var(--elemenx-game-item-icon-shadow);
+	scale: var(--elemenx-game-item-icon-scale);
+}
+
+.elemenx-game-slot-image {
+	width: 80%;
+	height: 80%;
+	object-fit: contain;
+}
+
+/* The cooldown: a dark sector shrinking clockwise, its share in --elemenx-game-slot-cooldown. */
+.elemenx-game-slot-sweep {
+	position: absolute;
+	inset: 0;
+	background: conic-gradient(var(--elemenx-game-cooldown) calc(var(--elemenx-game-slot-cooldown, 1) * 360deg), transparent 0);
+}
+
+.elemenx-game-slot-timer {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: var(--elemenx-game-bar-text);
+	font-size: var(--elemenx-font-size-large);
+	font-weight: var(--elemenx-font-weight-bold);
+	text-shadow: var(--elemenx-game-bar-text-shadow);
+}
+
+.elemenx-game-slot-key,
+.elemenx-game-slot-badge,
+.elemenx-game-slot-count {
+	position: absolute;
+	color: var(--elemenx-game-bar-text);
+	font-size: 10px;
+	font-weight: var(--elemenx-font-weight-bold);
+	line-height: 1;
+	text-shadow: var(--elemenx-game-bar-text-shadow);
+}
+
+.elemenx-game-slot-key {
+	top: 3px;
+	inset-inline-start: 4px;
+}
+
+.elemenx-game-slot-badge {
+	top: 3px;
+	inset-inline-start: 4px;
+	color: var(--elemenx-game-special);
+}
+
+.elemenx-game-slot-count {
+	bottom: 3px;
+	inset-inline-end: 4px;
+}

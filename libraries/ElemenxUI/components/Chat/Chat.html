@@ -1,9 +1,15 @@
 <div class="elemenx-container elemenx-chat">
 	<aside class="elemenx-column elemenx-chat-sidebar" *resizable="{Edges: 'right', MinWidth: 200, MaxWidth: 480}" [attribute.hidden]="SidebarOpen ? null : ''" [style.width]="SidebarWidth + 'px'" (resizeend)="Resized"><slot name="sidebar"></slot></aside>
-	<section class="elemenx-column fill elemenx-chat-main">
-		<header class="elemenx-container elemenx-chat-header"><slot name="header"></slot></header>
+	<section class="elemenx-column fill elemenx-chat-main" (keydown)="Key">
+		<header class="elemenx-container elemenx-chat-header" [attribute.hidden]="(Selection || []).length ? '' : null"><slot name="header"></slot></header>
+		<div class="elemenx-container elemenx-chat-selection" role="toolbar" [attribute.hidden]="(Selection || []).length ? null : ''" [attribute.aria-label]="$T('ui.chat.selected', {count: (Selection || []).length})">
+			<Button Icon="close" Variant="ghost" [title]="$T('ui.chat.clearSelection')" (click)="Clear" />
+			<strong class="elemenx-chat-selection-count" aria-live="polite">{{$T('ui.chat.selected', {count: (Selection || []).length})}}</strong>
+			<span class="elemenx-spacer"></span>
+			<slot name="selection"></slot>
+		</div>
 		<div class="elemenx-column fill elemenx-chat-messages" role="log" aria-live="polite" (scroll)="Scrolled"><slot></slot></div>
-		<div class="elemenx-chat-jump" *if="!AtEnd"><Button Icon="arrow-down" Title="Latest messages" Shape="round" (click)="ToEnd" /></div>
+		<div class="elemenx-chat-jump" *if="!AtEnd"><Button Icon="arrow-down" [title]="$T('ui.chat.latest')" Shape="round" (click)="ToEnd" /></div>
 		<footer class="elemenx-chat-composer-area"><slot name="composer"></slot></footer>
 	</section>
 </div>

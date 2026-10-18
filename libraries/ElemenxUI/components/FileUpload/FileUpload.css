@@ -149,9 +149,9 @@
 
 .elemenx-upload-tile figcaption {
 	position: absolute;
-	right: 0;
+	inset-inline-end: 0;
 	bottom: 0;
-	left: 0;
+	inset-inline-start: 0;
 	padding: 4px 8px;
 	overflow: hidden;
 	background: linear-gradient(transparent, var(--elemenx-overlay));
@@ -165,7 +165,7 @@
 .elemenx-upload-tile-remove {
 	position: absolute;
 	top: 4px;
-	right: 4px;
+	inset-inline-end: 4px;
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
@@ -217,7 +217,7 @@
 
 .elemenx-upload-avatar-edit {
 	position: absolute;
-	right: 0;
+	inset-inline-end: 0;
 	bottom: 0;
 	display: inline-flex;
 	align-items: center;

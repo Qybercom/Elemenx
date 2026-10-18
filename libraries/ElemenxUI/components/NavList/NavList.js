@@ -12,7 +12,7 @@ Elemenx.Component('NavList', {
 	Expanded: [],
 	Searchable: false,
 	Collapsed: false,
-	Label: 'Navigation',
+	Label: '',
 	Filter: '',
 
 	$OnCreate: function () {
@@ -118,11 +118,11 @@ Elemenx.Component('NavList', {
 		var item = this.Find(node.getAttribute('data-id'));
 		var target = null;
 
-		if (event.key === 'ArrowDown') target = rows[index + 1];
-		else if (event.key === 'ArrowUp') target = rows[index - 1];
-		else if (event.key === 'ArrowRight' && item && item.Items) this.Toggle(item.ID, true);
-		else if (event.key === 'ArrowLeft' && item && item.Items) this.Toggle(item.ID, false);
-		else if (event.key === 'Enter' || event.key === ' ') this.Pick(event, node);
+		if (Elemenx.Locale.Key(event) === 'ArrowDown') target = rows[index + 1];
+		else if (Elemenx.Locale.Key(event) === 'ArrowUp') target = rows[index - 1];
+		else if (Elemenx.Locale.Key(event) === 'ArrowRight' && item && item.Items) this.Toggle(item.ID, true);
+		else if (Elemenx.Locale.Key(event) === 'ArrowLeft' && item && item.Items) this.Toggle(item.ID, false);
+		else if (Elemenx.Locale.Key(event) === 'Enter' || Elemenx.Locale.Key(event) === ' ') this.Pick(event, node);
 		else return;
 
 		event.preventDefault();

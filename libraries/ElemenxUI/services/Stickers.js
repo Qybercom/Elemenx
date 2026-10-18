@@ -1,7 +1,9 @@
 /*
- * The sticker packs of the Application. Register({ID, Title, Icon, Items: [{ID, URL, Title, Keywords}]}) adds a pack
- * (again with the same ID: replaces it); Icon is an icon name or the URL of an image. A sticker is any image a browser
- * draws, animated ones too (GIF, WebP, APNG, SVG). Search(text) finds stickers by title and keywords. Recent() lists
+ * The sticker packs of the Application. Register({ID, Title, Icon, Items: [{ID, URL, Title, Keywords, Emoji}]}) adds a
+ * pack (again with the same ID: replaces it); Icon is an icon name or the URL of an image. A sticker is any image a
+ * browser draws, animated ones too (GIF, WebP, APNG, SVG). Emoji are the emoji the sticker means (a text or a list): a
+ * message of one of them suggests it, ByEmoji(char) lists those stickers (the starred and the recent ones first;
+ * skin tones and variation selectors do not count). Search(text) finds stickers by title, keywords and emoji. Recent() lists
  * the stickers sent last and Used(sticker) records one; Favorite(sticker) stars or unstars a sticker and Favorites()
  * lists them; both are remembered. OnChange(callback) reports the changes of the packs.
  */
@@ -40,7 +42,7 @@ Elemenx.Service('Stickers', {
 			throw new Error('Elemenx Stickers pack needs an ID');
 
 		while (pack.Items && i < pack.Items.length) {
-			items.push({ID: String(pack.Items[i].ID), Pack: String(pack.ID), URL: pack.Items[i].URL, Title: pack.Items[i].Title || '', Keywords: pack.Items[i].Keywords || ''});
+			items.push({ID: String(pack.Items[i].ID), Pack: String(pack.ID), URL: pack.Items[i].URL, Title: pack.Items[i].Title || '', Keywords: pack.Items[i].Keywords || '', Emoji: this.EmojiOf(pack.Items[i].Emoji)});
 
 			i++;
 		}
@@ -54,6 +56,69 @@ Elemenx.Service('Stickers', {
 		this.Changed();
 
 		return entry.ID;
+	},
+
+	/* The emoji of a sticker as a list of plain emoji: a text of emoji (with or without spaces) or a list. */
+	EmojiOf: function (value) {
+		var self = this;
+		var list = Array.isArray(value) ? value : String(value || '').split(/\s+/);
+		var result = [];
+
+		list.forEach(function (item) {
+			var text = String(item || '');
+			var parts = typeof Intl !== 'undefined' && Intl.Segmenter ? Array.prototype.map.call(Array.from(new Intl.Segmenter('en', {granularity: 'grapheme'}).segment(text)), function (part) {
+				return part.segment;
+			}) : [text];
+
+			parts.forEach(function (part) {
+				var plain = self.PlainEmoji(part);
+				if (plain.trim() && result.indexOf(plain) === -1)
+					result.push(plain);
+			});
+		});
+
+		return result;
+	},
+
+	/* An emoji without its variation selector and skin tone. */
+	PlainEmoji: function (char) {
+		return String(char || '').replace(/\uFE0F/g, '').replace(/\uD83C[\uDFFB-\uDFFF]/g, '').trim();
+	},
+
+	ByEmoji: function (char, limit) {
+		var self = this;
+		var plain = this.PlainEmoji(char);
+		var found = [];
+
+		if (!plain)
+			return found;
+
+		this.List.forEach(function (pack) {
+			pack.Items.forEach(function (item) {
+				if (item.Emoji.indexOf(plain) !== -1)
+					found.push(item);
+			});
+		});
+
+		found.sort(function (a, b) {
+			return self.Rank(a) - self.Rank(b);
+		});
+
+		return found.slice(0, limit || this.Limit);
+	},
+
+	/* The place of a sticker among the suggestions: starred, then recent, then the others in their order. */
+	Rank: function (sticker) {
+		var key = this.Key(sticker);
+		var starred = this.Stars.indexOf(key);
+		var recent = this.Last.indexOf(key);
+
+		if (starred !== -1) return starred;
+
+		if (recent !== -1)
+			return 1000 + recent;
+
+		return 2000;
 	},
 
 	Forget: function (id) {
@@ -90,7 +155,7 @@ Elemenx.Service('Stickers', {
 
 		this.List.forEach(function (pack) {
 			pack.Items.forEach(function (item) {
-				var haystack = ' ' + (item.Title + ' ' + item.Keywords + ' ' + pack.Title).toLowerCase();
+				var haystack = ' ' + (item.Title + ' ' + item.Keywords + ' ' + item.Emoji.join(' ') + ' ' + pack.Title).toLowerCase();
 				if (words.length && words.every(function (word) {
 					return haystack.indexOf(' ' + word) !== -1;
 				}))

@@ -25,7 +25,7 @@ Elemenx.Component('Table', {
 	Selectable: 'none',
 	Selected: [],
 	Caption: '',
-	Empty: 'No data',
+	Empty: '',
 	Height: '',
 	Compact: false,
 	Striped: false,
@@ -42,7 +42,7 @@ Elemenx.Component('Table', {
 	Tree: false,
 	ChildrenKey: 'Items',
 	Expanded: [],
-	OfLabel: 'of',
+	OfLabel: '',
 
 	$OnCreate: function () {
 		var self = this;
@@ -431,24 +431,24 @@ Elemenx.Component('Table', {
 		var target = null;
 		var children = row && this.Tree ? row[this.ChildrenKey] : null;
 
-		if (event.key === 'ArrowDown') target = node.nextElementSibling;
-		else if (event.key === 'ArrowUp') target = node.previousElementSibling;
+		if (Elemenx.Locale.Key(event) === 'ArrowDown') target = node.nextElementSibling;
+		else if (Elemenx.Locale.Key(event) === 'ArrowUp') target = node.previousElementSibling;
 
-		if (event.key === 'Enter') {
+		if (Elemenx.Locale.Key(event) === 'Enter') {
 			this.Activate(event, node);
 
 			return;
 		}
 
-		if ((event.key === 'ArrowRight' || event.key === 'ArrowLeft') && children && children.length) {
+		if ((Elemenx.Locale.Key(event) === 'ArrowRight' || Elemenx.Locale.Key(event) === 'ArrowLeft') && children && children.length) {
 			event.preventDefault();
 
-			this.Flip(row[this.RowKey], event.key === 'ArrowRight');
+			this.Flip(row[this.RowKey], Elemenx.Locale.Key(event) === 'ArrowRight');
 
 			return;
 		}
 
-		if (event.key === ' ' && this.Selectable === 'multiple') {
+		if (Elemenx.Locale.Key(event) === ' ' && this.Selectable === 'multiple') {
 			event.preventDefault();
 
 			this.CheckRow(event, node);

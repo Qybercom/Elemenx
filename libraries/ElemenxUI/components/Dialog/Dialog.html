@@ -5,7 +5,7 @@
 			<h2 class="elemenx-dialog-title" *if="Title">{{Title}}</h2>
 			<p class="elemenx-caption" *if="Description">{{Description}}</p>
 		</div>
-		<Button *if="Closable" Icon="close" Title="Close" Variant="ghost" Size="small" (click)="Close" />
+		<Button *if="Closable" Icon="close" [title]="$T('ui.common.close')" Variant="ghost" Size="small" (click)="Close" />
 	</header>
 	<div class="elemenx-dialog-body" [class.padded]="Padded"><slot></slot></div>
 	<footer class="elemenx-dialog-footer"><slot name="footer"></slot></footer>

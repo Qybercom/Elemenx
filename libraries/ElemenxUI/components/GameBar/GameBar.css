@@ -1,0 +1,130 @@
+.elemenx-game-bar {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	min-width: 120px;
+	color: var(--elemenx-game-text);
+	font-family: var(--elemenx-game-font);
+}
+
+.elemenx-game-bar-label {
+	font-size: var(--elemenx-font-size-small);
+	letter-spacing: var(--elemenx-game-letter-spacing);
+	text-transform: var(--elemenx-game-text-transform);
+}
+
+/* The gauge: the track, with room at its ends for the caps of the theme, and the ornament over it. */
+.elemenx-game-bar-gauge {
+	position: relative;
+	display: block;
+}
+
+.elemenx-game-bar-track {
+	position: relative;
+	display: block;
+	height: 14px;
+	overflow: hidden;
+	background: var(--elemenx-game-bar-track);
+	border: var(--elemenx-game-bar-frame);
+	border-image: var(--elemenx-game-bar-frame-image);
+	border-radius: var(--elemenx-game-bar-radius);
+	box-shadow: var(--elemenx-game-bar-shadow);
+	margin-inline: var(--elemenx-game-bar-gauge-margin);
+}
+
+.elemenx-game-bar-ornament {
+	position: absolute;
+	inset: var(--elemenx-game-bar-ornament-inset);
+	z-index: 1;
+	background: var(--elemenx-game-bar-ornament);
+	pointer-events: none;
+}
+
+.elemenx-game-bar.small .elemenx-game-bar-track {
+	height: 8px;
+}
+
+.elemenx-game-bar.large .elemenx-game-bar-track {
+	height: 22px;
+}
+
+.elemenx-game-bar-fill,
+.elemenx-game-bar-trail {
+	position: absolute;
+	inset-block: 0;
+	inset-inline-start: 0;
+	width: calc(var(--elemenx-game-bar-value) * 100%);
+}
+
+.elemenx-game-bar-fill {
+	overflow: hidden;
+	background: var(--elemenx-game-bar-color);
+	background-image: var(--elemenx-game-bar-shine);
+	opacity: var(--elemenx-game-bar-fill-opacity);
+	transition: width var(--elemenx-duration) ease-out;
+}
+
+/* The pattern of the theme inside the fill, and the light at its end. */
+.elemenx-game-bar-fill::before,
+.elemenx-game-bar-fill::after {
+	position: absolute;
+	inset-block: 0;
+	content: '';
+	pointer-events: none;
+}
+
+.elemenx-game-bar-fill::before {
+	inset-inline: 0;
+	background: var(--elemenx-game-bar-pattern);
+}
+
+.elemenx-game-bar-fill::after {
+	inset-inline-end: 0;
+	width: 4px;
+	background: var(--elemenx-game-bar-edge);
+}
+
+/* The trail of a loss: it stays a moment, then follows the fill; a gain hides it under the fill. */
+.elemenx-game-bar-trail {
+	background: var(--elemenx-game-bar-damage);
+	transition: width var(--elemenx-game-damage-duration) ease-in var(--elemenx-game-damage-delay);
+}
+
+.elemenx-game-bar.segmented .elemenx-game-bar-track::after {
+	position: absolute;
+	inset: 0;
+	background: repeating-linear-gradient(to right, transparent 0 calc(100% / var(--elemenx-game-bar-segments) - 1px), var(--elemenx-game-bar-track) calc(100% / var(--elemenx-game-bar-segments) - 1px) calc(100% / var(--elemenx-game-bar-segments)));
+	content: '';
+}
+
+.elemenx-game-bar-value {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: var(--elemenx-game-bar-value-align);
+	padding: var(--elemenx-game-bar-value-padding);
+	color: var(--elemenx-game-bar-text);
+	font-size: 10px;
+	font-weight: var(--elemenx-font-weight-bold);
+	line-height: 1;
+	text-shadow: var(--elemenx-game-bar-text-shadow);
+}
+
+.elemenx-game-bar.small .elemenx-game-bar-value {
+	display: none;
+}
+
+.elemenx-game-bar.large .elemenx-game-bar-value {
+	font-size: var(--elemenx-font-size-small);
+}
+
+.elemenx-game-bar.low .elemenx-game-bar-fill {
+	animation: elemenx-game-bar-pulse 1s ease-in-out infinite;
+}
+
+@keyframes elemenx-game-bar-pulse {
+	50% {
+		filter: brightness(1.35);
+	}
+}

@@ -6,7 +6,7 @@
  */
 Elemenx.Component('RibbonBackstage', {
 	$TemplateURL: 'RibbonBackstage.html',
-	Title: 'File',
+	Title: '',
 	Page: '',
 	Pages: [],
 
@@ -117,7 +117,7 @@ Elemenx.Component('RibbonBackstage', {
 		if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
 
 		items = Array.prototype.slice.call(this.$Element().querySelectorAll('.elemenx-ribbon-backstage-back, .elemenx-ribbon-backstage-item'));
-		index = items.indexOf(document.activeElement);
+		index = items.indexOf(this.$Element().getRootNode().activeElement);
 
 		if (index === -1) return;
 

@@ -2,6 +2,6 @@
 Elemenx.Component('Spinner', {
 	$TemplateURL: 'Spinner.html',
 	Size: 'medium',
-	Label: 'Loading',
+	Label: '',
 	ShowLabel: false
 });

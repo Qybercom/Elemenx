@@ -1,0 +1,10 @@
+<section class="elemenx-block framed" [class]="[Padding === 'compact' || Padding === 'spacious' ? Padding : '', HeaderShape === 'trapezoid' ? 'trapezoid' : '']">
+	<header class="elemenx-block-header" [hidden]="!Title && !Note">
+		<span class="elemenx-block-tab">
+			<span class="elemenx-block-title" role="heading" [attribute.aria-level]="Level">{{Title}}</span>
+			<span class="elemenx-block-note" *if="Note">{{Note}}</span>
+		</span>
+		<span class="elemenx-block-actions"><slot name="actions"></slot></span>
+	</header>
+	<div class="elemenx-block-body"><slot></slot></div>
+</section>

@@ -14,7 +14,7 @@ Elemenx.Component('TimeInput', {
 	Placeholder: '',
 	Locale: '',
 	NowLabel: '',
-	DoneLabel: 'OK',
+	DoneLabel: '',
 	Size: 'medium',
 	Shape: 'default',
 	Name: null,
@@ -73,7 +73,7 @@ Elemenx.Component('TimeInput', {
 			return (!!max && low.join(':') > self.Full(max)) || (!!min && high.join(':') < self.Full(min));
 		};
 
-		this.NowText = this.NowLabel || this.Relative(this.Locale || navigator.language || 'en', 'second', 'Now');
+		this.NowText = this.NowLabel || this.Relative(this.Locale || Elemenx.Locale.Language(), 'second', 'Now');
 	},
 
 	Relative: function (locale, unit, fallback) {
@@ -252,11 +252,11 @@ Elemenx.Component('TimeInput', {
 		columns = Array.prototype.slice.call(column.parentNode.querySelectorAll('.elemenx-time-column'));
 		index = columns.indexOf(column);
 
-		if (event.key === 'ArrowDown') target = button.nextElementSibling;
-		else if (event.key === 'ArrowUp') target = button.previousElementSibling;
-		else if (event.key === 'ArrowRight' && columns[index + 1]) target = columns[index + 1].querySelector('.selected') || columns[index + 1].querySelector('button');
-		else if (event.key === 'ArrowLeft' && columns[index - 1]) target = columns[index - 1].querySelector('.selected') || columns[index - 1].querySelector('button');
-		else if (event.key === 'Enter') this.Done();
+		if (Elemenx.Locale.Key(event) === 'ArrowDown') target = button.nextElementSibling;
+		else if (Elemenx.Locale.Key(event) === 'ArrowUp') target = button.previousElementSibling;
+		else if (Elemenx.Locale.Key(event) === 'ArrowRight' && columns[index + 1]) target = columns[index + 1].querySelector('.selected') || columns[index + 1].querySelector('button');
+		else if (Elemenx.Locale.Key(event) === 'ArrowLeft' && columns[index - 1]) target = columns[index - 1].querySelector('.selected') || columns[index - 1].querySelector('button');
+		else if (Elemenx.Locale.Key(event) === 'Enter') this.Done();
 
 		if (!target || target.tagName !== 'BUTTON') return;
 
@@ -264,12 +264,12 @@ Elemenx.Component('TimeInput', {
 
 		target.focus();
 
-		if (event.key === 'ArrowDown' || event.key === 'ArrowUp')
+		if (Elemenx.Locale.Key(event) === 'ArrowDown' || Elemenx.Locale.Key(event) === 'ArrowUp')
 			target.click();
 	},
 
 	InputKey: function (event, node) {
-		if (event.key === 'ArrowDown' && event.altKey) {
+		if (Elemenx.Locale.Key(event) === 'ArrowDown' && event.altKey) {
 			event.preventDefault();
 
 			this.Toggle(event, node);

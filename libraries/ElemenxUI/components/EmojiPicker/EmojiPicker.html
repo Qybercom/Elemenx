@@ -1,28 +1,28 @@
-<div class="elemenx-column elemenx-emoji" role="dialog" [attribute.aria-label]="Label" [attribute.style]="'--elemenx-emoji-columns: ' + Columns" (keydown)="Key">
+<div class="elemenx-column elemenx-emoji" role="dialog" [attribute.aria-label]="(Label || $T('ui.emojiPicker.label'))" [attribute.style]="'--elemenx-emoji-columns: ' + Columns" (keydown)="Key">
 	<div class="elemenx-container elemenx-picker-head elemenx-popup-anchor">
 		<div class="elemenx-input small elemenx-picker-search">
 			<Icon Name="search" />
-			<input class="elemenx-input-control" type="text" autocomplete="off" spellcheck="false" [placeholder]="Placeholder" [value]="Query" aria-label="Search emoji" (input)="Typed" />
-			<button class="elemenx-input-action" type="button" tabindex="-1" aria-label="Clear" *if="Query" (click)="Clear"><Icon Name="close" /></button>
+			<input class="elemenx-input-control" type="text" autocomplete="off" spellcheck="false" [placeholder]="(Placeholder || $T('ui.emojiPicker.placeholder'))" [value]="Query" [attribute.aria-label]="$T('ui.emojiPicker.searchLabel')" (input)="Typed" />
+			<button class="elemenx-input-action" type="button" tabindex="-1" [attribute.aria-label]="$T('ui.common.clear')" *if="Query" (click)="Clear"><Icon Name="close" /></button>
 		</div>
-		<button class="elemenx-emoji-tone" type="button" *if="Tones && Tones !== 'false'" aria-label="Skin tone" aria-haspopup="listbox" [attribute.aria-expanded]="String(ToneOpen)" (click)="ToneMenu">{{ToneSample(Tone)}}</button>
-		<div class="elemenx-popup elemenx-emoji-tones" role="listbox" aria-label="Skin tone" data-placement="bottom-end" *popup="ToneOpen" (dismiss)="ToneClosed">
-			<button class="elemenx-emoji-item" type="button" role="option" *for="tone of ToneList" *key="tone" [class.selected]="tone === Tone" [attribute.aria-selected]="String(tone === Tone)" [attribute.aria-label]="ToneNames[tone]" [attribute.data-tone]="tone" (click)="ToneChosen">{{ToneSample(tone)}}</button>
+		<button class="elemenx-emoji-tone" type="button" *if="Tones && Tones !== 'false'" [attribute.aria-label]="$T('ui.emojiPicker.skinTone')" aria-haspopup="listbox" [attribute.aria-expanded]="String(ToneOpen)" (click)="ToneMenu">{{ToneSample(Tone)}}</button>
+		<div class="elemenx-popup elemenx-emoji-tones" role="listbox" [attribute.aria-label]="$T('ui.emojiPicker.skinTone')" data-placement="bottom-end" *popup="ToneOpen" (dismiss)="ToneClosed">
+			<button class="elemenx-emoji-item" type="button" role="option" *for="tone of ToneList" *key="tone" [class.selected]="tone === Tone" [attribute.aria-selected]="String(tone === Tone)" [attribute.aria-label]="ToneNames[tone] || $T('ui.emojiPicker.tone' + tone)" [attribute.data-tone]="tone" (click)="ToneChosen">{{ToneSample(tone)}}</button>
 		</div>
 	</div>
-	<div class="elemenx-container elemenx-picker-tabs" role="tablist" aria-label="Groups" *if="!Query">
-		<button class="elemenx-picker-tab" type="button" role="tab" *for="section of Sections" *key="section.ID" [class.active]="section.ID === Active" [attribute.aria-selected]="String(section.ID === Active)" [attribute.aria-label]="section.Label" [attribute.title]="section.Label" [attribute.data-group]="section.ID" (click)="Jump"><Icon [name]="section.Icon" /></button>
+	<div class="elemenx-container elemenx-picker-tabs" role="tablist" [attribute.aria-label]="$T('ui.emojiPicker.groups')" *if="!Query">
+		<button class="elemenx-picker-tab" type="button" role="tab" *for="section of Sections" *key="section.ID" [class.active]="section.ID === Active" [attribute.aria-selected]="String(section.ID === Active)" [attribute.aria-label]="$T('ui.emojiPicker.group.' + section.ID)" [attribute.title]="$T('ui.emojiPicker.group.' + section.ID)" [attribute.data-group]="section.ID" (click)="Jump"><Icon [name]="section.Icon" /></button>
 	</div>
 	<div class="elemenx-column fill elemenx-emoji-body" (scroll)="Scrolled">
 		<Spinner *if="Loading" Size="small" />
 		<p class="elemenx-caption elemenx-picker-empty" *if="!Loading && Failed">{{Failed}}</p>
-		<section class="elemenx-emoji-group" *for="section of Sections" *key="section.ID" [attribute.data-group]="section.ID" [attribute.aria-label]="section.Label">
-			<h3 class="elemenx-emoji-title">{{section.Label}}</h3>
+		<section class="elemenx-emoji-group" *for="section of Sections" *key="section.ID" [attribute.data-group]="section.ID" [attribute.aria-label]="$T('ui.emojiPicker.group.' + section.ID)">
+			<h3 class="elemenx-emoji-title">{{$T('ui.emojiPicker.group.' + section.ID)}}</h3>
 			<div class="elemenx-emoji-grid">
 				<button class="elemenx-emoji-item" type="button" tabindex="-1" *for="item of section.Emoji" *key="item.Char" [attribute.data-char]="item.Char" [attribute.aria-label]="item.Label" [attribute.title]="item.Label" (click)="Pick" (mouseenter)="Hover" (focus)="Hover">{{item.Show}}</button>
 			</div>
 		</section>
-		<p class="elemenx-caption elemenx-picker-empty" *if="!Loading && Query && !Sections.length">{{Nothing}}</p>
+		<p class="elemenx-caption elemenx-picker-empty" *if="!Loading && Query && !Sections.length">{{(Nothing || $T('ui.emojiPicker.nothing'))}}</p>
 	</div>
 	<div class="elemenx-container elemenx-emoji-preview" *if="Preview" aria-hidden="true">
 		<span class="elemenx-emoji-preview-char">{{Preview.Show}}</span>

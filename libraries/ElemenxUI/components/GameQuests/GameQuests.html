@@ -1,0 +1,53 @@
+<div class="elemenx-game-quests" [class]="[Variant === 'tracker' ? 'tracker' : 'log']">
+	<div class="elemenx-game-quests-list" role="listbox" *if="Variant !== 'tracker'" [attribute.aria-label]="Label || $T('ui.game.quests')" (keydown)="Key">
+		<div class="elemenx-game-quests-group" *for="group of Groups(Items)" *key="group.Name">
+			<div class="elemenx-game-quests-heading" *if="group.Name">{{group.Name}}</div>
+			<button class="elemenx-game-quest" type="button" role="option" *for="entry of group.Items" *key="entry.Quest.ID" [class]="[entry.Quest.Status || 'active']" [class.active]="IsOpen(Items, Value, entry.Quest)" [attribute.aria-selected]="IsOpen(Items, Value, entry.Quest) ? 'true' : 'false'" [attribute.tabindex]="IsOpen(Items, Value, entry.Quest) ? 0 : -1" [attribute.data-index]="entry.Index" (click)="Pressed">
+				<span class="elemenx-game-quest-mark"><Icon *if="entry.Quest.Status === 'done' || entry.Quest.Status === 'failed' || entry.Quest.Tracked" [name]="entry.Quest.Status === 'done' ? 'check' : entry.Quest.Status === 'failed' ? 'close' : 'star-filled'" /></span>
+				<span class="elemenx-game-quest-title">{{entry.Quest.Title}}</span>
+				<span class="elemenx-game-quest-level" *if="entry.Quest.Level != null">{{entry.Quest.Level}}</span>
+			</button>
+		</div>
+		<div class="elemenx-game-quests-empty" *if="!(Items || []).length">{{Empty || $T('ui.game.noQuests')}}</div>
+	</div>
+	<article class="elemenx-game-quests-detail" *if="Variant !== 'tracker' && Current(Items, Value)">
+		<header class="elemenx-game-quests-header">
+			<h3 class="elemenx-game-quests-title">{{Current(Items, Value).Title}}</h3>
+			<span class="elemenx-game-quests-meta">{{[Current(Items, Value).Group, Current(Items, Value).Level != null ? $T('ui.game.level', {level: Current(Items, Value).Level}) : '', Current(Items, Value).Status === 'done' ? $T('ui.game.questDone') : Current(Items, Value).Status === 'failed' ? $T('ui.game.questFailed') : ''].filter(Boolean).join(' · ')}}</span>
+		</header>
+		<p class="elemenx-game-quests-text" *if="Current(Items, Value).Text">{{Current(Items, Value).Text}}</p>
+		<section class="elemenx-game-section" *if="(Current(Items, Value).Objectives || []).length">
+			<h4 class="elemenx-game-section-title">{{$T('ui.game.objectives')}}</h4>
+			<ul class="elemenx-game-objectives">
+				<li class="elemenx-game-objective" *for="objective of Current(Items, Value).Objectives" *key="$index" [class.done]="Reached(objective)">
+					<span class="elemenx-game-objective-mark"><Icon *if="Reached(objective)" Name="check" /></span>
+					<span class="elemenx-game-objective-label">{{objective.Label}}</span>
+					<span class="elemenx-game-objective-count" *if="objective.Max != null">{{Count(objective)}}</span>
+					<span class="elemenx-game-objective-bar" *if="objective.Max != null" aria-hidden="true"><span [style.width]="Share(objective)"></span></span>
+				</li>
+			</ul>
+		</section>
+		<section class="elemenx-game-section" *if="(Current(Items, Value).Rewards || []).length">
+			<h4 class="elemenx-game-section-title">{{$T('ui.game.rewards')}}</h4>
+			<ul class="elemenx-game-rewards">
+				<li class="elemenx-game-reward" *for="reward of Current(Items, Value).Rewards" *key="$index" [class]="[reward.Rarity || '']" [attribute.title]="RewardItem(reward) ? null : reward.Label" [attribute.tabindex]="RewardItem(reward) ? 0 : null" *itemcard="RewardItem(reward)">
+					<span class="elemenx-game-reward-icon" [style.--elemenx-game-reward-color]="reward.Color || null">
+						<img *if="reward.Image" [src]="reward.Image" alt="" />
+						<Icon *if="!reward.Image && reward.Icon" [name]="reward.Icon" />
+						<span class="elemenx-game-reward-count" *if="reward.Count > 1">{{reward.Count}}</span>
+					</span>
+					<span class="elemenx-game-reward-label">{{reward.Label}}</span>
+				</li>
+			</ul>
+		</section>
+		<div class="elemenx-game-quests-actions" *if="(Current(Items, Value).Status || 'active') === 'active'">
+			<Button Size="small" [icon]="Current(Items, Value).Tracked ? 'star-filled' : 'star'" [label]="Current(Items, Value).Tracked ? $T('ui.game.untrack') : $T('ui.game.track')" [pressed]="!!Current(Items, Value).Tracked" (click)="Track" />
+		</div>
+	</article>
+	<div class="elemenx-game-tracker" *if="Variant === 'tracker'" [attribute.aria-label]="Label || $T('ui.game.quests')" role="region">
+		<button class="elemenx-game-tracker-quest" type="button" *for="quest of Tracked(Items)" *key="quest.ID" [attribute.data-id]="quest.ID" (click)="Followed">
+			<span class="elemenx-game-tracker-title">{{quest.Title}}</span>
+			<span class="elemenx-game-tracker-objective" *for="objective of quest.Objectives || []" *key="$index" [class.done]="Reached(objective)">{{objective.Label}}<span class="elemenx-game-objective-count" *if="objective.Max != null"> {{Count(objective)}}</span></span>
+		</button>
+	</div>
+</div>

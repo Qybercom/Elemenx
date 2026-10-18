@@ -66,7 +66,8 @@ Elemenx.Component('RibbonGroup', {
 			root = this.$Element();
 
 			this.Outside = function (event) {
-				if (!root.contains(event.target) && !(event.target.closest && event.target.closest('.elemenx-popup')))
+				var target = event.composedPath ? event.composedPath()[0] : event.target;
+				if (!root.contains(target) && !(target.closest && target.closest('.elemenx-popup')))
 					self.Close(false);
 			};
 

@@ -4,7 +4,7 @@
 			<Icon *if="tab.Icon" [name]="tab.Icon" />
 			<span class="elemenx-tab-label">{{tab.Label}}</span>
 			<span class="elemenx-badge" *if="tab.Badge != null && tab.Badge !== ''">{{tab.Badge}}</span>
-			<button class="elemenx-tab-close" type="button" tabindex="-1" aria-label="Close tab" *if="tab.Closable || Closable" (click)="Close"><Icon Name="close" Size="12" /></button>
+			<button class="elemenx-tab-close" type="button" tabindex="-1" [attribute.aria-label]="$T('ui.tabs.close')" *if="tab.Closable || Closable" (click)="Close"><Icon Name="close" Size="12" /></button>
 		</div>
 	</div>
 	<div class="elemenx-tabs-extra"><slot></slot></div>

@@ -1,0 +1,12 @@
+<div class="elemenx-game-inventory" [class.holding]="Held !== -1" [attribute.style]="'--elemenx-game-inventory-columns: ' + Columns + ';'">
+	<div class="elemenx-game-inventory-grid" role="listbox" [attribute.aria-label]="Label || $T('ui.game.inventory')" (keydown)="Key">
+		<div class="elemenx-game-inventory-cell" role="option" *for="cell of Cells(Items, Slots)" *key="cell.Index" [attribute.data-index]="cell.Index" [attribute.tabindex]="cell.Index === Selected ? 0 : -1" [attribute.aria-selected]="cell.Index === Selected ? 'true' : 'false'" [attribute.aria-label]="cell.Item ? cell.Item.Name + (cell.Item.Count > 1 ? ' × ' + cell.Item.Count : '') : $T('ui.game.emptySlot')" [class]="[cell.Item ? 'filled' : 'empty', cell.Item ? cell.Item.Rarity || 'common' : '', cell.Index === Held ? 'held' : '', cell.Item && cell.Item.Active ? 'active' : ''].concat(cell.Item ? Classes(cell.Item.Class) : [])" [attribute.style]="cell.Item ? '--elemenx-game-item-color: ' + ItemColor(cell.Item) + ';' : null" *draggable="{Data: {Item: cell.Item, From: Place(cell.Index)}, Type: 'game-item', Disabled: !cell.Item}" *droppable="{Accept: ['game-item']}" (click)="Clicked" (dblclick)="Used" (focus)="Focused" (blur)="Blurred" (mouseenter)="Hovered" (mouseleave)="Left" (dragbegin)="DragBegan" (dragfinish)="DragFinished" (dropped)="Dropped">
+			<img class="elemenx-game-inventory-image" *if="cell.Item && cell.Item.Image" [src]="cell.Item.Image" alt="" draggable="false" />
+			<Icon *if="cell.Item && cell.Item.Icon && !cell.Item.Image" [name]="cell.Item.Icon" Size="28" />
+			<span class="elemenx-game-inventory-badge" *if="cell.Item && cell.Item.Badge">{{cell.Item.Badge}}</span>
+			<span class="elemenx-game-inventory-mark" aria-hidden="true"></span>
+			<span class="elemenx-game-inventory-count" *if="cell.Item && cell.Item.Count > 1">{{cell.Item.Count}}</span>
+		</div>
+	</div>
+	<GameItemCard [item]="Card !== -1 ? ItemAt(Card) : null" [place]="CardStyle" />
+</div>

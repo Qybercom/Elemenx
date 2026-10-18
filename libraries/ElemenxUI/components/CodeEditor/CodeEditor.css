@@ -1,0 +1,416 @@
+.elemenx-code-editor {
+	--elemenx-code-line: 1.5;
+	--elemenx-code-pad: 8px;
+	--elemenx-code-gutter: calc(var(--elemenx-code-digits, 2) * 1ch + 24px);
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+	background: var(--elemenx-surface);
+	border: 1px solid var(--elemenx-border-strong);
+	border-radius: var(--elemenx-radius);
+	color: var(--elemenx-text);
+	font-family: var(--elemenx-font-mono), monospace;
+	font-size: 13px;
+	line-height: var(--elemenx-code-line);
+}
+
+.elemenx-code-editor:hover {
+	border-color: rgba(var(--elemenx-text-rgb), 0.4);
+}
+
+.elemenx-code-editor:focus-within {
+	border-color: var(--elemenx-accent);
+	box-shadow: 0 0 0 2px rgba(var(--elemenx-accent-rgb), 0.24);
+}
+
+.elemenx-code-editor.invalid {
+	border-color: var(--elemenx-danger);
+}
+
+.elemenx-code-editor.invalid:focus-within {
+	box-shadow: 0 0 0 2px rgba(var(--elemenx-danger-rgb), 0.24);
+}
+
+.elemenx-code-editor.readonly {
+	background: var(--elemenx-surface-raised);
+}
+
+.elemenx-code-editor.disabled {
+	opacity: 0.48;
+	pointer-events: none;
+}
+
+.elemenx-code-editor-scroll {
+	height: calc(var(--elemenx-code-rows, 12) * var(--elemenx-code-line) * 1em + 2 * var(--elemenx-code-pad));
+	overflow: auto;
+	border-radius: inherit;
+}
+
+.elemenx-code-editor.auto-size .elemenx-code-editor-scroll {
+	height: auto;
+	min-height: calc(var(--elemenx-code-line) * 1em + 2 * var(--elemenx-code-pad));
+	overflow-y: hidden;
+}
+
+.elemenx-code-editor-content {
+	position: relative;
+	width: max-content;
+	min-width: 100%;
+	min-height: 100%;
+}
+
+.elemenx-code-editor.wrap .elemenx-code-editor-content {
+	width: auto;
+}
+
+.elemenx-code-editor-lines {
+	padding-block: var(--elemenx-code-pad);
+	white-space: pre;
+	tab-size: var(--elemenx-code-tab, 4);
+}
+
+.elemenx-code-editor-row {
+	display: flex;
+	min-height: calc(var(--elemenx-code-line) * 1em);
+}
+
+.elemenx-code-editor-number {
+	position: sticky;
+	inset-inline-start: 0;
+	z-index: 3;
+	flex: none;
+	box-sizing: border-box;
+	width: var(--elemenx-code-gutter);
+	padding-inline-end: 12px;
+	color: var(--elemenx-text-muted);
+	text-align: end;
+	user-select: none;
+}
+
+.elemenx-code-editor-lines,
+.elemenx-code-editor-number {
+	background: var(--elemenx-surface);
+}
+
+.elemenx-code-editor.readonly .elemenx-code-editor-lines,
+.elemenx-code-editor.readonly .elemenx-code-editor-number {
+	background: var(--elemenx-surface-raised);
+}
+
+.elemenx-code-editor:not(.numbered) .elemenx-code-editor-number {
+	display: none;
+}
+
+.elemenx-code-editor-text {
+	flex: 1 1 auto;
+	min-width: 0;
+	padding-inline: var(--elemenx-code-pad);
+}
+
+.elemenx-code-editor.wrap .elemenx-code-editor-text {
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
+}
+
+.elemenx-code-editor:focus-within .elemenx-code-editor-row.active .elemenx-code-editor-text {
+	background: rgba(var(--elemenx-text-rgb), 0.05);
+}
+
+.elemenx-code-editor:focus-within .elemenx-code-editor-row.active .elemenx-code-editor-number {
+	color: var(--elemenx-text);
+}
+
+.elemenx-code-editor-row.marked.error .elemenx-code-editor-number {
+	color: var(--elemenx-danger);
+	font-weight: var(--elemenx-font-weight-bold);
+}
+
+.elemenx-code-editor-row.marked.warning .elemenx-code-editor-number {
+	color: var(--elemenx-warning);
+	font-weight: var(--elemenx-font-weight-bold);
+}
+
+.elemenx-code-editor-row.marked.info .elemenx-code-editor-number {
+	color: var(--elemenx-info);
+}
+
+.elemenx-code-editor-input {
+	position: absolute;
+	inset: 0;
+	z-index: 2;
+	box-sizing: border-box;
+	width: 100%;
+	height: 100%;
+	margin: 0;
+	padding-block: var(--elemenx-code-pad);
+	padding-inline: calc(var(--elemenx-code-gutter) + var(--elemenx-code-pad)) var(--elemenx-code-pad);
+	overflow: hidden;
+	background: transparent;
+	border: 0;
+	outline: none;
+	color: transparent;
+	-webkit-text-fill-color: transparent;
+	caret-color: var(--elemenx-text);
+	font: inherit;
+	line-height: inherit;
+	letter-spacing: inherit;
+	white-space: pre;
+	tab-size: var(--elemenx-code-tab, 4);
+	resize: none;
+}
+
+.elemenx-code-editor:not(.numbered) .elemenx-code-editor-input {
+	padding-inline-start: var(--elemenx-code-pad);
+}
+
+.elemenx-code-editor.wrap .elemenx-code-editor-input {
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
+}
+
+.elemenx-code-editor-input::placeholder {
+	color: var(--elemenx-text-muted);
+	-webkit-text-fill-color: var(--elemenx-text-muted);
+	opacity: 1;
+}
+
+.elemenx-code-editor-input::selection {
+	background: rgba(var(--elemenx-info-rgb), 0.32);
+}
+
+.elemenx-code-editor-marker {
+	text-decoration: underline wavy var(--elemenx-danger);
+	text-decoration-skip-ink: none;
+	text-underline-offset: 3px;
+}
+
+.elemenx-code-editor-marker.warning {
+	text-decoration-color: var(--elemenx-warning);
+}
+
+.elemenx-code-editor-marker.info {
+	text-decoration-color: var(--elemenx-info);
+}
+
+.elemenx-code-editor-match {
+	background: rgba(var(--elemenx-warning-rgb), 0.24);
+	border-radius: var(--elemenx-radius);
+}
+
+.elemenx-code-editor-match.current {
+	background: rgba(var(--elemenx-warning-rgb), 0.48);
+	outline: 1px solid var(--elemenx-warning);
+}
+
+.elemenx-code-editor-bracket {
+	background: rgba(var(--elemenx-text-muted-rgb), 0.16);
+	outline: 1px solid rgba(var(--elemenx-text-muted-rgb), 0.56);
+}
+
+.elemenx-code-editor-popup {
+	position: absolute;
+	z-index: 20;
+	min-width: 200px;
+	max-width: 360px;
+	max-height: 240px;
+	overflow: auto;
+	background: var(--elemenx-surface);
+	border: 1px solid var(--elemenx-border);
+	border-radius: var(--elemenx-radius);
+	box-shadow: var(--elemenx-shadow);
+}
+
+.elemenx-code-editor-suggestions {
+	margin: 0;
+	padding: 4px;
+	list-style: none;
+}
+
+.elemenx-code-editor-suggestion {
+	display: flex;
+	align-items: baseline;
+	gap: 8px;
+	padding: 2px 8px;
+	border-radius: var(--elemenx-radius);
+	white-space: nowrap;
+	cursor: pointer;
+}
+
+.elemenx-code-editor-suggestion:hover,
+.elemenx-code-editor-suggestion.active {
+	background: var(--elemenx-surface-hover);
+}
+
+.elemenx-code-editor-suggestion-kind {
+	min-width: 1.5em;
+	color: var(--elemenx-info);
+	font-size: 11px;
+}
+
+.elemenx-code-editor-suggestion-detail {
+	margin-inline-start: auto;
+	overflow: hidden;
+	color: var(--elemenx-text-muted);
+	font-size: var(--elemenx-font-size-small);
+	text-overflow: ellipsis;
+}
+
+.elemenx-code-editor-hint {
+	position: absolute;
+	z-index: 21;
+	max-width: 420px;
+	padding: 6px 10px;
+	background: var(--elemenx-surface-raised);
+	border: 1px solid var(--elemenx-border);
+	border-radius: var(--elemenx-radius);
+	box-shadow: var(--elemenx-shadow);
+	font-family: var(--elemenx-font), sans-serif;
+	font-size: var(--elemenx-font-size-small);
+	white-space: pre-line;
+	pointer-events: none;
+}
+
+.elemenx-code-editor-print {
+	border: 0;
+	font-size: 11px;
+}
+
+.elemenx-code-editor-print .elemenx-code-editor-text {
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
+}
+
+.elemenx-code-editor-print .elemenx-code-editor-number {
+	position: static;
+}
+
+.elemenx-code-editor-print .elemenx-code-editor-row {
+	break-inside: avoid;
+}
+
+/* The diff view: the lines removed and added on their colors, the words changed in them marked. */
+.elemenx-code-diff {
+	height: calc(var(--elemenx-code-rows, 12) * var(--elemenx-code-line) * 1em + 2 * var(--elemenx-code-pad));
+	overflow: auto;
+	line-height: var(--elemenx-code-line);
+	outline: none;
+}
+
+.elemenx-code-editor.auto-size .elemenx-code-diff {
+	height: auto;
+}
+
+.elemenx-code-diff:focus-visible {
+	box-shadow: inset 0 0 0 2px var(--elemenx-focus);
+}
+
+.elemenx-code-diff-stats {
+	position: sticky;
+	z-index: 1;
+	top: 0;
+	padding: 4px 12px;
+	background: var(--elemenx-surface-raised);
+	border-bottom: 1px solid var(--elemenx-border);
+	font-family: var(--elemenx-font), sans-serif;
+	font-size: var(--elemenx-font-size-small);
+}
+
+.elemenx-code-diff-stats .added {
+	color: var(--elemenx-success);
+}
+
+.elemenx-code-diff-stats .removed {
+	color: var(--elemenx-danger);
+}
+
+.elemenx-code-diff-row {
+	display: grid;
+	grid-template-columns: 48px 48px 20px minmax(0, 1fr);
+	min-width: max-content;
+}
+
+.elemenx-code-diff-row.split {
+	grid-template-columns: 48px minmax(0, 1fr) 48px minmax(0, 1fr);
+	min-width: 0;
+}
+
+.elemenx-code-diff-number {
+	padding: 0 8px;
+	color: var(--elemenx-text-muted);
+	text-align: end;
+	user-select: none;
+}
+
+.elemenx-code-diff-sign {
+	color: var(--elemenx-text-muted);
+	text-align: center;
+	user-select: none;
+}
+
+.elemenx-code-diff-code {
+	padding-inline-end: 12px;
+	white-space: pre;
+	tab-size: 4;
+}
+
+.elemenx-code-diff-row.split .elemenx-code-diff-code {
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.elemenx-code-diff-row.remove,
+.elemenx-code-diff-code.remove,
+.elemenx-code-diff-number.remove {
+	background: rgba(var(--elemenx-danger-rgb), 0.12);
+}
+
+.elemenx-code-diff-row.add,
+.elemenx-code-diff-code.add,
+.elemenx-code-diff-number.add {
+	background: rgba(var(--elemenx-success-rgb), 0.12);
+}
+
+.elemenx-code-diff-row.remove .elemenx-code-diff-sign {
+	color: var(--elemenx-danger);
+}
+
+.elemenx-code-diff-row.add .elemenx-code-diff-sign {
+	color: var(--elemenx-success);
+}
+
+.elemenx-code-diff-row.remove .elemenx-code-diff-word,
+.elemenx-code-diff-code.remove .elemenx-code-diff-word {
+	background: rgba(var(--elemenx-danger-rgb), 0.32);
+	border-radius: var(--elemenx-radius-small);
+}
+
+.elemenx-code-diff-row.add .elemenx-code-diff-word,
+.elemenx-code-diff-code.add .elemenx-code-diff-word {
+	background: rgba(var(--elemenx-success-rgb), 0.32);
+	border-radius: var(--elemenx-radius-small);
+}
+
+.elemenx-code-diff-code.empty,
+.elemenx-code-diff-number.empty {
+	background: var(--elemenx-surface-raised);
+}
+
+/* A run of unchanged lines, folded: a press opens it. */
+.elemenx-code-diff-fold {
+	display: block;
+	width: 100%;
+	padding: 2px 12px;
+	background: rgba(var(--elemenx-accent-rgb), 0.08);
+	border: 0;
+	border-block: 1px solid var(--elemenx-border);
+	color: var(--elemenx-text-muted);
+	font-family: var(--elemenx-font), sans-serif;
+	font-size: var(--elemenx-font-size-small);
+	text-align: start;
+	cursor: pointer;
+}
+
+.elemenx-code-diff-fold:hover {
+	color: var(--elemenx-text);
+}

@@ -18,3 +18,60 @@
 	padding: 0;
 	overflow: hidden;
 }
+
+.elemenx-chat-emoji {
+	display: inline-flex;
+	flex: none;
+}
+
+.elemenx-input.elemenx-chat-composer {
+	position: relative;
+}
+
+.elemenx-chat-hints {
+	position: absolute;
+	inset-inline-start: 12px;
+	bottom: calc(100% + 6px);
+	z-index: 10;
+	display: flex;
+	gap: 2px;
+	max-width: calc(100% - 24px);
+	padding: 4px;
+	overflow-x: auto;
+	background: var(--elemenx-surface);
+	border: 1px solid var(--elemenx-border);
+	border-radius: var(--elemenx-radius-large);
+	box-shadow: var(--elemenx-shadow);
+}
+
+.elemenx-chat-hint {
+	display: inline-flex;
+	flex: none;
+	align-items: center;
+	justify-content: center;
+	width: 36px;
+	height: 36px;
+	padding: 0;
+	background: transparent;
+	border: 0;
+	border-radius: var(--elemenx-radius);
+	font-size: 22px;
+	line-height: 1;
+	cursor: pointer;
+}
+
+.elemenx-chat-hint:hover,
+.elemenx-chat-hint.active {
+	background: var(--elemenx-surface-hover);
+}
+
+.elemenx-chat-hint.sticker {
+	width: 72px;
+	height: 72px;
+}
+
+.elemenx-chat-hint.sticker img {
+	width: 64px;
+	height: 64px;
+	object-fit: contain;
+}

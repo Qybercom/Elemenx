@@ -1,7 +1,7 @@
-<div class="elemenx-nav" role="navigation" [class.collapsed]="Collapsed" [attribute.aria-label]="Label">
+<div class="elemenx-nav" role="navigation" [class.collapsed]="Collapsed" [attribute.aria-label]="(Label || $T('ui.navList.label'))">
 	<div class="elemenx-input small elemenx-nav-search" *if="Searchable && !Collapsed">
 		<Icon Name="search" />
-		<input class="elemenx-input-control" type="search" placeholder="Search" autocomplete="off" [value]="Filter" (input)="Search" />
+		<input class="elemenx-input-control" type="search" [attribute.placeholder]="$T('ui.common.search')" autocomplete="off" [value]="Filter" (input)="Search" />
 	</div>
 	<div class="elemenx-nav-rows" role="tree">
 		<div class="elemenx-nav-row" role="treeitem" tabindex="0" *for="row of Rows(Items, Expanded, Filter)" *key="row.Item.ID" [class.active]="String(row.Item.ID) === String(Value)" [class.group]="row.Group" [class.disabled]="!!row.Item.Disabled" [style.--elemenx-nav-depth]="row.Depth" [attribute.aria-expanded]="row.Group ? String(row.Open) : null" [attribute.aria-current]="String(row.Item.ID) === String(Value) ? 'page' : null" [attribute.title]="Collapsed ? row.Item.Label : null" [attribute.data-id]="row.Item.ID" (click)="Pick" (keydown)="Key">

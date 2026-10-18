@@ -1,0 +1,21 @@
+<div class="elemenx-game-leaderboard" role="table" [attribute.aria-label]="Label || $T('ui.game.leaderboard')" [class.selectable]="!!Selectable && Selectable !== 'false'">
+	<div class="elemenx-game-leaderboard-head" role="row">
+		<span role="columnheader">#</span>
+		<span role="columnheader">{{$T('ui.game.player')}}</span>
+		<span role="columnheader" class="elemenx-game-leaderboard-score">{{ScoreLabel || $T('ui.game.score')}}</span>
+	</div>
+	<div class="elemenx-game-leaderboard-row" role="row" *for="row of Rows(Items, Limit)" *key="row.Gap ? 'gap' : row.Item.ID || row.Index" [class]="[row.Gap ? 'gap' : Medal(row.Rank)]" [class.me]="!row.Gap && !!row.Item.Me" [attribute.data-index]="row.Gap ? null : row.Index" [attribute.tabindex]="!row.Gap && Selectable && Selectable !== 'false' ? 0 : null" (click)="Pressed">
+		<span class="elemenx-game-leaderboard-gap" role="cell" *if="row.Gap">…</span>
+		<span class="elemenx-game-leaderboard-rank" role="cell" *if="!row.Gap">{{row.Rank}}</span>
+		<span class="elemenx-game-leaderboard-player" role="cell" *if="!row.Gap">
+			<img class="elemenx-game-leaderboard-avatar" *if="row.Item.Avatar" [src]="row.Item.Avatar" alt="" />
+			<span class="elemenx-game-leaderboard-avatar" *if="!row.Item.Avatar && row.Item.Icon"><Icon [name]="row.Item.Icon" /></span>
+			<span class="elemenx-game-leaderboard-name">
+				<strong>{{row.Item.Name}}</strong>
+				<span class="elemenx-game-leaderboard-note" *if="row.Item.Note">{{row.Item.Note}}</span>
+			</span>
+			<span class="elemenx-game-leaderboard-change" *if="row.Item.Change" [class.up]="row.Item.Change > 0" [class.down]="row.Item.Change < 0" [attribute.aria-label]="row.Item.Change > 0 ? $T('ui.game.rose', {count: row.Item.Change}) : $T('ui.game.fell', {count: -row.Item.Change})">{{row.Item.Change > 0 ? '▲' + row.Item.Change : '▼' + -row.Item.Change}}</span>
+		</span>
+		<span class="elemenx-game-leaderboard-score" role="cell" *if="!row.Gap">{{Score(row.Item.Score)}}</span>
+	</div>
+</div>

@@ -1,0 +1,13 @@
+<section class="elemenx-game-panel elemenx-game-dialogue" tabindex="-1" [class.done]="Done" [attribute.aria-label]="Speaker || $T('ui.game.dialogue')" (keydown)="Key">
+	<img class="elemenx-game-dialogue-portrait" *if="Portrait" [src]="Portrait" alt="" />
+	<div class="elemenx-game-dialogue-body">
+		<strong class="elemenx-game-dialogue-speaker" *if="Speaker">{{Speaker}}</strong>
+		<p class="elemenx-game-dialogue-text" aria-hidden="true" (click)="Pressed">{{Shown}}<span class="elemenx-game-dialogue-caret" *if="!Done"></span></p>
+		<p class="elemenx-visually-hidden" aria-live="polite">{{Text}}</p>
+		<div class="elemenx-game-dialogue-choices" role="group" *if="Done && Choices.length">
+			<button class="elemenx-game-dialogue-choice" type="button" *for="choice of Choices" [attribute.data-index]="$index" [disabled]="!!choice.Disabled" (click)="Chosen"><span class="elemenx-game-dialogue-number">{{$index + 1}}</span>{{choice.Text}}</button>
+		</div>
+		<button class="elemenx-game-dialogue-next" type="button" *if="Done && !Choices.length" (click)="Next">{{$T('ui.game.continue')}}</button>
+	</div>
+	<i class="elemenx-game-dialogue-sync" hidden *mount="Sync(Text)"></i>
+</section>

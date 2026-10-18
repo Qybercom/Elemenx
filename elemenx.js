@@ -13,6 +13,8 @@
  *   Reactive                 reactive state: proxies, dependency tracking, effects, batching
  *   Bundle                   Elemenx.Bundle: production bundle registry, resolved before Discovery
  *   Resource                 Elemenx.Resource: files embedded by a bundle, fetched otherwise
+ *   Locale                   Elemenx.Locale: phrases by key in the language of the page, $T of the templates
+ *   Style                    Elemenx.Style: the stylesheets of the document and of the shadow roots of Applications
  *   Discovery                development loading of index.js graphs and entity scripts
  *   Library                  Elemenx.Library and the Application $Use declaration
  *   Service and Guard        Elemenx.Service, Elemenx.Guard and Application-owned service instances
@@ -29,11 +31,30 @@
  *   ServiceWorker            Elemenx.ServiceWorker
  *   Owner resources          wiring and release of the facades owned by Services, Components and Applications
  *   Application              Elemenx.Application: ownership, mounting, startup lifecycle
+ *   Export                   Elemenx.Version, Elemenx.NoConflict; the window gets this copy, an isolated build keeps it
  *   ServiceWorker bootstrap  runs inside a service worker started by Elemenx.ServiceWorker
  */
 (function () {
+	/*
+	 * Elemenx: the namespace of this copy of the framework. The window gets it last (see Export), unless a copy of the
+	 * same version is there already: then this one stops here and the page keeps the first.
+	 */
+	var Version = '0.9.2';
+	var Elemenx = {};
+	if (typeof ElemenxIsolated !== 'object' && (typeof globalThis !== 'undefined' ? globalThis : self).Elemenx && (typeof globalThis !== 'undefined' ? globalThis : self).Elemenx.Version === Version) return;
+
 	/* Runtime */
 	var Runtime = {};
+
+	/*
+	 * An isolated build (a widget on a page of its own) keeps the html element of the page as it is.
+	 */
+	Runtime.Isolated = typeof ElemenxIsolated === 'object' && !!ElemenxIsolated;
+
+	/*
+	 * The hosts of the Applications that render in a shadow root: they take the lang and dir of Elemenx.Locale.
+	 */
+	Runtime.ShadowHosts = [];
 
 	/*
 	 * The URL the workers load the framework from; a framework inline in its page (a single-file build) gives them a
@@ -276,8 +297,6 @@
 
 		var runtimeID = null;
 
-		global.Elemenx = global.Elemenx || {};
-
 		function RuntimeID () {
 			if (runtimeID)
 				return runtimeID;
@@ -308,21 +327,21 @@
 			return runtimeID;
 		}
 
-		global.Elemenx.RuntimeID = RuntimeID;
-		global.Elemenx.StartedAt = function () {
+		Elemenx.RuntimeID = RuntimeID;
+		Elemenx.StartedAt = function () {
 			return new Date(Runtime.StartedAt.getTime());
 		};
 
-		global.Elemenx.Title = function (value) {
+		Elemenx.Title = function (value) {
 			if (!Runtime.HasDOM)
-				return arguments.length ? global.Elemenx : '';
+				return arguments.length ? Elemenx : '';
 
 			if (!arguments.length)
 				return global.document.title;
 
 			global.document.title = value == null ? '' : String(value);
 
-			return global.Elemenx;
+			return Elemenx;
 		};
 
 		RuntimeID();
@@ -696,7 +715,7 @@
 				}
 			}
 
-			return global.Elemenx;
+			return Elemenx;
 		}
 
 		function resolvedName (type, name) {
@@ -765,7 +784,7 @@
 			Load: load,
 			LoadType: loadType
 		};
-		global.Elemenx.Bundle = install;
+		Elemenx.Bundle = install;
 	})(typeof globalThis !== 'undefined' ? globalThis : self);
 
 	/* Resource */
@@ -836,7 +855,527 @@
 			request.send();
 		};
 
-		global.Elemenx.Resource = resource;
+		Elemenx.Resource = resource;
+	})(typeof globalThis !== 'undefined' ? globalThis : self);
+
+	/* Locale */
+	(function (global) {
+		'use strict';
+
+		var own = Runtime.Own;
+		var dictionaries = {};
+		var sources = [];
+		var loaded = {};
+		var listeners = [];
+		var fallback = 'en';
+		var plurals = ['zero', 'one', 'two', 'few', 'many', 'other'];
+		var rightToLeft = ['ar', 'arc', 'ckb', 'dv', 'fa', 'he', 'iw', 'ks', 'ps', 'sd', 'ug', 'ur', 'yi'];
+		var state = Runtime.Reactive({Language: normalize(Runtime.HasDOM && global.document.documentElement.lang) || 'en', Version: 0});
+
+		function normalize (language) {
+			return String(language || '').replace(/_/g, '-').toLowerCase();
+		}
+
+		/* The languages a phrase is looked up in: pt-br, then pt, then the fallback language. */
+		function chain (language) {
+			var result = [];
+			var code = normalize(language);
+
+			while (code) {
+				if (result.indexOf(code) === -1)
+					result.push(code);
+
+				code = code.indexOf('-') === -1 ? '' : code.substring(0, code.lastIndexOf('-'));
+			}
+
+			if (result.indexOf(fallback) === -1)
+				result.push(fallback);
+
+			return result;
+		}
+
+		/* An object whose every key is a plural category holds the forms of one phrase. */
+		function pluralForms (value) {
+			var keys = Object.keys(value);
+			var i = 0;
+
+			if (!keys.length) return false;
+
+			while (i < keys.length) {
+				if (plurals.indexOf(keys[i]) === -1 || typeof value[keys[i]] !== 'string') return false;
+
+				i++;
+			}
+
+			return true;
+		}
+
+		/* Nested groups give keys with dots: {picker: {search: 'Search'}} is picker.search. */
+		function flatten (entries, prefix, target) {
+			var key;
+			var value;
+
+			for (key in entries) {
+				if (!own(entries, key)) continue;
+
+				value = entries[key];
+
+				if (typeof value === 'string' || (value && typeof value === 'object' && pluralForms(value))) target[prefix + key] = value;
+				else if (value && typeof value === 'object') flatten(value, prefix + key + '.', target);
+			}
+
+			return target;
+		}
+
+		function add (language, entries) {
+			var code = normalize(language);
+			var flat;
+			var key;
+
+			if (!code || !entries || typeof entries !== 'object')
+				throw new Error('Elemenx.Locale.Add expects (language, entries)');
+
+			flat = flatten(entries, '', {});
+			dictionaries[code] = dictionaries[code] || {};
+
+			for (key in flat) {
+				if (own(flat, key))
+					dictionaries[code][key] = flat[key];
+			}
+
+			Runtime.BatchReactive(function () {
+				state.Version++;
+			});
+		}
+
+		function category (language, count) {
+			if (global.Intl && typeof global.Intl.PluralRules === 'function') {
+				try {
+					return new global.Intl.PluralRules(language).select(count);
+				}
+				catch (error) {
+					return count === 1 ? 'one' : 'other';
+				}
+			}
+
+			return count === 1 ? 'one' : 'other';
+		}
+
+		function text (key, params) {
+			var languages;
+			var value;
+			var found = null;
+			var i = 0;
+
+			/* Both are read for the reactive tracking: a binding that shows a phrase follows the language and the dictionaries. */
+			languages = chain(state.Language);
+
+			if (!state.Version)
+				return String(key);
+
+			while (i < languages.length && found === null) {
+				if (dictionaries[languages[i]] && own(dictionaries[languages[i]], key))
+					found = {Language: languages[i], Value: dictionaries[languages[i]][key]};
+
+				i++;
+			}
+
+			if (found === null)
+				return String(key);
+
+			value = found.Value;
+
+			if (typeof value === 'object')
+				value = value[category(found.Language, Number(params && params.count))] || value.other || '';
+
+			return params ? String(value).replace(/\{([A-Za-z0-9_$]+)\}/g, function (all, name) {
+				return own(params, name) && params[name] !== null && params[name] !== undefined ? String(params[name]) : all;
+			}) : String(value);
+		}
+
+		function direction (language) {
+			var code = normalize(language === undefined ? state.Language : language);
+			var info;
+
+			if (global.Intl && typeof global.Intl.Locale === 'function') {
+				try {
+					info = new global.Intl.Locale(code);
+					info = typeof info.getTextInfo === 'function' ? info.getTextInfo() : info.textInfo;
+
+					if (info && info.direction) return info.direction;
+				}
+				catch (error) {
+					info = null;
+				}
+			}
+
+			return rightToLeft.indexOf(code.split('-')[0]) === -1 ? 'ltr' : 'rtl';
+		}
+
+		/*
+		 * Loads the dictionaries of the languages of language from every source, once each; a file that is not there is
+		 * a language without phrases of that source. Calls back when all of them are in.
+		 */
+		function prepare (language, callback) {
+			var jobs = [];
+			var languages = chain(language);
+			var complete;
+			var i = 0;
+			var j;
+
+			while (i < languages.length) {
+				j = 0;
+
+				while (j < sources.length) {
+					if (!loaded[sources[j].URL + '|' + languages[i]] && (!sources[j].Languages || sources[j].Languages.indexOf(languages[i]) !== -1))
+						jobs.push({Source: sources[j].URL, Language: languages[i]});
+
+					j++;
+				}
+
+				i++;
+			}
+
+			if (!jobs.length) {
+				callback(null);
+
+				return;
+			}
+
+			complete = Runtime.Countdown(jobs.length, callback);
+
+			jobs.forEach(function (job) {
+				var url = job.Source.replace(/\{language\}/g, job.Language);
+
+				loaded[job.Source + '|' + job.Language] = true;
+
+				Elemenx.Resource.Load(url, function (error, source) {
+					var entries;
+
+					if (error) {
+						complete(null);
+
+						return;
+					}
+
+					try {
+						entries = JSON.parse(source);
+					}
+					catch (parseError) {
+						complete(new Error('Elemenx Locale dictionary is not JSON: ' + url));
+
+						return;
+					}
+
+					add(job.Language, entries);
+
+					complete(null);
+				});
+			});
+		}
+
+		function notify () {
+			var list = listeners.slice();
+			var i = 0;
+
+			while (i < list.length) {
+				try {
+					list[i](state.Language);
+				}
+				catch (exception) {
+					Runtime.Report(exception);
+				}
+
+				i++;
+			}
+		}
+
+		/*
+		 * Elemenx.Locale: the phrases of the Applications and their Libraries in the language of the page. A key names a
+		 * phrase ('picker.search'); its text comes from the dictionary of the language, of its base language (pt for
+		 * pt-BR), of the fallback language (en), and is the key itself when none has it. Templates show phrases with
+		 * $T(key, params): they follow the language.
+		 */
+		Elemenx.Locale = {
+			Language: function (language, callback) {
+				var code;
+
+				if (!arguments.length)
+					return state.Language;
+
+				code = normalize(language);
+
+				if (!code)
+					throw new Error('Elemenx.Locale.Language expects (language) or (language, callback)');
+
+				prepare(code, function (error) {
+					if (!error && code !== state.Language) {
+						Runtime.BatchReactive(function () {
+							state.Language = code;
+							state.Version++;
+						});
+
+						if (Runtime.HasDOM) {
+							Runtime.ShadowHosts.concat(Runtime.Isolated ? [] : [global.document.documentElement]).forEach(function (node) {
+								node.lang = code;
+								node.dir = direction(code);
+							});
+						}
+
+						notify();
+					}
+
+					if (typeof callback === 'function') callback(error || null);
+					else if (error) Runtime.Report(error);
+				});
+
+				return state.Language;
+			},
+			Fallback: function (language) {
+				if (!arguments.length) return fallback;
+
+				fallback = normalize(language) || 'en';
+
+				Runtime.BatchReactive(function () {
+					state.Version++;
+				});
+
+				return fallback;
+			},
+			Add: add,
+			Text: function (key, params) {
+				if (typeof key !== 'string' || !key)
+					throw new Error('Elemenx.Locale.Text expects (key) or (key, params)');
+
+				return text(key, params);
+			},
+			Has: function (key) {
+				var languages = chain(state.Language);
+				var i = 0;
+
+				while (i < languages.length) {
+					if (dictionaries[languages[i]] && own(dictionaries[languages[i]], key)) return true;
+
+					i++;
+				}
+
+				return false;
+			},
+			Direction: direction,
+			/*
+			 * The key of a keyboard event as the direction of its element reads it: on a right-to-left element the arrows to
+			 * the left and to the right swap, so a handler written for left to right keeps its meaning (the next item is
+			 * the one toward the end of the line).
+			 */
+			Key: function (event) {
+				var key = event && event.key;
+				var target = event && event.target;
+
+				if (key !== 'ArrowLeft' && key !== 'ArrowRight') return key;
+				if (!target || target.nodeType !== 1 || typeof global.getComputedStyle !== 'function') return key;
+				if (global.getComputedStyle(target).direction !== 'rtl') return key;
+
+				return key === 'ArrowLeft' ? 'ArrowRight' : 'ArrowLeft';
+			},
+			/* A place of dictionaries: a URL with {language}; languages lists the ones it has (any one is asked for otherwise). */
+			Source: function (url, languages) {
+				var i = 0;
+
+				if (typeof url !== 'string' || url.indexOf('{language}') === -1 || (languages !== undefined && !Array.isArray(languages)))
+					throw new Error('Elemenx.Locale.Source expects (url with {language}) or (url, languages)');
+
+				url = Runtime.AbsoluteURL(url.replace(/\{language\}/g, '__language__')).replace(/__language__/g, '{language}');
+
+				while (i < sources.length) {
+					if (sources[i].URL === url) return;
+
+					i++;
+				}
+
+				sources.push({URL: url, Languages: languages ? languages.map(normalize) : null});
+			},
+			OnChange: function (callback) {
+				if (typeof callback !== 'function')
+					throw new Error('Elemenx.Locale.OnChange expects (callback)');
+
+				listeners.push(callback);
+
+				return callback;
+			},
+			OffChange: function (callback) {
+				var index = listeners.indexOf(callback);
+				if (index !== -1)
+					listeners.splice(index, 1);
+			}
+		};
+
+		/* The dictionaries of the current language, before an Application renders its root. */
+		Runtime.LocaleReady = function (callback) {
+			prepare(state.Language, callback);
+		};
+
+		/* Names every template expression sees, under the values of its Component. */
+		Runtime.TemplateGlobals = {
+			$T: function (key, params) {
+				return text(String(key), params);
+			}
+		};
+	})(typeof globalThis !== 'undefined' ? globalThis : self);
+
+	/* Style */
+	(function (global) {
+		'use strict';
+
+		var sheets = {};
+		var order = [];
+		var roots = [];
+
+		/* An isolated copy (a widget) keeps the stylesheets out of the document of the page, unless one asks for them. */
+		var inDocument = !Runtime.Isolated;
+
+		/*
+		 * A stylesheet written for the document, read in a shadow root: html, body and :root are the host there, so
+		 * body[data-theme='dark'] .card is :host([data-theme='dark']) .card.
+		 */
+		function hosted (css) {
+			return String(css).replace(/(^|[{}])([^{}@]+)\{/g, function (all, before, selectors) {
+				return before + selectors.split(',').map(function (part) {
+					return part.replace(/(^|[\s>+~(])(?::root|html|body)((?:\[[^\]]*\]|\.[\w-]+|#[\w-]+|:not\([^)]*\))*)(?![\w-])/g, function (match, start, compound) {
+						return start + ':host' + (compound ? '(' + compound + ')' : '');
+					});
+				}).join(',') + '{';
+			});
+		}
+
+		function element (sheet, root) {
+			var node;
+
+			if (sheet.URL && !root) {
+				node = global.document.createElement('link');
+				node.rel = 'stylesheet';
+				node.href = sheet.URL;
+			}
+			else {
+				node = global.document.createElement('style');
+				node.textContent = root ? hosted(sheet.Text) : sheet.Text;
+			}
+
+			return node;
+		}
+
+		/* The text of a stylesheet of a URL, for a shadow root: a <link> there could not read :root as its host. */
+		function text (sheet, callback) {
+			if (!sheet.URL) {
+				callback(sheet.Text);
+
+				return;
+			}
+
+			Elemenx.Resource.Load(sheet.URL, function (error, source) {
+				if (!error) {
+					sheet.Text = source;
+
+					callback(source);
+				}
+			});
+		}
+
+		function place (sheet, root) {
+			var target = root || global.document.head || global.document.documentElement;
+			var node = root ? sheet.Roots.get(root) : sheet.Node;
+
+			if (node && node.parentNode === target) {
+				if (!sheet.URL && node.tagName === 'STYLE' && node.textContent !== (root ? hosted(sheet.Text) : sheet.Text))
+					node.textContent = root ? hosted(sheet.Text) : sheet.Text;
+
+				return;
+			}
+
+			if (!root) {
+				sheet.Node = element(sheet, null);
+
+				target.appendChild(sheet.Node);
+
+				return;
+			}
+
+			text(sheet, function () {
+				var created = element(sheet, root);
+
+				sheet.Roots.set(root, created);
+
+				root.appendChild(created);
+			});
+		}
+
+		/*
+		 * Keeps a stylesheet (key: its name; sheet: {Text} or {URL}) in the document and in every shadow root an
+		 * Application renders in. A key keeps one stylesheet: a new text takes the place of the old one.
+		 */
+		function add (key, sheet) {
+			var entry = sheets[key];
+			var i = 0;
+
+			if (!Runtime.HasDOM) return;
+
+			if (!entry) {
+				entry = sheets[key] = {Key: key, Text: '', URL: '', Node: null, Roots: new WeakMap()};
+
+				order.push(key);
+			}
+
+			if (sheet.URL) entry.URL = sheet.URL;
+			else entry.Text = String(sheet.Text);
+
+			if (inDocument)
+				place(entry, null);
+
+			while (i < roots.length) {
+				place(entry, roots[i]);
+
+				i++;
+			}
+		}
+
+		Runtime.AddStyle = add;
+
+		/* A shadow root of an Application takes every stylesheet, now and later. */
+		/* The document takes every stylesheet, now and later: an Application of an isolated copy that renders in it. */
+		Runtime.AddStyleDocument = function () {
+			var i = 0;
+
+			if (inDocument) return;
+
+			inDocument = true;
+
+			while (i < order.length) {
+				place(sheets[order[i]], null);
+
+				i++;
+			}
+		};
+
+		Runtime.AddStyleRoot = function (root) {
+			var i = 0;
+
+			if (roots.indexOf(root) !== -1) return;
+
+			roots.push(root);
+
+			while (i < order.length) {
+				place(sheets[order[i]], root);
+
+				i++;
+			}
+		};
+
+		/* Elemenx.Style(name, text) keeps a stylesheet in the document and in the shadow roots of the Applications. */
+		Elemenx.Style = function (name, css) {
+			if (typeof name !== 'string' || !name || typeof css !== 'string')
+				throw new Error('Elemenx.Style expects (name, text)');
+
+			add('style:' + name, {Text: css});
+		};
 	})(typeof globalThis !== 'undefined' ? globalThis : self);
 
 	/* Discovery */
@@ -968,16 +1507,7 @@
 						target = absolute(directory, value);
 
 						if (/\.css(?:[?#].*)?$/i.test(value)) {
-							if (Runtime.HasDOM && !global.document.querySelector('link[data-elemenx-resource="' + target.replace(/"/g, '&quot;') + '"]')) {
-								var link = global.document.createElement('link');
-
-								link.rel = 'stylesheet';
-								link.href = target;
-
-								link.setAttribute('data-elemenx-resource', target);
-
-								(global.document.head || global.document.documentElement).appendChild(link);
-							}
+							Runtime.AddStyle(target, {URL: target});
 
 							complete(null);
 
@@ -1273,8 +1803,7 @@
 	/* Library */
 	(function (global) {
 		'use strict';
-		var Elemenx = global.Elemenx;
-		var definitions = {ElemenxUI: {$Root: '/libraries/ElemenxUI'}};
+		var definitions = {ElemenxUI: {$Root: '/libraries/ElemenxUI', $Locales: {URL: 'locales/{language}.json', Languages: ['en', 'ru']}}};
 		var applications = new WeakMap();
 
 		function list (value) {
@@ -1310,6 +1839,10 @@
 				}
 
 				entries.push({Name: name, Definition: definition, Owner: {}});
+
+				/* The dictionaries of the Library ($Locales: a path from its root with {language}, or {URL, Languages}). */
+				if (definition.$Locales && root(definition))
+					Elemenx.Locale.Source(root(definition).replace(/\/+$/, '') + '/' + (definition.$Locales.URL || definition.$Locales), definition.$Locales.Languages);
 
 				i++;
 			}
@@ -1414,7 +1947,6 @@
 	(function (global) {
 		'use strict';
 
-		var Elemenx = global.Elemenx;
 		var own = Runtime.Own;
 		var serviceRegistry = {};
 		var serviceHandles = {};
@@ -1953,6 +2485,9 @@
 				return definition;
 			},
 			Resolve: function (attribute) {
+				/* Every element of every template is asked: a plain attribute leaves at its first character. */
+				if (attribute.charCodeAt(0) !== 42) return null;
+
 				var match = /^\*([a-z][a-z0-9_-]*)$/i.exec(attribute);
 				var name;
 
@@ -2153,7 +2688,6 @@
 	(function (global) {
 		'use strict';
 
-		var Elemenx = global.Elemenx;
 		var own = Runtime.Own;
 
 		/* Component: Directive API */
@@ -2175,7 +2709,6 @@
 		var styleResources = {};
 		var stylePending = {};
 		var styleSequence = 0;
-		var installedComponentStyles = {};
 		var templateRegistry = {};
 		var templateRegistryPending = {};
 		var templateLoaders = [];
@@ -2476,18 +3009,7 @@
 				definition.$StyleKey = name ? 'component:' + name : 'anonymous:' + styleSequence;
 			}
 
-			var key = definition.$StyleKey;
-			var style = installedComponentStyles[key] || null;
-
-			if (!style || !style.parentNode) {
-				style = global.document.createElement('style');
-				style.__ElemenxStyleKey = key;
-				installedComponentStyles[key] = style;
-				(global.document.head || global.document.documentElement).appendChild(style);
-			}
-
-			if (style.textContent !== String(css))
-				style.textContent = String(css);
+			Runtime.AddStyle(definition.$StyleKey, {Text: String(css)});
 		}
 
 		/* Component: live and deferred instances */
@@ -2511,6 +3033,31 @@
 			if (index !== -1)
 				list.splice(index, 1);
 		}
+
+		/*
+		 * The placeholders of deferred components that wait for their definition; the Router waits for the ones of its
+		 * route. A component whose owner shows its waiting itself (a *pending status or $OnChildPending) is not among them.
+		 */
+		var pendingPlaceholders = [];
+
+		function markPending (placeholder, value) {
+			var index = pendingPlaceholders.indexOf(placeholder);
+
+			if (value && index === -1) pendingPlaceholders.push(placeholder);
+			else if (!value && index !== -1) pendingPlaceholders.splice(index, 1);
+		}
+
+		Runtime.HasPendingComponents = function (element) {
+			var i = 0;
+
+			while (i < pendingPlaceholders.length) {
+				if (element.contains(pendingPlaceholders[i])) return true;
+
+				i++;
+			}
+
+			return false;
+		};
 
 		function canonicalDeferredInput (value, definition) {
 			if (!value || typeof value !== 'object' || !definition || typeof definition !== 'object') return value;
@@ -2575,8 +3122,11 @@
 			var reloadParent = null;
 			var reloadNext = null;
 			var api = {};
+			var ownWaiting = !!(lifecycle && (lifecycle.Pending || (lifecycle.Owner && typeof lifecycle.Owner[lifecycle.Hooks && lifecycle.Hooks.$OnChildPending ? lifecycle.Hooks.$OnChildPending : '$OnChildPending'] === 'function')));
 
 			placeholder.style.display = 'contents';
+
+			markPending(placeholder, !ownWaiting);
 
 			function renderStatus (source) {
 				if (!source) return;
@@ -2700,6 +3250,8 @@
 				updates = [];
 				listeners = [];
 
+				markPending(placeholder, false);
+
 				Runtime.DetachRouterOwner(api);
 
 				if (current)
@@ -2724,6 +3276,8 @@
 
 				current = null;
 
+				markPending(placeholder, !ownWaiting);
+
 				if (lifecycle)
 					renderStatus(lifecycle.Pending);
 
@@ -2741,6 +3295,8 @@
 			api._Error = function (error) {
 				if (destroyed) return false;
 
+				markPending(placeholder, false);
+
 				if (lifecycle) {
 					renderStatus(lifecycle.Error);
 
@@ -2752,6 +3308,8 @@
 
 			api._Reload = function (factory) {
 				if (destroyed || !factory) return false;
+
+				markPending(placeholder, false);
 
 				var oldElement = current ? current.$Element() : placeholder;
 				var parentNode = reloadParent || (oldElement && oldElement.parentNode);
@@ -2806,6 +3364,8 @@
 
 			resolver(function (error, factory) {
 				if (destroyed) return;
+
+				markPending(placeholder, false);
 
 				if (error || !factory) {
 					var handled = false;
@@ -2893,11 +3453,52 @@
 				};
 			}
 
-			if (!expressionCache[source])
-				expressionCache[source] = new Function('$scope', 'with ($scope || {}) { return (' + source + '); }');
+			/* The names of the framework ($T) are seen under the values of the Component, which come first. */
+			if (!expressionCache[source]) {
+				expressionCache[source] = (function (evaluate) {
+					return function (scope) {
+						return evaluate(Runtime.TemplateGlobals, scope);
+					};
+				})(own(precompiledExpressions, source) ? precompiledExpressions[source] : compileSource(source));
+			}
 
 			return expressionCache[source];
 		}
+
+		/* The function of an expression a build did not precompile; a page that forbids eval (an extension) gets a plain error. */
+		function compileSource (source) {
+			try {
+				return new Function('$globals', '$scope', 'with ($globals) { with ($scope || {}) { return (' + source + '); } }');
+			}
+			catch (error) {
+				if (error && error.name === 'EvalError')
+					throw new Error('Elemenx expression is not precompiled and the page forbids eval: ' + source);
+
+				throw error;
+			}
+		}
+
+		/*
+		 * Precompiled expressions: the functions a build wrote as code for the expressions of the templates, by their
+		 * source, ($globals, $scope) each, as the compiler makes them. A page whose Content-Security-Policy forbids eval
+		 * (a browser extension) runs its templates with them and compiles nothing.
+		 */
+		var precompiledExpressions = {};
+
+		Elemenx.Expressions = function (map) {
+			var source;
+
+			for (source in map) {
+				if (!own(map, source)) continue;
+
+				if (typeof map[source] !== 'function')
+					throw new Error('Elemenx precompiled expression must be a function: ' + source);
+
+				precompiledExpressions[expressionNames(source)] = map[source];
+			}
+
+			return Elemenx;
+		};
 
 		Runtime.EvaluateExpression = function (source, scope) {
 			return compileExpression(source)(scope || {});
@@ -4003,8 +4604,12 @@
 						var localFactory;
 						var key;
 
+						/*
+						 * The style of the definition is placed once, under its name: an instance that took $Style
+						 * along would place it again under a key of its own, one more stylesheet for every instance.
+						 */
 						for (key in definition) {
-							if (own(definition, key) && key !== '$TemplateURL' && key !== '$StyleURL' && key !== '$DefinitionURL' && key !== '$StyleKey') {
+							if (own(definition, key) && key !== '$TemplateURL' && key !== '$StyleURL' && key !== '$DefinitionURL' && key !== '$StyleKey' && key !== '$Style') {
 								localDefinition[key] = definition[key];
 							}
 						}
@@ -4715,7 +5320,6 @@
 	(function (global) {
 		'use strict';
 
-		var Elemenx = global.Elemenx;
 		var own = Runtime.Own;
 
 		/* Router: paths and query */
@@ -5008,7 +5612,8 @@
 			var historyIndex = 0;
 			var committedURL = null;
 			var rollbackPop = false;
-			var urlMode = config.Mode === undefined ? (global.location.protocol === 'file:' ? 'memory' : 'history') : config.Mode;
+			/* A page that is not served over http (a file, the page of an extension, an Electron window) keeps its route in memory. */
+			var urlMode = config.Mode === undefined ? (/^https?:$/.test(global.location.protocol) ? 'history' : 'memory') : config.Mode;
 			if (urlMode !== 'history' && urlMode !== 'hash' && urlMode !== 'memory')
 				throw new Error('Elemenx.Router Mode must be history, hash or memory');
 
@@ -5191,6 +5796,30 @@
 				waitingElement = null;
 			}
 
+			/*
+			 * Runs callback once the browser has painted: the waiting component shows before the route renders, which can
+			 * hold the thread. A hidden page paints no frame, so a timer runs it too.
+			 */
+			function afterPaint (callback) {
+				var done = false;
+
+				function run () {
+					if (done) return;
+
+					done = true;
+
+					callback();
+				}
+
+				if (global.requestAnimationFrame) {
+					global.requestAnimationFrame(function () {
+						global.setTimeout(run, 0);
+					});
+				}
+
+				global.setTimeout(run, 100);
+			}
+
 			function showWaiting (prepared, callback) {
 				var chain = prepared.Found.Chain;
 				var route = chain.length ? chain[chain.length - 1] : null;
@@ -5238,7 +5867,9 @@
 
 					emit('NavigationWaiting', prepared.Packet);
 
-					callback(null);
+					afterPaint(function () {
+						callback(null);
+					});
 				}
 
 				if (bundledComponent(reference)) {
@@ -5513,11 +6144,17 @@
 				return true;
 			}
 
+			/* The components of the route are ready, and the deferred components inside them too (a page shows whole). */
 			function routeComponentsReady (from) {
 				var i = from;
+				var element;
 
 				while (i < active.length) {
 					if (active[i].Component && active[i].Component._Component && !active[i].Component._Component()) return false;
+
+					element = active[i].Component && active[i].Component.$Element ? active[i].Component.$Element() : null;
+
+					if (element && Runtime.HasPendingComponents(element)) return false;
 
 					i++;
 				}
@@ -5687,7 +6324,7 @@
 
 				if (state && typeof state.ElemenxRouterURL === 'string') return new URL(state.ElemenxRouterURL, routeBase());
 
-				return new URL(global.location.protocol === 'file:' ? '/' : global.location.pathname + global.location.search, routeBase());
+				return new URL(/^https?:$/.test(global.location.protocol) ? global.location.pathname + global.location.search : '/', routeBase());
 			}
 
 			/* The base of the route URLs outside Mode history: a file URL of a page has the path of the file (and a drive letter on Windows). */
@@ -6010,7 +6647,8 @@
 				clickHandler = function (event) {
 					if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
 
-					var anchor = findAnchor(event.target);
+					/* A link in a shadow root reaches the document as its host: the path holds the link itself. */
+					var anchor = findAnchor(event.composedPath ? event.composedPath()[0] : event.target);
 					if (!anchor || anchor.target || anchor.hasAttribute('download')) return;
 
 					var target = linkURL(anchor);
@@ -7393,7 +8031,6 @@
 	(function (global) {
 		'use strict';
 
-		var Elemenx = global.Elemenx;
 		var own = Runtime.Own;
 		var invoke = Runtime.Invoke;
 		var NetworkProtocols = {};
@@ -11845,7 +12482,6 @@
 	(function (global) {
 		'use strict';
 
-		var Elemenx = global.Elemenx;
 		var own = Runtime.Own;
 
 		function encodeValue (value) {
@@ -12777,7 +13413,6 @@
 	(function (global) {
 		'use strict';
 
-		var Elemenx = global.Elemenx;
 		var ownedResources = Runtime.OwnerRegistry();
 		var sockets = [];
 		var sequence = 0;
@@ -13219,7 +13854,6 @@
 	(function (global) {
 		'use strict';
 
-		var Elemenx = global.Elemenx;
 		var own = Runtime.Own;
 		var contexts = {};
 		var ownedResources = Runtime.OwnerRegistry();
@@ -13520,7 +14154,8 @@
 
 				ensure();
 
-				Runtime.PrepareMessagingSend(String(channel));
+				if (Runtime.PrepareMessagingSend)
+					Runtime.PrepareMessagingSend(String(channel));
 
 				if (options && options.Transferable === true) {
 					transfer = [data];
@@ -14094,7 +14729,6 @@
 	(function (global) {
 		'use strict';
 
-		var Elemenx = global.Elemenx;
 		var definitions = {};
 		var ownedResources = Runtime.OwnerRegistry();
 		var handles = [];
@@ -14464,7 +15098,6 @@
 	(function (global) {
 		'use strict';
 
-		var Elemenx = global.Elemenx;
 		var definitions = {};
 		var handles = [];
 		var ownedResources = Runtime.OwnerRegistry();
@@ -14855,30 +15488,55 @@
 		/*
 		 * Services, Components and Applications own Network resources, Messaging and Events sockets and workers.
 		 * These helpers wire and release them in one place; the release order is part of the lifecycle contract.
+		 * A build may leave out the sections an Application does not use (Network, Storage, Events, Messaging and the
+		 * workers): their facades are then not there.
 		 */
 		Runtime.AttachOwnerFacades = function (owner, name, index) {
-			owner.$Network = Runtime.NetworkFor(owner);
-			owner.$Storage = Runtime.StorageFor(owner);
-			owner.$WebWorker = Runtime.WebWorkerFor(owner);
-			owner.$ServiceWorker = Runtime.ServiceWorkerFor(owner);
+			if (Runtime.NetworkFor)
+				owner.$Network = Runtime.NetworkFor(owner);
 
-			Runtime.SetMessagingEntity(owner, name, index);
+			if (Runtime.StorageFor)
+				owner.$Storage = Runtime.StorageFor(owner);
 
-			owner.$Messaging = Runtime.MessagingFor(owner);
-			owner.$Events = Runtime.EventsFor(owner);
+			if (Runtime.WebWorkerFor)
+				owner.$WebWorker = Runtime.WebWorkerFor(owner);
+
+			if (Runtime.ServiceWorkerFor)
+				owner.$ServiceWorker = Runtime.ServiceWorkerFor(owner);
+
+			if (Runtime.MessagingFor) {
+				Runtime.SetMessagingEntity(owner, name, index);
+
+				owner.$Messaging = Runtime.MessagingFor(owner);
+			}
+
+			if (Runtime.EventsFor)
+				owner.$Events = Runtime.EventsFor(owner);
 		};
 
 		Runtime.InitializeOwnerSubscriptions = function (owner, definition) {
-			Runtime.InitializeEventsOwner(owner, definition);
-			Runtime.InitializeMessagingOwner(owner, definition);
+			if (Runtime.InitializeEventsOwner)
+				Runtime.InitializeEventsOwner(owner, definition);
+
+			if (Runtime.InitializeMessagingOwner)
+				Runtime.InitializeMessagingOwner(owner, definition);
 		};
 
 		Runtime.DestroyOwnerResources = function (owner) {
-			Runtime.DestroyNetworkOwner(owner);
-			Runtime.DestroyMessagingOwner(owner);
-			Runtime.DestroyEventsOwner(owner);
-			Runtime.DestroyWebWorkerOwner(owner);
-			Runtime.DestroyServiceWorkerOwner(owner);
+			if (Runtime.DestroyNetworkOwner)
+				Runtime.DestroyNetworkOwner(owner);
+
+			if (Runtime.DestroyMessagingOwner)
+				Runtime.DestroyMessagingOwner(owner);
+
+			if (Runtime.DestroyEventsOwner)
+				Runtime.DestroyEventsOwner(owner);
+
+			if (Runtime.DestroyWebWorkerOwner)
+				Runtime.DestroyWebWorkerOwner(owner);
+
+			if (Runtime.DestroyServiceWorkerOwner)
+				Runtime.DestroyServiceWorkerOwner(owner);
 		};
 	})(typeof globalThis !== 'undefined' ? globalThis : self);
 
@@ -14886,7 +15544,6 @@
 	(function (global) {
 		'use strict';
 
-		var Elemenx = global.Elemenx;
 		var own = Runtime.Own;
 		var applications = {};
 		var mountOwners = typeof WeakMap !== 'undefined' ? new WeakMap() : null;
@@ -15194,6 +15851,7 @@
 			var webWorkers = {};
 			var serviceWorkers = {};
 			var ownedMount = null;
+			var shadow = null;
 			var api = {};
 
 			definition = definition || {};
@@ -15260,7 +15918,8 @@
 				return Elemenx.Storage(context);
 			};
 
-			api.$Events = Runtime.EventsFor(api);
+			if (Runtime.EventsFor)
+				api.$Events = Runtime.EventsFor(api);
 
 			api.$Messaging = function (context, value) {
 				if (arguments.length === 2) {
@@ -15361,9 +16020,39 @@
 				definition.$Bootstrap.call(api);
 			}
 
+			/*
+			 * Where the Application renders: its mount element, or with $Shadow (true, 'open' or 'closed') a shadow root on
+			 * it, which takes every stylesheet of the framework and keeps the ones of the page out. An isolated build (a
+			 * widget) renders in a shadow root unless $Shadow is false.
+			 */
+			function renderTarget () {
+				var host = mountElement(definition.$Mount);
+				var mode = definition.$Shadow === undefined && Runtime.Isolated ? true : definition.$Shadow;
+				if (host && !mode && Runtime.Isolated)
+					Runtime.AddStyleDocument();
+
+				if (!host || !mode) return host;
+
+				if (!shadow) {
+					shadow = host.shadowRoot || host.attachShadow({mode: mode === 'closed' ? 'closed' : 'open'});
+
+					Runtime.AddStyleRoot(shadow);
+
+					if (Runtime.ShadowHosts.indexOf(host) === -1)
+						Runtime.ShadowHosts.push(host);
+
+					if (Runtime.Isolated || !host.lang) {
+						host.lang = Elemenx.Locale.Language();
+						host.dir = Elemenx.Locale.Direction();
+					}
+				}
+
+				return shadow;
+			}
+
 			/* Instance: status and lifecycle */
 			function applicationStatus (source) {
-				var mount = mountElement(definition.$Mount);
+				var mount = renderTarget();
 				if (!mount) return;
 
 				renderApplicationStatus(mount, source);
@@ -15421,7 +16110,7 @@
 				if (destroyed || !definition.$Component || root) return;
 
 				var factory = Elemenx.Component(definition.$Component);
-				var mount = mountElement(definition.$Mount);
+				var mount = renderTarget();
 				var mountOwner;
 
 				if (!factory)
@@ -15551,16 +16240,31 @@
 
 			api.$OnError = definition.$OnError || null;
 
+			/* The root renders once the dictionaries of the language are in: no key shows in place of its phrase. */
+			function startLocalized () {
+				Runtime.LocaleReady(function (error) {
+					if (destroyed) return;
+
+					if (error)
+						Runtime.Report(error);
+
+					startApplicationRoot();
+				});
+			}
+
 			function startRoot () {
 				var use = definition.$Use || definition.Use;
 
+				if (definition.$Locales)
+					Elemenx.Locale.Source(Runtime.DefinitionURL(definition, definition.$Locales.URL || definition.$Locales), definition.$Locales.Languages);
+
 				if (!use || !Runtime.Library) {
-					startApplicationRoot();
+					startLocalized();
 
 					return;
 				}
 
-				Runtime.Library.Use(api, use, loaded(startApplicationRoot));
+				Runtime.Library.Use(api, use, loaded(startLocalized));
 			}
 
 			if (Runtime.HasDOM && global.document.readyState === 'loading') {
@@ -15590,6 +16294,40 @@
 
 			return applications[name];
 		};
+	})(typeof globalThis !== 'undefined' ? globalThis : self);
+
+	/* Export */
+	(function (global) {
+		'use strict';
+
+		var previous = global.Elemenx;
+
+		Elemenx.Version = Version;
+
+		/* Gives the name Elemenx back to what had it before this copy, and returns this copy. */
+		Elemenx.NoConflict = function () {
+			if (global.Elemenx === Elemenx)
+				global.Elemenx = previous;
+
+			return Elemenx;
+		};
+
+		/* An isolated build (one script for a widget) keeps this copy to itself: the window does not see it. */
+		if (typeof ElemenxIsolated === 'object' && ElemenxIsolated) {
+			ElemenxIsolated.Elemenx = Elemenx;
+
+			return;
+		}
+
+		/* Another copy (another version, or another library) keeps the name: the page it serves goes on working. */
+		if (previous) {
+			if (global.console && typeof global.console.warn === 'function')
+				global.console.warn('Elemenx ' + Version + ' is not the Elemenx of this page: ' + (previous.Version ? 'Elemenx ' + previous.Version : 'another Elemenx') + ' is. A widget beside another Elemenx is an isolated build (elemenx build --widget).');
+
+			return;
+		}
+
+		global.Elemenx = Elemenx;
 	})(typeof globalThis !== 'undefined' ? globalThis : self);
 
 	/* ServiceWorker bootstrap */

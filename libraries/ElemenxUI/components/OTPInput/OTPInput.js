@@ -28,7 +28,7 @@ Elemenx.Component('OTPInput', {
 	RevealTimer: 0,
 	MaskChar: '•',
 	Placeholder: '',
-	Label: 'One-time code',
+	Label: '',
 	Size: 'medium',
 	Shape: 'default',
 	Name: null,
@@ -131,7 +131,7 @@ Elemenx.Component('OTPInput', {
 
 		node.value = value;
 
-		if (document.activeElement === node)
+		if (node.getRootNode().activeElement === node)
 			node.setSelectionRange(caret, caret);
 
 		this.Start = caret;

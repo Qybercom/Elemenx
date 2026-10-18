@@ -1,5 +1,5 @@
 <div class="elemenx-input elemenx-card-input" [class]="[Size || 'medium', Shape === 'round' ? 'round' : '', Invalid || (Touched && Value && String(Value).length !== Number(Length)) ? 'invalid' : '', Disabled ? 'disabled' : '']">
 	<Icon Name="lock" />
 	<input class="elemenx-input-control" inputmode="numeric" autocomplete="cc-csc" [type]="Revealed ? 'text' : 'password'" *mask="{Mask: Number(Length) === 4 ? '####' : '###', Value: Value}" [placeholder]="Placeholder || (Number(Length) === 4 ? '0000' : '000')" [disabled]="Disabled" [attribute.name]="Name" [attribute.maxlength]="Length" (mask)="Masked" (change)="Committed" />
-	<button class="elemenx-input-action" type="button" [attribute.aria-label]="Revealed ? 'Hide code' : 'Show code'" [attribute.aria-pressed]="String(Revealed)" [attribute.aria-busy]="Asking ? 'true' : null" (click)="Reveal"><Icon [name]="Asking ? 'loader' : Revealed ? 'eye-off' : 'eye'" [spin]="!!Asking" /></button>
+	<button class="elemenx-input-action" type="button" [attribute.aria-label]="Revealed ? $T('ui.common.hideCode') : $T('ui.common.showCode')" [attribute.aria-pressed]="String(Revealed)" [attribute.aria-busy]="Asking ? 'true' : null" (click)="Reveal"><Icon [name]="Asking ? 'loader' : Revealed ? 'eye-off' : 'eye'" [spin]="!!Asking" /></button>
 </div>

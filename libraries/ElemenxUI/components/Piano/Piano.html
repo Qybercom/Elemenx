@@ -1,0 +1,3 @@
+<div class="elemenx-piano" role="group" tabindex="0" [class]="[Size || 'medium', Disabled ? 'disabled' : '']" [attribute.aria-label]="Label || $T('ui.piano.label')" [attribute.aria-disabled]="Disabled ? 'true' : null" (pointerdown)="Down" (pointermove)="Move" (pointerup)="Up" (pointercancel)="Up" (keydown)="Typed" (keyup)="Released" (blur)="Blurred">
+	<span class="elemenx-piano-key" *for="key of Keys(From, Octaves)" *key="key.Midi" [class]="[key.Black ? 'black' : 'white', Mark(key.Midi, Marks), Lit(key.Midi, Pressed, Playing) ? 'pressed' : '']" [attribute.style]="key.Style || null" [attribute.data-midi]="key.Midi" [attribute.data-note]="key.Note" role="presentation"><span class="elemenx-piano-name" *if="Name(key, Labels)">{{Name(key, Labels)}}</span></span>
+</div>

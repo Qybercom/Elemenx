@@ -1,0 +1,64 @@
+.elemenx-game-hud {
+	position: relative;
+	height: 100%;
+	min-height: 240px;
+	overflow: hidden;
+	color: var(--elemenx-game-text);
+	font-family: var(--elemenx-game-font);
+}
+
+.elemenx-game-hud-scene {
+	position: absolute;
+	inset: 0;
+}
+
+.elemenx-game-hud-scene > * {
+	width: 100%;
+	height: 100%;
+}
+
+.elemenx-game-hud-layer {
+	position: absolute;
+	inset: 0;
+	display: grid;
+	grid-template-columns: 1fr auto 1fr;
+	grid-template-rows: auto 1fr auto;
+	gap: 8px;
+	padding: var(--elemenx-game-hud-padding, 16px);
+	pointer-events: none;
+}
+
+.elemenx-game-hud-area {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	min-width: 0;
+}
+
+.elemenx-game-hud-area > * {
+	pointer-events: auto;
+}
+
+.elemenx-game-hud-area.top,
+.elemenx-game-hud-area.center,
+.elemenx-game-hud-area.bottom {
+	align-items: center;
+}
+
+.elemenx-game-hud-area.top-end,
+.elemenx-game-hud-area.end,
+.elemenx-game-hud-area.bottom-end {
+	align-items: flex-end;
+}
+
+.elemenx-game-hud-area.start,
+.elemenx-game-hud-area.center,
+.elemenx-game-hud-area.end {
+	justify-content: center;
+}
+
+.elemenx-game-hud-area.bottom-start,
+.elemenx-game-hud-area.bottom,
+.elemenx-game-hud-area.bottom-end {
+	justify-content: flex-end;
+}

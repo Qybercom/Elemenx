@@ -1,0 +1,236 @@
+/*
+ * Fantasy: the windows of a classic MMO, in three levels. A primary window has a frame of metal lit from above (a dark
+ * outer line, a bevel, a groove and a thin light line); its four corners are figured metal standing out of the window,
+ * curls and a spike each (small ones at the bottom), with a scroll cut along the top edge, and its top edge rises into
+ * a crest with volutes, leaves and a drop of gold over the title. A secondary window has a thin frame of metal, a small
+ * crest with volutes and small curls on its top corners; a plain window no ornament at all; a panel keeps the frame
+ * without the figures, a light panel a thin line of metal with small figures in its corners, and a menu takes the
+ * figures of a primary window, a flourish under its title and items of the first rank with a spear point and volutes
+ * on both ends; a dialogue is a band set in the scene, fading at its ends between two lines of metal with flourishes. The glass is clear, with a warm glow inside and a shadow
+ * under its text; buttons have a dark face and an edge light at the top and dark at the bottom; items are painted
+ * tiles of their color lit from the middle, bevelled, with a large light icon outlined in black; gauges are one vessel
+ * rounded at both ends in a ring of metal, with a clear fill, a faint lattice in it and a light at its end. Dark
+ * only. Made for the game components and Window with Variant="game" (the --elemenx-game-* tokens; Level picks the
+ * window), and the other components follow its colors. Every rule starts with [data-theme][data-theme='fantasy']; a game
+ * changes any token on the same selector.
+ */
+[data-theme][data-theme='fantasy'],
+[data-theme][data-theme='fantasy'][data-scheme] {
+	--elemenx-background: #111312;
+	--elemenx-background-rgb: 17, 19, 18;
+	--elemenx-surface: #1b1e1c;
+	--elemenx-surface-rgb: 27, 30, 28;
+	--elemenx-surface-raised: #232624;
+	--elemenx-surface-hover: #2c2f2c;
+	--elemenx-surface-hover-rgb: 44, 47, 44;
+	--elemenx-text: #e2ddd0;
+	--elemenx-text-rgb: 226, 221, 208;
+	--elemenx-text-muted: #a39f92;
+	--elemenx-text-muted-rgb: 163, 159, 146;
+	--elemenx-accent: #b8a273;
+	--elemenx-accent-rgb: 184, 162, 115;
+	--elemenx-accent-hover: #cbb585;
+	--elemenx-accent-text: #14130f;
+	--elemenx-accent-text-rgb: 20, 19, 15;
+	--elemenx-danger: #d45a4c;
+	--elemenx-danger-rgb: 212, 90, 76;
+	--elemenx-success: #79b866;
+	--elemenx-success-rgb: 121, 184, 102;
+	--elemenx-warning: #d6aa52;
+	--elemenx-warning-rgb: 214, 170, 82;
+	--elemenx-info: #7c9ccc;
+	--elemenx-info-rgb: 124, 156, 204;
+	--elemenx-border: #353734;
+	--elemenx-border-strong: #56574f;
+	--elemenx-border-strong-rgb: 86, 87, 79;
+	--elemenx-shadow: 0 8px 24px #00000099;
+	--elemenx-game-text: #ece7da;
+	--elemenx-game-muted: #b5b0a2;
+	--elemenx-game-accent: #d4be86;
+	--elemenx-game-title: #f4f0e4;
+	--elemenx-game-title-align: center;
+	--elemenx-game-title-shadow: 0 1px 2px #000000;
+	--elemenx-game-title-inset: 0 96px;
+	--elemenx-game-text-shadow: 0 1px 2px #000000e6;
+	--elemenx-game-letter-spacing: normal;
+	--elemenx-game-panel: linear-gradient(to bottom, #1e1c19b2, #0f0e0cc7);
+	--elemenx-game-frame: 8px solid transparent;
+	--elemenx-game-frame-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' stroke-linecap='round' stroke-linejoin='round' fill='none' width='24' height='24' viewBox='0 0 24 24'><defs><linearGradient id='m' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='%23e6dabd'/><stop offset='.3' stop-color='%23a99a7c'/><stop offset='.7' stop-color='%235d5345'/><stop offset='1' stop-color='%232a251e'/></linearGradient></defs><rect x='.5' y='.5' width='23' height='23' rx='6' stroke='%23070605'/><rect x='1.8' y='1.8' width='20.5' height='20.5' rx='5' stroke='url(%23m)' stroke-width='1.5'/><rect x='3.5' y='3.5' width='17' height='17' rx='3.5' stroke='%2315120e' stroke-width='1.5'/><rect x='5' y='5' width='14' height='14' rx='2.5' stroke='rgba(222,204,160,.4)'/></svg>") 8 / 8px stretch;
+	--elemenx-game-panel-shadow: 0 0 0 1px #00000080, inset 0 0 20px #ffecc81f, 0 8px 22px #00000080;
+	--elemenx-game-active: 0 0 0 1px #d4be8629;
+	--elemenx-game-radius: 6px;
+	--elemenx-game-blur: none;
+	--elemenx-game-decor: var(--elemenx-fantasy-decor);
+	--elemenx-game-decor-inset: -16px;
+	--elemenx-game-header: linear-gradient(to bottom, #4e483c80, #201d184c);
+	--elemenx-game-header-image: none;
+	--elemenx-game-header-line: 1px solid #0000008c;
+	--elemenx-game-header-inset: 7px 7px 0;
+	--elemenx-game-header-radius: 2px 2px 0 0;
+	--elemenx-game-header-padding: 0 6px 0 10px;
+	--elemenx-game-ornament: none;
+	--elemenx-game-glow: 0 0 0 1px #c9b27a, 0 0 8px #c9b27a73;
+	--elemenx-game-cell: #00000066;
+	--elemenx-game-cell-frame: 1px solid #a09b8c6b;
+	--elemenx-game-cell-radius: 2px;
+	--elemenx-game-item-tint: 0.78;
+	--elemenx-game-item-gloss: radial-gradient(circle at 50% 40%, #fff6dc57, #fff6dc14 42%, #fff6dc00 64%), linear-gradient(to bottom, #ffffff1f, #ffffff00 30%, #00000000 60%, #00000073);
+	--elemenx-game-item-inset: 1px;
+	--elemenx-game-item-bevel: inset 1px 1px 0 #fff6dc66, inset -1px -1px 0 #000000b2;
+	--elemenx-game-item-icon: #f6efdc;
+	--elemenx-game-item-icon-shadow: drop-shadow(0 1px 0 #000000) drop-shadow(0 0 1.5px #000000f2);
+	--elemenx-game-item-icon-scale: 1.25;
+	--elemenx-game-inventory-gap: 2px;
+	--elemenx-game-bar-track: linear-gradient(to bottom, #040404, #15130f);
+	--elemenx-game-bar-frame: 0;
+	--elemenx-game-bar-frame-image: none;
+	--elemenx-game-bar-ornament: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' stroke-linecap='round' stroke-linejoin='round' fill='none' width='100%25' height='100%25'><defs><g id='f0'><defs><linearGradient id='f0r' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='%23e4d7b6'/><stop offset='.5' stop-color='%23a89a7a'/><stop offset='1' stop-color='%237a6d56'/></linearGradient></defs><g><path d='M12 .5H7A6.5 6.5 0 0 0 7 13.5H12' stroke='%23070605'/><path d='M12 1.5H7A5.5 5.5 0 0 0 7 12.5H12' stroke='url(%23f0r)'/><path d='M12 2.5H7A4.5 4.5 0 0 0 7 11.5H12' stroke='rgba(0,0,0,.8)'/></g></g></defs><use href='%23f0' transform='translate(0 0)'/><svg x='100%25' y='0' overflow='visible'><use href='%23f0' transform='translate(0 0) scale(-1 1)'/></svg></svg>") 0 0 / 100% 100% no-repeat, linear-gradient(to bottom, #070605 0 1px, #dfd2b0 1px 2px, #000000bf 2px 3px, #00000000 3px calc(100% - 3px), #000000bf calc(100% - 3px) calc(100% - 2px), #7e7159 calc(100% - 2px) calc(100% - 1px), #070605 calc(100% - 1px)) 12px 0 / calc(100% - 24px) 100% no-repeat;
+	--elemenx-game-bar-ornament-inset: 0;
+	--elemenx-game-bar-gauge-margin: 0;
+	--elemenx-game-bar-radius: 7px;
+	--elemenx-game-bar-fill-opacity: 0.86;
+	--elemenx-game-bar-pattern: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' stroke-linecap='round' stroke-linejoin='round' fill='none' width='12' height='12' viewBox='0 0 12 12'><path d='M0 6L6 0L12 6L6 12Z' stroke='rgba(255,248,226,.2)' stroke-width='.8'/><path d='M0 6.8L6 12.8M6 .8L12 6.8' stroke='rgba(0,0,0,.2)' stroke-width='.6'/><circle cx='6' cy='6' r='.9' fill='rgba(255,248,226,.3)'/></svg>") 0 50% / 12px 12px repeat;
+	--elemenx-game-bar-edge: linear-gradient(to right, #fffae400, #fffae4cc);
+	--elemenx-game-bar-shadow: inset 0 2px 3px #000000d9;
+	--elemenx-game-bar-shine: linear-gradient(to bottom, #ffffff6b, #ffffff1f 45%, #ffffff00 50%, #0000004c);
+	--elemenx-game-bar-damage: #e9e1c8;
+	--elemenx-game-bar-text: #ffffff;
+	--elemenx-game-bar-text-shadow: 0 1px 1px #000000;
+	--elemenx-game-cooldown: #0000009e;
+	--elemenx-game-health: #a8282c;
+	--elemenx-game-mana: #2a52a6;
+	--elemenx-game-experience: #8f7a3a;
+	--elemenx-game-stamina: #b8922e;
+	--elemenx-game-common: #8a8678;
+	--elemenx-game-uncommon: #3f9a44;
+	--elemenx-game-rare: #3a68c4;
+	--elemenx-game-epic: #8a48c0;
+	--elemenx-game-legendary: #c9822a;
+	--elemenx-game-good: #79d66b;
+	--elemenx-game-bad: #ec5c4a;
+	--elemenx-game-special: #dcc274;
+	--elemenx-game-section: linear-gradient(to bottom, #fff0d21a, #fff0d208);
+	--elemenx-game-section-title: #e0d2a8;
+	--elemenx-game-separator: linear-gradient(to right, transparent, #a8a08a99 12%, #a8a08a99 88%, transparent);
+	--elemenx-game-separator-ornament: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' stroke-linecap='round' stroke-linejoin='round' fill='none' width='16' height='8' viewBox='0 0 16 8'><path d='M8 1.5l2.5 2.5L8 6.5 5.5 4z' fill='%239c8a62'/></svg>");
+	--elemenx-game-button: linear-gradient(to bottom, #4d463b, #332e26 50%, #25211b);
+	--elemenx-game-button-edge: linear-gradient(to bottom, #e6dabd 0%, #a99a7c 36%, #5d5345 70%, #1f1b15 100%);
+	--elemenx-game-button-hover: linear-gradient(to bottom, #5e564a, #3e382f 50%, #2d2821);
+	--elemenx-game-button-radius: 4px;
+	--elemenx-game-button-padding: 22px;
+	--elemenx-game-button-min-width: 88px;
+	--elemenx-game-button-text: #f1e8d0;
+	--elemenx-game-button-shadow: 0 0 0 1px #000000d9, inset 0 1px 0 #fff5dc29;
+	--elemenx-game-field: #00000080;
+	--elemenx-game-field-frame: 1px solid #a09b8c73;
+	--elemenx-game-field-shadow: inset 0 1px 3px #000000b2;
+	--elemenx-game-scrollbar: #77766a;
+	--elemenx-game-tab: #0000004c;
+	--elemenx-game-tab-active: linear-gradient(to bottom, #fff0d224, #fff0d20a);
+	--elemenx-game-tab-marker: #d4be86;
+	--elemenx-game-appear: elemenx-window-appear 160ms ease-out;
+	--elemenx-game-menu-item: radial-gradient(ellipse at 50% 130%, #d4be8638, #d4be8600 62%), linear-gradient(to bottom, #4a4336, #2f2a22 50%, #1f1b16);
+	--elemenx-game-menu-item-hover: radial-gradient(ellipse at 50% 120%, #ffd68c6b, #ffd68c00 66%), linear-gradient(to bottom, #5c5343, #3b3429 50%, #28231c);
+	--elemenx-game-menu-item-hover-text: #fff4d6;
+	--elemenx-game-menu-item-frame: 3px solid transparent;
+	--elemenx-game-menu-item-frame-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' stroke-linecap='round' stroke-linejoin='round' fill='none' width='12' height='12' viewBox='0 0 12 12'><defs><linearGradient id='m' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='%23efe3c4'/><stop offset='.4' stop-color='%23b3a383'/><stop offset='.8' stop-color='%236a5e4c'/><stop offset='1' stop-color='%233a3329'/></linearGradient></defs><g><rect x='.5' y='.5' width='11' height='11' rx='2' stroke='%23070605'/><rect x='1.5' y='1.5' width='9' height='9' rx='1.5' stroke='url(%23m)'/><rect x='2.5' y='2.5' width='7' height='7' rx='1' stroke='rgba(0,0,0,.7)'/></g></svg>") 3 / 3px stretch;
+	--elemenx-game-menu-item-shadow: 0 3px 8px #00000099;
+	--elemenx-game-menu-item-ornament: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' stroke-linecap='round' stroke-linejoin='round' fill='none' width='100%25' height='100%25'><defs><linearGradient id='m' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='%23efe3c4'/><stop offset='.4' stop-color='%23b3a383'/><stop offset='.8' stop-color='%236a5e4c'/><stop offset='1' stop-color='%233a3329'/></linearGradient><linearGradient id='g' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='%23fff1c4'/><stop offset='.5' stop-color='%23d8b45c'/><stop offset='1' stop-color='%236e5220'/></linearGradient><g id='f0'><g><defs><path id='f0p1d' d='M20 4C12 3 6 5 5 9.5C4.4 13.5 9 15.5 10 13.2C10.4 11.6 8.6 10.4 7.8 11.4'/></defs><use href='%23f0p1d' stroke='%230a0806' stroke-width='3.6'/><use href='%23f0p1d' stroke='url(%23m)' stroke-width='1.4'/><use href='%23f0p1d' stroke='rgba(255,246,220,.6)' stroke-width='.6' transform='translate(0 -.5)'/><defs><path id='f0p1e' d='M20 42C12 43 6 41 5 36.5C4.4 32.5 9 30.5 10 32.8C10.4 34.4 8.6 35.6 7.8 34.6'/></defs><use href='%23f0p1e' stroke='%230a0806' stroke-width='3.6'/><use href='%23f0p1e' stroke='url(%23m)' stroke-width='1.4'/><use href='%23f0p1e' stroke='rgba(255,246,220,.6)' stroke-width='.6' transform='translate(0 -.5)'/><path d='M1 23L10 18.4L17 23L10 27.6L1 23Z' fill='url(%23m)' stroke='%230a0806' stroke-width='1'/><path d='M3 23H14' stroke='url(%23g)' stroke-width='1'/><path d='M2 22.6L9.6 18.8' stroke='rgba(255,246,220,.7)' stroke-width='.6'/><rect x='14.5' y='6' width='5' height='34' rx='2.5' fill='url(%23m)' stroke='%230a0806' stroke-width='1'/><path d='M15.8 8V38' stroke='rgba(255,246,220,.6)' stroke-width='.7'/><circle cx='17' cy='23' r='2.6' fill='url(%23g)' stroke='%230a0806' stroke-width='.7'/><circle cx='16.3' cy='22.2' r='.8' fill='rgba(255,252,236,.9)'/><defs><path id='f0p1f' d='M22 23C26 17.5 31 17.5 36 20.5'/></defs><use href='%23f0p1f' stroke='rgba(0,0,0,.6)' stroke-width='1.6'/><use href='%23f0p1f' stroke='rgba(228,210,168,.4)' stroke-width='.9' transform='translate(0 .8)'/><defs><path id='f0p20' d='M22 23C26 28.5 31 28.5 36 25.5'/></defs><use href='%23f0p20' stroke='rgba(0,0,0,.6)' stroke-width='1.6'/><use href='%23f0p20' stroke='rgba(228,210,168,.4)' stroke-width='.9' transform='translate(0 .8)'/></g></g></defs><svg x='0' y='50%25' overflow='visible'><use href='%23f0' transform='translate(0 -23)'/></svg><svg x='100%25' y='50%25' overflow='visible'><use href='%23f0' transform='translate(0 -23) scale(-1 1)'/></svg></svg>") 0 0 / 100% 100% no-repeat;
+	--elemenx-game-menu-item-ornament-inset: -3px -19px;
+	--elemenx-game-menu-item-align: center;
+	--elemenx-game-menu-item-padding: 10px 46px;
+	--elemenx-game-menu-item-shift: none;
+	--elemenx-game-menu-title-ornament: var(--elemenx-fantasy-flourish) center / 240px 20px no-repeat;
+	--elemenx-game-menu-title-ornament-height: 20px;
+	--elemenx-game-light-panel: linear-gradient(to bottom, #1a181499, #0c0b09ad);
+	--elemenx-game-light-frame: 3px solid transparent;
+	--elemenx-game-light-frame-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' stroke-linecap='round' stroke-linejoin='round' fill='none' width='12' height='12' viewBox='0 0 12 12'><defs><linearGradient id='m' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='%23efe3c4'/><stop offset='.4' stop-color='%23b3a383'/><stop offset='.8' stop-color='%236a5e4c'/><stop offset='1' stop-color='%233a3329'/></linearGradient></defs><g><rect x='.5' y='.5' width='11' height='11' rx='3' stroke='rgba(7,6,5,.9)'/><rect x='1.5' y='1.5' width='9' height='9' rx='2.2' stroke='url(%23m)' stroke-width='.9'/><rect x='2.5' y='2.5' width='7' height='7' rx='1.5' stroke='rgba(222,204,160,.2)' stroke-width='.7'/></g></svg>") 3 / 3px stretch;
+	--elemenx-game-light-radius: 4px;
+	--elemenx-game-light-shadow: 0 4px 14px #00000073, inset 0 0 12px #ffecc812;
+	--elemenx-game-light-decor: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' stroke-linecap='round' stroke-linejoin='round' fill='none' width='100%25' height='100%25'><defs><linearGradient id='m' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='%23efe3c4'/><stop offset='.4' stop-color='%23b3a383'/><stop offset='.8' stop-color='%236a5e4c'/><stop offset='1' stop-color='%233a3329'/></linearGradient><linearGradient id='g' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='%23fff1c4'/><stop offset='.5' stop-color='%23d8b45c'/><stop offset='1' stop-color='%236e5220'/></linearGradient><g id='f0'><g><defs><path id='f0p17' d='M22 6C18 3 13 3.4 11 6C9.6 7.8 11.4 9.6 13 8.4'/></defs><use href='%23f0p17' stroke='%230a0806' stroke-width='3.1'/><use href='%23f0p17' stroke='url(%23m)' stroke-width='.9'/><use href='%23f0p17' stroke='rgba(255,246,220,.6)' stroke-width='.6' transform='translate(0 -.5)'/><defs><path id='f0p18' d='M34 6C38 3 43 3.4 45 6C46.4 7.8 44.6 9.6 43 8.4'/></defs><use href='%23f0p18' stroke='%230a0806' stroke-width='3.1'/><use href='%23f0p18' stroke='url(%23m)' stroke-width='.9'/><use href='%23f0p18' stroke='rgba(255,246,220,.6)' stroke-width='.6' transform='translate(0 -.5)'/><path d='M28 1.2C29.6 3 30.6 4.6 30.6 6C30.6 7.4 29.6 9 28 10.8C26.4 9 25.4 7.4 25.4 6C25.4 4.6 26.4 3 28 1.2Z' fill='url(%23g)' stroke='%230a0806' stroke-width='.6'/></g></g><g id='f1'><g><defs><path id='f1p19' d='M4 17C4 9.5 9.5 4 17 4'/></defs><use href='%23f1p19' stroke='%230a0806' stroke-width='3.2'/><use href='%23f1p19' stroke='url(%23m)' stroke-width='1'/><use href='%23f1p19' stroke='rgba(255,246,220,.6)' stroke-width='.6' transform='translate(0 -.5)'/><defs><path id='f1p1a' d='M17 4C20.5 4 22 6.6 20.4 8C19.4 8.9 17.9 8.2 18.2 7'/></defs><use href='%23f1p1a' stroke='%230a0806' stroke-width='3.1'/><use href='%23f1p1a' stroke='url(%23m)' stroke-width='.9'/><use href='%23f1p1a' stroke='rgba(255,246,220,.6)' stroke-width='.6' transform='translate(0 -.5)'/><defs><path id='f1p1b' d='M4 17C4 20.5 6.6 22 8 20.4C8.9 19.4 8.2 17.9 7 18.2'/></defs><use href='%23f1p1b' stroke='%230a0806' stroke-width='3.1'/><use href='%23f1p1b' stroke='url(%23m)' stroke-width='.9'/><use href='%23f1p1b' stroke='rgba(255,246,220,.6)' stroke-width='.6' transform='translate(0 -.5)'/><defs><path id='f1p1c' d='M8.5 13.5C9.5 10.8 10.8 9.5 13.5 8.5'/></defs><use href='%23f1p1c' stroke='rgba(0,0,0,.6)' stroke-width='1.6'/><use href='%23f1p1c' stroke='rgba(228,210,168,.4)' stroke-width='.9' transform='translate(0 .8)'/><circle cx='4' cy='4' r='1.7' fill='url(%23g)' stroke='%230a0806' stroke-width='.5'/></g></g></defs><svg x='50%25' y='0' overflow='visible'><use href='%23f0' transform='translate(-28 0)'/></svg><use href='%23f1' transform='translate(0 0)'/><svg x='100%25' y='0' overflow='visible'><use href='%23f1' transform='translate(0 0) scale(-1 1)'/></svg><svg x='0' y='100%25' overflow='visible'><use href='%23f1' transform='translate(0 0) scale(1 -1)'/></svg><svg x='100%25' y='100%25' overflow='visible'><use href='%23f1' transform='translate(0 0) scale(-1 -1)'/></svg></svg>") 0 0 / 100% 100% no-repeat;
+	--elemenx-game-light-decor-inset: -4px;
+	--elemenx-game-dialogue-portrait-frame: 3px solid transparent;
+	--elemenx-game-dialogue-portrait-frame-image: var(--elemenx-game-menu-item-frame-image);
+	--elemenx-game-dialogue-portrait-radius: 2px;
+	--elemenx-game-dialogue-portrait-shadow: 0 3px 10px #00000099;
+	--elemenx-game-dialogue-choice: var(--elemenx-fantasy-choice), linear-gradient(to right, #d4be861f, #d4be8608 60%, #d4be8600);
+	--elemenx-game-dialogue-choice-hover: var(--elemenx-fantasy-choice), linear-gradient(to right, #ffd68c52, #ffd68c14 70%, #ffd68c00);
+	--elemenx-game-dialogue-choice-hover-text: #fff4d6;
+	--elemenx-game-dialogue-choice-frame: 0;
+	--elemenx-game-dialogue-choice-frame-image: none;
+	--elemenx-game-dialogue-choice-padding: 7px 12px 7px 32px;
+	--elemenx-game-dialogue-next-padding: 8px 44px;
+	--elemenx-game-dialogue-next-align: flex-start;
+	--elemenx-game-dialogue-next-margin: 4px 0 0 16px;
+	--elemenx-fantasy-decor: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' stroke-linecap='round' stroke-linejoin='round' fill='none' width='100%25' height='100%25'><defs><linearGradient id='m' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='%23efe3c4'/><stop offset='.4' stop-color='%23b3a383'/><stop offset='.8' stop-color='%236a5e4c'/><stop offset='1' stop-color='%233a3329'/></linearGradient><linearGradient id='g' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='%23fff1c4'/><stop offset='.5' stop-color='%23d8b45c'/><stop offset='1' stop-color='%236e5220'/></linearGradient><g id='f0'><linearGradient id='f0f' x1='0' y1='0' x2='1' y2='0'><stop offset='.3' stop-color='%2316130e' stop-opacity='0'/><stop offset='.3' stop-color='%2316130e' stop-opacity='.9'/><stop offset='.7' stop-color='%2316130e' stop-opacity='.9'/><stop offset='.7' stop-color='%2316130e' stop-opacity='0'/></linearGradient><path d='M0 16H50C64 16 72 13 78 8C82 5 86 3.5 88 1.5C90 3.5 94 5 98 8C104 13 112 16 126 16H176V23H0Z' fill='url(%23f0f)'/><path d='M0 16.5H50C64 16.5 72 13.5 78 8.5C82 5.5 86 4.0 88 2.0C90 4.0 94 5.5 98 8.5C104 13.5 112 16.5 126 16.5H176' stroke='%23070605'/><path d='M0 17.8H50C64 17.8 72 14.8 78 9.8C82 6.8 86 5.2 88 3.2C90 5.2 94 6.8 98 9.8C104 14.8 112 17.8 126 17.8H176' stroke='url(%23m)' stroke-width='1.5'/><path d='M0 19.5H50C64 19.5 72 16.5 78 11.5C82 8.5 86 7.0 88 5.0C90 7.0 94 8.5 98 11.5C104 16.5 112 19.5 126 19.5H176' stroke='%2315120e' stroke-width='1.5'/><path d='M0 21H50C64 21 72 18 78 13C82 10 86 8.5 88 6.5C90 8.5 94 10 98 13C104 18 112 21 126 21H176' stroke='rgba(222,204,160,.4)'/><defs><path id='f0p1' d='M52 16C48 9 41 6 35 8C30 10 30 16 35 16C38 16 39 13 37 12'/></defs><use href='%23f0p1' stroke='%230a0806' stroke-width='3.8'/><use href='%23f0p1' stroke='url(%23m)' stroke-width='1.6'/><use href='%23f0p1' stroke='rgba(255,246,220,.6)' stroke-width='.6' transform='translate(0 -.5)'/><defs><path id='f0p2' d='M124 16C128 9 135 6 141 8C146 10 146 16 141 16C138 16 137 13 139 12'/></defs><use href='%23f0p2' stroke='%230a0806' stroke-width='3.8'/><use href='%23f0p2' stroke='url(%23m)' stroke-width='1.6'/><use href='%23f0p2' stroke='rgba(255,246,220,.6)' stroke-width='.6' transform='translate(0 -.5)'/><defs><path id='f0p3' d='M70 13C66 9 61 8 57 10C61 12 65 13 70 13Z'/></defs><use href='%23f0p3' fill='%231c1812' stroke='%230a0806' stroke-width='3.2'/><use href='%23f0p3' stroke='url(%23m)' stroke-width='1'/><use href='%23f0p3' stroke='rgba(255,246,220,.6)' stroke-width='.6' transform='translate(0 -.5)'/><defs><path id='f0p4' d='M106 13C110 9 115 8 119 10C115 12 111 13 106 13Z'/></defs><use href='%23f0p4' fill='%231c1812' stroke='%230a0806' stroke-width='3.2'/><use href='%23f0p4' stroke='url(%23m)' stroke-width='1'/><use href='%23f0p4' stroke='rgba(255,246,220,.6)' stroke-width='.6' transform='translate(0 -.5)'/><defs><path id='f0p5' d='M86 15C82 15 78 13 76 16C75 18 77 19.5 79 18.5'/></defs><use href='%23f0p5' stroke='rgba(0,0,0,.6)' stroke-width='1.6'/><use href='%23f0p5' stroke='rgba(228,210,168,.4)' stroke-width='.9' transform='translate(0 .8)'/><defs><path id='f0p6' d='M90 15C94 15 98 13 100 16C101 18 99 19.5 97 18.5'/></defs><use href='%23f0p6' stroke='rgba(0,0,0,.6)' stroke-width='1.6'/><use href='%23f0p6' stroke='rgba(228,210,168,.4)' stroke-width='.9' transform='translate(0 .8)'/><path d='M88 5C91 8.5 91 11.5 88 13.5C85 11.5 85 8.5 88 5Z' fill='url(%23g)' stroke='%230a0806' stroke-width='.7'/><path d='M87.2 7.5C86.6 9 86.7 10.5 87.4 11.5' stroke='rgba(255,250,230,.8)' stroke-width='.6'/></g><g id='f1'><g><defs><path id='f1p7' d='M16 30C13 23 10 15 7 7C15 10 23 13 30 16C25 17 20 21 16 30Z'/></defs><use href='%23f1p7' fill='%231c1812' stroke='%230a0806' stroke-width='3.6'/><use href='%23f1p7' stroke='url(%23m)' stroke-width='1.4'/><use href='%23f1p7' stroke='rgba(255,246,220,.6)' stroke-width='.6' transform='translate(0 -.5)'/><path d='M10 10C14 14 17 18 18 22' stroke='rgba(255,240,205,.5)' stroke-width='.8'/><defs><path id='f1p8' d='M50 16C46 8 38 4 31 6C25 8 24 15 30 15.5C33.5 15.8 35 12.5 32.5 11'/></defs><use href='%23f1p8' stroke='%230a0806' stroke-width='3.8'/><use href='%23f1p8' stroke='url(%23m)' stroke-width='1.6'/><use href='%23f1p8' stroke='rgba(255,246,220,.6)' stroke-width='.6' transform='translate(0 -.5)'/><defs><path id='f1p9' d='M16 50C8 46 4 38 6 31C8 25 15 24 15.5 30C15.8 33.5 12.5 35 11 32.5'/></defs><use href='%23f1p9' stroke='%230a0806' stroke-width='3.8'/><use href='%23f1p9' stroke='url(%23m)' stroke-width='1.6'/><use href='%23f1p9' stroke='rgba(255,246,220,.6)' stroke-width='.6' transform='translate(0 -.5)'/><circle cx='50' cy='16' r='1.8' fill='url(%23g)' stroke='%230a0806' stroke-width='.6'/><circle cx='16' cy='50' r='1.8' fill='url(%23g)' stroke='%230a0806' stroke-width='.6'/><defs><path id='f1pa' d='M24 42C24 30 34 23 46 25C56 27 58 37 49 39C43 40 41 33 46 31'/></defs><use href='%23f1pa' stroke='rgba(0,0,0,.6)' stroke-width='1.6'/><use href='%23f1pa' stroke='rgba(228,210,168,.4)' stroke-width='.9' transform='translate(0 .8)'/><defs><path id='f1pb' d='M49 39C68 43 88 38 106 29C112 26 118 26 122 29'/></defs><use href='%23f1pb' stroke='rgba(0,0,0,.6)' stroke-width='1.6'/><use href='%23f1pb' stroke='rgba(228,210,168,.4)' stroke-width='.9' transform='translate(0 .8)'/><defs><path id='f1pc' d='M62 41C70 36 74 31 76 26'/></defs><use href='%23f1pc' stroke='rgba(0,0,0,.6)' stroke-width='1.6'/><use href='%23f1pc' stroke='rgba(228,210,168,.4)' stroke-width='.9' transform='translate(0 .8)'/><defs><path id='f1pd' d='M108 28C112 22 117 21 120 23'/></defs><use href='%23f1pd' stroke='rgba(0,0,0,.6)' stroke-width='1.6'/><use href='%23f1pd' stroke='rgba(228,210,168,.4)' stroke-width='.9' transform='translate(0 .8)'/></g></g><g id='f2'><g><defs><path id='f2pe' d='M16 26C14.6 29 13.2 32 11.5 36.5C16 34.8 19.5 33.4 22.5 32C19.8 31.2 17.6 29.2 16 26Z'/></defs><use href='%23f2pe' fill='%231c1812' stroke='%230a0806' stroke-width='3.3'/><use href='%23f2pe' stroke='url(%23m)' stroke-width='1.1'/><use href='%23f2pe' stroke='rgba(255,246,220,.6)' stroke-width='.6' transform='translate(0 -.5)'/><defs><path id='f2pf' d='M44 32C41 38 35 42 29 41C24 40 24 34 29 33.5C32 33.3 33 36 31 37'/></defs><use href='%23f2pf' stroke='%230a0806' stroke-width='3.8'/><use href='%23f2pf' stroke='url(%23m)' stroke-width='1.6'/><use href='%23f2pf' stroke='rgba(255,246,220,.6)' stroke-width='.6' transform='translate(0 -.5)'/><defs><path id='f2p10' d='M16 4C10 7 6 13 7 19C8 24 14 24 14.5 19C14.8 16 12 15 11 17'/></defs><use href='%23f2p10' stroke='%230a0806' stroke-width='3.8'/><use href='%23f2p10' stroke='url(%23m)' stroke-width='1.6'/><use href='%23f2p10' stroke='rgba(255,246,220,.6)' stroke-width='.6' transform='translate(0 -.5)'/></g></g></defs><svg x='50%25' y='0' overflow='visible'><use href='%23f0' transform='translate(-88 0)'/></svg><use href='%23f1' transform='translate(0 0)'/><svg x='100%25' y='0' overflow='visible'><use href='%23f1' transform='translate(0 0) scale(-1 1)'/></svg><svg x='0' y='100%25' overflow='visible'><use href='%23f2' transform='translate(0 -48)'/></svg><svg x='100%25' y='100%25' overflow='visible'><use href='%23f2' transform='translate(0 -48) scale(-1 1)'/></svg></svg>") 0 0 / 100% 100% no-repeat;
+	--elemenx-fantasy-flourish: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' stroke-linecap='round' stroke-linejoin='round' fill='none' width='240' height='20' viewBox='0 0 240 20'><defs><linearGradient id='m' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='%23efe3c4'/><stop offset='.4' stop-color='%23b3a383'/><stop offset='.8' stop-color='%236a5e4c'/><stop offset='1' stop-color='%233a3329'/></linearGradient><linearGradient id='g' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='%23fff1c4'/><stop offset='.5' stop-color='%23d8b45c'/><stop offset='1' stop-color='%236e5220'/></linearGradient><linearGradient id='l' x1='0' y1='0' x2='1' y2='0'><stop offset='0' stop-color='%23b3a383' stop-opacity='0'/><stop offset='1' stop-color='%23b3a383'/></linearGradient></defs><g><path d='M8 10H74' stroke='url(%23l)' stroke-width='1'/><path d='M8 10H74' stroke='url(%23l)' stroke-width='1' transform='translate(240 0) scale(-1 1)'/><defs><path id='p21' d='M111 10C102 3 90 3 84 9C80 14 85 18 89 15C91 13 89 10 87 11.5'/></defs><use href='%23p21' stroke='%230a0806' stroke-width='3.5'/><use href='%23p21' stroke='url(%23m)' stroke-width='1.3'/><use href='%23p21' stroke='rgba(255,246,220,.6)' stroke-width='.6' transform='translate(0 -.5)'/><defs><path id='p22' d='M129 10C138 3 150 3 156 9C160 14 155 18 151 15C149 13 151 10 153 11.5'/></defs><use href='%23p22' stroke='%230a0806' stroke-width='3.5'/><use href='%23p22' stroke='url(%23m)' stroke-width='1.3'/><use href='%23p22' stroke='rgba(255,246,220,.6)' stroke-width='.6' transform='translate(0 -.5)'/><defs><path id='p23' d='M111 10C100 14 86 12 74 10'/></defs><use href='%23p23' stroke='%230a0806' stroke-width='3.2'/><use href='%23p23' stroke='url(%23m)' stroke-width='1'/><use href='%23p23' stroke='rgba(255,246,220,.6)' stroke-width='.6' transform='translate(0 -.5)'/><defs><path id='p24' d='M129 10C140 14 154 12 166 10'/></defs><use href='%23p24' stroke='%230a0806' stroke-width='3.2'/><use href='%23p24' stroke='url(%23m)' stroke-width='1'/><use href='%23p24' stroke='rgba(255,246,220,.6)' stroke-width='.6' transform='translate(0 -.5)'/><path d='M120 2C122.5 5 126 8 127 10C126 12 122.5 15 120 18C117.5 15 114 12 113 10C114 8 117.5 5 120 2Z' fill='url(%23g)' stroke='%230a0806' stroke-width='.7'/><circle cx='118.8' cy='7.5' r='1' fill='rgba(255,252,236,.9)'/></g></svg>");
+	--elemenx-fantasy-choice: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' stroke-linecap='round' stroke-linejoin='round' fill='none' width='14' height='14' viewBox='0 0 14 14'><defs><linearGradient id='m' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='%23efe3c4'/><stop offset='.4' stop-color='%23b3a383'/><stop offset='.8' stop-color='%236a5e4c'/><stop offset='1' stop-color='%233a3329'/></linearGradient><linearGradient id='g' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='%23fff1c4'/><stop offset='.5' stop-color='%23d8b45c'/><stop offset='1' stop-color='%236e5220'/></linearGradient></defs><g><path d='M1 7L7 3.2L13 7L7 10.8Z' fill='url(%23m)' stroke='%230a0806' stroke-width='.8'/><circle cx='7' cy='7' r='1.6' fill='url(%23g)' stroke='%230a0806' stroke-width='.4'/></g></svg>") 10px center / 14px 14px no-repeat, linear-gradient(to right, #b3a38380, #b3a38300) left bottom / 100% 1px no-repeat;
+	color-scheme: dark;
+}
+
+[data-theme][data-theme='fantasy'] .elemenx-window.game.secondary {
+	--elemenx-game-decor: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' stroke-linecap='round' stroke-linejoin='round' fill='none' width='100%25' height='100%25'><defs><linearGradient id='m' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='%23efe3c4'/><stop offset='.4' stop-color='%23b3a383'/><stop offset='.8' stop-color='%236a5e4c'/><stop offset='1' stop-color='%233a3329'/></linearGradient><linearGradient id='g' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='%23fff1c4'/><stop offset='.5' stop-color='%23d8b45c'/><stop offset='1' stop-color='%236e5220'/></linearGradient><g id='f0'><linearGradient id='f0f' x1='0' y1='0' x2='1' y2='0'><stop offset='.2' stop-color='%2316130e' stop-opacity='0'/><stop offset='.3' stop-color='%2316130e' stop-opacity='.9'/><stop offset='.7' stop-color='%2316130e' stop-opacity='.9'/><stop offset='.8' stop-color='%2316130e' stop-opacity='0'/></linearGradient><path d='M0 10H30.0C40.8 10 46.8 8.1 51.6 4.9C54.6 2.9 57.6 2 60.0 1C62.4 2 65.4 2.9 68.4 4.9C73.2 8.1 79.2 10 90.0 10H120V15H0Z' fill='url(%23f0f)'/><path d='M0 10.5H30.0C40.8 10.5 46.8 8.6 51.6 5.4C54.6 3.4 57.6 2.5 60.0 1.5C62.4 2.5 65.4 3.4 68.4 5.4C73.2 8.6 79.2 10.5 90.0 10.5H120' stroke='%23070605'/><path d='M0 11.6H30.0C40.8 11.6 46.8 9.7 51.6 6.5C54.6 4.5 57.6 3.6 60.0 2.6C62.4 3.6 65.4 4.5 68.4 6.5C73.2 9.7 79.2 11.6 90.0 11.6H120' stroke='url(%23m)' stroke-width='1.2'/><path d='M0 13H30.0C40.8 13 46.8 11.1 51.6 7.9C54.6 5.9 57.6 5 60.0 4C62.4 5 65.4 5.9 68.4 7.9C73.2 11.1 79.2 13 90.0 13H120' stroke='%2315120e'/><path d='M0 14H30.0C40.8 14 46.8 12.1 51.6 8.9C54.6 6.9 57.6 6 60.0 5C62.4 6 65.4 6.9 68.4 8.9C73.2 12.1 79.2 14 90.0 14H120' stroke='rgba(222,204,160,.4)' stroke-width='.8'/><defs><path id='f0p11' d='M31 10C28 5.5 23.5 4 20 5.5C17.5 6.8 18 10 21 10C22.6 10 23 8.4 22 7.8'/></defs><use href='%23f0p11' stroke='%230a0806' stroke-width='3.3'/><use href='%23f0p11' stroke='url(%23m)' stroke-width='1.1'/><use href='%23f0p11' stroke='rgba(255,246,220,.6)' stroke-width='.6' transform='translate(0 -.5)'/><defs><path id='f0p12' d='M89 10C92 5.5 96.5 4 100 5.5C102.5 6.8 102 10 99 10C97.4 10 97 8.4 98 7.8'/></defs><use href='%23f0p12' stroke='%230a0806' stroke-width='3.3'/><use href='%23f0p12' stroke='url(%23m)' stroke-width='1.1'/><use href='%23f0p12' stroke='rgba(255,246,220,.6)' stroke-width='.6' transform='translate(0 -.5)'/><defs><path id='f0p13' d='M58 11C55.5 11 53 9.6 51.5 11.5'/></defs><use href='%23f0p13' stroke='rgba(0,0,0,.6)' stroke-width='1.6'/><use href='%23f0p13' stroke='rgba(228,210,168,.4)' stroke-width='.9' transform='translate(0 .8)'/><defs><path id='f0p14' d='M62 11C64.5 11 67 9.6 68.5 11.5'/></defs><use href='%23f0p14' stroke='rgba(0,0,0,.6)' stroke-width='1.6'/><use href='%23f0p14' stroke='rgba(228,210,168,.4)' stroke-width='.9' transform='translate(0 .8)'/><path d='M60 3.4C62 5.8 62 8 60 9.6C58 8 58 5.8 60 3.4Z' fill='url(%23g)' stroke='%230a0806' stroke-width='.6'/></g><g id='f1'><g><defs><path id='f1p15' d='M32 10C29 5 23.5 3 19.5 4.5C16.5 5.8 16.5 10 20 10C22 10 22.5 8 21 7.4'/></defs><use href='%23f1p15' stroke='%230a0806' stroke-width='3.4'/><use href='%23f1p15' stroke='url(%23m)' stroke-width='1.2'/><use href='%23f1p15' stroke='rgba(255,246,220,.6)' stroke-width='.6' transform='translate(0 -.5)'/><defs><path id='f1p16' d='M10 32C5 29 3 23.5 4.5 19.5C5.8 16.5 10 16.5 10 20C10 22 8 22.5 7.4 21'/></defs><use href='%23f1p16' stroke='%230a0806' stroke-width='3.4'/><use href='%23f1p16' stroke='url(%23m)' stroke-width='1.2'/><use href='%23f1p16' stroke='rgba(255,246,220,.6)' stroke-width='.6' transform='translate(0 -.5)'/><circle cx='5.5' cy='5.5' r='2' fill='url(%23g)' stroke='%230a0806' stroke-width='.6'/></g></g><g id='f2'><g><circle cx='5.5' cy='18.5' r='1.7' fill='url(%23g)' stroke='%230a0806' stroke-width='.6'/></g></g></defs><svg x='50%25' y='0' overflow='visible'><use href='%23f0' transform='translate(-60 0)'/></svg><use href='%23f1' transform='translate(0 0)'/><svg x='100%25' y='0' overflow='visible'><use href='%23f1' transform='translate(0 0) scale(-1 1)'/></svg><svg x='0' y='100%25' overflow='visible'><use href='%23f2' transform='translate(0 -24)'/></svg><svg x='100%25' y='100%25' overflow='visible'><use href='%23f2' transform='translate(0 -24) scale(-1 1)'/></svg></svg>") 0 0 / 100% 100% no-repeat;
+	--elemenx-game-decor-inset: -10px;
+	--elemenx-game-frame: 5px solid transparent;
+	--elemenx-game-frame-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' stroke-linecap='round' stroke-linejoin='round' fill='none' width='16' height='16' viewBox='0 0 16 16'><defs><linearGradient id='m' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='%23efe3c4'/><stop offset='.4' stop-color='%23b3a383'/><stop offset='.8' stop-color='%236a5e4c'/><stop offset='1' stop-color='%233a3329'/></linearGradient></defs><g><rect x='.5' y='.5' width='15' height='15' rx='5' stroke='%23070605'/><rect x='1.6' y='1.6' width='12.8' height='12.8' rx='4' stroke='url(%23m)' stroke-width='1.2'/><rect x='3' y='3' width='10' height='10' rx='3' stroke='%2315120e'/><rect x='4' y='4' width='8' height='8' rx='2.4' stroke='rgba(222,204,160,.4)' stroke-width='.8'/></g></svg>") 5 / 5px stretch;
+	--elemenx-game-radius: 6px;
+	--elemenx-game-panel-shadow: 0 0 0 1px #00000073, inset 0 0 14px #ffecc824, 0 6px 18px #00000073;
+	--elemenx-game-header: linear-gradient(to bottom, #55574fb2, #33352f99 50%, #22241f80);
+	--elemenx-game-header-line: 1px solid #00000080;
+	--elemenx-game-header-inset: 4px 4px 0;
+	--elemenx-game-header-radius: 2px 2px 0 0;
+	--elemenx-game-header-padding: 0 4px 0 10px;
+	--elemenx-game-ornament: none;
+}
+
+[data-theme][data-theme='fantasy'] .elemenx-window.game.plain {
+	--elemenx-game-decor: none;
+	--elemenx-game-decor-inset: 0;
+	--elemenx-game-frame: 1px solid #a8a08a;
+	--elemenx-game-frame-image: none;
+	--elemenx-game-radius: 7px;
+	--elemenx-game-panel-shadow: 0 0 0 1px #000000bf, inset 0 0 14px #ffecc829, 0 6px 18px #00000073;
+	--elemenx-game-header: transparent;
+	--elemenx-game-header-line: 0;
+	--elemenx-game-header-inset: 1px 1px 0;
+	--elemenx-game-header-radius: 6px 6px 0 0;
+	--elemenx-game-header-padding: 0 4px 0 10px;
+	--elemenx-game-ornament: none;
+}
+
+[data-theme][data-theme='fantasy'] .elemenx-game-panel {
+	--elemenx-game-decor: none;
+	--elemenx-game-decor-inset: 0;
+}
+
+[data-theme][data-theme='fantasy'] .elemenx-game-panel.elemenx-game-dialogue {
+	--elemenx-game-panel: radial-gradient(ellipse at 50% 0%, #d4be861f, #d4be8600 60%), linear-gradient(to right, #0a090800, #0a090840 12%, #0a090840 88%, #0a090800);
+	--elemenx-game-frame: 0;
+	--elemenx-game-frame-image: none;
+	--elemenx-game-radius: 0;
+	--elemenx-game-panel-shadow: none;
+	--elemenx-game-decor: var(--elemenx-fantasy-flourish) center top / 240px 20px no-repeat, var(--elemenx-fantasy-flourish) center bottom / 240px 20px no-repeat, linear-gradient(to right, #b3a38300, #b3a383bf 15%, #b3a383bf 85%, #b3a38300) center 9px / 100% 1px no-repeat, linear-gradient(to right, #00000000, #00000099 15%, #00000099 85%, #00000000) center 10px / 100% 1px no-repeat, linear-gradient(to right, #b3a38300, #b3a383bf 15%, #b3a383bf 85%, #b3a38300) center calc(100% - 10px) / 100% 1px no-repeat, linear-gradient(to right, #00000000, #00000099 15%, #00000099 85%, #00000000) center calc(100% - 9px) / 100% 1px no-repeat;
+	--elemenx-game-decor-inset: -10px 0;
+	padding: 24px 72px;
+}
+
+[data-theme][data-theme='fantasy'] .elemenx-game-panel.elemenx-game-menu {
+	--elemenx-game-decor: var(--elemenx-fantasy-decor);
+	--elemenx-game-decor-inset: -16px;
+	padding: 40px 36px 32px;
+}
+
+[data-theme][data-theme='fantasy'] .elemenx-game-bar.small {
+	--elemenx-game-bar-ornament: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' stroke-linecap='round' stroke-linejoin='round' fill='none' width='100%25' height='100%25'><defs><g id='f0'><defs><linearGradient id='f0r' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='%23e4d7b6'/><stop offset='.5' stop-color='%23a89a7a'/><stop offset='1' stop-color='%237a6d56'/></linearGradient></defs><g><path d='M12 .5H4A3.5 3.5 0 0 0 4 7.5H12' stroke='%23070605'/><path d='M12 1.5H4A2.5 2.5 0 0 0 4 6.5H12' stroke='url(%23f0r)'/><path d='M12 2.5H4A1.5 1.5 0 0 0 4 5.5H12' stroke='rgba(0,0,0,.8)'/></g></g></defs><use href='%23f0' transform='translate(0 0)'/><svg x='100%25' y='0' overflow='visible'><use href='%23f0' transform='translate(0 0) scale(-1 1)'/></svg></svg>") 0 0 / 100% 100% no-repeat, linear-gradient(to bottom, #070605 0 1px, #dfd2b0 1px 2px, #000000bf 2px 3px, #00000000 3px calc(100% - 3px), #000000bf calc(100% - 3px) calc(100% - 2px), #7e7159 calc(100% - 2px) calc(100% - 1px), #070605 calc(100% - 1px)) 12px 0 / calc(100% - 24px) 100% no-repeat;
+	--elemenx-game-bar-radius: 4px;
+}
+
+[data-theme][data-theme='fantasy'] .elemenx-game-bar.large {
+	--elemenx-game-bar-ornament: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' stroke-linecap='round' stroke-linejoin='round' fill='none' width='100%25' height='100%25'><defs><g id='f0'><defs><linearGradient id='f0r' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='%23e4d7b6'/><stop offset='.5' stop-color='%23a89a7a'/><stop offset='1' stop-color='%237a6d56'/></linearGradient></defs><g><path d='M12 .5H11A10.5 10.5 0 0 0 11 21.5H12' stroke='%23070605'/><path d='M12 1.5H11A9.5 9.5 0 0 0 11 20.5H12' stroke='url(%23f0r)'/><path d='M12 2.5H11A8.5 8.5 0 0 0 11 19.5H12' stroke='rgba(0,0,0,.8)'/></g></g></defs><use href='%23f0' transform='translate(0 0)'/><svg x='100%25' y='0' overflow='visible'><use href='%23f0' transform='translate(0 0) scale(-1 1)'/></svg></svg>") 0 0 / 100% 100% no-repeat, linear-gradient(to bottom, #070605 0 1px, #dfd2b0 1px 2px, #000000bf 2px 3px, #00000000 3px calc(100% - 3px), #000000bf calc(100% - 3px) calc(100% - 2px), #7e7159 calc(100% - 2px) calc(100% - 1px), #070605 calc(100% - 1px)) 12px 0 / calc(100% - 24px) 100% no-repeat;
+	--elemenx-game-bar-radius: 11px;
+}
+
+[data-theme][data-theme='fantasy'] .elemenx-game-inventory-count,
+[data-theme][data-theme='fantasy'] .elemenx-game-slot-count {
+	inset-inline: 4px auto;
+}

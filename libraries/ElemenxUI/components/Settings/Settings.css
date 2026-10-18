@@ -17,7 +17,7 @@
 	padding: 12px 8px;
 	overflow: visible;
 	background: var(--elemenx-surface-raised);
-	border-right: 1px solid var(--elemenx-border);
+	border-inline-end: 1px solid var(--elemenx-border);
 }
 
 .elemenx-settings-page {
@@ -51,7 +51,7 @@
 	display: inline-flex;
 	align-items: center;
 	gap: 4px;
-	margin-right: 4px;
+	margin-inline-end: 4px;
 }
 
 .elemenx-settings-title {

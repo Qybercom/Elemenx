@@ -2,6 +2,9 @@
  * Pages of a list of Count items, PageSize (10) on each: the range shown ('11–20 of 57'), a choice of PageSizes
  * (none when empty), and the buttons of the first page, the previous one, the numbers (the first, the last and the
  * ones around Page, with gaps between), the next one and the last. Page is from 1. Used by Table; works under any list.
+ * ShowRange, ShowPages, ShowFirstLast and ShowPrevNext switch the range, the numbers, the buttons of the first and the
+ * last page and those of the previous and the next one. Siblings is how many numbers show on each side of Page (1),
+ * Boundaries how many at each end (1); a gap that would hide a single page shows that page.
  * Events: page ({Page, PageSize}).
  */
 Elemenx.Component('Pagination', {
@@ -11,9 +14,15 @@ Elemenx.Component('Pagination', {
 	Count: 0,
 	PageSize: 10,
 	PageSizes: [10, 25, 50, 100],
-	OfLabel: 'of',
-	SizeLabel: '/ page',
-	Label: 'Pages',
+	OfLabel: '',
+	SizeLabel: '',
+	Label: '',
+	ShowRange: true,
+	ShowPages: true,
+	ShowFirstLast: true,
+	ShowPrevNext: true,
+	Siblings: 1,
+	Boundaries: 1,
 
 	$OnCreate: function () {
 		var self = this;
@@ -26,17 +35,20 @@ Elemenx.Component('Pagination', {
 			return Math.max(1, Math.min(Number(page) || 1, self.Pages(count, size)));
 		};
 
-		this.List = function (page, count, size) {
+		this.List = function (page, count, size, siblings, boundaries) {
 			var pages = self.Pages(count, size);
 			var current = self.Current(page, count, size);
 			var list = [];
 			var last = 0;
 			var i = 1;
 
+			siblings = Math.max(0, Math.floor(Number(siblings) || 0));
+			boundaries = Math.max(0, Math.floor(Number(boundaries) || 0));
+
 			while (i <= pages) {
-				if (i === 1 || i === pages || Math.abs(i - current) <= 1) {
-					if (i - last > 1)
-						list.push({Key: 'gap-' + i, Gap: true});
+				if (i <= boundaries || i > pages - boundaries || Math.abs(i - current) <= siblings) {
+					if (last && i - last === 2) list.push({Key: 'page-' + (i - 1), Number: i - 1, Current: false});
+					else if (i - last > 1) list.push({Key: 'gap-' + i, Gap: true});
 
 					list.push({Key: 'page-' + i, Number: i, Current: i === current});
 
@@ -46,6 +58,9 @@ Elemenx.Component('Pagination', {
 				i++;
 			}
 
+			if (last < pages)
+				list.push({Key: 'gap-end', Gap: true});
+
 			return list;
 		};
 
@@ -54,9 +69,12 @@ Elemenx.Component('Pagination', {
 			var per = Number(size) || Number(count);
 
 			if (!Number(count))
-				return '0 ' + self.OfLabel + ' 0';
+				return self.OfLabel ? '0 ' + self.OfLabel + ' 0' : Elemenx.Locale.Text('ui.pagination.range', {from: 0, to: 0, count: 0});
 
-			return ((current - 1) * per + 1) + '–' + Math.min(Number(count), current * per) + ' ' + self.OfLabel + ' ' + count;
+			if (self.OfLabel)
+				return ((current - 1) * per + 1) + '–' + Math.min(Number(count), current * per) + ' ' + self.OfLabel + ' ' + count;
+
+			return Elemenx.Locale.Text('ui.pagination.range', {from: (current - 1) * per + 1, to: Math.min(Number(count), current * per), count: count});
 		};
 	},
 

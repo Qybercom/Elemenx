@@ -1,21 +1,21 @@
 <div class="elemenx-range elemenx-popup-anchor">
 	<div class="elemenx-input" [class]="[Size || 'medium', Shape === 'round' ? 'round' : '', Invalid ? 'invalid' : '', Disabled ? 'disabled' : '']">
 		<button class="elemenx-range-toggle" type="button" aria-haspopup="dialog" [attribute.aria-expanded]="String(Open)" [disabled]="Disabled" (click)="Toggle">
-			<span class="elemenx-range-text" [class.placeholder]="!Text(Value, Locale)">{{Text(Value, Locale) || Placeholder}}</span>
+			<span class="elemenx-range-text" [class.placeholder]="!Text(Value, Locale)">{{Text(Value, Locale) || (Placeholder || $T('ui.dateRangeInput.placeholder'))}}</span>
 			<Icon Name="calendar" />
 		</button>
 	</div>
 	<input type="hidden" *if="Name" [attribute.name]="Name" [value]="(Value || []).join('/')" />
-	<div class="elemenx-popup elemenx-range-panel" role="dialog" aria-label="Choose a range" data-match-width="false" *popup="Open" (dismiss)="Dismissed" (keydown)="Key">
+	<div class="elemenx-popup elemenx-range-panel" role="dialog" [attribute.aria-label]="$T('ui.dateRangeInput.choose')" data-match-width="false" *popup="Open" (dismiss)="Dismissed" (keydown)="Key">
 		<div class="elemenx-range-presets" *if="Presets.length">
-			<button class="elemenx-option" type="button" *for="preset of Presets" *key="preset.Label" [attribute.data-index]="$index" (click)="Preset">{{preset.Label}}</button>
+			<button class="elemenx-option" type="button" *for="preset of Presets" *key="preset.Label" [attribute.data-index]="$index" (click)="Preset">{{preset.Key ? $T(preset.Key) : preset.Label}}</button>
 		</div>
 		<div class="elemenx-range-months">
 			<div class="elemenx-calendar elemenx-range-month" *for="month of Months(Cursor)" *key="month">
 				<div class="elemenx-calendar-header">
-					<button class="elemenx-calendar-nav" type="button" aria-label="Previous month" *if="$index === 0" (click)="Previous"><Icon Name="chevron-left" /></button>
+					<button class="elemenx-calendar-nav" type="button" [attribute.aria-label]="$T('ui.dateRangeInput.previousMonth')" *if="$index === 0" (click)="Previous"><Icon Name="chevron-left" /></button>
 					<span class="elemenx-calendar-title">{{Title(month, Locale)}}</span>
-					<button class="elemenx-calendar-nav" type="button" aria-label="Next month" *if="$index === 1" (click)="Following"><Icon Name="chevron-right" /></button>
+					<button class="elemenx-calendar-nav" type="button" [attribute.aria-label]="$T('ui.dateRangeInput.nextMonth')" *if="$index === 1" (click)="Following"><Icon Name="chevron-right" /></button>
 				</div>
 				<div class="elemenx-calendar-days" role="grid">
 					<span class="elemenx-calendar-weekday" *for="name of Weekdays(Locale)" *key="name">{{name}}</span>
@@ -23,9 +23,9 @@
 				</div>
 			</div>
 			<div class="elemenx-picker-footer">
-				<span class="elemenx-caption">{{Pending ? 'Pick the end' : Text(Value, Locale)}}</span>
+				<span class="elemenx-caption">{{Pending ? $T('ui.dateRangeInput.pickEnd') : Text(Value, Locale)}}</span>
 				<span class="elemenx-spacer"></span>
-				<Button [label]="ClearLabel" Variant="ghost" Size="small" (click)="Clear" />
+				<Button [label]="(ClearLabel || $T('ui.dateRangeInput.clear'))" Variant="ghost" Size="small" (click)="Clear" />
 			</div>
 		</div>
 	</div>

@@ -98,3 +98,28 @@
 		animation: none;
 	}
 }
+
+/*
+ * A dialog that waits for an answer shakes when Escape or the backdrop would close it. The animation of its opening
+ * stays in the list: an animation that leaves the list and comes back starts again, and the dialog would open twice.
+ */
+.elemenx-dialog.refused[open] {
+	animation: elemenx-dialog-in 160ms ease, elemenx-dialog-refuse var(--elemenx-duration-slow) var(--elemenx-easing) 2;
+}
+
+@keyframes elemenx-dialog-refuse {
+	25% {
+		translate: -6px 0;
+	}
+
+	75% {
+		translate: 6px 0;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.elemenx-dialog.refused[open] {
+		outline: 2px solid var(--elemenx-focus);
+		animation: none;
+	}
+}

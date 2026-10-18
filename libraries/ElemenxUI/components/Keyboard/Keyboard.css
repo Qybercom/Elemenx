@@ -1,0 +1,80 @@
+/* A keyboard: its blocks side by side, each a grid of quarters of a key (--elemenx-keyboard-unit is one key). */
+.elemenx-keyboard {
+	--elemenx-keyboard-unit: 40px;
+	display: inline-flex;
+	align-items: flex-start;
+	gap: calc(var(--elemenx-keyboard-unit) / 2);
+	max-width: 100%;
+	padding: 8px;
+	overflow-x: auto;
+	background: var(--elemenx-surface-hover);
+	border: 1px solid var(--elemenx-border);
+	border-radius: var(--elemenx-radius-large);
+	user-select: none;
+}
+
+.elemenx-keyboard.small {
+	--elemenx-keyboard-unit: 28px;
+}
+
+.elemenx-keyboard.large {
+	--elemenx-keyboard-unit: 52px;
+}
+
+.elemenx-keyboard-block {
+	display: grid;
+	flex: none;
+}
+
+.elemenx-keyboard-key {
+	display: flex;
+	align-items: flex-start;
+	justify-content: flex-start;
+	min-width: 0;
+	margin: 2px;
+	padding: 3px 5px;
+	overflow: hidden;
+	background: var(--elemenx-surface);
+	border: 1px solid var(--elemenx-border);
+	border-radius: var(--elemenx-radius);
+	box-shadow: inset 0 -2px 0 var(--elemenx-border);
+	color: var(--elemenx-text);
+	font: inherit;
+	font-size: var(--elemenx-font-size-small);
+	line-height: 1.1;
+	white-space: nowrap;
+	cursor: default;
+}
+
+.elemenx-keyboard.small .elemenx-keyboard-key {
+	padding: 1px 3px;
+	font-size: 10px;
+}
+
+.elemenx-keyboard.clickable .elemenx-keyboard-key {
+	cursor: pointer;
+}
+
+.elemenx-keyboard.clickable .elemenx-keyboard-key:hover {
+	background: linear-gradient(rgba(var(--elemenx-text-rgb), 0.06), rgba(var(--elemenx-text-rgb), 0.06)), var(--elemenx-surface);
+}
+
+.elemenx-keyboard-key:focus-visible {
+	outline: 2px solid var(--elemenx-focus);
+	outline-offset: 1px;
+}
+
+/* A marked key (a hotkey, the keys of a game) in the accent; a pressed key goes down. */
+.elemenx-keyboard-key.marked {
+	background: rgba(var(--elemenx-accent-rgb), 0.16);
+	border-color: var(--elemenx-accent);
+}
+
+.elemenx-keyboard-key.pressed,
+.elemenx-keyboard.clickable .elemenx-keyboard-key:active {
+	background: var(--elemenx-accent);
+	border-color: var(--elemenx-accent);
+	box-shadow: none;
+	color: var(--elemenx-accent-text);
+	transform: translateY(1px);
+}

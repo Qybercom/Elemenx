@@ -1,0 +1,235 @@
+/* Over the whole page, above the windows and the dialogs of the Application. */
+.elemenx-achievements {
+	position: fixed;
+	z-index: 2000;
+	inset-inline: 0;
+	display: flex;
+	justify-content: center;
+	padding: 0 16px;
+	pointer-events: none;
+}
+
+.elemenx-achievements.bottom {
+	bottom: 32px;
+}
+
+.elemenx-achievements.top {
+	top: 32px;
+}
+
+/*
+ * The band: it opens out of the round badge and folds back into it. Its time is the Duration of the achievement: it
+ * comes (1.1 s), stays, and goes in the last 0.9 s; one that lasts only comes.
+ */
+.elemenx-achievement {
+	position: relative;
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	max-width: 460px;
+	height: 64px;
+	padding: 0 24px 0 0;
+	overflow: hidden;
+	background: var(--elemenx-achievement-background);
+	border: 0;
+	border-radius: var(--elemenx-radius-pill);
+	box-shadow: var(--elemenx-achievement-shadow);
+	color: var(--elemenx-achievement-text);
+	font: inherit;
+	text-align: start;
+	white-space: nowrap;
+	cursor: pointer;
+	pointer-events: auto;
+	--elemenx-achievement-color: var(--elemenx-achievement-badge);
+}
+
+.elemenx-achievement.timed {
+	animation: elemenx-achievement-open 1100ms var(--elemenx-easing) both, elemenx-achievement-close 900ms var(--elemenx-easing) calc(var(--elemenx-achievement-duration) - 900ms) forwards;
+}
+
+.elemenx-achievement.lasting {
+	animation: elemenx-achievement-open 1100ms var(--elemenx-easing) both;
+}
+
+.elemenx-achievement:focus-visible {
+	outline: 2px solid var(--elemenx-focus);
+	outline-offset: 2px;
+}
+
+.elemenx-achievement.uncommon {
+	--elemenx-achievement-color: var(--elemenx-game-uncommon);
+}
+
+.elemenx-achievement.rare {
+	--elemenx-achievement-color: var(--elemenx-game-rare);
+}
+
+.elemenx-achievement.epic {
+	--elemenx-achievement-color: var(--elemenx-game-epic);
+}
+
+.elemenx-achievement.legendary {
+	--elemenx-achievement-color: var(--elemenx-game-legendary);
+}
+
+/* The light that runs over the band once it is open. */
+.elemenx-achievement::after {
+	position: absolute;
+	inset: 0;
+	background: linear-gradient(100deg, transparent 30%, var(--elemenx-achievement-shine) 50%, transparent 70%) no-repeat;
+	background-size: 200% 100%;
+	background-position: 150% 0;
+	content: '';
+	pointer-events: none;
+	animation: elemenx-achievement-shine 900ms var(--elemenx-easing) 1100ms;
+}
+
+.elemenx-achievement-badge {
+	display: inline-flex;
+	flex: none;
+	align-items: center;
+	justify-content: center;
+	width: 64px;
+	height: 64px;
+	overflow: hidden;
+	background: var(--elemenx-achievement-color);
+	border-radius: 50%;
+	color: var(--elemenx-achievement-badge-text);
+}
+
+.elemenx-achievement-badge .elemenx-icon {
+	width: 32px;
+	height: 32px;
+}
+
+.elemenx-achievement-badge > img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+.elemenx-achievement-band {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+}
+
+.elemenx-achievement.timed .elemenx-achievement-band {
+	animation: elemenx-achievement-show 1100ms linear both, elemenx-achievement-hide 300ms linear calc(var(--elemenx-achievement-duration) - 900ms) forwards;
+}
+
+.elemenx-achievement.lasting .elemenx-achievement-band {
+	animation: elemenx-achievement-show 1100ms linear both;
+}
+
+.elemenx-achievement-overline {
+	color: var(--elemenx-achievement-muted);
+	font-size: var(--elemenx-font-size-small);
+}
+
+.elemenx-achievement-line {
+	display: flex;
+	align-items: baseline;
+	gap: 8px;
+	min-width: 0;
+}
+
+.elemenx-achievement-points {
+	color: var(--elemenx-achievement-color);
+	font-weight: var(--elemenx-font-weight-bold);
+	font-variant-numeric: tabular-nums;
+}
+
+.elemenx-achievement-title {
+	overflow: hidden;
+	font-size: var(--elemenx-font-size-large);
+	font-weight: var(--elemenx-font-weight-strong);
+	text-overflow: ellipsis;
+}
+
+.elemenx-achievement-text {
+	overflow: hidden;
+	color: var(--elemenx-achievement-muted);
+	font-size: var(--elemenx-font-size-small);
+	text-overflow: ellipsis;
+}
+
+/* The badge pops up, then the band opens out of it. */
+@keyframes elemenx-achievement-open {
+	0% {
+		max-width: 64px;
+		opacity: 0;
+		transform: scale(0);
+	}
+
+	30% {
+		max-width: 64px;
+		opacity: 1;
+		transform: scale(1.12);
+	}
+
+	45% {
+		max-width: 64px;
+		transform: scale(1);
+	}
+
+	100% {
+		max-width: 460px;
+	}
+}
+
+/* The band folds back into the badge, and the badge goes. */
+@keyframes elemenx-achievement-close {
+	0% {
+		max-width: 460px;
+	}
+
+	60% {
+		max-width: 64px;
+		opacity: 1;
+		transform: scale(1);
+	}
+
+	100% {
+		max-width: 64px;
+		opacity: 0;
+		transform: scale(0);
+	}
+}
+
+@keyframes elemenx-achievement-show {
+	0%,
+	70% {
+		opacity: 0;
+	}
+
+	100% {
+		opacity: 1;
+	}
+}
+
+@keyframes elemenx-achievement-hide {
+	to {
+		opacity: 0;
+	}
+}
+
+@keyframes elemenx-achievement-shine {
+	from {
+		background-position: 150% 0;
+	}
+
+	to {
+		background-position: -50% 0;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.elemenx-achievement.timed,
+	.elemenx-achievement.lasting,
+	.elemenx-achievement.timed .elemenx-achievement-band,
+	.elemenx-achievement.lasting .elemenx-achievement-band,
+	.elemenx-achievement::after {
+		animation: none;
+	}
+}

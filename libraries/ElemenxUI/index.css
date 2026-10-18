@@ -2,7 +2,9 @@
  * The tokens of the theme. Geometry, type, motion and the colors that are the same in both schemes (shadows, the
  * backdrop of a modal, overlays on images, scrollbars) are here, on the root, so the scrollbars of the page have them
  * too; the colors of a scheme are on body below, with their dark values.
- * A custom theme redefines any of them under its own attribute: body[data-theme='ocean'] { --elemenx-radius: 0; }.
+ * A custom theme redefines any of them under its own attribute: [data-theme][data-theme='ocean'] { --elemenx-radius: 0; }.
+ * The attributes work on any element, not only on body: <section data-theme="darcula"> or data-scheme="dark" themes a
+ * part of the page (it takes the background, the text and the font of its theme), and everything in it.
  */
 :root {
 	--elemenx-font: 'Segoe UI', Inter, Arial, sans-serif;
@@ -40,6 +42,13 @@
 	--elemenx-scrollbar-hover: rgba(128, 128, 128, 0.64);
 	--elemenx-scrollbar-active: rgba(128, 128, 128, 0.8);
 	--elemenx-scrollbar-track: rgba(128, 128, 128, 0.12);
+	--elemenx-achievement-background: rgba(18, 18, 20, 0.94);
+	--elemenx-achievement-text: #ffffff;
+	--elemenx-achievement-muted: rgba(255, 255, 255, 0.72);
+	--elemenx-achievement-badge: #107c10;
+	--elemenx-achievement-badge-text: #ffffff;
+	--elemenx-achievement-shine: rgba(255, 255, 255, 0.28);
+	--elemenx-achievement-shadow: 0 8px 28px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.12);
 }
 
 
@@ -65,7 +74,10 @@ body {
 
 
 
-body {
+body,
+[data-theme='light'],
+[data-theme='system'],
+[data-scheme='light'] {
 	--elemenx-background: #f2f1ef;
 	--elemenx-background-rgb: 242, 241, 239;
 	--elemenx-surface: #ffffff;
@@ -106,11 +118,233 @@ body {
 	--elemenx-weather-wind: var(--elemenx-text-muted);
 	--elemenx-weather-fog: var(--elemenx-text-muted);
 	--elemenx-weather-thermometer: var(--elemenx-danger);
+	--elemenx-block-background: transparent;
+	--elemenx-block-frame: 1px solid var(--elemenx-border);
+	--elemenx-block-radius: var(--elemenx-radius-large);
+	--elemenx-block-gap: 12px;
+	--elemenx-block-title-band: var(--elemenx-surface-raised);
+	--elemenx-block-title-text: var(--elemenx-text);
+	--elemenx-block-title-padding: 6px;
+	--elemenx-block-title-spacing: normal;
+	--elemenx-block-title-transform: none;
+	--elemenx-block-tab-slant: 24px;
+	--elemenx-properties-gap: 4px 16px;
+	--elemenx-properties-pair-gap: 24px;
+	--elemenx-property-gap: 12px;
+	--elemenx-property-padding: 0;
+	--elemenx-property-label: transparent;
+	--elemenx-property-label-text: var(--elemenx-text-muted);
+	--elemenx-property-value: transparent;
+	--elemenx-property-value-frame: 0;
+	--elemenx-property-value-text: var(--elemenx-text);
+	--elemenx-game-font: var(--elemenx-font);
+	--elemenx-game-title-font: var(--elemenx-font);
+	--elemenx-game-title-shadow: none;
+	--elemenx-game-text: var(--elemenx-text);
+	--elemenx-game-muted: var(--elemenx-text-muted);
+	--elemenx-game-accent: var(--elemenx-accent);
+	--elemenx-game-letter-spacing: normal;
+	--elemenx-game-text-transform: none;
+	--elemenx-game-panel: var(--elemenx-surface);
+	--elemenx-game-frame: 1px solid var(--elemenx-border-strong);
+	--elemenx-game-panel-shadow: var(--elemenx-shadow);
+	--elemenx-game-radius: var(--elemenx-radius-large);
+	--elemenx-game-shape: none;
+	--elemenx-game-glow: 0 0 0 2px var(--elemenx-focus);
+	--elemenx-game-cell: var(--elemenx-surface-raised);
+	--elemenx-game-cell-frame: 1px solid var(--elemenx-border);
+	--elemenx-game-cell-radius: var(--elemenx-radius);
+	--elemenx-game-bar-track: rgba(var(--elemenx-text-rgb), 0.12);
+	--elemenx-game-bar-frame: 1px solid var(--elemenx-border);
+	--elemenx-game-bar-frame-image: none;
+	--elemenx-game-bar-ornament: none;
+	--elemenx-game-bar-ornament-inset: 0;
+	--elemenx-game-bar-gauge-margin: 0;
+	--elemenx-game-bar-fill-opacity: 1;
+	--elemenx-game-bar-pattern: none;
+	--elemenx-game-bar-edge: none;
+	--elemenx-game-bar-value-align: center;
+	--elemenx-game-bar-value-padding: 0;
+	--elemenx-game-bar-radius: var(--elemenx-radius-pill);
+	--elemenx-game-bar-shadow: none;
+	--elemenx-game-bar-shine: linear-gradient(to bottom, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0) 60%);
+	--elemenx-game-bar-damage: var(--elemenx-warning);
+	--elemenx-game-bar-text: #ffffff;
+	--elemenx-game-bar-text-shadow: 0 1px 2px rgba(0, 0, 0, 0.64);
+	--elemenx-game-damage-delay: 400ms;
+	--elemenx-game-damage-duration: 500ms;
+	--elemenx-game-cooldown: rgba(0, 0, 0, 0.6);
+	--elemenx-game-health: #c94a4a;
+	--elemenx-game-mana: #3f73c9;
+	--elemenx-game-experience: #c99a27;
+	--elemenx-game-stamina: #3fa86b;
+	--elemenx-game-common: var(--elemenx-text-muted);
+	--elemenx-game-uncommon: #3fa86b;
+	--elemenx-game-rare: #3f73c9;
+	--elemenx-game-epic: #8f4fc9;
+	--elemenx-game-legendary: #d98a1e;
+	--elemenx-game-medal-gold: #e0b53a;
+	--elemenx-game-medal-silver: #b9c2cf;
+	--elemenx-game-medal-bronze: #c27c45;
+	--elemenx-game-marker-frame: 1px solid rgba(0, 0, 0, 0.6);
+	--elemenx-game-marker-text: #101216;
+	--elemenx-game-minimap-shadow: drop-shadow(0 0 3px rgba(0, 0, 0, 0.8));
+	--elemenx-game-frame-image: none;
+	--elemenx-game-blur: none;
+	--elemenx-game-decor: none;
+	--elemenx-game-decor-inset: 0;
+	--elemenx-game-active: 0 0 0 0 transparent;
+	--elemenx-game-appear: elemenx-window-appear var(--elemenx-duration-slow) var(--elemenx-easing);
+	--elemenx-game-header: var(--elemenx-surface-raised);
+	--elemenx-game-header-line: 1px solid var(--elemenx-border);
+	--elemenx-game-header-inset: 0;
+	--elemenx-game-header-radius: 0;
+	--elemenx-game-header-padding: 0 4px 0 10px;
+	--elemenx-game-title-inset: 0 96px 0 10px;
+	--elemenx-game-title: var(--elemenx-game-text);
+	--elemenx-game-title-align: flex-start;
+	--elemenx-game-ornament: none;
+	--elemenx-game-ornament-top: 0;
+	--elemenx-game-ornament-width: 0;
+	--elemenx-game-ornament-height: 0;
+	--elemenx-game-good: var(--elemenx-success);
+	--elemenx-game-bad: var(--elemenx-danger);
+	--elemenx-game-special: var(--elemenx-warning);
+	--elemenx-game-section: var(--elemenx-surface-raised);
+	--elemenx-game-section-title: var(--elemenx-game-accent);
+	--elemenx-game-separator: linear-gradient(to right, transparent, var(--elemenx-border-strong), transparent);
+	--elemenx-game-separator-ornament: none;
+	--elemenx-game-button: linear-gradient(var(--elemenx-surface-raised), var(--elemenx-surface-raised));
+	--elemenx-game-button-edge: linear-gradient(var(--elemenx-border-strong), var(--elemenx-border-strong));
+	--elemenx-game-button-radius: var(--elemenx-radius);
+	--elemenx-game-button-hover: linear-gradient(var(--elemenx-surface-hover), var(--elemenx-surface-hover));
+	--elemenx-game-button-text: var(--elemenx-game-text);
+	--elemenx-game-button-shadow: none;
+	--elemenx-game-field: var(--elemenx-surface);
+	--elemenx-game-field-frame: 1px solid var(--elemenx-border-strong);
+	--elemenx-game-field-shadow: none;
+	--elemenx-game-scrollbar: var(--elemenx-scrollbar);
+	--elemenx-game-tab: transparent;
+	--elemenx-game-tab-active: var(--elemenx-game-cell);
+	--elemenx-game-tab-marker: var(--elemenx-game-accent);
+	--elemenx-game-text-shadow: none;
+	--elemenx-game-item-tint: 0;
+	--elemenx-game-item-gloss: none;
+	--elemenx-game-item-inset: 2px;
+	--elemenx-game-item-bevel: 0 0 0 0 transparent;
+	--elemenx-game-item-icon: var(--elemenx-game-text);
+	--elemenx-game-item-icon-shadow: none;
+	--elemenx-game-item-icon-scale: 1;
+	--elemenx-game-inventory-gap: 4px;
+	--elemenx-game-menu-item: var(--elemenx-game-cell);
+	--elemenx-game-menu-item-hover: var(--elemenx-game-cell);
+	--elemenx-game-menu-item-hover-text: var(--elemenx-game-text);
+	--elemenx-game-menu-item-frame: var(--elemenx-game-cell-frame);
+	--elemenx-game-menu-item-frame-image: none;
+	--elemenx-game-menu-item-shadow: 0 0 0 0 transparent;
+	--elemenx-game-menu-item-ornament: none;
+	--elemenx-game-menu-item-ornament-inset: 0;
+	--elemenx-game-menu-item-align: start;
+	--elemenx-game-menu-item-padding: 10px 16px;
+	--elemenx-game-menu-item-shift: translateX(4px);
+	--elemenx-game-menu-title-ornament: none;
+	--elemenx-game-menu-title-ornament-height: 0;
+	--elemenx-game-light-panel: var(--elemenx-game-panel);
+	--elemenx-game-light-frame: var(--elemenx-game-frame);
+	--elemenx-game-light-frame-image: var(--elemenx-game-frame-image);
+	--elemenx-game-light-radius: var(--elemenx-game-radius);
+	--elemenx-game-light-shadow: var(--elemenx-game-panel-shadow);
+	--elemenx-game-light-decor: none;
+	--elemenx-game-light-decor-inset: 0;
+	--elemenx-game-dialogue-portrait-frame: var(--elemenx-game-cell-frame);
+	--elemenx-game-dialogue-portrait-frame-image: none;
+	--elemenx-game-dialogue-portrait-radius: var(--elemenx-game-cell-radius);
+	--elemenx-game-dialogue-portrait-shadow: none;
+	--elemenx-game-dialogue-choice: var(--elemenx-game-cell);
+	--elemenx-game-dialogue-choice-hover: var(--elemenx-game-cell);
+	--elemenx-game-dialogue-choice-hover-text: var(--elemenx-game-text);
+	--elemenx-game-dialogue-choice-frame: var(--elemenx-game-cell-frame);
+	--elemenx-game-dialogue-choice-frame-image: none;
+	--elemenx-game-dialogue-choice-padding: 6px 10px;
+	--elemenx-game-dialogue-next-padding: 6px 10px;
+	--elemenx-game-dialogue-next-align: flex-end;
+	--elemenx-game-dialogue-next-margin: 0;
+	--elemenx-game-body-padding: 12px;
+	--elemenx-game-body: transparent;
+	--elemenx-game-body-frame: 0;
+	--elemenx-game-body-margin: 0;
+	--elemenx-game-section-gap: 6px;
+	--elemenx-game-section-padding: 0;
+	--elemenx-game-section-frame: 0;
+	--elemenx-game-section-title-margin: 0;
+	--elemenx-game-section-title-padding: 3px 8px;
+	--elemenx-game-heading: var(--elemenx-game-title);
+	--elemenx-game-heading-line: 1px solid var(--elemenx-border);
+	--elemenx-game-stats-gap: 2px 12px;
+	--elemenx-game-stats-pair-gap: 0px;
+	--elemenx-game-stats-cell-gap: 12px;
+	--elemenx-game-stat-padding: 0;
+	--elemenx-game-stat-label: transparent;
+	--elemenx-game-stat-label-text: var(--elemenx-game-muted);
+	--elemenx-game-stat-value: transparent;
+	--elemenx-game-stat-value-frame: 0;
+	--elemenx-game-hotbar-gap: 4px;
+	--elemenx-game-hotbar-padding: 6px;
+	--elemenx-game-table-spacing: 0;
+	--elemenx-game-table-frame: 1px solid var(--elemenx-border);
+	--elemenx-game-table-cell: transparent;
+	--elemenx-game-table-head: var(--elemenx-surface-raised);
+	--elemenx-game-table-head-text: var(--elemenx-text-muted);
+	--elemenx-game-table-line: 1px solid var(--elemenx-border);
+	--elemenx-game-table-divider: 0;
+	--elemenx-game-table-stripe: var(--elemenx-surface-raised);
+	--elemenx-game-table-hover: rgba(var(--elemenx-surface-hover-rgb), 0.64);
+	--elemenx-game-table-selected: linear-gradient(rgba(var(--elemenx-accent-rgb), 0.12), rgba(var(--elemenx-accent-rgb), 0.12)), var(--elemenx-surface);
+	--elemenx-game-table-selected-text: var(--elemenx-game-text);
+	--elemenx-game-meter-track: var(--elemenx-border);
+	--elemenx-game-meter-radius: var(--elemenx-radius-pill);
+	--elemenx-game-meter-ring: var(--elemenx-border);
+	--elemenx-game-meter-needle: var(--elemenx-game-text);
+	--elemenx-game-meter-value-size: inherit;
+	--elemenx-game-meter-value-weight: var(--elemenx-font-weight-strong);
+	--elemenx-game-meter-readout: var(--elemenx-game-text);
+	--elemenx-game-meter-readout-text: var(--elemenx-surface);
+	--elemenx-game-scrollbar-width: thin;
+	--elemenx-game-scrollbar-color: var(--elemenx-game-scrollbar) transparent;
+	--elemenx-game-scrollbar-track: transparent;
+	--elemenx-game-scrollbar-thumb: var(--elemenx-game-scrollbar);
+	--elemenx-game-scrollbar-thumb-inset: 3px;
+	--elemenx-game-scrollbar-radius: var(--elemenx-radius-pill);
+	--elemenx-game-item-selected: none;
+	--elemenx-game-item-selected-inset: 0;
+	--elemenx-game-item-active: var(--elemenx-game-glow);
+	--elemenx-game-item-active-fill: var(--elemenx-game-cell);
+	--elemenx-game-button-padding: 12px;
+	--elemenx-game-button-min-width: 0;
+	--elemenx-game-header-image: none;
+	--elemenx-syntax-comment: #8a857e;
+	--elemenx-syntax-keyword: #9c3d7a;
+	--elemenx-syntax-string: #2f7d4f;
+	--elemenx-syntax-number: #b35c1e;
+	--elemenx-syntax-literal: #b35c1e;
+	--elemenx-syntax-type: #2c6aa0;
+	--elemenx-syntax-function: #6a4caf;
+	--elemenx-syntax-property: #2c6aa0;
+	--elemenx-syntax-tag: #9c3d7a;
+	--elemenx-syntax-attribute: #b35c1e;
+	--elemenx-syntax-selector: #9c3d7a;
+	--elemenx-syntax-variable: #b4483f;
+	--elemenx-syntax-regex: #1f7a72;
+	--elemenx-syntax-meta: #8a6a14;
+	--elemenx-syntax-operator: #6f6a64;
+	--elemenx-syntax-heading: #23211e;
+	--elemenx-syntax-link: #3f6c9e;
+	--elemenx-syntax-code: #2f7d4f;
 	color-scheme: light;
 }
 
-body[data-theme='dark'],
-body[data-scheme='dark'] {
+[data-theme='dark'],
+[data-scheme='dark'] {
 	--elemenx-background: #15171b;
 	--elemenx-background-rgb: 21, 23, 27;
 	--elemenx-surface: #1d2025;
@@ -143,13 +377,31 @@ body[data-scheme='dark'] {
 	--elemenx-weather-moon: #b4bce6;
 	--elemenx-weather-snow: #8ccbef;
 	--elemenx-weather-bolt: #f2c94c;
+	--elemenx-syntax-comment: #7d8590;
+	--elemenx-syntax-keyword: #d58bc5;
+	--elemenx-syntax-string: #9cd08f;
+	--elemenx-syntax-number: #e3a46a;
+	--elemenx-syntax-literal: #e3a46a;
+	--elemenx-syntax-type: #7fb6e6;
+	--elemenx-syntax-function: #c7aef0;
+	--elemenx-syntax-property: #7fb6e6;
+	--elemenx-syntax-tag: #d58bc5;
+	--elemenx-syntax-attribute: #e3a46a;
+	--elemenx-syntax-selector: #d58bc5;
+	--elemenx-syntax-variable: #f08a80;
+	--elemenx-syntax-regex: #7fd1c3;
+	--elemenx-syntax-meta: #d8c26e;
+	--elemenx-syntax-operator: #a8b0ba;
+	--elemenx-syntax-heading: #eef0f3;
+	--elemenx-syntax-link: #7fa8d6;
+	--elemenx-syntax-code: #9cd08f;
 	color-scheme: dark;
 }
 
 /* Without data-theme, or with data-theme='system', the theme follows the system. Keep these colors equal to the block above. */
 @media (prefers-color-scheme: dark) {
 	body:not([data-theme]),
-	body[data-theme='system'] {
+	[data-theme='system'] {
 		--elemenx-background: #15171b;
 		--elemenx-background-rgb: 21, 23, 27;
 		--elemenx-surface: #1d2025;
@@ -182,6 +434,24 @@ body[data-scheme='dark'] {
 		--elemenx-weather-moon: #b4bce6;
 		--elemenx-weather-snow: #8ccbef;
 		--elemenx-weather-bolt: #f2c94c;
+		--elemenx-syntax-comment: #7d8590;
+		--elemenx-syntax-keyword: #d58bc5;
+		--elemenx-syntax-string: #9cd08f;
+		--elemenx-syntax-number: #e3a46a;
+		--elemenx-syntax-literal: #e3a46a;
+		--elemenx-syntax-type: #7fb6e6;
+		--elemenx-syntax-function: #c7aef0;
+		--elemenx-syntax-property: #7fb6e6;
+		--elemenx-syntax-tag: #d58bc5;
+		--elemenx-syntax-attribute: #e3a46a;
+		--elemenx-syntax-selector: #d58bc5;
+		--elemenx-syntax-variable: #f08a80;
+		--elemenx-syntax-regex: #7fd1c3;
+		--elemenx-syntax-meta: #d8c26e;
+		--elemenx-syntax-operator: #a8b0ba;
+		--elemenx-syntax-heading: #eef0f3;
+		--elemenx-syntax-link: #7fa8d6;
+		--elemenx-syntax-code: #9cd08f;
 		color-scheme: dark;
 	}
 }
@@ -199,6 +469,16 @@ body {
 	color: var(--elemenx-text);
 }
 
+/* A part of the page with a theme or a scheme of its own: its background, text and font, as body has them. */
+[data-theme]:not(body),
+[data-scheme]:not(body) {
+	background: var(--elemenx-background);
+	color: var(--elemenx-text);
+	font-family: var(--elemenx-font), sans-serif;
+	font-size: var(--elemenx-font-size);
+	line-height: var(--elemenx-line-height);
+}
+
 ::-webkit-scrollbar {
 	width: 12px;
 	height: 12px;
@@ -207,7 +487,7 @@ body {
 ::-webkit-scrollbar-track {
 	background: transparent;
 	backdrop-filter: blur(8px);
-	border-left: 1px solid var(--elemenx-scrollbar-track);
+	border-inline-start: 1px solid var(--elemenx-scrollbar-track);
 	box-shadow: none;
 }
 
@@ -466,6 +746,533 @@ a {
 	font-size: var(--elemenx-font-size-small);
 }
 
+.elemenx-syntax-comment {
+	color: var(--elemenx-syntax-comment);
+}
+
+.elemenx-syntax-keyword {
+	color: var(--elemenx-syntax-keyword);
+}
+
+.elemenx-syntax-string {
+	color: var(--elemenx-syntax-string);
+}
+
+.elemenx-syntax-number {
+	color: var(--elemenx-syntax-number);
+}
+
+.elemenx-syntax-literal {
+	color: var(--elemenx-syntax-literal);
+}
+
+.elemenx-syntax-type {
+	color: var(--elemenx-syntax-type);
+}
+
+.elemenx-syntax-function {
+	color: var(--elemenx-syntax-function);
+}
+
+.elemenx-syntax-property {
+	color: var(--elemenx-syntax-property);
+}
+
+.elemenx-syntax-tag {
+	color: var(--elemenx-syntax-tag);
+}
+
+/*
+ * The window of a native program without the frame of the system (Electron.Frame false): an element with
+ * elemenx-native-drag moves the window, as a title bar; the controls in it take elemenx-native-nodrag to stay clickable.
+ */
+.elemenx-native-drag {
+	-webkit-app-region: drag;
+	app-region: drag;
+	user-select: none;
+}
+
+.elemenx-native-nodrag {
+	-webkit-app-region: no-drag;
+	app-region: no-drag;
+}
+
+/* The panel of a game: its background, frame and shape come from the --elemenx-game-* tokens of the theme. */
+.elemenx-game-panel {
+	position: relative;
+	isolation: isolate;
+	color: var(--elemenx-game-text);
+	font-family: var(--elemenx-game-font);
+}
+
+.elemenx-game-panel::before {
+	position: absolute;
+	inset: 0;
+	z-index: -1;
+	background: var(--elemenx-game-panel);
+	border: var(--elemenx-game-frame);
+	border-image: var(--elemenx-game-frame-image);
+	border-radius: var(--elemenx-game-radius);
+	box-shadow: var(--elemenx-game-panel-shadow);
+	backdrop-filter: var(--elemenx-game-blur);
+	clip-path: var(--elemenx-game-shape);
+	content: '';
+}
+
+/* The decor of the theme over the frame and under the content: corners, crests, marks, lines of light. */
+.elemenx-game-panel::after {
+	position: absolute;
+	inset: var(--elemenx-game-decor-inset);
+	z-index: -1;
+	background: var(--elemenx-game-decor);
+	content: '';
+	pointer-events: none;
+}
+
+/* A light panel, for the small panels of a HUD: a thin frame and small figures (the --elemenx-game-light-* tokens). */
+.elemenx-game-panel.light::before {
+	background: var(--elemenx-game-light-panel);
+	border: var(--elemenx-game-light-frame);
+	border-image: var(--elemenx-game-light-frame-image);
+	border-radius: var(--elemenx-game-light-radius);
+	box-shadow: var(--elemenx-game-light-shadow);
+}
+
+.elemenx-game-panel.light::after {
+	inset: var(--elemenx-game-light-decor-inset);
+	background: var(--elemenx-game-light-decor);
+}
+
+.elemenx-game-panel,
+.elemenx-window.game {
+	scrollbar-color: var(--elemenx-game-scrollbar) transparent;
+	text-shadow: var(--elemenx-game-text-shadow);
+}
+
+/* A section of a game window: its title on a band. */
+.elemenx-game-section {
+	display: flex;
+	flex-direction: column;
+	gap: var(--elemenx-game-section-gap);
+	padding: var(--elemenx-game-section-padding);
+	border: var(--elemenx-game-section-frame);
+}
+
+/* The title of a section: a band, that a theme may set into the frame of its section (a negative margin). */
+.elemenx-game-section-title {
+	margin: var(--elemenx-game-section-title-margin);
+	padding: var(--elemenx-game-section-title-padding);
+	background: var(--elemenx-game-section);
+	color: var(--elemenx-game-section-title);
+	font-family: var(--elemenx-game-title-font);
+	font-size: var(--elemenx-font-size);
+	font-weight: var(--elemenx-font-weight-strong);
+	letter-spacing: var(--elemenx-game-letter-spacing);
+	text-transform: var(--elemenx-game-text-transform);
+}
+
+/* A line between the parts of a game window, with the ornament of the theme in its middle. */
+.elemenx-game-separator {
+	height: 12px;
+	margin: 6px 0;
+	background: var(--elemenx-game-separator-ornament) center / auto 12px no-repeat, var(--elemenx-game-separator) center / 100% 1px no-repeat;
+	border: 0;
+}
+
+/* Names and values: a dl of dt and dd, in one column or two (double). */
+.elemenx-game-stats {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) auto;
+	gap: var(--elemenx-game-stats-gap);
+	margin: 0;
+}
+
+.elemenx-game-stats.double {
+	grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto;
+}
+
+/* A pair of a stat: its name and its value, each in a cell of the theme. */
+.elemenx-game-stats > dt {
+	padding: var(--elemenx-game-stat-padding);
+	background: var(--elemenx-game-stat-label);
+	color: var(--elemenx-game-stat-label-text);
+}
+
+.elemenx-game-stats > dd {
+	margin: 0;
+	padding: var(--elemenx-game-stat-padding);
+	background: var(--elemenx-game-stat-value);
+	border: var(--elemenx-game-stat-value-frame);
+	font-variant-numeric: tabular-nums;
+	text-align: end;
+}
+
+/* The second pair of a row of a double list keeps away from the first. */
+.elemenx-game-stats.double > dt:nth-of-type(2n) {
+	margin-inline-start: var(--elemenx-game-stats-pair-gap);
+}
+
+/*
+ * The card of an item of a game (GameItemCard, *itemcard): its name in the color of its rarity, its type, stats and
+ * description. *itemcard opens it as a popover: the defaults of the browser for one are taken back.
+ */
+.elemenx-game-inventory-card {
+	position: fixed;
+	z-index: 1000;
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	width: 240px;
+	color: var(--elemenx-game-text);
+	font-family: var(--elemenx-game-font);
+	font-size: var(--elemenx-font-size);
+	line-height: var(--elemenx-line-height);
+	text-align: start;
+	white-space: normal;
+	padding: 10px 12px;
+	pointer-events: none;
+}
+
+.elemenx-game-inventory-name {
+	display: block;
+	font-family: var(--elemenx-game-title-font);
+	font-size: var(--elemenx-font-size-large);
+	letter-spacing: var(--elemenx-game-letter-spacing);
+}
+
+.elemenx-game-inventory-card.common .elemenx-game-inventory-name {
+	color: var(--elemenx-game-common);
+}
+
+.elemenx-game-inventory-card.uncommon .elemenx-game-inventory-name {
+	color: var(--elemenx-game-uncommon);
+}
+
+.elemenx-game-inventory-card.rare .elemenx-game-inventory-name {
+	color: var(--elemenx-game-rare);
+}
+
+.elemenx-game-inventory-card.epic .elemenx-game-inventory-name {
+	color: var(--elemenx-game-epic);
+}
+
+.elemenx-game-inventory-card.legendary .elemenx-game-inventory-name {
+	color: var(--elemenx-game-legendary);
+}
+
+.elemenx-game-inventory-type {
+	display: block;
+	color: var(--elemenx-game-muted);
+	font-size: var(--elemenx-font-size-small);
+}
+
+.elemenx-game-inventory-stats {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	margin: 4px 0 0;
+}
+
+.elemenx-game-inventory-stat {
+	display: flex;
+	justify-content: space-between;
+	gap: 8px;
+}
+
+.elemenx-game-inventory-stat-label {
+	color: var(--elemenx-game-muted);
+}
+
+.elemenx-game-inventory-stat-value {
+	font-weight: var(--elemenx-font-weight-strong);
+}
+
+.elemenx-game-inventory-description {
+	display: block;
+	margin: 4px 0 0;
+	color: var(--elemenx-game-muted);
+	font-size: var(--elemenx-font-size-small);
+	font-style: italic;
+}
+
+.elemenx-game-inventory-card[popover] {
+	overflow: visible;
+	background: transparent;
+	border: 0;
+}
+
+.elemenx-game-good {
+	color: var(--elemenx-game-good);
+}
+
+.elemenx-game-bad {
+	color: var(--elemenx-game-bad);
+}
+
+.elemenx-game-special {
+	color: var(--elemenx-game-special);
+}
+
+/* The buttons and the fields inside a game panel or window take the look of the game theme. */
+.elemenx-game-panel .elemenx-button:not(.ghost):not(.link),
+.elemenx-window.game .elemenx-button:not(.ghost):not(.link) {
+	background: var(--elemenx-game-button) padding-box, var(--elemenx-game-button-edge) border-box;
+	border: 1px solid transparent;
+	border-radius: var(--elemenx-game-button-radius);
+	box-shadow: var(--elemenx-game-button-shadow);
+	color: var(--elemenx-game-button-text);
+}
+
+.elemenx-game-panel .elemenx-button:not(.ghost):not(.link):not(.icon-only),
+.elemenx-window.game .elemenx-button:not(.ghost):not(.link):not(.icon-only) {
+	min-width: var(--elemenx-game-button-min-width);
+	padding-inline: var(--elemenx-game-button-padding);
+}
+
+.elemenx-game-panel .elemenx-button:not(.ghost):not(.link):hover,
+.elemenx-window.game .elemenx-button:not(.ghost):not(.link):hover {
+	background: var(--elemenx-game-button-hover) padding-box, var(--elemenx-game-button-edge) border-box;
+}
+
+.elemenx-game-panel .elemenx-input,
+.elemenx-window.game .elemenx-input {
+	background: var(--elemenx-game-field);
+	border: var(--elemenx-game-field-frame);
+	box-shadow: var(--elemenx-game-field-shadow);
+	color: var(--elemenx-game-text);
+}
+
+/* The tables inside a game panel or window: their header, lines, stripes, columns and selected rows by the theme. */
+.elemenx-game-panel .elemenx-table,
+.elemenx-window.game .elemenx-table {
+	border-spacing: var(--elemenx-game-table-spacing);
+	color: var(--elemenx-game-text);
+}
+
+.elemenx-game-panel .elemenx-table-wrap.scrolling,
+.elemenx-window.game .elemenx-table-wrap.scrolling {
+	border: var(--elemenx-game-table-frame);
+}
+
+.elemenx-game-panel .elemenx-table td,
+.elemenx-window.game .elemenx-table td {
+	background: var(--elemenx-game-table-cell);
+}
+
+.elemenx-game-panel .elemenx-table th,
+.elemenx-game-panel .elemenx-table td,
+.elemenx-window.game .elemenx-table th,
+.elemenx-window.game .elemenx-table td {
+	border-bottom: var(--elemenx-game-table-line);
+}
+
+.elemenx-game-panel .elemenx-table th,
+.elemenx-window.game .elemenx-table th {
+	background: var(--elemenx-game-table-head);
+	color: var(--elemenx-game-table-head-text);
+	letter-spacing: var(--elemenx-game-letter-spacing);
+	text-transform: var(--elemenx-game-text-transform);
+}
+
+.elemenx-game-panel .elemenx-table td + td,
+.elemenx-window.game .elemenx-table td + td {
+	border-inline-start: var(--elemenx-game-table-divider);
+}
+
+.elemenx-game-panel .elemenx-table.striped tbody tr:where(:nth-child(even)) td,
+.elemenx-window.game .elemenx-table.striped tbody tr:where(:nth-child(even)) td {
+	background: var(--elemenx-game-table-stripe);
+}
+
+.elemenx-game-panel .elemenx-table tbody tr:hover td,
+.elemenx-window.game .elemenx-table tbody tr:hover td {
+	background: var(--elemenx-game-table-hover);
+}
+
+.elemenx-game-panel .elemenx-table tbody tr.selected td,
+.elemenx-game-panel .elemenx-table tbody tr.selected:hover td,
+.elemenx-window.game .elemenx-table tbody tr.selected td,
+.elemenx-window.game .elemenx-table tbody tr.selected:hover td {
+	background: var(--elemenx-game-table-selected);
+	color: var(--elemenx-game-table-selected-text);
+}
+
+/* The meters inside a game panel or window: their track, ring, needle and value by the theme. */
+.elemenx-game-panel .elemenx-meter-track,
+.elemenx-window.game .elemenx-meter-track {
+	background: var(--elemenx-game-meter-track);
+	border-radius: var(--elemenx-game-meter-radius);
+}
+
+.elemenx-game-panel .elemenx-meter-fill,
+.elemenx-window.game .elemenx-meter-fill {
+	border-radius: var(--elemenx-game-meter-radius);
+}
+
+.elemenx-game-panel .elemenx-meter-ring,
+.elemenx-window.game .elemenx-meter-ring {
+	stroke: var(--elemenx-game-meter-ring);
+}
+
+.elemenx-game-panel .elemenx-meter-needle,
+.elemenx-game-panel .elemenx-meter-face .elemenx-meter-mark,
+.elemenx-window.game .elemenx-meter-needle,
+.elemenx-window.game .elemenx-meter-face .elemenx-meter-mark {
+	stroke: var(--elemenx-game-meter-needle);
+}
+
+.elemenx-game-panel .elemenx-meter-value,
+.elemenx-window.game .elemenx-meter-value {
+	font-size: var(--elemenx-game-meter-value-size);
+	font-weight: var(--elemenx-game-meter-value-weight);
+}
+
+.elemenx-game-panel .elemenx-meter-readout,
+.elemenx-window.game .elemenx-meter-readout {
+	background: var(--elemenx-game-meter-readout);
+	color: var(--elemenx-game-meter-readout-text);
+}
+
+.elemenx-game-panel .elemenx-meter-min,
+.elemenx-game-panel .elemenx-meter-max,
+.elemenx-window.game .elemenx-meter-min,
+.elemenx-window.game .elemenx-meter-max {
+	color: var(--elemenx-game-muted);
+}
+
+/*
+ * The scrollbars inside a game panel or window: a track and a thumb of the theme where the browser draws them. :where
+ * keeps the rule as weak as the one for every element, so a Component that hides its scrollbar (the tabs) keeps it hidden.
+ */
+:where(.elemenx-game-panel, .elemenx-window.game) * {
+	scrollbar-width: var(--elemenx-game-scrollbar-width);
+	scrollbar-color: var(--elemenx-game-scrollbar-color);
+}
+
+.elemenx-game-panel ::-webkit-scrollbar-track,
+.elemenx-window.game ::-webkit-scrollbar-track {
+	background: var(--elemenx-game-scrollbar-track);
+	border: 0;
+	backdrop-filter: none;
+}
+
+.elemenx-game-panel ::-webkit-scrollbar-thumb,
+.elemenx-window.game ::-webkit-scrollbar-thumb {
+	background: var(--elemenx-game-scrollbar-thumb) padding-box;
+	border: var(--elemenx-game-scrollbar-thumb-inset) solid transparent;
+	border-radius: var(--elemenx-game-scrollbar-radius);
+}
+
+/* A Block inside a game panel or window takes the look of a section of the game theme. */
+:where(.elemenx-game-panel, .elemenx-window.game) .elemenx-block.framed {
+	--elemenx-block-padding: 10px;
+	--elemenx-block-background: transparent;
+	--elemenx-block-frame: var(--elemenx-game-section-frame);
+	--elemenx-block-radius: 0;
+	--elemenx-block-gap: var(--elemenx-game-section-gap);
+	--elemenx-block-title-band: var(--elemenx-game-section);
+	--elemenx-block-title-text: var(--elemenx-game-section-title);
+	--elemenx-block-title-spacing: var(--elemenx-game-letter-spacing);
+	--elemenx-block-title-transform: var(--elemenx-game-text-transform);
+	font-family: var(--elemenx-game-font);
+}
+
+/* Properties inside a game panel or window take the look of the stats of the game theme, their tones its colors. */
+:where(.elemenx-game-panel, .elemenx-window.game) .elemenx-properties {
+	--elemenx-properties-gap: var(--elemenx-game-stats-gap);
+	--elemenx-properties-pair-gap: max(var(--elemenx-game-stats-pair-gap), 12px);
+	--elemenx-property-gap: var(--elemenx-game-stats-cell-gap);
+	--elemenx-property-padding: var(--elemenx-game-stat-padding);
+	--elemenx-property-label: var(--elemenx-game-stat-label);
+	--elemenx-property-label-text: var(--elemenx-game-stat-label-text);
+	--elemenx-property-value: var(--elemenx-game-stat-value);
+	--elemenx-property-value-frame: var(--elemenx-game-stat-value-frame);
+	--elemenx-property-value-text: var(--elemenx-game-text);
+}
+
+:where(.elemenx-game-panel, .elemenx-window.game) .elemenx-property.success .elemenx-property-value {
+	color: var(--elemenx-game-good);
+}
+
+:where(.elemenx-game-panel, .elemenx-window.game) .elemenx-property.danger .elemenx-property-value {
+	color: var(--elemenx-game-bad);
+}
+
+:where(.elemenx-game-panel, .elemenx-window.game) .elemenx-property.warning .elemenx-property-value,
+:where(.elemenx-game-panel, .elemenx-window.game) .elemenx-property.accent .elemenx-property-value {
+	color: var(--elemenx-game-special);
+}
+
+/* A Section inside a game panel or window: its heading in the colors and the letters of the game theme. */
+.elemenx-game-panel .elemenx-section-header,
+.elemenx-window.game .elemenx-section-header {
+	border-bottom: var(--elemenx-game-heading-line);
+}
+
+.elemenx-game-panel .elemenx-section-title,
+.elemenx-window.game .elemenx-section-title {
+	color: var(--elemenx-game-heading);
+	font-family: var(--elemenx-game-title-font);
+	letter-spacing: var(--elemenx-game-letter-spacing);
+	text-transform: var(--elemenx-game-text-transform);
+}
+
+.elemenx-game-hotbar {
+	display: flex;
+	gap: var(--elemenx-game-hotbar-gap);
+	padding: var(--elemenx-game-hotbar-padding);
+}
+
+.elemenx-syntax-attribute {
+	color: var(--elemenx-syntax-attribute);
+}
+
+.elemenx-syntax-selector {
+	color: var(--elemenx-syntax-selector);
+}
+
+.elemenx-syntax-variable {
+	color: var(--elemenx-syntax-variable);
+}
+
+.elemenx-syntax-regex {
+	color: var(--elemenx-syntax-regex);
+}
+
+.elemenx-syntax-meta {
+	color: var(--elemenx-syntax-meta);
+}
+
+.elemenx-syntax-operator {
+	color: var(--elemenx-syntax-operator);
+}
+
+.elemenx-syntax-link {
+	color: var(--elemenx-syntax-link);
+}
+
+.elemenx-syntax-comment {
+	font-style: italic;
+}
+
+.elemenx-syntax-heading,
+.elemenx-syntax-strong {
+	color: var(--elemenx-syntax-heading);
+	font-weight: var(--elemenx-font-weight-bold);
+}
+
+.elemenx-syntax-emphasis {
+	font-style: italic;
+}
+
+.elemenx-syntax-code {
+	color: var(--elemenx-syntax-code);
+}
+
+.elemenx-syntax-punctuation {
+	color: var(--elemenx-syntax-operator);
+}
+
 .elemenx-kbd {
 	display: inline-block;
 	min-width: 20px;
@@ -554,6 +1361,22 @@ a {
 	border: 1px solid rgba(var(--elemenx-callout-rgb), 0.32);
 	border-radius: var(--elemenx-radius-large);
 	color: var(--elemenx-text);
+}
+
+/* On a right-to-left page the icons of a direction (back, forward, previous, next) point the other way. */
+[dir='rtl'] .elemenx-icon[data-icon='chevron-left'],
+[dir='rtl'] .elemenx-icon[data-icon='chevron-right'],
+[dir='rtl'] .elemenx-icon[data-icon='chevrons-left'],
+[dir='rtl'] .elemenx-icon[data-icon='chevrons-right'],
+[dir='rtl'] .elemenx-icon[data-icon='arrow-left'],
+[dir='rtl'] .elemenx-icon[data-icon='arrow-right'],
+[dir='rtl'] .elemenx-icon[data-icon='page-first'],
+[dir='rtl'] .elemenx-icon[data-icon='page-last'],
+[dir='rtl'] .elemenx-icon[data-icon='undo'],
+[dir='rtl'] .elemenx-icon[data-icon='redo'],
+[dir='rtl'] .elemenx-icon[data-icon='reply'],
+[dir='rtl'] .elemenx-icon[data-icon='forward'] {
+	transform: scaleX(-1);
 }
 
 .elemenx-callout > .elemenx-icon {
@@ -648,13 +1471,13 @@ a {
 .elemenx-ul,
 .elemenx-ol {
 	margin: 0;
-	padding-left: 24px;
+	padding-inline-start: 24px;
 }
 
 .elemenx-ul li,
 .elemenx-ol li {
 	margin: 4px 0;
-	padding-left: 4px;
+	padding-inline-start: 4px;
 }
 
 .elemenx-ul li::marker,
@@ -667,7 +1490,7 @@ a {
 .elemenx-ol ul,
 .elemenx-ol ol {
 	margin: 4px 0;
-	padding-left: 24px;
+	padding-inline-start: 24px;
 }
 
 .elemenx-ul {
@@ -708,16 +1531,16 @@ a {
 	content: counters(elemenx-outline, '.') '.';
 	display: inline-block;
 	min-width: 24px;
-	margin-right: 8px;
-	margin-left: -32px;
+	margin-inline-end: 8px;
+	margin-inline-start: -32px;
 	color: var(--elemenx-text-muted);
 	font-variant-numeric: tabular-nums;
-	text-align: right;
+	text-align: end;
 }
 
 .elemenx-ol.outline ol li::before {
 	min-width: 32px;
-	margin-left: -40px;
+	margin-inline-start: -40px;
 }
 
 .elemenx-ul.check {
@@ -729,14 +1552,67 @@ a {
 	display: inline-block;
 	width: 8px;
 	height: 4px;
-	margin-right: 12px;
-	margin-left: -20px;
+	margin-inline-end: 12px;
+	margin-inline-start: -20px;
 	border-bottom: 2px solid var(--elemenx-success);
-	border-left: 2px solid var(--elemenx-success);
+	border-inline-start: 2px solid var(--elemenx-success);
 	transform: translateY(-4px) rotate(-45deg);
 }
 
 
+
+/* The layer of a modal dialog (*modal) under it, over the page: it takes the presses outside the dialog. */
+/* Picture-in-Picture (the PictureInPicture Service): the frame left in the page, and the body of the window. */
+.elemenx-pip-placeholder {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	padding: 16px;
+	background: var(--elemenx-surface-hover);
+	border: 1px dashed var(--elemenx-border-strong);
+	border-radius: var(--elemenx-radius-large);
+	color: var(--elemenx-text-muted);
+	font-size: var(--elemenx-font-size-small);
+	text-align: center;
+}
+
+.elemenx-pip-back {
+	padding: 4px 12px;
+	background: var(--elemenx-surface);
+	border: 1px solid var(--elemenx-border);
+	border-radius: var(--elemenx-radius-pill);
+	color: var(--elemenx-text);
+	font: inherit;
+	cursor: pointer;
+}
+
+.elemenx-pip-back:focus-visible {
+	outline: 2px solid var(--elemenx-focus);
+}
+
+.elemenx-pip-body {
+	min-height: 100vh;
+	margin: 0;
+	overflow: auto;
+	background: var(--elemenx-background);
+	color: var(--elemenx-text);
+	font-family: var(--elemenx-font);
+}
+
+.elemenx-modal-shade {
+	position: fixed;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	max-width: none;
+	max-height: none;
+	margin: 0;
+	padding: 0;
+	background: transparent;
+	border: 0;
+}
 
 .elemenx-popup {
 	position: fixed;
@@ -1353,14 +2229,14 @@ a {
 
 
 .elemenx-input.round {
-	padding-right: 12px;
-	padding-left: 12px;
+	padding-inline-end: 12px;
+	padding-inline-start: 12px;
 	border-radius: var(--elemenx-radius-pill);
 }
 
 .elemenx-input.round.small {
-	padding-right: 8px;
-	padding-left: 8px;
+	padding-inline-end: 8px;
+	padding-inline-start: 8px;
 }
 
 .elemenx-input.round.multiple,
@@ -1371,17 +2247,17 @@ a {
 .elemenx-input.round.elemenx-phone-input,
 .elemenx-input.round.elemenx-number-input,
 .elemenx-input.round.elemenx-color-input {
-	padding-left: 0;
+	padding-inline-start: 0;
 	overflow: hidden;
 }
 
 .elemenx-input.round.elemenx-number-input {
-	padding-left: 12px;
-	padding-right: 0;
+	padding-inline-start: 12px;
+	padding-inline-end: 0;
 }
 
 .elemenx-input.round.elemenx-color-input {
-	padding-left: 4px;
+	padding-inline-start: 4px;
 }
 
 .elemenx-input.round.elemenx-color-input .elemenx-color-swatch {
@@ -1389,7 +2265,7 @@ a {
 }
 
 .elemenx-input.round .elemenx-phone-country {
-	padding-left: 12px;
+	padding-inline-start: 12px;
 }
 
 
@@ -1424,25 +2300,25 @@ a {
 }
 
 .elemenx-resize-handle.right {
-	right: -4px;
+	inset-inline-end: -4px;
 }
 
 .elemenx-resize-handle.left {
-	left: -4px;
+	inset-inline-start: -4px;
 }
 
 .elemenx-resize-handle.right::after,
 .elemenx-resize-handle.left::after {
 	top: 0;
 	bottom: 0;
-	left: 3px;
+	inset-inline-start: 3px;
 	width: 2px;
 }
 
 .elemenx-resize-handle.top,
 .elemenx-resize-handle.bottom {
-	right: 0;
-	left: 0;
+	inset-inline-end: 0;
+	inset-inline-start: 0;
 	height: 8px;
 	cursor: row-resize;
 }
@@ -1458,8 +2334,8 @@ a {
 .elemenx-resize-handle.top::after,
 .elemenx-resize-handle.bottom::after {
 	top: 3px;
-	right: 0;
-	left: 0;
+	inset-inline-end: 0;
+	inset-inline-start: 0;
 	height: 2px;
 }
 
@@ -1470,7 +2346,7 @@ a {
 }
 
 .elemenx-resize-handle.corner {
-	right: 0;
+	inset-inline-end: 0;
 	bottom: 0;
 	width: 12px;
 	height: 12px;
@@ -1478,11 +2354,11 @@ a {
 }
 
 .elemenx-resize-handle.corner::after {
-	right: 2px;
+	inset-inline-end: 2px;
 	bottom: 2px;
 	width: 6px;
 	height: 6px;
-	border-right: 2px solid var(--elemenx-border-strong);
+	border-inline-end: 2px solid var(--elemenx-border-strong);
 	border-bottom: 2px solid var(--elemenx-border-strong);
 }
 
@@ -1508,7 +2384,7 @@ a {
 	color: var(--elemenx-text-muted);
 	font-size: var(--elemenx-font-size-small);
 	line-height: var(--elemenx-line-height-small);
-	text-align: left;
+	text-align: start;
 }
 
 .elemenx-table th,
@@ -1516,7 +2392,7 @@ a {
 	height: 40px;
 	padding: 0 12px;
 	border-bottom: 1px solid var(--elemenx-border);
-	text-align: left;
+	text-align: start;
 	vertical-align: middle;
 }
 
@@ -1535,7 +2411,7 @@ a {
 }
 
 .elemenx-table .align-right {
-	text-align: right;
+	text-align: end;
 }
 
 .elemenx-table .align-center {
@@ -1564,7 +2440,7 @@ a {
 
 .elemenx-table.bordered th + th,
 .elemenx-table.bordered td + td {
-	border-left: 1px solid var(--elemenx-border);
+	border-inline-start: 1px solid var(--elemenx-border);
 }
 
 .elemenx-table.bordered tbody tr:last-child td {
@@ -1572,11 +2448,11 @@ a {
 }
 
 .elemenx-table.bordered thead th:first-child {
-	border-top-left-radius: calc(var(--elemenx-radius-large) - 1px);
+	border-start-start-radius: calc(var(--elemenx-radius-large) - 1px);
 }
 
 .elemenx-table.bordered thead th:last-child {
-	border-top-right-radius: calc(var(--elemenx-radius-large) - 1px);
+	border-start-end-radius: calc(var(--elemenx-radius-large) - 1px);
 }
 
 .elemenx-table.sticky thead th {
@@ -1705,7 +2581,7 @@ a {
 .elemenx-drag-ghost {
 	position: fixed;
 	top: 0;
-	left: 0;
+	inset-inline-start: 0;
 	z-index: 1300;
 	margin: 0;
 	opacity: 0.92;
@@ -1732,7 +2608,7 @@ a {
 .elemenx-drop-marker {
 	position: fixed;
 	top: 0;
-	left: 0;
+	inset-inline-start: 0;
 	z-index: 1300;
 	background: var(--elemenx-accent);
 	border-radius: 1px;
@@ -1930,7 +2806,7 @@ a {
 .elemenx-card-date {
 	position: absolute;
 	top: 0;
-	right: 0;
+	inset-inline-end: 0;
 	z-index: 1;
 	display: flex;
 	flex-direction: column;
@@ -2106,9 +2982,9 @@ a {
 .elemenx-picker-tab.active::after {
 	content: '';
 	position: absolute;
-	right: 4px;
+	inset-inline-end: 4px;
 	bottom: -1px;
-	left: 4px;
+	inset-inline-start: 4px;
 	height: 2px;
 	background: var(--elemenx-accent);
 	border-radius: var(--elemenx-radius-small);

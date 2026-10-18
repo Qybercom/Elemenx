@@ -14,7 +14,7 @@ Elemenx.Component('Sparkline', {
 	Max: null,
 	Dot: true,
 	Color: '',
-	Label: 'Trend',
+	Label: '',
 
 	$OnCreate: function () {
 		var self = this;

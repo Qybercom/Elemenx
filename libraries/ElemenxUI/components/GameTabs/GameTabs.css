@@ -1,0 +1,80 @@
+.elemenx-game-tabs {
+	display: flex;
+	gap: 4px;
+	color: var(--elemenx-game-text);
+	font-family: var(--elemenx-game-font);
+}
+
+.elemenx-game-tabs.vertical {
+	flex-direction: column;
+}
+
+.elemenx-game-tab {
+	position: relative;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	min-height: 40px;
+	padding: 6px 10px;
+	background: var(--elemenx-game-tab);
+	border: var(--elemenx-game-cell-frame);
+	border-radius: var(--elemenx-game-cell-radius);
+	color: var(--elemenx-game-muted);
+	font: inherit;
+	text-align: start;
+	cursor: pointer;
+}
+
+.elemenx-game-tab:hover {
+	color: var(--elemenx-game-text);
+}
+
+.elemenx-game-tab:focus-visible {
+	outline: none;
+	box-shadow: var(--elemenx-game-glow);
+}
+
+.elemenx-game-tab.active {
+	background: var(--elemenx-game-tab-active);
+	color: var(--elemenx-game-title);
+}
+
+/* The marker of the open tab: a bar of the accent on its outer edge. */
+.elemenx-game-tab.active::before {
+	position: absolute;
+	background: var(--elemenx-game-tab-marker);
+	box-shadow: 0 0 8px var(--elemenx-game-tab-marker);
+	content: '';
+}
+
+.elemenx-game-tabs.vertical .elemenx-game-tab.active::before {
+	inset-block: 4px;
+	inset-inline-start: -1px;
+	width: 3px;
+}
+
+.elemenx-game-tabs.horizontal .elemenx-game-tab.active::before {
+	inset-inline: 4px;
+	bottom: -1px;
+	height: 3px;
+}
+
+.elemenx-game-tab:disabled {
+	opacity: 0.4;
+	cursor: default;
+}
+
+.elemenx-game-tab-number {
+	font-family: var(--elemenx-font-mono), monospace;
+	font-size: var(--elemenx-font-size-small);
+	letter-spacing: 0.08em;
+}
+
+.elemenx-game-tab-label {
+	overflow: hidden;
+	font-size: var(--elemenx-font-size-small);
+	letter-spacing: var(--elemenx-game-letter-spacing);
+	text-overflow: ellipsis;
+	text-transform: var(--elemenx-game-text-transform);
+	white-space: nowrap;
+}

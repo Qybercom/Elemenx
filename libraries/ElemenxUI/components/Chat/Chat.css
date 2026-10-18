@@ -3,6 +3,7 @@
 	height: 100%;
 	min-height: 0;
 	overflow: hidden;
+	container-type: inline-size;
 	background: var(--elemenx-surface);
 	border-radius: 0;
 }
@@ -12,7 +13,7 @@
 	min-height: 0;
 	overflow: visible;
 	background: var(--elemenx-surface-raised);
-	border-right: 1px solid var(--elemenx-border);
+	border-inline-end: 1px solid var(--elemenx-border);
 }
 
 .elemenx-chat-sidebar[hidden] {
@@ -35,8 +36,25 @@
 	border-radius: 0;
 }
 
-.elemenx-chat-header:empty {
+.elemenx-chat-header:empty,
+.elemenx-chat-header[hidden],
+.elemenx-chat-selection[hidden] {
 	display: none;
+}
+
+/* The bar of the messages chosen, in the place of the header: their count, a way out and their actions. */
+.elemenx-chat-selection {
+	flex: none;
+	align-items: center;
+	gap: 8px;
+	min-height: 56px;
+	padding: 8px 16px;
+	border-bottom: 1px solid var(--elemenx-border);
+	border-radius: 0;
+}
+
+.elemenx-chat-selection-count {
+	font-weight: var(--elemenx-font-weight-strong);
 }
 
 .elemenx-chat-messages {
@@ -49,7 +67,7 @@
 
 .elemenx-chat-jump {
 	position: absolute;
-	right: 16px;
+	inset-inline-end: 16px;
 	bottom: 88px;
 	z-index: 1;
 }
@@ -96,4 +114,11 @@
 
 .elemenx-chat-conversation.active {
 	background: linear-gradient(rgba(var(--elemenx-accent-rgb), 0.1), rgba(var(--elemenx-accent-rgb), 0.1)), var(--elemenx-surface);
+}
+
+/* A narrow chat (a phone) gives its whole width to the messages: the list of the conversations goes. */
+@container (max-width: 600px) {
+	.elemenx-chat-sidebar {
+		display: none;
+	}
 }

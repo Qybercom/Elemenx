@@ -1,8 +1,8 @@
 <div class="elemenx-container elemenx-theme-switch">
 	<Button *if="Compact" Variant="ghost" [size]="Size" [icon]="Policy === 'dark' ? 'moon' : Policy === 'light' ? 'sun' : 'monitor'" [title]="'Theme: ' + Policy" (click)="Next" />
-	<ButtonGroup *if="!Compact" Attached="true" Label="Theme">
-		<Button Icon="monitor" Title="System theme" [size]="Size" [pressed]="Policy === 'system'" (click)="System" />
-		<Button Icon="sun" Title="Light theme" [size]="Size" [pressed]="Policy === 'light'" (click)="Light" />
-		<Button Icon="moon" Title="Dark theme" [size]="Size" [pressed]="Policy === 'dark'" (click)="Dark" />
+	<ButtonGroup *if="!Compact" Attached="true" [label]="$T('ui.themeSwitch.title')">
+		<Button Icon="monitor" [title]="$T('ui.themeSwitch.system')" [size]="Size" [pressed]="Policy === 'system'" (click)="System" />
+		<Button Icon="sun" [title]="$T('ui.themeSwitch.light')" [size]="Size" [pressed]="Policy === 'light'" (click)="Light" />
+		<Button Icon="moon" [title]="$T('ui.themeSwitch.dark')" [size]="Size" [pressed]="Policy === 'dark'" (click)="Dark" />
 	</ButtonGroup>
 </div>

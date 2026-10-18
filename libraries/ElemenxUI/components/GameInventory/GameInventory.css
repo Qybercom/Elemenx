@@ -1,0 +1,151 @@
+.elemenx-game-inventory {
+	position: relative;
+	display: inline-block;
+	color: var(--elemenx-game-text);
+	font-family: var(--elemenx-game-font);
+}
+
+.elemenx-game-inventory-grid {
+	display: grid;
+	grid-template-columns: repeat(var(--elemenx-game-inventory-columns, 6), 52px);
+	gap: var(--elemenx-game-inventory-gap);
+}
+
+.elemenx-game-inventory-cell {
+	position: relative;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 52px;
+	height: 52px;
+	background: var(--elemenx-game-cell);
+	border: var(--elemenx-game-cell-frame);
+	border-radius: var(--elemenx-game-cell-radius);
+	outline: none;
+	cursor: pointer;
+	user-select: none;
+}
+
+.elemenx-game-inventory-cell.empty {
+	cursor: default;
+}
+
+.elemenx-game-inventory-cell:focus-visible,
+.elemenx-game-inventory-cell[aria-selected='true']:focus {
+	box-shadow: var(--elemenx-game-glow);
+}
+
+.elemenx-game-inventory-cell.uncommon {
+	border-color: var(--elemenx-game-uncommon);
+	box-shadow: inset 0 0 0 1px var(--elemenx-game-uncommon), var(--elemenx-game-item-bevel);
+}
+
+.elemenx-game-inventory-cell.rare {
+	border-color: var(--elemenx-game-rare);
+	box-shadow: inset 0 0 0 1px var(--elemenx-game-rare), var(--elemenx-game-item-bevel);
+}
+
+.elemenx-game-inventory-cell.epic {
+	border-color: var(--elemenx-game-epic);
+	box-shadow: inset 0 0 0 1px var(--elemenx-game-epic), var(--elemenx-game-item-bevel);
+}
+
+.elemenx-game-inventory-cell.legendary {
+	border-color: var(--elemenx-game-legendary);
+	box-shadow: inset 0 0 0 1px var(--elemenx-game-legendary), var(--elemenx-game-item-bevel);
+}
+
+/* The mark of the selected cell, focused or not: a picture of the theme in a box around the cell (brackets). */
+.elemenx-game-inventory-mark {
+	position: absolute;
+	inset: var(--elemenx-game-item-selected-inset);
+	z-index: 2;
+	pointer-events: none;
+}
+
+.elemenx-game-inventory-cell[aria-selected='true'] > .elemenx-game-inventory-mark {
+	background: var(--elemenx-game-item-selected);
+}
+
+/* An active item (in use, as one worn): the fill and the frame of the theme. */
+.elemenx-game-inventory-cell.filled.active {
+	background: var(--elemenx-game-item-active-fill);
+	box-shadow: var(--elemenx-game-item-active);
+}
+
+.elemenx-game-inventory-cell.held {
+	opacity: 0.56;
+	transform: scale(0.92);
+}
+
+.elemenx-game-inventory-cell.drop-over {
+	box-shadow: var(--elemenx-game-glow);
+	filter: brightness(1.2);
+}
+
+/* An item lies on glass of its color (Color, or the color of its rarity) under the gloss of the theme. */
+.elemenx-game-inventory-cell.filled {
+	box-shadow: var(--elemenx-game-item-bevel);
+}
+
+.elemenx-game-inventory-cell.filled::before,
+.elemenx-game-inventory-cell.filled::after {
+	position: absolute;
+	inset: var(--elemenx-game-item-inset);
+	z-index: 0;
+	border-radius: inherit;
+	content: '';
+	pointer-events: none;
+}
+
+.elemenx-game-inventory-cell.filled::before {
+	background: var(--elemenx-game-item-color);
+	opacity: var(--elemenx-game-item-tint);
+}
+
+.elemenx-game-inventory-cell.filled::after {
+	background: var(--elemenx-game-item-gloss);
+}
+
+.elemenx-game-inventory-cell > .elemenx-icon,
+.elemenx-game-inventory-cell > .elemenx-game-inventory-image {
+	position: relative;
+	z-index: 1;
+}
+
+.elemenx-game-inventory-cell > .elemenx-icon {
+	color: var(--elemenx-game-item-icon);
+	filter: var(--elemenx-game-item-icon-shadow);
+	scale: var(--elemenx-game-item-icon-scale);
+}
+
+.elemenx-game-inventory-image {
+	width: 80%;
+	height: 80%;
+	object-fit: contain;
+	pointer-events: none;
+}
+
+.elemenx-game-inventory-badge {
+	position: absolute;
+	top: 2px;
+	inset-inline-start: 4px;
+	z-index: 2;
+	color: var(--elemenx-game-special);
+	font-size: 10px;
+	font-weight: var(--elemenx-font-weight-bold);
+	line-height: 1;
+	text-shadow: var(--elemenx-game-bar-text-shadow);
+}
+
+.elemenx-game-inventory-count {
+	position: absolute;
+	z-index: 2;
+	bottom: 2px;
+	inset-inline-end: 4px;
+	color: var(--elemenx-game-bar-text);
+	font-size: 10px;
+	font-weight: var(--elemenx-font-weight-bold);
+	text-shadow: var(--elemenx-game-bar-text-shadow);
+}
+

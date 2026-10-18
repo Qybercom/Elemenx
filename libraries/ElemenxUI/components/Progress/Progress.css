@@ -48,7 +48,7 @@
 	position: absolute;
 	top: 0;
 	bottom: 0;
-	left: 0;
+	inset-inline-start: 0;
 	background: var(--elemenx-progress-color);
 	border-radius: var(--elemenx-radius-pill);
 	transition: width var(--elemenx-duration-slow) var(--elemenx-easing);
@@ -67,7 +67,7 @@
 	font-size: var(--elemenx-font-size-small);
 	line-height: var(--elemenx-line-height-small);
 	font-variant-numeric: tabular-nums;
-	text-align: right;
+	text-align: end;
 }
 
 .elemenx-progress.ring {

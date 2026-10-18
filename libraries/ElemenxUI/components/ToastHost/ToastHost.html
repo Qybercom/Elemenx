@@ -1,4 +1,4 @@
-<section class="elemenx-toast-host" aria-live="polite" aria-label="Notifications" [class]="[Placement || 'bottom-right']">
+<section class="elemenx-toast-host" aria-live="polite" [attribute.aria-label]="$T('ui.toastHost.title')" [class]="[Placement || 'bottom-right']">
 	<div class="elemenx-toast" role="status" *for="item of Items" *key="item.ID" [class]="[item.Variant, item.Class, item.Timed ? 'timed' : '']" [style.--elemenx-toast-duration]="item.Duration + 'ms'" [attribute.data-id]="item.ID" (mouseenter)="Hold" (mouseleave)="Release" (focusin)="Hold" (focusout)="Release">
 		<Icon *if="item.Icon" [name]="item.Icon" />
 		<div class="elemenx-toast-text">
@@ -9,7 +9,7 @@
 				<button class="elemenx-toast-action" type="button" *for="action of item.Actions" *key="$index" [class]="[action.Variant || '']" [attribute.data-index]="$index" (click)="Act">{{action.Label}}</button>
 			</div>
 		</div>
-		<button class="elemenx-input-action" type="button" aria-label="Close" *if="item.Closable" (click)="Close"><Icon Name="close" /></button>
+		<button class="elemenx-input-action" type="button" [attribute.aria-label]="$T('ui.common.close')" *if="item.Closable" (click)="Close"><Icon Name="close" /></button>
 		<span class="elemenx-toast-timer" *if="item.Timed" aria-hidden="true"></span>
 	</div>
 </section>

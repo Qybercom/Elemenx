@@ -276,7 +276,7 @@ Elemenx.Service('Countries', {
 	},
 
 	Locale: function (locale) {
-		return locale || (navigator.languages && navigator.languages[0]) || navigator.language || 'en';
+		return locale || Elemenx.Locale.Language();
 	},
 
 	List: function (locale) {

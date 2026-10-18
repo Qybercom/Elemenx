@@ -24,10 +24,10 @@ Elemenx.Component('PostCard', {
 	Variant: 'outlined',
 	DateBadge: false,
 	Href: '',
-	ReadLabel: 'min read',
-	LikeLabel: 'Like',
-	CommentLabel: 'Comments',
-	ShareLabel: 'Share',
+	ReadLabel: '',
+	LikeLabel: '',
+	CommentLabel: '',
+	ShareLabel: '',
 
 	$OnCreate: function () {
 		var format = this.$Service('Format');

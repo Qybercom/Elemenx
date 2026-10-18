@@ -1,17 +1,17 @@
-<div class="elemenx-pagination" role="navigation" [attribute.aria-label]="Label">
-	<span class="elemenx-caption elemenx-pagination-range">{{Range(Page, Count, PageSize)}}</span>
+<div class="elemenx-pagination" role="navigation" [attribute.aria-label]="(Label || $T('ui.pagination.label'))">
+	<span class="elemenx-caption elemenx-pagination-range" *if="ShowRange">{{Range(Page, Count, PageSize)}}</span>
 	<span class="elemenx-spacer"></span>
-	<select class="elemenx-pagination-size" aria-label="Rows per page" *if="PageSizes && PageSizes.length" (change)="Resize">
-		<option *for="size of PageSizes" *key="size" [value]="size" [selected]="Number(size) === Number(PageSize)">{{size}} {{SizeLabel}}</option>
+	<select class="elemenx-pagination-size" [attribute.aria-label]="$T('ui.pagination.rowsPerPage')" *if="PageSizes && PageSizes.length" (change)="Resize">
+		<option *for="size of PageSizes" *key="size" [value]="size" [selected]="Number(size) === Number(PageSize)">{{SizeLabel ? size + ' ' + SizeLabel : $T('ui.pagination.size', {size: size})}}</option>
 	</select>
-	<button class="elemenx-pagination-page" type="button" aria-label="First page" [disabled]="Current(Page, Count, PageSize) <= 1" (click)="First"><Icon Name="page-first" /></button>
-	<button class="elemenx-pagination-page" type="button" aria-label="Previous page" [disabled]="Current(Page, Count, PageSize) <= 1" (click)="Previous"><Icon Name="chevron-left" /></button>
-	<span class="elemenx-pagination-pages">
-		<span *for="item of List(Page, Count, PageSize)" *key="item.Key">
+	<button class="elemenx-pagination-page" type="button" *if="ShowFirstLast" [attribute.aria-label]="$T('ui.pagination.first')" [disabled]="Current(Page, Count, PageSize) <= 1" (click)="First"><Icon Name="page-first" /></button>
+	<button class="elemenx-pagination-page" type="button" *if="ShowPrevNext" [attribute.aria-label]="$T('ui.pagination.previous')" [disabled]="Current(Page, Count, PageSize) <= 1" (click)="Previous"><Icon Name="chevron-left" /></button>
+	<span class="elemenx-pagination-pages" *if="ShowPages">
+		<span *for="item of List(Page, Count, PageSize, Siblings, Boundaries)" *key="item.Key">
 			<span class="elemenx-pagination-gap" *if="item.Gap">…</span>
 			<button class="elemenx-pagination-page" type="button" *if="!item.Gap" [class.current]="item.Current" [attribute.aria-current]="item.Current ? 'page' : null" [attribute.data-page]="item.Number" (click)="To">{{item.Number}}</button>
 		</span>
 	</span>
-	<button class="elemenx-pagination-page" type="button" aria-label="Next page" [disabled]="Current(Page, Count, PageSize) >= Pages(Count, PageSize)" (click)="Next"><Icon Name="chevron-right" /></button>
-	<button class="elemenx-pagination-page" type="button" aria-label="Last page" [disabled]="Current(Page, Count, PageSize) >= Pages(Count, PageSize)" (click)="Last"><Icon Name="page-last" /></button>
+	<button class="elemenx-pagination-page" type="button" *if="ShowPrevNext" [attribute.aria-label]="$T('ui.pagination.next')" [disabled]="Current(Page, Count, PageSize) >= Pages(Count, PageSize)" (click)="Next"><Icon Name="chevron-right" /></button>
+	<button class="elemenx-pagination-page" type="button" *if="ShowFirstLast" [attribute.aria-label]="$T('ui.pagination.last')" [disabled]="Current(Page, Count, PageSize) >= Pages(Count, PageSize)" (click)="Last"><Icon Name="page-last" /></button>
 </div>

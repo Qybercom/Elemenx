@@ -14,9 +14,9 @@ Elemenx.Component('CommandPalette', {
 	Open: false,
 	Hotkey: 'Mod+K',
 	IncludeHotkeys: false,
-	Placeholder: 'Type a command or search',
-	Empty: 'No matching commands',
-	RecentTitle: 'Recent',
+	Placeholder: '',
+	Empty: '',
+	RecentTitle: '',
 	Remember: '',
 	Shown: false,
 	Limit: 50,
@@ -86,7 +86,7 @@ Elemenx.Component('CommandPalette', {
 					return String(entry.ID) === String(id);
 				})[0];
 			}).filter(Boolean).forEach(function (command, position) {
-				add({Command: command, Parts: [{Text: command.Label, Match: false}]}, position === 0 ? self.RecentTitle : null, 'recent:');
+				add({Command: command, Parts: [{Text: command.Label, Match: false}]}, position === 0 ? self.RecentTitle || Elemenx.Locale.Text('ui.commandPalette.recentTitle') : null, 'recent:');
 			});
 
 			all.forEach(function (command) {

@@ -2,9 +2,9 @@
 	<div class="elemenx-input elemenx-tags-field" [class]="[Size || 'medium', Shape === 'round' ? 'round' : '', Invalid || Refused ? 'invalid' : '', Disabled ? 'disabled' : '']" (click)="Focus">
 		<span class="elemenx-chip" *for="tag of Value" *key="$index + ':' + tag">
 			<span class="elemenx-chip-label">{{tag}}</span>
-			<button class="elemenx-input-action" type="button" tabindex="-1" [attribute.aria-label]="'Remove ' + tag" [attribute.data-index]="$index" *if="!Disabled" (click)="Remove"><Icon Name="close" Size="12" /></button>
+			<button class="elemenx-input-action" type="button" tabindex="-1" [attribute.aria-label]="$T('ui.common.remove', {name: tag})" [attribute.data-index]="$index" *if="!Disabled" (click)="Remove"><Icon Name="close" Size="12" /></button>
 		</span>
-		<input class="elemenx-input-control elemenx-tags-control" type="text" autocomplete="off" role="combobox" aria-autocomplete="list" [attribute.aria-expanded]="String(Open)" [attribute.aria-invalid]="Invalid || Refused ? 'true' : null" [placeholder]="Full(Value) ? '' : Placeholder" [disabled]="Disabled" [attribute.readonly]="Full(Value) ? '' : null" (input)="Typed" (paste)="Pasted" (keydown)="Key" (blur)="Blur" />
+		<input class="elemenx-input-control elemenx-tags-control" type="text" autocomplete="off" role="combobox" aria-autocomplete="list" [attribute.aria-expanded]="String(Open)" [attribute.aria-invalid]="Invalid || Refused ? 'true' : null" [placeholder]="Full(Value) ? '' : (Placeholder || $T('ui.tagInput.placeholder'))" [disabled]="Disabled" [attribute.readonly]="Full(Value) ? '' : null" (input)="Typed" (paste)="Pasted" (keydown)="Key" (blur)="Blur" />
 	</div>
 	<input type="hidden" *if="Name" [attribute.name]="Name" [value]="Value.join(',')" />
 	<div class="elemenx-popup" role="listbox" *popup="Open" (dismiss)="Dismissed">

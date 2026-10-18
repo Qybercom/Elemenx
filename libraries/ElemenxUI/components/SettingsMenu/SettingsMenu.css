@@ -1,0 +1,384 @@
+/* A menu of settings: a title, a search, and the page of the menu open now, in groups of rows. */
+.elemenx-settings-menu {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	min-width: 0;
+	overflow-x: hidden;
+	color: var(--elemenx-text);
+}
+
+.elemenx-settings-menu-back {
+	display: inline-flex;
+	align-self: flex-start;
+	align-items: center;
+	gap: 2px;
+	max-width: 100%;
+	min-height: var(--elemenx-control);
+	padding: 0 8px 0 0;
+	background: none;
+	border: 0;
+	border-radius: var(--elemenx-radius);
+	color: var(--elemenx-accent);
+	font: inherit;
+	cursor: pointer;
+	outline: none;
+}
+
+.elemenx-settings-menu-back:focus-visible {
+	outline: 2px solid var(--elemenx-focus);
+}
+
+.elemenx-settings-menu-back-label {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.elemenx-settings-menu-title {
+	padding: 0 4px;
+	font-size: 28px;
+	font-weight: var(--elemenx-font-weight-strong);
+	line-height: 1.2;
+}
+
+.elemenx-settings-menu-search {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	height: var(--elemenx-control);
+	padding: 0 12px;
+	background: var(--elemenx-surface-hover);
+	border-radius: var(--elemenx-radius-large);
+	color: var(--elemenx-text-muted);
+}
+
+.elemenx-settings-menu-search:focus-within {
+	box-shadow: 0 0 0 2px var(--elemenx-focus);
+}
+
+.elemenx-settings-menu-query {
+	flex: 1;
+	min-width: 0;
+	padding: 0;
+	background: transparent;
+	border: 0;
+	color: var(--elemenx-text);
+	font: inherit;
+	outline: none;
+}
+
+/* A new page slides in: from the end when a submenu opens, from the start when the menu goes back. */
+.elemenx-settings-menu-page {
+	display: flex;
+	flex-direction: column;
+	gap: 24px;
+	min-width: 0;
+}
+
+.elemenx-settings-menu-page.forward {
+	animation: elemenx-settings-menu-forward var(--elemenx-duration-slow) var(--elemenx-easing);
+}
+
+.elemenx-settings-menu-page.back {
+	animation: elemenx-settings-menu-back var(--elemenx-duration-slow) var(--elemenx-easing);
+}
+
+@keyframes elemenx-settings-menu-forward {
+	from {
+		opacity: 0;
+		transform: translateX(32px);
+	}
+}
+
+@keyframes elemenx-settings-menu-back {
+	from {
+		opacity: 0;
+		transform: translateX(-32px);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.elemenx-settings-menu-page.forward,
+	.elemenx-settings-menu-page.back {
+		animation: none;
+	}
+}
+
+.elemenx-settings-menu-group {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	min-width: 0;
+}
+
+.elemenx-settings-menu-group-title {
+	padding: 0 16px;
+	color: var(--elemenx-text-muted);
+	font-size: var(--elemenx-font-size-small);
+	line-height: var(--elemenx-line-height-small);
+}
+
+.elemenx-settings-menu-list {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.elemenx-settings-menu-note {
+	margin: 0;
+	padding: 0 16px;
+	color: var(--elemenx-text-muted);
+	font-size: var(--elemenx-font-size-small);
+	line-height: var(--elemenx-line-height-small);
+}
+
+/* A row: the tile, then its main part (the text, the value, the switch, the check and the chevron). */
+.elemenx-settings-menu-row {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	width: 100%;
+	padding: 0;
+	padding-inline-start: 16px;
+	background: transparent;
+	border: 0;
+	color: inherit;
+	font: inherit;
+	text-align: start;
+	cursor: pointer;
+	outline: none;
+}
+
+.elemenx-settings-menu-row:hover {
+	background: var(--elemenx-surface-hover);
+}
+
+.elemenx-settings-menu-row:focus-visible {
+	outline: 2px solid var(--elemenx-focus);
+	outline-offset: -2px;
+}
+
+.elemenx-settings-menu-row[disabled] {
+	opacity: 0.48;
+	cursor: default;
+}
+
+.elemenx-settings-menu-row[disabled]:hover {
+	background: transparent;
+}
+
+.elemenx-settings-menu-tile {
+	display: inline-flex;
+	flex: none;
+	align-items: center;
+	justify-content: center;
+	background: var(--elemenx-accent);
+	color: var(--elemenx-accent-text);
+}
+
+.elemenx-settings-menu-main {
+	display: flex;
+	flex: 1;
+	align-self: stretch;
+	align-items: center;
+	gap: 8px;
+	min-width: 0;
+	padding-block: 8px;
+	padding-inline-end: 16px;
+}
+
+.elemenx-settings-menu-text {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	min-width: 0;
+}
+
+.elemenx-settings-menu-label {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.elemenx-settings-menu-row.danger .elemenx-settings-menu-label {
+	color: var(--elemenx-danger);
+}
+
+.elemenx-settings-menu-description {
+	color: var(--elemenx-text-muted);
+	font-size: var(--elemenx-font-size-small);
+	line-height: var(--elemenx-line-height-small);
+}
+
+.elemenx-settings-menu-value {
+	flex: none;
+	max-width: 40%;
+	overflow: hidden;
+	color: var(--elemenx-text-muted);
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.elemenx-settings-menu-badge {
+	flex: none;
+	min-width: 20px;
+	padding: 0 6px;
+	background: var(--elemenx-danger);
+	border-radius: var(--elemenx-radius-pill);
+	color: var(--elemenx-accent-text);
+	font-size: var(--elemenx-font-size-small);
+	line-height: 20px;
+	text-align: center;
+}
+
+.elemenx-settings-menu-check {
+	display: inline-flex;
+	flex: none;
+	color: var(--elemenx-accent);
+}
+
+.elemenx-settings-menu-chevron {
+	display: inline-flex;
+	flex: none;
+	color: var(--elemenx-text-muted);
+}
+
+/* The switch of a Toggle row: a track and its knob, at the end when Checked. */
+.elemenx-settings-menu-switch {
+	position: relative;
+	flex: none;
+	background: var(--elemenx-border-strong);
+	border-radius: var(--elemenx-radius-pill);
+	transition: background var(--elemenx-duration) var(--elemenx-easing);
+}
+
+.elemenx-settings-menu-knob {
+	position: absolute;
+	top: 2px;
+	inset-inline-start: 2px;
+	background: var(--elemenx-surface);
+	border-radius: 50%;
+	box-shadow: var(--elemenx-shadow-small);
+	transition: transform var(--elemenx-duration) var(--elemenx-easing);
+}
+
+/* ios: the rows on rounded cards, square tiles, lines between the rows from the start of their text. */
+.elemenx-settings-menu.ios .elemenx-settings-menu-group-title {
+	text-transform: uppercase;
+}
+
+.elemenx-settings-menu.ios .elemenx-settings-menu-list {
+	overflow: hidden;
+	background: var(--elemenx-surface);
+	border-radius: var(--elemenx-radius-huge);
+}
+
+.elemenx-settings-menu.ios .elemenx-settings-menu-main {
+	min-height: 44px;
+}
+
+.elemenx-settings-menu.ios .elemenx-settings-menu-item + .elemenx-settings-menu-item .elemenx-settings-menu-main {
+	border-top: 1px solid var(--elemenx-border);
+}
+
+.elemenx-settings-menu.ios .elemenx-settings-menu-tile {
+	width: 29px;
+	height: 29px;
+	border-radius: var(--elemenx-radius-large);
+}
+
+.elemenx-settings-menu.ios .elemenx-settings-menu-switch {
+	width: 44px;
+	height: 26px;
+}
+
+.elemenx-settings-menu.ios .elemenx-settings-menu-knob {
+	width: 22px;
+	height: 22px;
+}
+
+.elemenx-settings-menu.ios .elemenx-settings-menu-row.checked .elemenx-settings-menu-switch {
+	background: var(--elemenx-success);
+}
+
+.elemenx-settings-menu.ios .elemenx-settings-menu-row.checked .elemenx-settings-menu-knob {
+	transform: translateX(18px);
+}
+
+/* material: the rows across the page, round tiles, the titles of the groups in the accent, a wider switch. */
+.elemenx-settings-menu.material .elemenx-settings-menu-page {
+	gap: 8px;
+}
+
+.elemenx-settings-menu.material .elemenx-settings-menu-group-title {
+	padding-top: 8px;
+	color: var(--elemenx-accent);
+	font-weight: var(--elemenx-font-weight-strong);
+}
+
+.elemenx-settings-menu.material .elemenx-settings-menu-row {
+	gap: 16px;
+	border-radius: var(--elemenx-radius-large);
+}
+
+.elemenx-settings-menu.material .elemenx-settings-menu-main {
+	min-height: 56px;
+	padding-block: 12px;
+}
+
+.elemenx-settings-menu.material .elemenx-settings-menu-label {
+	font-size: var(--elemenx-font-size-large);
+}
+
+.elemenx-settings-menu.material .elemenx-settings-menu-tile {
+	width: 40px;
+	height: 40px;
+	border-radius: 50%;
+}
+
+.elemenx-settings-menu.material .elemenx-settings-menu-switch {
+	width: 52px;
+	height: 32px;
+	background: var(--elemenx-surface-hover);
+	box-shadow: inset 0 0 0 2px var(--elemenx-border-strong);
+}
+
+.elemenx-settings-menu.material .elemenx-settings-menu-knob {
+	top: 8px;
+	inset-inline-start: 8px;
+	width: 16px;
+	height: 16px;
+	background: var(--elemenx-border-strong);
+	box-shadow: none;
+}
+
+.elemenx-settings-menu.material .elemenx-settings-menu-row.checked .elemenx-settings-menu-switch {
+	background: var(--elemenx-accent);
+	box-shadow: none;
+}
+
+.elemenx-settings-menu.material .elemenx-settings-menu-row.checked .elemenx-settings-menu-knob {
+	top: 4px;
+	width: 24px;
+	height: 24px;
+	background: var(--elemenx-accent-text);
+	transform: translateX(16px);
+}
+
+/* On a right-to-left page the knobs go to the other end, and the pages slide in from the other side. */
+[dir='rtl'] .elemenx-settings-menu.ios .elemenx-settings-menu-row.checked .elemenx-settings-menu-knob {
+	transform: translateX(-18px);
+}
+
+[dir='rtl'] .elemenx-settings-menu.material .elemenx-settings-menu-row.checked .elemenx-settings-menu-knob {
+	transform: translateX(-16px);
+}
+
+[dir='rtl'] .elemenx-settings-menu-page.forward {
+	animation-name: elemenx-settings-menu-back;
+}
+
+[dir='rtl'] .elemenx-settings-menu-page.back {
+	animation-name: elemenx-settings-menu-forward;
+}

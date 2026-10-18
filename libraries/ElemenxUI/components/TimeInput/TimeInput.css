@@ -34,8 +34,8 @@
 }
 
 .elemenx-time-column + .elemenx-time-column {
-	padding-left: 4px;
-	border-left: 1px solid var(--elemenx-border);
+	padding-inline-start: 4px;
+	border-inline-start: 1px solid var(--elemenx-border);
 }
 
 .elemenx-time-column button {

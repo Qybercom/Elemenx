@@ -206,14 +206,14 @@ describe('ElemenxUI theming', function () {
 			return /\.css$/.test(file);
 		});
 
-		expect(files).toEqual(['contrast.css', 'darcula.css', 'soft.css', 'template.css']);
+		expect(files).toEqual(['contrast.css', 'darcula.css', 'fantasy.css', 'scifi.css', 'soft.css', 'template.css']);
 
 		files.forEach(function (file) {
 			var name = file === 'template.css' ? 'my-theme' : file.replace(/\.css$/, '');
 
 			selectors(read(path.join(library, 'themes', file))).forEach(function (selector) {
 				selector.split(',').forEach(function (part) {
-					expect(part.trim().indexOf("body[data-theme='" + name + "']"), file + ': ' + part.trim()).toBe(0);
+					expect(part.trim().indexOf("[data-theme][data-theme='" + name + "']"), file + ': ' + part.trim()).toBe(0);
 				});
 			});
 

@@ -1,0 +1,99 @@
+/* The knob: the open ring of the dial Meter, its fill from the origin to the value, ticks, and a cap with a pointer. */
+.elemenx-knob {
+	display: inline-flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 4px;
+	user-select: none;
+}
+
+.elemenx-knob.disabled {
+	opacity: 0.48;
+	pointer-events: none;
+}
+
+.elemenx-knob-dial {
+	position: relative;
+	width: 72px;
+	aspect-ratio: 1;
+	border-radius: 50%;
+	cursor: ns-resize;
+	touch-action: none;
+	outline: none;
+}
+
+.elemenx-knob.small .elemenx-knob-dial {
+	width: 48px;
+}
+
+.elemenx-knob.large .elemenx-knob-dial {
+	width: 104px;
+}
+
+.elemenx-knob-dial:focus-visible {
+	box-shadow: 0 0 0 2px var(--elemenx-focus);
+}
+
+.elemenx-knob-face {
+	display: block;
+	width: 100%;
+	height: 100%;
+	overflow: visible;
+	fill: none;
+}
+
+.elemenx-knob-ring,
+.elemenx-knob-arc {
+	stroke-width: 6;
+}
+
+.elemenx-knob-ring {
+	stroke: var(--elemenx-border);
+}
+
+.elemenx-knob-arc {
+	stroke: var(--elemenx-accent);
+}
+
+.elemenx-knob-tick {
+	stroke: var(--elemenx-text-muted);
+	stroke-width: 1.5;
+}
+
+.elemenx-knob-cap {
+	fill: var(--elemenx-surface-raised);
+	stroke: var(--elemenx-border-strong);
+	stroke-width: 1;
+}
+
+.elemenx-knob-dial:hover .elemenx-knob-cap,
+.elemenx-knob.active .elemenx-knob-cap {
+	fill: var(--elemenx-surface-hover);
+}
+
+.elemenx-knob-pointer {
+	stroke: var(--elemenx-text);
+	stroke-width: 4;
+	stroke-linecap: round;
+}
+
+/* The value sits in the gap of the ring, under the cap. */
+.elemenx-knob-value {
+	position: absolute;
+	top: 84%;
+	left: 50%;
+	color: var(--elemenx-text);
+	font-size: var(--elemenx-font-size-small);
+	line-height: var(--elemenx-line-height-small);
+	font-variant-numeric: tabular-nums;
+	white-space: nowrap;
+	transform: translateX(-50%);
+}
+
+.elemenx-knob-label {
+	margin-top: 8px;
+	color: var(--elemenx-text-muted);
+	font-size: var(--elemenx-font-size-small);
+	line-height: var(--elemenx-line-height-small);
+	text-align: center;
+}

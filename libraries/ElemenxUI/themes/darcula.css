@@ -1,10 +1,10 @@
 /*
  * Darcula: the dark theme of the JetBrains IDEs, for IDE-like Applications. It is made for the dark scheme only, so
- * it stays dark whatever the policy. Every rule starts with body[data-theme='darcula'].
+ * it stays dark whatever the policy. Every rule starts with [data-theme][data-theme='darcula'].
  */
-/* With [data-scheme] as well, the colors win over the dark colors of index.css (body[data-scheme='dark']). */
-body[data-theme='darcula'],
-body[data-theme='darcula'][data-scheme] {
+/* With [data-scheme] as well, the colors win over the dark colors of index.css ([data-scheme='dark']). */
+[data-theme][data-theme='darcula'],
+[data-theme][data-theme='darcula'][data-scheme] {
 	--elemenx-font-mono: 'JetBrains Mono', Consolas, 'Cascadia Code', monospace;
 	--elemenx-background: #2b2b2b;
 	--elemenx-background-rgb: 43, 43, 43;
@@ -36,14 +36,32 @@ body[data-theme='darcula'][data-scheme] {
 	--elemenx-shadow: 0 8px 24px rgba(0, 0, 0, 0.56);
 	--elemenx-radius: 3px;
 	--elemenx-radius-large: 6px;
+	--elemenx-syntax-comment: #808080;
+	--elemenx-syntax-keyword: #cc7832;
+	--elemenx-syntax-string: #6a8759;
+	--elemenx-syntax-number: #6897bb;
+	--elemenx-syntax-literal: #cc7832;
+	--elemenx-syntax-type: #a9b7c6;
+	--elemenx-syntax-function: #ffc66d;
+	--elemenx-syntax-property: #9876aa;
+	--elemenx-syntax-tag: #e8bf6a;
+	--elemenx-syntax-attribute: #bababa;
+	--elemenx-syntax-selector: #e8bf6a;
+	--elemenx-syntax-variable: #9876aa;
+	--elemenx-syntax-regex: #64a8a0;
+	--elemenx-syntax-meta: #bbb529;
+	--elemenx-syntax-operator: #a9b7c6;
+	--elemenx-syntax-heading: #cc7832;
+	--elemenx-syntax-link: #287bde;
+	--elemenx-syntax-code: #6a8759;
 	color-scheme: dark;
 }
 
-body[data-theme='darcula'] .elemenx-button.primary {
+[data-theme][data-theme='darcula'] .elemenx-button.primary {
 	background: #365880;
 	border-color: #4c708c;
 }
 
-body[data-theme='darcula'] .elemenx-button.primary:hover {
+[data-theme][data-theme='darcula'] .elemenx-button.primary:hover {
 	background: #3e6491;
 }

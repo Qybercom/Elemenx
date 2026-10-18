@@ -5,7 +5,7 @@
  * Month: every day lists its events (an event of several days in each of its days), MaxEvents of them, then a
  * "+N more" that opens the week of that day. Week: the hours from StartHour to EndHour (HourHeight pixels each), the
  * events at their time (overlapping ones side by side), the whole-day events above, a line at the present time.
- * FirstDay: 0 Sunday, 1 Monday (by default from Locale).
+ * FirstDay: 0 Sunday, 1 Monday (the default), or 'locale' for the first day of the week of Locale.
  * Editable lets the user move events: dragged to another day (in the month and in the whole-day row) they keep their
  * times; dragged in the week they take the day and the time under them, in steps of Snap minutes; the lower edge of a
  * timed event changes its end. A shadow shows where the event goes; Escape cancels. With the focus on an event,
@@ -26,10 +26,10 @@ Elemenx.Component('Calendar', {
 	StartHour: 7,
 	EndHour: 21,
 	HourHeight: 48,
-	TodayLabel: 'Today',
-	MonthLabel: 'Month',
-	WeekLabel: 'Week',
-	MoreLabel: 'more',
+	TodayLabel: '',
+	MonthLabel: '',
+	WeekLabel: '',
+	MoreLabel: '',
 	Editable: false,
 	Snap: 15,
 	Now: 0,
@@ -208,10 +208,13 @@ Elemenx.Component('Calendar', {
 	First: function () {
 		var locale;
 
-		if (this.FirstDay !== null && this.FirstDay !== '') return Number(this.FirstDay) % 7;
+		if (this.FirstDay === null || this.FirstDay === '') return 1;
+
+		if (this.FirstDay !== 'locale')
+			return Number(this.FirstDay) % 7;
 
 		try {
-			locale = new Intl.Locale(this.Locale || navigator.language);
+			locale = new Intl.Locale(this.Locale || Elemenx.Locale.Language());
 
 			if (locale.weekInfo)
 				return locale.weekInfo.firstDay % 7;
@@ -577,8 +580,8 @@ Elemenx.Component('Calendar', {
 	/* Alt and the arrows move the focused event: a day left or right, Snap minutes up or down. */
 	Nudge: function (event, node) {
 		var item = this.Find(node.getAttribute('data-id'));
-		var days = {ArrowLeft: -1, ArrowRight: 1}[event.key];
-		var steps = {ArrowUp: -1, ArrowDown: 1}[event.key];
+		var days = {ArrowLeft: -1, ArrowRight: 1}[Elemenx.Locale.Key(event)];
+		var steps = {ArrowUp: -1, ArrowDown: 1}[Elemenx.Locale.Key(event)];
 		var minutes;
 
 		if (!this.Editable || !item || !event.altKey || (!days && !steps)) return;

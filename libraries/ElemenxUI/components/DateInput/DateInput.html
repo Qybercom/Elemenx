@@ -1,14 +1,14 @@
 <div class="elemenx-date elemenx-popup-anchor">
 	<div class="elemenx-input" [class]="[Size || 'medium', Shape === 'round' ? 'round' : '', Invalid || Bad ? 'invalid' : '', Disabled ? 'disabled' : '', ReadOnly ? 'readonly' : '']">
 		<input class="elemenx-input-control" type="text" inputmode="numeric" autocomplete="off" *mask="{Mask: MaskFor(Mode), Value: Text !== null ? Text : DigitsOf(Value, Mode)}" [placeholder]="PlaceholderFor(Mode)" [disabled]="Disabled" [attribute.readonly]="ReadOnly ? '' : null" [attribute.aria-invalid]="Invalid || Bad ? 'true' : null" (mask)="Masked" (change)="Committed" (keydown)="InputKey" />
-		<button class="elemenx-input-action" type="button" aria-haspopup="dialog" [attribute.aria-expanded]="String(Open)" aria-label="Choose a date" [disabled]="Disabled || ReadOnly" (click)="Toggle"><Icon Name="calendar" /></button>
+		<button class="elemenx-input-action" type="button" aria-haspopup="dialog" [attribute.aria-expanded]="String(Open)" [attribute.aria-label]="$T('ui.dateInput.choose')" [disabled]="Disabled || ReadOnly" (click)="Toggle"><Icon Name="calendar" /></button>
 	</div>
 	<input type="hidden" *if="Name" [attribute.name]="Name" [value]="Value" />
-	<div class="elemenx-popup elemenx-calendar" role="dialog" aria-label="Calendar" data-match-width="false" *popup="Open" (dismiss)="Dismissed" (keydown)="CalendarKey">
+	<div class="elemenx-popup elemenx-calendar" role="dialog" [attribute.aria-label]="$T('ui.dateInput.calendar')" data-match-width="false" *popup="Open" (dismiss)="Dismissed" (keydown)="CalendarKey">
 		<div class="elemenx-calendar-header">
-			<button class="elemenx-calendar-nav" type="button" aria-label="Previous" (click)="Previous"><Icon Name="chevron-left" /></button>
+			<button class="elemenx-calendar-nav" type="button" [attribute.aria-label]="$T('ui.common.previous')" (click)="Previous"><Icon Name="chevron-left" /></button>
 			<button class="elemenx-calendar-title" type="button" [disabled]="View === 'years'" (click)="Zoom">{{Title(Cursor, View)}}</button>
-			<button class="elemenx-calendar-nav" type="button" aria-label="Next" (click)="Following"><Icon Name="chevron-right" /></button>
+			<button class="elemenx-calendar-nav" type="button" [attribute.aria-label]="$T('ui.common.next')" (click)="Following"><Icon Name="chevron-right" /></button>
 		</div>
 		<div class="elemenx-calendar-days" role="grid" *if="View === 'days'">
 			<span class="elemenx-calendar-weekday" *for="name of Weekdays()" *key="name">{{name}}</span>
@@ -22,7 +22,7 @@
 		</div>
 		<div class="elemenx-picker-footer">
 			<Button [label]="TodayText" Variant="ghost" Size="small" (click)="Now" />
-			<Button [label]="ClearLabel" Variant="ghost" Size="small" (click)="Clear" />
+			<Button [label]="(ClearLabel || $T('ui.dateInput.clear'))" Variant="ghost" Size="small" (click)="Clear" />
 		</div>
 	</div>
 </div>

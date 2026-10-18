@@ -1,6 +1,9 @@
 /*
  * One level of a Menu. Items: [{ID, Label, Icon, Shortcut, Disabled, Danger, Checked, Items, Separator, Group}].
  * An item with Items opens a nested MenuList to the right; a leaf item emits "select" with the item.
+ * Sheet shows the menu as on a phone: a sheet from the bottom of the screen over a shade, with large rows, its Title,
+ * and a Cancel row; an item with Items opens its items in the same sheet, with a row back. Sheet: false (the default),
+ * true, or 'auto' (a sheet on a narrow screen or a touch screen, a popup otherwise).
  */
 Elemenx.Component('MenuList', {
 	$TemplateURL: 'MenuList.html',
@@ -11,6 +14,33 @@ Elemenx.Component('MenuList', {
 	MatchWidth: false,
 	Active: -1,
 	Expanded: -1,
+	Sheet: false,
+	Title: '',
+	Path: [],
+
+	$OnCreate: function () {
+		var self = this;
+
+		/* Whether the menu shows as a sheet now. */
+		this.Sheeted = function (sheet) {
+			if (sheet === 'auto')
+				return typeof window.matchMedia === 'function' && window.matchMedia('(max-width: 640px), (pointer: coarse)').matches;
+
+			return sheet === true || sheet === 'true';
+		};
+
+		/* The items of the level of the sheet at a path of indexes. */
+		this.Level = function (items, path) {
+			return (path || []).reduce(function (list, index) {
+				return list[index] && list[index].Items || [];
+			}, items || []);
+		};
+
+		/* The item whose items the sheet shows, or null at the top. */
+		this.Parent = function (items, path) {
+			return path && path.length ? self.Level(items, path.slice(0, -1))[path[path.length - 1]] || null : null;
+		};
+	},
 
 	/*
 	 * Focuses an item of the list root at once when it is visible, so a fast key sequence never meets a stale focus;
@@ -97,15 +127,15 @@ Elemenx.Component('MenuList', {
 
 		if (event.target.closest('.elemenx-menu') !== list) return;
 
-		if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+		if (Elemenx.Locale.Key(event) === 'ArrowDown' || Elemenx.Locale.Key(event) === 'ArrowUp') {
 			event.preventDefault();
 
-			this.Active = this.Move(event.key === 'ArrowDown' ? 1 : -1);
+			this.Active = this.Move(Elemenx.Locale.Key(event) === 'ArrowDown' ? 1 : -1);
 			this.Expanded = -1;
 
 			this.Focus(list, this.Active);
 		}
-		else if (event.key === 'ArrowRight' || event.key === 'Enter' || event.key === ' ') {
+		else if (Elemenx.Locale.Key(event) === 'ArrowRight' || Elemenx.Locale.Key(event) === 'Enter' || Elemenx.Locale.Key(event) === ' ') {
 			item = this.Items[this.Active];
 
 			if (!item) return;
@@ -117,18 +147,18 @@ Elemenx.Component('MenuList', {
 
 				this.Focus(list.querySelector('.elemenx-option[data-index="' + this.Active + '"] .elemenx-popup'), -1);
 			}
-			else if (event.key !== 'ArrowRight' && !item.Disabled) {
+			else if (Elemenx.Locale.Key(event) !== 'ArrowRight' && !item.Disabled) {
 				this.Reset();
 
 				this.$Emit('select', item);
 			}
 		}
-		else if (event.key === 'ArrowLeft' && this.Placement === 'right-start') {
+		else if (Elemenx.Locale.Key(event) === 'ArrowLeft' && this.Placement === 'right-start') {
 			event.preventDefault();
 
 			this.$Emit('dismiss', 'back');
 		}
-		else if (event.key === 'Tab') {
+		else if (Elemenx.Locale.Key(event) === 'Tab') {
 			this.Reset();
 
 			this.$Emit('dismiss', 'tab');
@@ -161,5 +191,97 @@ Elemenx.Component('MenuList', {
 	Reset: function () {
 		this.Active = -1;
 		this.Expanded = -1;
+		this.Path = [];
+	},
+
+	/* The sheet: a press on an item opens its items in the sheet, or chooses it. */
+	SheetPick: function (event, node) {
+		var index = Number(node.getAttribute('data-index'));
+		var item = this.Level(this.Items, this.Path)[index];
+
+		event.stopPropagation();
+
+		if (!item || item.Disabled) return;
+
+		if (item.Items) {
+			this.SheetHold();
+
+			this.Path = this.Path.concat([index]);
+
+			this.SheetFocus();
+
+			return;
+		}
+
+		this.Reset();
+
+		this.$Emit('select', item);
+	},
+
+	SheetBack: function (event) {
+		if (event)
+			event.stopPropagation();
+
+		this.SheetHold();
+
+		this.Path = this.Path.slice(0, -1);
+
+		this.SheetFocus();
+	},
+
+	SheetCancel: function (event) {
+		if (event)
+			event.stopPropagation();
+
+		this.Reset();
+
+		this.$Emit('dismiss', event && event.target.classList.contains('elemenx-menu-shade') ? 'backdrop' : 'cancel');
+	},
+
+	/*
+	 * The sheet itself takes the focus while its level changes: the row pressed goes away with its level, and a key
+	 * pressed before the next level renders still reaches the sheet.
+	 */
+	SheetHold: function () {
+		var sheet = this.$Element() && this.$Element().querySelector('.elemenx-menu.sheet');
+		if (sheet)
+			sheet.focus();
+	},
+
+	/* The first row of the level shown, once it renders. */
+	SheetFocus: function () {
+		var root = this.$Element();
+
+		window.setTimeout(function () {
+			var first = root && root.querySelector('.elemenx-menu.sheet > .elemenx-menu-entry > .elemenx-option:not(.disabled)');
+			if (first)
+				first.focus();
+		}, 0);
+	},
+
+	/* The keys of the sheet: the arrows go through its rows, Escape goes back a level or closes it. */
+	SheetKey: function (event) {
+		var rows = Array.prototype.slice.call(event.currentTarget.querySelectorAll('.elemenx-menu-back, .elemenx-menu.sheet > .elemenx-menu-entry > .elemenx-option:not(.disabled), .elemenx-menu-cancel'));
+		var at = rows.indexOf(event.target);
+		var key = Elemenx.Locale.Key(event);
+
+		if (key === 'ArrowDown' || key === 'ArrowUp') {
+			event.preventDefault();
+
+			if (rows.length)
+				rows[(at + (key === 'ArrowDown' ? 1 : -1) + rows.length) % rows.length].focus();
+		}
+		else if (key === 'Escape') {
+			event.preventDefault();
+			event.stopPropagation();
+
+			if (this.Path.length) this.SheetBack();
+			else this.SheetCancel();
+		}
+		else if ((key === 'Enter' || key === ' ') && event.target.classList.contains('elemenx-option')) {
+			event.preventDefault();
+
+			event.target.click();
+		}
 	}
 });

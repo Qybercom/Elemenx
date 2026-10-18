@@ -8,10 +8,10 @@
 			<h3 class="elemenx-tour-title" *if="Current(Steps, Step).Title">{{Current(Steps, Step).Title}}</h3>
 			<p class="elemenx-tour-text" *if="Current(Steps, Step).Text">{{Current(Steps, Step).Text}}</p>
 			<div class="elemenx-tour-footer">
-				<Button [label]="SkipLabel" Variant="link" Size="small" (click)="Skip" />
+				<Button [label]="(SkipLabel || $T('ui.tour.skip'))" Variant="link" Size="small" (click)="Skip" />
 				<span class="elemenx-spacer"></span>
-				<Button *if="Number(Step) > 0" [label]="BackLabel" Size="small" (click)="Back" />
-				<Button [label]="Number(Step) >= Steps.length - 1 ? DoneLabel : NextLabel" Variant="primary" Size="small" (click)="Next" />
+				<Button *if="Number(Step) > 0" [label]="(BackLabel || $T('ui.tour.back'))" Size="small" (click)="Back" />
+				<Button [label]="Number(Step) >= Steps.length - 1 ? (DoneLabel || $T('ui.tour.done')) : (NextLabel || $T('ui.tour.next'))" Variant="primary" Size="small" (click)="Next" />
 			</div>
 		</section>
 	</div>

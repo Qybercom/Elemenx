@@ -19,7 +19,7 @@ Elemenx.Component('Chart', {
 	Max: null,
 	Unit: '',
 	Format: null,
-	Label: 'Chart',
+	Label: '',
 	Hidden: [],
 	Hover: -1,
 	Width: 600,

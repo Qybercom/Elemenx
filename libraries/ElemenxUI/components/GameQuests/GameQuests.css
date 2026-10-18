@@ -1,0 +1,336 @@
+.elemenx-game-quests {
+	color: var(--elemenx-game-text);
+	font-family: var(--elemenx-game-font);
+}
+
+.elemenx-game-quests.log {
+	display: grid;
+	grid-template-columns: minmax(160px, 2fr) minmax(0, 3fr);
+	gap: 12px;
+	min-height: 0;
+}
+
+.elemenx-game-quests-list {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	min-height: 0;
+	overflow: auto;
+}
+
+.elemenx-game-quests-group {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.elemenx-game-quests-heading {
+	padding: 2px 8px;
+	color: var(--elemenx-game-heading);
+	font-size: var(--elemenx-font-size-small);
+	letter-spacing: var(--elemenx-game-letter-spacing);
+	text-transform: var(--elemenx-game-text-transform);
+}
+
+.elemenx-game-quest {
+	position: relative;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 6px 8px;
+	background: transparent;
+	border: 1px solid transparent;
+	border-radius: var(--elemenx-game-cell-radius);
+	color: var(--elemenx-game-text);
+	font: inherit;
+	text-align: start;
+	cursor: pointer;
+}
+
+.elemenx-game-quest:hover {
+	background: var(--elemenx-game-table-hover);
+}
+
+.elemenx-game-quest:focus-visible {
+	outline: none;
+	box-shadow: var(--elemenx-game-glow);
+}
+
+.elemenx-game-quest.active {
+	background: var(--elemenx-game-table-selected);
+	color: var(--elemenx-game-table-selected-text);
+}
+
+.elemenx-game-quest.done,
+.elemenx-game-quest.failed {
+	color: var(--elemenx-game-muted);
+}
+
+/* The mark of a quest: a dot, or a check, a cross or a star (tracked). */
+.elemenx-game-quest-mark,
+.elemenx-game-objective-mark {
+	display: inline-flex;
+	flex: none;
+	align-items: center;
+	justify-content: center;
+	width: 16px;
+	height: 16px;
+	color: var(--elemenx-game-accent);
+}
+
+.elemenx-game-quest-mark:empty::before,
+.elemenx-game-objective-mark:empty::before {
+	width: 6px;
+	height: 6px;
+	background: currentcolor;
+	border-radius: 50%;
+	content: '';
+}
+
+.elemenx-game-quest.done .elemenx-game-quest-mark {
+	color: var(--elemenx-game-good);
+}
+
+.elemenx-game-quest.failed .elemenx-game-quest-mark {
+	color: var(--elemenx-game-bad);
+}
+
+.elemenx-game-quest-title {
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.elemenx-game-quest-level {
+	color: var(--elemenx-game-muted);
+	font-size: var(--elemenx-font-size-small);
+	font-variant-numeric: tabular-nums;
+}
+
+.elemenx-game-quests-empty {
+	padding: 8px;
+	color: var(--elemenx-game-muted);
+}
+
+.elemenx-game-quests-detail {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	min-width: 0;
+	min-height: 0;
+	overflow: auto;
+}
+
+.elemenx-game-quests-header {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.elemenx-game-quests-title {
+	margin: 0;
+	color: var(--elemenx-game-title);
+	font-family: var(--elemenx-game-title-font);
+	font-size: var(--elemenx-font-size-large);
+	letter-spacing: var(--elemenx-game-letter-spacing);
+	text-shadow: var(--elemenx-game-title-shadow);
+	text-transform: var(--elemenx-game-text-transform);
+}
+
+.elemenx-game-quests-meta {
+	color: var(--elemenx-game-muted);
+	font-size: var(--elemenx-font-size-small);
+}
+
+.elemenx-game-quests-text {
+	margin: 0;
+	line-height: var(--elemenx-line-height);
+}
+
+.elemenx-game-objectives,
+.elemenx-game-rewards {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.elemenx-game-objectives {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.elemenx-game-objective {
+	display: grid;
+	grid-template-columns: auto minmax(0, 1fr) auto;
+	align-items: center;
+	gap: 2px 8px;
+}
+
+.elemenx-game-objective.done {
+	color: var(--elemenx-game-muted);
+}
+
+.elemenx-game-objective.done .elemenx-game-objective-mark {
+	color: var(--elemenx-game-good);
+}
+
+.elemenx-game-objective-count {
+	color: var(--elemenx-game-muted);
+	font-size: var(--elemenx-font-size-small);
+	font-variant-numeric: tabular-nums;
+}
+
+/* The progress of an objective: a thin line under its label. */
+.elemenx-game-objective-bar {
+	grid-column: 2 / 4;
+	height: 3px;
+	overflow: hidden;
+	background: var(--elemenx-game-bar-track);
+	border-radius: var(--elemenx-radius-pill);
+}
+
+.elemenx-game-objective-bar > span {
+	display: block;
+	height: 100%;
+	background: var(--elemenx-game-accent);
+	transition: width var(--elemenx-duration-slow) var(--elemenx-easing);
+}
+
+.elemenx-game-objective.done .elemenx-game-objective-bar > span {
+	background: var(--elemenx-game-good);
+}
+
+.elemenx-game-rewards {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+
+.elemenx-game-reward {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	min-width: 0;
+}
+
+/* A reward lies in a cell of the theme, framed in the color of its rarity. */
+.elemenx-game-reward-icon {
+	position: relative;
+	display: inline-flex;
+	flex: none;
+	align-items: center;
+	justify-content: center;
+	width: 36px;
+	height: 36px;
+	background: var(--elemenx-game-reward-color, var(--elemenx-game-cell));
+	border: var(--elemenx-game-cell-frame);
+	border-radius: var(--elemenx-game-cell-radius);
+	box-shadow: var(--elemenx-game-item-bevel);
+	color: var(--elemenx-game-item-icon);
+}
+
+.elemenx-game-reward-icon > img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+.elemenx-game-reward.common .elemenx-game-reward-icon {
+	border-color: var(--elemenx-game-common);
+}
+
+.elemenx-game-reward.uncommon .elemenx-game-reward-icon {
+	border-color: var(--elemenx-game-uncommon);
+}
+
+.elemenx-game-reward.rare .elemenx-game-reward-icon {
+	border-color: var(--elemenx-game-rare);
+}
+
+.elemenx-game-reward.epic .elemenx-game-reward-icon {
+	border-color: var(--elemenx-game-epic);
+}
+
+.elemenx-game-reward.legendary .elemenx-game-reward-icon {
+	border-color: var(--elemenx-game-legendary);
+}
+
+.elemenx-game-reward-count {
+	position: absolute;
+	right: 2px;
+	bottom: 0;
+	color: var(--elemenx-game-text);
+	font-size: var(--elemenx-font-size-small);
+	text-shadow: var(--elemenx-game-text-shadow);
+}
+
+.elemenx-game-reward-label {
+	font-size: var(--elemenx-font-size-small);
+}
+
+.elemenx-game-reward.uncommon .elemenx-game-reward-label {
+	color: var(--elemenx-game-uncommon);
+}
+
+.elemenx-game-reward.rare .elemenx-game-reward-label {
+	color: var(--elemenx-game-rare);
+}
+
+.elemenx-game-reward.epic .elemenx-game-reward-label {
+	color: var(--elemenx-game-epic);
+}
+
+.elemenx-game-reward.legendary .elemenx-game-reward-label {
+	color: var(--elemenx-game-legendary);
+}
+
+.elemenx-game-quests-actions {
+	display: flex;
+	justify-content: flex-end;
+	margin-top: auto;
+}
+
+/* The tracker: the objectives of the tracked quests over the scene. */
+.elemenx-game-tracker {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.elemenx-game-tracker-quest {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	padding: 0;
+	background: transparent;
+	border: 0;
+	color: var(--elemenx-game-text);
+	font: inherit;
+	text-align: start;
+	text-shadow: var(--elemenx-game-text-shadow);
+	cursor: pointer;
+}
+
+.elemenx-game-tracker-quest:focus-visible {
+	outline: none;
+	box-shadow: var(--elemenx-game-glow);
+}
+
+.elemenx-game-tracker-title {
+	color: var(--elemenx-game-accent);
+	letter-spacing: var(--elemenx-game-letter-spacing);
+	text-transform: var(--elemenx-game-text-transform);
+}
+
+.elemenx-game-tracker-objective {
+	padding-inline-start: 10px;
+	font-size: var(--elemenx-font-size-small);
+}
+
+.elemenx-game-tracker-objective.done {
+	color: var(--elemenx-game-good);
+	text-decoration: line-through;
+}

@@ -24,11 +24,11 @@ Elemenx.Component('CommentCard', {
 	Thread: false,
 	Variant: 'flat',
 	Now: null,
-	ReplyLabel: 'Reply',
-	RepostLabel: 'Repost',
-	LikeLabel: 'Like',
-	ShareLabel: 'Share',
-	VerifiedLabel: 'Verified',
+	ReplyLabel: '',
+	RepostLabel: '',
+	LikeLabel: '',
+	ShareLabel: '',
+	VerifiedLabel: '',
 
 	$OnCreate: function () {
 		var format = this.$Service('Format');

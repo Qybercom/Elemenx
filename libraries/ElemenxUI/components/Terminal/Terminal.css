@@ -71,7 +71,7 @@
 }
 
 .elemenx-terminal-prompt {
-	margin-right: 8px;
+	margin-inline-end: 8px;
 	color: var(--elemenx-accent);
 	font-weight: var(--elemenx-font-weight-bold);
 	user-select: none;

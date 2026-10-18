@@ -67,7 +67,7 @@ for (const origin of origins) {
 
 			await open(page, origin);
 
-			await expect(page.locator('.ui-kit > .elemenx-section')).toHaveCount(30);
+			await expect(page.locator('.ui-kit > .elemenx-section')).toHaveCount(41);
 
 			await expect(page.locator('#elemenx-icons')).toHaveAttribute('data-ready', 'true');
 			await expect(page.locator('.ui-kit-icon svg').first()).toHaveAttribute('data-icon', 'add');
@@ -119,7 +119,10 @@ for (const origin of origins) {
 
 			await expect(icons.locator('.ui-kit-set-music .ui-kit-icon')).toHaveCount(32);
 			await expect(weather.locator('.ui-kit-icon')).toHaveCount(44);
-			await expect(icons.locator('.ui-kit-set-brands .ui-kit-icon')).toHaveCount(133);
+			await expect(icons.locator('.ui-kit-set-brands .ui-kit-icon')).toHaveCount(349);
+			expect(await icons.locator('.ui-kit-set-brands svg[data-icon="brands:postgresql"] .brand').evaluate(function (node) {
+				return getComputedStyle(node).fill;
+			})).toBe('rgb(65, 105, 225)');
 			expect(await icons.locator('.ui-kit-set-brands svg[data-icon="brands:telegram"] .brand').evaluate(function (node) {
 				return getComputedStyle(node).fill;
 			})).toBe('rgb(38, 165, 228)');
@@ -163,6 +166,153 @@ for (const origin of origins) {
 			await expect(save.locator('g')).toHaveCount(0);
 			await expect(save.locator('path')).toHaveCount(1);
 			await expect(page.locator('svg.elemenx-icon use')).toHaveCount(0);
+		});
+
+		test('a right-to-left language mirrors the components: arrows, sliders, popups and the icons of a direction', async function ({ page }) {
+			var feedback;
+			var thumb;
+			var tabs;
+			var language;
+			var box;
+			var trigger;
+
+			await open(page, origin);
+
+			await page.locator('.ui-kit-intro').getByRole('button', {name: 'العربية'}).click();
+
+			await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
+			await expect(page.locator('html')).toHaveAttribute('lang', 'ar');
+
+			/* The phrases without an Arabic dictionary are the English ones. */
+			await expect(page.locator('.ui-kit-intro').getByRole('button', {name: 'Light theme'})).toBeVisible();
+
+			/* A slider runs from right to left: the arrow to the right lowers it, and its fill starts at the right. */
+			feedback = section(page, 'Feedback');
+			thumb = feedback.getByRole('slider', {name: 'Volume'});
+
+			await thumb.scrollIntoViewIfNeeded();
+			await thumb.focus();
+
+			await page.keyboard.press('ArrowRight');
+
+			await expect(feedback.locator('.elemenx-section-header')).toContainText('Volume: 39');
+
+			box = await feedback.locator('.elemenx-slider-track').first().boundingBox();
+
+			expect(await feedback.locator('.elemenx-slider-fill').first().evaluate(function (node) {
+				return Math.round(node.getBoundingClientRect().right);
+			})).toBe(Math.round(box.x + box.width));
+
+			/* The arrow to the left goes to the next tab. */
+			tabs = section(page, 'Tabs').getByRole('tab');
+
+			await tabs.first().click();
+
+			await page.keyboard.press('ArrowLeft');
+
+			await expect(tabs.nth(1)).toBeFocused();
+
+			/* A list opens at the start of its field: the right edge. */
+			language = field(page, 'Language');
+			trigger = await language.locator('.elemenx-select-trigger').boundingBox();
+
+			await language.locator('.elemenx-select-trigger').click();
+
+			box = await language.locator('.elemenx-popup').boundingBox();
+
+			expect(Math.abs(box.x + box.width - (trigger.x + trigger.width))).toBeLessThan(2);
+
+			await page.keyboard.press('Escape');
+
+			/* The icons of a direction point the other way; an address in a field stays from left to right. */
+			expect(await page.locator('.elemenx-pagination .elemenx-icon[data-icon="chevron-right"]').first().evaluate(function (node) {
+				return getComputedStyle(node).transform;
+			})).toBe('matrix(-1, 0, 0, 1, 0, 0)');
+			await expect(field(page, 'IPv6 address').locator('input')).toHaveAttribute('dir', 'ltr');
+
+			await page.locator('.ui-kit-intro').getByRole('button', {name: 'English'}).click();
+
+			await expect(page.locator('html')).toHaveAttribute('dir', 'ltr');
+		});
+
+		test('the phrases of the components follow the language of Elemenx.Locale', async function ({ page }) {
+			var intro;
+			var overlays;
+
+			await open(page, origin);
+
+			intro = page.locator('.ui-kit-intro');
+			overlays = section(page, 'Overlays');
+
+			await expect(page.locator('html')).not.toHaveAttribute('lang', 'ru');
+			await expect(intro.getByRole('button', {name: 'Light theme'})).toBeVisible();
+			await expect(page.locator('.elemenx-pagination-range').first()).toContainText(' of ');
+
+			await intro.getByRole('button', {name: 'Русский'}).click();
+
+			await expect(page.locator('html')).toHaveAttribute('lang', 'ru');
+			await expect(intro.getByRole('button', {name: 'Русский'})).toHaveAttribute('aria-pressed', 'true');
+			await expect(intro.getByRole('button', {name: 'Светлая тема'})).toBeVisible();
+			await expect(page.locator('.elemenx-pagination-range').first()).toContainText(' из ');
+
+			/* A phrase of the code (the actions of Dialogs.Alert) is in the language too. */
+			await overlays.getByRole('button', {name: 'Alert'}).click();
+
+			await expect(page.getByRole('dialog', {name: 'Saved'}).getByRole('button', {name: 'ОК'})).toBeVisible();
+
+			await page.keyboard.press('Escape');
+
+			await intro.getByRole('button', {name: 'English'}).click();
+
+			await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+			await expect(intro.getByRole('button', {name: 'Light theme'})).toBeVisible();
+			await expect(page.locator('.elemenx-pagination-range').first()).toContainText(' of ');
+		});
+
+		test('a part of the page takes a theme of its own, by its attribute or Theme.Scope, whatever the page shows', async function ({ page }) {
+			var errors = captureErrors(page);
+			var themes;
+			var scope;
+			var paint;
+
+			await open(page, origin);
+
+			themes = section(page, 'Themes');
+			scope = themes.locator('.ui-kit-theme-scope');
+			paint = function () {
+				return scope.evaluate(function (node) {
+					var button = node.querySelector('.elemenx-button.primary');
+
+					return [getComputedStyle(node).backgroundColor, getComputedStyle(node).color, getComputedStyle(button).backgroundColor, getComputedStyle(document.body).backgroundColor];
+				});
+			};
+
+			/* The page is light; the part is Darcula by its markup, and the Components in it follow it. */
+			await themes.locator('.elemenx-check-label', {hasText: /^Light$/}).click();
+
+			await expect(page.locator('body')).toHaveAttribute('data-scheme', 'light');
+			expect(await paint()).toEqual(['rgb(43, 43, 43)', 'rgb(187, 187, 187)', 'rgb(54, 88, 128)', 'rgb(242, 241, 239)']);
+
+			/* The page goes dark; the part asks for the light scheme: it stays light. */
+			await themes.locator('.elemenx-check-label', {hasText: /^Dark$/}).click();
+			await scope.getByRole('button', {name: 'Light'}).click();
+
+			await expect(scope).toHaveAttribute('data-theme', 'light');
+			await expect(scope).toHaveAttribute('data-scheme', 'light');
+			await expect.poll(async function () {
+				var colors = await paint();
+
+				return [colors[0], colors[3]];
+			}).toEqual(['rgb(242, 241, 239)', 'rgb(21, 23, 27)']);
+
+			/* A named theme of the Library: loaded first, then shown in the scheme of the page. */
+			await scope.getByRole('button', {name: 'Contrast'}).click();
+
+			await expect(scope).toHaveAttribute('data-theme', 'contrast');
+			await expect(scope).toHaveAttribute('data-scheme', 'dark');
+			await expect(page.locator('body')).toHaveAttribute('data-theme', 'dark');
+
+			expect(errors).toEqual([]);
 		});
 
 		test('themes switch the tokens and the rules of the Components, keep to their schemes and are remembered', async function ({ page }) {
@@ -362,11 +512,46 @@ for (const origin of origins) {
 			await expect(note).toContainText('Last: copy');
 			await expect(clipboard.locator('.elemenx-ribbon-group-popup')).toBeHidden();
 
+			/* Without room for the tabs: a button with the title of the current tab lists them. */
+			await frame.evaluate(function (node) {
+				node.style.width = '300px';
+			});
+
+			await expect(ribbon).toHaveClass(/tabs-menu/);
+			await expect(ribbon.getByRole('tab', {name: 'Home'})).toBeHidden();
+			await expect(ribbon.locator('.elemenx-ribbon-tabs-button')).toHaveText('Home');
+
+			await ribbon.locator('.elemenx-ribbon-tabs-button').click();
+
+			await expect(ribbon.getByRole('option', {name: 'Home'})).toBeFocused();
+			await expect(ribbon.getByRole('option', {name: 'Home'})).toHaveAttribute('aria-selected', 'true');
+
+			await page.keyboard.press('ArrowDown');
+
+			await expect(ribbon.getByRole('option', {name: 'Insert'})).toBeFocused();
+
+			await page.keyboard.press('Enter');
+
+			await expect(ribbon.locator('.elemenx-ribbon-tabs-list')).toBeHidden();
+			await expect(ribbon.locator('.elemenx-ribbon-tabs-button')).toHaveText('Insert');
+			await expect(ribbon.locator('.elemenx-ribbon-tabs-button')).toBeFocused();
+			await expect(ribbon.locator('.elemenx-ribbon-panels')).toHaveAttribute('data-tab', 'insert');
+
+			await ribbon.locator('.elemenx-ribbon-tabs-button').press('ArrowDown');
+			await page.keyboard.press('Escape');
+
+			await expect(ribbon.locator('.elemenx-ribbon-tabs-list')).toBeHidden();
+
+			await ribbon.locator('.elemenx-ribbon-tabs-button').click();
+			await ribbon.getByRole('option', {name: 'Home'}).click();
+
 			await frame.evaluate(function (node) {
 				node.style.width = '';
 			});
 
-			await expect(ribbon.locator('.elemenx-ribbon-group.collapsed')).toHaveCount(0);
+			await expect(ribbon).not.toHaveClass(/tabs-menu/);
+			await expect(ribbon.getByRole('tab', {name: 'Home'})).toBeVisible();
+			await expect(ribbon.locator('.elemenx-ribbon-panel.active .elemenx-ribbon-group.collapsed')).toHaveCount(0);
 
 			/* Collapsed: the tabs only; a tab opens its panel over the page until a command runs. */
 			await ribbon.getByRole('tab', {name: 'Home'}).dblclick();
@@ -509,6 +694,18 @@ for (const origin of origins) {
 			await expect(picker.getByRole('tab', {name: 'Smileys & emotion'})).toHaveAttribute('aria-selected', 'true');
 			expect(await picker.getByRole('tab').count()).toBeGreaterThan(7);
 
+			/* A tab scrolls its group to the top of the list, in a picker inside the page as in a popup. */
+			await picker.getByRole('tab', {name: 'Food & drink'}).click();
+
+			await expect(picker.getByRole('tab', {name: 'Food & drink'})).toHaveAttribute('aria-selected', 'true');
+			await expect.poll(function () {
+				return picker.locator('.elemenx-emoji-group[data-group="food"]').evaluate(function (node) {
+					return Math.round(node.getBoundingClientRect().top - node.parentElement.closest('.elemenx-emoji-body').getBoundingClientRect().top);
+				});
+			}).toBe(0);
+
+			await picker.getByRole('tab', {name: 'Smileys & emotion'}).click();
+
 			await search.fill('cat');
 
 			await expect(picker.locator('.elemenx-emoji-group')).toHaveCount(1);
@@ -536,6 +733,12 @@ for (const origin of origins) {
 
 			/* A skin tone shows on the emoji that take one and goes with the emoji picked. */
 			await picker.getByRole('button', {name: 'Skin tone'}).click();
+
+			/* Every tone shows in its sample, though the menu was drawn before the emoji data loaded. */
+			await expect(page.getByRole('option', {name: 'No skin tone', exact: true})).toHaveText('✋');
+			await expect(page.getByRole('option', {name: 'Medium skin tone', exact: true})).toHaveText('✋🏽');
+			await expect(page.getByRole('option', {name: 'Dark skin tone', exact: true})).toHaveText('✋🏿');
+
 			await page.getByRole('option', {name: 'Medium skin tone'}).click();
 
 			await expect(picker.locator('.elemenx-emoji-group[data-group="people"] .elemenx-emoji-item[data-char="👍"]')).toHaveText('👍🏽');
@@ -643,11 +846,12 @@ for (const origin of origins) {
 
 			await expect(popup.locator('.elemenx-emoji-item[data-char="😀"]')).toBeVisible();
 
-			/* The picker opens above the field, at its full size. */
+			/* The picker opens above its button, at its full size, its right side at the right side of the button. */
 			box = await popup.boundingBox();
-			area = await composer.boundingBox();
+			area = await composer.getByRole('button', {name: 'Emoji and stickers'}).boundingBox();
 
 			expect(box.y + box.height).toBeLessThanOrEqual(area.y);
+			expect(Math.abs(box.x + box.width - (area.x + area.width))).toBeLessThan(2);
 			expect(box.height).toBeGreaterThan(300);
 
 			await popup.locator('.elemenx-picker-search input').fill('waving');
@@ -682,6 +886,111 @@ for (const origin of origins) {
 
 			await expect(mine.getByRole('button', {name: '🔥 1'})).toHaveAttribute('aria-pressed', 'true');
 			await expect(mine.locator('.elemenx-chat-react-picker')).toBeHidden();
+		});
+
+		test('chat composer suggests emoji for a word and for :word, the stickers of a message of one emoji, and keeps to its setting', async function ({ page }) {
+			var errors = captureErrors(page);
+			var chat;
+			var composer;
+			var field;
+			var hints;
+
+			await open(page, origin);
+
+			chat = section(page, 'Chat');
+			composer = chat.locator('.elemenx-chat-composer');
+			field = composer.locator('textarea');
+			hints = composer.locator('.elemenx-chat-hints');
+
+			await composer.scrollIntoViewIfNeeded();
+
+			/* A word at the caret offers its emoji; a pressed one takes the place of the word. */
+			await field.click();
+
+			await page.keyboard.type('I need coffee');
+
+			await expect(hints.getByRole('option', {name: /hot beverage/i})).toBeVisible();
+			await expect(field).not.toHaveAttribute('aria-activedescendant', /./);
+
+			await hints.getByRole('option', {name: /hot beverage/i}).click();
+
+			await expect(field).toHaveValue('I need ☕');
+			await expect(field).toBeFocused();
+
+			/* A word of two letters offers its emoji too, as :word does. */
+			await field.fill('');
+
+			await page.keyboard.type('Fine, ok');
+
+			await expect(hints.getByRole('option', {name: /OK hand/i})).toBeVisible();
+
+			/* :word is chosen by the keys; Escape hides the suggestions until the text changes. */
+			await field.fill('');
+
+			await page.keyboard.type('Sure :rock');
+
+			await expect(hints.getByRole('option').first()).toBeVisible();
+			await expect(field).toHaveAttribute('aria-activedescendant', /-0$/);
+
+			await page.keyboard.press('Escape');
+
+			await expect(hints).toHaveCount(0);
+
+			await page.keyboard.type('et');
+
+			await expect(hints.getByRole('option', {name: /rocket/i})).toBeVisible();
+
+			await page.keyboard.press('ArrowDown');
+			await page.keyboard.press('ArrowUp');
+			await page.keyboard.press('Enter');
+
+			await expect(field).toHaveValue('Sure 🚀');
+
+			/* A message of one emoji offers its stickers; a pressed one is sent in place of the message. */
+			await field.fill('');
+
+			await page.keyboard.type(':thumbs');
+
+			await expect(hints.getByRole('option', {name: /thumbs up/i}).first()).toBeVisible();
+
+			await page.keyboard.press('Enter');
+
+			await expect(field).toHaveValue('👍');
+			await expect(hints.locator('.elemenx-chat-hint.sticker')).toHaveCount(1);
+			await expect(hints.getByRole('option', {name: 'Thumbs up'})).toBeVisible();
+
+			await hints.getByRole('option', {name: 'Thumbs up'}).click();
+
+			await expect(field).toHaveValue('');
+			await expect(hints).toHaveCount(0);
+			await expect(chat.locator('.elemenx-chat-message.own').last().locator('img')).toHaveAttribute('src', /thumbs-up\.svg$/);
+
+			/* After : only :word; Never offers no emoji, but still the stickers of an emoji. */
+			await chat.getByText('After :', {exact: true}).click();
+			await field.click();
+
+			await page.keyboard.type('more coffee');
+
+			await expect(hints).toHaveCount(0);
+
+			await page.keyboard.type(' :coffee');
+
+			await expect(hints.getByRole('option', {name: /hot beverage/i})).toBeVisible();
+
+			await chat.getByText('Never', {exact: true}).click();
+
+			await field.fill('');
+
+			await page.keyboard.type(':coffee');
+
+			await expect(hints).toHaveCount(0);
+
+			await field.fill('');
+
+			await page.keyboard.type('🚀');
+
+			await expect(hints.getByRole('option', {name: 'Rocket'})).toBeVisible();
+			expect(errors).toEqual([]);
 		});
 
 		test('cards: posts, people and comments count what the reader does, comments keep their text as text', async function ({ page }) {
@@ -924,6 +1233,74 @@ for (const origin of origins) {
 			await expect(saved.locator('.elemenx-card-conceal')).toHaveText('5555 •••• •••• 4444');
 		});
 
+		test('text formats keep their characters, normalize the value and show what is wrong', async function ({ page }) {
+			var email;
+			var iban;
+			var quantity;
+			var postal;
+
+			await open(page, origin);
+
+			email = field(page, 'Email address');
+			iban = field(page, 'IBAN');
+			quantity = field(page, 'Quantity');
+			postal = field(page, 'Moldovan postal code');
+
+			await email.scrollIntoViewIfNeeded();
+
+			await expect(email.locator('input')).toHaveAttribute('type', 'email');
+			await expect(email.locator('input')).toHaveAttribute('inputmode', 'email');
+			await expect(email.locator('input')).toHaveAttribute('autocomplete', 'email');
+			await expect(email.locator('input')).toHaveAttribute('spellcheck', 'false');
+
+			/* Wrong on commit: the field looks invalid and the Field shows the message; right again as soon as it is typed. */
+			await email.locator('input').fill('ada@example');
+			await email.locator('input').press('Tab');
+
+			await expect(email.locator('.elemenx-input')).toHaveClass(/invalid/);
+			await expect(email.locator('.elemenx-field-error')).toHaveText('Enter an email address, like name@example.com');
+
+			await email.locator('input').focus();
+
+			await page.keyboard.type('.COM');
+
+			await expect(email.locator('.elemenx-input')).not.toHaveClass(/invalid/);
+			await expect(email.locator('.elemenx-field-error')).toHaveCount(0);
+
+			await email.locator('input').press('Tab');
+
+			await expect(email.locator('input')).toHaveValue('ada@example.com');
+			await expect(email.locator('.elemenx-caption')).toHaveText('Value: ada@example.com');
+
+			/* The characters a format cannot hold do not get in. */
+			await quantity.locator('input').pressSequentially('4x2');
+
+			await expect(quantity.locator('input')).toHaveValue('42');
+
+			await quantity.locator('input').fill('120');
+			await quantity.locator('input').press('Tab');
+
+			await expect(quantity.locator('.elemenx-field-error')).toHaveText('Enter 100 or less');
+
+			/* An IBAN: upper case, its check digits, groups of four in the field and none in the value. */
+			await iban.locator('input').fill('de89370400440532013000');
+			await iban.locator('input').press('Tab');
+
+			await expect(iban.locator('input')).toHaveValue('DE89 3704 0044 0532 0130 00');
+			await expect(iban.locator('.elemenx-caption')).toHaveText('Value: DE89370400440532013000');
+			await expect(iban.locator('.elemenx-field-error')).toHaveCount(0);
+
+			await postal.locator('input').fill('2001');
+			await postal.locator('input').press('Tab');
+
+			await expect(postal.locator('.elemenx-field-error')).toHaveCount(0);
+
+			await postal.locator('input').fill('20011');
+			await postal.locator('input').press('Tab');
+
+			await expect(postal.locator('.elemenx-field-error')).toHaveText('Enter a postal code of MD');
+		});
+
 		test('number input steps inside its bounds', async function ({ page }) {
 			var amount;
 
@@ -987,6 +1364,647 @@ for (const origin of origins) {
 			await page.keyboard.press('Escape');
 
 			await expect(tags.locator('.elemenx-popup')).toBeHidden();
+		});
+
+		test('chat messages: a tap opens the menu, a long press starts a choice of several, the bar counts and deletes them', async function ({ page }) {
+			var errors = captureErrors(page);
+			var chat;
+			var messages;
+			var bar;
+			var count;
+			var touch;
+
+			/* A press of a finger on the bubble of a message: down, held for a time, up, and the click that follows. */
+			touch = async function (message, hold) {
+				var box = await message.locator('.elemenx-chat-bubble').boundingBox();
+				var point = {pointerType: 'touch', isPrimary: true, button: 0, pointerId: 7, clientX: box.x + 12, clientY: box.y + box.height / 2};
+
+				await message.locator('.elemenx-chat-bubble').dispatchEvent('pointerdown', point);
+
+				await page.waitForTimeout(hold);
+
+				await message.locator('.elemenx-chat-bubble').dispatchEvent('pointerup', point);
+				await message.locator('.elemenx-chat-bubble').dispatchEvent('click', {clientX: point.clientX, clientY: point.clientY, button: 0});
+			};
+
+			await open(page, origin);
+
+			chat = section(page, 'Chat');
+			messages = chat.locator('.elemenx-chat-message');
+			bar = chat.locator('.elemenx-chat-selection');
+
+			await messages.first().scrollIntoViewIfNeeded();
+
+			count = await messages.count();
+
+			/* A tap opens the menu of the message at the finger. */
+			await touch(messages.nth(0), 50);
+
+			await expect(chat.getByRole('menuitem', {name: 'Reply'}).first()).toBeVisible();
+			await expect(bar).toBeHidden();
+
+			await page.keyboard.press('Escape');
+
+			await expect(chat.getByRole('menuitem', {name: 'Reply'})).toHaveCount(0);
+
+			/* A long press chooses the message: the bar takes the place of the header, every message shows its check. */
+			await touch(messages.nth(0), 700);
+
+			await expect(bar).toContainText('1 selected');
+			await expect(chat.locator('.elemenx-chat-header')).toBeHidden();
+			await expect(messages.nth(0)).toHaveClass(/selected/);
+			await expect(messages.nth(0).getByRole('checkbox', {name: 'Select message'})).toHaveAttribute('aria-checked', 'true');
+			await expect(messages.nth(1).getByRole('checkbox', {name: 'Select message'})).toHaveAttribute('aria-checked', 'false');
+			await expect(chat.getByRole('menuitem', {name: 'Reply'})).toHaveCount(0);
+
+			/* While choosing, a click turns the choice of a message, and so does its check. */
+			await messages.nth(1).locator('.elemenx-chat-bubble').click();
+
+			await expect(bar).toContainText('2 selected');
+
+			await messages.nth(0).getByRole('checkbox').click();
+
+			await expect(bar).toContainText('1 selected');
+			await expect(messages.nth(0)).not.toHaveClass(/selected/);
+
+			/* Escape lets the choice go. */
+			await messages.nth(1).getByRole('checkbox').focus();
+
+			await page.keyboard.press('Escape');
+
+			await expect(bar).toBeHidden();
+			await expect(chat.locator('.elemenx-chat-header')).toBeVisible();
+			await expect(chat.getByRole('checkbox', {name: 'Select message'})).toHaveCount(0);
+
+			/* With a mouse: Shift and a click start a choice, and the item Select of the menu adds to it. */
+			await messages.nth(0).locator('.elemenx-chat-bubble').click({modifiers: ['Shift']});
+
+			await expect(bar).toContainText('1 selected');
+
+			await messages.nth(2).locator('.elemenx-chat-bubble').click({button: 'right'});
+			await chat.getByRole('menuitem', {name: 'Select'}).click();
+
+			await expect(bar).toContainText('2 selected');
+
+			/* The actions of the bar act on the chosen messages. */
+			await bar.getByRole('button', {name: 'Delete selected'}).click();
+
+			await expect(bar).toBeHidden();
+			await expect(messages).toHaveCount(count - 2);
+			await expect(chat.locator('.elemenx-section-header')).toContainText('Deleted 2 messages');
+
+			expect(errors).toEqual([]);
+		});
+
+		test('a dial pad types its keys, puts + on a long press of 0, erases, takes only its characters, calls, and takes a layout of its own', async function ({ page }) {
+			var errors = captureErrors(page);
+			var dial;
+			var phone;
+			var tones;
+			var field;
+			var zero;
+			var box;
+
+			await open(page, origin);
+
+			dial = section(page, 'Dial pad');
+			phone = dial.getByRole('group', {name: 'Phone'});
+			tones = dial.getByRole('group', {name: 'Tones'});
+			field = phone.getByRole('textbox', {name: 'Number'});
+
+			await phone.scrollIntoViewIfNeeded();
+
+			/* The pad of a phone: twelve keys in three columns, the letters under the digits. */
+			await expect(phone.locator('.elemenx-dial-pad-key')).toHaveCount(12);
+			await expect(phone.locator('.elemenx-dial-pad-key').nth(1)).toContainText('ABC');
+			await expect(phone.getByRole('button', {name: 'Call'})).toBeDisabled();
+
+			/* A long press of 0 puts +, the keys their digits. */
+			zero = phone.locator('.elemenx-dial-pad-key').nth(10);
+			box = await zero.boundingBox();
+
+			await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+			await page.mouse.down();
+			await page.waitForTimeout(700);
+			await page.mouse.up();
+
+			await phone.locator('.elemenx-dial-pad-key').nth(3).click();
+			await phone.locator('.elemenx-dial-pad-key').nth(8).click();
+			await phone.locator('.elemenx-dial-pad-key').nth(10).click();
+
+			await expect(field).toHaveValue('+490');
+
+			/* The key that erases takes the last one back. */
+			await phone.getByRole('button', {name: 'Erase'}).click();
+
+			await expect(field).toHaveValue('+49');
+
+			/* The field takes what is typed, of the characters of the keys only; Enter calls. */
+			await field.focus();
+			await field.press('End');
+			await field.pressSequentially('3x0#');
+
+			await expect(field).toHaveValue('+4930#');
+
+			await field.press('Enter');
+
+			await expect(dial.locator('.elemenx-section-header')).toContainText('Calling +4930#');
+
+			/* A character taken out leaves the caret where it was: what follows goes in at the same place. */
+			await field.press('Home');
+			await field.pressSequentially('x1');
+
+			await expect(field).toHaveValue('1+4930#');
+
+			/* A layout of its own: sixteen keys in four columns, no field and no call. */
+			await expect(tones.locator('.elemenx-dial-pad-key')).toHaveCount(16);
+			await expect(tones.locator('.elemenx-dial-pad-input')).toHaveCount(0);
+			await expect(tones.locator('.elemenx-dial-pad-call')).toHaveCount(0);
+
+			expect(await tones.locator('.elemenx-dial-pad-key').evaluateAll(function (keys) {
+				return [keys[0].getBoundingClientRect().top === keys[3].getBoundingClientRect().top, keys[4].getBoundingClientRect().top > keys[3].getBoundingClientRect().top, keys[3].classList.contains('ui-kit-tone-key')];
+			})).toEqual([true, true, true]);
+
+			await tones.getByRole('button', {name: 'B'}).click();
+
+			await expect(dial.locator('.elemenx-section-header')).toContainText('Tone B');
+
+			expect(errors).toEqual([]);
+		});
+
+		test('a mixer turns its faders, knobs and pans, mutes and solos its channels and shows their levels', async function ({ page }) {
+			var errors = captureErrors(page);
+			var music;
+			var header;
+			var mixer;
+			var drums;
+			var bass;
+
+			await open(page, origin);
+
+			music = section(page, 'Music and input');
+			header = music.locator('.elemenx-section-header');
+			mixer = music.getByRole('group', {name: 'Studio'});
+			drums = mixer.getByRole('group', {name: 'Drums'});
+			bass = mixer.getByRole('group', {name: 'Bass'});
+
+			await mixer.scrollIntoViewIfNeeded();
+
+			/* Four channels and the master bus, which has no Solo. */
+			await expect(mixer.locator('.elemenx-mixer-channel')).toHaveCount(5);
+			await expect(mixer.locator('.elemenx-mixer-channel.master').getByRole('button', {name: /^Solo/})).toHaveCount(0);
+			await expect(drums.locator('.elemenx-mixer-readout')).toHaveText('-3.0');
+
+			/* The fader: the arrows by half a decibel, Home to the bottom, where the readout says -∞. */
+			await drums.getByRole('slider', {name: 'Volume Drums'}).focus();
+
+			await page.keyboard.press('ArrowUp');
+
+			await expect(header).toContainText('drums Volume: -2.5');
+			await expect(drums.locator('.elemenx-mixer-readout')).toHaveText('-2.5');
+
+			await page.keyboard.press('Home');
+
+			await expect(drums.locator('.elemenx-mixer-readout')).toHaveText('-∞');
+
+			/* The pan and a knob of the equalizer. */
+			await bass.getByRole('slider', {name: 'Pan'}).focus();
+
+			await page.keyboard.press('ArrowRight');
+
+			await expect(header).toContainText('bass Pan: -19');
+
+			await bass.getByRole('slider', {name: 'Lo'}).focus();
+
+			await page.keyboard.press('ArrowDown');
+
+			await expect(header).toContainText('bass Lo: 3');
+
+			/* Mute dims its channel; Solo leaves the other channels out, not the master. */
+			await drums.getByRole('button', {name: 'Mute Drums'}).click();
+
+			await expect(drums.getByRole('button', {name: 'Mute Drums'})).toHaveAttribute('aria-pressed', 'true');
+			await expect(drums).toHaveClass(/muted/);
+
+			await bass.getByRole('button', {name: 'Solo Bass'}).click();
+
+			await expect(header).toContainText('bass Solo: true');
+			await expect(mixer.locator('.elemenx-mixer-channel.silenced')).toHaveCount(3);
+			await expect(bass).not.toHaveClass(/silenced/);
+
+			await bass.getByRole('button', {name: 'Solo Bass'}).click();
+
+			await expect(mixer.locator('.elemenx-mixer-channel.silenced')).toHaveCount(0);
+
+			/* The meter: a bar for each side of a stereo channel, filled to its level, the peak over it. */
+			expect(await mixer.getByRole('group', {name: 'Keys'}).locator('.elemenx-mixer-bar').evaluateAll(function (bars) {
+				return bars.map(function (bar) {
+					var box = bar.getBoundingClientRect();
+					var peak = bar.querySelector('.elemenx-mixer-peak').getBoundingClientRect();
+
+					return [Math.round(parseFloat(getComputedStyle(bar).getPropertyValue('--elemenx-mixer-level')) * 100), Math.round((box.bottom - peak.bottom) / box.height * 100)];
+				});
+			})).toEqual([[55, 67], [58, 68]]);
+
+			expect(errors).toEqual([]);
+		});
+
+		test('a keyboard lays out its keys, marks hotkeys, shows the keys held and takes presses', async function ({ page }) {
+			var errors = captureErrors(page);
+			var music;
+			var full;
+			var compact;
+			var unit;
+
+			await open(page, origin);
+
+			music = section(page, 'Music and input');
+			full = music.getByRole('group', {name: 'Hotkeys'});
+			compact = music.getByRole('group', {name: 'Compact'});
+
+			await full.scrollIntoViewIfNeeded();
+
+			/* The full layout: the main block with its function keys, the navigation and the number pad. */
+			await expect(full.locator('.elemenx-keyboard-block')).toHaveCount(3);
+			await expect(full.locator('.elemenx-keyboard-key')).toHaveCount(104);
+			await expect(compact.locator('.elemenx-keyboard-block')).toHaveCount(1);
+			await expect(compact.locator('.elemenx-keyboard-key')).toHaveCount(61);
+
+			/* Keys as wide as on a keyboard: the space bar six and a quarter keys, Enter of the number pad two rows. */
+			expect(await full.evaluate(function (node) {
+				var box = function (code) {
+					return node.querySelector('[data-code="' + code + '"]').getBoundingClientRect();
+				};
+
+				return [Math.round((box('Space').width + 4) / (box('KeyQ').width + 4) * 100) / 100, Math.round((box('NumpadEnter').height + 4) / (box('Numpad3').height + 4)), Math.round(box('KeyA').left - box('KeyQ').left)];
+			})).toEqual([6.25, 2, 10]);
+
+			/* Marks: the moves in the accent, the jump and the run in the classes given. */
+			await expect(full.locator('.elemenx-keyboard-key.marked')).toHaveCount(4);
+			await expect(full.locator('[data-code="Space"]')).toHaveClass(/ui-kit-key-jump/);
+
+			/* Pressed and held keys go down. */
+			await expect(compact.locator('.elemenx-keyboard-key.pressed')).toHaveCount(2);
+
+			await page.keyboard.down('KeyQ');
+
+			await expect(full.locator('[data-code="KeyQ"]')).toHaveClass(/pressed/);
+			await expect(full.locator('[data-code="KeyQ"]')).toHaveAttribute('aria-pressed', 'true');
+
+			await page.keyboard.up('KeyQ');
+
+			await expect(full.locator('[data-code="KeyQ"]')).not.toHaveClass(/pressed/);
+
+			/* A press on a key of the screen. */
+			await full.locator('[data-code="F5"]').click();
+
+			await expect(music.locator('.elemenx-section-header')).toContainText('Key F5');
+
+			unit = await compact.evaluate(function (node) {
+				return getComputedStyle(node).getPropertyValue('--elemenx-keyboard-unit').trim();
+			});
+
+			expect(unit).toBe('28px');
+			expect(errors).toEqual([]);
+		});
+
+		test('a piano plays the key pressed, louder lower on it, slides over keys, takes the keys of the computer and marks notes', async function ({ page }) {
+			var errors = captureErrors(page);
+			var music;
+			var header;
+			var piano;
+			var c4;
+			var d4;
+			var box;
+
+			await open(page, origin);
+
+			music = section(page, 'Music and input');
+			header = music.locator('.elemenx-section-header');
+			piano = music.getByRole('group', {name: 'Piano'});
+
+			await piano.scrollIntoViewIfNeeded();
+
+			/* Two octaves from C3 and their last C: fifteen white keys, ten black ones over them. */
+			await expect(piano.locator('.elemenx-piano-key.white')).toHaveCount(15);
+			await expect(piano.locator('.elemenx-piano-key.black')).toHaveCount(10);
+			await expect(piano.locator('.elemenx-piano-key.marked')).toHaveCount(3);
+			await expect(piano.locator('.elemenx-piano-name')).toHaveText(['C3', 'C4', 'C5']);
+
+			/* A black key stands over the line between its white keys. */
+			expect(await piano.evaluate(function (node) {
+				var c = node.querySelector('[data-note="C3"]').getBoundingClientRect();
+				var sharp = node.querySelector('[data-note="C#3"]').getBoundingClientRect();
+
+				return Math.abs((sharp.left + sharp.right) / 2 - c.right) < 2;
+			})).toBe(true);
+
+			/* A press low on a key is louder than one high on it. */
+			c4 = piano.locator('[data-note="C4"]');
+			d4 = piano.locator('[data-note="D4"]');
+			box = await c4.boundingBox();
+
+			await page.mouse.move(box.x + box.width / 2, box.y + box.height - 4);
+			await page.mouse.down();
+
+			await expect(header).toContainText('Playing C4 (velocity 1');
+			await expect(c4).toHaveClass(/pressed/);
+
+			/* A slide onto the next key plays it and lets the first one go. */
+			box = await d4.boundingBox();
+
+			await page.mouse.move(box.x + box.width / 2, box.y + box.height - 4, {steps: 4});
+
+			await expect(header).toContainText('Playing D4');
+			await expect(c4).not.toHaveClass(/pressed/);
+
+			await page.mouse.up();
+
+			await expect(header).toContainText('Released D4');
+
+			/* The keys of the computer: A is the first C, X an octave up. */
+			await piano.focus();
+
+			await page.keyboard.down('KeyA');
+
+			await expect(header).toContainText('Playing C3');
+			await expect(piano.locator('[data-note="C3"]')).toHaveClass(/pressed/);
+
+			await page.keyboard.up('KeyA');
+
+			await expect(header).toContainText('Released C3');
+
+			await page.keyboard.press('KeyX');
+			await page.keyboard.down('KeyD');
+
+			await expect(header).toContainText('Playing E4');
+
+			await page.keyboard.up('KeyD');
+
+			expect(errors).toEqual([]);
+		});
+
+		test('the six themed icon sets load as packs and draw every icon of theirs', async function ({ page }) {
+			var errors = captureErrors(page);
+			var sets;
+
+			await open(page, origin);
+
+			sets = page.locator('.ui-kit-themed-set');
+
+			await expect(sets).toHaveCount(6);
+
+			expect(await sets.evaluateAll(function (nodes) {
+				return nodes.map(function (node) {
+					return node.getAttribute('data-set');
+				});
+			})).toEqual(['sport', 'racing', 'science', 'art', 'cinema', 'games']);
+
+			await expect(sets.nth(0).locator('.ui-kit-icon')).toHaveCount(53);
+			await expect(sets.nth(1).locator('.ui-kit-icon')).toHaveCount(51);
+			await expect(sets.nth(2).locator('.ui-kit-icon')).toHaveCount(52);
+			await expect(sets.nth(5).locator('.ui-kit-icon')).toHaveCount(50);
+
+			/* Every icon draws the shapes of its symbol. */
+			await sets.nth(5).scrollIntoViewIfNeeded();
+
+			await expect.poll(function () {
+				return sets.evaluateAll(function (nodes) {
+					return nodes.reduce(function (empty, node) {
+						return empty + Array.prototype.filter.call(node.querySelectorAll('svg.elemenx-icon'), function (svg) {
+							return !svg.children.length;
+						}).length;
+					}, 0);
+				});
+			}).toBe(0);
+
+			await expect(page.locator('#elemenx-icons symbol#elemenx-icon-games-gamepad[data-set="games"]')).toHaveCount(1);
+
+			expect(errors).toEqual([]);
+		});
+
+		test('a settings menu goes into submenus and back, chooses, turns switches, finds rows on every level and follows the keys', async function ({ page }) {
+			var errors = captureErrors(page);
+			var settings;
+			var ios;
+			var material;
+			var header;
+
+			await open(page, origin);
+
+			settings = section(page, 'Settings menu');
+			header = settings.locator('.elemenx-section-header');
+			ios = settings.locator('.elemenx-settings-menu.ios');
+			material = settings.locator('.elemenx-settings-menu.material');
+
+			await ios.scrollIntoViewIfNeeded();
+
+			/* The two looks: rows on cards with square tiles, rows across with round tiles. */
+			expect(await ios.evaluate(function (node) {
+				var list = getComputedStyle(node.querySelector('.elemenx-settings-menu-list'));
+				var tile = node.querySelector('.elemenx-settings-menu-tile');
+
+				return [list.backgroundColor !== 'rgba(0, 0, 0, 0)', parseFloat(list.borderTopLeftRadius) > 0, tile.offsetWidth, getComputedStyle(tile).borderTopLeftRadius];
+			})).toEqual([true, true, 29, '8px']);
+
+			expect(await material.evaluate(function (node) {
+				var tile = node.querySelector('.elemenx-settings-menu-tile');
+
+				return [getComputedStyle(node.querySelector('.elemenx-settings-menu-list')).backgroundColor, tile.offsetWidth, getComputedStyle(tile).borderTopLeftRadius];
+			})).toEqual(['rgba(0, 0, 0, 0)', 40, '50%']);
+
+			/* A submenu of a choice: a press checks a row, and its label becomes the value of the row above. */
+			await ios.getByRole('button', {name: /^Wi-Fi/}).click();
+
+			await expect(ios.locator('.elemenx-settings-menu-title')).toHaveText('Wi-Fi');
+			await expect(ios.locator('.elemenx-settings-menu-back')).toHaveText('Settings');
+			await expect(ios.locator('.elemenx-settings-menu-group-title')).toHaveText('Networks');
+			await expect(ios.getByRole('button', {name: 'Home'})).toHaveAttribute('aria-current', 'true');
+
+			await ios.getByRole('button', {name: 'Office'}).click();
+
+			await expect(header).toContainText('Chose: Office in wifi');
+			await expect(ios.getByRole('button', {name: 'Office'})).toHaveAttribute('aria-current', 'true');
+			await expect(ios.getByRole('button', {name: 'Home'})).not.toHaveAttribute('aria-current', 'true');
+
+			await ios.locator('.elemenx-settings-menu-back').click();
+
+			await expect(ios.getByRole('button', {name: /^Wi-Fi/}).locator('.elemenx-settings-menu-value')).toHaveText('Office');
+			await expect(ios.getByRole('button', {name: /^Wi-Fi/})).toBeFocused();
+
+			/* A switch: the row is the switch. */
+			await ios.getByRole('switch', {name: 'Airplane mode'}).click();
+
+			await expect(ios.getByRole('switch', {name: 'Airplane mode'})).toHaveAttribute('aria-checked', 'true');
+			await expect(header).toContainText('Airplane mode: on');
+
+			/* The search finds rows on every level, with the menus they are in; a found row does what it does in its menu. */
+			await material.getByRole('searchbox', {name: 'Search settings'}).fill('previews');
+
+			await expect(material.locator('.elemenx-settings-menu-row')).toHaveCount(1);
+			await expect(material.locator('.elemenx-settings-menu-description')).toHaveText('Notifications');
+
+			await material.locator('.elemenx-settings-menu-row').click();
+
+			await expect(material.locator('.elemenx-settings-menu-title')).toHaveText('Show previews');
+			await expect(material.locator('.elemenx-settings-menu-back')).toHaveText('Notifications');
+			await expect(material.getByRole('searchbox', {name: 'Search settings'})).toHaveValue('');
+
+			await material.getByRole('searchbox', {name: 'Search settings'}).fill('zzz');
+
+			await expect(material.locator('.elemenx-settings-menu-note')).toHaveText('No settings found');
+
+			await material.getByRole('searchbox', {name: 'Search settings'}).fill('');
+
+			/* The keys: the arrows go through the rows, the right arrow opens a submenu, Escape goes back. */
+			await material.getByRole('button', {name: /^Never/}).focus();
+
+			await page.keyboard.press('Escape');
+
+			await expect(material.locator('.elemenx-settings-menu-title')).toHaveText('Notifications');
+			await expect(material.getByRole('button', {name: /^Show previews/})).toBeFocused();
+
+			await page.keyboard.press('ArrowLeft');
+
+			await expect(material.locator('.elemenx-settings-menu-title')).toHaveText('Settings');
+			await expect(material.getByRole('button', {name: /^Notifications/})).toBeFocused();
+
+			await page.keyboard.press('ArrowDown');
+
+			await expect(material.getByRole('switch', {name: 'Dark mode'})).toBeFocused();
+
+			await page.keyboard.press('ArrowUp');
+			await page.keyboard.press('ArrowRight');
+
+			await expect(material.locator('.elemenx-settings-menu-title')).toHaveText('Notifications');
+			await expect(material.getByRole('switch', {name: 'Sounds'})).toBeFocused();
+
+			/* A disabled row takes no press. */
+			await page.keyboard.press('Escape');
+
+			await expect(material.getByRole('button', {name: 'Beta features'})).toBeDisabled();
+
+			expect(errors).toEqual([]);
+		});
+
+		test('a settings menu takes the look of the device when its variant is auto: ios on an Apple device, material on the others', async function ({ page }) {
+			var settings;
+			var first;
+
+			await page.addInitScript(function () {
+				if (sessionStorage.getItem('ui-kit-apple'))
+					Object.defineProperty(navigator, 'userAgent', {get: function () {
+						return 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1';
+					}});
+			});
+
+			await open(page, origin);
+
+			settings = section(page, 'Settings menu');
+			first = settings.locator('.elemenx-settings-menu').first();
+
+			await settings.locator('.elemenx-check-label', {hasText: /^Auto$/}).click();
+
+			await expect(first).toHaveClass(/\bmaterial\b/);
+
+			await page.evaluate(function () {
+				sessionStorage.setItem('ui-kit-apple', '1');
+			});
+
+			await open(page, origin);
+
+			await settings.locator('.elemenx-check-label', {hasText: /^Auto$/}).click();
+
+			await expect(first).toHaveClass(/\bios\b/);
+		});
+
+		test('a mobile menu is a sheet from the bottom: large rows, levels inside it with a way back, Cancel and the shade close it', async function ({ page }) {
+			var menu;
+			var sheet;
+
+			await open(page, origin);
+
+			menu = page.locator('.elemenx-menu-root').filter({has: page.getByRole('button', {name: 'Mobile'})});
+
+			await menu.getByRole('button', {name: 'Mobile'}).click();
+
+			sheet = menu.locator('.elemenx-menu.sheet');
+
+			/* Fixed to the bottom of the viewport, as wide as it, with the title of the menu and rows of 48 pixels. */
+			await expect(sheet).toBeVisible();
+			await expect(sheet.locator('.elemenx-menu-title')).toHaveText('Mobile');
+			await expect(menu.getByRole('menuitem', {name: 'New'})).toBeFocused();
+			expect(await sheet.evaluate(async function (node) {
+				var box;
+
+				await Promise.all(node.getAnimations().map(function (animation) {
+					return animation.finished;
+				}));
+
+				box = node.getBoundingClientRect();
+
+				return [Math.round(box.bottom) === window.innerHeight, Math.round(box.width) === document.documentElement.clientWidth, node.querySelector('.elemenx-option').getBoundingClientRect().height];
+			})).toEqual([true, true, 48]);
+
+			/* A level opens in the sheet, with a row back to the level above. */
+			await sheet.getByRole('menuitem', {name: 'New'}).click();
+
+			await expect(sheet.locator('.elemenx-menu-back')).toHaveText('New');
+			await expect(sheet.getByRole('menuitem', {name: 'Folder'})).toBeVisible();
+
+			await sheet.getByRole('menuitem', {name: 'From template'}).click();
+			await sheet.getByRole('menuitem', {name: 'Component'}).click();
+
+			await expect(page.getByText('Menu: tpl-component')).toBeVisible();
+			await expect(sheet).toHaveCount(0);
+
+			/* Escape goes back a level, then closes; Cancel and the shade close it too. */
+			await menu.getByRole('button', {name: 'Mobile'}).click();
+			await sheet.getByRole('menuitem', {name: 'New'}).click();
+
+			await page.keyboard.press('Escape');
+
+			await expect(sheet.locator('.elemenx-menu-back')).toHaveCount(0);
+
+			/* A key pressed at once, before the next level renders, still reaches the sheet: it holds the focus meanwhile. */
+			await sheet.evaluate(function (node) {
+				var row = Array.prototype.filter.call(node.querySelectorAll('[role="menuitem"]'), function (item) {
+					return item.textContent.trim() === 'New';
+				})[0];
+
+				row.click();
+
+				document.activeElement.dispatchEvent(new KeyboardEvent('keydown', {key: 'Escape', bubbles: true, cancelable: true}));
+			});
+
+			await expect(sheet.locator('.elemenx-menu-back')).toHaveCount(0);
+			await expect(sheet.getByRole('menuitem', {name: 'Save'})).toBeVisible();
+
+			await page.keyboard.press('ArrowDown');
+			await page.keyboard.press('Escape');
+
+			await expect(sheet).toHaveCount(0);
+
+			await menu.getByRole('button', {name: 'Mobile'}).click();
+			await sheet.getByRole('button', {name: 'Cancel'}).click();
+
+			await expect(sheet).toHaveCount(0);
+
+			await menu.getByRole('button', {name: 'Mobile'}).click();
+			await page.mouse.click(10, 10);
+
+			await expect(sheet).toHaveCount(0);
+
+			/* Sheet="auto" (the menu of a chat message): a sheet on a phone-wide screen. */
+			await page.setViewportSize({width: 390, height: 800});
+
+			/* Regression: on a phone the chat gives its width to the messages (no list of conversations beside them). */
+			await expect(section(page, 'Chat').locator('.elemenx-chat-sidebar')).toBeHidden();
+
+			await section(page, 'Chat').locator('.elemenx-chat-message .elemenx-chat-text').first().click({button: 'right'});
+
+			await expect(section(page, 'Chat').locator('.elemenx-chat-menu-point .elemenx-menu.sheet')).toBeVisible();
+			await expect(section(page, 'Chat').locator('.elemenx-chat-menu-point .elemenx-menu-title')).toHaveText('The build is green again.');
 		});
 
 		test('menu opens nested levels and reports the chosen item', async function ({ page }) {
@@ -1134,8 +2152,8 @@ for (const origin of origins) {
 				});
 			};
 			var css = await (await page.request.get(origin.URL + '/libraries/ElemenxUI/index.css')).text();
-			var forced = css.match(/body\[data-theme='dark'\],\s*body\[data-scheme='dark'\] \{([^}]*)\}/)[1];
-			var system = css.match(/body\[data-theme='system'\] \{([^}]*)\}/)[1];
+			var forced = css.match(/\[data-theme='dark'\],\s*\[data-scheme='dark'\] \{([^}]*)\}/)[1];
+			var system = css.match(/\[data-theme='system'\] \{([^}]*)\}/)[1];
 
 			expect(system.replace(/\s+/g, ' ')).toBe(forced.replace(/\s+/g, ' '));
 
@@ -1183,6 +2201,9 @@ for (const origin of origins) {
 
 			await expect(date.locator('.elemenx-calendar-day[data-cursor="true"]')).toBeFocused();
 			await expect(date.locator('.elemenx-calendar-day[data-cursor="true"]')).toHaveText('22');
+
+			/* The week starts on Monday by default, whatever the locale (en here would start it on Sunday). */
+			await expect(date.locator('.elemenx-calendar-weekday').first()).toHaveText(/^Mo/);
 
 			await page.keyboard.press('ArrowRight');
 			await page.keyboard.press('ArrowDown');
@@ -1398,6 +2419,105 @@ for (const origin of origins) {
 			await expect(header).toContainText('Selected: 1, 2, 3, 4, 5');
 		});
 
+		test('a dialog that needs an answer shakes on Escape and the backdrop; Dialogs asks from the code', async function ({ page }) {
+			var overlays;
+			var required;
+			var confirm;
+			var note;
+
+			await open(page, origin);
+
+			overlays = section(page, 'Overlays');
+			note = overlays.locator('.elemenx-section-header');
+			required = page.getByRole('dialog', {name: 'Terms of the beta'});
+
+			await overlays.getByRole('button', {name: 'Required answer'}).click();
+
+			await expect(required).toBeVisible();
+			await expect(required.getByRole('button', {name: 'Close'})).toHaveCount(0);
+
+			/* A modal in the top layer at once (a popover, not showModal: no long pause on a large page), modal all the same: the focus goes in and Tab goes round inside it. */
+			await expect(required).toHaveAttribute('aria-modal', 'true');
+			expect(await required.evaluate(function (node) {
+				return [node.matches(':popover-open'), node.contains(document.activeElement)];
+			})).toEqual([true, true]);
+
+			for (let i = 0; i < 6; i++)
+				await page.keyboard.press(i % 2 ? 'Shift+Tab' : 'Tab');
+
+			for (let i = 0; i < 5; i++)
+				await page.keyboard.press('Tab');
+
+			expect(await required.evaluate(function (node) {
+				return node.contains(document.activeElement);
+			})).toBe(true);
+
+			await required.evaluate(function (node) {
+				node.testStarts = [];
+
+				node.addEventListener('animationstart', function (event) {
+					if (event.target === node)
+						node.testStarts.push(event.animationName);
+				});
+			});
+
+			await page.keyboard.press('Escape');
+
+			await expect(required).toBeVisible();
+			await expect(required).toHaveClass(/refused/);
+			await expect(required).not.toHaveClass(/refused/);
+
+			await page.waitForTimeout(300);
+
+			/* The shake keeps the animation of the opening: when it ends, the dialog does not open again. */
+			expect(await required.evaluate(function (node) {
+				return node.testStarts;
+			})).toEqual(['elemenx-dialog-refuse']);
+
+			/* A press on the backdrop: outside the box of the dialog. */
+			await page.mouse.click(5, 5);
+
+			await expect(required).toBeVisible();
+			await expect(required).toHaveClass(/refused/);
+
+			await required.getByRole('button', {name: 'Accept'}).click();
+
+			await expect(required).toBeHidden();
+
+			/* The focus goes back to the button that opened it. */
+			await expect(overlays.getByRole('button', {name: 'Required answer'})).toBeFocused();
+			await expect(note).toContainText('Dialog: terms accepted');
+
+			/* Confirm: the actions of the call, no close button, and the answer in the callback. */
+			confirm = page.getByRole('dialog', {name: 'Delete the project?'});
+
+			await overlays.getByRole('button', {name: 'Confirm'}).click();
+
+			await expect(confirm).toBeVisible();
+			await expect(confirm).toContainText('Its files and its history go for good.');
+			await expect(confirm.getByRole('button', {name: 'Close'})).toHaveCount(0);
+			await expect(confirm.getByRole('button', {name: 'Delete'})).toHaveClass(/danger/);
+
+			await page.keyboard.press('Escape');
+
+			await expect(confirm).toHaveClass(/refused/);
+
+			await confirm.getByRole('button', {name: 'Delete'}).click();
+
+			await expect(confirm).toHaveCount(0);
+			await expect(note).toContainText('Dialog: confirm: delete');
+
+			/* Alert: dismissible, so Escape closes it with no answer. */
+			await overlays.getByRole('button', {name: 'Alert'}).click();
+
+			await expect(page.getByRole('dialog', {name: 'Saved'})).toBeVisible();
+
+			await page.keyboard.press('Escape');
+
+			await expect(page.getByRole('dialog', {name: 'Saved'})).toHaveCount(0);
+			await expect(note).toContainText('Dialog: alert: null');
+		});
+
 		test('dialog, toast and popover open and close', async function ({ page }) {
 			var overlays;
 			var dialog;
@@ -1483,6 +2603,412 @@ for (const origin of origins) {
 			await page.keyboard.press('End');
 
 			await expect(header).toContainText('Budget: 800–800');
+		});
+
+		test('a knob turns by a drag up, the keys and the wheel, fills its ring from the origin and resets on a double click', async function ({ page }) {
+			var feedback;
+			var gain;
+			var box;
+			var arc;
+
+			await open(page, origin);
+
+			feedback = section(page, 'Feedback');
+			gain = feedback.getByRole('slider', {name: 'Gain'});
+			arc = gain.locator('.elemenx-knob-arc');
+
+			await gain.scrollIntoViewIfNeeded();
+
+			await expect(gain).toHaveAttribute('aria-valuenow', '0');
+
+			/* At the origin the ring has no fill. */
+			await expect(arc).toHaveAttribute('stroke-dasharray', '0 50 0 100');
+
+			/* A drag up by a quarter of the sensitivity turns it up by a quarter of the range. */
+			box = await gain.boundingBox();
+
+			await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+			await page.mouse.down();
+			await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2 - 50, {steps: 5});
+			await page.mouse.up();
+
+			await expect(gain).toHaveAttribute('aria-valuenow', '12');
+			await expect(gain).toHaveAttribute('aria-valuetext', '12 dB');
+			await expect(gain).toBeFocused();
+			await expect(arc).toHaveAttribute('stroke-dasharray', '0 50 25 100');
+
+			await page.keyboard.press('ArrowDown');
+
+			await expect(gain).toHaveAttribute('aria-valuenow', '11');
+
+			await page.keyboard.press('Home');
+
+			await expect(gain).toHaveAttribute('aria-valuenow', '-24');
+			await expect(arc).toHaveAttribute('stroke-dasharray', '0 0 50 100');
+
+			await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+			await page.mouse.wheel(0, -100);
+
+			await expect(gain).toHaveAttribute('aria-valuenow', '-23');
+
+			await gain.dblclick();
+
+			await expect(gain).toHaveAttribute('aria-valuenow', '0');
+		});
+
+		test('a vertical slider stands upright: its minimum at the bottom, the pointer and the arrows move it up and down', async function ({ page }) {
+			var feedback;
+			var header;
+			var level;
+			var track;
+			var box;
+			var thumb;
+
+			await open(page, origin);
+
+			feedback = section(page, 'Feedback');
+			header = feedback.locator('.elemenx-section-header');
+			level = feedback.getByRole('slider', {name: 'Level'});
+			track = feedback.locator('.elemenx-slider.vertical .elemenx-slider-track').first();
+
+			await expect(level).toHaveAttribute('aria-orientation', 'vertical');
+
+			await track.scrollIntoViewIfNeeded();
+
+			box = await track.boundingBox();
+
+			expect(box.height).toBeGreaterThan(box.width * 10);
+
+			/* A press a quarter of the way up the track sets a quarter of the range; the thumb sits there. */
+			await page.mouse.click(box.x + box.width / 2, box.y + box.height * 0.75);
+
+			await expect(header).toContainText('Volume: 25');
+
+			thumb = await level.boundingBox();
+
+			expect(Math.abs(thumb.y + thumb.height / 2 - (box.y + box.height * 0.75))).toBeLessThan(2);
+			expect(Math.abs(thumb.x + thumb.width / 2 - (box.x + box.width / 2))).toBeLessThan(1);
+
+			await level.focus();
+
+			await page.keyboard.press('ArrowUp');
+
+			await expect(header).toContainText('Volume: 26');
+
+			await page.keyboard.press('ArrowRight');
+
+			await expect(header).toContainText('Volume: 27');
+
+			await page.keyboard.press('ArrowDown');
+
+			await expect(header).toContainText('Volume: 26');
+
+			/* The fill rises from the bottom to the thumb. */
+			expect(await feedback.locator('.elemenx-slider.vertical .elemenx-slider-fill').first().evaluate(function (node) {
+				var fill = node.getBoundingClientRect();
+				var track = node.parentNode.getBoundingClientRect();
+
+				return [Math.round(track.bottom - fill.bottom), Math.round((fill.height / track.height) * 100)];
+			})).toEqual([0, 26]);
+		});
+
+		test('a block frames its content under a title on a band set into the frame, with a note, actions and paddings', async function ({ page }) {
+			var errors = captureErrors(page);
+			var blocks;
+
+			await open(page, origin);
+
+			blocks = section(page, 'Block').locator('.elemenx-block.framed');
+
+			await blocks.first().scrollIntoViewIfNeeded();
+
+			await expect(blocks).toHaveCount(3);
+
+			expect(await blocks.first().evaluate(function (node) {
+				var frame = node.getBoundingClientRect();
+				var header = node.querySelector('.elemenx-block-header').getBoundingClientRect();
+				var body = node.querySelector('.elemenx-block-body').getBoundingClientRect();
+
+				return [node.querySelector('[role="heading"]').textContent, node.querySelector('[role="heading"]').getAttribute('aria-level'), node.querySelector('.elemenx-block-note').textContent, node.querySelectorAll('.elemenx-block-actions .elemenx-button').length, header.left - frame.left <= 1 && frame.right - header.right <= 1, Math.round(body.left - frame.left), node.querySelectorAll('.elemenx-block-body .elemenx-meter').length];
+			})).toEqual(['Reactor', '3', 'Ring B', 1, true, 17, 2]);
+
+			/* HeaderShape trapezoid: the title and the note on a trapezoid as wide as their text, hanging from the top of the frame. */
+			expect(await blocks.nth(1).evaluate(function (node) {
+				var frame = node.getBoundingClientRect();
+				var header = node.querySelector('.elemenx-block-header').getBoundingClientRect();
+				var tab = node.querySelector('.elemenx-block-tab');
+				var box = tab.getBoundingClientRect();
+				var title = node.querySelector('.elemenx-block-title').getBoundingClientRect();
+				var note = node.querySelector('.elemenx-block-note').getBoundingClientRect();
+
+				return [node.classList.contains('trapezoid'), getComputedStyle(tab).clipPath.indexOf('polygon') === 0, Math.round(box.top - frame.top - node.clientTop), box.width < header.width / 2, Math.round(box.right - note.right) === Math.round(title.left - box.left), getComputedStyle(node.querySelector('.elemenx-block-header')).backgroundColor, node.querySelectorAll('.elemenx-block-actions .elemenx-button').length];
+			})).toEqual([true, true, 0, true, true, 'rgba(0, 0, 0, 0)', 1]);
+
+			/* The default shape keeps the tab out of the layout: the band runs across the frame. */
+			expect(await blocks.first().evaluate(function (node) {
+				return getComputedStyle(node.querySelector('.elemenx-block-tab')).display;
+			})).toBe('contents');
+
+			expect(await blocks.nth(2).evaluate(function (node) {
+				return [node.classList.contains('compact'), Math.round(node.querySelector('.elemenx-block-body').getBoundingClientRect().left - node.getBoundingClientRect().left)];
+			})).toEqual([true, 9]);
+
+			expect(errors).toEqual([]);
+		});
+
+		test('properties set a value apart from its name, in one column or two, with tones and values of their own', async function ({ page }) {
+			var errors = captureErrors(page);
+			var list;
+
+			await open(page, origin);
+
+			list = section(page, 'Block').locator('.elemenx-properties[aria-label="Service"]');
+
+			await list.scrollIntoViewIfNeeded();
+
+			expect(await list.evaluate(function (node) {
+				var rows = node.querySelectorAll('.elemenx-property');
+				var first = rows[0].getBoundingClientRect();
+				var second = rows[1].getBoundingClientRect();
+
+				return [node.tagName, node.classList.contains('double'), rows.length, Math.round(first.top) === Math.round(second.top) && second.left > first.right, rows[0].querySelector('dt').textContent, rows[0].querySelector('dd').textContent.trim(), rows[3].querySelector('dd code').textContent, getComputedStyle(rows[3].querySelector('.elemenx-property-text')).display, getComputedStyle(rows[2].querySelector('dd')).textAlign];
+			})).toEqual(['DL', true, 4, true, 'Uptime', '99.9%', 'v2.32', 'none', 'end']);
+
+			/* Tones color the value with the colors of the theme. */
+			expect(await list.evaluate(function (node) {
+				var tone = function (name) {
+					var probe = document.createElement('span');
+					var color;
+
+					probe.style.color = 'var(--elemenx-' + name + ')';
+
+					node.appendChild(probe);
+
+					color = getComputedStyle(probe).color;
+
+					probe.remove();
+
+					return color;
+				};
+
+				return [getComputedStyle(node.querySelector('.elemenx-property.success dd')).color === tone('success'), getComputedStyle(node.querySelector('.elemenx-property.danger dd')).color === tone('danger')];
+			})).toEqual([true, true]);
+
+			/* The section of their own: one column, two columns with every tone, values of their own in the slot. */
+			expect(await section(page, 'Properties').evaluate(function (node) {
+				var lists = node.querySelectorAll('.elemenx-properties');
+
+				return [lists.length, lists[0].querySelectorAll('.elemenx-property').length, lists[1].classList.contains('double'), Array.prototype.map.call(lists[1].querySelectorAll('.elemenx-property'), function (row) {
+					return row.className.replace('elemenx-property', '').trim();
+				}), lists[2].querySelector('.elemenx-property dd code').textContent, lists[2].querySelector('dd .elemenx-badge').textContent];
+			})).toEqual([3, 4, true, ['success', 'danger', 'warning', 'accent'], 'v2.32.0', 'Live']);
+
+			expect(errors).toEqual([]);
+		});
+
+		test('native features fall back to the web in a browser: a file picker, a download, confirm, a new tab', async function ({ page }) {
+			var errors = captureErrors(page);
+			var native;
+			var state;
+			var chooser;
+			var download;
+			var popup;
+
+			await page.context().route('https://example.com/**', function (route) {
+				route.fulfill({contentType: 'text/html', body: '<title>Example</title>'});
+			});
+
+			await open(page, origin);
+
+			native = section(page, 'Native');
+			state = native.locator('.ui-kit-native-state');
+
+			await native.scrollIntoViewIfNeeded();
+
+			await expect(native.locator('.elemenx-section-header')).toContainText('Platform: web');
+
+			/* Open: the file picker of the browser, the file read as text. */
+			chooser = page.waitForEvent('filechooser');
+
+			await native.getByRole('button', {name: 'Open a file'}).click();
+			(await chooser).setFiles({name: 'notes.txt', mimeType: 'text/plain', buffer: Buffer.from('Hello')});
+
+			await expect(state).toHaveText('notes.txt · 5 characters');
+
+			/* Save: a download of the text. */
+			download = page.waitForEvent('download');
+
+			await native.getByRole('button', {name: 'Save a file'}).click();
+
+			expect((await download).suggestedFilename()).toBe('notes.txt');
+			await expect(state).toHaveText('Saved as a download');
+
+			/* Message: confirm, the first button for OK, the second for Cancel. */
+			page.once('dialog', function (dialog) {
+				dialog.dismiss();
+			});
+
+			await native.getByRole('button', {name: 'Ask'}).click();
+
+			await expect(state).toHaveText('Pressed: Discard');
+
+			/* External: a new tab. */
+			popup = page.context().waitForEvent('page');
+
+			await native.getByRole('button', {name: 'Open example.com'}).click();
+
+			expect((await popup).url()).toBe('https://example.com/');
+			await expect(state).toHaveText('Opened example.com');
+
+			/* A feature the web has not: an error that says so. */
+			await native.getByRole('button', {name: 'Set the menu'}).click();
+
+			await expect(state).toHaveText('Elemenx Native menu needs a native program');
+
+			await native.getByRole('button', {name: 'Global hotkey'}).click();
+
+			await expect(state).toHaveText('Elemenx Native shortcuts needs a native program');
+
+			/* Power on the web: the battery of the Battery Status API. */
+			await native.getByRole('button', {name: 'Power'}).click();
+
+			await expect(state).toHaveText(/^Power: (on battery|plugged in) · (active|unknown)$/);
+
+			expect(errors).toEqual([]);
+		});
+
+		test('native features go through the bridge of a native program, and its events come back', async function ({ page }) {
+			var errors = captureErrors(page);
+			var native;
+			var state;
+			var calls;
+
+			/* The bridge a program of elemenx build --native desktop gives the page (preload.js), faked. */
+			await page.addInitScript(function () {
+				var listeners = {};
+
+				window.nativeCalls = [];
+				window.nativeListeners = listeners;
+				window.ElemenxNative = {
+					Platform: 'electron',
+					Features: ['window', 'dialogs', 'menu', 'tray', 'external', 'taskbar'],
+					Call: function (name, args, callback) {
+						window.nativeCalls.push({Name: name, Args: JSON.parse(JSON.stringify(args))});
+
+						if (name === 'open') callback(null, [{Name: 'report.md', Path: 'C:/report.md', Size: 9, Text: '# Report!'}]);
+						else if (name === 'save') callback(null, {Path: 'C:/notes.txt'});
+						else if (name === 'message') callback(null, 0);
+						else callback(null, null);
+					},
+					On: function (name, callback) {
+						(listeners[name] = listeners[name] || []).push(callback);
+
+						return function () {};
+					}
+				};
+			});
+
+			await open(page, origin);
+
+			native = section(page, 'Native');
+			state = native.locator('.ui-kit-native-state');
+
+			await native.scrollIntoViewIfNeeded();
+
+			await expect(native.locator('.elemenx-section-header')).toContainText('Platform: electron');
+
+			await native.getByRole('button', {name: 'Open a file'}).click();
+
+			await expect(state).toHaveText('report.md · 9 characters');
+
+			await native.getByRole('button', {name: 'Save a file'}).click();
+
+			await expect(state).toHaveText('Saved to C:/notes.txt');
+
+			await native.getByRole('button', {name: 'Ask'}).click();
+
+			await expect(state).toHaveText('Pressed: Keep');
+
+			await native.getByRole('button', {name: 'Set the menu'}).click();
+
+			await expect(state).toHaveText('The menu is set');
+
+			calls = await page.evaluate(function () {
+				return window.nativeCalls;
+			});
+
+			expect(calls.map(function (call) {
+				return call.Name;
+			})).toEqual(['open', 'save', 'message', 'menu']);
+			expect(calls[0].Args).toEqual({Accept: ['.txt', '.md', '.json'], Multiple: false, Read: 'text'});
+			expect(calls[1].Args).toEqual({Name: 'notes.txt', Text: 'Saved by Elemenx Native'});
+			expect(calls[2].Args).toEqual({Title: 'Elemenx', Text: 'Keep the changes?', Buttons: ['Keep', 'Discard'], Kind: 'question'});
+			expect(calls[3].Args.Items[0].Items[0]).toEqual({ID: 'open', Label: 'Open', Hotkey: 'CmdOrCtrl+O'});
+
+			/* A click of the menu of the program comes back as the menu event. */
+			await page.evaluate(function () {
+				window.nativeListeners.menu.forEach(function (callback) {
+					callback({ID: 'about'});
+				});
+			});
+
+			await expect(state).toHaveText('Menu: about');
+
+			expect(errors).toEqual([]);
+		});
+
+		test('meters fill a bar across or upwards, or a dial with ticks, marks, a needle and a middle of their own', async function ({ page }) {
+			var errors = captureErrors(page);
+			var feedback;
+
+			await open(page, origin);
+
+			feedback = section(page, 'Feedback');
+
+			await feedback.locator('.ui-kit-meters').scrollIntoViewIfNeeded();
+
+			/* Upwards: the fill grows from the bottom, the value is over the bar and the label under it. */
+			expect(await feedback.getByRole('meter', {name: 'Fuel'}).evaluate(function (node) {
+				var track = node.querySelector('.elemenx-meter-track').getBoundingClientRect();
+				var fill = node.querySelector('.elemenx-meter-fill').getBoundingClientRect();
+
+				return [node.classList.contains('vertical'), Math.round(fill.height / track.height * 100), Math.round(fill.bottom) === Math.round(track.bottom), node.querySelector('.elemenx-meter-value').getBoundingClientRect().bottom <= track.top, node.querySelector('.elemenx-meter-label').getBoundingClientRect().top >= track.bottom];
+			})).toEqual([true, 72, true, true, true]);
+
+			/* A dial: the fill of its ring is the share of the range, its ticks spread along it, the value in its middle. */
+			expect(await feedback.getByRole('meter', {name: 'Speed'}).evaluate(function (node) {
+				return [node.classList.contains('dial'), Math.round(parseFloat(getComputedStyle(node.querySelector('.elemenx-meter-arc')).strokeDasharray.replace(/^calc\(/, ''))), node.querySelectorAll('.elemenx-meter-tick').length, node.querySelector('.elemenx-meter-needle') === null, node.querySelector('.elemenx-meter-center .elemenx-meter-value').textContent, getComputedStyle(node.querySelector('.elemenx-meter-center .elemenx-meter-value')).display !== 'none'];
+			})).toEqual([true, 53, 9, true, '64', true]);
+
+			/* With a needle turned to the value, the marks of Low and High, and its own middle in place of the value. */
+			expect(await feedback.getByRole('meter', {name: 'Shields'}).evaluate(function (node) {
+				var needle = new DOMMatrix(getComputedStyle(node.querySelector('.elemenx-meter-needle')).transform);
+
+				return [node.getAttribute('aria-valuenow'), node.querySelectorAll('.elemenx-meter-face .elemenx-meter-mark').length, Math.round(Math.atan2(needle.b, needle.a) * 180 / Math.PI), node.querySelector('.elemenx-meter-content').textContent, getComputedStyle(node.querySelector('.elemenx-meter-center .elemenx-meter-value')).display];
+			})).toEqual(['72', 2, Math.round(0.72 * 270 - 360), 'A1', 'none']);
+
+			/* Without the marks of Low and High (the ticks stay), with Min and Max at the ends, the value in a frame below. */
+			expect(await feedback.getByRole('meter', {name: 'Thrust'}).evaluate(function (node) {
+				var face = node.querySelector('.elemenx-meter-face').getBoundingClientRect();
+				var readout = node.querySelector('.elemenx-meter-readout');
+
+				return [node.querySelectorAll('.elemenx-meter-face .elemenx-meter-mark').length, node.querySelectorAll('.elemenx-meter-tick').length, node.querySelector('.elemenx-meter-min').textContent, node.querySelector('.elemenx-meter-max').textContent, readout.textContent, Math.round(readout.getBoundingClientRect().left + readout.getBoundingClientRect().width / 2) === Math.round(face.left + face.width / 2), readout.getBoundingClientRect().top > face.top + face.height / 2, node.querySelector('.elemenx-meter-center .elemenx-meter-value') === null];
+			})).toEqual([0, 3, '0', '100', '73%', true, true, true]);
+
+			/* A bar with its value in the corner, over the end of the track (over Max), and Min and Max under it. */
+			expect(await feedback.getByRole('meter', {name: 'Pressure'}).evaluate(function (node) {
+				var track = node.querySelector('.elemenx-meter-track').getBoundingClientRect();
+				var readout = node.querySelector('.elemenx-meter-readout').getBoundingClientRect();
+
+				return [node.querySelector('.elemenx-meter-readout').textContent, Math.round(readout.right) === Math.round(track.right), readout.bottom <= track.top, node.querySelector('.elemenx-meter-range').textContent.replace(/\s+/g, ''), node.querySelector('.elemenx-meter-head .elemenx-meter-value') === null];
+			})).toEqual(['42 kPa', true, true, '080', true]);
+
+			/* A bar across stays as it was: its fill is as wide as the share. */
+			expect(await feedback.getByRole('meter', {name: 'Battery'}).evaluate(function (node) {
+				return [node.classList.contains('horizontal'), Math.round(node.querySelector('.elemenx-meter-fill').getBoundingClientRect().width / node.querySelector('.elemenx-meter-track').getBoundingClientRect().width * 100), node.querySelector('.elemenx-meter-dial').hidden];
+			})).toEqual([true, 72, true]);
+
+			expect(errors).toEqual([]);
 		});
 
 		test('drag and drop moves items and resizable elements grow', async function ({ page }) {
@@ -1726,6 +3252,57 @@ for (const origin of origins) {
 			})).toBe(0);
 		});
 
+		test('chat keeps to its last message when what it holds grows later: a picture that loads, more messages', async function ({ page }) {
+			var list;
+			var atEnd;
+
+			/* A sticker that comes a second late, after the message that shows it. */
+			await page.route('**/data/stickers/love.svg?late', async function (route) {
+				await new Promise(function (resolve) {
+					setTimeout(resolve, 1000);
+				});
+
+				await route.continue();
+			});
+
+			await open(page, origin);
+
+			list = section(page, 'Chat').locator('.elemenx-chat-messages');
+			atEnd = function () {
+				return list.evaluate(function (node) {
+					return node.scrollHeight - node.scrollTop - node.clientHeight < 2;
+				});
+			};
+
+			await list.scrollIntoViewIfNeeded();
+
+			/* Messages enough to scroll, then a late picture at the end. */
+			await list.evaluate(function (node) {
+				var i = 0;
+				var picture = document.createElement('img');
+
+				while (i < 12) {
+					node.appendChild(document.createElement('p')).textContent = 'Earlier message ' + i;
+
+					i++;
+				}
+
+				picture.src = '/data/stickers/love.svg?late';
+				picture.style.display = 'block';
+				picture.style.width = '200px';
+
+				node.appendChild(picture);
+			});
+
+			await expect.poll(atEnd).toBe(true);
+			await expect.poll(function () {
+				return list.evaluate(function (node) {
+					return node.lastElementChild.complete && node.lastElementChild.naturalWidth > 0;
+				});
+			}, {timeout: 10000}).toBe(true);
+			await expect.poll(atEnd).toBe(true);
+		});
+
 		test('chat shows the avatar on the newest message of a run from one author', async function ({ page }) {
 			var messages;
 
@@ -1743,6 +3320,181 @@ for (const origin of origins) {
 			await expect(messages.nth(2).locator('.elemenx-chat-author')).toHaveCount(0);
 		});
 
+		test('chat messages show their state, open their menu by a right click or the dots, and sum up reactions and views', async function ({ page }) {
+			var chat;
+			var messages;
+			var merged;
+			var summary;
+			var box;
+
+			await open(page, origin);
+
+			chat = section(page, 'Chat');
+			messages = chat.locator('.elemenx-chat-message');
+			merged = messages.filter({hasText: 'Looks good, merging it now.'});
+
+			/* States: edited, delivered (two checks), read (two checks in the accent), and the views. */
+			await expect(messages.filter({hasText: 'Can you check the new table?'}).locator('.elemenx-chat-edited')).toHaveText('edited');
+			await expect(messages.filter({hasText: 'Can you check the new table?'}).locator('.elemenx-chat-edited')).toHaveAttribute('title', 'Edited at 10:04');
+			await expect(messages.filter({hasText: 'The release notes are next.'}).locator('.elemenx-chat-status.delivered svg[data-icon="check-double"]')).toHaveCount(1);
+			await expect(merged.locator('.elemenx-chat-status.read svg[data-icon="check-double"]')).toHaveCount(1);
+			await expect(merged.locator('.elemenx-chat-views')).toHaveText('3');
+			await expect(merged.locator('.elemenx-chat-reaction').first()).toHaveAttribute('title', 'Grace Hopper, Alan Turing');
+
+			/*
+			 * Regression: the buttons of a message touch its bubble (not the wider row of its reactions), and their box runs
+			 * along the bubble, so the pointer gets to them from the middle of the bubble without the message losing it.
+			 */
+			await merged.locator('.elemenx-chat-bubble').hover();
+
+			expect(await merged.evaluate(function (node) {
+				var bubble = node.querySelector('.elemenx-chat-bubble').getBoundingClientRect();
+				var tools = node.querySelector('.elemenx-chat-tools').getBoundingClientRect();
+				var beside = document.elementFromPoint(bubble.left - 2, bubble.top + bubble.height * 0.75);
+
+				return [Math.round(tools.right - bubble.left), Math.round(tools.height - bubble.height), !!beside && !!beside.closest('.elemenx-chat-tools')];
+			})).toEqual([0, 0, true]);
+
+			/* The summary: all reactions with who gave them, one emoji, and who has seen the message. */
+			await merged.scrollIntoViewIfNeeded();
+			await merged.locator('.elemenx-chat-views').click();
+
+			summary = merged.locator('.elemenx-chat-summary');
+
+			await expect(summary).toBeVisible();
+			await expect(summary.getByRole('tab')).toHaveText(['All 3', '🎉 2', '👍 1', '3']);
+			await expect(summary.locator('.elemenx-chat-summary-name')).toHaveText(['Grace Hopper', 'Alan Turing', 'Me']);
+
+			await summary.getByRole('tab', {name: '🎉 2'}).click();
+
+			await expect(summary.locator('.elemenx-chat-summary-name')).toHaveText(['Grace Hopper', 'Alan Turing']);
+
+			await summary.getByRole('tab').last().click();
+
+			await expect(summary.locator('.elemenx-chat-summary-name')).toHaveText(['Grace Hopper', 'Alan Turing', 'Ada Lovelace']);
+			await expect(summary.locator('.elemenx-chat-summary-note')).toHaveText(['10:06', '10:11', '10:15']);
+
+			await page.keyboard.press('Escape');
+
+			await expect(summary).toBeHidden();
+
+			/* The menu by a right click, at the pointer: an action of the author. */
+			box = await merged.locator('.elemenx-chat-text').boundingBox();
+
+			await page.mouse.click(box.x + 10, box.y + 5, {button: 'right'});
+
+			await expect(merged.locator('.elemenx-chat-menu-point .elemenx-option')).toHaveText(['Reply', 'Copy text', 'Select', 'Edit', 'Delete', 'Reactions and views']);
+
+			await merged.locator('.elemenx-chat-menu-point .elemenx-option', {hasText: 'Edit'}).click();
+
+			await expect(chat.locator(':scope > .elemenx-section-header .elemenx-caption')).toHaveText('Edit: Looks good, merging it now.');
+			await expect(messages.filter({hasText: 'merging it now. (updated)'}).locator('.elemenx-chat-edited')).toHaveAttribute('title', 'Edited now');
+
+			/* The dots of a message of another author: no edit or delete; the summary from the menu. */
+			await messages.first().hover();
+			await messages.first().getByRole('button', {name: 'Message actions'}).click();
+
+			await expect(messages.first().locator('.elemenx-chat-menu-point .elemenx-option')).toHaveText(['Reply', 'Copy text', 'Select', 'Reactions and views']);
+
+			await messages.first().locator('.elemenx-chat-menu-point .elemenx-option', {hasText: 'Reactions and views'}).click();
+
+			await expect(messages.first().locator('.elemenx-chat-summary-empty')).toBeVisible();
+		});
+
+		test('gallery shows one picture with its caption, goes by arrows, dots, thumbnails, keys and swipes, and plays by itself', async function ({ page }) {
+			var block;
+			var gallery;
+			var plain;
+			var note;
+
+			await page.clock.install();
+
+			await open(page, origin);
+
+			block = section(page, 'Gallery');
+			gallery = block.locator('.elemenx-gallery').first();
+			plain = block.locator('.elemenx-gallery').nth(1);
+			note = block.locator(':scope > .elemenx-section-header .elemenx-caption');
+
+			await gallery.scrollIntoViewIfNeeded();
+
+			/* The first picture with its title, description and tags; the others are hidden from the reader. */
+			await expect(gallery.locator('.elemenx-gallery-slide.active .elemenx-gallery-title')).toHaveText('Mountains');
+			await expect(gallery.locator('.elemenx-gallery-slide.active .elemenx-gallery-tag')).toHaveText(['nature', 'cold']);
+			await expect(gallery.locator('.elemenx-gallery-counter')).toHaveText('1 / 4');
+			await expect(gallery.locator('.elemenx-gallery-slide').nth(1)).toHaveAttribute('aria-hidden', 'true');
+
+			/* Next, a dot, a thumbnail, the keys; round the ends. */
+			await gallery.getByRole('button', {name: 'Next picture'}).click();
+
+			await expect(note).toHaveText('Picture 2');
+			await expect(gallery.locator('.elemenx-gallery-slide.active .elemenx-gallery-title')).toHaveText('Sea');
+
+			await gallery.locator('.elemenx-gallery-dot').nth(3).click();
+
+			await expect(gallery.locator('.elemenx-gallery-counter')).toHaveText('4 / 4');
+			await expect(gallery.locator('.elemenx-gallery-slide.active .elemenx-gallery-caption')).toHaveText('Cover');
+
+			await gallery.locator('.elemenx-gallery-thumb').nth(2).click();
+
+			await expect(gallery.locator('.elemenx-gallery-slide.active .elemenx-gallery-title')).toHaveText('City');
+
+			await gallery.focus();
+
+			await page.keyboard.press('ArrowRight');
+			await page.keyboard.press('ArrowRight');
+
+			await expect(note).toHaveText('Picture 1');
+
+			await page.keyboard.press('End');
+
+			await expect(note).toHaveText('Picture 4');
+
+			/* A press on the picture selects its item. */
+			await gallery.locator('.elemenx-gallery-slide.active img').click();
+
+			await expect(note).toHaveText('Picture 4 · Opened: Cover');
+
+			/* The caption follows the options: no description, no tags. */
+			await page.keyboard.press('Home');
+
+			await block.locator('.elemenx-check-label', {hasText: /^Description$/}).click();
+			await block.locator('.elemenx-check-label', {hasText: /^Tags$/}).click();
+
+			await expect(gallery.locator('.elemenx-gallery-slide.active .elemenx-gallery-caption')).toHaveText('Mountains');
+
+			/* Autoplay: the next picture every 3 s, the previous one backwards; a button pauses it (the clock runs only when told). */
+			await page.clock.pauseAt(Date.now() + 1000);
+
+			await block.locator('.elemenx-check-label', {hasText: /^Autoplay$/}).click();
+
+			await page.mouse.move(0, 0);
+			await page.clock.runFor(3300);
+
+			await expect(note).toHaveText(/^Picture 2/);
+
+			await block.locator('.elemenx-check-label', {hasText: /^Backwards$/}).click();
+
+			await page.mouse.move(0, 0);
+			await page.clock.runFor(3300);
+
+			await expect(note).toHaveText(/^Picture 1/);
+
+			await gallery.getByRole('button', {name: 'Pause'}).click();
+
+			await page.mouse.move(0, 0);
+			await page.clock.runFor(7000);
+
+			await expect(note).toHaveText(/^Picture 1/);
+			await expect(gallery.getByRole('button', {name: 'Play'})).toHaveAttribute('aria-pressed', 'true');
+
+			/* The second gallery: the caption under the picture, no dots or counter, and no going round at the ends. */
+			await expect(plain.locator('.elemenx-gallery-dots')).toHaveCount(0);
+			await expect(plain.locator('.elemenx-gallery-counter')).toHaveCount(0);
+			await expect(plain).toHaveClass(/caption-below/);
+			await expect(plain.getByRole('button', {name: 'Previous picture'})).toBeDisabled();
+		});
+
 		test('steps show several active steps and timeline lists the activity', async function ({ page }) {
 			var block;
 			var steps;
@@ -1755,10 +3507,27 @@ for (const origin of origins) {
 			await expect(steps).toHaveClass([/done/, /active/, /active/, /pending/]);
 			await expect(block.locator('.elemenx-steps.vertical')).toHaveCount(1);
 
+			await steps.nth(2).locator('.elemenx-step-node').click();
+
+			await expect(steps).toHaveClass([/done/, /done/, /active/, /pending/]);
+			await expect(steps.nth(2)).toHaveAttribute('aria-current', 'step');
+
+			/* A Readonly step is no control: no button, no focus, a press changes nothing; it does not look disabled. */
+			await expect(steps.nth(3)).toHaveClass(/readonly/);
+			await expect(steps.nth(3).locator('button')).toHaveCount(0);
+			await expect(steps.nth(3).locator('.elemenx-step-node')).toHaveAttribute('role', 'img');
+
 			await steps.nth(3).locator('.elemenx-step-node').click();
 
-			await expect(steps).toHaveClass([/done/, /done/, /done/, /active/]);
-			await expect(steps.nth(3)).toHaveAttribute('aria-current', 'step');
+			await expect(steps).toHaveClass([/done/, /done/, /active/, /pending/]);
+			await expect(steps.nth(3).locator('.elemenx-step-node')).not.toBeFocused();
+			expect(await steps.nth(3).evaluate(function (node) {
+				return getComputedStyle(node).opacity;
+			})).toBe('1');
+
+			/* Steps that are not Clickable are a timeline: no buttons at all. */
+			await expect(block.locator('.elemenx-steps.vertical .elemenx-step')).toHaveCount(4);
+			await expect(block.locator('.elemenx-steps.vertical button')).toHaveCount(0);
 
 			await expect(block.locator('.elemenx-timeline-item')).toHaveCount(8);
 			await expect(block.locator('.elemenx-timeline-item').nth(4)).toContainText('The table should keep its header while scrolling.');
@@ -1808,6 +3577,1602 @@ for (const origin of origins) {
 			await terminal.getByRole('button', {name: 'Clear'}).click();
 
 			await expect(terminal.locator('.elemenx-terminal-line')).toHaveCount(0);
+		});
+
+		test('code editor highlights, keeps the indent, closes pairs, completes, comments and shows the messages of its markers', async function ({ page }) {
+			var errors = captureErrors(page);
+			var scope;
+			var editor;
+			var input;
+			var box;
+			var line = '\t\tvar next = this.Count + (step || 1);';
+
+			await open(page, origin);
+
+			scope = section(page, 'Code editor');
+			editor = scope.locator('.elemenx-code-editor');
+			input = editor.locator('textarea');
+
+			await editor.scrollIntoViewIfNeeded();
+
+			/* The layer under the field draws the text highlighted, with the markers of the page. */
+			await expect(editor.locator('.elemenx-code-editor-row')).toHaveCount(16);
+			await expect(editor.locator('.elemenx-syntax-keyword', {hasText: /^function$/})).toHaveCount(1);
+			await expect(editor.locator('.elemenx-syntax-regex')).toHaveText('/^\\d+$/g');
+			await expect(editor.locator('.elemenx-syntax-comment')).toHaveText('/* A component of the catalogue. */');
+			await expect(editor.locator('.elemenx-code-editor-marker.warning')).toHaveText('unused');
+			await expect(editor.locator('.elemenx-code-editor-marker.error')).toHaveText('`count: ${next}`');
+			await expect(editor.locator('.elemenx-code-editor-row').nth(7)).toHaveClass(/marked warning/);
+			await expect(input).toHaveAttribute('aria-label', 'Example code');
+
+			/* The pointer over a marker shows its message and the hint of the page for the word (the field lies over the text). */
+			box = await editor.locator('.elemenx-code-editor-marker.warning').boundingBox();
+
+			await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+
+			await expect(editor.locator('.elemenx-code-editor-hint')).toHaveText('unused is never used.\nunused: 1 use in the text');
+
+			await page.mouse.move(0, 0);
+
+			await expect(editor.locator('.elemenx-code-editor-hint')).toHaveCount(0);
+
+			/* Enter keeps the indent of the line; a bracket gets its pair and the completions fill the word. */
+			await input.evaluate(function (node, text) {
+				var end = node.value.indexOf(text) + text.length;
+
+				node.focus();
+				node.setSelectionRange(end, end);
+			}, line);
+
+			await page.keyboard.press('Enter');
+
+			await expect(scope.locator(':scope > .elemenx-section-header .elemenx-caption')).toHaveText('Line 8, column 3');
+
+			await page.keyboard.type('if (');
+
+			expect(await input.inputValue()).toContain(line + '\n\t\tif ()\n');
+
+			await page.keyboard.type('ne');
+
+			await expect(editor.locator('.elemenx-code-editor-suggestion').first()).toContainText('next');
+			await expect(input).toHaveAttribute('aria-activedescendant', /-0$/);
+
+			await page.keyboard.press('Enter');
+
+			await expect(editor.locator('.elemenx-code-editor-suggestion')).toHaveCount(0);
+
+			/* A closing bracket typed before its pair steps over it. */
+			await page.keyboard.type(') {');
+
+			expect(await input.inputValue()).toContain('\n\t\tif (next) {}\n');
+
+			await page.keyboard.press('Enter');
+
+			expect(await input.inputValue()).toContain('\n\t\tif (next) {\n\t\t\t\n\t\t}\n');
+			await expect(scope.locator(':scope > .elemenx-section-header .elemenx-caption')).toHaveText('Line 9, column 4');
+
+			/* Backspace between a pair takes both; the brackets at the caret are marked. */
+			await page.keyboard.type('[');
+
+			await expect(editor.locator('.elemenx-code-editor-bracket')).toHaveCount(2);
+
+			await page.keyboard.press('Backspace');
+
+			expect(await input.inputValue()).toContain('\n\t\tif (next) {\n\t\t\t\n\t\t}\n');
+
+			/* Mod+/ comments the line and takes the comment away again. */
+			await page.keyboard.type('go();');
+			await page.keyboard.press('ControlOrMeta+/');
+
+			expect(await input.inputValue()).toContain('\n\t\t\t// go();\n');
+			await expect(editor.locator('.elemenx-code-editor-row').nth(8).locator('.elemenx-syntax-comment')).toHaveText('// go();');
+
+			await page.keyboard.press('ControlOrMeta+/');
+
+			expect(await input.inputValue()).toContain('\n\t\t\tgo();\n');
+
+			/* Shift+Tab and Mod+] move the lines; the undo of the browser keeps the edits. */
+			await page.keyboard.press('Shift+Tab');
+
+			expect(await input.inputValue()).toContain('\n\t\tgo();\n');
+
+			await page.keyboard.press('ControlOrMeta+]');
+
+			expect(await input.inputValue()).toContain('\n\t\t\tgo();\n');
+
+			await scope.getByRole('button', {name: 'Undo'}).click();
+
+			expect(await input.inputValue()).toContain('\n\t\tgo();\n');
+
+			await scope.getByRole('button', {name: 'Redo'}).click();
+
+			expect(await input.inputValue()).toContain('\n\t\t\tgo();\n');
+
+			/* Escape, then Tab, leaves the editor. */
+			await input.focus();
+
+			await page.keyboard.press('Escape');
+			await page.keyboard.press('Tab');
+
+			await expect(input).not.toBeFocused();
+			expect(errors).toEqual([]);
+		});
+
+		test('code editor shows a diff with the original text, in one column or side by side, with the words changed and folds that open', async function ({ page }) {
+			var scope;
+			var editor;
+			var diff;
+
+			await open(page, origin);
+
+			scope = section(page, 'Code editor');
+			editor = scope.locator('.elemenx-code-editor').first();
+
+			await editor.scrollIntoViewIfNeeded();
+
+			await scope.getByText('Diff', {exact: true}).click();
+
+			diff = editor.locator('.elemenx-code-diff');
+
+			/* One column: the counts, the line removed and the line added with the word changed in each, and the numbers. */
+			await expect(diff).toBeVisible();
+			await expect(editor.locator('.elemenx-code-editor-scroll')).toBeHidden();
+			await expect(diff.locator('.elemenx-code-diff-stats')).toHaveText('+1 −2');
+			await expect(scope.locator('.ui-kit-editor-tools .elemenx-caption')).toHaveText('+1 −2');
+			await expect(diff.locator('.elemenx-code-diff-row.remove .elemenx-code-diff-word').first()).toHaveText('previous');
+			await expect(diff.locator('.elemenx-code-diff-row.add .elemenx-code-diff-word')).toHaveText('Elemenx');
+			await expect(diff.locator('.elemenx-code-diff-row.add .elemenx-code-diff-number')).toHaveText(['', '2']);
+			await expect(diff.locator('.elemenx-code-diff-row.add .elemenx-syntax-string')).toHaveText('\'Counter\'');
+
+			/* The unchanged run between the changes folds; a press opens it. */
+			await expect(diff.locator('.elemenx-code-diff-fold')).toHaveText('8 unchanged lines');
+
+			await diff.locator('.elemenx-code-diff-fold').click();
+
+			await expect(diff.locator('.elemenx-code-diff-fold')).toHaveCount(0);
+			await expect(diff.locator('.elemenx-code-diff-row')).toHaveCount(18);
+
+			/* Side by side: the text before on the left, after on the right; the extra line has nothing beside it. */
+			await scope.getByText('Side by side', {exact: true}).click();
+
+			await expect(diff).toHaveClass(/split/);
+			await expect(diff.locator('.elemenx-code-diff-code.remove .elemenx-code-diff-word').first()).toHaveText('previous');
+			await expect(diff.locator('.elemenx-code-diff-code.add .elemenx-code-diff-word')).toHaveText('Elemenx');
+			await expect(diff.locator('.elemenx-code-diff-code.empty')).toHaveCount(1);
+
+			/* Back to editing. */
+			await scope.getByText('Edit', {exact: true}).click();
+
+			await expect(diff).toHaveCount(0);
+			await expect(editor.locator('textarea')).toBeVisible();
+		});
+
+		test('code editor finds and replaces, switches languages, wraps and prints through its methods', async function ({ page }) {
+			var errors = captureErrors(page);
+			var scope;
+			var editor;
+			var input;
+			var printed;
+
+			await open(page, origin);
+
+			scope = section(page, 'Code editor');
+			editor = scope.locator('.elemenx-code-editor');
+			input = editor.locator('textarea');
+
+			await editor.scrollIntoViewIfNeeded();
+
+			/* Find marks every match and selects the first one; the buttons of the page walk them. */
+			await scope.getByPlaceholder('Find').fill('next');
+
+			await expect(scope.locator(':scope > .elemenx-section-header .elemenx-caption')).toContainText('Matches: 4');
+			await expect(editor.locator('.elemenx-code-editor-match')).toHaveCount(4);
+			await expect(editor.locator('.elemenx-code-editor-match.current')).toHaveCount(1);
+
+			expect(await input.evaluate(function (node) {
+				return node.value.substring(node.selectionStart, node.selectionEnd);
+			})).toBe('next');
+
+			await scope.getByRole('button', {name: 'Next match'}).click();
+
+			await expect(scope.locator(':scope > .elemenx-section-header .elemenx-caption')).toContainText('Line 10');
+
+			await scope.getByRole('button', {name: 'Previous match'}).click();
+
+			await expect(scope.locator(':scope > .elemenx-section-header .elemenx-caption')).toContainText('Line 7');
+
+			/* Replace all is one edit: Undo brings the text back. */
+			await scope.getByPlaceholder('Replace with').fill('value');
+			await scope.getByRole('button', {name: 'Replace all'}).click();
+
+			await expect(scope.locator(':scope > .elemenx-section-header .elemenx-caption')).toContainText('Matches: 0');
+			expect(await input.inputValue()).not.toContain('next');
+			expect(await input.inputValue()).toContain('var value = this.Count');
+
+			await scope.getByRole('button', {name: 'Undo'}).click();
+
+			expect(await input.inputValue()).toContain('var next = this.Count');
+
+			await scope.getByPlaceholder('Find').fill('');
+
+			await expect(editor.locator('.elemenx-code-editor-match')).toHaveCount(0);
+
+			/* Another language draws with its grammar. */
+			await scope.locator('.elemenx-select-trigger').click();
+			await page.getByRole('option', {name: 'Python'}).click();
+
+			await expect(editor.locator('.elemenx-syntax-keyword', {hasText: /^def$/})).toHaveCount(1);
+			await expect(editor.locator('.elemenx-syntax-meta')).toHaveText('@dataclass');
+			await expect(editor.locator('.elemenx-syntax-string')).toHaveText(/^"{3}The distance from the origin\."{3}$/);
+			await expect(editor.locator('.elemenx-code-editor-marker')).toHaveCount(0);
+
+			/* Wrap breaks the long lines in the field and in the layer alike. */
+			await scope.getByText('Wrap', {exact: true}).click();
+
+			await expect(editor).toHaveClass(/\bwrap\b/);
+			await expect(input).toHaveAttribute('wrap', 'soft');
+
+			/* Print prints a frame with the code, highlighted, and the stylesheets of the page. */
+			await page.evaluate(function () {
+				window.printed = [];
+
+				new MutationObserver(function (records) {
+					records.forEach(function (record) {
+						record.addedNodes.forEach(function (node) {
+							if (node.tagName === 'IFRAME')
+								window.printed.push(node.srcdoc);
+						});
+					});
+				}).observe(document.body, {childList: true});
+			});
+
+			await scope.getByRole('button', {name: 'Print'}).click();
+
+			await expect.poll(function () {
+				return page.evaluate(function () {
+					return window.printed.length;
+				});
+			}).toBe(1);
+
+			printed = await page.evaluate(function () {
+				return window.printed[0];
+			});
+
+			expect(printed).toContain('<title>Example code</title>');
+			expect(printed).toContain('class="elemenx-code-editor elemenx-code-editor-print numbered"');
+			expect(printed).toContain('<span class="elemenx-syntax-keyword">def</span>');
+			expect(printed).toContain('data-theme="light"');
+			expect(printed).toMatch(/<link rel="stylesheet" href="[^"]*ElemenxUI\/index\.css"/);
+			await expect(page.locator('body > iframe')).toHaveCount(0);
+			expect(errors).toEqual([]);
+		});
+
+		test('rich editor formats from the toolbar of the page and from its menu, makes blocks of Markdown and pastes through its schema', async function ({ page }) {
+			var errors = captureErrors(page);
+			var scope;
+			var content;
+
+			await open(page, origin);
+
+			scope = section(page, 'Rich text editor');
+			content = scope.locator('.elemenx-rich-editor-content');
+
+			await content.scrollIntoViewIfNeeded();
+
+			await expect(content.locator('h2')).toHaveText('Release notes');
+			await expect(content.locator('table tr')).toHaveCount(3);
+			await expect(content).toHaveAttribute('aria-label', 'Example document');
+
+			/* A selection shows the quick menu over it; its buttons style the selection. */
+			await content.evaluate(function (node) {
+				var text = node.querySelector('p').firstChild;
+				var range = document.createRange();
+
+				node.focus();
+
+				range.setStart(text, 0);
+				range.setEnd(text, 7);
+
+				getSelection().removeAllRanges();
+				getSelection().addRange(range);
+			});
+
+			await expect(scope.locator('.elemenx-rich-editor-menu')).toBeVisible();
+
+			await scope.locator('.elemenx-rich-editor-menu').getByRole('button', {name: 'Bold'}).click();
+
+			await expect(content.locator('p').first().locator('strong, b').first()).toHaveText('Elemenx');
+			await expect(scope.locator('.elemenx-rich-editor-menu').getByRole('button', {name: 'Bold'})).toHaveAttribute('aria-pressed', 'true');
+			await expect(scope.getByRole('button', {name: 'Bold', exact: true}).first()).toHaveAttribute('aria-pressed', 'true');
+
+			/* The link of the menu takes a URL in its own field. */
+			await scope.locator('.elemenx-rich-editor-menu').getByRole('button', {name: 'Link'}).click();
+
+			await expect(scope.locator('.elemenx-rich-editor-link')).toBeFocused();
+
+			await page.keyboard.type('https://example.com/a');
+			await page.keyboard.press('Enter');
+
+			await expect(content.locator('p').first().locator('a[href="https://example.com/a"]')).toHaveText('Elemenx');
+
+			/* The toolbar of the page turns the paragraph at the caret into a heading. */
+			await content.evaluate(function (node) {
+				var text = node.querySelectorAll('p')[1].firstChild;
+				var range = document.createRange();
+
+				node.focus();
+
+				range.setStart(text, 3);
+				range.collapse(true);
+
+				getSelection().removeAllRanges();
+				getSelection().addRange(range);
+			});
+
+			await expect(scope.locator(':scope > .elemenx-section-header .elemenx-caption')).toHaveText('Quote');
+
+			await scope.locator('.ui-kit-editor-tools .elemenx-select-trigger').click();
+			await page.getByRole('option', {name: 'Heading 3'}).click();
+
+			await expect(content.locator('h3')).toHaveText('Select some text to see the quick menu.');
+
+			/* Markdown typed at the start of a paragraph makes a block; Mod+B styles what follows. */
+			await content.evaluate(function (node) {
+				var range = document.createRange();
+
+				node.focus();
+
+				range.selectNodeContents(node.querySelector('table').previousElementSibling);
+				range.collapse(false);
+
+				getSelection().removeAllRanges();
+				getSelection().addRange(range);
+			});
+
+			await page.keyboard.press('Enter');
+			await page.keyboard.type('## Plans');
+			await page.keyboard.press('Enter');
+			await page.keyboard.type('- one');
+
+			await expect(content.locator('h2').nth(1)).toHaveText('Plans');
+			await expect(content.locator('ul').nth(1).locator('li')).toHaveText(['one']);
+
+			await page.keyboard.press('ControlOrMeta+b');
+			await page.keyboard.type(' loud');
+
+			await expect(content.locator('ul').nth(1).locator('strong, b')).toHaveText(/loud/);
+
+			/* Paste keeps the text and the schema, not the scripts, handlers and unsafe links. */
+			await content.evaluate(function (node) {
+				var data = new DataTransfer();
+
+				data.setData('text/html', '<p onclick="alert(1)">Pasted<script>window.bad = true</script> <b>bold</b> <a href="javascript:alert(1)">trap</a><img src="javascript:alert(1)"><iframe src="https://example.com"></iframe></p>');
+				data.setData('text/plain', 'Pasted bold trap');
+
+				node.dispatchEvent(new ClipboardEvent('paste', {clipboardData: data, bubbles: true, cancelable: true}));
+			});
+
+			await expect(content).toContainText('Pasted');
+			expect(await content.evaluate(function (node) {
+				return [!!node.querySelector('script, iframe, [onclick]'), !!node.querySelector('a[href^="javascript"]'), !!node.querySelector('img[src^="javascript"]'), window.bad === true];
+			})).toEqual([false, false, false, false]);
+
+			/* The undo of the browser keeps the edits made by the commands. */
+			await scope.getByRole('button', {name: 'Undo'}).first().click();
+
+			await expect(content).not.toContainText('Pasted');
+			expect(errors).toEqual([]);
+		});
+
+		test('rich editor reads and writes Markdown, edits tables, inserts images and prints through its methods', async function ({ page }) {
+			var errors = captureErrors(page);
+			var scope;
+			var content;
+			var markdown;
+			var printed;
+
+			await open(page, origin);
+
+			scope = section(page, 'Rich text editor');
+			content = scope.locator('.elemenx-rich-editor-content');
+
+			await content.scrollIntoViewIfNeeded();
+
+			/* The document as Markdown, in a code editor of the page. */
+			await scope.getByText('Markdown', {exact: true}).click();
+
+			markdown = scope.locator('.elemenx-code-editor textarea');
+
+			await expect(markdown).toHaveValue(/^## Release notes\n\nElemenx \*\*0\.9\*\* brings a \*rich text\* editor with \[no toolbar of its own\]\(https:\/\/github\.com\/Qybercom\/Elemenx\): the page calls `Command`\.\n\n- Markdown in and out\n- Paste through a schema\n\n> Select some text to see the quick menu\.\n\n\| Key \| Does \|\n\| --- \| --- \|\n\| Mod\+B \| Bold \|\n\| Mod\+K \| Link \|\n$/);
+
+			/* Markdown typed there becomes the document. */
+			await markdown.fill('# New\n\nText with **bold**, ~~old~~ and a [link](https://example.com).\n\n1. one\n2. two\n    - inner\n\n```\ncode <b>\n```\n\n| A | B |\n| --- | --- |\n| 1 | 2 |\n');
+
+			await expect(content.locator('h1')).toHaveText('New');
+			await expect(content.locator('strong')).toHaveText('bold');
+			await expect(content.locator('s')).toHaveText('old');
+			await expect(content.locator('a')).toHaveAttribute('href', 'https://example.com');
+			await expect(content.locator('ol > li')).toHaveCount(2);
+			await expect(content.locator('ol ul > li')).toHaveText('inner');
+			await expect(content.locator('pre')).toHaveText('code <b>');
+			await expect(content.locator('td')).toHaveText(['1', '2']);
+
+			/* Rows of a table come from the cell at the caret. */
+			await content.evaluate(function (node) {
+				var range = document.createRange();
+
+				node.focus();
+
+				range.selectNodeContents(node.querySelector('td'));
+				range.collapse(true);
+
+				getSelection().removeAllRanges();
+				getSelection().addRange(range);
+			});
+
+			await expect(scope.getByRole('button', {name: 'Row below'})).toBeEnabled();
+
+			await scope.getByRole('button', {name: 'Row below'}).click();
+
+			await expect(content.locator('tbody tr')).toHaveCount(2);
+
+			await scope.getByRole('button', {name: 'Image'}).click();
+
+			await expect(content.locator('img[alt="Mountains"]')).toHaveAttribute('src', 'data/cards/mountains.svg');
+
+			/* Print prints the document, in a frame with the stylesheets of the page. */
+			await page.evaluate(function () {
+				window.printed = [];
+
+				new MutationObserver(function (records) {
+					records.forEach(function (record) {
+						record.addedNodes.forEach(function (node) {
+							if (node.tagName === 'IFRAME')
+								window.printed.push(node.srcdoc);
+						});
+					});
+				}).observe(document.body, {childList: true});
+			});
+
+			await scope.getByRole('button', {name: 'Print'}).click();
+
+			await expect.poll(function () {
+				return page.evaluate(function () {
+					return window.printed.length;
+				});
+			}).toBe(1);
+
+			printed = await page.evaluate(function () {
+				return window.printed[0];
+			});
+
+			expect(printed).toContain('<title>Example document</title>');
+			expect(printed).toContain('class="elemenx-rich-editor-content elemenx-rich-editor-print"');
+			expect(printed).toContain('<h1>New</h1>');
+			await expect(page.locator('body > iframe')).toHaveCount(0);
+			expect(errors).toEqual([]);
+		});
+
+		test('a window with a trapezoid header hangs its icon and title on a trapezoid as wide as the title, and the header still moves it', async function ({ page }) {
+			var errors = captureErrors(page);
+			var notes;
+			var header;
+			var shape;
+			var box;
+			var before;
+
+			await open(page, origin);
+
+			notes = section(page, 'Windows').locator('.elemenx-window.trapezoid').filter({hasText: 'Notes'});
+			header = notes.locator('.elemenx-window-header');
+
+			await notes.scrollIntoViewIfNeeded();
+
+			shape = await notes.evaluate(function (node) {
+				var bar = node.querySelector('.elemenx-window-header').getBoundingClientRect();
+				var tab = node.querySelector('.elemenx-window-tab');
+				var box = tab.getBoundingClientRect();
+
+				return [getComputedStyle(tab).clipPath.indexOf('polygon') === 0, tab.contains(node.querySelector('.elemenx-icon')), tab.contains(node.querySelector('.elemenx-window-title')), box.width < bar.width / 2, Math.round(box.top - bar.top), Math.round(bar.bottom - box.bottom), getComputedStyle(node.querySelector('.elemenx-window-header')).backgroundColor];
+			});
+
+			expect(shape).toEqual([true, true, true, true, 0, 0, 'rgba(0, 0, 0, 0)']);
+
+			/* The room the trapezoid leaves in the header still moves the window. */
+			before = await notes.boundingBox();
+			box = await notes.locator('.elemenx-window-tab').boundingBox();
+
+			await page.mouse.move(box.x + box.width + 24, box.y + box.height / 2);
+			await page.mouse.down();
+			await page.mouse.move(box.x + box.width + 64, box.y + box.height / 2 + 30, {steps: 4});
+			await page.mouse.up();
+
+			await expect.poll(async function () {
+				var after = await notes.boundingBox();
+
+				return [Math.round(after.x - before.x), Math.round(after.y - before.y)];
+			}).toEqual([40, 30]);
+
+			await expect(header).toBeVisible();
+
+			/* The game window hangs it in the middle of its top. */
+			expect(await page.locator('.elemenx-window.game.trapezoid').filter({hasText: 'Bag'}).evaluate(function (node) {
+				var frame = node.getBoundingClientRect();
+				var tab = node.querySelector('.elemenx-window-tab').getBoundingClientRect();
+
+				return Math.abs((tab.left + tab.right) / 2 - (frame.left + frame.right) / 2) < 2;
+			})).toBe(true);
+
+			expect(errors).toEqual([]);
+		});
+
+		test('picture-in-picture moves the body of a window into a window of its own and back, and a video into its window', async function ({ page }) {
+			var errors = captureErrors(page);
+			var windows;
+			var notes;
+			var pop;
+			var pip;
+
+			/* The browser of the tests opens no window of the system: an iframe stands for it, and the video API answers as Chrome would. */
+			await page.addInitScript(function () {
+				Object.defineProperty(window, 'documentPictureInPicture', {configurable: true, value: {requestWindow: function (options) {
+					var frame = document.createElement('iframe');
+					var view;
+
+					frame.id = 'test-pip';
+					frame.style.cssText = 'position: fixed; right: 0; bottom: 0; z-index: 99999; width: ' + options.width + 'px; height: ' + options.height + 'px';
+
+					document.body.appendChild(frame);
+
+					view = frame.contentWindow;
+					view.close = function () {
+						view.dispatchEvent(new Event('pagehide'));
+
+						frame.remove();
+					};
+
+					return Promise.resolve(view);
+				}}});
+
+				Object.defineProperty(document, 'pictureInPictureEnabled', {get: function () {
+					return true;
+				}});
+
+				HTMLVideoElement.prototype.requestPictureInPicture = function () {
+					var video = this;
+
+					Object.defineProperty(document, 'pictureInPictureElement', {configurable: true, get: function () {
+						return video;
+					}});
+
+					return Promise.resolve({});
+				};
+
+				document.exitPictureInPicture = function () {
+					var video = document.pictureInPictureElement;
+
+					Object.defineProperty(document, 'pictureInPictureElement', {configurable: true, get: function () {
+						return null;
+					}});
+
+					video.dispatchEvent(new Event('leavepictureinpicture'));
+
+					return Promise.resolve();
+				};
+			});
+
+			await open(page, origin);
+
+			windows = section(page, 'Windows');
+			notes = windows.locator('.elemenx-window').filter({hasText: 'Notes'});
+			pop = notes.getByRole('button', {name: 'Picture in picture'});
+			pip = page.frameLocator('#test-pip');
+
+			await notes.scrollIntoViewIfNeeded();
+
+			/* The body goes into the window, with the styles and the theme of the page; a frame takes its place. */
+			await pop.click();
+
+			await expect(pip.locator('.elemenx-window-body')).toContainText('A window keeps to its container');
+			await expect(notes.locator('.elemenx-window-body')).toHaveCount(0);
+			await expect(notes.locator('.elemenx-pip-placeholder')).toContainText('Shown in a picture-in-picture window');
+			await expect(notes.getByRole('button', {name: 'Back into the page'})).toHaveAttribute('aria-pressed', 'true');
+
+			expect(await page.evaluate(function () {
+				var view = document.getElementById('test-pip').contentDocument;
+
+				return [view.documentElement.getAttribute('data-theme') === document.documentElement.getAttribute('data-theme'), view.head.querySelectorAll('style, link[rel="stylesheet"]').length > 10, view.body.className, getComputedStyle(view.querySelector('.elemenx-window-body')).display !== 'inline'];
+			})).toEqual([true, true, 'elemenx-pip-body', true]);
+
+			/* The frame brings it back. */
+			await notes.getByRole('button', {name: 'Bring it back'}).click();
+
+			await expect(notes.locator('.elemenx-window-body')).toContainText('A window keeps to its container');
+			await expect(notes.locator('.elemenx-pip-placeholder')).toHaveCount(0);
+			await expect(page.locator('#test-pip')).toHaveCount(0);
+			await expect(pop).toHaveAttribute('aria-pressed', 'false');
+
+			/* Closing the window brings it back too. */
+			await pop.click();
+
+			await expect(pip.locator('.elemenx-window-body')).toBeAttached();
+
+			await page.evaluate(function () {
+				document.getElementById('test-pip').contentWindow.close();
+			});
+
+			await expect(notes.locator('.elemenx-window-body')).toContainText('A window keeps to its container');
+			await expect(pop).toHaveAttribute('aria-pressed', 'false');
+
+			/* A video goes into its window and back. */
+			await windows.getByRole('button', {name: 'Video in a window'}).click();
+
+			await expect(windows.locator('.elemenx-section-header')).toContainText('The video is in a window');
+
+			await windows.getByRole('button', {name: 'Video in a window'}).click();
+
+			await expect(windows.locator('.elemenx-section-header')).toContainText('The video is back in the page');
+
+			expect(errors).toEqual([]);
+		});
+
+		test('windows move, resize, come to the front, minimize, maximize, follow the keys, close and remember their place', async function ({ page }) {
+			var errors = captureErrors(page);
+			var scope;
+			var note;
+			var properties;
+			var notes;
+			var header;
+			var box;
+			var area;
+
+			async function place (window) {
+				return window.evaluate(function (node) {
+					return [node.offsetLeft, node.offsetTop, node.offsetWidth, node.offsetHeight];
+				});
+			}
+
+			await open(page, origin);
+
+			scope = section(page, 'Windows');
+			note = scope.locator(':scope > .elemenx-section-header .elemenx-caption');
+			properties = scope.locator('.elemenx-window').filter({hasText: 'Properties'});
+			notes = scope.locator('.elemenx-window').filter({hasText: 'Notes'});
+			header = properties.locator('.elemenx-window-header');
+
+			await scope.locator('.ui-kit-desktop').scrollIntoViewIfNeeded();
+
+			expect(await place(properties)).toEqual([24, 24, 320, 260]);
+			await expect(properties).toHaveAttribute('role', 'dialog');
+			await expect(properties).toHaveAccessibleName('Properties');
+
+			/* The header moves it; it keeps to its container. */
+			box = await header.boundingBox();
+
+			await page.mouse.move(box.x + 60, box.y + 10);
+			await page.mouse.down();
+			await page.mouse.move(box.x + 160, box.y + 60, {steps: 5});
+			await page.mouse.up();
+
+			expect((await place(properties)).slice(0, 2)).toEqual([124, 74]);
+			await expect(note).toHaveText('Moved to 124, 74');
+
+			box = await header.boundingBox();
+
+			await page.mouse.move(box.x + 60, box.y + 10);
+			await page.mouse.down();
+			await page.mouse.move(box.x - 600, box.y - 600, {steps: 5});
+			await page.mouse.up();
+
+			expect((await place(properties)).slice(0, 2)).toEqual([0, 0]);
+
+			/* A corner resizes it, within its least size. */
+			box = await properties.boundingBox();
+
+			await page.mouse.move(box.x + box.width - 2, box.y + box.height - 2);
+			await page.mouse.down();
+			await page.mouse.move(box.x + box.width + 38, box.y + box.height + 28, {steps: 5});
+			await page.mouse.up();
+
+			expect((await place(properties)).slice(2)).toEqual([360, 290]);
+			await expect(note).toHaveText('Resized to 360 × 290');
+
+			box = await properties.boundingBox();
+
+			await page.mouse.move(box.x + box.width - 2, box.y + box.height - 2);
+			await page.mouse.down();
+			await page.mouse.move(box.x + 10, box.y + 10, {steps: 5});
+			await page.mouse.up();
+
+			expect((await place(properties)).slice(2)).toEqual([200, 120]);
+
+			/* A press brings a window to the front and makes it the active one. */
+			await notes.locator('.elemenx-window-body').click();
+
+			await expect(notes).toHaveClass(/\bactive\b/);
+			await expect(properties).not.toHaveClass(/\bactive\b/);
+			expect(Number(await notes.evaluate(function (node) {
+				return getComputedStyle(node).zIndex;
+			}))).toBeGreaterThan(Number(await properties.evaluate(function (node) {
+				return getComputedStyle(node).zIndex;
+			})));
+
+			/* Minimize folds it to its header; a double press on the header fills the container. */
+			await properties.getByRole('button', {name: 'Minimize'}).click();
+
+			await expect(properties).toHaveClass(/\bminimized\b/);
+			await expect(properties.locator('.elemenx-window-body')).toBeHidden();
+			await expect(note).toHaveText('Minimized');
+
+			await properties.getByRole('button', {name: 'Unfold'}).click();
+
+			await expect(properties.locator('.elemenx-window-body')).toBeVisible();
+
+			await header.dblclick({position: {x: 80, y: 10}});
+
+			area = await scope.locator('.ui-kit-desktop').evaluate(function (node) {
+				return [node.clientWidth, node.clientHeight];
+			});
+
+			await expect(properties).toHaveClass(/\bmaximized\b/);
+			expect((await place(properties)).slice(2)).toEqual(area);
+
+			await properties.getByRole('button', {name: 'Restore'}).click();
+
+			expect((await place(properties)).slice(2)).toEqual([200, 120]);
+
+			/* The arrows on the focused header move it; with Shift they resize it. */
+			await header.focus();
+
+			await page.keyboard.press('ArrowRight');
+			await page.keyboard.press('ArrowDown');
+
+			expect((await place(properties)).slice(0, 2)).toEqual([16, 16]);
+
+			await page.keyboard.press('Shift+ArrowRight');
+
+			expect((await place(properties)).slice(2)).toEqual([216, 120]);
+
+			/* Close hides it; the page opens it again. */
+			await properties.getByRole('button', {name: 'Close'}).click();
+
+			await expect(properties).toHaveCount(0);
+			await expect(note).toHaveText('Properties closed');
+
+			await expect(scope.getByRole('button', {name: 'Properties', exact: true})).toHaveAttribute('aria-pressed', 'false');
+
+			await scope.getByRole('button', {name: 'Properties', exact: true}).click();
+
+			await expect(properties).toBeVisible();
+
+			/* Notes remembers its place across a reload. */
+			box = await notes.locator('.elemenx-window-header').boundingBox();
+
+			await page.mouse.move(box.x + 60, box.y + 10);
+			await page.mouse.down();
+			await page.mouse.move(box.x + 20, box.y + 90, {steps: 5});
+			await page.mouse.up();
+
+			expect((await place(notes)).slice(0, 2)).toEqual([340, 140]);
+
+			await reload(page);
+
+			await expect.poll(function () {
+				return place(section(page, 'Windows').locator('.elemenx-window').filter({hasText: 'Notes'}));
+			}).toEqual([340, 140, 300, 200]);
+			expect(errors).toEqual([]);
+		});
+
+		test('game extras: a quest log and its tracker, a minimap, a leaderboard and achievements one after another', async function ({ page }) {
+			var errors = captureErrors(page);
+			var game;
+			var note;
+			var quests;
+			var tracker;
+			var minimap;
+			var ranking;
+			var banner;
+
+			await page.clock.install();
+
+			await open(page, origin);
+
+			game = section(page, 'Game UI');
+			note = game.locator(':scope > .elemenx-section-header .elemenx-caption');
+			tracker = game.locator('.ui-kit-game-tracker');
+			minimap = game.locator('.elemenx-game-minimap');
+
+			await game.locator('.elemenx-game-hud').scrollIntoViewIfNeeded();
+
+			/* The tracker lists the objectives of the tracked active quests; a press opens the log on that quest. */
+			await expect(tracker.locator('.elemenx-game-tracker-title')).toHaveText(['Wolves at the gate', 'Herbs for the healer']);
+			await expect(tracker.locator('.elemenx-game-tracker-objective').first()).toHaveText('Grey wolves slain 3 / 5');
+
+			await tracker.getByRole('button', {name: /Herbs for the healer/}).click();
+
+			quests = game.locator('.elemenx-window').filter({hasText: 'Quests'}).locator('.elemenx-game-quests');
+
+			await expect(quests.locator('.elemenx-game-quests-title')).toHaveText('Herbs for the healer');
+			await expect(quests.locator('.elemenx-game-quests-heading')).toHaveText(['Main story', 'Side quests']);
+			await expect(quests.getByRole('option', {name: /Herbs for the healer/})).toHaveAttribute('aria-selected', 'true');
+			await expect(quests.locator('.elemenx-game-quest.done .elemenx-game-quest-title')).toHaveText('A lost ring');
+			await expect(quests.locator('.elemenx-game-quest.failed .elemenx-game-quest-title')).toHaveText('Hold the bridge');
+			await expect(quests.locator('.elemenx-game-objective-count')).toHaveText('6 / 8');
+			expect(await quests.locator('.elemenx-game-objective-bar > span').evaluate(function (node) {
+				return node.style.width;
+			})).toBe('75%');
+			await expect(quests.locator('.elemenx-game-reward.uncommon .elemenx-game-reward-count')).toHaveText('3');
+
+			/* The card of an item shows wherever the item is: a reward of a quest too, in the top layer, beside it. */
+			await quests.locator('.elemenx-game-reward.uncommon').hover();
+
+			await expect(quests.locator('.elemenx-item-card')).toContainText('Healing potion');
+			await expect(quests.locator('.elemenx-item-card')).toContainText('Uncommon · Potion');
+			await expect(quests.locator('.elemenx-item-card')).toContainText('Restores 30 health.');
+			expect(await quests.locator('.elemenx-item-card').evaluate(function (node) {
+				var reward = node.previousElementSibling.getBoundingClientRect();
+				var card = node.getBoundingClientRect();
+
+				return [node.matches(':popover-open'), Math.round(card.left - reward.right) === 8 || Math.round(reward.left - card.right) === 8, Math.abs(card.top - reward.top) < 220, document.getElementById(node.previousElementSibling.getAttribute('aria-describedby')) === node];
+			})).toEqual([true, true, true, true]);
+
+			await page.mouse.move(0, 0);
+
+			await expect(quests.locator('.elemenx-item-card')).toHaveCount(0);
+
+			/* The arrows move through the quests; the button stops tracking one, and the tracker follows. */
+			await quests.getByRole('option', {name: /Herbs for the healer/}).focus();
+
+			await page.keyboard.press('ArrowDown');
+
+			await expect(quests.locator('.elemenx-game-quests-title')).toHaveText('A lost ring');
+			await expect(quests.getByRole('option', {name: /A lost ring/})).toBeFocused();
+			await expect(quests.locator('.elemenx-game-quests-meta')).toHaveText('Side quests · Level 4 · Done');
+			await expect(quests.getByRole('button', {name: 'Track'})).toHaveCount(0);
+
+			await page.keyboard.press('Home');
+
+			await expect(quests.locator('.elemenx-game-quests-title')).toHaveText('Wolves at the gate');
+
+			await quests.getByRole('button', {name: 'Stop tracking'}).click();
+
+			await expect(note).toHaveText('Stopped tracking: wolves');
+			await expect(tracker.locator('.elemenx-game-tracker-title')).toHaveText(['Herbs for the healer']);
+			await expect(quests.getByRole('button', {name: 'Track'})).toBeVisible();
+
+			/* The minimap: markers on the map, the one off the map waits on its edge; zoom and markers emit. */
+			await expect(minimap.locator('.elemenx-game-minimap-title')).toHaveText('Northern woods');
+			await expect(minimap.locator('.elemenx-game-marker')).toHaveCount(4);
+			await expect(minimap.locator('.elemenx-game-marker.edge')).toHaveCount(1);
+			await expect(minimap.locator('.elemenx-game-marker.edge')).toHaveAttribute('aria-label', 'The pass');
+
+			await minimap.getByRole('button', {name: 'Zoom in'}).click();
+
+			await expect(note).toHaveText('Map zoom ×3');
+			await expect(minimap.locator('.elemenx-game-minimap-note')).toHaveText('412, 88 · ×3');
+
+			await minimap.getByRole('button', {name: 'Grey wolf'}).click();
+
+			await expect(note).toHaveText('Marker: Grey wolf');
+
+			/* The leaderboard: by score, medals for the first three, the player of the page apart after a gap. */
+			await game.getByRole('button', {name: 'Ranking'}).click();
+
+			ranking = game.locator('.elemenx-game-leaderboard');
+
+			await expect(ranking.locator('.elemenx-game-leaderboard-rank')).toHaveText(['1', '2', '3', '4', '5', '6']);
+			await expect(ranking.locator('.elemenx-game-leaderboard-row.gold strong')).toHaveText('Kael');
+			await expect(ranking.locator('.elemenx-game-leaderboard-row.bronze strong')).toHaveText('Dorn');
+			await expect(ranking.locator('.elemenx-game-leaderboard-row.gap')).toHaveCount(1);
+			await expect(ranking.locator('.elemenx-game-leaderboard-row.me strong')).toHaveText('Aria');
+			await expect(ranking.locator('.elemenx-game-leaderboard-row.me .elemenx-game-leaderboard-change.up')).toHaveAttribute('aria-label', 'up 3');
+			await expect(ranking.locator('.elemenx-game-leaderboard-row.me .elemenx-game-leaderboard-score')).toHaveText('12,800');
+
+			await ranking.locator('.elemenx-game-leaderboard-row').filter({hasText: 'Sela'}).click();
+
+			await expect(note).toHaveText('Player: Sela');
+
+			/* Achievements show one after another, over the whole page and its windows; a press dismisses one. */
+			await page.clock.pauseAt(Date.now() + 1000);
+
+			await game.getByRole('button', {name: 'Unlock an achievement'}).click();
+			await game.getByRole('button', {name: 'Unlock an achievement'}).click();
+
+			banner = page.locator('.elemenx-achievements .elemenx-achievement');
+
+			await expect(banner).toHaveCount(1);
+			await expect(banner.locator('.elemenx-achievement-title')).toHaveText('First blood');
+			await expect(banner.locator('.elemenx-achievement-overline')).toHaveText('Achievement unlocked');
+			await expect(banner.locator('.elemenx-achievement-points')).toHaveText('10');
+
+			/* As on a console: the badge pops up and the band opens out of it, and it folds back at the end of its time. */
+			expect(await banner.evaluate(function (node) {
+				return node.getAnimations().map(function (animation) {
+					return animation.animationName + ' ' + animation.effect.getTiming().delay;
+				});
+			})).toEqual(['elemenx-achievement-open 0', 'elemenx-achievement-close 5100']);
+
+			await page.waitForTimeout(1300);
+
+			expect(await banner.evaluate(function (node) {
+				var box = node.getBoundingClientRect();
+
+				return [getComputedStyle(node.parentNode).position, document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2).closest('.elemenx-achievement') === node, box.width > 200];
+			})).toEqual(['fixed', true, true]);
+
+			await page.clock.runFor(6100);
+
+			await expect(banner.locator('.elemenx-achievement-title')).toHaveText('Pack hunter');
+			await expect(banner).toHaveClass(/rare/);
+
+			await banner.click();
+
+			await expect(banner).toHaveCount(0);
+
+			expect(errors).toEqual([]);
+		});
+
+		test('game windows take the look of the game themes: frames, ornaments, decor, a hologram, and numbered tabs', async function ({ page }) {
+			var errors = captureErrors(page);
+			var game;
+			var status;
+			var record;
+			var tabs;
+			var systems;
+
+			await open(page, origin);
+
+			game = section(page, 'Game UI');
+			status = game.locator('.elemenx-window').filter({hasText: 'Status'});
+
+			await game.locator('.elemenx-game-hud').scrollIntoViewIfNeeded();
+
+			await expect(status).toHaveClass(/\bgame\b/);
+			await expect(status.locator('.elemenx-property.success .elemenx-property-value')).toHaveText('ON');
+
+			/* Fantasy: a rounded window in a thin line, a crest over the header, buttons with a light top edge. */
+			await game.getByRole('button', {name: 'Fantasy'}).click();
+
+			await expect(page.locator('body')).toHaveAttribute('data-theme', 'fantasy');
+			expect(await status.evaluate(function (node) {
+				var frame = getComputedStyle(node, '::before');
+				var header = node.querySelector('.elemenx-window-header');
+				var button = getComputedStyle(node.querySelector('.elemenx-button'));
+
+				var decor = getComputedStyle(node, '::after');
+
+				return [node.classList.contains('primary'), frame.borderImageSource.indexOf('data:image/svg+xml') !== -1, decor.backgroundImage.split('data:image/svg+xml').length - 1, decor.top, getComputedStyle(header, '::before').backgroundImage, button.backgroundImage.split('linear-gradient').length - 1, button.borderRadius, button.minWidth, getComputedStyle(node.querySelector('.elemenx-window-body')).textShadow !== 'none'];
+			})).toEqual([true, true, 1, '-16px', 'none', 2, '4px', '88px', true]);
+
+			/* A secondary window: a thin frame of metal, a small crest and small corners. */
+			expect(await game.locator('.elemenx-window.secondary').filter({hasText: 'Bag'}).evaluate(function (node) {
+				var frame = getComputedStyle(node, '::before');
+				var decor = getComputedStyle(node, '::after');
+
+				return [frame.borderImageSource.indexOf('data:image/svg+xml') !== -1, frame.borderRadius, frame.borderTopWidth, decor.backgroundImage.split('data:image/svg+xml').length - 1, decor.top];
+			})).toEqual([true, '6px', '5px', 1, '-10px']);
+
+			/* Gauges sit in a ring of metal rounded at both ends: the fill starts right at the curve, with a lattice in it. */
+			expect(await status.locator('.elemenx-game-bar.health').evaluate(function (node) {
+				var ornament = getComputedStyle(node.querySelector('.elemenx-game-bar-ornament'));
+
+				var track = node.querySelector('.elemenx-game-bar-track').getBoundingClientRect();
+				var caps = node.querySelector('.elemenx-game-bar-ornament').getBoundingClientRect();
+				var fill = node.querySelector('.elemenx-game-bar-fill').getBoundingClientRect();
+
+				return [ornament.backgroundImage.split('data:image/svg+xml').length - 1, caps.left === track.left && caps.height === track.height, fill.left === track.left, getComputedStyle(node.querySelector('.elemenx-game-bar-track')).borderTopLeftRadius, getComputedStyle(node.querySelector('.elemenx-game-bar-fill'), '::before').backgroundImage.indexOf('data:image/svg+xml') !== -1];
+			})).toEqual([1, true, true, '7px', true]);
+
+			/* Gauges of every size are as long: their caps do not grow with their height. */
+			expect(await status.locator('.elemenx-game-bar-gauge').evaluateAll(function (nodes) {
+				return nodes.map(function (node) {
+					return Math.round(node.getBoundingClientRect().width);
+				}).filter(function (width, index, list) {
+					return list.indexOf(width) === index;
+				}).length;
+			})).toBe(1);
+
+			/* The title is in the middle of the window, whatever room its buttons take. */
+			expect(await status.evaluate(function (node) {
+				var title = node.querySelector('.elemenx-window-title').getBoundingClientRect();
+				var box = node.getBoundingClientRect();
+
+				return Math.abs(title.left + title.width / 2 - (box.left + box.width / 2)) < 2;
+			})).toBe(true);
+
+			/* Sci-fi: glass in a thin line, the lines of a drawing around it, the body a dark well set into the panel, the overline an orange tag, the opening of a projection; the record of the fleet with numbered tabs. */
+			await game.getByRole('button', {name: 'Sci-fi'}).click();
+
+			/* Stats in pairs of cells, Sections with their heading in the letters of the theme, room in the window. */
+			expect(await status.evaluate(function (node) {
+				var name = getComputedStyle(node.querySelector('.elemenx-property-label'));
+				var value = getComputedStyle(node.querySelector('.elemenx-property-value'));
+				var title = getComputedStyle(node.querySelector('.elemenx-section-title'));
+
+				return [name.backgroundColor !== 'rgba(0, 0, 0, 0)', value.borderTopWidth, title.textTransform, title.color, getComputedStyle(node.querySelector('.elemenx-section-header')).borderBottomWidth, getComputedStyle(node.querySelector('.elemenx-window-body')).paddingTop];
+			})).toEqual([true, '1px', 'uppercase', 'rgb(242, 254, 255)', '1px', '10px']);
+
+			/* The selected cell of the bag wears brackets of light apart from it; an active item and the active slot are filled in a double frame. */
+			expect(await game.locator('.elemenx-game-inventory-cell[aria-selected="true"]').evaluate(function (node) {
+				var cell = node.getBoundingClientRect();
+				var mark = node.querySelector('.elemenx-game-inventory-mark');
+				var box = mark.getBoundingClientRect();
+
+				return [getComputedStyle(mark).backgroundImage.split('linear-gradient').length - 1, Math.round(cell.left - box.left), Math.round(box.bottom - cell.bottom)];
+			})).toEqual([4, 3, 3]);
+			expect(await game.getByRole('option', {name: /Ember rune/}).evaluate(function (node) {
+				return [node.classList.contains('active'), getComputedStyle(node).boxShadow.split('rgb').length - 1, getComputedStyle(node.querySelector('.elemenx-game-inventory-mark')).backgroundImage];
+			})).toEqual([true, 4, 'none']);
+			expect(await game.locator('.elemenx-game-slot.active').evaluate(function (node) {
+				return [node.getAttribute('aria-label'), getComputedStyle(node).boxShadow.split('rgb').length - 1];
+			})).toEqual(['Blink', 4]);
+
+			/* A window of systems: tabs, meters upwards and dials in sections, a table of cells set apart by gaps, its scrollbar a rail. */
+			await game.getByRole('button', {name: 'Systems'}).click();
+
+			systems = game.locator('.elemenx-window').filter({hasText: 'Systems'});
+
+			await expect(systems.getByRole('tab', {name: 'Power'})).toHaveAttribute('aria-selected', 'true');
+			await expect(systems.locator('.elemenx-meter.vertical')).toHaveCount(5);
+			await expect(systems.locator('.elemenx-meter.dial')).toHaveCount(3);
+			expect(await systems.getByRole('meter', {name: 'Core'}).evaluate(function (node) {
+				return [node.classList.contains('warning'), getComputedStyle(node.querySelector('.elemenx-meter-value')).fontWeight, getComputedStyle(node.querySelector('.elemenx-meter-label')).textTransform];
+			})).toEqual([true, '300', 'uppercase']);
+
+			/* Regression: the scrollbars of a game window do not show the scrollbar the tabs hide. */
+			expect(await systems.locator('.elemenx-tabs-list').evaluate(function (node) {
+				return getComputedStyle(node).scrollbarWidth;
+			})).toBe('none');
+
+			await systems.getByRole('tab', {name: 'Files'}).click();
+
+			expect(await systems.locator('.elemenx-table').evaluate(function (node) {
+				var head = getComputedStyle(node.querySelector('th'));
+				var selected = node.querySelector('tbody tr.selected td');
+
+				return [head.backgroundColor, selected.parentNode.querySelector('td').textContent.trim(), getComputedStyle(selected).backgroundImage.indexOf('linear-gradient') !== -1, getComputedStyle(node).borderSpacing, getComputedStyle(node.querySelector('tbody td + td')).borderInlineStartWidth, getComputedStyle(node.querySelector('tbody td')).borderBottomWidth, getComputedStyle(node.closest('.elemenx-table-box') || node.parentNode).scrollbarWidth];
+			})).toEqual(['rgb(69, 201, 217)', '06', true, '2px', '0px', '0px', 'auto']);
+
+			/* A Block in a game window takes the look of a section of the theme: a frame, its title on a band set into it. */
+			await systems.getByRole('tab', {name: 'Log'}).click();
+
+			expect(await systems.locator('.elemenx-block.framed').evaluate(function (node) {
+				var header = node.querySelector('.elemenx-block-header').getBoundingClientRect();
+				var frame = node.getBoundingClientRect();
+
+				return [getComputedStyle(node).borderTopWidth, getComputedStyle(node.querySelector('.elemenx-block-header')).backgroundImage.indexOf('linear-gradient') !== -1, Math.round(header.left - frame.left), Math.round(header.top - frame.top), node.querySelector('.elemenx-block-title').textContent, getComputedStyle(node.querySelector('.elemenx-block-title')).textTransform];
+			})).toEqual(['1px', true, 1, 1, 'Log', 'uppercase']);
+
+			await systems.getByRole('button', {name: 'Close'}).click();
+
+			await expect(systems).toHaveCount(0);
+
+			await game.getByRole('button', {name: 'Record'}).click();
+
+			record = game.locator('.elemenx-window').filter({hasText: 'Bureau of Fleet Personnel'});
+			tabs = record.locator('.elemenx-game-tabs');
+
+			await expect(record.locator('.elemenx-window-header .elemenx-window-overline')).toHaveText('Free Planets Fleets');
+			expect(await record.evaluate(function (node) {
+				var glass = getComputedStyle(node, '::before');
+
+				var well = getComputedStyle(node.querySelector('.elemenx-window-body'));
+
+				return [getComputedStyle(node).animationName, glass.backdropFilter.indexOf('blur') !== -1, glass.borderTopWidth, getComputedStyle(node, '::after').backgroundImage.indexOf('data:image/svg+xml') !== -1, well.backgroundColor !== 'rgba(0, 0, 0, 0)', well.borderTopWidth, well.marginLeft, getComputedStyle(node.querySelector('.elemenx-window-header .elemenx-window-overline')).backgroundColor, getComputedStyle(node.querySelector('.elemenx-window-title')).fontWeight];
+			})).toEqual(['elemenx-window-hologram', true, '1px', true, true, '1px', '8px', 'rgb(232, 100, 42)', '300']);
+			await expect(record).toHaveClass(/\bactive\b/);
+
+			await expect(tabs.getByRole('tab')).toHaveText([/01\s*Service/, /02\s*Awards/, /03\s*Training/, /04\s*Remarks/]);
+			await expect(tabs.getByRole('tab', {name: /Service/})).toHaveAttribute('aria-selected', 'true');
+
+			await tabs.getByRole('tab', {name: /Service/}).focus();
+
+			await page.keyboard.press('ArrowDown');
+
+			await expect(tabs.getByRole('tab', {name: /Awards/})).toBeFocused();
+			await expect(record.locator('.ui-kit-game-window .elemenx-window-overline')).toHaveText('Free Planets Defense Force · Awards');
+
+			await page.keyboard.press('End');
+
+			await expect(tabs.getByRole('tab', {name: /Remarks/})).toHaveAttribute('aria-selected', 'true');
+
+			await record.getByRole('button', {name: 'Close'}).click();
+
+			await expect(record).toHaveCount(0);
+
+			await game.getByRole('button', {name: 'Default'}).click();
+
+			expect(errors).toEqual([]);
+		});
+
+		test('game UI: bars, slots with keys and cooldowns, an inventory by keys and by dragging, a dialogue, a menu and the game themes', async function ({ page }) {
+			var errors = captureErrors(page);
+			var game;
+			var health;
+			var heal;
+			var bag;
+			var note;
+
+			await open(page, origin);
+
+			game = section(page, 'Game UI');
+			note = game.locator(':scope > .elemenx-section-header .elemenx-caption');
+			health = game.locator('.ui-kit-game-status .elemenx-game-bar.health');
+			heal = game.locator('.elemenx-game-slot[title="Heal"]');
+			bag = game.locator('.elemenx-window').filter({hasText: 'Bag'}).locator('.elemenx-game-inventory');
+
+			await game.locator('.elemenx-game-hud').scrollIntoViewIfNeeded();
+
+			/* A bar tells its value; a loss leaves its trail for a moment. */
+			await expect(health).toHaveAttribute('aria-valuenow', '82');
+			await expect(health).toHaveAttribute('aria-label', 'Health');
+
+			await game.getByRole('button', {name: 'Take a hit'}).click();
+
+			await expect(health).toHaveAttribute('aria-valuenow', '59');
+			await expect(health.locator('.elemenx-game-bar-value')).toHaveText('59 / 100');
+			expect(await health.evaluate(function (node) {
+				return getComputedStyle(node).getPropertyValue('--elemenx-game-bar-value').trim();
+			})).toBe('0.59');
+
+			/* A slot runs by its key and then cools down: no second use until it is ready. */
+			await page.locator('body').click({position: {x: 2, y: 2}});
+			await page.keyboard.press('2');
+			await page.keyboard.press('2');
+
+			await expect(note).toHaveText('Healed for 25');
+			await expect(health).toHaveAttribute('aria-valuenow', '84');
+			await expect(heal).toHaveClass(/\bcooling\b/);
+			await expect(heal.locator('.elemenx-game-slot-timer')).toHaveText(/^\d\.\d$/);
+			await expect(heal).toHaveAttribute('aria-keyshortcuts', '2');
+			await expect(heal).not.toHaveClass(/\bcooling\b/, {timeout: 8000});
+
+			await page.keyboard.press('4');
+
+			await expect(game.getByRole('button', {name: 'Health potion'}).locator('.elemenx-game-slot-count')).toHaveText('2');
+
+			/* A slot of the hotbar shows the card of what it holds too, beside it, under the pointer or the focus. */
+			await game.getByRole('button', {name: 'Fireball'}).hover();
+
+			await expect(game.getByRole('button', {name: 'Fireball'}).locator('.elemenx-game-inventory-card')).toContainText('Fireball');
+			await expect(game.getByRole('button', {name: 'Fireball'}).locator('.elemenx-game-inventory-card')).toContainText('Damage24–30');
+			expect(await game.getByRole('button', {name: 'Fireball'}).evaluate(function (node) {
+				var card = node.querySelector('.elemenx-game-inventory-card').getBoundingClientRect();
+				var slot = node.getBoundingClientRect();
+
+				return [card.width, card.left >= slot.right || card.right <= slot.left];
+			})).toEqual([240, true]);
+
+			await page.mouse.move(0, 0);
+
+			await expect(game.locator('.elemenx-game-slot .elemenx-game-inventory-card')).toHaveCount(0);
+
+			await game.getByRole('button', {name: 'Health potion'}).focus();
+
+			await expect(game.getByRole('button', {name: 'Health potion'}).locator('.elemenx-game-inventory-card')).toContainText('Common · Potion');
+
+			await game.getByRole('button', {name: 'Health potion'}).blur();
+
+			/* The inventory: the card of an item, Space to pick it up and put it down, dragging, Delete. */
+			await bag.getByRole('option', {name: 'Moonblade'}).click();
+
+			await expect(bag.locator('.elemenx-game-inventory-card')).toContainText('Moonblade');
+			await expect(bag.locator('.elemenx-game-inventory-card')).toContainText('Legendary · Sword');
+			await expect(bag.locator('.elemenx-game-inventory-card')).toContainText('Damage42–58');
+
+			/* The card is fixed to the viewport: the window that scrolls the bag does not cut it. */
+			expect(await bag.locator('.elemenx-game-inventory-card').evaluate(function (node) {
+				var card = node.getBoundingClientRect();
+				var body = node.closest('.elemenx-window-body').getBoundingClientRect();
+
+				return [getComputedStyle(node).position, card.right > body.right || card.left < body.left];
+			})).toEqual(['fixed', true]);
+
+			await page.keyboard.press('Space');
+			await page.keyboard.press('ArrowRight');
+			await page.keyboard.press('ArrowRight');
+			await page.keyboard.press('Space');
+
+			await expect(bag.locator('.elemenx-game-inventory-cell').nth(2)).toHaveAttribute('aria-label', 'Moonblade');
+			await expect(bag.locator('.elemenx-game-inventory-cell').nth(0)).toHaveAttribute('aria-label', 'Empty slot');
+			await expect(bag.locator('.elemenx-game-inventory-cell').nth(2)).toBeFocused();
+
+			await bag.getByRole('option', {name: 'Health potion × 5'}).dragTo(bag.locator('.elemenx-game-inventory-cell').nth(0));
+
+			await expect(bag.locator('.elemenx-game-inventory-cell').nth(0)).toHaveAttribute('aria-label', 'Health potion × 5');
+
+			await bag.getByRole('option', {name: 'Old map'}).focus();
+
+			await page.keyboard.press('Enter');
+
+			await expect(note).toHaveText('Used: Old map');
+
+			await page.keyboard.press('Delete');
+
+			await expect(note).toHaveText('Dropped: Old map');
+			await expect(bag.getByRole('option', {name: 'Old map'})).toHaveCount(0);
+
+			/* The dialogue types its line; a press shows the rest; then its choices. */
+			await game.locator('.elemenx-game-dialogue-text').click();
+
+			await expect(game.locator('.elemenx-game-dialogue-text')).toHaveText('Traveller! The northern road is closed: a storm came down from the peaks at dawn.');
+
+			await game.getByRole('button', {name: 'Continue'}).click();
+			await game.locator('.elemenx-game-dialogue-text').click();
+
+			await expect(game.locator('.elemenx-game-dialogue-choice')).toHaveCount(3);
+			await expect(game.getByRole('button', {name: /Hire a guide/})).toBeDisabled();
+
+			await game.locator('.elemenx-game-dialogue').press('2');
+
+			await expect(note).toHaveText('Chosen: Wait at the inn');
+
+			/* The pause menu: the arrows go round its items, Escape goes back. */
+			await game.getByRole('button', {name: 'Pause'}).click();
+
+			await expect(game.getByRole('button', {name: /Resume/})).toBeFocused();
+
+			await page.keyboard.press('ArrowUp');
+
+			await expect(game.getByRole('button', {name: 'Quit to title'})).toBeFocused();
+
+			await page.keyboard.press('Escape');
+
+			await expect(game.locator('.elemenx-game-menu')).toHaveCount(0);
+
+			/* The game themes set the tokens of the game components. */
+			await game.getByRole('button', {name: 'Fantasy'}).click();
+
+			await expect(page.locator('body')).toHaveAttribute('data-theme', 'fantasy');
+
+			/* The dialogue is a band set in the scene: no frame, lines of metal with flourishes over and under it. */
+			expect(await game.locator('.elemenx-game-dialogue').evaluate(function (node) {
+				var band = getComputedStyle(node, '::before');
+
+				return [band.borderRadius, band.borderImageSource, getComputedStyle(node, '::after').backgroundImage.split('data:image/svg+xml').length - 1, getComputedStyle(node.querySelector('.elemenx-game-dialogue-speaker')).color];
+			})).toEqual(['0px', 'none', 2, 'rgb(212, 190, 134)']);
+
+			/* A light panel: a thin frame of metal and small figures. */
+			expect(await game.locator('.elemenx-game-panel.light').first().evaluate(function (node) {
+				return [getComputedStyle(node, '::before').borderImageSource.indexOf('data:image/svg+xml') !== -1, getComputedStyle(node, '::before').borderTopWidth, getComputedStyle(node, '::after').backgroundImage.indexOf('data:image/svg+xml') !== -1, getComputedStyle(node, '::after').top];
+			})).toEqual([true, '3px', true, '-4px']);
+
+			/* In the fantasy theme the menu takes the figures of a primary window, a flourish under its title, and its items a frame of metal with points standing out of their ends. */
+			await game.getByRole('button', {name: 'Pause'}).click();
+
+			expect(await game.locator('.elemenx-game-menu').evaluate(function (node) {
+				var item = node.querySelector('.elemenx-game-menu-item');
+				var ends = getComputedStyle(item, '::after');
+
+				return [getComputedStyle(node, '::after').backgroundImage.split('data:image/svg+xml').length - 1, getComputedStyle(node.querySelector('.elemenx-game-menu-title'), '::after').height, getComputedStyle(item).borderImageSource.indexOf('data:image/svg+xml') !== -1, ends.backgroundImage.split('data:image/svg+xml').length - 1, ends.left, getComputedStyle(item).textAlign];
+			})).toEqual([1, '20px', true, 1, '-19px', 'center']);
+
+			await page.keyboard.press('Escape');
+
+			await expect(game.locator('.elemenx-game-menu')).toHaveCount(0);
+
+			await game.getByRole('button', {name: 'Sci-fi'}).click();
+
+			await expect(page.locator('body')).toHaveAttribute('data-theme', 'scifi');
+			expect(await game.locator('.elemenx-game-dialogue').evaluate(function (node) {
+				return [getComputedStyle(node, '::before').borderTopWidth, getComputedStyle(node, '::after').backgroundImage.indexOf('data:image/svg+xml') !== -1, getComputedStyle(node.querySelector('.elemenx-game-dialogue-speaker')).textTransform];
+			})).toEqual(['1px', true, 'uppercase']);
+
+			await game.getByRole('button', {name: 'Default'}).click();
+
+			await expect(page.locator('body')).not.toHaveAttribute('data-theme', 'scifi');
+			expect(errors).toEqual([]);
+		});
+
+		test('items move between the bag and the hotbar, piles join, skills stay out of the bag, and items lie on glass of their color', async function ({ page }) {
+			var errors = captureErrors(page);
+			var game;
+			var bag;
+			var slots;
+			var note;
+			var cells;
+
+			/* A drag with the pointer, slow enough for a frame to see each step, with the whole scene in view. */
+			async function drag (from, to) {
+				var start;
+				var end;
+
+				await game.locator('.elemenx-game-hud').evaluate(function (node) {
+					node.scrollIntoView({block: 'start'});
+				});
+
+				start = await from.boundingBox();
+				end = await to.boundingBox();
+
+				await page.mouse.move(start.x + start.width / 2, start.y + start.height / 2);
+				await page.mouse.down();
+				await page.mouse.move(start.x + start.width / 2 + 12, start.y + start.height / 2 + 12, {steps: 4});
+				await page.waitForTimeout(60);
+				await page.mouse.move(end.x + end.width / 2, end.y + end.height / 2, {steps: 10});
+				await page.waitForTimeout(120);
+				await page.mouse.up();
+			}
+
+			await open(page, origin);
+
+			game = section(page, 'Game UI');
+			note = game.locator(':scope > .elemenx-section-header .elemenx-caption');
+			bag = game.locator('.elemenx-window').filter({hasText: 'Bag'}).locator('.elemenx-game-inventory');
+			cells = bag.locator('.elemenx-game-inventory-cell');
+			slots = game.locator('.elemenx-game-hotbar .elemenx-game-slot');
+
+			/* The bag and the hotbar both in view: a drop outside the viewport hits nothing. */
+			await page.setViewportSize({width: 1280, height: 900});
+
+			await game.locator('.elemenx-game-hud').evaluate(function (node) {
+				node.scrollIntoView({block: 'start'});
+			});
+
+			await expect(slots).toHaveCount(6);
+			await expect(slots.nth(4)).toHaveAccessibleName('Empty slot');
+
+			/* In the fantasy theme an item is a painted tile of its color, lit from the middle, with a large light icon. */
+			await game.getByRole('button', {name: 'Fantasy'}).click();
+
+			expect(await bag.getByRole('option', {name: 'Health potion × 5'}).evaluate(function (node) {
+				var glass = getComputedStyle(node, '::before');
+
+				return [glass.backgroundColor, glass.opacity, getComputedStyle(node, '::after').backgroundImage.indexOf('radial-gradient') === 0, getComputedStyle(node.querySelector('.elemenx-icon')).scale];
+			})).toEqual(['rgb(168, 40, 44)', '0.78', true, '1.25']);
+
+			/* Items take a badge and classes of their own (the page frames the items of a quest). */
+			await expect(bag.getByRole('option', {name: 'Moonblade'}).locator('.elemenx-game-inventory-badge')).toHaveText('+5');
+			await expect(bag.getByRole('option', {name: 'Old map'})).toHaveClass(/\bquest\b/);
+			expect(await bag.getByRole('option', {name: 'Moonblade'}).evaluate(function (node) {
+				return getComputedStyle(node).boxShadow.indexOf('inset') !== -1;
+			})).toBe(true);
+
+			await game.getByRole('button', {name: 'Default'}).click();
+
+			/* From the bag onto an empty slot the item moves: it leaves the bag. */
+			await drag(bag.getByRole('option', {name: 'Ember rune × 2'}), slots.nth(4));
+
+			await expect(slots.nth(4)).toHaveAttribute('title', 'Ember rune');
+			await expect(slots.nth(4).locator('.elemenx-game-slot-count')).toHaveText('2');
+			await expect(bag.getByRole('option', {name: /Ember rune/})).toHaveCount(0);
+			await expect(note).toHaveText('Ember rune on 5');
+
+			/* Its key uses it up, one at a time. */
+			await page.locator('body').click({position: {x: 2, y: 2}});
+			await page.keyboard.press('5');
+
+			await expect(note).toHaveText('Used: Ember rune');
+			await expect(slots.nth(4).locator('.elemenx-game-slot-count')).toHaveCount(0);
+			await expect(slots.nth(4)).toHaveAttribute('title', 'Ember rune');
+
+			/* From the slot back into an empty cell of the bag. */
+			await drag(slots.nth(4), cells.nth(2));
+
+			await expect(cells.nth(2)).toHaveAttribute('aria-label', 'Ember rune');
+			await expect(slots.nth(4)).toHaveAccessibleName('Empty slot');
+
+			/* Piles of the same item join: in the bag, and from the hotbar into the bag. */
+			await drag(bag.getByRole('option', {name: 'Silverleaf × 4'}), bag.getByRole('option', {name: 'Silverleaf × 7'}));
+
+			await expect(bag.getByRole('option', {name: 'Silverleaf × 11'})).toHaveCount(1);
+			await expect(bag.getByRole('option', {name: /Silverleaf/})).toHaveCount(1);
+
+			await drag(slots.nth(3), bag.getByRole('option', {name: 'Health potion × 5'}));
+
+			await expect(bag.getByRole('option', {name: 'Health potion × 8'})).toHaveCount(1);
+			await expect(slots.nth(3)).toHaveAccessibleName('Empty slot');
+
+			/* A skill does not go into the bag; slots swap. */
+			await drag(slots.nth(0), cells.nth(5));
+
+			await expect(note).toHaveText('A skill does not go into the bag');
+			await expect(slots.nth(0)).toHaveAttribute('title', 'Fireball');
+			await expect(cells.nth(5)).toHaveAttribute('aria-label', 'Empty slot');
+
+			await drag(slots.nth(0), slots.nth(1));
+
+			await expect(slots.nth(0)).toHaveAttribute('title', 'Heal');
+			await expect(slots.nth(1)).toHaveAttribute('title', 'Fireball');
+			await expect(slots.nth(0)).toHaveAttribute('aria-keyshortcuts', '1');
+			expect(errors).toEqual([]);
+		});
+
+		test('a gamepad drives the page: the d-pad moves the focus, A presses, B goes back, and the prompts show its buttons', async function ({ page }) {
+			var errors = captureErrors(page);
+			var game;
+
+			/* A pad of the standard mapping that the test presses. */
+			await page.addInitScript(function () {
+				var pad = {id: 'Xbox Wireless Controller (STANDARD GAMEPAD Vendor: 045e Product: 0b13)', index: 0, connected: true, mapping: 'standard', axes: [0, 0, 0, 0], timestamp: 0, buttons: []};
+				var i = 0;
+
+				while (i < 17) {
+					pad.buttons.push({pressed: false, value: 0});
+
+					i++;
+				}
+
+				window.testPad = pad;
+
+				Object.defineProperty(navigator, 'getGamepads', {configurable: true, value: function () {
+					return [pad];
+				}});
+			});
+
+			await open(page, origin);
+
+			game = section(page, 'Game UI');
+
+			await game.locator('.elemenx-game-hud').scrollIntoViewIfNeeded();
+
+			async function press (index) {
+				await page.evaluate(function (button) {
+					window.testPad.buttons[button] = {pressed: true, value: 1};
+				}, index);
+
+				await page.waitForTimeout(100);
+
+				await page.evaluate(function (button) {
+					window.testPad.buttons[button] = {pressed: false, value: 0};
+				}, index);
+
+				await page.waitForTimeout(100);
+			}
+
+			/* The prompts show the buttons of the pad in use. */
+			await expect(game.locator('.elemenx-game-key-glyph').first()).toHaveText('A');
+			await expect(game.locator('.elemenx-game-key').first()).toHaveClass(/\bxbox\b/);
+
+			/* The d-pad moves the focus to the nearest control on its side; A presses it. */
+			await game.getByRole('button', {name: 'Heal', exact: true}).focus();
+
+			await press(15);
+
+			await expect(game.getByRole('button', {name: 'Blink'})).toBeFocused();
+
+			await press(0);
+
+			await expect(game.locator(':scope > .elemenx-section-header .elemenx-caption')).toHaveText('Blink');
+
+			/* A on the pause button opens the menu; the d-pad goes through its items; B goes back. */
+			await game.getByRole('button', {name: 'Pause'}).focus();
+
+			await press(0);
+
+			await expect(game.getByRole('button', {name: /Resume/})).toBeFocused();
+
+			await press(13);
+
+			await expect(game.getByRole('button', {name: 'Save game'})).toBeFocused();
+
+			await press(1);
+
+			await expect(game.locator('.elemenx-game-menu')).toHaveCount(0);
+
+			/* Another kind of pad: the prompts follow it. */
+			await page.evaluate(function () {
+				window.testPad.id = 'DualSense Wireless Controller (STANDARD GAMEPAD Vendor: 054c Product: 0ce6)';
+			});
+
+			await press(3);
+
+			await expect(game.locator('.elemenx-game-key-glyph').first()).toHaveText('✕');
+			expect(errors).toEqual([]);
+		});
+
+		test('a gamepad presses once when the system reports it twice, leans the stick one way, and B lets the focused control take Escape first', async function ({ page }) {
+			var errors = captureErrors(page);
+			var game;
+			var overlays;
+			var required;
+
+			/* One pad reported twice (XInput and HID), and a pad without the standard mapping. */
+			await page.addInitScript(function () {
+				function pad (index, mapping) {
+					var value = {id: 'Xbox Wireless Controller (Vendor: 045e Product: 0b13)', index: index, connected: true, mapping: mapping, axes: [0, 0, 0, 0], timestamp: 0, buttons: []};
+
+					while (value.buttons.length < 17)
+						value.buttons.push({pressed: false, value: 0});
+
+					return value;
+				}
+
+				window.testPads = [pad(0, 'standard'), pad(1, 'standard'), pad(2, '')];
+
+				Object.defineProperty(navigator, 'getGamepads', {configurable: true, value: function () {
+					return window.testPads;
+				}});
+			});
+
+			async function set (pads, change) {
+				await page.evaluate(function (detail) {
+					detail.Pads.forEach(function (index) {
+						var pad = window.testPads[index];
+
+						if (detail.Change.Button !== undefined)
+							pad.buttons[detail.Change.Button] = {pressed: !!detail.Change.Down, value: detail.Change.Down ? 1 : 0};
+
+						if (detail.Change.Axes)
+							pad.axes = detail.Change.Axes;
+					});
+				}, {Pads: pads, Change: change});
+
+				await page.waitForTimeout(150);
+			}
+
+			/* A page with no game on it: the pad works there too, from the first control in view. */
+			await page.goto(origin.URL + '/');
+
+			await expect(page.locator('a[href="/ui"]').first()).toBeVisible();
+
+			await set([0], {Button: 13, Down: true});
+			await set([0], {Button: 13, Down: false});
+
+			expect(await page.evaluate(function () {
+				return document.activeElement !== document.body;
+			})).toBe(true);
+
+			await open(page, origin);
+
+			game = section(page, 'Game UI');
+
+			await game.locator('.elemenx-game-hud').scrollIntoViewIfNeeded();
+
+			await expect(game.locator('.elemenx-game-key-glyph').first()).toHaveText('A');
+
+			/* Both reports of the pad press the d-pad: the focus moves one control, not two. */
+			await game.getByRole('button', {name: 'Heal', exact: true}).focus();
+
+			await set([0, 1], {Button: 15, Down: true});
+			await set([0, 1], {Button: 15, Down: false});
+
+			await expect(game.getByRole('button', {name: 'Blink'})).toBeFocused();
+
+			/* The stick down and to the right, leaning right: one move to the right, none down. */
+			await set([0], {Axes: [0.9, 0.6, 0, 0]});
+			await set([0], {Axes: [0, 0, 0, 0]});
+
+			await expect(game.getByRole('button', {name: 'Potion'})).toBeFocused();
+
+			/* A pad without the standard mapping: its button 0 is no A, nothing is pressed. */
+			await set([2], {Button: 0, Down: true});
+			await set([2], {Button: 0, Down: false});
+
+			await expect(game.locator(':scope > .elemenx-section-header .elemenx-caption')).toHaveText('Fireball 1 · Heal 2 · Blink 3 · Potion 4');
+
+			/* B in a dialog: a control that takes Escape keeps it; otherwise the dialog is cancelled (and shakes). */
+			overlays = section(page, 'Overlays');
+			required = page.getByRole('dialog', {name: 'Terms of the beta'});
+
+			await overlays.getByRole('button', {name: 'Required answer'}).click();
+
+			await required.evaluate(function (node) {
+				var button = node.querySelector('button');
+
+				button.addEventListener('keydown', function (event) {
+					if (event.key === 'Escape')
+						event.preventDefault();
+				});
+
+				button.focus();
+			});
+
+			await set([0], {Button: 1, Down: true});
+			await set([0], {Button: 1, Down: false});
+
+			await expect(required).not.toHaveClass(/refused/);
+
+			await required.evaluate(function (node) {
+				node.focus();
+			});
+
+			await set([0], {Button: 1, Down: true});
+			await set([0], {Button: 1, Down: false});
+
+			await expect(required).toHaveClass(/refused/);
+			await expect(required).toBeVisible();
+
+			expect(errors).toEqual([]);
 		});
 
 		test('tile grid places tiles in cells, keeps locked ones, starts groups and runs group actions', async function ({ page }) {
@@ -2461,6 +5826,34 @@ for (const origin of origins) {
 
 			await expect(page.getByRole('dialog', {name: 'Filters'})).toBeVisible();
 
+			/* The shake of a drawer that waits for an answer keeps its slide: it does not slide in again after it. */
+			expect(await page.getByRole('dialog', {name: 'Filters'}).evaluate(async function (node) {
+				var starts = [];
+
+				await new Promise(function (resolve) {
+					window.setTimeout(resolve, 400);
+				});
+
+				node.addEventListener('animationstart', function (event) {
+					if (event.target === node)
+						starts.push(event.animationName);
+				});
+
+				node.classList.add('refused');
+
+				await new Promise(function (resolve) {
+					window.setTimeout(resolve, 500);
+				});
+
+				node.classList.remove('refused');
+
+				await new Promise(function (resolve) {
+					window.setTimeout(resolve, 300);
+				});
+
+				return starts;
+			})).toEqual(['elemenx-drawer-refuse']);
+
 			await page.keyboard.press('Escape');
 
 			await expect(page.getByRole('dialog', {name: 'Filters'})).toBeHidden();
@@ -2495,6 +5888,40 @@ for (const origin of origins) {
 			await expect(commands.locator('.elemenx-section-header')).toContainText('Last: Tour: done');
 		});
 
+		test('devices: the browser tells which of Push, Serial, USB and NFC it has, and each calls back its result or its error', async function ({ context, page }) {
+			var devices;
+			var state;
+			var row;
+
+			await context.grantPermissions(['notifications']);
+
+			await open(page, origin);
+
+			devices = page.locator('.ui-kit-devices');
+			state = page.locator('#ui-kit-devices-state');
+			row = function (name) {
+				return devices.locator('li').filter({hasText: name});
+			};
+
+			await devices.scrollIntoViewIfNeeded();
+
+			/* Desktop Chrome: push, serial ports and USB; NFC is for Android. */
+			await expect(row('Push').locator('.elemenx-badge')).toHaveText('supported');
+			await expect(row('Serial').locator('.elemenx-badge')).toHaveText('supported');
+			await expect(row('USB').locator('.elemenx-badge')).toHaveText('supported');
+			await expect(row('NFC').locator('.elemenx-badge')).toHaveText('not here');
+
+			/* A notification from the page, allowed: done. */
+			await row('Push').getByRole('button').click();
+
+			await expect(state).toHaveText('Push: done');
+
+			/* No NFC here: the error says so. */
+			await row('NFC').getByRole('button').click();
+
+			await expect(state).toHaveText('NFC: NotSupportedError · Elemenx NFC: this browser has no Web NFC');
+		});
+
 		test('biometric check, inactivity and permissions', async function ({ context, page }) {
 			var cdp = await context.newCDPSession(page);
 			var device;
@@ -2505,7 +5932,7 @@ for (const origin of origins) {
 			/* WebAuthn takes a domain, not an IP address, as the site: the page opens on localhost. */
 			await page.goto(origin.URL.replace('127.0.0.1', 'localhost') + '/ui');
 
-			await expect(page.locator('.elemenx-workspace').first()).toBeVisible({timeout: 20000});
+			await ready(page);
 
 			device = section(page, 'Security and device');
 
@@ -2548,6 +5975,74 @@ for (const origin of origins) {
 			await device.getByRole('button', {name: 'Stop'}).click();
 
 			await expect(page.locator('#ui-kit-idle-state')).toHaveText('State: stopped');
+		});
+
+		test('the arrows scroll a list of suggestions to the option they choose: tags and code completions', async function ({ page }) {
+			var topics;
+			var editor;
+			var popup;
+
+			/* Whether the active option of a list shows inside the list, and how far the list scrolled. */
+			async function shown (list) {
+				return list.evaluate(function (node) {
+					var item = node.querySelector('.active');
+					var box = node.getBoundingClientRect();
+					var rect = item.getBoundingClientRect();
+
+					return {Inside: rect.top >= box.top - 1 && rect.bottom <= box.bottom + 1, Scrolled: node.scrollTop > 0};
+				});
+			}
+
+			await open(page, origin);
+
+			/* Tags: the arrow up from the first suggestion goes round to the last, out of view at first. */
+			topics = field(page, 'Topics');
+
+			await topics.scrollIntoViewIfNeeded();
+			await topics.locator('input.elemenx-tags-control').click();
+
+			await page.keyboard.press('ArrowDown');
+
+			popup = page.locator('.elemenx-popup:not([hidden])');
+
+			await expect(popup.locator('.elemenx-option').first()).toHaveClass(/active/);
+
+			/* A short list, so that the last suggestion is out of view. */
+			await popup.evaluate(function (node) {
+				node.style.maxHeight = '80px';
+			});
+
+			await page.keyboard.press('ArrowUp');
+
+			await expect(popup.locator('.elemenx-option').last()).toHaveClass(/active/);
+			await expect.poll(function () {
+				return shown(popup);
+			}).toEqual({Inside: true, Scrolled: true});
+
+			await page.keyboard.press('Escape');
+
+			/* Code completions: Ctrl+Space lists all of them; the arrow up goes round to the last. */
+			editor = page.locator('.elemenx-code-editor').first();
+
+			await editor.scrollIntoViewIfNeeded();
+			await editor.locator('textarea').evaluate(function (node) {
+				node.focus();
+				node.setSelectionRange(node.value.length, node.value.length);
+			});
+
+			await page.keyboard.press('Enter');
+			await page.keyboard.press('Control+Space');
+
+			popup = editor.locator('.elemenx-code-editor-popup');
+
+			await expect(editor.locator('.elemenx-code-editor-suggestion').first()).toHaveClass(/active/);
+
+			await page.keyboard.press('ArrowUp');
+
+			await expect(editor.locator('.elemenx-code-editor-suggestion').last()).toHaveClass(/active/);
+			await expect.poll(function () {
+				return shown(popup);
+			}).toEqual({Inside: true, Scrolled: true});
 		});
 
 		test('tag input adds tags by keys, separators, suggestions and paste, and refuses what it must not take', async function ({ page }) {
@@ -2695,6 +6190,38 @@ for (const origin of origins) {
 			await page.keyboard.press('Enter');
 
 			await expect(city.locator('input')).toHaveValue('Riga');
+		});
+
+		test('city input finds the cities of GeoNames by name, without diacritics, and tells their time zone', async function ({ page }) {
+			var city;
+
+			await open(page, origin);
+
+			city = field(page, 'World city');
+
+			await city.scrollIntoViewIfNeeded();
+			await city.locator('input').click();
+
+			await page.keyboard.press('ArrowDown');
+
+			await expect(page.locator('.elemenx-popup:not([hidden]) .elemenx-popup-empty')).toHaveText('Type the name of a city');
+
+			await page.keyboard.type('zurich');
+
+			await expect(page.locator('.elemenx-popup:not([hidden]) .elemenx-option-label').first()).toHaveText('Zürich', {timeout: 15000});
+			await expect(page.locator('.elemenx-popup:not([hidden]) .elemenx-option-hint').first()).toContainText('Switzerland · ');
+
+			await page.keyboard.press('Enter');
+
+			await expect(city.locator('input')).toHaveValue('Zürich');
+			await expect(city.locator('.elemenx-caption')).toContainText('Zürich, Zurich, Switzerland · Europe/Zurich (UTC+0');
+
+			await city.locator('input').click();
+
+			await page.keyboard.press('Control+A');
+			await page.keyboard.type('qqqzzz');
+
+			await expect(page.locator('.elemenx-popup:not([hidden]) .elemenx-popup-empty')).toHaveText('No city found');
 		});
 
 		test('date range picks two days in either order, by pointer or keys, and from presets', async function ({ page }) {
@@ -2867,6 +6394,42 @@ for (const origin of origins) {
 			await page.keyboard.press('Enter');
 
 			await expect(page.locator('#ui-kit-virtual-state')).toHaveText('Picked: Row 100000');
+		});
+
+		test('pagination shows its parts by choice and as many numbers around the page and at the ends as asked', async function ({ page }) {
+			var data;
+			var wide;
+			var compact;
+
+			await open(page, origin);
+
+			data = section(page, 'Trees, tables and long lists');
+			wide = data.getByRole('navigation', {name: 'Wide pages'});
+			compact = data.getByRole('navigation', {name: 'Compact pages'});
+
+			/* Two numbers at each end and two on each side of the page; a gap of a single page shows that page. */
+			await expect(wide.locator('.elemenx-pagination-page:not([aria-label])')).toHaveText(['1', '2', '3', '11', '12']);
+			await expect(wide.getByRole('button', {name: 'First page'})).toHaveCount(0);
+			await expect(wide.getByRole('button', {name: 'Next page'})).toBeVisible();
+
+			await wide.locator('.elemenx-pagination-page', {hasText: /^3$/}).click();
+
+			await expect(page.locator('#ui-kit-results-page')).toHaveText('Results page 3');
+			await expect(wide.locator('.elemenx-pagination-page:not([aria-label])')).toHaveText(['1', '2', '3', '4', '5', '11', '12']);
+
+			await wide.locator('.elemenx-pagination-page', {hasText: /^5$/}).click();
+
+			await expect(wide.locator('.elemenx-pagination-page:not([aria-label])')).toHaveText(['1', '2', '3', '4', '5', '6', '7', '11', '12']);
+			await expect(wide.locator('.elemenx-pagination-gap')).toHaveCount(1);
+
+			/* Without numbers: the range and the previous and next buttons. */
+			await expect(compact.locator('.elemenx-pagination-pages')).toHaveCount(0);
+			await expect(compact.locator('.elemenx-pagination-range')).toHaveText('81–100 of 240');
+
+			await compact.getByRole('button', {name: 'Next page'}).click();
+
+			await expect(page.locator('#ui-kit-results-page')).toHaveText('Results page 6');
+			await expect(wide.locator('.elemenx-pagination-page[aria-current="page"]')).toHaveText('6');
 		});
 
 		test('table filters by text, list and number, pages its rows and shows tree rows', async function ({ page }) {
@@ -3143,11 +6706,13 @@ for (const origin of origins) {
 			var iso;
 			var day;
 			var box;
+			var step;
 
 			await open(page, origin);
 
 			charts = section(page, 'Charts and calendar');
 			calendar = charts.locator('.elemenx-cal');
+
 			note = charts.locator('.elemenx-section-header');
 			iso = function (offset) {
 				var date = new Date();
@@ -3162,36 +6727,47 @@ for (const origin of origins) {
 
 			await calendar.scrollIntoViewIfNeeded();
 
-			/* Month: a day to the right keeps the times. */
+			/* The week starts on Monday by default (regression: it followed the locale, Sunday for en). */
+			await expect(calendar.locator('.elemenx-cal-weekday').first()).toHaveText(/^Mo/);
+
+			/* Month: a day aside keeps the times; to the right, or to the left from the last day of a week row. */
 			box = await calendar.locator('.elemenx-cal-event', {hasText: 'Retrospective'}).boundingBox();
+			step = await calendar.locator('.elemenx-cal-event', {hasText: 'Retrospective'}).evaluate(function (node) {
+				var cell = node.closest('.elemenx-cal-day');
+
+				return cell.nextElementSibling && cell.nextElementSibling.getBoundingClientRect().top === cell.getBoundingClientRect().top ? 1 : -1;
+			});
 
 			await page.mouse.move(box.x + 20, box.y + 8);
 			await page.mouse.down();
-			await page.mouse.move(box.x + 20 + box.width + 12, box.y + 8, {steps: 8});
+			await page.mouse.move(box.x + 20 + step * (box.width + 12), box.y + 8, {steps: 8});
 
-			await expect(calendar.locator('.elemenx-cal-day.drop')).toHaveAttribute('data-date', iso(3));
+			await expect(calendar.locator('.elemenx-cal-day.drop')).toHaveAttribute('data-date', iso(2 + step));
 			await expect(calendar.locator('.elemenx-cal-event.dragged')).toHaveCount(1);
 
 			await page.mouse.up();
 
-			await expect(note).toContainText('Moved: Retrospective → ' + iso(3) + ' 15:00 – ' + iso(3) + ' 16:00');
-			expect(await day('Retrospective')).toBe(iso(3));
+			await expect(note).toContainText('Moved: Retrospective → ' + iso(2 + step) + ' 15:00 – ' + iso(2 + step) + ' 16:00');
+			expect(await day('Retrospective')).toBe(iso(2 + step));
 
-			/* Week: another day and time, in quarters of an hour, with a shadow while dragging. */
+			/* Week: another day and time, in quarters of an hour, with a shadow while dragging; to the right, or to the left from the last day of the week (regression: the test failed on the last day). */
 			await calendar.getByRole('button', {name: 'Week'}).click();
 			await calendar.locator('.elemenx-cal-week-body').scrollIntoViewIfNeeded();
 
 			box = await calendar.locator('.elemenx-cal-block', {hasText: 'Lunch talk'}).boundingBox();
+			step = await calendar.locator('.elemenx-cal-block', {hasText: 'Lunch talk'}).evaluate(function (node) {
+				return node.closest('.elemenx-cal-column').nextElementSibling ? 1 : -1;
+			});
 
 			await page.mouse.move(box.x + 20, box.y + 6);
 			await page.mouse.down();
-			await page.mouse.move(box.x + 20 + box.width + 12, box.y + 6 + 96, {steps: 10});
+			await page.mouse.move(box.x + 20 + step * (box.width + 12), box.y + 6 + 96, {steps: 10});
 
 			await expect(calendar.locator('.elemenx-cal-shadow')).toHaveText('14:30 – 15:15');
 
 			await page.mouse.up();
 
-			await expect(note).toContainText('Moved: Lunch talk → ' + iso(1) + ' 14:30 – ' + iso(1) + ' 15:15');
+			await expect(note).toContainText('Moved: Lunch talk → ' + iso(step) + ' 14:30 – ' + iso(step) + ' 15:15');
 			await expect(calendar.locator('.elemenx-cal-shadow')).toHaveCount(0);
 
 			/* The lower edge: the end moves, the start stays. */

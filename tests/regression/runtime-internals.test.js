@@ -17,7 +17,9 @@ var KnownGlobals = [
 	'MutationObserver', 'NodeFilter', 'Number', 'Object', 'Proxy', 'Reflect', 'RegExp', 'Set', 'String', 'Symbol',
 	'TextDecoder', 'TextEncoder', 'TypeError', 'URL', 'Uint32Array', 'Uint8Array', 'WeakMap', 'WeakSet', 'XMLHttpRequest',
 	'clearTimeout', 'console', 'decodeURIComponent', 'document', 'encodeURIComponent', 'globalThis', 'parseInt', 'self',
-	'setTimeout', 'undefined'
+	'setTimeout', 'undefined',
+	/* The box of an isolated build (elemenx build --widget) gets the copy of the framework. */
+	'ElemenxIsolated'
 ];
 
 var root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');

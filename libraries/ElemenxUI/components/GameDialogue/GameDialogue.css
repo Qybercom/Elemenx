@@ -1,0 +1,137 @@
+.elemenx-game-dialogue {
+	display: flex;
+	align-items: flex-start;
+	gap: 16px;
+	padding: 16px 20px;
+	outline: none;
+}
+
+.elemenx-game-dialogue-portrait {
+	flex: none;
+	width: 96px;
+	height: 96px;
+	object-fit: cover;
+	border: var(--elemenx-game-dialogue-portrait-frame);
+	border-image: var(--elemenx-game-dialogue-portrait-frame-image);
+	border-radius: var(--elemenx-game-dialogue-portrait-radius);
+	box-shadow: var(--elemenx-game-dialogue-portrait-shadow);
+}
+
+.elemenx-game-dialogue-body {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	gap: 8px;
+	min-width: 0;
+}
+
+.elemenx-game-dialogue-speaker {
+	color: var(--elemenx-game-accent);
+	font-family: var(--elemenx-game-title-font);
+	font-size: var(--elemenx-font-size-large);
+	letter-spacing: var(--elemenx-game-letter-spacing);
+	text-transform: var(--elemenx-game-text-transform);
+}
+
+.elemenx-game-dialogue-text {
+	min-height: 3em;
+	margin: 0;
+	font-size: var(--elemenx-font-size-large);
+	line-height: 1.5;
+	white-space: pre-wrap;
+	cursor: pointer;
+}
+
+.elemenx-game-dialogue-caret {
+	display: inline-block;
+	width: 0.5em;
+	height: 1em;
+	margin-inline-start: 2px;
+	vertical-align: text-bottom;
+	background: var(--elemenx-game-accent);
+	animation: elemenx-game-dialogue-blink 1s steps(1) infinite;
+}
+
+@keyframes elemenx-game-dialogue-blink {
+	50% {
+		opacity: 0;
+	}
+}
+
+.elemenx-game-dialogue-choices {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.elemenx-game-dialogue-choice {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: var(--elemenx-game-dialogue-choice-padding);
+	background: var(--elemenx-game-dialogue-choice);
+	border: var(--elemenx-game-dialogue-choice-frame);
+	border-image: var(--elemenx-game-dialogue-choice-frame-image);
+	border-radius: var(--elemenx-game-cell-radius);
+	color: var(--elemenx-game-text);
+	font: inherit;
+	text-align: start;
+	cursor: pointer;
+}
+
+.elemenx-game-dialogue-choice:hover:not(:disabled),
+.elemenx-game-dialogue-choice:focus-visible {
+	outline: none;
+	background: var(--elemenx-game-dialogue-choice-hover);
+	color: var(--elemenx-game-dialogue-choice-hover-text);
+	filter: brightness(1.15);
+}
+
+.elemenx-game-dialogue-choice:focus-visible {
+	box-shadow: var(--elemenx-game-glow);
+}
+
+/* The next button takes the look of an item of GameMenu: a button of the first rank. */
+.elemenx-game-dialogue-next {
+	position: relative;
+	display: flex;
+	align-self: var(--elemenx-game-dialogue-next-align);
+	align-items: center;
+	gap: 8px;
+	margin: var(--elemenx-game-dialogue-next-margin);
+	padding: var(--elemenx-game-dialogue-next-padding);
+	background: var(--elemenx-game-menu-item);
+	border: var(--elemenx-game-menu-item-frame);
+	border-image: var(--elemenx-game-menu-item-frame-image);
+	border-radius: var(--elemenx-game-cell-radius);
+	box-shadow: var(--elemenx-game-menu-item-shadow);
+	color: var(--elemenx-game-text);
+	font: inherit;
+	cursor: pointer;
+}
+
+.elemenx-game-dialogue-next::after {
+	position: absolute;
+	inset: var(--elemenx-game-menu-item-ornament-inset);
+	background: var(--elemenx-game-menu-item-ornament);
+	content: '';
+	pointer-events: none;
+}
+
+.elemenx-game-dialogue-next:hover,
+.elemenx-game-dialogue-next:focus-visible {
+	outline: none;
+	background: var(--elemenx-game-menu-item-hover);
+	box-shadow: var(--elemenx-game-menu-item-shadow), var(--elemenx-game-glow);
+	color: var(--elemenx-game-menu-item-hover-text);
+}
+
+.elemenx-game-dialogue-choice:disabled {
+	opacity: 0.48;
+	cursor: default;
+}
+
+.elemenx-game-dialogue-number {
+	color: var(--elemenx-game-accent);
+	font-weight: var(--elemenx-font-weight-bold);
+}

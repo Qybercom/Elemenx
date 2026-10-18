@@ -1,0 +1,21 @@
+<div class="elemenx-mixer-channel" role="group" [class]="[Master ? 'master' : '', Mute ? 'muted' : '', Solo ? 'soloed' : '', Silenced ? 'silenced' : '', Disabled ? 'disabled' : '']" [attribute.aria-label]="Label || null" [attribute.style]="Style(Color)">
+	<span class="elemenx-mixer-name" [attribute.title]="Label || null">{{Label}}</span>
+	<div class="elemenx-mixer-knobs" *if="(Knobs || []).length">
+		<Knob *for="knob of Knobs" *key="knob.Label" Size="small" [value]="knob.Value || 0" [min]="knob.Min === undefined ? -12 : knob.Min" [max]="knob.Max === undefined ? 12 : knob.Max" [origin]="knob.Origin === undefined ? 0 : knob.Origin" [default]="knob.Default === undefined ? 0 : knob.Default" [unit]="knob.Unit || ''" [label]="knob.Label" [disabled]="!!Disabled" (input)="Turned" />
+	</div>
+	<Knob *if="ShowPan" Size="small" [value]="Pan" Min="-100" Max="100" Origin="0" Default="0" [label]="$T('ui.mixer.pan')" [disabled]="!!Disabled" (input)="Panned" />
+	<div class="elemenx-mixer-buttons">
+		<button class="elemenx-mixer-toggle mute" type="button" [attribute.aria-pressed]="String(!!Mute)" [attribute.aria-label]="$T('ui.mixer.mute') + (Label ? ' ' + Label : '')" [attribute.title]="$T('ui.mixer.mute')" [disabled]="!!Disabled" (click)="MuteToggled">M</button>
+		<button class="elemenx-mixer-toggle solo" type="button" *if="!Master" [attribute.aria-pressed]="String(!!Solo)" [attribute.aria-label]="$T('ui.mixer.solo') + (Label ? ' ' + Label : '')" [attribute.title]="$T('ui.mixer.solo')" [disabled]="!!Disabled" (click)="SoloToggled">S</button>
+	</div>
+	<div class="elemenx-mixer-strip">
+		<Slider Orientation="vertical" [value]="Volume" [min]="Min" [max]="Max" Step="0.5" [marks]="Scale(Min, Max)" Unit=" dB" [label]="$T('ui.mixer.volume') + (Label ? ' ' + Label : '')" [disabled]="!!Disabled" (input)="Faded" />
+		<span class="elemenx-mixer-meter" aria-hidden="true">
+			<span class="elemenx-mixer-bar" *for="bar of Bars(Level, Peak)" *key="bar.Key" [attribute.style]="bar.Style">
+				<span class="elemenx-mixer-fill"></span>
+				<span class="elemenx-mixer-peak" *if="bar.Peak"></span>
+			</span>
+		</span>
+	</div>
+	<span class="elemenx-mixer-readout">{{Decibels(Volume)}}</span>
+</div>

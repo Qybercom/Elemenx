@@ -1,7 +1,13 @@
-<div class="elemenx-input elemenx-chat-composer elemenx-popup-anchor" [class.disabled]="Disabled">
-	<Button *if="Attach" Icon="attachment" Title="Attach" Variant="ghost" Size="small" [disabled]="Disabled" (click)="Attached" />
-	<textarea class="elemenx-input-control" rows="1" [value]="Value" [placeholder]="Placeholder" [disabled]="Disabled" aria-label="Message" (input)="Typed" (keydown)="Key"></textarea>
-	<Button *if="Emoji && Emoji !== 'false'" Icon="smile" Title="Emoji and stickers" Variant="ghost" Size="small" [disabled]="Disabled" [pressed]="Picking ? true : null" (click)="Pick" />
-	<Button Icon="send" Title="Send" Variant="primary" Size="small" Shape="round" [disabled]="Disabled || !String(Value || '').trim()" (click)="Send" />
-	<div class="elemenx-popup elemenx-chat-picker" data-placement="top-start" data-match-width="false" *popup="Picking" (dismiss)="Dismissed"><ExpressionPicker *if="Picking" [stickers]="Stickers" (pick)="Picked" (dismiss)="Dismissed" /></div>
+<div class="elemenx-input elemenx-chat-composer" [class.disabled]="Disabled">
+	<Button *if="Attach" Icon="attachment" [title]="$T('ui.chatComposer.attach')" Variant="ghost" Size="small" [disabled]="Disabled" (click)="Attached" />
+	<textarea class="elemenx-input-control" rows="1" [value]="Value" [placeholder]="(Placeholder || $T('ui.chatComposer.placeholder'))" [disabled]="Disabled" [attribute.aria-label]="$T('ui.chatComposer.message')" [attribute.aria-controls]="Hints.length || HintStickers.length ? HintsID : null" [attribute.aria-activedescendant]="HintKeyboard && Hints.length ? HintsID + '-' + HintIndex : null" (input)="Typed" (keydown)="Key" (keyup)="Moved" (click)="Moved" (blur)="Left"></textarea>
+	<span class="elemenx-popup-anchor elemenx-chat-emoji" *if="Emoji && Emoji !== 'false'">
+		<Button Icon="smile" [title]="$T('ui.chatComposer.expressions')" Variant="ghost" Size="small" [disabled]="Disabled" [pressed]="Picking ? true : null" (click)="Pick" />
+		<div class="elemenx-popup elemenx-chat-picker" data-placement="top-end" data-match-width="false" *popup="Picking" (dismiss)="Dismissed"><ExpressionPicker *if="Picking" [stickers]="Stickers" (pick)="Picked" (dismiss)="Dismissed" /></div>
+	</span>
+	<Button Icon="send" [title]="$T('ui.chatComposer.send')" Variant="primary" Size="small" Shape="round" [disabled]="Disabled || !String(Value || '').trim()" (click)="Send" />
+	<div class="elemenx-chat-hints" role="listbox" [attribute.id]="HintsID" *if="Hints.length || HintStickers.length" [class.stickers]="HintStickers.length > 0" [attribute.aria-label]="$T('ui.chatComposer.suggestions')" (mousedown)="HoldHint">
+		<button class="elemenx-chat-hint" type="button" role="option" *for="item of Hints" [attribute.id]="HintsID + '-' + $index" [attribute.data-index]="$index" [attribute.aria-selected]="HintKeyboard && $index === HintIndex ? 'true' : 'false'" [class.active]="HintKeyboard && $index === HintIndex" [attribute.aria-label]="item.Name" [attribute.title]="item.Name" (click)="HintPicked">{{item.Char}}</button>
+		<button class="elemenx-chat-hint sticker" type="button" role="option" *for="item of HintStickers" [attribute.data-index]="$index" aria-selected="false" [attribute.aria-label]="item.Title" [attribute.title]="item.Title" (click)="StickerHintPicked"><img [src]="item.URL" alt="" /></button>
+	</div>
 </div>

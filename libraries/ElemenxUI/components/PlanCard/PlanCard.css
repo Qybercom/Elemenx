@@ -120,7 +120,7 @@
 
 .elemenx-plan-features li .elemenx-caption {
 	flex-basis: 100%;
-	padding-left: 24px;
+	padding-inline-start: 24px;
 }
 
 .elemenx-plan-footer {

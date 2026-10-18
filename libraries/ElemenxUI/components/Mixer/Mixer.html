@@ -1,0 +1,6 @@
+<div class="elemenx-mixer" role="group" [attribute.aria-label]="Label || $T('ui.mixer.label')">
+	<div class="elemenx-mixer-channels">
+		<MixerChannel *for="channel of Channels" *key="channel.ID" [id]="channel.ID" [label]="channel.Label || ''" [color]="channel.Color || ''" [volume]="Value(channel.Volume, 0)" [pan]="Value(channel.Pan, 0)" [mute]="!!channel.Mute" [solo]="!!channel.Solo" [silenced]="Soloing(Channels, Version) && !channel.Solo" [level]="Value(channel.Level, null)" [peak]="Value(channel.Peak, null)" [knobs]="channel.Knobs || []" [min]="Min" [max]="Max" (change)="Changed" />
+	</div>
+	<MixerChannel *if="Master" ID="master" Master="true" [label]="Master.Label || $T('ui.mixer.master')" [color]="Master.Color || ''" [volume]="Value(Master.Volume, 0)" [pan]="Value(Master.Pan, 0)" [mute]="!!Master.Mute" [level]="Value(Master.Level, null)" [peak]="Value(Master.Peak, null)" [knobs]="Master.Knobs || []" [min]="Min" [max]="Max" (change)="Changed" />
+</div>

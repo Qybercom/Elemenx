@@ -54,7 +54,7 @@ Elemenx.Service('Emoji', {
 
 	/* The language of the names: Locale, or the language of the page, when there are names in it; English otherwise. */
 	Language: function () {
-		var locale = String(this.Locale || (typeof navigator !== 'undefined' && navigator.language) || 'en').toLowerCase().split('-')[0];
+		var locale = String(this.Locale || Elemenx.Locale.Language()).toLowerCase().split('-')[0];
 
 		return this.Locales.indexOf(locale) !== -1 ? locale : 'en';
 	},
@@ -259,6 +259,22 @@ Elemenx.Service('Emoji', {
 		return this.Index[this.Plain(char).replace(/\uD83C[\uDFFB-\uDFFF]/g, '')] || null;
 	},
 
+	/* The emoji a text is made of when it is one emoji and nothing else (spaces aside), or ''. Needs the data loaded. */
+	Single: function (text) {
+		var value = String(text || '').trim();
+		var parts;
+
+		if (!value || value.length > 32) return '';
+
+		if (typeof Intl !== 'undefined' && Intl.Segmenter) {
+			parts = Array.from(new Intl.Segmenter('en', {granularity: 'grapheme'}).segment(value));
+
+			if (parts.length !== 1) return '';
+		}
+
+		return this.Find(value) ? value : '';
+	},
+
 	/* Adds keywords of a language: {'😀': 'smile happy'}. */
 	Keywords: function (locale, map) {
 		var char;
@@ -285,7 +301,7 @@ Elemenx.Service('Emoji', {
 
 		if (emoji.Region && typeof Intl !== 'undefined' && Intl.DisplayNames) {
 			try {
-				regions = this.Regions || (this.Regions = new Intl.DisplayNames([this.Locale || navigator.language || 'en'], {type: 'region'}));
+				regions = this.Regions || (this.Regions = new Intl.DisplayNames([this.Locale || Elemenx.Locale.Language()], {type: 'region'}));
 
 				return regions.of(emoji.Region);
 			}

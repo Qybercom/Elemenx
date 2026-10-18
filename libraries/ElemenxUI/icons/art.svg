@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+	<!-- Art: <Icon Name="art:palette" />. -->
+	<!-- Paint -->
+	<symbol id="palette" viewBox="0 0 24 24"><path d="M12 3C7 3 3 7 3 12S7 21 12 21C13.4 21 14 20.1 14 19C14 17.6 13 17.3 13 16.2C13 15 14 14.5 15 14.5H17.5C19.5 14.5 21 13 21 11C21 6.6 17 3 12 3Z"/><circle cx="7.5" cy="11.5" r="1.2"/><circle cx="10" cy="7.3" r="1.2"/><circle cx="14.5" cy="7.3" r="1.2"/><circle cx="17.2" cy="10.6" r="1.2"/></symbol>
+	<symbol id="brush" viewBox="0 0 24 24"><path d="M9.5 14.5L20 4M8 13.5L10.5 16"/><path d="M8.2 13.3C6 13.3 4.8 15 4.8 16.8C4.8 18.5 4 19.5 2.5 20.5C6 21.5 9.5 20.5 10.4 18.4C10.9 17.3 10.8 16.3 10.4 15.7"/></symbol>
+	<symbol id="paint-roller" viewBox="0 0 24 24"><rect x="3" y="3" width="15" height="5" rx="1"/><path d="M18 5.5H20.5V11H11.5V14M10 14H13V21H10Z"/></symbol>
+	<symbol id="paint-bucket" viewBox="0 0 24 24"><path d="M11 3L19.5 11.5L12 19L3.5 10.5ZM3.5 10.5H18M19.5 11.5C21 14 21.5 15.5 21.5 16.5A1.5 1.5 0 0 1 18.5 16.5C18.5 15.5 19 14 19.5 11.5Z"/></symbol>
+	<symbol id="spray-can" viewBox="0 0 24 24"><rect x="7" y="9" width="8" height="12.5" rx="1.5"/><path d="M8.5 9V6.5H13.5V9M10 6.5V4H12V6.5M15 4.5H15.01M17.5 3H17.51M17.5 6H17.51M20 4.5H20.01M20 1.5H20.01M20 7.5H20.01"/></symbol>
+	<symbol id="color-drop" viewBox="0 0 24 24"><path d="M12 3C12 3 5.5 10 5.5 14.5A6.5 6.5 0 0 0 18.5 14.5C18.5 10 12 3 12 3Z"/><path d="M9 15A3 3 0 0 0 12 18"/></symbol>
+	<symbol id="eyedropper" viewBox="0 0 24 24"><path d="M13 5L19 11M14.5 6.5L17.5 3.5A2.1 2.1 0 0 1 20.5 6.5L17.5 9.5M15.5 8.5L6.5 17.5L4 18L4.5 15.5L13.5 6.5M4.2 17.8L2.5 21.5"/></symbol>
+	<symbol id="swatches" viewBox="0 0 24 24"><rect x="3" y="3" width="6" height="18" rx="1.5"/><path d="M9 7.5L13.5 3.5A1.4 1.4 0 0 1 15.5 3.6L19.4 7.9A1.4 1.4 0 0 1 19.3 9.9L9 19M9 21H19.5A1.5 1.5 0 0 0 21 19.5V14.5A1.5 1.5 0 0 0 19.5 13H15.5"/><path d="M6 17.5H6.01"/></symbol>
+	<symbol id="gradient" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 7H7.01M7 11H7.01M7 15H7.01M7 19H7.01M10 9H10.01M10 13H10.01M10 17H10.01M13 7H13.01M13 11H13.01M13 15H13.01M13 19H13.01"/><path d="M16 3H19A2 2 0 0 1 21 5V19A2 2 0 0 1 19 21H16Z" fill="currentColor" stroke="none"/></symbol>
+	<symbol id="sponge" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="11" rx="3"/><path d="M7 11H7.01M11 10H11.01M15 11.5H15.01M9 14H9.01M13 14.5H13.01M17 14H17.01"/></symbol>
+	<symbol id="brush-stroke" viewBox="0 0 24 24"><path d="M3 17C6 12 10 19 13 13S19 6 21 7C22 7.5 21 9 19 10.5C16 13 14 18 10 19C7 20 4 19.5 3 17Z"/></symbol>
+	<!-- Drawing and writing -->
+	<symbol id="pencil" viewBox="0 0 24 24"><path d="M16 3L21 8L8.5 20.5L3 21L3.5 15.5Z"/><path d="M13.5 5.5L18.5 10.5M3.5 15.5L8.5 20.5"/></symbol>
+	<symbol id="fountain-pen" viewBox="0 0 24 24"><path d="M12 21L7 13L12 3L17 13Z"/><path d="M12 3V11.5M8.5 16H15.5"/><circle cx="12" cy="13" r="1.5"/></symbol>
+	<symbol id="quill" viewBox="0 0 24 24"><path d="M21 3C14 3 8 8 6 16L4.5 21M6 16C12 16 17 12 18.5 6.5M9 11.5H14.5"/></symbol>
+	<symbol id="marker" viewBox="0 0 24 24"><path d="M15 3L21 9L10.5 19.5L4.5 13.5Z"/><path d="M4.5 13.5L3 21L10.5 19.5M7.5 16.5L5 19"/></symbol>
+	<symbol id="crayon" viewBox="0 0 24 24"><path d="M17 3L21 7L9.5 18.5L5.5 14.5ZM5.5 14.5L3 21L9.5 18.5M14 6L18 10M8 12L12 16"/></symbol>
+	<symbol id="eraser" viewBox="0 0 24 24"><path d="M8 20.5H20M8.5 20.5L3.5 15.5A1.5 1.5 0 0 1 3.5 13.4L13.4 3.5A1.5 1.5 0 0 1 15.5 3.5L20.5 8.5A1.5 1.5 0 0 1 20.5 10.6L10.6 20.5M8.5 8.5L15.5 15.5"/></symbol>
+	<symbol id="ink-bottle" viewBox="0 0 24 24"><path d="M9 3H15V7H9ZM7.5 7H16.5A2.5 2.5 0 0 1 19 9.5V19A2 2 0 0 1 17 21H7A2 2 0 0 1 5 19V9.5A2.5 2.5 0 0 1 7.5 7ZM5 13H19"/></symbol>
+	<symbol id="signature" viewBox="0 0 24 24"><path d="M3 17C5 9 7 5 8.5 6.5S7 15 6 17.5C8 15 10 11 11 12S10.5 17 12.5 15.5S15 13 16 14S17 16.5 21 15M3 20.5H21"/></symbol>
+	<symbol id="sketchbook" viewBox="0 0 24 24"><rect x="5" y="3" width="15" height="18" rx="1.5"/><path d="M5 6H3M5 10H3M5 14H3M5 18H3M9 15L12 10L14 13L15.5 11L17 15Z"/></symbol>
+	<symbol id="set-square" viewBox="0 0 24 24"><path d="M3 21V3L21 21Z"/><path d="M7 17V12L12 17Z"/><path d="M3 7H5M3 11H5M3 15H6"/></symbol>
+	<symbol id="bezier" viewBox="0 0 24 24"><path d="M4 18C4 10 10 6 20 6M4 18L9 9M20 6H12"/><rect x="2.5" y="16.5" width="3" height="3"/><rect x="18.5" y="4.5" width="3" height="3"/><circle cx="9" cy="9" r="1"/><circle cx="12" cy="6" r="1"/></symbol>
+	<!-- Pictures -->
+	<symbol id="easel" viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="10" rx="1"/><path d="M8 13L5 21M16 13L19 21M12 13V18M12 3V1.5"/></symbol>
+	<symbol id="canvas" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="1"/><path d="M7 15C9 10 11 16 13 11S16 10 17 9"/></symbol>
+	<symbol id="frame" viewBox="0 0 24 24"><rect x="2.5" y="3.5" width="19" height="17" rx="1"/><rect x="6" y="7" width="12" height="10"/><path d="M2.5 3.5L6 7M21.5 3.5L18 7M2.5 20.5L6 17M21.5 20.5L18 17"/></symbol>
+	<symbol id="portrait" viewBox="0 0 24 24"><rect x="4" y="2.5" width="16" height="19" rx="1"/><circle cx="12" cy="10" r="3"/><path d="M7 18.5C7.5 15.5 9.5 14 12 14S16.5 15.5 17 18.5"/></symbol>
+	<symbol id="landscape" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="1"/><path d="M3 17L9 11L13 15L16 12L21 17"/><circle cx="15.5" cy="8" r="1.5"/></symbol>
+	<symbol id="mosaic" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="13" y="3" width="8" height="5" rx="1"/><rect x="13" y="11" width="8" height="10" rx="1"/><rect x="3" y="15" width="7" height="6" rx="1"/></symbol>
+	<symbol id="camera" viewBox="0 0 24 24"><path d="M3 8.5A1.5 1.5 0 0 1 4.5 7H7.5L9 4.5H15L16.5 7H19.5A1.5 1.5 0 0 1 21 8.5V18.5A1.5 1.5 0 0 1 19.5 20H4.5A1.5 1.5 0 0 1 3 18.5Z"/><circle cx="12" cy="13" r="4"/></symbol>
+	<symbol id="museum" viewBox="0 0 24 24"><path d="M3 21H21M4 18H20M5 10V18M9.5 10V18M14.5 10V18M19 10V18M3 10H21L12 3Z"/></symbol>
+	<!-- Digital -->
+	<symbol id="layers" viewBox="0 0 24 24"><path d="M12 3L21 8L12 13L3 8Z"/><path d="M3 12L12 17L21 12M3 16L12 21L21 16"/></symbol>
+	<symbol id="shapes" viewBox="0 0 24 24"><circle cx="7.5" cy="7.5" r="4.5"/><rect x="13" y="13" width="8" height="8" rx="1"/><path d="M17 3L21.5 10.5H12.5ZM7.5 13L12 21H3Z"/></symbol>
+	<symbol id="crop" viewBox="0 0 24 24"><path d="M6 2V18H22M2 6H18V22"/></symbol>
+	<symbol id="blend" viewBox="0 0 24 24"><circle cx="9" cy="9" r="6"/><circle cx="15" cy="15" r="6"/></symbol>
+	<!-- Crafts -->
+	<symbol id="scissors" viewBox="0 0 24 24"><circle cx="6" cy="7" r="3"/><circle cx="6" cy="17" r="3"/><path d="M8.5 8.8L20 18M8.5 15.2L20 6M14 12H14.01"/></symbol>
+	<symbol id="palette-knife" viewBox="0 0 24 24"><path d="M3 21L9 15M9 15H11L19.5 6.5A2.1 2.1 0 0 0 16.5 3.5L8 12L8.5 14.5"/></symbol>
+	<symbol id="chisel" viewBox="0 0 24 24"><path d="M3.5 20.5L9 15M9 15L11 17L20.5 7.5L16.5 3.5L7 13Z"/><path d="M14 6L18 10"/></symbol>
+	<symbol id="sculpture" viewBox="0 0 24 24"><circle cx="12" cy="7" r="3.5"/><path d="M9 10.5C9 12.5 7 13.5 6 15H18C17 13.5 15 12.5 15 10.5M8 15V18H16V15M6 21H18V18H6Z"/></symbol>
+	<symbol id="vase" viewBox="0 0 24 24"><path d="M9 3H15M10 3C10 6 7 8 7 13C7 17.5 9 21 12 21S17 17.5 17 13C17 8 14 6 14 3M7.5 11H16.5"/></symbol>
+	<symbol id="pottery-wheel" viewBox="0 0 24 24"><path d="M8 4C8 6.5 6 8 6 11C6 13.5 8.5 15 12 15S18 13.5 18 11C18 8 16 6.5 16 4M3 16.5H21M12 16.5V21M8 21H16"/></symbol>
+	<symbol id="yarn" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7.5"/><path d="M5 7C9 8 13 11 15.5 17.5M8.5 4.2C12 6 15 10 16.5 13M4 11.5C7 12 10 14.5 11.5 18.5M17.5 14.5C19 18 20 20 22 21"/></symbol>
+	<symbol id="needle" viewBox="0 0 24 24"><path d="M20 4L4 20M18 4.5A1.4 1.4 0 0 1 19.5 6M15 9C11 5 4 7 5 12S14 14 12 19"/></symbol>
+	<symbol id="embroidery-hoop" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><circle cx="12" cy="13" r="6"/><path d="M10 5.2V2.5H14V5.2M10 15L12 11L14 15M10.5 13.8H13.5"/></symbol>
+	<symbol id="origami" viewBox="0 0 24 24"><path d="M2 11L9 13L12 5L15 13L22 9L16 17H9Z"/><path d="M12 5L9 13M15 13H9"/></symbol>
+	<symbol id="stamp" viewBox="0 0 24 24"><path d="M9 13V10A3 3 0 1 1 15 10V13M5 13H19V17H5ZM5 20H19"/></symbol>
+	<symbol id="stencil" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="2"/><path d="M14 13H18V18H14ZM8.5 13L11 18H6Z"/></symbol>
+	<symbol id="tape" viewBox="0 0 24 24"><circle cx="10" cy="10" r="7"/><circle cx="10" cy="10" r="2.5"/><path d="M10 17H21L19.5 18.5L21 20H10V17"/></symbol>
+	<symbol id="push-pin" viewBox="0 0 24 24"><path d="M9 3H15L14 4.5V9L17 12V14H7V12L10 9V4.5ZM12 14V21"/></symbol>
+	<!-- The stage -->
+	<symbol id="theater-masks" viewBox="0 0 24 24"><path d="M3 4C6 5 9 5 12 4V9.5C12 13 10 15 7.5 15S3 13 3 9.5Z"/><path d="M5.5 8.5H6.5M8.5 8.5H9.5M5.5 11.5C6.5 12.5 8.5 12.5 9.5 11.5"/><path d="M12 9C15 10 18 10 21 9V14.5C21 18 19 20 16.5 20S12 18 12 14.5"/><path d="M14.5 13.5H15.5M17.5 13.5H18.5M14.5 17.5C15.5 16.5 17.5 16.5 18.5 17.5"/></symbol>
+	<symbol id="idea" viewBox="0 0 24 24"><path d="M9 18H15M10 21H14M12 3A6 6 0 0 0 8.5 14C9.2 14.5 9.5 15.3 9.5 16V18H14.5V16C14.5 15.3 14.8 14.5 15.5 14A6 6 0 0 0 12 3Z"/></symbol>
+</svg>

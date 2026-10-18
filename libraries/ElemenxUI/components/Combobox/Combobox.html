@@ -2,9 +2,9 @@
 	<div class="elemenx-input" [class]="[Size || 'medium', Shape === 'round' ? 'round' : '', Invalid ? 'invalid' : '', Disabled ? 'disabled' : '']">
 		<Icon *if="Icon" [name]="Icon" />
 		<input class="elemenx-input-control elemenx-combobox-control" type="text" role="combobox" autocomplete="off" aria-autocomplete="list" [attribute.aria-expanded]="String(Open)" [attribute.aria-invalid]="Invalid ? 'true' : null" [placeholder]="Placeholder" [disabled]="Disabled" [value]="Editing ? Text : LabelOf(Options, Value)" (input)="Typed" (focus)="Focus" (keydown)="Key" (blur)="Blur" />
-		<Spinner *if="Loading" Size="small" Label="Loading" />
-		<button class="elemenx-input-action" type="button" tabindex="-1" aria-label="Clear" *if="Clearable && Value != null && !Disabled" (mousedown)="Prevent" (click)="Clear"><Icon Name="close" /></button>
-		<button class="elemenx-input-action" type="button" tabindex="-1" aria-label="Show the options" [disabled]="Disabled" (mousedown)="Prevent" (click)="Toggle"><Icon Name="chevron-down" /></button>
+		<Spinner *if="Loading" Size="small" [label]="$T('ui.common.loading')" />
+		<button class="elemenx-input-action" type="button" tabindex="-1" [attribute.aria-label]="$T('ui.common.clear')" *if="Clearable && Value != null && !Disabled" (mousedown)="Prevent" (click)="Clear"><Icon Name="close" /></button>
+		<button class="elemenx-input-action" type="button" tabindex="-1" [attribute.aria-label]="$T('ui.common.showOptions')" [disabled]="Disabled" (mousedown)="Prevent" (click)="Toggle"><Icon Name="chevron-down" /></button>
 	</div>
 	<input type="hidden" *if="Name" [attribute.name]="Name" [value]="Value == null ? '' : Value" />
 	<div class="elemenx-popup" role="listbox" *popup="Open" (dismiss)="Dismissed">
@@ -13,11 +13,11 @@
 			<div class="elemenx-option" role="option" *if="!entry.Heading" [class.active]="entry.Index === Active" [class.selected]="!entry.Create && entry.Option.Value === Value" [class.disabled]="entry.Index === -1" [class.elemenx-combobox-create]="entry.Create" [attribute.aria-selected]="String(!entry.Create && entry.Option.Value === Value)" [attribute.aria-disabled]="entry.Index === -1 ? 'true' : null" [attribute.data-index]="entry.Index" (mousedown)="Prevent" (mousemove)="Hover" (click)="Pick">
 				<Icon *if="entry.Create" Name="add" />
 				<Icon *if="!entry.Create && entry.Option.Icon" [name]="entry.Option.Icon" />
-				<span class="elemenx-option-label">{{entry.Create ? CreateLabel + ' “' + String(Text).trim() + '”' : entry.Option.Label}}</span>
+				<span class="elemenx-option-label">{{entry.Create ? (CreateLabel || $T('ui.combobox.create')) + ' “' + String(Text).trim() + '”' : entry.Option.Label}}</span>
 				<span class="elemenx-option-hint" *if="!entry.Create && entry.Option.Hint">{{entry.Option.Hint}}</span>
 				<Icon *if="!entry.Create && entry.Option.Value === Value" Name="check" />
 			</div>
 		</div>
-		<div class="elemenx-popup-empty" *if="!Entries(Options, Text, Editing, Filter).length">{{Loading ? '…' : Empty}}</div>
+		<div class="elemenx-popup-empty" *if="!Entries(Options, Text, Editing, Filter).length">{{Loading ? '…' : (Empty || $T('ui.combobox.empty'))}}</div>
 	</div>
 </div>

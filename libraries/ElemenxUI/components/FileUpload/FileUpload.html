@@ -2,14 +2,14 @@
 	<input class="elemenx-visually-hidden" type="file" tabindex="-1" [attribute.accept]="Accept || null" [multiple]="Multiple && Variant !== 'avatar'" [disabled]="Disabled" (change)="Chosen" />
 	<div class="elemenx-upload-zone" role="button" *if="Variant === 'dropzone' || Variant === 'gallery'" [attribute.tabindex]="Disabled ? null : 0" [attribute.aria-disabled]="Disabled ? 'true' : null" (click)="Browse" (keydown)="ZoneKey">
 		<Icon Name="upload" Size="24" />
-		<span class="elemenx-upload-title">{{Label}}</span>
+		<span class="elemenx-upload-title">{{(Label || $T('ui.fileUpload.label'))}}</span>
 		<span class="elemenx-caption" *if="Hint">{{Hint}}</span>
 	</div>
 	<div class="elemenx-upload-bar" *if="Variant === 'inline'">
-		<Button [label]="Label" Icon="attachment" [disabled]="Disabled" (click)="Browse" />
+		<Button [label]="(Label || $T('ui.fileUpload.label'))" Icon="attachment" [disabled]="Disabled" (click)="Browse" />
 		<span class="elemenx-caption" *if="Hint">{{Hint}}</span>
 	</div>
-	<div class="elemenx-upload-avatar" role="button" *if="Variant === 'avatar'" [attribute.tabindex]="Disabled ? null : 0" [attribute.aria-label]="Label" (click)="Browse" (keydown)="ZoneKey">
+	<div class="elemenx-upload-avatar" role="button" *if="Variant === 'avatar'" [attribute.tabindex]="Disabled ? null : 0" [attribute.aria-label]="(Label || $T('ui.fileUpload.label'))" (click)="Browse" (keydown)="ZoneKey">
 		<img *if="Files.length && Files[0].URL" [src]="(Files[0] || {}).URL" alt="" />
 		<Icon *if="!(Files[0] || {}).URL" Name="user" Size="32" />
 		<span class="elemenx-upload-avatar-edit" aria-hidden="true"><Icon Name="edit" Size="12" /></span>
@@ -19,7 +19,7 @@
 			<span class="elemenx-upload-thumb"><img *if="file.URL" [src]="file.URL" alt="" /><FileIcon *if="!file.URL" [name]="file.Name" Size="24" /></span>
 			<span class="elemenx-upload-name" [attribute.title]="file.Name">{{file.Name}}</span>
 			<span class="elemenx-caption">{{FormatSize(file.Size)}}</span>
-			<button class="elemenx-input-action" type="button" [attribute.aria-label]="'Remove ' + file.Name" [attribute.data-index]="$index" *if="!Disabled" (click)="Remove"><Icon Name="close" /></button>
+			<button class="elemenx-input-action" type="button" [attribute.aria-label]="$T('ui.common.remove', {name: file.Name})" [attribute.data-index]="$index" *if="!Disabled" (click)="Remove"><Icon Name="close" /></button>
 		</li>
 	</ul>
 	<div class="elemenx-upload-gallery" *if="Variant === 'gallery' && Files.length">
@@ -27,7 +27,7 @@
 			<img *if="file.URL" [src]="file.URL" [alt]="file.Name" />
 			<FileIcon *if="!file.URL" [name]="file.Name" Size="40" />
 			<figcaption [attribute.title]="file.Name">{{file.Name}}</figcaption>
-			<button class="elemenx-upload-tile-remove" type="button" [attribute.aria-label]="'Remove ' + file.Name" [attribute.data-index]="$index" *if="!Disabled" (click)="Remove"><Icon Name="close" Size="12" /></button>
+			<button class="elemenx-upload-tile-remove" type="button" [attribute.aria-label]="$T('ui.common.remove', {name: file.Name})" [attribute.data-index]="$index" *if="!Disabled" (click)="Remove"><Icon Name="close" Size="12" /></button>
 		</figure>
 	</div>
 	<ul class="elemenx-upload-errors" role="alert" *if="Errors.length">

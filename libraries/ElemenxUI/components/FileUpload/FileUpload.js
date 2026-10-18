@@ -11,7 +11,7 @@ Elemenx.Component('FileUpload', {
 	Multiple: true,
 	MaxSize: null,
 	MaxFiles: null,
-	Label: 'Drop files here or click to browse',
+	Label: '',
 	Hint: '',
 	Disabled: false,
 	Invalid: false,

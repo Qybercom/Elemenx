@@ -1,12 +1,12 @@
 <div class="elemenx-cal" [class]="[View === 'week' ? 'week' : 'month', Editable ? 'editable' : '', Dragging && Dragging.Active ? 'dragging' : '']">
 	<div class="elemenx-cal-header">
-		<button class="elemenx-cal-nav" type="button" aria-label="Previous" (click)="Previous"><Icon Name="chevron-left" /></button>
-		<button class="elemenx-cal-nav" type="button" aria-label="Next" (click)="Following"><Icon Name="chevron-right" /></button>
-		<Button [label]="TodayLabel" Size="small" (click)="Today" />
+		<button class="elemenx-cal-nav" type="button" [attribute.aria-label]="$T('ui.common.previous')" (click)="Previous"><Icon Name="chevron-left" /></button>
+		<button class="elemenx-cal-nav" type="button" [attribute.aria-label]="$T('ui.common.next')" (click)="Following"><Icon Name="chevron-right" /></button>
+		<Button [label]="(TodayLabel || $T('ui.calendar.today'))" Size="small" (click)="Today" />
 		<h3 class="elemenx-cal-title" aria-live="polite">{{Title(View, Date, Locale)}}</h3>
-		<span class="elemenx-cal-views" role="group" aria-label="View">
-			<button class="elemenx-cal-view" type="button" [class.current]="View !== 'week'" [attribute.aria-pressed]="String(View !== 'week')" (click)="ShowMonth">{{MonthLabel}}</button>
-			<button class="elemenx-cal-view" type="button" [class.current]="View === 'week'" [attribute.aria-pressed]="String(View === 'week')" (click)="ShowWeek">{{WeekLabel}}</button>
+		<span class="elemenx-cal-views" role="group" [attribute.aria-label]="$T('ui.calendar.view')">
+			<button class="elemenx-cal-view" type="button" [class.current]="View !== 'week'" [attribute.aria-pressed]="String(View !== 'week')" (click)="ShowMonth">{{(MonthLabel || $T('ui.calendar.month'))}}</button>
+			<button class="elemenx-cal-view" type="button" [class.current]="View === 'week'" [attribute.aria-pressed]="String(View === 'week')" (click)="ShowWeek">{{(WeekLabel || $T('ui.calendar.week'))}}</button>
 		</span>
 	</div>
 	<div class="elemenx-cal-month" role="grid" *if="View !== 'week'">
@@ -14,7 +14,7 @@
 		<div class="elemenx-cal-day" role="gridcell" *for="day of Month(Date, Events, MaxEvents)" *key="day.ISO" [class.outside]="day.Outside" [class.today]="day.Today" [class.drop]="!!Target && Target.Date === day.ISO && Target.Minutes == null" [attribute.data-date]="day.ISO" (click)="PickDay">
 			<span class="elemenx-cal-date" [attribute.aria-current]="day.Today ? 'date' : null">{{day.Day}}</span>
 			<button class="elemenx-cal-event" type="button" *for="event of day.Events" *key="event.ID" [class.whole]="Whole(event)" [class.dragged]="IsDragged(Dragging, event.ID)" [attribute.aria-grabbed]="Editable ? String(IsDragged(Dragging, event.ID)) : null" (pointerdown)="Grab" (pointermove)="Haul" (pointerup)="Drop" (pointercancel)="Drop" (keydown)="Nudge" [style.--elemenx-cal-color]="event.Color || null" [style.--elemenx-cal-rgb]="Channels(event.Color)" [attribute.data-id]="event.ID" (click)="Pick"><span class="elemenx-cal-time" *if="Time(event)">{{Time(event)}}</span>{{event.Title}}</button>
-			<button class="elemenx-cal-more" type="button" *if="day.More" [attribute.data-date]="day.ISO" (click)="More">+{{day.More}} {{MoreLabel}}</button>
+			<button class="elemenx-cal-more" type="button" *if="day.More" [attribute.data-date]="day.ISO" (click)="More">{{MoreLabel ? '+' + day.More + ' ' + MoreLabel : $T('ui.calendar.more', {count: day.More})}}</button>
 		</div>
 	</div>
 	<div class="elemenx-cal-week" *if="View === 'week'">

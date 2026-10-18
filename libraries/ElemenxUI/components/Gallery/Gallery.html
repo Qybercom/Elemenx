@@ -1,0 +1,29 @@
+<section class="elemenx-gallery" role="region" aria-roledescription="carousel" tabindex="0" [attribute.aria-label]="Label || $T('ui.gallery.label')" [class]="[Effect === 'fade' ? 'fade' : 'slide', Fit === 'contain' ? 'contain' : 'cover', Caption === 'below' ? 'caption-below' : 'caption-overlay']" [style.--elemenx-gallery-ratio]="Ratio" [style.--elemenx-gallery-index]="Current(Items, Index)" (keydown)="Key" (mouseenter)="Hold" (mouseleave)="Release" (focusin)="Hold" (focusout)="Release" (pointerdown)="Down" (pointerup)="Up">
+	<div class="elemenx-gallery-viewport" [attribute.aria-live]="Autoplay && Playing ? 'off' : 'polite'">
+		<div class="elemenx-gallery-track">
+			<figure class="elemenx-gallery-slide" role="group" aria-roledescription="slide" *for="item of Items" *key="item.ID || $index" [class.active]="$index === Current(Items, Index)" [attribute.aria-label]="($index + 1) + ' / ' + Items.length + (item.Title ? ': ' + item.Title : '')" [attribute.aria-hidden]="$index === Current(Items, Index) ? null : 'true'" [attribute.inert]="$index === Current(Items, Index) ? null : ''">
+				<img class="elemenx-gallery-image" [src]="item.Image" [attribute.alt]="item.Alt || item.Title || ''" draggable="false" [attribute.loading]="$index === Current(Items, Index) ? null : 'lazy'" (click)="Selected" />
+				<figcaption class="elemenx-gallery-caption" *if="Caption !== 'below' && Captioned(item)">
+					<strong class="elemenx-gallery-title" *if="On(ShowTitle) && item.Title">{{item.Title}}</strong>
+					<span class="elemenx-gallery-description" *if="On(ShowDescription) && item.Description">{{item.Description}}</span>
+					<span class="elemenx-gallery-tags" *if="On(ShowTags) && item.Tags && item.Tags.length"><span class="elemenx-gallery-tag" *for="tag of item.Tags" *key="tag">{{tag}}</span></span>
+				</figcaption>
+			</figure>
+		</div>
+		<button class="elemenx-gallery-arrow previous" type="button" *if="On(ShowArrows) && Items.length > 1" [disabled]="!On(Loop) && Current(Items, Index) === 0" [attribute.aria-label]="$T('ui.gallery.previous')" (click)="Previous"><Icon Name="chevron-left" /></button>
+		<button class="elemenx-gallery-arrow next" type="button" *if="On(ShowArrows) && Items.length > 1" [disabled]="!On(Loop) && Current(Items, Index) === Items.length - 1" [attribute.aria-label]="$T('ui.gallery.next')" (click)="Next"><Icon Name="chevron-right" /></button>
+		<span class="elemenx-gallery-counter" *if="On(ShowCounter) && Items.length > 1">{{Current(Items, Index) + 1}} / {{Items.length}}</span>
+		<button class="elemenx-gallery-play" type="button" *if="On(Autoplay) && Items.length > 1" [attribute.aria-label]="Playing ? $T('ui.gallery.pause') : $T('ui.gallery.play')" [attribute.aria-pressed]="String(!Playing)" (click)="Toggle"><Icon [name]="Playing ? 'pause' : 'play'" /></button>
+	</div>
+	<div class="elemenx-gallery-caption below" aria-live="polite" *if="Caption === 'below' && Captioned(Items[Current(Items, Index)])">
+		<strong class="elemenx-gallery-title" *if="On(ShowTitle) && Items[Current(Items, Index)].Title">{{Items[Current(Items, Index)].Title}}</strong>
+		<span class="elemenx-gallery-description" *if="On(ShowDescription) && Items[Current(Items, Index)].Description">{{Items[Current(Items, Index)].Description}}</span>
+		<span class="elemenx-gallery-tags" *if="On(ShowTags) && Items[Current(Items, Index)].Tags && Items[Current(Items, Index)].Tags.length"><span class="elemenx-gallery-tag" *for="tag of Items[Current(Items, Index)].Tags" *key="tag">{{tag}}</span></span>
+	</div>
+	<div class="elemenx-gallery-dots" *if="On(ShowDots) && Items.length > 1" role="tablist" [attribute.aria-label]="$T('ui.gallery.pictures')">
+		<button class="elemenx-gallery-dot" type="button" role="tab" *for="item of Items" *key="item.ID || $index" [class.active]="$index === Current(Items, Index)" [attribute.aria-selected]="String($index === Current(Items, Index))" [attribute.aria-label]="($index + 1) + ' / ' + Items.length" [attribute.tabindex]="$index === Current(Items, Index) ? 0 : -1" [attribute.data-index]="$index" (click)="Picked"></button>
+	</div>
+	<div class="elemenx-gallery-thumbs" *if="On(ShowThumbs) && Items.length > 1">
+		<button class="elemenx-gallery-thumb" type="button" *for="item of Items" *key="item.ID || $index" [class.active]="$index === Current(Items, Index)" [attribute.aria-label]="item.Title || ($index + 1) + ' / ' + Items.length" [attribute.aria-current]="$index === Current(Items, Index) ? 'true' : null" [attribute.data-index]="$index" (click)="Picked"><img [src]="item.Thumb || item.Image" alt="" draggable="false" loading="lazy" /></button>
+	</div>
+</section>

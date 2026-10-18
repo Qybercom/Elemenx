@@ -1,0 +1,8 @@
+<span class="elemenx-game-panel elemenx-game-inventory-card" role="tooltip" *if="Item" [class]="[Item.Rarity || 'common'].concat(Classes(Item.Class))" [attribute.style]="Place">
+	<strong class="elemenx-game-inventory-name">{{Item.Name}}</strong>
+	<span class="elemenx-game-inventory-type" *if="Item.Type || Item.Rarity">{{[Item.Rarity ? $T('ui.game.' + Item.Rarity) : '', Item.Type || ''].filter(Boolean).join(' · ')}}</span>
+	<span class="elemenx-game-inventory-stats" role="list" *if="Item.Stats && Item.Stats.length">
+		<span class="elemenx-game-inventory-stat" role="listitem" *for="stat of Item.Stats"><span class="elemenx-game-inventory-stat-label">{{stat.Label}}</span><span class="elemenx-game-inventory-stat-value">{{stat.Value}}</span></span>
+	</span>
+	<span class="elemenx-game-inventory-description" *if="Item.Description">{{Item.Description}}</span>
+</span>

@@ -133,7 +133,7 @@
 .elemenx-comment-actions {
 	display: flex;
 	gap: 16px;
-	margin-left: -6px;
+	margin-inline-start: -6px;
 }
 
 .elemenx-comment-actions .elemenx-card-action.repost.on {

@@ -4,7 +4,7 @@ Elemenx.Component('CurrencySelect', {
 	Value: 'USD',
 	Codes: null,
 	Locale: '',
-	Placeholder: 'Currency',
+	Placeholder: '',
 	Size: 'medium',
 	Shape: 'default',
 	Name: null,

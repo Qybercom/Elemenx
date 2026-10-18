@@ -1,0 +1,4 @@
+<div class="elemenx-property" [class]="[Tone === 'success' || Tone === 'danger' || Tone === 'warning' || Tone === 'accent' ? Tone : '']">
+	<dt class="elemenx-property-label">{{Label}}</dt>
+	<dd class="elemenx-property-value"><span class="elemenx-property-content"><slot></slot></span><span class="elemenx-property-text">{{Value}}{{Unit}}</span></dd>
+</div>

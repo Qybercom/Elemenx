@@ -1,5 +1,5 @@
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { loadElemenx, resetDOM, tick, unique } from '../setup.js';
+import { loadElemenx, resetDOM, tick, unique, waitFor } from '../setup.js';
 
 function boot (routes, events, notFound) {
 	var root = unique('RouterRoot');
@@ -204,7 +204,10 @@ describe('Regression: Router / Guards', function () {
 
 		router.Start();
 
-		await tick(20);
+		/* The first route renders after the browser has painted its waiting component. */
+		await waitFor(function () {
+			return !!document.getElementById('waiting-home') && !document.getElementById('waiting-global');
+		}, 2000);
 
 		router.Go('/waiting');
 
@@ -215,10 +218,113 @@ describe('Regression: Router / Guards', function () {
 		expect(document.getElementById('waiting-home')).not.toBeNull();
 		expect(document.getElementById('waiting-target')).toBeNull();
 
-		await tick(100);
+		await waitFor(function () {
+			return !document.getElementById('waiting-global');
+		}, 2000);
 
 		expect(document.getElementById('waiting-global')).toBeNull();
 		expect(document.getElementById('waiting-target')).not.toBeNull();
+
+		router.Destroy();
+
+		app.$Destroy();
+	});
+
+	it('Waiting shows before the route renders, and stays until the deferred Components inside the route Component are ready', async function () {
+		var page = unique('NestedWaitingPage');
+		var child = unique('NestedWaitingChild');
+		var template = unique('NestedWaitingTemplate');
+		var waiting = unique('NestedWaitingLoading');
+		var root = unique('NestedWaitingRoot');
+		var trace = [];
+		var deliver;
+
+		Elemenx.Template.Loader(function (name, ready) {
+			if (name === template)
+				deliver = ready;
+		});
+		Elemenx.Component(child, {$TemplateID: template});
+		Elemenx.Component(page, {$Template: '<div id="nested-waiting-page">PAGE <' + child + '></' + child + '></div>'});
+		Elemenx.Component(waiting, {$Template: '<div id="nested-waiting">WAIT</div>'});
+		Elemenx.Component(root, {$Template: '<main *outlet="Content"></main><aside *outlet="Waiting"></aside>'});
+
+		var app = Elemenx.Application(unique('NestedWaitingApp'), {$Component: root, $Mount: '#mount'});
+		var home = unique('NestedWaitingHome');
+
+		Elemenx.Component(home, {$Template: '<div>HOME</div>'});
+
+		var router = Elemenx.Router({Root: app.$Component(), Waiting: waiting, Routes: [{Path: '/', Component: home}, {Path: '/nested-waiting', Component: page}]});
+
+		router.Start();
+
+		await waitFor(function () {
+			return !document.querySelector('#mount aside').children.length;
+		}, 2000);
+
+		router.On('NavigationEnd', function () {
+			trace.push('end');
+		});
+
+		router.Go('/nested-waiting');
+
+		/* the waiting component is in the page at once, the route renders after a frame */
+		expect(document.getElementById('nested-waiting')).not.toBeNull();
+		expect(document.getElementById('nested-waiting-page')).toBeNull();
+
+		await waitFor(function () {
+			return !!document.getElementById('nested-waiting-page');
+		}, 2000);
+
+		await tick(30);
+
+		expect(document.getElementById('nested-waiting')).not.toBeNull();
+		expect(trace).toEqual([]);
+
+		deliver('<b id="nested-waiting-child">CHILD</b>');
+
+		await waitFor(function () {
+			return !document.getElementById('nested-waiting');
+		}, 2000);
+
+		expect(document.getElementById('nested-waiting-child')).not.toBeNull();
+		expect(trace).toEqual(['end']);
+
+		router.Destroy();
+
+		app.$Destroy();
+	});
+
+	it('Waiting does not wait for a deferred Component whose owner shows its own *pending status', async function () {
+		var page = unique('OwnPendingPage');
+		var child = unique('OwnPendingChild');
+		var template = unique('OwnPendingTemplate');
+		var waiting = unique('OwnPendingLoading');
+		var root = unique('OwnPendingRoot');
+
+		Elemenx.Template.Loader(function () {});
+		Elemenx.Component(child, {$TemplateID: template});
+		Elemenx.Component(page, {$Template: '<div id="own-pending-page"><' + child + ' *pending="Loading the child"></' + child + '></div>'});
+		Elemenx.Component(waiting, {$Template: '<div id="own-pending-waiting">WAIT</div>'});
+		Elemenx.Component(root, {$Template: '<main *outlet="Content"></main><aside *outlet="Waiting"></aside>'});
+
+		var app = Elemenx.Application(unique('OwnPendingApp'), {$Component: root, $Mount: '#mount'});
+		var home = unique('OwnPendingHome');
+
+		Elemenx.Component(home, {$Template: '<div>HOME</div>'});
+
+		var router = Elemenx.Router({Root: app.$Component(), Waiting: waiting, Routes: [{Path: '/', Component: home}, {Path: '/own-pending', Component: page}]});
+
+		router.Start();
+
+		await tick(50);
+
+		router.Go('/own-pending');
+
+		await waitFor(function () {
+			return !document.getElementById('own-pending-waiting');
+		}, 2000);
+
+		expect(document.getElementById('own-pending-page').textContent).toContain('Loading the child');
 
 		router.Destroy();
 
@@ -252,7 +358,9 @@ describe('Regression: Router / Guards', function () {
 		expect(document.getElementById('route-waiting')).not.toBeNull();
 		expect(document.getElementById('global-waiting')).toBeNull();
 
-		await tick(100);
+		await waitFor(function () {
+			return !document.getElementById('route-waiting');
+		}, 2000);
 
 		expect(document.getElementById('route-waiting')).toBeNull();
 		expect(document.getElementById('route-waiting-target')).not.toBeNull();
@@ -288,7 +396,9 @@ describe('Regression: Router / Guards', function () {
 		expect(document.getElementById('custom-waiting-loader')).not.toBeNull();
 		expect(document.getElementById('custom-waiting-loader').parentNode.hasAttribute('*outlet')).toBe(false);
 
-		await tick(100);
+		await waitFor(function () {
+			return !document.getElementById('custom-waiting-loader');
+		}, 2000);
 
 		expect(document.getElementById('custom-waiting-loader')).toBeNull();
 		expect(document.getElementById('custom-waiting-target')).not.toBeNull();

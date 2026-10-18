@@ -1,16 +1,16 @@
 <div class="elemenx-color elemenx-popup-anchor">
 	<div class="elemenx-input elemenx-color-input" [class]="[Size || 'medium', Shape === 'round' ? 'round' : '', Invalid ? 'invalid' : '', Disabled ? 'disabled' : '']">
-		<button class="elemenx-color-swatch" type="button" aria-haspopup="dialog" aria-label="Pick a color" [attribute.aria-expanded]="String(Open)" [disabled]="Disabled" (click)="Toggle"><span [style.background-color]="Value"></span></button>
+		<button class="elemenx-color-swatch" type="button" aria-haspopup="dialog" [attribute.aria-label]="$T('ui.colorInput.pick')" [attribute.aria-expanded]="String(Open)" [disabled]="Disabled" (click)="Toggle"><span [style.background-color]="Value"></span></button>
 		<input class="elemenx-input-control" type="text" spellcheck="false" autocomplete="off" [attribute.maxlength]="Alpha ? 9 : 7" [value]="Text === null ? Value : Text" [disabled]="Disabled" [attribute.name]="Name" (input)="Typed" (change)="Committed" />
 	</div>
-	<div class="elemenx-popup elemenx-color-popup" role="dialog" aria-label="Color" data-match-width="false" *popup="Open" (dismiss)="Dismissed">
-		<div class="elemenx-color-area" role="slider" tabindex="0" data-part="area" aria-label="Saturation and brightness" [attribute.aria-valuetext]="Math.round(S * 100) + '%, ' + Math.round(V * 100) + '%'" [style.background-color]="'hsl(' + H + ', 100%, 50%)'" (pointerdown)="Down" (pointermove)="Drift" (pointerup)="Up" (pointercancel)="Up" (keydown)="Key">
+	<div class="elemenx-popup elemenx-color-popup" role="dialog" [attribute.aria-label]="$T('ui.colorInput.title')" data-match-width="false" *popup="Open" (dismiss)="Dismissed">
+		<div class="elemenx-color-area" role="slider" tabindex="0" data-part="area" [attribute.aria-label]="$T('ui.colorInput.area')" [attribute.aria-valuetext]="Math.round(S * 100) + '%, ' + Math.round(V * 100) + '%'" [style.background-color]="'hsl(' + H + ', 100%, 50%)'" (pointerdown)="Down" (pointermove)="Drift" (pointerup)="Up" (pointercancel)="Up" (keydown)="Key">
 			<span class="elemenx-color-thumb" [style.left]="S * 100 + '%'" [style.top]="(1 - V) * 100 + '%'" [style.background-color]="Value"></span>
 		</div>
-		<div class="elemenx-color-slider hue" role="slider" tabindex="0" data-part="hue" aria-label="Hue" aria-valuemin="0" aria-valuemax="360" [attribute.aria-valuenow]="Math.round(H)" (pointerdown)="Down" (pointermove)="Drift" (pointerup)="Up" (pointercancel)="Up" (keydown)="Key">
+		<div class="elemenx-color-slider hue" role="slider" tabindex="0" data-part="hue" [attribute.aria-label]="$T('ui.colorInput.hue')" aria-valuemin="0" aria-valuemax="360" [attribute.aria-valuenow]="Math.round(H)" (pointerdown)="Down" (pointermove)="Drift" (pointerup)="Up" (pointercancel)="Up" (keydown)="Key">
 			<span class="elemenx-color-thumb" [style.left]="H / 360 * 100 + '%'" [style.background-color]="'hsl(' + H + ', 100%, 50%)'"></span>
 		</div>
-		<div class="elemenx-color-slider alpha" role="slider" tabindex="0" data-part="alpha" aria-label="Opacity" aria-valuemin="0" aria-valuemax="100" *if="Alpha" [attribute.aria-valuenow]="Math.round(A * 100)" [style.--elemenx-color-solid]="String(Value).substring(0, 7)" (pointerdown)="Down" (pointermove)="Drift" (pointerup)="Up" (pointercancel)="Up" (keydown)="Key">
+		<div class="elemenx-color-slider alpha" role="slider" tabindex="0" data-part="alpha" [attribute.aria-label]="$T('ui.colorInput.opacity')" aria-valuemin="0" aria-valuemax="100" *if="Alpha" [attribute.aria-valuenow]="Math.round(A * 100)" [style.--elemenx-color-solid]="String(Value).substring(0, 7)" (pointerdown)="Down" (pointermove)="Drift" (pointerup)="Up" (pointercancel)="Up" (keydown)="Key">
 			<span class="elemenx-color-thumb" [style.left]="A * 100 + '%'"></span>
 		</div>
 		<div class="elemenx-color-swatches">
@@ -18,7 +18,7 @@
 		</div>
 		<div class="elemenx-picker-footer">
 			<span class="elemenx-color-value">{{Value}}</span>
-			<Button *if="Dropper" Icon="color" Title="Pick from the screen" Variant="ghost" Size="small" (click)="Pick" />
+			<Button *if="Dropper" Icon="color" [title]="$T('ui.colorInput.dropper')" Variant="ghost" Size="small" (click)="Pick" />
 		</div>
 	</div>
 </div>

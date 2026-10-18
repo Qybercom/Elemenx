@@ -10,3 +10,4 @@ test-results/
 /tests/dist/single-output
 /tests/dist/single-cli-output
 /tests/dist/single-packs-output
+/tests/dist/widget-output

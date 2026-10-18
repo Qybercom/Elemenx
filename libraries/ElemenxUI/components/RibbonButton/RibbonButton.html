@@ -4,6 +4,6 @@
 		<span class="elemenx-ribbon-label" *if="Size !== 'icon'">{{Label}}</span>
 		<Icon *if="HasMenu(Items, Split)" Name="chevron-down" Size="12" />
 	</button>
-	<button class="elemenx-ribbon-split" type="button" *if="Split && Split !== 'false'" [attribute.aria-label]="'More ' + Label" aria-haspopup="menu" [attribute.aria-expanded]="String(Open)" [disabled]="Disabled" (click)="Menu"><Icon Name="chevron-down" Size="12" /></button>
+	<button class="elemenx-ribbon-split" type="button" *if="Split && Split !== 'false'" [attribute.aria-label]="$T('ui.ribbonButton.more', {name: Label})" aria-haspopup="menu" [attribute.aria-expanded]="String(Open)" [disabled]="Disabled" (click)="Menu"><Icon Name="chevron-down" Size="12" /></button>
 	<MenuList *if="Items && Items.length" [items]="Items" [open]="Open" Placement="bottom-start" (select)="Picked" (dismiss)="Dismissed" />
 </span>

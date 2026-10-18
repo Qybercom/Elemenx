@@ -233,6 +233,11 @@ function generateApplication (project, name, options) {
 	var indexFile = path.join(project, 'index.html');
 	var configFile = path.join(project, 'elemenx.config.js');
 	var packageFile = path.join(project, 'package.json');
+	var scripts = {dev: 'elemenx dev', build: 'elemenx build', serve: 'elemenx serve'};
+
+	/* A project made for native programs builds them with npm run native (elemenx build --native). */
+	if (options && options.native)
+		scripts.native = 'elemenx build --native' + (options.native === true || options.native === 'all' ? '' : ' ' + options.native);
 
 	if (writeIfMissing(appFile, "Elemenx.Application('" + name + "', {\n\t$Component: 'App',\n\t$Root: '" + name + "',\n\t$Mount: 'body'\n});")) {
 		host.push(appFile);
@@ -246,7 +251,7 @@ function generateApplication (project, name, options) {
 		host.push(configFile);
 	}
 
-	if (writeIfMissing(packageFile, JSON.stringify({name: applicationPackageName(path.basename(project) || name), private: true, scripts: {dev: 'elemenx dev', build: 'elemenx build', serve: 'elemenx serve'}, devDependencies: dependency()}, null, '\t') + '\n')) {
+	if (writeIfMissing(packageFile, JSON.stringify({name: applicationPackageName(path.basename(project) || name), private: true, scripts: scripts, devDependencies: dependency()}, null, '\t') + '\n')) {
 		host.push(packageFile);
 	}
 

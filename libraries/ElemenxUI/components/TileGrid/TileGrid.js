@@ -37,7 +37,7 @@ Elemenx.Component('TileGrid', {
 	GrowTimer: 0,
 	Last: null,
 	GroupPolicy: 'end',
-	NewGroupTitle: 'New group',
+	NewGroupTitle: '',
 	Dragging: '',
 	Snapshot: null,
 	Target: '',
@@ -58,7 +58,7 @@ Elemenx.Component('TileGrid', {
 		};
 
 		this.Escaped = function (event) {
-			if (event.key === 'Escape')
+			if (Elemenx.Locale.Key(event) === 'Escape')
 				self.End(true);
 		};
 
@@ -150,7 +150,7 @@ Elemenx.Component('TileGrid', {
 	},
 
 	Key: function (event, node) {
-		if (event.key !== 'Enter' && event.key !== ' ') return;
+		if (Elemenx.Locale.Key(event) !== 'Enter' && Elemenx.Locale.Key(event) !== ' ') return;
 
 		event.preventDefault();
 
@@ -342,7 +342,7 @@ Elemenx.Component('TileGrid', {
 		if (group === null) {
 			this.Sequence++;
 
-			created = {ID: 'group-' + Date.now() + '-' + this.Sequence, Title: this.NewGroupTitle, Tiles: []};
+			created = {ID: 'group-' + Date.now() + '-' + this.Sequence, Title: (this.NewGroupTitle || Elemenx.Locale.Text('ui.tileGrid.newGroupTitle')), Tiles: []};
 			target = at == null || at < 0 || at > groups.length ? groups.length : at;
 
 			groups.splice(target, 0, created);
@@ -449,7 +449,7 @@ Elemenx.Component('TileGrid', {
 
 	ResizeKey: function (event, node) {
 		var group = this.Groups[this.GroupIndex(node.getAttribute('data-group'))];
-		var step = {ArrowRight: 1, ArrowLeft: -1}[event.key];
+		var step = {ArrowRight: 1, ArrowLeft: -1}[Elemenx.Locale.Key(event)];
 		var groups;
 
 		if (!group || !step) return;

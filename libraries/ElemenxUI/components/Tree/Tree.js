@@ -19,8 +19,8 @@ Elemenx.Component('Tree', {
 	Loading: [],
 	Searchable: false,
 	Filter: '',
-	Label: 'Tree',
-	Empty: 'Nothing found',
+	Label: '',
+	Empty: '',
 	Focused: null,
 
 	$OnCreate: function () {
@@ -245,45 +245,45 @@ Elemenx.Component('Tree', {
 
 		if (!row) return;
 
-		if (event.key === 'ArrowDown') {
+		if (Elemenx.Locale.Key(event) === 'ArrowDown') {
 			this.Move(node, rows, index + 1);
 		}
-		else if (event.key === 'ArrowUp') {
+		else if (Elemenx.Locale.Key(event) === 'ArrowUp') {
 			this.Move(node, rows, index - 1);
 		}
-		else if (event.key === 'Home') {
+		else if (Elemenx.Locale.Key(event) === 'Home') {
 			this.Move(node, rows, 0);
 		}
-		else if (event.key === 'End') {
+		else if (Elemenx.Locale.Key(event) === 'End') {
 			this.Move(node, rows, rows.length - 1);
 		}
-		else if (event.key === 'ArrowRight') {
+		else if (Elemenx.Locale.Key(event) === 'ArrowRight') {
 			if (row.Group && !row.Open) this.Toggle(row.Item.ID, true);
 			else if (row.Open) this.Move(node, rows, index + 1);
 		}
-		else if (event.key === 'ArrowLeft') {
+		else if (Elemenx.Locale.Key(event) === 'ArrowLeft') {
 			if (row.Open) this.Toggle(row.Item.ID, false);
 			else if (row.Parent != null) this.Move(node, rows, rows.map(function (entry) {
 				return entry.Item.ID;
 			}).indexOf(row.Parent));
 		}
-		else if (event.key === 'Enter') {
+		else if (Elemenx.Locale.Key(event) === 'Enter') {
 			this.Select(row.Item);
 		}
-		else if (event.key === ' ' && this.Checkable) {
+		else if (Elemenx.Locale.Key(event) === ' ' && this.Checkable) {
 			if (!row.Item.Disabled)
 				this.Check(row.Item);
 		}
-		else if (event.key === '*') {
+		else if (Elemenx.Locale.Key(event) === '*') {
 			rows.filter(function (entry) {
 				return entry.Parent === row.Parent && entry.Group && !entry.Open;
 			}).forEach(function (entry) {
 				self.Toggle(entry.Item.ID, true);
 			});
 		}
-		else if (event.key.length === 1 && /\S/.test(event.key) && !event.ctrlKey && !event.metaKey && !event.altKey) {
+		else if (Elemenx.Locale.Key(event).length === 1 && /\S/.test(Elemenx.Locale.Key(event)) && !event.ctrlKey && !event.metaKey && !event.altKey) {
 			next = rows.slice(index + 1).concat(rows.slice(0, index + 1)).filter(function (entry) {
-				return String(entry.Item.Label).toLowerCase().indexOf(event.key.toLowerCase()) === 0;
+				return String(entry.Item.Label).toLowerCase().indexOf(Elemenx.Locale.Key(event).toLowerCase()) === 0;
 			})[0];
 
 			if (next)

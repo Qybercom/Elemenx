@@ -227,6 +227,68 @@ describe('Elemenx multi-Application Builder', function () {
 		expect(fs.existsSync(path.join(root, 'dist', 'libraries', 'UI', 'icons.svg'))).toBe(true);
 	});
 
+	it('takes the Library Services, Directives and Guards the Application names, and the ones they name', function () {
+		var root = project();
+
+		application(root, 'FooApp', 'FooRoot');
+
+		fs.writeFileSync(path.join(root, 'FooApp', 'FooRoot', 'FooRoot.html'), '<div *copy="Text"></div>');
+
+		var library = path.join(root, 'libraries', 'UI');
+
+		['services', 'directives', 'guards'].forEach(function (name) {
+			fs.mkdirSync(path.join(library, name), {recursive: true});
+		});
+
+		fs.writeFileSync(path.join(library, 'index.js'), "['services/Clipboard.js','services/Toast.js','services/Unused.js','directives/Copy.js','directives/Mask.js','guards/Auth.js','guards/Admin.js']");
+		fs.writeFileSync(path.join(library, 'services', 'Clipboard.js'), "Elemenx.Service('Clipboard', {Copy: function () { this.$Service('Toast'); }});");
+		fs.writeFileSync(path.join(library, 'services', 'Toast.js'), "Elemenx.Service('Toast', {});");
+		fs.writeFileSync(path.join(library, 'services', 'Unused.js'), "Elemenx.Service('Unused', {});");
+		fs.writeFileSync(path.join(library, 'directives', 'Copy.js'), "Elemenx.Directive('copy', {$OnCreate: function (context) { context.Component.$Service('Clipboard'); }});");
+		fs.writeFileSync(path.join(library, 'directives', 'Mask.js'), "Elemenx.Directive('mask', {});");
+		fs.writeFileSync(path.join(library, 'guards', 'Auth.js'), "Elemenx.Guard('Auth', function () { return true; });");
+		fs.writeFileSync(path.join(library, 'guards', 'Admin.js'), "Elemenx.Guard('Admin', function () { return true; });");
+		fs.writeFileSync(path.join(root, 'app.js'), "Elemenx.Library('UI', {$Root:'libraries/UI'});\nElemenx.Application('FooApp', {$Use:['UI'],$Component:'FooRoot',$Root:'FooApp',$Mount:'#foo',$Router:{Routes:[{Path:'/',Component:'FooRoot',Guards:['Auth']}]}});");
+
+		Builder.Build(root, {application: 'FooApp', entry: 'app.js', index: 'index.html', out: 'dist'});
+
+		var bundle = fs.readFileSync(path.join(root, 'dist', 'app.js'), 'utf8');
+
+		expect(bundle).toContain('"copy": function');
+		expect(bundle).toContain('"Clipboard": function');
+		expect(bundle).toContain('"Toast": function');
+		expect(bundle).toContain('"Auth": function');
+		expect(bundle).not.toContain('"mask": function');
+		expect(bundle).not.toContain('"Unused": function');
+		expect(bundle).not.toContain('"Admin": function');
+	});
+
+	it('leaves out of elemenx.js the sections the build does not use, and keeps all of it with full', function () {
+		var root = project();
+		var framework;
+
+		application(root, 'FooApp', 'FooRoot');
+
+		fs.writeFileSync(path.join(root, 'app.js'), "Elemenx.Application('FooApp', {$Component:'FooRoot',$Root:'FooApp',$Mount:'#foo',$Storage:{Prefix:'foo'}});");
+
+		Builder.Build(root, {application: 'FooApp', entry: 'app.js', index: 'index.html', out: 'dist'});
+
+		framework = fs.readFileSync(path.join(root, 'dist', 'elemenx.js'), 'utf8');
+
+		expect(framework).toContain('\n\t/* Storage */\n');
+		expect(framework).not.toContain('\n\t/* Network */\n');
+		expect(framework).not.toContain('\n\t/* Router */\n');
+		expect(framework).not.toContain('\n\t/* ServiceWorker bootstrap */\n');
+		expect(framework.length).toBeLessThan(fs.readFileSync(path.resolve('elemenx.js'), 'utf8').length * 0.7);
+		expect(function () {
+			new Function(framework);
+		}).not.toThrow();
+
+		Builder.Build(root, {application: 'FooApp', entry: 'app.js', index: 'index.html', out: 'dist', full: true});
+
+		expect(fs.readFileSync(path.join(root, 'dist', 'elemenx.js'), 'utf8')).toBe(fs.readFileSync(path.resolve('elemenx.js'), 'utf8'));
+	});
+
 	it('resolves the built-in ElemenxUI Library from $Use without an explicit declaration', function () {
 		var declarations = Builder.LibraryDeclarations(project(), "Elemenx.Application('FooApp', {$Use:['ElemenxUI']});");
 

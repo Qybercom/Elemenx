@@ -1,7 +1,7 @@
-<dialog class="elemenx-palette" *modal="Track(Open)" aria-label="Command palette" (dismiss)="Dismissed">
+<dialog class="elemenx-palette" *modal="Track(Open)" [attribute.aria-label]="$T('ui.commandPalette.title')" (dismiss)="Dismissed">
 	<div class="elemenx-input large elemenx-palette-search">
 		<Icon Name="search" />
-		<input class="elemenx-input-control" type="text" role="combobox" aria-expanded="true" aria-autocomplete="list" aria-label="Command" autocomplete="off" spellcheck="false" [placeholder]="Placeholder" [value]="Query" (input)="Search" (keydown)="Key" />
+		<input class="elemenx-input-control" type="text" role="combobox" aria-expanded="true" aria-autocomplete="list" [attribute.aria-label]="$T('ui.commandPalette.command')" autocomplete="off" spellcheck="false" [placeholder]="(Placeholder || $T('ui.commandPalette.placeholder'))" [value]="Query" (input)="Search" (keydown)="Key" />
 		<kbd class="elemenx-kbd">Esc</kbd>
 	</div>
 	<div class="elemenx-palette-list" role="listbox">
@@ -14,6 +14,6 @@
 				<kbd class="elemenx-kbd" *if="row.Shortcut">{{row.Shortcut}}</kbd>
 			</div>
 		</div>
-		<div class="elemenx-popup-empty" *if="!Count(Rows(Commands, Bound, Query, Recent))">{{Empty}}</div>
+		<div class="elemenx-popup-empty" *if="!Count(Rows(Commands, Bound, Query, Recent))">{{(Empty || $T('ui.commandPalette.empty'))}}</div>
 	</div>
 </dialog>

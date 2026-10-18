@@ -1,0 +1,21 @@
+<section class="elemenx-window" role="dialog" aria-modal="false" [attribute.aria-labelledby]="WindowID + '-title'" [attribute.hidden]="Open ? null : ''" [class]="[Variant || 'default', Level || 'primary', Active ? 'active' : '', Minimized ? 'minimized' : '', Maximized ? 'maximized' : '', Moving ? 'moving' : '', Bounds === 'viewport' ? 'fixed' : '', HeaderShape === 'trapezoid' ? 'trapezoid' : '']" [attribute.style]="Geometry(X, Y, Width, Height, Z, Maximized, Minimized)" (pointerdown)="Pressed" (focusin)="Pressed">
+	<header class="elemenx-window-header" tabindex="0" [attribute.aria-roledescription]="$T('ui.window.handle')" [attribute.aria-label]="(Title || '') + ' — ' + $T('ui.window.keys')" (pointerdown)="PointerDown" (pointermove)="PointerMove" (pointerup)="PointerUp" (pointercancel)="PointerUp" (dblclick)="Toggled" (keydown)="Key">
+		<span class="elemenx-window-tab">
+			<Icon *if="Icon" [name]="Icon" />
+			<span class="elemenx-window-titles">
+				<span class="elemenx-window-overline" *if="Overline">{{Overline}}</span>
+				<span class="elemenx-window-title" [attribute.id]="WindowID + '-title'">{{Title}}</span>
+			</span>
+		</span>
+		<span class="elemenx-window-extra"><slot name="header"></slot></span>
+		<span class="elemenx-window-controls">
+			<button class="elemenx-window-control popout" type="button" *if="PopOut && CanPopOut()" [attribute.aria-label]="Popped ? $T('ui.window.popIn') : $T('ui.window.popOut')" [attribute.title]="Popped ? $T('ui.window.popIn') : $T('ui.window.popOut')" [attribute.aria-pressed]="String(Popped)" (click)="PopPressed"><Icon Name="pip" /></button>
+			<button class="elemenx-window-control minimize" type="button" *if="Minimizable" [attribute.aria-label]="Minimized ? $T('ui.window.unfold') : $T('ui.window.minimize')" [attribute.title]="Minimized ? $T('ui.window.unfold') : $T('ui.window.minimize')" [attribute.aria-expanded]="Minimized ? 'false' : 'true'" (click)="MinimizePressed"><Icon Name="remove" /></button>
+			<button class="elemenx-window-control maximize" type="button" *if="Maximizable" [attribute.aria-label]="Maximized ? $T('ui.window.restore') : $T('ui.window.maximize')" [attribute.title]="Maximized ? $T('ui.window.restore') : $T('ui.window.maximize')" (click)="MaximizePressed"><Icon [name]="Maximized ? 'minimize' : 'maximize'" /></button>
+			<button class="elemenx-window-control close" type="button" *if="Closable" [attribute.aria-label]="$T('ui.window.close')" [attribute.title]="$T('ui.window.close')" (click)="ClosePressed"><Icon Name="close" /></button>
+		</span>
+	</header>
+	<div class="elemenx-window-body" [attribute.hidden]="Minimized ? '' : null"><slot></slot></div>
+	<footer class="elemenx-window-footer elemenx-layout-area" [attribute.hidden]="Minimized ? '' : null"><slot name="footer"></slot></footer>
+	<span class="elemenx-window-handle" *for="edge of (Resizable && !Minimized && !Maximized ? ['n', 'e', 's', 'w', 'ne', 'nw', 'se', 'sw'] : [])" [attribute.data-edge]="edge" [class]="[edge]" aria-hidden="true" (pointerdown)="PointerDown" (pointermove)="PointerMove" (pointerup)="PointerUp" (pointercancel)="PointerUp"></span>
+</section>

@@ -46,7 +46,8 @@ describe('Elemenx dist', function () {
 	it('embeds in ElemenxUI its styles, sprites, data and every entity with its template and style', function () {
 		var ui = read('elemenx-ui.min.js');
 
-		expect(ui).toContain('Elemenx.Library(\'ElemenxUI\',{$Root:root});');
+		expect(ui).toContain('Elemenx.Library(\'ElemenxUI\',{$Root:root,$Locales:{"URL":"locales/{language}.json","Languages":["en","ru"]}});');
+		expect(ui).toContain('Elemenx.Resource(root+"/locales/ru.json",');
 		expect(ui).toContain('Elemenx.Resource(root+"/index.svg",');
 		expect(ui).toContain('Elemenx.Resource(root+"/icons/weather.svg",');
 		expect(ui).not.toContain('"/data/emoji');
@@ -63,9 +64,11 @@ describe('Elemenx dist', function () {
 	it('leaves the packs of ElemenxUI (packs.json) to scripts of their own that put their files next to the script', function () {
 		var packs = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), 'libraries', 'ElemenxUI', 'packs.json'), 'utf8'));
 
-		expect(Object.keys(packs)).toEqual(['emoji', 'emoji.ru', 'brands', 'files']);
+		expect(Object.keys(packs)).toEqual(['emoji', 'emoji.ru', 'cities', 'cities.ru', 'brands', 'files', 'fantasy', 'scifi']);
 
-		Object.keys(packs).forEach(function (name) {
+		Object.keys(packs).filter(function (name) {
+			return !/\.css$/.test(packs[name].Files[0]);
+		}).forEach(function (name) {
 			['elemenx-ui.' + name + '.js', 'elemenx-ui.' + name + '.min.js'].forEach(function (file) {
 				var registered = {};
 
@@ -82,12 +85,50 @@ describe('Elemenx dist', function () {
 					return 'file:///D:/site/dist/elemenx-ui/' + relative;
 				}));
 				expect(registered['file:///D:/site/dist/elemenx-ui/' + packs[name].Files[0]].length, file).toBeGreaterThan(1000);
+
+				/* The data of text files is kept as it is: the cities are lines of fields between tabs. */
+				packs[name].Files.filter(function (relative) {
+					return /\.txt$/.test(relative);
+				}).forEach(function (relative) {
+					expect(registered['file:///D:/site/dist/elemenx-ui/' + relative], file).toBe(fs.readFileSync(path.resolve(process.cwd(), 'libraries', 'ElemenxUI', relative), 'utf8'));
+				});
+			});
+		});
+	});
+
+	it('leaves the game themes out of elemenx-ui.js, to scripts of their own that put their stylesheet into the page', function () {
+		var ui = read('elemenx-ui.js');
+
+		expect(ui).not.toContain("[data-theme][data-theme='fantasy']");
+		expect(ui).not.toContain("[data-theme][data-theme='scifi']");
+		expect(ui).toContain("[data-theme][data-theme='darcula']");
+
+		['fantasy', 'scifi'].forEach(function (name) {
+			['elemenx-ui.' + name + '.js', 'elemenx-ui.' + name + '.min.js'].forEach(function (file) {
+				var styles = [];
+
+				new vm.Script(read(file)).runInNewContext({
+					document: {
+						currentScript: {src: 'file:///D:/site/dist/' + file},
+						createElement: function () {
+							return {setAttribute: function () {}};
+						},
+						head: {
+							appendChild: function (style) {
+								styles.push(style.textContent);
+							}
+						}
+					}
+				});
+
+				expect(styles.length, file).toBe(1);
+				expect(styles[0], file).toContain("[data-theme][data-theme='" + name + "']");
 			});
 		});
 	});
 
 	it('writes no Unicode noncharacter, which an HTML parser reports in an inline script', function () {
-		['elemenx-ui.js', 'elemenx-ui.emoji.js', 'elemenx-ui.emoji.ru.js', 'elemenx-ui.brands.js', 'elemenx-ui.files.js'].forEach(function (name) {
+		['elemenx-ui.js', 'elemenx-ui.emoji.js', 'elemenx-ui.emoji.ru.js', 'elemenx-ui.cities.js', 'elemenx-ui.cities.ru.js', 'elemenx-ui.brands.js', 'elemenx-ui.files.js'].forEach(function (name) {
 			var source = read(name);
 			var found = [];
 
@@ -128,6 +169,17 @@ describe('Elemenx dist', function () {
 			expect(embedded('data/emoji.json')).toBe(true);
 			expect(embedded('data/emoji-en.json')).toBe(true);
 			expect(embedded('data/emoji-ru.json')).toBe(false);
+
+			/* The game themes go in when the Application names them, or by --packs. */
+			expect(html).not.toContain("[data-theme][data-theme='fantasy']");
+			expect(html).toContain("[data-theme][data-theme='darcula']");
+
+			Builder.Build(project, {single: true, out: '../single-packs-output', packs: ['fantasy']});
+
+			html = fs.readFileSync(path.join(target, 'index.html'), 'utf8');
+
+			expect(html).toContain("[data-theme][data-theme='fantasy']");
+			expect(html).not.toContain("[data-theme][data-theme='scifi']");
 		}
 		finally {
 			fs.rmSync(target, {recursive: true, force: true});
@@ -168,8 +220,9 @@ describe('Elemenx dist', function () {
 		expect(fs.existsSync(path.join(output, 'elemenx-ui', 'icons', 'brands.svg'))).toBe(true);
 		expect(manifest.Version).toBe(Package.version);
 		expect(Object.keys(manifest.Files).sort()).toEqual([
-			'elemenx-ui.brands.js', 'elemenx-ui.brands.min.js', 'elemenx-ui.emoji.js', 'elemenx-ui.emoji.min.js', 'elemenx-ui.emoji.ru.js', 'elemenx-ui.emoji.ru.min.js',
-			'elemenx-ui.files.js', 'elemenx-ui.files.min.js', 'elemenx-ui.js', 'elemenx-ui.min.js', 'elemenx.all.js', 'elemenx.all.min.js', 'elemenx.js', 'elemenx.min.js'
+			'elemenx-ui.brands.js', 'elemenx-ui.brands.min.js', 'elemenx-ui.cities.js', 'elemenx-ui.cities.min.js', 'elemenx-ui.cities.ru.js', 'elemenx-ui.cities.ru.min.js', 'elemenx-ui.emoji.js', 'elemenx-ui.emoji.min.js', 'elemenx-ui.emoji.ru.js', 'elemenx-ui.emoji.ru.min.js',
+			'elemenx-ui.fantasy.js', 'elemenx-ui.fantasy.min.js', 'elemenx-ui.files.js', 'elemenx-ui.files.min.js', 'elemenx-ui.js', 'elemenx-ui.min.js',
+			'elemenx-ui.scifi.js', 'elemenx-ui.scifi.min.js', 'elemenx.all.js', 'elemenx.all.min.js', 'elemenx.js', 'elemenx.min.js'
 		]);
 		expect(manifest.Files['elemenx.min.js'].Integrity).toBe('sha384-' + crypto.createHash('sha384').update(fs.readFileSync(path.join(output, 'elemenx.min.js'))).digest('base64'));
 		expect(manifest.Files['elemenx.min.js'].Gzip).toBeLessThan(manifest.Files['elemenx.min.js'].Size);

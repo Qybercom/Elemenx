@@ -50,4 +50,55 @@ describe('Regression: Component Style / StyleURL', function () {
 
 		component.$Destroy();
 	});
+
+	/*
+	 * Regression: every instance of a component of a StyleURL placed its stylesheet once more (thousands on a large page,
+	 * and each one restyled the whole page: a long pause before a dialog opened).
+	 */
+	it('StyleURL places the CSS once, for the first instance and for every later one', async function () {
+		var name = unique('RemoteStyleMany');
+		var factory = Elemenx.Component(name, {
+			$Template: '<div class="remote-style-many"></div>',
+			$StyleURL: 'Component.css',
+			$DefinitionURL: '/tests/public/component-style/Component.js'
+		});
+		var instances = [];
+		var i = 0;
+		var before;
+		var count = function () {
+			return Array.prototype.filter.call(document.querySelectorAll('style'), function (item) {
+				return item.textContent.indexOf('.remote-style-test') !== -1;
+			}).length;
+		};
+
+		before = count();
+
+		while (i < 5) {
+			instances.push(factory());
+
+			document.getElementById('mount').appendChild(instances[i].$Element());
+
+			i++;
+		}
+
+		expect(await waitFor(function () {
+			return document.querySelectorAll('.remote-style-many').length === 5;
+		}, 1000)).not.toBe(false);
+
+		expect(count()).toBe(before + 1);
+
+		instances.push(factory());
+
+		document.getElementById('mount').appendChild(instances[5].$Element());
+
+		await waitFor(function () {
+			return document.querySelectorAll('.remote-style-many').length === 6;
+		}, 1000);
+
+		expect(count()).toBe(before + 1);
+
+		instances.forEach(function (instance) {
+			instance.$Destroy();
+		});
+	});
 });

@@ -38,13 +38,13 @@
 
 .elemenx-drawer.right {
 	inset: 0 0 0 auto;
-	border-left: 1px solid var(--elemenx-border);
+	border-inline-start: 1px solid var(--elemenx-border);
 	animation: elemenx-drawer-right var(--elemenx-duration-slow) var(--elemenx-easing);
 }
 
 .elemenx-drawer.left {
 	inset: 0 auto 0 0;
-	border-right: 1px solid var(--elemenx-border);
+	border-inline-end: 1px solid var(--elemenx-border);
 	animation: elemenx-drawer-left var(--elemenx-duration-slow) var(--elemenx-easing);
 }
 
@@ -155,6 +155,43 @@
 
 @media (prefers-reduced-motion: reduce) {
 	.elemenx-drawer[open] {
+		animation: none;
+	}
+}
+
+/*
+ * A drawer that waits for an answer shakes when Escape or the backdrop would close it. The animation of its opening
+ * stays in the list: an animation that leaves the list and comes back starts again, and the drawer would slide in twice.
+ */
+.elemenx-drawer.right.refused {
+	animation: elemenx-drawer-right var(--elemenx-duration-slow) var(--elemenx-easing), elemenx-drawer-refuse var(--elemenx-duration-slow) var(--elemenx-easing) 2;
+}
+
+.elemenx-drawer.left.refused {
+	animation: elemenx-drawer-left var(--elemenx-duration-slow) var(--elemenx-easing), elemenx-drawer-refuse var(--elemenx-duration-slow) var(--elemenx-easing) 2;
+}
+
+.elemenx-drawer.top.refused {
+	animation: elemenx-drawer-top var(--elemenx-duration-slow) var(--elemenx-easing), elemenx-drawer-refuse var(--elemenx-duration-slow) var(--elemenx-easing) 2;
+}
+
+.elemenx-drawer.bottom.refused {
+	animation: elemenx-drawer-bottom var(--elemenx-duration-slow) var(--elemenx-easing), elemenx-drawer-refuse var(--elemenx-duration-slow) var(--elemenx-easing) 2;
+}
+
+@keyframes elemenx-drawer-refuse {
+	25% {
+		translate: -6px 0;
+	}
+
+	75% {
+		translate: 6px 0;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.elemenx-drawer.refused[open] {
+		outline: 2px solid var(--elemenx-focus);
 		animation: none;
 	}
 }

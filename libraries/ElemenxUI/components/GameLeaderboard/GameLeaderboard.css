@@ -1,0 +1,160 @@
+.elemenx-game-leaderboard {
+	display: flex;
+	flex-direction: column;
+	gap: var(--elemenx-game-table-spacing, 2px);
+	color: var(--elemenx-game-text);
+	font-family: var(--elemenx-game-font);
+}
+
+.elemenx-game-leaderboard-head,
+.elemenx-game-leaderboard-row {
+	display: grid;
+	grid-template-columns: 40px minmax(0, 1fr) auto;
+	align-items: center;
+	gap: 10px;
+	padding: 4px 10px;
+}
+
+.elemenx-game-leaderboard-head {
+	background: var(--elemenx-game-table-head);
+	color: var(--elemenx-game-table-head-text);
+	font-size: var(--elemenx-font-size-small);
+	letter-spacing: var(--elemenx-game-letter-spacing);
+	text-transform: var(--elemenx-game-text-transform);
+}
+
+.elemenx-game-leaderboard-row {
+	min-height: 40px;
+	background: var(--elemenx-game-table-cell);
+	border-bottom: var(--elemenx-game-table-line);
+}
+
+.elemenx-game-leaderboard-row:nth-of-type(2n + 1) {
+	background: var(--elemenx-game-table-stripe);
+}
+
+.elemenx-game-leaderboard.selectable .elemenx-game-leaderboard-row:not(.gap) {
+	cursor: pointer;
+}
+
+.elemenx-game-leaderboard.selectable .elemenx-game-leaderboard-row:not(.gap):hover {
+	background: var(--elemenx-game-table-hover);
+}
+
+.elemenx-game-leaderboard-row:focus-visible {
+	outline: none;
+	box-shadow: var(--elemenx-game-glow);
+}
+
+/* The player of the page stands out in the selection of the theme. */
+.elemenx-game-leaderboard-row.me {
+	background: var(--elemenx-game-table-selected);
+	color: var(--elemenx-game-table-selected-text);
+}
+
+.elemenx-game-leaderboard-row.gap {
+	min-height: 20px;
+	background: transparent;
+	border-bottom: 0;
+	color: var(--elemenx-game-muted);
+}
+
+.elemenx-game-leaderboard-gap {
+	grid-column: 1 / -1;
+	text-align: center;
+}
+
+/* The rank: a number, a medal of the theme for the first three. */
+.elemenx-game-leaderboard-rank {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 28px;
+	height: 28px;
+	color: var(--elemenx-game-muted);
+	font-variant-numeric: tabular-nums;
+	font-weight: var(--elemenx-font-weight-bold);
+}
+
+.elemenx-game-leaderboard-row.gold .elemenx-game-leaderboard-rank,
+.elemenx-game-leaderboard-row.silver .elemenx-game-leaderboard-rank,
+.elemenx-game-leaderboard-row.bronze .elemenx-game-leaderboard-rank {
+	border: 2px solid var(--elemenx-game-medal);
+	border-radius: 50%;
+	box-shadow: 0 0 8px var(--elemenx-game-medal), inset 0 0 6px var(--elemenx-game-medal);
+	color: var(--elemenx-game-medal);
+}
+
+.elemenx-game-leaderboard-row.gold {
+	--elemenx-game-medal: var(--elemenx-game-medal-gold);
+}
+
+.elemenx-game-leaderboard-row.silver {
+	--elemenx-game-medal: var(--elemenx-game-medal-silver);
+}
+
+.elemenx-game-leaderboard-row.bronze {
+	--elemenx-game-medal: var(--elemenx-game-medal-bronze);
+}
+
+.elemenx-game-leaderboard-player {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	min-width: 0;
+}
+
+.elemenx-game-leaderboard-avatar {
+	display: inline-flex;
+	flex: none;
+	align-items: center;
+	justify-content: center;
+	width: 28px;
+	height: 28px;
+	object-fit: cover;
+	background: var(--elemenx-game-cell);
+	border: var(--elemenx-game-cell-frame);
+	border-radius: var(--elemenx-game-cell-radius);
+}
+
+.elemenx-game-leaderboard-name {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	min-width: 0;
+}
+
+.elemenx-game-leaderboard-name > strong {
+	overflow: hidden;
+	font-weight: var(--elemenx-font-weight-strong);
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.elemenx-game-leaderboard-note {
+	color: var(--elemenx-game-muted);
+	font-size: var(--elemenx-font-size-small);
+}
+
+.elemenx-game-leaderboard-change {
+	font-size: var(--elemenx-font-size-small);
+	font-variant-numeric: tabular-nums;
+}
+
+.elemenx-game-leaderboard-change.up {
+	color: var(--elemenx-game-good);
+}
+
+.elemenx-game-leaderboard-change.down {
+	color: var(--elemenx-game-bad);
+}
+
+.elemenx-game-leaderboard-score {
+	font-variant-numeric: tabular-nums;
+	text-align: end;
+}
+
+.elemenx-game-leaderboard-row .elemenx-game-leaderboard-score {
+	color: var(--elemenx-game-accent);
+	font-weight: var(--elemenx-font-weight-bold);
+}

@@ -1,0 +1,14 @@
+<div class="elemenx-game-hud" role="region" [attribute.aria-label]="Label || $T('ui.game.screen')" [attribute.style]="'--elemenx-game-hud-padding: ' + Padding + 'px;'">
+	<div class="elemenx-game-hud-scene"><slot></slot></div>
+	<div class="elemenx-game-hud-layer">
+		<div class="elemenx-game-hud-area top-start"><slot name="top-start"></slot></div>
+		<div class="elemenx-game-hud-area top"><slot name="top"></slot></div>
+		<div class="elemenx-game-hud-area top-end"><slot name="top-end"></slot></div>
+		<div class="elemenx-game-hud-area start"><slot name="start"></slot></div>
+		<div class="elemenx-game-hud-area center"><slot name="center"></slot></div>
+		<div class="elemenx-game-hud-area end"><slot name="end"></slot></div>
+		<div class="elemenx-game-hud-area bottom-start"><slot name="bottom-start"></slot></div>
+		<div class="elemenx-game-hud-area bottom"><slot name="bottom"></slot></div>
+		<div class="elemenx-game-hud-area bottom-end"><slot name="bottom-end"></slot></div>
+	</div>
+</div>

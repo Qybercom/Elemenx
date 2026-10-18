@@ -1,0 +1,20 @@
+/* The mixer: the strips of the channels in a row that scrolls, the master strip at the end. */
+.elemenx-mixer {
+	display: flex;
+	align-items: flex-start;
+	gap: 12px;
+	max-width: 100%;
+	padding: 12px;
+	background: var(--elemenx-background);
+	border: 1px solid var(--elemenx-border);
+	border-radius: var(--elemenx-radius-large);
+}
+
+.elemenx-mixer-channels {
+	display: flex;
+	flex: 0 1 auto;
+	gap: 6px;
+	min-width: 0;
+	padding-bottom: 4px;
+	overflow-x: auto;
+}

@@ -103,3 +103,56 @@
 	width: 24px;
 	height: 24px;
 }
+
+/*
+ * The vertical slider stands upright, its minimum at the bottom: the track runs up the middle, the thumbs and ticks
+ * center on it, and the value shows beside the thumb.
+ */
+.elemenx-slider.vertical {
+	flex-direction: column;
+	width: var(--elemenx-control);
+	min-width: 0;
+	height: 160px;
+	padding: 8px 0;
+}
+
+.elemenx-slider.vertical.small {
+	width: var(--elemenx-control-small);
+}
+
+.elemenx-slider.vertical.large {
+	width: var(--elemenx-control-large);
+}
+
+.elemenx-slider.vertical .elemenx-slider-track {
+	width: 4px;
+	height: auto;
+}
+
+.elemenx-slider.vertical.large .elemenx-slider-track {
+	width: 8px;
+}
+
+.elemenx-slider.vertical .elemenx-slider-fill {
+	right: 0;
+	left: 0;
+}
+
+.elemenx-slider.vertical .elemenx-slider-tick,
+.elemenx-slider.vertical .elemenx-slider-thumb {
+	top: auto;
+	left: 50%;
+	transform: translate(-50%, 50%);
+}
+
+.elemenx-slider.vertical .elemenx-slider-value {
+	bottom: 50%;
+	left: calc(100% + 8px);
+	transform: translateY(50%);
+}
+
+/* On a right-to-left page the slider runs from right to left: its thumbs and ticks center on the other side. */
+[dir='rtl'] .elemenx-slider-tick,
+[dir='rtl'] .elemenx-slider-thumb {
+	transform: translate(50%, -50%);
+}

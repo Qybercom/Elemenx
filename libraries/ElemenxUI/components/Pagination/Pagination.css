@@ -6,7 +6,7 @@
 
 .elemenx-pagination-size {
 	height: 28px;
-	margin-right: 8px;
+	margin-inline-end: 8px;
 	padding: 0 4px;
 	background: var(--elemenx-surface);
 	border: 1px solid var(--elemenx-border-strong);

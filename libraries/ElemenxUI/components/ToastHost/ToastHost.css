@@ -9,24 +9,24 @@
 }
 
 .elemenx-toast-host.bottom-right {
-	right: 16px;
+	inset-inline-end: 16px;
 	bottom: 16px;
 }
 
 .elemenx-toast-host.bottom-left {
 	bottom: 16px;
-	left: 16px;
+	inset-inline-start: 16px;
 }
 
 .elemenx-toast-host.top-right {
 	top: 16px;
-	right: 16px;
+	inset-inline-end: 16px;
 	flex-direction: column-reverse;
 }
 
 .elemenx-toast-host.top-left {
 	top: 16px;
-	left: 16px;
+	inset-inline-start: 16px;
 	flex-direction: column-reverse;
 }
 
@@ -53,7 +53,7 @@
 	padding: 12px;
 	background: var(--elemenx-surface);
 	border: 1px solid var(--elemenx-border);
-	border-left: 4px solid var(--elemenx-toast-color);
+	border-inline-start: 4px solid var(--elemenx-toast-color);
 	border-radius: var(--elemenx-radius-large);
 	box-shadow: var(--elemenx-shadow);
 	color: var(--elemenx-text);
@@ -127,9 +127,9 @@
 
 .elemenx-toast-timer {
 	position: absolute;
-	right: 0;
+	inset-inline-end: 0;
 	bottom: 0;
-	left: 0;
+	inset-inline-start: 0;
 	height: 2px;
 	background: var(--elemenx-toast-color);
 	opacity: 0.48;

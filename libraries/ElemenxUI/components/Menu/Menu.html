@@ -1,4 +1,4 @@
 <div class="elemenx-menu-root elemenx-popup-anchor">
 	<Button [label]="Label" [icon]="Icon" [iconRight]="Label ? 'chevron-down' : ''" [title]="Title" [variant]="Variant" [size]="Size" [disabled]="Disabled" [pressed]="Open ? true : null" (click)="Toggle" />
-	<MenuList [items]="Items" [open]="Open" [placement]="Placement" (select)="Picked" (dismiss)="Close" />
+	<MenuList [items]="Items" [open]="Open" [placement]="Placement" [sheet]="Sheet" [title]="Label || Title" (select)="Picked" (dismiss)="Close" />
 </div>

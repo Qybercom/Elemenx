@@ -12,7 +12,7 @@ Elemenx.Component('TagInput', {
 	$StyleURL: 'TagInput.css',
 	Value: [],
 	Suggestions: [],
-	Placeholder: 'Add a tag',
+	Placeholder: '',
 	Separators: [',', ';'],
 	AllowNew: true,
 	Unique: true,
@@ -208,6 +208,8 @@ Elemenx.Component('TagInput', {
 			}
 
 			this.Active = (this.Active + (event.key === 'ArrowDown' ? 1 : -1) + matching.length) % matching.length;
+
+			this.Reveal('.elemenx-popup .elemenx-option.active');
 		}
 		else if (event.key === 'Escape' && this.Open) {
 			event.preventDefault();
@@ -258,5 +260,31 @@ Elemenx.Component('TagInput', {
 
 	Dismissed: function () {
 		this.Open = false;
+	},
+
+	/* Scrolls the list of the active item so that the item shows: the list only, never the page. */
+	Reveal: function (selector) {
+		var root = this.$Element();
+
+		window.setTimeout(function () {
+			var item = root && root.querySelector(selector);
+			var list = item && item.parentElement;
+			var box;
+			var rect;
+
+			while (list && list !== root && list.scrollHeight <= list.clientHeight && list.scrollWidth <= list.clientWidth)
+				list = list.parentElement;
+
+			if (!item || !list) return;
+
+			box = list.getBoundingClientRect();
+			rect = item.getBoundingClientRect();
+
+			if (rect.top < box.top) list.scrollTop -= box.top - rect.top;
+			else if (rect.bottom > box.bottom) list.scrollTop += rect.bottom - box.bottom;
+
+			if (rect.left < box.left) list.scrollLeft -= box.left - rect.left;
+			else if (rect.right > box.right) list.scrollLeft += rect.right - box.right;
+		}, 0);
 	}
 });

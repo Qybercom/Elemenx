@@ -10,7 +10,8 @@ Builder.Build(project, {
 	application: 'application',
 	entry: 'app.js',
 	index: 'index.html',
-	out: 'dist'
+	out: 'dist',
+	precompile: true
 });
 
 var server = Server.Create({

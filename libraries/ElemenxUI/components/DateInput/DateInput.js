@@ -2,6 +2,7 @@
  * A date field with its own calendar. Value is an ISO date ('2024-11-22'), or a month ('2024-11') in Mode 'month'; '' when empty.
  * Format uses DD, MM and YYYY ('DD.MM.YYYY'); by default it follows Locale (the browser language).
  * The text accepts only the digits of Format; Min and Max (ISO) limit both the text and the calendar.
+ * FirstDay: the first day of the week of the calendar, 0 Sunday or 1 Monday (the default); 'locale' for the one of Locale.
  */
 Elemenx.Component('DateInput', {
 	$TemplateURL: 'DateInput.html',
@@ -15,7 +16,7 @@ Elemenx.Component('DateInput', {
 	Max: '',
 	Placeholder: '',
 	TodayLabel: '',
-	ClearLabel: 'Clear',
+	ClearLabel: '',
 	Size: 'medium',
 	Shape: 'default',
 	Name: null,
@@ -30,12 +31,12 @@ Elemenx.Component('DateInput', {
 
 	$OnCreate: function () {
 		var self = this;
-		var locale = this.Locale || (navigator.languages && navigator.languages[0]) || navigator.language || 'en';
+		var locale = this.Locale || Elemenx.Locale.Language();
 
 		this.LocaleName = locale;
 		this.TodayText = this.TodayLabel || this.Relative(locale, 'day', 'Today');
 		this.Pattern = this.Format || this.LocalePattern(locale);
-		this.WeekStart = this.FirstDay === null || this.FirstDay === '' ? this.LocaleFirstDay(locale) : Number(this.FirstDay) % 7;
+		this.WeekStart = this.FirstDay === null || this.FirstDay === '' ? 1 : this.FirstDay === 'locale' ? this.LocaleFirstDay(locale) : Number(this.FirstDay) % 7;
 
 		this.FormatFor = function (mode) {
 			if (mode !== 'month') return self.Pattern;
@@ -427,7 +428,7 @@ Elemenx.Component('DateInput', {
 	},
 
 	InputKey: function (event, node) {
-		if (event.key === 'ArrowDown' && event.altKey) {
+		if (Elemenx.Locale.Key(event) === 'ArrowDown' && event.altKey) {
 			event.preventDefault();
 
 			this.Toggle(event, node);
@@ -436,22 +437,22 @@ Elemenx.Component('DateInput', {
 
 	CalendarKey: function (event, node) {
 		var focus = this.Parts(this.Cursor);
-		var step = {ArrowLeft: -1, ArrowRight: 1, ArrowUp: -7, ArrowDown: 7}[event.key];
+		var step = {ArrowLeft: -1, ArrowRight: 1, ArrowUp: -7, ArrowDown: 7}[Elemenx.Locale.Key(event)];
 		var date;
 
 		if (this.View !== 'days' || !focus || event.target.getAttribute('data-date') === null) return;
 
-		if (event.key === 'PageUp' || event.key === 'PageDown') {
+		if (Elemenx.Locale.Key(event) === 'PageUp' || Elemenx.Locale.Key(event) === 'PageDown') {
 			event.preventDefault();
 
-			this.Shift((event.key === 'PageUp' ? -1 : 1) * (event.shiftKey ? 12 : 1), node);
+			this.Shift((Elemenx.Locale.Key(event) === 'PageUp' ? -1 : 1) * (event.shiftKey ? 12 : 1), node);
 
 			return;
 		}
 
-		if (event.key === 'Home' || event.key === 'End') {
+		if (Elemenx.Locale.Key(event) === 'Home' || Elemenx.Locale.Key(event) === 'End') {
 			date = new Date(focus.Year, focus.Month - 1, focus.Day);
-			step = event.key === 'Home' ? -((date.getDay() - this.WeekStart + 7) % 7) : 6 - (date.getDay() - this.WeekStart + 7) % 7;
+			step = Elemenx.Locale.Key(event) === 'Home' ? -((date.getDay() - this.WeekStart + 7) % 7) : 6 - (date.getDay() - this.WeekStart + 7) % 7;
 		}
 
 		if (!step) return;

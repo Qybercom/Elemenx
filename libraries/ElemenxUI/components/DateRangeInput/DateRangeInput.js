@@ -3,7 +3,8 @@
  * button opens two months side by side: the first press picks the start, the second the end (the range shows while
  * the pointer moves), in either order. Presets on the left pick a whole range at once: [{Label, Value: [start, end]}
  * or {Label, Last: days (today included)} or {Label, Period: 'week', 'month', 'previous-month', 'year'}].
- * Min and Max bound the days; FirstDay is the first day of the week (0 Sunday, 1 Monday; by default from Locale).
+ * Min and Max bound the days; FirstDay is the first day of the week (0 Sunday, 1 Monday, the default; 'locale' for the
+ * one of Locale).
  * Keys in the months: arrows move a day or a week, Page Up and Down a month, Enter or Space pick, Escape closes.
  * Events: change ([start, end]).
  */
@@ -15,16 +16,16 @@ Elemenx.Component('DateRangeInput', {
 	Max: '',
 	Locale: '',
 	FirstDay: null,
-	Placeholder: 'Start – End',
+	Placeholder: '',
 	Presets: [
 		{Label: 'Today', Last: 1},
-		{Label: 'Last 7 days', Last: 7},
-		{Label: 'Last 30 days', Last: 30},
-		{Label: 'This month', Period: 'month'},
-		{Label: 'Last month', Period: 'previous-month'},
-		{Label: 'This year', Period: 'year'}
+		{Key: 'ui.dateRangeInput.last7', Label: 'Last 7 days', Last: 7},
+		{Key: 'ui.dateRangeInput.last30', Label: 'Last 30 days', Last: 30},
+		{Key: 'ui.dateRangeInput.thisMonth', Label: 'This month', Period: 'month'},
+		{Key: 'ui.dateRangeInput.lastMonth', Label: 'Last month', Period: 'previous-month'},
+		{Key: 'ui.dateRangeInput.thisYear', Label: 'This year', Period: 'year'}
 	],
-	ClearLabel: 'Clear',
+	ClearLabel: '',
 	Size: 'medium',
 	Shape: 'default',
 	Name: null,
@@ -125,14 +126,17 @@ Elemenx.Component('DateRangeInput', {
 		return this.ISO(new Date());
 	},
 
-	/* The first day of the week: FirstDay, or the one of Locale where the browser knows it, or Monday. */
+	/* The first day of the week: FirstDay, Monday by default; 'locale': the one of Locale where the browser knows it, or Monday. */
 	First: function () {
 		var locale;
 
-		if (this.FirstDay !== null && this.FirstDay !== '') return Number(this.FirstDay) % 7;
+		if (this.FirstDay === null || this.FirstDay === '') return 1;
+
+		if (this.FirstDay !== 'locale')
+			return Number(this.FirstDay) % 7;
 
 		try {
-			locale = new Intl.Locale(this.Locale || navigator.language);
+			locale = new Intl.Locale(this.Locale || Elemenx.Locale.Language());
 
 			if (locale.weekInfo)
 				return locale.weekInfo.firstDay % 7;
@@ -255,7 +259,7 @@ Elemenx.Component('DateRangeInput', {
 		var root = node.closest('.elemenx-range');
 		var date;
 
-		if (event.key === 'Escape') {
+		if (Elemenx.Locale.Key(event) === 'Escape') {
 			event.preventDefault();
 			event.stopPropagation();
 
@@ -268,15 +272,15 @@ Elemenx.Component('DateRangeInput', {
 
 		if (!event.target.classList.contains('elemenx-calendar-day')) return;
 
-		if (steps[event.key]) {
+		if (steps[Elemenx.Locale.Key(event)]) {
 			date = this.Parse(this.Cursor);
 
-			this.Cursor = this.Clamp(this.ISO(new Date(date.getFullYear(), date.getMonth(), date.getDate() + steps[event.key])));
+			this.Cursor = this.Clamp(this.ISO(new Date(date.getFullYear(), date.getMonth(), date.getDate() + steps[Elemenx.Locale.Key(event)])));
 		}
-		else if (event.key === 'PageUp' || event.key === 'PageDown') {
-			this.Shift(event.key === 'PageUp' ? -1 : 1);
+		else if (Elemenx.Locale.Key(event) === 'PageUp' || Elemenx.Locale.Key(event) === 'PageDown') {
+			this.Shift(Elemenx.Locale.Key(event) === 'PageUp' ? -1 : 1);
 		}
-		else if (event.key === 'Enter' || event.key === ' ') {
+		else if (Elemenx.Locale.Key(event) === 'Enter' || Elemenx.Locale.Key(event) === ' ') {
 			event.preventDefault();
 
 			this.Choose(this.Cursor);

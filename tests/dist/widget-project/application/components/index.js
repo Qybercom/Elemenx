@@ -1,0 +1,3 @@
+[
+	'WidgetRoot/WidgetRoot.js'
+];

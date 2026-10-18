@@ -15,12 +15,12 @@
 		<div class="elemenx-card-footer">
 			<span class="elemenx-person" *if="Author">
 				<span class="elemenx-person-avatar" aria-hidden="true"><img *if="Avatar" [src]="Avatar" alt="" /><span *if="!Avatar">{{Initials(Author)}}</span></span>
-				<span class="elemenx-person-text"><span class="elemenx-person-name">{{Author}}</span><span class="elemenx-card-meta"><time *if="Format().When(Date)" [attribute.datetime]="Format().When(Date).toISOString()">{{Format().Date(Date)}}</time><span *if="ReadTime">{{ReadTime}} {{ReadLabel}}</span></span></span>
+				<span class="elemenx-person-text"><span class="elemenx-person-name">{{Author}}</span><span class="elemenx-card-meta"><time *if="Format().When(Date)" [attribute.datetime]="Format().When(Date).toISOString()">{{Format().Date(Date)}}</time><span *if="ReadTime">{{ReadLabel ? ReadTime + ' ' + ReadLabel : $T('ui.postCard.readTime', {count: ReadTime})}}</span></span></span>
 			</span>
 			<span class="elemenx-spacer"></span>
-			<button class="elemenx-card-action" type="button" *if="Likes !== null" [class.on]="!!Liked" [attribute.aria-pressed]="String(!!Liked)" [attribute.aria-label]="LikeLabel + ' (' + Likes + ')'" (click)="Like"><Icon Name="heart" /><span>{{Format().Count(Likes)}}</span></button>
-			<button class="elemenx-card-action" type="button" *if="Comments !== null" [attribute.aria-label]="CommentLabel + ' (' + Comments + ')'" (click)="Comment"><Icon Name="comment" /><span>{{Format().Count(Comments)}}</span></button>
-			<button class="elemenx-card-action" type="button" [attribute.aria-label]="ShareLabel" (click)="Share"><Icon Name="share" /></button>
+			<button class="elemenx-card-action" type="button" *if="Likes !== null" [class.on]="!!Liked" [attribute.aria-pressed]="String(!!Liked)" [attribute.aria-label]="(LikeLabel || $T('ui.postCard.like')) + ' (' + Likes + ')'" (click)="Like"><Icon Name="heart" /><span>{{Format().Count(Likes)}}</span></button>
+			<button class="elemenx-card-action" type="button" *if="Comments !== null" [attribute.aria-label]="(CommentLabel || $T('ui.postCard.comment')) + ' (' + Comments + ')'" (click)="Comment"><Icon Name="comment" /><span>{{Format().Count(Comments)}}</span></button>
+			<button class="elemenx-card-action" type="button" [attribute.aria-label]="(ShareLabel || $T('ui.postCard.share'))" (click)="Share"><Icon Name="share" /></button>
 		</div>
 	</div>
 	<a class="elemenx-card-link" *if="Href" [href]="Href" [attribute.aria-label]="Title"></a>

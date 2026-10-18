@@ -3,7 +3,7 @@ Elemenx.Component('UIKitPage', {
 	$StyleURL: 'UIKitPage.css',
 	$Title: 'UI Kit - Elemenx',
 	Icons: [
-		'add', 'remove', 'close', 'check', 'edit', 'delete', 'save', 'copy', 'paste', 'search', 'filter', 'sort', 'refresh', 'undo', 'redo', 'settings', 'sliders', 'more', 'more-vertical', 'link', 'external', 'download', 'upload', 'send', 'share', 'eye', 'eye-off', 'lock', 'unlock', 'pin', 'star', 'heart', 'bookmark', 'zoom-in', 'zoom-out', 'maximize', 'minimize', 'grip', 'login', 'logout',
+		'add', 'remove', 'close', 'check', 'edit', 'delete', 'backspace', 'pip', 'save', 'copy', 'paste', 'search', 'filter', 'sort', 'refresh', 'undo', 'redo', 'settings', 'sliders', 'more', 'more-vertical', 'link', 'external', 'download', 'upload', 'send', 'share', 'eye', 'eye-off', 'lock', 'unlock', 'pin', 'star', 'heart', 'bookmark', 'zoom-in', 'zoom-out', 'maximize', 'minimize', 'grip', 'login', 'logout',
 		'chevron-left', 'chevron-right', 'chevron-up', 'chevron-down', 'chevrons-left', 'chevrons-right', 'chevrons-up-down', 'page-first', 'page-last', 'arrow-left', 'arrow-right', 'arrow-up', 'arrow-down', 'menu', 'home',
 		'file', 'file-text', 'file-code', 'folder', 'folder-open', 'image', 'attachment', 'archive',
 		'info', 'success', 'warning', 'error', 'help', 'bell', 'loader',
@@ -98,6 +98,7 @@ Elemenx.Component('UIKitPage', {
 		{ID: 'columns', Label: 'Columns', Icon: 'columns'}
 	],
 	MusicIcons: [],
+	ThemedSets: [],
 	WeatherIcons: [],
 	WeatherColored: true,
 	BrandLogos: [],
@@ -217,8 +218,39 @@ Elemenx.Component('UIKitPage', {
 	Price: 1250.5,
 	Money: 'USD 1250.5',
 	Volume: 40,
+	SettingsIos: [],
+	SettingsMaterial: [],
+	SettingsNote: '',
+	ChatSelection: [],
+	DialNumber: '',
+	MusicNote: '',
+	MixerPlaying: false,
+	MixerChannels: [
+		{ID: 'drums', Label: 'Drums', Color: '#e5484d', Volume: -3, Pan: 0, Level: [-12, -14], Peak: [-6, -8], Knobs: [{Label: 'Hi', Value: 2, Unit: ' dB'}, {Label: 'Lo', Value: -1, Unit: ' dB'}]},
+		{ID: 'bass', Label: 'Bass', Color: '#f76b15', Volume: -6, Pan: -20, Level: -18, Peak: -10, Knobs: [{Label: 'Hi', Value: 0, Unit: ' dB'}, {Label: 'Lo', Value: 4, Unit: ' dB'}]},
+		{ID: 'keys', Label: 'Keys', Color: '#30a46c', Volume: -9, Pan: 35, Level: [-24, -22], Peak: [-16, -15], Knobs: [{Label: 'Hi', Value: 1, Unit: ' dB'}, {Label: 'Lo', Value: 0, Unit: ' dB'}]},
+		{ID: 'vocals', Label: 'Vocals', Color: '#0090ff', Volume: 0, Pan: 0, Level: -9, Peak: -4, Knobs: [{Label: 'Hi', Value: 3, Unit: ' dB'}, {Label: 'Lo', Value: -2, Unit: ' dB'}]}
+	],
+	MixerMaster: {Label: 'Master', Volume: 0, Level: [-8, -9], Peak: [-3, -4]},
+	KeyboardMarks: {KeyW: true, KeyA: true, KeyS: true, KeyD: true, Space: 'ui-kit-key-jump', ShiftLeft: 'ui-kit-key-run'},
+	PianoMarks: {C4: true, E4: true, G4: true},
+	DialNote: '',
+	ToneKeys: [
+		{Value: '1'}, {Value: '2'}, {Value: '3'}, {Value: 'A', Class: 'ui-kit-tone-key'},
+		{Value: '4'}, {Value: '5'}, {Value: '6'}, {Value: 'B', Class: 'ui-kit-tone-key'},
+		{Value: '7'}, {Value: '8'}, {Value: '9'}, {Value: 'C', Class: 'ui-kit-tone-key'},
+		{Value: '*', Label: '✱'}, {Value: '0'}, {Value: '#'}, {Value: 'D', Class: 'ui-kit-tone-key'}
+	],
+	SettingsVariant: 'ios',
+	SettingsVariants: [
+		{Value: 'auto', Label: 'Auto'},
+		{Value: 'ios', Label: 'iOS'},
+		{Value: 'material', Label: 'Material'}
+	],
 	Budget: [200, 800],
 	DialogOpen: false,
+	UILanguage: 'en',
+	RequiredOpen: false,
 	DialogResult: '',
 	Columns: [
 		{Key: 'Name', Title: 'Name', Sortable: true, Width: '32%'},
@@ -246,10 +278,12 @@ Elemenx.Component('UIKitPage', {
 	Dropped: '',
 	Messages: [
 		{ID: 1, Author: 'Grace Hopper', Text: 'The build is green again.', Time: '10:02'},
-		{ID: 2, Author: 'Grace Hopper', Text: 'Can you check the new table?', Time: '10:02'},
+		{ID: 2, Author: 'Grace Hopper', Text: 'Can you check the new table?', Time: '10:02', Edited: 'Edited at 10:04'},
 		{ID: 3, Author: 'Grace Hopper', Text: 'The sorting looks right to me.', Time: '10:03'},
-		{ID: 4, Author: 'Me', Text: 'Looks good, merging it now.', Time: '10:05', Own: true, Status: 'read', Reactions: [{Emoji: '🎉', Count: 2, Mine: false}, {Emoji: '👍', Count: 1, Mine: true}]}
+		{ID: 4, Author: 'Me', Text: 'Looks good, merging it now.', Time: '10:05', Own: true, Status: 'read', Reactions: [{Emoji: '🎉', Count: 2, Mine: false, Users: [{Name: 'Grace Hopper'}, {Name: 'Alan Turing'}]}, {Emoji: '👍', Count: 1, Mine: true, Users: [{Name: 'Me'}]}], Viewers: [{Name: 'Grace Hopper', Time: '10:06'}, {Name: 'Alan Turing', Time: '10:11'}, {Name: 'Ada Lovelace', Time: '10:15'}]},
+		{ID: 5, Author: 'Me', Text: 'The release notes are next.', Time: '10:07', Own: true, Status: 'delivered', Views: 0}
 	],
+	ChatNote: '',
 	CardNote: '',
 	ProfileStats: [
 		{Label: 'Posts', Value: 128},
@@ -276,21 +310,186 @@ Elemenx.Component('UIKitPage', {
 		Title: 'Elemenx pals',
 		Icon: '/data/stickers/hello.svg',
 		Items: [
-			{ID: 'hello', URL: '/data/stickers/hello.svg', Title: 'Hello', Keywords: 'hi wave cat привет'},
-			{ID: 'love', URL: '/data/stickers/love.svg', Title: 'Love', Keywords: 'heart like любовь сердце'},
-			{ID: 'thumbs-up', URL: '/data/stickers/thumbs-up.svg', Title: 'Thumbs up', Keywords: 'ok yes like класс'},
-			{ID: 'party', URL: '/data/stickers/party.svg', Title: 'Party', Keywords: 'celebrate congrats праздник'},
-			{ID: 'coffee', URL: '/data/stickers/coffee.svg', Title: 'Coffee', Keywords: 'break morning кофе'},
-			{ID: 'rocket', URL: '/data/stickers/rocket.svg', Title: 'Rocket', Keywords: 'launch ship ракета'},
-			{ID: 'thinking', URL: '/data/stickers/thinking.svg', Title: 'Thinking', Keywords: 'hmm question думаю'},
-			{ID: 'sleepy', URL: '/data/stickers/sleepy.svg', Title: 'Sleepy', Keywords: 'night tired сон'}
+			{ID: 'hello', URL: '/data/stickers/hello.svg', Title: 'Hello', Keywords: 'hi wave cat привет', Emoji: '👋 😺'},
+			{ID: 'love', URL: '/data/stickers/love.svg', Title: 'Love', Keywords: 'heart like любовь сердце', Emoji: '❤️ 😍 🥰'},
+			{ID: 'thumbs-up', URL: '/data/stickers/thumbs-up.svg', Title: 'Thumbs up', Keywords: 'ok yes like класс', Emoji: '👍 👌'},
+			{ID: 'party', URL: '/data/stickers/party.svg', Title: 'Party', Keywords: 'celebrate congrats праздник', Emoji: '🎉 🥳'},
+			{ID: 'coffee', URL: '/data/stickers/coffee.svg', Title: 'Coffee', Keywords: 'break morning кофе', Emoji: '☕'},
+			{ID: 'rocket', URL: '/data/stickers/rocket.svg', Title: 'Rocket', Keywords: 'launch ship ракета', Emoji: '🚀'},
+			{ID: 'thinking', URL: '/data/stickers/thinking.svg', Title: 'Thinking', Keywords: 'hmm question думаю', Emoji: '🤔'},
+			{ID: 'sleepy', URL: '/data/stickers/sleepy.svg', Title: 'Sleepy', Keywords: 'night tired сон', Emoji: '😴 💤'}
 		]
 	},
+	PropertiesOpen: true,
+	NotesOpen: true,
+	WindowNote: 'Window',
+	PipVideo: false,
+	PipDocument: false,
+	GameStatusOpen: true,
+	GameBagOpen: true,
+	GameRecordOpen: false,
+	GameLoginOpen: false,
+	GameSystemsOpen: false,
+	GameQuestsOpen: false,
+	GameRankingOpen: false,
+	GameQuest: 'wolves',
+	GameQuestList: [
+		{ID: 'wolves', Title: 'Wolves at the gate', Group: 'Main story', Level: 7, Tracked: true, Text: 'The wolves of the northern woods grow bold. Thin the pack before they reach the village.', Objectives: [{Label: 'Grey wolves slain', Value: 3, Max: 5}, {Label: 'Report to the elder', Value: 0}], Rewards: [{Icon: 'star', Label: '450 experience'}, {Icon: 'gift', Label: 'Wolfhide cloak', Rarity: 'rare', Type: 'Cloak', Stats: [{Label: 'Defense', Value: '+18'}, {Label: 'Cold resist', Value: '+25%'}], Description: 'Warm, and the wolves know its smell.'}]},
+		{ID: 'road', Title: 'The northern road', Group: 'Main story', Level: 8, Text: 'Find a way through the pass before the snow closes it.', Objectives: [{Label: 'Reach the pass', Value: 0}], Rewards: [{Icon: 'star', Label: '600 experience'}]},
+		{ID: 'herbs', Title: 'Herbs for the healer', Group: 'Side quests', Level: 5, Tracked: true, Text: 'Mira needs silverleaf for her remedies.', Objectives: [{Label: 'Silverleaf gathered', Value: 6, Max: 8}], Rewards: [{Icon: 'heart', Label: 'Healing potion', Count: 3, Rarity: 'uncommon', Type: 'Potion', Description: 'Restores 30 health.'}]},
+		{ID: 'ring', Title: 'A lost ring', Group: 'Side quests', Level: 4, Status: 'done', Text: 'The ring was in the well all along.', Objectives: [{Label: 'Find the ring', Value: 1}], Rewards: [{Icon: 'star', Label: '120 experience'}]},
+		{ID: 'bridge', Title: 'Hold the bridge', Group: 'Side quests', Level: 6, Status: 'failed', Text: 'The bridge fell before help came.', Objectives: [{Label: 'Defend the bridge', Value: 0}]}
+	],
+	GameRanking: [
+		{ID: 'kael', Name: 'Kael', Note: 'Level 42 · Paladin', Score: 98420, Change: 1, Icon: 'user'},
+		{ID: 'lyra', Name: 'Lyra', Note: 'Level 41 · Ranger', Score: 97105, Change: -1, Icon: 'user'},
+		{ID: 'dorn', Name: 'Dorn', Note: 'Level 39 · Warrior', Score: 90330, Icon: 'user'},
+		{ID: 'sela', Name: 'Sela', Note: 'Level 37 · Mage', Score: 85012, Change: 2, Icon: 'user'},
+		{ID: 'brin', Name: 'Brin', Note: 'Level 36 · Rogue', Score: 80400, Change: -1, Icon: 'user'},
+		{ID: 'aria', Name: 'Aria', Note: 'Level 7 · Warden', Score: 12800, Change: 3, Icon: 'user', Me: true}
+	],
+	GameMarkers: [
+		{ID: 'elder', X: 0.3, Y: 0.35, Kind: 'quest', Label: 'The elder'},
+		{ID: 'wolf', X: 0.7, Y: 0.6, Kind: 'enemy', Label: 'Grey wolf'},
+		{ID: 'mira', X: 0.45, Y: 0.72, Kind: 'ally', Label: 'Mira'},
+		{ID: 'pass', X: 0.95, Y: -0.2, Kind: 'quest', Label: 'The pass'}
+	],
+	GameZoom: 2,
+	GameAchievementIndex: 0,
+	NativePlatform: 'web',
+	WorldCity: '',
+	ScopeTheme: 'darcula',
+	Devices: [],
+	DeviceState: 'Push, Serial, USB and NFC: what this browser has',
+	GalleryItems: [
+		{ID: 'mountains', Image: 'data/cards/mountains.svg', Title: 'Mountains', Description: 'The northern range at dawn.', Tags: ['nature', 'cold']},
+		{ID: 'sea', Image: 'data/cards/sea.svg', Title: 'Sea', Description: 'A calm bay in the south.', Tags: ['nature', 'water']},
+		{ID: 'city', Image: 'data/cards/city.svg', Title: 'City', Description: 'Lights of the old town.', Tags: ['night']},
+		{ID: 'cover', Image: 'data/cards/cover.svg', Title: 'Cover', Alt: 'An abstract cover'}
+	],
+	GalleryIndex: 0,
+	GalleryPicked: '',
+	GalleryAutoplay: false,
+	GalleryBackwards: false,
+	GalleryTitle: true,
+	GalleryDescription: true,
+	GalleryTags: true,
+	GalleryFade: false,
+	NativeState: 'Nothing yet',
+	GameSystemTab: 'power',
+	GameSystemTabs: [
+		{ID: 'power', Label: 'Power'},
+		{ID: 'files', Label: 'Files'},
+		{ID: 'log', Label: 'Log'}
+	],
+	GameReactor: [
+		{ID: 'Core', Value: 120},
+		{ID: 'Ring', Value: 90},
+		{ID: 'Coil', Value: 63},
+		{ID: 'Grid', Value: 100},
+		{ID: 'Vent', Value: 124}
+	],
+	GameFileColumns: [
+		{Key: 'ID', Title: '#', Width: '40px'},
+		{Key: 'File', Title: 'File'},
+		{Key: 'Size', Title: 'Size', Align: 'right'},
+		{Key: 'Date', Title: 'Date'},
+		{Key: 'Kind', Title: 'Type'}
+	],
+	GameFiles: [
+		{ID: '01', File: 'DR.0345/D', Size: '134.56 mb', Date: '03 / 01 / 2134', Kind: 'SYS Network'},
+		{ID: '02', File: 'DR.243346/D', Size: '23.20 mb', Date: '05 / 02 / 2132', Kind: 'SYS Network'},
+		{ID: '03', File: 'DR.0345/S', Size: '45.62 mb', Date: '12 / 01 / 2136', Kind: 'SYS Network'},
+		{ID: '04', File: 'DR.0345/A', Size: '869.24 mb', Date: '31 / 11 / 2121', Kind: 'DNS Network'},
+		{ID: '05', File: 'DR.0345/C', Size: '2.41 mb', Date: '21 / 07 / 2166', Kind: 'SYS Network'},
+		{ID: '06', File: 'DR.0345/D2', Size: '492.34 mb', Date: '01 / 04 / 2124', Kind: 'SYS Network'},
+		{ID: '07', File: 'DR.0305/G', Size: '4.06 mb', Date: '05 / 02 / 2111', Kind: 'SYS Network'},
+		{ID: '08', File: 'DR.97654/Z', Size: '23.43 mb', Date: '09 / 11 / 2178', Kind: 'EFD Network'},
+		{ID: '09', File: 'DR.0345/V', Size: '2.34 mb', Date: '12 / 06 / 2156', Kind: 'SYS Network'},
+		{ID: '10', File: 'DR.0237/A2', Size: '1.34 mb', Date: '16 / 09 / 2157', Kind: 'EFD Network'},
+		{ID: '11', File: 'DR.0345/G', Size: '479.21 mb', Date: '30 / 07 / 2158', Kind: 'SYS Network'},
+		{ID: '12', File: 'DR.03644S/B', Size: '974.04 mb', Date: '27 / 03 / 2159', Kind: 'CGT Network'},
+		{ID: '13', File: 'DR.0334/R', Size: '24.24 mb', Date: '23 / 12 / 2158', Kind: 'SYS Network'},
+		{ID: '14', File: 'DR.7489/S', Size: '324.72 mb', Date: '04 / 01 / 2161', Kind: 'SYS Network'},
+		{ID: '15', File: 'DR.A3245/H', Size: '90.21 mb', Date: '03 / 12 / 2140', Kind: 'SYS Network'}
+	],
+	GameFile: ['06'],
+	GameLog: [
+		{ID: 1, Label: '21:04:12 · Slow network is detected'},
+		{ID: 2, Label: '21:04:19 · Worm is detected in DR.0345/D'},
+		{ID: 3, Label: '21:05:02 · Coil temperature nominal'},
+		{ID: 4, Label: '21:05:40 · Vent pressure over the limit'},
+		{ID: 5, Label: '21:06:11 · Mode 02 engaged'},
+		{ID: 6, Label: '21:06:58 · Files synced with the fleet'},
+		{ID: 7, Label: '21:07:31 · Reactor core at 86%'},
+		{ID: 8, Label: '21:08:05 · Grid rerouted through ring B'},
+		{ID: 9, Label: '21:08:47 · Scanner modules online'},
+		{ID: 10, Label: '21:09:20 · Layout D3 saved'},
+		{ID: 11, Label: '21:10:02 · Detector armed'},
+		{ID: 12, Label: '21:10:36 · Crypt key rotated'},
+		{ID: 13, Label: '21:11:15 · Slow network is detected'},
+		{ID: 14, Label: '21:11:59 · Mode 01 engaged'}
+	],
+	GameActiveSlot: '3',
+	GameHotbar: [
+		{Key: '1', Skill: {ID: 'fireball', Kind: 'skill', Name: 'Fireball', Icon: 'fire', Cooldown: 3000, Color: '#b8402a', Type: 'Skill', Stats: [{Label: 'Damage', Value: '24–30'}, {Label: 'Mana', Value: '10'}], Description: 'Hurls a ball of fire.'}},
+		{Key: '2', Skill: {ID: 'heal', Kind: 'skill', Name: 'Heal', Icon: 'leaf', Cooldown: 5000, Color: '#3f9a44', Type: 'Skill', Description: 'Restores 25 health.'}},
+		{Key: '3', Skill: {ID: 'blink', Kind: 'skill', Name: 'Blink', Icon: 'star', Cooldown: 1500, Color: '#3a68c4', Type: 'Skill', Description: 'Steps a short way at once.'}},
+		{Key: '4', Item: {ID: 'potion', Name: 'Health potion', Icon: 'heart', Count: 3, Stack: 20, Rarity: 'common', Color: '#a8282c', Type: 'Potion', Use: 'heal', Description: 'Restores 30 health.'}},
+		{Key: '5'},
+		{Key: '6'}
+	],
+	GameRecordTab: 'Service',
+	GameRecordTabs: [
+		{ID: 'Service', Label: 'Service'},
+		{ID: 'Awards', Label: 'Awards'},
+		{ID: 'Training', Label: 'Training'},
+		{ID: 'Remarks', Label: 'Remarks'}
+	],
+	GameHealth: 82,
+	GameMana: 46,
+	GameExperiencePoints: 640,
+	GamePaused: false,
+	GameNote: 'Fireball 1 · Heal 2 · Blink 3 · Potion 4',
+	GameScript: [
+		{Speaker: 'Old sage', Text: 'Traveller! The northern road is closed: a storm came down from the peaks at dawn.'},
+		{Speaker: 'Old sage', Text: 'Will you take the mountain pass, or wait out the storm at the inn?', Choices: [
+			{ID: 'pass', Text: 'Take the mountain pass'},
+			{ID: 'inn', Text: 'Wait at the inn'},
+			{ID: 'guide', Text: 'Hire a guide (50 gold)', Disabled: true}
+		]}
+	],
+	GameStep: 0,
+	GameLine: null,
+	GameMenuItems: [
+		{ID: 'resume', Label: 'Resume', Hint: 'Esc'},
+		{ID: 'save', Label: 'Save game'},
+		{ID: 'settings', Label: 'Settings', Disabled: true},
+		{ID: 'quit', Label: 'Quit to title'}
+	],
+	GameItems: [
+		{ID: 'sword', Name: 'Moonblade', Icon: 'star', Rarity: 'legendary', Badge: '+5', Type: 'Sword', Description: 'Forged under a blue moon.', Stats: [{Label: 'Damage', Value: '42–58'}, {Label: 'Speed', Value: '1.2'}]},
+		{ID: 'potion', Name: 'Health potion', Icon: 'heart', Count: 5, Stack: 20, Rarity: 'common', Color: '#a8282c', Type: 'Potion', Use: 'heal', Description: 'Restores 30 health.'},
+		null,
+		{ID: 'map', Name: 'Old map', Icon: 'map-pin', Rarity: 'rare', Class: 'quest', Type: 'Quest item', Description: 'The way across the pass.'},
+		{ID: 'rune', Name: 'Ember rune', Icon: 'fire', Count: 2, Stack: 10, Rarity: 'epic', Badge: '+3', Color: '#b8402a', Active: true, Type: 'Rune', Stats: [{Label: 'Fire damage', Value: '+12%'}]},
+		null,
+		{ID: 'herb', Name: 'Silverleaf', Icon: 'leaf', Count: 7, Stack: 99, Rarity: 'uncommon', Type: 'Herb'},
+		{ID: 'gift', Name: 'Sealed box', Icon: 'gift', Rarity: 'uncommon', Type: 'Container', Description: 'Something rattles inside.'},
+		null,
+		{ID: 'herb', Name: 'Silverleaf', Icon: 'leaf', Count: 4, Stack: 99, Rarity: 'uncommon', Type: 'Herb'}
+	],
+	SuggestMode: 'always',
+	SuggestModes: [
+		{Value: 'always', Label: 'Always'},
+		{Value: 'colon', Label: 'After :'},
+		{Value: 'never', Label: 'Never'}
+	],
 	StepItems: [
 		{ID: 'plan', Label: 'Plan', Description: 'Scope and design', Icon: 'edit'},
 		{ID: 'build', Label: 'Build', Description: 'Code and tests', Icon: 'code'},
 		{ID: 'review', Label: 'Review', Description: 'Two approvals', Icon: 'users'},
-		{ID: 'deploy', Label: 'Deploy', Description: 'Staging, then production', Icon: 'cloud'}
+		{ID: 'deploy', Label: 'Deploy', Description: 'Started by the pipeline', Icon: 'cloud', Readonly: true}
 	],
 	ActiveSteps: ['build', 'review'],
 	DoneSteps: ['plan'],
@@ -313,6 +512,61 @@ Elemenx.Component('UIKitPage', {
 		{ID: 3, Kind: 'success', Text: 'Test Files  52 passed (52)'}
 	],
 	WorkspaceBusy: false,
+	EditorLanguage: 'javascript',
+	EditorLanguages: [
+		{Value: 'javascript', Label: 'JavaScript'},
+		{Value: 'typescript', Label: 'TypeScript'},
+		{Value: 'json', Label: 'JSON'},
+		{Value: 'html', Label: 'HTML'},
+		{Value: 'css', Label: 'CSS'},
+		{Value: 'markdown', Label: 'Markdown'},
+		{Value: 'sql', Label: 'SQL'},
+		{Value: 'python', Label: 'Python'},
+		{Value: 'shell', Label: 'Shell'}
+	],
+	EditorSamples: {
+		javascript: "/* A component of the catalogue. */\nElemenx.Component('Counter', {\n\tCount: 0,\n\tLimit: 10,\n\n\tAdd: function (step) {\n\t\tvar next = this.Count + (step || 1);\n\t\tvar unused = /^\\d+$/g;\n\n\t\tif (next > this.Limit) return;\n\n\t\tthis.Count = next;\n\t\tthis.$Emit('change', `count: ${next}`);\n\t}\n});\n",
+		typescript: "interface User {\n\treadonly id: number;\n\tname: string;\n\troles?: Array<'admin' | 'user'>;\n}\n\nexport function greet (user: User): string {\n\treturn 'Hello, ' + user.name;\n}\n",
+		json: '{\n\t"name": "@qybercom/elemenx",\n\t"version": "0.9.2",\n\t"private": false,\n\t"keywords": ["ui", "framework", null],\n\t"size": 1.5e3\n}\n',
+		html: '<!DOCTYPE html>\n<html lang="en">\n<head>\n\t<style>\n\t\tbody { margin: 0; }\n\t</style>\n</head>\n<body>\n\t<!-- The root of the Application -->\n\t<div id="app" class="app">{{Title}} &amp; more</div>\n\t<script src="elemenx.js"></script>\n</body>\n</html>\n',
+		css: '@media (max-width: 600px) {\n\t.card > .title:hover {\n\t\tcolor: #3f6c9e !important;\n\t\tmargin: 0 auto -1.5em;\n\t\twidth: calc(100% - 24px);\n\t}\n}\n',
+		markdown: '# Elemenx\n\nA **small** framework with *no* build step.\n\n- Components\n- Services\n\n```js\nElemenx.Application(\'App\', {$Component: \'Root\'});\n```\n\n> See [the docs](https://example.com).\n',
+		sql: "-- The users who signed in this year\nSELECT u.id, u.name, COUNT(s.id) AS sessions\nFROM users u\nLEFT JOIN sessions s ON s.user_id = u.id\nWHERE u.created_at >= '2026-01-01'\nGROUP BY u.id, u.name\nORDER BY sessions DESC\nLIMIT 10;\n",
+		python: '@dataclass\nclass Point:\n\tx: float = 0.0\n\ty: float = 0.0\n\n\tdef length(self) -> float:\n\t\t"""The distance from the origin."""\n\t\treturn (self.x ** 2 + self.y ** 2) ** 0.5  # Pythagoras\n\nprint(Point(3, 4).length(), None)\n',
+		shell: '#!/bin/bash\n# Builds every example\nfor name in Simple Advanced; do\n\techo "Building $name"\n\tnode elemenx-cli.js build "examples/${name}" --out dist || exit 1\ndone\n'
+	},
+	EditorCode: '',
+	EditorOriginal: '',
+	EditorView: 'edit',
+	EditorViews: [
+		{Value: 'edit', Label: 'Edit'},
+		{Value: 'unified', Label: 'Diff'},
+		{Value: 'split', Label: 'Side by side'}
+	],
+	EditorStats: '',
+	EditorWrap: false,
+	EditorMarkers: [],
+	EditorLine: 1,
+	EditorColumn: 1,
+	EditorQuery: '',
+	EditorReplacement: '',
+	EditorMatches: null,
+	RichValue: '<h2>Release notes</h2><p>Elemenx <strong>0.9</strong> brings a <em>rich text</em> editor with <a href="https://github.com/Qybercom/Elemenx">no toolbar of its own</a>: the page calls <code>Command</code>.</p><ul><li>Markdown in and out</li><li>Paste through a schema</li></ul><blockquote><p>Select some text to see the quick menu.</p></blockquote><table><thead><tr><th>Key</th><th>Does</th></tr></thead><tbody><tr><td>Mod+B</td><td>Bold</td></tr><tr><td>Mod+K</td><td>Link</td></tr></tbody></table>',
+	RichBlock: 'paragraph',
+	RichBlocks: [
+		{Value: 'paragraph', Label: 'Paragraph'},
+		{Value: 'heading-1', Label: 'Heading 1'},
+		{Value: 'heading-2', Label: 'Heading 2'},
+		{Value: 'heading-3', Label: 'Heading 3'},
+		{Value: 'quote', Label: 'Quote'},
+		{Value: 'codeblock', Label: 'Code'}
+	],
+	RichFormats: {},
+	RichLink: '',
+	RichNote: 'Paragraph',
+	RichMarkdownShown: false,
+	RichMarkdown: '',
+	RichFromMarkdown: false,
 	LineCount: 3,
 	TileGroups: [
 		{ID: 'work', Title: 'Work', Tiles: [
@@ -553,9 +807,14 @@ Elemenx.Component('UIKitPage', {
 		hotkeys.Unbind(this.TilesKey);
 
 		this.$Service('Idle').Stop();
+
+		window.clearInterval(this.PipClock);
+		window.clearInterval(this.MixerTimer);
+
 		this.$Service('Reveal').Guard(null);
 		this.$Service('Icons').Override('save', null);
 		this.$Service('Theme').OffChange(this.ThemeListener);
+		this.$Service('Native').Off('menu', this.NativeListener);
 
 		if (this.$Service('Theme').Theme() === 'mine')
 			this.$Service('Theme').Use('default');
@@ -571,7 +830,7 @@ Elemenx.Component('UIKitPage', {
 		this.MineCSS = function (accent, background, radius, control) {
 			var theme = self.$Service('Theme');
 
-			return "body[data-theme='mine'] {\n" +
+			return "[data-theme][data-theme='mine'] {\n" +
 				'\t--elemenx-accent: ' + accent + ';\n' +
 				'\t--elemenx-accent-rgb: ' + theme.Channels(accent) + ';\n' +
 				'\t--elemenx-accent-hover: ' + self.Mix(accent, '#000000', 0.84) + ';\n' +
@@ -721,6 +980,23 @@ Elemenx.Component('UIKitPage', {
 		icons.Load('brands', function (error, names) {
 			if (!error)
 				self.BrandLogos = self.Prefixed('brands', names);
+		});
+
+		/* The six themed sets, in the order of the catalogue, each listed once it loads. */
+		['sport', 'racing', 'science', 'art', 'cinema', 'games'].forEach(function (set, index) {
+			icons.Load(set, function (error, names) {
+				var sets;
+
+				if (error) return;
+
+				sets = self.ThemedSets.filter(function (entry) {
+					return entry.Name !== set;
+				}).concat([{Name: set, Order: index, Icons: self.Prefixed(set, names)}]);
+
+				self.ThemedSets = sets.sort(function (a, b) {
+					return a.Order - b.Order;
+				});
+			});
 		});
 
 		icons.Load('weather', function (error, names) {
@@ -1074,6 +1350,164 @@ Elemenx.Component('UIKitPage', {
 		this.VirtualState = 'Picked: ' + item.Label;
 	},
 
+	/* The settings of the SettingsMenu demos: a fresh copy for each, as a menu turns its own switches and choices. */
+	SettingsItems: function () {
+		return [
+			{ID: 'account', Label: 'Alex Furnica', Description: 'Account, cloud and purchases', Icon: 'user', Color: '#8e8e93', Items: [
+				{Group: 'Account'},
+				{ID: 'name', Label: 'Name', Value: 'Alex'},
+				{ID: 'mail', Label: 'Mail', Value: 'alex@example.com'}
+			]},
+			{Group: 'Connections'},
+			{ID: 'airplane', Label: 'Airplane mode', Icon: 'send', Color: '#ff9500', Toggle: true},
+			{ID: 'wifi', Label: 'Wi-Fi', Icon: 'globe', Color: '#007aff', Value: 'Home', Choice: true, Items: [
+				{Group: 'Networks', Note: 'Known networks join on their own.'},
+				{ID: 'home', Label: 'Home', Checked: true},
+				{ID: 'office', Label: 'Office'},
+				{ID: 'guest', Label: 'Guest'}
+			]},
+			{ID: 'notifications', Label: 'Notifications', Icon: 'bell', Color: '#ff3b30', Badge: 2, Items: [
+				{ID: 'sounds', Label: 'Sounds', Toggle: true, Checked: true},
+				{ID: 'previews', Label: 'Show previews', Value: 'Always', Choice: true, Items: [
+					{ID: 'always', Label: 'Always', Checked: true},
+					{ID: 'unlocked', Label: 'When unlocked'},
+					{ID: 'never', Label: 'Never'}
+				]}
+			]},
+			{Group: 'Display', Note: 'Dark mode can follow the time of day.'},
+			{ID: 'dark', Label: 'Dark mode', Icon: 'moon', Color: '#5856d6', Toggle: true},
+			{ID: 'lock', Label: 'Auto-lock', Description: 'Locks the screen while idle', Icon: 'lock', Color: '#34c759', Value: '30 seconds', Choice: true, Items: [
+				{ID: '30', Label: '30 seconds', Checked: true},
+				{ID: '60', Label: '1 minute'},
+				{ID: 'never', Label: 'Never'}
+			]},
+			{Group: ''},
+			{ID: 'beta', Label: 'Beta features', Disabled: true},
+			{ID: 'reset', Label: 'Reset all settings', Danger: true}
+		];
+	},
+
+	SettingsVariantChosen: function (value) {
+		this.SettingsVariant = value;
+	},
+
+	MixerChanged: function (detail) {
+		this.MusicNote = detail.ID + ' ' + detail.Key + ': ' + detail.Value;
+	},
+
+	/*
+	 * The meters move while Play is on: random levels and their peaks, ten times a second. Nothing runs while it is
+	 * off, so the catalogue costs nothing until then.
+	 */
+	MixerPlayed: function (value) {
+		var self = this;
+		var level = function (center) {
+			return Math.round(center + Math.random() * 12 - 6);
+		};
+		var step = function (channel) {
+			var levels = Array.isArray(channel.Level) ? [level(-14), level(-15)] : level(-14);
+			var peaks = Array.isArray(channel.Level) ? levels.map(function (entry, index) {
+				return Math.max(entry, (channel.Peak || [])[index] - 1 || entry);
+			}) : Math.max(levels, (channel.Peak || levels) - 1);
+
+			return Object.assign({}, channel, {Level: channel.Mute ? (Array.isArray(levels) ? [-60, -60] : -60) : levels, Peak: peaks});
+		};
+
+		this.MixerPlaying = value;
+
+		window.clearInterval(this.MixerTimer);
+
+		if (!value) return;
+
+		this.MixerTimer = window.setInterval(function () {
+			self.MixerChannels = self.MixerChannels.map(step);
+			self.MixerMaster = step(self.MixerMaster);
+		}, 100);
+	},
+
+	KeyPressed: function (detail) {
+		this.MusicNote = 'Key ' + detail.Code;
+	},
+
+	NotePlayed: function (detail) {
+		this.MusicNote = 'Playing ' + detail.Note + ' (velocity ' + detail.Velocity + ')';
+	},
+
+	NoteReleased: function (detail) {
+		this.MusicNote = 'Released ' + detail.Note;
+	},
+
+	DialTyped: function (value) {
+		this.DialNumber = value;
+	},
+
+	DialCalled: function (number) {
+		this.DialNote = 'Calling ' + number;
+	},
+
+	TonePressed: function (state) {
+		this.DialNote = 'Tone ' + state.Value;
+	},
+
+	/*
+	 * A video in a window of its own. It shows a clock drawn on a canvas, from the first press on: nothing is drawn
+	 * before, so the catalogue costs nothing until then.
+	 */
+	VideoPip: function () {
+		var self = this;
+		var video = this.$Element().querySelector('.ui-kit-pip-video');
+		var canvas;
+		var context;
+		var draw;
+		var show = function () {
+			self.$Service('PictureInPicture').Video(video, function (error, state) {
+				self.WindowNote = error ? 'Picture-in-Picture: ' + error.message : state.Active ? 'The video is in a window' : 'The video is back in the page';
+			});
+		};
+
+		if (video.srcObject) {
+			show();
+
+			return;
+		}
+
+		canvas = document.createElement('canvas');
+		canvas.width = 320;
+		canvas.height = 180;
+
+		context = canvas.getContext('2d');
+
+		draw = function () {
+			context.fillStyle = '#20232a';
+
+			context.fillRect(0, 0, 320, 180);
+
+			context.fillStyle = '#ffffff';
+			context.font = '48px sans-serif';
+			context.textAlign = 'center';
+
+			context.fillText(new Date().toLocaleTimeString(), 160, 105);
+		};
+
+		draw();
+
+		this.PipClock = window.setInterval(draw, 500);
+
+		video.srcObject = canvas.captureStream(2);
+
+		video.addEventListener('loadedmetadata', show, {once: true});
+
+		video.play();
+	},
+
+	SettingsChosen: function (state) {
+		this.SettingsNote = 'Chose: ' + state.Item.Label + (state.Path.length ? ' in ' + state.Path.join(' › ') : '');
+	},
+
+	SettingsToggled: function (state) {
+		this.SettingsNote = state.Item.Label + ': ' + (state.Checked ? 'on' : 'off');
+	},
+
 	ResultsPaged: function (state) {
 		this.ResultsPage = state.Page;
 	},
@@ -1209,6 +1643,65 @@ Elemenx.Component('UIKitPage', {
 		this.$Service('Toast').Show({Title: 'Saved', Message: 'The project settings were saved.', Variant: 'success'});
 	},
 
+	/* The language of the phrases of ElemenxUI (the catalogue itself stays in English). */
+	English: function () {
+		this.SetLanguage('en');
+	},
+
+	Russian: function () {
+		this.SetLanguage('ru');
+	},
+
+	Arabic: function () {
+		this.SetLanguage('ar');
+	},
+
+	SetLanguage: function (code) {
+		var self = this;
+
+		Elemenx.Locale.Language(code, function () {
+			self.UILanguage = Elemenx.Locale.Language();
+		});
+	},
+
+	OpenRequired: function () {
+		this.RequiredOpen = true;
+	},
+
+	AcceptRequired: function () {
+		this.RequiredOpen = false;
+		this.DialogResult = 'terms accepted';
+	},
+
+	DeclineRequired: function () {
+		this.RequiredOpen = false;
+		this.DialogResult = 'terms declined';
+	},
+
+	/* Dialogs from the code: the answer comes to the callback (null when the dialog was dismissed). */
+	AskConfirm: function () {
+		var self = this;
+
+		this.$Service('Dialogs').Confirm({
+			Title: 'Delete the project?',
+			Message: 'Its files and its history go for good.',
+			Icon: 'delete',
+			Variant: 'danger',
+			Actions: [{ID: 'keep', Label: 'Keep it'}, {ID: 'delete', Label: 'Delete', Variant: 'danger'}],
+			Dismissible: false
+		}, function (answer) {
+			self.DialogResult = 'confirm: ' + answer;
+		});
+	},
+
+	ShowAlert: function () {
+		var self = this;
+
+		this.$Service('Dialogs').Alert({Title: 'Saved', Message: 'The project settings were saved.', Icon: 'success'}, function (answer) {
+			self.DialogResult = 'alert: ' + answer;
+		});
+	},
+
 	ShowSticky: function () {
 		this.$Service('Toast').Show({Title: 'Stays until closed', Message: 'AutoHide: false keeps this toast.', AutoHide: false, Variant: 'warning'});
 	},
@@ -1283,6 +1776,519 @@ Elemenx.Component('UIKitPage', {
 		this.Dropped = event.detail.Kind === 'files' ? event.detail.Files.length + ' file(s) from outside' : 'text: ' + event.detail.Text.slice(0, 32);
 	},
 
+	ToggleProperties: function () {
+		this.PropertiesOpen = !this.PropertiesOpen;
+	},
+
+	CloseProperties: function () {
+		this.PropertiesOpen = false;
+		this.WindowNote = 'Properties closed';
+	},
+
+	ToggleNotes: function () {
+		this.NotesOpen = !this.NotesOpen;
+	},
+
+	CloseNotes: function () {
+		this.NotesOpen = false;
+		this.WindowNote = 'Notes closed';
+	},
+
+	WindowMoved: function (place) {
+		this.WindowNote = 'Moved to ' + place.X + ', ' + place.Y;
+	},
+
+	WindowResized: function (size) {
+		this.WindowNote = 'Resized to ' + size.Width + ' × ' + size.Height;
+	},
+
+	WindowMinimized: function () {
+		this.WindowNote = 'Minimized';
+	},
+
+	WindowMaximized: function () {
+		this.WindowNote = 'Maximized';
+	},
+
+	WindowRestored: function () {
+		this.WindowNote = 'Restored';
+	},
+
+	GameToggleStatus: function () {
+		this.GameStatusOpen = !this.GameStatusOpen;
+	},
+
+	GameToggleBag: function () {
+		this.GameBagOpen = !this.GameBagOpen;
+	},
+
+	GameToggleRecord: function () {
+		this.GameRecordOpen = !this.GameRecordOpen;
+	},
+
+	GameStatusClosed: function () {
+		this.GameStatusOpen = false;
+	},
+
+	GameBagClosed: function () {
+		this.GameBagOpen = false;
+	},
+
+	GameToggleLogin: function () {
+		this.GameLoginOpen = !this.GameLoginOpen;
+	},
+
+	GameLoginClosed: function () {
+		this.GameLoginOpen = false;
+	},
+
+	/* The devices of the browser: a press tries one; the browser asks the user first (a picker, a permission). */
+	UseDevice: function (event, node) {
+		var self = this;
+		var name = node.getAttribute('data-name');
+		var done = function (error, result) {
+			self.DeviceState = name + ': ' + (error ? error.name + ' · ' + error.message : result && result.Info ? 'picked ' + JSON.stringify(result.Info) : 'done');
+		};
+
+		if (name === 'Push') this.$Service('Push').Notify('Elemenx', {Text: 'A notification from the page'}, done);
+		else if (name === 'Serial') this.$Service('Serial').Request({}, done);
+		else if (name === 'USB') this.$Service('USB').Request({}, done);
+		else this.$Service('NFC').Scan(done);
+	},
+
+	GalleryChanged: function (index) {
+		this.GalleryIndex = index;
+	},
+
+	GallerySelected: function (item) {
+		this.GalleryPicked = item.Title;
+	},
+
+	GalleryAutoplayed: function (value) {
+		this.GalleryAutoplay = value;
+	},
+
+	GalleryReversed: function (value) {
+		this.GalleryBackwards = value;
+	},
+
+	GalleryTitled: function (value) {
+		this.GalleryTitle = value;
+	},
+
+	GalleryDescribed: function (value) {
+		this.GalleryDescription = value;
+	},
+
+	GalleryTagged: function (value) {
+		this.GalleryTags = value;
+	},
+
+	GalleryFaded: function (value) {
+		this.GalleryFade = value;
+	},
+
+	/* The part of the Themes section with a theme of its own: Theme.Scope on its element. */
+	Scope: function (name) {
+		var self = this;
+		var root = this.$Element();
+
+		this.$Service('Theme').Scope(root.querySelector('.ui-kit-theme-scope'), name, function (error) {
+			if (!error)
+				self.ScopeTheme = name;
+		});
+	},
+
+	ScopeDarcula: function () {
+		this.Scope('darcula');
+	},
+
+	ScopeLight: function () {
+		this.Scope('light');
+	},
+
+	ScopeContrast: function () {
+		this.Scope('contrast');
+	},
+
+	WorldCityChanged: function (city) {
+		var cities = this.$Service('Cities');
+		var clock = city ? cities.Clock(city) : null;
+
+		this.WorldCity = city ? cities.Label(city) + ' · ' + city.TimeZone + ' (UTC' + clock.Offset + '), ' + clock.Time : '';
+	},
+
+	NativeOpen: function () {
+		var self = this;
+
+		this.$Service('Native').Open({Accept: ['.txt', '.md', '.json'], Read: 'text'}, function (error, files) {
+			if (error) self.NativeState = error.message;
+			else self.NativeState = files.length ? files[0].Name + ' · ' + files[0].Text.length + ' characters' : 'Cancelled';
+		});
+	},
+
+	NativeSave: function () {
+		var self = this;
+
+		this.$Service('Native').Save({Name: 'notes.txt', Text: 'Saved by Elemenx Native'}, function (error, result) {
+			if (error) self.NativeState = error.message;
+			else self.NativeState = result ? 'Saved' + (result.Path ? ' to ' + result.Path : ' as a download') : 'Cancelled';
+		});
+	},
+
+	NativeAsk: function () {
+		var self = this;
+
+		this.$Service('Native').Message({Title: 'Elemenx', Text: 'Keep the changes?', Buttons: ['Keep', 'Discard'], Kind: 'question'}, function (error, index) {
+			self.NativeState = error ? error.message : 'Pressed: ' + ['Keep', 'Discard'][index];
+		});
+	},
+
+	NativeFullscreen: function () {
+		var self = this;
+
+		this.$Service('Native').Window('fullscreen', function (error) {
+			if (error)
+				self.NativeState = error.message;
+		});
+	},
+
+	NativeExternal: function () {
+		var self = this;
+
+		this.$Service('Native').External('https://example.com/', function (error) {
+			self.NativeState = error ? error.message : 'Opened example.com';
+		});
+	},
+
+	NativePower: function () {
+		var self = this;
+
+		this.$Service('Native').Power(function (error, power) {
+			self.NativeState = error ? error.message : 'Power: ' + (power.OnBattery ? 'on battery' : 'plugged in') + ' · ' + power.State;
+		});
+	},
+
+	NativeHotkey: function () {
+		var self = this;
+
+		this.$Service('Native').Shortcuts(['CommandOrControl+Shift+E'], function (error, keys) {
+			self.NativeState = error ? error.message : 'Hotkeys: ' + keys.join(', ');
+		});
+	},
+
+	NativeMenu: function () {
+		var self = this;
+
+		this.$Service('Native').Menu([
+			{Label: 'File', Items: [{ID: 'open', Label: 'Open', Hotkey: 'CmdOrCtrl+O'}, {Separator: true}, {ID: 'quit', Label: 'Quit', Role: 'quit'}]},
+			{Label: 'Help', Items: [{ID: 'about', Label: 'About'}]}
+		], function (error) {
+			self.NativeState = error ? error.message : 'The menu is set';
+		});
+	},
+
+	NativeChosen: function (value) {
+		this.NativeState = 'Menu: ' + value.ID;
+	},
+
+	GameToggleSystems: function () {
+		this.GameSystemsOpen = !this.GameSystemsOpen;
+	},
+
+	GameSystemsClosed: function () {
+		this.GameSystemsOpen = false;
+	},
+
+	GameSystemChosen: function (id) {
+		this.GameSystemTab = id;
+	},
+
+	GameFileChosen: function (ids) {
+		this.GameFile = ids;
+	},
+
+	GameActivate: function () {
+		this.GameNote = 'Detector activated';
+	},
+
+	GameToggleQuests: function () {
+		this.GameQuestsOpen = !this.GameQuestsOpen;
+	},
+
+	GameQuestsClosed: function () {
+		this.GameQuestsOpen = false;
+	},
+
+	GameQuestChosen: function (id) {
+		this.GameQuest = id;
+		this.GameQuestsOpen = true;
+	},
+
+	GameQuestTracked: function (detail) {
+		this.GameQuestList = this.GameQuestList.map(function (quest) {
+			return quest.ID === detail.ID ? Object.assign({}, quest, {Tracked: detail.Tracked}) : quest;
+		});
+		this.GameNote = (detail.Tracked ? 'Tracking: ' : 'Stopped tracking: ') + detail.ID;
+	},
+
+	GameToggleRanking: function () {
+		this.GameRankingOpen = !this.GameRankingOpen;
+	},
+
+	GameRankingClosed: function () {
+		this.GameRankingOpen = false;
+	},
+
+	GameRankChosen: function (item) {
+		this.GameNote = 'Player: ' + item.Name;
+	},
+
+	GameZoomed: function (step) {
+		this.GameZoom = Math.max(1, Math.min(4, this.GameZoom + step));
+		this.GameNote = 'Map zoom ×' + this.GameZoom;
+	},
+
+	GameMarkerChosen: function (marker) {
+		this.GameNote = 'Marker: ' + marker.Label;
+	},
+
+	GameUnlock: function () {
+		var list = [
+			{Title: 'First blood', Text: 'Defeat your first enemy.', Points: 10},
+			{Title: 'Pack hunter', Text: 'Slay five grey wolves.', Rarity: 'rare', Points: 25, Icon: 'flag'},
+			{Title: 'Legend of the north', Text: 'Finish the main story.', Rarity: 'legendary', Points: 100, Icon: 'star-filled'}
+		];
+
+		this.$Service('Achievements').Show(list[this.GameAchievementIndex % list.length]);
+
+		this.GameAchievementIndex++;
+	},
+
+	GameRecordClosed: function () {
+		this.GameRecordOpen = false;
+	},
+
+	GameRecordChosen: function (id) {
+		this.GameRecordTab = id;
+	},
+
+	GameBuffs: function () {
+		this.GameNote = 'Blessed: +10% to everything';
+	},
+
+	GameThemeDefault: function () {
+		this.$Service('Theme').Use('default');
+	},
+
+	GameThemeFantasy: function () {
+		this.$Service('Theme').Use('fantasy');
+	},
+
+	GameThemeScifi: function () {
+		this.$Service('Theme').Use('scifi');
+	},
+
+	GameHit: function () {
+		this.GameHealth = Math.max(0, this.GameHealth - 23);
+		this.GameNote = this.GameHealth ? 'Hit for 23' : 'Aria has fallen';
+	},
+
+	GameExperience: function () {
+		this.GameExperiencePoints = (this.GameExperiencePoints + 150) % 1000;
+	},
+
+	/* A slot of the hotbar was used: a skill acts, an item is used up one at a time. */
+	GameSlotUsed: function (detail) {
+		var self = this;
+		var index = this.GameSlotIndex(detail.Key);
+		var slot = this.GameHotbar[index] || {};
+		var hotbar;
+
+		if (slot.Skill) {
+			if (slot.Skill.ID === 'fireball') {
+				this.GameMana = Math.max(0, this.GameMana - 10);
+				this.GameNote = 'Fireball!';
+			}
+			else if (slot.Skill.ID === 'heal') {
+				this.GameHealth = Math.min(100, this.GameHealth + 25);
+				this.GameNote = 'Healed for 25';
+			}
+			else {
+				this.GameNote = slot.Skill.Name;
+			}
+
+			return;
+		}
+
+		if (!slot.Item) return;
+
+		if (slot.Item.Use === 'heal') {
+			this.GameHealth = Math.min(100, this.GameHealth + 30);
+			this.GameNote = 'A potion: +30 health';
+		}
+		else {
+			this.GameNote = 'Used: ' + slot.Item.Name;
+		}
+
+		hotbar = this.GameHotbar.slice();
+		hotbar[index] = {Key: slot.Key, Item: self.$Service('GameItems').Take(slot.Item)};
+
+		if (!hotbar[index].Item)
+			delete hotbar[index].Item;
+
+		this.GameHotbar = hotbar;
+	},
+
+	GameSlotIndex: function (key) {
+		var found = -1;
+
+		this.GameHotbar.forEach(function (slot, index) {
+			if (slot.Key === key)
+				found = index;
+		});
+
+		return found;
+	},
+
+	/* What a slot holds: {Key, Skill} or {Key, Item}, from what a move left there. */
+	GameSlotWith: function (key, held) {
+		var slot = {Key: key};
+
+		if (held && held.Kind === 'skill') slot.Skill = held;
+		else if (held) slot.Item = held;
+
+		return slot;
+	},
+
+	/*
+	 * A drop on a slot of the hotbar. The thing moves: from the bag it leaves the bag (piles join, other things swap),
+	 * from another slot the two slots swap or join. A skill never goes into the bag.
+	 */
+	GameSlotDropped: function (detail) {
+		var items = this.$Service('GameItems');
+		var hotbar = this.GameHotbar.slice();
+		var bag;
+		var to = this.GameSlotIndex(detail.To.Key);
+		var from = detail.From || {};
+		var source;
+		var result;
+
+		if (to === -1) return;
+
+		if (from.Kind === 'inventory') {
+			if (detail.Current && detail.Current.Kind === 'skill') {
+				this.GameNote = 'A skill does not go into the bag';
+
+				return;
+			}
+
+			bag = this.GameItems.slice();
+			result = items.Move(detail.Item, detail.Current);
+			bag[from.Index] = result.From || null;
+			hotbar[to] = this.GameSlotWith(hotbar[to].Key, result.To);
+			this.GameItems = bag;
+			this.GameHotbar = hotbar;
+			this.GameNote = detail.Item.Name + ' on ' + hotbar[to].Key;
+
+			return;
+		}
+
+		if (from.Kind !== 'slot') return;
+
+		source = this.GameSlotIndex(from.Key);
+
+		if (source === -1) return;
+
+		result = detail.Item.Kind === 'skill' || detail.Current && detail.Current.Kind === 'skill' ? {To: detail.Item, From: detail.Current} : items.Move(detail.Item, detail.Current);
+		hotbar[to] = this.GameSlotWith(hotbar[to].Key, result.To);
+		hotbar[source] = this.GameSlotWith(hotbar[source].Key, result.From);
+		this.GameHotbar = hotbar;
+		this.GameNote = 'Moved ' + from.Key + ' to ' + hotbar[to].Key;
+	},
+
+	/* A drop on a cell of the bag from the hotbar: the item leaves the slot (piles join, other items swap). */
+	GameBagReceived: function (detail) {
+		var hotbar;
+		var bag;
+		var result;
+		var source;
+		var from = detail.From || {};
+		if (from.Kind !== 'slot') return;
+
+		if (detail.Item.Kind === 'skill') {
+			this.GameNote = 'A skill does not go into the bag';
+
+			return;
+		}
+
+		source = this.GameSlotIndex(from.Key);
+
+		if (source === -1) return;
+
+		hotbar = this.GameHotbar.slice();
+		bag = this.GameItems.slice();
+		result = this.$Service('GameItems').Move(detail.Item, detail.Current);
+		bag[detail.To.Index] = result.To || null;
+		hotbar[source] = this.GameSlotWith(hotbar[source].Key, result.From);
+		this.GameItems = bag;
+		this.GameHotbar = hotbar;
+		this.GameNote = detail.Item.Name + ' back in the bag';
+	},
+
+	GamePause: function () {
+		this.GamePaused = true;
+	},
+
+	GameResume: function () {
+		this.GamePaused = false;
+	},
+
+	GameMenuChosen: function (detail) {
+		this.GameNote = 'Menu: ' + detail.Item.Label;
+
+		if (detail.ID === 'resume' || detail.ID === 'save')
+			this.GamePaused = false;
+
+		if (detail.ID === 'quit') {
+			this.GamePaused = false;
+			this.GameStep = 0;
+			this.GameLine = this.GameScript[0];
+		}
+	},
+
+	GameNext: function () {
+		this.GameStep++;
+		this.GameLine = this.GameScript[this.GameStep] || null;
+	},
+
+	GameChose: function (detail) {
+		this.GameNote = 'Chosen: ' + detail.Choice.Text;
+		this.GameLine = {Speaker: 'Old sage', Text: detail.ID === 'pass' ? 'Brave. Keep to the cairns, and do not look down.' : 'Wise. The storm will pass by morning.'};
+		this.GameStep = this.GameScript.length;
+	},
+
+	GameItemMoved: function (detail) {
+		this.GameItems = detail.Items;
+	},
+
+	GameItemUsed: function (detail) {
+		this.GameNote = 'Used: ' + detail.Item.Name;
+	},
+
+	GameItemDiscarded: function (detail) {
+		var items = this.GameItems.slice();
+
+		items[detail.Index] = null;
+
+		this.GameItems = items;
+		this.GameNote = 'Dropped: ' + detail.Item.Name;
+	},
+
+	SuggestModeChosen: function (value) {
+		this.SuggestMode = value;
+	},
+
 	SendSticker: function (detail) {
 		this.Messages = this.Messages.concat([{ID: this.Messages.length + 1, Author: 'Me', Text: detail.Sticker.Title, Sticker: detail.Sticker.URL, Time: 'now', Own: true, Status: 'sent'}]);
 	},
@@ -1300,13 +2306,15 @@ Elemenx.Component('UIKitPage', {
 
 				found = true;
 
-				return {Emoji: reaction.Emoji, Count: reaction.Count + (detail.Mine ? 1 : -1), Mine: detail.Mine};
+				return Object.assign({}, reaction, {Count: reaction.Count + (detail.Mine ? 1 : -1), Mine: detail.Mine, Users: (reaction.Users || []).filter(function (user) {
+					return user.Name !== 'Me';
+				}).concat(detail.Mine ? [{Name: 'Me'}] : [])});
 			}).filter(function (reaction) {
 				return reaction.Count > 0;
 			});
 
 			if (!found && detail.Mine)
-				reactions.push({Emoji: detail.Emoji, Count: 1, Mine: true});
+				reactions.push({Emoji: detail.Emoji, Count: 1, Mine: true, Users: [{Name: 'Me'}]});
 
 			return Object.assign({}, message, {Reactions: reactions});
 		});
@@ -1387,6 +2395,50 @@ Elemenx.Component('UIKitPage', {
 		this.PickedSticker = detail.Sticker.URL;
 	},
 
+	/* The menu of a message: an action, or the summary (the item 'summary' opens it inside the message). */
+	/* The choice of several messages: a message asks to be chosen or let go; the bar deletes the chosen ones. */
+	MessageSelected: function (detail) {
+		var rest = this.ChatSelection.filter(function (id) {
+			return id !== detail.ID;
+		});
+
+		this.ChatSelection = detail.Selected ? rest.concat([detail.ID]) : rest;
+	},
+
+	ChatCleared: function () {
+		this.ChatSelection = [];
+	},
+
+	DeleteSelected: function () {
+		var chosen = this.ChatSelection;
+
+		this.Messages = this.Messages.filter(function (item) {
+			return chosen.indexOf(item.ID) === -1;
+		});
+
+		this.ChatNote = 'Deleted ' + chosen.length + ' messages';
+		this.ChatSelection = [];
+	},
+
+	MessageAction: function (detail) {
+		var message = this.Messages.filter(function (item) {
+			return item.ID === detail.ID;
+		})[0];
+
+		if (detail.Action === 'delete') {
+			this.Messages = this.Messages.filter(function (item) {
+				return item.ID !== detail.ID;
+			});
+		}
+		else if (detail.Action === 'edit') {
+			this.Messages = this.Messages.map(function (item) {
+				return item.ID === detail.ID ? Object.assign({}, item, {Text: item.Text + ' (updated)', Edited: 'Edited now'}) : item;
+			});
+		}
+
+		this.ChatNote = detail.Item.Label + ': ' + (message ? message.Text : detail.ID);
+	},
+
 	SendMessage: function (text) {
 		this.Messages = this.Messages.concat([{ID: this.Messages.length + 1, Author: 'Me', Text: text, Time: 'now', Own: true, Status: 'sent'}]);
 	},
@@ -1398,10 +2450,54 @@ Elemenx.Component('UIKitPage', {
 
 		this.PaletteKeys = hotkeys.Format('Mod+K');
 
+		this.SettingsIos = this.SettingsItems();
+
+		this.PipVideo = this.$Service('PictureInPicture').Supported('video');
+		this.PipDocument = this.$Service('PictureInPicture').Supported('document');
+		this.SettingsMaterial = this.SettingsItems();
+
+		this.EditorLanguageChosen(this.EditorLanguage);
+
+		this.GameLine = this.GameScript[0];
+
+		/* The native features: their place, and the clicks of the menu of a native program. */
+		this.NativePlatform = this.$Service('Native').Platform();
+		this.NativeListener = function (value) {
+			self.NativeChosen(value);
+		};
+
+		this.$Service('Native').On('menu', this.NativeListener);
+
+		/* The menu of a message: everyone may reply and copy, the author edits and deletes. */
+		this.MessageActions = function (message) {
+			var actions = [{ID: 'reply', Label: 'Reply', Icon: 'reply'}, {ID: 'copy', Label: 'Copy text', Icon: 'copy'}, {ID: 'select', Label: 'Select', Icon: 'check'}];
+
+			if (message.Own)
+				actions = actions.concat([{ID: 'edit', Label: 'Edit', Icon: 'edit'}, {ID: 'delete', Label: 'Delete', Icon: 'delete', Danger: true}]);
+
+			return actions.concat([{Separator: true}, {ID: 'summary', Label: 'Reactions and views', Icon: 'eye'}]);
+		};
+
+		/* The completions and the hints of the code editor: functions of the state, which the template passes on. */
+		this.EditorCompleter = function (context, callback) {
+			self.EditorComplete(context, callback);
+		};
+
+		this.EditorHinter = function (context, callback) {
+			self.EditorHint(context, callback);
+		};
+
 		/* A comment written minutes ago. */
 		this.CommentTime = function (minutes) {
 			return new Date(Date.now() - minutes * 60000);
 		};
+
+		this.Devices = [
+			{Name: 'Push', Supported: this.$Service('Push').Supported(), Action: 'Notify'},
+			{Name: 'Serial', Supported: this.$Service('Serial').Supported(), Action: 'Pick a port'},
+			{Name: 'USB', Supported: this.$Service('USB').Supported(), Action: 'Pick a device'},
+			{Name: 'NFC', Supported: this.$Service('NFC').Supported(), Action: 'Scan a tag'}
+		];
 
 		this.LoadIcons();
 		this.WatchTheme();
@@ -1518,6 +2614,279 @@ Elemenx.Component('UIKitPage', {
 				self.Say(target, 'error', text.split(' ')[0] + ': command not found');
 			}, 400);
 		}
+	},
+
+	/* The rich text editor is kept behind a function too. */
+	RichReady: function (editor) {
+		this.Rich = function () {
+			return editor;
+		};
+	},
+
+	RichTyped: function (value) {
+		this.RichValue = value;
+
+		if (this.RichMarkdownShown && !this.RichFromMarkdown)
+			this.RichMarkdown = this.Rich().Markdown();
+	},
+
+	RichFormatsChanged: function (formats) {
+		var names = {paragraph: 'Paragraph', heading: 'Heading ' + formats.Level, quote: 'Quote', codeblock: 'Code', item: 'List item'};
+		var block = formats.Quote && formats.Block === 'paragraph' ? 'quote' : formats.Block;
+
+		this.RichFormats = formats;
+		this.RichBlock = block === 'heading' ? 'heading-' + formats.Level : block === 'item' ? '' : block || 'paragraph';
+		this.RichLink = formats.Link || '';
+		this.RichNote = (names[block] || 'Paragraph') + (formats.Link ? ' · Link: ' + formats.Link : '') + (formats.Table ? ' · Table' : '');
+	},
+
+	RichBlockChosen: function (value) {
+		var parts = String(value).split('-');
+
+		if (parts[0] === 'heading') this.Rich().Command('heading', Number(parts[1]));
+		else this.Rich().Command(this.RichFormats.Block === value && value !== 'paragraph' ? 'paragraph' : value);
+	},
+
+	RichBold: function () {
+		this.Rich().Command('bold');
+	},
+
+	RichItalic: function () {
+		this.Rich().Command('italic');
+	},
+
+	RichUnderline: function () {
+		this.Rich().Command('underline');
+	},
+
+	RichStrike: function () {
+		this.Rich().Command('strike');
+	},
+
+	RichCode: function () {
+		this.Rich().Command('code');
+	},
+
+	RichBullets: function () {
+		this.Rich().Command('bullets');
+	},
+
+	RichNumbers: function () {
+		this.Rich().Command('numbers');
+	},
+
+	RichLinkChanged: function (value) {
+		this.RichLink = value;
+	},
+
+	RichApplyLink: function () {
+		this.Rich().Command('link', this.RichLink);
+	},
+
+	/* Mod+K in the editor: the page puts the link of the selection into its field. */
+	RichLinkAsked: function (link) {
+		this.RichLink = link.Href || 'https://';
+
+		this.$Element().querySelector('.ui-kit-editor-tools input[placeholder="https://..."]').focus();
+	},
+
+	RichImage: function () {
+		this.Rich().Command('image', {Src: 'data/cards/mountains.svg', Alt: 'Mountains'});
+	},
+
+	RichTable: function () {
+		this.Rich().Command('table', {Rows: 3, Columns: 3});
+	},
+
+	RichRow: function () {
+		this.Rich().Command('row');
+	},
+
+	RichRule: function () {
+		this.Rich().Command('rule');
+	},
+
+	RichClear: function () {
+		this.Rich().Command('clear');
+	},
+
+	RichUndo: function () {
+		this.Rich().Command('undo');
+	},
+
+	RichRedo: function () {
+		this.Rich().Command('redo');
+	},
+
+	/* Images pasted or dropped: the page reads them and inserts them (a real one would upload them). */
+	RichFiles: function (files) {
+		var editor = this.Rich();
+
+		files.filter(function (file) {
+			return /^image\//.test(file.type);
+		}).forEach(function (file) {
+			var reader = new FileReader();
+
+			reader.onload = function () {
+				editor.Command('image', {Src: reader.result, Alt: file.name});
+			};
+
+			reader.readAsDataURL(file);
+		});
+	},
+
+	RichMarkdownToggled: function (value) {
+		this.RichMarkdownShown = value;
+		this.RichMarkdown = value ? this.Rich().Markdown() : '';
+	},
+
+	/* Markdown typed in the code editor below becomes the document. */
+	RichMarkdownTyped: function (value) {
+		this.RichMarkdown = value;
+		this.RichFromMarkdown = true;
+
+		this.Rich().SetMarkdown(value);
+
+		this.RichFromMarkdown = false;
+	},
+
+	RichPrint: function () {
+		this.Rich().Print({Title: 'Example document'});
+	},
+
+	/* The editor is kept behind a function: its handle is not state of the page. */
+	EditorReady: function (editor) {
+		this.Editor = function () {
+			return editor;
+		};
+	},
+
+	EditorLanguageChosen: function (value) {
+		this.EditorLanguage = value;
+		this.EditorCode = this.EditorSamples[value] || '';
+
+		/* The version before, for the diff view: a word changed in the second line, and one line more. */
+		this.EditorOriginal = this.EditorCode.split('\n').map(function (line, index) {
+			return index === 1 ? line.replace(/\w+/, 'previous') : line;
+		}).concat(['']).join('\n');
+		this.EditorMarkers = value === 'javascript' ? [
+			{Line: 8, Column: 7, Severity: 'warning', Message: 'unused is never used.'},
+			{Line: 13, Column: 24, EndColumn: 40, Severity: 'error', Message: 'Template literals are not ES5: use a string.'}
+		] : [];
+		this.EditorMatches = null;
+		this.EditorQuery = '';
+
+		if (this.Editor)
+			this.Editor().ClearFind();
+	},
+
+	EditorTyped: function (value) {
+		this.EditorCode = value;
+	},
+
+	EditorCursor: function (cursor) {
+		this.EditorLine = cursor.Line;
+		this.EditorColumn = cursor.Column;
+	},
+
+	EditorFind: function (value) {
+		this.EditorQuery = value;
+		this.EditorMatches = value ? this.Editor().Find(value) : null;
+
+		if (!value)
+			this.Editor().ClearFind();
+	},
+
+	EditorNext: function () {
+		this.Editor().FindNext();
+	},
+
+	EditorPrevious: function () {
+		this.Editor().FindPrevious();
+	},
+
+	EditorReplacementChanged: function (value) {
+		this.EditorReplacement = value;
+	},
+
+	EditorReplaceAll: function () {
+		this.Editor().ReplaceAll(this.EditorReplacement);
+
+		this.EditorMatches = this.EditorQuery ? this.Editor().Find(this.EditorQuery) : null;
+	},
+
+	EditorUndo: function () {
+		this.Editor().Undo();
+	},
+
+	EditorRedo: function () {
+		this.Editor().Redo();
+	},
+
+	EditorComment: function () {
+		this.Editor().Comment();
+	},
+
+	EditorViewChosen: function (value) {
+		var stats;
+
+		this.EditorView = value;
+
+		if (value !== 'edit' && this.Editor) {
+			stats = this.Editor().DiffStats();
+
+			this.EditorStats = '+' + stats.Added + ' −' + stats.Removed;
+		}
+	},
+
+	EditorWrapChanged: function (value) {
+		this.EditorWrap = value;
+	},
+
+	EditorPrint: function () {
+		this.Editor().Print({Title: 'Example code'});
+	},
+
+	/* Completions for the example: the keywords of the language and the words of the text. */
+	EditorComplete: function (context, callback) {
+		var words = {};
+		var keywords = {
+			javascript: ['break', 'case', 'catch', 'continue', 'default', 'else', 'function', 'return', 'switch', 'this', 'throw', 'typeof', 'var', 'while', 'Elemenx', 'console'],
+			python: ['class', 'def', 'elif', 'else', 'import', 'lambda', 'print', 'return', 'self', 'while', 'yield'],
+			sql: ['SELECT', 'FROM', 'WHERE', 'GROUP', 'ORDER', 'JOIN', 'LIMIT', 'COUNT']
+		};
+		var items = (keywords[context.Language] || []).map(function (word) {
+			return {Label: word, Kind: 'kw', Detail: 'keyword'};
+		});
+
+		(context.Text.match(/[A-Za-z_$][\w$]{2,}/g) || []).forEach(function (word) {
+			words[word] = (words[word] || 0) + 1;
+		});
+
+		Object.keys(words).sort().forEach(function (word) {
+			var known = items.some(function (item) {
+				return item.Label === word;
+			});
+			if (word !== context.Word && !known)
+				items.push({Label: word, Kind: 'ab', Detail: words[word] + ' in the text'});
+		});
+
+		callback(null, items);
+	},
+
+	/* A hint for the word under the pointer: how often the text uses it. */
+	EditorHint: function (context, callback) {
+		var count;
+
+		if (!/^[A-Za-z_]\w*$/.test(context.Word)) {
+			callback(null, '');
+
+			return;
+		}
+
+		count = context.Text.split(new RegExp('\\b' + context.Word + '\\b')).length - 1;
+
+		callback(null, context.Word + ': ' + count + (count === 1 ? ' use' : ' uses') + ' in the text');
 	},
 
 	RunCommand: function (command) {

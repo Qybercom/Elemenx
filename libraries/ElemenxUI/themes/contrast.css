@@ -1,15 +1,15 @@
 /*
  * High contrast: black on white and white on black, strong borders and a solid focus ring, for low vision and bright
- * rooms. Every rule starts with body[data-theme='contrast'], so the stylesheet may stay on the page: it applies only
+ * rooms. Every rule starts with [data-theme][data-theme='contrast'], so the stylesheet may stay on the page: it applies only
  * while the theme is on (the Theme Service: Use('contrast')).
  */
-body[data-theme='contrast'] {
+[data-theme][data-theme='contrast'] {
 	--elemenx-focus: var(--elemenx-accent);
 	--elemenx-hairline: var(--elemenx-text);
 	--elemenx-scrollbar: var(--elemenx-text-muted);
 }
 
-body[data-theme='contrast'][data-scheme='light'] {
+[data-theme][data-theme='contrast'][data-scheme='light'] {
 	--elemenx-background: #ffffff;
 	--elemenx-background-rgb: 255, 255, 255;
 	--elemenx-surface: #ffffff;
@@ -40,7 +40,7 @@ body[data-theme='contrast'][data-scheme='light'] {
 	--elemenx-shadow: 0 0 0 2px #000000;
 }
 
-body[data-theme='contrast'][data-scheme='dark'] {
+[data-theme][data-theme='contrast'][data-scheme='dark'] {
 	--elemenx-background: #000000;
 	--elemenx-background-rgb: 0, 0, 0;
 	--elemenx-surface: #000000;
@@ -71,13 +71,13 @@ body[data-theme='contrast'][data-scheme='dark'] {
 	--elemenx-shadow: 0 0 0 2px #ffffff;
 }
 
-body[data-theme='contrast'] .elemenx-link,
-body[data-theme='contrast'] a {
+[data-theme][data-theme='contrast'] .elemenx-link,
+[data-theme][data-theme='contrast'] a {
 	text-decoration: underline;
 }
 
-body[data-theme='contrast'] .elemenx-button:focus-visible,
-body[data-theme='contrast'] .elemenx-input:focus-within {
+[data-theme][data-theme='contrast'] .elemenx-button:focus-visible,
+[data-theme][data-theme='contrast'] .elemenx-input:focus-within {
 	outline: 3px solid var(--elemenx-accent);
 	outline-offset: 2px;
 }

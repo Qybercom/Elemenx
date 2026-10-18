@@ -1,6 +1,16 @@
 {
 	"emoji": {"Files": ["data/emoji.json", "data/emoji-en.json"], "Uses": ["'Emoji'", "\"Emoji\""]},
 	"emoji.ru": {"Files": ["data/emoji-ru.json"], "Uses": ["'Emoji'", "\"Emoji\""], "Language": "ru"},
+	"cities": {"Files": ["data/cities.txt", "data/regions.txt"], "Uses": ["'Cities'", "\"Cities\"", "CityInput"]},
+	"cities.ru": {"Files": ["data/cities-ru.txt"], "Uses": ["'Cities'", "\"Cities\"", "CityInput"], "Language": "ru"},
 	"brands": {"Files": ["icons/brands.svg"], "Uses": ["brands:"]},
-	"files": {"Files": ["icons/files.svg"], "Uses": ["files:", "FileIcon"]}
+	"files": {"Files": ["icons/files.svg"], "Uses": ["files:", "FileIcon"]},
+	"sport": {"Files": ["icons/sport.svg"], "Uses": ["sport:"]},
+	"racing": {"Files": ["icons/racing.svg"], "Uses": ["racing:"]},
+	"science": {"Files": ["icons/science.svg"], "Uses": ["science:"]},
+	"art": {"Files": ["icons/art.svg"], "Uses": ["art:"]},
+	"cinema": {"Files": ["icons/cinema.svg"], "Uses": ["cinema:"]},
+	"games": {"Files": ["icons/games.svg"], "Uses": ["games:"]},
+	"fantasy": {"Files": ["themes/fantasy.css"], "Uses": ["'fantasy'", "\"fantasy\""]},
+	"scifi": {"Files": ["themes/scifi.css"], "Uses": ["'scifi'", "\"scifi\""]}
 }

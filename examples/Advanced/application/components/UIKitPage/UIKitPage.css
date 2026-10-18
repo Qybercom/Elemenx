@@ -440,3 +440,234 @@
 	grid-template-columns: repeat(2, minmax(0, 1fr));
 	height: auto;
 }
+
+.ui-kit-editor-tools .elemenx-input {
+	width: 180px;
+}
+
+.ui-kit-meters {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-end;
+	gap: 24px;
+}
+
+.ui-kit-meters .elemenx-meter.vertical {
+	height: 160px;
+}
+
+.ui-kit-game-systems {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.ui-kit-game-power {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.ui-kit-game-columns {
+	display: flex;
+	justify-content: space-between;
+	gap: 12px;
+	height: 150px;
+}
+
+.ui-kit-game-dials {
+	display: flex;
+	justify-content: space-between;
+	gap: 8px;
+}
+
+.ui-kit-game-dials .ui-kit-dial-mark {
+	font-size: 20px;
+}
+
+.ui-kit-game-footnote {
+	margin-inline-end: auto;
+	color: var(--elemenx-game-muted);
+	font-size: var(--elemenx-font-size-small);
+}
+
+.ui-kit-dial-mark {
+	font-size: 28px;
+	font-weight: 300;
+}
+
+.ui-kit-game {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-start;
+	gap: 16px;
+}
+
+.ui-kit-game-hud {
+	flex: 1 1 560px;
+	height: 680px;
+	overflow: hidden;
+	border-radius: 8px;
+}
+
+.ui-kit-game-top-end {
+	display: flex;
+	align-items: flex-start;
+	gap: 8px;
+}
+
+.ui-kit-game-tracker {
+	width: 200px;
+	padding: 10px 12px;
+}
+
+.ui-kit-game-scene {
+	position: absolute;
+	inset: 0;
+	background: linear-gradient(to bottom, #24344f 0%, #4a5f80 46%, #6f7f72 47%, #3d4a38 100%);
+}
+
+.ui-kit-game-status {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	width: 240px;
+	padding: 14px 16px;
+}
+
+.ui-kit-game-center {
+	max-width: 360px;
+}
+
+.ui-kit-game-bottom {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 24px;
+	width: min(560px, 100%);
+}
+
+.ui-kit-game-bottom .elemenx-game-dialogue {
+	align-self: stretch;
+}
+
+.ui-kit-game-keys {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	padding: 12px 14px;
+}
+
+.ui-kit-game-window {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	min-width: 0;
+}
+
+.ui-kit-game-record {
+	display: grid;
+	grid-template-columns: auto 120px minmax(0, 1fr);
+	gap: 12px;
+	align-items: start;
+}
+
+.ui-kit-game-portrait {
+	width: 120px;
+	height: 150px;
+	object-fit: cover;
+	border: var(--elemenx-game-cell-frame);
+}
+
+.ui-kit-desktop {
+	position: relative;
+	height: 380px;
+	overflow: hidden;
+	background: repeating-linear-gradient(45deg, var(--elemenx-surface-raised) 0 12px, var(--elemenx-background) 12px 24px);
+	border: 1px solid var(--elemenx-border);
+	border-radius: 8px;
+}
+
+.ui-kit-game-login {
+	display: grid;
+	grid-template-columns: auto minmax(0, 1fr);
+	gap: 8px 12px;
+	align-items: center;
+	padding: 4px 4px 12px;
+}
+
+.ui-kit-game-label {
+	text-align: end;
+}
+
+.ui-kit-game-field {
+	height: 26px;
+	padding: 0 8px;
+}
+
+.ui-kit-game-actions {
+	display: flex;
+	justify-content: center;
+	gap: 12px;
+}
+
+/* An item of a quest, by the Class it asks for: a dashed frame of gold inside its cell. */
+.ui-kit-game .elemenx-game-inventory-cell.quest,
+.ui-kit-game .elemenx-game-slot.quest {
+	outline: 1px dashed var(--elemenx-game-special);
+	outline-offset: -5px;
+}
+
+.ui-kit-theme-scope {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	padding: 12px;
+	border: 1px solid var(--elemenx-border);
+	border-radius: var(--elemenx-radius-large);
+}
+
+/* The two looks of the SettingsMenu side by side, each as wide as a phone, on the grouped background of a phone. */
+.ui-kit-settings-menus {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(280px, 380px));
+	gap: 24px;
+}
+
+.ui-kit-settings-menus > .elemenx-settings-menu {
+	padding: 16px;
+	background: var(--elemenx-background);
+	border: 1px solid var(--elemenx-border);
+	border-radius: var(--elemenx-radius-giant);
+}
+
+/* The pad of a phone and a pad of tones side by side; the letters of the tones in the accent. */
+.ui-kit-dial-pads {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-start;
+	gap: 48px;
+}
+
+.ui-kit-dial-pads .ui-kit-tone-key {
+	color: var(--elemenx-accent);
+}
+
+/* The video of the Picture-in-Picture demo: a small screen, black until its first press. */
+.ui-kit-pip-video {
+	width: 160px;
+	height: 90px;
+	background: var(--elemenx-text);
+	border-radius: var(--elemenx-radius-large);
+}
+
+/* The keys of a game marked on the keyboard: the jump and the run, beside the moves (marked). */
+.elemenx-keyboard-key.ui-kit-key-jump {
+	border-color: var(--elemenx-success);
+	border-width: 2px;
+}
+
+.elemenx-keyboard-key.ui-kit-key-run {
+	border-color: var(--elemenx-warning);
+	border-width: 2px;
+}

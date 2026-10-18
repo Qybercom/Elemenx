@@ -59,7 +59,7 @@
 
 .elemenx-profile-status {
 	position: absolute;
-	right: 0;
+	inset-inline-end: 0;
 	bottom: 0;
 	width: 12px;
 	height: 12px;
@@ -69,7 +69,7 @@
 }
 
 .elemenx-profile.card .elemenx-profile-status {
-	right: 4px;
+	inset-inline-end: 4px;
 	bottom: 4px;
 	width: 16px;
 	height: 16px;
@@ -145,7 +145,7 @@
 }
 
 .elemenx-profile-stat + .elemenx-profile-stat {
-	border-left: 1px solid var(--elemenx-border);
+	border-inline-start: 1px solid var(--elemenx-border);
 }
 
 .elemenx-profile-stat dt {

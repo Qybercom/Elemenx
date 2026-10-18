@@ -27,14 +27,14 @@ Elemenx.Component('PlanCard', {
 	Selectable: false,
 	Tabbable: false,
 	Variant: 'outlined',
-	Action: 'Choose plan',
-	SelectedLabel: 'Selected',
-	CurrentLabel: 'Current plan',
-	FreeLabel: 'Free',
-	MonthLabel: 'month',
-	YearLabel: 'year',
-	IncludedLabel: 'Included',
-	ExcludedLabel: 'Not included',
+	Action: '',
+	SelectedLabel: '',
+	CurrentLabel: '',
+	FreeLabel: '',
+	MonthLabel: '',
+	YearLabel: '',
+	IncludedLabel: '',
+	ExcludedLabel: '',
 
 	$OnCreate: function () {
 		var self = this;
@@ -44,7 +44,7 @@ Elemenx.Component('PlanCard', {
 		this.Amount = function (price, yearly, period, currency) {
 			var amount = period === 'year' ? (yearly === null || yearly === undefined || yearly === '' ? Number(price) * 12 : Number(yearly)) : Number(price);
 
-			return amount > 0 ? format.Money(amount, currency) : self.FreeLabel;
+			return amount > 0 ? format.Money(amount, currency) : self.FreeLabel || Elemenx.Locale.Text('ui.planCard.free');
 		};
 	},
 

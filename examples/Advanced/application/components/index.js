@@ -2,6 +2,7 @@
 	'Layout/Layout.js',
 	'HomePage/HomePage.js',
 	'UIKitPage/UIKitPage.js',
+	'PresetField/PresetField.js',
 	'DirectiveStructuralProbe/DirectiveStructuralProbe.js',
 	'ComponentProbe/ComponentProbe.js',
 	'ComponentShowcase/ComponentShowcase.js',

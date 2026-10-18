@@ -1,0 +1,478 @@
+{
+	"ui": {
+		"achievements": {
+			"title": "Достижения",
+			"unlocked": "Достижение получено"
+		},
+		"calendar": {
+			"month": "Месяц",
+			"more": {
+				"one": "ещё {count}",
+				"few": "ещё {count}",
+				"many": "ещё {count}",
+				"other": "ещё {count}"
+			},
+			"today": "Сегодня",
+			"view": "Вид",
+			"week": "Неделя"
+		},
+		"cardNumberInput": {
+			"hideNumber": "Скрыть номер",
+			"showNumber": "Показать номер"
+		},
+		"chart": {
+			"label": "Диаграмма"
+		},
+		"chat": {
+			"latest": "К последним сообщениям",
+			"selected": "Выбрано: {count}",
+			"clearSelection": "Отменить выбор"
+		},
+		"chatComposer": {
+			"attach": "Прикрепить",
+			"expressions": "Эмодзи и стикеры",
+			"message": "Сообщение",
+			"placeholder": "Напишите сообщение…",
+			"send": "Отправить",
+			"suggestions": "Подсказки"
+		},
+		"chatMessage": {
+			"react": "Добавить реакцию",
+			"sticker": "Стикер",
+			"edited": "изменено",
+			"views": "Просмотров: {count}",
+			"sending": "Отправляется",
+			"sent": "Отправлено",
+			"delivered": "Доставлено",
+			"read": "Прочитано",
+			"error": "Не отправлено",
+			"actions": "Действия с сообщением",
+			"summary": "Реакции и просмотры",
+			"all": "Все",
+			"viewsUnknown": "Просмотров: {count}",
+			"select": "Выбрать сообщение",
+			"nobody": "Пока никого"
+		},
+		"codeEditor": {
+			"label": "Редактор кода",
+			"suggestions": "Подсказки",
+			"diff": "Изменения",
+			"unchanged": "Без изменений: {count}"
+		},
+		"colorInput": {
+			"area": "Насыщенность и яркость",
+			"dropper": "Взять цвет с экрана",
+			"hue": "Оттенок",
+			"opacity": "Непрозрачность",
+			"pick": "Выбрать цвет",
+			"title": "Цвет"
+		},
+		"combobox": {
+			"create": "Создать",
+			"empty": "Ничего не найдено"
+		},
+		"commandPalette": {
+			"command": "Команда",
+			"empty": "Нет подходящих команд",
+			"placeholder": "Введите команду или поисковый запрос",
+			"recentTitle": "Недавние",
+			"title": "Палитра команд"
+		},
+		"commentCard": {
+			"like": "Нравится",
+			"reply": "Ответить",
+			"repost": "Репост",
+			"share": "Поделиться",
+			"verified": "Подтверждённый аккаунт"
+		},
+		"common": {
+			"all": "Все",
+			"back": "Назад",
+			"clear": "Очистить",
+			"close": "Закрыть",
+			"collapse": "Свернуть",
+			"expand": "Развернуть",
+			"hide": "Скрыть",
+			"hideCode": "Скрыть код",
+			"loading": "Загрузка",
+			"next": "Далее",
+			"nothingFound": "Ничего не найдено",
+			"previous": "Назад",
+			"remove": "Удалить {name}",
+			"search": "Поиск",
+			"selectAll": "Выбрать все",
+			"showCode": "Показать код",
+			"showOptions": "Показать варианты"
+		},
+		"cityInput": {
+			"empty": "Город не найден",
+			"hint": "Введите название города",
+			"placeholder": "Город"
+		},
+		"currencySelect": {
+			"placeholder": "Валюта"
+		},
+		"dateInput": {
+			"calendar": "Календарь",
+			"choose": "Выбрать дату",
+			"clear": "Очистить"
+		},
+		"dateRangeInput": {
+			"choose": "Выбрать период",
+			"clear": "Очистить",
+			"last30": "Последние 30 дней",
+			"last7": "Последние 7 дней",
+			"lastMonth": "Прошлый месяц",
+			"nextMonth": "Следующий месяц",
+			"pickEnd": "Выберите конец периода",
+			"placeholder": "Начало – конец",
+			"previousMonth": "Предыдущий месяц",
+			"thisMonth": "Этот месяц",
+			"thisYear": "Этот год"
+		},
+		"dialPad": {
+			"call": "Позвонить",
+			"erase": "Стереть",
+			"hold": "удерживайте для {value}",
+			"label": "Номеронабиратель",
+			"number": "Номер"
+		},
+		"dialogs": {
+			"cancel": "Отмена",
+			"ok": "ОК"
+		},
+		"emojiPicker": {
+			"group": {
+				"activities": "Занятия",
+				"component": "Компоненты",
+				"flags": "Флаги",
+				"food": "Еда и напитки",
+				"nature": "Животные и природа",
+				"objects": "Предметы",
+				"people": "Люди и тело",
+				"recent": "Недавние",
+				"search": "Результаты поиска",
+				"smileys": "Смайлики и эмоции",
+				"symbols": "Символы",
+				"travel": "Путешествия и места"
+			},
+			"groups": "Группы",
+			"label": "Эмодзи",
+			"nothing": "Эмодзи не найдены",
+			"placeholder": "Поиск эмодзи",
+			"searchLabel": "Поиск эмодзи",
+			"skinTone": "Тон кожи",
+			"tone0": "Без тона кожи",
+			"tone1": "Светлый тон кожи",
+			"tone2": "Умеренно светлый тон кожи",
+			"tone3": "Средний тон кожи",
+			"tone4": "Умеренно тёмный тон кожи",
+			"tone5": "Тёмный тон кожи"
+		},
+		"expressionPicker": {
+			"emoji": "Эмодзи",
+			"kind": "Вид",
+			"stickers": "Стикеры"
+		},
+		"fileUpload": {
+			"label": "Перетащите файлы сюда или нажмите, чтобы выбрать"
+		},
+		"formats": {
+			"decimal": "Введите число, например 12,5",
+			"email": "Введите адрес почты, например name@example.com",
+			"iban": "Введите IBAN, например DE89 3704 0044 0532 0130 00",
+			"ibanCheck": "В этом IBAN ошибка: проверьте символы",
+			"integer": "Введите целое число",
+			"ipv4": "Введите адрес IPv4, например 192.168.0.1",
+			"ipv6": "Введите адрес IPv6, например 2001:db8::1",
+			"max": "Введите не больше {max}",
+			"min": "Введите не меньше {min}",
+			"postalCode": "Введите почтовый индекс",
+			"postalCodeOf": "Введите почтовый индекс страны {country}",
+			"semver": "Введите версию, например 1.4.2",
+			"url": "Введите адрес сайта, например https://example.com",
+			"uuid": "Введите UUID, например 123e4567-e89b-12d3-a456-426614174000"
+		},
+		"gallery": {
+			"label": "Галерея",
+			"previous": "Предыдущая картинка",
+			"next": "Следующая картинка",
+			"pause": "Пауза",
+			"play": "Воспроизвести",
+			"pictures": "Картинки"
+		},
+		"game": {
+			"health": "Здоровье",
+			"mana": "Мана",
+			"experience": "Опыт",
+			"stamina": "Выносливость",
+			"emptySlot": "Пустая ячейка",
+			"cooldown": "готово через {seconds} с",
+			"inventory": "Инвентарь",
+			"dialogue": "Диалог",
+			"continue": "Дальше",
+			"menu": "Меню",
+			"screen": "Игровой экран",
+			"button": "кнопка {button}",
+			"common": "Обычный",
+			"uncommon": "Необычный",
+			"rare": "Редкий",
+			"epic": "Эпический",
+			"legendary": "Легендарный",
+			"tabs": "Разделы",
+			"quests": "Задания",
+			"noQuests": "Заданий нет",
+			"level": "Уровень {level}",
+			"questDone": "Выполнено",
+			"questFailed": "Провалено",
+			"objectives": "Цели",
+			"rewards": "Награды",
+			"track": "Отслеживать",
+			"untrack": "Не отслеживать",
+			"map": "Карта",
+			"marker": "Метка",
+			"zoomIn": "Приблизить",
+			"zoomOut": "Отдалить",
+			"leaderboard": "Таблица лидеров",
+			"player": "Игрок",
+			"score": "Очки",
+			"rose": "выше на {count}",
+			"fell": "ниже на {count}"
+		},
+		"input": {
+			"hidePassword": "Скрыть пароль",
+			"showPassword": "Показать пароль"
+		},
+		"masterDetail": {
+			"empty": "Выберите элемент"
+		},
+		"multiSelect": {
+			"empty": "Ничего не найдено",
+			"placeholder": "Выберите…"
+		},
+		"navList": {
+			"label": "Навигация"
+		},
+		"numberInput": {
+			"decrease": "Уменьшить",
+			"increase": "Увеличить"
+		},
+		"otpInput": {
+			"label": "Одноразовый код"
+		},
+		"mixer": {
+			"label": "Микшер",
+			"master": "Мастер",
+			"mute": "Заглушить",
+			"pan": "Панорама",
+			"solo": "Соло",
+			"volume": "Громкость"
+		},
+		"keyboard": {
+			"label": "Клавиатура"
+		},
+		"piano": {
+			"label": "Пианино"
+		},
+		"pip": {
+			"away": "Показано в окне «картинка в картинке»",
+			"back": "Вернуть"
+		},
+		"pagination": {
+			"first": "Первая страница",
+			"label": "Страницы",
+			"last": "Последняя страница",
+			"next": "Следующая страница",
+			"previous": "Предыдущая страница",
+			"range": "{from}–{to} из {count}",
+			"rowsPerPage": "Строк на странице",
+			"size": "{size} на странице"
+		},
+		"phoneInput": {
+			"search": "Поиск страны или кода"
+		},
+		"planCard": {
+			"action": "Выбрать тариф",
+			"current": "Текущий тариф",
+			"excluded": "Не входит",
+			"free": "Бесплатно",
+			"included": "Входит",
+			"perMonth": "/ месяц",
+			"perYear": "/ год",
+			"selected": "Выбран"
+		},
+		"planPicker": {
+			"action": "Выбрать тариф",
+			"label": "Тарифы",
+			"monthly": "Помесячно",
+			"yearly": "За год"
+		},
+		"postCard": {
+			"comment": "Комментарии",
+			"like": "Нравится",
+			"readTime": {
+				"one": "{count} мин чтения",
+				"few": "{count} мин чтения",
+				"many": "{count} мин чтения",
+				"other": "{count} мин чтения"
+			},
+			"share": "Поделиться"
+		},
+		"productCard": {
+			"add": "В корзину",
+			"color": "Цвет",
+			"favorite": "В избранное",
+			"image": "Изображение",
+			"images": "Изображения",
+			"inCart": "В корзине",
+			"rating": "Оценка",
+			"size": "Размер"
+		},
+		"profileCard": {
+			"follow": "Подписаться",
+			"following": "Вы подписаны",
+			"message": "Написать",
+			"verified": "Подтверждённый аккаунт"
+		},
+		"rating": {
+			"label": "Оценка"
+		},
+		"ribbon": {
+			"collapse": "Свернуть ленту",
+			"file": "Файл",
+			"label": "Лента",
+			"pin": "Закрепить ленту",
+			"quickAccess": "Панель быстрого доступа"
+		},
+		"ribbonBackstage": {
+			"title": "Файл"
+		},
+		"ribbonButton": {
+			"more": "Ещё: {name}"
+		},
+		"ribbonGallery": {
+			"label": "Коллекция",
+			"nextRow": "Следующая строка",
+			"previousRow": "Предыдущая строка"
+		},
+		"richEditor": {
+			"label": "Текстовый редактор",
+			"placeholder": "Напишите что-нибудь…",
+			"formatting": "Форматирование",
+			"bold": "Полужирный",
+			"italic": "Курсив",
+			"underline": "Подчёркнутый",
+			"strike": "Зачёркнутый",
+			"code": "Код",
+			"link": "Ссылка",
+			"linkPlaceholder": "Вставьте ссылку и нажмите Enter",
+			"heading": "Заголовок",
+			"quote": "Цитата",
+			"clear": "Очистить форматирование"
+		},
+		"select": {
+			"empty": "Ничего не найдено",
+			"placeholder": "Выберите…"
+		},
+		"settings": {
+			"path": "Путь"
+		},
+		"settingsMenu": {
+			"back": "Назад",
+			"nothing": "Настройки не найдены",
+			"search": "Поиск настроек"
+		},
+		"sparkline": {
+			"label": "Тренд"
+		},
+		"spinner": {
+			"label": "Загрузка"
+		},
+		"stickerPicker": {
+			"favorites": "Избранное",
+			"label": "Стикеры",
+			"noFavorites": "Отметьте стикер звёздочкой, чтобы он появился здесь",
+			"noPacks": "Наборов стикеров пока нет",
+			"noRecent": "Здесь появятся отправленные стикеры",
+			"nothing": "Стикеры не найдены",
+			"packs": "Наборы",
+			"placeholder": "Поиск стикеров",
+			"recent": "Недавно отправленные",
+			"searchLabel": "Поиск стикеров",
+			"star": "Добавить в избранное",
+			"unstar": "Убрать из избранного"
+		},
+		"table": {
+			"empty": "Нет данных",
+			"filter": "Фильтр: {name}",
+			"selectAll": "Выбрать все строки",
+			"selectRow": "Выбрать строку"
+		},
+		"tabs": {
+			"close": "Закрыть вкладку"
+		},
+		"tagInput": {
+			"placeholder": "Добавьте метку"
+		},
+		"terminal": {
+			"command": "Команда",
+			"running": "Выполняется",
+			"title": "Терминал"
+		},
+		"theme": {
+			"contrast": "Высокий контраст",
+			"darcula": "Darcula",
+			"default": "Стандартная",
+			"soft": "Мягкая",
+			"fantasy": "Фэнтези",
+			"scifi": "Научная фантастика"
+		},
+		"themeSwitch": {
+			"dark": "Тёмная тема",
+			"light": "Светлая тема",
+			"system": "Как в системе",
+			"title": "Тема"
+		},
+		"tileGrid": {
+			"dropNewGroup": "Отпустите здесь, чтобы начать группу",
+			"groupWidth": "Ширина группы",
+			"newGroupTitle": "Новая группа"
+		},
+		"timeInput": {
+			"choose": "Выбрать время",
+			"done": "ОК",
+			"hours": "Часы",
+			"minutes": "Минуты",
+			"seconds": "Секунды",
+			"title": "Время"
+		},
+		"toastHost": {
+			"title": "Уведомления"
+		},
+		"tour": {
+			"back": "Назад",
+			"done": "Готово",
+			"next": "Далее",
+			"skip": "Пропустить"
+		},
+		"tree": {
+			"empty": "Ничего не найдено",
+			"label": "Дерево"
+		},
+		"virtualList": {
+			"empty": "Нет элементов",
+			"label": "Список"
+		},
+		"window": {
+			"handle": "окно",
+			"keys": "стрелки двигают окно, Shift со стрелками меняет его размер",
+			"minimize": "Свернуть",
+			"unfold": "Развернуть",
+			"maximize": "Развернуть на всё",
+			"restore": "Восстановить",
+			"close": "Закрыть",
+			"popOut": "Картинка в картинке",
+			"popIn": "Вернуть на страницу"
+		}
+	}
+}

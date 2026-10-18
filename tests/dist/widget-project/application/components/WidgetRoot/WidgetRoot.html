@@ -1,0 +1,7 @@
+<section class="elemenx-column widget-root">
+	<h1 class="widget-title">Widget</h1>
+	<Button Label="Count" Icon="add" Variant="primary" (click)="Clicked" />
+	<span class="widget-clicks">{{Clicks}}</span>
+	<Select [options]="Plans" [value]="Plan" (change)="Planned" />
+	<span class="widget-plan">{{Plan}}</span>
+</section>

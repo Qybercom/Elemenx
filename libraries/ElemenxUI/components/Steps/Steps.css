@@ -74,11 +74,11 @@
 	stroke-width: 2;
 }
 
-.elemenx-steps.clickable .elemenx-step:not(.disabled) .elemenx-step-node {
+.elemenx-steps.clickable .elemenx-step:not(.disabled):not(.readonly) .elemenx-step-node {
 	cursor: pointer;
 }
 
-.elemenx-steps.clickable .elemenx-step:not(.disabled) .elemenx-step-node:hover {
+.elemenx-steps.clickable .elemenx-step:not(.disabled):not(.readonly) .elemenx-step-node:hover {
 	box-shadow: 0 0 0 4px rgba(var(--elemenx-step-rgb), 0.24);
 }
 
@@ -145,8 +145,8 @@
 
 .elemenx-steps.horizontal .elemenx-step::after {
 	top: calc(var(--elemenx-step-size) / 2 - 1px);
-	right: calc(-50% + var(--elemenx-step-size) / 2 + 8px);
-	left: calc(50% + var(--elemenx-step-size) / 2 + 8px);
+	inset-inline-end: calc(-50% + var(--elemenx-step-size) / 2 + 8px);
+	inset-inline-start: calc(50% + var(--elemenx-step-size) / 2 + 8px);
 	height: 2px;
 }
 
@@ -170,6 +170,6 @@
 .elemenx-steps.vertical .elemenx-step::after {
 	top: calc(var(--elemenx-step-size) + 4px);
 	bottom: 4px;
-	left: calc(var(--elemenx-step-size) / 2 - 1px);
+	inset-inline-start: calc(var(--elemenx-step-size) / 2 - 1px);
 	width: 2px;
 }

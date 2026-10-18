@@ -1,13 +1,33 @@
-<div class="elemenx-popup elemenx-menu" role="menu" *popup="Open" [attribute.data-placement]="Placement" [attribute.data-match-width]="MatchWidth ? 'true' : 'false'" (dismiss)="Dismissed" (keydown)="Key">
-	<div class="elemenx-menu-entry" *for="item of Items" *key="item.ID || item.Label || item.Group || '#' + $index">
-		<div class="elemenx-popup-separator" role="separator" *if="item.Separator"></div>
-		<div class="elemenx-popup-group" *if="item.Group">{{item.Group}}</div>
-		<div class="elemenx-option elemenx-popup-anchor" role="menuitem" tabindex="-1" *if="!item.Separator && !item.Group" [class.active]="$index === Active" [class.disabled]="!!item.Disabled" [class.danger]="!!item.Danger" [attribute.aria-disabled]="item.Disabled ? 'true' : null" [attribute.aria-haspopup]="item.Items ? 'menu' : null" [attribute.aria-expanded]="item.Items ? String($index === Expanded) : null" [attribute.data-index]="$index" (mouseenter)="Hover" (focus)="Focused" (click)="Pick">
-			<span class="elemenx-menu-icon"><Icon *if="item.Icon && !item.Checked" [name]="item.Icon" /><Icon *if="item.Checked" Name="check" /></span>
-			<span class="elemenx-option-label">{{item.Label}}</span>
-			<span class="elemenx-option-hint" *if="item.Shortcut">{{item.Shortcut}}</span>
-			<Icon *if="item.Items" Name="chevron-right" />
-			<MenuList *if="item.Items" [items]="item.Items" [open]="Open && $index === Expanded" Placement="right-start" (select)="Nested" (dismiss)="Back" />
+<span class="elemenx-menu-host">
+	<div class="elemenx-popup elemenx-menu" role="menu" *popup="Open && !Sheeted(Sheet)" [attribute.data-placement]="Placement" [attribute.data-match-width]="MatchWidth ? 'true' : 'false'" (dismiss)="Dismissed" (keydown)="Key">
+		<div class="elemenx-menu-entry" *for="item of Items" *key="item.ID || item.Label || item.Group || '#' + $index">
+			<div class="elemenx-popup-separator" role="separator" *if="item.Separator"></div>
+			<div class="elemenx-popup-group" *if="item.Group">{{item.Group}}</div>
+			<div class="elemenx-option elemenx-popup-anchor" role="menuitem" tabindex="-1" *if="!item.Separator && !item.Group" [class.active]="$index === Active" [class.disabled]="!!item.Disabled" [class.danger]="!!item.Danger" [attribute.aria-disabled]="item.Disabled ? 'true' : null" [attribute.aria-haspopup]="item.Items ? 'menu' : null" [attribute.aria-expanded]="item.Items ? String($index === Expanded) : null" [attribute.data-index]="$index" (mouseenter)="Hover" (focus)="Focused" (click)="Pick">
+				<span class="elemenx-menu-icon"><Icon *if="item.Icon && !item.Checked" [name]="item.Icon" /><Icon *if="item.Checked" Name="check" /></span>
+				<span class="elemenx-option-label">{{item.Label}}</span>
+				<span class="elemenx-option-hint" *if="item.Shortcut">{{item.Shortcut}}</span>
+				<Icon *if="item.Items" Name="chevron-right" />
+				<MenuList *if="item.Items" [items]="item.Items" [open]="Open && $index === Expanded" Placement="right-start" (select)="Nested" (dismiss)="Back" />
+			</div>
 		</div>
 	</div>
-</div>
+	<div class="elemenx-menu-layer" *if="Open && Sheeted(Sheet)" (keydown)="SheetKey">
+		<div class="elemenx-menu-shade" (click)="SheetCancel"></div>
+		<div class="elemenx-menu sheet" role="menu" tabindex="-1" [attribute.aria-label]="Parent(Items, Path) ? Parent(Items, Path).Label : Title || null">
+			<span class="elemenx-menu-grabber" aria-hidden="true"></span>
+			<div class="elemenx-menu-title" *if="Title && !Path.length">{{Title}}</div>
+			<button class="elemenx-option elemenx-menu-back" type="button" *if="Path.length" (click)="SheetBack"><Icon Name="chevron-left" /><span class="elemenx-option-label">{{Parent(Items, Path).Label}}</span></button>
+			<div class="elemenx-menu-entry" *for="item of Level(Items, Path)" *key="item.ID || item.Label || item.Group || '#' + $index">
+				<div class="elemenx-popup-separator" role="separator" *if="item.Separator"></div>
+				<div class="elemenx-popup-group" *if="item.Group">{{item.Group}}</div>
+				<div class="elemenx-option" role="menuitem" tabindex="-1" *if="!item.Separator && !item.Group" [class.disabled]="!!item.Disabled" [class.danger]="!!item.Danger" [attribute.aria-disabled]="item.Disabled ? 'true' : null" [attribute.aria-haspopup]="item.Items ? 'menu' : null" [attribute.data-index]="$index" (click)="SheetPick">
+					<span class="elemenx-menu-icon"><Icon *if="item.Icon && !item.Checked" [name]="item.Icon" /><Icon *if="item.Checked" Name="check" /></span>
+					<span class="elemenx-option-label">{{item.Label}}</span>
+					<Icon *if="item.Items" Name="chevron-right" />
+				</div>
+			</div>
+			<button class="elemenx-menu-cancel" type="button" (click)="SheetCancel">{{$T('ui.dialogs.cancel')}}</button>
+		</div>
+	</div>
+</span>

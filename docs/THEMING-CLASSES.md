@@ -5,7 +5,7 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 ## Foundation (index.css)
 
 - `elemenx-badge`: `accent`, `danger`, `info`, `success`, `warning`
-- `elemenx-block`: `compact`, `spacious`
+- `elemenx-block`: `compact`, `framed`, `spacious`, `trapezoid`
 - `elemenx-calendar`
 - `elemenx-calendar-cell`: `selected`, `today`
 - `elemenx-calendar-day`: `end`, `outside`, `selected`, `start`, `today`, `within`
@@ -52,6 +52,17 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-file-icon`
 - `elemenx-footnote`
 - `elemenx-footnote-mark`
+- `elemenx-game-bad`
+- `elemenx-game-good`
+- `elemenx-game-hotbar`
+- `elemenx-game-panel`: `light`
+- `elemenx-game-section`
+- `elemenx-game-section-title`
+- `elemenx-game-separator`
+- `elemenx-game-special`
+- `elemenx-native-drag`
+- `elemenx-native-nodrag`
+- `elemenx-game-stats`: `double`
 - `elemenx-icon`: `colored`, `spin`
 - `elemenx-input`: `disabled`, `giant`, `invalid`, `large`, `multiple`, `readonly`, `round`, `small`
 - `elemenx-input-action`
@@ -64,7 +75,7 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-list`: `divided`
 - `elemenx-number-input`: `round`
 - `elemenx-ol`: `outline`
-- `elemenx-option`: `active`, `danger`, `disabled`, `selected`
+- `elemenx-option`: `active`, `contextual`, `danger`, `disabled`, `selected`
 - `elemenx-option-check`
 - `elemenx-option-hint`
 - `elemenx-option-label`
@@ -81,6 +92,10 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-picker-search`
 - `elemenx-picker-tab`: `active`
 - `elemenx-picker-tabs`
+- `elemenx-modal-shade`
+- `elemenx-pip-back`
+- `elemenx-pip-body`
+- `elemenx-pip-placeholder`
 - `elemenx-popup`
 - `elemenx-popup-empty`
 - `elemenx-popup-group`
@@ -102,17 +117,79 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-spinner`: `large`, `small`
 - `elemenx-spinner-ring`
 - `elemenx-subtitle`
+- `elemenx-syntax-attribute`
+- `elemenx-syntax-code`
+- `elemenx-syntax-comment`
+- `elemenx-syntax-emphasis`
+- `elemenx-syntax-function`
+- `elemenx-syntax-heading`
+- `elemenx-syntax-keyword`
+- `elemenx-syntax-link`
+- `elemenx-syntax-literal`
+- `elemenx-syntax-meta`
+- `elemenx-syntax-number`
+- `elemenx-syntax-operator`
+- `elemenx-syntax-property`
+- `elemenx-syntax-punctuation`
+- `elemenx-syntax-regex`
+- `elemenx-syntax-selector`
+- `elemenx-syntax-string`
+- `elemenx-syntax-strong`
+- `elemenx-syntax-tag`
+- `elemenx-syntax-type`
+- `elemenx-syntax-variable`
 - `elemenx-table`: `bordered`, `compact`, `selectable`, `sticky`, `striped`, `tree`
 - `elemenx-text`: `danger`, `large`, `mono`, `muted`, `small`, `strong`, `success`, `warning`
 - `elemenx-textarea`: `round`
 - `elemenx-title`
 - `elemenx-ul`: `check`
 - `elemenx-visually-hidden`
+- `elemenx-game-inventory-card`: `common`, `epic`, `legendary`, `rare`, `uncommon`
+- `elemenx-game-inventory-description`
+- `elemenx-game-inventory-name`
+- `elemenx-game-inventory-stat`
+- `elemenx-game-inventory-stat-label`
+- `elemenx-game-inventory-stat-value`
+- `elemenx-game-inventory-stats`
+- `elemenx-game-inventory-type`
 
 ## ButtonGroup
 
 - `elemenx-button`: `block`, `danger`, `ghost`, `giant`, `icon-only`, `large`, `link`, `loading`, `pressed`, `primary`, `round`, `small`
 - `elemenx-button-group`: `attached`, `vertical`
+
+## Properties
+
+- `elemenx-properties`: `double`
+
+## Property
+
+- `elemenx-property`: `accent`, `danger`, `success`, `warning`
+- `elemenx-property-content`
+- `elemenx-property-label`
+- `elemenx-property-text`
+- `elemenx-property-value`
+
+## AchievementHost
+
+- `elemenx-achievement`: `epic`, `lasting`, `legendary`, `rare`, `timed`, `uncommon`
+- `elemenx-achievement-badge`
+- `elemenx-achievement-band`
+- `elemenx-achievement-line`
+- `elemenx-achievement-overline`
+- `elemenx-achievement-points`
+- `elemenx-achievement-text`
+- `elemenx-achievement-title`
+- `elemenx-achievements`: `bottom`, `top`
+
+## Block
+
+- `elemenx-block-actions`
+- `elemenx-block-body`
+- `elemenx-block-header`
+- `elemenx-block-note`
+- `elemenx-block-tab`
+- `elemenx-block-title`
 
 ## Button
 
@@ -194,6 +271,9 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 ## ChatComposer
 
 - `elemenx-chat-composer`
+- `elemenx-chat-emoji`
+- `elemenx-chat-hint`: `active`, `sticker`
+- `elemenx-chat-hints`
 - `elemenx-chat-picker`
 
 ## ChatMessage
@@ -202,15 +282,33 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-chat-avatar`
 - `elemenx-chat-body`
 - `elemenx-chat-bubble`: `sticker`
-- `elemenx-chat-message`: `first`, `last`, `middle`, `own`, `single`
+- `elemenx-chat-check`
+- `elemenx-chat-edited`
+- `elemenx-chat-line`
+- `elemenx-chat-menu-point`
+- `elemenx-chat-message`: `first`, `last`, `middle`, `own`, `selected`, `selecting`, `single`
 - `elemenx-chat-meta`
+- `elemenx-chat-more`
 - `elemenx-chat-react`
 - `elemenx-chat-react-picker`
 - `elemenx-chat-reaction`: `mine`
 - `elemenx-chat-reaction-emoji`
 - `elemenx-chat-reactions`
+- `elemenx-chat-status`: `error`, `read`
 - `elemenx-chat-sticker`
+- `elemenx-chat-summary`
+- `elemenx-chat-summary-avatar`
+- `elemenx-chat-summary-empty`
+- `elemenx-chat-summary-list`
+- `elemenx-chat-summary-name`
+- `elemenx-chat-summary-note`
+- `elemenx-chat-summary-row`
+- `elemenx-chat-summary-tab`: `active`
+- `elemenx-chat-summary-tabs`
 - `elemenx-chat-text`
+- `elemenx-chat-tools`
+- `elemenx-chat-views`
+- `elemenx-menu`: `sheet`
 
 ## Chat
 
@@ -222,7 +320,38 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-chat-jump`
 - `elemenx-chat-main`
 - `elemenx-chat-messages`
+- `elemenx-chat-selection`
+- `elemenx-chat-selection-count`
 - `elemenx-chat-sidebar`
+
+## CodeEditor
+
+- `elemenx-code-diff`
+- `elemenx-code-diff-code`: `add`, `empty`, `remove`
+- `elemenx-code-diff-fold`
+- `elemenx-code-diff-number`: `add`, `empty`, `remove`
+- `elemenx-code-diff-row`: `add`, `remove`, `split`
+- `elemenx-code-diff-sign`
+- `elemenx-code-diff-stats`
+- `elemenx-code-diff-word`
+- `elemenx-code-editor`: `auto-size`, `disabled`, `invalid`, `readonly`, `wrap`
+- `elemenx-code-editor-bracket`
+- `elemenx-code-editor-content`
+- `elemenx-code-editor-hint`
+- `elemenx-code-editor-input`
+- `elemenx-code-editor-lines`
+- `elemenx-code-editor-marker`: `info`, `warning`
+- `elemenx-code-editor-match`: `current`
+- `elemenx-code-editor-number`
+- `elemenx-code-editor-popup`
+- `elemenx-code-editor-print`
+- `elemenx-code-editor-row`: `active`, `error`, `info`, `marked`, `warning`
+- `elemenx-code-editor-scroll`
+- `elemenx-code-editor-suggestion`: `active`
+- `elemenx-code-editor-suggestion-detail`
+- `elemenx-code-editor-suggestion-kind`
+- `elemenx-code-editor-suggestions`
+- `elemenx-code-editor-text`
 
 ## ColorInput
 
@@ -266,7 +395,6 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 
 - `elemenx-context`
 - `elemenx-context-point`
-- `elemenx-menu`
 
 ## DashboardWidget
 
@@ -304,18 +432,36 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-range-text`: `placeholder`
 - `elemenx-range-toggle`
 
+## DialPad
+
+- `elemenx-dial-pad`: `disabled`
+- `elemenx-dial-pad-call`
+- `elemenx-dial-pad-digit`
+- `elemenx-dial-pad-display`
+- `elemenx-dial-pad-erase`
+- `elemenx-dial-pad-input`
+- `elemenx-dial-pad-key`
+- `elemenx-dial-pad-keys`
+- `elemenx-dial-pad-sub`
+
 ## Dialog
 
-- `elemenx-dialog`: `full`, `large`, `small`
+- `elemenx-dialog`: `full`, `large`, `refused`, `small`
 - `elemenx-dialog-body`: `padded`
 - `elemenx-dialog-footer`
 - `elemenx-dialog-header`
 - `elemenx-dialog-heading`
 - `elemenx-dialog-title`
 
+## DialogHost
+
+- `elemenx-dialog-host`
+- `elemenx-dialog-host-actions`
+- `elemenx-dialog-host-item`
+
 ## Drawer
 
-- `elemenx-drawer`: `bottom`, `full`, `large`, `left`, `medium`, `right`, `small`, `top`
+- `elemenx-drawer`: `bottom`, `full`, `large`, `left`, `medium`, `refused`, `right`, `small`, `top`
 - `elemenx-drawer-actions`
 - `elemenx-drawer-body`: `padded`
 - `elemenx-drawer-footer`
@@ -375,6 +521,175 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-upload-title`
 - `elemenx-upload-zone`
 
+## Gallery
+
+- `elemenx-gallery`: `caption-overlay`, `contain`, `fade`, `slide`
+- `elemenx-gallery-arrow`: `next`, `previous`
+- `elemenx-gallery-caption`: `below`
+- `elemenx-gallery-counter`
+- `elemenx-gallery-description`
+- `elemenx-gallery-dot`: `active`
+- `elemenx-gallery-dots`
+- `elemenx-gallery-image`
+- `elemenx-gallery-play`
+- `elemenx-gallery-slide`: `active`
+- `elemenx-gallery-tag`
+- `elemenx-gallery-tags`
+- `elemenx-gallery-thumb`: `active`
+- `elemenx-gallery-thumbs`
+- `elemenx-gallery-title`
+- `elemenx-gallery-track`
+- `elemenx-gallery-viewport`
+
+## GameBar
+
+- `elemenx-game-bar`: `large`, `low`, `segmented`, `small`
+- `elemenx-game-bar-fill`
+- `elemenx-game-bar-gauge`
+- `elemenx-game-bar-label`
+- `elemenx-game-bar-ornament`
+- `elemenx-game-bar-track`
+- `elemenx-game-bar-trail`
+- `elemenx-game-bar-value`
+
+## GameDialogue
+
+- `elemenx-game-dialogue`
+- `elemenx-game-dialogue-body`
+- `elemenx-game-dialogue-caret`
+- `elemenx-game-dialogue-choice`
+- `elemenx-game-dialogue-choices`
+- `elemenx-game-dialogue-next`
+- `elemenx-game-dialogue-number`
+- `elemenx-game-dialogue-portrait`
+- `elemenx-game-dialogue-speaker`
+- `elemenx-game-dialogue-text`
+
+## GameHud
+
+- `elemenx-game-hud`
+- `elemenx-game-hud-area`: `bottom`, `bottom-end`, `bottom-start`, `center`, `end`, `start`, `top`, `top-end`
+- `elemenx-game-hud-layer`
+- `elemenx-game-hud-scene`
+
+## GameInventory
+
+- `elemenx-game-inventory`
+- `elemenx-game-inventory-badge`
+- `elemenx-game-inventory-cell`: `active`, `drop-over`, `empty`, `epic`, `filled`, `held`, `legendary`, `rare`, `uncommon`
+- `elemenx-game-inventory-count`
+- `elemenx-game-inventory-grid`
+- `elemenx-game-inventory-image`
+- `elemenx-game-inventory-mark`
+
+## GameKey
+
+- `elemenx-game-key`: `button-a`, `button-b`, `button-x`, `button-y`, `keyboard`
+- `elemenx-game-key-glyph`
+- `elemenx-game-key-label`
+
+## GameLeaderboard
+
+- `elemenx-game-leaderboard`: `selectable`
+- `elemenx-game-leaderboard-avatar`
+- `elemenx-game-leaderboard-change`: `down`, `up`
+- `elemenx-game-leaderboard-gap`
+- `elemenx-game-leaderboard-head`
+- `elemenx-game-leaderboard-name`
+- `elemenx-game-leaderboard-note`
+- `elemenx-game-leaderboard-player`
+- `elemenx-game-leaderboard-rank`
+- `elemenx-game-leaderboard-row`: `bronze`, `gap`, `gold`, `me`, `silver`
+- `elemenx-game-leaderboard-score`
+
+## GameMenu
+
+- `elemenx-game-menu`
+- `elemenx-game-menu-hint`
+- `elemenx-game-menu-item`
+- `elemenx-game-menu-items`
+- `elemenx-game-menu-label`
+- `elemenx-game-menu-subtitle`
+- `elemenx-game-menu-title`
+
+## GameMinimap
+
+- `elemenx-game-marker`: `ally`, `edge`, `enemy`, `quest`
+- `elemenx-game-minimap`: `round`
+- `elemenx-game-minimap-button`
+- `elemenx-game-minimap-caption`
+- `elemenx-game-minimap-map`
+- `elemenx-game-minimap-north`
+- `elemenx-game-minimap-note`
+- `elemenx-game-minimap-player`
+- `elemenx-game-minimap-title`
+- `elemenx-game-minimap-view`
+- `elemenx-game-minimap-zoom`
+
+## GameQuests
+
+- `elemenx-game-objective`: `done`
+- `elemenx-game-objective-bar`
+- `elemenx-game-objective-count`
+- `elemenx-game-objective-mark`
+- `elemenx-game-objectives`
+- `elemenx-game-quest`: `active`, `done`, `failed`
+- `elemenx-game-quest-level`
+- `elemenx-game-quest-mark`
+- `elemenx-game-quest-title`
+- `elemenx-game-quests`: `log`
+- `elemenx-game-quests-actions`
+- `elemenx-game-quests-detail`
+- `elemenx-game-quests-empty`
+- `elemenx-game-quests-group`
+- `elemenx-game-quests-header`
+- `elemenx-game-quests-heading`
+- `elemenx-game-quests-list`
+- `elemenx-game-quests-meta`
+- `elemenx-game-quests-text`
+- `elemenx-game-quests-title`
+- `elemenx-game-reward`: `common`, `epic`, `legendary`, `rare`, `uncommon`
+- `elemenx-game-reward-count`
+- `elemenx-game-reward-icon`
+- `elemenx-game-reward-label`
+- `elemenx-game-rewards`
+- `elemenx-game-tracker`
+- `elemenx-game-tracker-objective`: `done`
+- `elemenx-game-tracker-quest`
+- `elemenx-game-tracker-title`
+
+## GameSlot
+
+- `elemenx-game-slot`: `active`, `drop-over`, `empty`, `epic`, `filled`, `large`, `legendary`, `rare`, `small`, `uncommon`
+- `elemenx-game-slot-badge`
+- `elemenx-game-slot-count`
+- `elemenx-game-slot-glass`
+- `elemenx-game-slot-gloss`
+- `elemenx-game-slot-image`
+- `elemenx-game-slot-key`
+- `elemenx-game-slot-sweep`
+- `elemenx-game-slot-timer`
+
+## GameTabs
+
+- `elemenx-game-tab`: `active`
+- `elemenx-game-tab-label`
+- `elemenx-game-tab-number`
+- `elemenx-game-tabs`: `horizontal`, `vertical`
+
+## Knob
+
+- `elemenx-knob`: `active`, `disabled`, `large`, `small`
+- `elemenx-knob-arc`
+- `elemenx-knob-cap`
+- `elemenx-knob-dial`
+- `elemenx-knob-face`
+- `elemenx-knob-label`
+- `elemenx-knob-pointer`
+- `elemenx-knob-ring`
+- `elemenx-knob-tick`
+- `elemenx-knob-value`
+
 ## MasterDetail
 
 - `elemenx-detail`
@@ -392,7 +707,14 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 
 ## MenuList
 
+- `elemenx-menu-back`
+- `elemenx-menu-cancel`
+- `elemenx-menu-grabber`
+- `elemenx-menu-host`
 - `elemenx-menu-icon`
+- `elemenx-menu-layer`
+- `elemenx-menu-shade`
+- `elemenx-menu-title`
 
 ## Menu
 
@@ -400,11 +722,24 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 
 ## Meter
 
-- `elemenx-meter`: `danger`, `large`, `small`, `warning`
+- `elemenx-meter`: `danger`, `dial`, `large`, `small`, `value-below`, `value-corner`, `vertical`, `warning`
+- `elemenx-meter-arc`
+- `elemenx-meter-center`
+- `elemenx-meter-content`
+- `elemenx-meter-dial`
+- `elemenx-meter-face`
 - `elemenx-meter-fill`
 - `elemenx-meter-head`
 - `elemenx-meter-label`
 - `elemenx-meter-mark`
+- `elemenx-meter-max`
+- `elemenx-meter-min`
+- `elemenx-meter-needle`
+- `elemenx-meter-range`
+- `elemenx-meter-readout`
+- `elemenx-meter-ring`
+- `elemenx-meter-scale`
+- `elemenx-meter-tick`
 - `elemenx-meter-track`
 - `elemenx-meter-value`
 
@@ -531,7 +866,7 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 
 ## Ribbon
 
-- `elemenx-ribbon`: `collapsed`, `floating`, `narrow`
+- `elemenx-ribbon`: `collapsed`, `floating`, `narrow`, `tabs-menu`
 - `elemenx-ribbon-backstage`: `open`
 - `elemenx-ribbon-backstage-back`
 - `elemenx-ribbon-backstage-content`
@@ -572,6 +907,21 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-ribbon-split`
 - `elemenx-ribbon-tab`: `active`, `contextual`, `disabled`
 - `elemenx-ribbon-tabs`
+- `elemenx-ribbon-tabs-button`
+- `elemenx-ribbon-tabs-current`
+- `elemenx-ribbon-tabs-list`
+- `elemenx-ribbon-tabs-menu`
+
+## RichEditor
+
+- `elemenx-rich-editor`: `disabled`, `growing`, `readonly`
+- `elemenx-rich-editor-action`: `active`
+- `elemenx-rich-editor-actions`
+- `elemenx-rich-editor-content`: `empty`
+- `elemenx-rich-editor-link`
+- `elemenx-rich-editor-menu`
+- `elemenx-rich-editor-print`
+- `elemenx-rich-editor-separator`
 
 ## Section
 
@@ -600,9 +950,36 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-settings-path`
 - `elemenx-settings-title`
 
+## SettingsMenu
+
+- `elemenx-settings-menu`: `ios`, `material`
+- `elemenx-settings-menu-back`
+- `elemenx-settings-menu-back-label`
+- `elemenx-settings-menu-badge`
+- `elemenx-settings-menu-check`
+- `elemenx-settings-menu-chevron`
+- `elemenx-settings-menu-description`
+- `elemenx-settings-menu-group`
+- `elemenx-settings-menu-group-title`
+- `elemenx-settings-menu-item`
+- `elemenx-settings-menu-knob`
+- `elemenx-settings-menu-label`
+- `elemenx-settings-menu-list`
+- `elemenx-settings-menu-main`
+- `elemenx-settings-menu-note`
+- `elemenx-settings-menu-page`: `back`, `forward`
+- `elemenx-settings-menu-query`
+- `elemenx-settings-menu-row`: `checked`, `danger`
+- `elemenx-settings-menu-search`
+- `elemenx-settings-menu-switch`
+- `elemenx-settings-menu-text`
+- `elemenx-settings-menu-tile`
+- `elemenx-settings-menu-title`
+- `elemenx-settings-menu-value`
+
 ## Slider
 
-- `elemenx-slider`: `disabled`, `large`, `small`
+- `elemenx-slider`: `disabled`, `large`, `small`, `vertical`
 - `elemenx-slider-fill`
 - `elemenx-slider-thumb`: `active`
 - `elemenx-slider-tick`
@@ -762,6 +1139,21 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-virtual-row`: `active`, `selected`
 - `elemenx-virtual-space`
 - `elemenx-virtual-viewport`
+
+## Window
+
+- `elemenx-window`: `active`, `fixed`, `game`, `maximized`, `minimized`, `moving`, `trapezoid`
+- `elemenx-window-body`
+- `elemenx-window-control`: `close`
+- `elemenx-window-controls`
+- `elemenx-window-extra`
+- `elemenx-window-footer`
+- `elemenx-window-handle`: `e`, `n`, `ne`, `nw`, `s`, `se`, `sw`, `w`
+- `elemenx-window-header`
+- `elemenx-window-overline`
+- `elemenx-window-tab`
+- `elemenx-window-title`
+- `elemenx-window-titles`
 
 ## WorkspaceToolWindow
 

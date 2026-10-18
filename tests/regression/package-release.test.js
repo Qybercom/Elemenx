@@ -92,7 +92,7 @@ describe('Elemenx npm release surface', function () {
 	});
 
 	it('ignores in git no source of the repository: a CI checkout has every file the tests and the tools need', function () {
-		var outputs = /^(tests\/dist\/single(-cli|-packs)?-output|examples\/[^/]+\/dist)\//;
+		var outputs = /^(tests\/dist\/(single(-cli|-packs)?|widget)-output|examples\/[^/]+\/dist)\//;
 		var ignored = childProcess.execFileSync('git', ['ls-files', '--others', '--ignored', '--exclude-standard', '--', 'tests', 'tools', 'libraries', 'scripts', 'packages', 'docs', 'examples', 'eslint', 'stylelint', '.github'], {cwd: root, encoding: 'utf8'});
 
 		expect(ignored.split('\n').filter(function (file) {
@@ -135,6 +135,7 @@ describe('Elemenx npm release surface', function () {
 		expect(manifest.name).toBe('@qybercom/elemenx');
 		expect(manifest.license).toBe('LGPL-3.0-only');
 		expect(manifest.author).toBe('Alex Furnica');
+		expect(fs.readFileSync(path.join(root, 'elemenx.js'), 'utf8')).toContain('\n\tvar Version = \'' + manifest.version + '\';');
 		expect(fs.readFileSync(path.join(root, 'LICENSE'), 'utf8')).toContain('GNU LESSER GENERAL PUBLIC LICENSE');
 		expect(manifest.repository).toEqual({type: 'git', url: 'git+https://github.com/Qybercom/Elemenx.git'});
 		expect(manifest.engines.node).toBe('>=20');
@@ -198,7 +199,7 @@ describe('Elemenx npm release surface', function () {
 		temporary.push(site);
 
 		expect(manifest.scripts.preversion).toBe('node scripts/version.js check');
-		expect(manifest.scripts.version).toBe('node scripts/version.js sync && git add packages/elemenx/package.json');
+		expect(manifest.scripts.version).toBe('node scripts/version.js sync && git add packages/elemenx/package.json elemenx.js');
 		expect(manifest.scripts['version:set']).toBe('node scripts/version.js set');
 		expect(manifest.scripts['version:tag']).toBe('node scripts/version.js tag');
 
@@ -207,6 +208,7 @@ describe('Elemenx npm release surface', function () {
 		fs.mkdirSync(path.join(site, 'packages', 'elemenx'), {recursive: true});
 		fs.copyFileSync(path.join(root, 'scripts', 'version.js'), path.join(site, 'scripts', 'version.js'));
 		fs.copyFileSync(path.join(wrapper, 'package.json'), path.join(site, 'packages', 'elemenx', 'package.json'));
+		fs.writeFileSync(path.join(site, 'elemenx.js'), '(function () {\n\tvar Version = \'' + manifest.version + '\';\n})();\n');
 		fs.writeFileSync(path.join(site, 'package.json'), JSON.stringify({name: manifest.name, version: manifest.version, scripts: {preversion: manifest.scripts.preversion, version: manifest.scripts.version, 'version:set': manifest.scripts['version:set'], 'version:tag': manifest.scripts['version:tag']}}, null, '\t') + '\n');
 
 		git(['init', '-q']);
@@ -236,9 +238,10 @@ describe('Elemenx npm release surface', function () {
 		expect(read('package.json').version).toBe('0.9.7');
 		expect(read('packages/elemenx/package.json').version).toBe('0.9.7');
 		expect(read('packages/elemenx/package.json').dependencies).toEqual({'@qybercom/elemenx': '0.9.7'});
+		expect(fs.readFileSync(path.join(site, 'elemenx.js'), 'utf8')).toContain("var Version = '0.9.7';");
 		expect(git(['tag'])).toBe('v0.9.7');
 		expect(git(['rev-list', '-n', '1', 'v0.9.7'])).toBe(git(['rev-parse', 'HEAD']));
-		expect(git(['show', '--name-only', '--format=', 'HEAD']).split('\n').sort()).toEqual(['package.json', 'packages/elemenx/package.json']);
+		expect(git(['show', '--name-only', '--format=', 'HEAD']).split('\n').sort()).toEqual(['elemenx.js', 'package.json', 'packages/elemenx/package.json']);
 		expect(git(['status', '--porcelain'])).toBe('');
 
 		/* The other way: the version in a commit of the author, then the tag. */
@@ -286,7 +289,7 @@ describe('Elemenx npm release surface', function () {
 		run = script('version:tag');
 
 		expect(run.status).not.toBe(0);
-		expect(run.stderr).toContain('Elemenx version: package.json has the version 0.9.9, but packages/elemenx/package.json depends on @qybercom/elemenx 0.9.8. Run npm run version:set (it puts 0.9.9 everywhere), commit, then npm run version:tag');
+		expect(run.stderr).toContain('Elemenx version: package.json has the version 0.9.9, but packages/elemenx/package.json depends on @qybercom/elemenx 0.9.8, elemenx.js has the version 0.9.8. Run npm run version:set (it puts 0.9.9 everywhere), commit, then npm run version:tag');
 		expect(git(['tag', '--list', 'v0.9.9'])).toBe('');
 
 		/* version:set without a version puts the one of package.json everywhere. */

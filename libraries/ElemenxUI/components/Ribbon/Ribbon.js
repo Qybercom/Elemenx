@@ -10,7 +10,8 @@
  * (a RibbonBackstage: the File button opens it over the window). Tab is the current tab (the first one that is not
  * contextual by default). A narrow Ribbon shrinks its groups step by step (see RibbonGroup). Collapsed shows only the
  * tabs: a tab then opens its panel over the page until a command runs; a double click on a tab, the pin button or
- * Ctrl+F1 collapse and pin it.
+ * Ctrl+F1 collapse and pin it. When even the narrow bar has no room for the tabs, a button with the title of the current
+ * tab takes their place and lists them.
  * Key tips: Alt (or F10) shows a letter on every tab, the File button and the quick access commands; a letter opens
  * its tab and shows the letters of its commands; a letter of a command runs it; Escape goes back a level.
  * Events: tab ({ID}), command ({ID, Item}) for every RibbonButton, RibbonGallery and command page, collapse
@@ -23,12 +24,13 @@ Elemenx.Component('Ribbon', {
 	Collapsed: false,
 	Collapsible: true,
 	KeyTips: true,
-	Label: 'Ribbon',
-	FileLabel: 'File',
+	Label: '',
+	FileLabel: '',
 	FileKeyTip: 'F',
 	Tabs: [],
 	Floating: false,
 	HasBackstage: false,
+	TabsOpen: false,
 
 	$OnCreate: function () {
 		var self = this;
@@ -53,6 +55,20 @@ Elemenx.Component('Ribbon', {
 			}
 
 			return first || (tabs[0] ? tabs[0].ID : '');
+		};
+
+		/* The title of the current tab, for the button that lists the tabs on a narrow Ribbon. */
+		this.TabTitle = function (tab, tabs) {
+			var id = self.Active(tab, tabs);
+			var i = 0;
+
+			while (i < tabs.length) {
+				if (String(tabs[i].ID) === String(id)) return tabs[i].Title;
+
+				i++;
+			}
+
+			return '';
 		};
 	},
 
@@ -96,7 +112,8 @@ Elemenx.Component('Ribbon', {
 		};
 
 		this.OnPress = function (event) {
-			if (self.Floating && !root.contains(event.target) && !(event.target.closest && event.target.closest('.elemenx-popup, .elemenx-ribbon-group-popup')))
+			var target = event.composedPath ? event.composedPath()[0] : event.target;
+			if (self.Floating && !root.contains(target) && !(target.closest && target.closest('.elemenx-popup, .elemenx-ribbon-group-popup')))
 				self.Floating = false;
 		};
 
@@ -222,11 +239,14 @@ Elemenx.Component('Ribbon', {
 		var i = 0;
 		var j;
 
-		/* A narrow bar shows the commands of its slots as icons, so the tabs keep their room. */
-		root.classList.remove('narrow');
+		/* A narrow bar shows the commands of its slots as icons, so the tabs keep their room; without room still, a button lists them. */
+		root.classList.remove('narrow', 'tabs-menu');
 
 		if (bar.scrollWidth > bar.clientWidth + 1 || tabs.scrollWidth > tabs.clientWidth + 1)
 			root.classList.add('narrow');
+
+		if (tabs.scrollWidth > tabs.clientWidth + 1) root.classList.add('tabs-menu');
+		else if (this.TabsOpen) this.TabsOpen = false;
 
 		if (!panel || !panel.offsetWidth) return;
 
@@ -295,6 +315,66 @@ Elemenx.Component('Ribbon', {
 		this.Select(id);
 	},
 
+	/* The list of the tabs of a narrow Ribbon: it opens on its selected tab. */
+	TabsMenu: function () {
+		var self = this;
+
+		this.TabsOpen = !this.TabsOpen;
+
+		if (!this.TabsOpen) return;
+
+		window.setTimeout(function () {
+			var list = self.$Element().querySelector('.elemenx-ribbon-tabs-list');
+			var target = list && (list.querySelector('.elemenx-option.selected') || list.querySelector('.elemenx-option:not([disabled])'));
+			if (target)
+				target.focus();
+		}, 0);
+	},
+
+	TabsButtonKey: function (event) {
+		if (Elemenx.Locale.Key(event) !== 'ArrowDown' && Elemenx.Locale.Key(event) !== 'ArrowUp') return;
+
+		event.preventDefault();
+
+		if (!this.TabsOpen)
+			this.TabsMenu();
+	},
+
+	/* Up and Down move over the tabs that can be chosen, Home and End to the first and the last. */
+	TabsListKey: function (event) {
+		var options = Array.prototype.filter.call(this.$Element().querySelectorAll('.elemenx-ribbon-tabs-list .elemenx-option'), function (option) {
+			return !option.disabled;
+		});
+		var index = options.indexOf(this.$Element().getRootNode().activeElement);
+
+		if (!options.length) return;
+
+		if (Elemenx.Locale.Key(event) === 'ArrowDown') index = index < options.length - 1 ? index + 1 : 0;
+		else if (Elemenx.Locale.Key(event) === 'ArrowUp') index = index > 0 ? index - 1 : options.length - 1;
+		else if (Elemenx.Locale.Key(event) === 'Home') index = 0;
+		else if (Elemenx.Locale.Key(event) === 'End') index = options.length - 1;
+		else return;
+
+		event.preventDefault();
+
+		options[index].focus();
+	},
+
+	TabChosen: function (event, node) {
+		this.TabsOpen = false;
+
+		this.Pick(event, node);
+
+		this.$Element().querySelector('.elemenx-ribbon-tabs-button').focus();
+	},
+
+	TabsClosed: function (event) {
+		this.TabsOpen = false;
+
+		if (event.detail && event.detail.Reason === 'escape')
+			this.$Element().querySelector('.elemenx-ribbon-tabs-button').focus();
+	},
+
 	Select: function (id) {
 		if (String(id) === String(this.Active(this.Tab, this.Tabs))) return;
 
@@ -315,17 +395,17 @@ Elemenx.Component('Ribbon', {
 
 	TabKey: function (event, node) {
 		var tabs = Array.prototype.slice.call(node.querySelectorAll('.elemenx-ribbon-tab:not(.disabled)'));
-		var index = tabs.indexOf(document.activeElement);
+		var index = tabs.indexOf(node.getRootNode().activeElement);
 		var next = -1;
 		var panel;
 		var first;
 
 		if (index === -1) return;
 
-		if (event.key === 'ArrowRight') next = (index + 1) % tabs.length;
-		else if (event.key === 'ArrowLeft') next = (index - 1 + tabs.length) % tabs.length;
-		else if (event.key === 'Home') next = 0;
-		else if (event.key === 'End') next = tabs.length - 1;
+		if (Elemenx.Locale.Key(event) === 'ArrowRight') next = (index + 1) % tabs.length;
+		else if (Elemenx.Locale.Key(event) === 'ArrowLeft') next = (index - 1 + tabs.length) % tabs.length;
+		else if (Elemenx.Locale.Key(event) === 'Home') next = 0;
+		else if (Elemenx.Locale.Key(event) === 'End') next = tabs.length - 1;
 
 		if (next !== -1) {
 			event.preventDefault();
@@ -337,7 +417,7 @@ Elemenx.Component('Ribbon', {
 			return;
 		}
 
-		if (event.key !== 'ArrowDown' && event.key !== 'Enter' && event.key !== ' ') return;
+		if (Elemenx.Locale.Key(event) !== 'ArrowDown' && Elemenx.Locale.Key(event) !== 'Enter' && Elemenx.Locale.Key(event) !== ' ') return;
 
 		event.preventDefault();
 
@@ -354,7 +434,7 @@ Elemenx.Component('Ribbon', {
 	},
 
 	Key: function (event) {
-		if (event.key === 'F1' && (event.ctrlKey || event.metaKey)) {
+		if (Elemenx.Locale.Key(event) === 'F1' && (event.ctrlKey || event.metaKey)) {
 			event.preventDefault();
 
 			this.Toggle();
@@ -362,7 +442,7 @@ Elemenx.Component('Ribbon', {
 			return;
 		}
 
-		if (event.key === 'Escape' && this.Floating) {
+		if (Elemenx.Locale.Key(event) === 'Escape' && this.Floating) {
 			this.Floating = false;
 
 			this.$Element().querySelector('.elemenx-ribbon-tab.active').focus();
@@ -435,9 +515,9 @@ Elemenx.Component('Ribbon', {
 			return;
 		}
 
-		this.Alone = event.key === 'Alt' && plain;
+		this.Alone = Elemenx.Locale.Key(event) === 'Alt' && plain;
 
-		if (event.key === 'F10' && plain && !event.altKey && this.Usable()) {
+		if (Elemenx.Locale.Key(event) === 'F10' && plain && !event.altKey && this.Usable()) {
 			event.preventDefault();
 
 			this.ShowTips(null);
@@ -445,7 +525,7 @@ Elemenx.Component('Ribbon', {
 	},
 
 	KeyUp: function (event) {
-		if (event.key !== 'Alt' || !this.Alone) return;
+		if (Elemenx.Locale.Key(event) !== 'Alt' || !this.Alone) return;
 
 		this.Alone = false;
 
@@ -474,7 +554,7 @@ Elemenx.Component('Ribbon', {
 		var nodes;
 
 		if (!scope) {
-			nodes = Array.prototype.slice.call(root.querySelectorAll('.elemenx-ribbon-file, .elemenx-ribbon-tab:not(.disabled), .elemenx-ribbon-quick button, .elemenx-ribbon-quick [data-keytip]'));
+			nodes = Array.prototype.slice.call(root.querySelectorAll('.elemenx-ribbon-file, .elemenx-ribbon-tab:not(.disabled), .elemenx-ribbon-tabs-button, .elemenx-ribbon-quick button, .elemenx-ribbon-quick [data-keytip]'));
 		}
 		else {
 			nodes = Array.prototype.filter.call(scope.querySelectorAll(selector), function (node) {
@@ -573,7 +653,7 @@ Elemenx.Component('Ribbon', {
 		root.appendChild(layer);
 
 		this.Leave = function (event) {
-			if (!event || !layer.contains(event.target))
+			if (!event || !layer.contains(event.composedPath ? event.composedPath()[0] : event.target))
 				self.HideTips();
 		};
 
@@ -618,7 +698,7 @@ Elemenx.Component('Ribbon', {
 		var matches;
 		var i = 0;
 
-		if (event.key === 'Escape') {
+		if (Elemenx.Locale.Key(event) === 'Escape') {
 			event.preventDefault();
 			event.stopPropagation();
 
@@ -629,7 +709,7 @@ Elemenx.Component('Ribbon', {
 			return;
 		}
 
-		if (event.key === 'Alt' || event.key === 'F10') {
+		if (Elemenx.Locale.Key(event) === 'Alt' || Elemenx.Locale.Key(event) === 'F10') {
 			event.preventDefault();
 
 			this.HideTips();
@@ -637,8 +717,8 @@ Elemenx.Component('Ribbon', {
 			return;
 		}
 
-		if (event.key.length !== 1 || event.ctrlKey || event.metaKey) {
-			if (['Shift', 'Control', 'Meta', 'CapsLock'].indexOf(event.key) === -1)
+		if (Elemenx.Locale.Key(event).length !== 1 || event.ctrlKey || event.metaKey) {
+			if (['Shift', 'Control', 'Meta', 'CapsLock'].indexOf(Elemenx.Locale.Key(event)) === -1)
 				this.HideTips();
 
 			return;
@@ -647,7 +727,7 @@ Elemenx.Component('Ribbon', {
 		event.preventDefault();
 		event.stopPropagation();
 
-		typed = tips.Typed + event.key.toUpperCase();
+		typed = tips.Typed + Elemenx.Locale.Key(event).toUpperCase();
 		matches = tips.Items.filter(function (item) {
 			return item.Key.indexOf(typed) === 0;
 		});

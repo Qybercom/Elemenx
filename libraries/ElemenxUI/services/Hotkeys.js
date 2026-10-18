@@ -154,7 +154,7 @@ Elemenx.Service('Hotkeys', {
 
 	Handle: function (event) {
 		var self = this;
-		var target = event.target;
+		var target = event.composedPath ? event.composedPath()[0] : event.target;
 		var typing = this.Typing(target);
 		var candidates;
 		var found = null;

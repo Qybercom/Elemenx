@@ -1,7 +1,8 @@
 /*
  * *popup="Open" shows the element as a floating panel next to its anchor while the expression is truthy.
  * The anchor is the closest .elemenx-popup-anchor ancestor, or the parent element.
- * data-placement: bottom-start (default), bottom-end, top-start, right-start.
+ * data-placement: bottom-start (default), bottom-end, top-start, top-end, right-start; start and end, and the side of
+ * right-start, follow the direction of the page (on a right-to-left page start is the right edge).
  * The panel dispatches a "dismiss" DOM event on an outside pointer press and on Escape; the owner closes it.
  * The panel keeps to its anchor while the page scrolls or resizes and while its own size changes.
  */
@@ -35,10 +36,14 @@ Elemenx.Directive('popup', {
 			var height;
 			var top;
 			var left;
+			var rtl;
 
 			if (!anchor || !data.Open) return;
 
 			rect = anchor.getBoundingClientRect();
+
+			/* On a right-to-left page start is the right edge and a side panel opens to the left. */
+			rtl = window.getComputedStyle(anchor).direction === 'rtl';
 
 			if (placement.indexOf('right') !== 0 && element.getAttribute('data-match-width') !== 'false')
 				element.style.minWidth = rect.width + 'px';
@@ -47,17 +52,17 @@ Elemenx.Directive('popup', {
 			height = element.offsetHeight;
 
 			if (placement.indexOf('right') === 0) {
-				left = rect.right + gap;
+				left = rtl ? rect.left - gap - width : rect.right + gap;
 				top = rect.top - gap - 1;
 
-				if (left + width > window.innerWidth - margin)
-					left = rect.left - gap - width;
+				if (rtl && left < margin) left = rect.right + gap;
+				else if (!rtl && left + width > window.innerWidth - margin) left = rect.left - gap - width;
 
 				if (top + height > window.innerHeight - margin)
 					top = Math.max(margin, window.innerHeight - margin - height);
 			}
 			else {
-				left = placement.indexOf('end') !== -1 ? rect.right - width : rect.left;
+				left = (placement.indexOf('end') !== -1) !== rtl ? rect.right - width : rect.left;
 				top = rect.bottom + gap;
 
 				/* Above the anchor when asked or when there is no room below; below it when there is no room above. */
@@ -77,7 +82,9 @@ Elemenx.Directive('popup', {
 
 		data.Press = function (event) {
 			var anchor = data.Anchor();
-			if (element.contains(event.target) || (anchor && anchor.contains(event.target))) return;
+			/* In a shadow root the document sees the host as the target: the path holds the pressed node. */
+			var target = event.composedPath ? event.composedPath()[0] : event.target;
+			if (element.contains(target) || (anchor && anchor.contains(target))) return;
 
 			data.Dismiss('outside');
 		};

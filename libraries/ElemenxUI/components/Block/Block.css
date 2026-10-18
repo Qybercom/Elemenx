@@ -1,0 +1,150 @@
+/* A framed block: its padding in --elemenx-block-padding, so the band of its title spans the whole frame. */
+.elemenx-block.framed {
+	--elemenx-block-padding: 16px;
+	display: flex;
+	flex-direction: column;
+	gap: var(--elemenx-block-gap);
+	padding: 0 var(--elemenx-block-padding) var(--elemenx-block-padding);
+	background: var(--elemenx-block-background);
+	border: var(--elemenx-block-frame);
+	border-radius: var(--elemenx-block-radius);
+}
+
+.elemenx-block.framed.compact {
+	--elemenx-block-padding: 8px;
+}
+
+.elemenx-block.framed.spacious {
+	--elemenx-block-padding: 24px;
+}
+
+/* A block without a title: no band, and room over its content (the band is hidden, so its slots keep their place). */
+.elemenx-block-header[hidden] {
+	display: none;
+}
+
+.elemenx-block-header[hidden] + .elemenx-block-body {
+	padding-top: var(--elemenx-block-padding);
+}
+
+.elemenx-block-header {
+	display: flex;
+	align-items: baseline;
+	gap: 8px;
+	margin: 0 calc(-1 * var(--elemenx-block-padding));
+	padding: var(--elemenx-block-title-padding) var(--elemenx-block-padding);
+	background: var(--elemenx-block-title-band);
+	border-radius: var(--elemenx-block-radius) var(--elemenx-block-radius) 0 0;
+}
+
+/* The tab holds the title and the note: a part of the band, or the trapezoid of HeaderShape 'trapezoid'. */
+.elemenx-block-tab {
+	display: contents;
+}
+
+/*
+ * HeaderShape 'trapezoid': the block is a folder. The title and the note stand on a tab as wide as their text, whose
+ * end slopes down (by --elemenx-block-tab-slant) to the body; the tab and the body are one shape in the color of the
+ * band, with the frame around both. The actions stand beyond the slope. The block measures its tab into
+ * --elemenx-tab-width, where the top of the body begins.
+ */
+.elemenx-block.framed.trapezoid {
+	--elemenx-block-tab-height: 32px;
+	position: relative;
+	isolation: isolate;
+	background: transparent;
+	border: 0;
+}
+
+.elemenx-block.framed.trapezoid::before {
+	position: absolute;
+	inset: var(--elemenx-block-tab-height) 0 0;
+	z-index: -1;
+	background: var(--elemenx-block-title-band);
+	border: var(--elemenx-block-frame);
+	border-top: 0;
+	border-radius: 0 0 var(--elemenx-block-radius) var(--elemenx-block-radius);
+	content: '';
+}
+
+.elemenx-block.trapezoid .elemenx-block-header {
+	position: relative;
+	align-items: stretch;
+	height: var(--elemenx-block-tab-height);
+	padding: 0;
+	background: transparent;
+	border-radius: 0;
+}
+
+.elemenx-block.trapezoid .elemenx-block-header::after {
+	position: absolute;
+	right: 0;
+	bottom: 0;
+	left: calc(var(--elemenx-tab-width, 0px) + var(--elemenx-block-tab-slant));
+	border-top: var(--elemenx-block-frame);
+	border-top-right-radius: var(--elemenx-block-radius);
+	content: '';
+	pointer-events: none;
+}
+
+.elemenx-block.trapezoid .elemenx-block-tab {
+	position: relative;
+	display: flex;
+	flex: 0 1 auto;
+	align-items: baseline;
+	align-self: stretch;
+	gap: 8px;
+	min-width: 0;
+	margin-inline-end: var(--elemenx-block-tab-slant);
+	padding: calc(var(--elemenx-block-title-padding) + 1px) var(--elemenx-block-padding) 0;
+	background: var(--elemenx-block-title-band);
+	border: var(--elemenx-block-frame);
+	border-right: 0;
+	border-bottom: 0;
+	border-radius: var(--elemenx-block-radius) 0 0;
+}
+
+.elemenx-block.trapezoid .elemenx-block-tab::after {
+	position: absolute;
+	top: -1px;
+	left: 100%;
+	width: var(--elemenx-block-tab-slant);
+	height: calc(100% + 1px);
+	background: linear-gradient(to top right, var(--elemenx-block-title-band) calc(50% - 1px), var(--elemenx-border) calc(50% - 1px), var(--elemenx-border) calc(50% + 0.5px), transparent calc(50% + 0.5px));
+	content: '';
+}
+
+.elemenx-block.trapezoid .elemenx-block-actions {
+	align-self: center;
+	padding-inline-end: var(--elemenx-block-padding);
+}
+
+.elemenx-block-title {
+	color: var(--elemenx-block-title-text);
+	font-weight: var(--elemenx-font-weight-strong);
+	letter-spacing: var(--elemenx-block-title-spacing);
+	text-transform: var(--elemenx-block-title-transform);
+}
+
+.elemenx-block-note {
+	color: var(--elemenx-text-muted);
+	font-size: var(--elemenx-font-size-small);
+}
+
+.elemenx-block-actions {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	margin-inline-start: auto;
+}
+
+.elemenx-block-actions:empty {
+	display: none;
+}
+
+.elemenx-block-body {
+	display: flex;
+	flex-direction: column;
+	gap: var(--elemenx-block-gap);
+	min-width: 0;
+}

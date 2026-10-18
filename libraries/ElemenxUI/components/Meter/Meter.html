@@ -1,11 +1,35 @@
-<div class="elemenx-meter" role="meter" [attribute.aria-valuemin]="Min" [attribute.aria-valuemax]="Max" [attribute.aria-valuenow]="Value" [attribute.aria-valuetext]="Value + Unit" [attribute.aria-label]="Label || null" [class]="[Size || 'medium', Zone(Value)]">
-	<div class="elemenx-meter-head" *if="Label || ShowValue">
+<div class="elemenx-meter" role="meter" [attribute.aria-valuemin]="Min" [attribute.aria-valuemax]="Max" [attribute.aria-valuenow]="Value" [attribute.aria-valuetext]="Value + Unit" [attribute.aria-label]="Label || null" [class]="[Size || 'medium', Zone(Value), Form(Shape, Orientation), 'value-' + Placement(ValuePlacement)]" [attribute.style]="Style(Value, ValuePlacement)">
+	<div class="elemenx-meter-head" *if="Shape !== 'dial' && (Label || (ShowValue && Placement(ValuePlacement) !== 'below'))">
 		<span class="elemenx-meter-label">{{Label}}</span>
-		<span class="elemenx-meter-value" *if="ShowValue">{{Value}}{{Unit}}</span>
+		<span class="elemenx-meter-value" *if="ShowValue && Placement(ValuePlacement) === 'auto'">{{Value}}{{Unit}}</span>
+		<span class="elemenx-meter-readout" *if="ShowValue && Placement(ValuePlacement) === 'corner'">{{Value}}{{Unit}}</span>
 	</div>
-	<span class="elemenx-meter-track">
-		<span class="elemenx-meter-fill" [style.width]="Percent(Value) + '%'"></span>
-		<span class="elemenx-meter-mark" *if="Low !== null && Low !== ''" [style.left]="Percent(Low) + '%'"></span>
-		<span class="elemenx-meter-mark" *if="High !== null && High !== ''" [style.left]="Percent(High) + '%'"></span>
+	<span class="elemenx-meter-scale" *if="Shape !== 'dial'">
+		<span class="elemenx-meter-track">
+			<span class="elemenx-meter-fill"></span>
+			<span class="elemenx-meter-mark" *for="mark of Bounds(Low, High, Marks)" [attribute.style]="'--elemenx-meter-at: ' + mark + '%;'"></span>
+		</span>
+		<span class="elemenx-meter-range" *if="ShowRange || (ShowValue && Placement(ValuePlacement) === 'below')">
+			<span class="elemenx-meter-min" *if="ShowRange">{{Min}}</span>
+			<span class="elemenx-meter-readout" *if="ShowValue && Placement(ValuePlacement) === 'below'">{{Value}}{{Unit}}</span>
+			<span class="elemenx-meter-max" *if="ShowRange">{{Max}}</span>
+		</span>
 	</span>
+	<div class="elemenx-meter-dial" [hidden]="Shape !== 'dial'">
+		<svg class="elemenx-meter-face" viewBox="0 0 120 120" aria-hidden="true">
+			<path class="elemenx-meter-ring" [attribute.d]="Ring(ValuePlacement)"></path>
+			<path class="elemenx-meter-arc" [attribute.d]="Ring(ValuePlacement)" pathLength="100"></path>
+			<line class="elemenx-meter-tick" *for="tick of Ticked(Ticks, ValuePlacement)" [attribute.x1]="tick.X1" [attribute.y1]="tick.Y1" [attribute.x2]="tick.X2" [attribute.y2]="tick.Y2"></line>
+			<line class="elemenx-meter-mark" *for="mark of Marked(Low, High, Marks, ValuePlacement)" [attribute.x1]="mark.X1" [attribute.y1]="mark.Y1" [attribute.x2]="mark.X2" [attribute.y2]="mark.Y2"></line>
+			<line class="elemenx-meter-needle" *if="Needle" x1="71.31" y1="48.69" x2="28.89" y2="91.11"></line>
+		</svg>
+		<div class="elemenx-meter-center">
+			<span class="elemenx-meter-content"><slot></slot></span>
+			<span class="elemenx-meter-value" *if="ShowValue && Placement(ValuePlacement) === 'auto'">{{Value}}{{Unit}}</span>
+		</div>
+		<span class="elemenx-meter-min" *if="ShowRange">{{Min}}</span>
+		<span class="elemenx-meter-max" *if="ShowRange">{{Max}}</span>
+		<span class="elemenx-meter-readout" *if="ShowValue && Placement(ValuePlacement) !== 'auto'">{{Value}}{{Unit}}</span>
+	</div>
+	<span class="elemenx-meter-label" *if="Shape === 'dial' && Label">{{Label}}</span>
 </div>

@@ -50,7 +50,7 @@ Elemenx.Component('RibbonButton', {
 		if (!this.Open) return;
 
 		window.setTimeout(function () {
-			var first = root.querySelector('.elemenx-menu > .elemenx-menu-entry > .elemenx-option:not(.disabled)');
+			var first = root.querySelector('.elemenx-menu:not([hidden]) > .elemenx-menu-entry > .elemenx-option:not(.disabled)');
 			if (first)
 				first.focus();
 		}, 0);

@@ -18,15 +18,15 @@
 					<span class="elemenx-tile-badge" *if="tile.Badge">{{tile.Badge}}</span>
 				</div>
 			</div>
-			<span class="elemenx-tile-group-resize" role="separator" tabindex="0" aria-orientation="vertical" aria-label="Group width" *if="Editable && !group.Locked" [attribute.aria-valuenow]="ColumnsOf(group)" [attribute.aria-valuemax]="MaxColumns" [attribute.data-group]="group.ID" (pointerdown)="ResizeStart" (pointermove)="ResizeMove" (pointerup)="ResizeEnd" (pointercancel)="ResizeEnd" (keydown)="ResizeKey"></span>
+			<span class="elemenx-tile-group-resize" role="separator" tabindex="0" aria-orientation="vertical" [attribute.aria-label]="$T('ui.tileGrid.groupWidth')" *if="Editable && !group.Locked" [attribute.aria-valuenow]="ColumnsOf(group)" [attribute.aria-valuemax]="MaxColumns" [attribute.data-group]="group.ID" (pointerdown)="ResizeStart" (pointermove)="ResizeMove" (pointerup)="ResizeEnd" (pointercancel)="ResizeEnd" (keydown)="ResizeKey"></span>
 		</section>
 	</div>
 	<div class="elemenx-tile-lane" *if="Dragging && GroupPolicy !== 'none'">
 		<section class="elemenx-tile-group new" *droppable="{Accept: ['tile']}" (dropped)="DropOnNew">
 			<header class="elemenx-tile-group-header">
-				<h3 class="elemenx-tile-group-title">{{NewGroupTitle}}</h3>
+				<h3 class="elemenx-tile-group-title">{{(NewGroupTitle || $T('ui.tileGrid.newGroupTitle'))}}</h3>
 			</header>
-			<div class="elemenx-tile-new">Drop here to start a group</div>
+			<div class="elemenx-tile-new">{{$T('ui.tileGrid.dropNewGroup')}}</div>
 		</section>
 	</div>
 	<div class="elemenx-tile-sources" hidden><slot></slot></div>

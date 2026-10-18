@@ -1,12 +1,14 @@
 /*
  * The theme of the page: a policy of the color scheme and a named theme.
  * The policy is 'system' (follows the operating system), 'light' or 'dark'. The theme is 'default' (index.css) or a
- * named one: the Library brings 'contrast', 'darcula' and 'soft' (themes/), and Register adds the themes of the
- * Application. A theme is plain CSS whose rules start with its attribute: body[data-theme='ocean'] { ... } for both
- * schemes, body[data-theme='ocean'][data-scheme='dark'] { ... } for the dark one; such a rule is more specific than
- * the rule of a Component it overrides, so the order of the stylesheets does not matter.
+ * named one: the Library brings 'contrast', 'darcula', 'soft', 'fantasy' and 'scifi' (themes/), and Register adds the themes of the
+ * Application. A theme is plain CSS whose rules start with its attribute: [data-theme][data-theme='ocean'] { ... } for
+ * both schemes, [data-theme][data-theme='ocean'][data-scheme='dark'] { ... } for the dark one; such a rule is more
+ * specific than the rule of a Component it overrides, so the order of the stylesheets does not matter.
  * body[data-theme] holds the policy under the default theme (so index.css applies it before any script runs) and the
  * name of a named theme; body[data-scheme] always holds the scheme shown, 'light' or 'dark'.
+ * Scope(element, name, callback) themes one part of the page: the element and everything in it take a named theme or a
+ * policy ('light', 'dark', 'system') of their own, whatever the page shows; null gives the element back to the page.
  * The policy and the theme are remembered in localStorage (StorageKey, Persist) and changes are reported, including
  * system changes under 'system'. The first policy comes from localStorage, then from the data-theme of the page,
  * then from Default.
@@ -18,9 +20,11 @@ Elemenx.Service('Theme', {
 	Policies: ['system', 'light', 'dark'],
 	Library: 'ElemenxUI',
 	Builtin: {
-		contrast: {Label: 'High contrast', Schemes: ['light', 'dark']},
-		darcula: {Label: 'Darcula', Schemes: ['dark']},
-		soft: {Label: 'Soft', Schemes: ['light', 'dark']}
+		contrast: {Label: 'High contrast', Key: 'ui.theme.contrast', Schemes: ['light', 'dark']},
+		darcula: {Label: 'Darcula', Key: 'ui.theme.darcula', Schemes: ['dark']},
+		soft: {Label: 'Soft', Key: 'ui.theme.soft', Schemes: ['light', 'dark']},
+		fantasy: {Label: 'Fantasy', Key: 'ui.theme.fantasy', Schemes: ['dark']},
+		scifi: {Label: 'Sci-fi', Key: 'ui.theme.scifi', Schemes: ['dark']}
 	},
 
 	$OnCreate: function () {
@@ -31,7 +35,7 @@ Elemenx.Service('Theme', {
 		var key;
 
 		this.Listeners = [];
-		this.Registry = {default: {Name: 'default', Label: 'Default', Schemes: ['light', 'dark'], URL: '', Link: null, State: 'ready', Callbacks: []}};
+		this.Registry = {default: {Name: 'default', Label: 'Default', Key: 'ui.theme.default', Schemes: ['light', 'dark'], URL: '', Link: null, State: 'ready', Callbacks: []}};
 		this.Name = 'default';
 		this.Media = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
 
@@ -157,7 +161,7 @@ Elemenx.Service('Theme', {
 
 		for (name in this.Registry) {
 			if (this.Registry.hasOwnProperty(name))
-				list.push({Name: name, Label: this.Registry[name].Label, Schemes: this.Registry[name].Schemes.slice()});
+				list.push({Name: name, Label: this.Registry[name].Key ? Elemenx.Locale.Text(this.Registry[name].Key) : this.Registry[name].Label, Schemes: this.Registry[name].Schemes.slice()});
 		}
 
 		return list;
@@ -172,6 +176,50 @@ Elemenx.Service('Theme', {
 	 * Shows the theme name ('default' goes back to index.css). Its stylesheet loads first if it has to; then the theme
 	 * applies and callback gets (error). A stylesheet that fails to load leaves the theme as it was.
 	 */
+	Scope: function (element, name, callback) {
+		var self = this;
+		var theme = name && this.Registry[name];
+		var done = function (error) {
+			if (callback)
+				self.Notify(callback, error || null);
+		};
+
+		if (!element || element.nodeType !== 1)
+			throw new Error('Elemenx Theme.Scope expects an element');
+
+		if (!name || name === 'default') {
+			element.removeAttribute('data-theme');
+			element.removeAttribute('data-scheme');
+
+			done(null);
+
+			return;
+		}
+
+		if (this.Policies.indexOf(name) !== -1) {
+			element.setAttribute('data-theme', name);
+
+			if (name === 'system') element.removeAttribute('data-scheme');
+			else element.setAttribute('data-scheme', name);
+
+			done(null);
+
+			return;
+		}
+
+		if (!theme)
+			throw new Error('Elemenx Theme is not registered: ' + name);
+
+		this.Load(theme, function (error) {
+			if (!error) {
+				element.setAttribute('data-theme', name);
+				element.setAttribute('data-scheme', theme.Schemes && theme.Schemes.length === 1 ? theme.Schemes[0] : self.Resolved());
+			}
+
+			done(error);
+		});
+	},
+
 	Use: function (name, callback) {
 		var self = this;
 		var theme = this.Registry[name];
@@ -217,6 +265,7 @@ Elemenx.Service('Theme', {
 		link.setAttribute('data-elemenx-theme', theme.Name);
 
 		link.onload = function () {
+			self.Shadow(theme);
 			self.Settle(theme, 'ready', null);
 		};
 
@@ -287,9 +336,34 @@ Elemenx.Service('Theme', {
 		}
 	},
 
+	/* The mount of the Application when it renders in a shadow root, or null. */
+	Host: function () {
+		var application = this.$Application && this.$Application();
+		var host = application && application.$Mount ? application.$Mount() : null;
+
+		return host && host !== document.body && host.shadowRoot ? host : null;
+	},
+
+	/* A shadow root cannot use the <link> of the head: the rules of the theme go there through Elemenx.Style. */
+	Shadow: function (theme) {
+		if (!this.Host()) return;
+
+		Elemenx.Resource.Load(theme.URL, function (error, text) {
+			if (!error)
+				Elemenx.Style('theme:' + theme.Name, text);
+		});
+	},
+
 	Apply: function () {
-		document.body.setAttribute('data-theme', this.Name === 'default' ? this.Current : this.Name);
-		document.body.setAttribute('data-scheme', this.Resolved());
+		var targets = [document.body].concat(this.Host() || []);
+		var i = 0;
+
+		while (i < targets.length) {
+			targets[i].setAttribute('data-theme', this.Name === 'default' ? this.Current : this.Name);
+			targets[i].setAttribute('data-scheme', this.Resolved());
+
+			i++;
+		}
 	},
 
 	/*

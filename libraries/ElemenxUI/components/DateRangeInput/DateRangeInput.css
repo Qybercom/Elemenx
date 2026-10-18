@@ -20,7 +20,7 @@
 	border: 0;
 	color: var(--elemenx-text);
 	font: inherit;
-	text-align: left;
+	text-align: start;
 	cursor: pointer;
 	outline: none;
 }
@@ -55,7 +55,7 @@
 	gap: 2px;
 	min-width: 136px;
 	padding: 8px;
-	border-right: 1px solid var(--elemenx-border);
+	border-inline-end: 1px solid var(--elemenx-border);
 }
 
 .elemenx-range-presets .elemenx-option {
@@ -64,7 +64,7 @@
 	border: 0;
 	color: var(--elemenx-text);
 	font: inherit;
-	text-align: left;
+	text-align: start;
 }
 
 .elemenx-range-months {
@@ -121,7 +121,7 @@
 	.elemenx-range-presets {
 		flex-direction: row;
 		flex-wrap: wrap;
-		border-right: 0;
+		border-inline-end: 0;
 		border-bottom: 1px solid var(--elemenx-border);
 	}
 

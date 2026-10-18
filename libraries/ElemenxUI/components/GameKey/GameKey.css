@@ -1,0 +1,47 @@
+.elemenx-game-key {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	color: var(--elemenx-game-text);
+	font-family: var(--elemenx-game-font);
+}
+
+.elemenx-game-key-glyph {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 22px;
+	height: 22px;
+	padding: 0 6px;
+	background: var(--elemenx-game-cell);
+	border: var(--elemenx-game-cell-frame);
+	border-radius: var(--elemenx-radius);
+	font-family: var(--elemenx-font), sans-serif;
+	font-size: var(--elemenx-font-size-small);
+	font-weight: var(--elemenx-font-weight-bold);
+	line-height: 1;
+}
+
+/* The face buttons of a pad are round. */
+.elemenx-game-key.button-a .elemenx-game-key-glyph,
+.elemenx-game-key.button-b .elemenx-game-key-glyph,
+.elemenx-game-key.button-x .elemenx-game-key-glyph,
+.elemenx-game-key.button-y .elemenx-game-key-glyph {
+	width: 22px;
+	padding: 0;
+	border-radius: var(--elemenx-radius-pill);
+}
+
+.elemenx-game-key.keyboard .elemenx-game-key-glyph {
+	width: auto;
+	min-width: 22px;
+	padding: 0 6px;
+	border-bottom-width: 2px;
+	border-radius: var(--elemenx-radius);
+}
+
+.elemenx-game-key-label {
+	font-size: var(--elemenx-font-size-small);
+	letter-spacing: var(--elemenx-game-letter-spacing);
+	text-transform: var(--elemenx-game-text-transform);
+}

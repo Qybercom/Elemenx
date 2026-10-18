@@ -1,0 +1,18 @@
+<figure class="elemenx-game-panel elemenx-game-minimap" [class]="[Shape === 'square' ? 'square' : 'round']" [style.--elemenx-game-minimap-size]="Number(Size) + 'px'" role="group" [attribute.aria-label]="Label || Title || $T('ui.game.map')">
+	<div class="elemenx-game-minimap-map">
+		<div class="elemenx-game-minimap-view"><slot></slot></div>
+		<button class="elemenx-game-marker" type="button" *for="marker of Markers" *key="marker.ID || $index" [class]="[marker.Kind || 'point']" [class.edge]="Edge(marker)" [attribute.style]="Place(marker)" [attribute.data-index]="$index" [attribute.title]="marker.Label || null" [attribute.aria-label]="marker.Label || $T('ui.game.marker')" (click)="Pressed">
+			<Icon *if="marker.Icon" [name]="marker.Icon" />
+		</button>
+		<span class="elemenx-game-minimap-player" *if="Player" [style.transform]="'translate(-50%, -50%) rotate(' + Number(Heading) + 'deg)'" aria-hidden="true"></span>
+		<span class="elemenx-game-minimap-north" *if="North" aria-hidden="true">N</span>
+		<div class="elemenx-game-minimap-zoom" *if="Zoomable">
+			<button class="elemenx-game-minimap-button" type="button" [attribute.aria-label]="$T('ui.game.zoomIn')" (click)="ZoomIn">+</button>
+			<button class="elemenx-game-minimap-button" type="button" [attribute.aria-label]="$T('ui.game.zoomOut')" (click)="ZoomOut">−</button>
+		</div>
+	</div>
+	<figcaption class="elemenx-game-minimap-caption" *if="Title || Note">
+		<span class="elemenx-game-minimap-title" *if="Title">{{Title}}</span>
+		<span class="elemenx-game-minimap-note" *if="Note">{{Note}}</span>
+	</figcaption>
+</figure>

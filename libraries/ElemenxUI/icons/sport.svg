@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+	<!-- Sport: <Icon Name="sport:soccer-ball" />. -->
+	<!-- Balls -->
+	<symbol id="soccer-ball" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8.2L15.6 10.8L14.2 15H9.8L8.4 10.8Z"/><path d="M12 8.2V3M15.6 10.8L20.6 9.2M14.2 15L17.3 19.3M9.8 15L6.7 19.3M8.4 10.8L3.4 9.2"/></symbol>
+	<symbol id="basketball" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3V21M3 12H21M5.6 5.6C8.3 8.3 8.3 15.7 5.6 18.4M18.4 5.6C15.7 8.3 15.7 15.7 18.4 18.4"/></symbol>
+	<symbol id="volleyball" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 12C12 7.6 10.4 4.6 8 3.4M12 12C15.8 9.8 19.2 9.8 21 11M12 12C8.2 14.2 6.4 17.2 6.6 19.8M10.2 3.2C14 4.8 15.8 8 16 10.6M3.4 14.8C6.8 13 10.4 13.4 12.8 14.8M19.4 17.4C16.6 16 15.2 14.4 14.2 13"/></symbol>
+	<symbol id="tennis-ball" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3.3 9.6C7.4 10.2 9.8 13.8 9.2 20.6M20.7 14.4C16.6 13.8 14.2 10.2 14.8 3.4"/></symbol>
+	<symbol id="baseball" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M6.2 5.1C8.6 8.8 8.6 15.2 6.2 18.9M17.8 5.1C15.4 8.8 15.4 15.2 17.8 18.9"/><path d="M6.6 8.4H8.4M7.2 12H9M6.6 15.6H8.4M15.6 8.4H17.4M15 12H16.8M15.6 15.6H17.4"/></symbol>
+	<symbol id="american-football" viewBox="0 0 24 24"><path d="M20.5 3.5C14 2.5 7 4.5 4.5 9.5C2.5 13.5 3 18 3.5 20.5C10 21.5 17 19.5 19.5 14.5C21.5 10.5 21 6 20.5 3.5Z"/><path d="M9 15L15 9M10.6 11.4L12.6 13.4M12.1 9.9L14.1 11.9M9.1 12.9L11.1 14.9"/></symbol>
+	<symbol id="rugby-ball" viewBox="0 0 24 24"><path d="M2.5 12C4.5 7.5 8 5.5 12 5.5S19.5 7.5 21.5 12C19.5 16.5 16 18.5 12 18.5S4.5 16.5 2.5 12Z"/><path d="M12 5.5V18.5M10 9.5H14M10 12H14M10 14.5H14"/></symbol>
+	<symbol id="golf-ball" viewBox="0 0 24 24"><circle cx="12" cy="9" r="6.5"/><path d="M9.5 15.2L10.5 18H13.5L14.5 15.2M11 18L11.5 21.5H12.5L13 18"/><path d="M10 7.5H10.01M13 6.5H13.01M14.5 9.5H14.01M11.5 10.5H11.51M9 10.5H9.01"/></symbol>
+	<symbol id="bowling" viewBox="0 0 24 24"><path d="M8 2.5C6.6 2.5 6 3.7 6 5C6 6.5 7 7.5 6.8 8.5C6.5 10 5 12 5 15C5 18 5.8 20.5 6.5 21.5H9.5C10.2 20.5 11 18 11 15C11 12 9.5 10 9.2 8.5C9 7.5 10 6.5 10 5C10 3.7 9.4 2.5 8 2.5Z"/><path d="M6.8 8.5H9.2"/><circle cx="16.5" cy="16.5" r="5"/><path d="M15 14.5H15.01M17.5 14H17.51M16.5 16.3H16.51"/></symbol>
+	<symbol id="frisbee" viewBox="0 0 24 24"><ellipse cx="12" cy="12" rx="9" ry="4.5"/><ellipse cx="12" cy="11" rx="5" ry="2"/></symbol>
+	<!-- Rackets, bats and sticks -->
+	<symbol id="tennis-racket" viewBox="0 0 24 24"><ellipse cx="14.5" cy="9.5" rx="5.5" ry="6.5" transform="rotate(45 14.5 9.5)"/><path d="M10.6 13.4L3.5 20.5M12 7L17 12M14.5 5.5L18.5 9.5M11 10.5L13.5 13"/></symbol>
+	<symbol id="table-tennis" viewBox="0 0 24 24"><circle cx="10" cy="10" r="6.5"/><path d="M14.2 15.6L18.6 20A1.4 1.4 0 0 0 20.6 18L16.2 13.6"/><circle cx="19" cy="5.5" r="2"/></symbol>
+	<symbol id="badminton" viewBox="0 0 24 24"><path d="M9 17A3 3 0 0 0 15 17Z"/><path d="M9 17L6 4H18L15 17M10 4.2L11 17M14 4.2L13 17M7.2 9H16.8"/></symbol>
+	<symbol id="baseball-bat" viewBox="0 0 24 24"><path d="M20.5 3.5C21.5 4.5 20.8 6 19.5 7.2L10 15.5L8.5 14L16.8 4.5C18 3.2 19.5 2.5 20.5 3.5ZM9.2 14.8L4.5 19.5M3.5 18.5L5.5 20.5"/><circle cx="17" cy="17" r="2.5"/></symbol>
+	<symbol id="hockey" viewBox="0 0 24 24"><path d="M6 3L12.5 18.5A2 2 0 0 0 14.3 19.7H21V17.2H15.2L9 3"/><ellipse cx="6.5" cy="19" rx="3" ry="1.5"/></symbol>
+	<symbol id="golf" viewBox="0 0 24 24"><path d="M8 20V3L17 6.5L8 10"/><ellipse cx="8" cy="20" rx="5" ry="1.5"/></symbol>
+	<!-- Targets -->
+	<symbol id="target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5.5"/><circle cx="12" cy="12" r="2"/></symbol>
+	<symbol id="darts" viewBox="0 0 24 24"><circle cx="11" cy="13" r="8"/><circle cx="11" cy="13" r="4"/><path d="M11 13L19 5M19 5V2M19 5H22"/></symbol>
+	<symbol id="archery" viewBox="0 0 24 24"><path d="M5 3A16 16 0 0 1 21 19L5 3"/><path d="M4 20L17 7M14 7H17V10M4 20H6.5M4 20V17.5"/></symbol>
+	<!-- Fight and strength -->
+	<symbol id="boxing-glove" viewBox="0 0 24 24"><path d="M7 14V8.5C7 5.5 9.5 3 12.5 3H14C17 3 19 5.5 19 8.5V12C19 13.5 18 14.5 16.5 14.5H14V11.5C14 10.4 13.1 9.5 12 9.5H10"/><path d="M7 14H17V17.5C17 18.3 16.3 19 15.5 19H8.5C7.7 19 7 18.3 7 17.5ZM8 21.5H16"/></symbol>
+	<symbol id="belt" viewBox="0 0 24 24"><path d="M3 9H21M3 13H21"/><path d="M10 9L12 12L14 9M12 12L9.5 20M12 12L14.5 20"/></symbol>
+	<symbol id="fencing" viewBox="0 0 24 24"><path d="M3.5 3.5L17 17M20.5 3.5L7 17M15.5 20.5L20.5 15.5M3.5 15.5L8.5 20.5M17.5 19L20 21.5M4 21.5L6.5 19"/></symbol>
+	<symbol id="punching-bag" viewBox="0 0 24 24"><path d="M12 2V4M9 4H15M8 6H16V18A4 4 0 0 1 8 18Z"/><path d="M9 4L8 6M15 4L16 6M8 9.5H16"/></symbol>
+	<symbol id="dumbbell" viewBox="0 0 24 24"><rect x="5" y="6" width="3" height="12" rx="1"/><rect x="16" y="6" width="3" height="12" rx="1"/><path d="M2.5 9.5V14.5M21.5 9.5V14.5M8 12H16M2.5 12H5M19 12H21.5"/></symbol>
+	<symbol id="kettlebell" viewBox="0 0 24 24"><path d="M8.5 10A3.5 3.5 0 1 1 15.5 10"/><path d="M7.4 10H16.6A6.5 6.5 0 0 1 17.5 20.5H6.5A6.5 6.5 0 0 1 7.4 10Z"/></symbol>
+	<symbol id="barbell" viewBox="0 0 24 24"><rect x="4" y="7" width="2.5" height="10" rx="1"/><rect x="17.5" y="7" width="2.5" height="10" rx="1"/><rect x="6.5" y="9" width="2" height="6" rx="0.5"/><rect x="15.5" y="9" width="2" height="6" rx="0.5"/><path d="M2 12H4M8.5 12H15.5M20 12H22"/></symbol>
+	<symbol id="jump-rope" viewBox="0 0 24 24"><rect x="4.5" y="3" width="3" height="7" rx="1.5"/><rect x="16.5" y="3" width="3" height="7" rx="1.5"/><path d="M6 10C6 22 18 22 18 10"/></symbol>
+	<symbol id="yoga-mat" viewBox="0 0 24 24"><circle cx="17" cy="12" r="4"/><circle cx="17" cy="12" r="1.5"/><path d="M17 8H5A2 2 0 0 0 3 10V14A2 2 0 0 0 5 16H17"/></symbol>
+	<!-- Wheels, water and snow -->
+	<symbol id="bicycle" viewBox="0 0 24 24"><circle cx="5.5" cy="16" r="3.5"/><circle cx="18.5" cy="16" r="3.5"/><path d="M5.5 16L9 9H15.5L18.5 16M9 9L12 16H5.5M12 16L15.5 9M8 6.5H10.5M15.5 9L14.5 5.5H17"/></symbol>
+	<symbol id="skateboard" viewBox="0 0 24 24"><path d="M3 10C3 11 3.5 12 5 12H19C20.5 12 21 11 21 10"/><circle cx="7" cy="16" r="2"/><circle cx="17" cy="16" r="2"/><path d="M7 12V14M17 12V14"/></symbol>
+	<symbol id="swimming" viewBox="0 0 24 24"><circle cx="16" cy="6" r="2"/><path d="M3 17C5 15.5 7 15.5 9 17S13 18.5 15 17S19 15.5 21 17M3 21C5 19.5 7 19.5 9 21S13 22.5 15 21S19 19.5 21 21M5 13L10 8.5L13.5 11.5L17 13"/></symbol>
+	<symbol id="surfboard" viewBox="0 0 24 24"><path d="M19.5 4.5C14 2.5 6 8 4.5 15C4 17.5 4.8 19.2 6.5 19.5C13.5 21 21.5 10 19.5 4.5Z"/><path d="M7 17.5L17.5 7"/></symbol>
+	<symbol id="sailing" viewBox="0 0 24 24"><path d="M12 3V16M12 4L19 14H12M12 6L6 14H12M3 17H21L18.5 20.5H5.5Z"/></symbol>
+	<symbol id="rowing" viewBox="0 0 24 24"><path d="M5 19L17 7M19 19L7 7"/><path d="M17 7C17.5 5 19 3.5 20.5 3.5C20.5 5 19 6.5 17 7ZM7 7C6.5 5 5 3.5 3.5 3.5C3.5 5 5 6.5 7 7Z"/></symbol>
+	<symbol id="ski" viewBox="0 0 24 24"><path d="M3 17.5L19 9.5C20.5 8.8 21.5 9.5 21 10.5M3 21L19 13C20.5 12.3 21.5 13 21 14M8 3L9.5 16M14 3L14.5 12.5M7 6.5H9M13 6.5H15"/></symbol>
+	<symbol id="snowboard" viewBox="0 0 24 24"><path d="M5.5 20.5C3.9 20.5 3 19 3.8 17.6L15.6 4.3C16.6 3.2 18.4 3.2 19.6 4.4C20.8 5.6 20.8 7.4 19.7 8.4L6.4 20.2C6.1 20.4 5.8 20.5 5.5 20.5Z"/><path d="M7.5 14.5L10 17M13.5 7.5L16 10"/></symbol>
+	<symbol id="ice-skate" viewBox="0 0 24 24"><path d="M5 3H10V9L17 11C18.7 11.5 20 13 20 15V16H5Z"/><path d="M3 20H19C20.1 20 21 19.1 21 18M7 16V20M17 16V20M10 6H8M10 9H8"/></symbol>
+	<symbol id="sneaker" viewBox="0 0 24 24"><path d="M3 17V14L6.5 7H9L10 9.5L13 9C16 9 17.5 11 18.5 12.5L21 14.5V17ZM3 17H21M10 9.5L8.5 12.5M13 9L11.5 12"/></symbol>
+	<symbol id="carabiner" viewBox="0 0 24 24"><path d="M8.5 4H13.5A4 4 0 0 1 17.4 8.9L14.8 19A2.5 2.5 0 0 1 12.4 21H9.5A3 3 0 0 1 6.5 18V6A2 2 0 0 1 8.5 4Z"/><path d="M10 7.5V16"/></symbol>
+	<symbol id="horseshoe" viewBox="0 0 24 24"><path d="M7 20.5L5.5 14C4.5 8 7.5 3.5 12 3.5S19.5 8 18.5 14L17 20.5H14L15.5 13.5C16 9.5 14.5 7 12 7S8 9.5 8.5 13.5L10 20.5Z"/><path d="M6.5 11H6.51M17.5 11H17.51M6.8 16H6.81M17.2 16H17.21"/></symbol>
+	<!-- Winning and the game -->
+	<symbol id="trophy" viewBox="0 0 24 24"><path d="M7 4H17V9A5 5 0 0 1 7 9Z"/><path d="M7 5.5H4.5V7.5A3 3 0 0 0 7.5 10.5M17 5.5H19.5V7.5A3 3 0 0 1 16.5 10.5M12 14V18M8 21H16L15 18H9Z"/></symbol>
+	<symbol id="medal" viewBox="0 0 24 24"><path d="M8 2.5L11 9M16 2.5L13 9"/><circle cx="12" cy="15" r="6"/><path d="M10.8 13.5L12 12.5V17.5"/></symbol>
+	<symbol id="podium" viewBox="0 0 24 24"><path d="M3 21V14H8M8 21V9H16V21M16 16H21V21M2 21H22M12 12V15"/></symbol>
+	<symbol id="whistle" viewBox="0 0 24 24"><path d="M3 13A5 5 0 1 0 13 13V10H21V7H8A5 5 0 0 0 3 13Z"/><circle cx="8" cy="13" r="1.5"/><path d="M15 7V4.5"/></symbol>
+	<symbol id="stopwatch" viewBox="0 0 24 24"><circle cx="12" cy="14" r="7.5"/><path d="M12 14V10M10 2.5H14M12 2.5V6.5M18.5 7L20 5.5"/></symbol>
+	<symbol id="scoreboard" viewBox="0 0 24 24"><rect x="2.5" y="4" width="19" height="13" rx="1.5"/><path d="M12 4V17M7 20.5V17M17 20.5V17M6.5 8.5L8 7.5V13.5M15 8H17.5V10.5H15V13H17.5"/></symbol>
+	<symbol id="referee-cards" viewBox="0 0 24 24"><rect x="4.5" y="4" width="9" height="13" rx="1" transform="rotate(-10 9 10.5)"/><rect x="10.5" y="7" width="9" height="13" rx="1" transform="rotate(10 15 13.5)"/></symbol>
+	<symbol id="jersey" viewBox="0 0 24 24"><path d="M8.5 3L4 5.5L2.5 10L6 11.5V21H18V11.5L21.5 10L20 5.5L15.5 3C15 4.5 13.7 5.5 12 5.5S9 4.5 8.5 3Z"/><path d="M10.5 11L12 10V16"/></symbol>
+	<symbol id="helmet" viewBox="0 0 24 24"><path d="M3 15A9 9 0 0 1 21 13V15H14V18H6.5A3.5 3.5 0 0 1 3 15Z"/><path d="M14 15L18 18.5H21M11 4.5C10 7 10 9.5 11 12"/></symbol>
+	<symbol id="water-bottle" viewBox="0 0 24 24"><path d="M10 2.5H14M10.5 2.5V5.5L8.5 8V20A1.5 1.5 0 0 0 10 21.5H14A1.5 1.5 0 0 0 15.5 20V8L13.5 5.5V2.5M8.5 12H15.5M8.5 16H15.5"/></symbol>
+	<symbol id="heart-rate" viewBox="0 0 24 24"><path d="M12 20S3.5 15 3.5 8.8A4.3 4.3 0 0 1 12 6.6A4.3 4.3 0 0 1 20.5 8.8C20.5 15 12 20 12 20Z"/><path d="M5.5 12.5H9L10.5 10L13 15L14.5 12.5H18.5"/></symbol>
+	<!-- Places -->
+	<symbol id="stadium" viewBox="0 0 24 24"><ellipse cx="12" cy="8" rx="9" ry="3.5"/><path d="M3 8V15C3 17 7 18.5 12 18.5S21 17 21 15V8M7 11V17.5M17 11V17.5M12 11.5V18.5"/></symbol>
+	<symbol id="goal" viewBox="0 0 24 24"><path d="M3 20V6H21V20"/><path d="M3 6L6 9V20M21 6L18 9V20M6 9H18M6 13H18M6 17H18M10 9V20M14 9V20"/></symbol>
+</svg>

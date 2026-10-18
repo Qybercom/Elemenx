@@ -1,0 +1,14 @@
+<div class="elemenx-dial-pad" role="group" [class.disabled]="!!Disabled" [attribute.aria-label]="Label || $T('ui.dialPad.label')">
+	<div class="elemenx-dial-pad-display" *if="ShowInput">
+		<input class="elemenx-dial-pad-input" type="tel" inputmode="tel" autocomplete="tel" [value]="Value" [disabled]="!!Disabled" [attribute.aria-label]="$T('ui.dialPad.number')" (input)="Typed" (keydown)="Key" />
+		<button class="elemenx-dial-pad-erase" type="button" *if="Value" [disabled]="!!Disabled" [attribute.aria-label]="$T('ui.dialPad.erase')" [attribute.title]="$T('ui.dialPad.erase')" (pointerdown)="EraseDown" (pointerleave)="Up" (click)="Erase"><Icon Name="backspace" Size="20" /></button>
+	</div>
+	<div class="elemenx-dial-pad-keys" [attribute.style]="Grid(Columns)">
+		<button class="elemenx-dial-pad-key" type="button" *for="key of Layout(Keys)" *key="$index" [class]="[key.Class || '']" [disabled]="!!Disabled" [attribute.data-index]="$index" [attribute.aria-label]="key.Hold ? key.Value + ', ' + $T('ui.dialPad.hold', {value: key.Hold}) : null" (pointerdown)="Down" (pointerup)="Up" (pointerleave)="Up" (click)="Pressed">
+			<Icon *if="key.Icon" [name]="key.Icon" Size="24" />
+			<span class="elemenx-dial-pad-digit" *if="!key.Icon">{{key.Label || key.Value}}</span>
+			<span class="elemenx-dial-pad-sub" *if="key.Sub || Subbed(Keys)" aria-hidden="true">{{key.Sub || ''}}</span>
+		</button>
+	</div>
+	<button class="elemenx-dial-pad-call" type="button" *if="ShowCall" [disabled]="!!Disabled || !Value" [attribute.aria-label]="CallLabel || $T('ui.dialPad.call')" [attribute.title]="CallLabel || $T('ui.dialPad.call')" (click)="Call"><Icon Name="phone" Size="24" /></button>
+</div>

@@ -6,13 +6,13 @@
 		</aside>
 		<section class="elemenx-column fill elemenx-detail">
 			<header class="elemenx-container elemenx-detail-header">
-				<span class="elemenx-detail-back"><Button Icon="arrow-left" Title="Back" Variant="ghost" Size="small" (click)="Back" /></span>
+				<span class="elemenx-detail-back"><Button Icon="arrow-left" [title]="$T('ui.common.back')" Variant="ghost" Size="small" (click)="Back" /></span>
 				<span class="elemenx-detail-title"><slot name="detail-header"></slot></span>
 			</header>
 			<div class="elemenx-column fill elemenx-detail-content elemenx-layout-area"><slot name="detail"></slot></div>
 			<div class="elemenx-column elemenx-detail-empty">
 				<Icon [name]="EmptyIcon" Size="32" />
-				<span>{{Empty}}</span>
+				<span>{{(Empty || $T('ui.masterDetail.empty'))}}</span>
 			</div>
 		</section>
 	</div>

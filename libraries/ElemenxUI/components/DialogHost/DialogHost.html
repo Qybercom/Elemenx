@@ -1,0 +1,10 @@
+<div class="elemenx-dialog-host">
+	<div class="elemenx-dialog-host-item" *for="item of Items" *key="item.ID" [attribute.data-id]="item.ID">
+		<Dialog Open="true" Size="small" [title]="item.Title" [icon]="item.Icon" [closable]="item.Dismissible" [dismissible]="item.Dismissible" (close)="Dismissed">
+			<p class="elemenx-text" *if="item.Message">{{item.Message}}</p>
+			<span class="elemenx-dialog-host-actions" slot="footer">
+				<button class="elemenx-button" type="button" *for="action of item.Actions" *key="action.ID" [class]="[action.Variant]" [attribute.data-action]="action.ID" (click)="Act">{{action.Label}}</button>
+			</span>
+		</Dialog>
+	</div>
+</div>

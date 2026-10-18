@@ -60,16 +60,16 @@
 
 .elemenx-chat-message.single .elemenx-chat-bubble,
 .elemenx-chat-message.last .elemenx-chat-bubble {
-	border-bottom-left-radius: var(--elemenx-radius);
+	border-end-start-radius: var(--elemenx-radius);
 }
 
 .elemenx-chat-message.first .elemenx-chat-bubble {
-	border-bottom-left-radius: var(--elemenx-radius);
+	border-end-start-radius: var(--elemenx-radius);
 }
 
 .elemenx-chat-message.middle .elemenx-chat-bubble,
 .elemenx-chat-message.last .elemenx-chat-bubble {
-	border-top-left-radius: var(--elemenx-radius);
+	border-start-start-radius: var(--elemenx-radius);
 }
 
 .elemenx-chat-message.own .elemenx-chat-bubble {
@@ -82,20 +82,20 @@
 .elemenx-chat-message.own.single .elemenx-chat-bubble,
 .elemenx-chat-message.own.first .elemenx-chat-bubble,
 .elemenx-chat-message.own.last .elemenx-chat-bubble {
-	border-bottom-right-radius: var(--elemenx-radius);
+	border-end-end-radius: var(--elemenx-radius);
 }
 
 .elemenx-chat-message.own.middle .elemenx-chat-bubble,
 .elemenx-chat-message.own.last .elemenx-chat-bubble {
-	border-top-right-radius: var(--elemenx-radius);
+	border-start-end-radius: var(--elemenx-radius);
 }
 
 .elemenx-chat-message.own.middle .elemenx-chat-bubble {
-	border-bottom-right-radius: var(--elemenx-radius);
+	border-end-end-radius: var(--elemenx-radius);
 }
 
 .elemenx-chat-message.middle:not(.own) .elemenx-chat-bubble {
-	border-bottom-left-radius: var(--elemenx-radius);
+	border-end-start-radius: var(--elemenx-radius);
 }
 
 .elemenx-chat-author {
@@ -191,12 +191,47 @@
 	font-size: var(--elemenx-font-size);
 }
 
-/* The button that reacts shows beside the bubble while the message is hovered or focused. */
-.elemenx-chat-react {
+/* The bubble and the buttons beside it. */
+/* The line is never narrower than its bubble, so the buttons stand beside the bubble, not over it. */
+.elemenx-chat-line {
+	position: relative;
+	display: flex;
+	min-width: min-content;
+	max-width: 100%;
+}
+
+/*
+ * The buttons beside the bubble (react, the menu of the message) show while the message is hovered or focused. They
+ * touch the bubble and their box runs along its whole height, so the pointer reaches them from anywhere on the bubble
+ * without leaving the message on the way.
+ */
+.elemenx-chat-tools {
 	position: absolute;
-	top: 4px;
-	left: calc(100% + 4px);
+	z-index: 1;
+	top: 0;
+	bottom: 0;
+	inset-inline-start: 100%;
 	display: none;
+	align-items: flex-start;
+	gap: 4px;
+	padding: 4px 4px 0;
+}
+
+.elemenx-chat-message.own .elemenx-chat-tools {
+	inset-inline-end: 100%;
+	inset-inline-start: auto;
+	flex-direction: row-reverse;
+}
+
+.elemenx-chat-message:hover .elemenx-chat-tools,
+.elemenx-chat-message:focus-within .elemenx-chat-tools,
+.elemenx-chat-tools:has([aria-expanded='true']) {
+	display: inline-flex;
+}
+
+.elemenx-chat-react,
+.elemenx-chat-more {
+	display: inline-flex;
 	align-items: center;
 	justify-content: center;
 	width: var(--elemenx-control-small);
@@ -210,22 +245,203 @@
 	outline: none;
 }
 
-.elemenx-chat-message.own .elemenx-chat-react {
-	right: calc(100% + 4px);
-	left: auto;
-}
-
-.elemenx-chat-message:hover .elemenx-chat-react,
-.elemenx-chat-message:focus-within .elemenx-chat-react,
-.elemenx-chat-react[aria-expanded='true'] {
-	display: inline-flex;
-}
-
-.elemenx-chat-react:hover {
+.elemenx-chat-react:hover,
+.elemenx-chat-more:hover {
 	color: var(--elemenx-text);
 }
 
 .elemenx-chat-react-picker {
 	padding: 0;
 	overflow: hidden;
+}
+
+.elemenx-chat-edited {
+	font-style: italic;
+}
+
+.elemenx-chat-views {
+	display: inline-flex;
+	align-items: center;
+	gap: 2px;
+	padding: 0;
+	background: none;
+	border: 0;
+	color: inherit;
+	font: inherit;
+	cursor: pointer;
+}
+
+.elemenx-chat-views:hover {
+	text-decoration: underline;
+}
+
+.elemenx-chat-status {
+	display: inline-flex;
+}
+
+/* Read: the two checks in the accent. */
+.elemenx-chat-status.read {
+	color: var(--elemenx-accent);
+}
+
+.elemenx-chat-status.error {
+	color: var(--elemenx-danger);
+}
+
+/* The menu of the message opens at a point of the viewport: the pointer, or under the button. */
+.elemenx-chat-menu-point {
+	position: fixed;
+	z-index: 30;
+	width: 0;
+	height: 0;
+	pointer-events: none;
+}
+
+.elemenx-chat-menu-point .elemenx-menu {
+	pointer-events: auto;
+}
+
+/* The summary: who reacted with what, and who has seen the message. */
+.elemenx-chat-summary {
+	display: flex;
+	flex-direction: column;
+	width: 260px;
+	max-height: 320px;
+	padding: 0;
+}
+
+.elemenx-chat-summary-tabs {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 4px;
+	padding: 8px;
+	border-bottom: 1px solid var(--elemenx-border);
+}
+
+.elemenx-chat-summary-tab {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	padding: 2px 8px;
+	background: none;
+	border: 1px solid transparent;
+	border-radius: var(--elemenx-radius-pill);
+	color: var(--elemenx-text-muted);
+	font: inherit;
+	font-size: var(--elemenx-font-size-small);
+	cursor: pointer;
+}
+
+.elemenx-chat-summary-tab:hover {
+	background: var(--elemenx-surface-hover);
+}
+
+.elemenx-chat-summary-tab.active {
+	background: rgba(var(--elemenx-accent-rgb), 0.12);
+	border-color: var(--elemenx-accent);
+	color: var(--elemenx-text);
+}
+
+.elemenx-chat-summary-list {
+	flex: 1;
+	min-height: 0;
+	margin: 0;
+	padding: 4px 0;
+	overflow: auto;
+	list-style: none;
+}
+
+.elemenx-chat-summary-row {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 4px 12px;
+}
+
+.elemenx-chat-summary-avatar {
+	display: inline-flex;
+	flex: none;
+	align-items: center;
+	justify-content: center;
+	width: 24px;
+	height: 24px;
+	overflow: hidden;
+	background: var(--elemenx-surface-hover);
+	border-radius: 50%;
+	font-size: var(--elemenx-font-size-small);
+}
+
+.elemenx-chat-summary-avatar > img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+.elemenx-chat-summary-name {
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.elemenx-chat-summary-note {
+	color: var(--elemenx-text-muted);
+	font-size: var(--elemenx-font-size-small);
+}
+
+.elemenx-chat-summary-empty {
+	padding: 8px 12px;
+	color: var(--elemenx-text-muted);
+	font-size: var(--elemenx-font-size-small);
+}
+
+/*
+ * The choice of several messages: while selecting, a message takes the whole width of the list, its check at the
+ * start (on the side of every message, own or not), and a chosen one is marked in the accent.
+ */
+.elemenx-chat-message.selecting {
+	position: relative;
+	align-self: stretch;
+	max-width: none;
+	padding-inline-start: 40px;
+	border-radius: var(--elemenx-radius-large);
+	cursor: pointer;
+	user-select: none;
+}
+
+.elemenx-chat-message.selecting > .elemenx-chat-body {
+	max-width: 80%;
+}
+
+.elemenx-chat-message.selected {
+	background: rgba(var(--elemenx-accent-rgb), 0.12);
+}
+
+.elemenx-chat-check {
+	position: absolute;
+	top: 50%;
+	inset-inline-start: 8px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 22px;
+	height: 22px;
+	padding: 0;
+	background: var(--elemenx-surface);
+	border: 2px solid var(--elemenx-border-strong);
+	border-radius: 50%;
+	color: var(--elemenx-accent-text);
+	cursor: pointer;
+	transform: translateY(-50%);
+}
+
+.elemenx-chat-message.selected .elemenx-chat-check {
+	background: var(--elemenx-accent);
+	border-color: var(--elemenx-accent);
+}
+
+.elemenx-chat-check:focus-visible {
+	outline: 2px solid var(--elemenx-focus);
+	outline-offset: 2px;
 }

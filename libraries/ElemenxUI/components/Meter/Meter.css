@@ -32,6 +32,45 @@
 	font-variant-numeric: tabular-nums;
 }
 
+/* The scale of a bar: its track, and under it Min and Max with the value below between them. */
+.elemenx-meter-scale {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.elemenx-meter-range {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+}
+
+.elemenx-meter-range > .elemenx-meter-readout {
+	margin-inline: auto;
+}
+
+.elemenx-meter-min,
+.elemenx-meter-max {
+	color: var(--elemenx-text-muted);
+	font-size: var(--elemenx-font-size-small);
+	line-height: var(--elemenx-line-height-small);
+	font-variant-numeric: tabular-nums;
+}
+
+/* The value on a small plate in the colors of the text, below the meter or in its corner. */
+.elemenx-meter-readout {
+	padding: 0 4px;
+	background: var(--elemenx-text);
+	border-radius: var(--elemenx-radius-small);
+	color: var(--elemenx-surface);
+	font-size: var(--elemenx-font-size-small);
+	font-weight: var(--elemenx-font-weight-strong);
+	line-height: var(--elemenx-line-height-small);
+	font-variant-numeric: tabular-nums;
+	white-space: nowrap;
+}
+
 .elemenx-meter-track {
 	position: relative;
 	height: 8px;
@@ -52,10 +91,12 @@
 	position: absolute;
 	top: 0;
 	bottom: 0;
-	left: 0;
+	inset-inline-start: 0;
+	width: calc(var(--elemenx-meter-share) * 100%);
 	background: var(--elemenx-meter-color);
 	border-radius: var(--elemenx-radius-pill);
 	transition: width var(--elemenx-duration-slow) var(--elemenx-easing),
+		height var(--elemenx-duration-slow) var(--elemenx-easing),
 		background var(--elemenx-duration-slow) var(--elemenx-easing);
 }
 
@@ -63,7 +104,208 @@
 	position: absolute;
 	top: 0;
 	bottom: 0;
+	inset-inline-start: var(--elemenx-meter-at);
 	width: 2px;
 	background: var(--elemenx-surface);
 	transform: translateX(-1px);
+}
+
+/* Upwards: the value over the bar, the label under it; the bar fills its parent's height (96 pixels at least). */
+.elemenx-meter.vertical {
+	align-items: center;
+	width: auto;
+	height: 100%;
+}
+
+.elemenx-meter.vertical .elemenx-meter-head {
+	display: contents;
+}
+
+.elemenx-meter.vertical .elemenx-meter-value,
+.elemenx-meter.vertical .elemenx-meter-head > .elemenx-meter-readout {
+	order: -1;
+}
+
+.elemenx-meter.vertical .elemenx-meter-label {
+	order: 1;
+	font-size: var(--elemenx-font-size-small);
+}
+
+.elemenx-meter.vertical .elemenx-meter-scale {
+	display: flex;
+	flex: 1 1 auto;
+	align-items: stretch;
+	gap: 6px;
+	min-height: 96px;
+}
+
+.elemenx-meter.vertical .elemenx-meter-track {
+	width: 8px;
+	height: auto;
+}
+
+.elemenx-meter.vertical .elemenx-meter-scale {
+	flex-direction: row;
+}
+
+.elemenx-meter.vertical .elemenx-meter-range {
+	flex-direction: column-reverse;
+}
+
+.elemenx-meter.vertical .elemenx-meter-range > .elemenx-meter-readout {
+	margin: auto 0;
+}
+
+.elemenx-meter.vertical.small .elemenx-meter-track {
+	width: 4px;
+}
+
+.elemenx-meter.vertical.large .elemenx-meter-track {
+	width: 12px;
+}
+
+.elemenx-meter.vertical .elemenx-meter-fill {
+	top: auto;
+	right: 0;
+	left: 0;
+	width: auto;
+	height: calc(var(--elemenx-meter-share) * 100%);
+}
+
+.elemenx-meter.vertical .elemenx-meter-mark {
+	top: auto;
+	right: 0;
+	bottom: var(--elemenx-meter-at);
+	left: 0;
+	width: auto;
+	height: 2px;
+	transform: translateY(1px);
+}
+
+/* The dial: an open ring of three quarters, its fill, ticks, the marks of Low and High, a needle, and its middle. */
+.elemenx-meter.dial {
+	align-items: center;
+	width: auto;
+}
+
+.elemenx-meter-dial {
+	position: relative;
+	width: 128px;
+	aspect-ratio: 1;
+}
+
+.elemenx-meter-dial[hidden] {
+	display: none;
+}
+
+.elemenx-meter.dial.small .elemenx-meter-dial {
+	width: 88px;
+}
+
+.elemenx-meter.dial.large .elemenx-meter-dial {
+	width: 168px;
+}
+
+.elemenx-meter-face {
+	display: block;
+	width: 100%;
+	height: 100%;
+	overflow: visible;
+	fill: none;
+}
+
+.elemenx-meter-ring,
+.elemenx-meter-arc {
+	stroke-width: 6;
+}
+
+.elemenx-meter-ring {
+	stroke: var(--elemenx-border);
+}
+
+.elemenx-meter-arc {
+	stroke: var(--elemenx-meter-color);
+	stroke-dasharray: calc(var(--elemenx-meter-share) * 100) 100;
+	transition: stroke-dasharray var(--elemenx-duration-slow) var(--elemenx-easing),
+		stroke var(--elemenx-duration-slow) var(--elemenx-easing);
+}
+
+.elemenx-meter-tick {
+	stroke: var(--elemenx-text-muted);
+	stroke-width: 1;
+}
+
+.elemenx-meter-face .elemenx-meter-mark {
+	stroke: var(--elemenx-text);
+	stroke-width: 2;
+}
+
+.elemenx-meter-needle {
+	stroke: var(--elemenx-text);
+	stroke-width: 2;
+	stroke-linecap: round;
+	transform: rotate(calc(var(--elemenx-meter-share) * var(--elemenx-meter-span)));
+	transform-origin: 60px 60px;
+	transition: transform var(--elemenx-duration-slow) var(--elemenx-easing);
+}
+
+.elemenx-meter-center {
+	position: absolute;
+	inset: 22%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	text-align: center;
+}
+
+/* The middle shows the default slot, or the value when the slot is empty. */
+.elemenx-meter-content:empty {
+	display: none;
+}
+
+.elemenx-meter-content:not(:empty) + .elemenx-meter-value {
+	display: none;
+}
+
+.elemenx-meter.dial .elemenx-meter-value {
+	font-size: var(--elemenx-font-size-large);
+}
+
+/* Min and Max under the ends of the ring; the value below between them, or in the corner the shorter ring gives up. */
+.elemenx-meter-dial > .elemenx-meter-min,
+.elemenx-meter-dial > .elemenx-meter-max,
+.elemenx-meter-dial > .elemenx-meter-readout {
+	position: absolute;
+	transform: translateX(-50%);
+}
+
+.elemenx-meter-dial > .elemenx-meter-min {
+	top: 84%;
+	left: 20%;
+}
+
+.elemenx-meter-dial > .elemenx-meter-max {
+	top: 84%;
+	left: 80%;
+}
+
+.elemenx-meter.value-corner .elemenx-meter-dial > .elemenx-meter-max {
+	top: 56%;
+	left: 92%;
+}
+
+.elemenx-meter.value-below .elemenx-meter-dial > .elemenx-meter-readout {
+	bottom: 4%;
+	left: 50%;
+}
+
+.elemenx-meter.value-corner .elemenx-meter-dial > .elemenx-meter-readout {
+	right: 0;
+	bottom: 8%;
+	transform: none;
+}
+
+.elemenx-meter.dial > .elemenx-meter-label {
+	font-size: var(--elemenx-font-size-small);
+	text-align: center;
 }

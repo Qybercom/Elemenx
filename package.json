@@ -61,7 +61,7 @@
 		"lint": "eslint && stylelint \"**/*.{css,html}\"",
 		"prepack": "npm run dist",
 		"preversion": "node scripts/version.js check",
-		"version": "node scripts/version.js sync && git add packages/elemenx/package.json",
+		"version": "node scripts/version.js sync && git add packages/elemenx/package.json elemenx.js",
 		"version:set": "node scripts/version.js set",
 		"version:tag": "node scripts/version.js tag"
 	},

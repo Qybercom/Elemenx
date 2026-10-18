@@ -1,13 +1,19 @@
 <div class="elemenx-ribbon" [class.collapsed]="Collapsed" [class.floating]="Collapsed && Floating" (keydown)="Key">
 	<div class="elemenx-container elemenx-ribbon-bar">
-		<button class="elemenx-ribbon-file" type="button" aria-haspopup="dialog" *if="HasBackstage" [attribute.data-keytip]="FileKeyTip || null" (click)="OpenBackstage">{{FileLabel}}</button>
-		<div class="elemenx-ribbon-quick" role="toolbar" aria-label="Quick access"><slot name="quick"></slot></div>
-		<div class="elemenx-ribbon-tabs" role="tablist" [attribute.aria-label]="Label" (keydown)="TabKey">
+		<button class="elemenx-ribbon-file" type="button" aria-haspopup="dialog" *if="HasBackstage" [attribute.data-keytip]="FileKeyTip || null" (click)="OpenBackstage">{{(FileLabel || $T('ui.ribbon.file'))}}</button>
+		<div class="elemenx-ribbon-quick" role="toolbar" [attribute.aria-label]="$T('ui.ribbon.quickAccess')"><slot name="quick"></slot></div>
+		<div class="elemenx-ribbon-tabs" role="tablist" [attribute.aria-label]="(Label || $T('ui.ribbon.label'))" (keydown)="TabKey">
 			<div class="elemenx-ribbon-tab" role="tab" *for="tab of Tabs" *key="tab.ID" [class.active]="tab.ID === Active(Tab, Tabs)" [class.contextual]="tab.Contextual" [class.disabled]="tab.Disabled" [attribute.style]="tab.Color ? '--elemenx-ribbon-context: ' + tab.Color + '; --elemenx-ribbon-context-rgb: ' + Channels(tab.Color) : null" [attribute.title]="tab.Context || null" [attribute.aria-selected]="String(tab.ID === Active(Tab, Tabs))" [attribute.aria-disabled]="tab.Disabled ? 'true' : null" [attribute.tabindex]="tab.ID === Active(Tab, Tabs) ? 0 : -1" [attribute.data-id]="tab.ID" [attribute.data-keytip]="tab.KeyTip || null" (click)="Pick" (dblclick)="Toggle">{{tab.Title}}</div>
+		</div>
+		<div class="elemenx-popup-anchor elemenx-ribbon-tabs-menu">
+			<button class="elemenx-ribbon-tabs-button" type="button" aria-haspopup="listbox" [attribute.aria-label]="(Label || $T('ui.ribbon.label')) + ': ' + TabTitle(Tab, Tabs)" [attribute.aria-expanded]="String(TabsOpen)" (click)="TabsMenu" (keydown)="TabsButtonKey"><span class="elemenx-ribbon-tabs-current">{{TabTitle(Tab, Tabs)}}</span><Icon Name="chevron-down" /></button>
+			<div class="elemenx-popup elemenx-ribbon-tabs-list" role="listbox" data-match-width="false" [attribute.aria-label]="(Label || $T('ui.ribbon.label'))" *popup="TabsOpen" (dismiss)="TabsClosed" (keydown)="TabsListKey">
+				<button class="elemenx-option" type="button" role="option" *for="tab of Tabs" *key="tab.ID" [class.selected]="tab.ID === Active(Tab, Tabs)" [class.contextual]="tab.Contextual" [class.disabled]="tab.Disabled" [disabled]="tab.Disabled" [attribute.style]="tab.Color ? '--elemenx-ribbon-context: ' + tab.Color : null" [attribute.aria-selected]="String(tab.ID === Active(Tab, Tabs))" [attribute.data-id]="tab.ID" (click)="TabChosen"><span class="elemenx-option-label">{{tab.Title}}</span><span class="elemenx-option-hint" *if="tab.Context">{{tab.Context}}</span></button>
+			</div>
 		</div>
 		<span class="elemenx-spacer"></span>
 		<div class="elemenx-container elemenx-ribbon-end"><slot name="end"></slot></div>
-		<button class="elemenx-ribbon-pin" type="button" *if="Collapsible" [attribute.aria-label]="Collapsed ? 'Pin the ribbon' : 'Collapse the ribbon'" [attribute.title]="Collapsed ? 'Pin the ribbon (Ctrl+F1)' : 'Collapse the ribbon (Ctrl+F1)'" (click)="Toggle"><Icon [name]="Collapsed ? 'chevron-down' : 'chevron-up'" /></button>
+		<button class="elemenx-ribbon-pin" type="button" *if="Collapsible" [attribute.aria-label]="Collapsed ? $T('ui.ribbon.pin') : $T('ui.ribbon.collapse')" [attribute.title]="(Collapsed ? $T('ui.ribbon.pin') : $T('ui.ribbon.collapse')) + ' (Ctrl+F1)'" (click)="Toggle"><Icon [name]="Collapsed ? 'chevron-down' : 'chevron-up'" /></button>
 	</div>
 	<div class="elemenx-ribbon-panels" [attribute.data-tab]="Active(Tab, Tabs)"><slot></slot></div>
 	<div class="elemenx-ribbon-backstage-host"><slot name="backstage"></slot></div>

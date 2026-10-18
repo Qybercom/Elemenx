@@ -15,6 +15,13 @@ Elemenx.Directive('draggable', {
 
 		data.Options = {};
 
+		/* Where a floating copy of an element goes: the shadow root of the element, so its styles reach it, or the body. */
+		function layer (node) {
+			var root = node && node.getRootNode ? node.getRootNode() : document;
+
+			return root && root.nodeType === 11 && root.host ? root : document.body;
+		}
+
 		function emit (target, name, detail) {
 			target.dispatchEvent(new CustomEvent(name, {detail: detail}));
 		}
@@ -151,7 +158,7 @@ Elemenx.Directive('draggable', {
 				marker = document.createElement('div');
 				marker.className = 'elemenx-drop-marker';
 
-				document.body.appendChild(marker);
+				layer(target).appendChild(marker);
 
 				data.Marker = marker;
 			}
@@ -216,7 +223,7 @@ Elemenx.Directive('draggable', {
 			ghost.style.height = rect.height + 'px';
 			ghost.style.transform = 'translate3d(' + rect.left + 'px, ' + rect.top + 'px, 0)';
 
-			document.body.appendChild(ghost);
+			layer(element).appendChild(ghost);
 
 			/* A selection made before the pointer moved far enough would otherwise grow under the ghost. */
 			if (window.getSelection)

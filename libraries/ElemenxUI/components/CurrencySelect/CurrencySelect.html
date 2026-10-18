@@ -1,1 +1,1 @@
-<Select [options]="Options(Codes, Locale)" [value]="Value" [placeholder]="Placeholder" [size]="Size" [shape]="Shape" [name]="Name" [disabled]="Disabled" [invalid]="Invalid" Searchable="true" (change)="Changed" />
+<Select [options]="Options(Codes, Locale)" [value]="Value" [placeholder]="(Placeholder || $T('ui.currencySelect.placeholder'))" [size]="Size" [shape]="Shape" [name]="Name" [disabled]="Disabled" [invalid]="Invalid" Searchable="true" (change)="Changed" />

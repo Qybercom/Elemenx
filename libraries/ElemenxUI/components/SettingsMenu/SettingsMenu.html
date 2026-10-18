@@ -1,0 +1,29 @@
+<nav class="elemenx-settings-menu" [class]="[Look(Variant)]" [attribute.aria-label]="Title || null" (keydown)="Key">
+	<button class="elemenx-settings-menu-back" type="button" *if="Path.length && !Query" (click)="Back"><Icon Name="chevron-left" /><span class="elemenx-settings-menu-back-label">{{Above(Items, Path)}}</span></button>
+	<div class="elemenx-settings-menu-title" role="heading" aria-level="2" *if="Parent(Items, Path, Version) || Title">{{Parent(Items, Path, Version) ? Parent(Items, Path, Version).Label : Title}}</div>
+	<label class="elemenx-settings-menu-search" *if="Searchable"><Icon Name="search" /><input class="elemenx-settings-menu-query" type="search" [value]="Query" [attribute.aria-label]="SearchLabel || $T('ui.settingsMenu.search')" [attribute.placeholder]="SearchLabel || $T('ui.settingsMenu.search')" (input)="Search" /></label>
+	<div class="elemenx-settings-menu-page" *for="page of Page(Path, Query)" *key="page" [class]="[Direction]">
+		<section class="elemenx-settings-menu-group" *for="group of Groups(Items, Path, Query, Version)" *key="group.Key">
+			<div class="elemenx-settings-menu-group-title" role="heading" aria-level="3" *if="group.Title">{{group.Title}}</div>
+			<ul class="elemenx-settings-menu-list" *if="group.Rows.length">
+				<li class="elemenx-settings-menu-item" *for="row of group.Rows" *key="row.Key">
+					<button class="elemenx-settings-menu-row" type="button" [class.danger]="!!row.Item.Danger" [class.checked]="!!row.Item.Checked" [disabled]="!!row.Item.Disabled" [attribute.role]="row.Item.Toggle ? 'switch' : null" [attribute.aria-checked]="row.Item.Toggle ? String(!!row.Item.Checked) : null" [attribute.aria-current]="row.Item.Checked && !row.Item.Toggle ? 'true' : null" [attribute.data-key]="row.Key" (click)="Press">
+						<span class="elemenx-settings-menu-tile" *if="row.Item.Icon" [style.background]="row.Item.Color || null"><Icon [name]="row.Item.Icon" /></span>
+						<span class="elemenx-settings-menu-main">
+							<span class="elemenx-settings-menu-text">
+								<span class="elemenx-settings-menu-label">{{row.Item.Label}}</span>
+								<span class="elemenx-settings-menu-description" *if="row.Where || row.Item.Description">{{row.Where || row.Item.Description}}</span>
+							</span>
+							<span class="elemenx-settings-menu-badge" *if="Shown(row.Item.Badge)">{{row.Item.Badge}}</span>
+							<span class="elemenx-settings-menu-value" *if="Shown(row.Item.Value) && !row.Item.Toggle">{{row.Item.Value}}</span>
+							<span class="elemenx-settings-menu-switch" *if="row.Item.Toggle" aria-hidden="true"><span class="elemenx-settings-menu-knob"></span></span>
+							<span class="elemenx-settings-menu-check" *if="row.Item.Checked && !row.Item.Toggle"><Icon Name="check" /></span>
+							<span class="elemenx-settings-menu-chevron" *if="row.Item.Items"><Icon Name="chevron-right" /></span>
+						</span>
+					</button>
+				</li>
+			</ul>
+			<p class="elemenx-settings-menu-note" *if="group.Note">{{group.Note}}</p>
+		</section>
+	</div>
+</nav>

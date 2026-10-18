@@ -1,0 +1,474 @@
+{
+	"ui": {
+		"achievements": {
+			"title": "Achievements",
+			"unlocked": "Achievement unlocked"
+		},
+		"calendar": {
+			"month": "Month",
+			"more": {
+				"one": "+{count} more",
+				"other": "+{count} more"
+			},
+			"today": "Today",
+			"view": "View",
+			"week": "Week"
+		},
+		"cardNumberInput": {
+			"hideNumber": "Hide number",
+			"showNumber": "Show number"
+		},
+		"chart": {
+			"label": "Chart"
+		},
+		"chat": {
+			"latest": "Latest messages",
+			"selected": "{count} selected",
+			"clearSelection": "Cancel selection"
+		},
+		"chatComposer": {
+			"attach": "Attach",
+			"expressions": "Emoji and stickers",
+			"message": "Message",
+			"placeholder": "Write a message…",
+			"send": "Send",
+			"suggestions": "Suggestions"
+		},
+		"chatMessage": {
+			"react": "Add a reaction",
+			"sticker": "Sticker",
+			"edited": "edited",
+			"views": "Seen by {count}",
+			"sending": "Sending",
+			"sent": "Sent",
+			"delivered": "Delivered",
+			"read": "Read",
+			"error": "Not sent",
+			"actions": "Message actions",
+			"summary": "Reactions and views",
+			"all": "All",
+			"viewsUnknown": "Seen by {count}",
+			"select": "Select message",
+			"nobody": "No one yet"
+		},
+		"codeEditor": {
+			"label": "Code editor",
+			"suggestions": "Suggestions",
+			"diff": "Changes",
+			"unchanged": "{count} unchanged lines"
+		},
+		"colorInput": {
+			"area": "Saturation and brightness",
+			"dropper": "Pick from the screen",
+			"hue": "Hue",
+			"opacity": "Opacity",
+			"pick": "Pick a color",
+			"title": "Color"
+		},
+		"combobox": {
+			"create": "Create",
+			"empty": "Nothing found"
+		},
+		"commandPalette": {
+			"command": "Command",
+			"empty": "No matching commands",
+			"placeholder": "Type a command or search",
+			"recentTitle": "Recent",
+			"title": "Command palette"
+		},
+		"commentCard": {
+			"like": "Like",
+			"reply": "Reply",
+			"repost": "Repost",
+			"share": "Share",
+			"verified": "Verified"
+		},
+		"common": {
+			"all": "All",
+			"back": "Back",
+			"clear": "Clear",
+			"close": "Close",
+			"collapse": "Collapse",
+			"expand": "Expand",
+			"hide": "Hide",
+			"hideCode": "Hide code",
+			"loading": "Loading",
+			"next": "Next",
+			"nothingFound": "Nothing found",
+			"previous": "Previous",
+			"remove": "Remove {name}",
+			"search": "Search",
+			"selectAll": "Select all",
+			"showCode": "Show code",
+			"showOptions": "Show the options"
+		},
+		"cityInput": {
+			"empty": "No city found",
+			"hint": "Type the name of a city",
+			"placeholder": "City"
+		},
+		"currencySelect": {
+			"placeholder": "Currency"
+		},
+		"dateInput": {
+			"calendar": "Calendar",
+			"choose": "Choose a date",
+			"clear": "Clear"
+		},
+		"dateRangeInput": {
+			"choose": "Choose a range",
+			"clear": "Clear",
+			"last30": "Last 30 days",
+			"last7": "Last 7 days",
+			"lastMonth": "Last month",
+			"nextMonth": "Next month",
+			"pickEnd": "Pick the end",
+			"placeholder": "Start – End",
+			"previousMonth": "Previous month",
+			"thisMonth": "This month",
+			"thisYear": "This year"
+		},
+		"dialPad": {
+			"call": "Call",
+			"erase": "Erase",
+			"hold": "hold for {value}",
+			"label": "Dial pad",
+			"number": "Number"
+		},
+		"dialogs": {
+			"cancel": "Cancel",
+			"ok": "OK"
+		},
+		"emojiPicker": {
+			"group": {
+				"activities": "Activities",
+				"component": "Components",
+				"flags": "Flags",
+				"food": "Food & drink",
+				"nature": "Animals & nature",
+				"objects": "Objects",
+				"people": "People & body",
+				"recent": "Recently used",
+				"search": "Search results",
+				"smileys": "Smileys & emotion",
+				"symbols": "Symbols",
+				"travel": "Travel & places"
+			},
+			"groups": "Groups",
+			"label": "Emoji",
+			"nothing": "No emoji found",
+			"placeholder": "Search emoji",
+			"searchLabel": "Search emoji",
+			"skinTone": "Skin tone",
+			"tone0": "No skin tone",
+			"tone1": "Light skin tone",
+			"tone2": "Medium-light skin tone",
+			"tone3": "Medium skin tone",
+			"tone4": "Medium-dark skin tone",
+			"tone5": "Dark skin tone"
+		},
+		"expressionPicker": {
+			"emoji": "Emoji",
+			"kind": "Kind",
+			"stickers": "Stickers"
+		},
+		"fileUpload": {
+			"label": "Drop files here or click to browse"
+		},
+		"formats": {
+			"decimal": "Enter a number, like 12.5",
+			"email": "Enter an email address, like name@example.com",
+			"iban": "Enter an IBAN, like DE89 3704 0044 0532 0130 00",
+			"ibanCheck": "This IBAN has a mistake: check its characters",
+			"integer": "Enter a whole number",
+			"ipv4": "Enter an IPv4 address, like 192.168.0.1",
+			"ipv6": "Enter an IPv6 address, like 2001:db8::1",
+			"max": "Enter {max} or less",
+			"min": "Enter {min} or more",
+			"postalCode": "Enter a postal code",
+			"postalCodeOf": "Enter a postal code of {country}",
+			"semver": "Enter a version, like 1.4.2",
+			"url": "Enter a web address, like https://example.com",
+			"uuid": "Enter a UUID, like 123e4567-e89b-12d3-a456-426614174000"
+		},
+		"gallery": {
+			"label": "Gallery",
+			"previous": "Previous picture",
+			"next": "Next picture",
+			"pause": "Pause",
+			"play": "Play",
+			"pictures": "Pictures"
+		},
+		"game": {
+			"health": "Health",
+			"mana": "Mana",
+			"experience": "Experience",
+			"stamina": "Stamina",
+			"emptySlot": "Empty slot",
+			"cooldown": "ready in {seconds} s",
+			"inventory": "Inventory",
+			"dialogue": "Dialogue",
+			"continue": "Continue",
+			"menu": "Menu",
+			"screen": "Game screen",
+			"button": "button {button}",
+			"common": "Common",
+			"uncommon": "Uncommon",
+			"rare": "Rare",
+			"epic": "Epic",
+			"legendary": "Legendary",
+			"tabs": "Sections",
+			"quests": "Quests",
+			"noQuests": "No quests",
+			"level": "Level {level}",
+			"questDone": "Done",
+			"questFailed": "Failed",
+			"objectives": "Objectives",
+			"rewards": "Rewards",
+			"track": "Track",
+			"untrack": "Stop tracking",
+			"map": "Map",
+			"marker": "Marker",
+			"zoomIn": "Zoom in",
+			"zoomOut": "Zoom out",
+			"leaderboard": "Leaderboard",
+			"player": "Player",
+			"score": "Score",
+			"rose": "up {count}",
+			"fell": "down {count}"
+		},
+		"input": {
+			"hidePassword": "Hide password",
+			"showPassword": "Show password"
+		},
+		"masterDetail": {
+			"empty": "Select an item"
+		},
+		"multiSelect": {
+			"empty": "Nothing found",
+			"placeholder": "Select…"
+		},
+		"navList": {
+			"label": "Navigation"
+		},
+		"numberInput": {
+			"decrease": "Decrease",
+			"increase": "Increase"
+		},
+		"otpInput": {
+			"label": "One-time code"
+		},
+		"mixer": {
+			"label": "Mixer",
+			"master": "Master",
+			"mute": "Mute",
+			"pan": "Pan",
+			"solo": "Solo",
+			"volume": "Volume"
+		},
+		"keyboard": {
+			"label": "Keyboard"
+		},
+		"piano": {
+			"label": "Piano"
+		},
+		"pip": {
+			"away": "Shown in a picture-in-picture window",
+			"back": "Bring it back"
+		},
+		"pagination": {
+			"first": "First page",
+			"label": "Pages",
+			"last": "Last page",
+			"next": "Next page",
+			"previous": "Previous page",
+			"range": "{from}–{to} of {count}",
+			"rowsPerPage": "Rows per page",
+			"size": "{size} / page"
+		},
+		"phoneInput": {
+			"search": "Search country or code"
+		},
+		"planCard": {
+			"action": "Choose plan",
+			"current": "Current plan",
+			"excluded": "Not included",
+			"free": "Free",
+			"included": "Included",
+			"perMonth": "/ month",
+			"perYear": "/ year",
+			"selected": "Selected"
+		},
+		"planPicker": {
+			"action": "Choose plan",
+			"label": "Plans",
+			"monthly": "Monthly",
+			"yearly": "Yearly"
+		},
+		"postCard": {
+			"comment": "Comments",
+			"like": "Like",
+			"readTime": {
+				"one": "{count} min read",
+				"other": "{count} min read"
+			},
+			"share": "Share"
+		},
+		"productCard": {
+			"add": "Add to cart",
+			"color": "Color",
+			"favorite": "Favorite",
+			"image": "Image",
+			"images": "Images",
+			"inCart": "In the cart",
+			"rating": "Rating",
+			"size": "Size"
+		},
+		"profileCard": {
+			"follow": "Follow",
+			"following": "Following",
+			"message": "Message",
+			"verified": "Verified"
+		},
+		"rating": {
+			"label": "Rating"
+		},
+		"ribbon": {
+			"collapse": "Collapse the ribbon",
+			"file": "File",
+			"label": "Ribbon",
+			"pin": "Pin the ribbon",
+			"quickAccess": "Quick access"
+		},
+		"ribbonBackstage": {
+			"title": "File"
+		},
+		"ribbonButton": {
+			"more": "More {name}"
+		},
+		"ribbonGallery": {
+			"label": "Gallery",
+			"nextRow": "Next row",
+			"previousRow": "Previous row"
+		},
+		"richEditor": {
+			"label": "Text editor",
+			"placeholder": "Write something…",
+			"formatting": "Formatting",
+			"bold": "Bold",
+			"italic": "Italic",
+			"underline": "Underline",
+			"strike": "Strikethrough",
+			"code": "Code",
+			"link": "Link",
+			"linkPlaceholder": "Paste a link and press Enter",
+			"heading": "Heading",
+			"quote": "Quote",
+			"clear": "Clear formatting"
+		},
+		"select": {
+			"empty": "Nothing found",
+			"placeholder": "Select…"
+		},
+		"settings": {
+			"path": "Path"
+		},
+		"settingsMenu": {
+			"back": "Back",
+			"nothing": "No settings found",
+			"search": "Search settings"
+		},
+		"sparkline": {
+			"label": "Trend"
+		},
+		"spinner": {
+			"label": "Loading"
+		},
+		"stickerPicker": {
+			"favorites": "Favorites",
+			"label": "Stickers",
+			"noFavorites": "Star a sticker to keep it here",
+			"noPacks": "No sticker packs yet",
+			"noRecent": "The stickers you send show here",
+			"nothing": "No stickers found",
+			"packs": "Packs",
+			"placeholder": "Search stickers",
+			"recent": "Recently sent",
+			"searchLabel": "Search stickers",
+			"star": "Add to favorites",
+			"unstar": "Remove from favorites"
+		},
+		"table": {
+			"empty": "No data",
+			"filter": "Filter {name}",
+			"selectAll": "Select all rows",
+			"selectRow": "Select row"
+		},
+		"tabs": {
+			"close": "Close tab"
+		},
+		"tagInput": {
+			"placeholder": "Add a tag"
+		},
+		"terminal": {
+			"command": "Command",
+			"running": "Running",
+			"title": "Terminal"
+		},
+		"theme": {
+			"contrast": "High contrast",
+			"darcula": "Darcula",
+			"default": "Default",
+			"soft": "Soft",
+			"fantasy": "Fantasy",
+			"scifi": "Sci-fi"
+		},
+		"themeSwitch": {
+			"dark": "Dark theme",
+			"light": "Light theme",
+			"system": "System theme",
+			"title": "Theme"
+		},
+		"tileGrid": {
+			"dropNewGroup": "Drop here to start a group",
+			"groupWidth": "Group width",
+			"newGroupTitle": "New group"
+		},
+		"timeInput": {
+			"choose": "Choose a time",
+			"done": "OK",
+			"hours": "Hours",
+			"minutes": "Minutes",
+			"seconds": "Seconds",
+			"title": "Time"
+		},
+		"toastHost": {
+			"title": "Notifications"
+		},
+		"tour": {
+			"back": "Back",
+			"done": "Done",
+			"next": "Next",
+			"skip": "Skip"
+		},
+		"tree": {
+			"empty": "Nothing found",
+			"label": "Tree"
+		},
+		"virtualList": {
+			"empty": "No items",
+			"label": "List"
+		},
+		"window": {
+			"handle": "window",
+			"keys": "the arrows move the window, Shift with the arrows resizes it",
+			"minimize": "Minimize",
+			"unfold": "Unfold",
+			"maximize": "Maximize",
+			"restore": "Restore",
+			"close": "Close",
+			"popOut": "Picture in picture",
+			"popIn": "Back into the page"
+		}
+	}
+}

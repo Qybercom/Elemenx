@@ -1,9 +1,9 @@
 <div class="elemenx-tree">
 	<div class="elemenx-input small elemenx-tree-search" *if="Searchable">
 		<Icon Name="search" />
-		<input class="elemenx-input-control" type="search" placeholder="Search" autocomplete="off" [value]="Filter" (input)="Search" />
+		<input class="elemenx-input-control" type="search" [attribute.placeholder]="$T('ui.common.search')" autocomplete="off" [value]="Filter" (input)="Search" />
 	</div>
-	<div class="elemenx-tree-rows" role="tree" [attribute.aria-label]="Label" [attribute.aria-multiselectable]="Checkable ? 'true' : null">
+	<div class="elemenx-tree-rows" role="tree" [attribute.aria-label]="(Label || $T('ui.tree.label'))" [attribute.aria-multiselectable]="Checkable ? 'true' : null">
 		<div class="elemenx-tree-row" role="treeitem" *for="row of Rows(Items, Expanded, Filter, Checked)" *key="row.Item.ID" [class.active]="String(row.Item.ID) === String(Value)" [class.disabled]="!!row.Item.Disabled" [style.--elemenx-tree-depth]="row.Depth" [attribute.tabindex]="String(row.Item.ID) === Current(Rows(Items, Expanded, Filter, Checked), Focused, Value) ? 0 : -1" [attribute.aria-level]="row.Depth + 1" [attribute.aria-expanded]="row.Group ? String(row.Open) : null" [attribute.aria-selected]="Checkable ? null : String(String(row.Item.ID) === String(Value))" [attribute.aria-checked]="Checkable ? row.Check : null" [attribute.aria-disabled]="row.Item.Disabled ? 'true' : null" [attribute.aria-busy]="IsLoading(Loading, row.Item) ? 'true' : null" [attribute.data-id]="row.Item.ID" (click)="Pick" (keydown)="Key">
 			<span class="elemenx-tree-twisty" (click)="Twist"><Icon *if="row.Group && !IsLoading(Loading, row.Item)" [name]="row.Open ? 'chevron-down' : 'chevron-right'" Size="12" /><Icon *if="IsLoading(Loading, row.Item)" Name="loader" Size="12" Spin="true" /></span>
 			<span class="elemenx-check" *if="Checkable" [class.checked]="row.Check === 'true'" [class.indeterminate]="row.Check === 'mixed'" (click)="Tick"><span class="elemenx-check-box"><Icon Name="check" Size="12" /><Icon Name="remove" Size="12" /></span></span>
@@ -11,6 +11,6 @@
 			<span class="elemenx-tree-label">{{row.Item.Label}}</span>
 			<span class="elemenx-badge" *if="row.Item.Badge != null && row.Item.Badge !== ''">{{row.Item.Badge}}</span>
 		</div>
-		<div class="elemenx-popup-empty" *if="!Rows(Items, Expanded, Filter, Checked).length">{{Empty}}</div>
+		<div class="elemenx-popup-empty" *if="!Rows(Items, Expanded, Filter, Checked).length">{{(Empty || $T('ui.tree.empty'))}}</div>
 	</div>
 </div>

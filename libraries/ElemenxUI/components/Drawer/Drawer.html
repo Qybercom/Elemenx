@@ -6,7 +6,7 @@
 			<p class="elemenx-caption" *if="Description">{{Description}}</p>
 		</div>
 		<span class="elemenx-drawer-actions"><slot name="actions"></slot></span>
-		<Button *if="Closable" Icon="close" Title="Close" Variant="ghost" Size="small" (click)="Close" />
+		<Button *if="Closable" Icon="close" [title]="$T('ui.common.close')" Variant="ghost" Size="small" (click)="Close" />
 	</header>
 	<div class="elemenx-drawer-body" [class.padded]="Padded"><slot></slot></div>
 	<footer class="elemenx-drawer-footer"><slot name="footer"></slot></footer>

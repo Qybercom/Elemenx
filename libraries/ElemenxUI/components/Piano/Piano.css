@@ -1,0 +1,92 @@
+/* The keys of a piano: the white ones in a row, the black ones over the gaps between them. */
+.elemenx-piano {
+	--elemenx-piano-height: 140px;
+	position: relative;
+	display: flex;
+	width: 100%;
+	height: var(--elemenx-piano-height);
+	padding: 0;
+	background: var(--elemenx-text);
+	border: 2px solid var(--elemenx-text);
+	border-radius: var(--elemenx-radius) var(--elemenx-radius) var(--elemenx-radius-large) var(--elemenx-radius-large);
+	cursor: pointer;
+	touch-action: none;
+	user-select: none;
+	outline: none;
+}
+
+.elemenx-piano.small {
+	--elemenx-piano-height: 96px;
+}
+
+.elemenx-piano.large {
+	--elemenx-piano-height: 200px;
+}
+
+.elemenx-piano:focus-visible {
+	box-shadow: 0 0 0 2px var(--elemenx-focus);
+}
+
+.elemenx-piano.disabled {
+	opacity: 0.48;
+	cursor: default;
+}
+
+.elemenx-piano-key {
+	display: flex;
+	align-items: flex-end;
+	justify-content: center;
+}
+
+.elemenx-piano-key.white {
+	flex: 1;
+	min-width: 0;
+	padding-bottom: 6px;
+	background: var(--elemenx-surface);
+	border-right: 1px solid var(--elemenx-border-strong);
+	border-radius: 0 0 var(--elemenx-radius) var(--elemenx-radius);
+}
+
+.elemenx-piano-key.white:last-child {
+	border-right: 0;
+}
+
+.elemenx-piano-key.black {
+	position: absolute;
+	z-index: 1;
+	top: 0;
+	height: 62%;
+	background: var(--elemenx-text);
+	border: 1px solid var(--elemenx-text);
+	border-radius: 0 0 var(--elemenx-radius-small) var(--elemenx-radius-small);
+	box-shadow: inset 0 -4px 0 rgba(var(--elemenx-text-rgb), 0.4);
+}
+
+/* A marked note (a scale, a chord) in a tint of the accent; a played one in the accent. */
+.elemenx-piano-key.white.marked {
+	background: linear-gradient(rgba(var(--elemenx-accent-rgb), 0.24), rgba(var(--elemenx-accent-rgb), 0.24)), var(--elemenx-surface);
+}
+
+.elemenx-piano-key.black.marked {
+	box-shadow: inset 0 -12px 0 rgba(var(--elemenx-accent-rgb), 0.72);
+}
+
+.elemenx-piano-key.pressed {
+	background: var(--elemenx-accent);
+	border-color: var(--elemenx-accent);
+}
+
+.elemenx-piano-key.black.pressed {
+	box-shadow: none;
+}
+
+.elemenx-piano-name {
+	color: var(--elemenx-text-muted);
+	font-size: 10px;
+	line-height: 1;
+	pointer-events: none;
+}
+
+.elemenx-piano-key.pressed .elemenx-piano-name {
+	color: var(--elemenx-accent-text);
+}

@@ -34,14 +34,14 @@ Elemenx.Component('ProductCard', {
 	Variant: 'outlined',
 	Href: '',
 	Shown: 0,
-	AddLabel: 'Add to cart',
-	InCartLabel: 'In the cart',
-	FavoriteLabel: 'Favorite',
-	RatingLabel: 'Rating',
-	ColorLabel: 'Color',
-	SizeLabel: 'Size',
-	ImagesLabel: 'Images',
-	ImageLabel: 'Image',
+	AddLabel: '',
+	InCartLabel: '',
+	FavoriteLabel: '',
+	RatingLabel: '',
+	ColorLabel: '',
+	SizeLabel: '',
+	ImagesLabel: '',
+	ImageLabel: '',
 
 	$OnCreate: function () {
 		var format = this.$Service('Format');

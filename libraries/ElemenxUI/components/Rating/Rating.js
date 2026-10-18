@@ -15,7 +15,7 @@ Elemenx.Component('Rating', {
 	Disabled: false,
 	Icon: 'star',
 	Size: 'medium',
-	Label: 'Rating',
+	Label: '',
 	Hover: -1,
 
 	$OnCreate: function () {
@@ -89,11 +89,11 @@ Elemenx.Component('Rating', {
 
 		if (this.ReadOnly || this.Disabled) return;
 
-		if (event.key === 'ArrowRight' || event.key === 'ArrowUp') this.Set(value + step);
-		else if (event.key === 'ArrowLeft' || event.key === 'ArrowDown') this.Set(value - step);
-		else if (event.key === 'Home') this.Set(0);
-		else if (event.key === 'End') this.Set(Number(this.Max));
-		else if (/^[0-9]$/.test(event.key)) this.Set(Number(event.key));
+		if (Elemenx.Locale.Key(event) === 'ArrowRight' || Elemenx.Locale.Key(event) === 'ArrowUp') this.Set(value + step);
+		else if (Elemenx.Locale.Key(event) === 'ArrowLeft' || Elemenx.Locale.Key(event) === 'ArrowDown') this.Set(value - step);
+		else if (Elemenx.Locale.Key(event) === 'Home') this.Set(0);
+		else if (Elemenx.Locale.Key(event) === 'End') this.Set(Number(this.Max));
+		else if (/^[0-9]$/.test(Elemenx.Locale.Key(event))) this.Set(Number(Elemenx.Locale.Key(event)));
 		else return;
 
 		event.preventDefault();

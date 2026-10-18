@@ -1,0 +1,142 @@
+/* A dial pad: the number over a grid of round keys, the key that calls under them. */
+.elemenx-dial-pad {
+	display: inline-flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 16px;
+	width: 100%;
+	max-width: 280px;
+	user-select: none;
+}
+
+.elemenx-dial-pad.disabled {
+	opacity: 0.48;
+}
+
+.elemenx-dial-pad-display {
+	position: relative;
+	display: flex;
+	align-items: center;
+	width: 100%;
+	min-height: 48px;
+}
+
+/* The number keeps to the middle: the key that erases stands over the end of the field. */
+.elemenx-dial-pad-input {
+	width: 100%;
+	min-width: 0;
+	padding: 0 40px;
+	background: transparent;
+	border: 0;
+	color: var(--elemenx-text);
+	font: inherit;
+	font-size: 28px;
+	font-variant-numeric: tabular-nums;
+	letter-spacing: 0.04em;
+	text-align: center;
+	outline: none;
+}
+
+.elemenx-dial-pad-input:focus-visible {
+	box-shadow: inset 0 -2px 0 var(--elemenx-focus);
+}
+
+.elemenx-dial-pad-erase {
+	position: absolute;
+	inset-inline-end: 0;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 36px;
+	height: 36px;
+	padding: 0;
+	background: none;
+	border: 0;
+	border-radius: 50%;
+	color: var(--elemenx-text-muted);
+	cursor: pointer;
+}
+
+.elemenx-dial-pad-erase:hover {
+	background: var(--elemenx-surface-hover);
+	color: var(--elemenx-text);
+}
+
+.elemenx-dial-pad-keys {
+	display: grid;
+	gap: 12px 20px;
+	width: 100%;
+}
+
+.elemenx-dial-pad-key {
+	display: inline-flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	justify-self: center;
+	width: 100%;
+	max-width: 72px;
+	aspect-ratio: 1;
+	padding: 0;
+	background: var(--elemenx-surface-hover);
+	border: 0;
+	border-radius: 50%;
+	color: var(--elemenx-text);
+	font: inherit;
+	cursor: pointer;
+	touch-action: manipulation;
+	transition: background var(--elemenx-duration) var(--elemenx-easing);
+}
+
+.elemenx-dial-pad-key:hover {
+	background: linear-gradient(rgba(var(--elemenx-text-rgb), 0.06), rgba(var(--elemenx-text-rgb), 0.06)), var(--elemenx-surface-hover);
+}
+
+.elemenx-dial-pad-key:active {
+	background: linear-gradient(rgba(var(--elemenx-text-rgb), 0.16), rgba(var(--elemenx-text-rgb), 0.16)), var(--elemenx-surface-hover);
+}
+
+.elemenx-dial-pad-key:focus-visible,
+.elemenx-dial-pad-erase:focus-visible,
+.elemenx-dial-pad-call:focus-visible {
+	outline: 2px solid var(--elemenx-focus);
+	outline-offset: 2px;
+}
+
+.elemenx-dial-pad-key[disabled],
+.elemenx-dial-pad-erase[disabled] {
+	cursor: default;
+}
+
+.elemenx-dial-pad-digit {
+	font-size: 26px;
+	line-height: 1.1;
+}
+
+.elemenx-dial-pad-sub {
+	min-height: 1em;
+	color: var(--elemenx-text-muted);
+	font-size: 10px;
+	font-weight: var(--elemenx-font-weight-strong);
+	letter-spacing: 0.12em;
+	line-height: 1;
+}
+
+.elemenx-dial-pad-call {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 64px;
+	height: 64px;
+	padding: 0;
+	background: var(--elemenx-success);
+	border: 0;
+	border-radius: 50%;
+	color: var(--elemenx-accent-text);
+	cursor: pointer;
+}
+
+.elemenx-dial-pad-call[disabled] {
+	opacity: 0.48;
+	cursor: default;
+}

@@ -2,15 +2,15 @@
 	<div class="elemenx-input elemenx-select-trigger" role="combobox" aria-haspopup="listbox" [attribute.tabindex]="Disabled ? null : 0" [class]="[Size || 'medium', Shape === 'round' ? 'round' : '', Invalid ? 'invalid' : '', Disabled ? 'disabled' : '', Open ? 'open' : '']" [attribute.aria-expanded]="String(Open)" [attribute.aria-disabled]="Disabled ? 'true' : null" (click)="Toggle" (keydown)="Key">
 		<Icon *if="Icon" [name]="Icon" />
 		<Icon *if="!Icon && Find(Options, Value) && Find(Options, Value).Icon" [name]="(Find(Options, Value) || {}).Icon" />
-		<span class="elemenx-select-value" [class.placeholder]="!Find(Options, Value)">{{Find(Options, Value) ? Find(Options, Value).Label : Placeholder}}</span>
-		<button class="elemenx-input-action" type="button" tabindex="-1" aria-label="Clear" *if="Clearable && Find(Options, Value) && !Disabled" (click)="Clear"><Icon Name="close" /></button>
+		<span class="elemenx-select-value" [class.placeholder]="!Find(Options, Value)">{{Find(Options, Value) ? Find(Options, Value).Label : (Placeholder || $T('ui.select.placeholder'))}}</span>
+		<button class="elemenx-input-action" type="button" tabindex="-1" [attribute.aria-label]="$T('ui.common.clear')" *if="Clearable && Find(Options, Value) && !Disabled" (click)="Clear"><Icon Name="close" /></button>
 		<Icon Name="chevron-down" />
 	</div>
 	<input type="hidden" *if="Name" [attribute.name]="Name" [value]="Value == null ? '' : Value" />
 	<div class="elemenx-popup" role="listbox" *popup="Open" (dismiss)="Dismissed" (keydown)="Key">
 		<div class="elemenx-input small elemenx-popup-search" *if="Searchable">
 			<Icon Name="search" />
-			<input class="elemenx-input-control" type="text" placeholder="Search" autocomplete="off" [value]="Filter" (input)="Search" />
+			<input class="elemenx-input-control" type="text" [attribute.placeholder]="$T('ui.common.search')" autocomplete="off" [value]="Filter" (input)="Search" />
 		</div>
 		<div class="elemenx-popup-entry" *for="option of Visible(Options, Filter)" *key="String(option.Value)">
 			<div class="elemenx-popup-group" *if="option.Group && ($index === 0 || Visible(Options, Filter)[$index - 1].Group !== option.Group)">{{option.Group}}</div>
@@ -21,6 +21,6 @@
 				<Icon *if="option.Value === Value" Name="check" />
 			</div>
 		</div>
-		<div class="elemenx-popup-empty" *if="!Visible(Options, Filter).length">{{Empty}}</div>
+		<div class="elemenx-popup-empty" *if="!Visible(Options, Filter).length">{{(Empty || $T('ui.select.empty'))}}</div>
 	</div>
 </div>

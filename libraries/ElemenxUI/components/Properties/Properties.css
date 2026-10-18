@@ -1,0 +1,14 @@
+/* The list takes the width of its container, so the values line up at its end. */
+.elemenx-properties {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+	gap: var(--elemenx-properties-gap);
+	width: 100%;
+	min-width: 0;
+	margin: 0;
+}
+
+.elemenx-properties.double {
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	column-gap: var(--elemenx-properties-pair-gap);
+}

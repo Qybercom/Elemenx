@@ -21,7 +21,7 @@ export default defineConfig({
 	},
 	webServer: [
 		{
-			command: 'node ./node_modules/vite/bin/vite.js --host 127.0.0.1 --port 4273 --strictPort --configLoader bundle',
+			command: 'node ./node_modules/vite/bin/vite.js --host 127.0.0.1 --port 4273 --strictPort --configLoader bundle --config vite.e2e.config.mjs',
 			url: 'http://127.0.0.1:4273/tests/history/fixture.html',
 			reuseExistingServer: false,
 			stdout: 'pipe',

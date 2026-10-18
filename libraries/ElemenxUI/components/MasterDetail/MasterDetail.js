@@ -7,7 +7,7 @@
 Elemenx.Component('MasterDetail', {
 	$TemplateURL: 'MasterDetail.html',
 	$StyleURL: 'MasterDetail.css',
-	Empty: 'Select an item',
+	Empty: '',
 	EmptyIcon: 'list',
 
 	Back: function () {

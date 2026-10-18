@@ -101,13 +101,13 @@
 }
 
 .elemenx-table th:last-child > .elemenx-resize-handle.right {
-	right: 0;
+	inset-inline-end: 0;
 	width: 4px;
 }
 
 .elemenx-table th:last-child > .elemenx-resize-handle.right::after {
-	left: auto;
-	right: 0;
+	inset-inline-start: auto;
+	inset-inline-end: 0;
 }
 
 .elemenx-table-box {
@@ -152,8 +152,8 @@
 	display: inline-flex;
 	align-items: center;
 	vertical-align: middle;
-	margin-left: calc(var(--elemenx-table-depth, 0) * 20px);
-	margin-right: 4px;
+	margin-inline-start: calc(var(--elemenx-table-depth, 0) * 20px);
+	margin-inline-end: 4px;
 }
 
 .elemenx-table-twisty {

@@ -79,11 +79,11 @@
 }
 
 .elemenx-workspace-stripe.left {
-	border-right: 1px solid var(--elemenx-border);
+	border-inline-end: 1px solid var(--elemenx-border);
 }
 
 .elemenx-workspace-stripe.right {
-	border-left: 1px solid var(--elemenx-border);
+	border-inline-start: 1px solid var(--elemenx-border);
 }
 
 .elemenx-workspace-stripe .elemenx-divider {
@@ -104,11 +104,11 @@
 }
 
 .elemenx-workspace-panel.left {
-	border-right: 1px solid var(--elemenx-border);
+	border-inline-end: 1px solid var(--elemenx-border);
 }
 
 .elemenx-workspace-panel.right {
-	border-left: 1px solid var(--elemenx-border);
+	border-inline-start: 1px solid var(--elemenx-border);
 }
 
 .elemenx-workspace-panel.bottom {

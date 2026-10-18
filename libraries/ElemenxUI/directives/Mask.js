@@ -141,7 +141,7 @@ Elemenx.Directive('mask', {
 		}
 
 		function focused () {
-			return document.activeElement === element;
+			return element.getRootNode().activeElement === element;
 		}
 
 		/* The guide shows only while the field is focused or holds characters; an empty idle field shows its placeholder. */

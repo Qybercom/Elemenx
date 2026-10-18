@@ -1,0 +1,18 @@
+/*
+ * The dialogs of the Dialogs Service show in the top layer; their host stays out of the layout of the page, so a
+ * dialog that comes or goes lays out nothing of a large page around it.
+ */
+.elemenx-dialog-host {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 0;
+	height: 0;
+	overflow: visible;
+	contain: layout style size;
+}
+
+.elemenx-dialog-host-item,
+.elemenx-dialog-host-actions {
+	display: contents;
+}

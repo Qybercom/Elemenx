@@ -1,0 +1,13 @@
+<div class="elemenx-knob" [class]="[Size || 'medium', Disabled ? 'disabled' : '', Active ? 'active' : '']">
+	<div class="elemenx-knob-dial" role="slider" [attribute.tabindex]="Disabled ? null : 0" [attribute.aria-label]="Label || null" [attribute.aria-valuemin]="Min" [attribute.aria-valuemax]="Max" [attribute.aria-valuenow]="Value" [attribute.aria-valuetext]="Value + Unit" [attribute.aria-disabled]="Disabled ? 'true' : null" (pointerdown)="Down" (pointermove)="Move" (pointerup)="Up" (pointercancel)="Up" (keydown)="Key" (wheel)="Wheel" (dblclick)="Reset">
+		<svg class="elemenx-knob-face" viewBox="0 0 120 120" aria-hidden="true">
+			<path class="elemenx-knob-ring" d="M24.64 95.36A50 50 0 1 1 95.36 95.36"></path>
+			<path class="elemenx-knob-arc" d="M24.64 95.36A50 50 0 1 1 95.36 95.36" pathLength="100" [attribute.stroke-dasharray]="Dash(Value, Origin)"></path>
+			<line class="elemenx-knob-tick" *for="tick of Ticked(Ticks)" [attribute.x1]="tick.X1" [attribute.y1]="tick.Y1" [attribute.x2]="tick.X2" [attribute.y2]="tick.Y2"></line>
+			<circle class="elemenx-knob-cap" cx="60" cy="60" r="36"></circle>
+			<line class="elemenx-knob-pointer" x1="50.1" y1="69.9" x2="38.79" y2="81.21" [attribute.transform]="Turn(Value)"></line>
+		</svg>
+		<span class="elemenx-knob-value" *if="ShowValue">{{Value}}{{Unit}}</span>
+	</div>
+	<span class="elemenx-knob-label" *if="Label">{{Label}}</span>
+</div>

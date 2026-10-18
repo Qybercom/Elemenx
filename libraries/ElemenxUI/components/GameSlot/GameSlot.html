@@ -1,0 +1,12 @@
+<button class="elemenx-game-slot" type="button" [class]="[Size || 'medium', Rarity || '', Active ? 'active' : '', Cooling ? 'cooling' : '', !Icon && !Image ? 'empty' : 'filled'].concat(ClassList(Classes))" [disabled]="Disabled" [attribute.aria-label]="(Label || $T('ui.game.emptySlot')) + (Cooling ? ', ' + $T('ui.game.cooldown', {seconds: Seconds}) : '')" [attribute.aria-pressed]="Active ? 'true' : null" [attribute.aria-disabled]="Cooling ? 'true' : null" [attribute.aria-keyshortcuts]="Key || null" [attribute.title]="Label || null" *draggable="{Data: {Item: Held(Data, Icon, Image, Label, Count, Rarity, Color), From: Place(Key, Group)}, Type: 'game-item', Disabled: !Draggable || (!Icon && !Image)}" *droppable="{Accept: Accept || [], Disabled: !Accept || !Accept.length}" (click)="Pressed" (dropped)="Dropped" (mouseenter)="ShowCard" (mouseleave)="HideCard" (focus)="ShowCard" (blur)="HideCard">
+	<span class="elemenx-game-slot-glass" *if="Icon || Image" [attribute.style]="'background: ' + ItemColor(Color, Rarity) + ';'"></span>
+	<span class="elemenx-game-slot-gloss" *if="Icon || Image"></span>
+	<img class="elemenx-game-slot-image" *if="Image" [src]="Image" alt="" draggable="false" />
+	<Icon *if="Icon && !Image" [name]="Icon" [size]="Size === 'small' ? 18 : Size === 'large' ? 32 : 24" />
+	<span class="elemenx-game-slot-sweep" *if="Cooling"></span>
+	<span class="elemenx-game-slot-timer" *if="Cooling">{{Seconds}}</span>
+	<span class="elemenx-game-slot-key" *if="Key">{{KeyLabel(Key)}}</span>
+	<span class="elemenx-game-slot-badge" *if="Badge && !Key">{{Badge}}</span>
+	<span class="elemenx-game-slot-count" *if="Count > 1">{{Count}}</span>
+	<GameItemCard [item]="CardOpen ? Data : null" [place]="CardStyle" />
+</button>

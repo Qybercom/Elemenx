@@ -4,6 +4,14 @@
 		<h1 class="elemenx-title">Elemenx UI</h1>
 		<p class="elemenx-subtitle">The executable catalogue of the ElemenxUI library. The theme follows the system unless a policy is chosen.</p>
 		<div class="ui-kit-row"><ThemeSwitch /><span class="elemenx-caption">System, light or dark: remembered in localStorage</span></div>
+		<div class="ui-kit-row">
+			<ButtonGroup Attached="true" Label="Language">
+				<Button Label="English" Size="small" [pressed]="UILanguage === 'en'" (click)="English" />
+				<Button Label="Русский" Size="small" [pressed]="UILanguage === 'ru'" (click)="Russian" />
+				<Button Label="العربية" Size="small" [pressed]="UILanguage === 'ar'" (click)="Arabic" />
+			</ButtonGroup>
+			<span class="elemenx-caption">The phrases of ElemenxUI: Elemenx.Locale and $T(key); Arabic has no dictionary, its page reads from right to left</span>
+		</div>
 	</header>
 
 	<Section Title="Layout primitives" Note="elemenx-screen · elemenx-container · elemenx-column">
@@ -89,12 +97,96 @@
 		</Section>
 	</Section>
 
+	<Section Title="Block" Note="A frame with its title on a band set into it">
+		<div class="ui-kit-grid">
+			<Block Title="Reactor" Note="Ring B">
+				<Button slot="actions" Icon="refresh" Title="Reset" Variant="ghost" Size="small" />
+				<Meter Value="64" Label="Load" Unit="%" />
+				<Meter Value="91" Low="60" High="85" Optimum="0" Label="Heat" Unit="%" />
+			</Block>
+			<Block Title="Shields" Note="Deck 4" HeaderShape="trapezoid">
+				<Button slot="actions" Icon="refresh" Title="Recharge" Variant="ghost" Size="small" />
+				<p class="elemenx-text small">HeaderShape="trapezoid" hangs the title from the frame, as wide as its text.</p>
+				<Meter Value="72" Label="Charge" Unit="%" />
+			</Block>
+			<Block Title="Compact" Padding="compact">
+				<p class="elemenx-text small">Padding="compact" keeps the band and the frame closer to the content.</p>
+				<Properties Columns="2" Label="Service">
+					<Property Label="Uptime" Value="99.9" Unit="%" Tone="success" />
+					<Property Label="Errors" Value="3" Tone="danger" />
+					<Property Label="Region" Value="eu-west" />
+					<Property Label="Version"><code>v2.32</code></Property>
+				</Properties>
+			</Block>
+		</div>
+	</Section>
+
+	<Section Title="Properties" Note="A name and its value set apart, in one column or two">
+		<div class="ui-kit-grid">
+			<div class="ui-kit-stack">
+				<h5>One column</h5>
+				<Properties Label="Server">
+					<Property Label="Host" Value="api.example.com" />
+					<Property Label="Uptime" Value="99.98" Unit="%" Tone="success" />
+					<Property Label="Latency" Value="42" Unit=" ms" />
+					<Property Label="Errors today" Value="3" Tone="danger" />
+				</Properties>
+			</div>
+			<div class="ui-kit-stack">
+				<h5>Two columns and tones</h5>
+				<Properties Columns="2" Label="Tones">
+					<Property Label="Success" Value="Passed" Tone="success" />
+					<Property Label="Danger" Value="Failed" Tone="danger" />
+					<Property Label="Warning" Value="Slow" Tone="warning" />
+					<Property Label="Accent" Value="New" Tone="accent" />
+				</Properties>
+			</div>
+			<div class="ui-kit-stack">
+				<h5>A value of its own</h5>
+				<Properties Label="Release">
+					<Property Label="Version"><code>v2.32.0</code></Property>
+					<Property Label="Status"><span class="elemenx-badge success">Live</span></Property>
+					<Property Label="Owner"><a href="#owner">Ada Lovelace</a></Property>
+				</Properties>
+			</div>
+		</div>
+	</Section>
+
+	<Section Title="Native" [note]="'Platform: ' + NativePlatform">
+		<div class="ui-kit-row">
+			<Button Label="Open a file" (click)="NativeOpen" />
+			<Button Label="Save a file" (click)="NativeSave" />
+			<Button Label="Ask" (click)="NativeAsk" />
+			<Button Label="Full screen" (click)="NativeFullscreen" />
+			<Button Label="Open example.com" (click)="NativeExternal" />
+			<Button Label="Set the menu" (click)="NativeMenu" />
+			<Button Label="Power" (click)="NativePower" />
+			<Button Label="Global hotkey" (click)="NativeHotkey" />
+		</div>
+		<p class="elemenx-text small muted ui-kit-native-state">{{NativeState}}</p>
+	</Section>
+
 	<Section Title="Themes" [note]="'Theme: ' + ThemeName + ' · Scheme: ' + ThemeScheme">
 		<div class="ui-kit-grid">
 			<div class="elemenx-column ui-kit-themes">
 				<Field Label="Theme" Hint="contrast, darcula and soft come with the Library; Mine is made by the editor."><Select [options]="ThemeOptions" [value]="ThemeName" (change)="ThemeChosen" /></Field>
 				<Field Label="Scheme"><RadioGroup Variant="segmented" [options]="ThemeSchemes" [value]="ThemePolicy" (change)="PolicyChosen" /></Field>
-				<p class="elemenx-text">A theme is one CSS file whose rules start with <code class="elemenx-code">body[data-theme='name']</code>: tokens of the theme, and the rules of any Component by its classes. The whole page is its preview.</p>
+				<p class="elemenx-text">A theme is one CSS file whose rules start with <code class="elemenx-code">[data-theme][data-theme='name']</code>: tokens of the theme, and the rules of any Component by its classes. The whole page is its preview.</p>
+				<div class="ui-kit-theme-scope" data-theme="darcula" data-scheme="dark">
+					<div class="ui-kit-row">
+						<strong>A part with a theme of its own</strong>
+						<ButtonGroup Attached="true" Label="Theme of the part">
+							<Button Label="Darcula" Size="small" [pressed]="ScopeTheme === 'darcula'" (click)="ScopeDarcula" />
+							<Button Label="Light" Size="small" [pressed]="ScopeTheme === 'light'" (click)="ScopeLight" />
+							<Button Label="Contrast" Size="small" [pressed]="ScopeTheme === 'contrast'" (click)="ScopeContrast" />
+						</ButtonGroup>
+					</div>
+					<div class="ui-kit-row">
+						<Button Label="Primary" Variant="primary" Size="small" />
+						<Checkbox Label="Checked" Checked="true" Size="small" />
+						<Input Placeholder="A field" Size="small" />
+					</div>
+				</div>
 			</div>
 			<div class="elemenx-column ui-kit-theme-editor">
 				<div class="ui-kit-grid">
@@ -146,6 +238,7 @@
 			</ButtonGroup>
 			<Menu Label="File" Icon="file" [items]="MenuItems" (select)="MenuSelected" />
 			<Menu Icon="more" Title="More actions" Variant="ghost" [items]="MenuItems" (select)="MenuSelected" />
+			<Menu Label="Mobile" Icon="phone" Sheet="true" [items]="MenuItems" (select)="MenuSelected" />
 			<span class="elemenx-caption" *if="MenuChoice">Menu: {{MenuChoice}}</span>
 		</div>
 	</Section>
@@ -157,6 +250,12 @@
 		<h4>Media, calls and faces</h4>
 		<div class="ui-kit-icons">
 			<div class="ui-kit-icon" *for="name of MediaIcons" *key="name" [attribute.title]="name"><Icon [name]="name" Size="24" /><span>{{name}}</span></div>
+		</div>
+		<div class="ui-kit-themed-set" *for="set of ThemedSets" *key="set.Name" [attribute.data-set]="set.Name">
+			<h4>{{set.Name.charAt(0).toUpperCase() + set.Name.substring(1)}} set: &lt;Icon Name=&quot;{{set.Icons[0]}}&quot; /&gt;</h4>
+			<div class="ui-kit-icons">
+				<div class="ui-kit-icon" *for="name of set.Icons" *key="name" [attribute.title]="name"><Icon [name]="name" Size="24" /><span>{{name.substring(set.Name.length + 1)}}</span></div>
+			</div>
 		</div>
 		<h4>Music set: &lt;Icon Name=&quot;music:guitar&quot; /&gt;</h4>
 		<div class="ui-kit-icons ui-kit-set-music">
@@ -216,6 +315,19 @@
 			<Input Size="giant" Placeholder="Giant" Icon="search" />
 		</div>
 		<Field Label="Horizontal label" Horizontal="true" Hint="Settings-style layout."><Input Placeholder="Value" /></Field>
+		<h3 class="elemenx-title">Formats</h3>
+		<div class="ui-kit-grid">
+			<PresetField Label="Email address" Preset="email" Placeholder="name@example.com" />
+			<PresetField Label="Web address" Preset="url" Placeholder="example.com" />
+			<PresetField Label="Version" Preset="semver" Placeholder="1.4.2" />
+			<PresetField Label="IPv4 address" Preset="ipv4" Placeholder="192.168.0.1" />
+			<PresetField Label="IPv6 address" Preset="ipv6" Placeholder="2001:db8::1" />
+			<PresetField Label="UUID" Preset="uuid" Placeholder="123e4567-e89b-12d3-a456-426614174000" />
+			<PresetField Label="IBAN" Preset="iban" Placeholder="DE89 3704 0044 0532 0130 00" />
+			<PresetField Label="Moldovan postal code" Preset="postal-code" Country="MD" Placeholder="MD-2001" />
+			<PresetField Label="Quantity" Preset="integer" Min="0" Max="100" Placeholder="0 to 100" />
+			<PresetField Label="Weight, kg" Preset="decimal" Min="0" Placeholder="12.5" />
+		</div>
 	</Section>
 
 	<Section Title="Dates and time" Note="Own pickers, locale formats">
@@ -260,6 +372,7 @@
 			<Field Label="Invite" [hint]="InviteState || 'E-mail addresses only'"><TagInput Placeholder="name@example.com" Pattern="^[^@\s]+@[^@\s]+\.[^@\s]+$" (change)="InvitesChanged" (invalid)="InviteRefused" /></Field>
 			<Field Label="Framework" [hint]="'Value: ' + (Framework == null ? '—' : Framework)"><Combobox [options]="Frameworks" [value]="Framework" AllowCustom="true" Clearable="true" Placeholder="Type or pick" (change)="FrameworkChanged" /></Field>
 			<Field Label="City" Hint="Options come from a (simulated) server as you type"><Combobox [options]="Cities" [loading]="CitiesLoading" Filter="false" Icon="map-pin" Placeholder="Start typing a city" (search)="SearchCities" /></Field>
+			<Field Label="World city" [hint]="WorldCity || 'CityInput: 170 000 cities of GeoNames (CC BY 4.0), loaded on first use'"><CityInput Clearable="true" (change)="WorldCityChanged" /></Field>
 			<Field Label="Period" [hint]="Period.length ? Period.join(' → ') : 'Presets on the left'"><DateRangeInput [value]="Period" (change)="PeriodChanged" /></Field>
 		</div>
 		<div class="ui-kit-grid">
@@ -319,6 +432,9 @@
 				<p class="elemenx-text small">Shown while the pointer is over the trigger.</p>
 			</Popover>
 			<Button Label="Open dialog" Variant="primary" (click)="OpenDialog" />
+			<Button Label="Required answer" (click)="OpenRequired" />
+			<Button Label="Confirm" Icon="delete" (click)="AskConfirm" />
+			<Button Label="Alert" Icon="info" (click)="ShowAlert" />
 			<Button Label="Show toast" Icon="bell" (click)="ShowToast" />
 			<Button Label="Sticky toast" (click)="ShowSticky" />
 			<Button Label="Custom toast" (click)="ShowCustom" />
@@ -331,7 +447,14 @@
 			<Button slot="footer" Label="Cancel" (click)="CloseDialog" />
 			<Button slot="footer" Label="Save" Variant="primary" (click)="ConfirmDialog" />
 		</Dialog>
+		<Dialog Title="Terms of the beta" Description="Accept them, or leave the beta." Icon="lock" Size="small" Dismissible="false" Closable="false" [open]="RequiredOpen">
+			<p class="elemenx-text">The dialog waits for an answer: Escape and a press on the backdrop only shake it.</p>
+			<Button slot="footer" Label="Leave the beta" (click)="DeclineRequired" />
+			<Button slot="footer" Label="Accept" Variant="primary" (click)="AcceptRequired" />
+		</Dialog>
 		<ToastHost />
+		<AchievementHost />
+		<DialogHost />
 	</Section>
 
 	<Section Title="Commands and overlays" [note]="'Last: ' + (LastCommand || '—')">
@@ -383,7 +506,34 @@
 		<Tour [steps]="TourSteps" [open]="TourOpen" [step]="TourStep" (change)="TourChanged" (close)="TourClosed" />
 	</Section>
 
-	<Section Title="Security and device" Note="Biometric · Idle · Permissions">
+	<Section Title="Settings menu" [note]="SettingsNote || 'SettingsMenu · Variant auto, ios or material'">
+		<Field Label="Look of the first menu"><RadioGroup Variant="segmented" [options]="SettingsVariants" [value]="SettingsVariant" (change)="SettingsVariantChosen" /></Field>
+		<div class="ui-kit-settings-menus">
+			<SettingsMenu [variant]="SettingsVariant" Title="Settings" Searchable="true" [items]="SettingsIos" (select)="SettingsChosen" (toggle)="SettingsToggled" />
+			<SettingsMenu Variant="material" Title="Settings" Searchable="true" [items]="SettingsMaterial" (select)="SettingsChosen" (toggle)="SettingsToggled" />
+		</div>
+	</Section>
+
+	<Section Title="Dial pad" [note]="DialNote || 'DialPad · the pad of a phone, or a layout of your own'">
+		<div class="ui-kit-dial-pads">
+			<DialPad [value]="DialNumber" Label="Phone" (input)="DialTyped" (call)="DialCalled" />
+			<DialPad [keys]="ToneKeys" Columns="4" ShowInput="false" ShowCall="false" Label="Tones" (press)="TonePressed" />
+		</div>
+	</Section>
+
+	<Section Title="Music and input" [note]="MusicNote || 'Mixer · MixerChannel · Keyboard · Piano: the controls; the sound is the application\'s'">
+		<div class="ui-kit-row">
+			<Toggle Label="Play the meters" [checked]="MixerPlaying" (change)="MixerPlayed" />
+		</div>
+		<Mixer [channels]="MixerChannels" [master]="MixerMaster" Label="Studio" (change)="MixerChanged" />
+		<h5>Keyboard</h5>
+		<Keyboard Layout="full" Live="true" Clickable="true" [marks]="KeyboardMarks" Label="Hotkeys" (press)="KeyPressed" />
+		<Keyboard Layout="compact" Size="small" Native="true" [pressed]="['ShiftLeft', 'KeyS']" Label="Compact" />
+		<h5>Piano</h5>
+		<Piano From="C3" Octaves="2" [marks]="PianoMarks" Label="Piano" (noteon)="NotePlayed" (noteoff)="NoteReleased" />
+	</Section>
+
+	<Section Title="Security and device" Note="Biometric · Idle · Permissions · Push, Serial, USB, NFC">
 		<div class="ui-kit-grid three">
 			<div class="ui-kit-stack">
 				<h5>Biometric</h5>
@@ -412,6 +562,17 @@
 					</li>
 				</ul>
 			</div>
+			<div class="ui-kit-stack">
+				<h5>Devices</h5>
+				<p class="elemenx-text small muted" id="ui-kit-devices-state">{{DeviceState}}</p>
+				<ul class="elemenx-list divided ui-kit-devices">
+					<li *for="device of Devices" *key="device.Name">
+						<span>{{device.Name}}</span>
+						<span [class]="['elemenx-badge', device.Supported ? 'success' : '']">{{device.Supported ? 'supported' : 'not here'}}</span>
+						<button class="elemenx-button ghost small" type="button" [attribute.data-name]="device.Name" (click)="UseDevice">{{device.Action}}</button>
+					</li>
+				</ul>
+			</div>
 		</div>
 	</Section>
 
@@ -432,6 +593,8 @@
 		<Table [columns]="FilterColumns" [rows]="ManyPeople" PageSize="10" Compact="true" Striped="true" [page]="PeoplePage" (page)="PeoplePaged" />
 		<h5>Pagination on its own</h5>
 		<Pagination [count]="240" [page]="ResultsPage" PageSize="20" [page-sizes]="[]" Label="Search results" (page)="ResultsPaged" />
+		<Pagination [count]="240" [page]="ResultsPage" PageSize="20" [page-sizes]="[]" Siblings="2" Boundaries="2" ShowFirstLast="false" Label="Wide pages" (page)="ResultsPaged" />
+		<Pagination [count]="240" [page]="ResultsPage" PageSize="20" [page-sizes]="[]" ShowPages="false" ShowFirstLast="false" Label="Compact pages" (page)="ResultsPaged" />
 		<p class="elemenx-text small muted" id="ui-kit-results-page">Results page {{ResultsPage}}</p>
 		<h5>Tree rows</h5>
 		<Table [columns]="SizeColumns" [rows]="FileRows" Tree="true" [expanded]="['src']" Compact="true" [sort]="{Key: 'Name', Direction: 'asc'}" />
@@ -445,6 +608,19 @@
 			<Progress Label="Indexing" />
 			<Meter Value="72" Low="30" High="80" Optimum="100" Label="Battery" Unit="%" />
 			<Meter Value="91" Low="60" High="85" Optimum="0" Label="Disk usage" Unit="%" />
+			<div class="ui-kit-meters">
+				<Meter Orientation="vertical" Value="72" Low="30" High="80" Optimum="100" Label="Fuel" Unit="%" />
+				<Meter Orientation="vertical" Value="91" Low="60" High="85" Optimum="0" Label="Heat" Unit="%" Size="small" />
+				<Meter Shape="dial" Value="64" Max="120" Ticks="9" Label="Speed" />
+				<Meter Shape="dial" Value="72" Low="30" High="80" Optimum="100" Needle="true" Ticks="13" Label="Shields"><strong class="ui-kit-dial-mark">A<sup>1</sup></strong></Meter>
+				<Meter Shape="dial" Value="73" Max="100" High="90" Optimum="0" Needle="true" Ticks="3" Marks="false" ShowRange="true" ValuePlacement="below" Label="Thrust" Unit="%" />
+				<Meter Value="42" Max="80" ShowRange="true" ValuePlacement="corner" Label="Pressure" Unit=" kPa" />
+				<Slider Orientation="vertical" [value]="Volume" Label="Level" Unit="%" (input)="VolumeChanged" />
+				<Knob Value="0" Min="-24" Max="24" Origin="0" Default="0" Ticks="9" Label="Gain" Unit=" dB" />
+				<Knob Value="70" Ticks="11" Label="Drive" Unit="%" />
+				<Knob Value="30" Size="small" Label="Mix" ShowValue="false" />
+				<Slider Orientation="vertical" Range="true" [value]="[20, 60]" Marks="20" Size="small" Label="Band" />
+			</div>
 			<div class="ui-kit-row">
 				<Progress Variant="ring" Value="40" ShowValue="true" />
 				<Progress Variant="ring" Tone="success" Value="100" ShowValue="true" Size="large" />
@@ -750,6 +926,21 @@
 		</div>
 	</Section>
 
+	<Section Title="Gallery" [note]="'Picture ' + (GalleryIndex + 1) + (GalleryPicked ? ' · Opened: ' + GalleryPicked : '')">
+		<div class="ui-kit-row">
+			<Checkbox Label="Autoplay" [checked]="GalleryAutoplay" (change)="GalleryAutoplayed" />
+			<Checkbox Label="Backwards" [checked]="GalleryBackwards" (change)="GalleryReversed" />
+			<Checkbox Label="Title" [checked]="GalleryTitle" (change)="GalleryTitled" />
+			<Checkbox Label="Description" [checked]="GalleryDescription" (change)="GalleryDescribed" />
+			<Checkbox Label="Tags" [checked]="GalleryTags" (change)="GalleryTagged" />
+			<Checkbox Label="Fade" [checked]="GalleryFade" (change)="GalleryFaded" />
+		</div>
+		<div class="ui-kit-grid">
+			<Gallery [items]="GalleryItems" [index]="GalleryIndex" [autoplay]="GalleryAutoplay" Interval="3000" [direction]="GalleryBackwards ? 'previous' : 'next'" [showtitle]="GalleryTitle" [showdescription]="GalleryDescription" [showtags]="GalleryTags" [effect]="GalleryFade ? 'fade' : 'slide'" ShowThumbs="true" Label="Places" (change)="GalleryChanged" (select)="GallerySelected" />
+			<Gallery [items]="GalleryItems" Caption="below" ShowDots="false" ShowCounter="false" Loop="false" Fit="contain" Ratio="4 / 3" Label="Places, caption below" />
+		</div>
+	</Section>
+
 	<Section Title="Cards" [note]="'Last: ' + (CardNote || '—')">
 		<h4>Posts: vertical, with the date badge, overlay and horizontal</h4>
 		<div class="elemenx-container grid">
@@ -806,9 +997,11 @@
 		</div>
 	</Section>
 
-	<Section Title="Chat" Note="Chat, ChatMessage, ChatComposer">
+	<Section Title="Chat" [note]="ChatNote || 'Chat, ChatMessage, ChatComposer · right click a message for its menu'">
+		<div class="ui-kit-row"><span class="elemenx-caption">Emoji suggestions</span><RadioGroup Variant="segmented" [options]="SuggestModes" [value]="SuggestMode" (change)="SuggestModeChosen" /><span class="elemenx-caption">Type a word, :word, or a single emoji such as 👍 for its stickers</span></div>
 		<div class="ui-kit-frame chat">
-			<Chat>
+			<Chat [selection]="ChatSelection" (clear)="ChatCleared">
+				<Button slot="selection" Icon="delete" Title="Delete selected" Variant="ghost" (click)="DeleteSelected" />
 				<div slot="sidebar" class="ui-kit-stack ui-kit-conversations">
 					<Input Shape="round" Icon="search" Placeholder="Search" Size="small" />
 					<div class="elemenx-chat-conversation active"><span class="elemenx-chat-avatar">GH</span><div><strong>Grace Hopper</strong><p class="elemenx-text small muted">Can you check the new table?</p></div></div>
@@ -816,8 +1009,8 @@
 				</div>
 				<div slot="header" class="elemenx-container ui-kit-chat-header"><span class="elemenx-chat-avatar">GH</span><div><strong>Grace Hopper</strong><p class="elemenx-text small muted">online</p></div><span class="elemenx-spacer"></span><Button Icon="phone" Title="Call" Variant="ghost" /><Button Icon="more-vertical" Title="More" Variant="ghost" /></div>
 				<div class="elemenx-chat-divider">Today</div>
-				<ChatMessage *for="message of Thread(Messages)" *key="message.ID" [id]="message.ID" [author]="message.Author" [text]="message.Text" [time]="message.Time" [own]="!!message.Own" [position]="message.Position" [status]="message.Status || ''" [sticker]="message.Sticker || ''" [reactions]="message.Reactions || []" React="true" (react)="MessageReacted" />
-				<ChatComposer slot="composer" (send)="SendMessage" (sticker)="SendSticker" />
+				<ChatMessage *for="message of Thread(Messages)" *key="message.ID" [id]="message.ID" [author]="message.Author" [text]="message.Text" [time]="message.Time" [own]="!!message.Own" [position]="message.Position" [status]="message.Status || ''" [sticker]="message.Sticker || ''" [reactions]="message.Reactions || []" [edited]="message.Edited || false" [views]="message.Views || 0" [viewers]="message.Viewers || []" [actions]="MessageActions(message)" [selecting]="ChatSelection.length > 0" [selected]="ChatSelection.indexOf(message.ID) !== -1" React="true" (react)="MessageReacted" (action)="MessageAction" (select)="MessageSelected" />
+				<ChatComposer slot="composer" [suggest]="SuggestMode" (send)="SendMessage" (sticker)="SendSticker" />
 			</Chat>
 		</div>
 	</Section>
@@ -838,6 +1031,237 @@
 			<Terminal Title="Shell" Prompt="elemenx $" [lines]="Lines" [busy]="Busy" (command)="RunCommand" (clear)="ClearTerminal">
 				<Button slot="actions" Icon="delete" Title="Clear" Variant="ghost" Size="small" (click)="ClearTerminal" />
 			</Terminal>
+		</div>
+	</Section>
+
+	<Section Title="Code editor" [note]="'Line ' + EditorLine + ', column ' + EditorColumn + (EditorMatches === null ? '' : ' · Matches: ' + EditorMatches)">
+		<div class="ui-kit-row ui-kit-editor-tools">
+			<Select [options]="EditorLanguages" [value]="EditorLanguage" (change)="EditorLanguageChosen" />
+			<Input Icon="search" Placeholder="Find" Clearable="true" [value]="EditorQuery" (input)="EditorFind" />
+			<ButtonGroup Attached="true">
+				<Button Icon="chevron-up" Title="Previous match" (click)="EditorPrevious" />
+				<Button Icon="chevron-down" Title="Next match" (click)="EditorNext" />
+			</ButtonGroup>
+			<Input Placeholder="Replace with" [value]="EditorReplacement" (input)="EditorReplacementChanged" />
+			<Button Label="Replace all" (click)="EditorReplaceAll" />
+			<ButtonGroup Attached="true">
+				<Button Icon="undo" Title="Undo" (click)="EditorUndo" />
+				<Button Icon="redo" Title="Redo" (click)="EditorRedo" />
+			</ButtonGroup>
+			<Button Icon="code" Label="Comment" (click)="EditorComment" />
+			<Checkbox Label="Wrap" [checked]="EditorWrap" (change)="EditorWrapChanged" />
+			<Button Icon="file-text" Label="Print" (click)="EditorPrint" />
+			<RadioGroup Variant="segmented" [options]="EditorViews" [value]="EditorView" (change)="EditorViewChosen" />
+			<span class="elemenx-caption" *if="EditorView !== 'edit'">{{EditorStats}}</span>
+		</div>
+		<CodeEditor Label="Example code" Rows="14" [value]="EditorCode" [language]="EditorLanguage" [wrap]="EditorWrap" [markers]="EditorMarkers" [complete]="EditorCompleter" [hint]="EditorHinter" [original]="EditorView === 'edit' ? null : EditorOriginal" [diff]="EditorView === 'edit' ? false : EditorView" (ready)="EditorReady" (input)="EditorTyped" (cursor)="EditorCursor" />
+		<span class="elemenx-caption">The controls above are not part of the editor: they call its methods. Ctrl+Space completes, Mod+/ comments, Tab indents (Escape, then Tab, leaves).</span>
+	</Section>
+
+	<Section Title="Rich text editor" [note]="RichNote">
+		<div class="ui-kit-row ui-kit-editor-tools">
+			<Select [options]="RichBlocks" [value]="RichBlock" (change)="RichBlockChosen" />
+			<ButtonGroup Attached="true">
+				<Button Icon="bold" Title="Bold" [pressed]="!!RichFormats.Bold" (click)="RichBold" />
+				<Button Icon="italic" Title="Italic" [pressed]="!!RichFormats.Italic" (click)="RichItalic" />
+				<Button Icon="underline" Title="Underline" [pressed]="!!RichFormats.Underline" (click)="RichUnderline" />
+				<Button Icon="strikethrough" Title="Strikethrough" [pressed]="!!RichFormats.Strike" (click)="RichStrike" />
+				<Button Icon="code" Title="Inline code" [pressed]="!!RichFormats.Code" (click)="RichCode" />
+			</ButtonGroup>
+			<ButtonGroup Attached="true">
+				<Button Icon="list-bulleted" Title="Bulleted list" [pressed]="RichFormats.List === 'bullets'" (click)="RichBullets" />
+				<Button Icon="list-ordered" Title="Numbered list" [pressed]="RichFormats.List === 'numbers'" (click)="RichNumbers" />
+			</ButtonGroup>
+			<Input Icon="link" Placeholder="https://..." [value]="RichLink" (input)="RichLinkChanged" />
+			<Button Label="Link" (click)="RichApplyLink" />
+			<ButtonGroup Attached="true">
+				<Button Icon="image" Title="Image" (click)="RichImage" />
+				<Button Icon="table" Title="Table" (click)="RichTable" />
+				<Button Icon="add" Title="Row below" [disabled]="!RichFormats.Table" (click)="RichRow" />
+				<Button Icon="remove" Title="Horizontal rule" (click)="RichRule" />
+				<Button Icon="clear-format" Title="Clear formatting" (click)="RichClear" />
+			</ButtonGroup>
+			<ButtonGroup Attached="true">
+				<Button Icon="undo" Title="Undo" (click)="RichUndo" />
+				<Button Icon="redo" Title="Redo" (click)="RichRedo" />
+			</ButtonGroup>
+			<Checkbox Label="Markdown" [checked]="RichMarkdownShown" (change)="RichMarkdownToggled" />
+			<Button Icon="print" Label="Print" (click)="RichPrint" />
+		</div>
+		<RichEditor Label="Example document" Rows="8" MaxRows="20" [value]="RichValue" (ready)="RichReady" (input)="RichTyped" (formats)="RichFormatsChanged" (link)="RichLinkAsked" (files)="RichFiles" />
+		<CodeEditor *if="RichMarkdownShown" Label="Markdown of the document" Language="markdown" Rows="10" [value]="RichMarkdown" (input)="RichMarkdownTyped" />
+		<span class="elemenx-caption">The toolbar above is the page's own: it calls Command. Select text for the quick menu; type # , - , 1. or &gt; at the start of a line; paste or drop an image file.</span>
+	</Section>
+
+	<Section Title="Windows" [note]="WindowNote">
+		<div class="ui-kit-row">
+			<Button Icon="layout" Label="Properties" [pressed]="PropertiesOpen" (click)="ToggleProperties" />
+			<Button Icon="edit" Label="Notes" [pressed]="NotesOpen" (click)="ToggleNotes" />
+			<span class="elemenx-caption">The buttons show and hide the windows. Drag by the header, resize by any edge, double press the header to maximize; the arrows on a focused header move it, Shift resizes. Notes remembers its place.</span>
+		</div>
+		<div class="ui-kit-row">
+			<video class="ui-kit-pip-video" muted playsinline aria-label="A clock drawn live"></video>
+			<Button Icon="pip" Label="Video in a window" [disabled]="!PipVideo" (click)="VideoPip" />
+			<span class="elemenx-caption">Picture-in-Picture: a video in a small window over the other windows; the button in the header of Notes moves its body there ({{PipDocument ? 'this browser can' : 'not in this browser'}}).</span>
+		</div>
+		<div class="ui-kit-desktop">
+			<Window *if="PropertiesOpen" Title="Properties" Overline="Project" Icon="settings" X="24" Y="24" Width="320" Height="260" (close)="CloseProperties" (move)="WindowMoved" (resize)="WindowResized" (minimize)="WindowMinimized" (maximize)="WindowMaximized" (restore)="WindowRestored">
+				<div class="ui-kit-stack">
+					<Field Label="Name"><Input Value="Elemenx" /></Field>
+					<Checkbox Label="Public" Checked="true" />
+				</div>
+				<Button slot="footer" Label="Cancel" (click)="CloseProperties" />
+				<Button slot="footer" Label="Save" Variant="primary" (click)="CloseProperties" />
+			</Window>
+			<Window *if="NotesOpen" Title="Notes" Icon="edit" HeaderShape="trapezoid" PopOut="true" X="380" Y="60" Width="300" Height="200" Persist="ui-kit-notes" (close)="CloseNotes" (move)="WindowMoved" (resize)="WindowResized">
+				<Button slot="header" Icon="pin" Title="Pin" Variant="ghost" Size="small" />
+				<p class="elemenx-text">A window keeps to its container. This one remembers where it was left.</p>
+			</Window>
+		</div>
+	</Section>
+
+	<Section Title="Game UI" [note]="GameNote">
+		<div class="ui-kit-row">
+			<ButtonGroup Attached="true" Label="Game theme">
+				<Button Label="Default" [pressed]="ThemeName === 'default'" (click)="GameThemeDefault" />
+				<Button Label="Fantasy" [pressed]="ThemeName === 'fantasy'" (click)="GameThemeFantasy" />
+				<Button Label="Sci-fi" [pressed]="ThemeName === 'scifi'" (click)="GameThemeScifi" />
+			</ButtonGroup>
+			<Button Icon="remove" Label="Take a hit" (click)="GameHit" />
+			<Button Icon="add" Label="Gain experience" (click)="GameExperience" />
+			<Button Icon="trophy" Label="Unlock an achievement" (click)="GameUnlock" />
+			<ButtonGroup Attached="true" Label="Game windows">
+				<Button Label="Status" [pressed]="GameStatusOpen" (click)="GameToggleStatus" />
+				<Button Label="Bag" [pressed]="GameBagOpen" (click)="GameToggleBag" />
+				<Button Label="Record" [pressed]="GameRecordOpen" (click)="GameToggleRecord" />
+				<Button Label="Systems" [pressed]="GameSystemsOpen" (click)="GameToggleSystems" />
+				<Button Label="Quests" [pressed]="GameQuestsOpen" (click)="GameToggleQuests" />
+				<Button Label="Ranking" [pressed]="GameRankingOpen" (click)="GameToggleRanking" />
+				<Button Label="Sign in" [pressed]="GameLoginOpen" (click)="GameToggleLogin" />
+			</ButtonGroup>
+			<span class="elemenx-caption">A gamepad works the whole page: the d-pad moves the focus, A presses, B goes back.</span>
+		</div>
+		<div class="ui-kit-game">
+			<div class="ui-kit-game-hud">
+				<GameHud Label="Example game">
+					<div class="ui-kit-game-scene">
+						<Window *if="GameQuestsOpen" Variant="game" Title="Quests" X="60" Y="60" Width="560" Height="400" (close)="GameQuestsClosed">
+							<GameQuests [items]="GameQuestList" [value]="GameQuest" Label="Quest log" (change)="GameQuestChosen" (track)="GameQuestTracked" />
+						</Window>
+						<Window *if="GameRankingOpen" Variant="game" Level="secondary" Title="Ranking" Overline="Season 3" X="240" Y="80" Width="380" Maximizable="false" (close)="GameRankingClosed">
+							<GameLeaderboard [items]="GameRanking" Limit="5" ScoreLabel="Glory" Selectable="true" (select)="GameRankChosen" />
+						</Window>
+						<Window *if="GameStatusOpen" Variant="game" Title="Status" X="16" Y="176" Width="300" MinWidth="260" Maximizable="false" (close)="GameStatusClosed">
+							<div class="ui-kit-game-window">
+								<div class="ui-kit-row"><strong>Aria</strong><span class="elemenx-game-special">Level 7 · Warden</span></div>
+								<GameBar Kind="health" [value]="GameHealth" Max="100" Label="HP" />
+								<GameBar Kind="mana" [value]="GameMana" Max="80" Label="MP" />
+								<GameBar Kind="stamina" Value="64" Max="80" Label="CP" />
+								<hr class="elemenx-game-separator" />
+								<Section Title="Battle" Level="4">
+									<Properties Columns="2" Label="Battle">
+										<Property Label="Attack" Value="1017" /><Property Label="Magic" Value="210" />
+										<Property Label="Defense" Value="1162" /><Property Label="Resist" Value="762" />
+										<Property Label="Accuracy" Value="128" /><Property Label="Evasion" Value="114" />
+									</Properties>
+								</Section>
+								<Section Title="Effects" Level="4">
+									<Properties Label="Effects">
+										<Property Label="Blessing" Value="ON" Tone="success" />
+										<Property Label="Poison" Value="−12" Unit=" / s" Tone="danger" />
+										<Property Label="Experience rate" Value="×5.0" Tone="accent" />
+									</Properties>
+								</Section>
+							</div>
+							<Button slot="footer" Label="Get buffs" Size="small" (click)="GameBuffs" />
+						</Window>
+						<Window *if="GameBagOpen" Variant="game" Level="secondary" HeaderShape="trapezoid" Title="Bag" X="620" Y="96" Width="280" Resizable="false" Maximizable="false" (close)="GameBagClosed">
+							<GameInventory Columns="4" Slots="16" Label="Bag" Name="bag" [items]="GameItems" (move)="GameItemMoved" (receive)="GameBagReceived" (use)="GameItemUsed" (discard)="GameItemDiscarded" />
+						</Window>
+						<Window *if="GameLoginOpen" Variant="game" Level="plain" Title="Sign in" X="300" Y="230" Width="320" Resizable="false" Minimizable="false" Maximizable="false" (close)="GameLoginClosed">
+							<div class="ui-kit-game-login">
+								<label class="ui-kit-game-label" for="ui-kit-game-id">ID</label>
+								<input id="ui-kit-game-id" class="elemenx-input elemenx-input-control ui-kit-game-field" type="text" autocomplete="username" />
+								<label class="ui-kit-game-label" for="ui-kit-game-password">Password</label>
+								<input id="ui-kit-game-password" class="elemenx-input elemenx-input-control ui-kit-game-field" type="password" autocomplete="current-password" />
+							</div>
+							<div class="ui-kit-game-actions">
+								<Button Label="Log in" (click)="GameLoginClosed" />
+								<Button Label="Exit" (click)="GameLoginClosed" />
+							</div>
+						</Window>
+						<Window *if="GameRecordOpen" Variant="game" Overline="Free Planets Fleets" Title="Bureau of Fleet Personnel" X="200" Y="40" Width="520" Height="320" (close)="GameRecordClosed">
+							<div class="ui-kit-game-record">
+								<GameTabs [items]="GameRecordTabs" [value]="GameRecordTab" Label="Record" (change)="GameRecordChosen" />
+								<img class="ui-kit-game-portrait" src="data/cards/city.svg" alt="" />
+								<div class="ui-kit-game-window">
+									<span class="elemenx-window-overline">Free Planets Defense Force · {{GameRecordTab}}</span>
+									<Properties Label="Record">
+										<Property Label="Rank" Value="Commodore" />
+										<Property Label="Fleet" Value="13th" />
+										<Property Label="Service" Value="12" Unit=" years" />
+										<Property Label="Status" Value="Active" Tone="success" />
+									</Properties>
+									<hr class="elemenx-game-separator" />
+									<p class="elemenx-text small">Transferred to the headquarters of the fleet after the battle of Astarte.</p>
+								</div>
+							</div>
+						</Window>
+						<Window *if="GameSystemsOpen" Variant="game" Overline="v.2.32" Title="Systems" X="330" Y="16" Width="480" Height="520" (close)="GameSystemsClosed">
+							<div class="ui-kit-game-systems">
+								<Tabs [tabs]="GameSystemTabs" [value]="GameSystemTab" (change)="GameSystemChosen" />
+								<div class="ui-kit-game-power" *if="GameSystemTab === 'power'">
+									<Section Title="Reactor" Level="4">
+										<div class="ui-kit-game-columns">
+											<Meter *for="cell of GameReactor" *key="cell.ID" Orientation="vertical" [value]="cell.Value" Max="140" High="110" Optimum="0" Marks="false" [label]="cell.ID" />
+										</div>
+									</Section>
+									<Section Title="Modes" Level="4">
+										<div class="ui-kit-game-dials">
+											<Meter Shape="dial" Size="small" Needle="true" Ticks="11" Value="62" ShowRange="true" ValuePlacement="below" Label="Mode 01"><strong class="ui-kit-dial-mark">A<sup>1</sup></strong></Meter>
+											<Meter Shape="dial" Size="small" Needle="true" Ticks="11" Value="35" Label="Mode 02"><strong class="ui-kit-dial-mark">C<sup>4</sup></strong></Meter>
+											<Meter Shape="dial" Size="small" Ticks="11" Value="88" Low="20" High="80" Optimum="50" ValuePlacement="corner" Label="Mode 03"><strong class="ui-kit-dial-mark">N<sup>2</sup></strong></Meter>
+										</div>
+										<Meter Value="58" Low="30" High="80" Optimum="100" Marks="false" ShowRange="true" ValuePlacement="corner" Label="RDD EFD" Unit="%" />
+									</Section>
+								</div>
+								<Table *if="GameSystemTab === 'files'" [columns]="GameFileColumns" [rows]="GameFiles" [selected]="GameFile" Compact="true" Striped="true" Selectable="single" Height="300px" Label="Files" (select)="GameFileChosen" />
+								<Block *if="GameSystemTab === 'log'" Title="Log" Note="Last hour">
+									<VirtualList [items]="GameLog" Height="260px" ItemHeight="28" Label="Log" />
+								</Block>
+							</div>
+							<span slot="footer" class="ui-kit-game-footnote">\DF.93 · Slow network is detected</span>
+							<Button slot="footer" Label="Activate" Size="small" (click)="GameActivate" />
+						</Window>
+					</div>
+					<div slot="top-start" class="elemenx-game-panel light ui-kit-game-status">
+						<strong>Aria · level 7</strong>
+						<GameBar Kind="health" [value]="GameHealth" Max="100" Size="large" />
+						<GameBar Kind="mana" [value]="GameMana" Max="80" />
+						<GameBar Kind="experience" [value]="GameExperiencePoints" Max="1000" Size="small" Segments="10" Label="Experience" />
+					</div>
+					<div slot="top-end" class="ui-kit-game-top-end">
+						<Button Icon="pause" Title="Pause" Variant="secondary" (click)="GamePause" />
+						<GameMinimap Size="132" Title="Northern woods" [note]="'412, 88 · ×' + GameZoom" [markers]="GameMarkers" Heading="35" Zoomable="true" (zoom)="GameZoomed" (marker)="GameMarkerChosen"><img src="data/cards/mountains.svg" alt="" [style.transform]="'scale(' + (1 + GameZoom * 0.25) + ')'" /></GameMinimap>
+					</div>
+					<div slot="end" class="elemenx-game-panel light ui-kit-game-tracker">
+						<GameQuests Variant="tracker" [items]="GameQuestList" Label="Tracked quests" (change)="GameQuestChosen" />
+					</div>
+					<div slot="center" class="ui-kit-game-center">
+						<GameMenu *if="GamePaused" Title="Paused" Subtitle="Chapter II · The northern road" [items]="GameMenuItems" (select)="GameMenuChosen" (back)="GameResume" />
+					</div>
+					<div slot="bottom" class="ui-kit-game-bottom">
+						<GameDialogue *if="GameLine && !GamePaused" [speaker]="GameLine.Speaker" Portrait="data/cards/mountains.svg" [text]="GameLine.Text" [choices]="GameLine.Choices || []" Speed="60" (next)="GameNext" (choose)="GameChose" />
+						<div class="elemenx-game-panel elemenx-game-hotbar">
+							<GameSlot *for="slot of GameHotbar" *key="slot.Key" Group="hotbar" [key]="slot.Key" [data]="slot.Skill || slot.Item || null" [icon]="(slot.Skill || slot.Item || {}).Icon || ''" [image]="(slot.Skill || slot.Item || {}).Image || ''" [label]="(slot.Skill || slot.Item || {}).Name || ''" [cooldown]="slot.Skill ? slot.Skill.Cooldown || 0 : 0" [count]="slot.Item ? slot.Item.Count || 0 : 0" [color]="(slot.Skill || slot.Item || {}).Color || ''" [rarity]="slot.Item ? slot.Item.Rarity || '' : ''" [badge]="slot.Item ? slot.Item.Badge || '' : ''" [classes]="slot.Item ? slot.Item.Class || '' : ''" [active]="slot.Key === GameActiveSlot" [disabled]="!!slot.Skill && slot.Skill.ID === 'fireball' && GameMana < 10" (use)="GameSlotUsed" (drop)="GameSlotDropped" />
+						</div>
+					</div>
+					<div slot="bottom-end" class="elemenx-game-panel light ui-kit-game-keys">
+						<GameKey Button="a" Keyboard="Enter" Label="Talk" />
+						<GameKey Button="start" Keyboard="Escape" Label="Pause" />
+					</div>
+				</GameHud>
+			</div>
 		</div>
 	</Section>
 

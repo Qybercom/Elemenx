@@ -1,8 +1,8 @@
 /*
  * Soft: round corners, roomier controls and a violet accent, for consumer Applications. Every rule starts with
- * body[data-theme='soft'].
+ * [data-theme][data-theme='soft'].
  */
-body[data-theme='soft'] {
+[data-theme][data-theme='soft'] {
 	--elemenx-font: Inter, 'Segoe UI', Arial, sans-serif;
 	--elemenx-control-small: 28px;
 	--elemenx-control: 36px;
@@ -18,7 +18,7 @@ body[data-theme='soft'] {
 	--elemenx-easing: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-body[data-theme='soft'][data-scheme='light'] {
+[data-theme][data-theme='soft'][data-scheme='light'] {
 	--elemenx-background: #f5f4fb;
 	--elemenx-background-rgb: 245, 244, 251;
 	--elemenx-surface: #ffffff;
@@ -49,7 +49,7 @@ body[data-theme='soft'][data-scheme='light'] {
 	--elemenx-shadow: 0 12px 32px rgba(52, 40, 120, 0.14);
 }
 
-body[data-theme='soft'][data-scheme='dark'] {
+[data-theme][data-theme='soft'][data-scheme='dark'] {
 	--elemenx-background: #16141f;
 	--elemenx-background-rgb: 22, 20, 31;
 	--elemenx-surface: #1e1b2a;
@@ -80,6 +80,6 @@ body[data-theme='soft'][data-scheme='dark'] {
 	--elemenx-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
 }
 
-body[data-theme='soft'] .elemenx-button {
+[data-theme][data-theme='soft'] .elemenx-button {
 	border-radius: var(--elemenx-radius-pill);
 }

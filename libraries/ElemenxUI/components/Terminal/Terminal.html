@@ -1,4 +1,4 @@
-<section class="elemenx-column elemenx-terminal" [attribute.aria-label]="Title || 'Terminal'" [class.busy]="Busy">
+<section class="elemenx-column elemenx-terminal" [attribute.aria-label]="Title || $T('ui.terminal.title')" [class.busy]="Busy">
 	<header class="elemenx-container elemenx-terminal-header">
 		<Icon Name="terminal" />
 		<span class="elemenx-terminal-title">{{Title}}</span>
@@ -9,7 +9,7 @@
 	</div>
 	<label class="elemenx-container elemenx-terminal-command">
 		<span class="elemenx-terminal-prompt">{{Prompt}}</span>
-		<input class="elemenx-terminal-input" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Command" [placeholder]="Placeholder" [attribute.readonly]="Busy ? '' : null" [attribute.aria-busy]="Busy ? 'true' : null" (keydown)="Key" />
-		<Spinner *if="Busy" Size="small" Label="Running" />
+		<input class="elemenx-terminal-input" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" [attribute.aria-label]="$T('ui.terminal.command')" [placeholder]="Placeholder" [attribute.readonly]="Busy ? '' : null" [attribute.aria-busy]="Busy ? 'true' : null" (keydown)="Key" />
+		<Spinner *if="Busy" Size="small" [label]="$T('ui.terminal.running')" />
 	</label>
 </section>

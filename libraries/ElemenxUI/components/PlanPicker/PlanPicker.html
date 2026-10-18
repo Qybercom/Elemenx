@@ -1,9 +1,9 @@
 <div class="elemenx-column elemenx-plans">
 	<div class="elemenx-container elemenx-plans-period" *if="Periods && Periods !== 'false'">
-		<RadioGroup Variant="segmented" [options]="PeriodOptions(MonthlyLabel, YearlyLabel)" [value]="Period" (change)="PeriodChosen" />
+		<RadioGroup Variant="segmented" [options]="PeriodOptions((MonthlyLabel || $T('ui.planPicker.monthly')), (YearlyLabel || $T('ui.planPicker.yearly')))" [value]="Period" (change)="PeriodChosen" />
 		<span class="elemenx-badge success" *if="Discount">{{Discount}}</span>
 	</div>
-	<div class="elemenx-container grid elemenx-plans-grid" role="radiogroup" [attribute.aria-label]="Label" (keydown)="Key">
-		<PlanCard *for="plan of Plans" *key="plan.ID" [id]="plan.ID" [name]="plan.Name" [description]="plan.Description || ''" [price]="plan.Price" [yearlyPrice]="plan.YearlyPrice" [period]="Period" [currency]="plan.Currency || Currency" [note]="plan.Note || ''" [features]="plan.Features || []" [popular]="plan.Popular || ''" [color]="plan.Color || ''" [current]="!!plan.Current" [disabled]="!!plan.Disabled" [selected]="plan.ID === Value" [tabbable]="Value == null && $index === 0" [action]="plan.Action || Action" Selectable="true" [variant]="Variant" (select)="Chosen" />
+	<div class="elemenx-container grid elemenx-plans-grid" role="radiogroup" [attribute.aria-label]="(Label || $T('ui.planPicker.label'))" (keydown)="Key">
+		<PlanCard *for="plan of Plans" *key="plan.ID" [id]="plan.ID" [name]="plan.Name" [description]="plan.Description || ''" [price]="plan.Price" [yearlyPrice]="plan.YearlyPrice" [period]="Period" [currency]="plan.Currency || Currency" [note]="plan.Note || ''" [features]="plan.Features || []" [popular]="plan.Popular || ''" [color]="plan.Color || ''" [current]="!!plan.Current" [disabled]="!!plan.Disabled" [selected]="plan.ID === Value" [tabbable]="Value == null && $index === 0" [action]="plan.Action || (Action || $T('ui.planPicker.action'))" Selectable="true" [variant]="Variant" (select)="Chosen" />
 	</div>
 </div>

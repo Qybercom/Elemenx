@@ -4,6 +4,11 @@ var fs = require('fs');
 var path = require('path');
 var common = require('./common.js');
 var Minify = require('./minify.js');
+var Shake = require('./shake.js');
+var Expressions = require('./expressions.js');
+var Extension = require('./extension.js');
+var Electron = require('./electron.js');
+var Capacitor = require('./capacitor.js');
 var fail = common.fail;
 
 function readIndex (directory) {
@@ -376,77 +381,55 @@ function ownCode (entities, shared) {
 	return parts.join('\n');
 }
 
-function selectLibraryEntities (entities, catalog) {
-	var type;
+/*
+ * Whether a text uses a Library entity: a Component by its tag, a Directive by *name (or its name in quotes), a
+ * Service or a Guard by its name in quotes ($Service('Toast'), $Guards: ['Auth']). Other entities always go in.
+ */
+function sourceUsesEntity (source, type, name) {
+	var escaped = String(name).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-	for (type in catalog) {
-		if (!Object.prototype.hasOwnProperty.call(catalog, type) || type === 'Component') continue;
+	if (type === 'Component')
+		return sourceUsesComponent(source, name);
 
-		if (!entities[type])
-			entities[type] = {};
+	if (type === 'Directive' && new RegExp('\\*' + escaped + '(?![A-Za-z0-9_$-])').test(source || '')) return true;
+	if (type === 'Service' || type === 'Guard' || type === 'Directive') return new RegExp('[\'"]' + escaped + '[\'"]').test(source || '');
 
-		var names = Object.keys(catalog[type]);
-		var ni = 0;
+	return true;
+}
 
-		while (ni < names.length) {
-			if (!entities[type][names[ni]])
-				entities[type][names[ni]] = catalog[type][names[ni]];
-
-			ni++;
-		}
-	}
-
-	if (!catalog.Component) return;
-
+/*
+ * Adds to entities the ones of a Library catalog that the Application uses, and the ones they use, until nothing
+ * changes. text is the code the build has besides the entities (the entry, the page and its templates).
+ */
+function selectLibraryEntities (entities, catalog, text) {
 	var changed = true;
 
 	while (changed) {
 		changed = false;
 
-		var available = Object.keys(catalog.Component);
-		var sources = [];
-		var types = Object.keys(entities);
-		var ti = 0;
+		var sources = [text || ''];
 
-		while (ti < types.length) {
-			var current = entities[types[ti]];
-			var currentNames = Object.keys(current);
-			var ci = 0;
+		Object.keys(entities).forEach(function (type) {
+			Object.keys(entities[type]).forEach(function (name) {
+				sources.push(entities[type][name]);
+			});
+		});
 
-			while (ci < currentNames.length) {
-				sources.push(current[currentNames[ci]]);
+		Object.keys(catalog).forEach(function (type) {
+			Object.keys(catalog[type]).forEach(function (name) {
+				if (entities[type] && entities[type][name]) return;
 
-				ci++;
-			}
+				if (sources.some(function (source) {
+					return sourceUsesEntity(source, type, name);
+				})) {
+					if (!entities[type])
+						entities[type] = {};
 
-			ti++;
-		}
-
-		var ai = 0;
-
-		while (ai < available.length) {
-			var name = available[ai];
-
-			if (!entities.Component || !entities.Component[name]) {
-				var si = 0;
-
-				while (si < sources.length) {
-					if (sourceUsesComponent(sources[si], name)) {
-						if (!entities.Component)
-							entities.Component = {};
-
-						entities.Component[name] = catalog.Component[name];
-						changed = true;
-
-						break;
-					}
-
-					si++;
+					entities[type][name] = catalog[type][name];
+					changed = true;
 				}
-			}
-
-			ai++;
-		}
+			});
+		});
 	}
 }
 
@@ -528,6 +511,12 @@ function applicationDirectories (project, roots) {
 function build (project, options) {
 	options = options || {};
 
+	if (options.extension)
+		return extension(project, options);
+
+	if (options.native)
+		return native(project, options);
+
 	var appName = options.entry || 'app.js';
 	var indexName = options.index || 'index.html';
 	var outputName = options.out || 'dist';
@@ -543,6 +532,7 @@ function build (project, options) {
 	var directories;
 	var bundle;
 	var shared = {};
+	var shaken;
 	var i = 0;
 
 	if (!fs.existsSync(app))
@@ -577,20 +567,27 @@ function build (project, options) {
 
 		markShared(entities, catalog, shared);
 
-		selectLibraryEntities(entities, catalog);
+		selectLibraryEntities(entities, catalog, (templateBundle || '') + '\n' + indexSource + '\n' + appSource);
 
 		i++;
 	}
 
 	bundle = render(entities);
 
-	if (options.single) {
-		return single({
+	/* With precompile, the expressions of the templates go as code before the bundle (see expressions.js). */
+	if (options.precompile)
+		bundle = Expressions.Render([bundle, appSource], [indexSource]) + bundle;
+
+	shaken = frameworkSource(framework, (templateBundle || '') + '\n' + bundle + '\n' + indexSource + '\n' + appSource, options.full);
+
+	if (options.single || options.widget) {
+		return (options.widget ? widget : single)({
 			Project: project,
 			Output: output,
 			Index: index,
 			Entry: app,
 			Framework: framework,
+			FrameworkSource: shaken,
 			Roots: roots,
 			Libraries: libraries,
 			Code: (templateBundle ? templateBundle + '\n' : '') + bundle + '\n' + appSource,
@@ -603,7 +600,7 @@ function build (project, options) {
 
 	fs.mkdirSync(output, {recursive: true});
 
-	var excludedPaths = applicationDirectories(project, roots).concat([
+	var excludedPaths = applicationDirectories(project, roots).concat(options.excludes || [], [
 		output,
 		app,
 		index,
@@ -626,12 +623,145 @@ function build (project, options) {
 	}
 
 	fs.writeFileSync(path.join(output, 'index.html'), productionIndex);
-	fs.copyFileSync(framework, path.join(output, 'elemenx.js'));
+	fs.writeFileSync(path.join(output, 'elemenx.js'), shaken);
 	fs.writeFileSync(path.join(output, 'app.js'), (templateBundle ? templateBundle + '\n' : '') + bundle + '\n' + appSource.replace(/^\s+/, ''));
 
 	process.stdout.write('Elemenx Builder: ' + output + '\n');
 
 	return output;
+}
+
+/*
+ * A build of the Application as a browser extension (see extension.js): its production build, with its expressions
+ * precompiled, in out/extension/app, made into out/extension/chrome and out/extension/firefox with a zip of each.
+ */
+function extension (project, options) {
+	var outputName = options.out || 'dist';
+	var target = path.join(project, outputName, 'extension');
+	var folder = path.join(target, 'app');
+	var settings = options.extensionSettings || {};
+	var result;
+
+	if (options.single || options.widget)
+		fail('--extension is a build of its own: not with --single or --widget');
+
+	removeTree(target);
+
+	build(project, {
+		application: options.application,
+		applicationExplicit: options.applicationExplicit,
+		applications: options.applications,
+		entry: options.entry,
+		index: options.index,
+		out: path.relative(project, folder),
+		full: options.full,
+		precompile: true,
+		excludes: [path.join(project, outputName)]
+	});
+
+	result = Extension.Pack(folder, target, project, {
+		Surface: options.surface || settings.Surface,
+		Name: settings.Name,
+		Description: settings.Description,
+		Version: settings.Version,
+		ID: settings.ID,
+		Icons: settings.Icons,
+		Manifest: settings.Manifest
+	});
+
+	removeTree(folder);
+
+	process.stdout.write('Elemenx Builder: ' + result.Chrome + ' (Chrome, Edge), ' + result.Firefox + ' (Firefox), and a zip of each\n');
+
+	return target;
+}
+
+/* The platforms of elemenx build --native: a desktop program (Electron) and mobile programs (Capacitor). */
+var NativePlatforms = ['desktop', 'mobile'];
+
+/*
+ * A build of the Application as native programs: its production build, with its expressions precompiled, once, then
+ * for each platform (options.native: 'desktop', 'mobile', or 'all'): out/native/desktop, a desktop program with its
+ * main script (see electron.js), and the program in out/native/desktop-bin when the project has Electron and its
+ * packager; out/native/mobile, the web folder of the Capacitor project of the project (see capacitor.js). The
+ * settings of a platform: options.nativeSettings.Desktop and .Mobile (Native in elemenx.config.js).
+ */
+function native (project, options) {
+	var outputName = options.out || 'dist';
+	var root = path.join(project, outputName, 'native');
+	var staging = path.join(project, outputName, 'native-app');
+	var platforms = options.native === true || options.native === 'all' ? NativePlatforms : [options.native];
+	var settings = options.nativeSettings || {};
+	var command = function (platform) {
+		return 'npx elemenx build --native ' + platform + (outputName === 'dist' ? '' : ' --out ' + outputName);
+	};
+
+	platforms.forEach(function (platform) {
+		if (NativePlatforms.indexOf(platform) === -1)
+			fail('unknown --native platform: ' + platform + ' (desktop, mobile, or none for all of them)');
+	});
+
+	if (options.single || options.widget || options.extension)
+		fail('--native is a build of its own: not with --single, --widget or --extension');
+
+	removeTree(staging);
+
+	build(project, {
+		application: options.application,
+		applicationExplicit: options.applicationExplicit,
+		applications: options.applications,
+		entry: options.entry,
+		index: options.index,
+		out: path.relative(project, staging),
+		full: options.full,
+		precompile: true,
+		excludes: [path.join(project, outputName)]
+	});
+
+	platforms.forEach(function (platform, index) {
+		var source = staging;
+
+		/* Each platform takes the build away: the ones before the last take a copy. */
+		if (index < platforms.length - 1) {
+			source = staging + '-' + platform;
+
+			removeTree(source);
+
+			fs.cpSync(staging, source, {recursive: true});
+		}
+
+		if (platform === 'desktop') {
+			removeTree(path.join(root, 'desktop'));
+
+			fs.mkdirSync(path.join(root, 'desktop'), {recursive: true});
+
+			Electron.Pack(source, path.join(root, 'desktop'), path.join(root, 'desktop-bin'), project, settings.Desktop || {}, command('desktop'));
+		}
+		else {
+			Capacitor.Pack(source, path.join(root, 'mobile'), project, settings.Mobile || {}, command('mobile'));
+		}
+	});
+
+	return root;
+}
+
+/*
+ * The framework of a build: elemenx.js without the sections the code of the build does not use (see shake.js), or
+ * all of it when full is set. It reports the sections it leaves out.
+ */
+function frameworkSource (file, code, full) {
+	var source = fs.readFileSync(file, 'utf8');
+	var result;
+
+	if (full)
+		return source;
+
+	result = Shake.Shake(source, code);
+
+	if (result.Removed.length)
+		process.stdout.write('Elemenx Builder: without ' + result.Removed.join(', ') + ' (unused; --full keeps them)\n');
+
+	return result.Source;
 }
 
 /* Text for a <script> of the page: the HTML parser ends a script at </script and changes state at <!--. */
@@ -640,17 +770,13 @@ function scriptText (source) {
 }
 
 /*
- * A build of the whole Application into one index.html: the framework, the code of the Application, its templates and
- * styles and the Libraries it uses (their stylesheets, and their other files through Elemenx.Resource), inline and
- * minified. Images and the other public files of the project are copied next to it.
+ * The files of the Libraries of a build in one file: their stylesheets ({Name, Text}, minified) and the calls of
+ * Elemenx.Resource that embed their other files. A pack of a Library goes in when the Application asks for it
+ * (Packs) or uses it: its code has a text of Uses (a pack of a language, when it is the language of the page too).
  */
-function single (job) {
-	var page = fs.readFileSync(job.Index, 'utf8').replace(/^\uFEFF/, '');
+function libraryAssets (job, page) {
 	var styles = [];
 	var resources = [];
-	var framework = scriptText(Minify.JavaScript(fs.readFileSync(job.Framework, 'utf8')));
-	var code;
-	var replaced = {Framework: false, Entry: false};
 	var language = (/<html\b[^>]*\blang\s*=\s*["']?([A-Za-z]+)/i.exec(page) || [])[1];
 
 	/* A pack of a Library goes in when the Application asks for it (Packs) or uses it: its code has a text of Uses. */
@@ -677,12 +803,45 @@ function single (job) {
 
 			var text = fs.readFileSync(item.Source, 'utf8');
 
-			if (item.Style) styles.push(Minify.CSS(text));
-			else resources.push('Elemenx.Resource(' + JSON.stringify(root + '/' + relative) + ', ' + JSON.stringify(/\.json$/i.test(relative) ? Minify.JSON(text) : Minify.HTML(text)) + ');');
+			if (item.Style) styles.push({Name: root + '/' + relative, Text: Minify.CSS(text)});
+			else resources.push('Elemenx.Resource(' + JSON.stringify(root + '/' + relative) + ', ' + JSON.stringify(/\.json$/i.test(relative) ? Minify.JSON(text) : /\.txt$/i.test(relative) ? text : Minify.HTML(text)) + ');');
 		});
 	});
 
-	code = scriptText(Minify.JavaScript(resources.join('\n') + '\n' + job.Code));
+	return {Styles: styles, Resources: resources};
+}
+
+/* The public files of the project next to a build in one file: not its sources, its entry, its page or its config. */
+function copyBuildPublic (job) {
+	removeTree(job.Output);
+
+	fs.mkdirSync(job.Output, {recursive: true});
+
+	copyPublic(job.Project, job.Output, applicationDirectories(job.Project, job.Roots).concat([
+		job.Output,
+		job.Entry,
+		job.Index,
+		path.join(job.Project, 'elemenx.config.js'),
+		path.join(job.Project, 'package.json'),
+		path.join(job.Project, 'package-lock.json'),
+		path.join(job.Project, 'index.production.html')
+	]));
+}
+
+/*
+ * A build of the whole Application into one index.html: the framework, the code of the Application, its templates and
+ * styles and the Libraries it uses (their stylesheets, and their other files through Elemenx.Resource), inline and
+ * minified. Images and the other public files of the project are copied next to it.
+ */
+function single (job) {
+	var page = fs.readFileSync(job.Index, 'utf8').replace(/^\uFEFF/, '');
+	var assets = libraryAssets(job, page);
+	var styles = assets.Styles.map(function (style) {
+		return style.Text;
+	});
+	var framework = scriptText(Minify.JavaScript(job.FrameworkSource));
+	var code = scriptText(Minify.JavaScript(assets.Resources.join('\n') + '\n' + job.Code));
+	var replaced = {Framework: false, Entry: false};
 
 	/* The framework and the Application take the places of their <script src>: the framework stays one script of its own, so the workers can load it. */
 	page = page.replace(/<script\b[^>]*\bsrc\s*=\s*(["'])([^"']*)\1[^>]*>\s*<\/script>/gi, function (tag, quote, src) {
@@ -711,23 +870,50 @@ function single (job) {
 		else page = '<style>' + styles.join('') + '</style>\n' + page;
 	}
 
-	removeTree(job.Output);
-
-	fs.mkdirSync(job.Output, {recursive: true});
-
-	copyPublic(job.Project, job.Output, applicationDirectories(job.Project, job.Roots).concat([
-		job.Output,
-		job.Entry,
-		job.Index,
-		path.join(job.Project, 'elemenx.config.js'),
-		path.join(job.Project, 'package.json'),
-		path.join(job.Project, 'package-lock.json'),
-		path.join(job.Project, 'index.production.html')
-	]));
+	copyBuildPublic(job);
 
 	fs.writeFileSync(path.join(job.Output, 'index.html'), page);
 
 	process.stdout.write('Elemenx Builder: ' + path.join(job.Output, 'index.html') + ' (' + Math.round(Buffer.byteLength(page) / 1024) + ' KB)\n');
+
+	return job.Output;
+}
+
+/*
+ * A build of the Application as a widget for a page of another site: one widget.js with the framework, the Libraries
+ * and the Application, isolated. The window gets no Elemenx (the page may have its own, of any version), the
+ * Application renders in a shadow root (its styles and the ones of the page stay apart), the stylesheets reach it
+ * through Elemenx.Style and the other files of the Libraries through Elemenx.Resource. The index.html of the project
+ * becomes a page that loads widget.js in place of elemenx.js and the entry; the public files are copied next to it.
+ */
+function widget (job) {
+	var page = fs.readFileSync(job.Index, 'utf8').replace(/^\uFEFF/, '');
+	var assets = libraryAssets(job, page);
+	var styles = assets.Styles.map(function (style) {
+		return 'Elemenx.Style(' + JSON.stringify('library:' + style.Name) + ', ' + JSON.stringify(style.Text) + ');';
+	});
+	var framework = Minify.JavaScript(job.FrameworkSource);
+	var code = Minify.JavaScript(styles.concat(assets.Resources).join('\n') + '\n' + job.Code);
+	var version = (/\n\tvar Version = '([^']*)';/.exec(job.FrameworkSource) || [])[1] || '';
+	var text = '/*! ' + path.basename(job.Project) + ' | Elemenx ' + version + ', isolated */\n(function () {\nvar ElemenxIsolated = {};\n' + framework + '(function (Elemenx) {\n' + code + '})(ElemenxIsolated.Elemenx);\n})();\n';
+	var placed = false;
+
+	page = page.replace(/<script\b[^>]*\bsrc\s*=\s*(["'])([^"']*)\1[^>]*>\s*<\/script>\s*/gi, function (tag, quote, src) {
+		var name = src.replace(/[?#].*$/, '').split('/').pop();
+		if (name !== 'elemenx.js' && name !== 'elemenx.min.js' && name !== path.basename(job.Entry)) return tag;
+		if (placed) return '';
+
+		placed = true;
+
+		return '<script src="widget.js"></script>\n';
+	});
+
+	copyBuildPublic(job);
+
+	fs.writeFileSync(path.join(job.Output, 'widget.js'), text);
+	fs.writeFileSync(path.join(job.Output, 'index.html'), page);
+
+	process.stdout.write('Elemenx Builder: ' + path.join(job.Output, 'widget.js') + ' (' + Math.round(Buffer.byteLength(text) / 1024) + ' KB)\n');
 
 	return job.Output;
 }

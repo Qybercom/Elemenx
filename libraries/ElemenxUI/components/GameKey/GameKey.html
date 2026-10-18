@@ -1,0 +1,4 @@
+<span class="elemenx-game-key" [class]="[Kind || 'keyboard', 'button-' + Button]">
+	<kbd class="elemenx-game-key-glyph" [attribute.aria-label]="Kind ? $T('ui.game.button', {button: Glyph(Button, Keyboard, Kind)}) : null">{{Glyph(Button, Keyboard, Kind)}}</kbd>
+	<span class="elemenx-game-key-label" *if="Label">{{Label}}</span>
+</span>

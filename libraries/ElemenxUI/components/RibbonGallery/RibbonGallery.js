@@ -7,7 +7,7 @@
 Elemenx.Component('RibbonGallery', {
 	$TemplateURL: 'RibbonGallery.html',
 	ID: '',
-	Label: 'Gallery',
+	Label: '',
 	Items: [],
 	Value: null,
 	Columns: 4,

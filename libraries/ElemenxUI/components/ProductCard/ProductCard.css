@@ -9,14 +9,14 @@
 .elemenx-product-badge {
 	position: absolute;
 	top: 8px;
-	left: 8px;
+	inset-inline-start: 8px;
 	z-index: 1;
 }
 
 .elemenx-product-favorite {
 	position: absolute;
 	top: 8px;
-	right: 8px;
+	inset-inline-end: 8px;
 	z-index: 1;
 	display: inline-flex;
 	align-items: center;
@@ -51,7 +51,7 @@
 /* The price on the image: a tile of the Metro style at the corner. */
 .elemenx-product-corner {
 	position: absolute;
-	right: 0;
+	inset-inline-end: 0;
 	bottom: 0;
 	z-index: 1;
 	padding: 8px 12px;
@@ -77,7 +77,7 @@
 }
 
 .elemenx-product.corner .elemenx-product-dots {
-	left: 16px;
+	inset-inline-start: 16px;
 	transform: none;
 }
 

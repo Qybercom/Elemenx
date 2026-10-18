@@ -22,7 +22,7 @@ Elemenx.Service('Currencies', {
 	},
 
 	Locale: function (locale) {
-		return locale || (navigator.languages && navigator.languages[0]) || navigator.language || 'en';
+		return locale || Elemenx.Locale.Language();
 	},
 
 	Describe: function (code, locale, names) {

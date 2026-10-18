@@ -1,3 +1,4 @@
+/* A chart reads from left to right on a right-to-left page too: its axes and the text of its labels stay. */
 .elemenx-chart {
 	position: relative;
 	display: flex;
@@ -5,6 +6,7 @@
 	gap: 8px;
 	width: 100%;
 	min-width: 0;
+	direction: ltr;
 }
 
 .elemenx-chart-plot {
@@ -128,8 +130,8 @@
 }
 
 .elemenx-chart-tip-row b {
-	margin-left: auto;
-	padding-left: 12px;
+	margin-inline-start: auto;
+	padding-inline-start: 12px;
 	font-variant-numeric: tabular-nums;
 }
 

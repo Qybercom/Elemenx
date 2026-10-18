@@ -1,0 +1,321 @@
+/*
+ * Sci-fi: the screens of a ship, after the interfaces of Tron: Legacy. Glass of dark petrol in a thin line, the lines
+ * of a drawing running on past its corners with a cross where they meet; a header on a lighter band under a thick bar
+ * of light, its title large and light; sections in a line of light with their title set into it, stats in pairs of
+ * cells; tiles in a double line with a notch of light in a corner; gauges as a thin outlined track with a thick fill
+ * inside and a cap of light on its end, the value a large light figure over it; buttons of dark glass in a line of
+ * light with a small square of light on each corner; windows that open as a projection. Calm colors: cyan light,
+ * white for what matters, orange for a threat. Dark only. Made for the game components and Window with
+ * Variant="game" (the --elemenx-game-* tokens), and the other components follow its colors. Every rule starts with
+ * [data-theme][data-theme='scifi'].
+ */
+[data-theme][data-theme='scifi'],
+[data-theme][data-theme='scifi'][data-scheme] {
+	--elemenx-radius-small: 0;
+	--elemenx-radius: 1px;
+	--elemenx-radius-large: 2px;
+	--elemenx-background: #05141a;
+	--elemenx-background-rgb: 5, 20, 26;
+	--elemenx-surface: #0a2028;
+	--elemenx-surface-rgb: 10, 32, 40;
+	--elemenx-surface-raised: #0e2a33;
+	--elemenx-surface-hover: #123440;
+	--elemenx-surface-hover-rgb: 18, 52, 64;
+	--elemenx-text: #dff8fc;
+	--elemenx-text-rgb: 223, 248, 252;
+	--elemenx-text-muted: #7ea3ad;
+	--elemenx-text-muted-rgb: 126, 163, 173;
+	--elemenx-accent: #5ce1f5;
+	--elemenx-accent-rgb: 92, 225, 245;
+	--elemenx-accent-hover: #97eefa;
+	--elemenx-accent-text: #011014;
+	--elemenx-accent-text-rgb: 1, 16, 20;
+	--elemenx-danger: #ff7a2e;
+	--elemenx-danger-rgb: 255, 122, 46;
+	--elemenx-success: #55e6c1;
+	--elemenx-success-rgb: 85, 230, 193;
+	--elemenx-warning: #ffb54a;
+	--elemenx-warning-rgb: 255, 181, 74;
+	--elemenx-info: #5ce1f5;
+	--elemenx-info-rgb: 92, 225, 245;
+	--elemenx-border: #1a3c46;
+	--elemenx-border-strong: #2a5a66;
+	--elemenx-border-strong-rgb: 42, 90, 102;
+	--elemenx-shadow: 0 0 20px #5ce1f514;
+	--elemenx-game-text: #cdeff7;
+	--elemenx-game-muted: #7fa6b0;
+	--elemenx-game-accent: #8ff5ff;
+	--elemenx-game-title: #f2feff;
+	--elemenx-game-title-align: flex-start;
+	--elemenx-game-title-shadow: none;
+	--elemenx-game-text-shadow: none;
+	--elemenx-game-letter-spacing: 0.06em;
+	--elemenx-game-text-transform: uppercase;
+	--elemenx-game-panel: linear-gradient(to bottom, #143c47eb, #0e2e37f0) border-box;
+	--elemenx-game-frame: 1px solid #6fe9ff80;
+	--elemenx-game-frame-image: none;
+	--elemenx-game-panel-shadow: inset 0 0 30px #6fe9ff0d;
+	--elemenx-game-active: inset 0 0 40px #6fe9ff17;
+	--elemenx-game-radius: 0;
+	--elemenx-game-shape: none;
+	--elemenx-game-blur: blur(6px);
+	--elemenx-game-decor: linear-gradient(#5ce1f5, #5ce1f5) 18px 18px / calc(100% - 36px) 3px no-repeat, linear-gradient(#ff7a2e, #ff7a2e) calc(100% - 18px) 11px / 12px 4px no-repeat, var(--elemenx-scifi-lines);
+	--elemenx-game-decor-inset: -18px;
+	--elemenx-game-header: none;
+	--elemenx-game-header-line: 0;
+	--elemenx-game-header-image: none;
+	--elemenx-game-header-inset: 0;
+	--elemenx-game-header-padding: 6px 6px 0 16px;
+	--elemenx-game-body: #041014db;
+	--elemenx-game-body-frame: 1px solid #6fe9ff47;
+	--elemenx-game-body-margin: 0 8px 8px;
+	--elemenx-game-header-radius: 0;
+	--elemenx-game-ornament: none;
+	--elemenx-game-glow: 0 0 0 1px #7fe9fa, 0 0 10px #6fe9ff8c;
+	--elemenx-game-appear: elemenx-window-hologram 420ms ease-out;
+	--elemenx-game-cell: linear-gradient(135deg, #5ce1f5 0 5px, #00000000 5px) 0 0 / 12px 12px no-repeat, #06161bcc;
+	--elemenx-game-cell-frame: 1px solid #6fe9ff73;
+	--elemenx-game-cell-radius: 0;
+	--elemenx-game-item-tint: 0.22;
+	--elemenx-game-item-gloss: linear-gradient(to bottom, #ffffff14, #ffffff00 40%);
+	--elemenx-game-item-inset: 1px;
+	--elemenx-game-item-bevel: inset 0 0 0 2px #071d23, inset 0 0 0 3px #6fe9ff66;
+	--elemenx-game-item-icon: #eafcff;
+	--elemenx-game-item-icon-shadow: drop-shadow(0 0 3px #6fe9ffbf);
+	--elemenx-game-item-icon-scale: 1.1;
+	--elemenx-game-inventory-gap: 8px;
+	--elemenx-game-cooldown: #010507bf;
+	--elemenx-game-bar-track: linear-gradient(#8ff5ff, #8ff5ff) right bottom / 2px 14px no-repeat, linear-gradient(#6fe9ff80, #6fe9ff80) left bottom / 100% 1px no-repeat, linear-gradient(#6fe9ff80, #6fe9ff80) left calc(100% - 9px) / 100% 1px no-repeat, linear-gradient(#6fe9ff80, #6fe9ff80) left bottom / 1px 10px no-repeat;
+	--elemenx-game-bar-frame: 0;
+	--elemenx-game-bar-radius: 0;
+	--elemenx-game-bar-shadow: none;
+	--elemenx-game-bar-shine: none;
+	--elemenx-game-bar-fill-opacity: 1;
+	--elemenx-game-bar-pattern: none;
+	--elemenx-game-bar-edge: none;
+	--elemenx-game-bar-value-align: flex-end;
+	--elemenx-game-bar-value-padding: 0 6px 12px 0;
+	--elemenx-game-bar-damage: #ffffff66;
+	--elemenx-game-bar-text: #f2feff;
+	--elemenx-game-bar-text-shadow: none;
+	--elemenx-game-damage-delay: 250ms;
+	--elemenx-game-damage-duration: 350ms;
+	--elemenx-game-health: #ff7a2e;
+	--elemenx-game-mana: #5ce1f5;
+	--elemenx-game-experience: #c9f6ff;
+	--elemenx-game-stamina: #ffd27a;
+	--elemenx-game-common: #8aa4ad;
+	--elemenx-game-uncommon: #55e6c1;
+	--elemenx-game-rare: #5ca8ff;
+	--elemenx-game-epic: #b08cff;
+	--elemenx-game-legendary: #ff9a3c;
+	--elemenx-game-good: #55e6c1;
+	--elemenx-game-bad: #ff7a2e;
+	--elemenx-game-special: #ffab5c;
+	--elemenx-game-section: linear-gradient(to right, #17525c, #17525c33);
+	--elemenx-game-section-title: #effdff;
+	--elemenx-game-section-gap: 8px;
+	--elemenx-game-section-padding: 0 10px 10px;
+	--elemenx-game-section-frame: 1px solid #6fe9ff3d;
+	--elemenx-game-section-title-margin: 0 -10px 2px;
+	--elemenx-game-section-title-padding: 4px 10px;
+	--elemenx-game-stats-gap: 4px 2px;
+	--elemenx-game-stats-pair-gap: 10px;
+	--elemenx-game-stats-cell-gap: 2px;
+	--elemenx-game-stat-padding: 2px 8px;
+	--elemenx-game-stat-label: #6fe9ff14;
+	--elemenx-game-stat-label-text: #9cc9d2;
+	--elemenx-game-stat-value: #030e1299;
+	--elemenx-game-stat-value-frame: 1px solid #6fe9ff4c;
+	--elemenx-game-body-padding: 10px;
+	--elemenx-game-hotbar-gap: 6px;
+	--elemenx-game-hotbar-padding: 10px;
+	--elemenx-game-table-spacing: 2px;
+	--elemenx-game-table-frame: 0;
+	--elemenx-game-table-cell: #6fe9ff0d;
+	--elemenx-game-table-head: #45c9d9;
+	--elemenx-game-table-head-text: #04161b;
+	--elemenx-game-table-line: 0;
+	--elemenx-game-table-divider: 0;
+	--elemenx-game-table-stripe: #6fe9ff17;
+	--elemenx-game-table-hover: #6fe9ff14;
+	--elemenx-game-table-selected: linear-gradient(#17606d, #17606d);
+	--elemenx-game-table-selected-text: #ffffff;
+	--elemenx-game-meter-track: #6fe9ff24;
+	--elemenx-game-meter-radius: 0;
+	--elemenx-game-meter-ring: #6fe9ff38;
+	--elemenx-game-meter-needle: #e8fbff;
+	--elemenx-game-meter-value-size: 20px;
+	--elemenx-game-meter-value-weight: 300;
+	--elemenx-game-meter-readout: #8ff5ff;
+	--elemenx-game-meter-readout-text: #03161b;
+	--elemenx-game-scrollbar-width: auto;
+	--elemenx-game-scrollbar-color: auto;
+	--elemenx-game-scrollbar-track: linear-gradient(#6fe9ff59, #6fe9ff59) center / 1px 100% no-repeat, repeating-linear-gradient(to bottom, #6fe9ff1f 0 1px, #00000000 1px 10px) center / 7px 100% no-repeat;
+	--elemenx-game-scrollbar-thumb: linear-gradient(#8ff5ff, #8ff5ff);
+	--elemenx-game-scrollbar-thumb-inset: 4px;
+	--elemenx-game-scrollbar-radius: 0;
+	--elemenx-game-item-selected: linear-gradient(#8ff5ff, #8ff5ff) 0 0 / 11px 2px no-repeat, linear-gradient(#8ff5ff, #8ff5ff) 0 0 / 2px 11px no-repeat, linear-gradient(#8ff5ff, #8ff5ff) 100% 100% / 11px 2px no-repeat, linear-gradient(#8ff5ff, #8ff5ff) 100% 100% / 2px 11px no-repeat;
+	--elemenx-game-item-selected-inset: -4px;
+	--elemenx-game-item-active: inset 0 0 0 2px #0d3540, inset 0 0 0 3px #8ff5ff, 0 0 0 3px #071d23, 0 0 0 4px #6fe9ff99;
+	--elemenx-game-item-active-fill: #1a6a76e6;
+	--elemenx-game-separator: linear-gradient(to right, #6fe9ff00, #6fe9ff80 20%, #6fe9ff80 80%, #6fe9ff00);
+	--elemenx-game-separator-ornament: none;
+	--elemenx-game-button: var(--elemenx-scifi-brackets), linear-gradient(#0a2830, #0a2830);
+	--elemenx-game-button-edge: linear-gradient(#6fe9ff73, #6fe9ff73);
+	--elemenx-game-button-hover: var(--elemenx-scifi-brackets), linear-gradient(#155461, #155461);
+	--elemenx-game-button-radius: 0;
+	--elemenx-game-button-text: #8ff5ff;
+	--elemenx-game-button-shadow: none;
+	--elemenx-game-field: #000406bf;
+	--elemenx-game-field-frame: 1px solid #6fe9ff47;
+	--elemenx-game-field-shadow: none;
+	--elemenx-game-scrollbar: #6fe9ff66;
+	--elemenx-game-tab: #6fe9ff0a;
+	--elemenx-game-tab-active: #6fe9ff24;
+	--elemenx-game-tab-marker: #eafcff;
+	--elemenx-game-menu-item: var(--elemenx-game-button);
+	--elemenx-game-menu-item-hover: var(--elemenx-game-button-hover);
+	--elemenx-game-menu-item-hover-text: #ffffff;
+	--elemenx-game-menu-item-frame: 1px solid #6fe9ff73;
+	--elemenx-game-menu-item-shadow: none;
+	--elemenx-game-menu-item-ornament: none;
+	--elemenx-game-menu-item-ornament-inset: 0;
+	--elemenx-game-menu-item-align: center;
+	--elemenx-game-menu-item-padding: 12px 20px;
+	--elemenx-game-menu-item-shift: none;
+	--elemenx-game-menu-title-ornament: linear-gradient(to right, #6fe9ff00, #6fe9ffb2 30%, #6fe9ffb2 70%, #6fe9ff00) center / 100% 1px no-repeat;
+	--elemenx-game-menu-title-ornament-height: 9px;
+	--elemenx-game-light-panel: var(--elemenx-game-panel);
+	--elemenx-game-light-frame: var(--elemenx-game-frame);
+	--elemenx-game-light-frame-image: none;
+	--elemenx-game-light-radius: 0;
+	--elemenx-game-light-shadow: none;
+	--elemenx-game-light-decor: none;
+	--elemenx-game-light-decor-inset: 0;
+	--elemenx-game-dialogue-portrait-frame: 1px solid #6fe9ff80;
+	--elemenx-game-dialogue-portrait-radius: 0;
+	--elemenx-game-dialogue-portrait-shadow: 0 0 10px #6fe9ff33;
+	--elemenx-game-dialogue-choice: linear-gradient(#6fe9ffb2, #6fe9ffb2) 0 0 / 2px 100% no-repeat, linear-gradient(to right, #6fe9ff14, #6fe9ff00);
+	--elemenx-game-dialogue-choice-hover: linear-gradient(#e8fbff, #e8fbff) 0 0 / 2px 100% no-repeat, linear-gradient(to right, #6fe9ff38, #6fe9ff05);
+	--elemenx-game-dialogue-choice-hover-text: #ffffff;
+	--elemenx-game-dialogue-choice-frame: 0;
+	--elemenx-game-dialogue-choice-padding: 8px 14px 8px 16px;
+	--elemenx-game-dialogue-next-padding: 9px 22px;
+	--elemenx-scifi-lines: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='100%25' height='100%25' stroke='%236fe9ff'><defs><path id='c' d='M-7 0h14M0-7v14'/></defs><g stroke-opacity='.16'><path d='M0 18.5h9999M18.5 0v9999'/><svg x='100%25' y='100%25' overflow='visible'><path d='M0-18.5h-9999M-18.5 0v-9999'/></svg></g><g stroke-opacity='.7'><use href='%23c' x='18.5' y='18.5'/><svg x='100%25' overflow='visible'><use href='%23c' x='-18.5' y='18.5'/></svg><svg y='100%25' overflow='visible'><use href='%23c' x='18.5' y='-18.5'/></svg><svg x='100%25' y='100%25' overflow='visible'><use href='%23c' x='-18.5' y='-18.5'/></svg></g></svg>") 0 0 / 100% 100% no-repeat;
+	--elemenx-scifi-brackets: linear-gradient(#8ff5ff, #8ff5ff) 0 0 / 2px 100% no-repeat, linear-gradient(#8ff5ff, #8ff5ff) 100% 0 / 2px 100% no-repeat, linear-gradient(#8ff5ff, #8ff5ff) 0 0 / 7px 2px no-repeat, linear-gradient(#8ff5ff, #8ff5ff) 0 100% / 7px 2px no-repeat, linear-gradient(#8ff5ff, #8ff5ff) 100% 0 / 7px 2px no-repeat, linear-gradient(#8ff5ff, #8ff5ff) 100% 100% / 7px 2px no-repeat;
+	color-scheme: dark;
+}
+
+[data-theme][data-theme='scifi'] .elemenx-game-panel.elemenx-game-dialogue {
+	gap: 22px;
+	padding: 22px 26px;
+}
+
+[data-theme][data-theme='scifi'] .elemenx-game-panel.elemenx-game-menu {
+	gap: 16px;
+	padding: 30px 28px;
+}
+
+[data-theme][data-theme='scifi'] .elemenx-game-menu-items {
+	gap: 10px;
+}
+
+[data-theme][data-theme='scifi'] .elemenx-window.game .elemenx-window-header {
+	min-height: 52px;
+}
+
+[data-theme][data-theme='scifi'] .elemenx-window.game .elemenx-window-title,
+[data-theme][data-theme='scifi'] .elemenx-game-menu-title {
+	color: var(--elemenx-game-title);
+	font-weight: 300;
+}
+
+[data-theme][data-theme='scifi'] .elemenx-window.game .elemenx-window-title {
+	font-size: 20px;
+}
+
+[data-theme][data-theme='scifi'] .elemenx-window.game .elemenx-window-header .elemenx-window-overline {
+	padding: 1px 5px;
+	background: #e8642a;
+	color: #ffffff;
+}
+
+[data-theme][data-theme='scifi'] .elemenx-game-bar {
+	gap: 2px;
+}
+
+[data-theme][data-theme='scifi'] .elemenx-game-bar-label,
+[data-theme][data-theme='scifi'] .elemenx-game-stats > dt,
+[data-theme][data-theme='scifi'] .elemenx-game-panel .elemenx-property-label,
+[data-theme][data-theme='scifi'] .elemenx-window.game .elemenx-property-label,
+[data-theme][data-theme='scifi'] .elemenx-game-key-label,
+[data-theme][data-theme='scifi'] .elemenx-game-panel .elemenx-meter-label,
+[data-theme][data-theme='scifi'] .elemenx-window.game .elemenx-meter-label,
+[data-theme][data-theme='scifi'] .elemenx-game-panel .elemenx-table th,
+[data-theme][data-theme='scifi'] .elemenx-window.game .elemenx-table th {
+	font-size: 10px;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+}
+
+[data-theme][data-theme='scifi'] .elemenx-game-stats > dd,
+[data-theme][data-theme='scifi'] .elemenx-game-panel .elemenx-property-value,
+[data-theme][data-theme='scifi'] .elemenx-window.game .elemenx-property-value {
+	font-size: 15px;
+	font-weight: 300;
+}
+
+[data-theme][data-theme='scifi'] .elemenx-game-panel .elemenx-table,
+[data-theme][data-theme='scifi'] .elemenx-window.game .elemenx-table {
+	font-size: 12px;
+}
+
+[data-theme][data-theme='scifi'] .elemenx-game-panel .elemenx-table.compact td,
+[data-theme][data-theme='scifi'] .elemenx-window.game .elemenx-table.compact td {
+	height: 24px;
+}
+
+[data-theme][data-theme='scifi'] .elemenx-game-bar {
+	position: relative;
+}
+
+[data-theme][data-theme='scifi'] .elemenx-game-bar-label {
+	position: absolute;
+	bottom: 14px;
+	left: 0;
+	color: var(--elemenx-game-muted);
+}
+
+[data-theme][data-theme='scifi'] .elemenx-game-bar.small .elemenx-game-bar-label {
+	position: static;
+}
+
+[data-theme][data-theme='scifi'] .elemenx-game-bar-track {
+	height: 30px;
+}
+
+[data-theme][data-theme='scifi'] .elemenx-game-bar.small .elemenx-game-bar-track {
+	height: 14px;
+}
+
+[data-theme][data-theme='scifi'] .elemenx-game-bar.large .elemenx-game-bar-track {
+	height: 38px;
+}
+
+[data-theme][data-theme='scifi'] .elemenx-game-bar-fill {
+	background: linear-gradient(var(--elemenx-game-bar-color), var(--elemenx-game-bar-color)) left calc(100% - 3px) / 100% 4px no-repeat;
+}
+
+[data-theme][data-theme='scifi'] .elemenx-game-bar-trail {
+	background: linear-gradient(var(--elemenx-game-bar-damage), var(--elemenx-game-bar-damage)) left calc(100% - 3px) / 100% 4px no-repeat;
+}
+
+[data-theme][data-theme='scifi'] .elemenx-game-bar-value {
+	font-size: 14px;
+	font-weight: 300;
+}
+
+[data-theme][data-theme='scifi'] .elemenx-game-bar.large .elemenx-game-bar-value {
+	font-size: 20px;
+}

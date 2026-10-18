@@ -8,7 +8,7 @@ Elemenx.Service('Format', {
 	Locale: '',
 
 	Language: function () {
-		return this.Locale || (typeof navigator !== 'undefined' && navigator.language) || 'en';
+		return this.Locale || Elemenx.Locale.Language();
 	},
 
 	Count: function (value) {

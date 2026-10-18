@@ -4,7 +4,7 @@
 		<section class="elemenx-column fill elemenx-settings-page">
 			<header class="elemenx-container elemenx-settings-header">
 				<div class="elemenx-column elemenx-settings-heading">
-					<div class="elemenx-settings-path" role="navigation" aria-label="Path" *if="Path.length > 1">
+					<div class="elemenx-settings-path" role="navigation" [attribute.aria-label]="$T('ui.settings.path')" *if="Path.length > 1">
 						<span class="elemenx-settings-crumb" *for="part of Path.slice(0, -1)" *key="$index">{{part}}<Icon Name="chevron-right" Size="12" /></span>
 					</div>
 					<h2 class="elemenx-settings-title">{{Path.length ? Path[Path.length - 1] : ''}}</h2>

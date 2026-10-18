@@ -30,3 +30,122 @@
 .elemenx-menu .elemenx-option.danger .elemenx-menu-icon {
 	color: inherit;
 }
+
+/* The menu as on a phone: a sheet from the bottom of the screen, over a shade. */
+.elemenx-menu-host {
+	display: contents;
+}
+
+.elemenx-menu-layer {
+	position: fixed;
+	z-index: 1100;
+	inset: 0;
+	display: flex;
+	flex-direction: column;
+	justify-content: flex-end;
+}
+
+.elemenx-menu-shade {
+	position: absolute;
+	inset: 0;
+	background: var(--elemenx-backdrop);
+	animation: elemenx-menu-shade var(--elemenx-duration-slow) var(--elemenx-easing);
+}
+
+.elemenx-menu.sheet {
+	outline: none;
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	max-height: 80vh;
+	min-width: 0;
+	padding: 4px 8px calc(8px + env(safe-area-inset-bottom));
+	overflow: auto;
+	background: var(--elemenx-surface);
+	border-radius: var(--elemenx-radius-giant) var(--elemenx-radius-giant) 0 0;
+	box-shadow: var(--elemenx-shadow);
+	animation: elemenx-menu-sheet var(--elemenx-duration-slow) var(--elemenx-easing);
+}
+
+.elemenx-menu-grabber {
+	flex: none;
+	width: 40px;
+	height: 4px;
+	margin: 6px auto 8px;
+	background: var(--elemenx-border-strong);
+	border-radius: var(--elemenx-radius-pill);
+}
+
+.elemenx-menu-title {
+	padding: 4px 12px 8px;
+	color: var(--elemenx-text-muted);
+	font-size: var(--elemenx-font-size-small);
+	text-align: center;
+}
+
+/* Rows a finger finds: 48 pixels high, with larger icons. */
+.elemenx-menu.sheet .elemenx-option {
+	gap: 14px;
+	min-height: 48px;
+	padding: 0 12px;
+	border-radius: var(--elemenx-radius-large);
+	font-size: var(--elemenx-font-size-large);
+}
+
+.elemenx-menu.sheet .elemenx-menu-icon {
+	width: 20px;
+}
+
+.elemenx-menu.sheet .elemenx-option:active {
+	background: var(--elemenx-surface-hover);
+}
+
+.elemenx-menu-back {
+	width: 100%;
+	background: none;
+	border: 0;
+	color: var(--elemenx-text);
+	font: inherit;
+	font-weight: var(--elemenx-font-weight-strong);
+	text-align: start;
+	cursor: pointer;
+}
+
+.elemenx-menu-cancel {
+	flex: none;
+	min-height: 48px;
+	margin-top: 8px;
+	background: var(--elemenx-surface-raised);
+	border: 0;
+	border-radius: var(--elemenx-radius-large);
+	color: var(--elemenx-accent);
+	font: inherit;
+	font-size: var(--elemenx-font-size-large);
+	font-weight: var(--elemenx-font-weight-strong);
+	cursor: pointer;
+	outline: none;
+}
+
+.elemenx-menu-cancel:focus-visible,
+.elemenx-menu-cancel:hover {
+	background: var(--elemenx-surface-hover);
+}
+
+@keyframes elemenx-menu-sheet {
+	from {
+		transform: translateY(100%);
+	}
+}
+
+@keyframes elemenx-menu-shade {
+	from {
+		opacity: 0;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.elemenx-menu.sheet,
+	.elemenx-menu-shade {
+		animation: none;
+	}
+}

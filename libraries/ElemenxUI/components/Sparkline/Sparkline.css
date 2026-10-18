@@ -1,6 +1,7 @@
 .elemenx-sparkline {
 	--elemenx-spark-color: var(--elemenx-accent);
 	display: inline-block;
+	direction: ltr;
 	flex: none;
 	overflow: visible;
 	vertical-align: middle;

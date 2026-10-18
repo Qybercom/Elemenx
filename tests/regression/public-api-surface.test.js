@@ -60,8 +60,20 @@ describe('Regression: public API surface', function () {
 			'Elemenx.Component:function',
 			'Elemenx.Directive:function',
 			'Elemenx.Events:function',
+			'Elemenx.Expressions:function',
 			'Elemenx.Guard:function',
 			'Elemenx.Library:function',
+			'Elemenx.Locale:object',
+			'Elemenx.Locale.Add:function',
+			'Elemenx.Locale.Direction:function',
+			'Elemenx.Locale.Fallback:function',
+			'Elemenx.Locale.Has:function',
+			'Elemenx.Locale.Key:function',
+			'Elemenx.Locale.Language:function',
+			'Elemenx.Locale.OffChange:function',
+			'Elemenx.Locale.OnChange:function',
+			'Elemenx.Locale.Source:function',
+			'Elemenx.Locale.Text:function',
 			'Elemenx.Messaging:function',
 			'Elemenx.Messaging.Context:function',
 			'Elemenx.Messaging.Origins:function',
@@ -78,6 +90,7 @@ describe('Regression: public API surface', function () {
 			'Elemenx.Network.WebRTC:function',
 			'Elemenx.Network.WebSocket:function',
 			'Elemenx.Network.XHR:function',
+			'Elemenx.NoConflict:function',
 			'Elemenx.Pipe:function',
 			'Elemenx.Resource:function',
 			'Elemenx.Resource.Load:function',
@@ -89,12 +102,14 @@ describe('Regression: public API surface', function () {
 			'Elemenx.Storage:function',
 			'Elemenx.Storage.Context:function'
 		].concat(storage('Cookie'), ['Elemenx.Storage.IndexedDB:function'], storage('Local'), storage('Session'), [
+			'Elemenx.Style:function',
 			'Elemenx.Template:function',
 			'Elemenx.Template.Has:function',
 			'Elemenx.Template.Loader:function',
 			'Elemenx.Template.Reload:function',
 			'Elemenx.Template.Remove:function',
 			'Elemenx.Title:function',
+			'Elemenx.Version:string',
 			'Elemenx.WebWorker:function'
 		]));
 	});

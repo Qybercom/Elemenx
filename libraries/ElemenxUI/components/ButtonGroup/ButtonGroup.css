@@ -14,14 +14,14 @@
 }
 
 .elemenx-button-group.attached .elemenx-button:not(:first-of-type) {
-	margin-left: -1px;
-	border-top-left-radius: 0;
-	border-bottom-left-radius: 0;
+	margin-inline-start: -1px;
+	border-start-start-radius: 0;
+	border-end-start-radius: 0;
 }
 
 .elemenx-button-group.attached .elemenx-button:not(:last-of-type) {
-	border-top-right-radius: 0;
-	border-bottom-right-radius: 0;
+	border-start-end-radius: 0;
+	border-end-end-radius: 0;
 }
 
 .elemenx-button-group.attached .elemenx-button:hover,

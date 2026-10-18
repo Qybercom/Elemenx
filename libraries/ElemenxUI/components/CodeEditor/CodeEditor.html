@@ -1,0 +1,21 @@
+<div class="elemenx-code-editor" dir="ltr" [class]="[Wrap ? 'wrap' : '', LineNumbers ? 'numbered' : '', AutoSize ? 'auto-size' : '', Invalid ? 'invalid' : '', Disabled ? 'disabled' : '', ReadOnly ? 'readonly' : '']" [attribute.style]="'--elemenx-code-rows: ' + Rows + '; --elemenx-code-tab: ' + TabSize + ';'">
+	<div class="elemenx-code-editor-scroll" [hidden]="Diffing(Diff, Original)">
+		<div class="elemenx-code-editor-content">
+			<div class="elemenx-code-editor-lines" aria-hidden="true"></div>
+			<textarea class="elemenx-code-editor-input" spellcheck="false" autocomplete="off" autocapitalize="off" autocorrect="off" [value]="Value" [placeholder]="Placeholder" [disabled]="Disabled" [attribute.wrap]="Wrap ? 'soft' : 'off'" [attribute.readonly]="ReadOnly ? '' : null" [attribute.name]="Name" [attribute.aria-label]="Label || $T('ui.codeEditor.label')" [attribute.aria-invalid]="Invalid ? 'true' : null" [attribute.aria-autocomplete]="Complete ? 'list' : null" [attribute.aria-controls]="Suggestions.length ? ListID : null" [attribute.aria-activedescendant]="Suggestions.length ? ListID + '-' + Choice : null" (input)="Typed" (change)="Committed" (keydown)="Key" (keyup)="Moved" (mouseup)="Moved" (select)="Moved" (focus)="Focused" (blur)="Blurred" (mousemove)="Hover" (mouseleave)="Left"></textarea>
+		</div>
+	</div>
+	<i class="elemenx-code-editor-sync" hidden *mount="Sync(Value, Language, Markers, Found, Current, LineNumbers, ActiveLine)"></i>
+	<div class="elemenx-code-diff" role="table" tabindex="0" *if="Diffing(Diff, Original)" [class.split]="Diff === 'split'" [attribute.aria-label]="Label ? Label + ': ' + $T('ui.codeEditor.diff') : $T('ui.codeEditor.diff')" (click)="DiffPressed"></div>
+	<i class="elemenx-code-editor-sync" hidden *if="Diffing(Diff, Original)" *mount="DiffSync(Value, Original, Language, Diff, Context, Unfolded)"></i>
+	<div class="elemenx-code-editor-popup" *if="Suggestions.length" [attribute.style]="SuggestStyle" (mousedown)="Hold">
+		<ul class="elemenx-code-editor-suggestions" role="listbox" [attribute.id]="ListID" [attribute.aria-label]="$T('ui.codeEditor.suggestions')">
+			<li class="elemenx-code-editor-suggestion" role="option" *for="item of Suggestions" [attribute.id]="ListID + '-' + $index" [attribute.data-index]="$index" [attribute.aria-selected]="$index === Choice ? 'true' : 'false'" [class.active]="$index === Choice" (click)="Picked">
+				<span class="elemenx-code-editor-suggestion-kind" *if="item.Kind">{{item.Kind}}</span>
+				<span class="elemenx-code-editor-suggestion-label">{{item.Label}}</span>
+				<span class="elemenx-code-editor-suggestion-detail" *if="item.Detail">{{item.Detail}}</span>
+			</li>
+		</ul>
+	</div>
+	<div class="elemenx-code-editor-hint" role="tooltip" *if="HintText" [attribute.style]="HintStyle">{{HintText}}</div>
+</div>

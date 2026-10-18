@@ -7,10 +7,14 @@ var Builder = require('./tools/builder.js');
 var Server = require('./tools/server.js');
 var Generator = require('./tools/generator.js');
 var Icons = require('./tools/icons.js');
+var Native = require('./tools/native.js');
 var Package = require('./package.json');
 var fail = require('./tools/common.js').fail;
 
-var BooleanOptions = {force: true, 'current-color': true, single: true};
+var BooleanOptions = {force: true, 'current-color': true, single: true, widget: true, full: true, precompile: true, extension: true, help: true};
+
+/* Options whose value may be left out: --native alone builds all the platforms. */
+var OptionalValues = {native: ['desktop', 'mobile', 'all']};
 
 function parse (argv) {
 	var result = {Arguments: [], Options: {}};
@@ -29,6 +33,11 @@ function parse (argv) {
 
 				i++;
 			}
+			else if (OptionalValues[name]) {
+				result.Options[name] = OptionalValues[name].indexOf(argv[i + 1]) !== -1 ? argv[i + 1] : true;
+
+				i += result.Options[name] === true ? 1 : 2;
+			}
 			else if (i + 1 < argv.length && argv[i + 1].indexOf('--') !== 0) {
 				result.Options[name] = argv[i + 1];
 
@@ -41,7 +50,8 @@ function parse (argv) {
 			}
 		}
 		else {
-			result.Arguments.push(value);
+			if (value === '-h') result.Options.help = true;
+			else result.Arguments.push(value);
 
 			i++;
 		}
@@ -83,6 +93,14 @@ function buildOptions (parsed, settings) {
 		index: value(parsed.Options, 'index', settings.Index, 'index.html'),
 		out: value(parsed.Options, 'out', settings.Output, 'dist'),
 		single: parsed.Options.single === true || settings.Single === true,
+		widget: parsed.Options.widget === true || settings.Widget === true,
+		full: parsed.Options.full === true || settings.Full === true,
+		precompile: parsed.Options.precompile === true || settings.Precompile === true,
+		extension: parsed.Options.extension === true,
+		surface: value(parsed.Options, 'surface', (settings.Extension || {}).Surface, 'popup'),
+		extensionSettings: settings.Extension || {},
+		native: parsed.Options.native === undefined ? false : parsed.Options.native,
+		nativeSettings: settings.Native || {},
 		packs: listValue(value(parsed.Options, 'packs', settings.Packs, []))
 	};
 }
@@ -132,8 +150,42 @@ function listen (directory, port, settings, production, options) {
 
 var Commands = {};
 
-function command (name, description, handler) {
-	Commands[name] = {Description: description, Handler: handler};
+/*
+ * A command: its description (one line), its handler and its help (elemenx help <command>, or --help): {Usage: [lines],
+ * Text: [paragraphs], Options: [[option, what it does]]}.
+ */
+function command (name, description, handler, help) {
+	Commands[name] = {Description: description, Handler: handler, Help: help || {}};
+}
+
+/* The help of a command: what it does, how to call it, its options. */
+function describe (name) {
+	var entry = Commands[name];
+	var help = entry.Help;
+	var width = 0;
+	var lines = ['elemenx ' + name + ': ' + entry.Description, '', 'Usage:'];
+
+	(help.Usage || ['elemenx ' + name]).forEach(function (usage) {
+		lines.push('  ' + usage);
+	});
+
+	(help.Text || []).forEach(function (text) {
+		lines.push('', text);
+	});
+
+	if ((help.Options || []).length) {
+		help.Options.forEach(function (option) {
+			width = Math.max(width, option[0].length);
+		});
+
+		lines.push('', 'Options:');
+
+		help.Options.forEach(function (option) {
+			lines.push('  ' + option[0] + Array(width - option[0].length + 3).join(' ') + option[1]);
+		});
+	}
+
+	return lines.join('\n') + '\n';
 }
 
 command('generate', 'Generate an Application or an entity and register it in the Application graph.', function (parsed) {
@@ -145,9 +197,15 @@ command('generate', 'Generate an Application or an entity and register it in the
 			fail('usage: elemenx generate application <Name> [path] [--force]');
 		}
 
-		Generator.GenerateApplication(projectPath(parsed.Arguments.shift()), target, {
-			force: parsed.Options.force === true
+		var root = projectPath(parsed.Arguments.shift());
+
+		Generator.GenerateApplication(root, target, {
+			force: parsed.Options.force === true,
+			native: parsed.Options.native || false
 		});
+
+		if (parsed.Options.native)
+			Native.Add(root, parsed.Options.native);
 
 		return;
 	}
@@ -162,13 +220,38 @@ command('generate', 'Generate an Application or an entity and register it in the
 		application: parsed.Options.application !== undefined ? parsed.Options.application : (settings.Application || null),
 		force: parsed.Options.force === true
 	});
+}, {
+	Usage: ['elemenx generate application <Name> [path] [--native [desktop|mobile]] [--force]', 'elemenx generate <component|service|guard|directive> <path/Name> [project] [--application Name] [--force]', 'elemenx g ... (the same)'],
+	Text: ['An Application gets its folder, and its app.js, index.html, elemenx.config.js and package.json when the project has none. An entity gets its files and its line in the graph of its Application (index.js).'],
+	Options: [
+		['--application <Name>', 'the Application of the entity (Application of elemenx.config.js by default)'],
+		['--native [platform]', 'an Application made for native programs: installs Electron (desktop), Capacitor (mobile), or both, and adds npm run native'],
+		['--force', 'writes over the files that exist']
+	]
 });
 
-command('build', 'Build an application into dist (--single: all of it in one index.html; --packs a,b: Library packs it always embeds).', function (parsed) {
+command('build', 'Build an Application into dist: a site, one file, a widget, a browser extension or native programs.', function (parsed) {
 	var project = projectPath(parsed.Arguments[0]);
 	var settings = config(project);
 
 	Builder.Build(project, buildOptions(parsed, settings));
+}, {
+	Usage: ['elemenx build [project] [options]'],
+	Text: ['Without an option the build is a site: the framework, the Application and its Libraries for any static server. The settings of elemenx.config.js are the defaults of the options (docs/BUILDER.md).'],
+	Options: [
+		['--out <folder>', 'the folder of the build (dist)'],
+		['--entry <file>', 'the script of the Applications (app.js)'],
+		['--index <file>', 'the page (index.html)'],
+		['--application <Name>', 'the Application to build, of a project with several'],
+		['--single', 'all of it in one index.html that runs from a file'],
+		['--widget', 'one isolated widget.js for a page of another site'],
+		['--packs <a,b>', 'the Library packs it always embeds (all: every pack)'],
+		['--full', 'all of the framework, not only the sections the build uses'],
+		['--precompile', 'the expressions of the templates as code, for a page that forbids eval'],
+		['--extension', 'a browser extension for Chrome, Edge and Firefox'],
+		['--surface <popup|tab|side>', 'where the extension shows (popup)'],
+		['--native [desktop|mobile]', 'native programs: desktop (Electron) or mobile (Capacitor: Android and iOS); without a platform, all of them (elemenx native add installs what they need)']
+	]
 });
 
 command('dev', 'Serve application sources for development.', function (parsed) {
@@ -178,6 +261,13 @@ command('dev', 'Serve application sources for development.', function (parsed) {
 	var port = Number(value(parsed.Options, 'port', server.DevelopmentPort, 4173));
 
 	listen(project, port, settings, false, parsed.Options);
+}, {
+	Usage: ['elemenx dev [project] [--port 4173] [--host 127.0.0.1]'],
+	Text: ['Serves the sources as they are, with the framework of the package: a reload shows every change.'],
+	Options: [
+		['--port <number>', 'the port (Server.DevelopmentPort, 4173)'],
+		['--host <address>', 'the address it listens on (127.0.0.1; 0.0.0.0 for the other devices of the network)']
+	]
 });
 
 command('serve', 'Serve the production dist with gzip and HTTP caching.', function (parsed) {
@@ -192,6 +282,17 @@ command('serve', 'Serve the production dist with gzip and HTTP caching.', functi
 		fail('dist not found: ' + directory + ' (run elemenx build first)');
 
 	listen(directory, port, settings, true, parsed.Options);
+}, {
+	Usage: ['elemenx serve [project] [options]'],
+	Text: ['Serves the build of elemenx build, compressed and with caching, as a production server would.'],
+	Options: [
+		['--port <number>', 'the port (Server.ProductionPort, 4175)'],
+		['--host <address>', 'the address it listens on (127.0.0.1)'],
+		['--out <folder>', 'the folder of the build (dist)'],
+		['--compression <true|false>', 'gzip and brotli (true)'],
+		['--compression-threshold <bytes>', 'the smallest response it compresses (1024)'],
+		['--cache-control <value>', 'the Cache-Control of the files']
+	]
 });
 
 command('icons', 'Build an icon set (a sprite) from a directory of SVG files.', function (parsed) {
@@ -205,15 +306,47 @@ command('icons', 'Build an icon set (a sprite) from a directory of SVG files.', 
 	result = Icons.Build(directory, output, {CurrentColor: parsed.Options['current-color'] === true});
 
 	process.stdout.write('Elemenx icons: ' + result.Names.length + ' icons in ' + result.Output + '\n');
+}, {
+	Usage: ['elemenx icons <directory> <output.svg> [--current-color]'],
+	Text: ['Each SVG file of the directory becomes a symbol of the sprite, named by its file; the Icons Service shows them as a set.'],
+	Options: [
+		['--current-color', 'paints the icons with the color of the text (their fills and strokes become currentColor)']
+	]
+});
+
+command('native', 'Add what native programs need to a project: Electron (desktop), Capacitor (mobile).', function (parsed) {
+	var action = parsed.Arguments.shift();
+	var platform = OptionalValues.native.indexOf(parsed.Arguments[0]) !== -1 ? parsed.Arguments.shift() : 'all';
+
+	if (action !== 'add')
+		fail('usage: elemenx native add [desktop|mobile|all] [project]');
+
+	Native.Add(projectPath(parsed.Arguments.shift()), platform);
+}, {
+	Usage: ['elemenx native add [desktop|mobile|all] [project]'],
+	Text: ['Installs into the project, with npm: for desktop, electron and @electron/packager (development tools); for mobile, @capacitor/core, cli, android and ios, and the plugins app, browser and dialog. Without a platform, both. Then elemenx build --native makes the programs.']
 });
 
 command('version', 'Print Elemenx version.', function () {
 	process.stdout.write(Package.version + '\n');
 });
 
-command('help', 'Show Elemenx CLI commands.', function () {
+command('help', 'Show Elemenx CLI commands, or the help of one.', function (parsed) {
 	var names = Object.keys(Commands);
+	var topic = parsed && parsed.Arguments.shift();
 	var i = 0;
+
+	if (topic === 'g')
+		topic = 'generate';
+
+	if (topic) {
+		if (!Commands[topic])
+			fail('unknown command: ' + topic + ' (use elemenx help)');
+
+		process.stdout.write(describe(topic));
+
+		return;
+	}
 
 	process.stdout.write('Elemenx CLI ' + Package.version + '\n\n');
 	process.stdout.write('Usage: elemenx <command> [target] [options]\n\nCommands:\n');
@@ -224,7 +357,9 @@ command('help', 'Show Elemenx CLI commands.', function () {
 		i++;
 	}
 
-	process.stdout.write('\nAlias: g = generate. Future command groups are reserved for inspect and other toolchain operations.\n');
+	process.stdout.write('\nAlias: g = generate. The help of a command: elemenx help <command>, or elemenx <command> --help.\n');
+}, {
+	Usage: ['elemenx help [command]']
 });
 
 function main (argv) {
@@ -241,6 +376,12 @@ function main (argv) {
 
 	if (!Commands[name])
 		fail('unknown command: ' + name + ' (use elemenx help)');
+
+	if (parsed.Options.help && name !== 'help') {
+		process.stdout.write(describe(name));
+
+		return;
+	}
 
 	Commands[name].Handler(parsed);
 }
@@ -263,5 +404,7 @@ if (require.main === module)
 module.exports = {
 	Main: main,
 	Run: run,
-	Commands: Commands
+	Commands: Commands,
+	Parse: parse,
+	Describe: describe
 };

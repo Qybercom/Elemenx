@@ -1,0 +1,11 @@
+<div class="elemenx-game-bar" role="meter" aria-valuemin="0" [class]="[Kind || 'health', Size || 'medium', Segments > 0 ? 'segmented' : '', Fraction(Value, Max) <= 0.25 ? 'low' : '']" [attribute.aria-valuenow]="Math.round(Number(Value) || 0)" [attribute.aria-valuemax]="Max" [attribute.aria-label]="Label || $T('ui.game.' + (Kind || 'health'))" [attribute.style]="Style(Value, Max, Kind, Color, Segments)">
+	<span class="elemenx-game-bar-label" *if="Label">{{Label}}</span>
+	<span class="elemenx-game-bar-gauge">
+		<span class="elemenx-game-bar-track">
+			<span class="elemenx-game-bar-trail"></span>
+			<span class="elemenx-game-bar-fill"></span>
+			<span class="elemenx-game-bar-value" *if="ShowValue">{{Math.round(Number(Value) || 0)}} / {{Max}}</span>
+		</span>
+		<span class="elemenx-game-bar-ornament" aria-hidden="true"></span>
+	</span>
+</div>

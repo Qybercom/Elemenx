@@ -2,6 +2,7 @@
  * A slider. Value is a number, or [low, high] with Range. Min, Max and Step bound it; Marks shows ticks at
  * every Marks units (or at the listed values). ShowValue: always, active (while dragged or focused) or never.
  * The thumbs follow the pointer and the keys: arrows (Step), Page Up/Down (ten steps), Home and End.
+ * Orientation 'vertical' stands the slider upright, its minimum at the bottom, as the vertical Meter.
  * Events: input while moving, change on release.
  */
 Elemenx.Component('Slider', {
@@ -16,6 +17,7 @@ Elemenx.Component('Slider', {
 	ShowValue: 'active',
 	Unit: '',
 	Size: 'medium',
+	Orientation: 'horizontal',
 	Label: '',
 	Disabled: false,
 	Active: -1,
@@ -91,7 +93,13 @@ Elemenx.Component('Slider', {
 
 	At: function (event, track) {
 		var rect = track.getBoundingClientRect();
-		var ratio = Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width));
+		var rtl = window.getComputedStyle(track).direction === 'rtl';
+		var ratio;
+
+		if (this.Orientation === 'vertical') ratio = rect.height ? (rect.bottom - event.clientY) / rect.height : 0;
+		else ratio = (rtl ? rect.right - event.clientX : event.clientX - rect.left) / rect.width;
+
+		ratio = Math.max(0, Math.min(1, ratio));
 
 		return Number(this.Min) + ratio * (Number(this.Max) - Number(this.Min));
 	},
@@ -149,10 +157,11 @@ Elemenx.Component('Slider', {
 		var index = Number(node.getAttribute('data-thumb'));
 		var value = this.Values(this.Value, this.Range)[index];
 		var step = Number(this.Step) || 1;
+		var back = this.Orientation !== 'vertical' && window.getComputedStyle(node).direction === 'rtl' ? -1 : 1;
 		var next = {
-			ArrowLeft: value - step,
+			ArrowLeft: value - step * back,
 			ArrowDown: value - step,
-			ArrowRight: value + step,
+			ArrowRight: value + step * back,
 			ArrowUp: value + step,
 			PageDown: value - step * 10,
 			PageUp: value + step * 10,

@@ -1,0 +1,16 @@
+<section class="elemenx-achievements" aria-live="polite" [attribute.aria-label]="$T('ui.achievements.title')" [class]="[Placement === 'top' ? 'top' : 'bottom']">
+	<button class="elemenx-achievement" type="button" *for="item of Item ? [Item] : []" *key="item.ID" [class]="[item.Rarity || 'common', item.Duration > 0 ? 'timed' : 'lasting']" [style.--elemenx-achievement-duration]="item.Duration + 'ms'" [attribute.data-id]="item.ID" (click)="Dismiss">
+		<span class="elemenx-achievement-badge">
+			<img *if="item.Image" [src]="item.Image" alt="" />
+			<Icon *if="!item.Image && item.Icon" [name]="item.Icon" />
+		</span>
+		<span class="elemenx-achievement-band">
+			<span class="elemenx-achievement-overline">{{item.Overline || $T('ui.achievements.unlocked')}}</span>
+			<span class="elemenx-achievement-line">
+				<span class="elemenx-achievement-points" *if="item.Points != null">{{item.Points}}</span>
+				<strong class="elemenx-achievement-title">{{item.Title}}</strong>
+			</span>
+			<span class="elemenx-achievement-text" *if="item.Text">{{item.Text}}</span>
+		</span>
+	</button>
+</section>

@@ -7,12 +7,12 @@
 Elemenx.Component('StickerPicker', {
 	$TemplateURL: 'StickerPicker.html',
 	$StyleURL: 'StickerPicker.css',
-	Label: 'Stickers',
-	Placeholder: 'Search stickers',
-	Nothing: 'No stickers found',
-	NoRecent: 'The stickers you send show here',
-	NoFavorites: 'Star a sticker to keep it here',
-	NoPacks: 'No sticker packs yet',
+	Label: '',
+	Placeholder: '',
+	Nothing: '',
+	NoRecent: '',
+	NoFavorites: '',
+	NoPacks: '',
 	Columns: 4,
 	Tab: '',
 	Query: '',
@@ -71,7 +71,7 @@ Elemenx.Component('StickerPicker', {
 	Read: function () {
 		var stickers = this.$Service('Stickers');
 		var packs = stickers.Packs();
-		var tabs = [{ID: 'recent', Title: 'Recently sent', Icon: 'history'}, {ID: 'favorites', Title: 'Favorites', Icon: 'star'}].concat(packs.map(function (pack) {
+		var tabs = [{ID: 'recent', Key: 'ui.stickerPicker.recent', Title: 'Recently sent', Icon: 'history'}, {ID: 'favorites', Key: 'ui.stickerPicker.favorites', Title: 'Favorites', Icon: 'star'}].concat(packs.map(function (pack) {
 			return {ID: pack.ID, Title: pack.Title, Icon: pack.Icon};
 		}));
 		var tab = this.Tab;
@@ -126,10 +126,10 @@ Elemenx.Component('StickerPicker', {
 		var items = Array.prototype.slice.call(root.querySelectorAll('.elemenx-sticker-pick'));
 		var input = root.querySelector('.elemenx-picker-search input');
 		var columns = Number(this.Columns) || 4;
-		var index = items.indexOf(document.activeElement);
+		var index = items.indexOf(root.getRootNode().activeElement);
 		var next = -1;
 
-		if (event.key === 'Escape') {
+		if (Elemenx.Locale.Key(event) === 'Escape') {
 			if (this.Query) this.Clear();
 			else this.$Emit('dismiss');
 
@@ -139,13 +139,13 @@ Elemenx.Component('StickerPicker', {
 			return;
 		}
 
-		if (document.activeElement === input && event.key === 'ArrowDown' && items.length) next = 0;
-		else if (index !== -1 && event.key === 'ArrowRight') next = Math.min(items.length - 1, index + 1);
-		else if (index !== -1 && event.key === 'ArrowLeft') next = Math.max(0, index - 1);
-		else if (index !== -1 && event.key === 'ArrowDown') next = Math.min(items.length - 1, index + columns);
-		else if (index !== -1 && event.key === 'ArrowUp') next = index - columns;
+		if (root.getRootNode().activeElement === input && Elemenx.Locale.Key(event) === 'ArrowDown' && items.length) next = 0;
+		else if (index !== -1 && Elemenx.Locale.Key(event) === 'ArrowRight') next = Math.min(items.length - 1, index + 1);
+		else if (index !== -1 && Elemenx.Locale.Key(event) === 'ArrowLeft') next = Math.max(0, index - 1);
+		else if (index !== -1 && Elemenx.Locale.Key(event) === 'ArrowDown') next = Math.min(items.length - 1, index + columns);
+		else if (index !== -1 && Elemenx.Locale.Key(event) === 'ArrowUp') next = index - columns;
 
-		if (next === -1 && !(index !== -1 && event.key === 'ArrowUp')) return;
+		if (next === -1 && !(index !== -1 && Elemenx.Locale.Key(event) === 'ArrowUp')) return;
 
 		event.preventDefault();
 

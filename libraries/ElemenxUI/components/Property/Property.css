@@ -1,0 +1,54 @@
+/* A name and its value in a row, each in a cell of the theme. */
+.elemenx-property {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) auto;
+	column-gap: var(--elemenx-property-gap);
+	min-width: 0;
+}
+
+.elemenx-property-label,
+.elemenx-property-value {
+	margin: 0;
+	padding: var(--elemenx-property-padding);
+}
+
+.elemenx-property-label {
+	overflow: hidden;
+	background: var(--elemenx-property-label);
+	color: var(--elemenx-property-label-text);
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.elemenx-property-value {
+	background: var(--elemenx-property-value);
+	border: var(--elemenx-property-value-frame);
+	color: var(--elemenx-property-value-text);
+	font-variant-numeric: tabular-nums;
+	text-align: end;
+}
+
+/* The value shows the default slot, or Value and Unit when the slot is empty. */
+.elemenx-property-content:empty {
+	display: none;
+}
+
+.elemenx-property-content:not(:empty) + .elemenx-property-text {
+	display: none;
+}
+
+.elemenx-property.success .elemenx-property-value {
+	color: var(--elemenx-success);
+}
+
+.elemenx-property.danger .elemenx-property-value {
+	color: var(--elemenx-danger);
+}
+
+.elemenx-property.warning .elemenx-property-value {
+	color: var(--elemenx-warning);
+}
+
+.elemenx-property.accent .elemenx-property-value {
+	color: var(--elemenx-accent);
+}

@@ -1,5 +1,5 @@
 <div class="elemenx-chart" [class]="[Type || 'line', Stacked ? 'stacked' : '']" (mouseleave)="Leave">
-	<svg class="elemenx-chart-plot" role="img" [attribute.aria-label]="Label" [attribute.width]="Width" [attribute.height]="Height" [attribute.viewBox]="'0 0 ' + Width + ' ' + Height" (mousemove)="Track">
+	<svg class="elemenx-chart-plot" role="img" [attribute.aria-label]="(Label || $T('ui.chart.label'))" [attribute.width]="Width" [attribute.height]="Height" [attribute.viewBox]="'0 0 ' + Width + ' ' + Height" (mousemove)="Track">
 		<g *if="!G().Round">
 			<line class="elemenx-chart-grid" *for="tick of G().Ticks" *key="tick.Key" [attribute.x1]="G().Plot.X" [attribute.x2]="G().Plot.X + G().Plot.W" [attribute.y1]="tick.Y" [attribute.y2]="tick.Y"></line>
 			<text class="elemenx-chart-tick" *for="tick of G().Ticks" *key="tick.Key" [attribute.x]="G().Plot.X - 8" [attribute.y]="tick.Y" text-anchor="end" dominant-baseline="middle">{{tick.Label}}</text>
@@ -29,7 +29,7 @@
 		<button class="elemenx-chart-key" type="button" *for="item of Legend(Type, Labels, Series)" *key="item.Name" [class.off]="IsHidden(Hidden, item.Name)" [attribute.aria-pressed]="String(!IsHidden(Hidden, item.Name))" [attribute.data-name]="item.Name" (click)="Toggle"><i class="elemenx-chart-swatch" [style.background]="item.Color"></i>{{item.Name}}</button>
 	</div>
 	<table class="elemenx-chart-data">
-		<caption>{{Label}}</caption>
+		<caption>{{(Label || $T('ui.chart.label'))}}</caption>
 		<thead><tr><th scope="col"></th><th scope="col" *for="label of Labels" *key="$index">{{label}}</th></tr></thead>
 		<tbody><tr *for="entry of Series" *key="entry.Name"><th scope="row">{{entry.Name}}</th><td *for="value of entry.Values || []" *key="$index">{{Text(value)}}</td></tr></tbody>
 	</table>

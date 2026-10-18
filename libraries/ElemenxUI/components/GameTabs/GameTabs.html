@@ -1,0 +1,6 @@
+<div class="elemenx-game-tabs" role="tablist" [class]="[Orientation === 'horizontal' ? 'horizontal' : 'vertical']" [attribute.aria-orientation]="Orientation === 'horizontal' ? 'horizontal' : 'vertical'" [attribute.aria-label]="Label || $T('ui.game.tabs')" (keydown)="Key">
+	<button class="elemenx-game-tab" type="button" role="tab" *for="item of Items" *key="item.ID" [attribute.data-index]="$index" [attribute.aria-selected]="item.ID === Value ? 'true' : 'false'" [attribute.tabindex]="item.ID === Value || (Value == null && $index === 0) ? 0 : -1" [class.active]="item.ID === Value" [disabled]="!!item.Disabled" [attribute.title]="item.Label" (click)="Pressed">
+		<span class="elemenx-game-tab-number" *if="Numbered">{{Number($index)}}</span>
+		<span class="elemenx-game-tab-label">{{item.Label}}</span>
+	</button>
+</div>

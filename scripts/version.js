@@ -22,6 +22,7 @@ var childProcess = require('child_process');
 
 var Root = path.resolve(__dirname, '..');
 var Wrapper = path.join(Root, 'packages', 'elemenx', 'package.json');
+var Framework = path.join(Root, 'elemenx.js');
 
 function read (file) {
 	return JSON.parse(fs.readFileSync(file, 'utf8'));
@@ -53,6 +54,17 @@ function check () {
 	return stop('the working tree has changes, commit or remove them first:\n' + status.replace(/\n$/, ''));
 }
 
+/* The version elemenx.js names (Elemenx.Version), or null without the file. */
+function frameworkVersion () {
+	var match;
+
+	if (!fs.existsSync(Framework)) return null;
+
+	match = /\n\tvar Version = '([^']*)';/.exec(fs.readFileSync(Framework, 'utf8'));
+
+	return match ? match[1] : null;
+}
+
 function sync () {
 	var main = read(path.join(Root, 'package.json'));
 	var wrapper = read(Wrapper);
@@ -61,6 +73,9 @@ function sync () {
 	wrapper.dependencies[main.name] = main.version;
 
 	fs.writeFileSync(Wrapper, JSON.stringify(wrapper, null, '\t') + '\n');
+
+	if (fs.existsSync(Framework))
+		fs.writeFileSync(Framework, fs.readFileSync(Framework, 'utf8').replace(/(\n\tvar Version = ')[^']*(';)/, '$1' + main.version + '$2'));
 
 	process.stdout.write('Elemenx version: elemenx ' + wrapper.version + ' -> ' + main.name + ' ' + main.version + '\n');
 
@@ -98,6 +113,9 @@ function tag () {
 
 	if (wrapper.dependencies[main.name] !== main.version)
 		wrong.push('packages/elemenx/package.json depends on ' + main.name + ' ' + wrapper.dependencies[main.name]);
+
+	if (frameworkVersion() !== null && frameworkVersion() !== main.version)
+		wrong.push('elemenx.js has the version ' + frameworkVersion());
 
 	if (lock().version !== main.version)
 		wrong.push('package-lock.json has the version ' + lock().version);

@@ -22,7 +22,7 @@
 }
 
 .elemenx-splitter.horizontal > .elemenx-splitter-pane.first {
-	border-right: 1px solid var(--elemenx-border);
+	border-inline-end: 1px solid var(--elemenx-border);
 }
 
 .elemenx-splitter.vertical > .elemenx-splitter-pane.first {

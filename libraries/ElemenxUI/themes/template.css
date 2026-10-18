@@ -6,17 +6,17 @@
  *     this.$Service('Theme').Use('my-theme');
  *
  * or list it in an index.js of the Application (it then loads with the Application) and Register it without a URL.
- * Every rule starts with body[data-theme='my-theme'], so the theme applies only while it is on and wins over the rules
+ * Every rule starts with [data-theme][data-theme='my-theme'], so the theme applies only while it is on and wins over the rules
  * of the Components it overrides whatever the order of the stylesheets. A Component is restyled by its classes,
  * prefixed the same way (docs/THEMING-CLASSES.md lists them):
  *
- *     body[data-theme='my-theme'] .elemenx-button.primary { text-transform: uppercase; }
+ *     [data-theme][data-theme='my-theme'] .elemenx-button.primary { text-transform: uppercase; }
  *
  * A theme made for one scheme only is registered with Schemes: ['dark'] (or ['light']) and keeps one color block.
  */
 
 /* Geometry, type, motion and the colors that do not depend on the scheme. */
-body[data-theme='my-theme'] {
+[data-theme][data-theme='my-theme'] {
 	--elemenx-font: 'Segoe UI', Inter, Arial, sans-serif;
 	--elemenx-font-mono: Consolas, 'Cascadia Code', monospace;
 	--elemenx-font-size-small: 12px;
@@ -52,10 +52,17 @@ body[data-theme='my-theme'] {
 	--elemenx-scrollbar-hover: rgba(128, 128, 128, 0.64);
 	--elemenx-scrollbar-active: rgba(128, 128, 128, 0.8);
 	--elemenx-scrollbar-track: rgba(128, 128, 128, 0.12);
+	--elemenx-achievement-background: rgba(18, 18, 20, 0.94);
+	--elemenx-achievement-text: #ffffff;
+	--elemenx-achievement-muted: rgba(255, 255, 255, 0.72);
+	--elemenx-achievement-badge: #107c10;
+	--elemenx-achievement-badge-text: #ffffff;
+	--elemenx-achievement-shine: rgba(255, 255, 255, 0.28);
+	--elemenx-achievement-shadow: 0 8px 28px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.12);
 }
 
 /* The colors of the light scheme. */
-body[data-theme='my-theme'][data-scheme='light'] {
+[data-theme][data-theme='my-theme'][data-scheme='light'] {
 	--elemenx-background: #f2f1ef;
 	--elemenx-background-rgb: 242, 241, 239;
 	--elemenx-surface: #ffffff;
@@ -96,10 +103,232 @@ body[data-theme='my-theme'][data-scheme='light'] {
 	--elemenx-weather-wind: var(--elemenx-text-muted);
 	--elemenx-weather-fog: var(--elemenx-text-muted);
 	--elemenx-weather-thermometer: var(--elemenx-danger);
+	--elemenx-block-background: transparent;
+	--elemenx-block-frame: 1px solid var(--elemenx-border);
+	--elemenx-block-radius: var(--elemenx-radius-large);
+	--elemenx-block-gap: 12px;
+	--elemenx-block-title-band: var(--elemenx-surface-raised);
+	--elemenx-block-title-text: var(--elemenx-text);
+	--elemenx-block-title-padding: 6px;
+	--elemenx-block-title-spacing: normal;
+	--elemenx-block-title-transform: none;
+	--elemenx-block-tab-slant: 24px;
+	--elemenx-properties-gap: 4px 16px;
+	--elemenx-properties-pair-gap: 24px;
+	--elemenx-property-gap: 12px;
+	--elemenx-property-padding: 0;
+	--elemenx-property-label: transparent;
+	--elemenx-property-label-text: var(--elemenx-text-muted);
+	--elemenx-property-value: transparent;
+	--elemenx-property-value-frame: 0;
+	--elemenx-property-value-text: var(--elemenx-text);
+	--elemenx-game-font: var(--elemenx-font);
+	--elemenx-game-title-font: var(--elemenx-font);
+	--elemenx-game-title-shadow: none;
+	--elemenx-game-text: var(--elemenx-text);
+	--elemenx-game-muted: var(--elemenx-text-muted);
+	--elemenx-game-accent: var(--elemenx-accent);
+	--elemenx-game-letter-spacing: normal;
+	--elemenx-game-text-transform: none;
+	--elemenx-game-panel: var(--elemenx-surface);
+	--elemenx-game-frame: 1px solid var(--elemenx-border-strong);
+	--elemenx-game-panel-shadow: var(--elemenx-shadow);
+	--elemenx-game-radius: var(--elemenx-radius-large);
+	--elemenx-game-shape: none;
+	--elemenx-game-glow: 0 0 0 2px var(--elemenx-focus);
+	--elemenx-game-cell: var(--elemenx-surface-raised);
+	--elemenx-game-cell-frame: 1px solid var(--elemenx-border);
+	--elemenx-game-cell-radius: var(--elemenx-radius);
+	--elemenx-game-bar-track: rgba(var(--elemenx-text-rgb), 0.12);
+	--elemenx-game-bar-frame: 1px solid var(--elemenx-border);
+	--elemenx-game-bar-frame-image: none;
+	--elemenx-game-bar-ornament: none;
+	--elemenx-game-bar-ornament-inset: 0;
+	--elemenx-game-bar-gauge-margin: 0;
+	--elemenx-game-bar-fill-opacity: 1;
+	--elemenx-game-bar-pattern: none;
+	--elemenx-game-bar-edge: none;
+	--elemenx-game-bar-value-align: center;
+	--elemenx-game-bar-value-padding: 0;
+	--elemenx-game-bar-radius: var(--elemenx-radius-pill);
+	--elemenx-game-bar-shadow: none;
+	--elemenx-game-bar-shine: linear-gradient(to bottom, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0) 60%);
+	--elemenx-game-bar-damage: var(--elemenx-warning);
+	--elemenx-game-bar-text: #ffffff;
+	--elemenx-game-bar-text-shadow: 0 1px 2px rgba(0, 0, 0, 0.64);
+	--elemenx-game-damage-delay: 400ms;
+	--elemenx-game-damage-duration: 500ms;
+	--elemenx-game-cooldown: rgba(0, 0, 0, 0.6);
+	--elemenx-game-health: #c94a4a;
+	--elemenx-game-mana: #3f73c9;
+	--elemenx-game-experience: #c99a27;
+	--elemenx-game-stamina: #3fa86b;
+	--elemenx-game-common: var(--elemenx-text-muted);
+	--elemenx-game-uncommon: #3fa86b;
+	--elemenx-game-rare: #3f73c9;
+	--elemenx-game-epic: #8f4fc9;
+	--elemenx-game-legendary: #d98a1e;
+	--elemenx-game-medal-gold: #e0b53a;
+	--elemenx-game-medal-silver: #b9c2cf;
+	--elemenx-game-medal-bronze: #c27c45;
+	--elemenx-game-marker-frame: 1px solid rgba(0, 0, 0, 0.6);
+	--elemenx-game-marker-text: #101216;
+	--elemenx-game-minimap-shadow: drop-shadow(0 0 3px rgba(0, 0, 0, 0.8));
+	--elemenx-game-frame-image: none;
+	--elemenx-game-blur: none;
+	--elemenx-game-decor: none;
+	--elemenx-game-decor-inset: 0;
+	--elemenx-game-active: 0 0 0 0 transparent;
+	--elemenx-game-appear: elemenx-window-appear var(--elemenx-duration-slow) var(--elemenx-easing);
+	--elemenx-game-header: var(--elemenx-surface-raised);
+	--elemenx-game-header-line: 1px solid var(--elemenx-border);
+	--elemenx-game-header-inset: 0;
+	--elemenx-game-header-radius: 0;
+	--elemenx-game-header-padding: 0 4px 0 10px;
+	--elemenx-game-title-inset: 0 96px 0 10px;
+	--elemenx-game-title: var(--elemenx-game-text);
+	--elemenx-game-title-align: flex-start;
+	--elemenx-game-ornament: none;
+	--elemenx-game-ornament-top: 0;
+	--elemenx-game-ornament-width: 0;
+	--elemenx-game-ornament-height: 0;
+	--elemenx-game-good: var(--elemenx-success);
+	--elemenx-game-bad: var(--elemenx-danger);
+	--elemenx-game-special: var(--elemenx-warning);
+	--elemenx-game-section: var(--elemenx-surface-raised);
+	--elemenx-game-section-title: var(--elemenx-game-accent);
+	--elemenx-game-separator: linear-gradient(to right, transparent, var(--elemenx-border-strong), transparent);
+	--elemenx-game-separator-ornament: none;
+	--elemenx-game-button: linear-gradient(var(--elemenx-surface-raised), var(--elemenx-surface-raised));
+	--elemenx-game-button-edge: linear-gradient(var(--elemenx-border-strong), var(--elemenx-border-strong));
+	--elemenx-game-button-radius: var(--elemenx-radius);
+	--elemenx-game-button-hover: linear-gradient(var(--elemenx-surface-hover), var(--elemenx-surface-hover));
+	--elemenx-game-button-text: var(--elemenx-game-text);
+	--elemenx-game-button-shadow: none;
+	--elemenx-game-field: var(--elemenx-surface);
+	--elemenx-game-field-frame: 1px solid var(--elemenx-border-strong);
+	--elemenx-game-field-shadow: none;
+	--elemenx-game-scrollbar: var(--elemenx-scrollbar);
+	--elemenx-game-tab: transparent;
+	--elemenx-game-tab-active: var(--elemenx-game-cell);
+	--elemenx-game-tab-marker: var(--elemenx-game-accent);
+	--elemenx-game-text-shadow: none;
+	--elemenx-game-item-tint: 0;
+	--elemenx-game-item-gloss: none;
+	--elemenx-game-item-inset: 2px;
+	--elemenx-game-item-bevel: 0 0 0 0 transparent;
+	--elemenx-game-item-icon: var(--elemenx-game-text);
+	--elemenx-game-item-icon-shadow: none;
+	--elemenx-game-item-icon-scale: 1;
+	--elemenx-game-inventory-gap: 4px;
+	--elemenx-game-menu-item: var(--elemenx-game-cell);
+	--elemenx-game-menu-item-hover: var(--elemenx-game-cell);
+	--elemenx-game-menu-item-hover-text: var(--elemenx-game-text);
+	--elemenx-game-menu-item-frame: var(--elemenx-game-cell-frame);
+	--elemenx-game-menu-item-frame-image: none;
+	--elemenx-game-menu-item-shadow: 0 0 0 0 transparent;
+	--elemenx-game-menu-item-ornament: none;
+	--elemenx-game-menu-item-ornament-inset: 0;
+	--elemenx-game-menu-item-align: start;
+	--elemenx-game-menu-item-padding: 10px 16px;
+	--elemenx-game-menu-item-shift: translateX(4px);
+	--elemenx-game-menu-title-ornament: none;
+	--elemenx-game-menu-title-ornament-height: 0;
+	--elemenx-game-light-panel: var(--elemenx-game-panel);
+	--elemenx-game-light-frame: var(--elemenx-game-frame);
+	--elemenx-game-light-frame-image: var(--elemenx-game-frame-image);
+	--elemenx-game-light-radius: var(--elemenx-game-radius);
+	--elemenx-game-light-shadow: var(--elemenx-game-panel-shadow);
+	--elemenx-game-light-decor: none;
+	--elemenx-game-light-decor-inset: 0;
+	--elemenx-game-dialogue-portrait-frame: var(--elemenx-game-cell-frame);
+	--elemenx-game-dialogue-portrait-frame-image: none;
+	--elemenx-game-dialogue-portrait-radius: var(--elemenx-game-cell-radius);
+	--elemenx-game-dialogue-portrait-shadow: none;
+	--elemenx-game-dialogue-choice: var(--elemenx-game-cell);
+	--elemenx-game-dialogue-choice-hover: var(--elemenx-game-cell);
+	--elemenx-game-dialogue-choice-hover-text: var(--elemenx-game-text);
+	--elemenx-game-dialogue-choice-frame: var(--elemenx-game-cell-frame);
+	--elemenx-game-dialogue-choice-frame-image: none;
+	--elemenx-game-dialogue-choice-padding: 6px 10px;
+	--elemenx-game-dialogue-next-padding: 6px 10px;
+	--elemenx-game-dialogue-next-align: flex-end;
+	--elemenx-game-dialogue-next-margin: 0;
+	--elemenx-game-body-padding: 12px;
+	--elemenx-game-body: transparent;
+	--elemenx-game-body-frame: 0;
+	--elemenx-game-body-margin: 0;
+	--elemenx-game-section-gap: 6px;
+	--elemenx-game-section-padding: 0;
+	--elemenx-game-section-frame: 0;
+	--elemenx-game-section-title-margin: 0;
+	--elemenx-game-section-title-padding: 3px 8px;
+	--elemenx-game-heading: var(--elemenx-game-title);
+	--elemenx-game-heading-line: 1px solid var(--elemenx-border);
+	--elemenx-game-stats-gap: 2px 12px;
+	--elemenx-game-stats-pair-gap: 0px;
+	--elemenx-game-stats-cell-gap: 12px;
+	--elemenx-game-stat-padding: 0;
+	--elemenx-game-stat-label: transparent;
+	--elemenx-game-stat-label-text: var(--elemenx-game-muted);
+	--elemenx-game-stat-value: transparent;
+	--elemenx-game-stat-value-frame: 0;
+	--elemenx-game-hotbar-gap: 4px;
+	--elemenx-game-hotbar-padding: 6px;
+	--elemenx-game-table-spacing: 0;
+	--elemenx-game-table-frame: 1px solid var(--elemenx-border);
+	--elemenx-game-table-cell: transparent;
+	--elemenx-game-table-head: var(--elemenx-surface-raised);
+	--elemenx-game-table-head-text: var(--elemenx-text-muted);
+	--elemenx-game-table-line: 1px solid var(--elemenx-border);
+	--elemenx-game-table-divider: 0;
+	--elemenx-game-table-stripe: var(--elemenx-surface-raised);
+	--elemenx-game-table-hover: rgba(var(--elemenx-surface-hover-rgb), 0.64);
+	--elemenx-game-table-selected: linear-gradient(rgba(var(--elemenx-accent-rgb), 0.12), rgba(var(--elemenx-accent-rgb), 0.12)), var(--elemenx-surface);
+	--elemenx-game-table-selected-text: var(--elemenx-game-text);
+	--elemenx-game-meter-track: var(--elemenx-border);
+	--elemenx-game-meter-radius: var(--elemenx-radius-pill);
+	--elemenx-game-meter-ring: var(--elemenx-border);
+	--elemenx-game-meter-needle: var(--elemenx-game-text);
+	--elemenx-game-meter-value-size: inherit;
+	--elemenx-game-meter-value-weight: var(--elemenx-font-weight-strong);
+	--elemenx-game-meter-readout: var(--elemenx-game-text);
+	--elemenx-game-meter-readout-text: var(--elemenx-surface);
+	--elemenx-game-scrollbar-width: thin;
+	--elemenx-game-scrollbar-color: var(--elemenx-game-scrollbar) transparent;
+	--elemenx-game-scrollbar-track: transparent;
+	--elemenx-game-scrollbar-thumb: var(--elemenx-game-scrollbar);
+	--elemenx-game-scrollbar-thumb-inset: 3px;
+	--elemenx-game-scrollbar-radius: var(--elemenx-radius-pill);
+	--elemenx-game-item-selected: none;
+	--elemenx-game-item-selected-inset: 0;
+	--elemenx-game-item-active: var(--elemenx-game-glow);
+	--elemenx-game-item-active-fill: var(--elemenx-game-cell);
+	--elemenx-game-button-padding: 12px;
+	--elemenx-game-button-min-width: 0;
+	--elemenx-game-header-image: none;
+	--elemenx-syntax-comment: #8a857e;
+	--elemenx-syntax-keyword: #9c3d7a;
+	--elemenx-syntax-string: #2f7d4f;
+	--elemenx-syntax-number: #b35c1e;
+	--elemenx-syntax-literal: #b35c1e;
+	--elemenx-syntax-type: #2c6aa0;
+	--elemenx-syntax-function: #6a4caf;
+	--elemenx-syntax-property: #2c6aa0;
+	--elemenx-syntax-tag: #9c3d7a;
+	--elemenx-syntax-attribute: #b35c1e;
+	--elemenx-syntax-selector: #9c3d7a;
+	--elemenx-syntax-variable: #b4483f;
+	--elemenx-syntax-regex: #1f7a72;
+	--elemenx-syntax-meta: #8a6a14;
+	--elemenx-syntax-operator: #6f6a64;
+	--elemenx-syntax-heading: #23211e;
+	--elemenx-syntax-link: #3f6c9e;
+	--elemenx-syntax-code: #2f7d4f;
 }
 
 /* The colors of the dark scheme. */
-body[data-theme='my-theme'][data-scheme='dark'] {
+[data-theme][data-theme='my-theme'][data-scheme='dark'] {
 	--elemenx-background: #15171b;
 	--elemenx-background-rgb: 21, 23, 27;
 	--elemenx-surface: #1d2025;
@@ -140,4 +369,41 @@ body[data-theme='my-theme'][data-scheme='dark'] {
 	--elemenx-weather-wind: var(--elemenx-text-muted);
 	--elemenx-weather-fog: var(--elemenx-text-muted);
 	--elemenx-weather-thermometer: var(--elemenx-danger);
+	--elemenx-block-background: transparent;
+	--elemenx-block-frame: 1px solid var(--elemenx-border);
+	--elemenx-block-radius: var(--elemenx-radius-large);
+	--elemenx-block-gap: 12px;
+	--elemenx-block-title-band: var(--elemenx-surface-raised);
+	--elemenx-block-title-text: var(--elemenx-text);
+	--elemenx-block-title-padding: 6px;
+	--elemenx-block-title-spacing: normal;
+	--elemenx-block-title-transform: none;
+	--elemenx-block-tab-slant: 24px;
+	--elemenx-properties-gap: 4px 16px;
+	--elemenx-properties-pair-gap: 24px;
+	--elemenx-property-gap: 12px;
+	--elemenx-property-padding: 0;
+	--elemenx-property-label: transparent;
+	--elemenx-property-label-text: var(--elemenx-text-muted);
+	--elemenx-property-value: transparent;
+	--elemenx-property-value-frame: 0;
+	--elemenx-property-value-text: var(--elemenx-text);
+	--elemenx-syntax-comment: #7d8590;
+	--elemenx-syntax-keyword: #d58bc5;
+	--elemenx-syntax-string: #9cd08f;
+	--elemenx-syntax-number: #e3a46a;
+	--elemenx-syntax-literal: #e3a46a;
+	--elemenx-syntax-type: #7fb6e6;
+	--elemenx-syntax-function: #c7aef0;
+	--elemenx-syntax-property: #7fb6e6;
+	--elemenx-syntax-tag: #d58bc5;
+	--elemenx-syntax-attribute: #e3a46a;
+	--elemenx-syntax-selector: #d58bc5;
+	--elemenx-syntax-variable: #f08a80;
+	--elemenx-syntax-regex: #7fd1c3;
+	--elemenx-syntax-meta: #d8c26e;
+	--elemenx-syntax-operator: #a8b0ba;
+	--elemenx-syntax-heading: #eef0f3;
+	--elemenx-syntax-link: #7fa8d6;
+	--elemenx-syntax-code: #9cd08f;
 }

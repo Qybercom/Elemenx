@@ -11,23 +11,25 @@ To find a section in `elemenx.js`, search for its header, for example `/* Router
 | Field | Purpose | Used by |
 |---|---|---|
 | `ScriptURL` | URL of the loaded `elemenx.js` (a `blob:` URL of its text when it is inline in its page); workers load the same file from it | WebWorker, ServiceWorker |
-| `HasDOM` | `true` in a document, `false` inside workers | Utilities, Identity, Discovery, Template and Component, Messaging, WebWorker, ServiceWorker, Application, ServiceWorker bootstrap |
+| `HasDOM` | `true` in a document, `false` inside workers | Application, Discovery, Identity, Locale, Messaging, ServiceWorker, ServiceWorker bootstrap, Style, Template and Component, Utilities, WebWorker |
 | `StartedAt` | time this runtime started | Identity |
+| `Isolated` | true in an isolated build (`ElemenxIsolated`): the html element of the page is left alone | Application, Locale, Style |
+| `ShadowHosts` | the hosts of the Applications that render in a shadow root | Application, Locale |
 
 ## Utilities
 
 | Field | Purpose | Used by |
 |---|---|---|
-| `Own` | `Object.prototype.hasOwnProperty.call(object, key)`; modules alias it as `var own = Runtime.Own;` | Reactive, Bundle, Discovery, Service and Guard, Directive registry, Template and Component, Router, Structural, Network, Storage, Messaging, Application |
-| `AbsoluteURL` | resolves a URL against the document; in a worker the value is kept as it is | Resource, WebWorker, ServiceWorker |
+| `Own` | `Object.prototype.hasOwnProperty.call(object, key)`; modules alias it as `var own = Runtime.Own;` | Application, Bundle, Directive registry, Discovery, Locale, Messaging, Network, Reactive, Router, Service and Guard, Storage, Structural, Template and Component |
+| `AbsoluteURL` | resolves a URL against the document; in a worker the value is kept as it is | Locale, Resource, ServiceWorker, WebWorker |
 | `CurrentScriptURL` | the URL of the executing script without query and hash, or `null`: the base of the relative paths of its definitions | Library, Template and Component, Application |
 | `DefinitionURL` | resolves a relative path of a definition against its `$DefinitionURL`; absolute and root paths are kept | Library, Template and Component, Application |
 | `OwnerRegistry` | registry of the resources an owner created: `Add`, `Remove`, `Destroyed`, `Destroy` (destroys the rest with the owner) | Events, Messaging, WebWorker, ServiceWorker |
 | `EventList` | listeners of the named events of one object: `Add`, `Remove`, `Emit` (each listener isolated, one shared event), `Clear` | Storage, WebWorker, ServiceWorker |
-| `Countdown` | waits for N asynchronous steps: the callback gets the first error, or `null` once all succeeded | Discovery, Library |
+| `Countdown` | waits for N asynchronous steps: the callback gets the first error, or `null` once all succeeded | Discovery, Library, Locale |
 | `MessageListeners` | listeners of the global `message` event added through a wrapper, removable by their own callback | Messaging, WebWorker |
 | `Assign` | copies the own enumerable properties of a source into a target and returns the target | Template and Component, Router, Structural, Storage, WebWorker, ServiceWorker |
-| `Report` | reports an exception as an uncaught error at once, like the DOM does for event listeners (`reportError`; without it, rethrown from a timer) | Router |
+| `Report` | reports an exception as an uncaught error at once, like the DOM does for event listeners (`reportError`; without it, rethrown from a timer) | Application, Locale, Router |
 | `Notify` | calls one event listener in isolation: its exception is reported and the dispatch continues | Template and Component, Router, Network, Events, Messaging |
 | `Invoke` | calls a callback `(error, value)` from a promise handler; an exception thrown by the callback is reported instead of being swallowed | Network, ServiceWorker |
 
@@ -41,9 +43,9 @@ To find a section in `elemenx.js`, search for its header, for example `/* Router
 
 | Field | Purpose | Used by |
 |---|---|---|
-| `Reactive` | wraps a value into a tracked reactive proxy | Template and Component |
+| `Reactive` | wraps a value into a tracked reactive proxy | Locale, Template and Component |
 | `Effect` | runs a callback and re-runs it when its tracked dependencies change | Template and Component, Structural |
-| `BatchReactive` | groups changes and flushes effects once | Template and Component |
+| `BatchReactive` | groups changes and flushes effects once | Locale, Template and Component |
 | `Untracked` | runs a callback without recording dependencies | Structural |
 | `TrackIteration` | records a dependency on the iteration of a collection | Structural |
 
@@ -52,6 +54,21 @@ To find a section in `elemenx.js`, search for its header, for example `/* Router
 | Field | Purpose | Used by |
 |---|---|---|
 | `Bundle` | production bundle registry: `Install`, `Reload`, `Ready`, `ResolvedName`, `Load`, `LoadType` | Library, Template and Component, Router, Structural, Application |
+
+## Locale
+
+| Field | Purpose | Used by |
+|---|---|---|
+| `LocaleReady` | loads the dictionaries of the current language, before an Application renders its root | Application |
+| `TemplateGlobals` | the names every template expression sees under the values of its Component (`$T`) | Template and Component |
+
+## Style
+
+| Field | Purpose | Used by |
+|---|---|---|
+| `AddStyle` | keeps a stylesheet (`{Text}` or `{URL}`) in the document and in every shadow root of an Application | Discovery, Template and Component |
+| `AddStyleDocument` | puts every stylesheet in the document too, for an Application of an isolated copy that renders there | Application |
+| `AddStyleRoot` | gives a shadow root of an Application every stylesheet, now and later | Application |
 
 ## Discovery
 
@@ -109,6 +126,7 @@ To find a section in `elemenx.js`, search for its header, for example `/* Router
 | `FailComponentReload` | ends a failed component reload | Application |
 | `ReloadComponentInstances` | recreates live instances after a component reload | Application |
 | `ResolveOutlet` | finds a named outlet of a component | Router |
+| `HasPendingComponents` | whether an element holds a deferred component that waits for its definition | Router |
 
 ## Structural
 

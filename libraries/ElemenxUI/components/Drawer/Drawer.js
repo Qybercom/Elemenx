@@ -3,7 +3,7 @@
  * the close event (with the reason: 'close', 'escape' or 'backdrop') asks the owner to set Open back to false.
  * Side: right (default), left, top or bottom. Size: small, medium, large or full (the width, or the height for top and
  * bottom). Slots: default (the body), actions (beside the title), footer. Dismissible: false keeps it open on
- * Escape and backdrop presses.
+ * Escape and backdrop presses, which shake it.
  */
 Elemenx.Component('Drawer', {
 	$TemplateURL: 'Drawer.html',
@@ -23,7 +23,22 @@ Elemenx.Component('Drawer', {
 	},
 
 	Dismissed: function (event) {
-		if (this.Dismissible)
-			this.$Emit('close', event.detail.Reason);
+		if (this.Dismissible) this.$Emit('close', event.detail.Reason);
+		else this.Refuse();
+	},
+
+	/* Escape or the backdrop would close it, but it waits for an answer: it shakes. */
+	Refuse: function () {
+		var element = this.$Element();
+
+		element.classList.remove('refused');
+		element.getBoundingClientRect();
+		element.classList.add('refused');
+
+		window.clearTimeout(this.Refusal);
+
+		this.Refusal = window.setTimeout(function () {
+			element.classList.remove('refused');
+		}, 600);
 	}
 });

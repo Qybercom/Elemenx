@@ -2,13 +2,17 @@
  * A context menu over its content: a right click, the Menu key or Shift+F10 inside the default slot opens a
  * multi-level MenuList at the pointer (or under the focused element). Items: as in MenuList. Before it opens, the
  * open event carries {Target (the element pressed), X, Y}: the owner may change Items for that target then. The
- * select event carries {Item, Target}. Disabled leaves the browser menu alone.
+ * select event carries {Item, Target}. Disabled leaves the browser menu alone. Sheet: true, or 'auto' (on a narrow or
+ * a touch screen), shows the menu as a sheet from the bottom of the screen with its Title, as on a phone (a long
+ * press opens it there).
  */
 Elemenx.Component('ContextMenu', {
 	$TemplateURL: 'ContextMenu.html',
 	$StyleURL: 'ContextMenu.css',
 	Items: [],
 	Disabled: false,
+	Sheet: false,
+	Title: '',
 	Open: false,
 	X: 0,
 	Y: 0,
@@ -26,7 +30,7 @@ Elemenx.Component('ContextMenu', {
 		this.Open = true;
 
 		window.setTimeout(function () {
-			var first = root.querySelector('.elemenx-context-point .elemenx-menu > .elemenx-menu-entry > .elemenx-option:not(.disabled)');
+			var first = root.querySelector('.elemenx-context-point .elemenx-menu:not([hidden]) > .elemenx-menu-entry > .elemenx-option:not(.disabled)');
 			if (first)
 				first.focus();
 		}, 0);

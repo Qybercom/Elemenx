@@ -1,7 +1,7 @@
 /*
  * The icon sets of the page. The library sprite (index.svg) is the set without a name: <Icon Name="save" />. Another
- * set is named before the icon name: <Icon Name="weather:rain" />. The library sets 'brands', 'files', 'music' and
- * 'weather' are known already; Register(name, source) adds a set from a sprite file (a URL, relative to the page) or
+ * set is named before the icon name: <Icon Name="weather:rain" />. The library sets 'brands', 'files', 'music',
+ * 'weather', 'sport', 'racing', 'science', 'art', 'cinema' and 'games' are known already; Register(name, source) adds a set from a sprite file (a URL, relative to the page) or
  * from the markup of a sprite ('<svg>...</svg>'). A set is a sprite of <symbol id> elements; a symbol keeps its own fill and stroke
  * attributes, so a filled or a colored set draws as it is made.
  * A set loads once, when an icon first needs it (or by Load). Its symbols are copied into the hidden
@@ -14,7 +14,7 @@
  */
 Elemenx.Service('Icons', {
 	Library: 'ElemenxUI',
-	Builtin: {brands: 'icons/brands.svg', files: 'icons/files.svg', music: 'icons/music.svg', weather: 'icons/weather.svg'},
+	Builtin: {brands: 'icons/brands.svg', files: 'icons/files.svg', music: 'icons/music.svg', weather: 'icons/weather.svg', sport: 'icons/sport.svg', racing: 'icons/racing.svg', science: 'icons/science.svg', art: 'icons/art.svg', cinema: 'icons/cinema.svg', games: 'icons/games.svg'},
 	Formats: [
 		'js', 'jsx', 'ts', 'tsx', 'php', 'cpp', 'hpp', 'c', 'h', 'css', 'html', 'py', 'java', 'kt', 'cbl',
 		'rs', 'go', 'exe', 'lib', 'a', 'o', 'dll', 'jpg', 'png', 'svg', 'webp', 'ico', 'gif', 'tiff', 'psd', 'ai', 'pdf',
@@ -59,7 +59,7 @@ Elemenx.Service('Icons', {
 	 * (name -> name) and Listeners. Made once per page; null without a document.
 	 */
 	Copy: function () {
-		var copy = typeof document !== 'undefined' ? document.getElementById('elemenx-icons') : null;
+		var copy = typeof document !== 'undefined' ? document.getElementById(this.Prefix() + 'icons') : null;
 		if (copy && copy.ElemenxIcons) return copy.ElemenxIcons;
 
 		if (!copy) {
@@ -67,7 +67,7 @@ Elemenx.Service('Icons', {
 
 			copy = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
 
-			copy.setAttribute('id', 'elemenx-icons');
+			copy.setAttribute('id', this.Prefix() + 'icons');
 			copy.setAttribute('aria-hidden', 'true');
 			copy.setAttribute('data-ready', 'false');
 			copy.setAttribute('style', 'position:absolute;width:0;height:0;overflow:hidden');
@@ -150,7 +150,15 @@ Elemenx.Service('Icons', {
 	},
 
 	Id: function (set, name) {
-		return 'elemenx-icon-' + (set ? set + '-' : '') + name;
+		return this.Prefix() + 'icon-' + (set ? set + '-' : '') + name;
+	},
+
+	/*
+	 * The start of the ids of the sprite of the page: elemenx-, or elemenx-<runtime ID>- for a copy of Elemenx that is not
+	 * the one of the window (an isolated widget), so its sprite and its state stay apart from the ones of the page.
+	 */
+	Prefix: function () {
+		return typeof window === 'undefined' || window.Elemenx === Elemenx ? 'elemenx-' : 'elemenx-' + Elemenx.RuntimeID() + '-';
 	},
 
 	/*
@@ -209,7 +217,7 @@ Elemenx.Service('Icons', {
 		return this.Formats.indexOf(extension) === -1 ? 'file' : 'files:' + extension;
 	},
 
-	/* The names of the known sets: '' (the library sprite), 'brands', 'files', 'music', 'weather' and the registered ones. */
+	/* The names of the known sets: '' (the library sprite), the sets of the library and the registered ones. */
 	Sets: function () {
 		var list = [];
 		var name;

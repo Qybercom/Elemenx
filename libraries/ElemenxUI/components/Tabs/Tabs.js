@@ -62,12 +62,12 @@ Elemenx.Component('Tabs', {
 
 		if (!current || !count) return;
 
-		if (event.key === 'ArrowRight') direction = 1;
-		else if (event.key === 'ArrowLeft') direction = -1;
-		else if (event.key === 'Home') next = -1;
-		else if (event.key === 'End') next = count;
+		if (Elemenx.Locale.Key(event) === 'ArrowRight') direction = 1;
+		else if (Elemenx.Locale.Key(event) === 'ArrowLeft') direction = -1;
+		else if (Elemenx.Locale.Key(event) === 'Home') next = -1;
+		else if (Elemenx.Locale.Key(event) === 'End') next = count;
 
-		if ((event.key === 'Delete' || (event.key === 'w' && event.ctrlKey)) && tab && (tab.Closable || this.Closable)) {
+		if ((Elemenx.Locale.Key(event) === 'Delete' || (Elemenx.Locale.Key(event) === 'w' && event.ctrlKey)) && tab && (tab.Closable || this.Closable)) {
 			event.preventDefault();
 
 			this.$Emit('close', tab.ID);
@@ -75,10 +75,10 @@ Elemenx.Component('Tabs', {
 			return;
 		}
 
-		if (event.key === 'Home')
+		if (Elemenx.Locale.Key(event) === 'Home')
 			direction = 1;
 
-		if (event.key === 'End')
+		if (Elemenx.Locale.Key(event) === 'End')
 			direction = -1;
 
 		if (!direction) return;

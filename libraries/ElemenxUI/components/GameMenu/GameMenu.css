@@ -1,0 +1,96 @@
+.elemenx-game-menu {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	min-width: 280px;
+	padding: 24px;
+	color: var(--elemenx-game-text);
+	font-family: var(--elemenx-game-font);
+}
+
+.elemenx-game-menu-title {
+	margin: 0;
+	color: var(--elemenx-game-accent);
+	font-family: var(--elemenx-game-title-font);
+	font-size: 28px;
+	letter-spacing: var(--elemenx-game-letter-spacing);
+	text-align: center;
+	text-shadow: var(--elemenx-game-title-shadow);
+	text-transform: var(--elemenx-game-text-transform);
+}
+
+/* The flourish of the theme under the title. */
+.elemenx-game-menu-title::after {
+	display: block;
+	height: var(--elemenx-game-menu-title-ornament-height);
+	margin-top: 4px;
+	background: var(--elemenx-game-menu-title-ornament);
+	content: '';
+}
+
+.elemenx-game-menu-subtitle {
+	margin: -8px 0 0;
+	color: var(--elemenx-game-muted);
+	text-align: center;
+}
+
+.elemenx-game-menu-items {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.elemenx-game-menu-item {
+	position: relative;
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: var(--elemenx-game-menu-item-padding);
+	background: var(--elemenx-game-menu-item);
+	border: var(--elemenx-game-menu-item-frame);
+	border-image: var(--elemenx-game-menu-item-frame-image);
+	border-radius: var(--elemenx-game-cell-radius);
+	box-shadow: var(--elemenx-game-menu-item-shadow);
+	color: var(--elemenx-game-text);
+	font: inherit;
+	font-size: var(--elemenx-font-size-large);
+	letter-spacing: var(--elemenx-game-letter-spacing);
+	text-align: var(--elemenx-game-menu-item-align);
+	text-transform: var(--elemenx-game-text-transform);
+	cursor: pointer;
+	transition: transform var(--elemenx-duration) var(--elemenx-easing), filter var(--elemenx-duration) var(--elemenx-easing);
+}
+
+/* The ornament of the theme on the item: caps on its ends, that may stand out of it. */
+.elemenx-game-menu-item::after {
+	position: absolute;
+	inset: var(--elemenx-game-menu-item-ornament-inset);
+	background: var(--elemenx-game-menu-item-ornament);
+	content: '';
+	pointer-events: none;
+}
+
+.elemenx-game-menu-item:hover,
+.elemenx-game-menu-item:focus-visible {
+	outline: none;
+	background: var(--elemenx-game-menu-item-hover);
+	box-shadow: var(--elemenx-game-menu-item-shadow), var(--elemenx-game-glow);
+	color: var(--elemenx-game-menu-item-hover-text);
+	transform: var(--elemenx-game-menu-item-shift);
+}
+
+.elemenx-game-menu-item:disabled {
+	opacity: 0.4;
+	cursor: default;
+	transform: none;
+}
+
+.elemenx-game-menu-label {
+	flex: 1;
+}
+
+.elemenx-game-menu-hint {
+	color: var(--elemenx-game-muted);
+	font-size: var(--elemenx-font-size-small);
+	text-transform: none;
+}

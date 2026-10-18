@@ -8,9 +8,9 @@
 Elemenx.Component('EmojiPicker', {
 	$TemplateURL: 'EmojiPicker.html',
 	$StyleURL: 'EmojiPicker.css',
-	Label: 'Emoji',
-	Placeholder: 'Search emoji',
-	Nothing: 'No emoji found',
+	Label: '',
+	Placeholder: '',
+	Nothing: '',
 	Columns: 9,
 	Tones: true,
 	Recent: true,
@@ -19,7 +19,7 @@ Elemenx.Component('EmojiPicker', {
 	Tone: 0,
 	ToneOpen: false,
 	ToneList: [0, 1, 2, 3, 4, 5],
-	ToneNames: ['No skin tone', 'Light skin tone', 'Medium-light skin tone', 'Medium skin tone', 'Medium-dark skin tone', 'Dark skin tone'],
+	ToneNames: [],
 	Sections: [],
 	Active: '',
 	Preview: null,
@@ -32,8 +32,9 @@ Elemenx.Component('EmojiPicker', {
 
 		this.Tone = emoji.Tone();
 
+		/* The raised hand in a tone: it takes every tone, so it needs no data (the menu shows before the data loads). */
 		this.ToneSample = function (tone) {
-			return emoji.Toned('✋', tone);
+			return '✋' + (emoji.Tones[Number(tone)] || '');
 		};
 
 		emoji.Load(function (error) {
@@ -150,18 +151,19 @@ Elemenx.Component('EmojiPicker', {
 
 		this.Active = id;
 
+		/* By the boxes on the screen: offsetTop counts from the nearest positioned ancestor, which depends on the page. */
 		if (section)
-			body.scrollTop = section.offsetTop - body.offsetTop;
+			body.scrollTop += section.getBoundingClientRect().top - body.getBoundingClientRect().top;
 	},
 
 	/* The tab of the group at the top of the list follows the scrolling. */
 	Scrolled: function (event, node) {
 		var sections = node.querySelectorAll('.elemenx-emoji-group');
-		var top = node.scrollTop + node.offsetTop + 8;
+		var top = node.getBoundingClientRect().top + 8;
 		var active = '';
 		var i = 0;
 
-		while (i < sections.length && sections[i].offsetTop <= top) {
+		while (i < sections.length && sections[i].getBoundingClientRect().top <= top) {
 			active = sections[i].getAttribute('data-group');
 
 			i++;
@@ -238,10 +240,10 @@ Elemenx.Component('EmojiPicker', {
 		var items = Array.prototype.slice.call(root.querySelectorAll('.elemenx-emoji-body .elemenx-emoji-item'));
 		var input = root.querySelector('.elemenx-picker-search input');
 		var columns = Number(this.Columns) || 9;
-		var index = items.indexOf(document.activeElement);
+		var index = items.indexOf(root.getRootNode().activeElement);
 		var next = -1;
 
-		if (event.key === 'Escape' && !this.ToneOpen) {
+		if (Elemenx.Locale.Key(event) === 'Escape' && !this.ToneOpen) {
 			if (this.Query) this.Clear();
 			else this.$Emit('dismiss');
 
@@ -251,11 +253,11 @@ Elemenx.Component('EmojiPicker', {
 			return;
 		}
 
-		if (document.activeElement === input) {
-			if (event.key === 'ArrowDown' && items.length)
+		if (root.getRootNode().activeElement === input) {
+			if (Elemenx.Locale.Key(event) === 'ArrowDown' && items.length)
 				next = 0;
 
-			if (event.key === 'Enter' && items.length) {
+			if (Elemenx.Locale.Key(event) === 'Enter' && items.length) {
 				event.preventDefault();
 
 				this.Choose(items[0].getAttribute('data-char'));
@@ -264,13 +266,13 @@ Elemenx.Component('EmojiPicker', {
 			}
 		}
 		else if (index !== -1) {
-			if (event.key === 'ArrowRight') next = Math.min(items.length - 1, index + 1);
-			else if (event.key === 'ArrowLeft') next = Math.max(0, index - 1);
-			else if (event.key === 'ArrowDown') next = Math.min(items.length - 1, index + columns);
-			else if (event.key === 'ArrowUp' && index < columns) next = -2;
-			else if (event.key === 'ArrowUp') next = index - columns;
-			else if (event.key === 'Home') next = 0;
-			else if (event.key === 'End') next = items.length - 1;
+			if (Elemenx.Locale.Key(event) === 'ArrowRight') next = Math.min(items.length - 1, index + 1);
+			else if (Elemenx.Locale.Key(event) === 'ArrowLeft') next = Math.max(0, index - 1);
+			else if (Elemenx.Locale.Key(event) === 'ArrowDown') next = Math.min(items.length - 1, index + columns);
+			else if (Elemenx.Locale.Key(event) === 'ArrowUp' && index < columns) next = -2;
+			else if (Elemenx.Locale.Key(event) === 'ArrowUp') next = index - columns;
+			else if (Elemenx.Locale.Key(event) === 'Home') next = 0;
+			else if (Elemenx.Locale.Key(event) === 'End') next = items.length - 1;
 		}
 
 		if (next === -1) return;

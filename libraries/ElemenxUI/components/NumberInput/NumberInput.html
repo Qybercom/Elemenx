@@ -3,7 +3,7 @@
 	<input class="elemenx-input-control" type="text" inputmode="decimal" autocomplete="off" role="spinbutton" [value]="Display(Value, Text)" [placeholder]="Placeholder" [disabled]="Disabled" [attribute.readonly]="ReadOnly ? '' : null" [attribute.name]="Name" [attribute.aria-valuenow]="Value" [attribute.aria-valuemin]="Min" [attribute.aria-valuemax]="Max" [attribute.aria-invalid]="Invalid ? 'true' : null" (input)="Typed" (change)="Committed" (keydown)="Key" />
 	<span class="elemenx-input-affix" *if="Suffix">{{Suffix}}</span>
 	<span class="elemenx-number-controls" *if="Controls">
-		<button class="elemenx-number-step" type="button" tabindex="-1" aria-label="Increase" [disabled]="Disabled || ReadOnly || (Max !== null && Max !== '' && Value !== null && Number(Value) >= Number(Max))" (click)="Increment"><Icon Name="chevron-up" Size="12" /></button>
-		<button class="elemenx-number-step" type="button" tabindex="-1" aria-label="Decrease" [disabled]="Disabled || ReadOnly || (Min !== null && Min !== '' && Value !== null && Number(Value) <= Number(Min))" (click)="Decrement"><Icon Name="chevron-down" Size="12" /></button>
+		<button class="elemenx-number-step" type="button" tabindex="-1" [attribute.aria-label]="$T('ui.numberInput.increase')" [disabled]="Disabled || ReadOnly || (Max !== null && Max !== '' && Value !== null && Number(Value) >= Number(Max))" (click)="Increment"><Icon Name="chevron-up" Size="12" /></button>
+		<button class="elemenx-number-step" type="button" tabindex="-1" [attribute.aria-label]="$T('ui.numberInput.decrease')" [disabled]="Disabled || ReadOnly || (Min !== null && Min !== '' && Value !== null && Number(Value) <= Number(Min))" (click)="Decrement"><Icon Name="chevron-down" Size="12" /></button>
 	</span>
 </div>

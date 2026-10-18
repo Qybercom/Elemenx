@@ -12,10 +12,10 @@ Elemenx.Component('Tour', {
 	Open: false,
 	Step: 0,
 	Padding: 6,
-	BackLabel: 'Back',
-	NextLabel: 'Next',
-	DoneLabel: 'Done',
-	SkipLabel: 'Skip',
+	BackLabel: '',
+	NextLabel: '',
+	DoneLabel: '',
+	SkipLabel: '',
 	Hole: null,
 	CardX: 0,
 	CardY: 0,
@@ -137,7 +137,7 @@ Elemenx.Component('Tour', {
 	Focus: function (card) {
 		var button;
 
-		if (card.contains(document.activeElement)) return;
+		if (card.contains(card.getRootNode().activeElement)) return;
 
 		button = card.querySelectorAll('.elemenx-tour-footer button');
 		button = button[button.length - 1];
@@ -181,17 +181,17 @@ Elemenx.Component('Tour', {
 	},
 
 	Key: function (event) {
-		if (event.key === 'Escape') {
+		if (Elemenx.Locale.Key(event) === 'Escape') {
 			event.preventDefault();
 
 			this.Open = false;
 
 			this.$Emit('close', 'escape');
 		}
-		else if (event.key === 'ArrowRight' && !event.target.closest('input, textarea')) {
+		else if (Elemenx.Locale.Key(event) === 'ArrowRight' && !event.target.closest('input, textarea')) {
 			this.Next();
 		}
-		else if (event.key === 'ArrowLeft' && !event.target.closest('input, textarea')) {
+		else if (Elemenx.Locale.Key(event) === 'ArrowLeft' && !event.target.closest('input, textarea')) {
 			this.Back();
 		}
 	}

@@ -69,7 +69,7 @@
 .elemenx-sticker-star {
 	position: absolute;
 	top: 2px;
-	right: 2px;
+	inset-inline-end: 2px;
 	display: none;
 	align-items: center;
 	justify-content: center;

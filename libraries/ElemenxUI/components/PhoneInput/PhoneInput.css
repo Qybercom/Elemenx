@@ -5,7 +5,7 @@
 }
 
 .elemenx-input.elemenx-phone-input {
-	padding-left: 0;
+	padding-inline-start: 0;
 }
 
 .elemenx-phone-country {
@@ -17,7 +17,7 @@
 	padding: 0 8px;
 	background: transparent;
 	border: 0;
-	border-right: 1px solid var(--elemenx-border);
+	border-inline-end: 1px solid var(--elemenx-border);
 	border-radius: calc(var(--elemenx-radius) - 1px) 0 0 calc(var(--elemenx-radius) - 1px);
 	color: var(--elemenx-text);
 	font: inherit;

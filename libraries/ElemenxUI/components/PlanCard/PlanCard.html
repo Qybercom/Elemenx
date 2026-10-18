@@ -7,19 +7,19 @@
 	<div class="elemenx-card-content">
 		<div class="elemenx-plan-price">
 			<strong>{{Amount(Price, YearlyPrice, Period, Currency)}}</strong>
-			<span *if="Number(Price) > 0">/ {{Period === 'year' ? YearLabel : MonthLabel}}</span>
+			<span *if="Number(Price) > 0">{{Period === 'year' ? (YearLabel ? '/ ' + YearLabel : $T('ui.planCard.perYear')) : (MonthLabel ? '/ ' + MonthLabel : $T('ui.planCard.perMonth'))}}</span>
 		</div>
 		<p class="elemenx-caption elemenx-plan-note" *if="Note">{{Note}}</p>
 		<ul class="elemenx-plan-features">
 			<li *for="feature of Features" *key="feature.Label || feature" [class.excluded]="feature.Included === false">
-				<Icon [name]="feature.Included === false ? 'close' : 'check'" [label]="feature.Included === false ? ExcludedLabel : IncludedLabel" />
+				<Icon [name]="feature.Included === false ? 'close' : 'check'" [label]="feature.Included === false ? (ExcludedLabel || $T('ui.planCard.excluded')) : (IncludedLabel || $T('ui.planCard.included'))" />
 				<span>{{feature.Label || feature}}</span>
 				<span class="elemenx-caption" *if="feature.Hint">{{feature.Hint}}</span>
 			</li>
 		</ul>
 		<slot></slot>
 		<div class="elemenx-card-footer elemenx-plan-footer">
-			<Button [label]="Current ? CurrentLabel : (Selected ? SelectedLabel : Action)" [icon]="Selected || Current ? 'check' : ''" [variant]="Selected || Popular ? 'primary' : 'secondary'" Block="true" [disabled]="Disabled || Current" (click)="Choose" />
+			<Button [label]="Current ? (CurrentLabel || $T('ui.planCard.current')) : (Selected ? (SelectedLabel || $T('ui.planCard.selected')) : (Action || $T('ui.planCard.action')))" [icon]="Selected || Current ? 'check' : ''" [variant]="Selected || Popular ? 'primary' : 'secondary'" Block="true" [disabled]="Disabled || Current" (click)="Choose" />
 		</div>
 	</div>
 </article>

@@ -1,7 +1,7 @@
 <div class="elemenx-column elemenx-expressions">
-	<div class="elemenx-container elemenx-picker-tabs elemenx-expressions-kinds" role="tablist" aria-label="Kind" *if="HasStickers(Stickers, Version)">
-		<button class="elemenx-picker-tab" type="button" role="tab" [class.active]="Kind !== 'stickers'" [attribute.aria-selected]="String(Kind !== 'stickers')" data-kind="emoji" (click)="Switch"><Icon Name="smile" /><span>Emoji</span></button>
-		<button class="elemenx-picker-tab" type="button" role="tab" [class.active]="Kind === 'stickers'" [attribute.aria-selected]="String(Kind === 'stickers')" data-kind="stickers" (click)="Switch"><Icon Name="sticker" /><span>Stickers</span></button>
+	<div class="elemenx-container elemenx-picker-tabs elemenx-expressions-kinds" role="tablist" [attribute.aria-label]="$T('ui.expressionPicker.kind')" *if="HasStickers(Stickers, Version)">
+		<button class="elemenx-picker-tab" type="button" role="tab" [class.active]="Kind !== 'stickers'" [attribute.aria-selected]="String(Kind !== 'stickers')" data-kind="emoji" (click)="Switch"><Icon Name="smile" /><span>{{$T('ui.expressionPicker.emoji')}}</span></button>
+		<button class="elemenx-picker-tab" type="button" role="tab" [class.active]="Kind === 'stickers'" [attribute.aria-selected]="String(Kind === 'stickers')" data-kind="stickers" (click)="Switch"><Icon Name="sticker" /><span>{{$T('ui.expressionPicker.stickers')}}</span></button>
 	</div>
 	<EmojiPicker *if="Kind !== 'stickers' || !HasStickers(Stickers, Version)" [columns]="Columns" (pick)="EmojiPicked" (dismiss)="Dismissed" />
 	<StickerPicker *if="Kind === 'stickers' && HasStickers(Stickers, Version)" (pick)="StickerPicked" (dismiss)="Dismissed" />

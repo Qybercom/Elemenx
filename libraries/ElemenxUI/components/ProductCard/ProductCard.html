@@ -2,28 +2,28 @@
 	<div class="elemenx-card-media elemenx-product-media" [attribute.style]="'aspect-ratio: ' + String(Ratio || '1:1').replace(':', ' / ')">
 		<img *if="Pictures(Images, Image).length" [src]="Pictures(Images, Image)[Shown]" [attribute.alt]="Title" loading="lazy" />
 		<span class="elemenx-badge elemenx-product-badge" *if="Badge" [class]="[BadgeVariant || 'danger']">{{Badge}}</span>
-		<button class="elemenx-product-favorite" type="button" *if="Favorable" [class.on]="!!Favorite" [attribute.aria-pressed]="String(!!Favorite)" [attribute.aria-label]="FavoriteLabel" (click)="Star"><Icon Name="heart" /></button>
+		<button class="elemenx-product-favorite" type="button" *if="Favorable" [class.on]="!!Favorite" [attribute.aria-pressed]="String(!!Favorite)" [attribute.aria-label]="(FavoriteLabel || $T('ui.productCard.favorite'))" (click)="Star"><Icon Name="heart" /></button>
 		<span class="elemenx-product-corner" *if="PriceStyle === 'corner' && Price !== null">{{Format().Money(Price, Currency)}}</span>
-		<div class="elemenx-product-dots" *if="Pictures(Images, Image).length > 1" role="tablist" [attribute.aria-label]="ImagesLabel">
-			<button class="elemenx-product-dot" type="button" role="tab" *for="picture of Pictures(Images, Image)" *key="picture" [class.active]="$index === Shown" [attribute.aria-selected]="String($index === Shown)" [attribute.aria-label]="ImageLabel + ' ' + ($index + 1)" [attribute.data-index]="$index" (click)="Show"></button>
+		<div class="elemenx-product-dots" *if="Pictures(Images, Image).length > 1" role="tablist" [attribute.aria-label]="(ImagesLabel || $T('ui.productCard.images'))">
+			<button class="elemenx-product-dot" type="button" role="tab" *for="picture of Pictures(Images, Image)" *key="picture" [class.active]="$index === Shown" [attribute.aria-selected]="String($index === Shown)" [attribute.aria-label]="(ImageLabel || $T('ui.productCard.image')) + ' ' + ($index + 1)" [attribute.data-index]="$index" (click)="Show"></button>
 		</div>
 	</div>
 	<div class="elemenx-card-content">
 		<div class="elemenx-card-body">
 			<span class="elemenx-caption elemenx-product-brand" *if="Brand">{{Brand}}</span>
 			<h3 class="elemenx-card-title elemenx-product-title">{{Title}}</h3>
-			<span class="elemenx-container elemenx-product-rating" *if="Rating !== null"><Rating [value]="Rating" Half="true" ReadOnly="true" Size="small" [label]="RatingLabel" /><span class="elemenx-caption" *if="Reviews !== null">{{Format().Count(Reviews)}}</span></span>
+			<span class="elemenx-container elemenx-product-rating" *if="Rating !== null"><Rating [value]="Rating" Half="true" ReadOnly="true" Size="small" [label]="(RatingLabel || $T('ui.productCard.rating'))" /><span class="elemenx-caption" *if="Reviews !== null">{{Format().Count(Reviews)}}</span></span>
 			<span class="elemenx-product-price" *if="Price !== null && PriceStyle !== 'corner'"><strong [class.sale]="OldPrice !== null">{{Format().Money(Price, Currency)}}</strong><s *if="OldPrice !== null">{{Format().Money(OldPrice, Currency)}}</s></span>
-			<div class="elemenx-product-options" *if="Colors && Colors.length" role="radiogroup" [attribute.aria-label]="ColorLabel">
+			<div class="elemenx-product-options" *if="Colors && Colors.length" role="radiogroup" [attribute.aria-label]="(ColorLabel || $T('ui.productCard.color'))">
 				<button class="elemenx-product-color" type="button" role="radio" *for="color of Colors" *key="color.Value" [class.active]="color.Value === Color" [attribute.aria-checked]="String(color.Value === Color)" [attribute.aria-label]="color.Label || color.Value" [attribute.title]="color.Label || color.Value" [attribute.data-value]="color.Value" [attribute.style]="'--elemenx-swatch: ' + (color.Color || color.Value)" (click)="PickColor"></button>
 			</div>
-			<div class="elemenx-product-options" *if="Sizes && Sizes.length" role="radiogroup" [attribute.aria-label]="SizeLabel">
+			<div class="elemenx-product-options" *if="Sizes && Sizes.length" role="radiogroup" [attribute.aria-label]="(SizeLabel || $T('ui.productCard.size'))">
 				<button class="elemenx-product-size" type="button" role="radio" *for="size of Sizes" *key="size" [class.active]="size === Size" [attribute.aria-checked]="String(size === Size)" [attribute.data-value]="size" (click)="PickSize">{{size}}</button>
 			</div>
 			<slot></slot>
 		</div>
 		<div class="elemenx-card-footer elemenx-product-footer" *if="Cart">
-			<Button [label]="InCart ? InCartLabel : AddLabel" [icon]="InCart ? 'check' : 'cart'" [variant]="InCart ? 'secondary' : 'primary'" Block="true" [disabled]="Disabled" (click)="Add" />
+			<Button [label]="InCart ? (InCartLabel || $T('ui.productCard.inCart')) : (AddLabel || $T('ui.productCard.add'))" [icon]="InCart ? 'check' : 'cart'" [variant]="InCart ? 'secondary' : 'primary'" Block="true" [disabled]="Disabled" (click)="Add" />
 		</div>
 	</div>
 	<a class="elemenx-card-link" *if="Href" [href]="Href" [attribute.aria-label]="Title"></a>

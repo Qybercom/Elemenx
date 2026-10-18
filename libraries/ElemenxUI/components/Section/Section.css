@@ -28,7 +28,7 @@
 }
 
 .elemenx-section-aside .elemenx-caption {
-	text-align: right;
+	text-align: end;
 }
 
 .elemenx-section-note {
@@ -46,11 +46,11 @@
 	border: 0;
 	color: inherit;
 	font: inherit;
-	text-align: left;
+	text-align: start;
 }
 
 .elemenx-section-toggle {
-	margin-left: -4px;
+	margin-inline-start: -4px;
 	padding: 0 4px;
 	border-radius: var(--elemenx-radius);
 	cursor: pointer;

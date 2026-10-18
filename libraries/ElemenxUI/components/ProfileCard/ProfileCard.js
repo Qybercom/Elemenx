@@ -23,10 +23,10 @@ Elemenx.Component('ProfileCard', {
 	Layout: 'card',
 	Variant: 'outlined',
 	Href: '',
-	FollowLabel: 'Follow',
-	FollowingLabel: 'Following',
-	MessageLabel: 'Message',
-	VerifiedLabel: 'Verified',
+	FollowLabel: '',
+	FollowingLabel: '',
+	MessageLabel: '',
+	VerifiedLabel: '',
 	StatusLabels: {online: 'Online', away: 'Away', busy: 'Busy', offline: 'Offline'},
 
 	$OnCreate: function () {

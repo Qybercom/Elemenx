@@ -15,10 +15,10 @@ Elemenx.Component('PlanPicker', {
 	Discount: '',
 	Currency: 'USD',
 	Variant: 'outlined',
-	Action: 'Choose plan',
-	Label: 'Plans',
-	MonthlyLabel: 'Monthly',
-	YearlyLabel: 'Yearly',
+	Action: '',
+	Label: '',
+	MonthlyLabel: '',
+	YearlyLabel: '',
 
 	$OnCreate: function () {
 		this.PeriodOptions = function (monthly, yearly) {
@@ -39,7 +39,7 @@ Elemenx.Component('PlanPicker', {
 
 		window.setTimeout(function () {
 			var card = root.querySelector('.elemenx-plan[data-id="' + String(id).replace(/"/g, '') + '"]');
-			if (card && root.contains(document.activeElement))
+			if (card && root.contains(root.getRootNode().activeElement))
 				card.focus();
 		}, 0);
 	},
@@ -59,7 +59,7 @@ Elemenx.Component('PlanPicker', {
 		var index = plans.map(function (plan) {
 			return plan.ID;
 		}).indexOf(this.Value);
-		var step = {ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1}[event.key];
+		var step = {ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1}[Elemenx.Locale.Key(event)];
 		if (!step || !plans.length || !event.target.classList.contains('elemenx-plan')) return;
 
 		event.preventDefault();
