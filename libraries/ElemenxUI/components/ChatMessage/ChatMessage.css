@@ -445,3 +445,10 @@
 	outline: 2px solid var(--elemenx-focus);
 	outline-offset: 2px;
 }
+
+/* What shows on hover, a touch screen has no hover: the buttons beside the bubble show for every message. */
+@media (hover: none) {
+	.elemenx-chat-tools {
+		display: inline-flex;
+	}
+}

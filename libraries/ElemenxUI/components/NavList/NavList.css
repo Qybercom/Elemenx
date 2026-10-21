@@ -1,4 +1,5 @@
 .elemenx-nav {
+	container: elemenx-nav / inline-size;
 	display: flex;
 	flex-direction: column;
 	gap: 8px;
@@ -74,4 +75,18 @@
 .elemenx-nav.collapsed .elemenx-nav-twisty,
 .elemenx-nav.collapsed .elemenx-nav-label {
 	display: none;
+}
+
+/* A column too narrow for the labels (the side of a Dashboard on a phone) shows the icons alone, as Collapsed does. */
+@container elemenx-nav (max-width: 96px) {
+	.elemenx-nav-row {
+		justify-content: center;
+		padding: 0;
+	}
+
+	.elemenx-nav-twisty,
+	.elemenx-nav-label,
+	.elemenx-nav-search {
+		display: none;
+	}
 }

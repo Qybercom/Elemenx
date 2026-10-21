@@ -8,7 +8,7 @@
 	</div>
 	<input type="hidden" *if="Name" [attribute.name]="Name" [value]="Value.join(',')" />
 	<div class="elemenx-popup" role="listbox" *popup="Open" (dismiss)="Dismissed">
-		<div class="elemenx-option" role="option" *for="entry of Matching(Suggestions, Value, Text)" *key="entry" [class.active]="$index === Active" [attribute.aria-selected]="String($index === Active)" [attribute.data-index]="$index" (mousedown)="Prevent" (mousemove)="Hover" (click)="Pick">
+		<div class="elemenx-option" role="option" *for="entry of (Open ? Matching(Suggestions, Value, Text) : [])" *key="entry" [class.active]="$index === Active" [attribute.aria-selected]="String($index === Active)" [attribute.data-index]="$index" (mousedown)="Prevent" (mousemove)="Hover" (click)="Pick">
 			<span class="elemenx-option-label">{{entry}}</span>
 		</div>
 	</div>

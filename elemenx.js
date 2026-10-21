@@ -23,6 +23,7 @@
  *   Template and Component   Elemenx.Template, Elemenx.Directive, Elemenx.Component: compiler, bindings, factory
  *   Router                   Elemenx.Router: routes, guards, browser history
  *   Structural               structural hosts: conditional and collection mounting, deferred children
+ *   Cache                    Elemenx.Cache: unloading idle component definitions, sleeping instances (keep-alive)
  *   Network                  Elemenx.Network: XHR, Stream, LongPolling, SSE, Transfer, WebSocket, WebRTC, Metrics, Context
  *   Storage                  Elemenx.Storage: Local, Session, Cookie, IndexedDB, Context
  *   Events                   Elemenx.Events and Elemenx.Pipe
@@ -378,6 +379,18 @@
 				Render(null);
 			}
 
+			/* Takes the component out of the outlet without destroying it: a page of the Router that goes to sleep. */
+			function Release () {
+				var released = current;
+				var node = released && released.$Element ? released.$Element() : released;
+				if (node && node.parentNode === element)
+					element.removeChild(node);
+
+				current = null;
+
+				return released;
+			}
+
 			function Current () {
 				return current;
 			}
@@ -392,6 +405,7 @@
 				},
 				Render: Render,
 				Clear: Clear,
+				Release: Release,
 				Current: Current,
 				Destroy: Destroy
 			};
@@ -1338,6 +1352,31 @@
 		}
 
 		Runtime.AddStyle = add;
+
+		/* Takes a stylesheet out of the document and of every shadow root: the Cache unloads the style of a component. */
+		Runtime.RemoveStyle = function (key) {
+			var entry = sheets[key];
+			var node;
+			var i = 0;
+
+			if (!entry) return;
+
+			if (entry.Node && entry.Node.parentNode)
+				entry.Node.parentNode.removeChild(entry.Node);
+
+			while (i < roots.length) {
+				node = entry.Roots.get(roots[i]);
+
+				if (node && node.parentNode)
+					node.parentNode.removeChild(node);
+
+				i++;
+			}
+
+			delete sheets[key];
+
+			order.splice(order.indexOf(key), 1);
+		};
 
 		/* A shadow root of an Application takes every stylesheet, now and later. */
 		/* The document takes every stylesheet, now and later: an Application of an isolated copy that renders in it. */
@@ -2678,7 +2717,128 @@
 				});
 			}
 		}, true);
+
+		/*
+		 * *lazy: its host renders when it comes near the viewport (a screen away) or when the browser is idle (a tenth of a
+		 * second at most apart), whichever is first, one host at a time in the order of the page, and then stays. A long page shows its first screen at once
+		 * and builds the rest in the background, instead of freezing the tab until all of it is built.
+		 */
+		var lazyGlobal = typeof globalThis !== 'undefined' ? globalThis : self;
+		var lazyQueue = [];
+		var lazyIdle = 0;
+		var lazyFast = 0;
+
+		function lazyMount (context) {
+			var data = context.Data;
+			var index = lazyQueue.indexOf(context);
+			if (index !== -1)
+				lazyQueue.splice(index, 1);
+
+			data.Done = true;
+
+			lazyGlobal.clearTimeout(data.Waiting);
+
+			if (data.Observer)
+				data.Observer.disconnect();
+
+			if (data.Holder && data.Holder.parentNode)
+				data.Holder.parentNode.removeChild(data.Holder);
+
+			data.Observer = null;
+			data.Holder = null;
+
+			if (!data.Destroyed)
+				context.Mount();
+		}
+
+		/* One host a task: the ones near the viewport first, at once; the others when the browser is idle. */
+		function lazyNear () {
+			return lazyQueue.filter(function (context) {
+				return context.Data.Near;
+			})[0];
+		}
+
+		function lazyNext (fast) {
+			var context;
+
+			if (fast) lazyFast = 0;
+			else lazyIdle = 0;
+
+			context = lazyNear() || (fast ? null : lazyQueue[0]);
+
+			if (context)
+				lazyMount(context);
+
+			lazySchedule();
+		}
+
+		function lazySchedule () {
+			if (!lazyFast && lazyNear()) {
+				lazyFast = lazyGlobal.setTimeout(function () {
+					lazyNext(true);
+				}, 0);
+			}
+
+			if (lazyIdle || !lazyQueue.length) return;
+
+			lazyIdle = typeof lazyGlobal.requestIdleCallback === 'function' ? lazyGlobal.requestIdleCallback(function () {
+				lazyNext(false);
+			}, {timeout: 100}) : lazyGlobal.setTimeout(function () {
+				lazyNext(false);
+			}, 16);
+		}
+
+		Runtime.Directive.Register('lazy', {
+			Alias: 'Lazy',
+			Structural: true,
+			$OnCreate: function (context) {
+				var data = context.Data;
+
+				lazyQueue.push(context);
+
+				lazySchedule();
+
+				if (typeof lazyGlobal.IntersectionObserver !== 'function') return;
+
+				/*
+				 * A place the observer can see, one line high (so the hosts of a long page are not all near the viewport at first),
+				 * put in once the template around is compiled: the compiler finds the nodes of a template by their position.
+				 */
+				data.Waiting = lazyGlobal.setTimeout(function () {
+					var marker = context.Marker;
+
+					data.Waiting = 0;
+
+					if (data.Done || !marker || !marker.parentNode) return;
+
+					data.Holder = document.createElement('span');
+
+					data.Holder.setAttribute('data-elemenx-lazy', '');
+					data.Holder.setAttribute('aria-hidden', 'true');
+
+					data.Holder.style.display = 'block';
+					data.Holder.style.minHeight = '1px';
+
+					marker.parentNode.insertBefore(data.Holder, marker);
+
+					/* Near the viewport it goes before the others, still one a task: a host that renders moves the next ones away. */
+					data.Observer = new lazyGlobal.IntersectionObserver(function (entries) {
+						data.Near = entries[entries.length - 1].isIntersecting;
+
+						lazySchedule();
+					}, {rootMargin: '100% 0px'});
+
+					data.Observer.observe(data.Holder);
+				}, 0);
+			},
+			$OnDestroy: function (context) {
+				context.Data.Destroyed = true;
+
+				lazyMount(context);
+			}
+		}, true);
 		Runtime.Directive.Register('key', {Alias: 'Key', Kind: 'argument', For: 'collection', Role: 'key'}, true);
+		Runtime.Directive.Register('keep', {Alias: 'Keep', Kind: 'argument', For: 'structural', Role: 'keep'}, true);
 		Runtime.Directive.Register('outlet', {Alias: 'Outlet', Kind: 'behavior', Role: 'outlet'}, true);
 		Runtime.Directive.Register('pending', {Alias: 'Pending', Kind: 'status', Role: 'pending'}, true);
 		Runtime.Directive.Register('error', {Alias: 'Error', Kind: 'status', Role: 'error'}, true);
@@ -3011,6 +3171,123 @@
 
 			Runtime.AddStyle(definition.$StyleKey, {Text: String(css)});
 		}
+
+		/* Component: the use of the definitions (the Cache unloads the idle ones) */
+		var componentUse = {};
+
+		/* The live instances of a name: the Cache keeps the resources of a definition while one of them lives. */
+		function useComponent (name, component) {
+			var use = componentUse[name] || (componentUse[name] = {Count: 0, IdleSince: 0, Evicted: false});
+			var destroy = component.$Destroy;
+			var released = false;
+
+			use.Count++;
+			use.Evicted = false;
+
+			component.$Destroy = function () {
+				if (!released) {
+					released = true;
+					use.Count--;
+
+					if (!use.Count)
+						use.IdleSince = Date.now();
+				}
+
+				return destroy.apply(component, arguments);
+			};
+		}
+
+		/* The definitions in use or used once: {Name, Instances, IdleSince, Cached}. */
+		Runtime.ComponentUse = function () {
+			var list = [];
+			var name;
+
+			for (name in componentUse) {
+				if (own(componentUse, name))
+					list.push({Name: name, Instances: componentUse[name].Count, IdleSince: componentUse[name].IdleSince, Cached: !componentUse[name].Evicted});
+			}
+
+			return list;
+		};
+
+		/*
+		 * Unloads an idle definition: the text of its template and of its style (fetched again by the next instance), its
+		 * stylesheet, and the compiled expressions of the templates (compiled again on use). A definition of code keeps its
+		 * object: the next instance places its style again.
+		 */
+		Runtime.EvictComponent = function (name) {
+			var use = componentUse[name];
+			var factory = componentRegistry[name];
+			var definition = factory && factory.Definition;
+			if (!use || use.Count || use.Evicted || !definition) return false;
+
+			if (definition.$TemplateURL)
+				delete templateResources[definition.$TemplateURL];
+
+			if (definition.$StyleURL) {
+				delete styleResources[definition.$StyleURL];
+				delete definition.$Style;
+			}
+
+			if (definition.$StyleKey)
+				Runtime.RemoveStyle(definition.$StyleKey);
+
+			expressionCache = {};
+			fragmentCache = {};
+			fragmentCount = 0;
+			use.Evicted = true;
+
+			return true;
+		};
+
+		/*
+		 * Component: sleep and wake. The components and directives with $OnSleep or $OnWake, by the element they live on:
+		 * an instance that goes to sleep (the Cache keeps it out of the page) puts to sleep the ones inside it.
+		 */
+		var sleepAware = [];
+
+		function forgetSleepAware (entry) {
+			var index = sleepAware.indexOf(entry);
+			if (index !== -1)
+				sleepAware.splice(index, 1);
+		}
+
+		/*
+		 * Puts to sleep the components and directives inside an element, and empties its fields of passwords and of
+		 * payment cards: a page asleep keeps no secret. Returns them, for Runtime.WakeTree.
+		 */
+		Runtime.SleepTree = function (element) {
+			var asleep = sleepAware.filter(function (entry) {
+				return element.contains(entry.Root);
+			});
+			var fields = element.querySelectorAll ? element.querySelectorAll('input[type="password"], input[autocomplete^="cc-"]') : [];
+			var i = 0;
+
+			while (i < fields.length) {
+				if (fields[i].value) {
+					fields[i].value = '';
+
+					fields[i].dispatchEvent(new global.Event('input', {bubbles: true}));
+				}
+
+				i++;
+			}
+
+			asleep.forEach(function (entry) {
+				if (entry.Sleep)
+					Runtime.Notify(entry.Sleep, null, []);
+			});
+
+			return asleep;
+		};
+
+		/* Wakes the components and directives Runtime.SleepTree put to sleep, the ones still alive. */
+		Runtime.WakeTree = function (asleep) {
+			(asleep || []).forEach(function (entry) {
+				if (entry.Wake && sleepAware.indexOf(entry) !== -1)
+					Runtime.Notify(entry.Wake, null, []);
+			});
+		};
 
 		/* Component: live and deferred instances */
 		var liveComponentInstances = {};
@@ -3611,7 +3888,32 @@
 			return node.namespaceURI === 'http://www.w3.org/2000/svg' && svgAttributeNames[name] ? svgAttributeNames[name] : name;
 		}
 
+		/*
+		 * The parsed templates by their text: an instance clones the parse of its template, it does not parse it again (a
+		 * page of a thousand icons parsed one template a thousand times). A thousand texts at most: templates made of data
+		 * do not keep growing it. The Cache empties it with the definitions it unloads.
+		 */
+		var fragmentCache = {};
+		var fragmentCount = 0;
+
 		function createFragment (html) {
+			var key = String(html);
+			var parsed = own(fragmentCache, key) ? fragmentCache[key] : null;
+
+			if (!parsed) {
+				if (fragmentCount >= 1000) {
+					fragmentCache = {};
+					fragmentCount = 0;
+				}
+
+				parsed = fragmentCache[key] = parseFragment(key);
+				fragmentCount++;
+			}
+
+			return parsed.cloneNode(true);
+		}
+
+		function parseFragment (html) {
 			var template = document.createElement('template');
 			var protectedExpressions = protectExpressionAttributes(html);
 			var only;
@@ -3695,12 +3997,35 @@
 		 * template, so its live bindings would only be evaluated in vain (against state the condition excludes).
 		 * The children of a Component under the default structural host are its projection and stay with the owner.
 		 */
+		/*
+		 * The structural directive of each element of a template, found once while the bindings of an instance are collected:
+		 * every node asks for the ones of all its ancestors, and each answer reads every attribute of the element.
+		 */
+		var structuralSeen = null;
+
+		function structuralOf (node) {
+			var found;
+
+			if (!structuralSeen)
+				return Runtime.Directive.Find(node, 'structural');
+
+			found = structuralSeen.get(node);
+
+			if (found === undefined) {
+				found = Runtime.Directive.Find(node, 'structural');
+
+				structuralSeen.set(node, found);
+			}
+
+			return found;
+		}
+
 		function structuralOwned (node, root) {
 			var current = node.nodeType === 1 ? node : node.parentNode;
 			var directive;
 
 			while (current && current.nodeType === 1) {
-				directive = Runtime.Directive.Find(current, 'structural');
+				directive = structuralOf(current);
 
 				if (directive && (directive.Definition.Host !== 'structural' || !current.hasAttribute('data-elemenx-component'))) return true;
 				if (current === root) return false;
@@ -4051,7 +4376,7 @@
 				parent = nodes[i];
 
 				while (parent) {
-					if (parent.nodeType === 1 && (Runtime.Directive.Find(parent, 'structural'))) {
+					if (parent.nodeType === 1 && structuralOf(parent)) {
 						skip = true;
 
 						break;
@@ -4465,6 +4790,16 @@
 
 				record.Context = context;
 
+				if (typeof record.Definition.$OnSleep === 'function' || typeof record.Definition.$OnWake === 'function') {
+					record.Asleep = {
+						Root: record.Element,
+						Sleep: typeof record.Definition.$OnSleep === 'function' ? record.Definition.$OnSleep.bind(api, context) : null,
+						Wake: typeof record.Definition.$OnWake === 'function' ? record.Definition.$OnWake.bind(api, context) : null
+					};
+
+					sleepAware.push(record.Asleep);
+				}
+
 				if (typeof record.Definition.$OnCreate === 'function') {
 					record.Definition.$OnCreate.call(api, context);
 				}
@@ -4578,6 +4913,9 @@
 			while (i >= 0) {
 				record = customDirectives[i];
 
+				if (record.Asleep)
+					forgetSleepAware(record.Asleep);
+
 				if (typeof record.Definition.$OnDestroy === 'function')
 					record.Definition.$OnDestroy.call(api, record.Context);
 
@@ -4672,6 +5010,9 @@
 				if (name && !componentReloading)
 					track(component);
 
+				if (name)
+					useComponent(name, component);
+
 				return component;
 			};
 
@@ -4758,20 +5099,30 @@
 				var structural = null;
 				var parentComponent = null;
 				var componentEvents = {};
+				var asleep = null;
+				var seenOuter;
 				var api;
 
 				/* Instance: template compilation */
 				projectSlots(root, slotProjection);
 
-				collectRefs(root, refs);
+				seenOuter = structuralSeen;
+				structuralSeen = new Map();
 
-				collectOutlets(root, outlets);
+				try {
+					collectRefs(root, refs);
 
-				collectTextBindings(root, bindings);
+					collectOutlets(root, outlets);
 
-				collectElementBindings(root, bindings, models);
+					collectTextBindings(root, bindings);
 
-				collectCustomDirectives(root, customDirectives);
+					collectElementBindings(root, bindings, models);
+
+					collectCustomDirectives(root, customDirectives);
+				}
+				finally {
+					structuralSeen = seenOuter;
+				}
 
 				/* Instance: API methods */
 				function Batch (callback) {
@@ -4899,6 +5250,9 @@
 
 					destroyCustomDirectives(customDirectives, api);
 
+					if (asleep)
+						forgetSleepAware(asleep);
+
 					if (definition.$OnDestroy)
 						definition.$OnDestroy.call(api);
 
@@ -4993,6 +5347,20 @@
 
 				/* Instance: ownership and router */
 				Runtime.AttachOwnerFacades(api, name || 'Component', messagingInstanceSequence++);
+
+				/* The Cache unloaded the stylesheet of an idle definition of code: its next instance places it again. */
+				if (name && definition.$Style !== undefined && componentUse[name] && componentUse[name].Evicted)
+					installComponentStyle(name, definition, definition.$Style);
+
+				if (definition.$OnSleep || definition.$OnWake) {
+					asleep = {
+						Root: root,
+						Sleep: definition.$OnSleep ? definition.$OnSleep.bind(api) : null,
+						Wake: definition.$OnWake ? definition.$OnWake.bind(api) : null
+					};
+
+					sleepAware.push(asleep);
+				}
 
 				componentOutlets.set(api, outlets);
 				componentValues.set(api, values);
@@ -5102,6 +5470,9 @@
 				 */
 				if (definition.$OnReady)
 					definition.$OnReady.call(api);
+
+				if (name)
+					useComponent(name, api);
 
 				return api;
 			}
@@ -5604,6 +5975,7 @@
 			var waitingOutletName = config.WaitingOutlet || 'Waiting';
 			var routes = config.Routes || [];
 			var active = [];
+			var sleeping = {};
 			var started = false;
 			var clickHandler;
 			var popHandler;
@@ -6070,7 +6442,26 @@
 			}
 
 			/* Navigation: commit */
-			function destroyFrom (index) {
+			/* The key of a page asleep: its level, its component and the parameters of its route (a query does not count). */
+			function sleepKey (route, index, packet) {
+				return index + '|' + route.Component + '|' + JSON.stringify(packet && packet.Params ? packet.Params : {});
+			}
+
+			/* A page that leaves sleeps out of its outlet, when the policy of the Cache keeps it. */
+			function sleepPage (entry, outlet) {
+				var key = entry.Key;
+
+				outlet.Release();
+
+				if (sleeping[key])
+					Runtime.CacheDrop(sleeping[key]);
+
+				sleeping[key] = Runtime.CacheSleep(entry.Component, entry.Component.$Element(), entry.Route.Component, function () {
+					delete sleeping[key];
+				});
+			}
+
+			function destroyFrom (index, stopping) {
 				var i = active.length - 1;
 				var entry;
 				var parent;
@@ -6087,7 +6478,8 @@
 					 * teardown. Direct Component.Destroy() leaves a stale Current and a
 					 * later Render() destroys the already-recreated route component.
 					 */
-					if (outlet && outlet.Current && outlet.Current() === entry.Component) outlet.Clear();
+					if (!stopping && entry.Key && outlet && outlet.Current && outlet.Current() === entry.Component && Runtime.CacheKeeps('router', entry.Definition, undefined)) sleepPage(entry, outlet);
+					else if (outlet && outlet.Current && outlet.Current() === entry.Component) outlet.Clear();
 					else if (entry.Component) entry.Component.$Destroy();
 
 					i--;
@@ -6104,6 +6496,8 @@
 				var outlet;
 				var route;
 				var factory;
+				var key;
+				var asleep;
 				var i = 0;
 
 				while (common > 0 && i < common) {
@@ -6131,11 +6525,28 @@
 					if (!factory)
 						throw new Error('Elemenx route component not found: ' + route.Component);
 
-					parent = mountRouteComponent(factory, packet, parent, outlet, route.GuardFailure);
+					key = sleepKey(route, i, packet);
+					asleep = sleeping[key];
+
+					/* A page asleep under this key wakes in its outlet with the route of now. */
+					if (asleep && Runtime.CacheWake(asleep)) {
+						delete sleeping[key];
+
+						parent = asleep.Component;
+
+						Runtime.UpdateComponentRouteContext(parent, packet);
+
+						outlet.Render(parent);
+					}
+					else {
+						parent = mountRouteComponent(factory, packet, parent, outlet, route.GuardFailure);
+					}
 
 					active.push({
 						Route: route,
-						Component: parent
+						Component: parent,
+						Key: key,
+						Definition: factory.Definition
 					});
 
 					i++;
@@ -6721,8 +7132,13 @@
 
 				clearWaiting();
 
-				destroyFrom(0);
+				destroyFrom(0, true);
 
+				Object.keys(sleeping).forEach(function (key) {
+					Runtime.CacheDrop(sleeping[key]);
+				});
+
+				sleeping = {};
 				started = false;
 			}
 
@@ -7518,13 +7934,32 @@
 				if (projected && pristineProjection && pristineProjection.Blueprints)
 					projected.PrimeBlueprints(pristineProjection.Blueprints());
 
-				records.push(componentRecord(replaceWithMarker(node, markerText), factory, blueprint, structuralDirective, eventMap, projected));
+				records.push(componentRecord(replaceWithMarker(node, markerText), factory, blueprint, structuralDirective, eventMap, projected, keepArgument(node)));
 			}
 
-			function componentRecord (end, factory, blueprint, structuralDirective, eventMap, projected) {
+			/* *keep on a conditional host: true (an empty value too) or false; undefined without it. */
+			function keepArgument (node) {
+				var value = Runtime.Directive.Arguments(node, 'structural').keep;
+				if (value === undefined) return undefined;
+
+				return !/^\s*false\s*$/.test(value);
+			}
+
+			/* Takes the element of a component out of the page and gives it to the Cache asleep. */
+			function sleep (child, name, evicted) {
+				var element = child.$Element();
+				if (element.parentNode)
+					element.parentNode.removeChild(element);
+
+				return Runtime.CacheSleep(child, element, name, evicted);
+			}
+
+			function componentRecord (end, factory, blueprint, structuralDirective, eventMap, projected, keep) {
 				var child = null;
 				var previousProps = null;
 				var currentData = null;
+				var asleep = null;
+				var destroying = false;
 				var context;
 
 				function createChild (data) {
@@ -7544,6 +7979,7 @@
 				context = structuralDirective ? {
 					Name: structuralDirective.Name,
 					$Element: blueprint,
+					Marker: end,
 					Component: component,
 					Expression: structuralDirective.Expression,
 					Value: undefined,
@@ -7552,6 +7988,15 @@
 						return child !== null;
 					},
 					Mount: function () {
+						/* A child asleep wakes in its place; the props that changed meanwhile reach it on this update. */
+						if (!child && asleep && Runtime.CacheWake(asleep)) {
+							child = asleep.Component;
+
+							end.parentNode.insertBefore(child.$Element(), end);
+						}
+
+						asleep = null;
+
 						if (!child)
 							createChild(currentData || Runtime.ComponentValues(component));
 
@@ -7560,10 +8005,18 @@
 					Unmount: function () {
 						if (!child) return;
 
-						child.$Destroy();
-						child = null;
+						if (!destroying && Runtime.CacheKeeps('structural', factory.Definition, keep)) {
+							asleep = sleep(child, factory.ComponentName || blueprint.tagName, function () {
+								asleep = null;
+							});
+						}
+						else {
+							child.$Destroy();
 
-						previousProps = null;
+							previousProps = null;
+						}
+
+						child = null;
 					}
 				} : null;
 
@@ -7624,6 +8077,14 @@
 
 					$Destroy: function () {
 						effect.Destroy();
+
+						destroying = true;
+
+						if (asleep) {
+							Runtime.CacheDrop(asleep);
+
+							asleep = null;
+						}
 
 						if (context) {
 							context.Unmount();
@@ -7914,8 +8375,11 @@
 			function compileStructural (node, directive) {
 				var field = directive.Expression;
 				var template = blueprintFor(node).cloneNode(true);
+				var keep = keepArgument(template);
 				var end;
 				var child = null;
+				var asleep = null;
+				var destroying = false;
 				var context = {
 					Name: directive.Name,
 					$Element: node,
@@ -7929,6 +8393,17 @@
 					Mount: function () {
 						if (child)
 							return child;
+
+						if (asleep && Runtime.CacheWake(asleep)) {
+							child = asleep.Component;
+							asleep = null;
+
+							end.parentNode.insertBefore(child.$Element(), end);
+
+							return child;
+						}
+
+						asleep = null;
 
 						var subtreeDefinition = bindMethods(definition, component, {$Template: svgSource(template, templateHTML(template))}, subtreeMethod);
 
@@ -7946,7 +8421,15 @@
 					Unmount: function () {
 						if (!child) return;
 
-						child.$Destroy();
+						if (!destroying && Runtime.CacheKeeps('structural', null, keep)) {
+							asleep = sleep(child, '*' + directive.Name, function () {
+								asleep = null;
+							});
+						}
+						else {
+							child.$Destroy();
+						}
+
 						child = null;
 					}
 				};
@@ -7954,6 +8437,8 @@
 				template.removeAttribute(directive.Attribute);
 
 				end = replaceWithMarker(node, 'elemenx:structural:' + directive.Name + ':end');
+
+				context.Marker = end;
 
 				if (typeof directive.Definition.$OnCreate === 'function') {
 					directive.Definition.$OnCreate(context);
@@ -7975,6 +8460,14 @@
 					},
 					$Destroy: function () {
 						structuralEffect.Destroy();
+
+						destroying = true;
+
+						if (asleep) {
+							Runtime.CacheDrop(asleep);
+
+							asleep = null;
+						}
 
 						context.Unmount();
 
@@ -8025,6 +8518,245 @@
 		}
 
 		Runtime.Structural = Structural;
+	})(typeof globalThis !== 'undefined' ? globalThis : self);
+
+	/* Cache */
+	(function (global) {
+		'use strict';
+
+		/* Everything off: the definitions stay loaded and every instance is destroyed when it leaves, as without a policy. */
+		var policy = {Definitions: {MaxAge: 0, Max: 0}, Instances: {Scope: 'none', MaxAge: 0, Max: 0}};
+		var scopes = ['none', 'marked', 'router', 'all'];
+		var sleepers = [];
+		var timer = 0;
+
+		function copy () {
+			return {
+				Definitions: {MaxAge: policy.Definitions.MaxAge, Max: policy.Definitions.Max},
+				Instances: {Scope: policy.Instances.Scope, MaxAge: policy.Instances.MaxAge, Max: policy.Instances.Max}
+			};
+		}
+
+		function limit (value, name) {
+			if (typeof value !== 'number' || !(value >= 0) || value === Number.POSITIVE_INFINITY)
+				throw new Error('Elemenx.Cache expects ' + name + ' to be a number of 0 or more');
+
+			return value;
+		}
+
+		/* A policy of the definitions or of the instances, checked key by key; the keys not given stay as they are. */
+		function group (target, source, name, keys) {
+			var key;
+
+			if (source === undefined) return;
+
+			if (!source || typeof source !== 'object')
+				throw new Error('Elemenx.Cache expects ' + name + ' to be an object');
+
+			for (key in source) {
+				if (!Runtime.Own(source, key)) continue;
+
+				if (keys.indexOf(key) === -1)
+					throw new Error('Elemenx.Cache does not know ' + name + '.' + key);
+
+				if (key === 'Scope') {
+					if (scopes.indexOf(source.Scope) === -1)
+						throw new Error('Elemenx.Cache expects Instances.Scope to be none, marked, router or all');
+
+					target.Scope = source.Scope;
+				}
+				else {
+					target[key] = limit(source[key], name + '.' + key);
+				}
+			}
+		}
+
+		/*
+		 * Whether a component leaves its place asleep instead of being destroyed. kind: 'router' (a page of a Router) or
+		 * 'structural' (a conditional host such as *if); explicit: the *keep of the host, or undefined. *keep="false" and
+		 * $KeepAlive: false keep it out of every scope; *keep and $KeepAlive: true bring it in from the scope marked on.
+		 */
+		Runtime.CacheKeeps = function (kind, definition, explicit) {
+			var scope = policy.Instances.Scope;
+			if (scope === 'none' || explicit === false || (definition && definition.$KeepAlive === false)) return false;
+
+			if (explicit === true || (definition && definition.$KeepAlive === true)) return true;
+
+			return scope === 'all' || (scope === 'router' && kind === 'router');
+		};
+
+		/* Keeps a component asleep, out of the page: evicted() tells its place it is gone when the Cache destroys it. */
+		Runtime.CacheSleep = function (component, element, name, evicted) {
+			var entry = {Component: component, Name: name || '', SleptAt: Date.now(), Asleep: Runtime.SleepTree(element), Evicted: evicted || null};
+
+			sleepers.push(entry);
+
+			trim();
+
+			schedule();
+
+			return entry;
+		};
+
+		/* Wakes a component asleep: false when the Cache destroyed it meanwhile. */
+		Runtime.CacheWake = function (entry) {
+			var index = sleepers.indexOf(entry);
+			if (index === -1) return false;
+
+			sleepers.splice(index, 1);
+
+			Runtime.WakeTree(entry.Asleep);
+
+			return true;
+		};
+
+		/* Destroys a component asleep whose place goes away. */
+		Runtime.CacheDrop = function (entry) {
+			var index = sleepers.indexOf(entry);
+			if (index === -1) return;
+
+			sleepers.splice(index, 1);
+
+			entry.Component.$Destroy();
+		};
+
+		function evict (entry) {
+			var index = sleepers.indexOf(entry);
+			if (index === -1) return;
+
+			sleepers.splice(index, 1);
+
+			if (entry.Evicted)
+				entry.Evicted();
+
+			entry.Component.$Destroy();
+		}
+
+		/* Max: the instances asleep longest go first. */
+		function trim () {
+			while (policy.Instances.Max && sleepers.length > policy.Instances.Max)
+				evict(sleepers[0]);
+		}
+
+		function sweep () {
+			var now = Date.now();
+			var definitions = Runtime.ComponentUse();
+			var idle;
+			var cached;
+
+			sleepers.slice().forEach(function (entry) {
+				if (policy.Instances.MaxAge && now - entry.SleptAt >= policy.Instances.MaxAge)
+					evict(entry);
+			});
+
+			idle = definitions.filter(function (entry) {
+				return entry.Cached && !entry.Instances && entry.IdleSince;
+			}).sort(function (a, b) {
+				return a.IdleSince - b.IdleSince;
+			});
+
+			cached = definitions.filter(function (entry) {
+				return entry.Cached;
+			}).length;
+
+			idle.forEach(function (entry) {
+				var old = policy.Definitions.MaxAge && now - entry.IdleSince >= policy.Definitions.MaxAge;
+				var many = policy.Definitions.Max && cached > policy.Definitions.Max;
+				if ((old || many) && Runtime.EvictComponent(entry.Name))
+					cached--;
+			});
+		}
+
+		/* Whether the policy has something to watch: the age or the number of the definitions, the age of the instances. */
+		function watching () {
+			return !!(policy.Definitions.MaxAge || policy.Definitions.Max || (policy.Instances.MaxAge && sleepers.length));
+		}
+
+		/* A quarter of the shortest age, from a tenth of a second to a minute; a second for a number alone. */
+		function interval () {
+			var ages = [policy.Definitions.MaxAge, policy.Instances.MaxAge].filter(function (age) {
+				return age > 0;
+			});
+			var shortest = ages.length ? Math.min.apply(Math, ages) : 4000;
+
+			return Math.max(100, Math.min(60000, shortest / 4));
+		}
+
+		function schedule () {
+			if (timer || !watching()) return;
+
+			timer = global.setTimeout(function () {
+				timer = 0;
+
+				sweep();
+
+				schedule();
+			}, interval());
+		}
+
+		/*
+		 * Elemenx.Cache(policy) sets the policy of the cache of the components and returns it; without an argument it
+		 * returns it. policy: {Definitions: {MaxAge, Max}, Instances: {Scope, MaxAge, Max}} (milliseconds and counts, 0 for
+		 * no limit). Definitions: a definition no instance uses for MaxAge, or beyond the Max of the definitions loaded,
+		 * unloads its template, its style and the compiled expressions. Instances: an instance that leaves its place
+		 * sleeps out of the page instead of being destroyed, and wakes as it was when it comes back; Scope none (the
+		 * default), marked (*keep and $KeepAlive), router (and every page of a Router) or all (and every conditional host;
+		 * the items of a collection never sleep); an instance asleep for MaxAge, or beyond the Max asleep, is destroyed.
+		 */
+		Elemenx.Cache = function (settings) {
+			var next = copy();
+
+			if (settings === undefined) return next;
+
+			if (!settings || typeof settings !== 'object')
+				throw new Error('Elemenx.Cache expects a policy object');
+
+			Object.keys(settings).forEach(function (key) {
+				if (key !== 'Definitions' && key !== 'Instances')
+					throw new Error('Elemenx.Cache does not know ' + key);
+			});
+
+			group(next.Definitions, settings.Definitions, 'Definitions', ['MaxAge', 'Max']);
+			group(next.Instances, settings.Instances, 'Instances', ['Scope', 'MaxAge', 'Max']);
+
+			policy = next;
+
+			if (policy.Instances.Scope === 'none')
+				Elemenx.Cache.Clear();
+
+			trim();
+
+			schedule();
+
+			return copy();
+		};
+
+		/* What the cache holds: the definitions used ({Name, Instances, Cached, Idle}) and the instances asleep ({Name, Asleep}). */
+		Elemenx.Cache.Stats = function () {
+			var now = Date.now();
+
+			return {
+				Definitions: Runtime.ComponentUse().map(function (entry) {
+					return {Name: entry.Name, Instances: entry.Instances, Cached: entry.Cached, Idle: entry.Instances || !entry.IdleSince ? 0 : now - entry.IdleSince};
+				}),
+				Instances: sleepers.map(function (entry) {
+					return {Name: entry.Name, Asleep: now - entry.SleptAt};
+				})
+			};
+		};
+
+		/* Destroys every instance asleep and unloads every definition no instance uses, whatever the policy. */
+		Elemenx.Cache.Clear = function () {
+			while (sleepers.length)
+				evict(sleepers[0]);
+
+			Runtime.ComponentUse().forEach(function (entry) {
+				if (entry.Cached && !entry.Instances)
+					Runtime.EvictComponent(entry.Name);
+			});
+
+			return Elemenx;
+		};
 	})(typeof globalThis !== 'undefined' ? globalThis : self);
 
 	/* Network */

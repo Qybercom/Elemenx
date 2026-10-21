@@ -177,16 +177,33 @@ Elemenx.Component('Calendar', {
 	},
 
 	$OnReady: function () {
-		var self = this;
-
-		/* The line of the present time moves once a minute. */
-		this.Ticker = window.setInterval(function () {
-			self.Now = Date.now();
-		}, 60000);
+		this.Tick();
 	},
 
 	$OnDestroy: function () {
 		window.clearInterval(this.Ticker);
+	},
+
+	/* Asleep (Elemenx.Cache keeps it out of the page) its clock stops; awake it shows the time of now. */
+	$OnSleep: function () {
+		window.clearInterval(this.Ticker);
+	},
+
+	$OnWake: function () {
+		this.Now = Date.now();
+
+		this.Tick();
+	},
+
+	/* The line of the present time moves once a minute. */
+	Tick: function () {
+		var self = this;
+
+		window.clearInterval(this.Ticker);
+
+		this.Ticker = window.setInterval(function () {
+			self.Now = Date.now();
+		}, 60000);
 	},
 
 	Parse: function (iso) {

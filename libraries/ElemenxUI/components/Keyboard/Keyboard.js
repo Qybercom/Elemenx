@@ -3,7 +3,7 @@
  * presses on a screen. Layout: 'full' (with the number pad), 'tkl' (without it) or 'compact' (the main block alone).
  * Keys are named by their code (KeyboardEvent.code: KeyA, Digit1, ShiftLeft, ArrowUp, Numpad7...).
  * - Pressed: the codes shown pressed; Live also shows the keys held on the keyboard of the user while the page has the
- *   focus. Marks: {code: class} marks keys (a hotkey, a group of keys of a game), true for the mark of the theme.
+ *   focus (class held: a key that goes down or up changes its own button, not the whole keyboard). Marks: {code: class} marks keys (a hotkey, a group of keys of a game), true for the mark of the theme.
  * - Labels: {code: text} names keys of their own; Native names the keys of characters as the keyboard layout of the
  *   user writes them (navigator.keyboard, Chrome and Edge), US English otherwise.
  * - Clickable: a press of a key emits press ({Code, Label}); a key of the screen keyboard is a button.
@@ -20,7 +20,6 @@ Elemenx.Component('Keyboard', {
 	Clickable: false,
 	Size: 'medium',
 	Label: '',
-	Held: [],
 	Map: null,
 
 	$OnCreate: function () {
@@ -126,8 +125,8 @@ Elemenx.Component('Keyboard', {
 			return entry.Label;
 		};
 
-		this.Down = function (code, pressed, held) {
-			return (pressed || []).indexOf(code) !== -1 || (held || []).indexOf(code) !== -1;
+		this.Down = function (code, pressed) {
+			return (pressed || []).indexOf(code) !== -1;
 		};
 
 		/* The mark of a key: the class Marks gives it, 'marked' for true. */
@@ -141,29 +140,44 @@ Elemenx.Component('Keyboard', {
 			}).join(' ');
 		};
 
-		/* The keys held on the keyboard of the user, while Live. */
-		this.KeyDown = function (event) {
-			if (!self.Live || !event.code || self.Held.indexOf(event.code) !== -1) return;
+		/*
+		 * The keys held on the keyboard of the user, while Live: out of the state of the component, so a key that goes
+		 * down or up changes its own button, not every key of the keyboard.
+		 */
+		var held = [];
 
-			self.Held = self.Held.concat([event.code]);
+		this.Hold = function (code, down) {
+			var root = self.$Element();
+			var key = root && root.querySelector('.elemenx-keyboard-key[data-code="' + code + '"]');
+
+			if (down) held.push(code);
+			else held.splice(held.indexOf(code), 1);
+
+			if (!key) return;
+
+			key.classList.toggle('held', down);
+			key.setAttribute('aria-pressed', String(down || self.Down(code, self.Pressed)));
+		};
+
+		this.KeyDown = function (event) {
+			if (!self.Live || !/^[A-Za-z0-9]+$/.test(event.code || '') || held.indexOf(event.code) !== -1) return;
+
+			self.Hold(event.code, true);
 		};
 
 		this.KeyUp = function (event) {
-			if (!self.Live || self.Held.indexOf(event.code) === -1) return;
+			if (!self.Live || held.indexOf(event.code) === -1) return;
 
-			self.Held = self.Held.filter(function (code) {
-				return code !== event.code;
-			});
+			self.Hold(event.code, false);
 		};
 
 		this.Blurred = function () {
-			if (self.Held.length)
-				self.Held = [];
+			held.slice().forEach(function (code) {
+				self.Hold(code, false);
+			});
 		};
 
-		document.addEventListener('keydown', this.KeyDown, true);
-		document.addEventListener('keyup', this.KeyUp, true);
-		window.addEventListener('blur', this.Blurred);
+		this.Listen();
 
 		if (this.Native && navigator.keyboard && typeof navigator.keyboard.getLayoutMap === 'function') {
 			navigator.keyboard.getLayoutMap().then(function (map) {
@@ -179,6 +193,26 @@ Elemenx.Component('Keyboard', {
 	},
 
 	$OnDestroy: function () {
+		this.Unlisten();
+	},
+
+	/* Asleep (Elemenx.Cache keeps it out of the page) it hears no key and shows none held. */
+	$OnSleep: function () {
+		this.Unlisten();
+		this.Blurred();
+	},
+
+	$OnWake: function () {
+		this.Listen();
+	},
+
+	Listen: function () {
+		document.addEventListener('keydown', this.KeyDown, true);
+		document.addEventListener('keyup', this.KeyUp, true);
+		window.addEventListener('blur', this.Blurred);
+	},
+
+	Unlisten: function () {
 		document.removeEventListener('keydown', this.KeyDown, true);
 		document.removeEventListener('keyup', this.KeyUp, true);
 		window.removeEventListener('blur', this.Blurred);

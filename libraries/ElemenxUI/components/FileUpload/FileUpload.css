@@ -229,3 +229,10 @@
 	border-radius: 50%;
 	color: var(--elemenx-accent-text);
 }
+
+/* What shows on hover, a touch screen has no hover: the button that removes a file shows on every tile. */
+@media (hover: none) {
+	.elemenx-upload-tile-remove {
+		opacity: 1;
+	}
+}

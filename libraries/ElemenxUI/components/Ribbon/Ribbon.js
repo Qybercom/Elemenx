@@ -97,7 +97,7 @@ Elemenx.Component('Ribbon', {
 
 		if (typeof ResizeObserver !== 'undefined') {
 			this.Sizer = new ResizeObserver(function () {
-				self.Fit();
+				self.FitSoon();
 			});
 
 			this.Sizer.observe(root);
@@ -134,6 +134,23 @@ Elemenx.Component('Ribbon', {
 		this.Sync();
 	},
 
+	/* Asleep (Elemenx.Cache keeps it out of the page) the key tips and the presses outside are not its own. */
+	$OnSleep: function () {
+		this.HideTips();
+
+		document.removeEventListener('pointerdown', this.OnPress, true);
+		document.removeEventListener('keydown', this.OnDown, true);
+		document.removeEventListener('keyup', this.OnUp, true);
+	},
+
+	$OnWake: function () {
+		document.addEventListener('pointerdown', this.OnPress, true);
+		document.addEventListener('keydown', this.OnDown, true);
+		document.addEventListener('keyup', this.OnUp, true);
+
+		this.Sync();
+	},
+
 	$OnDestroy: function () {
 		var root = this.$Element();
 
@@ -142,6 +159,8 @@ Elemenx.Component('Ribbon', {
 
 		if (this.Sizer)
 			this.Sizer.disconnect();
+
+		window.cancelAnimationFrame(this.FitFrame);
 
 		this.HideTips();
 
@@ -203,7 +222,23 @@ Elemenx.Component('Ribbon', {
 		if (this.HasBackstage !== !!root.querySelector('.elemenx-ribbon-backstage'))
 			this.HasBackstage = !this.HasBackstage;
 
-		this.Fit();
+		this.FitSoon();
+	},
+
+	/*
+	 * Fits the groups once in the next frame, whatever asked for it meanwhile: the content that builds and the size that
+	 * changes ask many times, and every measure of a fit lays out the whole page.
+	 */
+	FitSoon: function () {
+		var self = this;
+
+		if (this.FitFrame) return;
+
+		this.FitFrame = window.requestAnimationFrame(function () {
+			self.FitFrame = 0;
+
+			self.Fit();
+		});
 	},
 
 	/* The panel of the current tab, or null. */
@@ -228,6 +263,7 @@ Elemenx.Component('Ribbon', {
 	 */
 	Fit: function () {
 		var root = this.$Element();
+
 		var bar = root.querySelector('.elemenx-ribbon-bar');
 		var tabs = root.querySelector('.elemenx-ribbon-tabs');
 		var panel = this.Current();
@@ -238,6 +274,9 @@ Elemenx.Component('Ribbon', {
 		var step;
 		var i = 0;
 		var j;
+
+		/* A ribbon out of sight (asleep, in a hidden panel) has no width to fit in. */
+		if (!root.isConnected || !root.offsetWidth) return;
 
 		/* A narrow bar shows the commands of its slots as icons, so the tabs keep their room; without room still, a button lists them. */
 		root.classList.remove('narrow', 'tabs-menu');

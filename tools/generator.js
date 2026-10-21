@@ -243,7 +243,7 @@ function generateApplication (project, name, options) {
 		host.push(appFile);
 	}
 
-	if (writeIfMissing(indexFile, '<!DOCTYPE html>\n<html>\n<head>\n\t<meta charset="utf-8">\n\n\t<script src="/elemenx.js"></script>\n\t<script src="/app.js"></script>\n</head>\n<body>\n</body>\n</html>\n')) {
+	if (writeIfMissing(indexFile, '<!DOCTYPE html>\n<html>\n<head>\n\t<meta charset="utf-8">\n\t<meta name="viewport" content="width=device-width, initial-scale=1">\n\n\t<script src="/elemenx.js"></script>\n\t<script src="/app.js"></script>\n</head>\n<body>\n</body>\n</html>\n')) {
 		host.push(indexFile);
 	}
 

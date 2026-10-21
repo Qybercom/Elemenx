@@ -12,6 +12,7 @@
 	--elemenx-font-size-small: 12px;
 	--elemenx-font-size: 14px;
 	--elemenx-font-size-large: 16px;
+	--elemenx-font-size-field: 16px;
 	--elemenx-line-height-small: 16px;
 	--elemenx-line-height: 20px;
 	--elemenx-line-height-large: 24px;
@@ -1324,11 +1325,13 @@ a {
 	gap: 16px;
 }
 
+/* A header too narrow for the title and the note (a phone) puts the note on a line of its own, never over the title. */
 .elemenx-section-header {
 	display: flex;
+	flex-wrap: wrap;
 	align-items: flex-end;
 	justify-content: space-between;
-	gap: 16px;
+	gap: 4px 16px;
 	padding-bottom: 8px;
 	border-bottom: 1px solid var(--elemenx-border);
 }
@@ -1594,6 +1597,7 @@ a {
 
 .elemenx-pip-body {
 	min-height: 100vh;
+	min-height: 100dvh;
 	margin: 0;
 	overflow: auto;
 	background: var(--elemenx-background);
@@ -1632,6 +1636,12 @@ a {
 
 .elemenx-popup[hidden] {
 	display: none;
+}
+
+/* In the top layer (a popover of the browser) the panel keeps its own place, size and look, not those of a popover. */
+.elemenx-popup[popover] {
+	inset: auto;
+	margin: 0;
 }
 
 .elemenx-popup-search {
@@ -3118,4 +3128,52 @@ a {
 
 .elemenx-calendar-cell {
 	height: 48px;
+}
+
+/* On a touch screen the text of a field is never under 16 pixels: iOS would zoom the page in at every focus. */
+@media (pointer: coarse) {
+	.elemenx-input-control {
+		font-size: var(--elemenx-font-size-field);
+	}
+}
+
+/* On a touch screen the controls are taller: a finger presses 40 pixels where a pointer presses 32. */
+@media (pointer: coarse) {
+	:root {
+		--elemenx-control-small: 32px;
+		--elemenx-control: 40px;
+		--elemenx-control-large: 48px;
+	}
+}
+
+/* On a touch screen a small button takes a press 40 pixels around it at least, and keeps its look. */
+@media (pointer: coarse) {
+	.elemenx-input-action,
+	.elemenx-number-step,
+	.elemenx-tab-close,
+	.elemenx-table-sort,
+	.elemenx-table-twisty,
+	.elemenx-gallery-dot,
+	.elemenx-product-dot,
+	.elemenx-chat-views,
+	.elemenx-comment-token,
+	.elemenx-game-minimap-button {
+		position: relative;
+	}
+
+	.elemenx-input-action::after,
+	.elemenx-number-step::after,
+	.elemenx-tab-close::after,
+	.elemenx-table-sort::after,
+	.elemenx-table-twisty::after,
+	.elemenx-gallery-dot::after,
+	.elemenx-product-dot::after,
+	.elemenx-chat-views::after,
+	.elemenx-comment-token::after,
+	.elemenx-game-minimap-button::after,
+	.elemenx-slider-thumb::after {
+		position: absolute;
+		inset: min(0px, calc((100% - 40px) / 2));
+		content: '';
+	}
 }

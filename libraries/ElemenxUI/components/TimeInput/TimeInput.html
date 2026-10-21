@@ -7,13 +7,13 @@
 	<div class="elemenx-popup elemenx-time-popup" role="dialog" [attribute.aria-label]="$T('ui.timeInput.title')" data-match-width="false" *popup="Open" (dismiss)="Dismissed" (keydown)="ColumnKey">
 		<div class="elemenx-time-columns">
 			<div class="elemenx-time-column" role="listbox" [attribute.aria-label]="$T('ui.timeInput.hours')">
-				<button type="button" *for="unit of Units(24, 1)" *key="unit" [class.selected]="unit === Part(Value, 0)" [disabled]="Blocked(0, unit, Value, Min, Max)" [attribute.aria-selected]="String(unit === Part(Value, 0))" data-part="0" [attribute.data-unit]="unit" (click)="Pick">{{unit}}</button>
+				<button type="button" *for="unit of (Open ? Units(24, 1) : [])" *key="unit" [class.selected]="unit === Part(Value, 0)" [disabled]="Blocked(0, unit, Value, Min, Max)" [attribute.aria-selected]="String(unit === Part(Value, 0))" data-part="0" [attribute.data-unit]="unit" (click)="Pick">{{unit}}</button>
 			</div>
 			<div class="elemenx-time-column" role="listbox" [attribute.aria-label]="$T('ui.timeInput.minutes')">
-				<button type="button" *for="unit of Units(60, MinuteStep)" *key="unit" [class.selected]="unit === Part(Value, 1)" [disabled]="Blocked(1, unit, Value, Min, Max)" [attribute.aria-selected]="String(unit === Part(Value, 1))" data-part="1" [attribute.data-unit]="unit" (click)="Pick">{{unit}}</button>
+				<button type="button" *for="unit of (Open ? Units(60, MinuteStep) : [])" *key="unit" [class.selected]="unit === Part(Value, 1)" [disabled]="Blocked(1, unit, Value, Min, Max)" [attribute.aria-selected]="String(unit === Part(Value, 1))" data-part="1" [attribute.data-unit]="unit" (click)="Pick">{{unit}}</button>
 			</div>
 			<div class="elemenx-time-column" role="listbox" [attribute.aria-label]="$T('ui.timeInput.seconds')" *if="Seconds">
-				<button type="button" *for="unit of Units(60, 1)" *key="unit" [class.selected]="unit === Part(Value, 2)" [disabled]="Blocked(2, unit, Value, Min, Max)" [attribute.aria-selected]="String(unit === Part(Value, 2))" data-part="2" [attribute.data-unit]="unit" (click)="Pick">{{unit}}</button>
+				<button type="button" *for="unit of (Open ? Units(60, 1) : [])" *key="unit" [class.selected]="unit === Part(Value, 2)" [disabled]="Blocked(2, unit, Value, Min, Max)" [attribute.aria-selected]="String(unit === Part(Value, 2))" data-part="2" [attribute.data-unit]="unit" (click)="Pick">{{unit}}</button>
 			</div>
 		</div>
 		<div class="elemenx-picker-footer">

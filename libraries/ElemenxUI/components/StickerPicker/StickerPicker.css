@@ -96,3 +96,10 @@
 .elemenx-sticker-star.on .elemenx-icon {
 	fill: currentColor;
 }
+
+/* What shows on hover, a touch screen has no hover: the star of a sticker shows on every sticker. */
+@media (hover: none) {
+	.elemenx-sticker-star {
+		display: inline-flex;
+	}
+}

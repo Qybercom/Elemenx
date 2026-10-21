@@ -1,5 +1,7 @@
+/* A long press of a touch opens the menu: the callout of iOS (the preview of a link, Copy) stays away. */
 .elemenx-context {
 	display: contents;
+	-webkit-touch-callout: none;
 }
 
 /* The point the menu opens at: an anchor without size at the pointer. */

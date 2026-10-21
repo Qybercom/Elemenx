@@ -204,7 +204,7 @@ describe('Elemenx graph-aware generator', function () {
 		var html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 
 		expect(html).not.toContain('\\n');
-		expect(html.split('\n')).toEqual(['<!DOCTYPE html>', '<html>', '<head>', '\t<meta charset="utf-8">', '', '\t<script src="/elemenx.js"></script>', '\t<script src="/app.js"></script>', '</head>', '<body>', '</body>', '</html>', '']);
+		expect(html.split('\n')).toEqual(['<!DOCTYPE html>', '<html>', '<head>', '\t<meta charset="utf-8">', '\t<meta name="viewport" content="width=device-width, initial-scale=1">', '', '\t<script src="/elemenx.js"></script>', '\t<script src="/app.js"></script>', '</head>', '<body>', '</body>', '</html>', '']);
 		expect(JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8')).devDependencies).toEqual({'@qybercom/elemenx': '^' + version});
 	});
 

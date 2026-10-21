@@ -210,6 +210,17 @@ Elemenx.Directive('modal', {
 		data.Return = null;
 	},
 
+	/* Asleep (Elemenx.Cache keeps it out of the page) an open dialog leaves the top layer and lets the page go; awake it comes back. */
+	$OnSleep: function (context) {
+		if (context.Data.Open)
+			context.Data.Hide();
+	},
+
+	$OnWake: function (context) {
+		if (context.Data.Open)
+			context.Data.Show();
+	},
+
 	$OnDestroy: function (context) {
 		context.Element.removeEventListener('cancel', context.Data.Cancel);
 		context.Element.removeEventListener('mousedown', context.Data.Press);

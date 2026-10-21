@@ -20,7 +20,7 @@ To find a section in `elemenx.js`, search for its header, for example `/* Router
 
 | Field | Purpose | Used by |
 |---|---|---|
-| `Own` | `Object.prototype.hasOwnProperty.call(object, key)`; modules alias it as `var own = Runtime.Own;` | Application, Bundle, Directive registry, Discovery, Locale, Messaging, Network, Reactive, Router, Service and Guard, Storage, Structural, Template and Component |
+| `Own` | `Object.prototype.hasOwnProperty.call(object, key)`; modules alias it as `var own = Runtime.Own;` | Application, Bundle, Cache, Directive registry, Discovery, Locale, Messaging, Network, Reactive, Router, Service and Guard, Storage, Structural, Template and Component |
 | `AbsoluteURL` | resolves a URL against the document; in a worker the value is kept as it is | Locale, Resource, ServiceWorker, WebWorker |
 | `CurrentScriptURL` | the URL of the executing script without query and hash, or `null`: the base of the relative paths of its definitions | Library, Template and Component, Application |
 | `DefinitionURL` | resolves a relative path of a definition against its `$DefinitionURL`; absolute and root paths are kept | Library, Template and Component, Application |
@@ -69,6 +69,7 @@ To find a section in `elemenx.js`, search for its header, for example `/* Router
 | `AddStyle` | keeps a stylesheet (`{Text}` or `{URL}`) in the document and in every shadow root of an Application | Discovery, Template and Component |
 | `AddStyleDocument` | puts every stylesheet in the document too, for an Application of an isolated copy that renders there | Application |
 | `AddStyleRoot` | gives a shadow root of an Application every stylesheet, now and later | Application |
+| `RemoveStyle` | takes a stylesheet out of the document and of every shadow root (the Cache unloads the style of a component) | Template and Component |
 
 ## Discovery
 
@@ -127,12 +128,25 @@ To find a section in `elemenx.js`, search for its header, for example `/* Router
 | `ReloadComponentInstances` | recreates live instances after a component reload | Application |
 | `ResolveOutlet` | finds a named outlet of a component | Router |
 | `HasPendingComponents` | whether an element holds a deferred component that waits for its definition | Router |
+| `ComponentUse` | the definitions in use or used once: `{Name, Instances, IdleSince, Cached}` | Cache |
+| `EvictComponent` | unloads an idle definition: the text of its template and style, its stylesheet, the compiled expressions | Cache |
+| `SleepTree` | puts to sleep the components and directives with `$OnSleep` inside an element and empties its password and card fields | Cache |
+| `WakeTree` | wakes what `SleepTree` put to sleep, the ones still alive (`$OnWake`) | Cache |
 
 ## Structural
 
 | Field | Purpose | Used by |
 |---|---|---|
 | `Structural` | structural host engine of a component template: conditional and collection mounting, deferred children | Template and Component |
+
+## Cache
+
+| Field | Purpose | Used by |
+|---|---|---|
+| `CacheKeeps` | whether a component that leaves its place sleeps instead of being destroyed, by the policy of `Elemenx.Cache`, `*keep` and `$KeepAlive` | Structural, Router |
+| `CacheSleep` | keeps a component asleep out of the page; its place hears when the Cache destroys it | Structural, Router |
+| `CacheWake` | wakes a component asleep, or tells that the Cache destroyed it | Structural, Router |
+| `CacheDrop` | destroys a component asleep whose place goes away | Structural, Router |
 
 ## Network
 

@@ -195,3 +195,12 @@
 		animation: none;
 	}
 }
+
+/* A drawer at an edge of a phone keeps its content off the notch and the bar of gestures (0 elsewhere). */
+.elemenx-drawer.bottom {
+	padding-bottom: env(safe-area-inset-bottom);
+}
+
+.elemenx-drawer.top {
+	padding-top: env(safe-area-inset-top);
+}

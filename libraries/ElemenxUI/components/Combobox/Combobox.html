@@ -8,7 +8,7 @@
 	</div>
 	<input type="hidden" *if="Name" [attribute.name]="Name" [value]="Value == null ? '' : Value" />
 	<div class="elemenx-popup" role="listbox" *popup="Open" (dismiss)="Dismissed">
-		<div class="elemenx-popup-entry" *for="entry of Entries(Options, Text, Editing, Filter)" *key="entry.Key">
+		<div class="elemenx-popup-entry" *for="entry of (Open ? Entries(Options, Text, Editing, Filter) : [])" *key="entry.Key">
 			<div class="elemenx-popup-group" *if="entry.Heading">{{entry.Heading}}</div>
 			<div class="elemenx-option" role="option" *if="!entry.Heading" [class.active]="entry.Index === Active" [class.selected]="!entry.Create && entry.Option.Value === Value" [class.disabled]="entry.Index === -1" [class.elemenx-combobox-create]="entry.Create" [attribute.aria-selected]="String(!entry.Create && entry.Option.Value === Value)" [attribute.aria-disabled]="entry.Index === -1 ? 'true' : null" [attribute.data-index]="entry.Index" (mousedown)="Prevent" (mousemove)="Hover" (click)="Pick">
 				<Icon *if="entry.Create" Name="add" />

@@ -3,8 +3,8 @@
  * multi-level MenuList at the pointer (or under the focused element). Items: as in MenuList. Before it opens, the
  * open event carries {Target (the element pressed), X, Y}: the owner may change Items for that target then. The
  * select event carries {Item, Target}. Disabled leaves the browser menu alone. Sheet: true, or 'auto' (on a narrow or
- * a touch screen), shows the menu as a sheet from the bottom of the screen with its Title, as on a phone (a long
- * press opens it there).
+ * a touch screen), shows the menu as a sheet from the bottom of the screen with its Title, as on a phone. On a touch
+ * screen a press held for Hold milliseconds in place opens it (iOS sends no contextmenu event for a long press).
  */
 Elemenx.Component('ContextMenu', {
 	$TemplateURL: 'ContextMenu.html',
@@ -17,6 +17,7 @@ Elemenx.Component('ContextMenu', {
 	X: 0,
 	Y: 0,
 	Target: null,
+	Hold: 500,
 
 	Show: function (target, x, y) {
 		var root = this.$Element();
@@ -37,11 +38,57 @@ Elemenx.Component('ContextMenu', {
 	},
 
 	Pressed: function (event) {
+		window.clearTimeout(this.Timer);
+
 		if (this.Disabled || !this.Items.length) return;
 
 		event.preventDefault();
 
+		/* A long press opened it already: the menu of the system that Android sends after it stays away. */
+		if (this.Held) return;
+
 		this.Show(event.target, event.clientX, event.clientY);
+	},
+
+	/* The start of a press: a touch held for Hold milliseconds in place opens the menu at it. */
+	Down: function (event) {
+		var self = this;
+		var target = event.target;
+		var x = event.clientX;
+		var y = event.clientY;
+
+		window.clearTimeout(this.Timer);
+
+		this.Held = false;
+		this.Start = {X: x, Y: y};
+
+		if (this.Disabled || !this.Items.length || (event.pointerType !== 'touch' && event.pointerType !== 'pen')) return;
+
+		this.Timer = window.setTimeout(function () {
+			self.Held = true;
+
+			self.Show(target, x, y);
+		}, Number(this.Hold) || 500);
+	},
+
+	/* A press that moves (the content scrolls) or ends before its time opens nothing. */
+	Moved: function (event) {
+		if (this.Start && Math.abs(event.clientX - this.Start.X) + Math.abs(event.clientY - this.Start.Y) > 10)
+			window.clearTimeout(this.Timer);
+	},
+
+	Released: function () {
+		window.clearTimeout(this.Timer);
+	},
+
+	/* The click that ends a long press is not a press on the content. */
+	Clicked: function (event) {
+		if (!this.Held) return;
+
+		this.Held = false;
+
+		event.preventDefault();
+		event.stopPropagation();
 	},
 
 	Key: function (event) {
@@ -66,6 +113,10 @@ Elemenx.Component('ContextMenu', {
 
 		if (target && target.focus && document.contains(target))
 			target.focus();
+	},
+
+	$OnDestroy: function () {
+		window.clearTimeout(this.Timer);
 	},
 
 	Close: function (reason) {

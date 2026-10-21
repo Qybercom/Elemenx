@@ -183,3 +183,10 @@ button.elemenx-table-twisty:hover {
 .elemenx-table.tree tbody tr {
 	outline: none;
 }
+
+/* On a touch screen the text of a field is never under 16 pixels: iOS would zoom the page in at every focus. */
+@media (pointer: coarse) {
+	.elemenx-table-filter-select {
+		font-size: var(--elemenx-font-size-field);
+	}
+}

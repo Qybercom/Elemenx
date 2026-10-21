@@ -446,17 +446,31 @@ Elemenx.Service('Emoji', {
 	Supported: function (char) {
 		var emoji = this.Find(char);
 		var context;
+		var key;
 
 		if (this.Support.hasOwnProperty(char)) return this.Support[char];
 
 		/* The emoji of Emoji 11 and before are drawn by every system in use. */
 		if (emoji && !emoji.Region && emoji.Version <= 11) return true;
 
+		/*
+		 * A system draws every emoji of a version of Emoji or none of them, and every flag or none: the first one drawn tells
+		 * for its version (a picker of two thousand emoji draws a few, not hundreds, on a canvas).
+		 */
+		key = emoji ? (emoji.Region ? '#flags' : '#version-' + emoji.Version) : char;
+
+		if (this.Support.hasOwnProperty(key)) {
+			this.Support[char] = this.Support[key];
+
+			return this.Support[char];
+		}
+
 		context = this.Context();
 
 		if (!context) return true;
 
 		this.Support[char] = this.Draw(context, char) !== this.Missing && context.measureText(char).width <= this.Width * 1.4 && (!emoji || !emoji.Region || this.Colored(context));
+		this.Support[key] = this.Support[char];
 
 		return this.Support[char];
 	},

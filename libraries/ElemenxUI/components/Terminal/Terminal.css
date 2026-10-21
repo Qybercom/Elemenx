@@ -107,3 +107,10 @@
 .elemenx-terminal-header:has(.elemenx-terminal-title:empty):has(.elemenx-terminal-actions:empty) {
 	display: none;
 }
+
+/* On a touch screen the text of a field is never under 16 pixels: iOS would zoom the page in at every focus. */
+@media (pointer: coarse) {
+	.elemenx-terminal-input {
+		font-size: var(--elemenx-font-size-field);
+	}
+}

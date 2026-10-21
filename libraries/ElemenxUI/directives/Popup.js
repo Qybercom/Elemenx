@@ -4,7 +4,9 @@
  * data-placement: bottom-start (default), bottom-end, top-start, top-end, right-start; start and end, and the side of
  * right-start, follow the direction of the page (on a right-to-left page start is the right edge).
  * The panel dispatches a "dismiss" DOM event on an outside pointer press and on Escape; the owner closes it.
- * The panel keeps to its anchor while the page scrolls or resizes and while its own size changes.
+ * The panel keeps to its anchor while the page scrolls or resizes and while its own size changes. It opens in the top
+ * layer (a popover of the browser): no overflow, transform or stacking of the parts of the page around it cuts or hides
+ * it; a browser without popovers places it as a fixed panel over the page.
  */
 Elemenx.Directive('popup', {
 	$OnCreate: function (context) {
@@ -13,6 +15,18 @@ Elemenx.Directive('popup', {
 
 		element.hidden = true;
 		data.Open = false;
+		data.Popover = typeof element.showPopover === 'function';
+
+		if (data.Popover)
+			element.setAttribute('popover', 'manual');
+
+		/* Into the top layer, or out of it; a panel out of the document waits for its next opening. */
+		data.Layer = function (open) {
+			if (!data.Popover || !element.isConnected) return;
+
+			if (open && !element.matches(':popover-open')) element.showPopover();
+			else if (!open && element.matches(':popover-open')) element.hidePopover();
+		};
 
 		data.Anchor = function () {
 			var parent = element.parentElement;
@@ -134,6 +148,7 @@ Elemenx.Directive('popup', {
 		data.Open = open;
 		element.hidden = !open;
 
+		data.Layer(open);
 		data.Listen(open);
 
 		if (open) {
@@ -147,8 +162,10 @@ Elemenx.Directive('popup', {
 	},
 
 	$OnDestroy: function (context) {
-		if (context.Data.Open)
+		if (context.Data.Open) {
 			context.Data.Listen(false);
+			context.Data.Layer(false);
+		}
 
 		context.Data.Open = false;
 	}

@@ -83,6 +83,15 @@ Elemenx.Component('RichEditor', {
 		document.removeEventListener('selectionchange', this.Own().Listener);
 	},
 
+	/* Asleep (Elemenx.Cache keeps it out of the page) the selection of the page is not its own. */
+	$OnSleep: function () {
+		document.removeEventListener('selectionchange', this.Own().Listener);
+	},
+
+	$OnWake: function () {
+		document.addEventListener('selectionchange', this.Own().Listener);
+	},
+
 	Content: function () {
 		var root = this.$Element();
 

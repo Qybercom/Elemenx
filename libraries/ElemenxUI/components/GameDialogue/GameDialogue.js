@@ -76,6 +76,12 @@ Elemenx.Component('GameDialogue', {
 		}, 30);
 	},
 
+	/* Asleep (Elemenx.Cache keeps it out of the page) the line is written whole: no timer types it out of sight. */
+	$OnSleep: function () {
+		if (!this.Done)
+			this.Finish();
+	},
+
 	/* The whole line, and the focus on the first choice or on the continue button. */
 	Finish: function () {
 		var self = this;

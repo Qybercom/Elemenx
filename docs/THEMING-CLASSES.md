@@ -677,6 +677,12 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-game-tab-number`
 - `elemenx-game-tabs`: `horizontal`, `vertical`
 
+## Keyboard
+
+- `elemenx-keyboard`: `clickable`, `large`, `small`
+- `elemenx-keyboard-block`
+- `elemenx-keyboard-key`: `held`, `marked`, `pressed`
+
 ## Knob
 
 - `elemenx-knob`: `active`, `disabled`, `large`, `small`
@@ -743,6 +749,25 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-meter-track`
 - `elemenx-meter-value`
 
+## Mixer
+
+- `elemenx-mixer`
+- `elemenx-mixer-channels`
+
+## MixerChannel
+
+- `elemenx-mixer-bar`
+- `elemenx-mixer-buttons`
+- `elemenx-mixer-channel`: `disabled`, `master`, `muted`, `silenced`
+- `elemenx-mixer-fill`
+- `elemenx-mixer-knobs`
+- `elemenx-mixer-meter`
+- `elemenx-mixer-name`
+- `elemenx-mixer-peak`
+- `elemenx-mixer-readout`
+- `elemenx-mixer-strip`
+- `elemenx-mixer-toggle`: `mute`, `solo`
+
 ## MoneyInput
 
 - `elemenx-money`
@@ -782,6 +807,12 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 
 - `elemenx-phone`
 - `elemenx-phone-code`
+
+## Piano
+
+- `elemenx-piano`: `disabled`, `large`, `small`
+- `elemenx-piano-key`: `black`, `marked`, `pressed`, `white`
+- `elemenx-piano-name`
 
 ## PlanCard
 

@@ -12,7 +12,7 @@
 			<Icon Name="search" />
 			<input class="elemenx-input-control" type="text" [attribute.placeholder]="$T('ui.common.search')" autocomplete="off" [value]="Filter" (input)="Search" />
 		</div>
-		<div class="elemenx-popup-entry" *for="option of Visible(Options, Filter)" *key="String(option.Value)">
+		<div class="elemenx-popup-entry" *for="option of (Open ? Visible(Options, Filter) : [])" *key="String(option.Value)">
 			<div class="elemenx-popup-group" *if="option.Group && ($index === 0 || Visible(Options, Filter)[$index - 1].Group !== option.Group)">{{option.Group}}</div>
 			<div class="elemenx-option" role="option" [class.active]="$index === Active" [class.selected]="option.Value === Value" [class.disabled]="!!option.Disabled" [attribute.aria-selected]="String(option.Value === Value)" [attribute.aria-disabled]="option.Disabled ? 'true' : null" [attribute.data-index]="$index" (mousedown)="Prevent" (mousemove)="Hover" (click)="Pick">
 				<Icon *if="option.Icon" [name]="option.Icon" />

@@ -1,5 +1,5 @@
 <div class="elemenx-keyboard" role="group" [class]="[Size || 'medium', Clickable ? 'clickable' : '']" [attribute.aria-label]="Label || $T('ui.keyboard.label')">
 	<div class="elemenx-keyboard-block" *for="block of Blocks(Layout)" *key="block.Name" [class]="[block.Name]" [attribute.style]="block.Style">
-		<button class="elemenx-keyboard-key" type="button" *for="key of block.Keys" *key="key.Code" [class]="[Mark(key.Code, Marks), Down(key.Code, Pressed, Held) ? 'pressed' : '']" [attribute.style]="key.Style" [attribute.data-code]="key.Code" [attribute.tabindex]="Clickable ? null : -1" [attribute.aria-pressed]="String(Down(key.Code, Pressed, Held))" [attribute.aria-label]="Name(key, Labels, Map) || key.Code" (click)="Press">{{Name(key, Labels, Map)}}</button>
+		<button class="elemenx-keyboard-key" type="button" *for="key of block.Keys" *key="key.Code" [class]="[Mark(key.Code, Marks), Down(key.Code, Pressed) ? 'pressed' : '']" [attribute.style]="key.Style" [attribute.data-code]="key.Code" [attribute.tabindex]="Clickable ? null : -1" [attribute.aria-pressed]="String(Down(key.Code, Pressed))" [attribute.aria-label]="Name(key, Labels, Map) || key.Code" (click)="Press">{{Name(key, Labels, Map)}}</button>
 	</div>
 </div>

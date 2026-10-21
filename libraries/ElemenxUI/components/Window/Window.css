@@ -1,10 +1,12 @@
 /* The place of a window is physical (X from the left edge), so its edges are physical too, in either direction. */
+/* A window keeps to the width of its container: on a phone the windows of a desktop do not run out of it. */
 .elemenx-window {
 	position: absolute;
 	display: flex;
 	flex-direction: column;
 	box-sizing: border-box;
 	min-width: 0;
+	max-width: 100%;
 	background: var(--elemenx-surface);
 	border: 1px solid var(--elemenx-border-strong);
 	border-radius: var(--elemenx-radius-large);
@@ -426,6 +428,7 @@
 
 .elemenx-window.game.trapezoid .elemenx-window-header {
 	margin: 0;
+	padding: 0;
 	border-image: none;
 }
 

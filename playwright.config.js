@@ -8,8 +8,11 @@ export default defineConfig({
 	 * ELEMENX_WORKERS sets the number of workers; by default half of the processors, and 2 on a runner of CI.
 	 */
 	fullyParallel: true,
-	/* The long tests of the catalogue take 15 seconds alone and more beside the other workers. */
-	timeout: 90000,
+	/*
+	 * The long tests of the catalogue take 15 seconds alone and more beside the other workers; every test opens the whole
+	 * catalogue, which grows with every component.
+	 */
+	timeout: 120000,
 	expect: {timeout: 10000},
 	workers: process.env.ELEMENX_WORKERS ? Number(process.env.ELEMENX_WORKERS) : (process.env.CI ? 2 : '50%'),
 	forbidOnly: !!process.env.CI,

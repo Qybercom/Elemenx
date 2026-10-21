@@ -63,7 +63,8 @@ test('official Advanced production bundle renders its catalogue under a Content-
 
 	await page.goto('http://127.0.0.1:4276/ui');
 
-	await expect(page.locator('.ui-kit > .elemenx-section')).toHaveCount(41);
+	await expect(page.locator('.ui-kit > .elemenx-section')).toHaveCount(42, {timeout: 60000});
+	await expect(page.locator('.ui-kit-lazy')).toHaveCount(42, {timeout: 60000});
 	await expect(page.locator('.ui-kit-game-hud .elemenx-game-bar').first()).toBeVisible();
 
 	/* Templates that render later: a window with tabs, a table and dials, the pause menu. */

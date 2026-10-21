@@ -1,5 +1,6 @@
 .elemenx-section-heading {
 	display: flex;
+	flex: 0 1 auto;
 	align-items: center;
 	flex-wrap: wrap;
 	gap: 4px 8px;
@@ -22,7 +23,8 @@
 .elemenx-section-aside {
 	display: flex;
 	align-items: center;
-	flex: 0 1 auto;
+	justify-content: flex-end;
+	flex: 1 1 12rem;
 	gap: 12px;
 	min-width: 0;
 }

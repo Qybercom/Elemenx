@@ -167,3 +167,10 @@
 	height: 2px;
 	background: var(--elemenx-accent);
 }
+
+/* What shows on hover, a touch screen has no hover: every tab that closes shows its cross. */
+@media (hover: none) {
+	.elemenx-tab-close {
+		visibility: visible;
+	}
+}

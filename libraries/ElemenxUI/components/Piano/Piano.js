@@ -241,6 +241,11 @@ Elemenx.Component('Piano', {
 		});
 	},
 
+	/* Asleep (Elemenx.Cache keeps it out of the page) no note keeps sounding. */
+	$OnSleep: function () {
+		this.Blurred();
+	},
+
 	/* Without the focus no key stays down. */
 	Blurred: function () {
 		var self = this;

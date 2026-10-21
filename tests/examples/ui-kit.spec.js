@@ -48,8 +48,11 @@ async function open (page, origin) {
 
 /* The catalogue is a large page: beside the other workers its development build may take more than 10 seconds. */
 async function ready (page) {
-	await expect(page.locator('.elemenx-workspace').first()).toBeVisible({timeout: 30000});
-	await expect(page.locator('.ui-kit-intro')).toBeVisible({timeout: 30000});
+	await expect(page.locator('.elemenx-workspace').first()).toBeVisible({timeout: 60000});
+	await expect(page.locator('.ui-kit-intro')).toBeVisible({timeout: 60000});
+
+	/* The sections build their content near the viewport or in the background (*lazy): the tests start once all of it is built. */
+	await expect(page.locator('.ui-kit-lazy')).toHaveCount(42, {timeout: 60000});
 }
 
 /* Reloads the catalogue and waits for it, as open does. */
@@ -67,7 +70,7 @@ for (const origin of origins) {
 
 			await open(page, origin);
 
-			await expect(page.locator('.ui-kit > .elemenx-section')).toHaveCount(41);
+			await expect(page.locator('.ui-kit > .elemenx-section')).toHaveCount(42);
 
 			await expect(page.locator('#elemenx-icons')).toHaveAttribute('data-ready', 'true');
 			await expect(page.locator('.ui-kit-icon svg').first()).toHaveAttribute('data-icon', 'add');
@@ -1532,6 +1535,55 @@ for (const origin of origins) {
 			expect(errors).toEqual([]);
 		});
 
+		test('a panel with *keep sleeps out of the page with what is typed in it, and its live keyboard stops listening until it wakes', async function ({ page }) {
+			var errors = captureErrors(page);
+			var keep;
+			var panel;
+			var draft;
+
+			await open(page, origin);
+
+			keep = section(page, 'Keep-alive');
+			panel = keep.locator('.ui-kit-keep-panel');
+			draft = panel.getByRole('textbox');
+
+			await keep.scrollIntoViewIfNeeded();
+
+			await draft.fill('kept draft');
+
+			await keep.getByRole('button', {name: 'Panel', exact: true}).click();
+
+			await expect(panel).toHaveCount(0);
+
+			await keep.getByRole('button', {name: 'Cache stats'}).click();
+
+			await expect(keep.locator('.elemenx-section-header')).toContainText('Asleep: *if');
+
+			/* Asleep, the keyboard does not hear the keys: a key held now is not shown when the panel comes back. */
+			await page.keyboard.down('KeyQ');
+
+			await keep.getByRole('button', {name: 'Panel', exact: true}).click();
+
+			await expect(panel).toBeVisible();
+			await expect(draft).toHaveValue('kept draft');
+			await expect(panel.locator('[data-code="KeyQ"]')).not.toHaveClass(/held/);
+
+			await page.keyboard.up('KeyQ');
+
+			/* Awake, it hears them again. */
+			await page.keyboard.down('KeyW');
+
+			await expect(panel.locator('[data-code="KeyW"]')).toHaveClass(/held/);
+
+			await page.keyboard.up('KeyW');
+
+			await keep.getByRole('button', {name: 'Cache stats'}).click();
+
+			await expect(keep.locator('.elemenx-section-header')).toContainText('Asleep: nothing');
+
+			expect(errors).toEqual([]);
+		});
+
 		test('a mixer turns its faders, knobs and pans, mutes and solos its channels and shows their levels', async function ({ page }) {
 			var errors = captureErrors(page);
 			var music;
@@ -1648,12 +1700,12 @@ for (const origin of origins) {
 
 			await page.keyboard.down('KeyQ');
 
-			await expect(full.locator('[data-code="KeyQ"]')).toHaveClass(/pressed/);
+			await expect(full.locator('[data-code="KeyQ"]')).toHaveClass(/held/);
 			await expect(full.locator('[data-code="KeyQ"]')).toHaveAttribute('aria-pressed', 'true');
 
 			await page.keyboard.up('KeyQ');
 
-			await expect(full.locator('[data-code="KeyQ"]')).not.toHaveClass(/pressed/);
+			await expect(full.locator('[data-code="KeyQ"]')).not.toHaveClass(/held/);
 
 			/* A press on a key of the screen. */
 			await full.locator('[data-code="F5"]').click();
@@ -1779,6 +1831,48 @@ for (const origin of origins) {
 			}).toBe(0);
 
 			await expect(page.locator('#elemenx-icons symbol#elemenx-icon-games-gamepad[data-set="games"]')).toHaveCount(1);
+
+			expect(errors).toEqual([]);
+		});
+
+		test('a popup opens in the top layer: an ancestor that clips or transforms neither cuts it nor moves it', async function ({ page }) {
+			var errors = captureErrors(page);
+			var field;
+			var popup;
+
+			await open(page, origin);
+
+			field = page.locator('.elemenx-field').filter({has: page.locator('.elemenx-select-trigger')}).filter({hasText: 'Round select'}).first();
+
+			await field.scrollIntoViewIfNeeded();
+
+			/* A box that cuts its overflow, with a transform: a fixed panel inside it would be cut and placed by it. */
+			await field.evaluate(function (node) {
+				node.style.overflow = 'hidden';
+				node.style.height = node.offsetHeight + 'px';
+				node.style.transform = 'translateX(1px)';
+			});
+
+			await field.locator('.elemenx-select-trigger').click();
+
+			popup = field.locator('.elemenx-popup');
+
+			await expect(popup).toBeVisible();
+
+			expect(await popup.evaluate(function (node) {
+				var box = node.getBoundingClientRect();
+				var anchor = node.closest('.elemenx-field').querySelector('.elemenx-select-trigger').getBoundingClientRect();
+				var hit = document.elementFromPoint(box.left + box.width / 2, box.bottom - 6);
+
+				return [node.matches(':popover-open'), node.contains(hit), Math.round(box.top - anchor.bottom), Math.round(box.left - anchor.left)];
+			})).toEqual([true, true, 4, 0]);
+
+			await page.keyboard.press('Escape');
+
+			await expect(popup).toBeHidden();
+			expect(await popup.evaluate(function (node) {
+				return node.matches(':popover-open');
+			})).toBe(false);
 
 			expect(errors).toEqual([]);
 		});
@@ -1916,6 +2010,102 @@ for (const origin of origins) {
 			await settings.locator('.elemenx-check-label', {hasText: /^Auto$/}).click();
 
 			await expect(first).toHaveClass(/\bios\b/);
+		});
+
+		test('on a phone the catalogue works by touch: fields big enough for iOS not to zoom', async function ({ browser }) {
+			var context = await browser.newContext({viewport: {width: 390, height: 844}, isMobile: true, hasTouch: true});
+			var page = await context.newPage();
+			var errors = captureErrors(page);
+
+			try {
+				await open(page, origin);
+
+				/* Under 16 pixels iOS zooms the page in at every focus of a field. */
+				expect(await page.evaluate(function () {
+					return Array.prototype.filter.call(document.querySelectorAll('.elemenx-input-control, .elemenx-terminal-input, .elemenx-settings-menu-query, .elemenx-table-filter-select, .elemenx-pagination-size, .elemenx-rich-editor-content, .elemenx-code-editor-input'), function (node) {
+						return node.offsetWidth && parseFloat(getComputedStyle(node).fontSize) < 16;
+					}).length;
+				})).toBe(0);
+
+				/* The note of a section never lies over its title: a narrow header puts it beside or under the title. */
+				expect(await page.evaluate(function () {
+					return Array.prototype.filter.call(document.querySelectorAll('.elemenx-section-header'), function (header) {
+						var title = header.querySelector('.elemenx-section-title');
+						var aside = header.querySelector('.elemenx-section-aside');
+						var a;
+						var b;
+
+						if (!title || !aside || !aside.offsetWidth) return false;
+
+						a = title.getBoundingClientRect();
+						b = aside.getBoundingClientRect();
+
+						return a.right > b.left + 1 && b.right > a.left + 1 && a.bottom > b.top + 1 && b.bottom > a.top + 1;
+					}).length;
+				})).toBe(0);
+
+				/* Dashboard and Settings on a phone: the navigation keeps the room of its icons, or goes over the page. */
+				expect(await page.evaluate(function () {
+					var nav = document.querySelector('.elemenx-dashboard-nav');
+					var settings = document.querySelector('.elemenx-settings-nav').getBoundingClientRect();
+					var page = document.querySelector('.elemenx-settings-page').getBoundingClientRect();
+
+					return [nav.offsetWidth, getComputedStyle(nav.querySelector('.elemenx-nav-label')).display, Math.round(page.top) >= Math.round(settings.bottom)];
+				})).toEqual([64, 'none', true]);
+
+				/* A finger presses 40 pixels: the controls are that tall, and a small button takes a press that far around it. */
+				expect(await page.evaluate(function () {
+					var button = document.querySelector('.elemenx-button.medium');
+					var action = getComputedStyle(document.querySelector('.elemenx-input-action'), '::after');
+
+					return [button.offsetHeight, parseFloat(action.width) >= 40, parseFloat(action.height) >= 40];
+				})).toEqual([40, true, true]);
+
+				/* A closed list builds no option: a phone pays for the hundreds of countries and currencies only when it opens. */
+				expect(await page.evaluate(function () {
+					return [document.querySelectorAll('.elemenx-phone-popup .elemenx-option').length, document.querySelectorAll('.elemenx-select > .elemenx-popup[hidden] .elemenx-popup-entry').length];
+				})).toEqual([0, 0]);
+
+				/* A window keeps to the width of its container: the windows of a desktop do not run out of a phone. */
+				expect(await page.evaluate(function () {
+					return Array.prototype.filter.call(document.querySelectorAll('.elemenx-window:not([hidden])'), function (node) {
+						return node.offsetWidth > node.offsetParent.clientWidth + 1;
+					}).length;
+				})).toBe(0);
+
+				/* No hover on a touch screen: the buttons that showed on hover show for good. */
+				expect(await page.evaluate(function () {
+					return [getComputedStyle(document.querySelector('.elemenx-chat-message .elemenx-chat-tools')).display !== 'none', getComputedStyle(document.querySelector('.elemenx-tab-close')).visibility];
+				})).toEqual([true, 'visible']);
+
+				/* A long press opens the context menu, with no contextmenu event (iOS sends none); the one Android sends after it opens no second menu. */
+				await page.locator('[data-file="app.js"]').scrollIntoViewIfNeeded();
+
+				await page.locator('[data-file="app.js"]').evaluate(function (node) {
+					var box = node.getBoundingClientRect();
+					var point = {bubbles: true, pointerType: 'touch', isPrimary: true, pointerId: 3, clientX: box.left + 20, clientY: box.top + box.height / 2};
+
+					node.dispatchEvent(new PointerEvent('pointerdown', point));
+				});
+
+				await page.waitForTimeout(700);
+
+				await page.locator('[data-file="app.js"]').evaluate(function (node) {
+					var box = node.getBoundingClientRect();
+					var point = {bubbles: true, cancelable: true, pointerType: 'touch', isPrimary: true, pointerId: 3, clientX: box.left + 20, clientY: box.top + box.height / 2};
+
+					node.dispatchEvent(new MouseEvent('contextmenu', point));
+					node.dispatchEvent(new PointerEvent('pointerup', point));
+					node.dispatchEvent(new MouseEvent('click', point));
+				});
+
+				await expect(page.locator('#ui-kit-context .elemenx-context-point .elemenx-menu')).toBeVisible();
+
+				expect(errors).toEqual([]);
+			}
+			finally {
+				await context.close();
+			}
 		});
 
 		test('a mobile menu is a sheet from the bottom: large rows, levels inside it with a way back, Cancel and the shade close it', async function ({ page }) {
@@ -2732,17 +2922,22 @@ for (const origin of origins) {
 				return [node.querySelector('[role="heading"]').textContent, node.querySelector('[role="heading"]').getAttribute('aria-level'), node.querySelector('.elemenx-block-note').textContent, node.querySelectorAll('.elemenx-block-actions .elemenx-button').length, header.left - frame.left <= 1 && frame.right - header.right <= 1, Math.round(body.left - frame.left), node.querySelectorAll('.elemenx-block-body .elemenx-meter').length];
 			})).toEqual(['Reactor', '3', 'Ring B', 1, true, 17, 2]);
 
-			/* HeaderShape trapezoid: the title and the note on a trapezoid as wide as their text, hanging from the top of the frame. */
+			/*
+			 * HeaderShape trapezoid: a folder. The title and the note on a tab as wide as their text, in the color of the
+			 * band as the body below; the top of the body begins where the slope of the tab ends, the actions beyond it.
+			 */
 			expect(await blocks.nth(1).evaluate(function (node) {
 				var frame = node.getBoundingClientRect();
-				var header = node.querySelector('.elemenx-block-header').getBoundingClientRect();
+				var header = node.querySelector('.elemenx-block-header');
+				var bar = header.getBoundingClientRect();
 				var tab = node.querySelector('.elemenx-block-tab');
 				var box = tab.getBoundingClientRect();
-				var title = node.querySelector('.elemenx-block-title').getBoundingClientRect();
-				var note = node.querySelector('.elemenx-block-note').getBoundingClientRect();
+				var line = getComputedStyle(header, '::after');
+				var body = getComputedStyle(node, '::before');
+				var actions = node.querySelector('.elemenx-block-actions').getBoundingClientRect();
 
-				return [node.classList.contains('trapezoid'), getComputedStyle(tab).clipPath.indexOf('polygon') === 0, Math.round(box.top - frame.top - node.clientTop), box.width < header.width / 2, Math.round(box.right - note.right) === Math.round(title.left - box.left), getComputedStyle(node.querySelector('.elemenx-block-header')).backgroundColor, node.querySelectorAll('.elemenx-block-actions .elemenx-button').length];
-			})).toEqual([true, true, 0, true, true, 'rgba(0, 0, 0, 0)', 1]);
+				return [node.classList.contains('trapezoid'), Math.round(box.top - frame.top), Math.round(box.left - frame.left), box.width < bar.width / 2, getComputedStyle(tab).backgroundColor === body.backgroundColor, Math.round(parseFloat(line.left) - box.width), Math.round(parseFloat(body.top) - bar.height), actions.left > box.right + 24, getComputedStyle(header).backgroundColor];
+			})).toEqual([true, 0, 0, true, true, 24, 0, true, 'rgba(0, 0, 0, 0)']);
 
 			/* The default shape keeps the tab out of the layout: the band runs across the frame. */
 			expect(await blocks.first().evaluate(function (node) {
@@ -4053,12 +4248,12 @@ for (const origin of origins) {
 			expect(errors).toEqual([]);
 		});
 
-		test('a window with a trapezoid header hangs its icon and title on a trapezoid as wide as the title, and the header still moves it', async function ({ page }) {
+		test('a window with a trapezoid header is a folder: the title on a tab, its slot and buttons beyond the slope, and the header still moves it', async function ({ page }) {
 			var errors = captureErrors(page);
 			var notes;
 			var header;
 			var shape;
-			var box;
+			var point;
 			var before;
 
 			await open(page, origin);
@@ -4068,23 +4263,32 @@ for (const origin of origins) {
 
 			await notes.scrollIntoViewIfNeeded();
 
+			/* The icon and the title on the tab; the body begins under the header, its top where the slope ends. */
 			shape = await notes.evaluate(function (node) {
-				var bar = node.querySelector('.elemenx-window-header').getBoundingClientRect();
+				var bar = node.querySelector('.elemenx-window-header');
 				var tab = node.querySelector('.elemenx-window-tab');
 				var box = tab.getBoundingClientRect();
+				var pin = node.querySelector('.elemenx-window-extra .elemenx-button').getBoundingClientRect();
+				var controls = node.querySelector('.elemenx-window-controls').getBoundingClientRect();
 
-				return [getComputedStyle(tab).clipPath.indexOf('polygon') === 0, tab.contains(node.querySelector('.elemenx-icon')), tab.contains(node.querySelector('.elemenx-window-title')), box.width < bar.width / 2, Math.round(box.top - bar.top), Math.round(bar.bottom - box.bottom), getComputedStyle(node.querySelector('.elemenx-window-header')).backgroundColor];
+				return [tab.contains(node.querySelector('.elemenx-icon')), tab.contains(node.querySelector('.elemenx-window-title')), box.width < bar.getBoundingClientRect().width / 2, getComputedStyle(bar).backgroundColor, Math.round(parseFloat(getComputedStyle(bar, '::after').left) - box.width), Math.round(parseFloat(getComputedStyle(node, '::before').top) - bar.getBoundingClientRect().height), getComputedStyle(tab).backgroundColor === getComputedStyle(node, '::before').backgroundColor, pin.left >= box.right + 24, controls.left > pin.right, Math.round(controls.right) === Math.round(node.getBoundingClientRect().right)];
 			});
 
-			expect(shape).toEqual([true, true, true, true, 0, 0, 'rgba(0, 0, 0, 0)']);
+			expect(shape).toEqual([true, true, true, 'rgba(0, 0, 0, 0)', 24, 0, true, true, true, true]);
 
-			/* The room the trapezoid leaves in the header still moves the window. */
+			/* The open part of the header, between the slot and the buttons, still moves the window. */
+			point = await notes.evaluate(function (node) {
+				var pin = node.querySelector('.elemenx-window-extra .elemenx-button').getBoundingClientRect();
+				var controls = node.querySelector('.elemenx-window-controls').getBoundingClientRect();
+
+				return {X: (pin.right + controls.left) / 2, Y: (pin.top + pin.bottom) / 2};
+			});
+
 			before = await notes.boundingBox();
-			box = await notes.locator('.elemenx-window-tab').boundingBox();
 
-			await page.mouse.move(box.x + box.width + 24, box.y + box.height / 2);
+			await page.mouse.move(point.X, point.Y);
 			await page.mouse.down();
-			await page.mouse.move(box.x + box.width + 64, box.y + box.height / 2 + 30, {steps: 4});
+			await page.mouse.move(point.X + 40, point.Y + 30, {steps: 4});
 			await page.mouse.up();
 
 			await expect.poll(async function () {
@@ -4095,13 +4299,13 @@ for (const origin of origins) {
 
 			await expect(header).toBeVisible();
 
-			/* The game window hangs it in the middle of its top. */
+			/* A game window: the tab and its slope in the panel of the theme, over the body of the same panel. */
 			expect(await page.locator('.elemenx-window.game.trapezoid').filter({hasText: 'Bag'}).evaluate(function (node) {
 				var frame = node.getBoundingClientRect();
 				var tab = node.querySelector('.elemenx-window-tab').getBoundingClientRect();
 
-				return Math.abs((tab.left + tab.right) / 2 - (frame.left + frame.right) / 2) < 2;
-			})).toBe(true);
+				return [Math.round(tab.left - frame.left), Math.round(tab.top - frame.top), getComputedStyle(node.querySelector('.elemenx-window-tab'), '::after').clipPath.indexOf('polygon') === 0];
+			})).toEqual([0, 0, true]);
 
 			expect(errors).toEqual([]);
 		});
@@ -4416,6 +4620,13 @@ for (const origin of origins) {
 				return [node.matches(':popover-open'), Math.round(card.left - reward.right) === 8 || Math.round(reward.left - card.right) === 8, Math.abs(card.top - reward.top) < 220, document.getElementById(node.previousElementSibling.getAttribute('aria-describedby')) === node];
 			})).toEqual([true, true, true, true]);
 
+			/* Regression: a scroll of the page (the reader's, or the page that grows as more of it renders) closed the card; it follows its element. */
+			await page.evaluate(function () {
+				document.dispatchEvent(new Event('scroll'));
+			});
+
+			await expect(quests.locator('.elemenx-item-card')).toHaveCount(1);
+
 			await page.mouse.move(0, 0);
 
 			await expect(quests.locator('.elemenx-item-card')).toHaveCount(0);
@@ -4686,6 +4897,9 @@ for (const origin of origins) {
 		});
 
 		test('game UI: bars, slots with keys and cooldowns, an inventory by keys and by dragging, a dialogue, a menu and the game themes', async function ({ page }) {
+			/* The longest walk through the catalogue: beside the other workers it may take more than the usual time. */
+			test.slow();
+
 			var errors = captureErrors(page);
 			var game;
 			var health;
@@ -5423,13 +5637,27 @@ for (const origin of origins) {
 
 			await grid.scrollIntoViewIfNeeded();
 
+			/* The edge shows the pause (class growing) only for GrowDelay, then the group grows: a record of it is kept, as a poll may miss it. */
+			await work.evaluate(function (node) {
+				window.sawGrowing = false;
+
+				new MutationObserver(function () {
+					if (node.classList.contains('growing'))
+						window.sawGrowing = true;
+				}).observe(node, {attributes: true, attributeFilter: ['class']});
+			});
+
 			box = await grid.locator('.elemenx-tile[data-id="tasks"]').boundingBox();
 
 			await page.mouse.move(box.x + 10, box.y + 10);
 			await page.mouse.down();
 			await page.mouse.move(box.x + 70, box.y + 10, {steps: 6});
 
-			await expect(work).toHaveClass(/growing/);
+			await expect.poll(function () {
+				return page.evaluate(function () {
+					return window.sawGrowing;
+				});
+			}).toBe(true);
 
 			await expect.poll(columns).toBe(5);
 			await expect(grid.locator('.elemenx-tile[data-id="tasks"]')).toHaveAttribute('style', /grid-area: 3 \/ 4 \//);

@@ -68,3 +68,10 @@
 	min-width: 20px;
 	color: var(--elemenx-text-muted);
 }
+
+/* On a touch screen the text of a field is never under 16 pixels: iOS would zoom the page in at every focus. */
+@media (pointer: coarse) {
+	.elemenx-pagination-size {
+		font-size: var(--elemenx-font-size-field);
+	}
+}

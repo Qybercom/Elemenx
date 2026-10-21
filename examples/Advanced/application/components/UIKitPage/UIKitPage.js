@@ -224,6 +224,8 @@ Elemenx.Component('UIKitPage', {
 	ChatSelection: [],
 	DialNumber: '',
 	MusicNote: '',
+	KeepShown: true,
+	KeepNote: 'Elemenx.Cache · *keep',
 	MixerPlaying: false,
 	MixerChannels: [
 		{ID: 'drums', Label: 'Drums', Color: '#e5484d', Volume: -3, Pan: 0, Level: [-12, -14], Peak: [-6, -8], Knobs: [{Label: 'Hi', Value: 2, Unit: ' dB'}, {Label: 'Lo', Value: -1, Unit: ' dB'}]},
@@ -805,6 +807,7 @@ Elemenx.Component('UIKitPage', {
 
 		hotkeys.Unbind(this.ThemeKey);
 		hotkeys.Unbind(this.TilesKey);
+		hotkeys.OffChange(this.ShortcutsListener);
 
 		this.$Service('Idle').Stop();
 
@@ -966,6 +969,8 @@ Elemenx.Component('UIKitPage', {
 	LoadIcons: function () {
 		var self = this;
 		var icons = this.$Service('Icons');
+		var themed;
+		var loaded;
 
 		icons.Register('brand', this.BrandIcons);
 
@@ -982,20 +987,21 @@ Elemenx.Component('UIKitPage', {
 				self.BrandLogos = self.Prefixed('brands', names);
 		});
 
-		/* The six themed sets, in the order of the catalogue, each listed once it loads. */
-		['sport', 'racing', 'science', 'art', 'cinema', 'games'].forEach(function (set, index) {
+		/*
+		 * The six themed sets, in the order of the catalogue, listed together once the last one loads: every change of the
+		 * state draws the whole catalogue again, so six sets are one change, not six.
+		 */
+		themed = ['sport', 'racing', 'science', 'art', 'cinema', 'games'];
+		loaded = [];
+
+		themed.forEach(function (set, index) {
 			icons.Load(set, function (error, names) {
-				var sets;
+				loaded[index] = error ? null : {Name: set, Icons: self.Prefixed(set, names)};
 
-				if (error) return;
-
-				sets = self.ThemedSets.filter(function (entry) {
-					return entry.Name !== set;
-				}).concat([{Name: set, Order: index, Icons: self.Prefixed(set, names)}]);
-
-				self.ThemedSets = sets.sort(function (a, b) {
-					return a.Order - b.Order;
-				});
+				if (loaded.filter(function (entry) {
+					return entry !== undefined;
+				}).length === themed.length)
+					self.ThemedSets = loaded.filter(Boolean);
 			});
 		});
 
@@ -1389,6 +1395,18 @@ Elemenx.Component('UIKitPage', {
 
 	SettingsVariantChosen: function (value) {
 		this.SettingsVariant = value;
+	},
+
+	KeepToggled: function () {
+		this.KeepShown = !this.KeepShown;
+	},
+
+	KeepStats: function () {
+		var stats = Elemenx.Cache.Stats();
+
+		this.KeepNote = 'Asleep: ' + (stats.Instances.map(function (entry) {
+			return entry.Name;
+		}).join(', ') || 'nothing');
 	},
 
 	MixerChanged: function (detail) {
@@ -2534,11 +2552,16 @@ Elemenx.Component('UIKitPage', {
 			self.GoTo('Tiles');
 		}, {Description: 'Go to the tiles', Group: 'Navigate'});
 
-		window.setTimeout(function () {
+		/* The list follows the bindings: the parts of the page that render later (*lazy) bind their keys then. */
+		this.ShortcutsListener = function () {
 			self.Shortcuts = hotkeys.List().filter(function (entry) {
 				return entry.Description;
 			});
-		}, 0);
+		};
+
+		hotkeys.OnChange(this.ShortcutsListener);
+
+		this.ShortcutsListener();
 
 		this.$Service('Biometric').Available(function (error, state) {
 			self.BiometricState = !state.Supported ? 'WebAuthn is not supported here' : state.Platform ? 'This device has a fingerprint, face or PIN check' : 'No check built into this device';

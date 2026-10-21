@@ -118,8 +118,8 @@
 	inset: 0;
 	background: linear-gradient(to top, var(--elemenx-success) 0%, var(--elemenx-success) 70%, var(--elemenx-warning) 85%, var(--elemenx-danger) 100%);
 	clip-path: inset(calc((1 - var(--elemenx-mixer-level)) * 100%) 0 0 0);
-	mask: repeating-linear-gradient(to top, #000000 0 3px, transparent 3px 4px);
-	transition: clip-path 80ms linear;
+	mask: repeating-linear-gradient(to top, var(--elemenx-text) 0 3px, transparent 3px 4px);
+	transition: clip-path var(--elemenx-duration) linear;
 }
 
 .elemenx-mixer-peak {

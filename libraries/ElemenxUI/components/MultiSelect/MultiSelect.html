@@ -20,7 +20,7 @@
 			<span class="elemenx-option-label">{{$T('ui.common.selectAll')}}</span>
 		</div>
 		<div class="elemenx-popup-separator" *if="SelectAll && !Filter"></div>
-		<div class="elemenx-popup-entry" *for="option of Visible(Options, Filter)" *key="String(option.Value)">
+		<div class="elemenx-popup-entry" *for="option of (Open ? Visible(Options, Filter) : [])" *key="String(option.Value)">
 			<div class="elemenx-popup-group" *if="option.Group && ($index === 0 || Visible(Options, Filter)[$index - 1].Group !== option.Group)">{{option.Group}}</div>
 			<div class="elemenx-option" role="option" [class.active]="$index === Active" [class.disabled]="!!option.Disabled" [attribute.aria-selected]="String(Has(Value, option.Value))" [attribute.data-index]="$index" (mousedown)="Prevent" (mousemove)="Hover" (click)="Pick">
 				<span class="elemenx-check" [class.checked]="Has(Value, option.Value)"><span class="elemenx-check-box"><Icon Name="check" Size="12" /><Icon Name="remove" Size="12" /></span></span>

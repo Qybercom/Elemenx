@@ -3,7 +3,8 @@
  * element (GameItems.Place), as GameInventory and GameSlot show it. The item is {Name, Rarity, Type, Stats: [{Label,
  * Value}], Description, Class}; an item with nothing more than a name (GameItems.Carded) shows none, and neither does
  * null. The card opens in the top layer (a popover), so no scrolling box, transform or filter around the element cuts
- * or moves it, and it stays in the DOM next to the element, so it takes the theme of the part of the page it is in.
+ * or moves it; it follows the element when the page scrolls (a scroll of the page that grows as more of it renders
+ * too), and it stays in the DOM next to the element, so it takes the theme of the part of the page it is in.
  * It has the classes of GameItemCard (elemenx-game-inventory-card...).
  */
 Elemenx.Directive('itemcard', {
@@ -94,11 +95,17 @@ Elemenx.Directive('itemcard', {
 			if (data.Card.showPopover)
 				data.Card.showPopover();
 
-			window.addEventListener('scroll', data.Hide, true);
+			window.addEventListener('scroll', data.Move, true);
+		};
+
+		/* A scroll (the reader's, or the page that moves as more of it renders) takes the card along with its element. */
+		data.Move = function () {
+			if (data.Card)
+				data.Card.setAttribute('style', 'position: fixed; inset: auto; margin: 0; ' + context.Component.$Service('GameItems').Place(element));
 		};
 
 		data.Hide = function () {
-			window.removeEventListener('scroll', data.Hide, true);
+			window.removeEventListener('scroll', data.Move, true);
 
 			if (!data.Card) return;
 

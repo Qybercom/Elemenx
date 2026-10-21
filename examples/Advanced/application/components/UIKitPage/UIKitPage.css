@@ -671,3 +671,8 @@
 	border-color: var(--elemenx-warning);
 	border-width: 2px;
 }
+
+/* The content of a section renders near the viewport or when the browser is idle (*lazy): it is not a box of its own. */
+.ui-kit-lazy {
+	display: contents;
+}

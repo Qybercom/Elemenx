@@ -9,12 +9,13 @@
 	pointer-events: none;
 }
 
+/* On a phone it keeps off the notch and the bar of gestures (env(safe-area-inset-*) is 0 elsewhere). */
 .elemenx-achievements.bottom {
-	bottom: 32px;
+	bottom: calc(32px + env(safe-area-inset-bottom));
 }
 
 .elemenx-achievements.top {
-	top: 32px;
+	top: calc(32px + env(safe-area-inset-top));
 }
 
 /*

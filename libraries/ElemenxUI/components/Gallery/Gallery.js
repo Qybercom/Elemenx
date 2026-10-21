@@ -79,6 +79,17 @@ Elemenx.Component('Gallery', {
 		this.Own().Timer = window.setInterval(this.Tick, 250);
 	},
 
+	/* Asleep (Elemenx.Cache keeps it out of the page) it does not turn its slides. */
+	$OnSleep: function () {
+		window.clearInterval(this.Own().Timer);
+	},
+
+	$OnWake: function () {
+		window.clearInterval(this.Own().Timer);
+
+		this.Own().Timer = window.setInterval(this.Tick, 250);
+	},
+
 	$OnDestroy: function () {
 		window.clearInterval(this.Own().Timer);
 	},

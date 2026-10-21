@@ -242,3 +242,10 @@
 .elemenx-rich-editor-print pre {
 	white-space: pre-wrap;
 }
+
+/* On a touch screen the text of a field is never under 16 pixels: iOS would zoom the page in at every focus. */
+@media (pointer: coarse) {
+	.elemenx-rich-editor-content {
+		font-size: var(--elemenx-font-size-field);
+	}
+}

@@ -11,7 +11,7 @@
 			<Icon Name="search" />
 			<input class="elemenx-input-control" type="text" [attribute.placeholder]="$T('ui.phoneInput.search')" autocomplete="off" [value]="Filter" (input)="Search" />
 		</div>
-		<div class="elemenx-option" role="option" *for="country of Matching(Countries, Filter)" *key="country.Code" [class.active]="$index === Active" [class.selected]="country.Code === Country" [attribute.aria-selected]="String(country.Code === Country)" [attribute.data-index]="$index" (mousemove)="Hover" (click)="Pick">
+		<div class="elemenx-option" role="option" *for="country of (Open ? Matching(Countries, Filter) : [])" *key="country.Code" [class.active]="$index === Active" [class.selected]="country.Code === Country" [attribute.aria-selected]="String(country.Code === Country)" [attribute.data-index]="$index" (mousemove)="Hover" (click)="Pick">
 			<span class="elemenx-phone-code">{{country.Code}}</span>
 			<span class="elemenx-option-label">{{country.Name}}</span>
 			<span class="elemenx-option-hint">+{{country.Dial}}</span>

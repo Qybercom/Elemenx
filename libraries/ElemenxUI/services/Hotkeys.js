@@ -9,7 +9,8 @@
  * CommandPalette). callback(event, binding).
  * List() returns the bindings [{ID, Keys, Label, Description, Group}]; Format(keys) is the label of keys on this
  * system ('Ctrl+K', '⌘K'). Trigger(id) runs a binding as if its keys were pressed (callback(null, binding)).
- * Pause() and Resume() turn every binding off and on (a nested Pause counts).
+ * Pause() and Resume() turn every binding off and on (a nested Pause counts). OnChange(callback) / OffChange(callback):
+ * callback() after a binding is added or removed (a part of the page that renders later, *lazy, binds its keys then).
  */
 Elemenx.Service('Hotkeys', {
 	$OnCreate: function () {
@@ -20,6 +21,7 @@ Elemenx.Service('Hotkeys', {
 		this.Paused = 0;
 		this.Pending = [];
 		this.PendingTimer = 0;
+		this.Listeners = [];
 		this.Mac = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent || '');
 
 		this.Listener = function (event) {
@@ -54,12 +56,36 @@ Elemenx.Service('Hotkeys', {
 			Group: options.Group || ''
 		});
 
+		this.Changed();
+
 		return 'hotkey-' + this.Sequence;
 	},
 
 	Unbind: function (id) {
+		var count = this.Bindings.length;
+
 		this.Bindings = this.Bindings.filter(function (binding) {
 			return binding.ID !== id;
+		});
+
+		if (this.Bindings.length !== count)
+			this.Changed();
+	},
+
+	OnChange: function (callback) {
+		if (this.Listeners.indexOf(callback) === -1)
+			this.Listeners.push(callback);
+	},
+
+	OffChange: function (callback) {
+		this.Listeners = this.Listeners.filter(function (listener) {
+			return listener !== callback;
+		});
+	},
+
+	Changed: function () {
+		this.Listeners.slice().forEach(function (listener) {
+			listener();
 		});
 	},
 

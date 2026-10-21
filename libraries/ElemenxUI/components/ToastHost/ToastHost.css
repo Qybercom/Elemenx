@@ -8,24 +8,25 @@
 	pointer-events: none;
 }
 
+/* On a phone the toasts keep off the notch and the bar of gestures (env(safe-area-inset-*) is 0 elsewhere). */
 .elemenx-toast-host.bottom-right {
 	inset-inline-end: 16px;
-	bottom: 16px;
+	bottom: calc(16px + env(safe-area-inset-bottom));
 }
 
 .elemenx-toast-host.bottom-left {
-	bottom: 16px;
+	bottom: calc(16px + env(safe-area-inset-bottom));
 	inset-inline-start: 16px;
 }
 
 .elemenx-toast-host.top-right {
-	top: 16px;
+	top: calc(16px + env(safe-area-inset-top));
 	inset-inline-end: 16px;
 	flex-direction: column-reverse;
 }
 
 .elemenx-toast-host.top-left {
-	top: 16px;
+	top: calc(16px + env(safe-area-inset-top));
 	inset-inline-start: 16px;
 	flex-direction: column-reverse;
 }

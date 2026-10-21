@@ -15,1359 +15,1455 @@
 	</header>
 
 	<Section Title="Layout primitives" Note="elemenx-screen · elemenx-container · elemenx-column">
-		<div class="elemenx-screen ui-kit-demo">
-			<span class="ui-kit-tag">elemenx-screen</span>
-			<div class="elemenx-container ui-kit-demo">
-				<span class="ui-kit-tag">elemenx-container</span>
-				<div class="elemenx-column fill ui-kit-demo"><span class="ui-kit-tag">elemenx-column fill</span><div class="ui-kit-box">A</div><div class="ui-kit-box">B</div></div>
-				<div class="elemenx-column non-fill ui-kit-demo"><span class="ui-kit-tag">elemenx-column non-fill</span><div class="ui-kit-box wide">C</div><div class="ui-kit-box wide">wide box</div></div>
-				<div class="elemenx-container centered ui-kit-demo"><span class="ui-kit-tag">elemenx-container centered</span><div class="ui-kit-box">D</div></div>
-			</div>
-			<div class="elemenx-container wrappable ui-kit-demo">
-				<span class="ui-kit-tag">elemenx-container wrappable</span>
-				<div class="ui-kit-box wide">1</div><div class="ui-kit-box wide">2</div><div class="ui-kit-box wide">3</div><div class="ui-kit-box wide">4</div><div class="ui-kit-box wide">5</div>
+		<div class="ui-kit-lazy" *lazy>
+			<div class="elemenx-screen ui-kit-demo">
+				<span class="ui-kit-tag">elemenx-screen</span>
+				<div class="elemenx-container ui-kit-demo">
+					<span class="ui-kit-tag">elemenx-container</span>
+					<div class="elemenx-column fill ui-kit-demo"><span class="ui-kit-tag">elemenx-column fill</span><div class="ui-kit-box">A</div><div class="ui-kit-box">B</div></div>
+					<div class="elemenx-column non-fill ui-kit-demo"><span class="ui-kit-tag">elemenx-column non-fill</span><div class="ui-kit-box wide">C</div><div class="ui-kit-box wide">wide box</div></div>
+					<div class="elemenx-container centered ui-kit-demo"><span class="ui-kit-tag">elemenx-container centered</span><div class="ui-kit-box">D</div></div>
+				</div>
+				<div class="elemenx-container wrappable ui-kit-demo">
+					<span class="ui-kit-tag">elemenx-container wrappable</span>
+					<div class="ui-kit-box wide">1</div><div class="ui-kit-box wide">2</div><div class="ui-kit-box wide">3</div><div class="ui-kit-box wide">4</div><div class="ui-kit-box wide">5</div>
+				</div>
 			</div>
 		</div>
 	</Section>
 
 	<Section Title="Typography and blocks" Note="index.css">
-		<div class="ui-kit-grid">
-			<div class="elemenx-panel ui-kit-stack">
-				<h1>Heading 1</h1>
-				<h2>Heading 2</h2>
-				<h3>Heading 3</h3>
-				<h4>Heading 4</h4>
-				<h5>Heading 5</h5>
-				<h6>Heading 6</h6>
-				<p class="elemenx-text">Body text with a <a class="elemenx-link" href="/ui">link</a>, <code class="elemenx-code">inline code</code> and <kbd class="elemenx-kbd">Ctrl</kbd> <kbd class="elemenx-kbd">K</kbd>.<sup class="elemenx-footnote-mark">1</sup></p>
-				<p class="elemenx-text small muted">Small muted text for secondary details.</p>
-				<span class="elemenx-label required">Label</span>
-				<p class="elemenx-footnote"><span>1</span><span>A footnote explains a marked statement.</span></p>
-			</div>
-			<div class="ui-kit-stack">
-				<div class="elemenx-callout"><Icon Name="info" /><span>Info callout for neutral guidance.</span></div>
-				<div class="elemenx-callout success"><Icon Name="success" /><span>Changes were saved.</span></div>
-				<div class="elemenx-callout warning"><Icon Name="warning" /><span>The token expires in 3 days.</span></div>
-				<div class="elemenx-callout danger"><Icon Name="error" /><span>The build failed.</span></div>
-				<div class="ui-kit-row">
-					<span class="elemenx-badge">Neutral</span>
-					<span class="elemenx-badge accent">Accent</span>
-					<span class="elemenx-badge info">Info</span>
-					<span class="elemenx-badge success">Success</span>
-					<span class="elemenx-badge warning">Warning</span>
-					<span class="elemenx-badge danger">Danger</span>
+		<div class="ui-kit-lazy" *lazy>
+			<div class="ui-kit-grid">
+				<div class="elemenx-panel ui-kit-stack">
+					<h1>Heading 1</h1>
+					<h2>Heading 2</h2>
+					<h3>Heading 3</h3>
+					<h4>Heading 4</h4>
+					<h5>Heading 5</h5>
+					<h6>Heading 6</h6>
+					<p class="elemenx-text">Body text with a <a class="elemenx-link" href="/ui">link</a>, <code class="elemenx-code">inline code</code> and <kbd class="elemenx-kbd">Ctrl</kbd> <kbd class="elemenx-kbd">K</kbd>.<sup class="elemenx-footnote-mark">1</sup></p>
+					<p class="elemenx-text small muted">Small muted text for secondary details.</p>
+					<span class="elemenx-label required">Label</span>
+					<p class="elemenx-footnote"><span>1</span><span>A footnote explains a marked statement.</span></p>
 				</div>
-				<div class="elemenx-card"><h4>Card</h4><p class="elemenx-text small muted">Raised surface for grouped content.</p></div>
+				<div class="ui-kit-stack">
+					<div class="elemenx-callout"><Icon Name="info" /><span>Info callout for neutral guidance.</span></div>
+					<div class="elemenx-callout success"><Icon Name="success" /><span>Changes were saved.</span></div>
+					<div class="elemenx-callout warning"><Icon Name="warning" /><span>The token expires in 3 days.</span></div>
+					<div class="elemenx-callout danger"><Icon Name="error" /><span>The build failed.</span></div>
+					<div class="ui-kit-row">
+						<span class="elemenx-badge">Neutral</span>
+						<span class="elemenx-badge accent">Accent</span>
+						<span class="elemenx-badge info">Info</span>
+						<span class="elemenx-badge success">Success</span>
+						<span class="elemenx-badge warning">Warning</span>
+						<span class="elemenx-badge danger">Danger</span>
+					</div>
+					<div class="elemenx-card"><h4>Card</h4><p class="elemenx-text small muted">Raised surface for grouped content.</p></div>
+				</div>
 			</div>
 		</div>
 	</Section>
 
 	<Section Title="Lists" Note="elemenx-ul · elemenx-ol · outline · check · elemenx-list divided">
-		<div class="ui-kit-grid four">
-			<ul class="elemenx-ul">
-				<li>Components<ul><li>Inputs<ul><li>PhoneInput</li><li>MoneyInput</li></ul></li><li>Overlays</li></ul></li>
-				<li>Directives</li>
-			</ul>
-			<ol class="elemenx-ol">
-				<li>Install<ol><li>Download<ol><li>Unpack</li></ol></li><li>Link</li></ol></li>
-				<li>Configure</li>
-			</ol>
-			<ol class="elemenx-ol outline">
-				<li>Scope<ol><li>Goals</li><li>Limits<ol><li>Budget</li></ol></li></ol></li>
-				<li>Plan</li>
-			</ol>
-			<div class="ui-kit-stack">
-				<ul class="elemenx-ul check"><li>Light theme</li><li>Dark theme</li><li>Tests</li></ul>
-				<ul class="elemenx-list divided"><li>Divided item</li><li>Another item</li><li>Last item</li></ul>
+		<div class="ui-kit-lazy" *lazy>
+			<div class="ui-kit-grid four">
+				<ul class="elemenx-ul">
+					<li>Components<ul><li>Inputs<ul><li>PhoneInput</li><li>MoneyInput</li></ul></li><li>Overlays</li></ul></li>
+					<li>Directives</li>
+				</ul>
+				<ol class="elemenx-ol">
+					<li>Install<ol><li>Download<ol><li>Unpack</li></ol></li><li>Link</li></ol></li>
+					<li>Configure</li>
+				</ol>
+				<ol class="elemenx-ol outline">
+					<li>Scope<ol><li>Goals</li><li>Limits<ol><li>Budget</li></ol></li></ol></li>
+					<li>Plan</li>
+				</ol>
+				<div class="ui-kit-stack">
+					<ul class="elemenx-ul check"><li>Light theme</li><li>Dark theme</li><li>Tests</li></ul>
+					<ul class="elemenx-list divided"><li>Divided item</li><li>Another item</li><li>Last item</li></ul>
+				</div>
 			</div>
 		</div>
 	</Section>
 
 	<Section Title="Section" Note="Collapsible, with actions in the header">
-		<Section Title="Project settings" Icon="settings" Level="3" Collapsible="true" [collapsed]="Collapsed" Note="Folds its body" (toggle)="SectionToggled">
-			<span slot="before" class="elemenx-badge accent">Before</span>
-			<span slot="after" class="elemenx-badge">After</span>
-			<Button slot="actions" Icon="edit" Title="Edit" Variant="ghost" Size="small" />
-			<Button slot="actions" Icon="delete" Title="Delete" Variant="ghost" Size="small" />
-			<p class="elemenx-text">The body of a collapsible section. State: {{Collapsed ? 'collapsed' : 'expanded'}}.</p>
-		</Section>
-		<Section Title="Caption under the line" Level="3" Note="NotePlacement=&quot;below&quot; puts the caption under the header line." NotePlacement="below">
-			<Button slot="actions" Label="Action" Size="small" />
-			<p class="elemenx-text">Body.</p>
-		</Section>
+		<div class="ui-kit-lazy" *lazy>
+			<Section Title="Project settings" Icon="settings" Level="3" Collapsible="true" [collapsed]="Collapsed" Note="Folds its body" (toggle)="SectionToggled">
+				<span slot="before" class="elemenx-badge accent">Before</span>
+				<span slot="after" class="elemenx-badge">After</span>
+				<Button slot="actions" Icon="edit" Title="Edit" Variant="ghost" Size="small" />
+				<Button slot="actions" Icon="delete" Title="Delete" Variant="ghost" Size="small" />
+				<p class="elemenx-text">The body of a collapsible section. State: {{Collapsed ? 'collapsed' : 'expanded'}}.</p>
+			</Section>
+			<Section Title="Caption under the line" Level="3" Note="NotePlacement=&quot;below&quot; puts the caption under the header line." NotePlacement="below">
+				<Button slot="actions" Label="Action" Size="small" />
+				<p class="elemenx-text">Body.</p>
+			</Section>
+		</div>
 	</Section>
 
 	<Section Title="Block" Note="A frame with its title on a band set into it">
-		<div class="ui-kit-grid">
-			<Block Title="Reactor" Note="Ring B">
-				<Button slot="actions" Icon="refresh" Title="Reset" Variant="ghost" Size="small" />
-				<Meter Value="64" Label="Load" Unit="%" />
-				<Meter Value="91" Low="60" High="85" Optimum="0" Label="Heat" Unit="%" />
-			</Block>
-			<Block Title="Shields" Note="Deck 4" HeaderShape="trapezoid">
-				<Button slot="actions" Icon="refresh" Title="Recharge" Variant="ghost" Size="small" />
-				<p class="elemenx-text small">HeaderShape="trapezoid" hangs the title from the frame, as wide as its text.</p>
-				<Meter Value="72" Label="Charge" Unit="%" />
-			</Block>
-			<Block Title="Compact" Padding="compact">
-				<p class="elemenx-text small">Padding="compact" keeps the band and the frame closer to the content.</p>
-				<Properties Columns="2" Label="Service">
-					<Property Label="Uptime" Value="99.9" Unit="%" Tone="success" />
-					<Property Label="Errors" Value="3" Tone="danger" />
-					<Property Label="Region" Value="eu-west" />
-					<Property Label="Version"><code>v2.32</code></Property>
-				</Properties>
-			</Block>
+		<div class="ui-kit-lazy" *lazy>
+			<div class="ui-kit-grid">
+				<Block Title="Reactor" Note="Ring B">
+					<Button slot="actions" Icon="refresh" Title="Reset" Variant="ghost" Size="small" />
+					<Meter Value="64" Label="Load" Unit="%" />
+					<Meter Value="91" Low="60" High="85" Optimum="0" Label="Heat" Unit="%" />
+				</Block>
+				<Block Title="Shields" Note="Deck 4" HeaderShape="trapezoid">
+					<Button slot="actions" Icon="refresh" Title="Recharge" Variant="ghost" Size="small" />
+					<p class="elemenx-text small">HeaderShape="trapezoid" makes a folder: the title on a tab as wide as its text, the actions beyond its slope.</p>
+					<Meter Value="72" Label="Charge" Unit="%" />
+				</Block>
+				<Block Title="Compact" Padding="compact">
+					<p class="elemenx-text small">Padding="compact" keeps the band and the frame closer to the content.</p>
+					<Properties Columns="2" Label="Service">
+						<Property Label="Uptime" Value="99.9" Unit="%" Tone="success" />
+						<Property Label="Errors" Value="3" Tone="danger" />
+						<Property Label="Region" Value="eu-west" />
+						<Property Label="Version"><code>v2.32</code></Property>
+					</Properties>
+				</Block>
+			</div>
 		</div>
 	</Section>
 
 	<Section Title="Properties" Note="A name and its value set apart, in one column or two">
-		<div class="ui-kit-grid">
-			<div class="ui-kit-stack">
-				<h5>One column</h5>
-				<Properties Label="Server">
-					<Property Label="Host" Value="api.example.com" />
-					<Property Label="Uptime" Value="99.98" Unit="%" Tone="success" />
-					<Property Label="Latency" Value="42" Unit=" ms" />
-					<Property Label="Errors today" Value="3" Tone="danger" />
-				</Properties>
-			</div>
-			<div class="ui-kit-stack">
-				<h5>Two columns and tones</h5>
-				<Properties Columns="2" Label="Tones">
-					<Property Label="Success" Value="Passed" Tone="success" />
-					<Property Label="Danger" Value="Failed" Tone="danger" />
-					<Property Label="Warning" Value="Slow" Tone="warning" />
-					<Property Label="Accent" Value="New" Tone="accent" />
-				</Properties>
-			</div>
-			<div class="ui-kit-stack">
-				<h5>A value of its own</h5>
-				<Properties Label="Release">
-					<Property Label="Version"><code>v2.32.0</code></Property>
-					<Property Label="Status"><span class="elemenx-badge success">Live</span></Property>
-					<Property Label="Owner"><a href="#owner">Ada Lovelace</a></Property>
-				</Properties>
+		<div class="ui-kit-lazy" *lazy>
+			<div class="ui-kit-grid">
+				<div class="ui-kit-stack">
+					<h5>One column</h5>
+					<Properties Label="Server">
+						<Property Label="Host" Value="api.example.com" />
+						<Property Label="Uptime" Value="99.98" Unit="%" Tone="success" />
+						<Property Label="Latency" Value="42" Unit=" ms" />
+						<Property Label="Errors today" Value="3" Tone="danger" />
+					</Properties>
+				</div>
+				<div class="ui-kit-stack">
+					<h5>Two columns and tones</h5>
+					<Properties Columns="2" Label="Tones">
+						<Property Label="Success" Value="Passed" Tone="success" />
+						<Property Label="Danger" Value="Failed" Tone="danger" />
+						<Property Label="Warning" Value="Slow" Tone="warning" />
+						<Property Label="Accent" Value="New" Tone="accent" />
+					</Properties>
+				</div>
+				<div class="ui-kit-stack">
+					<h5>A value of its own</h5>
+					<Properties Label="Release">
+						<Property Label="Version"><code>v2.32.0</code></Property>
+						<Property Label="Status"><span class="elemenx-badge success">Live</span></Property>
+						<Property Label="Owner"><a href="#owner">Ada Lovelace</a></Property>
+					</Properties>
+				</div>
 			</div>
 		</div>
 	</Section>
 
 	<Section Title="Native" [note]="'Platform: ' + NativePlatform">
-		<div class="ui-kit-row">
-			<Button Label="Open a file" (click)="NativeOpen" />
-			<Button Label="Save a file" (click)="NativeSave" />
-			<Button Label="Ask" (click)="NativeAsk" />
-			<Button Label="Full screen" (click)="NativeFullscreen" />
-			<Button Label="Open example.com" (click)="NativeExternal" />
-			<Button Label="Set the menu" (click)="NativeMenu" />
-			<Button Label="Power" (click)="NativePower" />
-			<Button Label="Global hotkey" (click)="NativeHotkey" />
+		<div class="ui-kit-lazy" *lazy>
+			<div class="ui-kit-row">
+				<Button Label="Open a file" (click)="NativeOpen" />
+				<Button Label="Save a file" (click)="NativeSave" />
+				<Button Label="Ask" (click)="NativeAsk" />
+				<Button Label="Full screen" (click)="NativeFullscreen" />
+				<Button Label="Open example.com" (click)="NativeExternal" />
+				<Button Label="Set the menu" (click)="NativeMenu" />
+				<Button Label="Power" (click)="NativePower" />
+				<Button Label="Global hotkey" (click)="NativeHotkey" />
+			</div>
+			<p class="elemenx-text small muted ui-kit-native-state">{{NativeState}}</p>
 		</div>
-		<p class="elemenx-text small muted ui-kit-native-state">{{NativeState}}</p>
 	</Section>
 
 	<Section Title="Themes" [note]="'Theme: ' + ThemeName + ' · Scheme: ' + ThemeScheme">
-		<div class="ui-kit-grid">
-			<div class="elemenx-column ui-kit-themes">
-				<Field Label="Theme" Hint="contrast, darcula and soft come with the Library; Mine is made by the editor."><Select [options]="ThemeOptions" [value]="ThemeName" (change)="ThemeChosen" /></Field>
-				<Field Label="Scheme"><RadioGroup Variant="segmented" [options]="ThemeSchemes" [value]="ThemePolicy" (change)="PolicyChosen" /></Field>
-				<p class="elemenx-text">A theme is one CSS file whose rules start with <code class="elemenx-code">[data-theme][data-theme='name']</code>: tokens of the theme, and the rules of any Component by its classes. The whole page is its preview.</p>
-				<div class="ui-kit-theme-scope" data-theme="darcula" data-scheme="dark">
-					<div class="ui-kit-row">
-						<strong>A part with a theme of its own</strong>
-						<ButtonGroup Attached="true" Label="Theme of the part">
-							<Button Label="Darcula" Size="small" [pressed]="ScopeTheme === 'darcula'" (click)="ScopeDarcula" />
-							<Button Label="Light" Size="small" [pressed]="ScopeTheme === 'light'" (click)="ScopeLight" />
-							<Button Label="Contrast" Size="small" [pressed]="ScopeTheme === 'contrast'" (click)="ScopeContrast" />
-						</ButtonGroup>
+		<div class="ui-kit-lazy" *lazy>
+			<div class="ui-kit-grid">
+				<div class="elemenx-column ui-kit-themes">
+					<Field Label="Theme" Hint="contrast, darcula and soft come with the Library; Mine is made by the editor."><Select [options]="ThemeOptions" [value]="ThemeName" (change)="ThemeChosen" /></Field>
+					<Field Label="Scheme"><RadioGroup Variant="segmented" [options]="ThemeSchemes" [value]="ThemePolicy" (change)="PolicyChosen" /></Field>
+					<p class="elemenx-text">A theme is one CSS file whose rules start with <code class="elemenx-code">[data-theme][data-theme='name']</code>: tokens of the theme, and the rules of any Component by its classes. The whole page is its preview.</p>
+					<div class="ui-kit-theme-scope" data-theme="darcula" data-scheme="dark">
+						<div class="ui-kit-row">
+							<strong>A part with a theme of its own</strong>
+							<ButtonGroup Attached="true" Label="Theme of the part">
+								<Button Label="Darcula" Size="small" [pressed]="ScopeTheme === 'darcula'" (click)="ScopeDarcula" />
+								<Button Label="Light" Size="small" [pressed]="ScopeTheme === 'light'" (click)="ScopeLight" />
+								<Button Label="Contrast" Size="small" [pressed]="ScopeTheme === 'contrast'" (click)="ScopeContrast" />
+							</ButtonGroup>
+						</div>
+						<div class="ui-kit-row">
+							<Button Label="Primary" Variant="primary" Size="small" />
+							<Checkbox Label="Checked" Checked="true" Size="small" />
+							<Input Placeholder="A field" Size="small" />
+						</div>
 					</div>
-					<div class="ui-kit-row">
-						<Button Label="Primary" Variant="primary" Size="small" />
-						<Checkbox Label="Checked" Checked="true" Size="small" />
-						<Input Placeholder="A field" Size="small" />
+				</div>
+				<div class="elemenx-column ui-kit-theme-editor">
+					<div class="ui-kit-grid">
+						<Field Label="Accent"><ColorInput [value]="MineAccent" (input)="MineAccentEdited" /></Field>
+						<Field Label="Background"><ColorInput [value]="MineBackground" (input)="MineBackgroundEdited" /></Field>
+						<Field Label="Corners"><Slider [value]="MineRadius" Min="0" Max="16" Unit="px" Label="Corners" (input)="MineRadiusEdited" /></Field>
+						<Field Label="Control height"><Slider [value]="MineControl" Min="24" Max="48" Step="4" Unit="px" Label="Control height" (input)="MineControlEdited" /></Field>
 					</div>
+					<div class="elemenx-container ui-kit-theme-actions">
+						<Button Label="Show Mine" Icon="color" Variant="primary" (click)="UseMine" />
+						<button class="elemenx-button secondary medium" type="button" *copy="{Text: MineCSS(MineAccent, MineBackground, MineRadius, MineControl), Toast: 'Theme copied'}"><Icon Name="copy" /><span>Copy CSS</span></button>
+					</div>
+					<pre class="elemenx-code ui-kit-theme-css">{{MineCSS(MineAccent, MineBackground, MineRadius, MineControl)}}</pre>
 				</div>
-			</div>
-			<div class="elemenx-column ui-kit-theme-editor">
-				<div class="ui-kit-grid">
-					<Field Label="Accent"><ColorInput [value]="MineAccent" (input)="MineAccentEdited" /></Field>
-					<Field Label="Background"><ColorInput [value]="MineBackground" (input)="MineBackgroundEdited" /></Field>
-					<Field Label="Corners"><Slider [value]="MineRadius" Min="0" Max="16" Unit="px" Label="Corners" (input)="MineRadiusEdited" /></Field>
-					<Field Label="Control height"><Slider [value]="MineControl" Min="24" Max="48" Step="4" Unit="px" Label="Control height" (input)="MineControlEdited" /></Field>
-				</div>
-				<div class="elemenx-container ui-kit-theme-actions">
-					<Button Label="Show Mine" Icon="color" Variant="primary" (click)="UseMine" />
-					<button class="elemenx-button secondary medium" type="button" *copy="{Text: MineCSS(MineAccent, MineBackground, MineRadius, MineControl), Toast: 'Theme copied'}"><Icon Name="copy" /><span>Copy CSS</span></button>
-				</div>
-				<pre class="elemenx-code ui-kit-theme-css">{{MineCSS(MineAccent, MineBackground, MineRadius, MineControl)}}</pre>
 			</div>
 		</div>
 	</Section>
 
 	<Section Title="Buttons" [note]="'Clicks: ' + Clicks">
-		<div class="ui-kit-row">
-			<Button Label="Primary" Variant="primary" (click)="Clicked" />
-			<Button Label="Secondary" (click)="Clicked" />
-			<Button Label="Ghost" Variant="ghost" />
-			<Button Label="Danger" Variant="danger" Icon="delete" />
-			<Button Label="Link" Variant="link" />
-			<Button Label="Disabled" Disabled="true" />
-			<Button Label="Loading" Variant="primary" Loading="true" />
-		</div>
-		<div class="ui-kit-row">
-			<Button Label="Small" Size="small" Icon="add" />
-			<Button Label="Medium" Icon="add" />
-			<Button Label="Large" Size="large" Icon="add" />
-			<Button Label="Giant" Size="giant" Variant="primary" IconRight="arrow-right" />
-		</div>
-		<div class="ui-kit-row">
-			<Button Label="Round" Shape="round" Variant="primary" />
-			<Button Label="Round" Shape="round" Icon="add" />
-			<Button Icon="settings" Title="Round icon" Shape="round" />
-			<Button Label="Large round" Shape="round" Size="large" IconRight="arrow-right" />
-		</div>
-		<div class="ui-kit-row">
-			<Button Icon="settings" Title="Settings" Variant="ghost" Size="small" />
-			<Button Icon="settings" Title="Settings" Variant="ghost" />
-			<Button Icon="settings" Title="Settings" />
-			<Button Icon="play" Title="Run" Variant="primary" Size="large" />
-			<ButtonGroup Attached="true">
-				<Button Label="Left" Icon="panel-left" Pressed="true" />
-				<Button Label="Bottom" Icon="panel-bottom" Pressed="false" />
-				<Button Label="Right" Icon="panel-right" Pressed="false" />
-			</ButtonGroup>
-			<Menu Label="File" Icon="file" [items]="MenuItems" (select)="MenuSelected" />
-			<Menu Icon="more" Title="More actions" Variant="ghost" [items]="MenuItems" (select)="MenuSelected" />
-			<Menu Label="Mobile" Icon="phone" Sheet="true" [items]="MenuItems" (select)="MenuSelected" />
-			<span class="elemenx-caption" *if="MenuChoice">Menu: {{MenuChoice}}</span>
+		<div class="ui-kit-lazy" *lazy>
+			<div class="ui-kit-row">
+				<Button Label="Primary" Variant="primary" (click)="Clicked" />
+				<Button Label="Secondary" (click)="Clicked" />
+				<Button Label="Ghost" Variant="ghost" />
+				<Button Label="Danger" Variant="danger" Icon="delete" />
+				<Button Label="Link" Variant="link" />
+				<Button Label="Disabled" Disabled="true" />
+				<Button Label="Loading" Variant="primary" Loading="true" />
+			</div>
+			<div class="ui-kit-row">
+				<Button Label="Small" Size="small" Icon="add" />
+				<Button Label="Medium" Icon="add" />
+				<Button Label="Large" Size="large" Icon="add" />
+				<Button Label="Giant" Size="giant" Variant="primary" IconRight="arrow-right" />
+			</div>
+			<div class="ui-kit-row">
+				<Button Label="Round" Shape="round" Variant="primary" />
+				<Button Label="Round" Shape="round" Icon="add" />
+				<Button Icon="settings" Title="Round icon" Shape="round" />
+				<Button Label="Large round" Shape="round" Size="large" IconRight="arrow-right" />
+			</div>
+			<div class="ui-kit-row">
+				<Button Icon="settings" Title="Settings" Variant="ghost" Size="small" />
+				<Button Icon="settings" Title="Settings" Variant="ghost" />
+				<Button Icon="settings" Title="Settings" />
+				<Button Icon="play" Title="Run" Variant="primary" Size="large" />
+				<ButtonGroup Attached="true">
+					<Button Label="Left" Icon="panel-left" Pressed="true" />
+					<Button Label="Bottom" Icon="panel-bottom" Pressed="false" />
+					<Button Label="Right" Icon="panel-right" Pressed="false" />
+				</ButtonGroup>
+				<Menu Label="File" Icon="file" [items]="MenuItems" (select)="MenuSelected" />
+				<Menu Icon="more" Title="More actions" Variant="ghost" [items]="MenuItems" (select)="MenuSelected" />
+				<Menu Label="Mobile" Icon="phone" Sheet="true" [items]="MenuItems" (select)="MenuSelected" />
+				<span class="elemenx-caption" *if="MenuChoice">Menu: {{MenuChoice}}</span>
+			</div>
 		</div>
 	</Section>
 
 	<Section Title="Icons" Note="&lt;Icon Name=&quot;...&quot; /&gt; · &lt;FileIcon Name=&quot;report.pdf&quot; /&gt;">
-		<div class="ui-kit-icons">
-			<div class="ui-kit-icon" *for="name of Icons" *key="name" [attribute.title]="name"><Icon [name]="name" Size="24" /><span>{{name}}</span></div>
-		</div>
-		<h4>Media, calls and faces</h4>
-		<div class="ui-kit-icons">
-			<div class="ui-kit-icon" *for="name of MediaIcons" *key="name" [attribute.title]="name"><Icon [name]="name" Size="24" /><span>{{name}}</span></div>
-		</div>
-		<div class="ui-kit-themed-set" *for="set of ThemedSets" *key="set.Name" [attribute.data-set]="set.Name">
-			<h4>{{set.Name.charAt(0).toUpperCase() + set.Name.substring(1)}} set: &lt;Icon Name=&quot;{{set.Icons[0]}}&quot; /&gt;</h4>
-			<div class="ui-kit-icons">
-				<div class="ui-kit-icon" *for="name of set.Icons" *key="name" [attribute.title]="name"><Icon [name]="name" Size="24" /><span>{{name.substring(set.Name.length + 1)}}</span></div>
+		<div class="ui-kit-lazy" *lazy>
+			<div class="ui-kit-icons" *lazy>
+				<div class="ui-kit-icon" *for="name of Icons" *key="name" [attribute.title]="name"><Icon [name]="name" Size="24" /><span>{{name}}</span></div>
 			</div>
-		</div>
-		<h4>Music set: &lt;Icon Name=&quot;music:guitar&quot; /&gt;</h4>
-		<div class="ui-kit-icons ui-kit-set-music">
-			<div class="ui-kit-icon" *for="name of MusicIcons" *key="name" [attribute.title]="name"><Icon [name]="name" Size="24" /><span>{{name.substring(6)}}</span></div>
-		</div>
-		<div class="elemenx-container ui-kit-set-header">
-			<h4>Weather set: &lt;Icon Name=&quot;weather:rain&quot; Colored=&quot;true&quot; /&gt;</h4>
-			<Button Label="Theme colors" Icon="color" Size="small" Variant="ghost" [pressed]="WeatherColored" (click)="ToggleWeatherColors" />
-		</div>
-		<div class="ui-kit-icons ui-kit-set-weather">
-			<div class="ui-kit-icon" *for="name of WeatherIcons" *key="name" [attribute.title]="name"><Icon [name]="name" Size="24" [colored]="WeatherColored" /><span>{{name.substring(8)}}</span></div>
-		</div>
-		<div class="elemenx-container ui-kit-set-header">
-			<h4>Brands set (Simple Icons): &lt;Icon Name=&quot;brands:github&quot; Colored=&quot;true&quot; /&gt;</h4>
-			<Button Label="Brand colors" Icon="color" Size="small" Variant="ghost" [pressed]="BrandsColored" (click)="ToggleBrandColors" />
-		</div>
-		<div class="ui-kit-icons ui-kit-set-brands">
-			<div class="ui-kit-icon" *for="name of BrandLogos" *key="name" [attribute.title]="name"><Icon [name]="name" Size="24" [colored]="BrandsColored" /><span>{{name.substring(7)}}</span></div>
-		</div>
-		<div class="elemenx-container ui-kit-set-header">
-			<h4>A set of the Application, from markup: Icons.Register('brand', '&lt;svg&gt;...')</h4>
-			<Button Label="Draw save as brand:disk" Icon="save" Size="small" Variant="ghost" [pressed]="BrandSave" (click)="ToggleBrandSave" />
-		</div>
-		<div class="ui-kit-icons ui-kit-set-brand">
-			<div class="ui-kit-icon" title="brand:disk"><Icon Name="brand:disk" Size="24" /><span>brand:disk</span></div>
-			<div class="ui-kit-icon" title="brand:spark"><Icon Name="brand:spark" Size="24" /><span>brand:spark</span></div>
-		</div>
-		<h4>Alignment, position and fit</h4>
-		<div class="ui-kit-icons">
-			<div class="ui-kit-icon" *for="name of LayoutIcons" *key="name" [attribute.title]="name"><Icon [name]="name" Size="24" /><span>{{name}}</span></div>
-		</div>
-		<h4>File formats</h4>
-		<div class="ui-kit-icons">
-			<div class="ui-kit-icon" *for="file of Files" *key="file" [attribute.title]="file"><FileIcon [name]="file" Size="32" /><span>{{file}}</span></div>
+			<h4>Media, calls and faces</h4>
+			<div class="ui-kit-icons" *lazy>
+				<div class="ui-kit-icon" *for="name of MediaIcons" *key="name" [attribute.title]="name"><Icon [name]="name" Size="24" /><span>{{name}}</span></div>
+			</div>
+			<div class="ui-kit-themed-set" *for="set of ThemedSets" *key="set.Name" [attribute.data-set]="set.Name">
+				<h4>{{set.Name.charAt(0).toUpperCase() + set.Name.substring(1)}} set: &lt;Icon Name=&quot;{{set.Icons[0]}}&quot; /&gt;</h4>
+				<div class="ui-kit-icons" *lazy>
+					<div class="ui-kit-icon" *for="name of set.Icons" *key="name" [attribute.title]="name"><Icon [name]="name" Size="24" /><span>{{name.substring(set.Name.length + 1)}}</span></div>
+				</div>
+			</div>
+			<h4>Music set: &lt;Icon Name=&quot;music:guitar&quot; /&gt;</h4>
+			<div class="ui-kit-icons ui-kit-set-music" *lazy>
+				<div class="ui-kit-icon" *for="name of MusicIcons" *key="name" [attribute.title]="name"><Icon [name]="name" Size="24" /><span>{{name.substring(6)}}</span></div>
+			</div>
+			<div class="elemenx-container ui-kit-set-header">
+				<h4>Weather set: &lt;Icon Name=&quot;weather:rain&quot; Colored=&quot;true&quot; /&gt;</h4>
+				<Button Label="Theme colors" Icon="color" Size="small" Variant="ghost" [pressed]="WeatherColored" (click)="ToggleWeatherColors" />
+			</div>
+			<div class="ui-kit-icons ui-kit-set-weather" *lazy>
+				<div class="ui-kit-icon" *for="name of WeatherIcons" *key="name" [attribute.title]="name"><Icon [name]="name" Size="24" [colored]="WeatherColored" /><span>{{name.substring(8)}}</span></div>
+			</div>
+			<div class="elemenx-container ui-kit-set-header">
+				<h4>Brands set (Simple Icons): &lt;Icon Name=&quot;brands:github&quot; Colored=&quot;true&quot; /&gt;</h4>
+				<Button Label="Brand colors" Icon="color" Size="small" Variant="ghost" [pressed]="BrandsColored" (click)="ToggleBrandColors" />
+			</div>
+			<div class="ui-kit-icons ui-kit-set-brands" *lazy>
+				<div class="ui-kit-icon" *for="name of BrandLogos" *key="name" [attribute.title]="name"><Icon [name]="name" Size="24" [colored]="BrandsColored" /><span>{{name.substring(7)}}</span></div>
+			</div>
+			<div class="elemenx-container ui-kit-set-header">
+				<h4>A set of the Application, from markup: Icons.Register('brand', '&lt;svg&gt;...')</h4>
+				<Button Label="Draw save as brand:disk" Icon="save" Size="small" Variant="ghost" [pressed]="BrandSave" (click)="ToggleBrandSave" />
+			</div>
+			<div class="ui-kit-icons ui-kit-set-brand" *lazy>
+				<div class="ui-kit-icon" title="brand:disk"><Icon Name="brand:disk" Size="24" /><span>brand:disk</span></div>
+				<div class="ui-kit-icon" title="brand:spark"><Icon Name="brand:spark" Size="24" /><span>brand:spark</span></div>
+			</div>
+			<h4>Alignment, position and fit</h4>
+			<div class="ui-kit-icons" *lazy>
+				<div class="ui-kit-icon" *for="name of LayoutIcons" *key="name" [attribute.title]="name"><Icon [name]="name" Size="24" /><span>{{name}}</span></div>
+			</div>
+			<h4>File formats</h4>
+			<div class="ui-kit-icons" *lazy>
+				<div class="ui-kit-icon" *for="file of Files" *key="file" [attribute.title]="file"><FileIcon [name]="file" Size="32" /><span>{{file}}</span></div>
+			</div>
 		</div>
 	</Section>
 
 	<Section Title="Inputs" [note]="'Value: ' + Text">
-		<div class="ui-kit-grid">
-			<Field Label="Project name" Hint="Text input with a hint." Required="true"><Input [value]="Text" Placeholder="Name" Clearable="true" (input)="TextChanged" /></Field>
-			<Field Label="Search"><Input Icon="search" Placeholder="Search everywhere" Clearable="true" /></Field>
-			<Field Label="Password"><Input Type="password" Value="secret" /></Field>
-			<Field Label="Invalid" Error="This value is not allowed."><Input Value="wrong" Invalid="true" /></Field>
-			<Field Label="Price"><Input Prefix="$" Suffix="USD" Placeholder="0.00" /></Field>
-			<Field Label="Disabled"><Input Value="Read only for now" Disabled="true" /></Field>
-			<Field Label="Amount" [hint]="'Value: ' + Amount"><NumberInput [value]="Amount" Min="0" Max="100" Step="1" Suffix="items" (input)="AmountChanged" /></Field>
-			<Field Label="Color" [hint]="'Value: ' + Color"><ColorInput [value]="Color" (input)="ColorChanged" /></Field>
-			<Field Label="Description"><TextArea Placeholder="Write something…" MaxLength="200" AutoSize="true" /></Field>
-			<Field Label="Notes (resizable)" Hint="Drag the bottom edge or focus it and use the arrow keys."><TextArea Rows="3" Value="Plain multi-line input." /></Field>
-			<Field Label="Round search"><Input Shape="round" Icon="search" Placeholder="Search" Clearable="true" /></Field>
-			<Field Label="Round select"><Select Shape="round" [options]="Languages" Placeholder="Language" /></Field>
-		</div>
-		<div class="ui-kit-row">
-			<Input Size="small" Placeholder="Small" />
-			<Input Placeholder="Medium" />
-			<Input Size="large" Placeholder="Large" />
-			<Input Size="giant" Placeholder="Giant" Icon="search" />
-		</div>
-		<Field Label="Horizontal label" Horizontal="true" Hint="Settings-style layout."><Input Placeholder="Value" /></Field>
-		<h3 class="elemenx-title">Formats</h3>
-		<div class="ui-kit-grid">
-			<PresetField Label="Email address" Preset="email" Placeholder="name@example.com" />
-			<PresetField Label="Web address" Preset="url" Placeholder="example.com" />
-			<PresetField Label="Version" Preset="semver" Placeholder="1.4.2" />
-			<PresetField Label="IPv4 address" Preset="ipv4" Placeholder="192.168.0.1" />
-			<PresetField Label="IPv6 address" Preset="ipv6" Placeholder="2001:db8::1" />
-			<PresetField Label="UUID" Preset="uuid" Placeholder="123e4567-e89b-12d3-a456-426614174000" />
-			<PresetField Label="IBAN" Preset="iban" Placeholder="DE89 3704 0044 0532 0130 00" />
-			<PresetField Label="Moldovan postal code" Preset="postal-code" Country="MD" Placeholder="MD-2001" />
-			<PresetField Label="Quantity" Preset="integer" Min="0" Max="100" Placeholder="0 to 100" />
-			<PresetField Label="Weight, kg" Preset="decimal" Min="0" Placeholder="12.5" />
+		<div class="ui-kit-lazy" *lazy>
+			<div class="ui-kit-grid">
+				<Field Label="Project name" Hint="Text input with a hint." Required="true"><Input [value]="Text" Placeholder="Name" Clearable="true" (input)="TextChanged" /></Field>
+				<Field Label="Search"><Input Icon="search" Placeholder="Search everywhere" Clearable="true" /></Field>
+				<Field Label="Password"><Input Type="password" Value="secret" /></Field>
+				<Field Label="Invalid" Error="This value is not allowed."><Input Value="wrong" Invalid="true" /></Field>
+				<Field Label="Price"><Input Prefix="$" Suffix="USD" Placeholder="0.00" /></Field>
+				<Field Label="Disabled"><Input Value="Read only for now" Disabled="true" /></Field>
+				<Field Label="Amount" [hint]="'Value: ' + Amount"><NumberInput [value]="Amount" Min="0" Max="100" Step="1" Suffix="items" (input)="AmountChanged" /></Field>
+				<Field Label="Color" [hint]="'Value: ' + Color"><ColorInput [value]="Color" (input)="ColorChanged" /></Field>
+				<Field Label="Description"><TextArea Placeholder="Write something…" MaxLength="200" AutoSize="true" /></Field>
+				<Field Label="Notes (resizable)" Hint="Drag the bottom edge or focus it and use the arrow keys."><TextArea Rows="3" Value="Plain multi-line input." /></Field>
+				<Field Label="Round search"><Input Shape="round" Icon="search" Placeholder="Search" Clearable="true" /></Field>
+				<Field Label="Round select"><Select Shape="round" [options]="Languages" Placeholder="Language" /></Field>
+			</div>
+			<div class="ui-kit-row">
+				<Input Size="small" Placeholder="Small" />
+				<Input Placeholder="Medium" />
+				<Input Size="large" Placeholder="Large" />
+				<Input Size="giant" Placeholder="Giant" Icon="search" />
+			</div>
+			<Field Label="Horizontal label" Horizontal="true" Hint="Settings-style layout."><Input Placeholder="Value" /></Field>
+			<h3 class="elemenx-title">Formats</h3>
+			<div class="ui-kit-grid">
+				<PresetField Label="Email address" Preset="email" Placeholder="name@example.com" />
+				<PresetField Label="Web address" Preset="url" Placeholder="example.com" />
+				<PresetField Label="Version" Preset="semver" Placeholder="1.4.2" />
+				<PresetField Label="IPv4 address" Preset="ipv4" Placeholder="192.168.0.1" />
+				<PresetField Label="IPv6 address" Preset="ipv6" Placeholder="2001:db8::1" />
+				<PresetField Label="UUID" Preset="uuid" Placeholder="123e4567-e89b-12d3-a456-426614174000" />
+				<PresetField Label="IBAN" Preset="iban" Placeholder="DE89 3704 0044 0532 0130 00" />
+				<PresetField Label="Moldovan postal code" Preset="postal-code" Country="MD" Placeholder="MD-2001" />
+				<PresetField Label="Quantity" Preset="integer" Min="0" Max="100" Placeholder="0 to 100" />
+				<PresetField Label="Weight, kg" Preset="decimal" Min="0" Placeholder="12.5" />
+			</div>
 		</div>
 	</Section>
 
 	<Section Title="Dates and time" Note="Own pickers, locale formats">
-		<div class="ui-kit-grid">
-			<Field Label="Date" [hint]="'Value: ' + (Date || '—')"><DateInput [value]="Date" (input)="DateChanged" /></Field>
-			<Field Label="Time" [hint]="'Value: ' + (Time || '—')"><TimeInput [value]="Time" MinuteStep="5" (input)="TimeChanged" /></Field>
-			<Field Label="Month, 2024–2026"><DateInput Mode="month" Min="2024-01" Max="2026-12" /></Field>
-			<Field Label="Time with seconds"><TimeInput Seconds="true" Min="08:00:00" Max="20:00:00" /></Field>
-			<Field Label="Color with opacity"><ColorInput Value="#3f6c9e80" Alpha="true" /></Field>
-			<Field Label="ISO date, Monday first"><DateInput Format="YYYY-MM-DD" FirstDay="1" Min="2020-01-01" /></Field>
+		<div class="ui-kit-lazy" *lazy>
+			<div class="ui-kit-grid">
+				<Field Label="Date" [hint]="'Value: ' + (Date || '—')"><DateInput [value]="Date" (input)="DateChanged" /></Field>
+				<Field Label="Time" [hint]="'Value: ' + (Time || '—')"><TimeInput [value]="Time" MinuteStep="5" (input)="TimeChanged" /></Field>
+				<Field Label="Month, 2024–2026"><DateInput Mode="month" Min="2024-01" Max="2026-12" /></Field>
+				<Field Label="Time with seconds"><TimeInput Seconds="true" Min="08:00:00" Max="20:00:00" /></Field>
+				<Field Label="Color with opacity"><ColorInput Value="#3f6c9e80" Alpha="true" /></Field>
+				<Field Label="ISO date, Monday first"><DateInput Format="YYYY-MM-DD" FirstDay="1" Min="2020-01-01" /></Field>
+			</div>
 		</div>
 	</Section>
 
 	<Section Title="Payment, phone and money" Note="Strict masks: typing, paste and drop">
-		<div class="ui-kit-grid">
-			<Field Label="Card number" [hint]="CardState || 'Try 4242 4242 4242 4242'"><CardNumberInput (validate)="CardValidated" /></Field>
-			<Field Label="Saved card" Hint="Conceal=&quot;xxxx ???? ???? xxxx&quot;; Guarded: the eye asks first, HideAfter 5 s"><CardNumberInput Value="5555555555554444" Conceal="xxxx ???? ???? xxxx" Guarded="true" HideAfter="5000" (reveal)="ConfirmReveal" /></Field>
-			<div class="ui-kit-pair">
-				<Field Label="Expires"><CardExpiryInput /></Field>
-				<Field Label="CVV" Hint="Guarded"><CVVInput Value="123" Guarded="true" HideAfter="5000" (reveal)="ConfirmReveal" /></Field>
+		<div class="ui-kit-lazy" *lazy>
+			<div class="ui-kit-grid">
+				<Field Label="Card number" [hint]="CardState || 'Try 4242 4242 4242 4242'"><CardNumberInput (validate)="CardValidated" /></Field>
+				<Field Label="Saved card" Hint="Conceal=&quot;xxxx ???? ???? xxxx&quot;; Guarded: the eye asks first, HideAfter 5 s"><CardNumberInput Value="5555555555554444" Conceal="xxxx ???? ???? xxxx" Guarded="true" HideAfter="5000" (reveal)="ConfirmReveal" /></Field>
+				<div class="ui-kit-pair">
+					<Field Label="Expires"><CardExpiryInput /></Field>
+					<Field Label="CVV" Hint="Guarded"><CVVInput Value="123" Guarded="true" HideAfter="5000" (reveal)="ConfirmReveal" /></Field>
+				</div>
+				<Field Label="One-time code" [hint]="OTPState || 'Six digits; paste 123-456'"><OTPInput Group="3" (input)="OTPTyped" (complete)="OTPCompleted" /></Field>
+				<Field Label="PIN" Hint="Masked, four digits, round cells"><OTPInput Length="4" Masked="true" Shape="round" Size="small" /></Field>
+				<Field Label="Recovery code" Hint="Single field, letters and digits in upper case"><OTPInput Variant="single" Length="8" Pattern="alphanumeric" Case="upper" Placeholder="XXXXXXXX" /></Field>
+				<Field Label="Hex code" Hint="Pattern=&quot;[0-9A-F]&quot;, masked single field"><OTPInput Variant="single" Length="6" Pattern="[0-9A-F]" Case="upper" Masked="true" /></Field>
+				<Field Label="Phone" [hint]="Phone + (PhoneState ? ' · ' + PhoneState : '')"><PhoneInput [value]="Phone" (input)="PhoneChanged" (validate)="PhoneValidated" /></Field>
+				<Field Label="Phone, skip separators" Hint="Backspace jumps over a separator"><PhoneInput Country="US" Backspace="skip" /></Field>
+				<Field Label="Phone without guide"><PhoneInput Country="DE" Guide="false" /></Field>
+				<Field Label="Phone (US only)"><PhoneInput Country="US" [countries]="[{Code: 'US', Name: 'United States', Dial: '1', Mask: '(###) ###-####'}]" /></Field>
+				<Field Label="Money" [hint]="Money"><MoneyInput [amount]="Price" Currency="USD" (change)="MoneyChanged" /></Field>
+				<Field Label="Currency"><CurrencySelect Value="EUR" /></Field>
 			</div>
-			<Field Label="One-time code" [hint]="OTPState || 'Six digits; paste 123-456'"><OTPInput Group="3" (input)="OTPTyped" (complete)="OTPCompleted" /></Field>
-			<Field Label="PIN" Hint="Masked, four digits, round cells"><OTPInput Length="4" Masked="true" Shape="round" Size="small" /></Field>
-			<Field Label="Recovery code" Hint="Single field, letters and digits in upper case"><OTPInput Variant="single" Length="8" Pattern="alphanumeric" Case="upper" Placeholder="XXXXXXXX" /></Field>
-			<Field Label="Hex code" Hint="Pattern=&quot;[0-9A-F]&quot;, masked single field"><OTPInput Variant="single" Length="6" Pattern="[0-9A-F]" Case="upper" Masked="true" /></Field>
-			<Field Label="Phone" [hint]="Phone + (PhoneState ? ' · ' + PhoneState : '')"><PhoneInput [value]="Phone" (input)="PhoneChanged" (validate)="PhoneValidated" /></Field>
-			<Field Label="Phone, skip separators" Hint="Backspace jumps over a separator"><PhoneInput Country="US" Backspace="skip" /></Field>
-			<Field Label="Phone without guide"><PhoneInput Country="DE" Guide="false" /></Field>
-			<Field Label="Phone (US only)"><PhoneInput Country="US" [countries]="[{Code: 'US', Name: 'United States', Dial: '1', Mask: '(###) ###-####'}]" /></Field>
-			<Field Label="Money" [hint]="Money"><MoneyInput [amount]="Price" Currency="USD" (change)="MoneyChanged" /></Field>
-			<Field Label="Currency"><CurrencySelect Value="EUR" /></Field>
 		</div>
 	</Section>
 
 	<Section Title="Selection" [note]="'Plan: ' + Plan + ' · View: ' + View + ' · Language: ' + Language + ' · Tags: ' + Tags.join(', ')">
-		<div class="ui-kit-grid">
-			<Field Label="Language"><Select [options]="Languages" [value]="Language" Searchable="true" (change)="LanguageChanged" /></Field>
-			<Field Label="Optional"><Select [options]="Languages" Placeholder="None" Clearable="true" /></Field>
-			<Field Label="Tags"><MultiSelect [options]="TagOptions" [value]="Tags" SelectAll="true" (change)="TagsChanged" /></Field>
-			<Field Label="Tags (count)"><MultiSelect [options]="TagOptions" [value]="Tags" Display="count" Searchable="false" /></Field>
-			<Field Label="Topics" [hint]="Topics.length + ' topics · Enter, comma or paste a list'"><TagInput [value]="Topics" [suggestions]="TopicSuggestions" Max="6" Case="lower" (change)="TopicsChanged" /></Field>
-			<Field Label="Invite" [hint]="InviteState || 'E-mail addresses only'"><TagInput Placeholder="name@example.com" Pattern="^[^@\s]+@[^@\s]+\.[^@\s]+$" (change)="InvitesChanged" (invalid)="InviteRefused" /></Field>
-			<Field Label="Framework" [hint]="'Value: ' + (Framework == null ? '—' : Framework)"><Combobox [options]="Frameworks" [value]="Framework" AllowCustom="true" Clearable="true" Placeholder="Type or pick" (change)="FrameworkChanged" /></Field>
-			<Field Label="City" Hint="Options come from a (simulated) server as you type"><Combobox [options]="Cities" [loading]="CitiesLoading" Filter="false" Icon="map-pin" Placeholder="Start typing a city" (search)="SearchCities" /></Field>
-			<Field Label="World city" [hint]="WorldCity || 'CityInput: 170 000 cities of GeoNames (CC BY 4.0), loaded on first use'"><CityInput Clearable="true" (change)="WorldCityChanged" /></Field>
-			<Field Label="Period" [hint]="Period.length ? Period.join(' → ') : 'Presets on the left'"><DateRangeInput [value]="Period" (change)="PeriodChanged" /></Field>
-		</div>
-		<div class="ui-kit-grid">
-			<div class="ui-kit-stack">
-				<Checkbox Label="I agree to the terms" [checked]="Agree" (change)="AgreeChanged" />
-				<Checkbox Label="Partially selected" Indeterminate="true" />
-				<Checkbox Label="Disabled" Disabled="true" Checked="true" />
-				<Checkbox Label="Small" Size="small" Checked="true" />
-				<div class="ui-kit-row">
-					<Checkbox Variant="chip" Label="Bug" Icon="debug" Checked="true" />
-					<Checkbox Variant="chip" Label="Feature" Icon="star" />
-					<Checkbox Variant="chip" Label="Docs" Icon="file-text" />
+		<div class="ui-kit-lazy" *lazy>
+			<div class="ui-kit-grid">
+				<Field Label="Language"><Select [options]="Languages" [value]="Language" Searchable="true" (change)="LanguageChanged" /></Field>
+				<Field Label="Optional"><Select [options]="Languages" Placeholder="None" Clearable="true" /></Field>
+				<Field Label="Tags"><MultiSelect [options]="TagOptions" [value]="Tags" SelectAll="true" (change)="TagsChanged" /></Field>
+				<Field Label="Tags (count)"><MultiSelect [options]="TagOptions" [value]="Tags" Display="count" Searchable="false" /></Field>
+				<Field Label="Topics" [hint]="Topics.length + ' topics · Enter, comma or paste a list'"><TagInput [value]="Topics" [suggestions]="TopicSuggestions" Max="6" Case="lower" (change)="TopicsChanged" /></Field>
+				<Field Label="Invite" [hint]="InviteState || 'E-mail addresses only'"><TagInput Placeholder="name@example.com" Pattern="^[^@\s]+@[^@\s]+\.[^@\s]+$" (change)="InvitesChanged" (invalid)="InviteRefused" /></Field>
+				<Field Label="Framework" [hint]="'Value: ' + (Framework == null ? '—' : Framework)"><Combobox [options]="Frameworks" [value]="Framework" AllowCustom="true" Clearable="true" Placeholder="Type or pick" (change)="FrameworkChanged" /></Field>
+				<Field Label="City" Hint="Options come from a (simulated) server as you type"><Combobox [options]="Cities" [loading]="CitiesLoading" Filter="false" Icon="map-pin" Placeholder="Start typing a city" (search)="SearchCities" /></Field>
+				<Field Label="World city" [hint]="WorldCity || 'CityInput: 170 000 cities of GeoNames (CC BY 4.0), loaded on first use'"><CityInput Clearable="true" (change)="WorldCityChanged" /></Field>
+				<Field Label="Period" [hint]="Period.length ? Period.join(' → ') : 'Presets on the left'"><DateRangeInput [value]="Period" (change)="PeriodChanged" /></Field>
+			</div>
+			<div class="ui-kit-grid">
+				<div class="ui-kit-stack">
+					<Checkbox Label="I agree to the terms" [checked]="Agree" (change)="AgreeChanged" />
+					<Checkbox Label="Partially selected" Indeterminate="true" />
+					<Checkbox Label="Disabled" Disabled="true" Checked="true" />
+					<Checkbox Label="Small" Size="small" Checked="true" />
+					<div class="ui-kit-row">
+						<Checkbox Variant="chip" Label="Bug" Icon="debug" Checked="true" />
+						<Checkbox Variant="chip" Label="Feature" Icon="star" />
+						<Checkbox Variant="chip" Label="Docs" Icon="file-text" />
+					</div>
+					<Checkbox Variant="tile" Label="Email notifications" Description="Receive a digest every morning." Checked="true" />
 				</div>
-				<Checkbox Variant="tile" Label="Email notifications" Description="Receive a digest every morning." Checked="true" />
+				<div class="ui-kit-stack">
+					<RadioGroup [options]="Plans" [value]="Plan" (change)="PlanChanged" />
+					<RadioGroup Variant="segmented" [options]="Views" [value]="View" (change)="ViewChanged" />
+					<RadioGroup Variant="horizontal" [options]="Views" Value="grid" />
+					<Toggle Label="Notifications" Description="Show desktop notifications." [checked]="Notifications" />
+					<Toggle Label="Small toggle" Size="small" />
+				</div>
 			</div>
-			<div class="ui-kit-stack">
-				<RadioGroup [options]="Plans" [value]="Plan" (change)="PlanChanged" />
-				<RadioGroup Variant="segmented" [options]="Views" [value]="View" (change)="ViewChanged" />
-				<RadioGroup Variant="horizontal" [options]="Views" Value="grid" />
-				<Toggle Label="Notifications" Description="Show desktop notifications." [checked]="Notifications" />
-				<Toggle Label="Small toggle" Size="small" />
-			</div>
+			<RadioGroup Variant="tile" [options]="Plans" Value="free" />
 		</div>
-		<RadioGroup Variant="tile" [options]="Plans" Value="free" />
 	</Section>
 
 	<Section Title="Tabs" [note]="'Active: ' + Tab + ' · ' + Section">
-		<Tabs [tabs]="SectionTabs" [value]="Section" (change)="SectionChanged" />
-		<Tabs Variant="pill" [tabs]="SectionTabs" Value="billing" />
-		<div class="elemenx-panel compact ui-kit-editor">
-			<Tabs Variant="editor" [tabs]="EditorTabs" [value]="Tab" (change)="TabChanged" (close)="TabClosed">
-				<Button Icon="more-vertical" Title="Tab actions" Variant="ghost" Size="small" />
-			</Tabs>
-			<p class="elemenx-text small muted ui-kit-editor-body">Content of {{Tab || 'nothing'}}. Close tabs with the cross, the middle button or Delete.</p>
+		<div class="ui-kit-lazy" *lazy>
+			<Tabs [tabs]="SectionTabs" [value]="Section" (change)="SectionChanged" />
+			<Tabs Variant="pill" [tabs]="SectionTabs" Value="billing" />
+			<div class="elemenx-panel compact ui-kit-editor">
+				<Tabs Variant="editor" [tabs]="EditorTabs" [value]="Tab" (change)="TabChanged" (close)="TabClosed">
+					<Button Icon="more-vertical" Title="Tab actions" Variant="ghost" Size="small" />
+				</Tabs>
+				<p class="elemenx-text small muted ui-kit-editor-body">Content of {{Tab || 'nothing'}}. Close tabs with the cross, the middle button or Delete.</p>
+			</div>
 		</div>
 	</Section>
 
 	<Section Title="Table" [note]="'Selected: ' + Selected.join(', ') + (Activated ? ' · Opened: ' + Activated : '')">
-		<Table [columns]="Columns" [rows]="People" [selected]="Selected" Selectable="multiple" Caption="Sort by a header, select with a click, Ctrl+click or the checkboxes, open with a double click or Enter." (select)="PeopleSelected" (activate)="PersonActivated" />
-		<Table [columns]="Columns" [rows]="People" Compact="true" Striped="true" Bordered="true" Selectable="single" Height="160px" />
-		<table class="elemenx-table bordered">
-			<caption>A plain table with the elemenx-table class</caption>
-			<thead><tr><th>Key</th><th>Value</th></tr></thead>
-			<tbody><tr><td>Theme</td><td>System</td></tr><tr><td>Size</td><td>Medium</td></tr></tbody>
-		</table>
+		<div class="ui-kit-lazy" *lazy>
+			<Table [columns]="Columns" [rows]="People" [selected]="Selected" Selectable="multiple" Caption="Sort by a header, select with a click, Ctrl+click or the checkboxes, open with a double click or Enter." (select)="PeopleSelected" (activate)="PersonActivated" />
+			<Table [columns]="Columns" [rows]="People" Compact="true" Striped="true" Bordered="true" Selectable="single" Height="160px" />
+			<table class="elemenx-table bordered">
+				<caption>A plain table with the elemenx-table class</caption>
+				<thead><tr><th>Key</th><th>Value</th></tr></thead>
+				<tbody><tr><td>Theme</td><td>System</td></tr><tr><td>Size</td><td>Medium</td></tr></tbody>
+			</table>
+		</div>
 	</Section>
 
 	<Section Title="Overlays" [note]="'Dialog: ' + (DialogResult || '—')">
-		<div class="ui-kit-row">
-			<Popover Title="Popover">
-				<Button slot="trigger" Label="Click popover" IconRight="chevron-down" />
-				<p class="elemenx-text small">Any content: text, forms or lists.</p>
-				<Input Placeholder="Inside a popover" />
-			</Popover>
-			<Popover Trigger="hover" Placement="top-start">
-				<Button slot="trigger" Label="Hover popover" Variant="ghost" />
-				<p class="elemenx-text small">Shown while the pointer is over the trigger.</p>
-			</Popover>
-			<Button Label="Open dialog" Variant="primary" (click)="OpenDialog" />
-			<Button Label="Required answer" (click)="OpenRequired" />
-			<Button Label="Confirm" Icon="delete" (click)="AskConfirm" />
-			<Button Label="Alert" Icon="info" (click)="ShowAlert" />
-			<Button Label="Show toast" Icon="bell" (click)="ShowToast" />
-			<Button Label="Sticky toast" (click)="ShowSticky" />
-			<Button Label="Custom toast" (click)="ShowCustom" />
-		</div>
-		<Dialog Title="Project settings" Description="Changes apply to every member." Icon="settings" [open]="DialogOpen" (close)="CloseDialog">
-			<div class="ui-kit-stack">
-				<Field Label="Name"><Input Value="Elemenx" /></Field>
-				<Field Label="Visibility"><RadioGroup Variant="segmented" [options]="Views" Value="list" /></Field>
+		<div class="ui-kit-lazy" *lazy>
+			<div class="ui-kit-row">
+				<Popover Title="Popover">
+					<Button slot="trigger" Label="Click popover" IconRight="chevron-down" />
+					<p class="elemenx-text small">Any content: text, forms or lists.</p>
+					<Input Placeholder="Inside a popover" />
+				</Popover>
+				<Popover Trigger="hover" Placement="top-start">
+					<Button slot="trigger" Label="Hover popover" Variant="ghost" />
+					<p class="elemenx-text small">Shown while the pointer is over the trigger.</p>
+				</Popover>
+				<Button Label="Open dialog" Variant="primary" (click)="OpenDialog" />
+				<Button Label="Required answer" (click)="OpenRequired" />
+				<Button Label="Confirm" Icon="delete" (click)="AskConfirm" />
+				<Button Label="Alert" Icon="info" (click)="ShowAlert" />
+				<Button Label="Show toast" Icon="bell" (click)="ShowToast" />
+				<Button Label="Sticky toast" (click)="ShowSticky" />
+				<Button Label="Custom toast" (click)="ShowCustom" />
 			</div>
-			<Button slot="footer" Label="Cancel" (click)="CloseDialog" />
-			<Button slot="footer" Label="Save" Variant="primary" (click)="ConfirmDialog" />
-		</Dialog>
-		<Dialog Title="Terms of the beta" Description="Accept them, or leave the beta." Icon="lock" Size="small" Dismissible="false" Closable="false" [open]="RequiredOpen">
-			<p class="elemenx-text">The dialog waits for an answer: Escape and a press on the backdrop only shake it.</p>
-			<Button slot="footer" Label="Leave the beta" (click)="DeclineRequired" />
-			<Button slot="footer" Label="Accept" Variant="primary" (click)="AcceptRequired" />
-		</Dialog>
-		<ToastHost />
-		<AchievementHost />
-		<DialogHost />
+			<Dialog Title="Project settings" Description="Changes apply to every member." Icon="settings" [open]="DialogOpen" (close)="CloseDialog">
+				<div class="ui-kit-stack">
+					<Field Label="Name"><Input Value="Elemenx" /></Field>
+					<Field Label="Visibility"><RadioGroup Variant="segmented" [options]="Views" Value="list" /></Field>
+				</div>
+				<Button slot="footer" Label="Cancel" (click)="CloseDialog" />
+				<Button slot="footer" Label="Save" Variant="primary" (click)="ConfirmDialog" />
+			</Dialog>
+			<Dialog Title="Terms of the beta" Description="Accept them, or leave the beta." Icon="lock" Size="small" Dismissible="false" Closable="false" [open]="RequiredOpen">
+				<p class="elemenx-text">The dialog waits for an answer: Escape and a press on the backdrop only shake it.</p>
+				<Button slot="footer" Label="Leave the beta" (click)="DeclineRequired" />
+				<Button slot="footer" Label="Accept" Variant="primary" (click)="AcceptRequired" />
+			</Dialog>
+			<ToastHost />
+			<AchievementHost />
+			<DialogHost />
+		</div>
 	</Section>
 
 	<Section Title="Commands and overlays" [note]="'Last: ' + (LastCommand || '—')">
-		<div class="ui-kit-row" id="ui-kit-commands">
-			<Button Label="Command palette" Icon="search" (click)="OpenPalette" />
-			<kbd class="elemenx-kbd" id="ui-kit-palette-keys">{{PaletteKeys}}</kbd>
-			<button class="elemenx-button secondary medium" type="button" *hotkey="{Keys: 'Alt+N', Description: 'Show a toast', Group: 'Demo'}" (click)="HotkeyToast">New toast</button>
-			<Button Label="Open drawer" Icon="panel-right" (click)="OpenDrawer" />
-			<Button Icon="menu" Title="Menu" Variant="ghost" (click)="OpenMenu" />
-			<RadioGroup Variant="segmented" [options]="MenuSides" [value]="MenuSide" (change)="MenuSideChanged" />
-			<Button Label="Take the tour" Icon="help" (click)="StartTour" />
-		</div>
-		<div class="ui-kit-grid">
-			<div class="ui-kit-stack" id="ui-kit-context">
-				<h5>Context menu</h5>
-				<p class="elemenx-text small muted">Right click a file, or focus it and press Shift+F10</p>
-				<ContextMenu [items]="FileMenu" (open)="ContextOpened" (select)="ContextPicked">
-					<ul class="elemenx-list divided ui-kit-files">
-						<li *for="file of ContextFiles" *key="file" tabindex="0" [attribute.data-file]="file"><FileIcon [name]="file" />{{file}}</li>
-					</ul>
-				</ContextMenu>
+		<div class="ui-kit-lazy" *lazy>
+			<div class="ui-kit-row" id="ui-kit-commands">
+				<Button Label="Command palette" Icon="search" (click)="OpenPalette" />
+				<kbd class="elemenx-kbd" id="ui-kit-palette-keys">{{PaletteKeys}}</kbd>
+				<button class="elemenx-button secondary medium" type="button" *hotkey="{Keys: 'Alt+N', Description: 'Show a toast', Group: 'Demo'}" (click)="HotkeyToast">New toast</button>
+				<Button Label="Open drawer" Icon="panel-right" (click)="OpenDrawer" />
+				<Button Icon="menu" Title="Menu" Variant="ghost" (click)="OpenMenu" />
+				<RadioGroup Variant="segmented" [options]="MenuSides" [value]="MenuSide" (change)="MenuSideChanged" />
+				<Button Label="Take the tour" Icon="help" (click)="StartTour" />
 			</div>
-			<div class="ui-kit-stack">
-				<h5>Copy</h5>
-				<div class="elemenx-container ui-kit-copy" id="ui-kit-copy">
-					<Input [value]="ApiToken" ReadOnly="true" />
-					<button class="elemenx-button secondary medium" type="button" aria-label="Copy the token" *copy="{Text: ApiToken, Toast: 'Token copied'}"><Icon Name="copy" /></button>
+			<div class="ui-kit-grid">
+				<div class="ui-kit-stack" id="ui-kit-context">
+					<h5>Context menu</h5>
+					<p class="elemenx-text small muted">Right click a file, or focus it and press Shift+F10</p>
+					<ContextMenu [items]="FileMenu" (open)="ContextOpened" (select)="ContextPicked">
+						<ul class="elemenx-list divided ui-kit-files">
+							<li *for="file of ContextFiles" *key="file" tabindex="0" [attribute.data-file]="file"><FileIcon [name]="file" />{{file}}</li>
+						</ul>
+					</ContextMenu>
 				</div>
-				<h5>Shortcuts</h5>
-				<ul class="elemenx-list ui-kit-shortcuts">
-					<li *for="hotkey of Shortcuts" *key="hotkey.ID"><span>{{hotkey.Description}}</span><kbd class="elemenx-kbd">{{hotkey.Label}}</kbd></li>
-				</ul>
+				<div class="ui-kit-stack">
+					<h5>Copy</h5>
+					<div class="elemenx-container ui-kit-copy" id="ui-kit-copy">
+						<Input [value]="ApiToken" ReadOnly="true" />
+						<button class="elemenx-button secondary medium" type="button" aria-label="Copy the token" *copy="{Text: ApiToken, Toast: 'Token copied'}"><Icon Name="copy" /></button>
+					</div>
+					<h5>Shortcuts</h5>
+					<ul class="elemenx-list ui-kit-shortcuts">
+						<li *for="hotkey of Shortcuts" *key="hotkey.ID"><span>{{hotkey.Description}}</span><kbd class="elemenx-kbd">{{hotkey.Label}}</kbd></li>
+					</ul>
+				</div>
 			</div>
+			<CommandPalette [commands]="Commands" [open]="PaletteOpen" IncludeHotkeys="true" Remember="ui-kit-palette" (run)="CommandRun" (close)="PaletteClosed" />
+			<Drawer [open]="DrawerOpen" Title="Filters" Description="A drawer from the right" Icon="filter" (close)="CloseDrawer">
+				<div class="ui-kit-stack">
+					<Field Label="Search"><Input Icon="search" Placeholder="Name or role" /></Field>
+					<Field Label="Role"><Select [options]="Views" Value="list" /></Field>
+					<Checkbox Label="Only maintainers" />
+				</div>
+				<Button slot="footer" Label="Reset" (click)="CloseDrawer" />
+				<Button slot="footer" Label="Apply" Variant="primary" (click)="CloseDrawer" />
+			</Drawer>
+			<Drawer [open]="MenuOpen" [side]="MenuSide" Size="small" Title="Elemenx" Icon="menu" Padded="false" (close)="CloseMenu">
+				<NavList [items]="DashboardNav" [value]="MenuPage" (select)="MenuPicked" />
+				<Button slot="footer" Label="Filters" Icon="filter" (click)="OpenDrawer" />
+			</Drawer>
+			<Tour [steps]="TourSteps" [open]="TourOpen" [step]="TourStep" (change)="TourChanged" (close)="TourClosed" />
 		</div>
-		<CommandPalette [commands]="Commands" [open]="PaletteOpen" IncludeHotkeys="true" Remember="ui-kit-palette" (run)="CommandRun" (close)="PaletteClosed" />
-		<Drawer [open]="DrawerOpen" Title="Filters" Description="A drawer from the right" Icon="filter" (close)="CloseDrawer">
-			<div class="ui-kit-stack">
-				<Field Label="Search"><Input Icon="search" Placeholder="Name or role" /></Field>
-				<Field Label="Role"><Select [options]="Views" Value="list" /></Field>
-				<Checkbox Label="Only maintainers" />
-			</div>
-			<Button slot="footer" Label="Reset" (click)="CloseDrawer" />
-			<Button slot="footer" Label="Apply" Variant="primary" (click)="CloseDrawer" />
-		</Drawer>
-		<Drawer [open]="MenuOpen" [side]="MenuSide" Size="small" Title="Elemenx" Icon="menu" Padded="false" (close)="CloseMenu">
-			<NavList [items]="DashboardNav" [value]="MenuPage" (select)="MenuPicked" />
-			<Button slot="footer" Label="Filters" Icon="filter" (click)="OpenDrawer" />
-		</Drawer>
-		<Tour [steps]="TourSteps" [open]="TourOpen" [step]="TourStep" (change)="TourChanged" (close)="TourClosed" />
 	</Section>
 
 	<Section Title="Settings menu" [note]="SettingsNote || 'SettingsMenu · Variant auto, ios or material'">
-		<Field Label="Look of the first menu"><RadioGroup Variant="segmented" [options]="SettingsVariants" [value]="SettingsVariant" (change)="SettingsVariantChosen" /></Field>
-		<div class="ui-kit-settings-menus">
-			<SettingsMenu [variant]="SettingsVariant" Title="Settings" Searchable="true" [items]="SettingsIos" (select)="SettingsChosen" (toggle)="SettingsToggled" />
-			<SettingsMenu Variant="material" Title="Settings" Searchable="true" [items]="SettingsMaterial" (select)="SettingsChosen" (toggle)="SettingsToggled" />
+		<div class="ui-kit-lazy" *lazy>
+			<Field Label="Look of the first menu"><RadioGroup Variant="segmented" [options]="SettingsVariants" [value]="SettingsVariant" (change)="SettingsVariantChosen" /></Field>
+			<div class="ui-kit-settings-menus">
+				<SettingsMenu [variant]="SettingsVariant" Title="Settings" Searchable="true" [items]="SettingsIos" (select)="SettingsChosen" (toggle)="SettingsToggled" />
+				<SettingsMenu Variant="material" Title="Settings" Searchable="true" [items]="SettingsMaterial" (select)="SettingsChosen" (toggle)="SettingsToggled" />
+			</div>
 		</div>
 	</Section>
 
 	<Section Title="Dial pad" [note]="DialNote || 'DialPad · the pad of a phone, or a layout of your own'">
-		<div class="ui-kit-dial-pads">
-			<DialPad [value]="DialNumber" Label="Phone" (input)="DialTyped" (call)="DialCalled" />
-			<DialPad [keys]="ToneKeys" Columns="4" ShowInput="false" ShowCall="false" Label="Tones" (press)="TonePressed" />
+		<div class="ui-kit-lazy" *lazy>
+			<div class="ui-kit-dial-pads">
+				<DialPad [value]="DialNumber" Label="Phone" (input)="DialTyped" (call)="DialCalled" />
+				<DialPad [keys]="ToneKeys" Columns="4" ShowInput="false" ShowCall="false" Label="Tones" (press)="TonePressed" />
+			</div>
+		</div>
+	</Section>
+
+	<Section Title="Keep-alive" [note]="KeepNote">
+		<div class="ui-kit-lazy" *lazy>
+			<div class="ui-kit-row">
+				<Button Label="Panel" Icon="layout" [pressed]="KeepShown" (click)="KeepToggled" />
+				<Button Label="Cache stats" Icon="info" Variant="ghost" (click)="KeepStats" />
+				<span class="elemenx-caption">The panel has *keep: hidden, it sleeps out of the page with what is typed in it, and its live keyboard stops listening (Elemenx.Cache, Scope marked).</span>
+			</div>
+			<div class="ui-kit-keep-panel" *if="KeepShown" *keep>
+				<Field Label="Draft"><Input Placeholder="Type, hide the panel, show it again" /></Field>
+				<Keyboard Layout="compact" Size="small" Live="true" Label="Live keys" />
+			</div>
 		</div>
 	</Section>
 
 	<Section Title="Music and input" [note]="MusicNote || 'Mixer · MixerChannel · Keyboard · Piano: the controls; the sound is the application\'s'">
-		<div class="ui-kit-row">
-			<Toggle Label="Play the meters" [checked]="MixerPlaying" (change)="MixerPlayed" />
+		<div class="ui-kit-lazy" *lazy>
+			<div class="ui-kit-row">
+				<Toggle Label="Play the meters" [checked]="MixerPlaying" (change)="MixerPlayed" />
+			</div>
+			<Mixer [channels]="MixerChannels" [master]="MixerMaster" Label="Studio" (change)="MixerChanged" />
+			<h5>Keyboard</h5>
+			<Keyboard Layout="full" Live="true" Clickable="true" [marks]="KeyboardMarks" Label="Hotkeys" (press)="KeyPressed" />
+			<Keyboard Layout="compact" Size="small" Native="true" [pressed]="['ShiftLeft', 'KeyS']" Label="Compact" />
+			<h5>Piano</h5>
+			<Piano From="C3" Octaves="2" [marks]="PianoMarks" Label="Piano" (noteon)="NotePlayed" (noteoff)="NoteReleased" />
 		</div>
-		<Mixer [channels]="MixerChannels" [master]="MixerMaster" Label="Studio" (change)="MixerChanged" />
-		<h5>Keyboard</h5>
-		<Keyboard Layout="full" Live="true" Clickable="true" [marks]="KeyboardMarks" Label="Hotkeys" (press)="KeyPressed" />
-		<Keyboard Layout="compact" Size="small" Native="true" [pressed]="['ShiftLeft', 'KeyS']" Label="Compact" />
-		<h5>Piano</h5>
-		<Piano From="C3" Octaves="2" [marks]="PianoMarks" Label="Piano" (noteon)="NotePlayed" (noteoff)="NoteReleased" />
 	</Section>
 
 	<Section Title="Security and device" Note="Biometric · Idle · Permissions · Push, Serial, USB, NFC">
-		<div class="ui-kit-grid three">
-			<div class="ui-kit-stack">
-				<h5>Biometric</h5>
-				<p class="elemenx-text small muted" id="ui-kit-biometric-state">{{BiometricState}}</p>
-				<div class="ui-kit-row">
-					<Button Label="Check this device" Icon="lock" (click)="CheckBiometric" />
-					<Button Label="Forget" Variant="ghost" (click)="ForgetBiometric" />
+		<div class="ui-kit-lazy" *lazy>
+			<div class="ui-kit-grid three">
+				<div class="ui-kit-stack">
+					<h5>Biometric</h5>
+					<p class="elemenx-text small muted" id="ui-kit-biometric-state">{{BiometricState}}</p>
+					<div class="ui-kit-row">
+						<Button Label="Check this device" Icon="lock" (click)="CheckBiometric" />
+						<Button Label="Forget" Variant="ghost" (click)="ForgetBiometric" />
+					</div>
+					<Toggle Label="Ask it for the guarded card fields" [checked]="UseBiometric" (change)="BiometricToggled" />
 				</div>
-				<Toggle Label="Ask it for the guarded card fields" [checked]="UseBiometric" (change)="BiometricToggled" />
-			</div>
-			<div class="ui-kit-stack">
-				<h5>Inactivity</h5>
-				<p class="elemenx-text small muted" id="ui-kit-idle-state">State: {{IdleState}}</p>
-				<div class="ui-kit-row">
-					<Button Label="Watch 6 s" (click)="StartIdle" />
-					<Button Label="Stop" Variant="ghost" (click)="StopIdle" />
+				<div class="ui-kit-stack">
+					<h5>Inactivity</h5>
+					<p class="elemenx-text small muted" id="ui-kit-idle-state">State: {{IdleState}}</p>
+					<div class="ui-kit-row">
+						<Button Label="Watch 6 s" (click)="StartIdle" />
+						<Button Label="Stop" Variant="ghost" (click)="StopIdle" />
+					</div>
 				</div>
-			</div>
-			<div class="ui-kit-stack">
-				<h5>Permissions</h5>
-				<ul class="elemenx-list divided ui-kit-permissions">
-					<li *for="permission of PermissionList" *key="permission.Name">
-						<span>{{permission.Name}}</span>
-						<span [class]="['elemenx-badge', permission.State === 'granted' ? 'success' : permission.State === 'denied' ? 'danger' : '']">{{permission.State}}</span>
-						<button class="elemenx-button ghost small" type="button" [attribute.data-name]="permission.Name" (click)="AskPermission">Ask</button>
-					</li>
-				</ul>
-			</div>
-			<div class="ui-kit-stack">
-				<h5>Devices</h5>
-				<p class="elemenx-text small muted" id="ui-kit-devices-state">{{DeviceState}}</p>
-				<ul class="elemenx-list divided ui-kit-devices">
-					<li *for="device of Devices" *key="device.Name">
-						<span>{{device.Name}}</span>
-						<span [class]="['elemenx-badge', device.Supported ? 'success' : '']">{{device.Supported ? 'supported' : 'not here'}}</span>
-						<button class="elemenx-button ghost small" type="button" [attribute.data-name]="device.Name" (click)="UseDevice">{{device.Action}}</button>
-					</li>
-				</ul>
+				<div class="ui-kit-stack">
+					<h5>Permissions</h5>
+					<ul class="elemenx-list divided ui-kit-permissions">
+						<li *for="permission of PermissionList" *key="permission.Name">
+							<span>{{permission.Name}}</span>
+							<span [class]="['elemenx-badge', permission.State === 'granted' ? 'success' : permission.State === 'denied' ? 'danger' : '']">{{permission.State}}</span>
+							<button class="elemenx-button ghost small" type="button" [attribute.data-name]="permission.Name" (click)="AskPermission">Ask</button>
+						</li>
+					</ul>
+				</div>
+				<div class="ui-kit-stack">
+					<h5>Devices</h5>
+					<p class="elemenx-text small muted" id="ui-kit-devices-state">{{DeviceState}}</p>
+					<ul class="elemenx-list divided ui-kit-devices">
+						<li *for="device of Devices" *key="device.Name">
+							<span>{{device.Name}}</span>
+							<span [class]="['elemenx-badge', device.Supported ? 'success' : '']">{{device.Supported ? 'supported' : 'not here'}}</span>
+							<button class="elemenx-button ghost small" type="button" [attribute.data-name]="device.Name" (click)="UseDevice">{{device.Action}}</button>
+						</li>
+					</ul>
+				</div>
 			</div>
 		</div>
 	</Section>
 
 	<Section Title="Trees, tables and long lists" Note="Tree · VirtualList · Table with filters, pages and tree rows">
-		<div class="ui-kit-grid">
-			<div class="ui-kit-stack">
-				<h5>Tree</h5>
-				<p class="elemenx-text small muted" id="ui-kit-tree-state">{{TreeState}}</p>
-				<Tree [items]="TreeItems" [value]="TreeValue" [expanded]="TreeExpanded" [checked]="TreeChecked" [loading]="TreeLoading" Checkable="true" Searchable="true" Label="Project" (select)="TreeSelected" (expand)="TreeExpandedChanged" (check)="TreeCheckedChanged" (load)="TreeLoad" />
+		<div class="ui-kit-lazy" *lazy>
+			<div class="ui-kit-grid">
+				<div class="ui-kit-stack">
+					<h5>Tree</h5>
+					<p class="elemenx-text small muted" id="ui-kit-tree-state">{{TreeState}}</p>
+					<Tree [items]="TreeItems" [value]="TreeValue" [expanded]="TreeExpanded" [checked]="TreeChecked" [loading]="TreeLoading" Checkable="true" Searchable="true" Label="Project" (select)="TreeSelected" (expand)="TreeExpandedChanged" (check)="TreeCheckedChanged" (load)="TreeLoad" />
+				</div>
+				<div class="ui-kit-stack">
+					<h5>A hundred thousand rows</h5>
+					<p class="elemenx-text small muted" id="ui-kit-virtual-state">{{VirtualState}}</p>
+					<VirtualList [items]="LongList" Height="320px" Label="Long list" (select)="LongPicked" />
+				</div>
 			</div>
-			<div class="ui-kit-stack">
-				<h5>A hundred thousand rows</h5>
-				<p class="elemenx-text small muted" id="ui-kit-virtual-state">{{VirtualState}}</p>
-				<VirtualList [items]="LongList" Height="320px" Label="Long list" (select)="LongPicked" />
-			</div>
+			<h5>Filters and pages</h5>
+			<Table [columns]="FilterColumns" [rows]="ManyPeople" PageSize="10" Compact="true" Striped="true" [page]="PeoplePage" (page)="PeoplePaged" />
+			<h5>Pagination on its own</h5>
+			<Pagination [count]="240" [page]="ResultsPage" PageSize="20" [page-sizes]="[]" Label="Search results" (page)="ResultsPaged" />
+			<Pagination [count]="240" [page]="ResultsPage" PageSize="20" [page-sizes]="[]" Siblings="2" Boundaries="2" ShowFirstLast="false" Label="Wide pages" (page)="ResultsPaged" />
+			<Pagination [count]="240" [page]="ResultsPage" PageSize="20" [page-sizes]="[]" ShowPages="false" ShowFirstLast="false" Label="Compact pages" (page)="ResultsPaged" />
+			<p class="elemenx-text small muted" id="ui-kit-results-page">Results page {{ResultsPage}}</p>
+			<h5>Tree rows</h5>
+			<Table [columns]="SizeColumns" [rows]="FileRows" Tree="true" [expanded]="['src']" Compact="true" [sort]="{Key: 'Name', Direction: 'asc'}" />
 		</div>
-		<h5>Filters and pages</h5>
-		<Table [columns]="FilterColumns" [rows]="ManyPeople" PageSize="10" Compact="true" Striped="true" [page]="PeoplePage" (page)="PeoplePaged" />
-		<h5>Pagination on its own</h5>
-		<Pagination [count]="240" [page]="ResultsPage" PageSize="20" [page-sizes]="[]" Label="Search results" (page)="ResultsPaged" />
-		<Pagination [count]="240" [page]="ResultsPage" PageSize="20" [page-sizes]="[]" Siblings="2" Boundaries="2" ShowFirstLast="false" Label="Wide pages" (page)="ResultsPaged" />
-		<Pagination [count]="240" [page]="ResultsPage" PageSize="20" [page-sizes]="[]" ShowPages="false" ShowFirstLast="false" Label="Compact pages" (page)="ResultsPaged" />
-		<p class="elemenx-text small muted" id="ui-kit-results-page">Results page {{ResultsPage}}</p>
-		<h5>Tree rows</h5>
-		<Table [columns]="SizeColumns" [rows]="FileRows" Tree="true" [expanded]="['src']" Compact="true" [sort]="{Key: 'Name', Direction: 'asc'}" />
 	</Section>
 
 	<Section Title="Feedback" [note]="'Volume: ' + Volume + ' · Budget: ' + Budget.join('–')">
-		<div class="ui-kit-grid">
-			<Field Label="Volume"><Slider [value]="Volume" Label="Volume" Unit="%" (input)="VolumeChanged" /></Field>
-			<Field Label="Budget"><Slider Range="true" [value]="Budget" Min="0" Max="1000" Step="50" Marks="100" ShowValue="always" Label="Budget" (input)="BudgetChanged" /></Field>
-			<Progress Value="64" Label="Uploading" ShowValue="true" />
-			<Progress Label="Indexing" />
-			<Meter Value="72" Low="30" High="80" Optimum="100" Label="Battery" Unit="%" />
-			<Meter Value="91" Low="60" High="85" Optimum="0" Label="Disk usage" Unit="%" />
-			<div class="ui-kit-meters">
-				<Meter Orientation="vertical" Value="72" Low="30" High="80" Optimum="100" Label="Fuel" Unit="%" />
-				<Meter Orientation="vertical" Value="91" Low="60" High="85" Optimum="0" Label="Heat" Unit="%" Size="small" />
-				<Meter Shape="dial" Value="64" Max="120" Ticks="9" Label="Speed" />
-				<Meter Shape="dial" Value="72" Low="30" High="80" Optimum="100" Needle="true" Ticks="13" Label="Shields"><strong class="ui-kit-dial-mark">A<sup>1</sup></strong></Meter>
-				<Meter Shape="dial" Value="73" Max="100" High="90" Optimum="0" Needle="true" Ticks="3" Marks="false" ShowRange="true" ValuePlacement="below" Label="Thrust" Unit="%" />
-				<Meter Value="42" Max="80" ShowRange="true" ValuePlacement="corner" Label="Pressure" Unit=" kPa" />
-				<Slider Orientation="vertical" [value]="Volume" Label="Level" Unit="%" (input)="VolumeChanged" />
-				<Knob Value="0" Min="-24" Max="24" Origin="0" Default="0" Ticks="9" Label="Gain" Unit=" dB" />
-				<Knob Value="70" Ticks="11" Label="Drive" Unit="%" />
-				<Knob Value="30" Size="small" Label="Mix" ShowValue="false" />
-				<Slider Orientation="vertical" Range="true" [value]="[20, 60]" Marks="20" Size="small" Label="Band" />
+		<div class="ui-kit-lazy" *lazy>
+			<div class="ui-kit-grid">
+				<Field Label="Volume"><Slider [value]="Volume" Label="Volume" Unit="%" (input)="VolumeChanged" /></Field>
+				<Field Label="Budget"><Slider Range="true" [value]="Budget" Min="0" Max="1000" Step="50" Marks="100" ShowValue="always" Label="Budget" (input)="BudgetChanged" /></Field>
+				<Progress Value="64" Label="Uploading" ShowValue="true" />
+				<Progress Label="Indexing" />
+				<Meter Value="72" Low="30" High="80" Optimum="100" Label="Battery" Unit="%" />
+				<Meter Value="91" Low="60" High="85" Optimum="0" Label="Disk usage" Unit="%" />
+				<div class="ui-kit-meters">
+					<Meter Orientation="vertical" Value="72" Low="30" High="80" Optimum="100" Label="Fuel" Unit="%" />
+					<Meter Orientation="vertical" Value="91" Low="60" High="85" Optimum="0" Label="Heat" Unit="%" Size="small" />
+					<Meter Shape="dial" Value="64" Max="120" Ticks="9" Label="Speed" />
+					<Meter Shape="dial" Value="72" Low="30" High="80" Optimum="100" Needle="true" Ticks="13" Label="Shields"><strong class="ui-kit-dial-mark">A<sup>1</sup></strong></Meter>
+					<Meter Shape="dial" Value="73" Max="100" High="90" Optimum="0" Needle="true" Ticks="3" Marks="false" ShowRange="true" ValuePlacement="below" Label="Thrust" Unit="%" />
+					<Meter Value="42" Max="80" ShowRange="true" ValuePlacement="corner" Label="Pressure" Unit=" kPa" />
+					<Slider Orientation="vertical" [value]="Volume" Label="Level" Unit="%" (input)="VolumeChanged" />
+					<Knob Value="0" Min="-24" Max="24" Origin="0" Default="0" Ticks="9" Label="Gain" Unit=" dB" />
+					<Knob Value="70" Ticks="11" Label="Drive" Unit="%" />
+					<Knob Value="30" Size="small" Label="Mix" ShowValue="false" />
+					<Slider Orientation="vertical" Range="true" [value]="[20, 60]" Marks="20" Size="small" Label="Band" />
+				</div>
+				<div class="ui-kit-row">
+					<Progress Variant="ring" Value="40" ShowValue="true" />
+					<Progress Variant="ring" Tone="success" Value="100" ShowValue="true" Size="large" />
+					<Progress Variant="ring" Size="small" />
+					<Spinner Size="small" />
+					<Spinner />
+					<Spinner Size="large" Label="Loading data" ShowLabel="true" />
+				</div>
+				<div class="ui-kit-row">
+					<Skeleton Shape="circle" />
+					<div class="ui-kit-stack fill"><Skeleton Lines="3" /></div>
+				</div>
 			</div>
-			<div class="ui-kit-row">
-				<Progress Variant="ring" Value="40" ShowValue="true" />
-				<Progress Variant="ring" Tone="success" Value="100" ShowValue="true" Size="large" />
-				<Progress Variant="ring" Size="small" />
-				<Spinner Size="small" />
-				<Spinner />
-				<Spinner Size="large" Label="Loading data" ShowLabel="true" />
-			</div>
-			<div class="ui-kit-row">
-				<Skeleton Shape="circle" />
-				<div class="ui-kit-stack fill"><Skeleton Lines="3" /></div>
-			</div>
-		</div>
-		<div class="ui-kit-grid">
-			<div class="ui-kit-stack">
-				<h5>Rating</h5>
-				<div class="ui-kit-row"><Rating [value]="Stars" Half="true" (change)="StarsChanged" /><span class="elemenx-text small muted" id="ui-kit-stars">{{Stars}} / 5</span></div>
-				<div class="ui-kit-row"><Rating Value="3.5" ReadOnly="true" Size="small" /><span class="elemenx-text small muted">Read-only, 3.5</span></div>
-				<Rating Value="2" Max="3" Icon="heart" Size="large" Label="Love" />
-			</div>
-			<div class="ui-kit-frame ui-kit-empties">
-				<EmptyState Variant="search" Size="small" Title="Nothing found" Description="No file matches “invoice-2019”." />
-				<EmptyState Variant="error" Size="small" Title="Could not load" Description="The server did not answer.">
-					<Button slot="actions" Label="Retry" Icon="refresh" Size="small" />
-				</EmptyState>
+			<div class="ui-kit-grid">
+				<div class="ui-kit-stack">
+					<h5>Rating</h5>
+					<div class="ui-kit-row"><Rating [value]="Stars" Half="true" (change)="StarsChanged" /><span class="elemenx-text small muted" id="ui-kit-stars">{{Stars}} / 5</span></div>
+					<div class="ui-kit-row"><Rating Value="3.5" ReadOnly="true" Size="small" /><span class="elemenx-text small muted">Read-only, 3.5</span></div>
+					<Rating Value="2" Max="3" Icon="heart" Size="large" Label="Love" />
+				</div>
+				<div class="ui-kit-frame ui-kit-empties">
+					<EmptyState Variant="search" Size="small" Title="Nothing found" Description="No file matches “invoice-2019”." />
+					<EmptyState Variant="error" Size="small" Title="Could not load" Description="The server did not answer.">
+						<Button slot="actions" Label="Retry" Icon="refresh" Size="small" />
+					</EmptyState>
+				</div>
 			</div>
 		</div>
 	</Section>
 
 	<Section Title="Charts and calendar" [note]="CalendarNote || 'Chart · Sparkline · Calendar'">
-		<div class="ui-kit-grid">
-			<Chart Type="line" [labels]="Months" [series]="Revenue" Unit="k$" Label="Revenue and costs" />
-			<Chart Type="bar" [labels]="Quarters" [series]="Products" Stacked="true" Label="Sales by product" />
-		</div>
-		<div class="ui-kit-grid three">
-			<Chart Type="donut" [labels]="Browsers" [series]="BrowserShare" Height="200" Unit="%" Label="Browsers" />
-			<Chart Type="area" [labels]="Weeks" [series]="Traffic" Height="200" Label="Traffic" />
-			<div class="ui-kit-stack">
-				<h5>Sparklines</h5>
-				<div class="ui-kit-row"><Sparkline [values]="Spark" /><span class="elemenx-text small">Line</span></div>
-				<div class="ui-kit-row"><Sparkline [values]="Spark" Type="area" Color="#2f8f83" /><span class="elemenx-text small">Area</span></div>
-				<div class="ui-kit-row"><Sparkline [values]="Spark" Type="bar" Color="#c2477f" /><span class="elemenx-text small">Bars</span></div>
+		<div class="ui-kit-lazy" *lazy>
+			<div class="ui-kit-grid">
+				<Chart Type="line" [labels]="Months" [series]="Revenue" Unit="k$" Label="Revenue and costs" />
+				<Chart Type="bar" [labels]="Quarters" [series]="Products" Stacked="true" Label="Sales by product" />
 			</div>
+			<div class="ui-kit-grid three">
+				<Chart Type="donut" [labels]="Browsers" [series]="BrowserShare" Height="200" Unit="%" Label="Browsers" />
+				<Chart Type="area" [labels]="Weeks" [series]="Traffic" Height="200" Label="Traffic" />
+				<div class="ui-kit-stack">
+					<h5>Sparklines</h5>
+					<div class="ui-kit-row"><Sparkline [values]="Spark" /><span class="elemenx-text small">Line</span></div>
+					<div class="ui-kit-row"><Sparkline [values]="Spark" Type="area" Color="#2f8f83" /><span class="elemenx-text small">Area</span></div>
+					<div class="ui-kit-row"><Sparkline [values]="Spark" Type="bar" Color="#c2477f" /><span class="elemenx-text small">Bars</span></div>
+				</div>
+			</div>
+			<Calendar [events]="Agenda" [view]="CalendarView" [date]="CalendarDate" Editable="true" (move)="AgendaMoved" (change)="CalendarChanged" (select)="AgendaPicked" (day)="DayPicked" (slot)="SlotPicked" />
 		</div>
-		<Calendar [events]="Agenda" [view]="CalendarView" [date]="CalendarDate" Editable="true" (move)="AgendaMoved" (change)="CalendarChanged" (select)="AgendaPicked" (day)="DayPicked" (slot)="SlotPicked" />
 	</Section>
 
 	<Section Title="Files and drag and drop" [note]="'Selected: ' + FileCount + (Dropped ? ' · Dropped: ' + Dropped : '')">
-		<div class="ui-kit-grid">
-			<FileUpload Hint="Any file up to 5 MB" MaxSize="5242880" (change)="FilesChanged" />
-			<FileUpload Variant="gallery" Accept="image/*" Label="Drop images here" Hint="Images only, previews below" />
-		</div>
-		<div class="ui-kit-row">
-			<FileUpload Variant="inline" Label="Attach files" Hint="PDF or text" Accept=".pdf,.txt" />
-			<FileUpload Variant="avatar" Accept="image/*" Label="Change avatar" />
-		</div>
-		<div class="ui-kit-grid three">
-			<div class="elemenx-panel compact ui-kit-board" *droppable="{Accept: ['task'], Sort: 'vertical'}" (dropped)="DropTodo">
-				<h5>To do</h5>
-				<div class="elemenx-card compact ui-kit-task" *for="task of Todo" *key="task.ID" *draggable="{Data: task, Type: 'task'}"><Icon Name="grip" />{{task.Title}}</div>
+		<div class="ui-kit-lazy" *lazy>
+			<div class="ui-kit-grid">
+				<FileUpload Hint="Any file up to 5 MB" MaxSize="5242880" (change)="FilesChanged" />
+				<FileUpload Variant="gallery" Accept="image/*" Label="Drop images here" Hint="Images only, previews below" />
 			</div>
-			<div class="elemenx-panel compact ui-kit-board" *droppable="{Accept: ['task'], Sort: 'vertical'}" (dropped)="DropDone">
-				<h5>Done</h5>
-				<div class="elemenx-card compact ui-kit-task" *for="task of Done" *key="task.ID" *draggable="{Data: task, Type: 'task'}"><Icon Name="grip" />{{task.Title}}</div>
+			<div class="ui-kit-row">
+				<FileUpload Variant="inline" Label="Attach files" Hint="PDF or text" Accept=".pdf,.txt" />
+				<FileUpload Variant="avatar" Accept="image/*" Label="Change avatar" />
 			</div>
-			<div class="elemenx-panel compact ui-kit-board centered" *droppable="{Files: true, Text: true}" (dropped)="DropFiles">
-				<Icon Name="download" Size="24" />
-				<span class="elemenx-caption">Drop files or text from outside the browser</span>
+			<div class="ui-kit-grid three">
+				<div class="elemenx-panel compact ui-kit-board" *droppable="{Accept: ['task'], Sort: 'vertical'}" (dropped)="DropTodo">
+					<h5>To do</h5>
+					<div class="elemenx-card compact ui-kit-task" *for="task of Todo" *key="task.ID" *draggable="{Data: task, Type: 'task'}"><Icon Name="grip" />{{task.Title}}</div>
+				</div>
+				<div class="elemenx-panel compact ui-kit-board" *droppable="{Accept: ['task'], Sort: 'vertical'}" (dropped)="DropDone">
+					<h5>Done</h5>
+					<div class="elemenx-card compact ui-kit-task" *for="task of Done" *key="task.ID" *draggable="{Data: task, Type: 'task'}"><Icon Name="grip" />{{task.Title}}</div>
+				</div>
+				<div class="elemenx-panel compact ui-kit-board centered" *droppable="{Files: true, Text: true}" (dropped)="DropFiles">
+					<Icon Name="download" Size="24" />
+					<span class="elemenx-caption">Drop files or text from outside the browser</span>
+				</div>
 			</div>
 		</div>
 	</Section>
 
 	<Section Title="Resizing" Note="*resizable and Splitter">
-		<div class="ui-kit-grid">
-			<div class="elemenx-panel ui-kit-resizable" *resizable="{Edges: 'right bottom corner', MinWidth: 160, MinHeight: 80}">Drag an edge or the corner</div>
-			<div class="ui-kit-splitter">
-				<Splitter Size="160" Min="80">
-					<div slot="first" class="elemenx-block compact">First pane</div>
-					<div slot="second" class="elemenx-block compact">Second pane</div>
-				</Splitter>
+		<div class="ui-kit-lazy" *lazy>
+			<div class="ui-kit-grid">
+				<div class="elemenx-panel ui-kit-resizable" *resizable="{Edges: 'right bottom corner', MinWidth: 160, MinHeight: 80}">Drag an edge or the corner</div>
+				<div class="ui-kit-splitter">
+					<Splitter Size="160" Min="80">
+						<div slot="first" class="elemenx-block compact">First pane</div>
+						<div slot="second" class="elemenx-block compact">Second pane</div>
+					</Splitter>
+				</div>
 			</div>
 		</div>
 	</Section>
 
 	<Section Title="Workspace" Note="IDE frame: an area shows while its slot has content; drag or focus the edges and use the arrow keys">
-		<div class="ui-kit-frame">
-			<Workspace>
-				<WorkspaceToolbar slot="header" Label="Main toolbar">
-					<span class="ui-kit-logo">E</span>
-					<Menu Label="Elemenx" Variant="ghost" Size="small" [items]="MenuItems" (select)="MenuSelected" />
-					<Button Label="main" Icon="branch" IconRight="chevron-down" Variant="ghost" Size="small" />
-					<span class="elemenx-spacer"></span>
-					<Button Icon="play" Title="Run" Variant="ghost" Size="small" />
-					<Button Icon="debug" Title="Debug" Variant="ghost" Size="small" />
-					<Button Icon="stop" Title="Stop" Variant="ghost" Size="small" Disabled="true" />
-					<span class="elemenx-divider vertical"></span>
-					<Button Icon="search" Title="Search everywhere" Variant="ghost" Size="small" />
-					<Button Icon="settings" Title="Settings" Variant="ghost" Size="small" />
-				</WorkspaceToolbar>
-				<span slot="top-stripe" class="ui-kit-crumbs"><Icon Name="folder" Size="12" />application<Icon Name="chevron-right" Size="12" />components<Icon Name="chevron-right" Size="12" /><FileIcon Name="app.js" Size="12" />app.js</span>
-				<Button slot="left-stripe" Icon="folder" Title="Project" Variant="ghost" [pressed]="LeftOpen" (click)="ToggleLeft" />
-				<Button slot="left-stripe" Icon="structure" Title="Structure" Variant="ghost" Pressed="false" />
-				<Button slot="left-stripe" Icon="commit" Title="Commit" Variant="ghost" Pressed="false" />
-				<span slot="left-stripe" class="elemenx-spacer"></span>
-				<Button slot="left-stripe" Icon="terminal" Title="Terminal" Variant="ghost" [pressed]="BottomOpen" (click)="ToggleBottom" />
-				<WorkspaceToolWindow slot="left" *if="LeftOpen" Title="Project" Icon="folder" Closable="true" (close)="ToggleLeft">
-					<Button slot="actions" Icon="refresh" Title="Refresh" Variant="ghost" Size="small" />
-					<ul class="ui-kit-tree">
-						<li><Icon Name="folder-open" />application</li>
-						<li class="nested"><Icon Name="folder" />components</li>
-						<li class="nested"><Icon Name="folder" />services</li>
-						<li class="nested active"><FileIcon Name="app.js" />app.js</li>
-						<li><Icon Name="folder" />libraries</li>
-						<li><FileIcon Name="README.md" />README.md</li>
-					</ul>
-				</WorkspaceToolWindow>
-				<div slot="main" class="elemenx-column fill">
-					<Tabs Variant="editor" [tabs]="WorkspaceTabs" [value]="WorkspaceTab" (change)="WorkspaceTabChanged" (close)="WorkspaceTabClosed" />
-					<pre class="ui-kit-code">Elemenx.Application('Application', {
-	$Use: ['ElemenxUI'],
-	$Component: 'Root'
-});</pre>
-				</div>
-				<div slot="bottom" class="elemenx-column fill" *if="BottomOpen">
-					<Terminal Title="Terminal" [lines]="WorkspaceLines" [busy]="WorkspaceBusy" (command)="RunWorkspaceCommand" (clear)="ClearWorkspaceTerminal">
-						<Button slot="actions" Icon="delete" Title="Clear" Variant="ghost" Size="small" (click)="ClearWorkspaceTerminal" />
-						<Button slot="actions" Icon="remove" Title="Hide" Variant="ghost" Size="small" (click)="ToggleBottom" />
-					</Terminal>
-				</div>
-				<WorkspaceToolWindow slot="right" *if="RightOpen" Title="Database" Icon="database" Closable="true" Padded="true" (close)="ToggleRight">
-					<p class="elemenx-text small muted">No data sources yet.</p>
-				</WorkspaceToolWindow>
-				<Button slot="right-stripe" Icon="bell" Title="Notifications" Variant="ghost" Pressed="false" />
-				<Button slot="right-stripe" Icon="database" Title="Database" Variant="ghost" [pressed]="RightOpen" (click)="ToggleRight" />
-				<span slot="bottom-stripe" class="ui-kit-crumbs"><Icon Name="warning" Size="12" />2 warnings<Icon Name="error" Size="12" />0 errors</span>
-				<span slot="status" class="elemenx-container ui-kit-status"><Icon Name="branch" />main</span>
-				<span slot="status" class="elemenx-spacer"></span>
-				<span slot="status">12:4</span>
-				<span slot="status">LF</span>
-				<span slot="status">UTF-8</span>
-			</Workspace>
+		<div class="ui-kit-lazy" *lazy>
+			<div class="ui-kit-frame">
+				<Workspace>
+					<WorkspaceToolbar slot="header" Label="Main toolbar">
+						<span class="ui-kit-logo">E</span>
+						<Menu Label="Elemenx" Variant="ghost" Size="small" [items]="MenuItems" (select)="MenuSelected" />
+						<Button Label="main" Icon="branch" IconRight="chevron-down" Variant="ghost" Size="small" />
+						<span class="elemenx-spacer"></span>
+						<Button Icon="play" Title="Run" Variant="ghost" Size="small" />
+						<Button Icon="debug" Title="Debug" Variant="ghost" Size="small" />
+						<Button Icon="stop" Title="Stop" Variant="ghost" Size="small" Disabled="true" />
+						<span class="elemenx-divider vertical"></span>
+						<Button Icon="search" Title="Search everywhere" Variant="ghost" Size="small" />
+						<Button Icon="settings" Title="Settings" Variant="ghost" Size="small" />
+					</WorkspaceToolbar>
+					<span slot="top-stripe" class="ui-kit-crumbs"><Icon Name="folder" Size="12" />application<Icon Name="chevron-right" Size="12" />components<Icon Name="chevron-right" Size="12" /><FileIcon Name="app.js" Size="12" />app.js</span>
+					<Button slot="left-stripe" Icon="folder" Title="Project" Variant="ghost" [pressed]="LeftOpen" (click)="ToggleLeft" />
+					<Button slot="left-stripe" Icon="structure" Title="Structure" Variant="ghost" Pressed="false" />
+					<Button slot="left-stripe" Icon="commit" Title="Commit" Variant="ghost" Pressed="false" />
+					<span slot="left-stripe" class="elemenx-spacer"></span>
+					<Button slot="left-stripe" Icon="terminal" Title="Terminal" Variant="ghost" [pressed]="BottomOpen" (click)="ToggleBottom" />
+					<WorkspaceToolWindow slot="left" *if="LeftOpen" Title="Project" Icon="folder" Closable="true" (close)="ToggleLeft">
+						<Button slot="actions" Icon="refresh" Title="Refresh" Variant="ghost" Size="small" />
+						<ul class="ui-kit-tree">
+							<li><Icon Name="folder-open" />application</li>
+							<li class="nested"><Icon Name="folder" />components</li>
+							<li class="nested"><Icon Name="folder" />services</li>
+							<li class="nested active"><FileIcon Name="app.js" />app.js</li>
+							<li><Icon Name="folder" />libraries</li>
+							<li><FileIcon Name="README.md" />README.md</li>
+						</ul>
+					</WorkspaceToolWindow>
+					<div slot="main" class="elemenx-column fill">
+						<Tabs Variant="editor" [tabs]="WorkspaceTabs" [value]="WorkspaceTab" (change)="WorkspaceTabChanged" (close)="WorkspaceTabClosed" />
+						<pre class="ui-kit-code">Elemenx.Application('Application', {
+		$Use: ['ElemenxUI'],
+		$Component: 'Root'
+	});</pre>
+					</div>
+					<div slot="bottom" class="elemenx-column fill" *if="BottomOpen">
+						<Terminal Title="Terminal" [lines]="WorkspaceLines" [busy]="WorkspaceBusy" (command)="RunWorkspaceCommand" (clear)="ClearWorkspaceTerminal">
+							<Button slot="actions" Icon="delete" Title="Clear" Variant="ghost" Size="small" (click)="ClearWorkspaceTerminal" />
+							<Button slot="actions" Icon="remove" Title="Hide" Variant="ghost" Size="small" (click)="ToggleBottom" />
+						</Terminal>
+					</div>
+					<WorkspaceToolWindow slot="right" *if="RightOpen" Title="Database" Icon="database" Closable="true" Padded="true" (close)="ToggleRight">
+						<p class="elemenx-text small muted">No data sources yet.</p>
+					</WorkspaceToolWindow>
+					<Button slot="right-stripe" Icon="bell" Title="Notifications" Variant="ghost" Pressed="false" />
+					<Button slot="right-stripe" Icon="database" Title="Database" Variant="ghost" [pressed]="RightOpen" (click)="ToggleRight" />
+					<span slot="bottom-stripe" class="ui-kit-crumbs"><Icon Name="warning" Size="12" />2 warnings<Icon Name="error" Size="12" />0 errors</span>
+					<span slot="status" class="elemenx-container ui-kit-status"><Icon Name="branch" />main</span>
+					<span slot="status" class="elemenx-spacer"></span>
+					<span slot="status">12:4</span>
+					<span slot="status">LF</span>
+					<span slot="status">UTF-8</span>
+				</Workspace>
+			</div>
 		</div>
 	</Section>
 
 	<Section Title="Ribbon" [note]="'Last: ' + (RibbonNote || '—') + ' · Alt shows the key tips'">
-		<div class="elemenx-container ui-kit-row">
-			<Checkbox Label="A table is selected (contextual tab)" [checked]="TableSelected" (change)="TableToggled" />
-			<span class="elemenx-caption">Drag the right edge of the frame to see the groups shrink.</span>
-		</div>
-		<div class="ui-kit-frame ribbon" *resizable="{Edges: 'right', MinWidth: 320}">
-			<Workspace Variant="ribbon">
-				<div slot="header" class="elemenx-container fill ui-kit-titlebar">
-					<Icon Name="files:docx" Size="16" />
-					<span class="elemenx-spacer"></span>
-					<span class="elemenx-label">Report.docx — Writer</span>
-					<span class="elemenx-spacer"></span>
-					<span class="elemenx-caption">Saved</span>
-				</div>
-				<Ribbon slot="ribbon" [tab]="RibbonTab" [collapsed]="RibbonCollapsed" (tab)="RibbonTabChanged" (command)="RibbonCommand" (collapse)="RibbonCollapseChanged">
-					<RibbonButton slot="quick" ID="save" Label="Save" Icon="save" Size="icon" />
-					<RibbonButton slot="quick" ID="undo" Label="Undo" Icon="undo" Size="icon" />
-					<RibbonButton slot="quick" ID="redo" Label="Redo" Icon="redo" Size="icon" />
-					<RibbonButton slot="end" ID="comments" Label="Comments" Icon="comment" />
-					<RibbonButton slot="end" ID="share" Label="Share" Icon="share" />
-
-					<RibbonTab ID="home" Title="Home" KeyTip="H">
-						<RibbonGroup Title="Clipboard" Icon="paste" KeyTip="ZC" Launcher="true" Priority="2" (launch)="RibbonLaunched">
-							<RibbonButton ID="paste" Label="Paste" Icon="paste" Size="large" KeyTip="V" Split="true" [items]="PasteItems" />
-							<RibbonButton ID="cut" Label="Cut" Icon="cut" KeyTip="X" />
-							<RibbonButton ID="copy" Label="Copy" Icon="copy" KeyTip="C" />
-							<RibbonButton ID="format-painter" Label="Format painter" Icon="format-painter" KeyTip="FP" />
-						</RibbonGroup>
-						<RibbonGroup Title="Font" Icon="text-color" KeyTip="ZF" Launcher="true" Priority="1" (launch)="RibbonLaunched">
-							<div class="elemenx-ribbon-row">
-								<Select Size="small" [options]="Fonts" [value]="Font" (change)="FontChanged" />
-								<Select Size="small" [options]="FontSizes" [value]="FontSize" (change)="FontSizeChanged" />
-							</div>
-							<div class="elemenx-ribbon-row">
-								<RibbonButton ID="bold" Label="Bold" Icon="bold" Size="icon" Toggle="true" KeyTip="1" [pressed]="Bold" (click)="BoldToggled" />
-								<RibbonButton ID="italic" Label="Italic" Icon="italic" Size="icon" Toggle="true" KeyTip="2" />
-								<RibbonButton ID="underline" Label="Underline" Icon="underline" Size="icon" Toggle="true" KeyTip="3" />
-								<RibbonButton ID="strikethrough" Label="Strikethrough" Icon="strikethrough" Size="icon" Toggle="true" KeyTip="4" />
-							</div>
-							<div class="elemenx-ribbon-row">
-								<RibbonButton ID="highlight" Label="Highlight" Icon="highlight" Size="icon" Split="true" [items]="HighlightItems" />
-								<RibbonButton ID="text-color" Label="Text color" Icon="text-color" Size="icon" Split="true" [items]="HighlightItems" />
-							</div>
-						</RibbonGroup>
-						<RibbonGroup Title="Paragraph" Icon="text-align-left" KeyTip="ZP">
-							<div class="elemenx-ribbon-row">
-								<RibbonButton ID="bullets" Label="Bullets" Icon="list-bulleted" Size="icon" Toggle="true" />
-								<RibbonButton ID="numbering" Label="Numbering" Icon="list-ordered" Size="icon" Toggle="true" />
-								<RibbonButton ID="outdent" Label="Decrease indent" Icon="outdent" Size="icon" />
-								<RibbonButton ID="indent" Label="Increase indent" Icon="indent" Size="icon" />
-							</div>
-							<div class="elemenx-ribbon-row">
-								<RibbonButton ID="align-left" Label="Align left" Icon="text-align-left" Size="icon" Toggle="true" Pressed="true" />
-								<RibbonButton ID="align-center" Label="Center" Icon="text-align-center" Size="icon" Toggle="true" />
-								<RibbonButton ID="align-right" Label="Align right" Icon="text-align-right" Size="icon" Toggle="true" />
-								<RibbonButton ID="justify" Label="Justify" Icon="text-align-justify" Size="icon" Toggle="true" />
-							</div>
-						</RibbonGroup>
-						<RibbonGroup Title="Styles" Icon="color" KeyTip="ZS" Priority="3">
-							<RibbonGallery ID="style" Label="Styles" KeyTip="L" Columns="4" [items]="TextStyles" [value]="TextStyle" (select)="TextStyleChosen" />
-						</RibbonGroup>
-						<RibbonGroup Title="Editing" Icon="search" KeyTip="ZE">
-							<RibbonButton ID="find" Label="Find" Icon="search" KeyTip="FD" />
-							<RibbonButton ID="replace" Label="Replace" Icon="refresh" KeyTip="R" />
-							<RibbonButton ID="select" Label="Select" Icon="check" KeyTip="SL" [items]="SelectItems" />
-						</RibbonGroup>
-					</RibbonTab>
-
-					<RibbonTab ID="insert" Title="Insert" KeyTip="N">
-						<RibbonGroup Title="Tables" Icon="table">
-							<RibbonButton ID="table" Label="Table" Icon="table" Size="large" [items]="TableItems" />
-						</RibbonGroup>
-						<RibbonGroup Title="Illustrations" Icon="image">
-							<RibbonButton ID="picture" Label="Pictures" Icon="image" Size="large" />
-							<RibbonButton ID="shapes" Label="Shapes" Icon="shapes" Size="large" />
-							<RibbonButton ID="chart" Label="Chart" Icon="chart" Size="large" />
-						</RibbonGroup>
-						<RibbonGroup Title="Links" Icon="link">
-							<RibbonButton ID="link" Label="Link" Icon="link" Size="large" />
-							<RibbonButton ID="bookmark" Label="Bookmark" Icon="bookmark" />
-						</RibbonGroup>
-						<RibbonGroup Title="Comments" Icon="comment">
-							<RibbonButton ID="comment" Label="Comment" Icon="comment" Size="large" />
-						</RibbonGroup>
-					</RibbonTab>
-
-					<RibbonTab ID="review" Title="Review" KeyTip="R">
-						<RibbonGroup Title="Proofing" Icon="spellcheck">
-							<RibbonButton ID="spelling" Label="Spelling" Icon="spellcheck" Size="large" />
-							<RibbonButton ID="words" Label="Word count" Icon="list-ordered" />
-						</RibbonGroup>
-						<RibbonGroup Title="Speech" Icon="volume-high">
-							<RibbonButton ID="read-aloud" Label="Read aloud" Icon="volume-high" Size="large" />
-							<RibbonButton ID="dictate" Label="Dictate" Icon="mic" Size="large" Split="true" [items]="DictateItems" />
-						</RibbonGroup>
-					</RibbonTab>
-
-					<RibbonTab ID="view" Title="View" KeyTip="W">
-						<RibbonGroup Title="Show" Icon="eye">
-							<RibbonButton ID="ruler" Label="Ruler" Icon="layout" Toggle="true" />
-							<RibbonButton ID="gridlines" Label="Gridlines" Icon="grid" Toggle="true" />
-							<RibbonButton ID="navigation" Label="Navigation pane" Icon="panel-left" Toggle="true" Pressed="true" />
-						</RibbonGroup>
-						<RibbonGroup Title="Zoom" Icon="zoom-in">
-							<RibbonButton ID="zoom" Label="Zoom" Icon="zoom-in" Size="large" />
-							<RibbonButton ID="zoom-100" Label="100%" Icon="search" />
-							<RibbonButton ID="page-width" Label="Page width" Icon="fit-stretch-horizontal" />
-						</RibbonGroup>
-					</RibbonTab>
-
-					<RibbonTab ID="table-design" Title="Table design" KeyTip="JT" Contextual="true" Context="Table tools" Color="#2f8a7e" *if="TableSelected">
-						<RibbonGroup Title="Table styles" Icon="table">
-							<RibbonGallery ID="table-style" Label="Table styles" Columns="3" [items]="TableStyles" Value="plain" />
-						</RibbonGroup>
-						<RibbonGroup Title="Rows and columns" Icon="columns">
-							<RibbonButton ID="row-above" Label="Insert above" Icon="arrow-up" />
-							<RibbonButton ID="row-below" Label="Insert below" Icon="arrow-down" />
-							<RibbonButton ID="delete-table" Label="Delete" Icon="delete" [items]="DeleteTableItems" />
-						</RibbonGroup>
-					</RibbonTab>
-
-					<RibbonBackstage slot="backstage" Title="File">
-						<RibbonPage ID="info" Title="Info" Icon="info">
-							<p class="elemenx-text">Report.docx · 12 KB · edited 5 minutes ago by you.</p>
-							<div class="elemenx-container ui-kit-row">
-								<Button Label="Protect document" Icon="lock" />
-								<Button Label="Check for issues" Icon="search" />
-							</div>
-						</RibbonPage>
-						<RibbonPage ID="new" Title="New" Icon="add">
-							<div class="ui-kit-icons">
-								<div class="ui-kit-icon"><FileIcon Name="blank.docx" Size="32" /><span>Blank document</span></div>
-								<div class="ui-kit-icon"><FileIcon Name="letter.docx" Size="32" /><span>Letter</span></div>
-								<div class="ui-kit-icon"><FileIcon Name="report.pdf" Size="32" /><span>Report</span></div>
-							</div>
-						</RibbonPage>
-						<RibbonPage ID="open" Title="Open" Icon="folder-open">
-							<ul class="elemenx-list divided">
-								<li><FileIcon Name="Report.docx" /> Report.docx</li>
-								<li><FileIcon Name="Budget.xlsx" /> Budget.xlsx</li>
-								<li><FileIcon Name="Slides.pptx" /> Slides.pptx</li>
-							</ul>
-						</RibbonPage>
-						<RibbonPage ID="file-save" Title="Save" Icon="save" Command="true" />
-						<RibbonPage ID="file-print" Title="Print" Icon="print" Command="true" />
-					</RibbonBackstage>
-				</Ribbon>
-				<div slot="main" class="elemenx-column fill ui-kit-document">
-					<div class="ui-kit-page">
-						<h2 class="elemenx-title">Quarterly report</h2>
-						<p class="elemenx-text">The Ribbon gathers the commands of the Application in tabs and groups. Shrink the frame: the groups give up their large buttons, then their labels, and at last fold into one button each.</p>
+		<div class="ui-kit-lazy" *lazy>
+			<div class="elemenx-container ui-kit-row">
+				<Checkbox Label="A table is selected (contextual tab)" [checked]="TableSelected" (change)="TableToggled" />
+				<span class="elemenx-caption">Drag the right edge of the frame to see the groups shrink.</span>
+			</div>
+			<div class="ui-kit-frame ribbon" *resizable="{Edges: 'right', MinWidth: 320}">
+				<Workspace Variant="ribbon">
+					<div slot="header" class="elemenx-container fill ui-kit-titlebar">
+						<Icon Name="files:docx" Size="16" />
+						<span class="elemenx-spacer"></span>
+						<span class="elemenx-label">Report.docx — Writer</span>
+						<span class="elemenx-spacer"></span>
+						<span class="elemenx-caption">Saved</span>
 					</div>
-				</div>
-				<span slot="status">Page 1 of 1</span>
-				<span slot="status">48 words</span>
-				<span slot="status" class="elemenx-spacer"></span>
-				<span slot="status">{{RibbonNote || 'Ready'}}</span>
-			</Workspace>
+					<Ribbon slot="ribbon" [tab]="RibbonTab" [collapsed]="RibbonCollapsed" (tab)="RibbonTabChanged" (command)="RibbonCommand" (collapse)="RibbonCollapseChanged">
+						<RibbonButton slot="quick" ID="save" Label="Save" Icon="save" Size="icon" />
+						<RibbonButton slot="quick" ID="undo" Label="Undo" Icon="undo" Size="icon" />
+						<RibbonButton slot="quick" ID="redo" Label="Redo" Icon="redo" Size="icon" />
+						<RibbonButton slot="end" ID="comments" Label="Comments" Icon="comment" />
+						<RibbonButton slot="end" ID="share" Label="Share" Icon="share" />
+
+						<RibbonTab ID="home" Title="Home" KeyTip="H">
+							<RibbonGroup Title="Clipboard" Icon="paste" KeyTip="ZC" Launcher="true" Priority="2" (launch)="RibbonLaunched">
+								<RibbonButton ID="paste" Label="Paste" Icon="paste" Size="large" KeyTip="V" Split="true" [items]="PasteItems" />
+								<RibbonButton ID="cut" Label="Cut" Icon="cut" KeyTip="X" />
+								<RibbonButton ID="copy" Label="Copy" Icon="copy" KeyTip="C" />
+								<RibbonButton ID="format-painter" Label="Format painter" Icon="format-painter" KeyTip="FP" />
+							</RibbonGroup>
+							<RibbonGroup Title="Font" Icon="text-color" KeyTip="ZF" Launcher="true" Priority="1" (launch)="RibbonLaunched">
+								<div class="elemenx-ribbon-row">
+									<Select Size="small" [options]="Fonts" [value]="Font" (change)="FontChanged" />
+									<Select Size="small" [options]="FontSizes" [value]="FontSize" (change)="FontSizeChanged" />
+								</div>
+								<div class="elemenx-ribbon-row">
+									<RibbonButton ID="bold" Label="Bold" Icon="bold" Size="icon" Toggle="true" KeyTip="1" [pressed]="Bold" (click)="BoldToggled" />
+									<RibbonButton ID="italic" Label="Italic" Icon="italic" Size="icon" Toggle="true" KeyTip="2" />
+									<RibbonButton ID="underline" Label="Underline" Icon="underline" Size="icon" Toggle="true" KeyTip="3" />
+									<RibbonButton ID="strikethrough" Label="Strikethrough" Icon="strikethrough" Size="icon" Toggle="true" KeyTip="4" />
+								</div>
+								<div class="elemenx-ribbon-row">
+									<RibbonButton ID="highlight" Label="Highlight" Icon="highlight" Size="icon" Split="true" [items]="HighlightItems" />
+									<RibbonButton ID="text-color" Label="Text color" Icon="text-color" Size="icon" Split="true" [items]="HighlightItems" />
+								</div>
+							</RibbonGroup>
+							<RibbonGroup Title="Paragraph" Icon="text-align-left" KeyTip="ZP">
+								<div class="elemenx-ribbon-row">
+									<RibbonButton ID="bullets" Label="Bullets" Icon="list-bulleted" Size="icon" Toggle="true" />
+									<RibbonButton ID="numbering" Label="Numbering" Icon="list-ordered" Size="icon" Toggle="true" />
+									<RibbonButton ID="outdent" Label="Decrease indent" Icon="outdent" Size="icon" />
+									<RibbonButton ID="indent" Label="Increase indent" Icon="indent" Size="icon" />
+								</div>
+								<div class="elemenx-ribbon-row">
+									<RibbonButton ID="align-left" Label="Align left" Icon="text-align-left" Size="icon" Toggle="true" Pressed="true" />
+									<RibbonButton ID="align-center" Label="Center" Icon="text-align-center" Size="icon" Toggle="true" />
+									<RibbonButton ID="align-right" Label="Align right" Icon="text-align-right" Size="icon" Toggle="true" />
+									<RibbonButton ID="justify" Label="Justify" Icon="text-align-justify" Size="icon" Toggle="true" />
+								</div>
+							</RibbonGroup>
+							<RibbonGroup Title="Styles" Icon="color" KeyTip="ZS" Priority="3">
+								<RibbonGallery ID="style" Label="Styles" KeyTip="L" Columns="4" [items]="TextStyles" [value]="TextStyle" (select)="TextStyleChosen" />
+							</RibbonGroup>
+							<RibbonGroup Title="Editing" Icon="search" KeyTip="ZE">
+								<RibbonButton ID="find" Label="Find" Icon="search" KeyTip="FD" />
+								<RibbonButton ID="replace" Label="Replace" Icon="refresh" KeyTip="R" />
+								<RibbonButton ID="select" Label="Select" Icon="check" KeyTip="SL" [items]="SelectItems" />
+							</RibbonGroup>
+						</RibbonTab>
+
+						<RibbonTab ID="insert" Title="Insert" KeyTip="N">
+							<RibbonGroup Title="Tables" Icon="table">
+								<RibbonButton ID="table" Label="Table" Icon="table" Size="large" [items]="TableItems" />
+							</RibbonGroup>
+							<RibbonGroup Title="Illustrations" Icon="image">
+								<RibbonButton ID="picture" Label="Pictures" Icon="image" Size="large" />
+								<RibbonButton ID="shapes" Label="Shapes" Icon="shapes" Size="large" />
+								<RibbonButton ID="chart" Label="Chart" Icon="chart" Size="large" />
+							</RibbonGroup>
+							<RibbonGroup Title="Links" Icon="link">
+								<RibbonButton ID="link" Label="Link" Icon="link" Size="large" />
+								<RibbonButton ID="bookmark" Label="Bookmark" Icon="bookmark" />
+							</RibbonGroup>
+							<RibbonGroup Title="Comments" Icon="comment">
+								<RibbonButton ID="comment" Label="Comment" Icon="comment" Size="large" />
+							</RibbonGroup>
+						</RibbonTab>
+
+						<RibbonTab ID="review" Title="Review" KeyTip="R">
+							<RibbonGroup Title="Proofing" Icon="spellcheck">
+								<RibbonButton ID="spelling" Label="Spelling" Icon="spellcheck" Size="large" />
+								<RibbonButton ID="words" Label="Word count" Icon="list-ordered" />
+							</RibbonGroup>
+							<RibbonGroup Title="Speech" Icon="volume-high">
+								<RibbonButton ID="read-aloud" Label="Read aloud" Icon="volume-high" Size="large" />
+								<RibbonButton ID="dictate" Label="Dictate" Icon="mic" Size="large" Split="true" [items]="DictateItems" />
+							</RibbonGroup>
+						</RibbonTab>
+
+						<RibbonTab ID="view" Title="View" KeyTip="W">
+							<RibbonGroup Title="Show" Icon="eye">
+								<RibbonButton ID="ruler" Label="Ruler" Icon="layout" Toggle="true" />
+								<RibbonButton ID="gridlines" Label="Gridlines" Icon="grid" Toggle="true" />
+								<RibbonButton ID="navigation" Label="Navigation pane" Icon="panel-left" Toggle="true" Pressed="true" />
+							</RibbonGroup>
+							<RibbonGroup Title="Zoom" Icon="zoom-in">
+								<RibbonButton ID="zoom" Label="Zoom" Icon="zoom-in" Size="large" />
+								<RibbonButton ID="zoom-100" Label="100%" Icon="search" />
+								<RibbonButton ID="page-width" Label="Page width" Icon="fit-stretch-horizontal" />
+							</RibbonGroup>
+						</RibbonTab>
+
+						<RibbonTab ID="table-design" Title="Table design" KeyTip="JT" Contextual="true" Context="Table tools" Color="#2f8a7e" *if="TableSelected">
+							<RibbonGroup Title="Table styles" Icon="table">
+								<RibbonGallery ID="table-style" Label="Table styles" Columns="3" [items]="TableStyles" Value="plain" />
+							</RibbonGroup>
+							<RibbonGroup Title="Rows and columns" Icon="columns">
+								<RibbonButton ID="row-above" Label="Insert above" Icon="arrow-up" />
+								<RibbonButton ID="row-below" Label="Insert below" Icon="arrow-down" />
+								<RibbonButton ID="delete-table" Label="Delete" Icon="delete" [items]="DeleteTableItems" />
+							</RibbonGroup>
+						</RibbonTab>
+
+						<RibbonBackstage slot="backstage" Title="File">
+							<RibbonPage ID="info" Title="Info" Icon="info">
+								<p class="elemenx-text">Report.docx · 12 KB · edited 5 minutes ago by you.</p>
+								<div class="elemenx-container ui-kit-row">
+									<Button Label="Protect document" Icon="lock" />
+									<Button Label="Check for issues" Icon="search" />
+								</div>
+							</RibbonPage>
+							<RibbonPage ID="new" Title="New" Icon="add">
+								<div class="ui-kit-icons">
+									<div class="ui-kit-icon"><FileIcon Name="blank.docx" Size="32" /><span>Blank document</span></div>
+									<div class="ui-kit-icon"><FileIcon Name="letter.docx" Size="32" /><span>Letter</span></div>
+									<div class="ui-kit-icon"><FileIcon Name="report.pdf" Size="32" /><span>Report</span></div>
+								</div>
+							</RibbonPage>
+							<RibbonPage ID="open" Title="Open" Icon="folder-open">
+								<ul class="elemenx-list divided">
+									<li><FileIcon Name="Report.docx" /> Report.docx</li>
+									<li><FileIcon Name="Budget.xlsx" /> Budget.xlsx</li>
+									<li><FileIcon Name="Slides.pptx" /> Slides.pptx</li>
+								</ul>
+							</RibbonPage>
+							<RibbonPage ID="file-save" Title="Save" Icon="save" Command="true" />
+							<RibbonPage ID="file-print" Title="Print" Icon="print" Command="true" />
+						</RibbonBackstage>
+					</Ribbon>
+					<div slot="main" class="elemenx-column fill ui-kit-document">
+						<div class="ui-kit-page">
+							<h2 class="elemenx-title">Quarterly report</h2>
+							<p class="elemenx-text">The Ribbon gathers the commands of the Application in tabs and groups. Shrink the frame: the groups give up their large buttons, then their labels, and at last fold into one button each.</p>
+						</div>
+					</div>
+					<span slot="status">Page 1 of 1</span>
+					<span slot="status">48 words</span>
+					<span slot="status" class="elemenx-spacer"></span>
+					<span slot="status">{{RibbonNote || 'Ready'}}</span>
+				</Workspace>
+			</div>
 		</div>
 	</Section>
 
 	<Section Title="Gallery" [note]="'Picture ' + (GalleryIndex + 1) + (GalleryPicked ? ' · Opened: ' + GalleryPicked : '')">
-		<div class="ui-kit-row">
-			<Checkbox Label="Autoplay" [checked]="GalleryAutoplay" (change)="GalleryAutoplayed" />
-			<Checkbox Label="Backwards" [checked]="GalleryBackwards" (change)="GalleryReversed" />
-			<Checkbox Label="Title" [checked]="GalleryTitle" (change)="GalleryTitled" />
-			<Checkbox Label="Description" [checked]="GalleryDescription" (change)="GalleryDescribed" />
-			<Checkbox Label="Tags" [checked]="GalleryTags" (change)="GalleryTagged" />
-			<Checkbox Label="Fade" [checked]="GalleryFade" (change)="GalleryFaded" />
-		</div>
-		<div class="ui-kit-grid">
-			<Gallery [items]="GalleryItems" [index]="GalleryIndex" [autoplay]="GalleryAutoplay" Interval="3000" [direction]="GalleryBackwards ? 'previous' : 'next'" [showtitle]="GalleryTitle" [showdescription]="GalleryDescription" [showtags]="GalleryTags" [effect]="GalleryFade ? 'fade' : 'slide'" ShowThumbs="true" Label="Places" (change)="GalleryChanged" (select)="GallerySelected" />
-			<Gallery [items]="GalleryItems" Caption="below" ShowDots="false" ShowCounter="false" Loop="false" Fit="contain" Ratio="4 / 3" Label="Places, caption below" />
+		<div class="ui-kit-lazy" *lazy>
+			<div class="ui-kit-row">
+				<Checkbox Label="Autoplay" [checked]="GalleryAutoplay" (change)="GalleryAutoplayed" />
+				<Checkbox Label="Backwards" [checked]="GalleryBackwards" (change)="GalleryReversed" />
+				<Checkbox Label="Title" [checked]="GalleryTitle" (change)="GalleryTitled" />
+				<Checkbox Label="Description" [checked]="GalleryDescription" (change)="GalleryDescribed" />
+				<Checkbox Label="Tags" [checked]="GalleryTags" (change)="GalleryTagged" />
+				<Checkbox Label="Fade" [checked]="GalleryFade" (change)="GalleryFaded" />
+			</div>
+			<div class="ui-kit-grid">
+				<Gallery [items]="GalleryItems" [index]="GalleryIndex" [autoplay]="GalleryAutoplay" Interval="3000" [direction]="GalleryBackwards ? 'previous' : 'next'" [showtitle]="GalleryTitle" [showdescription]="GalleryDescription" [showtags]="GalleryTags" [effect]="GalleryFade ? 'fade' : 'slide'" ShowThumbs="true" Label="Places" (change)="GalleryChanged" (select)="GallerySelected" />
+				<Gallery [items]="GalleryItems" Caption="below" ShowDots="false" ShowCounter="false" Loop="false" Fit="contain" Ratio="4 / 3" Label="Places, caption below" />
+			</div>
 		</div>
 	</Section>
 
 	<Section Title="Cards" [note]="'Last: ' + (CardNote || '—')">
-		<h4>Posts: vertical, with the date badge, overlay and horizontal</h4>
-		<div class="elemenx-container grid">
-			<PostCard Title="Ten passes through the Caucasus" Excerpt="A week on foot from one valley to the next: the routes, the huts and what to pack." Image="/data/cards/mountains.svg" Category="Travel" Author="Ada Lovelace" Date="2026-10-02" ReadTime="6" Likes="1240" Comments="38" DateBadge="true" Href="#ui-kit-post" (like)="PostLiked" (comment)="PostCommented" (share)="PostShared" />
-			<PostCard Title="Lights of the night city" Excerpt="How to photograph a city after dark with a phone." Image="/data/cards/city.svg" Category="Photo" Author="Grace Hopper" Date="2026-09-18" ReadTime="4" Likes="86" Comments="5" Layout="overlay" (like)="PostLiked" />
-			<PostCard Title="The sea in October" Excerpt="Warm water, empty beaches and cheap tickets: the best month for the coast." Image="/data/cards/sea.svg" Author="Alan Turing" Date="2026-10-11" ReadTime="3" [tags]="['sea', 'autumn']" Variant="elevated" (like)="PostLiked" />
-		</div>
-		<PostCard Title="A wide card for a feed" Excerpt="The image beside the text; on a narrow window it goes back above it." Image="/data/cards/mountains.svg" Category="Layout" Author="Barbara Liskov" Date="2026-10-12" ReadTime="2" Likes="12" Comments="0" Layout="horizontal" (like)="PostLiked" />
-
-		<h4>People</h4>
-		<div class="elemenx-container grid">
-			<ProfileCard Name="Ada Lovelace" Role="Analyst of engines" Bio="Writes the first programs for machines that do not exist yet." Cover="/data/cards/cover.svg" Status="online" Verified="true" [stats]="ProfileStats" (follow)="ProfileFollowed" (message)="ProfileMessaged" />
-			<ProfileCard Name="Grace Hopper" Role="Rear admiral" Bio="Compilers, COBOL and a moth in a relay." Color="#b4483f" Status="busy" [stats]="[{Label: 'Posts', Value: 312}, {Label: 'Followers', Value: 8800}]" Following="true" (follow)="ProfileFollowed" />
-			<div class="elemenx-column ui-kit-stack">
-				<ProfileCard Layout="compact" Name="Alan Turing" Role="Mathematician" Status="away" (follow)="ProfileFollowed" />
-				<ProfileCard Layout="compact" Name="Barbara Liskov" Role="Computer scientist" Status="offline" Following="true" (follow)="ProfileFollowed" />
-				<ProfileCard Layout="compact" Name="Edsger Dijkstra" Role="Shortest paths" (follow)="ProfileFollowed" />
+		<div class="ui-kit-lazy" *lazy>
+			<h4>Posts: vertical, with the date badge, overlay and horizontal</h4>
+			<div class="elemenx-container grid">
+				<PostCard Title="Ten passes through the Caucasus" Excerpt="A week on foot from one valley to the next: the routes, the huts and what to pack." Image="/data/cards/mountains.svg" Category="Travel" Author="Ada Lovelace" Date="2026-10-02" ReadTime="6" Likes="1240" Comments="38" DateBadge="true" Href="#ui-kit-post" (like)="PostLiked" (comment)="PostCommented" (share)="PostShared" />
+				<PostCard Title="Lights of the night city" Excerpt="How to photograph a city after dark with a phone." Image="/data/cards/city.svg" Category="Photo" Author="Grace Hopper" Date="2026-09-18" ReadTime="4" Likes="86" Comments="5" Layout="overlay" (like)="PostLiked" />
+				<PostCard Title="The sea in October" Excerpt="Warm water, empty beaches and cheap tickets: the best month for the coast." Image="/data/cards/sea.svg" Author="Alan Turing" Date="2026-10-11" ReadTime="3" [tags]="['sea', 'autumn']" Variant="elevated" (like)="PostLiked" />
 			</div>
-		</div>
+			<PostCard Title="A wide card for a feed" Excerpt="The image beside the text; on a narrow window it goes back above it." Image="/data/cards/mountains.svg" Category="Layout" Author="Barbara Liskov" Date="2026-10-12" ReadTime="2" Likes="12" Comments="0" Layout="horizontal" (like)="PostLiked" />
 
-		<h4>Comments and posts of a social network</h4>
-		<div class="elemenx-container grid ui-kit-comments">
-			<div class="elemenx-column">
-				<CommentCard Author="Grace Hopper" Handle="grace" Verified="true" [time]="CommentTime(5)" Text="The #ElemenxUI cards are in! Thanks @ada for the review. Notes: https://example.com/elemenx/cards" Replies="4" Reposts="12" Likes="240" Thread="true" (reply)="CommentReplied" (repost)="CommentReposted" (like)="CommentLiked" (mention)="CommentMention" (tag)="CommentTag" />
-				<CommentCard Author="Ada Lovelace" Handle="ada" [time]="CommentTime(2)" Text="They look right. The overlay layout is my favorite." Replies="0" Reposts="1" Likes="18" Liked="true" (like)="CommentLiked" (mention)="CommentMention" />
+			<h4>People</h4>
+			<div class="elemenx-container grid">
+				<ProfileCard Name="Ada Lovelace" Role="Analyst of engines" Bio="Writes the first programs for machines that do not exist yet." Cover="/data/cards/cover.svg" Status="online" Verified="true" [stats]="ProfileStats" (follow)="ProfileFollowed" (message)="ProfileMessaged" />
+				<ProfileCard Name="Grace Hopper" Role="Rear admiral" Bio="Compilers, COBOL and a moth in a relay." Color="#b4483f" Status="busy" [stats]="[{Label: 'Posts', Value: 312}, {Label: 'Followers', Value: 8800}]" Following="true" (follow)="ProfileFollowed" />
+				<div class="elemenx-column ui-kit-stack">
+					<ProfileCard Layout="compact" Name="Alan Turing" Role="Mathematician" Status="away" (follow)="ProfileFollowed" />
+					<ProfileCard Layout="compact" Name="Barbara Liskov" Role="Computer scientist" Status="offline" Following="true" (follow)="ProfileFollowed" />
+					<ProfileCard Layout="compact" Name="Edsger Dijkstra" Role="Shortest paths" (follow)="ProfileFollowed" />
+				</div>
 			</div>
-			<CommentCard Variant="outlined" Author="Alan Turing" Handle="turing" [time]="CommentTime(90)" Text="Sunset at the sea, and a city at night. #photo" [media]="['/data/cards/sea.svg', '/data/cards/city.svg']" Replies="2" Reposts="5" Likes="64" (like)="CommentLiked" (tag)="CommentTag" />
-		</div>
 
-		<h4>Products: a price under the title, or on the image</h4>
-		<div class="elemenx-container grid">
-			<ProductCard Title="Studio headphones" Brand="Elemenx Audio" [images]="['/data/cards/headphones.svg', '/data/cards/watch.svg']" Badge="−20%" Rating="4.5" Reviews="1280" Price="79.99" OldPrice="99.99" [colors]="ProductColors" Color="coral" (add)="ProductAdded" (favorite)="ProductFavorite" (color)="ProductColor" />
-			<ProductCard Title="Field watch" Brand="Elemenx Time" Image="/data/cards/watch.svg" Badge="New" BadgeVariant="success" Rating="5" Reviews="42" Price="149" (add)="ProductAdded" (favorite)="ProductFavorite" />
-			<ProductCard Title="Running shoes" Image="/data/cards/sneaker.svg" Rating="4" Reviews="310" Price="120" [sizes]="['39', '40', '41', '42', '43']" Size="41" (add)="ProductAdded" (size)="ProductSize" />
-			<ProductCard Title="City backpack" Image="/data/cards/backpack.svg" Price="64.5" PriceStyle="corner" Cart="false" Favorite="true" (favorite)="ProductFavorite" />
-		</div>
+			<h4>Comments and posts of a social network</h4>
+			<div class="elemenx-container grid ui-kit-comments">
+				<div class="elemenx-column">
+					<CommentCard Author="Grace Hopper" Handle="grace" Verified="true" [time]="CommentTime(5)" Text="The #ElemenxUI cards are in! Thanks @ada for the review. Notes: https://example.com/elemenx/cards" Replies="4" Reposts="12" Likes="240" Thread="true" (reply)="CommentReplied" (repost)="CommentReposted" (like)="CommentLiked" (mention)="CommentMention" (tag)="CommentTag" />
+					<CommentCard Author="Ada Lovelace" Handle="ada" [time]="CommentTime(2)" Text="They look right. The overlay layout is my favorite." Replies="0" Reposts="1" Likes="18" Liked="true" (like)="CommentLiked" (mention)="CommentMention" />
+				</div>
+				<CommentCard Variant="outlined" Author="Alan Turing" Handle="turing" [time]="CommentTime(90)" Text="Sunset at the sea, and a city at night. #photo" [media]="['/data/cards/sea.svg', '/data/cards/city.svg']" Replies="2" Reposts="5" Likes="64" (like)="CommentLiked" (tag)="CommentTag" />
+			</div>
 
-		<h4>Plans</h4>
-		<PlanPicker [plans]="Subscriptions" [value]="Subscription" [period]="SubscriptionPeriod" Discount="Save 20%" (change)="SubscriptionChosen" (period)="SubscriptionPeriodChosen" />
+			<h4>Products: a price under the title, or on the image</h4>
+			<div class="elemenx-container grid">
+				<ProductCard Title="Studio headphones" Brand="Elemenx Audio" [images]="['/data/cards/headphones.svg', '/data/cards/watch.svg']" Badge="−20%" Rating="4.5" Reviews="1280" Price="79.99" OldPrice="99.99" [colors]="ProductColors" Color="coral" (add)="ProductAdded" (favorite)="ProductFavorite" (color)="ProductColor" />
+				<ProductCard Title="Field watch" Brand="Elemenx Time" Image="/data/cards/watch.svg" Badge="New" BadgeVariant="success" Rating="5" Reviews="42" Price="149" (add)="ProductAdded" (favorite)="ProductFavorite" />
+				<ProductCard Title="Running shoes" Image="/data/cards/sneaker.svg" Rating="4" Reviews="310" Price="120" [sizes]="['39', '40', '41', '42', '43']" Size="41" (add)="ProductAdded" (size)="ProductSize" />
+				<ProductCard Title="City backpack" Image="/data/cards/backpack.svg" Price="64.5" PriceStyle="corner" Cart="false" Favorite="true" (favorite)="ProductFavorite" />
+			</div>
+
+			<h4>Plans</h4>
+			<PlanPicker [plans]="Subscriptions" [value]="Subscription" [period]="SubscriptionPeriod" Discount="Save 20%" (change)="SubscriptionChosen" (period)="SubscriptionPeriodChosen" />
+		</div>
 	</Section>
 
 	<Section Title="Emoji and stickers" [note]="'Picked: ' + (Picked || '—')">
-		<div class="elemenx-container wrappable ui-kit-pickers">
-			<div class="elemenx-card ui-kit-picker"><EmojiPicker Autofocus="false" (pick)="EmojiPicked" /></div>
-			<div class="elemenx-card ui-kit-picker"><StickerPicker (pick)="StickerPicked" /></div>
-			<div class="elemenx-column ui-kit-picker-notes">
-				<p class="elemenx-text">Emoji are the characters of Unicode, drawn by the fonts of the system; the ones a system cannot draw are left out. Search works with English names and with keywords in English and Russian; flags are named in the language of the browser.</p>
-				<p class="elemenx-text">Stickers are images of the packs the Application registers with the Stickers Service; star one to keep it in the favorites. The chat below has both in its composer, and reactions on its messages.</p>
-				<div class="elemenx-container ui-kit-row ui-kit-picked" *if="PickedEmoji || PickedSticker">
-					<span class="ui-kit-picked-emoji" *if="PickedEmoji">{{PickedEmoji}}</span>
-					<img class="ui-kit-picked-sticker" *if="PickedSticker" [src]="PickedSticker" alt="" />
+		<div class="ui-kit-lazy" *lazy>
+			<div class="elemenx-container wrappable ui-kit-pickers">
+				<div class="elemenx-card ui-kit-picker"><EmojiPicker Autofocus="false" (pick)="EmojiPicked" /></div>
+				<div class="elemenx-card ui-kit-picker"><StickerPicker (pick)="StickerPicked" /></div>
+				<div class="elemenx-column ui-kit-picker-notes">
+					<p class="elemenx-text">Emoji are the characters of Unicode, drawn by the fonts of the system; the ones a system cannot draw are left out. Search works with English names and with keywords in English and Russian; flags are named in the language of the browser.</p>
+					<p class="elemenx-text">Stickers are images of the packs the Application registers with the Stickers Service; star one to keep it in the favorites. The chat below has both in its composer, and reactions on its messages.</p>
+					<div class="elemenx-container ui-kit-row ui-kit-picked" *if="PickedEmoji || PickedSticker">
+						<span class="ui-kit-picked-emoji" *if="PickedEmoji">{{PickedEmoji}}</span>
+						<img class="ui-kit-picked-sticker" *if="PickedSticker" [src]="PickedSticker" alt="" />
+					</div>
 				</div>
 			</div>
 		</div>
 	</Section>
 
 	<Section Title="Chat" [note]="ChatNote || 'Chat, ChatMessage, ChatComposer · right click a message for its menu'">
-		<div class="ui-kit-row"><span class="elemenx-caption">Emoji suggestions</span><RadioGroup Variant="segmented" [options]="SuggestModes" [value]="SuggestMode" (change)="SuggestModeChosen" /><span class="elemenx-caption">Type a word, :word, or a single emoji such as 👍 for its stickers</span></div>
-		<div class="ui-kit-frame chat">
-			<Chat [selection]="ChatSelection" (clear)="ChatCleared">
-				<Button slot="selection" Icon="delete" Title="Delete selected" Variant="ghost" (click)="DeleteSelected" />
-				<div slot="sidebar" class="ui-kit-stack ui-kit-conversations">
-					<Input Shape="round" Icon="search" Placeholder="Search" Size="small" />
-					<div class="elemenx-chat-conversation active"><span class="elemenx-chat-avatar">GH</span><div><strong>Grace Hopper</strong><p class="elemenx-text small muted">Can you check the new table?</p></div></div>
-					<div class="elemenx-chat-conversation"><span class="elemenx-chat-avatar">AT</span><div><strong>Alan Turing</strong><p class="elemenx-text small muted">See you tomorrow</p></div></div>
-				</div>
-				<div slot="header" class="elemenx-container ui-kit-chat-header"><span class="elemenx-chat-avatar">GH</span><div><strong>Grace Hopper</strong><p class="elemenx-text small muted">online</p></div><span class="elemenx-spacer"></span><Button Icon="phone" Title="Call" Variant="ghost" /><Button Icon="more-vertical" Title="More" Variant="ghost" /></div>
-				<div class="elemenx-chat-divider">Today</div>
-				<ChatMessage *for="message of Thread(Messages)" *key="message.ID" [id]="message.ID" [author]="message.Author" [text]="message.Text" [time]="message.Time" [own]="!!message.Own" [position]="message.Position" [status]="message.Status || ''" [sticker]="message.Sticker || ''" [reactions]="message.Reactions || []" [edited]="message.Edited || false" [views]="message.Views || 0" [viewers]="message.Viewers || []" [actions]="MessageActions(message)" [selecting]="ChatSelection.length > 0" [selected]="ChatSelection.indexOf(message.ID) !== -1" React="true" (react)="MessageReacted" (action)="MessageAction" (select)="MessageSelected" />
-				<ChatComposer slot="composer" [suggest]="SuggestMode" (send)="SendMessage" (sticker)="SendSticker" />
-			</Chat>
+		<div class="ui-kit-lazy" *lazy>
+			<div class="ui-kit-row"><span class="elemenx-caption">Emoji suggestions</span><RadioGroup Variant="segmented" [options]="SuggestModes" [value]="SuggestMode" (change)="SuggestModeChosen" /><span class="elemenx-caption">Type a word, :word, or a single emoji such as 👍 for its stickers</span></div>
+			<div class="ui-kit-frame chat">
+				<Chat [selection]="ChatSelection" (clear)="ChatCleared">
+					<Button slot="selection" Icon="delete" Title="Delete selected" Variant="ghost" (click)="DeleteSelected" />
+					<div slot="sidebar" class="ui-kit-stack ui-kit-conversations">
+						<Input Shape="round" Icon="search" Placeholder="Search" Size="small" />
+						<div class="elemenx-chat-conversation active"><span class="elemenx-chat-avatar">GH</span><div><strong>Grace Hopper</strong><p class="elemenx-text small muted">Can you check the new table?</p></div></div>
+						<div class="elemenx-chat-conversation"><span class="elemenx-chat-avatar">AT</span><div><strong>Alan Turing</strong><p class="elemenx-text small muted">See you tomorrow</p></div></div>
+					</div>
+					<div slot="header" class="elemenx-container ui-kit-chat-header"><span class="elemenx-chat-avatar">GH</span><div><strong>Grace Hopper</strong><p class="elemenx-text small muted">online</p></div><span class="elemenx-spacer"></span><Button Icon="phone" Title="Call" Variant="ghost" /><Button Icon="more-vertical" Title="More" Variant="ghost" /></div>
+					<div class="elemenx-chat-divider">Today</div>
+					<ChatMessage *for="message of Thread(Messages)" *key="message.ID" [id]="message.ID" [author]="message.Author" [text]="message.Text" [time]="message.Time" [own]="!!message.Own" [position]="message.Position" [status]="message.Status || ''" [sticker]="message.Sticker || ''" [reactions]="message.Reactions || []" [edited]="message.Edited || false" [views]="message.Views || 0" [viewers]="message.Viewers || []" [actions]="MessageActions(message)" [selecting]="ChatSelection.length > 0" [selected]="ChatSelection.indexOf(message.ID) !== -1" React="true" (react)="MessageReacted" (action)="MessageAction" (select)="MessageSelected" />
+					<ChatComposer slot="composer" [suggest]="SuggestMode" (send)="SendMessage" (sticker)="SendSticker" />
+				</Chat>
+			</div>
 		</div>
 	</Section>
 
 	<Section Title="Steps and timeline" Note="Steps · Timeline">
-		<Steps [items]="StepItems" [active]="ActiveSteps" [done]="DoneSteps" Clickable="true" (select)="StepSelected" />
-		<div class="ui-kit-grid">
-			<div class="ui-kit-stack">
-				<Steps Direction="vertical" Size="small" [items]="StepItems" [active]="['review', 'deploy']" [done]="['plan']" />
-				<Steps Size="small" [items]="CustomSteps" [active]="[CustomStep]" Clickable="true" (select)="CustomStepSelected" />
+		<div class="ui-kit-lazy" *lazy>
+			<Steps [items]="StepItems" [active]="ActiveSteps" [done]="DoneSteps" Clickable="true" (select)="StepSelected" />
+			<div class="ui-kit-grid">
+				<div class="ui-kit-stack">
+					<Steps Direction="vertical" Size="small" [items]="StepItems" [active]="['review', 'deploy']" [done]="['plan']" />
+					<Steps Size="small" [items]="CustomSteps" [active]="[CustomStep]" Clickable="true" (select)="CustomStepSelected" />
+				</div>
+				<Timeline [items]="Activity" />
 			</div>
-			<Timeline [items]="Activity" />
 		</div>
 	</Section>
 
 	<Section Title="Terminal" Note="Type help, date or anything else; Arrow Up recalls the history">
-		<div class="ui-kit-frame terminal">
-			<Terminal Title="Shell" Prompt="elemenx $" [lines]="Lines" [busy]="Busy" (command)="RunCommand" (clear)="ClearTerminal">
-				<Button slot="actions" Icon="delete" Title="Clear" Variant="ghost" Size="small" (click)="ClearTerminal" />
-			</Terminal>
+		<div class="ui-kit-lazy" *lazy>
+			<div class="ui-kit-frame terminal">
+				<Terminal Title="Shell" Prompt="elemenx $" [lines]="Lines" [busy]="Busy" (command)="RunCommand" (clear)="ClearTerminal">
+					<Button slot="actions" Icon="delete" Title="Clear" Variant="ghost" Size="small" (click)="ClearTerminal" />
+				</Terminal>
+			</div>
 		</div>
 	</Section>
 
 	<Section Title="Code editor" [note]="'Line ' + EditorLine + ', column ' + EditorColumn + (EditorMatches === null ? '' : ' · Matches: ' + EditorMatches)">
-		<div class="ui-kit-row ui-kit-editor-tools">
-			<Select [options]="EditorLanguages" [value]="EditorLanguage" (change)="EditorLanguageChosen" />
-			<Input Icon="search" Placeholder="Find" Clearable="true" [value]="EditorQuery" (input)="EditorFind" />
-			<ButtonGroup Attached="true">
-				<Button Icon="chevron-up" Title="Previous match" (click)="EditorPrevious" />
-				<Button Icon="chevron-down" Title="Next match" (click)="EditorNext" />
-			</ButtonGroup>
-			<Input Placeholder="Replace with" [value]="EditorReplacement" (input)="EditorReplacementChanged" />
-			<Button Label="Replace all" (click)="EditorReplaceAll" />
-			<ButtonGroup Attached="true">
-				<Button Icon="undo" Title="Undo" (click)="EditorUndo" />
-				<Button Icon="redo" Title="Redo" (click)="EditorRedo" />
-			</ButtonGroup>
-			<Button Icon="code" Label="Comment" (click)="EditorComment" />
-			<Checkbox Label="Wrap" [checked]="EditorWrap" (change)="EditorWrapChanged" />
-			<Button Icon="file-text" Label="Print" (click)="EditorPrint" />
-			<RadioGroup Variant="segmented" [options]="EditorViews" [value]="EditorView" (change)="EditorViewChosen" />
-			<span class="elemenx-caption" *if="EditorView !== 'edit'">{{EditorStats}}</span>
+		<div class="ui-kit-lazy" *lazy>
+			<div class="ui-kit-row ui-kit-editor-tools">
+				<Select [options]="EditorLanguages" [value]="EditorLanguage" (change)="EditorLanguageChosen" />
+				<Input Icon="search" Placeholder="Find" Clearable="true" [value]="EditorQuery" (input)="EditorFind" />
+				<ButtonGroup Attached="true">
+					<Button Icon="chevron-up" Title="Previous match" (click)="EditorPrevious" />
+					<Button Icon="chevron-down" Title="Next match" (click)="EditorNext" />
+				</ButtonGroup>
+				<Input Placeholder="Replace with" [value]="EditorReplacement" (input)="EditorReplacementChanged" />
+				<Button Label="Replace all" (click)="EditorReplaceAll" />
+				<ButtonGroup Attached="true">
+					<Button Icon="undo" Title="Undo" (click)="EditorUndo" />
+					<Button Icon="redo" Title="Redo" (click)="EditorRedo" />
+				</ButtonGroup>
+				<Button Icon="code" Label="Comment" (click)="EditorComment" />
+				<Checkbox Label="Wrap" [checked]="EditorWrap" (change)="EditorWrapChanged" />
+				<Button Icon="file-text" Label="Print" (click)="EditorPrint" />
+				<RadioGroup Variant="segmented" [options]="EditorViews" [value]="EditorView" (change)="EditorViewChosen" />
+				<span class="elemenx-caption" *if="EditorView !== 'edit'">{{EditorStats}}</span>
+			</div>
+			<CodeEditor Label="Example code" Rows="14" [value]="EditorCode" [language]="EditorLanguage" [wrap]="EditorWrap" [markers]="EditorMarkers" [complete]="EditorCompleter" [hint]="EditorHinter" [original]="EditorView === 'edit' ? null : EditorOriginal" [diff]="EditorView === 'edit' ? false : EditorView" (ready)="EditorReady" (input)="EditorTyped" (cursor)="EditorCursor" />
+			<span class="elemenx-caption">The controls above are not part of the editor: they call its methods. Ctrl+Space completes, Mod+/ comments, Tab indents (Escape, then Tab, leaves).</span>
 		</div>
-		<CodeEditor Label="Example code" Rows="14" [value]="EditorCode" [language]="EditorLanguage" [wrap]="EditorWrap" [markers]="EditorMarkers" [complete]="EditorCompleter" [hint]="EditorHinter" [original]="EditorView === 'edit' ? null : EditorOriginal" [diff]="EditorView === 'edit' ? false : EditorView" (ready)="EditorReady" (input)="EditorTyped" (cursor)="EditorCursor" />
-		<span class="elemenx-caption">The controls above are not part of the editor: they call its methods. Ctrl+Space completes, Mod+/ comments, Tab indents (Escape, then Tab, leaves).</span>
 	</Section>
 
 	<Section Title="Rich text editor" [note]="RichNote">
-		<div class="ui-kit-row ui-kit-editor-tools">
-			<Select [options]="RichBlocks" [value]="RichBlock" (change)="RichBlockChosen" />
-			<ButtonGroup Attached="true">
-				<Button Icon="bold" Title="Bold" [pressed]="!!RichFormats.Bold" (click)="RichBold" />
-				<Button Icon="italic" Title="Italic" [pressed]="!!RichFormats.Italic" (click)="RichItalic" />
-				<Button Icon="underline" Title="Underline" [pressed]="!!RichFormats.Underline" (click)="RichUnderline" />
-				<Button Icon="strikethrough" Title="Strikethrough" [pressed]="!!RichFormats.Strike" (click)="RichStrike" />
-				<Button Icon="code" Title="Inline code" [pressed]="!!RichFormats.Code" (click)="RichCode" />
-			</ButtonGroup>
-			<ButtonGroup Attached="true">
-				<Button Icon="list-bulleted" Title="Bulleted list" [pressed]="RichFormats.List === 'bullets'" (click)="RichBullets" />
-				<Button Icon="list-ordered" Title="Numbered list" [pressed]="RichFormats.List === 'numbers'" (click)="RichNumbers" />
-			</ButtonGroup>
-			<Input Icon="link" Placeholder="https://..." [value]="RichLink" (input)="RichLinkChanged" />
-			<Button Label="Link" (click)="RichApplyLink" />
-			<ButtonGroup Attached="true">
-				<Button Icon="image" Title="Image" (click)="RichImage" />
-				<Button Icon="table" Title="Table" (click)="RichTable" />
-				<Button Icon="add" Title="Row below" [disabled]="!RichFormats.Table" (click)="RichRow" />
-				<Button Icon="remove" Title="Horizontal rule" (click)="RichRule" />
-				<Button Icon="clear-format" Title="Clear formatting" (click)="RichClear" />
-			</ButtonGroup>
-			<ButtonGroup Attached="true">
-				<Button Icon="undo" Title="Undo" (click)="RichUndo" />
-				<Button Icon="redo" Title="Redo" (click)="RichRedo" />
-			</ButtonGroup>
-			<Checkbox Label="Markdown" [checked]="RichMarkdownShown" (change)="RichMarkdownToggled" />
-			<Button Icon="print" Label="Print" (click)="RichPrint" />
+		<div class="ui-kit-lazy" *lazy>
+			<div class="ui-kit-row ui-kit-editor-tools">
+				<Select [options]="RichBlocks" [value]="RichBlock" (change)="RichBlockChosen" />
+				<ButtonGroup Attached="true">
+					<Button Icon="bold" Title="Bold" [pressed]="!!RichFormats.Bold" (click)="RichBold" />
+					<Button Icon="italic" Title="Italic" [pressed]="!!RichFormats.Italic" (click)="RichItalic" />
+					<Button Icon="underline" Title="Underline" [pressed]="!!RichFormats.Underline" (click)="RichUnderline" />
+					<Button Icon="strikethrough" Title="Strikethrough" [pressed]="!!RichFormats.Strike" (click)="RichStrike" />
+					<Button Icon="code" Title="Inline code" [pressed]="!!RichFormats.Code" (click)="RichCode" />
+				</ButtonGroup>
+				<ButtonGroup Attached="true">
+					<Button Icon="list-bulleted" Title="Bulleted list" [pressed]="RichFormats.List === 'bullets'" (click)="RichBullets" />
+					<Button Icon="list-ordered" Title="Numbered list" [pressed]="RichFormats.List === 'numbers'" (click)="RichNumbers" />
+				</ButtonGroup>
+				<Input Icon="link" Placeholder="https://..." [value]="RichLink" (input)="RichLinkChanged" />
+				<Button Label="Link" (click)="RichApplyLink" />
+				<ButtonGroup Attached="true">
+					<Button Icon="image" Title="Image" (click)="RichImage" />
+					<Button Icon="table" Title="Table" (click)="RichTable" />
+					<Button Icon="add" Title="Row below" [disabled]="!RichFormats.Table" (click)="RichRow" />
+					<Button Icon="remove" Title="Horizontal rule" (click)="RichRule" />
+					<Button Icon="clear-format" Title="Clear formatting" (click)="RichClear" />
+				</ButtonGroup>
+				<ButtonGroup Attached="true">
+					<Button Icon="undo" Title="Undo" (click)="RichUndo" />
+					<Button Icon="redo" Title="Redo" (click)="RichRedo" />
+				</ButtonGroup>
+				<Checkbox Label="Markdown" [checked]="RichMarkdownShown" (change)="RichMarkdownToggled" />
+				<Button Icon="print" Label="Print" (click)="RichPrint" />
+			</div>
+			<RichEditor Label="Example document" Rows="8" MaxRows="20" [value]="RichValue" (ready)="RichReady" (input)="RichTyped" (formats)="RichFormatsChanged" (link)="RichLinkAsked" (files)="RichFiles" />
+			<CodeEditor *if="RichMarkdownShown" Label="Markdown of the document" Language="markdown" Rows="10" [value]="RichMarkdown" (input)="RichMarkdownTyped" />
+			<span class="elemenx-caption">The toolbar above is the page's own: it calls Command. Select text for the quick menu; type # , - , 1. or &gt; at the start of a line; paste or drop an image file.</span>
 		</div>
-		<RichEditor Label="Example document" Rows="8" MaxRows="20" [value]="RichValue" (ready)="RichReady" (input)="RichTyped" (formats)="RichFormatsChanged" (link)="RichLinkAsked" (files)="RichFiles" />
-		<CodeEditor *if="RichMarkdownShown" Label="Markdown of the document" Language="markdown" Rows="10" [value]="RichMarkdown" (input)="RichMarkdownTyped" />
-		<span class="elemenx-caption">The toolbar above is the page's own: it calls Command. Select text for the quick menu; type # , - , 1. or &gt; at the start of a line; paste or drop an image file.</span>
 	</Section>
 
 	<Section Title="Windows" [note]="WindowNote">
-		<div class="ui-kit-row">
-			<Button Icon="layout" Label="Properties" [pressed]="PropertiesOpen" (click)="ToggleProperties" />
-			<Button Icon="edit" Label="Notes" [pressed]="NotesOpen" (click)="ToggleNotes" />
-			<span class="elemenx-caption">The buttons show and hide the windows. Drag by the header, resize by any edge, double press the header to maximize; the arrows on a focused header move it, Shift resizes. Notes remembers its place.</span>
-		</div>
-		<div class="ui-kit-row">
-			<video class="ui-kit-pip-video" muted playsinline aria-label="A clock drawn live"></video>
-			<Button Icon="pip" Label="Video in a window" [disabled]="!PipVideo" (click)="VideoPip" />
-			<span class="elemenx-caption">Picture-in-Picture: a video in a small window over the other windows; the button in the header of Notes moves its body there ({{PipDocument ? 'this browser can' : 'not in this browser'}}).</span>
-		</div>
-		<div class="ui-kit-desktop">
-			<Window *if="PropertiesOpen" Title="Properties" Overline="Project" Icon="settings" X="24" Y="24" Width="320" Height="260" (close)="CloseProperties" (move)="WindowMoved" (resize)="WindowResized" (minimize)="WindowMinimized" (maximize)="WindowMaximized" (restore)="WindowRestored">
-				<div class="ui-kit-stack">
-					<Field Label="Name"><Input Value="Elemenx" /></Field>
-					<Checkbox Label="Public" Checked="true" />
-				</div>
-				<Button slot="footer" Label="Cancel" (click)="CloseProperties" />
-				<Button slot="footer" Label="Save" Variant="primary" (click)="CloseProperties" />
-			</Window>
-			<Window *if="NotesOpen" Title="Notes" Icon="edit" HeaderShape="trapezoid" PopOut="true" X="380" Y="60" Width="300" Height="200" Persist="ui-kit-notes" (close)="CloseNotes" (move)="WindowMoved" (resize)="WindowResized">
-				<Button slot="header" Icon="pin" Title="Pin" Variant="ghost" Size="small" />
-				<p class="elemenx-text">A window keeps to its container. This one remembers where it was left.</p>
-			</Window>
+		<div class="ui-kit-lazy" *lazy>
+			<div class="ui-kit-row">
+				<Button Icon="layout" Label="Properties" [pressed]="PropertiesOpen" (click)="ToggleProperties" />
+				<Button Icon="edit" Label="Notes" [pressed]="NotesOpen" (click)="ToggleNotes" />
+				<span class="elemenx-caption">The buttons show and hide the windows. Drag by the header, resize by any edge, double press the header to maximize; the arrows on a focused header move it, Shift resizes. Notes remembers its place.</span>
+			</div>
+			<div class="ui-kit-row">
+				<video class="ui-kit-pip-video" muted playsinline aria-label="A clock drawn live"></video>
+				<Button Icon="pip" Label="Video in a window" [disabled]="!PipVideo" (click)="VideoPip" />
+				<span class="elemenx-caption">Picture-in-Picture: a video in a small window over the other windows; the button in the header of Notes moves its body there ({{PipDocument ? 'this browser can' : 'not in this browser'}}).</span>
+			</div>
+			<div class="ui-kit-desktop">
+				<Window *if="PropertiesOpen" Title="Properties" Overline="Project" Icon="settings" X="24" Y="24" Width="320" Height="260" (close)="CloseProperties" (move)="WindowMoved" (resize)="WindowResized" (minimize)="WindowMinimized" (maximize)="WindowMaximized" (restore)="WindowRestored">
+					<div class="ui-kit-stack">
+						<Field Label="Name"><Input Value="Elemenx" /></Field>
+						<Checkbox Label="Public" Checked="true" />
+					</div>
+					<Button slot="footer" Label="Cancel" (click)="CloseProperties" />
+					<Button slot="footer" Label="Save" Variant="primary" (click)="CloseProperties" />
+				</Window>
+				<Window *if="NotesOpen" Title="Notes" Icon="edit" HeaderShape="trapezoid" PopOut="true" X="380" Y="60" Width="300" Height="200" Persist="ui-kit-notes" (close)="CloseNotes" (move)="WindowMoved" (resize)="WindowResized">
+					<Button slot="header" Icon="pin" Title="Pin" Variant="ghost" Size="small" />
+					<p class="elemenx-text">A window keeps to its container. This one remembers where it was left.</p>
+				</Window>
+			</div>
 		</div>
 	</Section>
 
 	<Section Title="Game UI" [note]="GameNote">
-		<div class="ui-kit-row">
-			<ButtonGroup Attached="true" Label="Game theme">
-				<Button Label="Default" [pressed]="ThemeName === 'default'" (click)="GameThemeDefault" />
-				<Button Label="Fantasy" [pressed]="ThemeName === 'fantasy'" (click)="GameThemeFantasy" />
-				<Button Label="Sci-fi" [pressed]="ThemeName === 'scifi'" (click)="GameThemeScifi" />
-			</ButtonGroup>
-			<Button Icon="remove" Label="Take a hit" (click)="GameHit" />
-			<Button Icon="add" Label="Gain experience" (click)="GameExperience" />
-			<Button Icon="trophy" Label="Unlock an achievement" (click)="GameUnlock" />
-			<ButtonGroup Attached="true" Label="Game windows">
-				<Button Label="Status" [pressed]="GameStatusOpen" (click)="GameToggleStatus" />
-				<Button Label="Bag" [pressed]="GameBagOpen" (click)="GameToggleBag" />
-				<Button Label="Record" [pressed]="GameRecordOpen" (click)="GameToggleRecord" />
-				<Button Label="Systems" [pressed]="GameSystemsOpen" (click)="GameToggleSystems" />
-				<Button Label="Quests" [pressed]="GameQuestsOpen" (click)="GameToggleQuests" />
-				<Button Label="Ranking" [pressed]="GameRankingOpen" (click)="GameToggleRanking" />
-				<Button Label="Sign in" [pressed]="GameLoginOpen" (click)="GameToggleLogin" />
-			</ButtonGroup>
-			<span class="elemenx-caption">A gamepad works the whole page: the d-pad moves the focus, A presses, B goes back.</span>
-		</div>
-		<div class="ui-kit-game">
-			<div class="ui-kit-game-hud">
-				<GameHud Label="Example game">
-					<div class="ui-kit-game-scene">
-						<Window *if="GameQuestsOpen" Variant="game" Title="Quests" X="60" Y="60" Width="560" Height="400" (close)="GameQuestsClosed">
-							<GameQuests [items]="GameQuestList" [value]="GameQuest" Label="Quest log" (change)="GameQuestChosen" (track)="GameQuestTracked" />
-						</Window>
-						<Window *if="GameRankingOpen" Variant="game" Level="secondary" Title="Ranking" Overline="Season 3" X="240" Y="80" Width="380" Maximizable="false" (close)="GameRankingClosed">
-							<GameLeaderboard [items]="GameRanking" Limit="5" ScoreLabel="Glory" Selectable="true" (select)="GameRankChosen" />
-						</Window>
-						<Window *if="GameStatusOpen" Variant="game" Title="Status" X="16" Y="176" Width="300" MinWidth="260" Maximizable="false" (close)="GameStatusClosed">
-							<div class="ui-kit-game-window">
-								<div class="ui-kit-row"><strong>Aria</strong><span class="elemenx-game-special">Level 7 · Warden</span></div>
-								<GameBar Kind="health" [value]="GameHealth" Max="100" Label="HP" />
-								<GameBar Kind="mana" [value]="GameMana" Max="80" Label="MP" />
-								<GameBar Kind="stamina" Value="64" Max="80" Label="CP" />
-								<hr class="elemenx-game-separator" />
-								<Section Title="Battle" Level="4">
-									<Properties Columns="2" Label="Battle">
-										<Property Label="Attack" Value="1017" /><Property Label="Magic" Value="210" />
-										<Property Label="Defense" Value="1162" /><Property Label="Resist" Value="762" />
-										<Property Label="Accuracy" Value="128" /><Property Label="Evasion" Value="114" />
-									</Properties>
-								</Section>
-								<Section Title="Effects" Level="4">
-									<Properties Label="Effects">
-										<Property Label="Blessing" Value="ON" Tone="success" />
-										<Property Label="Poison" Value="−12" Unit=" / s" Tone="danger" />
-										<Property Label="Experience rate" Value="×5.0" Tone="accent" />
-									</Properties>
-								</Section>
-							</div>
-							<Button slot="footer" Label="Get buffs" Size="small" (click)="GameBuffs" />
-						</Window>
-						<Window *if="GameBagOpen" Variant="game" Level="secondary" HeaderShape="trapezoid" Title="Bag" X="620" Y="96" Width="280" Resizable="false" Maximizable="false" (close)="GameBagClosed">
-							<GameInventory Columns="4" Slots="16" Label="Bag" Name="bag" [items]="GameItems" (move)="GameItemMoved" (receive)="GameBagReceived" (use)="GameItemUsed" (discard)="GameItemDiscarded" />
-						</Window>
-						<Window *if="GameLoginOpen" Variant="game" Level="plain" Title="Sign in" X="300" Y="230" Width="320" Resizable="false" Minimizable="false" Maximizable="false" (close)="GameLoginClosed">
-							<div class="ui-kit-game-login">
-								<label class="ui-kit-game-label" for="ui-kit-game-id">ID</label>
-								<input id="ui-kit-game-id" class="elemenx-input elemenx-input-control ui-kit-game-field" type="text" autocomplete="username" />
-								<label class="ui-kit-game-label" for="ui-kit-game-password">Password</label>
-								<input id="ui-kit-game-password" class="elemenx-input elemenx-input-control ui-kit-game-field" type="password" autocomplete="current-password" />
-							</div>
-							<div class="ui-kit-game-actions">
-								<Button Label="Log in" (click)="GameLoginClosed" />
-								<Button Label="Exit" (click)="GameLoginClosed" />
-							</div>
-						</Window>
-						<Window *if="GameRecordOpen" Variant="game" Overline="Free Planets Fleets" Title="Bureau of Fleet Personnel" X="200" Y="40" Width="520" Height="320" (close)="GameRecordClosed">
-							<div class="ui-kit-game-record">
-								<GameTabs [items]="GameRecordTabs" [value]="GameRecordTab" Label="Record" (change)="GameRecordChosen" />
-								<img class="ui-kit-game-portrait" src="data/cards/city.svg" alt="" />
+		<div class="ui-kit-lazy" *lazy>
+			<div class="ui-kit-row">
+				<ButtonGroup Attached="true" Label="Game theme">
+					<Button Label="Default" [pressed]="ThemeName === 'default'" (click)="GameThemeDefault" />
+					<Button Label="Fantasy" [pressed]="ThemeName === 'fantasy'" (click)="GameThemeFantasy" />
+					<Button Label="Sci-fi" [pressed]="ThemeName === 'scifi'" (click)="GameThemeScifi" />
+				</ButtonGroup>
+				<Button Icon="remove" Label="Take a hit" (click)="GameHit" />
+				<Button Icon="add" Label="Gain experience" (click)="GameExperience" />
+				<Button Icon="trophy" Label="Unlock an achievement" (click)="GameUnlock" />
+				<ButtonGroup Attached="true" Label="Game windows">
+					<Button Label="Status" [pressed]="GameStatusOpen" (click)="GameToggleStatus" />
+					<Button Label="Bag" [pressed]="GameBagOpen" (click)="GameToggleBag" />
+					<Button Label="Record" [pressed]="GameRecordOpen" (click)="GameToggleRecord" />
+					<Button Label="Systems" [pressed]="GameSystemsOpen" (click)="GameToggleSystems" />
+					<Button Label="Quests" [pressed]="GameQuestsOpen" (click)="GameToggleQuests" />
+					<Button Label="Ranking" [pressed]="GameRankingOpen" (click)="GameToggleRanking" />
+					<Button Label="Sign in" [pressed]="GameLoginOpen" (click)="GameToggleLogin" />
+				</ButtonGroup>
+				<span class="elemenx-caption">A gamepad works the whole page: the d-pad moves the focus, A presses, B goes back.</span>
+			</div>
+			<div class="ui-kit-game">
+				<div class="ui-kit-game-hud">
+					<GameHud Label="Example game">
+						<div class="ui-kit-game-scene">
+							<Window *if="GameQuestsOpen" Variant="game" Title="Quests" X="60" Y="60" Width="560" Height="400" (close)="GameQuestsClosed">
+								<GameQuests [items]="GameQuestList" [value]="GameQuest" Label="Quest log" (change)="GameQuestChosen" (track)="GameQuestTracked" />
+							</Window>
+							<Window *if="GameRankingOpen" Variant="game" Level="secondary" Title="Ranking" Overline="Season 3" X="240" Y="80" Width="380" Maximizable="false" (close)="GameRankingClosed">
+								<GameLeaderboard [items]="GameRanking" Limit="5" ScoreLabel="Glory" Selectable="true" (select)="GameRankChosen" />
+							</Window>
+							<Window *if="GameStatusOpen" Variant="game" Title="Status" X="16" Y="176" Width="300" MinWidth="260" Maximizable="false" (close)="GameStatusClosed">
 								<div class="ui-kit-game-window">
-									<span class="elemenx-window-overline">Free Planets Defense Force · {{GameRecordTab}}</span>
-									<Properties Label="Record">
-										<Property Label="Rank" Value="Commodore" />
-										<Property Label="Fleet" Value="13th" />
-										<Property Label="Service" Value="12" Unit=" years" />
-										<Property Label="Status" Value="Active" Tone="success" />
-									</Properties>
+									<div class="ui-kit-row"><strong>Aria</strong><span class="elemenx-game-special">Level 7 · Warden</span></div>
+									<GameBar Kind="health" [value]="GameHealth" Max="100" Label="HP" />
+									<GameBar Kind="mana" [value]="GameMana" Max="80" Label="MP" />
+									<GameBar Kind="stamina" Value="64" Max="80" Label="CP" />
 									<hr class="elemenx-game-separator" />
-									<p class="elemenx-text small">Transferred to the headquarters of the fleet after the battle of Astarte.</p>
-								</div>
-							</div>
-						</Window>
-						<Window *if="GameSystemsOpen" Variant="game" Overline="v.2.32" Title="Systems" X="330" Y="16" Width="480" Height="520" (close)="GameSystemsClosed">
-							<div class="ui-kit-game-systems">
-								<Tabs [tabs]="GameSystemTabs" [value]="GameSystemTab" (change)="GameSystemChosen" />
-								<div class="ui-kit-game-power" *if="GameSystemTab === 'power'">
-									<Section Title="Reactor" Level="4">
-										<div class="ui-kit-game-columns">
-											<Meter *for="cell of GameReactor" *key="cell.ID" Orientation="vertical" [value]="cell.Value" Max="140" High="110" Optimum="0" Marks="false" [label]="cell.ID" />
-										</div>
+									<Section Title="Battle" Level="4">
+										<Properties Columns="2" Label="Battle">
+											<Property Label="Attack" Value="1017" /><Property Label="Magic" Value="210" />
+											<Property Label="Defense" Value="1162" /><Property Label="Resist" Value="762" />
+											<Property Label="Accuracy" Value="128" /><Property Label="Evasion" Value="114" />
+										</Properties>
 									</Section>
-									<Section Title="Modes" Level="4">
-										<div class="ui-kit-game-dials">
-											<Meter Shape="dial" Size="small" Needle="true" Ticks="11" Value="62" ShowRange="true" ValuePlacement="below" Label="Mode 01"><strong class="ui-kit-dial-mark">A<sup>1</sup></strong></Meter>
-											<Meter Shape="dial" Size="small" Needle="true" Ticks="11" Value="35" Label="Mode 02"><strong class="ui-kit-dial-mark">C<sup>4</sup></strong></Meter>
-											<Meter Shape="dial" Size="small" Ticks="11" Value="88" Low="20" High="80" Optimum="50" ValuePlacement="corner" Label="Mode 03"><strong class="ui-kit-dial-mark">N<sup>2</sup></strong></Meter>
-										</div>
-										<Meter Value="58" Low="30" High="80" Optimum="100" Marks="false" ShowRange="true" ValuePlacement="corner" Label="RDD EFD" Unit="%" />
+									<Section Title="Effects" Level="4">
+										<Properties Label="Effects">
+											<Property Label="Blessing" Value="ON" Tone="success" />
+											<Property Label="Poison" Value="−12" Unit=" / s" Tone="danger" />
+											<Property Label="Experience rate" Value="×5.0" Tone="accent" />
+										</Properties>
 									</Section>
 								</div>
-								<Table *if="GameSystemTab === 'files'" [columns]="GameFileColumns" [rows]="GameFiles" [selected]="GameFile" Compact="true" Striped="true" Selectable="single" Height="300px" Label="Files" (select)="GameFileChosen" />
-								<Block *if="GameSystemTab === 'log'" Title="Log" Note="Last hour">
-									<VirtualList [items]="GameLog" Height="260px" ItemHeight="28" Label="Log" />
-								</Block>
-							</div>
-							<span slot="footer" class="ui-kit-game-footnote">\DF.93 · Slow network is detected</span>
-							<Button slot="footer" Label="Activate" Size="small" (click)="GameActivate" />
-						</Window>
-					</div>
-					<div slot="top-start" class="elemenx-game-panel light ui-kit-game-status">
-						<strong>Aria · level 7</strong>
-						<GameBar Kind="health" [value]="GameHealth" Max="100" Size="large" />
-						<GameBar Kind="mana" [value]="GameMana" Max="80" />
-						<GameBar Kind="experience" [value]="GameExperiencePoints" Max="1000" Size="small" Segments="10" Label="Experience" />
-					</div>
-					<div slot="top-end" class="ui-kit-game-top-end">
-						<Button Icon="pause" Title="Pause" Variant="secondary" (click)="GamePause" />
-						<GameMinimap Size="132" Title="Northern woods" [note]="'412, 88 · ×' + GameZoom" [markers]="GameMarkers" Heading="35" Zoomable="true" (zoom)="GameZoomed" (marker)="GameMarkerChosen"><img src="data/cards/mountains.svg" alt="" [style.transform]="'scale(' + (1 + GameZoom * 0.25) + ')'" /></GameMinimap>
-					</div>
-					<div slot="end" class="elemenx-game-panel light ui-kit-game-tracker">
-						<GameQuests Variant="tracker" [items]="GameQuestList" Label="Tracked quests" (change)="GameQuestChosen" />
-					</div>
-					<div slot="center" class="ui-kit-game-center">
-						<GameMenu *if="GamePaused" Title="Paused" Subtitle="Chapter II · The northern road" [items]="GameMenuItems" (select)="GameMenuChosen" (back)="GameResume" />
-					</div>
-					<div slot="bottom" class="ui-kit-game-bottom">
-						<GameDialogue *if="GameLine && !GamePaused" [speaker]="GameLine.Speaker" Portrait="data/cards/mountains.svg" [text]="GameLine.Text" [choices]="GameLine.Choices || []" Speed="60" (next)="GameNext" (choose)="GameChose" />
-						<div class="elemenx-game-panel elemenx-game-hotbar">
-							<GameSlot *for="slot of GameHotbar" *key="slot.Key" Group="hotbar" [key]="slot.Key" [data]="slot.Skill || slot.Item || null" [icon]="(slot.Skill || slot.Item || {}).Icon || ''" [image]="(slot.Skill || slot.Item || {}).Image || ''" [label]="(slot.Skill || slot.Item || {}).Name || ''" [cooldown]="slot.Skill ? slot.Skill.Cooldown || 0 : 0" [count]="slot.Item ? slot.Item.Count || 0 : 0" [color]="(slot.Skill || slot.Item || {}).Color || ''" [rarity]="slot.Item ? slot.Item.Rarity || '' : ''" [badge]="slot.Item ? slot.Item.Badge || '' : ''" [classes]="slot.Item ? slot.Item.Class || '' : ''" [active]="slot.Key === GameActiveSlot" [disabled]="!!slot.Skill && slot.Skill.ID === 'fireball' && GameMana < 10" (use)="GameSlotUsed" (drop)="GameSlotDropped" />
+								<Button slot="footer" Label="Get buffs" Size="small" (click)="GameBuffs" />
+							</Window>
+							<Window *if="GameBagOpen" Variant="game" Level="secondary" HeaderShape="trapezoid" Title="Bag" X="620" Y="96" Width="280" Resizable="false" Maximizable="false" (close)="GameBagClosed">
+								<GameInventory Columns="4" Slots="16" Label="Bag" Name="bag" [items]="GameItems" (move)="GameItemMoved" (receive)="GameBagReceived" (use)="GameItemUsed" (discard)="GameItemDiscarded" />
+							</Window>
+							<Window *if="GameLoginOpen" Variant="game" Level="plain" Title="Sign in" X="300" Y="230" Width="320" Resizable="false" Minimizable="false" Maximizable="false" (close)="GameLoginClosed">
+								<div class="ui-kit-game-login">
+									<label class="ui-kit-game-label" for="ui-kit-game-id">ID</label>
+									<input id="ui-kit-game-id" class="elemenx-input elemenx-input-control ui-kit-game-field" type="text" autocomplete="username" />
+									<label class="ui-kit-game-label" for="ui-kit-game-password">Password</label>
+									<input id="ui-kit-game-password" class="elemenx-input elemenx-input-control ui-kit-game-field" type="password" autocomplete="current-password" />
+								</div>
+								<div class="ui-kit-game-actions">
+									<Button Label="Log in" (click)="GameLoginClosed" />
+									<Button Label="Exit" (click)="GameLoginClosed" />
+								</div>
+							</Window>
+							<Window *if="GameRecordOpen" Variant="game" Overline="Free Planets Fleets" Title="Bureau of Fleet Personnel" X="200" Y="40" Width="520" Height="320" (close)="GameRecordClosed">
+								<div class="ui-kit-game-record">
+									<GameTabs [items]="GameRecordTabs" [value]="GameRecordTab" Label="Record" (change)="GameRecordChosen" />
+									<img class="ui-kit-game-portrait" src="data/cards/city.svg" alt="" />
+									<div class="ui-kit-game-window">
+										<span class="elemenx-window-overline">Free Planets Defense Force · {{GameRecordTab}}</span>
+										<Properties Label="Record">
+											<Property Label="Rank" Value="Commodore" />
+											<Property Label="Fleet" Value="13th" />
+											<Property Label="Service" Value="12" Unit=" years" />
+											<Property Label="Status" Value="Active" Tone="success" />
+										</Properties>
+										<hr class="elemenx-game-separator" />
+										<p class="elemenx-text small">Transferred to the headquarters of the fleet after the battle of Astarte.</p>
+									</div>
+								</div>
+							</Window>
+							<Window *if="GameSystemsOpen" Variant="game" Overline="v.2.32" Title="Systems" X="330" Y="16" Width="480" Height="520" (close)="GameSystemsClosed">
+								<div class="ui-kit-game-systems">
+									<Tabs [tabs]="GameSystemTabs" [value]="GameSystemTab" (change)="GameSystemChosen" />
+									<div class="ui-kit-game-power" *if="GameSystemTab === 'power'">
+										<Section Title="Reactor" Level="4">
+											<div class="ui-kit-game-columns">
+												<Meter *for="cell of GameReactor" *key="cell.ID" Orientation="vertical" [value]="cell.Value" Max="140" High="110" Optimum="0" Marks="false" [label]="cell.ID" />
+											</div>
+										</Section>
+										<Section Title="Modes" Level="4">
+											<div class="ui-kit-game-dials">
+												<Meter Shape="dial" Size="small" Needle="true" Ticks="11" Value="62" ShowRange="true" ValuePlacement="below" Label="Mode 01"><strong class="ui-kit-dial-mark">A<sup>1</sup></strong></Meter>
+												<Meter Shape="dial" Size="small" Needle="true" Ticks="11" Value="35" Label="Mode 02"><strong class="ui-kit-dial-mark">C<sup>4</sup></strong></Meter>
+												<Meter Shape="dial" Size="small" Ticks="11" Value="88" Low="20" High="80" Optimum="50" ValuePlacement="corner" Label="Mode 03"><strong class="ui-kit-dial-mark">N<sup>2</sup></strong></Meter>
+											</div>
+											<Meter Value="58" Low="30" High="80" Optimum="100" Marks="false" ShowRange="true" ValuePlacement="corner" Label="RDD EFD" Unit="%" />
+										</Section>
+									</div>
+									<Table *if="GameSystemTab === 'files'" [columns]="GameFileColumns" [rows]="GameFiles" [selected]="GameFile" Compact="true" Striped="true" Selectable="single" Height="300px" Label="Files" (select)="GameFileChosen" />
+									<Block *if="GameSystemTab === 'log'" Title="Log" Note="Last hour">
+										<VirtualList [items]="GameLog" Height="260px" ItemHeight="28" Label="Log" />
+									</Block>
+								</div>
+								<span slot="footer" class="ui-kit-game-footnote">\DF.93 · Slow network is detected</span>
+								<Button slot="footer" Label="Activate" Size="small" (click)="GameActivate" />
+							</Window>
 						</div>
-					</div>
-					<div slot="bottom-end" class="elemenx-game-panel light ui-kit-game-keys">
-						<GameKey Button="a" Keyboard="Enter" Label="Talk" />
-						<GameKey Button="start" Keyboard="Escape" Label="Pause" />
-					</div>
-				</GameHud>
+						<div slot="top-start" class="elemenx-game-panel light ui-kit-game-status">
+							<strong>Aria · level 7</strong>
+							<GameBar Kind="health" [value]="GameHealth" Max="100" Size="large" />
+							<GameBar Kind="mana" [value]="GameMana" Max="80" />
+							<GameBar Kind="experience" [value]="GameExperiencePoints" Max="1000" Size="small" Segments="10" Label="Experience" />
+						</div>
+						<div slot="top-end" class="ui-kit-game-top-end">
+							<Button Icon="pause" Title="Pause" Variant="secondary" (click)="GamePause" />
+							<GameMinimap Size="132" Title="Northern woods" [note]="'412, 88 · ×' + GameZoom" [markers]="GameMarkers" Heading="35" Zoomable="true" (zoom)="GameZoomed" (marker)="GameMarkerChosen"><img src="data/cards/mountains.svg" alt="" [style.transform]="'scale(' + (1 + GameZoom * 0.25) + ')'" /></GameMinimap>
+						</div>
+						<div slot="end" class="elemenx-game-panel light ui-kit-game-tracker">
+							<GameQuests Variant="tracker" [items]="GameQuestList" Label="Tracked quests" (change)="GameQuestChosen" />
+						</div>
+						<div slot="center" class="ui-kit-game-center">
+							<GameMenu *if="GamePaused" Title="Paused" Subtitle="Chapter II · The northern road" [items]="GameMenuItems" (select)="GameMenuChosen" (back)="GameResume" />
+						</div>
+						<div slot="bottom" class="ui-kit-game-bottom">
+							<GameDialogue *if="GameLine && !GamePaused" [speaker]="GameLine.Speaker" Portrait="data/cards/mountains.svg" [text]="GameLine.Text" [choices]="GameLine.Choices || []" Speed="60" (next)="GameNext" (choose)="GameChose" />
+							<div class="elemenx-game-panel elemenx-game-hotbar">
+								<GameSlot *for="slot of GameHotbar" *key="slot.Key" Group="hotbar" [key]="slot.Key" [data]="slot.Skill || slot.Item || null" [icon]="(slot.Skill || slot.Item || {}).Icon || ''" [image]="(slot.Skill || slot.Item || {}).Image || ''" [label]="(slot.Skill || slot.Item || {}).Name || ''" [cooldown]="slot.Skill ? slot.Skill.Cooldown || 0 : 0" [count]="slot.Item ? slot.Item.Count || 0 : 0" [color]="(slot.Skill || slot.Item || {}).Color || ''" [rarity]="slot.Item ? slot.Item.Rarity || '' : ''" [badge]="slot.Item ? slot.Item.Badge || '' : ''" [classes]="slot.Item ? slot.Item.Class || '' : ''" [active]="slot.Key === GameActiveSlot" [disabled]="!!slot.Skill && slot.Skill.ID === 'fireball' && GameMana < 10" (use)="GameSlotUsed" (drop)="GameSlotDropped" />
+							</div>
+						</div>
+						<div slot="bottom-end" class="elemenx-game-panel light ui-kit-game-keys">
+							<GameKey Button="a" Keyboard="Enter" Label="Talk" />
+							<GameKey Button="start" Keyboard="Escape" Label="Pause" />
+						</div>
+					</GameHud>
+				</div>
 			</div>
 		</div>
 	</Section>
 
 	<Section Title="Tiles" [note]="'TileGrid · drag tiles to arrange them' + (OpenedTile ? ' · Opened: ' + OpenedTile : '')">
-		<TileGrid [groups]="TileGroups" Editable="true" GroupPolicy="between" (open)="TileOpened" (change)="TilesChanged" (groupaction)="TileGroupAction">
-			<TileGroup ID="pinned" Title="Pinned" Locked="true">
-				<Tile ID="clock" Title="Clock" Size="wide" Color="#1f2a37" Class="ui-kit-clock-tile">
-					<strong>{{ClockTime}}</strong>
-					<span>{{ClockDate}}</span>
-				</Tile>
-			</TileGroup>
-		</TileGrid>
-		<h4>Declared in the template</h4>
-		<Toggle Label="News tile" [checked]="ShowNews" (change)="NewsToggled" />
-		<TileGrid Editable="true" GroupPolicy="none" (open)="TileOpened">
-			<TileGroup ID="media" Title="Media">
-				<Tile ID="music" Title="Music" Icon="play" Color="#c2477f" [badge]="Plays || null" />
-				<Tile ID="photos" Title="Photos" Icon="image" Size="wide" Color="#2f8f83" Text="128 new" />
-				<Tile ID="player" Title="Player" Color="#5f5a54" Class="ui-kit-player-tile">
-					<Button Label="Play" Size="small" (click)="Play" />
-					<span>{{Plays}} plays</span>
-				</Tile>
-				<Tile *if="ShowNews" ID="news" Title="News" Icon="globe" Size="small" Color="#9a6514" />
-			</TileGroup>
-		</TileGrid>
+		<div class="ui-kit-lazy" *lazy>
+			<TileGrid [groups]="TileGroups" Editable="true" GroupPolicy="between" (open)="TileOpened" (change)="TilesChanged" (groupaction)="TileGroupAction">
+				<TileGroup ID="pinned" Title="Pinned" Locked="true">
+					<Tile ID="clock" Title="Clock" Size="wide" Color="#1f2a37" Class="ui-kit-clock-tile">
+						<strong>{{ClockTime}}</strong>
+						<span>{{ClockDate}}</span>
+					</Tile>
+				</TileGroup>
+			</TileGrid>
+			<h4>Declared in the template</h4>
+			<Toggle Label="News tile" [checked]="ShowNews" (change)="NewsToggled" />
+			<TileGrid Editable="true" GroupPolicy="none" (open)="TileOpened">
+				<TileGroup ID="media" Title="Media">
+					<Tile ID="music" Title="Music" Icon="play" Color="#c2477f" [badge]="Plays || null" />
+					<Tile ID="photos" Title="Photos" Icon="image" Size="wide" Color="#2f8f83" Text="128 new" />
+					<Tile ID="player" Title="Player" Color="#5f5a54" Class="ui-kit-player-tile">
+						<Button Label="Play" Size="small" (click)="Play" />
+						<span>{{Plays}} plays</span>
+					</Tile>
+					<Tile *if="ShowNews" ID="news" Title="News" Icon="globe" Size="small" Color="#9a6514" />
+				</TileGroup>
+			</TileGrid>
+		</div>
 	</Section>
 
 	<Section Title="Layouts" Note="Dashboard · Settings · MasterDetail · Centered">
-		<h4>Dashboard</h4>
-		<div class="ui-kit-frame">
-			<Dashboard>
-				<NavList slot="nav" [items]="DashboardNav" [value]="DashboardPage" [collapsed]="NavCollapsed" (select)="DashboardSelected" />
-				<div slot="header" class="elemenx-container ui-kit-chat-header">
-					<Button Icon="menu" Title="Collapse the navigation" Variant="ghost" (click)="ToggleNav" />
-					<strong>Overview</strong>
-					<span class="elemenx-spacer"></span>
-					<Input Shape="round" Icon="search" Placeholder="Search" Size="small" />
-				</div>
-				<DashboardWidget Title="Revenue" Icon="cart" Note="This month">
-					<span class="ui-kit-metric">$48,200</span>
-					<Meter Value="72" Low="30" High="80" Optimum="100" Label="Target" Unit="%" />
-				</DashboardWidget>
-				<DashboardWidget Title="Users" Icon="users">
-					<span class="ui-kit-metric">1,284</span>
-					<span class="elemenx-text small muted">+12% since last week</span>
-				</DashboardWidget>
-				<DashboardWidget Title="Builds" Icon="play" Span="2">
-					<Progress Value="84" Label="Passing" ShowValue="true" Tone="success" />
-					<Progress Value="12" Label="Flaky" ShowValue="true" Tone="warning" />
-				</DashboardWidget>
-				<DashboardWidget Title="Activity" Icon="history" Span="2" Rows="2">
-					<Timeline [items]="Activity" Compact="true" />
-				</DashboardWidget>
-				<DashboardWidget Title="Team" Icon="user" Span="2">
-					<Button slot="actions" Icon="add" Title="Invite" Variant="ghost" Size="small" />
-					<Table [columns]="Columns" [rows]="People" Compact="true" />
-				</DashboardWidget>
-			</Dashboard>
-		</div>
-		<h4>Settings</h4>
-		<div class="ui-kit-frame">
-			<Settings [path]="SettingsPath" Description="Options of the code editor">
-				<NavList slot="nav" [items]="SettingsNav" [value]="SettingsPage" [expanded]="['editor']" Searchable="true" (select)="SettingsSelected" />
-				<Button slot="actions" Icon="refresh" Title="Reset" Variant="ghost" Size="small" />
-				<Field Label="Font size" Horizontal="true"><NumberInput Value="14" Min="8" Max="32" Suffix="px" /></Field>
-				<Field Label="Theme" Horizontal="true"><ThemeSwitch Size="medium" /></Field>
-				<Field Label="Show line numbers" Horizontal="true"><Toggle Checked="true" /></Field>
-				<Field Label="Soft wrap" Horizontal="true"><Select [options]="Views" Value="list" /></Field>
-				<Button slot="footer" Label="Cancel" />
-				<Button slot="footer" Label="Apply" />
-				<Button slot="footer" Label="OK" Variant="primary" />
-			</Settings>
-		</div>
-		<h4>MasterDetail</h4>
-		<div class="ui-kit-frame small">
-			<MasterDetail Empty="Select a person" (back)="ClearPerson">
-				<Input slot="list-header" Icon="search" Placeholder="Filter" Size="small" />
-				<div slot="list" class="elemenx-master-row" *for="person of People" *key="person.ID" [class.active]="person.ID === PersonID" [attribute.data-id]="person.ID" (click)="PickPerson"><span class="elemenx-chat-avatar">{{person.Name.charAt(0)}}</span><div><strong>{{person.Name}}</strong><p class="elemenx-text small muted">{{person.Role}}</p></div></div>
-				<strong slot="detail-header" *if="PersonID">{{PersonName}}</strong>
-				<div slot="detail" class="ui-kit-stack" *if="PersonID">
-					<p class="elemenx-text">Commits: {{PersonCommits}}</p>
-					<Steps Size="small" [items]="StepItems" [done]="['plan', 'build']" [active]="['review']" />
-				</div>
-			</MasterDetail>
-		</div>
-		<h4>Centered</h4>
-		<div class="ui-kit-grid three">
-			<div class="ui-kit-frame centered">
-				<Centered Width="small" Card="true" Title="Sign in" Description="Use your work account">
-					<span slot="brand" class="ui-kit-logo">E</span>
-					<Field Label="Email"><Input Type="email" Placeholder="name@example.com" /></Field>
-					<Field Label="Password"><Input Type="password" /></Field>
-					<Button slot="actions" Label="Sign in" Variant="primary" Block="true" />
-					<span slot="footer">Privacy · Terms</span>
-				</Centered>
+		<div class="ui-kit-lazy" *lazy>
+			<h4>Dashboard</h4>
+			<div class="ui-kit-frame">
+				<Dashboard>
+					<NavList slot="nav" [items]="DashboardNav" [value]="DashboardPage" [collapsed]="NavCollapsed" (select)="DashboardSelected" />
+					<div slot="header" class="elemenx-container ui-kit-chat-header">
+						<Button Icon="menu" Title="Collapse the navigation" Variant="ghost" (click)="ToggleNav" />
+						<strong>Overview</strong>
+						<span class="elemenx-spacer"></span>
+						<Input Shape="round" Icon="search" Placeholder="Search" Size="small" />
+					</div>
+					<DashboardWidget Title="Revenue" Icon="cart" Note="This month">
+						<span class="ui-kit-metric">$48,200</span>
+						<Meter Value="72" Low="30" High="80" Optimum="100" Label="Target" Unit="%" />
+					</DashboardWidget>
+					<DashboardWidget Title="Users" Icon="users">
+						<span class="ui-kit-metric">1,284</span>
+						<span class="elemenx-text small muted">+12% since last week</span>
+					</DashboardWidget>
+					<DashboardWidget Title="Builds" Icon="play" Span="2">
+						<Progress Value="84" Label="Passing" ShowValue="true" Tone="success" />
+						<Progress Value="12" Label="Flaky" ShowValue="true" Tone="warning" />
+					</DashboardWidget>
+					<DashboardWidget Title="Activity" Icon="history" Span="2" Rows="2">
+						<Timeline [items]="Activity" Compact="true" />
+					</DashboardWidget>
+					<DashboardWidget Title="Team" Icon="user" Span="2">
+						<Button slot="actions" Icon="add" Title="Invite" Variant="ghost" Size="small" />
+						<Table [columns]="Columns" [rows]="People" Compact="true" />
+					</DashboardWidget>
+				</Dashboard>
 			</div>
-			<div class="ui-kit-frame centered">
-				<Centered Code="404" Title="Page not found" Description="The page was moved or never existed.">
-					<Button slot="actions" Label="Go home" Icon="home" Variant="primary" />
-				</Centered>
+			<h4>Settings</h4>
+			<div class="ui-kit-frame">
+				<Settings [path]="SettingsPath" Description="Options of the code editor">
+					<NavList slot="nav" [items]="SettingsNav" [value]="SettingsPage" [expanded]="['editor']" Searchable="true" (select)="SettingsSelected" />
+					<Button slot="actions" Icon="refresh" Title="Reset" Variant="ghost" Size="small" />
+					<Field Label="Font size" Horizontal="true"><NumberInput Value="14" Min="8" Max="32" Suffix="px" /></Field>
+					<Field Label="Theme" Horizontal="true"><ThemeSwitch Size="medium" /></Field>
+					<Field Label="Show line numbers" Horizontal="true"><Toggle Checked="true" /></Field>
+					<Field Label="Soft wrap" Horizontal="true"><Select [options]="Views" Value="list" /></Field>
+					<Button slot="footer" Label="Cancel" />
+					<Button slot="footer" Label="Apply" />
+					<Button slot="footer" Label="OK" Variant="primary" />
+				</Settings>
 			</div>
-			<div class="ui-kit-frame centered">
-				<Centered Icon="folder-open" Title="No projects yet" Description="Create a project to start.">
-					<Button slot="actions" Label="New project" Icon="add" Variant="primary" />
-					<Button slot="actions" Label="Import" />
-				</Centered>
+			<h4>MasterDetail</h4>
+			<div class="ui-kit-frame small">
+				<MasterDetail Empty="Select a person" (back)="ClearPerson">
+					<Input slot="list-header" Icon="search" Placeholder="Filter" Size="small" />
+					<div slot="list" class="elemenx-master-row" *for="person of People" *key="person.ID" [class.active]="person.ID === PersonID" [attribute.data-id]="person.ID" (click)="PickPerson"><span class="elemenx-chat-avatar">{{person.Name.charAt(0)}}</span><div><strong>{{person.Name}}</strong><p class="elemenx-text small muted">{{person.Role}}</p></div></div>
+					<strong slot="detail-header" *if="PersonID">{{PersonName}}</strong>
+					<div slot="detail" class="ui-kit-stack" *if="PersonID">
+						<p class="elemenx-text">Commits: {{PersonCommits}}</p>
+						<Steps Size="small" [items]="StepItems" [done]="['plan', 'build']" [active]="['review']" />
+					</div>
+				</MasterDetail>
+			</div>
+			<h4>Centered</h4>
+			<div class="ui-kit-grid three">
+				<div class="ui-kit-frame centered">
+					<Centered Width="small" Card="true" Title="Sign in" Description="Use your work account">
+						<span slot="brand" class="ui-kit-logo">E</span>
+						<Field Label="Email"><Input Type="email" Placeholder="name@example.com" /></Field>
+						<Field Label="Password"><Input Type="password" /></Field>
+						<Button slot="actions" Label="Sign in" Variant="primary" Block="true" />
+						<span slot="footer">Privacy · Terms</span>
+					</Centered>
+				</div>
+				<div class="ui-kit-frame centered">
+					<Centered Code="404" Title="Page not found" Description="The page was moved or never existed.">
+						<Button slot="actions" Label="Go home" Icon="home" Variant="primary" />
+					</Centered>
+				</div>
+				<div class="ui-kit-frame centered">
+					<Centered Icon="folder-open" Title="No projects yet" Description="Create a project to start.">
+						<Button slot="actions" Label="New project" Icon="add" Variant="primary" />
+						<Button slot="actions" Label="Import" />
+					</Centered>
+				</div>
 			</div>
 		</div>
 	</Section>

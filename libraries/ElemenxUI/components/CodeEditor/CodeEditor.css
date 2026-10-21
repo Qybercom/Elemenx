@@ -414,3 +414,10 @@
 .elemenx-code-diff-fold:hover {
 	color: var(--elemenx-text);
 }
+
+/* On a touch screen the text of a field is never under 16 pixels: iOS would zoom the page in at every focus. The whole editor takes it: its field lies over the drawn text. */
+@media (pointer: coarse) {
+	.elemenx-code-editor {
+		font-size: var(--elemenx-font-size-field);
+	}
+}

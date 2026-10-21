@@ -64,13 +64,14 @@
 	outline-offset: 1px;
 }
 
-/* A marked key (a hotkey, the keys of a game) in the accent; a pressed key goes down. */
+/* A marked key (a hotkey, the keys of a game) in the accent; a pressed key and a key held (Live) go down. */
 .elemenx-keyboard-key.marked {
 	background: rgba(var(--elemenx-accent-rgb), 0.16);
 	border-color: var(--elemenx-accent);
 }
 
 .elemenx-keyboard-key.pressed,
+.elemenx-keyboard-key.held,
 .elemenx-keyboard.clickable .elemenx-keyboard-key:active {
 	background: var(--elemenx-accent);
 	border-color: var(--elemenx-accent);

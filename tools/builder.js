@@ -11,6 +11,15 @@ var Electron = require('./electron.js');
 var Capacitor = require('./capacitor.js');
 var fail = common.fail;
 
+/*
+ * A page without <meta name="viewport"> is drawn by a phone as a desktop page about 980 pixels wide and zoomed out:
+ * none of the narrow layouts of the components apply there.
+ */
+function warnViewport (page, name) {
+	if (!/<meta\b[^>]*\bname\s*=\s*["']?viewport\b/i.test(page))
+		process.stderr.write('Elemenx Builder: ' + name + ' has no <meta name="viewport" content="width=device-width, initial-scale=1">: phones show it as a desktop page, zoomed out\n');
+}
+
 function readIndex (directory) {
 	var file = path.join(directory, 'index.js');
 	if (!fs.existsSync(file))
@@ -546,6 +555,9 @@ function build (project, options) {
 
 	appSource = fs.readFileSync(app, 'utf8').replace(/^\uFEFF/, '');
 	indexSource = fs.readFileSync(index, 'utf8').replace(/^\uFEFF/, '');
+
+	warnViewport(indexSource, indexName);
+
 	templateBundle = renderTemplates(indexSource);
 	roots = applicationRoots(project, options, appSource);
 
@@ -842,6 +854,8 @@ function single (job) {
 	var framework = scriptText(Minify.JavaScript(job.FrameworkSource));
 	var code = scriptText(Minify.JavaScript(assets.Resources.join('\n') + '\n' + job.Code));
 	var replaced = {Framework: false, Entry: false};
+
+	warnViewport(page, path.basename(job.Index));
 
 	/* The framework and the Application take the places of their <script src>: the framework stays one script of its own, so the workers can load it. */
 	page = page.replace(/<script\b[^>]*\bsrc\s*=\s*(["'])([^"']*)\1[^>]*>\s*<\/script>/gi, function (tag, quote, src) {
