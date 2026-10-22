@@ -1,0 +1,105 @@
+/* A small bar over the corner of an editor, as code editors have it. */
+.elemenx-find {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	max-width: 100%;
+	padding: 4px;
+	background: var(--elemenx-surface-raised);
+	border: 1px solid var(--elemenx-border-strong);
+	border-radius: var(--elemenx-radius);
+	box-shadow: var(--elemenx-shadow);
+	color: var(--elemenx-text);
+	font-size: var(--elemenx-font-size-small);
+}
+
+.elemenx-find-row {
+	display: flex;
+	align-items: center;
+	gap: 2px;
+}
+
+.elemenx-find-query,
+.elemenx-find-replacement {
+	flex: 1;
+	min-width: 80px;
+	height: 26px;
+	padding: 0 6px;
+	background: var(--elemenx-surface);
+	border: 1px solid var(--elemenx-border);
+	border-radius: var(--elemenx-radius);
+	color: var(--elemenx-text);
+	font: inherit;
+	font-size: var(--elemenx-font-size-field);
+}
+
+.elemenx-find-query:focus-visible,
+.elemenx-find-replacement:focus-visible {
+	border-color: var(--elemenx-accent);
+	outline: none;
+}
+
+.elemenx-find-button,
+.elemenx-find-option,
+.elemenx-find-text-button {
+	display: inline-flex;
+	flex: none;
+	align-items: center;
+	justify-content: center;
+	min-width: 26px;
+	height: 26px;
+	padding: 0 4px;
+	background: transparent;
+	border: 0;
+	border-radius: var(--elemenx-radius);
+	color: var(--elemenx-text-muted);
+	font: inherit;
+	cursor: pointer;
+}
+
+.elemenx-find-option {
+	font-family: var(--elemenx-font-mono);
+}
+
+.elemenx-find-text-button {
+	padding: 0 8px;
+}
+
+.elemenx-find-button:hover:not(:disabled),
+.elemenx-find-option:hover,
+.elemenx-find-text-button:hover:not(:disabled) {
+	background: var(--elemenx-surface-hover);
+	color: var(--elemenx-text);
+}
+
+.elemenx-find-option[aria-pressed='true'] {
+	background: rgba(var(--elemenx-accent-rgb), 0.16);
+	color: var(--elemenx-accent);
+}
+
+.elemenx-find-button:disabled,
+.elemenx-find-text-button:disabled {
+	opacity: 0.4;
+	cursor: default;
+}
+
+.elemenx-find-button:focus-visible,
+.elemenx-find-option:focus-visible,
+.elemenx-find-text-button:focus-visible {
+	box-shadow: 0 0 0 2px var(--elemenx-focus);
+	outline: none;
+}
+
+.elemenx-find-count {
+	flex: none;
+	min-width: 64px;
+	padding: 0 4px;
+	color: var(--elemenx-text-muted);
+	text-align: center;
+	white-space: nowrap;
+}
+
+.elemenx-find-indent {
+	flex: none;
+	width: 26px;
+}

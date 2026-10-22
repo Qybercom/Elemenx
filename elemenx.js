@@ -795,6 +795,12 @@
 				return false;
 			},
 			ResolvedName: resolvedName,
+
+			/* The names of the entities of a type the bundles carry. */
+			Names: function (type) {
+				return Object.keys(registry[type] || {});
+			},
+
 			Load: load,
 			LoadType: loadType
 		};
@@ -1835,6 +1841,13 @@
 				var map = maps.get(application);
 
 				return map ? map[name] || null : null;
+			},
+
+			/* The names of the entities of the source tree of an Application. */
+			Names: function (application) {
+				var map = maps.get(application);
+
+				return map ? Object.keys(map) : [];
 			}
 		};
 	})(typeof globalThis !== 'undefined' ? globalThis : self);
@@ -1842,7 +1855,18 @@
 	/* Library */
 	(function (global) {
 		'use strict';
-		var definitions = {ElemenxUI: {$Root: '/libraries/ElemenxUI', $Locales: {URL: 'locales/{language}.json', Languages: ['en', 'ru']}}};
+		/*
+		 * The root of ElemenxUI: libraries/ElemenxUI next to the elemenx.js that runs, on its origin (a framework from a CDN
+		 * takes its Library from there, not from the site of the page); /libraries/ElemenxUI of the page for a framework
+		 * inline in its page.
+		 */
+		function systemRoot () {
+			var script = Runtime.ScriptURL && /^(?:https?|file):/i.test(Runtime.ScriptURL) ? Runtime.ScriptURL.split('?')[0].split('#')[0] : '';
+
+			return script ? script.substring(0, script.lastIndexOf('/') + 1) + 'libraries/ElemenxUI' : '/libraries/ElemenxUI';
+		}
+
+		var definitions = {ElemenxUI: {$Root: systemRoot(), $Locales: {URL: 'locales/{language}.json', Languages: ['en', 'ru']}}};
 		var applications = new WeakMap();
 
 		function list (value) {
@@ -1978,6 +2002,21 @@
 				}
 
 				return null;
+			},
+
+			/* The names of the entities of the Libraries an Application uses. */
+			Names: function (application) {
+				var entries = applications.get(application) || [];
+				var names = [];
+				var i = 0;
+
+				while (i < entries.length) {
+					names = names.concat(Runtime.Discovery.Names(entries[i].Owner));
+
+					i++;
+				}
+
+				return names;
 			}
 		};
 	})(typeof globalThis !== 'undefined' ? globalThis : self);
@@ -2721,7 +2760,9 @@
 		/*
 		 * *lazy: its host renders when it comes near the viewport (a screen away) or when the browser is idle (a tenth of a
 		 * second at most apart), whichever is first, one host at a time in the order of the page, and then stays. A long page shows its first screen at once
-		 * and builds the rest in the background, instead of freezing the tab until all of it is built.
+		 * and builds the rest in the background, instead of freezing the tab until all of it is built. Its value is the
+		 * placeholder that holds the place meanwhile: none (a line), a height (a number of pixels, or a length), or '#id'
+		 * of a template of the page (Elemenx.Template) whose markup it shows.
 		 */
 		var lazyGlobal = typeof globalThis !== 'undefined' ? globalThis : self;
 		var lazyQueue = [];
@@ -2749,6 +2790,35 @@
 
 			if (!data.Destroyed)
 				context.Mount();
+		}
+
+		/* The placeholder of a value of *lazy: a height (data-elemenx-lazy="sized"), or a template of the page ("template"). */
+		function lazyPlaceholder (holder, value) {
+			var template = null;
+
+			if (typeof value === 'string' && value.charAt(0) === '#') {
+				if (!Runtime.Template.Has(value.substring(1)))
+					Runtime.Template.Harvest(document);
+
+				template = Runtime.Template.Get(value.substring(1));
+			}
+
+			if (template !== null) {
+				holder.setAttribute('data-elemenx-lazy', 'template');
+
+				holder.innerHTML = template;
+
+				return;
+			}
+
+			if (typeof value === 'number' && value > 0)
+				value = value + 'px';
+
+			if (typeof value === 'string' && value && value.charAt(0) !== '#') {
+				holder.setAttribute('data-elemenx-lazy', 'sized');
+
+				holder.style.minHeight = value;
+			}
 		}
 
 		/* One host a task: the ones near the viewport first, at once; the others when the browser is idle. */
@@ -2818,6 +2888,8 @@
 
 					data.Holder.style.display = 'block';
 					data.Holder.style.minHeight = '1px';
+
+					lazyPlaceholder(data.Holder, context.Value);
 
 					marker.parentNode.insertBefore(data.Holder, marker);
 
@@ -2897,13 +2969,21 @@
 			return templateRegistry[name];
 		}
 
+		/*
+		 * A template of the page: a <template id>, or a <script type="text/html" id> (or text/x-template), whose text keeps
+		 * the case of the names of its Components (the parser of a <template> writes them in lower case).
+		 */
+		function templateScript (node) {
+			return node.tagName.toUpperCase() === 'SCRIPT' && /^text\/(?:html|x-template)$/i.test(node.getAttribute('type') || '');
+		}
+
 		function harvestTemplateNode (node) {
-			if (!node || node.nodeType !== 1 || !node.tagName || node.tagName.toUpperCase() !== 'TEMPLATE') return false;
+			if (!node || node.nodeType !== 1 || !node.tagName || (node.tagName.toUpperCase() !== 'TEMPLATE' && !templateScript(node))) return false;
 
 			if (!node.id)
 				return false;
 
-			templateRegistrySet(node.id, node.innerHTML);
+			templateRegistrySet(node.id, templateScript(node) ? node.textContent : node.innerHTML);
 
 			if (node.parentNode)
 				node.parentNode.removeChild(node);
@@ -2920,7 +3000,7 @@
 			if (harvestTemplateNode(root)) return 1;
 			if (!root.querySelectorAll) return 0;
 
-			nodes = root.querySelectorAll('template[id]');
+			nodes = root.querySelectorAll('template[id], script[id][type]');
 
 			while (i < nodes.length) {
 				snapshot.push(nodes[i]);
@@ -3254,7 +3334,9 @@
 
 		/*
 		 * Puts to sleep the components and directives inside an element, and empties its fields of passwords and of
-		 * payment cards: a page asleep keeps no secret. Returns them, for Runtime.WakeTree.
+		 * payment cards: a page asleep keeps no secret. Returns them, for Runtime.WakeTree. The hooks run untracked, as
+		 * $OnCreate and $OnDestroy: a *if of the owner puts its child to sleep while its effect runs, and what $OnSleep
+		 * reads (an event to the owner that changes its state) must not make that effect run itself again.
 		 */
 		Runtime.SleepTree = function (element) {
 			var asleep = sleepAware.filter(function (entry) {
@@ -3263,29 +3345,33 @@
 			var fields = element.querySelectorAll ? element.querySelectorAll('input[type="password"], input[autocomplete^="cc-"]') : [];
 			var i = 0;
 
-			while (i < fields.length) {
-				if (fields[i].value) {
-					fields[i].value = '';
+			Runtime.Untracked(function () {
+				while (i < fields.length) {
+					if (fields[i].value) {
+						fields[i].value = '';
 
-					fields[i].dispatchEvent(new global.Event('input', {bubbles: true}));
+						fields[i].dispatchEvent(new global.Event('input', {bubbles: true}));
+					}
+
+					i++;
 				}
 
-				i++;
-			}
-
-			asleep.forEach(function (entry) {
-				if (entry.Sleep)
-					Runtime.Notify(entry.Sleep, null, []);
+				asleep.forEach(function (entry) {
+					if (entry.Sleep)
+						Runtime.Notify(entry.Sleep, null, []);
+				});
 			});
 
 			return asleep;
 		};
 
-		/* Wakes the components and directives Runtime.SleepTree put to sleep, the ones still alive. */
+		/* Wakes the components and directives Runtime.SleepTree put to sleep, the ones still alive; untracked too. */
 		Runtime.WakeTree = function (asleep) {
-			(asleep || []).forEach(function (entry) {
-				if (entry.Wake && sleepAware.indexOf(entry) !== -1)
-					Runtime.Notify(entry.Wake, null, []);
+			Runtime.Untracked(function () {
+				(asleep || []).forEach(function (entry) {
+					if (entry.Wake && sleepAware.indexOf(entry) !== -1)
+						Runtime.Notify(entry.Wake, null, []);
+				});
 			});
 		};
 
@@ -3799,6 +3885,7 @@
 				node = document.getElementById(source.substring(1));
 
 				if (node && node.tagName === 'TEMPLATE') return node.innerHTML;
+				if (node && templateScript(node)) return node.textContent;
 
 				throw new Error('Elemenx template not found: ' + source);
 			}
@@ -3889,6 +3976,46 @@
 		}
 
 		/*
+		 * The DOM property a binding names. HTML reads the names of attributes in small letters, so [property.innerHTML]
+		 * arrives as innerhtml: the property of the node with that name in any case is found on its prototype chain, once
+		 * for each kind of element. A name the node does not have stays as it is (an expando of the page).
+		 */
+		var propertyNames = {};
+
+		function propertyName (node, name) {
+			var lower = name.toLowerCase();
+			var key = (node.namespaceURI || '') + ' ' + node.nodeName + ' ' + lower;
+			var object = node;
+			var names;
+			var i;
+
+			if (name in node) return name;
+
+			if (Object.prototype.hasOwnProperty.call(propertyNames, key)) return propertyNames[key];
+
+			propertyNames[key] = name;
+
+			while (object) {
+				names = Object.getOwnPropertyNames(object);
+				i = 0;
+
+				while (i < names.length) {
+					if (names[i].toLowerCase() === lower) {
+						propertyNames[key] = names[i];
+
+						return names[i];
+					}
+
+					i++;
+				}
+
+				object = Object.getPrototypeOf(object);
+			}
+
+			return name;
+		}
+
+		/*
 		 * The parsed templates by their text: an instance clones the parse of its template, it does not parse it again (a
 		 * page of a thousand icons parsed one template a thousand times). A thousand texts at most: templates made of data
 		 * do not keep growing it. The Cache empties it with the definitions it unloads.
@@ -3913,6 +4040,24 @@
 			return parsed.cloneNode(true);
 		}
 
+		/* The one element of a template among comments and blank text (they are not content of its root), or null. */
+		function soleElement (content) {
+			var element = null;
+			var node = content.firstChild;
+
+			while (node) {
+				if (node.nodeType === 1 && element) return null;
+				if (node.nodeType === 3 && /\S/.test(node.nodeValue)) return null;
+
+				if (node.nodeType === 1)
+					element = node;
+
+				node = node.nextSibling;
+			}
+
+			return element;
+		}
+
 		function parseFragment (html) {
 			var template = document.createElement('template');
 			var protectedExpressions = protectExpressionAttributes(html);
@@ -3922,7 +4067,7 @@
 
 			restoreExpressionAttributes(template.content, protectedExpressions.Expressions);
 
-			only = template.content.childNodes.length === 1 ? template.content.firstChild : null;
+			only = template.content.childNodes.length === 1 ? template.content.firstChild : soleElement(template.content);
 
 			/* An element of an SVG drawing, parsed inside the <svg> of svgSource and taken out of it. */
 			if (only && only.nodeType === 1 && only.hasAttribute('data-elemenx-svg') && only.firstElementChild) return only.removeChild(only.firstElementChild);
@@ -4027,7 +4172,7 @@
 			while (current && current.nodeType === 1) {
 				directive = structuralOf(current);
 
-				if (directive && (directive.Definition.Host !== 'structural' || !current.hasAttribute('data-elemenx-component'))) return true;
+				if (directive && (directive.Definition.Host !== 'structural' || !componentDeclaration(current))) return true;
 				if (current === root) return false;
 
 				current = current.parentNode;
@@ -4317,13 +4462,13 @@
 							});
 						}
 						else if (namespace === 'property' && name) {
-							addBinding(bindings, key, {type: 'property', name: name, node: nodes[i]});
+							addBinding(bindings, key, {type: 'property', name: propertyName(nodes[i], name), node: nodes[i]});
 						}
 						else if (namespace === 'attribute' && name) {
 							addBinding(bindings, key, {type: 'attribute', name: attributeName(nodes[i], name), node: nodes[i]});
 						}
-						else if (separator === -1 && target && !nodes[i].hasAttribute('data-elemenx-component')) {
-							addBinding(bindings, key, {type: 'property', name: target, node: nodes[i]});
+						else if (separator === -1 && target && !componentDeclaration(nodes[i])) {
+							addBinding(bindings, key, {type: 'property', name: propertyName(nodes[i], target), node: nodes[i]});
 						}
 						else {
 							/*
@@ -4701,7 +4846,7 @@
 			i = 0;
 			while (i < nodes.length) {
 				/* A Component declaration keeps its (events) for Structural, also while the Component is still loading. */
-				if (nodes[i].hasAttribute('data-elemenx-component') || Runtime.ResolveComponentRegistered(nodes[i].tagName)) {
+				if (nodes[i].hasAttribute('data-elemenx-component') || Runtime.ResolveComponentRegistered(Runtime.ComponentTag(nodes[i], api.$Application ? api.$Application() : null))) {
 					i++;
 
 					continue;
@@ -4884,7 +5029,7 @@
 			var host;
 
 			/* A structural host or a Component declaration at the root gets a host of its own, so it is compiled like a child. */
-			if (root.nodeType !== 1 || (!Runtime.Directive.Find(root, 'structural') && !root.hasAttribute('data-elemenx-component'))) return root;
+			if (root.nodeType !== 1 || (!Runtime.Directive.Find(root, 'structural') && !componentDeclaration(root))) return root;
 
 			host = document.createElement('span');
 			host.style.display = 'contents';
@@ -5195,18 +5340,23 @@
 					return api;
 				}
 
+				/*
+				 * A change of a value (the event change) also goes up the DOM from the root of the component as the event
+				 * elemenx-change with the value in its detail, after the listeners: a form around it hears every field.
+				 */
 				function Emit (name, data) {
 					var list = componentEvents[name];
-					if (!list || !list.length) return api;
-
 					var i = 0;
-					var copy = list.slice(0);
+					var copy = list ? list.slice(0) : [];
 
 					while (i < copy.length) {
 						Runtime.Notify(copy[i], api, [data, api]);
 
 						i++;
 					}
+
+					if (name === 'change' && root && typeof global.CustomEvent === 'function')
+						root.dispatchEvent(new global.CustomEvent('elemenx-change', {bubbles: true, detail: data}));
 
 					return api;
 				}
@@ -5253,8 +5403,12 @@
 					if (asleep)
 						forgetSleepAware(asleep);
 
-					if (definition.$OnDestroy)
-						definition.$OnDestroy.call(api);
+					/* Untracked as $OnCreate and $OnReady: a row of a *for goes while the effect of the list runs. */
+					if (definition.$OnDestroy) {
+						Runtime.Untracked(function () {
+							definition.$OnDestroy.call(api);
+						});
+					}
 
 					i = listeners.length - 1;
 
@@ -5417,8 +5571,29 @@
 
 				Runtime.InitializeOwnerSubscriptions(api, definition);
 
-				if (definition.$OnCreate)
-					definition.$OnCreate.call(api, data || {});
+				/*
+				 * The listeners of the tag that declares it, and the component of that template, are there before its
+				 * hooks: an event that $OnCreate or $OnReady emits reaches its owner.
+				 */
+				if (options && options.Listeners) {
+					options.Listeners.forEach(function (listener) {
+						On(listener.Name, listener.Callback);
+					});
+				}
+
+				if (options && options.Parent)
+					parentComponent = options.Parent;
+
+				/*
+				 * The hooks run untracked: a component made while an effect of its parent runs (a row of a *for) must not
+				 * make that effect depend on what its hooks read, or a write of theirs would render the parent again in the
+				 * middle of its own render (the rows of the list came twice).
+				 */
+				if (definition.$OnCreate) {
+					Runtime.Untracked(function () {
+						definition.$OnCreate.call(api, data || {});
+					});
+				}
 
 				/*
 				 * Bootstrap is intentionally delayed until after $OnCreate().
@@ -5468,8 +5643,11 @@
 				 * The component is now fully initialized. Declarative Title is applied
 				 * before lifecycle hooks, so Ready may replace it with a dynamic value.
 				 */
-				if (definition.$OnReady)
-					definition.$OnReady.call(api);
+				if (definition.$OnReady) {
+					Runtime.Untracked(function () {
+						definition.$OnReady.call(api);
+					});
+				}
 
 				if (name)
 					useComponent(name, api);
@@ -5526,6 +5704,59 @@
 		Runtime.ResolveComponentRegistered = function (name) {
 			return componentRegistry[name] && !componentRegistry[name].ElemenxLazy ? componentRegistry[name] : null;
 		};
+
+		/* The lower case names a template of the page made ambiguous (Foo and FOO), warned once. */
+		var ambiguousComponentNames = {};
+
+		/*
+		 * The Component of a name in any case: the registered Components, those of the bundles, the source tree of the
+		 * Application and its Libraries, or null. Two Components whose names differ only in case are ambiguous: the first
+		 * is taken, with a warning.
+		 */
+		function componentName (name, application) {
+			var lower = String(name).toLowerCase();
+			var names = Object.keys(componentRegistry).concat(Runtime.Bundle.Names('Component'), application ? Runtime.Discovery.Names(application) : [], application ? Runtime.Library.Names(application) : []);
+			var found = [];
+			var i = 0;
+
+			while (i < names.length) {
+				if (names[i].toLowerCase() === lower && found.indexOf(names[i]) === -1)
+					found.push(names[i]);
+
+				i++;
+			}
+
+			if (found.length > 1 && !ambiguousComponentNames[lower]) {
+				ambiguousComponentNames[lower] = true;
+
+				if (global.console && typeof global.console.warn === 'function')
+					global.console.warn('Elemenx Component name is ambiguous in a template of the page: ' + found.join(', '));
+			}
+
+			return found[0] || null;
+		}
+
+		/*
+		 * The name of the Component an element of a template declares: its data-elemenx-component (the name as a template
+		 * of text writes it), otherwise its tag. The HTML parser writes the names of a <template> of the page in lower case
+		 * (FooComponent becomes foocomponent): an element HTML does not know takes the Component of its name in any case.
+		 * The elements HTML knows (button, select, dialog...) stay elements: a Component of such a name needs a template of
+		 * text, a <script type="text/html"> template of the page, or data-elemenx-component.
+		 */
+		Runtime.ComponentTag = function (node, application) {
+			var named = node.getAttribute('data-elemenx-component');
+			if (named)
+				return named;
+
+			if (Object.prototype.toString.call(node) !== '[object HTMLUnknownElement]') return node.tagName;
+
+			return componentName(node.tagName, application) || node.tagName;
+		};
+
+		/* An element of a template that declares a Component: named by data-elemenx-component, or one HTML does not know. */
+		function componentDeclaration (node) {
+			return node.hasAttribute('data-elemenx-component') || Object.prototype.toString.call(node) === '[object HTMLUnknownElement]';
+		}
 
 		Runtime.ReloadComponentTemplate = function (name, callback) {
 			var factory = Runtime.ResolveComponentRegistered(name);
@@ -7797,25 +8028,24 @@
 				return result;
 			}
 
-			function connect (child, eventMap) {
+			/* The listeners of the (events) of a declaration: they call the methods of the component of the template. */
+			function listenersFor (eventMap) {
+				var result = [];
 				var eventName;
-				var methodName;
-
-				child.$Parent(component);
 
 				for (eventName in eventMap) {
 					if (own(eventMap, eventName)) {
-						methodName = eventMap[eventName];
-
 						(function (name, method) {
-							child.$On(name, function (data, source) {
+							result.push({Name: name, Callback: function (data, source) {
 								if (typeof component[method] === 'function') {
 									component[method](data, source);
 								}
-							});
-						})(eventName, methodName);
+							}});
+						})(eventName, eventMap[eventName]);
 					}
 				}
+
+				return result;
 			}
 
 			function scan (parent) {
@@ -7880,7 +8110,7 @@
 					return;
 				}
 
-				var factory = factoryFor(node.getAttribute('data-elemenx-component') || node.tagName);
+				var factory = factoryFor(Runtime.ComponentTag(node, component.$Application()));
 
 				if (factory) {
 					compileComponent(node, factory, structuralDirective);
@@ -7912,7 +8142,7 @@
 			directiveHost('collection', compileCollectionDirective);
 
 			function compileComponent (node, factory, structuralDirective) {
-				var markerText = 'elemenx:component:' + (node.getAttribute('data-elemenx-component') || node.tagName) + ':end';
+				var markerText = 'elemenx:component:' + Runtime.ComponentTag(node, component.$Application()) + ':end';
 
 				if (structuralDirective)
 					node.removeAttribute(structuralDirective.Attribute);
@@ -7965,11 +8195,12 @@
 				function createChild (data) {
 					var childProps = props(blueprint, data, factory.Definition);
 
+					/* The factory registers the listeners and the parent before the hooks of the child run. */
 					child = Runtime.Untracked(function () {
-						return factory(childProps, projected, asyncOptions(blueprint, factory.ComponentName || blueprint.tagName));
+						return factory(childProps, projected, asyncOptions(blueprint, factory.ComponentName || blueprint.tagName, {Listeners: listenersFor(eventMap), Parent: component}));
 					});
 
-					connect(child, eventMap);
+					child.$Parent(component);
 
 					end.parentNode.insertBefore(child.$Element(), end);
 
@@ -8141,7 +8372,7 @@
 				end = replaceWithMarker(node, 'elemenx:collection:' + directive.Name + ':end');
 
 				function iterationDefinition () {
-					var componentRoot = factoryFor(template.getAttribute('data-elemenx-component') || template.tagName);
+					var componentRoot = factoryFor(Runtime.ComponentTag(template, component.$Application()));
 					var templateSource = componentRoot
 						? '<span style="display:contents">' + templateHTML(template) + '</span>'
 						: svgSource(template, templateHTML(template));

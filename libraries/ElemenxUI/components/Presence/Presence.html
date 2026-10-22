@@ -1,0 +1,4 @@
+<span class="elemenx-presence" [class]="[Known(Status) ? Status : 'other', Size || 'medium', ShowLabel ? 'labeled' : '']" [attribute.role]="ShowLabel ? null : 'img'" [attribute.aria-label]="ShowLabel ? null : Label || (Known(Status) ? $T('ui.presence.' + Status) : Status)" [attribute.title]="ShowLabel ? null : Label || (Known(Status) ? $T('ui.presence.' + Status) : Status)">
+	<span class="elemenx-presence-dot" aria-hidden="true"></span>
+	<span class="elemenx-presence-label" *if="ShowLabel">{{Label || (Known(Status) ? $T('ui.presence.' + Status) : Status)}}</span>
+</span>

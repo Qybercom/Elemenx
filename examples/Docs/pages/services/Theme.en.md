@@ -1,0 +1,44 @@
+<!-- generated -->
+# Theme
+
+The theme of the page: a policy of the color scheme and a named theme. The policy is 'system' (follows the operating system), 'light' or 'dark'. The theme is 'default' (index.css) or a named one: the Library brings 'contrast', 'darcula', 'soft', 'fantasy' and 'scifi' (themes/), and Register adds the themes of the Application. A theme is plain CSS whose rules start with its attribute: [data-theme][data-theme='ocean'] { ... } for both schemes, [data-theme][data-theme='ocean'][data-scheme='dark'] { ... } for the dark one; such a rule is more specific than the rule of a Component it overrides, so the order of the stylesheets does not matter. body[data-theme] holds the policy under the default theme (so index.css applies it before any script runs) and the name of a named theme; body[data-scheme] always holds the scheme shown, 'light' or 'dark'. Scope(element, name, callback) themes one part of the page: the element and everything in it take a named theme or a policy ('light', 'dark', 'system') of their own, whatever the page shows; null gives the element back to the page. The policy and the theme are remembered in localStorage (StorageKey, Persist) and changes are reported, including system changes under 'system'. The first policy comes from localStorage, then from the data-theme of the page, then from Default.
+
+## Methods
+
+- `Scope(element, name, callback)`
+
+## Example
+
+```example
+<Properties>
+	<Property Label="Policy" [value]="State.Policy" />
+	<Property Label="Scheme shown" [value]="State.Scheme" />
+	<Property Label="Theme" [value]="State.Theme" />
+</Properties>
+<RadioGroup Variant="segmented" [options]="[{Value: 'system', Label: 'System'}, {Value: 'light', Label: 'Light'}, {Value: 'dark', Label: 'Dark'}]" [value]="State.Policy" (change)="Policy" />
+<script>
+({
+	State: {},
+
+	$OnCreate: function () {
+		var self = this;
+		var theme = this.$Service('Theme');
+
+		this.Read = function () {
+			self.State = {Policy: theme.Policy(), Scheme: theme.Resolved(), Theme: theme.Theme()};
+		};
+
+		theme.OnChange(this.Read);
+		this.Read();
+	},
+
+	$OnDestroy: function () {
+		this.$Service('Theme').OffChange(this.Read);
+	},
+
+	Policy: function (value) {
+		this.$Service('Theme').Policy(value);
+	}
+})
+</script>
+```

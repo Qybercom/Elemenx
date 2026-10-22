@@ -1,0 +1,16 @@
+<div class="builder-stage" [class.preview]="Preview" (scroll)="Scrolled">
+	<i class="builder-sync" hidden *mount="Draw(Version, Lang())"></i>
+	<div class="builder-viewport" [class]="[Width || 'desktop']">
+		<div class="builder-surface" [attribute.aria-label]="$T('builder.canvas')">
+			<div class="builder-canvas"></div>
+			<div class="builder-layer" *if="!Preview" *droppable="{Accept: ['builder-kind', 'builder-node']}" (pointermove)="Moved" (pointerleave)="Left" (click)="Pressed" (dropmove)="Over" (dropped)="Dropped" (dropleave)="Left">
+				<div class="builder-hover" *if="Hovered && Hovered !== Selected" [attribute.style]="Box(Hovered, Tick)"></div>
+				<div class="builder-target" *if="Target" [attribute.style]="Style(Target)"></div>
+				<div class="builder-selection" *if="Selected" [attribute.style]="Box(Selected, Tick)">
+					<span class="builder-grip" *draggable="{Data: Selected, Type: 'builder-node'}"><Icon Name="grip" Size="12" />{{Label(Selected)}}</span>
+				</div>
+				<div class="builder-marker" *if="Marker" [attribute.style]="Style(Marker)"></div>
+			</div>
+		</div>
+	</div>
+</div>

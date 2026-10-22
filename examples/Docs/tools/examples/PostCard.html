@@ -1,0 +1,14 @@
+<div class="elemenx-container wrappable" style="gap: 8px;">
+	<PostCard Title="Ten passes through the Caucasus" Excerpt="A week on foot from one valley to the next: the routes, the huts and what to pack." Image="/data/cards/mountains.svg" Category="Travel" Author="Ada Lovelace" Date="2026-10-02" ReadTime="6" Likes="1240" Comments="38" DateBadge="true" (like)="Liked" />
+	<PostCard Title="Lights of the night city" Excerpt="How to photograph a city after dark with a phone." Image="/data/cards/city.svg" Category="Photo" Author="Grace Hopper" Date="2026-09-18" ReadTime="4" Likes="86" Comments="5" Layout="overlay" />
+</div>
+<p class="elemenx-text small muted">{{Note}}</p>
+<script>
+({
+	Note: '',
+
+	Liked: function (event) {
+		this.Note = (event.Liked ? 'Liked: ' : 'Unliked: ') + event.Likes;
+	}
+})
+</script>

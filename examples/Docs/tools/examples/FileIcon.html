@@ -1,0 +1,8 @@
+<div class="elemenx-container wrappable" style="gap: 8px;">
+	<div *for="name of Names" *key="name" class="docs-stack" style="align-items: center; width: 88px;"><FileIcon [name]="name" Size="40" /><span class="elemenx-caption">{{name}}</span></div>
+</div>
+<script>
+({
+	Names: ['report.pdf', 'app.js', 'photo.png', 'song.mp3', 'data.xlsx', 'archive.tar.gz', 'Dockerfile', '.gitignore', 'unknown.xyz']
+})
+</script>

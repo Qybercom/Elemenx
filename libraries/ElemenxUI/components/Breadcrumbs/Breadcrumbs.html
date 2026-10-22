@@ -1,0 +1,19 @@
+<nav class="elemenx-breadcrumbs" [class]="[Size || 'medium']" [attribute.aria-label]="Label || $T('ui.breadcrumbs.label')">
+	<span class="elemenx-breadcrumbs-start"><slot name="start"></slot></span>
+	<ol class="elemenx-breadcrumbs-list">
+		<li class="elemenx-breadcrumbs-item" *for="entry of Shown(Items, Max)" *key="entry.Key" [class]="[Current(entry, Items) ? 'current' : '', entry.More ? 'more' : '', !entry.More && entry.Item.Disabled ? 'disabled' : ''].concat(entry.More ? [] : String(entry.Item.Class || '').split(' '))">
+			<span class="elemenx-breadcrumbs-separator" aria-hidden="true" *if="$index > 0"><Icon *if="SeparatorIcon(Separator)" [name]="SeparatorIcon(Separator)" Size="14" />{{SeparatorText(Separator)}}</span>
+			<Menu *if="entry.More" Icon="more" Variant="ghost" Size="small" [title]="$T('ui.breadcrumbs.more')" [items]="entry.Items" (select)="MorePicked" />
+			<a class="elemenx-breadcrumbs-link" *if="!entry.More && entry.Item.Href && !entry.Item.Disabled" [attribute.href]="entry.Item.Href" [attribute.data-index]="entry.Index" [attribute.aria-current]="Current(entry, Items) ? 'page' : null" (click)="Pick">
+				<Icon *if="entry.Item.Icon" [name]="entry.Item.Icon" Size="14" /><FileIcon *if="entry.Item.File" [name]="entry.Item.File" Size="14" /><span class="elemenx-breadcrumbs-label">{{entry.Item.Label}}</span>
+			</a>
+			<button class="elemenx-breadcrumbs-link" type="button" *if="Pressable(entry, Items, CurrentClickable)" [attribute.data-index]="entry.Index" [attribute.aria-current]="Current(entry, Items) ? 'page' : null" (click)="Pick">
+				<Icon *if="entry.Item.Icon" [name]="entry.Item.Icon" Size="14" /><FileIcon *if="entry.Item.File" [name]="entry.Item.File" Size="14" /><span class="elemenx-breadcrumbs-label">{{entry.Item.Label}}</span>
+			</button>
+			<span class="elemenx-breadcrumbs-text" *if="!entry.More && (!entry.Item.Href || entry.Item.Disabled) && !Pressable(entry, Items, CurrentClickable)" [attribute.aria-current]="Current(entry, Items) ? 'page' : null" [attribute.aria-disabled]="entry.Item.Disabled ? 'true' : null">
+				<Icon *if="entry.Item.Icon" [name]="entry.Item.Icon" Size="14" /><FileIcon *if="entry.Item.File" [name]="entry.Item.File" Size="14" /><span class="elemenx-breadcrumbs-label">{{entry.Item.Label}}</span>
+			</span>
+		</li>
+	</ol>
+	<span class="elemenx-breadcrumbs-end"><slot name="end"></slot></span>
+</nav>

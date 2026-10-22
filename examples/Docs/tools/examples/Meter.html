@@ -1,0 +1,18 @@
+<input type="range" min="0" max="100" [(value)]="Load" style="width: 100%;" />
+<Meter [value]="Number(Load)" Label="CPU" Unit="%" Low="50" High="80" Optimum="20" ShowValue="true" Marks="true" ShowRange="true" />
+<div class="elemenx-container wrappable" style="gap: 8px;">
+	<Meter [value]="Number(Load)" Shape="dial" Needle="true" Ticks="11" Label="Speed" Unit="km/h" Max="100" Low="60" High="85" Optimum="30" ShowValue="true" />
+	<Meter [value]="Number(Load)" Shape="dial" Label="Battery" Unit="%" Low="20" High="60" Optimum="90" ShowValue="true" Size="small" />
+	<div style="height: 140px;"><Meter [value]="Number(Load)" Orientation="vertical" Label="Level" Low="30" High="70" Optimum="50" /></div>
+</div>
+<script>
+({
+	Load: '42',
+
+	$OnCreate: function () {
+		this.Number = function (value) {
+			return Number(value);
+		};
+	}
+})
+</script>

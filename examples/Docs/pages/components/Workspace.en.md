@@ -1,0 +1,79 @@
+<!-- generated -->
+# Workspace
+
+An IDE-like application frame built on elemenx-screen, elemenx-container and elemenx-column. Slots: header, ribbon (a Ribbon under the header), top-stripe (a band under them), left-stripe, left, main, bottom, right, right-stripe, bottom-stripe (a band above the status bar) and status. Variant="ribbon" makes the frame of an Office-like Application: the header becomes a slim title bar that joins the Ribbon. The frame does not decide its content: an area shows only while its slot renders something (put *if on a tool window to open and close it), and the left, right and bottom areas are resized by their edge; the resize event reports {Panel, Size}.
+
+Tool windows the user arranges: a WorkspaceToolWindow with an ID in the slot tools is placed by the frame. Its Area (left, right or bottom) is where it starts; a button on the stripe of that side (its Icon, Title and Badge: a count, 'dot', 'busy'...) opens and closes it, one tool window open in an area at a time (Open opens it at first). While Customize is on, the buttons are dragged from stripe to stripe (the lower part of the left stripe is the bottom area) and in their order: the tool window goes with its button. Layout is the arrangement: {Areas: {id: area}, Order: [id], Open: {left, right, bottom: id or null}, Sizes: {left, right, bottom: pixels}}; every change of it (a move, an opening, a resize) emits layout with the new one, and Persist (a key) keeps it in the storage of the browser for the next visit. ResetLayout() goes back to the areas of the tool windows.
+
+## Properties
+
+| Property | Default |
+| --- | --- |
+| `Variant` | `''` |
+| `Layout` | `null` |
+| `Persist` | `''` |
+| `Customize` | `false` |
+
+## Events
+
+`layout`, `resize`
+
+## Slots
+
+`header`, `ribbon`, `top-stripe`, `left-stripe`, `left`, `main`, `bottom`, `right`, `right-stripe`, `bottom-stripe`, `status`, `tools`
+
+## Methods
+
+- `ResetLayout()`
+
+## Example
+
+```example
+<div class="docs-frame tall">
+	<Workspace (resize)="Resized">
+		<WorkspaceToolbar slot="header" Label="Main toolbar">
+			<strong>Elemenx IDE</strong>
+			<span class="elemenx-divider vertical"></span>
+			<Button Icon="play" Title="Run" Variant="ghost" Size="small" />
+			<Button Icon="debug" Title="Debug" Variant="ghost" Size="small" />
+			<span class="elemenx-spacer"></span>
+			<Button Icon="panel-left" Title="Project" Variant="ghost" Size="small" (click)="ToggleLeft" />
+			<Button Icon="panel-bottom" Title="Terminal" Variant="ghost" Size="small" (click)="ToggleBottom" />
+		</WorkspaceToolbar>
+		<WorkspaceToolWindow slot="left" *if="Left" Title="Project" Icon="folder" Closable="true" (close)="ToggleLeft">
+			<Tree [items]="Files" [expanded]="['src']" />
+		</WorkspaceToolWindow>
+		<div slot="main" class="elemenx-column fill"><CodeView Language="javascript" Value="Elemenx.Component('Hello', {&#10;&#9;Name: 'world'&#10;});" /></div>
+		<WorkspaceToolWindow slot="bottom" *if="Bottom" Title="Terminal" Icon="terminal" Closable="true" (close)="ToggleBottom">
+			<Terminal [lines]="[{ID: 1, Kind: 'success', Text: 'Test Files  52 passed (52)'}]" />
+		</WorkspaceToolWindow>
+		<span slot="status">main · {{Note}}</span>
+	</Workspace>
+</div>
+<script>
+({
+	Left: true,
+	Bottom: true,
+	Note: 'UTF-8',
+	Files: [
+		{ID: 'src', Label: 'src', Icon: 'folder-open', Items: [
+			{ID: 'app', Label: 'app.js', Icon: 'file-code'},
+			{ID: 'style', Label: 'style.css', Icon: 'file-code'}
+		]},
+		{ID: 'readme', Label: 'README.md', Icon: 'file-text'}
+	],
+
+	ToggleLeft: function () {
+		this.Left = !this.Left;
+	},
+
+	ToggleBottom: function () {
+		this.Bottom = !this.Bottom;
+	},
+
+	Resized: function (event) {
+		this.Note = event.Panel + ' ' + event.Size + 'px';
+	}
+})
+</script>
+```

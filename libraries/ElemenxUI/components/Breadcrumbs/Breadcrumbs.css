@@ -1,0 +1,121 @@
+/* A path on one line: the items shrink to an ellipsis when it is narrow, the present one last. */
+.elemenx-breadcrumbs {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	min-width: 0;
+	max-width: 100%;
+	color: var(--elemenx-text-muted);
+	font-size: var(--elemenx-font-size);
+}
+
+.elemenx-breadcrumbs.small {
+	gap: 4px;
+	font-size: var(--elemenx-font-size-small);
+}
+
+.elemenx-breadcrumbs.large {
+	font-size: var(--elemenx-font-size-large);
+}
+
+.elemenx-breadcrumbs-start,
+.elemenx-breadcrumbs-end {
+	display: inline-flex;
+	flex: none;
+	align-items: center;
+	gap: 4px;
+}
+
+.elemenx-breadcrumbs-start:empty,
+.elemenx-breadcrumbs-end:empty {
+	display: none;
+}
+
+.elemenx-breadcrumbs-end {
+	margin-inline-start: auto;
+}
+
+.elemenx-breadcrumbs-list {
+	display: flex;
+	flex: 0 1 auto;
+	align-items: center;
+	min-width: 0;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.elemenx-breadcrumbs-item {
+	display: inline-flex;
+	flex: 0 1 auto;
+	align-items: center;
+	min-width: 0;
+}
+
+/* The present page keeps its name longest. */
+.elemenx-breadcrumbs-item.current {
+	flex-shrink: 0.2;
+}
+
+.elemenx-breadcrumbs-item.more {
+	flex: none;
+}
+
+.elemenx-breadcrumbs-separator {
+	display: inline-flex;
+	flex: none;
+	align-items: center;
+	padding: 0 4px;
+	color: var(--elemenx-text-muted);
+}
+
+.elemenx-breadcrumbs-link,
+.elemenx-breadcrumbs-text {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	min-width: 0;
+	padding: 2px 4px;
+	background: transparent;
+	border: 0;
+	border-radius: var(--elemenx-radius);
+	color: inherit;
+	font: inherit;
+	text-decoration: none;
+}
+
+.elemenx-breadcrumbs-link {
+	cursor: pointer;
+}
+
+.elemenx-breadcrumbs-link:hover {
+	background: var(--elemenx-surface-hover);
+	color: var(--elemenx-text);
+}
+
+.elemenx-breadcrumbs-link:focus-visible {
+	box-shadow: 0 0 0 2px var(--elemenx-focus);
+	outline: none;
+}
+
+.elemenx-breadcrumbs-item.current .elemenx-breadcrumbs-link,
+.elemenx-breadcrumbs-item.current .elemenx-breadcrumbs-text {
+	color: var(--elemenx-text);
+	font-weight: var(--elemenx-font-weight-strong);
+}
+
+.elemenx-breadcrumbs-item.disabled .elemenx-breadcrumbs-text {
+	opacity: 0.5;
+}
+
+.elemenx-breadcrumbs-label {
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.elemenx-breadcrumbs-item .elemenx-icon,
+.elemenx-breadcrumbs-item .elemenx-file-icon {
+	flex: none;
+}

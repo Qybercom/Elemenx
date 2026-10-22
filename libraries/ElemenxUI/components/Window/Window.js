@@ -119,12 +119,11 @@ Elemenx.Component('Window', {
 
 		this.$Service('PictureInPicture').OnChange(this.Own().Pip);
 
-		/* The width of the tab of a folder (HeaderShape trapezoid), where the top of the body begins. */
+		/* The width of the tab of a folder (HeaderShape trapezoid), where the top of its body begins (on the window). */
 		this.Own().Measure = typeof ResizeObserver === 'function' ? new ResizeObserver(function () {
-			var header = self.$Element() && self.$Element().querySelector('.elemenx-window-header');
-			var tab = header && header.querySelector('.elemenx-window-tab');
+			var tab = self.$Element() && self.$Element().querySelector('.elemenx-window-tab');
 			if (tab)
-				header.style.setProperty('--elemenx-tab-width', tab.offsetWidth + 'px');
+				self.$Element().style.setProperty('--elemenx-tab-width', tab.offsetWidth + 'px');
 		}) : null;
 
 		if (this.Own().Measure)

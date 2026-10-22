@@ -1,4 +1,9 @@
-/* A searchable select of currencies: every ISO 4217 currency of the Currencies Service, or the Codes given. */
+/*
+ * A searchable select of currencies: every ISO 4217 currency of the Currencies Service, or only the Codes given
+ * (['EUR', 'USD']), each with its code, its symbol and its name in the language of the page (Locale changes it). Value
+ * is the code ('USD' by default). Placeholder, Size, Shape, Name, Disabled and Invalid as in Select. Events: change (the
+ * code).
+ */
 Elemenx.Component('CurrencySelect', {
 	$TemplateURL: 'CurrencySelect.html',
 	Value: 'USD',

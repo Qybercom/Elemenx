@@ -1,0 +1,99 @@
+<!-- generated -->
+# Ресурсы и бандлы
+
+При разработке Elemenx загружает файлы приложения по одному, когда они впервые нужны. Производственная сборка вместо этого несёт их внутри своих скриптов. Работу обеспечивают три реестра, открытые и приложению: встроенные файлы (`Elemenx.Resource`), сущности бандла (`Elemenx.Bundle`) и предкомпилированные выражения (`Elemenx.Expressions`).
+
+## Встроенные файлы
+
+`Elemenx.Resource` хранит текст файла под его URL, так что код, который загрузил бы его, находит его уже на месте: спрайты иконок, данные библиотеки, словарь.
+
+| Вызов | Значение |
+| --- | --- |
+| `Elemenx.Resource(url, text)` | встраивает текст под URL (относительно страницы) |
+| `Elemenx.Resource(url)` | встроенный текст или `null` |
+| `Elemenx.Resource.Load(url, callback)` | вызывает `(error, text)`: сразу со встроенным текстом или с текстом, загруженным по URL |
+
+Компонент или сервис, читающий файл через `Resource.Load`, работает одинаково при разработке, с сервера и в однофайловой сборке, открытой через `file://`, где загрузить ничего нельзя.
+
+```js
+Elemenx.Resource.Load('/data/countries.json', function (error, text) {
+	if (error) return;
+
+	self.Countries = JSON.parse(text);
+});
+```
+
+## Бандл
+
+`Elemenx.Bundle({Type: {Name: loader}})` регистрирует сущности, которые несёт сборка: загрузчик — функция, объявляющая сущность (`Elemenx.Component(...)`, `Elemenx.Service(...)`, охранника, директиву), когда она впервые нужна. Производственный `app.js` начинается с одного такого вызова для всего графа, со встроенными шаблонами и стилями:
+
+```js
+Elemenx.Bundle({
+	Component: {
+		HomePage: function () {
+			Elemenx.Component('HomePage', {$Template: '<main>...</main>', $Style: '.home { ... }'});
+		}
+	},
+	Service: {
+		Cart: function () {
+			Elemenx.Service('Cart', {...});
+		}
+	}
+});
+```
+
+Сначала спрашивается бандл, затем Discovery (файлы графа): приложение может сочетать сущности из бандла и сущности, которые ещё загружает из файлов. Два графа в одном бандле не могут объявлять одно имя одного типа; сборщик останавливается и сообщает об этом.
+
+## Предкомпилированные выражения
+
+Страница, чья Content Security Policy запрещает `eval` (расширение браузера, `script-src 'self'`), не может компилировать выражения своих шаблонов. `elemenx build --precompile` записывает их в сборку кодом: один вызов `Elemenx.Expressions({source: function ($globals, $scope) {...}})` с функцией для каждого выражения, найденного сборщиком в шаблонах. Компилятор берёт их и ничего не компилирует; отсутствующее там выражение выбрасывает `Elemenx expression is not precompiled and the page forbids eval: <source>` (шаблон, созданный во время выполнения, сборщик прочитать не может). См. [Сборки](/guide/build).
+
+## Сам фреймворк
+
+| Член | Значение |
+| --- | --- |
+| `Elemenx.Version` | версия этой копии |
+| `Elemenx.NoConflict()` | возвращает имя `Elemenx` тому, что владело им до этой копии, и возвращает копию |
+| `Elemenx.RuntimeID()` | идентификатор этой среды выполнения (вкладки, фрейма, воркера): `runtime-…` |
+| `Elemenx.StartedAt()` | когда эта копия запустилась |
+| `Elemenx.Title(text)` | задаёт заголовок документа; `Elemenx.Title()` возвращает его |
+
+У каждой копии `elemenx.js` своё пространство имён. Вторая копия той же версии оставляет первую на месте и ничего не делает; копия другой версии запускается, но окно сохраняет первый `Elemenx` (обслуживаемая им страница продолжает работать), а консоль предупреждает. Изолированная сборка (`elemenx build --widget`) держит свою копию при себе: на странице может быть `Elemenx` любой версии.
+
+## Пример
+
+Текст, встроенный примером, читается через `Resource.Load` без запроса, а файл этой справки — с сервера:
+
+```example
+<Button Label="Read both" Variant="primary" (click)="Read" />
+<Properties>
+	<Property Label="Embedded" [value]="Embedded" />
+	<Property Label="Fetched (/pages/index.json)" [value]="Fetched" />
+	<Property Label="The framework" [value]="Version" />
+	<Property Label="This runtime" [value]="Runtime" />
+</Properties>
+<script>
+({
+	Embedded: '—',
+	Fetched: '—',
+	Version: Elemenx.Version,
+	Runtime: Elemenx.RuntimeID(),
+
+	$OnCreate: function () {
+		Elemenx.Resource('/docs-example/greeting.txt', 'Hello from an embedded file');
+	},
+
+	Read: function () {
+		var self = this;
+
+		Elemenx.Resource.Load('/docs-example/greeting.txt', function (error, text) {
+			self.Embedded = error ? error.message : text;
+		});
+
+		Elemenx.Resource.Load('/pages/index.json', function (error, text) {
+			self.Fetched = error ? error.message : JSON.parse(text).Sections.length + ' sections, ' + text.length + ' characters';
+		});
+	}
+})
+</script>
+```

@@ -1,0 +1,19 @@
+<TextArea Rows="2" [value]="Text" (input)="Typed" />
+<div [property.innerHTML]="MathML(Text)"></div>
+<script>
+({
+	Text: 'x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}',
+
+	$OnCreate: function () {
+		var formulas = this.$Service('Formulas');
+
+		this.MathML = function (text) {
+			return formulas.MathML(text, true);
+		};
+	},
+
+	Typed: function (value) {
+		this.Text = value;
+	}
+})
+</script>

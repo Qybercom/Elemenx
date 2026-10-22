@@ -1,0 +1,11 @@
+<div class="docs-shell">
+	<header class="docs-header">
+		<a class="docs-brand" href="/"><span class="docs-brand-mark">E</span><strong>Elemenx</strong><span class="docs-brand-note">{{$T('docs.reference')}}</span></a>
+		<span class="elemenx-spacer"></span>
+		<RadioGroup Variant="segmented" [options]="Languages" [value]="Language" [label]="$T('docs.language')" (change)="Chosen" />
+		<ThemeSwitch />
+	</header>
+	<main class="docs-main" *outlet="Content"></main>
+	<ToastHost />
+	<DialogHost />
+</div>

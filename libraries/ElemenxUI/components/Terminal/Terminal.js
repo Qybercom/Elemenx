@@ -3,7 +3,8 @@
  * info or success. Enter emits command with the text; Arrow Up and Down walk the history of this terminal; Ctrl+L
  * emits clear. Busy makes the command line read-only: it keeps the focus, so the next command can follow at once.
  * Slots: actions (in the title bar, shown with Title or actions).
- * The output follows new lines while the reader is at its end.
+ * The output follows new lines while the reader is at its end. Mod+F (or Ctrl+Shift+F) finds in the output: a FindBar
+ * under the title marks the matches (the Find Service) and goes from one to the next; Escape closes it.
  */
 Elemenx.Component('Terminal', {
 	$TemplateURL: 'Terminal.html',
@@ -16,6 +17,11 @@ Elemenx.Component('Terminal', {
 	History: [],
 	Cursor: -1,
 	AtEnd: true,
+	Finding: false,
+	FindQuery: '',
+	FindCount: 0,
+	FindIndex: -1,
+	FindRanges: null,
 
 	$OnReady: function () {
 		var self = this;
@@ -31,7 +37,57 @@ Elemenx.Component('Terminal', {
 		output.scrollTop = output.scrollHeight;
 	},
 
+	/* The find bar under the title (its field takes the focus). */
+	OpenFind: function () {
+		this.Finding = true;
+	},
+
+	/* The matches in the output, the last one (the newest) shown first. */
+	BarFind: function (query) {
+		var ranges = this.$Service('Find').Ranges(this.$Element().querySelector('.elemenx-terminal-output'), query.Query, {Case: query.Case, Word: query.Word, RegExp: query.RegExp});
+
+		this.FindQuery = query.Query;
+		this.FindRanges = ranges;
+		this.FindCount = ranges.length;
+		this.FindIndex = ranges.length - 1;
+
+		this.$Service('Find').Show(this, ranges, this.FindIndex);
+	},
+
+	BarStep: function (step) {
+		var ranges = this.FindRanges || [];
+		if (!ranges.length) return;
+
+		this.FindIndex = (this.FindIndex + step + ranges.length) % ranges.length;
+
+		this.$Service('Find').Show(this, ranges, this.FindIndex);
+	},
+
+	BarNext: function () {
+		this.BarStep(1);
+	},
+
+	BarPrevious: function () {
+		this.BarStep(-1);
+	},
+
+	CloseFind: function () {
+		var input = this.$Element().querySelector('.elemenx-terminal-input');
+
+		this.Finding = false;
+		this.FindRanges = null;
+		this.FindCount = 0;
+		this.FindIndex = -1;
+
+		this.$Service('Find').Clear(this);
+
+		if (input)
+			input.focus();
+	},
+
 	$OnDestroy: function () {
+		this.$Service('Find').Clear(this);
+
 		if (this.Observer)
 			this.Observer.disconnect();
 	},
@@ -49,6 +105,14 @@ Elemenx.Component('Terminal', {
 	Key: function (event, node) {
 		var history = this.History;
 		var text = node.value;
+
+		if ((event.ctrlKey || event.metaKey) && !event.altKey && event.code === 'KeyF') {
+			event.preventDefault();
+
+			this.OpenFind();
+
+			return;
+		}
 
 		if (event.key === 'Enter') {
 			event.preventDefault();

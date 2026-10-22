@@ -1,0 +1,26 @@
+<Breadcrumbs [items]="Path" (select)="Picked" />
+<Breadcrumbs [items]="Long" Max="4" Separator="slash" />
+<p class="elemenx-text small muted">{{Note}}</p>
+<script>
+({
+	Note: 'Press a part of the path.',
+	Path: [
+		{ID: 'home', Label: 'Home', Icon: 'home'},
+		{ID: 'docs', Label: 'Docs'},
+		{ID: 'components', Label: 'Components'},
+		{ID: 'page', Label: 'Breadcrumbs'}
+	],
+	Long: [
+		{ID: 'root', Label: 'Disk C', Icon: 'database'},
+		{ID: 'users', Label: 'Users'},
+		{ID: 'ada', Label: 'ada'},
+		{ID: 'projects', Label: 'Projects'},
+		{ID: 'elemenx', Label: 'elemenx'},
+		{ID: 'readme', Label: 'README.md', File: true}
+	],
+
+	Picked: function (event) {
+		this.Note = 'Go to ' + event.Item.Label + ' (part ' + (event.Index + 1) + ')';
+	}
+})
+</script>

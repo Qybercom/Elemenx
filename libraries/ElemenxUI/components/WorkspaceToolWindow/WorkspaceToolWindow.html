@@ -1,4 +1,4 @@
-<section class="elemenx-column fill elemenx-workspace-tool-window" [attribute.aria-label]="Title || null">
+<section class="elemenx-column fill elemenx-workspace-tool-window" [attribute.aria-label]="Title || null" [attribute.data-tool]="ID || null" [attribute.data-title]="ID ? Title : null" [attribute.data-icon]="ID ? Icon : null" [attribute.data-badge]="ID && Badge !== '' && Badge != null ? Badge : null" [attribute.data-area]="ID ? Area : null" [attribute.data-open]="ID && Open && Open !== 'false' ? 'true' : null">
 	<header class="elemenx-container elemenx-workspace-tool-window-header">
 		<Icon *if="Icon" [name]="Icon" />
 		<span class="elemenx-workspace-tool-window-title">{{Title}}</span>

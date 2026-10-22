@@ -1,0 +1,26 @@
+<FindBar [query]="Query" [count]="Count" [index]="Index" Replacing="true" (find)="Found" (next)="Next" (previous)="Previous" (replace)="Replaced" />
+<p class="elemenx-text small muted">{{Note}}</p>
+<script>
+({
+	Query: 'elemenx',
+	Count: 12,
+	Index: 2,
+	Note: 'The bar of an editor: it only reports; the editor finds.',
+
+	Found: function (event) {
+		this.Note = 'Find: ' + JSON.stringify(event);
+	},
+
+	Next: function () {
+		this.Index = (this.Index + 1) % this.Count;
+	},
+
+	Previous: function () {
+		this.Index = (this.Index + this.Count - 1) % this.Count;
+	},
+
+	Replaced: function (event) {
+		this.Note = 'Replace with ' + JSON.stringify(event);
+	}
+})
+</script>

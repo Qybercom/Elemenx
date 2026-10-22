@@ -1,0 +1,23 @@
+<div class="elemenx-container wrappable" style="gap: 8px;">
+	<ProductCard Title="Studio headphones" Brand="Elemenx Audio" [images]="['/data/cards/headphones.svg', '/data/cards/watch.svg']" Badge="−20%" Rating="4.5" Reviews="1280" Price="79.99" OldPrice="99.99" [colors]="Colors" Color="coral" (add)="Added" (favorite)="Favorite" />
+	<ProductCard Title="Field watch" Brand="Elemenx Time" Image="/data/cards/watch.svg" Badge="New" BadgeVariant="success" Rating="5" Reviews="42" Price="149" (add)="Added" />
+</div>
+<p class="elemenx-text small muted">{{Note}}</p>
+<script>
+({
+	Note: '',
+	Colors: [
+		{Value: 'coral', Color: '#ff6b6b', Label: 'Coral'},
+		{Value: 'ink', Color: '#2b2f3a', Label: 'Ink'},
+		{Value: 'sky', Color: '#4f7dff', Label: 'Sky'}
+	],
+
+	Added: function (event) {
+		this.Note = 'Added to the cart' + (event.Color ? ' in ' + event.Color : '');
+	},
+
+	Favorite: function (event) {
+		this.Note = event.Favorite ? 'In the favorites' : 'Out of the favorites';
+	}
+})
+</script>

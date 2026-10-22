@@ -4,6 +4,14 @@
 			"title": "Achievements",
 			"unlocked": "Achievement unlocked"
 		},
+		"badge": {
+			"new": "New",
+			"busy": "In progress"
+		},
+		"breadcrumbs": {
+			"label": "Breadcrumbs",
+			"more": "Hidden levels"
+		},
 		"calendar": {
 			"month": "Month",
 			"more": {
@@ -56,6 +64,11 @@
 			"suggestions": "Suggestions",
 			"diff": "Changes",
 			"unchanged": "{count} unchanged lines"
+		},
+		"codeView": {
+			"copy": "Copy the code",
+			"fold": "Fold the block",
+			"unfold": "Unfold the block"
 		},
 		"colorInput": {
 			"area": "Saturation and brightness",
@@ -175,6 +188,22 @@
 		"fileUpload": {
 			"label": "Drop files here or click to browse"
 		},
+		"find": {
+			"label": "Find",
+			"placeholder": "Find",
+			"replacement": "Replace with",
+			"case": "Match case",
+			"word": "Whole word",
+			"regexp": "Regular expression",
+			"count": "{index} of {count}",
+			"none": "No results",
+			"previous": "Previous match",
+			"next": "Next match",
+			"close": "Close",
+			"toggleReplace": "Show replace",
+			"replace": "Replace",
+			"replaceAll": "Replace all"
+		},
 		"formats": {
 			"decimal": "Enter a number, like 12.5",
 			"email": "Enter an email address, like name@example.com",
@@ -190,6 +219,18 @@
 			"semver": "Enter a version, like 1.4.2",
 			"url": "Enter a web address, like https://example.com",
 			"uuid": "Enter a UUID, like 123e4567-e89b-12d3-a456-426614174000"
+		},
+		"forms": {
+			"required": "Fill in this field",
+			"email": "Enter an email address",
+			"min": "At least {min}",
+			"max": "At most {max}",
+			"minLength": "At least {length} characters",
+			"maxLength": "At most {length} characters",
+			"pattern": "The value does not match the format",
+			"equal": "The values do not match",
+			"match": "The values do not match",
+			"invalid": "The value is not valid"
 		},
 		"gallery": {
 			"label": "Gallery",
@@ -236,6 +277,9 @@
 			"score": "Score",
 			"rose": "up {count}",
 			"fell": "down {count}"
+		},
+		"image": {
+			"broken": "The picture did not load"
 		},
 		"input": {
 			"hidePassword": "Hide password",
@@ -313,6 +357,14 @@
 				"other": "{count} min read"
 			},
 			"share": "Share"
+		},
+		"presence": {
+			"online": "Online",
+			"away": "Away",
+			"busy": "Busy",
+			"dnd": "Do not disturb",
+			"offline": "Offline",
+			"connecting": "Connecting…"
 		},
 		"productCard": {
 			"add": "Add to cart",
@@ -432,7 +484,8 @@
 		"tileGrid": {
 			"dropNewGroup": "Drop here to start a group",
 			"groupWidth": "Group width",
-			"newGroupTitle": "New group"
+			"newGroupTitle": "New group",
+			"groupHeight": "Height of the group"
 		},
 		"timeInput": {
 			"choose": "Choose a time",

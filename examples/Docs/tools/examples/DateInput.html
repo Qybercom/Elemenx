@@ -1,0 +1,14 @@
+<Field Label="A date" [hint]="Date || 'Type it or pick it'"><DateInput [value]="Date" (change)="Changed" /></Field>
+<Field Label="A month"><DateInput Mode="month" /></Field>
+<Field Label="Only the next 30 days"><DateInput [min]="Today" [max]="Later" /></Field>
+<script>
+({
+	Date: '',
+	Today: new Date().toISOString().slice(0, 10),
+	Later: new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10),
+
+	Changed: function (value) {
+		this.Date = value;
+	}
+})
+</script>

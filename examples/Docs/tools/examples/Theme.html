@@ -1,0 +1,31 @@
+<Properties>
+	<Property Label="Policy" [value]="State.Policy" />
+	<Property Label="Scheme shown" [value]="State.Scheme" />
+	<Property Label="Theme" [value]="State.Theme" />
+</Properties>
+<RadioGroup Variant="segmented" [options]="[{Value: 'system', Label: 'System'}, {Value: 'light', Label: 'Light'}, {Value: 'dark', Label: 'Dark'}]" [value]="State.Policy" (change)="Policy" />
+<script>
+({
+	State: {},
+
+	$OnCreate: function () {
+		var self = this;
+		var theme = this.$Service('Theme');
+
+		this.Read = function () {
+			self.State = {Policy: theme.Policy(), Scheme: theme.Resolved(), Theme: theme.Theme()};
+		};
+
+		theme.OnChange(this.Read);
+		this.Read();
+	},
+
+	$OnDestroy: function () {
+		this.$Service('Theme').OffChange(this.Read);
+	},
+
+	Policy: function (value) {
+		this.$Service('Theme').Policy(value);
+	}
+})
+</script>

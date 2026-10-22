@@ -57,17 +57,17 @@ Elemenx.Component('Calendar', {
 
 			if (view === 'week') {
 				days = self.Week(self.Cursor(date));
-				format = new Intl.DateTimeFormat(locale || undefined, {day: 'numeric', month: 'short'});
+				format = new Intl.DateTimeFormat(locale || Elemenx.Locale.Language() || undefined, {day: 'numeric', month: 'short'});
 
 				return format.format(self.Parse(days[0])) + ' – ' + format.format(self.Parse(days[6])) + ', ' + self.Parse(days[6]).getFullYear();
 			}
 
-			return new Intl.DateTimeFormat(locale || undefined, {month: 'long', year: 'numeric'}).format(self.Parse(self.Cursor(date)));
+			return new Intl.DateTimeFormat(locale || Elemenx.Locale.Language() || undefined, {month: 'long', year: 'numeric'}).format(self.Parse(self.Cursor(date)));
 		};
 
 		this.Weekdays = function (locale) {
 			var first = self.First();
-			var format = new Intl.DateTimeFormat(locale || undefined, {weekday: 'short'});
+			var format = new Intl.DateTimeFormat(locale || Elemenx.Locale.Language() || undefined, {weekday: 'short'});
 			var names = [];
 			var i = 0;
 
@@ -107,7 +107,7 @@ Elemenx.Component('Calendar', {
 
 		/* The days of the week view: [{ISO, Name, Day, Today, AllDay, Timed}]. */
 		this.Days = function (date, events, locale) {
-			var format = new Intl.DateTimeFormat(locale || undefined, {weekday: 'short'});
+			var format = new Intl.DateTimeFormat(locale || Elemenx.Locale.Language() || undefined, {weekday: 'short'});
 			var today = self.ISO(new Date(self.Now));
 
 			return self.Week(self.Cursor(date)).map(function (iso) {

@@ -1,0 +1,20 @@
+<div class="elemenx-container wrappable" style="gap: 8px;">
+	<Knob Label="Gain" [value]="Gain" Min="0" Max="100" Unit="%" ShowValue="true" Default="50" (input)="Gained" />
+	<Knob Label="Pan" [value]="Pan" Min="-100" Max="100" Origin="0" Default="0" ShowValue="true" (input)="Panned" />
+	<Knob Label="Mode" Value="2" Min="0" Max="4" Step="1" Ticks="5" ShowValue="true" Size="small" />
+</div>
+<p class="elemenx-text small muted">Gain {{Gain}}%, pan {{Pan}}. Drag up or right, use the arrows or the wheel; a double click resets.</p>
+<script>
+({
+	Gain: 70,
+	Pan: -20,
+
+	Gained: function (value) {
+		this.Gain = value;
+	},
+
+	Panned: function (value) {
+		this.Pan = value;
+	}
+})
+</script>

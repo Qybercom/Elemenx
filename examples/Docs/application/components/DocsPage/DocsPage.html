@@ -1,0 +1,14 @@
+<div class="docs-page">
+	<aside class="docs-nav">
+		<NavList Searchable="true" [label]="$T('docs.contents')" [items]="NavItems(Index, Lang())" [value]="Current($Params)" [expanded]="[Current($Params).split('/')[0]]" (select)="Picked" />
+	</aside>
+	<article class="docs-article" [attribute.lang]="Lang()">
+		<i class="docs-sync" hidden *mount="Load(Current($Params), Lang())"></i>
+		<div class="elemenx-callout neutral docs-fallback" *if="Fallback">{{$T('docs.untranslated')}}</div>
+		<div class="docs-missing" *if="Missing">{{$T('docs.missing')}}</div>
+		<div class="docs-segment" *for="segment of Segments" *key="segment.Key">
+			<Markdown *if="segment.Kind === 'text'" [value]="segment.Text" />
+			<DocsExample *if="segment.Kind === 'example'" [code]="segment.Code" />
+		</div>
+	</article>
+</div>

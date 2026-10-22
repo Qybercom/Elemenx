@@ -13,7 +13,10 @@
  *   numbered list, '> ' a quote, '``` ' code. Keys: Mod+B, Mod+I, Mod+U, Mod+E (code), Mod+K (the link event),
  *   Tab and Shift+Tab in a list nest its items.
  * - Methods: Focus(), Formats() (what the selection has: {Bold, Italic, Underline, Strike, Code, Block, Level,
- *   List, Link, Table}), Insert(html), Markdown(), SetMarkdown(text), Text(), Print(options, callback).
+ *   List, Link, Table}), Insert(html), Markdown(), SetMarkdown(text), Text(), Print(options, callback),
+ *   Find(query, {Case, Word, RegExp}) (returns the count of matches, marks them by the Find Service and shows the
+ *   one at the caret or after it), FindNext(), FindPrevious(), ReplaceCurrent(text), ReplaceAll(text), ClearFind().
+ * - Mod+F opens its find bar (a FindBar over its corner), Mod+H with the replace row; FindBar: false leaves it out.
  * - Events: input and change (Value), formats (Formats() as the selection moves), link ({Href, Text}: Mod+K, for a
  *   dialog of the Application), files (the files pasted or dropped: the Application uploads them and inserts images
  *   by Command), ready (the editor).
@@ -34,6 +37,12 @@ Elemenx.Component('RichEditor', {
 	MenuStyle: '',
 	LinkMode: false,
 	LinkText: '',
+	FindBar: true,
+	Finding: false,
+	FindReplacing: false,
+	FindQuery: '',
+	FindCount: 0,
+	FindIndex: -1,
 
 	$OnCreate: function () {
 		var self = this;
@@ -80,6 +89,8 @@ Elemenx.Component('RichEditor', {
 	$OnDestroy: function () {
 		window.clearTimeout(this.Own().ReadyTimer);
 
+		this.$Service('Find').Clear(this);
+
 		document.removeEventListener('selectionchange', this.Own().Listener);
 	},
 
@@ -90,6 +101,165 @@ Elemenx.Component('RichEditor', {
 
 	$OnWake: function () {
 		document.addEventListener('selectionchange', this.Own().Listener);
+	},
+
+	/* The matches of the query of Find in the text; show: the one at the caret or after it is the current one. */
+	Search: function (show) {
+		var query = this.Own().Query;
+		var content = this.Content();
+		var ranges = this.$Service('Find').Ranges(content, query.Text, query.Options);
+		var selection = window.getSelection();
+		var caret = selection && selection.rangeCount && content.contains(selection.getRangeAt(0).startContainer) ? selection.getRangeAt(0) : null;
+		var index = -1;
+
+		ranges.forEach(function (range, at) {
+			if (index === -1 && (!caret || range.compareBoundaryPoints(Range.START_TO_START, caret) >= 0))
+				index = at;
+		});
+
+		if (ranges.length && index === -1)
+			index = 0;
+
+		if (!show && this.FindIndex !== -1 && ranges.length)
+			index = Math.min(this.FindIndex, ranges.length - 1);
+
+		this.Own().Ranges = ranges;
+		this.FindCount = ranges.length;
+		this.FindIndex = index;
+
+		this.$Service('Find').Show(this, ranges, index);
+
+		return ranges.length;
+	},
+
+	Find: function (query, options) {
+		this.Own().Query = {Text: String(query == null ? '' : query), Options: options || {}};
+
+		return this.Search(true);
+	},
+
+	FindNext: function () {
+		return this.FindStep(1);
+	},
+
+	FindPrevious: function () {
+		return this.FindStep(-1);
+	},
+
+	FindStep: function (step) {
+		var ranges = this.Own().Ranges || [];
+		if (!ranges.length) return -1;
+
+		this.FindIndex = (this.FindIndex + step + ranges.length) % ranges.length;
+
+		this.$Service('Find').Show(this, ranges, this.FindIndex);
+
+		return this.FindIndex;
+	},
+
+	/* A replacement is typed over the match (insertText): the undo of the browser takes it back. */
+	ReplaceWith: function (range, text) {
+		var selection = window.getSelection();
+
+		this.Content().focus();
+
+		selection.removeAllRanges();
+		selection.addRange(range);
+
+		this.Run('insertText', String(text == null ? '' : text));
+	},
+
+	ReplaceCurrent: function (text) {
+		var range = (this.Own().Ranges || [])[this.FindIndex];
+		if (!range || !this.Editable()) return false;
+
+		this.ReplaceWith(range, text);
+		this.Read();
+		this.Search(false);
+
+		return true;
+	},
+
+	/* From the last match to the first, so the ranges before the one replaced stay where they are. */
+	ReplaceAll: function (text) {
+		var ranges = (this.Own().Ranges || []).slice();
+		var self = this;
+
+		if (!ranges.length || !this.Editable()) return 0;
+
+		ranges.reverse().forEach(function (range) {
+			self.ReplaceWith(range, text);
+		});
+
+		this.Read();
+		this.Search(false);
+
+		return ranges.length;
+	},
+
+	ClearFind: function () {
+		this.Own().Query = null;
+		this.Own().Ranges = [];
+		this.FindCount = 0;
+		this.FindIndex = -1;
+
+		this.$Service('Find').Clear(this);
+
+		return this;
+	},
+
+	/* The find bar: opened on the text selected (one line), its field focused. */
+	OpenFind: function (replace) {
+		var self = this;
+		var selection = window.getSelection();
+		var text = selection ? String(selection) : '';
+		if (text && text.indexOf('\n') === -1 && this.Content().contains(selection.anchorNode))
+			this.FindQuery = text;
+
+		this.FindReplacing = !!replace && this.Editable();
+		this.Finding = true;
+
+		window.setTimeout(function () {
+			if (self.FindQuery)
+				self.BarFind({Query: self.FindQuery, Case: false, Word: false, RegExp: false});
+		}, 0);
+	},
+
+	BarFind: function (query) {
+		this.FindQuery = query.Query;
+
+		this.Find(query.Query, {Case: query.Case, Word: query.Word, RegExp: query.RegExp});
+	},
+
+	BarNext: function () {
+		this.FindNext();
+	},
+
+	BarPrevious: function () {
+		this.FindPrevious();
+	},
+
+	BarReplace: function (data) {
+		this.ReplaceCurrent(data.Text);
+		this.BackToBar();
+	},
+
+	BarReplaceAll: function (data) {
+		this.ReplaceAll(data.Text);
+		this.BackToBar();
+	},
+
+	BackToBar: function () {
+		var field = this.$Element().querySelector('.elemenx-find-replacement');
+		if (field)
+			field.focus();
+	},
+
+	CloseFind: function () {
+		this.Finding = false;
+
+		this.ClearFind();
+		this.Focus();
 	},
 
 	Content: function () {
@@ -203,6 +373,7 @@ Elemenx.Component('RichEditor', {
 		var root = this.$Element();
 		var rect;
 		var box;
+		var touch;
 
 		if (!root) return;
 
@@ -226,7 +397,10 @@ Elemenx.Component('RichEditor', {
 		rect = range.getBoundingClientRect();
 		box = root.getBoundingClientRect();
 
-		this.MenuStyle = 'left: ' + Math.round(Math.max(4, Math.min(rect.left + rect.width / 2 - box.left - 150, box.width - 304))) + 'px; top: ' + Math.round(Math.max(-40, rect.top - box.top - 44)) + 'px;';
+		/* Above the selection; under it on a touch screen, where the menu of the system and the handles are above it. */
+		touch = typeof window.matchMedia === 'function' && window.matchMedia('(pointer: coarse)').matches;
+
+		this.MenuStyle = 'left: ' + Math.round(Math.max(4, Math.min(rect.left + rect.width / 2 - box.left - 150, box.width - 304))) + 'px; top: ' + Math.round(touch ? rect.bottom - box.top + 16 : Math.max(-40, rect.top - box.top - 44)) + 'px;';
 		this.MenuOpen = true;
 	},
 
@@ -480,6 +654,10 @@ Elemenx.Component('RichEditor', {
 	Typed: function (event) {
 		this.Read();
 
+		/* The matches of an open search follow the text as it changes. */
+		if (this.Own().Query)
+			this.Search(false);
+
 		if (event && event.inputType === 'insertText' && event.data === ' ')
 			this.Shortcut();
 	},
@@ -528,6 +706,15 @@ Elemenx.Component('RichEditor', {
 		var mod = event.ctrlKey || event.metaKey;
 		var key = String(event.key || '').toLowerCase();
 		var formats;
+
+		/* Mod+F: the find bar; Mod+H: with its replace row (an editor that can change). */
+		if (mod && !event.altKey && !event.shiftKey && (event.code === 'KeyF' || event.code === 'KeyH') && this.FindBar && this.FindBar !== 'false') {
+			event.preventDefault();
+
+			this.OpenFind(event.code === 'KeyH');
+
+			return;
+		}
 
 		if (event.isComposing || !this.Editable()) return;
 

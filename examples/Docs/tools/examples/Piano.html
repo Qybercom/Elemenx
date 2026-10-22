@@ -1,0 +1,28 @@
+<RadioGroup Variant="segmented" Label="Labels" [options]="Modes" [value]="Labels" (change)="Labelled" />
+<Piano From="C4" Octaves="2" [labels]="Labels" [pressed]="Down" [marks]="Scale" (noteon)="NoteOn" (noteoff)="NoteOff" />
+<p class="elemenx-text small muted">{{Note}} · the marked notes are the C major scale; with the focus, A W S E D... play it, Z and X shift an octave.</p>
+<Piano From="C4" Octaves="1" Size="small" Labels="all" [pressed]="['C#4', 'F#4', 'A#4']" />
+<script>
+({
+	Note: 'Press a key',
+	Labels: 'both',
+	Modes: [{Value: 'none', Label: 'none'}, {Value: 'c', Label: 'c'}, {Value: 'notes', Label: 'notes'}, {Value: 'all', Label: 'all'}, {Value: 'keys', Label: 'keys'}, {Value: 'both', Label: 'both'}],
+	Down: [],
+	Scale: {C4: true, D4: true, E4: true, F4: true, G4: true, A4: true, B4: true, C5: true},
+
+	Labelled: function (value) {
+		this.Labels = value;
+	},
+
+	NoteOn: function (event) {
+		this.Down = this.Down.concat([event.Note]);
+		this.Note = event.Note + ' (MIDI ' + event.Midi + ', velocity ' + event.Velocity + ')';
+	},
+
+	NoteOff: function (event) {
+		this.Down = this.Down.filter(function (note) {
+			return note !== event.Note;
+		});
+	}
+})
+</script>

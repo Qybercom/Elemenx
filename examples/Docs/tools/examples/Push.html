@@ -1,0 +1,29 @@
+<Properties>
+	<Property Label="Web Push here" [value]="Supported ? 'yes' : 'no'" />
+	<Property Label="Permission" [value]="Permission" />
+</Properties>
+<Button Label="A notification from the page" Icon="bell" (click)="Notify" />
+<p class="elemenx-text small muted">{{Note}}</p>
+<script>
+({
+	Supported: false,
+	Permission: '',
+	Note: 'Subscribe needs the VAPID key of your server: Push.Subscribe({Key}, callback).',
+
+	$OnCreate: function () {
+		var push = this.$Service('Push');
+
+		this.Supported = push.Supported();
+		this.Permission = push.Permission();
+	},
+
+	Notify: function () {
+		var self = this;
+
+		this.$Service('Push').Notify('Hello', {Text: 'A notification of the reference.'}, function (error) {
+			self.Permission = self.$Service('Push').Permission();
+			self.Note = error ? error.name : 'Shown';
+		});
+	}
+})
+</script>

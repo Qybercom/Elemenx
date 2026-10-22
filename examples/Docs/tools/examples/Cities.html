@@ -1,0 +1,31 @@
+<span class="elemenx-input"><input class="elemenx-input-control" [(value)]="Text" placeholder="A city" /></span>
+<Button Label="Search" Variant="primary" (click)="Search" />
+<ul class="elemenx-ul"><li *for="city of Found" *key="city.ID">{{city.Label}} · {{city.Time}}</li></ul>
+<p class="elemenx-text small muted">{{Note}}</p>
+<script>
+({
+	Text: 'riga',
+	Found: [],
+	Note: 'The data (7 MB) loads on the first search. Cities: GeoNames (geonames.org), CC BY 4.0.',
+
+	Search: function () {
+		var self = this;
+		var cities = this.$Service('Cities');
+
+		this.Note = 'Searching...';
+
+		cities.Search(this.Text, {Limit: 5}, function (error, found) {
+			if (error) {
+				self.Note = error.message;
+
+				return;
+			}
+
+			self.Note = found.length + ' found';
+			self.Found = found.map(function (city) {
+				return {ID: city.ID, Label: cities.Label(city), Time: cities.Clock(city).Time};
+			});
+		});
+	}
+})
+</script>

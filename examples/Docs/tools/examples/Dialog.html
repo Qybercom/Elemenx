@@ -1,0 +1,32 @@
+<Button Label="Open the dialog" Variant="primary" (click)="Open" />
+<span class="elemenx-text small muted">{{Note}}</span>
+<Dialog Title="Project settings" Description="Changes apply to every member." Icon="settings" [open]="Opened" (close)="Close">
+	<Field Label="Name"><Input [value]="Name" (input)="Typed" /></Field>
+	<Button slot="footer" Label="Cancel" (click)="Close" />
+	<Button slot="footer" Label="Save" Variant="primary" (click)="Save" />
+</Dialog>
+<script>
+({
+	Opened: false,
+	Name: 'Elemenx',
+	Note: '',
+
+	Open: function () {
+		this.Opened = true;
+	},
+
+	Typed: function (value) {
+		this.Name = value;
+	},
+
+	Close: function (reason) {
+		this.Opened = false;
+		this.Note = 'Closed' + (typeof reason === 'string' ? ': ' + reason : '');
+	},
+
+	Save: function () {
+		this.Opened = false;
+		this.Note = 'Saved: ' + this.Name;
+	}
+})
+</script>

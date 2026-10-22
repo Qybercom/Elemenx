@@ -9,6 +9,7 @@
 :root {
 	--elemenx-font: 'Segoe UI', Inter, Arial, sans-serif;
 	--elemenx-font-mono: Consolas, 'Cascadia Code', monospace;
+	--elemenx-font-math: 'Cambria Math', 'STIX Two Math', math, serif;
 	--elemenx-font-size-small: 12px;
 	--elemenx-font-size: 14px;
 	--elemenx-font-size-large: 16px;
@@ -38,6 +39,16 @@
 	--elemenx-overlay: rgba(0, 0, 0, 0.56);
 	--elemenx-overlay-soft: rgba(0, 0, 0, 0.24);
 	--elemenx-overlay-text: #ffffff;
+	--elemenx-badge-text: #ffffff;
+	--elemenx-avatar-text: #ffffff;
+	--elemenx-gamepad-face: #2a2d34;
+	--elemenx-gamepad-glyph: #ffffff;
+	--elemenx-gamepad-ring: #5b606b;
+	--elemenx-gamepad-green: #3fa34d;
+	--elemenx-gamepad-red: #d8453c;
+	--elemenx-gamepad-blue: #3d7be0;
+	--elemenx-gamepad-yellow: #e2a915;
+	--elemenx-gamepad-pink: #d873c1;
 	--elemenx-hairline: rgba(128, 128, 128, 0.32);
 	--elemenx-scrollbar: rgba(128, 128, 128, 0.44);
 	--elemenx-scrollbar-hover: rgba(128, 128, 128, 0.64);
@@ -107,24 +118,14 @@ body,
 	--elemenx-border-strong: #c2bdb6;
 	--elemenx-border-strong-rgb: 194, 189, 182;
 	--elemenx-shadow: 0 8px 24px rgba(35, 33, 30, 0.12);
-	--elemenx-focus: rgba(var(--elemenx-accent-rgb), 0.48);
 	--elemenx-rating-color: #e0a526;
 	--elemenx-tile-color: #4b5f7a;
 	--elemenx-weather-sun: #d9921a;
 	--elemenx-weather-moon: #6f78a8;
-	--elemenx-weather-cloud: var(--elemenx-text-muted);
-	--elemenx-weather-rain: var(--elemenx-info);
 	--elemenx-weather-snow: #4f9fcc;
 	--elemenx-weather-bolt: #d4a017;
-	--elemenx-weather-wind: var(--elemenx-text-muted);
-	--elemenx-weather-fog: var(--elemenx-text-muted);
-	--elemenx-weather-thermometer: var(--elemenx-danger);
 	--elemenx-block-background: transparent;
-	--elemenx-block-frame: 1px solid var(--elemenx-border);
-	--elemenx-block-radius: var(--elemenx-radius-large);
 	--elemenx-block-gap: 12px;
-	--elemenx-block-title-band: var(--elemenx-surface-raised);
-	--elemenx-block-title-text: var(--elemenx-text);
 	--elemenx-block-title-padding: 6px;
 	--elemenx-block-title-spacing: normal;
 	--elemenx-block-title-transform: none;
@@ -134,29 +135,12 @@ body,
 	--elemenx-property-gap: 12px;
 	--elemenx-property-padding: 0;
 	--elemenx-property-label: transparent;
-	--elemenx-property-label-text: var(--elemenx-text-muted);
 	--elemenx-property-value: transparent;
 	--elemenx-property-value-frame: 0;
-	--elemenx-property-value-text: var(--elemenx-text);
-	--elemenx-game-font: var(--elemenx-font);
-	--elemenx-game-title-font: var(--elemenx-font);
 	--elemenx-game-title-shadow: none;
-	--elemenx-game-text: var(--elemenx-text);
-	--elemenx-game-muted: var(--elemenx-text-muted);
-	--elemenx-game-accent: var(--elemenx-accent);
 	--elemenx-game-letter-spacing: normal;
 	--elemenx-game-text-transform: none;
-	--elemenx-game-panel: var(--elemenx-surface);
-	--elemenx-game-frame: 1px solid var(--elemenx-border-strong);
-	--elemenx-game-panel-shadow: var(--elemenx-shadow);
-	--elemenx-game-radius: var(--elemenx-radius-large);
 	--elemenx-game-shape: none;
-	--elemenx-game-glow: 0 0 0 2px var(--elemenx-focus);
-	--elemenx-game-cell: var(--elemenx-surface-raised);
-	--elemenx-game-cell-frame: 1px solid var(--elemenx-border);
-	--elemenx-game-cell-radius: var(--elemenx-radius);
-	--elemenx-game-bar-track: rgba(var(--elemenx-text-rgb), 0.12);
-	--elemenx-game-bar-frame: 1px solid var(--elemenx-border);
 	--elemenx-game-bar-frame-image: none;
 	--elemenx-game-bar-ornament: none;
 	--elemenx-game-bar-ornament-inset: 0;
@@ -166,10 +150,8 @@ body,
 	--elemenx-game-bar-edge: none;
 	--elemenx-game-bar-value-align: center;
 	--elemenx-game-bar-value-padding: 0;
-	--elemenx-game-bar-radius: var(--elemenx-radius-pill);
 	--elemenx-game-bar-shadow: none;
 	--elemenx-game-bar-shine: linear-gradient(to bottom, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0) 60%);
-	--elemenx-game-bar-damage: var(--elemenx-warning);
 	--elemenx-game-bar-text: #ffffff;
 	--elemenx-game-bar-text-shadow: 0 1px 2px rgba(0, 0, 0, 0.64);
 	--elemenx-game-damage-delay: 400ms;
@@ -179,7 +161,6 @@ body,
 	--elemenx-game-mana: #3f73c9;
 	--elemenx-game-experience: #c99a27;
 	--elemenx-game-stamina: #3fa86b;
-	--elemenx-game-common: var(--elemenx-text-muted);
 	--elemenx-game-uncommon: #3fa86b;
 	--elemenx-game-rare: #3f73c9;
 	--elemenx-game-epic: #8f4fc9;
@@ -193,54 +174,31 @@ body,
 	--elemenx-game-frame-image: none;
 	--elemenx-game-blur: none;
 	--elemenx-game-decor: none;
-	--elemenx-game-decor-inset: 0;
+	--elemenx-game-decor-inset: 0px;
+	--elemenx-game-folder-line: 1px;
+	--elemenx-game-folder-end: 0;
 	--elemenx-game-active: 0 0 0 0 transparent;
-	--elemenx-game-appear: elemenx-window-appear var(--elemenx-duration-slow) var(--elemenx-easing);
-	--elemenx-game-header: var(--elemenx-surface-raised);
-	--elemenx-game-header-line: 1px solid var(--elemenx-border);
 	--elemenx-game-header-inset: 0;
 	--elemenx-game-header-radius: 0;
 	--elemenx-game-header-padding: 0 4px 0 10px;
 	--elemenx-game-title-inset: 0 96px 0 10px;
-	--elemenx-game-title: var(--elemenx-game-text);
 	--elemenx-game-title-align: flex-start;
 	--elemenx-game-ornament: none;
 	--elemenx-game-ornament-top: 0;
 	--elemenx-game-ornament-width: 0;
 	--elemenx-game-ornament-height: 0;
-	--elemenx-game-good: var(--elemenx-success);
-	--elemenx-game-bad: var(--elemenx-danger);
-	--elemenx-game-special: var(--elemenx-warning);
-	--elemenx-game-section: var(--elemenx-surface-raised);
-	--elemenx-game-section-title: var(--elemenx-game-accent);
-	--elemenx-game-separator: linear-gradient(to right, transparent, var(--elemenx-border-strong), transparent);
 	--elemenx-game-separator-ornament: none;
-	--elemenx-game-button: linear-gradient(var(--elemenx-surface-raised), var(--elemenx-surface-raised));
-	--elemenx-game-button-edge: linear-gradient(var(--elemenx-border-strong), var(--elemenx-border-strong));
-	--elemenx-game-button-radius: var(--elemenx-radius);
-	--elemenx-game-button-hover: linear-gradient(var(--elemenx-surface-hover), var(--elemenx-surface-hover));
-	--elemenx-game-button-text: var(--elemenx-game-text);
 	--elemenx-game-button-shadow: none;
-	--elemenx-game-field: var(--elemenx-surface);
-	--elemenx-game-field-frame: 1px solid var(--elemenx-border-strong);
 	--elemenx-game-field-shadow: none;
-	--elemenx-game-scrollbar: var(--elemenx-scrollbar);
 	--elemenx-game-tab: transparent;
-	--elemenx-game-tab-active: var(--elemenx-game-cell);
-	--elemenx-game-tab-marker: var(--elemenx-game-accent);
 	--elemenx-game-text-shadow: none;
 	--elemenx-game-item-tint: 0;
 	--elemenx-game-item-gloss: none;
 	--elemenx-game-item-inset: 2px;
 	--elemenx-game-item-bevel: 0 0 0 0 transparent;
-	--elemenx-game-item-icon: var(--elemenx-game-text);
 	--elemenx-game-item-icon-shadow: none;
 	--elemenx-game-item-icon-scale: 1;
 	--elemenx-game-inventory-gap: 4px;
-	--elemenx-game-menu-item: var(--elemenx-game-cell);
-	--elemenx-game-menu-item-hover: var(--elemenx-game-cell);
-	--elemenx-game-menu-item-hover-text: var(--elemenx-game-text);
-	--elemenx-game-menu-item-frame: var(--elemenx-game-cell-frame);
 	--elemenx-game-menu-item-frame-image: none;
 	--elemenx-game-menu-item-shadow: 0 0 0 0 transparent;
 	--elemenx-game-menu-item-ornament: none;
@@ -250,21 +208,10 @@ body,
 	--elemenx-game-menu-item-shift: translateX(4px);
 	--elemenx-game-menu-title-ornament: none;
 	--elemenx-game-menu-title-ornament-height: 0;
-	--elemenx-game-light-panel: var(--elemenx-game-panel);
-	--elemenx-game-light-frame: var(--elemenx-game-frame);
-	--elemenx-game-light-frame-image: var(--elemenx-game-frame-image);
-	--elemenx-game-light-radius: var(--elemenx-game-radius);
-	--elemenx-game-light-shadow: var(--elemenx-game-panel-shadow);
 	--elemenx-game-light-decor: none;
 	--elemenx-game-light-decor-inset: 0;
-	--elemenx-game-dialogue-portrait-frame: var(--elemenx-game-cell-frame);
 	--elemenx-game-dialogue-portrait-frame-image: none;
-	--elemenx-game-dialogue-portrait-radius: var(--elemenx-game-cell-radius);
 	--elemenx-game-dialogue-portrait-shadow: none;
-	--elemenx-game-dialogue-choice: var(--elemenx-game-cell);
-	--elemenx-game-dialogue-choice-hover: var(--elemenx-game-cell);
-	--elemenx-game-dialogue-choice-hover-text: var(--elemenx-game-text);
-	--elemenx-game-dialogue-choice-frame: var(--elemenx-game-cell-frame);
 	--elemenx-game-dialogue-choice-frame-image: none;
 	--elemenx-game-dialogue-choice-padding: 6px 10px;
 	--elemenx-game-dialogue-next-padding: 6px 10px;
@@ -277,49 +224,27 @@ body,
 	--elemenx-game-section-gap: 6px;
 	--elemenx-game-section-padding: 0;
 	--elemenx-game-section-frame: 0;
+	--elemenx-game-section-edge: transparent;
 	--elemenx-game-section-title-margin: 0;
 	--elemenx-game-section-title-padding: 3px 8px;
-	--elemenx-game-heading: var(--elemenx-game-title);
-	--elemenx-game-heading-line: 1px solid var(--elemenx-border);
 	--elemenx-game-stats-gap: 2px 12px;
 	--elemenx-game-stats-pair-gap: 0px;
 	--elemenx-game-stats-cell-gap: 12px;
 	--elemenx-game-stat-padding: 0;
 	--elemenx-game-stat-label: transparent;
-	--elemenx-game-stat-label-text: var(--elemenx-game-muted);
 	--elemenx-game-stat-value: transparent;
 	--elemenx-game-stat-value-frame: 0;
 	--elemenx-game-hotbar-gap: 4px;
 	--elemenx-game-hotbar-padding: 6px;
 	--elemenx-game-table-spacing: 0;
-	--elemenx-game-table-frame: 1px solid var(--elemenx-border);
 	--elemenx-game-table-cell: transparent;
-	--elemenx-game-table-head: var(--elemenx-surface-raised);
-	--elemenx-game-table-head-text: var(--elemenx-text-muted);
-	--elemenx-game-table-line: 1px solid var(--elemenx-border);
 	--elemenx-game-table-divider: 0;
-	--elemenx-game-table-stripe: var(--elemenx-surface-raised);
-	--elemenx-game-table-hover: rgba(var(--elemenx-surface-hover-rgb), 0.64);
-	--elemenx-game-table-selected: linear-gradient(rgba(var(--elemenx-accent-rgb), 0.12), rgba(var(--elemenx-accent-rgb), 0.12)), var(--elemenx-surface);
-	--elemenx-game-table-selected-text: var(--elemenx-game-text);
-	--elemenx-game-meter-track: var(--elemenx-border);
-	--elemenx-game-meter-radius: var(--elemenx-radius-pill);
-	--elemenx-game-meter-ring: var(--elemenx-border);
-	--elemenx-game-meter-needle: var(--elemenx-game-text);
 	--elemenx-game-meter-value-size: inherit;
-	--elemenx-game-meter-value-weight: var(--elemenx-font-weight-strong);
-	--elemenx-game-meter-readout: var(--elemenx-game-text);
-	--elemenx-game-meter-readout-text: var(--elemenx-surface);
 	--elemenx-game-scrollbar-width: thin;
-	--elemenx-game-scrollbar-color: var(--elemenx-game-scrollbar) transparent;
 	--elemenx-game-scrollbar-track: transparent;
-	--elemenx-game-scrollbar-thumb: var(--elemenx-game-scrollbar);
 	--elemenx-game-scrollbar-thumb-inset: 3px;
-	--elemenx-game-scrollbar-radius: var(--elemenx-radius-pill);
 	--elemenx-game-item-selected: none;
 	--elemenx-game-item-selected-inset: 0;
-	--elemenx-game-item-active: var(--elemenx-game-glow);
-	--elemenx-game-item-active-fill: var(--elemenx-game-cell);
 	--elemenx-game-button-padding: 12px;
 	--elemenx-game-button-min-width: 0;
 	--elemenx-game-header-image: none;
@@ -455,6 +380,107 @@ body,
 		--elemenx-syntax-code: #9cd08f;
 		color-scheme: dark;
 	}
+}
+
+/*
+ * The tokens made of other tokens, set again on every element with a theme or a scheme of its own: a custom property
+ * takes the values of the element it is set on, so a dark part of a light page computes them from its own colors.
+ */
+body,
+[data-theme],
+[data-scheme] {
+	--elemenx-focus: rgba(var(--elemenx-accent-rgb), 0.48);
+	--elemenx-weather-cloud: var(--elemenx-text-muted);
+	--elemenx-weather-rain: var(--elemenx-info);
+	--elemenx-weather-wind: var(--elemenx-text-muted);
+	--elemenx-weather-fog: var(--elemenx-text-muted);
+	--elemenx-weather-thermometer: var(--elemenx-danger);
+	--elemenx-block-frame: 1px solid var(--elemenx-border);
+	--elemenx-block-radius: var(--elemenx-radius-large);
+	--elemenx-block-title-band: var(--elemenx-surface-raised);
+	--elemenx-block-title-text: var(--elemenx-text);
+	--elemenx-property-label-text: var(--elemenx-text-muted);
+	--elemenx-property-value-text: var(--elemenx-text);
+	--elemenx-game-font: var(--elemenx-font);
+	--elemenx-game-title-font: var(--elemenx-font);
+	--elemenx-game-text: var(--elemenx-text);
+	--elemenx-game-muted: var(--elemenx-text-muted);
+	--elemenx-game-accent: var(--elemenx-accent);
+	--elemenx-game-panel: var(--elemenx-surface);
+	--elemenx-game-frame: 1px solid var(--elemenx-border-strong);
+	--elemenx-game-panel-shadow: var(--elemenx-shadow);
+	--elemenx-game-radius: var(--elemenx-radius-large);
+	--elemenx-game-glow: 0 0 0 2px var(--elemenx-focus);
+	--elemenx-game-cell: var(--elemenx-surface-raised);
+	--elemenx-game-cell-frame: 1px solid var(--elemenx-border);
+	--elemenx-game-cell-radius: var(--elemenx-radius);
+	--elemenx-game-bar-track: rgba(var(--elemenx-text-rgb), 0.12);
+	--elemenx-game-bar-frame: 1px solid var(--elemenx-border);
+	--elemenx-game-bar-radius: var(--elemenx-radius-pill);
+	--elemenx-game-bar-damage: var(--elemenx-warning);
+	--elemenx-game-common: var(--elemenx-text-muted);
+	--elemenx-game-folder-slant: var(--elemenx-block-tab-slant);
+	--elemenx-block-tab-edge: var(--elemenx-border);
+	--elemenx-game-folder-edge: var(--elemenx-border-strong);
+	--elemenx-game-appear: elemenx-window-appear var(--elemenx-duration-slow) var(--elemenx-easing);
+	--elemenx-game-header: var(--elemenx-surface-raised);
+	--elemenx-game-header-line: 1px solid var(--elemenx-border);
+	--elemenx-game-title: var(--elemenx-game-text);
+	--elemenx-game-good: var(--elemenx-success);
+	--elemenx-game-bad: var(--elemenx-danger);
+	--elemenx-game-special: var(--elemenx-warning);
+	--elemenx-game-section: var(--elemenx-surface-raised);
+	--elemenx-game-section-title: var(--elemenx-game-accent);
+	--elemenx-game-separator: linear-gradient(to right, transparent, var(--elemenx-border-strong), transparent);
+	--elemenx-game-button: linear-gradient(var(--elemenx-surface-raised), var(--elemenx-surface-raised));
+	--elemenx-game-button-edge: linear-gradient(var(--elemenx-border-strong), var(--elemenx-border-strong));
+	--elemenx-game-button-radius: var(--elemenx-radius);
+	--elemenx-game-button-hover: linear-gradient(var(--elemenx-surface-hover), var(--elemenx-surface-hover));
+	--elemenx-game-button-text: var(--elemenx-game-text);
+	--elemenx-game-field: var(--elemenx-surface);
+	--elemenx-game-field-frame: 1px solid var(--elemenx-border-strong);
+	--elemenx-game-scrollbar: var(--elemenx-scrollbar);
+	--elemenx-game-tab-active: var(--elemenx-game-cell);
+	--elemenx-game-tab-marker: var(--elemenx-game-accent);
+	--elemenx-game-item-icon: var(--elemenx-game-text);
+	--elemenx-game-menu-item: var(--elemenx-game-cell);
+	--elemenx-game-menu-item-hover: var(--elemenx-game-cell);
+	--elemenx-game-menu-item-hover-text: var(--elemenx-game-text);
+	--elemenx-game-menu-item-frame: var(--elemenx-game-cell-frame);
+	--elemenx-game-light-panel: var(--elemenx-game-panel);
+	--elemenx-game-light-frame: var(--elemenx-game-frame);
+	--elemenx-game-light-frame-image: var(--elemenx-game-frame-image);
+	--elemenx-game-light-radius: var(--elemenx-game-radius);
+	--elemenx-game-light-shadow: var(--elemenx-game-panel-shadow);
+	--elemenx-game-dialogue-portrait-frame: var(--elemenx-game-cell-frame);
+	--elemenx-game-dialogue-portrait-radius: var(--elemenx-game-cell-radius);
+	--elemenx-game-dialogue-choice: var(--elemenx-game-cell);
+	--elemenx-game-dialogue-choice-hover: var(--elemenx-game-cell);
+	--elemenx-game-dialogue-choice-hover-text: var(--elemenx-game-text);
+	--elemenx-game-dialogue-choice-frame: var(--elemenx-game-cell-frame);
+	--elemenx-game-heading: var(--elemenx-game-title);
+	--elemenx-game-heading-line: 1px solid var(--elemenx-border);
+	--elemenx-game-stat-label-text: var(--elemenx-game-muted);
+	--elemenx-game-table-frame: 1px solid var(--elemenx-border);
+	--elemenx-game-table-head: var(--elemenx-surface-raised);
+	--elemenx-game-table-head-text: var(--elemenx-text-muted);
+	--elemenx-game-table-line: 1px solid var(--elemenx-border);
+	--elemenx-game-table-stripe: var(--elemenx-surface-raised);
+	--elemenx-game-table-hover: rgba(var(--elemenx-surface-hover-rgb), 0.64);
+	--elemenx-game-table-selected: linear-gradient(rgba(var(--elemenx-accent-rgb), 0.12), rgba(var(--elemenx-accent-rgb), 0.12)), var(--elemenx-surface);
+	--elemenx-game-table-selected-text: var(--elemenx-game-text);
+	--elemenx-game-meter-track: var(--elemenx-border);
+	--elemenx-game-meter-radius: var(--elemenx-radius-pill);
+	--elemenx-game-meter-ring: var(--elemenx-border);
+	--elemenx-game-meter-needle: var(--elemenx-game-text);
+	--elemenx-game-meter-value-weight: var(--elemenx-font-weight-strong);
+	--elemenx-game-meter-readout: var(--elemenx-game-text);
+	--elemenx-game-meter-readout-text: var(--elemenx-surface);
+	--elemenx-game-scrollbar-color: var(--elemenx-game-scrollbar) transparent;
+	--elemenx-game-scrollbar-thumb: var(--elemenx-game-scrollbar);
+	--elemenx-game-scrollbar-radius: var(--elemenx-radius-pill);
+	--elemenx-game-item-active: var(--elemenx-game-glow);
+	--elemenx-game-item-active-fill: var(--elemenx-game-cell);
 }
 
 
@@ -749,6 +775,143 @@ a {
 
 .elemenx-syntax-comment {
 	color: var(--elemenx-syntax-comment);
+}
+
+/* The matches of a search in a document or an output (the Find Service), the current one stronger. */
+::highlight(elemenx-find) {
+	background-color: rgba(var(--elemenx-warning-rgb), 0.32);
+}
+
+::highlight(elemenx-find-current) {
+	background-color: rgba(var(--elemenx-warning-rgb), 0.72);
+	color: var(--elemenx-text);
+}
+
+/*
+ * A document: the text of a RichEditor and of a Markdown viewer (paragraphs, headings, lists, quotes, code, tables,
+ * images, links), in the type of the theme.
+ */
+.elemenx-document {
+	line-height: 1.6;
+	overflow-wrap: anywhere;
+}
+
+.elemenx-document > :first-child {
+	margin-top: 0;
+}
+
+.elemenx-document > :last-child {
+	margin-bottom: 0;
+}
+
+.elemenx-document p,
+.elemenx-document ul,
+.elemenx-document ol,
+.elemenx-document blockquote,
+.elemenx-document pre,
+.elemenx-document table {
+	margin: 0 0 0.75em;
+}
+
+.elemenx-document h1,
+.elemenx-document h2,
+.elemenx-document h3,
+.elemenx-document h4 {
+	margin: 1em 0 0.5em;
+	font-family: inherit;
+	font-weight: var(--elemenx-font-weight-bold);
+	line-height: 1.25;
+}
+
+.elemenx-document h1 {
+	font-size: 1.75em;
+}
+
+.elemenx-document h2 {
+	font-size: 1.4em;
+}
+
+.elemenx-document h3 {
+	font-size: 1.2em;
+}
+
+.elemenx-document h4 {
+	font-size: 1em;
+}
+
+.elemenx-document ul,
+.elemenx-document ol {
+	padding-inline-start: 1.5em;
+}
+
+.elemenx-document li > ul,
+.elemenx-document li > ol {
+	margin: 0;
+}
+
+.elemenx-document blockquote {
+	padding-inline-start: 1em;
+	border-inline-start: 3px solid var(--elemenx-border-strong);
+	color: var(--elemenx-text-muted);
+}
+
+.elemenx-document pre {
+	padding: 8px 12px;
+	overflow-x: auto;
+	background: var(--elemenx-surface-raised);
+	border-radius: var(--elemenx-radius);
+	font-family: var(--elemenx-font-mono), monospace;
+	font-size: 0.9em;
+	white-space: pre;
+}
+
+.elemenx-document code {
+	padding: 0 4px;
+	background: var(--elemenx-surface-hover);
+	border-radius: var(--elemenx-radius);
+	font-family: var(--elemenx-font-mono), monospace;
+	font-size: 0.9em;
+}
+
+.elemenx-document pre code {
+	padding: 0;
+	background: none;
+}
+
+.elemenx-document a {
+	color: var(--elemenx-info);
+	text-decoration: underline;
+	text-underline-offset: 2px;
+}
+
+.elemenx-document img {
+	max-width: 100%;
+	height: auto;
+	vertical-align: middle;
+}
+
+.elemenx-document hr {
+	margin: 1em 0;
+	border: 0;
+	border-top: 1px solid var(--elemenx-border-strong);
+}
+
+.elemenx-document table {
+	border-collapse: collapse;
+}
+
+.elemenx-document th,
+.elemenx-document td {
+	min-width: 64px;
+	padding: 4px 8px;
+	border: 1px solid var(--elemenx-border-strong);
+	text-align: start;
+	vertical-align: top;
+}
+
+.elemenx-document th {
+	background: var(--elemenx-surface-raised);
+	font-weight: var(--elemenx-font-weight-strong);
 }
 
 .elemenx-syntax-keyword {
@@ -1169,6 +1332,7 @@ a {
 	--elemenx-block-padding: 10px;
 	--elemenx-block-background: transparent;
 	--elemenx-block-frame: var(--elemenx-game-section-frame);
+	--elemenx-block-tab-edge: var(--elemenx-game-section-edge);
 	--elemenx-block-radius: 0;
 	--elemenx-block-gap: var(--elemenx-game-section-gap);
 	--elemenx-block-title-band: var(--elemenx-game-section);
@@ -1447,6 +1611,68 @@ a {
 .elemenx-badge.danger {
 	--elemenx-badge-color: var(--elemenx-danger);
 	--elemenx-badge-rgb: var(--elemenx-danger-rgb);
+}
+
+/*
+ * A badge over the corner of an element (*badge, the Badge of a Button): a count or a text on the color of its tone,
+ * a dot, or a ring that turns while a task runs; a ring of the surface sets it off the element.
+ */
+:where(.elemenx-badged) {
+	position: relative;
+}
+
+.elemenx-button.badged {
+	position: relative;
+}
+
+.elemenx-badge.overlay {
+	position: absolute;
+	top: -6px;
+	inset-inline-end: -6px;
+	z-index: 1;
+	box-sizing: border-box;
+	justify-content: center;
+	min-width: 16px;
+	height: 16px;
+	padding: 0 4px;
+	background: var(--elemenx-badge-color);
+	color: var(--elemenx-badge-text);
+	font-size: 10px;
+	line-height: 16px;
+	box-shadow: 0 0 0 2px var(--elemenx-surface);
+	pointer-events: none;
+}
+
+.elemenx-badge.overlay[hidden] {
+	display: none;
+}
+
+.elemenx-badge.overlay.dot {
+	top: -2px;
+	inset-inline-end: -2px;
+	width: 10px;
+	min-width: 0;
+	height: 10px;
+	padding: 0;
+}
+
+.elemenx-badge.overlay.busy {
+	top: -3px;
+	inset-inline-end: -3px;
+	width: 12px;
+	min-width: 0;
+	height: 12px;
+	padding: 0;
+	background: var(--elemenx-surface);
+	border: 2px solid rgba(var(--elemenx-badge-rgb), 0.24);
+	border-top-color: var(--elemenx-badge-color);
+	animation: elemenx-spin 800ms linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.elemenx-badge.overlay.busy {
+		animation: none;
+	}
 }
 
 .elemenx-list {
@@ -2573,8 +2799,26 @@ a {
 	}
 }
 
+/* The place of a part of the page that waits for *lazy with a height: a shimmer, as a skeleton. */
+[data-elemenx-lazy='sized'] {
+	position: relative;
+	overflow: hidden;
+	background: var(--elemenx-surface-hover);
+	border-radius: var(--elemenx-radius-large);
+}
+
+[data-elemenx-lazy='sized']::after {
+	position: absolute;
+	inset: 0;
+	background: linear-gradient(90deg, transparent, rgba(var(--elemenx-surface-rgb), 0.64), transparent);
+	transform: translateX(-100%);
+	animation: elemenx-skeleton 1400ms ease-in-out infinite;
+	content: '';
+}
+
 @media (prefers-reduced-motion: reduce) {
-	.elemenx-skeleton-line::after {
+	.elemenx-skeleton-line::after,
+	[data-elemenx-lazy='sized']::after {
 		animation: none;
 	}
 }
@@ -2582,6 +2826,16 @@ a {
 
 .elemenx-draggable {
 	touch-action: none;
+}
+
+/* With Hold a finger scrolls the page; held still, it takes the element, which shows it. */
+.elemenx-draggable.hold {
+	touch-action: manipulation;
+}
+
+.elemenx-draggable.held {
+	transform: scale(1.04);
+	transition: transform var(--elemenx-duration) var(--elemenx-easing);
 }
 
 .elemenx-draggable.dragging {

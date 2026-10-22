@@ -1,0 +1,11 @@
+<Field Label="Accent" [hint]="Color"><ColorInput [value]="Color" (change)="Changed" /></Field>
+<div style="height: 32px; border-radius: 6px;" [style.background]="Color"></div>
+<script>
+({
+	Color: '#3d7be0',
+
+	Changed: function (value) {
+		this.Color = value;
+	}
+})
+</script>

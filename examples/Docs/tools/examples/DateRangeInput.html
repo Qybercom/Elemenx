@@ -1,0 +1,10 @@
+<Field Label="A stay" [hint]="Note"><DateRangeInput (change)="Changed" /></Field>
+<script>
+({
+	Note: 'Pick the first day, then the last.',
+
+	Changed: function (value) {
+		this.Note = value.length ? value.join(' → ') : 'Cleared';
+	}
+})
+</script>

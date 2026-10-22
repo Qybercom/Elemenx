@@ -1,0 +1,14 @@
+<div class="elemenx-container wrappable" style="gap: 8px;">
+	<Field Label="CVV"><CVVInput (validate)="Validated" /></Field>
+	<Field Label="CVV of Amex" Hint="Length 4"><CVVInput Length="4" Value="1234" /></Field>
+</div>
+<p class="elemenx-text small muted">{{State}}</p>
+<script>
+({
+	State: '',
+
+	Validated: function (result) {
+		this.State = result.Complete ? 'Complete' : 'Type the code';
+	}
+})
+</script>

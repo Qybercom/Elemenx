@@ -1,4 +1,8 @@
-/* Resize: vertical (the bottom edge), both (the corner) or none; AutoSize grows the field with its text instead. */
+/*
+ * A field of several lines of text. Value, Placeholder, Rows (the height in lines), MaxLength. Resize: vertical (the
+ * bottom edge, the default), both (the corner) or none; AutoSize grows the field with its text instead. Shape, Name,
+ * Disabled, ReadOnly and Invalid as in Input. Events: input (Value, while typing), change (Value, when it is committed).
+ */
 Elemenx.Component('TextArea', {
 	$TemplateURL: 'TextArea.html',
 	$StyleURL: 'TextArea.css',

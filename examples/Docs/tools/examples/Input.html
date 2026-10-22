@@ -1,0 +1,16 @@
+<Field Label="Search"><Input Placeholder="Search" Icon="search" Clearable="true" [value]="Query" (input)="Typed" /></Field>
+<Field Label="Password"><Input Type="password" Value="correct horse" /></Field>
+<Field Label="Price"><Input Prefix="$" Suffix="USD" Value="42" /></Field>
+<Field Label="A code" Hint="Mask ###-###"><Input Mask="###-###" Placeholder="123-456" /></Field>
+<Field Label="Email" Hint="Preset email: the keyboard, the check and the format"><Input Preset="email" /></Field>
+<div class="elemenx-container wrappable" style="gap: 8px;"><Input Size="small" Placeholder="Small" /><Input Placeholder="Medium" /><Input Size="large" Placeholder="Large" /><Input Shape="round" Placeholder="Round" /></div>
+<p class="elemenx-text small muted">Typed: {{Query || '—'}}</p>
+<script>
+({
+	Query: '',
+
+	Typed: function (value) {
+		this.Query = value;
+	}
+})
+</script>

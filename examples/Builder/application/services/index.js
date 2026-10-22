@@ -1,0 +1,4 @@
+[
+	'Palette.js',
+	'Design.js'
+];

@@ -1,0 +1,30 @@
+<div class="elemenx-card docs-pip" style="padding: 12px;">
+	<strong>A timer in its own window</strong>
+	<p class="elemenx-title">{{Seconds}} s</p>
+</div>
+<Button Label="Pop it out" Icon="pip" [disabled]="!Supported" (click)="Pop" />
+<span class="elemenx-text small muted">{{Supported ? 'Document Picture-in-Picture is here.' : 'This browser has no Document Picture-in-Picture (Chrome and Edge do).'}}</span>
+<script>
+({
+	Seconds: 0,
+	Supported: false,
+
+	$OnCreate: function () {
+		var self = this;
+
+		this.Supported = this.$Service('PictureInPicture').Supported('document');
+		this.Timer = setInterval(function () {
+			self.Seconds++;
+		}, 1000);
+	},
+
+	Pop: function () {
+		this.$Service('PictureInPicture').Document(this.$Element().querySelector('.docs-pip'), {Width: 260, Height: 140, Title: 'Timer'}, function () {});
+	},
+
+	$OnDestroy: function () {
+		clearInterval(this.Timer);
+		this.$Service('PictureInPicture').Close(function () {});
+	}
+})
+</script>

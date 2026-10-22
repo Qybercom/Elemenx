@@ -1,0 +1,36 @@
+<p class="elemenx-text">Press <kbd class="elemenx-kbd">{{Keys}}</kbd> or the sequence <kbd class="elemenx-kbd">g</kbd> <kbd class="elemenx-kbd">h</kbd>: {{Note}}</p>
+<ul class="elemenx-ul"><li *for="binding of List" *key="binding.ID">{{binding.Label}} — {{binding.Description}}</li></ul>
+<script>
+({
+	Note: 'nothing yet',
+	Keys: '',
+	List: [],
+
+	$OnCreate: function () {
+		var self = this;
+		var hotkeys = this.$Service('Hotkeys');
+
+		this.Keys = hotkeys.Format('Mod+Shift+L');
+		this.Bindings = [
+			hotkeys.Bind('Mod+Shift+L', function () {
+				self.Note = 'Mod+Shift+L at ' + new Date().toLocaleTimeString();
+			}, {Description: 'An example shortcut', Group: 'Docs'}),
+			hotkeys.Bind('g h', function () {
+				self.Note = 'the sequence g h';
+			}, {Description: 'An example sequence', Group: 'Docs'})
+		];
+
+		this.List = hotkeys.List().filter(function (binding) {
+			return binding.Group === 'Docs';
+		});
+	},
+
+	$OnDestroy: function () {
+		var hotkeys = this.$Service('Hotkeys');
+
+		this.Bindings.forEach(function (id) {
+			hotkeys.Unbind(id);
+		});
+	}
+})
+</script>

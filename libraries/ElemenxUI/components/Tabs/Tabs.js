@@ -1,6 +1,10 @@
 /*
- * A tab strip. Tabs: [{ID, Label, Icon, Badge, Closable, Disabled}]; Value is the ID of the active tab.
- * Variant: line, pill or editor. The owner renders the content of the active tab; projected content goes after the tabs.
+ * A strip of tabs. Tabs: [{ID, Label, Icon, Badge, Closable, Disabled}]; Value is the ID of the active tab. Variant:
+ * line (an underline, the default), pill (rounded buttons) or editor (the tabs of the files of an editor). A Closable tab
+ * (or every tab, with Closable on the strip) has a cross; the middle button, Delete and Ctrl+W close it too. Keys: the
+ * arrows, Home and End move between the tabs. The owner renders the content of the active tab; content in the default
+ * slot goes after the tabs (an action, a button that adds a tab). Size; Label names the strip for screen readers.
+ * Events: change (the ID), close (the ID).
  */
 Elemenx.Component('Tabs', {
 	$TemplateURL: 'Tabs.html',

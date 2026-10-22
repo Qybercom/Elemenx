@@ -1,6 +1,10 @@
 /*
- * Options: [{Value, Label, Hint, Icon, Group, Disabled}]. Value is the Value of the selected option or null.
- * Searchable adds a filter field; Clearable lets the user reset the value.
+ * A select: a button that opens a list of Options and shows the chosen one. Options: [{Value, Label, Hint, Icon, Group,
+ * Disabled}]; options of one Group are listed under its title. Value is the Value of the selected option, with its type,
+ * or null. Placeholder shows while nothing is chosen, Empty when a filter finds nothing. Searchable adds a filter field
+ * at the top of the list; Clearable adds a button that resets the value. Keys: the arrows move, Enter (Space without a
+ * filter) picks, Escape closes, a letter goes to the next option that starts with it. Icon, Size, Shape, Name, Disabled
+ * and Invalid as in Input. Events: change (Value; null when it is cleared).
  */
 Elemenx.Component('Select', {
 	$TemplateURL: 'Select.html',

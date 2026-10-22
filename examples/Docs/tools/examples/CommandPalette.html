@@ -1,0 +1,28 @@
+<Button Label="Open the palette" Icon="search" (click)="Show" />
+<span class="elemenx-text small muted">or press Ctrl+K · last command: {{Last || '—'}}</span>
+<CommandPalette [commands]="Commands" [open]="Open" Remember="docs-palette" (run)="Ran" (close)="Closed" />
+<script>
+({
+	Open: false,
+	Last: '',
+	Commands: [
+		{ID: 'new', Label: 'New document', Icon: 'add', Group: 'File', Keys: 'Mod+N'},
+		{ID: 'open', Label: 'Open a file', Icon: 'folder-open', Group: 'File', Keys: 'Mod+O', Keywords: 'load browse'},
+		{ID: 'save', Label: 'Save', Icon: 'save', Group: 'File', Keys: 'Mod+S'},
+		{ID: 'theme', Label: 'Switch the theme', Icon: 'sun', Group: 'View', Keywords: 'dark light'},
+		{ID: 'zoom', Label: 'Zoom in', Icon: 'zoom-in', Group: 'View', Disabled: true}
+	],
+
+	Show: function () {
+		this.Open = true;
+	},
+
+	Ran: function (command) {
+		this.Last = command.Label;
+	},
+
+	Closed: function () {
+		this.Open = false;
+	}
+})
+</script>

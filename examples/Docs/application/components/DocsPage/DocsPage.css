@@ -1,0 +1,57 @@
+.docs-page {
+	display: grid;
+	grid-template-columns: 280px minmax(0, 1fr);
+	flex: 1;
+	min-height: 0;
+}
+
+.docs-nav {
+	position: sticky;
+	top: 52px;
+	height: calc(100vh - 52px);
+	padding: 16px 12px;
+	overflow: auto;
+	background: var(--elemenx-surface);
+	border-inline-end: 1px solid var(--elemenx-border);
+	box-sizing: border-box;
+}
+
+.docs-article {
+	box-sizing: border-box;
+	width: 100%;
+	max-width: 920px;
+	padding: 24px 32px 64px;
+	overflow: auto;
+}
+
+.docs-segment + .docs-segment {
+	margin-top: 16px;
+}
+
+.docs-fallback,
+.docs-missing {
+	margin-bottom: 16px;
+}
+
+.docs-missing {
+	color: var(--elemenx-text-muted);
+}
+
+/* On a phone the navigation goes above the page, as high as a third of the screen. */
+@media (max-width: 760px) {
+	.docs-page {
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	.docs-nav {
+		position: static;
+		height: auto;
+		max-height: 33vh;
+		border-inline-end: 0;
+		border-bottom: 1px solid var(--elemenx-border);
+	}
+
+	.docs-article {
+		padding: 16px;
+	}
+}

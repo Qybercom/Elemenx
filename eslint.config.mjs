@@ -42,7 +42,7 @@ var plugins = {
 
 export default [
 	{
-		ignores: ['node_modules/**', 'test-results/**', 'playwright-report/**', 'coverage/**', '**/dist/**', '.vitest/**', '.idea/**']
+		ignores: ['node_modules/**', 'test-results/**', 'playwright-report/**', 'coverage/**', '**/dist/**', '.vitest/**', '.idea/**', 'examples/Docs/tools/examples/**']
 	},
 	{
 		linterOptions: {

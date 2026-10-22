@@ -1,0 +1,17 @@
+<span class="elemenx-avatar" [class]="[Shape || 'circle', SizeClass(Size)]" [style.width]="Pixels(Size)" [style.height]="Pixels(Size)" [style.font-size]="Pixels(Size, 0.4)" role="img" [attribute.aria-label]="Name || Initials || null">
+	<img class="elemenx-avatar-image" *if="Image && Broken !== Image" [attribute.src]="Image" alt="" draggable="false" (error)="Failed" />
+	<span class="elemenx-avatar-face" *if="!Image || Broken === Image" [class]="[Kind(Generate)]" [style.background]="Background(Seed || Name || Initials, Kind(Generate), Color)" aria-hidden="true">
+		<span class="elemenx-avatar-initials" *if="Kind(Generate) === 'initials'">{{InitialsOf(Name, Initials)}}</span>
+		<svg class="elemenx-avatar-art" *if="Kind(Generate) === 'pattern'" viewBox="-0.5 -0.5 6 6" [attribute.fill]="Foreground(Seed || Name || Initials)">
+			<rect *for="cell of Cells(Seed || Name || Initials)" *key="cell.Key" [attribute.x]="cell.X" [attribute.y]="cell.Y" width="1" height="1"></rect>
+		</svg>
+		<svg class="elemenx-avatar-art" *if="Kind(Generate) === 'shapes'" viewBox="0 0 80 80">
+			<g *for="shape of Shapes(Seed || Name || Initials)" *key="shape.Key" [attribute.fill]="shape.Fill">
+				<circle *if="shape.Kind === 'circle'" [attribute.cx]="shape.X" [attribute.cy]="shape.Y" [attribute.r]="shape.R"></circle>
+				<rect *if="shape.Kind === 'square'" [attribute.x]="shape.X - shape.R" [attribute.y]="shape.Y - shape.R" [attribute.width]="shape.Size" [attribute.height]="shape.Size" [attribute.transform]="'rotate(' + shape.Turn + ' ' + shape.X + ' ' + shape.Y + ')'"></rect>
+				<polygon *if="shape.Kind === 'triangle'" [attribute.points]="shape.Points"></polygon>
+			</g>
+		</svg>
+	</span>
+	<span class="elemenx-avatar-status" *if="Status"><Presence [status]="Status" Size="small" /></span>
+</span>

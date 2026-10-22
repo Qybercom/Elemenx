@@ -1,0 +1,15 @@
+.elemenx-form {
+	display: block;
+	min-width: 0;
+}
+
+/* The fieldset only disables the fields: no frame, no room of its own. */
+.elemenx-form-fields {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+	min-width: 0;
+	margin: 0;
+	padding: 0;
+	border: 0;
+}

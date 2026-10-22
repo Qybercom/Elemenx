@@ -315,6 +315,80 @@
 	border-radius: 8px;
 }
 
+.ui-kit-viewer {
+	min-width: 0;
+	max-height: 420px;
+	overflow: auto;
+	padding: 12px 16px;
+	border: 1px solid var(--elemenx-border);
+	border-radius: 8px;
+}
+
+.ui-kit-pads {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.ui-kit-pad {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 6px;
+}
+
+.ui-kit-tools-frame {
+	height: 280px;
+}
+
+.ui-kit-start {
+	height: 340px;
+}
+
+.ui-kit-form {
+	max-width: 420px;
+}
+
+.ui-kit-phone {
+	display: flex;
+	align-items: flex-end;
+	gap: 8px;
+}
+
+.ui-kit-phone > :first-child {
+	flex: 1;
+}
+
+.ui-kit-profile-value {
+	overflow-wrap: anywhere;
+	color: var(--elemenx-text-muted);
+}
+
+.ui-kit-crumbs-short {
+	max-width: 320px;
+}
+
+.ui-kit-badges,
+.ui-kit-presence,
+.ui-kit-avatars {
+	flex-wrap: wrap;
+	gap: 16px;
+}
+
+.ui-kit-images {
+	flex-wrap: wrap;
+	align-items: flex-start;
+	gap: 16px;
+}
+
+.ui-kit-image-box {
+	width: 240px;
+}
+
+.ui-kit-badge-icon {
+	display: inline-flex;
+}
+
 .ui-kit-crumbs {
 	display: inline-flex;
 	align-items: center;

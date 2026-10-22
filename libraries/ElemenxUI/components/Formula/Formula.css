@@ -1,0 +1,23 @@
+/* A formula in the line of the text, or on a line of its own (Display), in the math font of the system. */
+.elemenx-formula {
+	display: inline;
+	font-family: var(--elemenx-font-math);
+}
+
+.elemenx-formula.display {
+	display: block;
+	align-self: stretch;
+	margin: 8px 0;
+	overflow-x: auto;
+	font-size: var(--elemenx-font-size-large);
+	text-align: center;
+}
+
+.elemenx-formula.display > math {
+	width: fit-content;
+	margin-inline: auto;
+}
+
+.elemenx-formula merror {
+	color: var(--elemenx-danger);
+}

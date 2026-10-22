@@ -145,3 +145,62 @@
 	width: 12px;
 	height: 12px;
 }
+
+/* The buttons of the tool windows the frame places, on the stripes: the left tool windows above, the bottom ones below. */
+.elemenx-workspace-dock {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 4px;
+}
+
+.elemenx-workspace-dock.bottom {
+	margin-top: auto;
+}
+
+.elemenx-workspace-tool-button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 32px;
+	height: 32px;
+	padding: 0;
+	background: transparent;
+	border: 0;
+	border-radius: var(--elemenx-radius);
+	color: var(--elemenx-text-muted);
+	cursor: pointer;
+}
+
+.elemenx-workspace-tool-button:hover {
+	background: var(--elemenx-surface-hover);
+	color: var(--elemenx-text);
+}
+
+.elemenx-workspace-tool-button[aria-pressed='true'] {
+	background: rgba(var(--elemenx-accent-rgb), 0.14);
+	color: var(--elemenx-accent);
+}
+
+.elemenx-workspace-tool-button:focus-visible {
+	box-shadow: 0 0 0 2px var(--elemenx-focus);
+	outline: none;
+}
+
+.elemenx-workspace-tools {
+	display: contents;
+}
+
+/* Customize: every stripe shows, empty or not, with its places to drop a button on. */
+.elemenx-workspace.customizing .elemenx-workspace-stripe.elemenx-layout-area {
+	display: flex;
+}
+
+.elemenx-workspace.customizing .elemenx-workspace-dock {
+	min-height: 48px;
+	align-self: stretch;
+	border: 1px dashed var(--elemenx-border-strong);
+	border-radius: var(--elemenx-radius);
+	margin: 0 4px;
+	padding: 4px 0;
+}

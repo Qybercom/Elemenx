@@ -1,4 +1,5 @@
 <div class="elemenx-context" (contextmenu)="Pressed" (keydown)="Key" (pointerdown)="Down" (pointermove)="Moved" (pointerup)="Released" (pointercancel)="Released" (click)="Clicked">
 	<slot></slot>
-	<span class="elemenx-context-point elemenx-popup-anchor" [style.left]="X + 'px'" [style.top]="Y + 'px'"><MenuList [items]="Items" [open]="Open" [sheet]="Sheet" [title]="Title" (select)="Picked" (dismiss)="Close" /></span>
+	<span class="elemenx-menu-sources" hidden><slot name="items"></slot></span>
+	<span class="elemenx-context-point elemenx-popup-anchor" [style.left]="X + 'px'" [style.top]="Y + 'px'"><MenuList [items]="Items.concat(Declared)" [open]="Open" [sheet]="Sheet" [title]="Title" (select)="Picked" (dismiss)="Close" /></span>
 </div>

@@ -1,0 +1,21 @@
+<span class="elemenx-input"><input class="elemenx-input-control" [(value)]="Digits" placeholder="An international number" /></span>
+<p class="elemenx-text">The number belongs to: <strong>{{Match(Digits)}}</strong></p>
+<ul class="elemenx-ul"><li *for="country of First" *key="country.Code">{{country.Code}} · {{country.Name}} · +{{country.Dial}} · {{country.Currency}}</li></ul>
+<script>
+({
+	Digits: '74951234567',
+	First: [],
+
+	$OnCreate: function () {
+		var countries = this.$Service('Countries');
+
+		this.First = countries.List().slice(0, 6);
+
+		this.Match = function (digits) {
+			var country = countries.Match(String(digits).replace(/\D/g, ''), '');
+
+			return country ? country.Name + ' (+' + country.Dial + ')' : '—';
+		};
+	}
+})
+</script>

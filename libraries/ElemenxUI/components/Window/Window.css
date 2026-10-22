@@ -421,29 +421,71 @@
 	pointer-events: none;
 }
 
-/* A game window as a folder: the panel of the theme below the header, the tab and its slope of the same panel. */
+/*
+ * A game window as a folder, in the language of its theme. The body is the panel of the theme under the header, with
+ * its frame and its decor; the tab is a plate of the same panel and frame that comes down over the top of the frame of
+ * the body by --elemenx-game-folder-line (the width of the frame): the body leaves that place to it, so the two are one
+ * shape. The end of the tab slopes down by --elemenx-game-folder-slant, its edge in --elemenx-game-folder-edge (0: a
+ * square plate, framed on its end by --elemenx-game-folder-end). Beyond the tab the header is open, as in any folder.
+ */
 .elemenx-window.game.trapezoid::before {
 	top: var(--elemenx-window-tab-height);
+	/* The tab stands on the first corner of the body: its side goes straight down into the side of the body. */
+	border-start-start-radius: 0;
+	clip-path: polygon(-48px var(--elemenx-game-folder-line), calc(var(--elemenx-tab-width, 0px) + var(--elemenx-game-folder-slant)) var(--elemenx-game-folder-line), calc(var(--elemenx-tab-width, 0px) + var(--elemenx-game-folder-slant)) -48px, calc(100% + 48px) -48px, calc(100% + 48px) calc(100% + 48px), -48px calc(100% + 48px));
+}
+
+/*
+ * The decor frames the body: the place of the tab is left out of it. A theme may give a folder a decor of its own,
+ * --elemenx-game-folder-decor (without the figures of the middle of the top edge and of its first corner, where the
+ * tab stands); without one it keeps --elemenx-game-decor.
+ */
+.elemenx-window.game.trapezoid::after {
+	top: calc(var(--elemenx-window-tab-height) + var(--elemenx-game-decor-inset));
+	background: var(--elemenx-game-folder-decor, var(--elemenx-game-decor));
+	clip-path: polygon(calc(-48px - var(--elemenx-game-decor-inset)) calc(var(--elemenx-game-folder-line) + 4px - var(--elemenx-game-decor-inset)), calc(var(--elemenx-tab-width, 0px) + var(--elemenx-game-folder-slant) - var(--elemenx-game-decor-inset)) calc(var(--elemenx-game-folder-line) + 4px - var(--elemenx-game-decor-inset)), calc(var(--elemenx-tab-width, 0px) + var(--elemenx-game-folder-slant) - var(--elemenx-game-decor-inset)) -48px, calc(100% + 48px) -48px, calc(100% + 48px) calc(100% + 48px), calc(-48px - var(--elemenx-game-decor-inset)) calc(100% + 48px));
 }
 
 .elemenx-window.game.trapezoid .elemenx-window-header {
 	margin: 0;
 	padding: 0;
+	background: transparent;
+	border: 0;
 	border-image: none;
 }
 
+.elemenx-window.game.trapezoid .elemenx-window-header::before,
 .elemenx-window.game.trapezoid .elemenx-window-header::after {
 	display: none;
 }
 
 .elemenx-window.game.trapezoid .elemenx-window-tab {
+	box-sizing: border-box;
+	align-self: flex-start;
+	height: calc(100% + var(--elemenx-game-folder-line));
+	margin-inline-end: var(--elemenx-game-folder-slant);
+	padding: 0 12px var(--elemenx-game-folder-line);
 	background: var(--elemenx-game-panel);
-	border: 0;
+	border: var(--elemenx-game-frame);
+	border-image: var(--elemenx-game-frame-image);
+	border-bottom-width: 0;
+	border-inline-end-width: var(--elemenx-game-folder-end);
+	border-image-width: var(--elemenx-game-folder-line) var(--elemenx-game-folder-end) 0 var(--elemenx-game-folder-line);
+	border-radius: var(--elemenx-game-radius) var(--elemenx-game-radius) 0 0;
+	/* A tab that slopes has no corner at its end: the radius is 0 for any slant. */
+	border-start-end-radius: max(0%, calc(var(--elemenx-game-radius) - 1000 * var(--elemenx-game-folder-slant)));
+	backdrop-filter: var(--elemenx-game-blur);
 }
 
+/* The slope: the panel under its edge, from the top of the frame of the tab to the bottom of the frame of the body. */
 .elemenx-window.game.trapezoid .elemenx-window-tab::after {
-	background: var(--elemenx-game-panel);
-	clip-path: polygon(0 0, 100% 100%, 0 100%);
+	top: calc(-1 * var(--elemenx-game-folder-line));
+	width: var(--elemenx-game-folder-slant);
+	height: calc(100% + var(--elemenx-game-folder-line));
+	background: linear-gradient(to top right, transparent calc(50% - 1px), var(--elemenx-game-folder-edge) calc(50% - 1px), var(--elemenx-game-folder-edge) calc(50% + 0.5px), transparent calc(50% + 0.5px)), var(--elemenx-game-panel);
+	/* The mask follows the line of the gradient exactly: nothing of the panel shows beyond the edge. */
+	mask-image: linear-gradient(to top right, var(--elemenx-text) calc(50% + 0.5px), transparent calc(50% + 0.5px));
+	backdrop-filter: var(--elemenx-game-blur);
 }
 
 .elemenx-window.game.trapezoid .elemenx-window-titles {

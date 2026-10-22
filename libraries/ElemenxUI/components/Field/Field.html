@@ -1,8 +1,8 @@
-<div class="elemenx-field" [class.horizontal]="Horizontal" [class.invalid]="!!Error" [class.disabled]="Disabled">
+<div class="elemenx-field" [class.horizontal]="Horizontal" [class.invalid]="!!Shown(Error, Control, Messages)" [class.disabled]="Disabled" [class.pending]="!!Control && Control.Status === 'pending'" (input)="Typed" (change)="Typed" (elemenx-change)="Picked" (focusout)="Left">
 	<label class="elemenx-label elemenx-field-label" *if="Label" [class.required]="Required" (click)="Focus">{{Label}}</label>
 	<div class="elemenx-field-body">
 		<slot></slot>
-		<span class="elemenx-field-error" role="alert" *if="Error">{{Error}}</span>
-		<span class="elemenx-caption" *if="Hint && !Error">{{Hint}}</span>
+		<span class="elemenx-field-error" role="alert" *if="Shown(Error, Control, Messages)">{{Shown(Error, Control, Messages)}}</span>
+		<span class="elemenx-caption" *if="Hint && !Shown(Error, Control, Messages)">{{Hint}}</span>
 	</div>
 </div>

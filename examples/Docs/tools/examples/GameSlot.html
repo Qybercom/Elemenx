@@ -1,0 +1,17 @@
+<div class="elemenx-game-hotbar">
+	<GameSlot Key="1" Icon="fire" Label="Fireball" Cooldown="3000" Color="#b8402a" (use)="Used" />
+	<GameSlot Key="2" Icon="leaf" Label="Heal" Cooldown="5000" Color="#3f9a44" (use)="Used" />
+	<GameSlot Key="3" Icon="star" Label="Blink" Cooldown="1500" Active="true" (use)="Used" />
+	<GameSlot Key="4" Icon="heart" Label="Health potion" Count="3" Rarity="epic" Badge="+3" (use)="Used" />
+	<GameSlot Key="5" />
+</div>
+<p class="elemenx-text small muted">Press a slot or its key: {{Note}}</p>
+<script>
+({
+	Note: '—',
+
+	Used: function (event) {
+		this.Note = event.Label + ' used at ' + new Date().toLocaleTimeString();
+	}
+})
+</script>

@@ -115,6 +115,29 @@ describe('Regression: binding and event syntax', function () {
 		child.$Destroy();
 	});
 
+	test('a property binding finds the DOM property of a name with capitals, which HTML reads in small letters', function () {
+		var name = unique('PropertyCase');
+		var factory = Elemenx.Component(name, {
+			$Template: '<div><p [property.innerHTML]="Html"></p><span [textContent]="Text"></span><i [property.myOwn]="Own"></i></div>'
+		});
+		var child = factory({Html: '<b>bold</b>', Text: '<b>plain</b>', Own: 1});
+
+		document.body.appendChild(child.$Element());
+
+		expect(child.$Element().querySelector('p b').textContent).toBe('bold');
+		expect(child.$Element().querySelector('span').textContent).toBe('<b>plain</b>');
+		expect(child.$Element().querySelector('span b')).toBeNull();
+
+		/* A name the element does not have is an expando of the page: it keeps the letters HTML gave it. */
+		expect(child.$Element().querySelector('i').myown).toBe(1);
+
+		child.$Update({Html: '<em>more</em>'});
+
+		expect(child.$Element().querySelector('p em').textContent).toBe('more');
+
+		child.$Destroy();
+	});
+
 	test('[class] owns an array while [class.name] owns one class and static classes survive', function () {
 		var name = unique('ClassBindings');
 		var factory = Elemenx.Component(name, {

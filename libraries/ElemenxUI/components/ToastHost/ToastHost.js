@@ -1,4 +1,8 @@
-/* Shows the toasts of the Toast Service. Placement: bottom-right (default), bottom-left, top-right, top-left, top, bottom. */
+/*
+ * Shows the toasts of the Toast Service: place one in the layout of the Application. Placement: bottom-right (the
+ * default), bottom-left, top-right, top-left, top or bottom. A toast closes by itself after its Duration, and its timer
+ * pauses while the pointer or the focus is on it; the newest is nearest the edge.
+ */
 Elemenx.Component('ToastHost', {
 	$TemplateURL: 'ToastHost.html',
 	$StyleURL: 'ToastHost.css',

@@ -1,0 +1,19 @@
+<Field Label="A fruit" [hint]="Note"><Combobox Placeholder="Type to search" [options]="Fruits" [value]="Fruit" AllowCustom="true" (change)="Changed" (create)="Created" /></Field>
+<script>
+({
+	Fruit: 'pear',
+	Note: 'Type a name that is not in the list to add it.',
+	Fruits: [{Value: 'apple', Label: 'Apple'}, {Value: 'pear', Label: 'Pear'}, {Value: 'plum', Label: 'Plum'}, {Value: 'peach', Label: 'Peach'}],
+
+	Changed: function (value) {
+		this.Fruit = value;
+		this.Note = 'Chosen: ' + value;
+	},
+
+	Created: function (text) {
+		this.Fruits = this.Fruits.concat([{Value: text.toLowerCase(), Label: text}]);
+		this.Fruit = text.toLowerCase();
+		this.Note = 'Added: ' + text;
+	}
+})
+</script>

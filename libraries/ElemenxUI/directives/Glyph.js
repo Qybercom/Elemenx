@@ -3,7 +3,8 @@
  * copies the shapes of the symbol into the element, with its viewBox: no <use>, so a restyle of the page (a theme
  * change) does not rebuild one shadow tree per icon, which blanks every icon while the developer tools are open.
  * The fill and stroke attributes of the symbol go to a <g> around the shapes, so a filled or a colored set draws as it
- * is made. Any other reference ('sprite.svg#add') is drawn with <use>. Used by Icon.
+ * is made. Any other reference ('sprite.svg#add') is drawn with <use>. Used by Icon. A symbol that is not in the page yet
+ * draws nothing: a reference that waits for Icons.Ready('') (as Icon does) draws once the sprite is in.
  */
 Elemenx.Directive('glyph', {
 	$OnUpdate: function (context) {

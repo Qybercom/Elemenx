@@ -37,7 +37,7 @@ Elemenx.Component('Chart', {
 			if (value == null || isNaN(value)) return '—';
 			if (typeof self.Format === 'function') return self.Format(value);
 
-			return Number(value).toLocaleString() + (self.Unit ? ' ' + self.Unit : '');
+			return Number(value).toLocaleString(Elemenx.Locale.Language() || undefined) + (self.Unit ? ' ' + self.Unit : '');
 		};
 
 		this.IsHidden = function (hidden, name) {

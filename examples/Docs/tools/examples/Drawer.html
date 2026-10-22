@@ -1,0 +1,28 @@
+<Button Label="Filters" Icon="filter" (click)="Open" />
+<Button Label="Menu from the left" Icon="menu" Variant="ghost" (click)="OpenLeft" />
+<Drawer [open]="Opened" [side]="Side" Title="Filters" Description="A drawer over the page" Icon="filter" (close)="Close">
+	<Field Label="Status"><RadioGroup [options]="[{Value: 'all', Label: 'All'}, {Value: 'open', Label: 'Open'}, {Value: 'closed', Label: 'Closed'}]" Value="all" /></Field>
+	<Toggle Label="Only mine" />
+	<Button slot="footer" Label="Reset" Variant="ghost" (click)="Close" />
+	<Button slot="footer" Label="Apply" Variant="primary" (click)="Close" />
+</Drawer>
+<script>
+({
+	Opened: false,
+	Side: 'right',
+
+	Open: function () {
+		this.Side = 'right';
+		this.Opened = true;
+	},
+
+	OpenLeft: function () {
+		this.Side = 'left';
+		this.Opened = true;
+	},
+
+	Close: function () {
+		this.Opened = false;
+	}
+})
+</script>

@@ -45,3 +45,152 @@
 	letter-spacing: var(--elemenx-game-letter-spacing);
 	text-transform: var(--elemenx-game-text-transform);
 }
+
+/*
+ * The buttons of a pad drawn as on the pad of its kind (the class of its kind: xbox, playstation, nintendo, generic). The
+ * name of the button stays the text of the glyph, for screen readers; shapes drawn by masks hide it.
+ * Xbox: the face buttons in their colors with their letters. PlayStation: the four symbols in their colors on a dark
+ * button. Nintendo: the letters on a dark button. Generic: four dots, the one of the place of the button filled.
+ * Shoulders are pills, triggers slope, sticks are rings, the d-pad is a cross with its arm lit.
+ */
+.elemenx-game-key:not(.keyboard) .elemenx-game-key-glyph {
+	position: relative;
+	color: var(--elemenx-gamepad-glyph);
+	background: var(--elemenx-gamepad-face);
+	border-color: transparent;
+}
+
+.elemenx-game-key.xbox.button-a .elemenx-game-key-glyph {
+	background: var(--elemenx-gamepad-green);
+}
+
+.elemenx-game-key.xbox.button-b .elemenx-game-key-glyph {
+	background: var(--elemenx-gamepad-red);
+}
+
+.elemenx-game-key.xbox.button-x .elemenx-game-key-glyph {
+	background: var(--elemenx-gamepad-blue);
+}
+
+.elemenx-game-key.xbox.button-y .elemenx-game-key-glyph {
+	background: var(--elemenx-gamepad-yellow);
+}
+
+.elemenx-game-key.playstation.button-a .elemenx-game-key-glyph {
+	color: var(--elemenx-gamepad-blue);
+}
+
+.elemenx-game-key.playstation.button-b .elemenx-game-key-glyph {
+	color: var(--elemenx-gamepad-red);
+}
+
+.elemenx-game-key.playstation.button-x .elemenx-game-key-glyph {
+	color: var(--elemenx-gamepad-pink);
+}
+
+.elemenx-game-key.playstation.button-y .elemenx-game-key-glyph {
+	color: var(--elemenx-gamepad-green);
+}
+
+/* Shoulders: a pill; triggers: a pill that slopes down to the front. */
+.elemenx-game-key:not(.keyboard):is(.button-lb, .button-rb, .button-lt, .button-rt) .elemenx-game-key-glyph {
+	min-width: 30px;
+	height: 18px;
+	padding: 0 6px;
+	border-radius: var(--elemenx-radius-pill);
+	font-size: 10px;
+}
+
+.elemenx-game-key:not(.keyboard):is(.button-lt, .button-rt) .elemenx-game-key-glyph {
+	height: 22px;
+	border-radius: var(--elemenx-radius-large) var(--elemenx-radius-large) var(--elemenx-radius) var(--elemenx-radius);
+}
+
+/* Sticks: a ring with the letter of its side. */
+.elemenx-game-key:not(.keyboard):is(.button-ls, .button-rs) .elemenx-game-key-glyph {
+	width: 22px;
+	padding: 0;
+	border-radius: 50%;
+	box-shadow: inset 0 0 0 3px var(--elemenx-gamepad-ring);
+	font-size: 10px;
+}
+
+/* Shapes drawn by a mask over the glyph: its text is kept but not shown. */
+.elemenx-game-key:not(.keyboard):is(.button-up, .button-down, .button-left, .button-right, .button-select, .button-start, .button-home) .elemenx-game-key-glyph,
+.elemenx-game-key.generic:is(.button-a, .button-b, .button-x, .button-y) .elemenx-game-key-glyph {
+	width: 22px;
+	padding: 0;
+	color: transparent;
+	background: transparent;
+	border-radius: 0;
+}
+
+.elemenx-game-key:not(.keyboard):is(.button-up, .button-down, .button-left, .button-right, .button-select, .button-start, .button-home) .elemenx-game-key-glyph::before,
+.elemenx-game-key.generic:is(.button-a, .button-b, .button-x, .button-y) .elemenx-game-key-glyph::before {
+	position: absolute;
+	inset: 0;
+	background: var(--elemenx-gamepad-glyph);
+	content: '';
+	mask: var(--elemenx-game-key-mask) center / contain no-repeat;
+}
+
+.elemenx-game-key:not(.keyboard):is(.button-up, .button-down, .button-left, .button-right, .button-select, .button-start, .button-home) .elemenx-game-key-glyph::before,
+.elemenx-game-key.generic:is(.button-a, .button-b, .button-x, .button-y) .elemenx-game-key-glyph::before {
+	background: var(--elemenx-game-text);
+}
+
+.elemenx-game-key.button-up {
+	--elemenx-game-key-mask: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M9 2h6v7h7v6h-7v7H9v-7H2V9h7z' fill-opacity='.35'/><path d='M9 2h6v7H9z'/></svg>");
+}
+
+.elemenx-game-key.button-down {
+	--elemenx-game-key-mask: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M9 2h6v7h7v6h-7v7H9v-7H2V9h7z' fill-opacity='.35'/><path d='M9 15h6v7H9z'/></svg>");
+}
+
+.elemenx-game-key.button-left {
+	--elemenx-game-key-mask: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M9 2h6v7h7v6h-7v7H9v-7H2V9h7z' fill-opacity='.35'/><path d='M2 9h7v6H2z'/></svg>");
+}
+
+.elemenx-game-key.button-right {
+	--elemenx-game-key-mask: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M9 2h6v7h7v6h-7v7H9v-7H2V9h7z' fill-opacity='.35'/><path d='M15 9h7v6h-7z'/></svg>");
+}
+
+.elemenx-game-key.generic.button-y {
+	--elemenx-game-key-mask: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><circle cx='12' cy='5' r='3.4'/><circle cx='19' cy='12' r='2.2' fill-opacity='.4'/><circle cx='12' cy='19' r='2.2' fill-opacity='.4'/><circle cx='5' cy='12' r='2.2' fill-opacity='.4'/></svg>");
+}
+
+.elemenx-game-key.generic.button-b {
+	--elemenx-game-key-mask: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><circle cx='12' cy='5' r='2.2' fill-opacity='.4'/><circle cx='19' cy='12' r='3.4'/><circle cx='12' cy='19' r='2.2' fill-opacity='.4'/><circle cx='5' cy='12' r='2.2' fill-opacity='.4'/></svg>");
+}
+
+.elemenx-game-key.generic.button-a {
+	--elemenx-game-key-mask: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><circle cx='12' cy='5' r='2.2' fill-opacity='.4'/><circle cx='19' cy='12' r='2.2' fill-opacity='.4'/><circle cx='12' cy='19' r='3.4'/><circle cx='5' cy='12' r='2.2' fill-opacity='.4'/></svg>");
+}
+
+.elemenx-game-key.generic.button-x {
+	--elemenx-game-key-mask: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><circle cx='12' cy='5' r='2.2' fill-opacity='.4'/><circle cx='19' cy='12' r='2.2' fill-opacity='.4'/><circle cx='12' cy='19' r='2.2' fill-opacity='.4'/><circle cx='5' cy='12' r='3.4'/></svg>");
+}
+
+/* View, Create and Select: two windows; Menu, Options and Start: three lines; Home: a house. */
+.elemenx-game-key.button-select {
+	--elemenx-game-key-mask: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M4 5h11v9H4zm2 2v5h7V7z'/><path d='M9 10h11v9H9z' fill-opacity='.7'/></svg>");
+}
+
+.elemenx-game-key.button-start {
+	--elemenx-game-key-mask: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M3 5h18v3H3zm0 6h18v3H3zm0 6h18v3H3z'/></svg>");
+}
+
+.elemenx-game-key.button-home {
+	--elemenx-game-key-mask: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12 3l9 8h-3v9h-5v-6h-2v6H6v-9H3z'/></svg>");
+}
+
+/* Nintendo has a minus and a plus. */
+.elemenx-game-key.nintendo:is(.button-select, .button-start) .elemenx-game-key-glyph {
+	color: var(--elemenx-gamepad-glyph);
+	background: var(--elemenx-gamepad-face);
+	border-radius: 50%;
+}
+
+.elemenx-game-key.nintendo:is(.button-select, .button-start) .elemenx-game-key-glyph::before {
+	content: none;
+}

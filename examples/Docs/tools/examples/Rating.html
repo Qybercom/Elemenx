@@ -1,0 +1,13 @@
+<Rating [value]="Stars" Half="true" (change)="Rated" />
+<Rating Value="4" ReadOnly="true" />
+<Rating Value="2" Max="3" Icon="heart" />
+<p class="elemenx-text small muted">Rating: {{Stars}} · press the given rating to clear it.</p>
+<script>
+({
+	Stars: 3.5,
+
+	Rated: function (value) {
+		this.Stars = value;
+	}
+})
+</script>

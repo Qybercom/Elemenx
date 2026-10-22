@@ -363,6 +363,30 @@ Elemenx.Component('UIKitPage', {
 	ScopeTheme: 'darcula',
 	Devices: [],
 	DeviceState: 'Push, Serial, USB and NFC: what this browser has',
+	PeopleNote: '',
+	WorkspaceCustomize: false,
+	WorkspaceLayoutNote: '',
+	GamePads: ['xbox', 'playstation', 'nintendo', 'generic'],
+	GamePadButtons: ['a', 'b', 'x', 'y', 'lb', 'rb', 'lt', 'rt', 'ls', 'rs', 'up', 'down', 'left', 'right', 'select', 'start', 'home'],
+	ViewerMarkdown: '## Elemenx 0.9\n\nA **viewer** of Markdown: the *same* look as the rich editor, ~~nothing~~ that runs.\n\n- Tables, quotes and lists\n- Code that names its language:\n\n```js\nElemenx.Component(\'Hello\', {$Template: \'<b>{{Name}}</b>\', Name: \'world\'});\n```\n\n| Key | Does |\n| --- | --- |\n| Mod+F | Finds |\n| Mod+H | Replaces |\n',
+	ViewerCode: 'function Area (radius) {\n\t/* The area of a circle. */\n\tvar square = radius * radius;\n\n\treturn Math.PI * square;\n}\n',
+	ViewerJson: '{\n\t"name": "elemenx",\n\t"keywords": [\n\t\t"ui",\n\t\t"es5"\n\t],\n\t"scripts": {\n\t\t"test": "vitest",\n\t\t"lint": "eslint ."\n\t}\n}\n',
+	Formulas: ['ax^2 + bx + c = 0', 'x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}', '\\sum_{i=1}^{n} i = \\frac{n(n+1)}{2}', '\\int_0^\\infty e^{-x^2} dx = \\frac{\\sqrt{\\pi}}{2}', 'A = \\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}'],
+	WorkTiles: [],
+	CanRedo: false,
+	Wrapped: false,
+	FormNote: '',
+	Profile: null,
+	ProfileCities: [{Value: 'Berlin', Label: 'Berlin'}, {Value: 'Paris', Label: 'Paris'}, {Value: 'Tokyo', Label: 'Tokyo'}],
+	ServerStatus: 'online',
+	Unread: 3,
+	CrumbItems: [
+		{ID: 'projects', Label: 'Projects', Icon: 'folder'},
+		{ID: 'elemenx', Label: 'Elemenx'},
+		{ID: 'libraries', Label: 'libraries'},
+		{ID: 'components', Label: 'components'},
+		{ID: 'app', Label: 'app.js', File: 'app.js'}
+	],
 	GalleryItems: [
 		{ID: 'mountains', Image: 'data/cards/mountains.svg', Title: 'Mountains', Description: 'The northern range at dawn.', Tags: ['nature', 'cold']},
 		{ID: 'sea', Image: 'data/cards/sea.svg', Title: 'Sea', Description: 'A calm bay in the south.', Tags: ['nature', 'water']},
@@ -1577,6 +1601,14 @@ Elemenx.Component('UIKitPage', {
 
 	MenuSelected: function (item) {
 		this.MenuChoice = item.ID;
+
+		if (item.ID === 'wrap')
+			this.Wrapped = !this.Wrapped;
+	},
+
+	/* The select of a MenuItem of its own. */
+	UndoPicked: function () {
+		this.CanRedo = true;
 	},
 
 	TabChanged: function (id) {
@@ -2468,6 +2500,12 @@ Elemenx.Component('UIKitPage', {
 
 		this.PaletteKeys = hotkeys.Format('Mod+K');
 
+		this.Profile = this.ProfileModel();
+
+		this.ProfileJSON = function (value) {
+			return JSON.stringify(value);
+		};
+
 		this.SettingsIos = this.SettingsItems();
 
 		this.PipVideo = this.$Service('PictureInPicture').Supported('video');
@@ -2594,6 +2632,84 @@ Elemenx.Component('UIKitPage', {
 				return copy;
 			});
 		};
+	},
+
+	/* A model made in code: a name checked by the server (admin is taken), a city, and a list of phones. */
+	ProfileModel: function () {
+		var forms = this.$Service('Forms');
+		var check = forms.Validators;
+
+		return forms.Group({
+			Username: forms.Control('ada', {
+				Validators: [check.Required, check.MinLength(3)],
+				Async: [function (control, callback) {
+					window.setTimeout(function () {
+						callback(control.Value === 'admin' ? {taken: true} : null);
+					}, 300);
+				}]
+			}),
+			City: forms.Control('Berlin', [check.Required]),
+			Phones: forms.Array([forms.Control('+49 30 1234567', [check.Required, check.Pattern('[+0-9 ]+')])])
+		});
+	},
+
+	AddPhone: function () {
+		var forms = this.$Service('Forms');
+
+		this.Profile.Get('Phones').Push(forms.Control('', [forms.Validators.Required, forms.Validators.Pattern('[+0-9 ]+')]));
+	},
+
+	RemovePhone: function (event, node) {
+		this.Profile.Get('Phones').RemoveAt(Number(node.getAttribute('data-index')));
+	},
+
+	ProfileSaved: function (result) {
+		this.FormNote = 'Saved: ' + JSON.stringify(result.Value);
+	},
+
+	SignedUp: function (result) {
+		this.FormNote = 'Signed up: ' + result.Value.name + ' <' + result.Value.email + '>';
+	},
+
+	SignUpInvalid: function (result) {
+		this.FormNote = 'Fix: ' + Object.keys(result.Errors).join(', ');
+	},
+
+	SignUpCleared: function () {
+		this.FormNote = 'Cleared';
+	},
+
+	WorkspaceCustomized: function (value) {
+		this.WorkspaceCustomize = !!value;
+	},
+
+	/* The layout the user made: where each tool window is, and which one is open in each area. */
+	WorkspaceArranged: function (layout) {
+		this.WorkspaceLayoutNote = 'Layout: ' + JSON.stringify({Areas: layout.Areas, Open: layout.Open});
+	},
+
+	CrumbPicked: function (choice) {
+		this.PeopleNote = 'Crumb: ' + choice.Item.Label + ' (' + choice.Index + ')';
+	},
+
+	CrumbHome: function () {
+		this.PeopleNote = 'Crumb: home';
+	},
+
+	/* The server drops the connection, waits and comes back. */
+	Reconnect: function () {
+		var self = this;
+
+		this.ServerStatus = 'connecting';
+
+		window.setTimeout(function () {
+			self.ServerStatus = 'online';
+		}, 1500);
+	},
+
+	ReadAll: function () {
+		this.Unread = 0;
+		this.PeopleNote = 'All read';
 	},
 
 	StepSelected: function (item) {
@@ -2946,6 +3062,11 @@ Elemenx.Component('UIKitPage', {
 
 	TileGroupAction: function (event) {
 		this.OpenedTile = event.Action.Title + ' ' + event.Group.Title;
+	},
+
+	/* A tile more in the group Work, by the button of its header (declared in its slot actions). */
+	AddWorkTile: function () {
+		this.WorkTiles = this.WorkTiles.concat(['Draft ' + (this.WorkTiles.length + 1)]);
 	},
 
 	TilesChanged: function (groups) {

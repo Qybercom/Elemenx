@@ -1,8 +1,12 @@
 /*
  * One level of a Menu. Items: [{ID, Label, Icon, Shortcut, Disabled, Danger, Checked, Items, Separator, Group}].
+ * Open shows it: a popup under the closest elemenx-popup-anchor around it (a button of your own and the list in one
+ * element of that class), placed by Placement ('bottom-start'; 'right-start' for a submenu), as wide as the anchor with
+ * MatchWidth. A press outside it or Escape emits "dismiss" with the reason: the owner sets Open back to false.
  * An item with Items opens a nested MenuList to the right; a leaf item emits "select" with the item.
  * Sheet shows the menu as on a phone: a sheet from the bottom of the screen over a shade, with large rows, its Title,
- * and a Cancel row; an item with Items opens its items in the same sheet, with a row back. Sheet: false (the default),
+ * and a Cancel row; an item with Items opens its items in the same sheet, with a row back. The sheet follows a finger
+ * that drags its top (the grabber and the title) down, and a swipe down there closes it. Sheet: false (the default),
  * true, or 'auto' (a sheet on a narrow screen or a touch screen, a popup otherwise).
  */
 Elemenx.Component('MenuList', {
@@ -227,6 +231,33 @@ Elemenx.Component('MenuList', {
 		this.Path = this.Path.slice(0, -1);
 
 		this.SheetFocus();
+	},
+
+	/* The top of the sheet dragged: the sheet follows the finger down (barely up). */
+	SheetDragged: function (event, node) {
+		var sheet = node.parentNode;
+		var dy = event.detail.DY;
+
+		sheet.classList.add('dragging');
+
+		sheet.style.transform = 'translateY(' + Math.round(dy > 0 ? dy : dy / 4) + 'px)';
+	},
+
+	SheetSettled: function (event, node) {
+		node.parentNode.classList.remove('dragging');
+
+		node.parentNode.style.transform = '';
+	},
+
+	/* A swipe down closes the sheet; up, it goes back in place. */
+	SheetSwiped: function (event, node) {
+		this.SheetSettled(event, node);
+
+		if (event.detail.Direction !== 'down') return;
+
+		this.Reset();
+
+		this.$Emit('dismiss', 'swipe');
 	},
 
 	SheetCancel: function (event) {

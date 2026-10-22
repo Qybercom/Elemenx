@@ -44,3 +44,11 @@
 .elemenx-field.horizontal .elemenx-field-body {
 	flex: 1;
 }
+/* A field in error marks the frame of its control as an Input with invalid does. */
+.elemenx-field.invalid .elemenx-input {
+	border-color: var(--elemenx-danger);
+}
+
+.elemenx-field.invalid .elemenx-input:focus-within {
+	box-shadow: 0 0 0 2px rgba(var(--elemenx-danger-rgb), 0.24);
+}

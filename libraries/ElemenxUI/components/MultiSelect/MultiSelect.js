@@ -1,6 +1,8 @@
 /*
- * Options: [{Value, Label, Hint, Icon, Group, Disabled}]. Value is an Array of the selected option Values.
- * Display: chips (removable tags) or count ("3 selected"). SelectAll adds an option that toggles every enabled option.
+ * A select of several options. Options: [{Value, Label, Hint, Icon, Group, Disabled}]; Value is the list of the Values
+ * selected. Display: chips (the chosen options as removable tags in the field) or count ("3 selected"). Searchable (on
+ * by default) adds a filter field; SelectAll adds an option that toggles every enabled option. The list stays open while
+ * options are toggled. Placeholder, Empty, Size, Shape, Disabled and Invalid as in Select. Events: change (the list).
  */
 Elemenx.Component('MultiSelect', {
 	$TemplateURL: 'MultiSelect.html',

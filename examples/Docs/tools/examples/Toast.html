@@ -1,0 +1,36 @@
+<div class="elemenx-container wrappable" style="gap: 8px;">
+	<Button Label="Success" Variant="primary" (click)="Success" />
+	<Button Label="Stays until closed" (click)="Sticky" />
+	<Button Label="With actions" (click)="Actions" />
+	<Button Label="Clear all" Variant="ghost" (click)="Clear" />
+</div>
+<script>
+({
+	Success: function () {
+		this.$Service('Toast').Show({Title: 'Saved', Message: 'The document is saved.', Variant: 'success'});
+	},
+
+	Sticky: function () {
+		this.$Service('Toast').Show({Title: 'Offline', Message: 'Changes wait for the network.', Variant: 'warning', AutoHide: false});
+	},
+
+	Actions: function () {
+		var toast = this.$Service('Toast');
+
+		toast.Show({
+			Message: 'A new version is ready.',
+			Icon: 'download',
+			Actions: [
+				{Label: 'Later'},
+				{Label: 'Reload', Variant: 'primary', Run: function () {
+					toast.Show({Message: 'Reloading... (not really)', Variant: 'info'});
+				}}
+			]
+		});
+	},
+
+	Clear: function () {
+		this.$Service('Toast').Clear();
+	}
+})
+</script>

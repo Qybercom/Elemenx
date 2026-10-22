@@ -1,0 +1,68 @@
+<div class="builder-shell">
+	<Workspace Persist="elemenx-builder:layout">
+		<div slot="header" class="elemenx-container fill builder-header">
+			<span class="builder-brand"><span class="builder-brand-mark">E</span><strong>{{$T('builder.title')}}</strong></span>
+			<span class="elemenx-divider vertical"></span>
+			<Button Icon="undo" Variant="ghost" Size="small" [title]="$T('builder.undo')" [disabled]="!CanUndo(Version)" (click)="Undo" />
+			<Button Icon="redo" Variant="ghost" Size="small" [title]="$T('builder.redo')" [disabled]="!CanRedo(Version)" (click)="Redo" />
+			<span class="elemenx-divider vertical"></span>
+			<RadioGroup Variant="segmented" Size="small" [options]="Widths(Language)" [value]="Width" [label]="$T('builder.width')" (change)="Sized" />
+			<Toggle Size="small" [label]="$T('builder.preview')" [checked]="Preview" (change)="Previewed" />
+			<span class="elemenx-spacer"></span>
+			<Button Icon="upload" Size="small" [label]="$T('builder.import')" (click)="ImportOpened" />
+			<Button Icon="download" Variant="primary" Size="small" [label]="$T('builder.export')" (click)="ExportOpened" />
+			<Button Icon="delete" Variant="ghost" Size="small" [title]="$T('builder.clear')" (click)="Cleared" />
+			<span class="elemenx-divider vertical"></span>
+			<RadioGroup Variant="segmented" Size="small" [options]="Languages" [value]="Language" [label]="$T('builder.language')" (change)="Chosen" />
+			<ThemeSwitch Compact="true" />
+		</div>
+
+		<BuilderStage slot="main" [version]="Version" [selected]="Selected" [width]="Width" [preview]="Preview" (select)="Picked" (drop)="Dropped" />
+
+		<WorkspaceToolWindow slot="tools" ID="palette" Icon="add" Area="left" Open="true" [title]="$T('builder.palette')">
+			<div class="builder-palette">
+				<Input Icon="search" Size="small" Clearable="true" [placeholder]="$T('builder.search')" [value]="Query" (input)="Searched" />
+				<p class="elemenx-text small muted" *if="!Groups(Language, Query).length">{{$T('builder.found')}}</p>
+				<div class="builder-palette-group" *for="group of Groups(Language, Query)" *key="group.ID">
+					<h3 class="elemenx-label builder-palette-title">{{group.Label}}</h3>
+					<div class="builder-palette-items">
+						<button type="button" class="builder-palette-item" *for="kind of group.Kinds" *key="kind.ID" [attribute.data-kind]="kind.ID" [attribute.title]="kind.Label" *draggable="{Data: kind.ID, Type: 'builder-kind'}" (click)="Added">
+							<Icon [name]="kind.Icon" />
+							<span>{{kind.Label}}</span>
+						</button>
+					</div>
+				</div>
+			</div>
+		</WorkspaceToolWindow>
+
+		<WorkspaceToolWindow slot="tools" ID="structure" Icon="tree" Area="left" [title]="$T('builder.structure')">
+			<p class="elemenx-text small muted builder-start" *if="!Count(Version)">{{$T('builder.start')}}</p>
+			<Tree [label]="$T('builder.structure')" [items]="TreeItems(Version, Language)" [value]="Selected" [expanded]="Expanded(Version, Collapsed)" (select)="TreePicked" (expand)="Expand" />
+		</WorkspaceToolWindow>
+
+		<WorkspaceToolWindow slot="tools" ID="properties" Icon="sliders" Area="right" Open="true" [title]="$T('builder.properties')">
+			<BuilderInspector [node]="Selected" [version]="Version" (select)="Picked" />
+		</WorkspaceToolWindow>
+
+		<WorkspaceToolWindow slot="tools" ID="template" Icon="code" Area="bottom" [title]="$T('builder.template')">
+			<CodeView Language="html" [value]="Code(Version)" [label]="$T('builder.template')" />
+		</WorkspaceToolWindow>
+
+		<span slot="status">{{$T('builder.elements', {count: Count(Version)})}}</span>
+	</Workspace>
+
+	<Dialog Icon="download" Size="large" [title]="$T('builder.exportTitle')" [description]="$T('builder.exportNote')" [open]="Exporting" (close)="ExportClosed">
+		<CodeView Language="html" [value]="Code(Version)" [label]="$T('builder.template')" />
+		<Button slot="footer" [label]="$T('builder.close')" (click)="ExportClosed" />
+		<Button slot="footer" Icon="copy" Variant="primary" [label]="$T('builder.copy')" *copy="{Text: Code(Version), Toast: $T('builder.copied')}" />
+	</Dialog>
+
+	<Dialog Icon="upload" Size="large" [title]="$T('builder.importTitle')" [description]="$T('builder.importNote')" [open]="Importing" (close)="ImportClosed">
+		<div class="elemenx-callout danger" *if="ImportFailed">{{$T('builder.importFailed')}}</div>
+		<TextArea Rows="14" [value]="ImportText" (input)="ImportTyped" />
+		<Button slot="footer" [label]="$T('builder.close')" (click)="ImportClosed" />
+		<Button slot="footer" Icon="upload" Variant="primary" [label]="$T('builder.import')" (click)="Imported" />
+	</Dialog>
+
+	<ToastHost />
+</div>

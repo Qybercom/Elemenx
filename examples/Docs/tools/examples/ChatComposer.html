@@ -1,0 +1,15 @@
+<ChatComposer Attach="false" (send)="Send" (sticker)="Sticker" />
+<ul class="elemenx-ul"><li *for="line of Sent" *key="$index">{{line}}</li></ul>
+<script>
+({
+	Sent: [],
+
+	Send: function (text) {
+		this.Sent = this.Sent.concat(['Sent: ' + text]);
+	},
+
+	Sticker: function (event) {
+		this.Sent = this.Sent.concat(['A sticker: ' + event.Sticker.Title]);
+	}
+})
+</script>

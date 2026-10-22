@@ -1,0 +1,12 @@
+<Field Label="Price" [hint]="Note"><MoneyInput [amount]="Price" Currency="USD" (change)="Changed" /></Field>
+<Field Label="Price in euros"><MoneyInput Amount="1234.5" Currency="EUR" /></Field>
+<script>
+({
+	Price: 99.9,
+	Note: '99.9',
+
+	Changed: function (value) {
+		this.Note = JSON.stringify(value);
+	}
+})
+</script>

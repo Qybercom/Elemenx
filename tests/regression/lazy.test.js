@@ -115,4 +115,44 @@ describe('Contract: *lazy', function () {
 
 		component.$Destroy();
 	});
+
+	it('holds the place of its host with the placeholder of its value: a height, a length or a template of the page', async function () {
+		var child = unique('LazyHeld');
+		var name = unique('LazyHolders');
+		var template = unique('LazyPlaceholder');
+		var holders = [];
+		var observer = new MutationObserver(function (records) {
+			records.forEach(function (record) {
+				Array.prototype.forEach.call(record.addedNodes, function (node) {
+					if (node.nodeType === 1 && node.hasAttribute('data-elemenx-lazy'))
+						holders.push([node.parentNode.className, node.getAttribute('data-elemenx-lazy'), node.style.minHeight, node.innerHTML]);
+				});
+			});
+		});
+		var component;
+
+		Elemenx.Template(template, '<b class="lazy-skeleton">wait</b>');
+		Elemenx.Component(child, {$Template: '<p class="lazy-held">held</p>'});
+
+		observer.observe(document.getElementById('mount'), {childList: true, subtree: true});
+
+		component = Elemenx.Component(name, {
+			$Template: `<main><div style="height: 3000px"></div><section class="pixels"><${child} *lazy="240"></${child}></section><section class="length"><${child} *lazy="'12rem'"></${child}></section><section class="template"><${child} *lazy="'#${template}'"></${child}></section><section class="line"><${child} *lazy></${child}></section></main>`
+		})();
+
+		document.getElementById('mount').appendChild(component.$Element());
+
+		expect(await waitFor(function () { return document.querySelectorAll('.lazy-held').length === 4; }, 5000)).toBe(true);
+
+		observer.disconnect();
+
+		/* The hosts mount one a task: some may render before their placeholder is put in; every placeholder put in is right. */
+		expect(holders.length).toBeGreaterThanOrEqual(1);
+		expect(holders.every(function (holder) {
+			return JSON.stringify(holder) === JSON.stringify({pixels: ['pixels', 'sized', '240px', ''], length: ['length', 'sized', '12rem', ''], template: ['template', 'template', '1px', '<b class="lazy-skeleton">wait</b>'], line: ['line', '', '1px', '']}[holder[0]]);
+		})).toBe(true);
+		expect(document.querySelectorAll('[data-elemenx-lazy], .lazy-skeleton').length).toBe(0);
+
+		component.$Destroy();
+	});
 });

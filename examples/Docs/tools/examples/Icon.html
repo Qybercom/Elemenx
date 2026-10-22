@@ -1,0 +1,23 @@
+<div class="elemenx-container wrappable" style="gap: 8px;">
+	<Icon Name="home" Size="24" />
+	<Icon Name="settings" Size="24" />
+	<Icon Name="heart" Size="24" Label="Liked" />
+	<Icon Name="loader" Size="24" Spin="true" />
+	<Icon Name="files:pdf" Size="32" />
+	<Icon Name="brands:github" Size="32" Colored="true" />
+	<Icon Name="weather:snow" Size="32" Colored="true" />
+	<Icon Name="games:gamepad" Size="32" />
+</div>
+<div class="elemenx-container" style="gap: 12px; align-items: center;">
+	<Field Label="An icon name" Hint="home, star-filled, files:zip, weather:sun..."><Input [value]="Name" (input)="Typed" /></Field>
+	<Icon [name]="Name" Size="48" />
+</div>
+<script>
+({
+	Name: 'trophy',
+
+	Typed: function (value) {
+		this.Name = value;
+	}
+})
+</script>

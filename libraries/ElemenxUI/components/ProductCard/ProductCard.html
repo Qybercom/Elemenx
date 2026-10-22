@@ -1,5 +1,5 @@
 <article class="elemenx-card structured elemenx-product" [class]="[Variant || 'outlined', Href ? 'linked' : '', PriceStyle === 'corner' ? 'corner' : '']" [attribute.aria-label]="Title">
-	<div class="elemenx-card-media elemenx-product-media" [attribute.style]="'aspect-ratio: ' + String(Ratio || '1:1').replace(':', ' / ')">
+	<div class="elemenx-card-media elemenx-product-media" [attribute.style]="'aspect-ratio: ' + String(Ratio || '1:1').replace(':', ' / ')" *swipe (swipe)="Swiped">
 		<img *if="Pictures(Images, Image).length" [src]="Pictures(Images, Image)[Shown]" [attribute.alt]="Title" loading="lazy" />
 		<span class="elemenx-badge elemenx-product-badge" *if="Badge" [class]="[BadgeVariant || 'danger']">{{Badge}}</span>
 		<button class="elemenx-product-favorite" type="button" *if="Favorable" [class.on]="!!Favorite" [attribute.aria-pressed]="String(!!Favorite)" [attribute.aria-label]="(FavoriteLabel || $T('ui.productCard.favorite'))" (click)="Star"><Icon Name="heart" /></button>

@@ -9,7 +9,8 @@
  *   pauses and plays it. Loop (true) goes round at the ends.
  * - Effect: slide (the default) or fade. Fit: cover (the default) or contain. Ratio: the shape of the picture
  *   ('16 / 9').
- * - The arrows (Home, End) change the picture when the gallery has the focus, and a swipe does on a touch screen.
+ * - The arrows (Home, End) change the picture when the gallery has the focus; on a touch screen the picture follows
+ *   the finger across (*swipe) and a swipe goes to the next or the previous one (held back at the ends without Loop).
  */
 Elemenx.Component('Gallery', {
 	$TemplateURL: 'Gallery.html',
@@ -138,6 +139,10 @@ Elemenx.Component('Gallery', {
 
 	Selected: function () {
 		var item = (this.Items || [])[this.Current(this.Items, this.Index)];
+
+		/* The click a swipe ends with is no press on the picture. */
+		if (this.Own().Swiped && Date.now() - this.Own().Swiped < 400) return;
+
 		if (item)
 			this.$Emit('select', item);
 	},
@@ -187,24 +192,35 @@ Elemenx.Component('Gallery', {
 		}
 	},
 
-	/* A swipe on a touch screen: across, by more than 40 pixels. */
-	Down: function (event) {
-		if (event.pointerType === 'mouse') return;
+	/* The picture follows the finger (out of the state: a move restyles the track alone); held back at the ends. */
+	Dragged: function (event) {
+		var root = this.$Element();
+		var dx = event.detail.DX;
+		var index = this.Current(this.Items, this.Index);
+		var rtl = window.getComputedStyle(root).direction === 'rtl';
+		var forward = rtl ? dx > 0 : dx < 0;
+		if (!this.On(this.Loop) && ((forward && index === this.Items.length - 1) || (!forward && index === 0)))
+			dx = dx / 3;
 
-		this.Own().Start = {X: event.clientX, Y: event.clientY};
+		root.classList.add('dragging');
+		root.style.setProperty('--elemenx-gallery-drag', Math.round(dx) + 'px');
 	},
 
-	Up: function (event) {
-		var start = this.Own().Start;
-		var dx;
+	/* The end of a swipe: the next picture the way the finger went (in the direction of the page), or back in place. */
+	Swiped: function (event) {
+		var rtl = window.getComputedStyle(this.$Element()).direction === 'rtl';
+		var forward = (event.detail.Direction === 'left') !== rtl;
 
-		this.Own().Start = null;
+		this.Own().Swiped = Date.now();
 
-		if (!start) return;
+		this.Settled();
+		this.Step(forward ? 1 : -1);
+	},
 
-		dx = event.clientX - start.X;
+	Settled: function () {
+		var root = this.$Element();
 
-		if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(event.clientY - start.Y))
-			this.Step(dx < 0 ? 1 : -1);
+		root.classList.remove('dragging');
+		root.style.removeProperty('--elemenx-gallery-drag');
 	}
 });

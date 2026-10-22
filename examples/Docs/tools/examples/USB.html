@@ -1,0 +1,21 @@
+<p class="elemenx-text">WebUSB here: <strong>{{Supported ? 'yes' : 'no (Chrome and Edge)'}}</strong></p>
+<Button Label="Pick a device" Icon="link" [disabled]="!Supported" (click)="Pick" />
+<p class="elemenx-text small muted">{{Note}}</p>
+<script>
+({
+	Supported: false,
+	Note: '',
+
+	$OnCreate: function () {
+		this.Supported = this.$Service('USB').Supported();
+	},
+
+	Pick: function () {
+		var self = this;
+
+		this.$Service('USB').Request({}, function (error, device) {
+			self.Note = error ? error.name : device.Info.Manufacturer + ' ' + device.Info.Name + ' (' + device.Info.VendorID + ':' + device.Info.ProductID + ')';
+		});
+	}
+})
+</script>

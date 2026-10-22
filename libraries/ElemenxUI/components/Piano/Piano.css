@@ -34,8 +34,10 @@
 
 .elemenx-piano-key {
 	display: flex;
-	align-items: flex-end;
-	justify-content: center;
+	flex-direction: column;
+	align-items: center;
+	justify-content: flex-end;
+	gap: 2px;
 }
 
 .elemenx-piano-key.white {
@@ -76,8 +78,14 @@
 	border-color: var(--elemenx-accent);
 }
 
+/*
+ * A played black key: the accent is near the color of the black keys in most themes, so the key takes a half tint of
+ * it over the surface, lit from inside, and stays visibly down.
+ */
 .elemenx-piano-key.black.pressed {
-	box-shadow: none;
+	background: linear-gradient(rgba(var(--elemenx-accent-rgb), 0.56), rgba(var(--elemenx-accent-rgb), 0.56)), var(--elemenx-surface);
+	border-color: var(--elemenx-accent);
+	box-shadow: inset 0 0 0 1px var(--elemenx-surface), inset 0 -2px 6px rgba(var(--elemenx-accent-rgb), 0.48);
 }
 
 .elemenx-piano-name {
@@ -87,6 +95,47 @@
 	pointer-events: none;
 }
 
+.elemenx-piano-key.black .elemenx-piano-name {
+	padding-bottom: 4px;
+	color: var(--elemenx-surface);
+	font-size: 9px;
+}
+
 .elemenx-piano-key.pressed .elemenx-piano-name {
 	color: var(--elemenx-accent-text);
+}
+
+.elemenx-piano-key.black.pressed .elemenx-piano-name {
+	color: var(--elemenx-text);
+}
+
+/* The key of the computer that plays a note, under its name (Labels 'both'). */
+.elemenx-piano-typing {
+	min-width: 14px;
+	margin-bottom: 2px;
+	padding: 1px 3px;
+	color: var(--elemenx-text-muted);
+	font-family: var(--elemenx-font-mono);
+	font-size: 9px;
+	line-height: 1;
+	text-align: center;
+	border: 1px solid var(--elemenx-border-strong);
+	border-radius: var(--elemenx-radius-small);
+	pointer-events: none;
+}
+
+.elemenx-piano-key.black .elemenx-piano-typing {
+	margin-bottom: 4px;
+	color: var(--elemenx-surface);
+	border-color: rgba(var(--elemenx-surface-rgb), 0.48);
+}
+
+.elemenx-piano-key.pressed .elemenx-piano-typing {
+	color: var(--elemenx-accent-text);
+	border-color: var(--elemenx-accent-text);
+}
+
+.elemenx-piano-key.black.pressed .elemenx-piano-typing {
+	color: var(--elemenx-text);
+	border-color: var(--elemenx-text);
 }

@@ -4,7 +4,8 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 
 ## Foundation (index.css)
 
-- `elemenx-badge`: `accent`, `danger`, `info`, `success`, `warning`
+- `elemenx-badge`: `accent`, `busy`, `danger`, `dot`, `info`, `overlay`, `success`, `warning`
+- `elemenx-badged`
 - `elemenx-block`: `compact`, `framed`, `spacious`, `trapezoid`
 - `elemenx-calendar`
 - `elemenx-calendar-cell`: `selected`, `today`
@@ -44,7 +45,8 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-container`: `block`, `centered`, `fill`, `fill-fixed`, `grid`, `non-fill`, `wrappable`
 - `elemenx-divider`: `vertical`
 - `elemenx-drag-ghost`
-- `elemenx-draggable`: `dragging`
+- `elemenx-document`
+- `elemenx-draggable`: `dragging`, `held`, `hold`
 - `elemenx-drop-marker`
 - `elemenx-droppable`: `drop-over`, `drop-target`
 - `elemenx-eyebrow`
@@ -155,7 +157,7 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 
 ## ButtonGroup
 
-- `elemenx-button`: `block`, `danger`, `ghost`, `giant`, `icon-only`, `large`, `link`, `loading`, `pressed`, `primary`, `round`, `small`
+- `elemenx-button`: `badged`, `block`, `danger`, `ghost`, `giant`, `icon-only`, `large`, `link`, `loading`, `pressed`, `primary`, `round`, `small`
 - `elemenx-button-group`: `attached`, `vertical`
 
 ## Properties
@@ -337,6 +339,7 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-code-editor`: `auto-size`, `disabled`, `invalid`, `readonly`, `wrap`
 - `elemenx-code-editor-bracket`
 - `elemenx-code-editor-content`
+- `elemenx-code-editor-find`
 - `elemenx-code-editor-hint`
 - `elemenx-code-editor-input`
 - `elemenx-code-editor-lines`
@@ -499,7 +502,7 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 
 ## Field
 
-- `elemenx-field`: `disabled`, `horizontal`
+- `elemenx-field`: `disabled`, `horizontal`, `invalid`
 - `elemenx-field-body`
 - `elemenx-field-error`
 - `elemenx-field-label`
@@ -523,7 +526,7 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 
 ## Gallery
 
-- `elemenx-gallery`: `caption-overlay`, `contain`, `fade`, `slide`
+- `elemenx-gallery`: `caption-overlay`, `contain`, `dragging`, `fade`, `slide`
 - `elemenx-gallery-arrow`: `next`, `previous`
 - `elemenx-gallery-caption`: `below`
 - `elemenx-gallery-counter`
@@ -584,7 +587,7 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 
 ## GameKey
 
-- `elemenx-game-key`: `button-a`, `button-b`, `button-x`, `button-y`, `keyboard`
+- `elemenx-game-key`: `button-a`, `button-b`, `button-down`, `button-home`, `button-left`, `button-right`, `button-select`, `button-start`, `button-up`, `button-x`, `button-y`, `generic`, `keyboard`, `nintendo`, `playstation`, `xbox`
 - `elemenx-game-key-glyph`
 - `elemenx-game-key-label`
 
@@ -681,7 +684,9 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 
 - `elemenx-keyboard`: `clickable`, `large`, `small`
 - `elemenx-keyboard-block`
-- `elemenx-keyboard-key`: `held`, `marked`, `pressed`
+- `elemenx-keyboard-key`: `dual`, `held`, `marked`, `pressed`
+- `elemenx-keyboard-label`
+- `elemenx-keyboard-second`
 
 ## Knob
 
@@ -713,9 +718,11 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 
 ## MenuList
 
+- `elemenx-menu`: `dragging`, `sheet`
 - `elemenx-menu-back`
 - `elemenx-menu-cancel`
 - `elemenx-menu-grabber`
+- `elemenx-menu-head`
 - `elemenx-menu-host`
 - `elemenx-menu-icon`
 - `elemenx-menu-layer`
@@ -813,6 +820,7 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-piano`: `disabled`, `large`, `small`
 - `elemenx-piano-key`: `black`, `marked`, `pressed`, `white`
 - `elemenx-piano-name`
+- `elemenx-piano-typing`
 
 ## PlanCard
 
@@ -949,6 +957,7 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-rich-editor-action`: `active`
 - `elemenx-rich-editor-actions`
 - `elemenx-rich-editor-content`: `empty`
+- `elemenx-rich-editor-find`
 - `elemenx-rich-editor-link`
 - `elemenx-rich-editor-menu`
 - `elemenx-rich-editor-print`
@@ -1079,6 +1088,7 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-terminal`
 - `elemenx-terminal-actions`
 - `elemenx-terminal-command`
+- `elemenx-terminal-find`
 - `elemenx-terminal-header`
 - `elemenx-terminal-input`
 - `elemenx-terminal-line`: `error`, `info`, `input`, `output`, `success`
@@ -1092,17 +1102,18 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 
 ## TileGrid
 
-- `elemenx-tile`: `dragging`, `large`, `locked`, `medium`, `small`, `wide`
+- `elemenx-tile`: `dragging`, `large`, `locked`, `medium`, `small`, `spanned`, `tall`, `wide`, `xlarge`
 - `elemenx-tile-badge`
 - `elemenx-tile-cells`
 - `elemenx-tile-content`
 - `elemenx-tile-gap`: `drop-over`, `drop-target`
-- `elemenx-tile-grid`: `drop-over`, `drop-target`, `editable`, `sorting`
+- `elemenx-tile-grid`: `drop-over`, `drop-target`, `editable`, `horizontal`, `scroll`, `sorting`
 - `elemenx-tile-group`: `drop-over`, `drop-target`, `growing`, `new`
 - `elemenx-tile-group-action`
 - `elemenx-tile-group-actions`
 - `elemenx-tile-group-header`
 - `elemenx-tile-group-resize`
+- `elemenx-tile-group-stretch`: `bottom`, `corner`
 - `elemenx-tile-group-title`
 - `elemenx-tile-lane`
 - `elemenx-tile-new`
@@ -1200,13 +1211,85 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 
 ## Workspace
 
-- `elemenx-workspace`: `ribbon`
+- `elemenx-workspace`: `customizing`, `ribbon`
 - `elemenx-workspace-band`: `bottom`, `top`
 - `elemenx-workspace-body`
 - `elemenx-workspace-center`
+- `elemenx-workspace-dock`: `bottom`
 - `elemenx-workspace-header`
 - `elemenx-workspace-main`
 - `elemenx-workspace-panel`: `bottom`, `left`, `right`
 - `elemenx-workspace-ribbon`
 - `elemenx-workspace-status`
 - `elemenx-workspace-stripe`: `left`, `right`
+- `elemenx-workspace-tool-button`
+- `elemenx-workspace-tools`
+
+## Breadcrumbs
+
+- `elemenx-breadcrumbs`: `large`, `small`
+- `elemenx-breadcrumbs-end`
+- `elemenx-breadcrumbs-item`: `current`, `disabled`, `more`
+- `elemenx-breadcrumbs-label`
+- `elemenx-breadcrumbs-link`
+- `elemenx-breadcrumbs-list`
+- `elemenx-breadcrumbs-separator`
+- `elemenx-breadcrumbs-start`
+- `elemenx-breadcrumbs-text`
+
+## Presence
+
+- `elemenx-presence`: `away`, `busy`, `connecting`, `dnd`, `large`, `offline`, `online`, `small`
+- `elemenx-presence-dot`
+- `elemenx-presence-label`
+
+## Avatar
+
+- `elemenx-avatar`: `large`, `rounded`, `small`, `square`, `xlarge`
+- `elemenx-avatar-art`
+- `elemenx-avatar-face`
+- `elemenx-avatar-image`
+- `elemenx-avatar-initials`
+- `elemenx-avatar-status`
+
+## Image
+
+- `elemenx-image`: `circle`, `loading`, `rounded`, `sized`, `stretch-both`, `stretch-height`, `stretch-width`
+- `elemenx-image-broken`
+- `elemenx-image-picture`
+- `elemenx-image-placeholder`
+
+## Form
+
+- `elemenx-form`
+- `elemenx-form-fields`
+
+## FindBar
+
+- `elemenx-find`
+- `elemenx-find-button`
+- `elemenx-find-count`
+- `elemenx-find-indent`
+- `elemenx-find-option`
+- `elemenx-find-query`
+- `elemenx-find-replacement`
+- `elemenx-find-row`
+- `elemenx-find-text-button`
+
+## Markdown
+
+- `elemenx-markdown`
+
+## CodeView
+
+- `elemenx-code-view`: `folding`, `limited`, `numbered`, `wrap`
+- `elemenx-code-view-copy`: `copied`
+- `elemenx-code-view-fold`
+- `elemenx-code-view-line`: `folded`, `marked`
+- `elemenx-code-view-more`
+- `elemenx-code-view-tail`
+- `elemenx-code-view-text`
+
+## Formula
+
+- `elemenx-formula`: `display`

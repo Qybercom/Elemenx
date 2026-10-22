@@ -1,0 +1,28 @@
+<RadioGroup Variant="segmented" [options]="[{Value: 'javascript', Label: 'JavaScript'}, {Value: 'python', Label: 'Python'}, {Value: 'sql', Label: 'SQL'}]" [value]="Language" (change)="Chose" />
+<CodeEditor [language]="Language" [value]="Code" LineNumbers="true" Rows="8" Pairs="true" (input)="Typed" (cursor)="Moved" />
+<p class="elemenx-text small muted">{{Code.length}} characters · {{Cursor}} · Mod+F finds, Mod+H replaces, Mod+/ comments a line.</p>
+<script>
+({
+	Language: 'javascript',
+	Cursor: '',
+	Code: "/* A counter. */\nfunction count (limit) {\n\tvar total = 0;\n\n\tfor (var i = 0; i < limit; i++)\n\t\ttotal += i;\n\n\treturn total;\n}\n",
+	Samples: {
+		javascript: "/* A counter. */\nfunction count (limit) {\n\tvar total = 0;\n\n\tfor (var i = 0; i < limit; i++)\n\t\ttotal += i;\n\n\treturn total;\n}\n",
+		python: "def count(limit):\n\t\"\"\"A counter.\"\"\"\n\treturn sum(range(limit))  # the total\n",
+		sql: "SELECT name, COUNT(*) AS orders\nFROM users\nGROUP BY name;\n"
+	},
+
+	Chose: function (value) {
+		this.Language = value;
+		this.Code = this.Samples[value];
+	},
+
+	Typed: function (value) {
+		this.Code = value;
+	},
+
+	Moved: function (cursor) {
+		this.Cursor = 'line ' + cursor.Line + ', column ' + cursor.Column;
+	}
+})
+</script>

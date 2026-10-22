@@ -1,0 +1,19 @@
+<Field Label="Phone"><span class="elemenx-input"><input class="elemenx-input-control" *mask="{Mask: '+7 (###) ###-##-##', Value: Phone, Guide: true}" (mask)="Masked" /></span></Field>
+<Field Label="Plate"><span class="elemenx-input"><input class="elemenx-input-control" *mask="{Mask: 'A ### AA', Value: Plate}" (mask)="Plated" /></span></Field>
+<p class="elemenx-text small muted">Phone digits: {{Phone || '—'}} ({{Complete ? 'complete' : 'not complete'}}) · plate: {{Plate || '—'}}</p>
+<script>
+({
+	Phone: '',
+	Plate: '',
+	Complete: false,
+
+	Masked: function (event) {
+		this.Phone = event.detail.Value;
+		this.Complete = event.detail.Complete;
+	},
+
+	Plated: function (event) {
+		this.Plate = event.detail.Value;
+	}
+})
+</script>

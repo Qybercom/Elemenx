@@ -1,0 +1,14 @@
+<div class="elemenx-container wrappable" style="gap: 8px;">
+	<PlanCard ID="free" Name="Basic" Description="For a start" Price="0" [features]="['3 projects', '1 GB of storage', {Label: 'Custom themes', Included: false}]" Current="true" Color="#3f6c9e" />
+	<PlanCard ID="pro" Name="Standard" Description="For a team" Price="12" Currency="EUR" [features]="['Unlimited projects', '100 GB of storage', 'Custom themes']" Popular="Most popular" Color="#b4483f" (select)="Chosen" />
+</div>
+<p class="elemenx-text small muted">{{Note}}</p>
+<script>
+({
+	Note: '',
+
+	Chosen: function (event) {
+		this.Note = 'Chosen: ' + event.ID;
+	}
+})
+</script>

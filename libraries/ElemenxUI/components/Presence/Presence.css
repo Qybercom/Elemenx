@@ -1,0 +1,98 @@
+/*
+ * A dot in the color of its status: online filled green, away amber with a notch, busy red, dnd red with a bar,
+ * offline a hollow ring, connecting a ring that turns. --elemenx-presence-size is its size.
+ */
+.elemenx-presence {
+	--elemenx-presence-size: 10px;
+	--elemenx-presence-color: var(--elemenx-text-muted);
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	color: var(--elemenx-text-muted);
+	font-size: var(--elemenx-font-size-small);
+	line-height: var(--elemenx-line-height-small);
+	vertical-align: middle;
+}
+
+.elemenx-presence.small {
+	--elemenx-presence-size: 8px;
+}
+
+.elemenx-presence.large {
+	--elemenx-presence-size: 14px;
+	gap: 8px;
+	font-size: var(--elemenx-font-size);
+}
+
+.elemenx-presence.online {
+	--elemenx-presence-color: var(--elemenx-success);
+}
+
+.elemenx-presence.away {
+	--elemenx-presence-color: var(--elemenx-warning);
+}
+
+.elemenx-presence.busy,
+.elemenx-presence.dnd {
+	--elemenx-presence-color: var(--elemenx-danger);
+}
+
+.elemenx-presence.connecting {
+	--elemenx-presence-color: var(--elemenx-accent);
+}
+
+.elemenx-presence-dot {
+	position: relative;
+	flex: none;
+	box-sizing: border-box;
+	width: var(--elemenx-presence-size);
+	height: var(--elemenx-presence-size);
+	background: var(--elemenx-presence-color);
+	border-radius: 50%;
+}
+
+/* Away: a notch of the surface in the dot, like the hand of a clock. */
+.elemenx-presence.away .elemenx-presence-dot::after {
+	position: absolute;
+	top: 18%;
+	left: 44%;
+	width: 18%;
+	height: 40%;
+	background: var(--elemenx-surface);
+	border-radius: 1px;
+	content: '';
+}
+
+/* Do not disturb: a bar across the dot. */
+.elemenx-presence.dnd .elemenx-presence-dot::after {
+	position: absolute;
+	top: 40%;
+	left: 22%;
+	width: 56%;
+	height: 20%;
+	background: var(--elemenx-surface);
+	border-radius: 1px;
+	content: '';
+}
+
+.elemenx-presence.offline .elemenx-presence-dot {
+	background: transparent;
+	border: 2px solid var(--elemenx-presence-color);
+}
+
+.elemenx-presence.connecting .elemenx-presence-dot {
+	background: transparent;
+	border: 2px solid rgba(var(--elemenx-accent-rgb), 0.24);
+	border-top-color: var(--elemenx-presence-color);
+	animation: elemenx-spin 800ms linear infinite;
+}
+
+.elemenx-presence-label {
+	white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.elemenx-presence.connecting .elemenx-presence-dot {
+		animation: none;
+	}
+}

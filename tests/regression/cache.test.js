@@ -120,6 +120,63 @@ describe('Contract: Elemenx.Cache', function () {
 		expect(Elemenx.Cache.Stats().Instances).toEqual([]);
 	});
 
+	it('$OnSleep and $OnWake run untracked: an event to the owner that changes its state does not loop its *if', async function () {
+		var name = unique('CacheLogParent');
+		var childName = unique('CacheLogChild');
+		var errors = [];
+		var component;
+
+		function capture (event) {
+			errors.push(event.message);
+
+			event.preventDefault();
+		}
+
+		Elemenx.Cache({Instances: {Scope: 'marked'}});
+
+		Elemenx.Component(childName, {
+			$Template: '<p class="cache-log-child">child</p>',
+			$OnSleep: function () {
+				this.$Emit('life', 'sleep');
+			},
+			$OnWake: function () {
+				this.$Emit('life', 'wake');
+			}
+		});
+
+		component = Elemenx.Component(name, {
+			$Template: '<section><div *if="Shown" *keep><' + childName + ' (life)="Logged" /></div><i class="cache-log">{{Log.join(",")}}</i></section>',
+			Shown: true,
+			Log: [],
+			Logged: function (line) {
+				this.Log = this.Log.concat([line]);
+			}
+		})();
+
+		owned.push(component);
+
+		document.getElementById('mount').appendChild(component.$Element());
+
+		window.addEventListener('error', capture);
+
+		try {
+			component.Shown = false;
+
+			await tick();
+
+			component.Shown = true;
+
+			await tick();
+		}
+		finally {
+			window.removeEventListener('error', capture);
+		}
+
+		expect(errors).toEqual([]);
+		expect(document.querySelector('.cache-log').textContent).toBe('sleep,wake');
+		expect(document.querySelectorAll('.cache-log-child').length).toBe(1);
+	});
+
 	it('marked: $KeepAlive brings a component in; *keep="false" and $KeepAlive: false keep one out of every scope', async function () {
 		var kept;
 		var refused;

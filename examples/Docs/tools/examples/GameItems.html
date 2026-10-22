@@ -1,0 +1,24 @@
+<p class="elemenx-text">A potion (5 of 20) dropped on a pile of 18: <strong>{{Result}}</strong></p>
+<p class="elemenx-text">A sword dropped on a potion: <strong>{{Swap}}</strong></p>
+<p class="elemenx-text">One potion of 5 used: <strong>{{Taken}}</strong></p>
+<script>
+({
+	Result: '',
+	Swap: '',
+	Taken: '',
+
+	$OnCreate: function () {
+		var items = this.$Service('GameItems');
+		var potion = {ID: 'potion', Name: 'Potion', Count: 5, Stack: 20};
+		var pile = {ID: 'potion', Name: 'Potion', Count: 18, Stack: 20};
+		var sword = {ID: 'sword', Name: 'Sword'};
+		var move = items.Move(potion, pile);
+		var swap = items.Move(sword, potion);
+		var taken = items.Take(potion, 1);
+
+		this.Result = 'the pile has ' + move.To.Count + ', ' + (move.From ? move.From.Count + ' go back' : 'nothing goes back');
+		this.Swap = 'the place holds the ' + swap.To.Name + ', the ' + swap.From.Name + ' goes back';
+		this.Taken = taken.Count + ' left';
+	}
+})
+</script>

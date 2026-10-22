@@ -1,0 +1,28 @@
+<Form Label="Sign up" (submit)="Submitted" (invalid)="Refused" (reset)="Cleared">
+	<Field Label="Email" Name="email" Required="true" Email="true"><Input Type="email" Placeholder="ada@example.com" /></Field>
+	<Field Label="Password" Name="password" Required="true" MinLength="8" Hint="At least 8 characters"><Input Type="password" /></Field>
+	<Field Label="Repeat the password" Name="repeat" Required="true" Match="password"><Input Type="password" /></Field>
+	<Field Label="Age" Name="age" Min="18" Max="120"><NumberInput /></Field>
+	<div class="elemenx-container" style="gap: 8px;">
+		<Button Type="submit" Variant="primary" Label="Sign up" />
+		<Button Type="reset" Label="Reset" />
+	</div>
+</Form>
+<pre class="elemenx-code">{{Result}}</pre>
+<script>
+({
+	Result: 'Press Sign up with empty fields to see the errors.',
+
+	Submitted: function (event) {
+		this.Result = 'submit: ' + JSON.stringify(event.Value, null, 2);
+	},
+
+	Refused: function (event) {
+		this.Result = 'invalid: ' + JSON.stringify(event.Errors, null, 2);
+	},
+
+	Cleared: function () {
+		this.Result = 'reset';
+	}
+})
+</script>

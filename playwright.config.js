@@ -53,6 +53,22 @@ export default defineConfig({
 			reuseExistingServer: false,
 			stdout: 'pipe',
 			stderr: 'pipe'
+		},
+		{
+			command: 'node tools/server.js examples/Docs',
+			url: 'http://127.0.0.1:4277/',
+			env: {PORT: '4277'},
+			reuseExistingServer: false,
+			stdout: 'pipe',
+			stderr: 'pipe'
+		},
+		{
+			command: 'node tools/server.js examples/Builder',
+			url: 'http://127.0.0.1:4278/',
+			env: {PORT: '4278'},
+			reuseExistingServer: false,
+			stdout: 'pipe',
+			stderr: 'pipe'
 		}
 	]
 });

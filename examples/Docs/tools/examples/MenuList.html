@@ -1,0 +1,49 @@
+<span class="elemenx-popup-anchor">
+	<Button Label="Actions" Icon="more" (click)="Toggle" />
+	<MenuList [items]="Items" [open]="Open" (select)="Picked" (dismiss)="Closed" />
+</span>
+<span class="elemenx-popup-anchor">
+	<Button Label="As a sheet" (click)="ToggleSheet" />
+	<MenuList [items]="Items" [open]="Sheet" Sheet="true" Title="Actions" (select)="Picked" (dismiss)="SheetClosed" />
+</span>
+<p class="elemenx-text small muted">{{Note}}</p>
+<script>
+({
+	Open: false,
+	Sheet: false,
+	Note: 'One level of a menu under any element of your own: Share opens a level of its own.',
+	Items: [
+		{ID: 'open', Label: 'Open', Icon: 'external', Shortcut: 'Enter'},
+		{ID: 'rename', Label: 'Rename', Icon: 'edit', Shortcut: 'F2'},
+		{ID: 'share', Label: 'Share', Icon: 'share', Items: [
+			{ID: 'link', Label: 'Copy a link', Icon: 'link'},
+			{ID: 'mail', Label: 'By email', Icon: 'mail'}
+		]},
+		{ID: 'pin', Label: 'Pinned', Icon: 'pin', Checked: true},
+		{Separator: true, ID: 'separator'},
+		{ID: 'delete', Label: 'Delete', Icon: 'delete', Danger: true}
+	],
+
+	Toggle: function () {
+		this.Open = !this.Open;
+	},
+
+	ToggleSheet: function () {
+		this.Sheet = !this.Sheet;
+	},
+
+	Closed: function () {
+		this.Open = false;
+	},
+
+	SheetClosed: function () {
+		this.Sheet = false;
+	},
+
+	Picked: function (item) {
+		this.Open = false;
+		this.Sheet = false;
+		this.Note = 'Chosen: ' + item.Label;
+	}
+})
+</script>

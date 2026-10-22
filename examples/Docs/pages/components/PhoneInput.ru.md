@@ -1,0 +1,46 @@
+<!-- generated -->
+# PhoneInput
+
+Value — номер в международном формате: «+», код страны и местные цифры («+79991234567»). Countries по умолчанию — все страны сервиса Countries, названные по Locale и отсортированные по коду; можно заменить на [{Code, Name, Dial, Mask}], где Mask описывает национальную часть (# — цифра). Guide показывает весь шаблон ('+7 (99_) ___-__-__'); Backspace 'skip' перескакивает разделитель, а не стирает цифру перед ним. Принимаются только цифры, подходящие к маске выбранной страны: при вводе, вставке, перетаскивании и автозаполнении.
+
+## Свойства
+
+| Свойство | По умолчанию |
+| --- | --- |
+| `Value` | `''` |
+| `Country` | `'RU'` |
+| `Placeholder` | `''` |
+| `Size` | `'medium'` |
+| `Shape` | `'default'` |
+| `Name` | `null` |
+| `Disabled` | `false` |
+| `Invalid` | `false` |
+| `Countries` | `null` |
+| `Locale` | `''` |
+| `Guide` | `true` |
+| `Backspace` | `'delete'` |
+
+## События
+
+`input`, `validate`, `change`, `country`
+
+## Пример
+
+```example
+<Field Label="Phone" [hint]="Note"><PhoneInput [value]="Phone" (input)="Typed" (country)="Country" /></Field>
+<script>
+({
+	Phone: '+447911123456',
+	Note: 'Type a number with its code, or pick the country.',
+
+	Typed: function (value) {
+		this.Phone = value;
+		this.Note = 'Value: ' + value;
+	},
+
+	Country: function (code) {
+		this.Note = 'Country: ' + code;
+	}
+})
+</script>
+```

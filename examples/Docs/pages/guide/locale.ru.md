@@ -1,0 +1,99 @@
+<!-- generated -->
+# Языки
+
+`Elemenx.Locale` хранит фразы приложений и их библиотек на языке страницы. Шаблоны показывают их через `$T(key, params)`, и когда язык меняется, каждая фраза на странице следует за ним вместе с `lang` и `dir` документа.
+
+Словари — JSON-файлы, по одному на язык; вложенные объекты образуют ключи с точками:
+
+```json
+{
+	"cart": {
+		"title": "Cart",
+		"total": "Total: {sum}",
+		"items": {"one": "{count} item", "other": "{count} items"}
+	}
+}
+```
+
+```js
+Elemenx.Application('Shop', {
+	$Locales: {URL: 'locales/{language}.json', Languages: ['en', 'ru', 'de']}
+});
+```
+
+```html
+<h2>{{$T('cart.title')}}</h2>
+<p>{{$T('cart.items', {count: Items.length})}} · {{$T('cart.total', {sum: Total})}}</p>
+```
+
+Корень приложения отрисовывается, когда словари языка загружены, поэтому первый экран показывает фразы, а не их ключи.
+
+## Язык
+
+| Метод | Значение |
+| --- | --- |
+| `Language()` | язык страницы (`'en'`, `'pt-br'`...) |
+| `Language(code, callback)` | загружает словари языка, затем переключается на него и вызывает `(error)`; `lang` и `dir` страницы следуют |
+| `Fallback(code)` | язык фраз, которых нет в словаре, по умолчанию `'en'`; `Fallback()` возвращает его |
+| `Direction(code)` | `'ltr'` или `'rtl'` (арабский, иврит, персидский, урду...) |
+| `OnChange(callback)`, `OffChange(callback)` | язык изменился |
+
+Первый язык — `lang` страницы или язык браузера.
+
+## Фразы
+
+| Метод | Значение |
+| --- | --- |
+| `Text(key, params)` | фраза ключа: на языке, иначе на базовом языке (`pt` для `pt-BR`), иначе на запасном, иначе сам ключ; `{name}` заменяется на `params.name` |
+| `Has(key)` | есть ли фраза с таким ключом |
+| `Add(language, entries)` | добавляет фразы в коде: `Add('de', {cart: {title: 'Warenkorb'}})` |
+| `Source(url, languages)` | называет файлы словарей: `'/locales/{language}.json'`, только для перечисленных языков, если список дан |
+| `Key(event)` | клавиша события клавиатуры, где `ArrowLeft` и `ArrowRight` меняются местами на элементе с письмом справа налево: код, написанный для письма слева направо, сохраняет смысл |
+
+Фраза-объект с формами множественного числа (`zero`, `one`, `two`, `few`, `many`, `other`) выбирается по `params.count` через `Intl.PluralRules` языка: у русского есть `one` (1, 21), `few` (2–4, 22–24) и `many` (5–20), у английского — `one` и `other`.
+
+`$T` в шаблоне следует за языком: шаблон, показывающий фразу, обновляется при смене языка без всяких действий. Компонент, которому фраза нужна в коде, вызывает `Elemenx.Locale.Text(key, params)` и слушает `OnChange`, если хранит результат.
+
+## Библиотеки
+
+Библиотека объявляет свои словари в собственном `$Locales` (относительно своего корня). ElemenxUI говорит по-английски и по-русски: каждая подпись, подсказка и сообщение его компонентов — ключ под `ui.` (`ui.common.clear`), и приложение может добавить язык (`Add('de', {ui: {...}})`) или изменить фразу. Даты, числа, страны и валюты компонентов тоже следуют за языком, а язык с письмом справа налево зеркалит их (см. [ElemenxUI](/guide/library)).
+
+## Эта справка
+
+Страницы этой справки — Markdown-файлы каждого языка: `pages/guide/start.en.md`, `pages/guide/start.ru.md`; страница, которой нет на языке, показывается на английском с пометкой. Кнопки шапки вызывают `Elemenx.Locale.Language`, а язык сохраняется в `localStorage` до следующего визита.
+
+## Пример
+
+Фразы примера добавлены в коде, по-английски и по-русски; форма множественного числа следует за количеством на языке этой страницы:
+
+```example
+<Slider [value]="Count" Min="0" Max="30" ShowValue="always" (input)="Counted" />
+<p><strong>{{$T('docs.example.items', {count: Count})}}</strong></p>
+<p class="elemenx-text small muted">{{$T('docs.example.language', {language: $T('docs.example.name')})}} · {{Direction}}</p>
+<script>
+({
+	Count: 3,
+	Direction: 'Arabic is written ' + Elemenx.Locale.Direction('ar') + ', Russian ' + Elemenx.Locale.Direction('ru'),
+
+	$OnCreate: function () {
+		Elemenx.Locale.Add('en', {docs: {example: {
+			items: {one: '{count} file', other: '{count} files'},
+			language: 'The language of the page: {language}',
+			name: 'English'
+		}}});
+
+		Elemenx.Locale.Add('ru', {docs: {example: {
+			items: {one: '{count} файл', few: '{count} файла', many: '{count} файлов', other: '{count} файла'},
+			language: 'Язык страницы: {language}',
+			name: 'русский'
+		}}});
+	},
+
+	Counted: function (value) {
+		this.Count = value;
+	}
+})
+</script>
+```
+
+Переключите язык в шапке справки: фразы примера последуют.

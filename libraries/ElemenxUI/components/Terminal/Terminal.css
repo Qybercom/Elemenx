@@ -114,3 +114,8 @@
 		font-size: var(--elemenx-font-size-field);
 	}
 }
+
+/* The find bar under the title: the matches of the output, from the newest. */
+.elemenx-terminal-find {
+	padding: 4px 8px 0;
+}

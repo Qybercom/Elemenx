@@ -178,9 +178,11 @@
 }
 
 /* The data as a table, for screen readers only. */
+/* Out of sight for screen readers: a fixed layout keeps the table one pixel wide (a table is no narrower than its text). */
 .elemenx-chart-data {
 	position: absolute;
 	width: 1px;
+	table-layout: fixed;
 	height: 1px;
 	overflow: hidden;
 	clip-path: inset(50%);

@@ -1,6 +1,8 @@
 /*
- * Options: [{Value, Label, Description, Disabled}]. Variant: default, horizontal, tile or segmented.
- * The change event carries the Value of the picked option, with its original type.
+ * A set of radio buttons, one of them chosen. Options: [{Value, Label, Description, Disabled}]; Value is the Value of
+ * the chosen option, with its original type. Variant: default (one under another), horizontal (in a row), tile (tiles
+ * with their descriptions) or segmented (a strip of buttons, as a switch between views). Label names the group for screen
+ * readers; the arrows move the choice. Size, Name, Disabled, Invalid. Events: change (Value).
  */
 Elemenx.Component('RadioGroup', {
 	$TemplateURL: 'RadioGroup.html',

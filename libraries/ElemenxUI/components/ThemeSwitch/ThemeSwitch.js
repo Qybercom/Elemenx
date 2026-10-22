@@ -1,4 +1,8 @@
-/* Switches the Theme policy: system, light or dark. Compact shows one button that moves to the next policy. */
+/*
+ * Switches the policy of the Theme Service: system (follows the operating system), light or dark; the choice is
+ * remembered. Three buttons (system, light, dark), or with Compact one button that shows the policy and moves to the
+ * next one. Size: small (the default) or medium. It follows changes made elsewhere (another switch, the code).
+ */
 Elemenx.Component('ThemeSwitch', {
 	$TemplateURL: 'ThemeSwitch.html',
 	Size: 'small',

@@ -15,8 +15,10 @@
 	<div class="elemenx-menu-layer" *if="Open && Sheeted(Sheet)" (keydown)="SheetKey">
 		<div class="elemenx-menu-shade" (click)="SheetCancel"></div>
 		<div class="elemenx-menu sheet" role="menu" tabindex="-1" [attribute.aria-label]="Parent(Items, Path) ? Parent(Items, Path).Label : Title || null">
-			<span class="elemenx-menu-grabber" aria-hidden="true"></span>
-			<div class="elemenx-menu-title" *if="Title && !Path.length">{{Title}}</div>
+			<div class="elemenx-menu-head" *swipe="'y'" (swipemove)="SheetDragged" (swipe)="SheetSwiped" (swipecancel)="SheetSettled">
+				<span class="elemenx-menu-grabber" aria-hidden="true"></span>
+				<div class="elemenx-menu-title" *if="Title && !Path.length">{{Title}}</div>
+			</div>
 			<button class="elemenx-option elemenx-menu-back" type="button" *if="Path.length" (click)="SheetBack"><Icon Name="chevron-left" /><span class="elemenx-option-label">{{Parent(Items, Path).Label}}</span></button>
 			<div class="elemenx-menu-entry" *for="item of Level(Items, Path)" *key="item.ID || item.Label || item.Group || '#' + $index">
 				<div class="elemenx-popup-separator" role="separator" *if="item.Separator"></div>

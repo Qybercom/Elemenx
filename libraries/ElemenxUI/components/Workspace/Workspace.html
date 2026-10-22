@@ -1,17 +1,31 @@
-<div class="elemenx-screen elemenx-workspace" [class.ribbon]="Variant === 'ribbon'">
+<div class="elemenx-screen elemenx-workspace" [class.ribbon]="Variant === 'ribbon'" [class.customizing]="!!Customize && Customize !== 'false'">
 	<div class="elemenx-container elemenx-workspace-header elemenx-layout-area"><slot name="header"></slot></div>
 	<div class="elemenx-column elemenx-workspace-ribbon elemenx-layout-area"><slot name="ribbon"></slot></div>
 	<div class="elemenx-container elemenx-workspace-band top elemenx-layout-area"><slot name="top-stripe"></slot></div>
 	<div class="elemenx-container fill elemenx-workspace-body">
-		<div class="elemenx-column elemenx-workspace-stripe left elemenx-layout-area"><slot name="left-stripe"></slot></div>
-		<div class="elemenx-column elemenx-workspace-panel left elemenx-layout-area" data-panel="left" *resizable="{Edges: 'right', MinWidth: 160, MaxWidth: 640}" (resizeend)="Resized"><slot name="left"></slot></div>
+		<div class="elemenx-column elemenx-workspace-stripe left elemenx-layout-area">
+			<slot name="left-stripe"></slot>
+			<span class="elemenx-workspace-dock" data-area="left" *droppable="{Accept: ['workspace-tool'], Sort: 'vertical', Disabled: !Customize || Customize === 'false'}" (dropped)="Docked">
+				<button class="elemenx-workspace-tool-button" type="button" *for="tool of ToolsIn('left', Tools, Layout)" *key="tool.ID" [attribute.data-tool]="tool.ID" [attribute.title]="tool.Title" [attribute.aria-label]="tool.Title" [attribute.aria-pressed]="String(OpenIn('left', Tools, Layout) === tool.ID)" *badge="tool.Badge" *draggable="{Data: tool.ID, Type: 'workspace-tool', Disabled: !Customize || Customize === 'false'}" (click)="Toggled"><Icon [name]="tool.Icon" /></button>
+			</span>
+			<span class="elemenx-workspace-dock bottom" data-area="bottom" *droppable="{Accept: ['workspace-tool'], Sort: 'vertical', Disabled: !Customize || Customize === 'false'}" (dropped)="Docked">
+				<button class="elemenx-workspace-tool-button" type="button" *for="tool of ToolsIn('bottom', Tools, Layout)" *key="tool.ID" [attribute.data-tool]="tool.ID" [attribute.title]="tool.Title" [attribute.aria-label]="tool.Title" [attribute.aria-pressed]="String(OpenIn('bottom', Tools, Layout) === tool.ID)" *badge="tool.Badge" *draggable="{Data: tool.ID, Type: 'workspace-tool', Disabled: !Customize || Customize === 'false'}" (click)="Toggled"><Icon [name]="tool.Icon" /></button>
+			</span>
+		</div>
+		<div class="elemenx-column elemenx-workspace-panel left elemenx-layout-area" data-panel="left" *resizable="{Edges: 'right', MinWidth: 160, MaxWidth: 640}" [style.width]="SizeOf('left', Layout)" (resizeend)="Resized" (elemenx-tool-close)="ToolClosed"><slot name="left"></slot><span class="elemenx-workspace-tools" *mount="Mounted('left', Tools, Layout)"></span></div>
 		<div class="elemenx-column fill elemenx-workspace-center">
 			<div class="elemenx-column fill elemenx-workspace-main"><slot name="main"></slot></div>
-			<div class="elemenx-column elemenx-workspace-panel bottom elemenx-layout-area" data-panel="bottom" *resizable="{Edges: 'top', MinHeight: 80, MaxHeight: 640}" (resizeend)="Resized"><slot name="bottom"></slot></div>
+			<div class="elemenx-column elemenx-workspace-panel bottom elemenx-layout-area" data-panel="bottom" *resizable="{Edges: 'top', MinHeight: 80, MaxHeight: 640}" [style.height]="SizeOf('bottom', Layout)" (resizeend)="Resized" (elemenx-tool-close)="ToolClosed"><slot name="bottom"></slot><span class="elemenx-workspace-tools" *mount="Mounted('bottom', Tools, Layout)"></span></div>
 		</div>
-		<div class="elemenx-column elemenx-workspace-panel right elemenx-layout-area" data-panel="right" *resizable="{Edges: 'left', MinWidth: 160, MaxWidth: 640}" (resizeend)="Resized"><slot name="right"></slot></div>
-		<div class="elemenx-column elemenx-workspace-stripe right elemenx-layout-area"><slot name="right-stripe"></slot></div>
+		<div class="elemenx-column elemenx-workspace-panel right elemenx-layout-area" data-panel="right" *resizable="{Edges: 'left', MinWidth: 160, MaxWidth: 640}" [style.width]="SizeOf('right', Layout)" (resizeend)="Resized" (elemenx-tool-close)="ToolClosed"><slot name="right"></slot><span class="elemenx-workspace-tools" *mount="Mounted('right', Tools, Layout)"></span></div>
+		<div class="elemenx-column elemenx-workspace-stripe right elemenx-layout-area">
+			<slot name="right-stripe"></slot>
+			<span class="elemenx-workspace-dock" data-area="right" *droppable="{Accept: ['workspace-tool'], Sort: 'vertical', Disabled: !Customize || Customize === 'false'}" (dropped)="Docked">
+				<button class="elemenx-workspace-tool-button" type="button" *for="tool of ToolsIn('right', Tools, Layout)" *key="tool.ID" [attribute.data-tool]="tool.ID" [attribute.title]="tool.Title" [attribute.aria-label]="tool.Title" [attribute.aria-pressed]="String(OpenIn('right', Tools, Layout) === tool.ID)" *badge="tool.Badge" *draggable="{Data: tool.ID, Type: 'workspace-tool', Disabled: !Customize || Customize === 'false'}" (click)="Toggled"><Icon [name]="tool.Icon" /></button>
+			</span>
+		</div>
 	</div>
 	<div class="elemenx-container elemenx-workspace-band bottom elemenx-layout-area"><slot name="bottom-stripe"></slot></div>
 	<div class="elemenx-container elemenx-workspace-status elemenx-layout-area"><slot name="status"></slot></div>
+	<span class="elemenx-workspace-sources" hidden><slot name="tools"></slot></span>
 </div>

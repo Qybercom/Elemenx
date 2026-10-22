@@ -1,0 +1,74 @@
+<!-- generated -->
+# Menus
+
+The items of a menu declared in a template with MenuItem (Menu and ContextMenu use it). Read(container) returns the items its MenuItems declare, nested ones as Items: [{ID, Label, Icon, Shortcut, Disabled, Danger, Checked, Separator, Group, Items, Source}], Source the declaration. Watch(container, callback) calls back with the items again whenever a declaration inside comes, goes or changes, and returns the function that stops it. Pick(item) tells the MenuItem of a declared item that it was chosen (its select).
+
+## Methods
+
+- `Read(container)`
+- `Watch(container, callback)`
+- `Pick(item)`
+
+## Example
+
+```example
+<div class="docs-menu-source" hidden>
+	<MenuItem ID="new" Label="New" Icon="add" Shortcut="Ctrl+N" />
+	<MenuItem ID="export" Label="Export" Icon="download" [disabled]="Locked">
+		<MenuItem ID="pdf" Label="PDF" />
+		<MenuItem ID="png" Label="PNG" />
+	</MenuItem>
+	<MenuItem Separator="true" />
+	<MenuItem ID="delete" Label="Delete" Icon="delete" Danger="true" />
+</div>
+<span class="elemenx-popup-anchor">
+	<Button Label="The menu read from them" Icon="menu" (click)="Toggle" />
+	<MenuList [items]="Items" [open]="Open" (select)="Picked" (dismiss)="Closed" />
+</span>
+<Toggle Label="Lock Export (the declaration changes; Watch reads it again)" [checked]="Locked" (change)="Lock" />
+<pre class="elemenx-code">{{Read}}</pre>
+<script>
+({
+	Items: [],
+	Read: '',
+	Open: false,
+	Locked: false,
+
+	$OnReady: function () {
+		var self = this;
+
+		this.Stop = this.$Service('Menus').Watch(this.$Element().querySelector('.docs-menu-source'), function (items) {
+			self.Items = items;
+			self.Read = JSON.stringify(items.map(function (item) {
+				return item.Separator ? {Separator: true} : {ID: item.ID, Label: item.Label, Disabled: !!item.Disabled, Items: (item.Items || []).map(function (child) {
+					return child.ID;
+				})};
+			}), null, 2);
+		});
+	},
+
+	$OnDestroy: function () {
+		if (this.Stop)
+			this.Stop();
+	},
+
+	Toggle: function () {
+		this.Open = !this.Open;
+	},
+
+	Closed: function () {
+		this.Open = false;
+	},
+
+	Lock: function (value) {
+		this.Locked = value;
+	},
+
+	Picked: function (item) {
+		this.Open = false;
+		this.$Service('Menus').Pick(item);
+		this.Read = 'Picked: ' + item.ID;
+	}
+})
+</script>
+```

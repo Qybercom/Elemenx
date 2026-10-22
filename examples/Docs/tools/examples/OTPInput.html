@@ -1,0 +1,15 @@
+<Field Label="The code from the message" [hint]="Note"><OTPInput Length="6" Group="3" (complete)="Completed" (input)="Typed" /></Field>
+<Field Label="A key, masked"><OTPInput Length="8" Variant="single" Pattern="alphanumeric" Case="upper" Masked="true" /></Field>
+<script>
+({
+	Note: 'Type or paste 123-456.',
+
+	Typed: function (value) {
+		this.Note = value.length + ' of 6';
+	},
+
+	Completed: function (value) {
+		this.Note = 'Checking ' + value + '...';
+	}
+})
+</script>

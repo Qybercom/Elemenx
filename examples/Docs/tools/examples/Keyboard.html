@@ -1,0 +1,20 @@
+<RadioGroup Variant="segmented" Label="Second layout" [options]="Layouts" [value]="Alternate" (change)="Chose" />
+<Keyboard Layout="compact" [alternate]="Alternate" [pressed]="Pressed" [marks]="{KeyW: true, KeyA: true, KeyS: true, KeyD: true, Space: true}" Live="true" Clickable="true" (press)="Press" />
+<p class="elemenx-text small muted">Press a key on the screen, or type while the page has the focus: {{Last}}</p>
+<Keyboard Layout="full" Size="small" [pressed]="['ControlLeft', 'ShiftLeft', 'KeyP']" Label="A hotkey" />
+<script>
+({
+	Pressed: [],
+	Last: '—',
+	Alternate: 'ru',
+	Layouts: [{Value: '', Label: 'none'}, {Value: 'ru', Label: 'ru'}, {Value: 'uk', Label: 'uk'}, {Value: 'el', Label: 'el'}, {Value: 'he', Label: 'he'}],
+
+	Chose: function (value) {
+		this.Alternate = value;
+	},
+
+	Press: function (event) {
+		this.Last = event.Label + ' (' + event.Code + ')';
+	}
+})
+</script>

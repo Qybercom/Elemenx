@@ -67,6 +67,23 @@
 	animation: elemenx-menu-sheet var(--elemenx-duration-slow) var(--elemenx-easing);
 }
 
+/* The top of the sheet: a finger drags the sheet down by it. */
+.elemenx-menu-head {
+	display: flex;
+	flex: none;
+	flex-direction: column;
+	min-height: 24px;
+}
+
+.elemenx-menu.sheet.dragging {
+	transition: none;
+	animation: none;
+}
+
+.elemenx-menu.sheet:not(.dragging) {
+	transition: transform var(--elemenx-duration) var(--elemenx-easing);
+}
+
 .elemenx-menu-grabber {
 	flex: none;
 	width: 40px;

@@ -1,0 +1,23 @@
+<RadioGroup Variant="segmented" [options]="Types" [value]="Type" (change)="Typed" />
+<Chart [type]="Type" [labels]="Labels" [series]="Series" Label="Visits and sign-ups" (hover)="Hovered" />
+<p class="elemenx-text small muted">{{Note}}</p>
+<script>
+({
+	Type: 'line',
+	Note: 'Point at the chart; press a name of the legend to hide its series.',
+	Types: [{Value: 'line', Label: 'Line'}, {Value: 'area', Label: 'Area'}, {Value: 'bar', Label: 'Bar'}, {Value: 'pie', Label: 'Pie'}, {Value: 'donut', Label: 'Donut'}],
+	Labels: ['W1', 'W2', 'W3', 'W4', 'W5', 'W6'],
+	Series: [
+		{Name: 'Visits', Values: [120, 132, 101, 154, 190, 230]},
+		{Name: 'Sign-ups', Values: [12, 18, 9, 21, 30, 41]}
+	],
+
+	Typed: function (value) {
+		this.Type = value;
+	},
+
+	Hovered: function (event) {
+		this.Note = 'Week ' + event.Label;
+	}
+})
+</script>

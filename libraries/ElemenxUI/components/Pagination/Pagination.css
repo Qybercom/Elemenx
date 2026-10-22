@@ -1,5 +1,7 @@
+/* On a narrow screen the parts of the pagination wrap rather than leave the page. */
 .elemenx-pagination {
 	display: flex;
+	flex-wrap: wrap;
 	align-items: center;
 	gap: 4px;
 }

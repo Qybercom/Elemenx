@@ -1,0 +1,38 @@
+<Steps [items]="Items" [active]="[Items[Index].ID]" [done]="Done" Clickable="true" (select)="Selected" />
+<div class="elemenx-container" style="gap: 8px;">
+	<Button Label="Back" Icon="arrow-left" [disabled]="Index === 0" (click)="Back" />
+	<Button Label="Next" Variant="primary" [disabled]="Index === Items.length - 1" (click)="Next" />
+</div>
+<Steps Direction="vertical" [items]="[{ID: 'a', Label: 'Ordered', Description: 'Monday, 10:42', Status: 'done'}, {ID: 'b', Label: 'Shipped', Description: 'Tuesday', Status: 'done'}, {ID: 'c', Label: 'Held at customs', Status: 'error'}, {ID: 'd', Label: 'Delivered'}]" />
+<script>
+({
+	Index: 1,
+	Items: [{ID: 'cart', Label: 'Cart', Icon: 'cart'}, {ID: 'address', Label: 'Address'}, {ID: 'pay', Label: 'Payment'}, {ID: 'done', Label: 'Done'}],
+	Done: ['cart'],
+
+	$OnCreate: function () {
+		this.Mark();
+	},
+
+	Mark: function () {
+		this.Done = this.Items.slice(0, this.Index).map(function (item) {
+			return item.ID;
+		});
+	},
+
+	Back: function () {
+		this.Index--;
+		this.Mark();
+	},
+
+	Next: function () {
+		this.Index++;
+		this.Mark();
+	},
+
+	Selected: function (item) {
+		this.Index = this.Items.indexOf(item);
+		this.Mark();
+	}
+})
+</script>

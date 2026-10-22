@@ -1,0 +1,31 @@
+<svg class="elemenx-icon" width="32" height="32" *glyph="Ready ? '#elemenx-icon-save' : ''"></svg>
+<svg class="elemenx-icon" width="32" height="32" *glyph="Ready ? '#elemenx-icon-' + Name : ''" style="color: var(--elemenx-accent);"></svg>
+<Select [options]="[{Value: 'star', Label: 'star'}, {Value: 'heart', Label: 'heart'}, {Value: 'trophy', Label: 'trophy'}]" [value]="Name" (change)="Chose" />
+<p class="elemenx-text small muted">The symbols are those of the page: the reference waits for Icons.Ready(''), as Icon does, and draws once the sprite of the library is in.</p>
+<script>
+({
+	Name: 'star',
+	Ready: false,
+
+	$OnCreate: function () {
+		var self = this;
+		var icons = this.$Service('Icons');
+
+		this.Ready = icons.Ready('');
+
+		this.Listener = icons.OnChange(function () {
+			self.Ready = icons.Ready('');
+		});
+
+		icons.Load('');
+	},
+
+	$OnDestroy: function () {
+		this.$Service('Icons').OffChange(this.Listener);
+	},
+
+	Chose: function (value) {
+		this.Name = value;
+	}
+})
+</script>

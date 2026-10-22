@@ -3,9 +3,14 @@
  * presses on a screen. Layout: 'full' (with the number pad), 'tkl' (without it) or 'compact' (the main block alone).
  * Keys are named by their code (KeyboardEvent.code: KeyA, Digit1, ShiftLeft, ArrowUp, Numpad7...).
  * - Pressed: the codes shown pressed; Live also shows the keys held on the keyboard of the user while the page has the
- *   focus (class held: a key that goes down or up changes its own button, not the whole keyboard). Marks: {code: class} marks keys (a hotkey, a group of keys of a game), true for the mark of the theme.
+ *   focus (class held: a key that goes down or up changes its own button, not the whole keyboard), but for the keys a
+ *   control in the focus takes for itself (a Piano that plays them, a hotkey: they prevent the default of the key). Marks: {code: class} marks keys (a hotkey, a group of keys of a game), true for the mark of the theme.
  * - Labels: {code: text} names keys of their own; Native names the keys of characters as the keyboard layout of the
  *   user writes them (navigator.keyboard, Chrome and Edge), US English otherwise.
+ * - Alternate: a second layout on the keys of characters, as on the keyboards of countries with another alphabet: the
+ *   first one large in the top left corner of a key, the second one smaller in its bottom right corner. A name of a
+ *   layout of the Library ('ru' Russian, 'uk' Ukrainian, 'el' Greek, 'he' Hebrew), 'native' (the layout of the user,
+ *   as Native reads it), or {code: text} for any other.
  * - Clickable: a press of a key emits press ({Code, Label}); a key of the screen keyboard is a button.
  */
 Elemenx.Component('Keyboard', {
@@ -16,6 +21,7 @@ Elemenx.Component('Keyboard', {
 	Marks: {},
 	Labels: {},
 	Native: false,
+	Alternate: '',
 	Live: false,
 	Clickable: false,
 	Size: 'medium',
@@ -125,6 +131,19 @@ Elemenx.Component('Keyboard', {
 			return entry.Label;
 		};
 
+		/* The second name of a key of characters under Alternate, '' for none (or the same as the first). */
+		this.Second = function (entry, alternate, map) {
+			var names = alternate === 'native' ? map : typeof alternate === 'string' ? self.Layouts[alternate] : alternate;
+			var text = entry.Char && names && names[entry.Code];
+			if (!text)
+				return '';
+
+			/* The layout of the user names its characters in lower case; the keys show them as they are printed. */
+			text = alternate === 'native' ? String(text).toUpperCase() : String(text);
+
+			return text === self.Name(entry, self.Labels, self.Map) ? '' : text;
+		};
+
 		this.Down = function (code, pressed) {
 			return (pressed || []).indexOf(code) !== -1;
 		};
@@ -159,8 +178,9 @@ Elemenx.Component('Keyboard', {
 			key.setAttribute('aria-pressed', String(down || self.Down(code, self.Pressed)));
 		};
 
+		/* A key a control in the focus took for itself (it prevented the default of the key) is the control's, not shown. */
 		this.KeyDown = function (event) {
-			if (!self.Live || !/^[A-Za-z0-9]+$/.test(event.code || '') || held.indexOf(event.code) !== -1) return;
+			if (!self.Live || event.defaultPrevented || !/^[A-Za-z0-9]+$/.test(event.code || '') || held.indexOf(event.code) !== -1) return;
 
 			self.Hold(event.code, true);
 		};
@@ -179,7 +199,7 @@ Elemenx.Component('Keyboard', {
 
 		this.Listen();
 
-		if (this.Native && navigator.keyboard && typeof navigator.keyboard.getLayoutMap === 'function') {
+		if ((this.Native || this.Alternate === 'native') && navigator.keyboard && typeof navigator.keyboard.getLayoutMap === 'function') {
 			navigator.keyboard.getLayoutMap().then(function (map) {
 				var names = {};
 
@@ -207,22 +227,31 @@ Elemenx.Component('Keyboard', {
 	},
 
 	Listen: function () {
-		document.addEventListener('keydown', this.KeyDown, true);
+		document.addEventListener('keydown', this.KeyDown);
 		document.addEventListener('keyup', this.KeyUp, true);
 		window.addEventListener('blur', this.Blurred);
 	},
 
 	Unlisten: function () {
-		document.removeEventListener('keydown', this.KeyDown, true);
+		document.removeEventListener('keydown', this.KeyDown);
 		document.removeEventListener('keyup', this.KeyUp, true);
 		window.removeEventListener('blur', this.Blurred);
 	},
 
+	/* The second layouts of the Library: the characters of the keys of letters and signs, by their codes, as printed on them. */
+	Layouts: {
+		ru: {Backquote: 'Ё', KeyQ: 'Й', KeyW: 'Ц', KeyE: 'У', KeyR: 'К', KeyT: 'Е', KeyY: 'Н', KeyU: 'Г', KeyI: 'Ш', KeyO: 'Щ', KeyP: 'З', BracketLeft: 'Х', BracketRight: 'Ъ', KeyA: 'Ф', KeyS: 'Ы', KeyD: 'В', KeyF: 'А', KeyG: 'П', KeyH: 'Р', KeyJ: 'О', KeyK: 'Л', KeyL: 'Д', Semicolon: 'Ж', Quote: 'Э', KeyZ: 'Я', KeyX: 'Ч', KeyC: 'С', KeyV: 'М', KeyB: 'И', KeyN: 'Т', KeyM: 'Ь', Comma: 'Б', Period: 'Ю', Slash: '.'},
+		uk: {Backquote: 'ʼ', KeyQ: 'Й', KeyW: 'Ц', KeyE: 'У', KeyR: 'К', KeyT: 'Е', KeyY: 'Н', KeyU: 'Г', KeyI: 'Ш', KeyO: 'Щ', KeyP: 'З', BracketLeft: 'Х', BracketRight: 'Ї', Backslash: 'Ґ', KeyA: 'Ф', KeyS: 'І', KeyD: 'В', KeyF: 'А', KeyG: 'П', KeyH: 'Р', KeyJ: 'О', KeyK: 'Л', KeyL: 'Д', Semicolon: 'Ж', Quote: 'Є', KeyZ: 'Я', KeyX: 'Ч', KeyC: 'С', KeyV: 'М', KeyB: 'И', KeyN: 'Т', KeyM: 'Ь', Comma: 'Б', Period: 'Ю', Slash: '.'},
+		el: {KeyQ: ';', KeyW: 'ς', KeyE: 'Ε', KeyR: 'Ρ', KeyT: 'Τ', KeyY: 'Υ', KeyU: 'Θ', KeyI: 'Ι', KeyO: 'Ο', KeyP: 'Π', KeyA: 'Α', KeyS: 'Σ', KeyD: 'Δ', KeyF: 'Φ', KeyG: 'Γ', KeyH: 'Η', KeyJ: 'Ξ', KeyK: 'Κ', KeyL: 'Λ', Semicolon: '΄', KeyZ: 'Ζ', KeyX: 'Χ', KeyC: 'Ψ', KeyV: 'Ω', KeyB: 'Β', KeyN: 'Ν', KeyM: 'Μ'},
+		he: {KeyQ: '/', KeyW: "'", KeyE: 'ק', KeyR: 'ר', KeyT: 'א', KeyY: 'ט', KeyU: 'ו', KeyI: 'ן', KeyO: 'ם', KeyP: 'פ', KeyA: 'ש', KeyS: 'ד', KeyD: 'ג', KeyF: 'כ', KeyG: 'ע', KeyH: 'י', KeyJ: 'ח', KeyK: 'ל', KeyL: 'ך', Semicolon: 'ף', Quote: ',', KeyZ: 'ז', KeyX: 'ס', KeyC: 'ב', KeyV: 'ה', KeyB: 'נ', KeyN: 'מ', KeyM: 'צ', Comma: 'ת', Period: 'ץ', Slash: '.'}
+	},
+
 	Press: function (event, node) {
 		var code = node.getAttribute('data-code');
+		var label = node.querySelector('.elemenx-keyboard-label');
 
 		if (!this.Clickable) return;
 
-		this.$Emit('press', {Code: code, Label: node.textContent.trim()});
+		this.$Emit('press', {Code: code, Label: (label || node).textContent.trim()});
 	}
 });

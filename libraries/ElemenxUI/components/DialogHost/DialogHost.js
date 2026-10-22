@@ -1,4 +1,7 @@
-/* Shows the confirmations and alerts of the Dialogs Service: one modal Dialog each, the last one on top. */
+/*
+ * Shows the confirmations and alerts of the Dialogs Service, one modal Dialog each, the last one on top: place one in
+ * the layout of the Application. Escape and a press on the backdrop dismiss a dialog unless it is not Dismissible.
+ */
 Elemenx.Component('DialogHost', {
 	$TemplateURL: 'DialogHost.html',
 	$StyleURL: 'DialogHost.css',

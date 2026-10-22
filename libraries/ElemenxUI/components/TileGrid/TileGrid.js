@@ -3,12 +3,20 @@
  * Groups: [{ID, Title, Tiles, Locked, Actions, Element, Render}]. A group header shows Actions ([{ID, Icon, Label,
  * Title, Run}], buttons that emit groupaction with {Group, Action} and call Run(group)) and custom content: Element
  * (a DOM node) or Render(container, group). A Locked group keeps its tiles and takes no others.
- * A tile is {ID, Title, Icon, Size (small 1x1, medium 2x2, wide 4x2, large 4x4), Row, Column, Color, Badge, Text,
- * Class, Locked, Element, Render}. Row and Column place the tile on the cells of its group (from 0); a tile without
+ * A tile is {ID, Title, Icon, Size (small 1x1, medium 2x2, wide 4x2, tall 2x4, large 4x4, xlarge 6x4), Width and
+ * Height (any number of cells, over Size), Row, Column, Color, Badge, Text, Class, Locked, Element, Render}. Row and Column place the tile on the cells of its group (from 0); a tile without
  * them takes the first free place. Element or Render(container, tile) replace the icon and the text with custom
  * content, Class adds classes, Locked keeps the tile in its place. Columns is the width of a group in cells; a group
- * may have its own Columns, and while Editable the handle on its right edge stretches it (pointer or arrow keys,
- * whole columns, from its widest tile up to MaxColumns), reported by change. A tile dragged past the right edge of a
+ * may have its own Columns and Rows (its least height), and while Editable the handles on its right edge, its bottom
+ * edge and its corner stretch it (pointer or arrow keys, whole cells, from its widest tile up to MaxColumns (0: no
+ * limit), from its lowest tile down), reported by change. Fit gives a group no more columns than the grid has room
+ * for: on a narrow screen the tiles that do not fit take free places below, and come back as it widens.
+ * Direction 'horizontal' puts the groups in one row, as on a start screen; Scroll makes the grid scroll on its own (give
+ * it a height), and a tile dragged to its edge scrolls it. On a touch screen a finger scrolls over the tiles, and a
+ * press held still takes a tile.
+ * Arrangement() returns the places of the tiles and the sizes of the groups ([{ID, Title, Columns, Rows, Tiles: [{ID,
+ * Row, Column, Size, Width, Height}]}]); Restore(arrangement) brings them back (tiles and groups it does not name stay
+ * as they are); Persist (a key) keeps the arrangement in the storage of the browser and restores it on the next visit. A tile dragged past the right edge of a
  * group widens it by a column after GrowDelay milliseconds there (the edge shows it), again while it stays.
  * Events: open (the tile, on click or Enter). Editable lets the user move tiles by dragging: the tile goes to the cell
  * under the top left corner of its ghost and pushes down the tiles in its way, while it moves, as the grid will look
@@ -30,6 +38,11 @@ Elemenx.Component('TileGrid', {
 	Editable: false,
 	Columns: 4,
 	MaxColumns: 12,
+	Fit: false,
+	Room: 0,
+	Direction: 'wrap',
+	Scroll: false,
+	Persist: '',
 	GrowDelay: 500,
 	Resizing: null,
 	Grown: null,
@@ -62,14 +75,66 @@ Elemenx.Component('TileGrid', {
 				self.End(true);
 		};
 
-		/* The width of a group in cells: its own Columns, or the Columns of the grid. */
-		this.ColumnsOf = function (group) {
-			return Number(group && group.Columns) || Number(self.Columns) || 4;
+		/* The width of a group in cells: its own Columns, or the Columns of the grid; with Fit, no more than there is room for. */
+		this.ColumnsOf = function (group, room) {
+			var columns = Number(group && group.Columns) || Number(self.Columns) || 4;
+
+			return room ? Math.max(1, Math.min(columns, room)) : columns;
+		};
+
+		/* The height of a group in cells: its Rows, or the rows its tiles take. */
+		this.RowsOf = function (group) {
+			return Math.max(Number(group && group.Rows) || 0, self.Bottom(group));
+		};
+
+		/* A tile dragged near an edge of a grid that scrolls scrolls it, a frame at a time. */
+		var edge = {Point: null, Frame: 0};
+
+		function scrolled () {
+			var root = self.$Element();
+			var point = edge.Point;
+			var rect;
+			var dx = 0;
+			var dy = 0;
+
+			edge.Frame = 0;
+
+			if (!self.Dragging || !point || !root) return;
+
+			rect = root.getBoundingClientRect();
+
+			if (root.scrollWidth > root.clientWidth)
+				dx = point.X < rect.left + 48 ? -1 : point.X > rect.right - 48 ? 1 : 0;
+
+			if (root.scrollHeight > root.clientHeight)
+				dy = point.Y < rect.top + 48 ? -1 : point.Y > rect.bottom - 48 ? 1 : 0;
+
+			if (!dx && !dy) return;
+
+			root.scrollLeft += dx * 12;
+			root.scrollTop += dy * 12;
+
+			edge.Frame = window.requestAnimationFrame(scrolled);
+		}
+
+		this.Edge = function (event) {
+			edge.Point = {X: event.clientX, Y: event.clientY};
+
+			if (!edge.Frame)
+				edge.Frame = window.requestAnimationFrame(scrolled);
+		};
+
+		this.EdgeStop = function () {
+			document.removeEventListener('pointermove', self.Edge, true);
+
+			window.cancelAnimationFrame(edge.Frame);
+
+			edge.Frame = 0;
 		};
 
 		/* The grid-area of a tile: its place in the layout of its group. */
 		this.Area = function (group, tile) {
-			var spot = self.Layout(group.Tiles, self.ColumnsOf(group)).filter(function (entry) {
+			var spot = self.Layout(group.Tiles, self.ColumnsOf(group, self.Room)).filter(function (entry) {
 				return String(entry.Tile.ID) === String(tile.ID);
 			})[0];
 
@@ -103,11 +168,34 @@ Elemenx.Component('TileGrid', {
 		this.Watcher.observe(sources, {subtree: true, childList: true, attributes: true});
 
 		this.Sync();
+
+		this.Load();
+
+		/* Fit: the room of the grid in columns of cells, as it resizes. */
+		if (typeof ResizeObserver === 'function') {
+			this.Measure = new ResizeObserver(function () {
+				var room = self.Fit && self.Fit !== 'false' ? Math.max(1, Math.floor((self.$Element().clientWidth + 8) / 56)) : 0;
+				if (room !== self.Room)
+					self.Room = room;
+			});
+
+			this.Measure.observe(this.$Element());
+		}
+
+		/* The arrangement is kept at every change, with Persist. */
+		this.$On('change', function () {
+			self.Save();
+		});
 	},
 
 	$OnDestroy: function () {
 		if (this.Watcher)
 			this.Watcher.disconnect();
+
+		if (this.Measure)
+			this.Measure.disconnect();
+
+		this.EdgeStop();
 
 		this.Unlisten();
 	},
@@ -183,9 +271,25 @@ Elemenx.Component('TileGrid', {
 
 	/* The cells of a tile in a group of columns: [columns, rows]. */
 	Span: function (tile, columns) {
-		var span = {small: [1, 1], medium: [2, 2], wide: [4, 2], large: [4, 4]}[tile.Size || 'medium'] || [2, 2];
+		var span = {small: [1, 1], medium: [2, 2], wide: [4, 2], tall: [2, 4], large: [4, 4], xlarge: [6, 4]}[tile.Size || 'medium'] || [2, 2];
+		var width = Number(tile.Width) > 0 ? Math.round(Number(tile.Width)) : span[0];
+		var height = Number(tile.Height) > 0 ? Math.round(Number(tile.Height)) : span[1];
 
-		return [Math.min(span[0], columns || 4), span[1]];
+		return [Math.min(width, columns || 4), height];
+	},
+
+	/* The most columns a group may have: MaxColumns, none for 0. */
+	Limit: function () {
+		var max = Number(this.MaxColumns);
+
+		return max === 0 && this.MaxColumns !== '' && this.MaxColumns !== null ? Infinity : max || 12;
+	},
+
+	/* The rows the tiles of a group take at its width. */
+	Bottom: function (group) {
+		return Math.max.apply(Math, [0].concat(this.Layout(group && group.Tiles, this.ColumnsOf(group, this.Room)).map(function (spot) {
+			return spot.Row + spot.Height;
+		})));
 	},
 
 	Overlaps: function (a, b) {
@@ -389,7 +493,7 @@ Elemenx.Component('TileGrid', {
 		if (!group)
 			return null;
 
-		columns = Math.max(this.Narrowest(group), Math.min(Number(this.MaxColumns) || 12, columns));
+		columns = Math.max(this.Narrowest(group), Math.min(this.Limit(), columns));
 
 		if (columns === this.ColumnsOf(group)) return null;
 
@@ -420,18 +524,46 @@ Elemenx.Component('TileGrid', {
 
 		node.setPointerCapture(event.pointerId);
 
-		this.Resizing = {ID: String(group.ID), X: event.clientX, Columns: this.ColumnsOf(group), Snapshot: this.Groups};
+		this.Resizing = {ID: String(group.ID), Edge: node.getAttribute('data-edge') || 'e', X: event.clientX, Y: event.clientY, Columns: this.ColumnsOf(group), Rows: this.RowsOf(group), Snapshot: this.Groups};
 	},
 
 	ResizeMove: function (event) {
 		var resizing = this.Resizing;
-		var groups;
+		var groups = resizing ? resizing.Snapshot : null;
 
 		if (!resizing) return;
 
-		groups = this.Widened(resizing.Snapshot, resizing.ID, resizing.Columns + Math.round((event.clientX - resizing.X) / 56));
+		if (resizing.Edge.indexOf('e') !== -1)
+			groups = this.Widened(groups, resizing.ID, resizing.Columns + Math.round((event.clientX - resizing.X) / 56)) || groups;
 
-		this.Groups = groups || resizing.Snapshot;
+		if (resizing.Edge.indexOf('s') !== -1)
+			groups = this.Heightened(groups, resizing.ID, resizing.Rows + Math.round((event.clientY - resizing.Y) / 56)) || groups;
+
+		this.Groups = groups;
+	},
+
+	/* Groups with the group id at least rows high (no lower than its tiles), or null when nothing changes. */
+	Heightened: function (base, id, rows) {
+		var index = this.GroupIndexIn(base, id);
+		var group = base[index];
+		var copy = {};
+		var key;
+
+		if (!group)
+			return null;
+
+		rows = Math.max(this.Bottom(group), rows);
+
+		if (rows === this.RowsOf(group)) return null;
+
+		for (key in group) {
+			if (Object.prototype.hasOwnProperty.call(group, key))
+				copy[key] = group[key];
+		}
+
+		copy.Rows = rows;
+
+		return base.slice(0, index).concat([copy], base.slice(index + 1));
 	},
 
 	ResizeEnd: function (event, node) {
@@ -449,14 +581,15 @@ Elemenx.Component('TileGrid', {
 
 	ResizeKey: function (event, node) {
 		var group = this.Groups[this.GroupIndex(node.getAttribute('data-group'))];
-		var step = {ArrowRight: 1, ArrowLeft: -1}[Elemenx.Locale.Key(event)];
+		var height = node.getAttribute('data-edge') === 's';
+		var step = (height ? {ArrowDown: 1, ArrowUp: -1} : {ArrowRight: 1, ArrowLeft: -1})[Elemenx.Locale.Key(event)];
 		var groups;
 
 		if (!group || !step) return;
 
 		event.preventDefault();
 
-		groups = this.Widened(this.Groups, group.ID, this.ColumnsOf(group) + step);
+		groups = height ? this.Heightened(this.Groups, group.ID, this.RowsOf(group) + step) : this.Widened(this.Groups, group.ID, this.ColumnsOf(group) + step);
 
 		if (!groups) return;
 
@@ -476,6 +609,7 @@ Elemenx.Component('TileGrid', {
 		document.addEventListener('pointerup', this.Released);
 		document.addEventListener('pointercancel', this.Cancelled);
 		document.addEventListener('keydown', this.Escaped, true);
+		document.addEventListener('pointermove', this.Edge, true);
 	},
 
 	/*
@@ -507,7 +641,7 @@ Elemenx.Component('TileGrid', {
 
 		if (!group) return;
 
-		columns = this.ColumnsOf(group);
+		columns = this.ColumnsOf(group, this.Room);
 		rect = cells.getBoundingClientRect();
 		row = Math.round((detail.ClientY - detail.OffsetY - rect.top) / 56);
 		column = Math.round((detail.ClientX - detail.OffsetX - rect.left) / 56);
@@ -516,7 +650,7 @@ Elemenx.Component('TileGrid', {
 		this.Last = {Detail: detail, Node: node};
 
 		/* The ghost reaches past the right edge: the group grows if it stays there. */
-		if (column + this.Span(found.Tile, Infinity)[0] > columns && columns < (Number(this.MaxColumns) || 12) && !group.Locked) this.Wait(String(group.ID));
+		if (column + this.Span(found.Tile, Infinity)[0] > columns && columns < this.Limit() && !group.Locked) this.Wait(String(group.ID));
 		else this.StopGrowing();
 
 		if (key === this.Target) return;
@@ -701,7 +835,7 @@ Elemenx.Component('TileGrid', {
 	Read: function (node) {
 		var content = node.ElemenxContent || node.querySelector('.elemenx-tile-source-content');
 		var tile = {Declared: true};
-		var names = ['ID', 'Title', 'Icon', 'Size', 'Row', 'Column', 'Color', 'Badge', 'Text', 'Class'];
+		var names = ['ID', 'Title', 'Icon', 'Size', 'Width', 'Height', 'Row', 'Column', 'Color', 'Badge', 'Text', 'Class'];
 
 		node.ElemenxContent = content;
 
@@ -709,7 +843,7 @@ Elemenx.Component('TileGrid', {
 			var value = node.getAttribute('data-' + name.toLowerCase());
 			if (value === null) return;
 
-			tile[name] = name === 'Row' || name === 'Column' ? Number(value) : value;
+			tile[name] = /^(Row|Column|Width|Height)$/.test(name) ? Number(value) : value;
 		});
 
 		tile.Locked = node.getAttribute('data-locked') === 'true';
@@ -729,11 +863,18 @@ Elemenx.Component('TileGrid', {
 				return tile.closest('.elemenx-tile-group-source') === node;
 			});
 
+			var actions = node.ElemenxActions || node.querySelector('.elemenx-tile-group-source-actions');
+
+			/* The actions of the slot actions: the header shows them (the node moves there, so it is kept). */
+			node.ElemenxActions = actions;
+
 			return {
 				ID: node.getAttribute('data-id'),
 				Title: node.getAttribute('data-title') || '',
 				Locked: node.getAttribute('data-locked') === 'true',
 				Columns: Number(node.getAttribute('data-columns')) || null,
+				Rows: Number(node.getAttribute('data-rows')) || null,
+				Element: actions && actions.querySelector('*') ? actions : null,
 				Declared: true,
 				Tiles: tiles.map(function (tile) {
 					return self.Read(tile);
@@ -805,8 +946,14 @@ Elemenx.Component('TileGrid', {
 				copy.Title = own.Title;
 				copy.Locked = own.Locked;
 
+				if (own.Element)
+					copy.Element = own.Element;
+
 				if (copy.Columns == null)
 					copy.Columns = own.Columns;
+
+				if (copy.Rows == null)
+					copy.Rows = own.Rows;
 
 				copy.Declared = true;
 			}
@@ -834,7 +981,7 @@ Elemenx.Component('TileGrid', {
 			})[0];
 
 			if (!target) {
-				target = {ID: entry.ID, Title: entry.Title, Locked: entry.Locked, Columns: entry.Columns, Declared: true, Tiles: []};
+				target = {ID: entry.ID, Title: entry.Title, Locked: entry.Locked, Columns: entry.Columns, Rows: entry.Rows, Element: entry.Element, Declared: true, Tiles: []};
 
 				groups.push(target);
 			}
@@ -848,6 +995,150 @@ Elemenx.Component('TileGrid', {
 		this.Groups = groups;
 	},
 
+	/* The places of the tiles and the sizes of the groups, to keep and to give back to Restore. */
+	Arrangement: function () {
+		return (this.Groups || []).map(function (group) {
+			return {
+				ID: group.ID,
+				Title: group.Title || '',
+				Columns: group.Columns || null,
+				Rows: group.Rows || null,
+				Tiles: group.Tiles.map(function (tile) {
+					var place = {ID: tile.ID, Row: tile.Row == null ? null : tile.Row, Column: tile.Column == null ? null : tile.Column, Size: tile.Size || 'medium'};
+
+					if (tile.Width)
+						place.Width = tile.Width;
+
+					if (tile.Height)
+						place.Height = tile.Height;
+
+					return place;
+				})
+			};
+		});
+	},
+
+	/*
+	 * Brings back an arrangement: its groups in its order (a group it names that is gone comes back with its Title), each
+	 * with the tiles it names at their places and sizes; the tiles and groups it does not name stay where they are.
+	 */
+	Restore: function (arrangement) {
+		var tiles = {};
+		var named = {};
+		var groups;
+
+		if (!Array.isArray(arrangement)) return;
+
+		(this.Groups || []).forEach(function (group) {
+			group.Tiles.forEach(function (tile) {
+				tiles[String(tile.ID)] = tile;
+			});
+		});
+
+		arrangement.forEach(function (group) {
+			(group.Tiles || []).forEach(function (place) {
+				if (tiles[String(place.ID)])
+					named[String(place.ID)] = true;
+			});
+		});
+
+		groups = arrangement.map(function (entry) {
+			var own = (this.Groups || []).filter(function (group) {
+				return String(group.ID) === String(entry.ID);
+			})[0];
+			var copy = {};
+			var key;
+
+			for (key in own || {}) {
+				if (Object.prototype.hasOwnProperty.call(own, key))
+					copy[key] = own[key];
+			}
+
+			copy.ID = entry.ID;
+			copy.Title = own ? own.Title : entry.Title || '';
+			copy.Columns = entry.Columns || null;
+			copy.Rows = entry.Rows || null;
+			copy.Tiles = (entry.Tiles || []).filter(function (place) {
+				return !!tiles[String(place.ID)];
+			}).map(function (place) {
+				var tile = tiles[String(place.ID)];
+				var moved = {};
+				var name;
+
+				for (name in tile) {
+					if (Object.prototype.hasOwnProperty.call(tile, name))
+						moved[name] = tile[name];
+				}
+
+				moved.Row = place.Row;
+				moved.Column = place.Column;
+				moved.Size = place.Size || tile.Size;
+				moved.Width = place.Width || null;
+				moved.Height = place.Height || null;
+
+				return moved;
+			}).concat(own ? own.Tiles.filter(function (tile) {
+				return !named[String(tile.ID)];
+			}) : []);
+
+			return copy;
+		}, this);
+
+		(this.Groups || []).forEach(function (group) {
+			if (arrangement.some(function (entry) {
+				return String(entry.ID) === String(group.ID);
+			})) return;
+
+			group = Object.assign({}, group, {Tiles: group.Tiles.filter(function (tile) {
+				return !named[String(tile.ID)];
+			})});
+
+			if (group.Tiles.length || !group.Declared)
+				groups.push(group);
+		});
+
+		this.Groups = groups.filter(function (group) {
+			return group.Tiles.length || group.Declared || arrangement.some(function (entry) {
+				return String(entry.ID) === String(group.ID) && (entry.Tiles || []).length;
+			});
+		});
+	},
+
+	/* Persist: the arrangement from the storage of the browser, and into it. */
+	Load: function () {
+		var text;
+
+		if (!this.Persist) return;
+
+		try {
+			text = window.localStorage.getItem('elemenx-tile-grid:' + this.Persist);
+		}
+		catch (error) {
+			text = null;
+		}
+
+		if (text) {
+			/* A value of the storage that is no arrangement is left alone. */
+			try {
+				this.Restore(JSON.parse(text));
+			}
+			catch (error) {
+				return;
+			}
+		}
+	},
+
+	Save: function () {
+		if (!this.Persist) return;
+
+		try {
+			window.localStorage.setItem('elemenx-tile-grid:' + this.Persist, JSON.stringify(this.Arrangement()));
+		}
+		catch (error) {
+			return;
+		}
+	},
+
 	/* Ends a drag: a cancel restores the groups, a drop removes the groups it emptied and reports the change. */
 	End: function (cancel) {
 		var snapshot = this.Snapshot;
@@ -857,6 +1148,8 @@ Elemenx.Component('TileGrid', {
 		var group;
 
 		this.Unlisten();
+
+		this.EdgeStop();
 
 		if (!this.Dragging) return;
 

@@ -1,5 +1,7 @@
 /*
- * Value is the international number: "+" with the dialling code and the local digits ("+79991234567").
+ * Value is the international number: "+" with the dialling code and the local digits ("+79991234567"). The field shows
+ * it in the country of Country, or, when the code of that country does not start it, in the country its code names
+ * (Value "+447911123456" shows the United Kingdom whatever Country says).
  * Countries defaults to every country of the Countries Service, named in Locale and sorted by code; it may be replaced by
  * [{Code, Name, Dial, Mask}], where Mask describes the national part (# is a digit).
  * Guide keeps the whole template visible ('+7 (99_) ___-__-__'); Backspace 'skip' moves over a separator instead of
@@ -26,6 +28,8 @@ Elemenx.Component('PhoneInput', {
 	Backspace: 'delete',
 
 	$OnCreate: function () {
+		var self = this;
+
 		if (!this.Countries)
 			this.Countries = this.$Service('Countries').List(this.Locale);
 
@@ -39,6 +43,29 @@ Elemenx.Component('PhoneInput', {
 			}
 
 			return countries[0] || {Code: '', Name: '', Dial: '', Mask: ''};
+		};
+
+		/*
+		 * The country a number shows in: the one of code when its dialling code starts the number (or there is no
+		 * number), otherwise the country of the longest code that starts it (code first among equal ones).
+		 */
+		this.Effective = function (countries, code, value) {
+			var current = self.Current(countries, code);
+			var digits = String(value || '').replace(/\D/g, '');
+			var service = self.$Service('Countries');
+			var best = null;
+			var i = 0;
+
+			if (!digits || !current.Dial || digits.indexOf(current.Dial) === 0) return current;
+
+			while (i < countries.length) {
+				if (countries[i].Dial && digits.indexOf(countries[i].Dial) === 0 && service.Better(countries[i], best, code))
+					best = countries[i];
+
+				i++;
+			}
+
+			return best || current;
 		};
 
 		this.Local = function (value, country) {
@@ -65,9 +92,10 @@ Elemenx.Component('PhoneInput', {
 	},
 
 	Masked: function (event) {
-		var country = this.Current(this.Countries, this.Country);
+		var country = this.Effective(this.Countries, this.Country, this.Value);
 		var local = event.detail.Value;
 
+		this.Country = country.Code;
 		this.Value = local ? '+' + country.Dial + local : '';
 
 		this.$Emit('input', this.Value);
@@ -162,7 +190,7 @@ Elemenx.Component('PhoneInput', {
 
 	Choose: function (index, node) {
 		var list = this.Matching(this.Countries, this.Filter);
-		var previous = this.Current(this.Countries, this.Country);
+		var previous = this.Effective(this.Countries, this.Country, this.Value);
 		var next = list[index];
 		var root = node.closest('.elemenx-phone');
 		var local;

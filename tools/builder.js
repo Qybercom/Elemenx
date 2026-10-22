@@ -808,6 +808,10 @@ function libraryAssets (job, page) {
 
 		libraryResources(declaration.Directory, declaration.Directory, list, {});
 
+		/* ElemenxUI takes its files from next to elemenx.js; in one file they are embedded under this root, so it keeps it. */
+		if (declaration.Name === 'ElemenxUI')
+			resources.push('if (Elemenx.Library && Elemenx.Library("ElemenxUI")) Elemenx.Library("ElemenxUI").$Root = ' + JSON.stringify(root) + ';');
+
 		list.forEach(function (item) {
 			var relative = item.Relative.replace(/\\/g, '/');
 			var pack = common.packOf(packs, relative);

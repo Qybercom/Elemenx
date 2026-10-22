@@ -1,0 +1,16 @@
+.builder-inspector {
+	padding: 12px;
+}
+
+.builder-inspector-body {
+	gap: 12px;
+}
+
+.builder-inspector-head {
+	gap: 2px;
+	align-items: center;
+}
+
+.builder-inspector-title {
+	font-weight: var(--elemenx-font-weight-strong);
+}

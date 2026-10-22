@@ -1,0 +1,33 @@
+<span class="elemenx-input"><input class="elemenx-input-control" [(value)]="Query" placeholder="Search emoji" /></span>
+<Button Label="Search" Variant="primary" (click)="Search" />
+<p class="elemenx-title">{{Found}}</p>
+<p class="elemenx-text small muted">{{Note}}</p>
+<script>
+({
+	Query: 'cat',
+	Found: '',
+	Note: 'The data loads on the first use.',
+
+	Search: function () {
+		var self = this;
+		var emoji = this.$Service('Emoji');
+
+		emoji.Load(function (error) {
+			var found;
+
+			if (error) {
+				self.Note = error.message;
+
+				return;
+			}
+
+			found = emoji.Search(self.Query, 12);
+
+			self.Found = found.map(function (item) {
+				return item.Char;
+			}).join(' ');
+			self.Note = found.length ? found[0].Char + ' is ' + emoji.Name(found[0].Char) : 'Nothing found';
+		});
+	}
+})
+</script>

@@ -1,0 +1,5 @@
+<figure class="docs-example">
+	<div class="docs-example-result" [attribute.aria-label]="$T('docs.result')"></div>
+	<div class="elemenx-callout danger" *if="Failure">{{Failure}}</div>
+	<CodeView [value]="Code" Language="html" [label]="$T('docs.code')" />
+</figure>

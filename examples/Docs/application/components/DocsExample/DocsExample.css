@@ -1,0 +1,72 @@
+.docs-example {
+	display: flex;
+	flex-direction: column;
+	gap: 0;
+	margin: 0;
+	border: 1px solid var(--elemenx-border);
+	border-radius: 8px;
+	overflow: hidden;
+}
+
+/* The result above its code, on the surface of the page. */
+.docs-example-result {
+	padding: 20px;
+	background: var(--elemenx-surface);
+	overflow-x: auto;
+}
+
+.docs-example-root {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 12px;
+}
+
+.docs-example .elemenx-code-view {
+	border: 0;
+	border-top: 1px solid var(--elemenx-border);
+	border-radius: 0;
+}
+
+/* Blocks of an example take a row of their own; buttons and inline controls stand side by side. */
+.docs-example-root > p,
+.docs-example-root > ul,
+.docs-example-root > ol,
+.docs-example-root > pre,
+.docs-example-root > table,
+.docs-example-root > form,
+.docs-example-root > section,
+.docs-example-root > div,
+.docs-example-root > dl,
+.docs-example-root > figure,
+.docs-example-root > .elemenx-formula.display,
+.docs-example-root > h3,
+.docs-example-root > h4 {
+	flex-basis: 100%;
+	margin: 0;
+}
+
+/* A frame of a fixed height for the layouts that fill their container (Chat, Workspace, Dashboard...). */
+.docs-frame {
+	position: relative;
+	display: flex;
+	height: 360px;
+	overflow: hidden;
+	border: 1px solid var(--elemenx-border);
+	border-radius: var(--elemenx-radius-large);
+}
+
+.docs-frame.tall {
+	height: 480px;
+}
+
+.docs-frame > * {
+	flex: 1 1 auto;
+	min-width: 0;
+}
+
+.docs-stack {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}

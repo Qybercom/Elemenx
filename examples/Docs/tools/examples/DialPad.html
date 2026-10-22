@@ -1,0 +1,16 @@
+<DialPad [value]="Number" (input)="Typed" (call)="Called" />
+<p class="elemenx-text">{{Note}}</p>
+<script>
+({
+	Number: '',
+	Note: 'Type a number with the keys or the keyboard.',
+
+	Typed: function (value) {
+		this.Number = value;
+	},
+
+	Called: function (value) {
+		this.Note = 'Calling ' + value + '...';
+	}
+})
+</script>

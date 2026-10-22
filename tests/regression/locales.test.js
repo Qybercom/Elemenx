@@ -83,7 +83,7 @@ describe('ElemenxUI dictionaries', function () {
 	it('has a phrase for every key the components and services name, and no phrase nobody names', function () {
 		var english = dictionary('en');
 		var keys = used();
-		var dynamic = /^ui\.emojiPicker\.(group\.|tone\d)|^ui\.game\.(health|mana|experience|stamina|common|uncommon|rare|epic|legendary)$/;
+		var dynamic = /^ui\.presence\.|^ui\.forms\.|^ui\.emojiPicker\.(group\.|tone\d)|^ui\.game\.(health|mana|experience|stamina|common|uncommon|rare|epic|legendary)$/;
 
 		expect(Object.keys(keys).filter(function (key) {
 			return !(key in english);
@@ -97,7 +97,7 @@ describe('ElemenxUI dictionaries', function () {
 	it('lists the languages of the dictionaries in the default declaration of ElemenxUI in elemenx.js', function () {
 		var core = fs.readFileSync(path.resolve(process.cwd(), 'elemenx.js'), 'utf8');
 
-		expect(core).toContain("ElemenxUI: {$Root: '/libraries/ElemenxUI', $Locales: {URL: 'locales/{language}.json', Languages: ['en', 'ru']}}");
+		expect(core).toContain("ElemenxUI: {$Root: systemRoot(), $Locales: {URL: 'locales/{language}.json', Languages: ['en', 'ru']}}");
 		expect(fs.readFileSync(path.join(library, 'index.js'), 'utf8')).toContain("'locales/ru.json'");
 	});
 });

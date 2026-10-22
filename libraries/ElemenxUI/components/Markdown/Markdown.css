@@ -1,0 +1,5 @@
+/* The document takes the look of elemenx-document (index.css); the viewer adds no frame of its own. */
+.elemenx-markdown {
+	min-width: 0;
+	overflow-wrap: anywhere;
+}

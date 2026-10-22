@@ -1,0 +1,76 @@
+<!-- generated -->
+# Chat
+
+Раскладка чата на основе elemenx-screen, elemenx-container и elemenx-column. Слоты: sidebar (беседы), header, по умолчанию (сообщения), composer. SidebarOpen показывает боковую панель (чат шириной 600 пикселей и меньше, как на телефоне, прячет её); SidebarWidth меняется перетаскиванием. Список сообщений следует за новыми, пока читатель в конце, и стоит на месте, пока он листает историю. Selection — ID выбранных сообщений (события select у ChatMessage): пока они есть, вместо шапки стоит полоса с их числом, кнопкой, снимающей выбор (событие clear; также Escape), и слотом selection для действий над ними. Каждый ChatMessage получает от него [selecting] и [selected].
+
+## Свойства
+
+| Свойство | По умолчанию |
+| --- | --- |
+| `SidebarOpen` | `true` |
+| `SidebarWidth` | `280` |
+| `Selection` | `[]` |
+
+## События
+
+`clear`, `resize`
+
+## Слоты
+
+`sidebar`, `header`, `selection`, по умолчанию, `composer`
+
+## Пример
+
+```example
+<div class="docs-frame tall">
+	<Chat [selection]="Selection" (clear)="Cleared">
+		<div slot="sidebar" class="docs-stack">
+			<Input Shape="round" Icon="search" Placeholder="Search" Size="small" />
+			<div class="elemenx-chat-conversation active"><Avatar Name="Grace Hopper" Size="small" /><div><strong>Grace Hopper</strong><p class="elemenx-text small muted">The build is green.</p></div></div>
+			<div class="elemenx-chat-conversation"><Avatar Name="Alan Turing" Size="small" /><div><strong>Alan Turing</strong><p class="elemenx-text small muted">See you tomorrow</p></div></div>
+		</div>
+		<div slot="header" class="elemenx-container" style="gap: 8px;"><Avatar Name="Grace Hopper" Size="small" Status="online" /><strong>Grace Hopper</strong></div>
+		<Button slot="selection" Icon="delete" Title="Delete selected" Variant="ghost" (click)="Delete" />
+		<ChatMessage *for="message of Messages" *key="message.ID" [id]="message.ID" [author]="message.Author" [text]="message.Text" [time]="message.Time" [own]="!!message.Own" [status]="message.Status || ''" [selecting]="Selection.length > 0" [selected]="Selection.indexOf(message.ID) !== -1" (select)="Selected" />
+		<ChatComposer slot="composer" (send)="Send" />
+	</Chat>
+</div>
+<script>
+({
+	Selection: [],
+	Messages: [
+		{ID: 1, Author: 'Grace Hopper', Text: 'The build is green again.', Time: '10:02'},
+		{ID: 2, Author: 'Grace Hopper', Text: 'Can you check the new table?', Time: '10:03'},
+		{ID: 3, Author: 'Me', Text: 'Looks good, merging it now.', Time: '10:05', Own: true, Status: 'read'}
+	],
+
+	Send: function (text) {
+		var now = new Date();
+
+		this.Messages = this.Messages.concat([{ID: Date.now(), Author: 'Me', Text: text, Time: now.getHours() + ':' + ('0' + now.getMinutes()).slice(-2), Own: true, Status: 'sent'}]);
+	},
+
+	Selected: function (event) {
+		var id = event.ID;
+
+		this.Selection = this.Selection.indexOf(id) === -1 ? this.Selection.concat([id]) : this.Selection.filter(function (item) {
+			return item !== id;
+		});
+	},
+
+	Cleared: function () {
+		this.Selection = [];
+	},
+
+	Delete: function () {
+		var selection = this.Selection;
+
+		this.Messages = this.Messages.filter(function (message) {
+			return selection.indexOf(message.ID) === -1;
+		});
+
+		this.Selection = [];
+	}
+})
+</script>
+```

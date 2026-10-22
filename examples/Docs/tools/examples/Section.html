@@ -1,0 +1,17 @@
+<Section Title="Settings" Collapsible="true" [collapsed]="Folded" (toggle)="Toggled">
+	<Button slot="actions" Icon="refresh" Title="Reload" Size="small" Variant="ghost" />
+	<span slot="note" class="elemenx-text small muted">{{Folded ? 'folded' : 'open'}}</span>
+	<p class="elemenx-text">The body of the section: press the title to fold it.</p>
+</Section>
+<Section Title="Account" Icon="user" Note="Note with NotePlacement below: the caption goes under the header line." NotePlacement="below">
+	<p class="elemenx-text">A section that does not fold.</p>
+</Section>
+<script>
+({
+	Folded: false,
+
+	Toggled: function (value) {
+		this.Folded = value;
+	}
+})
+</script>

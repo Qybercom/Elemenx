@@ -17,5 +17,6 @@
 			</li>
 		</ul>
 	</div>
+	<div class="elemenx-code-editor-find" *if="Finding"><FindBar Autofocus="true" [query]="FindQuery" [count]="Found.length" [index]="Current" [canreplace]="!ReadOnly && !Disabled" [replacing]="FindReplacing" [label]="Label" (find)="BarFind" (next)="BarNext" (previous)="BarPrevious" (replace)="BarReplace" (replaceall)="BarReplaceAll" (close)="CloseFind" /></div>
 	<div class="elemenx-code-editor-hint" role="tooltip" *if="HintText" [attribute.style]="HintStyle">{{HintText}}</div>
 </div>

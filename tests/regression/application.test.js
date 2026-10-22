@@ -55,6 +55,14 @@ describe('Regression: Application public facade and ownership', function () {
 		expect(document.querySelector('.application-root').textContent).toBe('ready');
 	});
 
+	it('takes ElemenxUI from libraries/ElemenxUI next to elemenx.js, not from the site of the page', function () {
+		var script = Array.prototype.filter.call(document.scripts, function (element) {
+			return /elemenx(\.min)?\.js(\?|$)/.test(element.src);
+		})[0];
+
+		expect(Elemenx.Library('ElemenxUI').$Root).toBe(new URL('libraries/ElemenxUI', script.src.split('?')[0]).href);
+	});
+
 	it('skips unknown Libraries without blocking Application startup', function () {
 		var component = unique('UnknownLibraryRoot');
 		var name = unique('UnknownLibraryApplication');

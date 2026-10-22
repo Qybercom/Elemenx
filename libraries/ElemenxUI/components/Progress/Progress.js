@@ -1,6 +1,7 @@
 /*
- * Progress of a task. Value from 0 to Max; null shows an indeterminate progress. Variant: bar or ring.
- * Tone: accent, success, warning or danger. ShowValue prints the percent.
+ * The progress of a task. Value from 0 to Max (100); null shows a progress that does not know its end (a moving bar,
+ * a turning ring). Variant: bar or ring. Tone: accent, success, warning or danger. Label names it (shown above a bar,
+ * read by screen readers); ShowValue prints the percent. Size: small, medium or large.
  */
 Elemenx.Component('Progress', {
 	$TemplateURL: 'Progress.html',

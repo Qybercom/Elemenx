@@ -1,5 +1,5 @@
 /*
- * The card of a product: its Images (dots switch them) or Image, a Badge ('Sale', 'New'; BadgeVariant), the favorite
+ * The card of a product: its Images (dots switch them, and a swipe across on a touch screen) or Image, a Badge ('Sale', 'New'; BadgeVariant), the favorite
  * heart (Favorable, Favorite), Brand, Title, Rating (halves) and Reviews, Price and OldPrice in Currency, the Colors
  * ([{Value, Color, Label}]) and Sizes to choose (Color, Size), and the cart button (Cart, InCart). PriceStyle 'corner'
  * puts the price on the image, as a tile of the Metro style. Ratio is the shape of the image ('1:1' by default).
@@ -57,6 +57,16 @@ Elemenx.Component('ProductCard', {
 
 	Show: function (event, node) {
 		this.Shown = Number(node.getAttribute('data-index'));
+	},
+
+	/* A swipe across the image: the next one the way the finger went, round at the ends. */
+	Swiped: function (event) {
+		var count = this.Images && this.Images.length ? this.Images.length : this.Image ? 1 : 0;
+		var rtl = window.getComputedStyle(this.$Element()).direction === 'rtl';
+		var step = (event.detail.Direction === 'left') !== rtl ? 1 : -1;
+
+		if (count > 1)
+			this.Shown = ((this.Shown + step) % count + count) % count;
 	},
 
 	Star: function () {

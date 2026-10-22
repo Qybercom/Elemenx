@@ -1,0 +1,10 @@
+<Field Label="A city" [hint]="City || 'Type a few letters: moskva finds Москва too'"><CityInput Clearable="true" (change)="Changed" /></Field>
+<script>
+({
+	City: '',
+
+	Changed: function (city) {
+		this.City = city ? city.Name + ', ' + city.Country + ' · ' + city.TimeZone : '';
+	}
+})
+</script>

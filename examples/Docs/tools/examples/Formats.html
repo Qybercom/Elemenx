@@ -1,0 +1,19 @@
+<Field Label="IBAN" Hint="Shown in groups of four, checked by its country"><Input Preset="iban" Value="DE89370400440532013000" /></Field>
+<Field Label="Email"><Input Preset="email" Placeholder="you@example.com" /></Field>
+<Field Label="Postal code of Germany"><Input Preset="postal-code" Country="DE" /></Field>
+<ul class="elemenx-ul"><li *for="check of Checks" *key="check.Text">{{check.Name}} "{{check.Text}}" → {{check.Result}}</li></ul>
+<script>
+({
+	Checks: [],
+
+	$OnCreate: function () {
+		var formats = this.$Service('Formats');
+
+		this.Checks = [['email', ' Ada@Example.COM '], ['url', 'example.com/docs'], ['ipv4', '256.1.1.1'], ['decimal', '3,14']].map(function (pair) {
+			var result = formats.Check(pair[0], pair[1]);
+
+			return {Name: pair[0], Text: pair[1], Result: result.Valid ? 'valid: ' + result.Value : result.Message};
+		});
+	}
+})
+</script>

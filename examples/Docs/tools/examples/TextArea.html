@@ -1,0 +1,13 @@
+<Field Label="A message" [hint]="Text.length + ' / 200'"><TextArea Placeholder="Write something" Rows="3" MaxLength="200" [value]="Text" (input)="Typed" /></Field>
+<Field Label="Grows with its text"><TextArea AutoSize="true" Rows="1" Placeholder="Type several lines" /></Field>
+<Field Label="Resizes by the corner"><TextArea Resize="both" Rows="2" /></Field>
+<Field Label="Read only"><TextArea ReadOnly="true" Value="This text cannot change." Rows="1" /></Field>
+<script>
+({
+	Text: '',
+
+	Typed: function (value) {
+		this.Text = value;
+	}
+})
+</script>

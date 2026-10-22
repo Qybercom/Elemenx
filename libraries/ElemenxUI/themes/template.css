@@ -19,6 +19,7 @@
 [data-theme][data-theme='my-theme'] {
 	--elemenx-font: 'Segoe UI', Inter, Arial, sans-serif;
 	--elemenx-font-mono: Consolas, 'Cascadia Code', monospace;
+	--elemenx-font-math: 'Cambria Math', 'STIX Two Math', math, serif;
 	--elemenx-font-size-small: 12px;
 	--elemenx-font-size: 14px;
 	--elemenx-font-size-large: 16px;
@@ -48,6 +49,16 @@
 	--elemenx-overlay: rgba(0, 0, 0, 0.56);
 	--elemenx-overlay-soft: rgba(0, 0, 0, 0.24);
 	--elemenx-overlay-text: #ffffff;
+	--elemenx-badge-text: #ffffff;
+	--elemenx-avatar-text: #ffffff;
+	--elemenx-gamepad-face: #2a2d34;
+	--elemenx-gamepad-glyph: #ffffff;
+	--elemenx-gamepad-ring: #5b606b;
+	--elemenx-gamepad-green: #3fa34d;
+	--elemenx-gamepad-red: #d8453c;
+	--elemenx-gamepad-blue: #3d7be0;
+	--elemenx-gamepad-yellow: #e2a915;
+	--elemenx-gamepad-pink: #d873c1;
 	--elemenx-hairline: rgba(128, 128, 128, 0.32);
 	--elemenx-scrollbar: rgba(128, 128, 128, 0.44);
 	--elemenx-scrollbar-hover: rgba(128, 128, 128, 0.64);
@@ -114,6 +125,7 @@
 	--elemenx-block-title-spacing: normal;
 	--elemenx-block-title-transform: none;
 	--elemenx-block-tab-slant: 24px;
+	--elemenx-block-tab-edge: var(--elemenx-border);
 	--elemenx-properties-gap: 4px 16px;
 	--elemenx-properties-pair-gap: 24px;
 	--elemenx-property-gap: 12px;
@@ -178,7 +190,11 @@
 	--elemenx-game-frame-image: none;
 	--elemenx-game-blur: none;
 	--elemenx-game-decor: none;
-	--elemenx-game-decor-inset: 0;
+	--elemenx-game-decor-inset: 0px;
+	--elemenx-game-folder-line: 1px;
+	--elemenx-game-folder-slant: var(--elemenx-block-tab-slant);
+	--elemenx-game-folder-edge: var(--elemenx-border-strong);
+	--elemenx-game-folder-end: 0;
 	--elemenx-game-active: 0 0 0 0 transparent;
 	--elemenx-game-appear: elemenx-window-appear var(--elemenx-duration-slow) var(--elemenx-easing);
 	--elemenx-game-header: var(--elemenx-surface-raised);
@@ -262,6 +278,7 @@
 	--elemenx-game-section-gap: 6px;
 	--elemenx-game-section-padding: 0;
 	--elemenx-game-section-frame: 0;
+	--elemenx-game-section-edge: transparent;
 	--elemenx-game-section-title-margin: 0;
 	--elemenx-game-section-title-padding: 3px 8px;
 	--elemenx-game-heading: var(--elemenx-game-title);
@@ -380,6 +397,7 @@
 	--elemenx-block-title-spacing: normal;
 	--elemenx-block-title-transform: none;
 	--elemenx-block-tab-slant: 24px;
+	--elemenx-block-tab-edge: var(--elemenx-border);
 	--elemenx-properties-gap: 4px 16px;
 	--elemenx-properties-pair-gap: 24px;
 	--elemenx-property-gap: 12px;

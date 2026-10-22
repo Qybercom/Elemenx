@@ -1,0 +1,11 @@
+<Field Label="Card number" [hint]="State || 'Try 4242 4242 4242 4242'"><CardNumberInput (validate)="Validated" /></Field>
+<Field Label="A saved card" Hint="Concealed; the eye shows it"><CardNumberInput Value="5555555555554444" Conceal="xxxx ???? ???? xxxx" /></Field>
+<script>
+({
+	State: '',
+
+	Validated: function (result) {
+		this.State = (result.Brand || 'Unknown brand') + (result.Valid ? ', valid' : result.Complete ? ', not a valid number' : '');
+	}
+})
+</script>

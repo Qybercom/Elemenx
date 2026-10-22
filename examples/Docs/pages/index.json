@@ -1,0 +1,1378 @@
+{
+	"Sections": [
+		{
+			"ID": "guide",
+			"Title": {
+				"en": "Guide",
+				"ru": "Руководство"
+			},
+			"Pages": [
+				{
+					"ID": "start",
+					"Title": {
+						"en": "Getting started",
+						"ru": "Начало работы"
+					}
+				},
+				{
+					"ID": "applications",
+					"Title": {
+						"en": "Applications",
+						"ru": "Приложения"
+					}
+				},
+				{
+					"ID": "components",
+					"Title": {
+						"en": "Components",
+						"ru": "Компоненты"
+					}
+				},
+				{
+					"ID": "templates",
+					"Title": {
+						"en": "Templates",
+						"ru": "Шаблоны"
+					}
+				},
+				{
+					"ID": "reactivity",
+					"Title": {
+						"en": "State and reactivity",
+						"ru": "Состояние и реактивность"
+					}
+				},
+				{
+					"ID": "lifecycle",
+					"Title": {
+						"en": "Lifecycle",
+						"ru": "Жизненный цикл"
+					}
+				},
+				{
+					"ID": "directives",
+					"Title": {
+						"en": "Directives",
+						"ru": "Директивы"
+					}
+				},
+				{
+					"ID": "services",
+					"Title": {
+						"en": "Services",
+						"ru": "Сервисы"
+					}
+				},
+				{
+					"ID": "router",
+					"Title": {
+						"en": "Router",
+						"ru": "Маршрутизатор"
+					}
+				},
+				{
+					"ID": "guards",
+					"Title": {
+						"en": "Guards",
+						"ru": "Охранники маршрутов"
+					}
+				},
+				{
+					"ID": "locale",
+					"Title": {
+						"en": "Languages",
+						"ru": "Языки"
+					}
+				},
+				{
+					"ID": "forms",
+					"Title": {
+						"en": "Forms",
+						"ru": "Формы"
+					}
+				},
+				{
+					"ID": "styles",
+					"Title": {
+						"en": "Styles and shadow DOM",
+						"ru": "Стили и shadow DOM"
+					}
+				},
+				{
+					"ID": "cache",
+					"Title": {
+						"en": "Lazy rendering and cache",
+						"ru": "Ленивая отрисовка и кэш"
+					}
+				},
+				{
+					"ID": "resources",
+					"Title": {
+						"en": "Resources and bundles",
+						"ru": "Ресурсы и бандлы"
+					}
+				},
+				{
+					"ID": "library",
+					"Title": {
+						"en": "Libraries and ElemenxUI",
+						"ru": "Библиотеки и ElemenxUI"
+					}
+				},
+				{
+					"ID": "theming",
+					"Title": {
+						"en": "Themes",
+						"ru": "Темы"
+					}
+				},
+				{
+					"ID": "cli",
+					"Title": {
+						"en": "The CLI",
+						"ru": "CLI"
+					}
+				},
+				{
+					"ID": "build",
+					"Title": {
+						"en": "Builds",
+						"ru": "Сборки"
+					}
+				}
+			]
+		},
+		{
+			"ID": "network",
+			"Title": {
+				"en": "Network",
+				"ru": "Сеть"
+			},
+			"Pages": [
+				{
+					"ID": "overview",
+					"Title": {
+						"en": "Overview",
+						"ru": "Обзор"
+					}
+				},
+				{
+					"ID": "xhr",
+					"Title": {
+						"en": "XHR",
+						"ru": "XHR"
+					}
+				},
+				{
+					"ID": "stream",
+					"Title": {
+						"en": "Stream",
+						"ru": "Stream"
+					}
+				},
+				{
+					"ID": "longpolling",
+					"Title": {
+						"en": "LongPolling",
+						"ru": "LongPolling"
+					}
+				},
+				{
+					"ID": "sse",
+					"Title": {
+						"en": "SSE",
+						"ru": "SSE"
+					}
+				},
+				{
+					"ID": "websocket",
+					"Title": {
+						"en": "WebSocket",
+						"ru": "WebSocket"
+					}
+				},
+				{
+					"ID": "webrtc",
+					"Title": {
+						"en": "WebRTC",
+						"ru": "WebRTC"
+					}
+				},
+				{
+					"ID": "transfer",
+					"Title": {
+						"en": "Transfer",
+						"ru": "Transfer"
+					}
+				},
+				{
+					"ID": "metrics",
+					"Title": {
+						"en": "Metrics",
+						"ru": "Metrics"
+					}
+				},
+				{
+					"ID": "protocols",
+					"Title": {
+						"en": "Protocols",
+						"ru": "Протоколы"
+					}
+				},
+				{
+					"ID": "contexts",
+					"Title": {
+						"en": "Contexts",
+						"ru": "Контексты"
+					}
+				}
+			]
+		},
+		{
+			"ID": "data",
+			"Title": {
+				"en": "Data and messaging",
+				"ru": "Данные и обмен"
+			},
+			"Pages": [
+				{
+					"ID": "storage",
+					"Title": {
+						"en": "Storage",
+						"ru": "Хранилище"
+					}
+				},
+				{
+					"ID": "indexeddb",
+					"Title": {
+						"en": "IndexedDB",
+						"ru": "IndexedDB"
+					}
+				},
+				{
+					"ID": "events",
+					"Title": {
+						"en": "Events and pipes",
+						"ru": "События и конвейеры"
+					}
+				},
+				{
+					"ID": "messaging",
+					"Title": {
+						"en": "Messaging",
+						"ru": "Обмен сообщениями"
+					}
+				},
+				{
+					"ID": "webworker",
+					"Title": {
+						"en": "Web workers",
+						"ru": "Web Worker"
+					}
+				},
+				{
+					"ID": "serviceworker",
+					"Title": {
+						"en": "Service workers",
+						"ru": "Service Worker"
+					}
+				}
+			]
+		},
+		{
+			"ID": "components",
+			"Title": {
+				"en": "Components",
+				"ru": "Компоненты"
+			},
+			"Pages": [
+				{
+					"ID": "AchievementHost",
+					"Title": {
+						"en": "AchievementHost"
+					}
+				},
+				{
+					"ID": "Avatar",
+					"Title": {
+						"en": "Avatar"
+					}
+				},
+				{
+					"ID": "Block",
+					"Title": {
+						"en": "Block"
+					}
+				},
+				{
+					"ID": "Breadcrumbs",
+					"Title": {
+						"en": "Breadcrumbs"
+					}
+				},
+				{
+					"ID": "Button",
+					"Title": {
+						"en": "Button"
+					}
+				},
+				{
+					"ID": "ButtonGroup",
+					"Title": {
+						"en": "ButtonGroup"
+					}
+				},
+				{
+					"ID": "CVVInput",
+					"Title": {
+						"en": "CVVInput"
+					}
+				},
+				{
+					"ID": "Calendar",
+					"Title": {
+						"en": "Calendar"
+					}
+				},
+				{
+					"ID": "Card",
+					"Title": {
+						"en": "Card"
+					}
+				},
+				{
+					"ID": "CardExpiryInput",
+					"Title": {
+						"en": "CardExpiryInput"
+					}
+				},
+				{
+					"ID": "CardNumberInput",
+					"Title": {
+						"en": "CardNumberInput"
+					}
+				},
+				{
+					"ID": "Centered",
+					"Title": {
+						"en": "Centered"
+					}
+				},
+				{
+					"ID": "Chart",
+					"Title": {
+						"en": "Chart"
+					}
+				},
+				{
+					"ID": "Chat",
+					"Title": {
+						"en": "Chat"
+					}
+				},
+				{
+					"ID": "ChatComposer",
+					"Title": {
+						"en": "ChatComposer"
+					}
+				},
+				{
+					"ID": "ChatMessage",
+					"Title": {
+						"en": "ChatMessage"
+					}
+				},
+				{
+					"ID": "Checkbox",
+					"Title": {
+						"en": "Checkbox"
+					}
+				},
+				{
+					"ID": "CityInput",
+					"Title": {
+						"en": "CityInput"
+					}
+				},
+				{
+					"ID": "CodeEditor",
+					"Title": {
+						"en": "CodeEditor"
+					}
+				},
+				{
+					"ID": "CodeView",
+					"Title": {
+						"en": "CodeView"
+					}
+				},
+				{
+					"ID": "ColorInput",
+					"Title": {
+						"en": "ColorInput"
+					}
+				},
+				{
+					"ID": "Combobox",
+					"Title": {
+						"en": "Combobox"
+					}
+				},
+				{
+					"ID": "CommandPalette",
+					"Title": {
+						"en": "CommandPalette"
+					}
+				},
+				{
+					"ID": "CommentCard",
+					"Title": {
+						"en": "CommentCard"
+					}
+				},
+				{
+					"ID": "ContextMenu",
+					"Title": {
+						"en": "ContextMenu"
+					}
+				},
+				{
+					"ID": "CurrencySelect",
+					"Title": {
+						"en": "CurrencySelect"
+					}
+				},
+				{
+					"ID": "Dashboard",
+					"Title": {
+						"en": "Dashboard"
+					}
+				},
+				{
+					"ID": "DashboardWidget",
+					"Title": {
+						"en": "DashboardWidget"
+					}
+				},
+				{
+					"ID": "DateInput",
+					"Title": {
+						"en": "DateInput"
+					}
+				},
+				{
+					"ID": "DateRangeInput",
+					"Title": {
+						"en": "DateRangeInput"
+					}
+				},
+				{
+					"ID": "DialPad",
+					"Title": {
+						"en": "DialPad"
+					}
+				},
+				{
+					"ID": "Dialog",
+					"Title": {
+						"en": "Dialog"
+					}
+				},
+				{
+					"ID": "DialogHost",
+					"Title": {
+						"en": "DialogHost"
+					}
+				},
+				{
+					"ID": "Drawer",
+					"Title": {
+						"en": "Drawer"
+					}
+				},
+				{
+					"ID": "EmojiPicker",
+					"Title": {
+						"en": "EmojiPicker"
+					}
+				},
+				{
+					"ID": "EmptyState",
+					"Title": {
+						"en": "EmptyState"
+					}
+				},
+				{
+					"ID": "ExpressionPicker",
+					"Title": {
+						"en": "ExpressionPicker"
+					}
+				},
+				{
+					"ID": "Field",
+					"Title": {
+						"en": "Field"
+					}
+				},
+				{
+					"ID": "FileIcon",
+					"Title": {
+						"en": "FileIcon"
+					}
+				},
+				{
+					"ID": "FileUpload",
+					"Title": {
+						"en": "FileUpload"
+					}
+				},
+				{
+					"ID": "FindBar",
+					"Title": {
+						"en": "FindBar"
+					}
+				},
+				{
+					"ID": "Form",
+					"Title": {
+						"en": "Form"
+					}
+				},
+				{
+					"ID": "Formula",
+					"Title": {
+						"en": "Formula"
+					}
+				},
+				{
+					"ID": "Gallery",
+					"Title": {
+						"en": "Gallery"
+					}
+				},
+				{
+					"ID": "GameBar",
+					"Title": {
+						"en": "GameBar"
+					}
+				},
+				{
+					"ID": "GameDialogue",
+					"Title": {
+						"en": "GameDialogue"
+					}
+				},
+				{
+					"ID": "GameHud",
+					"Title": {
+						"en": "GameHud"
+					}
+				},
+				{
+					"ID": "GameInventory",
+					"Title": {
+						"en": "GameInventory"
+					}
+				},
+				{
+					"ID": "GameItemCard",
+					"Title": {
+						"en": "GameItemCard"
+					}
+				},
+				{
+					"ID": "GameKey",
+					"Title": {
+						"en": "GameKey"
+					}
+				},
+				{
+					"ID": "GameLeaderboard",
+					"Title": {
+						"en": "GameLeaderboard"
+					}
+				},
+				{
+					"ID": "GameMenu",
+					"Title": {
+						"en": "GameMenu"
+					}
+				},
+				{
+					"ID": "GameMinimap",
+					"Title": {
+						"en": "GameMinimap"
+					}
+				},
+				{
+					"ID": "GameQuests",
+					"Title": {
+						"en": "GameQuests"
+					}
+				},
+				{
+					"ID": "GameSlot",
+					"Title": {
+						"en": "GameSlot"
+					}
+				},
+				{
+					"ID": "GameTabs",
+					"Title": {
+						"en": "GameTabs"
+					}
+				},
+				{
+					"ID": "Icon",
+					"Title": {
+						"en": "Icon"
+					}
+				},
+				{
+					"ID": "Image",
+					"Title": {
+						"en": "Image"
+					}
+				},
+				{
+					"ID": "Input",
+					"Title": {
+						"en": "Input"
+					}
+				},
+				{
+					"ID": "Keyboard",
+					"Title": {
+						"en": "Keyboard"
+					}
+				},
+				{
+					"ID": "Knob",
+					"Title": {
+						"en": "Knob"
+					}
+				},
+				{
+					"ID": "Markdown",
+					"Title": {
+						"en": "Markdown"
+					}
+				},
+				{
+					"ID": "MasterDetail",
+					"Title": {
+						"en": "MasterDetail"
+					}
+				},
+				{
+					"ID": "Menu",
+					"Title": {
+						"en": "Menu"
+					}
+				},
+				{
+					"ID": "MenuItem",
+					"Title": {
+						"en": "MenuItem"
+					}
+				},
+				{
+					"ID": "MenuList",
+					"Title": {
+						"en": "MenuList"
+					}
+				},
+				{
+					"ID": "Meter",
+					"Title": {
+						"en": "Meter"
+					}
+				},
+				{
+					"ID": "Mixer",
+					"Title": {
+						"en": "Mixer"
+					}
+				},
+				{
+					"ID": "MixerChannel",
+					"Title": {
+						"en": "MixerChannel"
+					}
+				},
+				{
+					"ID": "MoneyInput",
+					"Title": {
+						"en": "MoneyInput"
+					}
+				},
+				{
+					"ID": "MultiSelect",
+					"Title": {
+						"en": "MultiSelect"
+					}
+				},
+				{
+					"ID": "NavList",
+					"Title": {
+						"en": "NavList"
+					}
+				},
+				{
+					"ID": "NumberInput",
+					"Title": {
+						"en": "NumberInput"
+					}
+				},
+				{
+					"ID": "OTPInput",
+					"Title": {
+						"en": "OTPInput"
+					}
+				},
+				{
+					"ID": "Pagination",
+					"Title": {
+						"en": "Pagination"
+					}
+				},
+				{
+					"ID": "PhoneInput",
+					"Title": {
+						"en": "PhoneInput"
+					}
+				},
+				{
+					"ID": "Piano",
+					"Title": {
+						"en": "Piano"
+					}
+				},
+				{
+					"ID": "PlanCard",
+					"Title": {
+						"en": "PlanCard"
+					}
+				},
+				{
+					"ID": "PlanPicker",
+					"Title": {
+						"en": "PlanPicker"
+					}
+				},
+				{
+					"ID": "Popover",
+					"Title": {
+						"en": "Popover"
+					}
+				},
+				{
+					"ID": "PostCard",
+					"Title": {
+						"en": "PostCard"
+					}
+				},
+				{
+					"ID": "Presence",
+					"Title": {
+						"en": "Presence"
+					}
+				},
+				{
+					"ID": "ProductCard",
+					"Title": {
+						"en": "ProductCard"
+					}
+				},
+				{
+					"ID": "ProfileCard",
+					"Title": {
+						"en": "ProfileCard"
+					}
+				},
+				{
+					"ID": "Progress",
+					"Title": {
+						"en": "Progress"
+					}
+				},
+				{
+					"ID": "Properties",
+					"Title": {
+						"en": "Properties"
+					}
+				},
+				{
+					"ID": "Property",
+					"Title": {
+						"en": "Property"
+					}
+				},
+				{
+					"ID": "Radio",
+					"Title": {
+						"en": "Radio"
+					}
+				},
+				{
+					"ID": "RadioGroup",
+					"Title": {
+						"en": "RadioGroup"
+					}
+				},
+				{
+					"ID": "Rating",
+					"Title": {
+						"en": "Rating"
+					}
+				},
+				{
+					"ID": "Ribbon",
+					"Title": {
+						"en": "Ribbon"
+					}
+				},
+				{
+					"ID": "RibbonBackstage",
+					"Title": {
+						"en": "RibbonBackstage"
+					}
+				},
+				{
+					"ID": "RibbonButton",
+					"Title": {
+						"en": "RibbonButton"
+					}
+				},
+				{
+					"ID": "RibbonGallery",
+					"Title": {
+						"en": "RibbonGallery"
+					}
+				},
+				{
+					"ID": "RibbonGroup",
+					"Title": {
+						"en": "RibbonGroup"
+					}
+				},
+				{
+					"ID": "RibbonPage",
+					"Title": {
+						"en": "RibbonPage"
+					}
+				},
+				{
+					"ID": "RibbonTab",
+					"Title": {
+						"en": "RibbonTab"
+					}
+				},
+				{
+					"ID": "RichEditor",
+					"Title": {
+						"en": "RichEditor"
+					}
+				},
+				{
+					"ID": "Section",
+					"Title": {
+						"en": "Section"
+					}
+				},
+				{
+					"ID": "Select",
+					"Title": {
+						"en": "Select"
+					}
+				},
+				{
+					"ID": "Settings",
+					"Title": {
+						"en": "Settings"
+					}
+				},
+				{
+					"ID": "SettingsMenu",
+					"Title": {
+						"en": "SettingsMenu"
+					}
+				},
+				{
+					"ID": "Skeleton",
+					"Title": {
+						"en": "Skeleton"
+					}
+				},
+				{
+					"ID": "Slider",
+					"Title": {
+						"en": "Slider"
+					}
+				},
+				{
+					"ID": "Sparkline",
+					"Title": {
+						"en": "Sparkline"
+					}
+				},
+				{
+					"ID": "Spinner",
+					"Title": {
+						"en": "Spinner"
+					}
+				},
+				{
+					"ID": "Splitter",
+					"Title": {
+						"en": "Splitter"
+					}
+				},
+				{
+					"ID": "Steps",
+					"Title": {
+						"en": "Steps"
+					}
+				},
+				{
+					"ID": "StickerPicker",
+					"Title": {
+						"en": "StickerPicker"
+					}
+				},
+				{
+					"ID": "Table",
+					"Title": {
+						"en": "Table"
+					}
+				},
+				{
+					"ID": "Tabs",
+					"Title": {
+						"en": "Tabs"
+					}
+				},
+				{
+					"ID": "TagInput",
+					"Title": {
+						"en": "TagInput"
+					}
+				},
+				{
+					"ID": "Terminal",
+					"Title": {
+						"en": "Terminal"
+					}
+				},
+				{
+					"ID": "TextArea",
+					"Title": {
+						"en": "TextArea"
+					}
+				},
+				{
+					"ID": "ThemeSwitch",
+					"Title": {
+						"en": "ThemeSwitch"
+					}
+				},
+				{
+					"ID": "Tile",
+					"Title": {
+						"en": "Tile"
+					}
+				},
+				{
+					"ID": "TileGrid",
+					"Title": {
+						"en": "TileGrid"
+					}
+				},
+				{
+					"ID": "TileGroup",
+					"Title": {
+						"en": "TileGroup"
+					}
+				},
+				{
+					"ID": "TimeInput",
+					"Title": {
+						"en": "TimeInput"
+					}
+				},
+				{
+					"ID": "Timeline",
+					"Title": {
+						"en": "Timeline"
+					}
+				},
+				{
+					"ID": "ToastHost",
+					"Title": {
+						"en": "ToastHost"
+					}
+				},
+				{
+					"ID": "Toggle",
+					"Title": {
+						"en": "Toggle"
+					}
+				},
+				{
+					"ID": "Tour",
+					"Title": {
+						"en": "Tour"
+					}
+				},
+				{
+					"ID": "Tree",
+					"Title": {
+						"en": "Tree"
+					}
+				},
+				{
+					"ID": "VirtualList",
+					"Title": {
+						"en": "VirtualList"
+					}
+				},
+				{
+					"ID": "Window",
+					"Title": {
+						"en": "Window"
+					}
+				},
+				{
+					"ID": "Workspace",
+					"Title": {
+						"en": "Workspace"
+					}
+				},
+				{
+					"ID": "WorkspaceToolWindow",
+					"Title": {
+						"en": "WorkspaceToolWindow"
+					}
+				},
+				{
+					"ID": "WorkspaceToolbar",
+					"Title": {
+						"en": "WorkspaceToolbar"
+					}
+				}
+			]
+		},
+		{
+			"ID": "services",
+			"Title": {
+				"en": "Services",
+				"ru": "Сервисы"
+			},
+			"Pages": [
+				{
+					"ID": "Achievements",
+					"Title": {
+						"en": "Achievements"
+					}
+				},
+				{
+					"ID": "Badges",
+					"Title": {
+						"en": "Badges"
+					}
+				},
+				{
+					"ID": "Biometric",
+					"Title": {
+						"en": "Biometric"
+					}
+				},
+				{
+					"ID": "Cities",
+					"Title": {
+						"en": "Cities"
+					}
+				},
+				{
+					"ID": "Clipboard",
+					"Title": {
+						"en": "Clipboard"
+					}
+				},
+				{
+					"ID": "Countries",
+					"Title": {
+						"en": "Countries"
+					}
+				},
+				{
+					"ID": "Currencies",
+					"Title": {
+						"en": "Currencies"
+					}
+				},
+				{
+					"ID": "Dialogs",
+					"Title": {
+						"en": "Dialogs"
+					}
+				},
+				{
+					"ID": "Diff",
+					"Title": {
+						"en": "Diff"
+					}
+				},
+				{
+					"ID": "Emoji",
+					"Title": {
+						"en": "Emoji"
+					}
+				},
+				{
+					"ID": "Find",
+					"Title": {
+						"en": "Find"
+					}
+				},
+				{
+					"ID": "Format",
+					"Title": {
+						"en": "Format"
+					}
+				},
+				{
+					"ID": "Formats",
+					"Title": {
+						"en": "Formats"
+					}
+				},
+				{
+					"ID": "Forms",
+					"Title": {
+						"en": "Forms"
+					}
+				},
+				{
+					"ID": "Formulas",
+					"Title": {
+						"en": "Formulas"
+					}
+				},
+				{
+					"ID": "GameItems",
+					"Title": {
+						"en": "GameItems"
+					}
+				},
+				{
+					"ID": "Gamepad",
+					"Title": {
+						"en": "Gamepad"
+					}
+				},
+				{
+					"ID": "Hotkeys",
+					"Title": {
+						"en": "Hotkeys"
+					}
+				},
+				{
+					"ID": "Icons",
+					"Title": {
+						"en": "Icons"
+					}
+				},
+				{
+					"ID": "Idle",
+					"Title": {
+						"en": "Idle"
+					}
+				},
+				{
+					"ID": "Menus",
+					"Title": {
+						"en": "Menus"
+					}
+				},
+				{
+					"ID": "NFC",
+					"Title": {
+						"en": "NFC"
+					}
+				},
+				{
+					"ID": "Native",
+					"Title": {
+						"en": "Native"
+					}
+				},
+				{
+					"ID": "Permissions",
+					"Title": {
+						"en": "Permissions"
+					}
+				},
+				{
+					"ID": "PictureInPicture",
+					"Title": {
+						"en": "PictureInPicture"
+					}
+				},
+				{
+					"ID": "Print",
+					"Title": {
+						"en": "Print"
+					}
+				},
+				{
+					"ID": "Push",
+					"Title": {
+						"en": "Push"
+					}
+				},
+				{
+					"ID": "Reveal",
+					"Title": {
+						"en": "Reveal"
+					}
+				},
+				{
+					"ID": "RichText",
+					"Title": {
+						"en": "RichText"
+					}
+				},
+				{
+					"ID": "Serial",
+					"Title": {
+						"en": "Serial"
+					}
+				},
+				{
+					"ID": "Stickers",
+					"Title": {
+						"en": "Stickers"
+					}
+				},
+				{
+					"ID": "Syntax",
+					"Title": {
+						"en": "Syntax"
+					}
+				},
+				{
+					"ID": "Theme",
+					"Title": {
+						"en": "Theme"
+					}
+				},
+				{
+					"ID": "Toast",
+					"Title": {
+						"en": "Toast"
+					}
+				},
+				{
+					"ID": "USB",
+					"Title": {
+						"en": "USB"
+					}
+				},
+				{
+					"ID": "Windows",
+					"Title": {
+						"en": "Windows"
+					}
+				}
+			]
+		},
+		{
+			"ID": "directives",
+			"Title": {
+				"en": "Directives",
+				"ru": "Директивы"
+			},
+			"Pages": [
+				{
+					"ID": "badge",
+					"Title": {
+						"en": "*badge"
+					}
+				},
+				{
+					"ID": "copy",
+					"Title": {
+						"en": "*copy"
+					}
+				},
+				{
+					"ID": "draggable",
+					"Title": {
+						"en": "*draggable"
+					}
+				},
+				{
+					"ID": "droppable",
+					"Title": {
+						"en": "*droppable"
+					}
+				},
+				{
+					"ID": "glyph",
+					"Title": {
+						"en": "*glyph"
+					}
+				},
+				{
+					"ID": "hotkey",
+					"Title": {
+						"en": "*hotkey"
+					}
+				},
+				{
+					"ID": "itemCard",
+					"Title": {
+						"en": "*itemCard"
+					}
+				},
+				{
+					"ID": "mask",
+					"Title": {
+						"en": "*mask"
+					}
+				},
+				{
+					"ID": "modal",
+					"Title": {
+						"en": "*modal"
+					}
+				},
+				{
+					"ID": "mount",
+					"Title": {
+						"en": "*mount"
+					}
+				},
+				{
+					"ID": "popup",
+					"Title": {
+						"en": "*popup"
+					}
+				},
+				{
+					"ID": "resizable",
+					"Title": {
+						"en": "*resizable"
+					}
+				},
+				{
+					"ID": "swipe",
+					"Title": {
+						"en": "*swipe"
+					}
+				}
+			]
+		}
+	]
+}

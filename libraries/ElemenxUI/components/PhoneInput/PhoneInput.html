@@ -1,17 +1,17 @@
 <div class="elemenx-phone elemenx-popup-anchor">
 	<div class="elemenx-input elemenx-phone-input" [class]="[Size || 'medium', Shape === 'round' ? 'round' : '', Invalid ? 'invalid' : '', Disabled ? 'disabled' : '']">
-		<button class="elemenx-phone-country" type="button" aria-haspopup="listbox" [disabled]="Disabled || Countries.length < 2" [attribute.aria-expanded]="String(Open)" [attribute.aria-label]="'Country: ' + Current(Countries, Country).Name" (click)="Toggle">
-			<span class="elemenx-phone-code">{{Current(Countries, Country).Code}}</span>
+		<button class="elemenx-phone-country" type="button" aria-haspopup="listbox" [disabled]="Disabled || Countries.length < 2" [attribute.aria-expanded]="String(Open)" [attribute.aria-label]="'Country: ' + Effective(Countries, Country, Value).Name" (click)="Toggle">
+			<span class="elemenx-phone-code">{{Effective(Countries, Country, Value).Code}}</span>
 			<Icon Name="chevron-down" Size="12" *if="Countries.length > 1" />
 		</button>
-		<input class="elemenx-input-control" type="tel" autocomplete="tel" *mask="{Mask: '+' + Current(Countries, Country).Dial + ' ' + Current(Countries, Country).Mask, Value: Local(Value, Current(Countries, Country)), Guide: Guide, Backspace: Backspace}" [placeholder]="Placeholder || Example(Current(Countries, Country))" [disabled]="Disabled" [attribute.name]="Name" [attribute.aria-invalid]="Invalid ? 'true' : null" (mask)="Masked" (paste)="Pasted" (change)="Committed" />
+		<input class="elemenx-input-control" type="tel" autocomplete="tel" *mask="{Mask: '+' + Effective(Countries, Country, Value).Dial + ' ' + Effective(Countries, Country, Value).Mask, Value: Local(Value, Effective(Countries, Country, Value)), Guide: Guide, Backspace: Backspace}" [placeholder]="Placeholder || Example(Effective(Countries, Country, Value))" [disabled]="Disabled" [attribute.name]="Name" [attribute.aria-invalid]="Invalid ? 'true' : null" (mask)="Masked" (paste)="Pasted" (change)="Committed" />
 	</div>
 	<div class="elemenx-popup elemenx-phone-popup" role="listbox" data-match-width="true" *popup="Open" (dismiss)="Dismissed" (keydown)="ListKey">
 		<div class="elemenx-input small elemenx-popup-search">
 			<Icon Name="search" />
 			<input class="elemenx-input-control" type="text" [attribute.placeholder]="$T('ui.phoneInput.search')" autocomplete="off" [value]="Filter" (input)="Search" />
 		</div>
-		<div class="elemenx-option" role="option" *for="country of (Open ? Matching(Countries, Filter) : [])" *key="country.Code" [class.active]="$index === Active" [class.selected]="country.Code === Country" [attribute.aria-selected]="String(country.Code === Country)" [attribute.data-index]="$index" (mousemove)="Hover" (click)="Pick">
+		<div class="elemenx-option" role="option" *for="country of (Open ? Matching(Countries, Filter) : [])" *key="country.Code" [class.active]="$index === Active" [class.selected]="country.Code === Effective(Countries, Country, Value).Code" [attribute.aria-selected]="String(country.Code === Effective(Countries, Country, Value).Code)" [attribute.data-index]="$index" (mousemove)="Hover" (click)="Pick">
 			<span class="elemenx-phone-code">{{country.Code}}</span>
 			<span class="elemenx-option-label">{{country.Name}}</span>
 			<span class="elemenx-option-hint">+{{country.Dial}}</span>

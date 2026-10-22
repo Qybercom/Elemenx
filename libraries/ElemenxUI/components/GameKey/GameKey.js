@@ -2,7 +2,9 @@
  * The prompt of a control: "[A] Continue". It shows the button of the gamepad in use (Button: a, b, x, y, lb, rb, lt,
  * rt, select, start... drawn the way that kind of pad names it: A, ✕, B) and, without a gamepad, the key of the
  * keyboard (Keyboard: 'Enter', 'E', 'Escape'). Label is the text after it. It follows the pad: plug one in or switch
- * pads and it changes.
+ * pads and it changes. Pad (xbox, playstation, nintendo, generic) shows the buttons of that kind of pad whatever is
+ * plugged in (a page of help). The button is drawn as on its pad: the colors and the symbols of the face buttons, the
+ * shoulders, the triggers, the sticks, the d-pad with its arm lit, the buttons of the menus.
  */
 Elemenx.Component('GameKey', {
 	$TemplateURL: 'GameKey.html',
@@ -11,6 +13,7 @@ Elemenx.Component('GameKey', {
 	Keyboard: '',
 	Label: '',
 	Kind: '',
+	Pad: '',
 
 	$OnCreate: function () {
 		var self = this;
@@ -28,10 +31,10 @@ Elemenx.Component('GameKey', {
 		var self = this;
 		var gamepad = this.$Service('Gamepad');
 
-		this.Kind = gamepad.Kind();
+		this.Kind = this.Pad || gamepad.Kind();
 
 		this.Listener = function () {
-			self.Kind = gamepad.Kind();
+			self.Kind = self.Pad || gamepad.Kind();
 		};
 
 		gamepad.On('change', this.Listener);

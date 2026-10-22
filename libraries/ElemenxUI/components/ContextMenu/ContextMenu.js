@@ -2,7 +2,8 @@
  * A context menu over its content: a right click, the Menu key or Shift+F10 inside the default slot opens a
  * multi-level MenuList at the pointer (or under the focused element). Items: as in MenuList. Before it opens, the
  * open event carries {Target (the element pressed), X, Y}: the owner may change Items for that target then. The
- * select event carries {Item, Target}. Disabled leaves the browser menu alone. Sheet: true, or 'auto' (on a narrow or
+ * select event carries {Item, Target}. MenuItems in its slot items declare items after Items (a declared one emits
+ * select on its MenuItem too). Disabled leaves the browser menu alone. Sheet: true, or 'auto' (on a narrow or
  * a touch screen), shows the menu as a sheet from the bottom of the screen with its Title, as on a phone. On a touch
  * screen a press held for Hold milliseconds in place opens it (iOS sends no contextmenu event for a long press).
  */
@@ -18,6 +19,16 @@ Elemenx.Component('ContextMenu', {
 	Y: 0,
 	Target: null,
 	Hold: 500,
+	Declared: [],
+
+	/* The items its MenuItems declare, after Items; they follow the template as it changes. */
+	$OnReady: function () {
+		var self = this;
+
+		this.Unwatch = this.$Service('Menus').Watch(this.$Element().querySelector('.elemenx-menu-sources'), function (items) {
+			self.Declared = items;
+		});
+	},
 
 	Show: function (target, x, y) {
 		var root = this.$Element();
@@ -111,11 +122,16 @@ Elemenx.Component('ContextMenu', {
 
 		this.$Emit('select', {Item: item, Target: target});
 
+		this.$Service('Menus').Pick(item);
+
 		if (target && target.focus && document.contains(target))
 			target.focus();
 	},
 
 	$OnDestroy: function () {
+		if (this.Unwatch)
+			this.Unwatch();
+
 		window.clearTimeout(this.Timer);
 	},
 

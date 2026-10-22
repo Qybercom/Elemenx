@@ -1,0 +1,35 @@
+<div class="builder-inspector">
+	<p class="elemenx-text small muted" *if="!Current(Node, Version)">{{$T('builder.nothing')}}</p>
+	<div class="elemenx-column builder-inspector-body" *if="Current(Node, Version)">
+		<div class="elemenx-container builder-inspector-head">
+			<strong class="builder-inspector-title">{{Title(Current(Node, Version))}}</strong>
+			<span class="elemenx-spacer"></span>
+			<Button Icon="arrow-up" Variant="ghost" Size="small" [title]="$T('builder.up')" [disabled]="Index(Current(Node, Version)) <= 0" (click)="Up" />
+			<Button Icon="arrow-down" Variant="ghost" Size="small" [title]="$T('builder.down')" [disabled]="Index(Current(Node, Version)) >= Count(Current(Node, Version)) - 1" (click)="Down" />
+			<Button Icon="chevron-up" Variant="ghost" Size="small" [title]="$T('builder.parent')" (click)="Parent" />
+			<Button Icon="copy" Variant="ghost" Size="small" [title]="$T('builder.duplicate')" (click)="Duplicate" />
+			<Button Icon="delete" Variant="ghost" Size="small" [title]="$T('builder.delete')" (click)="Delete" />
+		</div>
+		<Field *if="Slots(Current(Node, Version)).length" [label]="$T('builder.slot')" [hint]="$T('builder.slotHint')">
+			<Select Name="Slot" [options]="Slots(Current(Node, Version))" [value]="Current(Node, Version).Slot || ''" (change)="Changed" />
+		</Field>
+		<Field *if="HasText(Current(Node, Version))" [label]="$T('builder.text')">
+			<TextArea Rows="2" AutoSize="true" [value]="Current(Node, Version).Text" (input)="Typed" />
+		</Field>
+		<div class="builder-inspector-field" *for="field of Fields(Current(Node, Version))" *key="Node + field.Name">
+			<Field *if="field.Type === 'text' || field.Type === 'list'" [label]="field.Name" [hint]="field.Type === 'list' ? 'One, Two, Three' : ''">
+				<Input [name]="field.Name" [value]="field.Value" (input)="Changed" />
+			</Field>
+			<Field *if="field.Type === 'number'" [label]="field.Name">
+				<NumberInput [name]="field.Name" [value]="field.Value" (input)="Numbered" />
+			</Field>
+			<Field *if="field.Type === 'select'" [label]="field.Name">
+				<Select [name]="field.Name" [options]="field.Options" [value]="field.Value" (change)="Changed" />
+			</Field>
+			<Field *if="field.Type === 'json'" [label]="field.Name" [hint]="$T('builder.expression')">
+				<TextArea class="builder-inspector-expression" Rows="1" AutoSize="true" [name]="field.Name" [value]="field.Value" (input)="Changed" />
+			</Field>
+			<Toggle *if="field.Type === 'bool'" [name]="field.Name" [label]="field.Name" [checked]="field.Value" (change)="Changed" />
+		</div>
+	</div>
+</div>

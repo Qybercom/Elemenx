@@ -1,0 +1,23 @@
+<div class="elemenx-container wrappable" style="gap: 8px;">
+	<Spinner Size="small" />
+	<Spinner />
+	<Spinner Size="large" />
+	<Spinner Label="Saving" ShowLabel="true" />
+</div>
+<Button [label]="Loading ? 'Loading...' : 'Load'" (click)="Load" />
+<Spinner *if="Loading" Label="Loading the list" ShowLabel="true" />
+<script>
+({
+	Loading: false,
+
+	Load: function () {
+		var self = this;
+
+		this.Loading = true;
+
+		setTimeout(function () {
+			self.Loading = false;
+		}, 1500);
+	}
+})
+</script>

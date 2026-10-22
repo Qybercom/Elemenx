@@ -1,0 +1,43 @@
+<!-- generated -->
+# CodeView
+
+Source code shown, not edited: Value highlighted by the Syntax Service in Language, as a CodeEditor draws it. LineNumbers (and Start, the number of the first line), Wrap, Highlight ([3, '7-9']: lines marked), Copy (a button that copies the code, on by default), Label. The text is selectable; Rows limits its height in lines (it scrolls). Fold: a bracket ({, [ or () that closes on a later line makes a block that folds: a button beside its first line hides the lines up to the one that closes it, and the first line ends with … and the rest of that last one ("items": [ … ],). A press on … unfolds it too. Folded lists the numbers of the lines whose blocks start folded; the event fold reports {Line, Folded} at each press.
+
+## Properties
+
+| Property | Default |
+| --- | --- |
+| `Value` | `''` |
+| `Language` | `'text'` |
+| `LineNumbers` | `false` |
+| `Start` | `1` |
+| `Wrap` | `false` |
+| `Highlight` | `[]` |
+| `Copy` | `true` |
+| `Rows` | `0` |
+| `Label` | `''` |
+| `Fold` | `false` |
+| `Folded` | `[]` |
+
+## Events
+
+`fold`
+
+## Example
+
+```example
+<CodeView Language="javascript" LineNumbers="true" [highlight]="[4]" Label="A function" Value="function greet (name) {&#10;&#9;var text = 'Hello, ' + name;&#10;&#10;&#9;return text.toUpperCase();&#10;}" />
+<CodeView Language="json" Fold="true" [folded]="[7]" Label="A package" [value]="Package" (fold)="Folded" />
+<p class="elemenx-text small muted">{{Note}}</p>
+<CodeView Language="css" Rows="3" Value=".card {&#10;&#9;color: var(--elemenx-accent);&#10;&#9;padding: 12px;&#10;&#9;border-radius: 8px;&#10;}" />
+<script>
+({
+	Note: 'Fold: the arrows fold the blocks, … unfolds them; the copy button shows under the pointer.',
+	Package: '{\n\t"name": "elemenx",\n\t"keywords": [\n\t\t"ui",\n\t\t"es5"\n\t],\n\t"scripts": {\n\t\t"test": "vitest",\n\t\t"lint": "eslint ."\n\t}\n}\n',
+
+	Folded: function (event) {
+		this.Note = 'Line ' + event.Line + (event.Folded ? ' folded' : ' unfolded');
+	}
+})
+</script>
+```

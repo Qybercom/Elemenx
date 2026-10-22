@@ -1,0 +1,15 @@
+<div class="elemenx-container wrappable" style="gap: 8px;">
+	<Image Src="/data/cards/mountains.svg" Alt="Mountains" Width="200" Ratio="16:9" Shape="rounded" (load)="Loaded" />
+	<Image Src="/data/cards/sea.svg" Alt="Sea" Width="120" Height="120" Shape="circle" Fit="cover" />
+	<Image Src="/data/missing.png" Alt="A picture that does not load" Width="160" Ratio="4:3" />
+</div>
+<p class="elemenx-text small muted">{{Note}}</p>
+<script>
+({
+	Note: 'A missing picture shows its fallback; pictures load near the viewport.',
+
+	Loaded: function () {
+		this.Note = 'The first picture is loaded.';
+	}
+})
+</script>

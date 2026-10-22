@@ -25,11 +25,16 @@
 }
 
 .elemenx-gallery.slide .elemenx-gallery-track {
-	transform: translateX(calc(var(--elemenx-gallery-index) * -100%));
+	transform: translateX(calc(var(--elemenx-gallery-index) * -100% + var(--elemenx-gallery-drag, 0px)));
 }
 
 .elemenx-gallery.slide:dir(rtl) .elemenx-gallery-track {
-	transform: translateX(calc(var(--elemenx-gallery-index) * 100%));
+	transform: translateX(calc(var(--elemenx-gallery-index) * 100% + var(--elemenx-gallery-drag, 0px)));
+}
+
+/* While a finger drags it the track follows at once. */
+.elemenx-gallery.dragging .elemenx-gallery-track {
+	transition: none;
 }
 
 .elemenx-gallery-slide {

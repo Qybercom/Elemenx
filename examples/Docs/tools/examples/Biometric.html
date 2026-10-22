@@ -1,0 +1,24 @@
+<Button Label="Is it available?" (click)="Check" />
+<Button Label="Verify me on this device" Icon="lock" Variant="primary" (click)="Verify" />
+<p class="elemenx-text small muted">{{Note}}</p>
+<script>
+({
+	Note: 'WebAuthn needs HTTPS or localhost; the device asks for a fingerprint, a face or a PIN.',
+
+	Check: function () {
+		var self = this;
+
+		this.$Service('Biometric').Available(function (error, result) {
+			self.Note = error ? error.message : 'WebAuthn: ' + result.Supported + ' · a platform authenticator: ' + result.Platform;
+		});
+	},
+
+	Verify: function () {
+		var self = this;
+
+		this.$Service('Biometric').Check(function (error) {
+			self.Note = error ? 'Not verified: ' + error.name : 'Verified on this device';
+		});
+	}
+})
+</script>

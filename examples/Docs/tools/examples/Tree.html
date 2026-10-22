@@ -1,0 +1,48 @@
+<div class="elemenx-container wrappable" style="gap: 8px; align-items: flex-start;">
+	<div style="width: 260px;"><Tree [items]="Items" [value]="Current" [expanded]="Open" [loading]="Loading" Checkable="true" [checked]="Checked" Searchable="true" (select)="Selected" (expand)="Expanded" (check)="Checks" (load)="Load" /></div>
+	<div class="elemenx-text small">
+		<p>Selected: {{Current || 'none'}}</p>
+		<p>Checked: {{Checked.join(', ') || 'none'}}</p>
+	</div>
+</div>
+<script>
+({
+	Current: 'app',
+	Open: ['src'],
+	Checked: [],
+	Loading: [],
+	Items: [
+		{ID: 'src', Label: 'src', Icon: 'folder', Items: [
+			{ID: 'app', Label: 'app.js', Icon: 'file'},
+			{ID: 'router', Label: 'router.js', Icon: 'file', Badge: 'M'}
+		]},
+		{ID: 'remote', Label: 'remote (loads)', Icon: 'cloud', Lazy: true},
+		{ID: 'readme', Label: 'README.md', Icon: 'file'}
+	],
+
+	Selected: function (item) {
+		this.Current = item.ID;
+	},
+
+	Expanded: function (ids) {
+		this.Open = ids;
+	},
+
+	Checks: function (ids) {
+		this.Checked = ids;
+	},
+
+	Load: function (item) {
+		var self = this;
+
+		this.Loading = [item.ID];
+
+		setTimeout(function () {
+			self.Items = self.Items.map(function (entry) {
+				return entry.ID === item.ID ? {ID: entry.ID, Label: entry.Label, Icon: entry.Icon, Items: [{ID: 'r1', Label: 'one.txt'}, {ID: 'r2', Label: 'two.txt'}]} : entry;
+			});
+			self.Loading = [];
+		}, 800);
+	}
+})
+</script>

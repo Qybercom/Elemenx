@@ -421,3 +421,12 @@
 		font-size: var(--elemenx-font-size-field);
 	}
 }
+
+/* The find bar over the top corner of the editor. */
+.elemenx-code-editor-find {
+	position: absolute;
+	top: 4px;
+	inset-inline-end: 16px;
+	z-index: 5;
+	max-width: calc(100% - 24px);
+}

@@ -10,7 +10,7 @@ To find a section in `elemenx.js`, search for its header, for example `/* Router
 
 | Field | Purpose | Used by |
 |---|---|---|
-| `ScriptURL` | URL of the loaded `elemenx.js` (a `blob:` URL of its text when it is inline in its page); workers load the same file from it | WebWorker, ServiceWorker |
+| `ScriptURL` | URL of the loaded `elemenx.js` (a `blob:` URL of its text when it is inline in its page); workers load the same file from it, and ElemenxUI is taken from `libraries/ElemenxUI` next to it | Library, WebWorker, ServiceWorker |
 | `HasDOM` | `true` in a document, `false` inside workers | Application, Discovery, Identity, Locale, Messaging, ServiceWorker, ServiceWorker bootstrap, Style, Template and Component, Utilities, WebWorker |
 | `StartedAt` | time this runtime started | Identity |
 | `Isolated` | true in an isolated build (`ElemenxIsolated`): the html element of the page is left alone | Application, Locale, Style |
@@ -46,14 +46,14 @@ To find a section in `elemenx.js`, search for its header, for example `/* Router
 | `Reactive` | wraps a value into a tracked reactive proxy | Locale, Template and Component |
 | `Effect` | runs a callback and re-runs it when its tracked dependencies change | Template and Component, Structural |
 | `BatchReactive` | groups changes and flushes effects once | Locale, Template and Component |
-| `Untracked` | runs a callback without recording dependencies | Structural |
+| `Untracked` | runs a callback without recording dependencies | Structural, Template and Component |
 | `TrackIteration` | records a dependency on the iteration of a collection | Structural |
 
 ## Bundle
 
 | Field | Purpose | Used by |
 |---|---|---|
-| `Bundle` | production bundle registry: `Install`, `Reload`, `Ready`, `ResolvedName`, `Load`, `LoadType` | Library, Template and Component, Router, Structural, Application |
+| `Bundle` | production bundle registry: `Install`, `Reload`, `Ready`, `ResolvedName`, `Names` (the names of a type), `Load`, `LoadType` | Library, Template and Component, Router, Structural, Application |
 
 ## Locale
 
@@ -81,7 +81,7 @@ To find a section in `elemenx.js`, search for its header, for example `/* Router
 
 | Field | Purpose | Used by |
 |---|---|---|
-| `Library` | `Use(application, names, callback)` and `ResolvedURL(application, name)` for `$Use` libraries | Discovery, Structural, Application |
+| `Library` | `Use(application, names, callback)`, `ResolvedURL(application, name)` and `Names(application)` for `$Use` libraries | Application, Discovery, Structural, Template and Component |
 
 ## Service and Guard
 
@@ -115,10 +115,11 @@ To find a section in `elemenx.js`, search for its header, for example `/* Router
 
 | Field | Purpose | Used by |
 |---|---|---|
-| `Template` | named Template Registry behind `Elemenx.Template`: `Set`, `Get`, `Has`, `Remove`, `Resolve`, `Harvest` | Application |
+| `Template` | named Template Registry behind `Elemenx.Template`: `Set`, `Get`, `Has`, `Remove`, `Resolve`, `Harvest` | Application, Directive registry |
 | `EvaluateExpression` | evaluates a template expression against a scope | Structural |
 | `ResolveComponent` | resolves a component factory by name, through Bundle, Discovery and Libraries | Structural |
 | `ResolveComponentRegistered` | returns a factory only if it is already registered and loaded | Router, Structural, Application |
+| `ComponentTag` | the name of the Component an element of a template declares: `data-elemenx-component`, otherwise its tag, in any case for an element HTML does not know | Structural |
 | `ReloadComponentTemplate` | reloads the external template of a component | Application |
 | `ComponentValues` | reactive state of a component instance | Structural |
 | `UpdateComponentRouteContext` | pushes `$Path`, `$Params`, `$Query`, `$Hash` into a routed component | Router |

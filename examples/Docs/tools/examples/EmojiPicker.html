@@ -1,0 +1,13 @@
+<div class="elemenx-card"><EmojiPicker Autofocus="false" (pick)="Picked" /></div>
+<p class="elemenx-text">Picked: <span class="elemenx-title">{{Emoji || '—'}}</span> {{Name}}</p>
+<script>
+({
+	Emoji: '',
+	Name: '',
+
+	Picked: function (event) {
+		this.Emoji = event.Emoji;
+		this.Name = event.Name;
+	}
+})
+</script>

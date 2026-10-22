@@ -1,0 +1,45 @@
+# Хранилище
+
+`Elemenx.Storage` придаёт хранилищам браузера один вид: `Local` (`localStorage`: хранится, пока его не очистят), `Session` (`sessionStorage`: пока жива вкладка), `Cookie` (`document.cookie`: уходит на сервер с каждым запросом) и `IndexedDB` (база объектов, см. [IndexedDB](/data/indexeddb)). Пространство имён отделяет ключи одной части приложения от других, а контекст даёт нескольким частям одни и те же пространства имён и базу.
+
+@block 1
+
+## Local и Session
+
+| Метод | Значение |
+| --- | --- |
+| `Get(name)` | значение или `null`, если его нет (или его записал не Elemenx) |
+| `Set(name, value)` | сохраняет любое значение, которое умеет JSON: числа, тексты, списки, объекты; возвращает хранилище |
+| `Has(name)` | есть ли значение |
+| `Remove(name)` | удаляет его |
+| `Clear()` | удаляет все ключи пространства имён (без него — всего хранилища) |
+| `Namespace(name)` | то же хранилище под префиксом `name.`: `Local.Namespace('cart').Set('items', [...])` пишет `cart.items` |
+
+Значение хранится как `{"Value": ...}`, поэтому `Get` возвращает тот же тип, что был записан: число остаётся числом, `false` — `false`.
+
+## Cookie
+
+Cookie хранит текст. `Set(name, value, options)`, `Remove(name, options)` и `Clear(options)` принимают параметры cookie:
+
+| Параметр | Значение |
+| --- | --- |
+| `Path` | пути, которые его получают, `'/'` — весь сайт |
+| `Domain` | домен и его поддомены |
+| `MaxAge` | сколько секунд он живёт |
+| `Expires` | момент окончания: `Date` или текст |
+| `SameSite` | `'Strict'`, `'Lax'` или `'None'` |
+| `Secure` | только по HTTPS |
+
+Cookie удаляется с теми же `Path` и `Domain`, с которыми был записан. `Get`, `Has` и `Namespace` работают как у `Local`.
+
+## Контексты
+
+@block 2
+
+`Elemenx.Storage(context)` возвращает `{Local, Session, Cookie, IndexedDB}` для контекста: пространства имён контекста и контекстов, на которых он строится (`Contexts`), соединяются по порядку, а их определения `IndexedDB` сливаются, так что `IndexedDB()` без аргументов открывает описанную ими базу (с аргументами `IndexedDB(name, definition)` открывает другую). Контекст, ссылающийся сам на себя через `Contexts`, выбрасывает `Elemenx circular Storage Context dependency`; неизвестный — `Elemenx unknown Storage Context: <name>`.
+
+В компоненте или сервисе `this.$Storage('ShopCart')` — то же, что `Elemenx.Storage('ShopCart')`. Приложение объявляет контекст через `this.$Storage(name, definition)`.
+
+## Пример
+
+@block 3

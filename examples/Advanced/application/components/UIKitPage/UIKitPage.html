@@ -256,6 +256,16 @@
 				<Menu Label="File" Icon="file" [items]="MenuItems" (select)="MenuSelected" />
 				<Menu Icon="more" Title="More actions" Variant="ghost" [items]="MenuItems" (select)="MenuSelected" />
 				<Menu Label="Mobile" Icon="phone" Sheet="true" [items]="MenuItems" (select)="MenuSelected" />
+				<Menu Label="Edit" Icon="edit" (select)="MenuSelected">
+					<MenuItem ID="undo" Label="Undo" Icon="undo" Shortcut="Ctrl+Z" (select)="UndoPicked" />
+					<MenuItem ID="redo" Label="Redo" Icon="redo" Shortcut="Ctrl+Y" [disabled]="!CanRedo" />
+					<MenuItem Separator="true" />
+					<MenuItem ID="paste" Label="Paste special" Icon="paste">
+						<MenuItem ID="paste-text" Label="Text only" />
+						<MenuItem ID="paste-format" Label="Keep the format" />
+					</MenuItem>
+					<MenuItem ID="wrap" Label="Wrap lines" [checked]="Wrapped" />
+				</Menu>
 				<span class="elemenx-caption" *if="MenuChoice">Menu: {{MenuChoice}}</span>
 			</div>
 		</div>
@@ -352,6 +362,36 @@
 		</div>
 	</Section>
 
+	<Section Title="Forms" [note]="FormNote || 'Form · Field · the Forms Service: in the template, or a model in code'">
+		<div class="ui-kit-lazy" *lazy>
+			<div class="ui-kit-grid">
+				<div class="ui-kit-form ui-kit-sign-up">
+					<Form Label="Sign up" (submit)="SignedUp" (invalid)="SignUpInvalid" (reset)="SignUpCleared">
+						<Field Label="Name" Name="name" Required="true"><Input Placeholder="Your name" /></Field>
+						<Field Label="Email" Name="email" Required="true" Email="true"><Input Type="email" Placeholder="you@example.com" /></Field>
+						<Field Label="Password" Name="password" Required="true" MinLength="8" Hint="Eight characters or more"><Input Type="password" /></Field>
+						<Field Label="Repeat the password" Name="repeat" Required="true" Match="password" [messages]="{match: 'The passwords differ'}"><Input Type="password" /></Field>
+						<Field Label="Age" Name="age" Min="18" Max="120"><NumberInput /></Field>
+						<Field Name="terms" Required="true" [messages]="{required: 'Accept the terms to go on'}"><Checkbox Label="I accept the terms" /></Field>
+						<div class="ui-kit-row"><Button Type="submit" Variant="primary" Label="Sign up" /><Button Type="reset" Label="Clear" /></div>
+					</Form>
+				</div>
+				<div class="ui-kit-form ui-kit-profile">
+					<Form [model]="Profile" Label="Profile" (submit)="ProfileSaved">
+						<Field Label="Username" [control]="Profile.Get('Username')" [messages]="{taken: 'This name is taken'}" Hint="admin is taken"><Input /></Field>
+						<Field Label="City" Name="City"><Select [options]="ProfileCities" [value]="Profile.Get('City').Value" /></Field>
+						<div class="ui-kit-phone" *for="phone of Profile.Get('Phones').Controls" *key="phone.ID">
+							<Field Label="Phone" [control]="phone"><Input /></Field>
+							<button class="elemenx-button ghost small icon-only" type="button" title="Remove the phone" [attribute.data-index]="$index" (click)="RemovePhone"><Icon Name="delete" /></button>
+						</div>
+						<div class="ui-kit-row"><Button Label="Add a phone" Icon="add" (click)="AddPhone" /><Button Type="submit" Variant="primary" Label="Save" /></div>
+						<code class="ui-kit-profile-value">{{Profile.Status}} · {{ProfileJSON(Profile.Value)}}</code>
+					</Form>
+				</div>
+			</div>
+		</div>
+	</Section>
+
 	<Section Title="Dates and time" Note="Own pickers, locale formats">
 		<div class="ui-kit-lazy" *lazy>
 			<div class="ui-kit-grid">
@@ -381,6 +421,7 @@
 				<Field Label="Phone" [hint]="Phone + (PhoneState ? ' · ' + PhoneState : '')"><PhoneInput [value]="Phone" (input)="PhoneChanged" (validate)="PhoneValidated" /></Field>
 				<Field Label="Phone, skip separators" Hint="Backspace jumps over a separator"><PhoneInput Country="US" Backspace="skip" /></Field>
 				<Field Label="Phone without guide"><PhoneInput Country="DE" Guide="false" /></Field>
+				<Field Label="Phone of another country" Hint="Value +447911123456 and Country left as it is: the code chooses"><PhoneInput Value="+447911123456" /></Field>
 				<Field Label="Phone (US only)"><PhoneInput Country="US" [countries]="[{Code: 'US', Name: 'United States', Dial: '1', Mask: '(###) ###-####'}]" /></Field>
 				<Field Label="Money" [hint]="Money"><MoneyInput [amount]="Price" Currency="USD" (change)="MoneyChanged" /></Field>
 				<Field Label="Currency"><CurrencySelect Value="EUR" /></Field>
@@ -510,6 +551,8 @@
 						<ul class="elemenx-list divided ui-kit-files">
 							<li *for="file of ContextFiles" *key="file" tabindex="0" [attribute.data-file]="file"><FileIcon [name]="file" />{{file}}</li>
 						</ul>
+						<MenuItem slot="items" Separator="true" />
+						<MenuItem slot="items" ID="properties" Label="Properties" Icon="info" />
 					</ContextMenu>
 				</div>
 				<div class="ui-kit-stack">
@@ -584,8 +627,10 @@
 			<h5>Keyboard</h5>
 			<Keyboard Layout="full" Live="true" Clickable="true" [marks]="KeyboardMarks" Label="Hotkeys" (press)="KeyPressed" />
 			<Keyboard Layout="compact" Size="small" Native="true" [pressed]="['ShiftLeft', 'KeyS']" Label="Compact" />
+			<Keyboard Layout="compact" Alternate="ru" [pressed]="['KeyF']" Label="Two layouts" />
 			<h5>Piano</h5>
 			<Piano From="C3" Octaves="2" [marks]="PianoMarks" Label="Piano" (noteon)="NotePlayed" (noteoff)="NoteReleased" />
+			<Piano From="C4" Octaves="1" Size="small" Labels="both" [pressed]="['C#4', 'E4']" Label="Piano with its keys" />
 		</div>
 	</Section>
 
@@ -830,6 +875,25 @@
 					<span slot="status">12:4</span>
 					<span slot="status">LF</span>
 					<span slot="status">UTF-8</span>
+				</Workspace>
+			</div>
+			<h4>Tool windows the user arranges, kept between visits</h4>
+			<Toggle Label="Customize the layout: drag the buttons of the stripes" [checked]="WorkspaceCustomize" (change)="WorkspaceCustomized" />
+			<div class="ui-kit-frame ui-kit-tools-frame">
+				<Workspace Persist="ui-kit-tools" [customize]="WorkspaceCustomize" (layout)="WorkspaceArranged">
+					<div slot="main" class="elemenx-column fill"><p class="elemenx-text small muted ui-kit-editor-body">{{WorkspaceLayoutNote || 'Press a button of a stripe to open its tool window.'}}</p></div>
+					<WorkspaceToolWindow slot="tools" ID="project" Title="Project" Icon="folder" Area="left" Open="true" Closable="true" Padded="true">
+						<p class="elemenx-text small">application, libraries, README.md</p>
+					</WorkspaceToolWindow>
+					<WorkspaceToolWindow slot="tools" ID="commits" Title="Commits" Icon="commit" Area="left" Badge="3" Closable="true" Padded="true">
+						<p class="elemenx-text small">Three changes wait.</p>
+					</WorkspaceToolWindow>
+					<WorkspaceToolWindow slot="tools" ID="problems" Title="Problems" Icon="warning" Area="bottom" Badge="dot" Closable="true" Padded="true">
+						<p class="elemenx-text small">Something new happened.</p>
+					</WorkspaceToolWindow>
+					<WorkspaceToolWindow slot="tools" ID="build" Title="Build" Icon="play" Area="right" Badge="busy" Closable="true" Padded="true">
+						<p class="elemenx-text small">The build runs.</p>
+					</WorkspaceToolWindow>
 				</Workspace>
 			</div>
 		</div>
@@ -1108,6 +1172,49 @@
 		</div>
 	</Section>
 
+	<Section Title="Navigation and people" [note]="PeopleNote || 'Breadcrumbs · Avatar · Presence · Image · *badge'">
+		<div class="ui-kit-lazy" *lazy="320">
+			<div class="ui-kit-stack">
+				<Breadcrumbs [items]="CrumbItems" (select)="CrumbPicked">
+					<Button slot="start" Icon="home" Variant="ghost" Size="small" Title="Home" (click)="CrumbHome" />
+					<Presence slot="end" [status]="ServerStatus" ShowLabel="true" />
+				</Breadcrumbs>
+				<div class="ui-kit-crumbs-short"><Breadcrumbs [items]="CrumbItems" Max="3" Separator="slash" Size="small" (select)="CrumbPicked" /></div>
+				<div class="ui-kit-row ui-kit-avatars">
+					<Avatar Name="Ada Lovelace" Status="online" Size="large" />
+					<Avatar Name="Alan Turing" Generate="pattern" Status="away" Size="large" />
+					<Avatar Name="Grace Hopper" Generate="shapes" Status="dnd" Size="large" />
+					<Avatar Name="Elemenx" Initials="EX" Shape="rounded" Size="large" />
+					<Avatar Name="Broken picture" Image="data:image/png;base64,AAAA" Size="large" />
+					<Avatar Name="Linus" Generate="pattern" Shape="square" Size="72" />
+				</div>
+				<div class="ui-kit-row ui-kit-presence">
+					<Presence Status="online" ShowLabel="true" />
+					<Presence Status="away" ShowLabel="true" />
+					<Presence Status="busy" ShowLabel="true" />
+					<Presence Status="dnd" ShowLabel="true" />
+					<Presence Status="offline" ShowLabel="true" />
+					<Presence Status="connecting" ShowLabel="true" />
+					<Button Label="Reconnect" Size="small" (click)="Reconnect" />
+				</div>
+				<div class="ui-kit-row ui-kit-badges">
+					<Button Icon="bell" Title="Notifications" [badge]="Unread" (click)="ReadAll" />
+					<Button Icon="mail" Title="Mail" Badge="120" />
+					<Button Icon="refresh" Title="Build" Badge="busy" />
+					<Button Icon="branch" Title="Changes" Badge="dot" />
+					<Button Label="Updates" [badge]="{Value: 'new', Tone: 'success'}" />
+					<span class="ui-kit-badge-icon" *badge="Unread"><Icon Name="users" Size="24" /></span>
+				</div>
+				<div class="ui-kit-row ui-kit-images">
+					<div class="ui-kit-image-box"><Image Src="data/cards/mountains.svg" Alt="Mountains" Ratio="16/9" Stretch="width" Shape="rounded" /></div>
+					<Image Src="data/cards/sea.svg" Alt="Sea" Width="120" Height="120" Shape="circle" />
+					<Image Src="data:image/png;base64,AAAA" Fallback="data/cards/city.svg" Alt="City" Ratio="1" Width="120" />
+					<Image Src="data:image/png;base64,AAAA" Alt="Nothing" Width="120" Height="90" />
+				</div>
+			</div>
+		</div>
+	</Section>
+
 	<Section Title="Terminal" Note="Type help, date or anything else; Arrow Up recalls the history">
 		<div class="ui-kit-lazy" *lazy>
 			<div class="ui-kit-frame terminal">
@@ -1178,6 +1285,20 @@
 			<RichEditor Label="Example document" Rows="8" MaxRows="20" [value]="RichValue" (ready)="RichReady" (input)="RichTyped" (formats)="RichFormatsChanged" (link)="RichLinkAsked" (files)="RichFiles" />
 			<CodeEditor *if="RichMarkdownShown" Label="Markdown of the document" Language="markdown" Rows="10" [value]="RichMarkdown" (input)="RichMarkdownTyped" />
 			<span class="elemenx-caption">The toolbar above is the page's own: it calls Command. Select text for the quick menu; type # , - , 1. or &gt; at the start of a line; paste or drop an image file.</span>
+		</div>
+	</Section>
+
+	<Section Title="Viewers and formulas" Note="Markdown · CodeView · Formula · Mod+F finds in the editors and the terminal">
+		<div class="ui-kit-lazy" *lazy="400">
+			<div class="ui-kit-grid">
+				<div class="ui-kit-viewer"><Markdown [value]="ViewerMarkdown" Label="Release notes" /></div>
+				<div class="ui-kit-stack">
+					<CodeView [value]="ViewerCode" Language="javascript" LineNumbers="true" Start="10" [highlight]="['12-13']" Label="An example" />
+					<CodeView [value]="ViewerJson" Language="json" Fold="true" [folded]="[7]" Label="A package" />
+					<p class="elemenx-text">The roots of <Formula [value]="Formulas[0]" /> are</p>
+					<Formula Display="true" *for="formula of Formulas.slice(1)" *key="formula" [value]="formula" />
+				</div>
+			</div>
 		</div>
 	</Section>
 
@@ -1354,12 +1475,18 @@
 					</GameHud>
 				</div>
 			</div>
+			<h4>The buttons of the pads: Xbox, PlayStation, Nintendo and any other</h4>
+			<div class="ui-kit-pads">
+				<div class="ui-kit-pad" *for="pad of GamePads" *key="pad">
+					<GameKey *for="button of GamePadButtons" *key="pad + button" [pad]="pad" [button]="button" />
+				</div>
+			</div>
 		</div>
 	</Section>
 
 	<Section Title="Tiles" [note]="'TileGrid · drag tiles to arrange them' + (OpenedTile ? ' · Opened: ' + OpenedTile : '')">
 		<div class="ui-kit-lazy" *lazy>
-			<TileGrid [groups]="TileGroups" Editable="true" GroupPolicy="between" (open)="TileOpened" (change)="TilesChanged" (groupaction)="TileGroupAction">
+			<TileGrid [groups]="TileGroups" Editable="true" Fit="true" GroupPolicy="between" (open)="TileOpened" (change)="TilesChanged" (groupaction)="TileGroupAction">
 				<TileGroup ID="pinned" Title="Pinned" Locked="true">
 					<Tile ID="clock" Title="Clock" Size="wide" Color="#1f2a37" Class="ui-kit-clock-tile">
 						<strong>{{ClockTime}}</strong>
@@ -1380,6 +1507,22 @@
 					<Tile *if="ShowNews" ID="news" Title="News" Icon="globe" Size="small" Color="#9a6514" />
 				</TileGroup>
 			</TileGrid>
+			<h4>A start screen: one row that scrolls, tiles of any size, kept between visits</h4>
+			<div class="ui-kit-start">
+				<TileGrid Editable="true" Direction="horizontal" Scroll="true" MaxColumns="0" Persist="ui-kit-start" GroupPolicy="end" (open)="TileOpened">
+					<TileGroup ID="work" Title="Work" Columns="8" Rows="4">
+						<Button slot="actions" Icon="add" Title="Add a tile" Variant="ghost" Size="small" (click)="AddWorkTile" />
+						<Tile ID="calendar" Title="Calendar" Icon="calendar" Width="3" Height="2" Color="#3b6ea5" />
+						<Tile ID="board" Title="Board" Icon="grid" Size="xlarge" Color="#5b4a8a" />
+						<Tile ID="notes" Title="Notes" Icon="edit" Size="tall" Color="#7a5c1e" />
+						<Tile *for="tile of WorkTiles" *key="tile" [id]="tile" [title]="tile" Icon="file" Size="small" Color="#4d5a66" />
+					</TileGroup>
+					<TileGroup ID="play" Title="Play" Columns="6">
+						<Tile ID="games" Title="Games" Icon="trophy" Size="large" Color="#2f7d4f" />
+						<Tile ID="radio" Title="Radio" Icon="headphones" Size="wide" Color="#8a3b5b" />
+					</TileGroup>
+				</TileGrid>
+			</div>
 		</div>
 	</Section>
 

@@ -1,0 +1,44 @@
+<Table [columns]="Columns" [rows]="Rows" [sort]="Sort" Selectable="multiple" [selected]="Selected" PageSize="5" [page]="Page" [pagesizes]="[5, 10]" (sort)="Sorted" (select)="Picked" (page)="Paged" (activate)="Opened" />
+<p class="elemenx-text small muted">{{Note}}</p>
+<script>
+({
+	Sort: {Key: 'Name', Direction: 'asc'},
+	Selected: [],
+	Page: 1,
+	Note: 'Sort by a title, filter under it, select rows; a double click opens one.',
+	Columns: [
+		{Key: 'Name', Title: 'Name', Sortable: true, Filter: 'text'},
+		{Key: 'Role', Title: 'Role', Sortable: true, Filter: 'select'},
+		{Key: 'Tasks', Title: 'Tasks', Align: 'right', Sortable: true, Filter: 'number'},
+		{Key: 'Since', Title: 'Since', Sortable: true, Format: function (value) {
+			return new Date(value).toLocaleDateString();
+		}}
+	],
+	Rows: [
+		{ID: 1, Name: 'Ada', Role: 'Analyst', Tasks: 12, Since: '2019-03-01'},
+		{ID: 2, Name: 'Alan', Role: 'Engineer', Tasks: 7, Since: '2020-06-15'},
+		{ID: 3, Name: 'Grace', Role: 'Engineer', Tasks: 21, Since: '2018-01-09'},
+		{ID: 4, Name: 'Edsger', Role: 'Architect', Tasks: 3, Since: '2021-11-30'},
+		{ID: 5, Name: 'Barbara', Role: 'Analyst', Tasks: 15, Since: '2017-08-21'},
+		{ID: 6, Name: 'Donald', Role: 'Writer', Tasks: 9, Since: '2016-04-04'},
+		{ID: 7, Name: 'Margaret', Role: 'Engineer', Tasks: 18, Since: '2022-02-14'}
+	],
+
+	Sorted: function (sort) {
+		this.Sort = sort;
+	},
+
+	Picked: function (keys) {
+		this.Selected = keys;
+		this.Note = keys.length + ' selected: ' + keys.join(', ');
+	},
+
+	Paged: function (event) {
+		this.Page = event.Page;
+	},
+
+	Opened: function (row) {
+		this.Note = 'Open ' + row.Name;
+	}
+})
+</script>

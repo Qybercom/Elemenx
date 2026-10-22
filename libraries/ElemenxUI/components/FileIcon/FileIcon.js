@@ -1,6 +1,7 @@
 /*
- * The icon of a file name: <FileIcon Name="report.pdf" />, from the files set (Icons.File). Unknown formats get the
- * plain file icon.
+ * The icon of a file by its name: <FileIcon Name="report.pdf" />, from the set files (Icons.File): about 170 formats
+ * and their other extensions, double extensions (.tar.gz) and well-known names (Dockerfile, Makefile, .gitignore).
+ * Unknown formats get the plain file icon. Size in pixels (16); Label names it for screen readers.
  */
 Elemenx.Component('FileIcon', {
 	$TemplateURL: 'FileIcon.html',

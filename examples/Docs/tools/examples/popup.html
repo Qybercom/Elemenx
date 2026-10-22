@@ -1,0 +1,20 @@
+<span class="elemenx-popup-anchor">
+	<Button Label="Options" Icon="chevron-down" (click)="Toggle" />
+	<div class="elemenx-card" style="padding: 12px; width: 220px;" *popup="Opened" data-placement="bottom-start" (dismiss)="Close">
+		<p class="elemenx-text">A floating panel next to its anchor, over everything.</p>
+		<Button Label="OK" Size="small" (click)="Close" />
+	</div>
+</span>
+<script>
+({
+	Opened: false,
+
+	Toggle: function () {
+		this.Opened = !this.Opened;
+	},
+
+	Close: function () {
+		this.Opened = false;
+	}
+})
+</script>

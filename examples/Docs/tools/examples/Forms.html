@@ -1,0 +1,35 @@
+<Form [model]="Model" (submit)="Sent">
+	<Field Label="Name" Name="Name"><Input /></Field>
+	<Field Label="Email" Name="Email"><Input Type="email" /></Field>
+	<Button Type="submit" Label="Send" Variant="primary" />
+</Form>
+<p class="elemenx-text small muted">{{Status}} · {{Errors}}</p>
+<script>
+({
+	Model: null,
+	Status: '',
+	Errors: '',
+
+	$OnCreate: function () {
+		var self = this;
+		var forms = this.$Service('Forms');
+
+		this.Model = forms.Group({
+			Name: forms.Control('', [forms.Validators.Required, forms.Validators.MinLength(2)]),
+			Email: forms.Control('', [forms.Validators.Required, forms.Validators.Email])
+		});
+
+		this.Show = function (model) {
+			self.Status = model.Status;
+			self.Errors = JSON.stringify({Name: model.Get('Name').Errors, Email: model.Get('Email').Errors});
+		};
+
+		this.Model.OnChange(this.Show);
+		this.Show(this.Model);
+	},
+
+	Sent: function (result) {
+		this.Status = 'Sent: ' + JSON.stringify(result.Value);
+	}
+})
+</script>

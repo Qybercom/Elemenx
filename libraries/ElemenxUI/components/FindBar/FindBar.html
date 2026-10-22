@@ -1,0 +1,19 @@
+<div class="elemenx-find" role="search" [attribute.aria-label]="Label || $T('ui.find.label')" (keydown)="Key">
+	<div class="elemenx-find-row">
+		<button class="elemenx-find-button" type="button" *if="CanReplace" [attribute.aria-expanded]="String(!!Replacing)" [attribute.title]="$T('ui.find.toggleReplace')" [attribute.aria-label]="$T('ui.find.toggleReplace')" (click)="Switch"><Icon [name]="Replacing ? 'chevron-down' : 'chevron-right'" Size="14" /></button>
+		<input class="elemenx-find-query" type="text" spellcheck="false" autocomplete="off" [value]="Query" [placeholder]="$T('ui.find.placeholder')" [attribute.aria-label]="$T('ui.find.placeholder')" (input)="Typed" />
+		<button class="elemenx-find-option" type="button" data-option="Case" [attribute.aria-pressed]="String(!!Case)" [attribute.title]="$T('ui.find.case')" [attribute.aria-label]="$T('ui.find.case')" (click)="Toggled">Aa</button>
+		<button class="elemenx-find-option" type="button" data-option="Word" [attribute.aria-pressed]="String(!!Word)" [attribute.title]="$T('ui.find.word')" [attribute.aria-label]="$T('ui.find.word')" (click)="Toggled"><u>ab</u></button>
+		<button class="elemenx-find-option" type="button" data-option="RegExp" [attribute.aria-pressed]="String(!!RegExp)" [attribute.title]="$T('ui.find.regexp')" [attribute.aria-label]="$T('ui.find.regexp')" (click)="Toggled">.*</button>
+		<span class="elemenx-find-count" role="status">{{Query ? (Count ? $T('ui.find.count', {index: Index + 1, count: Count}) : $T('ui.find.none')) : ''}}</span>
+		<button class="elemenx-find-button" type="button" [disabled]="!Count" [attribute.title]="$T('ui.find.previous')" [attribute.aria-label]="$T('ui.find.previous')" (click)="Previous"><Icon Name="arrow-up" Size="14" /></button>
+		<button class="elemenx-find-button" type="button" [disabled]="!Count" [attribute.title]="$T('ui.find.next')" [attribute.aria-label]="$T('ui.find.next')" (click)="Next"><Icon Name="arrow-down" Size="14" /></button>
+		<button class="elemenx-find-button" type="button" [attribute.title]="$T('ui.find.close')" [attribute.aria-label]="$T('ui.find.close')" (click)="Close"><Icon Name="close" Size="14" /></button>
+	</div>
+	<div class="elemenx-find-row" *if="CanReplace && Replacing">
+		<span class="elemenx-find-indent"></span>
+		<input class="elemenx-find-replacement" type="text" spellcheck="false" autocomplete="off" [value]="Replacement" [placeholder]="$T('ui.find.replacement')" [attribute.aria-label]="$T('ui.find.replacement')" (input)="Written" />
+		<button class="elemenx-find-text-button" type="button" [disabled]="!Count" (click)="Replace">{{$T('ui.find.replace')}}</button>
+		<button class="elemenx-find-text-button" type="button" [disabled]="!Count" (click)="ReplaceAll">{{$T('ui.find.replaceAll')}}</button>
+	</div>
+</div>

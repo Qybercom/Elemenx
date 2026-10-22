@@ -1,0 +1,10 @@
+<Field Label="Currency" [hint]="Value"><CurrencySelect Value="EUR" (change)="Changed" /></Field>
+<script>
+({
+	Value: 'EUR',
+
+	Changed: function (value) {
+		this.Value = value;
+	}
+})
+</script>

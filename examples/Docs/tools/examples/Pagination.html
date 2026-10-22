@@ -1,0 +1,33 @@
+<Pagination Count="240" [pagesize]="Size" [page]="Page" [pagesizes]="[10, 20, 50]" (page)="Paged" />
+<ul class="elemenx-ul"><li *for="item of Items" *key="item">Item {{item}}</li></ul>
+<Pagination Count="240" Page="7" PageSize="10" Siblings="2" ShowRange="false" ShowFirstLast="false" />
+<script>
+({
+	Page: 3,
+	Size: 10,
+	Items: [],
+
+	$OnCreate: function () {
+		this.Fill();
+	},
+
+	Fill: function () {
+		var first = (this.Page - 1) * this.Size + 1;
+		var result = [];
+		var i = 0;
+
+		while (i < 3) {
+			result.push(first + i);
+			i++;
+		}
+
+		this.Items = result;
+	},
+
+	Paged: function (event) {
+		this.Page = event.Page;
+		this.Size = event.PageSize;
+		this.Fill();
+	}
+})
+</script>

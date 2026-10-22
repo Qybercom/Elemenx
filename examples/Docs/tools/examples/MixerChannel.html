@@ -1,0 +1,16 @@
+<div class="elemenx-container" style="gap: 8px;">
+	<MixerChannel ID="guitar" Label="Guitar" Color="#30a46c" [volume]="Volume" [pan]="Pan" [level]="[-14, -16]" [peak]="[-8, -9]" [knobs]="[{Label: 'Gain', Value: 4, Min: 0, Max: 12, Unit: ' dB'}]" (change)="Changed" />
+	<MixerChannel ID="master" Label="Master" Master="true" Volume="0" [level]="[-8, -9]" [peak]="[-3, -4]" />
+</div>
+<p class="elemenx-text small muted">Volume {{Volume}} dB · pan {{Pan}}</p>
+<script>
+({
+	Volume: -6,
+	Pan: 10,
+
+	Changed: function (event) {
+		if (event.Key === 'Volume') this.Volume = event.Value;
+		else if (event.Key === 'Pan') this.Pan = event.Value;
+	}
+})
+</script>

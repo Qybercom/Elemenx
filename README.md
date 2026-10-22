@@ -53,6 +53,13 @@ npm run example:simple
 npm run example:advanced
 ```
 
+Two applications are built with ElemenxUI as well: `examples/Docs`, the reference of Elemenx and of the Library in English and Russian (its pages are Markdown files, `pages/<section>/<page>.<language>.md`; `npm run docs:pages` makes the pages of the Library again from the comments of its sources), and `examples/Builder`, a visual builder of pages that exports and imports their templates (its palette holds every component of the Library and the classes of its layouts; `npm run builder:palette` makes it again from the sources):
+
+```bash
+npm run example:docs
+npm run example:builder
+```
+
 `Advanced` is also a standalone package consumer: after copying it outside the repository, run `npm install` and `npm run dev`. Its `@qybercom/elemenx` dependency provides the framework and CLI; the example does not carry a private copy of `elemenx.js` or the server.
 
 The production path is exercised with:

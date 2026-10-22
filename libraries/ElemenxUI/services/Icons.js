@@ -8,7 +8,8 @@
  * <svg id="elemenx-icons"> of the page: elemenx-icon-<name> for the library sprite, elemenx-icon-<set>-<name> for a set.
  * Every Icon draws the shapes of its symbol itself (*glyph), so a set needs the same origin or CORS.
  * Override('save', 'brand:disk') makes every icon named save draw another symbol; Override('save') restores it.
- * Load(set, callback) calls back (error, names). Names(set) lists the names of a loaded set. Href(name) is the reference
+ * Load(set, callback) calls back (error, names). Ready(set) tells whether a set is in the page ('' the library sprite).
+ * Names(set) lists the names of a loaded set. Href(name) is the reference
  * an Icon draws. OnChange(callback) reports {Set} when a set loads and {Override: name} when an override changes.
  * The state is kept on the hidden <svg>, so every Application of the page shares the sets.
  */

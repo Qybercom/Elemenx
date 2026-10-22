@@ -1,0 +1,57 @@
+<div class="elemenx-container wrappable" style="gap: 8px;">
+	<Button Icon="bold" Title="Bold" Size="small" [pressed]="Formats.Bold" (click)="Bold" />
+	<Button Icon="italic" Title="Italic" Size="small" [pressed]="Formats.Italic" (click)="Italic" />
+	<Button Label="H2" Size="small" (click)="Heading" />
+	<Button Icon="list" Title="A list" Size="small" (click)="Bullets" />
+	<Button Icon="undo" Title="Undo" Size="small" (click)="Undo" />
+	<Button Label="As Markdown" Size="small" (click)="Export" />
+</div>
+<RichEditor Rows="5" [value]="Html" (ready)="Ready" (formats)="Moved" (change)="Changed" />
+<pre class="elemenx-code" *if="Output">{{Output}}</pre>
+<script>
+(function () {
+	var editor = null;
+
+	return {
+		Html: '<h2>Notes</h2><p>Select some <strong>text</strong> to see the quick menu. Type <code>- </code> at the start of a line for a list.</p>',
+		Formats: {},
+		Output: '',
+
+		Ready: function (instance) {
+			editor = instance;
+		},
+
+		Moved: function (formats) {
+			this.Formats = formats;
+		},
+
+		Changed: function (html) {
+			this.Html = html;
+		},
+
+		Bold: function () {
+			editor.Command('bold');
+		},
+
+		Italic: function () {
+			editor.Command('italic');
+		},
+
+		Heading: function () {
+			editor.Command('heading', 2);
+		},
+
+		Bullets: function () {
+			editor.Command('bullets');
+		},
+
+		Undo: function () {
+			editor.Command('undo');
+		},
+
+		Export: function () {
+			this.Output = editor.Markdown();
+		}
+	};
+})()
+</script>

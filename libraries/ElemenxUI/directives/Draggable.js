@@ -5,7 +5,8 @@
  * frame while the item is over it) and "dropped". Over a target with Sort, Index in their detail is the place the item
  * would take among the draggable items of that target (the dragged item left out), and a line marks it. OffsetX and
  * OffsetY are the point of the element that the pointer holds, so ClientX - OffsetX is the left edge of the ghost.
- * Disabled turns dragging off; Handle limits where the drag may start. A drag outlives a new rendering of its element
+ * Disabled turns dragging off; Handle limits where the drag may start. Hold (milliseconds) leaves a finger to the page:
+ * on a touch screen a move scrolls it, and a press held still that long takes the element (it shows held). A drag outlives a new rendering of its element
  * (a list that moves the item to another place while it is dragged): it ends on the release of the pointer.
  */
 Elemenx.Directive('draggable', {
@@ -244,6 +245,12 @@ Elemenx.Directive('draggable', {
 		function finish (event, dropped) {
 			var target = data.Over;
 
+			window.clearTimeout(data.HoldTimer);
+
+			data.Ready = false;
+
+			element.classList.remove('held');
+
 			document.removeEventListener('pointermove', data.Move, true);
 			document.removeEventListener('pointerup', data.Up, true);
 			document.removeEventListener('pointercancel', data.Cancel, true);
@@ -317,6 +324,18 @@ Elemenx.Directive('draggable', {
 			data.StartX = event.clientX;
 			data.StartY = event.clientY;
 			data.Active = false;
+			data.Ready = true;
+
+			/* A finger with Hold: the page scrolls by it until it stays still long enough to take the element. */
+			if (data.Options.Hold && event.pointerType !== 'mouse') {
+				data.Ready = false;
+
+				data.HoldTimer = window.setTimeout(function () {
+					data.Ready = true;
+
+					element.classList.add('held');
+				}, Number(data.Options.Hold));
+			}
 
 			document.addEventListener('pointermove', data.Move, true);
 			document.addEventListener('pointerup', data.Up, true);
@@ -328,6 +347,13 @@ Elemenx.Directive('draggable', {
 		data.Move = function (event) {
 			if (!data.Active) {
 				if (Math.abs(event.clientX - data.StartX) + Math.abs(event.clientY - data.StartY) < 4) return;
+
+				/* Moved before the hold: it is a scroll of the page, not a drag. */
+				if (!data.Ready) {
+					finish(event, false);
+
+					return;
+				}
 
 				begin(event);
 			}
@@ -381,7 +407,15 @@ Elemenx.Directive('draggable', {
 			finish({clientX: data.StartX, clientY: data.StartY}, false);
 		};
 
+		/* Once a held finger takes the element, the page does not scroll by it (nor shows its menu of a long press). */
+		data.Touch = function (event) {
+			if (data.Ready && data.Options.Hold && (data.Active || element.classList.contains('held')))
+				event.preventDefault();
+		};
+
 		element.addEventListener('pointerdown', data.Down);
+		element.addEventListener('touchmove', data.Touch, {passive: false});
+		element.addEventListener('contextmenu', data.Touch);
 	},
 
 	$OnUpdate: function (context) {
@@ -392,11 +426,16 @@ Elemenx.Directive('draggable', {
 
 		context.Element.classList.add('elemenx-draggable');
 		context.Element.classList.toggle('disabled', !!options.Disabled);
+		context.Element.classList.toggle('hold', !!options.Hold);
 		context.Element.setAttribute('aria-roledescription', 'draggable');
 	},
 
 	$OnDestroy: function (context) {
 		context.Element.removeEventListener('pointerdown', context.Data.Down);
+		context.Element.removeEventListener('touchmove', context.Data.Touch);
+		context.Element.removeEventListener('contextmenu', context.Data.Touch);
+
+		window.clearTimeout(context.Data.HoldTimer);
 
 		/* A drag in progress keeps its listeners and ghost until the pointer is released. */
 		if (context.Data.Active) return;

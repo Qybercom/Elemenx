@@ -1,3 +1,10 @@
+/*
+ * A number field. Value is a number or null. Min and Max bound it, Step is the step of the arrows (Shift: ten steps)
+ * and of the buttons beside the field (Controls false hides them), Precision the number of decimals it keeps. Only
+ * digits, one point (a comma becomes one) and a leading minus can be typed; the value is bounded and rounded when it is
+ * committed. Prefix and Suffix stand inside the field ('$', 'kg'). Size, Shape, Placeholder, Name, Disabled, ReadOnly
+ * and Invalid as in Input. Events: input (Value, while typing), change (Value, when committed).
+ */
 Elemenx.Component('NumberInput', {
 	$TemplateURL: 'NumberInput.html',
 	$StyleURL: 'NumberInput.css',

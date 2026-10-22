@@ -1,0 +1,32 @@
+<div class="docs-frame">
+	<SettingsMenu Variant="ios" Title="Settings" Searchable="true" [items]="Items" (select)="Picked" (toggle)="Toggled" />
+</div>
+<p class="elemenx-text small muted">{{Note}}</p>
+<script>
+({
+	Note: '',
+	Items: [
+		{Group: 'Connections'},
+		{ID: 'airplane', Label: 'Airplane mode', Icon: 'send', Color: '#ff9500', Toggle: true},
+		{ID: 'wifi', Label: 'Wi-Fi', Icon: 'globe', Color: '#007aff', Value: 'Home', Choice: true, Items: [
+			{Group: 'Networks', Note: 'Known networks join on their own.'},
+			{ID: 'home', Label: 'Home', Checked: true},
+			{ID: 'office', Label: 'Office'}
+		]},
+		{ID: 'notifications', Label: 'Notifications', Icon: 'bell', Color: '#ff3b30', Badge: 2, Items: [
+			{ID: 'sounds', Label: 'Sounds', Toggle: true, Checked: true}
+		]},
+		{Group: 'Display', Note: 'Dark mode can follow the time of day.'},
+		{ID: 'dark', Label: 'Dark mode', Icon: 'moon', Color: '#5856d6', Toggle: true},
+		{ID: 'about', Label: 'About', Icon: 'info', Color: '#8e8e93'}
+	],
+
+	Picked: function (event) {
+		this.Note = 'Selected: ' + event.ID;
+	},
+
+	Toggled: function (event) {
+		this.Note = event.ID + ' is ' + (event.Checked ? 'on' : 'off');
+	}
+})
+</script>

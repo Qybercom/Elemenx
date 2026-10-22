@@ -1,0 +1,32 @@
+<Select [options]="Languages" [value]="Language" (change)="Chose" />
+<pre class="elemenx-code" [property.innerHTML]="Html(Sample, Language)"></pre>
+<p class="elemenx-text small muted">{{Count(Sample, Language)}} tokens</p>
+<script>
+({
+	Language: 'javascript',
+	Sample: "// A sum\nfunction add (a, b) {\n\treturn a + b * 2; /* twice */\n}\n",
+	Languages: [{Value: 'javascript', Label: 'JavaScript'}, {Value: 'python', Label: 'Python'}, {Value: 'sql', Label: 'SQL'}],
+	Samples: {
+		javascript: "// A sum\nfunction add (a, b) {\n\treturn a + b * 2; /* twice */\n}\n",
+		python: "def add(a, b):\n\t\"\"\"A sum.\"\"\"\n\treturn a + b * 2  # twice\n",
+		sql: "SELECT name, COUNT(*) AS orders\nFROM users\nWHERE active = 1\nGROUP BY name;\n"
+	},
+
+	$OnCreate: function () {
+		var syntax = this.$Service('Syntax');
+
+		this.Html = function (text, language) {
+			return syntax.HTML(text, language);
+		};
+
+		this.Count = function (text, language) {
+			return syntax.Tokens(text, language).length;
+		};
+	},
+
+	Chose: function (value) {
+		this.Language = value;
+		this.Sample = this.Samples[value];
+	}
+})
+</script>

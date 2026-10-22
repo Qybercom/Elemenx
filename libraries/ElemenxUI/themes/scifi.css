@@ -61,6 +61,7 @@
 	--elemenx-game-blur: blur(6px);
 	--elemenx-game-decor: linear-gradient(#5ce1f5, #5ce1f5) 18px 18px / calc(100% - 36px) 3px no-repeat, linear-gradient(#ff7a2e, #ff7a2e) calc(100% - 18px) 11px / 12px 4px no-repeat, var(--elemenx-scifi-lines);
 	--elemenx-game-decor-inset: -18px;
+	--elemenx-game-folder-edge: #6fe9ff80;
 	--elemenx-game-header: none;
 	--elemenx-game-header-line: 0;
 	--elemenx-game-header-image: none;
@@ -117,6 +118,7 @@
 	--elemenx-game-section-gap: 8px;
 	--elemenx-game-section-padding: 0 10px 10px;
 	--elemenx-game-section-frame: 1px solid #6fe9ff3d;
+	--elemenx-game-section-edge: #6fe9ff3d;
 	--elemenx-game-section-title-margin: 0 -10px 2px;
 	--elemenx-game-section-title-padding: 4px 10px;
 	--elemenx-game-stats-gap: 4px 2px;
@@ -223,6 +225,11 @@
 
 [data-theme][data-theme='scifi'] .elemenx-window.game .elemenx-window-header {
 	min-height: 52px;
+}
+
+/* A folder: its tab is as tall as that header, and the body begins under it. */
+[data-theme][data-theme='scifi'] .elemenx-window.game.trapezoid {
+	--elemenx-window-tab-height: 52px;
 }
 
 [data-theme][data-theme='scifi'] .elemenx-window.game .elemenx-window-title,

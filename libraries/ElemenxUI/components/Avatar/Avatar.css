@@ -1,0 +1,80 @@
+/* A square of its Size, round by its Shape; a made avatar is a face of the color of its name. */
+.elemenx-avatar {
+	--elemenx-avatar-size: 32px;
+	position: relative;
+	display: inline-flex;
+	flex: none;
+	width: var(--elemenx-avatar-size);
+	height: var(--elemenx-avatar-size);
+	border-radius: 50%;
+	font-size: calc(var(--elemenx-avatar-size) * 0.4);
+	vertical-align: middle;
+	user-select: none;
+}
+
+.elemenx-avatar.small {
+	--elemenx-avatar-size: 24px;
+}
+
+.elemenx-avatar.large {
+	--elemenx-avatar-size: 48px;
+}
+
+.elemenx-avatar.xlarge {
+	--elemenx-avatar-size: 64px;
+}
+
+.elemenx-avatar.rounded {
+	border-radius: var(--elemenx-radius-large);
+}
+
+.elemenx-avatar.square {
+	border-radius: var(--elemenx-radius);
+}
+
+.elemenx-avatar-image,
+.elemenx-avatar-face {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	height: 100%;
+	overflow: hidden;
+	border-radius: inherit;
+}
+
+.elemenx-avatar-image {
+	object-fit: cover;
+}
+
+.elemenx-avatar-initials {
+	color: var(--elemenx-avatar-text);
+	font-weight: var(--elemenx-font-weight-strong);
+	line-height: 1;
+	letter-spacing: 0.02em;
+}
+
+.elemenx-avatar-art {
+	display: block;
+	width: 100%;
+	height: 100%;
+}
+
+/* The dot of the presence on the corner, ringed by the surface around. */
+.elemenx-avatar-status {
+	position: absolute;
+	right: 0;
+	bottom: 0;
+	display: inline-flex;
+	line-height: 0;
+}
+
+.elemenx-avatar-status .elemenx-presence-dot {
+	box-shadow: 0 0 0 2px var(--elemenx-surface);
+}
+
+.elemenx-avatar.square .elemenx-avatar-status,
+.elemenx-avatar.rounded .elemenx-avatar-status {
+	right: -2px;
+	bottom: -2px;
+}

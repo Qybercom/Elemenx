@@ -1,0 +1,16 @@
+<Gallery [items]="Pictures" ShowThumbs="true" Label="Places" (change)="Changed" />
+<p class="elemenx-text small muted">Picture {{Index + 1}} of {{Pictures.length}}</p>
+<script>
+({
+	Index: 0,
+	Pictures: [
+		{ID: 'mountains', Image: '/data/cards/mountains.svg', Title: 'Mountains', Description: 'The northern range at dawn.', Tags: ['nature', 'cold']},
+		{ID: 'sea', Image: '/data/cards/sea.svg', Title: 'Sea', Description: 'A calm bay in the south.', Tags: ['nature', 'water']},
+		{ID: 'city', Image: '/data/cards/city.svg', Title: 'City', Description: 'Lights of the old town.', Tags: ['night']}
+	],
+
+	Changed: function (index) {
+		this.Index = index;
+	}
+})
+</script>

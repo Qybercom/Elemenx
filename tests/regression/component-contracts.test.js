@@ -54,6 +54,109 @@ describe('Regression: Template and Component contracts', function () {
 		}).toThrow('Elemenx template not found: #Absent');
 	});
 
+	it('a <template> of the page finds its Components in any case (the parser writes their names in lower case)', function () {
+		var child = unique('CaseChild');
+		var element = unique('CaseTemplate');
+
+		Elemenx.Component(child, {$Template: '<b class="case-child">{{Text}}</b>', Text: ''});
+
+		document.body.insertAdjacentHTML('beforeend', '<template id="' + element + '"><section class="case-owner"><' + child + ' [Text]="\'found\'"></' + child + '><button class="native">native</button></section></template>');
+
+		var owner = mounted(Elemenx.Component(unique('CaseOwner'), {$Template: '#' + element})());
+
+		expect(owner.$Element().querySelector('.case-child').textContent).toBe('found');
+		expect(owner.$Element().querySelector('.native').tagName).toBe('BUTTON');
+	});
+
+	it('a <template> of the page with a Component at its root takes it in any case', function () {
+		var child = unique('CaseRoot');
+		var element = unique('CaseRootTemplate');
+
+		Elemenx.Component(child, {$Template: '<b class="case-root">{{Text}}</b>', Text: ''});
+
+		document.body.insertAdjacentHTML('beforeend', '<template id="' + element + '"><' + child + ' [Text]="\'root\'"></' + child + '></template>');
+
+		var owner = mounted(Elemenx.Component(unique('CaseRootOwner'), {$Template: '#' + element})());
+
+		expect(owner.$Element().querySelector('.case-root').textContent).toBe('root');
+	});
+
+	it('a <script type="text/html" id> of the page is a template that keeps the case of its names', function () {
+		var name = unique('Cased');
+		var element = unique('ScriptTemplate');
+
+		Elemenx.Component(name, {$Template: '<b class="mixed">mixed</b>'});
+		Elemenx.Component(name.toUpperCase(), {$Template: '<b class="upper">upper</b>'});
+
+		document.body.insertAdjacentHTML('beforeend', '<script type="text/html" id="' + element + '"><p class="from-script">{{Text}} <' + name + '></' + name + '></p></script>');
+
+		var owner = mounted(Elemenx.Component(unique('ScriptOwner'), {$Template: '#' + element, Text: 'script'})());
+
+		expect(owner.$Element().className).toBe('from-script');
+		expect(owner.$Element().textContent).toBe('script mixed');
+	});
+
+	it('a template of one element and comments has that element as its root, not a wrapper', function () {
+		var child = unique('CommentedChild');
+		var commented = mounted(Elemenx.Component(unique('Commented'), {$Template: '<!-- the card -->\n<section class="commented">{{Text}}</section>\n<!-- end -->', Text: 'one'})());
+
+		Elemenx.Component(child, {$Template: '<b class="commented-child">child</b>'});
+
+		var owner = mounted(Elemenx.Component(unique('CommentedOwner'), {$Template: '<!-- a component at the root -->\n<' + child + '></' + child + '>'})());
+
+		expect(commented.$Element().tagName).toBe('SECTION');
+		expect(commented.$Element().textContent).toBe('one');
+		expect(owner.$Element().tagName).not.toBe('DIV');
+		expect(document.querySelectorAll('#mount .commented-child').length).toBe(1);
+	});
+
+	it('a change a component emits also goes up the DOM as elemenx-change with the value, after its listeners', function () {
+		var heard = [];
+		var picker = mounted(Elemenx.Component(unique('ChangePicker'), {$Template: '<span class="change-picker"></span>'})());
+
+		picker.$On('change', function (value) {
+			heard.push('listener ' + value);
+		});
+
+		document.getElementById('mount').addEventListener('elemenx-change', function (event) {
+			heard.push('dom ' + event.detail + ' ' + event.target.className);
+		});
+
+		picker.$Emit('change', 7);
+		picker.$Emit('input', 8);
+
+		expect(heard).toEqual(['listener 7', 'dom 7 change-picker']);
+	});
+
+	/* Regression: a row whose hooks wrote into its item made the effect of the list depend on it, and the rows came twice. */
+	it('the hooks of a row of a *for that write into its item do not render the list again: each row comes once', async function () {
+		var row = unique('HookRow');
+		var holder = {Items: [{Name: 'a', Listeners: []}]};
+		var listener = function () {};
+
+		Elemenx.Component(row, {
+			$Template: '<b>{{Item.Name}}</b>',
+			Item: null,
+			$OnReady: function () {
+				this.Item.Listeners.push(listener);
+			},
+			$OnDestroy: function () {
+				this.Item.Listeners.splice(this.Item.Listeners.indexOf(listener), 1);
+			}
+		});
+
+		var owner = mounted(Elemenx.Component(unique('HookList'), {$Template: '<main><p class="hook-row" *for="item of Model.Items"><' + row + ' [Item]="item"></' + row + '></p></main>', Model: holder})());
+
+		owner.Model.Items.push({Name: 'b', Listeners: []});
+
+		await waitFor(function () {
+			return owner.$Element().textContent === 'ab';
+		}, 1000);
+
+		expect(owner.$Element().querySelectorAll('.hook-row').length).toBe(2);
+		expect(owner.$Element().textContent).toBe('ab');
+	});
+
 	it('a template with blank lines around its element (the final newline of a file) has that element as its root', function () {
 		var spaced = mounted(Elemenx.Component(unique('Spaced'), {$Template: '\n\t<section class="spaced"><b>{{Text}}</b></section>\n\n', Text: 'root'})());
 		var several = mounted(Elemenx.Component(unique('Several'), {$Template: '<i class="one"></i>\n<i class="two"></i>\n'})());
@@ -147,5 +250,34 @@ describe('Regression: Template and Component contracts', function () {
 		}
 
 		expect(logged).toEqual(['Elemenx TemplateURL failed: /component-contracts/Missing.html (404)']);
+	});
+	it('an event that $OnCreate or $OnReady emits reaches the listener of its tag, and $Parent() is its owner there', function () {
+		var child = unique('EarlyChild');
+		var parents = [];
+		var owner;
+
+		Elemenx.Component(child, {
+			$Template: '<i>child</i>',
+			$OnCreate: function () {
+				parents.push(this.$Parent());
+
+				this.$Emit('life', 'create');
+			},
+			$OnReady: function () {
+				this.$Emit('life', 'ready');
+			}
+		});
+
+		owner = mounted(Elemenx.Component(unique('EarlyOwner'), {
+			$Template: '<div><' + child + ' (life)="Heard"></' + child + '><b class="early-log">{{Log.join(",")}}</b></div>',
+			Log: [],
+			Heard: function (value) {
+				this.Log = this.Log.concat([value]);
+			}
+		})({}));
+
+		expect(owner.$Element().querySelector('.early-log').textContent).toBe('create,ready');
+		expect(parents.length).toBe(1);
+		expect(parents[0]).toBe(owner);
 	});
 });

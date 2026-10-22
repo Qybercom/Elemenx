@@ -1,0 +1,28 @@
+<div class="docs-stack">
+	<ChatMessage Author="Grace Hopper" Text="The build is green again." Time="10:02" Position="first" />
+	<ChatMessage Author="Grace Hopper" Text="Can you check the new table?" Time="10:03" Position="last" Edited="Edited at 10:04" />
+	<ChatMessage Author="Me" Text="Looks good, merging it now." Time="10:05" Own="true" Status="read" React="true" [reactions]="Reactions" [actions]="Actions" [viewers]="Viewers" (react)="Reacted" (action)="Acted" />
+</div>
+<p class="elemenx-text small muted">{{Note}}</p>
+<script>
+({
+	Note: 'Right click the last message for its menu; press a reaction.',
+	Reactions: [{Emoji: '🎉', Count: 2, Mine: false, Users: [{Name: 'Grace Hopper'}, {Name: 'Alan Turing'}]}, {Emoji: '👍', Count: 1, Mine: true, Users: [{Name: 'Me'}]}],
+	Viewers: [{Name: 'Grace Hopper', Time: '10:06'}, {Name: 'Alan Turing', Time: '10:11'}],
+	Actions: [
+		{ID: 'reply', Label: 'Reply', Icon: 'reply'},
+		{ID: 'copy', Label: 'Copy', Icon: 'copy'},
+		{ID: 'summary', Label: 'Reactions and views', Icon: 'eye'},
+		{Separator: true, ID: 'separator'},
+		{ID: 'delete', Label: 'Delete', Icon: 'delete', Danger: true}
+	],
+
+	Reacted: function (event) {
+		this.Note = 'Reacted with ' + event.Emoji;
+	},
+
+	Acted: function (event) {
+		this.Note = 'Action: ' + (event.Item ? event.Item.ID : event.ID);
+	}
+})
+</script>

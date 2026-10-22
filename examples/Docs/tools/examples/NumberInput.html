@@ -1,0 +1,13 @@
+<Field Label="Price"><NumberInput [value]="Price" Prefix="$" Precision="2" Step="0.5" Min="0" (change)="Priced" /></Field>
+<Field Label="Weight"><NumberInput Value="70" Suffix="kg" Min="1" Max="300" /></Field>
+<Field Label="Quantity" Hint="Without the buttons"><NumberInput Value="3" Controls="false" /></Field>
+<p class="elemenx-text small muted">Price: {{Price === null ? 'empty' : Price}} · the arrows step, Shift ten steps.</p>
+<script>
+({
+	Price: 19.99,
+
+	Priced: function (value) {
+		this.Price = value;
+	}
+})
+</script>

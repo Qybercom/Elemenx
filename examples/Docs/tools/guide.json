@@ -1,0 +1,58 @@
+{
+	"Sections": [
+		{
+			"ID": "guide",
+			"Title": {"en": "Guide", "ru": "Руководство"},
+			"Pages": [
+				{"ID": "start", "Title": {"en": "Getting started", "ru": "Начало работы"}},
+				{"ID": "applications", "Title": {"en": "Applications", "ru": "Приложения"}},
+				{"ID": "components", "Title": {"en": "Components", "ru": "Компоненты"}},
+				{"ID": "templates", "Title": {"en": "Templates", "ru": "Шаблоны"}},
+				{"ID": "reactivity", "Title": {"en": "State and reactivity", "ru": "Состояние и реактивность"}},
+				{"ID": "lifecycle", "Title": {"en": "Lifecycle", "ru": "Жизненный цикл"}},
+				{"ID": "directives", "Title": {"en": "Directives", "ru": "Директивы"}},
+				{"ID": "services", "Title": {"en": "Services", "ru": "Сервисы"}},
+				{"ID": "router", "Title": {"en": "Router", "ru": "Маршрутизатор"}},
+				{"ID": "guards", "Title": {"en": "Guards", "ru": "Охранники маршрутов"}},
+				{"ID": "locale", "Title": {"en": "Languages", "ru": "Языки"}},
+				{"ID": "forms", "Title": {"en": "Forms", "ru": "Формы"}},
+				{"ID": "styles", "Title": {"en": "Styles and shadow DOM", "ru": "Стили и shadow DOM"}},
+				{"ID": "cache", "Title": {"en": "Lazy rendering and cache", "ru": "Ленивая отрисовка и кэш"}},
+				{"ID": "resources", "Title": {"en": "Resources and bundles", "ru": "Ресурсы и бандлы"}},
+				{"ID": "library", "Title": {"en": "Libraries and ElemenxUI", "ru": "Библиотеки и ElemenxUI"}},
+				{"ID": "theming", "Title": {"en": "Themes", "ru": "Темы"}},
+				{"ID": "cli", "Title": {"en": "The CLI", "ru": "CLI"}},
+				{"ID": "build", "Title": {"en": "Builds", "ru": "Сборки"}}
+			]
+		},
+		{
+			"ID": "network",
+			"Title": {"en": "Network", "ru": "Сеть"},
+			"Pages": [
+				{"ID": "overview", "Title": {"en": "Overview", "ru": "Обзор"}},
+				{"ID": "xhr", "Title": {"en": "XHR", "ru": "XHR"}},
+				{"ID": "stream", "Title": {"en": "Stream", "ru": "Stream"}},
+				{"ID": "longpolling", "Title": {"en": "LongPolling", "ru": "LongPolling"}},
+				{"ID": "sse", "Title": {"en": "SSE", "ru": "SSE"}},
+				{"ID": "websocket", "Title": {"en": "WebSocket", "ru": "WebSocket"}},
+				{"ID": "webrtc", "Title": {"en": "WebRTC", "ru": "WebRTC"}},
+				{"ID": "transfer", "Title": {"en": "Transfer", "ru": "Transfer"}},
+				{"ID": "metrics", "Title": {"en": "Metrics", "ru": "Metrics"}},
+				{"ID": "protocols", "Title": {"en": "Protocols", "ru": "Протоколы"}},
+				{"ID": "contexts", "Title": {"en": "Contexts", "ru": "Контексты"}}
+			]
+		},
+		{
+			"ID": "data",
+			"Title": {"en": "Data and messaging", "ru": "Данные и обмен"},
+			"Pages": [
+				{"ID": "storage", "Title": {"en": "Storage", "ru": "Хранилище"}},
+				{"ID": "indexeddb", "Title": {"en": "IndexedDB", "ru": "IndexedDB"}},
+				{"ID": "events", "Title": {"en": "Events and pipes", "ru": "События и конвейеры"}},
+				{"ID": "messaging", "Title": {"en": "Messaging", "ru": "Обмен сообщениями"}},
+				{"ID": "webworker", "Title": {"en": "Web workers", "ru": "Web Worker"}},
+				{"ID": "serviceworker", "Title": {"en": "Service workers", "ru": "Service Worker"}}
+			]
+		}
+	]
+}

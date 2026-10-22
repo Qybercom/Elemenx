@@ -44,7 +44,7 @@ Elemenx.Component('DateRangeInput', {
 
 			if (!value || value.length !== 2 || !value[0]) return '';
 
-			format = new Intl.DateTimeFormat(locale || undefined, {day: 'numeric', month: 'short', year: 'numeric'});
+			format = new Intl.DateTimeFormat(locale || Elemenx.Locale.Language() || undefined, {day: 'numeric', month: 'short', year: 'numeric'});
 
 			return format.format(self.Parse(value[0])) + ' – ' + format.format(self.Parse(value[1]));
 		};
@@ -56,13 +56,13 @@ Elemenx.Component('DateRangeInput', {
 		};
 
 		this.Title = function (month, locale) {
-			return new Intl.DateTimeFormat(locale || undefined, {month: 'long', year: 'numeric'}).format(self.Parse(month));
+			return new Intl.DateTimeFormat(locale || Elemenx.Locale.Language() || undefined, {month: 'long', year: 'numeric'}).format(self.Parse(month));
 		};
 
 		this.Weekdays = function (locale) {
 			var first = self.First();
 			var names = [];
-			var format = new Intl.DateTimeFormat(locale || undefined, {weekday: 'short'});
+			var format = new Intl.DateTimeFormat(locale || Elemenx.Locale.Language() || undefined, {weekday: 'short'});
 			var i = 0;
 
 			/* 2023-01-01 was a Sunday. */

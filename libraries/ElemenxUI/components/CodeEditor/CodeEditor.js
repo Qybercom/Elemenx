@@ -13,7 +13,8 @@
  *   Detail, Kind}] or texts. The items that start with the word show; Enter or Tab inserts one.
  * - Hint(context, callback) shows a hint for the text under the pointer: callback(error, text).
  * - Keys: Tab and Shift+Tab indent and outdent (Escape, then Tab, leaves the editor), Enter keeps the indent,
- *   Mod+/ comments the lines, Mod+] and Mod+[ indent and outdent, Ctrl+Space completes.
+ *   Mod+/ comments the lines, Mod+] and Mod+[ indent and outdent, Ctrl+Space completes, Mod+F finds and Mod+H
+ *   replaces in its own find bar (a FindBar over its corner; FindBar: false leaves it to the page).
  * - Methods: Focus(), Selection() ({Start, End, Text}), Select(start, end), Insert(text), Replace(start, end, text),
  *   Position(offset) ({Line, Column}), Offset(line, column), GoTo(line, column), Undo(), Redo(), Indent(),
  *   Outdent(), Comment(), Find(query, {Case, Word, RegExp}) (returns the count of matches and selects the next one),
@@ -59,6 +60,10 @@ Elemenx.Component('CodeEditor', {
 	Diff: false,
 	Context: 3,
 	Unfolded: [],
+	FindBar: true,
+	Finding: false,
+	FindReplacing: false,
+	FindQuery: '',
 
 	$OnCreate: function () {
 		var self = this;
@@ -646,6 +651,15 @@ Elemenx.Component('CodeEditor', {
 
 		if (event.isComposing || event.keyCode === 229) return;
 
+		/* Mod+F: the find bar; Mod+H: with its replace row (an editor that can change). */
+		if (mod && !event.altKey && !event.shiftKey && (event.code === 'KeyF' || event.code === 'KeyH') && this.FindBar && this.FindBar !== 'false') {
+			event.preventDefault();
+
+			this.OpenFind(event.code === 'KeyH');
+
+			return;
+		}
+
 		if (this.Suggestions.length) {
 			if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
 				event.preventDefault();
@@ -1054,7 +1068,10 @@ Elemenx.Component('CodeEditor', {
 		start = Math.max(0, Math.min(length, Number(start) || 0));
 		end = end == null ? start : Math.max(start, Math.min(length, Number(end) || 0));
 
-		node.focus();
+		/* The find bar selects the matches without taking the focus from its field. */
+		if (!this.Own().Quiet)
+			node.focus();
+
 		node.setSelectionRange(start, end);
 
 		this.Caret();
@@ -1229,6 +1246,72 @@ Elemenx.Component('CodeEditor', {
 		this.Edit(0, value.length, result, 0);
 
 		return count;
+	},
+
+	/* The find bar: opened on the text selected (one line), its field focused. */
+	OpenFind: function (replace) {
+		var self = this;
+		var selection = this.Selection();
+		if (selection.Text && selection.Text.indexOf('\n') === -1)
+			this.FindQuery = selection.Text;
+
+		this.FindReplacing = !!replace && !this.ReadOnly && !this.Disabled;
+		this.Finding = true;
+
+		window.setTimeout(function () {
+			if (self.FindQuery)
+				self.BarFind({Query: self.FindQuery, Case: false, Word: false, RegExp: false});
+		}, 0);
+	},
+
+	/* A change of the find bar (its text or an option), without the focus leaving it. */
+	BarFind: function (query) {
+		this.FindQuery = query.Query;
+		this.Own().Quiet = true;
+
+		this.Find(query.Query, {Case: query.Case, Word: query.Word, RegExp: query.RegExp});
+
+		this.Own().Quiet = false;
+	},
+
+	BarNext: function () {
+		this.Own().Quiet = true;
+
+		this.FindNext();
+
+		this.Own().Quiet = false;
+	},
+
+	BarPrevious: function () {
+		this.Own().Quiet = true;
+
+		this.FindPrevious();
+
+		this.Own().Quiet = false;
+	},
+
+	/* A replacement takes the focus into the text: it goes back to the field of the replacement. */
+	BarReplace: function (data) {
+		this.ReplaceCurrent(data.Text);
+		this.BackToBar();
+	},
+
+	BarReplaceAll: function (data) {
+		this.ReplaceAll(data.Text);
+		this.BackToBar();
+	},
+
+	BackToBar: function () {
+		var field = this.$Element().querySelector('.elemenx-find-replacement');
+		if (field)
+			field.focus();
+	},
+
+	CloseFind: function () {
+		this.Finding = false;
+
+		this.ClearFind();
+		this.Focus();
 	},
 
 	ClearFind: function () {

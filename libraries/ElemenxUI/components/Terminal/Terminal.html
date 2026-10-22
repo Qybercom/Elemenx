@@ -4,6 +4,7 @@
 		<span class="elemenx-terminal-title">{{Title}}</span>
 		<span class="elemenx-terminal-actions"><slot name="actions"></slot></span>
 	</header>
+	<div class="elemenx-terminal-find" *if="Finding"><FindBar Autofocus="true" [query]="FindQuery" [count]="FindCount" [index]="FindIndex" CanReplace="false" (find)="BarFind" (next)="BarNext" (previous)="BarPrevious" (close)="CloseFind" /></div>
 	<div class="elemenx-column fill elemenx-terminal-output" role="log" aria-live="polite" (scroll)="Scrolled" (click)="FocusLine">
 		<div class="elemenx-terminal-line" *for="line of Lines" *key="line.ID == null ? $index : line.ID" [class]="[line.Kind || 'output']"><span class="elemenx-terminal-prompt" *if="line.Kind === 'input'">{{Prompt}}</span>{{line.Text}}</div>
 	</div>

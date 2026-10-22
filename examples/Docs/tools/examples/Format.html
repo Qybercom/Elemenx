@@ -1,0 +1,25 @@
+<Properties>
+	<Property Label="Count(12400)" [value]="Text.Count" />
+	<Property Label="Date(now, 'long')" [value]="Text.Date" />
+	<Property Label="Relative(an hour ago)" [value]="Text.Relative" />
+	<Property Label="Money(1234.5, 'EUR')" [value]="Text.Money" />
+	<Property Label="Day(now)" [value]="Text.Day" />
+</Properties>
+<script>
+({
+	Text: {},
+
+	$OnCreate: function () {
+		var format = this.$Service('Format');
+		var day = format.Day(new Date());
+
+		this.Text = {
+			Count: format.Count(12400),
+			Date: format.Date(new Date(), 'long'),
+			Relative: format.Relative(Date.now() - 3600000),
+			Money: format.Money(1234.5, 'EUR'),
+			Day: day.Day + ' ' + day.Month
+		};
+	}
+})
+</script>

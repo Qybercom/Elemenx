@@ -1,0 +1,29 @@
+<div class="elemenx-container wrappable" style="gap: 8px;">
+	<Icon Name="save" Size="24" />
+	<Icon Name="files:pdf" Size="24" />
+	<Icon Name="brands:github" Size="24" Colored="true" />
+	<Icon Name="weather:storm" Size="24" Colored="true" />
+	<Icon Name="docs:dot" Size="24" />
+	<Icon Name="bell" Size="24" />
+</div>
+<Button [label]="Overridden ? 'Restore the bell' : 'Draw every bell as a star'" (click)="Toggle" />
+<script>
+({
+	Overridden: false,
+
+	$OnCreate: function () {
+		this.$Service('Icons').Register('docs', '<svg xmlns="http://www.w3.org/2000/svg"><symbol id="dot" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" fill="#e5484d" /></symbol></svg>');
+	},
+
+	Toggle: function () {
+		this.Overridden = !this.Overridden;
+
+		if (this.Overridden) this.$Service('Icons').Override('bell', 'star');
+		else this.$Service('Icons').Override('bell');
+	},
+
+	$OnDestroy: function () {
+		this.$Service('Icons').Override('bell');
+	}
+})
+</script>

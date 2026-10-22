@@ -1,0 +1,11 @@
+<Field Label="Expires"><CardExpiryInput (change)="Changed" /></Field>
+<p class="elemenx-text small muted">Value: {{Value || '—'}}</p>
+<script>
+({
+	Value: '',
+
+	Changed: function (value) {
+		this.Value = value;
+	}
+})
+</script>

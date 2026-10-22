@@ -13,6 +13,22 @@
 	gap: 0;
 }
 
+/*
+ * A group wider than its container (on a phone) does not leave the page: its buttons wrap, or the buttons of an attached
+ * group (one bar) scroll sideways, with room for their focus ring.
+ */
+.elemenx-button-group:not(.vertical):not(.attached) {
+	flex-wrap: wrap;
+}
+
+.elemenx-button-group.attached:not(.vertical) {
+	max-width: 100%;
+	margin: -2px;
+	padding: 2px;
+	overflow-x: auto;
+	scrollbar-width: none;
+}
+
 .elemenx-button-group.attached .elemenx-button:not(:first-of-type) {
 	margin-inline-start: -1px;
 	border-start-start-radius: 0;

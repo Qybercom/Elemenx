@@ -1,0 +1,14 @@
+<CodeView Language="javascript" LineNumbers="true" [highlight]="[4]" Label="A function" Value="function greet (name) {&#10;&#9;var text = 'Hello, ' + name;&#10;&#10;&#9;return text.toUpperCase();&#10;}" />
+<CodeView Language="json" Fold="true" [folded]="[7]" Label="A package" [value]="Package" (fold)="Folded" />
+<p class="elemenx-text small muted">{{Note}}</p>
+<CodeView Language="css" Rows="3" Value=".card {&#10;&#9;color: var(--elemenx-accent);&#10;&#9;padding: 12px;&#10;&#9;border-radius: 8px;&#10;}" />
+<script>
+({
+	Note: 'Fold: the arrows fold the blocks, … unfolds them; the copy button shows under the pointer.',
+	Package: '{\n\t"name": "elemenx",\n\t"keywords": [\n\t\t"ui",\n\t\t"es5"\n\t],\n\t"scripts": {\n\t\t"test": "vitest",\n\t\t"lint": "eslint ."\n\t}\n}\n',
+
+	Folded: function (event) {
+		this.Note = 'Line ' + event.Line + (event.Folded ? ' folded' : ' unfolded');
+	}
+})
+</script>

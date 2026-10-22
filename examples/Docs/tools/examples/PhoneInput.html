@@ -1,0 +1,16 @@
+<Field Label="Phone" [hint]="Note"><PhoneInput [value]="Phone" (input)="Typed" (country)="Country" /></Field>
+<script>
+({
+	Phone: '+447911123456',
+	Note: 'Type a number with its code, or pick the country.',
+
+	Typed: function (value) {
+		this.Phone = value;
+		this.Note = 'Value: ' + value;
+	},
+
+	Country: function (code) {
+		this.Note = 'Country: ' + code;
+	}
+})
+</script>

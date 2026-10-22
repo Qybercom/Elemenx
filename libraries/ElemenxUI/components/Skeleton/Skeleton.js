@@ -1,4 +1,8 @@
-/* A placeholder while content loads. Shape: text (Lines lines, the last one shorter), rect or circle; Width and Height in CSS units. */
+/*
+ * A placeholder of content that loads: grey shapes that shimmer, in the place and the size of what will come. Shape:
+ * text (Lines lines, the last one shorter), rect (a picture, a card) or circle (an avatar); Width and Height in CSS
+ * units ('100%', '48px'). Put several together for the skeleton of a card or a row.
+ */
 Elemenx.Component('Skeleton', {
 	$TemplateURL: 'Skeleton.html',
 	Shape: 'text',

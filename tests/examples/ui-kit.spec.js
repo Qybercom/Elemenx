@@ -20,6 +20,33 @@ function captureErrors (page) {
 	return errors;
 }
 
+/* A finger on a touch screen drags the element by dx, dy in steps and lifts (pointer events of a touch, as a phone sends them). */
+function swipe (locator, dx, dy, lift) {
+	return locator.evaluate(function (node, move) {
+		var box = node.getBoundingClientRect();
+		var x = box.left + box.width / 2;
+		var y = box.top + Math.min(box.height / 2, 12);
+		var i = 0;
+
+		function send (type, step) {
+			node.dispatchEvent(new PointerEvent(type, {bubbles: true, cancelable: true, pointerType: 'touch', isPrimary: true, pointerId: 7, clientX: x + move.DX * step, clientY: y + move.DY * step}));
+		}
+
+		send('pointerdown', 0);
+
+		while (i < 5) {
+			i++;
+
+			send('pointermove', i / 5);
+		}
+
+		if (move.Lift)
+			send('pointerup', 1);
+
+		return node.closest('.elemenx-gallery, .elemenx-menu') ? getComputedStyle(node.closest('.elemenx-gallery, .elemenx-menu.sheet')).getPropertyValue('--elemenx-gallery-drag') || node.closest('.elemenx-gallery, .elemenx-menu.sheet').style.transform : '';
+	}, {DX: dx, DY: dy, Lift: lift !== false});
+}
+
 function section (page, title) {
 	return page.locator('.ui-kit > .elemenx-section').filter({has: page.locator(':scope > .elemenx-section-header .elemenx-section-title', {hasText: new RegExp('^' + title + '$')})});
 }
@@ -52,7 +79,7 @@ async function ready (page) {
 	await expect(page.locator('.ui-kit-intro')).toBeVisible({timeout: 60000});
 
 	/* The sections build their content near the viewport or in the background (*lazy): the tests start once all of it is built. */
-	await expect(page.locator('.ui-kit-lazy')).toHaveCount(42, {timeout: 60000});
+	await expect(page.locator('.ui-kit-lazy')).toHaveCount(45, {timeout: 60000});
 }
 
 /* Reloads the catalogue and waits for it, as open does. */
@@ -70,7 +97,7 @@ for (const origin of origins) {
 
 			await open(page, origin);
 
-			await expect(page.locator('.ui-kit > .elemenx-section')).toHaveCount(42);
+			await expect(page.locator('.ui-kit > .elemenx-section')).toHaveCount(45);
 
 			await expect(page.locator('#elemenx-icons')).toHaveAttribute('data-ready', 'true');
 			await expect(page.locator('.ui-kit-icon svg').first()).toHaveAttribute('data-icon', 'add');
@@ -1459,6 +1486,695 @@ for (const origin of origins) {
 			expect(errors).toEqual([]);
 		});
 
+		test('a workspace places its tool windows by their buttons on the stripes; in Customize they are dragged to another side, and the layout is kept', async function ({ page }) {
+			var errors = captureErrors(page);
+			var frame;
+			var commits;
+			var right;
+			var from;
+			var to;
+
+			await open(page, origin);
+
+			await page.evaluate(function () {
+				localStorage.removeItem('elemenx-workspace:ui-kit-tools');
+			});
+
+			frame = page.locator('.ui-kit-tools-frame .elemenx-workspace');
+
+			await frame.scrollIntoViewIfNeeded();
+
+			/* Project is open at first; the buttons carry the badges of their tool windows. */
+			await expect(frame.locator('.elemenx-workspace-panel.left .elemenx-workspace-tool-window-title')).toHaveText('Project');
+			await expect(frame.getByRole('button', {name: 'Commits'}).locator('.elemenx-badge.overlay')).toHaveText('3');
+			await expect(frame.getByRole('button', {name: 'Problems'}).locator('.elemenx-badge.overlay')).toHaveClass(/dot/);
+			await expect(frame.getByRole('button', {name: 'Build'}).locator('.elemenx-badge.overlay')).toHaveClass(/busy/);
+
+			/* A button opens its tool window in its area (one at a time), again closes it; the close button of the window too. */
+			await frame.getByRole('button', {name: 'Commits'}).click();
+
+			await expect(frame.locator('.elemenx-workspace-panel.left .elemenx-workspace-tool-window-title')).toHaveText('Commits');
+			await expect(frame.getByRole('button', {name: 'Commits'})).toHaveAttribute('aria-pressed', 'true');
+
+			await frame.getByRole('button', {name: 'Problems'}).click();
+
+			await expect(frame.locator('.elemenx-workspace-panel.bottom .elemenx-workspace-tool-window-title')).toHaveText('Problems');
+
+			await frame.locator('.elemenx-workspace-panel.bottom .elemenx-workspace-tool-window').getByRole('button', {name: 'Hide'}).click();
+
+			await expect(frame.locator('.elemenx-workspace-panel.bottom')).toBeHidden();
+
+			/* Customize: the button of Commits dragged onto the right stripe takes its open tool window there. */
+			await page.getByText('Customize the layout').click();
+
+			await expect(frame).toHaveClass(/customizing/);
+
+			commits = frame.getByRole('button', {name: 'Commits'});
+			right = frame.locator('.elemenx-workspace-dock[data-area="right"]');
+			from = await commits.boundingBox();
+			to = await right.boundingBox();
+
+			await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2);
+			await page.mouse.down();
+			await page.mouse.move(to.x + to.width / 2, to.y + to.height - 4, {steps: 8});
+			await page.mouse.up();
+
+			await expect(right.getByRole('button', {name: 'Commits'})).toHaveCount(1);
+			await expect(frame.locator('.elemenx-workspace-panel.right .elemenx-workspace-tool-window-title')).toHaveText('Commits');
+			await expect(page.getByText(/Layout: .*"commits":"right"/)).toBeVisible();
+
+			/* Kept: the next visit finds Commits on the right. */
+			await page.reload();
+
+			await ready(page);
+
+			await frame.scrollIntoViewIfNeeded();
+
+			await expect(frame.locator('.elemenx-workspace-dock[data-area="right"]').getByRole('button', {name: 'Commits'})).toHaveCount(1);
+			await expect(frame.locator('.elemenx-workspace-panel.right .elemenx-workspace-tool-window-title')).toHaveText('Commits');
+
+			await page.evaluate(function () {
+				localStorage.removeItem('elemenx-workspace:ui-kit-tools');
+			});
+
+			expect(errors).toEqual([]);
+		});
+
+		test('the buttons of a pad are drawn as on the pad of its kind: Xbox colors, PlayStation symbols, Nintendo letters, the places of a generic pad', async function ({ page }) {
+			var errors = captureErrors(page);
+			var pads;
+
+			await open(page, origin);
+
+			pads = page.locator('.ui-kit-pads');
+
+			await pads.scrollIntoViewIfNeeded();
+
+			expect(await pads.evaluate(function (node) {
+				var rows = node.querySelectorAll('.ui-kit-pad');
+
+				function glyph (row, button) {
+					return rows[row].querySelector('.elemenx-game-key.button-' + button + ' .elemenx-game-key-glyph');
+				}
+
+				function token (name) {
+					var probe = document.createElement('i');
+					var color;
+
+					probe.style.color = 'var(' + name + ')';
+
+					node.appendChild(probe);
+
+					color = getComputedStyle(probe).color;
+
+					probe.remove();
+
+					return color;
+				}
+
+				return [
+					glyph(0, 'a').textContent, getComputedStyle(glyph(0, 'a')).backgroundColor === token('--elemenx-gamepad-green'), getComputedStyle(glyph(0, 'b')).backgroundColor === token('--elemenx-gamepad-red'),
+					glyph(1, 'a').textContent, getComputedStyle(glyph(1, 'a')).color === token('--elemenx-gamepad-blue'), glyph(1, 'y').textContent,
+					glyph(2, 'a').textContent, glyph(2, 'lt').textContent, glyph(2, 'start').textContent,
+					getComputedStyle(glyph(3, 'a')).color, getComputedStyle(glyph(3, 'a'), '::before').maskImage.indexOf('svg') !== -1,
+					getComputedStyle(glyph(0, 'up'), '::before').maskImage.indexOf('svg') !== -1, glyph(0, 'up').textContent,
+					getComputedStyle(glyph(0, 'ls')).boxShadow.indexOf('inset') !== -1
+				];
+			})).toEqual(['A', true, true, '✕', true, '△', 'B', 'ZL', '+', 'rgba(0, 0, 0, 0)', true, true, '↑', true]);
+
+			expect(errors).toEqual([]);
+		});
+
+		test('Mod+F finds and Mod+H replaces in the editors, Mod+F finds in a terminal; viewers show Markdown and code, formulas are drawn as MathML', async function ({ page }) {
+			var errors = captureErrors(page);
+			var code;
+			var rich;
+			var terminal;
+			var bar;
+			var viewers;
+			var place;
+
+			await open(page, origin);
+
+			/* The code editor: its own bar, the place of the match, the next one, a replacement, Escape back into the text. */
+			code = section(page, 'Code editor').locator('.elemenx-code-editor').first();
+
+			await code.scrollIntoViewIfNeeded();
+			await code.locator('textarea').click();
+
+			await expect(code.locator('textarea')).toBeFocused();
+
+			await page.keyboard.press('ControlOrMeta+h');
+
+			bar = code.locator('.elemenx-find');
+
+			await expect(bar.locator('.elemenx-find-query')).toBeFocused();
+
+			await page.keyboard.type('this');
+
+			await expect(bar.locator('.elemenx-find-count')).toHaveText(/^\d of [2-9]$/);
+			await expect(bar.locator('.elemenx-find-query')).toBeFocused();
+
+			place = Number((await bar.locator('.elemenx-find-count').textContent()).split(' ')[0]);
+
+			await page.keyboard.press('Enter');
+
+			await expect(bar.locator('.elemenx-find-count')).not.toHaveText(new RegExp('^' + place + ' of'));
+
+			await bar.locator('.elemenx-find-replacement').fill('self');
+			await bar.getByRole('button', {name: 'Replace all'}).click();
+
+			await expect(bar.locator('.elemenx-find-count')).toHaveText('No results');
+			expect(await code.locator('textarea').inputValue()).toContain('self.Count');
+
+			await page.keyboard.press('Escape');
+
+			await expect(bar).toHaveCount(0);
+			await expect(code.locator('textarea')).toBeFocused();
+
+			/* The rich editor: the matches marked by highlights of the browser, a replacement that undo takes back. */
+			rich = section(page, 'Rich text editor').locator('.elemenx-rich-editor').first();
+
+			await rich.scrollIntoViewIfNeeded();
+			await rich.locator('.elemenx-rich-editor-content p').first().click();
+
+			await expect(rich.locator('.elemenx-rich-editor-content')).toBeFocused();
+
+			await page.keyboard.press('ControlOrMeta+h');
+
+			bar = rich.locator('.elemenx-find');
+
+			await expect(bar.locator('.elemenx-find-query')).toBeFocused();
+
+			await page.keyboard.type('editor');
+
+			await expect(bar.locator('.elemenx-find-count')).toHaveText(/ of /);
+			expect(await page.evaluate(function () {
+				return CSS.highlights.get('elemenx-find').size > 0 && CSS.highlights.get('elemenx-find-current').size === 1;
+			})).toBe(true);
+
+			await bar.locator('.elemenx-find-replacement').fill('writer');
+			await bar.getByRole('button', {name: 'Replace', exact: true}).click();
+
+			await expect(rich.locator('.elemenx-rich-editor-content')).toContainText('writer');
+
+			await bar.getByRole('button', {name: 'Close'}).click();
+
+			expect(await page.evaluate(function () {
+				return CSS.highlights.get('elemenx-find').size;
+			})).toBe(0);
+
+			/* The terminal: its output, from the newest line. */
+			terminal = section(page, 'Terminal').locator('.elemenx-terminal');
+
+			await terminal.scrollIntoViewIfNeeded();
+			await terminal.locator('.elemenx-terminal-input').click();
+
+			await expect(terminal.locator('.elemenx-terminal-input')).toBeFocused();
+
+			await page.keyboard.press('ControlOrMeta+f');
+
+			await expect(terminal.locator('.elemenx-find-query')).toBeFocused();
+
+			await page.keyboard.type('help');
+
+			await expect(terminal.locator('.elemenx-find-count')).toHaveText('1 of 1');
+			await expect(terminal.locator('.elemenx-find').getByRole('button', {name: 'Replace all'})).toHaveCount(0);
+
+			await page.keyboard.press('Escape');
+
+			await expect(terminal.locator('.elemenx-terminal-input')).toBeFocused();
+
+			/* The viewers: Markdown with its code highlighted, code with numbers and marked lines, formulas in MathML. */
+			viewers = section(page, 'Viewers and formulas');
+
+			await viewers.scrollIntoViewIfNeeded();
+
+			await expect(viewers.locator('.elemenx-markdown h2')).toHaveText('Elemenx 0.9');
+			await expect(viewers.locator('.elemenx-markdown table tr')).toHaveCount(3);
+			await expect(viewers.locator('.elemenx-markdown pre[data-language="js"] .elemenx-syntax-string').first()).toBeVisible();
+			await expect(viewers.locator('.elemenx-code-view[aria-label="An example"] .elemenx-code-view-line')).toHaveCount(6);
+			await expect(viewers.locator('.elemenx-code-view[aria-label="An example"] .elemenx-code-view-line.marked')).toHaveCount(2);
+			await expect(viewers.locator('.elemenx-code-view[aria-label="An example"] .elemenx-code-view-line').first()).toHaveAttribute('data-line', '10');
+			await expect(viewers.locator('.elemenx-formula math')).toHaveCount(5);
+			await expect(viewers.locator('.elemenx-formula math mfrac').first()).toBeVisible();
+			await expect(viewers.locator('.elemenx-formula merror')).toHaveCount(0);
+			await expect(viewers.locator('.elemenx-formula.display').first()).toHaveAttribute('aria-label', /frac/);
+
+			expect(errors).toEqual([]);
+		});
+
+		test('a code view folds the blocks of its brackets, and its copy button answers the pointer', async function ({ page }) {
+			var errors = captureErrors(page);
+			var view;
+			var copy;
+			var before;
+
+			await open(page, origin);
+
+			view = section(page, 'Viewers and formulas').locator('.elemenx-code-view[aria-label="A package"]');
+
+			await view.scrollIntoViewIfNeeded();
+
+			/* Three blocks: the object, its array and its object of scripts; the scripts start folded. */
+			await expect(view.locator('.elemenx-code-view-fold')).toHaveCount(3);
+			await expect(view.locator('[data-line="7"]')).toHaveClass(/folded/);
+			await expect(view.locator('[data-line="8"]')).toBeHidden();
+			await expect(view.locator('[data-line="10"]')).toBeHidden();
+			await expect(view.locator('[data-line="7"]')).toHaveText(/"scripts": \{\s*…\s*\}$/);
+
+			/* The array folds under its button: "keywords": [ … ], and the lines inside it hide. */
+			await view.locator('[data-line="3"] .elemenx-code-view-fold').click();
+
+			await expect(view.locator('[data-line="3"]')).toHaveText(/"keywords": \[\s*…\s*\],$/);
+			await expect(view.locator('[data-line="3"] .elemenx-code-view-fold')).toHaveAttribute('aria-expanded', 'false');
+			await expect(view.locator('[data-line="4"]')).toBeHidden();
+			await expect(view.locator('[data-line="6"]')).toBeHidden();
+			await expect(view.locator('[data-line="7"]')).toBeVisible();
+
+			/* The whole object folds over its folded blocks; unfolded, the scripts are still folded, and … unfolds them. */
+			await view.locator('[data-line="1"] .elemenx-code-view-fold').click();
+
+			await expect(view.locator('.elemenx-code-view-line:visible')).toHaveCount(1);
+
+			await view.locator('[data-line="1"] .elemenx-code-view-fold').click();
+
+			await expect(view.locator('[data-line="8"]')).toBeHidden();
+
+			await view.locator('[data-line="7"] .elemenx-code-view-more').click();
+
+			await expect(view.locator('[data-line="8"]')).toBeVisible();
+			await expect(view.locator('.elemenx-code-view-line:visible')).toHaveCount(8);
+
+			/* The copy button: shown over the code under the pointer, and lit under the pointer itself. */
+			copy = view.locator('.elemenx-code-view-copy');
+
+			await view.hover();
+
+			before = await copy.evaluate(function (node) {
+				return getComputedStyle(node).backgroundColor;
+			});
+
+			await copy.hover();
+
+			await expect.poll(function () {
+				return copy.evaluate(function (node) {
+					return getComputedStyle(node).backgroundColor;
+				});
+			}).not.toBe(before);
+
+			expect(errors).toEqual([]);
+		});
+
+		test('a start screen: tiles of any size, groups in one row that scrolls, actions declared in a group, heights and widths without a limit, kept between visits', async function ({ page }) {
+			var errors = captureErrors(page);
+			var start;
+			var work;
+			var rows;
+
+			await open(page, origin);
+
+			start = page.locator('.ui-kit-start .elemenx-tile-grid');
+			work = start.locator('.elemenx-tile-group[data-group="work"]');
+
+			await page.evaluate(function () {
+				localStorage.removeItem('elemenx-tile-grid:ui-kit-start');
+			});
+
+			await start.scrollIntoViewIfNeeded();
+
+			/* Width and Height in cells, the sizes tall and xlarge; the groups side by side in a grid that scrolls on its own. */
+			expect(await start.evaluate(function (node) {
+				function cells (id) {
+					var box = node.querySelector('[data-id="' + id + '"]').getBoundingClientRect();
+
+					return [Math.round((box.width + 8) / 56), Math.round((box.height + 8) / 56)];
+				}
+
+				return [cells('calendar'), cells('board'), cells('notes'), cells('games'), getComputedStyle(node).overflowX, getComputedStyle(node).flexWrap, node.scrollHeight > node.clientHeight];
+			})).toEqual([[3, 2], [6, 4], [2, 4], [4, 4], 'auto', 'nowrap', true]);
+
+			/* The button declared in the slot actions of the group stands in its header and keeps its binding. */
+			await work.locator('.elemenx-tile-group-header').getByRole('button', {name: 'Add a tile'}).click();
+
+			await expect(work.locator('[data-id="Draft 1"]')).toHaveCount(1);
+
+			/* The bottom handle makes the group higher by whole rows; MaxColumns 0: the right one widens it past twelve. */
+			rows = Number(await work.locator('.elemenx-tile-group-stretch.bottom').getAttribute('aria-valuenow'));
+
+			await work.locator('.elemenx-tile-group-stretch.bottom').focus();
+
+			await page.keyboard.press('ArrowDown');
+
+			await expect(work.locator('.elemenx-tile-group-stretch.bottom')).toHaveAttribute('aria-valuenow', String(rows + 1));
+
+			await work.locator('.elemenx-tile-group-resize').focus();
+
+			for (var i = 0; i < 6; i++)
+				await page.keyboard.press('ArrowRight');
+
+			await expect(work.locator('.elemenx-tile-group-resize')).toHaveAttribute('aria-valuenow', '14');
+
+			/* Kept: the arrangement is in the storage and comes back on the next visit. */
+			expect(await page.evaluate(function () {
+				var groups = JSON.parse(localStorage.getItem('elemenx-tile-grid:ui-kit-start'));
+
+				return [groups[0].ID, groups[0].Columns, groups[0].Rows, groups[0].Tiles.map(function (tile) {
+					return tile.ID;
+				}).slice(0, 3)];
+			})).toEqual(['work', 14, rows + 1, ['calendar', 'board', 'notes']]);
+
+			await page.reload();
+
+			await ready(page);
+
+			await start.scrollIntoViewIfNeeded();
+
+			await expect(work.locator('.elemenx-tile-group-resize')).toHaveAttribute('aria-valuenow', '14');
+			await expect(work.locator('.elemenx-tile-group-stretch.bottom')).toHaveAttribute('aria-valuenow', String(rows + 1));
+
+			await page.evaluate(function () {
+				localStorage.removeItem('elemenx-tile-grid:ui-kit-start');
+			});
+
+			expect(errors).toEqual([]);
+		});
+
+		test('a finger swipes a gallery and the pictures of a product card across, and drags a menu sheet down to close it', async function ({ page }) {
+			var errors = captureErrors(page);
+			var block;
+			var gallery;
+			var product;
+			var menu;
+			var sheet;
+
+			await open(page, origin);
+
+			block = section(page, 'Gallery');
+			gallery = block.locator('.elemenx-gallery').first();
+
+			await gallery.scrollIntoViewIfNeeded();
+
+			/* The picture follows the finger, then the swipe goes to the next one; a move too short goes back. */
+			expect(await swipe(gallery.locator('.elemenx-gallery-viewport'), -120, 0, false)).toBe('-120px');
+
+			await gallery.locator('.elemenx-gallery-viewport').evaluate(function (node) {
+				node.dispatchEvent(new PointerEvent('pointerup', {bubbles: true, pointerType: 'touch', pointerId: 7, clientX: 0, clientY: 0}));
+			});
+
+			await expect(gallery.locator('.elemenx-gallery-counter')).toHaveText('2 / 4');
+			await expect(gallery).not.toHaveClass(/dragging/);
+
+			await swipe(gallery.locator('.elemenx-gallery-viewport'), 120, 0);
+
+			await expect(gallery.locator('.elemenx-gallery-counter')).toHaveText('1 / 4');
+
+			await swipe(gallery.locator('.elemenx-gallery-viewport'), -20, 0, false);
+
+			await page.waitForTimeout(300);
+
+			await gallery.locator('.elemenx-gallery-viewport').evaluate(function (node) {
+				var box = node.getBoundingClientRect();
+
+				node.dispatchEvent(new PointerEvent('pointerup', {bubbles: true, pointerType: 'touch', pointerId: 7, clientX: box.left + box.width / 2 - 20, clientY: box.top + 12}));
+			});
+
+			await page.waitForTimeout(200);
+
+			await expect(gallery.locator('.elemenx-gallery-counter')).toHaveText('1 / 4');
+
+			/* A move up and down is the page's: no picture changes. */
+			await swipe(gallery.locator('.elemenx-gallery-viewport'), 5, -120);
+
+			await expect(gallery.locator('.elemenx-gallery-counter')).toHaveText('1 / 4');
+
+			/* The pictures of a product card. */
+			product = section(page, 'Cards').locator('.elemenx-product').filter({hasText: 'Studio headphones'});
+
+			await product.scrollIntoViewIfNeeded();
+
+			await swipe(product.locator('.elemenx-product-media'), -100, 0);
+
+			await expect(product.locator('.elemenx-product-dot').nth(1)).toHaveClass(/active/);
+
+			/* The sheet of a menu follows a finger on its top down, and a swipe down closes it. */
+			menu = page.locator('.elemenx-menu-root').filter({has: page.getByRole('button', {name: 'Mobile'})});
+
+			await menu.getByRole('button', {name: 'Mobile'}).click();
+
+			sheet = menu.locator('.elemenx-menu.sheet');
+
+			await expect(sheet).toBeVisible();
+
+			expect(await swipe(sheet.locator('.elemenx-menu-head'), 0, 90, false)).toBe('translateY(90px)');
+
+			await sheet.locator('.elemenx-menu-head').evaluate(function (node) {
+				node.dispatchEvent(new PointerEvent('pointerup', {bubbles: true, pointerType: 'touch', pointerId: 7, clientX: 0, clientY: 9999}));
+			});
+
+			await expect(sheet).toHaveCount(0);
+
+			expect(errors).toEqual([]);
+		});
+
+		test('a menu takes items declared in its template: nested ones, a separator, a check, and the select of an item of its own', async function ({ page }) {
+			var errors = captureErrors(page);
+			var buttons;
+			var menu;
+
+			await open(page, origin);
+
+			buttons = section(page, 'Buttons');
+			menu = buttons.locator('.elemenx-menu-root').filter({has: page.getByRole('button', {name: 'Edit'})});
+
+			await menu.scrollIntoViewIfNeeded();
+			await menu.getByRole('button', {name: 'Edit'}).click();
+
+			await expect(menu.getByRole('menuitem')).toHaveText([/Undo/, /Redo/, /Paste special/, /Wrap lines/]);
+			await expect(menu.getByRole('menuitem', {name: /Redo/})).toHaveAttribute('aria-disabled', 'true');
+			await expect(menu.locator('[role="separator"], .elemenx-menu-separator, hr')).toHaveCount(1);
+
+			/* Undo emits select on the menu and on its MenuItem: Redo is enabled then. */
+			await menu.getByRole('menuitem', {name: /Undo/}).click();
+
+			await expect(buttons).toContainText('Menu: undo');
+
+			await menu.getByRole('button', {name: 'Edit'}).click();
+
+			await expect(menu.getByRole('menuitem', {name: /Redo/})).not.toHaveAttribute('aria-disabled', 'true');
+
+			/* A MenuItem with MenuItems inside is a submenu. */
+			await menu.getByRole('menuitem', {name: /Paste special/}).click();
+			await menu.getByRole('menuitem', {name: 'Keep the format'}).click();
+
+			await expect(buttons).toContainText('Menu: paste-format');
+
+			expect(errors).toEqual([]);
+		});
+
+		test('forms collect their fields, validate them in the template or by a model in code, and submit only when valid', async function ({ page }) {
+			var errors = captureErrors(page);
+			var forms;
+			var header;
+			var signUp;
+			var profile;
+
+			function error (form, label) {
+				return form.locator('.elemenx-field').filter({has: page.locator('.elemenx-field-label', {hasText: new RegExp('^' + label + '$')})}).locator('.elemenx-field-error');
+			}
+
+			await open(page, origin);
+
+			forms = section(page, 'Forms');
+			header = forms.locator(':scope > .elemenx-section-header');
+			signUp = forms.locator('.ui-kit-sign-up');
+			profile = forms.locator('.ui-kit-profile');
+
+			await signUp.scrollIntoViewIfNeeded();
+
+			/* Nothing shows before a field is touched; a submit touches them all and the first one in error takes the focus. */
+			await expect(signUp.locator('.elemenx-field-error')).toHaveCount(0);
+
+			await signUp.getByRole('button', {name: 'Sign up'}).click();
+
+			await expect(header).toContainText('Fix: name, email, password, repeat, terms');
+			await expect(error(signUp, 'Name')).toHaveText('Fill in this field');
+			await expect(signUp.locator('.elemenx-field-error').last()).toHaveText('Accept the terms to go on');
+			await expect(signUp.getByPlaceholder('Your name')).toBeFocused();
+
+			/* Each field validates as it is typed. */
+			await signUp.getByPlaceholder('Your name').fill('Ada');
+			await signUp.getByPlaceholder('you@example.com').fill('ada@');
+
+			await expect(error(signUp, 'Name')).toHaveCount(0);
+			await expect(error(signUp, 'Email')).toHaveText('Enter an email address');
+
+			await signUp.getByPlaceholder('you@example.com').fill('ada@example.com');
+			await signUp.locator('input[type="password"]').first().fill('short');
+
+			await expect(error(signUp, 'Password')).toHaveText('At least 8 characters');
+
+			await signUp.locator('input[type="password"]').first().fill('long enough');
+			await signUp.locator('input[type="password"]').last().fill('different');
+
+			await expect(error(signUp, 'Repeat the password')).toHaveText('The passwords differ');
+
+			await signUp.locator('input[type="password"]').last().fill('long enough');
+			await signUp.locator('.elemenx-number-input input').fill('12');
+			await signUp.locator('.elemenx-number-input input').blur();
+
+			await expect(error(signUp, 'Age')).toHaveText('At least 18');
+
+			await signUp.locator('.elemenx-number-input input').fill('36');
+			await signUp.getByText('I accept the terms').click();
+			await signUp.getByRole('button', {name: 'Sign up'}).click();
+
+			await expect(header).toContainText('Signed up: Ada <ada@example.com>');
+
+			/* A reset empties the fields and hides the errors. */
+			await signUp.getByRole('button', {name: 'Clear'}).click();
+
+			await expect(header).toContainText('Cleared');
+			await expect(signUp.getByPlaceholder('Your name')).toHaveValue('');
+			await expect(signUp.locator('.elemenx-field-error')).toHaveCount(0);
+
+			/* A model in code: its value and status follow the fields; a server check waits, then refuses a name. */
+			await profile.scrollIntoViewIfNeeded();
+
+			await expect(profile.locator('.ui-kit-profile-value')).toHaveText('valid · {"Username":"ada","City":"Berlin","Phones":["+49 30 1234567"]}');
+
+			await error(profile, 'Username').count();
+
+			await profile.locator('.elemenx-field').first().locator('input').fill('admin');
+
+			await expect(profile.locator('.ui-kit-profile-value')).toContainText('pending');
+			await expect(profile.locator('.ui-kit-profile-value')).toContainText('invalid');
+
+			await profile.locator('.elemenx-field').first().locator('input').blur();
+
+			await expect(error(profile, 'Username')).toHaveText('This name is taken');
+
+			await profile.locator('.elemenx-field').first().locator('input').fill('grace');
+
+			/* A Component inside a Field (a Select) gives its value by its change. */
+			await profile.locator('.elemenx-select-trigger').click();
+			await page.getByRole('option', {name: 'Tokyo'}).click();
+
+			/* An array of controls: a phone added is required, so the form does not submit until it is filled or removed. */
+			await profile.getByRole('button', {name: 'Add a phone'}).click();
+
+			await expect(profile.locator('.ui-kit-phone')).toHaveCount(2);
+
+			await profile.getByRole('button', {name: 'Save'}).click();
+
+			await expect(error(profile, 'Phone').last()).toHaveText('Fill in this field');
+
+			await profile.locator('.ui-kit-phone').last().getByTitle('Remove the phone').click();
+			await profile.getByRole('button', {name: 'Save'}).click();
+
+			await expect(header).toContainText('Saved: {"Username":"grace","City":"Tokyo","Phones":["+49 30 1234567"]}');
+
+			expect(errors).toEqual([]);
+		});
+
+		test('breadcrumbs lead back, fold the middle into a menu; avatars are made of names; presence, badges and pictures', async function ({ page }) {
+			var errors = captureErrors(page);
+			var people;
+			var crumbs;
+			var short;
+			var header;
+
+			await open(page, origin);
+
+			people = section(page, 'Navigation and people');
+			header = people.locator(':scope > .elemenx-section-header');
+			crumbs = people.getByRole('navigation', {name: 'Breadcrumbs'}).first();
+			short = people.locator('.ui-kit-crumbs-short');
+
+			await crumbs.scrollIntoViewIfNeeded();
+
+			/* The path: the items are buttons, the last one the present page; the slots stand before and after it. */
+			await expect(crumbs.locator('.elemenx-breadcrumbs-item')).toHaveCount(5);
+			await expect(crumbs.locator('[aria-current="page"] .elemenx-breadcrumbs-label')).toHaveText('app.js');
+			await expect(crumbs.locator('.elemenx-breadcrumbs-start').getByRole('button', {name: 'Home'})).toBeVisible();
+			await expect(crumbs.locator('.elemenx-breadcrumbs-end .elemenx-presence')).toHaveText('Online');
+
+			await crumbs.getByRole('button', {name: 'libraries'}).click();
+
+			await expect(header).toContainText('Crumb: libraries (2)');
+
+			/* Max 3: the first, a "…" menu of the hidden ones, the last two; slashes between them. */
+			await expect(short.locator('.elemenx-breadcrumbs-item')).toHaveCount(4);
+			await expect(short.locator('.elemenx-breadcrumbs-separator').first()).toHaveText('/');
+
+			await short.locator('.elemenx-breadcrumbs-item.more .elemenx-button').click();
+			await short.getByRole('menuitem', {name: 'Elemenx'}).click();
+
+			await expect(header).toContainText('Crumb: Elemenx (1)');
+
+			/* Avatars: initials of the name in a color of the name, the same for the same name; a pattern; shapes; a logo of letters; a dot of presence. */
+			expect(await people.locator('.ui-kit-avatars .elemenx-avatar').evaluateAll(function (nodes) {
+				return nodes.map(function (node) {
+					var face = node.querySelector('.elemenx-avatar-face');
+
+					return [node.getAttribute('aria-label'), node.textContent.trim(), face ? face.className.replace('elemenx-avatar-face ', '') : 'image', node.querySelectorAll('rect, circle, polygon').length > 0, !!node.querySelector('.elemenx-presence')];
+				});
+			})).toEqual([
+				['Ada Lovelace', 'AL', 'initials', false, true],
+				['Alan Turing', '', 'pattern', true, true],
+				['Grace Hopper', '', 'shapes', true, true],
+				['Elemenx', 'EX', 'initials', false, false],
+				['Broken picture', 'BP', 'initials', false, false],
+				['Linus', '', 'pattern', true, false]
+			]);
+
+			expect(await page.evaluate(function () {
+				var faces = document.querySelectorAll('.ui-kit-avatars .elemenx-avatar-face');
+
+				return [faces[0].style.background === faces[0].style.background && faces[0].style.background !== faces[4].style.background, getComputedStyle(document.querySelectorAll('.ui-kit-avatars .elemenx-avatar')[5]).width];
+			})).toEqual([true, '72px']);
+
+			/* Presence: a dot with its name; connecting turns until the server answers. */
+			await expect(people.locator('.ui-kit-presence .elemenx-presence-label')).toHaveText(['Online', 'Away', 'Busy', 'Do not disturb', 'Offline', 'Connecting…']);
+
+			await people.getByRole('button', {name: 'Reconnect'}).click();
+
+			await expect(crumbs.locator('.elemenx-presence')).toHaveClass(/connecting/);
+			await expect(crumbs.locator('.elemenx-presence')).toHaveClass(/online/, {timeout: 5000});
+
+			/* Badges: a count (99+ past 99), a ring of a task, a dot, a text of a tone; on any element by *badge; 0 shows none. */
+			expect(await people.locator('.ui-kit-badges .elemenx-badge.overlay').evaluateAll(function (nodes) {
+				return nodes.map(function (node) {
+					return [node.className.replace('elemenx-badge overlay ', ''), node.textContent, node.hidden];
+				});
+			})).toEqual([
+				['count danger', '3', false],
+				['count danger', '99+', false],
+				['busy accent', 'In progress', false],
+				['dot accent', 'New', false],
+				['text success', 'new', false],
+				['count danger', '3', false]
+			]);
+
+			await people.getByRole('button', {name: 'Notifications'}).click();
+
+			await expect(header).toContainText('All read');
+			await expect(people.locator('.ui-kit-badges .elemenx-badge.overlay:not([hidden])')).toHaveCount(4);
+
+			/* Pictures: a box of a ratio filled by the picture, a circle, a fallback, and the icon of a picture when none loads. */
+			await expect.poll(function () {
+				return people.locator('.ui-kit-images .elemenx-image').evaluateAll(function (nodes) {
+					return nodes.map(function (node) {
+						var picture = node.querySelector('img');
+
+						return [Math.round(node.getBoundingClientRect().width), Math.round(node.getBoundingClientRect().height), picture ? picture.getAttribute('src').split('/').pop() : null, !!node.querySelector('.elemenx-image-broken'), node.classList.contains('loading')];
+					});
+				});
+			}).toEqual([[240, 135, 'mountains.svg', false, false], [120, 120, 'sea.svg', false, false], [120, 120, 'city.svg', false, false], [120, 90, null, true, false]]);
+
+			expect(errors).toEqual([]);
+		});
+
 		test('a dial pad types its keys, puts + on a long press of 0, erases, takes only its characters, calls, and takes a layout of its own', async function ({ page }) {
 			var errors = captureErrors(page);
 			var dial;
@@ -1733,7 +2449,7 @@ for (const origin of origins) {
 
 			music = section(page, 'Music and input');
 			header = music.locator('.elemenx-section-header');
-			piano = music.getByRole('group', {name: 'Piano'});
+			piano = music.getByRole('group', {name: 'Piano', exact: true});
 
 			await piano.scrollIntoViewIfNeeded();
 
@@ -1791,7 +2507,78 @@ for (const origin of origins) {
 
 			await expect(header).toContainText('Playing E4');
 
+			/* The keys the piano in the focus plays are its own: the live keyboards of the page do not show them held. */
+			expect(await page.locator('.elemenx-keyboard-key.held').count()).toBe(0);
+
 			await page.keyboard.up('KeyD');
+
+			expect(errors).toEqual([]);
+		});
+
+		test('a piano lights its black keys too and names its notes and the keys that play them; a keyboard shows a second layout', async function ({ page }) {
+			var errors = captureErrors(page);
+			var music;
+			var piano;
+			var keyboard;
+			var colors;
+
+			await open(page, origin);
+
+			music = section(page, 'Music and input');
+			piano = music.getByRole('group', {name: 'Piano with its keys'});
+			keyboard = music.getByRole('group', {name: 'Two layouts'});
+
+			await piano.scrollIntoViewIfNeeded();
+
+			/* A played black key does not look as the others: it takes a tint of the accent over the surface. */
+			colors = await piano.evaluate(function (node) {
+				var color = function (note) {
+					var style = getComputedStyle(node.querySelector('[data-note="' + note + '"]'));
+
+					return style.backgroundImage + ' ' + style.backgroundColor;
+				};
+
+				return [color('C#4'), color('D#4')];
+			});
+
+			expect(colors[0]).not.toBe(colors[1]);
+			await expect(piano.locator('[data-note="C#4"]')).toHaveClass(/pressed/);
+
+			/* Labels 'both': every note by its name, and under it the key of the computer that plays it. */
+			await expect(piano.locator('.elemenx-piano-name')).toHaveCount(13);
+			await expect(piano.locator('[data-note="C4"] .elemenx-piano-name')).toHaveText('C');
+			await expect(piano.locator('[data-note="C#4"] .elemenx-piano-name')).toHaveText('C#');
+			await expect(piano.locator('[data-note="C4"] .elemenx-piano-typing')).toHaveText('A');
+			await expect(piano.locator('[data-note="C#4"] .elemenx-piano-typing')).toHaveText('W');
+			await expect(piano.locator('[data-note="C5"] .elemenx-piano-typing')).toHaveText('K');
+
+			/* Z shifts the keys of the computer an octave down: the first C of this octave is then played by K, the last row. */
+			await piano.focus();
+
+			await page.keyboard.press('KeyZ');
+
+			await expect(piano.locator('.elemenx-piano-typing')).toHaveCount(6);
+			await expect(piano.locator('[data-note="C4"] .elemenx-piano-typing')).toHaveText('K');
+
+			await page.keyboard.press('KeyX');
+
+			await expect(piano.locator('[data-note="C4"] .elemenx-piano-typing')).toHaveText('A');
+
+			/* Alternate 'ru': the Latin letter large at the top left, the Cyrillic one smaller at the bottom right. */
+			await expect(keyboard.locator('[data-code="KeyQ"] .elemenx-keyboard-label')).toHaveText('Q');
+			await expect(keyboard.locator('[data-code="KeyQ"] .elemenx-keyboard-second')).toHaveText('Й');
+			await expect(keyboard.locator('[data-code="Backquote"] .elemenx-keyboard-second')).toHaveText('Ё');
+			await expect(keyboard.locator('[data-code="Period"] .elemenx-keyboard-second')).toHaveText('Ю');
+			await expect(keyboard.locator('[data-code="Digit1"] .elemenx-keyboard-second')).toHaveCount(0);
+			await expect(keyboard.locator('[data-code="KeyQ"]')).toHaveAttribute('aria-label', 'Q Й');
+
+			expect(await keyboard.evaluate(function (node) {
+				var key = node.querySelector('[data-code="KeyQ"]').getBoundingClientRect();
+				var first = node.querySelector('[data-code="KeyQ"] .elemenx-keyboard-label').getBoundingClientRect();
+				var second = node.querySelector('[data-code="KeyQ"] .elemenx-keyboard-second').getBoundingClientRect();
+
+				return [first.left - key.left < key.width / 2, first.top - key.top < key.height / 2, second.left - key.left > key.width / 2, second.top - key.top > key.height / 2, first.height > second.height];
+			})).toEqual([true, true, true, true, true]);
 
 			expect(errors).toEqual([]);
 		});
@@ -2100,6 +2887,102 @@ for (const origin of origins) {
 				});
 
 				await expect(page.locator('#ui-kit-context .elemenx-context-point .elemenx-menu')).toBeVisible();
+
+				await page.keyboard.press('Escape');
+
+				/* Nothing is wider than the phone: the page does not scroll sideways (a long bar of buttons scrolls inside itself). */
+				expect(await page.evaluate(function () {
+					return [document.documentElement.scrollWidth, window.innerWidth];
+				})).toEqual([390, 390]);
+
+				/* A submenu without room beside its item opens under it, a step in, not over it. */
+				await page.locator('.elemenx-menu-root').filter({has: page.getByRole('button', {name: 'Edit', exact: true})}).locator('.elemenx-button').first().click();
+				await page.getByRole('menuitem', {name: /Paste special/}).click();
+
+				expect(await page.getByRole('menuitem', {name: /Paste special/}).evaluate(function (node) {
+					var item = node.getBoundingClientRect();
+					var submenu = node.parentNode.querySelector('.elemenx-menu').getBoundingClientRect();
+
+					return [submenu.top >= item.bottom, submenu.left > item.left, submenu.right <= window.innerWidth];
+				})).toEqual([true, true, true]);
+
+				await page.keyboard.press('Escape');
+				await page.keyboard.press('Escape');
+
+				/* The quick menu of a rich editor stands under the selection, out of the way of the menu of the system above it. */
+				await page.locator('.elemenx-rich-editor-content').first().scrollIntoViewIfNeeded();
+
+				expect(await page.locator('.elemenx-rich-editor-content').first().evaluate(async function (node) {
+					var text = node.querySelector('p').firstChild;
+					var range = document.createRange();
+					var menu;
+
+					range.setStart(text, 0);
+					range.setEnd(text, 5);
+
+					node.focus();
+
+					getSelection().removeAllRanges();
+					getSelection().addRange(range);
+
+					await new Promise(function (resolve) {
+						setTimeout(resolve, 300);
+					});
+
+					menu = node.closest('.elemenx-rich-editor').querySelector('.elemenx-rich-editor-menu');
+
+					return !!menu && menu.getBoundingClientRect().top > range.getBoundingClientRect().bottom;
+				})).toBe(true);
+
+				/* Fit: no group of tiles is wider than the phone; the tiles that do not fit go below. */
+				expect(await page.locator('.elemenx-tile-grid').first().evaluate(function (grid) {
+					return Array.prototype.every.call(grid.querySelectorAll('.elemenx-tile-group[data-group]'), function (group) {
+						return group.getBoundingClientRect().width <= grid.clientWidth + 1;
+					});
+				})).toBe(true);
+
+				/* A finger that moves over a tile scrolls; held still, it takes the tile. */
+				await page.locator('.elemenx-tile-grid').first().locator('.elemenx-tile:not(.locked)').first().scrollIntoViewIfNeeded();
+
+				expect(await page.locator('.elemenx-tile-grid').first().locator('.elemenx-tile:not(.locked)').first().evaluate(async function (tile) {
+					var box = tile.getBoundingClientRect();
+					var result = [];
+
+					function send (type, dy) {
+						tile.dispatchEvent(new PointerEvent(type, {bubbles: true, cancelable: true, pointerType: 'touch', isPrimary: true, pointerId: 9, button: 0, clientX: box.left + 10, clientY: box.top + 10 + dy}));
+					}
+
+					function wait (time) {
+						return new Promise(function (resolve) {
+							setTimeout(resolve, time);
+						});
+					}
+
+					send('pointerdown', 0);
+					send('pointermove', 40);
+
+					result.push(!!document.querySelector('.elemenx-drag-ghost'));
+
+					send('pointerup', 40);
+
+					send('pointerdown', 0);
+
+					await wait(450);
+
+					result.push(tile.classList.contains('held'));
+
+					send('pointermove', 40);
+
+					result.push(!!document.querySelector('.elemenx-drag-ghost'));
+
+					document.dispatchEvent(new KeyboardEvent('keydown', {key: 'Escape', bubbles: true, cancelable: true}));
+
+					await wait(50);
+
+					result.push(!!document.querySelector('.elemenx-drag-ghost'));
+
+					return result;
+				})).toEqual([false, true, true, false]);
 
 				expect(errors).toEqual([]);
 			}
@@ -3350,6 +4233,31 @@ for (const origin of origins) {
 			await expect(phone.locator('input[type="tel"]')).toHaveValue('+373 69 12 34 56');
 		});
 
+		test('a phone number of another country shows in the country its code names, and stays in it while it is edited', async function ({ page }) {
+			var errors = captureErrors(page);
+			var phone;
+			var input;
+
+			await open(page, origin);
+
+			phone = field(page, 'Phone of another country');
+			input = phone.locator('input[type="tel"]');
+
+			await phone.scrollIntoViewIfNeeded();
+
+			await expect(phone.locator('.elemenx-phone-country')).toContainText('GB');
+			await expect(input).toHaveValue(/^\+44 /);
+			expect((await input.inputValue()).replace(/\D/g, '')).toBe('447911123456');
+
+			await input.click();
+			await input.press('End');
+			await input.press('Backspace');
+
+			await expect(phone.locator('.elemenx-phone-country')).toContainText('GB');
+			expect((await input.inputValue()).replace(/\D/g, '')).toBe('44791112345');
+			expect(errors).toEqual([]);
+		});
+
 		test('money input formats the amount of its currency and file icons follow the format', async function ({ page }) {
 			var money;
 			var icons;
@@ -3391,7 +4299,7 @@ for (const origin of origins) {
 
 			await open(page, origin);
 
-			workspace = section(page, 'Workspace').locator('.elemenx-workspace');
+			workspace = section(page, 'Workspace').locator('.elemenx-workspace').first();
 			left = workspace.locator('.elemenx-workspace-panel.left');
 			handle = left.locator(':scope > .elemenx-resize-handle.right');
 
@@ -4299,13 +5207,31 @@ for (const origin of origins) {
 
 			await expect(header).toBeVisible();
 
-			/* A game window: the tab and its slope in the panel of the theme, over the body of the same panel. */
-			expect(await page.locator('.elemenx-window.game.trapezoid').filter({hasText: 'Bag'}).evaluate(function (node) {
-				var frame = node.getBoundingClientRect();
-				var tab = node.querySelector('.elemenx-window-tab').getBoundingClientRect();
+			/*
+			 * A game window: the tab is a plate of the panel and the frame of the theme that comes down over the top of the
+			 * frame of the body, which leaves it that place; the decor frames the body, not the open header. In fantasy the
+			 * plate is square and framed by the ornament of the theme on three sides (the frame of a secondary window: 5px).
+			 */
+			async function gameFolder () {
+				return page.locator('.elemenx-window.game.trapezoid').filter({hasText: 'Bag'}).evaluate(function (node) {
+					var frame = node.getBoundingClientRect();
+					var header = node.querySelector('.elemenx-window-header').getBoundingClientRect();
+					var element = node.querySelector('.elemenx-window-tab');
+					var tab = element.getBoundingClientRect();
+					var style = getComputedStyle(element);
+					var decor = getComputedStyle(node, '::after');
 
-				return [Math.round(tab.left - frame.left), Math.round(tab.top - frame.top), getComputedStyle(node.querySelector('.elemenx-window-tab'), '::after').clipPath.indexOf('polygon') === 0];
-			})).toEqual([0, 0, true]);
+					return [Math.round(tab.left - frame.left), Math.round(tab.top - frame.top), Math.round(tab.height - header.height), getComputedStyle(node, '::before').clipPath.indexOf('polygon') === 0, decor.clipPath.indexOf('polygon') === 0, Math.round(parseFloat(decor.top) - header.height), style.borderImageSource !== 'none', style.borderBottomWidth, Math.round(parseFloat(getComputedStyle(element, '::after').width))];
+				});
+			}
+
+			expect(await gameFolder()).toEqual([0, 0, 1, true, true, 0, false, '0px', 24]);
+
+			await section(page, 'Game UI').getByRole('button', {name: 'Fantasy', exact: true}).click();
+
+			await expect.poll(gameFolder).toEqual([0, 0, 5, true, true, -10, true, '0px', 0]);
+
+			await section(page, 'Game UI').getByRole('button', {name: 'Default', exact: true}).click();
 
 			expect(errors).toEqual([]);
 		});
@@ -4755,13 +5681,16 @@ for (const origin of origins) {
 				return [node.classList.contains('primary'), frame.borderImageSource.indexOf('data:image/svg+xml') !== -1, decor.backgroundImage.split('data:image/svg+xml').length - 1, decor.top, getComputedStyle(header, '::before').backgroundImage, button.backgroundImage.split('linear-gradient').length - 1, button.borderRadius, button.minWidth, getComputedStyle(node.querySelector('.elemenx-window-body')).textShadow !== 'none'];
 			})).toEqual([true, true, 1, '-16px', 'none', 2, '4px', '88px', true]);
 
-			/* A secondary window: a thin frame of metal, a small crest and small corners. */
+			/*
+			 * A secondary window: a thin frame of metal, a small crest and small corners (the Bag is a folder: its decor frames
+			 * the body, under the tab of 36px, and the first corner of the body is square, the tab stands on it).
+			 */
 			expect(await game.locator('.elemenx-window.secondary').filter({hasText: 'Bag'}).evaluate(function (node) {
 				var frame = getComputedStyle(node, '::before');
 				var decor = getComputedStyle(node, '::after');
 
 				return [frame.borderImageSource.indexOf('data:image/svg+xml') !== -1, frame.borderRadius, frame.borderTopWidth, decor.backgroundImage.split('data:image/svg+xml').length - 1, decor.top];
-			})).toEqual([true, '6px', '5px', 1, '-10px']);
+			})).toEqual([true, '0px 6px 6px', '5px', 1, '26px']);
 
 			/* Gauges sit in a ring of metal rounded at both ends: the fill starts right at the curve, with a lattice in it. */
 			expect(await status.locator('.elemenx-game-bar.health').evaluate(function (node) {
@@ -5973,6 +6902,12 @@ for (const origin of origins) {
 
 			await expect(menu).toBeHidden();
 			await expect(commands.locator('[data-file="logo.svg"]')).toBeFocused();
+
+			/* An item declared in its slot items comes after Items. */
+			await commands.locator('[data-file="logo.svg"]').click({button: 'right'});
+			await menu.getByRole('menuitem', {name: /Properties/}).click();
+
+			await expect(commands.locator('.elemenx-section-header')).toContainText('Last: Properties logo.svg');
 		});
 
 		test('a drawer is a side menu from either side, and drawers stack: Escape closes the top one', async function ({ page }) {

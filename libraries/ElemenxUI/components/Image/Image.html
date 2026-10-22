@@ -1,0 +1,5 @@
+<span class="elemenx-image" [class]="['stretch-' + (Stretch || 'none'), Shape || '', Width || Height || Ratio || (Stretch && Stretch !== 'none') ? 'sized' : '', Source(Src, Fallback, Broken) ? '' : 'broken', Source(Src, Fallback, Broken) && Done !== Source(Src, Fallback, Broken) ? 'loading' : '']" [style.width]="Length(Width)" [style.height]="Length(Height)" [style.aspect-ratio]="RatioOf(Ratio)">
+	<span class="elemenx-image-placeholder" aria-hidden="true" *if="Placeholder && Source(Src, Fallback, Broken) && Done !== Source(Src, Fallback, Broken)"></span>
+	<img class="elemenx-image-picture" *if="Source(Src, Fallback, Broken)" [attribute.src]="Source(Src, Fallback, Broken)" [attribute.alt]="Alt" [attribute.loading]="Lazy ? 'lazy' : 'eager'" decoding="async" [style.object-fit]="FitOf(Fit)" [style.object-position]="Position || 'center'" (load)="Loaded" (error)="Failed" />
+	<span class="elemenx-image-broken" *if="!Source(Src, Fallback, Broken)" role="img" [attribute.aria-label]="Alt || $T('ui.image.broken')"><Icon Name="image" /></span>
+</span>

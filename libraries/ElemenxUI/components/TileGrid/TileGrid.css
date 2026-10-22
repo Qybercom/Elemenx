@@ -11,6 +11,22 @@
 	padding-bottom: 112px;
 }
 
+/* Direction horizontal: the groups in one row, as on a start screen. */
+.elemenx-tile-grid.horizontal {
+	flex-wrap: nowrap;
+}
+
+/* Scroll: the grid scrolls on its own (in the height its page gives it), not the page around it. */
+.elemenx-tile-grid.scroll {
+	max-height: 100%;
+	overflow: auto;
+	overscroll-behavior: contain;
+}
+
+.elemenx-tile-grid.horizontal.scroll {
+	padding-bottom: 16px;
+}
+
 .elemenx-tile-lane {
 	position: relative;
 	display: flex;
@@ -115,15 +131,71 @@
 	outline: none;
 }
 
+/* The handles on the bottom edge and the corner of a group: drag them to make it higher, or wider and higher. */
+.elemenx-tile-group-stretch {
+	position: absolute;
+	touch-action: none;
+}
+
+.elemenx-tile-group-stretch.bottom {
+	inset-inline: 0;
+	bottom: -12px;
+	height: 8px;
+	border-radius: var(--elemenx-radius);
+	cursor: ns-resize;
+}
+
+.elemenx-tile-group-stretch.bottom::after {
+	position: absolute;
+	inset-inline: 0;
+	top: 3px;
+	height: 2px;
+	background: transparent;
+	border-radius: 1px;
+	content: '';
+	transition: background var(--elemenx-duration) var(--elemenx-easing);
+}
+
+.elemenx-tile-group:hover > .elemenx-tile-group-stretch.bottom::after {
+	background: var(--elemenx-border);
+}
+
+.elemenx-tile-group-stretch.bottom:hover::after,
+.elemenx-tile-group-stretch.bottom:focus-visible::after {
+	background: var(--elemenx-accent);
+}
+
+.elemenx-tile-group-stretch:focus-visible {
+	outline: none;
+}
+
+.elemenx-tile-group-stretch.corner {
+	inset-inline-end: -14px;
+	bottom: -14px;
+	width: 12px;
+	height: 12px;
+	cursor: nwse-resize;
+}
+
+.elemenx-tile-group-stretch.corner:dir(rtl) {
+	cursor: nesw-resize;
+}
+
+.elemenx-tile-grid.sorting .elemenx-tile-group-stretch {
+	display: none;
+}
+
 .elemenx-tile-grid.sorting .elemenx-tile-group-resize {
 	display: none;
 }
 
+/* Rows gives a group a least height in cells. */
 .elemenx-tile-cells {
 	display: grid;
 	grid-template-columns: repeat(var(--elemenx-tile-columns), 48px);
 	grid-auto-rows: 48px;
 	gap: 8px;
+	min-height: calc(var(--elemenx-tile-rows, 0) * 56px - 8px);
 }
 
 .elemenx-tile {
@@ -192,8 +264,21 @@
 	grid-row: span 4;
 }
 
+.elemenx-tile.tall {
+	grid-column: span 2;
+	grid-row: span 4;
+}
+
+.elemenx-tile.xlarge {
+	grid-column: span 6;
+	grid-row: span 4;
+}
+
 .elemenx-tile.wide > .elemenx-icon,
-.elemenx-tile.large > .elemenx-icon {
+.elemenx-tile.tall > .elemenx-icon,
+.elemenx-tile.large > .elemenx-icon,
+.elemenx-tile.xlarge > .elemenx-icon,
+.elemenx-tile.spanned > .elemenx-icon {
 	top: 12px;
 	inset-inline-start: 12px;
 	transform: none;

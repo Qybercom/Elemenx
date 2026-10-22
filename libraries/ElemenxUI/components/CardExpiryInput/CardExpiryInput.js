@@ -1,4 +1,9 @@
-/* Value holds MMYY digits. A month is kept in 01-12 while typing; an expired date is invalid. */
+/*
+ * The expiry date of a payment card: Value holds the digits MMYY ('0927'), shown as MM/YY. Only digits are taken; the
+ * month is kept in 01-12 while typing, and a date already past is invalid. Placeholder (MM/YY), Size, Shape, Name,
+ * Disabled and Invalid as in Input. Events: input (Value), validate ({Value, Complete, Valid}), change (Value, when it is
+ * committed).
+ */
 Elemenx.Component('CardExpiryInput', {
 	$TemplateURL: 'CardExpiryInput.html',
 	Value: '',

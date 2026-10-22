@@ -1,0 +1,17 @@
+<Field Label="Volume" [hint]="Volume + '%'"><Slider [value]="Volume" Min="0" Max="100" ShowValue="always" (input)="Moved" /></Field>
+<Field Label="Price" [hint]="Range[0] + ' – ' + Range[1] + ' €'"><Slider Range="true" [value]="Range" Min="0" Max="500" Step="10" Marks="100" (change)="Ranged" /></Field>
+<Slider Orientation="vertical" Value="30" Label="Level" />
+<script>
+({
+	Volume: 40,
+	Range: [100, 300],
+
+	Moved: function (value) {
+		this.Volume = value;
+	},
+
+	Ranged: function (value) {
+		this.Range = value;
+	}
+})
+</script>

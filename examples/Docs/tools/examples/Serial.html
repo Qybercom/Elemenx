@@ -1,0 +1,40 @@
+<p class="elemenx-text">Web Serial here: <strong>{{Supported ? 'yes' : 'no (Chrome and Edge on the desktop)'}}</strong></p>
+<Button Label="Pick a port" Icon="link" [disabled]="!Supported" (click)="Pick" />
+<ul class="elemenx-ul"><li *for="line of Lines" *key="$index">{{line}}</li></ul>
+<script>
+({
+	Supported: false,
+	Lines: [],
+
+	$OnCreate: function () {
+		this.Supported = this.$Service('Serial').Supported();
+	},
+
+	Pick: function () {
+		var self = this;
+
+		this.$Service('Serial').Request({}, function (error, port) {
+			if (error) {
+				self.Lines = [error.name];
+
+				return;
+			}
+
+			self.Port = port;
+
+			port.On('line', function (line) {
+				self.Lines = self.Lines.concat([line]).slice(-8);
+			});
+
+			port.Open({BaudRate: 9600}, function (failure) {
+				self.Lines = [failure ? failure.message : 'Open: VendorID ' + port.Info.VendorID];
+			});
+		});
+	},
+
+	$OnDestroy: function () {
+		if (this.Port)
+			this.Port.Close(function () {});
+	}
+})
+</script>

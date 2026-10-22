@@ -1,0 +1,40 @@
+<div class="elemenx-container wrappable" style="gap: 8px;">
+	<GameKey Button="a" [pad]="Kind || 'xbox'" />
+	<GameKey Button="b" [pad]="Kind || 'xbox'" />
+	<GameKey Button="x" [pad]="Kind || 'xbox'" />
+	<GameKey Button="y" [pad]="Kind || 'xbox'" />
+</div>
+<p class="elemenx-text">{{Kind ? 'A ' + Kind + ' pad is connected.' : 'Connect a gamepad and press a button.'}} Last button: <strong>{{Last}}</strong></p>
+<p class="elemenx-text small muted">The pad works the page as the keys do: the d-pad moves the focus, A presses.</p>
+<script>
+({
+	Kind: '',
+	Last: '—',
+
+	$OnCreate: function () {
+		var self = this;
+		var gamepad = this.$Service('Gamepad');
+
+		this.Kind = gamepad.Kind();
+
+		this.Pressed = function (event) {
+			self.Last = gamepad.Label(event.Button, gamepad.Kind()) + ' (' + event.Button + ')';
+		};
+
+		this.Changed = function () {
+			self.Kind = gamepad.Kind();
+		};
+
+		gamepad.On('button', this.Pressed);
+		gamepad.On('change', this.Changed);
+		gamepad.On('connect', this.Changed);
+	},
+
+	$OnDestroy: function () {
+		var gamepad = this.$Service('Gamepad');
+
+		gamepad.Off(this.Pressed);
+		gamepad.Off(this.Changed);
+	}
+})
+</script>

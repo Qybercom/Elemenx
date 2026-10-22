@@ -1,0 +1,21 @@
+<Button Label="Unlock an achievement" Icon="trophy" Variant="primary" (click)="Unlock" />
+<AchievementHost />
+<script>
+({
+	Count: 0,
+
+	Unlock: function () {
+		var rarities = ['common', 'rare', 'epic', 'legendary'];
+
+		this.Count++;
+
+		this.$Service('Achievements').Show({
+			Title: 'Reader ' + this.Count,
+			Text: 'You opened ' + this.Count + ' pages of the reference.',
+			Rarity: rarities[(this.Count - 1) % rarities.length],
+			Points: this.Count * 10,
+			Duration: 4000
+		});
+	}
+})
+</script>

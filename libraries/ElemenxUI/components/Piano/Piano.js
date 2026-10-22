@@ -6,7 +6,9 @@
  * X shift them an octave down and up.
  * - Pressed: notes shown played (a song, a MIDI keyboard); Marks: {note: class} marks notes (a scale, a chord), true
  *   for the mark of the theme. Notes are written as C4, C#4, Db4 or MIDI numbers.
- * - Labels: 'none', 'c' (the name of every C) or 'all'. Size: small, medium or large.
+ * - Labels: what the keys show. 'none'; 'c' (the name of every C, the default); 'notes' (the name of every note,
+ *   without its octave: C, C#, D...); 'all' (with its octave: C4, C#4...); 'keys' (the key of the computer that plays
+ *   it, as it is now, Z and X included); 'both' (the note and that key). Size: small, medium or large.
  * Events: noteon ({Note, Midi, Velocity}), noteoff ({Note, Midi}).
  */
 Elemenx.Component('Piano', {
@@ -120,10 +122,26 @@ Elemenx.Component('Piano', {
 			}).join(' ');
 		};
 
-		this.Name = function (key, labels) {
+		/* The name a key shows under Labels (see the head of this file); shift is the octave Z and X chose. */
+		this.Name = function (key, labels, shift) {
 			if (labels === 'all' || (labels === 'c' && key.Note.charAt(0) === 'C' && !key.Black)) return key.Note;
 
+			if (labels === 'notes')
+				return key.Note.replace(/-?\d+$/, '');
+
+			if (labels === 'keys')
+				return self.Typing(key.Midi, shift);
+
 			return '';
+		};
+
+		/* The key of the computer that plays a note now ('' for none): the label of its code, A for KeyA, ; for Semicolon. */
+		this.Typing = function (midi, shift) {
+			var code = self.ComputerKeys[midi - self.Base(self.From) - (shift || 0)];
+			if (!code)
+				return '';
+
+			return code === 'Semicolon' ? ';' : code === 'Quote' ? "'" : code.replace(/^Key/, '');
 		};
 	},
 

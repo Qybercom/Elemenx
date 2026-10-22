@@ -1,0 +1,19 @@
+<table class="elemenx-table compact">
+	<tr><th>Value</th><th>Kind</th><th>Text</th><th>Tone</th><th>Label</th></tr>
+	<tr *for="row of Rows" *key="row.Value"><td><code class="elemenx-code">{{row.Value}}</code></td><td>{{row.Kind}}</td><td>{{row.Text}}</td><td>{{row.Tone}}</td><td>{{row.Label}}</td></tr>
+</table>
+<script>
+({
+	Rows: [],
+
+	$OnCreate: function () {
+		var badges = this.$Service('Badges');
+
+		this.Rows = [3, 120, 'dot', 'busy', 'new', {Value: 7, Tone: 'success', Label: '7 builds'}].map(function (value) {
+			var badge = badges.Describe(value);
+
+			return {Value: JSON.stringify(value), Kind: badge.Kind, Text: badge.Text, Tone: badge.Tone, Label: badge.Label};
+		});
+	}
+})
+</script>

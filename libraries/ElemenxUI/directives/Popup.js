@@ -2,7 +2,8 @@
  * *popup="Open" shows the element as a floating panel next to its anchor while the expression is truthy.
  * The anchor is the closest .elemenx-popup-anchor ancestor, or the parent element.
  * data-placement: bottom-start (default), bottom-end, top-start, top-end, right-start; start and end, and the side of
- * right-start, follow the direction of the page (on a right-to-left page start is the right edge).
+ * right-start, follow the direction of the page (on a right-to-left page start is the right edge). A right-start panel
+ * without room on either side (a submenu on a phone) goes under its anchor, a step in.
  * The panel dispatches a "dismiss" DOM event on an outside pointer press and on Escape; the owner closes it.
  * The panel keeps to its anchor while the page scrolls or resizes and while its own size changes. It opens in the top
  * layer (a popover of the browser): no overflow, transform or stacking of the parts of the page around it cuts or hides
@@ -74,6 +75,18 @@ Elemenx.Directive('popup', {
 
 				if (top + height > window.innerHeight - margin)
 					top = Math.max(margin, window.innerHeight - margin - height);
+
+				/*
+				 * No room on either side (a submenu on a phone): under its anchor, a step in, rather than over it, where
+				 * the press that opened it would land on one of its items; above it when there is no room below.
+				 */
+				if (left < margin || left + width > window.innerWidth - margin) {
+					left = rtl ? rect.right - 16 - width : rect.left + 16;
+					top = rect.bottom + gap;
+
+					if (top + height > window.innerHeight - margin && rect.top - gap - height >= margin)
+						top = rect.top - gap - height;
+				}
 			}
 			else {
 				left = (placement.indexOf('end') !== -1) !== rtl ? rect.right - width : rect.left;

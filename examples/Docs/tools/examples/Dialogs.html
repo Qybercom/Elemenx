@@ -1,0 +1,34 @@
+<Button Label="Confirm" Variant="danger" (click)="Confirm" />
+<Button Label="Three actions" (click)="Choose" />
+<Button Label="Alert" Variant="ghost" (click)="Alert" />
+<span class="elemenx-text small muted">{{Note}}</span>
+<script>
+({
+	Note: '',
+
+	Confirm: function () {
+		var self = this;
+
+		this.$Service('Dialogs').Confirm({Title: 'Delete the project?', Message: 'Its files go for good.', Icon: 'delete', Variant: 'danger'}, function (action) {
+			self.Note = 'Answer: ' + (action || 'dismissed');
+		});
+	},
+
+	Choose: function () {
+		var self = this;
+
+		this.$Service('Dialogs').Confirm({
+			Title: 'Unsaved changes',
+			Message: 'Save them before closing?',
+			Dismissible: false,
+			Actions: [{ID: 'discard', Label: 'Discard', Variant: 'danger'}, {ID: 'cancel', Label: 'Cancel'}, {ID: 'save', Label: 'Save', Variant: 'primary'}]
+		}, function (action) {
+			self.Note = 'Answer: ' + action;
+		});
+	},
+
+	Alert: function () {
+		this.$Service('Dialogs').Alert('The build is complete.');
+	}
+})
+</script>
