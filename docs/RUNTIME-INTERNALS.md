@@ -20,7 +20,7 @@ To find a section in `elemenx.js`, search for its header, for example `/* Router
 
 | Field | Purpose | Used by |
 |---|---|---|
-| `Own` | `Object.prototype.hasOwnProperty.call(object, key)`; modules alias it as `var own = Runtime.Own;` | Application, Bundle, Cache, Directive registry, Discovery, Locale, Messaging, Network, Reactive, Router, Service and Guard, Storage, Structural, Template and Component |
+| `Own` | `Object.prototype.hasOwnProperty.call(object, key)`; modules alias it as `var own = Runtime.Own;` | Application, Bundle, Cache, Directive registry, Discovery, Locale, Messaging, Meta, Network, Reactive, Router, Service and Guard, Storage, Structural, Template and Component |
 | `AbsoluteURL` | resolves a URL against the document; in a worker the value is kept as it is | Locale, Resource, ServiceWorker, WebWorker |
 | `CurrentScriptURL` | the URL of the executing script without query and hash, or `null`: the base of the relative paths of its definitions | Library, Template and Component, Application |
 | `DefinitionURL` | resolves a relative path of a definition against its `$DefinitionURL`; absolute and root paths are kept | Library, Template and Component, Application |
@@ -91,6 +91,7 @@ To find a section in `elemenx.js`, search for its header, for example `/* Router
 | `ServiceForApplication` | service handle owned by a given Application | Router, Application |
 | `DestroyApplicationServices` | destroys every service instance owned by an Application | Application |
 | `RegisterServiceDefinition` | registers or replaces a service definition at runtime | Application |
+| `ServiceDefinition` | the definition of a service registered under a name, or `null` | Meta |
 | `RefreshDeferredService` | refreshes the handle of a service reloaded through Discovery | Application |
 | `ResolveGuard` | resolves a guard name or function to a guard function | Router |
 
@@ -109,7 +110,7 @@ To find a section in `elemenx.js`, search for its header, for example `/* Router
 
 | Field | Purpose | Used by |
 |---|---|---|
-| `Directive` | directive registry and composition policy, including the built-in `if`, `for`, `key`, `outlet`, `pending`, `error` | Template and Component, Structural |
+| `Directive` | directive registry and composition policy, including the built-in `if`, `for`, `key`, `outlet`, `pending`, `error` | Template and Component, Structural, Meta |
 
 ## Template and Component
 
@@ -119,6 +120,8 @@ To find a section in `elemenx.js`, search for its header, for example `/* Router
 | `EvaluateExpression` | evaluates a template expression against a scope | Structural |
 | `ResolveComponent` | resolves a component factory by name, through Bundle, Discovery and Libraries | Structural |
 | `ResolveComponentRegistered` | returns a factory only if it is already registered and loaded | Router, Structural, Application |
+| `ComponentDefinition` | the definition of a component registered and loaded under a name, or `null` | Meta |
+| `ComponentNames` | the names of the components registered and loaded | Meta |
 | `ComponentTag` | the name of the Component an element of a template declares: `data-elemenx-component`, otherwise its tag, in any case for an element HTML does not know | Structural |
 | `ReloadComponentTemplate` | reloads the external template of a component | Application |
 | `ComponentValues` | reactive state of a component instance | Structural |

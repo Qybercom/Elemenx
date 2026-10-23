@@ -10,6 +10,21 @@
 Elemenx.Component('Steps', {
 	$TemplateURL: 'Steps.html',
 	$StyleURL: 'Steps.css',
+	$Meta: {
+		Group: 'navigation',
+		Icon: 'list-ordered',
+		Description: 'Steps joined by lines.',
+		Events: ['select'],
+		Props: {
+			Items: 'The steps: [{ID, Label, Description, Icon, Status, Class, Disabled, Readonly, Element, Render}].',
+			Active: 'The IDs of the active steps.',
+			Done: 'The IDs of the steps done.',
+			Direction: {Options: ['horizontal', 'vertical'], Description: 'horizontal or vertical.'},
+			Size: {Options: ['small', 'medium', 'large'], Description: 'Its size: small, medium or large.'},
+			Clickable: 'Makes the steps buttons that emit select.'
+		},
+		Sample: {Items: [{ID: 'cart', Label: 'Cart'}, {ID: 'pay', Label: 'Payment'}, {ID: 'done', Label: 'Done'}], Active: ['pay'], Done: ['cart'], Clickable: true}
+	},
 	Items: [],
 	Active: [],
 	Done: [],

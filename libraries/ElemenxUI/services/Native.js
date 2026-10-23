@@ -37,6 +37,10 @@
  *   Focused}), shortcut, link and power.
  */
 Elemenx.Service('Native', {
+	$Meta: {
+		Description: 'The native features of the system around the Application, one API wherever it runs.',
+		Methods: ['Available()', 'Platform()', 'Has(feature)', 'Window(action, callback)', 'Title(text, callback)', 'Open(options, callback)', 'Save(options, callback)', 'Message(options, callback)', 'Menu(items, callback)', 'ContextMenu(items, callback)', 'Tray(options, callback)', 'External(url, callback)', 'Badge(count, callback)', 'Progress(value, callback)', 'Shortcuts(keys, callback)', 'Autostart(enabled, callback)', 'Links(callback)', 'Power(callback)', 'Awake(on, callback)', 'Update(callback)', 'On(name, callback)', 'Off(name, callback)']
+	},
 	$OnCreate: function () {
 		var self = this;
 

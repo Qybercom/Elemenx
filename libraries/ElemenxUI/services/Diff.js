@@ -10,6 +10,10 @@
  * - Stats(lines): {Added, Removed}.
  */
 Elemenx.Service('Diff', {
+	$Meta: {
+		Description: 'The differences between two texts (the algorithm of Myers: the shortest list of changes).',
+		Methods: ['Lines(before, after)', 'Words(before, after)', 'Hunks(lines, context)', 'Stats(lines)']
+	},
 	/* The shortest edit between two lists (Myers): the operations in order, ['same' | 'remove' | 'add', index]. */
 	Edit: function (a, b, equal) {
 		var n = a.length;

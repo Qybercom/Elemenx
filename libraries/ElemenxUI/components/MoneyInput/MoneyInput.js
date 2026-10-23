@@ -6,6 +6,26 @@
 Elemenx.Component('MoneyInput', {
 	$TemplateURL: 'MoneyInput.html',
 	$StyleURL: 'MoneyInput.css',
+	$Meta: {
+		Group: 'inputs',
+		Icon: 'credit-card',
+		Description: 'An amount of money with its currency.',
+		Props: {
+			Amount: 'The amount: a number, or null.',
+			Currency: 'The code of the currency (USD).',
+			Codes: 'Only these currencies in the select.',
+			Locale: 'The language of its texts and formats (the language of the page by default).',
+			Min: 'The least amount.',
+			Max: 'The greatest amount.',
+			Placeholder: 'The text shown while it is empty.',
+			Size: {Options: ['small', 'medium', 'large'], Description: 'Its size: small, medium or large.'},
+			Shape: 'Its shape: default, or round.',
+			Name: 'The name of its value in a form.',
+			Fixed: 'Hides the select of the currency.',
+			Disabled: 'Turns it off: it takes no input and looks so.',
+			Invalid: 'Marks its value as wrong.'
+		}
+	},
 	Amount: null,
 	Currency: 'USD',
 	Codes: null,

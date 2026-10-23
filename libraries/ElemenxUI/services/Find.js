@@ -7,6 +7,10 @@
  * without highlights selects the current match instead.
  */
 Elemenx.Service('Find', {
+	$Meta: {
+		Description: 'Finds text in the DOM: what the find bar of a RichEditor or a Terminal looks through.',
+		Methods: ['Ranges(root, query, options)', 'Show(owner, ranges, index)', 'Clear(owner)']
+	},
 	$OnCreate: function () {
 		this.Marks = [];
 	},

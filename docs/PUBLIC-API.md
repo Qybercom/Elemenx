@@ -16,6 +16,7 @@ This document is the release-level map of the supported top-level Elemenx surfac
 - `Elemenx.Storage` — storage providers and composable storage contexts.
 - `Elemenx.Events` — synchronous same-runtime event channels.
 - `Elemenx.Messaging` — cross-context message channels and composable messaging contexts.
+- `Elemenx.Meta` — what Components, Services and Directives declare of themselves for tools (a builder, a reference) in the `$Meta` key of their definitions: `{Group, Icon, Description, Props, Slots, Container, Events, Methods, Sample}`, where `Props` names the public props, each a description or `{Type, Options, Description}`. `Elemenx.Meta(name)` returns it normalized for the definition of that name (a Directive in any case): `{Name, Kind ('Component', 'Service' or 'Directive'), Group, Icon, Description, Props: [{Name, Type ('bool', 'number', 'text', 'select', 'json'), Default (the value of the definition), Options, Description}], Slots, Container, Events, Methods, Sample}`, a copy, or `null` when no such definition is loaded or it declares no `$Meta`; `Elemenx.Meta()` returns the ones of every loaded Component that declares one. `$Meta` is never state.
 - `Elemenx.WebWorker` — Web Worker lifecycle and Messaging bridge.
 - `Elemenx.ServiceWorker` — Service Worker lifecycle and registration helpers.
 - `Elemenx.Bundle` — production bundle registry used before normal Discovery fallback.

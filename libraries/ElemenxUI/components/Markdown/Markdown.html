@@ -1,1 +1,1 @@
-<div class="elemenx-markdown elemenx-document" [attribute.aria-label]="Label || null" [attribute.role]="Label ? 'document' : null" *mount="Rendered(Value, Highlight)"></div>
+<div class="elemenx-markdown" [class]="[Look === 'interface' ? 'interface' : 'elemenx-document']" [attribute.aria-label]="Label || null" [attribute.role]="Label ? 'document' : null" *mount="Rendered(Value, Highlight, Look)"></div>

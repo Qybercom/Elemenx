@@ -1,7 +1,7 @@
 <!-- generated -->
 # Tabs
 
-A strip of tabs. Tabs: [{ID, Label, Icon, Badge, Closable, Disabled}]; Value is the ID of the active tab. Variant: line (an underline, the default), pill (rounded buttons) or editor (the tabs of the files of an editor). A Closable tab (or every tab, with Closable on the strip) has a cross; the middle button, Delete and Ctrl+W close it too. Keys: the arrows, Home and End move between the tabs. The owner renders the content of the active tab; content in the default slot goes after the tabs (an action, a button that adds a tab). Size; Label names the strip for screen readers. Events: change (the ID), close (the ID).
+A strip of tabs. Tabs: [{ID, Label, Icon, Badge, Closable, Disabled}]; Value is the ID of the active tab. Variant: line (an underline, the default), pill (rounded buttons) or editor (the tabs of the files of an editor). A Closable tab (or every tab, with Closable on the strip) has a cross; the middle button, Delete and Ctrl+W close it too. Keys: the arrows, Home and End move between the tabs. The owner renders the content of the active tab; content in the default slot goes after the tabs (an action, a button that adds a tab). Size; Label names the strip for screen readers. Tabs may be declared in the template too, with their content: <Tab ID="general" Label="General">...</Tab> in the default slot (see Tab). Their tabs follow the ones of Tabs in the strip, and the Tabs shows the content of the current one under the strip (the first tab that is not Disabled while Value names none). Events: change (the ID), close (the ID).
 
 ## Properties
 

@@ -3,3 +3,33 @@
 	min-width: 0;
 	overflow-wrap: anywhere;
 }
+
+/* Look 'interface': the blocks of the document with the classes of the Library, a line apart. */
+.elemenx-markdown.interface {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	line-height: var(--elemenx-line-height-large);
+}
+
+.elemenx-markdown.interface > * {
+	margin: 0;
+}
+
+.elemenx-markdown.interface > :is(h1, h2, h3, h4, h5, h6) {
+	margin-top: 12px;
+}
+
+.elemenx-markdown.interface > :first-child {
+	margin-top: 0;
+}
+
+.elemenx-markdown.interface pre.elemenx-code {
+	padding: 12px;
+	overflow-x: auto;
+	white-space: pre;
+}
+
+.elemenx-markdown.interface img {
+	max-width: 100%;
+}

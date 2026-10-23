@@ -8,6 +8,10 @@
  * the field hides it again by itself. Guard(null) removes the guard.
  */
 Elemenx.Service('Reveal', {
+	$Meta: {
+		Description: 'Showing what a field hides: a password (Input), a card number (CardNumberInput), a security code (CVVInput) or a one-time code (OTPInput).',
+		Methods: ['Guard(callback)', 'Toggle(field, kind)']
+	},
 	$OnCreate: function () {
 		this.Check = null;
 		this.Sequence = 0;

@@ -17,6 +17,30 @@
 Elemenx.Component('Calendar', {
 	$TemplateURL: 'Calendar.html',
 	$StyleURL: 'Calendar.css',
+	$Meta: {
+		Group: 'data',
+		Icon: 'calendar',
+		Description: 'A calendar of events.',
+		Events: ['change', 'select', 'move', 'day', 'slot'],
+		Props: {
+			Events: 'The events: [{ID, Title, Start, End, AllDay, Color}], Start and End as YYYY-MM-DD or YYYY-MM-DDTHH:mm.',
+			View: {Options: ['month', 'week'], Description: 'month or week.'},
+			Date: 'A day of the period shown (today by default).',
+			Locale: 'The language of its texts and formats (the language of the page by default).',
+			FirstDay: 'The first day of the week: 0 Sunday, 1 Monday, or locale.',
+			MaxEvents: 'How many events a day of the month lists before "+N more".',
+			StartHour: 'The first hour of the week view.',
+			EndHour: 'The last hour of the week view.',
+			HourHeight: 'The height of an hour of the week view, in pixels.',
+			TodayLabel: 'The text of the Today button (the phrase of the language by default).',
+			MonthLabel: 'The text of the Month button.',
+			WeekLabel: 'The text of the Week button.',
+			MoreLabel: 'The text of "+N more" ({count} is the number).',
+			Editable: 'Lets the user drag the events to another day or time (the move event).',
+			Snap: 'The step of a move in the week, in minutes.'
+		},
+		Sample: {Editable: true}
+	},
 	Events: [],
 	View: 'month',
 	Date: '',

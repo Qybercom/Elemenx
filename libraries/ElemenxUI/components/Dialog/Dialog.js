@@ -6,6 +6,25 @@
 Elemenx.Component('Dialog', {
 	$TemplateURL: 'Dialog.html',
 	$StyleURL: 'Dialog.css',
+	$Meta: {
+		Group: 'overlays',
+		Icon: 'layout',
+		Description: 'A modal dialog.',
+		Container: true,
+		Slots: ['footer'],
+		Events: ['close'],
+		Props: {
+			Open: 'Shows the dialog; its close event asks the owner to set it back to false.',
+			Title: 'The title of the dialog.',
+			Description: 'A text under the title.',
+			Icon: 'An icon before the title.',
+			Size: {Options: ['small', 'medium', 'large', 'full'], Description: 'Its size: small, medium or large.'},
+			Closable: 'Shows the close button.',
+			Dismissible: 'Escape and a press on the backdrop close it; false keeps it open.',
+			Padded: 'Puts room around the body.'
+		},
+		Sample: {Title: 'Project settings', Description: 'Changes apply to every member.', Icon: 'settings'}
+	},
 	Open: false,
 	Title: '',
 	Description: '',

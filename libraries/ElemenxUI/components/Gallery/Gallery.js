@@ -9,12 +9,40 @@
  *   pauses and plays it. Loop (true) goes round at the ends.
  * - Effect: slide (the default) or fade. Fit: cover (the default) or contain. Ratio: the shape of the picture
  *   ('16 / 9').
- * - The arrows (Home, End) change the picture when the gallery has the focus; on a touch screen the picture follows
- *   the finger across (*swipe) and a swipe goes to the next or the previous one (held back at the ends without Loop).
+ * - The arrows (Home, End) change the picture when the gallery has the focus; the picture follows a finger across, or
+ *   the mouse that drags it (*swipe), and a swipe goes to the next or the previous one (held back at the ends without
+ *   Loop).
  */
 Elemenx.Component('Gallery', {
 	$TemplateURL: 'Gallery.html',
 	$StyleURL: 'Gallery.css',
+	$Meta: {
+		Group: 'display',
+		Icon: 'image',
+		Description: 'A gallery: one picture at a time out of Items [{ID, Image, Thumb, Alt, Title, Description, Tags}], with buttons to the previous and the next one, dots, a counter and thumbnails.',
+		Events: ['change', 'select'],
+		Props: {
+			Items: 'The pictures: [{ID, Image, Thumb, Alt, Title, Description, Tags}].',
+			Index: 'The picture shown.',
+			ShowTitle: 'Shows the title in the caption.',
+			ShowDescription: 'Shows the description in the caption.',
+			ShowTags: 'Shows the tags in the caption.',
+			ShowArrows: 'Shows the buttons to the previous and the next picture.',
+			ShowDots: 'Shows the dots.',
+			ShowCounter: 'Shows the counter (2 / 4).',
+			ShowThumbs: 'Shows the thumbnails.',
+			Caption: {Options: ['overlay', 'below'], Description: 'overlay (over the picture) or below it.'},
+			Autoplay: 'Goes on by itself every Interval.',
+			Interval: 'The time of a picture in Autoplay, in milliseconds.',
+			Direction: {Options: ['next', 'previous'], Description: 'The way of Autoplay: next or previous.'},
+			Loop: 'Goes round at the ends.',
+			Effect: {Options: ['slide', 'fade'], Description: 'slide or fade.'},
+			Fit: {Options: ['cover', 'contain'], Description: 'cover or contain.'},
+			Ratio: 'The shape of the picture (16 / 9).',
+			Label: 'The name of the gallery for screen readers.'
+		},
+		Sample: {Items: [{ID: 1, Image: 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 9%22%3E%3Crect width=%2216%22 height=%229%22 fill=%22%233f6c9e%22/%3E%3C/svg%3E', Title: 'Blue'}, {ID: 2, Image: 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 9%22%3E%3Crect width=%2216%22 height=%229%22 fill=%22%23b4483f%22/%3E%3C/svg%3E', Title: 'Red'}], ShowThumbs: true, Label: 'Places'}
+	},
 	Items: [],
 	Index: 0,
 	ShowTitle: true,

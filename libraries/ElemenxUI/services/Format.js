@@ -5,6 +5,10 @@
  * an ISO string; an invalid one gives ''.
  */
 Elemenx.Service('Format', {
+	$Meta: {
+		Description: 'The formats the cards share, in the language of the page (Locale): Count(12400) is \'12K\', Date(value, style) a date (\'short\', \'medium\', \'long\', or Intl.DateTimeFormat options), Day(value) {Day, Month} for a date badge, Relative(value) the time from now (\'5 minutes ago\'), Money(amount, code) an amount of a currency.',
+		Methods: ['Count(value)', 'Date(value, style)', 'Day(value)', 'Relative(value, now)', 'Money(amount, code)']
+	},
 	Locale: '',
 
 	Language: function () {

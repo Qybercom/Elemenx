@@ -9,6 +9,10 @@
  * {Current, Queue}.
  */
 Elemenx.Service('Achievements', {
+	$Meta: {
+		Description: 'The achievements of an Application (a game, a course, a profile...), shown one after another by an AchievementHost (place one in the layout of the Application, as a ToastHost).',
+		Methods: ['Show(options)', 'Dismiss(id)', 'Clear()', 'Current()', 'Queue()', 'OnChange(callback)', 'OffChange(callback)']
+	},
 	Duration: 6000,
 
 	$OnCreate: function () {

@@ -605,16 +605,19 @@ h3 {
 	box-sizing: border-box;
 }
 
+.elemenx-screen.fill,
 .elemenx-column.fill,
 .elemenx-container.fill {
 	flex: 1;
 }
 
+.elemenx-screen.fill-fixed,
 .elemenx-column.fill-fixed,
 .elemenx-container.fill-fixed {
 	width: 100%;
 }
 
+.elemenx-screen.non-fill,
 .elemenx-column.non-fill,
 .elemenx-container.non-fill {
 	flex: none !important;

@@ -10,6 +10,9 @@
  * it; a browser without popovers places it as a fixed panel over the page.
  */
 Elemenx.Directive('popup', {
+	$Meta: {
+		Description: '*popup="Open" shows the element as a floating panel next to its anchor while the expression is truthy.'
+	},
 	$OnCreate: function (context) {
 		var element = context.Element;
 		var data = context.Data;

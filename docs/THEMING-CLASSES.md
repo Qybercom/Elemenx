@@ -107,7 +107,7 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-radio-group`: `horizontal`, `segmented`, `small`, `tile`
 - `elemenx-resizable`: `resizing`
 - `elemenx-resize-handle`: `bottom`, `corner`, `left`, `right`, `top`
-- `elemenx-screen`
+- `elemenx-screen`: `fill`, `fill-fixed`, `non-fill`
 - `elemenx-section`: `collapsed`
 - `elemenx-section-header`
 - `elemenx-select`
@@ -434,6 +434,43 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-range-presets`
 - `elemenx-range-text`: `placeholder`
 - `elemenx-range-toggle`
+
+## DesignerCanvas
+
+- `elemenx-designer-canvas`
+- `elemenx-designer-empty`
+- `elemenx-designer-grip`
+- `elemenx-designer-hover`
+- `elemenx-designer-layer`
+- `elemenx-designer-marker`
+- `elemenx-designer-node`
+- `elemenx-designer-page`
+- `elemenx-designer-page-host`
+- `elemenx-designer-selection`
+- `elemenx-designer-surface`
+- `elemenx-designer-target`
+- `elemenx-designer-viewport`: `phone`, `tablet`
+
+## DesignerInspector
+
+- `elemenx-designer-inspector`
+- `elemenx-designer-inspector-body`
+- `elemenx-designer-inspector-description`
+- `elemenx-designer-inspector-head`
+- `elemenx-designer-inspector-layout`
+- `elemenx-designer-inspector-title`
+
+## DesignerPalette
+
+- `elemenx-designer-palette`
+- `elemenx-designer-palette-item`
+- `elemenx-designer-palette-items`
+- `elemenx-designer-palette-title`
+
+## DesignerTree
+
+- `elemenx-designer-tree`
+- `elemenx-designer-tree-start`
 
 ## DialPad
 
@@ -1069,6 +1106,10 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-table-twisty`
 - `elemenx-table-wrap`: `scrolling`
 
+## Tab
+
+- `elemenx-tab-panel`
+
 ## Tabs
 
 - `elemenx-tab`: `active`, `disabled`
@@ -1278,7 +1319,7 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 
 ## Markdown
 
-- `elemenx-markdown`
+- `elemenx-markdown`: `interface`
 
 ## CodeView
 

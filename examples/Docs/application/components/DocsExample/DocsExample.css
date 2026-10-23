@@ -22,9 +22,17 @@
 	gap: 12px;
 }
 
+/* The listings of the code (HTML, JS, CSS) under the result, a tab each. */
+.docs-example-listings {
+	border-top: 1px solid var(--elemenx-border);
+}
+
+.docs-example-listings > .elemenx-tabs {
+	padding: 0 12px;
+}
+
 .docs-example .elemenx-code-view {
 	border: 0;
-	border-top: 1px solid var(--elemenx-border);
 	border-radius: 0;
 }
 

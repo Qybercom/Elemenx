@@ -11,6 +11,23 @@
 Elemenx.Component('ChatComposer', {
 	$TemplateURL: 'ChatComposer.html',
 	$StyleURL: 'ChatComposer.css',
+	$Meta: {
+		Group: 'social',
+		Icon: 'send',
+		Description: 'The message field of a Chat.',
+		Events: ['input', 'sticker', 'send', 'attach'],
+		Props: {
+			Placeholder: 'The text shown while it is empty.',
+			MaxRows: 'How many lines the field grows to.',
+			Attach: 'Shows the button that emits attach.',
+			Emoji: 'Shows the button of the emoji and the stickers.',
+			Stickers: 'Shows the tab of the stickers.',
+			Disabled: 'Turns it off: it takes no input and looks so.',
+			Suggest: {Options: ['always', 'colon', 'never'], Description: 'Suggests emoji for the word at the caret: always, colon (for :word only) or never.'},
+			SuggestStickers: 'Offers stickers for a message of one emoji.'
+		},
+		Sample: {Attach: false}
+	},
 	Value: '',
 	Placeholder: '',
 	MaxRows: 8,

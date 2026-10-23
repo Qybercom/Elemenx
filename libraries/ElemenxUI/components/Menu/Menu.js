@@ -10,6 +10,26 @@
 Elemenx.Component('Menu', {
 	$TemplateURL: 'Menu.html',
 	$StyleURL: 'Menu.css',
+	$Meta: {
+		Group: 'buttons',
+		Icon: 'launcher',
+		Description: 'A button that opens a multi-level MenuList.',
+		Container: true,
+		Events: ['select'],
+		Props: {
+			Items: 'The items: [{ID, Label, Icon, Shortcut, Disabled, Danger, Checked, Items, Separator, Group}].',
+			Label: 'The text of the button.',
+			Icon: 'The icon of the button.',
+			Title: 'The tooltip of the button, and the title of the sheet.',
+			Variant: 'The look of the button, as in Button.',
+			Size: {Options: ['small', 'medium', 'large'], Description: 'Its size: small, medium or large.'},
+			Placement: {Options: ['bottom-start', 'bottom-end', 'top-start', 'top-end'], Description: 'Where the list opens: bottom-start, bottom-end, top-start...'},
+			Sheet: 'Shows the list as a sheet from the bottom: true, or auto on a narrow or a touch screen.',
+			Disabled: 'Turns it off: it takes no input and looks so.',
+			Open: 'Shows the list.'
+		},
+		Sample: {Label: 'Edit', Icon: 'edit'}
+	},
 	Items: [],
 	Label: '',
 	Icon: '',

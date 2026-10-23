@@ -9,6 +9,27 @@
 Elemenx.Component('CardNumberInput', {
 	$TemplateURL: 'CardNumberInput.html',
 	$StyleURL: 'CardNumberInput.css',
+	$Meta: {
+		Group: 'inputs',
+		Icon: 'credit-card',
+		Description: 'Value holds digits only.',
+		Events: ['input', 'validate', 'change'],
+		Props: {
+			Value: 'The digits of the number.',
+			Placeholder: 'The text shown while it is empty.',
+			Size: {Options: ['small', 'medium', 'large'], Description: 'Its size: small, medium or large.'},
+			Shape: 'Its shape: default, or round.',
+			Name: 'The name of its value in a form.',
+			Disabled: 'Turns it off: it takes no input and looks so.',
+			Invalid: 'Marks its value as wrong.',
+			Conceal: 'A template that hides the middle: x a shown digit, ? a hidden one (xxxx ???? ???? xxxx).',
+			ConcealChar: 'The character of a hidden digit.',
+			Revealed: 'Shows the hidden digits (the eye button turns it).',
+			Guarded: 'Asks before the eye shows the number (the Reveal Service).',
+			HideAfter: 'Hides the number again after so many milliseconds (0: never).',
+			Brands: 'The brands of cards it knows, in place of the ones of the Library.'
+		}
+	},
 	Value: '',
 	Placeholder: '0000 0000 0000 0000',
 	Size: 'medium',

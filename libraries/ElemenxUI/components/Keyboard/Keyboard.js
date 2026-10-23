@@ -16,6 +16,25 @@
 Elemenx.Component('Keyboard', {
 	$TemplateURL: 'Keyboard.html',
 	$StyleURL: 'Keyboard.css',
+	$Meta: {
+		Group: 'music',
+		Icon: 'grid',
+		Description: 'A keyboard of a computer, drawn key by key (the look and the controls): to show hotkeys, the keys held, or to take presses on a screen.',
+		Events: ['press'],
+		Props: {
+			Layout: {Options: ['full', 'tkl', 'compact'], Description: 'full (with the number pad), tkl (without it) or compact (the main block).'},
+			Pressed: 'The codes of the keys shown pressed.',
+			Marks: 'Marks keys: {code: class}, true for the mark of the theme.',
+			Labels: 'Names of its own for keys: {code: text}.',
+			Native: 'Names the keys as the layout of the user writes them.',
+			Alternate: 'A second layout on the keys: ru, uk, el, he, native, or {code: text}.',
+			Live: 'Shows the keys held on the keyboard of the user too.',
+			Clickable: 'Makes the keys buttons that emit press.',
+			Size: {Options: ['small', 'medium', 'large'], Description: 'Its size: small, medium or large.'},
+			Label: 'The name of the keyboard for screen readers.'
+		},
+		Sample: {Layout: 'compact', Marks: {KeyW: true, KeyA: true, KeyS: true, KeyD: true, Space: true}, Live: true, Clickable: true}
+	},
 	Layout: 'full',
 	Pressed: [],
 	Marks: {},

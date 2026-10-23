@@ -28,6 +28,15 @@
 	margin-top: 16px;
 }
 
+/* The source of the page, after its text: a listing of each of its files. */
+.docs-source {
+	margin-top: 32px;
+}
+
+.docs-source > h2 {
+	margin: 0 0 8px;
+}
+
 .docs-fallback,
 .docs-missing {
 	margin-bottom: 16px;

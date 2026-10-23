@@ -11,7 +11,7 @@
 			<button class="elemenx-option" type="button" *for="preset of Presets" *key="preset.Label" [attribute.data-index]="$index" (click)="Preset">{{preset.Key ? $T(preset.Key) : preset.Label}}</button>
 		</div>
 		<div class="elemenx-range-months">
-			<div class="elemenx-calendar elemenx-range-month" *for="month of Months(Cursor)" *key="month">
+			<div class="elemenx-calendar elemenx-range-month" *for="month of Months(Cursor, Shown)" *key="month">
 				<div class="elemenx-calendar-header">
 					<button class="elemenx-calendar-nav" type="button" [attribute.aria-label]="$T('ui.dateRangeInput.previousMonth')" *if="$index === 0" (click)="Previous"><Icon Name="chevron-left" /></button>
 					<span class="elemenx-calendar-title">{{Title(month, Locale)}}</span>

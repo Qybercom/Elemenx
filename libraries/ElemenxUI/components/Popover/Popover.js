@@ -6,6 +6,22 @@
 Elemenx.Component('Popover', {
 	$TemplateURL: 'Popover.html',
 	$StyleURL: 'Popover.css',
+	$Meta: {
+		Group: 'overlays',
+		Icon: 'comment',
+		Description: 'Floating content next to a trigger.',
+		Container: true,
+		Slots: ['trigger'],
+		Events: ['toggle'],
+		Props: {
+			Open: 'Shows the content.',
+			Trigger: {Options: ['click', 'hover'], Description: 'click or hover.'},
+			Placement: {Options: ['bottom-start', 'bottom-end', 'top-start', 'right-start'], Description: 'bottom-start, bottom-end, top-start or right-start.'},
+			Title: 'A title on top of the content.',
+			Width: 'The width of the content (a length).'
+		},
+		Sample: {Title: 'Popover'}
+	},
 	Open: false,
 	Trigger: 'click',
 	Placement: 'bottom-start',

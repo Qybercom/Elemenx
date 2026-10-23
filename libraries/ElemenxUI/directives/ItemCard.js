@@ -8,6 +8,9 @@
  * It has the classes of GameItemCard (elemenx-game-inventory-card...).
  */
 Elemenx.Directive('itemcard', {
+	$Meta: {
+		Description: '*itemcard="item" shows the card of an item of a game on any element: under the pointer or the focus, beside the element (GameItems.Place), as GameInventory and GameSlot show it.'
+	},
 	$OnCreate: function (context) {
 		var element = context.Element;
 		var data = context.Data;

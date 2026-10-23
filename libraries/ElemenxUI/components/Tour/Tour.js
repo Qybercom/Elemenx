@@ -8,6 +8,22 @@
 Elemenx.Component('Tour', {
 	$TemplateURL: 'Tour.html',
 	$StyleURL: 'Tour.css',
+	$Meta: {
+		Group: 'navigation',
+		Icon: 'help',
+		Description: 'A guided tour: the page is shaded except the element of the current step, and a card next to it explains it.',
+		Events: ['change', 'finish', 'close'],
+		Props: {
+			Steps: 'The steps: [{Target, Title, Text, Placement}].',
+			Open: 'Shows the tour.',
+			Step: 'The current step, from 0.',
+			Padding: 'The room around the element of a step, in pixels.',
+			BackLabel: 'The text of the Back button.',
+			NextLabel: 'The text of the Next button.',
+			DoneLabel: 'The text of the Done button.',
+			SkipLabel: 'The text of the Skip button.'
+		}
+	},
 	Steps: [],
 	Open: false,
 	Step: 0,

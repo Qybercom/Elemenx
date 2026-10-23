@@ -6,6 +6,23 @@
 Elemenx.Component('Sparkline', {
 	$TemplateURL: 'Sparkline.html',
 	$StyleURL: 'Sparkline.css',
+	$Meta: {
+		Group: 'data',
+		Icon: 'chart',
+		Description: 'A small chart without axes, for a line of text or a cell: Values (numbers) as a line, an area or bars (Type), Width by Height pixels.',
+		Props: {
+			Values: 'The numbers.',
+			Type: {Options: ['line', 'area', 'bar'], Description: 'line, area or bar.'},
+			Width: 'The width in pixels.',
+			Height: 'The height in pixels.',
+			Min: 'Fixes the bottom of the scale.',
+			Max: 'Fixes the top of the scale.',
+			Dot: 'Puts a dot on the last value.',
+			Color: 'A CSS color (the accent by default).',
+			Label: 'The name of the chart for screen readers.'
+		},
+		Sample: {Height: 28}
+	},
 	Values: [],
 	Type: 'line',
 	Width: 120,

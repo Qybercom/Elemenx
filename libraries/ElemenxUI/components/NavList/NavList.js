@@ -7,6 +7,21 @@
 Elemenx.Component('NavList', {
 	$TemplateURL: 'NavList.html',
 	$StyleURL: 'NavList.css',
+	$Meta: {
+		Group: 'navigation',
+		Icon: 'menu',
+		Description: 'A navigation list or tree.',
+		Events: ['expand', 'select'],
+		Props: {
+			Items: 'The items: [{ID, Label, Icon, Badge, Items, Disabled}]; Items make a group.',
+			Value: 'The ID of the current item.',
+			Expanded: 'The IDs of the open groups.',
+			Searchable: 'Adds a filter of the tree.',
+			Collapsed: 'Shows only the icons (a narrow sidebar).',
+			Label: 'The name of the list for screen readers.'
+		},
+		Sample: {Searchable: true}
+	},
 	Items: [],
 	Value: null,
 	Expanded: [],

@@ -12,6 +12,21 @@
 Elemenx.Component('MenuList', {
 	$TemplateURL: 'MenuList.html',
 	$StyleURL: 'MenuList.css',
+	$Meta: {
+		Group: 'buttons',
+		Icon: 'launcher',
+		Description: 'One level of a Menu.',
+		Events: ['select', 'dismiss'],
+		Props: {
+			Items: 'The items: [{ID, Label, Icon, Shortcut, Disabled, Danger, Checked, Items, Separator, Group}].',
+			Open: 'Shows the list under the closest elemenx-popup-anchor around it.',
+			Placement: {Options: ['bottom-start', 'bottom-end', 'top-start', 'right-start'], Description: 'Where it opens: bottom-start; right-start for a submenu.'},
+			MatchWidth: 'As wide as its anchor.',
+			Sheet: 'A sheet from the bottom: true, or auto on a narrow or a touch screen.',
+			Title: 'The title of the sheet.'
+		},
+		Sample: {Items: [{ID: 'new', Label: 'New', Icon: 'add'}, {ID: 'open', Label: 'Open', Icon: 'folder-open'}, {ID: 'save', Label: 'Save', Icon: 'save'}]}
+	},
 	Items: [],
 	Open: false,
 	Placement: 'bottom-start',

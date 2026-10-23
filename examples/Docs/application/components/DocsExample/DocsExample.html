@@ -1,5 +1,8 @@
 <figure class="docs-example">
 	<div class="docs-example-result" [attribute.aria-label]="$T('docs.result')"></div>
 	<div class="elemenx-callout danger" *if="Failure">{{Failure}}</div>
-	<CodeView [value]="Code" Language="html" [label]="$T('docs.code')" />
+	<div class="docs-example-listings">
+		<Tabs *if="Listings(Code).length > 1" Size="small" [label]="$T('docs.code')" [tabs]="Listings(Code)" [value]="Shown(Code, Listing)" (change)="Switched" />
+		<CodeView Fold="true" [value]="Listed(Code, Listing).Text" [language]="Listed(Code, Listing).Language" [label]="$T('docs.code')" />
+	</div>
 </figure>

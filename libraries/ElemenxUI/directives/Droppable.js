@@ -9,6 +9,9 @@
  * or 'text'), Type, Data, Files, Text, Source, ClientX, ClientY, Index (-1 without Sort)}.
  */
 Elemenx.Directive('droppable', {
+	$Meta: {
+		Description: '*droppable="{Accept: [\'task\'], Files: true, Text: true}" makes the element a drop target.'
+	},
 	$OnCreate: function (context) {
 		var element = context.Element;
 		var data = context.Data;

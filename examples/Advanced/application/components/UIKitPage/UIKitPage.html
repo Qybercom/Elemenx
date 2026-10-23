@@ -478,6 +478,13 @@
 				</Tabs>
 				<p class="elemenx-text small muted ui-kit-editor-body">Content of {{Tab || 'nothing'}}. Close tabs with the cross, the middle button or Delete.</p>
 			</div>
+			<h5>Declared tabs</h5>
+			<Tabs Label="Declared tabs" Variant="pill" (change)="DeclaredTabChanged">
+				<Tab ID="profile" Label="Profile" Icon="user"><p class="elemenx-text">The profile, declared with its content.</p></Tab>
+				<Tab ID="sales" Label="Sales" Icon="chart" Component="Chart" [props]="DeclaredChart" />
+				<Tab ID="archive" Label="Archive" Disabled="true"><p class="elemenx-text">Not reachable.</p></Tab>
+				<Button Icon="add" Title="Add a tab" Variant="ghost" Size="small" />
+			</Tabs>
 		</div>
 	</Section>
 
@@ -1291,10 +1298,11 @@
 	<Section Title="Viewers and formulas" Note="Markdown · CodeView · Formula · Mod+F finds in the editors and the terminal">
 		<div class="ui-kit-lazy" *lazy="400">
 			<div class="ui-kit-grid">
-				<div class="ui-kit-viewer"><Markdown [value]="ViewerMarkdown" Label="Release notes" /></div>
+				<div class="ui-kit-viewer"><Markdown [value]="ViewerMarkdown" Label="Release notes" /><Markdown [value]="ViewerMarkdown" Look="interface" Label="Release notes in the interface" /></div>
 				<div class="ui-kit-stack">
 					<CodeView [value]="ViewerCode" Language="javascript" LineNumbers="true" Start="10" [highlight]="['12-13']" Label="An example" />
 					<CodeView [value]="ViewerJson" Language="json" Fold="true" [folded]="[7]" Label="A package" />
+					<CodeView [value]="ViewerHtml" Language="html" Fold="true" Label="A page" />
 					<p class="elemenx-text">The roots of <Formula [value]="Formulas[0]" /> are</p>
 					<Formula Display="true" *for="formula of Formulas.slice(1)" *key="formula" [value]="formula" />
 				</div>

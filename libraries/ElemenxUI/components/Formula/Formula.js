@@ -7,6 +7,17 @@
 Elemenx.Component('Formula', {
 	$TemplateURL: 'Formula.html',
 	$StyleURL: 'Formula.css',
+	$Meta: {
+		Group: 'text',
+		Icon: 'shapes',
+		Description: 'A formula written as in LaTeX (the part the Formulas Service reads: fractions, roots, powers and indices, sums and integrals with their limits, Greek letters, matrices...), drawn by the browser as MathML.',
+		Props: {
+			Value: 'The formula, written as in LaTeX.',
+			Display: 'On a line of its own, centered and larger.',
+			Label: 'What a screen reader says of it (the formula as written by default).'
+		},
+		Sample: {Value: 'x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}', Display: true}
+	},
 	Value: '',
 	Display: false,
 	Label: '',

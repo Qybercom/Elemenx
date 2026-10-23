@@ -1,4 +1,0 @@
-[
-	'Palette.js',
-	'Design.js'
-];

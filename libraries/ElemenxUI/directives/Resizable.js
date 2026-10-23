@@ -5,6 +5,9 @@
  * after, both with the detail {Width, Height, Edge}.
  */
 Elemenx.Directive('resizable', {
+	$Meta: {
+		Description: '*resizable="\'right bottom\'" adds resize handles to the element: right, left, bottom, top and corner (bottom right).'
+	},
 	$OnCreate: function (context) {
 		var element = context.Element;
 		var data = context.Data;

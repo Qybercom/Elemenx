@@ -15,6 +15,10 @@
  * (flags on Windows, the newest emoji on older systems), and the pickers leave such emoji out.
  */
 Elemenx.Service('Emoji', {
+	$Meta: {
+		Description: 'The emoji of Unicode, drawn by the fonts of the system: their groups, names and keywords for search, skin tones and the emoji used last.',
+		Methods: ['Load(callback)', 'LoadLanguage(locale, callback)', 'Keywords(locale, map)', 'Name(emoji)', 'Search(text, limit)', 'Tone(value)', 'Toned(char, tone)', 'Recent(limit)', 'Used(char)', 'Supported(char)']
+	},
 	Library: 'ElemenxUI',
 	StorageKey: 'elemenx-emoji',
 	Persist: true,

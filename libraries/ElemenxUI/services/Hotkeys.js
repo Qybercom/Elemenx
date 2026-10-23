@@ -13,6 +13,10 @@
  * callback() after a binding is added or removed (a part of the page that renders later, *lazy, binds its keys then).
  */
 Elemenx.Service('Hotkeys', {
+	$Meta: {
+		Description: 'Keyboard shortcuts of the page.',
+		Methods: ['Bind(keys, callback, options)', 'Unbind(id)', 'OnChange(callback)', 'OffChange(callback)', 'List()', 'Trigger(id)', 'Pause()', 'Resume()', 'Format(keys)']
+	},
 	$OnCreate: function () {
 		var self = this;
 

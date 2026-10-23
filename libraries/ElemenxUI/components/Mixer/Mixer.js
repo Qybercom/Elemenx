@@ -8,6 +8,20 @@
 Elemenx.Component('Mixer', {
 	$TemplateURL: 'Mixer.html',
 	$StyleURL: 'Mixer.css',
+	$Meta: {
+		Group: 'music',
+		Icon: 'headphones',
+		Description: 'An audio mixer (the look and the controls; the sound is the application\'s): a row of MixerChannel strips and the strip of the master bus at the end.',
+		Events: ['change'],
+		Props: {
+			Channels: 'The strips: [{ID, Label, Color, Volume, Pan, Mute, Solo, Level, Peak, Knobs}].',
+			Master: 'The strip of the master bus (null for none).',
+			Min: 'The bottom of the faders, in decibels.',
+			Max: 'The top of the faders, in decibels.',
+			Label: 'The name of the mixer for screen readers.'
+		},
+		Sample: {Label: 'Studio'}
+	},
 	Channels: [],
 	Master: null,
 	Min: -60,

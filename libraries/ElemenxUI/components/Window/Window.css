@@ -96,15 +96,17 @@
 	--elemenx-window-edge: rgba(var(--elemenx-accent-rgb), 0.56);
 }
 
-/* The body of the folder: below the header, its top border drawn by the header beyond the tab. */
+/*
+ * The body of the folder: below the header, in one frame with its top edge, so the edge beyond the slope and the side of
+ * the body meet in one rounded corner; the tab comes down over that edge by its width and covers it (it stands there).
+ */
 .elemenx-window.trapezoid::before {
 	position: absolute;
 	inset: var(--elemenx-window-tab-height) 0 0;
 	z-index: -1;
 	background: var(--elemenx-surface);
 	border: 1px solid var(--elemenx-window-edge);
-	border-top: 0;
-	border-radius: 0 0 var(--elemenx-radius-large) var(--elemenx-radius-large);
+	border-radius: 0 var(--elemenx-radius-large) var(--elemenx-radius-large) var(--elemenx-radius-large);
 	box-shadow: var(--elemenx-shadow);
 	content: '';
 }
@@ -122,23 +124,13 @@
 	border-radius: 0;
 }
 
-.elemenx-window.trapezoid .elemenx-window-header::after {
-	position: absolute;
-	right: 0;
-	bottom: 0;
-	left: calc(var(--elemenx-tab-width, 0px) + var(--elemenx-block-tab-slant));
-	height: 1px;
-	background: var(--elemenx-window-edge);
-	border-top-right-radius: var(--elemenx-radius-large);
-	content: '';
-	pointer-events: none;
-}
-
 .elemenx-window.trapezoid .elemenx-window-tab {
 	position: relative;
 	display: flex;
 	flex: 0 1 auto;
 	align-items: center;
+	align-self: flex-start;
+	height: calc(100% + 1px);
 	gap: 8px;
 	min-width: 0;
 	margin-inline-end: var(--elemenx-block-tab-slant);

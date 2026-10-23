@@ -6,6 +6,26 @@
 Elemenx.Component('TextArea', {
 	$TemplateURL: 'TextArea.html',
 	$StyleURL: 'TextArea.css',
+	$Meta: {
+		Group: 'inputs',
+		Icon: 'text-align-justify',
+		Description: 'A field of several lines of text.',
+		Events: ['input', 'change'],
+		Props: {
+			Value: 'The text.',
+			Placeholder: 'The text shown while it is empty.',
+			Rows: 'The height in lines.',
+			MaxLength: 'The longest text.',
+			AutoSize: 'Grows with its text.',
+			Resize: {Options: ['vertical', 'both', 'none'], Description: 'vertical (the bottom edge), both (the corner) or none.'},
+			Shape: 'Its shape: default, or round.',
+			Name: 'The name of its value in a form.',
+			Disabled: 'Turns it off: it takes no input and looks so.',
+			ReadOnly: 'Shows the value without letting it change.',
+			Invalid: 'Marks its value as wrong.'
+		},
+		Sample: {Placeholder: 'Write something', MaxLength: 200}
+	},
 	Value: '',
 	Placeholder: '',
 	Rows: 3,

@@ -10,6 +10,10 @@
  * - Lock(callback): makes the tag held to the device read only, for good.
  */
 Elemenx.Service('NFC', {
+	$Meta: {
+		Description: 'NFC tags through Web NFC: Chrome on Android, HTTPS.',
+		Methods: ['Supported()', 'Scan(callback)', 'Stop()', 'Write(message, options, callback)', 'Lock(callback)']
+	},
 	$OnCreate: function () {
 		this.Reading = null;
 	},

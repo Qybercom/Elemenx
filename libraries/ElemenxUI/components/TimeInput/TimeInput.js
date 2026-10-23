@@ -6,6 +6,30 @@
 Elemenx.Component('TimeInput', {
 	$TemplateURL: 'TimeInput.html',
 	$StyleURL: 'TimeInput.css',
+	$Meta: {
+		Group: 'inputs',
+		Icon: 'clock',
+		Description: 'A 24-hour time field with its own picker.',
+		Events: ['input', 'change'],
+		Props: {
+			Value: 'The time: HH:MM, or HH:MM:SS with Seconds; empty when none.',
+			Seconds: 'Takes the seconds too.',
+			MinuteStep: 'The step of the minutes of the picker.',
+			Min: 'The earliest time.',
+			Max: 'The latest time.',
+			Placeholder: 'The text shown while it is empty.',
+			Locale: 'The language of its texts and formats (the language of the page by default).',
+			NowLabel: 'The text of the Now button.',
+			DoneLabel: 'The text of the Done button.',
+			Size: {Options: ['small', 'medium', 'large'], Description: 'Its size: small, medium or large.'},
+			Shape: 'Its shape: default, or round.',
+			Name: 'The name of its value in a form.',
+			Disabled: 'Turns it off: it takes no input and looks so.',
+			ReadOnly: 'Shows the value without letting it change.',
+			Invalid: 'Marks its value as wrong.'
+		},
+		Sample: {MinuteStep: 15}
+	},
 	Value: '',
 	Seconds: false,
 	MinuteStep: 1,

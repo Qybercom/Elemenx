@@ -6,6 +6,18 @@
  */
 Elemenx.Component('RibbonBackstage', {
 	$TemplateURL: 'RibbonBackstage.html',
+	$Meta: {
+		Group: 'navigation',
+		Icon: 'menu',
+		Description: 'The backstage of a Ribbon, as the File view of Microsoft Office: <RibbonBackstage slot="backstage"> with RibbonPage children.',
+		Container: true,
+		Events: ['page'],
+		Props: {
+			Title: 'The title of the backstage.',
+			Page: 'The ID of the current page.'
+		},
+		Sample: {Title: 'File'}
+	},
 	Title: '',
 	Page: '',
 	Pages: [],

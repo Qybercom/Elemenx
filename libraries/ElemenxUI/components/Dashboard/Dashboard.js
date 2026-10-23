@@ -6,5 +6,12 @@
  */
 Elemenx.Component('Dashboard', {
 	$TemplateURL: 'Dashboard.html',
-	$StyleURL: 'Dashboard.css'
+	$StyleURL: 'Dashboard.css',
+	$Meta: {
+		Group: 'layout',
+		Icon: 'grid',
+		Description: 'A dashboard layout built on elemenx-screen, elemenx-container and elemenx-column.',
+		Container: true,
+		Slots: ['nav', 'header', 'footer']
+	}
 });

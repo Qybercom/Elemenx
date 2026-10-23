@@ -68,7 +68,56 @@ function inlineResources (file, source, min) {
 	return source;
 }
 
-function scan (directory, root, entities, visited, declaredNames, min) {
+/*
+ * A definition without its $Meta: what it tells the tools of itself (a builder, a reference) is no part of a build
+ * that asks none of it (no Elemenx.Meta, no Designer). The braces in its texts are skipped with them.
+ */
+function stripMeta (source) {
+	var pattern = /(^|\n)([ \t]*)\$Meta\s*:\s*\{/g;
+	var match = pattern.exec(source);
+	var depth;
+	var i;
+	var quote;
+
+	while (match) {
+		depth = 0;
+		i = match.index + match[0].length - 1;
+		quote = '';
+
+		while (i < source.length) {
+			if (quote) {
+				if (source.charAt(i) === '\\') i++;
+				else if (source.charAt(i) === quote) quote = '';
+			}
+			else if (source.charAt(i) === '\'' || source.charAt(i) === '"') {
+				quote = source.charAt(i);
+			}
+			else if (source.charAt(i) === '{') {
+				depth++;
+			}
+			else if (source.charAt(i) === '}') {
+				depth--;
+
+				if (!depth) break;
+			}
+
+			i++;
+		}
+
+		i++;
+
+		if (source.charAt(i) === ',')
+			i++;
+
+		source = source.substring(0, match.index + match[1].length) + source.substring(i).replace(/^[ \t]*\r?\n/, '');
+		pattern.lastIndex = match.index;
+		match = pattern.exec(source);
+	}
+
+	return source;
+}
+
+function scan (directory, root, entities, visited, declaredNames, min, meta) {
 	var absolute = path.resolve(directory);
 	if (visited[absolute]) return;
 
@@ -100,6 +149,9 @@ function scan (directory, root, entities, visited, declaredNames, min) {
 			if (type === 'Component')
 				source = inlineResources(target, source, min);
 
+			if (declaredNames && meta === false)
+				source = stripMeta(source);
+
 			if (!entities[type])
 				entities[type] = {};
 
@@ -109,7 +161,7 @@ function scan (directory, root, entities, visited, declaredNames, min) {
 			entities[type][name] = source;
 		}
 		else if (fs.existsSync(target) && fs.statSync(target).isDirectory()) {
-			scan(target, root, entities, visited, declaredNames, min);
+			scan(target, root, entities, visited, declaredNames, min, meta);
 		}
 
 		i++;
@@ -575,7 +627,7 @@ function build (project, options) {
 	while (i < libraries.length) {
 		var catalog = {};
 
-		scan(libraries[i].Directory, libraries[i].Directory, catalog, {}, true, options.single);
+		scan(libraries[i].Directory, libraries[i].Directory, catalog, {}, true, options.single, /\bElemenx\.Meta\b|Designer/.test((templateBundle || '') + '\n' + indexSource + '\n' + appSource));
 
 		markShared(entities, catalog, shared);
 
@@ -951,6 +1003,7 @@ module.exports = {
 	Build: build,
 	ScriptText: scriptText,
 	Scan: scan,
+	StripMeta: stripMeta,
 	Render: render,
 	IndexTemplates: indexTemplates,
 	RenderTemplates: renderTemplates,

@@ -10,6 +10,28 @@
 Elemenx.Component('Pagination', {
 	$TemplateURL: 'Pagination.html',
 	$StyleURL: 'Pagination.css',
+	$Meta: {
+		Group: 'navigation',
+		Icon: 'menu',
+		Description: 'Pages of a list of Count items, PageSize (10) on each: the range shown (\'11–20 of 57\'), a choice of PageSizes (none when empty), and the buttons of the first page, the previous one, the numbers (the first, the last and the ones around Page, with gaps between), the next one and the last.',
+		Events: ['page'],
+		Props: {
+			Page: 'The current page, from 1.',
+			Count: 'How many items the list has.',
+			PageSize: 'How many items a page holds.',
+			PageSizes: 'The sizes offered ([10, 20, 50]; none when empty).',
+			OfLabel: 'The word between the range and the count (of).',
+			SizeLabel: 'The text of the choice of the size ({size} / page).',
+			Label: 'The name of the navigation for screen readers.',
+			ShowRange: 'Shows the range (11–20 of 57).',
+			ShowPages: 'Shows the numbers of the pages.',
+			ShowFirstLast: 'Shows the buttons of the first and the last page.',
+			ShowPrevNext: 'Shows the buttons of the previous and the next page.',
+			Siblings: 'How many numbers show on each side of the current page.',
+			Boundaries: 'How many numbers show at each end.'
+		},
+		Sample: {Count: 240, PageSizes: [10, 20, 50]}
+	},
 	Page: 1,
 	Count: 0,
 	PageSize: 10,

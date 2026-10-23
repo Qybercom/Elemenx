@@ -6,6 +6,25 @@
  */
 Elemenx.Component('Radio', {
 	$TemplateURL: 'Radio.html',
+	$Meta: {
+		Group: 'inputs',
+		Icon: 'edit',
+		Description: 'A single radio button, for layouts of your own; RadioGroup renders a whole set from Options.',
+		Container: true,
+		Events: ['change'],
+		Props: {
+			Checked: 'Whether it is chosen.',
+			Label: 'The text beside it.',
+			Description: 'A smaller text under the label.',
+			Variant: {Options: ['default', 'tile'], Description: 'default, or tile (a tile with its description).'},
+			Size: {Options: ['small', 'medium', 'large'], Description: 'Its size: small, medium or large.'},
+			Name: 'Groups it with the radio buttons of the same name.',
+			Value: 'What it stands for.',
+			Disabled: 'Turns it off: it takes no input and looks so.',
+			Invalid: 'Marks its value as wrong.'
+		},
+		Sample: {Label: 'By post', Description: '5 to 7 days', Name: 'docs-ship', Value: 'post'}
+	},
 	Checked: false,
 	Label: '',
 	Description: '',

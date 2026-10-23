@@ -1,5 +1,3 @@
 [
-	'BuilderLayout/BuilderLayout.js',
-	'BuilderStage/BuilderStage.js',
-	'BuilderInspector/BuilderInspector.js'
+	'BuilderLayout/BuilderLayout.js'
 ];

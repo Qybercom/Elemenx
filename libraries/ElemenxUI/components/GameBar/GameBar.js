@@ -7,6 +7,22 @@
 Elemenx.Component('GameBar', {
 	$TemplateURL: 'GameBar.html',
 	$StyleURL: 'GameBar.css',
+	$Meta: {
+		Group: 'game',
+		Icon: 'trophy',
+		Description: 'A bar of a game: health, mana, experience, stamina or any other amount.',
+		Props: {
+			Value: 'The amount.',
+			Max: 'The most it holds.',
+			Kind: 'health, mana, experience, stamina or a name of its own (its color: --elemenx-game-<Kind>).',
+			Label: 'The name shown with the bar.',
+			ShowValue: 'Shows the value on the bar.',
+			Segments: 'Draws the bar in so many parts (0: one).',
+			Size: {Options: ['small', 'medium', 'large'], Description: 'small, medium or large.'},
+			Color: 'A color of its own.'
+		},
+		Sample: {Label: 'Health'}
+	},
 	Value: 0,
 	Max: 100,
 	Kind: 'health',

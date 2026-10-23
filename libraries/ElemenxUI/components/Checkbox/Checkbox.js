@@ -6,6 +6,27 @@
  */
 Elemenx.Component('Checkbox', {
 	$TemplateURL: 'Checkbox.html',
+	$Meta: {
+		Group: 'inputs',
+		Icon: 'check',
+		Description: 'A check box.',
+		Container: true,
+		Events: ['change'],
+		Props: {
+			Checked: 'Whether it is checked.',
+			Indeterminate: 'Shows a dash: a set that is partly checked.',
+			Label: 'The text beside the box.',
+			Description: 'A smaller text under the label.',
+			Icon: 'An icon before the label.',
+			Variant: {Options: ['default', 'chip', 'tile'], Description: 'default (a box), chip (a toggle chip) or tile (a tile with its description).'},
+			Size: {Options: ['small', 'medium', 'large'], Description: 'Its size: small, medium or large.'},
+			Name: 'The name of its value in a form.',
+			Value: 'The value of the field in a form.',
+			Disabled: 'Turns it off: it takes no input and looks so.',
+			Invalid: 'Marks its value as wrong.'
+		},
+		Sample: {Label: 'Remember me'}
+	},
 	Checked: false,
 	Indeterminate: false,
 	Label: '',

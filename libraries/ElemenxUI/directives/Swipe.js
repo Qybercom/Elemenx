@@ -5,8 +5,13 @@
  * axis, the other one 0); when it lifts, swipe with {Direction (left, right, up or down), DX, DY} if it went past
  * Threshold pixels (or flicked), or swipecancel if not (and when the browser takes the gesture). An owner listens with
  * (swipe)="Handler" (event.detail). A move that began on a field, a slider or anything marked data-no-swipe is left to it.
+ * With Mouse a mouse drags the element too: the click that ends a move is no press (a link, a picture that opens),
+ * and a picture inside is not dragged away by the browser.
  */
 Elemenx.Directive('swipe', {
+	$Meta: {
+		Description: '*swipe makes an element follow a finger (a pen, or a mouse with Mouse) along an axis and tells the end of the move: *swipe, *swipe="\'y\'" or *swipe="{Axis: \'x\' or \'y\', Threshold: 40, Mouse: false}".'
+	},
 	$OnCreate: function (context) {
 		var element = context.Element;
 		var data = context.Data;
@@ -62,6 +67,13 @@ Elemenx.Directive('swipe', {
 
 			if (!start.Moving) return;
 
+			/* The click the browser sends after a move of the mouse is no press on the element. */
+			data.Swallow = true;
+
+			window.setTimeout(function () {
+				data.Swallow = false;
+			}, 0);
+
 			distance = data.Options.Axis === 'y' ? event.clientY - start.Y : event.clientX - start.X;
 			speed = Math.abs(distance) / Math.max(1, Date.now() - start.Time);
 
@@ -85,10 +97,27 @@ Elemenx.Directive('swipe', {
 			data.Start = {ID: event.pointerId, X: event.clientX, Y: event.clientY, Time: Date.now(), Moving: false};
 		};
 
+		data.Click = function (event) {
+			if (!data.Swallow) return;
+
+			data.Swallow = false;
+
+			event.preventDefault();
+			event.stopPropagation();
+		};
+
+		/* A mouse that drags the element does not drag a picture or a link inside it away. */
+		data.Drag = function (event) {
+			if (data.Options.Mouse)
+				event.preventDefault();
+		};
+
 		element.addEventListener('pointerdown', data.Down);
 		element.addEventListener('pointermove', data.Move);
 		element.addEventListener('pointerup', data.Up);
 		element.addEventListener('pointercancel', data.Up);
+		element.addEventListener('click', data.Click, true);
+		element.addEventListener('dragstart', data.Drag);
 	},
 
 	$OnUpdate: function (context) {
@@ -112,5 +141,7 @@ Elemenx.Directive('swipe', {
 		element.removeEventListener('pointermove', data.Move);
 		element.removeEventListener('pointerup', data.Up);
 		element.removeEventListener('pointercancel', data.Up);
+		element.removeEventListener('click', data.Click, true);
+		element.removeEventListener('dragstart', data.Drag);
 	}
 });

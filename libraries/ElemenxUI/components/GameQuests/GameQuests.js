@@ -12,6 +12,20 @@
 Elemenx.Component('GameQuests', {
 	$TemplateURL: 'GameQuests.html',
 	$StyleURL: 'GameQuests.css',
+	$Meta: {
+		Group: 'game',
+		Icon: 'trophy',
+		Description: 'The quests of a game.',
+		Events: ['change', 'track'],
+		Props: {
+			Items: 'The quests: [{ID, Title, Group, Level, Status, Tracked, Text, Objectives, Rewards}].',
+			Value: 'The ID of the open quest.',
+			Variant: {Options: ['log', 'tracker'], Description: 'log (the journal) or tracker (the objectives of the tracked quests).'},
+			Label: 'The name of the list for screen readers.',
+			Empty: 'The text without quests.'
+		},
+		Sample: {Label: 'Quest log'}
+	},
 	Items: [],
 	Value: null,
 	Variant: 'log',

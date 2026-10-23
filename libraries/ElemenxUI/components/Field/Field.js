@@ -13,6 +13,32 @@
 Elemenx.Component('Field', {
 	$TemplateURL: 'Field.html',
 	$StyleURL: 'Field.css',
+	$Meta: {
+		Group: 'inputs',
+		Icon: 'edit',
+		Description: 'A label, a hint and an error around a control.',
+		Container: true,
+		Props: {
+			Label: 'The label above the control.',
+			Hint: 'A text under the control.',
+			Error: 'An error of its own, in place of the hint.',
+			Required: 'The value must not be empty (and the label shows a mark).',
+			Horizontal: 'The label beside the control, not above it.',
+			Disabled: 'Turns it off: it takes no input and looks so.',
+			Control: 'A control of the Forms Service made in code.',
+			Name: 'The name of its control in a Form.',
+			Value: 'The first value of the control it makes in a Form.',
+			Email: 'The value must be an email address.',
+			Min: 'The least number.',
+			Max: 'The greatest number.',
+			MinLength: 'The least length of the text.',
+			MaxLength: 'The greatest length of the text.',
+			Pattern: 'A regular expression the value must match.',
+			Match: 'The name of a field whose value it must repeat (a password twice).',
+			Messages: 'Texts of its own for the errors: {required: \'...\'}.'
+		},
+		Sample: {Label: 'Name', Hint: 'As it is written in your passport.', Required: true}
+	},
 	Label: '',
 	Hint: '',
 	Error: '',

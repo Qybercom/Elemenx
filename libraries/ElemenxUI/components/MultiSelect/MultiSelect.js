@@ -6,6 +6,26 @@
  */
 Elemenx.Component('MultiSelect', {
 	$TemplateURL: 'MultiSelect.html',
+	$Meta: {
+		Group: 'inputs',
+		Icon: 'edit',
+		Description: 'A select of several options.',
+		Events: ['change'],
+		Props: {
+			Options: 'The options: [{Value, Label, Hint, Icon, Group, Disabled}].',
+			Value: 'The Values chosen.',
+			Placeholder: 'The text shown while it is empty.',
+			Empty: 'The text when the filter finds nothing.',
+			Display: {Options: ['chips', 'count'], Description: 'chips (removable tags) or count (3 selected).'},
+			Size: {Options: ['small', 'medium', 'large'], Description: 'Its size: small, medium or large.'},
+			Shape: 'Its shape: default, or round.',
+			Searchable: 'Adds a filter field to the list.',
+			SelectAll: 'Adds an option that toggles every one.',
+			Disabled: 'Turns it off: it takes no input and looks so.',
+			Invalid: 'Marks its value as wrong.'
+		},
+		Sample: {Placeholder: 'Pick colors', SelectAll: true}
+	},
 	Options: [],
 	Value: [],
 	Placeholder: '',

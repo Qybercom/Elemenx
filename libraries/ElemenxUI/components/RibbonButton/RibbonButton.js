@@ -8,6 +8,26 @@
  */
 Elemenx.Component('RibbonButton', {
 	$TemplateURL: 'RibbonButton.html',
+	$Meta: {
+		Group: 'navigation',
+		Icon: 'menu',
+		Description: 'A command of a RibbonGroup: <RibbonButton ID="paste" Label="Paste" Icon="paste" Size="large" />.',
+		Events: ['click', 'select'],
+		Props: {
+			ID: 'The ID of the command.',
+			Label: 'The text of the button (the name of an icon button).',
+			Icon: 'The icon.',
+			Size: {Options: ['large', 'small', 'icon'], Description: 'large (an icon over the label), small (one row) or icon.'},
+			Title: 'The tooltip.',
+			KeyTip: 'The letter of its key tip.',
+			Toggle: 'A button that stays pressed.',
+			Pressed: 'Whether it is pressed.',
+			Split: 'The button runs its command; only the arrow opens the menu.',
+			Items: 'The items of its menu, as MenuList.',
+			Disabled: 'Turns it off: it takes no input and looks so.'
+		},
+		Sample: {ID: 'save', Label: 'Save', Icon: 'save', Size: 'icon'}
+	},
 	ID: '',
 	Label: '',
 	Icon: '',

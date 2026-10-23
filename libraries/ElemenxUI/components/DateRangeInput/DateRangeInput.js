@@ -11,6 +11,27 @@
 Elemenx.Component('DateRangeInput', {
 	$TemplateURL: 'DateRangeInput.html',
 	$StyleURL: 'DateRangeInput.css',
+	$Meta: {
+		Group: 'inputs',
+		Icon: 'calendar',
+		Description: 'A range of dates.',
+		Events: ['change'],
+		Props: {
+			Value: 'The range: [start, end] as YYYY-MM-DD, or [] for none.',
+			Min: 'The first day that can be chosen.',
+			Max: 'The last day that can be chosen.',
+			Locale: 'The language of its texts and formats (the language of the page by default).',
+			FirstDay: 'The first day of the week: 0 Sunday, 1 Monday, or locale.',
+			Placeholder: 'The text shown while it is empty.',
+			Presets: 'Whole ranges on the left: [{Label, Value}], {Label, Last: days} or {Label, Period}.',
+			ClearLabel: 'The text of the Clear button.',
+			Size: {Options: ['small', 'medium', 'large'], Description: 'Its size: small, medium or large.'},
+			Shape: 'Its shape: default, or round.',
+			Name: 'The name of its value in a form.',
+			Disabled: 'Turns it off: it takes no input and looks so.',
+			Invalid: 'Marks its value as wrong.'
+		}
+	},
 	Value: [],
 	Min: '',
 	Max: '',
@@ -33,6 +54,7 @@ Elemenx.Component('DateRangeInput', {
 	Invalid: false,
 	Open: false,
 	Cursor: '',
+	Shown: '',
 	Pending: '',
 	Hover: '',
 
@@ -49,8 +71,16 @@ Elemenx.Component('DateRangeInput', {
 			return format.format(self.Parse(value[0])) + ' – ' + format.format(self.Parse(value[1]));
 		};
 
-		this.Months = function (cursor) {
+		/*
+		 * The two months shown: from the month kept (shown) while the cursor is in one of them, from the month of the
+		 * cursor otherwise. Picking a day of the second month keeps the first one in view.
+		 */
+		this.Months = function (cursor, shown) {
 			var date = self.Parse(cursor || self.Today());
+			var first = shown ? self.Parse(shown) : null;
+			var distance = first ? (date.getFullYear() - first.getFullYear()) * 12 + date.getMonth() - first.getMonth() : -1;
+			if (distance === 0 || distance === 1)
+				date = first;
 
 			return [self.ISO(new Date(date.getFullYear(), date.getMonth(), 1)), self.ISO(new Date(date.getFullYear(), date.getMonth() + 1, 1))];
 		};
@@ -202,6 +232,7 @@ Elemenx.Component('DateRangeInput', {
 		this.Open = !this.Open;
 		this.Pending = '';
 		this.Hover = '';
+		this.Shown = '';
 
 		if (!this.Open) return;
 
@@ -220,6 +251,7 @@ Elemenx.Component('DateRangeInput', {
 
 	Choose: function (iso) {
 		if (!this.Pending) {
+			this.Shown = this.Months(this.Cursor, this.Shown)[0];
 			this.Pending = iso;
 			this.Hover = iso;
 			this.Cursor = iso;
@@ -243,6 +275,7 @@ Elemenx.Component('DateRangeInput', {
 	Shift: function (months) {
 		var date = this.Parse(this.Cursor || this.Today());
 
+		this.Shown = '';
 		this.Cursor = this.ISO(new Date(date.getFullYear(), date.getMonth() + months, Math.min(date.getDate(), 28)));
 	},
 

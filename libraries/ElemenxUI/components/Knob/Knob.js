@@ -9,6 +9,28 @@
 Elemenx.Component('Knob', {
 	$TemplateURL: 'Knob.html',
 	$StyleURL: 'Knob.css',
+	$Meta: {
+		Group: 'inputs',
+		Icon: 'edit',
+		Description: 'A knob: a rotary input with the look of the dial Meter, an open ring of three quarters around a cap with a pointer.',
+		Events: ['input', 'change'],
+		Props: {
+			Value: 'The value.',
+			Min: 'The least value.',
+			Max: 'The greatest value.',
+			Step: 'The step.',
+			Origin: 'Where the ring fills from (Min by default; 0 for a pan).',
+			Default: 'The value a double click gives back.',
+			Ticks: 'How many ticks along the ring.',
+			Label: 'The name under the knob.',
+			Unit: 'The unit after the value.',
+			ShowValue: 'Shows the value under the cap.',
+			Size: {Options: ['small', 'medium', 'large'], Description: 'Its size: small, medium or large.'},
+			Sensitivity: 'How many pixels of a drag cover the whole range.',
+			Disabled: 'Turns it off: it takes no input and looks so.'
+		},
+		Sample: {Default: 50, Label: 'Gain', Unit: '%'}
+	},
 	Value: 0,
 	Min: 0,
 	Max: 100,

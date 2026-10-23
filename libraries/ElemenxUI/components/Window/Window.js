@@ -21,6 +21,44 @@
 Elemenx.Component('Window', {
 	$TemplateURL: 'Window.html',
 	$StyleURL: 'Window.css',
+	$Meta: {
+		Group: 'overlays',
+		Icon: 'maximize',
+		Description: 'A window over the page or over its container: a header with its Title (and an Overline above it, an Icon), the body (the default slot) and a footer (slot footer); the slot header puts controls into the header.',
+		Container: true,
+		Slots: ['header', 'footer'],
+		Events: ['front', 'restore', 'close', 'resize', 'move'],
+		Methods: ['Front()', 'Minimize()', 'Maximize()', 'Restore()', 'Close()', 'Center()'],
+		Props: {
+			Title: 'The title in the header.',
+			Overline: 'A small line above the title.',
+			Icon: 'An icon before the title.',
+			Open: 'Shows the window; Close sets it to false.',
+			Width: 'The width, in pixels.',
+			Height: 'The height, in pixels (its content without it).',
+			MinWidth: 'The least width of a resize.',
+			MinHeight: 'The least height of a resize.',
+			MaxWidth: 'The greatest width of a resize.',
+			MaxHeight: 'The greatest height of a resize.',
+			Bounds: {Options: ['parent', 'viewport'], Description: 'parent (the positioned element it is in) or viewport (fixed to the window of the browser).'},
+			Draggable: 'The header moves it.',
+			Resizable: 'The edges and the corners resize it.',
+			Minimizable: 'Shows the button that folds it to its header.',
+			Maximizable: 'Shows the button that fills its bounds.',
+			Closable: 'Shows the close button.',
+			Minimized: 'Folded to its header.',
+			Maximized: 'Filling its bounds.',
+			Persist: 'A key that remembers its place, its size and its state between visits.',
+			Variant: {Options: ['default', 'game'], Description: 'default, or game: the look of the game theme.'},
+			Level: {Options: ['primary', 'secondary', 'plain'], Description: 'How a game theme draws it: primary (the main windows), secondary (the smaller ones) or plain (a dialog).'},
+			PopOut: 'Adds the button that moves the body into a window of its own (Picture-in-Picture).',
+			Popped: 'The body is in its own window.',
+			HeaderShape: {Options: ['default', 'trapezoid'], Description: 'default, or trapezoid: a folder, the title on a tab.'},
+			X: 'The left of the window, in pixels (a cascade without it).',
+			Y: 'The top of the window, in pixels.'
+		},
+		Sample: {Title: 'Properties', Overline: 'Project', Icon: 'settings', Width: 300, Height: 220}
+	},
 	Title: '',
 	Overline: '',
 	Icon: '',
@@ -44,6 +82,7 @@ Elemenx.Component('Window', {
 	Persist: '',
 	Variant: 'default',
 	Level: 'primary',
+	TabWidth: 0,
 	PopOut: false,
 	Popped: false,
 	HeaderShape: 'default',
@@ -68,11 +107,17 @@ Elemenx.Component('Window', {
 		};
 
 		/* The style of the place of the window. */
-		this.Geometry = function (x, y, width, height, z, maximized) {
-			if (maximized)
-				return 'z-index: ' + z + ';';
+		/*
+		 * The place and the size of the window as its style, with the width of the tab of a folder (TabWidth): the style
+		 * is the whole attribute, so the width of the tab is a part of it, not a property set beside it.
+		 */
+		this.Geometry = function (x, y, width, height, z, maximized, minimized, tabWidth) {
+			var tab = tabWidth ? ' --elemenx-tab-width: ' + tabWidth + 'px;' : '';
 
-			return 'left: ' + (Number(x) || 0) + 'px; top: ' + (Number(y) || 0) + 'px; width: ' + (Number(width) ? Number(width) + 'px' : 'auto') + '; height: ' + (Number(height) && !self.Minimized ? Number(height) + 'px' : 'auto') + '; z-index: ' + z + ';';
+			if (maximized)
+				return 'z-index: ' + z + ';' + tab;
+
+			return 'left: ' + (Number(x) || 0) + 'px; top: ' + (Number(y) || 0) + 'px; width: ' + (Number(width) ? Number(width) + 'px' : 'auto') + '; height: ' + (Number(height) && !self.Minimized ? Number(height) + 'px' : 'auto') + '; z-index: ' + z + ';' + tab;
 		};
 
 		stored = this.Persist ? this.Windows().Load(this.Persist) : null;
@@ -123,7 +168,7 @@ Elemenx.Component('Window', {
 		this.Own().Measure = typeof ResizeObserver === 'function' ? new ResizeObserver(function () {
 			var tab = self.$Element() && self.$Element().querySelector('.elemenx-window-tab');
 			if (tab)
-				self.$Element().style.setProperty('--elemenx-tab-width', tab.offsetWidth + 'px');
+				self.TabWidth = tab.offsetWidth;
 		}) : null;
 
 		if (this.Own().Measure)

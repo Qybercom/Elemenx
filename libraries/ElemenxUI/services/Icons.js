@@ -14,6 +14,10 @@
  * The state is kept on the hidden <svg>, so every Application of the page shares the sets.
  */
 Elemenx.Service('Icons', {
+	$Meta: {
+		Description: 'The icon sets of the page.',
+		Methods: ['Register(name, source)', 'Href(name)', 'Ready(name)', 'Names(name)', 'Load(name, callback)', 'Override(name, target)', 'OnChange(callback)']
+	},
 	Library: 'ElemenxUI',
 	Builtin: {brands: 'icons/brands.svg', files: 'icons/files.svg', music: 'icons/music.svg', weather: 'icons/weather.svg', sport: 'icons/sport.svg', racing: 'icons/racing.svg', science: 'icons/science.svg', art: 'icons/art.svg', cinema: 'icons/cinema.svg', games: 'icons/games.svg'},
 	Formats: [

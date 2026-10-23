@@ -6,6 +6,20 @@
 Elemenx.Component('GameTabs', {
 	$TemplateURL: 'GameTabs.html',
 	$StyleURL: 'GameTabs.css',
+	$Meta: {
+		Group: 'game',
+		Icon: 'trophy',
+		Description: 'The tabs of a game window: Items [{ID, Label, Disabled}] in a column (Orientation \'vertical\', the default) or a row, numbered 01, 02...',
+		Events: ['change'],
+		Props: {
+			Items: 'The tabs: [{ID, Label, Disabled}].',
+			Value: 'The ID of the open tab.',
+			Numbered: 'Numbers the tabs: 01, 02...',
+			Orientation: {Options: ['vertical', 'horizontal'], Description: 'vertical (a column) or horizontal (a row).'},
+			Label: 'The name of the list for screen readers.'
+		},
+		Sample: {Items: [{ID: 'items', Label: 'Items'}, {ID: 'skills', Label: 'Skills'}, {ID: 'map', Label: 'Map'}], Value: 'items', Label: 'Record'}
+	},
 	Items: [],
 	Value: null,
 	Numbered: true,

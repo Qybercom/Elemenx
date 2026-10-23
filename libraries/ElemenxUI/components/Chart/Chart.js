@@ -9,6 +9,29 @@
 Elemenx.Component('Chart', {
 	$TemplateURL: 'Chart.html',
 	$StyleURL: 'Chart.css',
+	$Meta: {
+		Group: 'data',
+		Icon: 'chart',
+		Description: 'A chart in SVG, as wide as its container.',
+		Events: ['hover', 'toggle'],
+		Props: {
+			Type: {Options: ['line', 'area', 'bar', 'pie', 'donut'], Description: 'line, area, bar, pie or donut.'},
+			Labels: 'The names of the points of the x axis, or of the slices of a pie.',
+			Series: 'The data: [{Name, Values, Color}] (a pie shows the first one).',
+			Height: 'The height in pixels.',
+			Stacked: 'Piles the bars and the areas of the series.',
+			Legend: 'Shows the legend, whose names turn the series off and on.',
+			Min: 'Fixes the bottom of the y axis.',
+			Max: 'Fixes the top of the y axis.',
+			Unit: 'The unit written after the values.',
+			Format: 'A function (value) that writes a value.',
+			Label: 'The name of the chart for screen readers.',
+			Hidden: 'The names of the series (or slices) turned off.',
+			Width: 'The width of the drawing it scales from (it fills its container).',
+			Palette: 'The colors of the series, in their order.'
+		},
+		Sample: {Label: 'Visits and sign-ups'}
+	},
 	Type: 'line',
 	Labels: [],
 	Series: [],

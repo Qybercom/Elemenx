@@ -10,6 +10,24 @@
 Elemenx.Component('CommandPalette', {
 	$TemplateURL: 'CommandPalette.html',
 	$StyleURL: 'CommandPalette.css',
+	$Meta: {
+		Group: 'navigation',
+		Icon: 'search',
+		Description: 'A command palette: a search over the actions of the application, opened by Hotkey (\'Mod+K\' by default; \'\' for none) or by Open.',
+		Events: ['close', 'run'],
+		Methods: ['Run(index)'],
+		Props: {
+			Commands: 'The commands: [{ID, Label, Icon, Group, Keys, Hint, Keywords, Disabled, Run}].',
+			Open: 'Shows the palette.',
+			Hotkey: 'The shortcut that opens it (Mod+K; empty for none).',
+			IncludeHotkeys: 'Adds every shortcut of the Hotkeys Service that has a description.',
+			Placeholder: 'The text shown while it is empty.',
+			Empty: 'The text when nothing matches.',
+			Remember: 'A localStorage key that keeps the recent commands between visits.',
+			Limit: 'How many commands the list shows.'
+		},
+		Sample: {Remember: 'docs-palette'}
+	},
 	Commands: [],
 	Open: false,
 	Hotkey: 'Mod+K',

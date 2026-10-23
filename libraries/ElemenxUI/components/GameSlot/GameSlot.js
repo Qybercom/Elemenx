@@ -18,6 +18,33 @@
 Elemenx.Component('GameSlot', {
 	$TemplateURL: 'GameSlot.html',
 	$StyleURL: 'GameSlot.css',
+	$Meta: {
+		Group: 'game',
+		Icon: 'trophy',
+		Description: 'A slot of an action bar (hotbar): a button with an Icon or an Image, a Label for the hint and screen readers, Count and Rarity (common, uncommon, rare, epic, legendary).',
+		Events: ['use', 'ready', 'drop'],
+		Methods: ['Cool(milliseconds)'],
+		Props: {
+			Icon: 'The icon of the action.',
+			Image: 'A picture in place of the icon.',
+			Label: 'The hint, and the name for screen readers.',
+			Key: 'The shortcut that presses it (1, Q).',
+			Count: 'A count in the corner (0 hides it).',
+			Rarity: 'common, uncommon, rare, epic or legendary: its frame and its tint.',
+			Cooldown: 'The time it cools down after use, in milliseconds.',
+			Active: 'Marks a toggled action.',
+			Disabled: 'Turns it off: it takes no input and looks so.',
+			Size: {Options: ['small', 'medium', 'large'], Description: 'small, medium or large.'},
+			Color: 'The tint of the glass under its icon.',
+			Accept: 'The types of drags it takes ([\'game-item\']; [] takes nothing).',
+			Draggable: 'Lets its content be dragged.',
+			Data: 'What the slot holds: an item or a skill.',
+			Group: 'The name of the bar in the places of a drag.',
+			Badge: 'A mark in a corner (+5).',
+			Classes: 'More classes, for a look of its own.'
+		},
+		Sample: {Icon: 'fire', Label: 'Fireball', Key: '1', Cooldown: 3000, Color: '#b8402a'}
+	},
 	Icon: '',
 	Image: '',
 	Label: '',

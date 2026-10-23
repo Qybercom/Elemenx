@@ -10,6 +10,9 @@
  * (a list that moves the item to another place while it is dragged): it ends on the release of the pointer.
  */
 Elemenx.Directive('draggable', {
+	$Meta: {
+		Description: '*draggable="{Data: item, Type: \'task\', Handle: \'.grip\'}" (or just *draggable="item") lets the element be dragged with the pointer onto *droppable elements that accept Type.'
+	},
 	$OnCreate: function (context) {
 		var element = context.Element;
 		var data = context.Data;

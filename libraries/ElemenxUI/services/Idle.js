@@ -7,6 +7,10 @@
  * or after going idle.
  */
 Elemenx.Service('Idle', {
+	$Meta: {
+		Description: 'The inactivity of the user, as a banking application that signs out after some minutes.',
+		Methods: ['Start(options)', 'Stop()', 'Reset()', 'State()', 'Remaining()']
+	},
 	StorageKey: 'elemenx-idle',
 
 	$OnCreate: function () {

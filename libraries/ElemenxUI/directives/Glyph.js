@@ -7,6 +7,9 @@
  * draws nothing: a reference that waits for Icons.Ready('') (as Icon does) draws once the sprite is in.
  */
 Elemenx.Directive('glyph', {
+	$Meta: {
+		Description: '*glyph="reference" draws a sprite symbol inside an <svg>.'
+	},
 	$OnUpdate: function (context) {
 		var element = context.Element;
 		var reference = String(context.Value || '');

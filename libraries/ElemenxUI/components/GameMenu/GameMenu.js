@@ -6,6 +6,20 @@
 Elemenx.Component('GameMenu', {
 	$TemplateURL: 'GameMenu.html',
 	$StyleURL: 'GameMenu.css',
+	$Meta: {
+		Group: 'game',
+		Icon: 'trophy',
+		Description: 'A menu of a game: the main menu, a pause menu, a list of saves.',
+		Container: true,
+		Events: ['select', 'back'],
+		Props: {
+			Title: 'The title above the items.',
+			Subtitle: 'A line under the title.',
+			Items: 'The items: [{ID, Label, Hint, Icon, Disabled}].',
+			AutoFocus: 'Puts the focus on the first item when it shows.'
+		},
+		Sample: {Title: 'Paused', Subtitle: 'Chapter II · The northern road'}
+	},
 	Title: '',
 	Subtitle: '',
 	Items: [],

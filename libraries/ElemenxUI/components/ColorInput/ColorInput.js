@@ -6,6 +6,22 @@
 Elemenx.Component('ColorInput', {
 	$TemplateURL: 'ColorInput.html',
 	$StyleURL: 'ColorInput.css',
+	$Meta: {
+		Group: 'inputs',
+		Icon: 'color',
+		Description: 'A color field with its own picker.',
+		Events: ['input', 'change'],
+		Props: {
+			Value: 'The color: #rrggbb, or #rrggbbaa with Alpha.',
+			Alpha: 'Adds the slider of the opacity.',
+			Swatches: 'Colors offered in the picker.',
+			Size: {Options: ['small', 'medium', 'large'], Description: 'Its size: small, medium or large.'},
+			Shape: 'Its shape: default, or round.',
+			Name: 'The name of its value in a form.',
+			Disabled: 'Turns it off: it takes no input and looks so.',
+			Invalid: 'Marks its value as wrong.'
+		}
+	},
 	Value: '#000000',
 	Alpha: false,
 	Swatches: [

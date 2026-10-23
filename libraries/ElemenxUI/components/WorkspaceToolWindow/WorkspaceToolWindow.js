@@ -7,6 +7,25 @@
 Elemenx.Component('WorkspaceToolWindow', {
 	$TemplateURL: 'WorkspaceToolWindow.html',
 	$StyleURL: 'WorkspaceToolWindow.css',
+	$Meta: {
+		Group: 'overlays',
+		Icon: 'panel-right',
+		Description: 'A tool window for a Workspace area: a title bar with actions (slot "actions") above a scrolling body (default slot).',
+		Container: true,
+		Slots: ['actions'],
+		Events: ['close'],
+		Props: {
+			Title: 'The title of its bar.',
+			Icon: 'Its icon, and the icon of its button on the stripe.',
+			Closable: 'Shows the close button.',
+			Padded: 'Puts room around the body.',
+			ID: 'The ID by which the Workspace places it.',
+			Area: {Options: ['left', 'right', 'bottom'], Description: 'Where it starts: left, right or bottom.'},
+			Open: 'Opens it at first.',
+			Badge: 'A badge on its button: a count, dot, busy...'
+		},
+		Sample: {Title: 'Project', Icon: 'folder', Closable: true, Padded: true, ID: 'project', Open: true}
+	},
 	Title: '',
 	Icon: '',
 	Closable: false,

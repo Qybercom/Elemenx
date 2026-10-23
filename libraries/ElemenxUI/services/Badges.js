@@ -6,6 +6,10 @@
  * or the phrase of a dot or a ring)}. Classes(value) are the classes of the badge for it.
  */
 Elemenx.Service('Badges', {
+	$Meta: {
+		Description: 'The badges of *badge and of the Badge of a Button.',
+		Methods: ['Describe(value)', 'Classes(value)']
+	},
 	Describe: function (value) {
 		var options = value && typeof value === 'object' ? value : {Value: value};
 		var shown = options.Value;

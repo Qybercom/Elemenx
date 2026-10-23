@@ -20,6 +20,23 @@
 Elemenx.Component('Ribbon', {
 	$TemplateURL: 'Ribbon.html',
 	$StyleURL: 'Ribbon.css',
+	$Meta: {
+		Group: 'navigation',
+		Icon: 'menu',
+		Description: 'A ribbon of commands, as in Microsoft Office: tabs of RibbonTab, each with RibbonGroup groups of RibbonButton, RibbonGallery and any other controls, declared in the template: * <Ribbon [tab]="Tab" (tab)="TabChanged" (command)="Run"> <RibbonTab ID="home" Title="Home"><RibbonGroup Title="Clipboard">...</RibbonGroup></RibbonTab> </Ribbon> * Slots: quick (the quick access toolbar, before the tabs), end (after them: a search, a share button) and backstage (a RibbonBackstage: the File button opens it over the window).',
+		Container: true,
+		Slots: ['quick', 'end', 'backstage'],
+		Events: ['tab', 'collapse', 'command', 'backstage'],
+		Props: {
+			Tab: 'The ID of the current tab.',
+			Collapsed: 'Shows only the tabs; a tab opens its panel over the page.',
+			Collapsible: 'Lets the user collapse it (a double click on a tab, the pin, Ctrl+F1).',
+			KeyTips: 'Alt shows the letters of the tabs and the commands.',
+			Label: 'The name of the ribbon for screen readers.',
+			FileLabel: 'The text of the File button.',
+			FileKeyTip: 'The key tip of the File button.'
+		}
+	},
 	Tab: '',
 	Collapsed: false,
 	Collapsible: true,
@@ -174,13 +191,9 @@ Elemenx.Component('Ribbon', {
 		document.removeEventListener('keyup', this.OnUp, true);
 	},
 
-	/* The panels of this Ribbon (not of a Ribbon inside it). */
+	/* The panels of this Ribbon (not of a Ribbon inside it), read as Tabs reads its tabs (the Panels Service). */
 	Panels: function () {
-		var root = this.$Element();
-
-		return Array.prototype.filter.call(root.querySelectorAll('.elemenx-ribbon-panel'), function (node) {
-			return node.parentElement.closest('.elemenx-ribbon') === root;
-		});
+		return this.$Service('Panels').Read(this.$Element(), '.elemenx-ribbon-panel', '.elemenx-ribbon');
 	},
 
 	/* Reads the declared tabs, shows the panel of the current one and fits its groups. */

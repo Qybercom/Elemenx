@@ -6,11 +6,34 @@
  * IDs (parents included). Filter (or a search field with Searchable) keeps the items that match and their parents,
  * open. Keys: arrows (Right opens or goes to the first child, Left closes or goes to the parent), Home, End, Enter
  * selects, Space checks, '*' opens the siblings, a letter goes to the next item that starts with it.
- * Events: select (the item), expand (the open IDs), check (the checked IDs), load (the item).
+ * Movable lets the pointer drag an item onto another: before it (the upper part of its row), after it (the lower part)
+ * or into it (the middle), never into itself or one of its own items. The tree does not change Items itself: the move
+ * event ({ID, Target, Position: 'before', 'after' or 'inside'}) asks the owner to.
+ * Events: select (the item), expand (the open IDs), check (the checked IDs), load (the item), move.
  */
 Elemenx.Component('Tree', {
 	$TemplateURL: 'Tree.html',
 	$StyleURL: 'Tree.css',
+	$Meta: {
+		Group: 'navigation',
+		Icon: 'tree',
+		Description: 'A tree.',
+		Events: ['check', 'expand', 'load', 'select', 'move'],
+		Props: {
+			Items: 'The items: [{ID, Label, Icon, Badge, Items, Disabled, Lazy}].',
+			Value: 'The ID of the selected item.',
+			Expanded: 'The IDs of the open items.',
+			Checkable: 'Adds check boxes.',
+			Checked: 'The IDs of the checked items.',
+			Loading: 'The IDs of the items whose children load.',
+			Searchable: 'Adds a search field.',
+			Filter: 'Keeps the items that match, and their parents.',
+			Label: 'The name of the tree for screen readers.',
+			Empty: 'The text without items.',
+			Movable: 'Lets the pointer drag an item before, after or into another (the move event).'
+		},
+		Sample: {Checkable: true, Searchable: true}
+	},
 	Items: [],
 	Value: null,
 	Expanded: [],
@@ -21,10 +44,38 @@ Elemenx.Component('Tree', {
 	Filter: '',
 	Label: '',
 	Empty: '',
+	Movable: false,
 	Focused: null,
+	DropOn: null,
+	DropAt: '',
 
 	$OnCreate: function () {
 		var self = this;
+
+		/* Whether target is the item of id or one of its own items (an item never goes into itself). */
+		this.Within = function (items, id, target) {
+			var found = null;
+
+			function find (list) {
+				(list || []).forEach(function (item) {
+					if (String(item.ID) === String(id)) found = item;
+					else if (!found) find(item.Items);
+				});
+			}
+
+			function has (item) {
+				return String(item.ID) === String(target) || (item.Items || []).some(has);
+			}
+
+			find(items);
+
+			return !!found && has(found);
+		};
+
+		/* The place a dragged item would take at a row: its mark (before, after, inside), or nothing. */
+		this.Drop = function (id, on, at) {
+			return String(id) === String(on) ? at : null;
+		};
 
 		/* The visible rows: [{Item, Depth, Group, Open, Parent, Check ('true', 'false', 'mixed')}]. */
 		this.Rows = function (items, expanded, filter, checked) {
@@ -294,5 +345,38 @@ Elemenx.Component('Tree', {
 		}
 
 		event.preventDefault();
+	},
+
+	/* A dragged item over a row: before, after or into it by the height the pointer is at. */
+	DragOver: function (event, node) {
+		var id = node.getAttribute('data-id');
+		var box = node.getBoundingClientRect();
+		var y = (event.detail.ClientY - box.top) / Math.max(1, box.height);
+		var at = y < 0.25 ? 'before' : y > 0.75 ? 'after' : 'inside';
+
+		if (this.Within(this.Items, event.detail.Data, id))
+			at = '';
+
+		if (this.DropOn !== id)
+			this.DropOn = id;
+
+		if (this.DropAt !== at)
+			this.DropAt = at;
+	},
+
+	DragLeave: function (event, node) {
+		if (this.DropOn === node.getAttribute('data-id'))
+			this.DropOn = null;
+	},
+
+	Dropped: function (event, node) {
+		var id = node.getAttribute('data-id');
+		var at = this.DropOn === id ? this.DropAt : '';
+
+		this.DropOn = null;
+		this.DropAt = '';
+
+		if (at && String(event.detail.Data) !== id)
+			this.$Emit('move', {ID: event.detail.Data, Target: id, Position: at});
 	}
 });

@@ -4,6 +4,9 @@
  * Button, for example). Uses the Clipboard Service. The element dispatches "copied" with {Text, Error}.
  */
 Elemenx.Directive('copy', {
+	$Meta: {
+		Description: '*copy="text" copies text when the element is clicked (or *copy="{Text, Toast}": Toast true or a message shows a toast).'
+	},
 	$OnCreate: function (context) {
 		var element = context.Element;
 		var data = context.Data;

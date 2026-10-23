@@ -6,6 +6,21 @@
  */
 Elemenx.Component('CardExpiryInput', {
 	$TemplateURL: 'CardExpiryInput.html',
+	$Meta: {
+		Group: 'inputs',
+		Icon: 'credit-card',
+		Description: 'The expiry date of a payment card: Value holds the digits MMYY (\'0927\'), shown as MM/YY.',
+		Events: ['input', 'validate', 'change'],
+		Props: {
+			Value: 'The digits MMYY (0927), shown as MM/YY.',
+			Placeholder: 'The text shown while it is empty.',
+			Size: {Options: ['small', 'medium', 'large'], Description: 'Its size: small, medium or large.'},
+			Shape: 'Its shape: default, or round.',
+			Name: 'The name of its value in a form.',
+			Disabled: 'Turns it off: it takes no input and looks so.',
+			Invalid: 'Marks its value as wrong.'
+		}
+	},
 	Value: '',
 	Placeholder: 'MM/YY',
 	Size: 'medium',

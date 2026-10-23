@@ -10,6 +10,23 @@
 Elemenx.Component('ContextMenu', {
 	$TemplateURL: 'ContextMenu.html',
 	$StyleURL: 'ContextMenu.css',
+	$Meta: {
+		Group: 'buttons',
+		Icon: 'launcher',
+		Description: 'A context menu over its content: a right click, the Menu key or Shift+F10 inside the default slot opens a multi-level MenuList at the pointer (or under the focused element).',
+		Container: true,
+		Slots: ['items'],
+		Events: ['open', 'select'],
+		Props: {
+			Items: 'The items of the menu, as MenuList (more may be declared with MenuItem).',
+			Disabled: 'Turns it off: it takes no input and looks so.',
+			Sheet: 'Shows the menu as a sheet from the bottom: true, or auto on a narrow or a touch screen.',
+			Title: 'The title of the sheet.',
+			Open: 'Shows the menu (at X, Y).',
+			Target: 'The element the menu was opened for.',
+			Hold: 'How long a press opens it on a touch screen, in milliseconds.'
+		}
+	},
 	Items: [],
 	Disabled: false,
 	Sheet: false,

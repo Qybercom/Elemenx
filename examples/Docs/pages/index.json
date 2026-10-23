@@ -467,6 +467,30 @@
 					}
 				},
 				{
+					"ID": "DesignerCanvas",
+					"Title": {
+						"en": "DesignerCanvas"
+					}
+				},
+				{
+					"ID": "DesignerInspector",
+					"Title": {
+						"en": "DesignerInspector"
+					}
+				},
+				{
+					"ID": "DesignerPalette",
+					"Title": {
+						"en": "DesignerPalette"
+					}
+				},
+				{
+					"ID": "DesignerTree",
+					"Title": {
+						"en": "DesignerTree"
+					}
+				},
+				{
 					"ID": "DialPad",
 					"Title": {
 						"en": "DialPad"
@@ -941,6 +965,12 @@
 					}
 				},
 				{
+					"ID": "Tab",
+					"Title": {
+						"en": "Tab"
+					}
+				},
+				{
 					"ID": "Table",
 					"Title": {
 						"en": "Table"
@@ -1112,6 +1142,12 @@
 					}
 				},
 				{
+					"ID": "Designer",
+					"Title": {
+						"en": "Designer"
+					}
+				},
+				{
 					"ID": "Dialogs",
 					"Title": {
 						"en": "Dialogs"
@@ -1205,6 +1241,12 @@
 					"ID": "Native",
 					"Title": {
 						"en": "Native"
+					}
+				},
+				{
+					"ID": "Panels",
+					"Title": {
+						"en": "Panels"
 					}
 				},
 				{

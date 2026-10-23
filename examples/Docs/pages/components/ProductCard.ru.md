@@ -1,7 +1,7 @@
 <!-- generated -->
 # ProductCard
 
-Карточка товара: Images (переключаются точками, а на сенсорном экране — свайпом) или Image, Badge ('Sale', 'New'; BadgeVariant), сердечко избранного (Favorable, Favorite), Brand, Title, Rating (с половинками) и Reviews, Price и OldPrice в Currency, цвета Colors ([{Value, Color, Label}]) и размеры Sizes на выбор (Color, Size) и кнопка корзины (Cart, InCart). PriceStyle 'corner' ставит цену на картинку, как плитку в стиле Metro. Ratio — пропорции картинки ('1:1' по умолчанию). Variant и Href — как в Card. События: add ({Color, Size}), favorite ({Favorite}), color ({Color}), size ({Size}).
+Карточка товара: Images (переключаются точками и свайпом пальца или мыши) или Image, Badge ('Sale', 'New'; BadgeVariant), сердечко избранного (Favorable, Favorite), Brand, Title, Rating (с половинками) и Reviews, Price и OldPrice в Currency, цвета Colors ([{Value, Color, Label}]) и размеры Sizes на выбор (Color, Size) и кнопка корзины (Cart, InCart). PriceStyle 'corner' ставит цену на картинку, как плитку в стиле Metro. Ratio — пропорции картинки ('1:1' по умолчанию). Variant и Href — как в Card. События: add ({Color, Size}), favorite ({Favorite}), color ({Color}), size ({Size}).
 
 ## Свойства
 

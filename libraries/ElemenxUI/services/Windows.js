@@ -6,6 +6,10 @@
  * localStorage under StorageKey.
  */
 Elemenx.Service('Windows', {
+	$Meta: {
+		Description: 'The windows of the page (the Window component): their order and the active one.',
+		Methods: ['Front(entry)', 'Active()', 'List()', 'Place()', 'OnChange(callback)', 'OffChange(callback)']
+	},
 	Base: 100,
 	Step: 28,
 	StorageKey: 'elemenx-windows',

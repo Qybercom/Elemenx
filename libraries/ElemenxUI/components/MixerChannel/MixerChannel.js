@@ -9,6 +9,31 @@
 Elemenx.Component('MixerChannel', {
 	$TemplateURL: 'MixerChannel.html',
 	$StyleURL: 'MixerChannel.css',
+	$Meta: {
+		Group: 'music',
+		Icon: 'headphones',
+		Description: 'A channel strip of an audio mixer (the look and the controls; the sound is the application\'s): its Label, Knobs (an equalizer, sends: [{Label, Value, Min, Max, Origin, Default, Unit}]), the Pan (-100 left to 100 right), the buttons Mute and Solo, the fader of its Volume in decibels between Min and Max, and the meter of its Level beside it: a level in decibels, or [left, right] for stereo, with the Peak held over it.',
+		Events: ['change'],
+		Props: {
+			ID: 'The ID of the channel, in its events.',
+			Label: 'The name of the strip.',
+			Color: 'A color that marks the strip.',
+			Volume: 'The fader, in decibels.',
+			Min: 'The bottom of the fader, in decibels.',
+			Max: 'The top of the fader, in decibels.',
+			Pan: 'The balance: -100 left to 100 right.',
+			ShowPan: 'Shows the knob of the pan.',
+			Mute: 'Silences the channel.',
+			Solo: 'Leaves the other channels out of the mix.',
+			Master: 'The strip of the master bus (no Solo).',
+			Silenced: 'Dims a strip that the Solo of another one leaves out.',
+			Level: 'The level of the meter, in decibels: a number, or [left, right].',
+			Peak: 'The peak held over the meter.',
+			Knobs: 'Knobs above the pan: [{Label, Value, Min, Max, Origin, Default, Unit}].',
+			Disabled: 'Turns it off: it takes no input and looks so.'
+		},
+		Sample: {ID: 'guitar', Label: 'Guitar', Color: '#30a46c', Level: [-14, -16], Peak: [-8, -9], Knobs: [{Label: 'Gain', Value: 4, Min: 0, Max: 12, Unit: ' dB'}]}
+	},
 	ID: null,
 	Label: '',
 	Color: '',

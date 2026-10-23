@@ -10,6 +10,10 @@
  *   viewport, on the side with room. Carded(item) tells whether an item has more to show than its name.
  */
 Elemenx.Service('GameItems', {
+	$Meta: {
+		Description: 'The rules of moving the items of a game: what lies where after an item is moved onto a place.',
+		Methods: ['Stacks(a, b)', 'Move(item, current)', 'Take(item, count)', 'Place(element)', 'Carded(item)']
+	},
 	Count: function (item) {
 		return item ? Math.max(1, Number(item.Count) || 1) : 0;
 	},

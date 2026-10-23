@@ -9,6 +9,10 @@
  * the timer while the toast is hovered or focused. OnChange(callback)/OffChange(callback) report the list.
  */
 Elemenx.Service('Toast', {
+	$Meta: {
+		Description: 'Notifications shown by a ToastHost (place one in the layout of the Application).',
+		Methods: ['Configure(options)', 'Show(options)', 'Dismiss(id)', 'Clear()', 'Pause(id)', 'Resume(id)', 'OnChange(callback)', 'OffChange(callback)']
+	},
 	Duration: 5000,
 	AutoHide: true,
 	Limit: 5,

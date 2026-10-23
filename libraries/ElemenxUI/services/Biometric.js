@@ -16,6 +16,10 @@
  *   challenge, credentials)) and options.Confirm(result, done) (done(error, true)) it asks the server.
  */
 Elemenx.Service('Biometric', {
+	$Meta: {
+		Description: 'The fingerprint, face or PIN of the device (Touch ID, Windows Hello, Android) through WebAuthn: HTTPS or localhost.',
+		Methods: ['Available(callback)', 'Register(options, callback)', 'Verify(options, callback)', 'Check(callback)', 'Forget()', 'Guard(options)']
+	},
 	StorageKey: 'elemenx-biometric',
 	Name: 'Elemenx',
 

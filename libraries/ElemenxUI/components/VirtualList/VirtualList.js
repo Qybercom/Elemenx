@@ -8,6 +8,27 @@
 Elemenx.Component('VirtualList', {
 	$TemplateURL: 'VirtualList.html',
 	$StyleURL: 'VirtualList.css',
+	$Meta: {
+		Group: 'layout',
+		Icon: 'list',
+		Description: 'A long list that draws only the rows in view (and Overscan more on each side): a hundred thousand items scroll as lightly as ten.',
+		Events: ['range', 'select'],
+		Methods: ['ScrollTo(index)'],
+		Props: {
+			Items: 'The items: objects, or texts.',
+			ItemHeight: 'The height of a row, in pixels.',
+			Height: 'The height of the list (a CSS length).',
+			Overscan: 'Rows drawn beyond the view on each side.',
+			ItemKey: 'The field that identifies an item.',
+			LabelKey: 'The field shown as the label.',
+			Render: 'A function (container, item, index) that draws a row.',
+			Value: 'The key of the selected item.',
+			Label: 'The name of the list for screen readers.',
+			Empty: 'The text without items.',
+			Start: 'The first row drawn.'
+		},
+		Sample: {ItemHeight: 36, Height: '300px', Label: 'A hundred thousand rows'}
+	},
 	Items: [],
 	ItemHeight: 32,
 	Height: '320px',

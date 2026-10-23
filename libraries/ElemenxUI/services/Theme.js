@@ -14,6 +14,10 @@
  * then from Default.
  */
 Elemenx.Service('Theme', {
+	$Meta: {
+		Description: 'The theme of the page: a policy of the color scheme and a named theme.',
+		Methods: ['Scope(element, name, callback)']
+	},
 	Default: 'system',
 	Persist: true,
 	StorageKey: 'elemenx-theme',

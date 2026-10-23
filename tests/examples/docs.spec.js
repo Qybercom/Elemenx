@@ -82,6 +82,75 @@ test.describe('Elemenx documentation', function () {
 		expect(errors).toEqual([]);
 	});
 
+	test('shows the example of the page it goes to through the contents, not the one of the page before', async function ({ page }) {
+		var errors = captureErrors(page);
+		var nav = page.locator('.docs-nav');
+		var result = page.locator('.docs-example-result').first();
+
+		await page.goto(origin + '/components/Button');
+
+		await expect(result).toContainText('Primary');
+
+		await nav.locator('input').first().fill('Checkbox');
+		await nav.getByText('Checkbox', {exact: true}).click();
+
+		await expect(page).toHaveURL(/\/components\/Checkbox$/);
+		await expect(result).toContainText('Remember me');
+		await expect(result).not.toContainText('Primary');
+
+		await nav.locator('input').first().fill('Toggle');
+		await nav.getByText('Toggle', {exact: true}).click();
+
+		await expect(result).toContainText('Notifications');
+		await expect(result).not.toContainText('Remember me');
+
+		expect(errors).toEqual([]);
+	});
+
+	test('shows the code of an example in listings of its own and the source files of the component of the page', async function ({ page }) {
+		var errors = captureErrors(page);
+		var example = page.locator('.docs-example').first();
+		var source = page.locator('.docs-source');
+
+		/* The example of the Designer: its template, its script and its style, a tab each. */
+		await page.goto(origin + '/components/DesignerCanvas');
+
+		await expect(example.locator('.docs-example-listings .elemenx-tab')).toHaveText(['HTML', 'JS', 'CSS']);
+		await expect(example.locator('.elemenx-code-view')).toContainText('<DesignerCanvas Width="desktop" />');
+		await expect(example.locator('.elemenx-code-view')).not.toContainText('<script>');
+
+		await example.locator('.docs-example-listings .elemenx-tab').filter({hasText: 'CSS'}).click();
+
+		await expect(example.locator('.elemenx-code-view')).toContainText('.designer-demo {');
+
+		await example.locator('.docs-example-listings .elemenx-tab').filter({hasText: 'JS'}).click();
+
+		await expect(example.locator('.elemenx-code-view')).toContainText('Show: function () {');
+
+		/* The style of the example applies to its result. */
+		await expect(page.locator('.docs-example-result .designer-demo')).toHaveCSS('display', 'grid');
+
+		/* The source of the component: its template, its script and its stylesheet. */
+		await expect(source.locator('.elemenx-tab')).toHaveText(['DesignerCanvas.html', 'DesignerCanvas.js', 'DesignerCanvas.css']);
+		await expect(source.locator('.elemenx-code-view')).toContainText('<div class="elemenx-designer-canvas"');
+
+		await source.locator('.elemenx-tab').filter({hasText: 'DesignerCanvas.css'}).click();
+
+		await expect(source.locator('.elemenx-code-view')).toContainText('.elemenx-designer-surface {');
+
+		/* A directive has its script alone; a page of the guide has no source. */
+		await page.goto(origin + '/directives/swipe');
+
+		await expect(source.locator('.elemenx-tab')).toHaveText(['Swipe.js']);
+		await expect(source.locator('.elemenx-code-view')).toContainText('Elemenx.Directive(\'swipe\'');
+
+		await page.goto(origin + '/guide/start');
+
+		await expect(source).toHaveCount(0);
+
+		expect(errors).toEqual([]);
+	});
+
 	test('tells a page that does not exist', async function ({ page }) {
 		await page.goto(origin + '/components/Nothing');
 

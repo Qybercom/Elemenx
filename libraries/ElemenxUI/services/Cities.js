@@ -16,6 +16,10 @@
  *   (now by default). Label(city): 'Name, Region, Country' in the language of the page; Place(city): 'Region, Country'.
  */
 Elemenx.Service('Cities', {
+	$Meta: {
+		Description: 'The cities of the world from GeoNames (every city of a thousand people or more, CC BY 4.0: show Attribution where the cities are seen): their names, countries, regions, coordinates and time zones.',
+		Methods: ['Load(callback)', 'Search(text, options, callback)', 'Find(id, callback)', 'Nearest(latitude, longitude, options, callback)', 'Clock(city, date)', 'Label(city)', 'Place(city)']
+	},
 	Library: 'ElemenxUI',
 	Locale: '',
 	Locales: ['ru'],

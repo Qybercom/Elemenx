@@ -5,6 +5,11 @@
 Elemenx.Component('DialogHost', {
 	$TemplateURL: 'DialogHost.html',
 	$StyleURL: 'DialogHost.css',
+	$Meta: {
+		Group: 'overlays',
+		Icon: 'panel-right',
+		Description: 'Shows the confirmations and alerts of the Dialogs Service, one modal Dialog each, the last one on top: place one in the layout of the Application.'
+	},
 	Items: [],
 
 	$OnCreate: function () {

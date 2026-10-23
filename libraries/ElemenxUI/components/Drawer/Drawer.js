@@ -8,6 +8,26 @@
 Elemenx.Component('Drawer', {
 	$TemplateURL: 'Drawer.html',
 	$StyleURL: 'Drawer.css',
+	$Meta: {
+		Group: 'overlays',
+		Icon: 'panel-left',
+		Description: 'A panel that slides in from an edge of the window over the page (modal: the page behind is inert).',
+		Container: true,
+		Slots: ['actions', 'footer'],
+		Events: ['close'],
+		Props: {
+			Open: 'Shows the drawer; its close event asks the owner to set it back to false.',
+			Title: 'The title of the drawer.',
+			Description: 'A text under the title.',
+			Icon: 'An icon before the title.',
+			Side: {Options: ['right', 'left', 'top', 'bottom'], Description: 'The edge it slides from: right, left, top or bottom.'},
+			Size: {Options: ['small', 'medium', 'large', 'full'], Description: 'Its width (or height): small, medium, large or full.'},
+			Closable: 'Shows the close button.',
+			Dismissible: 'Escape and a press on the backdrop close it; false keeps it open.',
+			Padded: 'Puts room around the body.'
+		},
+		Sample: {Title: 'Filters', Description: 'A drawer over the page', Icon: 'filter'}
+	},
 	Open: false,
 	Title: '',
 	Description: '',

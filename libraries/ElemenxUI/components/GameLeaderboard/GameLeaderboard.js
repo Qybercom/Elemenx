@@ -8,6 +8,20 @@
 Elemenx.Component('GameLeaderboard', {
 	$TemplateURL: 'GameLeaderboard.html',
 	$StyleURL: 'GameLeaderboard.css',
+	$Meta: {
+		Group: 'game',
+		Icon: 'trophy',
+		Description: 'The leaderboard of a game.',
+		Events: ['select'],
+		Props: {
+			Items: 'The players: [{ID, Name, Score, Rank, Avatar, Icon, Note, Change, Me}].',
+			Limit: 'How many rows of the top show.',
+			ScoreLabel: 'The name of the score.',
+			Selectable: 'The rows emit select with their item.',
+			Label: 'The name of the board for screen readers.'
+		},
+		Sample: {Limit: 5, ScoreLabel: 'Glory', Selectable: true}
+	},
 	Items: [],
 	Limit: 10,
 	ScoreLabel: '',

@@ -19,6 +19,21 @@
 Elemenx.Component('GameInventory', {
 	$TemplateURL: 'GameInventory.html',
 	$StyleURL: 'GameInventory.css',
+	$Meta: {
+		Group: 'game',
+		Icon: 'trophy',
+		Description: 'An inventory: a grid of Slots cells (Items.length by default) in Columns columns.',
+		Events: ['select', 'use', 'move', 'discard', 'receive', 'give'],
+		Methods: ['Move(from, to)'],
+		Props: {
+			Items: 'The items by cell (null for an empty one): {ID, Name, Icon or Image, Count, Stack, Rarity...}.',
+			Slots: 'How many cells (the count of Items by default).',
+			Columns: 'How many cells in a row.',
+			Label: 'The name of the grid for screen readers.',
+			Name: 'The name of the inventory in the places of a drag.'
+		},
+		Sample: {Slots: 12, Columns: 4, Label: 'Bag', Name: 'bag'}
+	},
 	Items: [],
 	Slots: 0,
 	Columns: 6,

@@ -12,6 +12,10 @@
  * The HTML is read in an inert template: nothing of it runs or loads while it is read.
  */
 Elemenx.Service('RichText', {
+	$Meta: {
+		Description: 'The document of rich text: the HTML RichEditor keeps and the Markdown it reads and writes.',
+		Methods: ['Sanitize(html)', 'Text(html)', 'ToMarkdown(html)', 'FromMarkdown(text)']
+	},
 	Blocks: {P: 1, H1: 1, H2: 1, H3: 1, H4: 1, BLOCKQUOTE: 1, PRE: 1, UL: 1, OL: 1, LI: 1, HR: 1, TABLE: 1, THEAD: 1, TBODY: 1, TR: 1, TH: 1, TD: 1},
 	Inline: {STRONG: 1, EM: 1, U: 1, S: 1, CODE: 1, A: 1, BR: 1, IMG: 1},
 	Aliases: {B: 'STRONG', I: 'EM', STRIKE: 'S', DEL: 'S', INS: 'U', H5: 'H4', H6: 'H4', TT: 'CODE', KBD: 'CODE'},

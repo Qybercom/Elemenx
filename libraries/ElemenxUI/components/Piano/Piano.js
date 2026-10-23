@@ -14,6 +14,23 @@
 Elemenx.Component('Piano', {
 	$TemplateURL: 'Piano.html',
 	$StyleURL: 'Piano.css',
+	$Meta: {
+		Group: 'music',
+		Icon: 'volume',
+		Description: 'The keys of a piano (the look and the controls; the sound is the application\'s).',
+		Events: ['noteon', 'noteoff'],
+		Props: {
+			From: 'The first note (C3).',
+			Octaves: 'How many octaves follow it.',
+			Pressed: 'The notes shown played.',
+			Marks: 'Marks notes: {note: class}, true for the mark of the theme.',
+			Labels: {Options: ['none', 'c', 'notes', 'all', 'keys', 'both'], Description: 'What the keys show: none, c, notes, all, keys or both.'},
+			Size: {Options: ['small', 'medium', 'large'], Description: 'Its size: small, medium or large.'},
+			Label: 'The name of the piano for screen readers.',
+			Disabled: 'Turns it off.'
+		},
+		Sample: {From: 'C4'}
+	},
 	From: 'C3',
 	Octaves: 2,
 	Pressed: [],

@@ -14,6 +14,10 @@
  *   lines (a token never holds a line break); HTML(text, language) escaped markup with a span for each token.
  */
 Elemenx.Service('Syntax', {
+	$Meta: {
+		Description: 'The highlighting of source code: the grammars of the languages and the tokens of a text in one of them.',
+		Methods: ['Register(name, grammar)', 'Find(name)', 'Languages()', 'Tokens(text, language)', 'Lines(text, language)', 'HTML(text, language)']
+	},
 	$OnCreate: function () {
 		var self = this;
 		var keywords = 'break case catch class const continue debugger default delete do else export extends finally for from function if import in instanceof let new of return static switch throw try typeof var void while with yield async await get set';

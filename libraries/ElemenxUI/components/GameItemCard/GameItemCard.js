@@ -7,6 +7,16 @@
  */
 Elemenx.Component('GameItemCard', {
 	$TemplateURL: 'GameItemCard.html',
+	$Meta: {
+		Group: 'game',
+		Icon: 'trophy',
+		Description: 'The card of an item of a game: its Name in the color of its Rarity, its Rarity and Type, its Stats [{Label, Value}] and its Description, on the panel of the theme.',
+		Props: {
+			Item: 'The item: {Name, Rarity, Type, Stats, Description}.',
+			Place: 'The style that places the card (fixed beside an element: GameItems.Place).'
+		},
+		Sample: {Item: {Name: 'Sword of dawn', Rarity: 'rare', Type: 'Weapon', Stats: [{Label: 'Attack', Value: 42}], Description: 'Forged at first light.'}, Place: 'position: static;'}
+	},
 	Item: null,
 	Place: '',
 

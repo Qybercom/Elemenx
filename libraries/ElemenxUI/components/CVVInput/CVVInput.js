@@ -4,6 +4,25 @@
  */
 Elemenx.Component('CVVInput', {
 	$TemplateURL: 'CVVInput.html',
+	$Meta: {
+		Group: 'inputs',
+		Icon: 'credit-card',
+		Description: 'Value holds the 3 or 4 security code digits (Length).',
+		Events: ['input', 'validate', 'change'],
+		Props: {
+			Value: 'The digits of the code.',
+			Length: 'How many digits: 3, or 4.',
+			Placeholder: 'The text shown while it is empty.',
+			Size: {Options: ['small', 'medium', 'large'], Description: 'Its size: small, medium or large.'},
+			Shape: 'Its shape: default, or round.',
+			Name: 'The name of its value in a form.',
+			Disabled: 'Turns it off: it takes no input and looks so.',
+			Invalid: 'Marks its value as wrong.',
+			Revealed: 'Shows the digits.',
+			Guarded: 'Asks before the eye shows the code.',
+			HideAfter: 'Hides the code again after so many milliseconds (0: never).'
+		}
+	},
 	Value: '',
 	Length: 3,
 	Placeholder: '',

@@ -8,6 +8,20 @@
 Elemenx.Component('GameDialogue', {
 	$TemplateURL: 'GameDialogue.html',
 	$StyleURL: 'GameDialogue.css',
+	$Meta: {
+		Group: 'game',
+		Icon: 'trophy',
+		Description: 'The line of a character in a dialogue: Speaker, Portrait (an image URL) and Text, typed out at Speed characters a second (0 shows it at once).',
+		Events: ['next', 'choose'],
+		Props: {
+			Speaker: 'The name of the one who speaks.',
+			Portrait: 'The URL of the portrait.',
+			Text: 'The line, typed out.',
+			Choices: 'The answers: [{ID, Text, Disabled}].',
+			Speed: 'Characters a second (0 shows the line at once).'
+		},
+		Sample: {Speed: 60}
+	},
 	Speaker: '',
 	Portrait: '',
 	Text: '',

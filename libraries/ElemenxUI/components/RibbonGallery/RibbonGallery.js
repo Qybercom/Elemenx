@@ -6,6 +6,20 @@
  */
 Elemenx.Component('RibbonGallery', {
 	$TemplateURL: 'RibbonGallery.html',
+	$Meta: {
+		Group: 'navigation',
+		Icon: 'menu',
+		Description: 'A gallery of a RibbonGroup: a strip of samples (styles, layouts, colors) that scrolls row by row, and a button that shows all of them.',
+		Events: ['select'],
+		Props: {
+			ID: 'The ID of the gallery, in the command.',
+			Label: 'The name of the gallery.',
+			Items: 'The samples: [{ID, Label, Icon, Preview, Style}].',
+			Value: 'The ID of the sample chosen.',
+			Columns: 'How many samples in a row of the strip.'
+		},
+		Sample: {ID: 'style', Label: 'Styles', Columns: 3}
+	},
 	ID: '',
 	Label: '',
 	Items: [],

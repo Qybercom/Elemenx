@@ -10,6 +10,27 @@
 Elemenx.Component('Image', {
 	$TemplateURL: 'Image.html',
 	$StyleURL: 'Image.css',
+	$Meta: {
+		Group: 'display',
+		Icon: 'image',
+		Description: 'A picture that is easy to place.',
+		Events: ['load', 'error'],
+		Props: {
+			Src: 'The URL of the picture.',
+			Alt: 'The text of the picture for screen readers.',
+			Fit: {Options: ['cover', 'contain', 'fill', 'none', 'scale-down'], Description: 'cover, contain, fill, none or scale-down.'},
+			Position: 'The point it keeps in view: center, top, 30% 20%...',
+			Width: 'The width: pixels or a length.',
+			Height: 'The height: pixels or a length.',
+			Ratio: 'The shape of the box: 16/9, 4:3, 1.5.',
+			Stretch: {Options: ['none', 'width', 'height', 'both'], Description: 'How it follows its container: none, width, height or both.'},
+			Shape: {Options: ['', 'rounded', 'circle'], Description: 'rounded or circle.'},
+			Lazy: 'Loads it when it comes near the viewport.',
+			Placeholder: 'The text shown while it is empty.',
+			Fallback: 'The URL of a picture shown when it does not load.'
+		},
+		Sample: {Alt: 'Mountains', Width: '200', Ratio: '16:9', Shape: 'rounded'}
+	},
 	Src: '',
 	Alt: '',
 	Fit: 'cover',

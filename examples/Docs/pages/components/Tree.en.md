@@ -1,7 +1,7 @@
 <!-- generated -->
 # Tree
 
-A tree. Items: [{ID, Label, Icon, Badge, Items, Disabled, Lazy}]; Value is the ID of the selected item; Expanded holds the open IDs. A Lazy item without Items asks for its children with the load event (the item): the owner gives it Items (Loading holds the IDs being loaded, shown with a spinner). Checkable adds check boxes: a parent is checked when all its children are, mixed when some are; checking it checks all of them. Checked holds the checked IDs (parents included). Filter (or a search field with Searchable) keeps the items that match and their parents, open. Keys: arrows (Right opens or goes to the first child, Left closes or goes to the parent), Home, End, Enter selects, Space checks, '*' opens the siblings, a letter goes to the next item that starts with it. Events: select (the item), expand (the open IDs), check (the checked IDs), load (the item).
+A tree. Items: [{ID, Label, Icon, Badge, Items, Disabled, Lazy}]; Value is the ID of the selected item; Expanded holds the open IDs. A Lazy item without Items asks for its children with the load event (the item): the owner gives it Items (Loading holds the IDs being loaded, shown with a spinner). Checkable adds check boxes: a parent is checked when all its children are, mixed when some are; checking it checks all of them. Checked holds the checked IDs (parents included). Filter (or a search field with Searchable) keeps the items that match and their parents, open. Keys: arrows (Right opens or goes to the first child, Left closes or goes to the parent), Home, End, Enter selects, Space checks, '*' opens the siblings, a letter goes to the next item that starts with it. Movable lets the pointer drag an item onto another: before it (the upper part of its row), after it (the lower part) or into it (the middle), never into itself or one of its own items. The tree does not change Items itself: the move event ({ID, Target, Position: 'before', 'after' or 'inside'}) asks the owner to. Events: select (the item), expand (the open IDs), check (the checked IDs), load (the item), move.
 
 ## Properties
 
@@ -17,10 +17,11 @@ A tree. Items: [{ID, Label, Icon, Badge, Items, Disabled, Lazy}]; Value is the I
 | `Filter` | `''` |
 | `Label` | `''` |
 | `Empty` | `''` |
+| `Movable` | `false` |
 
 ## Events
 
-`check`, `expand`, `load`, `select`
+`check`, `expand`, `load`, `select`, `move`
 
 ## Example
 
@@ -32,6 +33,8 @@ A tree. Items: [{ID, Label, Icon, Badge, Items, Disabled, Lazy}]; Value is the I
 		<p>Checked: {{Checked.join(', ') || 'none'}}</p>
 	</div>
 </div>
+<h3 class="elemenx-label">Movable: drag an item before, after or into another</h3>
+<div style="width: 260px;"><Tree Movable="true" [items]="Layers" [expanded]="['page', 'header']" (move)="Moved" /></div>
 <script>
 ({
 	Current: 'app',
@@ -47,6 +50,14 @@ A tree. Items: [{ID, Label, Icon, Badge, Items, Disabled, Lazy}]; Value is the I
 		{ID: 'readme', Label: 'README.md', Icon: 'file'}
 	],
 
+	Layers: [
+		{ID: 'page', Label: 'Page', Icon: 'file', Items: [
+			{ID: 'header', Label: 'Header', Icon: 'layout', Items: [{ID: 'logo', Label: 'Logo', Icon: 'image'}]},
+			{ID: 'body', Label: 'Body', Icon: 'layout'},
+			{ID: 'footer', Label: 'Footer', Icon: 'layout'}
+		]}
+	],
+
 	Selected: function (item) {
 		this.Current = item.ID;
 	},
@@ -57,6 +68,40 @@ A tree. Items: [{ID, Label, Icon, Badge, Items, Disabled, Lazy}]; Value is the I
 
 	Checks: function (ids) {
 		this.Checked = ids;
+	},
+
+	/* The tree asks; the owner moves the item in Layers: out of where it was, then before, after or into the target. */
+	Moved: function (move) {
+		var taken = null;
+
+		function take (items) {
+			return items.filter(function (item) {
+				if (item.ID === move.ID)
+					taken = item;
+
+				return item.ID !== move.ID;
+			}).map(function (item) {
+				return item.Items ? {ID: item.ID, Label: item.Label, Icon: item.Icon, Items: take(item.Items)} : item;
+			});
+		}
+
+		function put (items) {
+			var result = [];
+
+			items.forEach(function (item) {
+				if (item.ID === move.Target && move.Position === 'before')
+					result.push(taken);
+
+				result.push(item.ID === move.Target && move.Position === 'inside' ? {ID: item.ID, Label: item.Label, Icon: item.Icon, Items: (item.Items || []).concat([taken])} : item.Items ? {ID: item.ID, Label: item.Label, Icon: item.Icon, Items: put(item.Items)} : item);
+
+				if (item.ID === move.Target && move.Position === 'after')
+					result.push(taken);
+			});
+
+			return result;
+		}
+
+		this.Layers = put(take(this.Layers));
 	},
 
 	Load: function (item) {

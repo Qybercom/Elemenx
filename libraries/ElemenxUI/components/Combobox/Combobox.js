@@ -10,6 +10,30 @@
 Elemenx.Component('Combobox', {
 	$TemplateURL: 'Combobox.html',
 	$StyleURL: 'Combobox.css',
+	$Meta: {
+		Group: 'inputs',
+		Icon: 'edit',
+		Description: 'A field that suggests: typing filters Options ([{Value, Label, Hint, Icon, Group, Disabled}]) in a list under it, the labels that start with the text first; arrows and Enter pick, Escape closes and then restores the text.',
+		Events: ['search', 'create', 'change'],
+		Props: {
+			Options: 'The options: [{Value, Label, Hint, Icon, Group, Disabled}].',
+			Value: 'The Value of the option picked (or the text, with AllowCustom).',
+			Placeholder: 'The text shown while it is empty.',
+			Empty: 'The text of the list when nothing matches.',
+			CreateLabel: 'The text of the row that creates a value of its own.',
+			AllowCustom: 'Takes a text that is no option too.',
+			Filter: 'Filters the options by the text; false keeps them as they come (from a server).',
+			Loading: 'Shows a spinner in the list.',
+			Clearable: 'Adds a button that clears the value.',
+			Icon: 'An icon at the start of the field.',
+			Size: {Options: ['small', 'medium', 'large'], Description: 'Its size: small, medium or large.'},
+			Shape: 'Its shape: default, or round.',
+			Name: 'The name of its value in a form.',
+			Disabled: 'Turns it off: it takes no input and looks so.',
+			Invalid: 'Marks its value as wrong.'
+		},
+		Sample: {Placeholder: 'Type to search', AllowCustom: true}
+	},
 	Options: [],
 	Value: null,
 	Placeholder: '',

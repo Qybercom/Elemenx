@@ -6,6 +6,27 @@
  */
 Elemenx.Component('CityInput', {
 	$TemplateURL: 'CityInput.html',
+	$Meta: {
+		Group: 'inputs',
+		Icon: 'map-pin',
+		Description: 'A field that finds a city of the Cities Service (the cities of the world from GeoNames, loaded when it is first used): typing lists the cities by name, with their region, country and local time.',
+		Events: ['change'],
+		Props: {
+			Value: 'The ID of the city picked.',
+			Country: 'Keeps the cities of one country (an ISO 3166 code).',
+			Limit: 'How many cities the list shows.',
+			ShowTime: 'Shows the local time of each city.',
+			Placeholder: 'The text shown while it is empty.',
+			Clearable: 'Adds a button that clears the value.',
+			Size: {Options: ['small', 'medium', 'large'], Description: 'Its size: small, medium or large.'},
+			Shape: 'Its shape: default, or round.',
+			Name: 'The name of its value in a form.',
+			Disabled: 'Turns it off: it takes no input and looks so.',
+			Invalid: 'Marks its value as wrong.',
+			Cities: 'Cities of its own in place of the ones of the Cities Service.'
+		},
+		Sample: {Clearable: true}
+	},
 	Value: null,
 	Country: '',
 	Limit: 20,

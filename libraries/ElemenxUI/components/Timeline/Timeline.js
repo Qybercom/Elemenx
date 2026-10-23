@@ -8,6 +8,16 @@
 Elemenx.Component('Timeline', {
 	$TemplateURL: 'Timeline.html',
 	$StyleURL: 'Timeline.css',
+	$Meta: {
+		Group: 'data',
+		Icon: 'history',
+		Description: 'An activity timeline, like the activity of a merge request.',
+		Props: {
+			Items: 'The events: [{ID, Icon, Variant, Author, Action, Time, Text, Element, Render, Size}].',
+			Compact: 'Tighter spacing.'
+		},
+		Sample: {Items: [{ID: 1, Icon: 'edit', Author: 'Ada', Action: 'opened the request', Time: '9:00'}, {ID: 2, Icon: 'check', Author: 'Alan', Action: 'approved it', Time: '11:30', Variant: 'success'}]}
+	},
 	Items: [],
 	Compact: false
 });

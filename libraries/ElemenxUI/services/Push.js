@@ -15,6 +15,10 @@
  *   ({Type: 'push' or 'click', Data}).
  */
 Elemenx.Service('Push', {
+	$Meta: {
+		Description: 'Web Push: the server of the Application sends messages that reach the user even while the page is closed (a Service Worker shows them as notifications).',
+		Methods: ['Supported()', 'Permission()', 'Subscribe(options, callback)', 'Subscription(callback)', 'Unsubscribe(callback)', 'Notify(title, options, callback)', 'On(name, callback)', 'Off(name, callback)']
+	},
 	$OnCreate: function () {
 		var self = this;
 

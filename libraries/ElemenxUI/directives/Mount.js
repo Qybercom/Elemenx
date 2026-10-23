@@ -3,6 +3,9 @@
  * (called once with the element) or an object with Element or Render(container, item). Used by ToastHost.
  */
 Elemenx.Directive('mount', {
+	$Meta: {
+		Description: '*mount="source" places custom content in the element: source is a DOM node (moved in), a function (called once with the element) or an object with Element or Render(container, item).'
+	},
 	$OnUpdate: function (context) {
 		var element = context.Element;
 		var source = context.Value;

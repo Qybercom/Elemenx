@@ -10,6 +10,21 @@
 Elemenx.Component('Icon', {
 	$TemplateURL: 'Icon.html',
 	$StyleURL: 'Icon.css',
+	$Meta: {
+		Group: 'display',
+		Icon: 'star',
+		Description: 'An icon of a sprite: <Icon Name="add" />, or of another icon set: <Icon Name="weather:rain" /> (see the Icons Service).',
+		Props: {
+			Name: 'The name of the icon: add, or a set and a name: weather:rain.',
+			Size: 'The size in pixels.',
+			Label: 'What a screen reader says of it (without one it is hidden from them).',
+			Sprite: 'Another sprite file, drawn with <use>.',
+			Colored: 'Paints the named parts of a set in the colors of the theme.',
+			Ready: 'True once the library sprite is in the page.',
+			Spin: 'Turns it (a loader).'
+		},
+		Sample: {Name: 'home', Size: 24}
+	},
 	Name: '',
 	Size: 16,
 	Label: '',

@@ -8,6 +8,26 @@
  */
 Elemenx.Component('Select', {
 	$TemplateURL: 'Select.html',
+	$Meta: {
+		Group: 'inputs',
+		Icon: 'chevrons-up-down',
+		Description: 'A select: a button that opens a list of Options and shows the chosen one.',
+		Events: ['change'],
+		Props: {
+			Options: 'The options: [{Value, Label, Hint, Icon, Group, Disabled}].',
+			Value: 'The Value of the option chosen, or null.',
+			Placeholder: 'The text shown while it is empty.',
+			Empty: 'The text when the filter finds nothing.',
+			Icon: 'An icon at the start of the button.',
+			Size: {Options: ['small', 'medium', 'large'], Description: 'Its size: small, medium or large.'},
+			Shape: 'Its shape: default, or round.',
+			Name: 'The name of its value in a form.',
+			Searchable: 'Adds a filter field at the top of the list.',
+			Clearable: 'Adds a button that clears the value.',
+			Disabled: 'Turns it off: it takes no input and looks so.',
+			Invalid: 'Marks its value as wrong.'
+		}
+	},
 	Options: [],
 	Value: null,
 	Placeholder: '',

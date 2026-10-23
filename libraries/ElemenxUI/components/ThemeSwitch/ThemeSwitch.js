@@ -5,6 +5,16 @@
  */
 Elemenx.Component('ThemeSwitch', {
 	$TemplateURL: 'ThemeSwitch.html',
+	$Meta: {
+		Group: 'buttons',
+		Icon: 'moon',
+		Description: 'Switches the policy of the Theme Service: system (follows the operating system), light or dark; the choice is remembered.',
+		Props: {
+			Size: {Options: ['small', 'medium'], Description: 'small or medium.'},
+			Compact: 'One button that moves to the next policy.',
+			Policy: {Options: ['system', 'light', 'dark'], Description: 'The policy shown: system, light or dark (it follows the Theme Service).'}
+		}
+	},
 	Size: 'small',
 	Compact: false,
 	Policy: 'system',

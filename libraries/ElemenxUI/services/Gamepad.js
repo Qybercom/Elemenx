@@ -19,6 +19,10 @@
  * or scope); the keyboard may call it too. Browsers report a pad once a button of it is pressed on the page.
  */
 Elemenx.Service('Gamepad', {
+	$Meta: {
+		Description: 'Gamepads (the Gamepad API, standard mapping): they work the page the way the keyboard does.',
+		Methods: ['Pads()', 'Kind()', 'Label(button, kind)', 'Move(direction, scope)', 'On(name, callback)', 'Off(callback)']
+	},
 	Navigate: true,
 	Threshold: 0.5,
 	Delay: 400,

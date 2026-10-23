@@ -2,8 +2,7 @@
  * Which members of a definition of ElemenxUI are its public props: the ones the comment at the head of its source names,
  * the props every field and control shares (Placeholder, Size, Disabled...), the texts it shows that an Application may
  * replace (the names ending with Label), and the props of the list below, that a comment speaks of by their use. The
- * other members are the state of the component. Used by the reference (tools/pages.js) and the builder
- * (examples/Builder/tools/palette.js).
+ * other members are the state of the component. Used by the reference (tools/pages.js).
  */
 var Common = ['Placeholder', 'Size', 'Shape', 'Name', 'Disabled', 'ReadOnly', 'Invalid', 'Label', 'Title', 'Description', 'Icon', 'Note', 'Hint', 'Empty', 'Clearable', 'Locale', 'Variant', 'Placement', 'Closable', 'Padded', 'Level', 'Caption', 'Unit', 'ShowValue', 'Columns', 'Multiple', 'Horizontal', 'AutoFocus', 'Autofocus'];
 

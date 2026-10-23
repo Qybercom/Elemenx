@@ -6,6 +6,10 @@
  * MenuItem of a declared item that it was chosen (its select).
  */
 Elemenx.Service('Menus', {
+	$Meta: {
+		Description: 'The items of a menu declared in a template with MenuItem (Menu and ContextMenu use it).',
+		Methods: ['Read(container)', 'Watch(container, callback)', 'Pick(item)']
+	},
 	Read: function (container) {
 		var self = this;
 

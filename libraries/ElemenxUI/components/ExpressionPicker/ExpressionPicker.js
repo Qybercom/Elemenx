@@ -6,6 +6,17 @@
 Elemenx.Component('ExpressionPicker', {
 	$TemplateURL: 'ExpressionPicker.html',
 	$StyleURL: 'ExpressionPicker.css',
+	$Meta: {
+		Group: 'inputs',
+		Icon: 'edit',
+		Description: 'Emoji and stickers in one picker, a tab each: an EmojiPicker and, while the Stickers Service has packs and Stickers is on, a StickerPicker.',
+		Events: ['kind', 'pick', 'dismiss'],
+		Props: {
+			Kind: {Options: ['emoji', 'stickers'], Description: 'The tab shown: emoji or stickers.'},
+			Stickers: 'Shows the tab of the stickers (while the Stickers Service has packs).',
+			Columns: 'How many emoji in a row.'
+		}
+	},
 	Kind: 'emoji',
 	Stickers: true,
 	Columns: 9,

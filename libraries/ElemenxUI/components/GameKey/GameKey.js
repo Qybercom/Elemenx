@@ -9,6 +9,18 @@
 Elemenx.Component('GameKey', {
 	$TemplateURL: 'GameKey.html',
 	$StyleURL: 'GameKey.css',
+	$Meta: {
+		Group: 'game',
+		Icon: 'trophy',
+		Description: 'The prompt of a control: "[A] Continue".',
+		Props: {
+			Button: 'The button of the gamepad: a, b, x, y, lb, rb, lt, rt, select, start...',
+			Keyboard: 'The key of the keyboard shown without a gamepad: Enter, E, Escape.',
+			Label: 'The text after the button.',
+			Pad: {Options: ['', 'xbox', 'playstation', 'nintendo', 'generic'], Description: 'Shows the buttons of a kind of pad whatever is plugged in: xbox, playstation, nintendo or generic.'}
+		},
+		Sample: {Label: 'Jump', Pad: 'xbox'}
+	},
 	Button: 'a',
 	Keyboard: '',
 	Label: '',

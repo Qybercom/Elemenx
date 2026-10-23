@@ -24,6 +24,25 @@
 Elemenx.Component('RichEditor', {
 	$TemplateURL: 'RichEditor.html',
 	$StyleURL: 'RichEditor.css',
+	$Meta: {
+		Group: 'inputs',
+		Icon: 'bold',
+		Description: 'An editor of rich text (WYSIWYG).',
+		Events: ['ready', 'input', 'formats', 'link', 'files', 'change'],
+		Methods: ['Find(query, options)', 'FindNext()', 'FindPrevious()', 'ReplaceCurrent(text)', 'ReplaceAll(text)', 'ClearFind()', 'Formats()', 'Command(name, value)', 'Focus()', 'Insert(html)', 'Markdown()', 'SetMarkdown(text)', 'Text()', 'Print(options, callback)'],
+		Props: {
+			Value: 'The HTML of the document.',
+			Placeholder: 'The text shown while it is empty.',
+			ReadOnly: 'Shows the value without letting it change.',
+			Disabled: 'Turns it off: it takes no input and looks so.',
+			Label: 'The name of the editor for screen readers.',
+			Rows: 'The least height, in lines.',
+			MaxRows: 'The greatest height, in lines, then it scrolls (0: it grows with the text).',
+			Menu: 'Shows the small menu of quick styles over a selection.',
+			FindBar: 'Its own find bar on Mod+F; false leaves it out.'
+		},
+		Sample: {Rows: 5}
+	},
 	Value: '',
 	Placeholder: '',
 	ReadOnly: false,

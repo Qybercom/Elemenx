@@ -4,6 +4,10 @@
  * Without Intl support a currency still lists with its code as the name and the symbol.
  */
 Elemenx.Service('Currencies', {
+	$Meta: {
+		Description: 'The active ISO 4217 currencies.',
+		Methods: ['List(locale)', 'Find(code, locale)', 'Format(amount, code, locale)']
+	},
 	Codes: [
 		'AED', 'AFN', 'ALL', 'AMD', 'ANG', 'AOA', 'ARS', 'AUD', 'AWG', 'AZN', 'BAM', 'BBD', 'BDT', 'BGN', 'BHD', 'BIF',
 		'BMD', 'BND', 'BOB', 'BRL', 'BSD', 'BTN', 'BWP', 'BYN', 'BZD', 'CAD', 'CDF', 'CHF', 'CLP', 'CNY', 'COP', 'CRC',

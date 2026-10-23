@@ -1,19 +1,53 @@
 /*
  * An example of a page: its code (a template of Elemenx), and beside it the same template running as a component of
- * its own. The component is made once for a code and lives as long as the example.
+ * its own. The component is made once for a code and lives as long as the example. Its code is shown in listings of
+ * their own, a tab each: the template (HTML), the definition of the <script> after it (JS) and the rules of a <style>
+ * in it (CSS), the ones it has.
  */
 Elemenx.Component('DocsExample', {
 	$TemplateURL: 'DocsExample.html',
 	$StyleURL: 'DocsExample.css',
 	Code: '',
 	Failure: '',
+	Listing: '',
 
 	$OnCreate: function () {
+		var self = this;
 		var own = {Instance: null};
 
 		/* The running component: kept out of the state. */
 		this.Own = function () {
 			return own;
+		};
+
+		/* The listings of a code: [{ID, Label, Language, Text}], the template first. */
+		this.Listings = function (code) {
+			var parts = self.Parts(code);
+
+			return [
+				{ID: 'html', Label: 'HTML', Language: 'html', Text: parts.Template},
+				{ID: 'js', Label: 'JS', Language: 'js', Text: parts.Script},
+				{ID: 'css', Label: 'CSS', Language: 'css', Text: parts.Style}
+			].filter(function (listing) {
+				return listing.Text;
+			});
+		};
+
+		this.Listed = function (code, listing) {
+			var shown = self.Shown(code, listing);
+
+			return self.Listings(code).filter(function (item) {
+				return item.ID === shown;
+			})[0] || {Text: '', Language: 'html'};
+		};
+
+		/* The listing shown: the one picked, or the first. */
+		this.Shown = function (code, listing) {
+			var listings = self.Listings(code);
+
+			return listings.some(function (item) {
+				return item.ID === listing;
+			}) ? listing : listings.length ? listings[0].ID : '';
 		};
 	},
 
@@ -41,16 +75,37 @@ Elemenx.Component('DocsExample', {
 	},
 
 	/*
-	 * The template and the definition of an example: a <script> after the template holds the object of the definition
-	 * (its state and methods), as ({Count: 0, Add: function () {...}}).
+	 * The parts of the code of an example: its template; the object of its definition (its state and methods), in a
+	 * <script> after the template, as ({Count: 0, Add: function () {...}}); and its rules, in a <style> of it.
 	 */
-	Definition: function (code) {
-		var match = /<script>([\s\S]*?)<\/script>\s*$/.exec(code);
-		var definition = match ? new Function('return (' + match[1] + ');')() : {};
+	Parts: function (code) {
+		var script = /<script>([\s\S]*?)<\/script>\s*$/.exec(code);
+		var template = script ? code.substring(0, script.index) : code;
+		var style = /<style>([\s\S]*?)<\/style>\s*/.exec(template);
+		if (style)
+			template = template.substring(0, style.index) + template.substring(style.index + style[0].length);
 
-		definition.$Template = '<div class="docs-example-root">' + (match ? code.substring(0, match.index) : code) + '</div>';
+		return {
+			Template: template.replace(/^\s+|\s+$/g, ''),
+			Script: script ? script[1].replace(/^\s+|\s+$/g, '') : '',
+			Style: style ? style[1].replace(/^\n+|\s+$/g, '').replace(/^\t/gm, '') : ''
+		};
+	},
+
+	Definition: function (code) {
+		var parts = this.Parts(code);
+		var definition = parts.Script ? new Function('return (' + parts.Script + ');')() : {};
+
+		definition.$Template = '<div class="docs-example-root">' + parts.Template + '</div>';
+
+		if (parts.Style)
+			definition.$Style = parts.Style;
 
 		return definition;
+	},
+
+	Switched: function (id) {
+		this.Listing = id;
 	},
 
 	Run: function () {

@@ -1,7 +1,7 @@
 <!-- generated -->
 # *swipe
 
-*swipe makes an element follow a finger (a pen, or a mouse with Mouse) along an axis and tells the end of the move: *swipe, *swipe="'y'" or *swipe="{Axis: 'x' or 'y', Threshold: 40, Mouse: false}". The page still scrolls along the other axis (touch-action). While the finger moves the element dispatches swipemove with {DX, DY} (the move along its axis, the other one 0); when it lifts, swipe with {Direction (left, right, up or down), DX, DY} if it went past Threshold pixels (or flicked), or swipecancel if not (and when the browser takes the gesture). An owner listens with (swipe)="Handler" (event.detail). A move that began on a field, a slider or anything marked data-no-swipe is left to it.
+*swipe makes an element follow a finger (a pen, or a mouse with Mouse) along an axis and tells the end of the move: *swipe, *swipe="'y'" or *swipe="{Axis: 'x' or 'y', Threshold: 40, Mouse: false}". The page still scrolls along the other axis (touch-action). While the finger moves the element dispatches swipemove with {DX, DY} (the move along its axis, the other one 0); when it lifts, swipe with {Direction (left, right, up or down), DX, DY} if it went past Threshold pixels (or flicked), or swipecancel if not (and when the browser takes the gesture). An owner listens with (swipe)="Handler" (event.detail). A move that began on a field, a slider or anything marked data-no-swipe is left to it. With Mouse a mouse drags the element too: the click that ends a move is no press (a link, a picture that opens), and a picture inside is not dragged away by the browser.
 
 ## Example
 

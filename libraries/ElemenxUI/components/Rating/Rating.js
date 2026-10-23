@@ -7,6 +7,24 @@
 Elemenx.Component('Rating', {
 	$TemplateURL: 'Rating.html',
 	$StyleURL: 'Rating.css',
+	$Meta: {
+		Group: 'display',
+		Icon: 'star-filled',
+		Description: 'A rating of Max stars (5).',
+		Events: ['change'],
+		Props: {
+			Value: 'The rating, 0 to Max.',
+			Max: 'How many stars.',
+			Half: 'Takes halves.',
+			Clearable: 'A press on the given rating clears it.',
+			ReadOnly: 'Shows the value without letting it change.',
+			Disabled: 'Turns it off: it takes no input and looks so.',
+			Icon: 'Another shape (heart).',
+			Size: {Options: ['small', 'medium', 'large'], Description: 'Its size: small, medium or large.'},
+			Label: 'The name of the rating for screen readers.'
+		},
+		Sample: {Half: true}
+	},
 	Value: 0,
 	Max: 5,
 	Half: false,

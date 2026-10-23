@@ -1,7 +1,7 @@
 <!-- generated -->
 # ProductCard
 
-The card of a product: its Images (dots switch them, and a swipe across on a touch screen) or Image, a Badge ('Sale', 'New'; BadgeVariant), the favorite heart (Favorable, Favorite), Brand, Title, Rating (halves) and Reviews, Price and OldPrice in Currency, the Colors ([{Value, Color, Label}]) and Sizes to choose (Color, Size), and the cart button (Cart, InCart). PriceStyle 'corner' puts the price on the image, as a tile of the Metro style. Ratio is the shape of the image ('1:1' by default). Variant and Href as in Card. Events: add ({Color, Size}), favorite ({Favorite}), color ({Color}), size ({Size}).
+The card of a product: its Images (dots switch them, and a swipe across, of a finger or of the mouse) or Image, a Badge ('Sale', 'New'; BadgeVariant), the favorite heart (Favorable, Favorite), Brand, Title, Rating (halves) and Reviews, Price and OldPrice in Currency, the Colors ([{Value, Color, Label}]) and Sizes to choose (Color, Size), and the cart button (Cart, InCart). PriceStyle 'corner' puts the price on the image, as a tile of the Metro style. Ratio is the shape of the image ('1:1' by default). Variant and Href as in Card. Events: add ({Color, Size}), favorite ({Favorite}), color ({Color}), size ({Size}).
 
 ## Properties
 

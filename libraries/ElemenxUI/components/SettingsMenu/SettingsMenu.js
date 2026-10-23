@@ -18,6 +18,21 @@
 Elemenx.Component('SettingsMenu', {
 	$TemplateURL: 'SettingsMenu.html',
 	$StyleURL: 'SettingsMenu.css',
+	$Meta: {
+		Group: 'layout',
+		Icon: 'settings',
+		Description: 'A menu of settings as on a phone: rows in groups, each with an Icon on a tile of its Color, a Label, a Description under it, a Value and a chevron to the submenu of its Items.',
+		Events: ['toggle', 'select', 'navigate'],
+		Props: {
+			Items: 'The rows: [{ID, Label, Description, Icon, Color, Value, Badge, Items, Choice, Toggle, Checked, Disabled, Danger}], and {Group, Note} for a group.',
+			Title: 'The large title of the top menu.',
+			Variant: {Options: ['auto', 'ios', 'material'], Description: 'auto, ios (rows on rounded cards) or material (rows across).'},
+			Searchable: 'Shows a field that finds rows on every level.',
+			SearchLabel: 'The placeholder of the search.',
+			Path: 'The IDs of the open submenus.'
+		},
+		Sample: {Title: 'Settings', Variant: 'ios', Searchable: true}
+	},
 	Items: [],
 	Title: '',
 	Variant: 'auto',

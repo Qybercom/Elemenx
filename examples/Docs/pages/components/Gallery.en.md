@@ -6,7 +6,7 @@ A gallery: one picture at a time out of Items [{ID, Image, Thumb, Alt, Title, De
 - What shows: ShowTitle, ShowDescription, ShowTags (the caption: Caption 'overlay' over the picture, the default, or 'below' it), ShowArrows, ShowDots, ShowCounter, ShowThumbs. A caption with nothing to show is left out.
 - Autoplay goes to the next picture (Direction 'next') or the previous one ('previous') every Interval milliseconds; it waits while the pointer or the focus is on the gallery and while the page is hidden, and a button pauses and plays it. Loop (true) goes round at the ends.
 - Effect: slide (the default) or fade. Fit: cover (the default) or contain. Ratio: the shape of the picture ('16 / 9').
-- The arrows (Home, End) change the picture when the gallery has the focus; on a touch screen the picture follows the finger across (*swipe) and a swipe goes to the next or the previous one (held back at the ends without Loop).
+- The arrows (Home, End) change the picture when the gallery has the focus; the picture follows a finger across, or the mouse that drags it (*swipe), and a swipe goes to the next or the previous one (held back at the ends without Loop).
 
 ## Properties
 

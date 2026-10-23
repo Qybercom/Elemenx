@@ -6,6 +6,25 @@
 Elemenx.Component('FileUpload', {
 	$TemplateURL: 'FileUpload.html',
 	$StyleURL: 'FileUpload.css',
+	$Meta: {
+		Group: 'inputs',
+		Icon: 'upload',
+		Description: 'Picks files by dialog or drag and drop; it does not upload them.',
+		Events: ['reject', 'change'],
+		Props: {
+			Variant: {Options: ['dropzone', 'inline', 'gallery', 'avatar'], Description: 'dropzone, inline, gallery or avatar.'},
+			Accept: 'The types of files taken: image/*, .pdf...',
+			Multiple: 'Takes several files.',
+			MaxSize: 'The largest file, in bytes.',
+			MaxFiles: 'How many files at most.',
+			Label: 'The text of the zone.',
+			Hint: 'A smaller text under it.',
+			Disabled: 'Turns it off: it takes no input and looks so.',
+			Invalid: 'Marks its value as wrong.',
+			Files: 'The files picked: [{ID, Name, Size, Type, URL, File}].'
+		},
+		Sample: {Accept: 'image/*,.pdf', MaxSize: 5000000}
+	},
 	Variant: 'dropzone',
 	Accept: '',
 	Multiple: true,

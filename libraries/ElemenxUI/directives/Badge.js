@@ -5,6 +5,9 @@
  * is positioned, unless it is already). A Button takes its badge by its own Badge.
  */
 Elemenx.Directive('badge', {
+	$Meta: {
+		Description: '*badge="value" puts a badge over the corner of any element: an item of a toolbar, of a list, a picture.'
+	},
 	$OnCreate: function (context) {
 		context.Data.Badge = document.createElement('span');
 		context.Data.Badge.hidden = true;

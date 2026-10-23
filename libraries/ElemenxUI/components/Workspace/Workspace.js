@@ -18,6 +18,21 @@
 Elemenx.Component('Workspace', {
 	$TemplateURL: 'Workspace.html',
 	$StyleURL: 'Workspace.css',
+	$Meta: {
+		Group: 'overlays',
+		Icon: 'monitor',
+		Description: 'An IDE-like application frame built on elemenx-screen, elemenx-container and elemenx-column.',
+		Container: true,
+		Slots: ['header', 'ribbon', 'top-stripe', 'left-stripe', 'left', 'main', 'bottom', 'right', 'right-stripe', 'bottom-stripe', 'status', 'tools'],
+		Events: ['layout', 'resize'],
+		Methods: ['ResetLayout()'],
+		Props: {
+			Variant: {Options: ['', 'ribbon'], Description: 'empty, or ribbon: a slim title bar that joins a Ribbon.'},
+			Layout: 'The arrangement of the tool windows: {Areas, Order, Open, Sizes}.',
+			Persist: 'A key that keeps the arrangement between visits.',
+			Customize: 'Lets the user drag the buttons of the tool windows between the stripes.'
+		}
+	},
 	Variant: '',
 	Layout: null,
 	Persist: '',

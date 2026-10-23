@@ -1,6 +1,6 @@
 <div class="elemenx-tabs" [class]="[Variant || 'line', Size || 'medium']">
 	<div class="elemenx-tabs-list" role="tablist" [attribute.aria-label]="Label || null" (keydown)="Key">
-		<div class="elemenx-tab" role="tab" *for="tab of Tabs" *key="tab.ID" [class.active]="tab.ID === Value" [class.disabled]="!!tab.Disabled" [attribute.aria-selected]="String(tab.ID === Value)" [attribute.aria-disabled]="tab.Disabled ? 'true' : null" [attribute.tabindex]="tab.ID === Value || (Value == null && $index === 0) ? 0 : -1" [attribute.data-index]="$index" [attribute.title]="tab.Title || null" (click)="Pick" (auxclick)="Middle">
+		<div class="elemenx-tab" role="tab" *for="tab of Items(Tabs, Declared)" *key="tab.ID" [class.active]="tab.ID === Current(Value, Items(Tabs, Declared))" [class.disabled]="!!tab.Disabled" [attribute.aria-selected]="String(tab.ID === Current(Value, Items(Tabs, Declared)))" [attribute.aria-disabled]="tab.Disabled ? 'true' : null" [attribute.tabindex]="tab.ID === Current(Value, Items(Tabs, Declared)) ? 0 : -1" [attribute.data-index]="$index" [attribute.title]="tab.Title || null" (click)="Pick" (auxclick)="Middle">
 			<Icon *if="tab.Icon" [name]="tab.Icon" />
 			<span class="elemenx-tab-label">{{tab.Label}}</span>
 			<span class="elemenx-badge" *if="tab.Badge != null && tab.Badge !== ''">{{tab.Badge}}</span>
@@ -8,4 +8,5 @@
 		</div>
 	</div>
 	<div class="elemenx-tabs-extra"><slot></slot></div>
+	<i class="elemenx-tabs-sync" hidden *mount="Show(Value, Declared, Tabs)"></i>
 </div>

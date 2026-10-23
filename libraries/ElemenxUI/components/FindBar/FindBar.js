@@ -10,6 +10,26 @@
 Elemenx.Component('FindBar', {
 	$TemplateURL: 'FindBar.html',
 	$StyleURL: 'FindBar.css',
+	$Meta: {
+		Group: 'navigation',
+		Icon: 'search',
+		Description: 'The bar of find and replace of an editor (CodeEditor, RichEditor) or a terminal: a field for the text, the options Case, Word and RegExp, the place of the match (\'3 of 12\', from Index and Count) with the previous and the next one, and with Replacing a field for the replacement with Replace and Replace all (CanReplace: false leaves them out).',
+		Events: ['find', 'close', 'next', 'previous', 'replace', 'replaceall'],
+		Methods: ['Focus()'],
+		Props: {
+			Query: 'The text to find.',
+			Case: 'Matches the case of the letters.',
+			Word: 'Matches whole words.',
+			RegExp: 'The text is a regular expression.',
+			Replacing: 'Shows the row of the replacement.',
+			CanReplace: 'Offers Replace and Replace all.',
+			Count: 'How many matches there are.',
+			Index: 'The place of the current match (from 0; -1 for none).',
+			Label: 'The name of the bar for screen readers.',
+			Autofocus: 'Puts the focus in its field once it is ready.'
+		},
+		Sample: {Replacing: true}
+	},
 	Query: '',
 	Replacement: '',
 	Case: false,

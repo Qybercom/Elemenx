@@ -10,6 +10,9 @@
  * character before a literal under the caret; 'skip' only moves the caret over the literal.
  */
 Elemenx.Directive('mask', {
+	$Meta: {
+		Description: '*mask="{Mask: Mask, Value: Value}" keeps an <input> strictly inside a mask.'
+	},
 	$OnCreate: function (context) {
 		var element = context.Element;
 		var data = context.Data;

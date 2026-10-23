@@ -11,6 +11,19 @@
 Elemenx.Component('Chat', {
 	$TemplateURL: 'Chat.html',
 	$StyleURL: 'Chat.css',
+	$Meta: {
+		Group: 'social',
+		Icon: 'comment',
+		Description: 'A chat layout built on elemenx-screen, elemenx-container and elemenx-column.',
+		Container: true,
+		Slots: ['sidebar', 'header', 'selection', 'composer'],
+		Events: ['clear', 'resize'],
+		Props: {
+			SidebarOpen: 'Shows the sidebar of the conversations.',
+			SidebarWidth: 'The width of the sidebar, in pixels (it can be dragged).',
+			Selection: 'The IDs of the messages chosen; a bar of actions shows while it has some.'
+		}
+	},
 	SidebarOpen: true,
 	SidebarWidth: 280,
 	AtEnd: true,

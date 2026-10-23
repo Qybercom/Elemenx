@@ -81,6 +81,7 @@ describe('Regression: public API surface', function () {
 			'Elemenx.Messaging.Context:function',
 			'Elemenx.Messaging.Origins:function',
 			'Elemenx.Messaging.Window:function',
+			'Elemenx.Meta:function',
 			'Elemenx.Network:object',
 			'Elemenx.Network.Context:function',
 			'Elemenx.Network.LongPolling:function',

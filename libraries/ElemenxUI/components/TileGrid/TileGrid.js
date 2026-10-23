@@ -34,6 +34,28 @@
 Elemenx.Component('TileGrid', {
 	$TemplateURL: 'TileGrid.html',
 	$StyleURL: 'TileGrid.css',
+	$Meta: {
+		Group: 'layout',
+		Icon: 'grid',
+		Description: 'Groups of tiles on a grid of 48px cells, like a start screen.',
+		Container: true,
+		Events: ['open', 'groupaction', 'change', 'groupcreate'],
+		Methods: ['Arrangement()', 'Restore(arrangement)'],
+		Props: {
+			Groups: 'The groups: [{ID, Title, Tiles, Locked, Actions, Element, Render}] (TileGroup children add more).',
+			Editable: 'Lets the user move the tiles and stretch the groups.',
+			Columns: 'The width of a group, in cells.',
+			MaxColumns: 'The widest a group may be stretched (0: no limit).',
+			Fit: 'No more columns than the grid has room for.',
+			Direction: {Options: ['wrap', 'horizontal'], Description: 'wrap, or horizontal (the groups in one row).'},
+			Scroll: 'The grid scrolls on its own (give it a height).',
+			Persist: 'A key that keeps the arrangement in the storage of the browser.',
+			GrowDelay: 'How long a tile at the edge of a group waits before it widens the group, in milliseconds.',
+			GroupPolicy: {Options: ['end', 'between', 'none'], Description: 'Where a dragged tile may start a group: end, between or none.'},
+			NewGroupTitle: 'The title of a group a drag starts.'
+		},
+		Sample: {Groups: [{ID: 'start', Title: 'Start', Tiles: [{ID: 'mail', Title: 'Mail', Icon: 'mail', Size: 'medium', Color: '#3f6c9e'}, {ID: 'photos', Title: 'Photos', Icon: 'image', Size: 'wide', Color: '#b4483f'}]}], Editable: true, Fit: true, GroupPolicy: 'between'}
+	},
 	Groups: [],
 	Editable: false,
 	Columns: 4,

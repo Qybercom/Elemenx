@@ -12,6 +12,10 @@
  * - On('connect' or 'disconnect', callback): a port of the page joins or leaves ({Port}).
  */
 Elemenx.Service('Serial', {
+	$Meta: {
+		Description: 'Serial ports (COM ports, UART: Arduino, GPS, scales, printers...) through Web Serial: Chrome and Edge on the desktop, HTTPS or localhost.',
+		Methods: ['Supported()', 'Request(options, callback)', 'Ports(callback)', 'On(name, callback)', 'Off(name, callback)']
+	},
 	$OnCreate: function () {
 		var self = this;
 

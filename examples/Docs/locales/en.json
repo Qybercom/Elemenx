@@ -6,6 +6,7 @@
 		"untranslated": "This page has no translation yet: it is shown in English.",
 		"missing": "There is no such page.",
 		"result": "Result",
-		"code": "Code"
+		"code": "Code",
+		"source": "Source"
 	}
 }

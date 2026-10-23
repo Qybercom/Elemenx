@@ -4,6 +4,10 @@
  * message). Read(callback) reads the text (the browser may ask the user). callback(error, text).
  */
 Elemenx.Service('Clipboard', {
+	$Meta: {
+		Description: 'The clipboard.',
+		Methods: ['Copy(text, callback, options)', 'Read(callback)']
+	},
 	Message: 'Copied',
 
 	Copy: function (text, callback, options) {

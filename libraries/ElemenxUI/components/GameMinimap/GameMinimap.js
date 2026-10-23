@@ -9,6 +9,26 @@
 Elemenx.Component('GameMinimap', {
 	$TemplateURL: 'GameMinimap.html',
 	$StyleURL: 'GameMinimap.css',
+	$Meta: {
+		Group: 'game',
+		Icon: 'trophy',
+		Description: 'The frame of a minimap: the map in its default slot (an image, a canvas), round or square (Shape), Size pixels wide.',
+		Container: true,
+		Events: ['marker', 'zoom'],
+		Props: {
+			Shape: {Options: ['round', 'square'], Description: 'round or square.'},
+			Size: 'The width in pixels.',
+			Markers: 'The marks over the map: [{ID, X, Y, Kind, Icon, Label, Color}], X and Y from 0 to 1.',
+			Heading: 'The direction of the player, in degrees.',
+			Player: 'Shows the arrow of the player.',
+			North: 'Shows the letter N on the frame.',
+			Title: 'The name of the place on the band under the map.',
+			Note: 'A note on the band (coordinates, the time).',
+			Zoomable: 'Adds the + and - buttons.',
+			Label: 'The name of the map for screen readers.'
+		},
+		Sample: {Heading: 35, Title: 'Northern woods', Zoomable: true}
+	},
 	Shape: 'round',
 	Size: 160,
 	Markers: [],

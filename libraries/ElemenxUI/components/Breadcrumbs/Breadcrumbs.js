@@ -9,6 +9,23 @@
 Elemenx.Component('Breadcrumbs', {
 	$TemplateURL: 'Breadcrumbs.html',
 	$StyleURL: 'Breadcrumbs.css',
+	$Meta: {
+		Group: 'navigation',
+		Icon: 'chevron-right',
+		Description: 'The path to the present page: Items [{ID, Label, Icon, File, Href, Disabled, Class}], the last one the present page (aria-current="page", not pressed unless CurrentClickable).',
+		Container: true,
+		Slots: ['start', 'end'],
+		Events: ['select'],
+		Props: {
+			Items: 'The path: [{ID, Label, Icon, File, Href, Disabled, Class}], the last item the present page.',
+			Separator: 'Between the items: chevron, slash, arrow, dot, or a text of its own.',
+			Max: 'How many items show (0: all); the ones in the middle go into a "…" menu.',
+			Size: {Options: ['small', 'medium', 'large'], Description: 'Its size: small, medium or large.'},
+			Label: 'The name of the path for screen readers.',
+			CurrentClickable: 'Lets the last item (the present page) be pressed too.'
+		},
+		Sample: {Items: [{ID: 'home', Label: 'Home', Icon: 'home'}, {ID: 'docs', Label: 'Docs'}, {ID: 'page', Label: 'Page'}]}
+	},
 	Items: [],
 	Separator: 'chevron',
 	Max: 0,

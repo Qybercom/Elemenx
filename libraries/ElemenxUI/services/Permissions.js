@@ -7,6 +7,10 @@
  * persistent-storage. callback(error, state).
  */
 Elemenx.Service('Permissions', {
+	$Meta: {
+		Description: 'The permissions of the browser.',
+		Methods: ['Query(name, callback)', 'Request(name, callback)', 'Watch(name, callback)', 'Unwatch(id)']
+	},
 	$OnCreate: function () {
 		this.Watches = {};
 		this.Sequence = 0;

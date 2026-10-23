@@ -12,6 +12,10 @@
  * The browser lets a window open only after a press or a key of the user.
  */
 Elemenx.Service('PictureInPicture', {
+	$Meta: {
+		Description: 'Picture-in-Picture: a video, or any part of the page, in a small window of its own that stays over the other windows of the system.',
+		Methods: ['Supported(kind)', 'Active()', 'OnChange(callback)', 'OffChange(callback)', 'Video(video, callback)', 'Document(element, options, callback)', 'Close(callback)']
+	},
 	$OnCreate: function () {
 		this.Current = null;
 		this.Listeners = [];

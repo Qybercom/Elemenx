@@ -10,6 +10,32 @@
 Elemenx.Component('Meter', {
 	$TemplateURL: 'Meter.html',
 	$StyleURL: 'Meter.css',
+	$Meta: {
+		Group: 'display',
+		Icon: 'sliders',
+		Description: 'A measurement within a known range, like <meter>: Value between Min and Max.',
+		Container: true,
+		Props: {
+			Value: 'The measure.',
+			Min: 'The bottom of the range.',
+			Max: 'The top of the range.',
+			Low: 'The end of the low zone.',
+			High: 'The start of the high zone.',
+			Optimum: 'A value in the good zone: the zones around it show warning and danger.',
+			Label: 'The name of the meter.',
+			Unit: 'The unit after the value.',
+			Size: {Options: ['small', 'medium', 'large'], Description: 'small, medium or large.'},
+			ShowValue: 'Shows the value.',
+			Orientation: {Options: ['horizontal', 'vertical'], Description: 'horizontal or vertical (a bar upwards).'},
+			Shape: {Options: ['bar', 'dial'], Description: 'bar or dial.'},
+			Needle: 'Draws a needle on a dial.',
+			Ticks: 'How many ticks along a dial.',
+			Marks: 'Shows the marks of Low and High.',
+			ShowRange: 'Shows Min and Max at the ends.',
+			ValuePlacement: {Options: ['auto', 'below', 'corner'], Description: 'Where the value shows: auto, below (a plate) or corner.'}
+		},
+		Sample: {Low: 50, High: 80, Optimum: 20, Label: 'CPU', Unit: '%', ShowRange: true}
+	},
 	Value: 0,
 	Min: 0,
 	Max: 100,

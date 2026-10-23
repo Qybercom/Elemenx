@@ -7,6 +7,18 @@
 Elemenx.Component('GameHud', {
 	$TemplateURL: 'GameHud.html',
 	$StyleURL: 'GameHud.css',
+	$Meta: {
+		Group: 'game',
+		Icon: 'trophy',
+		Description: 'The frame of a game screen: the scene (the default slot: a canvas, a picture) and the HUD over it, in nine areas named by slots: top-start, top, top-end, start, center, end, bottom-start, bottom, bottom-end.',
+		Container: true,
+		Slots: ['top-start', 'top', 'top-end', 'start', 'center', 'end', 'bottom-start', 'bottom', 'bottom-end'],
+		Props: {
+			Padding: 'The distance of the areas from the edges, in pixels.',
+			Label: 'The name of the screen for screen readers.'
+		},
+		Sample: {Label: 'An example game'}
+	},
 	Padding: 16,
 	Label: ''
 });

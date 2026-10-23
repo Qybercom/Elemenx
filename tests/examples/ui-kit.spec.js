@@ -1710,9 +1710,9 @@ for (const origin of origins) {
 
 			await viewers.scrollIntoViewIfNeeded();
 
-			await expect(viewers.locator('.elemenx-markdown h2')).toHaveText('Elemenx 0.9');
-			await expect(viewers.locator('.elemenx-markdown table tr')).toHaveCount(3);
-			await expect(viewers.locator('.elemenx-markdown pre[data-language="js"] .elemenx-syntax-string').first()).toBeVisible();
+			await expect(viewers.locator('.elemenx-markdown[aria-label="Release notes"] h2')).toHaveText('Elemenx 0.9');
+			await expect(viewers.locator('.elemenx-markdown[aria-label="Release notes"] table tr')).toHaveCount(3);
+			await expect(viewers.locator('.elemenx-markdown[aria-label="Release notes"] pre[data-language="js"] .elemenx-syntax-string').first()).toBeVisible();
 			await expect(viewers.locator('.elemenx-code-view[aria-label="An example"] .elemenx-code-view-line')).toHaveCount(6);
 			await expect(viewers.locator('.elemenx-code-view[aria-label="An example"] .elemenx-code-view-line.marked')).toHaveCount(2);
 			await expect(viewers.locator('.elemenx-code-view[aria-label="An example"] .elemenx-code-view-line').first()).toHaveAttribute('data-line', '10');
@@ -1720,6 +1720,63 @@ for (const origin of origins) {
 			await expect(viewers.locator('.elemenx-formula math mfrac').first()).toBeVisible();
 			await expect(viewers.locator('.elemenx-formula merror')).toHaveCount(0);
 			await expect(viewers.locator('.elemenx-formula.display').first()).toHaveAttribute('aria-label', /frac/);
+
+			expect(errors).toEqual([]);
+		});
+
+		test('a Markdown document takes the classes of the interface with Look interface, and the look of a RichEditor by default', async function ({ page }) {
+			var errors = captureErrors(page);
+			var viewers;
+			var plain;
+			var styled;
+
+			await open(page, origin);
+
+			viewers = section(page, 'Viewers and formulas');
+			plain = viewers.locator('.elemenx-markdown[aria-label="Release notes"]');
+			styled = viewers.locator('.elemenx-markdown[aria-label="Release notes in the interface"]');
+
+			await styled.scrollIntoViewIfNeeded();
+
+			await expect(plain).toHaveClass(/elemenx-document/);
+			await expect(plain.locator('table')).not.toHaveClass(/elemenx-table/);
+
+			await expect(styled).toHaveClass(/interface/);
+			await expect(styled).not.toHaveClass(/elemenx-document/);
+			await expect(styled.locator('table')).toHaveClass('elemenx-table');
+			await expect(styled.locator('ul').first()).toHaveClass('elemenx-ul');
+			await expect(styled.locator('pre').first()).toHaveClass('elemenx-code');
+			await expect(styled.locator('pre[data-language="js"] .elemenx-syntax-string').first()).toBeVisible();
+
+			expect(errors).toEqual([]);
+		});
+
+		test('a code view folds the elements of HTML by their tags, but not the void ones nor the ones that close themselves', async function ({ page }) {
+			var errors = captureErrors(page);
+			var view;
+
+			await open(page, origin);
+
+			view = section(page, 'Viewers and formulas').locator('.elemenx-code-view[aria-label="A page"]');
+
+			await view.scrollIntoViewIfNeeded();
+
+			/* Two blocks: the section and the list; <img>, <br> and <Button /> open none. */
+			await expect(view.locator('.elemenx-code-view-fold')).toHaveCount(2);
+			await expect(view.locator('[data-line="1"]')).toHaveAttribute('data-end', '10');
+			await expect(view.locator('[data-line="3"]')).toHaveAttribute('data-end', '6');
+
+			await view.locator('[data-line="3"] .elemenx-code-view-fold').click();
+
+			await expect(view.locator('[data-line="3"]')).toHaveText(/<ul>\s*…\s*<\/ul>$/);
+			await expect(view.locator('[data-line="4"]')).toBeHidden();
+			await expect(view.locator('[data-line="6"]')).toBeHidden();
+			await expect(view.locator('[data-line="7"]')).toBeVisible();
+
+			await view.locator('[data-line="1"] .elemenx-code-view-fold').click();
+
+			await expect(view.locator('[data-line="1"]')).toHaveText(/<section class="card">\s*…\s*<\/section>$/);
+			await expect(view.locator('.elemenx-code-view-line:visible')).toHaveCount(1);
 
 			expect(errors).toEqual([]);
 		});
@@ -1856,6 +1913,68 @@ for (const origin of origins) {
 			await page.evaluate(function () {
 				localStorage.removeItem('elemenx-tile-grid:ui-kit-start');
 			});
+
+			expect(errors).toEqual([]);
+		});
+
+		test('a mouse drags a gallery and the pictures of a product card across, and the click that ends the drag presses nothing', async function ({ page }) {
+			var errors = captureErrors(page);
+			var gallery;
+			var product;
+			var box;
+			var clicks;
+
+			/* A drag of the mouse along x from the middle of a box, in steps, as a hand does. */
+			async function drag (locator, dx) {
+				box = await locator.boundingBox();
+
+				await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+				await page.mouse.down();
+				await page.mouse.move(box.x + box.width / 2 + dx, box.y + box.height / 2, {steps: 8});
+				await page.mouse.up();
+			}
+
+			await open(page, origin);
+
+			gallery = section(page, 'Gallery').locator('.elemenx-gallery').first();
+
+			await gallery.scrollIntoViewIfNeeded();
+
+			/* The clicks that reach the page: none from the end of a drag. */
+			await page.evaluate(function () {
+				window.uiKitClicks = 0;
+
+				document.addEventListener('click', function () {
+					window.uiKitClicks++;
+				});
+			});
+
+			await drag(gallery.locator('.elemenx-gallery-viewport'), -140);
+
+			await expect(gallery.locator('.elemenx-gallery-counter')).toHaveText('2 / 4');
+
+			await drag(gallery.locator('.elemenx-gallery-viewport'), 140);
+
+			await expect(gallery.locator('.elemenx-gallery-counter')).toHaveText('1 / 4');
+
+			clicks = await page.evaluate(function () {
+				return window.uiKitClicks;
+			});
+
+			expect(clicks).toBe(0);
+
+			/* The pictures of a product card go by a drag of the mouse too; a picture is not dragged away by the browser. */
+			product = section(page, 'Cards').locator('.elemenx-product').filter({hasText: 'Studio headphones'});
+
+			await product.scrollIntoViewIfNeeded();
+
+			await drag(product.locator('.elemenx-product-media'), -100);
+
+			await expect(product.locator('.elemenx-product-dot').nth(1)).toHaveClass(/active/);
+
+			expect(await page.evaluate(function () {
+				return window.uiKitClicks;
+			})).toBe(0);
 
 			expect(errors).toEqual([]);
 		});
@@ -3123,6 +3242,59 @@ for (const origin of origins) {
 			await expect(menu.getByRole('menuitem', {name: 'Save'})).toBeHidden();
 		});
 
+		test('tabs declared with their content show the panel of the current one, and make the component of a tab when it first opens', async function ({ page }) {
+			var errors = captureErrors(page);
+			var tabs;
+			var profile;
+			var sales;
+
+			await open(page, origin);
+
+			tabs = page.getByRole('tablist', {name: 'Declared tabs'}).locator('xpath=..');
+			profile = tabs.locator('.elemenx-tab-panel[data-id="profile"]');
+			sales = tabs.locator('.elemenx-tab-panel[data-id="sales"]');
+
+			await tabs.scrollIntoViewIfNeeded();
+
+			/* The strip lists the declared tabs; the first one that is not disabled is current, its panel under the strip. */
+			await expect(tabs.getByRole('tab')).toHaveText(['Profile', 'Sales', 'Archive']);
+			await expect(tabs.getByRole('tab', {name: 'Profile'})).toHaveAttribute('aria-selected', 'true');
+			await expect(tabs.getByRole('tab', {name: 'Archive'})).toHaveAttribute('aria-disabled', 'true');
+			await expect(profile).toBeVisible();
+			await expect(sales).toBeHidden();
+
+			expect(await tabs.evaluate(function (node) {
+				var strip = node.querySelector('.elemenx-tabs-list').getBoundingClientRect();
+				var panel = node.querySelector('.elemenx-tab-panel.active').getBoundingClientRect();
+				var add = node.querySelector('.elemenx-tabs-extra .elemenx-button').getBoundingClientRect();
+
+				return [panel.top >= strip.bottom, Math.abs(add.top + add.height / 2 - (strip.top + strip.height / 2)) < 4];
+			})).toEqual([true, true]);
+
+			/* The component of a tab is made only when the tab first opens. */
+			await expect(sales.locator('.elemenx-chart')).toHaveCount(0);
+
+			await tabs.getByRole('tab', {name: 'Sales'}).click();
+
+			await expect(sales).toBeVisible();
+			await expect(profile).toBeHidden();
+			await expect(sales.locator('.elemenx-chart')).toHaveCount(1);
+			await expect(sales.locator('.elemenx-chart')).toBeVisible();
+
+			/* Back and forth: the made component stays. */
+			await tabs.getByRole('tab', {name: 'Profile'}).click();
+			await tabs.getByRole('tab', {name: 'Sales'}).click();
+
+			await expect(sales.locator('.elemenx-chart')).toHaveCount(1);
+
+			/* A disabled tab is not reached by a press. */
+			await tabs.getByRole('tab', {name: 'Archive'}).click({force: true});
+
+			await expect(tabs.getByRole('tab', {name: 'Sales'})).toHaveAttribute('aria-selected', 'true');
+
+			expect(errors).toEqual([]);
+		});
+
 		test('editor tabs switch and close', async function ({ page }) {
 			var editor;
 
@@ -3210,7 +3382,7 @@ for (const origin of origins) {
 			await page.locator('.elemenx-tabs.line').getByRole('tab', {name: 'Members'}).click();
 
 			await expect(page.locator('.elemenx-tabs.line .elemenx-tab.active')).toContainText('Members');
-			await expect(page.locator('.elemenx-tabs.pill .elemenx-tab.active')).toContainText('Billing');
+			await expect(page.locator('.elemenx-tabs.pill').filter({hasNot: page.getByRole('tablist', {name: 'Declared tabs'})}).locator('.elemenx-tab.active')).toContainText('Billing');
 
 			await page.locator('.ui-kit-editor').getByRole('tab', {name: 'index.html'}).click();
 
@@ -3807,7 +3979,8 @@ for (const origin of origins) {
 
 			/*
 			 * HeaderShape trapezoid: a folder. The title and the note on a tab as wide as their text, in the color of the
-			 * band as the body below; the top of the body begins where the slope of the tab ends, the actions beyond it.
+			 * band as the body below; the top of the body begins where the slope of the tab ends, the actions beyond it. The
+			 * top edge is the border of the body itself: no line of the header of its own, that left a notch at its end.
 			 */
 			expect(await blocks.nth(1).evaluate(function (node) {
 				var frame = node.getBoundingClientRect();
@@ -3819,8 +3992,8 @@ for (const origin of origins) {
 				var body = getComputedStyle(node, '::before');
 				var actions = node.querySelector('.elemenx-block-actions').getBoundingClientRect();
 
-				return [node.classList.contains('trapezoid'), Math.round(box.top - frame.top), Math.round(box.left - frame.left), box.width < bar.width / 2, getComputedStyle(tab).backgroundColor === body.backgroundColor, Math.round(parseFloat(line.left) - box.width), Math.round(parseFloat(body.top) - bar.height), actions.left > box.right + 24, getComputedStyle(header).backgroundColor];
-			})).toEqual([true, 0, 0, true, true, 24, 0, true, 'rgba(0, 0, 0, 0)']);
+				return [node.classList.contains('trapezoid'), Math.round(box.top - frame.top), Math.round(box.left - frame.left), box.width < bar.width / 2, getComputedStyle(tab).backgroundColor === body.backgroundColor, line.content, body.borderTopStyle, Math.round(parseFloat(body.top) - bar.height), actions.left > box.right + 24, getComputedStyle(header).backgroundColor];
+			})).toEqual([true, 0, 0, true, true, 'none', 'solid', 0, true, 'rgba(0, 0, 0, 0)']);
 
 			/* The default shape keeps the tab out of the layout: the band runs across the frame. */
 			expect(await blocks.first().evaluate(function (node) {
@@ -5179,10 +5352,10 @@ for (const origin of origins) {
 				var pin = node.querySelector('.elemenx-window-extra .elemenx-button').getBoundingClientRect();
 				var controls = node.querySelector('.elemenx-window-controls').getBoundingClientRect();
 
-				return [tab.contains(node.querySelector('.elemenx-icon')), tab.contains(node.querySelector('.elemenx-window-title')), box.width < bar.getBoundingClientRect().width / 2, getComputedStyle(bar).backgroundColor, Math.round(parseFloat(getComputedStyle(bar, '::after').left) - box.width), Math.round(parseFloat(getComputedStyle(node, '::before').top) - bar.getBoundingClientRect().height), getComputedStyle(tab).backgroundColor === getComputedStyle(node, '::before').backgroundColor, pin.left >= box.right + 24, controls.left > pin.right, Math.round(controls.right) === Math.round(node.getBoundingClientRect().right)];
+				return [tab.contains(node.querySelector('.elemenx-icon')), tab.contains(node.querySelector('.elemenx-window-title')), box.width < bar.getBoundingClientRect().width / 2, getComputedStyle(bar).backgroundColor, Math.round(parseFloat(getComputedStyle(node).getPropertyValue('--elemenx-tab-width')) - box.width), Math.round(parseFloat(getComputedStyle(node, '::before').top) - bar.getBoundingClientRect().height), getComputedStyle(tab).backgroundColor === getComputedStyle(node, '::before').backgroundColor, pin.left >= box.right + 24, controls.left > pin.right, Math.round(controls.right) === Math.round(node.getBoundingClientRect().right)];
 			});
 
-			expect(shape).toEqual([true, true, true, 'rgba(0, 0, 0, 0)', 24, 0, true, true, true, true]);
+			expect(shape).toEqual([true, true, true, 'rgba(0, 0, 0, 0)', 0, 0, true, true, true, true]);
 
 			/* The open part of the header, between the slot and the buttons, still moves the window. */
 			point = await notes.evaluate(function (node) {
@@ -5206,6 +5379,21 @@ for (const origin of origins) {
 			}).toEqual([40, 30]);
 
 			await expect(header).toBeVisible();
+
+			/*
+			 * Moved, the window is active (it came to the front): its style is written again, and it keeps the width of its
+			 * tab. The top edge of the body is the frame of the body itself, rounded at its corner, and the tab comes down
+			 * over it: no line of the header under the tab, no step where the edge meets the side.
+			 */
+			await expect(notes).toHaveClass(/active/);
+
+			expect(await notes.evaluate(function (node) {
+				var tab = node.querySelector('.elemenx-window-tab');
+				var bar = node.querySelector('.elemenx-window-header');
+				var body = getComputedStyle(node, '::before');
+
+				return [Math.round(parseFloat(getComputedStyle(node).getPropertyValue('--elemenx-tab-width')) - tab.offsetWidth), getComputedStyle(bar, '::after').content, body.borderTopWidth, body.borderTopRightRadius !== '0px', Math.round(tab.getBoundingClientRect().bottom - bar.getBoundingClientRect().bottom)];
+			})).toEqual([0, 'none', '1px', true, 1]);
 
 			/*
 			 * A game window: the tab is a plate of the panel and the frame of the theme that comes down over the top of the
@@ -7392,6 +7580,7 @@ for (const origin of origins) {
 			var iso;
 			var today;
 			var later;
+			var months;
 
 			await open(page, origin);
 
@@ -7432,6 +7621,26 @@ for (const origin of origins) {
 			await page.locator('.elemenx-range-presets .elemenx-option', {hasText: 'Last 7 days'}).click();
 
 			await expect(period.locator('.elemenx-caption').last()).toHaveText(iso(new Date(today.getFullYear(), today.getMonth(), today.getDate() - 6)) + ' → ' + iso(today));
+
+			/*
+			 * A start picked in the second month keeps the first one in view, so an end before it can still be pressed
+			 * (the months followed the picked day: a range across the end of a month could not be picked backwards).
+			 */
+			await period.locator('.elemenx-range-toggle').click();
+
+			months = await page.locator('.elemenx-range-month').evaluateAll(function (nodes) {
+				return nodes.map(function (node) {
+					return node.querySelector('.elemenx-calendar-day:not(.outside)').getAttribute('data-date');
+				});
+			});
+
+			await page.locator('.elemenx-range-month').nth(1).locator('.elemenx-calendar-day:not(.outside)').nth(2).click();
+
+			await expect(page.locator('.elemenx-range-month').first().locator('.elemenx-calendar-day:not(.outside)').first()).toHaveAttribute('data-date', months[0]);
+
+			await page.locator('.elemenx-range-month').first().locator('.elemenx-calendar-day:not(.outside)').nth(4).click();
+
+			await expect(period.locator('.elemenx-caption').last()).toHaveText(months[0].substring(0, 8) + '05 → ' + months[1].substring(0, 8) + '03');
 		});
 
 		test('tree opens, selects, checks with parents, loads lazily, filters and moves by the keys', async function ({ page }) {

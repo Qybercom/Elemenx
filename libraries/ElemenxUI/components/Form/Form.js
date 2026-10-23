@@ -11,6 +11,20 @@
 Elemenx.Component('Form', {
 	$TemplateURL: 'Form.html',
 	$StyleURL: 'Form.css',
+	$Meta: {
+		Group: 'layout',
+		Icon: 'file-text',
+		Description: 'A form: a <form> that collects its fields into Model, a Group of the Forms Service, and validates them.',
+		Container: true,
+		Events: ['submit', 'invalid', 'reset'],
+		Methods: ['Submit()', 'Reset()'],
+		Props: {
+			Model: 'A Group of the Forms Service made in code; without one the Form makes it of its Fields.',
+			Label: 'The name of the form for screen readers.',
+			Disabled: 'Disables every field of the form.'
+		},
+		Sample: {Label: 'Sign up'}
+	},
 	Model: null,
 	Label: '',
 	Disabled: false,

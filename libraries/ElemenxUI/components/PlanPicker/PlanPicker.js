@@ -8,6 +8,26 @@
 Elemenx.Component('PlanPicker', {
 	$TemplateURL: 'PlanPicker.html',
 	$StyleURL: 'PlanPicker.css',
+	$Meta: {
+		Group: 'commerce',
+		Icon: 'cart',
+		Description: 'A choice of a plan: a PlanCard for each of Plans ([{ID, Name, Description, Price, YearlyPrice, Currency, Note, Features, Popular, Color, Current, Disabled, Action}]) in a grid, one of them chosen (Value), as a group of radios: the arrows move the choice.',
+		Events: ['change', 'period'],
+		Props: {
+			Plans: 'The plans: [{ID, Name, Description, Price, YearlyPrice, Currency, Note, Features, Popular, Color, Current, Disabled, Action}].',
+			Value: 'The ID of the plan chosen.',
+			Period: {Options: ['month', 'year'], Description: 'month or year.'},
+			Periods: 'Shows the switch of the monthly and the yearly prices.',
+			Discount: 'A text beside the switch (Save 20%).',
+			Currency: 'The code of the currency.',
+			Variant: 'The look of the cards, as in Card.',
+			Action: 'The text of the buttons.',
+			Label: 'The name of the group for screen readers.',
+			MonthlyLabel: 'The text of the monthly side of the switch.',
+			YearlyLabel: 'The text of the yearly side of the switch.'
+		},
+		Sample: {Discount: 'Save 20%'}
+	},
 	Plans: [],
 	Value: null,
 	Period: 'month',

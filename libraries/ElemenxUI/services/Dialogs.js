@@ -11,6 +11,10 @@
  * dialog from the code and calls back with action. OnChange(callback)/OffChange(callback) report the list.
  */
 Elemenx.Service('Dialogs', {
+	$Meta: {
+		Description: 'Confirmations and alerts from the code, shown by a DialogHost (place one in the layout of the Application): a modal Dialog without one of its own in a template.',
+		Methods: ['Confirm(options, callback)', 'Alert(options, callback)', 'Close(id, action)', 'OnChange(callback)', 'OffChange(callback)']
+	},
 	$OnCreate: function () {
 		this.Items = [];
 		this.Listeners = [];

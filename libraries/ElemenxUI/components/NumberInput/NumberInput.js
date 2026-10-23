@@ -8,6 +8,30 @@
 Elemenx.Component('NumberInput', {
 	$TemplateURL: 'NumberInput.html',
 	$StyleURL: 'NumberInput.css',
+	$Meta: {
+		Group: 'inputs',
+		Icon: 'edit',
+		Description: 'A number field.',
+		Events: ['input', 'change'],
+		Props: {
+			Value: 'The number, or null.',
+			Min: 'The least number.',
+			Max: 'The greatest number.',
+			Step: 'The step of the arrows and the buttons (Shift: ten steps).',
+			Precision: 'How many decimals it keeps.',
+			Placeholder: 'The text shown while it is empty.',
+			Size: {Options: ['small', 'medium', 'large'], Description: 'Its size: small, medium or large.'},
+			Shape: 'Its shape: default, or round.',
+			Prefix: 'A text before the number ($).',
+			Suffix: 'A text after the number (kg).',
+			Name: 'The name of its value in a form.',
+			Controls: 'Shows the buttons beside the field.',
+			Disabled: 'Turns it off: it takes no input and looks so.',
+			ReadOnly: 'Shows the value without letting it change.',
+			Invalid: 'Marks its value as wrong.'
+		},
+		Sample: {Min: 0, Step: 0.5, Precision: 2, Prefix: '$'}
+	},
 	Value: null,
 	Min: null,
 	Max: null,

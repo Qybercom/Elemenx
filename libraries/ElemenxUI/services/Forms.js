@@ -21,6 +21,10 @@
  * Form and Field use these models: a Form gives Fields their controls by Name and validates them on submit.
  */
 Elemenx.Service('Forms', {
+	$Meta: {
+		Description: 'The models of forms: the values a form collects and their validation, as the forms of Angular have them.',
+		Methods: ['Control(value, validators)', 'Group(controls, validators)', 'Array(controls, validators)', 'Message(errors)']
+	},
 	$OnCreate: function () {
 		var self = this;
 

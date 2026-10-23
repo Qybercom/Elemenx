@@ -4,6 +4,17 @@
  */
 Elemenx.Component('Spinner', {
 	$TemplateURL: 'Spinner.html',
+	$Meta: {
+		Group: 'display',
+		Icon: 'loader',
+		Description: 'A busy indicator: a turning ring.',
+		Props: {
+			Size: {Options: ['small', 'medium', 'large'], Description: 'small (16px), medium (24px) or large (40px).'},
+			Label: 'What screen readers say of it (Loading by default).',
+			ShowLabel: 'Shows the label beside the ring.'
+		},
+		Sample: {Size: 'small'}
+	},
 	Size: 'medium',
 	Label: '',
 	ShowLabel: false

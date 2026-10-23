@@ -17,35 +17,28 @@
 			<ThemeSwitch Compact="true" />
 		</div>
 
-		<BuilderStage slot="main" [version]="Version" [selected]="Selected" [width]="Width" [preview]="Preview" (select)="Picked" (drop)="Dropped" />
+		<DesignerCanvas slot="main" [width]="Width" [preview]="Preview" />
 
 		<WorkspaceToolWindow slot="tools" ID="palette" Icon="add" Area="left" Open="true" [title]="$T('builder.palette')">
-			<div class="builder-palette">
-				<Input Icon="search" Size="small" Clearable="true" [placeholder]="$T('builder.search')" [value]="Query" (input)="Searched" />
-				<p class="elemenx-text small muted" *if="!Groups(Language, Query).length">{{$T('builder.found')}}</p>
-				<div class="builder-palette-group" *for="group of Groups(Language, Query)" *key="group.ID">
-					<h3 class="elemenx-label builder-palette-title">{{group.Label}}</h3>
-					<div class="builder-palette-items">
-						<button type="button" class="builder-palette-item" *for="kind of group.Kinds" *key="kind.ID" [attribute.data-kind]="kind.ID" [attribute.title]="kind.Label" *draggable="{Data: kind.ID, Type: 'builder-kind'}" (click)="Added">
-							<Icon [name]="kind.Icon" />
-							<span>{{kind.Label}}</span>
-						</button>
+			<div class="builder-left">
+				<Splitter Direction="vertical" Size="420" Min="160">
+					<div slot="first" class="builder-pane">
+						<DesignerPalette />
 					</div>
-				</div>
+					<section slot="second" class="builder-pane builder-structure" [attribute.aria-label]="$T('builder.structure')">
+						<h3 class="elemenx-label builder-structure-title">{{$T('builder.structure')}}</h3>
+						<DesignerTree />
+					</section>
+				</Splitter>
 			</div>
 		</WorkspaceToolWindow>
 
-		<WorkspaceToolWindow slot="tools" ID="structure" Icon="tree" Area="left" [title]="$T('builder.structure')">
-			<p class="elemenx-text small muted builder-start" *if="!Count(Version)">{{$T('builder.start')}}</p>
-			<Tree [label]="$T('builder.structure')" [items]="TreeItems(Version, Language)" [value]="Selected" [expanded]="Expanded(Version, Collapsed)" (select)="TreePicked" (expand)="Expand" />
-		</WorkspaceToolWindow>
-
 		<WorkspaceToolWindow slot="tools" ID="properties" Icon="sliders" Area="right" Open="true" [title]="$T('builder.properties')">
-			<BuilderInspector [node]="Selected" [version]="Version" (select)="Picked" />
+			<DesignerInspector />
 		</WorkspaceToolWindow>
 
 		<WorkspaceToolWindow slot="tools" ID="template" Icon="code" Area="bottom" [title]="$T('builder.template')">
-			<CodeView Language="html" [value]="Code(Version)" [label]="$T('builder.template')" />
+			<CodeView Language="html" Fold="true" [value]="Code(Version)" [label]="$T('builder.template')" />
 		</WorkspaceToolWindow>
 
 		<span slot="status">{{$T('builder.elements', {count: Count(Version)})}}</span>

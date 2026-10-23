@@ -7,6 +7,30 @@
 Elemenx.Component('DateInput', {
 	$TemplateURL: 'DateInput.html',
 	$StyleURL: 'DateInput.css',
+	$Meta: {
+		Group: 'inputs',
+		Icon: 'calendar',
+		Description: 'A date field with its own calendar.',
+		Events: ['input', 'change'],
+		Props: {
+			Value: 'The date: YYYY-MM-DD, or YYYY-MM in the month mode; empty when none.',
+			Mode: {Options: ['date', 'month'], Description: 'date or month.'},
+			Format: 'How the date is written: DD, MM and YYYY (DD.MM.YYYY); by default the one of Locale.',
+			Locale: 'The language of its texts and formats (the language of the page by default).',
+			FirstDay: 'The first day of the week of the calendar: 0 Sunday, 1 Monday, or locale.',
+			Min: 'The first date that can be chosen.',
+			Max: 'The last date that can be chosen.',
+			Placeholder: 'The text shown while it is empty.',
+			TodayLabel: 'The text of the Today button.',
+			ClearLabel: 'The text of the Clear button.',
+			Size: {Options: ['small', 'medium', 'large'], Description: 'Its size: small, medium or large.'},
+			Shape: 'Its shape: default, or round.',
+			Name: 'The name of its value in a form.',
+			Disabled: 'Turns it off: it takes no input and looks so.',
+			ReadOnly: 'Shows the value without letting it change.',
+			Invalid: 'Marks its value as wrong.'
+		}
+	},
 	Value: '',
 	Mode: 'date',
 	Format: '',

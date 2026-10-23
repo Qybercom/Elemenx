@@ -10,6 +10,29 @@
 Elemenx.Component('TagInput', {
 	$TemplateURL: 'TagInput.html',
 	$StyleURL: 'TagInput.css',
+	$Meta: {
+		Group: 'inputs',
+		Icon: 'tag',
+		Description: 'A field of tags.',
+		Events: ['invalid', 'add', 'change', 'remove'],
+		Props: {
+			Value: 'The tags.',
+			Suggestions: 'Tags offered while typing.',
+			Placeholder: 'The text shown while it is empty.',
+			Separators: 'The characters that end a tag ([\',\', \';\']).',
+			AllowNew: 'Takes tags that are not among the suggestions.',
+			Unique: 'Refuses a tag already there.',
+			Max: 'How many tags at most (0: no limit).',
+			Pattern: 'A regular expression a tag must match.',
+			Case: {Options: ['', 'lower', 'upper'], Description: 'Changes the tags: lower or upper.'},
+			Size: {Options: ['small', 'medium', 'large'], Description: 'Its size: small, medium or large.'},
+			Shape: 'Its shape: default, or round.',
+			Name: 'The name of its value in a form.',
+			Disabled: 'Turns it off: it takes no input and looks so.',
+			Invalid: 'Marks its value as wrong.'
+		},
+		Sample: {Suggestions: ['elemenx', 'es5', 'ui', 'components', 'reactivity', 'router'], Case: 'lower'}
+	},
 	Value: [],
 	Suggestions: [],
 	Placeholder: '',

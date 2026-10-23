@@ -39,55 +39,25 @@ body {
 	border-radius: var(--elemenx-radius-small);
 }
 
-.builder-palette {
+/* The palette over the structure: both in view, the divider between them moves. */
+.builder-left {
 	display: flex;
-	flex-direction: column;
-	gap: 12px;
-	padding: 12px;
+	height: 100%;
+	min-height: 0;
 }
 
-.builder-palette-title {
-	margin: 0 0 6px;
+.builder-left > .elemenx-splitter {
+	flex: 1 1 auto;
+	min-height: 0;
 }
 
-.builder-palette-items {
-	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
-	gap: 6px;
+.builder-pane {
+	height: 100%;
+	min-height: 0;
+	overflow: auto;
 }
 
-.builder-palette-item {
-	display: flex;
-	align-items: center;
-	gap: 6px;
-	min-width: 0;
-	padding: 6px 8px;
-	color: inherit;
-	font: inherit;
-	font-size: var(--elemenx-font-size-small);
-	text-align: start;
-	cursor: grab;
-	background: var(--elemenx-surface);
-	border: 1px solid var(--elemenx-border);
-	border-radius: var(--elemenx-radius-small);
+.builder-structure-title {
+	margin: 0;
+	padding: 12px 12px 0;
 }
-
-.builder-palette-item span {
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
-}
-
-.builder-palette-item:hover {
-	background: var(--elemenx-surface-hover);
-}
-
-.builder-palette-item:focus-visible {
-	outline: 2px solid var(--elemenx-focus);
-	outline-offset: 1px;
-}
-
-.builder-start {
-	padding: 12px;
-}
-

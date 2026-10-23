@@ -9,6 +9,23 @@
 Elemenx.Component('Avatar', {
 	$TemplateURL: 'Avatar.html',
 	$StyleURL: 'Avatar.css',
+	$Meta: {
+		Group: 'display',
+		Icon: 'user',
+		Description: 'The picture of a person, a team or a product.',
+		Props: {
+			Name: 'The name of the person, the team or the product: the initials, the figure and the color come from it.',
+			Image: 'The URL of a picture; the generated avatar shows while it loads or when it fails.',
+			Initials: 'Letters of its own in place of the initials of Name (a logo of letters).',
+			Generate: {Options: ['initials', 'pattern', 'shapes'], Description: 'What the avatar without a picture is made of: initials, pattern (a figure of cells) or shapes.'},
+			Seed: 'The text the avatar is made of in place of Name (an ID, an email).',
+			Color: 'A CSS color of its own; by default a color of the name.',
+			Shape: {Options: ['circle', 'rounded', 'square'], Description: 'Its shape: default, or round.'},
+			Size: {Options: ['small', 'medium', 'large'], Description: 'Its size: small, medium or large.'},
+			Status: {Options: ['', 'online', 'away', 'busy', 'dnd', 'offline', 'connecting'], Description: 'The presence dot on its corner: online, away, busy, dnd, offline or connecting.'}
+		},
+		Sample: {Name: 'Ada Lovelace', Size: 'large', Status: 'online'}
+	},
 	Name: '',
 	Image: '',
 	Initials: '',

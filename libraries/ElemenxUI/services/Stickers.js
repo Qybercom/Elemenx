@@ -8,6 +8,10 @@
  * lists them; both are remembered. OnChange(callback) reports the changes of the packs.
  */
 Elemenx.Service('Stickers', {
+	$Meta: {
+		Description: 'The sticker packs of the Application.',
+		Methods: ['Register(pack)', 'ByEmoji(char, limit)', 'Search(text)', 'Recent()', 'Favorites()', 'Used(sticker)', 'Favorite(sticker)', 'OnChange(callback)']
+	},
 	StorageKey: 'elemenx-stickers',
 	Persist: true,
 	Limit: 24,

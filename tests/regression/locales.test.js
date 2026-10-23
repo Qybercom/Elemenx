@@ -83,7 +83,7 @@ describe('ElemenxUI dictionaries', function () {
 	it('has a phrase for every key the components and services name, and no phrase nobody names', function () {
 		var english = dictionary('en');
 		var keys = used();
-		var dynamic = /^ui\.presence\.|^ui\.forms\.|^ui\.emojiPicker\.(group\.|tone\d)|^ui\.game\.(health|mana|experience|stamina|common|uncommon|rare|epic|legendary)$/;
+		var dynamic = /^ui\.presence\.|^ui\.forms\.|^ui\.designer\.(groups|kinds)\.|^ui\.emojiPicker\.(group\.|tone\d)|^ui\.game\.(health|mana|experience|stamina|common|uncommon|rare|epic|legendary)$/;
 
 		expect(Object.keys(keys).filter(function (key) {
 			return !(key in english);

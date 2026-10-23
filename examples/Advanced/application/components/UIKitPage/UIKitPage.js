@@ -370,6 +370,9 @@ Elemenx.Component('UIKitPage', {
 	GamePadButtons: ['a', 'b', 'x', 'y', 'lb', 'rb', 'lt', 'rt', 'ls', 'rs', 'up', 'down', 'left', 'right', 'select', 'start', 'home'],
 	ViewerMarkdown: '## Elemenx 0.9\n\nA **viewer** of Markdown: the *same* look as the rich editor, ~~nothing~~ that runs.\n\n- Tables, quotes and lists\n- Code that names its language:\n\n```js\nElemenx.Component(\'Hello\', {$Template: \'<b>{{Name}}</b>\', Name: \'world\'});\n```\n\n| Key | Does |\n| --- | --- |\n| Mod+F | Finds |\n| Mod+H | Replaces |\n',
 	ViewerCode: 'function Area (radius) {\n\t/* The area of a circle. */\n\tvar square = radius * radius;\n\n\treturn Math.PI * square;\n}\n',
+	DeclaredChart: {Type: 'bar', Labels: ['Q1', 'Q2', 'Q3', 'Q4'], Series: [{Name: 'Sales', Values: [12, 18, 15, 24]}], Label: 'Sales'},
+	DeclaredTab: '',
+	ViewerHtml: '<section class="card">\n\t<h2>Title</h2>\n\t<ul>\n\t\t<li>One</li>\n\t\t<li>Two</li>\n\t</ul>\n\t<img src="a.png">\n\t<br>\n\t<Button Label="Go" />\n</section>\n',
 	ViewerJson: '{\n\t"name": "elemenx",\n\t"keywords": [\n\t\t"ui",\n\t\t"es5"\n\t],\n\t"scripts": {\n\t\t"test": "vitest",\n\t\t"lint": "eslint ."\n\t}\n}\n',
 	Formulas: ['ax^2 + bx + c = 0', 'x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}', '\\sum_{i=1}^{n} i = \\frac{n(n+1)}{2}', '\\int_0^\\infty e^{-x^2} dx = \\frac{\\sqrt{\\pi}}{2}', 'A = \\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}'],
 	WorkTiles: [],
@@ -1609,6 +1612,10 @@ Elemenx.Component('UIKitPage', {
 	/* The select of a MenuItem of its own. */
 	UndoPicked: function () {
 		this.CanRedo = true;
+	},
+
+	DeclaredTabChanged: function (id) {
+		this.DeclaredTab = id;
 	},
 
 	TabChanged: function (id) {

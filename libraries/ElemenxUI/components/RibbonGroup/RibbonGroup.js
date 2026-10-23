@@ -8,6 +8,20 @@
  */
 Elemenx.Component('RibbonGroup', {
 	$TemplateURL: 'RibbonGroup.html',
+	$Meta: {
+		Group: 'navigation',
+		Icon: 'menu',
+		Description: 'A group of commands of a RibbonTab: <RibbonGroup Title="Clipboard" Icon="paste">.',
+		Container: true,
+		Events: ['launch'],
+		Props: {
+			Title: 'The title under the group.',
+			Icon: 'The icon of the group when it shrinks into one button.',
+			Priority: 'The order of shrinking: the lowest first.',
+			Launcher: 'Adds the button at the corner of the title (event launch).'
+		},
+		Sample: {Title: 'Clipboard', Icon: 'paste', Priority: 2, Launcher: true}
+	},
 	Title: '',
 	Icon: '',
 	KeyTip: '',

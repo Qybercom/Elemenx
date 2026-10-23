@@ -9,6 +9,22 @@
 Elemenx.Component('Terminal', {
 	$TemplateURL: 'Terminal.html',
 	$StyleURL: 'Terminal.css',
+	$Meta: {
+		Group: 'data',
+		Icon: 'terminal',
+		Description: 'A terminal: a scrolling output above a command line.',
+		Container: true,
+		Slots: ['actions'],
+		Events: ['command', 'clear'],
+		Props: {
+			Lines: 'The output: [{ID, Kind, Text}], Kind input, output, error, info or success.',
+			Title: 'The title of its bar.',
+			Prompt: 'The prompt of the command line.',
+			Placeholder: 'The text shown while it is empty.',
+			Busy: 'The command line is read only while a command runs.'
+		},
+		Sample: {Title: 'Shell'}
+	},
 	Lines: [],
 	Title: '',
 	Prompt: '$',

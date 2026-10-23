@@ -12,6 +12,10 @@
  * - On('connect' or 'disconnect', callback): a device of the page joins or leaves ({Device}).
  */
 Elemenx.Service('USB', {
+	$Meta: {
+		Description: 'USB devices through WebUSB (Chrome and Edge; HTTPS or localhost): devices with a driver of their own, not the ones the system keeps (keyboards, disks).',
+		Methods: ['Supported()', 'Request(options, callback)', 'Devices(callback)', 'On(name, callback)']
+	},
 	$OnCreate: function () {
 		var self = this;
 

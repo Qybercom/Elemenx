@@ -1,7 +1,9 @@
 /*
  * A page of the reference: the navigation of all the pages (pages/index.json) beside the page of the route, read
  * from pages/<section>/<page>.<language>.md (the English page when the language has none). The text is shown by
- * Markdown; a block ```example holds a template that runs beside its code (DocsExample).
+ * Markdown; a block ```example holds a template that runs beside its code (DocsExample). The page of a component, a
+ * service or a directive ends with its source, read from the Library: a listing for each of its files (its template,
+ * its script, its stylesheet), a tab each.
  */
 Elemenx.Component('DocsPage', {
 	$TemplateURL: 'DocsPage.html',
@@ -11,6 +13,8 @@ Elemenx.Component('DocsPage', {
 	Fallback: false,
 	Missing: false,
 	Loaded: '',
+	Sources: [],
+	Source: '',
 
 	$OnCreate: function () {
 		var self = this;
@@ -23,6 +27,21 @@ Elemenx.Component('DocsPage', {
 		/* The page of the route: section/page, the start of the guide by default. */
 		this.Current = function (params) {
 			return params && params.section && params.page ? params.section + '/' + params.page : 'guide/start';
+		};
+
+		/* The source shown: the file picked, or the first one (its script, for a page of a service or a directive). */
+		this.SourceShown = function (sources, source) {
+			return sources.some(function (file) {
+				return file.ID === source;
+			}) ? source : sources.length ? sources[0].ID : '';
+		};
+
+		this.SourceFile = function (sources, source) {
+			var shown = self.SourceShown(sources, source);
+
+			return sources.filter(function (file) {
+				return file.ID === shown;
+			})[0] || {Language: 'text', Text: '', Label: ''};
 		};
 
 		this.NavItems = function (index, language) {
@@ -63,6 +82,8 @@ Elemenx.Component('DocsPage', {
 
 		this.Loaded = key;
 
+		this.Read(current, key);
+
 		/* A server that answers every path with the page of the Application (for its routes) answers a missing page so. */
 		function page (error, text) {
 			return !error && !/^\s*<!DOCTYPE/i.test(text);
@@ -95,10 +116,27 @@ Elemenx.Component('DocsPage', {
 		});
 	},
 
-	/* The text cut into its parts: Markdown, and the blocks ```example between them. */
+	/* A short hash of a text (djb2), for the keys of the examples. */
+	Hash: function (text) {
+		var hash = 5381;
+		var i = 0;
+
+		while (i < text.length) {
+			hash = ((hash << 5) + hash + text.charCodeAt(i)) >>> 0;
+
+			i++;
+		}
+
+		return hash.toString(36);
+	},
+
+	/*
+	 * The text cut into its parts: Markdown, the blocks ```example (a live example) and the other fenced blocks of code
+	 * (a CodeView of their language, that copies and folds) between them.
+	 */
 	Show: function (text, fallback) {
 		var segments = [];
-		var pattern = /^```example[^\n]*\n([\s\S]*?)^```[ \t]*$/gm;
+		var pattern = /^```([\w+#.-]*)[^\n]*\n([\s\S]*?)^```[ \t]*$/gm;
 		var last = 0;
 		var match;
 
@@ -109,7 +147,12 @@ Elemenx.Component('DocsPage', {
 			if (match.index > last)
 				segments.push({Key: 'text-' + segments.length, Kind: 'text', Text: text.substring(last, match.index)});
 
-			segments.push({Key: 'example-' + segments.length, Kind: 'example', Code: match[1].replace(/\n$/, '')});
+			/*
+			 * A segment of code is keyed by its code too: the example of another page at the same place is another
+			 * component, made for its own code (a key by the place alone kept the example of the first page shown).
+			 */
+			if (match[1] === 'example') segments.push({Key: 'example-' + segments.length + '-' + this.Hash(match[2]), Kind: 'example', Code: match[2].replace(/\n$/, '')});
+			else segments.push({Key: 'code-' + segments.length + '-' + this.Hash(match[2]), Kind: 'code', Language: match[1] || 'text', Code: match[2].replace(/\n$/, '')});
 
 			last = match.index + match[0].length;
 		}
@@ -122,6 +165,54 @@ Elemenx.Component('DocsPage', {
 		this.Segments = segments;
 
 		window.scrollTo(0, 0);
+	},
+
+	/*
+	 * The files of the page of a component (its .html, .js and .css), a service or a directive (its .js), read from the
+	 * root of ElemenxUI; a file that is not there (a bundle carries no sources) is left out.
+	 */
+	Read: function (current, key) {
+		var self = this;
+		var parts = current.split('/');
+		var library = Elemenx.Library('ElemenxUI');
+		var root = String(library && library.$Root || '').replace(/\/$/, '');
+		var name = parts[1] ? parts[1].charAt(0).toUpperCase() + parts[1].substring(1) : '';
+		var languages = {html: 'html', js: 'js', css: 'css'};
+		var files = [];
+		var found = [];
+		var remaining;
+
+		if (parts[0] === 'components') {
+			files = ['html', 'js', 'css'].map(function (extension) {
+				return {Name: name + '.' + extension, URL: root + '/components/' + name + '/' + name + '.' + extension, Language: languages[extension]};
+			});
+		}
+		else if (parts[0] === 'services' || parts[0] === 'directives') {
+			files = [{Name: name + '.js', URL: root + '/' + parts[0] + '/' + name + '.js', Language: 'js'}];
+		}
+
+		this.Sources = [];
+		this.Source = '';
+
+		remaining = files.length;
+
+		files.forEach(function (file, index) {
+			Elemenx.Resource.Load(file.URL, function (error, text) {
+				if (self.Loaded !== key) return;
+
+				if (!error && !/^\s*<!DOCTYPE/i.test(text))
+					found[index] = {ID: file.Name, Label: file.Name, Language: file.Language, Text: text.replace(/\r\n/g, '\n').replace(/\s+$/, '')};
+
+				remaining--;
+
+				if (!remaining)
+					self.Sources = found.filter(Boolean);
+			});
+		});
+	},
+
+	SourcePicked: function (id) {
+		this.Source = id;
 	},
 
 	Picked: function (item) {

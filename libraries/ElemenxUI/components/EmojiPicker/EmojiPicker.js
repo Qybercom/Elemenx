@@ -8,6 +8,22 @@
 Elemenx.Component('EmojiPicker', {
 	$TemplateURL: 'EmojiPicker.html',
 	$StyleURL: 'EmojiPicker.css',
+	$Meta: {
+		Group: 'inputs',
+		Icon: 'smile',
+		Description: 'A picker of the emoji of Unicode (the Emoji Service): a search over names and keywords, the groups with a tab each, the emoji used last first, a skin tone for the emoji that take one, and the name of the emoji under the pointer.',
+		Events: ['pick', 'dismiss'],
+		Props: {
+			Label: 'The name of the picker for screen readers.',
+			Placeholder: 'The text shown while it is empty.',
+			Nothing: 'The text when the search finds nothing.',
+			Columns: 'How many emoji in a row.',
+			Tones: 'Offers the skin tones.',
+			Recent: 'Shows the emoji used last first.',
+			Autofocus: 'Takes the focus when it shows.'
+		},
+		Sample: {Autofocus: false}
+	},
 	Label: '',
 	Placeholder: '',
 	Nothing: '',

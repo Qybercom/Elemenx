@@ -10,6 +10,9 @@
  * outside the dialog.
  */
 Elemenx.Directive('modal', {
+	$Meta: {
+		Description: '*modal="Open" opens a <dialog> element as a modal while the expression is truthy and closes it otherwise.'
+	},
 	$OnCreate: function (context) {
 		var element = context.Element;
 		var data = context.Data;

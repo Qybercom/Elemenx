@@ -3,6 +3,7 @@
 	"emoji.ru": {"Files": ["data/emoji-ru.json"], "Uses": ["'Emoji'", "\"Emoji\""], "Language": "ru"},
 	"cities": {"Files": ["data/cities.txt", "data/regions.txt"], "Uses": ["'Cities'", "\"Cities\"", "CityInput"]},
 	"cities.ru": {"Files": ["data/cities-ru.txt"], "Uses": ["'Cities'", "\"Cities\"", "CityInput"], "Language": "ru"},
+	"meta": {"Files": ["data/meta.json"], "Uses": ["Designer"]},
 	"brands": {"Files": ["icons/brands.svg"], "Uses": ["brands:"]},
 	"files": {"Files": ["icons/files.svg"], "Uses": ["files:", "FileIcon"]},
 	"sport": {"Files": ["icons/sport.svg"], "Uses": ["sport:"]},

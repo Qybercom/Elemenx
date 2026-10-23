@@ -5,6 +5,10 @@
  * international number: the longest dialling code, then the preferred country, then the main country of a shared code.
  */
 Elemenx.Service('Countries', {
+	$Meta: {
+		Description: 'Countries and territories with their dialling code, the mask of the national number (# is a digit) and currency.',
+		Methods: ['List(locale)', 'Find(code, locale)', 'Match(digits, preferred, locale)']
+	},
 	Data: [
 		'AF|Afghanistan|93|## ### ####|AFN',
 		'AX|Aland Islands|358|## ### ## ##|EUR',

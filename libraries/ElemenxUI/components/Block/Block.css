@@ -45,7 +45,7 @@
 /*
  * HeaderShape 'trapezoid': the block is a folder. The title and the note stand on a tab as wide as their text, whose
  * end slopes down (by --elemenx-block-tab-slant) to the body; the tab and the body are one shape in the color of the
- * band, with the frame around both. The actions stand beyond the slope. The block measures its tab into
+ * band, with the frame around both: the frame of the body has its top edge, and the tab comes down over it. The actions stand beyond the slope. The block measures its tab into
  * --elemenx-tab-width, where the top of the body begins.
  */
 .elemenx-block.framed.trapezoid {
@@ -62,8 +62,7 @@
 	z-index: -1;
 	background: var(--elemenx-block-title-band);
 	border: var(--elemenx-block-frame);
-	border-top: 0;
-	border-radius: 0 0 var(--elemenx-block-radius) var(--elemenx-block-radius);
+	border-radius: 0 var(--elemenx-block-radius) var(--elemenx-block-radius) var(--elemenx-block-radius);
 	content: '';
 }
 
@@ -76,24 +75,14 @@
 	border-radius: 0;
 }
 
-.elemenx-block.trapezoid .elemenx-block-header::after {
-	position: absolute;
-	right: 0;
-	bottom: 0;
-	left: calc(var(--elemenx-tab-width, 0px) + var(--elemenx-block-tab-slant));
-	border-top: var(--elemenx-block-frame);
-	border-top-right-radius: var(--elemenx-block-radius);
-	content: '';
-	pointer-events: none;
-}
-
 .elemenx-block.trapezoid .elemenx-block-tab {
 	position: relative;
 	display: flex;
 	flex: 0 1 auto;
 	align-items: baseline;
-	align-self: stretch;
+	align-self: flex-start;
 	gap: 8px;
+	height: calc(100% + 1px);
 	min-width: 0;
 	margin-inline-end: var(--elemenx-block-tab-slant);
 	padding: calc(var(--elemenx-block-title-padding) + 1px) var(--elemenx-block-padding) 0;

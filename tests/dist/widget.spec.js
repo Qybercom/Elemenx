@@ -43,7 +43,10 @@ test.describe('elemenx build --widget', function () {
 		expect(script).not.toContain('Elemenx.Network=');
 		expect(script).not.toContain('Elemenx.Router=');
 		expect(script).not.toContain('Elemenx.WebWorker=');
-		expect(Buffer.byteLength(script)).toBeLessThan(320 * 1024);
+
+		/* Nor what the components tell the tools of themselves ($Meta): the widget asks nothing of it. */
+		expect(script).not.toContain('Two panes with a draggable divider.');
+		expect(Buffer.byteLength(script)).toBeLessThan(336 * 1024);
 
 		/* The game themes are packs: the widget names none of them, so they stay out. */
 		expect(script).not.toContain('themes/fantasy.css');

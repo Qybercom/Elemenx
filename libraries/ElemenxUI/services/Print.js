@@ -10,6 +10,10 @@
  * - Document(target, options) returns the HTML of the document Element prints.
  */
 Elemenx.Service('Print', {
+	$Meta: {
+		Description: 'Printing of a part of the page: the browser prints a frame of its own with a copy of that part and the stylesheets of the page (and of the shadow root the part is in), so the rest of the page stays out.',
+		Methods: ['Document(target, options)', 'Element(target, options, callback)']
+	},
 	Margin: '16mm',
 
 	Document: function (target, options) {

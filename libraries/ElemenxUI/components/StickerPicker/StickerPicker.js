@@ -7,6 +7,21 @@
 Elemenx.Component('StickerPicker', {
 	$TemplateURL: 'StickerPicker.html',
 	$StyleURL: 'StickerPicker.css',
+	$Meta: {
+		Group: 'inputs',
+		Icon: 'sticker',
+		Description: 'A picker of the stickers of the Stickers Service: a tab for the stickers sent last, one for the starred ones and one per pack, and a search over titles and keywords.',
+		Events: ['pick', 'dismiss'],
+		Props: {
+			Label: 'The name of the picker for screen readers.',
+			Placeholder: 'The text shown while it is empty.',
+			Nothing: 'The text when the search finds nothing.',
+			NoRecent: 'The text of the tab of recent stickers while it is empty.',
+			NoFavorites: 'The text of the tab of favorites while it is empty.',
+			NoPacks: 'The text when the Stickers Service has no packs.',
+			Columns: 'How many stickers in a row.'
+		}
+	},
 	Label: '',
 	Placeholder: '',
 	Nothing: '',

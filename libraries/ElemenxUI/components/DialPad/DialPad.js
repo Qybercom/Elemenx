@@ -11,6 +11,23 @@
 Elemenx.Component('DialPad', {
 	$TemplateURL: 'DialPad.html',
 	$StyleURL: 'DialPad.css',
+	$Meta: {
+		Group: 'inputs',
+		Icon: 'phone',
+		Description: 'A dial pad: the number in a field over a grid of keys, a key that erases and a key that calls.',
+		Events: ['input', 'press', 'call'],
+		Props: {
+			Value: 'The number.',
+			Keys: 'The keys row by row: [{Value, Label, Sub, Hold, Icon, Class}]; a phone pad without them.',
+			Columns: 'How many keys in a row.',
+			ShowInput: 'Shows the field of the number (the keyboard and a paste go in too).',
+			ShowCall: 'Shows the key that calls.',
+			CallLabel: 'The name of the key that calls.',
+			Label: 'The name of the pad for screen readers.',
+			Hold: 'How long a press gives the Hold of a key (+ on 0), in milliseconds.',
+			Disabled: 'Turns it off: it takes no input and looks so.'
+		}
+	},
 	Value: '',
 	Keys: null,
 	Columns: 3,

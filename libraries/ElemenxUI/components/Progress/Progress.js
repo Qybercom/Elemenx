@@ -6,6 +6,21 @@
 Elemenx.Component('Progress', {
 	$TemplateURL: 'Progress.html',
 	$StyleURL: 'Progress.css',
+	$Meta: {
+		Group: 'display',
+		Icon: 'loader',
+		Description: 'The progress of a task.',
+		Props: {
+			Value: 'The progress from 0 to Max; null for a progress that does not know its end.',
+			Max: 'The end.',
+			Variant: {Options: ['bar', 'ring'], Description: 'bar or ring.'},
+			Tone: {Options: ['accent', 'success', 'warning', 'danger'], Description: 'accent, success, warning or danger.'},
+			Size: {Options: ['small', 'medium', 'large'], Description: 'small, medium or large.'},
+			Label: 'The name of the task (above a bar).',
+			ShowValue: 'Prints the percent.'
+		},
+		Sample: {Label: 'Upload', ShowValue: true}
+	},
 	Value: null,
 	Max: 100,
 	Variant: 'bar',

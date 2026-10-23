@@ -21,6 +21,7 @@
  *   Router ownership         which Router a component belongs to
  *   Directive registry       directive metadata and the built-in if, for, key, outlet, pending, error
  *   Template and Component   Elemenx.Template, Elemenx.Directive, Elemenx.Component: compiler, bindings, factory
+ *   Meta                     Elemenx.Meta: what Components, Services and Directives declare of themselves ($Meta)
  *   Router                   Elemenx.Router: routes, guards, browser history
  *   Structural               structural hosts: conditional and collection mounting, deferred children
  *   Cache                    Elemenx.Cache: unloading idle component definitions, sleeping instances (keep-alive)
@@ -2345,6 +2346,11 @@
 				ApplicationInstanceList: [],
 				Generation: previous ? previous.Generation + 1 : 0
 			};
+		};
+
+		/* The definition of a Service registered under a name, or null. */
+		Runtime.ServiceDefinition = function (name) {
+			return serviceRegistry[name] ? serviceRegistry[name].Definition : null;
 		};
 
 		Runtime.RefreshDeferredService = function (name) {
@@ -5915,6 +5921,116 @@
 			if (arguments.length === 2 && typeof name === 'string') return CreateComponentFactory(name, definition || {});
 
 			throw new Error('Elemenx.Component expects (name) or (name, definition)');
+		};
+
+		/* The definition of a Component registered and loaded under a name, or null. */
+		Runtime.ComponentDefinition = function (name) {
+			var factory = componentRegistry[name];
+
+			return factory && !factory.ElemenxLazy && factory.Definition ? factory.Definition : null;
+		};
+
+		/* The names of the Components registered and loaded. */
+		Runtime.ComponentNames = function () {
+			return Object.keys(componentRegistry).filter(function (name) {
+				return !!Runtime.ComponentDefinition(name);
+			});
+		};
+	})(typeof globalThis !== 'undefined' ? globalThis : self);
+
+	/* Meta */
+	(function (global) {
+		'use strict';
+
+		var own = Runtime.Own;
+
+		/* The type of a prop from its default value: bool, number, text, or json (a list, an object, null). */
+		function typeOf (value) {
+			if (typeof value === 'boolean') return 'bool';
+
+			if (typeof value === 'number') return 'number';
+
+			if (typeof value === 'string') return 'text';
+
+			return 'json';
+		}
+
+		function copy (value) {
+			return value === undefined ? undefined : JSON.parse(JSON.stringify(value));
+		}
+
+		/*
+		 * What a definition declares of itself in $Meta, normalized: {Name, Kind, Group, Icon, Description, Props, Slots,
+		 * Container, Events, Methods, Sample}. $Meta.Props names the public props, each a description or {Type, Options,
+		 * Description}; its Default is the value of the definition, its Type that of the default unless Meta names one.
+		 */
+		function normalize (name, kind, definition) {
+			var meta = definition.$Meta;
+			var props = [];
+			var key;
+			var entry;
+
+			if (!meta || typeof meta !== 'object') return null;
+
+			for (key in meta.Props || {}) {
+				if (!own(meta.Props, key)) continue;
+
+				entry = typeof meta.Props[key] === 'string' ? {Description: meta.Props[key]} : meta.Props[key] || {};
+
+				props.push({
+					Name: key,
+					Type: entry.Type || (entry.Options ? 'select' : typeOf(definition[key])),
+					Default: typeof definition[key] === 'function' ? undefined : copy(definition[key]),
+					Options: entry.Options ? entry.Options.slice() : null,
+					Description: entry.Description || ''
+				});
+			}
+
+			return {
+				Name: name,
+				Kind: kind,
+				Group: meta.Group || '',
+				Icon: meta.Icon || '',
+				Description: meta.Description || '',
+				Props: props,
+				Slots: (meta.Slots || []).slice(),
+				Container: !!meta.Container,
+				Events: (meta.Events || []).slice(),
+				Methods: (meta.Methods || []).slice(),
+				Sample: copy(meta.Sample || {})
+			};
+		}
+
+		function find (name) {
+			var definition = Runtime.ComponentDefinition(name);
+			if (definition)
+				return normalize(name, 'Component', definition);
+
+			definition = Runtime.ServiceDefinition(name);
+
+			if (definition)
+				return normalize(name, 'Service', definition);
+
+			definition = own(Runtime.Directive.Registry, name.toLowerCase()) ? Runtime.Directive.Registry[name.toLowerCase()] : null;
+
+			return definition ? normalize(name.toLowerCase(), 'Directive', definition) : null;
+		}
+
+		/*
+		 * Elemenx.Meta(name): the $Meta of the Component, the Service or the Directive of that name, normalized, or null
+		 * (no such definition loaded, or no $Meta in it). Elemenx.Meta(): the ones of every Component loaded.
+		 */
+		Elemenx.Meta = function (name) {
+			if (arguments.length === 1) return find(String(name));
+
+			if (arguments.length)
+				throw new Error('Elemenx.Meta expects () or (name)');
+
+			return Runtime.ComponentNames().map(function (component) {
+				return normalize(component, 'Component', Runtime.ComponentDefinition(component));
+			}).filter(function (meta) {
+				return meta !== null;
+			});
 		};
 	})(typeof globalThis !== 'undefined' ? globalThis : self);
 

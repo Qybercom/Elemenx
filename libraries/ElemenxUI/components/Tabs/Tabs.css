@@ -1,6 +1,12 @@
+/*
+ * The strip, then the panels of the declared tabs (Tab) on the lines under it: the content of the default slot stands in
+ * the flow of the strip itself, so its actions follow the tabs and its panels wrap below them.
+ */
 .elemenx-tabs {
 	display: flex;
-	align-items: stretch;
+	flex-wrap: wrap;
+	align-items: center;
+	column-gap: 4px;
 	min-width: 0;
 }
 
@@ -19,14 +25,7 @@
 }
 
 .elemenx-tabs-extra {
-	display: flex;
-	align-items: center;
-	flex: none;
-	gap: 4px;
-}
-
-.elemenx-tabs-extra:empty {
-	display: none;
+	display: contents;
 }
 
 .elemenx-tab {

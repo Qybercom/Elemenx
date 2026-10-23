@@ -4,6 +4,9 @@
  * limits the shortcut to the focus inside the closest section, dialog or form of the element. Uses the Hotkeys Service.
  */
 Elemenx.Directive('hotkey', {
+	$Meta: {
+		Description: '*hotkey="\'Mod+S\'" (or *hotkey="{Keys: \'Mod+S\', Scope: \'local\', Description: \'Save\', Group: \'File\'}") clicks the element when the keys are pressed, unless it is disabled or hidden, and sets its aria-keyshortcuts.'
+	},
 	$OnUpdate: function (context) {
 		var element = context.Element;
 		var value = context.Value;

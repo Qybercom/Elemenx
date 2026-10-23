@@ -8,6 +8,7 @@ var Server = require('./tools/server.js');
 var Generator = require('./tools/generator.js');
 var Icons = require('./tools/icons.js');
 var Native = require('./tools/native.js');
+var Meta = require('./tools/meta.js');
 var Package = require('./package.json');
 var fail = require('./tools/common.js').fail;
 
@@ -312,6 +313,17 @@ command('icons', 'Build an icon set (a sprite) from a directory of SVG files.', 
 	Options: [
 		['--current-color', 'paints the icons with the color of the text (their fills and strokes become currentColor)']
 	]
+});
+
+command('meta', 'Collect the $Meta of the Components, Services and Directives of a library into one JSON file.', function (parsed) {
+	var library = path.resolve(parsed.Arguments[0] || path.join(__dirname, 'libraries', 'ElemenxUI'));
+	var output = path.resolve(parsed.Arguments[1] || path.join(library, 'data', 'meta.json'));
+	var result = Meta.Build(library, output);
+
+	process.stdout.write('Elemenx meta: ' + result.Components.length + ' components, ' + result.Services.length + ' services, ' + result.Directives.length + ' directives, ' + Object.keys(result.Classes).length + ' classes in ' + output + '\n');
+}, {
+	Usage: ['elemenx meta [library] [output.json]'],
+	Text: ['Reads the files of the index.js of the library (ElemenxUI by default) and writes what their definitions declare in $Meta, as Elemenx.Meta(name) gives it, with the classes of the stylesheets and their modifiers: the data of the tools (a builder, a reference). The output is data/meta.json in the library by default, where the Designer Service reads it.']
 });
 
 command('native', 'Add what native programs need to a project: Electron (desktop), Capacitor (mobile).', function (parsed) {

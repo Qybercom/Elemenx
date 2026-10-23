@@ -11,6 +11,26 @@
 Elemenx.Component('PhoneInput', {
 	$TemplateURL: 'PhoneInput.html',
 	$StyleURL: 'PhoneInput.css',
+	$Meta: {
+		Group: 'inputs',
+		Icon: 'phone',
+		Description: 'Value is the international number: "+" with the dialling code and the local digits ("+79991234567").',
+		Events: ['input', 'validate', 'change', 'country'],
+		Props: {
+			Value: 'The international number: + with the dialling code and the digits.',
+			Country: 'The country of the number (when its code does not tell another).',
+			Placeholder: 'The text shown while it is empty.',
+			Size: {Options: ['small', 'medium', 'large'], Description: 'Its size: small, medium or large.'},
+			Shape: 'Its shape: default, or round.',
+			Name: 'The name of its value in a form.',
+			Disabled: 'Turns it off: it takes no input and looks so.',
+			Invalid: 'Marks its value as wrong.',
+			Countries: 'The countries offered: [{Code, Name, Dial, Mask}] (# a digit).',
+			Locale: 'The language of its texts and formats (the language of the page by default).',
+			Guide: 'Keeps the whole template visible.',
+			Backspace: {Options: ['delete', 'skip'], Description: 'delete, or skip (moves over a separator).'}
+		}
+	},
 	Value: '',
 	Country: 'RU',
 	Placeholder: '',

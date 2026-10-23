@@ -8,6 +8,27 @@
 Elemenx.Component('Slider', {
 	$TemplateURL: 'Slider.html',
 	$StyleURL: 'Slider.css',
+	$Meta: {
+		Group: 'inputs',
+		Icon: 'sliders',
+		Description: 'A slider.',
+		Events: ['input', 'change'],
+		Props: {
+			Value: 'The value, or [low, high] with Range.',
+			Range: 'Two thumbs: a range.',
+			Min: 'The least value.',
+			Max: 'The greatest value.',
+			Step: 'The step.',
+			Marks: 'Ticks every so many units, or at the values listed.',
+			ShowValue: {Options: ['always', 'active', 'never'], Description: 'When the value shows: always, active (while dragged or focused) or never.'},
+			Unit: 'The unit after the value.',
+			Size: {Options: ['small', 'medium', 'large'], Description: 'Its size: small, medium or large.'},
+			Orientation: {Options: ['horizontal', 'vertical'], Description: 'horizontal or vertical.'},
+			Label: 'The name of the slider.',
+			Disabled: 'Turns it off: it takes no input and looks so.'
+		},
+		Sample: {ShowValue: 'always'}
+	},
 	Value: 0,
 	Range: false,
 	Min: 0,

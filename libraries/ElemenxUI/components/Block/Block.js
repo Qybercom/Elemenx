@@ -8,6 +8,21 @@
 Elemenx.Component('Block', {
 	$TemplateURL: 'Block.html',
 	$StyleURL: 'Block.css',
+	$Meta: {
+		Group: 'layout',
+		Icon: 'panel-bottom',
+		Description: 'A block: content in a frame, with a title on a band set into the top of the frame.',
+		Container: true,
+		Slots: ['actions'],
+		Props: {
+			Title: 'The title on the band at the top of the frame.',
+			Note: 'A caption after the title.',
+			Level: 'The level of the title as a heading for screen readers (aria-level).',
+			Padding: {Options: ['medium', 'compact', 'spacious'], Description: 'The room inside the frame: compact, medium or spacious.'},
+			HeaderShape: {Options: ['default', 'trapezoid'], Description: 'default (a band set into the frame) or trapezoid (a folder: the title on a tab).'}
+		},
+		Sample: {Title: 'Reactor', Note: 'Ring B'}
+	},
 	Title: '',
 	Note: '',
 	Level: 3,
