@@ -299,6 +299,9 @@ function create (options) {
 
 		try {
 			pathname = decodeURIComponent(request.url.split('?')[0]);
+
+			if (pathname.indexOf('\0') !== -1)
+				throw new Error('Elemenx server path contains a null byte');
 		}
 		catch (error) {
 			response.writeHead(400);

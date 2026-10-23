@@ -10,15 +10,18 @@ import { createRequire } from 'module';
 var require = createRequire(import.meta.url);
 var Server = require('../../tools/server.js');
 
-function request (port, method, headers) {
+function request (port, method, headers, pathname) {
 	return new Promise(function (resolve, reject) {
-		var req = http.request({host: '127.0.0.1', port: port, path: '/', method: method || 'GET', headers: headers || {}}, function (response) {
+		var req = http.request({host: '127.0.0.1', port: port, path: pathname || '/', method: method || 'GET', headers: headers || {}}, function (response) {
 			var chunks = [];
 
 			response.on('data', function (chunk) { chunks.push(chunk); });
 			response.on('end', function () { resolve({Status: response.statusCode, Headers: response.headers, Body: Buffer.concat(chunks)}); });
 		});
 
+		req.setTimeout(2000, function () {
+			req.destroy(new Error('Test request timed out'));
+		});
 		req.on('error', reject);
 		req.end();
 	});
@@ -41,6 +44,52 @@ function withServer (options, callback) {
 }
 
 describe('Elemenx production server', function () {
+	it.each(['/%00', '/assets/file%00.txt', '/libraries/%00', '/%'])('rejects malformed path %s and keeps serving requests', async function (pathname) {
+		var root = fs.mkdtempSync(path.join(os.tmpdir(), 'elemenx-server-invalid-path-'));
+		var handled = [];
+
+		fs.writeFileSync(path.join(root, 'index.html'), '<main>still running</main>');
+
+		try {
+			await withServer({Root: root, Request: function (request, response, pathname) {
+				handled.push(pathname);
+			}}, async function (port) {
+				var invalid = await request(port, 'GET', {}, pathname);
+
+				expect(invalid.Status).toBe(400);
+				expect(invalid.Body.toString('utf8')).toBe('Bad Request');
+				expect(handled).toEqual([]);
+
+				var healthy = await request(port, 'GET');
+
+				expect(healthy.Status).toBe(200);
+				expect(healthy.Body.toString('utf8')).toBe('<main>still running</main>');
+				expect(handled).toEqual(['/']);
+			});
+		}
+		finally {
+			fs.rmSync(root, {recursive: true, force: true});
+		}
+	});
+
+	it('allows an encoded percent sign in a filename and leaves the query out of path validation', async function () {
+		var root = fs.mkdtempSync(path.join(os.tmpdir(), 'elemenx-server-percent-path-'));
+
+		fs.writeFileSync(path.join(root, '%00.txt'), 'literal filename');
+
+		try {
+			await withServer({Root: root, SPA: false}, async function (port) {
+				var result = await request(port, 'GET', {}, '/%2500.txt?value=%00');
+
+				expect(result.Status).toBe(200);
+				expect(result.Body.toString('utf8')).toBe('literal filename');
+			});
+		}
+		finally {
+			fs.rmSync(root, {recursive: true, force: true});
+		}
+	});
+
 	it('emits cache validators and Cache-Control and answers conditional GET with 304', async function () {
 		var root = fs.mkdtempSync(path.join(os.tmpdir(), 'elemenx-server-'));
 
