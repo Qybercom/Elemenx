@@ -31,7 +31,8 @@ Elemenx.Service('RichText', {
 	},
 
 	SafeURL: function (url, image) {
-		var value = String(url || '').trim();
+		/* Browsers ignore ASCII tabs/newlines and leading/trailing C0 controls when parsing a URL. */
+		var value = String(url || '').trim().replace(/[\t\n\r]/g, '').replace(/^[\u0000-\u0020]+|[\u0000-\u0020]+$/g, '');
 		if (!value) return '';
 		if (/^(?:https?:|mailto:|tel:|#|\/|\.{1,2}\/|\?)/i.test(value)) return value;
 		if (image && /^data:image\/(?:png|jpe?g|gif|webp|avif);base64,[a-z0-9+/=\s]+$/i.test(value)) return value;
