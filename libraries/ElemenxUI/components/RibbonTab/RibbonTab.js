@@ -10,6 +10,7 @@ Elemenx.Component('RibbonTab', {
 		Icon: 'menu',
 		Description: 'A tab of a Ribbon: <RibbonTab ID="home" Title="Home"> with RibbonGroup children.',
 		Container: true,
+		Children: ['RibbonGroup'],
 		Props: {
 			ID: 'The ID of the tab.',
 			Title: 'The title of the tab.',

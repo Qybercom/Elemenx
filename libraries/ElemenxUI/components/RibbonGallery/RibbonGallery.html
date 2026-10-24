@@ -1,7 +1,8 @@
-<div class="elemenx-ribbon-gallery elemenx-popup-anchor" [attribute.style]="'--elemenx-gallery-columns: ' + Columns">
+<div class="elemenx-ribbon-gallery elemenx-popup-anchor" [class.labelled]="Labels" [attribute.style]="'--elemenx-gallery-columns: ' + Columns">
 	<div class="elemenx-ribbon-gallery-items" role="listbox" [attribute.aria-label]="(Label || $T('ui.ribbonGallery.label'))">
-		<button class="elemenx-ribbon-gallery-item" type="button" role="option" *for="item of Items" *key="item.ID" [class.selected]="String(item.ID) === String(Value)" [attribute.aria-selected]="String(String(item.ID) === String(Value))" [attribute.title]="item.Label" [attribute.aria-label]="item.Label" [attribute.data-id]="item.ID" (click)="Choose">
+		<button class="elemenx-ribbon-gallery-item" type="button" role="option" *for="item of Items" *key="item.ID" [class.selected]="String(item.ID) === String(Value)" [attribute.aria-selected]="String(String(item.ID) === String(Value))" [attribute.title]="item.Hint ? item.Label + ' — ' + item.Hint : item.Label" [attribute.aria-label]="item.Label" [attribute.data-id]="item.ID" *draggable="{Data: item.ID, Type: Drag, Disabled: !Drag}" (click)="Choose">
 			<span class="elemenx-ribbon-gallery-preview" [attribute.style]="item.Style || null"><Icon *if="item.Icon" [name]="item.Icon" Size="24" /><span *if="!item.Icon">{{item.Preview || item.Label}}</span></span>
+			<span class="elemenx-ribbon-gallery-caption" *if="Labels">{{item.Label}}</span>
 		</button>
 	</div>
 	<div class="elemenx-ribbon-gallery-scroll">
@@ -10,7 +11,7 @@
 		<button class="elemenx-ribbon-gallery-more" type="button" aria-haspopup="listbox" [attribute.aria-expanded]="String(Open)" [attribute.aria-label]="'All ' + (Label || $T('ui.ribbonGallery.label'))" [attribute.data-keytip]="KeyTip || null" (click)="More"><Icon Name="more" Size="12" /></button>
 	</div>
 	<div class="elemenx-popup elemenx-ribbon-gallery-popup" role="listbox" data-placement="bottom-end" [attribute.aria-label]="(Label || $T('ui.ribbonGallery.label'))" *popup="Open" (dismiss)="Dismissed">
-		<button class="elemenx-ribbon-gallery-item" type="button" role="option" *for="item of Items" *key="item.ID" [class.selected]="String(item.ID) === String(Value)" [attribute.aria-selected]="String(String(item.ID) === String(Value))" [attribute.aria-label]="item.Label" [attribute.data-id]="item.ID" (click)="Choose">
+		<button class="elemenx-ribbon-gallery-item" type="button" role="option" *for="item of Items" *key="item.ID" [class.selected]="String(item.ID) === String(Value)" [attribute.aria-selected]="String(String(item.ID) === String(Value))" [attribute.aria-label]="item.Label" [attribute.data-id]="item.ID" *draggable="{Data: item.ID, Type: Drag, Disabled: !Drag}" (click)="Choose">
 			<span class="elemenx-ribbon-gallery-preview" [attribute.style]="item.Style || null"><Icon *if="item.Icon" [name]="item.Icon" Size="24" /><span *if="!item.Icon">{{item.Preview || item.Label}}</span></span>
 			<span class="elemenx-ribbon-gallery-label">{{item.Label}}</span>
 		</button>

@@ -1,0 +1,4 @@
+<div class="elemenx-tab-panel" role="tabpanel" tabindex="0" [attribute.data-id]="ID" [attribute.data-label]="Label" [attribute.data-icon]="Icon || null" [attribute.data-badge]="Badge !== '' && Badge != null ? String(Badge) : null" [attribute.data-closable]="Closable && Closable !== 'false' ? 'true' : null" [attribute.data-disabled]="Disabled && Disabled !== 'false' ? 'true' : null" [attribute.aria-label]="Label || null" (tabopen)="Open">
+	<slot></slot>
+	<div class="elemenx-tab-content" *if="Opened && Component"><div *mount="Made(Component, Props)"></div></div>
+</div>

@@ -25,9 +25,9 @@ Elemenx.Component('DocsExample', {
 			var parts = self.Parts(code);
 
 			return [
-				{ID: 'html', Label: 'HTML', Language: 'html', Text: parts.Template},
-				{ID: 'js', Label: 'JS', Language: 'js', Text: parts.Script},
-				{ID: 'css', Label: 'CSS', Language: 'css', Text: parts.Style}
+				{ID: 'html', Label: 'Example.html', Language: 'html', Text: parts.Template},
+				{ID: 'js', Label: 'Example.js', Language: 'js', Text: parts.Script ? 'Elemenx.Component(\'Example\', ' + parts.Script + ');' : ''},
+				{ID: 'css', Label: 'Example.css', Language: 'css', Text: parts.Style}
 			].filter(function (listing) {
 				return listing.Text;
 			});
@@ -87,9 +87,24 @@ Elemenx.Component('DocsExample', {
 
 		return {
 			Template: template.replace(/^\s+|\s+$/g, ''),
-			Script: script ? script[1].replace(/^\s+|\s+$/g, '') : '',
+			Script: script ? this.Body(script[1]) : '',
 			Style: style ? style[1].replace(/^\n+|\s+$/g, '').replace(/^\t/gm, '') : ''
 		};
+	},
+
+	/*
+	 * The object of the definition in the <script> of an example: the object alone, in parentheses (({Count: 0})), or
+	 * the call an Application writes (Elemenx.Component('Example', {Count: 0});).
+	 */
+	Body: function (script) {
+		var text = script.replace(/^\s+|\s+$/g, '');
+		var call = /^Elemenx\.Component\(\s*(['"])[^'"]*\1\s*,\s*([\s\S]*?)\s*\)\s*;?$/.exec(text);
+		var wrapped = /^\(([\s\S]*)\)$/.exec(text);
+
+		if (call)
+			return call[2];
+
+		return wrapped ? wrapped[1] : text;
 	},
 
 	Definition: function (code) {

@@ -485,6 +485,18 @@
 					}
 				},
 				{
+					"ID": "DesignerRules",
+					"Title": {
+						"en": "DesignerRules"
+					}
+				},
+				{
+					"ID": "DesignerStyle",
+					"Title": {
+						"en": "DesignerStyle"
+					}
+				},
+				{
 					"ID": "DesignerTree",
 					"Title": {
 						"en": "DesignerTree"

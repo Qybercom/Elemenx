@@ -20,7 +20,8 @@ body {
 	align-items: center;
 	gap: 12px;
 	height: 52px;
-	padding: 0 16px;
+	/* Its content over the page, in the middle of a wide screen as the page is (1600 pixels at most). */
+	padding: 0 max(16px, calc((100% - 1600px) / 2 + 16px));
 	background: var(--elemenx-surface);
 	border-bottom: 1px solid var(--elemenx-border);
 }
@@ -51,7 +52,7 @@ body {
 
 .docs-main {
 	display: flex;
-	flex: 1;
+	flex: 1 0 auto;
 	flex-direction: column;
 	min-height: 0;
 }

@@ -1,6 +1,7 @@
 /* Code as a CodeEditor draws it, read only: its lines, their numbers in a column, the marked ones on a band. */
 .elemenx-code-view {
 	--elemenx-code-view-rows: 0;
+	--elemenx-code-view-scrollbar: 0px;
 	position: relative;
 	margin: 0;
 	min-width: 0;
@@ -60,7 +61,7 @@
 .elemenx-code-view-copy {
 	position: absolute;
 	top: 6px;
-	right: 6px;
+	right: calc(6px + var(--elemenx-code-view-scrollbar));
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;

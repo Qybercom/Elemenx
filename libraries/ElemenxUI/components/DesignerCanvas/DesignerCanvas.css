@@ -1,0 +1,269 @@
+/*
+ * The canvas is the body of the page: the viewport as high as the room the canvas has (as wide as Width says), the
+ * page in it a column that fills it, so a screen with Sizing fill fills it too; taller, the canvas scrolls.
+ */
+.elemenx-designer-canvas {
+	position: relative;
+	display: flex;
+	flex: 1 1 auto;
+	flex-direction: column;
+	min-height: 0;
+	padding: 16px;
+	overflow: auto;
+	background: var(--elemenx-background);
+}
+
+.elemenx-designer-viewport {
+	display: flex;
+	flex: 1 0 auto;
+	flex-direction: column;
+	align-self: center;
+	width: 100%;
+	container-type: inline-size;
+	container-name: elemenx-designer;
+	transition: width var(--elemenx-duration) var(--elemenx-easing);
+}
+
+.elemenx-designer-viewport.tablet {
+	width: 768px;
+}
+
+.elemenx-designer-viewport.phone {
+	width: 390px;
+}
+
+.elemenx-designer-surface {
+	position: relative;
+	display: flex;
+	flex: 1 0 auto;
+	flex-direction: column;
+	background: var(--elemenx-surface);
+	border: 1px solid var(--elemenx-border);
+	border-radius: var(--elemenx-radius);
+	box-shadow: var(--elemenx-shadow-small);
+}
+
+/*
+ * The page in a stacking context of its own, under the layer that takes the pointer: an element of the page with a
+ * z-index of its own (a Window, a popup) stays under the layer, so a press on it selects it.
+ */
+.elemenx-designer-page-host {
+	position: relative;
+	z-index: 0;
+	isolation: isolate;
+	display: flex;
+	flex: 1 0 auto;
+	flex-direction: column;
+}
+
+.elemenx-designer-page {
+	display: flex;
+	flex: 1 0 auto;
+	flex-direction: column;
+}
+
+/* Outlines: the frame of every container; Gaps: room to drop into the containers without a padding of their own. */
+.elemenx-designer-canvas.outlines [data-designer-container] > * {
+	outline: 1px dashed var(--elemenx-border-strong);
+	outline-offset: -1px;
+}
+
+.elemenx-designer-canvas.gaps .elemenx-designer-page,
+.elemenx-designer-canvas.gaps [data-designer-gap] > * {
+	padding: 8px;
+}
+
+.elemenx-designer-node {
+	display: contents;
+}
+
+.elemenx-designer-empty {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 48px;
+	min-width: 96px;
+	padding: 8px;
+	color: var(--elemenx-text-muted);
+	font-size: var(--elemenx-font-size-small);
+	border: 1px dashed var(--elemenx-border-strong);
+	border-radius: var(--elemenx-radius-small);
+}
+
+.elemenx-designer-layer {
+	position: absolute;
+	inset: 0;
+	z-index: 1;
+	cursor: default;
+}
+
+.elemenx-designer-hover,
+.elemenx-designer-selection,
+.elemenx-designer-target,
+.elemenx-designer-marker {
+	position: absolute;
+	box-sizing: border-box;
+	pointer-events: none;
+}
+
+.elemenx-designer-hover {
+	border: 1px dashed var(--elemenx-accent);
+}
+
+.elemenx-designer-selection {
+	border: 2px solid var(--elemenx-accent);
+}
+
+.elemenx-designer-target {
+	background: rgba(var(--elemenx-accent-rgb), 0.12);
+	border: 1px solid var(--elemenx-accent);
+}
+
+.elemenx-designer-marker {
+	background: var(--elemenx-accent);
+	border-radius: var(--elemenx-radius-small);
+}
+
+/* Where the drop goes, in words, beside its line: In Screen, after Row. */
+.elemenx-designer-marker-note {
+	position: absolute;
+	top: 100%;
+	left: 0;
+	margin-top: 4px;
+	padding: 0 6px;
+	color: var(--elemenx-accent-text);
+	font-size: var(--elemenx-font-size-small);
+	line-height: var(--elemenx-line-height-small);
+	white-space: nowrap;
+	background: var(--elemenx-accent);
+	border-radius: var(--elemenx-radius-small);
+}
+
+.elemenx-designer-grip {
+	position: absolute;
+	bottom: 100%;
+	left: -2px;
+	display: inline-flex;
+	gap: 4px;
+	align-items: center;
+	padding: 0 8px;
+	color: var(--elemenx-accent-text);
+	font-size: var(--elemenx-font-size-small);
+	line-height: 20px;
+	white-space: nowrap;
+	cursor: grab;
+	background: var(--elemenx-accent);
+	border-radius: var(--elemenx-radius-small) var(--elemenx-radius-small) 0 0;
+	pointer-events: auto;
+}
+
+/* The bar of a drag: the containers from the page to the one a drop goes into; a drop on one puts it at its end. */
+.elemenx-designer-chain {
+	position: sticky;
+	top: 0;
+	z-index: 3;
+	display: flex;
+	flex: none;
+	justify-content: center;
+	height: 0;
+}
+
+.elemenx-designer-chain-bar {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 4px;
+	height: max-content;
+	margin-top: -12px;
+	padding: 4px 6px;
+	background: var(--elemenx-surface);
+	border: 1px solid var(--elemenx-border);
+	border-radius: var(--elemenx-radius);
+	box-shadow: var(--elemenx-shadow-small);
+}
+
+.elemenx-designer-chain-title {
+	color: var(--elemenx-text-muted);
+	font-size: var(--elemenx-font-size-small);
+}
+
+.elemenx-designer-chain-item {
+	padding: 2px 8px;
+	font-size: var(--elemenx-font-size-small);
+	background: var(--elemenx-background);
+	border: 1px dashed var(--elemenx-border-strong);
+	border-radius: var(--elemenx-radius-small);
+}
+
+.elemenx-designer-chain-item.active {
+	color: var(--elemenx-accent-text);
+	background: var(--elemenx-accent);
+	border-style: solid;
+	border-color: var(--elemenx-accent);
+}
+
+/* The inspection of a preview: the boxes of the element under the pointer, as the tools of a browser draw them. */
+.elemenx-designer-layer.inspect {
+	cursor: crosshair;
+}
+
+.elemenx-designer-measure,
+.elemenx-designer-distance,
+.elemenx-designer-tip {
+	position: absolute;
+	box-sizing: border-box;
+	pointer-events: none;
+}
+
+.elemenx-designer-measure.margin {
+	background: rgba(var(--elemenx-warning-rgb), 0.32);
+}
+
+.elemenx-designer-measure.padding {
+	background: rgba(var(--elemenx-success-rgb), 0.32);
+}
+
+.elemenx-designer-measure.content {
+	background: rgba(var(--elemenx-info-rgb), 0.4);
+}
+
+.elemenx-designer-measure.pinned {
+	border: 2px solid var(--elemenx-accent);
+}
+
+.elemenx-designer-distance {
+	background: var(--elemenx-danger);
+}
+
+.elemenx-designer-distance > span {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	padding: 0 4px;
+	color: var(--elemenx-accent-text);
+	font-size: var(--elemenx-font-size-small);
+	line-height: var(--elemenx-line-height-small);
+	white-space: nowrap;
+	background: var(--elemenx-danger);
+	border-radius: var(--elemenx-radius-small);
+	transform: translate(-50%, -50%);
+}
+
+.elemenx-designer-tip {
+	z-index: 2;
+	display: flex;
+	flex-direction: column;
+	padding: 4px 8px;
+	color: var(--elemenx-text);
+	font-size: var(--elemenx-font-size-small);
+	line-height: var(--elemenx-line-height-small);
+	white-space: nowrap;
+	background: var(--elemenx-surface);
+	border: 1px solid var(--elemenx-border);
+	border-radius: var(--elemenx-radius-small);
+	box-shadow: var(--elemenx-shadow-small);
+}
+
+.elemenx-designer-tip-row {
+	color: var(--elemenx-text-muted);
+}

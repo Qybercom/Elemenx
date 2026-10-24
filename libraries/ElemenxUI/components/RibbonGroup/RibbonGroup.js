@@ -13,6 +13,7 @@ Elemenx.Component('RibbonGroup', {
 		Icon: 'menu',
 		Description: 'A group of commands of a RibbonTab: <RibbonGroup Title="Clipboard" Icon="paste">.',
 		Container: true,
+		Children: ['RibbonButton', 'RibbonGallery'],
 		Events: ['launch'],
 		Props: {
 			Title: 'The title under the group.',

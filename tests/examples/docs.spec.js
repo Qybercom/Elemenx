@@ -115,17 +115,20 @@ test.describe('Elemenx documentation', function () {
 		/* The example of the Designer: its template, its script and its style, a tab each. */
 		await page.goto(origin + '/components/DesignerCanvas');
 
-		await expect(example.locator('.docs-example-listings .elemenx-tab')).toHaveText(['HTML', 'JS', 'CSS']);
+		await expect(example.locator('.docs-example-listings .elemenx-tab')).toHaveText(['Example.html', 'Example.js', 'Example.css']);
 		await expect(example.locator('.elemenx-code-view')).toContainText('<DesignerCanvas Width="desktop" />');
 		await expect(example.locator('.elemenx-code-view')).not.toContainText('<script>');
 
-		await example.locator('.docs-example-listings .elemenx-tab').filter({hasText: 'CSS'}).click();
+		await example.locator('.docs-example-listings .elemenx-tab').filter({hasText: 'Example.css'}).click();
 
 		await expect(example.locator('.elemenx-code-view')).toContainText('.designer-demo {');
 
-		await example.locator('.docs-example-listings .elemenx-tab').filter({hasText: 'JS'}).click();
+		await example.locator('.docs-example-listings .elemenx-tab').filter({hasText: 'Example.js'}).click();
 
 		await expect(example.locator('.elemenx-code-view')).toContainText('Show: function () {');
+
+		/* The script is shown as an Application writes it: the call that defines the component, not the bare object. */
+		expect((await example.locator('.elemenx-code-view').innerText()).trim()).toMatch(/^Elemenx\.Component\('Example', \{\n[\s\S]*\n\}\);$/);
 
 		/* The style of the example applies to its result. */
 		await expect(page.locator('.docs-example-result .designer-demo')).toHaveCSS('display', 'grid');

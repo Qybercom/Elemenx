@@ -5961,8 +5961,10 @@
 
 		/*
 		 * What a definition declares of itself in $Meta, normalized: {Name, Kind, Group, Icon, Description, Props, Slots,
-		 * Container, Events, Methods, Sample}. $Meta.Props names the public props, each a description or {Type, Options,
-		 * Description}; its Default is the value of the definition, its Type that of the default unless Meta names one.
+		 * Container, Children, Current, Events, Methods, Sample}. $Meta.Props names the public props, each a description or
+		 * {Type, Options, Schema, Description}; its Default is the value of the definition, its Type that of the default
+		 * unless Meta names one. Schema describes the items of a list prop ({ID: 'text', Disabled: 'bool'}); Children names
+		 * the components declared inside it (Tab in Tabs) and Current the prop that names the one shown (Value).
 		 */
 		function normalize (name, kind, definition) {
 			var meta = definition.$Meta;
@@ -5982,6 +5984,7 @@
 					Type: entry.Type || (entry.Options ? 'select' : typeOf(definition[key])),
 					Default: typeof definition[key] === 'function' ? undefined : copy(definition[key]),
 					Options: entry.Options ? entry.Options.slice() : null,
+					Schema: entry.Schema ? copy(entry.Schema) : null,
 					Description: entry.Description || ''
 				});
 			}
@@ -5995,6 +5998,8 @@
 				Props: props,
 				Slots: (meta.Slots || []).slice(),
 				Container: !!meta.Container,
+				Children: (meta.Children || []).slice(),
+				Current: meta.Current || '',
 				Events: (meta.Events || []).slice(),
 				Methods: (meta.Methods || []).slice(),
 				Sample: copy(meta.Sample || {})

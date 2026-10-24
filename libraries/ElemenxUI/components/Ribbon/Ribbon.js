@@ -7,8 +7,8 @@
  *     </Ribbon>
  *
  * Slots: quick (the quick access toolbar, before the tabs), end (after them: a search, a share button) and backstage
- * (a RibbonBackstage: the File button opens it over the window). Tab is the current tab (the first one that is not
- * contextual by default). A narrow Ribbon shrinks its groups step by step (see RibbonGroup). Collapsed shows only the
+ * (a RibbonBackstage: the File button opens it over the Workspace of the Ribbon, or over the window without one). Tab
+ * is the current tab (the first one that is not contextual by default). A narrow Ribbon shrinks its groups step by step (see RibbonGroup). Collapsed shows only the
  * tabs: a tab then opens its panel over the page until a command runs; a double click on a tab, the pin button or
  * Ctrl+F1 collapse and pin it. When even the narrow bar has no room for the tabs, a button with the title of the current
  * tab takes their place and lists them.
@@ -23,8 +23,10 @@ Elemenx.Component('Ribbon', {
 	$Meta: {
 		Group: 'navigation',
 		Icon: 'menu',
-		Description: 'A ribbon of commands, as in Microsoft Office: tabs of RibbonTab, each with RibbonGroup groups of RibbonButton, RibbonGallery and any other controls, declared in the template: * <Ribbon [tab]="Tab" (tab)="TabChanged" (command)="Run"> <RibbonTab ID="home" Title="Home"><RibbonGroup Title="Clipboard">...</RibbonGroup></RibbonTab> </Ribbon> * Slots: quick (the quick access toolbar, before the tabs), end (after them: a search, a share button) and backstage (a RibbonBackstage: the File button opens it over the window).',
+		Description: 'A ribbon of commands, as in Microsoft Office: tabs (RibbonTab) of groups (RibbonGroup) of buttons (RibbonButton), galleries (RibbonGallery) and any other controls, and a backstage (RibbonBackstage) behind the File button.',
 		Container: true,
+		Children: ['RibbonTab', 'RibbonBackstage'],
+		Current: 'Tab',
 		Slots: ['quick', 'end', 'backstage'],
 		Events: ['tab', 'collapse', 'command', 'backstage'],
 		Props: {
@@ -142,6 +144,10 @@ Elemenx.Component('Ribbon', {
 			self.KeyUp(event);
 		};
 
+		this.OnCover = function () {
+			self.Cover();
+		};
+
 		root.addEventListener('elemenx-ribbon-command', this.OnCommand);
 		root.addEventListener('elemenx-ribbon-close', this.OnClose);
 		document.addEventListener('pointerdown', this.OnPress, true);
@@ -189,6 +195,8 @@ Elemenx.Component('Ribbon', {
 		document.removeEventListener('pointerdown', this.OnPress, true);
 		document.removeEventListener('keydown', this.OnDown, true);
 		document.removeEventListener('keyup', this.OnUp, true);
+		window.removeEventListener('resize', this.OnCover);
+		window.removeEventListener('scroll', this.OnCover, true);
 	},
 
 	/* The panels of this Ribbon (not of a Ribbon inside it), read as Tabs reads its tabs (the Panels Service). */
@@ -533,12 +541,46 @@ Elemenx.Component('Ribbon', {
 
 		backstage.classList.add('open');
 
+		this.Cover();
+
+		window.addEventListener('resize', this.OnCover);
+		window.addEventListener('scroll', this.OnCover, true);
+
 		first = backstage.querySelector('.elemenx-ribbon-backstage-item.active') || backstage.querySelector('.elemenx-ribbon-backstage-item');
 
 		if (first)
 			first.focus();
 
 		this.$Emit('backstage', {Open: true});
+	},
+
+	/*
+	 * The open backstage covers the Workspace of the Ribbon, where it stands in the page now (a page around it scrolls,
+	 * a header of the page stays over it); without a Workspace, the whole window.
+	 */
+	Cover: function () {
+		var backstage = this.Backstage();
+		var workspace = this.$Element() && this.$Element().closest('.elemenx-workspace');
+		var box;
+
+		if (!backstage) return;
+
+		if (!workspace) {
+			['top', 'left', 'right', 'bottom', 'width', 'height'].forEach(function (name) {
+				backstage.style.removeProperty(name);
+			});
+
+			return;
+		}
+
+		box = workspace.getBoundingClientRect();
+
+		backstage.style.top = box.top + 'px';
+		backstage.style.left = box.left + 'px';
+		backstage.style.right = 'auto';
+		backstage.style.bottom = 'auto';
+		backstage.style.width = box.width + 'px';
+		backstage.style.height = box.height + 'px';
 	},
 
 	CloseBackstage: function (focus) {
@@ -548,6 +590,9 @@ Elemenx.Component('Ribbon', {
 		if (!backstage || !backstage.classList.contains('open')) return;
 
 		backstage.classList.remove('open');
+
+		window.removeEventListener('resize', this.OnCover);
+		window.removeEventListener('scroll', this.OnCover, true);
 
 		file = this.$Element().querySelector('.elemenx-ribbon-file');
 

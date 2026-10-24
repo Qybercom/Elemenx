@@ -7,6 +7,7 @@
 		"missing": "There is no such page.",
 		"result": "Result",
 		"code": "Code",
-		"source": "Source"
+		"source": "Source",
+		"onPage": "On this page"
 	}
 }

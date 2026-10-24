@@ -1,0 +1,127 @@
+.elemenx-designer-inspector {
+	padding: 12px;
+}
+
+.elemenx-designer-inspector-body {
+	gap: 12px;
+}
+
+.elemenx-designer-inspector-head {
+	gap: 2px;
+	align-items: center;
+}
+
+.elemenx-designer-inspector-title {
+	font-weight: var(--elemenx-font-weight-strong);
+}
+
+.elemenx-designer-inspector-description {
+	margin: 0;
+}
+
+
+.elemenx-designer-inspector-props {
+	gap: 12px;
+}
+
+.elemenx-designer-inspector-children {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+}
+
+/* A list prop of its items: a row of fields for each, with its actions. */
+.elemenx-designer-list {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.elemenx-designer-list-head {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.elemenx-designer-list > .elemenx-text {
+	margin: 0;
+}
+
+.elemenx-designer-list-item {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+	gap: 6px;
+	padding: 8px;
+	background: var(--elemenx-background);
+	border: 1px solid var(--elemenx-border);
+	border-radius: var(--elemenx-radius);
+}
+
+.elemenx-designer-list-key {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	min-width: 0;
+	color: var(--elemenx-text-muted);
+	font-size: var(--elemenx-font-size-small);
+}
+
+.elemenx-designer-list-key input[type='checkbox'] {
+	align-self: flex-start;
+	margin: 4px 0;
+}
+
+.elemenx-designer-list-input {
+	box-sizing: border-box;
+	width: 100%;
+	height: 26px;
+	padding: 0 6px;
+	color: var(--elemenx-text);
+	font: inherit;
+	background: var(--elemenx-surface);
+	border: 1px solid var(--elemenx-border);
+	border-radius: var(--elemenx-radius-small);
+}
+
+.elemenx-designer-list-input:focus-visible {
+	outline: 2px solid var(--elemenx-focus);
+	outline-offset: -1px;
+}
+
+.elemenx-designer-list-actions {
+	display: flex;
+	align-items: flex-end;
+	gap: 2px;
+}
+
+.elemenx-designer-list-button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 26px;
+	height: 26px;
+	padding: 0 6px;
+	color: var(--elemenx-text-muted);
+	font: inherit;
+	font-family: var(--elemenx-font-mono);
+	font-size: var(--elemenx-font-size-small);
+	cursor: pointer;
+	background: none;
+	border: 1px solid transparent;
+	border-radius: var(--elemenx-radius-small);
+}
+
+.elemenx-designer-list-button:hover {
+	color: var(--elemenx-text);
+	background: var(--elemenx-surface-hover);
+	border-color: var(--elemenx-border);
+}
+
+.elemenx-designer-list-button:focus-visible {
+	outline: 2px solid var(--elemenx-focus);
+	outline-offset: 1px;
+}
+
+.elemenx-designer-list-add {
+	align-self: flex-start;
+}

@@ -17,7 +17,7 @@ Elemenx.Component('Breadcrumbs', {
 		Slots: ['start', 'end'],
 		Events: ['select'],
 		Props: {
-			Items: 'The path: [{ID, Label, Icon, File, Href, Disabled, Class}], the last item the present page.',
+			Items: {Schema: {ID: 'text', Label: 'text', Icon: 'icon', Href: 'text', Disabled: 'bool'}, Description: 'The path: [{ID, Label, Icon, File, Href, Disabled, Class}], the last item the present page.'},
 			Separator: 'Between the items: chevron, slash, arrow, dot, or a text of its own.',
 			Max: 'How many items show (0: all); the ones in the middle go into a "…" menu.',
 			Size: {Options: ['small', 'medium', 'large'], Description: 'Its size: small, medium or large.'},

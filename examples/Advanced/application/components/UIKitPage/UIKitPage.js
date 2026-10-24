@@ -9,7 +9,8 @@ Elemenx.Component('UIKitPage', {
 		'info', 'success', 'warning', 'error', 'help', 'bell', 'loader',
 		'calendar', 'clock', 'history', 'user', 'users', 'mail', 'phone', 'credit-card', 'cart', 'globe', 'map-pin', 'tag', 'color', 'sun', 'moon', 'monitor',
 		'terminal', 'code', 'branch', 'commit', 'merge', 'play', 'pause', 'stop', 'debug', 'database', 'server', 'cloud', 'layout', 'panel-left', 'panel-right', 'panel-bottom', 'columns', 'list', 'grid', 'tree', 'structure',
-		'sort-ascending', 'sort-descending'
+		'sort-ascending', 'sort-descending',
+		'justify-start', 'justify-center', 'justify-end', 'justify-between', 'justify-around', 'justify-evenly', 'align-baseline', 'flex-wrap', 'smartphone', 'tablet'
 	],
 	MediaIcons: [
 		'mic', 'mic-off', 'video', 'video-off', 'camera', 'camera-off', 'volume', 'volume-low', 'volume-high', 'volume-off', 'speaker', 'speaker-off', 'headphones', 'headphones-off',

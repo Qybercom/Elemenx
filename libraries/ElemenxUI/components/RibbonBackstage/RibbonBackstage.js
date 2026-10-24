@@ -1,7 +1,7 @@
 /*
  * The backstage of a Ribbon, as the File view of Microsoft Office: <RibbonBackstage slot="backstage"> with RibbonPage
- * children. The File button of the Ribbon opens it over the window: the list of the pages on the side, the content of
- * the current one beside it. The back button and Escape close it. Page is the current page.
+ * children. The File button of the Ribbon opens it over its Workspace (the window without one): the list of the pages on
+ * the side, the content of the current one beside it. The back button and Escape close it. Page is the current page.
  * Events: page ({ID}). Commands among the pages are reported by the Ribbon (command).
  */
 Elemenx.Component('RibbonBackstage', {
@@ -11,6 +11,8 @@ Elemenx.Component('RibbonBackstage', {
 		Icon: 'menu',
 		Description: 'The backstage of a Ribbon, as the File view of Microsoft Office: <RibbonBackstage slot="backstage"> with RibbonPage children.',
 		Container: true,
+		Children: ['RibbonPage'],
+		Current: 'Page',
 		Events: ['page'],
 		Props: {
 			Title: 'The title of the backstage.',

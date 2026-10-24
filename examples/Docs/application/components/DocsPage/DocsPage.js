@@ -3,7 +3,8 @@
  * from pages/<section>/<page>.<language>.md (the English page when the language has none). The text is shown by
  * Markdown; a block ```example holds a template that runs beside its code (DocsExample). The page of a component, a
  * service or a directive ends with its source, read from the Library: a listing for each of its files (its template,
- * its script, its stylesheet), a tab each.
+ * its script, its stylesheet), a tab each. Beside the page, on a wide screen, its contents: its headings, the one read now
+ * marked as the page scrolls; a press goes to one.
  */
 Elemenx.Component('DocsPage', {
 	$TemplateURL: 'DocsPage.html',
@@ -14,6 +15,8 @@ Elemenx.Component('DocsPage', {
 	Missing: false,
 	Loaded: '',
 	Sources: [],
+	Headings: [],
+	Active: '',
 	Source: '',
 
 	$OnCreate: function () {
@@ -68,6 +71,42 @@ Elemenx.Component('DocsPage', {
 
 	$OnReady: function () {
 		var self = this;
+
+		/* The heading read now: the last one above the top of the window, under the header. */
+		this.OnScroll = function () {
+			var active = '';
+
+			self.Headings.forEach(function (heading) {
+				var node = document.getElementById(heading.ID);
+				if (node && node.getBoundingClientRect().top < 120)
+					active = heading.ID;
+			});
+
+			if (!active && self.Headings.length)
+				active = self.Headings[0].ID;
+
+			if (self.Active !== active)
+				self.Active = active;
+		};
+
+		window.addEventListener('scroll', this.OnScroll, {passive: true});
+
+		/*
+		 * The headings of the page as it is drawn (its Markdown, its source, later than the page itself): the contents
+		 * are made again on the frame after a change of the article, once a frame at most.
+		 */
+		this.Frame = 0;
+		this.Watcher = new MutationObserver(function () {
+			if (self.Frame) return;
+
+			self.Frame = window.requestAnimationFrame(function () {
+				self.Frame = 0;
+
+				self.Outline(self.$Element().querySelector('.docs-article'));
+			});
+		});
+
+		this.Watcher.observe(this.$Element().querySelector('.docs-article'), {childList: true, subtree: true});
 
 		Elemenx.Resource.Load('/pages/index.json', function (error, text) {
 			if (!error)
@@ -213,6 +252,52 @@ Elemenx.Component('DocsPage', {
 
 	SourcePicked: function (id) {
 		this.Source = id;
+	},
+
+	$OnDestroy: function () {
+		window.removeEventListener('scroll', this.OnScroll);
+		window.cancelAnimationFrame(this.Frame);
+
+		this.Watcher.disconnect();
+	},
+
+	/* The headings of an article (h2 and h3 of its text and of its source) with the IDs they are given. */
+	Outline: function (article) {
+		var used = {};
+		var headings = [];
+
+		if (!article) return;
+
+		Array.prototype.forEach.call(article.querySelectorAll('.docs-segment h2, .docs-segment h3, .docs-source > h2'), function (node) {
+			if (node.closest('.docs-example')) return;
+
+			var text = node.textContent.trim();
+			var id = 'docs-' + (text.toLowerCase().replace(/[^a-z0-9\u0400-\u04ff]+/g, '-').replace(/^-+|-+$/g, '') || 'part');
+			var base = id;
+			var count = 1;
+
+			while (used[id]) {
+				count++;
+				id = base + '-' + count;
+			}
+
+			used[id] = true;
+			node.id = id;
+
+			headings.push({ID: id, Text: text, Level: node.tagName === 'H3' ? 3 : 2});
+		});
+
+		if (JSON.stringify(headings) !== JSON.stringify(this.Headings))
+			this.Headings = headings;
+
+		if (this.OnScroll)
+			this.OnScroll();
+	},
+
+	Jumped: function (event, node) {
+		var target = document.getElementById(node.getAttribute('data-id'));
+		if (target)
+			target.scrollIntoView({behavior: 'smooth', block: 'start'});
 	},
 
 	Picked: function (item) {

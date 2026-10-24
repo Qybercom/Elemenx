@@ -39,6 +39,13 @@ describe('tools/shake.js', function () {
 		}).not.toThrow();
 	});
 
+	it('finds the sections in a framework whose lines end in CRLF, as Git on Windows checks it out', function () {
+		var result = Shake.Shake(source.replace(/\n/g, '\r\n'), "Elemenx.Component('Foo', {$Template: '<div></div>'});");
+
+		expect(result.Removed).toEqual(['Router', 'Network', 'Storage', 'Events', 'Messaging', 'WebWorker', 'ServiceWorker']);
+		expect(result.Source).not.toContain('Elemenx.Network =');
+	});
+
 	it('keeps the groups a kept group needs', function () {
 		var result = Shake.Shake(source, "this.$Messaging.Send('foo', {});");
 

@@ -11,6 +11,7 @@ Elemenx.Component('MenuItem', {
 		Icon: 'launcher',
 		Description: 'An item of a menu declared in the template of a Menu (its default slot) or of a ContextMenu (slot items): ID, Label, Icon, Shortcut, Disabled, Danger, Checked, Group; Separator draws a line instead; MenuItem children make a submenu.',
 		Container: true,
+		Children: ['MenuItem'],
 		Events: ['select'],
 		Props: {
 			ID: 'The ID of the item, in the select event.',

@@ -22,7 +22,7 @@ Elemenx.Component('Gallery', {
 		Description: 'A gallery: one picture at a time out of Items [{ID, Image, Thumb, Alt, Title, Description, Tags}], with buttons to the previous and the next one, dots, a counter and thumbnails.',
 		Events: ['change', 'select'],
 		Props: {
-			Items: 'The pictures: [{ID, Image, Thumb, Alt, Title, Description, Tags}].',
+			Items: {Schema: {ID: 'text', Image: 'text', Title: 'text', Description: 'text'}, Description: 'The pictures: [{ID, Image, Thumb, Alt, Title, Description, Tags}].'},
 			Index: 'The picture shown.',
 			ShowTitle: 'Shows the title in the caption.',
 			ShowDescription: 'Shows the description in the caption.',

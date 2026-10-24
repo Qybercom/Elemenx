@@ -169,7 +169,8 @@ Elemenx.Component('CodeView', {
 		}
 
 		/* labels: the names of the buttons of a block, {Fold, Unfold}, in the language of the page. */
-		this.Rendered = function (value, language, start, highlight, fold, folded, labels) {
+		/* rows: the code is drawn again when it changes, and with it the place of the copy button (Hide). */
+		this.Rendered = function (value, language, start, highlight, fold, folded, labels, rows) {
 			var lines = self.$Service('Syntax').Lines(String(value == null ? '' : value).replace(/\n$/, ''), language || 'text');
 			var first = Number(start) || 1;
 			var marks = marked(highlight);
@@ -221,6 +222,9 @@ Elemenx.Component('CodeView', {
 
 			i++;
 		}
+
+		/* The copy button keeps clear of the scroll bar of the code, when the lines shown give it one. */
+		container.parentNode.style.setProperty('--elemenx-code-view-scrollbar', Math.max(0, container.offsetWidth - container.clientWidth) + 'px');
 	},
 
 	/* A press on the button of a block or on its … folds or unfolds it. */

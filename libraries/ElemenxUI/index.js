@@ -197,6 +197,8 @@
 	'components/DesignerPalette/DesignerPalette.js',
 	'components/DesignerCanvas/DesignerCanvas.js',
 	'components/DesignerTree/DesignerTree.js',
+	'components/DesignerStyle/DesignerStyle.js',
+	'components/DesignerRules/DesignerRules.js',
 	'components/DesignerInspector/DesignerInspector.js',
 	'components/VirtualList/VirtualList.js',
 	'components/EmptyState/EmptyState.js',

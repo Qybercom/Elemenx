@@ -1,36 +1,107 @@
 <div class="builder-shell">
-	<Workspace Persist="elemenx-builder:layout">
+	<Workspace Variant="ribbon" Persist="elemenx-builder:layout">
 		<div slot="header" class="elemenx-container fill builder-header">
 			<span class="builder-brand"><span class="builder-brand-mark">E</span><strong>{{$T('builder.title')}}</strong></span>
-			<span class="elemenx-divider vertical"></span>
-			<Button Icon="undo" Variant="ghost" Size="small" [title]="$T('builder.undo')" [disabled]="!CanUndo(Version)" (click)="Undo" />
-			<Button Icon="redo" Variant="ghost" Size="small" [title]="$T('builder.redo')" [disabled]="!CanRedo(Version)" (click)="Redo" />
-			<span class="elemenx-divider vertical"></span>
-			<RadioGroup Variant="segmented" Size="small" [options]="Widths(Language)" [value]="Width" [label]="$T('builder.width')" (change)="Sized" />
-			<Toggle Size="small" [label]="$T('builder.preview')" [checked]="Preview" (change)="Previewed" />
 			<span class="elemenx-spacer"></span>
-			<Button Icon="upload" Size="small" [label]="$T('builder.import')" (click)="ImportOpened" />
-			<Button Icon="download" Variant="primary" Size="small" [label]="$T('builder.export')" (click)="ExportOpened" />
-			<Button Icon="delete" Variant="ghost" Size="small" [title]="$T('builder.clear')" (click)="Cleared" />
-			<span class="elemenx-divider vertical"></span>
-			<RadioGroup Variant="segmented" Size="small" [options]="Languages" [value]="Language" [label]="$T('builder.language')" (change)="Chosen" />
+			<Button Size="small" [variant]="Preview ? 'danger' : 'primary'" [icon]="Preview ? 'stop' : 'play'" [label]="Preview ? $T('builder.stop') : $T('builder.run')" (click)="Ran" />
+			<Button *if="Preview" Size="small" Variant="ghost" Icon="search" [pressed]="Inspect" [label]="$T('builder.inspect')" (click)="Inspected" />
+			<Button *if="Preview" Size="small" Variant="ghost" Icon="grid" [pressed]="Lines" [label]="$T('builder.outlines')" (click)="Lined" />
+			<span class="elemenx-spacer"></span>
+			<div class="builder-language">
+				<Select Size="small" [options]="Languages" [value]="Language" [label]="$T('builder.language')" (change)="Chosen" />
+			</div>
 			<ThemeSwitch Compact="true" />
 		</div>
 
-		<DesignerCanvas slot="main" [width]="Width" [preview]="Preview" />
+		<Ribbon slot="ribbon" [tab]="Tab" [label]="$T('builder.title')" (tab)="TabChanged" (command)="Command">
+			<RibbonButton slot="quick" ID="undo" Icon="undo" Size="icon" [label]="$T('builder.undo')" [disabled]="!CanUndo(Version)" />
+			<RibbonButton slot="quick" ID="redo" Icon="redo" Size="icon" [label]="$T('builder.redo')" [disabled]="!CanRedo(Version)" />
 
-		<WorkspaceToolWindow slot="tools" ID="palette" Icon="add" Area="left" Open="true" [title]="$T('builder.palette')">
-			<div class="builder-left">
-				<Splitter Direction="vertical" Size="420" Min="160">
-					<div slot="first" class="builder-pane">
-						<DesignerPalette />
+			<RibbonBackstage slot="backstage" [title]="$T('builder.file')" [page]="Page" (page)="Paged">
+				<RibbonPage ID="export" Icon="download" [title]="$T('builder.export')">
+					<div class="elemenx-column builder-page">
+						<h2 class="elemenx-title">{{$T('builder.exportTitle')}}</h2>
+						<p class="elemenx-text muted">{{$T('builder.exportNote')}}</p>
+						<CodeView Language="html" Fold="true" Rows="20" [value]="Code(Version)" [label]="$T('builder.template')" />
+						<div class="elemenx-container">
+							<Button Icon="copy" Variant="primary" [label]="$T('builder.copy')" *copy="{Text: Code(Version), Toast: $T('builder.copied')}" />
+						</div>
 					</div>
-					<section slot="second" class="builder-pane builder-structure" [attribute.aria-label]="$T('builder.structure')">
-						<h3 class="elemenx-label builder-structure-title">{{$T('builder.structure')}}</h3>
-						<DesignerTree />
-					</section>
-				</Splitter>
-			</div>
+				</RibbonPage>
+				<RibbonPage ID="import" Icon="upload" [title]="$T('builder.import')">
+					<div class="elemenx-column builder-page">
+						<h2 class="elemenx-title">{{$T('builder.importTitle')}}</h2>
+						<p class="elemenx-text muted">{{$T('builder.importNote')}}</p>
+						<div class="elemenx-callout danger" *if="ImportFailed">{{$T('builder.importFailed')}}</div>
+						<TextArea Rows="14" [label]="$T('builder.template')" [value]="ImportText" (input)="ImportTyped" />
+						<div class="elemenx-container">
+							<button type="button" class="elemenx-button primary medium builder-import" (click)="Imported"><Icon Name="upload" Size="16" /><span class="elemenx-button-label">{{$T('builder.import')}}</span></button>
+						</div>
+					</div>
+				</RibbonPage>
+				<RibbonPage ID="app" Icon="launcher" [title]="$T('builder.app')">
+					<div class="elemenx-column builder-page">
+						<h2 class="elemenx-title">{{$T('builder.appTitle')}}</h2>
+						<p class="elemenx-text muted">{{$T('builder.appNote')}}</p>
+						<Field [label]="$T('builder.appName')">
+							<Input [value]="AppName" (input)="Named" />
+						</Field>
+						<div class="elemenx-callout danger" *if="PackageFailed">{{PackageFailed}}</div>
+						<div class="elemenx-container builder-downloads">
+							<button type="button" class="elemenx-button primary medium builder-download-html" (click)="DownloadedHtml"><Icon Name="file-code" Size="16" /><span class="elemenx-button-label">{{$T('builder.appHtml')}}</span></button>
+							<button type="button" class="elemenx-button secondary medium builder-download-project" (click)="DownloadedProject"><Icon Name="archive" Size="16" /><span class="elemenx-button-label">{{$T('builder.appProject')}}</span></button>
+						</div>
+					</div>
+				</RibbonPage>
+				<RibbonPage ID="clear" Icon="delete" Command="true" [title]="$T('builder.clear')" />
+			</RibbonBackstage>
+
+			<RibbonTab ID="home" KeyTip="H" [title]="$T('builder.home')">
+				<RibbonGroup Icon="history" Priority="3" [title]="$T('builder.history')">
+					<RibbonButton ID="undo" Icon="undo" Size="large" [label]="$T('builder.undo')" [disabled]="!CanUndo(Version)" />
+					<RibbonButton ID="redo" Icon="redo" Size="large" [label]="$T('builder.redo')" [disabled]="!CanRedo(Version)" />
+				</RibbonGroup>
+				<RibbonGroup Icon="edit" Priority="2" [title]="$T('builder.element')">
+					<RibbonButton ID="duplicate" Icon="copy" Size="large" [label]="$T('builder.duplicate')" [disabled]="!Selected(Version)" />
+					<RibbonButton ID="delete" Icon="delete" Size="large" [label]="$T('builder.delete')" [disabled]="!Selected(Version)" />
+					<RibbonButton ID="up" Icon="arrow-up" [label]="$T('builder.up')" [disabled]="!Selected(Version)" />
+					<RibbonButton ID="down" Icon="arrow-down" [label]="$T('builder.down')" [disabled]="!Selected(Version)" />
+					<RibbonButton ID="parent" Icon="chevron-up" [label]="$T('builder.parent')" [disabled]="!Selected(Version)" />
+				</RibbonGroup>
+			</RibbonTab>
+
+			<RibbonTab ID="insert" KeyTip="N" [title]="$T('builder.insert')">
+				<RibbonGroup Icon="search" Priority="100" [title]="$T('builder.find')">
+					<div class="builder-find">
+						<Input Icon="search" Size="small" Clearable="true" [placeholder]="$T('builder.search')" [value]="Query" (input)="Searched" />
+						<span class="elemenx-text small muted" *if="Query && !Found(Version, Query, Language).length">{{$T('builder.found')}}</span>
+					</div>
+					<div class="builder-found" *if="Query && Found(Version, Query, Language).length">
+						<RibbonGallery ID="found" Columns="4" Labels="true" Drag="elemenx-designer-kind" [label]="$T('builder.find')" [items]="Found(Version, Query, Language)" />
+					</div>
+				</RibbonGroup>
+				<RibbonGroup *for="group of Groups(Version, Language)" *key="group.ID" [title]="group.Label" [icon]="group.Icon" [priority]="group.Priority">
+					<RibbonGallery Columns="3" Labels="true" Drag="elemenx-designer-kind" [id]="'insert-' + group.ID" [label]="group.Label" [items]="group.Kinds" />
+				</RibbonGroup>
+			</RibbonTab>
+
+			<RibbonTab ID="view" KeyTip="W" [title]="$T('builder.view')">
+				<RibbonGroup Icon="monitor" Priority="3" [title]="$T('builder.width')">
+					<RibbonButton ID="desktop" Icon="monitor" Size="large" Toggle="true" [label]="$T('builder.desktop')" [pressed]="Width === 'desktop'" />
+					<RibbonButton ID="tablet" Icon="tablet" Size="large" Toggle="true" [label]="$T('builder.tablet')" [pressed]="Width === 'tablet'" />
+					<RibbonButton ID="phone" Icon="smartphone" Size="large" Toggle="true" [label]="$T('builder.phone')" [pressed]="Width === 'phone'" />
+				</RibbonGroup>
+				<RibbonGroup Icon="layout" Priority="2" [title]="$T('builder.canvas')">
+					<RibbonButton ID="outlines" Icon="grid" Size="large" Toggle="true" [label]="$T('builder.outlines')" [pressed]="Outlines" />
+					<RibbonButton ID="gaps" Icon="fit-stretch" Size="large" Toggle="true" [label]="$T('builder.gaps')" [pressed]="Gaps" />
+				</RibbonGroup>
+			</RibbonTab>
+		</Ribbon>
+
+		<DesignerCanvas slot="main" [width]="Width" [preview]="Preview" [outlines]="Outlines" [gaps]="Gaps" [inspect]="Inspect" [lines]="Lines" />
+
+		<WorkspaceToolWindow slot="tools" ID="structure" Icon="tree" Area="left" Open="true" [title]="$T('builder.structure')">
+			<DesignerTree />
 		</WorkspaceToolWindow>
 
 		<WorkspaceToolWindow slot="tools" ID="properties" Icon="sliders" Area="right" Open="true" [title]="$T('builder.properties')">
@@ -43,19 +114,6 @@
 
 		<span slot="status">{{$T('builder.elements', {count: Count(Version)})}}</span>
 	</Workspace>
-
-	<Dialog Icon="download" Size="large" [title]="$T('builder.exportTitle')" [description]="$T('builder.exportNote')" [open]="Exporting" (close)="ExportClosed">
-		<CodeView Language="html" [value]="Code(Version)" [label]="$T('builder.template')" />
-		<Button slot="footer" [label]="$T('builder.close')" (click)="ExportClosed" />
-		<Button slot="footer" Icon="copy" Variant="primary" [label]="$T('builder.copy')" *copy="{Text: Code(Version), Toast: $T('builder.copied')}" />
-	</Dialog>
-
-	<Dialog Icon="upload" Size="large" [title]="$T('builder.importTitle')" [description]="$T('builder.importNote')" [open]="Importing" (close)="ImportClosed">
-		<div class="elemenx-callout danger" *if="ImportFailed">{{$T('builder.importFailed')}}</div>
-		<TextArea Rows="14" [value]="ImportText" (input)="ImportTyped" />
-		<Button slot="footer" [label]="$T('builder.close')" (click)="ImportClosed" />
-		<Button slot="footer" Icon="upload" Variant="primary" [label]="$T('builder.import')" (click)="Imported" />
-	</Dialog>
 
 	<ToastHost />
 </div>

@@ -1,0 +1,74 @@
+<div class="elemenx-designer-inspector">
+	<p class="elemenx-text small muted" *if="!Current(Version)">{{$T('ui.designer.nothing')}}</p>
+	<div class="elemenx-column elemenx-designer-inspector-body" *if="Current(Version)">
+		<div class="elemenx-container elemenx-designer-inspector-head">
+			<strong class="elemenx-designer-inspector-title">{{Title(Current(Version))}}</strong>
+			<span class="elemenx-spacer"></span>
+			<Button Icon="arrow-up" Variant="ghost" Size="small" [title]="$T('ui.designer.up')" [disabled]="Index(Current(Version)) <= 0" (click)="Up" />
+			<Button Icon="arrow-down" Variant="ghost" Size="small" [title]="$T('ui.designer.down')" [disabled]="Index(Current(Version)) >= Count(Current(Version)) - 1" (click)="Down" />
+			<Button Icon="chevron-up" Variant="ghost" Size="small" [title]="$T('ui.designer.parent')" (click)="Parent" />
+			<Button Icon="copy" Variant="ghost" Size="small" [title]="$T('ui.designer.duplicate')" (click)="Duplicate" />
+			<Button Icon="delete" Variant="ghost" Size="small" [title]="$T('ui.designer.delete')" (click)="Delete" />
+		</div>
+		<p class="elemenx-text small muted elemenx-designer-inspector-description" *if="Description(Current(Version))">{{Description(Current(Version))}}</p>
+		<Section *if="Style && Current(Version).Kind !== 'text'" Collapsible="true" Level="4" [title]="$T('ui.designer.layout')">
+			<DesignerStyle />
+		</Section>
+		<Section *if="Style && Current(Version).Kind !== 'text'" Collapsible="true" Level="4" [title]="$T('ui.designer.rules.title')">
+			<DesignerRules />
+		</Section>
+		<Section Collapsible="true" Level="4" [title]="$T('ui.designer.props')">
+			<div class="elemenx-column elemenx-designer-inspector-props">
+				<div class="elemenx-designer-inspector-children" *if="Children(Current(Version)).length">
+					<button type="button" class="elemenx-button secondary small" *for="kind of Children(Current(Version))" *key="kind" [attribute.data-kind]="kind" (click)="Declared"><Icon Name="add" Size="14" /><span class="elemenx-button-label">{{kind}}</span></button>
+				</div>
+				<Field *if="Slots(Current(Version)).length" [label]="$T('ui.designer.slot')" [hint]="$T('ui.designer.slotHint')">
+					<Select Name="Slot" [options]="Slots(Current(Version))" [value]="Current(Version).Slot || ''" (change)="Changed" />
+				</Field>
+				<Field *if="HasText(Current(Version))" [label]="$T('ui.designer.text')">
+					<TextArea Rows="2" AutoSize="true" [value]="Current(Version).Text" (input)="Typed" />
+				</Field>
+				<div class="elemenx-designer-inspector-field" *for="field of Fields(Current(Version), Raw)" *key="Current(Version).ID + field.Name">
+					<Field *if="field.Type === 'text' || field.Type === 'list'" [label]="field.Name" [hint]="field.Hint">
+						<Input [name]="field.Name" [value]="field.Value" (input)="Changed" />
+					</Field>
+					<Field *if="field.Type === 'number'" [label]="field.Name" [hint]="field.Hint">
+						<NumberInput [name]="field.Name" [value]="field.Value" (input)="Numbered" />
+					</Field>
+					<Field *if="field.Type === 'select'" [label]="field.Name" [hint]="field.Hint">
+						<Select [name]="field.Name" [options]="field.Options" [value]="field.Value" (change)="Changed" />
+					</Field>
+					<Field *if="field.Type === 'classes'" [label]="$T('ui.designer.modifiers')" [hint]="$T('ui.designer.modifiersHint')">
+						<MultiSelect [options]="field.Options" [value]="field.Value" (change)="Classed" />
+					</Field>
+					<div class="elemenx-designer-list" *if="field.Type === 'json' && field.Items">
+						<div class="elemenx-designer-list-head">
+							<span class="elemenx-label">{{field.Name}}</span>
+							<span class="elemenx-spacer"></span>
+							<button type="button" class="elemenx-designer-list-button" [attribute.title]="$T('ui.designer.raw')" [attribute.data-field]="field.Name" (click)="Rawed">{ }</button>
+						</div>
+						<p class="elemenx-text small muted">{{field.Hint}}</p>
+						<div class="elemenx-designer-list-item" *for="item of field.Items" *key="item.Index">
+							<label class="elemenx-designer-list-key" *for="key of field.Keys" *key="key.Name">
+								<span>{{key.Name}}</span>
+								<input *if="key.Type === 'bool'" type="checkbox" [checked]="!!item.Values[key.Name]" [attribute.data-field]="field.Name" [attribute.data-index]="item.Index" [attribute.data-key]="key.Name" (change)="Itemed" />
+								<input *if="key.Type !== 'bool'" type="text" class="elemenx-designer-list-input" [value]="item.Values[key.Name] === undefined ? '' : String(item.Values[key.Name])" [attribute.data-field]="field.Name" [attribute.data-index]="item.Index" [attribute.data-key]="key.Name" (change)="Itemed" />
+							</label>
+							<div class="elemenx-designer-list-actions">
+								<button type="button" class="elemenx-designer-list-button" [attribute.title]="$T('ui.designer.up')" [attribute.data-field]="field.Name" [attribute.data-index]="item.Index" data-step="-1" (click)="Shifted"><Icon Name="arrow-up" Size="14" /></button>
+								<button type="button" class="elemenx-designer-list-button" [attribute.title]="$T('ui.designer.down')" [attribute.data-field]="field.Name" [attribute.data-index]="item.Index" data-step="1" (click)="Shifted"><Icon Name="arrow-down" Size="14" /></button>
+								<button type="button" class="elemenx-designer-list-button" [attribute.title]="$T('ui.designer.delete')" [attribute.data-field]="field.Name" [attribute.data-index]="item.Index" data-step="0" (click)="Shifted"><Icon Name="delete" Size="14" /></button>
+							</div>
+						</div>
+						<button type="button" class="elemenx-button ghost small elemenx-designer-list-add" [attribute.data-field]="field.Name" [attribute.data-key]="field.Keys[0].Name" (click)="Added"><Icon Name="add" Size="14" /><span class="elemenx-button-label">{{$T('ui.designer.addItem')}}</span></button>
+					</div>
+					<Field *if="field.Type === 'json' && !field.Items" [label]="field.Name" [hint]="field.Hint">
+						<TextArea class="elemenx-designer-inspector-expression" Rows="1" AutoSize="true" [name]="field.Name" [value]="field.Value" (input)="Changed" />
+						<button type="button" class="elemenx-designer-list-button" *if="field.Schema" [attribute.title]="$T('ui.designer.list')" [attribute.data-field]="field.Name" (click)="Rawed"><Icon Name="list" Size="14" /></button>
+					</Field>
+					<Toggle *if="field.Type === 'bool'" [name]="field.Name" [label]="field.Name" [description]="field.Hint" [checked]="field.Value" (change)="Changed" />
+				</div>
+			</div>
+		</Section>
+	</div>
+</div>

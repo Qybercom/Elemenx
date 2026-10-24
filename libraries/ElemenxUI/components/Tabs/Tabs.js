@@ -17,9 +17,11 @@ Elemenx.Component('Tabs', {
 		Icon: 'panel-bottom',
 		Description: 'A strip of tabs.',
 		Container: true,
+		Children: ['Tab'],
+		Current: 'Value',
 		Events: ['change', 'close'],
 		Props: {
-			Tabs: 'The tabs: [{ID, Label, Icon, Badge, Closable, Disabled}] (Tab children add more).',
+			Tabs: {Schema: {ID: 'text', Label: 'text', Icon: 'icon', Badge: 'text', Closable: 'bool', Disabled: 'bool'}, Description: 'The tabs: [{ID, Label, Icon, Badge, Closable, Disabled}] (Tab children add more).'},
 			Value: 'The ID of the current tab.',
 			Variant: {Options: ['line', 'pill', 'editor'], Description: 'line (an underline), pill (rounded buttons) or editor (the tabs of files).'},
 			Size: {Options: ['small', 'medium', 'large'], Description: 'small, medium or large.'},

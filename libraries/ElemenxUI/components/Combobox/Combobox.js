@@ -16,7 +16,7 @@ Elemenx.Component('Combobox', {
 		Description: 'A field that suggests: typing filters Options ([{Value, Label, Hint, Icon, Group, Disabled}]) in a list under it, the labels that start with the text first; arrows and Enter pick, Escape closes and then restores the text.',
 		Events: ['search', 'create', 'change'],
 		Props: {
-			Options: 'The options: [{Value, Label, Hint, Icon, Group, Disabled}].',
+			Options: {Schema: {Value: 'text', Label: 'text', Hint: 'text', Disabled: 'bool'}, Description: 'The options: [{Value, Label, Hint, Icon, Group, Disabled}].'},
 			Value: 'The Value of the option picked (or the text, with AllowCustom).',
 			Placeholder: 'The text shown while it is empty.',
 			Empty: 'The text of the list when nothing matches.',

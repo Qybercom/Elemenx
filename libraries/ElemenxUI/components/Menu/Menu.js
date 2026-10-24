@@ -15,6 +15,7 @@ Elemenx.Component('Menu', {
 		Icon: 'launcher',
 		Description: 'A button that opens a multi-level MenuList.',
 		Container: true,
+		Children: ['MenuItem'],
 		Events: ['select'],
 		Props: {
 			Items: 'The items: [{ID, Label, Icon, Shortcut, Disabled, Danger, Checked, Items, Separator, Group}].',

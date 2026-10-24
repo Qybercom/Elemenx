@@ -437,18 +437,27 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 
 ## DesignerCanvas
 
-- `elemenx-designer-canvas`
+- `elemenx-designer-canvas`: `gaps`, `outlines`
+- `elemenx-designer-chain`
+- `elemenx-designer-chain-bar`
+- `elemenx-designer-chain-item`: `active`
+- `elemenx-designer-chain-title`
+- `elemenx-designer-distance`
 - `elemenx-designer-empty`
 - `elemenx-designer-grip`
 - `elemenx-designer-hover`
-- `elemenx-designer-layer`
+- `elemenx-designer-layer`: `inspect`
 - `elemenx-designer-marker`
+- `elemenx-designer-marker-note`
+- `elemenx-designer-measure`: `content`, `margin`, `padding`, `pinned`
 - `elemenx-designer-node`
 - `elemenx-designer-page`
 - `elemenx-designer-page-host`
 - `elemenx-designer-selection`
 - `elemenx-designer-surface`
 - `elemenx-designer-target`
+- `elemenx-designer-tip`
+- `elemenx-designer-tip-row`
 - `elemenx-designer-viewport`: `phone`, `tablet`
 
 ## DesignerInspector
@@ -456,9 +465,18 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-designer-inspector`
 - `elemenx-designer-inspector-body`
 - `elemenx-designer-inspector-description`
+- `elemenx-designer-inspector-children`
 - `elemenx-designer-inspector-head`
-- `elemenx-designer-inspector-layout`
+- `elemenx-designer-inspector-props`
 - `elemenx-designer-inspector-title`
+- `elemenx-designer-list`
+- `elemenx-designer-list-actions`
+- `elemenx-designer-list-add`
+- `elemenx-designer-list-button`
+- `elemenx-designer-list-head`
+- `elemenx-designer-list-input`
+- `elemenx-designer-list-item`
+- `elemenx-designer-list-key`
 
 ## DesignerPalette
 
@@ -466,6 +484,29 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-designer-palette-item`
 - `elemenx-designer-palette-items`
 - `elemenx-designer-palette-title`
+
+## DesignerRules
+
+- `elemenx-designer-rules-body`
+- `elemenx-designer-rules-context`
+- `elemenx-designer-rules-list`
+- `elemenx-designer-rules-name`
+- `elemenx-designer-rules-other`: `active`
+- `elemenx-designer-rules-others`
+- `elemenx-designer-rules-row`
+
+## DesignerStyle
+
+- `elemenx-designer-box`: `padding`
+- `elemenx-designer-box-core`
+- `elemenx-designer-box-name`
+- `elemenx-designer-box-side`: `bottom`, `left`, `right`, `top`
+- `elemenx-designer-style`
+- `elemenx-designer-style-choice`: `active`, `turned`
+- `elemenx-designer-style-choices`
+- `elemenx-designer-style-flex`
+- `elemenx-designer-style-row`
+- `elemenx-designer-style-sizes`
 
 ## DesignerTree
 
@@ -953,7 +994,8 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-ribbon-button`: `pressed`
 - `elemenx-ribbon-end`
 - `elemenx-ribbon-file`
-- `elemenx-ribbon-gallery`
+- `elemenx-ribbon-gallery`: `labelled`
+- `elemenx-ribbon-gallery-caption`
 - `elemenx-ribbon-gallery-item`: `selected`
 - `elemenx-ribbon-gallery-items`
 - `elemenx-ribbon-gallery-label`

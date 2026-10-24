@@ -1,4 +1,4 @@
 <figure class="elemenx-code-view" dir="ltr" [class]="[LineNumbers ? 'numbered' : '', Wrap ? 'wrap' : '', Rows ? 'limited' : '', Fold ? 'folding' : '']" [attribute.style]="Rows ? '--elemenx-code-view-rows: ' + Number(Rows) : null" [attribute.aria-label]="Label || null">
-	<pre class="elemenx-code-view-text" tabindex="0" [attribute.data-language]="Language || null" *mount="Rendered(Value, Language, Start, Highlight, Fold, Folded, {Fold: $T('ui.codeView.fold'), Unfold: $T('ui.codeView.unfold')})" (click)="Toggled"></pre>
+	<pre class="elemenx-code-view-text" tabindex="0" [attribute.data-language]="Language || null" *mount="Rendered(Value, Language, Start, Highlight, Fold, Folded, {Fold: $T('ui.codeView.fold'), Unfold: $T('ui.codeView.unfold')}, Rows)" (click)="Toggled"></pre>
 	<button class="elemenx-code-view-copy" type="button" *if="Copy" *copy="Value" [attribute.aria-label]="$T('ui.codeView.copy')" [attribute.title]="$T('ui.codeView.copy')"><Icon Name="copy" Size="14" /></button>
 </figure>

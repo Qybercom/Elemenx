@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
+import url from 'url';
 import { createRequire } from 'module';
 import Builder from '../../tools/builder.js';
 
@@ -329,7 +330,7 @@ describe('Builder: a desktop program (Electron)', function () {
 			handler = fake.Protocols.app;
 
 			expect(handler({url: 'app://bundle/index.html'})).toBe('fetched');
-			expect(fake.Fetched[0]).toBe(new URL('file:///' + path.join(folder, 'app', 'index.html').replace(/\\/g, '/')).href);
+			expect(fake.Fetched[0]).toBe(url.pathToFileURL(path.join(folder, 'app', 'index.html')).href);
 			expect(handler({url: 'app://bundle/%2F..%2Fmain.js'}).status).toBe(403);
 
 			/* The bridge: the page of the Application only, its features only. */

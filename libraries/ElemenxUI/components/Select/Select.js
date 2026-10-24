@@ -14,7 +14,7 @@ Elemenx.Component('Select', {
 		Description: 'A select: a button that opens a list of Options and shows the chosen one.',
 		Events: ['change'],
 		Props: {
-			Options: 'The options: [{Value, Label, Hint, Icon, Group, Disabled}].',
+			Options: {Schema: {Value: 'text', Label: 'text', Icon: 'icon', Disabled: 'bool'}, Description: 'The options: [{Value, Label, Hint, Icon, Group, Disabled}].'},
 			Value: 'The Value of the option chosen, or null.',
 			Placeholder: 'The text shown while it is empty.',
 			Empty: 'The text when the filter finds nothing.',

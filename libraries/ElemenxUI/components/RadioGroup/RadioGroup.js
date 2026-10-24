@@ -12,7 +12,7 @@ Elemenx.Component('RadioGroup', {
 		Description: 'A set of radio buttons, one of them chosen.',
 		Events: ['change'],
 		Props: {
-			Options: 'The options: [{Value, Label, Description, Disabled}].',
+			Options: {Schema: {Value: 'text', Label: 'text', Hint: 'text', Disabled: 'bool'}, Description: 'The options: [{Value, Label, Description, Disabled}].'},
 			Value: 'The Value of the option chosen.',
 			Variant: {Options: ['default', 'horizontal', 'tile', 'segmented'], Description: 'default (a column), horizontal (a row), tile or segmented (a strip of buttons).'},
 			Size: {Options: ['small', 'medium', 'large'], Description: 'Its size: small, medium or large.'},

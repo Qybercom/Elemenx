@@ -1,0 +1,4 @@
+<div class="elemenx-designer-tree">
+	<p class="elemenx-text small muted elemenx-designer-tree-start" *if="!Count(Version)">{{$T('ui.designer.start')}}</p>
+	<Tree *if="Count(Version)" Movable="true" [accept]="['elemenx-designer-kind']" [label]="Label || $T('ui.designer.structure')" [items]="Items(Version)" [value]="Selected(Version)" [expanded]="Expanded(Version, Collapsed)" (select)="Picked" (expand)="Expand" (move)="Moved" />
+</div>

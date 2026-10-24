@@ -1,0 +1,145 @@
+.elemenx-designer-style {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+/* The box model: the margin around the padding around the element, a field on each side. */
+.elemenx-designer-box {
+	position: relative;
+	display: grid;
+	grid-template-areas:
+		'. top .'
+		'left core right'
+		'. bottom .';
+	grid-template-columns: 48px minmax(0, 1fr) 48px;
+	gap: 4px;
+	align-items: center;
+	justify-items: center;
+	padding: 18px 6px 6px;
+	background: rgba(var(--elemenx-accent-rgb), 0.06);
+	border: 1px dashed var(--elemenx-border-strong);
+	border-radius: var(--elemenx-radius);
+}
+
+.elemenx-designer-box.padding {
+	grid-area: core;
+	align-self: stretch;
+	justify-self: stretch;
+	background: var(--elemenx-surface);
+	border-style: solid;
+	border-color: var(--elemenx-border);
+}
+
+.elemenx-designer-box-name {
+	position: absolute;
+	top: 3px;
+	left: 6px;
+	color: var(--elemenx-text-muted);
+	font-size: var(--elemenx-font-size-small);
+	line-height: var(--elemenx-line-height-small);
+}
+
+.elemenx-designer-box-side {
+	box-sizing: border-box;
+	width: 44px;
+	height: 24px;
+	padding: 0 4px;
+	color: var(--elemenx-text);
+	font: inherit;
+	font-size: var(--elemenx-font-size-small);
+	text-align: center;
+	background: var(--elemenx-surface);
+	border: 1px solid var(--elemenx-border);
+	border-radius: var(--elemenx-radius-small);
+}
+
+.elemenx-designer-box-side:focus-visible {
+	outline: 2px solid var(--elemenx-focus);
+	outline-offset: -1px;
+}
+
+.elemenx-designer-box-side.top {
+	grid-area: top;
+}
+
+.elemenx-designer-box-side.right {
+	grid-area: right;
+}
+
+.elemenx-designer-box-side.bottom {
+	grid-area: bottom;
+}
+
+.elemenx-designer-box-side.left {
+	grid-area: left;
+}
+
+.elemenx-designer-box-core {
+	grid-area: core;
+	width: 100%;
+	min-height: 20px;
+	background: rgba(var(--elemenx-accent-rgb), 0.16);
+	border-radius: var(--elemenx-radius-small);
+}
+
+.elemenx-designer-style-sizes {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 8px 12px;
+}
+
+.elemenx-designer-style-flex {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.elemenx-designer-style-row {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+/* The choices of a property of a flex container: icons side by side, the one set pressed. */
+.elemenx-designer-style-choices {
+	display: inline-flex;
+	align-self: flex-start;
+	padding: 2px;
+	background: var(--elemenx-background);
+	border: 1px solid var(--elemenx-border);
+	border-radius: var(--elemenx-radius);
+}
+
+.elemenx-designer-style-choice {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 30px;
+	height: 26px;
+	padding: 0;
+	color: var(--elemenx-text-muted);
+	cursor: pointer;
+	background: none;
+	border: 0;
+	border-radius: var(--elemenx-radius-small);
+}
+
+.elemenx-designer-style-choice:hover {
+	color: var(--elemenx-text);
+	background: var(--elemenx-surface-hover);
+}
+
+.elemenx-designer-style-choice.active {
+	color: var(--elemenx-accent-text);
+	background: var(--elemenx-accent);
+}
+
+.elemenx-designer-style-choice.turned .elemenx-icon {
+	transform: rotate(90deg);
+}
+
+.elemenx-designer-style-choice:focus-visible {
+	outline: 2px solid var(--elemenx-focus);
+	outline-offset: 1px;
+}

@@ -1,8 +1,17 @@
+/*
+ * The reference in the middle of a wide screen: the navigation, the page and its contents, no wider than 1600 pixels.
+ * The text keeps a width that reads well; the examples and the code take all the width of the page.
+ */
 .docs-page {
 	display: grid;
-	grid-template-columns: 280px minmax(0, 1fr);
-	flex: 1;
+	grid-template-columns: 280px minmax(0, 1fr) 240px;
+	/* As high as the page: the window scrolls it, the navigation and the contents stay (sticky). */
+	flex: 1 0 auto;
+	box-sizing: border-box;
+	width: 100%;
+	max-width: 1600px;
 	min-height: 0;
+	margin: 0 auto;
 }
 
 .docs-nav {
@@ -19,9 +28,77 @@
 .docs-article {
 	box-sizing: border-box;
 	width: 100%;
-	max-width: 920px;
-	padding: 24px 32px 64px;
+	min-width: 0;
+	padding: 24px 40px 64px;
+}
+
+.docs-segment > .elemenx-markdown {
+	max-width: 860px;
+}
+
+/* The contents of the page, on its right, as it scrolls. */
+.docs-toc {
+	position: sticky;
+	top: 52px;
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	box-sizing: border-box;
+	max-height: calc(100vh - 52px);
+	padding: 24px 16px 24px 0;
 	overflow: auto;
+}
+
+.docs-toc-title {
+	margin: 0 0 8px;
+	padding-inline-start: 12px;
+}
+
+.docs-toc-item {
+	padding: 4px 12px;
+	color: var(--elemenx-text-muted);
+	font: inherit;
+	font-size: var(--elemenx-font-size-small);
+	text-align: start;
+	cursor: pointer;
+	background: none;
+	border: 0;
+	border-inline-start: 2px solid var(--elemenx-border);
+}
+
+.docs-toc-item.sub {
+	padding-inline-start: 24px;
+}
+
+.docs-toc-item:hover {
+	color: var(--elemenx-text);
+}
+
+.docs-toc-item.active {
+	color: var(--elemenx-accent);
+	border-inline-start-color: var(--elemenx-accent);
+}
+
+.docs-toc-item:focus-visible {
+	outline: 2px solid var(--elemenx-focus);
+	outline-offset: -2px;
+}
+
+/* The headings a press on the contents goes to stand under the header of the reference. */
+.docs-article h2,
+.docs-article h3 {
+	scroll-margin-top: 68px;
+}
+
+/* Without the room for the contents, the page takes it. */
+@media (max-width: 1240px) {
+	.docs-page {
+		grid-template-columns: 280px minmax(0, 1fr);
+	}
+
+	.docs-toc {
+		display: none;
+	}
 }
 
 .docs-segment + .docs-segment {

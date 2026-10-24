@@ -17,4 +17,8 @@
 			<CodeView Fold="true" Rows="30" [language]="SourceFile(Sources, Source).Language" [value]="SourceFile(Sources, Source).Text" [label]="SourceFile(Sources, Source).Label" />
 		</section>
 	</article>
+	<nav class="docs-toc" *if="Headings.length > 1" [attribute.aria-label]="$T('docs.onPage')">
+		<h2 class="elemenx-label docs-toc-title">{{$T('docs.onPage')}}</h2>
+		<button type="button" class="docs-toc-item" *for="heading of Headings" *key="heading.ID" [class.sub]="heading.Level > 2" [class.active]="heading.ID === Active" [attribute.data-id]="heading.ID" (click)="Jumped">{{heading.Text}}</button>
+	</nav>
 </div>

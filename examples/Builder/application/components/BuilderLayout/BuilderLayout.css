@@ -39,25 +39,32 @@ body {
 	border-radius: var(--elemenx-radius-small);
 }
 
-/* The palette over the structure: both in view, the divider between them moves. */
-.builder-left {
+/* The search of the Insert tab: its field, and what it says when nothing is found. */
+.builder-find {
 	display: flex;
-	height: 100%;
-	min-height: 0;
+	flex-direction: column;
+	justify-content: center;
+	gap: 4px;
+	width: 180px;
 }
 
-.builder-left > .elemenx-splitter {
-	flex: 1 1 auto;
-	min-height: 0;
+.builder-appearance {
+	gap: 6px;
+	justify-content: center;
 }
 
-.builder-pane {
-	height: 100%;
-	min-height: 0;
-	overflow: auto;
+/* A page of the backstage: the export and the import of the template. */
+.builder-page {
+	gap: 12px;
+	max-width: 880px;
 }
 
-.builder-structure-title {
+.builder-page > .elemenx-title,
+.builder-page > .elemenx-text {
 	margin: 0;
-	padding: 12px 12px 0;
+}
+
+/* The language of the builder, a list as narrow as its names. */
+.builder-language {
+	width: 140px;
 }

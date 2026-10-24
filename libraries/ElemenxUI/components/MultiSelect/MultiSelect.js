@@ -12,7 +12,7 @@ Elemenx.Component('MultiSelect', {
 		Description: 'A select of several options.',
 		Events: ['change'],
 		Props: {
-			Options: 'The options: [{Value, Label, Hint, Icon, Group, Disabled}].',
+			Options: {Schema: {Value: 'text', Label: 'text', Icon: 'icon', Disabled: 'bool'}, Description: 'The options: [{Value, Label, Hint, Icon, Group, Disabled}].'},
 			Value: 'The Values chosen.',
 			Placeholder: 'The text shown while it is empty.',
 			Empty: 'The text when the filter finds nothing.',

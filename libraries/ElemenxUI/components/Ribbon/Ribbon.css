@@ -714,6 +714,20 @@
 	overflow: auto;
 }
 
+/* Labels: the name of a sample under it in the strip, as wide as its column. */
+.elemenx-ribbon-gallery-caption {
+	max-width: 100%;
+	overflow: hidden;
+	font-size: var(--elemenx-font-size-small);
+	line-height: var(--elemenx-line-height-small);
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.elemenx-ribbon-gallery.labelled .elemenx-ribbon-gallery-items {
+	grid-template-columns: repeat(var(--elemenx-gallery-columns, 4), 72px);
+}
+
 .elemenx-ribbon-gallery-label {
 	max-width: 100%;
 	overflow: hidden;

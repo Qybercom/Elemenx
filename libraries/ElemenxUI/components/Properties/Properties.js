@@ -10,6 +10,7 @@ Elemenx.Component('Properties', {
 		Icon: 'list',
 		Description: 'A list of properties: Property children, a name and its value each, in one column or two (Columns).',
 		Container: true,
+		Children: ['Property'],
 		Props: {
 			Columns: 'One column of pairs, or two.',
 			Label: 'The name of the list for screen readers.'

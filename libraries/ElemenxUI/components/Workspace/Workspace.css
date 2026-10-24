@@ -33,6 +33,11 @@
 	z-index: 2;
 }
 
+/* The open backstage of its Ribbon covers the Workspace: over the tool windows and their handles too. */
+.elemenx-workspace-ribbon:has(.elemenx-ribbon-backstage.open) {
+	z-index: 90;
+}
+
 .elemenx-workspace-ribbon > span {
 	display: contents;
 }

@@ -39,6 +39,7 @@ Elemenx.Component('TileGrid', {
 		Icon: 'grid',
 		Description: 'Groups of tiles on a grid of 48px cells, like a start screen.',
 		Container: true,
+		Children: ['TileGroup'],
 		Events: ['open', 'groupaction', 'change', 'groupcreate'],
 		Methods: ['Arrangement()', 'Restore(arrangement)'],
 		Props: {

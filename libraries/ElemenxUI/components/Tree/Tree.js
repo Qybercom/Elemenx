@@ -8,7 +8,9 @@
  * selects, Space checks, '*' opens the siblings, a letter goes to the next item that starts with it.
  * Movable lets the pointer drag an item onto another: before it (the upper part of its row), after it (the lower part)
  * or into it (the middle), never into itself or one of its own items. The tree does not change Items itself: the move
- * event ({ID, Target, Position: 'before', 'after' or 'inside'}) asks the owner to.
+ * event ({ID, Target, Position: 'before', 'after' or 'inside'}) asks the owner to. Accept names other types of drags
+ * (*draggable) the rows take the same way, a kind of a palette dropped in a structure: their move carries the Type and
+ * the Data of the drag as ID.
  * Events: select (the item), expand (the open IDs), check (the checked IDs), load (the item), move.
  */
 Elemenx.Component('Tree', {
@@ -30,7 +32,8 @@ Elemenx.Component('Tree', {
 			Filter: 'Keeps the items that match, and their parents.',
 			Label: 'The name of the tree for screen readers.',
 			Empty: 'The text without items.',
-			Movable: 'Lets the pointer drag an item before, after or into another (the move event).'
+			Movable: 'Lets the pointer drag an item before, after or into another (the move event).',
+			Accept: 'Other types of drags (*draggable) the rows take as their own items, with their Type in the move event.'
 		},
 		Sample: {Checkable: true, Searchable: true}
 	},
@@ -45,6 +48,7 @@ Elemenx.Component('Tree', {
 	Label: '',
 	Empty: '',
 	Movable: false,
+	Accept: [],
 	Focused: null,
 	DropOn: null,
 	DropAt: '',
@@ -354,7 +358,7 @@ Elemenx.Component('Tree', {
 		var y = (event.detail.ClientY - box.top) / Math.max(1, box.height);
 		var at = y < 0.25 ? 'before' : y > 0.75 ? 'after' : 'inside';
 
-		if (this.Within(this.Items, event.detail.Data, id))
+		if (event.detail.Type === 'elemenx-tree-item' && this.Within(this.Items, event.detail.Data, id))
 			at = '';
 
 		if (this.DropOn !== id)
@@ -376,7 +380,7 @@ Elemenx.Component('Tree', {
 		this.DropOn = null;
 		this.DropAt = '';
 
-		if (at && String(event.detail.Data) !== id)
-			this.$Emit('move', {ID: event.detail.Data, Target: id, Position: at});
+		if (at && (event.detail.Type !== 'elemenx-tree-item' || String(event.detail.Data) !== id))
+			this.$Emit('move', {ID: event.detail.Data, Target: id, Position: at, Type: event.detail.Type});
 	}
 });

@@ -1,7 +1,7 @@
 <!-- generated -->
 # Tree
 
-A tree. Items: [{ID, Label, Icon, Badge, Items, Disabled, Lazy}]; Value is the ID of the selected item; Expanded holds the open IDs. A Lazy item without Items asks for its children with the load event (the item): the owner gives it Items (Loading holds the IDs being loaded, shown with a spinner). Checkable adds check boxes: a parent is checked when all its children are, mixed when some are; checking it checks all of them. Checked holds the checked IDs (parents included). Filter (or a search field with Searchable) keeps the items that match and their parents, open. Keys: arrows (Right opens or goes to the first child, Left closes or goes to the parent), Home, End, Enter selects, Space checks, '*' opens the siblings, a letter goes to the next item that starts with it. Movable lets the pointer drag an item onto another: before it (the upper part of its row), after it (the lower part) or into it (the middle), never into itself or one of its own items. The tree does not change Items itself: the move event ({ID, Target, Position: 'before', 'after' or 'inside'}) asks the owner to. Events: select (the item), expand (the open IDs), check (the checked IDs), load (the item), move.
+A tree. Items: [{ID, Label, Icon, Badge, Items, Disabled, Lazy}]; Value is the ID of the selected item; Expanded holds the open IDs. A Lazy item without Items asks for its children with the load event (the item): the owner gives it Items (Loading holds the IDs being loaded, shown with a spinner). Checkable adds check boxes: a parent is checked when all its children are, mixed when some are; checking it checks all of them. Checked holds the checked IDs (parents included). Filter (or a search field with Searchable) keeps the items that match and their parents, open. Keys: arrows (Right opens or goes to the first child, Left closes or goes to the parent), Home, End, Enter selects, Space checks, '*' opens the siblings, a letter goes to the next item that starts with it. Movable lets the pointer drag an item onto another: before it (the upper part of its row), after it (the lower part) or into it (the middle), never into itself or one of its own items. The tree does not change Items itself: the move event ({ID, Target, Position: 'before', 'after' or 'inside'}) asks the owner to. Accept names other types of drags (*draggable) the rows take the same way, a kind of a palette dropped in a structure: their move carries the Type and the Data of the drag as ID. Events: select (the item), expand (the open IDs), check (the checked IDs), load (the item), move.
 
 ## Properties
 
@@ -18,6 +18,7 @@ A tree. Items: [{ID, Label, Icon, Badge, Items, Disabled, Lazy}]; Value is the I
 | `Label` | `''` |
 | `Empty` | `''` |
 | `Movable` | `false` |
+| `Accept` | `[]` |
 
 ## Events
 

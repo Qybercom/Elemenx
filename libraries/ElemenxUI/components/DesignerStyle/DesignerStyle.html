@@ -1,0 +1,34 @@
+<div class="elemenx-designer-style">
+	<p class="elemenx-text small muted" *if="!Current(Version)">{{$T('ui.designer.nothing')}}</p>
+	<div class="elemenx-designer-box" *if="Current(Version)">
+		<span class="elemenx-designer-box-name">{{$T('ui.designer.margin')}}</span>
+		<input class="elemenx-designer-box-side top" type="text" data-property="margin" data-side="0" placeholder="0" [attribute.aria-label]="$T('ui.designer.margin') + ' · ' + $T('ui.designer.top')" [value]="Side(Current(Version), 'margin', 0)" (change)="Sided" />
+		<input class="elemenx-designer-box-side right" type="text" data-property="margin" data-side="1" placeholder="0" [attribute.aria-label]="$T('ui.designer.margin') + ' · ' + $T('ui.designer.right')" [value]="Side(Current(Version), 'margin', 1)" (change)="Sided" />
+		<input class="elemenx-designer-box-side bottom" type="text" data-property="margin" data-side="2" placeholder="0" [attribute.aria-label]="$T('ui.designer.margin') + ' · ' + $T('ui.designer.bottom')" [value]="Side(Current(Version), 'margin', 2)" (change)="Sided" />
+		<input class="elemenx-designer-box-side left" type="text" data-property="margin" data-side="3" placeholder="0" [attribute.aria-label]="$T('ui.designer.margin') + ' · ' + $T('ui.designer.left')" [value]="Side(Current(Version), 'margin', 3)" (change)="Sided" />
+		<div class="elemenx-designer-box padding">
+			<span class="elemenx-designer-box-name">{{$T('ui.designer.padding')}}</span>
+			<input class="elemenx-designer-box-side top" type="text" data-property="padding" data-side="0" placeholder="0" [attribute.aria-label]="$T('ui.designer.padding') + ' · ' + $T('ui.designer.top')" [value]="Side(Current(Version), 'padding', 0)" (change)="Sided" />
+			<input class="elemenx-designer-box-side right" type="text" data-property="padding" data-side="1" placeholder="0" [attribute.aria-label]="$T('ui.designer.padding') + ' · ' + $T('ui.designer.right')" [value]="Side(Current(Version), 'padding', 1)" (change)="Sided" />
+			<input class="elemenx-designer-box-side bottom" type="text" data-property="padding" data-side="2" placeholder="0" [attribute.aria-label]="$T('ui.designer.padding') + ' · ' + $T('ui.designer.bottom')" [value]="Side(Current(Version), 'padding', 2)" (change)="Sided" />
+			<input class="elemenx-designer-box-side left" type="text" data-property="padding" data-side="3" placeholder="0" [attribute.aria-label]="$T('ui.designer.padding') + ' · ' + $T('ui.designer.left')" [value]="Side(Current(Version), 'padding', 3)" (change)="Sided" />
+			<div class="elemenx-designer-box-core"></div>
+		</div>
+	</div>
+	<div class="elemenx-designer-style-sizes" *if="Current(Version)">
+		<Field *for="property of Sizes()" *key="property" [label]="property">
+			<Input Size="small" Placeholder="auto" [name]="property" [value]="Value(Current(Version), property)" (change)="Sized" />
+		</Field>
+	</div>
+	<div class="elemenx-designer-style-flex" *if="Current(Version) && Flex(Current(Version))">
+		<div class="elemenx-designer-style-row" *for="property of ['flex-direction', 'flex-wrap', 'align-items', 'justify-content']" *key="property">
+			<span class="elemenx-label">{{property}}</span>
+			<div class="elemenx-designer-style-choices" role="group" [attribute.aria-label]="property">
+				<button type="button" class="elemenx-designer-style-choice" *for="choice of Choices(Current(Version), property, $T('ui.designer.layout'))" *key="choice.Value" [class.active]="choice.Active" [class.turned]="choice.Turned" [attribute.aria-pressed]="String(choice.Active)" [attribute.title]="choice.Label" [attribute.data-property]="property" [attribute.data-value]="choice.Value" (click)="Chosen"><Icon [name]="choice.Icon" Size="16" /></button>
+			</div>
+		</div>
+		<Field Label="gap">
+			<Input Size="small" Name="gap" Placeholder="0" [value]="Value(Current(Version), 'gap')" (change)="Sized" />
+		</Field>
+	</div>
+</div>

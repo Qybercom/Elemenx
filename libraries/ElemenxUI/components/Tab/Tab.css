@@ -1,0 +1,16 @@
+/* The panel of a tab: under the strip of its Tabs, the whole width; only the panel of the current tab shows. */
+.elemenx-tab-panel {
+	flex: 0 0 100%;
+	order: 1;
+	min-width: 0;
+	padding-top: 12px;
+	outline: none;
+}
+
+.elemenx-tab-panel:not(.active) {
+	display: none;
+}
+
+.elemenx-tab-panel:focus-visible {
+	box-shadow: inset 0 0 0 2px var(--elemenx-focus);
+}

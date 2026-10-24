@@ -11,6 +11,7 @@ Elemenx.Component('TileGroup', {
 		Icon: 'layout',
 		Description: 'The declaration of a group of tiles in the template of a TileGrid: <TileGroup ID="work" Title="Work"> with <Tile> children.',
 		Container: true,
+		Children: ['Tile'],
 		Slots: ['actions'],
 		Props: {
 			ID: 'The ID of the group.',

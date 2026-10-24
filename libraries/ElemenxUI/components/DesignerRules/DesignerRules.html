@@ -1,0 +1,41 @@
+<div class="elemenx-designer-rules">
+	<p class="elemenx-text small muted" *if="!Current(Version)">{{$T('ui.designer.nothing')}}</p>
+	<div class="elemenx-designer-rules-body" *if="Current(Version)">
+		<div class="elemenx-designer-rules-context">
+			<Field [label]="$T('ui.designer.rules.who')">
+				<Select Size="small" Name="Who" [options]="Whos(Current(Version), Version)" [value]="Who" (change)="Contexted" />
+			</Field>
+			<Field [label]="$T('ui.designer.rules.when')">
+				<Select Size="small" Name="When" [options]="Whens($T('ui.designer.rules.when'))" [value]="When" (change)="Contexted" />
+			</Field>
+			<Field [label]="$T('ui.designer.rules.where')">
+				<Select Size="small" Name="Where" [options]="Wheres($T('ui.designer.rules.where'))" [value]="Where" (change)="Contexted" />
+			</Field>
+			<Field [label]="$T('ui.designer.rules.scheme')">
+				<Select Size="small" Name="Scheme" [options]="Schemes($T('ui.designer.rules.scheme'))" [value]="Scheme" (change)="Contexted" />
+			</Field>
+		</div>
+		<div class="elemenx-designer-rules-list">
+			<div class="elemenx-designer-rules-row" *for="item of Props(Current(Version), Who, When, Where, Scheme, Version)" *key="item.Name">
+				<code class="elemenx-designer-rules-name">{{item.Name}}</code>
+				<input type="text" class="elemenx-designer-list-input" list="elemenx-designer-tokens" [attribute.aria-label]="item.Name" [attribute.data-property]="item.Name" [value]="item.Value" (change)="Valued" />
+				<button type="button" class="elemenx-designer-list-button" [attribute.title]="$T('ui.designer.delete')" [attribute.data-property]="item.Name" (click)="Removed"><Icon Name="delete" Size="14" /></button>
+			</div>
+			<div class="elemenx-designer-rules-row">
+				<input type="text" class="elemenx-designer-list-input elemenx-designer-rules-property" list="elemenx-designer-properties" [attribute.placeholder]="$T('ui.designer.rules.property')" [attribute.aria-label]="$T('ui.designer.rules.property')" [value]="Property" (input)="PropertyTyped" (keydown)="AddKey" />
+				<input type="text" class="elemenx-designer-list-input elemenx-designer-rules-value" list="elemenx-designer-tokens" [attribute.placeholder]="$T('ui.designer.rules.value')" [attribute.aria-label]="$T('ui.designer.rules.value')" [value]="Value" (input)="ValueTyped" (keydown)="AddKey" />
+				<button type="button" class="elemenx-designer-list-button elemenx-designer-rules-add" [attribute.title]="$T('ui.designer.rules.add')" (click)="Added"><Icon Name="add" Size="14" /></button>
+			</div>
+		</div>
+		<div class="elemenx-designer-rules-others" *if="Others(Current(Version), Who, When, Where, Scheme, Version).length">
+			<span class="elemenx-label">{{$T('ui.designer.rules.others')}}</span>
+			<button type="button" class="elemenx-designer-rules-other" *for="other of Others(Current(Version), Who, When, Where, Scheme, Version)" *key="other.Index" [class.active]="other.Active" [attribute.data-index]="other.Index" (click)="Picked">{{other.Text}}</button>
+		</div>
+		<datalist id="elemenx-designer-properties">
+			<option *for="name of Properties()" *key="name" [attribute.value]="name"></option>
+		</datalist>
+		<datalist id="elemenx-designer-tokens">
+			<option *for="token of Tokens()" *key="token" [attribute.value]="token"></option>
+		</datalist>
+	</div>
+</div>

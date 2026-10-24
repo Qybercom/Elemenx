@@ -1,0 +1,13 @@
+<div class="elemenx-designer-palette">
+	<Input Icon="search" Size="small" Clearable="true" [placeholder]="$T('ui.designer.search')" [value]="Query" (input)="Searched" />
+	<p class="elemenx-text small muted" *if="!Groups(Version, Query).length">{{$T('ui.designer.found')}}</p>
+	<div class="elemenx-designer-palette-group" *for="group of Groups(Version, Query)" *key="group.ID">
+		<h3 class="elemenx-label elemenx-designer-palette-title">{{group.Label}}</h3>
+		<div class="elemenx-designer-palette-items">
+			<button type="button" class="elemenx-designer-palette-item" *for="kind of group.Kinds" *key="kind.ID" [attribute.data-kind]="kind.ID" [attribute.title]="kind.Hint" *draggable="{Data: kind.ID, Type: 'elemenx-designer-kind'}" (click)="Added">
+				<Icon [name]="kind.Icon" />
+				<span>{{kind.Label}}</span>
+			</button>
+		</div>
+	</div>
+</div>

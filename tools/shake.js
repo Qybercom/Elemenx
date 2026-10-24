@@ -76,7 +76,8 @@ function Shake (source, code) {
 	var keep = used(String(code || ''));
 	var drop = {};
 	var removed = [];
-	var lines = String(source).split('\n');
+	/* A checkout that turned the lines of elemenx.js into CRLF (Git on Windows) keeps its sections found. */
+	var lines = String(source).replace(/\r\n/g, '\n').split('\n');
 	var output = [];
 	var skipping = false;
 

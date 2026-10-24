@@ -13,7 +13,7 @@ Elemenx.Component('Timeline', {
 		Icon: 'history',
 		Description: 'An activity timeline, like the activity of a merge request.',
 		Props: {
-			Items: 'The events: [{ID, Icon, Variant, Author, Action, Time, Text, Element, Render, Size}].',
+			Items: {Schema: {ID: 'text', Icon: 'icon', Author: 'text', Action: 'text', Time: 'text', Variant: 'text'}, Description: 'The events: [{ID, Icon, Variant, Author, Action, Time, Text, Element, Render, Size}].'},
 			Compact: 'Tighter spacing.'
 		},
 		Sample: {Items: [{ID: 1, Icon: 'edit', Author: 'Ada', Action: 'opened the request', Time: '9:00'}, {ID: 2, Icon: 'check', Author: 'Alan', Action: 'approved it', Time: '11:30', Variant: 'success'}]}

@@ -1,0 +1,71 @@
+.elemenx-designer-rules-body {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+/* The context of the rule: who, when, where, which scheme. */
+.elemenx-designer-rules-context {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 8px 12px;
+}
+
+.elemenx-designer-rules-list {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+/* A property of the rule: its name, its value, its removal; the last row adds one. */
+.elemenx-designer-rules-row {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr) auto;
+	gap: 4px;
+	align-items: center;
+}
+
+.elemenx-designer-rules-name {
+	overflow: hidden;
+	font-family: var(--elemenx-font-mono);
+	font-size: var(--elemenx-font-size-small);
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.elemenx-designer-rules-others {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 4px;
+	align-items: center;
+}
+
+.elemenx-designer-rules-others > .elemenx-label {
+	flex-basis: 100%;
+}
+
+.elemenx-designer-rules-other {
+	padding: 2px 8px;
+	color: var(--elemenx-text);
+	font: inherit;
+	font-size: var(--elemenx-font-size-small);
+	cursor: pointer;
+	background: var(--elemenx-background);
+	border: 1px solid var(--elemenx-border);
+	border-radius: var(--elemenx-radius-pill);
+}
+
+.elemenx-designer-rules-other:hover {
+	background: var(--elemenx-surface-hover);
+}
+
+.elemenx-designer-rules-other.active {
+	color: var(--elemenx-accent-text);
+	background: var(--elemenx-accent);
+	border-color: var(--elemenx-accent);
+}
+
+.elemenx-designer-rules-other:focus-visible {
+	outline: 2px solid var(--elemenx-focus);
+	outline-offset: 1px;
+}

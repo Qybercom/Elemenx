@@ -1,0 +1,9 @@
+# The sources keep LF on every system: the tools read elemenx.js by its lines (Git on Windows would check out CRLF).
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.webp binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.zip binary
