@@ -106,6 +106,28 @@ describe('Builder: the icon of an Application on every platform', function () {
 		expect(fs.readFileSync(path.join(folder, 'dist', 'index.html'), 'utf8')).toContain('<link rel="icon" type="image/png" href="data:image/png;base64,');
 	});
 
+	it('takes /icons/app.png from the root of the project, and a full path of a file as it is, a full path of Linux too', function () {
+		var folder = project(256);
+		var outside = path.resolve(process.cwd(), 'tests', 'dist', 'icon-outside.ico');
+		/* A full path that starts with /, as all of them do on Linux and macOS (on Windows: from the root of the drive). */
+		var slashed = process.platform === 'win32' ? outside.slice(2).replace(/\\/g, '/') : outside;
+		var icon;
+
+		fs.mkdirSync(path.join(folder, 'icons'), {recursive: true});
+		fs.copyFileSync(path.join(folder, 'icon.png'), path.join(folder, 'icons', 'app.png'));
+		fs.writeFileSync(outside, 'an ico');
+
+		try {
+			icon = AppIcon.Settings(folder, '/icons/app.png', {Windows: slashed});
+
+			expect(icon.File).toBe(path.join(folder, 'icons', 'app.png'));
+			expect(icon.Icons.Windows).toBe(outside);
+		}
+		finally {
+			fs.rmSync(outside, {force: true});
+		}
+	});
+
 	it('refuses an icon that is not a square PNG, and tells a small one', function () {
 		var folder = project(256);
 

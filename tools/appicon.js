@@ -20,6 +20,17 @@ var Image = require('./image.js');
 var Densities = [['mdpi', 48, 108], ['hdpi', 72, 162], ['xhdpi', 96, 216], ['xxhdpi', 144, 324], ['xxxhdpi', 192, 432]];
 
 /*
+ * A file of the project: /icons/app.png is from its root, as in the page; a full path of a file that is there is taken
+ * as it is (on Linux and macOS a full path starts with / too).
+ */
+function locate (project, value) {
+	var text = String(value);
+	if (path.isAbsolute(text) && fs.existsSync(text)) return path.resolve(text);
+
+	return path.resolve(project, text.replace(/^\/+/, ''));
+}
+
+/*
  * The icon of a project, checked: {File, Image (its pixels), Icons (the files of the platforms)}, or null without
  * one. An icon that is not a square PNG is an error; a small one is told.
  */
@@ -34,7 +45,7 @@ function settings (project, icon, icons) {
 		if (['Favicon', 'Windows', 'Mac', 'Linux', 'Android', 'IOS'].indexOf(name) === -1)
 			throw new Error('Icons does not know ' + name + ' (Favicon, Windows, Mac, Linux, Android, IOS)');
 
-		own[name] = path.resolve(project, String(icons[name]).replace(/^\/+/, ''));
+		own[name] = locate(project, icons[name]);
 
 		if (!fs.existsSync(own[name]))
 			throw new Error('Icons.' + name + ' not found: ' + own[name]);
@@ -43,7 +54,7 @@ function settings (project, icon, icons) {
 	if (!icon)
 		return {File: null, Image: null, Icons: own};
 
-	file = path.resolve(project, String(icon).replace(/^\/+/, ''));
+	file = locate(project, icon);
 
 	if (!fs.existsSync(file))
 		throw new Error('Icon not found: ' + file);

@@ -71,6 +71,39 @@ async function hotkey (page, target, keys, shown) {
 	}).toPass({timeout: 30000});
 }
 
+/*
+ * Watches scope for a state that lasts a moment (a load of 300 ms, a reconnect): selector matching an element in it, or
+ * its text starting with text. Call it before the action; it returns a function that waits until the state has been
+ * seen. A busy page may show the state and leave it between two looks of an expect.
+ */
+async function became (page, scope, selector, text) {
+	var key = 'became' + Math.random().toString(36).slice(2);
+
+	await scope.evaluate(function (node, detail) {
+		function look () {
+			if (detail.Selector && (node.matches(detail.Selector) || node.querySelector(detail.Selector)))
+				window[detail.Key] = true;
+
+			if (detail.Text && node.textContent.indexOf(detail.Text) === 0)
+				window[detail.Key] = true;
+		}
+
+		window[detail.Key] = false;
+
+		look();
+
+		new MutationObserver(look).observe(node, {subtree: true, childList: true, attributes: true, characterData: true});
+	}, {Key: key, Selector: selector || null, Text: text || null});
+
+	return function () {
+		return expect.poll(function () {
+			return page.evaluate(function (name) {
+				return window[name];
+			}, key);
+		}).toBe(true);
+	};
+}
+
 /* Types into the search field of the open popup of scope: the field takes the focus a task after the popup opens. */
 async function search (page, scope, text) {
 	await expect(scope.locator('.elemenx-popup-search input')).toBeFocused();
@@ -2194,6 +2227,19 @@ for (const origin of origins) {
 
 			await expect(buttons).toContainText('Menu: bar-copy');
 
+			/* Two arrows at once, the second before the focus came to the menu the first opened: two menus on, Edit to File. */
+			await entry('Edit').getByRole('button').click();
+			await entry('Edit').getByRole('menuitem', {name: /Copy/}).focus();
+
+			await entry('Edit').getByRole('menuitem', {name: /Copy/}).evaluate(function (node) {
+				node.dispatchEvent(new KeyboardEvent('keydown', {key: 'ArrowRight', bubbles: true, cancelable: true}));
+				node.dispatchEvent(new KeyboardEvent('keydown', {key: 'ArrowRight', bubbles: true, cancelable: true}));
+			});
+
+			await expect(entry('File').getByRole('menuitem').filter({visible: true})).toHaveText([/New/, /Open/]);
+
+			await page.keyboard.press('Escape');
+
 			/* F10, or Alt alone, takes the first bar of the page to its first menu, and again gives the focus back. */
 			await buttons.getByRole('button', {name: 'Primary'}).focus();
 
@@ -2214,6 +2260,7 @@ for (const origin of origins) {
 
 		test('forms collect their fields, validate them in the template or by a model in code, and submit only when valid', async function ({ page }) {
 			var errors = captureErrors(page);
+			var pending;
 			var forms;
 			var header;
 			var signUp;
@@ -2285,9 +2332,13 @@ for (const origin of origins) {
 
 			await error(profile, 'Username').count();
 
+			/* Pending while the server checks (300 ms). */
+			pending = await became(page, profile.locator('.ui-kit-profile-value'), null, 'pending');
+
 			await profile.locator('.elemenx-field').first().locator('input').fill('admin');
 
-			await expect(profile.locator('.ui-kit-profile-value')).toContainText('pending');
+			await pending();
+
 			await expect(profile.locator('.ui-kit-profile-value')).toContainText('invalid');
 
 			/* Left, the field shows its error; the check of the server answers late beside the other workers, so it is left again until then. */
@@ -2323,6 +2374,7 @@ for (const origin of origins) {
 
 		test('breadcrumbs lead back, fold the middle into a menu; avatars are made of names; presence, badges and pictures', async function ({ page }) {
 			var errors = captureErrors(page);
+			var connecting;
 			var people;
 			var crumbs;
 			var short;
@@ -2381,9 +2433,12 @@ for (const origin of origins) {
 			/* Presence: a dot with its name; connecting turns until the server answers. */
 			await expect(people.locator('.ui-kit-presence .elemenx-presence-label')).toHaveText(['Online', 'Away', 'Busy', 'Do not disturb', 'Offline', 'Connecting…']);
 
+			connecting = await became(page, crumbs, '.elemenx-presence.connecting');
+
 			await people.getByRole('button', {name: 'Reconnect'}).click();
 
-			await expect(crumbs.locator('.elemenx-presence')).toHaveClass(/connecting/);
+			await connecting();
+
 			await expect(crumbs.locator('.elemenx-presence')).toHaveClass(/online/, {timeout: 5000});
 
 			/* Badges: a count (99+ past 99), a ring of a task, a dot, a text of a tone; on any element by *badge; 0 shows none. */
@@ -7863,6 +7918,7 @@ for (const origin of origins) {
 
 		test('tree opens, selects, checks with parents, loads lazily, filters and moves by the keys', async function ({ page }) {
 			var data;
+			var busy;
 			var tree;
 			var rows;
 			var row;
@@ -7932,9 +7988,13 @@ for (const origin of origins) {
 
 			await expect(page.locator('#ui-kit-tree-state')).toHaveText('Checked: 4');
 
+			/* The row is busy while its items load (300 ms). */
+			busy = await became(page, tree, '.elemenx-tree-row[aria-busy="true"]');
+
 			await row('remote \\(loads on open\\)').locator('.elemenx-tree-twisty').click();
 
-			await expect(tree.locator('.elemenx-tree-row[aria-busy="true"]')).toHaveCount(1);
+			await busy();
+
 			await expect(row('backup-1.zip')).toBeVisible();
 			await expect(row('remote')).toHaveAttribute('aria-expanded', 'true');
 

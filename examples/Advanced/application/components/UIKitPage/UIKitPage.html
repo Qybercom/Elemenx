@@ -405,7 +405,7 @@
 							<button class="elemenx-button ghost small icon-only" type="button" title="Remove the phone" [attribute.data-index]="$index" (click)="RemovePhone"><Icon Name="delete" /></button>
 						</div>
 						<div class="ui-kit-row"><Button Label="Add a phone" Icon="add" (click)="AddPhone" /><Button Type="submit" Variant="primary" Label="Save" /></div>
-						<code class="ui-kit-profile-value">{{Profile.Status}} · {{ProfileJSON(Profile.Value)}}</code>
+						<code class="ui-kit-profile-value">{{ProfileState}}</code>
 					</Form>
 				</div>
 			</div>

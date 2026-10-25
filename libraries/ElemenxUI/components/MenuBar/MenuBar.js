@@ -181,7 +181,8 @@ Elemenx.Component('MenuBar', {
 	/* The arrows: from menu to menu, open or closed; down opens the menu of the focused button. */
 	Key: function (event) {
 		var key = Elemenx.Locale.Key(event);
-		var index = this.Index(event.target);
+		/* The menu open, not the element of the focus: the focus goes to a menu opened a task after it opens. */
+		var index = this.Open !== -1 && this.Index(event.target) !== -1 ? this.Open : this.Index(event.target);
 		var option = event.target.closest('.elemenx-option');
 		var menu = event.target.closest('.elemenx-menu');
 		var next;

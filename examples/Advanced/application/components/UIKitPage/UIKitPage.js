@@ -381,6 +381,7 @@ Elemenx.Component('UIKitPage', {
 	Wrapped: false,
 	FormNote: '',
 	Profile: null,
+	ProfileState: '',
 	ProfileCities: [{Value: 'Berlin', Label: 'Berlin'}, {Value: 'Paris', Label: 'Paris'}, {Value: 'Tokyo', Label: 'Tokyo'}],
 	ServerStatus: 'online',
 	Unread: 3,
@@ -2523,9 +2524,14 @@ Elemenx.Component('UIKitPage', {
 
 		this.Profile = this.ProfileModel();
 
-		this.ProfileJSON = function (value) {
-			return JSON.stringify(value);
+		/* The status and the value of the model, as it tells them: its check by the server ends by itself, later. */
+		this.ProfileShown = function () {
+			self.ProfileState = self.Profile.Status + ' · ' + JSON.stringify(self.Profile.Value);
 		};
+
+		this.ProfileShown();
+
+		this.Profile.OnChange(this.ProfileShown);
 
 		this.SettingsIos = this.SettingsItems();
 
