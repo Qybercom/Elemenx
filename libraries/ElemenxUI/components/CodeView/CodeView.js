@@ -6,7 +6,9 @@
  * later line (<ul> ... </ul>; not one that closes itself, nor a void element), makes a block that folds: a button
  * beside its first line hides the lines up to the one that closes it, and the first line ends with … and the rest of
  * that last one ("items": [ … ], or <ul> … </ul>). A press on … unfolds it too. Folded lists the numbers of the lines
- * whose blocks start folded; the event fold reports {Line, Folded} at each press.
+ * whose blocks start folded; the event fold reports {Line, Folded} at each press. Without Value the code is the body of
+ * the element (<CodeView Language="html">&lt;p&gt;Hi&lt;/p&gt;</CodeView>: its text, so a tag in it is written as
+ * &lt;), without the indentation its lines share: the body follows its changes.
  */
 Elemenx.Component('CodeView', {
 	$TemplateURL: 'CodeView.html',
@@ -17,7 +19,7 @@ Elemenx.Component('CodeView', {
 		Description: 'Source code shown, not edited: Value highlighted by the Syntax Service in Language, as a CodeEditor draws it.',
 		Events: ['fold'],
 		Props: {
-			Value: 'The code.',
+			Value: {Body: true, Description: 'The code; without it, the body of the element.'},
 			Language: 'The language that highlights it.',
 			LineNumbers: 'Shows the numbers of the lines.',
 			Start: 'The number of the first line.',
@@ -42,9 +44,40 @@ Elemenx.Component('CodeView', {
 	Label: '',
 	Fold: false,
 	Folded: [],
+	Body: '',
 
 	$OnCreate: function () {
 		var self = this;
+
+		/*
+		 * The text of the body: its lines without the indentation they all share, and without the blank lines around them,
+		 * so a text indented as the template around it reads as it was written.
+		 */
+		function bodyText (node) {
+			var lines = String(node ? node.textContent : '').replace(/\r\n?/g, '\n').split('\n');
+			var indent = null;
+
+			while (lines.length && !lines[0].trim()) {
+				lines.shift();
+			}
+
+			while (lines.length && !lines[lines.length - 1].trim()) {
+				lines.pop();
+			}
+
+			lines.forEach(function (line) {
+				var lead = /^[ \t]*/.exec(line)[0];
+				if (line.trim() && (indent === null || lead.length < indent.length))
+					indent = lead;
+			});
+
+			return lines.map(function (line) {
+				return indent && line.indexOf(indent) === 0 ? line.substring(indent.length) : line.replace(/^[ \t]+$/, '');
+			}).join('\n');
+		}
+
+		/* What renders nothing: how the body reads. */
+		this.BodyText = bodyText;
 
 		function escape (text) {
 			return String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -242,5 +275,26 @@ Elemenx.Component('CodeView', {
 		this.Hide(node);
 
 		this.$Emit('fold', {Line: Number(line.getAttribute('data-line')), Folded: folded});
+	},
+
+	/* The body read once it is there, and again as it changes. */
+	$OnReady: function () {
+		var self = this;
+		var source = this.$Element().querySelector('.elemenx-code-view-source');
+
+		this.Body = this.BodyText(source);
+
+		this.Watcher = new MutationObserver(function () {
+			var text = self.BodyText(source);
+			if (text !== self.Body)
+				self.Body = text;
+		});
+
+		this.Watcher.observe(source, {childList: true, characterData: true, subtree: true});
+	},
+
+	$OnDestroy: function () {
+		if (this.Watcher)
+			this.Watcher.disconnect();
 	}
 });

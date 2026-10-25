@@ -134,8 +134,17 @@ describe('Elemenx multi-Application Builder', function () {
 		fs.writeFileSync(path.join(root, 'elemenx.config.js'), "module.exports = {Application: 'FooApp'};");
 		fs.writeFileSync(path.join(root, 'package.json'), '{"private":true}');
 
+		/* What npm and the native programs keep in a project: their packages, the projects of Android and iOS, the config of Capacitor. */
+		['node_modules/electron/index.js', 'android/app/build.gradle', 'ios/App/Podfile', 'capacitor.config.json', '.git/HEAD'].forEach(function (file) {
+			fs.mkdirSync(path.dirname(path.join(root, file)), {recursive: true});
+			fs.writeFileSync(path.join(root, file), 'x');
+		});
+
 		Builder.Build(root, {application: 'FooApp', entry: 'app.js', index: 'index.html', out: 'dist'});
 
+		['node_modules', 'android', 'ios', 'capacitor.config.json', '.git'].forEach(function (name) {
+			expect(fs.existsSync(path.join(root, 'dist', name)), name).toBe(false);
+		});
 		expect(fs.existsSync(path.join(root, 'dist', 'elemenx.config.js'))).toBe(false);
 		expect(fs.existsSync(path.join(root, 'dist', 'package.json'))).toBe(false);
 		expect(fs.existsSync(path.join(root, 'dist', 'FooApp'))).toBe(false);

@@ -1,11 +1,12 @@
 /*
  * A document written in Markdown, shown: Value is read by the RichText Service (CommonMark with the tables, the strike
  * and the fenced code of GitHub) and kept to its schema, so nothing in it runs. The code of a fence that names its
- * language (```js) is highlighted by the Syntax Service (Highlight, on by default). Look: 'document' (the default) looks
- * as the text of a RichEditor (the classes of elemenx-document); 'interface' takes the classes of the interface of the
- * Library instead, as a page of an Application: a table is an elemenx-table, a list an elemenx-ul or an elemenx-ol, a
- * quote an elemenx-callout, a link an elemenx-link, code (a block or in a line) an elemenx-code, a rule an
- * elemenx-divider.
+ * language (```js) is highlighted by the Syntax Service (Highlight, on by default). Look: 'document' (the default)
+ * looks as the text of a RichEditor (the classes of elemenx-document); 'interface' takes the classes of the interface
+ * of the Library instead, as a page of an Application: a table is an elemenx-table, a list an elemenx-ul or an
+ * elemenx-ol, a quote an elemenx-callout, a link an elemenx-link, code (a block or in a line) an elemenx-code, a rule
+ * an elemenx-divider. Without Value the text is the body of the element (<Markdown>## A title</Markdown>), without the
+ * indentation its lines share: the body follows its changes.
  */
 Elemenx.Component('Markdown', {
 	$TemplateURL: 'Markdown.html',
@@ -15,7 +16,7 @@ Elemenx.Component('Markdown', {
 		Icon: 'file-text',
 		Description: 'A document written in Markdown, shown: Value is read by the RichText Service (CommonMark with the tables, the strike and the fenced code of GitHub) and kept to its schema, so nothing in it runs.',
 		Props: {
-			Value: 'The text in Markdown.',
+			Value: {Body: true, Description: 'The text in Markdown; without it, the body of the element.'},
 			Highlight: 'Highlights the code of the fences that name their language.',
 			Look: {Options: ['document', 'interface'], Description: 'document (as a RichEditor) or interface (the classes of the Library).'},
 			Label: 'The name of the document for screen readers.'
@@ -26,9 +27,43 @@ Elemenx.Component('Markdown', {
 	Highlight: true,
 	Look: 'document',
 	Label: '',
+	Body: '',
 
 	$OnCreate: function () {
 		var self = this;
+		var source = null;
+
+		/*
+		 * The text of the body: its lines without the indentation they all share, and without the blank lines around them,
+		 * so a text indented as the template around it reads as it was written.
+		 */
+		function bodyText (node) {
+			var lines = String(node ? node.textContent : '').replace(/\r\n?/g, '\n').split('\n');
+			var indent = null;
+
+			while (lines.length && !lines[0].trim()) {
+				lines.shift();
+			}
+
+			while (lines.length && !lines[lines.length - 1].trim()) {
+				lines.pop();
+			}
+
+			lines.forEach(function (line) {
+				var lead = /^[ \t]*/.exec(line)[0];
+				if (line.trim() && (indent === null || lead.length < indent.length))
+					indent = lead;
+			});
+
+			return lines.map(function (line) {
+				return indent && line.indexOf(indent) === 0 ? line.substring(indent.length) : line.replace(/^[ \t]+$/, '');
+			}).join('\n');
+		}
+
+		/* What renders nothing: the place of the body, kept out of state. */
+		this.Own = function () {
+			return {Source: source, Text: bodyText};
+		};
 
 		/* The languages of the fences of a text, in their order. */
 		function languages (text) {
@@ -62,10 +97,17 @@ Elemenx.Component('Markdown', {
 			var html = self.$Service('RichText').FromMarkdown(String(value == null ? '' : value));
 			var names = languages(value);
 			var syntax = self.$Service('Syntax');
+			/* The body, taken before the document takes its place, and kept after it, hidden. */
+			var root = self.$Element ? self.$Element() : null;
+			if (!source && root)
+				source = root.querySelector('.elemenx-markdown-source');
 
 			return {
 				Render: function (container) {
 					container.innerHTML = html;
+
+					if (source)
+						container.appendChild(source);
 
 					if (look === 'interface')
 						Object.keys(looks).forEach(function (tag) {
@@ -87,5 +129,27 @@ Elemenx.Component('Markdown', {
 				}
 			};
 		};
+	},
+
+	/* The body read once it is there, and again as it changes. */
+	$OnReady: function () {
+		var self = this;
+		var own = this.Own();
+		if (!own.Source) return;
+
+		this.Body = own.Text(own.Source);
+
+		this.Watcher = new MutationObserver(function () {
+			var text = own.Text(own.Source);
+			if (text !== self.Body)
+				self.Body = text;
+		});
+
+		this.Watcher.observe(own.Source, {childList: true, characterData: true, subtree: true});
+	},
+
+	$OnDestroy: function () {
+		if (this.Watcher)
+			this.Watcher.disconnect();
 	}
 });

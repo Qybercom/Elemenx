@@ -23,8 +23,18 @@
 	border-bottom: 1px solid var(--elemenx-border);
 }
 
+/*
+ * The areas side by side: on a narrow screen the main area keeps the width it needs (--elemenx-workspace-main-min)
+ * and the body scrolls across, so the panels on both sides stay within reach. Narrower still (720 pixels), see below.
+ * Its layers (the handles of the panels, what floats in the areas) stay inside it, under the popups of the Ribbon.
+ */
 .elemenx-workspace-body {
+	position: relative;
+	isolation: isolate;
 	min-height: 0;
+	overflow-x: auto;
+	overflow-y: hidden;
+	container: elemenx-workspace / inline-size;
 }
 
 .elemenx-workspace-ribbon {
@@ -122,7 +132,7 @@
 }
 
 .elemenx-workspace-center {
-	min-width: 0;
+	min-width: var(--elemenx-workspace-main-min, 320px);
 	min-height: 0;
 }
 
@@ -194,6 +204,43 @@
 
 .elemenx-workspace-tools {
 	display: contents;
+}
+
+/*
+ * A frame of 720 pixels or less: the main area takes the whole width and the side panels open over it, beside their
+ * stripes, as high as the body.
+ */
+@container elemenx-workspace (max-width: 720px) {
+	.elemenx-workspace-center {
+		min-width: 0;
+	}
+
+	.elemenx-workspace-panel.left,
+	.elemenx-workspace-panel.right {
+		position: absolute;
+		inset-block: 0;
+		z-index: 3;
+		max-width: calc(100% - 80px);
+		box-shadow: var(--elemenx-shadow);
+	}
+
+	.elemenx-workspace-panel.left {
+		inset-inline-start: 0;
+	}
+
+	.elemenx-workspace-panel.right {
+		inset-inline-end: 0;
+	}
+
+	.elemenx-workspace-body:has(> .elemenx-workspace-stripe.left > span:not(.elemenx-resize-handle) > *) > .elemenx-workspace-panel.left,
+	.elemenx-workspace.customizing .elemenx-workspace-panel.left {
+		inset-inline-start: 40px;
+	}
+
+	.elemenx-workspace-body:has(> .elemenx-workspace-stripe.right > span:not(.elemenx-resize-handle) > *) > .elemenx-workspace-panel.right,
+	.elemenx-workspace.customizing .elemenx-workspace-panel.right {
+		inset-inline-end: 40px;
+	}
 }
 
 /* Customize: every stripe shows, empty or not, with its places to drop a button on. */

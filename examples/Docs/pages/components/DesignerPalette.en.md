@@ -1,7 +1,7 @@
 <!-- generated -->
 # DesignerPalette
 
-The palette of a designer of pages (the Designer Service): the kinds it can place, by group, with a search. A kind pressed goes into the selected element when that is a container, after it otherwise, and at the end of the page without a selection, and is selected; a kind dragged (*draggable, type elemenx-designer-kind) goes where a DesignerCanvas takes it. Its hint is the description the Component declares in $Meta. Events: add (the new ID).
+The palette of a designer of pages (the Designer Service): the kinds it can place, by group, with a search. A kind pressed goes into the selected element when that is a container, after it otherwise, and at the end of the page without a selection, and is selected; a kind dragged (*draggable, type elemenx-designer-kind) goes where a DesignerCanvas takes it. Its tip (*tip) is its name in bold and the description its Component declares in $Meta. Events: add (the new ID).
 
 ## Events
 

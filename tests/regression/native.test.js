@@ -95,6 +95,14 @@ describe('Builder: native programs (--native)', function () {
 		expect(JSON.parse(fs.readFileSync(config, 'utf8'))).toEqual({appId: 'com.example.nativeproject', appName: 'native-project', webDir: '../native-output/native/mobile'});
 		expect(fs.existsSync(path.join(output, 'native-app'))).toBe(false);
 
+		/* With a splash, the screen of the system takes its color and waits for the page to hide it. */
+		fs.rmSync(config);
+
+		build({splash: {Background: '#102030'}});
+
+		expect(JSON.parse(fs.readFileSync(config, 'utf8')).plugins).toEqual({SplashScreen: {launchAutoHide: false, launchShowDuration: 0, backgroundColor: '#102030'}});
+		expect(JSON.parse(fs.readFileSync(config, 'utf8')).backgroundColor).toBe('#102030');
+
 		expect(text).toContain('it has no mobile projects yet');
 		expect(text).toContain('(missing: @capacitor/cli, @capacitor/core, @capacitor/android, @capacitor/ios)');
 		expect(text).toContain('npx elemenx native add mobile');
@@ -116,6 +124,14 @@ describe('Builder: native programs (--native)', function () {
 		expect(fs.readFileSync(record, 'utf8').trim().split('\n')).toEqual(['add android|' + project, 'sync|' + project]);
 		expect(JSON.parse(fs.readFileSync(config, 'utf8')).appId).toBe('dev.elemenx.single');
 		expect(text).toContain('the mobile programs are ready to build: android (npx cap open android)');
+
+		/* With a splash, the launch theme of Android takes its color: set once, set again on the next build. */
+		write(path.join(project, 'android', 'app', 'src', 'main', 'res', 'values', 'styles.xml'), '<resources>\n    <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">\n        <item name="android:background">@drawable/splash</item>\n    </style>\n</resources>\n');
+
+		build({nativeSettings: {Mobile: {AppID: 'dev.elemenx.single', Name: 'Single'}}, splash: {Background: '#102030'}});
+		build({nativeSettings: {Mobile: {AppID: 'dev.elemenx.single', Name: 'Single'}}, splash: {Background: '#405060'}});
+
+		expect(fs.readFileSync(path.join(project, 'android', 'app', 'src', 'main', 'res', 'values', 'styles.xml'), 'utf8')).toBe('<resources>\n    <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">\n        <item name="android:background">@drawable/splash</item>\n        <item name="windowSplashScreenBackground">#405060</item>\n    </style>\n</resources>\n');
 	});
 
 	it('builds every platform without one, and refuses a platform or an ID it does not know', function () {
@@ -134,6 +150,10 @@ describe('Builder: native programs (--native)', function () {
 		expect(function () {
 			build({nativeSettings: {Mobile: {AppID: 'single'}}});
 		}).toThrow('Native.Mobile.AppID must be a reverse domain name, as com.example.app: single');
+		/* Android builds the code of the program in a package of its ID: no part of it may be a word of Java. */
+		expect(function () {
+			build({nativeSettings: {Mobile: {AppID: 'dev.elemenx.native'}}});
+		}).toThrow('Native.Mobile.AppID holds a word of Java, which Android does not take in an ID (native): dev.elemenx.native');
 		expect(function () {
 			build({nativeSettings: {Mobile: {Platforms: ['android', 'tizen']}}});
 		}).toThrow('unknown Native.Mobile.Platforms: tizen (android, ios)');
@@ -167,7 +187,7 @@ describe('elemenx native add', function () {
 		expect(result[0]).toEqual(['desktop', 'mobile']);
 		expect(calls).toEqual([
 			[site, 'install --save-dev electron @electron/packager'],
-			[site, 'install --save @capacitor/core @capacitor/cli @capacitor/android @capacitor/ios @capacitor/app @capacitor/browser @capacitor/dialog']
+			[site, 'install --save @capacitor/core @capacitor/cli @capacitor/android @capacitor/ios @capacitor/app @capacitor/browser @capacitor/dialog @capacitor/filesystem @capacitor/splash-screen']
 		]);
 		expect(result[1]).toContain('build with: npx elemenx build --native');
 

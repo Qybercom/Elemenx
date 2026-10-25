@@ -3,6 +3,8 @@
 	--elemenx-code-view-rows: 0;
 	--elemenx-code-view-scrollbar: 0px;
 	position: relative;
+	display: flex;
+	flex-direction: column;
 	margin: 0;
 	min-width: 0;
 	background: var(--elemenx-surface);
@@ -10,7 +12,9 @@
 	border-radius: var(--elemenx-radius);
 }
 
+/* The lines take the height the view is given (a view that fills a panel), at least their own. */
 .elemenx-code-view-text {
+	flex: 1 0 auto;
 	margin: 0;
 	padding: 8px 0;
 	overflow: auto;

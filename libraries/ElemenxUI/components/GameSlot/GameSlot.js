@@ -135,7 +135,9 @@ Elemenx.Component('GameSlot', {
 				self.HideCard();
 			};
 
-			window.addEventListener('scroll', own.Scroll, true);
+			own.View = (this.$Element().ownerDocument || document).defaultView || window;
+
+			own.View.addEventListener('scroll', own.Scroll, true);
 		}
 
 		this.CardStyle = items.Place(node);
@@ -146,7 +148,7 @@ Elemenx.Component('GameSlot', {
 		var own = this.Own();
 
 		if (own.Scroll) {
-			window.removeEventListener('scroll', own.Scroll, true);
+			(own.View || window).removeEventListener('scroll', own.Scroll, true);
 
 			own.Scroll = null;
 		}

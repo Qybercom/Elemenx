@@ -96,7 +96,14 @@ Elemenx.Component('RichEditor', {
 			self.Selected();
 		};
 
-		document.addEventListener('selectionchange', own.Listener);
+		/* The editor may move into another document (a window the Application opened): its selection follows it there. */
+		own.Focus = function () {
+			self.Bind(true);
+		};
+
+		this.$Element().addEventListener('focusin', own.Focus);
+
+		this.Bind(true);
 
 		this.Render(this.Value);
 
@@ -110,16 +117,44 @@ Elemenx.Component('RichEditor', {
 
 		this.$Service('Find').Clear(this);
 
-		document.removeEventListener('selectionchange', this.Own().Listener);
+		this.$Element().removeEventListener('focusin', this.Own().Focus);
+
+		this.Bind(false);
 	},
 
 	/* Asleep (Elemenx.Cache keeps it out of the page) the selection of the page is not its own. */
 	$OnSleep: function () {
-		document.removeEventListener('selectionchange', this.Own().Listener);
+		this.Bind(false);
 	},
 
 	$OnWake: function () {
-		document.addEventListener('selectionchange', this.Own().Listener);
+		this.Bind(true);
+	},
+
+	/* The document and the window of the editor, wherever it is now. */
+	Doc: function () {
+		var owner = this.$Element().ownerDocument;
+
+		return owner && owner.defaultView ? owner : document;
+	},
+
+	View: function () {
+		return this.Doc().defaultView || window;
+	},
+
+	/* Hears the changes of the selection of the document the editor is in (on), or of none (off). */
+	Bind: function (on) {
+		var own = this.Own();
+		var target = on ? this.Doc() : null;
+		if (own.Bound === target) return;
+
+		if (own.Bound)
+			own.Bound.removeEventListener('selectionchange', own.Listener);
+
+		if (target)
+			target.addEventListener('selectionchange', own.Listener);
+
+		own.Bound = target;
 	},
 
 	/* The matches of the query of Find in the text; show: the one at the caret or after it is the current one. */
@@ -127,7 +162,7 @@ Elemenx.Component('RichEditor', {
 		var query = this.Own().Query;
 		var content = this.Content();
 		var ranges = this.$Service('Find').Ranges(content, query.Text, query.Options);
-		var selection = window.getSelection();
+		var selection = this.View().getSelection();
 		var caret = selection && selection.rangeCount && content.contains(selection.getRangeAt(0).startContainer) ? selection.getRangeAt(0) : null;
 		var index = -1;
 
@@ -178,7 +213,7 @@ Elemenx.Component('RichEditor', {
 
 	/* A replacement is typed over the match (insertText): the undo of the browser takes it back. */
 	ReplaceWith: function (range, text) {
-		var selection = window.getSelection();
+		var selection = this.View().getSelection();
 
 		this.Content().focus();
 
@@ -230,7 +265,7 @@ Elemenx.Component('RichEditor', {
 	/* The find bar: opened on the text selected (one line), its field focused. */
 	OpenFind: function (replace) {
 		var self = this;
-		var selection = window.getSelection();
+		var selection = this.View().getSelection();
 		var text = selection ? String(selection) : '';
 		if (text && text.indexOf('\n') === -1 && this.Content().contains(selection.anchorNode))
 			this.FindQuery = text;
@@ -331,7 +366,7 @@ Elemenx.Component('RichEditor', {
 		var content = this.Content();
 		var scope = content && content.getRootNode();
 
-		return scope && scope.getSelection ? scope.getSelection() : document.getSelection();
+		return scope && scope.getSelection ? scope.getSelection() : this.Doc().getSelection();
 	},
 
 	/* The range of the selection when it is in the document, or null. */
@@ -417,7 +452,7 @@ Elemenx.Component('RichEditor', {
 		box = root.getBoundingClientRect();
 
 		/* Above the selection; under it on a touch screen, where the menu of the system and the handles are above it. */
-		touch = typeof window.matchMedia === 'function' && window.matchMedia('(pointer: coarse)').matches;
+		touch = typeof this.View().matchMedia === 'function' && this.View().matchMedia('(pointer: coarse)').matches;
 
 		this.MenuStyle = 'left: ' + Math.round(Math.max(4, Math.min(rect.left + rect.width / 2 - box.left - 150, box.width - 304))) + 'px; top: ' + Math.round(touch ? rect.bottom - box.top + 16 : Math.max(-40, rect.top - box.top - 44)) + 'px;';
 		this.MenuOpen = true;
@@ -439,7 +474,7 @@ Elemenx.Component('RichEditor', {
 
 	Run: function (command, value) {
 		try {
-			return document.execCommand(command, false, value);
+			return this.Doc().execCommand(command, false, value);
 		}
 		catch (error) {
 			return false;
@@ -553,7 +588,7 @@ Elemenx.Component('RichEditor', {
 		var whole;
 
 		if (code && !this.Closest(['PRE'])) {
-			whole = document.createRange();
+			whole = this.Doc().createRange();
 
 			whole.selectNode(code);
 
@@ -578,7 +613,7 @@ Elemenx.Component('RichEditor', {
 		var whole;
 
 		if (link && (!range || range.collapsed)) {
-			whole = document.createRange();
+			whole = this.Doc().createRange();
 
 			whole.selectNodeContents(link);
 
@@ -695,7 +730,7 @@ Elemenx.Component('RichEditor', {
 
 		if (!block) return;
 
-		head = document.createRange();
+		head = this.Doc().createRange();
 
 		head.setStart(block, 0);
 		head.setEnd(range.startContainer, range.startOffset);

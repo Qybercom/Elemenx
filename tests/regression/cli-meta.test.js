@@ -42,8 +42,8 @@ describe('elemenx meta', function () {
 			Components: [{
 				Name: 'Card', Kind: 'Component', Group: 'layout', Icon: '', Description: '', Slots: [], Container: false, Children: [], Current: '', Events: [], Methods: [], Sample: {},
 				Props: [
-					{Name: 'Title', Type: 'text', Default: '', Options: null, Schema: null, Description: 'The title.'},
-					{Name: 'Look', Type: 'select', Default: 'flat', Options: ['flat', 'raised'], Schema: null, Description: 'Its look.'}
+					{Name: 'Title', Type: 'text', Default: '', Options: null, Schema: null, Body: false, Description: 'The title.'},
+					{Name: 'Look', Type: 'select', Default: 'flat', Options: ['flat', 'raised'], Schema: null, Body: false, Description: 'Its look.'}
 				]
 			}],
 			Services: [{Name: 'Count', Kind: 'Service', Group: '', Icon: '', Description: 'Counts.', Props: [], Slots: [], Container: false, Children: [], Current: '', Events: [], Methods: ['Count()'], Sample: {}}],

@@ -11,10 +11,13 @@
  * edge and its corner stretch it (pointer or arrow keys, whole cells, from its widest tile up to MaxColumns (0: no
  * limit), from its lowest tile down), reported by change. Fit gives a group no more columns than the grid has room
  * for: on a narrow screen the tiles that do not fit take free places below, and come back as it widens.
- * Direction 'horizontal' puts the groups in one row, as on a start screen; Scroll makes the grid scroll on its own (give
+ * Direction 'horizontal' puts the groups in one row, as on a start screen; 'columns' stacks them in columns, as the
+ * Start menu of Windows: a group has the Stack (a number) of its column, and the columns wrap to a new row when the
+ * grid is narrower than they are, each whole; a tile dragged above or below a group, or beside a column, starts a
+ * group there (unless GroupPolicy is 'none'). Scroll makes the grid scroll on its own (give
  * it a height), and a tile dragged to its edge scrolls it. On a touch screen a finger scrolls over the tiles, and a
  * press held still takes a tile.
- * Arrangement() returns the places of the tiles and the sizes of the groups ([{ID, Title, Columns, Rows, Tiles: [{ID,
+ * Arrangement() returns the places of the tiles and the sizes of the groups ([{ID, Title, Columns, Rows, Stack, Tiles: [{ID,
  * Row, Column, Size, Width, Height}]}]); Restore(arrangement) brings them back (tiles and groups it does not name stay
  * as they are); Persist (a key) keeps the arrangement in the storage of the browser and restores it on the next visit. A tile dragged past the right edge of a
  * group widens it by a column after GrowDelay milliseconds there (the edge shows it), again while it stays.
@@ -48,7 +51,7 @@ Elemenx.Component('TileGrid', {
 			Columns: 'The width of a group, in cells.',
 			MaxColumns: 'The widest a group may be stretched (0: no limit).',
 			Fit: 'No more columns than the grid has room for.',
-			Direction: {Options: ['wrap', 'horizontal'], Description: 'wrap, or horizontal (the groups in one row).'},
+			Direction: {Options: ['wrap', 'horizontal', 'columns'], Description: 'wrap, horizontal (the groups in one row) or columns (stacked in columns that wrap, as the Start menu).'},
 			Scroll: 'The grid scrolls on its own (give it a height).',
 			Persist: 'A key that keeps the arrangement in the storage of the browser.',
 			GrowDelay: 'How long a tile at the edge of a group waits before it widens the group, in milliseconds.',
@@ -99,6 +102,38 @@ Elemenx.Component('TileGrid', {
 		};
 
 		/* The width of a group in cells: its own Columns, or the Columns of the grid; with Fit, no more than there is room for. */
+		/*
+		 * The stacks of the groups: in columns, the groups of one Stack (in their order), the stacks by their Stack; else one
+		 * stack for each group, a stack that is no box of its own. A group without a Stack has its place in Groups.
+		 */
+		this.Stacks = function (groups, direction) {
+			var stacks = [];
+			var byValue = {};
+
+			(groups || []).forEach(function (group, index) {
+				var value = direction === 'columns' && typeof group.Stack === 'number' ? group.Stack : index;
+
+				if (direction !== 'columns' || !byValue[value]) {
+					byValue[value] = {Key: direction === 'columns' ? 'stack-' + value : 'group-' + group.ID, Value: value, Groups: []};
+
+					stacks.push(byValue[value]);
+				}
+
+				byValue[value].Groups.push(group);
+			});
+
+			return direction === 'columns' ? stacks.sort(function (a, b) {
+				return a.Value - b.Value;
+			}) : stacks;
+		};
+
+		/* The place of a group in Groups, by its ID. */
+		this.IndexOf = function (groups, group) {
+			return (groups || []).map(function (entry) {
+				return String(entry.ID);
+			}).indexOf(String(group.ID));
+		};
+
 		this.ColumnsOf = function (group, room) {
 			var columns = Number(group && group.Columns) || Number(self.Columns) || 4;
 
@@ -629,10 +664,13 @@ Elemenx.Component('TileGrid', {
 		this.Target = '';
 		this.Created = '';
 
-		document.addEventListener('pointerup', this.Released);
-		document.addEventListener('pointercancel', this.Cancelled);
-		document.addEventListener('keydown', this.Escaped, true);
-		document.addEventListener('pointermove', this.Edge, true);
+		/* The document of the drag (the page, or a window the Application opened), whose listeners come off at the end. */
+		this.Listened = (this.$Element().ownerDocument || document);
+
+		this.Listened.addEventListener('pointerup', this.Released);
+		this.Listened.addEventListener('pointercancel', this.Cancelled);
+		this.Listened.addEventListener('keydown', this.Escaped, true);
+		this.Listened.addEventListener('pointermove', this.Edge, true);
 	},
 
 	/*
@@ -800,7 +838,8 @@ Elemenx.Component('TileGrid', {
 
 	/*
 	 * Over the grid but outside the groups (below the last row of a group, or between groups), the tile goes to the
-	 * group whose column the pointer is in, so a tile can be put under the lowest tile of a group.
+	 * group whose column the pointer is in, so a tile can be put under the lowest tile of a group. In columns that room
+	 * belongs to the place of a new group under it.
 	 */
 	Beside: function (event, node) {
 		var groups = node.querySelectorAll('.elemenx-tile-group[data-group]');
@@ -811,6 +850,8 @@ Elemenx.Component('TileGrid', {
 		var rect;
 		var gap;
 		var i = 0;
+
+		if (this.Direction === 'columns') return;
 
 		while (i < groups.length) {
 			rect = groups[i].getBoundingClientRect();
@@ -833,25 +874,61 @@ Elemenx.Component('TileGrid', {
 	},
 
 	DropBetween: function (event, node) {
-		this.Start(event, Number(node.getAttribute('data-index')));
+		this.Start(event, Number(node.getAttribute('data-index')), node.hasAttribute('data-stack') && this.Direction === 'columns' ? Number(node.getAttribute('data-stack')) : null);
 	},
 
-	/* A new group for the dropped tile, at position at (null: after the last group). */
-	Start: function (event, at) {
+	/* A new column beside a column: a group of its own, its Stack between the ones around it. */
+	DropSide: function (event, node) {
+		this.Start(event, null, Number(node.getAttribute('data-stack')));
+	},
+
+	/*
+	 * A new group for the dropped tile, at position at (null: after the last group); in columns in the column stack (a
+	 * value between two columns makes a new one there), the columns numbered again from 0.
+	 */
+	Start: function (event, at, stack) {
+		var created = null;
+		var values;
 		var groups;
 
 		if (!this.Dragging || event.detail.Type !== 'tile' || this.GroupPolicy === 'none') return;
 
 		groups = this.Arrange(this.Snapshot, event.detail.Data, null, 0, 0, at);
 
-		if (groups)
-			this.Groups = groups;
+		if (!groups) return;
+
+		if (this.Direction === 'columns') {
+			groups.forEach(function (group, index) {
+				if (typeof group.Stack !== 'number')
+					group.Stack = index;
+
+				if (String(group.ID) === this.Created)
+					created = group;
+			}, this);
+
+			if (created)
+				created.Stack = stack === null || stack === undefined || isNaN(stack) ? groups.length : stack;
+
+			values = groups.map(function (group) {
+				return group.Stack;
+			}).filter(function (value, index, list) {
+				return list.indexOf(value) === index;
+			}).sort(function (a, b) {
+				return a - b;
+			});
+
+			groups.forEach(function (group) {
+				group.Stack = values.indexOf(group.Stack);
+			});
+		}
+
+		this.Groups = groups;
 	},
 
 	Unlisten: function () {
-		document.removeEventListener('pointerup', this.Released);
-		document.removeEventListener('pointercancel', this.Cancelled);
-		document.removeEventListener('keydown', this.Escaped, true);
+		(this.Listened || document).removeEventListener('pointerup', this.Released);
+		(this.Listened || document).removeEventListener('pointercancel', this.Cancelled);
+		(this.Listened || document).removeEventListener('keydown', this.Escaped, true);
 	},
 
 	/* The tile that a <Tile> declares; its content (moved into the tile once shown) is kept on the declaration. */
@@ -897,6 +974,7 @@ Elemenx.Component('TileGrid', {
 				Locked: node.getAttribute('data-locked') === 'true',
 				Columns: Number(node.getAttribute('data-columns')) || null,
 				Rows: Number(node.getAttribute('data-rows')) || null,
+				Stack: node.hasAttribute('data-stack') ? Number(node.getAttribute('data-stack')) : null,
 				Element: actions && actions.querySelector('*') ? actions : null,
 				Declared: true,
 				Tiles: tiles.map(function (tile) {
@@ -978,6 +1056,9 @@ Elemenx.Component('TileGrid', {
 				if (copy.Rows == null)
 					copy.Rows = own.Rows;
 
+				if (typeof copy.Stack !== 'number' && typeof own.Stack === 'number')
+					copy.Stack = own.Stack;
+
 				copy.Declared = true;
 			}
 
@@ -1026,6 +1107,7 @@ Elemenx.Component('TileGrid', {
 				Title: group.Title || '',
 				Columns: group.Columns || null,
 				Rows: group.Rows || null,
+				Stack: typeof group.Stack === 'number' ? group.Stack : null,
 				Tiles: group.Tiles.map(function (tile) {
 					var place = {ID: tile.ID, Row: tile.Row == null ? null : tile.Row, Column: tile.Column == null ? null : tile.Column, Size: tile.Size || 'medium'};
 
@@ -1081,6 +1163,10 @@ Elemenx.Component('TileGrid', {
 			copy.Title = own ? own.Title : entry.Title || '';
 			copy.Columns = entry.Columns || null;
 			copy.Rows = entry.Rows || null;
+
+			if (typeof entry.Stack === 'number')
+				copy.Stack = entry.Stack;
+
 			copy.Tiles = (entry.Tiles || []).filter(function (place) {
 				return !!tiles[String(place.ID)];
 			}).map(function (place) {

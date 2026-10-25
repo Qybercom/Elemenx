@@ -16,8 +16,8 @@
 
 .docs-nav {
 	position: sticky;
-	top: 52px;
-	height: calc(100vh - 52px);
+	top: var(--docs-header, 56px);
+	height: calc(100vh - var(--docs-header, 56px));
 	padding: 16px 12px;
 	overflow: auto;
 	background: var(--elemenx-surface);
@@ -39,12 +39,12 @@
 /* The contents of the page, on its right, as it scrolls. */
 .docs-toc {
 	position: sticky;
-	top: 52px;
+	top: var(--docs-header, 56px);
 	display: flex;
 	flex-direction: column;
 	gap: 2px;
 	box-sizing: border-box;
-	max-height: calc(100vh - 52px);
+	max-height: calc(100vh - var(--docs-header, 56px));
 	padding: 24px 16px 24px 0;
 	overflow: auto;
 }

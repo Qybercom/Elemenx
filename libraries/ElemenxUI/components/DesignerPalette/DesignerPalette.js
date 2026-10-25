@@ -2,7 +2,8 @@
  * The palette of a designer of pages (the Designer Service): the kinds it can place, by group, with a search. A kind
  * pressed goes into the selected element when that is a container, after it otherwise, and at the end of the page
  * without a selection, and is selected; a kind dragged (*draggable, type elemenx-designer-kind) goes where a
- * DesignerCanvas takes it. Its hint is the description the Component declares in $Meta. Events: add (the new ID).
+ * DesignerCanvas takes it. Its tip (*tip) is its name in bold and the description its Component declares in $Meta.
+ * Events: add (the new ID).
  */
 Elemenx.Component('DesignerPalette', {
 	$TemplateURL: 'DesignerPalette.html',
@@ -43,7 +44,7 @@ Elemenx.Component('DesignerPalette', {
 					Kinds: group.Kinds.map(function (kind) {
 						var label = designer.Label(kind.ID);
 
-						return {ID: kind.ID, Icon: kind.Icon, Label: label, Hint: designer.Hint(kind.ID) ? label + ' — ' + designer.Hint(kind.ID) : label};
+						return {ID: kind.ID, Icon: kind.Icon, Label: label, Hint: designer.Hint(kind.ID)};
 					}).filter(function (kind) {
 						return !text || kind.Label.toLowerCase().indexOf(text) !== -1 || kind.ID.toLowerCase().indexOf(text) !== -1;
 					})

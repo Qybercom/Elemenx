@@ -44,9 +44,13 @@ test.describe('elemenx build --widget', function () {
 		expect(script).not.toContain('Elemenx.Router=');
 		expect(script).not.toContain('Elemenx.WebWorker=');
 
-		/* Nor what the components tell the tools of themselves ($Meta): the widget asks nothing of it. */
+		/* Nor a splash or an installation: a widget is a part of a page of its own. */
+		expect(script).not.toContain('Elemenx.Splash=');
+		expect(script).not.toContain('Elemenx.Install=');
+
+		/* Nor what the components tell the tools of themselves ($Meta): the widget asks nothing of it. Its dictionaries of ElemenxUI go in whole. */
 		expect(script).not.toContain('Two panes with a draggable divider.');
-		expect(Buffer.byteLength(script)).toBeLessThan(336 * 1024);
+		expect(Buffer.byteLength(script)).toBeLessThan(352 * 1024);
 
 		/* The game themes are packs: the widget names none of them, so they stay out. */
 		expect(script).not.toContain('themes/fantasy.css');

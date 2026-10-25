@@ -42,8 +42,10 @@ Elemenx.Component('MenuList', {
 
 		/* Whether the menu shows as a sheet now. */
 		this.Sheeted = function (sheet) {
+			var view = (self.$Element() && self.$Element().ownerDocument || document).defaultView || window;
+
 			if (sheet === 'auto')
-				return typeof window.matchMedia === 'function' && window.matchMedia('(max-width: 640px), (pointer: coarse)').matches;
+				return typeof view.matchMedia === 'function' && view.matchMedia('(max-width: 640px), (pointer: coarse)').matches;
 
 			return sheet === true || sheet === 'true';
 		};

@@ -71,7 +71,7 @@ Elemenx.Directive('modal', {
 		data.Top = function () {
 			var top = null;
 
-			Array.prototype.forEach.call(document.querySelectorAll('[data-elemenx-modal]'), function (open) {
+			Array.prototype.forEach.call((element.ownerDocument || document).querySelectorAll('[data-elemenx-modal]'), function (open) {
 				if (!top || Number(open.getAttribute('data-elemenx-modal')) > Number(top.getAttribute('data-elemenx-modal')))
 					top = open;
 			});
@@ -161,15 +161,22 @@ Elemenx.Directive('modal', {
 
 			element.setAttribute('open', '');
 
-			document.addEventListener('keydown', data.Key);
-			document.addEventListener('focusin', data.Focus, true);
+			/* The keys and the focus of the document the dialog is in (the page, or a window the Application opened). */
+			data.Listened = element.ownerDocument || document;
+
+			data.Listened.addEventListener('keydown', data.Key);
+			data.Listened.addEventListener('focusin', data.Focus, true);
 
 			data.Enter();
 		};
 
 		data.Hide = function () {
-			document.removeEventListener('keydown', data.Key);
-			document.removeEventListener('focusin', data.Focus, true);
+			if (data.Listened) {
+				data.Listened.removeEventListener('keydown', data.Key);
+				data.Listened.removeEventListener('focusin', data.Focus, true);
+
+				data.Listened = null;
+			}
 
 			element.removeAttribute('data-elemenx-modal');
 			element.removeAttribute('open');
@@ -207,7 +214,7 @@ Elemenx.Directive('modal', {
 
 		data.Hide();
 
-		if (data.Return && data.Return.focus && document.contains(data.Return))
+		if (data.Return && data.Return.focus && data.Return.isConnected)
 			data.Return.focus();
 
 		data.Return = null;

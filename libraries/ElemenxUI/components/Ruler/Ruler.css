@@ -1,0 +1,98 @@
+/*
+ * A ruler: its short ticks every Step and its long ones every Major are two backgrounds that repeat, shifted by its
+ * Start; the numbers, the range, the marker and the guides stand over them.
+ */
+.elemenx-ruler {
+	position: relative;
+	box-sizing: border-box;
+	overflow: hidden;
+	color: var(--elemenx-text-muted);
+	font-family: var(--elemenx-font);
+	font-size: 10px;
+	line-height: 1;
+	background-color: var(--elemenx-surface);
+	background-repeat: repeat-x;
+	user-select: none;
+}
+
+.elemenx-ruler.horizontal {
+	height: 20px;
+	background-image:
+		repeating-linear-gradient(90deg, var(--elemenx-border-strong) 0 1px, transparent 1px var(--elemenx-ruler-minor)),
+		repeating-linear-gradient(90deg, var(--elemenx-border-strong) 0 1px, transparent 1px var(--elemenx-ruler-major));
+	background-position: var(--elemenx-ruler-minor-shift) 100%, var(--elemenx-ruler-major-shift) 100%;
+	background-size: 100% 4px, 100% 10px;
+	border-bottom: 1px solid var(--elemenx-border);
+}
+
+.elemenx-ruler.vertical {
+	width: 20px;
+	height: 100%;
+	background-image:
+		repeating-linear-gradient(180deg, var(--elemenx-border-strong) 0 1px, transparent 1px var(--elemenx-ruler-minor)),
+		repeating-linear-gradient(180deg, var(--elemenx-border-strong) 0 1px, transparent 1px var(--elemenx-ruler-major));
+	background-position: 100% var(--elemenx-ruler-minor-shift), 100% var(--elemenx-ruler-major-shift);
+	background-repeat: repeat-y;
+	background-size: 4px 100%, 10px 100%;
+	border-right: 1px solid var(--elemenx-border);
+}
+
+.elemenx-ruler-label {
+	position: absolute;
+	top: 2px;
+	padding-left: 3px;
+	white-space: nowrap;
+	pointer-events: none;
+}
+
+.elemenx-ruler.vertical .elemenx-ruler-label {
+	top: auto;
+	left: 2px;
+	padding: 3px 0 0;
+	writing-mode: vertical-rl;
+	transform: rotate(180deg);
+	transform-origin: center;
+}
+
+.elemenx-ruler-range,
+.elemenx-ruler-marker,
+.elemenx-ruler-guide {
+	position: absolute;
+	pointer-events: none;
+}
+
+.elemenx-ruler.horizontal .elemenx-ruler-range {
+	top: 0;
+	bottom: 0;
+}
+
+.elemenx-ruler.vertical .elemenx-ruler-range {
+	left: 0;
+	right: 0;
+}
+
+.elemenx-ruler-range {
+	background: rgba(var(--elemenx-accent-rgb), 0.16);
+}
+
+.elemenx-ruler.horizontal .elemenx-ruler-marker,
+.elemenx-ruler.horizontal .elemenx-ruler-guide {
+	top: 0;
+	bottom: 0;
+	width: 1px;
+}
+
+.elemenx-ruler.vertical .elemenx-ruler-marker,
+.elemenx-ruler.vertical .elemenx-ruler-guide {
+	left: 0;
+	right: 0;
+	height: 1px;
+}
+
+.elemenx-ruler-marker {
+	background: var(--elemenx-accent);
+}
+
+.elemenx-ruler-guide {
+	background: var(--elemenx-info);
+}

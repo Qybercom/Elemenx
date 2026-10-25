@@ -11,7 +11,7 @@ To find a section in `elemenx.js`, search for its header, for example `/* Router
 | Field | Purpose | Used by |
 |---|---|---|
 | `ScriptURL` | URL of the loaded `elemenx.js` (a `blob:` URL of its text when it is inline in its page); workers load the same file from it, and ElemenxUI is taken from `libraries/ElemenxUI` next to it | Library, WebWorker, ServiceWorker |
-| `HasDOM` | `true` in a document, `false` inside workers | Application, Discovery, Identity, Locale, Messaging, ServiceWorker, ServiceWorker bootstrap, Style, Template and Component, Utilities, WebWorker |
+| `HasDOM` | `true` in a document, `false` inside workers | Application, Discovery, Identity, Install, Locale, Messaging, ServiceWorker, ServiceWorker bootstrap, Splash, Style, Template and Component, Utilities, WebWorker |
 | `StartedAt` | time this runtime started | Identity |
 | `Isolated` | true in an isolated build (`ElemenxIsolated`): the html element of the page is left alone | Application, Locale, Style |
 | `ShadowHosts` | the hosts of the Applications that render in a shadow root | Application, Locale |
@@ -29,7 +29,7 @@ To find a section in `elemenx.js`, search for its header, for example `/* Router
 | `Countdown` | waits for N asynchronous steps: the callback gets the first error, or `null` once all succeeded | Discovery, Library, Locale |
 | `MessageListeners` | listeners of the global `message` event added through a wrapper, removable by their own callback | Messaging, WebWorker |
 | `Assign` | copies the own enumerable properties of a source into a target and returns the target | Template and Component, Router, Structural, Storage, WebWorker, ServiceWorker |
-| `Report` | reports an exception as an uncaught error at once, like the DOM does for event listeners (`reportError`; without it, rethrown from a timer) | Application, Locale, Router |
+| `Report` | reports an exception as an uncaught error at once, like the DOM does for event listeners (`reportError`; without it, rethrown from a timer) | Application, Install, Locale, Router |
 | `Notify` | calls one event listener in isolation: its exception is reported and the dispatch continues | Template and Component, Router, Network, Events, Messaging |
 | `Invoke` | calls a callback `(error, value)` from a promise handler; an exception thrown by the callback is reported instead of being swallowed | Network, ServiceWorker |
 
@@ -207,6 +207,12 @@ To find a section in `elemenx.js`, search for its header, for example `/* Router
 | `AttachOwnerFacades` | sets `$Network`, `$Storage`, `$WebWorker`, `$ServiceWorker`, `$Messaging`, `$Events` and the Messaging identity of a Service or Component | Service and Guard, Template and Component |
 | `InitializeOwnerSubscriptions` | subscribes the `$Events` and `$Messaging` channels declared by a definition | Service and Guard, Template and Component, Application |
 | `DestroyOwnerResources` | releases everything an owner created, in this order: Network, Messaging, Events, WebWorker, ServiceWorker | Service and Guard, Template and Component, Application |
+
+## Splash
+
+| Field | Purpose | Used by |
+|---|---|---|
+| `Splash` | `Ready()`: an Application is ready or failed, so the splash of the page goes unless it is held | Application |
 
 ## Application
 

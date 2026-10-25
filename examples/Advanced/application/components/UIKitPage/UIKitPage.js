@@ -598,6 +598,12 @@ Elemenx.Component('UIKitPage', {
 	RichMarkdown: '',
 	RichFromMarkdown: false,
 	LineCount: 3,
+	ColumnGroups: [
+		{ID: 'productivity', Title: 'Productivity', Stack: 0, Columns: 4, Tiles: [{ID: 'c-mail', Title: 'Mail', Icon: 'mail', Size: 'medium', Color: '#3f6c9e'}, {ID: 'c-calendar', Title: 'Calendar', Icon: 'calendar', Size: 'medium', Color: '#2f8f83'}]},
+		{ID: 'play', Title: 'Play', Stack: 0, Columns: 4, Tiles: [{ID: 'c-music', Title: 'Music', Icon: 'play', Size: 'wide', Color: '#c2477f'}]},
+		{ID: 'explore', Title: 'Explore', Stack: 1, Columns: 4, Tiles: [{ID: 'c-store', Title: 'Store', Icon: 'cart', Size: 'medium', Color: '#9a6514'}, {ID: 'c-maps', Title: 'Maps', Icon: 'map-pin', Size: 'medium', Color: '#5f5a54'}]}
+	],
+
 	TileGroups: [
 		{ID: 'work', Title: 'Work', Tiles: [
 			{ID: 'mail', Title: 'Mail', Icon: 'mail', Size: 'wide', Text: '3 unread', Badge: 3, Color: '#2b5797'},
@@ -3079,6 +3085,10 @@ Elemenx.Component('UIKitPage', {
 
 	TilesChanged: function (groups) {
 		this.TileGroups = groups;
+	},
+
+	ColumnsChanged: function (groups) {
+		this.ColumnGroups = groups;
 	},
 
 	DashboardSelected: function (item) {

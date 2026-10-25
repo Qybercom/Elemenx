@@ -5,7 +5,7 @@
 
 export default {
 	plugins: ['@stylistic/stylelint-plugin', './stylelint/plugin.mjs'],
-	ignoreFiles: ['node_modules/**', '**/dist/**', 'test-results/**', 'playwright-report/**', 'coverage/**'],
+	ignoreFiles: ['node_modules/**', '**/dist/**', 'test-results/**', 'playwright-report/**', 'coverage/**', 'examples/Native/android/**', 'examples/Native/ios/**'],
 	overrides: [
 		{
 			files: ['**/*.html'],

@@ -8,8 +8,20 @@
  * has no Node: it asks the main process through the bridge of preload.js, for the features of elemenx-native.json
  * only, and only from app://bundle/. A link out of the Application opens in the browser of the system.
  *
- * The events of the system reach the pages of every window: menu, tray, window, shortcut (a global hotkey), link (a
- * link of the scheme of the program, Protocol of elemenx-native.json) and power (sleep, the lock, the battery).
+ * The events of the system reach the pages of every window: menu, tray ({ID, Kind}: an item of its menu, or a click,
+ * a double click or a right click on its icon), window, shortcut (a global hotkey), link (a link of the scheme of the
+ * program, Protocol of elemenx-native.json), task (a task of the jump list of the program, Tasks), thumbar (a button
+ * under the thumbnail of the window) and power (sleep, the lock, the battery).
+ *
+ * The page opens more windows of the same Application (Native.OpenWindow): an empty page of its own origin named
+ * elemenx-window-<ID>, which the Application fills; such a window never navigates (a link out of the Application opens in
+ * the browser of the system) and opens no window, and all of them close with the first window.
+ *
+ * The window of the tray (Native.Tray with Window) is one of them too, named elemenx-tray: no frame, off the taskbar,
+ * shown by the icon at a click (its menu then waits for the right button) and hidden when it loses the focus.
+ *
+ * CloseToTray keeps the program in its tray: while it has an icon there, closing the window hides it and a click on
+ * the icon shows it again; the program quits by a quit of its menus (Role quit) or Window('quit').
  */
 
 var electron = require('electron');
@@ -25,11 +37,22 @@ var origin = 'app://bundle/';
 var tray = null;
 var awake = null;
 
+/* The window of the tray (Native.Tray with Window): shown by the icon, and when it last hid on losing the focus. */
+var trayWindow = null;
+var trayHidden = 0;
+
+/* Whether the program is quitting: a window closed then goes, even when CloseToTray hides it. */
+var quitting = false;
+
+/* The tasks of the jump list (Tasks) that started the program or came since the page last asked. */
+var tasks = [];
+
 /* The links of the scheme of the program (Protocol) that opened it or came since the page last asked. */
 var links = [];
 
-/* One program answers the links of its scheme: a second start hands its link to the first and quits. */
-var primary = !settings.Protocol || app.requestSingleInstanceLock();
+/* One program answers the links of its scheme and the tasks of its jump list: a second start hands them to the first and quits. */
+var single = !!settings.Protocol || !!(settings.Tasks && settings.Tasks.length);
+var primary = !single || app.requestSingleInstanceLock();
 
 /* The group of features of each call of the bridge. */
 var Groups = {
@@ -41,9 +64,13 @@ var Groups = {
 	menu: 'menu',
 	'context-menu': 'menu',
 	tray: 'tray',
+	traywindow: 'tray',
 	external: 'external',
 	badge: 'taskbar',
 	progress: 'taskbar',
+	attention: 'taskbar',
+	thumbar: 'taskbar',
+	tasks: 'taskbar',
 	shortcuts: 'hotkeys',
 	autostart: 'autostart',
 	links: 'links',
@@ -75,6 +102,38 @@ function linksOf (argv) {
 	return (argv || []).filter(function (argument) {
 		return !!settings.Protocol && String(argument).toLowerCase().indexOf(settings.Protocol + ':') === 0;
 	});
+}
+
+/* The tasks of the jump list among the arguments of a start (--elemenx-task=ID). */
+function tasksOf (argv) {
+	return (argv || []).filter(function (argument) {
+		return String(argument).indexOf('--elemenx-task=') === 0;
+	}).map(function (argument) {
+		return String(argument).substring('--elemenx-task='.length);
+	}).filter(function (id) {
+		return (settings.Tasks || []).some(function (task) {
+			return task.ID === id;
+		});
+	});
+}
+
+/*
+ * The first window of the program, shown and in front (hidden in the tray, or minimized): the window of the page, not
+ * one the Application opened (the window of the tray among them), whatever their order.
+ */
+function surface () {
+	var window = electron.BrowserWindow.getAllWindows().filter(function (one) {
+		return !!one.ElemenxSend;
+	})[0];
+	if (!window) return;
+
+	if (window.isMinimized())
+		window.restore();
+
+	if (!window.isVisible())
+		window.show();
+
+	window.focus();
 }
 
 /* A link that came: kept for Links, and told to the pages. */
@@ -177,6 +236,15 @@ var handlers = {
 		if (action === 'close')
 			window.close();
 
+		if (action === 'show')
+			surface();
+
+		if (action === 'quit') {
+			app.quit();
+
+			return null;
+		}
+
 		return state(window);
 	},
 	title: function (args, window) {
@@ -229,6 +297,8 @@ var handlers = {
 		});
 	},
 	tray: function (args, window, send) {
+		var menu = null;
+
 		if (tray) {
 			tray.destroy();
 			tray = null;
@@ -241,15 +311,40 @@ var handlers = {
 		if (args.Tooltip)
 			tray.setToolTip(String(args.Tooltip));
 
-		if (args.Items) {
-			tray.setContextMenu(electron.Menu.buildFromTemplate(template(args.Items, function (id) {
-				send('tray', {ID: id});
-			})));
-		}
+		if (args.Items)
+			menu = electron.Menu.buildFromTemplate(template(args.Items, function (id) {
+				send('tray', {ID: id, Kind: 'menu'});
+			}));
+
+		/* With a window, a click opens it and the menu waits for the right button (macOS would open a menu set on the icon at a click). */
+		if (menu && !args.Window)
+			tray.setContextMenu(menu);
 
 		tray.on('click', function () {
-			send('tray', {ID: null});
+			if (args.Window) showTray(!(trayWindow && trayWindow.isVisible()) && Date.now() - trayHidden > 250);
+			else if (settings.CloseToTray) surface();
+
+			send('tray', {ID: null, Kind: 'click'});
 		});
+
+		tray.on('double-click', function () {
+			send('tray', {ID: null, Kind: 'double'});
+		});
+
+		tray.on('right-click', function () {
+			if (menu && args.Window)
+				tray.popUpContextMenu(menu);
+
+			send('tray', {ID: null, Kind: 'right'});
+		});
+
+		return null;
+	},
+	traywindow: function (args) {
+		if (!tray || !trayWindow)
+			throw new Error('Elemenx Native has no window of the tray: Native.Tray with Window makes it');
+
+		showTray(args.Show !== false);
 
 		return null;
 	},
@@ -261,15 +356,65 @@ var handlers = {
 			return null;
 		});
 	},
-	badge: function (args) {
-		app.setBadgeCount(Math.max(0, Number(args.Count) || 0));
+	/* The count on the icon of the program: on Windows a small picture over it (Image, drawn by the page), elsewhere the badge of the system. */
+	badge: function (args, window) {
+		var count = Math.max(0, Number(args.Count) || 0);
+
+		if (process.platform === 'win32') {
+			window.setOverlayIcon(count && args.Image ? electron.nativeImage.createFromDataURL(String(args.Image)) : null, count ? String(count) : '');
+
+			return null;
+		}
+
+		app.setBadgeCount(count);
 
 		return null;
 	},
+	/* The progress on the button of the window: a part from 0 to 1, in a state (normal, indeterminate, paused, error); null takes it away. */
 	progress: function (args, window) {
-		window.setProgressBar(args.Value === null || args.Value === undefined ? -1 : Number(args.Value));
+		var mode = ['normal', 'indeterminate', 'paused', 'error'].indexOf(args.State) === -1 ? 'normal' : args.State;
+
+		if ((args.Value === null || args.Value === undefined) && mode !== 'indeterminate') {
+			window.setProgressBar(-1);
+
+			return null;
+		}
+
+		window.setProgressBar(mode === 'indeterminate' ? 2 : Number(args.Value), {mode: mode});
 
 		return null;
+	},
+	/* The button of the window asks for attention (it flashes, the dock bounces) until the window is in front, or On false. */
+	attention: function (args, window) {
+		window.flashFrame(!!args.On);
+
+		if (args.On && process.platform === 'darwin' && app.dock)
+			app.dock.bounce('informational');
+
+		return null;
+	},
+	/* The buttons under the thumbnail of the window (Windows, seven at most): a press is the thumbar event {ID}; [] takes them away. */
+	thumbar: function (args, window, send) {
+		if (process.platform !== 'win32')
+			throw new Error('Elemenx Native thumbnail buttons need Windows');
+
+		return window.setThumbarButtons((args.Buttons || []).slice(0, 7).map(function (button) {
+			return {
+				icon: electron.nativeImage.createFromPath(path.join(root, String(button.Icon || ''))),
+				tooltip: String(button.Tooltip || ''),
+				flags: button.Disabled ? ['disabled'] : ['enabled'],
+				click: function () {
+					send('thumbar', {ID: button.ID});
+				}
+			};
+		}));
+	},
+	/* The tasks of the jump list that started the program or came since the last call. */
+	tasks: function () {
+		if (!(settings.Tasks && settings.Tasks.length))
+			throw new Error('Elemenx Native tasks need Native.Desktop.Tasks (the jump list of the program)');
+
+		return tasks.splice(0, tasks.length);
 	},
 	shortcuts: function (args) {
 		electron.globalShortcut.unregisterAll();
@@ -334,12 +479,82 @@ var handlers = {
 	}
 };
 
+/* The window of the tray by its icon, within the screen (above the icon on a taskbar at the bottom, below it at the top), or hidden. */
+function showTray (show) {
+	var icon;
+	var size;
+	var area;
+	var x;
+	var y;
+
+	if (!trayWindow || trayWindow.isDestroyed()) return;
+
+	if (!show) {
+		trayWindow.hide();
+
+		return;
+	}
+
+	icon = tray && tray.getBounds ? tray.getBounds() : null;
+
+	if (!icon || !icon.width) {
+		icon = electron.screen.getCursorScreenPoint();
+		icon = {x: icon.x, y: icon.y, width: 0, height: 0};
+	}
+
+	size = trayWindow.getBounds();
+	area = electron.screen.getDisplayMatching(icon).workArea;
+	x = Math.round(icon.x + icon.width / 2 - size.width / 2);
+	y = icon.y > area.y + area.height / 2 ? icon.y - size.height - 8 : icon.y + icon.height + 8;
+
+	x = Math.max(area.x + 8, Math.min(x, area.x + area.width - size.width - 8));
+	y = Math.max(area.y + 8, Math.min(y, area.y + area.height - size.height - 8));
+
+	trayWindow.setPosition(x, y);
+	trayWindow.show();
+	trayWindow.focus();
+}
+
+/* The window of the tray, made hidden by the page: it hides when it loses the focus, and closes with its icon. */
+function holdTray (child) {
+	trayWindow = child;
+
+	child.on('blur', function () {
+		trayHidden = Date.now();
+
+		child.hide();
+	});
+
+	child.on('closed', function () {
+		if (trayWindow === child)
+			trayWindow = null;
+	});
+}
+
+/* A window the Application opened: it stays on its empty page, and what it would open goes to the browser of the system. */
+function guard (child) {
+	child.webContents.setWindowOpenHandler(function (details) {
+		if (external(details.url))
+			electron.shell.openExternal(details.url);
+
+		return {action: 'deny'};
+	});
+
+	child.webContents.on('will-navigate', function (event, target) {
+		event.preventDefault();
+
+		if (external(target))
+			electron.shell.openExternal(target);
+	});
+}
+
 function open () {
 	var window = new electron.BrowserWindow({
 		width: settings.Width || 1200,
 		height: settings.Height || 800,
 		title: settings.Name,
 		frame: settings.Frame !== false,
+		backgroundColor: settings.Background || undefined,
 		webPreferences: {contextIsolation: true, sandbox: true, preload: path.join(__dirname, 'preload.js'), additionalArguments: ['--elemenx-features=' + features.join(',')]}
 	});
 
@@ -354,11 +569,26 @@ function open () {
 		});
 	});
 
+	/* A window of the Application (an empty page named elemenx-window-<ID>); a link out of it, in the browser of the system. */
 	window.webContents.setWindowOpenHandler(function (details) {
+		if (details.url === 'about:blank' && /^elemenx-window-[\w-]+$/.test(String(details.frameName)))
+			return {action: 'allow', overrideBrowserWindowOptions: {title: settings.Name, autoHideMenuBar: true, frame: settings.Frame !== false}};
+
+		/* The window of the tray: no frame, not on the taskbar, over the others, shown by the icon. */
+		if (details.url === 'about:blank' && details.frameName === 'elemenx-tray')
+			return {action: 'allow', overrideBrowserWindowOptions: {title: settings.Name, show: false, frame: false, resizable: false, movable: false, minimizable: false, maximizable: false, fullscreenable: false, skipTaskbar: true, alwaysOnTop: true}};
+
 		if (external(details.url))
 			electron.shell.openExternal(details.url);
 
 		return {action: 'deny'};
+	});
+
+	window.webContents.on('did-create-window', function (child, details) {
+		guard(child);
+
+		if (details && details.frameName === 'elemenx-tray')
+			holdTray(child);
 	});
 
 	window.webContents.on('will-navigate', function (event, target) {
@@ -368,6 +598,23 @@ function open () {
 
 		if (external(target))
 			electron.shell.openExternal(target);
+	});
+
+	/* CloseToTray: while the program has its icon in the tray, closing the window hides it there. */
+	window.on('close', function (event) {
+		if (!settings.CloseToTray || !tray || quitting) return;
+
+		event.preventDefault();
+
+		window.hide();
+	});
+
+	/* The windows of the Application close with the first one: their page lives in it. */
+	window.on('closed', function () {
+		electron.BrowserWindow.getAllWindows().forEach(function (other) {
+			if (other !== window && !other.isDestroyed())
+				other.close();
+		});
 	});
 
 	window.ElemenxSend = send;
@@ -424,18 +671,40 @@ if (primary && settings.Protocol) {
 	else app.setAsDefaultProtocolClient(settings.Protocol);
 
 	links = linksOf(process.argv);
+}
 
+/*
+ * The jump list of the program on Windows (Tasks): each task starts the program with --elemenx-task=ID, a second start
+ * that hands it to the first one.
+ */
+if (primary && settings.Tasks && settings.Tasks.length) {
+	tasks = tasksOf(process.argv);
+
+	if (process.platform === 'win32' && typeof app.setUserTasks === 'function')
+		app.setUserTasks(settings.Tasks.map(function (task) {
+			return {
+				program: process.execPath,
+				arguments: (process.defaultApp ? '"' + path.resolve(process.argv[1] || '.') + '" ' : '') + '--elemenx-task=' + task.ID,
+				title: task.Label,
+				description: task.Description || task.Label,
+				iconPath: process.execPath,
+				iconIndex: 0
+			};
+		}));
+}
+
+/* A second start: its links and tasks go to the pages of the first, which comes to the front. */
+if (primary && single) {
 	app.on('second-instance', function (event, argv) {
-		var window = electron.BrowserWindow.getAllWindows()[0];
-
 		linksOf(argv).forEach(deliver);
 
-		if (window) {
-			if (window.isMinimized())
-				window.restore();
+		tasksOf(argv).forEach(function (id) {
+			tasks.push(id);
 
-			window.focus();
-		}
+			broadcast('task', {ID: id});
+		});
+
+		surface();
 	});
 
 	app.on('open-url', function (event, link) {
@@ -444,6 +713,10 @@ if (primary && settings.Protocol) {
 		deliver(link);
 	});
 }
+
+app.on('before-quit', function () {
+	quitting = true;
+});
 
 app.on('will-quit', function () {
 	if (features.indexOf('hotkeys') !== -1)

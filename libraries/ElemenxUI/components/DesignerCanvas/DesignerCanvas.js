@@ -1,20 +1,24 @@
 /*
- * The canvas of a designer of pages (the Designer Service): the page of the document running as a component of its
- * own (made again on every change), at the width of a desktop, a tablet or a phone (Width). A layer over it takes the
+ * The canvas of a designer of pages (the Designer Service): the page of the document running as a component of its own
+ * (made again on every change), at the width of a desktop, a tablet or a phone (Width). A layer over it takes the
  * pointer, so the components of the page stay still while they are built: it marks the element under the pointer and
  * the selected one, selects what is pressed, and takes the kinds of a DesignerPalette dropped on it and the elements
  * moved by the grip of the selection, with a line where they go and words that say it (In Screen, after Row). Near the
- * edge of a container a drop goes beside it, in its parent; Alt held takes it one level up. A press on a tab of a
- * component of declared children (Tabs, Ribbon) selects the child it shows, and the canvas shows the child the selection
- * is in. While a drag goes on, a bar over the canvas names the container the drop goes into and those around it: a drop
- * on one of them puts the element at its end, whatever the edges. The canvas is the body of the page: as high as the
- * room it has (a screen with Sizing fill fills it), as wide as Width says. Outlines draws the frame of every container,
- * Gaps gives the containers without a padding of their own some room to drop into (8 pixels); neither is in the page.
- * Preview takes the layer away, the outlines and the places to drop with it: the page works as it will. Inspect (in a
- * preview) shows the box of the element under the pointer as the tools of a browser do: its margin, its padding, its
- * size; a press keeps one, and Alt held measures the distance from it to the one under the pointer. Lines draws the
- * outlines in a preview too. Empty is the text of an empty container (the phrase of the language of the page by
- * default).
+ * edge of a container a drop goes beside it, in its parent; Shift held takes it one level up. Shift held without a
+ * drag measures, as the designers of pictures do: from the selected element to the one under the pointer (to the sides
+ * of the one around it, when that is under the pointer), or to the edges of the canvas when the pointer is on it or on
+ * nothing (the element under the pointer to them, with nothing selected). A press on a tab of a
+ * component of declared children (Tabs, Ribbon) selects the child it shows, and the canvas shows the child the
+ * selection is in. While a drag goes on, a bar over the canvas names the container the drop goes into and those around
+ * it: a drop on one of them puts the element at its end, whatever the edges. The canvas is the body of the page: as
+ * high as the room it has (a screen with Sizing fill fills it), as wide as Width says. Outlines draws the frame of
+ * every container, Gaps gives the containers without a padding of their own some room to drop into (8 pixels); neither
+ * is in the page. Preview takes the layer away, the outlines and the places to drop with it: the page works as it will.
+ * Inspect (in a preview) shows the box of the element under the pointer as the tools of a browser do: its margin, its
+ * padding, its size; a press keeps one, and Shift held measures the distance from it to the one under the pointer (to
+ * the edges of the canvas without one). Lines draws the outlines in a preview too. Rulers (Ruler) run along the top and
+ * the side of the canvas, the pointer and the selected element marked on them. Empty is the text of an empty container
+ * (the phrase of the language of the page by default).
  * Events: select (the ID of an element, or null), drop ({Kind or Node, Parent, Index, ID}).
  */
 Elemenx.Component('DesignerCanvas', {
@@ -32,6 +36,7 @@ Elemenx.Component('DesignerCanvas', {
 			Gaps: 'Gives the containers without a padding of their own 8 pixels of room to drop into while the page is built.',
 			Inspect: 'In a preview, shows the margin, the padding and the size of the element under the pointer.',
 			Lines: 'Draws the frame of every container in a preview too.',
+			Rulers: 'Shows the rulers along the top and the side, with the pointer and the selected element marked on them.',
 			Empty: 'The text of an empty container; the phrase of the language of the page without one.'
 		}
 	},
@@ -41,6 +46,7 @@ Elemenx.Component('DesignerCanvas', {
 	Gaps: true,
 	Inspect: false,
 	Lines: false,
+	Rulers: true,
 	Empty: '',
 	Version: 0,
 	Hovered: null,
@@ -53,11 +59,16 @@ Elemenx.Component('DesignerCanvas', {
 	Measured: null,
 	Pin: null,
 	Distances: [],
+	Spaces: [],
+	RulerX: 0,
+	RulerY: 0,
+	PointX: null,
+	PointY: null,
 
 	$OnCreate: function () {
 		var self = this;
 		var designer = this.$Service('Designer');
-		var own = {Instance: null, Source: '', Frame: 0, Observers: [], Changed: null, Alt: false, Keys: null, Ending: null, Hover: null, Pinned: null, Into: ''};
+		var own = {Instance: null, Source: '', Frame: 0, Observers: [], Changed: null, Shift: false, Point: null, Keys: null, Ending: null, Hover: null, Pinned: null, Into: ''};
 
 		own.Changed = function () {
 			self.Version++;
@@ -92,6 +103,15 @@ Elemenx.Component('DesignerCanvas', {
 		};
 
 		this.Style = style;
+
+		/* The span of the selected element along a ruler (x or y), in the units of the page. */
+		this.Span = function (id, tick, axis) {
+			var rect = tick >= 0 && id ? self.Rect(id) : null;
+			if (!rect)
+				return null;
+
+			return axis === 'x' ? {From: rect.Left, To: rect.Right} : {From: rect.Top, To: rect.Bottom};
+		};
 
 		/* The tooltip of a measured element, under its margin box. */
 		this.Tip = function (measured) {
@@ -130,9 +150,21 @@ Elemenx.Component('DesignerCanvas', {
 
 		this.Own().Observers = [resize, mutation];
 
-		/* Alt held while a drag goes over the canvas takes the drop one level up. */
+		/*
+		 * Shift held while a drag goes over the canvas takes the drop one level up; in an inspection it measures at once,
+		 * the pointer still.
+		 */
 		this.Own().Keys = function (event) {
-			self.Own().Alt = event.altKey;
+			var own = self.Own();
+			if (own.Shift === event.shiftKey) return;
+
+			own.Shift = event.shiftKey;
+
+			if (self.Preview && self.Inspect && own.Point)
+				self.Inspected({clientX: own.Point.X, clientY: own.Point.Y});
+
+			if (!self.Preview)
+				self.Spaced();
 		};
 
 		window.addEventListener('keydown', this.Own().Keys, true);
@@ -194,6 +226,8 @@ Elemenx.Component('DesignerCanvas', {
 
 		own.Frame = window.requestAnimationFrame(function () {
 			self.Tick++;
+
+			self.Origin();
 		});
 	},
 
@@ -202,8 +236,8 @@ Elemenx.Component('DesignerCanvas', {
 		return this.$Element().querySelector('.elemenx-designer-page-host [data-designer-id="' + id + '"]');
 	},
 
-	/* The box of a node, relative to the surface: the box of its content (the wrapper itself has none). */
-	Rect: function (id) {
+	/* The box of a node, relative to the surface: the box of its content (the wrapper itself has none); exact: not rounded. */
+	Rect: function (id, exact) {
 		var wrapper = id === 'root' ? this.$Element().querySelector('.elemenx-designer-page-host') : this.Wrapper(id);
 		var surface = this.$Element().querySelector('.elemenx-designer-surface');
 		var range;
@@ -216,12 +250,42 @@ Elemenx.Component('DesignerCanvas', {
 
 		range.selectNodeContents(wrapper);
 
-		rect = range.getBoundingClientRect();
+		rect = exact ? this.Union(wrapper) || range.getBoundingClientRect() : range.getBoundingClientRect();
 		base = surface.getBoundingClientRect();
 
 		if (!rect.width && !rect.height) return null;
 
+		if (exact)
+			return {Left: rect.left - base.left, Top: rect.top - base.top, Width: rect.width, Height: rect.height, Right: rect.right - base.left, Bottom: rect.bottom - base.top};
+
 		return {Left: Math.round(rect.left - base.left), Top: Math.round(rect.top - base.top), Width: Math.round(rect.width), Height: Math.round(rect.height), Right: Math.round(rect.right - base.left), Bottom: Math.round(rect.bottom - base.top)};
+	},
+
+	/*
+	 * The boxes of the elements in a wrapper, as one: what a distance is measured from (the box of its text would stand
+	 * out of a heading by the glyphs of its font). Null for a wrapper of text alone.
+	 */
+	Union: function (wrapper) {
+		var result = null;
+
+		Array.prototype.forEach.call(wrapper.children, function (child) {
+			var box = child.getBoundingClientRect();
+			if (!box.width && !box.height) return;
+
+			result = result ? {
+				left: Math.min(result.left, box.left),
+				top: Math.min(result.top, box.top),
+				right: Math.max(result.right, box.right),
+				bottom: Math.max(result.bottom, box.bottom)
+			} : {left: box.left, top: box.top, right: box.right, bottom: box.bottom};
+		});
+
+		if (result) {
+			result.width = result.right - result.left;
+			result.height = result.bottom - result.top;
+		}
+
+		return result;
 	},
 
 	/* The node under a point of the window: the layer steps aside for a moment to let the page answer. */
@@ -273,7 +337,7 @@ Elemenx.Component('DesignerCanvas', {
 	 * Where a drop at a point goes: the container under it (or the one around the element under it), and the place among
 	 * its children before the first one whose middle the point is before. Near an edge of a container across the flow of
 	 * its parent (a quarter of it, 32 pixels at most) the drop goes beside it, in its parent: a row in a screen that a row
-	 * fills goes after that row from the lower part of it. Alt held (up) takes the drop one level up. A moved node never
+	 * fills goes after that row from the lower part of it. Shift held (up) takes the drop one level up. A moved node never
 	 * goes into itself.
 	 */
 	Place: function (x, y, moving, up) {
@@ -385,10 +449,47 @@ Elemenx.Component('DesignerCanvas', {
 	Moved: function (event) {
 		var id = this.At(event.clientX, event.clientY);
 
+		this.Own().Point = {X: event.clientX, Y: event.clientY};
 		this.Hovered = id === 'root' ? null : id;
+
+		this.Spaced();
+	},
+
+	/*
+	 * The distances Shift shows while the page is built (no drag going on): from the selected element to the one under
+	 * the pointer, inside the one around it when that is under the pointer, or to the edges of the canvas.
+	 */
+	Spaced: function () {
+		var own = this.Own();
+		var selected = this.$Service('Designer').Selected();
+		var hovered = this.Hovered;
+		var from = selected ? this.Rect(selected, true) : null;
+		var to = hovered && hovered !== selected ? this.Rect(hovered, true) : null;
+		var inside;
+
+		if (!own.Shift || !own.Point || this.Marker || this.Target) {
+			if (this.Spaces.length)
+				this.Spaces = [];
+
+			return;
+		}
+
+		if (from && to) {
+			inside = from.Left >= to.Left && from.Top >= to.Top && from.Right <= to.Right && from.Bottom <= to.Bottom;
+
+			this.Spaces = inside ? this.Spacing(to, from) : this.Spacing(from, to);
+
+			return;
+		}
+
+		from = from || (hovered ? this.Rect(hovered, true) : null);
+
+		this.Spaces = from ? this.Spacing(this.Edges(), from) : [];
 	},
 
 	Left: function () {
+		this.Own().Point = null;
+		this.Spaces = [];
 		this.Hovered = null;
 		this.Marker = null;
 		this.Note = '';
@@ -401,6 +502,8 @@ Elemenx.Component('DesignerCanvas', {
 		this.$Service('Designer').Select(id);
 
 		this.$Emit('select', id === 'root' ? null : id);
+
+		this.Spaced();
 	},
 
 	Over: function (event) {
@@ -410,7 +513,7 @@ Elemenx.Component('DesignerCanvas', {
 
 		if (detail.Kind !== 'item') return;
 
-		place = this.Place(detail.ClientX, detail.ClientY, detail.Type === 'elemenx-designer-node' ? detail.Data : null, this.Own().Alt);
+		place = this.Place(detail.ClientX, detail.ClientY, detail.Type === 'elemenx-designer-node' ? detail.Data : null, this.Own().Shift);
 		links = this.Links(place.Parent);
 
 		this.Marker = this.Line(place);
@@ -434,7 +537,7 @@ Elemenx.Component('DesignerCanvas', {
 
 		if (detail.Kind !== 'item') return;
 
-		place = this.Place(detail.ClientX, detail.ClientY, detail.Type === 'elemenx-designer-node' ? detail.Data : null, this.Own().Alt);
+		place = this.Place(detail.ClientX, detail.ClientY, detail.Type === 'elemenx-designer-node' ? detail.Data : null, this.Own().Shift);
 
 		this.Put(detail, place.Parent, place.Index);
 	},
@@ -531,6 +634,41 @@ Elemenx.Component('DesignerCanvas', {
 
 	Scrolled: function () {
 		this.Measure();
+	},
+
+	/* Where the rulers start in the units of the page: 0 is the edge of the page, wherever the stage scrolled it. */
+	Origin: function () {
+		var surface = this.$Element().querySelector('.elemenx-designer-surface');
+		var top = this.$Element().querySelector('.elemenx-designer-ruler.horizontal');
+		var side = this.$Element().querySelector('.elemenx-designer-ruler.vertical');
+		var box;
+		var x;
+		var y;
+
+		if (!surface || !top || !side) return;
+
+		box = surface.getBoundingClientRect();
+		x = Math.round(top.getBoundingClientRect().left - box.left);
+		y = Math.round(side.getBoundingClientRect().top - box.top);
+
+		if (this.RulerX !== x)
+			this.RulerX = x;
+
+		if (this.RulerY !== y)
+			this.RulerY = y;
+	},
+
+	/* The pointer over the stage, marked on the rulers in the units of the page. */
+	Pointed: function (event) {
+		var box = this.$Element().querySelector('.elemenx-designer-surface').getBoundingClientRect();
+
+		this.PointX = Math.round(event.clientX - box.left);
+		this.PointY = Math.round(event.clientY - box.top);
+	},
+
+	Unpointed: function () {
+		this.PointX = null;
+		this.PointY = null;
 	},
 
 	/* The element of the page under a point of the window, under the layer of the inspection. */
@@ -634,17 +772,26 @@ Elemenx.Component('DesignerCanvas', {
 		var element = this.Under(event.clientX, event.clientY);
 
 		own.Hover = element;
+		own.Point = {X: event.clientX, Y: event.clientY};
 
 		this.Measured = element ? this.Boxes(element) : null;
-		this.Distances = own.Alt && own.Pinned && element && element !== own.Pinned ? this.Spacing(this.Boxes(own.Pinned).Border, this.Measured.Border) : [];
+		this.Distances = own.Shift && element && element !== own.Pinned ? this.Spacing(own.Pinned ? this.Boxes(own.Pinned).Border : this.Edges(), this.Measured.Border) : [];
+	},
+
+	/* The box of the canvas itself, the page: Shift without an element pressed measures to its edges. */
+	Edges: function () {
+		var box = this.$Element().querySelector('.elemenx-designer-surface').getBoundingClientRect();
+
+		return {Left: 0, Top: 0, Width: box.width, Height: box.height};
 	},
 
 	Uninspected: function () {
+		this.Own().Point = null;
 		this.Measured = null;
 		this.Distances = [];
 	},
 
-	/* A press keeps the element measured, the one Alt measures from; a press on it again lets it go. */
+	/* A press keeps the element measured, the one Shift measures from; a press on it again lets it go. */
 	Pinned: function () {
 		var own = this.Own();
 

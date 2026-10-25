@@ -18,6 +18,7 @@ A select of several options. Options: [{Value, Label, Hint, Icon, Group, Disable
 | `SelectAll` | `false` |
 | `Disabled` | `false` |
 | `Invalid` | `false` |
+| `Name` | `null` |
 
 ## Events
 

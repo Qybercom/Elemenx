@@ -64,6 +64,7 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-game-special`
 - `elemenx-native-drag`
 - `elemenx-native-nodrag`
+- `elemenx-native-window`
 - `elemenx-game-stats`: `double`
 - `elemenx-icon`: `colored`, `spin`
 - `elemenx-input`: `disabled`, `giant`, `invalid`, `large`, `multiple`, `readonly`, `round`, `small`
@@ -143,6 +144,9 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-table`: `bordered`, `compact`, `selectable`, `sticky`, `striped`, `tree`
 - `elemenx-text`: `danger`, `large`, `mono`, `muted`, `small`, `strong`, `success`, `warning`
 - `elemenx-textarea`: `round`
+- `elemenx-tip`: `rich`
+- `elemenx-tip-text`
+- `elemenx-tip-title`
 - `elemenx-title`
 - `elemenx-ul`: `check`
 - `elemenx-visually-hidden`
@@ -437,7 +441,7 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 
 ## DesignerCanvas
 
-- `elemenx-designer-canvas`: `gaps`, `outlines`
+- `elemenx-designer-canvas`: `gaps`, `outlines`, `rulers`
 - `elemenx-designer-chain`
 - `elemenx-designer-chain-bar`
 - `elemenx-designer-chain-item`: `active`
@@ -451,14 +455,33 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-designer-marker-note`
 - `elemenx-designer-measure`: `content`, `margin`, `padding`, `pinned`
 - `elemenx-designer-node`
+- `elemenx-designer-outlet`
 - `elemenx-designer-page`
 - `elemenx-designer-page-host`
+- `elemenx-designer-part`
+- `elemenx-designer-ruler`: `horizontal`, `vertical`
+- `elemenx-designer-rulers-corner`
 - `elemenx-designer-selection`
+- `elemenx-designer-slot`
+- `elemenx-designer-stage`
 - `elemenx-designer-surface`
 - `elemenx-designer-target`
 - `elemenx-designer-tip`
 - `elemenx-designer-tip-row`
 - `elemenx-designer-viewport`: `phone`, `tablet`
+
+## DesignerDocument
+
+- `elemenx-designer-document`
+- `elemenx-designer-document-body`
+- `elemenx-designer-document-drop`
+- `elemenx-designer-document-head`
+- `elemenx-designer-document-input`
+- `elemenx-designer-document-key`: `wide`
+- `elemenx-designer-document-prop`
+- `elemenx-designer-document-props`
+- `elemenx-designer-document-routes`
+- `elemenx-designer-document-slots`
 
 ## DesignerInspector
 
@@ -485,15 +508,37 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-designer-palette-items`
 - `elemenx-designer-palette-title`
 
+## DesignerProject
+
+- `elemenx-designer-project`
+- `elemenx-designer-project-add`
+- `elemenx-designer-project-head`
+- `elemenx-designer-project-item`: `active`
+- `elemenx-designer-project-name`
+- `elemenx-designer-project-route`
+
 ## DesignerRules
 
 - `elemenx-designer-rules-body`
+- `elemenx-designer-rules-computed`
 - `elemenx-designer-rules-context`
 - `elemenx-designer-rules-list`
 - `elemenx-designer-rules-name`
 - `elemenx-designer-rules-other`: `active`
 - `elemenx-designer-rules-others`
 - `elemenx-designer-rules-row`
+
+## DesignerSettings
+
+- `elemenx-designer-settings`
+- `elemenx-designer-settings-body`
+- `elemenx-designer-settings-grid`
+- `elemenx-designer-settings-guard`
+- `elemenx-designer-settings-remove`
+- `elemenx-designer-settings-route`
+- `elemenx-designer-settings-routes`
+- `elemenx-designer-settings-signature`
+- `elemenx-designer-settings-wide`
 
 ## DesignerStyle
 
@@ -1042,6 +1087,14 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-rich-editor-print`
 - `elemenx-rich-editor-separator`
 
+## Ruler
+
+- `elemenx-ruler`: `horizontal`, `vertical`
+- `elemenx-ruler-guide`
+- `elemenx-ruler-label`
+- `elemenx-ruler-marker`
+- `elemenx-ruler-range`
+
 ## Section
 
 - `elemenx-section-actions`
@@ -1189,8 +1242,8 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-tile-badge`
 - `elemenx-tile-cells`
 - `elemenx-tile-content`
-- `elemenx-tile-gap`: `drop-over`, `drop-target`
-- `elemenx-tile-grid`: `drop-over`, `drop-target`, `editable`, `horizontal`, `scroll`, `sorting`
+- `elemenx-tile-gap`: `after`, `below`, `drop-over`, `drop-target`, `side`
+- `elemenx-tile-grid`: `columns`, `drop-over`, `drop-target`, `editable`, `horizontal`, `scroll`, `sorting`
 - `elemenx-tile-group`: `drop-over`, `drop-target`, `growing`, `new`
 - `elemenx-tile-group-action`
 - `elemenx-tile-group-actions`
@@ -1201,6 +1254,7 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-tile-lane`
 - `elemenx-tile-new`
 - `elemenx-tile-source-content`
+- `elemenx-tile-stack`
 - `elemenx-tile-text`
 - `elemenx-tile-title`
 

@@ -1,0 +1,72 @@
+<div class="elemenx-designer-document">
+	<div class="elemenx-column elemenx-designer-document-body" *if="Current(Version)">
+		<div class="elemenx-container elemenx-designer-document-head">
+			<Icon [name]="Current(Version).Type === 'page' ? 'file' : 'layout'" />
+			<strong>{{Current(Version).Type === 'page' ? $T('ui.designer.project.page') : $T('ui.designer.project.component')}}</strong>
+			<span class="elemenx-spacer"></span>
+			<Button Icon="delete" Variant="ghost" Size="small" [title]="$T('ui.designer.project.remove')" [disabled]="!Current(Version).Removable" (click)="Removed" />
+		</div>
+		<p class="elemenx-text small muted" *if="Current(Version).Used.length">{{$T('ui.designer.project.used', {names: Current(Version).Used.join(', ')})}}</p>
+		<Field [label]="$T('ui.designer.project.name')" [error]="Wrong === 'Name' ? (Current(Version).Type === 'page' ? $T('ui.designer.project.pageTaken') : $T('ui.designer.project.nameTaken')) : ''">
+			<Input Name="Name" [value]="Current(Version).Name" (change)="Changed" />
+		</Field>
+		<Field *if="Current(Version).Type === 'page'" [label]="$T('ui.designer.project.title')">
+			<Input Name="Title" [value]="Current(Version).Title" (change)="Changed" />
+		</Field>
+		<div class="elemenx-designer-document-routes" *if="Current(Version).Type === 'page' && Current(Version).Mode === 'application'">
+			<span class="elemenx-label">{{$T('ui.designer.project.routes')}}</span>
+			<p class="elemenx-text small muted" *if="!Current(Version).Routes.length">{{$T('ui.designer.project.noRoutes')}}</p>
+			<div class="elemenx-chips" *if="Current(Version).Routes.length">
+				<code class="elemenx-chip" *for="path of Current(Version).Routes" *key="path">{{path}}</code>
+			</div>
+			<p class="elemenx-text small muted">{{$T('ui.designer.project.routesHint')}}</p>
+		</div>
+		<Field *if="Current(Version).Type === 'component'" [label]="$T('ui.designer.project.description')">
+			<TextArea Name="Description" Rows="2" AutoSize="true" [value]="Current(Version).Description" (change)="Changed" />
+		</Field>
+		<div class="elemenx-designer-document-props" *if="Current(Version).Type === 'component'">
+			<span class="elemenx-label">{{$T('ui.designer.project.props')}}</span>
+			<p class="elemenx-text small muted" *if="!Current(Version).Props.length">{{$T('ui.designer.project.noProps')}}</p>
+			<div class="elemenx-designer-document-prop" *for="row of Rows(Current(Version))" *key="row.Index">
+				<label class="elemenx-designer-document-key">
+					<span>{{$T('ui.designer.project.name')}}</span>
+					<input type="text" class="elemenx-designer-document-input" [value]="row.Name" [attribute.data-index]="row.Index" data-key="Name" (change)="Propped" />
+				</label>
+				<label class="elemenx-designer-document-key">
+					<span>{{$T('ui.designer.project.type')}}</span>
+					<select class="elemenx-designer-document-input" [attribute.data-index]="row.Index" data-key="Type" (change)="Propped">
+						<option *for="type of Types(Version)" *key="type.Value" [value]="type.Value" [selected]="type.Value === row.Type">{{type.Label}}</option>
+					</select>
+				</label>
+				<label class="elemenx-designer-document-key" *if="row.Type !== 'bool'">
+					<span>{{$T('ui.designer.project.default')}}</span>
+					<input type="text" class="elemenx-designer-document-input" [value]="row.Default" [attribute.data-index]="row.Index" data-key="Default" (change)="Propped" />
+				</label>
+				<label class="elemenx-designer-document-key" *if="row.Type === 'bool'">
+					<span>{{$T('ui.designer.project.default')}}</span>
+					<input type="checkbox" [checked]="row.Default" [attribute.data-index]="row.Index" data-key="Default" (change)="Propped" />
+				</label>
+				<label class="elemenx-designer-document-key" *if="row.Type === 'select'">
+					<span>{{$T('ui.designer.project.options')}}</span>
+					<input type="text" class="elemenx-designer-document-input" [value]="row.Options" [attribute.data-index]="row.Index" data-key="Options" (change)="Propped" />
+				</label>
+				<label class="elemenx-designer-document-key wide">
+					<span>{{$T('ui.designer.project.description')}}</span>
+					<input type="text" class="elemenx-designer-document-input" [value]="row.Description" [attribute.data-index]="row.Index" data-key="Description" (change)="Propped" />
+				</label>
+				<button type="button" class="elemenx-designer-document-drop" [attribute.title]="$T('ui.designer.delete')" [attribute.aria-label]="$T('ui.designer.delete')" [attribute.data-index]="row.Index" (click)="Dropped"><Icon Name="delete" Size="14" /></button>
+			</div>
+			<p class="elemenx-text small danger" *if="Wrong === 'Props'">{{$T('ui.designer.project.propTaken')}}</p>
+			<div>
+				<button type="button" class="elemenx-button ghost small elemenx-designer-document-add" (click)="Added"><Icon Name="add" Size="14" /><span class="elemenx-button-label">{{$T('ui.designer.project.addProp')}}</span></button>
+			</div>
+		</div>
+		<div class="elemenx-designer-document-slots" *if="Current(Version).Type === 'component'">
+			<span class="elemenx-label">{{$T('ui.designer.project.slots')}}</span>
+			<p class="elemenx-text small muted" *if="!Current(Version).Slots.length">{{$T('ui.designer.project.noSlots')}}</p>
+			<div class="elemenx-chips" *if="Current(Version).Slots.length">
+				<span class="elemenx-chip" *for="slot of Current(Version).Slots" *key="slot">{{SlotLabel(slot)}}</span>
+			</div>
+		</div>
+	</div>
+</div>

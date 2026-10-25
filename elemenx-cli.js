@@ -5,6 +5,7 @@ var fs = require('fs');
 var path = require('path');
 var Builder = require('./tools/builder.js');
 var Server = require('./tools/server.js');
+var Splash = require('./tools/splash.js');
 var Generator = require('./tools/generator.js');
 var Icons = require('./tools/icons.js');
 var Native = require('./tools/native.js');
@@ -102,7 +103,9 @@ function buildOptions (parsed, settings) {
 		extensionSettings: settings.Extension || {},
 		native: parsed.Options.native === undefined ? false : parsed.Options.native,
 		nativeSettings: settings.Native || {},
-		packs: listValue(value(parsed.Options, 'packs', settings.Packs, []))
+		packs: listValue(value(parsed.Options, 'packs', settings.Packs, [])),
+		splash: settings.Splash,
+		pwa: settings.PWA
 	};
 }
 
@@ -142,6 +145,10 @@ function listen (directory, port, settings, production, options) {
 			CacheControl: cacheControl,
 			FrameworkFallback: !production,
 			Request: serverSettings.Request || null,
+			/* In development the page gets its splash as a build would write it, splash.html read again each time. */
+			Page: production ? null : function (text) {
+				return Splash.Inject(text, Splash.Settings(directory, settings.Splash));
+			},
 			WebSocket: serverSettings.WebSocket || null
 		})
 		.Listen(port, host, function () {
@@ -246,7 +253,7 @@ command('build', 'Build an Application into dist: a site, one file, a widget, a 
 		['--application <Name>', 'the Application to build, of a project with several'],
 		['--single', 'all of it in one index.html that runs from a file'],
 		['--widget', 'one isolated widget.js for a page of another site'],
-		['--packs <a,b>', 'the Library packs it always embeds (all: every pack)'],
+		['--packs <a,b>', 'the Library packs it always takes (all: every pack)'],
 		['--full', 'all of the framework, not only the sections the build uses'],
 		['--precompile', 'the expressions of the templates as code, for a page that forbids eval'],
 		['--extension', 'a browser extension for Chrome, Edge and Firefox'],

@@ -5,7 +5,10 @@ body {
 	font-family: var(--elemenx-font);
 }
 
+/* The height of the header, which the navigation and the contents of a page stay under. */
 .docs-shell {
+	--docs-header: 56px;
+
 	display: flex;
 	flex-direction: column;
 	min-height: 100vh;
@@ -19,9 +22,10 @@ body {
 	display: flex;
 	align-items: center;
 	gap: 12px;
-	height: 52px;
-	/* Its content over the page, in the middle of a wide screen as the page is (1600 pixels at most). */
-	padding: 0 max(16px, calc((100% - 1600px) / 2 + 16px));
+	height: var(--docs-header);
+	box-sizing: border-box;
+	/* Its content over the page, in the middle of a wide screen as the page is (1600 pixels at most), with room above and under it. */
+	padding: 10px max(16px, calc((100% - 1600px) / 2 + 16px));
 	background: var(--elemenx-surface);
 	border-bottom: 1px solid var(--elemenx-border);
 }
@@ -55,6 +59,79 @@ body {
 	flex: 1 0 auto;
 	flex-direction: column;
 	min-height: 0;
+}
+
+/* The search of the whole reference in the header, and the pages it found under it. */
+.docs-search {
+	position: relative;
+	flex: 0 1 360px;
+	min-width: 0;
+}
+
+.docs-search-results {
+	position: absolute;
+	top: calc(100% + 6px);
+	left: 0;
+	z-index: 20;
+	box-sizing: border-box;
+	width: min(560px, calc(100vw - 32px));
+	max-height: min(70vh, 560px);
+	padding: 6px;
+	overflow: auto;
+	background: var(--elemenx-surface);
+	border: 1px solid var(--elemenx-border);
+	border-radius: var(--elemenx-radius-large);
+	box-shadow: var(--elemenx-shadow);
+}
+
+.docs-search-none {
+	margin: 8px;
+}
+
+.docs-search-result {
+	display: grid;
+	grid-template-columns: auto 1fr;
+	gap: 2px 8px;
+	width: 100%;
+	padding: 8px 10px;
+	color: inherit;
+	font: inherit;
+	text-align: start;
+	cursor: pointer;
+	background: transparent;
+	border: 0;
+	border-radius: var(--elemenx-radius);
+}
+
+.docs-search-result:hover,
+.docs-search-result.active {
+	background: var(--elemenx-surface-hover);
+}
+
+.docs-search-place {
+	color: var(--elemenx-text-muted);
+	font-size: var(--elemenx-font-size-small);
+}
+
+.docs-search-title {
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.docs-search-snippet {
+	grid-column: 1 / -1;
+	color: var(--elemenx-text-muted);
+	font-size: var(--elemenx-font-size-small);
+	line-height: 1.4;
+}
+
+.docs-search-hit {
+	color: var(--elemenx-text);
+	font-weight: var(--elemenx-font-weight-bold);
+	background: rgba(var(--elemenx-accent-rgb), 0.16);
+	border-radius: 2px;
 }
 
 @media (max-width: 640px) {

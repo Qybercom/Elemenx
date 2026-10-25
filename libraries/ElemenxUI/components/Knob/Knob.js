@@ -173,7 +173,7 @@ Elemenx.Component('Knob', {
 
 	/* The wheel turns the knob only while it has the focus, so it never takes the scrolling of the page. */
 	Wheel: function (event, node) {
-		if (this.Disabled || document.activeElement !== node || !event.deltaY) return;
+		if (this.Disabled || (node.ownerDocument || document).activeElement !== node || !event.deltaY) return;
 
 		event.preventDefault();
 

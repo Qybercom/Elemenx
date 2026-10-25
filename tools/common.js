@@ -67,8 +67,38 @@ function packOf (packs, relative) {
 	return null;
 }
 
+/*
+ * The package.json of a module the project installed ({File, Package}), or null: found in the node_modules of the
+ * project and of the folders above it, as Node looks for a module. Not by require.resolve: a package whose exports
+ * leave its package.json out (@electron/packager) cannot be resolved so.
+ */
+function installed (project, name) {
+	var folder = path.resolve(project);
+	var file;
+
+	while (folder) {
+		file = path.join(folder, 'node_modules', name, 'package.json');
+
+		if (fs.existsSync(file)) {
+			try {
+				return {File: file, Package: JSON.parse(fs.readFileSync(file, 'utf8'))};
+			}
+			catch (error) {
+				return null;
+			}
+		}
+
+		if (path.dirname(folder) === folder) return null;
+
+		folder = path.dirname(folder);
+	}
+
+	return null;
+}
+
 module.exports = {
 	fail: fail,
+	installed: installed,
 	parseIndex: parseIndex,
 	readPacks: readPacks,
 	packOf: packOf

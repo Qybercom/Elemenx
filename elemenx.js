@@ -32,6 +32,8 @@
  *   WebWorker                Elemenx.WebWorker
  *   ServiceWorker            Elemenx.ServiceWorker
  *   Owner resources          wiring and release of the facades owned by Services, Components and Applications
+ *   Install                  Elemenx.Install: the page as an application of the system (PWA), its prompt and worker
+ *   Splash                   Elemenx.Splash: the splash of the page, gone when the first Application is ready
  *   Application              Elemenx.Application: ownership, mounting, startup lifecycle
  *   Export                   Elemenx.Version, Elemenx.NoConflict; the window gets this copy, an isolated build keeps it
  *   ServiceWorker bootstrap  runs inside a service worker started by Elemenx.ServiceWorker
@@ -589,6 +591,17 @@
 							trigger(target, 'length');
 						}
 
+						/* A shorter array: what read its removed items ({{Items[1]}}) reads them again. */
+						if (key === 'length' && Array.isArray(target) && target.length < oldLength) {
+							var removed = target.length;
+
+							while (removed < oldLength) {
+								trigger(target, String(removed));
+
+								removed++;
+							}
+						}
+
 						if (Array.isArray(target)) {
 							if (arrayIndex || key === 'length') {
 								trigger(target, ITERATE);
@@ -600,6 +613,21 @@
 					}
 
 					return result;
+				},
+
+				/* 'Name' in Data reads whether the key is there: a key added or taken away runs it again. */
+				has: function (target, key) {
+					if (typeof key !== 'symbol')
+						track(target, key);
+
+					return Reflect.has(target, key);
+				},
+
+				/* Object.keys(Data), for...in: the keys of the object, read again when one comes or goes. */
+				ownKeys: function (target) {
+					track(target, Array.isArray(target) ? 'length' : ITERATE);
+
+					return Reflect.ownKeys(target);
 				},
 
 				deleteProperty: function (target, key) {
@@ -4992,13 +5020,46 @@
 		}
 
 		/* Plain definition values (not $ keys, not methods): the initial state of an instance. */
+		/*
+		 * A value of a definition for one instance: a plain object or an array is copied, deep, so two instances never
+		 * share one (Items: [] of each its own); anything else (a Date, a Map, an element, an object of a class) is kept.
+		 */
+		function instanceValue (value) {
+			var copy;
+			var key;
+			var i = 0;
+
+			if (Array.isArray(value)) {
+				copy = [];
+
+				while (i < value.length) {
+					copy.push(instanceValue(value[i]));
+
+					i++;
+				}
+
+				return copy;
+			}
+
+			if (!value || typeof value !== 'object' || (Object.getPrototypeOf(value) !== Object.prototype && Object.getPrototypeOf(value) !== null)) return value;
+
+			copy = {};
+
+			for (key in value) {
+				if (own(value, key))
+					copy[key] = instanceValue(value[key]);
+			}
+
+			return copy;
+		}
+
 		function definitionValues (definition) {
 			var values = {};
 			var key;
 
 			for (key in definition) {
 				if (own(definition, key) && key.charAt(0) !== '$' && typeof definition[key] !== 'function') {
-					values[key] = definition[key];
+					values[key] = instanceValue(definition[key]);
 				}
 			}
 
@@ -5962,8 +6023,9 @@
 		/*
 		 * What a definition declares of itself in $Meta, normalized: {Name, Kind, Group, Icon, Description, Props, Slots,
 		 * Container, Children, Current, Events, Methods, Sample}. $Meta.Props names the public props, each a description or
-		 * {Type, Options, Schema, Description}; its Default is the value of the definition, its Type that of the default
-		 * unless Meta names one. Schema describes the items of a list prop ({ID: 'text', Disabled: 'bool'}); Children names
+		 * {Type, Options, Schema, Body, Description}; its Default is the value of the definition, its Type that of the default
+		 * unless Meta names one. Schema describes the items of a list prop ({ID: 'text', Disabled: 'bool'}); Body marks a text
+		 * the component also takes from its body, written there by tools (the code of a CodeView); Children names
 		 * the components declared inside it (Tab in Tabs) and Current the prop that names the one shown (Value).
 		 */
 		function normalize (name, kind, definition) {
@@ -5985,6 +6047,7 @@
 					Default: typeof definition[key] === 'function' ? undefined : copy(definition[key]),
 					Options: entry.Options ? entry.Options.slice() : null,
 					Schema: entry.Schema ? copy(entry.Schema) : null,
+					Body: !!entry.Body,
 					Description: entry.Description || ''
 				});
 			}
@@ -7311,13 +7374,22 @@
 				});
 			}
 
-			function notFound (url, mode) {
+			/*
+			 * An unknown path with a NotFound component: the pages shown are asked to leave first ($OnRouteLeave), as for
+			 * any navigation; a refusal cancels it (a history step goes back), a path redirects.
+			 */
+			function notFound (url, mode, targetHistoryIndex) {
 				var reference = config.NotFound;
 				if (!reference) return false;
 
 				var id = ++navigationID;
 				var packet = statePacket(url, {});
 				var context = {
+					$Service: function (name) {
+						return Runtime.ServiceForApplication(application(), name);
+					},
+					$Wait: waiter,
+					$Fail: fail,
 					$From: navigationPacket(committedURL || routeURL()),
 					$To: packet,
 					$Route: null,
@@ -7354,24 +7426,47 @@
 					committedURL = new URL(url.href);
 				}
 
-				writeHistory(mode, url);
-
-				if (bundledComponent(reference)) {
-					attempt();
-
-					return true;
-				}
-
-				discover('Component', reference, new Error('Elemenx NotFound component not found: ' + reference), function (error) {
+				runLeaveGuards(0, context, function (leaveResult) {
 					if (id !== navigationID) return;
 
-					if (error) {
-						reportNavigationError(context, error);
+					if (leaveResult !== true && leaveResult !== undefined) {
+						emit('NavigationCancel', context);
+
+						if (typeof leaveResult === 'string') {
+							navigate(leaveResult, 'replace', true);
+						}
+						else {
+							handleGuardFailure(leaveResult, context);
+
+							if (mode === 'pop')
+								rejectPop(targetHistoryIndex);
+						}
 
 						return;
 					}
 
-					attempt();
+					writeHistory(mode, url);
+
+					if (mode === 'pop' && targetHistoryIndex !== null && targetHistoryIndex !== undefined)
+						historyIndex = targetHistoryIndex;
+
+					if (bundledComponent(reference)) {
+						attempt();
+
+						return;
+					}
+
+					discover('Component', reference, new Error('Elemenx NotFound component not found: ' + reference), function (error) {
+						if (id !== navigationID) return;
+
+						if (error) {
+							reportNavigationError(context, error);
+
+							return;
+						}
+
+						attempt();
+					});
 				});
 
 				return true;
@@ -7445,10 +7540,7 @@
 						execute(prepared, 'pop', targetIndex);
 					}
 					else {
-						notFound(url, 'pop');
-
-						if (targetIndex !== null)
-							historyIndex = targetIndex;
+						notFound(url, 'pop', targetIndex);
 					}
 				};
 
@@ -16624,6 +16716,217 @@
 		};
 	})(typeof globalThis !== 'undefined' ? globalThis : self);
 
+	/* Install */
+	(function (global) {
+		'use strict';
+
+		/*
+		 * The page as an application of the system (a PWA, PWA of elemenx.config.js). The prompt of the browser to install
+		 * it (beforeinstallprompt) is kept from the start of the page instead of showing on its own, so the Application
+		 * decides when: Elemenx.Install.Available() tells it may, Prompt(callback) shows it, callback(error, {Outcome:
+		 * 'accepted' or 'dismissed'}). Installed() is true in the window of the installed application (and in a native
+		 * program, installed already), Manual() on a system that installs by its own menu only (Safari of iOS: Share, Add
+		 * to Home Screen). State() is {Available, Installed, Manual}; OnChange(callback) hears it change, OffChange takes the
+		 * callback away. The service worker a build names (<meta name="elemenx-pwa-worker">) is registered once the page
+		 * has loaded: it keeps the files of the build for the page to run offline.
+		 */
+		var prompt = null;
+		var installed = false;
+		var listeners = [];
+
+		function standalone () {
+			if (!Runtime.HasDOM) return false;
+			if (global.ElemenxNative) return true;
+
+			return (typeof global.matchMedia === 'function' && global.matchMedia('(display-mode: standalone)').matches) || global.navigator.standalone === true;
+		}
+
+		/* Safari of iOS and iPadOS: no prompt, its Share menu adds the page to the Home Screen. */
+		function manual () {
+			var agent = Runtime.HasDOM ? String(global.navigator.userAgent || '') : '';
+			var apple = /iPad|iPhone|iPod/.test(agent) || (/Macintosh/.test(agent) && global.navigator.maxTouchPoints > 1);
+
+			return apple && !standalone();
+		}
+
+		function state () {
+			return {Available: !!prompt && !installed, Installed: installed || standalone(), Manual: manual()};
+		}
+
+		function changed () {
+			var value = state();
+
+			listeners.slice().forEach(function (listener) {
+				listener(value);
+			});
+		}
+
+		/* The worker of the build, once the page has loaded: it does not compete with the files of the start. */
+		function register () {
+			var meta = global.document.querySelector('meta[name="elemenx-pwa-worker"]');
+			if (!meta || !global.navigator.serviceWorker || typeof global.navigator.serviceWorker.register !== 'function') return;
+
+			global.navigator.serviceWorker.register(meta.getAttribute('content'), {scope: meta.getAttribute('data-scope') || '/'}).catch(function (error) {
+				Runtime.Report(error);
+			});
+		}
+
+		if (Runtime.HasDOM && typeof global.addEventListener === 'function') {
+			global.addEventListener('beforeinstallprompt', function (event) {
+				event.preventDefault();
+
+				prompt = event;
+
+				changed();
+			});
+
+			global.addEventListener('appinstalled', function () {
+				installed = true;
+				prompt = null;
+
+				changed();
+			});
+
+			if (global.document.readyState === 'complete') register();
+			else global.addEventListener('load', register);
+		}
+
+		Elemenx.Install = {
+			Available: function () {
+				return state().Available;
+			},
+			Installed: function () {
+				return state().Installed;
+			},
+			Manual: function () {
+				return state().Manual;
+			},
+			State: state,
+			Prompt: function (callback) {
+				var event = prompt;
+
+				callback = callback || function () {};
+
+				if (!event || installed) {
+					callback(new Error('Elemenx.Install has no prompt of the browser: the page is installed, not installable here, or not yet'));
+
+					return;
+				}
+
+				/* A prompt shows once: the browser may give another one later. */
+				prompt = null;
+
+				event.prompt();
+
+				event.userChoice.then(function (choice) {
+					if (choice && choice.outcome === 'accepted')
+						installed = true;
+
+					changed();
+
+					callback(null, {Outcome: choice && choice.outcome === 'accepted' ? 'accepted' : 'dismissed'});
+				}, function (error) {
+					changed();
+
+					callback(error instanceof Error ? error : new Error(String(error)));
+				});
+
+				changed();
+			},
+			OnChange: function (callback) {
+				if (typeof callback === 'function' && listeners.indexOf(callback) === -1)
+					listeners.push(callback);
+
+				return Elemenx.Install;
+			},
+			OffChange: function (callback) {
+				listeners = listeners.filter(function (listener) {
+					return listener !== callback;
+				});
+
+				return Elemenx.Install;
+			}
+		};
+	})(typeof globalThis !== 'undefined' ? globalThis : self);
+
+	/* Splash */
+	(function (global) {
+		'use strict';
+
+		/*
+		 * The splash of the page: #elemenx-splash, which a build puts at the top of its body (the Splash of
+		 * elemenx.config.js). It goes when the first Application is ready or fails, not before data-min milliseconds from
+		 * the start of the page, and at the latest data-timeout milliseconds after it; it fades (the class
+		 * elemenx-splash-out) and leaves the page. Elemenx.Splash.Hold() keeps it past the ready until Hide(), which takes
+		 * it away; Visible() tells whether it is still there.
+		 */
+		var held = 0;
+		var hidden = null;
+
+		function node () {
+			return Runtime.HasDOM ? global.document.getElementById('elemenx-splash') : null;
+		}
+
+		/* The milliseconds since the page started. */
+		function since () {
+			return global.performance && typeof global.performance.now === 'function' ? global.performance.now() : 0;
+		}
+
+		function hide () {
+			var element = node();
+			if (!element || element === hidden) return;
+
+			hidden = element;
+
+			global.setTimeout(function () {
+				element.classList.add('elemenx-splash-out');
+
+				global.setTimeout(function () {
+					if (element.parentNode)
+						element.parentNode.removeChild(element);
+				}, 300);
+			}, Math.max(0, (Number(element.getAttribute('data-min')) || 0) - since()));
+		}
+
+		/* The latest the splash stays: its data-timeout, once the page has it. */
+		function limit () {
+			var element = node();
+			var timeout = element ? Number(element.getAttribute('data-timeout')) || 0 : 0;
+			if (timeout > 0)
+				global.setTimeout(hide, Math.max(0, timeout - since()));
+		}
+
+		Runtime.Splash = {
+			Ready: function () {
+				if (!held)
+					hide();
+			}
+		};
+
+		Elemenx.Splash = {
+			Hold: function () {
+				held++;
+
+				return Elemenx.Splash;
+			},
+			Hide: function () {
+				held = 0;
+
+				hide();
+
+				return Elemenx.Splash;
+			},
+			Visible: function () {
+				var element = node();
+
+				return !!element && element !== hidden;
+			}
+		};
+
+		if (Runtime.HasDOM && global.document.readyState === 'loading') global.document.addEventListener('DOMContentLoaded', limit);
+		else limit();
+	})(typeof globalThis !== 'undefined' ? globalThis : self);
+
 	/* Application */
 	(function (global) {
 		'use strict';
@@ -17154,6 +17457,10 @@
 				if (method === '$OnReady')
 					startRouter();
 
+				/* A failed Application shows its error, not the splash. */
+				if (method === '$OnError' && Runtime.Splash)
+					Runtime.Splash.Ready();
+
 				if (typeof api[method] !== 'function') {
 					if (method === '$OnError' && error && global.console && typeof global.console.error === 'function')
 						global.console.error(error);
@@ -17320,6 +17627,10 @@
 
 				if (typeof definition.$OnReady === 'function')
 					definition.$OnReady.call(api, args);
+
+				/* The splash of the page goes with the first Application ready (its $OnReady may hold it); a build without one has no Splash. */
+				if (Runtime.Splash)
+					Runtime.Splash.Ready();
 			};
 
 			api.$OnError = definition.$OnError || null;

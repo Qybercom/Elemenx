@@ -1,10 +1,10 @@
 /*
- * A page of the reference: the navigation of all the pages (pages/index.json) beside the page of the route, read
- * from pages/<section>/<page>.<language>.md (the English page when the language has none). The text is shown by
- * Markdown; a block ```example holds a template that runs beside its code (DocsExample). The page of a component, a
- * service or a directive ends with its source, read from the Library: a listing for each of its files (its template,
- * its script, its stylesheet), a tab each. Beside the page, on a wide screen, its contents: its headings, the one read now
- * marked as the page scrolls; a press goes to one.
+ * A page of the reference: the navigation of all the pages (pages/index.json) beside the page of the route, read from
+ * pages/<section>/<page>.<language>.md (the English page when the language has none); the components in the navigation
+ * by their groups, the group of the page open. The text is shown by Markdown; a block ```example holds a template that
+ * runs beside its code (DocsExample). The page of a component, a service or a directive ends with its source, read from
+ * the Library: a listing for each of its files (its template, its script, its stylesheet), a tab each. Beside the page,
+ * on a wide screen, its contents: its headings, the one read now marked as the page scrolls; a press goes to one.
  */
 Elemenx.Component('DocsPage', {
 	$TemplateURL: 'DocsPage.html',
@@ -47,16 +47,40 @@ Elemenx.Component('DocsPage', {
 			})[0] || {Language: 'text', Text: '', Label: ''};
 		};
 
+		/* The sections and their pages; a section of groups (the components) has a branch for each group. */
 		this.NavItems = function (index, language) {
 			return (index || []).map(function (section) {
+				function item (page) {
+					return {ID: section.ID + '/' + page.ID, Label: page.Title ? page.Title[language] || page.Title.en : page.ID};
+				}
+
 				return {
 					ID: section.ID,
 					Label: section.Title[language] || section.Title.en,
-					Items: section.Pages.map(function (page) {
-						return {ID: section.ID + '/' + page.ID, Label: page.Title ? page.Title[language] || page.Title.en : page.ID};
-					})
+					Items: section.Groups ? section.Groups.map(function (group) {
+						return {
+							ID: section.ID + ':' + group.ID,
+							Label: group.Title[language] || group.Title.en,
+							Items: section.Pages.filter(function (page) {
+								return page.Group === group.ID;
+							}).map(item)
+						};
+					}) : section.Pages.map(item)
 				};
 			});
+		};
+
+		/* The branches open: the section of the page, and its group in a section of groups. */
+		this.Expanded = function (index, current) {
+			var parts = current.split('/');
+			var section = (index || []).filter(function (entry) {
+				return entry.ID === parts[0];
+			})[0];
+			var page = section ? section.Pages.filter(function (entry) {
+				return entry.ID === parts[1];
+			})[0] : null;
+
+			return page && page.Group ? [parts[0], parts[0] + ':' + page.Group] : [parts[0]];
 		};
 
 		/* The page of a route in a language, loaded when either changes (a hidden element of the template asks for it). */

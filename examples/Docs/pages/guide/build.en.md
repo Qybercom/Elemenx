@@ -18,9 +18,18 @@
 
 - **Components** the Application does not render: the build follows the tags of its templates, then the templates of the components it took.
 - **Services, guards and directives** it does not name: it keeps the ones named in quotes in its code (`$Service('Toast')`, `Guards: ['SignedIn']`) and the directives its templates put on elements, and the ones these use in turn.
+- **Files of the libraries**: of the packs (emoji, cities, icon sets, game themes) a build in a folder copies the ones the Application uses, with every language of them (see below).
 - **Parts of the framework**: Router, Network, Storage, Events, Messaging, WebWorker and ServiceWorker stay only when the code of the build uses them (`$Router`, `$Network`, `$Storage`, `$Events` or `$OnEvent`, `$Messaging` or `$OnMessage`, `$WebWorker`, `$ServiceWorker`, `Elemenx.Network`...). Messaging keeps Events; an Application with workers keeps all of the framework, since their scripts are files the build does not read.
 
-The build says what it left out. A name built at run time (`$Service(name)`) cannot show a use: name it in quotes somewhere, or build with `--full`, which keeps all of the framework.
+The build says what it left out. A name built at run time (`$Service(name)`) cannot show a use: name it in quotes somewhere, or build with `--full`, which keeps all of the framework and every file of the libraries.
+
+## A splash screen
+
+`Splash: true` in `elemenx.config.js` (or `{Image, Background, Color, Text, Spinner, MinTime, Timeout}`, or a `splash.html` in the project) shows a splash from the first paint of the page until the first Application is ready: the build puts it at the top of the body, with no script, and `elemenx dev` serves it too. `Elemenx.Splash.Hold()` keeps it until `Elemenx.Splash.Hide()`, for an Application that loads its data first. The window of a desktop program and the screen of a phone while the program starts take its background.
+
+## An installable application (PWA)
+
+`PWA: true` in `elemenx.config.js` (or `{Name, ShortName, Description, Icon, Theme, Background, Display, Start, Offline}`) makes the build of a site installable: `manifest.webmanifest` linked from its page and, with `Offline` (by default), a service worker that keeps the files of the build so it runs without the network. The Application offers the installation when it chooses: `Elemenx.Install.Available()` tells the browser can install it, `Elemenx.Install.Prompt(callback)` shows its prompt, `Elemenx.Install.Manual()` is true on Safari of iOS, which installs by its Share menu.
 
 ## Expressions as code
 
@@ -55,10 +64,10 @@ npx elemenx native add desktop
 npx elemenx build --native desktop
 ```
 
-- **Desktop**: `dist/native/desktop` holds the Application, `main.js`, `preload.js` and the settings; with Electron and the packager installed, the program for the system is in `dist/native/desktop-bin` (`Native.Desktop.Platform` and `Arch` choose another one). The window loads the Application from a scheme of its own (`app://bundle/`), the page has no Node, and it reaches the system through the bridge the `Native` service of ElemenxUI uses: windows, dialogs, menus, the tray, global shortcuts, autostart, links of its own scheme (`Native.Desktop.Protocol`), power, updates. `Native.Desktop.Frame: false` lets the Application draw its own title bar.
+- **Desktop**: `dist/native/desktop` holds the Application, `main.js`, `preload.js` and the settings; with Electron and the packager installed, the program for the system is in `dist/native/desktop-bin` (`Native.Desktop.Platform` and `Arch` choose another one). The window loads the Application from a scheme of its own (`app://bundle/`), the page has no Node, and it reaches the system through the bridge the `Native` service of ElemenxUI uses: windows, dialogs, menus, the tray, global shortcuts, autostart, links of its own scheme (`Native.Desktop.Protocol`), power, updates. `Native.Desktop.Frame: false` lets the Application draw its own title bar. The program is a folder (its executable needs the files next to it): `Native.Desktop.Targets: ['zip', 'installer', 'portable']` makes it into a zip, an installer and a portable program in `dist/native/desktop-dist` (the installer and the portable program by electron-builder), and it keeps the languages of Chromium the Application speaks (`Native.Desktop.Languages`, `all` for every one).
 - **Mobile**: the project becomes a Capacitor project; the build writes the Application into `dist/native/mobile`, adds the Android and iOS platforms installed, and copies it into them; Android Studio and Xcode build the programs (`npx cap open android`).
 
-The settings are `Native.Desktop` (`Name`, `Version`, `Width`, `Height`, `Features`, `Protocol`, `Update`, `Frame`...) and `Native.Mobile` (`AppID`, `Name`, `Platforms`) in `elemenx.config.js`.
+The settings are `Native.Desktop` (`Name`, `Version`, `Width`, `Height`, `Features`, `Protocol`, `Update`, `Frame`, `Targets`, `Languages`...) and `Native.Mobile` (`AppID`, `Name`, `Platforms`) in `elemenx.config.js`.
 
 ## Several Applications
 

@@ -1515,6 +1515,10 @@
 					<Tile *if="ShowNews" ID="news" Title="News" Icon="globe" Size="small" Color="#9a6514" />
 				</TileGroup>
 			</TileGrid>
+			<h4>Columns, as the Start menu: groups under one another, the columns wrap as the room narrows</h4>
+			<div class="ui-kit-start-columns">
+				<TileGrid Direction="columns" Editable="true" GroupPolicy="between" [groups]="ColumnGroups" (change)="ColumnsChanged" />
+			</div>
 			<h4>A start screen: one row that scrolls, tiles of any size, kept between visits</h4>
 			<div class="ui-kit-start">
 				<TileGrid Editable="true" Direction="horizontal" Scroll="true" MaxColumns="0" Persist="ui-kit-start" GroupPolicy="end" (open)="TileOpened">

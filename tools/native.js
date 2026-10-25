@@ -13,7 +13,7 @@ var childProcess = require('child_process');
 
 var Packages = {
 	desktop: {Development: true, Names: ['electron', '@electron/packager']},
-	mobile: {Development: false, Names: ['@capacitor/core', '@capacitor/cli', '@capacitor/android', '@capacitor/ios', '@capacitor/app', '@capacitor/browser', '@capacitor/dialog']}
+	mobile: {Development: false, Names: ['@capacitor/core', '@capacitor/cli', '@capacitor/android', '@capacitor/ios', '@capacitor/app', '@capacitor/browser', '@capacitor/dialog', '@capacitor/filesystem', '@capacitor/splash-screen']}
 };
 
 /* The platforms of a word: desktop, mobile, or all (nothing) for both. */
@@ -33,9 +33,14 @@ function commands (list) {
 	});
 }
 
-/* Runs npm in the project and shows what it prints; the status of npm. */
+/*
+ * Runs npm in the project and shows what it prints; the status of npm. On Windows npm is a script of the shell
+ * (npm.cmd), which Node starts only in a shell: one command line then, its words quoted, not words handed to the shell.
+ */
 function npm (project, args) {
-	var run = childProcess.spawnSync(process.platform === 'win32' ? 'npm.cmd' : 'npm', args, {cwd: project, stdio: 'inherit', shell: process.platform === 'win32'});
+	var run = process.platform === 'win32' ? childProcess.spawnSync(['npm'].concat(args).map(function (word) {
+		return /^[\w@./:=^~-]+$/.test(word) ? word : '"' + word.replace(/"/g, '\\"') + '"';
+	}).join(' '), {cwd: project, stdio: 'inherit', shell: true}) : childProcess.spawnSync('npm', args, {cwd: project, stdio: 'inherit'});
 
 	return run.error ? 1 : run.status;
 }

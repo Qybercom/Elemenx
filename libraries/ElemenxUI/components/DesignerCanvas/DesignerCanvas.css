@@ -1,16 +1,61 @@
 /*
  * The canvas is the body of the page: the viewport as high as the room the canvas has (as wide as Width says), the
- * page in it a column that fills it, so a screen with Sizing fill fills it too; taller, the canvas scrolls.
+ * page in it a column that fills it, so a screen with Sizing fill fills it too; taller, the canvas scrolls. Its layers
+ * (the rulers, the page and what floats in it) stay inside it: a popup of the page around it goes over them.
  */
 .elemenx-designer-canvas {
+	position: relative;
+	isolation: isolate;
+	display: flex;
+	flex: 1 1 auto;
+	min-width: 0;
+	min-height: 0;
+	background: var(--elemenx-background);
+}
+
+/* The rulers along the top and the side, out of the scroll; the stage that scrolls takes the rest. */
+.elemenx-designer-canvas.rulers {
+	padding: 20px 0 0 20px;
+}
+
+.elemenx-designer-stage {
 	position: relative;
 	display: flex;
 	flex: 1 1 auto;
 	flex-direction: column;
+	min-width: 0;
 	min-height: 0;
 	padding: 16px;
 	overflow: auto;
-	background: var(--elemenx-background);
+}
+
+.elemenx-designer-rulers-corner,
+.elemenx-designer-ruler {
+	position: absolute;
+	z-index: 4;
+}
+
+.elemenx-designer-rulers-corner {
+	top: 0;
+	left: 0;
+	width: 20px;
+	height: 20px;
+	box-sizing: border-box;
+	background: var(--elemenx-surface);
+	border-right: 1px solid var(--elemenx-border);
+	border-bottom: 1px solid var(--elemenx-border);
+}
+
+.elemenx-designer-ruler.horizontal {
+	top: 0;
+	right: 0;
+	left: 20px;
+}
+
+.elemenx-designer-ruler.vertical {
+	top: 20px;
+	bottom: 0;
+	left: 0;
 }
 
 .elemenx-designer-viewport {
@@ -266,4 +311,23 @@
 
 .elemenx-designer-tip-row {
 	color: var(--elemenx-text-muted);
+}
+
+/*
+ * A slot of a component being made, the place of what it is given (named), and the place of the pages in the component
+ * of an application.
+ */
+.elemenx-designer-slot,
+.elemenx-designer-outlet {
+	padding: 12px;
+	color: var(--elemenx-text-muted);
+	font-size: var(--elemenx-font-size-small);
+	text-align: center;
+	border: 1px dashed var(--elemenx-border-strong);
+	border-radius: var(--elemenx-radius-small);
+}
+
+/* A component of the project on the canvas: its own element takes no room of its own. */
+.elemenx-designer-part {
+	display: contents;
 }

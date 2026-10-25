@@ -1,0 +1,83 @@
+.elemenx-designer-document {
+	padding: 12px;
+}
+
+.elemenx-designer-document-body {
+	gap: 12px;
+}
+
+.elemenx-designer-document-head {
+	gap: 8px;
+	align-items: center;
+}
+
+/* The public props of a component: a row of fields each, in a frame. */
+.elemenx-designer-document-props,
+.elemenx-designer-document-routes,
+.elemenx-designer-document-slots {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.elemenx-designer-document-prop {
+	position: relative;
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 6px;
+	padding: 8px 32px 8px 8px;
+	border: 1px solid var(--elemenx-border);
+	border-radius: var(--elemenx-radius-small);
+}
+
+.elemenx-designer-document-key {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	min-width: 0;
+	color: var(--elemenx-text-muted);
+	font-size: var(--elemenx-font-size-small);
+}
+
+.elemenx-designer-document-key.wide {
+	grid-column: 1 / -1;
+}
+
+.elemenx-designer-document-input {
+	box-sizing: border-box;
+	width: 100%;
+	height: 26px;
+	padding: 0 6px;
+	color: var(--elemenx-text);
+	font: inherit;
+	background: var(--elemenx-surface);
+	border: 1px solid var(--elemenx-border);
+	border-radius: var(--elemenx-radius-small);
+}
+
+.elemenx-designer-document-input:focus-visible {
+	outline: 2px solid var(--elemenx-focus);
+	outline-offset: -1px;
+}
+
+.elemenx-designer-document-drop {
+	position: absolute;
+	top: 6px;
+	inset-inline-end: 6px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 22px;
+	height: 22px;
+	padding: 0;
+	color: var(--elemenx-text-muted);
+	cursor: pointer;
+	background: transparent;
+	border: 0;
+	border-radius: var(--elemenx-radius-small);
+}
+
+.elemenx-designer-document-drop:hover {
+	color: var(--elemenx-danger);
+	background: var(--elemenx-surface-hover);
+}

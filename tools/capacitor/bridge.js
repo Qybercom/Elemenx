@@ -3,8 +3,9 @@
  * device: window.ElemenxNative, as the preload of a desktop program gives it, for the Native Service of ElemenxUI.
  * It answers with the plugins the project installed: external (@capacitor/browser, or the browser of the system),
  * message (@capacitor/dialog), title, links (@capacitor/app: the link that opened the program, the link event for
- * the next ones) and power (@capacitor/app: the power event, suspend and resume, as the program goes to the back
- * and comes back).
+ * the next ones), power (@capacitor/app: the power event, suspend and resume, as the program goes to the back
+ * and comes back) and save (@capacitor/filesystem: the file in the Documents of the device). What it has no handler
+ * for (Can), the Service does as on the web: open is the file picker of the web view.
  */
 (function () {
 	var capacitor = window.Capacitor;
@@ -22,6 +23,13 @@
 
 	if (plugins.App)
 		features.push('links', 'power');
+
+	if (plugins.Filesystem)
+		features.push('files');
+
+	/* The screen of the system goes once the page shows (its own splash, or the Application): @capacitor/splash-screen. */
+	if (plugins.SplashScreen && typeof plugins.SplashScreen.hide === 'function')
+		plugins.SplashScreen.hide({fadeOutDuration: 0}).catch(function () {});
 
 	function emit (name, value) {
 		(listeners[name] || []).slice().forEach(function (callback) {
@@ -87,6 +95,23 @@
 				return 0;
 			});
 		},
+		/* A file of the Application in the Documents of the device (a name of its own, folders made): {Path} its URI. */
+		save: function (args) {
+			var name = String(args.Name || 'file').replace(/[\\:*?"<>|]+/g, '-').replace(/^\/+/, '');
+			var options = {path: name, directory: 'DOCUMENTS', recursive: true};
+
+			if (args.Data !== undefined) {
+				options.data = String(args.Data);
+			}
+			else {
+				options.data = String(args.Text || '');
+				options.encoding = 'utf8';
+			}
+
+			return plugins.Filesystem.writeFile(options).then(function (result) {
+				return {Path: result && result.uri || name};
+			});
+		},
 		links: function () {
 			return Promise.resolve(launched.splice(0, launched.length));
 		},
@@ -94,17 +119,22 @@
 			return Promise.resolve({OnBattery: null, Idle: null, State: document.visibilityState === 'visible' ? 'active' : 'idle'});
 		}
 	};
-	var groups = {external: 'external', window: 'window', title: 'window', message: 'dialogs', links: 'links', power: 'power'};
+	var groups = {external: 'external', window: 'window', title: 'window', message: 'dialogs', save: 'files', links: 'links', power: 'power'};
+	var plugin = {dialogs: '@capacitor/dialog', files: '@capacitor/filesystem', links: '@capacitor/app', power: '@capacitor/app'};
 
 	window.ElemenxNative = {
 		Platform: 'capacitor',
 		System: capacitor.getPlatform ? capacitor.getPlatform() : 'mobile',
 		Features: features,
+		/* Whether the bridge answers a call; the Service does the others as on the web. */
+		Can: function (name) {
+			return Object.prototype.hasOwnProperty.call(handlers, name);
+		},
 		Call: function (name, args, callback) {
 			var done = callback || function () {};
 
 			if (!handlers[name] || features.indexOf(groups[name]) === -1) {
-				done(new Error('Elemenx Native feature is off: ' + name + ' (install its Capacitor plugin)'));
+				done(new Error('Elemenx Native feature is off: ' + name + ' (install ' + (plugin[groups[name]] || 'its Capacitor plugin') + ')'));
 
 				return;
 			}

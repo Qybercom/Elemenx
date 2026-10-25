@@ -32,7 +32,7 @@ Elemenx.Service('Find', {
 
 		if (!root || !query) return ranges;
 
-		walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+		walker = (root.ownerDocument || document).createTreeWalker(root, NodeFilter.SHOW_TEXT);
 
 		while ((node = walker.nextNode())) {
 			nodes.push({Node: node, Start: text.length});
@@ -68,7 +68,7 @@ Elemenx.Service('Find', {
 
 			start = point(match.index, false);
 			end = point(match.index + match[0].length, true);
-			range = document.createRange();
+			range = (root.ownerDocument || document).createRange();
 
 			range.setStart(start.Node, start.Offset);
 			range.setEnd(end.Node, end.Offset);
@@ -82,6 +82,7 @@ Elemenx.Service('Find', {
 	Show: function (owner, ranges, index) {
 		var current = ranges[index] || null;
 		var element;
+		var view;
 
 		this.Marks = this.Marks.filter(function (mark) {
 			return mark.Owner !== owner;
@@ -96,9 +97,11 @@ Elemenx.Service('Find', {
 		if (element && element.scrollIntoView)
 			element.scrollIntoView({block: 'nearest', inline: 'nearest'});
 
-		if (typeof Highlight !== 'function' || !window.CSS || !CSS.highlights) {
-			window.getSelection().removeAllRanges();
-			window.getSelection().addRange(current);
+		view = (current.startContainer.ownerDocument || document).defaultView || window;
+
+		if (typeof view.Highlight !== 'function' || !view.CSS || !view.CSS.highlights) {
+			view.getSelection().removeAllRanges();
+			view.getSelection().addRange(current);
 		}
 	},
 
@@ -110,21 +113,61 @@ Elemenx.Service('Find', {
 		this.Paint();
 	},
 
-	/* The highlights of every owner, in the two highlights of the page. */
+	/*
+	 * The highlights of every owner, in the two highlights of each window they are in (the page, or a window the
+	 * Application opened: a window has highlights of its own); a window left without marks loses them.
+	 */
 	Paint: function () {
-		var all = [];
-		var current = [];
+		var windows = [];
+		var painted = this.Painted || [];
 
-		if (typeof Highlight !== 'function' || !window.CSS || !CSS.highlights) return;
+		function of (view) {
+			var i;
+
+			for (i = 0; i < windows.length; i++) {
+				if (windows[i].View === view) return windows[i];
+			}
+
+			windows.push({View: view, All: [], Current: []});
+
+			return windows[windows.length - 1];
+		}
+
+		function viewOf (range) {
+			return (range.startContainer.ownerDocument || document).defaultView || window;
+		}
+
+		function able (view) {
+			return !view.closed && typeof view.Highlight === 'function' && view.CSS && view.CSS.highlights;
+		}
+
+		of(window);
 
 		this.Marks.forEach(function (mark) {
-			all = all.concat(mark.Ranges);
+			mark.Ranges.forEach(function (range) {
+				of(viewOf(range)).All.push(range);
+			});
 
 			if (mark.Current)
-				current.push(mark.Current);
+				of(viewOf(mark.Current)).Current.push(mark.Current);
 		});
 
-		CSS.highlights.set('elemenx-find', new (Function.prototype.bind.apply(Highlight, [null].concat(all)))());
-		CSS.highlights.set('elemenx-find-current', new (Function.prototype.bind.apply(Highlight, [null].concat(current)))());
+		painted.forEach(function (view) {
+			of(view);
+		});
+
+		this.Painted = [];
+
+		windows.forEach(function (entry) {
+			var make = entry.View.Highlight;
+
+			if (!able(entry.View)) return;
+
+			entry.View.CSS.highlights.set('elemenx-find', new (Function.prototype.bind.apply(make, [null].concat(entry.All)))());
+			entry.View.CSS.highlights.set('elemenx-find-current', new (Function.prototype.bind.apply(make, [null].concat(entry.Current)))());
+
+			if (entry.All.length || entry.Current.length)
+				this.Painted.push(entry.View);
+		}, this);
 	}
 });

@@ -1,6 +1,17 @@
 <div class="docs-shell">
 	<header class="docs-header">
 		<a class="docs-brand" href="/"><span class="docs-brand-mark">E</span><strong>Elemenx</strong><span class="docs-brand-note">{{$T('docs.reference')}}</span></a>
+		<div class="docs-search" (keydown)="Keyed" (focusin)="Opened" (focusout)="Blurred">
+			<Input Icon="search" Size="small" Clearable="true" [placeholder]="$T('docs.search')" [label]="$T('docs.search')" [value]="Query" (input)="Searched" />
+			<div class="docs-search-results" role="listbox" *if="Open && Query.trim()" [attribute.aria-label]="$T('docs.search')">
+				<p class="elemenx-text small muted docs-search-none" *if="!Results.length">{{Loading ? $T('docs.searching') : $T('docs.nothing')}}</p>
+				<button type="button" role="option" class="docs-search-result" *for="result of Results" *key="result.ID" [class.active]="$index === Active" [attribute.aria-selected]="String($index === Active)" [attribute.data-id]="result.ID" (pointerdown)="Held" (click)="Went">
+					<span class="docs-search-place">{{result.Section}}</span>
+					<strong class="docs-search-title">{{result.Title}}</strong>
+					<span class="docs-search-snippet"><span *for="part of result.Parts" *key="$index" [class.docs-search-hit]="part.Hit">{{part.Text}}</span></span>
+				</button>
+			</div>
+		</div>
 		<span class="elemenx-spacer"></span>
 		<RadioGroup Variant="segmented" [options]="Languages" [value]="Language" [label]="$T('docs.language')" (change)="Chosen" />
 		<ThemeSwitch />

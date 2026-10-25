@@ -98,7 +98,9 @@ Elemenx.Directive('itemcard', {
 			if (data.Card.showPopover)
 				data.Card.showPopover();
 
-			window.addEventListener('scroll', data.Move, true);
+			data.View = (element.ownerDocument || document).defaultView || window;
+
+			data.View.addEventListener('scroll', data.Move, true);
 		};
 
 		/* A scroll (the reader's, or the page that moves as more of it renders) takes the card along with its element. */
@@ -108,7 +110,7 @@ Elemenx.Directive('itemcard', {
 		};
 
 		data.Hide = function () {
-			window.removeEventListener('scroll', data.Move, true);
+			(data.View || window).removeEventListener('scroll', data.Move, true);
 
 			if (!data.Card) return;
 

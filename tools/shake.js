@@ -15,7 +15,10 @@ var Groups = [
 	{Name: 'Events', Sections: ['Events'], Uses: [/\$Events\b/, /\$OnEvent\b/, /\bElemenx\.(Events|Pipe)\b/]},
 	{Name: 'Messaging', Sections: ['Messaging'], Uses: [/\$Messaging\b/, /\$OnMessage\b/, /\bElemenx\.Messaging\b/], Needs: ['Events']},
 	{Name: 'WebWorker', Sections: ['WebWorker'], Uses: [/\$WebWorker\b/, /\bElemenx\.WebWorker\b/], Needs: ['Messaging'], All: true},
-	{Name: 'ServiceWorker', Sections: ['ServiceWorker', 'ServiceWorker bootstrap'], Uses: [/\$ServiceWorker\b/, /\bElemenx\.ServiceWorker\b/], Needs: ['WebWorker'], All: true}
+	{Name: 'ServiceWorker', Sections: ['ServiceWorker', 'ServiceWorker bootstrap'], Uses: [/\$ServiceWorker\b/, /\bElemenx\.ServiceWorker\b/], Needs: ['WebWorker'], All: true},
+	/* The page as a PWA and its splash: what a build puts in its page names them (its worker, its #elemenx-splash). */
+	{Name: 'Install', Sections: ['Install'], Uses: [/\bElemenx\.Install\b/, /\belemenx-pwa-worker\b/]},
+	{Name: 'Splash', Sections: ['Splash'], Uses: [/\bElemenx\.Splash\b/, /\belemenx-splash\b/]}
 ];
 
 function find (name) {

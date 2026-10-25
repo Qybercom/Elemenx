@@ -82,7 +82,7 @@ Elemenx.Component('Field', {
 		/* A value set in code goes back into the native control inside (not while it is the one that changed it). */
 		this.Sync = function (control) {
 			var native = self.Native();
-			if (!native || native === document.activeElement) return;
+			if (!native || native === (native.ownerDocument || document).activeElement) return;
 
 			if (native.type === 'checkbox') native.checked = !!control.Value;
 			else if (native.type !== 'radio' && native.value !== String(control.Value === null || control.Value === undefined ? '' : control.Value)) native.value = control.Value === null || control.Value === undefined ? '' : control.Value;

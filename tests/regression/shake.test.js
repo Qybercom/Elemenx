@@ -28,7 +28,7 @@ describe('tools/shake.js', function () {
 		var result = Shake.Shake(source, "Elemenx.Component('Foo', {$Template: '<div></div>'});");
 		var names = sections(result.Source);
 
-		expect(result.Removed).toEqual(['Router', 'Network', 'Storage', 'Events', 'Messaging', 'WebWorker', 'ServiceWorker']);
+		expect(result.Removed).toEqual(['Router', 'Network', 'Storage', 'Events', 'Messaging', 'WebWorker', 'ServiceWorker', 'Install', 'Splash']);
 		expect(names).not.toContain('Network');
 		expect(names).not.toContain('ServiceWorker bootstrap');
 		expect(names).toContain('Application');
@@ -42,14 +42,14 @@ describe('tools/shake.js', function () {
 	it('finds the sections in a framework whose lines end in CRLF, as Git on Windows checks it out', function () {
 		var result = Shake.Shake(source.replace(/\n/g, '\r\n'), "Elemenx.Component('Foo', {$Template: '<div></div>'});");
 
-		expect(result.Removed).toEqual(['Router', 'Network', 'Storage', 'Events', 'Messaging', 'WebWorker', 'ServiceWorker']);
+		expect(result.Removed).toEqual(['Router', 'Network', 'Storage', 'Events', 'Messaging', 'WebWorker', 'ServiceWorker', 'Install', 'Splash']);
 		expect(result.Source).not.toContain('Elemenx.Network =');
 	});
 
 	it('keeps the groups a kept group needs', function () {
 		var result = Shake.Shake(source, "this.$Messaging.Send('foo', {});");
 
-		expect(result.Removed).toEqual(['Router', 'Network', 'Storage', 'WebWorker', 'ServiceWorker']);
+		expect(result.Removed).toEqual(['Router', 'Network', 'Storage', 'WebWorker', 'ServiceWorker', 'Install', 'Splash']);
 		expect(sections(result.Source)).toContain('Events');
 	});
 
@@ -62,5 +62,17 @@ describe('tools/shake.js', function () {
 		expect(Shake.Shake(source, '<a (click)="$Router.Navigate(\'/\')"></a>').Removed).not.toContain('Router');
 		expect(Shake.Shake(source, '$OnEvent: {Foo: function () {}}').Removed).not.toContain('Events');
 		expect(Shake.Shake(source, 'this.$Network.Http.Get(url)').Removed).not.toContain('Network');
+	});
+
+	it('keeps the splash and the installation for a page that has them, or a code that names them', function () {
+		expect(Shake.Shake(source, '<div id="elemenx-splash"></div>').Removed).not.toContain('Splash');
+		expect(Shake.Shake(source, 'Elemenx.Splash.Hold()').Removed).not.toContain('Splash');
+		expect(Shake.Shake(source, '<meta name="elemenx-pwa-worker">').Removed).not.toContain('Install');
+		expect(Shake.Shake(source, 'Elemenx.Install.Prompt(done)').Removed).not.toContain('Install');
+
+		/* Without them, the Application starts all the same. */
+		expect(function () {
+			new Function(Shake.Shake(source, '').Source);
+		}).not.toThrow();
 	});
 });

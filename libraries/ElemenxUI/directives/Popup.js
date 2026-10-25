@@ -7,7 +7,8 @@
  * The panel dispatches a "dismiss" DOM event on an outside pointer press and on Escape; the owner closes it.
  * The panel keeps to its anchor while the page scrolls or resizes and while its own size changes. It opens in the top
  * layer (a popover of the browser): no overflow, transform or stacking of the parts of the page around it cuts or hides
- * it; a browser without popovers places it as a fixed panel over the page.
+ * it; a browser without popovers places it as a fixed panel over the page. It works in the document of its element: in
+ * a window of its own (Native.OpenWindow), its window measures it and hears the presses and the keys.
  */
 Elemenx.Directive('popup', {
 	$Meta: {
@@ -30,6 +31,15 @@ Elemenx.Directive('popup', {
 
 			if (open && !element.matches(':popover-open')) element.showPopover();
 			else if (!open && element.matches(':popover-open')) element.hidePopover();
+		};
+
+		/* The document and the window of the element, wherever it is now (the page, or a window the Application opened). */
+		data.Document = function () {
+			return element.ownerDocument || document;
+		};
+
+		data.View = function () {
+			return data.Document().defaultView || window;
 		};
 
 		data.Anchor = function () {
@@ -55,13 +65,14 @@ Elemenx.Directive('popup', {
 			var top;
 			var left;
 			var rtl;
+			var view = data.View();
 
 			if (!anchor || !data.Open) return;
 
 			rect = anchor.getBoundingClientRect();
 
 			/* On a right-to-left page start is the right edge and a side panel opens to the left. */
-			rtl = window.getComputedStyle(anchor).direction === 'rtl';
+			rtl = view.getComputedStyle(anchor).direction === 'rtl';
 
 			if (placement.indexOf('right') !== 0 && element.getAttribute('data-match-width') !== 'false')
 				element.style.minWidth = rect.width + 'px';
@@ -74,20 +85,20 @@ Elemenx.Directive('popup', {
 				top = rect.top - gap - 1;
 
 				if (rtl && left < margin) left = rect.right + gap;
-				else if (!rtl && left + width > window.innerWidth - margin) left = rect.left - gap - width;
+				else if (!rtl && left + width > view.innerWidth - margin) left = rect.left - gap - width;
 
-				if (top + height > window.innerHeight - margin)
-					top = Math.max(margin, window.innerHeight - margin - height);
+				if (top + height > view.innerHeight - margin)
+					top = Math.max(margin, view.innerHeight - margin - height);
 
 				/*
 				 * No room on either side (a submenu on a phone): under its anchor, a step in, rather than over it, where
 				 * the press that opened it would land on one of its items; above it when there is no room below.
 				 */
-				if (left < margin || left + width > window.innerWidth - margin) {
+				if (left < margin || left + width > view.innerWidth - margin) {
 					left = rtl ? rect.right - 16 - width : rect.left + 16;
 					top = rect.bottom + gap;
 
-					if (top + height > window.innerHeight - margin && rect.top - gap - height >= margin)
+					if (top + height > view.innerHeight - margin && rect.top - gap - height >= margin)
 						top = rect.top - gap - height;
 				}
 			}
@@ -96,11 +107,11 @@ Elemenx.Directive('popup', {
 				top = rect.bottom + gap;
 
 				/* Above the anchor when asked or when there is no room below; below it when there is no room above. */
-				if (placement.indexOf('top') === 0 ? rect.top - gap - height >= margin || top + height > window.innerHeight - margin : top + height > window.innerHeight - margin && rect.top - gap - height >= margin)
+				if (placement.indexOf('top') === 0 ? rect.top - gap - height >= margin || top + height > view.innerHeight - margin : top + height > view.innerHeight - margin && rect.top - gap - height >= margin)
 					top = rect.top - gap - height;
 			}
 
-			left = Math.max(margin, Math.min(left, window.innerWidth - margin - width));
+			left = Math.max(margin, Math.min(left, view.innerWidth - margin - width));
 
 			element.style.left = Math.round(left) + 'px';
 			element.style.top = Math.round(top) + 'px';
@@ -124,7 +135,7 @@ Elemenx.Directive('popup', {
 
 			if (event.key !== 'Escape') return;
 
-			opened = document.querySelectorAll('.elemenx-popup:not([hidden])');
+			opened = data.Document().querySelectorAll('.elemenx-popup:not([hidden])');
 
 			if (opened[opened.length - 1] !== element) return;
 
@@ -133,15 +144,20 @@ Elemenx.Directive('popup', {
 			data.Dismiss('escape');
 		};
 
+		/* The listeners go on the document and the window the panel opened in, and come off the same ones. */
 		data.Listen = function (on) {
 			var method = on ? 'addEventListener' : 'removeEventListener';
+			var target = on ? data.Document() : data.Listened || data.Document();
+			var view = target.defaultView || window;
 
-			document[method]('mousedown', data.Press, true);
-			document[method]('touchstart', data.Press, true);
-			document[method]('keydown', data.Key, true);
+			data.Listened = on ? target : null;
 
-			window[method]('scroll', data.Position, true);
-			window[method]('resize', data.Position);
+			target[method]('mousedown', data.Press, true);
+			target[method]('touchstart', data.Press, true);
+			target[method]('keydown', data.Key, true);
+
+			view[method]('scroll', data.Position, true);
+			view[method]('resize', data.Position);
 
 			/* Content that shows after the panel opens (a list that loads, a component behind *if) moves it again. */
 			if (typeof ResizeObserver === 'undefined') return;
@@ -173,7 +189,7 @@ Elemenx.Directive('popup', {
 
 			data.Position();
 
-			window.requestAnimationFrame(data.Position);
+			data.View().requestAnimationFrame(data.Position);
 		}
 	},
 

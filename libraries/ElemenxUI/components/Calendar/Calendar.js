@@ -505,7 +505,9 @@ Elemenx.Component('Calendar', {
 			}
 		};
 
-		document.addEventListener('keydown', this.Escape, true);
+		this.Listened = (this.$Element().ownerDocument || document);
+
+		this.Listened.addEventListener('keydown', this.Escape, true);
 	},
 
 	/* The target under the pointer: a day, or a day and a time in the week. */
@@ -530,7 +532,7 @@ Elemenx.Component('Calendar', {
 		}
 
 		if (dragging.Mode === 'day') {
-			hit = document.elementFromPoint(event.clientX, event.clientY);
+			hit = (this.$Element().ownerDocument || document).elementFromPoint(event.clientX, event.clientY);
 			hit = hit && hit.closest('[data-date]');
 
 			if (hit && root.contains(hit))
@@ -592,9 +594,10 @@ Elemenx.Component('Calendar', {
 	 */
 	Hush: function (later) {
 		var self = this;
+		var owner = (this.$Element().ownerDocument || document);
 
 		function reset () {
-			document.removeEventListener('pointerup', release, true);
+			owner.removeEventListener('pointerup', release, true);
 
 			window.setTimeout(function () {
 				self.Swallow = false;
@@ -607,12 +610,12 @@ Elemenx.Component('Calendar', {
 
 		this.Swallow = true;
 
-		if (later) document.addEventListener('pointerup', release, true);
+		if (later) owner.addEventListener('pointerup', release, true);
 		else reset();
 	},
 
 	Abandon: function () {
-		document.removeEventListener('keydown', this.Escape, true);
+		(this.Listened || document).removeEventListener('keydown', this.Escape, true);
 
 		this.Dragging = null;
 		this.Target = null;

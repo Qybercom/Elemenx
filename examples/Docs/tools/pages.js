@@ -1,9 +1,10 @@
 /*
- * Makes the pages of the Library for the reference: one for every component, service and directive of ElemenxUI,
- * from the comment at the head of its source (in English), with its example (tools/examples/<Name>.html) and its Russian
- * description (the files of tools/ru) when they are there; and pages/index.json, the contents. A page it made starts with the
- * line <!-- generated -->: it is made again each time; a page without that line was written by hand and is kept.
- * node examples/Docs/tools/pages.js
+ * Makes the pages of the Library for the reference: one for every component, service and directive of ElemenxUI, from
+ * the comment at the head of its source (in English), with its example (tools/examples/<Name>.html) and its Russian
+ * description (the files of tools/ru) when they are there; and pages/index.json, the contents (the components in the
+ * groups their $Meta names, as data/meta.json has them), and pages/search.<language>.json, the text of every page in a
+ * language for the search of the reference. A page it made starts with the line <!-- generated -->: it is made again
+ * each time; a page without that line was written by hand and is kept. node examples/Docs/tools/pages.js
  */
 var fs = require('fs');
 var path = require('path');
@@ -218,6 +219,16 @@ function page (kind, name, description, language, reference) {
 
 var sections = guide.Sections.slice();
 
+/* The groups of the components: the one each names in its $Meta, in the order of the palette, by the names of the Library. */
+var meta = JSON.parse(fs.readFileSync(path.join(Library, 'data', 'meta.json'), 'utf8'));
+var labels = {en: JSON.parse(fs.readFileSync(path.join(Library, 'locales', 'en.json'), 'utf8')).ui.designer.groups, ru: JSON.parse(fs.readFileSync(path.join(Library, 'locales', 'ru.json'), 'utf8')).ui.designer.groups};
+var order = ['layout', 'text', 'inputs', 'buttons', 'navigation', 'display', 'data', 'overlays', 'social', 'commerce', 'music', 'game', 'tools', 'other'];
+var groupOf = {};
+
+meta.Components.forEach(function (component) {
+	groupOf[component.Name] = order.indexOf(component.Group) === -1 ? 'other' : component.Group;
+});
+
 kinds.forEach(function (kind) {
 	var directory = path.join(Library, kind.ID);
 	var names = fs.readdirSync(directory).filter(function (entry) {
@@ -241,7 +252,20 @@ kinds.forEach(function (kind) {
 			write(path.join(Pages, kind.ID, id + '.ru.md'), page(kind, title, russian[name].trim() + '\n', 'ru', api(kind, name, source, template, comment, 'ru')));
 	});
 
-	sections.push({
+	sections.push(kind.ID === 'components' ? {
+		ID: kind.ID,
+		Title: kind.Title,
+		Groups: order.filter(function (group) {
+			return names.some(function (name) {
+				return (groupOf[name] || 'other') === group;
+			});
+		}).map(function (group) {
+			return {ID: group, Title: {en: labels.en[group], ru: labels.ru[group]}};
+		}),
+		Pages: names.map(function (name) {
+			return {ID: name, Title: {en: name}, Group: groupOf[name] || 'other'};
+		})
+	} : {
 		ID: kind.ID,
 		Title: kind.Title,
 		Pages: names.map(function (name) {
@@ -284,3 +308,28 @@ function translations (directory, relative) {
 }
 
 translations(path.join(__dirname, 'ru-pages'), '');
+
+/*
+ * The text of a page for the search: its words without the marks of Markdown (headings, emphasis, links: their text),
+ * its code kept, its lines joined.
+ */
+function plain (text) {
+	return text.replace(Marker, '').replace(/^# .*$/m, '').replace(/^```\w*$/gm, '').replace(/^#+\s*/gm, '').replace(/!?\[([^\]]*)\]\([^)]*\)/g, '$1').replace(/[*_`]+/g, '').replace(/\s+/g, ' ').trim();
+}
+
+/* The search of the reference in each language: every page, its section, its title and its text (the English one when it has none). */
+['en', 'ru'].forEach(function (language) {
+	var entries = [];
+
+	sections.forEach(function (section) {
+		section.Pages.forEach(function (entry) {
+			var own = path.join(Pages, section.ID, entry.ID + '.' + language + '.md');
+			var file = fs.existsSync(own) ? own : path.join(Pages, section.ID, entry.ID + '.en.md');
+			if (!fs.existsSync(file)) return;
+
+			entries.push({ID: section.ID + '/' + entry.ID, Section: section.Title[language] || section.Title.en, Title: entry.Title ? entry.Title[language] || entry.Title.en : entry.ID, Text: plain(fs.readFileSync(file, 'utf8'))});
+		});
+	});
+
+	fs.writeFileSync(path.join(Pages, 'search.' + language + '.json'), JSON.stringify(entries) + '\n');
+});

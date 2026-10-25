@@ -6675,6 +6675,79 @@ for (const origin of origins) {
 			expect(await tiles()).toEqual(['player@1,3', 'photos@3,1', 'music@5,1']);
 		});
 
+		test('tile grid in columns stacks groups as the Start menu, starts a group under another and wraps its columns as the room narrows', async function ({ page }) {
+			var frame;
+			var grid;
+			var stacks;
+			var from;
+			var gap;
+			var boxes;
+
+			await open(page, origin);
+
+			frame = section(page, 'Tiles').locator('.ui-kit-start-columns');
+			grid = frame.locator('.elemenx-tile-grid.columns');
+			stacks = function () {
+				return grid.locator('.elemenx-tile-stack').evaluateAll(function (nodes) {
+					return nodes.map(function (node) {
+						return Array.prototype.map.call(node.querySelectorAll('.elemenx-tile-group-title'), function (title) {
+							return title.textContent;
+						});
+					});
+				});
+			};
+
+			await frame.scrollIntoViewIfNeeded();
+
+			expect(await stacks()).toEqual([['Productivity', 'Play'], ['Explore']]);
+
+			/* The columns stand side by side while there is room. */
+			boxes = await grid.locator('.elemenx-tile-stack').evaluateAll(function (nodes) {
+				return nodes.map(function (node) {
+					var box = node.getBoundingClientRect();
+
+					return {Left: box.left, Right: box.right, Top: box.top, Bottom: box.bottom};
+				});
+			});
+
+			expect(boxes[1].Left).toBeGreaterThan(boxes[0].Right);
+
+			/* A tile dragged under the last group of the first column starts a group there, in that column. */
+			from = await grid.locator('.elemenx-tile[data-id="c-maps"]').boundingBox();
+
+			await page.mouse.move(from.x + 8, from.y + 8);
+			await page.mouse.down();
+			await page.mouse.move(from.x + 30, from.y + 30, {steps: 6});
+
+			/*
+			 * On the way the tile shows in the groups it passes, which grow and push the place under the column down: the
+			 * pointer follows the place, as a hand does, until it is over it.
+			 */
+			await expect.poll(async function () {
+				gap = await grid.locator('.elemenx-tile-stack').first().locator('.elemenx-tile-gap.below').boundingBox();
+
+				await page.mouse.move(gap.x + gap.width / 2, gap.y + 12, {steps: 4});
+
+				return grid.locator('.elemenx-tile-stack').first().locator('.elemenx-tile-gap.below').getAttribute('class');
+			}, {timeout: 30000}).toMatch(/drop-over/);
+
+			await page.mouse.up();
+
+			expect(await stacks()).toEqual([['Productivity', 'Play', 'New group'], ['Explore']]);
+			await expect(grid.locator('.elemenx-tile-stack').first().locator('.elemenx-tile[data-id="c-maps"]')).toHaveCount(1);
+
+			/* Narrower than two columns: the second column goes, whole, under the first. */
+			await frame.evaluate(function (node) {
+				node.style.width = '300px';
+			});
+
+			await expect.poll(async function () {
+				return grid.locator('.elemenx-tile-stack').evaluateAll(function (nodes) {
+					return nodes[1].getBoundingClientRect().top > nodes[0].getBoundingClientRect().bottom;
+				});
+			}).toBe(true);
+		});
+
 		test('tile groups stretch by whole columns, and a press on a control inside a tile does not press the tile', async function ({ page }) {
 			var grid;
 			var tools;

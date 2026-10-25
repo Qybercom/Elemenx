@@ -42,6 +42,7 @@ function normalize (name, kind, definition) {
 			Default: typeof definition[key] === 'function' ? undefined : copy(definition[key]),
 			Options: entry.Options ? entry.Options.slice() : null,
 			Schema: entry.Schema ? copy(entry.Schema) : null,
+			Body: !!entry.Body,
 			Description: entry.Description || ''
 		});
 	});

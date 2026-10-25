@@ -1,7 +1,7 @@
 <!-- generated -->
 # DesignerRules
 
-The rules of CSS of the selected element of a designer of pages (the Designer Service), by their context: who (this element, every element of its kind, or those inside an element of the kind around it), when (always, :hover, :focus-visible, :active, :disabled), where (every width, a tablet, a phone) and in which scheme (both, light, dark). The properties of the rule of the context are rows of a name and a value (a token of the theme, var(--elemenx-accent), is offered as one); a property added makes the rule, the last one taken away removes it. The rules that reach the element in other contexts are listed under them, a press goes to one. The rules go into the template as a <style>.
+The rules of CSS of the selected element of a designer of pages (the Designer Service), by their context: who (this element, every element of its kind, or those inside an element of the kind around it), when (always, :hover, :focus-visible, :active, :disabled), where (every width, a tablet, a phone) and in which scheme (both, light, dark). The properties of the rule of the context are rows of a name and a value (a token of the theme, var(--elemenx-accent), is offered as one, with the value it takes on the canvas: in the scheme of the context, or in the light and the dark one; a value that holds a token shows what it comes to under it); a property added makes the rule, the last one taken away removes it. The rules that reach the element in other contexts are listed under them, a press goes to one. The rules go into the template as a <style>.
 
 ## Example
 

@@ -1,7 +1,7 @@
 <!-- generated -->
 # Markdown
 
-A document written in Markdown, shown: Value is read by the RichText Service (CommonMark with the tables, the strike and the fenced code of GitHub) and kept to its schema, so nothing in it runs. The code of a fence that names its language (```js) is highlighted by the Syntax Service (Highlight, on by default). Look: 'document' (the default) looks as the text of a RichEditor (the classes of elemenx-document); 'interface' takes the classes of the interface of the Library instead, as a page of an Application: a table is an elemenx-table, a list an elemenx-ul or an elemenx-ol, a quote an elemenx-callout, a link an elemenx-link, code (a block or in a line) an elemenx-code, a rule an elemenx-divider.
+A document written in Markdown, shown: Value is read by the RichText Service (CommonMark with the tables, the strike and the fenced code of GitHub) and kept to its schema, so nothing in it runs. The code of a fence that names its language (```js) is highlighted by the Syntax Service (Highlight, on by default). Look: 'document' (the default) looks as the text of a RichEditor (the classes of elemenx-document); 'interface' takes the classes of the interface of the Library instead, as a page of an Application: a table is an elemenx-table, a list an elemenx-ul or an elemenx-ol, a quote an elemenx-callout, a link an elemenx-link, code (a block or in a line) an elemenx-code, a rule an elemenx-divider. Without Value the text is the body of the element (<Markdown>## A title</Markdown>), without the indentation its lines share: the body follows its changes.
 
 ## Properties
 
@@ -11,6 +11,10 @@ A document written in Markdown, shown: Value is read by the RichText Service (Co
 | `Highlight` | `true` |
 | `Look` | `'document'` |
 | `Label` | `''` |
+
+## Slots
+
+default
 
 ## Example
 

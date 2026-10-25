@@ -853,6 +853,58 @@
 	overflow: auto;
 }
 
+/* A screen of middle width: a narrower list of pages, less room around the page. */
+@media (max-width: 1024px) {
+	.elemenx-ribbon-backstage-nav {
+		width: 184px;
+	}
+
+	.elemenx-ribbon-backstage-content {
+		padding: 24px;
+	}
+}
+
+/* A narrow screen: the list of pages becomes a band over the page, scrolled across, and the page takes the width. */
+@media (max-width: 720px) {
+	.elemenx-ribbon-backstage.open {
+		flex-direction: column;
+	}
+
+	.elemenx-ribbon-backstage-nav {
+		flex-direction: row;
+		align-items: center;
+		width: auto;
+		padding: 6px 8px;
+		overflow-x: auto;
+	}
+
+	.elemenx-ribbon-backstage-back {
+		flex: none;
+		margin-bottom: 0;
+	}
+
+	.elemenx-ribbon-backstage-item {
+		flex: none;
+		gap: 8px;
+		white-space: nowrap;
+	}
+
+	.elemenx-ribbon-backstage-item.command:first-of-type,
+	.elemenx-ribbon-backstage-item:not(.command) + .elemenx-ribbon-backstage-item.command {
+		margin-top: 0;
+		margin-inline-start: 8px;
+		border-top: none;
+		border-inline-start: 1px solid rgba(var(--elemenx-accent-text-rgb), 0.24);
+		border-radius: var(--elemenx-radius);
+	}
+
+	.elemenx-ribbon-backstage-content {
+		flex: 1 1 auto;
+		min-height: 0;
+		padding: 16px;
+	}
+}
+
 .elemenx-ribbon-page {
 	display: none;
 	gap: 16px;

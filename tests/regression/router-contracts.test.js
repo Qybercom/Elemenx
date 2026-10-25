@@ -342,6 +342,43 @@ describe('Regression: Router contracts', function () {
 		expect(document.getElementById('contract-missing')).not.toBeNull();
 	});
 
+	it('an unknown path with NotFound asks $OnRouteLeave first: a refusal keeps the page, a path redirects', async function () {
+		var answer = false;
+		var a = page('contract-guarded', {
+			$OnRouteLeave: function () {
+				return answer;
+			}
+		});
+		var x = boot([{Path: '/guarded', Component: a}, {Path: '/elsewhere', Component: page('contract-elsewhere')}], page('contract-missing'));
+
+		x.Router.Go('/guarded');
+
+		await tick(20);
+
+		x.Router.Go('/unknown');
+
+		await tick(20);
+
+		expect(document.getElementById('contract-guarded')).not.toBeNull();
+		expect(document.getElementById('contract-missing')).toBeNull();
+		expect(location.pathname).toBe('/guarded');
+
+		answer = '/elsewhere';
+
+		x.Router.Go('/unknown');
+
+		await tick(40);
+
+		expect(location.pathname).toBe('/elsewhere');
+		expect(document.getElementById('contract-elsewhere')).not.toBeNull();
+
+		x.Router.Go('/unknown');
+
+		await tick(20);
+
+		expect(document.getElementById('contract-missing')).not.toBeNull();
+	});
+
 	it('$OnRouteLeave returning a path redirects instead of the requested navigation', async function () {
 		var trace = [];
 		var a = page('contract-leave', {

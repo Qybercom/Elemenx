@@ -75,10 +75,38 @@ async function drag (page, from, x, y, before) {
 	await page.mouse.up();
 }
 
+/* No element selected: Escape, outside the fields that keep it. */
+async function deselect (page) {
+	await page.evaluate(function () {
+		document.activeElement.blur();
+	});
+
+	await page.keyboard.press('Escape');
+}
+
 /* Opens a page of the backstage (the File button of the Ribbon). */
 async function backstage (page, name) {
 	await page.locator('.elemenx-ribbon-file').click();
 	await page.locator('.elemenx-ribbon-backstage.open .elemenx-ribbon-backstage-item').filter({hasText: name}).click();
+}
+
+/* A new project of a kind, from the page Create of the backstage. */
+async function create (page, mode, name) {
+	await backstage(page, 'Create');
+
+	await page.locator('.elemenx-ribbon-backstage.open input').filter({visible: true}).fill(name);
+	await page.locator('.builder-kind[data-mode="' + mode + '"]').click();
+
+	await expect(page.locator('.elemenx-ribbon-backstage.open')).toHaveCount(0);
+}
+
+/* A project kept, opened again from the page Open of the backstage. */
+async function reopen (page, name) {
+	await backstage(page, 'Open');
+
+	await page.locator('.builder-project-open').filter({hasText: name}).first().click();
+
+	await expect(page.locator('.elemenx-ribbon-backstage.open')).toHaveCount(0);
 }
 
 /* Imports a template in place of the page, from the backstage. */
@@ -144,7 +172,7 @@ test.describe('Elemenx builder', function () {
 
 		await expect(inspector.locator('.elemenx-designer-inspector-title')).toHaveText('Heading');
 
-		await page.locator('.elemenx-designer-canvas').click({position: {x: 8, y: 8}});
+		await page.locator('.elemenx-designer-stage').click({position: {x: 8, y: 8}});
 
 		await page.keyboard.press('Control+z');
 
@@ -238,7 +266,7 @@ test.describe('Elemenx builder', function () {
 		expect(errors).toEqual([]);
 	});
 
-	test('drops a row into a screen that a row fills: beside the row from the edge of it, one level up with Alt', async function ({ page }) {
+	test('drops a row into a screen that a row fills: beside the row from the edge of it, one level up with Shift', async function ({ page }) {
 		var errors = captureErrors(page);
 		var canvas = page.locator('.elemenx-designer-page-host');
 		var box;
@@ -261,17 +289,17 @@ test.describe('Elemenx builder', function () {
 			return node.Kind;
 		})).toEqual(['row', 'row']);
 
-		/* In the middle of the first row a column goes into it; with Alt held, into the screen around it. */
+		/* In the middle of the first row a column goes into it; with Shift held, into the screen around it. */
 		box = await canvas.locator('.elemenx-container').first().boundingBox();
 
 		await drag(page, await sample(page, 'column'), box.x + box.width - 8, box.y + box.height / 2, async function () {
-			await page.keyboard.down('Alt');
+			await page.keyboard.down('Shift');
 			await page.mouse.move(box.x + box.width - 9, box.y + box.height / 2);
 
 			await expect(page.locator('.elemenx-designer-marker-note')).toContainText('In Screen');
 		});
 
-		await page.keyboard.up('Alt');
+		await page.keyboard.up('Shift');
 
 		doc = await document(page);
 
@@ -348,9 +376,12 @@ test.describe('Elemenx builder', function () {
 		})).toEqual([]);
 		expect(kinds).toEqual(expect.arrayContaining(['screen', 'row', 'column', 'grid', 'panel', 'gamepanel', 'paragraph', 'textstyle', 'link', 'badge', 'kbd', 'code', 'bullets', 'numbers', 'chips', 'table', 'stats', 'document']));
 
-		/* A sample tells its name and what it is when the pointer rests on it, and says its name under it. */
-		await expect(page.locator('.elemenx-ribbon-gallery-item[data-id="screen"]').first()).toHaveAttribute('title', 'Screen — The screen of an Application: a column as high as its place (Sizing fill takes all of it).');
-		await expect(page.locator('.elemenx-ribbon-gallery-item[data-id="screen"]').first()).toContainText('Screen');
+		/* A sample says its name under it, and its tip tells its name in bold and what it is under it. */
+		await (await sample(page, 'screen')).hover();
+
+		await expect(page.locator('#elemenx-tip .elemenx-tip-title')).toHaveText('Screen');
+		await expect(page.locator('#elemenx-tip .elemenx-tip-text')).toHaveText('The screen of an Application: a column as high as its place (Sizing fill takes all of it).');
+		await expect(await sample(page, 'screen')).toContainText('Screen');
 
 		/* The search keeps the kinds whose name holds its text, and says when none does. */
 		await page.locator('.builder-find input').fill('game');
@@ -621,15 +652,29 @@ test.describe('Elemenx builder', function () {
 
 		await expect(canvas.locator('.elemenx-check input')).toBeChecked();
 
-		await page.getByRole('button', {name: 'Stop'}).click();
+		/* The run brings its own tab to the Ribbon and shows it: Inspect, Outlines, Stop. */
+		await expect(page.locator('.elemenx-ribbon-tab.active')).toHaveText('Running');
+
+		await page.locator('.elemenx-ribbon [data-command="inspect"]').click();
+		await page.locator('.elemenx-ribbon [data-command="stop"]').click();
 
 		await expect(page.locator('.elemenx-designer-layer')).toHaveCount(1);
+		await expect(page.locator('.elemenx-ribbon-tab.active')).toHaveText('View');
+		await expect(page.locator('.elemenx-ribbon-tab').filter({hasText: 'Running'})).toHaveCount(0);
+
+		/* The options of the run are kept for the next one. */
+		await page.getByRole('button', {name: 'Run'}).click();
+
+		await expect(page.locator('.elemenx-ribbon [data-command="inspect"]')).toHaveAttribute('aria-pressed', 'true');
+		await expect(page.locator('.elemenx-designer-layer.inspect')).toHaveCount(1);
+
+		await page.locator('.elemenx-ribbon [data-command="stop"]').click();
 
 		/* The language is a list in the header. */
 		await page.locator('.builder-language .elemenx-select').click();
 		await page.getByRole('option', {name: 'Русский'}).click();
 
-		await expect(page.locator('.builder-brand')).toHaveText('EКонструктор');
+		await expect(page.locator('.builder-brand')).toHaveText('EElemenxКонструктор');
 		await expect(page.locator('.elemenx-ribbon-tab').filter({hasText: 'Вставка'})).toHaveCount(1);
 		await expect(page.locator('.elemenx-designer-inspector')).toContainText('Оформление');
 
@@ -691,8 +736,8 @@ test.describe('Elemenx builder', function () {
 		await expect(canvas.locator('.elemenx-designer-empty')).toHaveCount(0);
 		await expect(canvas.locator('.elemenx-column')).toHaveCSS('outline-style', 'none');
 
-		/* Inspect: the box of the element under the pointer, its size, its margin; Alt measures from the one pressed. */
-		await page.getByRole('button', {name: 'Inspect'}).click();
+		/* Inspect: the box of the element under the pointer, its size, its margin; Shift measures from the one pressed. */
+		await page.locator('.elemenx-ribbon [data-command="inspect"]').click();
 
 		box = await canvas.locator('h2').boundingBox();
 
@@ -704,19 +749,114 @@ test.describe('Elemenx builder', function () {
 
 		box = await canvas.locator('p').boundingBox();
 
-		await page.keyboard.down('Alt');
+		await page.keyboard.down('Shift');
 		await page.mouse.move(box.x + 10, box.y + 5);
 		await page.mouse.move(box.x + 12, box.y + 6);
 
 		await expect(page.locator('.elemenx-designer-tip')).toContainText('margin 0 0 12 0');
 		await expect(page.locator('.elemenx-designer-distance')).toHaveText(['16']);
 
-		await page.keyboard.up('Alt');
+		await page.keyboard.up('Shift');
+
+		await expect(page.locator('.elemenx-designer-distance')).toHaveCount(0);
+
+		/* Nothing pressed: Shift measures to the four edges of the canvas at once, the pointer still. */
+		box = await canvas.locator('h2').boundingBox();
+
+		await page.mouse.click(box.x + 10, box.y + 5);
+
+		await expect(page.locator('.elemenx-designer-measure.pinned')).toHaveCount(0);
+
+		box = await canvas.locator('p').boundingBox();
+
+		await page.mouse.move(box.x + 10, box.y + 5);
+		await page.mouse.move(box.x + 12, box.y + 6);
+
+		await expect(page.locator('.elemenx-designer-tip')).toContainText('Paragraph');
+
+		await page.keyboard.down('Shift');
+
+		await expect(page.locator('.elemenx-designer-distance')).toHaveCount(4);
+
+		await page.keyboard.up('Shift');
 
 		/* Outlines come back in the run on their own toggle. */
-		await page.getByRole('button', {name: 'Outlines'}).click();
+		await page.locator('.elemenx-ribbon [data-command="lines"]').click();
 
 		await expect(canvas.locator('.elemenx-column')).not.toHaveCSS('outline-style', 'none');
+
+		expect(errors).toEqual([]);
+	});
+
+	test('shows the template in the tool window of the bottom as high as the window, however short it is', async function ({ page }) {
+		var errors = captureErrors(page);
+		var sizes;
+
+		await open(page);
+
+		await page.locator('.elemenx-workspace-tool-button[data-tool="template"]').click();
+
+		await expect(page.locator('.elemenx-workspace-tool-window[data-tool="template"] .elemenx-code-view')).toBeVisible();
+
+		sizes = await page.locator('.elemenx-workspace-tool-window[data-tool="template"] .elemenx-workspace-tool-window-body').evaluate(function (body) {
+			return {Body: body.getBoundingClientRect().height, View: body.querySelector('.elemenx-code-view').getBoundingClientRect().height, Text: body.querySelector('.elemenx-code-view-text').getBoundingClientRect().height};
+		});
+
+		expect(sizes.View).toBeGreaterThan(100);
+		expect(Math.abs(sizes.View - sizes.Body)).toBeLessThanOrEqual(1);
+		expect(sizes.Text).toBeGreaterThan(sizes.View - 4);
+
+		expect(errors).toEqual([]);
+	});
+
+	test('measures with Shift while the page is built: to the edges of the canvas, to another element, to the sides of its parent', async function ({ page }) {
+		var errors = captureErrors(page);
+		var canvas = page.locator('.elemenx-designer-page-host');
+		var lines = page.locator('.elemenx-designer-layer:not(.inspect) .elemenx-designer-distance');
+		var surface;
+		var box;
+		var texts;
+
+		await open(page);
+
+		await load(page, '<div class="elemenx-column" style="padding: 24px; gap: 16px">\n\t<h2>Sign in</h2>\n\t<p style="margin: 0">Text</p>\n</div>');
+
+		box = await canvas.locator('h2').boundingBox();
+
+		await page.mouse.click(box.x + 10, box.y + 5);
+
+		/* The selected element under the pointer: its four distances to the edges of the canvas. */
+		await page.keyboard.down('Shift');
+
+		await expect(lines).toHaveCount(4);
+
+		surface = await page.locator('.elemenx-designer-surface').boundingBox();
+		box = await page.locator('.elemenx-designer-selection').boundingBox();
+		texts = await lines.allTextContents();
+
+		/* As the frame of the selection stands from the edges, the pixels rounded. */
+		expect(Math.abs(Number(texts[0]) - (box.x - surface.x))).toBeLessThanOrEqual(1);
+		expect(Math.abs(Number(texts[2]) - (box.y - surface.y))).toBeLessThanOrEqual(1);
+
+		/* Another element: the gap between them. */
+		box = await canvas.locator('p').boundingBox();
+
+		await page.mouse.move(box.x + 10, box.y + 5);
+
+		await expect(lines).toHaveText(['16']);
+
+		/* The column around it: the room to its sides, its padding, and below it the text, the gap and the padding. */
+		box = await canvas.locator('.elemenx-column').boundingBox();
+		texts = await canvas.locator('p').boundingBox();
+
+		await page.mouse.move(box.x + 4, box.y + box.height - 4);
+
+		await expect(lines).toHaveText(['24', '24', '24', String(Math.round(texts.height + 16 + 24))]);
+
+		/* Without Shift, nothing; a drag would take Shift for itself. */
+		await page.keyboard.up('Shift');
+
+		await expect(lines).toHaveCount(0);
 
 		expect(errors).toEqual([]);
 	});
@@ -734,9 +874,9 @@ test.describe('Elemenx builder', function () {
 		await page.locator('.elemenx-designer-tree').getByText('Button · Continue').click();
 
 		/* This element: a rule of its own, on the canvas at once. */
-		await rules.locator('.elemenx-designer-rules-property').fill('border-radius');
-		await rules.locator('.elemenx-designer-rules-value').fill('0');
-		await rules.locator('.elemenx-designer-rules-value').press('Enter');
+		await rules.locator('.elemenx-designer-rules-property input').fill('border-radius');
+		await rules.locator('.elemenx-designer-rules-value input').fill('0');
+		await rules.locator('.elemenx-designer-rules-value input').press('Enter');
 
 		await expect(canvas.locator('.elemenx-button')).toHaveCSS('border-radius', '0px');
 
@@ -748,11 +888,33 @@ test.describe('Elemenx builder', function () {
 		await rules.locator('.elemenx-select').nth(3).click();
 		await page.getByRole('option', {name: 'Dark', exact: true}).click();
 
-		await rules.locator('.elemenx-designer-rules-property').fill('color');
-		await rules.locator('.elemenx-designer-rules-value').fill('var(--elemenx-accent)');
+		await rules.locator('.elemenx-designer-rules-property input').fill('color');
+		await rules.locator('.elemenx-designer-rules-value input').fill('var(--elemenx-accent)');
 		await rules.locator('.elemenx-designer-rules-add').click();
 
 		await expect(rules.locator('.elemenx-designer-rules-other')).toHaveText(['This element (1)', 'Every Button · :hover · Dark (1)']);
+
+		/* A token shows what it comes to on the canvas, in the scheme of the rule: its value in the dark scheme. */
+		await expect(rules.locator('.elemenx-designer-rules-computed')).toHaveText(await page.evaluate(function () {
+			var probe = document.createElement('span');
+			var value;
+
+			probe.setAttribute('data-scheme', 'dark');
+
+			document.querySelector('.elemenx-designer-page').appendChild(probe);
+
+			value = getComputedStyle(probe).getPropertyValue('--elemenx-accent').trim();
+
+			probe.remove();
+
+			return value;
+		}));
+
+		await rules.locator('.elemenx-designer-rules-field').getByRole('button', {name: 'Show the options'}).click();
+
+		await expect(page.locator('.elemenx-option-hint').first()).toHaveText(/^(#|rgb)/);
+
+		await page.keyboard.press('Escape');
 
 		template = await exported(page);
 
@@ -779,7 +941,8 @@ test.describe('Elemenx builder', function () {
 
 		await backstage(page, 'Application');
 
-		await page.locator('.elemenx-ribbon-backstage.open input').fill('My page');
+		await page.locator('.elemenx-ribbon-backstage.open input').filter({visible: true}).fill('My page');
+		await page.locator('.elemenx-ribbon-backstage.open input').filter({visible: true}).press('Enter');
 
 		download = page.waitForEvent('download');
 
@@ -803,6 +966,469 @@ test.describe('Elemenx builder', function () {
 
 		await expect(page.locator('.elemenx-button')).toHaveText('Go');
 		expect(Math.round((await page.locator('.elemenx-screen').boundingBox()).height)).toBe(page.viewportSize().height);
+
+		expect(errors).toEqual([]);
+	});
+	test('gives an application a splash and an installation in its settings, and its HTML file shows the splash until it is ready', async function ({ page }) {
+		var errors = captureErrors(page);
+		var settings = page.locator('.elemenx-designer-settings');
+		var download;
+		var file;
+		var text;
+
+		await open(page);
+
+		await create(page, 'application', 'Splashy');
+
+		await page.locator('.builder-document').filter({hasText: 'Application'}).click();
+
+		await expect(settings).toBeVisible();
+
+		/* Off at first: its fields show once it is on. */
+		await expect(settings.locator('input[name="SplashText"]')).toHaveCount(0);
+
+		await settings.locator('.elemenx-designer-settings-splash .elemenx-toggle').first().click();
+		await settings.locator('input[name="SplashText"]').fill('Loading the shop');
+		await settings.locator('input[name="SplashText"]').press('Enter');
+		await settings.locator('input[name="SplashMinTime"]').fill('-5');
+		await settings.locator('input[name="SplashMinTime"]').press('Enter');
+
+		await expect(settings.locator('.elemenx-field-error')).toHaveCount(1);
+
+		await settings.locator('input[name="SplashMinTime"]').fill('200');
+		await settings.locator('input[name="SplashMinTime"]').press('Enter');
+
+		await expect(settings.locator('.elemenx-field-error')).toHaveCount(0);
+
+		expect(await page.evaluate(function () {
+			var store = JSON.parse(localStorage.getItem('elemenx-designer:projects'));
+
+			return Object.keys(store.Projects).map(function (id) {
+				return store.Projects[id];
+			}).filter(function (item) {
+				return item.Name === 'Splashy';
+			})[0].Settings;
+		})).toMatchObject({Splash: 'true', SplashText: 'Loading the shop', SplashMinTime: '200', SplashSpinner: 'true'});
+
+		/* Installable as an application: its short name and its window. */
+		await settings.locator('.elemenx-designer-settings-pwa .elemenx-toggle').first().click();
+		await settings.locator('input[name="PWAShortName"]').fill('Shop');
+		await settings.locator('input[name="PWAShortName"]').press('Enter');
+
+		expect(await page.evaluate(function () {
+			var store = JSON.parse(localStorage.getItem('elemenx-designer:projects'));
+
+			return Object.keys(store.Projects).map(function (id) {
+				return store.Projects[id];
+			}).filter(function (item) {
+				return item.Name === 'Splashy';
+			})[0].Settings;
+		})).toMatchObject({PWA: 'true', PWAShortName: 'Shop', PWADisplay: 'standalone', PWAOffline: 'true'});
+
+		/* The file it downloads has the splash at the top of its body; it goes once the application is ready. */
+		await backstage(page, 'Application');
+
+		download = page.waitForEvent('download');
+
+		await page.locator('.builder-download-html').click();
+
+		download = await download;
+		file = test.info().outputPath('splashy.html');
+
+		await download.saveAs(file);
+
+		text = fs.readFileSync(file, 'utf8');
+
+		expect(text).toContain('<body>\n<style id="elemenx-splash-style">');
+		expect(text).toContain('data-min="200" data-timeout="10000"><p class="elemenx-splash-text">Loading the shop</p><span class="elemenx-splash-spinner" aria-hidden="true"></span></div>');
+
+		await page.goto('file:///' + file.replace(/\\/g, '/'));
+
+		await expect(page.locator('#elemenx-splash')).toHaveCount(0);
+
+		expect(errors).toEqual([]);
+	});
+
+	test('has rulers along the canvas that mark the selected element, and makes nothing of a press on them', async function ({ page }) {
+		var errors = captureErrors(page);
+		var ruler;
+
+		await open(page);
+
+		await add(page, 'Card');
+
+		/* The span of the selected element on both rulers; numbers every 100 pixels, 0 at the edge of the page. */
+		await expect(page.locator('.elemenx-designer-ruler.horizontal .elemenx-ruler-range')).toHaveCount(1);
+		await expect(page.locator('.elemenx-designer-ruler.vertical .elemenx-ruler-range')).toHaveCount(1);
+		await expect(page.locator('.elemenx-designer-ruler.horizontal .elemenx-ruler-label').first()).toHaveText('0');
+
+		/* A press and a drag on a ruler leave nothing over the page. */
+		ruler = await page.locator('.elemenx-designer-ruler.horizontal').boundingBox();
+
+		await page.mouse.move(ruler.x + 200, ruler.y + 10);
+		await page.mouse.down();
+		await page.mouse.move(ruler.x + 250, ruler.y + 200, {steps: 6});
+		await page.mouse.up();
+
+		await expect(page.locator('.elemenx-designer-ruler .elemenx-ruler-guide')).toHaveCount(0);
+
+		/* The rulers go off on the View tab. */
+		await page.locator('.elemenx-ribbon-tab').filter({hasText: 'View'}).click();
+		await page.locator('.elemenx-ribbon [data-command="rulers"]').click();
+
+		await expect(page.locator('.elemenx-designer-ruler')).toHaveCount(0);
+
+		expect(errors).toEqual([]);
+	});
+
+	test('makes an application of pages and components: a component with its props and slot, used on a page, routes, guards, settings and a download', async function ({ page }) {
+		var errors = captureErrors(page);
+		var canvas = page.locator('.elemenx-designer-canvas');
+		var inspector = page.locator('.elemenx-designer-inspector');
+		var settings = page.locator('.elemenx-designer-settings');
+		var route;
+		var download;
+		var file;
+		var text;
+
+		/* Wide enough for the Insert tab to keep its search beside the group of the project. */
+		await page.setViewportSize({width: 1600, height: 900});
+
+		await open(page);
+
+		/* An application: its kind chosen when it is made; a tab for each document open over the canvas, and its settings. */
+		await create(page, 'application', 'Shop');
+
+		await expect(page.locator('.builder-document')).toHaveText(['Application', 'Home']);
+
+		/* A component: a paragraph and the slot of what it is given. */
+		await page.locator('.elemenx-ribbon-tab[data-id="project"]').click();
+		await page.locator('.elemenx-ribbon [data-command="new-component"]').click();
+
+		await expect(page.locator('.builder-document.active')).toHaveText('Component2');
+
+		await page.locator('.elemenx-ribbon-tab[data-id="insert"]').click();
+
+		await add(page, 'paragraph');
+
+		await deselect(page);
+
+		await add(page, 'slot');
+
+		await expect(canvas.locator('.elemenx-designer-slot')).toHaveText('Default slot');
+
+		/* With nothing selected the inspector is the one of the component: its name, a prop, its slot. */
+		await deselect(page);
+
+		await inspector.locator('.elemenx-designer-document input').first().fill('HeroBanner');
+		await inspector.locator('.elemenx-designer-document input').first().press('Enter');
+
+		await expect(page.locator('.builder-document.active')).toHaveText('HeroBanner');
+
+		await inspector.locator('.elemenx-designer-document-add').click();
+		await inspector.locator('.elemenx-designer-document-prop input[data-key="Name"]').fill('Title');
+		await inspector.locator('.elemenx-designer-document-prop input[data-key="Name"]').press('Enter');
+		await inspector.locator('.elemenx-designer-document-prop input[data-key="Default"]').fill('Hello');
+		await inspector.locator('.elemenx-designer-document-prop input[data-key="Default"]').press('Enter');
+
+		await expect(inspector.locator('.elemenx-designer-document-slots .elemenx-chip')).toHaveText(['Default slot']);
+
+		/* The page takes the component from the palette: it shows on the canvas, its prop in the inspector. */
+		await page.locator('.builder-document-open').filter({hasText: 'Home'}).click();
+
+		await add(page, 'HeroBanner');
+
+		await expect(canvas.locator('.elemenx-designer-part p')).toHaveText('A paragraph of text.');
+		await expect(inspector.locator('.elemenx-designer-inspector-title')).toHaveText('HeroBanner');
+		await expect(inspector.locator('input[name="Title"]')).toHaveValue('Hello');
+
+		/* The component the page holds cannot go. */
+		await page.locator('.builder-document-open').filter({hasText: 'HeroBanner'}).click();
+
+		await deselect(page);
+
+		await expect(inspector.locator('.elemenx-designer-document-head button')).toBeDisabled();
+		await expect(inspector.locator('.elemenx-designer-document')).toContainText('Used in: Home');
+
+		/* A tab closes by its cross; the document stays in the project, the explorer opens it again. */
+		await page.locator('.builder-document').filter({hasText: 'HeroBanner'}).locator('.builder-document-close').click();
+
+		await expect(page.locator('.builder-document')).toHaveText(['Application', 'Home']);
+
+		/* The settings of the Application in the main area: a guard, and a route it guards. */
+		await page.locator('.builder-document').filter({hasText: 'Application'}).click();
+
+		await expect(settings).toBeVisible();
+		await expect(canvas).toHaveCount(0);
+
+		await settings.locator('.elemenx-designer-settings-add-guard').click();
+
+		await expect(settings.locator('.elemenx-designer-settings-guard')).toHaveCount(1);
+
+		await settings.locator('.elemenx-designer-settings-add-route').click();
+
+		route = settings.locator('.elemenx-designer-settings-route').nth(1);
+
+		await route.locator('input').first().fill('/hero/:id');
+		await route.locator('input').first().press('Enter');
+		await route.locator('.elemenx-select-trigger').nth(1).click();
+		await page.getByRole('option', {name: 'Guard1'}).click();
+		await page.keyboard.press('Escape');
+
+		await expect(route.locator('.elemenx-chip')).toHaveText(['Guard1']);
+
+		/* The whole application downloads as one file: the component, the pages on their routes, the guard; it runs from the disk. */
+		await backstage(page, 'Application');
+
+		download = page.waitForEvent('download');
+
+		await page.locator('.builder-download-html').click();
+
+		download = await download;
+		file = test.info().outputPath('shop.html');
+
+		await download.saveAs(file);
+
+		text = fs.readFileSync(file, 'utf8');
+
+		expect(download.suggestedFilename()).toBe('shop.html');
+		expect(text).toContain('Elemenx.Component(\'HeroBanner\', {');
+		expect(text).toContain('Title: {Type: \'text\', Description: \'\'}');
+		expect(text).toContain('{Path: \'/\', Component: \'HomePage\'}');
+		expect(text).toContain('{Path: \'/hero/:id\', Component: \'HomePage\', Guard: \'Guard1\'}');
+		expect(text).toContain('Elemenx.Guard(\'Guard1\', function () {');
+
+		await page.goto('file:///' + file.replace(/\\/g, '/'));
+
+		await expect(page.locator('p')).toHaveText('A paragraph of text.');
+
+		expect(errors).toEqual([]);
+	});
+
+	test('keeps several projects, each of its own kind, opens them again and carries one in a file', async function ({ page }) {
+		var errors = captureErrors(page);
+		var download;
+		var file;
+		var i = 0;
+
+		await open(page);
+
+		/* A tool window closed and then taken away by its *if, made again with the same ID: the frame keeps one of it. */
+		await create(page, 'application', 'Shop');
+		await create(page, 'component', 'Badge');
+
+		while (i < 3) {
+			await reopen(page, 'Shop');
+
+			await page.locator('.elemenx-workspace-tool-button[data-tool="project"]').click();
+
+			await reopen(page, 'Badge');
+
+			await expect(page.locator('.elemenx-workspace-tool-button[data-tool="project"]')).toHaveCount(0);
+
+			i++;
+		}
+
+		await reopen(page, 'Shop');
+
+		await expect(page.locator('.elemenx-workspace-tool-button[data-tool="project"]')).toHaveCount(1);
+		await expect(page.locator('.builder-document')).toHaveText(['Application', 'Home']);
+
+		/* The kinds stay their own: the component has its slot, no tab of documents, no tab of the project. */
+		await reopen(page, 'Badge');
+
+		await expect(page.locator('.builder-documents')).toHaveCount(0);
+		await expect(page.locator('.elemenx-ribbon-tab[data-id="project"]')).toHaveCount(0);
+
+		/* Saved into a file and opened from it: a project of its own beside the others. */
+		await backstage(page, 'Open');
+
+		download = page.waitForEvent('download');
+
+		await page.locator('.builder-save-file').click();
+
+		download = await download;
+		file = test.info().outputPath('badge.elemenx.json');
+
+		await download.saveAs(file);
+
+		expect(download.suggestedFilename()).toBe('badge.elemenx.json');
+		expect(JSON.parse(fs.readFileSync(file, 'utf8')).Project.Mode).toBe('component');
+
+		await page.locator('.builder-open-file input').setInputFiles(file);
+
+		await expect(page.locator('.elemenx-ribbon-backstage.open')).toHaveCount(0);
+
+		await backstage(page, 'Open');
+
+		await expect(page.locator('.builder-project-open strong')).toHaveText(['Badge', 'Badge', 'Shop', 'App']);
+
+		/* A project removed goes once the dialog agrees. */
+		await page.locator('.builder-project-remove').nth(3).click();
+		await page.locator('.elemenx-dialog').getByRole('button', {name: 'Remove the project'}).click();
+
+		await expect(page.locator('.builder-project-open strong')).toHaveText(['Badge', 'Badge', 'Shop']);
+
+		expect(errors).toEqual([]);
+	});
+
+	test('writes the text of a Markdown and the code of a CodeView as their body, edited in a field of many lines', async function ({ page }) {
+		var errors = captureErrors(page);
+		var canvas = page.locator('.elemenx-designer-page-host');
+		var inspector = page.locator('.elemenx-designer-inspector');
+		var template = '<div class="elemenx-screen fill">\n\t<Markdown>\n\t\t## Notes\n\n\t\tSome **bold** text.\n\t</Markdown>\n\t<CodeView Language="html">\n\t\t&lt;p&gt;Hi&lt;/p&gt;\n\t</CodeView>\n</div>';
+
+		await open(page);
+
+		await load(page, template);
+
+		/* The body is what they show, on the canvas as in an Application. */
+		await expect(canvas.locator('.elemenx-markdown h2')).toHaveText('Notes');
+		await expect(canvas.locator('.elemenx-markdown strong')).toHaveText('bold');
+		await expect(canvas.locator('.elemenx-code-view-text')).toContainText('<p>Hi</p>');
+
+		/* The inspector edits it in a field of many lines, as the text it is, its indentation gone. */
+		await page.locator('.elemenx-designer-tree').getByText('Markdown', {exact: true}).click();
+
+		await expect(inspector.locator('textarea')).toHaveValue('## Notes\n\nSome **bold** text.');
+
+		await inspector.locator('textarea').fill('## Changed\n\n<b>{{x}}</b>');
+
+		await expect(canvas.locator('.elemenx-markdown h2')).toHaveText('Changed');
+
+		/* It goes back into the body, its tag and its braces written so that the template keeps them as text. */
+		/* The field of the import holds the template as it is now, its blank lines too, though the import was the last page. */
+		await backstage(page, 'Import');
+
+		template = await page.locator('.elemenx-ribbon-backstage.open textarea').inputValue();
+
+		await page.keyboard.press('Escape');
+
+		expect(template).toBe('<div class="elemenx-screen fill">\n\t<Markdown>\n\t\t## Changed\n\n\t\t&lt;b&gt;{{ \'{{\' }}x}}&lt;/b&gt;\n\t</Markdown>\n\t<CodeView Language="html">\n\t\t&lt;p&gt;Hi&lt;/p&gt;\n\t</CodeView>\n</div>');
+
+		await load(page, template);
+
+		await page.locator('.elemenx-designer-tree').getByText('Markdown', {exact: true}).click();
+
+		await expect(inspector.locator('textarea')).toHaveValue('## Changed\n\n<b>{{x}}</b>');
+
+		expect(errors).toEqual([]);
+	});
+
+	test('on a narrow screen scrolls across to the panels on both sides, then opens them over the canvas, and the backstage puts its pages over the page', async function ({ page }) {
+		var errors = captureErrors(page);
+		var body = page.locator('.elemenx-workspace-body');
+		var left = page.locator('.elemenx-workspace-panel.left');
+		var right = page.locator('.elemenx-workspace-panel.right');
+		var sizes;
+		var nav;
+		var content;
+
+		await open(page);
+
+		await page.setViewportSize({width: 900, height: 900});
+
+		/* The main area keeps its width; the frame scrolls across to the panel of the properties on the right. */
+		sizes = await body.evaluate(function (node) {
+			return {Scroll: node.scrollWidth, Client: node.clientWidth, Main: node.querySelector('.elemenx-workspace-center').getBoundingClientRect().width};
+		});
+
+		expect(sizes.Main).toBeGreaterThanOrEqual(320);
+		expect(sizes.Scroll).toBeGreaterThan(sizes.Client);
+
+		await body.evaluate(function (node) {
+			node.scrollLeft = node.scrollWidth;
+		});
+
+		await expect(right).toBeInViewport();
+
+		/* Narrower: the canvas takes the whole width between the stripes, the panels open over it, one side at a time. */
+		await page.setViewportSize({width: 520, height: 900});
+
+		sizes = await body.evaluate(function (node) {
+			return {Scroll: node.scrollWidth, Client: node.clientWidth, Main: node.querySelector('.elemenx-workspace-center').getBoundingClientRect().width};
+		});
+
+		expect(sizes.Scroll).toBe(sizes.Client);
+		expect(sizes.Main).toBe(sizes.Client - 80);
+
+		await page.locator('.elemenx-workspace-stripe.right .elemenx-workspace-tool-button').first().click();
+
+		await expect(right).toBeHidden();
+
+		await page.locator('.elemenx-workspace-stripe.right .elemenx-workspace-tool-button').first().click();
+
+		await expect(right).toBeVisible();
+		await expect(left).toBeHidden();
+		expect(await right.evaluate(function (node) {
+			return getComputedStyle(node).position;
+		})).toBe('absolute');
+
+		await page.locator('.elemenx-workspace-stripe.left .elemenx-workspace-tool-button').first().click();
+
+		await expect(left).toBeVisible();
+		await expect(right).toBeHidden();
+
+		/* A press on the canvas beside the panel closes it. */
+		await page.mouse.click(470, 500);
+
+		await expect(left).toBeHidden();
+
+		/* The backstage: its pages a band over the page, the page as wide as the screen. */
+		await backstage(page, 'Export');
+
+		nav = await page.locator('.elemenx-ribbon-backstage.open .elemenx-ribbon-backstage-nav').boundingBox();
+		content = await page.locator('.elemenx-ribbon-backstage.open .elemenx-ribbon-backstage-content').boundingBox();
+
+		expect(nav.height).toBeLessThan(64);
+		expect(content.y).toBeGreaterThanOrEqual(nav.y + nav.height - 1);
+		expect(content.width).toBeGreaterThan(500);
+
+		expect(errors).toEqual([]);
+	});
+
+	test('opens a group of the Ribbon over the canvas, its rulers and the handles of the panels', async function ({ page }) {
+		var errors = captureErrors(page);
+		var covered;
+		var index;
+
+		await open(page);
+
+		await page.setViewportSize({width: 1000, height: 900});
+
+		/* A group over the start of the canvas, the popup of which goes down over its ruler and the panel beside it. */
+		index = await page.evaluate(function () {
+			var ruler = document.querySelector('.elemenx-designer-ruler').getBoundingClientRect();
+
+			return Array.prototype.map.call(document.querySelectorAll('.elemenx-ribbon-group.collapsed .elemenx-ribbon-group-toggle'), function (toggle) {
+				var box = toggle.getBoundingClientRect();
+
+				return Math.abs(box.left - ruler.left - 120);
+			}).reduce(function (best, distance, at, all) {
+				return distance < all[best] ? at : best;
+			}, 0);
+		});
+
+		await page.locator('.elemenx-ribbon-group.collapsed .elemenx-ribbon-group-toggle').nth(index).click();
+
+		/* Whatever is under it on the page, every point of the popup is its own. */
+		covered = await page.locator('.elemenx-ribbon-group.open .elemenx-ribbon-group-popup').evaluate(function (popup) {
+			var box = popup.getBoundingClientRect();
+			var found = [];
+			var x;
+			var y;
+
+			for (x = box.left + 6; x < box.right - 6; x += 8) {
+				for (y = box.top + 6; y < box.bottom - 6; y += 4) {
+					if (!popup.contains(document.elementFromPoint(x, y)))
+						found.push(document.elementFromPoint(x, y).className);
+				}
+			}
+
+			return found;
+		});
+
+		expect(covered).toEqual([]);
 
 		expect(errors).toEqual([]);
 	});

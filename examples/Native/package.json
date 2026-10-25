@@ -1,0 +1,27 @@
+{
+	"name": "elemenx-native-example",
+	"private": true,
+	"scripts": {
+		"dev": "node ../../elemenx-cli.js dev .",
+		"build": "node ../../elemenx-cli.js build .",
+		"native": "node ../../elemenx-cli.js build . --native",
+		"desktop": "node ../../elemenx-cli.js build . --native desktop",
+		"mobile": "node ../../elemenx-cli.js build . --native mobile"
+	},
+	"devDependencies": {
+		"@electron/packager": "^20.3.0",
+		"electron": "^45.0.0",
+		"electron-builder": "^26.18.0"
+	},
+	"dependencies": {
+		"@capacitor/android": "^8.5.3",
+		"@capacitor/app": "^8.1.2",
+		"@capacitor/browser": "^8.0.5",
+		"@capacitor/cli": "^8.5.3",
+		"@capacitor/core": "^8.5.3",
+		"@capacitor/dialog": "^8.0.1",
+		"@capacitor/filesystem": "^8.1.5",
+		"@capacitor/ios": "^8.5.3",
+		"@capacitor/splash-screen": "^8.0.2"
+	}
+}

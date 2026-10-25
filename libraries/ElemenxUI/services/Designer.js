@@ -11,32 +11,60 @@
  *   the default one; Style holds its layout (padding, margin, the size with its least and greatest and, in a flex
  *   container, its direction, its wrap, align-items, justify-content and gap), set inline: on its element, or on a div
  *   around a Component. SetStyle(id, property, value) sets one of Layout.
- * - A Component whose $Meta names its Children (Tab in Tabs) holds them as nodes: a child inserted gets an ID and a name
- *   (tab-2, Tab 2), and on the canvas the component shows the child the selection is in (its Current prop).
+ * - A Component whose $Meta names its Children (Tab in Tabs) holds them as nodes: a child inserted gets an ID and a
+ *   name (tab-2, Tab 2), and on the canvas the component shows the child the selection is in (its Current prop).
+ * - A prop its Component declares Body (the Value of a Markdown, of a CodeView) is a text of many lines, written as the
+ *   body of the element (indented as the template, a tag in it as &lt;) and read back from it.
  * - Literal(value) writes a value as the source of an expression ({ID: 'a'}); Parse(expression) reads it back.
  * - Kinds() lists the kinds by group; Kind(id) is one: {ID, Group, Icon, Tag, Component, Container, Flex, Text,
  *   Description, Props (the first values), Fields ([{Name, Type, Options, Default, Description}]), Slots}. Label(kind)
  *   and GroupLabel(group) name them in the language of the page; Slots(id) are the named slots of the parent of a node.
  * - Insert(kind, parent, index), Move(id, parent, index), Remove(id), Duplicate(id), Set(id, name, value),
  *   SetStyle(id, property, value), Clear(); Select(id) and Selected() for the selected node.
- * - The rules of CSS of the page, by context: Rules(); Rule(context) the one of {Who: node, kind or within, Node, Class,
- *   Parent, State, Width, Theme}; SetRule(context, property, value) sets a property of it (the rule comes with its
- *   first property and goes with its last); RootClass(id) is the class of the element of a node (elemenx-button), what
- *   a rule of its kind names. A node with rules of its own takes the class page-<its ID> (on a div around a Component).
+ * - The rules of CSS of the page, by context: Rules(); Rule(context) the one of {Who: node, kind or within, Node,
+ *   Class, Parent, State, Width, Theme}; SetRule(context, property, value) sets a property of it (the rule comes with
+ *   its first property and goes with its last); RootClass(id) is the class of the element of a node (elemenx-button),
+ *   what a rule of its kind names. A node with rules of its own takes the class page-<its ID> (on a div around a
+ *   Component).
  * - Template() is the document as a template of Elemenx, its rules first in a <style> (@media for the widths);
  *   Template(true, empty) the same for a canvas, every node in an element that names it (data-designer-id), a container
  *   marked (data-designer-container, data-designer-gap), an empty one holding the text empty (none when it is ''), and
  *   the rules inside the page of the canvas (@container for the widths).
  * - Import(text) reads a template back: the kinds of the palette where an element is one, any other element as it is,
  *   and the rules of its <style> (those it does not understand kept as they are).
+ * - Projects, the one being edited among them, each kept in the storage of the browser (ProjectsKey): Projects() lists
+ *   them, Create(mode, name) makes one of a mode that stays its own, template (one page), component (a Component with
+ *   its public props and slots) or application (pages and components, routes, guards and the settings of the
+ *   Application), Switch(id) edits another, RemoveProject(id) takes one away; ExportProject() is the one being edited
+ *   as the text of a file, ImportProject(text) reads one back as a new project.
+ * - Project() is the project being edited: {ID, Mode, Name, Settings, Current, Tabs, Documents, Routes, Guards}. A
+ *   document is {ID, Type (page or component), Name, Title (a page), Description and Props ([{Name, Type, Default,
+ *   Options, Description}], a component), Slots (those its Slot elements make, '' the default one), Outlet (whether it
+ *   holds the place of the pages)}; Opened() is the ID of the one being edited, Tabs those open. AddDocument(type,
+ *   name), RemoveDocument(id) (not a component another document holds: Used(id) names them), Open(id) (in a tab;
+ *   each document keeps its own history), Close(id) (its tab), SetDocument(id, name, value); Source(id) is the
+ *   template of a document.
+ * - The routes of an application: [{ID, Path, Page, Guards, Failed}], AddRoute(path, page), SetRoute(id, name,
+ *   value), RemoveRoute(id); its guards, [{Name, Description, Code}] (Code the body of the function of the guard),
+ *   AddGuard(name), SetGuard(name, field, value), RemoveGuard(name); its settings, SetSetting(name, value): Name,
+ *   Title, Description, Icon, Language, Theme, Router, Component (the component that holds the pages), NotFound and
+ *   the splash of its page: Splash ('true' or ''), SplashImage, SplashBackground, SplashColor, SplashText,
+ *   SplashSpinner, SplashMinTime and SplashHTML (its own content); and its install as an application of the system:
+ *   PWA ('true' or ''), PWAShortName, PWAIcon, PWATheme, PWADisplay and PWAOffline ('true' or '').
+ * - In an application the components of the project are kinds of the palette (group project) the document being
+ *   edited may take, but itself and those holding it; on the canvas each runs as a Component made of its document. The
+ *   kind slot (a component only) marks where the component puts what it is given, the kind outlet (a component of an
+ *   application) where the pages of the routes go.
  */
 Elemenx.Service('Designer', {
 	$Meta: {
 		Description: 'The document of a designer of pages: its nodes, their props and layout, the selection, the history and the template.',
-		Methods: ['Load(callback)', 'Use(meta)', 'Ready()', 'Literal(value)', 'Parse(expression)', 'Rules()', 'Rule(context)', 'SetRule(context, property, value)', 'RootClass(id)', 'Kinds()', 'Kind(id)', 'Label(kind)', 'Hint(kind)', 'GroupLabel(group)', 'Root()', 'Find(id)', 'Parent(id)', 'Container(id)', 'Within(id, within)', 'Slots(id)', 'Insert(kind, parent, index)', 'Move(id, parent, index)', 'Remove(id)', 'Duplicate(id)', 'Set(id, name, value)', 'SetStyle(id, property, value)', 'Clear()', 'Select(id)', 'Selected()', 'Count()', 'CanUndo()', 'CanRedo()', 'Undo()', 'Redo()', 'Template(canvas, empty)', 'Import(text)', 'OnChange(listener)', 'OffChange(listener)']
+		Methods: ['Load(callback)', 'Use(meta)', 'Ready()', 'Literal(value)', 'Parse(expression)', 'Rules()', 'Rule(context)', 'SetRule(context, property, value)', 'RootClass(id)', 'Kinds()', 'Kind(id)', 'Label(kind)', 'Hint(kind)', 'GroupLabel(group)', 'Root()', 'Find(id)', 'Parent(id)', 'Container(id)', 'Within(id, within)', 'Slots(id)', 'Insert(kind, parent, index)', 'Move(id, parent, index)', 'Remove(id)', 'Duplicate(id)', 'Set(id, name, value)', 'SetStyle(id, property, value)', 'Clear()', 'Select(id)', 'Selected()', 'Count()', 'CanUndo()', 'CanRedo()', 'Undo()', 'Redo()', 'Template(canvas, empty)', 'Import(text)', 'Project()', 'Opened()', 'Projects()', 'Create(mode, name)', 'Switch(id)', 'RemoveProject(id)', 'ExportProject()', 'ImportProject(text)', 'AddDocument(type, name)', 'RemoveDocument(id)', 'Used(id)', 'Open(id)', 'Close(id)', 'SetDocument(id, name, value)', 'AddRoute(path, page)', 'SetRoute(id, name, value)', 'RemoveRoute(id)', 'AddGuard(name)', 'SetGuard(name, field, value)', 'RemoveGuard(name)', 'SetSetting(name, value)', 'Source(id)', 'OnChange(listener)', 'OffChange(listener)']
 	},
 	Library: 'ElemenxUI',
 	StorageKey: 'elemenx-designer:document',
+	ProjectKey: 'elemenx-designer:project',
+	ProjectsKey: 'elemenx-designer:projects',
 	Groups: ['layout', 'text', 'inputs', 'buttons', 'navigation', 'display', 'data', 'overlays', 'social', 'commerce', 'music', 'game'],
 
 	/* The layout a node may set, in the order of its style; the last five in a flex container only. */
@@ -55,6 +83,19 @@ Elemenx.Service('Designer', {
 		var selected = null;
 		var state = 'idle';
 		var waiting = [];
+
+		/*
+		 * The project: its documents and the one being edited (its tree is root, kept in its Root on every change), the
+		 * history of each other one, and the Components the canvas made of its components, by what they are made of.
+		 */
+		var store = {Current: '', Projects: {}};
+		var project = null;
+		var old;
+		var histories = {};
+		var parts = {};
+		var made = 0;
+		var building = [];
+		var aliasing = false;
 
 		/* The names of the components of an imported template, by the name HTML gives their elements (elemenx-c-<name>). */
 		var named = {};
@@ -161,6 +202,12 @@ Elemenx.Service('Designer', {
 				}},
 			{ID: 'document', Group: 'text', Icon: 'file-text', Tag: 'div', Base: 'elemenx-document', Container: true, Gap: true, Props: {}, Fields: []},
 
+			/* In a component of the project: where it puts what it is given, the slot of its Name ('' the default one). */
+			{ID: 'slot', Group: 'layout', Icon: 'login', Tag: 'slot', Props: {Name: ''}, Fields: [{Name: 'Name', Type: 'text'}]},
+
+			/* In the component of an application: where the page of the route goes (*outlet). */
+			{ID: 'outlet', Group: 'layout', Icon: 'file', Tag: 'div', Props: {}, Fields: []},
+
 			/* Not in the palette: what an imported template holds besides the kinds of the palette, kept as it is. */
 			{ID: 'element', Group: '', Icon: 'code', Tag: 'div', Container: true, Gap: true, Props: {Tag: 'div', Attributes: ''}, Fields: [{Name: 'Tag', Type: 'text'}, {Name: 'Attributes', Type: 'text'}]},
 			{ID: 'text', Group: '', Icon: 'text-color', Tag: '', Text: '', Props: {}, Fields: []}
@@ -172,6 +219,381 @@ Elemenx.Service('Designer', {
 			return JSON.parse(JSON.stringify(value));
 		}
 
+		function fresh () {
+			return {ID: 'root', Kind: 'root', Props: {}, Text: '', Children: []};
+		}
+
+		/* The ID of a new project: the time it was made and a few letters of chance. */
+		function identity () {
+			return 'p' + Date.now().toString(36) + Math.random().toString(36).substring(2, 6);
+		}
+
+		function settings (name) {
+			return {Title: name || 'App', Description: '', Icon: '', Language: 'en', Theme: '', Router: 'history', Component: '', NotFound: '', Splash: '', SplashImage: '', SplashBackground: '', SplashColor: '', SplashText: '', SplashSpinner: 'true', SplashMinTime: '0', SplashHTML: '', PWA: '', PWAShortName: '', PWAIcon: '', PWATheme: '', PWADisplay: 'standalone', PWAOffline: 'true'};
+		}
+
+		/* A new project of a mode: one page (a template), one component, or a page Home on the route / (an application). */
+		function blank (mode, name) {
+			var item = mode === 'component' ? {ID: 'd1', Type: 'component', Name: /^[A-Z][A-Za-z0-9]*$/.test(name) ? name : 'MyComponent', Title: '', Description: '', Props: [], Root: null} : {ID: 'd1', Type: 'page', Name: 'Home', Title: 'Home', Description: '', Props: [], Root: null};
+
+			return {ID: identity(), Mode: mode, Name: name || (mode === 'component' ? item.Name : 'App'), Settings: settings(name), Documents: [item], Current: 'd1', Tabs: ['d1'], Routes: mode === 'application' ? [{ID: 'r1', Path: '/', Page: 'd1', Guards: [], Failed: ''}] : [], Guards: [], Changed: Date.now()};
+		}
+
+		function valid (entry) {
+			return !!entry && Object.prototype.toString.call(entry.Documents) === '[object Array]' && entry.Documents.length > 0 && !!entry.Settings;
+		}
+
+		/* A project kept by an earlier designer: its routes from the Route of its pages, its tabs, guards and settings. */
+		function upgrade (entry) {
+			var base = settings(entry.Name);
+			var count = 0;
+
+			entry.ID = entry.ID || identity();
+			entry.Mode = ['template', 'component', 'application'].indexOf(entry.Mode) === -1 ? 'template' : entry.Mode;
+			entry.Guards = entry.Guards || [];
+
+			if (!entry.Routes) {
+				entry.Routes = [];
+
+				entry.Documents.forEach(function (item) {
+					if (item.Type === 'page' && item.Route) {
+						count++;
+
+						entry.Routes.push({ID: 'r' + count, Path: item.Route, Page: item.ID, Guards: [], Failed: ''});
+					}
+				});
+			}
+
+			entry.Documents.forEach(function (item) {
+				delete item.Route;
+			});
+
+			Object.keys(base).forEach(function (key) {
+				if (entry.Settings[key] === undefined)
+					entry.Settings[key] = base[key];
+			});
+
+			entry.Tabs = (entry.Tabs || [entry.Current]).filter(function (id) {
+				return entry.Documents.some(function (item) {
+					return item.ID === id;
+				});
+			});
+
+			if (!entry.Tabs.length)
+				entry.Tabs = [entry.Documents[0].ID];
+
+			return entry;
+		}
+
+		/* The project being edited kept among the others, its tree in its document. */
+		function keep () {
+			opened().Root = root;
+			store.Projects[project.ID] = project;
+			store.Current = project.ID;
+		}
+
+		/* Another project to edit: its first tab open, nothing selected, no history yet. */
+		function use (entry) {
+			project = entry;
+
+			if (!opened())
+				project.Current = project.Tabs[0] || project.Documents[0].ID;
+
+			root = opened().Root || fresh();
+			histories = {};
+			past = [];
+			future = [];
+			selected = null;
+			typing.Key = '';
+
+			project.Documents.forEach(function (item) {
+				next = Math.max(next, highest(treeOf(item)) + 1);
+			});
+
+			keep();
+		}
+
+		function guardOf (name) {
+			return project.Guards.filter(function (guard) {
+				return guard.Name === name;
+			})[0] || null;
+		}
+
+		/* Whether a tree holds the place of the pages (the kind outlet). */
+		function holdsOutlet (tree) {
+			return tree.Kind === 'outlet' || tree.Children.some(holdsOutlet);
+		}
+
+		/* A path as a route has it: from /, without spaces around. */
+		function normal (path) {
+			return '/' + String(path || '').trim().replace(/^\/+/, '');
+		}
+
+		function taken (path, except) {
+			return project.Routes.some(function (route) {
+				return route.ID !== except && route.Path === path;
+			});
+		}
+
+		function routeID () {
+			return 'r' + (Math.max.apply(Math, [0].concat(project.Routes.map(function (route) {
+				return Number(String(route.ID).substring(1)) || 0;
+			}))) + 1);
+		}
+
+		function documentOf (id) {
+			return project.Documents.filter(function (item) {
+				return item.ID === id;
+			})[0] || null;
+		}
+
+		function opened () {
+			return documentOf(project.Current);
+		}
+
+		/* The tree of a document: root for the one being edited. */
+		function treeOf (item) {
+			if (item.ID === project.Current) return root;
+
+			item.Root = item.Root || fresh();
+
+			return item.Root;
+		}
+
+		/* The names of the slots the Slot elements of a tree make, '' for the default one, each once. */
+		function slotsOf (tree) {
+			var names = [];
+
+			function walk (node) {
+				if (node.Kind === 'slot' && names.indexOf(node.Props.Name || '') === -1)
+					names.push(node.Props.Name || '');
+
+				node.Children.forEach(walk);
+			}
+
+			walk(tree);
+
+			return names;
+		}
+
+		/* Whether the tree of a document holds the component name: itself, or inside a component of the project it holds. */
+		function holds (item, name, seen) {
+			var found = false;
+
+			seen = seen || [];
+
+			if (seen.indexOf(item.ID) !== -1) return false;
+
+			seen.push(item.ID);
+
+			function walk (node) {
+				var inner = byID[node.Kind] && byID[node.Kind].Project ? documentOf(byID[node.Kind].Project) : null;
+
+				if (found) return;
+
+				if (node.Kind === name || (inner && holds(inner, name, seen))) found = true;
+				else node.Children.forEach(walk);
+			}
+
+			walk(treeOf(item));
+
+			return found;
+		}
+
+		/* Whether the document being edited may take a component of the project: not itself, nor one that holds it. */
+		function usable (kind) {
+			var item = documentOf(kind.Project);
+			var own = opened();
+
+			return !!item && item.ID !== own.ID && (own.Type !== 'component' || !holds(item, own.Name));
+		}
+
+		/* A component of the project as a kind: its props as fields, their defaults as the first values. */
+		function projectKind (item) {
+			var slots = slotsOf(treeOf(item));
+			var kind = {ID: item.Name, Group: 'project', Icon: 'layout', Tag: item.Name, Component: true, Project: item.ID, Container: slots.length > 0, Description: item.Description || '', Slots: slots.filter(Boolean), Children: [], Current: '', Props: {}, Fields: []};
+
+			(item.Props || []).forEach(function (prop) {
+				var field = {Name: prop.Name, Type: prop.Type, Schema: null, Description: prop.Description || '', Default: prop.Default};
+
+				if (prop.Type === 'select')
+					field.Options = (prop.Options || []).indexOf(prop.Default) === -1 ? [prop.Default].concat(prop.Options || []) : prop.Options.slice();
+
+				kind.Fields.push(field);
+
+				kind.Props[prop.Name] = prop.Default;
+			});
+
+			return kind;
+		}
+
+		/* The kinds of the components of the project, made again on every change: their slots come from their trees. */
+		function refresh () {
+			kinds = kinds.filter(function (kind) {
+				return !kind.Project;
+			});
+
+			project.Documents.forEach(function (item) {
+				if (item.Type === 'component')
+					kinds.push(projectKind(item));
+			});
+
+			byID = {};
+
+			kinds.forEach(function (kind) {
+				byID[kind.ID] = kind;
+			});
+		}
+
+		/* Runs with the tree of another document as root: its nodes, its rules. */
+		function within (tree, run) {
+			var saved = root;
+
+			root = tree;
+
+			try {
+				return run();
+			}
+			finally {
+				root = saved;
+			}
+		}
+
+		/*
+		 * The Component that shows a component of the project on the canvas, made of its document (its template with its
+		 * rules, its props with their defaults) under a name of its own, made again when what it is made of changes.
+		 */
+		function part (definition) {
+			var item = documentOf(definition.Project);
+			var values = {};
+			var source;
+			var key;
+
+			if (!item || building.indexOf(item.ID) !== -1) return 'div';
+
+			building.push(item.ID);
+
+			try {
+				source = within(treeOf(item), function () {
+					return template(false, '');
+				});
+			}
+			finally {
+				building.pop();
+			}
+
+			key = JSON.stringify([item.Name, item.Props, source]);
+
+			if (!parts[key]) {
+				(item.Props || []).forEach(function (prop) {
+					var value = prop.Type === 'json' ? self.Parse(String(prop.Default || 'null')) : prop.Default;
+
+					values[prop.Name] = value === undefined ? null : value;
+				});
+
+				made++;
+
+				values.$Template = '<div class="elemenx-designer-part">' + source + '</div>';
+				parts[key] = 'DesignerPart' + made;
+
+				Elemenx.Component(parts[key], values);
+			}
+
+			return parts[key];
+		}
+
+		/* Whether a name is free for a document of a type: a component a name of a Component no other kind has. */
+		function free (type, name, except) {
+			var taken = project.Documents.some(function (item) {
+				return item.ID !== except && item.Type === type && item.Name === name;
+			});
+			if (taken || !name) return false;
+
+			if (type === 'page') return true;
+
+			return /^[A-Z][A-Za-z0-9]*$/.test(name) && (!byID[name] || byID[name].Project === except);
+		}
+
+		/* The route of a new page: / for the first, its name in small letters for the others, the same never twice. */
+		function routeOf (name) {
+			var base = '/' + String(name).toLowerCase().replace(/[^a-z0-9Ѐ-ӿ]+/g, '-').replace(/^-+|-+$/g, '');
+			var route = base;
+			var count = 2;
+
+			if (!taken('/', null)) return '/';
+
+			while (taken(route, null)) {
+				route = base + '-' + count;
+
+				count++;
+			}
+
+			return route;
+		}
+
+		/* The props of a component as it declares them: names of JavaScript, each once, their defaults of their type. */
+		function declare (props) {
+			var names = [];
+			var result = [];
+			var valid = Object.prototype.toString.call(props) === '[object Array]';
+
+			(valid ? props : []).forEach(function (prop) {
+				var type = ['text', 'number', 'bool', 'select', 'json'].indexOf(prop && prop.Type) === -1 ? 'text' : prop.Type;
+				var name = String(prop && prop.Name || '').trim();
+				var value = prop.Default;
+				var options = typeof prop.Options === 'string' ? list(prop.Options) : (prop.Options || []).map(String);
+
+				if (!/^[A-Za-z_][\w]*$/.test(name) || names.indexOf(name) !== -1) {
+					valid = false;
+
+					return;
+				}
+
+				names.push(name);
+
+				if (type === 'bool') value = value === true || value === 'true';
+				else if (type === 'number') value = Number(value) || 0;
+				else value = value === null || value === undefined ? '' : String(value);
+
+				if (type === 'select' && options.indexOf(value) === -1)
+					value = options[0] || '';
+
+				result.push({Name: name, Type: type, Default: value, Options: type === 'select' ? options : [], Description: String(prop.Description || '')});
+			});
+
+			return valid ? result : null;
+		}
+
+		/* A component renamed: the nodes of every document and of every history take the new name. */
+		function rename (old, name) {
+			var from = '"Kind":' + JSON.stringify(old);
+			var to = '"Kind":' + JSON.stringify(name);
+
+			function walk (node) {
+				if (node.Kind === old)
+					node.Kind = name;
+
+				node.Children.forEach(walk);
+			}
+
+			function swap (entries) {
+				return entries.map(function (entry) {
+					return entry.split(from).join(to);
+				});
+			}
+
+			project.Documents.forEach(function (item) {
+				walk(treeOf(item));
+			});
+
+			past = swap(past);
+			future = swap(future);
+
+			Object.keys(histories).forEach(function (id) {
+				histories[id] = {Past: swap(histories[id].Past), Future: swap(histories[id].Future)};
+			});
+		}
+
 		/* A Component of the Library as a kind, from its meta: its props as fields, its sample as the first values. */
 		function component (meta) {
 			var kind = {ID: meta.Name, Group: meta.Group || 'other', Icon: meta.Icon || 'code', Tag: meta.Name, Component: true, Container: !!meta.Container, Description: meta.Description || '', Slots: (meta.Slots || []).slice(), Children: (meta.Children || []).slice(), Current: meta.Current || '', Props: {}, Fields: []};
@@ -179,7 +601,7 @@ Elemenx.Service('Designer', {
 
 			(meta.Props || []).forEach(function (prop) {
 				var type = ['bool', 'number', 'text', 'select'].indexOf(prop.Type) !== -1 ? prop.Type : 'json';
-				var field = {Name: prop.Name, Type: type, Schema: prop.Schema || null, Description: prop.Description || ''};
+				var field = {Name: prop.Name, Type: type, Schema: prop.Schema || null, Body: !!prop.Body && type === 'text', Description: prop.Description || ''};
 				var value = Object.prototype.hasOwnProperty.call(sample, prop.Name) ? sample[prop.Name] : prop.Default;
 
 				if (type === 'json') {
@@ -245,11 +667,8 @@ Elemenx.Service('Designer', {
 			});
 
 			kinds = kinds.concat((meta && meta.Components || []).map(component));
-			byID = {};
 
-			kinds.forEach(function (kind) {
-				byID[kind.ID] = kind;
-			});
+			refresh();
 		}
 
 		function find (node, id) {
@@ -315,8 +734,13 @@ Elemenx.Service('Designer', {
 		}
 
 		function save () {
+			project.Changed = Date.now();
+
+			keep();
+
 			try {
 				window.localStorage.setItem(self.StorageKey, JSON.stringify(root));
+				window.localStorage.setItem(self.ProjectsKey, JSON.stringify(store));
 			}
 			catch (error) {
 				return;
@@ -332,6 +756,8 @@ Elemenx.Service('Designer', {
 		function changed () {
 			if (selected && !find(root, selected))
 				selected = null;
+
+			refresh();
 
 			save();
 
@@ -501,7 +927,7 @@ Elemenx.Service('Designer', {
 				var value = node.Props[field.Name];
 				var name = definition.Base === undefined ? field.Name : field.Name.toLowerCase();
 
-				if (field.Class || definition.TagOf || definition.Inner || node.Kind === 'element' || (current && field.Name === definition.Current)) return;
+				if (field.Class || field.Body || definition.TagOf || definition.Inner || node.Kind === 'element' || (current && field.Name === definition.Current)) return;
 
 				if (value === null || value === undefined) return;
 
@@ -541,9 +967,42 @@ Elemenx.Service('Designer', {
 			});
 		}
 
+		/* The field of a kind written as the body of its element (Body), or null. */
+		function bodyOf (definition) {
+			return (definition.Fields || []).filter(function (field) {
+				return field.Body;
+			})[0] || null;
+		}
+
+		/* The text of a body: its lines without the indentation they share, without the blank lines around them. */
+		function dedent (value) {
+			var lines = String(value || '').replace(/\r\n?/g, '\n').split('\n');
+			var indent = null;
+
+			while (lines.length && !lines[0].trim()) {
+				lines.shift();
+			}
+
+			while (lines.length && !lines[lines.length - 1].trim()) {
+				lines.pop();
+			}
+
+			lines.forEach(function (line) {
+				var lead = /^[ \t]*/.exec(line)[0];
+				if (line.trim() && (indent === null || lead.length < indent.length))
+					indent = lead;
+			});
+
+			return lines.map(function (line) {
+				return indent && line.indexOf(indent) === 0 ? line.substring(indent.length) : line.replace(/^[ \t]+$/, '');
+			}).join('\n');
+		}
+
 		function tagOf (node, definition) {
 			if (node.Kind === 'element')
 				return node.Props.Tag || 'div';
+
+			if (definition.Project && aliasing) return part(definition);
 
 			return definition.TagOf ? definition.TagOf(node.Props) : definition.Tag;
 		}
@@ -639,10 +1098,24 @@ Elemenx.Service('Designer', {
 			if (node.Kind === 'text')
 				return indent + text(node.Text);
 
+			/* The place of the pages: on the canvas a place that says it, in the template the outlet of the router. */
+			if (node.Kind === 'outlet')
+				return indent + (canvas ? '<div class="elemenx-designer-outlet">' + text(Elemenx.Locale.Text('ui.designer.outlet')) + '</div>' : '<div class="elemenx-column fill" *outlet="Content"></div>');
+
+			/* A slot of a component: on the canvas a place that names it. */
+			if (node.Kind === 'slot')
+				return indent + (canvas ? '<div class="elemenx-designer-slot">' + text(node.Props.Name || Elemenx.Locale.Text('ui.designer.slotDefault')) + '</div>' : '<slot' + (node.Props.Name ? ' name="' + escape(node.Props.Name) + '"' : '') + '></slot>');
+
 			if (!canvas && node.Kind === 'element' && node.Children.length && node.Children.every(inline))
 				return indent + '<' + tag + attributes(node, definition, false, false) + '>' + node.Children.map(line).join(' ') + '</' + tag + '>';
 
 			open = '<' + tag + attributes(node, definition, canvas, wrapped);
+
+			if (bodyOf(definition) && String(node.Props[bodyOf(definition).Name] || ''))
+				return indent + open + '>\n' + String(node.Props[bodyOf(definition).Name]).split('\n').map(function (line) {
+					return line ? indent + '\t' + text(line) : '';
+				}).join('\n') + '\n' + indent + '</' + tag + '>';
+
 			inner = definition.Inner ? definition.Inner(node.Props).map(function (child) {
 				return indent + '\t' + child;
 			}) : node.Children.map(function (child) {
@@ -698,6 +1171,10 @@ Elemenx.Service('Designer', {
 			var names = (element.getAttribute('class') || '').split(/\s+/).filter(Boolean);
 			var found = null;
 			var score = -1;
+
+			if (tag === 'slot') return 'slot';
+
+			if (element.hasAttribute('*outlet')) return 'outlet';
 
 			if (tag.indexOf(prefix) === 0) {
 				tag = tag.substring(prefix.length);
@@ -864,6 +1341,9 @@ Elemenx.Service('Designer', {
 					});
 				});
 			}
+
+			if (bodyOf(definition) && !element.hasAttribute(bodyOf(definition).Name.toLowerCase()) && !element.hasAttribute('[' + bodyOf(definition).Name.toLowerCase() + ']') && element.textContent.trim())
+				node.Props[bodyOf(definition).Name] = dedent(element.textContent.split('{{ \'{{\' }}').join('{{'));
 
 			if (definition.Text !== undefined) node.Text = element.textContent.trim();
 			else if (definition.Container) node.Children = children(element);
@@ -1192,16 +1672,26 @@ Elemenx.Service('Designer', {
 			return state === 'ready';
 		};
 
+		/* The kinds by group: the slot in a component only, the components of the project in an application only. */
 		this.Kinds = function () {
 			var groups = self.Groups.slice();
+			var shown = kinds.filter(function (kind) {
+				if (kind.ID === 'slot')
+					return opened().Type === 'component';
 
-			kinds.forEach(function (kind) {
+				if (kind.ID === 'outlet')
+					return opened().Type === 'component' && project.Mode === 'application';
+
+				return !kind.Project || (project.Mode === 'application' && usable(kind));
+			});
+
+			shown.forEach(function (kind) {
 				if (kind.Group && groups.indexOf(kind.Group) === -1)
 					groups.push(kind.Group);
 			});
 
 			return groups.map(function (group) {
-				return {ID: group, Kinds: kinds.filter(function (kind) {
+				return {ID: group, Kinds: shown.filter(function (kind) {
 					return kind.Group === group;
 				})};
 			}).filter(function (group) {
@@ -1300,7 +1790,7 @@ Elemenx.Service('Designer', {
 			var target = find(root, parent || 'root');
 			var node;
 
-			if (!byID[kind] || !target || !this.Container(target.ID)) return null;
+			if (!byID[kind] || !target || !this.Container(target.ID) || (byID[kind].Project && !usable(byID[kind]))) return null;
 
 			remember();
 
@@ -1462,13 +1952,25 @@ Elemenx.Service('Designer', {
 		 * The document as a template, its rules first in a <style>; for the canvas (canvas true) every node is wrapped and an
 		 * empty container says so with the text empty (none without one).
 		 */
-		this.Template = function (canvas, empty) {
+		function template (canvas, empty) {
 			var css = sheet(!!canvas);
 			var body = root.Children.map(function (node) {
 				return render(node, 0, !!canvas, empty || '');
 			}).join('\n');
 
 			return css && body ? css + '\n' + body : css || body;
+		}
+
+		/* On the canvas the components of the project are the Components made of their documents (part). */
+		this.Template = function (canvas, empty) {
+			aliasing = !!canvas;
+
+			try {
+				return template(canvas, empty);
+			}
+			finally {
+				aliasing = false;
+			}
 		};
 
 		/* Reads a template into the document, in place of what it held; false when the text holds no element. */
@@ -1600,6 +2102,509 @@ Elemenx.Service('Designer', {
 			return found;
 		};
 
+		/*
+		 * The project as it is (a copy): its ID, its mode, its name, its settings, the tabs open, its documents (with the
+		 * slots of each), its routes and its guards.
+		 */
+		this.Project = function () {
+			return {
+				ID: project.ID,
+				Mode: project.Mode,
+				Name: project.Name,
+				Settings: clone(project.Settings),
+				Current: project.Current,
+				Tabs: project.Tabs.slice(),
+				Documents: project.Documents.map(function (item) {
+					return {ID: item.ID, Type: item.Type, Name: item.Name, Title: item.Title || '', Description: item.Description || '', Props: clone(item.Props || []), Slots: slotsOf(treeOf(item)), Outlet: holdsOutlet(treeOf(item))};
+				}),
+				Routes: clone(project.Routes),
+				Guards: clone(project.Guards)
+			};
+		};
+
+		this.Opened = function () {
+			return project.Current;
+		};
+
+		/* The projects kept, the last changed first: [{ID, Name, Mode, Changed, Current}]. */
+		this.Projects = function () {
+			keep();
+
+			return Object.keys(store.Projects).map(function (id) {
+				var entry = store.Projects[id];
+
+				return {ID: id, Name: entry.Name, Mode: entry.Mode, Changed: entry.Changed || 0, Current: id === project.ID};
+			}).sort(function (first, second) {
+				return second.Changed - first.Changed;
+			});
+		};
+
+		/*
+		 * A new project of a mode, edited at once: a template (one page), a component (one component, its props and slots)
+		 * or an application (a page Home on the route /, with its settings). Its ID, or null for a mode that is not one.
+		 */
+		this.Create = function (mode, name) {
+			if (['template', 'component', 'application'].indexOf(mode) === -1) return null;
+
+			keep();
+
+			use(blank(mode, String(name || '').trim()));
+
+			changed();
+
+			return project.ID;
+		};
+
+		/* Edits another project kept: the one being edited is kept as it is. False when there is no such project. */
+		this.Switch = function (id) {
+			if (id === project.ID || !store.Projects[id]) return false;
+
+			keep();
+
+			use(clone(store.Projects[id]));
+
+			changed();
+
+			return true;
+		};
+
+		/* Takes a project away for good; the one being edited gives way to the last changed other one, or to a new template. */
+		this.RemoveProject = function (id) {
+			var others;
+
+			keep();
+
+			if (!store.Projects[id]) return false;
+
+			delete store.Projects[id];
+
+			if (id === project.ID) {
+				others = Object.keys(store.Projects).sort(function (first, second) {
+					return (store.Projects[second].Changed || 0) - (store.Projects[first].Changed || 0);
+				});
+
+				use(others.length ? clone(store.Projects[others[0]]) : blank('template', ''));
+			}
+
+			changed();
+
+			return true;
+		};
+
+		/* The project being edited as the text of a file (JSON), to keep or to carry to another browser. */
+		this.ExportProject = function () {
+			keep();
+
+			return JSON.stringify({Elemenx: 'designer-project', Version: 1, Project: store.Projects[project.ID]}, null, '\t');
+		};
+
+		/* A project read from the text of a file, kept beside the others under an ID of its own and edited; its ID, or null. */
+		this.ImportProject = function (text) {
+			var data;
+
+			try {
+				data = JSON.parse(String(text || ''));
+			}
+			catch (error) {
+				return null;
+			}
+
+			if (!data || data.Elemenx !== 'designer-project' || !valid(data.Project)) return null;
+
+			keep();
+
+			data.Project.ID = identity();
+
+			use(upgrade(data.Project));
+
+			changed();
+
+			return project.ID;
+		};
+
+		/*
+		 * A new document, page or component (or, in an application, a page gets a route of its own), named name (or by its
+		 * number); its ID, or null when the name is taken. It is not opened.
+		 */
+		this.AddDocument = function (type, name) {
+			var number = project.Documents.length + 1;
+			var item;
+
+			if (type !== 'page' && type !== 'component') return null;
+
+			if (name === undefined || name === null || name === '') {
+				name = type === 'page' ? 'Page ' + number : 'Component' + number;
+
+				while (!free(type, name, null)) {
+					number++;
+
+					name = type === 'page' ? 'Page ' + number : 'Component' + number;
+				}
+			}
+
+			name = String(name).trim();
+
+			if (!free(type, name, null)) return null;
+
+			item = {ID: 'd' + (Math.max.apply(Math, project.Documents.map(function (entry) {
+				return Number(String(entry.ID).substring(1)) || 0;
+			})) + 1), Type: type, Name: name, Title: type === 'page' ? name : '', Description: '', Props: [], Root: fresh()};
+
+			project.Documents.push(item);
+
+			if (type === 'page' && project.Mode === 'application')
+				project.Routes.push({ID: routeID(), Path: routeOf(name), Page: item.ID, Guards: [], Failed: ''});
+
+			changed();
+
+			return item.ID;
+		};
+
+		/* The names of the documents that hold a component of the project. */
+		this.Used = function (id) {
+			var item = documentOf(id);
+			if (!item || item.Type !== 'component') return [];
+
+			return project.Documents.filter(function (other) {
+				return other.ID !== id && holds(other, item.Name);
+			}).map(function (other) {
+				return other.Name;
+			});
+		};
+
+		/*
+		 * Removes a document (never the last one, nor a component another one holds), with its tab, its routes and the
+		 * settings that name it; the one being edited gives way to another.
+		 */
+		this.RemoveDocument = function (id) {
+			var item = documentOf(id);
+			if (!item || project.Documents.length < 2 || this.Used(id).length) return false;
+
+			if (id === project.Current)
+				this.Open(project.Tabs.filter(function (tab) {
+					return tab !== id;
+				})[0] || project.Documents.filter(function (other) {
+					return other.ID !== id;
+				})[0].ID);
+
+			project.Documents = project.Documents.filter(function (other) {
+				return other !== item;
+			});
+			project.Tabs = project.Tabs.filter(function (tab) {
+				return tab !== id;
+			});
+			project.Routes = project.Routes.filter(function (route) {
+				return route.Page !== id;
+			});
+
+			project.Routes.forEach(function (route) {
+				if (route.Failed === id)
+					route.Failed = '';
+			});
+
+			['Component', 'NotFound'].forEach(function (key) {
+				if (project.Settings[key] === id)
+					project.Settings[key] = '';
+			});
+
+			delete histories[id];
+
+			changed();
+
+			return true;
+		};
+
+		/*
+		 * Edits another document, in a tab of its own (one more when it has none): the tree of the one being edited and
+		 * its history are kept for when it comes back.
+		 */
+		this.Open = function (id) {
+			var item = documentOf(id);
+			if (!item)
+				return false;
+
+			if (project.Tabs.indexOf(id) === -1)
+				project.Tabs.push(id);
+
+			if (id === project.Current) {
+				changed();
+
+				return true;
+			}
+
+			histories[project.Current] = {Past: past, Future: future};
+			opened().Root = root;
+			project.Current = id;
+			root = item.Root || fresh();
+			past = histories[id] ? histories[id].Past : [];
+			future = histories[id] ? histories[id].Future : [];
+			typing.Key = '';
+			selected = null;
+
+			changed();
+
+			return true;
+		};
+
+		/* Closes the tab of a document (never the last one); the one being edited gives way to the tab beside it. */
+		this.Close = function (id) {
+			var at = project.Tabs.indexOf(id);
+			if (at === -1 || project.Tabs.length < 2) return false;
+
+			project.Tabs.splice(at, 1);
+
+			if (id === project.Current) this.Open(project.Tabs[Math.min(at, project.Tabs.length - 1)]);
+			else changed();
+
+			return true;
+		};
+
+		/*
+		 * Sets what a document is: its Name (a component a name of a Component no other kind has: the nodes that hold it
+		 * follow), its Title (a page: the title of the window on its routes), its Description and Props (a component).
+		 * False when the value is not one.
+		 */
+		this.SetDocument = function (id, name, value) {
+			var item = documentOf(id);
+			if (!item || ['Name', 'Title', 'Description', 'Props'].indexOf(name) === -1) return false;
+
+			if (name === 'Name') {
+				value = String(value || '').trim();
+
+				if (value === item.Name) return true;
+
+				if (!free(item.Type, value, item.ID)) return false;
+
+				if (item.Type === 'component')
+					rename(item.Name, value);
+			}
+			else if (name === 'Props') {
+				value = declare(value);
+
+				if (!value)
+					return false;
+			}
+			else {
+				value = String(value || '');
+			}
+
+			item[name] = value;
+
+			changed();
+
+			return true;
+		};
+
+		/* A new route to a page (its first one by default): its ID, or null without a page or with a path taken. */
+		this.AddRoute = function (path, page) {
+			var target = documentOf(page) || project.Documents.filter(function (item) {
+				return item.Type === 'page';
+			})[0];
+			var route;
+
+			if (!target || target.Type !== 'page') return null;
+
+			path = path ? normal(path) : routeOf(target.Name);
+
+			if (taken(path, null)) return null;
+
+			route = {ID: routeID(), Path: path, Page: target.ID, Guards: [], Failed: ''};
+
+			project.Routes.push(route);
+
+			changed();
+
+			return route.ID;
+		};
+
+		/*
+		 * Sets a field of a route: Path (another route's never), Page (a page), Guards (the names of guards of the project,
+		 * asked in their order), or Failed (the page shown when a guard refuses, '' for none). False when the value is not one.
+		 */
+		this.SetRoute = function (id, name, value) {
+			var route = project.Routes.filter(function (entry) {
+				return entry.ID === id;
+			})[0];
+			var names = project.Guards.map(function (guard) {
+				return guard.Name;
+			});
+
+			if (!route)
+				return false;
+
+			if (name === 'Path') {
+				value = normal(value);
+
+				if (taken(value, id)) return false;
+			}
+			else if (name === 'Page' || name === 'Failed') {
+				if (!(name === 'Failed' && !value) && !(documentOf(value) && documentOf(value).Type === 'page')) return false;
+			}
+			else if (name === 'Guards') {
+				value = (value || []).filter(function (guard, index, list) {
+					return names.indexOf(guard) !== -1 && list.indexOf(guard) === index;
+				});
+			}
+			else {
+				return false;
+			}
+
+			route[name] = value;
+
+			changed();
+
+			return true;
+		};
+
+		this.RemoveRoute = function (id) {
+			var count = project.Routes.length;
+
+			project.Routes = project.Routes.filter(function (route) {
+				return route.ID !== id;
+			});
+
+			if (count === project.Routes.length) return false;
+
+			changed();
+
+			return true;
+		};
+
+		/*
+		 * A new guard of the application, a function that answers whether a route may open: true, false, a path to go to
+		 * instead, or this.$Fail(reason). Code is its body; a new one lets every navigation through. Its name, or null
+		 * when it is taken.
+		 */
+		this.AddGuard = function (name) {
+			var count = project.Guards.length + 1;
+
+			if (!name) {
+				name = 'Guard' + count;
+
+				while (guardOf(name)) {
+					count++;
+
+					name = 'Guard' + count;
+				}
+			}
+
+			if (!/^[A-Z][A-Za-z0-9]*$/.test(name) || guardOf(name)) return null;
+
+			project.Guards.push({Name: name, Description: '', Code: 'return true;'});
+
+			changed();
+
+			return name;
+		};
+
+		/* Sets the Name (the routes follow), the Description or the Code of a guard. False when the value is not one. */
+		this.SetGuard = function (name, field, value) {
+			var guard = guardOf(name);
+			if (!guard || ['Name', 'Description', 'Code'].indexOf(field) === -1) return false;
+
+			value = String(value === null || value === undefined ? '' : value);
+
+			if (field === 'Name') {
+				value = value.trim();
+
+				if (value === name) return true;
+
+				if (!/^[A-Z][A-Za-z0-9]*$/.test(value) || guardOf(value)) return false;
+
+				project.Routes.forEach(function (route) {
+					route.Guards = route.Guards.map(function (entry) {
+						return entry === name ? value : entry;
+					});
+				});
+			}
+
+			guard[field] = value;
+
+			changed();
+
+			return true;
+		};
+
+		/* Takes a guard away, from the routes too. */
+		this.RemoveGuard = function (name) {
+			if (!guardOf(name)) return false;
+
+			project.Guards = project.Guards.filter(function (guard) {
+				return guard.Name !== name;
+			});
+
+			project.Routes.forEach(function (route) {
+				route.Guards = route.Guards.filter(function (entry) {
+					return entry !== name;
+				});
+			});
+
+			changed();
+
+			return true;
+		};
+
+		/*
+		 * Sets a setting of the Application: Name, Title, Description, Icon (the URL of its icon), Language, Theme ('',
+		 * light or dark), Router (history, hash or memory), Component (the component of the project that holds the pages:
+		 * one with a place for them, '' for none), NotFound (the page of a path no route has, '' for the first page), or the
+		 * splash: Splash and SplashSpinner ('true' or ''), SplashMinTime (milliseconds), SplashImage, SplashBackground,
+		 * SplashColor, SplashText and SplashHTML, or the PWA: PWA and PWAOffline ('true' or ''), PWADisplay (standalone,
+		 * fullscreen, minimal-ui or browser), PWAShortName, PWAIcon and PWATheme.
+		 */
+		this.SetSetting = function (name, value) {
+			var item;
+
+			value = String(value === null || value === undefined ? '' : value).trim();
+
+			if (name === 'Name') {
+				if (!value || value === project.Name) return false;
+
+				project.Name = value;
+			}
+			else if (name === 'Component' || name === 'NotFound') {
+				item = value ? documentOf(value) : null;
+
+				if (value && (!item || item.Type !== (name === 'Component' ? 'component' : 'page'))) return false;
+
+				project.Settings[name] = value;
+			}
+			else if (['Title', 'Description', 'Icon', 'Language', 'Theme', 'Router', 'SplashImage', 'SplashBackground', 'SplashColor', 'SplashText', 'SplashHTML', 'PWAShortName', 'PWAIcon', 'PWATheme'].indexOf(name) !== -1) {
+				project.Settings[name] = value;
+			}
+			else if (name === 'PWADisplay') {
+				if (['standalone', 'fullscreen', 'minimal-ui', 'browser'].indexOf(value) === -1) return false;
+
+				project.Settings[name] = value;
+			}
+			else if (name === 'Splash' || name === 'SplashSpinner' || name === 'PWA' || name === 'PWAOffline') {
+				project.Settings[name] = value === 'true' ? 'true' : '';
+			}
+			else if (name === 'SplashMinTime') {
+				if (!/^\d+$/.test(value || '0')) return false;
+
+				project.Settings[name] = value || '0';
+			}
+			else {
+				return false;
+			}
+
+			changed();
+
+			return true;
+		};
+
+		/* The template of a document, as Template() is the one of the document being edited. */
+		this.Source = function (id) {
+			var item = documentOf(id);
+			if (!item)
+				return '';
+
+			return within(treeOf(item), function () {
+				return template(false, '');
+			});
+		};
+
 		this.OnChange = function (listener) {
 			listeners.push(listener);
 		};
@@ -1610,16 +2615,41 @@ Elemenx.Service('Designer', {
 				listeners.splice(index, 1);
 		};
 
-		prepare(null);
-
+		/* The projects and the document as they were left: the document is the one of the project being edited. */
 		try {
+			store = JSON.parse(window.localStorage.getItem(this.ProjectsKey) || 'null');
+
+			/* A project kept before there were several: it becomes the first of them. */
+			if (!store && window.localStorage.getItem(this.ProjectKey)) {
+				old = upgrade(JSON.parse(window.localStorage.getItem(this.ProjectKey)));
+				old.ID = old.ID || identity();
+				store = {Current: old.ID, Projects: {}};
+				store.Projects[old.ID] = old;
+			}
+
+			if (!store || !store.Projects || !valid(store.Projects[store.Current]))
+				throw new Error('Elemenx designer projects are not there');
+
+			project = upgrade(clone(store.Projects[store.Current]));
+
 			if (window.localStorage.getItem(this.StorageKey))
 				root = JSON.parse(window.localStorage.getItem(this.StorageKey));
 		}
 		catch (error) {
-			root = {ID: 'root', Kind: 'root', Props: {}, Text: '', Children: []};
+			store = {Current: '', Projects: {}};
+			project = blank('template', '');
+			root = fresh();
 		}
 
-		next = highest(root) + 1;
+		if (!opened())
+			project.Current = project.Documents[0].ID;
+
+		opened().Root = root;
+
+		project.Documents.forEach(function (item) {
+			next = Math.max(next, highest(treeOf(item)) + 1);
+		});
+
+		prepare(null);
 	}
 });

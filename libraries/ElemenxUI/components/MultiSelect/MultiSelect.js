@@ -22,7 +22,8 @@ Elemenx.Component('MultiSelect', {
 			Searchable: 'Adds a filter field to the list.',
 			SelectAll: 'Adds an option that toggles every one.',
 			Disabled: 'Turns it off: it takes no input and looks so.',
-			Invalid: 'Marks its value as wrong.'
+			Invalid: 'Marks its value as wrong.',
+			Name: 'The name of its value in a form; the change event gives the field with it, as the other fields do.'
 		},
 		Sample: {Placeholder: 'Pick colors', SelectAll: true}
 	},
@@ -37,6 +38,7 @@ Elemenx.Component('MultiSelect', {
 	SelectAll: false,
 	Disabled: false,
 	Invalid: false,
+	Name: null,
 	Open: false,
 	Filter: '',
 	Active: -1,

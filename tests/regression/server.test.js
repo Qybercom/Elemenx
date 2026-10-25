@@ -41,6 +41,43 @@ function withServer (options, callback) {
 }
 
 describe('Elemenx production server', function () {
+	it('answers a path with a null byte with 400 and goes on serving, where the file system used to crash it', async function () {
+		var root = fs.mkdtempSync(path.join(os.tmpdir(), 'elemenx-server-null-'));
+
+		fs.writeFileSync(path.join(root, 'index.html'), '<main>still running</main>');
+
+		try {
+			await withServer({Root: root}, async function (port) {
+				var paths = ['/%00', '/assets/file%00.txt', '/libraries/%00'];
+				var i = 0;
+				var answer;
+
+				while (i < paths.length) {
+					answer = await new Promise(function (resolve, reject) {
+						http.get({host: '127.0.0.1', port: port, path: paths[i]}, function (response) {
+							response.resume();
+							response.on('end', function () {
+								resolve(response.statusCode);
+							});
+						}).on('error', reject);
+					});
+
+					expect(answer, paths[i]).toBe(400);
+
+					i++;
+				}
+
+				answer = await request(port, 'GET');
+
+				expect(answer.Status).toBe(200);
+				expect(answer.Body.toString('utf8')).toBe('<main>still running</main>');
+			});
+		}
+		finally {
+			fs.rmSync(root, {recursive: true, force: true});
+		}
+	});
+
 	it('emits cache validators and Cache-Control and answers conditional GET with 304', async function () {
 		var root = fs.mkdtempSync(path.join(os.tmpdir(), 'elemenx-server-'));
 

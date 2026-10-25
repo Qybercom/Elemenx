@@ -149,7 +149,9 @@ Elemenx.Component('GameInventory', {
 				self.HideCard();
 			};
 
-			window.addEventListener('scroll', own.Scroll, true);
+			own.View = (this.$Element().ownerDocument || document).defaultView || window;
+
+			own.View.addEventListener('scroll', own.Scroll, true);
 		}
 
 		this.CardStyle = this.$Service('GameItems').Place(cell);
@@ -160,7 +162,7 @@ Elemenx.Component('GameInventory', {
 		var own = this.Own();
 
 		if (own.Scroll) {
-			window.removeEventListener('scroll', own.Scroll, true);
+			(own.View || window).removeEventListener('scroll', own.Scroll, true);
 
 			own.Scroll = null;
 		}

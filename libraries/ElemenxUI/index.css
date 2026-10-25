@@ -1824,7 +1824,9 @@ a {
 	outline: 2px solid var(--elemenx-focus);
 }
 
-.elemenx-pip-body {
+/* The body of a window of its own: a part of the page in Picture-in-Picture, or a window the Application opened. */
+.elemenx-pip-body,
+.elemenx-native-window {
 	min-height: 100vh;
 	min-height: 100dvh;
 	margin: 0;
@@ -2824,6 +2826,45 @@ a {
 	[data-elemenx-lazy='sized']::after {
 		animation: none;
 	}
+}
+
+
+/* *tip: a tip of the theme over an element; rich, a bold title over its text, as the ScreenTips of Office. */
+.elemenx-tip {
+	position: fixed;
+	z-index: 1000;
+	box-sizing: border-box;
+	max-width: 320px;
+	padding: 4px 8px;
+	color: var(--elemenx-text);
+	font-family: var(--elemenx-font);
+	font-size: var(--elemenx-font-size-small);
+	line-height: var(--elemenx-line-height-small);
+	background: var(--elemenx-surface);
+	border: 1px solid var(--elemenx-border);
+	border-radius: var(--elemenx-radius-small);
+	box-shadow: var(--elemenx-shadow-small);
+	pointer-events: none;
+}
+
+.elemenx-tip.rich {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	padding: 8px 10px;
+}
+
+/* A tip hidden stays hidden, rich (a flex) or not: this rule comes after the ones that show it. */
+.elemenx-tip[hidden] {
+	display: none;
+}
+
+.elemenx-tip-title {
+	font-weight: var(--elemenx-font-weight-strong);
+}
+
+.elemenx-tip.rich .elemenx-tip-text {
+	color: var(--elemenx-text-muted);
 }
 
 

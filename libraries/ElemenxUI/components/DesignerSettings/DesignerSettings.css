@@ -1,0 +1,85 @@
+.elemenx-designer-settings {
+	box-sizing: border-box;
+	height: 100%;
+	padding: 24px;
+	overflow: auto;
+}
+
+.elemenx-designer-settings-body {
+	gap: 16px;
+	max-width: 960px;
+}
+
+.elemenx-designer-settings-body > .elemenx-title,
+.elemenx-designer-settings-body > .elemenx-subtitle {
+	margin: 0;
+}
+
+/* The settings in columns while there is room; the description across them. */
+.elemenx-designer-settings-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+	gap: 12px 16px;
+}
+
+.elemenx-designer-settings-wide {
+	grid-column: 1 / -1;
+}
+
+/* A route: its path, its page, its guards and the page of a refusal in a row, in a frame. */
+.elemenx-designer-settings-routes {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.elemenx-designer-settings-route {
+	display: grid;
+	grid-template-columns: minmax(140px, 1.2fr) minmax(120px, 1fr) minmax(160px, 1.4fr) minmax(120px, 1fr) auto;
+	gap: 8px;
+	align-items: end;
+	padding: 10px;
+	border: 1px solid var(--elemenx-border);
+	border-radius: var(--elemenx-radius);
+}
+
+.elemenx-designer-settings-remove {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 32px;
+	height: 32px;
+	padding: 0;
+	color: var(--elemenx-text-muted);
+	cursor: pointer;
+	background: transparent;
+	border: 0;
+	border-radius: var(--elemenx-radius-small);
+}
+
+.elemenx-designer-settings-remove:hover {
+	color: var(--elemenx-danger);
+	background: var(--elemenx-surface-hover);
+}
+
+/* A guard: its name and description, then its code between the lines that frame it as a function. */
+.elemenx-designer-settings-guard {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	padding: 12px;
+	border: 1px solid var(--elemenx-border);
+	border-radius: var(--elemenx-radius);
+}
+
+.elemenx-designer-settings-signature {
+	color: var(--elemenx-text-muted);
+	font-family: var(--elemenx-font-mono);
+	font-size: var(--elemenx-font-size-small);
+}
+
+@media (max-width: 900px) {
+	.elemenx-designer-settings-route {
+		grid-template-columns: 1fr 1fr;
+	}
+}

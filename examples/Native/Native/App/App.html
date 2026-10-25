@@ -1,0 +1,25 @@
+<main class="elemenx-screen fill native-app">
+	<div class="elemenx-column native-body">
+		<h1 class="elemenx-title">Elemenx native</h1>
+		<p class="elemenx-text muted">Platform: <strong class="native-platform">{{Platform}}</strong></p>
+		<div class="elemenx-chips native-features">
+			<span class="elemenx-chip" *for="feature of Features" *key="feature">{{feature}}</span>
+		</div>
+		<div class="elemenx-container wrappable native-actions">
+			<Button Label="Message" (click)="Messaged" />
+			<Button Label="Open a file" (click)="Opened" />
+			<Button Label="Save a file" (click)="Saved" />
+			<Button Label="Open example.com" (click)="Linked" />
+			<Button Label="Maximize" (click)="Maximized" />
+			<Button [label]="'Badge ' + Count" (click)="Badged" />
+			<Button Label="Progress" (click)="Progressed" />
+			<Button Label="Attention" (click)="Attended" />
+			<Button Label="Tray" (click)="Trayed" />
+			<Button Label="Open a window" (click)="Windowed" />
+		</div>
+		<p class="elemenx-text native-notes-count">Notes: {{Notes}}</p>
+		<ol class="elemenx-ol native-log">
+			<li *for="line of Log" *key="line.ID">{{line.Text}}</li>
+		</ol>
+	</div>
+</main>

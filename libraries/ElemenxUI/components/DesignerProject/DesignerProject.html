@@ -1,0 +1,24 @@
+<div class="elemenx-designer-project">
+	<button type="button" class="elemenx-designer-project-item" data-settings [class.active]="Settings" (click)="Configured">
+		<Icon Name="settings" />
+		<span class="elemenx-designer-project-name">{{$T('ui.designer.project.settings')}}</span>
+	</button>
+	<div class="elemenx-designer-project-head">
+		<span class="elemenx-label">{{$T('ui.designer.project.pages')}}</span>
+		<button type="button" class="elemenx-designer-project-add" data-type="page" [attribute.title]="$T('ui.designer.project.addPage')" [attribute.aria-label]="$T('ui.designer.project.addPage')" (click)="Added"><Icon Name="add" Size="14" /></button>
+	</div>
+	<button type="button" class="elemenx-designer-project-item" *for="item of Documents(Version, 'page', Settings)" *key="item.ID" [class.active]="item.Active" [attribute.data-document]="item.ID" (click)="Chosen">
+		<Icon Name="file" />
+		<span class="elemenx-designer-project-name">{{item.Name}}</span>
+		<span class="elemenx-designer-project-route">{{item.Route}}</span>
+	</button>
+	<div class="elemenx-designer-project-head">
+		<span class="elemenx-label">{{$T('ui.designer.project.components')}}</span>
+		<button type="button" class="elemenx-designer-project-add" data-type="component" [attribute.title]="$T('ui.designer.project.addComponent')" [attribute.aria-label]="$T('ui.designer.project.addComponent')" (click)="Added"><Icon Name="add" Size="14" /></button>
+	</div>
+	<p class="elemenx-text small muted" *if="!Documents(Version, 'component', Settings).length">{{$T('ui.designer.project.noComponents')}}</p>
+	<button type="button" class="elemenx-designer-project-item" *for="item of Documents(Version, 'component', Settings)" *key="item.ID" [class.active]="item.Active" [attribute.data-document]="item.ID" (click)="Chosen">
+		<Icon Name="layout" />
+		<span class="elemenx-designer-project-name">{{item.Name}}</span>
+	</button>
+</div>

@@ -32,11 +32,42 @@ Elemenx.Service('Hotkeys', {
 			self.Handle(event);
 		};
 
+		/* A window the Application opened (Native.OpenWindow) is of the page: its keys are heard too, while it is open. */
+		this.Opened = function (event) {
+			var child = event.detail && event.detail.Window;
+			if (!child || !child.document) return;
+
+			child.document.addEventListener('keydown', self.Listener);
+
+			self.Windows.push(child);
+
+			child.addEventListener('pagehide', function () {
+				child.document.removeEventListener('keydown', self.Listener);
+
+				self.Windows = self.Windows.filter(function (other) {
+					return other !== child;
+				});
+			});
+		};
+
+		this.Windows = [];
+
 		document.addEventListener('keydown', this.Listener);
+		document.addEventListener('elemenx-window', this.Opened);
 	},
 
 	$OnDestroy: function () {
+		var self = this;
+
 		document.removeEventListener('keydown', this.Listener);
+		document.removeEventListener('elemenx-window', this.Opened);
+
+		this.Windows.forEach(function (child) {
+			if (!child.closed)
+				child.document.removeEventListener('keydown', self.Listener);
+		});
+
+		this.Windows = [];
 
 		window.clearTimeout(this.PendingTimer);
 

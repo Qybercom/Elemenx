@@ -92,8 +92,9 @@ describe('Elemenx npm release surface', function () {
 	});
 
 	it('ignores in git no source of the repository: a CI checkout has every file the tests and the tools need', function () {
-		var outputs = /^(tests\/dist\/(single(-cli|-packs)?|widget)-output|examples\/[^/]+\/dist)\//;
-		var ignored = childProcess.execFileSync('git', ['ls-files', '--others', '--ignored', '--exclude-standard', '--', 'tests', 'tools', 'libraries', 'scripts', 'packages', 'docs', 'examples', 'eslint', 'stylelint', '.github'], {cwd: root, encoding: 'utf8'});
+		/* What builds and installs make, never sources: the outputs of the builds, and the packages and the native platforms of examples/Native. */
+		var outputs = /^(tests\/dist\/(single(-cli|-packs)?|widget)-output|examples\/[^/]+\/dist|examples\/Native\/(node_modules|android|ios))\//;
+		var ignored = childProcess.execFileSync('git', ['ls-files', '--others', '--ignored', '--exclude-standard', '--', 'tests', 'tools', 'libraries', 'scripts', 'packages', 'docs', 'examples', 'eslint', 'stylelint', '.github'], {cwd: root, encoding: 'utf8', maxBuffer: 256 * 1024 * 1024});
 
 		expect(ignored.split('\n').filter(function (file) {
 			return file && !outputs.test(file);

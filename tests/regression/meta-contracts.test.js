@@ -32,7 +32,8 @@ describe('Contract: Elemenx.Meta', function () {
 					Open: 'Whether it is open.',
 					Variant: {Options: ['flat', 'raised'], Schema: null, Description: 'Its look.'},
 					Items: {Schema: {ID: 'number', Label: 'text'}, Description: 'The list.'},
-					Size: {Type: 'text'}
+					Size: {Type: 'text'},
+					Text: {Body: true, Description: 'Its text, also from its body.'}
 				}
 			},
 			Title: '',
@@ -41,6 +42,7 @@ describe('Contract: Elemenx.Meta', function () {
 			Variant: 'flat',
 			Items: [{ID: 1}],
 			Size: 'medium',
+			Text: '',
 			Hidden: 'state, not a prop'
 		});
 
@@ -51,12 +53,13 @@ describe('Contract: Elemenx.Meta', function () {
 			Icon: 'layout',
 			Description: 'A card.',
 			Props: [
-				{Name: 'Title', Type: 'text', Default: '', Options: null, Schema: null, Description: 'The title on top.'},
-				{Name: 'Count', Type: 'number', Default: 3, Options: null, Schema: null, Description: 'How many.'},
-				{Name: 'Open', Type: 'bool', Default: false, Options: null, Schema: null, Description: 'Whether it is open.'},
-				{Name: 'Variant', Type: 'select', Default: 'flat', Options: ['flat', 'raised'], Schema: null, Description: 'Its look.'},
-				{Name: 'Items', Type: 'json', Default: [{ID: 1}], Options: null, Schema: {ID: 'number', Label: 'text'}, Description: 'The list.'},
-				{Name: 'Size', Type: 'text', Default: 'medium', Options: null, Schema: null, Description: ''}
+				{Name: 'Title', Type: 'text', Default: '', Options: null, Schema: null, Body: false, Description: 'The title on top.'},
+				{Name: 'Count', Type: 'number', Default: 3, Options: null, Schema: null, Body: false, Description: 'How many.'},
+				{Name: 'Open', Type: 'bool', Default: false, Options: null, Schema: null, Body: false, Description: 'Whether it is open.'},
+				{Name: 'Variant', Type: 'select', Default: 'flat', Options: ['flat', 'raised'], Schema: null, Body: false, Description: 'Its look.'},
+				{Name: 'Items', Type: 'json', Default: [{ID: 1}], Options: null, Schema: {ID: 'number', Label: 'text'}, Body: false, Description: 'The list.'},
+				{Name: 'Size', Type: 'text', Default: 'medium', Options: null, Schema: null, Body: false, Description: ''},
+				{Name: 'Text', Type: 'text', Default: '', Options: null, Schema: null, Body: true, Description: 'Its text, also from its body.'}
 			],
 			Slots: ['actions'],
 			Container: true,

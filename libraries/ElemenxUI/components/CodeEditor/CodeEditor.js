@@ -512,7 +512,7 @@ Elemenx.Component('CodeEditor', {
 		node.setSelectionRange(start, end);
 
 		try {
-			done = document.execCommand(text ? 'insertText' : 'delete', false, text);
+			done = (this.$Element().ownerDocument || document).execCommand(text ? 'insertText' : 'delete', false, text);
 		}
 		catch (error) {
 			done = false;
@@ -874,7 +874,7 @@ Elemenx.Component('CodeEditor', {
 			return {Left: rect.left + parseFloat(getComputedStyle(text).paddingLeft || 0), Top: rect.top, Bottom: rect.top + parseFloat(getComputedStyle(row).lineHeight || 20)};
 		}
 
-		range = document.createRange();
+		range = (this.$Element().ownerDocument || document).createRange();
 
 		range.setStart(current, column);
 		range.setEnd(current, column);
@@ -1037,7 +1037,7 @@ Elemenx.Component('CodeEditor', {
 		var walker;
 		var current;
 		var count = 0;
-		var range = document.createRange();
+		var range = (this.$Element().ownerDocument || document).createRange();
 		var index;
 		var rect;
 
@@ -1148,7 +1148,7 @@ Elemenx.Component('CodeEditor', {
 	Undo: function () {
 		this.Focus();
 
-		document.execCommand('undo');
+		(this.$Element().ownerDocument || document).execCommand('undo');
 
 		return this;
 	},
@@ -1156,7 +1156,7 @@ Elemenx.Component('CodeEditor', {
 	Redo: function () {
 		this.Focus();
 
-		document.execCommand('redo');
+		(this.$Element().ownerDocument || document).execCommand('redo');
 
 		return this;
 	},

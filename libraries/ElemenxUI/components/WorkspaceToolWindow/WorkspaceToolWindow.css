@@ -40,6 +40,11 @@
 	overflow: auto;
 }
 
+/* The one thing in a tool window (a CodeView, a list) is as high as it at least; taller, the body scrolls. */
+.elemenx-workspace-tool-window-body > span > :only-child {
+	flex: 1 0 auto;
+}
+
 .elemenx-workspace-tool-window-body.padded {
 	padding: 8px 12px;
 }

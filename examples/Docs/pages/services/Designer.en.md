@@ -6,12 +6,17 @@ The document of a designer of pages, shared by its components (DesignerPalette, 
 - The kinds are the classes of the layouts of ElemenxUI (a screen, a row, a heading, a table...), their modifiers as fields, and every Component of the Library from what it declares in $Meta: data/meta.json of the Library, made by elemenx meta. Load(callback) reads it once (Ready() tells it is there); Use(meta) gives it instead.
 - A node is {ID, Kind, Props, Text, Slot, Style, Children}: Slot is the named slot of its parent it goes to, '' for the default one; Style holds its layout (padding, margin, the size with its least and greatest and, in a flex container, its direction, its wrap, align-items, justify-content and gap), set inline: on its element, or on a div around a Component. SetStyle(id, property, value) sets one of Layout.
 - A Component whose $Meta names its Children (Tab in Tabs) holds them as nodes: a child inserted gets an ID and a name (tab-2, Tab 2), and on the canvas the component shows the child the selection is in (its Current prop).
+- A prop its Component declares Body (the Value of a Markdown, of a CodeView) is a text of many lines, written as the body of the element (indented as the template, a tag in it as &lt;) and read back from it.
 - Literal(value) writes a value as the source of an expression ({ID: 'a'}); Parse(expression) reads it back.
 - Kinds() lists the kinds by group; Kind(id) is one: {ID, Group, Icon, Tag, Component, Container, Flex, Text, Description, Props (the first values), Fields ([{Name, Type, Options, Default, Description}]), Slots}. Label(kind) and GroupLabel(group) name them in the language of the page; Slots(id) are the named slots of the parent of a node.
 - Insert(kind, parent, index), Move(id, parent, index), Remove(id), Duplicate(id), Set(id, name, value), SetStyle(id, property, value), Clear(); Select(id) and Selected() for the selected node.
 - The rules of CSS of the page, by context: Rules(); Rule(context) the one of {Who: node, kind or within, Node, Class, Parent, State, Width, Theme}; SetRule(context, property, value) sets a property of it (the rule comes with its first property and goes with its last); RootClass(id) is the class of the element of a node (elemenx-button), what a rule of its kind names. A node with rules of its own takes the class page-<its ID> (on a div around a Component).
 - Template() is the document as a template of Elemenx, its rules first in a <style> (@media for the widths); Template(true, empty) the same for a canvas, every node in an element that names it (data-designer-id), a container marked (data-designer-container, data-designer-gap), an empty one holding the text empty (none when it is ''), and the rules inside the page of the canvas (@container for the widths).
 - Import(text) reads a template back: the kinds of the palette where an element is one, any other element as it is, and the rules of its <style> (those it does not understand kept as they are).
+- Projects, the one being edited among them, each kept in the storage of the browser (ProjectsKey): Projects() lists them, Create(mode, name) makes one of a mode that stays its own, template (one page), component (a Component with its public props and slots) or application (pages and components, routes, guards and the settings of the Application), Switch(id) edits another, RemoveProject(id) takes one away; ExportProject() is the one being edited as the text of a file, ImportProject(text) reads one back as a new project.
+- Project() is the project being edited: {ID, Mode, Name, Settings, Current, Tabs, Documents, Routes, Guards}. A document is {ID, Type (page or component), Name, Title (a page), Description and Props ([{Name, Type, Default, Options, Description}], a component), Slots (those its Slot elements make, '' the default one), Outlet (whether it holds the place of the pages)}; Opened() is the ID of the one being edited, Tabs those open. AddDocument(type, name), RemoveDocument(id) (not a component another document holds: Used(id) names them), Open(id) (in a tab; each document keeps its own history), Close(id) (its tab), SetDocument(id, name, value); Source(id) is the template of a document.
+- The routes of an application: [{ID, Path, Page, Guards, Failed}], AddRoute(path, page), SetRoute(id, name, value), RemoveRoute(id); its guards, [{Name, Description, Code}] (Code the body of the function of the guard), AddGuard(name), SetGuard(name, field, value), RemoveGuard(name); its settings, SetSetting(name, value): Name, Title, Description, Icon, Language, Theme, Router, Component (the component that holds the pages), NotFound and the splash of its page: Splash ('true' or ''), SplashImage, SplashBackground, SplashColor, SplashText, SplashSpinner, SplashMinTime and SplashHTML (its own content); and its install as an application of the system: PWA ('true' or ''), PWAShortName, PWAIcon, PWATheme, PWADisplay and PWAOffline ('true' or '').
+- In an application the components of the project are kinds of the palette (group project) the document being edited may take, but itself and those holding it; on the canvas each runs as a Component made of its document. The kind slot (a component only) marks where the component puts what it is given, the kind outlet (a component of an application) where the pages of the routes go.
 
 ## Methods
 
@@ -40,6 +45,28 @@ The document of a designer of pages, shared by its components (DesignerPalette, 
 - `Rule(context)`
 - `SetRule(context, property, value)`
 - `RootClass(id)`
+- `Project()`
+- `Opened()`
+- `Projects()`
+- `Create(mode, name)`
+- `Switch(id)`
+- `RemoveProject(id)`
+- `ExportProject()`
+- `ImportProject(text)`
+- `AddDocument(type, name)`
+- `Used(id)`
+- `RemoveDocument(id)`
+- `Open(id)`
+- `Close(id)`
+- `SetDocument(id, name, value)`
+- `AddRoute(path, page)`
+- `SetRoute(id, name, value)`
+- `RemoveRoute(id)`
+- `AddGuard(name)`
+- `SetGuard(name, field, value)`
+- `RemoveGuard(name)`
+- `SetSetting(name, value)`
+- `Source(id)`
 
 ## Example
 

@@ -1,7 +1,7 @@
 <!-- generated -->
 # MultiSelect
 
-Выбор нескольких вариантов. Options: [{Value, Label, Hint, Icon, Group, Disabled}]; Value — список выбранных Value. Display: chips (выбранные варианты как удаляемые метки в поле) или count («Выбрано: 3»). Searchable (по умолчанию включено) добавляет поле фильтра; SelectAll добавляет вариант, переключающий все доступные. Список остаётся открытым, пока варианты переключаются. Placeholder, Empty, Size, Shape, Disabled и Invalid — как в Select. События: change (список).
+Выбор нескольких вариантов. Options: [{Value, Label, Hint, Icon, Group, Disabled}]; Value — список выбранных Value. Display: chips (выбранные варианты как удаляемые метки в поле) или count («Выбрано: 3»). Searchable (по умолчанию включено) добавляет поле фильтра; SelectAll добавляет вариант, переключающий все доступные. Список остаётся открытым, пока варианты переключаются. Placeholder, Empty, Size, Shape, Disabled и Invalid — как в Select. События: change (список). Name — имя его значения в форме; событие change передаёт поле вместе с ним, как у остальных полей.
 
 ## Свойства
 
@@ -18,6 +18,7 @@
 | `SelectAll` | `false` |
 | `Disabled` | `false` |
 | `Invalid` | `false` |
+| `Name` | `null` |
 
 ## События
 

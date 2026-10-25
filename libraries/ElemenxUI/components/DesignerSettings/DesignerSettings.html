@@ -1,0 +1,133 @@
+<div class="elemenx-designer-settings">
+	<div class="elemenx-column elemenx-designer-settings-body" *if="Project(Version)">
+		<h2 class="elemenx-title">{{$T('ui.designer.project.settingsTitle')}}</h2>
+		<h3 class="elemenx-subtitle">{{$T('ui.designer.project.general')}}</h3>
+		<div class="elemenx-designer-settings-grid">
+			<Field [label]="$T('ui.designer.project.appName')" [hint]="$T('ui.designer.project.appNameHint')">
+				<Input Name="Name" [value]="Project(Version).Name" (change)="Changed" />
+			</Field>
+			<Field [label]="$T('ui.designer.project.title')" [hint]="$T('ui.designer.project.titleHint')">
+				<Input Name="Title" [value]="Project(Version).Settings.Title" (change)="Changed" />
+			</Field>
+			<Field [label]="$T('ui.designer.project.language')" [hint]="$T('ui.designer.project.languageHint')">
+				<Combobox Name="Language" AllowCustom="true" [options]="Languages()" [value]="Project(Version).Settings.Language" (change)="Changed" />
+			</Field>
+			<Field [label]="$T('ui.designer.project.theme')">
+				<Select Name="Theme" [options]="Themes(Version)" [value]="Project(Version).Settings.Theme" (change)="Changed" />
+			</Field>
+			<Field [label]="$T('ui.designer.project.router')" [hint]="$T('ui.designer.project.routerHint')">
+				<Select Name="Router" [options]="Routers(Version)" [value]="Project(Version).Settings.Router" (change)="Changed" />
+			</Field>
+			<Field [label]="$T('ui.designer.project.icon')" [hint]="$T('ui.designer.project.iconHint')">
+				<Input Name="Icon" [value]="Project(Version).Settings.Icon" (change)="Changed" />
+			</Field>
+			<div class="elemenx-designer-settings-wide">
+				<Field [label]="$T('ui.designer.project.description')">
+					<TextArea Name="Description" Rows="2" AutoSize="true" [value]="Project(Version).Settings.Description" (change)="Changed" />
+				</Field>
+			</div>
+		</div>
+		<h3 class="elemenx-subtitle">{{$T('ui.designer.project.structure')}}</h3>
+		<div class="elemenx-designer-settings-grid">
+			<Field [label]="$T('ui.designer.project.appComponent')" [hint]="$T('ui.designer.project.appComponentHint')" [error]="Unplaced(Project(Version)) ? $T('ui.designer.project.noOutlet') : ''">
+				<Select Name="Component" [options]="Choices(Project(Version), 'component')" [value]="Project(Version).Settings.Component" (change)="Changed" />
+			</Field>
+			<Field [label]="$T('ui.designer.project.notFound')" [hint]="$T('ui.designer.project.notFoundHint')">
+				<Select Name="NotFound" [options]="Choices(Project(Version), 'page')" [value]="Project(Version).Settings.NotFound" (change)="Changed" />
+			</Field>
+		</div>
+		<h3 class="elemenx-subtitle">{{$T('ui.designer.project.splash')}}</h3>
+		<div class="elemenx-designer-settings-grid elemenx-designer-settings-splash">
+			<div class="elemenx-designer-settings-wide">
+				<Toggle Name="Splash" [label]="$T('ui.designer.project.splashOn')" [description]="$T('ui.designer.project.splashHint')" [checked]="Project(Version).Settings.Splash === 'true'" (change)="Changed" />
+			</div>
+			<Field *if="Project(Version).Settings.Splash === 'true'" [label]="$T('ui.designer.project.splashImage')" [hint]="$T('ui.designer.project.splashImageHint')">
+				<Input Name="SplashImage" [value]="Project(Version).Settings.SplashImage" (change)="Changed" />
+			</Field>
+			<Field *if="Project(Version).Settings.Splash === 'true'" [label]="$T('ui.designer.project.splashText')">
+				<Input Name="SplashText" [value]="Project(Version).Settings.SplashText" (change)="Changed" />
+			</Field>
+			<Field *if="Project(Version).Settings.Splash === 'true'" [label]="$T('ui.designer.project.splashMinTime')" [hint]="$T('ui.designer.project.splashMinTimeHint')" [error]="Wrong === 'SplashMinTime' ? $T('ui.designer.project.splashMinTimeWrong') : ''">
+				<Input Name="SplashMinTime" Type="number" [value]="Project(Version).Settings.SplashMinTime" (change)="Splashed" />
+			</Field>
+			<Field *if="Project(Version).Settings.Splash === 'true'" [label]="$T('ui.designer.project.splashBackground')" [hint]="$T('ui.designer.project.splashColorsHint')">
+				<ColorInput Name="SplashBackground" [value]="Project(Version).Settings.SplashBackground" (change)="Changed" />
+			</Field>
+			<Field *if="Project(Version).Settings.Splash === 'true'" [label]="$T('ui.designer.project.splashColor')">
+				<ColorInput Name="SplashColor" [value]="Project(Version).Settings.SplashColor" (change)="Changed" />
+			</Field>
+			<div class="elemenx-designer-settings-wide" *if="Project(Version).Settings.Splash === 'true'">
+				<Toggle Name="SplashSpinner" [label]="$T('ui.designer.project.splashSpinner')" [checked]="Project(Version).Settings.SplashSpinner === 'true'" (change)="Changed" />
+			</div>
+			<div class="elemenx-designer-settings-wide" *if="Project(Version).Settings.Splash === 'true'">
+				<Field [label]="$T('ui.designer.project.splashHTML')" [hint]="$T('ui.designer.project.splashHTMLHint')">
+					<CodeEditor Name="SplashHTML" Language="html" Rows="5" [value]="Project(Version).Settings.SplashHTML" (change)="Changed" />
+				</Field>
+			</div>
+		</div>
+		<h3 class="elemenx-subtitle">{{$T('ui.designer.project.pwa')}}</h3>
+		<div class="elemenx-designer-settings-grid elemenx-designer-settings-pwa">
+			<div class="elemenx-designer-settings-wide">
+				<Toggle Name="PWA" [label]="$T('ui.designer.project.pwaOn')" [description]="$T('ui.designer.project.pwaHint')" [checked]="Project(Version).Settings.PWA === 'true'" (change)="Changed" />
+			</div>
+			<Field *if="Project(Version).Settings.PWA === 'true'" [label]="$T('ui.designer.project.pwaShortName')" [hint]="$T('ui.designer.project.pwaShortNameHint')">
+				<Input Name="PWAShortName" [value]="Project(Version).Settings.PWAShortName" (change)="Changed" />
+			</Field>
+			<Field *if="Project(Version).Settings.PWA === 'true'" [label]="$T('ui.designer.project.pwaIcon')" [hint]="$T('ui.designer.project.pwaIconHint')">
+				<Input Name="PWAIcon" [value]="Project(Version).Settings.PWAIcon" (change)="Changed" />
+			</Field>
+			<Field *if="Project(Version).Settings.PWA === 'true'" [label]="$T('ui.designer.project.pwaDisplay')">
+				<Select Name="PWADisplay" [options]="Displays(Version)" [value]="Project(Version).Settings.PWADisplay" (change)="Changed" />
+			</Field>
+			<Field *if="Project(Version).Settings.PWA === 'true'" [label]="$T('ui.designer.project.pwaTheme')" [hint]="$T('ui.designer.project.pwaThemeHint')">
+				<ColorInput Name="PWATheme" [value]="Project(Version).Settings.PWATheme" (change)="Changed" />
+			</Field>
+			<div class="elemenx-designer-settings-wide" *if="Project(Version).Settings.PWA === 'true'">
+				<Toggle Name="PWAOffline" [label]="$T('ui.designer.project.pwaOffline')" [description]="$T('ui.designer.project.pwaOfflineHint')" [checked]="Project(Version).Settings.PWAOffline === 'true'" (change)="Changed" />
+			</div>
+		</div>
+		<h3 class="elemenx-subtitle">{{$T('ui.designer.project.routes')}}</h3>
+		<div class="elemenx-designer-settings-routes">
+			<div class="elemenx-designer-settings-route" *for="route of Project(Version).Routes" *key="route.ID" [attribute.data-route]="route.ID">
+				<Field [label]="$T('ui.designer.project.path')" [error]="Wrong === route.ID ? $T('ui.designer.project.pathTaken') : ''">
+					<Input [name]="route.ID + '|Path'" [value]="route.Path" (change)="Routed" />
+				</Field>
+				<Field [label]="$T('ui.designer.project.page')">
+					<Select [name]="route.ID + '|Page'" [options]="Pages(Project(Version))" [value]="route.Page" (change)="Routed" />
+				</Field>
+				<Field [label]="$T('ui.designer.project.guards')">
+					<MultiSelect [name]="route.ID + '|Guards'" [options]="Guards(Project(Version))" [value]="route.Guards" (change)="Routed" />
+				</Field>
+				<Field [label]="$T('ui.designer.project.failed')">
+					<Select [name]="route.ID + '|Failed'" [options]="Choices(Project(Version), 'page')" [value]="route.Failed" (change)="Routed" />
+				</Field>
+				<button type="button" class="elemenx-designer-settings-remove" [attribute.title]="$T('ui.designer.project.remove')" [attribute.aria-label]="$T('ui.designer.project.remove')" [attribute.data-route]="route.ID" (click)="RouteRemoved"><Icon Name="delete" Size="16" /></button>
+			</div>
+			<div>
+				<button type="button" class="elemenx-button secondary small elemenx-designer-settings-add-route" (click)="RouteAdded"><Icon Name="add" Size="14" /><span class="elemenx-button-label">{{$T('ui.designer.project.addRoute')}}</span></button>
+			</div>
+		</div>
+		<h3 class="elemenx-subtitle">{{$T('ui.designer.project.guards')}}</h3>
+		<p class="elemenx-text small muted" *if="!Project(Version).Guards.length">{{$T('ui.designer.project.noGuards')}}</p>
+		<div class="elemenx-designer-settings-guard" *for="guard of Project(Version).Guards" *key="guard.Name">
+			<div class="elemenx-designer-settings-grid">
+				<Field [label]="$T('ui.designer.project.name')" [error]="Wrong === guard.Name ? $T('ui.designer.project.guardTaken') : ''">
+					<Input [name]="guard.Name + '|Name'" [value]="guard.Name" (change)="Guarded" />
+				</Field>
+				<Field [label]="$T('ui.designer.project.description')">
+					<Input [name]="guard.Name + '|Description'" [value]="guard.Description" (change)="Guarded" />
+				</Field>
+			</div>
+			<span class="elemenx-label">{{$T('ui.designer.project.code')}}</span>
+			<code class="elemenx-designer-settings-signature">Elemenx.Guard('{{guard.Name}}', function () {</code>
+			<CodeEditor Language="javascript" Rows="6" [name]="guard.Name + '|Code'" [value]="guard.Code" (change)="Guarded" />
+			<code class="elemenx-designer-settings-signature">});</code>
+			<div>
+				<button type="button" class="elemenx-button ghost small elemenx-designer-settings-remove-guard" [attribute.data-guard]="guard.Name" (click)="GuardRemoved"><Icon Name="delete" Size="14" /><span class="elemenx-button-label">{{$T('ui.designer.project.remove')}}</span></button>
+			</div>
+		</div>
+		<div>
+			<button type="button" class="elemenx-button secondary small elemenx-designer-settings-add-guard" (click)="GuardAdded"><Icon Name="add" Size="14" /><span class="elemenx-button-label">{{$T('ui.designer.project.addGuard')}}</span></button>
+		</div>
+	</div>
+</div>

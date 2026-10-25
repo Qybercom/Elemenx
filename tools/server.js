@@ -239,7 +239,32 @@ function create (options) {
 	var compression = options.Compression !== false;
 	var threshold = options.CompressionThreshold === undefined ? 1024 : Number(options.CompressionThreshold);
 
+	/* The page of the root (index.html) through options.Page (text in, text out): the splash of development. */
+	function page (request, response, file) {
+		fs.readFile(file, 'utf8', function (error, text) {
+			var body;
+
+			if (error) {
+				response.writeHead(404, {'Content-Type': 'text/plain; charset=utf-8'});
+				response.end('Not Found');
+
+				return;
+			}
+
+			body = Buffer.from(options.Page(text), 'utf8');
+
+			response.writeHead(200, {'Content-Type': Types['.html'], 'Content-Length': body.length, 'Cache-Control': 'no-cache'});
+			response.end(request.method === 'HEAD' ? undefined : body);
+		});
+	}
+
 	function send (request, response, file) {
+		if (typeof options.Page === 'function' && path.resolve(file) === path.join(root, 'index.html')) {
+			page(request, response, file);
+
+			return;
+		}
+
 		fs.stat(file, function (error, stat) {
 			if (error || !stat.isFile()) {
 				response.writeHead(404, {'Content-Type': 'text/plain; charset=utf-8'});
@@ -299,6 +324,10 @@ function create (options) {
 
 		try {
 			pathname = decodeURIComponent(request.url.split('?')[0]);
+
+			/* A null byte in a path (/%00) makes the file system throw: such a request is answered, the server goes on. */
+			if (pathname.indexOf('\0') !== -1)
+				throw new Error('Elemenx server path holds a null byte');
 		}
 		catch (error) {
 			response.writeHead(400);

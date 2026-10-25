@@ -5,6 +5,8 @@ var path = require('path');
 var common = require('./common.js');
 var Minify = require('./minify.js');
 var Shake = require('./shake.js');
+var Splash = require('./splash.js');
+var PWA = require('./pwa.js');
 var Expressions = require('./expressions.js');
 var Extension = require('./extension.js');
 var Electron = require('./electron.js');
@@ -267,6 +269,16 @@ function isInside (target, parent) {
 	return relative === '' || (relative.indexOf('..' + path.sep) !== 0 && relative !== '..' && !path.isAbsolute(relative));
 }
 
+/*
+ * The folders and files of a project that are never public, wherever its build goes: the packages of npm, the history
+ * of git, and the native projects of Capacitor (android, ios) with its config.
+ */
+function privatePaths (project) {
+	return ['node_modules', '.git', 'android', 'ios', 'capacitor.config.json', 'capacitor.config.ts', 'capacitor.config.js'].map(function (name) {
+		return path.join(project, name);
+	});
+}
+
 function copyPublic (source, output, excludedPaths) {
 	var entries = fs.readdirSync(source, {withFileTypes: true});
 	var i = 0;
@@ -519,13 +531,34 @@ function libraryResources (directory, root, result, visited) {
 	}
 }
 
-function copyLibraryResources (output, declarations) {
+/*
+ * Whether a build takes a pack of a Library (packs.json: {Files, Uses, Language}): the Application asks for it
+ * (Packs, all for every pack) or its code has a text of Uses. language: the language of the page, which a pack of a
+ * language must have too (a build in one file); without one (a build in a folder, which may change its language), a
+ * pack of a language goes in with its texts, or with the pack it is of (emoji.ru with emoji).
+ */
+function packNeeded (name, pack, uses, asked, language) {
+	if (asked.indexOf(name) !== -1 || asked.indexOf('all') !== -1) return true;
+	if (language === undefined && pack.Language && asked.indexOf(name.split('.')[0]) !== -1) return true;
+	if (language !== undefined && pack.Language && pack.Language !== String(language || '').toLowerCase()) return false;
+
+	return (pack.Uses || []).some(function (text) {
+		return uses.indexOf(text) !== -1;
+	});
+}
+
+/*
+ * The files of the Libraries next to a build in a folder; the paths of their stylesheets. choice {Uses, Packs,
+ * Removed}: the packs of a Library its code does not use stay out, their names in Removed[Library] (null: every file).
+ */
+function copyLibraryResources (output, declarations, choice) {
 	var hrefs = [];
 	var i = 0;
 
 	while (i < declarations.length) {
 		var declaration = declarations[i];
 		var resources = [];
+		var packs = choice ? common.readPacks(declaration.Directory) : {};
 
 		libraryResources(declaration.Directory, declaration.Directory, resources, {});
 
@@ -534,6 +567,19 @@ function copyLibraryResources (output, declarations) {
 		while (ri < resources.length) {
 			if (!fs.existsSync(resources[ri].Source))
 				fail('Library resource not found: ' + resources[ri].Source);
+
+			var pack = choice ? common.packOf(packs, resources[ri].Relative.replace(/\\/g, '/')) : null;
+
+			if (pack && !packNeeded(pack, packs[pack], choice.Uses, choice.Packs)) {
+				choice.Removed[declaration.Name] = choice.Removed[declaration.Name] || [];
+
+				if (choice.Removed[declaration.Name].indexOf(pack) === -1)
+					choice.Removed[declaration.Name].push(pack);
+
+				ri++;
+
+				continue;
+			}
 
 			var target = path.resolve(output, declaration.Root, resources[ri].Relative);
 
@@ -642,11 +688,13 @@ function build (project, options) {
 	if (options.precompile)
 		bundle = Expressions.Render([bundle, appSource], [indexSource]) + bundle;
 
-	shaken = frameworkSource(framework, (templateBundle || '') + '\n' + bundle + '\n' + indexSource + '\n' + appSource, options.full);
+	/* The splash and the worker of a PWA the build puts in the page keep their sections of the framework. */
+	shaken = frameworkSource(framework, (templateBundle || '') + '\n' + bundle + '\n' + indexSource + '\n' + appSource + (options.splash !== false && !options.widget && Splash.Settings(project, options.splash) ? '\nelemenx-splash' : '') + (options.pwa && !options.single && !options.widget ? '\nelemenx-pwa-worker' : ''), options.full);
 
 	if (options.single || options.widget) {
 		return (options.widget ? widget : single)({
 			Project: project,
+			Splash: options.splash === false ? null : Splash.Settings(project, options.splash),
 			Output: output,
 			Index: index,
 			Entry: app,
@@ -664,7 +712,7 @@ function build (project, options) {
 
 	fs.mkdirSync(output, {recursive: true});
 
-	var excludedPaths = applicationDirectories(project, roots).concat(options.excludes || [], [
+	var excludedPaths = applicationDirectories(project, roots).concat(options.excludes || [], privatePaths(project), [
 		output,
 		app,
 		index,
@@ -676,7 +724,13 @@ function build (project, options) {
 
 	copyPublic(project, output, excludedPaths);
 
-	var libraryStyleHrefs = copyLibraryResources(output, libraries);
+	var choice = options.full ? null : {Uses: ownCode(entities, shared) + '\n' + indexSource + '\n' + appSource, Packs: options.packs || [], Removed: {}};
+	var libraryStyleHrefs = copyLibraryResources(output, libraries, choice);
+
+	Object.keys(choice ? choice.Removed : {}).forEach(function (name) {
+		process.stdout.write('Elemenx Builder: without the packs of ' + name + ': ' + choice.Removed[name].join(', ') + ' (unused; --packs or --full keeps them)\n');
+	});
+
 	var productionIndex = fs.readFileSync(index, 'utf8');
 
 	if (libraryStyleHrefs.length) {
@@ -686,9 +740,18 @@ function build (project, options) {
 		else productionIndex = styleMarkup + '\n' + productionIndex;
 	}
 
+	/* The splash of the Application, at the top of its body (see splash.js). */
+	if (options.splash !== false)
+		productionIndex = Splash.Inject(productionIndex, Splash.Settings(project, options.splash));
+
 	fs.writeFileSync(path.join(output, 'index.html'), productionIndex);
 	fs.writeFileSync(path.join(output, 'elemenx.js'), shaken);
 	fs.writeFileSync(path.join(output, 'app.js'), (templateBundle ? templateBundle + '\n' : '') + bundle + '\n' + appSource.replace(/^\s+/, ''));
+
+	/* An installable application of the system, last: its worker keeps every file of the build (see pwa.js). */
+	var pwa = PWA.Settings(project, options.pwa, productionIndex, output, options.splash === false ? null : Splash.Settings(project, options.splash));
+	if (pwa)
+		process.stdout.write('Elemenx Builder: a PWA, ' + PWA.Apply(output, pwa).join(', ') + (pwa.Icons.length ? '' : ' (no PWA.Icon: a browser installs it with an icon of 192 and of 512 pixels)') + '\n');
 
 	process.stdout.write('Elemenx Builder: ' + output + '\n');
 
@@ -719,6 +782,8 @@ function extension (project, options) {
 		index: options.index,
 		out: path.relative(project, folder),
 		full: options.full,
+		packs: options.packs,
+		splash: false,
 		precompile: true,
 		excludes: [path.join(project, outputName)]
 	});
@@ -756,6 +821,8 @@ function native (project, options) {
 	var staging = path.join(project, outputName, 'native-app');
 	var platforms = options.native === true || options.native === 'all' ? NativePlatforms : [options.native];
 	var settings = options.nativeSettings || {};
+	/* The splash of the Application: its color is the one of the window, and of the screen of a phone, before the page paints. */
+	var splash = options.splash === false ? null : Splash.Settings(project, options.splash);
 	var command = function (platform) {
 		return 'npx elemenx build --native ' + platform + (outputName === 'dist' ? '' : ' --out ' + outputName);
 	};
@@ -778,6 +845,8 @@ function native (project, options) {
 		index: options.index,
 		out: path.relative(project, staging),
 		full: options.full,
+		packs: options.packs,
+		splash: options.splash,
 		precompile: true,
 		excludes: [path.join(project, outputName)]
 	});
@@ -799,10 +868,10 @@ function native (project, options) {
 
 			fs.mkdirSync(path.join(root, 'desktop'), {recursive: true});
 
-			Electron.Pack(source, path.join(root, 'desktop'), path.join(root, 'desktop-bin'), project, settings.Desktop || {}, command('desktop'));
+			Electron.Pack(source, path.join(root, 'desktop'), path.join(root, 'desktop-bin'), project, settings.Desktop || {}, command('desktop'), splash);
 		}
 		else {
-			Capacitor.Pack(source, path.join(root, 'mobile'), project, settings.Mobile || {}, command('mobile'));
+			Capacitor.Pack(source, path.join(root, 'mobile'), project, settings.Mobile || {}, command('mobile'), splash);
 		}
 	});
 
@@ -845,12 +914,7 @@ function libraryAssets (job, page) {
 
 	/* A pack of a Library goes in when the Application asks for it (Packs) or uses it: its code has a text of Uses. */
 	function needed (name, pack) {
-		if (job.Packs.indexOf(name) !== -1 || job.Packs.indexOf('all') !== -1) return true;
-		if (pack.Language && pack.Language !== String(language || '').toLowerCase()) return false;
-
-		return (pack.Uses || []).some(function (text) {
-			return job.Uses.indexOf(text) !== -1;
-		});
+		return packNeeded(name, pack, job.Uses, job.Packs, language || '');
 	}
 
 	job.Libraries.forEach(function (declaration) {
@@ -885,7 +949,7 @@ function copyBuildPublic (job) {
 
 	fs.mkdirSync(job.Output, {recursive: true});
 
-	copyPublic(job.Project, job.Output, applicationDirectories(job.Project, job.Roots).concat([
+	copyPublic(job.Project, job.Output, applicationDirectories(job.Project, job.Roots).concat(privatePaths(job.Project), [
 		job.Output,
 		job.Entry,
 		job.Index,
@@ -941,6 +1005,8 @@ function single (job) {
 	}
 
 	copyBuildPublic(job);
+
+	page = Splash.Inject(page, job.Splash);
 
 	fs.writeFileSync(path.join(job.Output, 'index.html'), page);
 

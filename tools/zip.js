@@ -63,8 +63,11 @@ function files (directory, base, result) {
 	return result;
 }
 
-/* A zip archive of a list of {Name, Data}: a Buffer. */
-function archive (list) {
+/*
+ * A zip archive of a list of {Name, Data, Mode}: a Buffer. Mode, the rights of Unix of a file (0755 for a program),
+ * marks the archive made on Unix so they come back when it opens; level of deflate, 9 by default.
+ */
+function archive (list, level) {
 	var parts = [];
 	var central = [];
 	var offset = 0;
@@ -75,7 +78,7 @@ function archive (list) {
 	list.forEach(function (file) {
 		var name = Buffer.from(file.Name, 'utf8');
 		var data = Buffer.isBuffer(file.Data) ? file.Data : Buffer.from(String(file.Data), 'utf8');
-		var deflated = zlib.deflateRawSync(data, {level: 9});
+		var deflated = zlib.deflateRawSync(data, {level: level === undefined ? 9 : level});
 		var crc = crc32(data);
 		var local = Buffer.alloc(30);
 		var entry = Buffer.alloc(46);
@@ -93,7 +96,7 @@ function archive (list) {
 		local.writeUInt16LE(0, 28);
 
 		entry.writeUInt32LE(0x02014B50, 0);
-		entry.writeUInt16LE(20, 4);
+		entry.writeUInt16LE(file.Mode === undefined ? 20 : (3 << 8) | 20, 4);
 		entry.writeUInt16LE(20, 6);
 		entry.writeUInt16LE(0x0800, 8);
 		entry.writeUInt16LE(8, 10);
@@ -103,6 +106,10 @@ function archive (list) {
 		entry.writeUInt32LE(deflated.length, 20);
 		entry.writeUInt32LE(data.length, 24);
 		entry.writeUInt16LE(name.length, 28);
+
+		if (file.Mode !== undefined)
+			entry.writeUInt32LE(((0x8000 | file.Mode) << 16) >>> 0, 38);
+
 		entry.writeUInt32LE(offset, 42);
 
 		parts.push(local, name, deflated);

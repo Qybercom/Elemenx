@@ -13,6 +13,9 @@ import * as espree from 'espree';
 var root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 var Skipped = {'node_modules': true, 'dist': true, 'tests': true, '.git': true, '.idea': true, '.vitest': true, 'test-results': true, 'playwright-report': true, 'coverage': true};
 
+/* The native projects Capacitor makes in examples/Native (git ignores them): their files are Capacitor's, not shipped by Elemenx. */
+var SkippedPaths = ['examples/Native/android', 'examples/Native/ios'];
+
 function files (directory, result) {
 	var entries = fs.readdirSync(directory, {withFileTypes: true});
 	var i = 0;
@@ -24,7 +27,7 @@ function files (directory, result) {
 		var file = path.join(directory, entry.name);
 
 		if (entry.isDirectory()) {
-			if (!Skipped[entry.name])
+			if (!Skipped[entry.name] && SkippedPaths.indexOf(path.relative(root, file).replace(/\\/g, '/')) === -1)
 				files(file, result);
 		}
 		else if (/\.(js|html)$/.test(entry.name) && !(directory === root && /\.config\.js$/.test(entry.name))) {

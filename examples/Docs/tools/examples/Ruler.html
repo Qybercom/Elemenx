@@ -1,0 +1,26 @@
+<div class="docs-stack" style="gap: 8px;">
+	<div style="height: 20px;" (pointermove)="Moved">
+		<Ruler [start]="Start" [marker]="Marker" [range]="{From: 40, To: 200}" [guides]="Guides" (pull)="Pulled" />
+	</div>
+	<label class="elemenx-text small">Start <input class="elemenx-input" type="range" min="0" max="400" step="10" [value]="Start" (input)="Scrolled"></label>
+	<p class="elemenx-text small muted">Guides: {{Guides.join(', ') || 'none'}} (press the ruler to add one)</p>
+</div>
+<script>
+({
+	Start: 0,
+	Marker: null,
+	Guides: [300],
+
+	Moved: function (event, node) {
+		this.Marker = Math.round(this.Start + event.clientX - node.getBoundingClientRect().left);
+	},
+
+	Scrolled: function (event) {
+		this.Start = Number(event.target.value);
+	},
+
+	Pulled: function (event) {
+		this.Guides = this.Guides.concat([event.detail.Value]);
+	}
+})
+</script>

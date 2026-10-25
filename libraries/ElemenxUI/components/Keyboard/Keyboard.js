@@ -216,6 +216,14 @@ Elemenx.Component('Keyboard', {
 			});
 		};
 
+		/* Put into another document (a window the Application opened), it hears the keys there from a pointer or a focus on it. */
+		this.Moving = function () {
+			self.Moved();
+		};
+
+		this.$Element().addEventListener('pointerover', this.Moving);
+		this.$Element().addEventListener('focusin', this.Moving);
+
 		this.Listen();
 
 		if ((this.Native || this.Alternate === 'native') && navigator.keyboard && typeof navigator.keyboard.getLayoutMap === 'function') {
@@ -245,16 +253,42 @@ Elemenx.Component('Keyboard', {
 		this.Listen();
 	},
 
+	/*
+	 * The keys of the document the keyboard is in, and the window losing the focus. The keyboard may move into another
+	 * document (a window the Application opened): a press or a focus there listens to that one (Moved).
+	 */
 	Listen: function () {
-		document.addEventListener('keydown', this.KeyDown);
-		document.addEventListener('keyup', this.KeyUp, true);
-		window.addEventListener('blur', this.Blurred);
+		var target = this.Document();
+
+		this.Listened = target;
+
+		target.addEventListener('keydown', this.KeyDown);
+		target.addEventListener('keyup', this.KeyUp, true);
+		(target.defaultView || window).addEventListener('blur', this.Blurred);
 	},
 
 	Unlisten: function () {
-		document.removeEventListener('keydown', this.KeyDown);
-		document.removeEventListener('keyup', this.KeyUp, true);
-		window.removeEventListener('blur', this.Blurred);
+		var target = this.Listened || document;
+
+		target.removeEventListener('keydown', this.KeyDown);
+		target.removeEventListener('keyup', this.KeyUp, true);
+		(target.defaultView || window).removeEventListener('blur', this.Blurred);
+
+		this.Listened = null;
+	},
+
+	/* The document of the keyboard: the page while it is still being made (in a document of no window). */
+	Document: function () {
+		var owner = this.$Element().ownerDocument;
+
+		return owner && owner.defaultView ? owner : document;
+	},
+
+	Moved: function () {
+		if (!this.Listened || this.Listened === this.Document()) return;
+
+		this.Unlisten();
+		this.Listen();
 	},
 
 	/* The second layouts of the Library: the characters of the keys of letters and signs, by their codes, as printed on them. */

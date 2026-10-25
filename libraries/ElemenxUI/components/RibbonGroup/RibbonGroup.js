@@ -50,7 +50,7 @@ Elemenx.Component('RibbonGroup', {
 			return;
 		}
 
-		panel.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - 8 - panel.offsetWidth)) + 'px';
+		panel.style.left = Math.max(8, Math.min(rect.left, ((this.$Element().ownerDocument || document).defaultView || window).innerWidth - 8 - panel.offsetWidth)) + 'px';
 		panel.style.top = (rect.bottom + 4) + 'px';
 
 		this.Listen(true);
@@ -90,12 +90,14 @@ Elemenx.Component('RibbonGroup', {
 				self.Close(false);
 			};
 
-			document.addEventListener('pointerdown', this.Outside, true);
+			this.Listened = (this.$Element().ownerDocument || document);
+
+			this.Listened.addEventListener('pointerdown', this.Outside, true);
 			root.addEventListener('elemenx-ribbon-command', this.Done);
 		}
 
 		if (!on && this.Outside) {
-			document.removeEventListener('pointerdown', this.Outside, true);
+			(this.Listened || document).removeEventListener('pointerdown', this.Outside, true);
 			this.$Element().removeEventListener('elemenx-ribbon-command', this.Done);
 
 			this.Outside = null;

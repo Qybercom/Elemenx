@@ -2,9 +2,11 @@
  * The rules of CSS of the selected element of a designer of pages (the Designer Service), by their context: who (this
  * element, every element of its kind, or those inside an element of the kind around it), when (always, :hover,
  * :focus-visible, :active, :disabled), where (every width, a tablet, a phone) and in which scheme (both, light, dark).
- * The properties of the rule of the context are rows of a name and a value (a token of the theme, var(--elemenx-accent),
- * is offered as one); a property added makes the rule, the last one taken away removes it. The rules that reach the
- * element in other contexts are listed under them, a press goes to one. The rules go into the template as a <style>.
+ * The properties of the rule of the context are rows of a name and a value (a token of the theme,
+ * var(--elemenx-accent), is offered as one, with the value it takes on the canvas: in the scheme of the context, or in
+ * the light and the dark one; a value that holds a token shows what it comes to under it); a property added makes the
+ * rule, the last one taken away removes it. The rules that reach the element in other contexts are listed under them, a
+ * press goes to one. The rules go into the template as a <style>.
  */
 Elemenx.Component('DesignerRules', {
 	$TemplateURL: 'DesignerRules.html',
@@ -131,15 +133,74 @@ Elemenx.Component('DesignerRules', {
 			}) : [];
 		};
 
-		/* The names of the properties offered, and the tokens of the theme as values. */
-		this.Properties = function () {
-			return ['color', 'background', 'background-color', 'border', 'border-color', 'border-radius', 'border-width', 'box-shadow', 'opacity', 'font-size', 'font-weight', 'font-family', 'font-style', 'line-height', 'letter-spacing', 'text-align', 'text-transform', 'text-decoration', 'white-space', 'width', 'height', 'min-width', 'max-width', 'min-height', 'max-height', 'margin', 'padding', 'gap', 'display', 'flex', 'flex-direction', 'flex-wrap', 'align-items', 'align-self', 'justify-content', 'order', 'position', 'top', 'right', 'bottom', 'left', 'z-index', 'overflow', 'cursor', 'transform', 'transition', 'outline', 'filter', 'aspect-ratio', 'object-fit', 'visibility'];
+		/* Texts as the options of a Combobox. */
+		this.Options = function (values) {
+			return values.map(function (value) {
+				return {Value: value, Label: value};
+			});
 		};
 
-		this.Tokens = function () {
+		/* The names of the properties offered, and the tokens of the theme as values (any other text is taken too). */
+		this.Properties = function () {
+			return self.Options(['color', 'background', 'background-color', 'border', 'border-color', 'border-radius', 'border-width', 'box-shadow', 'opacity', 'font-size', 'font-weight', 'font-family', 'font-style', 'line-height', 'letter-spacing', 'text-align', 'text-transform', 'text-decoration', 'white-space', 'width', 'height', 'min-width', 'max-width', 'min-height', 'max-height', 'margin', 'padding', 'gap', 'display', 'flex', 'flex-direction', 'flex-wrap', 'align-items', 'align-self', 'justify-content', 'order', 'position', 'top', 'right', 'bottom', 'left', 'z-index', 'overflow', 'cursor', 'transform', 'transition', 'outline', 'filter', 'aspect-ratio', 'object-fit', 'visibility']);
+		};
+
+		this.Tokens = function (scheme) {
 			return ['accent', 'accent-text', 'text', 'text-muted', 'background', 'surface', 'surface-hover', 'border', 'border-strong', 'success', 'warning', 'danger', 'info', 'radius-small', 'radius', 'radius-large', 'radius-pill', 'font-size-small', 'font-size', 'font-size-large', 'shadow-small', 'control-small', 'control', 'control-large'].map(function (name) {
-				return 'var(--elemenx-' + name + ')';
+				var value = 'var(--elemenx-' + name + ')';
+
+				return {Value: value, Label: value, Hint: self.Computed(value, scheme)};
 			});
+		};
+
+		/*
+		 * The value a token of the theme (name: accent) takes in a scheme (light or dark, '' as it is) on the page of the
+		 * canvas, where the page is, not in the theme of the builder around it.
+		 */
+		this.Resolve = function (name, scheme) {
+			var host = document.querySelector('.elemenx-designer-page') || document.body;
+			var probe = document.createElement('span');
+			var value;
+
+			if (scheme)
+				probe.setAttribute('data-scheme', scheme);
+
+			probe.hidden = true;
+
+			host.appendChild(probe);
+
+			value = window.getComputedStyle(probe).getPropertyValue('--elemenx-' + name).trim();
+
+			host.removeChild(probe);
+
+			return value;
+		};
+
+		/*
+		 * What a value that holds tokens comes to: each token by its value in the scheme of the context, or in the light and
+		 * the dark one when they differ (light · dark); '' for a value without a token.
+		 */
+		this.Computed = function (value, scheme) {
+			var text = String(value || '');
+			var names = text.match(/var\(--elemenx-[\w-]+\)/g);
+			var light;
+			var dark;
+
+			function resolved (mode) {
+				return text.replace(/var\(--elemenx-([\w-]+)\)/g, function (all, name) {
+					return self.Resolve(name, mode) || all;
+				});
+			}
+
+			if (!names) return '';
+
+			if (scheme)
+				return resolved(scheme);
+
+			light = resolved('light');
+			dark = resolved('dark');
+
+			return light === dark ? light : light + ' · ' + dark;
 		};
 
 		designer.OnChange(changed);
@@ -166,30 +227,29 @@ Elemenx.Component('DesignerRules', {
 		this[control.Name] = value || '';
 	},
 
-	Valued: function (event, node) {
-		this.$Service('Designer').SetRule(this.Rule(), node.getAttribute('data-property'), node.value);
+	/* The value of a property of the rule changed: its Combobox is named by the property. */
+	Valued: function (value, control) {
+		this.$Service('Designer').SetRule(this.Rule(), control.Name, value);
 	},
 
 	Removed: function (event, node) {
 		this.$Service('Designer').SetRule(this.Rule(), node.getAttribute('data-property'), '');
 	},
 
-	PropertyTyped: function (event, node) {
-		this.Property = node.value;
+	PropertyChosen: function (value) {
+		this.Property = value || '';
 	},
 
-	ValueTyped: function (event, node) {
-		this.Value = node.value;
-	},
+	/* The value of the new property: chosen or typed, it adds the property when it has a name. */
+	ValueChosen: function (value) {
+		this.Value = value || '';
 
-	AddKey: function (event) {
-		if (event.key === 'Enter')
-			this.Added();
+		this.Added();
 	},
 
 	/* A property added to the rule of the context, the fields of the new one emptied. */
 	Added: function () {
-		if (!this.Property.trim() || !this.Value.trim()) return;
+		if (!String(this.Property).trim() || !String(this.Value).trim()) return;
 
 		this.$Service('Designer').SetRule(this.Rule(), this.Property, this.Value);
 

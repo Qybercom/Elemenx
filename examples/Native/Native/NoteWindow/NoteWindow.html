@@ -1,0 +1,13 @@
+<div class="elemenx-column native-notes">
+	<h2 class="elemenx-title">Notes</h2>
+	<div class="elemenx-container native-note-form">
+		<div class="native-note-kind">
+			<Select [options]="Kinds" [value]="Kind" (change)="Kinded" />
+		</div>
+		<Input Placeholder="A note" [value]="Text" (input)="Typed" />
+		<button type="button" class="elemenx-button primary medium native-note-add" *tip="{Title: 'Add', Text: 'Adds the note to the list the main window shows too.', Delay: 0}" (click)="Added">Add</button>
+	</div>
+	<ul class="elemenx-ul native-note-list">
+		<li *for="item of Items" *key="item.ID">{{item.Kind}}: {{item.Text}}</li>
+	</ul>
+</div>

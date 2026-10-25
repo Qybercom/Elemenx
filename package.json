@@ -45,6 +45,7 @@
 	},
 	"scripts": {
 		"test": "npm run lint && npm run test:browser && npm run test:tools && npm run dist && npm run test:min && npm run test:history",
+		"test:native": "playwright test --config playwright.native.config.mjs",
 		"dist": "node tools/dist.js",
 		"test:min": "node tests/dist/min.mjs",
 		"test:browser": "vitest run",

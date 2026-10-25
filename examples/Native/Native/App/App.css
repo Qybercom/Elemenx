@@ -1,0 +1,72 @@
+body {
+	margin: 0;
+	background: var(--elemenx-background);
+	color: var(--elemenx-text);
+	font-family: var(--elemenx-font);
+}
+
+.native-body {
+	gap: 16px;
+	max-width: 720px;
+	margin: 0 auto;
+	padding: 24px 16px;
+}
+
+.native-body > .elemenx-title,
+.native-body > .elemenx-text {
+	margin: 0;
+}
+
+.native-actions {
+	gap: 8px;
+}
+
+/* A long answer (a path, JSON) wraps where it can: the page never grows wider than the screen. */
+.native-log {
+	min-width: 0;
+	overflow-wrap: anywhere;
+	font-family: var(--elemenx-font-mono);
+	font-size: var(--elemenx-font-size-small);
+}
+
+/* The window of notes. */
+.native-notes {
+	gap: 12px;
+	padding: 16px;
+}
+
+.native-notes > .elemenx-title {
+	margin: 0;
+}
+
+.native-note-form {
+	gap: 8px;
+	align-items: center;
+}
+
+.native-note-kind {
+	width: 120px;
+}
+
+/* The window of the tray. */
+.native-tray {
+	gap: 8px;
+	height: 100%;
+	padding: 16px;
+	box-sizing: border-box;
+	border: 1px solid var(--elemenx-border);
+}
+
+.native-tray > .elemenx-title,
+.native-tray > .elemenx-text {
+	margin: 0;
+}
+
+.native-tray-list {
+	flex: 1;
+	margin: 0;
+}
+
+.native-tray-actions {
+	gap: 8px;
+}

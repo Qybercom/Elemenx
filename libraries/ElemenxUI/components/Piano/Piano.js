@@ -182,7 +182,7 @@ Elemenx.Component('Piano', {
 
 	/* The key under a point, and how hard it is pressed there: the lower, the louder. */
 	At: function (x, y) {
-		var node = document.elementFromPoint(x, y);
+		var node = (this.$Element().ownerDocument || document).elementFromPoint(x, y);
 		var key = node && node.closest && node.closest('.elemenx-piano-key');
 		var rect;
 

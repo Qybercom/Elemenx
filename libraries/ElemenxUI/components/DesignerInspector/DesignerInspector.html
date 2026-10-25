@@ -1,5 +1,6 @@
 <div class="elemenx-designer-inspector">
-	<p class="elemenx-text small muted" *if="!Current(Version)">{{$T('ui.designer.nothing')}}</p>
+	<p class="elemenx-text small muted" *if="!Current(Version) && Mode(Version) === 'template'">{{$T('ui.designer.nothing')}}</p>
+	<DesignerDocument *if="!Current(Version) && Mode(Version) !== 'template'" />
 	<div class="elemenx-column elemenx-designer-inspector-body" *if="Current(Version)">
 		<div class="elemenx-container elemenx-designer-inspector-head">
 			<strong class="elemenx-designer-inspector-title">{{Title(Current(Version))}}</strong>
@@ -31,6 +32,9 @@
 				<div class="elemenx-designer-inspector-field" *for="field of Fields(Current(Version), Raw)" *key="Current(Version).ID + field.Name">
 					<Field *if="field.Type === 'text' || field.Type === 'list'" [label]="field.Name" [hint]="field.Hint">
 						<Input [name]="field.Name" [value]="field.Value" (input)="Changed" />
+					</Field>
+					<Field *if="field.Type === 'body'" [label]="field.Name" [hint]="field.Hint">
+						<TextArea Rows="6" AutoSize="true" [name]="field.Name" [value]="field.Value" (input)="Changed" />
 					</Field>
 					<Field *if="field.Type === 'number'" [label]="field.Name" [hint]="field.Hint">
 						<NumberInput [name]="field.Name" [value]="field.Value" (input)="Numbered" />

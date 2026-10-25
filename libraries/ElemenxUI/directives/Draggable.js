@@ -19,11 +19,19 @@ Elemenx.Directive('draggable', {
 
 		data.Options = {};
 
+		/*
+		 * The document of the drag: the one the element was pressed in (the page, or a window the Application opened). A
+		 * drag stays in its window: its listeners, its targets and its ghost are of that document.
+		 */
+		function owner () {
+			return data.Doc || element.ownerDocument || document;
+		}
+
 		/* Where a floating copy of an element goes: the shadow root of the element, so its styles reach it, or the body. */
 		function layer (node) {
-			var root = node && node.getRootNode ? node.getRootNode() : document;
+			var root = node && node.getRootNode ? node.getRootNode() : owner();
 
-			return root && root.nodeType === 11 && root.host ? root : document.body;
+			return root && root.nodeType === 11 && root.host ? root : owner().body;
 		}
 
 		function emit (target, name, detail) {
@@ -41,9 +49,9 @@ Elemenx.Directive('draggable', {
 		}
 
 		function targetAt (x, y) {
-			var node = document.elementFromPoint(x, y);
+			var node = owner().elementFromPoint(x, y);
 
-			while (node && node !== document.documentElement) {
+			while (node && node !== owner().documentElement) {
 				if (node.classList && node.classList.contains('elemenx-droppable') && accepts(node)) return node;
 
 				node = node.parentNode;
@@ -182,7 +190,7 @@ Elemenx.Directive('draggable', {
 		}
 
 		function highlight (on) {
-			var targets = document.querySelectorAll('.elemenx-droppable');
+			var targets = owner().querySelectorAll('.elemenx-droppable');
 			var i = 0;
 
 			while (i < targets.length) {
@@ -230,8 +238,8 @@ Elemenx.Directive('draggable', {
 			layer(element).appendChild(ghost);
 
 			/* A selection made before the pointer moved far enough would otherwise grow under the ghost. */
-			if (window.getSelection)
-				window.getSelection().removeAllRanges();
+			if ((owner().defaultView || window).getSelection)
+				(owner().defaultView || window).getSelection().removeAllRanges();
 
 			element.classList.add('dragging');
 
@@ -254,13 +262,13 @@ Elemenx.Directive('draggable', {
 
 			element.classList.remove('held');
 
-			document.removeEventListener('pointermove', data.Move, true);
-			document.removeEventListener('pointerup', data.Up, true);
-			document.removeEventListener('pointercancel', data.Cancel, true);
-			document.removeEventListener('keydown', data.Key, true);
-			document.removeEventListener('selectstart', data.Prevent, true);
+			owner().removeEventListener('pointermove', data.Move, true);
+			owner().removeEventListener('pointerup', data.Up, true);
+			owner().removeEventListener('pointercancel', data.Cancel, true);
+			owner().removeEventListener('keydown', data.Key, true);
+			owner().removeEventListener('selectstart', data.Prevent, true);
 
-			window.cancelAnimationFrame(data.Frame);
+			(owner().defaultView || window).cancelAnimationFrame(data.Frame);
 
 			data.Frame = 0;
 
@@ -298,10 +306,10 @@ Elemenx.Directive('draggable', {
 			emit(element, 'dragfinish', {Dropped: !!(dropped && target), Target: dropped ? target : null});
 
 			/* The click that ends a drag is not a click on the element. */
-			document.addEventListener('click', data.Swallow, true);
+			owner().addEventListener('click', data.Swallow, true);
 
 			window.setTimeout(function () {
-				document.removeEventListener('click', data.Swallow, true);
+				owner().removeEventListener('click', data.Swallow, true);
 			}, 0);
 		}
 
@@ -314,7 +322,7 @@ Elemenx.Directive('draggable', {
 			event.stopPropagation();
 			event.preventDefault();
 
-			document.removeEventListener('click', data.Swallow, true);
+			owner().removeEventListener('click', data.Swallow, true);
 		};
 
 		data.Down = function (event) {
@@ -340,11 +348,13 @@ Elemenx.Directive('draggable', {
 				}, Number(data.Options.Hold));
 			}
 
-			document.addEventListener('pointermove', data.Move, true);
-			document.addEventListener('pointerup', data.Up, true);
-			document.addEventListener('pointercancel', data.Cancel, true);
-			document.addEventListener('keydown', data.Key, true);
-			document.addEventListener('selectstart', data.Prevent, true);
+			data.Doc = element.ownerDocument || document;
+
+			owner().addEventListener('pointermove', data.Move, true);
+			owner().addEventListener('pointerup', data.Up, true);
+			owner().addEventListener('pointercancel', data.Cancel, true);
+			owner().addEventListener('keydown', data.Key, true);
+			owner().addEventListener('selectstart', data.Prevent, true);
 		};
 
 		data.Move = function (event) {
@@ -372,7 +382,7 @@ Elemenx.Directive('draggable', {
 			data.Ghost.style.transform = 'translate3d(' + (event.clientX - data.OffsetX) + 'px, ' + (event.clientY - data.OffsetY) + 'px, 0)';
 
 			if (!data.Frame)
-				data.Frame = window.requestAnimationFrame(data.Track);
+				data.Frame = (owner().defaultView || window).requestAnimationFrame(data.Track);
 		};
 
 		data.Track = function () {
@@ -443,11 +453,11 @@ Elemenx.Directive('draggable', {
 		/* A drag in progress keeps its listeners and ghost until the pointer is released. */
 		if (context.Data.Active) return;
 
-		document.removeEventListener('pointermove', context.Data.Move, true);
-		document.removeEventListener('pointerup', context.Data.Up, true);
-		document.removeEventListener('pointercancel', context.Data.Cancel, true);
-		document.removeEventListener('keydown', context.Data.Key, true);
-		document.removeEventListener('selectstart', context.Data.Prevent, true);
+		(context.Data.Doc || document).removeEventListener('pointermove', context.Data.Move, true);
+		(context.Data.Doc || document).removeEventListener('pointerup', context.Data.Up, true);
+		(context.Data.Doc || document).removeEventListener('pointercancel', context.Data.Cancel, true);
+		(context.Data.Doc || document).removeEventListener('keydown', context.Data.Key, true);
+		(context.Data.Doc || document).removeEventListener('selectstart', context.Data.Prevent, true);
 
 		if (context.Data.Ghost && context.Data.Ghost.parentNode)
 			context.Data.Ghost.parentNode.removeChild(context.Data.Ghost);

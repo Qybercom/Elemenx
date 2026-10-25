@@ -48,6 +48,36 @@
 		"appNote": "One HTML file runs alone: open it from the disk or put it on any server (the framework and ElemenxUI are inside it, about 1.7 MB). The project is a zip for elemenx dev and elemenx build, which keeps only what the page uses.",
 		"appName": "Name",
 		"appHtml": "Download the HTML file",
-		"appProject": "Download the project (.zip)"
+		"appProject": "Download the project (.zip)",
+		"running": "Running",
+		"inspection": "Inspection",
+		"rulers": "Rulers",
+		"project": "Project",
+		"documents": "Documents",
+		"newPage": "New page",
+		"newComponent": "New component",
+		"settings": "Application",
+		"new": "Create",
+		"newTitle": "Create a project",
+		"newNote": "What a project makes stays its own: a template, a component or a whole application.",
+		"newName": "Name",
+		"newNamePlaceholder": "The name of the project",
+		"kinds": {
+			"template": "Template",
+			"templateText": "One page as a template, to copy into an application.",
+			"component": "Component",
+			"componentText": "A Component with its public properties and slots, for the inspector.",
+			"application": "Application",
+			"applicationText": "Pages and components, routes and guards, and the settings of the Application."
+		},
+		"open": "Open",
+		"openTitle": "Projects",
+		"removeProject": "Remove the project",
+		"removeProjectText": "The project «{name}» goes for good.",
+		"cancel": "Cancel",
+		"fileFailed": "This file holds no project of the builder.",
+		"openFile": "Open a file",
+		"saveFile": "Save to a file",
+		"closeTab": "Close"
 	}
 }

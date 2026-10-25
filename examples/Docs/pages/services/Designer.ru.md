@@ -12,6 +12,11 @@
 - Template() — документ как шаблон Elemenx; Template(true, empty) — то же для холста: каждый узел в элементе, который его называет (data-designer-id), а пустой контейнер содержит текст empty.
 - Правила CSS страницы по контексту: Rules(); Rule(context) — правило контекста {Who: node, kind или within, Node, Class, Parent, State, Width, Theme}; SetRule(context, property, value) задаёт его свойство (правило появляется с первым свойством и исчезает с последним); RootClass(id) — класс элемента узла (elemenx-button), который называет правило его вида. Узел со своими правилами получает класс page-<его ID> (у компонента — на div вокруг него). Template() пишет правила первыми в <style> (ширины — через @media), а для холста — внутрь его страницы (ширины — через @container).
 - Import(text) читает шаблон обратно вместе с правилами его <style> (непонятные правила сохраняются как есть): виды палитры там, где элемент им соответствует, а любой другой элемент — как есть.
+- Свойство, которое компонент объявляет как Body (Value у Markdown, CodeView), — многострочный текст: пишется в тело элемента (с отступом шаблона, тег в нём — как &lt;) и читается из него обратно.
+- Проекты, редактируемый среди них, каждый хранится в хранилище браузера (ProjectsKey): Projects() перечисляет их, Create(mode, name) создаёт проект своего типа, который не меняется: template (одна страница), component (компонент с публичными свойствами и слотами) или application (страницы и компоненты, маршруты, гварды и настройки приложения); Switch(id) открывает другой, RemoveProject(id) удаляет; ExportProject() — редактируемый проект как текст файла, ImportProject(text) читает его обратно как новый проект.
+- Project() — редактируемый проект: {ID, Mode, Name, Settings, Current, Tabs, Documents, Routes, Guards}. Документ — {ID, Type (page или component), Name, Title (у страницы), Description и Props ([{Name, Type, Default, Options, Description}], у компонента), Slots (слоты его элементов Slot, '' — по умолчанию), Outlet (есть ли в нём место страницы)}; Opened() — ID редактируемого, Tabs — открытые во вкладках. AddDocument(type, name), RemoveDocument(id) (не компонент, который держит другой документ: их называет Used(id)), Open(id) (во вкладке; у каждого документа своя история), Close(id) (его вкладку), SetDocument(id, name, value); Source(id) — шаблон документа.
+- Маршруты приложения: [{ID, Path, Page, Guards, Failed}], AddRoute(path, page), SetRoute(id, name, value), RemoveRoute(id); его гварды — [{Name, Description, Code}] (Code — тело функции гварда), AddGuard(name), SetGuard(name, field, value), RemoveGuard(name); его настройки — SetSetting(name, value): Name, Title, Description, Icon, Language, Theme, Router, Component (компонент, внутри которого страницы), NotFound и заставка страницы: Splash ('true' или ''), SplashImage, SplashBackground, SplashColor, SplashText, SplashSpinner, SplashMinTime и SplashHTML (её собственное содержимое); и его установка как приложения системы: PWA ('true' или ''), PWAShortName, PWAIcon, PWATheme, PWADisplay и PWAOffline ('true' или '').
+- В приложении компоненты проекта — виды палитры (группа project), которые может взять редактируемый документ, кроме него самого и тех, что держат его; на холсте каждый работает как компонент, сделанный из своего документа. Вид slot (только в компоненте) отмечает, куда компонент помещает переданное ему содержимое, вид outlet (компонент приложения) — куда идут страницы маршрутов.
 
 ## Методы
 
@@ -40,6 +45,28 @@
 - `Rule(context)`
 - `SetRule(context, property, value)`
 - `RootClass(id)`
+- `Project()`
+- `Opened()`
+- `Projects()`
+- `Create(mode, name)`
+- `Switch(id)`
+- `RemoveProject(id)`
+- `ExportProject()`
+- `ImportProject(text)`
+- `AddDocument(type, name)`
+- `Used(id)`
+- `RemoveDocument(id)`
+- `Open(id)`
+- `Close(id)`
+- `SetDocument(id, name, value)`
+- `AddRoute(path, page)`
+- `SetRoute(id, name, value)`
+- `RemoveRoute(id)`
+- `AddGuard(name)`
+- `SetGuard(name, field, value)`
+- `RemoveGuard(name)`
+- `SetSetting(name, value)`
+- `Source(id)`
 
 ## Пример
 

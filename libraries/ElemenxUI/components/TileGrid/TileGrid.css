@@ -16,6 +16,21 @@
 	flex-wrap: nowrap;
 }
 
+/*
+ * The stacks of the groups: no box of their own, but in columns (as the Start menu), where a stack is a column of
+ * groups and the columns wrap, each whole, to a new row when the grid is narrower than they are.
+ */
+.elemenx-tile-stack {
+	display: contents;
+}
+
+.elemenx-tile-grid.columns .elemenx-tile-stack {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	gap: 32px;
+}
+
 /* Scroll: the grid scrolls on its own (in the height its page gives it), not the page around it. */
 .elemenx-tile-grid.scroll {
 	max-height: 100%;
@@ -373,6 +388,43 @@
 	width: 16px;
 	border: 2px dashed transparent;
 	border-radius: var(--elemenx-radius-large);
+}
+
+/* In columns: a new group above a group, below the last one of a column, or a new column beside a column. */
+.elemenx-tile-grid.columns .elemenx-tile-gap {
+	top: -24px;
+	bottom: auto;
+	inset-inline-start: 0;
+	width: auto;
+	inset-inline-end: 0;
+	height: 16px;
+}
+
+/*
+ * The place under the last group of a column is as tall as two rows of tiles: a group that showed the dragged tile
+ * shrinks when the pointer leaves it for that place, and the place, risen with it, stays under the pointer.
+ */
+.elemenx-tile-grid.columns.sorting .elemenx-tile-stack {
+	padding-bottom: 152px;
+}
+
+.elemenx-tile-grid.columns .elemenx-tile-gap.below {
+	top: calc(100% + 8px);
+	height: 136px;
+}
+
+.elemenx-tile-grid.columns .elemenx-tile-gap.side {
+	top: 0;
+	bottom: 0;
+	inset-inline-start: -24px;
+	inset-inline-end: auto;
+	width: 16px;
+	height: auto;
+}
+
+.elemenx-tile-grid.columns .elemenx-tile-gap.side.after {
+	inset-inline-start: auto;
+	inset-inline-end: -24px;
 }
 
 .elemenx-tile-gap.elemenx-droppable,

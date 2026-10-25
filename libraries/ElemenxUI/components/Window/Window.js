@@ -202,7 +202,7 @@ Elemenx.Component('Window', {
 		var root = this.$Element();
 		var parent = root && root.offsetParent;
 		if (this.Bounds === 'viewport' || !parent)
-			return {Width: window.innerWidth, Height: window.innerHeight};
+			return {Width: ((root.ownerDocument || document).defaultView || window).innerWidth, Height: ((root.ownerDocument || document).defaultView || window).innerHeight};
 
 		return {Width: parent.clientWidth, Height: parent.clientHeight};
 	},

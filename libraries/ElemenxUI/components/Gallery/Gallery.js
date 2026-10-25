@@ -190,7 +190,7 @@ Elemenx.Component('Gallery', {
 	Release: function (event) {
 		var root = this.$Element();
 		if (event && event.type === 'focusout' && root && root.contains(event.relatedTarget)) return;
-		if (event && event.type === 'mouseleave' && root && root.contains(document.activeElement)) return;
+		if (event && event.type === 'mouseleave' && root && root.contains((root.ownerDocument || document).activeElement)) return;
 
 		this.Held = false;
 

@@ -49,12 +49,17 @@ test.describe('Elemenx documentation', function () {
 		expect(errors).toEqual([]);
 	});
 
-	test('switches to Russian, keeps the language and finds a page by the search of the contents', async function ({ page }) {
+	test('switches to Russian, keeps the language and finds a page by the search of the whole reference in its header', async function ({ page }) {
 		var errors = captureErrors(page);
 		var article = page.locator('.docs-article');
 		var nav = page.locator('.docs-nav');
+		var search = page.locator('.docs-header .docs-search');
 
 		await page.goto(origin + '/components/Button');
+
+		/* The components by their groups, the group of the page open. */
+		await expect(nav.getByText('Buttons', {exact: true})).toBeVisible();
+		await expect(nav.getByText('Button', {exact: true})).toBeVisible();
 
 		await expect(article.locator('h1')).toHaveText('Button');
 
@@ -68,12 +73,30 @@ test.describe('Elemenx documentation', function () {
 
 		await expect(article).toContainText('Кнопка.');
 
-		await nav.locator('input').first().fill('Toggle');
-		await nav.getByText('Toggle', {exact: true}).click();
+		/* The search reads the text of every page in the language: a word of the description finds the page, its title first. */
+		await search.locator('input').fill('Переключатель');
+
+		await expect(search.locator('.docs-search-result').first().locator('.docs-search-title')).toHaveText('Toggle');
+		await expect(search.locator('.docs-search-result').first().locator('.docs-search-hit').first()).toHaveText(/переключатель/i);
+
+		await search.locator('.docs-search-result').first().click();
 
 		await expect(page).toHaveURL(/\/components\/Toggle$/);
 		await expect(article.locator('h1')).toHaveText('Toggle');
 		await expect(article).toContainText('Переключатель');
+
+		/* The keys: the arrows go through the pages found, Enter opens one, Escape closes the list. */
+		await search.locator('input').fill('dialog');
+
+		await expect(search.locator('.docs-search-result').first()).toHaveClass(/active/);
+
+		await search.locator('input').press('ArrowDown');
+
+		await expect(search.locator('.docs-search-result').nth(1)).toHaveClass(/active/);
+
+		await search.locator('input').press('Escape');
+
+		await expect(search.locator('.docs-search-results')).toHaveCount(0);
 
 		await page.goto(origin + '/guide/start');
 
@@ -91,14 +114,14 @@ test.describe('Elemenx documentation', function () {
 
 		await expect(result).toContainText('Primary');
 
-		await nav.locator('input').first().fill('Checkbox');
+		/* Through the group of the components it is in. */
+		await nav.getByText('Inputs', {exact: true}).click();
 		await nav.getByText('Checkbox', {exact: true}).click();
 
 		await expect(page).toHaveURL(/\/components\/Checkbox$/);
 		await expect(result).toContainText('Remember me');
 		await expect(result).not.toContainText('Primary');
 
-		await nav.locator('input').first().fill('Toggle');
 		await nav.getByText('Toggle', {exact: true}).click();
 
 		await expect(result).toContainText('Notifications');

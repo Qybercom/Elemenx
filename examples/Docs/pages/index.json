@@ -285,822 +285,1079 @@
 				"en": "Components",
 				"ru": "Компоненты"
 			},
+			"Groups": [
+				{
+					"ID": "layout",
+					"Title": {
+						"en": "Layout",
+						"ru": "Раскладка"
+					}
+				},
+				{
+					"ID": "text",
+					"Title": {
+						"en": "Text",
+						"ru": "Текст"
+					}
+				},
+				{
+					"ID": "inputs",
+					"Title": {
+						"en": "Inputs",
+						"ru": "Поля ввода"
+					}
+				},
+				{
+					"ID": "buttons",
+					"Title": {
+						"en": "Buttons",
+						"ru": "Кнопки"
+					}
+				},
+				{
+					"ID": "navigation",
+					"Title": {
+						"en": "Navigation",
+						"ru": "Навигация"
+					}
+				},
+				{
+					"ID": "display",
+					"Title": {
+						"en": "Display",
+						"ru": "Отображение"
+					}
+				},
+				{
+					"ID": "data",
+					"Title": {
+						"en": "Data",
+						"ru": "Данные"
+					}
+				},
+				{
+					"ID": "overlays",
+					"Title": {
+						"en": "Windows and overlays",
+						"ru": "Окна и слои"
+					}
+				},
+				{
+					"ID": "social",
+					"Title": {
+						"en": "People and chat",
+						"ru": "Люди и чат"
+					}
+				},
+				{
+					"ID": "commerce",
+					"Title": {
+						"en": "Commerce",
+						"ru": "Коммерция"
+					}
+				},
+				{
+					"ID": "music",
+					"Title": {
+						"en": "Music",
+						"ru": "Музыка"
+					}
+				},
+				{
+					"ID": "game",
+					"Title": {
+						"en": "Game",
+						"ru": "Игра"
+					}
+				},
+				{
+					"ID": "tools",
+					"Title": {
+						"en": "Designer",
+						"ru": "Конструктор"
+					}
+				}
+			],
 			"Pages": [
 				{
 					"ID": "AchievementHost",
 					"Title": {
 						"en": "AchievementHost"
-					}
+					},
+					"Group": "overlays"
 				},
 				{
 					"ID": "Avatar",
 					"Title": {
 						"en": "Avatar"
-					}
+					},
+					"Group": "display"
 				},
 				{
 					"ID": "Block",
 					"Title": {
 						"en": "Block"
-					}
+					},
+					"Group": "layout"
 				},
 				{
 					"ID": "Breadcrumbs",
 					"Title": {
 						"en": "Breadcrumbs"
-					}
+					},
+					"Group": "navigation"
 				},
 				{
 					"ID": "Button",
 					"Title": {
 						"en": "Button"
-					}
+					},
+					"Group": "buttons"
 				},
 				{
 					"ID": "ButtonGroup",
 					"Title": {
 						"en": "ButtonGroup"
-					}
+					},
+					"Group": "buttons"
 				},
 				{
 					"ID": "CVVInput",
 					"Title": {
 						"en": "CVVInput"
-					}
+					},
+					"Group": "inputs"
 				},
 				{
 					"ID": "Calendar",
 					"Title": {
 						"en": "Calendar"
-					}
+					},
+					"Group": "data"
 				},
 				{
 					"ID": "Card",
 					"Title": {
 						"en": "Card"
-					}
+					},
+					"Group": "layout"
 				},
 				{
 					"ID": "CardExpiryInput",
 					"Title": {
 						"en": "CardExpiryInput"
-					}
+					},
+					"Group": "inputs"
 				},
 				{
 					"ID": "CardNumberInput",
 					"Title": {
 						"en": "CardNumberInput"
-					}
+					},
+					"Group": "inputs"
 				},
 				{
 					"ID": "Centered",
 					"Title": {
 						"en": "Centered"
-					}
+					},
+					"Group": "layout"
 				},
 				{
 					"ID": "Chart",
 					"Title": {
 						"en": "Chart"
-					}
+					},
+					"Group": "data"
 				},
 				{
 					"ID": "Chat",
 					"Title": {
 						"en": "Chat"
-					}
+					},
+					"Group": "social"
 				},
 				{
 					"ID": "ChatComposer",
 					"Title": {
 						"en": "ChatComposer"
-					}
+					},
+					"Group": "social"
 				},
 				{
 					"ID": "ChatMessage",
 					"Title": {
 						"en": "ChatMessage"
-					}
+					},
+					"Group": "social"
 				},
 				{
 					"ID": "Checkbox",
 					"Title": {
 						"en": "Checkbox"
-					}
+					},
+					"Group": "inputs"
 				},
 				{
 					"ID": "CityInput",
 					"Title": {
 						"en": "CityInput"
-					}
+					},
+					"Group": "inputs"
 				},
 				{
 					"ID": "CodeEditor",
 					"Title": {
 						"en": "CodeEditor"
-					}
+					},
+					"Group": "inputs"
 				},
 				{
 					"ID": "CodeView",
 					"Title": {
 						"en": "CodeView"
-					}
+					},
+					"Group": "text"
 				},
 				{
 					"ID": "ColorInput",
 					"Title": {
 						"en": "ColorInput"
-					}
+					},
+					"Group": "inputs"
 				},
 				{
 					"ID": "Combobox",
 					"Title": {
 						"en": "Combobox"
-					}
+					},
+					"Group": "inputs"
 				},
 				{
 					"ID": "CommandPalette",
 					"Title": {
 						"en": "CommandPalette"
-					}
+					},
+					"Group": "navigation"
 				},
 				{
 					"ID": "CommentCard",
 					"Title": {
 						"en": "CommentCard"
-					}
+					},
+					"Group": "social"
 				},
 				{
 					"ID": "ContextMenu",
 					"Title": {
 						"en": "ContextMenu"
-					}
+					},
+					"Group": "buttons"
 				},
 				{
 					"ID": "CurrencySelect",
 					"Title": {
 						"en": "CurrencySelect"
-					}
+					},
+					"Group": "inputs"
 				},
 				{
 					"ID": "Dashboard",
 					"Title": {
 						"en": "Dashboard"
-					}
+					},
+					"Group": "layout"
 				},
 				{
 					"ID": "DashboardWidget",
 					"Title": {
 						"en": "DashboardWidget"
-					}
+					},
+					"Group": "layout"
 				},
 				{
 					"ID": "DateInput",
 					"Title": {
 						"en": "DateInput"
-					}
+					},
+					"Group": "inputs"
 				},
 				{
 					"ID": "DateRangeInput",
 					"Title": {
 						"en": "DateRangeInput"
-					}
+					},
+					"Group": "inputs"
 				},
 				{
 					"ID": "DesignerCanvas",
 					"Title": {
 						"en": "DesignerCanvas"
-					}
+					},
+					"Group": "tools"
+				},
+				{
+					"ID": "DesignerDocument",
+					"Title": {
+						"en": "DesignerDocument"
+					},
+					"Group": "tools"
 				},
 				{
 					"ID": "DesignerInspector",
 					"Title": {
 						"en": "DesignerInspector"
-					}
+					},
+					"Group": "tools"
 				},
 				{
 					"ID": "DesignerPalette",
 					"Title": {
 						"en": "DesignerPalette"
-					}
+					},
+					"Group": "tools"
+				},
+				{
+					"ID": "DesignerProject",
+					"Title": {
+						"en": "DesignerProject"
+					},
+					"Group": "tools"
 				},
 				{
 					"ID": "DesignerRules",
 					"Title": {
 						"en": "DesignerRules"
-					}
+					},
+					"Group": "tools"
+				},
+				{
+					"ID": "DesignerSettings",
+					"Title": {
+						"en": "DesignerSettings"
+					},
+					"Group": "tools"
 				},
 				{
 					"ID": "DesignerStyle",
 					"Title": {
 						"en": "DesignerStyle"
-					}
+					},
+					"Group": "tools"
 				},
 				{
 					"ID": "DesignerTree",
 					"Title": {
 						"en": "DesignerTree"
-					}
+					},
+					"Group": "tools"
 				},
 				{
 					"ID": "DialPad",
 					"Title": {
 						"en": "DialPad"
-					}
+					},
+					"Group": "inputs"
 				},
 				{
 					"ID": "Dialog",
 					"Title": {
 						"en": "Dialog"
-					}
+					},
+					"Group": "overlays"
 				},
 				{
 					"ID": "DialogHost",
 					"Title": {
 						"en": "DialogHost"
-					}
+					},
+					"Group": "overlays"
 				},
 				{
 					"ID": "Drawer",
 					"Title": {
 						"en": "Drawer"
-					}
+					},
+					"Group": "overlays"
 				},
 				{
 					"ID": "EmojiPicker",
 					"Title": {
 						"en": "EmojiPicker"
-					}
+					},
+					"Group": "inputs"
 				},
 				{
 					"ID": "EmptyState",
 					"Title": {
 						"en": "EmptyState"
-					}
+					},
+					"Group": "display"
 				},
 				{
 					"ID": "ExpressionPicker",
 					"Title": {
 						"en": "ExpressionPicker"
-					}
+					},
+					"Group": "inputs"
 				},
 				{
 					"ID": "Field",
 					"Title": {
 						"en": "Field"
-					}
+					},
+					"Group": "inputs"
 				},
 				{
 					"ID": "FileIcon",
 					"Title": {
 						"en": "FileIcon"
-					}
+					},
+					"Group": "display"
 				},
 				{
 					"ID": "FileUpload",
 					"Title": {
 						"en": "FileUpload"
-					}
+					},
+					"Group": "inputs"
 				},
 				{
 					"ID": "FindBar",
 					"Title": {
 						"en": "FindBar"
-					}
+					},
+					"Group": "navigation"
 				},
 				{
 					"ID": "Form",
 					"Title": {
 						"en": "Form"
-					}
+					},
+					"Group": "layout"
 				},
 				{
 					"ID": "Formula",
 					"Title": {
 						"en": "Formula"
-					}
+					},
+					"Group": "text"
 				},
 				{
 					"ID": "Gallery",
 					"Title": {
 						"en": "Gallery"
-					}
+					},
+					"Group": "display"
 				},
 				{
 					"ID": "GameBar",
 					"Title": {
 						"en": "GameBar"
-					}
+					},
+					"Group": "game"
 				},
 				{
 					"ID": "GameDialogue",
 					"Title": {
 						"en": "GameDialogue"
-					}
+					},
+					"Group": "game"
 				},
 				{
 					"ID": "GameHud",
 					"Title": {
 						"en": "GameHud"
-					}
+					},
+					"Group": "game"
 				},
 				{
 					"ID": "GameInventory",
 					"Title": {
 						"en": "GameInventory"
-					}
+					},
+					"Group": "game"
 				},
 				{
 					"ID": "GameItemCard",
 					"Title": {
 						"en": "GameItemCard"
-					}
+					},
+					"Group": "game"
 				},
 				{
 					"ID": "GameKey",
 					"Title": {
 						"en": "GameKey"
-					}
+					},
+					"Group": "game"
 				},
 				{
 					"ID": "GameLeaderboard",
 					"Title": {
 						"en": "GameLeaderboard"
-					}
+					},
+					"Group": "game"
 				},
 				{
 					"ID": "GameMenu",
 					"Title": {
 						"en": "GameMenu"
-					}
+					},
+					"Group": "game"
 				},
 				{
 					"ID": "GameMinimap",
 					"Title": {
 						"en": "GameMinimap"
-					}
+					},
+					"Group": "game"
 				},
 				{
 					"ID": "GameQuests",
 					"Title": {
 						"en": "GameQuests"
-					}
+					},
+					"Group": "game"
 				},
 				{
 					"ID": "GameSlot",
 					"Title": {
 						"en": "GameSlot"
-					}
+					},
+					"Group": "game"
 				},
 				{
 					"ID": "GameTabs",
 					"Title": {
 						"en": "GameTabs"
-					}
+					},
+					"Group": "game"
 				},
 				{
 					"ID": "Icon",
 					"Title": {
 						"en": "Icon"
-					}
+					},
+					"Group": "display"
 				},
 				{
 					"ID": "Image",
 					"Title": {
 						"en": "Image"
-					}
+					},
+					"Group": "display"
 				},
 				{
 					"ID": "Input",
 					"Title": {
 						"en": "Input"
-					}
+					},
+					"Group": "inputs"
 				},
 				{
 					"ID": "Keyboard",
 					"Title": {
 						"en": "Keyboard"
-					}
+					},
+					"Group": "music"
 				},
 				{
 					"ID": "Knob",
 					"Title": {
 						"en": "Knob"
-					}
+					},
+					"Group": "inputs"
 				},
 				{
 					"ID": "Markdown",
 					"Title": {
 						"en": "Markdown"
-					}
+					},
+					"Group": "text"
 				},
 				{
 					"ID": "MasterDetail",
 					"Title": {
 						"en": "MasterDetail"
-					}
+					},
+					"Group": "layout"
 				},
 				{
 					"ID": "Menu",
 					"Title": {
 						"en": "Menu"
-					}
+					},
+					"Group": "buttons"
 				},
 				{
 					"ID": "MenuItem",
 					"Title": {
 						"en": "MenuItem"
-					}
+					},
+					"Group": "buttons"
 				},
 				{
 					"ID": "MenuList",
 					"Title": {
 						"en": "MenuList"
-					}
+					},
+					"Group": "buttons"
 				},
 				{
 					"ID": "Meter",
 					"Title": {
 						"en": "Meter"
-					}
+					},
+					"Group": "display"
 				},
 				{
 					"ID": "Mixer",
 					"Title": {
 						"en": "Mixer"
-					}
+					},
+					"Group": "music"
 				},
 				{
 					"ID": "MixerChannel",
 					"Title": {
 						"en": "MixerChannel"
-					}
+					},
+					"Group": "music"
 				},
 				{
 					"ID": "MoneyInput",
 					"Title": {
 						"en": "MoneyInput"
-					}
+					},
+					"Group": "inputs"
 				},
 				{
 					"ID": "MultiSelect",
 					"Title": {
 						"en": "MultiSelect"
-					}
+					},
+					"Group": "inputs"
 				},
 				{
 					"ID": "NavList",
 					"Title": {
 						"en": "NavList"
-					}
+					},
+					"Group": "navigation"
 				},
 				{
 					"ID": "NumberInput",
 					"Title": {
 						"en": "NumberInput"
-					}
+					},
+					"Group": "inputs"
 				},
 				{
 					"ID": "OTPInput",
 					"Title": {
 						"en": "OTPInput"
-					}
+					},
+					"Group": "inputs"
 				},
 				{
 					"ID": "Pagination",
 					"Title": {
 						"en": "Pagination"
-					}
+					},
+					"Group": "navigation"
 				},
 				{
 					"ID": "PhoneInput",
 					"Title": {
 						"en": "PhoneInput"
-					}
+					},
+					"Group": "inputs"
 				},
 				{
 					"ID": "Piano",
 					"Title": {
 						"en": "Piano"
-					}
+					},
+					"Group": "music"
 				},
 				{
 					"ID": "PlanCard",
 					"Title": {
 						"en": "PlanCard"
-					}
+					},
+					"Group": "commerce"
 				},
 				{
 					"ID": "PlanPicker",
 					"Title": {
 						"en": "PlanPicker"
-					}
+					},
+					"Group": "commerce"
 				},
 				{
 					"ID": "Popover",
 					"Title": {
 						"en": "Popover"
-					}
+					},
+					"Group": "overlays"
 				},
 				{
 					"ID": "PostCard",
 					"Title": {
 						"en": "PostCard"
-					}
+					},
+					"Group": "social"
 				},
 				{
 					"ID": "Presence",
 					"Title": {
 						"en": "Presence"
-					}
+					},
+					"Group": "display"
 				},
 				{
 					"ID": "ProductCard",
 					"Title": {
 						"en": "ProductCard"
-					}
+					},
+					"Group": "commerce"
 				},
 				{
 					"ID": "ProfileCard",
 					"Title": {
 						"en": "ProfileCard"
-					}
+					},
+					"Group": "social"
 				},
 				{
 					"ID": "Progress",
 					"Title": {
 						"en": "Progress"
-					}
+					},
+					"Group": "display"
 				},
 				{
 					"ID": "Properties",
 					"Title": {
 						"en": "Properties"
-					}
+					},
+					"Group": "layout"
 				},
 				{
 					"ID": "Property",
 					"Title": {
 						"en": "Property"
-					}
+					},
+					"Group": "layout"
 				},
 				{
 					"ID": "Radio",
 					"Title": {
 						"en": "Radio"
-					}
+					},
+					"Group": "inputs"
 				},
 				{
 					"ID": "RadioGroup",
 					"Title": {
 						"en": "RadioGroup"
-					}
+					},
+					"Group": "inputs"
 				},
 				{
 					"ID": "Rating",
 					"Title": {
 						"en": "Rating"
-					}
+					},
+					"Group": "display"
 				},
 				{
 					"ID": "Ribbon",
 					"Title": {
 						"en": "Ribbon"
-					}
+					},
+					"Group": "navigation"
 				},
 				{
 					"ID": "RibbonBackstage",
 					"Title": {
 						"en": "RibbonBackstage"
-					}
+					},
+					"Group": "navigation"
 				},
 				{
 					"ID": "RibbonButton",
 					"Title": {
 						"en": "RibbonButton"
-					}
+					},
+					"Group": "navigation"
 				},
 				{
 					"ID": "RibbonGallery",
 					"Title": {
 						"en": "RibbonGallery"
-					}
+					},
+					"Group": "navigation"
 				},
 				{
 					"ID": "RibbonGroup",
 					"Title": {
 						"en": "RibbonGroup"
-					}
+					},
+					"Group": "navigation"
 				},
 				{
 					"ID": "RibbonPage",
 					"Title": {
 						"en": "RibbonPage"
-					}
+					},
+					"Group": "navigation"
 				},
 				{
 					"ID": "RibbonTab",
 					"Title": {
 						"en": "RibbonTab"
-					}
+					},
+					"Group": "navigation"
 				},
 				{
 					"ID": "RichEditor",
 					"Title": {
 						"en": "RichEditor"
-					}
+					},
+					"Group": "inputs"
+				},
+				{
+					"ID": "Ruler",
+					"Title": {
+						"en": "Ruler"
+					},
+					"Group": "display"
 				},
 				{
 					"ID": "Section",
 					"Title": {
 						"en": "Section"
-					}
+					},
+					"Group": "layout"
 				},
 				{
 					"ID": "Select",
 					"Title": {
 						"en": "Select"
-					}
+					},
+					"Group": "inputs"
 				},
 				{
 					"ID": "Settings",
 					"Title": {
 						"en": "Settings"
-					}
+					},
+					"Group": "layout"
 				},
 				{
 					"ID": "SettingsMenu",
 					"Title": {
 						"en": "SettingsMenu"
-					}
+					},
+					"Group": "layout"
 				},
 				{
 					"ID": "Skeleton",
 					"Title": {
 						"en": "Skeleton"
-					}
+					},
+					"Group": "display"
 				},
 				{
 					"ID": "Slider",
 					"Title": {
 						"en": "Slider"
-					}
+					},
+					"Group": "inputs"
 				},
 				{
 					"ID": "Sparkline",
 					"Title": {
 						"en": "Sparkline"
-					}
+					},
+					"Group": "data"
 				},
 				{
 					"ID": "Spinner",
 					"Title": {
 						"en": "Spinner"
-					}
+					},
+					"Group": "display"
 				},
 				{
 					"ID": "Splitter",
 					"Title": {
 						"en": "Splitter"
-					}
+					},
+					"Group": "layout"
 				},
 				{
 					"ID": "Steps",
 					"Title": {
 						"en": "Steps"
-					}
+					},
+					"Group": "navigation"
 				},
 				{
 					"ID": "StickerPicker",
 					"Title": {
 						"en": "StickerPicker"
-					}
+					},
+					"Group": "inputs"
 				},
 				{
 					"ID": "Tab",
 					"Title": {
 						"en": "Tab"
-					}
+					},
+					"Group": "navigation"
 				},
 				{
 					"ID": "Table",
 					"Title": {
 						"en": "Table"
-					}
+					},
+					"Group": "data"
 				},
 				{
 					"ID": "Tabs",
 					"Title": {
 						"en": "Tabs"
-					}
+					},
+					"Group": "navigation"
 				},
 				{
 					"ID": "TagInput",
 					"Title": {
 						"en": "TagInput"
-					}
+					},
+					"Group": "inputs"
 				},
 				{
 					"ID": "Terminal",
 					"Title": {
 						"en": "Terminal"
-					}
+					},
+					"Group": "data"
 				},
 				{
 					"ID": "TextArea",
 					"Title": {
 						"en": "TextArea"
-					}
+					},
+					"Group": "inputs"
 				},
 				{
 					"ID": "ThemeSwitch",
 					"Title": {
 						"en": "ThemeSwitch"
-					}
+					},
+					"Group": "buttons"
 				},
 				{
 					"ID": "Tile",
 					"Title": {
 						"en": "Tile"
-					}
+					},
+					"Group": "layout"
 				},
 				{
 					"ID": "TileGrid",
 					"Title": {
 						"en": "TileGrid"
-					}
+					},
+					"Group": "layout"
 				},
 				{
 					"ID": "TileGroup",
 					"Title": {
 						"en": "TileGroup"
-					}
+					},
+					"Group": "layout"
 				},
 				{
 					"ID": "TimeInput",
 					"Title": {
 						"en": "TimeInput"
-					}
+					},
+					"Group": "inputs"
 				},
 				{
 					"ID": "Timeline",
 					"Title": {
 						"en": "Timeline"
-					}
+					},
+					"Group": "data"
 				},
 				{
 					"ID": "ToastHost",
 					"Title": {
 						"en": "ToastHost"
-					}
+					},
+					"Group": "overlays"
 				},
 				{
 					"ID": "Toggle",
 					"Title": {
 						"en": "Toggle"
-					}
+					},
+					"Group": "inputs"
 				},
 				{
 					"ID": "Tour",
 					"Title": {
 						"en": "Tour"
-					}
+					},
+					"Group": "navigation"
 				},
 				{
 					"ID": "Tree",
 					"Title": {
 						"en": "Tree"
-					}
+					},
+					"Group": "navigation"
 				},
 				{
 					"ID": "VirtualList",
 					"Title": {
 						"en": "VirtualList"
-					}
+					},
+					"Group": "layout"
 				},
 				{
 					"ID": "Window",
 					"Title": {
 						"en": "Window"
-					}
+					},
+					"Group": "overlays"
 				},
 				{
 					"ID": "Workspace",
 					"Title": {
 						"en": "Workspace"
-					}
+					},
+					"Group": "overlays"
 				},
 				{
 					"ID": "WorkspaceToolWindow",
 					"Title": {
 						"en": "WorkspaceToolWindow"
-					}
+					},
+					"Group": "overlays"
 				},
 				{
 					"ID": "WorkspaceToolbar",
 					"Title": {
 						"en": "WorkspaceToolbar"
-					}
+					},
+					"Group": "overlays"
 				}
 			]
 		},
@@ -1424,6 +1681,12 @@
 					"ID": "swipe",
 					"Title": {
 						"en": "*swipe"
+					}
+				},
+				{
+					"ID": "tip",
+					"Title": {
+						"en": "*tip"
 					}
 				}
 			]

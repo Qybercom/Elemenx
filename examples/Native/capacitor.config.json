@@ -1,0 +1,13 @@
+{
+	"appId": "dev.elemenx.nativeexample",
+	"appName": "Elemenx native",
+	"webDir": "dist/native/mobile",
+	"backgroundColor": "#1e1f22",
+	"plugins": {
+		"SplashScreen": {
+			"launchAutoHide": false,
+			"launchShowDuration": 0,
+			"backgroundColor": "#1e1f22"
+		}
+	}
+}

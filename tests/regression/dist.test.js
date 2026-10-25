@@ -186,6 +186,50 @@ describe('Elemenx dist', function () {
 		}
 	});
 
+	it('copies next to a build in a folder the packs the Application uses, with every language of them, and the ones of --packs or --full', function () {
+		var project = path.resolve(process.cwd(), 'tests', 'dist', 'single-project');
+		var target = path.join(project, '..', 'folder-packs-output');
+		var index;
+
+		function copied (relative) {
+			return fs.existsSync(path.join(target, 'libraries', 'ElemenxUI', relative));
+		}
+
+		try {
+			Builder.Build(project, {out: '../folder-packs-output'});
+
+			index = fs.readFileSync(path.join(target, 'index.html'), 'utf8');
+
+			expect(copied('icons/brands.svg')).toBe(true);
+			expect(copied('icons/weather.svg')).toBe(true);
+			expect(copied('index.css')).toBe(true);
+			expect(copied('icons/files.svg')).toBe(false);
+			expect(copied('data/emoji.json')).toBe(false);
+			expect(copied('data/cities.txt')).toBe(false);
+			expect(copied('themes/fantasy.css')).toBe(false);
+			expect(index).not.toContain('themes/fantasy.css');
+			expect(index).toContain('themes/darcula.css');
+
+			Builder.Build(project, {out: '../folder-packs-output', packs: ['emoji', 'fantasy']});
+
+			index = fs.readFileSync(path.join(target, 'index.html'), 'utf8');
+
+			expect(copied('data/emoji.json')).toBe(true);
+			expect(copied('data/emoji-en.json')).toBe(true);
+			expect(copied('data/emoji-ru.json')).toBe(true);
+			expect(copied('themes/fantasy.css')).toBe(true);
+			expect(index).toContain('themes/fantasy.css');
+
+			Builder.Build(project, {out: '../folder-packs-output', full: true});
+
+			expect(copied('data/cities.txt')).toBe(true);
+			expect(copied('icons/files.svg')).toBe(true);
+		}
+		finally {
+			fs.rmSync(target, {recursive: true, force: true});
+		}
+	});
+
 	it('builds an Application into one index.html with elemenx build --single, its scripts safe inside a <script>', function () {
 		var cli = path.resolve(process.cwd(), 'elemenx-cli.js');
 		var project = path.resolve(process.cwd(), 'tests', 'dist', 'single-project');

@@ -1,14 +1,15 @@
 /*
  * The selected element of a designer of pages (the Designer Service), in blocks of their own: on top its layout, what
  * every element has (DesignerStyle: its box, its sizes, its flex), its rules of CSS by their context (DesignerRules;
- * Style false leaves both out), then its props, what
- * its kind has: a field for each prop (a text, a number, a switch, a choice, the modifiers of its class, an expression of
- * JavaScript), with the description its Component declares in $Meta as the hint; its slot in its parent and its text
- * when its kind has one. A list prop whose $Meta gives the Schema of its items is a list of them, each a row of fields,
- * that adds, moves and removes items ({ } edits it as an expression again). A component of declared children (Tabs and
- * Tab) has a button to add each kind of them. The actions on the element: up and down among its siblings, its parent,
- * a copy, removal. Every change goes to the Designer at once. Events: select (the element selected after an action, or
- * null).
+ * Style false leaves both out), then its props, what its kind has: a field for each prop (a text, a number, a switch, a
+ * choice, the modifiers of its class, an expression of JavaScript), with the description its Component declares in
+ * $Meta as the hint; its slot in its parent and its text when its kind has one. A list prop whose $Meta gives the
+ * Schema of its items is a list of them, each a row of fields, that adds, moves and removes items ({ } edits it as an
+ * expression again). A component of declared children (Tabs and Tab) has a button to add each kind of them. The actions
+ * on the element: up and down among its siblings, its parent, a copy, removal. Every change goes to the Designer at
+ * once. A prop its Component declares Body (the Value of a Markdown) is a field of many lines. With no element
+ * selected, a component or an application shows the document being edited (DesignerDocument).
+ * Events: select (the element selected after an action, or null).
  */
 Elemenx.Component('DesignerInspector', {
 	$TemplateURL: 'DesignerInspector.html',
@@ -51,6 +52,11 @@ Elemenx.Component('DesignerInspector', {
 			return id ? designer.Find(id) : null;
 		};
 
+		/* The mode of the designer: with no element selected, a component or an application shows its document. */
+		this.Mode = function (version) {
+			return version >= 0 ? designer.Project().Mode : 'template';
+		};
+
 		this.Title = function (node) {
 			return node ? designer.Label(node.Kind) : '';
 		};
@@ -80,7 +86,7 @@ Elemenx.Component('DesignerInspector', {
 
 				return {
 					Name: field.Name,
-					Type: field.Type,
+					Type: field.Body ? 'body' : field.Type,
 					Value: field.Type === 'classes' ? String(value || '').split(/\s+/).filter(Boolean) : value,
 					Hint: field.Description || (field.Type === 'json' ? Elemenx.Locale.Text('ui.designer.expression') : field.Type === 'list' ? 'One, Two, Three' : ''),
 					Options: options(field.Options || []),

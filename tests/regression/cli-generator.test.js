@@ -206,6 +206,9 @@ describe('Elemenx graph-aware generator', function () {
 		expect(html).not.toContain('\\n');
 		expect(html.split('\n')).toEqual(['<!DOCTYPE html>', '<html>', '<head>', '\t<meta charset="utf-8">', '\t<meta name="viewport" content="width=device-width, initial-scale=1">', '', '\t<script src="/elemenx.js"></script>', '\t<script src="/app.js"></script>', '</head>', '<body>', '</body>', '</html>', '']);
 		expect(JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8')).devDependencies).toEqual({'@qybercom/elemenx': '^' + version});
+
+		/* The index of the Application ends as the indexes of the repository do, with a semicolon. */
+		expect(fs.readFileSync(path.join(root, 'FooApp', 'index.js'), 'utf8')).toBe('[\n\t\'App/App.js\'\n];\n');
 	});
 
 	it('creates another named Application without touching existing host files', function () {

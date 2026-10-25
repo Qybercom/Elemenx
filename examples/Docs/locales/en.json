@@ -8,6 +8,9 @@
 		"result": "Result",
 		"code": "Code",
 		"source": "Source",
-		"onPage": "On this page"
+		"onPage": "On this page",
+		"search": "Search the reference",
+		"searching": "Searching…",
+		"nothing": "Nothing found."
 	}
 }

@@ -211,7 +211,7 @@ function generateApplication (project, name, options) {
 	var componentDirectory = path.join(application, 'App');
 	var targets = {};
 
-	targets[index] = "[\n\t'App/App.js'\n]";
+	targets[index] = "[\n\t'App/App.js'\n];\n";
 	targets[path.join(componentDirectory, 'App.js')] = "Elemenx.Component('App', {\n\t$TemplateURL: 'App.html'\n});";
 	targets[path.join(componentDirectory, 'App.html')] = '<main class = "' + name + '"></main>';
 

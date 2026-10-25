@@ -1,10 +1,13 @@
 /*
- * An IDE-like application frame built on elemenx-screen, elemenx-container and elemenx-column.
- * Slots: header, ribbon (a Ribbon under the header), top-stripe (a band under them), left-stripe, left, main, bottom,
- * right, right-stripe, bottom-stripe (a band above the status bar) and status. Variant="ribbon" makes the frame of an
- * Office-like Application: the header becomes a slim title bar that joins the Ribbon. The frame does not decide its content: an area shows
- * only while its slot renders something (put *if on a tool window to open and close it), and the left, right and
- * bottom areas are resized by their edge; the resize event reports {Panel, Size}.
+ * An IDE-like application frame built on elemenx-screen, elemenx-container and elemenx-column. Slots: header, ribbon (a
+ * Ribbon under the header), top-stripe (a band under them), left-stripe, left, main, bottom, right, right-stripe,
+ * bottom-stripe (a band above the status bar) and status. Variant="ribbon" makes the frame of an Office-like
+ * Application: the header becomes a slim title bar that joins the Ribbon. The frame does not decide its content: an
+ * area shows only while its slot renders something (put *if on a tool window to open and close it), and the left, right
+ * and bottom areas are resized by their edge; the resize event reports {Panel, Size}. On a narrow screen the main area
+ * keeps 320 pixels (--elemenx-workspace-main-min) and the frame scrolls across to the panels; in a frame of 720 pixels
+ * or less the main area takes the whole width and the left and right panels open over it (a press on the main area
+ * closes the tool windows the frame placed there).
  *
  * Tool windows the user arranges: a WorkspaceToolWindow with an ID in the slot tools is placed by the frame. Its Area
  * (left, right or bottom) is where it starts; a button on the stripe of that side (its Icon, Title and Badge: a count,
@@ -48,8 +51,12 @@ Elemenx.Component('Workspace', {
 			return known;
 		};
 
+		/* A tool window that goes: never read again, though its element is still in the slot for a moment. */
 		this.Forget = function (node) {
 			var index = known.indexOf(node);
+
+			node.ElemenxGone = true;
+
 			if (index !== -1)
 				known.splice(index, 1);
 
@@ -139,11 +146,40 @@ Elemenx.Component('Workspace', {
 		this.Watcher.observe(sources, {subtree: true, childList: true, attributes: true, attributeFilter: ['data-tool', 'data-title', 'data-icon', 'data-badge', 'data-area', 'data-open']});
 
 		this.Read();
+
+		this.$Element().querySelector('.elemenx-workspace-main').addEventListener('pointerdown', function () {
+			self.Covered();
+		});
 	},
 
 	$OnDestroy: function () {
 		if (this.Watcher)
 			this.Watcher.disconnect();
+	},
+
+	/* A press on the main area of a narrow frame: the tool windows open over it close. */
+	Covered: function () {
+		var self = this;
+		var value = this.Copy();
+		var changed = false;
+
+		['left', 'right'].forEach(function (area) {
+			if (!self.Over(area) || !self.OpenIn(area, self.Tools, self.Layout)) return;
+
+			value.Open[area] = null;
+			changed = true;
+		});
+
+		if (changed)
+			this.Arranged(value);
+	},
+
+	/* Whether the panel of a side opens over the main area (a narrow frame). */
+	Over: function (area) {
+		var panel = this.$Element().querySelector('.elemenx-workspace-panel.' + area);
+		var view = panel && panel.ownerDocument.defaultView;
+
+		return !!view && view.getComputedStyle(panel).position === 'absolute';
 	},
 
 	/* The tool windows: the ones in the slot tools now, and the ones moved from it into their areas. */
@@ -153,7 +189,7 @@ Elemenx.Component('Workspace', {
 		var sources = this.$Element().querySelector('.elemenx-workspace-sources');
 
 		Array.prototype.forEach.call(sources.querySelectorAll('[data-tool]'), function (node) {
-			if (known.indexOf(node) === -1) {
+			if (known.indexOf(node) === -1 && !node.ElemenxGone) {
 				known.push(node);
 
 				/* A tool window that goes (its *if) tells the frame, wherever its element is now. */
@@ -216,7 +252,10 @@ Elemenx.Component('Workspace', {
 		this.Arranged(value);
 	},
 
-	/* A button of a stripe: its tool window opens in its area, or closes when it is the open one. */
+	/*
+	 * A button of a stripe: its tool window opens in its area, or closes when it is the open one. Over the main area (a
+	 * narrow frame) one side is open at a time.
+	 */
 	Toggled: function (event, node) {
 		var id = node.getAttribute('data-tool');
 		var tool = this.Tools.filter(function (entry) {
@@ -229,6 +268,9 @@ Elemenx.Component('Workspace', {
 
 		area = this.AreaOf(tool, this.Layout);
 		value.Open[area] = this.OpenIn(area, this.Tools, this.Layout) === id ? null : id;
+
+		if (value.Open[area] && area !== 'bottom' && this.Over(area))
+			value.Open[area === 'left' ? 'right' : 'left'] = null;
 
 		this.Arranged(value);
 	},

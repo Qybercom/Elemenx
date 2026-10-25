@@ -1,0 +1,6 @@
+<div class="elemenx-ruler" role="presentation" [class]="[Orientation === 'vertical' ? 'vertical' : 'horizontal']" [attribute.style]="Ticks(Start, Scale, Step, Major)" (pointerdown)="Pulled">
+	<span class="elemenx-ruler-range" *if="Range" [attribute.style]="Span(Range, Start, Scale, Orientation)"></span>
+	<span class="elemenx-ruler-label" *for="label of Labels(Length, Start, Scale, Major)" *key="label.Value" [attribute.style]="label.Style">{{label.Value}}</span>
+	<span class="elemenx-ruler-guide" *for="guide of Guides" *key="$index" [attribute.style]="Point(guide, Start, Scale, Orientation)"></span>
+	<span class="elemenx-ruler-marker" *if="Marker !== null && Marker !== undefined" [attribute.style]="Point(Marker, Start, Scale, Orientation)"></span>
+</div>

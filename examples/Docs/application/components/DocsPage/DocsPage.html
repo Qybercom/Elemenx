@@ -1,6 +1,6 @@
 <div class="docs-page">
 	<aside class="docs-nav">
-		<NavList Searchable="true" [label]="$T('docs.contents')" [items]="NavItems(Index, Lang())" [value]="Current($Params)" [expanded]="[Current($Params).split('/')[0]]" (select)="Picked" />
+		<NavList [label]="$T('docs.contents')" [items]="NavItems(Index, Lang())" [value]="Current($Params)" [expanded]="Expanded(Index, Current($Params))" (select)="Picked" />
 	</aside>
 	<article class="docs-article" [attribute.lang]="Lang()">
 		<i class="docs-sync" hidden *mount="Load(Current($Params), Lang())"></i>

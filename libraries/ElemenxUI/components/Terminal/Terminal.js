@@ -113,7 +113,8 @@ Elemenx.Component('Terminal', {
 	},
 
 	FocusLine: function (event) {
-		var selection = window.getSelection ? String(window.getSelection()) : '';
+		var view = (this.$Element().ownerDocument || document).defaultView || window;
+		var selection = view.getSelection ? String(view.getSelection()) : '';
 		if (!selection && event.target.tagName !== 'BUTTON')
 			this.$Element().querySelector('.elemenx-terminal-input').focus();
 	},

@@ -1,0 +1,73 @@
+.elemenx-designer-project {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	padding: 8px;
+}
+
+/* The title of a list (pages, components) and its button to add one. */
+.elemenx-designer-project-head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+	padding: 10px 6px 4px;
+}
+
+.elemenx-designer-project-add {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 24px;
+	height: 24px;
+	padding: 0;
+	color: var(--elemenx-text-muted);
+	cursor: pointer;
+	background: transparent;
+	border: 0;
+	border-radius: var(--elemenx-radius-small);
+}
+
+.elemenx-designer-project-add:hover {
+	color: var(--elemenx-text);
+	background: var(--elemenx-surface-hover);
+}
+
+/* An item: the settings, a page with its route, a component; the open one stands out. */
+.elemenx-designer-project-item {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	min-width: 0;
+	padding: 6px 8px;
+	color: inherit;
+	font: inherit;
+	font-size: var(--elemenx-font-size-small);
+	text-align: start;
+	cursor: pointer;
+	background: transparent;
+	border: 0;
+	border-radius: var(--elemenx-radius-small);
+}
+
+.elemenx-designer-project-item:hover {
+	background: var(--elemenx-surface-hover);
+}
+
+.elemenx-designer-project-item.active {
+	color: var(--elemenx-accent);
+	background: rgba(var(--elemenx-accent-rgb), 0.1);
+}
+
+.elemenx-designer-project-name {
+	flex: 1 1 auto;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.elemenx-designer-project-route {
+	color: var(--elemenx-text-muted);
+	font-family: var(--elemenx-font-mono);
+}

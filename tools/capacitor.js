@@ -10,7 +10,8 @@
  *
  * The page reaches the device through the bridge of elemenx-native.js (window.ElemenxNative, Platform 'capacitor'),
  * which the Native Service of ElemenxUI uses: links in the browser of the system (@capacitor/browser), messages
- * (@capacitor/dialog), the links of the scheme of the program and the pause and resume of the program (@capacitor/app).
+ * (@capacitor/dialog), files saved in the Documents of the device (@capacitor/filesystem), the links of the scheme of
+ * the program and the pause and resume of the program (@capacitor/app). Files are opened with the picker of the web view.
  */
 
 var fs = require('fs');
@@ -21,25 +22,32 @@ var childProcess = require('child_process');
 var Platforms = ['android', 'ios'];
 
 /* The package.json of a module of the project, or null when it is not installed. */
-function installed (project, name) {
-	try {
-		var file = require.resolve(name + '/package.json', {paths: [project]});
+var installed = require('./common.js').installed;
 
-		return {File: file, Package: JSON.parse(fs.readFileSync(file, 'utf8'))};
-	}
-	catch (error) {
-		return null;
-	}
-}
+/* The words of Java, which Android takes in no part of the ID of a program (it is the package of its code). */
+var Keywords = ['abstract', 'assert', 'boolean', 'break', 'byte', 'case', 'catch', 'char', 'class', 'const', 'continue', 'default', 'do', 'double', 'else', 'enum', 'extends', 'false', 'final', 'finally', 'float', 'for', 'goto', 'if', 'implements', 'import', 'instanceof', 'int', 'interface', 'long', 'native', 'new', 'null', 'package', 'private', 'protected', 'public', 'return', 'short', 'static', 'strictfp', 'super', 'switch', 'synchronized', 'this', 'throw', 'throws', 'transient', 'true', 'try', 'void', 'volatile', 'while'];
 
-/* The name and the ID of the program: its settings, then the package.json of the project. */
+/*
+ * The name and the ID of the program: its settings, then the package.json of the project. An ID made of the name
+ * never ends with a word of Java (native: nativeapp).
+ */
 function details (project, settings) {
 	var file = path.join(project, 'package.json');
 	var pack = fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')) : {};
 	var name = String(settings.Name || pack.productName || pack.name || path.basename(project));
-	var id = String(settings.AppID || 'com.example.' + (name.toLowerCase().replace(/[^a-z0-9]+/g, '') || 'application'));
+	var last = name.toLowerCase().replace(/[^a-z0-9]+/g, '').replace(/^[0-9]+/, '') || 'application';
+	var id = String(settings.AppID || 'com.example.' + (Keywords.indexOf(last) === -1 ? last : last + 'app'));
+	var taken;
+
 	if (!/^[a-zA-Z][\w]*(\.[a-zA-Z][\w]*)+$/.test(id))
 		throw new Error('Native.Mobile.AppID must be a reverse domain name, as com.example.app: ' + id);
+
+	taken = id.split('.').filter(function (part) {
+		return Keywords.indexOf(part) !== -1;
+	});
+
+	if (taken.length)
+		throw new Error('Native.Mobile.AppID holds a word of Java, which Android does not take in an ID (' + taken.join(', ') + '): ' + id);
 
 	return {Name: name, AppID: id};
 }
@@ -86,7 +94,39 @@ function cap (project, cli, args) {
  * put into its page; capacitor.config.json made in the project when it has none. settings: Name, AppID, Platforms
  * (['android', 'ios'] by default). Returns {Folder, Platforms (the ones synced)}.
  */
-function pack (source, folder, project, settings, command) {
+/* The color of a splash as the systems of the phones take it: #rrggbb (or #rrggbbaa), else null. */
+function hex (splash) {
+	return splash && /^#[0-9a-f]{6}([0-9a-f]{2})?$/i.test(splash.Background) ? splash.Background : null;
+}
+
+/*
+ * The screen Android shows while the program starts (12 and later: its icon on the background of the launch theme)
+ * in the color of the splash: windowSplashScreenBackground of AppTheme.NoActionBarLaunch, as Capacitor makes it, set
+ * again on each build (no other line of the file changes).
+ */
+function tint (project, splash) {
+	var file = path.join(project, 'android', 'app', 'src', 'main', 'res', 'values', 'styles.xml');
+	var color = hex(splash);
+	var text;
+	var next;
+
+	if (!color || !fs.existsSync(file)) return;
+
+	text = fs.readFileSync(file, 'utf8');
+	next = text.replace(/(<style name="AppTheme\.NoActionBarLaunch"[^>]*>)([\s\S]*?)(\s*<\/style>)/, function (all, open, body, close) {
+		var item = '<item name="windowSplashScreenBackground">' + color + '</item>';
+
+		if (/<item name="windowSplashScreenBackground">[^<]*<\/item>/.test(body))
+			return open + body.replace(/<item name="windowSplashScreenBackground">[^<]*<\/item>/, item) + close;
+
+		return open + body + '\n        ' + item + close;
+	});
+
+	if (next !== text)
+		fs.writeFileSync(file, next);
+}
+
+function pack (source, folder, project, settings, command, splash) {
 	var info = details(project, settings || {});
 	var config = path.join(project, 'capacitor.config.json');
 	var webDir = path.relative(project, folder).replace(/\\/g, '/');
@@ -118,7 +158,11 @@ function pack (source, folder, project, settings, command) {
 	}
 
 	if (!fs.existsSync(config)) {
-		fs.writeFileSync(config, JSON.stringify({appId: info.AppID, appName: info.Name, webDir: webDir}, null, '\t') + '\n');
+		fs.writeFileSync(config, JSON.stringify(Object.assign({appId: info.AppID, appName: info.Name, webDir: webDir}, splash ? {
+			/* The web view, before the page paints, and the screen of the system while the program starts, in the color of the splash; the page hides the screen once it shows its own. */
+			backgroundColor: hex(splash) || '#ffffff',
+			plugins: {SplashScreen: {launchAutoHide: false, launchShowDuration: 0, backgroundColor: hex(splash) || '#ffffff'}}
+		} : {}), null, '\t') + '\n');
 	}
 	else if (JSON.parse(fs.readFileSync(config, 'utf8')).webDir !== webDir) {
 		process.stdout.write('Elemenx Builder: capacitor.config.json has another webDir; set it to "' + webDir + '" for the build to reach the programs\n');
@@ -151,6 +195,9 @@ function pack (source, folder, project, settings, command) {
 
 	if (synced.length)
 		cap(project, cli, ['sync']);
+
+	if (splash && synced.indexOf('android') !== -1)
+		tint(project, splash);
 
 	process.stdout.write('Elemenx Builder: the mobile programs are ready to build: ' + (synced.length ? synced.join(', ') + ' (npx cap open ' + synced[0] + ')' : 'no platform installed (npx elemenx native add mobile)') + '\n');
 

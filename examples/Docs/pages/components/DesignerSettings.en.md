@@ -1,0 +1,4 @@
+<!-- generated -->
+# DesignerSettings
+
+The settings of the Application a designer of pages makes (the Designer Service), as the properties of a project in an editor of code. General: its Name (of its files), its Title (of the window), its Language, its Theme (as the system, light or dark), how its Router keeps the route (the address, after # or in the history only), its Icon and its Description. Structure: the component of the Application (a component of the project around the pages, with the place of the page; said when it has none) and the page of a path no route has. Routes: a row each, its path (/product/:id), its page, its guards (asked in their order), the page shown when one refuses; added and removed. Guards: their names, descriptions and code (the body of the function of each), added and removed. Every change goes to the Designer at once; a name or a path that cannot be is said under its field.
