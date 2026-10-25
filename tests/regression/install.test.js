@@ -30,7 +30,7 @@ describe('Contract: Elemenx.Install, the page as an application of the system', 
 		var result;
 
 		expect(Elemenx.Install.Available()).toBe(false);
-		expect(Elemenx.Install.State()).toEqual({Available: false, Installed: false, Manual: false});
+		expect(Elemenx.Install.State()).toEqual({Available: false, Installed: false, Manual: false, Waiting: false, Version: null});
 
 		expect(Elemenx.Install.OnChange(listener)).toBe(Elemenx.Install);
 
@@ -76,5 +76,14 @@ describe('Contract: Elemenx.Install, the page as an application of the system', 
 		window.dispatchEvent(new Event('appinstalled'));
 
 		expect(states.length).toBe(6);
+	});
+
+	it('checks for a new build only with a worker of a build, and says so without one', async function () {
+		var error = await new Promise(function (resolve) {
+			Elemenx.Install.Update(resolve);
+		});
+
+		expect(error.message).toBe('Elemenx.Install has no worker: the build is not a PWA that runs offline, or the page has not loaded yet');
+		expect([Elemenx.Install.State().Waiting, Elemenx.Install.State().Version]).toEqual([false, null]);
 	});
 });

@@ -66,6 +66,7 @@ describe('Regression: public API surface', function () {
 			'Elemenx.Expressions:function',
 			'Elemenx.Guard:function',
 			'Elemenx.Install:object',
+			'Elemenx.Install.Apply:function',
 			'Elemenx.Install.Available:function',
 			'Elemenx.Install.Installed:function',
 			'Elemenx.Install.Manual:function',
@@ -73,6 +74,7 @@ describe('Regression: public API surface', function () {
 			'Elemenx.Install.OnChange:function',
 			'Elemenx.Install.Prompt:function',
 			'Elemenx.Install.State:function',
+			'Elemenx.Install.Update:function',
 			'Elemenx.Library:function',
 			'Elemenx.Locale:object',
 			'Elemenx.Locale.Add:function',
@@ -84,6 +86,7 @@ describe('Regression: public API surface', function () {
 			'Elemenx.Locale.OffChange:function',
 			'Elemenx.Locale.OnChange:function',
 			'Elemenx.Locale.Source:function',
+			'Elemenx.Locale.System:function',
 			'Elemenx.Locale.Text:function',
 			'Elemenx.Messaging:function',
 			'Elemenx.Messaging.Context:function',
@@ -126,7 +129,13 @@ describe('Regression: public API surface', function () {
 			'Elemenx.Template.Remove:function',
 			'Elemenx.Title:function',
 			'Elemenx.Version:string',
-			'Elemenx.WebWorker:function'
+			'Elemenx.WebWorker:function',
+			'Elemenx.Widgets:object',
+			'Elemenx.Widgets.Define:function',
+			'Elemenx.Widgets.Mount:function',
+			'Elemenx.Widgets.Names:function',
+			'Elemenx.Widgets.Unmount:function',
+			'Elemenx.Widgets.Watch:function'
 		]));
 	});
 

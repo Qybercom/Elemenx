@@ -3,6 +3,9 @@
 	<symbol id="add" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
 	<symbol id="remove" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
 	<symbol id="close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+	<symbol id="window-minimize" viewBox="0 0 24 24"><path d="M6 12h12"/></symbol>
+	<symbol id="window-maximize" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="1"/></symbol>
+	<symbol id="window-restore" viewBox="0 0 24 24"><rect x="6" y="9" width="9" height="9" rx="1"/><path d="M9 9V7a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1h-2"/></symbol>
 	<symbol id="check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7"/></symbol>
 	<symbol id="check-double" viewBox="0 0 24 24"><path d="m2 12.5 4.5 4.5L16 7.5M11.5 16l1 1L22 7.5"/></symbol>
 	<symbol id="edit" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16v4zM13 7l4 4"/></symbol>

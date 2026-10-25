@@ -82,6 +82,9 @@
 			<Field *if="Project(Version).Settings.PWA === 'true'" [label]="$T('ui.designer.project.pwaTheme')" [hint]="$T('ui.designer.project.pwaThemeHint')">
 				<ColorInput Name="PWATheme" [value]="Project(Version).Settings.PWATheme" (change)="Changed" />
 			</Field>
+			<Field *if="Project(Version).Settings.PWA === 'true' && Project(Version).Settings.PWAOffline === 'true'" [label]="$T('ui.designer.project.pwaUpdate')" [hint]="$T('ui.designer.project.pwaUpdateHint')">
+				<Select Name="PWAUpdate" [options]="Updates(Version)" [value]="Project(Version).Settings.PWAUpdate || 'auto'" (change)="Changed" />
+			</Field>
 			<div class="elemenx-designer-settings-wide" *if="Project(Version).Settings.PWA === 'true'">
 				<Toggle Name="PWAOffline" [label]="$T('ui.designer.project.pwaOffline')" [description]="$T('ui.designer.project.pwaOfflineHint')" [checked]="Project(Version).Settings.PWAOffline === 'true'" (change)="Changed" />
 			</div>

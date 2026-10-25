@@ -60,6 +60,13 @@
 	height: 100%;
 }
 
+/* A picture of the Suprematist Service: its svg fills the face. */
+.elemenx-avatar-art > svg {
+	display: block;
+	width: 100%;
+	height: 100%;
+}
+
 /* The dot of the presence on the corner, ringed by the surface around. */
 .elemenx-avatar-status {
 	position: absolute;

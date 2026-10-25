@@ -1,0 +1,106 @@
+/*
+ * The title bar of a window: as high as the place the system leaves it (env(titlebar-area-*) with Frame hidden: the
+ * buttons of the system on the right on Windows and Linux, the traffic lights of macOS on the left), 32 pixels elsewhere.
+ */
+.elemenx-title-bar-host {
+	display: contents;
+}
+
+.elemenx-title-bar {
+	display: flex;
+	flex: none;
+	align-items: center;
+	gap: 8px;
+	box-sizing: border-box;
+	height: 32px;
+	padding: 0 0 0 8px;
+	background: var(--elemenx-surface);
+	border-bottom: 1px solid var(--elemenx-border);
+	color: var(--elemenx-text);
+	font-family: var(--elemenx-font);
+	font-size: var(--elemenx-font-size-small);
+	user-select: none;
+}
+
+.elemenx-title-bar.overlay {
+	height: env(titlebar-area-height, 32px);
+	padding-left: calc(env(titlebar-area-x, 0px) + 8px);
+	padding-right: calc(100vw - env(titlebar-area-x, 0px) - env(titlebar-area-width, 100vw));
+}
+
+.elemenx-title-bar-icon {
+	display: inline-flex;
+	flex: none;
+	align-items: center;
+}
+
+.elemenx-title-bar-icon img {
+	width: 16px;
+	height: 16px;
+}
+
+.elemenx-title-bar-content {
+	display: flex;
+	flex: none;
+	align-items: center;
+	gap: 4px;
+	min-width: 0;
+}
+
+.elemenx-title-bar-content:empty,
+.elemenx-title-bar-actions:empty {
+	display: none;
+}
+
+.elemenx-title-bar-title {
+	flex: 1;
+	overflow: hidden;
+	text-align: center;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.elemenx-title-bar-space {
+	flex: 1;
+}
+
+.elemenx-title-bar-actions {
+	display: flex;
+	flex: none;
+	align-items: center;
+	gap: 4px;
+}
+
+.elemenx-title-bar:not(.controls) .elemenx-title-bar-actions {
+	padding-right: 8px;
+}
+
+.elemenx-title-bar-controls {
+	display: flex;
+	flex: none;
+	align-self: stretch;
+}
+
+.elemenx-title-bar-control {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 46px;
+	padding: 0;
+	background: transparent;
+	border: 0;
+	color: inherit;
+	cursor: default;
+}
+
+.elemenx-title-bar-control:hover,
+.elemenx-title-bar-control:focus-visible {
+	background: var(--elemenx-surface-hover);
+	outline: none;
+}
+
+.elemenx-title-bar-control.close:hover,
+.elemenx-title-bar-control.close:focus-visible {
+	background: var(--elemenx-danger);
+	color: var(--elemenx-surface);
+}

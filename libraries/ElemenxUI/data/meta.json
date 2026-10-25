@@ -5330,6 +5330,15 @@
 					"Description": "Shows the list as a sheet from the bottom: true, or auto on a narrow or a touch screen."
 				},
 				{
+					"Name": "Caret",
+					"Type": "bool",
+					"Default": true,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Shows the arrow by the label of the button (true by default)."
+				},
+				{
 					"Name": "Disabled",
 					"Type": "bool",
 					"Default": false,
@@ -5361,6 +5370,113 @@
 			"Sample": {
 				"Label": "Edit",
 				"Icon": "edit"
+			}
+		},
+		{
+			"Name": "MenuBar",
+			"Kind": "Component",
+			"Group": "buttons",
+			"Icon": "menu",
+			"Description": "A bar of menus, as at the top of the window of a program: File, Edit, View...",
+			"Props": [
+				{
+					"Name": "Items",
+					"Type": "json",
+					"Default": [],
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The menus: [{ID, Label, Icon, Disabled, Items}], the items of each as in Menu."
+				},
+				{
+					"Name": "Variant",
+					"Type": "text",
+					"Default": "ghost",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The look of its buttons, as in Button."
+				},
+				{
+					"Name": "Size",
+					"Type": "select",
+					"Default": "small",
+					"Options": [
+						"small",
+						"medium",
+						"large"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "Its size: small, medium or large."
+				},
+				{
+					"Name": "Caret",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Shows the arrow of a menu by its label."
+				},
+				{
+					"Name": "Disabled",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Turns it off: it takes no input and looks so."
+				}
+			],
+			"Slots": [],
+			"Container": true,
+			"Children": [
+				"MenuItem"
+			],
+			"Current": "",
+			"Events": [
+				"select"
+			],
+			"Methods": [],
+			"Sample": {
+				"Items": [
+					{
+						"Label": "File",
+						"Items": [
+							{
+								"ID": "new",
+								"Label": "New"
+							},
+							{
+								"ID": "open",
+								"Label": "Open..."
+							}
+						]
+					},
+					{
+						"Label": "Edit",
+						"Items": [
+							{
+								"ID": "copy",
+								"Label": "Copy"
+							},
+							{
+								"ID": "paste",
+								"Label": "Paste"
+							}
+						]
+					},
+					{
+						"Label": "Help",
+						"Items": [
+							{
+								"ID": "about",
+								"Label": "About"
+							}
+						]
+					}
+				]
 			}
 		},
 		{
@@ -5450,6 +5566,15 @@
 					"Schema": null,
 					"Body": false,
 					"Description": "A title of a group in place of an item."
+				},
+				{
+					"Name": "Role",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "In a menu of a program (NativeMenu), what the system does for it: undo, copy, paste, quit..."
 				}
 			],
 			"Slots": [],
@@ -5467,6 +5592,201 @@
 				"Label": "Undo",
 				"Icon": "undo",
 				"Shortcut": "Ctrl+Z"
+			}
+		},
+		{
+			"Name": "NativeMenu",
+			"Kind": "Component",
+			"Group": "buttons",
+			"Icon": "menu",
+			"Description": "The menu of a program declared as a menu of the page: <NativeMenu> with MenuItem children.",
+			"Props": [
+				{
+					"Name": "Target",
+					"Type": "select",
+					"Default": "window",
+					"Options": [
+						"window",
+						"tray"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "The menu of the window of the program, or of its icon in the tray."
+				},
+				{
+					"Name": "Look",
+					"Type": "select",
+					"Default": "elemenx",
+					"Options": [
+						"elemenx",
+						"system"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "Drawn by ElemenxUI (a bar of menus, a menu window by the tray), or by the system."
+				},
+				{
+					"Name": "Caret",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Shows the arrow of a menu of the bar by its label."
+				},
+				{
+					"Name": "Variant",
+					"Type": "text",
+					"Default": "ghost",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The look of the buttons of the bar, as in Button."
+				},
+				{
+					"Name": "Size",
+					"Type": "select",
+					"Default": "small",
+					"Options": [
+						"small",
+						"medium",
+						"large"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "The size of the bar: small, medium or large."
+				}
+			],
+			"Slots": [],
+			"Container": true,
+			"Children": [
+				"MenuItem"
+			],
+			"Current": "",
+			"Events": [
+				"select",
+				"apply"
+			],
+			"Methods": [],
+			"Sample": {}
+		},
+		{
+			"Name": "NativeMenuPanel",
+			"Kind": "Component",
+			"Group": "buttons",
+			"Icon": "menu",
+			"Description": "The menu of the tray of a program drawn by ElemenxUI: the list a NativeMenu of the tray puts in its window.",
+			"Props": [
+				{
+					"Name": "Items",
+					"Type": "json",
+					"Default": [],
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The items: [{ID, Label, Icon, Shortcut, Disabled, Danger, Checked, Items, Separator, Group}]."
+				},
+				{
+					"Name": "Choose",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Called with the item chosen."
+				}
+			],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"Methods": [],
+			"Sample": {
+				"Items": [
+					{
+						"ID": "show",
+						"Label": "Show"
+					},
+					{
+						"Separator": true
+					},
+					{
+						"ID": "quit",
+						"Label": "Quit"
+					}
+				]
+			}
+		},
+		{
+			"Name": "TitleBar",
+			"Kind": "Component",
+			"Group": "layout",
+			"Icon": "window-maximize",
+			"Description": "The title bar of a window of a program drawn by the Application, the header of the page on the web.",
+			"Props": [
+				{
+					"Name": "Title",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The title of the window."
+				},
+				{
+					"Name": "Icon",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "An icon before the title."
+				},
+				{
+					"Name": "Image",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The URL of a picture before the title (the icon of the program)."
+				},
+				{
+					"Name": "Controls",
+					"Type": "select",
+					"Default": "auto",
+					"Options": [
+						"auto",
+						"true",
+						"false"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "The buttons of the window: where the system draws none (auto), always, or never."
+				},
+				{
+					"Name": "Window",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The ID of the window of OpenWindow it is the bar of."
+				}
+			],
+			"Slots": [
+				"actions"
+			],
+			"Container": true,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"Methods": [],
+			"Sample": {
+				"Title": "Notes",
+				"Icon": "file-text",
+				"Controls": "true"
 			}
 		},
 		{
@@ -7085,11 +7405,12 @@
 					"Options": [
 						"initials",
 						"pattern",
-						"shapes"
+						"shapes",
+						"suprematism"
 					],
 					"Schema": null,
 					"Body": false,
-					"Description": "What the avatar without a picture is made of: initials, pattern (a figure of cells) or shapes."
+					"Description": "What the avatar without a picture is made of: initials, pattern (a figure of cells), shapes or suprematism."
 				},
 				{
 					"Name": "Seed",
@@ -7163,6 +7484,83 @@
 				"Name": "Ada Lovelace",
 				"Size": "large",
 				"Status": "online"
+			}
+		},
+		{
+			"Name": "Suprematism",
+			"Kind": "Component",
+			"Group": "display",
+			"Icon": "image",
+			"Description": "A picture in the manner of Suprematism, made of a seed: always the same for the same seed.",
+			"Props": [
+				{
+					"Name": "Seed",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The text the picture is made of (a name, an ID)."
+				},
+				{
+					"Name": "Width",
+					"Type": "number",
+					"Default": 400,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its width, for its proportions."
+				},
+				{
+					"Name": "Height",
+					"Type": "number",
+					"Default": 400,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its height, for its proportions."
+				},
+				{
+					"Name": "Palette",
+					"Type": "select",
+					"Default": "classic",
+					"Options": [
+						"classic",
+						"theme"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "Its colors: classic, theme, or a list of CSS colors."
+				},
+				{
+					"Name": "Density",
+					"Type": "number",
+					"Default": 0.5,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "How many figures, 0 to 1."
+				},
+				{
+					"Name": "Title",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The text of the picture for a screen reader; none: it is decoration."
+				}
+			],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"Methods": [],
+			"Sample": {
+				"Seed": "Elemenx",
+				"Width": 320,
+				"Height": 200
 			}
 		},
 		{
@@ -8173,6 +8571,82 @@
 			"Events": [],
 			"Methods": [],
 			"Sample": {}
+		},
+		{
+			"Name": "NotificationHost",
+			"Kind": "Component",
+			"Group": "overlays",
+			"Icon": "bell",
+			"Description": "The notifications of the Application drawn by ElemenxUI, in a window by the corner of the screen or in the page.",
+			"Props": [
+				{
+					"Name": "Items",
+					"Type": "json",
+					"Default": [],
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The notifications: [{ID, Title, Text, Icon, Image, Variant, Actions: [{ID, Label}]}]."
+				},
+				{
+					"Name": "Page",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Floats in the corner of the page (on the web), not in a window of its own."
+				},
+				{
+					"Name": "Choose",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Called with the notification and the action pressed (null for the card)."
+				},
+				{
+					"Name": "Close",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Called with the notification closed."
+				},
+				{
+					"Name": "Fit",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Called with {Width, Height} after each drawing: the size of the cards."
+				}
+			],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"Methods": [],
+			"Sample": {
+				"Items": [
+					{
+						"ID": "mail",
+						"Title": "New mail",
+						"Text": "Ada sent the report.",
+						"Icon": "mail",
+						"Actions": [
+							{
+								"ID": "open",
+								"Label": "Open"
+							}
+						]
+					}
+				]
+			}
 		},
 		{
 			"Name": "AchievementHost",
@@ -9600,6 +10074,112 @@
 				"Size": 180,
 				"Min": 80,
 				"Max": 400
+			}
+		},
+		{
+			"Name": "Board",
+			"Kind": "Component",
+			"Group": "layout",
+			"Icon": "grid",
+			"Description": "An infinite canvas: its content in coordinates of its own, moved and zoomed as on the canvas of Figma.",
+			"Props": [
+				{
+					"Name": "X",
+					"Type": "number",
+					"Default": 0,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The point of the world at the left of the view."
+				},
+				{
+					"Name": "Y",
+					"Type": "number",
+					"Default": 0,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The point of the world at the top of the view."
+				},
+				{
+					"Name": "Zoom",
+					"Type": "number",
+					"Default": 1,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The scale of the view: 1 is a pixel of the world for a pixel of the screen."
+				},
+				{
+					"Name": "MinZoom",
+					"Type": "number",
+					"Default": 0.1,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The smallest zoom."
+				},
+				{
+					"Name": "MaxZoom",
+					"Type": "number",
+					"Default": 8,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The largest zoom."
+				},
+				{
+					"Name": "Grid",
+					"Type": "select",
+					"Default": "dots",
+					"Options": [
+						"dots",
+						"lines",
+						"none"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "The grid under the content: dots, lines or none."
+				},
+				{
+					"Name": "GridSize",
+					"Type": "number",
+					"Default": 24,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The step of the grid, in pixels of the world."
+				},
+				{
+					"Name": "Drag",
+					"Type": "bool",
+					"Default": true,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "A drag on an empty place moves the view (true by default)."
+				},
+				{
+					"Name": "Controls",
+					"Type": "bool",
+					"Default": true,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Shows the buttons of the zoom and its percent."
+				}
+			],
+			"Slots": [],
+			"Container": true,
+			"Children": [],
+			"Current": "",
+			"Events": [
+				"view"
+			],
+			"Methods": [],
+			"Sample": {
+				"Grid": "dots",
+				"Controls": true
 			}
 		},
 		{
@@ -15550,7 +16130,10 @@
 				"Available()",
 				"Platform()",
 				"Has(feature)",
-				"Window(action, callback)",
+				"Window(action, callback, id)",
+				"Frame(id)",
+				"TitleBarOverlay(colors, callback)",
+				"Scheme(scheme, callback)",
 				"Title(text, callback)",
 				"Open(options, callback)",
 				"Save(options, callback)",
@@ -15559,7 +16142,12 @@
 				"ContextMenu(items, callback)",
 				"Tray(options, callback)",
 				"TrayWindow(show, callback)",
+				"TrayMenu(items, callback)",
+				"TrayPopup(options, callback)",
+				"ShowTrayPopup(show, callback)",
+				"Role(role, callback)",
 				"External(url, callback)",
+				"Notify(options, callback)",
 				"Badge(count, callback)",
 				"Progress(value, callback)",
 				"Attention(on, callback)",
@@ -15788,6 +16376,25 @@
 				"Source(id)",
 				"OnChange(listener)",
 				"OffChange(listener)"
+			],
+			"Sample": {}
+		},
+		{
+			"Name": "Suprematist",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "Pictures in the manner of Suprematism, made of a seed: always the same for the same seed.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"Methods": [
+				"Generate(options)",
+				"DataURL(options)",
+				"Figures(options)"
 			],
 			"Sample": {}
 		}
@@ -16229,7 +16836,9 @@
 		"elemenx-pip-placeholder": [],
 		"elemenx-pip-back": [],
 		"elemenx-pip-body": [],
-		"elemenx-native-window": [],
+		"elemenx-native-window": [
+			"transparent"
+		],
 		"elemenx-modal-shade": [],
 		"elemenx-popup": [],
 		"elemenx-popup-search": [],
@@ -16825,6 +17434,25 @@
 		"elemenx-menu-back": [],
 		"elemenx-menu-cancel": [],
 		"elemenx-menu-root": [],
+		"elemenx-menu-bar-host": [],
+		"elemenx-menu-bar": [],
+		"elemenx-menu-bar-entry": [],
+		"elemenx-native-menu": [],
+		"elemenx-native-menu-bar": [],
+		"elemenx-native-menu-panel": [],
+		"elemenx-title-bar-host": [],
+		"elemenx-title-bar": [
+			"overlay"
+		],
+		"elemenx-title-bar-icon": [],
+		"elemenx-title-bar-content": [],
+		"elemenx-title-bar-actions": [],
+		"elemenx-title-bar-title": [],
+		"elemenx-title-bar-space": [],
+		"elemenx-title-bar-controls": [],
+		"elemenx-title-bar-control": [
+			"close"
+		],
 		"elemenx-tabs": [
 			"editor",
 			"large",
@@ -17021,6 +17649,7 @@
 		"elemenx-avatar-initials": [],
 		"elemenx-avatar-art": [],
 		"elemenx-avatar-status": [],
+		"elemenx-suprematism": [],
 		"elemenx-image": [
 			"circle",
 			"loading",
@@ -17081,6 +17710,21 @@
 			"primary"
 		],
 		"elemenx-toast-timer": [],
+		"elemenx-notification-frame": [],
+		"elemenx-notification-host": [
+			"page"
+		],
+		"elemenx-notification": [
+			"danger",
+			"success",
+			"warning"
+		],
+		"elemenx-notification-image": [],
+		"elemenx-notification-icon": [],
+		"elemenx-notification-body": [],
+		"elemenx-notification-text": [],
+		"elemenx-notification-actions": [],
+		"elemenx-notification-close": [],
 		"elemenx-achievements": [
 			"bottom",
 			"top"
@@ -17260,6 +17904,17 @@
 			"first",
 			"second"
 		],
+		"elemenx-board-host": [],
+		"elemenx-board": [
+			"grid-dots",
+			"grid-lines",
+			"panning"
+		],
+		"elemenx-board-world": [],
+		"elemenx-board-content": [],
+		"elemenx-board-controls": [],
+		"elemenx-board-control": [],
+		"elemenx-board-zoom": [],
 		"elemenx-emoji": [],
 		"elemenx-emoji-item": [
 			"selected"

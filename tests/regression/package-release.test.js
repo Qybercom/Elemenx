@@ -309,6 +309,87 @@ describe('Elemenx npm release surface', function () {
 		expect(git(['tag', '--list', 'v0.9.9'])).toBe('v0.9.9');
 	}, 60000);
 
+	it('npm run release <version> checks first, then tests, sets the version, commits, tags and pushes, and stops at a step that fails', function () {
+		var Release = require(path.join(root, 'scripts', 'release.js'));
+		var answers = {'rev-parse --abbrev-ref HEAD': 'main\n', 'tag --list v0.9.5': '', 'ls-remote --tags origin refs/tags/v0.9.5': '', 'fetch --quiet origin main': '', 'rev-list --count HEAD..origin/main': '0\n', 'status --short': ' M elemenx.js\n'};
+		var ran;
+		var said;
+		var result;
+
+		function options (extra) {
+			ran = [];
+			said = '';
+
+			return Object.assign({
+				Version: '0.9.5',
+				Current: '0.9.4',
+				Npm: 'npm-cli.js',
+				Git: function (args) {
+					return answers[args.join(' ')] || '';
+				},
+				Run: function (command, args) {
+					ran.push(args.filter(function (arg) {
+						return arg !== 'npm-cli.js';
+					}).join(' '));
+
+					return true;
+				},
+				Ask: function (question, answer) {
+					answer(false);
+				},
+				Say: function (text) {
+					said += text;
+				}
+			}, extra || {});
+		}
+
+		function go (extra) {
+			result = 'pending';
+
+			Release.Release(options(extra), function (error) {
+				result = error ? error.message : null;
+			});
+
+			return result;
+		}
+
+		/* The version is required, exact, and greater than the one of package.json. */
+		expect(Release.Parse([]).Error).toBe('give the version: npm run release 0.9.5');
+		expect(Release.Parse(['patch']).Error).toBe('the version must be exact, as 0.9.5 or 1.0.0-beta.1: patch');
+		expect(Release.Parse(['v1.0.0-beta.1', '--yes', '--skip-tests'])).toEqual({Version: '1.0.0-beta.1', Yes: true, SkipTests: true});
+		expect([Release.Compare('0.9.5', '0.9.4'), Release.Compare('1.0.0-beta.1', '1.0.0'), Release.Compare('0.10.0', '0.9.9'), Release.Compare('0.9.4', '0.9.4')]).toEqual([1, -1, 1, 0]);
+
+		/* Not confirmed: it shows what it will commit and does nothing. */
+		expect(go()).toBe('Elemenx release: nothing done, not confirmed (--yes makes it without the question)');
+		expect(said).toContain(' M elemenx.js');
+		expect(ran).toEqual([]);
+
+		/* Confirmed: the whole of it, in this order. */
+		expect(go({Yes: true})).toBe(null);
+		expect(ran).toEqual(['test', 'run version:set -- 0.9.5', 'add --all', 'commit -m v0.9.5', 'run version:tag', 'push --follow-tags']);
+
+		expect(go({Yes: true, SkipTests: true})).toBe(null);
+		expect(ran[0]).toBe('run version:set -- 0.9.5');
+
+		/* A step that fails stops it, and it says what is done. */
+		expect(go({Yes: true, Run: function (command, args) {
+			ran.push(args.join(' '));
+
+			return args.indexOf('version:tag') === -1;
+		}})).toBe('Elemenx release: the tag failed. Done: the tests, the version, git add, the commit. Fix it and go on by hand from the tag (docs/RELEASING.md).');
+
+		/* What stops it before it changes anything. */
+		answers['rev-parse --abbrev-ref HEAD'] = 'feature\n';
+		answers['tag --list v0.9.5'] = 'v0.9.5\n';
+		answers['rev-list --count HEAD..origin/main'] = '2\n';
+
+		expect(go({Yes: true, Current: '0.9.5'})).toBe('Elemenx release: nothing done, the branch is feature, a release is made on main; the version 0.9.5 is not greater than 0.9.5 of package.json; the tag v0.9.5 exists already; main is 2 commit(s) behind origin/main: git pull first');
+		expect(ran).toEqual([]);
+
+		/* The command of package.json. */
+		expect(manifest.scripts.release).toBe('node scripts/release.js');
+	});
+
 	afterAll(function () {
 		temporary.forEach(function (directory) {
 			fs.rmSync(directory, {recursive: true, force: true});

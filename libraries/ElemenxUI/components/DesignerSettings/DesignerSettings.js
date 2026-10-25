@@ -101,6 +101,15 @@ Elemenx.Component('DesignerSettings', {
 			];
 		};
 
+		/* How a new build of the installed application takes the place of the one before. */
+		this.Updates = function () {
+			return [
+				{Value: 'auto', Label: Elemenx.Locale.Text('ui.designer.project.pwaUpdates.auto')},
+				{Value: 'prompt', Label: Elemenx.Locale.Text('ui.designer.project.pwaUpdates.prompt')},
+				{Value: 'manual', Label: Elemenx.Locale.Text('ui.designer.project.pwaUpdates.manual')}
+			];
+		};
+
 		designer.OnChange(changed);
 
 		Elemenx.Locale.OnChange(changed);

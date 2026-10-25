@@ -55,6 +55,22 @@ function field (page, label) {
 	return page.locator('.elemenx-field').filter({has: page.locator('.elemenx-field-label', {hasText: new RegExp('^' + label + '$')})});
 }
 
+/*
+ * Presses keys in target until shown is visible: a busy page (the catalogue beside the other workers) may take a key
+ * before the element listens. It presses again only while shown is not there, never once it worked.
+ */
+async function hotkey (page, target, keys, shown) {
+	await expect(async function () {
+		if (!(await shown.count())) {
+			await target.focus();
+
+			await page.keyboard.press(keys);
+		}
+
+		await expect(shown).toBeVisible({timeout: 2000});
+	}).toPass({timeout: 30000});
+}
+
 /* Types into the search field of the open popup of scope: the field takes the focus a task after the popup opens. */
 async function search (page, scope, text) {
 	await expect(scope.locator('.elemenx-popup-search input')).toBeFocused();
@@ -62,31 +78,47 @@ async function search (page, scope, text) {
 	await page.keyboard.type(text);
 }
 
-async function open (page, origin) {
+/*
+ * Opens the catalogue: with sections, only those (?sections=: a test builds the part of the page it needs, not the
+ * whole of it beside the other workers), all of them without.
+ */
+async function open (page, origin, sections) {
 	/* The catalogue loads more resources than the default buffer of Resource Timing (250) keeps. */
 	await page.addInitScript(function () {
 		performance.setResourceTimingBufferSize(4000);
 	});
 
-	await page.goto(origin.URL + '/ui');
+	await page.goto(origin.URL + '/ui' + (sections ? '?sections=' + encodeURIComponent(sections.join(',')) : ''));
 
-	await ready(page);
+	await ready(page, !sections);
 }
 
 /* The catalogue is a large page: beside the other workers its development build may take more than 10 seconds. */
-async function ready (page) {
-	await expect(page.locator('.elemenx-workspace').first()).toBeVisible({timeout: 60000});
+async function ready (page, whole) {
+	/* The whole catalogue: its Workspace too (a part of it shows only its sections). */
+	if (whole)
+		await expect(page.locator('.elemenx-workspace').first()).toBeVisible({timeout: 60000});
+
 	await expect(page.locator('.ui-kit-intro')).toBeVisible({timeout: 60000});
 
-	/* The sections build their content near the viewport or in the background (*lazy): the tests start once all of it is built. */
-	await expect(page.locator('.ui-kit-lazy')).toHaveCount(45, {timeout: 60000});
+	/*
+	 * The sections build their content near the viewport or in the background (*lazy, a placeholder until then): the
+	 * tests start once none is left, twice in a row, since a content built may hold a *lazy of its own a task later.
+	 */
+	await expect(async function () {
+		expect(await page.locator('[data-elemenx-lazy]').count()).toBe(0);
+
+		await page.waitForTimeout(150);
+
+		expect(await page.locator('[data-elemenx-lazy]').count()).toBe(0);
+	}).toPass({timeout: 60000});
 }
 
 /* Reloads the catalogue and waits for it, as open does. */
 async function reload (page) {
 	await page.reload();
 
-	await ready(page);
+	await ready(page, page.url().indexOf('sections=') === -1);
 }
 
 for (const origin of origins) {
@@ -305,7 +337,7 @@ for (const origin of origins) {
 			var scope;
 			var paint;
 
-			await open(page, origin);
+			await open(page, origin, ['Themes']);
 
 			themes = section(page, 'Themes');
 			scope = themes.locator('.ui-kit-theme-scope');
@@ -436,7 +468,7 @@ for (const origin of origins) {
 			var tab;
 			var panel;
 
-			await open(page, origin);
+			await open(page, origin, ['Ribbon']);
 
 			ribbon = section(page, 'Ribbon').locator('.elemenx-ribbon');
 			note = section(page, 'Ribbon').locator('.elemenx-section-header');
@@ -506,7 +538,7 @@ for (const origin of origins) {
 			var note;
 			var clipboard;
 
-			await open(page, origin);
+			await open(page, origin, ['Ribbon']);
 
 			ribbon = section(page, 'Ribbon').locator('.elemenx-ribbon');
 			frame = section(page, 'Ribbon').locator('.ui-kit-frame.ribbon');
@@ -620,7 +652,7 @@ for (const origin of origins) {
 			var backstage;
 			var tips;
 
-			await open(page, origin);
+			await open(page, origin, ['Ribbon']);
 
 			ribbon = section(page, 'Ribbon').locator('.elemenx-ribbon');
 			note = section(page, 'Ribbon').locator('.elemenx-section-header');
@@ -806,7 +838,7 @@ for (const origin of origins) {
 			var stickers;
 			var note;
 
-			await open(page, origin);
+			await open(page, origin, ['Emoji and stickers']);
 
 			pickers = section(page, 'Emoji and stickers');
 			stickers = pickers.locator('.elemenx-stickers');
@@ -856,7 +888,7 @@ for (const origin of origins) {
 			var box;
 			var area;
 
-			await open(page, origin);
+			await open(page, origin, ['Chat']);
 
 			chat = section(page, 'Chat');
 			composer = chat.locator('.elemenx-chat-composer');
@@ -925,7 +957,7 @@ for (const origin of origins) {
 			var field;
 			var hints;
 
-			await open(page, origin);
+			await open(page, origin, ['Chat']);
 
 			chat = section(page, 'Chat');
 			composer = chat.locator('.elemenx-chat-composer');
@@ -1031,7 +1063,7 @@ for (const origin of origins) {
 			var comment;
 			var box;
 
-			await open(page, origin);
+			await open(page, origin, ['Cards']);
 
 			cards = section(page, 'Cards');
 			note = cards.locator('.elemenx-section-header');
@@ -1104,7 +1136,7 @@ for (const origin of origins) {
 			var plans;
 			var standard;
 
-			await open(page, origin);
+			await open(page, origin, ['Cards']);
 
 			cards = section(page, 'Cards');
 			note = cards.locator('.elemenx-section-header');
@@ -1546,7 +1578,7 @@ for (const origin of origins) {
 			/* Kept: the next visit finds Commits on the right. */
 			await page.reload();
 
-			await ready(page);
+			await ready(page, page.url().indexOf('sections=') === -1);
 
 			await frame.scrollIntoViewIfNeeded();
 
@@ -1614,7 +1646,7 @@ for (const origin of origins) {
 			var viewers;
 			var place;
 
-			await open(page, origin);
+			await open(page, origin, ['Code editor', 'Rich text editor', 'Terminal', 'Viewers and formulas']);
 
 			/* The code editor: its own bar, the place of the match, the next one, a replacement, Escape back into the text. */
 			code = section(page, 'Code editor').locator('.elemenx-code-editor').first();
@@ -1624,9 +1656,9 @@ for (const origin of origins) {
 
 			await expect(code.locator('textarea')).toBeFocused();
 
-			await page.keyboard.press('ControlOrMeta+h');
-
 			bar = code.locator('.elemenx-find');
+
+			await hotkey(page, code.locator('textarea'), 'ControlOrMeta+h', bar);
 
 			await expect(bar.locator('.elemenx-find-query')).toBeFocused();
 
@@ -1660,9 +1692,9 @@ for (const origin of origins) {
 
 			await expect(rich.locator('.elemenx-rich-editor-content')).toBeFocused();
 
-			await page.keyboard.press('ControlOrMeta+h');
-
 			bar = rich.locator('.elemenx-find');
+
+			await hotkey(page, rich.locator('.elemenx-rich-editor-content'), 'ControlOrMeta+h', bar);
 
 			await expect(bar.locator('.elemenx-find-query')).toBeFocused();
 
@@ -1692,7 +1724,7 @@ for (const origin of origins) {
 
 			await expect(terminal.locator('.elemenx-terminal-input')).toBeFocused();
 
-			await page.keyboard.press('ControlOrMeta+f');
+			await hotkey(page, terminal.locator('.elemenx-terminal-input'), 'ControlOrMeta+f', terminal.locator('.elemenx-find'));
 
 			await expect(terminal.locator('.elemenx-find-query')).toBeFocused();
 
@@ -1730,7 +1762,7 @@ for (const origin of origins) {
 			var plain;
 			var styled;
 
-			await open(page, origin);
+			await open(page, origin, ['Viewers and formulas']);
 
 			viewers = section(page, 'Viewers and formulas');
 			plain = viewers.locator('.elemenx-markdown[aria-label="Release notes"]');
@@ -1755,7 +1787,7 @@ for (const origin of origins) {
 			var errors = captureErrors(page);
 			var view;
 
-			await open(page, origin);
+			await open(page, origin, ['Viewers and formulas']);
 
 			view = section(page, 'Viewers and formulas').locator('.elemenx-code-view[aria-label="A page"]');
 
@@ -1787,7 +1819,7 @@ for (const origin of origins) {
 			var copy;
 			var before;
 
-			await open(page, origin);
+			await open(page, origin, ['Viewers and formulas']);
 
 			view = section(page, 'Viewers and formulas').locator('.elemenx-code-view[aria-label="A package"]');
 
@@ -1903,7 +1935,7 @@ for (const origin of origins) {
 
 			await page.reload();
 
-			await ready(page);
+			await ready(page, page.url().indexOf('sections=') === -1);
 
 			await start.scrollIntoViewIfNeeded();
 
@@ -1934,7 +1966,7 @@ for (const origin of origins) {
 				await page.mouse.up();
 			}
 
-			await open(page, origin);
+			await open(page, origin, ['Gallery', 'Cards']);
 
 			gallery = section(page, 'Gallery').locator('.elemenx-gallery').first();
 
@@ -2061,7 +2093,7 @@ for (const origin of origins) {
 			var buttons;
 			var menu;
 
-			await open(page, origin);
+			await open(page, origin, ['Buttons']);
 
 			buttons = section(page, 'Buttons');
 			menu = buttons.locator('.elemenx-menu-root').filter({has: page.getByRole('button', {name: 'Edit'})});
@@ -2091,6 +2123,95 @@ for (const origin of origins) {
 			expect(errors).toEqual([]);
 		});
 
+		test('a bar of menus opens the menu under the pointer while one is open, goes from menu to menu by the arrows, and has no carets', async function ({ page }) {
+			var errors = captureErrors(page);
+			var buttons;
+			var bar;
+			var entry;
+
+			await open(page, origin, ['Buttons']);
+
+			buttons = section(page, 'Buttons');
+			bar = buttons.locator('.ui-kit-menu-bar .elemenx-menu-bar');
+
+			entry = function (name) {
+				return bar.locator('.elemenx-menu-bar-entry').filter({has: page.getByRole('button', {name: name, exact: true})});
+			};
+
+			await bar.scrollIntoViewIfNeeded();
+
+			await expect(bar.locator('.elemenx-button')).toHaveText(['File', 'Edit', 'Help']);
+
+			/* No arrow by the labels of the bar, nor by a Menu with Caret false; a Menu keeps its own by default. */
+			await expect(bar.locator('.elemenx-button .elemenx-icon')).toHaveCount(0);
+			await expect(buttons.locator('.ui-kit-menu-bar > .elemenx-menu-root .elemenx-button .elemenx-icon')).toHaveCount(0);
+			await expect(buttons.locator('.elemenx-menu-root').filter({has: page.getByRole('button', {name: 'File', exact: true})}).first().locator('.elemenx-button .elemenx-icon')).not.toHaveCount(0);
+
+			/* Closed, the pointer opens nothing; open, the menu under the pointer takes the place of the open one. */
+			await entry('Edit').hover();
+
+			await expect(bar.getByRole('menuitem').filter({visible: true})).toHaveCount(0);
+
+			await entry('File').getByRole('button').click();
+
+			await expect(entry('File').getByRole('menuitem').filter({visible: true})).toHaveText([/New/, /Open/]);
+
+			await entry('Edit').getByRole('button').hover();
+
+			await expect(entry('Edit').getByRole('menuitem').filter({visible: true})).toHaveText([/Copy/, /Paste special/]);
+			await expect(entry('File').getByRole('menuitem').filter({visible: true})).toHaveCount(0);
+
+			/* The arrows: right to the next menu, left back, round the bar; in a submenu they are the submenu's. */
+			await entry('Edit').getByRole('menuitem', {name: /Copy/}).focus();
+
+			await page.keyboard.press('ArrowRight');
+
+			await expect(entry('Help').getByRole('menuitem').filter({visible: true})).toHaveText([/About/]);
+
+			await page.keyboard.press('ArrowRight');
+
+			await expect(entry('File').getByRole('menuitem').filter({visible: true})).toHaveText([/New/, /Open/]);
+
+			await page.keyboard.press('ArrowLeft');
+
+			await expect(entry('Help').getByRole('menuitem').filter({visible: true})).toHaveCount(1);
+
+			/* Escape closes it, back on its button; a choice reaches the select of the bar. */
+			await page.keyboard.press('Escape');
+
+			await expect(bar.getByRole('menuitem').filter({visible: true})).toHaveCount(0);
+			await expect(entry('Help').getByRole('button')).toBeFocused();
+
+			await page.keyboard.press('ArrowLeft');
+
+			await expect(entry('Edit').getByRole('button')).toBeFocused();
+
+			await page.keyboard.press('ArrowDown');
+
+			await expect(entry('Edit').getByRole('menuitem', {name: /Copy/})).toBeFocused();
+
+			await page.keyboard.press('Enter');
+
+			await expect(buttons).toContainText('Menu: bar-copy');
+
+			/* F10, or Alt alone, takes the first bar of the page to its first menu, and again gives the focus back. */
+			await buttons.getByRole('button', {name: 'Primary'}).focus();
+
+			await page.keyboard.press('F10');
+
+			await expect(entry('File').getByRole('button')).toBeFocused();
+
+			await page.keyboard.press('F10');
+
+			await expect(buttons.getByRole('button', {name: 'Primary'})).toBeFocused();
+
+			await page.keyboard.press('Alt');
+
+			await expect(entry('File').getByRole('button')).toBeFocused();
+
+			expect(errors).toEqual([]);
+		});
+
 		test('forms collect their fields, validate them in the template or by a model in code, and submit only when valid', async function ({ page }) {
 			var errors = captureErrors(page);
 			var forms;
@@ -2102,7 +2223,7 @@ for (const origin of origins) {
 				return form.locator('.elemenx-field').filter({has: page.locator('.elemenx-field-label', {hasText: new RegExp('^' + label + '$')})}).locator('.elemenx-field-error');
 			}
 
-			await open(page, origin);
+			await open(page, origin, ['Forms']);
 
 			forms = section(page, 'Forms');
 			header = forms.locator(':scope > .elemenx-section-header');
@@ -2169,9 +2290,13 @@ for (const origin of origins) {
 			await expect(profile.locator('.ui-kit-profile-value')).toContainText('pending');
 			await expect(profile.locator('.ui-kit-profile-value')).toContainText('invalid');
 
-			await profile.locator('.elemenx-field').first().locator('input').blur();
+			/* Left, the field shows its error; the check of the server answers late beside the other workers, so it is left again until then. */
+			await expect(async function () {
+				await profile.locator('.elemenx-field').first().locator('input').focus();
+				await profile.locator('.elemenx-field').first().locator('input').blur();
 
-			await expect(error(profile, 'Username')).toHaveText('This name is taken');
+				await expect(error(profile, 'Username')).toHaveText('This name is taken', {timeout: 2000});
+			}).toPass({timeout: 30000});
 
 			await profile.locator('.elemenx-field').first().locator('input').fill('grace');
 
@@ -2203,7 +2328,7 @@ for (const origin of origins) {
 			var short;
 			var header;
 
-			await open(page, origin);
+			await open(page, origin, ['Navigation and people']);
 
 			people = section(page, 'Navigation and people');
 			header = people.locator(':scope > .elemenx-section-header');
@@ -2303,7 +2428,7 @@ for (const origin of origins) {
 			var zero;
 			var box;
 
-			await open(page, origin);
+			await open(page, origin, ['Dial pad']);
 
 			dial = section(page, 'Dial pad');
 			phone = dial.getByRole('group', {name: 'Phone'});
@@ -2322,8 +2447,9 @@ for (const origin of origins) {
 			box = await zero.boundingBox();
 
 			await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+			/* Held well past its Hold (500 ms): a busy page fires the timer late. */
 			await page.mouse.down();
-			await page.waitForTimeout(700);
+			await page.waitForTimeout(1500);
 			await page.mouse.up();
 
 			await phone.locator('.elemenx-dial-pad-key').nth(3).click();
@@ -2376,7 +2502,7 @@ for (const origin of origins) {
 			var panel;
 			var draft;
 
-			await open(page, origin);
+			await open(page, origin, ['Keep-alive']);
 
 			keep = section(page, 'Keep-alive');
 			panel = keep.locator('.ui-kit-keep-panel');
@@ -2427,7 +2553,7 @@ for (const origin of origins) {
 			var drums;
 			var bass;
 
-			await open(page, origin);
+			await open(page, origin, ['Music and input']);
 
 			music = section(page, 'Music and input');
 			header = music.locator('.elemenx-section-header');
@@ -2503,7 +2629,7 @@ for (const origin of origins) {
 			var compact;
 			var unit;
 
-			await open(page, origin);
+			await open(page, origin, ['Music and input']);
 
 			music = section(page, 'Music and input');
 			full = music.getByRole('group', {name: 'Hotkeys'});
@@ -2564,7 +2690,7 @@ for (const origin of origins) {
 			var d4;
 			var box;
 
-			await open(page, origin);
+			await open(page, origin, ['Music and input']);
 
 			music = section(page, 'Music and input');
 			header = music.locator('.elemenx-section-header');
@@ -2641,7 +2767,7 @@ for (const origin of origins) {
 			var keyboard;
 			var colors;
 
-			await open(page, origin);
+			await open(page, origin, ['Music and input']);
 
 			music = section(page, 'Music and input');
 			piano = music.getByRole('group', {name: 'Piano with its keys'});
@@ -2790,7 +2916,7 @@ for (const origin of origins) {
 			var material;
 			var header;
 
-			await open(page, origin);
+			await open(page, origin, ['Settings menu']);
 
 			settings = section(page, 'Settings menu');
 			header = settings.locator('.elemenx-section-header');
@@ -3579,7 +3705,7 @@ for (const origin of origins) {
 			var heading;
 			var below;
 
-			await open(page, origin);
+			await open(page, origin, ['Section']);
 
 			outer = section(page, 'Section');
 
@@ -3619,7 +3745,7 @@ for (const origin of origins) {
 				return table.locator('tbody tr').first().locator('td').nth(1);
 			};
 
-			await open(page, origin);
+			await open(page, origin, ['Table']);
 
 			table = section(page, 'Table').locator('.elemenx-table').first();
 			header = section(page, 'Table').locator('.elemenx-section-header');
@@ -3670,7 +3796,7 @@ for (const origin of origins) {
 			var confirm;
 			var note;
 
-			await open(page, origin);
+			await open(page, origin, ['Overlays']);
 
 			overlays = section(page, 'Overlays');
 			note = overlays.locator('.elemenx-section-header');
@@ -3767,7 +3893,7 @@ for (const origin of origins) {
 			var overlays;
 			var dialog;
 
-			await open(page, origin);
+			await open(page, origin, ['Overlays']);
 
 			overlays = section(page, 'Overlays');
 			dialog = page.getByRole('dialog', {name: 'Project settings'});
@@ -3828,7 +3954,7 @@ for (const origin of origins) {
 			var feedback;
 			var header;
 
-			await open(page, origin);
+			await open(page, origin, ['Feedback']);
 
 			feedback = section(page, 'Feedback');
 			header = feedback.locator('.elemenx-section-header');
@@ -3856,7 +3982,7 @@ for (const origin of origins) {
 			var box;
 			var arc;
 
-			await open(page, origin);
+			await open(page, origin, ['Feedback']);
 
 			feedback = section(page, 'Feedback');
 			gain = feedback.getByRole('slider', {name: 'Gain'});
@@ -3909,7 +4035,7 @@ for (const origin of origins) {
 			var box;
 			var thumb;
 
-			await open(page, origin);
+			await open(page, origin, ['Feedback']);
 
 			feedback = section(page, 'Feedback');
 			header = feedback.locator('.elemenx-section-header');
@@ -3961,7 +4087,7 @@ for (const origin of origins) {
 			var errors = captureErrors(page);
 			var blocks;
 
-			await open(page, origin);
+			await open(page, origin, ['Block']);
 
 			blocks = section(page, 'Block').locator('.elemenx-block.framed');
 
@@ -4011,7 +4137,7 @@ for (const origin of origins) {
 			var errors = captureErrors(page);
 			var list;
 
-			await open(page, origin);
+			await open(page, origin, ['Block', 'Properties']);
 
 			list = section(page, 'Block').locator('.elemenx-properties[aria-label="Service"]');
 
@@ -4069,7 +4195,7 @@ for (const origin of origins) {
 				route.fulfill({contentType: 'text/html', body: '<title>Example</title>'});
 			});
 
-			await open(page, origin);
+			await open(page, origin, ['Native']);
 
 			native = section(page, 'Native');
 			state = native.locator('.ui-kit-native-state');
@@ -4184,8 +4310,11 @@ for (const origin of origins) {
 
 			await expect(state).toHaveText('The menu is set');
 
+			/* The calls of the buttons; the Theme gives the program its scheme too (Native.Scheme), as it starts. */
 			calls = await page.evaluate(function () {
-				return window.nativeCalls;
+				return window.nativeCalls.filter(function (call) {
+					return call.Name !== 'scheme';
+				});
 			});
 
 			expect(calls.map(function (call) {
@@ -4212,7 +4341,7 @@ for (const origin of origins) {
 			var errors = captureErrors(page);
 			var feedback;
 
-			await open(page, origin);
+			await open(page, origin, ['Feedback']);
 
 			feedback = section(page, 'Feedback');
 
@@ -4470,7 +4599,7 @@ for (const origin of origins) {
 			var handle;
 			var box;
 
-			await open(page, origin);
+			await open(page, origin, ['Workspace', 'Terminal']);
 
 			workspace = section(page, 'Workspace').locator('.elemenx-workspace').first();
 			left = workspace.locator('.elemenx-workspace-panel.left');
@@ -4541,7 +4670,7 @@ for (const origin of origins) {
 				await route.continue();
 			});
 
-			await open(page, origin);
+			await open(page, origin, ['Chat']);
 
 			list = section(page, 'Chat').locator('.elemenx-chat-messages');
 			atEnd = function () {
@@ -4582,7 +4711,7 @@ for (const origin of origins) {
 		test('chat shows the avatar on the newest message of a run from one author', async function ({ page }) {
 			var messages;
 
-			await open(page, origin);
+			await open(page, origin, ['Chat']);
 
 			messages = section(page, 'Chat').locator('.elemenx-chat-message:not(.own)');
 
@@ -4603,7 +4732,7 @@ for (const origin of origins) {
 			var summary;
 			var box;
 
-			await open(page, origin);
+			await open(page, origin, ['Chat']);
 
 			chat = section(page, 'Chat');
 			messages = chat.locator('.elemenx-chat-message');
@@ -4685,7 +4814,7 @@ for (const origin of origins) {
 
 			await page.clock.install();
 
-			await open(page, origin);
+			await open(page, origin, ['Gallery']);
 
 			block = section(page, 'Gallery');
 			gallery = block.locator('.elemenx-gallery').first();
@@ -4775,7 +4904,7 @@ for (const origin of origins) {
 			var block;
 			var steps;
 
-			await open(page, origin);
+			await open(page, origin, ['Steps and timeline']);
 
 			block = section(page, 'Steps and timeline');
 			steps = block.locator('.elemenx-steps').first().locator('.elemenx-step');
@@ -4817,7 +4946,7 @@ for (const origin of origins) {
 			var terminal;
 			var input;
 
-			await open(page, origin);
+			await open(page, origin, ['Terminal']);
 
 			terminal = section(page, 'Terminal').locator('.elemenx-terminal');
 			input = terminal.locator('.elemenx-terminal-input');
@@ -4863,7 +4992,7 @@ for (const origin of origins) {
 			var box;
 			var line = '\t\tvar next = this.Count + (step || 1);';
 
-			await open(page, origin);
+			await open(page, origin, ['Code editor']);
 
 			scope = section(page, 'Code editor');
 			editor = scope.locator('.elemenx-code-editor');
@@ -4979,7 +5108,7 @@ for (const origin of origins) {
 			var editor;
 			var diff;
 
-			await open(page, origin);
+			await open(page, origin, ['Code editor']);
 
 			scope = section(page, 'Code editor');
 			editor = scope.locator('.elemenx-code-editor').first();
@@ -5030,7 +5159,7 @@ for (const origin of origins) {
 			var input;
 			var printed;
 
-			await open(page, origin);
+			await open(page, origin, ['Code editor']);
 
 			scope = section(page, 'Code editor');
 			editor = scope.locator('.elemenx-code-editor');
@@ -5128,7 +5257,7 @@ for (const origin of origins) {
 			var scope;
 			var content;
 
-			await open(page, origin);
+			await open(page, origin, ['Rich text editor']);
 
 			scope = section(page, 'Rich text editor');
 			content = scope.locator('.elemenx-rich-editor-content');
@@ -5247,7 +5376,7 @@ for (const origin of origins) {
 			var markdown;
 			var printed;
 
-			await open(page, origin);
+			await open(page, origin, ['Rich text editor']);
 
 			scope = section(page, 'Rich text editor');
 			content = scope.locator('.elemenx-rich-editor-content');
@@ -5337,7 +5466,7 @@ for (const origin of origins) {
 			var point;
 			var before;
 
-			await open(page, origin);
+			await open(page, origin, ['Windows', 'Game UI']);
 
 			notes = section(page, 'Windows').locator('.elemenx-window.trapezoid').filter({hasText: 'Notes'});
 			header = notes.locator('.elemenx-window-header');
@@ -5479,7 +5608,7 @@ for (const origin of origins) {
 				};
 			});
 
-			await open(page, origin);
+			await open(page, origin, ['Windows']);
 
 			windows = section(page, 'Windows');
 			notes = windows.locator('.elemenx-window').filter({hasText: 'Notes'});
@@ -5550,7 +5679,7 @@ for (const origin of origins) {
 				});
 			}
 
-			await open(page, origin);
+			await open(page, origin, ['Windows']);
 
 			scope = section(page, 'Windows');
 			note = scope.locator(':scope > .elemenx-section-header .elemenx-caption');
@@ -6024,7 +6153,7 @@ for (const origin of origins) {
 			var bag;
 			var note;
 
-			await open(page, origin);
+			await open(page, origin, ['Game UI']);
 
 			game = section(page, 'Game UI');
 			note = game.locator(':scope > .elemenx-section-header .elemenx-caption');
@@ -6191,6 +6320,9 @@ for (const origin of origins) {
 				return [getComputedStyle(node, '::after').backgroundImage.split('data:image/svg+xml').length - 1, getComputedStyle(node.querySelector('.elemenx-game-menu-title'), '::after').height, getComputedStyle(item).borderImageSource.indexOf('data:image/svg+xml') !== -1, ends.backgroundImage.split('data:image/svg+xml').length - 1, ends.left, getComputedStyle(item).textAlign];
 			})).toEqual([1, '20px', true, 1, '-19px', 'center']);
 
+			/* Escape once the menu has the focus (it takes it a moment after it opens). */
+			await expect(game.locator('.elemenx-game-menu :focus')).toHaveCount(1);
+
 			await page.keyboard.press('Escape');
 
 			await expect(game.locator('.elemenx-game-menu')).toHaveCount(0);
@@ -6237,7 +6369,7 @@ for (const origin of origins) {
 				await page.mouse.up();
 			}
 
-			await open(page, origin);
+			await open(page, origin, ['Game UI']);
 
 			game = section(page, 'Game UI');
 			note = game.locator(':scope > .elemenx-section-header .elemenx-caption');
@@ -6526,7 +6658,7 @@ for (const origin of origins) {
 			var from;
 			var to;
 
-			await open(page, origin);
+			await open(page, origin, ['Tiles']);
 
 			grid = section(page, 'Tiles').locator('.elemenx-tile-grid').first();
 			state = function () {
@@ -6635,7 +6767,7 @@ for (const origin of origins) {
 			var tiles;
 			var from;
 
-			await open(page, origin);
+			await open(page, origin, ['Tiles']);
 
 			grid = section(page, 'Tiles').locator('.elemenx-tile-grid').nth(1);
 			tiles = function () {
@@ -6696,7 +6828,7 @@ for (const origin of origins) {
 			var gap;
 			var boxes;
 
-			await open(page, origin);
+			await open(page, origin, ['Tiles']);
 
 			frame = section(page, 'Tiles').locator('.ui-kit-start-columns');
 			grid = frame.locator('.elemenx-tile-grid.columns');
@@ -6769,7 +6901,7 @@ for (const origin of origins) {
 			var box;
 			var play;
 
-			await open(page, origin);
+			await open(page, origin, ['Tiles']);
 
 			grid = section(page, 'Tiles').locator('.elemenx-tile-grid').first();
 			tools = grid.locator('.elemenx-tile-group[data-group="tools"]');
@@ -6828,7 +6960,7 @@ for (const origin of origins) {
 			var columns;
 			var box;
 
-			await open(page, origin);
+			await open(page, origin, ['Tiles']);
 
 			grid = section(page, 'Tiles').locator('.elemenx-tile-grid').first();
 			work = grid.locator('.elemenx-tile-group[data-group="work"]');
@@ -7149,7 +7281,7 @@ for (const origin of origins) {
 			var commands;
 			var menu;
 
-			await open(page, origin);
+			await open(page, origin, ['Commands and overlays']);
 
 			commands = section(page, 'Commands and overlays');
 			menu = commands.locator('.elemenx-context-point .elemenx-menu');
@@ -7190,7 +7322,7 @@ for (const origin of origins) {
 			var filters;
 			var box = null;
 
-			await open(page, origin);
+			await open(page, origin, ['Commands and overlays']);
 
 			commands = section(page, 'Commands and overlays');
 			menu = page.getByRole('dialog', {name: 'Elemenx'});
@@ -7369,7 +7501,7 @@ for (const origin of origins) {
 			/* WebAuthn takes a domain, not an IP address, as the site: the page opens on localhost. */
 			await page.goto(origin.URL.replace('127.0.0.1', 'localhost') + '/ui');
 
-			await ready(page);
+			await ready(page, page.url().indexOf('sections=') === -1);
 
 			device = section(page, 'Security and device');
 
@@ -7994,7 +8126,7 @@ for (const origin of origins) {
 			var stars;
 			var box;
 
-			await open(page, origin);
+			await open(page, origin, ['Feedback']);
 
 			feedback = section(page, 'Feedback');
 			rating = feedback.locator('.elemenx-rating').first();
@@ -8110,7 +8242,7 @@ for (const origin of origins) {
 			var today;
 			var iso;
 
-			await open(page, origin);
+			await open(page, origin, ['Charts and calendar']);
 
 			charts = section(page, 'Charts and calendar');
 			calendar = charts.locator('.elemenx-cal');
@@ -8166,7 +8298,7 @@ for (const origin of origins) {
 			var box;
 			var step;
 
-			await open(page, origin);
+			await open(page, origin, ['Charts and calendar']);
 
 			charts = section(page, 'Charts and calendar');
 			calendar = charts.locator('.elemenx-cal');
@@ -8264,7 +8396,7 @@ for (const origin of origins) {
 		test('steps take custom content and a disabled step is not clickable', async function ({ page }) {
 			var custom;
 
-			await open(page, origin);
+			await open(page, origin, ['Steps and timeline']);
 
 			custom = section(page, 'Steps and timeline').locator('.elemenx-steps').nth(2);
 
@@ -8288,7 +8420,7 @@ for (const origin of origins) {
 			var settings;
 			var master;
 
-			await open(page, origin);
+			await open(page, origin, ['Layouts']);
 
 			layouts = section(page, 'Layouts');
 			nav = layouts.locator('.elemenx-dashboard .elemenx-nav');

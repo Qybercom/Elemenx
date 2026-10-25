@@ -1,7 +1,7 @@
 /*
  * An item of a menu declared in the template of a Menu (its default slot) or of a ContextMenu (slot items): ID,
  * Label, Icon, Shortcut, Disabled, Danger, Checked, Group; Separator draws a line instead; MenuItem children make a
- * submenu. It shows nothing by itself: the menu reads it. A press on it emits select with the item, here as well as
+ * submenu. Role is what the system does for it in a menu of a program (NativeMenu: undo, copy, quit...). It shows nothing by itself: the menu reads it. A press on it emits select with the item, here as well as
  * on the menu.
  */
 Elemenx.Component('MenuItem', {
@@ -22,7 +22,8 @@ Elemenx.Component('MenuItem', {
 			Danger: 'Paints it as a dangerous action.',
 			Checked: 'Shows a check before it (true or false makes it a toggle).',
 			Separator: 'A line in place of an item.',
-			Group: 'A title of a group in place of an item.'
+			Group: 'A title of a group in place of an item.',
+			Role: 'In a menu of a program (NativeMenu), what the system does for it: undo, copy, paste, quit...'
 		},
 		Sample: {ID: 'undo', Label: 'Undo', Icon: 'undo', Shortcut: 'Ctrl+Z'}
 	},
@@ -35,6 +36,7 @@ Elemenx.Component('MenuItem', {
 	Checked: null,
 	Separator: false,
 	Group: '',
+	Role: '',
 
 	/* The menu chose this item (the event elemenx-menu-pick on its declaration). */
 	Picked: function (event) {

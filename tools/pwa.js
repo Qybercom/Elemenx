@@ -5,7 +5,10 @@
  * {Name, ShortName, Description, Icon (a PNG or an SVG of the project, 512 pixels for every system), Icons ([{Src,
  * Sizes, Type, Purpose}] instead), Theme and Background (CSS colors of the bar of its window and of its start; the
  * background of the splash, white by default), Display (standalone by default, fullscreen, minimal-ui, browser), Start
- * (the address it opens, /), Orientation, Offline (true by default)}. The build writes manifest.webmanifest and links it
+ * (the address it opens, /), Orientation, Offline (true by default), Update (how a new build takes the place of the one
+ * the page runs: auto, by default, at once, for the next start; prompt, when the Application says, Elemenx.Install
+ * checking for one at the start and every hour; manual, when the Application says, after it asks)}. The build writes
+ * manifest.webmanifest and links it
  * from the head of the page, with the color of the theme and the icon of Apple; with Offline, elemenx-pwa.js, a service
  * worker that keeps every file of the build (up to 2 MB each; larger ones once they are fetched) so the Application
  * runs without the network: the page from the network when there is one, the files from the cache, a new build a new
@@ -17,6 +20,9 @@ var path = require('path');
 var crypto = require('crypto');
 
 var Displays = ['standalone', 'fullscreen', 'minimal-ui', 'browser'];
+
+/* How a new build takes the place of the one the page runs (PWA.Update). */
+var Updates = ['auto', 'prompt', 'manual'];
 
 /* The largest file kept when the worker installs; the larger ones are kept once fetched. */
 var Precached = 2 * 1024 * 1024;
@@ -51,7 +57,7 @@ function typeOf (src) {
  * Orientation, Offline, Language}, or null without one. page: the page of the build (its title and its language),
  * output: the folder of the build (the sizes of its icons), splash: the splash of the build (its background).
  */
-function settings (project, pwa, page, output, splash) {
+function settings (project, pwa, page, output, splash, fallback) {
 	var file = path.join(project, 'package.json');
 	var pack = fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')) : {};
 	var value;
@@ -65,10 +71,13 @@ function settings (project, pwa, page, output, splash) {
 	value = pwa === true ? {} : pwa;
 
 	if (typeof value !== 'object' || Array.isArray(value))
-		throw new Error('PWA must be true or {Name, ShortName, Description, Icon, Icons, Theme, Background, Display, Start, Orientation, Offline}');
+		throw new Error('PWA must be true or {Name, ShortName, Description, Icon, Icons, Theme, Background, Display, Start, Orientation, Offline, Update}');
 
 	if (value.Display !== undefined && Displays.indexOf(value.Display) === -1)
 		throw new Error('PWA.Display must be one of ' + Displays.join(', ') + ': ' + value.Display);
+
+	if (value.Update !== undefined && Updates.indexOf(value.Update) === -1)
+		throw new Error('PWA.Update must be one of ' + Updates.join(', ') + ': ' + value.Update);
 
 	['Theme', 'Background'].forEach(function (key) {
 		if (value[key] !== undefined && !/^[#A-Za-z0-9(),.%\s-]+$/.test(String(value[key])))
@@ -80,7 +89,9 @@ function settings (project, pwa, page, output, splash) {
 
 	icons = value.Icons ? value.Icons.map(function (icon) {
 		return {src: String(icon.Src), sizes: String(icon.Sizes || sizeOf(path.join(output, String(icon.Src))) || 'any'), type: icon.Type || typeOf(String(icon.Src)), purpose: icon.Purpose || 'any'};
-	}) : value.Icon ? [{src: String(value.Icon), sizes: sizeOf(path.join(output, String(value.Icon))) || 'any', type: typeOf(String(value.Icon)), purpose: 'any'}] : [];
+	}) : value.Icon ? [{src: String(value.Icon), sizes: sizeOf(path.join(output, String(value.Icon))) || 'any', type: typeOf(String(value.Icon)), purpose: 'any'}] : (fallback || []).map(function (icon) {
+		return {src: icon.Src, sizes: icon.Sizes, type: icon.Type, purpose: 'any'};
+	});
 
 	return {
 		Name: name,
@@ -94,6 +105,7 @@ function settings (project, pwa, page, output, splash) {
 		Scope: String(value.Scope || '/'),
 		Orientation: value.Orientation ? String(value.Orientation) : '',
 		Offline: value.Offline !== false,
+		Update: value.Update || 'auto',
 		Language: (/<html\b[^>]*\blang\s*=\s*["']?([A-Za-z-]+)/i.exec(page || '') || [])[1] || ''
 	};
 }
@@ -126,11 +138,11 @@ function manifest (pwa) {
 function head (page, pwa) {
 	var tags = ['<link rel="manifest" href="/manifest.webmanifest">', '<meta name="theme-color" content="' + escape(pwa.Theme) + '">'];
 
-	if (pwa.Icons.length)
+	if (pwa.Icons.length && page.indexOf('rel="apple-touch-icon"') === -1)
 		tags.push('<link rel="apple-touch-icon" href="' + escape(pwa.Icons[pwa.Icons.length - 1].src) + '">');
 
 	if (pwa.Offline)
-		tags.push('<meta name="elemenx-pwa-worker" content="/elemenx-pwa.js" data-scope="' + escape(pwa.Scope) + '">');
+		tags.push('<meta name="elemenx-pwa-worker" content="/elemenx-pwa.js" data-scope="' + escape(pwa.Scope) + '" data-update="' + escape(pwa.Update || 'auto') + '">');
 
 	if (page.indexOf('rel="manifest"') !== -1) return page;
 
@@ -156,19 +168,36 @@ function files (folder, base, list) {
 	return list;
 }
 
-/* The service worker of a build: the files kept when it installs, its cache named by the version of the build. */
-function worker (list, version) {
+/*
+ * The service worker of a build: the files kept when it installs, its cache named by the version of the build. With
+ * update auto it takes the place of the one before at once; else it waits until the page tells it (Elemenx.Install.Apply).
+ */
+function worker (list, version, update) {
 	return [
 		'/* The service worker of an Elemenx build (elemenx build, PWA.Offline): the files of the build, offline. */',
+		'var Version = \'' + version + '\';',
 		'var Cache = \'elemenx-pwa-' + version + '\';',
 		'var Files = ' + JSON.stringify(list) + ';',
 		'',
 		'self.addEventListener(\'install\', function (event) {',
 		'\tevent.waitUntil(caches.open(Cache).then(function (cache) {',
 		'\t\treturn cache.addAll(Files);',
-		'\t}).then(function () {',
+		'\t})' + ((update || 'auto') === 'auto' ? '.then(function () {' : ');'),
+	].concat((update || 'auto') === 'auto' ? [
 		'\t\treturn self.skipWaiting();',
-		'\t}));',
+		'\t}));'
+	] : []).concat([
+		'});',
+		'',
+		'/* The page asks for the version of the build, or tells it to take the place of the one before now. */',
+		'self.addEventListener(\'message\', function (event) {',
+		'\tvar data = event.data || {};',
+		'',
+		'\tif (data.Type === \'elemenx-pwa-version\' && event.ports && event.ports[0])',
+		'\t\tevent.ports[0].postMessage({Version: Version});',
+		'',
+		'\tif (data.Type === \'elemenx-pwa-apply\')',
+		'\t\tself.skipWaiting();',
 		'});',
 		'',
 		'/* The caches of the builds before this one go. */',
@@ -212,7 +241,7 @@ function worker (list, version) {
 		'\t}));',
 		'});',
 		''
-	].join('\n');
+	]).join('\n');
 }
 
 /*
@@ -243,7 +272,7 @@ function apply (output, pwa) {
 		return fs.statSync(entry.File).size <= Precached;
 	}).map(function (entry) {
 		return entry.URL;
-	}), hash.digest('hex').substring(0, 12)));
+	}), hash.digest('hex').substring(0, 12), pwa.Update));
 
 	return ['manifest.webmanifest', 'elemenx-pwa.js'];
 }

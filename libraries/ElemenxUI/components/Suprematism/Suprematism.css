@@ -1,0 +1,10 @@
+/* A picture made of a seed: as wide as its place, the height of its proportions. */
+.elemenx-suprematism {
+	display: block;
+	line-height: 0;
+}
+
+.elemenx-suprematism > svg {
+	width: 100%;
+	height: auto;
+}

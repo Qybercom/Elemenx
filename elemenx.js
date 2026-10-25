@@ -33,6 +33,7 @@
  *   ServiceWorker            Elemenx.ServiceWorker
  *   Owner resources          wiring and release of the facades owned by Services, Components and Applications
  *   Install                  Elemenx.Install: the page as an application of the system (PWA), its prompt and worker
+ *   Widgets                  Elemenx.Widgets: Components of an Application mounted on a page of another site
  *   Splash                   Elemenx.Splash: the splash of the page, gone when the first Application is ready
  *   Application              Elemenx.Application: ownership, mounting, startup lifecycle
  *   Export                   Elemenx.Version, Elemenx.NoConflict; the window gets this copy, an isolated build keeps it
@@ -43,7 +44,7 @@
 	 * Elemenx: the namespace of this copy of the framework. The window gets it last (see Export), unless a copy of the
 	 * same version is there already: then this one stops here and the page keeps the first.
 	 */
-	var Version = '0.9.4';
+	var Version = '0.9.5';
 	var Elemenx = {};
 	if (typeof ElemenxIsolated !== 'object' && (typeof globalThis !== 'undefined' ? globalThis : self).Elemenx && (typeof globalThis !== 'undefined' ? globalThis : self).Elemenx.Version === Version) return;
 
@@ -921,6 +922,10 @@
 		var rightToLeft = ['ar', 'arc', 'ckb', 'dv', 'fa', 'he', 'iw', 'ks', 'ps', 'sd', 'ug', 'ur', 'yi'];
 		var state = Runtime.Reactive({Language: normalize(Runtime.HasDOM && global.document.documentElement.lang) || 'en', Version: 0});
 
+		/* The language chosen is remembered here; the languages the Applications have ($Locales.Languages), for 'system'. */
+		var storageKey = 'elemenx-language';
+		var spoken = [];
+
 		function normalize (language) {
 			return String(language || '').replace(/_/g, '-').toLowerCase();
 		}
@@ -1123,6 +1128,68 @@
 			});
 		}
 
+		/* The language remembered (null: none, or the system), and remembering one (null forgets it); an isolated copy keeps none. */
+		function remembered (language) {
+			try {
+				if (!arguments.length)
+					return Runtime.Isolated ? null : normalize(global.localStorage.getItem(storageKey)) || null;
+
+				if (Runtime.Isolated) return null;
+
+				if (language) global.localStorage.setItem(storageKey, language);
+				else global.localStorage.removeItem(storageKey);
+			}
+			catch (error) {
+				return null;
+			}
+
+			return null;
+		}
+
+		/* The language of the system among languages: the first of the browser (navigator.languages) it has, as it is or by its base (pt for pt-BR), or null. */
+		function systemLanguage (languages) {
+			var navigator = global.navigator || {};
+			var asked = navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language];
+			var code;
+			var i = 0;
+
+			while (i < asked.length) {
+				code = normalize(asked[i]);
+
+				if (code && languages.indexOf(code) !== -1) return code;
+
+				if (code && languages.indexOf(code.split('-')[0]) !== -1) return code.split('-')[0];
+
+				i++;
+			}
+
+			return null;
+		}
+
+		/* Loads the dictionaries of code, then switches to it: the lang and dir of the page follow. */
+		function use (code, callback) {
+			prepare(code, function (error) {
+				if (!error && code !== state.Language) {
+					Runtime.BatchReactive(function () {
+						state.Language = code;
+						state.Version++;
+					});
+
+					if (Runtime.HasDOM) {
+						Runtime.ShadowHosts.concat(Runtime.Isolated ? [] : [global.document.documentElement]).forEach(function (node) {
+							node.lang = code;
+							node.dir = direction(code);
+						});
+					}
+
+					notify();
+				}
+
+				if (typeof callback === 'function') callback(error || null);
+				else if (error) Runtime.Report(error);
+			});
+		}
+
 		function notify () {
 			var list = listeners.slice();
 			var i = 0;
@@ -1143,7 +1210,10 @@
 		 * Elemenx.Locale: the phrases of the Applications and their Libraries in the language of the page. A key names a
 		 * phrase ('picker.search'); its text comes from the dictionary of the language, of its base language (pt for
 		 * pt-BR), of the fallback language (en), and is the key itself when none has it. Templates show phrases with
-		 * $T(key, params): they follow the language.
+		 * $T(key, params): they follow the language. An Application whose $Locales lists its Languages starts in the
+		 * language of the system among them (navigator.languages), or the one chosen before: Language(code) is remembered
+		 * (localStorage), Language('system') forgets it and takes the one of the system again ($Locales.System false keeps
+		 * the lang of the page).
 		 */
 		Elemenx.Locale = {
 			Language: function (language, callback) {
@@ -1157,28 +1227,22 @@
 				if (!code)
 					throw new Error('Elemenx.Locale.Language expects (language) or (language, callback)');
 
-				prepare(code, function (error) {
-					if (!error && code !== state.Language) {
-						Runtime.BatchReactive(function () {
-							state.Language = code;
-							state.Version++;
-						});
+				if (code === 'system') {
+					remembered(null);
 
-						if (Runtime.HasDOM) {
-							Runtime.ShadowHosts.concat(Runtime.Isolated ? [] : [global.document.documentElement]).forEach(function (node) {
-								node.lang = code;
-								node.dir = direction(code);
-							});
-						}
+					code = systemLanguage(spoken) || state.Language;
+				}
+				else {
+					remembered(code);
+				}
 
-						notify();
-					}
-
-					if (typeof callback === 'function') callback(error || null);
-					else if (error) Runtime.Report(error);
-				});
+				use(code, callback);
 
 				return state.Language;
+			},
+			/* The language of the system among the languages of the Applications, or null: the one Language('system') takes. */
+			System: function () {
+				return systemLanguage(spoken);
 			},
 			Fallback: function (language) {
 				if (!arguments.length) return fallback;
@@ -1259,8 +1323,27 @@
 		};
 
 		/* The dictionaries of the current language, before an Application renders its root. */
-		Runtime.LocaleReady = function (callback) {
-			prepare(state.Language, callback);
+		/*
+		 * The language of an Application starting, its dictionaries loaded: with the Languages of its $Locales, the one
+		 * chosen before, or the one of the system among them, unless $Locales.System is false; the lang of the page else.
+		 */
+		Runtime.LocaleReady = function (callback, locales) {
+			var languages = locales && Array.isArray(locales.Languages) ? locales.Languages.map(normalize) : [];
+			var code = null;
+
+			languages.forEach(function (language) {
+				if (spoken.indexOf(language) === -1)
+					spoken.push(language);
+			});
+
+			if (languages.length && locales.System !== false && Runtime.HasDOM) {
+				code = remembered();
+
+				if (!code || languages.indexOf(code) === -1)
+					code = systemLanguage(languages);
+			}
+
+			use(code || state.Language, callback);
 		};
 
 		/* Names every template expression sees, under the values of its Component. */
@@ -16729,10 +16812,23 @@
 		 * to Home Screen). State() is {Available, Installed, Manual}; OnChange(callback) hears it change, OffChange takes the
 		 * callback away. The service worker a build names (<meta name="elemenx-pwa-worker">) is registered once the page
 		 * has loaded: it keeps the files of the build for the page to run offline.
+		 *
+		 * Its updates: State() has Version (the build the page runs, once its worker answers) and Waiting (a new build is
+		 * there, waiting to take its place). Update(callback) asks the server for a new build: callback(error, {Available,
+		 * Version, Current}). Apply(callback) updates at once, whatever is there: the new build takes the place of the one
+		 * before and every page of it reloads; without a new build the worker and its files are forgotten and the page
+		 * reloads from the network (it keeps the files again). PWA.Update of the build: auto (a new build is taken at once,
+		 * for the next start), prompt (it waits for Apply; checked at the start and every hour), manual (it waits for Apply,
+		 * checked by Update only).
 		 */
 		var prompt = null;
 		var installed = false;
 		var listeners = [];
+		var registration = null;
+		var policy = 'auto';
+		var version = null;
+		var waiting = null;
+		var controlled = false;
 
 		function standalone () {
 			if (!Runtime.HasDOM) return false;
@@ -16750,7 +16846,164 @@
 		}
 
 		function state () {
-			return {Available: !!prompt && !installed, Installed: installed || standalone(), Manual: manual()};
+			return {Available: !!prompt && !installed, Installed: installed || standalone(), Manual: manual(), Waiting: !!waiting, Version: version};
+		}
+
+		/* The version of the build of a worker (it answers on a channel), or null when it does not answer. */
+		function versionOf (worker, callback) {
+			var channel = new global.MessageChannel();
+			var done = false;
+			var timer = global.setTimeout(function () {
+				finish(null);
+			}, 3000);
+
+			function finish (value) {
+				if (done) return;
+
+				done = true;
+
+				global.clearTimeout(timer);
+
+				callback(value);
+			}
+
+			channel.port1.onmessage = function (event) {
+				finish(event.data && event.data.Version ? String(event.data.Version) : null);
+			};
+
+			worker.postMessage({Type: 'elemenx-pwa-version'}, [channel.port2]);
+		}
+
+		/* A worker of a new build, once installed: the build waits (or, with update auto, is taken already). */
+		function arrived (worker, callback) {
+			function ready () {
+				versionOf(worker, function (value) {
+					waiting = value || 'new';
+
+					changed();
+
+					if (callback)
+						callback(waiting);
+				});
+			}
+
+			if (worker.state === 'installed' || worker.state === 'activating' || worker.state === 'activated') {
+				ready();
+
+				return;
+			}
+
+			worker.addEventListener('statechange', function listen () {
+				if (worker.state === 'redundant') {
+					worker.removeEventListener('statechange', listen);
+
+					if (callback)
+						callback(null);
+				}
+
+				if (worker.state !== 'installed' && worker.state !== 'activated') return;
+
+				worker.removeEventListener('statechange', listen);
+
+				ready();
+			});
+		}
+
+		/* The version of the build the worker of the page runs: at once, or once the first worker of the page is active. */
+		function current (value) {
+			var worker = value.active || value.installing || value.waiting;
+
+			function ask () {
+				versionOf(worker, function (answer) {
+					version = answer;
+
+					changed();
+				});
+			}
+
+			if (!worker) return;
+
+			if (worker.state === 'activated') {
+				ask();
+
+				return;
+			}
+
+			worker.addEventListener('statechange', function listen () {
+				if (worker.state !== 'activated') return;
+
+				worker.removeEventListener('statechange', listen);
+
+				ask();
+			});
+		}
+
+		/* The registration of the worker: the version of the build, the new builds that come, the checks of prompt. */
+		function watch (value) {
+			registration = value;
+
+			current(value);
+
+			/* A new build taken (update auto, or another page applied it): the version that runs now. */
+			global.navigator.serviceWorker.addEventListener('controllerchange', function () {
+				current(value);
+			});
+
+			if (value.waiting && controlled)
+				arrived(value.waiting);
+
+			value.addEventListener('updatefound', function () {
+				if (value.installing && controlled)
+					arrived(value.installing);
+			});
+
+			if (policy === 'prompt') {
+				value.update().catch(function () {});
+
+				global.setInterval(function () {
+					value.update().catch(function () {});
+				}, 3600000);
+			}
+		}
+
+		function reload () {
+			global.location.reload();
+		}
+
+		/* The worker of the build and its files forgotten: callback(error) once both are gone. */
+		function forget (callback) {
+			var done = Runtime.Countdown(2, callback);
+
+			function failed (error) {
+				done(error instanceof Error ? error : new Error(String(error)));
+			}
+
+			if (registration) registration.unregister().then(function () {
+				done(null);
+			}, failed);
+			else done(null);
+
+			if (!global.caches) {
+				done(null);
+
+				return;
+			}
+
+			global.caches.keys().then(function (keys) {
+				var names = keys.filter(function (key) {
+					return key.indexOf('elemenx-pwa-') === 0;
+				});
+				var gone = Runtime.Countdown(names.length, done);
+
+				if (!names.length)
+					done(null);
+
+				names.forEach(function (key) {
+					global.caches.delete(key).then(function () {
+						gone(null);
+					}, failed);
+				});
+			}, failed);
 		}
 
 		function changed () {
@@ -16766,7 +17019,16 @@
 			var meta = global.document.querySelector('meta[name="elemenx-pwa-worker"]');
 			if (!meta || !global.navigator.serviceWorker || typeof global.navigator.serviceWorker.register !== 'function') return;
 
-			global.navigator.serviceWorker.register(meta.getAttribute('content'), {scope: meta.getAttribute('data-scope') || '/'}).catch(function (error) {
+			policy = meta.getAttribute('data-update') || 'auto';
+			controlled = !!global.navigator.serviceWorker.controller;
+
+			/* A new build taken by another page of it (its Apply): this one reloads too, but for the first worker of the page. */
+			global.navigator.serviceWorker.addEventListener('controllerchange', function () {
+				if (controlled && policy !== 'auto')
+					reload();
+			});
+
+			global.navigator.serviceWorker.register(meta.getAttribute('content'), {scope: meta.getAttribute('data-scope') || '/'}).then(watch, function (error) {
 				Runtime.Report(error);
 			});
 		}
@@ -16833,6 +17095,65 @@
 
 				changed();
 			},
+			Update: function (callback) {
+				callback = callback || function () {};
+
+				if (!registration) {
+					callback(new Error('Elemenx.Install has no worker: the build is not a PWA that runs offline, or the page has not loaded yet'));
+
+					return;
+				}
+
+				registration.update().then(function () {
+					var worker = registration.installing || registration.waiting;
+
+					if (!worker) {
+						callback(null, {Available: !!waiting, Version: waiting, Current: version});
+
+						return;
+					}
+
+					arrived(worker, function (value) {
+						callback(null, {Available: !!value, Version: value, Current: version});
+					});
+				}, function (error) {
+					callback(error instanceof Error ? error : new Error(String(error)));
+				});
+			},
+			Apply: function (callback) {
+				var workers = Runtime.HasDOM && global.navigator.serviceWorker;
+
+				callback = callback || function () {};
+
+				if (!workers) {
+					reload();
+
+					return;
+				}
+
+				/* A new build waits: it takes the place of the one before, and every page of it reloads (controllerchange). */
+				if (registration && registration.waiting) {
+					controlled = true;
+					policy = 'prompt';
+
+					registration.waiting.postMessage({Type: 'elemenx-pwa-apply'});
+
+					return;
+				}
+
+				/* Taken already (update auto): the page of the new build. */
+				if (waiting) {
+					reload();
+
+					return;
+				}
+
+				/* Nothing new: the worker and its files are forgotten, the page comes from the network and keeps them again. */
+				forget(function (error) {
+					if (error) callback(error);
+					else reload();
+				});
+			},
 			OnChange: function (callback) {
 				if (typeof callback === 'function' && listeners.indexOf(callback) === -1)
 					listeners.push(callback);
@@ -16845,6 +17166,297 @@
 				});
 
 				return Elemenx.Install;
+			}
+		};
+	})(typeof globalThis !== 'undefined' ? globalThis : self);
+
+	/* Widgets */
+	(function (global) {
+		'use strict';
+
+		/*
+		 * Elemenx.Widgets: the Components of an Application on a page of another site, as widgets. The page loads the
+		 * code once (a build of elemenx build --widget: widget.js in its head) and marks the places of the widgets:
+		 * <div data-elemenx-widget="Cart" data-props='{"Currency": "EUR"}'></div>. Define(name, {Component, Application,
+		 * Props, Events, Shadow}) names a widget: its Component, the name of its Application, the props it starts with,
+		 * the events of the Component the page hears as DOM events of the element (they bubble, detail the data), and
+		 * Shadow false to render in the element itself (by default in a shadow root of it: the styles of the page stay out,
+		 * the ones of the framework go in). Watch(root) mounts every place in root (the document) and the ones that come
+		 * later, takes away the ones that go, and follows their data-props; it returns the function that stops it.
+		 * Mount(element, name, props) mounts one from code: {Name, Element, Update(props), On(event, callback),
+		 * Unmount()}; Unmount(element) takes one away; Names() lists the widgets defined. The widgets of one Application
+		 * share its Services and its state; a widget is made once its Application has started.
+		 */
+		var defined = {};
+		var mounted = [];
+
+		function entryOf (element) {
+			var i = 0;
+
+			while (i < mounted.length) {
+				if (mounted[i].Element === element) return mounted[i];
+
+				i++;
+			}
+
+			return null;
+		}
+
+		/* The props of a place: its data-props, a JSON object. */
+		function propsOf (element) {
+			var text = element.getAttribute('data-props');
+			var value;
+
+			if (!text)
+				return {};
+
+			try {
+				value = JSON.parse(text);
+			}
+			catch (error) {
+				Runtime.Report(new Error('Elemenx.Widgets: the data-props of a widget is not JSON: ' + text));
+
+				return {};
+			}
+
+			return value && typeof value === 'object' && !Array.isArray(value) ? value : {};
+		}
+
+		/* New props of a widget: its Component takes them, or the ones it will be made with, while its Application starts. */
+		function update (entry, props) {
+			var key;
+
+			if (entry.Instance) {
+				entry.Instance.$Update(props || {});
+
+				return;
+			}
+
+			for (key in props || {}) {
+				if (Runtime.Own(props, key))
+					entry.Props[key] = props[key];
+			}
+		}
+
+		function listen (entry, name, callback) {
+			entry.Instance.$On(name, function (data) {
+				callback(data);
+			});
+		}
+
+		function handle (entry) {
+			return {
+				Name: entry.Name,
+				Element: entry.Element,
+				Update: function (props) {
+					if (mounted.indexOf(entry) !== -1)
+						update(entry, props);
+				},
+				On: function (name, callback) {
+					if (entry.Instance) listen(entry, name, callback);
+					else entry.Listeners.push([name, callback]);
+				},
+				Unmount: function () {
+					unmount(entry.Element);
+				}
+			};
+		}
+
+		function mount (element, name, props) {
+			var widget = defined[name];
+			var entry = entryOf(element);
+			var application;
+			var target;
+			var instance;
+			var key;
+			var values = {};
+
+			if (!element || element.nodeType !== 1)
+				throw new Error('Elemenx.Widgets.Mount expects (element, name, props)');
+
+			if (!widget)
+				throw new Error('Elemenx.Widgets does not know the widget ' + name);
+
+			/* Mounted already: the same widget takes the props, another one takes its place. */
+			if (entry && entry.Name === name) {
+				update(entry, props);
+
+				return handle(entry);
+			}
+
+			if (entry)
+				unmount(element);
+
+			for (key in widget.Props || {}) {
+				if (Runtime.Own(widget.Props, key))
+					values[key] = widget.Props[key];
+			}
+
+			for (key in props || {}) {
+				if (Runtime.Own(props, key))
+					values[key] = props[key];
+			}
+
+			application = widget.Application ? Elemenx.Application(widget.Application) : null;
+			target = element;
+
+			if (widget.Shadow !== false) {
+				target = element.shadowRoot || element.attachShadow({mode: 'open'});
+
+				Runtime.AddStyleRoot(target);
+
+				if (Runtime.ShadowHosts.indexOf(element) === -1)
+					Runtime.ShadowHosts.push(element);
+
+				element.lang = Elemenx.Locale.Language();
+				element.dir = Elemenx.Locale.Direction();
+			}
+			else if (Runtime.Isolated) {
+				Runtime.AddStyleDocument();
+			}
+
+			entry = {Element: element, Name: name, Instance: null, Target: target, Props: values, Listeners: []};
+
+			mounted.push(entry);
+
+			/* Its Component is made once its Application has started (its Services and its Libraries are there then). */
+			Runtime.WhenStarted(application, function () {
+				if (mounted.indexOf(entry) === -1) return;
+
+				instance = Elemenx.Component(widget.Component)(entry.Props, null, {Application: application});
+				entry.Instance = instance;
+
+				target.appendChild(instance.$Element());
+
+				(widget.Events || []).forEach(function (event) {
+					instance.$On(event, function (data) {
+						element.dispatchEvent(new global.CustomEvent(event, {bubbles: true, detail: data}));
+					});
+				});
+
+				entry.Listeners.splice(0).forEach(function (pair) {
+					listen(entry, pair[0], pair[1]);
+				});
+			});
+
+			element.setAttribute('data-elemenx-widget-mounted', name);
+
+			return handle(entry);
+		}
+
+		function unmount (element) {
+			var entry = entryOf(element);
+			var index;
+
+			if (!entry)
+				return false;
+
+			mounted.splice(mounted.indexOf(entry), 1);
+
+			if (entry.Instance)
+				entry.Instance.$Destroy();
+
+			while (entry.Target.firstChild)
+				entry.Target.removeChild(entry.Target.firstChild);
+
+			index = Runtime.ShadowHosts.indexOf(element);
+
+			if (index !== -1)
+				Runtime.ShadowHosts.splice(index, 1);
+
+			element.removeAttribute('data-elemenx-widget-mounted');
+
+			return true;
+		}
+
+		/* The places of root (an element, or the document) with a widget defined here; the ones of other widgets are left. */
+		function scan (root) {
+			var places = [];
+
+			if (root.nodeType === 1 && root.hasAttribute('data-elemenx-widget'))
+				places.push(root);
+
+			Array.prototype.forEach.call(root.querySelectorAll ? root.querySelectorAll('[data-elemenx-widget]') : [], function (element) {
+				places.push(element);
+			});
+
+			places.forEach(function (element) {
+				var name = element.getAttribute('data-elemenx-widget');
+				var entry = entryOf(element);
+				if (!Runtime.Own(defined, name) || (entry && entry.Name === name)) return;
+
+				try {
+					mount(element, name, propsOf(element));
+				}
+				catch (error) {
+					Runtime.Report(error);
+				}
+			});
+		}
+
+		function watch (root) {
+			var observer;
+
+			root = root || global.document;
+
+			if (!Runtime.HasDOM)
+				throw new Error('Elemenx.Widgets.Watch needs a document');
+
+			/* The places of the page once it is parsed; the ones that come and go, after. */
+			if (global.document.readyState === 'loading') global.document.addEventListener('DOMContentLoaded', function () {
+				scan(root);
+			});
+			else scan(root);
+
+			observer = new global.MutationObserver(function (records) {
+				records.forEach(function (record) {
+					var entry;
+
+					if (record.type === 'attributes') {
+						entry = entryOf(record.target);
+
+						if (record.attributeName === 'data-props' && entry) update(entry, propsOf(record.target));
+						else if (record.attributeName === 'data-elemenx-widget' && entry && entry.Name !== record.target.getAttribute('data-elemenx-widget')) unmount(record.target);
+
+						scan(record.target);
+
+						return;
+					}
+
+					Array.prototype.forEach.call(record.addedNodes, function (node) {
+						if (node.nodeType === 1)
+							scan(node);
+					});
+				});
+
+				/* A place gone from the page: its widget goes. */
+				mounted.slice().forEach(function (entry) {
+					if (!entry.Element.isConnected)
+						unmount(entry.Element);
+				});
+			});
+
+			observer.observe(root, {childList: true, subtree: true, attributes: true, attributeFilter: ['data-elemenx-widget', 'data-props']});
+
+			return function () {
+				observer.disconnect();
+			};
+		}
+
+		Elemenx.Widgets = {
+			Define: function (name, options) {
+				if (typeof name !== 'string' || !name || !options || typeof options.Component !== 'string' || !options.Component)
+					throw new Error('Elemenx.Widgets.Define expects (name, {Component, Application, Props, Events, Shadow})');
+
+				defined[name] = options;
+
+				return Elemenx.Widgets;
+			},
+			Mount: mount,
+			Unmount: unmount,
+			Watch: watch,
+			Names: function () {
+				return Object.keys(defined);
 			}
 		};
 	})(typeof globalThis !== 'undefined' ? globalThis : self);
@@ -16935,12 +17547,29 @@
 		var applications = {};
 		var mountOwners = typeof WeakMap !== 'undefined' ? new WeakMap() : null;
 		var mountedApplications = [];
+		var started = typeof WeakMap !== 'undefined' ? new WeakMap() : null;
 
 		function applicationMountOwner (element) {
 			if (!mountOwners || !element) return null;
 
 			return mountOwners.get(element) || null;
 		}
+
+		/*
+		 * Calls callback once an Application has started: its Libraries, its dictionaries, its Services and its Components
+		 * ready (a widget of it is made then); at once when it has, or for a value that is no Application.
+		 */
+		Runtime.WhenStarted = function (application, callback) {
+			var state = application && started ? started.get(application) : null;
+
+			if (!state || state.Done) {
+				callback();
+
+				return;
+			}
+
+			state.Waiting.push(callback);
+		};
 
 		Runtime.ApplicationBoundary = function (application, element) {
 			var owner = applicationMountOwner(element);
@@ -17403,6 +18032,9 @@
 
 			Runtime.InitializeOwnerSubscriptions(api, definition);
 
+			if (started)
+				started.set(api, {Done: false, Waiting: []});
+
 			if (typeof definition.$Bootstrap === 'function') {
 				definition.$Bootstrap.call(api);
 			}
@@ -17556,7 +18188,7 @@
 
 			/* Instance: start */
 			function startApplicationRoot () {
-				if (destroyed || !definition.$Component || root) return;
+				if (destroyed || root) return;
 
 				if (Runtime.Bundle.Ready()) {
 					Runtime.Bundle.LoadType('Directive');
@@ -17569,6 +18201,18 @@
 				if (discoveryRoot) {
 					Runtime.Discovery.Root(api, discoveryRoot);
 				}
+
+				/* Started: what waits for it (its widgets) goes on. */
+				if (started && started.get(api) && !started.get(api).Done) {
+					started.get(api).Done = true;
+
+					started.get(api).Waiting.splice(0).forEach(function (callback) {
+						callback();
+					});
+				}
+
+				/* An Application without a Component of its own (of widgets, Elemenx.Widgets) finds theirs by its root. */
+				if (!definition.$Component) return;
 
 				/*
 				 * A fully resolvable registry/bundle graph starts without touching the
@@ -17644,7 +18288,7 @@
 						Runtime.Report(error);
 
 					startApplicationRoot();
-				});
+				}, definition.$Locales && typeof definition.$Locales === 'object' ? definition.$Locales : null);
 			}
 
 			function startRoot () {

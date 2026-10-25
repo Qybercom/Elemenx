@@ -1,7 +1,7 @@
 <!-- generated -->
 # Menu
 
-A button that opens a multi-level MenuList. Items, and the items its MenuItem children declare after them (a MenuItem with MenuItems inside is a submenu). The select event carries the chosen leaf item (a declared one emits select on its MenuItem too). Sheet: true, or 'auto' (on a narrow or a touch screen), shows the list as a sheet from the bottom of the screen, as on a phone.
+A button that opens a multi-level MenuList. Items, and the items its MenuItem children declare after them (a MenuItem with MenuItems inside is a submenu). The select event carries the chosen leaf item (a declared one emits select on its MenuItem too). Sheet: true, or 'auto' (on a narrow or a touch screen), shows the list as a sheet from the bottom of the screen, as on a phone. Caret false takes away the arrow by the label of the button.
 
 Menu is the button and the menu it opens; MenuList is one level of a menu alone (the list, its submenus, its sheet): Menu, ContextMenu and the Ribbon are made of it, and it can be placed under any element of your own.
 
@@ -17,6 +17,7 @@ Menu is the button and the menu it opens; MenuList is one level of a menu alone 
 | `Size` | `'medium'` |
 | `Placement` | `'bottom-start'` |
 | `Sheet` | `false` |
+| `Caret` | `true` |
 | `Disabled` | `false` |
 | `Open` | `false` |
 

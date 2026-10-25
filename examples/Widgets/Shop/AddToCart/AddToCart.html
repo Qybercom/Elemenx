@@ -1,0 +1,5 @@
+<div class="shop-add">
+	<strong class="shop-add-price">{{Number(Price).toFixed(2)}} {{Currency}}</strong>
+	<Button Label="Add to cart" Icon="add" Variant="primary" (click)="Added" />
+	<span class="elemenx-caption shop-add-taken" *if="Taken">In the cart: {{Taken}}</span>
+</div>

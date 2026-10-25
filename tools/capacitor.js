@@ -23,6 +23,7 @@ var Platforms = ['android', 'ios'];
 
 /* The package.json of a module of the project, or null when it is not installed. */
 var installed = require('./common.js').installed;
+var AppIcon = require('./appicon.js');
 
 /* The words of Java, which Android takes in no part of the ID of a program (it is the package of its code). */
 var Keywords = ['abstract', 'assert', 'boolean', 'break', 'byte', 'case', 'catch', 'char', 'class', 'const', 'continue', 'default', 'do', 'double', 'else', 'enum', 'extends', 'false', 'final', 'finally', 'float', 'for', 'goto', 'if', 'implements', 'import', 'instanceof', 'int', 'interface', 'long', 'native', 'new', 'null', 'package', 'private', 'protected', 'public', 'return', 'short', 'static', 'strictfp', 'super', 'switch', 'synchronized', 'this', 'throw', 'throws', 'transient', 'true', 'try', 'void', 'volatile', 'while'];
@@ -126,7 +127,7 @@ function tint (project, splash) {
 		fs.writeFileSync(file, next);
 }
 
-function pack (source, folder, project, settings, command, splash) {
+function pack (source, folder, project, settings, command, splash, icon) {
 	var info = details(project, settings || {});
 	var config = path.join(project, 'capacitor.config.json');
 	var webDir = path.relative(project, folder).replace(/\\/g, '/');
@@ -198,6 +199,10 @@ function pack (source, folder, project, settings, command, splash) {
 
 	if (splash && synced.indexOf('android') !== -1)
 		tint(project, splash);
+
+	/* The icons of the programs, on the background of the splash (see appicon.js). */
+	if (icon && synced.length)
+		AppIcon.Mobile(icon, project, splash && splash.Background);
 
 	process.stdout.write('Elemenx Builder: the mobile programs are ready to build: ' + (synced.length ? synced.join(', ') + ' (npx cap open ' + synced[0] + ')' : 'no platform installed (npx elemenx native add mobile)') + '\n');
 

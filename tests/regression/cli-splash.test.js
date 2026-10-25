@@ -96,6 +96,8 @@ describe('Builder: the splash of an Application', function () {
 		expect(definition.SplashConfig.call(definition, {Spinner: true})).toBe('true');
 		expect(definition.PWAConfig.call(definition, {ShortName: 'Shop', Icon: '/icon.png', Theme: '', Display: 'fullscreen', Offline: false})).toBe('{ShortName: \'Shop\', Icon: \'/icon.png\', Display: \'fullscreen\', Offline: false}');
 		expect(definition.PWAConfig.call(definition, {Display: 'standalone', Offline: true})).toBe('true');
+		expect(definition.PWAConfig.call(definition, {Display: 'standalone', Offline: true, Update: 'prompt'})).toBe('{Update: \'prompt\'}');
+		expect(definition.PWAConfig.call(definition, {Offline: false, Update: 'prompt'})).toBe('{Offline: false}');
 	});
 
 	it('serves the page of the development server with the splash, as a build writes it', async function () {
@@ -170,6 +172,17 @@ describe('Builder: an installable application of the system (PWA)', function () 
 		expect(function () {
 			PWA.Settings(folder, {Theme: 'red;}'}, '', folder, null);
 		}).toThrow('PWA.Theme must be a CSS color');
+
+		/* Update: auto by default; prompt and manual make the worker wait until the page tells it, and the page knows which. */
+		expect(PWA.Settings(folder, true, '', folder, null).Update).toBe('auto');
+		expect(function () {
+			PWA.Settings(folder, {Update: 'later'}, '', folder, null);
+		}).toThrow('PWA.Update must be one of auto, prompt, manual: later');
+
+		expect(PWA.Worker(['/a.js'], 'v1')).toContain('return self.skipWaiting();');
+		expect(PWA.Worker(['/a.js'], 'v1', 'prompt')).not.toContain('return self.skipWaiting();');
+		expect(PWA.Worker(['/a.js'], 'v1', 'prompt')).toContain('if (data.Type === \'elemenx-pwa-apply\')');
+		expect(PWA.Head('<head></head>', {Theme: '#fff', Icons: [], Offline: true, Scope: '/', Update: 'manual'})).toContain('data-update="manual"');
 	});
 
 	it('keeps the files of the build in its worker, under the version of the build, and is not in a native program', function () {

@@ -563,7 +563,8 @@ Elemenx.Component('BuilderLayout', {
 				Icon: project.Settings.PWAIcon,
 				Theme: project.Settings.PWATheme,
 				Display: project.Settings.PWADisplay,
-				Offline: project.Settings.PWAOffline === 'true'
+				Offline: project.Settings.PWAOffline === 'true',
+				Update: project.Settings.PWAUpdate || 'auto'
 			} : null}
 		};
 	},

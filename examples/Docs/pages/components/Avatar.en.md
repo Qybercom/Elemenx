@@ -1,7 +1,7 @@
 <!-- generated -->
 # Avatar
 
-The picture of a person, a team or a product. Image shows a picture; without one, or when it does not load, the avatar is made of the Name (or of Seed): Generate initials (the first letters of the first two words, or Initials of its own: a logo of letters), pattern (a symmetric figure of five by five cells, as code hosts give their users) or shapes (an abstract composition of circles, squares and triangles), always the same for the same name, in a color of the name; Color sets the color of its own. Shape circle, rounded or square; Size small, medium, large, xlarge or a number of pixels. Status puts the dot of a Presence (online, away, busy, dnd, offline, connecting) on its corner.
+The picture of a person, a team or a product. Image shows a picture; without one, or when it does not load, the avatar is made of the Name (or of Seed): Generate initials (the first letters of the first two words, or Initials of its own: a logo of letters), pattern (a symmetric figure of five by five cells, as code hosts give their users) or shapes (an abstract composition of circles, squares and triangles) or suprematism (a picture of the Suprematist Service), always the same for the same name, in a color of the name; Color sets the color of its own. Shape circle, rounded or square; Size small, medium, large, xlarge or a number of pixels. Status puts the dot of a Presence (online, away, busy, dnd, offline, connecting) on its corner.
 
 ## Properties
 

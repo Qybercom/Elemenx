@@ -16,7 +16,7 @@ var fail = require('./tools/common.js').fail;
 var BooleanOptions = {force: true, 'current-color': true, single: true, widget: true, full: true, precompile: true, extension: true, help: true};
 
 /* Options whose value may be left out: --native alone builds all the platforms. */
-var OptionalValues = {native: ['desktop', 'mobile', 'all']};
+var OptionalValues = {native: ['desktop', 'mobile', 'android-library', 'all']};
 
 function parse (argv) {
 	var result = {Arguments: [], Options: {}};
@@ -105,7 +105,9 @@ function buildOptions (parsed, settings) {
 		nativeSettings: settings.Native || {},
 		packs: listValue(value(parsed.Options, 'packs', settings.Packs, [])),
 		splash: settings.Splash,
-		pwa: settings.PWA
+		pwa: settings.PWA,
+		icon: settings.Icon,
+		icons: settings.Icons
 	};
 }
 
@@ -258,7 +260,7 @@ command('build', 'Build an Application into dist: a site, one file, a widget, a 
 		['--precompile', 'the expressions of the templates as code, for a page that forbids eval'],
 		['--extension', 'a browser extension for Chrome, Edge and Firefox'],
 		['--surface <popup|tab|side>', 'where the extension shows (popup)'],
-		['--native [desktop|mobile]', 'native programs: desktop (Electron) or mobile (Capacitor: Android and iOS); without a platform, all of them (elemenx native add installs what they need)']
+		['--native [desktop|mobile|android-library]', 'native programs: desktop (Electron) or mobile (Capacitor: Android and iOS), without a platform both (elemenx native add installs what they need); android-library: the interface for an Android program of its own, a module of Gradle with ElemenxView']
 	]
 });
 

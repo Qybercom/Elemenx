@@ -34,6 +34,28 @@ function executable () {
 }
 
 test.describe('Elemenx native: the desktop program', function () {
+	/* The window of the program whose page has an element: the windows of the tray and of its menu are about:blank too. */
+	async function page (selector) {
+		var found = null;
+
+		await expect.poll(async function () {
+			var pages = app.windows();
+			var i;
+
+			for (i = 0; i < pages.length; i++) {
+				if (await pages[i].locator(selector).count()) {
+					found = pages[i];
+
+					return true;
+				}
+			}
+
+			return false;
+		}).toBe(true);
+
+		return found;
+	}
+
 	test.skip(!ready, 'Electron is not in examples/Native: npx elemenx native add desktop examples/Native');
 
 	var app;
@@ -141,6 +163,85 @@ test.describe('Elemenx native: the desktop program', function () {
 		})).toEqual({Require: 'undefined', Process: 'undefined', Bridge: 'object'});
 	});
 
+	test('has its menu, the buttons under its thumbnail and its icon in the tray from the start, their commands told to the page', async function () {
+		var log = window.locator('.native-log');
+
+		/* The menu of the window, a NativeMenu of the template drawn by ElemenxUI: a bar of menus, the system with none. */
+		expect(await app.evaluate(function (modules) {
+			return modules.Menu.getApplicationMenu();
+		})).toBe(null);
+
+		await expect(window.locator('.elemenx-native-menu-bar > .elemenx-menu-host > .elemenx-button, .elemenx-native-menu-bar .elemenx-button').filter({visible: true})).toHaveText(['File', 'Edit', 'View', 'Window', 'Help']);
+
+		await expect(log).toContainText('Tray: null');
+
+		if (process.platform === 'win32')
+			await expect(log).toContainText('Thumbar: true');
+
+		/* A command of the menu: a new note, which the page counts; an item of a role, with its usual shortcut. */
+		await window.locator('.elemenx-native-menu-bar .elemenx-button').filter({hasText: 'Edit'}).click();
+
+		await expect(window.getByRole('menuitem', {name: /Copy/})).toContainText('Ctrl+C');
+
+		await window.keyboard.press('Escape');
+		await window.locator('.elemenx-native-menu-bar .elemenx-button').filter({hasText: 'File'}).click();
+		await window.getByRole('menuitem', {name: /New note/}).click();
+
+		await expect(window.locator('.native-notes-count')).toHaveText('Notes: 1');
+		await expect(log.locator('li').first()).toContainText('menu: note');
+
+		/* The menu of the tray drawn by ElemenxUI: its window at the pointer at the right button, Show there brings the window back. */
+		await window.getByRole('button', {name: 'Tray'}).click();
+
+		await expect(log.locator('li').first()).toContainText('Tray: null');
+
+		await app.evaluate(function () {
+			global.tray.emit('right-click');
+		});
+
+		await expect.poll(function () {
+			return app.windows().filter(function (page) {
+				return page.url() === 'about:blank';
+			}).length;
+		}).toBe(2);
+
+		var popup = null;
+
+		for (var page of app.windows()) {
+			if (page.url() === 'about:blank' && await page.locator('.elemenx-native-menu-panel').count())
+				popup = page;
+		}
+
+		await expect(popup.locator('.elemenx-native-menu-panel .elemenx-option-label')).toHaveText(['Show', 'New note', 'Quit']);
+
+		expect(await app.evaluate(function (modules) {
+			return modules.BrowserWindow.getAllWindows().filter(function (one) {
+				return one.isVisible() && !one.ElemenxSend;
+			}).length;
+		})).toBe(1);
+
+		await popup.locator('.elemenx-native-menu-panel .elemenx-option').filter({hasText: 'Show'}).click();
+
+		await expect(log.locator('li').first()).toContainText('menu: show');
+		await expect.poll(function () {
+			return app.evaluate(function (modules) {
+				return modules.BrowserWindow.getAllWindows().filter(function (one) {
+					return one.isVisible() && !one.ElemenxSend;
+				}).length;
+			});
+		}).toBe(0);
+
+		/* A thumbnail button pressed, as the taskbar tells the main script. */
+		await app.evaluate(function (modules) {
+			modules.BrowserWindow.getAllWindows().filter(function (one) {
+				return !!one.ElemenxSend;
+			})[0].ElemenxSend('thumbar', {ID: 'note'});
+		});
+
+		await expect(window.locator('.native-notes-count')).toHaveText('Notes: 2');
+		await expect(log.locator('li').first()).toContainText('thumbar: {"ID":"note"}');
+	});
+
 	test('asks the system: a message, a file opened and one saved, a link in the browser, the window', async function () {
 		var log = window.locator('.native-log li');
 		var asked;
@@ -174,7 +275,10 @@ test.describe('Elemenx native: the desktop program', function () {
 		await expect(log.first()).toContainText('"Maximized":true');
 
 		expect(await app.evaluate(function (modules) {
-			return modules.BrowserWindow.getAllWindows()[0].isMaximized();
+			/* The window of the page: the window of the tray is one of the windows of the program too. */
+			return modules.BrowserWindow.getAllWindows().filter(function (one) {
+				return !!one.ElemenxSend;
+			})[0].isMaximized();
 		})).toBe(true);
 	});
 
@@ -202,14 +306,19 @@ test.describe('Elemenx native: the desktop program', function () {
 		await expect(log.locator('li').first()).toContainText('Tray: null');
 
 		/* The window of the tray, made hidden by the page, off the taskbar. */
-		expect(await app.evaluate(function (modules) {
+		expect(await app.evaluate(async function (modules) {
 			var all = modules.BrowserWindow.getAllWindows();
 			var shown = all.filter(function (one) {
 				return one.webContents.getURL().indexOf('app://') === 0;
 			})[0];
-			var panel = all.filter(function (one) {
-				return one !== shown;
-			})[0];
+			var panel = null;
+			var i;
+
+			/* The window of the tray among the windows of the Application (the menu of the tray is one too): the one of its panel. */
+			for (i = 0; i < all.length; i++) {
+				if (all[i] !== shown && await all[i].webContents.executeJavaScript('!!document.querySelector(".native-tray")'))
+					panel = all[i];
+			}
 
 			global.shown = shown;
 			global.panel = panel;
@@ -217,7 +326,7 @@ test.describe('Elemenx native: the desktop program', function () {
 			shown.close();
 
 			return {Windows: all.length, Visible: shown.isVisible(), Panel: panel.isVisible(), Tray: !global.tray.isDestroyed()};
-		})).toEqual({Windows: 2, Visible: false, Panel: false, Tray: true});
+		})).toEqual({Windows: 3, Visible: false, Panel: false, Tray: true});
 
 		/* A click on the icon opens it by the icon; its button brings the program back and hides it. */
 		expect(await app.evaluate(function () {
@@ -228,9 +337,8 @@ test.describe('Elemenx native: the desktop program', function () {
 
 		await expect(log.locator('li').first()).toContainText('tray: {"ID":null,"Kind":"click"}');
 
-		await app.windows().filter(function (page) {
-			return page.url() === 'about:blank';
-		})[0].getByRole('button', {name: 'Open the program'}).click();
+		/* The window of the tray among the windows of the program: the one with its panel (the menu of the tray is one too). */
+		await (await page('.native-tray')).getByRole('button', {name: 'Open the program'}).click();
 
 		await expect.poll(function () {
 			return app.evaluate(function () {
@@ -247,12 +355,13 @@ test.describe('Elemenx native: the desktop program', function () {
 
 	test('opens one more window of the same Application: its state, its lists, its tips and its own document, closed with its event', async function () {
 		var log = window.locator('.native-log');
-		var opened = app.waitForEvent('window');
 		var child;
+		var maximized;
+		var before;
 
 		await window.getByRole('button', {name: 'Open a window'}).click();
 
-		child = await opened;
+		child = await page('.native-notes');
 
 		await expect(log.locator('li').first()).toContainText('OpenWindow: notes');
 		await expect(child.locator('.native-notes h2')).toHaveText('Notes');
@@ -282,12 +391,133 @@ test.describe('Elemenx native: the desktop program', function () {
 		/* One Application: the note added there is in the state the main window shows. */
 		await child.locator('.native-note-add').click();
 
-		await expect(child.locator('.native-note-list li')).toHaveText(['task: Write the docs']);
-		await expect(window.locator('.native-notes-count')).toHaveText('Notes: 1');
+		/* After the two notes the menu and the thumbnail button added (see above). */
+		await expect(child.locator('.native-note-list li')).toHaveText(['idea: A note #1', 'idea: A note #2', 'task: Write the docs']);
+		await expect(window.locator('.native-notes-count')).toHaveText('Notes: 3');
 
-		/* Closed by the user: its Component goes, the page hears it. */
-		await child.close();
+		/* No frame of the system (Frame none): its TitleBar draws the buttons, and they act on it, not on the main window. */
+		await expect(child.locator('.elemenx-title-bar-control')).toHaveCount(3);
+
+		maximized = function () {
+			return app.evaluate(function (modules) {
+				return modules.BrowserWindow.getAllWindows().filter(function (item) {
+					return item.isVisible() && item.isMaximized();
+				}).map(function (item) {
+					return item.getTitle();
+				}).sort();
+			});
+		};
+
+		before = await maximized();
+
+		await child.locator('.elemenx-title-bar-control').nth(1).click();
+
+		await expect.poll(maximized).toEqual(before.concat(['Notes']).sort());
+
+		await child.locator('.elemenx-title-bar-control').nth(1).click();
+
+		/* Its close button closes it: its Component goes, the page hears it. */
+		await child.locator('.elemenx-title-bar-control.close').click();
 
 		await expect(log.locator('li').first()).toContainText('closed: {"ID":"notes"}');
+
+		/* The main window has its title bar under the buttons of the system (Frame hidden). */
+		await expect(window.locator('.elemenx-title-bar.overlay')).toHaveCount(1);
+		await expect(window.locator('.elemenx-title-bar .elemenx-menu-bar .elemenx-button')).toHaveText(['File', 'Edit', 'View', 'Window', 'Help']);
+	});
+
+	test('shows a card of ElemenxUI by the corner of the screen, in a window that takes no focus, its button told to the page', async function () {
+		var log = window.locator('.native-log');
+		var cards;
+		var state;
+
+		await window.getByRole('button', {name: 'Notify in ElemenxUI'}).click();
+
+		cards = await page('.elemenx-notification-host');
+
+		await expect(cards.locator('.elemenx-notification-title')).toHaveText('Elemenx native');
+
+		/* Over the others, not focused, in the corner of the work area, as large as its card. */
+		await expect.poll(function () {
+			return app.evaluate(function (modules) {
+				var found = modules.BrowserWindow.getAllWindows().filter(function (item) {
+					return item.isVisible() && !item.isFocusable();
+				})[0];
+				var area = modules.screen.getPrimaryDisplay().workArea;
+				var bounds = found ? found.getBounds() : null;
+
+				return bounds ? {Top: found.isAlwaysOnTop(), Focused: found.isFocused(), Right: bounds.x + bounds.width === area.x + area.width, Bottom: process.platform === 'darwin' || bounds.y + bounds.height === area.y + area.height, Small: bounds.height < 260} : null;
+			});
+		}).toEqual({Top: true, Focused: false, Right: true, Bottom: true, Small: true});
+
+		/* Its button: the action event in the page; the last card gone, the window hides. */
+		await cards.locator('.elemenx-notification-actions button').filter({hasText: 'Later'}).click();
+
+		await expect(log.locator('li').first()).toContainText('notification: {"ID":"card","Kind":"action","Action":"later"}');
+
+		state = await app.evaluate(function (modules) {
+			return modules.BrowserWindow.getAllWindows().filter(function (item) {
+				return !item.isFocusable();
+			}).map(function (item) {
+				return item.isVisible();
+			});
+		});
+
+		expect(state).toEqual([false]);
+	});
+	test('after a reload of its page its windows of the tray hold the new page only: one content, a menu that answers, cards of their size', async function () {
+		var log = window.locator('.native-log');
+		var popup;
+		var tray;
+		var cards;
+
+		await window.reload();
+
+		await expect(window.locator('.elemenx-title-bar .elemenx-menu-bar .elemenx-button')).toHaveText(['File', 'Edit', 'View', 'Window', 'Help']);
+
+		/* The windows of the page before went with it: the new page has its own, with one content each. */
+		tray = await page('.native-tray');
+
+		await expect(tray.locator('body > *')).toHaveCount(1);
+
+		await app.evaluate(function () {
+			global.tray.emit('right-click');
+		});
+
+		popup = await page('.elemenx-native-menu-panel');
+
+		await expect(popup.locator('.elemenx-native-menu-panel')).toHaveCount(1);
+
+		/* Its items light under the pointer and are chosen. */
+		await popup.locator('.elemenx-option').filter({hasText: 'New note'}).hover();
+
+		await expect(popup.locator('.elemenx-option.active')).toHaveText(/New note/);
+
+		await popup.locator('.elemenx-option').filter({hasText: 'New note'}).click();
+
+		await expect(log.locator('li').first()).toContainText('menu: note');
+
+		/* A card: its window as wide as the card, every time. */
+		for (var i = 0; i < 2; i++) {
+			await window.getByRole('button', {name: 'Notify in ElemenxUI'}).click();
+
+			cards = await page('.elemenx-notification');
+
+			await expect(cards.locator('.elemenx-notification')).toHaveCount(1);
+
+			await expect.poll(function () {
+				return app.evaluate(function (modules) {
+					var found = modules.BrowserWindow.getAllWindows().filter(function (item) {
+						return !item.isFocusable() && item.isVisible();
+					})[0];
+
+					return found ? found.getBounds().width >= 340 && found.getBounds().height >= 80 : false;
+				});
+			}).toBe(true);
+
+			await cards.locator('.elemenx-notification-close').click();
+
+			await expect(log.locator('li').first()).toContainText('"Kind":"close"');
+		}
 	});
 });

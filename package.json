@@ -1,6 +1,6 @@
 {
 	"name": "@qybercom/elemenx",
-	"version": "0.9.4",
+	"version": "0.9.5",
 	"description": "A browser UI framework in one ES5 file: components, reactive state, routing, services, storage, messaging and network, with its CLI and the ElemenxUI component library",
 	"keywords": [
 		"ui",
@@ -53,6 +53,7 @@
 		"test:coverage": "vitest run --coverage",
 		"test:coverage:all": "node tests/coverage/run.mjs",
 		"test:history": "playwright test",
+		"test:stress": "playwright test --repeat-each 5 --workers 100% --retries 0",
 		"examples": "vite --host 127.0.0.1",
 		"example:simple": "node elemenx-cli.js dev examples/Simple --port 4174",
 		"example:advanced": "node elemenx-cli.js dev examples/Advanced",
@@ -68,7 +69,8 @@
 		"preversion": "node scripts/version.js check",
 		"version": "node scripts/version.js sync && git add packages/elemenx/package.json elemenx.js",
 		"version:set": "node scripts/version.js set",
-		"version:tag": "node scripts/version.js tag"
+		"version:tag": "node scripts/version.js tag",
+		"release": "node scripts/release.js"
 	},
 	"devDependencies": {
 		"@html-eslint/eslint-plugin": "0.66.1",

@@ -4,12 +4,23 @@
  * (window.ElemenxNative); in a browser it does what the web can: a file picker, a download, confirm, a new tab, the
  * full screen. Every call takes callback(error, result); a feature the place lacks calls back an error.
  *
- * Available() is true in a native program, Platform() 'electron', 'capacitor' or 'web', Has(feature) tells whether a feature
- * works here (window, dialogs, menu, tray, external, taskbar, hotkeys, autostart, links, power, update; files in a mobile
- * program).
- * - Window(action, callback): minimize, maximize, restore, toggle-maximize, fullscreen, focus, close, show (a window
- *   hidden in the tray comes back) and quit (the program quits, even with CloseToTray); the result is the state
- *   {Maximized, Minimized, Fullscreen, Focused}. Title(text, callback): the title of the window.
+ * Available() is true in a native program, Platform() 'electron', 'capacitor', 'android' (the ElemenxView of an Android
+ * program of its own: elemenx build --native android-library) or 'web', Has(feature) tells whether a feature
+ * works here (window, dialogs, menu, tray, external, taskbar, hotkeys, autostart, links, power, update,
+ * notifications; files in a mobile program).
+ * - Window(action, callback, id): minimize, maximize, restore, toggle-maximize, fullscreen, focus, close, show (a
+ *   window hidden in the tray comes back) and quit (the program quits, even with CloseToTray); the result is the state
+ *   {Maximized, Minimized, Fullscreen, Focused}. id is a window of OpenWindow (its own buttons); the first one without.
+ *   Title(text, callback): the title of the window.
+ * - Frame(id): the frame of the windows of the program (Native.Desktop.Frame), or of the window id of OpenWindow:
+ *   system, hidden (the title bar of the
+ *   system hidden under the page, its buttons over it, their place in env(titlebar-area-*)), none or transparent (the
+ *   Application draws its title bar: an element with elemenx-native-drag moves the window; a TitleBar of ElemenxUI);
+ *   web on the web. <html> holds it in data-elemenx-frame, and the Material in data-elemenx-material.
+ *   TitleBarOverlay({Color, Symbol, Height}, callback): the colors of the buttons of the system over a page with Frame
+ *   hidden (a TitleBar gives them its own), true when the system took them. Scheme(scheme, callback): the scheme of
+ *   the parts of the system (dialogs, menus, the buttons of the window): system, light or dark; the Theme Service gives
+ *   it its own.
  * - Open({Accept, Multiple, Read, Title}, callback): files chosen by the user, [{Name, Path, Size, Text or Data}]; Read
  *   'text' (by default), 'data' (base64) or 'none'; [] when the user cancels. A mobile program picks them as the web.
  * - Save({Name, Text or Data, Accept, Title}, callback): a file written where the user says, {Path} (null on the web,
@@ -25,8 +36,22 @@
  *   back. With Window ({Component, Props, Element, Width, Height}, 320 by 420) a click on the icon opens a small window
  *   of the Application by it, as the tray windows of programs do (no frame, not on the taskbar, hidden when it loses the
  *   focus), and the menu opens with the right button; TrayWindow(show, callback) shows it (true) or hides it (false),
- *   after a choice in it say.
+ *   after a choice in it say. TrayMenu(items, callback) puts the menu of the icon in place, the icon and its window
+ *   staying (a NativeMenu with Target tray does). TrayPopup({Component, Props, Element, Width, Height}, callback) is
+ *   a menu of the tray drawn by the Application: a window of it that the right button of the icon opens at the pointer,
+ *   in place of the menu of the system (ShowTrayPopup(show) shows it, hides it, or sizes it with {Width, Height}).
+ * - Role(role, callback): what the system does for an item of a menu with that role (undo, copy, reload, zoomIn,
+ *   togglefullscreen, quit...), for a menu the Application draws.
  * - External(url, callback): opens an http, https or mailto link in the browser of the system.
+ * - Notify({ID, Title, Text, Icon, Image, Variant, Actions: [{ID, Label}], Silent, Urgency, Tag, Timeout, Look},
+ *   callback): a notification, callback(error, {ID}). Look system (by default) is the one of the system: Electron in a
+ *   program (Icon a path in the Application; Silent; Urgency low, normal or critical; Actions on macOS), the
+ *   Notification of the browser on the web (it asks the user first). Look elemenx is a card of ElemenxUI
+ *   (NotificationHost: Image, Variant info, success, warning or danger, Actions everywhere), drawn as the theme says:
+ *   in a program by the corner of the screen, in a window of its own over the others that takes no focus, on the web
+ *   in the corner of the page; it closes after Timeout milliseconds (6000; 0: when the user closes it). The
+ *   notification event {ID, Kind, Action}: click (the notification pressed), action (a button of it, Action its ID),
+ *   close (closed by the user) or timeout.
  * - Badge(count, callback): a number on the icon of the program (0 removes it; on Windows a small picture over the
  *   icon, drawn here). Progress(value, callback): a progress from 0 to 1 on the button of the window (null removes it),
  *   or {Value, State} with State normal, indeterminate (no value: it runs), paused or error.
@@ -48,20 +73,20 @@
  *   screen from sleeping (on the web through the Screen Wake Lock), the result {Awake}.
  * - Update(callback): asks the feed of the versions (Native.Desktop.Update: a JSON {Version, URL, Notes}) whether a newer
  *   version is out: {Current, Latest, Available, URL, Notes}; External(URL) then opens the download.
- * - OpenWindow({ID, Component, Props, Element, Title, Width, Height}, callback): one more window of the same
+ * - OpenWindow({ID, Component, Props, Element, Title, Width, Height, Frame}, callback): one more window of the same
  *   Application: its Component (with its Props), or an Element, lives in a window of its own, with the styles, the
  *   theme and the direction of the page, the state and the Services of the one Application. A link of the Application
  *   pressed there routes the page. An ID open already comes to the front. callback(error, {ID, Window}); a browser
  *   opens one only after a press or a key of the user. Windows() lists the IDs open, FocusWindow(id) brings one to the
  *   front, CloseWindow(id) closes it; a window closed (by the user too) takes its Component away and is the closed
- *   event {ID}. In a program the windows close with the first one.
+ *   event {ID}. In a program the windows close with the first one; Frame is its own frame (as Frame() names them).
  * - On(name, callback) / Off(name, callback): the events menu, tray, window ({Maximized, Minimized, Fullscreen,
  *   Focused}), shortcut, link, task, thumbar, closed and power.
  */
 Elemenx.Service('Native', {
 	$Meta: {
 		Description: 'The native features of the system around the Application, one API wherever it runs.',
-		Methods: ['Available()', 'Platform()', 'Has(feature)', 'Window(action, callback)', 'Title(text, callback)', 'Open(options, callback)', 'Save(options, callback)', 'Message(options, callback)', 'Menu(items, callback)', 'ContextMenu(items, callback)', 'Tray(options, callback)', 'TrayWindow(show, callback)', 'External(url, callback)', 'Badge(count, callback)', 'Progress(value, callback)', 'Attention(on, callback)', 'Thumbar(buttons, callback)', 'Tasks(callback)', 'OpenWindow(options, callback)', 'Windows()', 'FocusWindow(id)', 'CloseWindow(id)', 'Shortcuts(keys, callback)', 'Autostart(enabled, callback)', 'Links(callback)', 'Power(callback)', 'Awake(on, callback)', 'Update(callback)', 'On(name, callback)', 'Off(name, callback)']
+		Methods: ['Available()', 'Platform()', 'Has(feature)', 'Window(action, callback, id)', 'Frame(id)', 'TitleBarOverlay(colors, callback)', 'Scheme(scheme, callback)', 'Title(text, callback)', 'Open(options, callback)', 'Save(options, callback)', 'Message(options, callback)', 'Menu(items, callback)', 'ContextMenu(items, callback)', 'Tray(options, callback)', 'TrayWindow(show, callback)', 'TrayMenu(items, callback)', 'TrayPopup(options, callback)', 'ShowTrayPopup(show, callback)', 'Role(role, callback)', 'External(url, callback)', 'Notify(options, callback)', 'Badge(count, callback)', 'Progress(value, callback)', 'Attention(on, callback)', 'Thumbar(buttons, callback)', 'Tasks(callback)', 'OpenWindow(options, callback)', 'Windows()', 'FocusWindow(id)', 'CloseWindow(id)', 'Shortcuts(keys, callback)', 'Autostart(enabled, callback)', 'Links(callback)', 'Power(callback)', 'Awake(on, callback)', 'Update(callback)', 'On(name, callback)', 'Off(name, callback)']
 	},
 	$OnCreate: function () {
 		var self = this;
@@ -69,6 +94,15 @@ Elemenx.Service('Native', {
 		this.Listeners = {};
 		this.Detach = {};
 		this.Opened = {};
+
+		/* The notifications drawn by ElemenxUI (Notify with Look elemenx), and where. */
+		this.Cards = [];
+		this.CardTimers = {};
+		this.CardHost = null;
+		this.NotificationSequence = 0;
+
+		/* The frames the windows of OpenWindow asked for, by their ID (their Components ask while they are made). */
+		this.Frames = {};
 
 		/* The web reports the window from the full screen and the focus. */
 		this.WebState = function () {
@@ -101,12 +135,14 @@ Elemenx.Service('Native', {
 		if (feature === 'power')
 			return typeof navigator !== 'undefined' && (typeof navigator.getBattery === 'function' || !!navigator.wakeLock);
 
-		return ['window', 'dialogs', 'external'].indexOf(feature) !== -1 || (feature === 'taskbar' && typeof navigator !== 'undefined' && typeof navigator.setAppBadge === 'function');
+		return ['window', 'dialogs', 'external'].indexOf(feature) !== -1 || (feature === 'taskbar' && typeof navigator !== 'undefined' && typeof navigator.setAppBadge === 'function') || (feature === 'notifications' && typeof Notification !== 'undefined');
 	},
 
 	/*
 	 * A call of the bridge, or the fallback of the web (or an error where the web has none). A bridge with Can(name)
-	 * leaves to the web the calls it does not answer (a mobile program picks a file in its web view).
+	 * leaves to the web the calls it does not answer (a mobile program picks a file in its web view). The bridge gets a
+	 * plain copy of the arguments: the state of a Component (a menu kept in a field) is a proxy, which the messages of a
+	 * program cannot carry.
 	 */
 	Ask: function (name, args, callback, web) {
 		var bridge = this.Bridge();
@@ -114,7 +150,7 @@ Elemenx.Service('Native', {
 		callback = callback || function () {};
 
 		if (bridge && (typeof bridge.Can !== 'function' || bridge.Can(name) || !web)) {
-			bridge.Call(name, args, callback);
+			bridge.Call(name, args === undefined ? args : JSON.parse(JSON.stringify(args)), callback);
 
 			return;
 		}
@@ -133,11 +169,18 @@ Elemenx.Service('Native', {
 		return {Maximized: false, Minimized: false, Fullscreen: !!document.fullscreenElement, Focused: document.hasFocus()};
 	},
 
-	Window: function (action, callback) {
+	Window: function (action, callback, id) {
 		var self = this;
+		var entry = id ? this.Opened[String(id)] : null;
 
-		this.Ask('window', {Action: action}, callback, function (done) {
-			if (action === 'fullscreen') {
+		this.Ask('window', id ? {Action: action, Window: String(id)} : {Action: action}, callback, function (done) {
+			if (entry && action === 'close') {
+				self.CloseWindow(id);
+			}
+			else if (entry && action === 'focus') {
+				self.FocusWindow(id);
+			}
+			else if (action === 'fullscreen') {
 				if (document.fullscreenElement) document.exitFullscreen();
 				else document.documentElement.requestFullscreen();
 			}
@@ -154,6 +197,28 @@ Elemenx.Service('Native', {
 			}
 
 			done(null, self.State());
+		});
+	},
+
+	Frame: function (id) {
+		var bridge = this.Bridge();
+		if (!bridge)
+			return 'web';
+
+		return id && this.Frames[String(id)] ? this.Frames[String(id)] : String(bridge.Frame || 'system');
+	},
+
+	TitleBarOverlay: function (colors, callback) {
+		colors = colors || {};
+
+		this.Ask('titlebar', {Color: colors.Color, Symbol: colors.Symbol, Height: colors.Height}, callback, function (done) {
+			done(null, false);
+		});
+	},
+
+	Scheme: function (scheme, callback) {
+		this.Ask('scheme', {Scheme: ['light', 'dark'].indexOf(scheme) === -1 ? 'system' : scheme}, callback, function (done) {
+			done(null, false);
 		});
 	},
 
@@ -337,7 +402,7 @@ Elemenx.Service('Native', {
 		args = {Icon: options.Icon, Tooltip: options.Tooltip, Items: options.Items};
 
 		if (view && options.Icon && this.Bridge()) {
-			entry = this.Spawn('elemenx-tray', view, width, height);
+			entry = this.Spawn('elemenx-tray', view, width, height, 'none');
 
 			if (!entry) {
 				callback(new Error('Elemenx Native could not open the window of the tray'));
@@ -374,6 +439,87 @@ Elemenx.Service('Native', {
 
 		if (!entry.Window.closed)
 			entry.Window.close();
+	},
+
+	/* The menu of the icon in the tray, in its place (the icon and its window stay): items as Menu takes them, null for none. */
+	TrayMenu: function (items, callback) {
+		this.Ask('traymenu', {Items: items || null}, callback);
+	},
+
+	/*
+	 * The menu of the tray drawn by the Application: a window of it ({Component, Props, Element, Width, Height}) that the
+	 * right button of the icon opens at the pointer, in place of the menu of the system, hidden when it loses the focus;
+	 * null takes it away. callback(error, {Window, Instance}). A NativeMenu of the tray makes it of its items.
+	 */
+	TrayPopup: function (options, callback) {
+		var self = this;
+		var entry = this.TrayPopupEntry;
+		var width = Math.round(Number(options && options.Width) || 240);
+		var height = Math.round(Number(options && options.Height) || 120);
+
+		callback = callback || function () {};
+
+		if (entry) {
+			this.TrayPopupEntry = null;
+
+			entry.Release();
+
+			if (!entry.Window.closed)
+				entry.Window.close();
+		}
+
+		if (!options) {
+			callback(null, null);
+
+			return;
+		}
+
+		if (!this.Bridge()) {
+			callback(new Error('Elemenx Native TrayPopup needs a native program'));
+
+			return;
+		}
+
+		entry = this.Spawn('elemenx-traypopup', options, width, height, 'transparent');
+
+		if (!entry) {
+			callback(new Error('Elemenx Native could not open the menu of the tray'));
+
+			return;
+		}
+
+		this.TrayPopupEntry = entry;
+
+		/* The window is see-through: the menu has the corners and the shadow of a menu of the page. */
+		entry.Window.document.body.classList.add('transparent');
+
+		entry.Window.addEventListener('pagehide', function () {
+			if (self.TrayPopupEntry !== entry) return;
+
+			self.TrayPopupEntry = null;
+
+			entry.Release();
+		});
+
+		document.dispatchEvent(new CustomEvent('elemenx-window', {detail: {ID: 'traypopup', Window: entry.Window}}));
+
+		callback(null, {Window: entry.Window, Instance: entry.Instance});
+	},
+
+	/* The menu of the tray drawn by the Application: shown at the pointer (true), hidden (false), or its size ({Width, Height}). */
+	ShowTrayPopup: function (show, callback) {
+		this.Ask('traypopup', show && typeof show === 'object' ? {Width: show.Width, Height: show.Height} : {Show: !!show}, callback);
+	},
+
+	/*
+	 * What the system does for an item of a menu with a Role, when the Application draws the menu (a NativeMenu): undo,
+	 * redo, cut, copy, paste, selectAll, reload, toggleDevTools, resetZoom, zoomIn, zoomOut, togglefullscreen, minimize,
+	 * close or quit. On the web the editing ones go to the page (document.execCommand), the others call back an error.
+	 */
+	Role: function (role, callback) {
+		this.Ask('role', {Role: String(role || '')}, callback, ['undo', 'redo', 'cut', 'copy', 'paste', 'selectAll'].indexOf(role) === -1 ? null : function (done) {
+			done(document.execCommand(role) ? null : new Error('Elemenx Native role ' + role + ' was refused by the page'), null);
+		});
 	},
 
 	/* Shows the window of the tray by its icon (true) or hides it (false). */
@@ -581,7 +727,9 @@ Elemenx.Service('Native', {
 			return;
 		}
 
-		entry = this.Spawn('elemenx-window-' + id, options, width, height);
+		this.Frames[id] = options.Frame ? String(options.Frame) : null;
+
+		entry = this.Spawn('elemenx-window-' + id, options, width, height, this.Frames[id]);
 
 		if (!entry) {
 			callback(new Error('Elemenx Native could not open the window ' + id + ' (a browser opens one only after a press or a key)'));
@@ -618,18 +766,29 @@ Elemenx.Service('Native', {
 	 * it, options.Element or the options.Component of the Application (with options.Props) in its body, the links of the
 	 * Application routing the page. {Window, Instance, Release (takes the Component away)}, or null when it did not open.
 	 */
-	Spawn: function (name, options, width, height) {
+	Spawn: function (name, options, width, height, frame) {
 		var self = this;
-		var child = window.open('', name, 'popup=yes,width=' + width + ',height=' + height);
+		var child = window.open('', name, 'popup=yes,width=' + width + ',height=' + height + (frame ? ',elemenx-frame=' + frame : ''));
 		var entry;
 
 		if (!child)
 			return null;
 
+		/* A window of the name open already (left by a page before this one, reloaded): emptied, its content is dead. */
+		while (child.document.head.firstChild)
+			child.document.head.removeChild(child.document.head.firstChild);
+
+		while (child.document.body.firstChild)
+			child.document.body.removeChild(child.document.body.firstChild);
+
 		entry = {Window: child, Instance: null, Stop: this.Mirror(child)};
 
 		child.document.title = String(options.Title || document.title);
 		child.document.body.className = 'elemenx-native-window';
+
+		/* Its frame, for its CSS and its TitleBar: the one it asked for, or the one of the program. */
+		if (this.Available())
+			child.document.documentElement.setAttribute('data-elemenx-frame', frame || this.Frame());
 
 		if (options.Element) {
 			child.document.body.appendChild(options.Element);
@@ -672,9 +831,11 @@ Elemenx.Service('Native', {
 
 	/* The styles of the page and the attributes of its root (the theme, the language, the direction) in another window, kept in step; the function that stops it. */
 	Mirror: function (child) {
+		/* The attributes of the page (its lang, dir, theme), but the frame: the window has its own. */
 		var copy = function () {
 			Array.prototype.forEach.call(document.documentElement.attributes, function (attribute) {
-				child.document.documentElement.setAttribute(attribute.name, attribute.value);
+				if (attribute.name !== 'data-elemenx-frame' && attribute.name !== 'data-elemenx-material')
+					child.document.documentElement.setAttribute(attribute.name, attribute.value);
 			});
 		};
 		var style = function (node) {
@@ -784,6 +945,160 @@ Elemenx.Service('Native', {
 
 			this.Detach[name] = null;
 		}
+	},
+
+	Notify: function (options, callback) {
+		var self = this;
+		var settings = options || {};
+		var id = String(settings.ID || 'notification-' + (++this.NotificationSequence));
+		var actions = (settings.Actions || []).map(function (action) {
+			return {ID: String(action.ID), Label: String(action.Label || action.ID)};
+		});
+
+		callback = callback || function () {};
+
+		if (!settings.Title && !settings.Text) {
+			callback(new Error('Elemenx Native Notify needs a Title or a Text'));
+
+			return;
+		}
+
+		if (settings.Look === 'elemenx') {
+			this.Card({ID: id, Title: settings.Title || '', Text: settings.Text || '', Icon: settings.Icon || '', Image: settings.Image || '', Variant: settings.Variant || '', Actions: actions}, settings.Timeout === undefined ? 6000 : Number(settings.Timeout) || 0);
+
+			callback(null, {ID: id});
+
+			return;
+		}
+
+		this.Ask('notify', {ID: id, Title: String(settings.Title || ''), Text: String(settings.Text || ''), Icon: settings.Icon || '', Silent: !!settings.Silent, Urgency: settings.Urgency || 'normal', Actions: actions}, function (error) {
+			callback(error || null, error ? null : {ID: id});
+		}, function (done) {
+			if (typeof Notification === 'undefined') {
+				done(new Error('Elemenx Native Notify: this browser has no notifications'));
+
+				return;
+			}
+
+			Notification.requestPermission().then(function (permission) {
+				var notification;
+
+				if (permission !== 'granted') {
+					done(new Error('Elemenx Native Notify: the user did not allow notifications'));
+
+					return;
+				}
+
+				notification = new Notification(String(settings.Title || ''), {body: String(settings.Text || ''), icon: settings.Icon || undefined, tag: settings.Tag || undefined, silent: !!settings.Silent});
+
+				notification.onclick = function () {
+					window.focus();
+
+					self.Emit('notification', {ID: id, Kind: 'click', Action: null});
+				};
+
+				notification.onclose = function () {
+					self.Emit('notification', {ID: id, Kind: 'close', Action: null});
+				};
+
+				done(null, {ID: id});
+			}, function (error) {
+				done(error instanceof Error ? error : new Error(String(error)));
+			});
+		});
+	},
+
+	/* A card of Notify with Look elemenx: in the list of the cards (one of an ID), shown, gone after timeout (0: never). */
+	Card: function (item, timeout) {
+		var self = this;
+
+		window.clearTimeout(this.CardTimers[item.ID]);
+
+		this.Cards = this.Cards.filter(function (card) {
+			return card.ID !== item.ID;
+		}).concat([item]);
+
+		if (timeout) {
+			this.CardTimers[item.ID] = window.setTimeout(function () {
+				self.Uncard(item.ID, 'timeout');
+			}, timeout);
+		}
+
+		this.ShowCards();
+	},
+
+	/* A card gone: kind is the event it is (close, timeout), or null when the event was told already (a press). */
+	Uncard: function (id, kind) {
+		var had = this.Cards.length;
+
+		window.clearTimeout(this.CardTimers[id]);
+
+		delete this.CardTimers[id];
+
+		this.Cards = this.Cards.filter(function (card) {
+			return card.ID !== id;
+		});
+
+		if (this.Cards.length === had) return;
+
+		if (kind)
+			this.Emit('notification', {ID: id, Kind: kind, Action: null});
+
+		this.ShowCards();
+	},
+
+	/*
+	 * The cards where they show: in a program a see-through window by the corner of the screen (elemenx-notifications,
+	 * over the others, without the focus) as large as they are; on the web a NotificationHost in the corner of the page.
+	 */
+	ShowCards: function () {
+		var self = this;
+		var entry;
+		var props = {
+			Items: this.Cards.slice(),
+			Choose: function (item, action) {
+				self.Emit('notification', {ID: item.ID, Kind: action ? 'action' : 'click', Action: action ? action.ID : null});
+
+				self.Uncard(item.ID, null);
+			},
+			Close: function (item) {
+				self.Uncard(item.ID, 'close');
+			},
+			Fit: function (size) {
+				if (self.CardHost && self.CardHost.Window)
+					self.Ask('notifications', {Width: size.Width, Height: size.Height, Show: self.Cards.length > 0});
+			}
+		};
+
+		if (this.CardHost && this.CardHost.Window && this.CardHost.Window.closed)
+			this.CardHost = null;
+
+		if (this.CardHost) {
+			this.CardHost.Instance.$Update({Items: props.Items});
+
+			if (this.CardHost.Window && !props.Items.length)
+				this.Ask('notifications', {Show: false});
+
+			return;
+		}
+
+		if (!props.Items.length) return;
+
+		entry = this.Bridge() && this.Has('notifications') ? this.Spawn('elemenx-notifications', {Component: 'NotificationHost', Props: props}, 360, 120, 'transparent') : null;
+
+		if (entry) {
+			entry.Window.document.body.classList.add('transparent');
+
+			this.CardHost = entry;
+
+			return;
+		}
+
+		props.Page = true;
+
+		this.CardHost = {Instance: Elemenx.Component('NotificationHost')(props, null, {Application: this.$Application()}), Window: null};
+
+		document.body.appendChild(this.CardHost.Instance.$Element());
 	},
 
 	Emit: function (name, value) {

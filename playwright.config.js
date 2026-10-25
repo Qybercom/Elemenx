@@ -17,6 +17,12 @@ export default defineConfig({
 	workers: process.env.ELEMENX_WORKERS ? Number(process.env.ELEMENX_WORKERS) : (process.env.CI ? 2 : '50%'),
 	forbidOnly: !!process.env.CI,
 	/*
+	 * In CI a failed test runs once more: one that passes then is reported flaky (an annotation of the github reporter),
+	 * not hidden. Locally a test runs once; npm run test:stress -- <file or -g name> runs tests five times on every
+	 * processor, to find the flaky ones on purpose.
+	 */
+	retries: process.env.CI ? 1 : 0,
+	/*
 	 * In CI the github reporter makes every failed test an annotation of its job (its file, line and error): readable
 	 * through the public API of GitHub, where the logs and the reports need the rights of an admin of the repository.
 	 */

@@ -24,6 +24,10 @@
 
 The build says what it left out. A name built at run time (`$Service(name)`) cannot show a use: name it in quotes somewhere, or build with `--full`, which keeps all of the framework and every file of the libraries.
 
+## The icon of the Application
+
+`Icon: '/icon.png'` in `elemenx.config.js`, a square PNG of the project (1024 pixels), is the icon everywhere: the icon of the page and of Apple, the icons of a PWA, the ICO, ICNS and PNG of the desktop programs with their installers, and the icons of Android and iOS. `Icons: {Favicon, Windows, Mac, Linux, Android, IOS}` gives a platform a file of its own.
+
 ## A splash screen
 
 `Splash: true` in `elemenx.config.js` (or `{Image, Background, Color, Text, Spinner, MinTime, Timeout}`, or a `splash.html` in the project) shows a splash from the first paint of the page until the first Application is ready: the build puts it at the top of the body, with no script, and `elemenx dev` serves it too. `Elemenx.Splash.Hold()` keeps it until `Elemenx.Splash.Hide()`, for an Application that loads its data first. The window of a desktop program and the screen of a phone while the program starts take its background.
@@ -66,9 +70,10 @@ npx elemenx build --native desktop
 ```
 
 - **Desktop**: `dist/native/desktop` holds the Application, `main.js`, `preload.js` and the settings; with Electron and the packager installed, the program for the system is in `dist/native/desktop-bin` (`Native.Desktop.Platform` and `Arch` choose another one). The window loads the Application from a scheme of its own (`app://bundle/`), the page has no Node, and it reaches the system through the bridge the `Native` service of ElemenxUI uses: windows, dialogs, menus, the tray, global shortcuts, autostart, links of its own scheme (`Native.Desktop.Protocol`), power, updates. `Native.Desktop.Frame: false` lets the Application draw its own title bar. The program is a folder (its executable needs the files next to it): `Native.Desktop.Targets: ['zip', 'installer', 'portable']` makes it into a zip, an installer and a portable program in `dist/native/desktop-dist` (the installer and the portable program by electron-builder), and it keeps the languages of Chromium the Application speaks (`Native.Desktop.Languages`, `all` for every one).
+- **An Android program of its own**: `elemenx build --native android-library` makes a module of Gradle (`dist/native/android-library/elemenx`) with the Application in its assets and `ElemenxView`, a view your program in Java or Kotlin shows and answers (`view.handle(name, args -> result)`, `view.emit(name, value)`); no Capacitor (see the README next to it).
 - **Mobile**: the project becomes a Capacitor project; the build writes the Application into `dist/native/mobile`, adds the Android and iOS platforms installed, and copies it into them; Android Studio and Xcode build the programs (`npx cap open android`).
 
-The settings are `Native.Desktop` (`Name`, `Version`, `Width`, `Height`, `Features`, `Protocol`, `Update`, `Frame`, `Targets`, `Languages`...) and `Native.Mobile` (`AppID`, `Name`, `Platforms`) in `elemenx.config.js`.
+The settings are `Native.Desktop` (`Name`, `Version`, `Width`, `Height`, `Features`, `Protocol`, `Update`, `Frame` (`system`, `hidden`, `none`, `transparent`), `Material`, `Targets`, `Languages`...) and `Native.Mobile` (`AppID`, `Name`, `Platforms`) in `elemenx.config.js`.
 
 ## Several Applications
 

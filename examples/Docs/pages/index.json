@@ -401,6 +401,13 @@
 					"Group": "layout"
 				},
 				{
+					"ID": "Board",
+					"Title": {
+						"en": "Board"
+					},
+					"Group": "layout"
+				},
+				{
 					"ID": "Breadcrumbs",
 					"Title": {
 						"en": "Breadcrumbs"
@@ -891,6 +898,13 @@
 					"Group": "buttons"
 				},
 				{
+					"ID": "MenuBar",
+					"Title": {
+						"en": "MenuBar"
+					},
+					"Group": "buttons"
+				},
+				{
 					"ID": "MenuItem",
 					"Title": {
 						"en": "MenuItem"
@@ -940,11 +954,32 @@
 					"Group": "inputs"
 				},
 				{
+					"ID": "NativeMenu",
+					"Title": {
+						"en": "NativeMenu"
+					},
+					"Group": "buttons"
+				},
+				{
+					"ID": "NativeMenuPanel",
+					"Title": {
+						"en": "NativeMenuPanel"
+					},
+					"Group": "buttons"
+				},
+				{
 					"ID": "NavList",
 					"Title": {
 						"en": "NavList"
 					},
 					"Group": "navigation"
+				},
+				{
+					"ID": "NotificationHost",
+					"Title": {
+						"en": "NotificationHost"
+					},
+					"Group": "overlays"
 				},
 				{
 					"ID": "NumberInput",
@@ -1213,6 +1248,13 @@
 					"Group": "inputs"
 				},
 				{
+					"ID": "Suprematism",
+					"Title": {
+						"en": "Suprematism"
+					},
+					"Group": "display"
+				},
+				{
 					"ID": "Tab",
 					"Title": {
 						"en": "Tab"
@@ -1295,6 +1337,13 @@
 						"en": "Timeline"
 					},
 					"Group": "data"
+				},
+				{
+					"ID": "TitleBar",
+					"Title": {
+						"en": "TitleBar"
+					},
+					"Group": "layout"
 				},
 				{
 					"ID": "ToastHost",
@@ -1564,6 +1613,12 @@
 					"ID": "Stickers",
 					"Title": {
 						"en": "Stickers"
+					}
+				},
+				{
+					"ID": "Suprematist",
+					"Title": {
+						"en": "Suprematist"
 					}
 				},
 				{

@@ -8,6 +8,12 @@
 			"new": "New",
 			"busy": "In progress"
 		},
+		"board": {
+			"label": "Canvas",
+			"zoomIn": "Zoom in",
+			"zoomOut": "Zoom out",
+			"fit": "Fit the content"
+		},
 		"breadcrumbs": {
 			"label": "Breadcrumbs",
 			"more": "Hidden levels"
@@ -345,7 +351,7 @@
 				"notFound": "Page of a path not found",
 				"notFoundHint": "Shown for an address no route has; without it, the first page.",
 				"icon": "Icon",
-				"iconHint": "The address of the picture of the tab of the browser (favicon).",
+				"iconHint": "The icon of the application: a square PNG of the project (1024 pixels), as /icon.png. elemenx build makes of it the icon of the tab, of the programs and of the phones.",
 				"splash": "Splash screen",
 				"splashOn": "Show a splash screen",
 				"splashHint": "Shown from the first moment the page opens until the application is ready, in the browser and in the desktop and mobile programs.",
@@ -373,6 +379,13 @@
 				"pwaThemeHint": "The bar of its window; empty: the background of the splash.",
 				"pwaOffline": "Works offline",
 				"pwaOfflineHint": "Its service worker keeps the files of the build.",
+				"pwaUpdate": "Updates",
+				"pwaUpdateHint": "How a new build takes the place of the one installed: Elemenx.Install.Update and Apply.",
+				"pwaUpdates": {
+					"auto": "At once, for the next start",
+					"prompt": "When the application says, checked every hour",
+					"manual": "When the application says, checked when it asks"
+				},
 				"pwaDisplays": {
 					"standalone": "Its own window",
 					"fullscreen": "Full screen",

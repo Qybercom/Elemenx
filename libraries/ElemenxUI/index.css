@@ -964,6 +964,20 @@ a {
 	app-region: no-drag;
 }
 
+/*
+ * A see-through window of a program (Native.Desktop.Frame transparent): only what the Application draws shows. Under a
+ * Material (mica, acrylic) the background of the page lets the one of the system show through.
+ */
+[data-elemenx-frame='transparent'],
+[data-elemenx-frame='transparent'] body,
+[data-elemenx-material] {
+	background: transparent;
+}
+
+[data-elemenx-material] body {
+	background: rgba(var(--elemenx-background-rgb), 0.7);
+}
+
 /* The panel of a game: its background, frame and shape come from the --elemenx-game-* tokens of the theme. */
 .elemenx-game-panel {
 	position: relative;
@@ -1834,6 +1848,13 @@ a {
 	background: var(--elemenx-background);
 	color: var(--elemenx-text);
 	font-family: var(--elemenx-font);
+}
+
+/* A window of the system drawn see-through (the menu of the tray): only what the page draws in it shows. */
+.elemenx-native-window.transparent {
+	min-height: 0;
+	overflow: hidden;
+	background: transparent;
 }
 
 .elemenx-modal-shade {

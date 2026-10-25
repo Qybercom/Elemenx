@@ -67,6 +67,9 @@ function fakeElectron () {
 		this.setPosition = function (x, y) {
 			self.Bounds = Object.assign({}, self.Bounds, {x: x, y: y});
 		};
+		this.setContentSize = function (width, height) {
+			self.Bounds = Object.assign({}, self.Bounds, {width: width, height: height});
+		};
 		this.Navigate = function (target, events) {
 			listeners['will-navigate']({preventDefault: function () {
 				events.push('prevented');
@@ -80,6 +83,16 @@ function fakeElectron () {
 		this.Taskbar = [];
 		this.on = function (name, callback) {
 			self.Events[name] = callback;
+		};
+		this.setTitleBarOverlay = function (options) {
+			self.Overlay = options;
+		};
+		this.minimize = function () {
+			self.Minimized = true;
+		};
+		this.showInactive = function () {
+			self.Visible = true;
+			self.Inactive = true;
 		};
 		this.setProgressBar = function (value, options) {
 			self.Taskbar.push(['progress', value, options ? options.mode : undefined]);
@@ -105,7 +118,10 @@ function fakeElectron () {
 			return self.Visible;
 		};
 		this.isDestroyed = function () {
-			return false;
+			return !!self.Destroyed;
+		};
+		this.destroy = function () {
+			self.Destroyed = true;
 		};
 		this.isMaximized = function () {
 			return maximized;
@@ -259,8 +275,11 @@ function fakeElectron () {
 
 				return {popup: function () {}};
 			},
-			setApplicationMenu: function () {}
+			setApplicationMenu: function (menu) {
+				fake.ApplicationMenus = (fake.ApplicationMenus || []).concat([menu]);
+			}
 		},
+		nativeTheme: {themeSource: 'system'},
 		shell: {
 			openExternal: function (url) {
 				fake.External.push(url);
@@ -293,6 +312,9 @@ function fakeElectron () {
 			this.destroy = function () {
 				tray.Destroyed = true;
 			};
+			this.isDestroyed = function () {
+				return !!tray.Destroyed;
+			};
 			this.getBounds = function () {
 				return {x: 1800, y: 1040, width: 24, height: 24};
 			};
@@ -307,8 +329,27 @@ function fakeElectron () {
 				return {workArea: {x: 0, y: 0, width: 1920, height: 1040}};
 			},
 			getCursorScreenPoint: function () {
-				return {x: 0, y: 0};
+				return fake.Cursor || {x: 0, y: 0};
+			},
+			getDisplayNearestPoint: function () {
+				return {workArea: {x: 0, y: 0, width: 1920, height: 1040}};
+			},
+			getPrimaryDisplay: function () {
+				return {workArea: {x: 0, y: 0, width: 1920, height: 1040}};
 			}
+		},
+		/* A notification of the system: its options, shown, and its events for the test to tell. */
+		Notification: function (options) {
+			var notification = this;
+
+			this.Options = options;
+			this.Events = {};
+			this.on = function (name, callback) {
+				notification.Events[name] = callback;
+			};
+			this.show = function () {
+				(fake.Notifications = fake.Notifications || []).push(notification);
+			};
 		},
 		BrowserWindow: Window
 	};
@@ -328,7 +369,7 @@ describe('Builder: a desktop program (Electron)', function () {
 
 		expect(fs.readdirSync(folder).sort()).toEqual(['app', 'elemenx-native.json', 'main.js', 'package.json', 'preload.js']);
 		expect(JSON.parse(fs.readFileSync(path.join(folder, 'package.json'), 'utf8'))).toEqual({name: 'single-project', productName: 'single-project', version: '1.0.0', description: '', main: 'main.js', private: true});
-		expect(JSON.parse(fs.readFileSync(path.join(folder, 'elemenx-native.json'), 'utf8'))).toEqual({Name: 'single-project', Width: 1200, Height: 800, Frame: true, Features: ['window', 'dialogs', 'menu', 'tray', 'external', 'taskbar', 'hotkeys', 'autostart', 'links', 'power', 'update']});
+		expect(JSON.parse(fs.readFileSync(path.join(folder, 'elemenx-native.json'), 'utf8'))).toEqual({Name: 'single-project', Width: 1200, Height: 800, Frame: 'system', Features: ['window', 'dialogs', 'menu', 'tray', 'external', 'taskbar', 'hotkeys', 'autostart', 'links', 'power', 'update', 'notifications']});
 		expect(fs.readFileSync(path.join(folder, 'app', 'app.js'), 'utf8')).toContain('Elemenx.Expressions({');
 		expect(fs.existsSync(path.join(output, 'native-app'))).toBe(false);
 
@@ -359,6 +400,14 @@ describe('Builder: a desktop program (Electron)', function () {
 		build({nativeSettings: {Desktop: {Name: 'Single', Platform: 'darwin', Arch: 'arm64', Protocol: 'single'}}});
 
 		expect(JSON.parse(fs.readFileSync(record, 'utf8')).slice(-2)).toEqual(['--protocol=single', '--protocol-name=Single']);
+
+		/* The icon of the program: the ICO of the project for Windows. */
+		write(path.join(output, 'own.ico'), 'an ico');
+
+		build({icons: {Windows: path.join(output, 'own.ico')}, nativeSettings: {Desktop: {Name: 'Single', Platform: 'win32', Arch: 'x64'}}});
+
+		expect(JSON.parse(fs.readFileSync(record, 'utf8')).slice(-1)).toEqual(['--icon=' + path.join(output, 'native', 'desktop', 'icon.ico')]);
+		expect(fs.readFileSync(path.join(output, 'native', 'desktop', 'icon.ico'), 'utf8')).toBe('an ico');
 		expect(text).toContain('the program is in ' + path.join(output, 'native', 'desktop-bin'));
 		expect(text).not.toContain('not a program yet');
 	});
@@ -441,7 +490,7 @@ describe('Builder: a desktop program (Electron)', function () {
 
 		build({nativeSettings: {Desktop: {Name: 'Single', Width: 900, Height: 600, Frame: false, Features: ['window', 'dialogs']}}});
 
-		expect(JSON.parse(fs.readFileSync(path.join(folder, 'elemenx-native.json'), 'utf8'))).toEqual({Name: 'Single', Width: 900, Height: 600, Frame: false, Features: ['window', 'dialogs']});
+		expect(JSON.parse(fs.readFileSync(path.join(folder, 'elemenx-native.json'), 'utf8'))).toEqual({Name: 'Single', Width: 900, Height: 600, Frame: 'none', Features: ['window', 'dialogs']});
 
 		expect(function () {
 			build({nativeSettings: {Desktop: {Features: ['window', 'camera']}}});
@@ -472,6 +521,166 @@ describe('Builder: a desktop program (Electron)', function () {
 		}).toThrow('Native.Desktop.Update must be an https URL: http://example.com/feed.json');
 	});
 
+	it('frames its windows as Frame says: the system, hidden under the page with the buttons over it, none, see-through; no menu of its own', function () {
+		var folder = fs.mkdtempSync(path.join(os.tmpdir(), 'elemenx-electron-'));
+		var settings = path.join(output, 'native', 'desktop', 'elemenx-native.json');
+		var fake = fakeElectron();
+		var bridge;
+		var child;
+		var options;
+
+		try {
+			/* The frames of the settings, true and false as before; others stop the build. */
+			build({nativeSettings: {Desktop: {Frame: 'hidden', Material: 'mica'}}});
+
+			expect(JSON.parse(fs.readFileSync(settings, 'utf8'))).toMatchObject({Frame: 'hidden', Material: 'mica'});
+
+			build({nativeSettings: {Desktop: {Frame: true}}});
+
+			expect(JSON.parse(fs.readFileSync(settings, 'utf8')).Frame).toBe('system');
+
+			expect(function () {
+				build({nativeSettings: {Desktop: {Frame: 'round'}}});
+			}).toThrow('Native.Desktop.Frame must be one of system, hidden, none, transparent: round');
+			expect(function () {
+				build({nativeSettings: {Desktop: {Material: 'glass'}}});
+			}).toThrow('Native.Desktop.Material must be one of none, mica, acrylic, tabbed: glass');
+
+			build({nativeSettings: {Desktop: {Frame: 'hidden', Material: 'mica', Features: ['window', 'menu']}}});
+
+			fs.cpSync(path.join(output, 'native', 'desktop'), folder, {recursive: true});
+
+			write(path.join(folder, 'node_modules', 'electron', 'index.js'), 'module.exports = global.fakeElectron;');
+
+			global.fakeElectron = fake.Electron;
+
+			require(path.join(folder, 'main.js'));
+
+			bridge = fake.Handlers['elemenx:native'];
+
+			/* Not the menu of Electron (File, Edit, View...): none until the Application gives one (macOS keeps the one of editing). */
+			expect(fake.ApplicationMenus[0]).toBe(process.platform === 'darwin' ? fake.ApplicationMenus[0] : null);
+
+			/* Hidden: the title of the system under the page, its buttons over it; the page told the frame and the material. */
+			options = fake.Windows[0].Options;
+
+			expect(options.titleBarStyle).toBe('hidden');
+			expect(options.webPreferences.additionalArguments).toEqual(['--elemenx-features=window,menu', '--elemenx-frame=hidden', '--elemenx-material=mica']);
+
+			if (process.platform === 'win32') {
+				expect(options.titleBarOverlay).toMatchObject({height: 32});
+				expect(options.backgroundMaterial).toBe('mica');
+			}
+
+			/* The buttons of the system take the colors the title bar of the page gives them. */
+			expect(bridge(fake.Event(0), 'titlebar', {Color: '#202020', Symbol: '#f0f0f0', Height: 32})).toBe(process.platform !== 'darwin');
+
+			if (process.platform !== 'darwin')
+				expect(fake.Windows[0].Overlay).toEqual({color: '#202020', symbolColor: '#f0f0f0', height: 32});
+
+			/* The parts of the system take the scheme of the theme of the page. */
+			bridge(fake.Event(0), 'scheme', {Scheme: 'dark'});
+
+			expect(fake.Electron.nativeTheme.themeSource).toBe('dark');
+
+			bridge(fake.Event(0), 'scheme', {Scheme: 'sepia'});
+
+			expect(fake.Electron.nativeTheme.themeSource).toBe('system');
+
+			/* A window of the Application asks for a frame of its own in the features of window.open. */
+			expect(fake.Windows[0].OpenHandler({url: 'about:blank', frameName: 'elemenx-window-notes', features: 'popup=yes,width=460,height=380,elemenx-frame=none'}).overrideBrowserWindowOptions).toMatchObject({frame: false});
+			expect(fake.Windows[0].OpenHandler({url: 'about:blank', frameName: 'elemenx-window-see', features: 'popup=yes,elemenx-frame=transparent'}).overrideBrowserWindowOptions).toMatchObject({frame: false, transparent: true, backgroundColor: '#00000000'});
+			expect(fake.Windows[0].OpenHandler({url: 'about:blank', frameName: 'elemenx-window-same', features: 'popup=yes'}).overrideBrowserWindowOptions).toMatchObject({titleBarStyle: 'hidden'});
+
+			/* Its own buttons act on it, not on the first window, and its state goes to the page with its ID. */
+			child = new fake.Electron.BrowserWindow({width: 460, height: 380});
+
+			fake.Windows[0].Contents['did-create-window'](child, {frameName: 'elemenx-window-notes'});
+
+			bridge(fake.Event(0), 'window', {Action: 'minimize', Window: 'notes'});
+
+			expect([child.Minimized, fake.Windows[0].Minimized]).toEqual([true, undefined]);
+
+			bridge(fake.Event(0), 'window', {Action: 'toggle-maximize', Window: 'notes'});
+
+			child.Events.maximize();
+
+			expect(fake.Windows[0].Sent[fake.Windows[0].Sent.length - 1]).toEqual(['elemenx:native-event', 'window', {Maximized: true, Minimized: false, Fullscreen: false, Focused: true, ID: 'notes'}]);
+
+			/* A move in the page (a hash) leaves its windows; a reload of it closes them, the new page opens its own. */
+			fake.Windows[0].Contents['did-start-navigation']({isMainFrame: true, isSameDocument: true});
+
+			expect(child.Destroyed).toBe(undefined);
+
+			fake.Windows[0].Contents['did-start-navigation']({isMainFrame: true, isSameDocument: false});
+
+			expect(child.Destroyed).toBe(true);
+		}
+		finally {
+			delete global.fakeElectron;
+			fs.rmSync(folder, {recursive: true, force: true});
+		}
+	});
+
+	it('shows the notifications of the system and the window of the cards of the Application by the corner of the screen', function () {
+		var folder = fs.mkdtempSync(path.join(os.tmpdir(), 'elemenx-electron-'));
+		var fake = fakeElectron();
+		var bridge;
+		var cards;
+		var shown;
+
+		try {
+			build({nativeSettings: {Desktop: {Features: ['window', 'notifications']}}});
+
+			fs.cpSync(path.join(output, 'native', 'desktop'), folder, {recursive: true});
+
+			write(path.join(folder, 'node_modules', 'electron', 'index.js'), 'module.exports = global.fakeElectron;');
+
+			global.fakeElectron = fake.Electron;
+
+			require(path.join(folder, 'main.js'));
+
+			bridge = fake.Handlers['elemenx:native'];
+
+			/* A notification of the system: its options, and its press and buttons go to the page with its ID. */
+			expect(bridge(fake.Event(0), 'notify', {ID: 'mail', Title: 'New mail', Text: 'Ada wrote', Icon: '/icons/mail.png', Silent: true, Urgency: 'critical', Actions: [{ID: 'open', Label: 'Open'}]})).toEqual({ID: 'mail'});
+
+			shown = fake.Notifications[0];
+
+			expect(shown.Options).toMatchObject({title: 'New mail', body: 'Ada wrote', icon: path.join(folder, 'app', 'icons', 'mail.png'), silent: true, urgency: 'critical', actions: [{type: 'button', text: 'Open'}]});
+
+			shown.Events.click();
+			shown.Events.action({}, 0);
+
+			expect(fake.Windows[0].Sent.slice(-2)).toEqual([['elemenx:native-event', 'notification', {ID: 'mail', Kind: 'click', Action: null}], ['elemenx:native-event', 'notification', {ID: 'mail', Kind: 'action', Action: 'open'}]]);
+
+			/* The window of the cards: see-through, over the others, takes no focus, then sized and shown in the corner. */
+			expect(function () {
+				bridge(fake.Event(0), 'notifications', {Show: true});
+			}).toThrow('Elemenx Native has no window of its notifications');
+
+			expect(fake.Windows[0].OpenHandler({url: 'about:blank', frameName: 'elemenx-notifications'}).overrideBrowserWindowOptions).toMatchObject({show: false, frame: false, transparent: true, focusable: false, skipTaskbar: true, alwaysOnTop: true});
+
+			cards = new fake.Electron.BrowserWindow({width: 360, height: 120});
+			cards.Visible = false;
+
+			fake.Windows[0].Contents['did-create-window'](cards, {frameName: 'elemenx-notifications'});
+
+			bridge(fake.Event(0), 'notifications', {Width: 360, Height: 200, Show: true});
+
+			expect([cards.Visible, cards.Inactive]).toEqual([true, true]);
+			expect(cards.Bounds).toMatchObject({width: 360, height: 200, x: 1920 - 360, y: process.platform === 'darwin' ? 0 : 1040 - 200});
+
+			bridge(fake.Event(0), 'notifications', {Show: false});
+
+			expect(cards.Visible).toBe(false);
+		}
+		finally {
+			delete global.fakeElectron;
+			fs.rmSync(folder, {recursive: true, force: true});
+		}
+	});
+
 	it('opens a window on app://bundle/, serves the files of the Application only, and answers the bridge for its features', async function () {
 		var folder = fs.mkdtempSync(path.join(os.tmpdir(), 'elemenx-electron-'));
 		var fake = fakeElectron();
@@ -496,7 +705,7 @@ describe('Builder: a desktop program (Electron)', function () {
 			/* The window: on the scheme of the Application, with the bridge of preload.js, its features in the arguments. */
 			expect(fake.Schemes[0]).toEqual({scheme: 'app', privileges: {standard: true, secure: true, supportFetchAPI: true, corsEnabled: true}});
 			expect(fake.Windows[0].Loaded).toBe('app://bundle/index.html');
-			expect(fake.Windows[0].Options.webPreferences).toEqual({contextIsolation: true, sandbox: true, preload: path.join(folder, 'preload.js'), additionalArguments: ['--elemenx-features=window,dialogs,menu,external']});
+			expect(fake.Windows[0].Options.webPreferences).toEqual({contextIsolation: true, sandbox: true, preload: path.join(folder, 'preload.js'), additionalArguments: ['--elemenx-features=window,dialogs,menu,external', '--elemenx-frame=system', '--elemenx-material=none']});
 
 			/* The files: from the folder of the Application only (a decoded slash cannot lead out of it). */
 			handler = fake.Protocols.app;
@@ -684,12 +893,14 @@ describe('Builder: a desktop program (Electron)', function () {
 		}
 	});
 
-	it('shows a progress in its states, a count over the icon, the attention and the buttons under the thumbnail on the taskbar of Windows', function () {
+	it('shows a progress in its states, a count over the icon, the attention and the buttons under the thumbnail on the taskbar of Windows', async function () {
 		var folder = fs.mkdtempSync(path.join(os.tmpdir(), 'elemenx-electron-'));
 		var fake = fakeElectron();
 		var platform = Object.getOwnPropertyDescriptor(process, 'platform');
 		var bridge;
 		var sent = [];
+		var refused;
+		var later;
 
 		try {
 			build();
@@ -735,11 +946,32 @@ describe('Builder: a desktop program (Electron)', function () {
 
 			expect(fake.Windows[0].Thumbar.map(function (button) {
 				return [button.icon.From, button.tooltip, button.flags];
-			})).toEqual([[path.join(folder, 'app', 'icons', 'play.png'), 'Play', ['enabled']], [path.join(folder, 'app', 'icons', 'next.png'), '', ['disabled']]]);
+			})).toEqual([[path.join(folder, 'app', 'icons', 'play.png'), 'Play', undefined], [path.join(folder, 'app', 'icons', 'next.png'), '', ['disabled']]]);
 
 			fake.Windows[0].Thumbar[0].click();
 
 			expect(sent).toEqual([['thumbar', {ID: 'play'}]]);
+
+			/* A window whose button is not on the taskbar yet takes them a moment later; shown again, it has them again. */
+			refused = 2;
+			fake.Windows[0].setThumbarButtons = function (buttons) {
+				if (refused-- > 0) return false;
+
+				fake.Windows[0].Thumbar = buttons;
+
+				return true;
+			};
+
+			later = bridge(fake.Event(0), 'thumbar', {Buttons: [{ID: 'stop', Icon: 'icons/stop.png'}]});
+
+			expect(await later).toBe(true);
+			expect(fake.Windows[0].Thumbar[0].tooltip).toBe('');
+
+			fake.Windows[0].Thumbar = null;
+
+			fake.Windows[0].Events.show();
+
+			expect(fake.Windows[0].Thumbar.length).toBe(1);
 
 			/* Elsewhere: the badge of the system, a dock that bounces, no thumbnail buttons. */
 			Object.defineProperty(process, 'platform', {value: 'darwin'});
@@ -863,6 +1095,8 @@ describe('Builder: a desktop program (Electron)', function () {
 		var bridge;
 		var child;
 		var main;
+		var popup;
+		var copied = false;
 		var now = Date.now;
 		var time = 1000000;
 
@@ -897,7 +1131,7 @@ describe('Builder: a desktop program (Electron)', function () {
 
 			bridge(fake.Event(0), 'tray', {Icon: 'icon.png', Items: [{ID: 'open', Label: 'Open'}], Window: {Width: 320, Height: 420}});
 
-			expect(fake.Trays[0].Menu).toBe(undefined);
+			expect(fake.Trays[0].Menu).toBe(null);
 
 			/* A click shows it above the icon on a taskbar at the bottom, within the screen. */
 			fake.Trays[0].Events.click();
@@ -926,6 +1160,51 @@ describe('Builder: a desktop program (Electron)', function () {
 			fake.Trays[0].Events['right-click']();
 
 			expect(fake.Trays[0].Popped).not.toBe(undefined);
+
+			/* The menu in its place (a NativeMenu of the tray): the icon stays, the right button opens the new one. */
+			expect(bridge(fake.Event(0), 'traymenu', {Items: [{ID: 'show', Label: 'Show'}]})).toBe(null);
+
+			fake.Trays[0].Events['right-click']();
+
+			expect(fake.Trays.length).toBe(1);
+			expect(fake.Menus[fake.Menus.length - 1].map(function (item) {
+				return item.label;
+			})).toEqual(['Show']);
+			/* A menu of ElemenxUI (Native.TrayPopup): its window opens at the pointer at the right button, in place of the one of the system. */
+			expect(fake.Windows[0].OpenHandler({url: 'about:blank', frameName: 'elemenx-traypopup'})).toMatchObject({action: 'allow', overrideBrowserWindowOptions: {show: false, frame: false, skipTaskbar: true}});
+
+			popup = new fake.Electron.BrowserWindow({width: 240, height: 120});
+			popup.Visible = false;
+
+			fake.Windows[0].Contents['did-create-window'](popup, {frameName: 'elemenx-traypopup'});
+
+			expect(fake.Trays[0].Menu).toBe(null);
+
+			bridge(fake.Event(0), 'traypopup', {Width: 220, Height: 90});
+
+			fake.Cursor = {x: 1700, y: 1030};
+			fake.Trays[0].Popped = undefined;
+			time += 1000;
+
+			fake.Trays[0].Events['right-click']();
+
+			expect([popup.Visible, popup.Bounds.x, popup.Bounds.y, popup.Bounds.width, fake.Trays[0].Popped]).toEqual([true, 1700, 940, 220, undefined]);
+
+			popup.Events.blur();
+
+			expect(popup.Visible).toBe(false);
+
+			/* The role of an item of a menu the page draws: the system does it. */
+			fake.Windows[0].webContents.copy = function () {
+				copied = true;
+			};
+
+			expect(bridge({sender: fake.Windows[0].webContents, senderFrame: {url: 'app://bundle/index.html'}}, 'role', {Role: 'copy'})).toBe(null);
+			expect(copied).toBe(true);
+			expect(function () {
+				bridge({sender: fake.Windows[0].webContents, senderFrame: {url: 'app://bundle/index.html'}}, 'role', {Role: 'explode'});
+			}).toThrow('Elemenx Native does not know the role explode');
+
 			expect(bridge(fake.Event(0), 'traywindow', {Show: true})).toBe(null);
 			expect(child.Visible).toBe(true);
 

@@ -37,9 +37,15 @@ function details (project, settings) {
 }
 
 /* The features of the bridge a program has by default (Native.Desktop.Features keeps some of them). */
-var Features = ['window', 'dialogs', 'menu', 'tray', 'external', 'taskbar', 'hotkeys', 'autostart', 'links', 'power', 'update'];
+var Features = ['window', 'dialogs', 'menu', 'tray', 'external', 'taskbar', 'hotkeys', 'autostart', 'links', 'power', 'update', 'notifications'];
 
 /* The schemes a program may not take for its links. */
+/* The frames of a window: the one of the system, its title hidden under the page (its buttons stay), none, none and see-through. */
+var Frames = ['system', 'hidden', 'none', 'transparent'];
+
+/* The materials of the background of a window under a see-through page: Windows 11 (mica, acrylic, tabbed), and macOS (its vibrancy). */
+var Materials = ['none', 'mica', 'acrylic', 'tabbed'];
+
 var Reserved = ['http', 'https', 'file', 'ftp', 'mailto', 'data', 'javascript', 'blob', 'about', 'app', 'chrome', 'devtools', 'ws', 'wss'];
 
 /*
@@ -55,7 +61,14 @@ function native (info, settings, splash) {
 	if (unknown.length)
 		throw new Error('unknown Native.Desktop.Features: ' + unknown.join(', ') + ' (' + Features.join(', ') + ')');
 
-	result = {Name: info.Name, Width: info.Width, Height: info.Height, Frame: settings.Frame !== false, Features: features};
+	result = {Name: info.Name, Width: info.Width, Height: info.Height, Frame: frameOf(settings.Frame), Features: features};
+
+	if (settings.Material !== undefined && settings.Material !== 'none') {
+		if (Materials.indexOf(settings.Material) === -1)
+			throw new Error('Native.Desktop.Material must be one of ' + Materials.join(', ') + ': ' + settings.Material);
+
+		result.Material = settings.Material;
+	}
 
 	if (settings.Protocol !== undefined) {
 		if (!/^[a-z][a-z0-9+.-]*$/.test(String(settings.Protocol)) || Reserved.indexOf(String(settings.Protocol)) !== -1)
@@ -97,6 +110,7 @@ function native (info, settings, splash) {
 /* The package.json of a project module (electron, @electron/packager), or null when the project has not installed it. */
 var installed = require('./common.js').installed;
 var Zip = require('./zip.js');
+var AppIcon = require('./appicon.js');
 
 /* What a program is made into besides its folder (Native.Desktop.Targets). */
 var Targets = ['zip', 'installer', 'portable'];
@@ -188,7 +202,7 @@ function entries (folder, base, list) {
  * The program made into what Targets asks, in output: a zip of its folder (on macOS by ditto, which keeps the links of
  * its bundle), an installer and a portable program by electron-builder (missing: what to type). The files made.
  */
-function make (program, output, folder, project, info, platform, arch, targets, electron) {
+function make (program, output, folder, project, info, platform, arch, targets, electron, icons) {
 	var made = [];
 	var builder;
 	var kinds;
@@ -250,7 +264,9 @@ function make (program, output, folder, project, info, platform, arch, targets, 
 		directories: {output: output},
 		nsis: {oneClick: false, allowToChangeInstallationDirectory: true, artifactName: '${productName}-${version}-setup.${ext}'},
 		portable: {artifactName: '${productName}-${version}-portable.${ext}'},
-		linux: {maintainer: info.Name, category: 'Utility'},
+		linux: {maintainer: info.Name, category: 'Utility', icon: icons && icons.Linux},
+		win: {icon: icons && icons.Windows},
+		mac: {icon: icons && icons.Mac},
 		publish: null
 	};
 
@@ -314,15 +330,29 @@ function guide (project, folder, bin, missing, command) {
 	].join('\n');
 }
 
+/* The frame of the windows: Native.Desktop.Frame, true and false as system and none. */
+function frameOf (frame) {
+	if (frame === undefined || frame === true) return 'system';
+
+	if (frame === false) return 'none';
+
+	if (Frames.indexOf(frame) === -1)
+		throw new Error('Native.Desktop.Frame must be one of ' + Frames.join(', ') + ': ' + frame);
+
+	return frame;
+}
+
 /*
  * The program of the production build in source, written to folder (dist/native/desktop): its main script,
  * package.json and app/, then, with Electron and the packager in the project, the program for this system (or
  * Platform and Arch of the settings) in bin (dist/native/desktop-bin). settings: Name, Version, Description, Width,
- * Height, Frame (false: no frame of the system, the Application draws its own), Features (of the bridge, all by default), Protocol (the scheme of the
+ * Height, Frame (system, hidden: the title bar of the system hidden under the page, its buttons staying; none, or false:
+ * no frame, the Application draws its own; transparent: none, and see-through), Material (mica, acrylic or tabbed under a
+ * see-through page), Features (of the bridge, all by default), Protocol (the scheme of the
  * links that open the program: myapp://...), Update (the https URL of the feed of its versions), Platform, Arch.
  * Returns {Folder, Program} (Program null when the project lacks them), and writes the guide when it does.
  */
-function pack (source, folder, bin, project, settings, command, splash) {
+function pack (source, folder, bin, project, settings, command, splash, icon) {
 	var info = details(project, settings || {});
 	var program = native(info, settings || {}, splash);
 	var targets = targetsOf(settings || {});
@@ -331,6 +361,7 @@ function pack (source, folder, bin, project, settings, command, splash) {
 	var arch = (settings && settings.Arch) || process.arch;
 	var made;
 	var removed;
+	var icons;
 	var electron = installed(project, 'electron');
 	var packager = installed(project, '@electron/packager');
 	var missing = [];
@@ -339,6 +370,12 @@ function pack (source, folder, bin, project, settings, command, splash) {
 	var binary;
 
 	fs.renameSync(source, path.join(folder, 'app'));
+
+	/* The icon of the program, of its installer and of its windows (see appicon.js). */
+	icons = AppIcon.Desktop(icon, folder);
+
+	if (icons.Window)
+		program.Icon = icons.Window;
 
 	fs.copyFileSync(path.join(__dirname, 'electron', 'main.js'), path.join(folder, 'main.js'));
 	fs.copyFileSync(path.join(__dirname, 'electron', 'preload.js'), path.join(folder, 'preload.js'));
@@ -372,7 +409,7 @@ function pack (source, folder, bin, project, settings, command, splash) {
 		'--electron-version=' + electron.Package.version,
 		'--platform=' + platform,
 		'--arch=' + arch
-	].concat(program.Protocol ? ['--protocol=' + program.Protocol, '--protocol-name=' + info.Name] : []), {cwd: project, encoding: 'utf8'});
+	].concat(program.Protocol ? ['--protocol=' + program.Protocol, '--protocol-name=' + info.Name] : [], icons[{win32: 'Windows', darwin: 'Mac', linux: 'Linux'}[platform]] ? ['--icon=' + icons[{win32: 'Windows', darwin: 'Mac', linux: 'Linux'}[platform]]] : []), {cwd: project, encoding: 'utf8'});
 
 	if (run.status !== 0)
 		throw new Error('Electron packager failed:\n' + (run.stderr || run.stdout || run.error || ''));
@@ -384,7 +421,7 @@ function pack (source, folder, bin, project, settings, command, splash) {
 	if (removed.length)
 		process.stdout.write('Elemenx Builder: the program speaks ' + languages.join(', ') + ' (Native.Desktop.Languages: all keeps the other ' + removed.length + ')\n');
 
-	made = make(path.join(bin, info.Name + '-' + platform + '-' + arch), path.join(path.dirname(bin), 'desktop-dist'), folder, project, info, platform, arch, targets, electron);
+	made = make(path.join(bin, info.Name + '-' + platform + '-' + arch), path.join(path.dirname(bin), 'desktop-dist'), folder, project, info, platform, arch, targets, electron, icons);
 
 	made.forEach(function (file) {
 		process.stdout.write('Elemenx Builder: ' + file + '\n');

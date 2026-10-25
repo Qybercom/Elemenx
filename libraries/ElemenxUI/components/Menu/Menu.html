@@ -1,5 +1,5 @@
 <div class="elemenx-menu-root elemenx-popup-anchor">
-	<Button [label]="Label" [icon]="Icon" [iconRight]="Label ? 'chevron-down' : ''" [title]="Title" [variant]="Variant" [size]="Size" [disabled]="Disabled" [pressed]="Open ? true : null" (click)="Toggle" />
+	<Button [label]="Label" [icon]="Icon" [iconRight]="Label && Caret ? 'chevron-down' : ''" [title]="Title" [variant]="Variant" [size]="Size" [disabled]="Disabled" [pressed]="Open ? true : null" (click)="Toggle" />
 	<span class="elemenx-menu-sources" hidden><slot></slot></span>
 	<MenuList [items]="Items.concat(Declared)" [open]="Open" [placement]="Placement" [sheet]="Sheet" [title]="Label || Title" (select)="Picked" (dismiss)="Close" />
 </div>

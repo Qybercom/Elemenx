@@ -50,7 +50,8 @@
  *   Title, Description, Icon, Language, Theme, Router, Component (the component that holds the pages), NotFound and
  *   the splash of its page: Splash ('true' or ''), SplashImage, SplashBackground, SplashColor, SplashText,
  *   SplashSpinner, SplashMinTime and SplashHTML (its own content); and its install as an application of the system:
- *   PWA ('true' or ''), PWAShortName, PWAIcon, PWATheme, PWADisplay and PWAOffline ('true' or '').
+ *   PWA ('true' or ''), PWAShortName, PWAIcon, PWATheme, PWADisplay, PWAOffline ('true' or '') and PWAUpdate (auto,
+ *   prompt or manual).
  * - In an application the components of the project are kinds of the palette (group project) the document being
  *   edited may take, but itself and those holding it; on the canvas each runs as a Component made of its document. The
  *   kind slot (a component only) marks where the component puts what it is given, the kind outlet (a component of an
@@ -229,7 +230,7 @@ Elemenx.Service('Designer', {
 		}
 
 		function settings (name) {
-			return {Title: name || 'App', Description: '', Icon: '', Language: 'en', Theme: '', Router: 'history', Component: '', NotFound: '', Splash: '', SplashImage: '', SplashBackground: '', SplashColor: '', SplashText: '', SplashSpinner: 'true', SplashMinTime: '0', SplashHTML: '', PWA: '', PWAShortName: '', PWAIcon: '', PWATheme: '', PWADisplay: 'standalone', PWAOffline: 'true'};
+			return {Title: name || 'App', Description: '', Icon: '', Language: 'en', Theme: '', Router: 'history', Component: '', NotFound: '', Splash: '', SplashImage: '', SplashBackground: '', SplashColor: '', SplashText: '', SplashSpinner: 'true', SplashMinTime: '0', SplashHTML: '', PWA: '', PWAShortName: '', PWAIcon: '', PWATheme: '', PWADisplay: 'standalone', PWAOffline: 'true', PWAUpdate: 'auto'};
 		}
 
 		/* A new project of a mode: one page (a template), one component, or a page Home on the route / (an application). */
@@ -2550,7 +2551,7 @@ Elemenx.Service('Designer', {
 		 * one with a place for them, '' for none), NotFound (the page of a path no route has, '' for the first page), or the
 		 * splash: Splash and SplashSpinner ('true' or ''), SplashMinTime (milliseconds), SplashImage, SplashBackground,
 		 * SplashColor, SplashText and SplashHTML, or the PWA: PWA and PWAOffline ('true' or ''), PWADisplay (standalone,
-		 * fullscreen, minimal-ui or browser), PWAShortName, PWAIcon and PWATheme.
+		 * fullscreen, minimal-ui or browser), PWAUpdate (auto, prompt or manual), PWAShortName, PWAIcon and PWATheme.
 		 */
 		this.SetSetting = function (name, value) {
 			var item;
@@ -2574,6 +2575,11 @@ Elemenx.Service('Designer', {
 			}
 			else if (name === 'PWADisplay') {
 				if (['standalone', 'fullscreen', 'minimal-ui', 'browser'].indexOf(value) === -1) return false;
+
+				project.Settings[name] = value;
+			}
+			else if (name === 'PWAUpdate') {
+				if (['auto', 'prompt', 'manual'].indexOf(value) === -1) return false;
 
 				project.Settings[name] = value;
 			}

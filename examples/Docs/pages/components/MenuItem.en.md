@@ -1,7 +1,7 @@
 <!-- generated -->
 # MenuItem
 
-An item of a menu declared in the template of a Menu (its default slot) or of a ContextMenu (slot items): ID, Label, Icon, Shortcut, Disabled, Danger, Checked, Group; Separator draws a line instead; MenuItem children make a submenu. It shows nothing by itself: the menu reads it. A press on it emits select with the item, here as well as on the menu.
+An item of a menu declared in the template of a Menu (its default slot) or of a ContextMenu (slot items): ID, Label, Icon, Shortcut, Disabled, Danger, Checked, Group; Separator draws a line instead; MenuItem children make a submenu. Role is what the system does for it in a menu of a program (NativeMenu: undo, copy, quit...). It shows nothing by itself: the menu reads it. A press on it emits select with the item, here as well as on the menu.
 
 ## Properties
 
@@ -16,6 +16,7 @@ An item of a menu declared in the template of a Menu (its default slot) or of a 
 | `Checked` | `null` |
 | `Separator` | `false` |
 | `Group` | `''` |
+| `Role` | `''` |
 
 ## Events
 

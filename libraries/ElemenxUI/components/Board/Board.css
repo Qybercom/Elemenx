@@ -1,0 +1,90 @@
+/*
+ * An infinite canvas: the view fills its place, the world inside is moved and scaled from its top left corner; the
+ * grid is the background of the view, its step and its place follow the view.
+ */
+.elemenx-board-host {
+	position: relative;
+	display: block;
+	height: 100%;
+	min-height: 240px;
+}
+
+.elemenx-board {
+	position: absolute;
+	inset: 0;
+	overflow: hidden;
+	background-color: var(--elemenx-background);
+	cursor: default;
+	outline: none;
+	touch-action: none;
+	user-select: none;
+}
+
+.elemenx-board:focus-visible {
+	box-shadow: inset 0 0 0 2px var(--elemenx-focus);
+}
+
+.elemenx-board.panning {
+	cursor: grabbing;
+}
+
+.elemenx-board.grid-dots {
+	background-image: radial-gradient(circle, var(--elemenx-border-strong) 1px, transparent 1.5px);
+}
+
+.elemenx-board.grid-lines {
+	background-image: linear-gradient(to right, var(--elemenx-border) 1px, transparent 1px), linear-gradient(to bottom, var(--elemenx-border) 1px, transparent 1px);
+}
+
+.elemenx-board-world {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 0;
+	height: 0;
+	transform-origin: 0 0;
+}
+
+.elemenx-board-content {
+	position: absolute;
+	top: 0;
+	left: 0;
+}
+
+.elemenx-board-controls {
+	position: absolute;
+	right: 12px;
+	bottom: 12px;
+	display: flex;
+	align-items: center;
+	background: var(--elemenx-surface);
+	border: 1px solid var(--elemenx-border);
+	border-radius: var(--elemenx-radius);
+	box-shadow: var(--elemenx-shadow);
+}
+
+.elemenx-board-control {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 32px;
+	height: 32px;
+	padding: 0 6px;
+	background: transparent;
+	border: 0;
+	color: var(--elemenx-text);
+	font: inherit;
+	font-size: var(--elemenx-font-size-small);
+	cursor: pointer;
+}
+
+.elemenx-board-control:hover,
+.elemenx-board-control:focus-visible {
+	background: var(--elemenx-surface-hover);
+	outline: none;
+}
+
+.elemenx-board-zoom {
+	min-width: 56px;
+	font-variant-numeric: tabular-nums;
+}

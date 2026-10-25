@@ -24,6 +24,10 @@
 
 Сборка сообщает, что опустила. Имя, собранное во время выполнения (`$Service(name)`), не выдаёт использования: назовите его где-нибудь в кавычках или собирайте с `--full`, который сохраняет весь фреймворк и все файлы библиотек.
 
+## Иконка приложения
+
+`Icon: '/icon.png'` в `elemenx.config.js`, квадратный PNG проекта (1024 пикселя), — иконка везде: иконка страницы и Apple, иконки PWA, ICO, ICNS и PNG программ для компьютера с их установщиками, иконки Android и iOS. `Icons: {Favicon, Windows, Mac, Linux, Android, IOS}` даёт платформе свой файл.
+
 ## Заставка
 
 `Splash: true` в `elemenx.config.js` (или `{Image, Background, Color, Text, Spinner, MinTime, Timeout}`, или `splash.html` в проекте) показывает заставку с первой отрисовки страницы, пока первое приложение не будет готово: сборка кладёт её в начало body, без скрипта, и `elemenx dev` отдаёт её тоже. `Elemenx.Splash.Hold()` держит её до `Elemenx.Splash.Hide()` — для приложения, которое сначала загружает данные. Окно программы для компьютера и экран телефона при запуске программы берут её фон.
@@ -63,9 +67,10 @@
 @block 1
 
 - **Компьютер**: `dist/native/desktop` содержит приложение, `main.js`, `preload.js` и настройки; с установленными Electron и упаковщиком программа для системы появляется в `dist/native/desktop-bin` (`Native.Desktop.Platform` и `Arch` выбирают другую). Окно загружает приложение по собственной схеме (`app://bundle/`), у страницы нет Node, и с системой она общается через мост, которым пользуется сервис `Native` из ElemenxUI: окна, диалоги, меню, трей, глобальные сочетания клавиш, автозапуск, ссылки собственной схемы (`Native.Desktop.Protocol`), питание, обновления. `Native.Desktop.Frame: false` позволяет приложению рисовать свою строку заголовка. Программа — это папка (её исполняемому файлу нужны файлы рядом): `Native.Desktop.Targets: ['zip', 'installer', 'portable']` делает из неё zip, установщик и портативную программу в `dist/native/desktop-dist` (установщик и портативную — через electron-builder) и оставляет только языки Chromium, на которых говорит приложение (`Native.Desktop.Languages`, `all` — все).
+- **Своя программа для Android**: `elemenx build --native android-library` делает модуль Gradle (`dist/native/android-library/elemenx`) с приложением в его assets и `ElemenxView` — представлением, которое ваша программа на Java или Kotlin показывает и которому отвечает (`view.handle(name, args -> result)`, `view.emit(name, value)`); без Capacitor (см. README рядом).
 - **Мобильные**: проект становится проектом Capacitor; сборка записывает приложение в `dist/native/mobile`, добавляет установленные платформы Android и iOS и копирует его в них; программы собирают Android Studio и Xcode (`npx cap open android`).
 
-Настройки — `Native.Desktop` (`Name`, `Version`, `Width`, `Height`, `Features`, `Protocol`, `Update`, `Frame`, `Targets`, `Languages`...) и `Native.Mobile` (`AppID`, `Name`, `Platforms`) в `elemenx.config.js`.
+Настройки — `Native.Desktop` (`Name`, `Version`, `Width`, `Height`, `Features`, `Protocol`, `Update`, `Frame` (`system`, `hidden`, `none`, `transparent`), `Material`, `Targets`, `Languages`...) и `Native.Mobile` (`AppID`, `Name`, `Platforms`) в `elemenx.config.js`.
 
 ## Несколько приложений
 

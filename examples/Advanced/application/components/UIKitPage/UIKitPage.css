@@ -17,6 +17,17 @@
 	gap: 8px;
 }
 
+/* A bar of menus as at the top of a window: the layout gives it its background and border. */
+.ui-kit-menu-bar {
+	display: flex;
+	align-items: center;
+	gap: 2px;
+	padding: 2px 4px;
+	background: var(--elemenx-surface);
+	border: 1px solid var(--elemenx-border);
+	border-radius: var(--elemenx-radius);
+}
+
 .ui-kit-grid {
 	display: grid;
 	grid-template-columns: repeat(2, minmax(0, 1fr));

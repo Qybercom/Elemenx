@@ -1,0 +1,22 @@
+/*
+ * The list of the menu of the tray: a menu of ElemenxUI as a popup draws it, in its place rather than over the page.
+ * The window is see-through: its margins are the room of the shadow, the window as large as the list with them.
+ */
+.elemenx-native-menu-panel {
+	position: static;
+	display: flex;
+	flex-direction: column;
+	width: max-content;
+	min-width: 200px;
+	max-width: 360px;
+	box-sizing: border-box;
+	margin: 8px 12px 20px;
+	padding: 4px;
+	background: var(--elemenx-surface);
+	border: 1px solid var(--elemenx-border);
+	border-radius: var(--elemenx-radius-large);
+	box-shadow: var(--elemenx-shadow);
+	color: var(--elemenx-text);
+	font-family: var(--elemenx-font);
+	outline: none;
+}

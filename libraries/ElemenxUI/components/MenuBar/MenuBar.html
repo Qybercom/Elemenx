@@ -1,0 +1,9 @@
+<div class="elemenx-menu-bar-host">
+	<div class="elemenx-menu-bar" role="menubar" [class.disabled]="Disabled" (keydown)="Key">
+		<div class="elemenx-menu-bar-entry elemenx-popup-anchor" *for="menu of Menus(Items, Declared)" *key="menu.ID || menu.Label || '#' + $index" [attribute.data-index]="$index" (mouseenter)="Hover">
+			<Button [label]="menu.Label" [icon]="menu.Icon || ''" [iconRight]="Caret ? 'chevron-down' : ''" [variant]="Variant" [size]="Size" [disabled]="Disabled || !!menu.Disabled" [pressed]="Open === $index ? true : null" (click)="Toggle" />
+			<MenuList [items]="menu.Items || []" [open]="Open === $index" Placement="bottom-start" (select)="Picked" (dismiss)="Close" />
+		</div>
+	</div>
+	<span class="elemenx-menu-bar-sources" hidden><slot></slot></span>
+</div>

@@ -1,0 +1,80 @@
+.pwa-app {
+	gap: 20px;
+	max-width: 640px;
+	margin: 0 auto;
+	padding: 24px 16px;
+}
+
+.pwa-header {
+	display: flex;
+	align-items: center;
+	gap: 16px;
+}
+
+.pwa-logo {
+	width: 56px;
+	height: 56px;
+	border-radius: var(--elemenx-radius-large);
+}
+
+.pwa-heading {
+	gap: 4px;
+}
+
+.pwa-heading > .elemenx-title,
+.pwa-heading > .elemenx-text {
+	margin: 0;
+}
+
+.pwa-status {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+	gap: 12px;
+}
+
+.pwa-fact {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	min-width: 0;
+}
+
+.pwa-fact > strong {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.pwa-actions {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+}
+
+.pwa-notes {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.pwa-form {
+	display: flex;
+	gap: 8px;
+	margin: 0;
+}
+
+.pwa-form > .elemenx-input {
+	flex: 1;
+}
+
+.pwa-list {
+	margin: 0;
+}
+
+.pwa-list > li {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+}

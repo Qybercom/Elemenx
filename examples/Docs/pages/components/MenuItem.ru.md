@@ -1,7 +1,7 @@
 <!-- generated -->
 # MenuItem
 
-Пункт меню, объявленный в шаблоне Menu (в слоте по умолчанию) или ContextMenu (в слоте items): ID, Label, Icon, Shortcut, Disabled, Danger, Checked, Group; Separator рисует вместо него линию; дочерние MenuItem образуют подменю. Сам по себе ничего не показывает: меню его читает. Нажатие отправляет select с пунктом — и здесь, и на меню.
+Пункт меню, объявленный в шаблоне Menu (в слоте по умолчанию) или ContextMenu (в слоте items): ID, Label, Icon, Shortcut, Disabled, Danger, Checked, Group; Separator рисует вместо него линию; дочерние MenuItem образуют подменю. Сам по себе ничего не показывает: меню его читает. Нажатие отправляет select с пунктом — и здесь, и на меню. Role — что делает для него система в меню программы (NativeMenu: undo, copy, quit...).
 
 ## Свойства
 
@@ -16,6 +16,7 @@
 | `Checked` | `null` |
 | `Separator` | `false` |
 | `Group` | `''` |
+| `Role` | `''` |
 
 ## События
 

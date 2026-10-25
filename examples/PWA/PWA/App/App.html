@@ -1,0 +1,34 @@
+<main class="elemenx-screen pwa-app">
+	<header class="pwa-header">
+		<img class="pwa-logo" src="/icons/app.png" alt="" />
+		<div class="elemenx-column pwa-heading">
+			<h1 class="elemenx-title">Elemenx notes</h1>
+			<p class="elemenx-text">An application of the browser: it installs, runs without the network and updates when you say.</p>
+		</div>
+	</header>
+
+	<section class="elemenx-container pwa-status">
+		<div class="pwa-fact"><span class="elemenx-caption">Network</span><strong class="pwa-online">{{Online ? 'online' : 'offline'}}</strong></div>
+		<div class="pwa-fact"><span class="elemenx-caption">Build</span><strong class="pwa-version">{{Install.Version || 'not kept yet'}}</strong></div>
+		<div class="pwa-fact"><span class="elemenx-caption">Application</span><strong class="pwa-installed">{{Install.Installed ? 'installed' : Install.Available ? 'can be installed' : Install.Manual ? 'Share, Add to Home Screen' : 'in the browser'}}</strong></div>
+		<div class="pwa-fact"><span class="elemenx-caption">New build</span><strong class="pwa-waiting">{{Install.Waiting ? 'waiting' : 'none'}}</strong></div>
+	</section>
+
+	<section class="pwa-actions">
+		<Button Label="Install" Icon="download" Variant="primary" [disabled]="!Install.Available" (click)="Installed" />
+		<Button Label="Check for updates" Icon="refresh" [loading]="Busy" (click)="Checked" />
+		<Button Label="Update now" Icon="upload" [variant]="Install.Waiting ? 'primary' : 'secondary'" (click)="Updated" />
+		<span class="elemenx-caption pwa-said" *if="Said">{{Said}}</span>
+	</section>
+
+	<section class="elemenx-container pwa-notes">
+		<form class="pwa-form" (submit)="Submitted">
+			<Input Placeholder="A note, kept on this device" [value]="Text" (input)="Typed" />
+			<Button Label="Add" Type="submit" Variant="primary" />
+		</form>
+		<ul class="elemenx-ul pwa-list">
+			<li *for="note of Notes" *key="note.ID"><span>{{note.Text}}</span><button class="elemenx-button ghost small icon-only" type="button" aria-label="Remove" [attribute.data-id]="note.ID" (click)="Removed"><Icon Name="close" /></button></li>
+		</ul>
+		<p class="elemenx-caption" *if="!Notes.length">No notes yet.</p>
+	</section>
+</main>

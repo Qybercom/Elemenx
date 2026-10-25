@@ -1,7 +1,7 @@
 <!-- generated -->
 # Menus
 
-The items of a menu declared in a template with MenuItem (Menu and ContextMenu use it). Read(container) returns the items its MenuItems declare, nested ones as Items: [{ID, Label, Icon, Shortcut, Disabled, Danger, Checked, Separator, Group, Items, Source}], Source the declaration. Watch(container, callback) calls back with the items again whenever a declaration inside comes, goes or changes, and returns the function that stops it. Pick(item) tells the MenuItem of a declared item that it was chosen (its select).
+The items of a menu declared in a template with MenuItem (Menu and ContextMenu use it). Read(container) returns the items its MenuItems declare, nested ones as Items: [{ID, Label, Icon, Shortcut, Disabled, Danger, Checked, Separator, Group, Role, Items, Source}], Source the declaration. Watch(container, callback) calls back with the items again whenever a declaration inside comes, goes or changes, and returns the function that stops it. Pick(item) tells the MenuItem of a declared item that it was chosen (its select).
 
 ## Methods
 

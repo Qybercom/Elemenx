@@ -1,0 +1,12 @@
+<div class="elemenx-board-host">
+	<div class="elemenx-board" tabindex="0" role="application" [attribute.aria-label]="$T('ui.board.label')" [class]="['grid-' + (Grid || 'dots')]" [style.background-size]="GridStyle(X, Y, Zoom, GridSize).Size" [style.background-position]="GridStyle(X, Y, Zoom, GridSize).Position" (wheel)="Wheeled" (pointerdown)="Pressed" (pointermove)="Moved" (pointerup)="Released" (pointercancel)="Released" (keydown)="Key" (keyup)="Key">
+		<div class="elemenx-board-world" [style.transform]="World(X, Y, Zoom)">
+			<div class="elemenx-board-content"><slot></slot></div>
+		</div>
+	</div>
+	<div class="elemenx-board-controls" *if="Controls">
+		<button class="elemenx-board-control" type="button" [attribute.aria-label]="$T('ui.board.zoomOut')" [attribute.title]="$T('ui.board.zoomOut')" (click)="ZoomOut"><Icon Name="zoom-out" /></button>
+		<button class="elemenx-board-control elemenx-board-zoom" type="button" [attribute.aria-label]="$T('ui.board.fit')" [attribute.title]="$T('ui.board.fit')" (click)="Fitted">{{Percent(Zoom)}}</button>
+		<button class="elemenx-board-control" type="button" [attribute.aria-label]="$T('ui.board.zoomIn')" [attribute.title]="$T('ui.board.zoomIn')" (click)="ZoomIn"><Icon Name="zoom-in" /></button>
+	</div>
+</div>

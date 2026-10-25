@@ -231,6 +231,27 @@ describe('Elemenx dist', function () {
 		}
 	});
 
+	it('takes a Component of a Library the code names to make it, as a window of a program opens it, not only by its tag', function () {
+		var project = fs.mkdtempSync(path.join(os.tmpdir(), 'elemenx-named-'));
+		var bundle;
+
+		try {
+			fs.cpSync(path.resolve(process.cwd(), 'tests', 'dist', 'single-project'), project, {recursive: true});
+			fs.appendFileSync(path.join(project, 'app.js'), '\nvar windows = {Component: \'NativeMenuPanel\'};\nvar made = Elemenx.Component(\'Knob\');\n');
+
+			Builder.Build(project, {out: 'dist'});
+
+			bundle = fs.readFileSync(path.join(project, 'dist', 'app.js'), 'utf8');
+
+			expect(bundle).toContain('Elemenx.Component(\'NativeMenuPanel\'');
+			expect(bundle).toContain('Elemenx.Component(\'Knob\'');
+			expect(bundle).not.toContain('Elemenx.Component(\'Piano\'');
+		}
+		finally {
+			fs.rmSync(project, {recursive: true, force: true});
+		}
+	});
+
 	it('keeps in the dictionaries of ElemenxUI the phrases the build names, by their key or the start of one', function () {
 		var project = fs.mkdtempSync(path.join(os.tmpdir(), 'elemenx-dictionary-'));
 		var target = path.join(project, 'dist');

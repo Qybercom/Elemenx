@@ -12,6 +12,7 @@
 				<polygon *if="shape.Kind === 'triangle'" [attribute.points]="shape.Points"></polygon>
 			</g>
 		</svg>
+		<span class="elemenx-avatar-art" *if="Kind(Generate) === 'suprematism'" *mount="Suprematist(Seed || Name || Initials)"></span>
 	</span>
 	<span class="elemenx-avatar-status" *if="Status"><Presence [status]="Status" Size="small" /></span>
 </span>

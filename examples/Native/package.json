@@ -6,7 +6,8 @@
 		"build": "node ../../elemenx-cli.js build .",
 		"native": "node ../../elemenx-cli.js build . --native",
 		"desktop": "node ../../elemenx-cli.js build . --native desktop",
-		"mobile": "node ../../elemenx-cli.js build . --native mobile"
+		"mobile": "node ../../elemenx-cli.js build . --native mobile",
+		"android": "node ../../elemenx-cli.js build . --native mobile && npx cap run android"
 	},
 	"devDependencies": {
 		"@electron/packager": "^20.3.0",

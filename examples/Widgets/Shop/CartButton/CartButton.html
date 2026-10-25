@@ -1,0 +1,6 @@
+<div class="shop-cart">
+	<Icon Name="cart" />
+	<span class="shop-cart-count">{{Count}}</span>
+	<span class="shop-cart-total">{{Money(Total)}}</span>
+	<Button Label="Checkout" Variant="primary" Size="small" [disabled]="!Count" (click)="CheckedOut" />
+</div>

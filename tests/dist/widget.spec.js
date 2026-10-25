@@ -35,7 +35,7 @@ test.describe('elemenx build --widget', function () {
 		var page = fs.readFileSync(path.join(output, 'index.html'), 'utf8');
 
 		expect(fs.readdirSync(output).sort()).toEqual(['index.html', 'widget.js']);
-		expect(script).toMatch(/^\/\*! widget-project \| Elemenx \d+\.\d+\.\d+, isolated \*\/\n\(function \(\) \{\nvar ElemenxIsolated = \{\};\n/);
+		expect(script).toMatch(/^\/\*! widget-project \| Elemenx \d+\.\d+\.\d+, isolated \*\/\n\(function \(\) \{\nif \(window\["elemenx-widget:widget-project"\]\) return;\nwindow\["elemenx-widget:widget-project"\] = true;\nvar ElemenxIsolated = \{\};\n/);
 		expect(script).toContain('Elemenx.Style("library:/libraries/ElemenxUI/index.css",');
 		expect(script).toContain('})(ElemenxIsolated.Elemenx);');
 

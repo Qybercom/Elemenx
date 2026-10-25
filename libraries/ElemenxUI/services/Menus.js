@@ -1,7 +1,7 @@
 /*
  * The items of a menu declared in a template with MenuItem (Menu and ContextMenu use it). Read(container) returns the
  * items its MenuItems declare, nested ones as Items: [{ID, Label, Icon, Shortcut, Disabled, Danger, Checked,
- * Separator, Group, Items, Source}], Source the declaration. Watch(container, callback) calls back with the items again
+ * Separator, Group, Role, Items, Source}], Source the declaration. Watch(container, callback) calls back with the items again
  * whenever a declaration inside comes, goes or changes, and returns the function that stops it. Pick(item) tells the
  * MenuItem of a declared item that it was chosen (its select).
  */
@@ -31,7 +31,7 @@ Elemenx.Service('Menus', {
 			return child.parentNode.closest('.elemenx-menu-item-source') === node;
 		});
 
-		['ID', 'Label', 'Icon', 'Shortcut', 'Group'].forEach(function (name) {
+		['ID', 'Label', 'Icon', 'Shortcut', 'Group', 'Role'].forEach(function (name) {
 			var value = node.getAttribute('data-' + name.toLowerCase());
 			if (value !== null)
 				item[name] = value;
@@ -71,7 +71,7 @@ Elemenx.Service('Menus', {
 			callback(self.Read(container));
 		});
 
-		observer.observe(container, {subtree: true, childList: true, attributes: true, attributeFilter: ['data-id', 'data-label', 'data-icon', 'data-shortcut', 'data-disabled', 'data-danger', 'data-checked', 'data-separator', 'data-group']});
+		observer.observe(container, {subtree: true, childList: true, attributes: true, attributeFilter: ['data-id', 'data-label', 'data-icon', 'data-shortcut', 'data-disabled', 'data-danger', 'data-checked', 'data-separator', 'data-group', 'data-role']});
 
 		callback(self.Read(container));
 

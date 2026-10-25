@@ -146,7 +146,7 @@ describe('Builder: native programs (--native)', function () {
 
 		expect(function () {
 			build({native: 'tv'});
-		}).toThrow('unknown --native platform: tv (desktop, mobile, or none for all of them)');
+		}).toThrow('unknown --native platform: tv (desktop, mobile, android-library, or none for desktop and mobile)');
 		expect(function () {
 			build({nativeSettings: {Mobile: {AppID: 'single'}}});
 		}).toThrow('Native.Mobile.AppID must be a reverse domain name, as com.example.app: single');
@@ -157,6 +157,42 @@ describe('Builder: native programs (--native)', function () {
 		expect(function () {
 			build({nativeSettings: {Mobile: {Platforms: ['android', 'tizen']}}});
 		}).toThrow('unknown Native.Mobile.Platforms: tizen (android, ios)');
+	});
+
+	it('makes the interface for an Android program of its own: a module of Gradle with the build in its assets, the bridge first, ElemenxView in its package', function () {
+		var folder = path.join(output, 'native', 'android-library');
+		var module = path.join(folder, 'ui');
+		var text;
+		var view;
+
+		text = build({native: 'android-library', nativeSettings: {Android: {Package: 'com.example.server.ui', Module: 'ui'}}});
+
+		expect(text).toContain('the Android module ' + module + ' (com.example.server.ui.ElemenxView');
+
+		/* Only that target: not the desktop program or the Capacitor folder. */
+		expect(fs.readdirSync(path.join(output, 'native')).sort()).toEqual(['android-library']);
+
+		/* The build in its assets, the bridge before the framework. */
+		expect(fs.existsSync(path.join(module, 'src', 'main', 'assets', 'elemenx', 'elemenx.js'))).toBe(true);
+		expect(fs.existsSync(path.join(module, 'src', 'main', 'assets', 'elemenx', 'elemenx-android.js'))).toBe(true);
+		expect(fs.readFileSync(path.join(module, 'src', 'main', 'assets', 'elemenx', 'index.html'), 'utf8').match(/<script src="[^"]+"/g)[0]).toBe('<script src="/elemenx-android.js"');
+
+		/* The view in the package of the settings, the module of that namespace, its door kept by R8. */
+		view = fs.readFileSync(path.join(module, 'src', 'main', 'java', 'com', 'example', 'server', 'ui', 'ElemenxView.java'), 'utf8');
+
+		expect(view.split('\n')[0]).toBe('package com.example.server.ui;');
+		expect(view).not.toContain('__PACKAGE__');
+		expect(fs.readFileSync(path.join(module, 'build.gradle'), 'utf8')).toContain("namespace 'com.example.server.ui'");
+		expect(fs.readFileSync(path.join(module, 'build.gradle'), 'utf8')).toContain("implementation 'androidx.webkit:webkit:1.14.0'");
+		expect(fs.readFileSync(path.join(module, 'consumer-rules.pro'), 'utf8')).toContain('-keepclassmembers class com.example.server.ui.ElemenxView$Port');
+		expect(fs.readFileSync(path.join(folder, 'README.md'), 'utf8')).toContain("include ':ui'");
+
+		expect(function () {
+			build({native: 'android-library', nativeSettings: {Android: {Package: 'ui'}}});
+		}).toThrow('Native.Android.Package must be a Java package of two words or more, as com.example.ui: ui');
+		expect(function () {
+			build({native: 'android-library', nativeSettings: {Android: {Package: 'com.example.native'}}});
+		}).toThrow('Native.Android.Package must be a Java package');
 	});
 });
 
@@ -259,7 +295,7 @@ describe('elemenx help', function () {
 		expect(all.stdout).toContain('elemenx help <command>, or elemenx <command> --help');
 		expect(build.stdout).toContain('elemenx build: Build an Application into dist');
 		expect(build.stdout).toContain('Usage:\n  elemenx build [project] [options]');
-		expect(build.stdout).toMatch(/\n {2}--native \[desktop\|mobile\] +native programs: desktop \(Electron\)/);
+		expect(build.stdout).toMatch(/\n {2}--native \[desktop\|mobile\|android-library\] +native programs: desktop \(Electron\)/);
 		expect(flag.stdout).toBe(build.stdout);
 		expect(short.stdout).toContain('elemenx native add [desktop|mobile|all] [project]');
 		expect(alias.stdout).toContain('elemenx generate application <Name> [path] [--native [desktop|mobile]] [--force]');
@@ -270,6 +306,7 @@ describe('elemenx help', function () {
 		expect(Cli.Parse(['build', '--native']).Options).toEqual({native: true});
 		expect(Cli.Parse(['build', '--native', 'mobile', 'site'])).toEqual({Arguments: ['build', 'site'], Options: {native: 'mobile'}});
 		expect(Cli.Parse(['build', '--native', 'site'])).toEqual({Arguments: ['build', 'site'], Options: {native: true}});
+		expect(Cli.Parse(['build', '--native', 'android-library'])).toEqual({Arguments: ['build'], Options: {native: 'android-library'}});
 		expect(childProcess.spawnSync(process.execPath, [cli, 'native', 'remove'], {encoding: 'utf8'}).stderr).toBe('Elemenx CLI: usage: elemenx native add [desktop|mobile|all] [project]\n');
 	});
 });

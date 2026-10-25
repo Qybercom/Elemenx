@@ -1,0 +1,11 @@
+/*
+ * The menu of a program: a MenuBar of the window where the layout places it (the layout gives it its background and
+ * border), nothing of its own for the tray or the menus of the system.
+ */
+.elemenx-native-menu {
+	display: contents;
+}
+
+.elemenx-native-menu-bar {
+	display: contents;
+}

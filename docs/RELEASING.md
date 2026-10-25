@@ -2,7 +2,7 @@
 
 A release publishes two packages of the same version to npm: `@qybercom/elemenx` (the repository root) and `elemenx`, its short name (`packages/elemenx`: it depends on exactly that version of `@qybercom/elemenx` and runs its CLI). The tag `v<version>` starts `.github/workflows/publish.yml`: it checks that the tag is the version of both packages, runs the whole CI (`ci.yml` with the end-to-end tests, about 10 minutes), publishes `@qybercom/elemenx` (its `prepack` builds `dist/` into it), then `elemenx`. A prerelease version (`0.9.1-beta.1`) goes to the dist-tag `next`, any other to `latest`. Last, the workflow creates the GitHub release of the tag (a pre-release for a prerelease version): its notes list the changes since the last release, and it carries the files of `dist/` (every script, `manifest.json` with the sizes and the integrity, and `elemenx-<version>.zip` with all of `dist/`).
 
-Every command below starts from a working tree with nothing to commit, untracked files included; the version commands stop otherwise.
+Every command below but `npm run release` (which commits the working tree) starts from a working tree with nothing to commit, untracked files included; the version commands stop otherwise.
 
 ## A release
 
@@ -13,7 +13,15 @@ Every command below starts from a working tree with nothing to commit, untracked
    git pull
    ```
 
-2. Choose one of the two ways.
+2. Choose one of the three ways.
+
+   **In one command** (`scripts/release.js`: the version in a commit `v0.9.1` with the work of the working tree):
+
+   ```bash
+   npm run release 0.9.1
+   ```
+
+   It takes an exact version only (`0.9.1`, `1.0.0-beta.1`), greater than the one of `package.json`, and changes nothing when the branch is not `main`, the tag `v0.9.1` exists (here or on `origin`) or `main` is behind `origin/main`. It shows the changes it will commit and asks before it goes on, runs the whole `npm test`, then `npm run version:set -- 0.9.1`, `git add --all`, `git commit -m v0.9.1`, `npm run version:tag` and `git push --follow-tags`. `npm run release -- 0.9.1 --yes` does not ask, `--skip-tests` runs no tests. A step that fails stops it: it says what is done, undoes nothing, and the rest goes by hand as below.
 
    **The version in a commit of its own** (the commit `0.9.1` holds only the versions of `package.json`, `package-lock.json` and `packages/elemenx/package.json`, and gets the tag):
 

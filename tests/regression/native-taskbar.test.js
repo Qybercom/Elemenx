@@ -155,4 +155,41 @@ describe('Contract: the Native Service of ElemenxUI with the taskbar and the tra
 			frame.remove();
 		}
 	});
+
+	it('sends the bridge a plain copy of what the state of a Component holds, as the messages of a program carry it', function () {
+		var sent = null;
+		var failure = 'none';
+		var component;
+
+		window.ElemenxNative = {
+			Platform: 'electron',
+			Features: ['menu'],
+			/* As the IPC of Electron: it clones what it sends, and a proxy cannot be cloned. */
+			Call: function (name, args, callback) {
+				sent = structuredClone(args);
+
+				callback(null, null);
+			},
+			On: function () {
+				return function () {};
+			}
+		};
+
+		component = Elemenx.Component('NativeMenuState', {
+			$Template: '<div></div>',
+			Menus: [{Label: 'File', Items: [{ID: 'note', Label: 'New note'}]}]
+		})();
+
+		try {
+			native.Menu(component.Menus, function (error) {
+				failure = error;
+			});
+		}
+		finally {
+			component.$Destroy();
+		}
+
+		expect(failure).toBe(null);
+		expect(sent).toEqual({Items: [{Label: 'File', Items: [{ID: 'note', Label: 'New note'}]}]});
+	});
 });

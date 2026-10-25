@@ -7,10 +7,11 @@
  *   the Component Page (Page.html, Page.js) under application/, ready for elemenx dev and elemenx build. It returns the
  *   bytes of the zip (a Uint8Array).
  * - Save(name, data, type): gives a file to the browser to save.
- * options: {Title, Language, Theme, Description, Icon, Splash, PWA}. Splash ({Image, Background, Color, Text, Spinner,
+ * options: {Title, Language, Theme, Description, Icon, Splash, PWA}. Icon, a PNG of the project, is the Icon of
+ * elemenx.config.js of a project too: the icon of every platform. Splash ({Image, Background, Color, Text, Spinner,
  * MinTime, HTML}, null for none) is the splash of the page: in the HTML file its markup at the top of the body, as
  * elemenx build writes it (tools/splash.js), in a project the Splash of elemenx.config.js and its splash.html. PWA
- * ({ShortName, Icon, Theme, Display, Offline}, null for none) is the PWA of elemenx.config.js of a project: elemenx build
+ * ({ShortName, Icon, Theme, Display, Offline, Update}, null for none) is the PWA of elemenx.config.js of a project: elemenx build
  * makes it installable (a page in one file runs from a file, which a system does not install).
  *
  * In place of the template both take an application ({Name, Title, Description, Icon, Language, Theme, Router,
@@ -104,6 +105,9 @@ Elemenx.Service('Packager', {
 
 		if (pwa.Offline === false)
 			parts.push('Offline: false');
+
+		if (pwa.Offline !== false && pwa.Update && pwa.Update !== 'auto')
+			parts.push('Update: ' + self.Quote(pwa.Update));
 
 		return parts.length ? '{' + parts.join(', ') + '}' : 'true';
 	},
@@ -284,7 +288,7 @@ Elemenx.Service('Packager', {
 
 	Project: function (template, options) {
 		var index = '<!DOCTYPE html>\n<html ' + this.Root(options) + '>\n<head>\n' + this.Head(options) + '\n\t<script src="/elemenx.js"></script>\n\t<script src="/app.js"></script>\n</head>\n<body>\n</body>\n</html>\n';
-		var config = 'module.exports = {\n\tApplication: \'application\',\n\tEntry: \'app.js\',\n\tIndex: \'index.html\',\n\tOutput: \'dist\'' + (options.Splash ? ',\n\tSplash: ' + this.SplashConfig(options.Splash) : '') + (options.PWA ? ',\n\tPWA: ' + this.PWAConfig(options.PWA) : '') + '\n};\n';
+		var config = 'module.exports = {\n\tApplication: \'application\',\n\tEntry: \'app.js\',\n\tIndex: \'index.html\',\n\tOutput: \'dist\'' + (options.Splash ? ',\n\tSplash: ' + this.SplashConfig(options.Splash) : '') + (options.PWA ? ',\n\tPWA: ' + this.PWAConfig(options.PWA) : '') + (/^[^:]+\.png$/i.test(options.Icon || '') ? ',\n\tIcon: ' + this.Quote(options.Icon) : '') + '\n};\n';
 		var list = [];
 		var guards = [];
 		var app = [];

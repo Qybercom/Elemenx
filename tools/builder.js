@@ -7,10 +7,12 @@ var Minify = require('./minify.js');
 var Shake = require('./shake.js');
 var Splash = require('./splash.js');
 var PWA = require('./pwa.js');
+var AppIcon = require('./appicon.js');
 var Expressions = require('./expressions.js');
 var Extension = require('./extension.js');
 var Electron = require('./electron.js');
 var Capacitor = require('./capacitor.js');
+var AndroidLibrary = require('./androidlibrary.js');
 var fail = common.fail;
 
 /*
@@ -422,10 +424,14 @@ function libraryRoots (project, appSource) {
 	return unique(roots);
 }
 
+/*
+ * Whether a text uses a Component: by its tag, or by its name as code makes it, Component: 'Name' (a window that
+ * Native.OpenWindow or Native.TrayPopup opens) or Elemenx.Component('Name').
+ */
 function sourceUsesComponent (source, name) {
 	var escaped = String(name).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-	return new RegExp('<\\s*' + escaped + '(?:\\s|/?>)').test(source || '');
+	return new RegExp('<\\s*' + escaped + '(?:\\s|/?>)|\\bComponent\\s*(?::|\\(\\s*)\\s*([\'"])' + escaped + '\\1').test(source || '');
 }
 
 /* Marks in shared the Services, Guards and Directives of a Library that the Application does not define: every Application gets them. */
@@ -754,6 +760,7 @@ function build (project, options) {
 		return (options.widget ? widget : single)({
 			Project: project,
 			Splash: options.splash === false ? null : Splash.Settings(project, options.splash),
+			Icon: AppIcon.Settings(project, options.icon, options.icons),
 			Output: output,
 			Index: index,
 			Entry: app,
@@ -804,12 +811,17 @@ function build (project, options) {
 	if (options.splash !== false)
 		productionIndex = Splash.Inject(productionIndex, Splash.Settings(project, options.splash));
 
+	/* The icon of the Application in the place of the icons the page named (see appicon.js). */
+	var icon = AppIcon.Settings(project, options.icon, options.icons);
+	if (icon)
+		productionIndex = AppIcon.Page(productionIndex, icon, output, false);
+
 	fs.writeFileSync(path.join(output, 'index.html'), productionIndex);
 	fs.writeFileSync(path.join(output, 'elemenx.js'), shaken);
 	fs.writeFileSync(path.join(output, 'app.js'), (templateBundle ? templateBundle + '\n' : '') + bundle + '\n' + appSource.replace(/^\s+/, ''));
 
 	/* An installable application of the system, last: its worker keeps every file of the build (see pwa.js). */
-	var pwa = PWA.Settings(project, options.pwa, productionIndex, output, options.splash === false ? null : Splash.Settings(project, options.splash));
+	var pwa = PWA.Settings(project, options.pwa, productionIndex, output, options.splash === false ? null : Splash.Settings(project, options.splash), AppIcon.ManifestIcons(icon));
 	if (pwa)
 		process.stdout.write('Elemenx Builder: a PWA, ' + PWA.Apply(output, pwa).join(', ') + (pwa.Icons.length ? '' : ' (no PWA.Icon: a browser installs it with an icon of 192 and of 512 pixels)') + '\n');
 
@@ -868,12 +880,17 @@ function extension (project, options) {
 /* The platforms of elemenx build --native: a desktop program (Electron) and mobile programs (Capacitor). */
 var NativePlatforms = ['desktop', 'mobile'];
 
+/* The targets of --native besides them, named only: the interface for an Android program of its own (androidlibrary.js). */
+var NativeTargets = NativePlatforms.concat(['android-library']);
+
 /*
  * A build of the Application as native programs: its production build, with its expressions precompiled, once, then
  * for each platform (options.native: 'desktop', 'mobile', or 'all'): out/native/desktop, a desktop program with its
  * main script (see electron.js), and the program in out/native/desktop-bin when the project has Electron and its
- * packager; out/native/mobile, the web folder of the Capacitor project of the project (see capacitor.js). The
- * settings of a platform: options.nativeSettings.Desktop and .Mobile (Native in elemenx.config.js).
+ * packager; out/native/mobile, the web folder of the Capacitor project of the project (see capacitor.js);
+ * android-library (only when named): out/native/android-library, a module of Gradle for an Android program of its own
+ * (see androidlibrary.js). The settings of a platform: options.nativeSettings.Desktop, .Mobile and .Android (Native
+ * in elemenx.config.js).
  */
 function native (project, options) {
 	var outputName = options.out || 'dist';
@@ -883,13 +900,14 @@ function native (project, options) {
 	var settings = options.nativeSettings || {};
 	/* The splash of the Application: its color is the one of the window, and of the screen of a phone, before the page paints. */
 	var splash = options.splash === false ? null : Splash.Settings(project, options.splash);
+	var icon = AppIcon.Settings(project, options.icon, options.icons);
 	var command = function (platform) {
 		return 'npx elemenx build --native ' + platform + (outputName === 'dist' ? '' : ' --out ' + outputName);
 	};
 
 	platforms.forEach(function (platform) {
-		if (NativePlatforms.indexOf(platform) === -1)
-			fail('unknown --native platform: ' + platform + ' (desktop, mobile, or none for all of them)');
+		if (NativeTargets.indexOf(platform) === -1)
+			fail('unknown --native platform: ' + platform + ' (desktop, mobile, android-library, or none for desktop and mobile)');
 	});
 
 	if (options.single || options.widget || options.extension)
@@ -907,6 +925,8 @@ function native (project, options) {
 		full: options.full,
 		packs: options.packs,
 		splash: options.splash,
+		icon: options.icon,
+		icons: options.icons,
 		precompile: true,
 		excludes: [path.join(project, outputName)]
 	});
@@ -928,10 +948,13 @@ function native (project, options) {
 
 			fs.mkdirSync(path.join(root, 'desktop'), {recursive: true});
 
-			Electron.Pack(source, path.join(root, 'desktop'), path.join(root, 'desktop-bin'), project, settings.Desktop || {}, command('desktop'), splash);
+			Electron.Pack(source, path.join(root, 'desktop'), path.join(root, 'desktop-bin'), project, settings.Desktop || {}, command('desktop'), splash, icon);
+		}
+		else if (platform === 'android-library') {
+			AndroidLibrary.Pack(source, path.join(root, 'android-library'), settings.Android || {});
 		}
 		else {
-			Capacitor.Pack(source, path.join(root, 'mobile'), project, settings.Mobile || {}, command('mobile'), splash);
+			Capacitor.Pack(source, path.join(root, 'mobile'), project, settings.Mobile || {}, command('mobile'), splash, icon);
 		}
 	});
 
@@ -1072,6 +1095,9 @@ function single (job) {
 
 	page = Splash.Inject(page, job.Splash);
 
+	if (job.Icon)
+		page = AppIcon.Page(page, job.Icon, null, true);
+
 	fs.writeFileSync(path.join(job.Output, 'index.html'), page);
 
 	process.stdout.write('Elemenx Builder: ' + path.join(job.Output, 'index.html') + ' (' + Math.round(Buffer.byteLength(page) / 1024) + ' KB)\n');
@@ -1095,7 +1121,9 @@ function widget (job) {
 	var framework = Minify.JavaScript(job.FrameworkSource);
 	var code = Minify.JavaScript(styles.concat(assets.Resources).join('\n') + '\n' + job.Code);
 	var version = (/\n\tvar Version = '([^']*)';/.exec(job.FrameworkSource) || [])[1] || '';
-	var text = '/*! ' + path.basename(job.Project) + ' | Elemenx ' + version + ', isolated */\n(function () {\nvar ElemenxIsolated = {};\n' + framework + '(function (Elemenx) {\n' + code + '})(ElemenxIsolated.Elemenx);\n})();\n';
+	/* Loaded twice in a page (two script tags, two places that each bring it), it runs once: its widgets are mounted once. */
+	var key = JSON.stringify('elemenx-widget:' + path.basename(job.Project));
+	var text = '/*! ' + path.basename(job.Project) + ' | Elemenx ' + version + ', isolated */\n(function () {\nif (window[' + key + ']) return;\nwindow[' + key + '] = true;\nvar ElemenxIsolated = {};\n' + framework + '(function (Elemenx) {\n' + code + '})(ElemenxIsolated.Elemenx);\n})();\n';
 	var placed = false;
 
 	page = page.replace(/<script\b[^>]*\bsrc\s*=\s*(["'])([^"']*)\1[^>]*>\s*<\/script>\s*/gi, function (tag, quote, src) {

@@ -39,6 +39,11 @@ body {
 	margin: 0;
 }
 
+/* The title bar of the window of notes (it has no frame of the system): along the top, over the padding. */
+.native-notes > .elemenx-title-bar-host > .elemenx-title-bar {
+	margin: -16px -16px 0;
+}
+
 .native-note-form {
 	gap: 8px;
 	align-items: center;

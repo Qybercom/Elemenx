@@ -1,0 +1,15 @@
+.shop-cart {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	padding: 4px 4px 4px 12px;
+	background: var(--elemenx-surface);
+	border: 1px solid var(--elemenx-border);
+	border-radius: var(--elemenx-radius-large);
+	color: var(--elemenx-text);
+	font-family: var(--elemenx-font);
+}
+
+.shop-cart-count {
+	font-weight: var(--elemenx-font-weight-strong);
+}

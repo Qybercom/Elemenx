@@ -11,25 +11,25 @@ To find a section in `elemenx.js`, search for its header, for example `/* Router
 | Field | Purpose | Used by |
 |---|---|---|
 | `ScriptURL` | URL of the loaded `elemenx.js` (a `blob:` URL of its text when it is inline in its page); workers load the same file from it, and ElemenxUI is taken from `libraries/ElemenxUI` next to it | Library, WebWorker, ServiceWorker |
-| `HasDOM` | `true` in a document, `false` inside workers | Application, Discovery, Identity, Install, Locale, Messaging, ServiceWorker, ServiceWorker bootstrap, Splash, Style, Template and Component, Utilities, WebWorker |
+| `HasDOM` | `true` in a document, `false` inside workers | Application, Discovery, Identity, Install, Locale, Messaging, ServiceWorker, ServiceWorker bootstrap, Splash, Style, Template and Component, Utilities, WebWorker, Widgets |
 | `StartedAt` | time this runtime started | Identity |
-| `Isolated` | true in an isolated build (`ElemenxIsolated`): the html element of the page is left alone | Application, Locale, Style |
-| `ShadowHosts` | the hosts of the Applications that render in a shadow root | Application, Locale |
+| `Isolated` | true in an isolated build (`ElemenxIsolated`): the html element of the page is left alone | Application, Locale, Style, Widgets |
+| `ShadowHosts` | the hosts of the Applications that render in a shadow root | Application, Locale, Widgets |
 
 ## Utilities
 
 | Field | Purpose | Used by |
 |---|---|---|
-| `Own` | `Object.prototype.hasOwnProperty.call(object, key)`; modules alias it as `var own = Runtime.Own;` | Application, Bundle, Cache, Directive registry, Discovery, Locale, Messaging, Meta, Network, Reactive, Router, Service and Guard, Storage, Structural, Template and Component |
+| `Own` | `Object.prototype.hasOwnProperty.call(object, key)`; modules alias it as `var own = Runtime.Own;` | Application, Bundle, Cache, Directive registry, Discovery, Locale, Messaging, Meta, Network, Reactive, Router, Service and Guard, Storage, Structural, Template and Component, Widgets |
 | `AbsoluteURL` | resolves a URL against the document; in a worker the value is kept as it is | Locale, Resource, ServiceWorker, WebWorker |
 | `CurrentScriptURL` | the URL of the executing script without query and hash, or `null`: the base of the relative paths of its definitions | Library, Template and Component, Application |
 | `DefinitionURL` | resolves a relative path of a definition against its `$DefinitionURL`; absolute and root paths are kept | Library, Template and Component, Application |
 | `OwnerRegistry` | registry of the resources an owner created: `Add`, `Remove`, `Destroyed`, `Destroy` (destroys the rest with the owner) | Events, Messaging, WebWorker, ServiceWorker |
 | `EventList` | listeners of the named events of one object: `Add`, `Remove`, `Emit` (each listener isolated, one shared event), `Clear` | Storage, WebWorker, ServiceWorker |
-| `Countdown` | waits for N asynchronous steps: the callback gets the first error, or `null` once all succeeded | Discovery, Library, Locale |
+| `Countdown` | waits for N asynchronous steps: the callback gets the first error, or `null` once all succeeded | Discovery, Install, Library, Locale |
 | `MessageListeners` | listeners of the global `message` event added through a wrapper, removable by their own callback | Messaging, WebWorker |
 | `Assign` | copies the own enumerable properties of a source into a target and returns the target | Template and Component, Router, Structural, Storage, WebWorker, ServiceWorker |
-| `Report` | reports an exception as an uncaught error at once, like the DOM does for event listeners (`reportError`; without it, rethrown from a timer) | Application, Install, Locale, Router |
+| `Report` | reports an exception as an uncaught error at once, like the DOM does for event listeners (`reportError`; without it, rethrown from a timer) | Application, Install, Locale, Router, Widgets |
 | `Notify` | calls one event listener in isolation: its exception is reported and the dispatch continues | Template and Component, Router, Network, Events, Messaging |
 | `Invoke` | calls a callback `(error, value)` from a promise handler; an exception thrown by the callback is reported instead of being swallowed | Network, ServiceWorker |
 
@@ -67,8 +67,8 @@ To find a section in `elemenx.js`, search for its header, for example `/* Router
 | Field | Purpose | Used by |
 |---|---|---|
 | `AddStyle` | keeps a stylesheet (`{Text}` or `{URL}`) in the document and in every shadow root of an Application | Discovery, Template and Component |
-| `AddStyleDocument` | puts every stylesheet in the document too, for an Application of an isolated copy that renders there | Application |
-| `AddStyleRoot` | gives a shadow root of an Application every stylesheet, now and later | Application |
+| `AddStyleDocument` | puts every stylesheet in the document too, for an Application of an isolated copy that renders there | Application, Widgets |
+| `AddStyleRoot` | gives a shadow root of an Application every stylesheet, now and later | Application, Widgets |
 | `RemoveStyle` | takes a stylesheet out of the document and of every shadow root (the Cache unloads the style of a component) | Template and Component |
 
 ## Discovery
@@ -219,6 +219,7 @@ To find a section in `elemenx.js`, search for its header, for example `/* Router
 | Field | Purpose | Used by |
 |---|---|---|
 | `ApplicationBoundary` | tells whether an element is the mount of another Application, so traversal stops there | Structural |
+| `WhenStarted` | calls back once an Application has started (its Libraries, dictionaries, Services and Components ready), at once when it has | Widgets |
 
 ## Notes
 

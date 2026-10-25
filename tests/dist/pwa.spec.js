@@ -83,6 +83,119 @@ test.describe('elemenx build with PWA', function () {
 		})).toEqual(expect.arrayContaining(['/app.js', '/elemenx.js', '/index.html', '/libraries/ElemenxUI/index.css', '/logo.svg', '/manifest.webmanifest']));
 	});
 
+	test('with Update prompt a new build waits until the Application applies it, every page then reloads; with none it starts over', async function ({ page, context }) {
+		var other;
+		var first;
+		var second;
+		var answer;
+
+		/* The version of the build the page runs, once its worker answers. */
+		function version (target) {
+			return target.evaluate(function () {
+				return new Promise(function (resolve) {
+					function look () {
+						if (Elemenx.Install.State().Version) resolve(Elemenx.Install.State().Version);
+						else setTimeout(look, 50);
+					}
+
+					look();
+				});
+			});
+		}
+
+		function build (text) {
+			var original = process.stdout.write;
+
+			fs.appendFileSync(path.join(folder, 'app.js'), '\n/* ' + text + ' */\n');
+
+			process.stdout.write = function () {
+				return true;
+			};
+
+			try {
+				Builder.Build(folder, {out: 'dist', pwa: {Name: 'Single PWA', Icon: '/logo.svg', Update: 'prompt'}});
+			}
+			finally {
+				process.stdout.write = original;
+			}
+		}
+
+		build('the first build');
+
+		expect(fs.readFileSync(path.join(folder, 'dist', 'index.html'), 'utf8')).toContain('data-update="prompt"');
+
+		await page.goto(origin + '/');
+		await page.evaluate(function () {
+			return navigator.serviceWorker.ready;
+		});
+
+		/* A page of the worker already: it hears a new build. A second page of it reloads with it. */
+		await page.reload();
+
+		first = await version(page);
+
+		other = await context.newPage();
+
+		await other.goto(origin + '/');
+
+		expect(await version(other)).toBe(first);
+
+		build('the second build');
+
+		answer = await page.evaluate(function () {
+			return new Promise(function (resolve) {
+				Elemenx.Install.Update(function (error, result) {
+					resolve([error && error.message, result, Elemenx.Install.State().Waiting]);
+				});
+			});
+		});
+
+		expect(answer[0]).toBe(null);
+		expect(answer[1]).toMatchObject({Available: true, Current: first});
+		expect(answer[1].Version).not.toBe(first);
+		expect(answer[2]).toBe(true);
+
+		second = answer[1].Version;
+
+		/* Still the first build until the Application applies the new one; then both pages reload into it. */
+		expect(await version(page)).toBe(first);
+
+		await Promise.all([page.waitForEvent('load'), other.waitForEvent('load'), page.evaluate(function () {
+			Elemenx.Install.Apply();
+		})]);
+
+		expect(await version(page)).toBe(second);
+		expect(await version(other)).toBe(second);
+
+		/* Nothing new: Apply forgets the worker and its files, the page comes from the network and keeps them again. */
+		await page.evaluate(function () {
+			return caches.keys().then(function (keys) {
+				return caches.open(keys[0]).then(function (cache) {
+					return cache.put('/forgotten.txt', new Response('old'));
+				});
+			});
+		});
+
+		await Promise.all([page.waitForEvent('load'), page.evaluate(function () {
+			Elemenx.Install.Apply();
+		})]);
+
+		expect(await version(page)).toBe(second);
+		expect(await page.evaluate(function () {
+			return caches.keys().then(function (keys) {
+				return Promise.all(keys.map(function (key) {
+					return caches.open(key).then(function (cache) {
+						return cache.match('/forgotten.txt');
+					});
+				}));
+			}).then(function (found) {
+				return found.filter(Boolean).length;
+			});
+		})).toBe(0);
+
+		await other.close();
+	});
+
 	test('runs without the network, a route of the Router too, from the files its worker keeps', async function ({ page, context }) {
 		await page.goto(origin + '/');
 

@@ -1,0 +1,14 @@
+<div class="elemenx-menu elemenx-native-menu-panel" role="menu" tabindex="-1" (keydown)="Key" (mouseleave)="Leave">
+	<i hidden *mount="Sized(Items, Path)"></i>
+	<button class="elemenx-option elemenx-menu-back" type="button" *if="Path.length" (click)="Back"><Icon Name="chevron-left" /><span class="elemenx-option-label">{{Parent(Items, Path).Label}}</span></button>
+	<div class="elemenx-menu-entry" *for="item of Level(Items, Path)" *key="item.ID || item.Label || item.Group || '#' + $index">
+		<div class="elemenx-popup-separator" role="separator" *if="item.Separator"></div>
+		<div class="elemenx-popup-group" *if="item.Group">{{item.Group}}</div>
+		<div class="elemenx-option" role="menuitem" tabindex="-1" *if="!item.Separator && !item.Group" [class.active]="$index === Active" [class.disabled]="!!item.Disabled" [class.danger]="!!item.Danger" [attribute.aria-disabled]="item.Disabled ? 'true' : null" [attribute.aria-haspopup]="item.Items ? 'menu' : null" [attribute.data-index]="$index" (mouseenter)="Hover" (click)="Pick">
+			<span class="elemenx-menu-icon"><Icon *if="item.Icon && !item.Checked" [name]="item.Icon" /><Icon *if="item.Checked" Name="check" /></span>
+			<span class="elemenx-option-label">{{item.Label}}</span>
+			<span class="elemenx-option-hint" *if="item.Shortcut">{{item.Shortcut}}</span>
+			<Icon *if="item.Items" Name="chevron-right" />
+		</div>
+	</div>
+</div>

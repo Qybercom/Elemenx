@@ -1,0 +1,6 @@
+<div class="elemenx-native-menu">
+	<span class="elemenx-native-menu-sources" hidden><slot></slot></span>
+	<div class="elemenx-native-menu-bar" *if="Drawn(Look) && Target !== 'tray'">
+		<MenuBar [items]="Bar(Items)" [caret]="Caret" [variant]="Variant" [size]="Size" (select)="BarChosen" />
+	</div>
+</div>

@@ -63,8 +63,11 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-game-separator`
 - `elemenx-game-special`
 - `elemenx-native-drag`
+- `elemenx-native-menu`
+- `elemenx-native-menu-bar`
+- `elemenx-native-menu-panel`
 - `elemenx-native-nodrag`
-- `elemenx-native-window`
+- `elemenx-native-window`: `transparent`
 - `elemenx-game-stats`: `double`
 - `elemenx-icon`: `colored`, `spin`
 - `elemenx-input`: `disabled`, `giant`, `invalid`, `large`, `multiple`, `readonly`, `round`, `small`
@@ -856,6 +859,12 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 
 - `elemenx-menu-root`
 
+## MenuBar
+
+- `elemenx-menu-bar`
+- `elemenx-menu-bar-entry`
+- `elemenx-menu-bar-host`
+
 ## Meter
 
 - `elemenx-meter`: `danger`, `dial`, `large`, `small`, `value-below`, `value-corner`, `vertical`, `warning`
@@ -902,6 +911,18 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 
 - `elemenx-money`
 - `elemenx-money-input`
+
+## NotificationHost
+
+- `elemenx-notification`: `danger`, `success`, `warning`
+- `elemenx-notification-actions`
+- `elemenx-notification-body`
+- `elemenx-notification-close`
+- `elemenx-notification-frame`
+- `elemenx-notification-host`: `page`
+- `elemenx-notification-icon`
+- `elemenx-notification-image`
+- `elemenx-notification-text`
 
 ## NavList
 
@@ -1189,6 +1210,10 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-stickers-grid`
 - `elemenx-stickers-tab-image`
 
+## Suprematism
+
+- `elemenx-suprematism`
+
 ## Table
 
 - `elemenx-table-box`
@@ -1257,6 +1282,18 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-tile-stack`
 - `elemenx-tile-text`
 - `elemenx-tile-title`
+
+## TitleBar
+
+- `elemenx-title-bar`: `overlay`
+- `elemenx-title-bar-actions`
+- `elemenx-title-bar-content`
+- `elemenx-title-bar-control`: `close`
+- `elemenx-title-bar-controls`
+- `elemenx-title-bar-host`
+- `elemenx-title-bar-icon`
+- `elemenx-title-bar-space`
+- `elemenx-title-bar-title`
 
 ## TimeInput
 
@@ -1361,6 +1398,16 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-workspace-stripe`: `left`, `right`
 - `elemenx-workspace-tool-button`
 - `elemenx-workspace-tools`
+
+## Board
+
+- `elemenx-board`: `grid-dots`, `grid-lines`, `panning`
+- `elemenx-board-content`
+- `elemenx-board-control`
+- `elemenx-board-controls`
+- `elemenx-board-host`
+- `elemenx-board-world`
+- `elemenx-board-zoom`
 
 ## Breadcrumbs
 

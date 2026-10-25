@@ -1,0 +1,9 @@
+{
+	"name": "elemenx-widgets-example",
+	"private": true,
+	"scripts": {
+		"dev": "node ../../elemenx-cli.js dev .",
+		"build": "node ../../elemenx-cli.js build .",
+		"serve": "node ../../elemenx-cli.js serve ."
+	}
+}

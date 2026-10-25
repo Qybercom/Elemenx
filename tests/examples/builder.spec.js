@@ -125,6 +125,9 @@ async function exported (page) {
 
 	await backstage(page, 'Export');
 
+	/* The code shows a task after the page opens: waited for, then read. */
+	await expect(page.locator('.elemenx-ribbon-backstage.open .elemenx-code-view')).not.toHaveText(/^\s*$/);
+
 	text = (await page.locator('.elemenx-ribbon-backstage.open .elemenx-code-view').innerText()).trim();
 
 	await page.keyboard.press('Escape');
@@ -511,7 +514,8 @@ test.describe('Elemenx builder', function () {
 		/* The layout comes first, the rules of CSS next, the props of the component after them: blocks of their own. */
 		await tree.getByText('Column', {exact: true}).click();
 
-		expect(await inspector.locator('.elemenx-section-title').allInnerTexts()).toEqual(['Layout', 'CSS', 'Properties']);
+		/* The inspector draws the element chosen a task later: its titles are waited for, not read once. */
+		await expect(inspector.locator('.elemenx-section-title')).toHaveText(['Layout', 'CSS', 'Properties']);
 
 		/* The four sides of the padding are one shorthand; a number is in pixels. */
 		for (var side of ['top', 'right', 'bottom', 'left']) {
@@ -1015,6 +1019,10 @@ test.describe('Elemenx builder', function () {
 		await settings.locator('input[name="PWAShortName"]').fill('Shop');
 		await settings.locator('input[name="PWAShortName"]').press('Enter');
 
+		/* Its updates wait until the application applies them. */
+		await settings.locator('.elemenx-field').filter({has: page.locator('.elemenx-field-label', {hasText: /^Updates$/})}).locator('.elemenx-select-trigger').click();
+		await page.getByRole('option', {name: 'When the application says, checked every hour'}).click();
+
 		expect(await page.evaluate(function () {
 			var store = JSON.parse(localStorage.getItem('elemenx-designer:projects'));
 
@@ -1023,7 +1031,7 @@ test.describe('Elemenx builder', function () {
 			}).filter(function (item) {
 				return item.Name === 'Splashy';
 			})[0].Settings;
-		})).toMatchObject({PWA: 'true', PWAShortName: 'Shop', PWADisplay: 'standalone', PWAOffline: 'true'});
+		})).toMatchObject({PWA: 'true', PWAShortName: 'Shop', PWADisplay: 'standalone', PWAOffline: 'true', PWAUpdate: 'prompt'});
 
 		/* The file it downloads has the splash at the top of its body; it goes once the application is ready. */
 		await backstage(page, 'Application');

@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+	<link rel="icon" href="data:," />
+
+	<title>A shop of another site</title>
+
+	<!--
+		The page of another site: its own styles (they do not reach the widgets, which render in shadow roots), and the
+		code of the widgets once, in its head. The build puts widget.js in place of the two scripts below.
+	-->
+	<style>
+		body {
+			margin: 0;
+			background: #fbf6ee;
+			color: #3a2e1f;
+			font: 16px/1.5 Georgia, serif;
+		}
+
+		/* Styles of the page that would break the widgets, were they not isolated. */
+		button {
+			background: #b3261e;
+			color: #ffffff;
+			border-radius: 0;
+			font: bold 20px Georgia, serif;
+			text-transform: uppercase;
+		}
+
+		.shop-header {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 16px;
+			padding: 16px 24px;
+			background: #3a2e1f;
+			color: #fbf6ee;
+		}
+
+		.shop-title {
+			margin: 0;
+			font-size: 24px;
+		}
+
+		.shop-products {
+			display: grid;
+			grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+			gap: 24px;
+			max-width: 960px;
+			margin: 0 auto;
+			padding: 24px 16px;
+		}
+
+		.shop-product {
+			display: flex;
+			flex-direction: column;
+			gap: 12px;
+			padding: 16px;
+			background: #ffffff;
+			border: 1px solid #e3d5bf;
+		}
+
+		.shop-name {
+			margin: 0;
+			font-size: 20px;
+		}
+
+		.shop-tools {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 12px;
+			max-width: 960px;
+			margin: 0 auto;
+			padding: 0 16px;
+		}
+
+		.shop-log {
+			max-width: 960px;
+			margin: 0 auto;
+			padding: 16px;
+			font-family: monospace;
+		}
+	</style>
+
+	<script src="/elemenx.js"></script>
+	<script src="/app.js"></script>
+</head>
+<body>
+	<header class="shop-header">
+		<h1 class="shop-title">Old Town Goods</h1>
+		<div class="shop-cart-place" data-elemenx-widget="Cart" data-props='{"Currency": "EUR"}'></div>
+	</header>
+
+	<main class="shop-products">
+		<article class="shop-product">
+			<h2 class="shop-name">Brass lamp</h2>
+			<p>A desk lamp of brass, with a linen shade.</p>
+			<div data-elemenx-widget="AddToCart" data-props='{"Product": "Brass lamp", "Price": 89}'></div>
+			<div data-elemenx-widget="Reviews" data-props='{"Product": "Brass lamp"}'></div>
+		</article>
+		<article class="shop-product">
+			<h2 class="shop-name">Oak shelf</h2>
+			<p>A wall shelf of oiled oak.</p>
+			<div data-elemenx-widget="AddToCart" data-props='{"Product": "Oak shelf", "Price": 54.5}'></div>
+		</article>
+	</main>
+
+	<!-- The code of the page: a product added later gets its widget, a product removed loses it. -->
+	<div class="shop-tools">
+		<button type="button" class="shop-more">Show one more product</button>
+		<button type="button" class="shop-less">Remove the last product</button>
+	</div>
+
+	<pre class="shop-log"></pre>
+
+	<script>
+		document.querySelector('.shop-more').addEventListener('click', function () {
+			var product = document.createElement('article');
+
+			product.className = 'shop-product';
+			product.innerHTML = '<h2 class="shop-name">Clay jug</h2><p>A jug of glazed clay.</p><div data-elemenx-widget="AddToCart" data-props=\'{"Product": "Clay jug", "Price": 23}\'></div>';
+
+			document.querySelector('.shop-products').appendChild(product);
+		});
+
+		document.querySelector('.shop-less').addEventListener('click', function () {
+			var products = document.querySelectorAll('.shop-product');
+			if (products.length)
+				products[products.length - 1].remove();
+		});
+
+		/* The events of the widgets bubble from their places: the page hears them as its own. */
+		document.addEventListener('checkout', function (event) {
+			document.querySelector('.shop-log').textContent += 'checkout: ' + event.detail.Items.length + ' items, ' + event.detail.Total.toFixed(2) + '\n';
+		});
+
+		document.addEventListener('added', function (event) {
+			document.querySelector('.shop-log').textContent += 'added: ' + event.detail.Product + '\n';
+		});
+	</script>
+</body>
+</html>

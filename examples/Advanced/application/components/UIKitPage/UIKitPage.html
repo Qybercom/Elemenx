@@ -14,7 +14,7 @@
 		</div>
 	</header>
 
-	<Section Title="Layout primitives" Note="elemenx-screen · elemenx-container · elemenx-column">
+	<Section *if="Shows('Layout primitives')" Title="Layout primitives" Note="elemenx-screen · elemenx-container · elemenx-column">
 		<div class="ui-kit-lazy" *lazy>
 			<div class="elemenx-screen ui-kit-demo">
 				<span class="ui-kit-tag">elemenx-screen</span>
@@ -32,7 +32,7 @@
 		</div>
 	</Section>
 
-	<Section Title="Typography and blocks" Note="index.css">
+	<Section *if="Shows('Typography and blocks')" Title="Typography and blocks" Note="index.css">
 		<div class="ui-kit-lazy" *lazy>
 			<div class="ui-kit-grid">
 				<div class="elemenx-panel ui-kit-stack">
@@ -66,7 +66,7 @@
 		</div>
 	</Section>
 
-	<Section Title="Lists" Note="elemenx-ul · elemenx-ol · outline · check · elemenx-list divided">
+	<Section *if="Shows('Lists')" Title="Lists" Note="elemenx-ul · elemenx-ol · outline · check · elemenx-list divided">
 		<div class="ui-kit-lazy" *lazy>
 			<div class="ui-kit-grid four">
 				<ul class="elemenx-ul">
@@ -89,7 +89,7 @@
 		</div>
 	</Section>
 
-	<Section Title="Section" Note="Collapsible, with actions in the header">
+	<Section *if="Shows('Section')" Title="Section" Note="Collapsible, with actions in the header">
 		<div class="ui-kit-lazy" *lazy>
 			<Section Title="Project settings" Icon="settings" Level="3" Collapsible="true" [collapsed]="Collapsed" Note="Folds its body" (toggle)="SectionToggled">
 				<span slot="before" class="elemenx-badge accent">Before</span>
@@ -105,7 +105,7 @@
 		</div>
 	</Section>
 
-	<Section Title="Block" Note="A frame with its title on a band set into it">
+	<Section *if="Shows('Block')" Title="Block" Note="A frame with its title on a band set into it">
 		<div class="ui-kit-lazy" *lazy>
 			<div class="ui-kit-grid">
 				<Block Title="Reactor" Note="Ring B">
@@ -131,7 +131,7 @@
 		</div>
 	</Section>
 
-	<Section Title="Properties" Note="A name and its value set apart, in one column or two">
+	<Section *if="Shows('Properties')" Title="Properties" Note="A name and its value set apart, in one column or two">
 		<div class="ui-kit-lazy" *lazy>
 			<div class="ui-kit-grid">
 				<div class="ui-kit-stack">
@@ -164,7 +164,7 @@
 		</div>
 	</Section>
 
-	<Section Title="Native" [note]="'Platform: ' + NativePlatform">
+	<Section *if="Shows('Native')" Title="Native" [note]="'Platform: ' + NativePlatform">
 		<div class="ui-kit-lazy" *lazy>
 			<div class="ui-kit-row">
 				<Button Label="Open a file" (click)="NativeOpen" />
@@ -180,7 +180,7 @@
 		</div>
 	</Section>
 
-	<Section Title="Themes" [note]="'Theme: ' + ThemeName + ' · Scheme: ' + ThemeScheme">
+	<Section *if="Shows('Themes')" Title="Themes" [note]="'Theme: ' + ThemeName + ' · Scheme: ' + ThemeScheme">
 		<div class="ui-kit-lazy" *lazy>
 			<div class="ui-kit-grid">
 				<div class="elemenx-column ui-kit-themes">
@@ -220,7 +220,7 @@
 		</div>
 	</Section>
 
-	<Section Title="Buttons" [note]="'Clicks: ' + Clicks">
+	<Section *if="Shows('Buttons')" Title="Buttons" [note]="'Clicks: ' + Clicks">
 		<div class="ui-kit-lazy" *lazy>
 			<div class="ui-kit-row">
 				<Button Label="Primary" Variant="primary" (click)="Clicked" />
@@ -268,10 +268,30 @@
 				</Menu>
 				<span class="elemenx-caption" *if="MenuChoice">Menu: {{MenuChoice}}</span>
 			</div>
+			<div class="ui-kit-menu-bar">
+				<MenuBar (select)="MenuSelected">
+					<MenuItem Label="File">
+						<MenuItem ID="bar-new" Label="New" Shortcut="Ctrl+N" />
+						<MenuItem ID="bar-open" Label="Open..." />
+					</MenuItem>
+					<MenuItem Label="Edit">
+						<MenuItem ID="bar-copy" Label="Copy" />
+						<MenuItem Label="Paste special">
+							<MenuItem ID="bar-paste-text" Label="Text only" />
+						</MenuItem>
+					</MenuItem>
+					<MenuItem Label="Help">
+						<MenuItem ID="bar-about" Label="About" />
+					</MenuItem>
+				</MenuBar>
+				<Menu Label="View" Caret="false" Variant="ghost" Size="small" (select)="MenuSelected">
+					<MenuItem ID="bar-zoom" Label="Zoom in" />
+				</Menu>
+			</div>
 		</div>
 	</Section>
 
-	<Section Title="Icons" Note="&lt;Icon Name=&quot;...&quot; /&gt; · &lt;FileIcon Name=&quot;report.pdf&quot; /&gt;">
+	<Section *if="Shows('Icons')" Title="Icons" Note="&lt;Icon Name=&quot;...&quot; /&gt; · &lt;FileIcon Name=&quot;report.pdf&quot; /&gt;">
 		<div class="ui-kit-lazy" *lazy>
 			<div class="ui-kit-icons" *lazy>
 				<div class="ui-kit-icon" *for="name of Icons" *key="name" [attribute.title]="name"><Icon [name]="name" Size="24" /><span>{{name}}</span></div>
@@ -323,7 +343,7 @@
 		</div>
 	</Section>
 
-	<Section Title="Inputs" [note]="'Value: ' + Text">
+	<Section *if="Shows('Inputs')" Title="Inputs" [note]="'Value: ' + Text">
 		<div class="ui-kit-lazy" *lazy>
 			<div class="ui-kit-grid">
 				<Field Label="Project name" Hint="Text input with a hint." Required="true"><Input [value]="Text" Placeholder="Name" Clearable="true" (input)="TextChanged" /></Field>
@@ -362,7 +382,7 @@
 		</div>
 	</Section>
 
-	<Section Title="Forms" [note]="FormNote || 'Form · Field · the Forms Service: in the template, or a model in code'">
+	<Section *if="Shows('Forms')" Title="Forms" [note]="FormNote || 'Form · Field · the Forms Service: in the template, or a model in code'">
 		<div class="ui-kit-lazy" *lazy>
 			<div class="ui-kit-grid">
 				<div class="ui-kit-form ui-kit-sign-up">
@@ -392,7 +412,7 @@
 		</div>
 	</Section>
 
-	<Section Title="Dates and time" Note="Own pickers, locale formats">
+	<Section *if="Shows('Dates and time')" Title="Dates and time" Note="Own pickers, locale formats">
 		<div class="ui-kit-lazy" *lazy>
 			<div class="ui-kit-grid">
 				<Field Label="Date" [hint]="'Value: ' + (Date || '—')"><DateInput [value]="Date" (input)="DateChanged" /></Field>
@@ -405,7 +425,7 @@
 		</div>
 	</Section>
 
-	<Section Title="Payment, phone and money" Note="Strict masks: typing, paste and drop">
+	<Section *if="Shows('Payment, phone and money')" Title="Payment, phone and money" Note="Strict masks: typing, paste and drop">
 		<div class="ui-kit-lazy" *lazy>
 			<div class="ui-kit-grid">
 				<Field Label="Card number" [hint]="CardState || 'Try 4242 4242 4242 4242'"><CardNumberInput (validate)="CardValidated" /></Field>
@@ -429,7 +449,7 @@
 		</div>
 	</Section>
 
-	<Section Title="Selection" [note]="'Plan: ' + Plan + ' · View: ' + View + ' · Language: ' + Language + ' · Tags: ' + Tags.join(', ')">
+	<Section *if="Shows('Selection')" Title="Selection" [note]="'Plan: ' + Plan + ' · View: ' + View + ' · Language: ' + Language + ' · Tags: ' + Tags.join(', ')">
 		<div class="ui-kit-lazy" *lazy>
 			<div class="ui-kit-grid">
 				<Field Label="Language"><Select [options]="Languages" [value]="Language" Searchable="true" (change)="LanguageChanged" /></Field>
@@ -468,7 +488,7 @@
 		</div>
 	</Section>
 
-	<Section Title="Tabs" [note]="'Active: ' + Tab + ' · ' + Section">
+	<Section *if="Shows('Tabs')" Title="Tabs" [note]="'Active: ' + Tab + ' · ' + Section">
 		<div class="ui-kit-lazy" *lazy>
 			<Tabs [tabs]="SectionTabs" [value]="Section" (change)="SectionChanged" />
 			<Tabs Variant="pill" [tabs]="SectionTabs" Value="billing" />
@@ -488,7 +508,7 @@
 		</div>
 	</Section>
 
-	<Section Title="Table" [note]="'Selected: ' + Selected.join(', ') + (Activated ? ' · Opened: ' + Activated : '')">
+	<Section *if="Shows('Table')" Title="Table" [note]="'Selected: ' + Selected.join(', ') + (Activated ? ' · Opened: ' + Activated : '')">
 		<div class="ui-kit-lazy" *lazy>
 			<Table [columns]="Columns" [rows]="People" [selected]="Selected" Selectable="multiple" Caption="Sort by a header, select with a click, Ctrl+click or the checkboxes, open with a double click or Enter." (select)="PeopleSelected" (activate)="PersonActivated" />
 			<Table [columns]="Columns" [rows]="People" Compact="true" Striped="true" Bordered="true" Selectable="single" Height="160px" />
@@ -500,7 +520,7 @@
 		</div>
 	</Section>
 
-	<Section Title="Overlays" [note]="'Dialog: ' + (DialogResult || '—')">
+	<Section *if="Shows('Overlays')" Title="Overlays" [note]="'Dialog: ' + (DialogResult || '—')">
 		<div class="ui-kit-lazy" *lazy>
 			<div class="ui-kit-row">
 				<Popover Title="Popover">
@@ -539,7 +559,7 @@
 		</div>
 	</Section>
 
-	<Section Title="Commands and overlays" [note]="'Last: ' + (LastCommand || '—')">
+	<Section *if="Shows('Commands and overlays')" Title="Commands and overlays" [note]="'Last: ' + (LastCommand || '—')">
 		<div class="ui-kit-lazy" *lazy>
 			<div class="ui-kit-row" id="ui-kit-commands">
 				<Button Label="Command palette" Icon="search" (click)="OpenPalette" />
@@ -592,7 +612,7 @@
 		</div>
 	</Section>
 
-	<Section Title="Settings menu" [note]="SettingsNote || 'SettingsMenu · Variant auto, ios or material'">
+	<Section *if="Shows('Settings menu')" Title="Settings menu" [note]="SettingsNote || 'SettingsMenu · Variant auto, ios or material'">
 		<div class="ui-kit-lazy" *lazy>
 			<Field Label="Look of the first menu"><RadioGroup Variant="segmented" [options]="SettingsVariants" [value]="SettingsVariant" (change)="SettingsVariantChosen" /></Field>
 			<div class="ui-kit-settings-menus">
@@ -602,7 +622,7 @@
 		</div>
 	</Section>
 
-	<Section Title="Dial pad" [note]="DialNote || 'DialPad · the pad of a phone, or a layout of your own'">
+	<Section *if="Shows('Dial pad')" Title="Dial pad" [note]="DialNote || 'DialPad · the pad of a phone, or a layout of your own'">
 		<div class="ui-kit-lazy" *lazy>
 			<div class="ui-kit-dial-pads">
 				<DialPad [value]="DialNumber" Label="Phone" (input)="DialTyped" (call)="DialCalled" />
@@ -611,7 +631,7 @@
 		</div>
 	</Section>
 
-	<Section Title="Keep-alive" [note]="KeepNote">
+	<Section *if="Shows('Keep-alive')" Title="Keep-alive" [note]="KeepNote">
 		<div class="ui-kit-lazy" *lazy>
 			<div class="ui-kit-row">
 				<Button Label="Panel" Icon="layout" [pressed]="KeepShown" (click)="KeepToggled" />
@@ -625,7 +645,7 @@
 		</div>
 	</Section>
 
-	<Section Title="Music and input" [note]="MusicNote || 'Mixer · MixerChannel · Keyboard · Piano: the controls; the sound is the application\'s'">
+	<Section *if="Shows('Music and input')" Title="Music and input" [note]="MusicNote || 'Mixer · MixerChannel · Keyboard · Piano: the controls; the sound is the application\'s'">
 		<div class="ui-kit-lazy" *lazy>
 			<div class="ui-kit-row">
 				<Toggle Label="Play the meters" [checked]="MixerPlaying" (change)="MixerPlayed" />
@@ -641,7 +661,7 @@
 		</div>
 	</Section>
 
-	<Section Title="Security and device" Note="Biometric · Idle · Permissions · Push, Serial, USB, NFC">
+	<Section *if="Shows('Security and device')" Title="Security and device" Note="Biometric · Idle · Permissions · Push, Serial, USB, NFC">
 		<div class="ui-kit-lazy" *lazy>
 			<div class="ui-kit-grid three">
 				<div class="ui-kit-stack">
@@ -686,7 +706,7 @@
 		</div>
 	</Section>
 
-	<Section Title="Trees, tables and long lists" Note="Tree · VirtualList · Table with filters, pages and tree rows">
+	<Section *if="Shows('Trees, tables and long lists')" Title="Trees, tables and long lists" Note="Tree · VirtualList · Table with filters, pages and tree rows">
 		<div class="ui-kit-lazy" *lazy>
 			<div class="ui-kit-grid">
 				<div class="ui-kit-stack">
@@ -712,7 +732,7 @@
 		</div>
 	</Section>
 
-	<Section Title="Feedback" [note]="'Volume: ' + Volume + ' · Budget: ' + Budget.join('–')">
+	<Section *if="Shows('Feedback')" Title="Feedback" [note]="'Volume: ' + Volume + ' · Budget: ' + Budget.join('–')">
 		<div class="ui-kit-lazy" *lazy>
 			<div class="ui-kit-grid">
 				<Field Label="Volume"><Slider [value]="Volume" Label="Volume" Unit="%" (input)="VolumeChanged" /></Field>
@@ -764,7 +784,7 @@
 		</div>
 	</Section>
 
-	<Section Title="Charts and calendar" [note]="CalendarNote || 'Chart · Sparkline · Calendar'">
+	<Section *if="Shows('Charts and calendar')" Title="Charts and calendar" [note]="CalendarNote || 'Chart · Sparkline · Calendar'">
 		<div class="ui-kit-lazy" *lazy>
 			<div class="ui-kit-grid">
 				<Chart Type="line" [labels]="Months" [series]="Revenue" Unit="k$" Label="Revenue and costs" />
@@ -784,7 +804,7 @@
 		</div>
 	</Section>
 
-	<Section Title="Files and drag and drop" [note]="'Selected: ' + FileCount + (Dropped ? ' · Dropped: ' + Dropped : '')">
+	<Section *if="Shows('Files and drag and drop')" Title="Files and drag and drop" [note]="'Selected: ' + FileCount + (Dropped ? ' · Dropped: ' + Dropped : '')">
 		<div class="ui-kit-lazy" *lazy>
 			<div class="ui-kit-grid">
 				<FileUpload Hint="Any file up to 5 MB" MaxSize="5242880" (change)="FilesChanged" />
@@ -811,7 +831,7 @@
 		</div>
 	</Section>
 
-	<Section Title="Resizing" Note="*resizable and Splitter">
+	<Section *if="Shows('Resizing')" Title="Resizing" Note="*resizable and Splitter">
 		<div class="ui-kit-lazy" *lazy>
 			<div class="ui-kit-grid">
 				<div class="elemenx-panel ui-kit-resizable" *resizable="{Edges: 'right bottom corner', MinWidth: 160, MinHeight: 80}">Drag an edge or the corner</div>
@@ -825,7 +845,7 @@
 		</div>
 	</Section>
 
-	<Section Title="Workspace" Note="IDE frame: an area shows while its slot has content; drag or focus the edges and use the arrow keys">
+	<Section *if="Shows('Workspace')" Title="Workspace" Note="IDE frame: an area shows while its slot has content; drag or focus the edges and use the arrow keys">
 		<div class="ui-kit-lazy" *lazy>
 			<div class="ui-kit-frame">
 				<Workspace>
@@ -906,7 +926,7 @@
 		</div>
 	</Section>
 
-	<Section Title="Ribbon" [note]="'Last: ' + (RibbonNote || '—') + ' · Alt shows the key tips'">
+	<Section *if="Shows('Ribbon')" Title="Ribbon" [note]="'Last: ' + (RibbonNote || '—') + ' · Alt shows the key tips'">
 		<div class="ui-kit-lazy" *lazy>
 			<div class="elemenx-container ui-kit-row">
 				<Checkbox Label="A table is selected (contextual tab)" [checked]="TableSelected" (change)="TableToggled" />
@@ -1069,7 +1089,7 @@
 		</div>
 	</Section>
 
-	<Section Title="Gallery" [note]="'Picture ' + (GalleryIndex + 1) + (GalleryPicked ? ' · Opened: ' + GalleryPicked : '')">
+	<Section *if="Shows('Gallery')" Title="Gallery" [note]="'Picture ' + (GalleryIndex + 1) + (GalleryPicked ? ' · Opened: ' + GalleryPicked : '')">
 		<div class="ui-kit-lazy" *lazy>
 			<div class="ui-kit-row">
 				<Checkbox Label="Autoplay" [checked]="GalleryAutoplay" (change)="GalleryAutoplayed" />
@@ -1086,7 +1106,7 @@
 		</div>
 	</Section>
 
-	<Section Title="Cards" [note]="'Last: ' + (CardNote || '—')">
+	<Section *if="Shows('Cards')" Title="Cards" [note]="'Last: ' + (CardNote || '—')">
 		<div class="ui-kit-lazy" *lazy>
 			<h4>Posts: vertical, with the date badge, overlay and horizontal</h4>
 			<div class="elemenx-container grid">
@@ -1129,7 +1149,7 @@
 		</div>
 	</Section>
 
-	<Section Title="Emoji and stickers" [note]="'Picked: ' + (Picked || '—')">
+	<Section *if="Shows('Emoji and stickers')" Title="Emoji and stickers" [note]="'Picked: ' + (Picked || '—')">
 		<div class="ui-kit-lazy" *lazy>
 			<div class="elemenx-container wrappable ui-kit-pickers">
 				<div class="elemenx-card ui-kit-picker"><EmojiPicker Autofocus="false" (pick)="EmojiPicked" /></div>
@@ -1146,7 +1166,7 @@
 		</div>
 	</Section>
 
-	<Section Title="Chat" [note]="ChatNote || 'Chat, ChatMessage, ChatComposer · right click a message for its menu'">
+	<Section *if="Shows('Chat')" Title="Chat" [note]="ChatNote || 'Chat, ChatMessage, ChatComposer · right click a message for its menu'">
 		<div class="ui-kit-lazy" *lazy>
 			<div class="ui-kit-row"><span class="elemenx-caption">Emoji suggestions</span><RadioGroup Variant="segmented" [options]="SuggestModes" [value]="SuggestMode" (change)="SuggestModeChosen" /><span class="elemenx-caption">Type a word, :word, or a single emoji such as 👍 for its stickers</span></div>
 			<div class="ui-kit-frame chat">
@@ -1166,7 +1186,7 @@
 		</div>
 	</Section>
 
-	<Section Title="Steps and timeline" Note="Steps · Timeline">
+	<Section *if="Shows('Steps and timeline')" Title="Steps and timeline" Note="Steps · Timeline">
 		<div class="ui-kit-lazy" *lazy>
 			<Steps [items]="StepItems" [active]="ActiveSteps" [done]="DoneSteps" Clickable="true" (select)="StepSelected" />
 			<div class="ui-kit-grid">
@@ -1179,7 +1199,7 @@
 		</div>
 	</Section>
 
-	<Section Title="Navigation and people" [note]="PeopleNote || 'Breadcrumbs · Avatar · Presence · Image · *badge'">
+	<Section *if="Shows('Navigation and people')" Title="Navigation and people" [note]="PeopleNote || 'Breadcrumbs · Avatar · Presence · Image · *badge'">
 		<div class="ui-kit-lazy" *lazy="320">
 			<div class="ui-kit-stack">
 				<Breadcrumbs [items]="CrumbItems" (select)="CrumbPicked">
@@ -1222,7 +1242,7 @@
 		</div>
 	</Section>
 
-	<Section Title="Terminal" Note="Type help, date or anything else; Arrow Up recalls the history">
+	<Section *if="Shows('Terminal')" Title="Terminal" Note="Type help, date or anything else; Arrow Up recalls the history">
 		<div class="ui-kit-lazy" *lazy>
 			<div class="ui-kit-frame terminal">
 				<Terminal Title="Shell" Prompt="elemenx $" [lines]="Lines" [busy]="Busy" (command)="RunCommand" (clear)="ClearTerminal">
@@ -1232,7 +1252,7 @@
 		</div>
 	</Section>
 
-	<Section Title="Code editor" [note]="'Line ' + EditorLine + ', column ' + EditorColumn + (EditorMatches === null ? '' : ' · Matches: ' + EditorMatches)">
+	<Section *if="Shows('Code editor')" Title="Code editor" [note]="'Line ' + EditorLine + ', column ' + EditorColumn + (EditorMatches === null ? '' : ' · Matches: ' + EditorMatches)">
 		<div class="ui-kit-lazy" *lazy>
 			<div class="ui-kit-row ui-kit-editor-tools">
 				<Select [options]="EditorLanguages" [value]="EditorLanguage" (change)="EditorLanguageChosen" />
@@ -1258,7 +1278,7 @@
 		</div>
 	</Section>
 
-	<Section Title="Rich text editor" [note]="RichNote">
+	<Section *if="Shows('Rich text editor')" Title="Rich text editor" [note]="RichNote">
 		<div class="ui-kit-lazy" *lazy>
 			<div class="ui-kit-row ui-kit-editor-tools">
 				<Select [options]="RichBlocks" [value]="RichBlock" (change)="RichBlockChosen" />
@@ -1295,7 +1315,7 @@
 		</div>
 	</Section>
 
-	<Section Title="Viewers and formulas" Note="Markdown · CodeView · Formula · Mod+F finds in the editors and the terminal">
+	<Section *if="Shows('Viewers and formulas')" Title="Viewers and formulas" Note="Markdown · CodeView · Formula · Mod+F finds in the editors and the terminal">
 		<div class="ui-kit-lazy" *lazy="400">
 			<div class="ui-kit-grid">
 				<div class="ui-kit-viewer"><Markdown [value]="ViewerMarkdown" Label="Release notes" /><Markdown [value]="ViewerMarkdown" Look="interface" Label="Release notes in the interface" /></div>
@@ -1310,7 +1330,7 @@
 		</div>
 	</Section>
 
-	<Section Title="Windows" [note]="WindowNote">
+	<Section *if="Shows('Windows')" Title="Windows" [note]="WindowNote">
 		<div class="ui-kit-lazy" *lazy>
 			<div class="ui-kit-row">
 				<Button Icon="layout" Label="Properties" [pressed]="PropertiesOpen" (click)="ToggleProperties" />
@@ -1339,7 +1359,7 @@
 		</div>
 	</Section>
 
-	<Section Title="Game UI" [note]="GameNote">
+	<Section *if="Shows('Game UI')" Title="Game UI" [note]="GameNote">
 		<div class="ui-kit-lazy" *lazy>
 			<div class="ui-kit-row">
 				<ButtonGroup Attached="true" Label="Game theme">
@@ -1492,7 +1512,7 @@
 		</div>
 	</Section>
 
-	<Section Title="Tiles" [note]="'TileGrid · drag tiles to arrange them' + (OpenedTile ? ' · Opened: ' + OpenedTile : '')">
+	<Section *if="Shows('Tiles')" Title="Tiles" [note]="'TileGrid · drag tiles to arrange them' + (OpenedTile ? ' · Opened: ' + OpenedTile : '')">
 		<div class="ui-kit-lazy" *lazy>
 			<TileGrid [groups]="TileGroups" Editable="true" Fit="true" GroupPolicy="between" (open)="TileOpened" (change)="TilesChanged" (groupaction)="TileGroupAction">
 				<TileGroup ID="pinned" Title="Pinned" Locked="true">
@@ -1538,7 +1558,7 @@
 		</div>
 	</Section>
 
-	<Section Title="Layouts" Note="Dashboard · Settings · MasterDetail · Centered">
+	<Section *if="Shows('Layouts')" Title="Layouts" Note="Dashboard · Settings · MasterDetail · Centered">
 		<div class="ui-kit-lazy" *lazy>
 			<h4>Dashboard</h4>
 			<div class="ui-kit-frame">

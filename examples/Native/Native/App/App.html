@@ -1,4 +1,49 @@
 <main class="elemenx-screen fill native-app">
+	<TitleBar Title="Elemenx native" Image="/icons/app.png">
+		<NativeMenu (select)="MenuChosen" (apply)="MenuApplied">
+			<MenuItem Label="File">
+				<MenuItem ID="note" Label="New note" Shortcut="Mod+N" />
+				<MenuItem ID="notes" Label="Window of notes" Shortcut="Mod+Shift+N" />
+				<MenuItem Separator="true" />
+				<MenuItem ID="open" Label="Open a file..." Shortcut="Mod+O" />
+				<MenuItem ID="save" Label="Save a file..." Shortcut="Mod+S" />
+				<MenuItem Separator="true" />
+				<MenuItem Label="Quit" Role="quit" />
+			</MenuItem>
+			<MenuItem Label="Edit">
+				<MenuItem Label="Undo" Role="undo" />
+				<MenuItem Label="Redo" Role="redo" />
+				<MenuItem Separator="true" />
+				<MenuItem Label="Cut" Role="cut" />
+				<MenuItem Label="Copy" Role="copy" />
+				<MenuItem Label="Paste" Role="paste" />
+				<MenuItem Label="Select all" Role="selectAll" />
+			</MenuItem>
+			<MenuItem Label="View">
+				<MenuItem Label="Reload" Role="reload" />
+				<MenuItem Label="Developer tools" Role="toggleDevTools" />
+				<MenuItem Separator="true" />
+				<MenuItem Label="Actual size" Role="resetZoom" />
+				<MenuItem Label="Zoom in" Role="zoomIn" />
+				<MenuItem Label="Zoom out" Role="zoomOut" />
+				<MenuItem Separator="true" />
+				<MenuItem Label="Full screen" Role="togglefullscreen" />
+			</MenuItem>
+			<MenuItem Label="Window">
+				<MenuItem Label="Minimize" Role="minimize" />
+				<MenuItem Label="Close" Role="close" />
+			</MenuItem>
+			<MenuItem Label="Help">
+				<MenuItem ID="about" Label="About Elemenx native" />
+			</MenuItem>
+		</NativeMenu>
+	</TitleBar>
+	<NativeMenu Target="tray" (select)="MenuChosen">
+		<MenuItem ID="show" Label="Show" />
+		<MenuItem ID="note" Label="New note" />
+		<MenuItem Separator="true" />
+		<MenuItem Label="Quit" Role="quit" />
+	</NativeMenu>
 	<div class="elemenx-column native-body">
 		<h1 class="elemenx-title">Elemenx native</h1>
 		<p class="elemenx-text muted">Platform: <strong class="native-platform">{{Platform}}</strong></p>
@@ -16,6 +61,8 @@
 			<Button Label="Attention" (click)="Attended" />
 			<Button Label="Tray" (click)="Trayed" />
 			<Button Label="Open a window" (click)="Windowed" />
+			<Button Label="Notify" (click)="Notified" />
+			<Button Label="Notify in ElemenxUI" (click)="Carded" />
 		</div>
 		<p class="elemenx-text native-notes-count">Notes: {{Notes}}</p>
 		<ol class="elemenx-ol native-log">

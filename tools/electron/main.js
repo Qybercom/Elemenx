@@ -39,6 +39,22 @@ var awake = null;
 
 /* The window of the tray (Native.Tray with Window): shown by the icon, and when it last hid on losing the focus. */
 var trayWindow = null;
+
+/* The items of the menu of the tray (Native.Tray, Native.TrayMenu): they stay when the icon comes again. */
+var trayItems = null;
+var trayMenuBuilt = null;
+var trayHasWindow = false;
+
+/* The window of the menu of the tray (Native.TrayPopup: a menu of ElemenxUI), which the right button opens at the pointer. */
+var trayPopup = null;
+
+/* The notifications of the system shown (kept, or they go before they are pressed), and the window of the cards of the Application. */
+var notifications = {};
+var notificationWindow = null;
+
+/* The windows of the Application by their ID (OpenWindow): their own buttons act on them. */
+var named = {};
+var trayPopupHidden = 0;
 var trayHidden = 0;
 
 /* Whether the program is quitting: a window closed then goes, even when CloseToTray hides it. */
@@ -58,6 +74,8 @@ var primary = !single || app.requestSingleInstanceLock();
 var Groups = {
 	window: 'window',
 	title: 'window',
+	titlebar: 'window',
+	scheme: 'window',
 	open: 'dialogs',
 	save: 'dialogs',
 	message: 'dialogs',
@@ -65,7 +83,12 @@ var Groups = {
 	'context-menu': 'menu',
 	tray: 'tray',
 	traywindow: 'tray',
+	traymenu: 'tray',
+	traypopup: 'tray',
+	role: 'window',
 	external: 'external',
+	notify: 'notifications',
+	notifications: 'notifications',
 	badge: 'taskbar',
 	progress: 'taskbar',
 	attention: 'taskbar',
@@ -215,6 +238,10 @@ function filters (accept) {
 var handlers = {
 	window: function (args, window) {
 		var action = args.Action;
+
+		if (args.Window && named[args.Window] && !named[args.Window].isDestroyed())
+			window = named[args.Window];
+
 		if (action === 'minimize')
 			window.minimize();
 
@@ -246,6 +273,86 @@ var handlers = {
 		}
 
 		return state(window);
+	},
+	/* A notification of the system: its press, its buttons (macOS) and its close go to the page as the notification event. */
+	notify: function (args, window, send) {
+		var id = String(args.ID);
+		var actions = args.Actions || [];
+		var notification;
+
+		if (!electron.Notification || (typeof electron.Notification.isSupported === 'function' && !electron.Notification.isSupported()))
+			throw new Error('Elemenx Native: this system shows no notifications');
+
+		notification = new electron.Notification({
+			title: String(args.Title || ''),
+			body: String(args.Text || ''),
+			icon: args.Icon ? path.join(root, String(args.Icon)) : (settings.Icon ? path.join(root, settings.Icon) : undefined),
+			silent: !!args.Silent,
+			urgency: ['low', 'normal', 'critical'].indexOf(args.Urgency) === -1 ? 'normal' : args.Urgency,
+			actions: actions.map(function (action) {
+				return {type: 'button', text: String(action.Label)};
+			})
+		});
+
+		notification.on('click', function () {
+			send('notification', {ID: id, Kind: 'click', Action: null});
+		});
+
+		notification.on('action', function (event, index) {
+			send('notification', {ID: id, Kind: 'action', Action: actions[index] ? actions[index].ID : null});
+		});
+
+		notification.on('close', function () {
+			delete notifications[id];
+
+			send('notification', {ID: id, Kind: 'close', Action: null});
+		});
+
+		notifications[id] = notification;
+
+		notification.show();
+
+		return {ID: id};
+	},
+	/* The window of the cards of the Application (Notify with Look elemenx): its size, by the corner of the screen, or hidden. */
+	notifications: function (args) {
+		if (!notificationWindow || notificationWindow.isDestroyed())
+			throw new Error('Elemenx Native has no window of its notifications: Native.Notify with Look elemenx makes it');
+
+		if (args.Width && args.Height)
+			notificationWindow.setContentSize(Math.round(args.Width), Math.round(args.Height));
+
+		if (args.Show === false) {
+			notificationWindow.hide();
+
+			return null;
+		}
+
+		placeNotifications();
+
+		if (args.Show && !notificationWindow.isVisible())
+			notificationWindow.showInactive();
+
+		return null;
+	},
+	/* The scheme of the parts of the system (dialogs, menus, the buttons of the window): the one of the theme of the page. */
+	scheme: function (args) {
+		electron.nativeTheme.themeSource = ['light', 'dark'].indexOf(args.Scheme) === -1 ? 'system' : args.Scheme;
+
+		return true;
+	},
+	/* The buttons of the system over a page with Frame hidden: their colors, as the title bar of the page has them. */
+	titlebar: function (args, window) {
+		if (typeof window.setTitleBarOverlay !== 'function' || process.platform === 'darwin') return false;
+
+		try {
+			window.setTitleBarOverlay({color: args.Color, symbolColor: args.Symbol, height: args.Height ? Math.round(args.Height) : undefined});
+		}
+		catch (error) {
+			return false;
+		}
+
+		return true;
 	},
 	title: function (args, window) {
 		window.setTitle(String(args.Text || ''));
@@ -281,7 +388,7 @@ var handlers = {
 	menu: function (args, window, send) {
 		electron.Menu.setApplicationMenu(args.Items ? electron.Menu.buildFromTemplate(template(args.Items, function (id) {
 			send('menu', {ID: id});
-		})) : null);
+		})) : bareMenu());
 
 		return null;
 	},
@@ -297,8 +404,6 @@ var handlers = {
 		});
 	},
 	tray: function (args, window, send) {
-		var menu = null;
-
 		if (tray) {
 			tray.destroy();
 			tray = null;
@@ -311,14 +416,13 @@ var handlers = {
 		if (args.Tooltip)
 			tray.setToolTip(String(args.Tooltip));
 
-		if (args.Items)
-			menu = electron.Menu.buildFromTemplate(template(args.Items, function (id) {
-				send('tray', {ID: id, Kind: 'menu'});
-			}));
+		/* Its Items, or the ones of Native.TrayMenu (a NativeMenu of the tray) when it gives none. */
+		if (args.Items !== undefined)
+			trayItems = args.Items || null;
 
-		/* With a window, a click opens it and the menu waits for the right button (macOS would open a menu set on the icon at a click). */
-		if (menu && !args.Window)
-			tray.setContextMenu(menu);
+		trayHasWindow = !!args.Window;
+
+		trayMenu(send);
 
 		tray.on('click', function () {
 			if (args.Window) showTray(!(trayWindow && trayWindow.isVisible()) && Date.now() - trayHidden > 250);
@@ -332,11 +436,52 @@ var handlers = {
 		});
 
 		tray.on('right-click', function () {
-			if (menu && args.Window)
-				tray.popUpContextMenu(menu);
+			if (trayPopup && !trayPopup.isDestroyed()) showTrayPopup(!trayPopup.isVisible() && Date.now() - trayPopupHidden > 250);
+			else if (trayMenuBuilt && trayHasWindow) tray.popUpContextMenu(trayMenuBuilt);
 
 			send('tray', {ID: null, Kind: 'right'});
 		});
+
+		return null;
+	},
+	/* The menu of the icon in the tray in its place: the icon and its window stay. */
+	traymenu: function (args, window, send) {
+		trayItems = args.Items || null;
+
+		if (tray)
+			trayMenu(send);
+
+		return null;
+	},
+	/* The window of the menu of the tray: its size (it measures its list), or shown at the pointer, or hidden. */
+	traypopup: function (args) {
+		if (!trayPopup || trayPopup.isDestroyed())
+			throw new Error('Elemenx Native has no menu of the tray of its own: Native.TrayPopup makes it');
+
+		if (args.Width && args.Height)
+			trayPopup.setContentSize(Math.round(args.Width), Math.round(args.Height));
+
+		if (args.Show !== undefined)
+			showTrayPopup(!!args.Show);
+
+		return null;
+	},
+	/* What the system does for an item of a menu of ElemenxUI with a Role (a NativeMenu drawn by the page). */
+	role: function (args, window) {
+		var contents = window.webContents;
+		var role = String(args.Role || '');
+		var edit = ['undo', 'redo', 'cut', 'copy', 'paste', 'pasteAndMatchStyle', 'delete', 'selectAll'];
+
+		if (edit.indexOf(role) !== -1) contents[role]();
+		else if (role === 'reload' || role === 'forceReload') contents[role === 'reload' ? 'reload' : 'reloadIgnoringCache']();
+		else if (role === 'toggleDevTools') contents.toggleDevTools();
+		else if (role === 'resetZoom') contents.setZoomLevel(0);
+		else if (role === 'zoomIn' || role === 'zoomOut') contents.setZoomLevel(contents.getZoomLevel() + (role === 'zoomIn' ? 0.5 : -0.5));
+		else if (role === 'togglefullscreen') window.setFullScreen(!window.isFullScreen());
+		else if (role === 'minimize') window.minimize();
+		else if (role === 'close') window.close();
+		else if (role === 'quit') app.quit();
+		else throw new Error('Elemenx Native does not know the role ' + role);
 
 		return null;
 	},
@@ -398,16 +543,43 @@ var handlers = {
 		if (process.platform !== 'win32')
 			throw new Error('Elemenx Native thumbnail buttons need Windows');
 
-		return window.setThumbarButtons((args.Buttons || []).slice(0, 7).map(function (button) {
+		var buttons = (args.Buttons || []).slice(0, 7).map(function (button) {
 			return {
 				icon: electron.nativeImage.createFromPath(path.join(root, String(button.Icon || ''))),
 				tooltip: String(button.Tooltip || ''),
-				flags: button.Disabled ? ['disabled'] : ['enabled'],
+				/* An enabled button has no flag: with the flag enabled, Electron 45 refuses all of them. */
+				flags: button.Disabled ? ['disabled'] : undefined,
 				click: function () {
 					send('thumbar', {ID: button.ID});
 				}
 			};
-		}));
+		});
+
+		/* Windows drops the buttons of a window hidden and shown again (in the tray): they come back with it. */
+		if (!window.ElemenxThumbar)
+			window.on('show', function () {
+				window.setThumbarButtons(window.ElemenxThumbar);
+			});
+
+		window.ElemenxThumbar = buttons;
+
+		if (window.setThumbarButtons(buttons)) return true;
+
+		/* A window whose button is not on the taskbar yet (at the start of the program) takes them a moment later. */
+		return new Promise(function (resolve) {
+			var tries = 0;
+			var timer = setInterval(function () {
+				var done = !window.isDestroyed() && window.ElemenxThumbar === buttons && window.setThumbarButtons(buttons);
+
+				tries++;
+
+				if (done || tries >= 20 || window.isDestroyed() || window.ElemenxThumbar !== buttons) {
+					clearInterval(timer);
+
+					resolve(!!done);
+				}
+			}, 250);
+		});
 	},
 	/* The tasks of the jump list that started the program or came since the last call. */
 	tasks: function () {
@@ -479,6 +651,18 @@ var handlers = {
 	}
 };
 
+/*
+ * The menu of the icon in the tray, of its items: set on the icon, or, with a window of the tray, kept for the right
+ * button (macOS would open a menu set on the icon at a click, in the place of the window).
+ */
+function trayMenu (send) {
+	trayMenuBuilt = trayItems ? electron.Menu.buildFromTemplate(template(trayItems, function (id) {
+		send('tray', {ID: id, Kind: 'menu'});
+	})) : null;
+
+	tray.setContextMenu(trayHasWindow || trayPopup ? null : trayMenuBuilt);
+}
+
 /* The window of the tray by its icon, within the screen (above the icon on a taskbar at the bottom, below it at the top), or hidden. */
 function showTray (show) {
 	var icon;
@@ -531,6 +715,137 @@ function holdTray (child) {
 	});
 }
 
+/* The frame of a window: Frame of the settings (system, hidden, none, transparent; true and false of older builds). */
+function frameOf (frame) {
+	if (frame === false) return 'none';
+
+	return ['hidden', 'none', 'transparent'].indexOf(frame) === -1 ? 'system' : frame;
+}
+
+/* The frame a window of the Application asks for in the features of window.open (elemenx-frame=none), or null. */
+function asked (features) {
+	var match = /(?:^|,)elemenx-frame=(\w+)/.exec(String(features || ''));
+
+	return match ? match[1] : null;
+}
+
+/*
+ * The options of a window of a frame: hidden keeps the buttons of the system over the page (Window Controls Overlay: the
+ * page reads their place in env(titlebar-area-*); the traffic lights of macOS inside the page), none draws none,
+ * transparent is none and see-through. A Material (mica, acrylic, tabbed) is the background of Windows 11, the vibrancy
+ * of macOS, under a page that lets it show.
+ */
+function framed (frame, material) {
+	var options = {};
+
+	if (frame === 'hidden') {
+		options.titleBarStyle = 'hidden';
+
+		if (process.platform === 'darwin') options.trafficLightPosition = {x: 12, y: 10};
+		else options.titleBarOverlay = {color: settings.Background || '#ffffff', symbolColor: '#1f1f1f', height: 32};
+	}
+
+	if (frame === 'none' || frame === 'transparent')
+		options.frame = false;
+
+	if (frame === 'transparent') {
+		options.transparent = true;
+		options.backgroundColor = '#00000000';
+	}
+
+	if (material && material !== 'none') {
+		options.backgroundColor = '#00000000';
+
+		if (process.platform === 'win32')
+			options.backgroundMaterial = material;
+
+		if (process.platform === 'darwin')
+			options.vibrancy = 'under-window';
+	}
+
+	return options;
+}
+
+/*
+ * The menu of the system when the Application has none: nothing, its bar of menus (if any) a part of its page; on macOS
+ * the menu of the application and of editing, which the keys of editing and Quit need there.
+ */
+function bareMenu () {
+	return process.platform === 'darwin' ? electron.Menu.buildFromTemplate([{role: 'appMenu'}, {role: 'editMenu'}]) : null;
+}
+
+/* The menu of the tray at the pointer (above it on a taskbar at the bottom), within the screen, or hidden. */
+function showTrayPopup (show) {
+	var point;
+	var size;
+	var area;
+
+	if (!trayPopup || trayPopup.isDestroyed()) return;
+
+	if (!show) {
+		trayPopup.hide();
+
+		return;
+	}
+
+	point = electron.screen.getCursorScreenPoint();
+	size = trayPopup.getBounds();
+	area = electron.screen.getDisplayNearestPoint(point).workArea;
+
+	trayPopup.setPosition(
+		Math.round(Math.max(area.x, Math.min(point.x, area.x + area.width - size.width))),
+		Math.round(Math.max(area.y, Math.min(point.y > area.y + area.height / 2 ? point.y - size.height : point.y, area.y + area.height - size.height)))
+	);
+	trayPopup.show();
+	trayPopup.focus();
+}
+
+/* A window of the Application by its ID: its state goes to the page as the window event with its ID. */
+function holdNamed (child, id, send) {
+	named[id] = child;
+
+	['maximize', 'unmaximize', 'minimize', 'restore', 'enter-full-screen', 'leave-full-screen', 'focus', 'blur'].forEach(function (name) {
+		child.on(name, function () {
+			send('window', Object.assign(state(child), {ID: id}));
+		});
+	});
+
+	child.on('closed', function () {
+		if (named[id] === child)
+			delete named[id];
+	});
+}
+
+/* The window of the cards in the corner of the work area of the screen: the bottom right (the top right on macOS). */
+function placeNotifications () {
+	var area = electron.screen.getPrimaryDisplay().workArea;
+	var bounds = notificationWindow.getBounds();
+
+	notificationWindow.setPosition(Math.round(area.x + area.width - bounds.width), Math.round(process.platform === 'darwin' ? area.y : area.y + area.height - bounds.height));
+}
+
+/* The window of the menu of the tray, made hidden by the page: it hides when it loses the focus, as a menu does. */
+function holdTrayPopup (child) {
+	trayPopup = child;
+
+	child.on('blur', function () {
+		trayPopupHidden = Date.now();
+
+		child.hide();
+	});
+
+	child.on('closed', function () {
+		if (trayPopup === child)
+			trayPopup = null;
+
+		if (tray && !tray.isDestroyed())
+			tray.setContextMenu(trayHasWindow ? null : trayMenuBuilt);
+	});
+
+	if (tray && !tray.isDestroyed())
+		tray.setContextMenu(null);
+}
+
 /* A window the Application opened: it stays on its empty page, and what it would open goes to the browser of the system. */
 function guard (child) {
 	child.webContents.setWindowOpenHandler(function (details) {
@@ -549,14 +864,17 @@ function guard (child) {
 }
 
 function open () {
-	var window = new electron.BrowserWindow({
+	var window = new electron.BrowserWindow(Object.assign({
 		width: settings.Width || 1200,
 		height: settings.Height || 800,
 		title: settings.Name,
-		frame: settings.Frame !== false,
 		backgroundColor: settings.Background || undefined,
-		webPreferences: {contextIsolation: true, sandbox: true, preload: path.join(__dirname, 'preload.js'), additionalArguments: ['--elemenx-features=' + features.join(',')]}
-	});
+		icon: settings.Icon ? path.join(root, settings.Icon) : undefined,
+		webPreferences: {contextIsolation: true, sandbox: true, preload: path.join(__dirname, 'preload.js'), additionalArguments: ['--elemenx-features=' + features.join(','), '--elemenx-frame=' + frameOf(settings.Frame), '--elemenx-material=' + (settings.Material || 'none')]}
+	}, framed(frameOf(settings.Frame), settings.Material)));
+
+	/* The windows its page opened (window.open): they go with the page. */
+	var children = [];
 
 	function send (name, value) {
 		if (!window.isDestroyed())
@@ -572,9 +890,16 @@ function open () {
 	/* A window of the Application (an empty page named elemenx-window-<ID>); a link out of it, in the browser of the system. */
 	window.webContents.setWindowOpenHandler(function (details) {
 		if (details.url === 'about:blank' && /^elemenx-window-[\w-]+$/.test(String(details.frameName)))
-			return {action: 'allow', overrideBrowserWindowOptions: {title: settings.Name, autoHideMenuBar: true, frame: settings.Frame !== false}};
+			return {action: 'allow', overrideBrowserWindowOptions: Object.assign({title: settings.Name, autoHideMenuBar: true}, framed(frameOf(asked(details.features) || settings.Frame), settings.Material))};
 
 		/* The window of the tray: no frame, not on the taskbar, over the others, shown by the icon. */
+		if (details.url === 'about:blank' && details.frameName === 'elemenx-traypopup')
+			return {action: 'allow', overrideBrowserWindowOptions: {title: settings.Name, show: false, frame: false, transparent: true, backgroundColor: '#00000000', hasShadow: false, resizable: false, movable: false, minimizable: false, maximizable: false, fullscreenable: false, skipTaskbar: true, alwaysOnTop: true, width: 240, height: 120}};
+
+		/* The window of the cards of the notifications: see-through, over the others, takes no focus, not on the taskbar. */
+		if (details.url === 'about:blank' && details.frameName === 'elemenx-notifications')
+			return {action: 'allow', overrideBrowserWindowOptions: {title: settings.Name, show: false, frame: false, transparent: true, backgroundColor: '#00000000', hasShadow: false, resizable: false, movable: false, minimizable: false, maximizable: false, fullscreenable: false, focusable: false, skipTaskbar: true, alwaysOnTop: true, width: 360, height: 120}};
+
 		if (details.url === 'about:blank' && details.frameName === 'elemenx-tray')
 			return {action: 'allow', overrideBrowserWindowOptions: {title: settings.Name, show: false, frame: false, resizable: false, movable: false, minimizable: false, maximizable: false, fullscreenable: false, skipTaskbar: true, alwaysOnTop: true}};
 
@@ -584,11 +909,43 @@ function open () {
 		return {action: 'deny'};
 	});
 
+	/*
+	 * The page loads again (a reload, another address): the windows it opened (of the tray, of its menu, of the
+	 * notifications, of the Application) hold its dead content; they close, and the new page opens its own.
+	 */
+	window.webContents.on('did-start-navigation', function (details) {
+		var main = details && details.isMainFrame !== undefined ? details.isMainFrame : arguments[3];
+		var same = details && details.isSameDocument !== undefined ? details.isSameDocument : arguments[2];
+		if (!main || same) return;
+
+		children.splice(0).forEach(function (child) {
+			if (!child.isDestroyed())
+				child.destroy();
+		});
+	});
+
 	window.webContents.on('did-create-window', function (child, details) {
 		guard(child);
 
+		children.push(child);
+
 		if (details && details.frameName === 'elemenx-tray')
 			holdTray(child);
+
+		if (details && details.frameName === 'elemenx-traypopup')
+			holdTrayPopup(child);
+
+		if (details && details.frameName === 'elemenx-notifications') {
+			notificationWindow = child;
+
+			child.on('closed', function () {
+				if (notificationWindow === child)
+					notificationWindow = null;
+			});
+		}
+
+		if (details && /^elemenx-window-[\w-]+$/.test(String(details.frameName)))
+			holdNamed(child, String(details.frameName).replace('elemenx-window-', ''), send);
 	});
 
 	window.webContents.on('will-navigate', function (event, target) {
@@ -625,6 +982,9 @@ function open () {
 }
 
 app.whenReady().then(function () {
+	/* No menu of the system (not the one of Electron, File, Edit, View...) until the Application gives one. */
+	electron.Menu.setApplicationMenu(bareMenu());
+
 	electron.protocol.handle('app', function (request) {
 		var file = path.join(root, decodeURIComponent(new URL(request.url).pathname));
 		if (file !== root && file.indexOf(root + path.sep) !== 0) return new Response('', {status: 403});

@@ -1,0 +1,107 @@
+/*
+ * The cards of the notifications: in their window (see-through, by the corner of the screen) the margins are the
+ * room of their shadows; in the page (Page) they float in its corner.
+ */
+.elemenx-notification-frame {
+	display: contents;
+}
+
+.elemenx-notification-host {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	box-sizing: border-box;
+	width: 360px;
+	max-width: 100%;
+	margin: 0;
+	padding: 12px 16px 20px;
+	font-family: var(--elemenx-font);
+}
+
+.elemenx-notification-host.page {
+	position: fixed;
+	right: 0;
+	bottom: env(safe-area-inset-bottom);
+	z-index: 1300;
+	max-width: calc(100% - 16px);
+	pointer-events: none;
+}
+
+.elemenx-notification {
+	display: flex;
+	align-items: flex-start;
+	gap: 12px;
+	padding: 12px;
+	background: var(--elemenx-surface);
+	border: 1px solid var(--elemenx-border);
+	border-radius: var(--elemenx-radius-large);
+	box-shadow: var(--elemenx-shadow);
+	color: var(--elemenx-text);
+	cursor: default;
+	pointer-events: auto;
+}
+
+.elemenx-notification:focus-visible {
+	outline: 2px solid var(--elemenx-focus);
+}
+
+.elemenx-notification.success {
+	border-inline-start: 3px solid var(--elemenx-success);
+}
+
+.elemenx-notification.warning {
+	border-inline-start: 3px solid var(--elemenx-warning);
+}
+
+.elemenx-notification.danger {
+	border-inline-start: 3px solid var(--elemenx-danger);
+}
+
+.elemenx-notification-image {
+	width: 48px;
+	height: 48px;
+	border-radius: var(--elemenx-radius);
+	object-fit: cover;
+}
+
+.elemenx-notification-icon {
+	display: inline-flex;
+	padding-top: 2px;
+	color: var(--elemenx-accent);
+}
+
+.elemenx-notification-body {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	gap: 2px;
+	min-width: 0;
+}
+
+.elemenx-notification-text {
+	color: var(--elemenx-text-muted);
+	font-size: var(--elemenx-font-size-small);
+}
+
+.elemenx-notification-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin-top: 8px;
+}
+
+.elemenx-notification-close {
+	display: inline-flex;
+	padding: 2px;
+	background: transparent;
+	border: 0;
+	border-radius: var(--elemenx-radius);
+	color: var(--elemenx-text-muted);
+	cursor: pointer;
+}
+
+.elemenx-notification-close:hover,
+.elemenx-notification-close:focus-visible {
+	background: var(--elemenx-surface-hover);
+	outline: none;
+}

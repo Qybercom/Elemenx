@@ -12,7 +12,27 @@ var features = (process.argv.filter(function (argument) {
 	return argument.indexOf('--elemenx-features=') === 0;
 })[0] || '').replace('--elemenx-features=', '').split(',').filter(Boolean);
 
+/* The frame and the material of the window: the page reads them, and its CSS by data-elemenx-frame and data-elemenx-material. */
+var frame = argument('frame') || 'system';
+var material = argument('material') || 'none';
+
 var listeners = {};
+
+function argument (name) {
+	return (process.argv.filter(function (value) {
+		return value.indexOf('--elemenx-' + name + '=') === 0;
+	})[0] || '').replace('--elemenx-' + name + '=', '');
+}
+
+function mark () {
+	document.documentElement.setAttribute('data-elemenx-frame', frame);
+
+	if (material !== 'none')
+		document.documentElement.setAttribute('data-elemenx-material', material);
+}
+
+if (typeof document !== 'undefined' && document.documentElement) mark();
+else if (typeof document !== 'undefined') document.addEventListener('DOMContentLoaded', mark);
 
 electron.ipcRenderer.on('elemenx:native-event', function (event, name, value) {
 	(listeners[name] || []).slice().forEach(function (callback) {
@@ -23,6 +43,8 @@ electron.ipcRenderer.on('elemenx:native-event', function (event, name, value) {
 electron.contextBridge.exposeInMainWorld('ElemenxNative', {
 	Platform: 'electron',
 	System: process.platform,
+	Frame: frame,
+	Material: material,
 	Features: features,
 	Call: function (name, args, callback) {
 		electron.ipcRenderer.invoke('elemenx:native', String(name), args || {}).then(function (result) {

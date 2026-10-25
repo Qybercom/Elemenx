@@ -3,7 +3,7 @@ Elemenx.Component('UIKitPage', {
 	$StyleURL: 'UIKitPage.css',
 	$Title: 'UI Kit - Elemenx',
 	Icons: [
-		'add', 'remove', 'close', 'check', 'edit', 'delete', 'backspace', 'pip', 'save', 'copy', 'paste', 'search', 'filter', 'sort', 'refresh', 'undo', 'redo', 'settings', 'sliders', 'more', 'more-vertical', 'link', 'external', 'download', 'upload', 'send', 'share', 'eye', 'eye-off', 'lock', 'unlock', 'pin', 'star', 'heart', 'bookmark', 'zoom-in', 'zoom-out', 'maximize', 'minimize', 'grip', 'login', 'logout',
+		'add', 'remove', 'close', 'check', 'edit', 'delete', 'backspace', 'pip', 'save', 'copy', 'paste', 'search', 'filter', 'sort', 'refresh', 'undo', 'redo', 'settings', 'sliders', 'more', 'more-vertical', 'link', 'external', 'download', 'upload', 'send', 'share', 'eye', 'eye-off', 'lock', 'unlock', 'pin', 'star', 'heart', 'bookmark', 'zoom-in', 'zoom-out', 'maximize', 'minimize', 'window-minimize', 'window-maximize', 'window-restore', 'grip', 'login', 'logout',
 		'chevron-left', 'chevron-right', 'chevron-up', 'chevron-down', 'chevrons-left', 'chevrons-right', 'chevrons-up-down', 'page-first', 'page-last', 'arrow-left', 'arrow-right', 'arrow-up', 'arrow-down', 'menu', 'home',
 		'file', 'file-text', 'file-code', 'folder', 'folder-open', 'image', 'attachment', 'archive',
 		'info', 'success', 'warning', 'error', 'help', 'bell', 'loader',
@@ -2511,6 +2511,13 @@ Elemenx.Component('UIKitPage', {
 		var now = new Date();
 		var self = this;
 		var hotkeys = this.$Service('Hotkeys');
+
+		var only = (new URLSearchParams(window.location.search).get('sections') || '').split(',').filter(Boolean);
+
+		/* The sections a link names (?sections=Buttons,Forms: a test opens the ones it needs), all of them without one. */
+		this.Shows = function (title) {
+			return !only.length || only.indexOf(title) !== -1;
+		};
 
 		this.PaletteKeys = hotkeys.Format('Mod+K');
 

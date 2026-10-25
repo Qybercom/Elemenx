@@ -137,6 +137,108 @@ describe('Regression: Elemenx.Locale', function () {
 		expect(heard).toEqual(['fr', 'es']);
 	});
 
+	it('starts an Application with Languages in the language of the system among them, or the one chosen before; system forgets it', async function () {
+		var folder = '/embedded/' + unique('system-locales');
+		var key = unique('greeting');
+		var languages = Object.getOwnPropertyDescriptor(Navigator.prototype, 'languages');
+		var applications = [];
+
+		function start (locales) {
+			var component = unique('SystemRoot');
+			var app;
+
+			Elemenx.Component(component, {$Template: '<main class="system-root">{{$T(\'' + key + '\')}}</main>'});
+
+			app = Elemenx.Application(unique('SystemApplication'), {$Component: component, $Mount: '#mount', $Locales: locales});
+
+			applications.push(app);
+
+			return app;
+		}
+
+		function stop () {
+			while (applications.length) applications.pop().$Destroy();
+		}
+
+		Elemenx.Resource(folder + '/en.json', JSON.stringify({[key]: 'Hello'}));
+		Elemenx.Resource(folder + '/fr.json', JSON.stringify({[key]: 'Bonjour'}));
+		Elemenx.Resource(folder + '/de.json', JSON.stringify({[key]: 'Hallo'}));
+
+		/* A browser in Canadian French, then English: the Application has en, fr and de. */
+		Object.defineProperty(navigator, 'languages', {configurable: true, get: function () {
+			return ['fr-CA', 'en-US'];
+		}});
+
+		try {
+			localStorage.removeItem('elemenx-language');
+
+			resetDOM();
+
+			start({URL: folder + '/{language}.json', Languages: ['en', 'fr', 'de']});
+
+			await waitFor(function () {
+				return document.querySelector('.system-root') && document.querySelector('.system-root').textContent === 'Bonjour';
+			});
+
+			expect([Elemenx.Locale.Language(), document.documentElement.lang, Elemenx.Locale.System()]).toEqual(['fr', 'fr', 'fr']);
+
+			/* A choice is remembered: the next start takes it. */
+			await language('de');
+
+			expect(localStorage.getItem('elemenx-language')).toBe('de');
+
+			stop();
+
+			await language('en');
+
+			localStorage.setItem('elemenx-language', 'de');
+
+			resetDOM();
+
+			start({URL: folder + '/{language}.json', Languages: ['en', 'fr', 'de']});
+
+			await waitFor(function () {
+				return document.querySelector('.system-root') && document.querySelector('.system-root').textContent === 'Hallo';
+			});
+
+			/* system forgets it and takes the one of the system again. */
+			await language('system');
+
+			expect([Elemenx.Locale.Language(), localStorage.getItem('elemenx-language')]).toEqual(['fr', null]);
+
+			/* System false keeps the lang of the page. */
+			stop();
+
+			await language('en');
+
+			localStorage.removeItem('elemenx-language');
+
+			resetDOM();
+
+			start({URL: folder + '/{language}.json', Languages: ['en', 'fr', 'de'], System: false});
+
+			await waitFor(function () {
+				return document.querySelector('.system-root') && document.querySelector('.system-root').textContent === 'Hello';
+			});
+
+			expect(Elemenx.Locale.Language()).toBe('en');
+		}
+		finally {
+			stop();
+
+			if (languages)
+				Object.defineProperty(Navigator.prototype, 'languages', languages);
+
+			delete navigator.languages;
+
+			localStorage.removeItem('elemenx-language');
+
+			await language('en');
+
+			localStorage.removeItem('elemenx-language');
+		}
+	});
+
 	it('gives the direction of a language and sets the one of the page', async function () {
 		expect(Elemenx.Locale.Direction('ar')).toBe('rtl');
 		expect(Elemenx.Locale.Direction('he-IL')).toBe('rtl');

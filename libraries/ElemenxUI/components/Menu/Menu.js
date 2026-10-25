@@ -2,7 +2,7 @@
  * A button that opens a multi-level MenuList. Items, and the items its MenuItem children declare after them (a
  * MenuItem with MenuItems inside is a submenu). The select event carries the chosen leaf item (a declared one emits
  * select on its MenuItem too). Sheet: true, or 'auto' (on a narrow or a touch screen), shows the list as a sheet from
- * the bottom of the screen, as on a phone.
+ * the bottom of the screen, as on a phone. Caret false takes away the arrow by the label of the button.
  *
  * Menu is the button and the menu it opens; MenuList is one level of a menu alone (the list, its submenus, its sheet):
  * Menu, ContextMenu and the Ribbon are made of it, and it can be placed under any element of your own.
@@ -26,6 +26,7 @@ Elemenx.Component('Menu', {
 			Size: {Options: ['small', 'medium', 'large'], Description: 'Its size: small, medium or large.'},
 			Placement: {Options: ['bottom-start', 'bottom-end', 'top-start', 'top-end'], Description: 'Where the list opens: bottom-start, bottom-end, top-start...'},
 			Sheet: 'Shows the list as a sheet from the bottom: true, or auto on a narrow or a touch screen.',
+			Caret: 'Shows the arrow by the label of the button (true by default).',
 			Disabled: 'Turns it off: it takes no input and looks so.',
 			Open: 'Shows the list.'
 		},
@@ -39,6 +40,7 @@ Elemenx.Component('Menu', {
 	Size: 'medium',
 	Placement: 'bottom-start',
 	Sheet: false,
+	Caret: true,
 	Disabled: false,
 	Open: false,
 	Declared: [],

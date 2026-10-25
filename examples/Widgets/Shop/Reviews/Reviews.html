@@ -1,0 +1,14 @@
+<div class="shop-reviews">
+	<div class="shop-reviews-head">
+		<Rating [value]="Math.round(Average(Items) * 2) / 2" Half="true" ReadOnly="true" />
+		<span class="elemenx-caption shop-reviews-count">{{Items.length}} reviews</span>
+	</div>
+	<ul class="elemenx-ul shop-reviews-list">
+		<li *for="item of Items" *key="$index">{{item.Stars}}★ {{item.Text}}</li>
+	</ul>
+	<form class="shop-reviews-form" (submit)="Sent">
+		<Rating [value]="Stars" (change)="Rated" />
+		<Input Placeholder="Your review" [value]="Text" (input)="Typed" />
+		<Button Label="Send" Type="submit" />
+	</form>
+</div>

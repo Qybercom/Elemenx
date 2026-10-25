@@ -2,7 +2,8 @@
  * The picture of a person, a team or a product. Image shows a picture; without one, or when it does not load, the
  * avatar is made of the Name (or of Seed): Generate initials (the first letters of the first two words, or Initials of
  * its own: a logo of letters), pattern (a symmetric figure of five by five cells, as code hosts give their users) or
- * shapes (an abstract composition of circles, squares and triangles), always the same for the same name, in a color of
+ * shapes (an abstract composition of circles, squares and triangles) or suprematism (a picture of the Suprematist
+ * Service), always the same for the same name, in a color of
  * the name; Color sets the color of its own. Shape circle, rounded or square; Size small, medium, large, xlarge or a
  * number of pixels. Status puts the dot of a Presence (online, away, busy, dnd, offline, connecting) on its corner.
  */
@@ -17,7 +18,7 @@ Elemenx.Component('Avatar', {
 			Name: 'The name of the person, the team or the product: the initials, the figure and the color come from it.',
 			Image: 'The URL of a picture; the generated avatar shows while it loads or when it fails.',
 			Initials: 'Letters of its own in place of the initials of Name (a logo of letters).',
-			Generate: {Options: ['initials', 'pattern', 'shapes'], Description: 'What the avatar without a picture is made of: initials, pattern (a figure of cells) or shapes.'},
+			Generate: {Options: ['initials', 'pattern', 'shapes', 'suprematism'], Description: 'What the avatar without a picture is made of: initials, pattern (a figure of cells), shapes or suprematism.'},
 			Seed: 'The text the avatar is made of in place of Name (an ID, an email).',
 			Color: 'A CSS color of its own; by default a color of the name.',
 			Shape: {Options: ['circle', 'rounded', 'square'], Description: 'Its shape: default, or round.'},
@@ -38,6 +39,8 @@ Elemenx.Component('Avatar', {
 	Broken: '',
 
 	$OnCreate: function () {
+		var self = this;
+
 		/* FNV-1a: a number of a text, the same in every browser. */
 		function hash (text) {
 			var value = 2166136261;
@@ -71,7 +74,18 @@ Elemenx.Component('Avatar', {
 		}
 
 		this.Kind = function (generate) {
-			return generate === 'pattern' || generate === 'shapes' ? generate : 'initials';
+			return generate === 'pattern' || generate === 'shapes' || generate === 'suprematism' ? generate : 'initials';
+		};
+
+		/* The picture of the Suprematist Service of a seed, the same function for the same seed (*mount draws it once). */
+		this.Suprematist = function (seed) {
+			if (self.Painted && self.Painted.Seed === seed) return self.Painted.Source;
+
+			self.Painted = {Seed: seed, Source: function (element) {
+				element.innerHTML = self.$Service('Suprematist').Generate({Seed: seed, Width: 80, Height: 80, Density: 0.3});
+			}};
+
+			return self.Painted.Source;
 		};
 
 		this.InitialsOf = function (name, initials) {

@@ -1,0 +1,16 @@
+/* A bar of menus: its buttons in a row, and nothing more (the layout around it gives its place, background and border). */
+.elemenx-menu-bar-host {
+	display: contents;
+}
+
+.elemenx-menu-bar {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 2px;
+}
+
+.elemenx-menu-bar-entry {
+	position: relative;
+	display: inline-flex;
+}
