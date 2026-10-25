@@ -407,6 +407,21 @@
 	outline: none;
 }
 
+/*
+ * Its title on two lines at most, its words wrapped at 76 pixels: a title of several words does not take the room of
+ * the other groups, and a long word stays whole.
+ */
+.elemenx-ribbon-group.collapsed .elemenx-ribbon-group-toggle > .elemenx-ribbon-label {
+	display: -webkit-box;
+	min-width: min-content;
+	max-width: 76px;
+	overflow: hidden;
+	white-space: normal;
+	text-align: center;
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 2;
+}
+
 .elemenx-ribbon-group.collapsed .elemenx-ribbon-group-toggle:hover,
 .elemenx-ribbon-group.collapsed.open .elemenx-ribbon-group-toggle {
 	background: var(--elemenx-surface-hover);

@@ -16,7 +16,11 @@ export default defineConfig({
 	expect: {timeout: 10000},
 	workers: process.env.ELEMENX_WORKERS ? Number(process.env.ELEMENX_WORKERS) : (process.env.CI ? 2 : '50%'),
 	forbidOnly: !!process.env.CI,
-	reporter: process.env.CI ? [['list'], ['html', {open: 'never'}]] : 'list',
+	/*
+	 * In CI the github reporter makes every failed test an annotation of its job (its file, line and error): readable
+	 * through the public API of GitHub, where the logs and the reports need the rights of an admin of the repository.
+	 */
+	reporter: process.env.CI ? [['list'], ['github'], ['html', {open: 'never'}]] : 'list',
 	use: {
 		baseURL: 'http://127.0.0.1:4273',
 		channel: 'chrome',

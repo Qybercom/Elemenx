@@ -548,8 +548,65 @@ function packNeeded (name, pack, uses, asked, language) {
 }
 
 /*
+ * A dictionary of a Library (locales/<language>.json) with the phrases the code of a build names only: a key in quotes
+ * ('ui.select.placeholder', in $T, Elemenx.Locale.Text or Key:), or every key under a key built at run time from its
+ * start ('ui.presence.' + status). The keys of a dictionary are its nested names joined by dots; an object of plural
+ * forms is the phrase of its key. Returns the text of the dictionary, minified.
+ */
+function trimDictionary (text, code) {
+	var named = {};
+	var starts = [];
+	var pattern = /['"`](ui\.[A-Za-z0-9_.-]+)['"`](\s*\+)?/g;
+	var match;
+
+	while ((match = pattern.exec(code))) {
+		if (match[2] || match[1].charAt(match[1].length - 1) === '.') starts.push(match[1].replace(/\.?$/, '.'));
+		else named[match[1]] = true;
+	}
+
+	function kept (key) {
+		return named[key] || starts.some(function (start) {
+			return key.indexOf(start) === 0;
+		});
+	}
+
+	function walk (value, prefix) {
+		var result = {};
+		var any = false;
+
+		Object.keys(value).forEach(function (name) {
+			var key = prefix ? prefix + '.' + name : name;
+			var inner;
+
+			if (kept(key)) {
+				result[name] = value[name];
+				any = true;
+			}
+			else if (value[name] && typeof value[name] === 'object') {
+				inner = walk(value[name], key);
+
+				if (inner) {
+					result[name] = inner;
+					any = true;
+				}
+			}
+		});
+
+		return any ? result : null;
+	}
+
+	return JSON.stringify(walk(JSON.parse(text), '') || {});
+}
+
+/* Whether a file of a Library is one of its dictionaries. */
+function dictionary (relative) {
+	return /^locales\/[^/]+\.json$/i.test(String(relative).replace(/\\/g, '/'));
+}
+
+/*
  * The files of the Libraries next to a build in a folder; the paths of their stylesheets. choice {Uses, Packs,
- * Removed}: the packs of a Library its code does not use stay out, their names in Removed[Library] (null: every file).
+ * Removed, Code}: the packs of a Library its code does not use stay out, their names in Removed[Library], and its
+ * dictionaries keep the phrases Code names (null: every file, whole).
  */
 function copyLibraryResources (output, declarations, choice) {
 	var hrefs = [];
@@ -584,7 +641,9 @@ function copyLibraryResources (output, declarations, choice) {
 			var target = path.resolve(output, declaration.Root, resources[ri].Relative);
 
 			fs.mkdirSync(path.dirname(target), {recursive: true});
-			fs.copyFileSync(resources[ri].Source, target);
+
+			if (choice && dictionary(resources[ri].Relative)) fs.writeFileSync(target, trimDictionary(fs.readFileSync(resources[ri].Source, 'utf8'), choice.Code));
+			else fs.copyFileSync(resources[ri].Source, target);
 
 			if (resources[ri].Style)
 				hrefs.push('/' + declaration.Root.replace(/^\/+|\/+$/g, '') + '/' + resources[ri].Relative.replace(/\\/g, '/'));
@@ -703,6 +762,7 @@ function build (project, options) {
 			Roots: roots,
 			Libraries: libraries,
 			Code: (templateBundle ? templateBundle + '\n' : '') + bundle + '\n' + appSource,
+			Full: !!options.full,
 			Uses: ownCode(entities, shared) + '\n' + indexSource + '\n' + appSource,
 			Packs: options.packs || []
 		});
@@ -724,7 +784,7 @@ function build (project, options) {
 
 	copyPublic(project, output, excludedPaths);
 
-	var choice = options.full ? null : {Uses: ownCode(entities, shared) + '\n' + indexSource + '\n' + appSource, Packs: options.packs || [], Removed: {}};
+	var choice = options.full ? null : {Uses: ownCode(entities, shared) + '\n' + indexSource + '\n' + appSource, Packs: options.packs || [], Removed: {}, Code: (templateBundle || '') + '\n' + bundle + '\n' + indexSource + '\n' + appSource};
 	var libraryStyleHrefs = copyLibraryResources(output, libraries, choice);
 
 	Object.keys(choice ? choice.Removed : {}).forEach(function (name) {
@@ -934,6 +994,10 @@ function libraryAssets (job, page) {
 			if (pack && !needed(pack, packs[pack])) return;
 
 			var text = fs.readFileSync(item.Source, 'utf8');
+
+			/* Its dictionaries with the phrases the Application names (whole with --full). */
+			if (!job.Full && dictionary(relative))
+				text = trimDictionary(text, job.Code + '\n' + job.Uses);
 
 			if (item.Style) styles.push({Name: root + '/' + relative, Text: Minify.CSS(text)});
 			else resources.push('Elemenx.Resource(' + JSON.stringify(root + '/' + relative) + ', ' + JSON.stringify(/\.json$/i.test(relative) ? Minify.JSON(text) : /\.txt$/i.test(relative) ? text : Minify.HTML(text)) + ');');

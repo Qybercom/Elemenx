@@ -64,11 +64,12 @@ Elemenx.Service('GameItems', {
 	},
 
 	Place: function (element) {
+		var view = (element.ownerDocument || document).defaultView || window;
 		var rect = element.getBoundingClientRect();
 		var left = rect.right + 8;
-		var top = Math.max(4, Math.min(rect.top, window.innerHeight - 200));
+		var top = Math.max(4, Math.min(rect.top, view.innerHeight - 200));
 
-		if (left + 240 > window.innerWidth && rect.left - 248 >= 0)
+		if (left + 240 > view.innerWidth && rect.left - 248 >= 0)
 			left = rect.left - 248;
 
 		return 'left: ' + Math.round(left) + 'px; top: ' + Math.round(top) + 'px;';

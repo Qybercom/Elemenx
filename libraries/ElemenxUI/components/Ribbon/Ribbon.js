@@ -280,7 +280,8 @@ Elemenx.Component('Ribbon', {
 	 * Shrinks the groups of the current panel until they fit, one step of one group at a time (compact: large buttons
 	 * become small; icons: the labels go; collapsed: one button). The groups of the lowest Priority go through every
 	 * step before a group of a higher one starts; among equal ones the rightmost goes first. The shrinking stops as
-	 * soon as the panel has room; when every group is one button and there is still no room, the panel scrolls.
+	 * soon as the panel has room; when every group is one button and there is still no room, the panel scrolls. A group
+	 * with Keep never shrinks.
 	 */
 	Fit: function () {
 		var root = this.$Element();
@@ -322,7 +323,9 @@ Elemenx.Component('Ribbon', {
 			i++;
 		}
 
-		groups.map(function (group, index) {
+		groups.filter(function (group) {
+			return group.getAttribute('data-keep') !== 'true';
+		}).map(function (group, index) {
 			return {Group: group, Priority: Number(group.getAttribute('data-priority')) || 0, Index: index};
 		}).sort(function (a, b) {
 			return a.Priority - b.Priority || b.Index - a.Index;

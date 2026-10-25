@@ -113,7 +113,7 @@
 			</RibbonTab>
 
 			<RibbonTab ID="insert" KeyTip="N" [title]="$T('builder.insert')">
-				<RibbonGroup Icon="search" Priority="100" [title]="$T('builder.find')">
+				<RibbonGroup Icon="search" Priority="100" Keep="true" [title]="$T('builder.find')">
 					<div class="builder-search">
 						<div class="builder-find">
 							<Input Icon="search" Size="small" Clearable="true" [placeholder]="$T('builder.search')" [value]="Query" (input)="Searched" />

@@ -3,8 +3,9 @@
  * rows: a large RibbonButton takes a whole column, small buttons and other controls stack three to a column.
  * When the Ribbon is too narrow it shrinks its groups step by step, the lowest Priority first and the rightmost of
  * equal ones: large buttons become small, then the labels go, then the group becomes one button (Icon and Title)
- * that opens its commands in a panel. Launcher adds the small button at the corner of the title that opens the full
- * options of the group: event launch.
+ * that opens its commands in a panel. Keep never shrinks the group (a search field, what the tab is for): the panel
+ * scrolls instead once the others are one button each. Launcher adds the small button at the corner of the title that
+ * opens the full options of the group: event launch.
  */
 Elemenx.Component('RibbonGroup', {
 	$TemplateURL: 'RibbonGroup.html',
@@ -19,6 +20,7 @@ Elemenx.Component('RibbonGroup', {
 			Title: 'The title under the group.',
 			Icon: 'The icon of the group when it shrinks into one button.',
 			Priority: 'The order of shrinking: the lowest first.',
+			Keep: 'Never shrinks: the panel scrolls instead.',
 			Launcher: 'Adds the button at the corner of the title (event launch).'
 		},
 		Sample: {Title: 'Clipboard', Icon: 'paste', Priority: 2, Launcher: true}
@@ -27,6 +29,7 @@ Elemenx.Component('RibbonGroup', {
 	Icon: '',
 	KeyTip: '',
 	Priority: 0,
+	Keep: false,
 	Launcher: false,
 	Open: false,
 

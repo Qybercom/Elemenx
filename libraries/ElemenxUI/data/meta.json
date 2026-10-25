@@ -6106,6 +6106,15 @@
 					"Description": "The order of shrinking: the lowest first."
 				},
 				{
+					"Name": "Keep",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Never shrinks: the panel scrolls instead."
+				},
+				{
 					"Name": "Launcher",
 					"Type": "bool",
 					"Default": false,

@@ -13,7 +13,7 @@
  * Group}) and takes what is dropped on it (Accept: the Types it takes, ['game-item'] by default; [] takes nothing):
  * drop carries {Item, From, To, Current} (Current is Data) and the owner moves the item, with GameItems.Move.
  * The pointer or the focus on a slot whose Data has more than a name (Description, Type, Rarity, Stats) shows its card
- * (GameItemCard), as in an inventory; a scroll hides it.
+ * (GameItemCard), as in an inventory; it follows the slot when the page scrolls.
  */
 Elemenx.Component('GameSlot', {
 	$TemplateURL: 'GameSlot.html',
@@ -123,16 +123,19 @@ Elemenx.Component('GameSlot', {
 			this.Hotkeys().Unbind(own.Binding);
 	},
 
-	/* The card of what the slot holds, beside it; a scroll of the page hides it. */
+	/* The card of what the slot holds, beside it; a scroll of the page takes it along with the slot. */
 	ShowCard: function (event, node) {
 		var self = this;
 		var own = this.Own();
 		var items = this.$Service('GameItems');
 		if (!items.Carded(this.Data)) return;
 
+		own.Node = node;
+
 		if (!own.Scroll) {
 			own.Scroll = function () {
-				self.HideCard();
+				if (own.Node)
+					self.CardStyle = items.Place(own.Node);
 			};
 
 			own.View = (this.$Element().ownerDocument || document).defaultView || window;
@@ -153,6 +156,7 @@ Elemenx.Component('GameSlot', {
 			own.Scroll = null;
 		}
 
+		own.Node = null;
 		this.CardOpen = false;
 	},
 

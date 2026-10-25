@@ -224,9 +224,35 @@ describe('Elemenx dist', function () {
 
 			expect(copied('data/cities.txt')).toBe(true);
 			expect(copied('icons/files.svg')).toBe(true);
+			expect(fs.readFileSync(path.join(target, 'libraries', 'ElemenxUI', 'locales', 'en.json'), 'utf8')).toBe(fs.readFileSync(path.join(process.cwd(), 'libraries', 'ElemenxUI', 'locales', 'en.json'), 'utf8'));
 		}
 		finally {
 			fs.rmSync(target, {recursive: true, force: true});
+		}
+	});
+
+	it('keeps in the dictionaries of ElemenxUI the phrases the build names, by their key or the start of one', function () {
+		var project = fs.mkdtempSync(path.join(os.tmpdir(), 'elemenx-dictionary-'));
+		var target = path.join(project, 'dist');
+		var app = path.join(project, 'app.js');
+		var dictionary;
+
+		try {
+			fs.cpSync(path.resolve(process.cwd(), 'tests', 'dist', 'single-project'), project, {recursive: true});
+
+			/* The code of the Application names a phrase, and phrases by the start of their key. */
+			fs.appendFileSync(app, '\nElemenx.Locale.Text(\'ui.common.close\');\nvar status = function (name) { return Elemenx.Locale.Text(\'ui.presence.\' + name); };\n');
+
+			Builder.Build(project, {out: 'dist'});
+
+			dictionary = JSON.parse(fs.readFileSync(path.join(target, 'libraries', 'ElemenxUI', 'locales', 'ru.json'), 'utf8'));
+
+			expect(Object.keys(dictionary.ui).sort()).toEqual(['badge', 'common', 'presence']);
+			expect(Object.keys(dictionary.ui.common)).toEqual(['close']);
+			expect(Object.keys(dictionary.ui.presence).length).toBe(Object.keys(JSON.parse(fs.readFileSync(path.join(process.cwd(), 'libraries', 'ElemenxUI', 'locales', 'ru.json'), 'utf8')).ui.presence).length);
+		}
+		finally {
+			fs.rmSync(project, {recursive: true, force: true});
 		}
 	});
 

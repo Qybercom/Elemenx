@@ -131,7 +131,7 @@ Elemenx.Component('GameInventory', {
 
 	/*
 	 * Shows the card of the item of a cell next to it, on the side with room. The card is fixed to the viewport, so a
-	 * window or a panel that scrolls its content does not cut it; a scroll of the page hides it.
+	 * window or a panel that scrolls its content does not cut it; it follows the cell when the page scrolls.
 	 */
 	ShowCard: function (index) {
 		var self = this;
@@ -144,9 +144,12 @@ Elemenx.Component('GameInventory', {
 			return;
 		}
 
+		own.Cell = cell;
+
 		if (!own.Scroll) {
 			own.Scroll = function () {
-				self.HideCard();
+				if (own.Cell && own.Cell.isConnected)
+					self.CardStyle = self.$Service('GameItems').Place(own.Cell);
 			};
 
 			own.View = (this.$Element().ownerDocument || document).defaultView || window;
@@ -167,6 +170,7 @@ Elemenx.Component('GameInventory', {
 			own.Scroll = null;
 		}
 
+		own.Cell = null;
 		this.Card = -1;
 	},
 

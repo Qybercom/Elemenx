@@ -1,4 +1,4 @@
-<div class="elemenx-ribbon-group" role="group" [attribute.aria-label]="Title" [attribute.data-priority]="Priority" [class.open]="Open">
+<div class="elemenx-ribbon-group" role="group" [attribute.aria-label]="Title" [attribute.data-priority]="Priority" [attribute.data-keep]="Keep && Keep !== 'false' ? 'true' : null" [class.open]="Open">
 	<button class="elemenx-ribbon-group-toggle" type="button" aria-haspopup="true" [attribute.aria-expanded]="String(Open)" [attribute.data-keytip]="KeyTip || null" (click)="Toggle">
 		<Icon [name]="Icon || 'more'" Size="24" />
 		<span class="elemenx-ribbon-label">{{Title}}</span>

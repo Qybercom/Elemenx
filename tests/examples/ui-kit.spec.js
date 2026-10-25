@@ -6074,6 +6074,19 @@ for (const origin of origins) {
 				return [card.width, card.left >= slot.right || card.right <= slot.left];
 			})).toEqual([240, true]);
 
+			/* A scroll of the page that leaves the pointer on the slot takes the card along with it. */
+			await page.evaluate(function () {
+				window.scrollBy(0, 10);
+			});
+
+			await expect.poll(function () {
+				return game.getByRole('button', {name: 'Fireball'}).evaluate(function (node) {
+					var card = node.querySelector('.elemenx-game-inventory-card');
+
+					return card ? Math.round(card.getBoundingClientRect().top - Math.max(4, Math.min(node.getBoundingClientRect().top, window.innerHeight - 200))) + 0 : null;
+				});
+			}).toBe(0);
+
 			await page.mouse.move(0, 0);
 
 			await expect(game.locator('.elemenx-game-slot .elemenx-game-inventory-card')).toHaveCount(0);

@@ -1387,6 +1387,38 @@ test.describe('Elemenx builder', function () {
 		expect(errors).toEqual([]);
 	});
 
+	test('keeps the search of the Insert tab whatever the width and the language: the other groups shrink, then the panel scrolls', async function ({ page }) {
+		var errors = captureErrors(page);
+		var panel = page.locator('.elemenx-ribbon-panel').filter({visible: true});
+
+		await open(page);
+
+		/* Longer titles than the English ones, on a window narrower than the groups even shrunk. */
+		await page.locator('.builder-language .elemenx-select').click();
+		await page.getByRole('option', {name: 'Русский'}).click();
+
+		await expect(page.locator('.elemenx-ribbon-tab').filter({hasText: 'Вставка'})).toHaveCount(1);
+
+		for (var width of [1280, 900]) {
+			await page.setViewportSize({width: width, height: 800});
+
+			await expect(page.locator('.builder-find input')).toBeVisible();
+			await expect(panel.locator('.elemenx-ribbon-group.collapsed').first()).toBeVisible();
+			await expect(panel.locator('.elemenx-ribbon-group[data-keep="true"]')).not.toHaveClass(/\bcollapsed\b/);
+		}
+
+		await expect(panel).toHaveClass(/\boverflowing\b/);
+
+		/* A title of several words on two lines, a long word whole. */
+		expect(await panel.locator('.elemenx-ribbon-group.collapsed .elemenx-ribbon-group-toggle > .elemenx-ribbon-label').evaluateAll(function (labels) {
+			return labels.every(function (label) {
+				return label.scrollWidth <= label.clientWidth + 1;
+			});
+		})).toBe(true);
+
+		expect(errors).toEqual([]);
+	});
+
 	test('opens a group of the Ribbon over the canvas, its rulers and the handles of the panels', async function ({ page }) {
 		var errors = captureErrors(page);
 		var covered;

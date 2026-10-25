@@ -19,6 +19,7 @@
 - **Components** the Application does not render: the build follows the tags of its templates, then the templates of the components it took.
 - **Services, guards and directives** it does not name: it keeps the ones named in quotes in its code (`$Service('Toast')`, `Guards: ['SignedIn']`) and the directives its templates put on elements, and the ones these use in turn.
 - **Files of the libraries**: of the packs (emoji, cities, icon sets, game themes) a build in a folder copies the ones the Application uses, with every language of them (see below).
+- **Phrases of the libraries**: their dictionaries keep the phrases the code of the build names, by their key or the start of one.
 - **Parts of the framework**: Router, Network, Storage, Events, Messaging, WebWorker and ServiceWorker stay only when the code of the build uses them (`$Router`, `$Network`, `$Storage`, `$Events` or `$OnEvent`, `$Messaging` or `$OnMessage`, `$WebWorker`, `$ServiceWorker`, `Elemenx.Network`...). Messaging keeps Events; an Application with workers keeps all of the framework, since their scripts are files the build does not read.
 
 The build says what it left out. A name built at run time (`$Service(name)`) cannot show a use: name it in quotes somewhere, or build with `--full`, which keeps all of the framework and every file of the libraries.

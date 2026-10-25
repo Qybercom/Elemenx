@@ -48,9 +48,11 @@ test.describe('elemenx build --widget', function () {
 		expect(script).not.toContain('Elemenx.Splash=');
 		expect(script).not.toContain('Elemenx.Install=');
 
-		/* Nor what the components tell the tools of themselves ($Meta): the widget asks nothing of it. Its dictionaries of ElemenxUI go in whole. */
+		/* Nor what the components tell the tools of themselves ($Meta), nor the phrases of the components it does not use. */
 		expect(script).not.toContain('Two panes with a draggable divider.');
-		expect(Buffer.byteLength(script)).toBeLessThan(352 * 1024);
+		expect(script).toContain('Nothing found');
+		expect(script).not.toContain('pwaShortName');
+		expect(Buffer.byteLength(script)).toBeLessThan(320 * 1024);
 
 		/* The game themes are packs: the widget names none of them, so they stay out. */
 		expect(script).not.toContain('themes/fantasy.css');
