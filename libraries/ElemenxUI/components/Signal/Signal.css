@@ -1,0 +1,45 @@
+/* The bars of a signal: as tall as the text beside them, the lit ones in the color of the level, the others dim. */
+.elemenx-signal {
+	display: inline-flex;
+	flex: none;
+	align-items: flex-end;
+	gap: 2px;
+	height: 12px;
+	vertical-align: middle;
+}
+
+.elemenx-signal.small {
+	gap: 1px;
+	height: 10px;
+}
+
+.elemenx-signal-bar {
+	width: 3px;
+	min-height: 2px;
+	background: rgba(var(--elemenx-text-rgb), 0.24);
+	border-radius: 1px;
+}
+
+.elemenx-signal.small .elemenx-signal-bar {
+	width: 2px;
+}
+
+.elemenx-signal.success .elemenx-signal-bar.on {
+	background: var(--elemenx-success);
+}
+
+.elemenx-signal.warning .elemenx-signal-bar.on {
+	background: var(--elemenx-warning);
+}
+
+.elemenx-signal.danger .elemenx-signal-bar.on {
+	background: var(--elemenx-danger);
+}
+
+.elemenx-signal.accent .elemenx-signal-bar.on {
+	background: var(--elemenx-accent);
+}
+
+.elemenx-signal.muted .elemenx-signal-bar.on {
+	background: var(--elemenx-text-muted);
+}

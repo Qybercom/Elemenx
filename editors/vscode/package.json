@@ -1,0 +1,107 @@
+{
+	"name": "elemenx",
+	"displayName": "Elemenx",
+	"description": "Completion, hover, go to definition, diagnostics and the syntax of the templates of Elemenx and ElemenxUI.",
+	"version": "1.0.1",
+	"publisher": "qybercom",
+	"license": "LGPL-3.0-only",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/Qybercom/Elemenx"
+	},
+	"engines": {
+		"vscode": "^1.80.0"
+	},
+	"categories": [
+		"Programming Languages",
+		"Snippets"
+	],
+	"keywords": [
+		"elemenx",
+		"elemenxui",
+		"templates",
+		"components"
+	],
+	"main": "./extension.js",
+	"activationEvents": [
+		"onLanguage:html",
+		"onLanguage:javascript",
+		"workspaceContains:**/elemenx.config.js"
+	],
+	"contributes": {
+		"commands": [
+			{
+				"command": "elemenx.refresh",
+				"title": "Elemenx: Read the project again"
+			}
+		],
+		"configuration": {
+			"title": "Elemenx",
+			"properties": {
+				"elemenx.meta": {
+					"type": "string",
+					"default": "",
+					"description": "A meta.json of a Library (elemenx meta), beside the ones the project has."
+				},
+				"elemenx.diagnostics": {
+					"type": "boolean",
+					"default": true,
+					"description": "Marks the unknown Components, props, events and directives of the templates."
+				}
+			}
+		},
+		"grammars": [
+			{
+				"scopeName": "elemenx.template.components",
+				"path": "./syntaxes/elemenx-components.json",
+				"injectTo": [
+					"text.html.basic",
+					"text.html.derivative",
+					"source.js",
+					"source.js.jsx",
+					"source.ts"
+				]
+			},
+			{
+				"scopeName": "elemenx.template.attributes",
+				"path": "./syntaxes/elemenx-attributes.json",
+				"injectTo": [
+					"text.html.basic",
+					"text.html.derivative",
+					"source.js",
+					"source.js.jsx",
+					"source.ts"
+				],
+				"embeddedLanguages": {
+					"meta.embedded.inline.js.elemenx": "javascript"
+				}
+			},
+			{
+				"scopeName": "elemenx.template.interpolation",
+				"path": "./syntaxes/elemenx-interpolation.json",
+				"injectTo": [
+					"text.html.basic",
+					"text.html.derivative",
+					"source.js",
+					"source.js.jsx",
+					"source.ts"
+				],
+				"embeddedLanguages": {
+					"meta.embedded.inline.js.elemenx": "javascript"
+				}
+			},
+			{
+				"scopeName": "elemenx.template.javascript",
+				"path": "./syntaxes/elemenx-js-templates.json",
+				"injectTo": [
+					"source.js",
+					"source.js.jsx",
+					"source.ts"
+				],
+				"embeddedLanguages": {
+					"text.html.elemenx": "html"
+				}
+			}
+		]
+	}
+}

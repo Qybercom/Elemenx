@@ -83,3 +83,10 @@
 		grid-template-columns: 1fr 1fr;
 	}
 }
+
+/* The places of the Buttons: their data, no box of their own. */
+.elemenx-designer-settings-add-route,
+.elemenx-designer-settings-remove-guard,
+.elemenx-designer-settings-add-guard {
+	display: contents;
+}

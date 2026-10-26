@@ -1,0 +1,16 @@
+<div class="elemenx-call-stage" [class]="[Layout || 'grid']" [class.side]="!!Side" role="region" [attribute.aria-label]="$T('ui.call.stage')" [attribute.data-page]="Paged(Page, PerPage)">
+	<div class="elemenx-call-stage-status"><slot name="status"></slot></div>
+	<div class="elemenx-call-stage-body">
+		<div class="elemenx-call-stage-area">
+			<div class="elemenx-call-stage-main"><slot name="main"></slot></div>
+			<div class="elemenx-call-stage-participants" [style.--elemenx-call-columns]="Columns(Count, Layout, PerPage)"><slot name="participants"></slot></div>
+			<div class="elemenx-call-stage-pages" *if="Layout === 'grid' && HasPages(Count, PerPage)">
+				<Button Variant="ghost" Shape="round" Icon="chevron-left" [title]="$T('ui.common.previous')" [disabled]="!Page" (click)="Previous" />
+				<Button Variant="ghost" Shape="round" Icon="chevron-right" [title]="$T('ui.common.next')" [disabled]="Last(Count, PerPage, Page)" (click)="Next" />
+			</div>
+			<div class="elemenx-call-stage-self" [class]="[Corner || 'bottom-right']" (pointerdown)="Grabbed" (pointermove)="Dragged" (pointerup)="Dropped" (pointercancel)="Dropped"><slot name="self"></slot></div>
+		</div>
+		<aside class="elemenx-call-stage-side"><slot name="side"></slot></aside>
+	</div>
+	<div class="elemenx-call-stage-controls"><slot name="controls"></slot></div>
+</div>

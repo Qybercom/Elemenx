@@ -38,6 +38,7 @@ test.describe('Elemenx documentation: every page', function () {
 				var i = 0;
 				var id;
 				var state;
+				var started;
 
 				test.setTimeout(240000);
 
@@ -64,18 +65,27 @@ test.describe('Elemenx documentation: every page', function () {
 
 					await page.waitForTimeout(600);
 
-					state = await page.evaluate(function () {
-						return {
-							Failures: Array.prototype.map.call(document.querySelectorAll('.docs-example .elemenx-callout.danger'), function (node) {
-								return node.textContent;
-							}),
-							Missing: !!document.querySelector('.docs-missing'),
-							Fallback: !!document.querySelector('.docs-fallback'),
-							Empty: Array.prototype.filter.call(document.querySelectorAll('.docs-example-result'), function (node) {
-								return !node.innerText.trim() && !node.querySelector('svg, img, canvas, input, button, textarea');
-							}).length
-						};
-					});
+					/* Read again while it is not clean, for up to 15 seconds: a busy page draws its examples late (regression: one look found one empty). */
+					started = Date.now();
+					state = null;
+
+					do {
+						if (state)
+							await page.waitForTimeout(250);
+
+						state = await page.evaluate(function () {
+							return {
+								Failures: Array.prototype.map.call(document.querySelectorAll('.docs-example .elemenx-callout.danger'), function (node) {
+									return node.textContent;
+								}),
+								Missing: !!document.querySelector('.docs-missing'),
+								Fallback: !!document.querySelector('.docs-fallback'),
+								Empty: Array.prototype.filter.call(document.querySelectorAll('.docs-example-result'), function (node) {
+									return !node.innerText.trim() && !node.querySelector('svg, img, canvas, input, button, textarea');
+								}).length
+							};
+						});
+					} while ((state.Failures.length || state.Missing || state.Fallback || state.Empty) && Date.now() - started < 15000);
 
 					if (state.Failures.length || state.Missing || state.Fallback || state.Empty || errors.length)
 						problems.push(id + ': ' + JSON.stringify({Failures: state.Failures, Missing: state.Missing, Fallback: state.Fallback, Empty: state.Empty, Errors: errors.slice()}));

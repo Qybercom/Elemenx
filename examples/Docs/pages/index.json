@@ -443,6 +443,34 @@
 					"Group": "data"
 				},
 				{
+					"ID": "CallControls",
+					"Title": {
+						"en": "CallControls"
+					},
+					"Group": "social"
+				},
+				{
+					"ID": "CallInvite",
+					"Title": {
+						"en": "CallInvite"
+					},
+					"Group": "social"
+				},
+				{
+					"ID": "CallStage",
+					"Title": {
+						"en": "CallStage"
+					},
+					"Group": "layout"
+				},
+				{
+					"ID": "CallTile",
+					"Title": {
+						"en": "CallTile"
+					},
+					"Group": "social"
+				},
+				{
 					"ID": "Card",
 					"Title": {
 						"en": "Card"
@@ -504,6 +532,13 @@
 						"en": "Checkbox"
 					},
 					"Group": "inputs"
+				},
+				{
+					"ID": "Chronicle",
+					"Title": {
+						"en": "Chronicle"
+					},
+					"Group": "data"
 				},
 				{
 					"ID": "CityInput",
@@ -765,6 +800,13 @@
 					"Group": "game"
 				},
 				{
+					"ID": "GameBuilding",
+					"Title": {
+						"en": "GameBuilding"
+					},
+					"Group": "game"
+				},
+				{
 					"ID": "GameDialogue",
 					"Title": {
 						"en": "GameDialogue"
@@ -800,6 +842,13 @@
 					"Group": "game"
 				},
 				{
+					"ID": "GameLayer",
+					"Title": {
+						"en": "GameLayer"
+					},
+					"Group": "game"
+				},
+				{
 					"ID": "GameLeaderboard",
 					"Title": {
 						"en": "GameLeaderboard"
@@ -821,6 +870,13 @@
 					"Group": "game"
 				},
 				{
+					"ID": "GameObject",
+					"Title": {
+						"en": "GameObject"
+					},
+					"Group": "game"
+				},
+				{
 					"ID": "GameQuests",
 					"Title": {
 						"en": "GameQuests"
@@ -838,6 +894,27 @@
 					"ID": "GameTabs",
 					"Title": {
 						"en": "GameTabs"
+					},
+					"Group": "game"
+				},
+				{
+					"ID": "GameTerrain",
+					"Title": {
+						"en": "GameTerrain"
+					},
+					"Group": "game"
+				},
+				{
+					"ID": "GameUnit",
+					"Title": {
+						"en": "GameUnit"
+					},
+					"Group": "game"
+				},
+				{
+					"ID": "GameWorld",
+					"Title": {
+						"en": "GameWorld"
 					},
 					"Group": "game"
 				},
@@ -1199,6 +1276,13 @@
 					"Group": "layout"
 				},
 				{
+					"ID": "Signal",
+					"Title": {
+						"en": "Signal"
+					},
+					"Group": "display"
+				},
+				{
 					"ID": "Skeleton",
 					"Title": {
 						"en": "Skeleton"
@@ -1335,6 +1419,34 @@
 					"ID": "Timeline",
 					"Title": {
 						"en": "Timeline"
+					},
+					"Group": "data"
+				},
+				{
+					"ID": "TimelineLane",
+					"Title": {
+						"en": "TimelineLane"
+					},
+					"Group": "data"
+				},
+				{
+					"ID": "TimelineMark",
+					"Title": {
+						"en": "TimelineMark"
+					},
+					"Group": "data"
+				},
+				{
+					"ID": "TimelineProgress",
+					"Title": {
+						"en": "TimelineProgress"
+					},
+					"Group": "data"
+				},
+				{
+					"ID": "TimelineRange",
+					"Title": {
+						"en": "TimelineRange"
 					},
 					"Group": "data"
 				},
@@ -1520,6 +1632,18 @@
 					}
 				},
 				{
+					"ID": "GameLoop",
+					"Title": {
+						"en": "GameLoop"
+					}
+				},
+				{
+					"ID": "GameMaps",
+					"Title": {
+						"en": "GameMaps"
+					}
+				},
+				{
 					"ID": "Gamepad",
 					"Title": {
 						"en": "Gamepad"
@@ -1568,6 +1692,12 @@
 					}
 				},
 				{
+					"ID": "Pathfinding",
+					"Title": {
+						"en": "Pathfinding"
+					}
+				},
+				{
 					"ID": "Permissions",
 					"Title": {
 						"en": "Permissions"
@@ -1592,6 +1722,12 @@
 					}
 				},
 				{
+					"ID": "Random",
+					"Title": {
+						"en": "Random"
+					}
+				},
+				{
 					"ID": "Reveal",
 					"Title": {
 						"en": "Reveal"
@@ -1607,6 +1743,12 @@
 					"ID": "Serial",
 					"Title": {
 						"en": "Serial"
+					}
+				},
+				{
+					"ID": "Spatial",
+					"Title": {
+						"en": "Spatial"
 					}
 				},
 				{
@@ -1643,6 +1785,12 @@
 					"ID": "USB",
 					"Title": {
 						"en": "USB"
+					}
+				},
+				{
+					"ID": "Visibility",
+					"Title": {
+						"en": "Visibility"
 					}
 				},
 				{

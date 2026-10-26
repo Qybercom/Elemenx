@@ -5,7 +5,7 @@
 <script>
 ({
 	View: 'month',
-	Note: 'Drag an event to another day; switch to the week to drag it in time.',
+	Note: 'Drag an event to another day; switch to the week to drag it in time, to the quarter to plan.',
 	Events: [],
 
 	$OnCreate: function () {
@@ -21,12 +21,21 @@
 			{ID: 1, Title: 'Planning', Start: day(0, '10:00'), End: day(0, '11:30'), Color: '#3f6c9e'},
 			{ID: 2, Title: 'Review', Start: day(1, '14:00'), End: day(1, '15:00'), Color: '#b4483f'},
 			{ID: 3, Title: 'Conference', Start: day(3), End: day(5), AllDay: true, Color: '#3d7a54'},
-			{ID: 4, Title: 'Release', Start: day(7, '09:00'), End: day(7, '10:00')}
+			{ID: 4, Title: 'Release', Start: day(7, '09:00'), End: day(7, '10:00')},
+			{ID: 5, Title: 'Night deploy', Start: day(2, '20:00'), End: day(3, '09:00'), Color: '#b8860b'},
+			{ID: 6, Title: 'Gym', Start: day(1, '07:00'), End: day(1, '08:00'), Repeat: 'FREQ=WEEKLY;BYDAY=TU,TH;COUNT=10'}
 		];
 	},
 
 	Moved: function (event) {
 		var id = event.Event.ID;
+
+		/* An occurrence of a recurring event: here it is only told (an owner moves the series, or that day alone). */
+		if (event.Occurrence) {
+			this.Note = event.Event.Title + ' of ' + event.Occurrence + ' moved to ' + event.Start;
+
+			return;
+		}
 
 		this.Events = this.Events.map(function (item) {
 			return item.ID === id ? {ID: item.ID, Title: item.Title, Start: event.Start, End: event.End, AllDay: item.AllDay, Color: item.Color} : item;

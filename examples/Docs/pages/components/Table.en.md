@@ -9,6 +9,7 @@ A data table. Columns: [{Key, Title, Width, MinWidth, Align (left, center, right
 | --- | --- |
 | `Columns` | `[]` |
 | `Rows` | `[]` |
+| `Label` | `''` |
 | `RowKey` | `'ID'` |
 | `Sort` | `null` |
 | `SortLocal` | `true` |

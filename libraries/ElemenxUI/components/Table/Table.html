@@ -1,14 +1,11 @@
 <div class="elemenx-table-box">
 	<div class="elemenx-table-wrap" [style.max-height]="Height || null" [class.scrolling]="!!Height">
-		<table class="elemenx-table" [class]="[Compact ? 'compact' : '', Striped ? 'striped' : '', Bordered ? 'bordered' : '', Sticky ? 'sticky' : '', Selectable !== 'none' ? 'selectable' : '', Tree ? 'tree' : '']" [attribute.role]="Tree ? 'treegrid' : null" [attribute.aria-multiselectable]="Selectable === 'multiple' ? 'true' : null">
+		<table class="elemenx-table" [class]="[Compact ? 'compact' : '', Striped ? 'striped' : '', Bordered ? 'bordered' : '', Sticky ? 'sticky' : '', Selectable !== 'none' ? 'selectable' : '', Tree ? 'tree' : '']" [attribute.role]="Tree ? 'treegrid' : null" [attribute.aria-multiselectable]="Selectable === 'multiple' ? 'true' : null" [attribute.aria-label]="Label || null">
 			<caption *if="Caption">{{Caption}}</caption>
 			<thead>
 				<tr>
 					<th class="elemenx-table-check" *if="Selectable === 'multiple'">
-						<label class="elemenx-check" [class.checked]="AllSelected(Paged(Entries(Rows, Sort, SortLocal, Filters, FilterLocal, Expanded, Tree), Page, PageSize, PageLocal), Selected)" [class.indeterminate]="!AllSelected(Paged(Entries(Rows, Sort, SortLocal, Filters, FilterLocal, Expanded, Tree), Page, PageSize, PageLocal), Selected) && (Selected || []).length > 0">
-							<input class="elemenx-check-input" type="checkbox" [attribute.aria-label]="$T('ui.table.selectAll')" [checked]="AllSelected(Paged(Entries(Rows, Sort, SortLocal, Filters, FilterLocal, Expanded, Tree), Page, PageSize, PageLocal), Selected)" (change)="CheckAll" />
-							<span class="elemenx-check-box"><Icon Name="check" Size="12" /><Icon Name="remove" Size="12" /></span>
-						</label>
+						<span class="elemenx-table-check-box" (change)="CheckAll"><Checkbox Size="small" [label]="$T('ui.table.selectAll')" [checked]="AllSelected(Paged(Entries(Rows, Sort, SortLocal, Filters, FilterLocal, Expanded, Tree), Page, PageSize, PageLocal), Selected)" [indeterminate]="!AllSelected(Paged(Entries(Rows, Sort, SortLocal, Filters, FilterLocal, Expanded, Tree), Page, PageSize, PageLocal), Selected) && (Selected || []).length > 0" /></span>
 					</th>
 					<th *for="column of Columns" *key="column.Key" *resizable="column.Resizable === false ? '' : {Edges: 'right', MinWidth: column.MinWidth || 48}" scope="col" [class]="['align-' + (column.Align || 'left')]" [style.width]="Widths[column.Key] || column.Width || null" [attribute.aria-sort]="AriaSort(Sort, column)" [attribute.data-key]="column.Key" (resizeend)="Resized">
 						<button class="elemenx-table-sort" type="button" *if="column.Sortable" [attribute.data-key]="column.Key" (click)="SortBy"><span>{{column.Title}}</span><Icon [name]="SortIcon(Sort, column)" Size="12" /></button>
@@ -32,10 +29,7 @@
 			<tbody>
 				<tr *for="entry of Paged(Entries(Rows, Sort, SortLocal, Filters, FilterLocal, Expanded, Tree), Page, PageSize, PageLocal)" *key="String(entry.Row[RowKey])" [class.selected]="IsSelected(Selected, entry.Row)" [attribute.tabindex]="Selectable === 'none' && !Tree ? null : 0" [attribute.aria-selected]="Selectable === 'none' ? null : String(IsSelected(Selected, entry.Row))" [attribute.aria-level]="Tree ? entry.Depth + 1 : null" [attribute.aria-expanded]="Tree && entry.Children ? String(entry.Open) : null" [attribute.data-key]="String(entry.Row[RowKey])" (click)="RowClick" (dblclick)="Activate" (keydown)="Key">
 					<td class="elemenx-table-check" *if="Selectable === 'multiple'">
-						<label class="elemenx-check" [class.checked]="IsSelected(Selected, entry.Row)" (click)="Stop">
-							<input class="elemenx-check-input" type="checkbox" [attribute.aria-label]="$T('ui.table.selectRow')" [checked]="IsSelected(Selected, entry.Row)" (change)="CheckRow" />
-							<span class="elemenx-check-box"><Icon Name="check" Size="12" /><Icon Name="remove" Size="12" /></span>
-						</label>
+						<span class="elemenx-table-check-box" (click)="Stop" (change)="CheckRow"><Checkbox Size="small" [label]="$T('ui.table.selectRow')" [checked]="IsSelected(Selected, entry.Row)" /></span>
 					</td>
 					<td *for="column of Columns" *key="column.Key" [class]="['align-' + (column.Align || 'left')]">
 						<span class="elemenx-table-tree" *if="Tree && $index === 0" [style.--elemenx-table-depth]="entry.Depth">

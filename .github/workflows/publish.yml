@@ -45,8 +45,11 @@ jobs:
     name: npm and GitHub release
     needs: test
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 40
     environment: npm
+    # dist builds the extensions of the editors: the plugin of IntelliJ against an IntelliJ IDEA that Gradle downloads.
+    env:
+      ELEMENX_INTELLIJ: download
     permissions:
       contents: write
       id-token: write
@@ -57,6 +60,10 @@ jobs:
           node-version: 24
           registry-url: https://registry.npmjs.org
           cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
       - name: npm with trusted publishing
         run: npm install -g npm@^11.5.1
       - run: npm ci
@@ -93,4 +100,4 @@ jobs:
           esac
           [ -f dist/manifest.json ] || npm run dist
           (cd dist && zip -qr "../elemenx-$version.zip" .)
-          gh release create "$GITHUB_REF_NAME" --verify-tag --title "Elemenx $version" --generate-notes $prerelease dist/*.js dist/manifest.json "elemenx-$version.zip"
+          gh release create "$GITHUB_REF_NAME" --verify-tag --title "Elemenx $version" --generate-notes $prerelease dist/*.js dist/manifest.json dist/editors/* "elemenx-$version.zip"

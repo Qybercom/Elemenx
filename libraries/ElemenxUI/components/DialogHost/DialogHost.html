@@ -3,7 +3,7 @@
 		<Dialog Open="true" Size="small" [title]="item.Title" [icon]="item.Icon" [closable]="item.Dismissible" [dismissible]="item.Dismissible" (close)="Dismissed">
 			<p class="elemenx-text" *if="item.Message">{{item.Message}}</p>
 			<span class="elemenx-dialog-host-actions" slot="footer">
-				<button class="elemenx-button" type="button" *for="action of item.Actions" *key="action.ID" [class]="[action.Variant]" [attribute.data-action]="action.ID" (click)="Act">{{action.Label}}</button>
+				<span class="elemenx-dialog-host-action" *for="action of item.Actions" *key="action.ID" [attribute.data-action]="action.ID"><Button [label]="action.Label" [variant]="action.Variant || 'secondary'" (click)="Act" /></span>
 			</span>
 		</Dialog>
 	</div>

@@ -2,11 +2,7 @@
 	<div class="elemenx-profile-cover" *if="Layout !== 'compact'" [attribute.style]="Cover ? null : 'background: ' + (Color || 'var(--elemenx-accent)')"><img *if="Cover" [src]="Cover" alt="" loading="lazy" /></div>
 	<div class="elemenx-card-content">
 		<div class="elemenx-profile-head">
-			<span class="elemenx-profile-avatar" aria-hidden="true">
-				<img *if="Avatar" [src]="Avatar" alt="" />
-				<span *if="!Avatar">{{Initials(Name)}}</span>
-				<span class="elemenx-profile-status" *if="Status" [class]="[Status]"></span>
-			</span>
+			<span class="elemenx-profile-avatar" aria-hidden="true"><Avatar [name]="Name" [image]="Avatar" [status]="Status" [size]="Layout === 'compact' ? 40 : 80" /></span>
 			<span class="elemenx-profile-names">
 				<span class="elemenx-card-title elemenx-profile-name">{{Name}}<Icon *if="Verified" Name="success" [label]="(VerifiedLabel || $T('ui.profileCard.verified'))" /></span>
 				<span class="elemenx-card-text" *if="Role">{{Role}}</span>

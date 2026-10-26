@@ -80,12 +80,6 @@ Elemenx.Component('ChatMessage', {
 	Hold: 500,
 
 	$OnCreate: function () {
-		this.Initials = function (name) {
-			return String(name || '').split(/\s+/).filter(Boolean).slice(0, 2).map(function (part) {
-				return part.charAt(0).toUpperCase();
-			}).join('');
-		};
-
 		this.StatusIcon = function (status) {
 			return {sending: 'clock', sent: 'check', delivered: 'check-double', read: 'check-double', error: 'error'}[status] || '';
 		};
@@ -161,7 +155,9 @@ Elemenx.Component('ChatMessage', {
 
 	/* The menu of the message at a point of the viewport. */
 	ShowMenu: function (x, y) {
+		var self = this;
 		var root = this.$Element();
+		var tries = 0;
 
 		if (!(this.Actions || []).length) return false;
 
@@ -169,11 +165,25 @@ Elemenx.Component('ChatMessage', {
 		this.MenuY = Math.round(y);
 		this.MenuOpen = true;
 
-		window.setTimeout(function () {
+		/*
+		 * Its first item takes the focus once the menu is drawn and shown, tried again while it is open (regression: a busy
+		 * page had not drawn it a task later, the menu never had the focus and Escape did not close it).
+		 */
+		function focus () {
 			var first = root && root.querySelector('.elemenx-chat-menu-point .elemenx-menu:not([hidden]) > .elemenx-menu-entry > .elemenx-option:not(.disabled)');
 			if (first)
 				first.focus();
-		}, 0);
+
+			/* Taken only once the panel shows: an item of a panel not shown yet takes no focus. */
+			if (first && root.ownerDocument.activeElement === first) return;
+
+			tries++;
+
+			if (self.MenuOpen && tries < 300)
+				window.setTimeout(focus, 16);
+		}
+
+		window.setTimeout(focus, 0);
 
 		return true;
 	},

@@ -51,6 +51,7 @@ var trayPopup = null;
 /* The notifications of the system shown (kept, or they go before they are pressed), and the window of the cards of the Application. */
 var notifications = {};
 var notificationWindow = null;
+var notificationCorner = process.platform === 'darwin' ? 'top-right' : 'bottom-right';
 
 /* The windows of the Application by their ID (OpenWindow): their own buttons act on them. */
 var named = {};
@@ -327,6 +328,9 @@ var handlers = {
 
 			return null;
 		}
+
+		if (['bottom-right', 'bottom-left', 'top-right', 'top-left'].indexOf(args.Corner) !== -1)
+			notificationCorner = args.Corner;
 
 		placeNotifications();
 
@@ -816,12 +820,14 @@ function holdNamed (child, id, send) {
 	});
 }
 
-/* The window of the cards in the corner of the work area of the screen: the bottom right (the top right on macOS). */
+/* The window of the cards in its corner of the work area of the screen (the bottom right, the top right on macOS). */
 function placeNotifications () {
 	var area = electron.screen.getPrimaryDisplay().workArea;
 	var bounds = notificationWindow.getBounds();
+	var right = notificationCorner.indexOf('right') !== -1;
+	var top = notificationCorner.indexOf('top') === 0;
 
-	notificationWindow.setPosition(Math.round(area.x + area.width - bounds.width), Math.round(process.platform === 'darwin' ? area.y : area.y + area.height - bounds.height));
+	notificationWindow.setPosition(Math.round(right ? area.x + area.width - bounds.width : area.x), Math.round(top ? area.y : area.y + area.height - bounds.height));
 }
 
 /* The window of the menu of the tray, made hidden by the page: it hides when it loses the focus, as a menu does. */
@@ -870,7 +876,7 @@ function open () {
 		title: settings.Name,
 		backgroundColor: settings.Background || undefined,
 		icon: settings.Icon ? path.join(root, settings.Icon) : undefined,
-		webPreferences: {contextIsolation: true, sandbox: true, preload: path.join(__dirname, 'preload.js'), additionalArguments: ['--elemenx-features=' + features.join(','), '--elemenx-frame=' + frameOf(settings.Frame), '--elemenx-material=' + (settings.Material || 'none')]}
+		webPreferences: {contextIsolation: true, sandbox: true, autoplayPolicy: 'no-user-gesture-required', preload: path.join(__dirname, 'preload.js'), additionalArguments: ['--elemenx-features=' + features.join(','), '--elemenx-frame=' + frameOf(settings.Frame), '--elemenx-material=' + (settings.Material || 'none')]}
 	}, framed(frameOf(settings.Frame), settings.Material)));
 
 	/* The windows its page opened (window.open): they go with the page. */

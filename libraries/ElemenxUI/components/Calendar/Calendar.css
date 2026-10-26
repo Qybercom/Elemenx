@@ -8,14 +8,17 @@
 	min-width: 0;
 }
 
+/* Narrow, the switch of the views goes under the title. */
 .elemenx-cal-header {
 	display: flex;
 	align-items: center;
+	flex-wrap: wrap;
 	gap: 4px;
 }
 
 .elemenx-cal-title {
 	flex: 1;
+	min-width: max-content;
 	margin: 0 0 0 8px;
 	font-size: var(--elemenx-font-size-large);
 	line-height: var(--elemenx-line-height-large);
@@ -411,4 +414,109 @@
 	height: 8px;
 	border-radius: 50%;
 	background: var(--elemenx-danger);
+}
+
+/* The items of a day: a spacer keeps the row of a bar a day has not, so a bar stays in its row through its days. */
+.elemenx-cal-item {
+	display: contents;
+}
+
+.elemenx-cal-spacer {
+	flex: none;
+	height: 20px;
+}
+
+.elemenx-cal-label {
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+/* A bar of several days: joined to its piece in the day beside it, an arrow where it goes on past the week. */
+.elemenx-cal-event.bar {
+	position: relative;
+	flex: none;
+	width: auto;
+	border-inline-start-width: 0;
+	border-radius: calc(var(--elemenx-radius) - 1px);
+}
+
+.elemenx-cal-event.bar:not(.joins-before):not(.earlier) {
+	border-inline-start-width: 3px;
+}
+
+.elemenx-cal-day .elemenx-cal-event.joins-before {
+	margin-inline-start: -5px;
+	border-start-start-radius: 0;
+	border-end-start-radius: 0;
+}
+
+.elemenx-cal-day .elemenx-cal-event.joins-after {
+	margin-inline-end: -5px;
+	border-start-end-radius: 0;
+	border-end-end-radius: 0;
+}
+
+.elemenx-cal-allday .elemenx-cal-event.joins-before {
+	margin-inline-start: -3px;
+	border-start-start-radius: 0;
+	border-end-start-radius: 0;
+}
+
+.elemenx-cal-allday .elemenx-cal-event.joins-after {
+	margin-inline-end: -3px;
+	border-start-end-radius: 0;
+	border-end-end-radius: 0;
+}
+
+.elemenx-cal-event.earlier {
+	border-start-start-radius: 0;
+	border-end-start-radius: 0;
+}
+
+.elemenx-cal-event.later {
+	border-start-end-radius: 0;
+	border-end-end-radius: 0;
+}
+
+.elemenx-cal-event.earlier::before,
+.elemenx-cal-event.later::after {
+	flex: none;
+	color: var(--elemenx-cal-color);
+	font-weight: var(--elemenx-font-weight-bold);
+}
+
+.elemenx-cal-event.earlier::before {
+	content: '‹';
+}
+
+.elemenx-cal-event.later::after {
+	content: '›';
+	margin-inline-start: auto;
+}
+
+/* The end of a bar: drag it to change its last day. */
+.elemenx-cal-event .elemenx-cal-resize {
+	inset-inline-start: auto;
+	top: 0;
+	width: 6px;
+	height: auto;
+	cursor: ew-resize;
+}
+
+/* A timed event cut at midnight: it goes on from the day before, or into the next one. */
+.elemenx-cal-block.before {
+	border-start-start-radius: 0;
+	border-start-end-radius: 0;
+}
+
+.elemenx-cal-block.after {
+	border-end-start-radius: 0;
+	border-end-end-radius: 0;
+}
+
+/* Day: one column of hours. */
+.elemenx-cal.day .elemenx-cal-week-head,
+.elemenx-cal.day .elemenx-cal-week-allday,
+.elemenx-cal.day .elemenx-cal-week-body {
+	grid-template-columns: 56px minmax(0, 1fr);
 }

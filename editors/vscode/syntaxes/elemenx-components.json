@@ -1,0 +1,44 @@
+{
+	"scopeName": "elemenx.template.components",
+	"injectionSelector": "L:text.html -comment -meta.tag -meta.embedded -string",
+	"patterns": [
+		{
+			"name": "meta.tag.component.elemenx",
+			"begin": "(<)([A-Z][\\w.-]*)(?=[\\s/>])",
+			"beginCaptures": {
+				"1": {
+					"name": "punctuation.definition.tag.begin.html"
+				},
+				"2": {
+					"name": "entity.name.tag.html support.class.component.elemenx"
+				}
+			},
+			"end": "(/?>)",
+			"endCaptures": {
+				"1": {
+					"name": "punctuation.definition.tag.end.html"
+				}
+			},
+			"patterns": [
+				{
+					"include": "text.html.basic#attribute"
+				}
+			]
+		},
+		{
+			"name": "meta.tag.component.elemenx",
+			"match": "(</)([A-Z][\\w.-]*)\\s*(>)",
+			"captures": {
+				"1": {
+					"name": "punctuation.definition.tag.begin.html"
+				},
+				"2": {
+					"name": "entity.name.tag.html support.class.component.elemenx"
+				},
+				"3": {
+					"name": "punctuation.definition.tag.end.html"
+				}
+			}
+		}
+	]
+}

@@ -1,7 +1,7 @@
 <!-- generated -->
 # Table
 
-Таблица данных. Columns: [{Key, Title, Width, MinWidth, Align (left, center, right), Sortable, Resizable, Format, Filter, Options}], где Format(value, row) возвращает текст ячейки. Rows — объекты, различаемые по RowKey. Sort — {Key, Direction} ('asc' или 'desc'); SortLocal сортирует Rows здесь, иначе сортирует владелец по событию sort. Selectable: none, single или multiple; Selected хранит выбранные ключи, событие select сообщает их. Фильтры: столбец с Filter ('text': содержит текст; 'select': один из Options или найденных значений; 'number': '10', '>10', '<=5', '5..10') получает поле под заголовком. Filters хранит {Key: текст}; FilterLocal фильтрует здесь, иначе фильтрует владелец по событию filter. Страницы: PageSize (0 — одна страница) и Page (с 1) показывают часть строк с Pagination под таблицей; PageSizes предлагает другие размеры. PageLocal делит на страницы здесь; иначе Rows — сама страница, а Total — число всех строк. Дерево: строка может содержать дочерние строки в Items (ChildrenKey); первый столбец показывает кнопку, раскрывающую её (Expanded хранит раскрытые ключи; также стрелки вправо и влево). Сортировка оставляет детей под родителем; фильтр сохраняет родителей найденных строк, раскрытыми. События: sort ({Key, Direction}), select (ключи), activate (строка: двойной щелчок или Enter), resize ({Key, Width}), filter (Filters), page ({Page, PageSize}), expand (раскрытые ключи).
+Таблица данных. Columns: [{Key, Title, Width, MinWidth, Align (left, center, right), Sortable, Resizable, Format, Filter, Options}], где Format(value, row) возвращает текст ячейки. Rows — объекты, различаемые по RowKey. Sort — {Key, Direction} ('asc' или 'desc'); SortLocal сортирует Rows здесь, иначе сортирует владелец по событию sort. Selectable: none, single или multiple; Selected хранит выбранные ключи, событие select сообщает их. Фильтры: столбец с Filter ('text': содержит текст; 'select': один из Options или найденных значений; 'number': '10', '>10', '<=5', '5..10') получает поле под заголовком. Filters хранит {Key: текст}; FilterLocal фильтрует здесь, иначе фильтрует владелец по событию filter. Страницы: PageSize (0 — одна страница) и Page (с 1) показывают часть строк с Pagination под таблицей; PageSizes предлагает другие размеры. PageLocal делит на страницы здесь; иначе Rows — сама страница, а Total — число всех строк. Дерево: строка может содержать дочерние строки в Items (ChildrenKey); первый столбец показывает кнопку, раскрывающую её (Expanded хранит раскрытые ключи; также стрелки вправо и влево). Сортировка оставляет детей под родителем; фильтр сохраняет родителей найденных строк, раскрытыми. События: sort ({Key, Direction}), select (ключи), activate (строка: двойной щелчок или Enter), resize ({Key, Width}), filter (Filters), page ({Page, PageSize}), expand (раскрытые ключи). Label — имя таблицы для скринридера.
 
 ## Свойства
 
@@ -9,6 +9,7 @@
 | --- | --- |
 | `Columns` | `[]` |
 | `Rows` | `[]` |
+| `Label` | `''` |
 | `RowKey` | `'ID'` |
 | `Sort` | `null` |
 | `SortLocal` | `true` |

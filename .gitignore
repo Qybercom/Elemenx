@@ -13,3 +13,9 @@ test-results/
 /tests/dist/widget-output
 /examples/Native/android
 /examples/Native/ios
+/editors/vscode/core
+/editors/vscode/LICENSE
+/editors/intellij/build
+/editors/intellij/.gradle
+/editors/intellij/.kotlin
+/editors/intellij/.intellijPlatform

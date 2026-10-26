@@ -238,6 +238,65 @@ Elemenx.Component('UIKitPage', {
 	KeyboardMarks: {KeyW: true, KeyA: true, KeyS: true, KeyD: true, Space: 'ui-kit-key-jump', ShiftLeft: 'ui-kit-key-run'},
 	PianoMarks: {C4: true, E4: true, G4: true},
 	DialNote: '',
+	WorldNote: '',
+	WorldProjection: 'isometric',
+	WorldProjections: [{Value: 'isometric', Label: 'Isometric'}, {Value: 'orthogonal', Label: 'From above'}],
+	WorldFog: false,
+	WorldAdded: 0,
+	WorldRows: [
+		'TTTT,,,.......:~~:..........',
+		'TTT,,,,.......:~~:.....,,,..',
+		'TT,,..........:~~:....,,,,,.',
+		'T,,...........:~~:..........',
+		',,.............:~~:.........',
+		'...............:~~:.....^^^.',
+		'____...........:==:....^^^^.',
+		'...____________:==:___^^^^..',
+		'...............:~~:....^^^..',
+		'..^^............:~~:........',
+		'.^^^^...........:~~:........',
+		'.^^^^............:~~:.......',
+		'..^^.............:~~:....TTT',
+		'.................:~~:...TTTT',
+		'..##..............:~~:..TTTT',
+		'.###..............:~~:.TTTTT',
+		'..#...............:~~:TTTTTT',
+		'..................:~~:.TTTTT',
+		'...................:~~:TTTTT',
+		'...................:~~:TTTTT'
+	],
+	WorldUnits: [
+		{ID: 'archer-1', X: 6, Y: 9, Team: 'blue', Type: 'archer', Health: 40, MaxHealth: 40},
+		{ID: 'archer-2', X: 7, Y: 9, Team: 'blue', Type: 'archer', Health: 32, MaxHealth: 40},
+		{ID: 'archer-3', X: 6, Y: 10, Team: 'blue', Type: 'archer', Health: 40, MaxHealth: 40},
+		{ID: 'sword-1', X: 8, Y: 10, Team: 'blue', Type: 'swordsman', Health: 60, MaxHealth: 60},
+		{ID: 'sword-2', X: 7, Y: 11, Team: 'blue', Type: 'swordsman', Health: 25, MaxHealth: 60},
+		{ID: 'raider-1', X: 24, Y: 5, Team: 'red', Type: 'swordsman', Health: 60, MaxHealth: 60},
+		{ID: 'raider-2', X: 25, Y: 6, Team: 'red', Type: 'swordsman', Health: 60, MaxHealth: 60},
+		{ID: 'raider-3', X: 23, Y: 6, Team: 'red', Type: 'archer', Health: 40, MaxHealth: 40}
+	],
+	WorldTrees: [{ID: 'tree-1', X: 10, Y: 15}, {ID: 'tree-2', X: 12, Y: 16}, {ID: 'tree-3', X: 9, Y: 17}, {ID: 'tree-4', X: 11, Y: 18}, {ID: 'tree-5', X: 21, Y: 1}],
+	CallLayout: 'grid',
+	CallSide: false,
+	CallCorner: 'bottom-right',
+	CallPinned: '',
+	CallState: {Muted: true, Camera: true, Sharing: false, Hand: false},
+	CallPeople: [
+		{Name: 'Ada Lovelace', Speaking: true, Level: 0.6, Quality: 'good'},
+		{Name: 'Alan Turing', Muted: true, Camera: false, Quality: 'fair'},
+		{Name: 'Grace Hopper', Hand: true, Quality: 'good'},
+		{Name: 'Edsger Dijkstra', Camera: false, Quality: 'poor'},
+		{Name: 'Margaret Hamilton', Quality: 'good'},
+		{Name: 'Claude Shannon', Muted: true, Quality: 'good'}
+	],
+	CallDevices: {
+		Microphones: [{ID: 'default', Label: 'Default microphone'}, {ID: 'headset', Label: 'Headset'}],
+		Speakers: [{ID: 'default', Label: 'Speakers'}, {ID: 'headset', Label: 'Headset'}],
+		Cameras: [{ID: 'front', Label: 'Front camera'}],
+		Microphone: 'headset',
+		Speaker: 'headset',
+		Camera: 'front'
+	},
 	ToneKeys: [
 		{Value: '1'}, {Value: '2'}, {Value: '3'}, {Value: 'A', Class: 'ui-kit-tone-key'},
 		{Value: '4'}, {Value: '5'}, {Value: '6'}, {Value: 'B', Class: 'ui-kit-tone-key'},
@@ -534,6 +593,31 @@ Elemenx.Component('UIKitPage', {
 		{ID: 4, Icon: 'check', Author: 'Alan Turing', Action: 'approved this merge request', Time: '3 hours ago', Variant: 'success'},
 		{ID: 5, Icon: 'merge', Author: 'Ada Lovelace', Action: 'merged into main', Time: 'just now', Variant: 'accent'}
 	],
+	TimelineNote: '',
+	PlanLanes: [{ID: 'design', Label: 'Design'}, {ID: 'build', Label: 'Build'}, {ID: 'launch', Label: 'Launch'}],
+	PlanRanges: [
+		{ID: 'research', From: '2026-01-12', To: '2026-03-06', Label: 'Research', Lane: 'design'},
+		{ID: 'mockups', From: '2026-02-16', To: '2026-04-24', Label: 'Mock-ups', Lane: 'design', Tone: 'info'},
+		{ID: 'core', From: '2026-03-02', To: '2026-07-31', Label: 'Core', Lane: 'build'},
+		{ID: 'beta', From: '2026-06-01', To: '2026-09-15', Label: 'Beta', Lane: 'launch', Tone: 'warning'},
+		{ID: 'release', From: '2026-09-15', To: '2026-12-18', Label: 'Release', Lane: 'launch', Tone: 'success'}
+	],
+	PlanMarks: [
+		{ID: 'kickoff', At: '2026-01-12', Label: 'Kick-off', Icon: 'flag'},
+		{ID: 'alpha', At: '2026-05-04', Label: 'Alpha', Tone: 'info'},
+		{ID: 'demo', At: '2026-05-08', Label: 'Demo day', Tone: 'info'},
+		{ID: 'board', At: '2026-05-08', Label: 'Board meeting', Tone: 'muted'},
+		{ID: 'launch', At: '2026-09-15', Label: 'Launch', Tone: 'success', Icon: 'star', Side: 'before'}
+	],
+	HistoryMarks: [
+		{ID: 'flight', At: '1903-12-17', Label: 'First powered flight'},
+		{ID: 'radio', At: '1920-11-02', Label: 'First commercial radio'},
+		{ID: 'computer', At: '1945-12-10', Label: 'ENIAC runs', Tone: 'info'},
+		{ID: 'moon', At: '1969-07-20', Label: 'Moon landing', Tone: 'success', Side: 'before'},
+		{ID: 'web', At: '1991-08-06', Label: 'The web goes public', Tone: 'info'},
+		{ID: 'phone', At: '2007-01-09', Label: 'A phone with a touch screen'}
+	],
+	VideoAt: 75,
 	Lines: [
 		{ID: 1, Kind: 'info', Text: 'Elemenx terminal. Type help.'}
 	],
@@ -1278,7 +1362,13 @@ Elemenx.Component('UIKitPage', {
 			{ID: 'offsite', Title: 'Team offsite', Start: day(3), End: day(5), Color: '#3f6c9e'},
 			{ID: 'retro', Title: 'Retrospective', Start: day(2) + 'T15:00', End: day(2) + 'T16:00'},
 			{ID: 'one', Title: 'One-to-one', Start: day(0) + 'T14:00', End: day(0) + 'T14:30'},
-			{ID: 'lunch', Title: 'Lunch talk', Start: day(0) + 'T12:30', End: day(0) + 'T13:15', Color: '#5f7d2e'}
+			{ID: 'lunch', Title: 'Lunch talk', Start: day(0) + 'T12:30', End: day(0) + 'T13:15', Color: '#5f7d2e'},
+			{ID: 'deploy', Title: 'Night deploy', Start: day(6) + 'T22:00', End: day(7) + 'T02:00', Color: '#b8860b'},
+			{ID: 'party', Title: 'Launch party', Start: day(9) + 'T20:00', End: day(10) + 'T00:00', Color: '#c2477f'},
+			{ID: 'conference', Title: 'Conference', Start: day(8) + 'T09:00', End: day(10) + 'T18:00', Color: '#2f8f83'},
+			{ID: 'vacation', Title: 'Vacation', Start: day(12), End: day(25), Color: '#5f7d2e'},
+			{ID: 'gym', Title: 'Gym', Start: day(1) + 'T07:00', End: day(1) + 'T08:00', Repeat: {Every: 'week', Days: ['TU', 'TH', 'SA'], Count: 24}},
+			{ID: 'report', Title: 'Monthly report', Start: day(-20), AllDay: true, Repeat: 'FREQ=MONTHLY;COUNT=12', Color: '#7a4fb0'}
 		];
 	},
 
@@ -1293,6 +1383,28 @@ Elemenx.Component('UIKitPage', {
 
 	/* The calendar asks; the page moves the event in its list. */
 	AgendaMoved: function (change) {
+		/* An occurrence of a weekly event moves alone: its day is left out of the series, it becomes an event of its own (the monthly one, an RRULE, moves whole). */
+		if (change.Occurrence && typeof change.Event.Repeat === 'object') {
+			this.Agenda = this.Agenda.map(function (event) {
+				var copy = {};
+				var key;
+
+				if (event.ID !== change.Event.ID) return event;
+
+				for (key in event) {
+					if (Object.prototype.hasOwnProperty.call(event, key))
+						copy[key] = event[key];
+				}
+
+				copy.Repeat = {Every: event.Repeat.Every, Days: event.Repeat.Days, Count: event.Repeat.Count, Except: (event.Repeat.Except || []).concat([change.Occurrence])};
+
+				return copy;
+			}).concat([{ID: change.Event.ID + '-' + change.Occurrence, Title: change.Event.Title, Start: change.Start, End: change.End, AllDay: change.Event.AllDay, Color: change.Event.Color}]);
+			this.CalendarNote = 'Moved: ' + change.Event.Title + ' (' + change.Occurrence + ') → ' + change.Start.replace('T', ' ');
+
+			return;
+		}
+
 		this.Agenda = this.Agenda.map(function (event) {
 			var moved = {};
 			var key;
@@ -1500,6 +1612,151 @@ Elemenx.Component('UIKitPage', {
 
 	TonePressed: function (state) {
 		this.DialNote = 'Tone ' + state.Value;
+	},
+
+	/* The bar of the call: its state changed as it asks, what it tells shown in the header of the section. */
+	CallToggled: function (name, value) {
+		var state = {};
+		var key;
+
+		for (key in this.CallState) {
+			if (Object.prototype.hasOwnProperty.call(this.CallState, key))
+				state[key] = this.CallState[key];
+		}
+
+		state[name] = value;
+
+		this.CallState = state;
+		this.CallNote = name + ': ' + value;
+	},
+
+	CallMuted: function (detail) {
+		this.CallToggled('Muted', detail.Muted);
+	},
+
+	CallFilmed: function (detail) {
+		this.CallToggled('Camera', detail.Camera);
+	},
+
+	CallShared: function (detail) {
+		this.CallToggled('Sharing', detail.Sharing);
+
+		this.CallLayout = detail.Sharing ? 'screen' : 'grid';
+	},
+
+	CallRaised: function (detail) {
+		this.CallToggled('Hand', detail.Hand);
+	},
+
+	CallReacted: function (detail) {
+		this.CallNote = 'Reaction ' + detail.Emoji;
+	},
+
+	CallChatted: function (detail) {
+		this.CallSide = detail.Open;
+	},
+
+	CallListed: function (detail) {
+		this.CallSide = detail.Open;
+	},
+
+	CallLaidOut: function (detail) {
+		this.CallLayout = detail.Layout;
+	},
+
+	CallDevice: function (detail) {
+		var devices = {};
+		var key;
+
+		for (key in this.CallDevices) {
+			if (Object.prototype.hasOwnProperty.call(this.CallDevices, key))
+				devices[key] = this.CallDevices[key];
+		}
+
+		devices[detail.Kind.charAt(0).toUpperCase() + detail.Kind.substring(1)] = detail.ID;
+
+		this.CallDevices = devices;
+		this.CallNote = detail.Kind + ': ' + detail.ID;
+	},
+
+	CallLeft: function () {
+		this.CallNote = 'Left the call';
+	},
+
+	/* The world of the game: its methods, kept for the buttons of the section. */
+	WorldReady: function (world) {
+		this.World = function () {
+			return world;
+		};
+	},
+
+	WorldProjected: function (value) {
+		this.WorldProjection = value;
+	},
+
+	WorldFogged: function (value) {
+		this.WorldFog = value;
+	},
+
+	WorldSelected: function (detail) {
+		this.WorldNote = detail.IDs.length ? detail.IDs.length + ' selected: ' + detail.IDs.join(', ') : 'Nothing selected';
+	},
+
+	WorldOrdered: function (detail) {
+		this.WorldNote = detail.Kind === 'stop' ? 'Stop: ' + detail.IDs.join(', ') : detail.Kind + ' to ' + detail.X + ', ' + detail.Y + ': ' + detail.IDs.length + ' units';
+	},
+
+	WorldArrived: function (detail) {
+		this.WorldNote = 'Arrived: ' + detail.ID;
+	},
+
+	WorldCell: function (detail) {
+		this.WorldNote = 'Cell ' + detail.X + ', ' + detail.Y + (detail.Object ? ' · ' + detail.Object.ID : '');
+	},
+
+	WorldCentered: function () {
+		if (this.World)
+			this.World().CenterOn(6.5, 3.5);
+	},
+
+	/* A unit added by the code, by the barracks: the methods of the world, beside what its template declares. */
+	WorldRecruited: function () {
+		var world = this.World ? this.World() : null;
+		var unit;
+
+		if (!world) return;
+
+		this.WorldAdded++;
+
+		unit = world.Add({ID: 'recruit-' + this.WorldAdded, Kind: 'unit', X: 8, Y: 5, Team: 'blue', Type: 'worker', Health: 30, MaxHealth: 30, Speed: 3});
+
+		world.Order([unit.ID], {X: 9 + this.WorldAdded % 4, Y: 7});
+
+		this.WorldNote = 'Recruited ' + unit.ID + ' · ' + world.Objects(function (item) {
+			return item.Kind === 'unit' && item.Team === 'blue';
+		}).length + ' blue units';
+	},
+
+	CallAccepted: function (detail) {
+		this.CallNote = detail.Video ? 'Accepted with the camera' : 'Accepted';
+	},
+
+	CallDeclined: function () {
+		this.CallNote = 'Declined';
+	},
+
+	CallPin: function (detail) {
+		this.CallPinned = detail.Pinned ? detail.Name : '';
+		this.CallLayout = detail.Pinned ? 'speaker' : 'grid';
+	},
+
+	CallCornered: function (detail) {
+		this.CallCorner = detail.Corner;
+		this.CallNote = 'Own video: ' + detail.Corner;
+	},
+
+	CallPaged: function (detail) {
+		this.CallNote = 'Page ' + (detail.Page + 1);
 	},
 
 	/*
@@ -2513,11 +2770,43 @@ Elemenx.Component('UIKitPage', {
 		var self = this;
 		var hotkeys = this.$Service('Hotkeys');
 
-		var only = (new URLSearchParams(window.location.search).get('sections') || '').split(',').filter(Boolean);
+		/* Titles split by | or by commas; a part between | counts whole too, as a title may have a comma (Payment, phone and money). */
+		var only = (new URLSearchParams(window.location.search).get('sections') || '').split('|').reduce(function (all, part) {
+			return all.concat([part], part.split(','));
+		}, []).filter(Boolean);
 
-		/* The sections a link names (?sections=Buttons,Forms: a test opens the ones it needs), all of them without one. */
+		/* The sections a link names (?sections=Buttons,Forms or Buttons|Forms: a test opens the ones it needs), all of them without one. */
 		this.Shows = function (title) {
 			return !only.length || only.indexOf(title) !== -1;
+		};
+
+		var videos = {};
+
+		/* The videos of the call: pictures of Suprematism in place of the cameras, one element for each (a template calls it). */
+		this.CallVideo = function (seed) {
+			var image;
+
+			if (!videos[seed]) {
+				image = document.createElement('img');
+				image.alt = '';
+				image.src = self.$Service('Suprematist').DataURL({Seed: seed, Width: 320, Height: 180});
+				videos[seed] = image;
+			}
+
+			return videos[seed];
+		};
+
+		/* The people in the tiles: all of them but the one pinned in front. */
+		this.CallOthers = function (people, pinned) {
+			return people.filter(function (person) {
+				return person.Name !== pinned;
+			});
+		};
+
+		this.CallFront = function (people, pinned) {
+			return people.filter(function (person) {
+				return person.Name === pinned;
+			})[0] || null;
 		};
 
 		this.PaletteKeys = hotkeys.Format('Mod+K');
@@ -2737,6 +3026,40 @@ Elemenx.Component('UIKitPage', {
 	ReadAll: function () {
 		this.Unread = 0;
 		this.PeopleNote = 'All read';
+	},
+
+	/* The Timeline of the plan: its events change the data, it does not change it itself. */
+	PlanSelected: function (event) {
+		this.TimelineNote = 'Selected: ' + (event.Item.Label || event.ID);
+	},
+
+	PlanMoved: function (event) {
+		if (event.Kind === 'mark') {
+			this.PlanMarks = this.PlanMarks.map(function (mark) {
+				return mark.ID === event.ID ? Object.assign({}, mark, {At: event.At}) : mark;
+			});
+			this.TimelineNote = 'Moved: ' + event.Item.Label + ' to ' + event.At;
+
+			return;
+		}
+
+		this.PlanResized(event);
+	},
+
+	PlanResized: function (event) {
+		this.PlanRanges = this.PlanRanges.map(function (range) {
+			return range.ID === event.ID ? Object.assign({}, range, {From: event.From, To: event.To}) : range;
+		});
+		this.TimelineNote = event.Item.Label + ': ' + event.From + ' – ' + event.To;
+	},
+
+	PlanCreated: function (event) {
+		this.PlanRanges = this.PlanRanges.concat([{ID: 'new-' + this.PlanRanges.length, From: event.From, To: event.To, Label: 'New', Lane: event.Lane, Tone: 'muted'}]);
+		this.TimelineNote = 'Created: ' + event.From + ' – ' + event.To;
+	},
+
+	VideoSeek: function (event) {
+		this.VideoAt = event.At;
 	},
 
 	StepSelected: function (item) {

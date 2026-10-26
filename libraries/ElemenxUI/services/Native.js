@@ -49,7 +49,13 @@
  *   Notification of the browser on the web (it asks the user first). Look elemenx is a card of ElemenxUI
  *   (NotificationHost: Image, Variant info, success, warning or danger, Actions everywhere), drawn as the theme says:
  *   in a program by the corner of the screen, in a window of its own over the others that takes no focus, on the web
- *   in the corner of the page; it closes after Timeout milliseconds (6000; 0: when the user closes it). The
+ *   in the corner of the page; it closes after Timeout milliseconds (6000; 0: when the user closes it; held while the
+ *   pointer is over it). A card of the same ID takes the place of the one before (Progress, 0 to 1, of a task); Component
+ *   and Props of the Application draw a card of its own (an invitation to a call: CallInvite), the Component getting
+ *   Notification {ID, Choose(action), Close()}, Bare leaving out the frame of a card; Priority high keeps it next to the
+ *   corner past the limit; Sound (a URL; Loop) plays until it goes. Notifications({Limit, Corner}): how many cards show
+ *   (4; the others told as +N) and in which corner (bottom-right, bottom-left, top-right, top-left).
+ *   CloseNotification(id) takes one away. The
  *   notification event {ID, Kind, Action}: click (the notification pressed), action (a button of it, Action its ID),
  *   close (closed by the user) or timeout.
  * - Badge(count, callback): a number on the icon of the program (0 removes it; on Windows a small picture over the
@@ -86,7 +92,7 @@
 Elemenx.Service('Native', {
 	$Meta: {
 		Description: 'The native features of the system around the Application, one API wherever it runs.',
-		Methods: ['Available()', 'Platform()', 'Has(feature)', 'Window(action, callback, id)', 'Frame(id)', 'TitleBarOverlay(colors, callback)', 'Scheme(scheme, callback)', 'Title(text, callback)', 'Open(options, callback)', 'Save(options, callback)', 'Message(options, callback)', 'Menu(items, callback)', 'ContextMenu(items, callback)', 'Tray(options, callback)', 'TrayWindow(show, callback)', 'TrayMenu(items, callback)', 'TrayPopup(options, callback)', 'ShowTrayPopup(show, callback)', 'Role(role, callback)', 'External(url, callback)', 'Notify(options, callback)', 'Badge(count, callback)', 'Progress(value, callback)', 'Attention(on, callback)', 'Thumbar(buttons, callback)', 'Tasks(callback)', 'OpenWindow(options, callback)', 'Windows()', 'FocusWindow(id)', 'CloseWindow(id)', 'Shortcuts(keys, callback)', 'Autostart(enabled, callback)', 'Links(callback)', 'Power(callback)', 'Awake(on, callback)', 'Update(callback)', 'On(name, callback)', 'Off(name, callback)']
+		Methods: ['Available()', 'Platform()', 'Has(feature)', 'Window(action, callback, id)', 'Frame(id)', 'TitleBarOverlay(colors, callback)', 'Scheme(scheme, callback)', 'Title(text, callback)', 'Open(options, callback)', 'Save(options, callback)', 'Message(options, callback)', 'Menu(items, callback)', 'ContextMenu(items, callback)', 'Tray(options, callback)', 'TrayWindow(show, callback)', 'TrayMenu(items, callback)', 'TrayPopup(options, callback)', 'ShowTrayPopup(show, callback)', 'Role(role, callback)', 'External(url, callback)', 'Notify(options, callback)', 'CloseNotification(id)', 'Notifications(settings)', 'Badge(count, callback)', 'Progress(value, callback)', 'Attention(on, callback)', 'Thumbar(buttons, callback)', 'Tasks(callback)', 'OpenWindow(options, callback)', 'Windows()', 'FocusWindow(id)', 'CloseWindow(id)', 'Shortcuts(keys, callback)', 'Autostart(enabled, callback)', 'Links(callback)', 'Power(callback)', 'Awake(on, callback)', 'Update(callback)', 'On(name, callback)', 'Off(name, callback)']
 	},
 	$OnCreate: function () {
 		var self = this;
@@ -98,6 +104,8 @@ Elemenx.Service('Native', {
 		/* The notifications drawn by ElemenxUI (Notify with Look elemenx), and where. */
 		this.Cards = [];
 		this.CardTimers = {};
+		this.CardSounds = {};
+		this.CardSettings = {Limit: 4, Corner: 'bottom-right'};
 		this.CardHost = null;
 		this.NotificationSequence = 0;
 
@@ -957,14 +965,14 @@ Elemenx.Service('Native', {
 
 		callback = callback || function () {};
 
-		if (!settings.Title && !settings.Text) {
+		if (!settings.Title && !settings.Text && !(settings.Look === 'elemenx' && settings.Component)) {
 			callback(new Error('Elemenx Native Notify needs a Title or a Text'));
 
 			return;
 		}
 
 		if (settings.Look === 'elemenx') {
-			this.Card({ID: id, Title: settings.Title || '', Text: settings.Text || '', Icon: settings.Icon || '', Image: settings.Image || '', Variant: settings.Variant || '', Actions: actions}, settings.Timeout === undefined ? 6000 : Number(settings.Timeout) || 0);
+			this.Card({ID: id, Title: settings.Title || '', Text: settings.Text || '', Icon: settings.Icon || '', Image: settings.Image || '', Variant: settings.Variant || '', Actions: actions, Progress: settings.Progress === undefined ? null : Number(settings.Progress), Component: settings.Component || '', Props: settings.Props || {}, Bare: !!settings.Bare, Priority: settings.Priority === 'high' ? 'high' : 'normal'}, settings.Timeout === undefined ? 6000 : Number(settings.Timeout) || 0, settings.Sound ? {URL: String(settings.Sound), Loop: !!settings.Loop} : null);
 
 			callback(null, {ID: id});
 
@@ -1008,32 +1016,121 @@ Elemenx.Service('Native', {
 		});
 	},
 
-	/* A card of Notify with Look elemenx: in the list of the cards (one of an ID), shown, gone after timeout (0: never). */
-	Card: function (item, timeout) {
+	/* The cards of Notify with Look elemenx: Limit of them shown (4; the rest told as more), and the corner of the screen. */
+	Notifications: function (settings) {
+		var value = settings || {};
+		if (value.Limit !== undefined)
+			this.CardSettings.Limit = Math.max(1, Number(value.Limit) || 1);
+
+		if (['bottom-right', 'bottom-left', 'top-right', 'top-left'].indexOf(value.Corner) !== -1)
+			this.CardSettings.Corner = value.Corner;
+
+		this.ShowCards();
+
+		return {Limit: this.CardSettings.Limit, Corner: this.CardSettings.Corner};
+	},
+
+	/* A notification taken away by the Application (a call answered elsewhere): true when it was there. */
+	CloseNotification: function (id) {
+		var there = this.Cards.some(function (card) {
+			return card.ID === String(id);
+		});
+
+		this.Uncard(String(id), null);
+
+		return there;
+	},
+
+	/*
+	 * A card of Notify with Look elemenx: one of an ID, a new one taking the place of the one before (its progress, say);
+	 * gone after timeout (0: never), its time held while the pointer is over it; its sound, until it goes.
+	 */
+	Card: function (item, timeout, sound) {
 		var self = this;
+		var index = -1;
+		var i = 0;
 
-		window.clearTimeout(this.CardTimers[item.ID]);
+		while (i < this.Cards.length) {
+			if (this.Cards[i].ID === item.ID)
+				index = i;
 
-		this.Cards = this.Cards.filter(function (card) {
-			return card.ID !== item.ID;
-		}).concat([item]);
+			i++;
+		}
 
-		if (timeout) {
-			this.CardTimers[item.ID] = window.setTimeout(function () {
+		this.Stop(item.ID);
+
+		item.Duration = timeout || 0;
+		item.Stamp = Date.now();
+
+		if (index === -1) this.Cards = this.Cards.concat([item]);
+		else this.Cards = this.Cards.slice(0, index).concat([item], this.Cards.slice(index + 1));
+
+		if (timeout)
+			this.CardTimers[item.ID] = {Left: timeout, Ends: Date.now() + timeout, Handle: window.setTimeout(function () {
 				self.Uncard(item.ID, 'timeout');
-			}, timeout);
+			}, timeout)};
+
+		if (sound && sound.URL && typeof Audio === 'function') {
+			if (this.CardSounds[item.ID])
+				this.CardSounds[item.ID].pause();
+
+			this.CardSounds[item.ID] = new Audio(sound.URL);
+			this.CardSounds[item.ID].loop = !!sound.Loop;
+
+			try {
+				this.CardSounds[item.ID].play().catch(function () {});
+			}
+			catch (error) {
+				this.CardSounds[item.ID] = null;
+			}
 		}
 
 		this.ShowCards();
+	},
+
+	/* The timer of a card stopped (held or gone). */
+	Stop: function (id) {
+		var timer = this.CardTimers[id];
+		if (timer)
+			window.clearTimeout(timer.Handle);
+
+		delete this.CardTimers[id];
+	},
+
+	/* The pointer over a card: its time stops; off it, the time it had left goes on. */
+	HoldCard: function (id) {
+		var timer = this.CardTimers[id];
+		if (!timer || timer.Held) return;
+
+		window.clearTimeout(timer.Handle);
+
+		timer.Left = Math.max(0, timer.Ends - Date.now());
+		timer.Held = true;
+	},
+
+	ReleaseCard: function (id) {
+		var self = this;
+		var timer = this.CardTimers[id];
+		if (!timer || !timer.Held) return;
+
+		timer.Held = false;
+		timer.Ends = Date.now() + timer.Left;
+		timer.Handle = window.setTimeout(function () {
+			self.Uncard(id, 'timeout');
+		}, timer.Left);
 	},
 
 	/* A card gone: kind is the event it is (close, timeout), or null when the event was told already (a press). */
 	Uncard: function (id, kind) {
 		var had = this.Cards.length;
 
-		window.clearTimeout(this.CardTimers[id]);
+		this.Stop(id);
 
-		delete this.CardTimers[id];
+		if (this.CardSounds[id]) {
+			this.CardSounds[id].pause();
+
+			delete this.CardSounds[id];
+		}
 
 		this.Cards = this.Cards.filter(function (card) {
 			return card.ID !== id;
@@ -1048,14 +1145,34 @@ Elemenx.Service('Native', {
 	},
 
 	/*
+	 * The cards shown: the ones of Priority high always and next to the corner, then the newest of the others up to the
+	 * Limit; More, the number of the others. {Items, More}
+	 */
+	ShownCards: function () {
+		var high = this.Cards.filter(function (card) {
+			return card.Priority === 'high';
+		});
+		var others = this.Cards.filter(function (card) {
+			return card.Priority !== 'high';
+		});
+		var room = Math.max(0, this.CardSettings.Limit - high.length);
+		var shown = room ? others.slice(-room) : [];
+
+		return {Items: shown.concat(high), More: others.length - shown.length};
+	},
+
+	/*
 	 * The cards where they show: in a program a see-through window by the corner of the screen (elemenx-notifications,
 	 * over the others, without the focus) as large as they are; on the web a NotificationHost in the corner of the page.
 	 */
 	ShowCards: function () {
 		var self = this;
 		var entry;
+		var shown = this.ShownCards();
 		var props = {
-			Items: this.Cards.slice(),
+			Items: shown.Items,
+			More: shown.More,
+			Corner: this.CardSettings.Corner,
 			Choose: function (item, action) {
 				self.Emit('notification', {ID: item.ID, Kind: action ? 'action' : 'click', Action: action ? action.ID : null});
 
@@ -1064,9 +1181,15 @@ Elemenx.Service('Native', {
 			Close: function (item) {
 				self.Uncard(item.ID, 'close');
 			},
+			Hold: function (item) {
+				self.HoldCard(item.ID);
+			},
+			Release: function (item) {
+				self.ReleaseCard(item.ID);
+			},
 			Fit: function (size) {
 				if (self.CardHost && self.CardHost.Window)
-					self.Ask('notifications', {Width: size.Width, Height: size.Height, Show: self.Cards.length > 0});
+					self.Ask('notifications', {Width: size.Width, Height: size.Height, Show: self.Cards.length > 0, Corner: self.CardSettings.Corner});
 			}
 		};
 
@@ -1074,7 +1197,7 @@ Elemenx.Service('Native', {
 			this.CardHost = null;
 
 		if (this.CardHost) {
-			this.CardHost.Instance.$Update({Items: props.Items});
+			this.CardHost.Instance.$Update({Items: props.Items, More: props.More, Corner: props.Corner});
 
 			if (this.CardHost.Window && !props.Items.length)
 				this.Ask('notifications', {Show: false});

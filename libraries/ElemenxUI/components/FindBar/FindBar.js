@@ -71,8 +71,9 @@ Elemenx.Component('FindBar', {
 		this.Emitted();
 	},
 
-	Toggled: function (event, node) {
-		var name = node.getAttribute('data-option');
+	/* A Button of an option: its name on the element round it. */
+	Toggled: function (event) {
+		var name = event.target.closest('[data-option]').getAttribute('data-option');
 
 		this[name] = !this[name];
 

@@ -26,11 +26,46 @@
 			},
 			"today": "Today",
 			"view": "View",
-			"week": "Week"
+			"week": "Week",
+			"day": "Day",
+			"months": "Months",
+			"quarter": "Quarter",
+			"year": "Year",
+			"years": "Years",
+			"quarterTitle": "Q{quarter} {year}"
 		},
 		"cardNumberInput": {
 			"hideNumber": "Hide number",
 			"showNumber": "Show number"
+		},
+		"call": {
+			"incoming": "Incoming call",
+			"accept": "Accept",
+			"acceptVideo": "Accept with video",
+			"decline": "Decline",
+			"hand": "Raise the hand",
+			"pin": "Pin",
+			"unpin": "Unpin",
+			"controls": "Call controls",
+			"mute": "Turn the microphone off",
+			"unmute": "Turn the microphone on",
+			"microphones": "Microphone and speaker",
+			"cameraOff": "Turn the camera off",
+			"cameraOn": "Turn the camera on",
+			"cameras": "Camera",
+			"share": "Share the screen",
+			"stopShare": "Stop sharing",
+			"react": "React",
+			"chat": "Chat",
+			"people": "People",
+			"layout": "Layout",
+			"layouts": {
+				"grid": "Grid",
+				"speaker": "Speaker",
+				"screen": "Screen"
+			},
+			"leave": "Leave",
+			"stage": "Call"
 		},
 		"chart": {
 			"label": "Chart"
@@ -584,6 +619,9 @@
 			"rowsPerPage": "Rows per page",
 			"size": "{size} / page"
 		},
+		"notifications": {
+			"more": "+{count} more"
+		},
 		"phoneInput": {
 			"search": "Search country or code"
 		},
@@ -776,6 +814,25 @@
 			"close": "Close",
 			"popOut": "Picture in picture",
 			"popIn": "Back into the page"
+		},
+		"gameWorld": {
+			"label": "Game world",
+			"minimap": "Minimap",
+			"selected": "{count} selected"
+		},
+		"signal": {
+			"good": "Good connection",
+			"fair": "Fair connection",
+			"poor": "Poor connection",
+			"level": "Signal {percent}%"
+		},
+		"timeline": {
+			"label": "Timeline",
+			"now": "Now",
+			"playhead": "Playhead",
+			"zoomIn": "Zoom in",
+			"zoomOut": "Zoom out",
+			"fit": "Show all"
 		}
 	}
 }

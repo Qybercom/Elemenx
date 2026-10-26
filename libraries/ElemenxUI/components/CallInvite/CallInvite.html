@@ -1,0 +1,14 @@
+<div class="elemenx-call-invite" role="alertdialog" [attribute.aria-label]="(Text || $T('ui.call.incoming')) + ': ' + Name">
+	<div class="elemenx-call-invite-caller">
+		<span class="elemenx-call-invite-avatar"><Avatar [name]="Name" [image]="Image" Size="large" /></span>
+		<div class="elemenx-call-invite-text">
+			<strong class="elemenx-call-invite-name">{{Name}}</strong>
+			<span class="elemenx-call-invite-kind"><Icon [name]="Video ? 'video' : 'phone'" />{{Text || $T('ui.call.incoming')}}</span>
+		</div>
+	</div>
+	<div class="elemenx-call-invite-actions">
+		<span class="elemenx-call-invite-button decline"><Button Variant="danger" Shape="round" Size="large" Icon="call-end" [title]="$T('ui.call.decline')" (click)="Declined" /></span>
+		<span class="elemenx-call-invite-button accept"><Button Variant="primary" Shape="round" Size="large" Icon="phone" [title]="$T('ui.call.accept')" (click)="Accepted" /></span>
+		<span class="elemenx-call-invite-button accept" *if="Video"><Button Variant="primary" Shape="round" Size="large" Icon="video" [title]="$T('ui.call.acceptVideo')" (click)="AcceptedVideo" /></span>
+	</div>
+</div>

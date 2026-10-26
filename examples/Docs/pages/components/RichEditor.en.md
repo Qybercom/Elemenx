@@ -7,7 +7,7 @@ An editor of rich text (WYSIWYG). Value is the HTML of the document, kept to the
 - Command(name, value): bold, italic, underline, strike, code; paragraph, heading (value 1-4), quote, codeblock; bullets, numbers, indent, outdent; link (value: the URL; empty removes it), unlink; image (value: {Src, Alt} or the URL), table (value: {Rows, Columns}), row, column, row-delete, column-delete, table-delete; rule; clear; undo, redo. It returns false for a name it does not know or while it cannot edit.
 - Typing Markdown at the start of a paragraph makes blocks: '# ' to '#### ' headings, '- ' a list, '1. ' a numbered list, '> ' a quote, '``` ' code. Keys: Mod+B, Mod+I, Mod+U, Mod+E (code), Mod+K (the link event), Tab and Shift+Tab in a list nest its items.
 - Methods: Focus(), Formats() (what the selection has: {Bold, Italic, Underline, Strike, Code, Block, Level, List, Link, Table}), Insert(html), Markdown(), SetMarkdown(text), Text(), Print(options, callback), Find(query, {Case, Word, RegExp}) (returns the count of matches, marks them by the Find Service and shows the one at the caret or after it), FindNext(), FindPrevious(), ReplaceCurrent(text), ReplaceAll(text), ClearFind().
-- Mod+F opens its find bar (a FindBar over its corner), Mod+H with the replace row; FindBar: false leaves it out.
+- Mod+F opens its find bar (a FindBar over its corner), Mod+R (or Mod+H) with the replace row; FindBar: false leaves it out.
 - Events: input and change (Value), formats (Formats() as the selection moves), link ({Href, Text}: Mod+K, for a dialog of the Application), files (the files pasted or dropped: the Application uploads them and inserts images by Command), ready (the editor).
 
 ## Properties

@@ -1,12 +1,12 @@
 <div class="elemenx-column native-notes">
-	<TitleBar Title="Notes" Icon="file-text" Window="notes" />
-	<h2 class="elemenx-title">Notes</h2>
+	<TitleBar [title]="$T('native.notes.title')" Icon="file-text" Window="notes" />
+	<h2 class="elemenx-title">{{$T('native.notes.title')}}</h2>
 	<div class="elemenx-container native-note-form">
 		<div class="native-note-kind">
-			<Select [options]="Kinds" [value]="Kind" (change)="Kinded" />
+			<Select [options]="KindsOf($T('native.kinds.idea'), $T('native.kinds.task'))" [value]="Kind" (change)="Kinded" />
 		</div>
-		<Input Placeholder="A note" [value]="Text" (input)="Typed" />
-		<button type="button" class="elemenx-button primary medium native-note-add" *tip="{Title: 'Add', Text: 'Adds the note to the list the main window shows too.', Delay: 0}" (click)="Added">Add</button>
+		<Input [placeholder]="$T('native.notes.placeholder')" [value]="Text" (input)="Typed" />
+		<button type="button" class="elemenx-button primary medium native-note-add" *tip="{Title: $T('native.notes.add'), Text: $T('native.addTip'), Delay: 0}" (click)="Added">{{$T('native.notes.add')}}</button>
 	</div>
 	<ul class="elemenx-ul native-note-list">
 		<li *for="item of Items" *key="item.ID">{{item.Kind}}: {{item.Text}}</li>

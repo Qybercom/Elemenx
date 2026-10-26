@@ -1,0 +1,22 @@
+{
+	"scopeName": "elemenx.template.javascript",
+	"injectionSelector": "L:source.js -comment -string",
+	"patterns": [
+		{
+			"begin": "(\\$Template)\\s*(:)\\s*(['\"`])",
+			"beginCaptures": {
+				"1": {"name": "meta.object-literal.key.js support.type.property-name.template.elemenx"},
+				"2": {"name": "punctuation.separator.key-value.js"},
+				"3": {"name": "string.quoted.js punctuation.definition.string.begin.js"}
+			},
+			"end": "(?<!\\\\)\\3",
+			"endCaptures": {
+				"0": {"name": "string.quoted.js punctuation.definition.string.end.js"}
+			},
+			"contentName": "text.html.elemenx",
+			"patterns": [
+				{"include": "text.html.basic"}
+			]
+		}
+	]
+}

@@ -1,0 +1,83 @@
+/* An invitation to a call: a dark card of its own (it goes in a card of a notification with Bare), its picture ringing. */
+.elemenx-call-invite {
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+	padding: 16px;
+	background: var(--elemenx-text);
+	border-radius: var(--elemenx-radius-large);
+	box-shadow: var(--elemenx-shadow);
+	color: var(--elemenx-background);
+	font-family: var(--elemenx-font);
+}
+
+.elemenx-call-invite-caller {
+	display: flex;
+	align-items: center;
+	gap: 14px;
+}
+
+.elemenx-call-invite-avatar {
+	position: relative;
+	display: inline-flex;
+	border-radius: 50%;
+	animation: elemenx-call-ring 1.4s ease-out infinite;
+}
+
+.elemenx-call-invite-text {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	min-width: 0;
+}
+
+.elemenx-call-invite-name {
+	overflow: hidden;
+	font-size: var(--elemenx-font-size-large);
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.elemenx-call-invite-kind {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	opacity: 0.75;
+}
+
+.elemenx-call-invite-actions {
+	display: flex;
+	justify-content: flex-end;
+	gap: 12px;
+}
+
+/* The places of its Buttons: the kind of the answer, no box of their own; accepting is green, as on a phone. */
+.elemenx-call-invite-button {
+	display: contents;
+}
+
+.elemenx-call-invite-button.accept .elemenx-button {
+	background: var(--elemenx-success);
+	border-color: var(--elemenx-success);
+	color: var(--elemenx-surface);
+}
+
+.elemenx-call-invite-button.accept .elemenx-button:hover {
+	background: linear-gradient(rgba(var(--elemenx-text-rgb), 0.12), rgba(var(--elemenx-text-rgb), 0.12)), var(--elemenx-success);
+}
+
+@keyframes elemenx-call-ring {
+	0% {
+		box-shadow: 0 0 0 0 rgba(var(--elemenx-success-rgb), 0.55);
+	}
+
+	100% {
+		box-shadow: 0 0 0 14px rgba(var(--elemenx-success-rgb), 0);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.elemenx-call-invite-avatar {
+		animation: none;
+	}
+}

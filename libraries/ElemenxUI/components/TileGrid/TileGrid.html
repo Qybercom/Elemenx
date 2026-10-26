@@ -7,7 +7,7 @@
 				<header class="elemenx-tile-group-header">
 					<h3 class="elemenx-tile-group-title">{{group.Title || ''}}</h3>
 					<span class="elemenx-tile-group-actions">
-						<button class="elemenx-tile-group-action" type="button" *for="action of group.Actions || []" *key="action.ID" [attribute.title]="action.Title || action.Label || null" [attribute.aria-label]="action.Title || action.Label || null" [attribute.data-group]="group.ID" [attribute.data-action]="action.ID" (click)="Act"><Icon *if="action.Icon" [name]="action.Icon" /><span *if="action.Label">{{action.Label}}</span></button>
+						<span class="elemenx-tile-group-action" *for="action of group.Actions || []" *key="action.ID" [attribute.data-group]="group.ID" [attribute.data-action]="action.ID"><Button Variant="ghost" Size="small" [icon]="action.Icon || ''" [label]="action.Label || ''" [title]="action.Title || action.Label || ''" (click)="Act" /></span>
 						<span class="elemenx-tile-group-custom" *if="group.Element || group.Render" *mount="group"></span>
 					</span>
 				</header>

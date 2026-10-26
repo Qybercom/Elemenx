@@ -25,7 +25,7 @@ Elemenx.Directive('popup', {
 		if (data.Popover)
 			element.setAttribute('popover', 'manual');
 
-		/* Into the top layer, or out of it; a panel out of the document waits for its next opening. */
+		/* Into the top layer, or out of it (Show waits for a panel out of the document). */
 		data.Layer = function (open) {
 			if (!data.Popover || !element.isConnected) return;
 
@@ -144,6 +144,31 @@ Elemenx.Directive('popup', {
 			data.Dismiss('escape');
 		};
 
+		/*
+		 * Into the top layer with its listeners, placed. A panel open while its element is out of the page (a component
+		 * built and then placed, a menu drawn in a busy page) waits for it to be in: before, it stayed out of the top layer
+		 * and its document heard no Escape (regression).
+		 */
+		data.Show = function () {
+			if (!data.Open) return;
+
+			if (!element.isConnected) {
+				data.Waiting = window.setTimeout(data.Show, 16);
+
+				return;
+			}
+
+			data.Layer(true);
+			data.Listen(true);
+
+			element.style.left = '0px';
+			element.style.top = '0px';
+
+			data.Position();
+
+			data.View().requestAnimationFrame(data.Position);
+		};
+
 		/* The listeners go on the document and the window the panel opened in, and come off the same ones. */
 		data.Listen = function (on) {
 			var method = on ? 'addEventListener' : 'removeEventListener';
@@ -180,17 +205,16 @@ Elemenx.Directive('popup', {
 		data.Open = open;
 		element.hidden = !open;
 
-		data.Layer(open);
-		data.Listen(open);
+		window.clearTimeout(data.Waiting);
 
-		if (open) {
-			element.style.left = '0px';
-			element.style.top = '0px';
+		if (!open) {
+			data.Layer(false);
+			data.Listen(false);
 
-			data.Position();
-
-			data.View().requestAnimationFrame(data.Position);
+			return;
 		}
+
+		data.Show();
 	},
 
 	$OnDestroy: function (context) {
@@ -198,6 +222,8 @@ Elemenx.Directive('popup', {
 			context.Data.Listen(false);
 			context.Data.Layer(false);
 		}
+
+		window.clearTimeout(context.Data.Waiting);
 
 		context.Data.Open = false;
 	}

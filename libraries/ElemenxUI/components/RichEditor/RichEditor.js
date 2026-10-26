@@ -16,7 +16,7 @@
  *   List, Link, Table}), Insert(html), Markdown(), SetMarkdown(text), Text(), Print(options, callback),
  *   Find(query, {Case, Word, RegExp}) (returns the count of matches, marks them by the Find Service and shows the
  *   one at the caret or after it), FindNext(), FindPrevious(), ReplaceCurrent(text), ReplaceAll(text), ClearFind().
- * - Mod+F opens its find bar (a FindBar over its corner), Mod+H with the replace row; FindBar: false leaves it out.
+ * - Mod+F opens its find bar (a FindBar over its corner), Mod+R (or Mod+H) with the replace row; FindBar: false leaves it out.
  * - Events: input and change (Value), formats (Formats() as the selection moves), link ({Href, Text}: Mod+K, for a
  *   dialog of the Application), files (the files pasted or dropped: the Application uploads them and inserts images
  *   by Command), ready (the editor).
@@ -761,11 +761,15 @@ Elemenx.Component('RichEditor', {
 		var key = String(event.key || '').toLowerCase();
 		var formats;
 
-		/* Mod+F: the find bar; Mod+H: with its replace row (an editor that can change). */
-		if (mod && !event.altKey && !event.shiftKey && (event.code === 'KeyF' || event.code === 'KeyH') && this.FindBar && this.FindBar !== 'false') {
+		/*
+		 * Mod+F: the find bar; Mod+R (or Mod+H): with its replace row (an editor that can change). Taken here, while the
+		 * editor has the focus: the page does not reload, a hotkey of the page (Reload of a menu) does not run.
+		 */
+		if (mod && !event.altKey && !event.shiftKey && (event.code === 'KeyF' || event.code === 'KeyR' || event.code === 'KeyH') && this.FindBar && this.FindBar !== 'false') {
 			event.preventDefault();
+			event.stopPropagation();
 
-			this.OpenFind(event.code === 'KeyH');
+			this.OpenFind(event.code !== 'KeyF');
 
 			return;
 		}
@@ -890,8 +894,9 @@ Elemenx.Component('RichEditor', {
 			event.preventDefault();
 	},
 
-	Act: function (event, node) {
-		var name = node.getAttribute('data-command');
+	/* A Button of the toolbar: its command on the element round it. */
+	Act: function (event) {
+		var name = event.target.closest('[data-command]').getAttribute('data-command');
 
 		var root = this.$Element();
 

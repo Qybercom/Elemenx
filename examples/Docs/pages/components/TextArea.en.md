@@ -8,6 +8,7 @@ A field of several lines of text. Value, Placeholder, Rows (the height in lines)
 | Property | Default |
 | --- | --- |
 | `Value` | `''` |
+| `Label` | `''` |
 | `Placeholder` | `''` |
 | `Rows` | `3` |
 | `MaxLength` | `null` |

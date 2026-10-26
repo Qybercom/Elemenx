@@ -80,8 +80,11 @@ test.describe('Elemenx native: the desktop program', function () {
 
 		fs.writeFileSync(path.join(folder, 'note.txt'), 'A note.');
 
-		/* Started by a task of its jump list, as the taskbar of Windows starts it. */
-		app = await electron.launch({executablePath: executable(), args: ['--elemenx-task=compose']});
+		/*
+		 * Started by a task of its jump list, as the taskbar of Windows starts it; in English, whatever the language of the
+		 * system, and with data of its own (no language or theme a user chose in the program).
+		 */
+		app = await electron.launch({executablePath: executable(), args: ['--elemenx-task=compose', '--lang=en-US', '--user-data-dir=' + path.join(folder, 'data')]});
 		window = await app.firstWindow();
 
 		/* The dialogs and the browser of the system, stood in for: what they were asked is kept in the main process. */

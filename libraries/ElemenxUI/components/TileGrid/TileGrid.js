@@ -303,7 +303,9 @@ Elemenx.Component('TileGrid', {
 		this.Open(event, node);
 	},
 
-	Act: function (event, node) {
+	/* A Button of an action: the group and the action on the element round it. */
+	Act: function (event) {
+		var node = event.target.closest('[data-action]');
 		var group = this.Groups[this.GroupIndex(node.getAttribute('data-group'))];
 		var action = group && (group.Actions || []).filter(function (entry) {
 			return String(entry.ID) === node.getAttribute('data-action');

@@ -14,6 +14,7 @@ Elemenx.Component('Select', {
 		Description: 'A select: a button that opens a list of Options and shows the chosen one.',
 		Events: ['change'],
 		Props: {
+			Label: 'The name of the field for screen readers, when no Field names it.',
 			Options: {Schema: {Value: 'text', Label: 'text', Icon: 'icon', Disabled: 'bool'}, Description: 'The options: [{Value, Label, Hint, Icon, Group, Disabled}].'},
 			Value: 'The Value of the option chosen, or null.',
 			Placeholder: 'The text shown while it is empty.',
@@ -30,6 +31,7 @@ Elemenx.Component('Select', {
 	},
 	Options: [],
 	Value: null,
+	Label: '',
 	Placeholder: '',
 	Empty: '',
 	Icon: '',

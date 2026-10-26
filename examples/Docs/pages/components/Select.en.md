@@ -9,6 +9,7 @@ A select: a button that opens a list of Options and shows the chosen one. Option
 | --- | --- |
 | `Options` | `[]` |
 | `Value` | `null` |
+| `Label` | `''` |
 | `Placeholder` | `''` |
 | `Empty` | `''` |
 | `Icon` | `''` |

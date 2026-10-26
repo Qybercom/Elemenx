@@ -67,8 +67,9 @@
 	border-color: var(--elemenx-accent-hover);
 }
 
+/* A shade laid over the color of the button itself: leaving it, the transition goes from that color to that color. */
 .elemenx-button.primary:active {
-	background: linear-gradient(rgba(var(--elemenx-accent-rgb), 0.8), rgba(var(--elemenx-accent-rgb), 0.8)), var(--elemenx-background);
+	background: linear-gradient(rgba(var(--elemenx-background-rgb), 0.2), rgba(var(--elemenx-background-rgb), 0.2)), var(--elemenx-accent);
 }
 
 .elemenx-button.ghost {
@@ -87,7 +88,7 @@
 }
 
 .elemenx-button.danger:hover {
-	background: linear-gradient(rgba(var(--elemenx-danger-rgb), 0.88), rgba(var(--elemenx-danger-rgb), 0.88)), var(--elemenx-text);
+	background: linear-gradient(rgba(var(--elemenx-text-rgb), 0.12), rgba(var(--elemenx-text-rgb), 0.12)), var(--elemenx-danger);
 	border-color: transparent;
 }
 

@@ -39,57 +39,6 @@
 	outline: none;
 }
 
-.elemenx-find-button,
-.elemenx-find-option,
-.elemenx-find-text-button {
-	display: inline-flex;
-	flex: none;
-	align-items: center;
-	justify-content: center;
-	min-width: 26px;
-	height: 26px;
-	padding: 0 4px;
-	background: transparent;
-	border: 0;
-	border-radius: var(--elemenx-radius);
-	color: var(--elemenx-text-muted);
-	font: inherit;
-	cursor: pointer;
-}
-
-.elemenx-find-option {
-	font-family: var(--elemenx-font-mono);
-}
-
-.elemenx-find-text-button {
-	padding: 0 8px;
-}
-
-.elemenx-find-button:hover:not(:disabled),
-.elemenx-find-option:hover,
-.elemenx-find-text-button:hover:not(:disabled) {
-	background: var(--elemenx-surface-hover);
-	color: var(--elemenx-text);
-}
-
-.elemenx-find-option[aria-pressed='true'] {
-	background: rgba(var(--elemenx-accent-rgb), 0.16);
-	color: var(--elemenx-accent);
-}
-
-.elemenx-find-button:disabled,
-.elemenx-find-text-button:disabled {
-	opacity: 0.4;
-	cursor: default;
-}
-
-.elemenx-find-button:focus-visible,
-.elemenx-find-option:focus-visible,
-.elemenx-find-text-button:focus-visible {
-	box-shadow: 0 0 0 2px var(--elemenx-focus);
-	outline: none;
-}
-
 .elemenx-find-count {
 	flex: none;
 	min-width: 64px;
@@ -103,3 +52,19 @@
 	flex: none;
 	width: 26px;
 }
+
+/* The options: Buttons of their letters (mono), the accent while they are on. */
+.elemenx-find-option {
+	display: contents;
+}
+
+.elemenx-find-option .elemenx-button {
+	font-family: var(--elemenx-font-mono);
+}
+
+.elemenx-find-option .elemenx-button.pressed {
+	background: rgba(var(--elemenx-accent-rgb), 0.16);
+	border-color: transparent;
+	color: var(--elemenx-accent);
+}
+

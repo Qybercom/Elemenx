@@ -20,16 +20,40 @@
 
 .elemenx-notification-host.page {
 	position: fixed;
-	right: 0;
-	bottom: env(safe-area-inset-bottom);
 	z-index: 1300;
 	max-width: calc(100% - 16px);
 	pointer-events: none;
 }
 
+.elemenx-notification-host.page.bottom-right {
+	right: 0;
+	bottom: env(safe-area-inset-bottom);
+}
+
+.elemenx-notification-host.page.bottom-left {
+	left: 0;
+	bottom: env(safe-area-inset-bottom);
+}
+
+/* At the top the newest is next to the corner too: the list goes from the top down, its newest first. */
+.elemenx-notification-host.page.top-right {
+	top: env(safe-area-inset-top);
+	right: 0;
+	flex-direction: column-reverse;
+}
+
+.elemenx-notification-host.page.top-left {
+	top: env(safe-area-inset-top);
+	left: 0;
+	flex-direction: column-reverse;
+}
+
 .elemenx-notification {
+	position: relative;
 	display: flex;
 	align-items: flex-start;
+	overflow: hidden;
+	animation: elemenx-notification-in var(--elemenx-duration) ease-out;
 	gap: 12px;
 	padding: 12px;
 	background: var(--elemenx-surface);
@@ -104,4 +128,89 @@
 .elemenx-notification-close:focus-visible {
 	background: var(--elemenx-surface-hover);
 	outline: none;
+}
+
+/* A card of a Component of its own, without the frame of a card (Bare): the Component draws all of it. */
+.elemenx-notification.bare {
+	padding: 0;
+	background: transparent;
+	border: 0;
+	box-shadow: none;
+}
+
+.elemenx-notification-custom {
+	flex: 1;
+	min-width: 0;
+}
+
+/* The time a card has left, held while the pointer is over it. */
+.elemenx-notification-timer {
+	position: absolute;
+	left: 0;
+	bottom: 0;
+	height: 3px;
+	background: var(--elemenx-accent);
+	opacity: 0.6;
+	animation: elemenx-notification-timer var(--elemenx-notification-duration) linear forwards;
+}
+
+.elemenx-notification.held .elemenx-notification-timer {
+	animation-play-state: paused;
+}
+
+/* The progress of a task (Progress). */
+.elemenx-notification-progress {
+	display: block;
+	height: 4px;
+	margin-top: 6px;
+	overflow: hidden;
+	background: var(--elemenx-surface-hover);
+	border-radius: var(--elemenx-radius-small);
+}
+
+.elemenx-notification-progress > span {
+	display: block;
+	height: 100%;
+	background: var(--elemenx-accent);
+	transition: width var(--elemenx-duration) ease;
+}
+
+/* The cards past the limit. */
+.elemenx-notification-more {
+	align-self: flex-end;
+	padding: 2px 10px;
+	background: var(--elemenx-surface);
+	border: 1px solid var(--elemenx-border);
+	border-radius: var(--elemenx-radius-pill);
+	color: var(--elemenx-text-muted);
+	font-size: var(--elemenx-font-size-small);
+	pointer-events: auto;
+}
+
+@keyframes elemenx-notification-in {
+	from {
+		opacity: 0;
+		transform: translateY(8px);
+	}
+}
+
+@keyframes elemenx-notification-timer {
+	from {
+		width: 100%;
+	}
+
+	to {
+		width: 0;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.elemenx-notification {
+		animation: none;
+	}
+}
+
+/* The place of a Button of an action: its index, no box of its own. */
+.elemenx-notification-action {
+	display: contents;
 }

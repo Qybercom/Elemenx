@@ -2,7 +2,8 @@
  * A button. Variant: primary, secondary (default), ghost, danger or link; Size: small, medium, large or giant; Shape round
  * makes it round. Icon and IconRight are icons before and after its Label; without a Label it is an icon only, named by
  * its Title. Loading shows a spinner and disables it, Disabled disables it, Pressed (true or false) makes it a toggle
- * button (aria-pressed), Block stretches it to the full width. Type is the type of the native button (button, submit,
+ * button (aria-pressed), Expanded (true or false) tells it opens something (aria-expanded), AriaLabel is its name for
+ * a screen reader when its text does not say it (M for Mute the drums), Block stretches it to the full width. Type is the type of the native button (button, submit,
  * reset). Badge puts a badge over its corner, as *badge does: a count, 'dot', 'busy', a text or {Value, Tone, Max, Label}.
  * Events: click.
  */
@@ -28,6 +29,8 @@ Elemenx.Component('Button', {
 			Loading: 'Shows a spinner and disables the button.',
 			Block: 'Stretches it to the full width.',
 			Pressed: 'true or false makes it a toggle button (aria-pressed); empty for a plain button.',
+			Expanded: 'true or false: it opens and closes something (aria-expanded); empty for a plain button.',
+			AriaLabel: 'Its name for a screen reader, when its text does not say it (M for Mute the drums).',
 			Badge: 'A badge over its corner: a count, dot, busy, a text or {Value, Tone, Max, Label}.'
 		},
 		Sample: {Label: 'Primary', Variant: 'primary'}
@@ -44,6 +47,8 @@ Elemenx.Component('Button', {
 	Loading: false,
 	Block: false,
 	Pressed: null,
+	Expanded: null,
+	AriaLabel: '',
 	Badge: '',
 
 	$OnCreate: function () {

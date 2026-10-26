@@ -7,8 +7,8 @@
 		<span class="elemenx-game-minimap-player" *if="Player" [style.transform]="'translate(-50%, -50%) rotate(' + Number(Heading) + 'deg)'" aria-hidden="true"></span>
 		<span class="elemenx-game-minimap-north" *if="North" aria-hidden="true">N</span>
 		<div class="elemenx-game-minimap-zoom" *if="Zoomable">
-			<button class="elemenx-game-minimap-button" type="button" [attribute.aria-label]="$T('ui.game.zoomIn')" (click)="ZoomIn">+</button>
-			<button class="elemenx-game-minimap-button" type="button" [attribute.aria-label]="$T('ui.game.zoomOut')" (click)="ZoomOut">−</button>
+			<Button Shape="round" Size="small" Icon="add" [title]="$T('ui.game.zoomIn')" (click)="ZoomIn" />
+			<Button Shape="round" Size="small" Icon="remove" [title]="$T('ui.game.zoomOut')" (click)="ZoomOut" />
 		</div>
 	</div>
 	<figcaption class="elemenx-game-minimap-caption" *if="Title || Note">

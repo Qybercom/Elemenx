@@ -1,0 +1,143 @@
+/*
+ * The tile of a participant: a dark frame of 16 by 9 (its place may set another size), the video filling it, the
+ * avatar in its middle; the frame of a speaker breathes with Level.
+ */
+.elemenx-call-tile {
+	position: relative;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 0;
+	min-height: 0;
+	aspect-ratio: 16 / 9;
+	overflow: hidden;
+	background: var(--elemenx-call-tile);
+	border-radius: var(--elemenx-radius-large);
+	color: var(--elemenx-call-text);
+	font-family: var(--elemenx-font);
+	isolation: isolate;
+}
+
+/* A tile of another page of a grid. */
+.elemenx-call-tile[hidden] {
+	display: none;
+}
+
+.elemenx-call-tile::after {
+	position: absolute;
+	inset: 0;
+	z-index: 2;
+	border: 2px solid transparent;
+	border-radius: inherit;
+	content: '';
+	pointer-events: none;
+	transition: border-color var(--elemenx-duration) ease, box-shadow var(--elemenx-duration) ease;
+}
+
+.elemenx-call-tile.speaking::after {
+	border-color: var(--elemenx-success);
+	box-shadow: inset 0 0 0 calc(var(--elemenx-call-level, 0) * 4px) rgba(var(--elemenx-success-rgb), 0.5);
+}
+
+.elemenx-call-tile.pinned::after {
+	border-color: var(--elemenx-accent);
+}
+
+.elemenx-call-tile-video,
+.elemenx-call-tile-video > * {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+}
+
+.elemenx-call-tile-video > * {
+	object-fit: cover;
+}
+
+/* A screen shared is kept whole; the own video is mirrored, as a mirror shows it. */
+.elemenx-call-tile.screen .elemenx-call-tile-video > * {
+	object-fit: contain;
+}
+
+.elemenx-call-tile.self .elemenx-call-tile-video > * {
+	transform: scaleX(-1);
+}
+
+.elemenx-call-tile-avatar {
+	display: flex;
+	opacity: 0.95;
+}
+
+.elemenx-call-tile-top {
+	position: absolute;
+	top: 8px;
+	right: 8px;
+	z-index: 3;
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.elemenx-call-tile-hand {
+	display: inline-flex;
+	padding: 4px;
+	background: var(--elemenx-warning);
+	border-radius: var(--elemenx-radius-pill);
+	color: var(--elemenx-call-tile);
+}
+
+/* The Signal of the connection on a chip as tall as the others of the tile; its dim bars light on the dark chip. */
+.elemenx-call-tile-quality {
+	display: inline-flex;
+	align-items: center;
+	box-sizing: border-box;
+	height: 24px;
+	padding: 0 6px;
+	background: var(--elemenx-call-chip);
+	border-radius: var(--elemenx-radius);
+}
+
+.elemenx-call-tile-quality .elemenx-signal-bar {
+	background: var(--elemenx-call-dim);
+}
+
+/* The Button that pins: shown while the pointer is over the tile, while it has the focus, and on a pinned tile. */
+.elemenx-call-tile-pin {
+	display: inline-flex;
+	opacity: 0;
+	transition: opacity var(--elemenx-duration) ease;
+}
+
+.elemenx-call-tile-pin .elemenx-button {
+	background: var(--elemenx-call-chip);
+	border-color: transparent;
+	color: var(--elemenx-call-text);
+}
+
+.elemenx-call-tile:hover .elemenx-call-tile-pin,
+.elemenx-call-tile-pin:focus-within,
+.elemenx-call-tile.pinned .elemenx-call-tile-pin {
+	opacity: 1;
+}
+
+.elemenx-call-tile-name {
+	position: absolute;
+	left: 8px;
+	bottom: 8px;
+	z-index: 3;
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	max-width: calc(100% - 16px);
+	padding: 3px 8px;
+	background: var(--elemenx-call-chip);
+	border-radius: var(--elemenx-radius);
+	font-size: var(--elemenx-font-size-small);
+}
+
+.elemenx-call-tile-name > span {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}

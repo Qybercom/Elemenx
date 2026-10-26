@@ -8,5 +8,7 @@ Elemenx.Application('Native', {
 	$Component: 'App',
 	$Root: 'Native',
 	$Mount: 'body',
-	$Use: ['ElemenxUI']
+	$Use: ['ElemenxUI'],
+	/* Its phrases in English and Russian: it starts in the language of the system, or the one chosen before. */
+	$Locales: {URL: 'locales/{language}.json', Languages: ['en', 'ru']}
 });

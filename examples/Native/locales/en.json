@@ -1,0 +1,65 @@
+{
+	"native": {
+		"menu": {
+			"file": "File",
+			"newNote": "New note",
+			"notesWindow": "Window of notes",
+			"open": "Open a file...",
+			"save": "Save a file...",
+			"quit": "Quit",
+			"edit": "Edit",
+			"undo": "Undo",
+			"redo": "Redo",
+			"cut": "Cut",
+			"copy": "Copy",
+			"paste": "Paste",
+			"selectAll": "Select all",
+			"view": "View",
+			"reload": "Reload",
+			"devTools": "Developer tools",
+			"actualSize": "Actual size",
+			"zoomIn": "Zoom in",
+			"zoomOut": "Zoom out",
+			"fullScreen": "Full screen",
+			"window": "Window",
+			"minimize": "Minimize",
+			"close": "Close",
+			"help": "Help",
+			"about": "About Elemenx native",
+			"show": "Show"
+		},
+		"actions": {
+			"message": "Message",
+			"openFile": "Open a file",
+			"saveFile": "Save a file",
+			"link": "Open example.com",
+			"maximize": "Maximize",
+			"progress": "Progress",
+			"attention": "Attention",
+			"tray": "Tray",
+			"window": "Open a window",
+			"notify": "Notify",
+			"card": "Notify in ElemenxUI",
+			"call": "Incoming call",
+			"download": "Download"
+		},
+		"tray": {
+			"open": "Open the program"
+		},
+		"notes": {
+			"title": "Notes",
+			"add": "Add",
+			"placeholder": "A note"
+		},
+		"platform": "Platform",
+		"notesCount": "Notes: {count}",
+		"badge": "Badge {count}",
+		"language": "Language",
+		"kinds": {
+			"idea": "Idea",
+			"task": "Task"
+		},
+		"addTip": "Adds the note to the list the main window shows too.",
+		"download": "Downloading the update"
+	}
+}

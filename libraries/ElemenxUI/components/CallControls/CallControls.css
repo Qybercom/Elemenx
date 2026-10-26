@@ -1,0 +1,76 @@
+/*
+ * The bar of a call: round Buttons on a dark band (the ones of the theme, in the colors of the room of a call), the
+ * ones turned off in red, the ones turned on in the accent, the red leave button at its end.
+ */
+.elemenx-call-controls {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: center;
+	gap: 8px 24px;
+	padding: 8px 12px;
+	color: var(--elemenx-call-text);
+	font-family: var(--elemenx-font);
+}
+
+.elemenx-call-controls-group {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.elemenx-call-controls-pair {
+	display: inline-flex;
+	align-items: center;
+}
+
+/* The place of a Button: its name for the code, no box of its own. */
+.elemenx-call-control {
+	display: contents;
+}
+
+.elemenx-call-controls .elemenx-button {
+	border-radius: var(--elemenx-radius-pill);
+}
+
+.elemenx-call-controls .elemenx-button.secondary,
+.elemenx-call-controls .elemenx-button.ghost {
+	background: var(--elemenx-call-control);
+	border-color: transparent;
+	color: var(--elemenx-call-text);
+}
+
+.elemenx-call-controls .elemenx-button.secondary:hover,
+.elemenx-call-controls .elemenx-button.ghost:hover {
+	background: var(--elemenx-call-control-hover);
+}
+
+/* A pressed toggle keeps its color: red turned off (the microphone, the camera), the accent turned on. */
+.elemenx-call-controls .elemenx-button.danger.pressed {
+	background: var(--elemenx-danger);
+	border-color: var(--elemenx-danger);
+}
+
+.elemenx-call-controls .elemenx-button.primary.pressed {
+	background: var(--elemenx-accent);
+	border-color: var(--elemenx-accent);
+}
+
+.elemenx-call-controls .elemenx-button.danger.pressed:hover {
+	background: linear-gradient(rgba(var(--elemenx-text-rgb), 0.12), rgba(var(--elemenx-text-rgb), 0.12)), var(--elemenx-danger);
+}
+
+.elemenx-call-controls .elemenx-button.primary.pressed:hover {
+	background: var(--elemenx-accent-hover);
+}
+
+/* The arrow of the devices beside its button: no ground of its own. */
+.elemenx-call-controls-pair .elemenx-button.ghost {
+	background: transparent;
+}
+
+@media (max-width: 560px) {
+	.elemenx-call-control.leave .elemenx-button-label {
+		display: none;
+	}
+}

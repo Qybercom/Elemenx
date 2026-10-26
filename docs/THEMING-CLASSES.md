@@ -164,7 +164,7 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 
 ## ButtonGroup
 
-- `elemenx-button`: `badged`, `block`, `danger`, `ghost`, `giant`, `icon-only`, `large`, `link`, `loading`, `pressed`, `primary`, `round`, `small`
+- `elemenx-button`: `badged`, `block`, `danger`, `ghost`, `giant`, `icon-only`, `large`, `link`, `loading`, `pressed`, `primary`, `round`, `secondary`, `small`
 - `elemenx-button-group`: `attached`, `vertical`
 
 ## Properties
@@ -206,22 +206,25 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 
 ## Calendar
 
-- `elemenx-cal`: `dragging`, `editable`
+- `elemenx-cal`: `day`, `dragging`, `editable`
 - `elemenx-cal-allday`: `drop`
-- `elemenx-cal-block`: `dragged`, `short`
+- `elemenx-cal-block`: `after`, `before`, `dragged`, `short`
 - `elemenx-cal-column`: `today`
 - `elemenx-cal-date`
 - `elemenx-cal-day`: `drop`, `outside`, `today`
-- `elemenx-cal-event`: `dragged`, `whole`
+- `elemenx-cal-event`: `bar`, `dragged`, `earlier`, `joins-after`, `joins-before`, `later`, `whole`
 - `elemenx-cal-header`
 - `elemenx-cal-hour`
 - `elemenx-cal-hours`
+- `elemenx-cal-item`
+- `elemenx-cal-label`
 - `elemenx-cal-month`
 - `elemenx-cal-more`
 - `elemenx-cal-nav`
 - `elemenx-cal-now`
 - `elemenx-cal-resize`
 - `elemenx-cal-shadow`
+- `elemenx-cal-spacer`
 - `elemenx-cal-time`
 - `elemenx-cal-title`
 - `elemenx-cal-view`: `current`
@@ -253,6 +256,39 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-centered-middle`
 - `elemenx-centered-state`
 - `elemenx-centered-title`
+
+## Chronicle
+
+- `elemenx-chronicle`: `compact`
+- `elemenx-chronicle-body`
+- `elemenx-chronicle-content`
+- `elemenx-chronicle-head`
+- `elemenx-chronicle-item`: `accent`, `danger`, `dot`, `info`, `small`, `success`, `warning`
+- `elemenx-chronicle-node`
+
+## Timeline
+
+- `elemenx-timeline`: `editable`, `seekable`, `vertical`
+- `elemenx-timeline-axis`
+- `elemenx-timeline-body`
+- `elemenx-timeline-buffer`
+- `elemenx-timeline-controls`
+- `elemenx-timeline-label`: `before`, `selected`
+- `elemenx-timeline-label-text`
+- `elemenx-timeline-lane`
+- `elemenx-timeline-lane-name`
+- `elemenx-timeline-lane-names`
+- `elemenx-timeline-leader`
+- `elemenx-timeline-now`
+- `elemenx-timeline-playhead`
+- `elemenx-timeline-point`: `selected`
+- `elemenx-timeline-progress`
+- `elemenx-timeline-range`: `cut-end`, `cut-start`, `draft`, `narrow`, `selected`
+- `elemenx-timeline-range-edge`: `end`, `start`
+- `elemenx-timeline-range-label`
+- `elemenx-timeline-tick`: `major`
+- `elemenx-timeline-tick-label`
+- `elemenx-timeline-track`
 
 ## Chart
 
@@ -475,6 +511,7 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 
 ## DesignerDocument
 
+- `elemenx-designer-document-add`
 - `elemenx-designer-document`
 - `elemenx-designer-document-body`
 - `elemenx-designer-document-drop`
@@ -495,6 +532,8 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-designer-inspector-head`
 - `elemenx-designer-inspector-props`
 - `elemenx-designer-inspector-title`
+- `elemenx-designer-kind`
+- `elemenx-designer-list-field`
 - `elemenx-designer-list`
 - `elemenx-designer-list-actions`
 - `elemenx-designer-list-add`
@@ -533,6 +572,9 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 
 ## DesignerSettings
 
+- `elemenx-designer-settings-add-guard`
+- `elemenx-designer-settings-add-route`
+- `elemenx-designer-settings-remove-guard`
 - `elemenx-designer-settings`
 - `elemenx-designer-settings-body`
 - `elemenx-designer-settings-grid`
@@ -584,6 +626,7 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 
 ## DialogHost
 
+- `elemenx-dialog-host-action`
 - `elemenx-dialog-host`
 - `elemenx-dialog-host-actions`
 - `elemenx-dialog-host-item`
@@ -745,7 +788,6 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 
 - `elemenx-game-marker`: `ally`, `edge`, `enemy`, `quest`
 - `elemenx-game-minimap`: `round`
-- `elemenx-game-minimap-button`
 - `elemenx-game-minimap-caption`
 - `elemenx-game-minimap-map`
 - `elemenx-game-minimap-north`
@@ -805,6 +847,13 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-game-tab-label`
 - `elemenx-game-tab-number`
 - `elemenx-game-tabs`: `horizontal`, `vertical`
+
+## GameWorld
+
+- `elemenx-game-world`: `panning`
+- `elemenx-game-world-canvas`
+- `elemenx-game-world-hud`
+- `elemenx-game-world-minimap`
 
 ## Keyboard
 
@@ -914,15 +963,62 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 
 ## NotificationHost
 
-- `elemenx-notification`: `danger`, `success`, `warning`
+- `elemenx-notification-action`
+- `elemenx-notification`: `bare`, `danger`, `held`, `success`, `warning`
 - `elemenx-notification-actions`
 - `elemenx-notification-body`
 - `elemenx-notification-close`
+- `elemenx-notification-custom`
 - `elemenx-notification-frame`
-- `elemenx-notification-host`: `page`
+- `elemenx-notification-host`: `bottom-left`, `bottom-right`, `page`, `top-left`, `top-right`
 - `elemenx-notification-icon`
 - `elemenx-notification-image`
+- `elemenx-notification-more`
+- `elemenx-notification-progress`
 - `elemenx-notification-text`
+- `elemenx-notification-timer`
+
+## CallInvite
+
+- `elemenx-call-invite`
+- `elemenx-call-invite-actions`
+- `elemenx-call-invite-avatar`
+- `elemenx-call-invite-button`: `accept`
+- `elemenx-call-invite-caller`
+- `elemenx-call-invite-kind`
+- `elemenx-call-invite-name`
+- `elemenx-call-invite-text`
+
+## CallTile
+
+- `elemenx-call-tile`: `pinned`, `screen`, `self`, `speaking`
+- `elemenx-call-tile-avatar`
+- `elemenx-call-tile-hand`
+- `elemenx-call-tile-name`
+- `elemenx-call-tile-pin`
+- `elemenx-call-tile-quality`
+- `elemenx-call-tile-top`
+- `elemenx-call-tile-video`
+
+## CallControls
+
+- `elemenx-call-controls`
+- `elemenx-call-controls-group`
+- `elemenx-call-controls-pair`
+- `elemenx-call-control`: `leave`
+
+## CallStage
+
+- `elemenx-call-stage`: `grid`, `speaker`, `screen`, `side`, `has-main`, `has-self`, `has-status`, `has-controls`
+- `elemenx-call-stage-area`
+- `elemenx-call-stage-body`
+- `elemenx-call-stage-controls`
+- `elemenx-call-stage-main`
+- `elemenx-call-stage-pages`
+- `elemenx-call-stage-participants`
+- `elemenx-call-stage-self`: `bottom-right`, `bottom-left`, `top-right`, `top-left`, `dragging`
+- `elemenx-call-stage-side`
+- `elemenx-call-stage-status`
 
 ## NavList
 
@@ -1027,7 +1123,6 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-profile-names`
 - `elemenx-profile-stat`
 - `elemenx-profile-stats`
-- `elemenx-profile-status`: `away`, `busy`, `online`
 - `elemenx-profile-status-label`
 
 ## Progress
@@ -1099,7 +1194,7 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 ## RichEditor
 
 - `elemenx-rich-editor`: `disabled`, `growing`, `readonly`
-- `elemenx-rich-editor-action`: `active`
+- `elemenx-rich-editor-action`
 - `elemenx-rich-editor-actions`
 - `elemenx-rich-editor-content`: `empty`
 - `elemenx-rich-editor-find`
@@ -1170,6 +1265,11 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-settings-menu-title`
 - `elemenx-settings-menu-value`
 
+## Signal
+
+- `elemenx-signal`: `accent`, `danger`, `muted`, `small`, `success`, `warning`
+- `elemenx-signal-bar`: `on`
+
 ## Slider
 
 - `elemenx-slider`: `disabled`, `large`, `small`, `vertical`
@@ -1217,6 +1317,7 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 ## Table
 
 - `elemenx-table-box`
+- `elemenx-table-check-box`
 - `elemenx-table-check`
 - `elemenx-table-empty`
 - `elemenx-table-filter-select`
@@ -1301,15 +1402,6 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-time-column`
 - `elemenx-time-columns`
 - `elemenx-time-popup`
-
-## Timeline
-
-- `elemenx-timeline`: `compact`
-- `elemenx-timeline-body`
-- `elemenx-timeline-content`
-- `elemenx-timeline-head`
-- `elemenx-timeline-item`: `accent`, `danger`, `dot`, `info`, `small`, `success`, `warning`
-- `elemenx-timeline-node`
 
 ## ToastHost
 
@@ -1403,7 +1495,6 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 
 - `elemenx-board`: `grid-dots`, `grid-lines`, `panning`
 - `elemenx-board-content`
-- `elemenx-board-control`
 - `elemenx-board-controls`
 - `elemenx-board-host`
 - `elemenx-board-world`
@@ -1451,14 +1542,12 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 ## FindBar
 
 - `elemenx-find`
-- `elemenx-find-button`
 - `elemenx-find-count`
 - `elemenx-find-indent`
 - `elemenx-find-option`
 - `elemenx-find-query`
 - `elemenx-find-replacement`
 - `elemenx-find-row`
-- `elemenx-find-text-button`
 
 ## Markdown
 

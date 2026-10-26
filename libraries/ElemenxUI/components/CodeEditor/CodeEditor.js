@@ -13,8 +13,8 @@
  *   Detail, Kind}] or texts. The items that start with the word show; Enter or Tab inserts one.
  * - Hint(context, callback) shows a hint for the text under the pointer: callback(error, text).
  * - Keys: Tab and Shift+Tab indent and outdent (Escape, then Tab, leaves the editor), Enter keeps the indent,
- *   Mod+/ comments the lines, Mod+] and Mod+[ indent and outdent, Ctrl+Space completes, Mod+F finds and Mod+H
- *   replaces in its own find bar (a FindBar over its corner; FindBar: false leaves it to the page).
+ *   Mod+/ comments the lines, Mod+] and Mod+[ indent and outdent, Ctrl+Space completes, Mod+F finds and Mod+R (or
+ *   Mod+H) replaces in its own find bar (a FindBar over its corner; FindBar: false leaves it to the page).
  * - Methods: Focus(), Selection() ({Start, End, Text}), Select(start, end), Insert(text), Replace(start, end, text),
  *   Position(offset) ({Line, Column}), Offset(line, column), GoTo(line, column), Undo(), Redo(), Indent(),
  *   Outdent(), Comment(), Find(query, {Case, Word, RegExp}) (returns the count of matches and selects the next one),
@@ -684,11 +684,15 @@ Elemenx.Component('CodeEditor', {
 
 		if (event.isComposing || event.keyCode === 229) return;
 
-		/* Mod+F: the find bar; Mod+H: with its replace row (an editor that can change). */
-		if (mod && !event.altKey && !event.shiftKey && (event.code === 'KeyF' || event.code === 'KeyH') && this.FindBar && this.FindBar !== 'false') {
+		/*
+		 * Mod+F: the find bar; Mod+R (or Mod+H): with its replace row (an editor that can change). Taken here, while the
+		 * editor has the focus: the page does not reload, a hotkey of the page (Reload of a menu) does not run.
+		 */
+		if (mod && !event.altKey && !event.shiftKey && (event.code === 'KeyF' || event.code === 'KeyR' || event.code === 'KeyH') && this.FindBar && this.FindBar !== 'false') {
 			event.preventDefault();
+			event.stopPropagation();
 
-			this.OpenFind(event.code === 'KeyH');
+			this.OpenFind(event.code !== 'KeyF');
 
 			return;
 		}

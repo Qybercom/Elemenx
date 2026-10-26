@@ -108,7 +108,8 @@ describe('Builder: the icon of an Application on every platform', function () {
 
 	it('takes /icons/app.png from the root of the project, and a full path of a file as it is, a full path of Linux too', function () {
 		var folder = project(256);
-		var outside = path.resolve(process.cwd(), 'tests', 'dist', 'icon-outside.ico');
+		/* Of this run alone: two runs at the same time do not take each other's file. */
+		var outside = path.resolve(process.cwd(), 'tests', 'dist', 'icon-outside-' + process.pid + '.ico');
 		/* A full path that starts with /, as all of them do on Linux and macOS (on Windows: from the root of the drive). */
 		var slashed = process.platform === 'win32' ? outside.slice(2).replace(/\\/g, '/') : outside;
 		var icon;

@@ -1,7 +1,7 @@
 <!-- generated -->
 # Button
 
-Кнопка. Variant: primary, secondary (по умолчанию), ghost, danger или link; Size: small, medium, large или giant; Shape round делает её круглой. Icon и IconRight — иконки до и после подписи Label; без Label кнопка — только иконка, и её название берётся из Title. Loading показывает вращающийся индикатор и выключает кнопку, Disabled выключает её, Pressed (true или false) делает её переключателем (aria-pressed), Block растягивает на всю ширину. Type — тип нативной кнопки (button, submit, reset). Badge ставит в угол значок, как директива *badge: число, 'dot', 'busy', текст или {Value, Tone, Max, Label}. Событие click.
+Кнопка. Variant: primary, secondary (по умолчанию), ghost, danger или link; Size: small, medium, large или giant; Shape round делает её круглой. Icon и IconRight — иконки до и после подписи Label; без Label кнопка — только иконка, и её название берётся из Title. Loading показывает вращающийся индикатор и выключает кнопку, Disabled выключает её, Pressed (true или false) делает её переключателем (aria-pressed), Expanded (true или false) говорит, что она раскрывает и закрывает что-то (aria-expanded), AriaLabel — её имя для скринридера, когда текст его не передаёт (M — «Выключить звук барабанов»), Block растягивает на всю ширину. Type — тип нативной кнопки (button, submit, reset). Badge ставит в угол значок, как директива *badge: число, 'dot', 'busy', текст или {Value, Tone, Max, Label}. Событие click.
 
 ## Свойства
 
@@ -19,6 +19,8 @@
 | `Loading` | `false` |
 | `Block` | `false` |
 | `Pressed` | `null` |
+| `Expanded` | `null` |
+| `AriaLabel` | `''` |
 | `Badge` | `''` |
 
 ## События

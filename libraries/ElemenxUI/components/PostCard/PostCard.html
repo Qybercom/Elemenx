@@ -14,7 +14,7 @@
 		</div>
 		<div class="elemenx-card-footer">
 			<span class="elemenx-person" *if="Author">
-				<span class="elemenx-person-avatar" aria-hidden="true"><img *if="Avatar" [src]="Avatar" alt="" /><span *if="!Avatar">{{Initials(Author)}}</span></span>
+				<span class="elemenx-person-avatar" aria-hidden="true"><Avatar [name]="Author" [image]="Avatar" [size]="32" /></span>
 				<span class="elemenx-person-text"><span class="elemenx-person-name">{{Author}}</span><span class="elemenx-card-meta"><time *if="Format().When(Date)" [attribute.datetime]="Format().When(Date).toISOString()">{{Format().Date(Date)}}</time><span *if="ReadTime">{{ReadLabel ? ReadTime + ' ' + ReadLabel : $T('ui.postCard.readTime', {count: ReadTime})}}</span></span></span>
 			</span>
 			<span class="elemenx-spacer"></span>

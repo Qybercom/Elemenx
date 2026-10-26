@@ -1,0 +1,21 @@
+<div class="elemenx-call-controls" role="toolbar" [attribute.aria-label]="$T('ui.call.controls')">
+	<div class="elemenx-call-controls-group">
+		<span class="elemenx-call-controls-pair" *if="Shows(Hide, 'mute')">
+			<span class="elemenx-call-control" data-control="mute"><Button Shape="round" Size="large" [variant]="Muted ? 'danger' : 'secondary'" [pressed]="!!Muted" [icon]="Muted ? 'mic-off' : 'mic'" [title]="Muted ? $T('ui.call.unmute') : $T('ui.call.mute')" (click)="Muting" /></span>
+			<Menu *if="SoundItems(Devices).length" Icon="chevron-up" Caret="false" Variant="ghost" Size="small" Placement="top-start" [title]="$T('ui.call.microphones')" [items]="SoundItems(Devices)" (select)="Picked" />
+		</span>
+		<span class="elemenx-call-controls-pair" *if="Shows(Hide, 'camera')">
+			<span class="elemenx-call-control" data-control="camera"><Button Shape="round" Size="large" [variant]="Off(Camera) ? 'danger' : 'secondary'" [pressed]="Off(Camera)" [icon]="Off(Camera) ? 'video-off' : 'video'" [title]="Off(Camera) ? $T('ui.call.cameraOn') : $T('ui.call.cameraOff')" (click)="Filming" /></span>
+			<Menu *if="DeviceItems(Devices, 'Cameras', 'Camera', 'camera').length" Icon="chevron-up" Caret="false" Variant="ghost" Size="small" Placement="top-start" [title]="$T('ui.call.cameras')" [items]="DeviceItems(Devices, 'Cameras', 'Camera', 'camera')" (select)="Picked" />
+		</span>
+		<span class="elemenx-call-control" data-control="share" *if="Shows(Hide, 'share')"><Button Shape="round" Size="large" [variant]="Sharing ? 'primary' : 'secondary'" [pressed]="!!Sharing" [icon]="Sharing ? 'screen-share-off' : 'screen-share'" [title]="Sharing ? $T('ui.call.stopShare') : $T('ui.call.share')" (click)="Shared" /></span>
+		<span class="elemenx-call-control" data-control="hand" *if="Shows(Hide, 'hand')"><Button Shape="round" Size="large" Icon="hand" [variant]="Hand ? 'primary' : 'secondary'" [pressed]="!!Hand" [title]="$T('ui.call.hand')" (click)="Raised" /></span>
+		<Menu *if="Shows(Hide, 'react')" Icon="smile" Caret="false" Size="large" Placement="top-start" [title]="$T('ui.call.react')" [items]="ReactionItems(Reactions)" (select)="Picked" />
+	</div>
+	<div class="elemenx-call-controls-group">
+		<span class="elemenx-call-control" data-control="chat" *if="Shows(Hide, 'chat')"><Button Shape="round" Size="large" Icon="comment" [variant]="Chat ? 'primary' : 'secondary'" [pressed]="!!Chat" [title]="$T('ui.call.chat')" (click)="Chatted" /></span>
+		<span class="elemenx-call-control" data-control="people" *if="Shows(Hide, 'people')"><Button Shape="round" Size="large" Icon="users" [variant]="People ? 'primary' : 'secondary'" [pressed]="!!People" [title]="$T('ui.call.people')" (click)="Listed" /></span>
+		<Menu *if="Shows(Hide, 'layout')" Icon="layout" Caret="false" Size="large" Placement="top-end" [title]="$T('ui.call.layout')" [items]="LayoutItems(Layout)" (select)="Picked" />
+		<span class="elemenx-call-control leave" data-control="leave" *if="Shows(Hide, 'leave')"><Button Shape="round" Size="large" Variant="danger" Icon="call-end" [label]="$T('ui.call.leave')" [title]="$T('ui.call.leave')" (click)="Left" /></span>
+	</div>
+</div>

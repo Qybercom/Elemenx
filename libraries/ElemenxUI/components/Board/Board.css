@@ -63,28 +63,9 @@
 	box-shadow: var(--elemenx-shadow);
 }
 
-.elemenx-board-control {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	min-width: 32px;
-	height: 32px;
-	padding: 0 6px;
-	background: transparent;
-	border: 0;
-	color: var(--elemenx-text);
-	font: inherit;
-	font-size: var(--elemenx-font-size-small);
-	cursor: pointer;
-}
-
-.elemenx-board-control:hover,
-.elemenx-board-control:focus-visible {
-	background: var(--elemenx-surface-hover);
-	outline: none;
-}
-
-.elemenx-board-zoom {
+/* The Buttons of the zoom; the percent is as wide as 100%, its digits of one width. */
+.elemenx-board-zoom .elemenx-button {
 	min-width: 56px;
 	font-variant-numeric: tabular-nums;
 }
+

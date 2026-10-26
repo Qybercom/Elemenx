@@ -27,7 +27,10 @@ Elemenx.Component('DialogHost', {
 		this.$Service('Dialogs').OffChange(this.Listener);
 	},
 
-	Act: function (event, node) {
+	/* A Button of an action: its action on the element round it. */
+	Act: function (event) {
+		var node = event.target.closest('[data-action]');
+
 		this.$Service('Dialogs').Close(node.closest('.elemenx-dialog-host-item').getAttribute('data-id'), node.getAttribute('data-action'));
 	},
 

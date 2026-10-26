@@ -4,7 +4,6 @@
  */
 Elemenx.Component('NoteWindow', {
 	$TemplateURL: 'NoteWindow.html',
-	Kinds: [{Value: 'idea', Label: 'Idea'}, {Value: 'task', Label: 'Task'}],
 	Kind: 'idea',
 	Text: '',
 	Items: [],
@@ -12,6 +11,11 @@ Elemenx.Component('NoteWindow', {
 	$OnCreate: function () {
 		var self = this;
 		var notes = this.$Service('Notes');
+
+		/* The kinds of a note in the language of the page (a template calls it). */
+		this.KindsOf = function (idea, task) {
+			return [{Value: 'idea', Label: idea}, {Value: 'task', Label: task}];
+		};
 
 		this.Changed = function () {
 			self.Items = notes.Items.slice();

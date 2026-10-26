@@ -66,12 +66,6 @@ Elemenx.Component('CommentCard', {
 			return format;
 		};
 
-		this.Initials = function (name) {
-			return String(name || '').split(/\s+/).filter(Boolean).slice(0, 2).map(function (part) {
-				return part.charAt(0).toUpperCase();
-			}).join('');
-		};
-
 		this.MediaClass = function (media) {
 			return 'count-' + Math.min(media.length, 4);
 		};

@@ -57,6 +57,9 @@ test.describe('Elemenx documentation', function () {
 
 		await page.goto(origin + '/components/Button');
 
+		/* The field of the search has a name of its own, not only its placeholder: there is no Field round it. */
+		await expect(search.locator('input.elemenx-input-control')).toHaveAttribute('aria-label', 'Search the reference');
+
 		/* The components by their groups, the group of the page open. */
 		await expect(nav.getByText('Buttons', {exact: true})).toBeVisible();
 		await expect(nav.getByText('Button', {exact: true})).toBeVisible();

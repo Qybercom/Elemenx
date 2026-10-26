@@ -1,0 +1,237 @@
+/*
+ * The stage of a call: its status on top, its area (main and the participants, the own video over them) with the side
+ * panel beside it, its controls under it; dark, as the rooms of calls are.
+ */
+.elemenx-call-stage {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	box-sizing: border-box;
+	height: 100%;
+	min-height: 320px;
+	padding: 8px;
+	background: var(--elemenx-call-stage);
+	border-radius: var(--elemenx-radius-large);
+	color: var(--elemenx-call-text);
+	font-family: var(--elemenx-font);
+}
+
+/* The parts with nothing in them take no place: their slots hold nothing, or the side panel is closed. */
+.elemenx-call-stage-status,
+.elemenx-call-stage-controls,
+.elemenx-call-stage-self,
+.elemenx-call-stage-side {
+	display: none;
+}
+
+.elemenx-call-stage.has-status .elemenx-call-stage-status {
+	display: flex;
+}
+
+.elemenx-call-stage.has-controls .elemenx-call-stage-controls {
+	display: flex;
+}
+
+.elemenx-call-stage.has-self .elemenx-call-stage-self {
+	display: block;
+}
+
+.elemenx-call-stage.side .elemenx-call-stage-side {
+	display: flex;
+}
+
+.elemenx-call-stage-status {
+	align-items: center;
+	gap: 12px;
+	font-size: var(--elemenx-font-size-small);
+}
+
+.elemenx-call-stage-body {
+	position: relative;
+	display: flex;
+	flex: 1;
+	gap: 8px;
+	min-height: 0;
+}
+
+.elemenx-call-stage-area {
+	position: relative;
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	gap: 8px;
+	min-width: 0;
+	min-height: 0;
+}
+
+.elemenx-call-stage-main {
+	display: none;
+}
+
+.elemenx-call-stage-main .elemenx-call-tile {
+	width: 100%;
+	height: 100%;
+	aspect-ratio: auto;
+}
+
+/* The grid: as many columns as its tiles need, its rows sharing the height of the stage, the tiles filling them. */
+.elemenx-call-stage-participants {
+	display: grid;
+	flex: 1;
+	grid-template-columns: repeat(var(--elemenx-call-columns, 1), minmax(0, 1fr));
+	grid-auto-rows: minmax(0, 1fr);
+	gap: 8px;
+	min-height: 0;
+}
+
+.elemenx-call-stage.grid .elemenx-call-stage-participants .elemenx-call-tile {
+	height: 100%;
+	aspect-ratio: auto;
+}
+
+.elemenx-call-stage.grid.has-main .elemenx-call-stage-main {
+	display: block;
+	flex: 1;
+	min-height: 0;
+}
+
+.elemenx-call-stage.grid.has-main .elemenx-call-stage-participants {
+	flex: 0 0 auto;
+	grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+	grid-auto-rows: auto;
+}
+
+.elemenx-call-stage.grid.has-main .elemenx-call-stage-participants .elemenx-call-tile {
+	height: auto;
+	aspect-ratio: 16 / 9;
+}
+
+/* The speaker: main large, the participants in a strip under it. */
+.elemenx-call-stage.speaker .elemenx-call-stage-main,
+.elemenx-call-stage.screen .elemenx-call-stage-main {
+	display: block;
+	flex: 1;
+	min-width: 0;
+	min-height: 0;
+}
+
+.elemenx-call-stage.speaker .elemenx-call-stage-participants {
+	display: flex;
+	flex: 0 0 auto;
+	gap: 8px;
+	height: 112px;
+	overflow-x: auto;
+}
+
+.elemenx-call-stage.speaker .elemenx-call-stage-participants .elemenx-call-tile {
+	flex: 0 0 auto;
+	height: 100%;
+}
+
+/* The screen: main large, the participants in a column beside it. */
+.elemenx-call-stage.screen .elemenx-call-stage-area {
+	flex-direction: row;
+}
+
+.elemenx-call-stage.screen .elemenx-call-stage-participants {
+	display: flex;
+	flex: 0 0 200px;
+	flex-direction: column;
+	overflow-y: auto;
+}
+
+.elemenx-call-stage.screen .elemenx-call-stage-participants .elemenx-call-tile {
+	flex: 0 0 auto;
+}
+
+.elemenx-call-stage-pages {
+	position: absolute;
+	top: 50%;
+	left: 0;
+	right: 0;
+	display: flex;
+	justify-content: space-between;
+	pointer-events: none;
+	transform: translateY(-50%);
+}
+
+/* The Buttons of the pages: on a chip over the videos, taking the presses the band of the pages lets through. */
+.elemenx-call-stage-pages .elemenx-button {
+	background: var(--elemenx-call-chip);
+	border-color: transparent;
+	color: var(--elemenx-call-text);
+	pointer-events: auto;
+}
+
+/* The own video: small, in its corner over the stage; a drag takes it to another corner. */
+.elemenx-call-stage-self {
+	position: absolute;
+	z-index: 4;
+	width: 180px;
+	cursor: grab;
+	touch-action: none;
+}
+
+.elemenx-call-stage-self.dragging {
+	cursor: grabbing;
+	opacity: 0.85;
+}
+
+.elemenx-call-stage-self .elemenx-call-tile {
+	box-shadow: var(--elemenx-shadow);
+}
+
+.elemenx-call-stage-self.bottom-right {
+	right: 12px;
+	bottom: 12px;
+}
+
+.elemenx-call-stage-self.bottom-left {
+	left: 12px;
+	bottom: 12px;
+}
+
+.elemenx-call-stage-self.top-right {
+	top: 12px;
+	right: 12px;
+}
+
+.elemenx-call-stage-self.top-left {
+	top: 12px;
+	left: 12px;
+}
+
+.elemenx-call-stage-side {
+	flex: 0 0 300px;
+	flex-direction: column;
+	min-height: 0;
+	overflow: hidden;
+	background: var(--elemenx-surface);
+	border-radius: var(--elemenx-radius-large);
+	color: var(--elemenx-text);
+}
+
+.elemenx-call-stage-controls {
+	justify-content: center;
+}
+
+@media (max-width: 720px) {
+	.elemenx-call-stage-side {
+		position: absolute;
+		inset: 0;
+		z-index: 5;
+	}
+
+	.elemenx-call-stage.screen .elemenx-call-stage-area {
+		flex-direction: column;
+	}
+
+	.elemenx-call-stage.screen .elemenx-call-stage-participants {
+		flex: 0 0 112px;
+		flex-direction: row;
+	}
+
+	.elemenx-call-stage-self {
+		width: 120px;
+	}
+}

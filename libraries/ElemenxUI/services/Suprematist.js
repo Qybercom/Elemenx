@@ -21,32 +21,9 @@ Elemenx.Service('Suprematist', {
 		theme: {Ground: 'var(--elemenx-surface)', Colors: ['var(--elemenx-accent)', 'var(--elemenx-text)', 'var(--elemenx-danger)', 'var(--elemenx-warning)', 'var(--elemenx-info)', 'var(--elemenx-success)']}
 	},
 
-	/* A random number generator of a seed: the same numbers, 0 to 1, for the same text. */
+	/* A random number generator of a seed (the Random Service): the same numbers, 0 to 1, for the same text. */
 	Random: function (seed) {
-		var text = String(seed === undefined || seed === null ? '' : seed);
-		var hash = 1779033703 ^ text.length;
-		var state;
-		var i;
-
-		for (i = 0; i < text.length; i++) {
-			hash = Math.imul(hash ^ text.charCodeAt(i), 3432918353);
-			hash = (hash << 13) | (hash >>> 19);
-		}
-
-		hash = Math.imul(hash ^ (hash >>> 16), 2246822507);
-		hash = Math.imul(hash ^ (hash >>> 13), 3266489909);
-		state = (hash ^ (hash >>> 16)) >>> 0;
-
-		return function () {
-			var value;
-
-			state = (state + 0x6D2B79F5) >>> 0;
-			value = state;
-			value = Math.imul(value ^ (value >>> 15), value | 1);
-			value ^= value + Math.imul(value ^ (value >>> 7), value | 61);
-
-			return ((value ^ (value >>> 14)) >>> 0) / 4294967296;
-		};
+		return this.$Service('Random').Create(seed === undefined || seed === null ? '' : seed).Next;
 	},
 
 	/* The palette of options: {Ground, Colors}. */

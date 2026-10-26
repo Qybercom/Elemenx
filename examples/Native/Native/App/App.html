@@ -1,70 +1,79 @@
 <main class="elemenx-screen fill native-app">
 	<TitleBar Title="Elemenx native" Image="/icons/app.png">
 		<NativeMenu (select)="MenuChosen" (apply)="MenuApplied">
-			<MenuItem Label="File">
-				<MenuItem ID="note" Label="New note" Shortcut="Mod+N" />
-				<MenuItem ID="notes" Label="Window of notes" Shortcut="Mod+Shift+N" />
+			<MenuItem [label]="$T('native.menu.file')">
+				<MenuItem ID="note" [label]="$T('native.menu.newNote')" Shortcut="Mod+N" />
+				<MenuItem ID="notes" [label]="$T('native.menu.notesWindow')" Shortcut="Mod+Shift+N" />
 				<MenuItem Separator="true" />
-				<MenuItem ID="open" Label="Open a file..." Shortcut="Mod+O" />
-				<MenuItem ID="save" Label="Save a file..." Shortcut="Mod+S" />
+				<MenuItem ID="open" [label]="$T('native.menu.open')" Shortcut="Mod+O" />
+				<MenuItem ID="save" [label]="$T('native.menu.save')" Shortcut="Mod+S" />
 				<MenuItem Separator="true" />
-				<MenuItem Label="Quit" Role="quit" />
+				<MenuItem [label]="$T('native.menu.quit')" Role="quit" />
 			</MenuItem>
-			<MenuItem Label="Edit">
-				<MenuItem Label="Undo" Role="undo" />
-				<MenuItem Label="Redo" Role="redo" />
+			<MenuItem [label]="$T('native.menu.edit')">
+				<MenuItem [label]="$T('native.menu.undo')" Role="undo" />
+				<MenuItem [label]="$T('native.menu.redo')" Role="redo" />
 				<MenuItem Separator="true" />
-				<MenuItem Label="Cut" Role="cut" />
-				<MenuItem Label="Copy" Role="copy" />
-				<MenuItem Label="Paste" Role="paste" />
-				<MenuItem Label="Select all" Role="selectAll" />
+				<MenuItem [label]="$T('native.menu.cut')" Role="cut" />
+				<MenuItem [label]="$T('native.menu.copy')" Role="copy" />
+				<MenuItem [label]="$T('native.menu.paste')" Role="paste" />
+				<MenuItem [label]="$T('native.menu.selectAll')" Role="selectAll" />
 			</MenuItem>
-			<MenuItem Label="View">
-				<MenuItem Label="Reload" Role="reload" />
-				<MenuItem Label="Developer tools" Role="toggleDevTools" />
+			<MenuItem [label]="$T('native.menu.view')">
+				<MenuItem [label]="$T('native.menu.reload')" Role="reload" />
+				<MenuItem [label]="$T('native.menu.devTools')" Role="toggleDevTools" />
 				<MenuItem Separator="true" />
-				<MenuItem Label="Actual size" Role="resetZoom" />
-				<MenuItem Label="Zoom in" Role="zoomIn" />
-				<MenuItem Label="Zoom out" Role="zoomOut" />
+				<MenuItem [label]="$T('native.menu.actualSize')" Role="resetZoom" />
+				<MenuItem [label]="$T('native.menu.zoomIn')" Role="zoomIn" />
+				<MenuItem [label]="$T('native.menu.zoomOut')" Role="zoomOut" />
 				<MenuItem Separator="true" />
-				<MenuItem Label="Full screen" Role="togglefullscreen" />
+				<MenuItem [label]="$T('native.menu.fullScreen')" Role="togglefullscreen" />
 			</MenuItem>
-			<MenuItem Label="Window">
-				<MenuItem Label="Minimize" Role="minimize" />
-				<MenuItem Label="Close" Role="close" />
+			<MenuItem [label]="$T('native.menu.window')">
+				<MenuItem [label]="$T('native.menu.minimize')" Role="minimize" />
+				<MenuItem [label]="$T('native.menu.close')" Role="close" />
 			</MenuItem>
-			<MenuItem Label="Help">
-				<MenuItem ID="about" Label="About Elemenx native" />
+			<MenuItem [label]="$T('native.menu.help')">
+				<MenuItem ID="about" [label]="$T('native.menu.about')" />
 			</MenuItem>
 		</NativeMenu>
+		<div class="native-switches" slot="actions">
+			<ThemeSwitch Compact="true" />
+			<ButtonGroup Attached="true" [label]="$T('native.language')">
+				<Button Label="EN" Size="small" Variant="ghost" [pressed]="Language === 'en'" (click)="English" />
+				<Button Label="RU" Size="small" Variant="ghost" [pressed]="Language === 'ru'" (click)="Russian" />
+			</ButtonGroup>
+		</div>
 	</TitleBar>
 	<NativeMenu Target="tray" (select)="MenuChosen">
-		<MenuItem ID="show" Label="Show" />
-		<MenuItem ID="note" Label="New note" />
+		<MenuItem ID="show" [label]="$T('native.menu.show')" />
+		<MenuItem ID="note" [label]="$T('native.menu.newNote')" />
 		<MenuItem Separator="true" />
-		<MenuItem Label="Quit" Role="quit" />
+		<MenuItem [label]="$T('native.menu.quit')" Role="quit" />
 	</NativeMenu>
 	<div class="elemenx-column native-body">
 		<h1 class="elemenx-title">Elemenx native</h1>
-		<p class="elemenx-text muted">Platform: <strong class="native-platform">{{Platform}}</strong></p>
+		<p class="elemenx-text muted">{{$T('native.platform')}}: <strong class="native-platform">{{Platform}}</strong></p>
 		<div class="elemenx-chips native-features">
 			<span class="elemenx-chip" *for="feature of Features" *key="feature">{{feature}}</span>
 		</div>
 		<div class="elemenx-container wrappable native-actions">
-			<Button Label="Message" (click)="Messaged" />
-			<Button Label="Open a file" (click)="Opened" />
-			<Button Label="Save a file" (click)="Saved" />
-			<Button Label="Open example.com" (click)="Linked" />
-			<Button Label="Maximize" (click)="Maximized" />
-			<Button [label]="'Badge ' + Count" (click)="Badged" />
-			<Button Label="Progress" (click)="Progressed" />
-			<Button Label="Attention" (click)="Attended" />
-			<Button Label="Tray" (click)="Trayed" />
-			<Button Label="Open a window" (click)="Windowed" />
-			<Button Label="Notify" (click)="Notified" />
-			<Button Label="Notify in ElemenxUI" (click)="Carded" />
+			<Button [label]="$T('native.actions.message')" (click)="Messaged" />
+			<Button [label]="$T('native.actions.openFile')" (click)="Opened" />
+			<Button [label]="$T('native.actions.saveFile')" (click)="Saved" />
+			<Button [label]="$T('native.actions.link')" (click)="Linked" />
+			<Button [label]="$T('native.actions.maximize')" (click)="Maximized" />
+			<Button [label]="$T('native.badge', {count: Count})" (click)="Badged" />
+			<Button [label]="$T('native.actions.progress')" (click)="Progressed" />
+			<Button [label]="$T('native.actions.attention')" (click)="Attended" />
+			<Button [label]="$T('native.actions.tray')" (click)="Trayed" />
+			<Button [label]="$T('native.actions.window')" (click)="Windowed" />
+			<Button [label]="$T('native.actions.notify')" (click)="Notified" />
+			<Button [label]="$T('native.actions.card')" (click)="Carded" />
+			<Button [label]="$T('native.actions.call')" Icon="phone" (click)="Called" />
+			<Button [label]="$T('native.actions.download')" Icon="download" (click)="Downloaded" />
 		</div>
-		<p class="elemenx-text native-notes-count">Notes: {{Notes}}</p>
+		<p class="elemenx-text native-notes-count">{{$T('native.notesCount', {count: Notes})}}</p>
 		<ol class="elemenx-ol native-log">
 			<li *for="line of Log" *key="line.ID">{{line.Text}}</li>
 		</ol>

@@ -1,158 +1,457 @@
 .elemenx-timeline {
-	display: flex;
-	flex-direction: column;
-	margin: 0;
-	padding: 0;
-	list-style: none;
-}
-
-.elemenx-timeline-item {
-	--elemenx-timeline-color: var(--elemenx-text-muted);
-	--elemenx-timeline-rgb: var(--elemenx-text-muted-rgb);
 	position: relative;
-	display: flex;
-	gap: 12px;
-	padding-bottom: 16px;
+	overflow: hidden;
+	min-width: 0;
+	padding: 8px 0;
+	background: var(--elemenx-surface);
+	border: 1px solid var(--elemenx-border);
+	border-radius: var(--elemenx-radius-large);
+	color: var(--elemenx-text);
+	font-size: var(--elemenx-font-size-small);
+	touch-action: none;
+	user-select: none;
 }
 
-/* The line runs through every item behind the nodes, from the center of the first node to the center of the last. */
-.elemenx-timeline-item::before {
-	content: '';
+.elemenx-timeline:focus-visible {
+	outline: 2px solid var(--elemenx-focus);
+	outline-offset: 2px;
+}
+
+.elemenx-timeline.vertical {
+	height: 420px;
+	padding: 0 8px;
+}
+
+.elemenx-timeline-body {
+	position: relative;
+}
+
+.elemenx-timeline.vertical .elemenx-timeline-body {
+	height: 100%;
+}
+
+/* Everything on the track is placed by the Timeline: along the line and across it. */
+.elemenx-timeline-track {
 	position: absolute;
 	top: 0;
+	right: 0;
 	bottom: 0;
-	inset-inline-start: 11px;
-	width: 2px;
-	background: var(--elemenx-border);
 }
 
-.elemenx-timeline-item:first-child::before {
-	top: 12px;
+.elemenx-timeline.vertical .elemenx-timeline-track {
+	left: 0;
+	right: 0;
+	bottom: 0;
 }
 
-.elemenx-timeline-item:last-child {
-	padding-bottom: 0;
+.elemenx-timeline-track > * {
+	position: absolute;
+	box-sizing: border-box;
 }
 
-.elemenx-timeline-item:last-child::before {
-	bottom: auto;
-	height: 12px;
-}
-
-.elemenx-timeline-item:only-child::before {
-	display: none;
-}
-
-.elemenx-timeline-item.accent {
+/* The tones of marks and ranges. */
+.elemenx-timeline-track .accent {
 	--elemenx-timeline-color: var(--elemenx-accent);
 	--elemenx-timeline-rgb: var(--elemenx-accent-rgb);
 }
 
-.elemenx-timeline-item.info {
+.elemenx-timeline-track .info {
 	--elemenx-timeline-color: var(--elemenx-info);
 	--elemenx-timeline-rgb: var(--elemenx-info-rgb);
 }
 
-.elemenx-timeline-item.success {
+.elemenx-timeline-track .success {
 	--elemenx-timeline-color: var(--elemenx-success);
 	--elemenx-timeline-rgb: var(--elemenx-success-rgb);
 }
 
-.elemenx-timeline-item.warning {
+.elemenx-timeline-track .warning {
 	--elemenx-timeline-color: var(--elemenx-warning);
 	--elemenx-timeline-rgb: var(--elemenx-warning-rgb);
 }
 
-.elemenx-timeline-item.danger {
+.elemenx-timeline-track .danger {
 	--elemenx-timeline-color: var(--elemenx-danger);
 	--elemenx-timeline-rgb: var(--elemenx-danger-rgb);
 }
 
-.elemenx-timeline-node {
-	position: relative;
-	z-index: 1;
+.elemenx-timeline-track .muted {
+	--elemenx-timeline-color: var(--elemenx-text-muted);
+	--elemenx-timeline-rgb: var(--elemenx-text-muted-rgb);
+}
+
+/* The lanes: their names in a column at the start, their rows striped. */
+.elemenx-timeline-lane-names {
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+}
+
+.elemenx-timeline-lane-name {
+	position: absolute;
+	box-sizing: border-box;
+	display: flex;
+	align-items: center;
+	overflow: hidden;
+	width: 150px;
+	padding: 0 12px;
+	border-top: 1px solid var(--elemenx-border);
+	color: var(--elemenx-text-muted);
+	font-weight: var(--elemenx-font-weight-strong);
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.elemenx-timeline.vertical .elemenx-timeline-lane-name {
+	justify-content: center;
+	width: auto;
+	height: 36px;
+	padding: 0 6px;
+	border-top: 0;
+	border-left: 1px solid var(--elemenx-border);
+}
+
+.elemenx-timeline-lane {
+	right: 0;
+	border-top: 1px solid var(--elemenx-border);
+}
+
+.elemenx-timeline-lane:nth-child(even) {
+	background: rgba(var(--elemenx-text-rgb), 0.025);
+}
+
+.elemenx-timeline.editable .elemenx-timeline-lane {
+	cursor: crosshair;
+}
+
+.elemenx-timeline.vertical .elemenx-timeline-lane {
+	bottom: 0;
+	border-top: 0;
+	border-left: 1px solid var(--elemenx-border);
+}
+
+/* The axis and its ticks: a line, and their labels beside it. */
+.elemenx-timeline-axis {
+	right: 0;
+	cursor: grab;
+}
+
+.elemenx-timeline-axis::after {
+	content: '';
+	position: absolute;
+	right: 0;
+	bottom: 4px;
+	left: 0;
+	height: 4px;
+	background: rgba(var(--elemenx-text-rgb), 0.08);
+	border-radius: var(--elemenx-radius-pill);
+}
+
+.elemenx-timeline.seekable .elemenx-timeline-axis {
+	cursor: pointer;
+}
+
+.elemenx-timeline.vertical .elemenx-timeline-axis {
+	bottom: 0;
+}
+
+.elemenx-timeline.vertical .elemenx-timeline-axis::after {
+	top: 0;
+	right: 4px;
+	bottom: 0;
+	left: auto;
+	width: 4px;
+	height: auto;
+}
+
+.elemenx-timeline-tick {
+	width: 0;
+	pointer-events: none;
+}
+
+.elemenx-timeline-tick::before {
+	content: '';
+	position: absolute;
+	bottom: 4px;
+	left: 0;
+	width: 1px;
+	height: 8px;
+	background: var(--elemenx-border-strong);
+}
+
+.elemenx-timeline-tick.major::before {
+	height: 14px;
+}
+
+.elemenx-timeline-tick-label {
+	position: absolute;
+	top: 0;
+	left: 4px;
+	color: var(--elemenx-text-muted);
+	white-space: nowrap;
+}
+
+.elemenx-timeline-tick.major .elemenx-timeline-tick-label {
+	color: var(--elemenx-text);
+	font-weight: var(--elemenx-font-weight-strong);
+}
+
+.elemenx-timeline.vertical .elemenx-timeline-tick {
+	width: auto;
+	height: 0;
+}
+
+.elemenx-timeline.vertical .elemenx-timeline-tick::before {
+	top: 0;
+	right: 4px;
+	bottom: auto;
+	left: auto;
+	width: 8px;
+	height: 1px;
+}
+
+.elemenx-timeline.vertical .elemenx-timeline-tick.major::before {
+	width: 14px;
+	height: 1px;
+}
+
+.elemenx-timeline.vertical .elemenx-timeline-tick-label {
+	top: 0;
+	right: 22px;
+	left: auto;
+	transform: translateY(-50%);
+}
+
+/* The progress on the axis, its buffer under it. */
+.elemenx-timeline-progress,
+.elemenx-timeline-buffer {
+	border-radius: var(--elemenx-radius-pill);
+	pointer-events: none;
+}
+
+.elemenx-timeline-buffer {
+	background: rgba(var(--elemenx-accent-rgb), 0.28);
+}
+
+.elemenx-timeline-progress {
+	background: var(--elemenx-accent);
+}
+
+/* The ranges: bars in the rows of their lane, their edges dragged when Editable. */
+.elemenx-timeline-range {
+	display: flex;
+	align-items: center;
+	overflow: hidden;
+	min-width: 4px;
+	padding: 0 8px;
+	background: rgba(var(--elemenx-timeline-rgb, var(--elemenx-accent-rgb)), 0.16);
+	border: 1px solid rgba(var(--elemenx-timeline-rgb, var(--elemenx-accent-rgb)), 0.56);
+	border-radius: var(--elemenx-radius-small);
+	color: var(--elemenx-text);
+	cursor: pointer;
+	white-space: nowrap;
+}
+
+.elemenx-timeline-range:hover {
+	background: rgba(var(--elemenx-timeline-rgb, var(--elemenx-accent-rgb)), 0.24);
+}
+
+.elemenx-timeline-range:focus-visible,
+.elemenx-timeline-point:focus-visible {
+	outline: 2px solid var(--elemenx-focus);
+	outline-offset: 1px;
+}
+
+.elemenx-timeline-range.selected {
+	background: var(--elemenx-timeline-color, var(--elemenx-accent));
+	border-color: var(--elemenx-timeline-color, var(--elemenx-accent));
+	color: var(--elemenx-accent-text);
+}
+
+.elemenx-timeline-range.cut-start {
+	border-left-style: dashed;
+	border-top-left-radius: 0;
+	border-bottom-left-radius: 0;
+}
+
+.elemenx-timeline-range.cut-end {
+	border-right-style: dashed;
+	border-top-right-radius: 0;
+	border-bottom-right-radius: 0;
+}
+
+/* A range too narrow for its label: a bar of its color alone (its tip names it). */
+.elemenx-timeline-range.narrow {
+	padding: 0;
+}
+
+.elemenx-timeline-range.narrow .elemenx-timeline-range-label {
+	display: none;
+}
+
+.elemenx-timeline-range.draft {
+	border-style: dashed;
+	pointer-events: none;
+}
+
+.elemenx-timeline.editable .elemenx-timeline-range {
+	cursor: grab;
+}
+
+.elemenx-timeline.vertical .elemenx-timeline-range {
+	align-items: flex-start;
+	padding: 6px 4px;
+	white-space: normal;
+}
+
+.elemenx-timeline-range-label {
+	overflow: hidden;
+	min-width: 0;
+	text-overflow: ellipsis;
+	pointer-events: none;
+}
+
+.elemenx-timeline-range-edge {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	width: 6px;
+	cursor: ew-resize;
+}
+
+.elemenx-timeline-range-edge.start {
+	left: 0;
+}
+
+.elemenx-timeline-range-edge.end {
+	right: 0;
+}
+
+.elemenx-timeline.vertical .elemenx-timeline-range-edge {
+	right: 0;
+	left: 0;
+	width: auto;
+	height: 6px;
+	cursor: ns-resize;
+}
+
+.elemenx-timeline.vertical .elemenx-timeline-range-edge.start {
+	top: 0;
+	bottom: auto;
+}
+
+.elemenx-timeline.vertical .elemenx-timeline-range-edge.end {
+	top: auto;
+	bottom: 0;
+}
+
+/* The marks: a point on the axis, a leader to its label in its row. */
+.elemenx-timeline-point {
+	z-index: 2;
+	background: var(--elemenx-surface);
+	border: 2px solid var(--elemenx-timeline-color, var(--elemenx-accent));
+	border-radius: 50%;
+	cursor: pointer;
+}
+
+.elemenx-timeline-point:hover,
+.elemenx-timeline-point.selected {
+	background: var(--elemenx-timeline-color, var(--elemenx-accent));
+}
+
+.elemenx-timeline.editable .elemenx-timeline-point {
+	cursor: grab;
+}
+
+.elemenx-timeline-leader {
+	width: 1px;
+	background: rgba(var(--elemenx-timeline-rgb, var(--elemenx-accent-rgb)), 0.48);
+	pointer-events: none;
+}
+
+.elemenx-timeline.vertical .elemenx-timeline-leader {
+	width: auto;
+	height: 1px;
+}
+
+.elemenx-timeline-label {
+	display: flex;
+	align-items: center;
+	white-space: nowrap;
+	pointer-events: none;
+}
+
+.elemenx-timeline-label-text {
 	display: inline-flex;
 	align-items: center;
-	justify-content: center;
+	gap: 4px;
+	max-width: 320px;
+	padding: 1px 6px;
+	background: rgba(var(--elemenx-timeline-rgb, var(--elemenx-accent-rgb)), 0.12);
+	border-radius: var(--elemenx-radius-small);
+	color: var(--elemenx-text);
+}
+
+.elemenx-timeline-label-text > span {
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.elemenx-timeline-label-text > svg {
 	flex: none;
-	width: 24px;
-	height: 24px;
-	background: var(--elemenx-surface);
-	border: 1px solid var(--elemenx-border-strong);
+	color: var(--elemenx-timeline-color, var(--elemenx-accent));
+}
+
+.elemenx-timeline-label.selected .elemenx-timeline-label-text {
+	background: var(--elemenx-timeline-color, var(--elemenx-accent));
+	color: var(--elemenx-accent-text);
+}
+
+.elemenx-timeline-label.selected .elemenx-timeline-label-text > svg {
+	color: inherit;
+}
+
+.elemenx-timeline.vertical .elemenx-timeline-label {
+	white-space: normal;
+}
+
+.elemenx-timeline.vertical .elemenx-timeline-label.before {
+	justify-content: flex-end;
+}
+
+/* Now and the playhead. */
+.elemenx-timeline-now {
+	z-index: 3;
+	width: 2px;
+	margin-left: -1px;
+	background: var(--elemenx-danger);
+	pointer-events: none;
+}
+
+.elemenx-timeline.vertical .elemenx-timeline-now {
+	width: auto;
+	height: 2px;
+	margin: -1px 0 0;
+}
+
+.elemenx-timeline-playhead {
+	z-index: 4;
+	background: var(--elemenx-accent);
+	border: 2px solid var(--elemenx-surface);
 	border-radius: 50%;
-	color: var(--elemenx-timeline-color);
+	box-shadow: var(--elemenx-shadow-small);
+	cursor: grab;
 }
 
-.elemenx-timeline-item:not(.default) .elemenx-timeline-node {
-	border-color: rgba(var(--elemenx-timeline-rgb), 0.48);
-	background: linear-gradient(rgba(var(--elemenx-timeline-rgb), 0.12), rgba(var(--elemenx-timeline-rgb), 0.12)), var(--elemenx-surface);
-}
-
-.elemenx-timeline-content {
+/* The buttons of the zoom, in a corner over the line. */
+.elemenx-timeline-controls {
+	position: absolute;
+	top: 4px;
+	right: 4px;
+	z-index: 5;
 	display: flex;
-	flex: 1;
-	flex-direction: column;
-	gap: 8px;
-	min-width: 0;
-	padding-top: 2px;
-}
-
-.elemenx-timeline-head {
-	display: flex;
-	align-items: baseline;
-	flex-wrap: wrap;
-	gap: 4px 8px;
-}
-
-.elemenx-timeline-head > span {
-	color: var(--elemenx-text-muted);
-}
-
-.elemenx-timeline-item.small {
-	padding-bottom: 12px;
-}
-
-.elemenx-timeline-item.small .elemenx-timeline-node {
-	width: 16px;
-	height: 16px;
-	margin: 4px;
-}
-
-.elemenx-timeline-item.dot .elemenx-timeline-node {
-	width: 8px;
-	height: 8px;
-	margin: 8px;
-	background: var(--elemenx-border-strong);
-	border: 0;
-	box-shadow: 0 0 0 4px var(--elemenx-surface);
-}
-
-.elemenx-timeline-item.dot:not(.default) .elemenx-timeline-node {
-	background: var(--elemenx-timeline-color);
-}
-
-.elemenx-timeline-item.small .elemenx-timeline-content {
-	padding-top: 4px;
-	font-size: var(--elemenx-font-size-small);
-	line-height: var(--elemenx-line-height-small);
-}
-
-.elemenx-timeline-body {
-	padding: 12px;
-	background: var(--elemenx-surface);
+	background: var(--elemenx-surface-raised);
 	border: 1px solid var(--elemenx-border);
-	border-radius: var(--elemenx-radius-large);
-	white-space: pre-wrap;
-}
-
-.elemenx-timeline.compact .elemenx-timeline-item {
-	padding-bottom: 8px;
-}
-
-.elemenx-timeline.compact .elemenx-timeline-item.small {
-	padding-bottom: 4px;
-}
-
-.elemenx-timeline.compact .elemenx-timeline-body {
-	padding: 8px;
+	border-radius: var(--elemenx-radius);
+	box-shadow: var(--elemenx-shadow-subtle);
 }

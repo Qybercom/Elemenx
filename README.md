@@ -44,6 +44,10 @@ npm test
 
 `npm test` runs the browser contract suite, Node/tooling regressions, and real-browser Playwright end-to-end tests. Playwright runs its tests in parallel, on half of the processors; `ELEMENX_WORKERS=2 npm run test:history` sets the number of workers.
 
+## Editors
+
+The extension of VS Code, the plugin of the IDEs of JetBrains (through LSP4IJ) and a language server for the other editors complete, document, check and color the templates and the code of Elemenx: see [docs/EDITORS.md](docs/EDITORS.md). `npm run editors` builds them into `dist/editors`.
+
 ## Examples
 
 The maintained examples are `examples/Simple` and `examples/Advanced`. From the Elemenx repository they can be started with:

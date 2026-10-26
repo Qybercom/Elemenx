@@ -8,7 +8,7 @@
 		<span class="elemenx-game-leaderboard-gap" role="cell" *if="row.Gap">…</span>
 		<span class="elemenx-game-leaderboard-rank" role="cell" *if="!row.Gap">{{row.Rank}}</span>
 		<span class="elemenx-game-leaderboard-player" role="cell" *if="!row.Gap">
-			<img class="elemenx-game-leaderboard-avatar" *if="row.Item.Avatar" [src]="row.Item.Avatar" alt="" />
+			<span class="elemenx-game-leaderboard-avatar" *if="row.Item.Avatar" aria-hidden="true"><Avatar Shape="square" [name]="row.Item.Name" [image]="row.Item.Avatar" [size]="28" /></span>
 			<span class="elemenx-game-leaderboard-avatar" *if="!row.Item.Avatar && row.Item.Icon"><Icon [name]="row.Item.Icon" /></span>
 			<span class="elemenx-game-leaderboard-name">
 				<strong>{{row.Item.Name}}</strong>

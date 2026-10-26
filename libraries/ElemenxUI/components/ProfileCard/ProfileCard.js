@@ -69,12 +69,6 @@ Elemenx.Component('ProfileCard', {
 		this.Stat = function (value) {
 			return typeof value === 'number' ? format.Count(value) : value;
 		};
-
-		this.Initials = function (name) {
-			return String(name || '').split(/\s+/).filter(Boolean).slice(0, 2).map(function (part) {
-				return part.charAt(0).toUpperCase();
-			}).join('');
-		};
 	},
 
 	Toggle: function () {

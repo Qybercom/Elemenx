@@ -14,7 +14,7 @@ var root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 var Skipped = {'node_modules': true, 'dist': true, 'tests': true, '.git': true, '.idea': true, '.vitest': true, 'test-results': true, 'playwright-report': true, 'coverage': true};
 
 /* The native projects Capacitor makes in examples/Native (git ignores them): their files are Capacitor's, not shipped by Elemenx. */
-var SkippedPaths = ['examples/Native/android', 'examples/Native/ios'];
+var SkippedPaths = ['examples/Native/android', 'examples/Native/ios', 'editors/vscode/core', 'editors/intellij/build', 'editors/intellij/.gradle', 'editors/intellij/.intellijPlatform'];
 
 function files (directory, result) {
 	var entries = fs.readdirSync(directory, {withFileTypes: true});

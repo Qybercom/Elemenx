@@ -1,0 +1,14 @@
+<ol class="elemenx-chronicle" [class.compact]="Compact">
+	<li class="elemenx-chronicle-item" *for="item of Items" *key="item.ID" [class]="[item.Variant || 'default', item.Size === 'small' ? 'small' : '', item.Size === 'small' && !item.Icon ? 'dot' : '', item.Text || item.Element || item.Render ? 'with-body' : '']">
+		<span class="elemenx-chronicle-node"><Icon *if="item.Icon || item.Size !== 'small'" [name]="item.Icon || 'commit'" [size]="item.Size === 'small' ? 8 : 12" /></span>
+		<div class="elemenx-chronicle-content">
+			<div class="elemenx-chronicle-head">
+				<strong *if="item.Author">{{item.Author}}</strong>
+				<span>{{item.Action}}</span>
+				<time class="elemenx-caption" *if="item.Time">{{item.Time}}</time>
+			</div>
+			<div class="elemenx-chronicle-body" *if="item.Text">{{item.Text}}</div>
+			<div class="elemenx-chronicle-body" *if="item.Element || item.Render" *mount="item"></div>
+		</div>
+	</li>
+</ol>

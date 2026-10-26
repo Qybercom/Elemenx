@@ -75,3 +75,10 @@ body {
 .native-tray-actions {
 	gap: 8px;
 }
+
+/* The theme and the language, in the title bar of the window. */
+.native-switches {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}

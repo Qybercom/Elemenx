@@ -9,6 +9,7 @@ A text field. A password field has an eye button: Guarded asks before it shows t
 | --- | --- |
 | `Type` | `'text'` |
 | `Value` | `''` |
+| `Label` | `''` |
 | `Placeholder` | `''` |
 | `Size` | `'medium'` |
 | `Shape` | `'default'` |

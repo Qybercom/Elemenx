@@ -53,32 +53,23 @@
 	gap: 4px;
 }
 
+/* M and S: small Buttons of their letter, red muted, yellow alone. */
 .elemenx-mixer-toggle {
-	width: 28px;
-	height: 24px;
+	display: contents;
+}
+
+.elemenx-mixer-toggle .elemenx-button {
+	min-width: 28px;
 	padding: 0;
-	background: var(--elemenx-surface-hover);
-	border: 1px solid var(--elemenx-border);
-	border-radius: var(--elemenx-radius);
-	color: var(--elemenx-text-muted);
-	font: inherit;
-	font-size: var(--elemenx-font-size-small);
 	font-weight: var(--elemenx-font-weight-strong);
-	cursor: pointer;
 }
 
-.elemenx-mixer-toggle:focus-visible {
-	outline: 2px solid var(--elemenx-focus);
-	outline-offset: 1px;
-}
-
-.elemenx-mixer-toggle.mute[aria-pressed='true'] {
+.elemenx-mixer-toggle.mute .elemenx-button.pressed {
 	background: var(--elemenx-danger);
 	border-color: var(--elemenx-danger);
-	color: var(--elemenx-accent-text);
 }
 
-.elemenx-mixer-toggle.solo[aria-pressed='true'] {
+.elemenx-mixer-toggle.solo .elemenx-button.pressed {
 	background: var(--elemenx-warning);
 	border-color: var(--elemenx-warning);
 	color: var(--elemenx-text);

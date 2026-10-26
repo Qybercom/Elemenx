@@ -59,6 +59,15 @@
 	--elemenx-gamepad-blue: #3d7be0;
 	--elemenx-gamepad-yellow: #e2a915;
 	--elemenx-gamepad-pink: #d873c1;
+	--elemenx-call-stage: #0f1114;
+	--elemenx-call-tile: #1b1d21;
+	--elemenx-call-text: #f2f3f5;
+	--elemenx-call-control: rgba(255, 255, 255, 0.12);
+	--elemenx-call-control-hover: rgba(255, 255, 255, 0.2);
+	--elemenx-call-chip: rgba(0, 0, 0, 0.5);
+	--elemenx-call-dim: rgba(255, 255, 255, 0.35);
+	--elemenx-game-world-background: #0b0e12;
+	--elemenx-game-world-frame: #3a3226;
 	--elemenx-hairline: rgba(128, 128, 128, 0.32);
 	--elemenx-scrollbar: rgba(128, 128, 128, 0.44);
 	--elemenx-scrollbar-hover: rgba(128, 128, 128, 0.64);

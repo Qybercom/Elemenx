@@ -5,6 +5,7 @@ import path from 'path';
 import vm from 'vm';
 import crypto from 'crypto';
 import { createRequire } from 'module';
+import { Sandbox } from './sandbox.mjs';
 
 var require = createRequire(import.meta.url);
 var Dist = require('../../tools/dist.js');
@@ -143,7 +144,8 @@ describe('Elemenx dist', function () {
 	});
 
 	it('embeds in a single file the packs the Application uses, and the ones of --packs', function () {
-		var project = path.resolve(process.cwd(), 'tests', 'dist', 'single-project');
+		var sandbox = Sandbox('packs');
+		var project = sandbox.Project;
 		var target = path.join(project, '..', 'single-packs-output');
 		var html;
 
@@ -182,12 +184,13 @@ describe('Elemenx dist', function () {
 			expect(html).not.toContain("[data-theme][data-theme='scifi']");
 		}
 		finally {
-			fs.rmSync(target, {recursive: true, force: true});
+			fs.rmSync(sandbox.Root, {recursive: true, force: true});
 		}
 	});
 
 	it('copies next to a build in a folder the packs the Application uses, with every language of them, and the ones of --packs or --full', function () {
-		var project = path.resolve(process.cwd(), 'tests', 'dist', 'single-project');
+		var sandbox = Sandbox('folder-packs');
+		var project = sandbox.Project;
 		var target = path.join(project, '..', 'folder-packs-output');
 		var index;
 
@@ -227,7 +230,7 @@ describe('Elemenx dist', function () {
 			expect(fs.readFileSync(path.join(target, 'libraries', 'ElemenxUI', 'locales', 'en.json'), 'utf8')).toBe(fs.readFileSync(path.join(process.cwd(), 'libraries', 'ElemenxUI', 'locales', 'en.json'), 'utf8'));
 		}
 		finally {
-			fs.rmSync(target, {recursive: true, force: true});
+			fs.rmSync(sandbox.Root, {recursive: true, force: true});
 		}
 	});
 
@@ -279,7 +282,8 @@ describe('Elemenx dist', function () {
 
 	it('builds an Application into one index.html with elemenx build --single, its scripts safe inside a <script>', function () {
 		var cli = path.resolve(process.cwd(), 'elemenx-cli.js');
-		var project = path.resolve(process.cwd(), 'tests', 'dist', 'single-project');
+		var sandbox = Sandbox('cli');
+		var project = sandbox.Project;
 		var target = path.join(project, '..', 'single-cli-output');
 		var run;
 		var html;
@@ -300,7 +304,7 @@ describe('Elemenx dist', function () {
 			expect(fs.existsSync(path.join(target, 'elemenx.js'))).toBe(false);
 		}
 		finally {
-			fs.rmSync(target, {recursive: true, force: true});
+			fs.rmSync(sandbox.Root, {recursive: true, force: true});
 		}
 
 		expect(Builder.ScriptText('var a = "</script>", b = "<!-- x";')).toBe('var a = "<\\/script>", b = "<\\!-- x";');

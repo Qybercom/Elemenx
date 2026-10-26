@@ -83,30 +83,9 @@
 	gap: 2px;
 }
 
+/* The place of the Button of an action: its group and its ID, no box of its own. */
 .elemenx-tile-group-action {
-	display: inline-flex;
-	align-items: center;
-	gap: 4px;
-	height: 24px;
-	min-width: 24px;
-	padding: 0 4px;
-	background: transparent;
-	border: 0;
-	border-radius: var(--elemenx-radius);
-	color: var(--elemenx-text-muted);
-	font: inherit;
-	font-size: var(--elemenx-font-size-small);
-	cursor: pointer;
-}
-
-.elemenx-tile-group-action:hover {
-	background: var(--elemenx-surface-hover);
-	color: var(--elemenx-text);
-}
-
-.elemenx-tile-group-action:focus-visible {
-	outline: 2px solid var(--elemenx-accent);
-	outline-offset: 1px;
+	display: contents;
 }
 
 /* The handle on the right edge of a group, in the gap beside it: drag it to stretch the group by whole columns. */

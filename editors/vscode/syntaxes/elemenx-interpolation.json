@@ -1,0 +1,26 @@
+{
+	"scopeName": "elemenx.template.interpolation",
+	"injectionSelector": "L:text.html -comment -meta.tag -meta.embedded",
+	"patterns": [
+		{
+			"begin": "\\{\\{",
+			"beginCaptures": {
+				"0": {
+					"name": "punctuation.section.embedded.begin.elemenx"
+				}
+			},
+			"end": "\\}\\}",
+			"endCaptures": {
+				"0": {
+					"name": "punctuation.section.embedded.end.elemenx"
+				}
+			},
+			"contentName": "meta.embedded.inline.js.elemenx",
+			"patterns": [
+				{
+					"include": "source.js"
+				}
+			]
+		}
+	]
+}

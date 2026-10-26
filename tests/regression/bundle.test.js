@@ -213,7 +213,8 @@ describe('Regression: production bundle registry', function () {
 
 			var found = false;
 			var started = Date.now();
-			while (!found && Date.now() - started < 1500) {
+			/* It loads a script: the limit is for a busy machine, the loop ends as soon as the component is there. */
+			while (!found && Date.now() - started < 4000) {
 				found = !!document.querySelector('.remote-basic');
 
 				if (!found)

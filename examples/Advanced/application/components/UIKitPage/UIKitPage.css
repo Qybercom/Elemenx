@@ -770,3 +770,45 @@
 .ui-kit-lazy {
 	display: contents;
 }
+
+/* The stage of the call demo: a dark room of its own size. */
+.ui-kit-call {
+	height: 520px;
+	border-radius: var(--elemenx-radius-large);
+	overflow: hidden;
+}
+
+.ui-kit-call-status {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.ui-kit-call-side {
+	padding: 12px 16px;
+}
+
+/* The world of the game demo: a window on its map, the resources of the player over it. */
+.ui-kit-world {
+	height: 480px;
+	overflow: hidden;
+	border-radius: var(--elemenx-radius-large);
+}
+
+/* The bar of the HUD takes the presses over it only: the world round it takes the others. */
+.ui-kit-world-hud {
+	position: absolute;
+	top: 10px;
+	left: 50%;
+	transform: translateX(-50%);
+}
+
+.ui-kit-world-resources {
+	display: inline-flex;
+	gap: 16px;
+	padding: 6px 14px;
+	background: var(--elemenx-overlay);
+	border-radius: var(--elemenx-radius-pill);
+	color: var(--elemenx-overlay-text);
+	font-size: var(--elemenx-font-size-small);
+}

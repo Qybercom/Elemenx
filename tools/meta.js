@@ -95,7 +95,8 @@ function definitions (file) {
 	};
 
 	try {
-		vm.runInNewContext(fs.readFileSync(file, 'utf8'), sandbox, {filename: file, timeout: 1000});
+		/* A file that never ends stops; a busy machine (a build beside the tests) still reads a long one (regression: 1 second failed under load). */
+		vm.runInNewContext(fs.readFileSync(file, 'utf8'), sandbox, {filename: file, timeout: 10000});
 	}
 	catch (error) {
 		fail('Elemenx meta: ' + file + ': ' + error.message);

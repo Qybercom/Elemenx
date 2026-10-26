@@ -1,9 +1,6 @@
 <article class="elemenx-chat-message" [class]="[Position || 'single', Own ? 'own' : '', Selecting ? 'selecting' : '', Selected ? 'selected' : '']" (contextmenu)="Context" (keydown)="Key" (pointerdown)="Down" (pointermove)="Moved" (pointerup)="Released" (pointercancel)="Released" (click)="Pressed">
 	<button class="elemenx-chat-check" type="button" role="checkbox" *if="Selecting" [attribute.aria-checked]="String(!!Selected)" [attribute.aria-label]="$T('ui.chatMessage.select')" (click)="Checked"><Icon *if="Selected" Name="check" Size="14" /></button>
-	<span class="elemenx-chat-avatar" aria-hidden="true">
-		<img *if="Avatar && (Position === 'single' || Position === 'last')" [src]="Avatar" alt="" />
-		<span *if="!Avatar && (Position === 'single' || Position === 'last')">{{Initials(Author)}}</span>
-	</span>
+	<span class="elemenx-chat-avatar" aria-hidden="true"><Avatar *if="Position === 'single' || Position === 'last'" [name]="Author" [image]="Avatar" [size]="32" /></span>
 	<div class="elemenx-chat-body elemenx-popup-anchor">
 		<div class="elemenx-chat-line">
 			<div class="elemenx-chat-bubble" [class.sticker]="!!Sticker">
@@ -35,7 +32,7 @@
 			</div>
 			<ul class="elemenx-chat-summary-list">
 				<li class="elemenx-chat-summary-row" *for="row of SummaryRows(Reactions, Viewers, SummaryTab)" *key="$index">
-					<span class="elemenx-chat-summary-avatar" aria-hidden="true"><img *if="row.Avatar" [src]="row.Avatar" alt="" /><span *if="!row.Avatar">{{Initials(row.Name)}}</span></span>
+					<span class="elemenx-chat-summary-avatar" aria-hidden="true"><Avatar [name]="row.Name" [image]="row.Avatar" [size]="24" /></span>
 					<span class="elemenx-chat-summary-name">{{row.Name}}</span>
 					<span class="elemenx-chat-summary-note" *if="row.Emoji || row.Note">{{row.Emoji || row.Note}}</span>
 				</li>

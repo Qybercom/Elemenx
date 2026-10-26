@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "advanced",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["elemenx-cli.js", "dev", "examples/Advanced", "--port", "4180"],
+      "port": 4180
+    }
+  ]
+}

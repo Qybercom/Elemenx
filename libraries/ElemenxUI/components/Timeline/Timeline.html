@@ -1,14 +1,32 @@
-<ol class="elemenx-timeline" [class.compact]="Compact">
-	<li class="elemenx-timeline-item" *for="item of Items" *key="item.ID" [class]="[item.Variant || 'default', item.Size === 'small' ? 'small' : '', item.Size === 'small' && !item.Icon ? 'dot' : '', item.Text || item.Element || item.Render ? 'with-body' : '']">
-		<span class="elemenx-timeline-node"><Icon *if="item.Icon || item.Size !== 'small'" [name]="item.Icon || 'commit'" [size]="item.Size === 'small' ? 8 : 12" /></span>
-		<div class="elemenx-timeline-content">
-			<div class="elemenx-timeline-head">
-				<strong *if="item.Author">{{item.Author}}</strong>
-				<span>{{item.Action}}</span>
-				<time class="elemenx-caption" *if="item.Time">{{item.Time}}</time>
+<div class="elemenx-timeline" tabindex="0" role="group" [class.vertical]="Orientation === 'vertical'" [class.editable]="Editable" [class.seekable]="Seekable" [attribute.aria-label]="Label || $T('ui.timeline.label')" [attribute.data-drawn]="Drawn(Current())" (keydown)="Key" (wheel)="Wheel" (pointerdown)="Down" (pointermove)="Move" (pointerup)="Up" (pointercancel)="Cancel">
+	<div class="elemenx-timeline-body" [attribute.style]="Current().Box">
+		<div class="elemenx-timeline-lane-names" *if="Current().Header"><span class="elemenx-timeline-lane-name" *for="lane of Current().Lanes" *key="lane.ID" [attribute.style]="lane.Style">{{lane.Label}}</span></div>
+		<div class="elemenx-timeline-track" [attribute.style]="Current().TrackStyle">
+			<div class="elemenx-timeline-lane" *for="lane of Current().Lanes" *key="lane.ID" [attribute.data-lane]="lane.ID" [attribute.style]="lane.Style"></div>
+			<div class="elemenx-timeline-axis" [attribute.style]="Current().AxisStyle"></div>
+			<span class="elemenx-timeline-tick" *for="tick of Current().Ticks" *key="tick.Value" [class.major]="tick.Major" [attribute.style]="tick.Style"><span class="elemenx-timeline-tick-label">{{tick.Label}}</span></span>
+			<div class="elemenx-timeline-buffer" *if="Current().Buffer" [attribute.style]="Current().Buffer.Style"></div>
+			<div class="elemenx-timeline-progress" *if="Current().Progress" [attribute.style]="Current().Progress.Style"></div>
+			<div class="elemenx-timeline-range" *for="range of Current().Ranges" *key="range.ID || 'draft'" [class]="[range.Tone, range.Selected ? 'selected' : '', range.Draft ? 'draft' : '', range.Narrow ? 'narrow' : '', range.CutStart ? 'cut-start' : '', range.CutEnd ? 'cut-end' : '']" [attribute.style]="range.Style" [attribute.data-kind]="range.Draft ? null : 'range'" [attribute.data-id]="range.ID" [attribute.tabindex]="range.Draft ? null : 0" [attribute.role]="range.Draft ? null : 'button'" [attribute.aria-label]="range.Name" [attribute.aria-pressed]="range.Draft ? null : String(range.Selected)" *tip="{Title: range.Label || range.ID, Text: Tip(range).Text, Placement: Tip(range).Placement, Disabled: range.Draft}">
+				<span class="elemenx-timeline-range-edge start" *if="Editable && !range.Draft" data-edge="start"></span>
+				<span class="elemenx-timeline-range-label" *if="!range.Custom">{{range.Label}}</span>
+				<span class="elemenx-timeline-range-label" *if="range.Custom" *mount="range.Custom"></span>
+				<span class="elemenx-timeline-range-edge end" *if="Editable && !range.Draft" data-edge="end"></span>
 			</div>
-			<div class="elemenx-timeline-body" *if="item.Text">{{item.Text}}</div>
-			<div class="elemenx-timeline-body" *if="item.Element || item.Render" *mount="item"></div>
+			<span class="elemenx-timeline-leader" *for="mark of Current().Marks" *key="mark.ID" [class]="[mark.Tone, mark.Side]" [attribute.style]="mark.LeaderStyle"></span>
+			<span class="elemenx-timeline-label" *for="mark of Current().Marks" *key="mark.ID" [class]="[mark.Tone, mark.Side, mark.Selected ? 'selected' : '']" [attribute.data-key]="'mark:' + mark.ID" [attribute.style]="mark.LabelStyle">
+				<span class="elemenx-timeline-label-text" *if="!mark.Custom"><Icon *if="mark.Icon" [name]="mark.Icon" [size]="12" /><span>{{mark.Label}}</span></span>
+				<span class="elemenx-timeline-label-text" *if="mark.Custom" *mount="mark.Custom"></span>
+			</span>
+			<span class="elemenx-timeline-point" *for="mark of Current().Marks" *key="mark.ID" [class]="[mark.Tone, mark.Selected ? 'selected' : '']" [attribute.style]="mark.PointStyle" data-kind="mark" [attribute.data-id]="mark.ID" tabindex="0" role="button" [attribute.aria-label]="mark.Name" [attribute.aria-pressed]="String(mark.Selected)" *tip="{Title: mark.Label || mark.ID, Text: Tip(mark).Text, Placement: Tip(mark).Placement}"></span>
+			<span class="elemenx-timeline-now" *if="Current().Now" [attribute.style]="Current().Now.Style" [attribute.title]="$T('ui.timeline.now')"></span>
+			<span class="elemenx-timeline-playhead" *if="Current().Playhead" [attribute.style]="Current().Playhead.Style" role="slider" tabindex="-1" [attribute.aria-label]="$T('ui.timeline.playhead')" [attribute.aria-valuetext]="Current().Playhead.Name || ''"></span>
 		</div>
-	</li>
-</ol>
+	</div>
+	<div class="elemenx-timeline-controls" *if="Controls">
+		<Button Variant="ghost" Size="small" Icon="zoom-out" [AriaLabel]="$T('ui.timeline.zoomOut')" *tip="$T('ui.timeline.zoomOut')" (click)="ZoomOut" />
+		<Button Variant="ghost" Size="small" Icon="maximize" [AriaLabel]="$T('ui.timeline.fit')" *tip="$T('ui.timeline.fit')" (click)="Fit" />
+		<Button Variant="ghost" Size="small" Icon="zoom-in" [AriaLabel]="$T('ui.timeline.zoomIn')" *tip="$T('ui.timeline.zoomIn')" (click)="ZoomIn" />
+	</div>
+	<div class="elemenx-timeline-sources" hidden><slot></slot></div>
+</div>

@@ -16,34 +16,16 @@
 	align-self: flex-end;
 }
 
+/* The place of the Avatar of the author: kept on every message of a group, the Avatar on its last one. */
 .elemenx-chat-avatar {
 	display: inline-flex;
-	align-items: center;
-	justify-content: center;
 	flex: none;
 	width: 32px;
 	height: 32px;
-	overflow: hidden;
-	background: var(--elemenx-surface-hover);
-	border-radius: 50%;
-	color: var(--elemenx-text-muted);
-	font-size: var(--elemenx-font-size-small);
-	font-weight: var(--elemenx-font-weight-strong);
-}
-
-.elemenx-chat-message.first .elemenx-chat-avatar,
-.elemenx-chat-message.middle .elemenx-chat-avatar {
-	background: transparent;
 }
 
 .elemenx-chat-message.own .elemenx-chat-avatar {
 	display: none;
-}
-
-.elemenx-chat-avatar img {
-	width: 100%;
-	height: 100%;
-	object-fit: cover;
 }
 
 .elemenx-chat-bubble {
@@ -361,20 +343,6 @@
 .elemenx-chat-summary-avatar {
 	display: inline-flex;
 	flex: none;
-	align-items: center;
-	justify-content: center;
-	width: 24px;
-	height: 24px;
-	overflow: hidden;
-	background: var(--elemenx-surface-hover);
-	border-radius: 50%;
-	font-size: var(--elemenx-font-size-small);
-}
-
-.elemenx-chat-summary-avatar > img {
-	width: 100%;
-	height: 100%;
-	object-fit: cover;
 }
 
 .elemenx-chat-summary-name {

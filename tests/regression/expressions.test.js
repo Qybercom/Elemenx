@@ -3,6 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import Expressions from '../../tools/expressions.js';
 import Builder from '../../tools/builder.js';
+import { Sandbox } from './sandbox.mjs';
 
 /* The sources the builder precompiles are the ones the runtime compiles, and nothing that would not compile. */
 describe('Builder: precompiled expressions', function () {
@@ -30,7 +31,8 @@ describe('Builder: precompiled expressions', function () {
 	});
 
 	it('puts them before the bundle of a build with precompile', function () {
-		var project = path.resolve(process.cwd(), 'tests', 'dist', 'single-project');
+		var sandbox = Sandbox('precompile');
+		var project = sandbox.Project;
 		var target = path.join(project, '..', 'single-precompile-output');
 		var html;
 
@@ -47,7 +49,7 @@ describe('Builder: precompiled expressions', function () {
 			expect(fs.readFileSync(path.join(target, 'index.html'), 'utf8')).not.toContain('Elemenx.Expressions(');
 		}
 		finally {
-			fs.rmSync(target, {recursive: true, force: true});
+			fs.rmSync(sandbox.Root, {recursive: true, force: true});
 		}
 	});
 });

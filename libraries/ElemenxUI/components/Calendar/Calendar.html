@@ -1,42 +1,50 @@
-<div class="elemenx-cal" [class]="[View === 'week' ? 'week' : 'month', Editable ? 'editable' : '', Dragging && Dragging.Active ? 'dragging' : '']">
+<div class="elemenx-cal" [class]="[Grid(View) ? 'week' : Planner(View) ? 'planner' : 'month', View === 'day' ? 'day' : '', Editable ? 'editable' : '', Dragging && Dragging.Active ? 'dragging' : '']">
 	<div class="elemenx-cal-header">
 		<button class="elemenx-cal-nav" type="button" [attribute.aria-label]="$T('ui.common.previous')" (click)="Previous"><Icon Name="chevron-left" /></button>
 		<button class="elemenx-cal-nav" type="button" [attribute.aria-label]="$T('ui.common.next')" (click)="Following"><Icon Name="chevron-right" /></button>
 		<Button [label]="(TodayLabel || $T('ui.calendar.today'))" Size="small" (click)="Today" />
-		<h3 class="elemenx-cal-title" aria-live="polite">{{Title(View, Date, Locale)}}</h3>
+		<h3 class="elemenx-cal-title" aria-live="polite">{{Title(View, Date, Locale, Span)}}</h3>
 		<span class="elemenx-cal-views" role="group" [attribute.aria-label]="$T('ui.calendar.view')">
-			<button class="elemenx-cal-view" type="button" [class.current]="View !== 'week'" [attribute.aria-pressed]="String(View !== 'week')" (click)="ShowMonth">{{(MonthLabel || $T('ui.calendar.month'))}}</button>
-			<button class="elemenx-cal-view" type="button" [class.current]="View === 'week'" [attribute.aria-pressed]="String(View === 'week')" (click)="ShowWeek">{{(WeekLabel || $T('ui.calendar.week'))}}</button>
+			<button class="elemenx-cal-view" type="button" *for="view of Switch(Views, View, {month: MonthLabel, week: WeekLabel})" *key="view.View" [class.current]="view.Current" [attribute.aria-pressed]="String(view.Current)" [attribute.data-view]="view.View" (click)="ShowView">{{view.Label}}</button>
 		</span>
 	</div>
-	<div class="elemenx-cal-month" role="grid" *if="View !== 'week'">
+	<div class="elemenx-cal-month" role="grid" *if="!Grid(View) && !Planner(View)">
 		<span class="elemenx-cal-weekday" role="columnheader" *for="name of Weekdays(Locale)" *key="name">{{name}}</span>
 		<div class="elemenx-cal-day" role="gridcell" *for="day of Month(Date, Events, MaxEvents)" *key="day.ISO" [class.outside]="day.Outside" [class.today]="day.Today" [class.drop]="!!Target && Target.Date === day.ISO && Target.Minutes == null" [attribute.data-date]="day.ISO" (click)="PickDay">
 			<span class="elemenx-cal-date" [attribute.aria-current]="day.Today ? 'date' : null">{{day.Day}}</span>
-			<button class="elemenx-cal-event" type="button" *for="event of day.Events" *key="event.ID" [class.whole]="Whole(event)" [class.dragged]="IsDragged(Dragging, event.ID)" [attribute.aria-grabbed]="Editable ? String(IsDragged(Dragging, event.ID)) : null" (pointerdown)="Grab" (pointermove)="Haul" (pointerup)="Drop" (pointercancel)="Drop" (keydown)="Nudge" [style.--elemenx-cal-color]="event.Color || null" [style.--elemenx-cal-rgb]="Channels(event.Color)" [attribute.data-id]="event.ID" (click)="Pick"><span class="elemenx-cal-time" *if="Time(event)">{{Time(event)}}</span>{{event.Title}}</button>
+			<span class="elemenx-cal-item" *for="item of day.Events" *key="item.Key">
+				<span class="elemenx-cal-spacer" *if="item.Spacer"></span>
+				<button class="elemenx-cal-event" type="button" *if="!item.Spacer" [class]="[item.Bar ? 'bar' : '', item.Bar && !item.Begins && !item.Earlier ? 'joins-before' : '', item.Bar && !item.Ends && !item.Later ? 'joins-after' : '', item.Earlier ? 'earlier' : '', item.Later ? 'later' : '']" [class.whole]="Whole(item.Event) || item.Bar" [class.dragged]="IsDragged(Dragging, item.Event.ID)" [attribute.aria-grabbed]="Editable ? String(IsDragged(Dragging, item.Event.ID)) : null" [attribute.aria-label]="item.Head ? null : item.Event.Title" (pointerdown)="Grab" (pointermove)="Haul" (pointerup)="Drop" (pointercancel)="Drop" (keydown)="Nudge" [style.--elemenx-cal-color]="item.Event.Color || null" [style.--elemenx-cal-rgb]="Channels(item.Event.Color)" [attribute.data-id]="item.Event.ID" (click)="Pick"><span class="elemenx-cal-time" *if="item.Head && item.Begins && Time(item.Event)">{{Time(item.Event)}}</span><span class="elemenx-cal-label" *if="item.Head">{{item.Event.Title}}</span><span class="elemenx-cal-resize" *if="Editable && item.Bar && item.Ends" aria-hidden="true"></span></button>
+			</span>
 			<button class="elemenx-cal-more" type="button" *if="day.More" [attribute.data-date]="day.ISO" (click)="More">{{MoreLabel ? '+' + day.More + ' ' + MoreLabel : $T('ui.calendar.more', {count: day.More})}}</button>
 		</div>
 	</div>
-	<div class="elemenx-cal-week" *if="View === 'week'">
+	<div class="elemenx-cal-week" *if="Grid(View)">
 		<div class="elemenx-cal-week-head">
 			<span class="elemenx-cal-gutter"></span>
-			<span class="elemenx-cal-week-day" *for="day of Days(Date, Events, Locale)" *key="day.ISO" [class.today]="day.Today"><span>{{day.Name}}</span><strong>{{day.Day}}</strong></span>
+			<span class="elemenx-cal-week-day" *for="day of Days(Date, Events, Locale, View)" *key="day.ISO" [class.today]="day.Today"><span>{{day.Name}}</span><strong>{{day.Day}}</strong></span>
 		</div>
 		<div class="elemenx-cal-week-allday">
 			<span class="elemenx-cal-gutter"></span>
-			<div class="elemenx-cal-allday" *for="day of Days(Date, Events, Locale)" *key="day.ISO" [class.drop]="!!Target && Target.Date === day.ISO && Target.Minutes == null" [attribute.data-date]="day.ISO">
-				<button class="elemenx-cal-event whole" type="button" *for="event of day.AllDay" *key="event.ID" [class.dragged]="IsDragged(Dragging, event.ID)" [attribute.aria-grabbed]="Editable ? String(IsDragged(Dragging, event.ID)) : null" (pointerdown)="Grab" (pointermove)="Haul" (pointerup)="Drop" (pointercancel)="Drop" (keydown)="Nudge" [style.--elemenx-cal-color]="event.Color || null" [style.--elemenx-cal-rgb]="Channels(event.Color)" [attribute.data-id]="event.ID" (click)="Pick">{{event.Title}}</button>
+			<div class="elemenx-cal-allday" *for="day of Days(Date, Events, Locale, View)" *key="day.ISO" [class.drop]="!!Target && Target.Date === day.ISO && Target.Minutes == null" [attribute.data-date]="day.ISO">
+				<span class="elemenx-cal-item" *for="item of day.AllDay" *key="item.Key">
+					<span class="elemenx-cal-spacer" *if="item.Spacer"></span>
+					<button class="elemenx-cal-event whole" type="button" *if="!item.Spacer" [class]="['bar', !item.Begins && !item.Earlier ? 'joins-before' : '', !item.Ends && !item.Later ? 'joins-after' : '', item.Earlier ? 'earlier' : '', item.Later ? 'later' : '']" [class.dragged]="IsDragged(Dragging, item.Event.ID)" [attribute.aria-grabbed]="Editable ? String(IsDragged(Dragging, item.Event.ID)) : null" [attribute.aria-label]="item.Head ? null : item.Event.Title" (pointerdown)="Grab" (pointermove)="Haul" (pointerup)="Drop" (pointercancel)="Drop" (keydown)="Nudge" [style.--elemenx-cal-color]="item.Event.Color || null" [style.--elemenx-cal-rgb]="Channels(item.Event.Color)" [attribute.data-id]="item.Event.ID" (click)="Pick"><span class="elemenx-cal-time" *if="item.Head && item.Begins && Time(item.Event)">{{Time(item.Event)}}</span><span class="elemenx-cal-label" *if="item.Head">{{item.Event.Title}}</span><span class="elemenx-cal-resize" *if="Editable && item.Ends" aria-hidden="true"></span></button>
+				</span>
 			</div>
 		</div>
 		<div class="elemenx-cal-week-body">
 			<div class="elemenx-cal-hours">
 				<span class="elemenx-cal-hour" *for="hour of Hours(StartHour, EndHour)" *key="hour.Hour" [style.height]="HourHeight + 'px'">{{hour.Label}}</span>
 			</div>
-			<div class="elemenx-cal-column" *for="day of Days(Date, Events, Locale)" *key="day.ISO" [class.today]="day.Today" [style.height]="((EndHour - StartHour) * HourHeight) + 'px'" [style.--elemenx-cal-hour]="HourHeight + 'px'" [attribute.data-date]="day.ISO" (click)="Slot">
-				<button class="elemenx-cal-block" type="button" *for="slot of day.Timed" *key="slot.Event.ID" [class.short]="slot.Height < 36" [class.dragged]="IsDragged(Dragging, slot.Event.ID)" [attribute.aria-grabbed]="Editable ? String(IsDragged(Dragging, slot.Event.ID)) : null" (pointerdown)="Grab" (pointermove)="Haul" (pointerup)="Drop" (pointercancel)="Drop" (keydown)="Nudge" [style.--elemenx-cal-color]="slot.Event.Color || null" [style.--elemenx-cal-rgb]="Channels(slot.Event.Color)" [style.top]="slot.Top + 'px'" [style.height]="slot.Height + 'px'" [style.left]="(slot.Lane / slot.Lanes * 100) + '%'" [style.width]="'calc(' + (100 / slot.Lanes) + '% - 4px)'" [attribute.data-id]="slot.Event.ID" (click)="Pick"><span class="elemenx-cal-time">{{Time(slot.Event)}}</span><span>{{slot.Event.Title}}</span><span class="elemenx-cal-resize" *if="Editable" aria-hidden="true"></span></button>
+			<div class="elemenx-cal-column" *for="day of Days(Date, Events, Locale, View)" *key="day.ISO" [class.today]="day.Today" [style.height]="((EndHour - StartHour) * HourHeight) + 'px'" [style.--elemenx-cal-hour]="HourHeight + 'px'" [attribute.data-date]="day.ISO" (click)="Slot">
+				<button class="elemenx-cal-block" type="button" *for="slot of day.Timed" *key="slot.Event.ID" [class.short]="slot.Height < 36" [class.before]="slot.Before" [class.after]="slot.After" [class.dragged]="IsDragged(Dragging, slot.Event.ID)" [attribute.aria-grabbed]="Editable ? String(IsDragged(Dragging, slot.Event.ID)) : null" (pointerdown)="Grab" (pointermove)="Haul" (pointerup)="Drop" (pointercancel)="Drop" (keydown)="Nudge" [style.--elemenx-cal-color]="slot.Event.Color || null" [style.--elemenx-cal-rgb]="Channels(slot.Event.Color)" [style.top]="slot.Top + 'px'" [style.height]="slot.Height + 'px'" [style.left]="(slot.Lane / slot.Lanes * 100) + '%'" [style.width]="'calc(' + (100 / slot.Lanes) + '% - 4px)'" [attribute.data-id]="slot.Event.ID" (click)="Pick"><span class="elemenx-cal-time">{{slot.Time}}</span><span>{{slot.Event.Title}}</span><span class="elemenx-cal-resize" *if="Editable && !slot.After" aria-hidden="true"></span></button>
 				<span class="elemenx-cal-shadow" *if="Shadow(Target, day.ISO)" [style.top]="Shadow(Target, day.ISO).Top + 'px'" [style.height]="Shadow(Target, day.ISO).Height + 'px'">{{Shadow(Target, day.ISO).Label}}</span>
 				<span class="elemenx-cal-now" *if="day.Today && NowTop(Now) >= 0" [style.top]="NowTop(Now) + 'px'"></span>
 			</div>
 		</div>
+	</div>
+	<div class="elemenx-cal-planner" *if="Planner(View)">
+		<Timeline [start]="Range(View, Date, Span).From" [end]="Range(View, Date, Span).To" [ranges]="Plan(View, Date, Span, Events)" Now="true" Snap="day" [editable]="Editable" [label]="Title(View, Date, Locale, Span)" (select)="PlanSelect" (move)="PlanMove" (resize)="PlanResize" />
 	</div>
 </div>

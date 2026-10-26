@@ -1,5 +1,5 @@
 <div class="elemenx-select elemenx-popup-anchor">
-	<div class="elemenx-input elemenx-select-trigger" role="combobox" aria-haspopup="listbox" [attribute.tabindex]="Disabled ? null : 0" [class]="[Size || 'medium', Shape === 'round' ? 'round' : '', Invalid ? 'invalid' : '', Disabled ? 'disabled' : '', Open ? 'open' : '']" [attribute.aria-expanded]="String(Open)" [attribute.aria-disabled]="Disabled ? 'true' : null" (click)="Toggle" (keydown)="Key">
+	<div class="elemenx-input elemenx-select-trigger" role="combobox" aria-haspopup="listbox" [attribute.aria-label]="Label || null" [attribute.tabindex]="Disabled ? null : 0" [class]="[Size || 'medium', Shape === 'round' ? 'round' : '', Invalid ? 'invalid' : '', Disabled ? 'disabled' : '', Open ? 'open' : '']" [attribute.aria-expanded]="String(Open)" [attribute.aria-disabled]="Disabled ? 'true' : null" (click)="Toggle" (keydown)="Key">
 		<Icon *if="Icon" [name]="Icon" />
 		<Icon *if="!Icon && Find(Options, Value) && Find(Options, Value).Icon" [name]="(Find(Options, Value) || {}).Icon" />
 		<span class="elemenx-select-value" [class.placeholder]="!Find(Options, Value)">{{Find(Options, Value) ? Find(Options, Value).Label : (Placeholder || $T('ui.select.placeholder'))}}</span>

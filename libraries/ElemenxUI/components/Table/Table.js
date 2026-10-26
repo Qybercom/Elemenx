@@ -23,6 +23,7 @@ Elemenx.Component('Table', {
 		Description: 'A data table.',
 		Events: ['sort', 'filter', 'page', 'expand', 'select', 'activate', 'resize'],
 		Props: {
+			Label: 'The name of the table for screen readers.',
 			Columns: 'The columns: [{Key, Title, Width, MinWidth, Align, Sortable, Resizable, Format, Filter, Options}].',
 			Rows: 'The rows: objects.',
 			RowKey: 'The field that identifies a row.',
@@ -53,6 +54,7 @@ Elemenx.Component('Table', {
 	},
 	Columns: [],
 	Rows: [],
+	Label: '',
 	RowKey: 'ID',
 	Sort: null,
 	SortLocal: true,

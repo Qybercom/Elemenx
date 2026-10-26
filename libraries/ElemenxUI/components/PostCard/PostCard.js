@@ -65,12 +65,6 @@ Elemenx.Component('PostCard', {
 		this.Format = function () {
 			return format;
 		};
-
-		this.Initials = function (name) {
-			return String(name || '').split(/\s+/).filter(Boolean).slice(0, 2).map(function (part) {
-				return part.charAt(0).toUpperCase();
-			}).join('');
-		};
 	},
 
 	Like: function () {

@@ -3,6 +3,8 @@ import { loadElemenx, resetDOM, tick, unique } from '../setup.js';
 import boardSource from '../../libraries/ElemenxUI/components/Board/Board.js?raw';
 import boardTemplate from '../../libraries/ElemenxUI/components/Board/Board.html?raw';
 import boardStyle from '../../libraries/ElemenxUI/components/Board/Board.css?raw';
+import buttonSource from '../../libraries/ElemenxUI/components/Button/Button.js?raw';
+import buttonTemplate from '../../libraries/ElemenxUI/components/Button/Button.html?raw';
 
 var owned = [];
 
@@ -31,6 +33,11 @@ describe('Contract: Board, an infinite canvas', function () {
 		/* The Board with its template inline and its style: the page of the tests serves no Library. */
 		new Function(boardSource.replace("$StyleURL: 'Board.css',\n", '').replace("$TemplateURL: 'Board.html'", function () {
 			return '$Template: ' + JSON.stringify(boardTemplate);
+		}))();
+
+		/* Its buttons of the zoom are Buttons. */
+		new Function(buttonSource.replace("$StyleURL: 'Button.css',\n", '').replace("$TemplateURL: 'Button.html'", function () {
+			return '$Template: ' + JSON.stringify(buttonTemplate);
 		}))();
 
 		Elemenx.Style('test:board', boardStyle);
@@ -106,13 +113,14 @@ describe('Contract: Board, an infinite canvas', function () {
 		expect(host.$Element().querySelector('.elemenx-board-world').style.transform).toBe('translate(-50px, -20px) scale(1)');
 
 		/* The buttons zoom in and out; the percent fits the content: all of it in view, no larger than zoom 1. */
-		host.$Element().querySelectorAll('.elemenx-board-control')[2].click();
+		host.$Element().querySelectorAll('.elemenx-board-controls button')[2].click();
 
 		await tick(20);
 
-		expect(host.$Element().querySelector('.elemenx-board-zoom').textContent).toBe('125%');
+		expect(host.$Element().querySelector('.elemenx-board-zoom').textContent.trim()).toBe('125%');
+		expect(host.$Element().querySelector('.elemenx-board-zoom button').getAttribute('aria-label')).toBe(Elemenx.Locale.Text('ui.board.fit'));
 
-		host.$Element().querySelector('.elemenx-board-zoom').click();
+		host.$Element().querySelector('.elemenx-board-zoom button').click();
 
 		await tick(20);
 
@@ -131,7 +139,7 @@ describe('Contract: Board, an infinite canvas', function () {
 
 		await tick(20);
 
-		expect(host.$Element().querySelector('.elemenx-board-zoom').textContent).toBe('400%');
+		expect(host.$Element().querySelector('.elemenx-board-zoom').textContent.trim()).toBe('400%');
 		expect(component).not.toBe(null);
 	});
 });

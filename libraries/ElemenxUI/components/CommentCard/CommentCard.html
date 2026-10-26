@@ -1,6 +1,6 @@
 <article class="elemenx-comment" [class]="[Variant || 'flat', Thread ? 'thread' : '']" [attribute.aria-label]="Author">
 	<div class="elemenx-comment-side">
-		<span class="elemenx-person-avatar elemenx-comment-avatar" aria-hidden="true"><img *if="Avatar" [src]="Avatar" alt="" /><span *if="!Avatar">{{Initials(Author)}}</span></span>
+		<span class="elemenx-person-avatar elemenx-comment-avatar" aria-hidden="true"><Avatar [name]="Author" [image]="Avatar" [size]="32" /></span>
 		<span class="elemenx-comment-line" *if="Thread" aria-hidden="true"></span>
 	</div>
 	<div class="elemenx-comment-main">

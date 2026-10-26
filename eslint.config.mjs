@@ -42,7 +42,7 @@ var plugins = {
 
 export default [
 	{
-		ignores: ['node_modules/**', 'test-results/**', 'playwright-report/**', 'coverage/**', '**/dist/**', '.vitest/**', '.idea/**', 'examples/Docs/tools/examples/**', 'examples/Native/android/**', 'examples/Native/ios/**']
+		ignores: ['node_modules/**', 'test-results/**', 'playwright-report/**', 'coverage/**', '**/dist/**', '.vitest/**', '.idea/**', 'examples/Docs/tools/examples/**', 'examples/Native/android/**', 'examples/Native/ios/**', 'editors/vscode/core/**', 'editors/intellij/build/**', 'editors/intellij/.gradle/**', 'editors/intellij/.intellijPlatform/**']
 	},
 	{
 		linterOptions: {
@@ -50,7 +50,7 @@ export default [
 		}
 	},
 	{
-		files: ['elemenx.js', 'elemenx-cli.js', 'tools/**/*.js', 'libraries/**/*.js', 'examples/**/*.js', 'eslint/**/*.js'],
+		files: ['elemenx.js', 'elemenx-cli.js', 'tools/**/*.js', 'libraries/**/*.js', 'examples/**/*.js', 'eslint/**/*.js', 'editors/**/*.js'],
 		languageOptions: {
 			ecmaVersion: 5,
 			sourceType: 'script'

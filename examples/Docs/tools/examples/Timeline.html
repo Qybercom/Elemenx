@@ -1,17 +1,41 @@
-<Timeline [items]="Items" />
-<Button Label="Approve" Icon="check" Size="small" (click)="Approve" />
+<Timeline Start="2026-01-01" End="2026-12-31" [marks]="Marks" [ranges]="Ranges" [lanes]="Lanes" Editable="true" Snap="day" (move)="Moved" (resize)="Moved" (select)="Selected" />
+<p>{{Note}}</p>
+<Timeline Start="0" End="300" Unit="s" [playhead]="At" Seekable="true" (seek)="Seek">
+	<TimelineProgress [to]="At" Buffer="120" />
+	<TimelineMark ID="intro" At="0" Label="Intro" />
+	<TimelineMark ID="goal" At="95" Tone="success"><strong>Goal!</strong></TimelineMark>
+	<TimelineMark ID="replay" At="100" Label="Replay" Side="before" />
+	<TimelineRange ID="ad" From="150" To="180" Label="Ad" Tone="danger" />
+</Timeline>
 <script>
 ({
-	Items: [
-		{ID: 1, Icon: 'branch', Author: 'Ada', Action: 'opened this merge request', Time: '9:00'},
-		{ID: 2, Author: 'Alan', Action: 'added the label ui', Time: '9:12', Size: 'small'},
-		{ID: 3, Icon: 'comment', Author: 'Alan', Action: 'commented', Time: '11:30', Text: 'Looks good; can the list keep its scroll on reload?'},
-		{ID: 4, Author: 'Ada', Action: 'pushed 2 commits', Time: '13:05', Size: 'small', Variant: 'info'},
-		{ID: 5, Icon: 'warning', Author: 'CI', Action: 'failed on the e2e tests', Time: '13:20', Variant: 'danger'}
+	Note: 'Drag a range, its edges or a mark',
+	At: 40,
+	Lanes: [{ID: 'design', Label: 'Design'}, {ID: 'build', Label: 'Build'}],
+	Ranges: [
+		{ID: 'research', From: '2026-01-12', To: '2026-03-20', Label: 'Research', Lane: 'design'},
+		{ID: 'core', From: '2026-03-02', To: '2026-08-28', Label: 'Core', Lane: 'build', Tone: 'info'}
+	],
+	Marks: [
+		{ID: 'alpha', At: '2026-05-04', Label: 'Alpha'},
+		{ID: 'demo', At: '2026-05-08', Label: 'Demo day', Tone: 'success'}
 	],
 
-	Approve: function () {
-		this.Items = this.Items.concat([{ID: this.Items.length + 1, Icon: 'check', Author: 'You', Action: 'approved', Time: 'now', Variant: 'success'}]);
+	Moved: function (event) {
+		var list = event.Kind === 'mark' ? 'Marks' : 'Ranges';
+
+		this[list] = this[list].map(function (item) {
+			return item.ID === event.ID ? Object.assign({}, item, event.Kind === 'mark' ? {At: event.At} : {From: event.From, To: event.To}) : item;
+		});
+		this.Note = event.ID + ': ' + (event.At || event.From + ' – ' + event.To);
+	},
+
+	Selected: function (event) {
+		this.Note = 'Selected: ' + event.ID;
+	},
+
+	Seek: function (event) {
+		this.At = event.At;
 	}
 })
 </script>

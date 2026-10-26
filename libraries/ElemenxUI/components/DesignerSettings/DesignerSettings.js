@@ -163,7 +163,7 @@ Elemenx.Component('DesignerSettings', {
 		this.$Service('Designer').AddGuard();
 	},
 
-	GuardRemoved: function (event, node) {
-		this.$Service('Designer').RemoveGuard(node.getAttribute('data-guard'));
+	GuardRemoved: function (event) {
+		this.$Service('Designer').RemoveGuard(event.target.closest('[data-guard]').getAttribute('data-guard'));
 	}
 });

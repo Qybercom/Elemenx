@@ -101,7 +101,8 @@ Elemenx.Component('DesignerDocument', {
 
 		if (!prop) return;
 
-		prop[key] = node.type === 'checkbox' ? node.checked : node.value;
+		/* A field of its own, or the place of a Checkbox the change of its box bubbled to. */
+		prop[key] = event.target.type === 'checkbox' ? event.target.checked : node.value;
 
 		this.Wrong = designer.SetDocument(item.ID, 'Props', props) ? '' : 'Props';
 	},

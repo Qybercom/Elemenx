@@ -62,49 +62,23 @@
 	user-select: none;
 }
 
+/* The Button that copies, over the code: shown under the pointer, with the focus, and once it copied (in success). */
 .elemenx-code-view-copy {
 	position: absolute;
 	top: 6px;
 	right: calc(6px + var(--elemenx-code-view-scrollbar));
 	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	width: 26px;
-	height: 26px;
-	padding: 0;
-	background: var(--elemenx-surface);
-	border: 1px solid var(--elemenx-border);
-	border-radius: var(--elemenx-radius);
-	color: var(--elemenx-text-muted);
 	opacity: 0;
-	cursor: pointer;
 	transition: opacity var(--elemenx-duration) var(--elemenx-easing);
 }
 
 .elemenx-code-view:hover .elemenx-code-view-copy,
-.elemenx-code-view-copy:focus-visible,
+.elemenx-code-view-copy:focus-within,
 .elemenx-code-view-copy.copied {
 	opacity: 1;
 }
 
-/* The button under the pointer stands out of the code; pressed, it goes down; once it copied, it shows success. */
-.elemenx-code-view-copy:hover {
-	background: var(--elemenx-surface-hover);
-	border-color: var(--elemenx-border-strong);
-	color: var(--elemenx-text);
-}
-
-.elemenx-code-view-copy:active {
-	background: rgba(var(--elemenx-accent-rgb), 0.16);
-	transform: translateY(1px);
-}
-
-.elemenx-code-view-copy:focus-visible {
-	outline: 2px solid var(--elemenx-focus);
-	outline-offset: 1px;
-}
-
-.elemenx-code-view-copy.copied {
+.elemenx-code-view-copy.copied .elemenx-button {
 	border-color: var(--elemenx-success);
 	color: var(--elemenx-success);
 }

@@ -631,6 +631,54 @@
 		</div>
 	</Section>
 
+	<Section *if="Shows('Calls')" Title="Calls" [note]="CallNote || 'CallStage · CallTile · CallControls · CallInvite: the look of a call (its media come from the application)'">
+		<div class="ui-kit-lazy" *lazy>
+			<div class="ui-kit-call">
+				<CallStage [layout]="CallLayout" [side]="CallSide" [corner]="CallCorner" PerPage="4" (corner)="CallCornered" (page)="CallPaged">
+					<span slot="status" class="ui-kit-call-status"><Icon Name="record" /> 12:04 · Weekly sync</span>
+					<CallTile slot="main" *if="CallLayout === 'screen'" Name="Ada Lovelace" Screen="true" [element]="CallVideo('Screen of Ada')" />
+					<CallTile slot="main" *if="CallLayout === 'speaker' && CallFront(CallPeople, CallPinned)" [name]="CallPinned" Pinned="true" [camera]="CallFront(CallPeople, CallPinned).Camera" [muted]="CallFront(CallPeople, CallPinned).Muted" [element]="CallVideo(CallPinned)" (pin)="CallPin" />
+					<CallTile slot="participants" *for="person of CallOthers(CallPeople, CallPinned)" [name]="person.Name" [muted]="!!person.Muted" [camera]="person.Camera !== false" [element]="CallVideo(person.Name)" [speaking]="!!person.Speaking" [level]="person.Level || 0" [quality]="person.Quality" [hand]="!!person.Hand" (pin)="CallPin" />
+					<CallTile slot="self" Name="You" Self="true" [muted]="CallState.Muted" [camera]="CallState.Camera" [element]="CallVideo('You')" />
+					<CallControls slot="controls" [muted]="CallState.Muted" [camera]="CallState.Camera" [sharing]="CallState.Sharing" [hand]="CallState.Hand" [chat]="CallSide" [layout]="CallLayout" [devices]="CallDevices" (mute)="CallMuted" (camera)="CallFilmed" (share)="CallShared" (hand)="CallRaised" (react)="CallReacted" (chat)="CallChatted" (people)="CallListed" (layout)="CallLaidOut" (device)="CallDevice" (leave)="CallLeft" />
+					<div slot="side" class="ui-kit-call-side">
+						<h5>Chat</h5>
+						<p class="elemenx-caption">Ada: the slides are up.</p>
+						<p class="elemenx-caption">Grace: one question at the end.</p>
+					</div>
+				</CallStage>
+			</div>
+			<h5>Invitation</h5>
+			<div class="ui-kit-row">
+				<CallInvite Name="Grace Hopper" Video="true" (accept)="CallAccepted" (decline)="CallDeclined" />
+			</div>
+		</div>
+	</Section>
+
+	<Section *if="Shows('Game world')" Title="Game world" [note]="WorldNote || 'GameWorld · GameLayer · GameBuilding · GameUnit · GameObject: a click or a frame selects, a right click orders'">
+		<div class="ui-kit-lazy" *lazy>
+			<div class="ui-kit-row">
+				<RadioGroup Variant="segmented" Label="Projection" [options]="WorldProjections" [value]="WorldProjection" (change)="WorldProjected" />
+				<Toggle Label="Fog of war" [checked]="WorldFog" (change)="WorldFogged" />
+				<Button Label="To the barracks" Icon="home" Variant="ghost" (click)="WorldCentered" />
+				<Button Label="Recruit" Icon="add" Variant="ghost" (click)="WorldRecruited" />
+			</div>
+			<div class="ui-kit-world">
+				<GameWorld Team="blue" Minimap="true" [projection]="WorldProjection" [fog]="WorldFog" (ready)="WorldReady" (select)="WorldSelected" (order)="WorldOrdered" (arrive)="WorldArrived" (cell)="WorldCell">
+					<GameLayer Name="ground" [rows]="WorldRows" />
+					<GameBuilding ID="barracks" X="5" Y="2" Width="3" Height="3" Team="blue" Type="barracks" Health="400" MaxHealth="400" />
+					<GameBuilding ID="hall" X="23" Y="1" Width="3" Height="2" Team="red" Type="hall" Health="500" MaxHealth="500" />
+					<GameUnit *for="unit of WorldUnits" [id]="unit.ID" [x]="unit.X" [y]="unit.Y" [team]="unit.Team" [type]="unit.Type" [health]="unit.Health" [maxHealth]="unit.MaxHealth" />
+					<GameObject *for="tree of WorldTrees" Kind="tree" [id]="tree.ID" [x]="tree.X" [y]="tree.Y" Blocks="true" Opaque="true" />
+					<GameObject ID="stone" Kind="rock" X="4" Y="13" Blocks="true" />
+					<div slot="hud" class="ui-kit-world-hud">
+						<span class="ui-kit-world-resources"><span>Gold 1 250</span><span>Wood 840</span><span>Food 410</span></span>
+					</div>
+				</GameWorld>
+			</div>
+		</div>
+	</Section>
+
 	<Section *if="Shows('Keep-alive')" Title="Keep-alive" [note]="KeepNote">
 		<div class="ui-kit-lazy" *lazy>
 			<div class="ui-kit-row">
@@ -1174,10 +1222,10 @@
 					<Button slot="selection" Icon="delete" Title="Delete selected" Variant="ghost" (click)="DeleteSelected" />
 					<div slot="sidebar" class="ui-kit-stack ui-kit-conversations">
 						<Input Shape="round" Icon="search" Placeholder="Search" Size="small" />
-						<div class="elemenx-chat-conversation active"><span class="elemenx-chat-avatar">GH</span><div><strong>Grace Hopper</strong><p class="elemenx-text small muted">Can you check the new table?</p></div></div>
-						<div class="elemenx-chat-conversation"><span class="elemenx-chat-avatar">AT</span><div><strong>Alan Turing</strong><p class="elemenx-text small muted">See you tomorrow</p></div></div>
+						<div class="elemenx-chat-conversation active"><span class="elemenx-chat-avatar"><Avatar Name="Grace Hopper" Size="32" /></span><div><strong>Grace Hopper</strong><p class="elemenx-text small muted">Can you check the new table?</p></div></div>
+						<div class="elemenx-chat-conversation"><span class="elemenx-chat-avatar"><Avatar Name="Alan Turing" Size="32" /></span><div><strong>Alan Turing</strong><p class="elemenx-text small muted">See you tomorrow</p></div></div>
 					</div>
-					<div slot="header" class="elemenx-container ui-kit-chat-header"><span class="elemenx-chat-avatar">GH</span><div><strong>Grace Hopper</strong><p class="elemenx-text small muted">online</p></div><span class="elemenx-spacer"></span><Button Icon="phone" Title="Call" Variant="ghost" /><Button Icon="more-vertical" Title="More" Variant="ghost" /></div>
+					<div slot="header" class="elemenx-container ui-kit-chat-header"><span class="elemenx-chat-avatar"><Avatar Name="Grace Hopper" Status="online" Size="32" /></span><div><strong>Grace Hopper</strong><p class="elemenx-text small muted">online</p></div><span class="elemenx-spacer"></span><Button Icon="phone" Title="Call" Variant="ghost" /><Button Icon="more-vertical" Title="More" Variant="ghost" /></div>
 					<div class="elemenx-chat-divider">Today</div>
 					<ChatMessage *for="message of Thread(Messages)" *key="message.ID" [id]="message.ID" [author]="message.Author" [text]="message.Text" [time]="message.Time" [own]="!!message.Own" [position]="message.Position" [status]="message.Status || ''" [sticker]="message.Sticker || ''" [reactions]="message.Reactions || []" [edited]="message.Edited || false" [views]="message.Views || 0" [viewers]="message.Viewers || []" [actions]="MessageActions(message)" [selecting]="ChatSelection.length > 0" [selected]="ChatSelection.indexOf(message.ID) !== -1" React="true" (react)="MessageReacted" (action)="MessageAction" (select)="MessageSelected" />
 					<ChatComposer slot="composer" [suggest]="SuggestMode" (send)="SendMessage" (sticker)="SendSticker" />
@@ -1186,7 +1234,7 @@
 		</div>
 	</Section>
 
-	<Section *if="Shows('Steps and timeline')" Title="Steps and timeline" Note="Steps · Timeline">
+	<Section *if="Shows('Steps and timeline')" Title="Steps and timeline" Note="Steps · Chronicle">
 		<div class="ui-kit-lazy" *lazy>
 			<Steps [items]="StepItems" [active]="ActiveSteps" [done]="DoneSteps" Clickable="true" (select)="StepSelected" />
 			<div class="ui-kit-grid">
@@ -1194,7 +1242,32 @@
 					<Steps Direction="vertical" Size="small" [items]="StepItems" [active]="['review', 'deploy']" [done]="['plan']" />
 					<Steps Size="small" [items]="CustomSteps" [active]="[CustomStep]" Clickable="true" (select)="CustomStepSelected" />
 				</div>
-				<Timeline [items]="Activity" />
+				<Chronicle [items]="Activity" />
+			</div>
+		</div>
+	</Section>
+
+	<Section *if="Shows('Timeline')" Title="Timeline" [note]="TimelineNote || 'Timeline · TimelineMark · TimelineRange · TimelineLane · TimelineProgress'">
+		<div class="ui-kit-lazy ui-kit-stack" *lazy="360">
+			<Timeline Start="2026-01-01" End="2026-12-31" [marks]="PlanMarks" [ranges]="PlanRanges" [lanes]="PlanLanes" Now="true" Editable="true" Snap="day" Label="The plan of the year" (select)="PlanSelected" (move)="PlanMoved" (resize)="PlanResized" (create)="PlanCreated" />
+			<Timeline Start="0" End="600" Unit="s" [playhead]="VideoAt" Seekable="true" Label="A video" (seek)="VideoSeek">
+				<TimelineProgress [to]="VideoAt" Buffer="240" />
+				<TimelineMark ID="intro" At="0" Label="Intro" Tone="muted" />
+				<TimelineMark ID="title" At="12" Label="Title" Tone="info" />
+				<TimelineMark ID="scene" At="18" Label="Scene 1" />
+				<TimelineMark ID="chapter" At="20" Label="Chapter 1" Side="before" />
+				<TimelineMark ID="goal" At="312" Tone="success"><strong>Goal!</strong> <em>5:12</em></TimelineMark>
+				<TimelineMark ID="credits" At="560" Label="Credits" Icon="star" Side="before" Tone="warning" />
+				<TimelineRange ID="ad" From="120" To="150" Label="Ad break" Tone="danger" />
+			</Timeline>
+			<div class="ui-kit-grid">
+				<Timeline Orientation="vertical" Start="1900-01-01" End="2030-01-01" [marks]="HistoryMarks" Controls="false" Label="A century" />
+				<Timeline Orientation="vertical" Start="2026-10-26T08:00" End="2026-10-26T20:00" Controls="false" Label="A day">
+					<TimelineLane ID="room" Label="Room" />
+					<TimelineRange ID="standup" From="2026-10-26T09:30" To="2026-10-26T10:00" Label="Stand-up" Lane="room" />
+					<TimelineRange ID="review" From="2026-10-26T13:00" To="2026-10-26T15:30" Label="Design review" Lane="room" Tone="success" />
+					<TimelineMark ID="lunch" At="2026-10-26T12:00" Label="Lunch" Icon="coffee" />
+				</Timeline>
 			</div>
 		</div>
 	</Section>
@@ -1223,6 +1296,15 @@
 					<Presence Status="offline" ShowLabel="true" />
 					<Presence Status="connecting" ShowLabel="true" />
 					<Button Label="Reconnect" Size="small" (click)="Reconnect" />
+				</div>
+				<div class="ui-kit-row ui-kit-signals">
+					<Signal Quality="good" />
+					<Signal Quality="fair" />
+					<Signal Quality="poor" />
+					<Signal Value="0.6" Bars="5" />
+					<Signal Value="0" Bars="4" Label="No network" />
+					<Signal Value="0.75" Bars="4" Tone="accent" Size="small" />
+					<span class="elemenx-caption">Signal: Value 0 to 1 or Quality, Bars, the color of its level or a Tone</span>
 				</div>
 				<div class="ui-kit-row ui-kit-badges">
 					<Button Icon="bell" Title="Notifications" [badge]="Unread" (click)="ReadAll" />
@@ -1583,7 +1665,7 @@
 						<Progress Value="12" Label="Flaky" ShowValue="true" Tone="warning" />
 					</DashboardWidget>
 					<DashboardWidget Title="Activity" Icon="history" Span="2" Rows="2">
-						<Timeline [items]="Activity" Compact="true" />
+						<Chronicle [items]="Activity" Compact="true" />
 					</DashboardWidget>
 					<DashboardWidget Title="Team" Icon="user" Span="2">
 						<Button slot="actions" Icon="add" Title="Invite" Variant="ghost" Size="small" />
@@ -1609,7 +1691,7 @@
 			<div class="ui-kit-frame small">
 				<MasterDetail Empty="Select a person" (back)="ClearPerson">
 					<Input slot="list-header" Icon="search" Placeholder="Filter" Size="small" />
-					<div slot="list" class="elemenx-master-row" *for="person of People" *key="person.ID" [class.active]="person.ID === PersonID" [attribute.data-id]="person.ID" (click)="PickPerson"><span class="elemenx-chat-avatar">{{person.Name.charAt(0)}}</span><div><strong>{{person.Name}}</strong><p class="elemenx-text small muted">{{person.Role}}</p></div></div>
+					<div slot="list" class="elemenx-master-row" *for="person of People" *key="person.ID" [class.active]="person.ID === PersonID" [attribute.data-id]="person.ID" (click)="PickPerson"><span class="elemenx-chat-avatar"><Avatar [name]="person.Name" Size="32" /></span><div><strong>{{person.Name}}</strong><p class="elemenx-text small muted">{{person.Role}}</p></div></div>
 					<strong slot="detail-header" *if="PersonID">{{PersonName}}</strong>
 					<div slot="detail" class="ui-kit-stack" *if="PersonID">
 						<p class="elemenx-text">Commits: {{PersonCommits}}</p>

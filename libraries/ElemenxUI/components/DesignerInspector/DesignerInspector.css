@@ -125,3 +125,13 @@
 .elemenx-designer-list-add {
 	align-self: flex-start;
 }
+
+/* The places of the Buttons of a kind: their data, no box of their own. */
+.elemenx-designer-kind {
+	display: contents;
+}
+
+/* A key of an item: its field, or its Checkbox. */
+.elemenx-designer-list-field {
+	display: contents;
+}

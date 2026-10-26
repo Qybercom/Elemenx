@@ -70,30 +70,9 @@
 	gap: 2px;
 }
 
+/* The place of a Button of the toolbar: its command, no box of its own. */
 .elemenx-rich-editor-action {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	width: 28px;
-	height: 28px;
-	padding: 0;
-	background: transparent;
-	border: 0;
-	border-radius: var(--elemenx-radius);
-	color: var(--elemenx-text);
-	cursor: pointer;
-}
-
-.elemenx-rich-editor-action:hover {
-	background: var(--elemenx-surface-hover);
-}
-
-.elemenx-rich-editor-action.active {
-	background: rgba(var(--elemenx-accent-rgb), 0.16);
-}
-
-.elemenx-rich-editor-action:focus-visible {
-	outline: 2px solid var(--elemenx-focus);
+	display: contents;
 }
 
 .elemenx-rich-editor-separator {

@@ -1,0 +1,7 @@
+<div class="elemenx-game-world" tabindex="0" role="application" [class.panning]="Panning" [attribute.aria-label]="Label || $T('ui.gameWorld.label')" [attribute.data-changed]="Changed(Map, Team, Fog, Grid, Projection, Paused, Speed, X, Y, Zoom)" (keydown)="Key" (keyup)="KeyUp" (blur)="Blurred">
+	<canvas class="elemenx-game-world-canvas" (pointerdown)="Down" (pointermove)="Move" (pointerup)="Up" (pointercancel)="Cancel" (pointerleave)="Left" (wheel)="Wheel" (contextmenu)="Menu" (dblclick)="Double"></canvas>
+	<canvas class="elemenx-game-world-minimap" *if="Minimap" role="img" [attribute.aria-label]="$T('ui.gameWorld.minimap')" (pointerdown)="MapDown" (pointermove)="MapMove" (pointerup)="MapUp" (pointercancel)="MapUp"></canvas>
+	<div class="elemenx-game-world-hud"><slot name="hud"></slot></div>
+	<div class="elemenx-game-world-sources" hidden><slot></slot></div>
+	<div class="elemenx-visually-hidden" aria-live="polite">{{Status}}</div>
+</div>

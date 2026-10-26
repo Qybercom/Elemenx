@@ -1,11 +1,11 @@
 <div class="elemenx-column native-tray">
 	<h2 class="elemenx-title">Elemenx native</h2>
-	<p class="elemenx-text muted native-tray-count">Notes: {{Items.length}}</p>
+	<p class="elemenx-text muted native-tray-count">{{$T('native.notesCount', {count: Items.length})}}</p>
 	<ul class="elemenx-ul native-tray-list">
 		<li *for="item of Items" *key="item.ID">{{item.Kind}}: {{item.Text}}</li>
 	</ul>
 	<div class="elemenx-container native-tray-actions">
-		<Button Label="Open the program" Variant="primary" (click)="Shown" />
-		<Button Label="Quit" (click)="Quitted" />
+		<Button [label]="$T('native.tray.open')" Variant="primary" (click)="Shown" />
+		<Button [label]="$T('native.menu.quit')" (click)="Quitted" />
 	</div>
 </div>

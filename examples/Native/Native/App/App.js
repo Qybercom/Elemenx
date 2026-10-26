@@ -16,13 +16,23 @@ Elemenx.Component('App', {
 	Count: 0,
 	Lines: 0,
 	Notes: 0,
+	Language: 'en',
 	Step: 0,
 
 	$OnCreate: function () {
+		var self = this;
 		var native = this.$Service('Native');
 
+		/* The language of the switch: the one of the Locale, as it changes (here or by the system at the start). */
+		this.Language = Elemenx.Locale.Language();
+		this.Spoken = function (code) {
+			self.Language = code;
+		};
+
+		Elemenx.Locale.OnChange(this.Spoken);
+
 		this.Platform = native.Platform();
-		this.Features = ['window', 'dialogs', 'menu', 'tray', 'external', 'taskbar', 'hotkeys', 'autostart', 'links', 'power', 'update', 'files'].filter(function (feature) {
+		this.Features = ['window', 'dialogs', 'menu', 'tray', 'external', 'taskbar', 'hotkeys', 'autostart', 'links', 'power', 'update', 'notifications', 'files'].filter(function (feature) {
 			return native.Has(feature);
 		});
 	},
@@ -68,6 +78,8 @@ Elemenx.Component('App', {
 
 	$OnDestroy: function () {
 		var native = this.$Service('Native');
+
+		Elemenx.Locale.OffChange(this.Spoken);
 
 		if (!this.Listeners) return;
 
@@ -205,6 +217,34 @@ Elemenx.Component('App', {
 		this.$Service('Native').Notify({ID: 'card', Title: 'Elemenx native', Text: 'A card of ElemenxUI by the corner of the screen', Icon: 'bell', Look: 'elemenx', Actions: [{ID: 'open', Label: 'Open'}, {ID: 'later', Label: 'Later'}]}, function (error) {
 			self.Said('Notify: ' + (error ? 'error, ' + error.message : 'elemenx'));
 		});
+	},
+
+	/* The language, remembered (Elemenx.Locale): the theme switches by its own ThemeSwitch. */
+	English: function () {
+		Elemenx.Locale.Language('en');
+	},
+
+	Russian: function () {
+		Elemenx.Locale.Language('ru');
+	},
+
+	/* An invitation to a call, as a messenger shows it: by the corner of the screen, over the others, until it is answered. */
+	Called: function () {
+		this.$Service('Native').Notify({ID: 'call', Look: 'elemenx', Component: 'CallInvite', Props: {Name: 'Ada Lovelace', Video: true}, Bare: true, Priority: 'high', Timeout: 0});
+	},
+
+	/* A task in a card: the same card, its progress new, until it is done. */
+	Downloaded: function () {
+		var native = this.$Service('Native');
+		var progress = 0;
+		var timer = window.setInterval(function () {
+			progress = Math.min(1, progress + 0.1);
+
+			native.Notify({ID: 'download', Look: 'elemenx', Title: Elemenx.Locale.Text('native.download'), Text: Math.round(progress * 100) + '%', Icon: 'download', Progress: progress, Timeout: progress < 1 ? 0 : 3000});
+
+			if (progress >= 1)
+				window.clearInterval(timer);
+		}, 300);
 	},
 
 	Badged: function () {

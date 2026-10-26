@@ -222,6 +222,31 @@ module.exports = {
 	Build: Build
 };
 
+/*
+ * The extensions of the editors into <output>/editors, after the files of the framework (editors/build.js): the one of
+ * VS Code always, the plugin of IntelliJ when an IDE of JetBrains or a release can make it. In the repository only:
+ * the package of npm has no editors/. They are told in manifest.json, as Editors.
+ */
+function Editors (result) {
+	var builder = path.join(Root, 'editors', 'build.js');
+	var made;
+
+	if (!fs.existsSync(builder)) return [];
+
+	made = require(builder).Build({Output: path.join(result.Output, 'editors')});
+	result.Manifest.Editors = {};
+
+	made.forEach(function (file) {
+		var bytes = fs.readFileSync(path.join(result.Output, 'editors', file.Name));
+
+		result.Manifest.Editors['editors/' + file.Name] = {Size: bytes.length, Integrity: 'sha384-' + crypto.createHash('sha384').update(bytes).digest('base64')};
+	});
+
+	fs.writeFileSync(path.join(result.Output, 'manifest.json'), JSON.stringify(result.Manifest, null, '\t') + '\n');
+
+	return made;
+}
+
 if (require.main === module) {
 	try {
 		(function (result) {
@@ -231,8 +256,14 @@ if (require.main === module) {
 				process.stdout.write('  ' + name + Array(Math.max(2, 28 - name.length)).join(' ') + Math.round(file.Size / 1024) + ' KB, gzip ' + Math.round(file.Gzip / 1024) + ' KB\n');
 			});
 
+			if (process.argv.indexOf('--no-editors') === -1) {
+				Editors(result).forEach(function (file) {
+					process.stdout.write('  editors/' + file.Name + Array(Math.max(2, 20 - file.Name.length)).join(' ') + Math.round(file.Size / 1024) + ' KB\n');
+				});
+			}
+
 			process.stdout.write('Elemenx dist ' + result.Manifest.Version + ': ' + result.Output + '\n');
-		})(Build(process.argv[2]));
+		})(Build(process.argv[2] && process.argv[2].indexOf('--') !== 0 ? process.argv[2] : undefined));
 	}
 	catch (error) {
 		process.stderr.write('Elemenx dist: ' + error.message + '\n');

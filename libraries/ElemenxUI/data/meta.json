@@ -258,6 +258,24 @@
 					"Description": "true or false makes it a toggle button (aria-pressed); empty for a plain button."
 				},
 				{
+					"Name": "Expanded",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "true or false: it opens and closes something (aria-expanded); empty for a plain button."
+				},
+				{
+					"Name": "AriaLabel",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its name for a screen reader, when its text does not say it (M for Mute the drums)."
+				},
+				{
 					"Name": "Badge",
 					"Type": "text",
 					"Default": "",
@@ -1148,6 +1166,15 @@
 					"Schema": null,
 					"Body": false,
 					"Description": "Hides the password again after so many milliseconds (0: never)."
+				},
+				{
+					"Name": "Label",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The name of the field for screen readers, when no Field names it."
 				}
 			],
 			"Slots": [],
@@ -1173,6 +1200,15 @@
 			"Icon": "text-align-justify",
 			"Description": "A field of several lines of text.",
 			"Props": [
+				{
+					"Name": "Label",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The name of the field for screen readers, when no Field names it."
+				},
 				{
 					"Name": "Value",
 					"Type": "text",
@@ -2924,6 +2960,722 @@
 				"Limit": 5,
 				"ScoreLabel": "Glory",
 				"Selectable": true
+			}
+		},
+		{
+			"Name": "GameTerrain",
+			"Kind": "Component",
+			"Group": "game",
+			"Icon": "layout",
+			"Description": "A kind of ground of a GameWorld: the character of its rows, its color, its cost and whether it hides.",
+			"Props": [
+				{
+					"Name": "Key",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The character of the kind in the rows of a GameLayer."
+				},
+				{
+					"Name": "Name",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The name of the kind: water, forest."
+				},
+				{
+					"Name": "Color",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its color."
+				},
+				{
+					"Name": "Cost",
+					"Type": "number",
+					"Default": 1,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The cost to enter a cell of it: 1 by default, Infinity blocks."
+				},
+				{
+					"Name": "Opaque",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "It hides what is behind it."
+				},
+				{
+					"Name": "Image",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "A picture of a tile of it."
+				}
+			],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"Methods": [],
+			"Sample": {
+				"Key": "~",
+				"Name": "water",
+				"Color": "#3a6fb8",
+				"Cost": "Infinity"
+			}
+		},
+		{
+			"Name": "GameLayer",
+			"Kind": "Component",
+			"Group": "game",
+			"Icon": "layout",
+			"Description": "A layer of the ground of a GameWorld: its rows of text, a character a kind of the ground.",
+			"Props": [
+				{
+					"Name": "Name",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The name of the layer."
+				},
+				{
+					"Name": "Rows",
+					"Type": "json",
+					"Default": [],
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The rows, when they are not inside it."
+				}
+			],
+			"Slots": [],
+			"Container": true,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"Methods": [],
+			"Sample": {
+				"Name": "ground"
+			}
+		},
+		{
+			"Name": "GameUnit",
+			"Kind": "Component",
+			"Group": "game",
+			"Icon": "user",
+			"Description": "A unit of a GameWorld: where it stands, its team, its health, its speed and its sight.",
+			"Props": [
+				{
+					"Name": "ID",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The ID of the unit."
+				},
+				{
+					"Name": "X",
+					"Type": "number",
+					"Default": 0,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The cell it stands on, across."
+				},
+				{
+					"Name": "Y",
+					"Type": "number",
+					"Default": 0,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The cell it stands on, down."
+				},
+				{
+					"Name": "Team",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its team."
+				},
+				{
+					"Name": "Type",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its kind in the game: archer, worker."
+				},
+				{
+					"Name": "Name",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its name."
+				},
+				{
+					"Name": "Color",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its color (of its team by default)."
+				},
+				{
+					"Name": "Image",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "A picture of it, standing on its feet."
+				},
+				{
+					"Name": "Health",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its health."
+				},
+				{
+					"Name": "MaxHealth",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its health when whole."
+				},
+				{
+					"Name": "Speed",
+					"Type": "number",
+					"Default": 2,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Cells a second."
+				},
+				{
+					"Name": "Sight",
+					"Type": "number",
+					"Default": 5,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The cells it sees."
+				}
+			],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"Methods": [],
+			"Sample": {
+				"ID": "archer-1",
+				"X": 4,
+				"Y": 6,
+				"Team": "blue",
+				"Type": "archer"
+			}
+		},
+		{
+			"Name": "GameBuilding",
+			"Kind": "Component",
+			"Group": "game",
+			"Icon": "home",
+			"Description": "A building of a GameWorld: the cells it takes, its team, its colors and its health.",
+			"Props": [
+				{
+					"Name": "ID",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The ID of the building."
+				},
+				{
+					"Name": "X",
+					"Type": "number",
+					"Default": 0,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its first cell, across."
+				},
+				{
+					"Name": "Y",
+					"Type": "number",
+					"Default": 0,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its first cell, down."
+				},
+				{
+					"Name": "Width",
+					"Type": "number",
+					"Default": 2,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The cells it takes across."
+				},
+				{
+					"Name": "Height",
+					"Type": "number",
+					"Default": 2,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The cells it takes down."
+				},
+				{
+					"Name": "Team",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its team."
+				},
+				{
+					"Name": "Type",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its kind in the game: barracks."
+				},
+				{
+					"Name": "Name",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its name."
+				},
+				{
+					"Name": "Color",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The color of its walls."
+				},
+				{
+					"Name": "Roof",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The color of its roof (of its team by default)."
+				},
+				{
+					"Name": "Tall",
+					"Type": "number",
+					"Default": 1,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its walls, in heights of a tile."
+				},
+				{
+					"Name": "Image",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "A picture of it, standing on its footprint."
+				},
+				{
+					"Name": "Health",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its health."
+				},
+				{
+					"Name": "MaxHealth",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its health when whole."
+				},
+				{
+					"Name": "Sight",
+					"Type": "number",
+					"Default": 4,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The cells it sees."
+				}
+			],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"Methods": [],
+			"Sample": {
+				"ID": "barracks",
+				"X": 8,
+				"Y": 2,
+				"Width": 3,
+				"Height": 3,
+				"Team": "blue"
+			}
+		},
+		{
+			"Name": "GameObject",
+			"Kind": "Component",
+			"Group": "game",
+			"Icon": "leaf",
+			"Description": "A thing of a GameWorld: a tree, a rock, a resource; whether it blocks the way and hides.",
+			"Props": [
+				{
+					"Name": "ID",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The ID of the thing."
+				},
+				{
+					"Name": "Kind",
+					"Type": "text",
+					"Default": "tree",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "What it is: tree, rock, or a name of your own."
+				},
+				{
+					"Name": "X",
+					"Type": "number",
+					"Default": 0,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its cell, across."
+				},
+				{
+					"Name": "Y",
+					"Type": "number",
+					"Default": 0,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its cell, down."
+				},
+				{
+					"Name": "Width",
+					"Type": "number",
+					"Default": 1,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The cells it takes across."
+				},
+				{
+					"Name": "Height",
+					"Type": "number",
+					"Default": 1,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The cells it takes down."
+				},
+				{
+					"Name": "Name",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its name."
+				},
+				{
+					"Name": "Color",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its color."
+				},
+				{
+					"Name": "Image",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "A picture of it, standing on its cell."
+				},
+				{
+					"Name": "Blocks",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "No way through it."
+				},
+				{
+					"Name": "Opaque",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "It hides what is behind it."
+				}
+			],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"Methods": [],
+			"Sample": {
+				"Kind": "tree",
+				"X": 3,
+				"Y": 3
+			}
+		},
+		{
+			"Name": "GameWorld",
+			"Kind": "Component",
+			"Group": "game",
+			"Icon": "map-pin",
+			"Description": "The world of a strategy game: a map of cells from above or at an angle, its buildings and units, the selection, the orders and the fog of war.",
+			"Props": [
+				{
+					"Name": "Map",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The map: its JSON ({Width, Height, Projection, Terrain, Layers, Objects}), or the URL of a JSON of its own or of Tiled."
+				},
+				{
+					"Name": "Projection",
+					"Type": "select",
+					"Default": "",
+					"Options": [
+						"",
+						"isometric",
+						"orthogonal"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "From above (orthogonal) or at an angle (isometric); the one of the map by default."
+				},
+				{
+					"Name": "Team",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The team of the player: its units are selected and ordered, the fog is lifted by them."
+				},
+				{
+					"Name": "Fog",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The fog of war: what the team does not see is hidden, what it explored is dimmed."
+				},
+				{
+					"Name": "Grid",
+					"Type": "bool",
+					"Default": true,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Draws the lines of the cells."
+				},
+				{
+					"Name": "Minimap",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Shows the whole map in a corner."
+				},
+				{
+					"Name": "X",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The point of the world at the left of the view (null: the map in the middle)."
+				},
+				{
+					"Name": "Y",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The point of the world at the top of the view."
+				},
+				{
+					"Name": "Zoom",
+					"Type": "number",
+					"Default": 1,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The scale of the view."
+				},
+				{
+					"Name": "MinZoom",
+					"Type": "number",
+					"Default": 0.25,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The smallest zoom."
+				},
+				{
+					"Name": "MaxZoom",
+					"Type": "number",
+					"Default": 4,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The largest zoom."
+				},
+				{
+					"Name": "Paused",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Holds the time of the game."
+				},
+				{
+					"Name": "Speed",
+					"Type": "number",
+					"Default": 1,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The speed of the time (1: real time)."
+				},
+				{
+					"Name": "Label",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The name of the world for screen readers."
+				}
+			],
+			"Slots": [
+				"hud"
+			],
+			"Container": true,
+			"Children": [
+				"GameTerrain",
+				"GameLayer",
+				"GameBuilding",
+				"GameUnit",
+				"GameObject"
+			],
+			"Current": "",
+			"Events": [
+				"ready",
+				"load",
+				"select",
+				"order",
+				"arrive",
+				"cell",
+				"view",
+				"error"
+			],
+			"Methods": [
+				"Load(map, callback)",
+				"Add(object)",
+				"Change(id, changes)",
+				"Remove(id)",
+				"Get(id)",
+				"Objects(filter)",
+				"Select(ids)",
+				"Selection()",
+				"Order(ids, target, kind)",
+				"Stop(ids)",
+				"Cell(x, y)",
+				"Paint(x, y, key, layer)",
+				"Near(x, y, radius, filter)",
+				"Route(from, to)",
+				"PathGrid()",
+				"FogOfWar()",
+				"CenterOn(x, y)",
+				"ToCell(clientX, clientY)",
+				"ToScreen(x, y)"
+			],
+			"Sample": {
+				"Team": "blue",
+				"Map": {
+					"Width": 12,
+					"Height": 12,
+					"Layers": [
+						{
+							"Rows": [
+								"............",
+								".....~~.....",
+								".....~~....."
+							]
+						}
+					]
+				}
 			}
 		},
 		{
@@ -4876,6 +5628,15 @@
 			"Icon": "chevrons-up-down",
 			"Description": "A select: a button that opens a list of Options and shows the chosen one.",
 			"Props": [
+				{
+					"Name": "Label",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The name of the field for screen readers, when no Field names it."
+				},
 				{
 					"Name": "Options",
 					"Type": "json",
@@ -7365,6 +8126,93 @@
 			}
 		},
 		{
+			"Name": "Signal",
+			"Kind": "Component",
+			"Group": "display",
+			"Icon": "chart",
+			"Description": "The strength of a signal: bars that grow from left to right, as many lit as it is strong.",
+			"Props": [
+				{
+					"Name": "Value",
+					"Type": "number",
+					"Default": 1,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "How strong it is, from 0 to 1."
+				},
+				{
+					"Name": "Quality",
+					"Type": "select",
+					"Default": "",
+					"Options": [
+						"",
+						"good",
+						"fair",
+						"poor"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "good, fair or poor, in place of Value."
+				},
+				{
+					"Name": "Bars",
+					"Type": "number",
+					"Default": 3,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "How many bars (3)."
+				},
+				{
+					"Name": "Tone",
+					"Type": "select",
+					"Default": "",
+					"Options": [
+						"",
+						"accent",
+						"success",
+						"warning",
+						"danger",
+						"muted"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "The color of the lit bars; by default the one of its level."
+				},
+				{
+					"Name": "Size",
+					"Type": "select",
+					"Default": "medium",
+					"Options": [
+						"small",
+						"medium"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "small or medium."
+				},
+				{
+					"Name": "Label",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its name for screen readers (the phrase of its level by default)."
+				}
+			],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"Methods": [],
+			"Sample": {
+				"Quality": "fair"
+			}
+		},
+		{
 			"Name": "Avatar",
 			"Kind": "Component",
 			"Group": "display",
@@ -7717,6 +8565,15 @@
 			"Icon": "table",
 			"Description": "A data table.",
 			"Props": [
+				{
+					"Name": "Label",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The name of the table for screen readers."
+				},
 				{
 					"Name": "Columns",
 					"Type": "json",
@@ -8586,7 +9443,16 @@
 					"Options": null,
 					"Schema": null,
 					"Body": false,
-					"Description": "The notifications: [{ID, Title, Text, Icon, Image, Variant, Actions: [{ID, Label}]}]."
+					"Description": "The notifications: [{ID, Title, Text, Icon, Image, Variant, Actions: [{ID, Label}], Progress, Duration, Component, Props, Bare}]."
+				},
+				{
+					"Name": "More",
+					"Type": "number",
+					"Default": 0,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The number of the notifications past the limit."
 				},
 				{
 					"Name": "Page",
@@ -8596,6 +9462,20 @@
 					"Schema": null,
 					"Body": false,
 					"Description": "Floats in the corner of the page (on the web), not in a window of its own."
+				},
+				{
+					"Name": "Corner",
+					"Type": "select",
+					"Default": "bottom-right",
+					"Options": [
+						"bottom-right",
+						"bottom-left",
+						"top-right",
+						"top-left"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "The corner of the page it floats in (Page)."
 				},
 				{
 					"Name": "Choose",
@@ -8614,6 +9494,24 @@
 					"Schema": null,
 					"Body": false,
 					"Description": "Called with the notification closed."
+				},
+				{
+					"Name": "Hold",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Called with the notification under the pointer: its time stops."
+				},
+				{
+					"Name": "Release",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Called with the notification the pointer left: its time goes on."
 				},
 				{
 					"Name": "Fit",
@@ -8646,6 +9544,430 @@
 						]
 					}
 				]
+			}
+		},
+		{
+			"Name": "CallInvite",
+			"Kind": "Component",
+			"Group": "social",
+			"Icon": "phone",
+			"Description": "An invitation to a call: who calls, and the buttons to accept or decline it.",
+			"Props": [
+				{
+					"Name": "Name",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Who calls."
+				},
+				{
+					"Name": "Image",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The URL of a picture of who calls; none: the avatar of the name."
+				},
+				{
+					"Name": "Text",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The kind of the call; Incoming call by default."
+				},
+				{
+					"Name": "Video",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "A video call: a button accepts it with the camera."
+				},
+				{
+					"Name": "Notification",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The notification it is in (Native.Notify): it takes the choice."
+				}
+			],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [
+				"accept",
+				"decline"
+			],
+			"Methods": [],
+			"Sample": {
+				"Name": "Ada Lovelace",
+				"Video": true
+			}
+		},
+		{
+			"Name": "CallTile",
+			"Kind": "Component",
+			"Group": "social",
+			"Icon": "user",
+			"Description": "The tile of a participant of a call: their video, or their avatar while the camera is off.",
+			"Props": [
+				{
+					"Name": "Name",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The name of the participant."
+				},
+				{
+					"Name": "Image",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The picture of their avatar."
+				},
+				{
+					"Name": "Stream",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Their video: a MediaStream."
+				},
+				{
+					"Name": "Element",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Their video: an element of your own (a <video> of another media layer)."
+				},
+				{
+					"Name": "Muted",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Their microphone is off."
+				},
+				{
+					"Name": "Camera",
+					"Type": "bool",
+					"Default": true,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Their camera is on (true by default)."
+				},
+				{
+					"Name": "Speaking",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "They talk: a frame round the tile."
+				},
+				{
+					"Name": "Level",
+					"Type": "number",
+					"Default": 0,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "How loud they talk, 0 to 1."
+				},
+				{
+					"Name": "Quality",
+					"Type": "select",
+					"Default": "",
+					"Options": [
+						"good",
+						"fair",
+						"poor"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "The connection: good, fair or poor."
+				},
+				{
+					"Name": "Hand",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Their hand is raised."
+				},
+				{
+					"Name": "Pinned",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The tile is pinned."
+				},
+				{
+					"Name": "Self",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The own video: mirrored, as a mirror shows it."
+				},
+				{
+					"Name": "Screen",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "A screen shared: the video kept whole."
+				}
+			],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [
+				"pin"
+			],
+			"Methods": [],
+			"Sample": {
+				"Name": "Ada Lovelace",
+				"Camera": false,
+				"Speaking": true,
+				"Quality": "good"
+			}
+		},
+		{
+			"Name": "CallControls",
+			"Kind": "Component",
+			"Group": "social",
+			"Icon": "call-end",
+			"Description": "The bar of a call: the microphone, the camera, the screen, the hand, reactions, the chat, the people, the layout and leaving.",
+			"Props": [
+				{
+					"Name": "Muted",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The microphone is off."
+				},
+				{
+					"Name": "Camera",
+					"Type": "bool",
+					"Default": true,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The camera is on (true by default)."
+				},
+				{
+					"Name": "Sharing",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The screen is shared."
+				},
+				{
+					"Name": "Hand",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The hand is raised."
+				},
+				{
+					"Name": "Chat",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The chat is open."
+				},
+				{
+					"Name": "People",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The list of the people is open."
+				},
+				{
+					"Name": "Layout",
+					"Type": "select",
+					"Default": "grid",
+					"Options": [
+						"grid",
+						"speaker",
+						"screen"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "The layout of the stage."
+				},
+				{
+					"Name": "Devices",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The devices: {Microphones, Speakers, Cameras: [{ID, Label}], Microphone, Speaker, Camera}."
+				},
+				{
+					"Name": "Reactions",
+					"Type": "json",
+					"Default": [
+						"👍",
+						"👏",
+						"😂",
+						"❤️",
+						"🎉",
+						"😮"
+					],
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The emoji of the reactions."
+				},
+				{
+					"Name": "Hide",
+					"Type": "json",
+					"Default": [],
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The buttons left out: mute, camera, share, hand, react, chat, people, layout, leave."
+				}
+			],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [
+				"mute",
+				"camera",
+				"share",
+				"hand",
+				"react",
+				"chat",
+				"people",
+				"layout",
+				"device",
+				"leave"
+			],
+			"Methods": [],
+			"Sample": {
+				"Muted": true
+			}
+		},
+		{
+			"Name": "CallStage",
+			"Kind": "Component",
+			"Group": "layout",
+			"Icon": "users",
+			"Description": "The stage of a call: the video in front, the tiles of the participants, the own video, the controls and a side panel.",
+			"Props": [
+				{
+					"Name": "Layout",
+					"Type": "select",
+					"Default": "grid",
+					"Options": [
+						"grid",
+						"speaker",
+						"screen"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "grid, speaker (main large, a strip under it) or screen (main large, a column beside it)."
+				},
+				{
+					"Name": "Side",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Shows the side panel."
+				},
+				{
+					"Name": "Corner",
+					"Type": "select",
+					"Default": "bottom-right",
+					"Options": [
+						"bottom-right",
+						"bottom-left",
+						"top-right",
+						"top-left"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "The corner of the own video."
+				},
+				{
+					"Name": "PerPage",
+					"Type": "number",
+					"Default": 0,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "How many participants a page of the grid shows (0: all)."
+				},
+				{
+					"Name": "Page",
+					"Type": "number",
+					"Default": 0,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The page of the grid."
+				}
+			],
+			"Slots": [
+				"main",
+				"participants",
+				"self",
+				"controls",
+				"side",
+				"status"
+			],
+			"Container": true,
+			"Children": [],
+			"Current": "",
+			"Events": [
+				"layout",
+				"corner",
+				"page"
+			],
+			"Methods": [],
+			"Sample": {
+				"Layout": "grid"
 			}
 		},
 		{
@@ -12537,11 +13859,11 @@
 			}
 		},
 		{
-			"Name": "Timeline",
+			"Name": "Chronicle",
 			"Kind": "Component",
 			"Group": "data",
 			"Icon": "history",
-			"Description": "An activity timeline, like the activity of a merge request.",
+			"Description": "The chronicle of an activity, like the activity of a merge request.",
 			"Props": [
 				{
 					"Name": "Items",
@@ -12593,6 +13915,496 @@
 						"Variant": "success"
 					}
 				]
+			}
+		},
+		{
+			"Name": "Timeline",
+			"Kind": "Component",
+			"Group": "data",
+			"Icon": "clock",
+			"Description": "A line of time: its scale, marks with labels that stack when they are close, ranges in lanes, a progress and a playhead.",
+			"Props": [
+				{
+					"Name": "Start",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The start of the line: a date (YYYY-MM-DD, YYYY-MM-DDTHH:mm) or a number."
+				},
+				{
+					"Name": "End",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The end of the line."
+				},
+				{
+					"Name": "From",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The start of the part in view (the start of the line by default)."
+				},
+				{
+					"Name": "To",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The end of the part in view."
+				},
+				{
+					"Name": "Scale",
+					"Type": "select",
+					"Default": "",
+					"Options": [
+						"",
+						"time",
+						"number"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "time (dates) or number; by default the one of Start."
+				},
+				{
+					"Name": "Orientation",
+					"Type": "select",
+					"Default": "horizontal",
+					"Options": [
+						"horizontal",
+						"vertical"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "horizontal or vertical."
+				},
+				{
+					"Name": "Marks",
+					"Type": "json",
+					"Default": [],
+					"Options": null,
+					"Schema": {
+						"ID": "text",
+						"At": "text",
+						"Label": "text",
+						"Icon": "icon",
+						"Tone": "text",
+						"Side": "text"
+					},
+					"Body": false,
+					"Description": "The marks: [{ID, At, Label, Text, Icon, Tone, Side, Element, Render}]."
+				},
+				{
+					"Name": "Ranges",
+					"Type": "json",
+					"Default": [],
+					"Options": null,
+					"Schema": {
+						"ID": "text",
+						"From": "text",
+						"To": "text",
+						"Label": "text",
+						"Tone": "text",
+						"Lane": "text"
+					},
+					"Body": false,
+					"Description": "The ranges: [{ID, From, To, Label, Tone, Color, Lane, Element, Render}]."
+				},
+				{
+					"Name": "Lanes",
+					"Type": "json",
+					"Default": [],
+					"Options": null,
+					"Schema": {
+						"ID": "text",
+						"Label": "text"
+					},
+					"Body": false,
+					"Description": "The lanes of the ranges: [{ID, Label}]."
+				},
+				{
+					"Name": "Progress",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Filled up to a moment, or {To, Buffer}."
+				},
+				{
+					"Name": "Playhead",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The moment of the playhead."
+				},
+				{
+					"Name": "Seekable",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "A press on the axis seeks, the playhead follows the pointer."
+				},
+				{
+					"Name": "Now",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Shows the line of now."
+				},
+				{
+					"Name": "Editable",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Marks and ranges are dragged in time, ranges by their edges, new ranges drawn on a lane."
+				},
+				{
+					"Name": "Snap",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The step of the moments of a drag: minute, hour, day, week, month, year, or a number."
+				},
+				{
+					"Name": "MinSpan",
+					"Type": "number",
+					"Default": 0,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The smallest span in view (milliseconds or units of the scale)."
+				},
+				{
+					"Name": "Unit",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The unit of a number scale, after its numbers (s)."
+				},
+				{
+					"Name": "Format",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "A function (value, step) that writes the label of a tick."
+				},
+				{
+					"Name": "Controls",
+					"Type": "bool",
+					"Default": true,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Shows the buttons of the zoom."
+				},
+				{
+					"Name": "Label",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The name of the Timeline for screen readers."
+				}
+			],
+			"Slots": [],
+			"Container": true,
+			"Children": [
+				"TimelineMark",
+				"TimelineRange",
+				"TimelineLane",
+				"TimelineProgress"
+			],
+			"Current": "",
+			"Events": [
+				"select",
+				"seek",
+				"view",
+				"move",
+				"resize",
+				"create"
+			],
+			"Methods": [],
+			"Sample": {
+				"Start": "2026-01-01",
+				"End": "2026-12-31",
+				"Marks": [
+					{
+						"ID": "release",
+						"At": "2026-06-01",
+						"Label": "Release"
+					}
+				],
+				"Ranges": [
+					{
+						"ID": "beta",
+						"From": "2026-03-01",
+						"To": "2026-05-15",
+						"Label": "Beta"
+					}
+				]
+			}
+		},
+		{
+			"Name": "TimelineMark",
+			"Kind": "Component",
+			"Group": "data",
+			"Icon": "flag",
+			"Description": "A mark of a Timeline: a moment with its label, above or under the axis; any content inside it is its label.",
+			"Props": [
+				{
+					"Name": "ID",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The ID of the mark."
+				},
+				{
+					"Name": "At",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its moment: a date (YYYY-MM-DD, YYYY-MM-DDTHH:mm) or a number."
+				},
+				{
+					"Name": "Label",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its label."
+				},
+				{
+					"Name": "Text",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "A text under its label."
+				},
+				{
+					"Name": "Icon",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "An icon in its point and its label."
+				},
+				{
+					"Name": "Tone",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its color: accent, info, success, warning, danger or muted."
+				},
+				{
+					"Name": "Side",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "before (above the axis) or after (under it, the default)."
+				}
+			],
+			"Slots": [],
+			"Container": true,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"Methods": [],
+			"Sample": {
+				"ID": "release",
+				"At": "2026-11-01",
+				"Label": "Release"
+			}
+		},
+		{
+			"Name": "TimelineRange",
+			"Kind": "Component",
+			"Group": "data",
+			"Icon": "columns",
+			"Description": "A range of a Timeline: from a moment to another, in a lane; any content inside it is its label.",
+			"Props": [
+				{
+					"Name": "ID",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The ID of the range."
+				},
+				{
+					"Name": "From",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its start."
+				},
+				{
+					"Name": "To",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its end."
+				},
+				{
+					"Name": "Label",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its label."
+				},
+				{
+					"Name": "Tone",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its color: accent, info, success, warning, danger or muted."
+				},
+				{
+					"Name": "Color",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "A CSS color of its own."
+				},
+				{
+					"Name": "Lane",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The ID of its lane."
+				}
+			],
+			"Slots": [],
+			"Container": true,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"Methods": [],
+			"Sample": {
+				"ID": "sprint",
+				"From": "2026-11-02",
+				"To": "2026-11-13",
+				"Label": "Sprint 1"
+			}
+		},
+		{
+			"Name": "TimelineLane",
+			"Kind": "Component",
+			"Group": "data",
+			"Icon": "list",
+			"Description": "A lane of a Timeline: a row of ranges with its label at its start.",
+			"Props": [
+				{
+					"Name": "ID",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The ID of the lane."
+				},
+				{
+					"Name": "Label",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its label."
+				}
+			],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"Methods": [],
+			"Sample": {
+				"ID": "design",
+				"Label": "Design"
+			}
+		},
+		{
+			"Name": "TimelineProgress",
+			"Kind": "Component",
+			"Group": "data",
+			"Icon": "loader",
+			"Description": "The progress of a Timeline: its axis filled up to a moment.",
+			"Props": [
+				{
+					"Name": "To",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Up to where: a moment."
+				},
+				{
+					"Name": "Buffer",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Up to where the lighter fill goes."
+				}
+			],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"Methods": [],
+			"Sample": {
+				"To": "2026-11-08"
 			}
 		},
 		{
@@ -15348,19 +17160,48 @@
 					"Options": null,
 					"Schema": null,
 					"Body": false,
-					"Description": "The events: [{ID, Title, Start, End, AllDay, Color}], Start and End as YYYY-MM-DD or YYYY-MM-DDTHH:mm."
+					"Description": "The events: [{ID, Title, Start, End, AllDay, Color, Repeat}], Start and End as YYYY-MM-DD or YYYY-MM-DDTHH:mm; Repeat {Every, Interval, Days, Until, Count, Except} or an RRULE."
 				},
 				{
 					"Name": "View",
 					"Type": "select",
 					"Default": "month",
 					"Options": [
+						"day",
+						"week",
 						"month",
-						"week"
+						"months",
+						"quarter",
+						"year",
+						"years"
 					],
 					"Schema": null,
 					"Body": false,
-					"Description": "month or week."
+					"Description": "day, week, month, months, quarter, year or years."
+				},
+				{
+					"Name": "Views",
+					"Type": "json",
+					"Default": [
+						"day",
+						"week",
+						"month",
+						"quarter",
+						"year"
+					],
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The views the header switches between (day, week, month, quarter and year by default)."
+				},
+				{
+					"Name": "Span",
+					"Type": "number",
+					"Default": 0,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The months of the months view, the years of the years view (3 by default)."
 				},
 				{
 					"Name": "Date",
@@ -16148,6 +17989,8 @@
 				"Role(role, callback)",
 				"External(url, callback)",
 				"Notify(options, callback)",
+				"CloseNotification(id)",
+				"Notifications(settings)",
 				"Badge(count, callback)",
 				"Progress(value, callback)",
 				"Attention(on, callback)",
@@ -16376,6 +18219,121 @@
 				"Source(id)",
 				"OnChange(listener)",
 				"OffChange(listener)"
+			],
+			"Sample": {}
+		},
+		{
+			"Name": "Random",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "Random numbers of a seed: always the same numbers for the same seed.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"Methods": [
+				"Create(seed)",
+				"Hash(text)",
+				"Noise(seed, size)"
+			],
+			"Sample": {}
+		},
+		{
+			"Name": "Spatial",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "Where things are on a plane, found fast: a grid of buckets for the queries of a rectangle, a radius and the nearest.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"Methods": [
+				"Create(options)",
+				"Distance(x, y, thing)"
+			],
+			"Sample": {}
+		},
+		{
+			"Name": "Pathfinding",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "The ways across a map: A*, Dijkstra and flow fields on a grid, A* on a graph of your own.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"Methods": [
+				"Grid(width, height, cost)",
+				"Path(grid, from, to, options)",
+				"Distances(grid, targets, options)",
+				"Flow(grid, targets, options)",
+				"Search(options)",
+				"Smooth(grid, path)"
+			],
+			"Sample": {}
+		},
+		{
+			"Name": "Visibility",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "What can be seen on a grid: lines, the line of sight, the field of view and the fog of war.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"Methods": [
+				"Line(x0, y0, x1, y1)",
+				"Sight(opaque, x0, y0, x1, y1)",
+				"Field(opaque, x, y, radius)",
+				"Fog(width, height)"
+			],
+			"Sample": {}
+		},
+		{
+			"Name": "GameLoop",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "The loop of a game: updates in steps of the same time, drawn once a frame.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"Methods": [
+				"Create(options)"
+			],
+			"Sample": {}
+		},
+		{
+			"Name": "GameMaps",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "The maps of GameWorld: its own JSON, or a map of Tiled (.tmj), made into one form.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"Methods": [
+				"Normalize(map)",
+				"FromTiled(data, base)",
+				"Load(url, callback)"
 			],
 			"Sample": {}
 		},
@@ -16712,6 +18670,7 @@
 			"pressed",
 			"primary",
 			"round",
+			"secondary",
 			"small"
 		],
 		"elemenx-input": [
@@ -17008,7 +18967,7 @@
 		],
 		"elemenx-chat-views": [],
 		"elemenx-comment-token": [],
-		"elemenx-game-minimap-button": [],
+		"elemenx-game-minimap-zoom": [],
 		"elemenx-slider-thumb": [
 			"active"
 		],
@@ -17031,11 +18990,9 @@
 		"elemenx-find-row": [],
 		"elemenx-find-query": [],
 		"elemenx-find-replacement": [],
-		"elemenx-find-button": [],
-		"elemenx-find-option": [],
-		"elemenx-find-text-button": [],
 		"elemenx-find-count": [],
 		"elemenx-find-indent": [],
+		"elemenx-find-option": [],
 		"elemenx-markdown": [
 			"interface"
 		],
@@ -17128,9 +19085,7 @@
 		],
 		"elemenx-rich-editor-menu": [],
 		"elemenx-rich-editor-actions": [],
-		"elemenx-rich-editor-action": [
-			"active"
-		],
+		"elemenx-rich-editor-action": [],
 		"elemenx-rich-editor-separator": [],
 		"elemenx-rich-editor-link": [],
 		"elemenx-rich-editor-print": [],
@@ -17324,7 +19279,6 @@
 		],
 		"elemenx-game-minimap-player": [],
 		"elemenx-game-minimap-north": [],
-		"elemenx-game-minimap-zoom": [],
 		"elemenx-game-minimap-caption": [],
 		"elemenx-game-minimap-title": [],
 		"elemenx-game-minimap-note": [],
@@ -17350,6 +19304,12 @@
 			"up"
 		],
 		"elemenx-game-leaderboard-score": [],
+		"elemenx-game-world": [
+			"panning"
+		],
+		"elemenx-game-world-canvas": [],
+		"elemenx-game-world-minimap": [],
+		"elemenx-game-world-hud": [],
 		"elemenx-number-controls": [],
 		"elemenx-date": [],
 		"elemenx-time": [],
@@ -17637,6 +19597,17 @@
 		],
 		"elemenx-presence-dot": [],
 		"elemenx-presence-label": [],
+		"elemenx-signal": [
+			"accent",
+			"danger",
+			"muted",
+			"small",
+			"success",
+			"warning"
+		],
+		"elemenx-signal-bar": [
+			"on"
+		],
 		"elemenx-avatar": [
 			"large",
 			"rounded",
@@ -17668,6 +19639,7 @@
 		"elemenx-table-filters": [],
 		"elemenx-table-filter-select": [],
 		"elemenx-table-tree": [],
+		"elemenx-table-check-box": [],
 		"elemenx-money": [],
 		"elemenx-money-input": [],
 		"elemenx-dialog": [
@@ -17686,6 +19658,7 @@
 		"elemenx-dialog-host": [],
 		"elemenx-dialog-host-item": [],
 		"elemenx-dialog-host-actions": [],
+		"elemenx-dialog-host-action": [],
 		"elemenx-popover-root": [],
 		"elemenx-popover-trigger": [],
 		"elemenx-popover": [],
@@ -17712,10 +19685,16 @@
 		"elemenx-toast-timer": [],
 		"elemenx-notification-frame": [],
 		"elemenx-notification-host": [
-			"page"
+			"bottom-left",
+			"bottom-right",
+			"page",
+			"top-left",
+			"top-right"
 		],
 		"elemenx-notification": [
+			"bare",
 			"danger",
+			"held",
 			"success",
 			"warning"
 		],
@@ -17725,6 +19704,65 @@
 		"elemenx-notification-text": [],
 		"elemenx-notification-actions": [],
 		"elemenx-notification-close": [],
+		"elemenx-notification-custom": [],
+		"elemenx-notification-timer": [],
+		"elemenx-notification-progress": [],
+		"elemenx-notification-more": [],
+		"elemenx-notification-action": [],
+		"elemenx-call-invite": [],
+		"elemenx-call-invite-caller": [],
+		"elemenx-call-invite-avatar": [],
+		"elemenx-call-invite-text": [],
+		"elemenx-call-invite-name": [],
+		"elemenx-call-invite-kind": [],
+		"elemenx-call-invite-actions": [],
+		"elemenx-call-invite-button": [
+			"accept"
+		],
+		"elemenx-call-tile": [
+			"pinned",
+			"screen",
+			"self",
+			"speaking"
+		],
+		"elemenx-call-tile-video": [],
+		"elemenx-call-tile-avatar": [],
+		"elemenx-call-tile-top": [],
+		"elemenx-call-tile-hand": [],
+		"elemenx-call-tile-quality": [],
+		"elemenx-call-tile-pin": [],
+		"elemenx-call-tile-name": [],
+		"elemenx-call-controls": [],
+		"elemenx-call-controls-group": [],
+		"elemenx-call-controls-pair": [],
+		"elemenx-call-control": [
+			"leave"
+		],
+		"elemenx-call-stage": [
+			"grid",
+			"has-controls",
+			"has-main",
+			"has-self",
+			"has-status",
+			"screen",
+			"side",
+			"speaker"
+		],
+		"elemenx-call-stage-status": [],
+		"elemenx-call-stage-controls": [],
+		"elemenx-call-stage-self": [
+			"bottom-left",
+			"bottom-right",
+			"dragging",
+			"top-left",
+			"top-right"
+		],
+		"elemenx-call-stage-side": [],
+		"elemenx-call-stage-body": [],
+		"elemenx-call-stage-area": [],
+		"elemenx-call-stage-main": [],
+		"elemenx-call-stage-participants": [],
+		"elemenx-call-stage-pages": [],
 		"elemenx-achievements": [
 			"bottom",
 			"top"
@@ -17913,7 +19951,6 @@
 		"elemenx-board-world": [],
 		"elemenx-board-content": [],
 		"elemenx-board-controls": [],
-		"elemenx-board-control": [],
 		"elemenx-board-zoom": [],
 		"elemenx-emoji": [],
 		"elemenx-emoji-item": [
@@ -17983,11 +20020,6 @@
 		],
 		"elemenx-profile-head": [],
 		"elemenx-profile-avatar": [],
-		"elemenx-profile-status": [
-			"away",
-			"busy",
-			"online"
-		],
 		"elemenx-profile-names": [],
 		"elemenx-profile-name": [],
 		"elemenx-profile-status-label": [],
@@ -18136,10 +20168,10 @@
 		"elemenx-step-text": [],
 		"elemenx-step-label": [],
 		"elemenx-step-content": [],
-		"elemenx-timeline": [
+		"elemenx-chronicle": [
 			"compact"
 		],
-		"elemenx-timeline-item": [
+		"elemenx-chronicle-item": [
 			"accent",
 			"danger",
 			"dot",
@@ -18148,10 +20180,51 @@
 			"success",
 			"warning"
 		],
-		"elemenx-timeline-node": [],
-		"elemenx-timeline-content": [],
-		"elemenx-timeline-head": [],
+		"elemenx-chronicle-node": [],
+		"elemenx-chronicle-content": [],
+		"elemenx-chronicle-head": [],
+		"elemenx-chronicle-body": [],
+		"elemenx-timeline": [
+			"editable",
+			"seekable",
+			"vertical"
+		],
 		"elemenx-timeline-body": [],
+		"elemenx-timeline-track": [],
+		"elemenx-timeline-lane-names": [],
+		"elemenx-timeline-lane-name": [],
+		"elemenx-timeline-lane": [],
+		"elemenx-timeline-axis": [],
+		"elemenx-timeline-tick": [
+			"major"
+		],
+		"elemenx-timeline-tick-label": [],
+		"elemenx-timeline-progress": [],
+		"elemenx-timeline-buffer": [],
+		"elemenx-timeline-range": [
+			"cut-end",
+			"cut-start",
+			"draft",
+			"narrow",
+			"selected"
+		],
+		"elemenx-timeline-point": [
+			"selected"
+		],
+		"elemenx-timeline-range-label": [],
+		"elemenx-timeline-range-edge": [
+			"end",
+			"start"
+		],
+		"elemenx-timeline-leader": [],
+		"elemenx-timeline-label": [
+			"before",
+			"selected"
+		],
+		"elemenx-timeline-label-text": [],
+		"elemenx-timeline-now": [],
+		"elemenx-timeline-playhead": [],
+		"elemenx-timeline-controls": [],
 		"elemenx-terminal": [],
 		"elemenx-terminal-header": [],
 		"elemenx-terminal-title": [],
@@ -18458,6 +20531,8 @@
 		"elemenx-designer-list-actions": [],
 		"elemenx-designer-list-button": [],
 		"elemenx-designer-list-add": [],
+		"elemenx-designer-kind": [],
+		"elemenx-designer-list-field": [],
 		"elemenx-designer-document": [],
 		"elemenx-designer-document-body": [],
 		"elemenx-designer-document-head": [],
@@ -18470,6 +20545,7 @@
 		],
 		"elemenx-designer-document-input": [],
 		"elemenx-designer-document-drop": [],
+		"elemenx-designer-document-add": [],
 		"elemenx-designer-project": [],
 		"elemenx-designer-project-head": [],
 		"elemenx-designer-project-add": [],
@@ -18487,6 +20563,9 @@
 		"elemenx-designer-settings-remove": [],
 		"elemenx-designer-settings-guard": [],
 		"elemenx-designer-settings-signature": [],
+		"elemenx-designer-settings-add-route": [],
+		"elemenx-designer-settings-remove-guard": [],
+		"elemenx-designer-settings-add-guard": [],
 		"elemenx-virtual": [],
 		"elemenx-virtual-viewport": [],
 		"elemenx-virtual-space": [],
@@ -18552,6 +20631,7 @@
 		],
 		"elemenx-chart-data": [],
 		"elemenx-cal": [
+			"day",
 			"dragging",
 			"editable"
 		],
@@ -18562,10 +20642,17 @@
 			"current"
 		],
 		"elemenx-cal-event": [
+			"bar",
 			"dragged",
+			"earlier",
+			"joins-after",
+			"joins-before",
+			"later",
 			"whole"
 		],
 		"elemenx-cal-block": [
+			"after",
+			"before",
 			"dragged",
 			"short"
 		],
@@ -18597,6 +20684,9 @@
 		],
 		"elemenx-cal-shadow": [],
 		"elemenx-cal-resize": [],
-		"elemenx-cal-now": []
+		"elemenx-cal-now": [],
+		"elemenx-cal-item": [],
+		"elemenx-cal-spacer": [],
+		"elemenx-cal-label": []
 	}
 }

@@ -184,7 +184,8 @@ Elemenx.Component('DesignerInspector', {
 		var items = this.Items(name);
 		var item = items[Number(node.getAttribute('data-index'))] || {};
 
-		if (node.type === 'checkbox') item[key] = node.checked;
+		/* A field of its own, or the place of a Checkbox the change of its box bubbled to. */
+		if (event.target.type === 'checkbox') item[key] = event.target.checked;
 		else if (node.value === '') delete item[key];
 		else item[key] = /^-?\d+(\.\d+)?$/.test(node.value) && typeof item[key] === 'number' ? Number(node.value) : node.value;
 
@@ -192,7 +193,8 @@ Elemenx.Component('DesignerInspector', {
 	},
 
 	/* An item added at the end, with the first key as its ID: item-3. */
-	Added: function (event, node) {
+	Added: function (event) {
+		var node = event.target.closest('[data-field]');
 		var name = node.getAttribute('data-field');
 		var first = node.getAttribute('data-key');
 		var items = this.Items(name);
@@ -227,8 +229,8 @@ Elemenx.Component('DesignerInspector', {
 	},
 
 	/* A child of a kind declared inside the element (a Tab in Tabs) added at its end, and selected. */
-	Declared: function (event, node) {
-		this.Pick(this.$Service('Designer').Insert(node.getAttribute('data-kind'), this.Node()));
+	Declared: function (event) {
+		this.Pick(this.$Service('Designer').Insert(event.target.closest('[data-kind]').getAttribute('data-kind'), this.Node()));
 	},
 
 	Up: function () {

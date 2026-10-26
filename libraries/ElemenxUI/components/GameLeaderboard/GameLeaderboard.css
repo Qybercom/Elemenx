@@ -111,7 +111,7 @@
 	justify-content: center;
 	width: 28px;
 	height: 28px;
-	object-fit: cover;
+	overflow: hidden;
 	background: var(--elemenx-game-cell);
 	border: var(--elemenx-game-cell-frame);
 	border-radius: var(--elemenx-game-cell-radius);

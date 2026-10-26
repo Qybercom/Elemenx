@@ -1,0 +1,14 @@
+<div class="elemenx-call-tile" [class.speaking]="!!Speaking" [class.self]="!!Self" [class.screen]="!!Screen" [class.pinned]="!!Pinned" [style.--elemenx-call-level]="Number(Level) || 0" [attribute.aria-label]="Name" (dblclick)="PinPressed">
+	<div class="elemenx-call-tile-video" *if="Shows(Camera, Stream, Element)" *mount="Video(Stream, Element)"></div>
+	<div class="elemenx-call-tile-avatar" *if="!Shows(Camera, Stream, Element)"><Avatar [name]="Name" [image]="Image" [size]="96" /></div>
+	<div class="elemenx-call-tile-top">
+		<span class="elemenx-call-tile-hand" *if="Hand" [attribute.title]="$T('ui.call.hand')"><Icon Name="hand" /></span>
+		<span class="elemenx-call-tile-quality" *if="Quality"><Signal [quality]="Quality" /></span>
+		<span class="elemenx-call-tile-pin"><Button Variant="ghost" Size="small" Icon="pin" [pressed]="!!Pinned" [title]="Pinned ? $T('ui.call.unpin') : $T('ui.call.pin')" (click)="PinPressed" /></span>
+	</div>
+	<div class="elemenx-call-tile-name">
+		<Icon *if="Muted" Name="mic-off" />
+		<Icon *if="Screen" Name="screen-share" />
+		<span>{{Name}}</span>
+	</div>
+</div>

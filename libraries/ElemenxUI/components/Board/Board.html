@@ -5,8 +5,8 @@
 		</div>
 	</div>
 	<div class="elemenx-board-controls" *if="Controls">
-		<button class="elemenx-board-control" type="button" [attribute.aria-label]="$T('ui.board.zoomOut')" [attribute.title]="$T('ui.board.zoomOut')" (click)="ZoomOut"><Icon Name="zoom-out" /></button>
-		<button class="elemenx-board-control elemenx-board-zoom" type="button" [attribute.aria-label]="$T('ui.board.fit')" [attribute.title]="$T('ui.board.fit')" (click)="Fitted">{{Percent(Zoom)}}</button>
-		<button class="elemenx-board-control" type="button" [attribute.aria-label]="$T('ui.board.zoomIn')" [attribute.title]="$T('ui.board.zoomIn')" (click)="ZoomIn"><Icon Name="zoom-in" /></button>
+		<Button Variant="ghost" Icon="zoom-out" [title]="$T('ui.board.zoomOut')" (click)="ZoomOut" />
+		<span class="elemenx-board-zoom"><Button Variant="ghost" [label]="Percent(Zoom)" [ariaLabel]="$T('ui.board.fit')" [title]="$T('ui.board.fit')" (click)="Fitted" /></span>
+		<Button Variant="ghost" Icon="zoom-in" [title]="$T('ui.board.zoomIn')" (click)="ZoomIn" />
 	</div>
 </div>

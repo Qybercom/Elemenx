@@ -12,6 +12,7 @@ Elemenx.Component('TextArea', {
 		Description: 'A field of several lines of text.',
 		Events: ['input', 'change'],
 		Props: {
+			Label: 'The name of the field for screen readers, when no Field names it.',
 			Value: 'The text.',
 			Placeholder: 'The text shown while it is empty.',
 			Rows: 'The height in lines.',
@@ -27,6 +28,7 @@ Elemenx.Component('TextArea', {
 		Sample: {Placeholder: 'Write something', MaxLength: 200}
 	},
 	Value: '',
+	Label: '',
 	Placeholder: '',
 	Rows: 3,
 	MaxLength: null,

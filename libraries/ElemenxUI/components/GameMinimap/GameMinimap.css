@@ -134,24 +134,18 @@
 	gap: 2px;
 }
 
-.elemenx-game-minimap-button {
-	width: 20px;
-	height: 20px;
-	padding: 0;
+/* The Buttons of the zoom, in the look of the buttons of the game. */
+.elemenx-game-minimap-zoom .elemenx-button {
 	background: var(--elemenx-game-button);
 	border: var(--elemenx-game-cell-frame);
-	border-radius: 50%;
 	color: var(--elemenx-game-button-text);
-	font: inherit;
-	line-height: 1;
-	cursor: pointer;
 }
 
-.elemenx-game-minimap-button:hover {
+.elemenx-game-minimap-zoom .elemenx-button:hover {
 	background: var(--elemenx-game-button-hover);
 }
 
-.elemenx-game-minimap-button:focus-visible {
+.elemenx-game-minimap-zoom .elemenx-button:focus-visible {
 	outline: none;
 	box-shadow: var(--elemenx-game-glow);
 }

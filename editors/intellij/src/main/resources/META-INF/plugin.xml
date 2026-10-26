@@ -1,0 +1,35 @@
+<idea-plugin>
+	<id>com.qybercom.elemenx</id>
+	<name>Elemenx</name>
+	<vendor url="https://github.com/Qybercom/Elemenx">Qybercom</vendor>
+	<description><![CDATA[
+		Elemenx and ElemenxUI in the editor: completion of the Components, their props, events and the directives in
+		the templates, the Services in the code, their documentation on hover, go to the definition of a Component or of
+		a function of a template, and the diagnostics of unknown Components, props, events and directives. Through the
+		language server of Elemenx and LSP4IJ; it needs Node.js (ELEMENX_NODE names another one than the node of PATH).
+	]]></description>
+
+	<depends>com.intellij.modules.platform</depends>
+	<depends>com.intellij.modules.xml</depends>
+	<depends>com.redhat.devtools.lsp4ij</depends>
+
+	<!--
+		The inspections of HTML kept quiet on the Components and the bindings of Elemenx; their colors (Settings → Editor →
+		Color Scheme → Elemenx); JavaScript in their expressions and HTML in the $Template of a definition.
+	-->
+	<extensions defaultExtensionNs="com.intellij">
+		<lang.inspectionSuppressor language="HTML" implementationClass="com.qybercom.elemenx.ElemenxInspectionSuppressor" />
+		<annotator language="HTML" implementationClass="com.qybercom.elemenx.ElemenxAnnotator" />
+		<colorSettingsPage implementation="com.qybercom.elemenx.ElemenxColorSettingsPage" />
+		<multiHostInjector implementation="com.qybercom.elemenx.ElemenxInjector" />
+	</extensions>
+
+	<extensions defaultExtensionNs="com.redhat.devtools.lsp4ij">
+		<server id="elemenx" name="Elemenx" factoryClass="com.qybercom.elemenx.ElemenxLanguageServerFactory">
+			<description><![CDATA[The language server of Elemenx: the templates and the code of an Elemenx project.]]></description>
+		</server>
+
+		<fileNamePatternMapping patterns="*.html;*.htm" serverId="elemenx" languageId="html" />
+		<fileNamePatternMapping patterns="*.js;*.mjs" serverId="elemenx" languageId="javascript" />
+	</extensions>
+</idea-plugin>

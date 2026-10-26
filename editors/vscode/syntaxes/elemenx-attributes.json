@@ -1,0 +1,95 @@
+{
+	"scopeName": "elemenx.template.attributes",
+	"injectionSelector": "L:text.html meta.tag -comment -string",
+	"patterns": [
+		{
+			"include": "#binding"
+		},
+		{
+			"include": "#event"
+		},
+		{
+			"include": "#directive"
+		}
+	],
+	"repository": {
+		"binding": {
+			"begin": "(\\[[^\\]\\s=\"'>]+\\])\\s*(=)\\s*([\"'])",
+			"beginCaptures": {
+				"1": {
+					"name": "entity.other.attribute-name.binding.elemenx variable.other.property.binding.elemenx"
+				},
+				"2": {
+					"name": "punctuation.separator.key-value.html"
+				},
+				"3": {
+					"name": "string.quoted.html punctuation.definition.string.begin.html"
+				}
+			},
+			"end": "\\3",
+			"endCaptures": {
+				"0": {
+					"name": "string.quoted.html punctuation.definition.string.end.html"
+				}
+			},
+			"contentName": "meta.embedded.inline.js.elemenx",
+			"patterns": [
+				{
+					"include": "source.js"
+				}
+			]
+		},
+		"event": {
+			"begin": "(\\([^)\\s=\"'>]+\\))\\s*(=)\\s*([\"'])",
+			"beginCaptures": {
+				"1": {
+					"name": "entity.other.attribute-name.event.elemenx entity.name.function.event.elemenx"
+				},
+				"2": {
+					"name": "punctuation.separator.key-value.html"
+				},
+				"3": {
+					"name": "string.quoted.html punctuation.definition.string.begin.html"
+				}
+			},
+			"end": "\\3",
+			"endCaptures": {
+				"0": {
+					"name": "string.quoted.html punctuation.definition.string.end.html"
+				}
+			},
+			"contentName": "meta.embedded.inline.js.elemenx",
+			"patterns": [
+				{
+					"include": "source.js"
+				}
+			]
+		},
+		"directive": {
+			"begin": "(\\*[A-Za-z][\\w-]*)\\s*(=)\\s*([\"'])",
+			"beginCaptures": {
+				"1": {
+					"name": "entity.other.attribute-name.directive.elemenx keyword.control.directive.elemenx"
+				},
+				"2": {
+					"name": "punctuation.separator.key-value.html"
+				},
+				"3": {
+					"name": "string.quoted.html punctuation.definition.string.begin.html"
+				}
+			},
+			"end": "\\3",
+			"endCaptures": {
+				"0": {
+					"name": "string.quoted.html punctuation.definition.string.end.html"
+				}
+			},
+			"contentName": "meta.embedded.inline.js.elemenx",
+			"patterns": [
+				{
+					"include": "source.js"
+				}
+			]
+		}
+	}
+}

@@ -1,4 +1,4 @@
 <div class="elemenx-input elemenx-textarea" *resizable="{Edges: AutoSize || Disabled || Resize === 'none' ? '' : Resize === 'both' ? 'corner' : 'bottom', MinHeight: 32, MinWidth: 120}" [class]="[Shape === 'round' ? 'round' : '', Invalid ? 'invalid' : '', Disabled ? 'disabled' : '', ReadOnly ? 'readonly' : '']">
-	<textarea class="elemenx-input-control" [value]="Value" [placeholder]="Placeholder" [disabled]="Disabled" [attribute.readonly]="ReadOnly ? '' : null" [attribute.rows]="Rows" [attribute.maxlength]="MaxLength" [attribute.name]="Name" [attribute.aria-invalid]="Invalid ? 'true' : null" (input)="Typed" (change)="Committed"></textarea>
+	<textarea class="elemenx-input-control" [value]="Value" [placeholder]="Placeholder" [disabled]="Disabled" [attribute.readonly]="ReadOnly ? '' : null" [attribute.rows]="Rows" [attribute.maxlength]="MaxLength" [attribute.name]="Name" [attribute.aria-invalid]="Invalid ? 'true' : null" [attribute.aria-label]="Label || null" (input)="Typed" (change)="Committed"></textarea>
 	<span class="elemenx-textarea-counter" *if="MaxLength">{{String(Value || '').length}} / {{MaxLength}}</span>
 </div>

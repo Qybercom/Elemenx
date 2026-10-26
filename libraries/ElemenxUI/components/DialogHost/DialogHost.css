@@ -13,6 +13,7 @@
 }
 
 .elemenx-dialog-host-item,
-.elemenx-dialog-host-actions {
+.elemenx-dialog-host-actions,
+.elemenx-dialog-host-action {
 	display: contents;
 }

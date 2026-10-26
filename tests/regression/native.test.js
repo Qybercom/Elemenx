@@ -1,19 +1,20 @@
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, beforeEach, describe, expect, it } from 'vitest';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import childProcess from 'child_process';
 import { createRequire } from 'module';
 import Builder from '../../tools/builder.js';
+import { Sandbox } from './sandbox.mjs';
 
 var require = createRequire(import.meta.url);
 var Native = require('../../tools/native.js');
 var Cli = require('../../elemenx-cli.js');
 var cli = path.resolve(process.cwd(), 'elemenx-cli.js');
-/* A copy of the project of the dist tests: the tests of Electron put their own modules into that one at the same time. */
-var source = path.resolve(process.cwd(), 'tests', 'dist', 'single-project');
-var project = path.resolve(process.cwd(), 'tests', 'dist', 'native-project');
-var output = path.resolve(process.cwd(), 'tests', 'dist', 'native-output');
+/* A copy of the project of its own: its fakes of Capacitor go into its node_modules, its builds next to it. */
+var sandbox = Sandbox('native', 'native-project');
+var project = sandbox.Project;
+var output = path.join(sandbox.Root, 'native-output');
 var modules = path.join(project, 'node_modules');
 var config = path.join(project, 'capacitor.config.json');
 
@@ -65,15 +66,8 @@ function quiet (run) {
 	return [result, written];
 }
 
-beforeAll(function () {
-	fs.rmSync(project, {recursive: true, force: true});
-	fs.cpSync(source, project, {recursive: true, filter: function (file) {
-		return !/(^|[\\/])node_modules([\\/]|$)/.test(path.relative(source, file));
-	}});
-});
-
 afterAll(function () {
-	fs.rmSync(project, {recursive: true, force: true});
+	fs.rmSync(sandbox.Root, {recursive: true, force: true});
 });
 
 afterEach(function () {

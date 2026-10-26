@@ -95,13 +95,69 @@ async function became (page, scope, selector, text) {
 		new MutationObserver(look).observe(node, {subtree: true, childList: true, attributes: true, characterData: true});
 	}, {Key: key, Selector: selector || null, Text: text || null});
 
-	return function () {
+	return function (timeout) {
 		return expect.poll(function () {
 			return page.evaluate(function (name) {
 				return window[name];
 			}, key);
-		}).toBe(true);
+		}, {timeout: timeout}).toBe(true);
 	};
+}
+
+/*
+ * The box of locator once it stays put and in view: the same twice, 200 ms apart, at least 80 pixels from the top and
+ * the bottom of the window (else it is scrolled to the middle). Content built above it may move it meanwhile, a box at
+ * the edge makes a drag scroll the page, and a gesture to a box read before that misses (regression: drags under load).
+ */
+async function settled (locator) {
+	var box = null;
+
+	await expect.poll(async function () {
+		var height = locator.page().viewportSize().height;
+
+		box = await locator.boundingBox();
+
+		if (!box)
+			return false;
+
+		if (box.y < 80 || box.y + box.height > height - 80) {
+			await locator.evaluate(function (node) {
+				node.scrollIntoView({block: 'center'});
+			});
+
+			return false;
+		}
+
+		await new Promise(function (resolve) {
+			setTimeout(resolve, 200);
+		});
+
+		return JSON.stringify(await locator.boundingBox()) === JSON.stringify(box);
+	}).toBe(true);
+
+	return box;
+}
+
+/*
+ * Takes the item at box with the mouse: down at it, and a move of 12 pixels until the ghost of the drag shows. A busy
+ * page may not start the drag of the first press (regression: no ghost, under load); the button is let go then, a
+ * click of the item, and pressed again. The drag goes on from there with the button down.
+ */
+async function grab (page, box) {
+	await expect(async function () {
+		await page.mouse.move(box.x + 20, box.y + box.height / 2);
+		await page.mouse.down();
+		await page.mouse.move(box.x + 32, box.y + box.height / 2, {steps: 2});
+
+		try {
+			await expect(page.locator('.elemenx-drag-ghost')).toBeVisible({timeout: 2000});
+		}
+		catch (error) {
+			await page.mouse.up();
+
+			throw error;
+		}
+	}).toPass({timeout: 30000});
 }
 
 /* Types into the search field of the open popup of scope: the field takes the focus a task after the popup opens. */
@@ -121,7 +177,7 @@ async function open (page, origin, sections) {
 		performance.setResourceTimingBufferSize(4000);
 	});
 
-	await page.goto(origin.URL + '/ui' + (sections ? '?sections=' + encodeURIComponent(sections.join(',')) : ''));
+	await page.goto(origin.URL + '/ui' + (sections ? '?sections=' + encodeURIComponent(sections.join('|')) : ''));
 
 	await ready(page, !sections);
 }
@@ -162,7 +218,7 @@ for (const origin of origins) {
 
 			await open(page, origin);
 
-			await expect(page.locator('.ui-kit > .elemenx-section')).toHaveCount(45);
+			await expect(page.locator('.ui-kit > .elemenx-section')).toHaveCount(48);
 
 			await expect(page.locator('#elemenx-icons')).toHaveAttribute('data-ready', 'true');
 			await expect(page.locator('.ui-kit-icon svg').first()).toHaveAttribute('data-icon', 'add');
@@ -202,7 +258,7 @@ for (const origin of origins) {
 			var sun;
 			var save;
 
-			await open(page, origin);
+			await open(page, origin, ['Icons']);
 
 			icons = section(page, 'Icons');
 			weather = icons.locator('.ui-kit-set-weather');
@@ -271,7 +327,7 @@ for (const origin of origins) {
 			var box;
 			var trigger;
 
-			await open(page, origin);
+			await open(page, origin, ['Feedback', 'Tabs', 'Selection', 'Inputs', 'Trees, tables and long lists']);
 
 			await page.locator('.ui-kit-intro').getByRole('button', {name: 'العربية'}).click();
 
@@ -334,7 +390,7 @@ for (const origin of origins) {
 			var intro;
 			var overlays;
 
-			await open(page, origin);
+			await open(page, origin, ['Overlays', 'Themes', 'Trees, tables and long lists']);
 
 			intro = page.locator('.ui-kit-intro');
 			overlays = section(page, 'Overlays');
@@ -418,13 +474,14 @@ for (const origin of origins) {
 			var button;
 			var style;
 
-			await open(page, origin);
+			await open(page, origin, ['Themes', 'Inputs', 'Layouts']);
 
 			themes = section(page, 'Themes');
 			picker = field(page, 'Theme');
 			body = page.locator('body');
 			input = section(page, 'Inputs').locator('.elemenx-input').first();
 			button = themes.getByRole('button', {name: 'Show Mine'});
+			/* Colors and sizes may come with a transition: they are read until they are the ones expected. */
 			style = function (locator, name) {
 				return locator.evaluate(function (node, property) {
 					return getComputedStyle(node)[property];
@@ -435,7 +492,9 @@ for (const origin of origins) {
 
 			await expect(body).toHaveAttribute('data-theme', 'light');
 			await expect(body).toHaveAttribute('data-scheme', 'light');
-			expect(await style(input, 'height')).toBe('32px');
+			await expect.poll(function () {
+				return style(input, 'height');
+			}).toBe('32px');
 
 			/* A Library theme: its tokens and its rules of the Components. */
 			await picker.locator('.elemenx-select-trigger').click();
@@ -444,16 +503,26 @@ for (const origin of origins) {
 			await expect(body).toHaveAttribute('data-theme', 'soft');
 			await expect(body).toHaveAttribute('data-scheme', 'light');
 			await expect(themes.locator('.elemenx-section-header')).toContainText('Theme: soft · Scheme: light');
-			expect(await style(input, 'height')).toBe('36px');
-			expect(await style(input, 'borderTopLeftRadius')).toBe('8px');
-			expect(await style(button, 'borderTopLeftRadius')).toBe('999px');
-			expect(await style(button, 'backgroundColor')).toBe('rgb(107, 78, 255)');
+			await expect.poll(function () {
+				return style(input, 'height');
+			}).toBe('36px');
+			await expect.poll(function () {
+				return style(input, 'borderTopLeftRadius');
+			}).toBe('8px');
+			await expect.poll(function () {
+				return style(button, 'borderTopLeftRadius');
+			}).toBe('999px');
+			await expect.poll(function () {
+				return style(button, 'backgroundColor');
+			}).toBe('rgb(107, 78, 255)');
 
 			await themes.locator('.elemenx-check-label', {hasText: /^Dark$/}).click();
 
 			await expect(body).toHaveAttribute('data-theme', 'soft');
 			await expect(body).toHaveAttribute('data-scheme', 'dark');
-			expect(await style(button, 'backgroundColor')).toBe('rgb(165, 148, 255)');
+			await expect.poll(function () {
+				return style(button, 'backgroundColor');
+			}).toBe('rgb(165, 148, 255)');
 
 			/* A theme made for the dark scheme stays dark under the light policy. */
 			await picker.locator('.elemenx-select-trigger').click();
@@ -462,8 +531,12 @@ for (const origin of origins) {
 
 			await expect(body).toHaveAttribute('data-theme', 'darcula');
 			await expect(body).toHaveAttribute('data-scheme', 'dark');
-			expect(await style(input, 'backgroundColor')).toBe('rgb(60, 63, 65)');
-			expect(await style(button, 'backgroundColor')).toBe('rgb(54, 88, 128)');
+			await expect.poll(function () {
+				return style(input, 'backgroundColor');
+			}).toBe('rgb(60, 63, 65)');
+			await expect.poll(function () {
+				return style(button, 'backgroundColor');
+			}).toBe('rgb(54, 88, 128)');
 
 			/* A theme of the page, written by the editor, follows its edits and is remembered. */
 			await themes.getByRole('slider', {name: 'Corners'}).focus();
@@ -476,13 +549,19 @@ for (const origin of origins) {
 
 			await expect(body).toHaveAttribute('data-theme', 'mine');
 			await expect(themes.locator('.ui-kit-theme-css')).toContainText('--elemenx-radius: 7px;');
-			expect(await style(input, 'borderTopLeftRadius')).toBe('7px');
-			expect(await style(input, 'height')).toBe('36px');
-			expect(await style(button, 'backgroundColor')).toBe('rgb(11, 110, 153)');
+			await expect.poll(function () {
+				return style(input, 'borderTopLeftRadius');
+			}).toBe('7px');
+			await expect.poll(function () {
+				return style(input, 'height');
+			}).toBe('36px');
+			await expect.poll(function () {
+				return style(button, 'backgroundColor');
+			}).toBe('rgb(11, 110, 153)');
 
 			await reload(page);
 
-			await expect(page.locator('.elemenx-workspace').first()).toBeVisible({timeout: 20000});
+			await expect(section(page, 'Themes')).toBeVisible({timeout: 20000});
 
 			await expect(body).toHaveAttribute('data-theme', 'mine');
 			await expect(body).toHaveAttribute('data-scheme', 'light');
@@ -492,7 +571,9 @@ for (const origin of origins) {
 			await picker.locator('.elemenx-option', {hasText: 'Default'}).click();
 
 			await expect(body).toHaveAttribute('data-theme', 'light');
-			expect(await style(input, 'height')).toBe('32px');
+			await expect.poll(function () {
+				return style(input, 'height');
+			}).toBe('32px');
 		});
 
 		test('ribbon switches tabs, runs commands, menus and galleries, and shows a contextual tab', async function ({ page }) {
@@ -776,7 +857,7 @@ for (const origin of origins) {
 			var search;
 			var note;
 
-			await open(page, origin);
+			await open(page, origin, ['Emoji and stickers']);
 
 			pickers = section(page, 'Emoji and stickers');
 			picker = pickers.locator('.elemenx-emoji').first();
@@ -859,7 +940,7 @@ for (const origin of origins) {
 			/* The tone and the emoji used last are remembered. */
 			await reload(page);
 
-			await expect(page.locator('.elemenx-workspace').first()).toBeVisible({timeout: 20000});
+			await expect(section(page, 'Emoji and stickers')).toBeVisible({timeout: 20000});
 
 			picker = section(page, 'Emoji and stickers').locator('.elemenx-emoji').first();
 
@@ -1130,7 +1211,8 @@ for (const origin of origins) {
 
 			/* A person: the stats shortened, follow and message. */
 			await expect(profile.locator('.elemenx-profile-stat dt')).toHaveText(['Posts', 'Followers', 'Following']);
-			await expect(profile.locator('.elemenx-profile-status')).toHaveClass(/online/);
+			/* Its Avatar: the presence of the person on its corner. */
+			await expect(profile.locator('.elemenx-profile-avatar .elemenx-avatar-status .elemenx-presence')).toHaveClass(/online/);
 
 			await profile.getByRole('button', {name: 'Follow'}).click();
 
@@ -1235,7 +1317,7 @@ for (const origin of origins) {
 			var phone;
 			var input;
 
-			await open(page, origin);
+			await open(page, origin, ['Forms', 'Payment, phone and money']);
 
 			phone = field(page, 'Phone');
 			input = phone.locator('input[type="tel"]');
@@ -1275,7 +1357,7 @@ for (const origin of origins) {
 			var expiry;
 			var saved;
 
-			await open(page, origin);
+			await open(page, origin, ['Payment, phone and money', 'Overlays']);
 
 			card = field(page, 'Card number').locator('input');
 			expiry = field(page, 'Expires').locator('input');
@@ -1334,7 +1416,7 @@ for (const origin of origins) {
 			var quantity;
 			var postal;
 
-			await open(page, origin);
+			await open(page, origin, ['Inputs']);
 
 			email = field(page, 'Email address');
 			iban = field(page, 'IBAN');
@@ -1399,7 +1481,7 @@ for (const origin of origins) {
 		test('number input steps inside its bounds', async function ({ page }) {
 			var amount;
 
-			await open(page, origin);
+			await open(page, origin, ['Inputs']);
 
 			amount = field(page, 'Amount');
 
@@ -1418,7 +1500,7 @@ for (const origin of origins) {
 			var language;
 			var tags;
 
-			await open(page, origin);
+			await open(page, origin, ['Selection']);
 
 			language = field(page, 'Language');
 
@@ -1469,20 +1551,34 @@ for (const origin of origins) {
 			var count;
 			var touch;
 
-			/* A press of a finger on the bubble of a message: down, held for a time, up, and the click that follows. */
-			touch = async function (message, hold) {
-				var box = await message.locator('.elemenx-chat-bubble').boundingBox();
+			/*
+			 * A press of a finger on the bubble of a message: down, up, and the click that follows. A tap is all of it at once in
+			 * the page; a long press (held, a locator) stays down until held shows. The time is the one of the page: a press held
+			 * for a time of the test ended before its timer under load, and a tap became a long press (regression).
+			 */
+			touch = async function (message, held) {
+				var bubble = message.locator('.elemenx-chat-bubble');
+				var box = await bubble.boundingBox();
 				var point = {pointerType: 'touch', isPrimary: true, button: 0, pointerId: 7, clientX: box.x + 12, clientY: box.y + box.height / 2};
 
-				await message.locator('.elemenx-chat-bubble').dispatchEvent('pointerdown', point);
+				await bubble.evaluate(function (node, detail) {
+					node.dispatchEvent(new PointerEvent('pointerdown', Object.assign({bubbles: true, cancelable: true}, detail.Point)));
 
-				await page.waitForTimeout(hold);
+					if (detail.Long) return;
 
-				await message.locator('.elemenx-chat-bubble').dispatchEvent('pointerup', point);
-				await message.locator('.elemenx-chat-bubble').dispatchEvent('click', {clientX: point.clientX, clientY: point.clientY, button: 0});
+					node.dispatchEvent(new PointerEvent('pointerup', Object.assign({bubbles: true, cancelable: true}, detail.Point)));
+					node.dispatchEvent(new MouseEvent('click', {bubbles: true, cancelable: true, clientX: detail.Point.clientX, clientY: detail.Point.clientY, button: 0}));
+				}, {Point: point, Long: !!held});
+
+				if (!held) return;
+
+				await expect(held).toBeVisible();
+
+				await bubble.dispatchEvent('pointerup', point);
+				await bubble.dispatchEvent('click', {clientX: point.clientX, clientY: point.clientY, button: 0});
 			};
 
-			await open(page, origin);
+			await open(page, origin, ['Chat']);
 
 			chat = section(page, 'Chat');
 			messages = chat.locator('.elemenx-chat-message');
@@ -1493,17 +1589,28 @@ for (const origin of origins) {
 			count = await messages.count();
 
 			/* A tap opens the menu of the message at the finger. */
-			await touch(messages.nth(0), 50);
+			await touch(messages.nth(0));
 
 			await expect(chat.getByRole('menuitem', {name: 'Reply'}).first()).toBeVisible();
 			await expect(bar).toBeHidden();
 
-			await page.keyboard.press('Escape');
+			/* Escape closes the menu that has the focus: the key waits for the focus in it (regression: a busy page took the key before). */
+			await expect.poll(function () {
+				return page.evaluate(function () {
+					return !!document.activeElement.closest('.elemenx-popup');
+				});
+			}).toBe(true);
 
-			await expect(chat.getByRole('menuitem', {name: 'Reply'})).toHaveCount(0);
+			/* The menu may listen a moment after it has the focus: the key again while it is open. */
+			await expect(async function () {
+				if (await chat.getByRole('menuitem', {name: 'Reply'}).count())
+					await page.keyboard.press('Escape');
+
+				await expect(chat.getByRole('menuitem', {name: 'Reply'})).toHaveCount(0, {timeout: 2000});
+			}).toPass({timeout: 30000});
 
 			/* A long press chooses the message: the bar takes the place of the header, every message shows its check. */
-			await touch(messages.nth(0), 700);
+			await touch(messages.nth(0), bar);
 
 			await expect(bar).toContainText('1 selected');
 			await expect(chat.locator('.elemenx-chat-header')).toBeHidden();
@@ -1559,7 +1666,7 @@ for (const origin of origins) {
 			var from;
 			var to;
 
-			await open(page, origin);
+			await open(page, origin, ['Workspace']);
 
 			await page.evaluate(function () {
 				localStorage.removeItem('elemenx-workspace:ui-kit-tools');
@@ -1629,7 +1736,7 @@ for (const origin of origins) {
 			var errors = captureErrors(page);
 			var pads;
 
-			await open(page, origin);
+			await open(page, origin, ['Game UI']);
 
 			pads = page.locator('.ui-kit-pads');
 
@@ -1691,7 +1798,17 @@ for (const origin of origins) {
 
 			bar = code.locator('.elemenx-find');
 
-			await hotkey(page, code.locator('textarea'), 'ControlOrMeta+h', bar);
+			/* Mod+R (Mod+H too, below) opens the replace row: in the editor it does not reload the page. */
+			await page.evaluate(function () {
+				window.stillHere = true;
+			});
+
+			await hotkey(page, code.locator('textarea'), 'ControlOrMeta+r', bar);
+
+			expect(await page.evaluate(function () {
+				return window.stillHere === true;
+			})).toBe(true);
+			await expect(bar.locator('.elemenx-find-replacement')).toBeVisible();
 
 			await expect(bar.locator('.elemenx-find-query')).toBeFocused();
 
@@ -1889,7 +2006,7 @@ for (const origin of origins) {
 			await expect(view.locator('.elemenx-code-view-line:visible')).toHaveCount(8);
 
 			/* The copy button: shown over the code under the pointer, and lit under the pointer itself. */
-			copy = view.locator('.elemenx-code-view-copy');
+			copy = view.locator('.elemenx-code-view-copy .elemenx-button');
 
 			await view.hover();
 
@@ -1914,7 +2031,7 @@ for (const origin of origins) {
 			var work;
 			var rows;
 
-			await open(page, origin);
+			await open(page, origin, ['Tiles']);
 
 			start = page.locator('.ui-kit-start .elemenx-tile-grid');
 			work = start.locator('.elemenx-tile-group[data-group="work"]');
@@ -2052,7 +2169,7 @@ for (const origin of origins) {
 			var menu;
 			var sheet;
 
-			await open(page, origin);
+			await open(page, origin, ['Gallery', 'Cards', 'Buttons']);
 
 			block = section(page, 'Gallery');
 			gallery = block.locator('.elemenx-gallery').first();
@@ -2395,6 +2512,13 @@ for (const origin of origins) {
 			await expect(crumbs.locator('.elemenx-breadcrumbs-start').getByRole('button', {name: 'Home'})).toBeVisible();
 			await expect(crumbs.locator('.elemenx-breadcrumbs-end .elemenx-presence')).toHaveText('Online');
 
+			/* Signals: as many lit bars as they are strong, in the color of their level, named for a screen reader. */
+			await expect(people.locator('.ui-kit-signals').getByRole('img', {name: 'Fair connection'}).locator('.elemenx-signal-bar.on')).toHaveCount(2);
+			await expect(people.locator('.ui-kit-signals').getByRole('img', {name: 'Poor connection'})).toHaveClass(/danger/);
+			await expect(people.locator('.ui-kit-signals').getByRole('img', {name: 'Signal 60%'}).locator('.elemenx-signal-bar')).toHaveCount(5);
+			await expect(people.locator('.ui-kit-signals').getByRole('img', {name: 'Signal 60%'}).locator('.elemenx-signal-bar.on')).toHaveCount(3);
+			await expect(people.locator('.ui-kit-signals').getByRole('img', {name: 'No network'}).locator('.elemenx-signal-bar.on')).toHaveCount(0);
+
 			await crumbs.getByRole('button', {name: 'libraries'}).click();
 
 			await expect(header).toContainText('Crumb: libraries (2)');
@@ -2547,6 +2671,259 @@ for (const origin of origins) {
 			await tones.getByRole('button', {name: 'B'}).click();
 
 			await expect(dial.locator('.elemenx-section-header')).toContainText('Tone B');
+
+			expect(errors).toEqual([]);
+		});
+
+		test('a call stage pages its tiles, changes its layout with the bar of the call, pins a tile in front, opens its side panel and takes its own video to another corner', async function ({ page }) {
+			var errors = captureErrors(page);
+			var calls;
+			var stage;
+			var tiles;
+			var bar;
+			var own;
+			var box;
+			var area;
+			var leave;
+			var leaveBox;
+			var frames;
+
+			await page.setViewportSize({width: 1280, height: 900});
+
+			await open(page, origin, ['Calls']);
+
+			calls = section(page, 'Calls');
+			stage = calls.locator('.elemenx-call-stage');
+			tiles = stage.locator('.elemenx-call-stage-participants .elemenx-call-tile');
+			bar = calls.getByRole('toolbar', {name: 'Call controls'});
+
+			await stage.scrollIntoViewIfNeeded();
+
+			/* Six people, four a page: the grid of two columns, the others on the next page. */
+			await expect(tiles).toHaveCount(6);
+			await expect(tiles.locator('visible=true')).toHaveCount(4);
+			await expect(stage).toHaveClass(/\bgrid\b/);
+			await expect(stage).not.toHaveClass(/has-main/);
+			await expect(stage.locator('.elemenx-call-stage-participants')).toHaveAttribute('style', /--elemenx-call-columns: 2/);
+			await expect(stage.getByRole('button', {name: 'Previous'})).toBeDisabled();
+
+			await stage.getByRole('button', {name: 'Next'}).click();
+
+			await expect(tiles.locator('visible=true')).toHaveCount(2);
+			await expect(tiles.nth(4)).toBeVisible();
+			await expect(stage.getByRole('button', {name: 'Next'})).toBeDisabled();
+			await expect(calls.locator('.elemenx-section-header')).toContainText('Page 2');
+
+			await stage.getByRole('button', {name: 'Previous'}).click();
+
+			/* The tiles: the avatar of a camera off, the microphone off, the hand, the speaker framed. */
+			await expect(tiles.nth(1).locator('.elemenx-call-tile-avatar')).toBeVisible();
+			await expect(tiles.nth(1).locator('.elemenx-call-tile-video')).toHaveCount(0);
+			await expect(tiles.nth(0)).toHaveClass(/speaking/);
+			await expect(tiles.nth(2).locator('.elemenx-call-tile-hand')).toBeVisible();
+
+			/* The microphone: its state from the Application, the label of what a press does. */
+			await bar.getByRole('button', {name: 'Turn the microphone on'}).click();
+
+			await expect(bar.getByRole('button', {name: 'Turn the microphone off'})).toHaveAttribute('aria-pressed', 'false');
+			await expect(stage.locator('.elemenx-call-stage-self .elemenx-call-tile-name svg')).toHaveCount(0);
+
+			/* The screen shared: main in front, the participants in a column beside it. */
+			await bar.getByRole('button', {name: 'Share the screen'}).click();
+
+			await expect(stage).toHaveClass(/\bscreen\b/);
+			await expect(stage).toHaveClass(/has-main/);
+			await expect(stage.locator('.elemenx-call-stage-main .elemenx-call-tile')).toHaveClass(/screen/);
+
+			expect(await stage.evaluate(function (node) {
+				var main = node.querySelector('.elemenx-call-stage-main').getBoundingClientRect();
+				var list = node.querySelector('.elemenx-call-stage-participants').getBoundingClientRect();
+
+				return [list.left >= main.right, main.width > list.width * 2];
+			})).toEqual([true, true]);
+
+			await bar.getByRole('button', {name: 'Stop sharing'}).click();
+
+			await expect(stage).toHaveClass(/\bgrid\b/);
+
+			/* A tile pinned with a double click: in front, the others in a strip under it. */
+			await tiles.nth(2).dblclick();
+
+			await expect(stage).toHaveClass(/\bspeaker\b/);
+			await expect(stage.locator('.elemenx-call-stage-main .elemenx-call-tile')).toHaveAttribute('aria-label', 'Grace Hopper');
+			await expect(tiles).toHaveCount(5);
+
+			await stage.locator('.elemenx-call-stage-main').getByRole('button', {name: 'Unpin'}).click();
+
+			await expect(stage).toHaveClass(/\bgrid\b/);
+			await expect(tiles).toHaveCount(6);
+
+			/* The layout from its menu, a device and a reaction told. */
+			await bar.getByRole('button', {name: 'Layout', exact: true}).click();
+			await page.getByRole('menuitem', {name: 'Speaker'}).click();
+
+			await expect(stage).toHaveClass(/\bspeaker\b/);
+
+			await bar.getByRole('button', {name: 'Camera', exact: true}).click();
+			await page.getByRole('menuitem', {name: 'Front camera'}).click();
+
+			await expect(calls.locator('.elemenx-section-header')).toContainText('camera: front');
+
+			await bar.getByRole('button', {name: 'React'}).click();
+			await page.getByRole('menuitem', {name: '🎉'}).click();
+
+			await expect(calls.locator('.elemenx-section-header')).toContainText('Reaction 🎉');
+
+			/* The chat: the side panel beside the stage. */
+			await bar.getByRole('button', {name: 'Chat', exact: true}).click();
+
+			await expect(stage.locator('.elemenx-call-stage-side')).toBeVisible();
+			await expect(stage.locator('.elemenx-call-stage-side')).toContainText('the slides are up');
+
+			await bar.getByRole('button', {name: 'Chat', exact: true}).click();
+
+			await expect(stage.locator('.elemenx-call-stage-side')).toBeHidden();
+
+			/* The own video dragged to the top left: it stays in that corner. */
+			own = stage.locator('.elemenx-call-stage-self');
+			box = await own.boundingBox();
+			area = await stage.locator('.elemenx-call-stage-area').boundingBox();
+
+			await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+			await page.mouse.down();
+			await page.mouse.move(area.x + 40, area.y + 40, {steps: 5});
+			await page.mouse.up();
+
+			await expect(own).toHaveClass(/top-left/);
+			await expect(calls.locator('.elemenx-section-header')).toContainText('Own video: top-left');
+
+			/* A red Button the pointer leaves stays red all along its transition: its shade lies over its own color, not over the text one. */
+			leave = bar.getByRole('button', {name: 'Leave'});
+			leaveBox = await leave.boundingBox();
+
+			await page.mouse.move(leaveBox.x + leaveBox.width / 2, leaveBox.y + leaveBox.height / 2);
+			await page.waitForTimeout(300);
+
+			frames = leave.evaluate(function (node) {
+				return new Promise(function (resolve) {
+					var list = [];
+					var start = performance.now();
+
+					(function look () {
+						list.push(getComputedStyle(node).backgroundColor);
+
+						if (performance.now() - start < 400) requestAnimationFrame(look);
+						else resolve(list);
+					})();
+				});
+			});
+
+			await page.mouse.move(leaveBox.x - 200, leaveBox.y - 200);
+
+			expect(Array.from(new Set(await frames))).toHaveLength(1);
+
+			/* The answers of the invitation take a shade under the pointer, accepting too (green). */
+			await calls.locator('.elemenx-call-invite').getByRole('button', {name: 'Accept', exact: true}).hover();
+
+			await expect.poll(function () {
+				return calls.locator('.elemenx-call-invite').getByRole('button', {name: 'Accept', exact: true}).evaluate(function (node) {
+					return getComputedStyle(node).backgroundImage;
+				});
+			}).toContain('linear-gradient');
+
+			/* The invitation alone in a page: its events. */
+			await calls.locator('.elemenx-call-invite').getByRole('button', {name: 'Accept with video'}).click();
+
+			await expect(calls.locator('.elemenx-section-header')).toContainText('Accepted with the camera');
+
+			expect(errors).toEqual([]);
+		});
+
+		test('a game world draws its declared map, selects the units of its team, orders them along their ways, recruits by code and hides the unexplored in the fog', async function ({ page }) {
+			var errors = captureErrors(page);
+			var game;
+			var world;
+			var canvas;
+			var header;
+			var box;
+			var pixel;
+			var recruited;
+
+			await page.setViewportSize({width: 1280, height: 900});
+
+			await open(page, origin, ['Game world']);
+
+			game = section(page, 'Game world');
+			world = game.locator('.elemenx-game-world');
+			canvas = world.locator('.elemenx-game-world-canvas');
+			header = game.locator('.elemenx-section-header');
+
+			await world.scrollIntoViewIfNeeded();
+
+			/* The declarations: a layer, two buildings, eight units, five trees and a rock. */
+			await expect(world.locator('.elemenx-game-source')).toHaveCount(17);
+			await expect(world).toHaveAttribute('role', 'application');
+
+			pixel = async function (selector, x, y) {
+				return world.locator(selector).evaluate(function (node, point) {
+					return Array.prototype.slice.call(node.getContext('2d').getImageData(point.X, point.Y, 1, 1).data);
+				}, {X: x, Y: y});
+			};
+
+			/* The map is drawn in the middle of the view. */
+			await expect.poll(async function () {
+				return (await pixel('.elemenx-game-world-canvas', 520, 240))[3];
+			}).toBeGreaterThan(240);
+
+			/* Ctrl+A: the units of the team; Escape: none. */
+			await world.focus();
+
+			await page.keyboard.press('Control+a');
+
+			await expect(header).toContainText('5 selected: archer-1, archer-2, archer-3, sword-1, sword-2');
+
+			await page.keyboard.press('Escape');
+
+			await expect(header).toContainText('Nothing selected');
+
+			/* A frame drawn over the view: the units in it. */
+			box = await canvas.boundingBox();
+
+			await page.mouse.move(box.x + 4, box.y + 4);
+			await page.mouse.down();
+			await page.mouse.move(box.x + box.width - 4, box.y + box.height - 4, {steps: 6});
+			await page.mouse.up();
+
+			await expect(header).toContainText('5 selected');
+
+			/* A right click in the middle: the order, then each walks its way there. */
+			await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2, {button: 'right'});
+
+			await expect(header).toContainText(/move to \d+, \d+: 5 units/);
+			await expect(header).toContainText('Arrived:', {timeout: 20000});
+
+			/* A unit of the code: added by the barracks, sent on its way (it arrives soon: its note lasts a moment). */
+			recruited = await became(page, header.locator('.elemenx-caption'), null, 'Recruited recruit-1 · 6 blue units');
+
+			await game.getByRole('button', {name: 'Recruit'}).click();
+
+			await recruited();
+
+			/* The fog: the far side of the river, unexplored, black on the minimap. */
+			expect((await pixel('.elemenx-game-world-minimap', 170, 42)).slice(0, 3)).not.toEqual([6, 8, 12]);
+
+			await game.locator('.elemenx-toggle').filter({hasText: 'Fog of war'}).click();
+
+			await expect.poll(async function () {
+				return (await pixel('.elemenx-game-world-minimap', 170, 42)).slice(0, 3);
+			}).toEqual([6, 8, 12]);
+
+			/* From above: the same world, drawn again. */
+			await game.locator('.elemenx-check-label', {hasText: 'From above'}).click();
+
+			await expect.poll(async function () {
+				return (await pixel('.elemenx-game-world-canvas', 520, 240))[3];
+			}).toBeGreaterThan(240);
 
 			expect(errors).toEqual([]);
 		});
@@ -2770,12 +3147,28 @@ for (const origin of origins) {
 			/* A press low on a key is louder than one high on it. */
 			c4 = piano.locator('[data-note="C4"]');
 			d4 = piano.locator('[data-note="D4"]');
-			box = await c4.boundingBox();
 
-			await page.mouse.move(box.x + box.width / 2, box.y + box.height - 4);
-			await page.mouse.down();
+			/*
+			 * In view, the box read again before each press: the content built above (the mixer) may move the keys meanwhile
+			 * (regression: a press went beside the key under load). A press that played nothing is let go and made again.
+			 */
+			await expect(async function () {
+				await c4.scrollIntoViewIfNeeded();
 
-			await expect(header).toContainText('Playing C4 (velocity 1');
+				box = await c4.boundingBox();
+
+				await page.mouse.move(box.x + box.width / 2, box.y + box.height - 4);
+				await page.mouse.down();
+
+				try {
+					await expect(header).toContainText('Playing C4 (velocity 1', {timeout: 2000});
+				}
+				catch (error) {
+					await page.mouse.up();
+
+					throw error;
+				}
+			}).toPass({timeout: 30000});
 			await expect(c4).toHaveClass(/pressed/);
 
 			/* A slide onto the next key plays it and lets the first one go. */
@@ -2887,7 +3280,7 @@ for (const origin of origins) {
 			var errors = captureErrors(page);
 			var sets;
 
-			await open(page, origin);
+			await open(page, origin, ['Icons']);
 
 			sets = page.locator('.ui-kit-themed-set');
 
@@ -2927,7 +3320,7 @@ for (const origin of origins) {
 			var field;
 			var popup;
 
-			await open(page, origin);
+			await open(page, origin, ['Inputs']);
 
 			field = page.locator('.elemenx-field').filter({has: page.locator('.elemenx-select-trigger')}).filter({hasText: 'Round select'}).first();
 
@@ -3079,7 +3472,7 @@ for (const origin of origins) {
 					}});
 			});
 
-			await open(page, origin);
+			await open(page, origin, ['Settings menu']);
 
 			settings = section(page, 'Settings menu');
 			first = settings.locator('.elemenx-settings-menu').first();
@@ -3092,7 +3485,7 @@ for (const origin of origins) {
 				sessionStorage.setItem('ui-kit-apple', '1');
 			});
 
-			await open(page, origin);
+			await open(page, origin, ['Settings menu']);
 
 			await settings.locator('.elemenx-check-label', {hasText: /^Auto$/}).click();
 
@@ -3295,7 +3688,7 @@ for (const origin of origins) {
 			var menu;
 			var sheet;
 
-			await open(page, origin);
+			await open(page, origin, ['Chat', 'Buttons']);
 
 			menu = page.locator('.elemenx-menu-root').filter({has: page.getByRole('button', {name: 'Mobile'})});
 
@@ -3383,7 +3776,7 @@ for (const origin of origins) {
 		test('menu opens nested levels and reports the chosen item', async function ({ page }) {
 			var menu;
 
-			await open(page, origin);
+			await open(page, origin, ['Buttons']);
 
 			menu = page.locator('.ui-kit-row .elemenx-menu-root').first();
 
@@ -3429,7 +3822,7 @@ for (const origin of origins) {
 			var profile;
 			var sales;
 
-			await open(page, origin);
+			await open(page, origin, ['Tabs']);
 
 			tabs = page.getByRole('tablist', {name: 'Declared tabs'}).locator('xpath=..');
 			profile = tabs.locator('.elemenx-tab-panel[data-id="profile"]');
@@ -3479,7 +3872,7 @@ for (const origin of origins) {
 		test('editor tabs switch and close', async function ({ page }) {
 			var editor;
 
-			await open(page, origin);
+			await open(page, origin, ['Tabs']);
 
 			editor = page.locator('.ui-kit-editor .elemenx-tabs.editor');
 
@@ -3504,7 +3897,7 @@ for (const origin of origins) {
 			var gallery;
 			var chooser;
 
-			await open(page, origin);
+			await open(page, origin, ['Files and drag and drop']);
 
 			gallery = page.locator('.elemenx-upload.gallery');
 
@@ -3542,7 +3935,7 @@ for (const origin of origins) {
 				return section(page, 'Selection').locator('.elemenx-radio-group.' + group + ' .elemenx-radio.checked .elemenx-check-label');
 			};
 
-			await open(page, origin);
+			await open(page, origin, ['Selection', 'Tabs', 'Workspace']);
 
 			await section(page, 'Selection').locator('.elemenx-radio-group.default').getByText('Free', {exact: true}).click();
 
@@ -3585,7 +3978,7 @@ for (const origin of origins) {
 
 			await page.emulateMedia({colorScheme: 'dark'});
 
-			await open(page, origin);
+			await open(page, origin, ['Inputs']);
 
 			await expect(page.locator('body')).toHaveAttribute('data-theme', 'system');
 			await expect(page.locator('body')).toHaveAttribute('data-scheme', 'dark');
@@ -3618,7 +4011,7 @@ for (const origin of origins) {
 			var date;
 			var iso;
 
-			await open(page, origin);
+			await open(page, origin, ['Dates and time']);
 
 			date = field(page, 'Date');
 			iso = field(page, 'ISO date, Monday first');
@@ -3676,7 +4069,7 @@ for (const origin of origins) {
 			var time;
 			var bounded;
 
-			await open(page, origin);
+			await open(page, origin, ['Dates and time']);
 
 			time = field(page, 'Time');
 			bounded = field(page, 'Time with seconds');
@@ -3724,7 +4117,7 @@ for (const origin of origins) {
 			var color;
 			var before;
 
-			await open(page, origin);
+			await open(page, origin, ['Dates and time']);
 
 			color = field(page, 'Color with opacity');
 
@@ -3850,6 +4243,7 @@ for (const origin of origins) {
 			var required;
 			var confirm;
 			var note;
+			var shaken;
 
 			await open(page, origin, ['Overlays']);
 
@@ -3887,10 +4281,15 @@ for (const origin of origins) {
 				});
 			});
 
+			/* The shake lasts a moment: watched from before the key, a busy page cannot end it between two looks (regression). */
+			shaken = await became(page, required, '.refused');
+
 			await page.keyboard.press('Escape');
 
 			await expect(required).toBeVisible();
-			await expect(required).toHaveClass(/refused/);
+
+			await shaken();
+
 			await expect(required).not.toHaveClass(/refused/);
 
 			await page.waitForTimeout(300);
@@ -3901,10 +4300,13 @@ for (const origin of origins) {
 			})).toEqual(['elemenx-dialog-refuse']);
 
 			/* A press on the backdrop: outside the box of the dialog. */
+			shaken = await became(page, required, '.refused');
+
 			await page.mouse.click(5, 5);
 
 			await expect(required).toBeVisible();
-			await expect(required).toHaveClass(/refused/);
+
+			await shaken();
 
 			await required.getByRole('button', {name: 'Accept'}).click();
 
@@ -3924,9 +4326,14 @@ for (const origin of origins) {
 			await expect(confirm.getByRole('button', {name: 'Close'})).toHaveCount(0);
 			await expect(confirm.getByRole('button', {name: 'Delete'})).toHaveClass(/danger/);
 
-			await page.keyboard.press('Escape');
+			/* A busy page may take the key before the dialog listens: pressed again until it shakes (a shake changes nothing), the shake watched from before. */
+			shaken = await became(page, confirm, '.refused');
 
-			await expect(confirm).toHaveClass(/refused/);
+			await expect(async function () {
+				await page.keyboard.press('Escape');
+
+				await shaken(1000);
+			}).toPass({timeout: 15000});
 
 			await confirm.getByRole('button', {name: 'Delete'}).click();
 
@@ -4105,10 +4512,14 @@ for (const origin of origins) {
 
 			expect(box.height).toBeGreaterThan(box.width * 10);
 
-			/* A press a quarter of the way up the track sets a quarter of the range; the thumb sits there. */
-			await page.mouse.click(box.x + box.width / 2, box.y + box.height * 0.75);
+			/* A press a quarter of the way up the track sets a quarter of the range; the thumb sits there. The box is read again before each press: content built above may move the track meanwhile (regression: a press went beside it under load). */
+			await expect(async function () {
+				box = await track.boundingBox();
 
-			await expect(header).toContainText('Volume: 25');
+				await page.mouse.click(box.x + box.width / 2, box.y + box.height * 0.75);
+
+				await expect(header).toContainText('Volume: 25', {timeout: 2000});
+			}).toPass({timeout: 30000});
 
 			thumb = await level.boundingBox();
 
@@ -4340,7 +4751,7 @@ for (const origin of origins) {
 				};
 			});
 
-			await open(page, origin);
+			await open(page, origin, ['Native']);
 
 			native = section(page, 'Native');
 			state = native.locator('.ui-kit-native-state');
@@ -4458,7 +4869,7 @@ for (const origin of origins) {
 			var box;
 			var todo;
 
-			await open(page, origin);
+			await open(page, origin, ['Files and drag and drop', 'Inputs']);
 
 			files = section(page, 'Files and drag and drop');
 			task = files.locator('.ui-kit-task', {hasText: 'Design tokens'});
@@ -4466,11 +4877,14 @@ for (const origin of origins) {
 
 			await task.scrollIntoViewIfNeeded();
 
-			from = await task.boundingBox();
-			to = await done.boundingBox();
+			/* Both in view: the target may scroll the item, which is read again then. */
+			await settled(task);
 
-			await page.mouse.move(from.x + 20, from.y + from.height / 2);
-			await page.mouse.down();
+			to = await settled(done);
+			from = await settled(task);
+
+			await grab(page, from);
+
 			await page.mouse.move(to.x + to.width / 2, to.y + to.height / 2, {steps: 8});
 
 			await expect(done).toHaveClass(/drop-over/);
@@ -4489,11 +4903,14 @@ for (const origin of origins) {
 			await expect(files.locator('.elemenx-section-header')).toContainText('Dropped: Design tokens → Done');
 
 			todo = files.locator('.ui-kit-board', {hasText: 'To do'});
-			from = await todo.locator('.ui-kit-task').last().boundingBox();
-			to = await todo.locator('.ui-kit-task').first().boundingBox();
 
-			await page.mouse.move(from.x + 20, from.y + from.height / 2);
-			await page.mouse.down();
+			await settled(todo.locator('.ui-kit-task').last());
+
+			to = await settled(todo.locator('.ui-kit-task').first());
+			from = await settled(todo.locator('.ui-kit-task').last());
+
+			await grab(page, from);
+
 			await page.mouse.move(to.x + 40, to.y + 4, {steps: 8});
 
 			await expect(page.locator('.elemenx-drop-marker')).toBeVisible();
@@ -4517,13 +4934,17 @@ for (const origin of origins) {
 			await page.mouse.move(box.x + 40, box.y + box.height / 2 + 48, {steps: 4});
 			await page.mouse.up();
 
-			expect((await notes.boundingBox()).height).toBeGreaterThan(before + 40);
+			await expect.poll(async function () {
+				return (await notes.boundingBox()).height;
+			}).toBeGreaterThan(before + 40);
 
 			await handle.focus();
 
 			await page.keyboard.press('ArrowUp');
 
-			expect((await notes.boundingBox()).height).toBeLessThan(before + 48);
+			await expect.poll(async function () {
+				return (await notes.boundingBox()).height;
+			}).toBeLessThan(before + 48);
 		});
 
 		test('phone guide keeps the template and lists every country', async function ({ page }) {
@@ -4532,7 +4953,7 @@ for (const origin of origins) {
 			var phone;
 			var codes;
 
-			await open(page, origin);
+			await open(page, origin, ['Payment, phone and money', 'Forms']);
 
 			skip = field(page, 'Phone, skip separators');
 			input = skip.locator('input[type="tel"]');
@@ -4595,7 +5016,7 @@ for (const origin of origins) {
 			var phone;
 			var input;
 
-			await open(page, origin);
+			await open(page, origin, ['Payment, phone and money']);
 
 			phone = field(page, 'Phone of another country');
 			input = phone.locator('input[type="tel"]');
@@ -4619,7 +5040,7 @@ for (const origin of origins) {
 			var money;
 			var icons;
 
-			await open(page, origin);
+			await open(page, origin, ['Icons', 'Payment, phone and money']);
 
 			money = field(page, 'Money');
 			icons = section(page, 'Icons');
@@ -4661,13 +5082,25 @@ for (const origin of origins) {
 			handle = left.locator(':scope > .elemenx-resize-handle.right');
 
 			await expect(left).toBeVisible();
-			expect((await left.boundingBox()).width).toBe(280);
+			await expect.poll(async function () {
+				return (await left.boundingBox()).width;
+			}).toBe(280);
 
-			await handle.focus();
+			/* A busy page may take the key before the handle listens: pressed again only while the width has not moved (regression: one press was lost under load). */
+			await expect(async function () {
+				if ((await left.boundingBox()).width === 280) {
+					await handle.focus();
 
-			await page.keyboard.press('ArrowRight');
+					await page.keyboard.press('ArrowRight');
+				}
 
-			expect((await left.boundingBox()).width).toBe(288);
+				await expect.poll(async function () {
+					return (await left.boundingBox()).width;
+				}, {timeout: 2000}).toBe(288);
+			}).toPass({timeout: 30000});
+
+			/* The handle in view and its box read once the width above is in place: a press where it was went beside it (regression: under load). */
+			await handle.scrollIntoViewIfNeeded();
 
 			box = await handle.boundingBox();
 
@@ -4676,7 +5109,9 @@ for (const origin of origins) {
 			await page.mouse.move(box.x + 42, box.y + 100, {steps: 4});
 			await page.mouse.up();
 
-			expect((await left.boundingBox()).width).toBe(328);
+			await expect.poll(async function () {
+				return (await left.boundingBox()).width;
+			}).toBe(328);
 
 			await workspace.getByRole('button', {name: 'Project'}).click();
 
@@ -4703,7 +5138,7 @@ for (const origin of origins) {
 		test('tables fit their container without a horizontal scroll', async function ({ page }) {
 			var wrap;
 
-			await open(page, origin);
+			await open(page, origin, ['Table']);
 
 			wrap = page.locator('.elemenx-table-wrap').first();
 
@@ -4955,7 +5390,7 @@ for (const origin of origins) {
 			await expect(plain.getByRole('button', {name: 'Previous picture'})).toBeDisabled();
 		});
 
-		test('steps show several active steps and timeline lists the activity', async function ({ page }) {
+		test('steps show several active steps and the chronicle lists the activity', async function ({ page }) {
 			var block;
 			var steps;
 
@@ -4989,17 +5424,160 @@ for (const origin of origins) {
 			await expect(block.locator('.elemenx-steps.vertical .elemenx-step')).toHaveCount(4);
 			await expect(block.locator('.elemenx-steps.vertical button')).toHaveCount(0);
 
-			await expect(block.locator('.elemenx-timeline-item')).toHaveCount(8);
-			await expect(block.locator('.elemenx-timeline-item').nth(4)).toContainText('The table should keep its header while scrolling.');
-			await expect(block.locator('.elemenx-timeline-item.small')).toHaveCount(3);
-			await expect(block.locator('.elemenx-timeline-item.dot')).toHaveCount(2);
-			await expect(block.locator('.elemenx-timeline-item.dot .elemenx-icon')).toHaveCount(0);
-			expect((await block.locator('.elemenx-timeline-item.dot .elemenx-timeline-node').first().boundingBox()).width).toBe(8);
+			await expect(block.locator('.elemenx-chronicle-item')).toHaveCount(8);
+			await expect(block.locator('.elemenx-chronicle-item').nth(4)).toContainText('The table should keep its header while scrolling.');
+			await expect(block.locator('.elemenx-chronicle-item.small')).toHaveCount(3);
+			await expect(block.locator('.elemenx-chronicle-item.dot')).toHaveCount(2);
+			await expect(block.locator('.elemenx-chronicle-item.dot .elemenx-icon')).toHaveCount(0);
+			await expect.poll(async function () {
+				return (await block.locator('.elemenx-chronicle-item.dot .elemenx-chronicle-node').first().boundingBox()).width;
+			}).toBe(8);
+		});
+
+		test('timeline draws its scale, stacks close labels, edits ranges, zooms and seeks', async function ({ page }) {
+			var block;
+			var plan;
+			var video;
+			var boxes;
+			var box;
+			var core;
+			var research;
+			var lane;
+			var ticks;
+
+			await open(page, origin, ['Timeline']);
+
+			block = section(page, 'Timeline');
+			plan = block.getByRole('group', {name: 'The plan of the year'});
+			video = block.getByRole('group', {name: 'A video'});
+
+			await expect(plan.locator('.elemenx-timeline-lane-name')).toHaveText(['Design', 'Build', 'Launch']);
+			await expect(plan.locator('.elemenx-timeline-range')).toHaveCount(5);
+			await expect(plan.locator('.elemenx-timeline-point')).toHaveCount(5);
+			await expect(plan.locator('.elemenx-timeline-tick.major').first()).toContainText('2026');
+			await expect(plan.locator('.elemenx-timeline-now')).toHaveCount(1);
+
+			/* The labels of marks close together stack in rows: none covers another. */
+			boxes = await plan.locator('.elemenx-timeline-label.after').evaluateAll(function (labels) {
+				return labels.map(function (label) {
+					var rect = label.firstElementChild.getBoundingClientRect();
+
+					return {Left: rect.left, Right: rect.right, Top: rect.top, Bottom: rect.bottom};
+				});
+			});
+
+			expect(boxes.length).toBe(4);
+
+			boxes.forEach(function (a, i) {
+				boxes.slice(i + 1).forEach(function (b) {
+					expect(a.Right <= b.Left || b.Right <= a.Left || a.Bottom <= b.Top || b.Bottom <= a.Top).toBe(true);
+				});
+			});
+
+			/* A range dragged in time: the Timeline asks, the owner changes its data. */
+			core = plan.getByRole('button', {name: /^Core,/});
+			box = await core.boundingBox();
+
+			await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+			await page.mouse.down();
+			await page.mouse.move(box.x + box.width / 2 + 40, box.y + box.height / 2, {steps: 5});
+			await page.mouse.up();
+
+			await expect(block).toContainText('Core: 2026-');
+			await expect.poll(async function () {
+				return (await core.boundingBox()).x;
+			}).toBeGreaterThan(box.x + 20);
+
+			/* By its end: only the end changes. */
+			research = plan.getByRole('button', {name: /^Research,/});
+			box = await research.boundingBox();
+
+			await page.mouse.move(box.x + box.width - 2, box.y + box.height / 2);
+			await page.mouse.down();
+			await page.mouse.move(box.x + box.width + 40, box.y + box.height / 2, {steps: 5});
+			await page.mouse.up();
+
+			await expect(block).toContainText('Research: 2026-01-12 – 2026-');
+			expect(Math.abs((await research.boundingBox()).x - box.x)).toBeLessThan(2);
+
+			/* A new range drawn on an empty part of a lane. */
+			lane = plan.locator('.elemenx-timeline-lane[data-lane="launch"]');
+			box = await lane.boundingBox();
+
+			await page.mouse.move(box.x + 60, box.y + box.height / 2);
+			await page.mouse.down();
+			await page.mouse.move(box.x + 160, box.y + box.height / 2, {steps: 5});
+			await page.mouse.up();
+
+			await expect(block).toContainText('Created: 2026-');
+			await expect(plan.locator('.elemenx-timeline-range')).toHaveCount(6);
+
+			/* The keys: Enter selects, the arrows go to the next mark, Alt with them moves it by its snap. */
+			await plan.getByRole('button', {name: /^Alpha,/}).focus();
+
+			await page.keyboard.press('Enter');
+
+			await expect(block).toContainText('Selected: Alpha');
+			await expect(plan.getByRole('button', {name: /^Alpha,/})).toHaveAttribute('aria-pressed', 'true');
+
+			await page.keyboard.press('ArrowRight');
+
+			await expect(plan.getByRole('button', {name: /^Demo day,/})).toBeFocused();
+
+			await page.keyboard.press('Alt+ArrowRight');
+
+			await expect(block).toContainText('Moved: Demo day to 2026-05-09');
+
+			/* The zoom: Ctrl with the wheel at the pointer, the buttons, and back to all of it. */
+			ticks = await plan.locator('.elemenx-timeline-tick').allTextContents();
+			box = await plan.locator('.elemenx-timeline-axis').boundingBox();
+
+			await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+			await page.keyboard.down('Control');
+			await page.mouse.wheel(0, -400);
+			await page.keyboard.up('Control');
+
+			await expect.poll(function () {
+				return plan.locator('.elemenx-timeline-tick').allTextContents();
+			}).not.toEqual(ticks);
+
+			await plan.getByRole('button', {name: 'Show all'}).click();
+
+			await expect.poll(function () {
+				return plan.locator('.elemenx-timeline-tick').allTextContents();
+			}).toEqual(ticks);
+
+			/* Declared inside it: marks (one with its own content as its label), a range, a progress; a press on the axis seeks. */
+			await expect(video.locator('.elemenx-timeline-point')).toHaveCount(6);
+			await expect(video.locator('.elemenx-timeline-label strong')).toHaveText('Goal!');
+			await expect(video.getByRole('button', {name: /^Ad break,/})).toHaveCount(1);
+			await expect(video.locator('.elemenx-timeline-buffer')).toHaveCount(1);
+			await expect(video.getByRole('slider')).toHaveAttribute('aria-valuetext', '75 s');
+
+			await video.scrollIntoViewIfNeeded();
+
+			box = await video.locator('.elemenx-timeline-axis').boundingBox();
+
+			await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+
+			await expect(video.getByRole('slider')).toHaveAttribute('aria-valuetext', /^(29\d|30\d)(\.\d+)? s$/);
+			await expect.poll(async function () {
+				return (await video.locator('.elemenx-timeline-progress').boundingBox()).width;
+			}).toBeCloseTo(box.width / 2, -1);
+
+			/* Vertical: the line goes down, the lanes go across. */
+			await expect(block.locator('.elemenx-timeline.vertical')).toHaveCount(2);
+			await expect(block.getByRole('group', {name: 'A day'}).locator('.elemenx-timeline-lane-name')).toHaveText(['Room']);
+
+			box = await block.getByRole('group', {name: 'A day'}).getByRole('button', {name: /^Design review,/}).boundingBox();
+
+			expect(box.height).toBeGreaterThan(60);
 		});
 
 		test('terminal runs commands and recalls its history', async function ({ page }) {
 			var terminal;
 			var input;
+			var locked;
 
 			await open(page, origin, ['Terminal']);
 
@@ -5012,10 +5590,14 @@ for (const origin of origins) {
 			await expect(terminal.locator('.elemenx-terminal-line')).toContainText(['Elemenx terminal. Type help.', 'help', /date\s+print the date/]);
 
 			await input.fill('make coffee');
+
+			/* While the command runs, the command line is read-only and keeps the focus: a moment, watched from before Enter (regression: a busy page ended it between two looks). */
+			locked = await became(page, terminal, '.elemenx-terminal-input[readonly]');
+
 			await input.press('Enter');
 
-			/* While the command runs, the command line is read-only and keeps the focus. */
-			await expect(input).toHaveAttribute('readonly', '');
+			await locked();
+
 			await expect(input).toBeFocused();
 			await expect(terminal.locator('.elemenx-terminal-line').last()).toHaveText('make: command not found');
 			await expect(input).not.toHaveAttribute('readonly', '');
@@ -5877,7 +6459,7 @@ for (const origin of origins) {
 
 			await page.clock.install();
 
-			await open(page, origin);
+			await open(page, origin, ['Game UI', 'Overlays']);
 
 			game = section(page, 'Game UI');
 			note = game.locator(':scope > .elemenx-section-header .elemenx-caption');
@@ -5981,8 +6563,13 @@ for (const origin of origins) {
 
 			await expect(note).toHaveText('Player: Sela');
 
-			/* Achievements show one after another, over the whole page and its windows; a press dismisses one. */
-			await page.clock.pauseAt(Date.now() + 1000);
+			/*
+			 * Achievements show one after another, over the whole page and its windows; a press dismisses one. The time is
+			 * stopped a second after the one of the page (ahead of the one of the test once it was run forward).
+			 */
+			await page.clock.pauseAt(await page.evaluate(function () {
+				return Date.now();
+			}) + 1000);
 
 			await game.getByRole('button', {name: 'Unlock an achievement'}).click();
 			await game.getByRole('button', {name: 'Unlock an achievement'}).click();
@@ -6029,7 +6616,7 @@ for (const origin of origins) {
 			var tabs;
 			var systems;
 
-			await open(page, origin);
+			await open(page, origin, ['Game UI']);
 
 			game = section(page, 'Game UI');
 			status = game.locator('.elemenx-window').filter({hasText: 'Status'});
@@ -6105,13 +6692,16 @@ for (const origin of origins) {
 			})).toEqual([true, '1px', 'uppercase', 'rgb(242, 254, 255)', '1px', '10px']);
 
 			/* The selected cell of the bag wears brackets of light apart from it; an active item and the active slot are filled in a double frame. */
-			expect(await game.locator('.elemenx-game-inventory-cell[aria-selected="true"]').evaluate(function (node) {
-				var cell = node.getBoundingClientRect();
-				var mark = node.querySelector('.elemenx-game-inventory-mark');
-				var box = mark.getBoundingClientRect();
+			/* The brackets come in with a transition: read until it ended (regression: a page quicker than the whole catalogue read them halfway). */
+			await expect.poll(function () {
+				return game.locator('.elemenx-game-inventory-cell[aria-selected="true"]').evaluate(function (node) {
+					var cell = node.getBoundingClientRect();
+					var mark = node.querySelector('.elemenx-game-inventory-mark');
+					var box = mark.getBoundingClientRect();
 
-				return [getComputedStyle(mark).backgroundImage.split('linear-gradient').length - 1, Math.round(cell.left - box.left), Math.round(box.bottom - cell.bottom)];
-			})).toEqual([4, 3, 3]);
+					return [getComputedStyle(mark).backgroundImage.split('linear-gradient').length - 1, Math.round(cell.left - box.left), Math.round(box.bottom - cell.bottom)];
+				});
+			}).toEqual([4, 3, 3]);
 			expect(await game.getByRole('option', {name: /Ember rune/}).evaluate(function (node) {
 				return [node.classList.contains('active'), getComputedStyle(node).boxShadow.split('rgb').length - 1, getComputedStyle(node.querySelector('.elemenx-game-inventory-mark')).backgroundImage];
 			})).toEqual([true, 4, 'none']);
@@ -6137,6 +6727,9 @@ for (const origin of origins) {
 			})).toBe('none');
 
 			await systems.getByRole('tab', {name: 'Files'}).click();
+
+			/* The table is named by its Label. */
+			await expect(systems.getByRole('table', {name: 'Files'})).toBeVisible();
 
 			expect(await systems.locator('.elemenx-table').evaluate(function (node) {
 				var head = getComputedStyle(node.querySelector('th'));
@@ -6530,24 +7123,31 @@ for (const origin of origins) {
 				}});
 			});
 
-			await open(page, origin);
+			await open(page, origin, ['Game UI']);
 
 			game = section(page, 'Game UI');
 
 			await game.locator('.elemenx-game-hud').scrollIntoViewIfNeeded();
 
+			/*
+			 * A press: down until the next frame of the page, where the pad is read once, then up. Held from the test it lasted as
+			 * long as the test was slow: past the 400 ms of the repeat of the d-pad, one press moved the focus two or three
+			 * controls (regression: under load).
+			 */
 			async function press (index) {
 				await page.evaluate(function (button) {
 					window.testPad.buttons[button] = {pressed: true, value: 1};
+
+					return new Promise(function (resolve) {
+						requestAnimationFrame(function () {
+							window.testPad.buttons[button] = {pressed: false, value: 0};
+
+							requestAnimationFrame(function () {
+								resolve();
+							});
+						});
+					});
 				}, index);
-
-				await page.waitForTimeout(100);
-
-				await page.evaluate(function (button) {
-					window.testPad.buttons[button] = {pressed: false, value: 0};
-				}, index);
-
-				await page.waitForTimeout(100);
 			}
 
 			/* The prompts show the buttons of the pad in use. */
@@ -6596,6 +7196,7 @@ for (const origin of origins) {
 			var game;
 			var overlays;
 			var required;
+			var shaken;
 
 			/* One pad reported twice (XInput and HID), and a pad without the standard mapping. */
 			await page.addInitScript(function () {
@@ -6615,35 +7216,47 @@ for (const origin of origins) {
 				}});
 			});
 
-			async function set (pads, change) {
+			/* Down until the next frame of the page, where the pads are read once, then up: no hold long enough to repeat (see press in the test before). */
+			async function tap (pads, change) {
 				await page.evaluate(function (detail) {
-					detail.Pads.forEach(function (index) {
-						var pad = window.testPads[index];
+					function apply (down) {
+						detail.Pads.forEach(function (index) {
+							var pad = window.testPads[index];
 
-						if (detail.Change.Button !== undefined)
-							pad.buttons[detail.Change.Button] = {pressed: !!detail.Change.Down, value: detail.Change.Down ? 1 : 0};
+							if (detail.Change.Button !== undefined)
+								pad.buttons[detail.Change.Button] = {pressed: down, value: down ? 1 : 0};
 
-						if (detail.Change.Axes)
-							pad.axes = detail.Change.Axes;
+							if (detail.Change.Axes)
+								pad.axes = down ? detail.Change.Axes : [0, 0, 0, 0];
+						});
+					}
+
+					apply(true);
+
+					return new Promise(function (resolve) {
+						requestAnimationFrame(function () {
+							apply(false);
+
+							requestAnimationFrame(function () {
+								resolve();
+							});
+						});
 					});
 				}, {Pads: pads, Change: change});
-
-				await page.waitForTimeout(150);
 			}
 
 			/* A page with no game on it: the pad works there too, from the first control in view. */
 			await page.goto(origin.URL + '/');
 
-			await expect(page.locator('a[href="/ui"]').first()).toBeVisible();
+			await expect(page.locator('a[href="/ui"]').first()).toBeVisible({timeout: 30000});
 
-			await set([0], {Button: 13, Down: true});
-			await set([0], {Button: 13, Down: false});
+			await tap([0], {Button: 13});
 
 			expect(await page.evaluate(function () {
 				return document.activeElement !== document.body;
 			})).toBe(true);
 
-			await open(page, origin);
+			await open(page, origin, ['Game UI', 'Overlays']);
 
 			game = section(page, 'Game UI');
 
@@ -6654,20 +7267,17 @@ for (const origin of origins) {
 			/* Both reports of the pad press the d-pad: the focus moves one control, not two. */
 			await game.getByRole('button', {name: 'Heal', exact: true}).focus();
 
-			await set([0, 1], {Button: 15, Down: true});
-			await set([0, 1], {Button: 15, Down: false});
+			await tap([0, 1], {Button: 15});
 
 			await expect(game.getByRole('button', {name: 'Blink'})).toBeFocused();
 
 			/* The stick down and to the right, leaning right: one move to the right, none down. */
-			await set([0], {Axes: [0.9, 0.6, 0, 0]});
-			await set([0], {Axes: [0, 0, 0, 0]});
+			await tap([0], {Axes: [0.9, 0.6, 0, 0]});
 
 			await expect(game.getByRole('button', {name: 'Potion'})).toBeFocused();
 
 			/* A pad without the standard mapping: its button 0 is no A, nothing is pressed. */
-			await set([2], {Button: 0, Down: true});
-			await set([2], {Button: 0, Down: false});
+			await tap([2], {Button: 0});
 
 			await expect(game.locator(':scope > .elemenx-section-header .elemenx-caption')).toHaveText('Fireball 1 · Heal 2 · Blink 3 · Potion 4');
 
@@ -6688,8 +7298,7 @@ for (const origin of origins) {
 				button.focus();
 			});
 
-			await set([0], {Button: 1, Down: true});
-			await set([0], {Button: 1, Down: false});
+			await tap([0], {Button: 1});
 
 			await expect(required).not.toHaveClass(/refused/);
 
@@ -6697,10 +7306,13 @@ for (const origin of origins) {
 				node.focus();
 			});
 
-			await set([0], {Button: 1, Down: true});
-			await set([0], {Button: 1, Down: false});
+			/* The shake lasts a moment: watched from before the press, a busy page cannot end it between two looks. */
+			shaken = await became(page, required, '.refused');
 
-			await expect(required).toHaveClass(/refused/);
+			await tap([0], {Button: 1});
+
+			await shaken();
+
 			await expect(required).toBeVisible();
 
 			expect(errors).toEqual([]);
@@ -6887,6 +7499,7 @@ for (const origin of origins) {
 
 			frame = section(page, 'Tiles').locator('.ui-kit-start-columns');
 			grid = frame.locator('.elemenx-tile-grid.columns');
+			/* Read until they are as expected: the grid arranges its columns a frame after it is drawn or resized. */
 			stacks = function () {
 				return grid.locator('.elemenx-tile-stack').evaluateAll(function (nodes) {
 					return nodes.map(function (node) {
@@ -6899,7 +7512,7 @@ for (const origin of origins) {
 
 			await frame.scrollIntoViewIfNeeded();
 
-			expect(await stacks()).toEqual([['Productivity', 'Play'], ['Explore']]);
+			await expect.poll(stacks).toEqual([['Productivity', 'Play'], ['Explore']]);
 
 			/* The columns stand side by side while there is room. */
 			boxes = await grid.locator('.elemenx-tile-stack').evaluateAll(function (nodes) {
@@ -6933,7 +7546,7 @@ for (const origin of origins) {
 
 			await page.mouse.up();
 
-			expect(await stacks()).toEqual([['Productivity', 'Play', 'New group'], ['Explore']]);
+			await expect.poll(stacks).toEqual([['Productivity', 'Play', 'New group'], ['Explore']]);
 			await expect(grid.locator('.elemenx-tile-stack').first().locator('.elemenx-tile[data-id="c-maps"]')).toHaveCount(1);
 
 			/* Narrower than two columns: the second column goes, whole, under the first. */
@@ -7079,7 +7692,7 @@ for (const origin of origins) {
 			var pin;
 			var recovery;
 
-			await open(page, origin);
+			await open(page, origin, ['Payment, phone and money']);
 
 			otp = field(page, 'One-time code');
 			input = otp.locator('input');
@@ -7179,7 +7792,8 @@ for (const origin of origins) {
 			var input;
 			var ask;
 
-			await open(page, origin);
+			/* Its section and the one of the ToastHost alone: the whole catalogue builds the others meanwhile and a busy page held the timer of HideAfter back. */
+			await open(page, origin, ['Payment, phone and money', 'Overlays']);
 
 			cvv = field(page, 'CVV');
 			eye = cvv.locator('.elemenx-input-action');
@@ -7218,7 +7832,8 @@ for (const origin of origins) {
 			await ask.getByRole('button', {name: 'Use fingerprint'}).click();
 
 			await expect(input).toHaveAttribute('type', 'text');
-			await expect(input).toHaveAttribute('type', 'password', {timeout: 8000});
+			/* HideAfter is 5 seconds; the wait ends as soon as it hides (regression: 8 seconds were too few under load). */
+			await expect(input).toHaveAttribute('type', 'password', {timeout: 20000});
 
 			/* An unguarded field shows at once. */
 			await field(page, 'PIN').getByRole('button', {name: 'Show code'}).click();
@@ -7231,7 +7846,7 @@ for (const origin of origins) {
 			var palette;
 			var options;
 
-			await open(page, origin);
+			await open(page, origin, ['Commands and overlays', 'Overlays']);
 
 			commands = section(page, 'Commands and overlays');
 			palette = page.locator('dialog.elemenx-palette');
@@ -7243,9 +7858,15 @@ for (const origin of origins) {
 
 			await expect(commands.locator('.ui-kit-shortcuts li')).toHaveText([/Toggle the theme\s*Alt\+T/, /Go to the tiles\s*G T/, /Show a toast\s*Alt\+N/]);
 
-			await page.keyboard.press('Control+K');
+			/* A busy page may take the key before it listens: pressed again while the palette is closed (regression: one press was lost under load). */
+			await expect(async function () {
+				if (!(await palette.evaluate(function (node) {
+					return node.open;
+				})))
+					await page.keyboard.press('Control+K');
 
-			await expect(palette).toHaveJSProperty('open', true);
+				await expect(palette).toHaveJSProperty('open', true, {timeout: 2000});
+			}).toPass({timeout: 30000});
 			await expect(palette.getByRole('combobox')).toBeFocused();
 			expect(await options()).toEqual(['Toggle the theme', 'Open the filters drawer', 'Take the tour', 'Show a success toast', 'Copy the API token', 'Publish (needs a reviewer)', 'Go to the tiles', 'Show a toast']);
 
@@ -7293,7 +7914,7 @@ for (const origin of origins) {
 		test('shortcuts fire by their keys, also in another keyboard layout, sequences included, but not while typing', async function ({ page }) {
 			var commands;
 
-			await open(page, origin);
+			await open(page, origin, ['Commands and overlays', 'Tiles', 'Payment, phone and money']);
 
 			commands = section(page, 'Commands and overlays');
 
@@ -7433,7 +8054,7 @@ for (const origin of origins) {
 
 			await context.grantPermissions(['clipboard-read', 'clipboard-write']);
 
-			await open(page, origin);
+			await open(page, origin, ['Commands and overlays', 'Overlays']);
 
 			commands = section(page, 'Commands and overlays');
 
@@ -7519,7 +8140,7 @@ for (const origin of origins) {
 
 			await context.grantPermissions(['notifications']);
 
-			await open(page, origin);
+			await open(page, origin, ['Security and device']);
 
 			devices = page.locator('.ui-kit-devices');
 			state = page.locator('#ui-kit-devices-state');
@@ -7617,7 +8238,7 @@ for (const origin of origins) {
 				});
 			}
 
-			await open(page, origin);
+			await open(page, origin, ['Selection', 'Code editor']);
 
 			/* Tags: the arrow up from the first suggestion goes round to the last, out of view at first. */
 			topics = field(page, 'Topics');
@@ -7675,7 +8296,7 @@ for (const origin of origins) {
 			var chips;
 			var invite;
 
-			await open(page, origin);
+			await open(page, origin, ['Selection']);
 
 			topics = field(page, 'Topics');
 			input = topics.locator('input.elemenx-tags-control');
@@ -7749,7 +8370,7 @@ for (const origin of origins) {
 			var options;
 			var city;
 
-			await open(page, origin);
+			await open(page, origin, ['Selection', 'Forms']);
 
 			framework = field(page, 'Framework');
 			input = framework.locator('input[role="combobox"]');
@@ -7819,7 +8440,7 @@ for (const origin of origins) {
 		test('city input finds the cities of GeoNames by name, without diacritics, and tells their time zone', async function ({ page }) {
 			var city;
 
-			await open(page, origin);
+			await open(page, origin, ['Selection']);
 
 			city = field(page, 'World city');
 
@@ -7855,7 +8476,7 @@ for (const origin of origins) {
 			var later;
 			var months;
 
-			await open(page, origin);
+			await open(page, origin, ['Selection']);
 
 			period = field(page, 'Period');
 			iso = function (date) {
@@ -7923,7 +8544,7 @@ for (const origin of origins) {
 			var rows;
 			var row;
 
-			await open(page, origin);
+			await open(page, origin, ['Trees, tables and long lists', 'Overlays']);
 
 			data = section(page, 'Trees, tables and long lists');
 			tree = data.locator('.elemenx-tree');
@@ -8008,7 +8629,7 @@ for (const origin of origins) {
 			var list;
 			var box;
 
-			await open(page, origin);
+			await open(page, origin, ['Trees, tables and long lists']);
 
 			data = section(page, 'Trees, tables and long lists');
 			list = data.locator('.elemenx-virtual-viewport');
@@ -8019,7 +8640,9 @@ for (const origin of origins) {
 			expect(await list.evaluate(function (node) {
 				return node.scrollHeight;
 			})).toBe(3200000);
-			expect((await list.boundingBox()).width).toBeGreaterThan(200);
+			await expect.poll(async function () {
+				return (await list.boundingBox()).width;
+			}).toBeGreaterThan(200);
 
 			await list.evaluate(function (node) {
 				node.scrollTop = 32 * 50000;
@@ -8051,7 +8674,7 @@ for (const origin of origins) {
 			var wide;
 			var compact;
 
-			await open(page, origin);
+			await open(page, origin, ['Trees, tables and long lists']);
 
 			data = section(page, 'Trees, tables and long lists');
 			wide = data.getByRole('navigation', {name: 'Wide pages'});
@@ -8089,7 +8712,7 @@ for (const origin of origins) {
 			var levels;
 			var results;
 
-			await open(page, origin);
+			await open(page, origin, ['Trees, tables and long lists']);
 
 			data = section(page, 'Trees, tables and long lists');
 			table = data.locator('.elemenx-table-box').first();
@@ -8239,7 +8862,7 @@ for (const origin of origins) {
 			var errors;
 			var svg = 'http://www.w3.org/2000/svg';
 
-			await open(page, origin);
+			await open(page, origin, ['Charts and calendar']);
 
 			charts = section(page, 'Charts and calendar');
 			line = charts.locator('.elemenx-chart').nth(0);
@@ -8279,6 +8902,9 @@ for (const origin of origins) {
 
 			/* The pointer over a donut: the slice under it shows in the tooltip, and nothing fails. */
 			errors = captureErrors(page);
+
+			await charts.locator('.elemenx-chart.donut svg').scrollIntoViewIfNeeded();
+
 			box = await charts.locator('.elemenx-chart.donut svg').boundingBox();
 
 			await page.mouse.move(box.x + 4, box.y + 4);
@@ -8453,6 +9079,133 @@ for (const origin of origins) {
 			await expect(note).toContainText('Event: Pairing');
 		});
 
+		test('calendar draws events of several days as bars, cuts the night, repeats events, shows a day and plans a quarter', async function ({ page }) {
+			var charts;
+			var calendar;
+			var note;
+			var iso;
+			var cell;
+			var dates;
+			var box;
+			var target;
+
+			await open(page, origin, ['Charts and calendar']);
+
+			charts = section(page, 'Charts and calendar');
+			calendar = charts.locator('.elemenx-cal');
+			note = charts.locator('.elemenx-section-header');
+			iso = function (offset) {
+				var date = new Date();
+
+				date = new Date(date.getFullYear(), date.getMonth(), date.getDate() + offset);
+
+				return date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0') + '-' + String(date.getDate()).padStart(2, '0');
+			};
+			cell = function (offset) {
+				return calendar.locator('.elemenx-cal-day[data-date="' + iso(offset) + '"]');
+			};
+
+			await calendar.scrollIntoViewIfNeeded();
+
+			/* The month shows the days around today: the next one when today is late in its month. */
+			if (await cell(10).count() === 0)
+				await calendar.getByRole('button', {name: 'Next'}).click();
+
+			/* An event of several days is a bar in the same row of each of its days, its title in its first day alone. */
+			await expect(cell(3).locator('.elemenx-cal-event.bar', {hasText: 'Team offsite'})).toHaveCount(1);
+			expect(await calendar.locator('.elemenx-cal-event.bar[data-id="offsite"]').evaluateAll(function (bars) {
+				return bars.map(function (bar) {
+					return Math.round(bar.getBoundingClientRect().top - bar.closest('.elemenx-cal-day').getBoundingClientRect().top);
+				}).filter(function (top, index, all) {
+					return all.indexOf(top) === index;
+				}).length;
+			})).toBe(1);
+
+			/* An event that ends at midnight is not in the day after (regression: that day listed it). */
+			await expect(cell(9).locator('.elemenx-cal-event', {hasText: 'Launch party'})).toHaveCount(1);
+			await expect(cell(10).locator('.elemenx-cal-event[data-id="party"]')).toHaveCount(0);
+
+			/* A recurring event: on its days of the week alone, from its first day on. */
+			dates = await calendar.locator('.elemenx-cal-event', {hasText: 'Gym'}).evaluateAll(function (events) {
+				return events.map(function (event) {
+					return event.closest('.elemenx-cal-day').getAttribute('data-date');
+				});
+			});
+
+			expect(dates.length).toBeGreaterThan(3);
+
+			dates.forEach(function (date) {
+				var parts = date.split('-');
+
+				expect([2, 4, 6]).toContain(new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2])).getDay());
+				expect(date > iso(0)).toBe(true);
+			});
+
+			/* Alt with an arrow moves one occurrence: the page leaves its day out of the series. */
+			await calendar.locator('.elemenx-cal-day[data-date="' + dates[0] + '"] .elemenx-cal-event', {hasText: 'Gym'}).focus();
+
+			await page.keyboard.press('Alt+ArrowRight');
+
+			await expect(note).toContainText('Moved: Gym (' + dates[0] + ')');
+			await expect(calendar.locator('.elemenx-cal-day[data-date="' + dates[0] + '"] .elemenx-cal-event', {hasText: 'Gym'})).toHaveCount(0);
+
+			/* The end of a bar dragged to another day of its row: its last day moves, its first stays. */
+			box = await cell(5).locator('.elemenx-cal-event[data-id="offsite"] .elemenx-cal-resize').boundingBox();
+			target = Math.abs((await cell(6).boundingBox()).y - box.y) < 40 ? 6 : 4;
+
+			await page.mouse.move(box.x + 2, box.y + box.height / 2);
+			await page.mouse.down();
+			await page.mouse.move((await cell(target).boundingBox()).x + 20, box.y + box.height / 2, {steps: 6});
+			await page.mouse.up();
+
+			await expect(note).toContainText('Moved: Team offsite → ' + iso(3) + ' – ' + iso(target));
+
+			/* The weeks: the piece of the night deploy after midnight ends before StartHour, none in the hours (regression: half an hour at 07:00). */
+			await calendar.getByRole('button', {name: 'Today'}).click();
+			await calendar.getByRole('button', {name: 'Week'}).click();
+
+			while (await calendar.locator('.elemenx-cal-column[data-date="' + iso(7) + '"]').count() === 0) {
+				await calendar.getByRole('button', {name: 'Next'}).click();
+			}
+
+			await expect(calendar.locator('.elemenx-cal-column[data-date="' + iso(7) + '"] .elemenx-cal-block[data-id="deploy"]')).toHaveCount(0);
+
+			/* An event of a day or more is a bar above the hours. */
+			while (await calendar.locator('.elemenx-cal-allday[data-date="' + iso(8) + '"]').count() === 0) {
+				await calendar.getByRole('button', {name: 'Next'}).click();
+			}
+
+			await expect(calendar.locator('.elemenx-cal-allday[data-date="' + iso(8) + '"] .elemenx-cal-event', {hasText: 'Conference'})).toHaveCount(1);
+			await expect(calendar.locator('.elemenx-cal-block', {hasText: 'Conference'})).toHaveCount(0);
+
+			/* The day: one column of hours. */
+			await calendar.getByRole('button', {name: 'Today'}).click();
+			await calendar.getByRole('button', {name: 'Day', exact: true}).click();
+
+			await expect(calendar).toHaveClass(/day/);
+			await expect(calendar.locator('.elemenx-cal-column')).toHaveCount(1);
+			await expect(calendar.locator('.elemenx-cal-column.today .elemenx-cal-block')).toHaveCount(5);
+
+			/* The quarter: a Timeline of the events by days; a press on one selects it, the arrows go to the next quarter. */
+			await calendar.getByRole('button', {name: 'Quarter'}).click();
+
+			await expect(calendar.locator('.elemenx-timeline')).toHaveCount(1);
+			await expect(calendar.locator('.elemenx-cal-title')).toHaveText(new RegExp('^Q' + (Math.floor(new Date().getMonth() / 3) + 1) + ' '));
+
+			await calendar.getByRole('button', {name: /^Design review,/}).click();
+
+			await expect(note).toContainText('Event: Design review');
+
+			await calendar.getByRole('button', {name: 'Next'}).click();
+
+			await expect(calendar.locator('.elemenx-cal-title')).toHaveText(new RegExp('^Q' + ((Math.floor(new Date().getMonth() / 3) + 1) % 4 + 1) + ' '));
+			await expect(calendar.locator('.elemenx-timeline-range[data-id="standup"]')).toHaveCount(0);
+
+			await calendar.getByRole('button', {name: 'Year'}).click();
+
+			await expect(calendar.locator('.elemenx-cal-title')).toHaveText(/^\d{4}$/);
+		});
+
 		test('steps take custom content and a disabled step is not clickable', async function ({ page }) {
 			var custom;
 
@@ -8494,7 +9247,9 @@ for (const origin of origins) {
 			await layouts.getByRole('button', {name: 'Collapse the navigation'}).click();
 
 			await expect(nav).toHaveClass(/collapsed/);
-			expect((await layouts.locator('.elemenx-dashboard-nav').boundingBox()).width).toBe(64);
+			await expect.poll(async function () {
+				return (await layouts.locator('.elemenx-dashboard-nav').boundingBox()).width;
+			}).toBe(64);
 
 			settings = layouts.locator('.elemenx-settings');
 

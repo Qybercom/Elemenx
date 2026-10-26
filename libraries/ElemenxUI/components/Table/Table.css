@@ -190,3 +190,17 @@ button.elemenx-table-twisty:hover {
 		font-size: var(--elemenx-font-size-field);
 	}
 }
+
+/* The Checkbox of a row (and of them all): its box alone, its label for a screen reader only. */
+.elemenx-table-check-box {
+	display: inline-flex;
+}
+
+.elemenx-table-check-box .elemenx-check-text {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+	clip-path: inset(50%);
+	white-space: nowrap;
+}

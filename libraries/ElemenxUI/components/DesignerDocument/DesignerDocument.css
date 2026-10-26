@@ -81,3 +81,8 @@
 	color: var(--elemenx-danger);
 	background: var(--elemenx-surface-hover);
 }
+
+/* The place of the Button that adds a prop. */
+.elemenx-designer-document-add {
+	display: contents;
+}

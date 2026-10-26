@@ -1,14 +1,17 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, describe, expect, it } from 'vitest';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import url from 'url';
 import { createRequire } from 'module';
 import Builder from '../../tools/builder.js';
+import { Sandbox } from './sandbox.mjs';
 
 var require = createRequire(import.meta.url);
-var project = path.resolve(process.cwd(), 'tests', 'dist', 'single-project');
-var output = path.resolve(process.cwd(), 'tests', 'dist', 'electron-output');
+/* A copy of the project of its own: its fakes of Electron go into its node_modules, its builds next to it. */
+var sandbox = Sandbox('electron');
+var project = sandbox.Project;
+var output = path.join(sandbox.Root, 'electron-output');
 var modules = path.join(project, 'node_modules');
 
 function write (file, text) {
@@ -358,6 +361,10 @@ function fakeElectron () {
 }
 
 describe('Builder: a desktop program (Electron)', function () {
+	afterAll(function () {
+		fs.rmSync(sandbox.Root, {recursive: true, force: true});
+	});
+
 	afterEach(function () {
 		fs.rmSync(output, {recursive: true, force: true});
 		fs.rmSync(modules, {recursive: true, force: true});
@@ -671,6 +678,11 @@ describe('Builder: a desktop program (Electron)', function () {
 			expect([cards.Visible, cards.Inactive]).toEqual([true, true]);
 			expect(cards.Bounds).toMatchObject({width: 360, height: 200, x: 1920 - 360, y: process.platform === 'darwin' ? 0 : 1040 - 200});
 
+			/* Another corner of the screen, as Native.Notifications asks. */
+			bridge(fake.Event(0), 'notifications', {Show: true, Corner: 'top-left'});
+
+			expect(cards.Bounds).toMatchObject({x: 0, y: 0});
+
 			bridge(fake.Event(0), 'notifications', {Show: false});
 
 			expect(cards.Visible).toBe(false);
@@ -705,7 +717,7 @@ describe('Builder: a desktop program (Electron)', function () {
 			/* The window: on the scheme of the Application, with the bridge of preload.js, its features in the arguments. */
 			expect(fake.Schemes[0]).toEqual({scheme: 'app', privileges: {standard: true, secure: true, supportFetchAPI: true, corsEnabled: true}});
 			expect(fake.Windows[0].Loaded).toBe('app://bundle/index.html');
-			expect(fake.Windows[0].Options.webPreferences).toEqual({contextIsolation: true, sandbox: true, preload: path.join(folder, 'preload.js'), additionalArguments: ['--elemenx-features=window,dialogs,menu,external', '--elemenx-frame=system', '--elemenx-material=none']});
+			expect(fake.Windows[0].Options.webPreferences).toEqual({contextIsolation: true, sandbox: true, autoplayPolicy: 'no-user-gesture-required', preload: path.join(folder, 'preload.js'), additionalArguments: ['--elemenx-features=window,dialogs,menu,external', '--elemenx-frame=system', '--elemenx-material=none']});
 
 			/* The files: from the folder of the Application only (a decoded slash cannot lead out of it). */
 			handler = fake.Protocols.app;

@@ -107,7 +107,7 @@
 				<button type="button" class="elemenx-designer-settings-remove" [attribute.title]="$T('ui.designer.project.remove')" [attribute.aria-label]="$T('ui.designer.project.remove')" [attribute.data-route]="route.ID" (click)="RouteRemoved"><Icon Name="delete" Size="16" /></button>
 			</div>
 			<div>
-				<button type="button" class="elemenx-button secondary small elemenx-designer-settings-add-route" (click)="RouteAdded"><Icon Name="add" Size="14" /><span class="elemenx-button-label">{{$T('ui.designer.project.addRoute')}}</span></button>
+				<span class="elemenx-designer-settings-add-route"><Button Size="small" Icon="add" [label]="$T('ui.designer.project.addRoute')" (click)="RouteAdded" /></span>
 			</div>
 		</div>
 		<h3 class="elemenx-subtitle">{{$T('ui.designer.project.guards')}}</h3>
@@ -126,11 +126,11 @@
 			<CodeEditor Language="javascript" Rows="6" [name]="guard.Name + '|Code'" [value]="guard.Code" (change)="Guarded" />
 			<code class="elemenx-designer-settings-signature">});</code>
 			<div>
-				<button type="button" class="elemenx-button ghost small elemenx-designer-settings-remove-guard" [attribute.data-guard]="guard.Name" (click)="GuardRemoved"><Icon Name="delete" Size="14" /><span class="elemenx-button-label">{{$T('ui.designer.project.remove')}}</span></button>
+				<span class="elemenx-designer-settings-remove-guard" [attribute.data-guard]="guard.Name"><Button Variant="ghost" Size="small" Icon="delete" [label]="$T('ui.designer.project.remove')" (click)="GuardRemoved" /></span>
 			</div>
 		</div>
 		<div>
-			<button type="button" class="elemenx-button secondary small elemenx-designer-settings-add-guard" (click)="GuardAdded"><Icon Name="add" Size="14" /><span class="elemenx-button-label">{{$T('ui.designer.project.addGuard')}}</span></button>
+			<span class="elemenx-designer-settings-add-guard"><Button Size="small" Icon="add" [label]="$T('ui.designer.project.addGuard')" (click)="GuardAdded" /></span>
 		</div>
 	</div>
 </div>

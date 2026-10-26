@@ -2,6 +2,10 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { loadElemenx, resetDOM, tick } from '../setup.js';
 import hostSource from '../../libraries/ElemenxUI/components/NotificationHost/NotificationHost.js?raw';
 import hostTemplate from '../../libraries/ElemenxUI/components/NotificationHost/NotificationHost.html?raw';
+import inviteSource from '../../libraries/ElemenxUI/components/CallInvite/CallInvite.js?raw';
+import inviteTemplate from '../../libraries/ElemenxUI/components/CallInvite/CallInvite.html?raw';
+import buttonSource from '../../libraries/ElemenxUI/components/Button/Button.js?raw';
+import buttonTemplate from '../../libraries/ElemenxUI/components/Button/Button.html?raw';
 
 var calls;
 
@@ -37,6 +41,15 @@ describe('Contract: Native.Notify, the notifications of the system or of Elemenx
 
 		new Function(hostSource.replace("$StyleURL: 'NotificationHost.css',\n", '').replace("$TemplateURL: 'NotificationHost.html'", function () {
 			return '$Template: ' + JSON.stringify(hostTemplate);
+		}))();
+
+		new Function(inviteSource.replace("$StyleURL: 'CallInvite.css',\n", '').replace("$TemplateURL: 'CallInvite.html'", function () {
+			return '$Template: ' + JSON.stringify(inviteTemplate);
+		}))();
+
+		/* The Buttons of the actions and of the invitation. */
+		new Function(buttonSource.replace("$StyleURL: 'Button.css',\n", '').replace("$TemplateURL: 'Button.html'", function () {
+			return '$Template: ' + JSON.stringify(buttonTemplate);
 		}))();
 
 		native = Elemenx.Service('Native');
@@ -85,7 +98,7 @@ describe('Contract: Native.Notify, the notifications of the system or of Elemenx
 		expect(card.querySelector('.elemenx-notification-title').textContent).toBe('New mail');
 		expect(card.querySelector('.elemenx-notification-text').textContent).toBe('Ada wrote');
 		expect(Array.prototype.map.call(card.querySelectorAll('.elemenx-notification-actions button'), function (button) {
-			return button.textContent;
+			return button.textContent.trim();
 		})).toEqual(['Open', 'Later']);
 
 		/* A button: the action event, and the card goes. */
@@ -198,6 +211,122 @@ describe('Contract: Native.Notify, the notifications of the system or of Elemenx
 			window.open = open;
 
 			frame.remove();
+		}
+	});
+
+	it('stacks its cards as toasts: one of an ID updated in place, a limit past which they are counted, the newest next to the corner', async function () {
+		var labels = function () {
+			return Array.prototype.map.call(document.querySelectorAll('.elemenx-notification-title'), function (node) {
+				return node.textContent;
+			});
+		};
+
+		native.Notifications({Limit: 2, Corner: 'top-left'});
+
+		native.Notify({ID: 'one', Title: 'One', Look: 'elemenx', Timeout: 0});
+		native.Notify({ID: 'upload', Title: 'Upload', Progress: 0.2, Look: 'elemenx', Timeout: 0});
+		native.Notify({ID: 'three', Title: 'Three', Look: 'elemenx', Timeout: 0});
+
+		await tick(20);
+
+		/* Two shown, the newest last (next to the corner); one counted. */
+		expect(labels()).toEqual(['Upload', 'Three']);
+		expect(document.querySelector('.elemenx-notification-more').textContent).toBe(Elemenx.Locale.Text('ui.notifications.more', {count: 1}));
+		expect(document.querySelector('.elemenx-notification-host').classList.contains('top-left')).toBe(true);
+
+		/* The same ID: in its place, its progress new. */
+		native.Notify({ID: 'upload', Title: 'Upload', Progress: 0.8, Look: 'elemenx', Timeout: 0});
+
+		await tick(20);
+
+		expect(labels()).toEqual(['Upload', 'Three']);
+		expect(document.querySelector('.elemenx-notification-progress > span').style.width).toBe('80%');
+
+		/* Taken away by the Application: the one counted shows again. */
+		expect(native.CloseNotification('three')).toBe(true);
+		expect(native.CloseNotification('three')).toBe(false);
+
+		await tick(20);
+
+		expect(labels()).toEqual(['One', 'Upload']);
+		expect(document.querySelectorAll('.elemenx-notification-more').length).toBe(0);
+
+		native.Notifications({Limit: 4, Corner: 'bottom-right'});
+	});
+
+	it('holds the time of a card while the pointer is over it, and shows the time it has left', async function () {
+		var card;
+
+		native.Notify({ID: 'held', Title: 'Held', Look: 'elemenx', Timeout: 80});
+
+		await tick(20);
+
+		card = document.querySelector('.elemenx-notification');
+
+		expect(card.classList.contains('timed')).toBe(true);
+		expect(card.querySelector('.elemenx-notification-timer')).not.toBe(null);
+
+		card.dispatchEvent(new MouseEvent('mouseenter'));
+
+		await tick(150);
+
+		expect(document.querySelectorAll('.elemenx-notification').length).toBe(1);
+		expect(card.classList.contains('held')).toBe(true);
+
+		card.dispatchEvent(new MouseEvent('mouseleave'));
+
+		await tick(150);
+
+		expect(document.querySelectorAll('.elemenx-notification').length).toBe(0);
+		expect(heard).toEqual([{ID: 'held', Kind: 'timeout', Action: null}]);
+	});
+
+	it('draws a card of a Component of its own, as an invitation to a call: over the limit, its sound until it goes, its choice told', async function () {
+		var original = window.Audio;
+		var sounds = [];
+
+		window.Audio = function (url) {
+			var sound = {URL: url, Playing: false, play: function () {
+				sound.Playing = true;
+
+				return Promise.resolve();
+			}, pause: function () {
+				sound.Playing = false;
+			}};
+
+			sounds.push(sound);
+
+			return sound;
+		};
+
+		try {
+			native.Notifications({Limit: 1});
+
+			native.Notify({ID: 'mail', Title: 'Mail', Look: 'elemenx', Timeout: 0});
+			native.Notify({ID: 'call', Look: 'elemenx', Component: 'CallInvite', Props: {Name: 'Ada Lovelace', Video: true}, Bare: true, Priority: 'high', Timeout: 0, Sound: '/ring.mp3', Loop: true});
+
+			await tick(30);
+
+			/* The invitation shows past the limit, next to the corner; the mail is counted. */
+			expect(document.querySelectorAll('.elemenx-notification').length).toBe(1);
+			expect(document.querySelector('.elemenx-notification').classList.contains('bare')).toBe(true);
+			expect(document.querySelector('.elemenx-call-invite-name').textContent).toBe('Ada Lovelace');
+			expect(document.querySelectorAll('.elemenx-call-invite-button button').length).toBe(3);
+			expect([sounds[0].URL, sounds[0].loop, sounds[0].Playing]).toEqual(['/ring.mp3', true, true]);
+
+			/* Accepted with the camera: the action told, the card and its sound gone, the mail back. */
+			document.querySelectorAll('.elemenx-call-invite-button button')[2].click();
+
+			await tick(30);
+
+			expect(heard).toEqual([{ID: 'call', Kind: 'action', Action: 'accept-video'}]);
+			expect(sounds[0].Playing).toBe(false);
+			expect(document.querySelector('.elemenx-notification-title').textContent).toBe('Mail');
+		}
+		finally {
+			window.Audio = original;
+
+			native.Notifications({Limit: 4});
 		}
 	});
 

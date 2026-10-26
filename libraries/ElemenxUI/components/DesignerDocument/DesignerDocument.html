@@ -42,10 +42,7 @@
 					<span>{{$T('ui.designer.project.default')}}</span>
 					<input type="text" class="elemenx-designer-document-input" [value]="row.Default" [attribute.data-index]="row.Index" data-key="Default" (change)="Propped" />
 				</label>
-				<label class="elemenx-designer-document-key" *if="row.Type === 'bool'">
-					<span>{{$T('ui.designer.project.default')}}</span>
-					<input type="checkbox" [checked]="row.Default" [attribute.data-index]="row.Index" data-key="Default" (change)="Propped" />
-				</label>
+				<span class="elemenx-designer-document-key" *if="row.Type === 'bool'" [attribute.data-index]="row.Index" data-key="Default" (change)="Propped"><Checkbox Size="small" [label]="$T('ui.designer.project.default')" [checked]="!!row.Default" /></span>
 				<label class="elemenx-designer-document-key" *if="row.Type === 'select'">
 					<span>{{$T('ui.designer.project.options')}}</span>
 					<input type="text" class="elemenx-designer-document-input" [value]="row.Options" [attribute.data-index]="row.Index" data-key="Options" (change)="Propped" />
@@ -58,7 +55,7 @@
 			</div>
 			<p class="elemenx-text small danger" *if="Wrong === 'Props'">{{$T('ui.designer.project.propTaken')}}</p>
 			<div>
-				<button type="button" class="elemenx-button ghost small elemenx-designer-document-add" (click)="Added"><Icon Name="add" Size="14" /><span class="elemenx-button-label">{{$T('ui.designer.project.addProp')}}</span></button>
+				<span class="elemenx-designer-document-add"><Button Variant="ghost" Size="small" Icon="add" [label]="$T('ui.designer.project.addProp')" (click)="Added" /></span>
 			</div>
 		</div>
 		<div class="elemenx-designer-document-slots" *if="Current(Version).Type === 'component'">

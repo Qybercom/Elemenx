@@ -41,12 +41,14 @@ Elemenx.Component('Input', {
 			Clearable: 'Adds a button that clears the value.',
 			Revealed: 'Shows the password.',
 			Guarded: 'Asks before the eye shows the password.',
-			HideAfter: 'Hides the password again after so many milliseconds (0: never).'
+			HideAfter: 'Hides the password again after so many milliseconds (0: never).',
+			Label: 'The name of the field for screen readers, when no Field names it.'
 		},
 		Sample: {Placeholder: 'Search', Icon: 'search', Clearable: true}
 	},
 	Type: 'text',
 	Value: '',
+	Label: '',
 	Placeholder: '',
 	Size: 'medium',
 	Shape: 'default',

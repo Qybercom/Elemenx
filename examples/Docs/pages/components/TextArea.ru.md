@@ -1,13 +1,14 @@
 <!-- generated -->
 # TextArea
 
-Поле из нескольких строк текста. Value, Placeholder, Rows (высота в строках), MaxLength. Resize: vertical (нижний край, по умолчанию), both (угол) или none; AutoSize вместо этого растит поле вместе с текстом. Shape, Name, Disabled, ReadOnly и Invalid — как в Input. События: input (Value, при вводе), change (Value, при подтверждении).
+Поле из нескольких строк текста. Value, Placeholder, Rows (высота в строках), MaxLength. Resize: vertical (нижний край, по умолчанию), both (угол) или none; AutoSize вместо этого растит поле вместе с текстом. Shape, Name, Disabled, ReadOnly и Invalid — как в Input. События: input (Value, при вводе), change (Value, при подтверждении). Label — имя поля для скринридера, когда его не называет Field.
 
 ## Свойства
 
 | Свойство | По умолчанию |
 | --- | --- |
 | `Value` | `''` |
+| `Label` | `''` |
 | `Placeholder` | `''` |
 | `Rows` | `3` |
 | `MaxLength` | `null` |

@@ -28,63 +28,15 @@
 	margin-top: -56px;
 }
 
+/* The place of its Avatar (its presence the dot of the Avatar), ringed by the surface on a card, over the cover. */
 .elemenx-profile-avatar {
-	position: relative;
 	display: inline-flex;
-	align-items: center;
-	justify-content: center;
 	flex: none;
-	width: var(--elemenx-control-large);
-	height: var(--elemenx-control-large);
-	background: var(--elemenx-surface-hover);
 	border-radius: 50%;
-	color: var(--elemenx-text-muted);
-	font-weight: var(--elemenx-font-weight-strong);
 }
 
 .elemenx-profile.card .elemenx-profile-avatar {
-	width: 80px;
-	height: 80px;
 	border: 4px solid var(--elemenx-surface);
-	font-size: 24px;
-	line-height: 32px;
-}
-
-.elemenx-profile-avatar img {
-	width: 100%;
-	height: 100%;
-	border-radius: 50%;
-	object-fit: cover;
-}
-
-.elemenx-profile-status {
-	position: absolute;
-	inset-inline-end: 0;
-	bottom: 0;
-	width: 12px;
-	height: 12px;
-	background: var(--elemenx-text-muted);
-	border: 2px solid var(--elemenx-surface);
-	border-radius: 50%;
-}
-
-.elemenx-profile.card .elemenx-profile-status {
-	inset-inline-end: 4px;
-	bottom: 4px;
-	width: 16px;
-	height: 16px;
-}
-
-.elemenx-profile-status.online {
-	background: var(--elemenx-success);
-}
-
-.elemenx-profile-status.away {
-	background: var(--elemenx-warning);
-}
-
-.elemenx-profile-status.busy {
-	background: var(--elemenx-danger);
 }
 
 .elemenx-profile-names {

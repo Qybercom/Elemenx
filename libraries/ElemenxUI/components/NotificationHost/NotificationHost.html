@@ -1,17 +1,21 @@
 <div class="elemenx-notification-frame">
 	<i hidden *mount="Sized(Items)"></i>
-	<section class="elemenx-notification-host" aria-live="polite" [class.page]="!!Page">
-		<article class="elemenx-notification" role="status" tabindex="0" *for="item of Items" *key="item.ID" [class]="[item.Variant || '']" [attribute.data-id]="item.ID" (click)="Pressed">
-			<img class="elemenx-notification-image" *if="item.Image" [attribute.src]="item.Image" alt="" />
-			<span class="elemenx-notification-icon" *if="item.Icon && !item.Image"><Icon [name]="item.Icon" /></span>
-			<div class="elemenx-notification-body">
+	<section class="elemenx-notification-host" aria-live="polite" [class.page]="!!Page" [class]="[Page ? Corner || 'bottom-right' : '']">
+		<div class="elemenx-notification-more" *if="More">{{$T('ui.notifications.more', {count: More})}}</div>
+		<article class="elemenx-notification" role="status" tabindex="0" *for="item of Items" *key="item.ID" [class]="[item.Variant || '', item.Bare ? 'bare' : '', item.Duration ? 'timed' : '']" [style.--elemenx-notification-duration]="(item.Duration || 0) + 'ms'" [attribute.data-id]="item.ID" (click)="Pressed" (mouseenter)="Entered" (mouseleave)="Left">
+			<div class="elemenx-notification-custom" *if="item.Component" *mount="Custom(item)"></div>
+			<img class="elemenx-notification-image" *if="!item.Component && item.Image" [attribute.src]="item.Image" alt="" />
+			<span class="elemenx-notification-icon" *if="!item.Component && item.Icon && !item.Image"><Icon [name]="item.Icon" /></span>
+			<div class="elemenx-notification-body" *if="!item.Component">
 				<strong class="elemenx-notification-title" *if="item.Title">{{item.Title}}</strong>
 				<span class="elemenx-notification-text" *if="item.Text">{{item.Text}}</span>
+				<span class="elemenx-notification-progress" *if="item.Progress !== undefined && item.Progress !== null" role="progressbar" aria-valuemin="0" aria-valuemax="100" [attribute.aria-valuenow]="Math.round(item.Progress * 100)"><span [style.width]="Percent(item.Progress)"></span></span>
 				<div class="elemenx-notification-actions" *if="item.Actions && item.Actions.length">
-					<button class="elemenx-button small" type="button" *for="action of item.Actions" *key="action.ID" [class]="[$index === 0 ? 'primary' : 'secondary']" [attribute.data-index]="$index" (click)="Acted">{{action.Label}}</button>
+					<span class="elemenx-notification-action" *for="action of item.Actions" *key="action.ID" [attribute.data-index]="$index"><Button Size="small" [label]="action.Label" [variant]="$index === 0 ? 'primary' : 'secondary'" (click)="Acted" /></span>
 				</div>
 			</div>
-			<button class="elemenx-notification-close" type="button" [attribute.aria-label]="$T('ui.common.close')" (click)="Closed"><Icon Name="close" /></button>
+			<button class="elemenx-notification-close" type="button" *if="!item.Bare" [attribute.aria-label]="$T('ui.common.close')" (click)="Closed"><Icon Name="close" /></button>
+			<span class="elemenx-notification-timer" aria-hidden="true" *for="stamp of item.Duration ? [item.Stamp || 0] : []" *key="stamp"></span>
 		</article>
 	</section>
 </div>

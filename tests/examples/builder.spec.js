@@ -32,7 +32,8 @@ async function open (page) {
 
 	await page.goto(origin + '/');
 
-	await expect(page.locator('.elemenx-ribbon-gallery-item[data-id="Button"]').first()).toBeAttached();
+	/* The Builder is a large page: beside the other workers its development build may take more than 10 seconds. */
+	await expect(page.locator('.elemenx-ribbon-gallery-item[data-id="Button"]').first()).toBeAttached({timeout: 60000});
 	await expect(page.locator('.builder-find input')).toBeVisible();
 }
 
@@ -332,6 +333,9 @@ test.describe('Elemenx builder', function () {
 		/* A text without an element is refused; the page stays. */
 		await backstage(page, 'Import');
 
+		/* The field of the template is named for a screen reader. */
+		await expect(page.locator('.elemenx-ribbon-backstage.open').getByRole('textbox', {name: 'Template'})).toBeVisible();
+
 		await page.locator('.elemenx-ribbon-backstage.open textarea').fill('just words');
 		await page.locator('.builder-import').click();
 
@@ -389,7 +393,7 @@ test.describe('Elemenx builder', function () {
 		/* The search keeps the kinds whose name holds its text, and says when none does. */
 		await page.locator('.builder-find input').fill('game');
 
-		await expect(found).toHaveCount(13);
+		await expect(found).toHaveCount(19);
 		await expect(found.filter({hasText: 'GameBar'})).toHaveCount(1);
 
 		await page.locator('.builder-find input').fill('nothing like it');
@@ -674,7 +678,9 @@ test.describe('Elemenx builder', function () {
 
 		await page.locator('.elemenx-ribbon [data-command="stop"]').click();
 
-		/* The language is a list in the header. */
+		/* The language is a list in the header, named. */
+		await expect(page.locator('.builder-language').getByRole('combobox', {name: 'Language'})).toBeVisible();
+
 		await page.locator('.builder-language .elemenx-select').click();
 		await page.getByRole('option', {name: 'Русский'}).click();
 
