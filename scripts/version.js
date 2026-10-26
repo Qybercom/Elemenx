@@ -25,6 +25,9 @@ var Wrapper = path.join(Root, 'packages', 'elemenx', 'package.json');
 var Framework = path.join(Root, 'elemenx.js');
 /* The example that installs the package from npm: it depends on the minor version (^0.10.0), as a site would. */
 var Example = path.join(Root, 'examples', 'Advanced', 'package.json');
+/* The extensions of the editors: the version of Elemenx, so a release of Elemenx is one of them too. */
+var VSCode = path.join(Root, 'editors', 'vscode', 'package.json');
+var IntelliJ = path.join(Root, 'editors', 'intellij', 'build.gradle.kts');
 
 function read (file) {
 	return JSON.parse(fs.readFileSync(file, 'utf8'));
@@ -67,6 +70,13 @@ function frameworkVersion () {
 	return match ? match[1] : null;
 }
 
+/* The versions of the extensions of the editors, or null for one that is not there. */
+function editorVersions () {
+	var gradle = fs.existsSync(IntelliJ) ? /\nversion = "([^"]*)"/.exec(fs.readFileSync(IntelliJ, 'utf8')) : null;
+
+	return {VSCode: fs.existsSync(VSCode) ? read(VSCode).version : null, IntelliJ: gradle ? gradle[1] : null};
+}
+
 /* The range the example depends on for a version: ^0.10.0 for 0.10.3. */
 function range (version) {
 	return '^' + version.replace(/\.\d+$/, '.0');
@@ -89,6 +99,12 @@ function sync () {
 		fs.writeFileSync(Example, example.replace(new RegExp('("' + main.name.replace(/[.*+?^${}()|[\]\\\/]/g, '\\$&') + '"\\s*:\\s*")[^"]*(")'), '$1' + range(main.version) + '$2'));
 	}
 
+	if (fs.existsSync(VSCode))
+		fs.writeFileSync(VSCode, fs.readFileSync(VSCode, 'utf8').replace(/(\n\t"version": ")[^"]*(")/, '$1' + main.version + '$2'));
+
+	if (fs.existsSync(IntelliJ))
+		fs.writeFileSync(IntelliJ, fs.readFileSync(IntelliJ, 'utf8').replace(/(\nversion = ")[^"]*(")/, '$1' + main.version + '$2'));
+
 	if (fs.existsSync(Framework))
 		fs.writeFileSync(Framework, fs.readFileSync(Framework, 'utf8').replace(/(\n\tvar Version = ')[^']*(';)/, '$1' + main.version + '$2'));
 
@@ -99,7 +115,8 @@ function sync () {
 
 /*
  * Puts a version in every place that holds it: package.json, package-lock.json, packages/elemenx (its version and its
- * dependency on @qybercom/elemenx), the dependency of examples/Advanced (^ its minor version). It takes a version or patch, minor, major, prerelease; without one it puts the
+ * dependency on @qybercom/elemenx), the dependency of examples/Advanced (^ its minor version), and the extensions of
+ * the editors (editors/vscode and editors/intellij). It takes a version or patch, minor, major, prerelease; without one it puts the
  * version of package.json everywhere (after package.json was changed by hand). It commits and tags nothing.
  */
 function set (value) {
@@ -134,6 +151,12 @@ function tag () {
 
 	if (fs.existsSync(Example) && read(Example).dependencies[main.name] !== range(main.version))
 		wrong.push('examples/Advanced/package.json depends on ' + main.name + ' ' + read(Example).dependencies[main.name]);
+
+	if (editorVersions().VSCode !== null && editorVersions().VSCode !== main.version)
+		wrong.push('editors/vscode/package.json has the version ' + editorVersions().VSCode);
+
+	if (editorVersions().IntelliJ !== null && editorVersions().IntelliJ !== main.version)
+		wrong.push('editors/intellij/build.gradle.kts has the version ' + editorVersions().IntelliJ);
 
 	if (lock().version !== main.version)
 		wrong.push('package-lock.json has the version ' + lock().version);

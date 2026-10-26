@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- The colors of a template of Elemenx in the light schemes (Default, IntelliJ Light): each 4.5:1 or more on white. -->
+<list>
+	<option name="ELEMENX_COMPONENT">
+		<value>
+			<option name="FOREGROUND" value="0e7c86" />
+			<option name="FONT_TYPE" value="1" />
+		</value>
+	</option>
+	<option name="ELEMENX_BINDING">
+		<value>
+			<option name="FOREGROUND" value="871094" />
+		</value>
+	</option>
+	<option name="ELEMENX_EVENT">
+		<value>
+			<option name="FOREGROUND" value="00627a" />
+		</value>
+	</option>
+	<option name="ELEMENX_DIRECTIVE">
+		<value>
+			<option name="FOREGROUND" value="0033b3" />
+			<option name="FONT_TYPE" value="1" />
+		</value>
+	</option>
+	<option name="ELEMENX_INTERPOLATION">
+		<value>
+			<option name="FOREGROUND" value="0033b3" />
+			<option name="FONT_TYPE" value="1" />
+		</value>
+	</option>
+	<option name="ELEMENX_REF">
+		<value>
+			<option name="FOREGROUND" value="9e5800" />
+			<option name="FONT_TYPE" value="2" />
+		</value>
+	</option>
+</list>

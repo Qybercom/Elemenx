@@ -19,7 +19,15 @@
 var fs = require('fs');
 var path = require('path');
 
-var Skipped = {'node_modules': true, 'dist': true, '.git': true, 'build': true, '.gradle': true, '.idea': true, '.vscode': true, 'coverage': true, 'test-results': true, 'playwright-report': true, '.vitest': true};
+var Skipped = {'node_modules': true, 'dist': true, '.git': true, 'build': true, '.gradle': true, '.idea': true, '.vscode': true, 'coverage': true, 'test-results': true, 'playwright-report': true, '.vitest': true, 'android': true, 'ios': true};
+
+/*
+ * A build, not a source: a minified file, or one with the banner of a build of Elemenx (/*! Elemenx 0.10.1, /*! ElemenxUI):
+ * its copies of the Components and directives of the Libraries are no definitions (regression: *tip went into a bundle).
+ */
+function built (file, source) {
+	return /\.min\.m?js$/.test(file) || /^\/\*! Elemenx(UI)? \d/.test(source);
+}
 
 /* The directives of the core, beside the ones of the Libraries. */
 var CoreDirectives = [
@@ -296,6 +304,42 @@ function definitions (source, file) {
 }
 
 /* The meta.json of the Libraries a project uses: of its own (a Library of it), of the package of Elemenx, or the one given. */
+/* The file of a folder of that name, whatever its case (Mount.js for the directive mount), or null. */
+function fileOf (folder, name) {
+	var names;
+
+	try {
+		names = fs.readdirSync(folder);
+	}
+	catch (error) {
+		return null;
+	}
+
+	return names.filter(function (each) {
+		return lower(each) === lower(name);
+	}).map(function (each) {
+		return path.join(folder, each);
+	})[0] || null;
+}
+
+/* elemenx.js of a project: at its root (the repository of Elemenx), in its package, or the copy of the extension; null without one. */
+function frameworkFile (roots) {
+	var found = null;
+
+	roots.forEach(function (root) {
+		[path.join(root, 'elemenx.js'), path.join(root, 'node_modules', '@qybercom', 'elemenx', 'elemenx.js')].forEach(function (file) {
+			if (!found && exists(file))
+				found = file;
+		});
+	});
+
+	/* The copy the extension carries, for a project with a build of dist alone. */
+	if (!found && exists(path.join(__dirname, 'elemenx.js')))
+		found = path.join(__dirname, 'elemenx.js');
+
+	return found;
+}
+
 function metaFiles (roots, given) {
 	var found = [];
 
@@ -324,7 +368,10 @@ function metaFiles (roots, given) {
 		});
 	});
 
-	/* The copy the extension carries: the library of the version it was made with. */
+	/* The copy the extension carries, the Library of its version with its sources (a project with the builds of dist alone has none). */
+	if (!found.length)
+		add(path.join(__dirname, 'library', 'data', 'meta.json'));
+
 	if (!found.length)
 		add(path.join(__dirname, 'meta.json'));
 
@@ -384,7 +431,7 @@ function Create (options) {
 			});
 
 			(data.Directives || []).forEach(function (directive) {
-				library.Directives[lower(directive.Name)] = {Name: directive.Name, Description: directive.Description || ''};
+				library.Directives[lower(directive.Name)] = {Name: directive.Name, Description: directive.Description || '', File: fileOf(path.join(base, 'directives'), directive.Name + '.js')};
 			});
 		});
 	}
@@ -392,7 +439,7 @@ function Create (options) {
 	function scanFile (file, text) {
 		var source = text === undefined ? read(file) : text;
 
-		if (source === null || source.length > 4000000 || source.indexOf('Elemenx.') === -1) {
+		if (source === null || source.length > 4000000 || source.indexOf('Elemenx.') === -1 || built(file, source)) {
 			delete project[file];
 
 			return;
@@ -524,6 +571,14 @@ function Create (options) {
 			var result = CoreDirectives.slice();
 			var key;
 
+			/* The directives of a Library with their file first: a copy of one in a bundle of the project (a build) is no definition. */
+			for (key in library.Directives) {
+				if (library.Directives[key].File && !result.some(function (directive) {
+					return lower(directive.Name) === key;
+				}))
+					result.push(library.Directives[key]);
+			}
+
 			Object.keys(project).forEach(function (file) {
 				project[file].Directives.forEach(function (each) {
 					if (!result.some(function (known) {
@@ -552,6 +607,10 @@ function Create (options) {
 			});
 
 			return result;
+		},
+		/* elemenx.js, where the core directives are (*if, *for...). */
+		Framework: function () {
+			return frameworkFile(roots);
 		},
 		Empty: function () {
 			return !Object.keys(library.Components).length && !Object.keys(project).length;
@@ -834,6 +893,22 @@ function candidates (knowledge, text, offset, language, file) {
 	var bound;
 
 	if (language === 'js') {
+		/* $Ref('...'): the references (#Name) of the template of the Component of the file. */
+		found = /\$Ref\(\s*['"]([\w$-]*)$/.exec(text.substring(Math.max(0, offset - 200), offset));
+
+		if (found) {
+			own = templateOf(file, text);
+
+			(own ? refs(own.Text) : []).forEach(function (each) {
+				if (starts(each.Name, found[1]) && !items.some(function (item) {
+					return item.Label === each.Name;
+				}))
+					items.push({Label: each.Name, Kind: 'field', Detail: '#' + each.Name + ' · ' + path.basename(own.File), Documentation: 'The element of the template with #' + each.Name + '.', Insert: each.Name, Start: offset - found[1].length, End: offset});
+			});
+
+			return items;
+		}
+
 		found = /(\$Service|Elemenx\.Service)\(\s*['"]([\w]*)$/.exec(text.substring(Math.max(0, offset - 200), offset));
 
 		if (!found)
@@ -941,6 +1016,65 @@ function candidates (knowledge, text, offset, language, file) {
 	return items;
 }
 
+/* The template of the Component of a file of code: its $TemplateURL beside it, or the .html of its name. {File, Text} or null. */
+function templateOf (file, source) {
+	var url = /\$TemplateURL\s*:\s*(['"])([^'"]+)\1/.exec(source || '');
+	var candidate;
+	var text;
+
+	if (!file)
+		return null;
+
+	candidate = url ? path.resolve(path.dirname(file), url[2]) : file.replace(/\.js$/, '.html');
+	text = read(candidate);
+
+	return text === null ? null : {File: candidate, Text: text};
+}
+
+/* The references of a template: #Name on its elements, [{Name, Start, End}] (the attribute, with its #). */
+function refs (text) {
+	var found = [];
+
+	scan(text, -1).Tags.forEach(function (tag) {
+		tag.Attributes.forEach(function (attribute) {
+			if (attribute.Name.charAt(0) === '#' && attribute.Name.length > 1)
+				found.push({Name: attribute.Name.substring(1), Start: attribute.Start, End: attribute.End});
+		});
+	});
+
+	return found;
+}
+
+/* The $Ref('Name') of the code under offset: {Name, Start, End} of the name, or null. */
+function refAt (text, offset) {
+	var pattern = /\$Ref\(\s*(['"])([\w$-]*)\1/g;
+	var match;
+	var start;
+
+	while ((match = pattern.exec(text))) {
+		start = match.index + match[0].length - 1 - match[2].length;
+
+		if (offset >= start && offset <= start + match[2].length)
+			return {Name: match[2], Start: start, End: start + match[2].length};
+	}
+
+	return null;
+}
+
+/* The place of the first match of pattern in a file: {File, Line, Character} (at the text matched, past a new line), or null. */
+function place (file, pattern) {
+	var text = read(file);
+	var match = text === null ? null : pattern.exec(text);
+	var at;
+
+	if (!match)
+		return null;
+
+	at = match.index + (match[0].charAt(0) === '\n' ? match[0].search(/[^\s]/) : 0);
+
+	return {File: file, Line: Position(text, at).line, Character: Position(text, at).character};
+}
+
 function Complete (knowledge, text, offset, language, file) {
 	return candidates(knowledge, text, offset, language, file).map(function (item) {
 		item.Sort = Order[item.Kind] + (/^\[(attribute|class|style)\./.test(item.Label) ? '9' : /^\[/.test(item.Label) ? '1' : '0') + item.Label;
@@ -959,6 +1093,17 @@ function Hover (knowledge, text, offset, language, file) {
 	var word;
 
 	if (language === 'js') {
+		word = refAt(text, offset);
+
+		if (word) {
+			own = templateOf(file, text);
+			item = own ? refs(own.Text).filter(function (each) {
+				return each.Name === word.Name;
+			})[0] : null;
+
+			return item ? {Markdown: '**#' + item.Name + '** · the element of ' + path.basename(own.File) + '\n\n```html\n' + own.Text.split('\n')[lineOf(own.Text, item.Start)].trim() + '\n```', Start: word.Start, End: word.End} : null;
+		}
+
 		service = serviceAt(text, offset);
 		item = service ? knowledge.Service(service.Name) : null;
 
@@ -981,6 +1126,12 @@ function Hover (knowledge, text, offset, language, file) {
 	if (at.Kind === 'attribute-name' && at.Attribute) {
 		component = knowledge.Component(at.Tag.Name);
 		bound = binding(at.Attribute.Name);
+
+		if (at.Attribute.Name.charAt(0) === '#') {
+			own = owner(knowledge, file);
+
+			return {Markdown: '**' + at.Attribute.Name + '** · a reference: `this.$Ref(\'' + at.Attribute.Name.substring(1) + '\')`' + (own ? ' in ' + own.Name : '') + ' gives this element', Start: at.Attribute.Start, End: at.Attribute.End};
+		}
 
 		if (bound.Kind === 'directive') {
 			item = knowledge.Directives().filter(function (each) {
@@ -1029,6 +1180,18 @@ function Definition (knowledge, text, offset, language, file) {
 	var item;
 
 	if (language === 'js') {
+		word = refAt(text, offset);
+
+		/* $Ref('Name'): to #Name in the template. */
+		if (word) {
+			own = templateOf(file, text);
+			item = own ? refs(own.Text).filter(function (each) {
+				return each.Name === word.Name;
+			})[0] : null;
+
+			return item ? {File: own.File, Line: Position(own.Text, item.Start).line, Character: Position(own.Text, item.Start).character} : null;
+		}
+
 		service = serviceAt(text, offset);
 		item = service ? knowledge.Service(service.Name) : null;
 
@@ -1036,6 +1199,57 @@ function Definition (knowledge, text, offset, language, file) {
 	}
 
 	at = scan(text, offset).At;
+
+	/* *directive: to its Elemenx.Directive, or to its Register in elemenx.js (the core ones: *if, *for...). */
+	if (at.Kind === 'attribute-name' && at.Attribute && at.Attribute.Name.charAt(0) === '*') {
+		item = knowledge.Directives().filter(function (each) {
+			return lower(each.Name) === lower(at.Attribute.Name.substring(1).replace(/[.=].*$/, ''));
+		})[0];
+
+		if (!item)
+			return null;
+
+		if (item.File && item.Line !== undefined)
+			return {File: item.File, Line: item.Line, Character: 0};
+
+		/* A directive of a Library: its file, at its Elemenx.Directive. */
+		if (item.File)
+			return place(item.File, /Elemenx\.Directive\(/) || {File: item.File, Line: 0, Character: 0};
+
+		word = knowledge.Framework();
+
+		return word ? place(word, new RegExp('Directive\\.Register\\(\\s*([\'"])' + item.Name + '\\1')) : null;
+	}
+
+	/* A prop (Title, [Title]) or an event ((pick)) of a Component: to its key, or to the line that emits it. */
+	if (at.Kind === 'attribute-name' && at.Attribute && at.Tag && knowledge.Component(at.Tag.Name) && /^[\[(]?[A-Za-z]/.test(at.Attribute.Name)) {
+		component = knowledge.Component(at.Tag.Name);
+		word = binding(at.Attribute.Name);
+
+		if (!component.File) return null;
+
+		if (word.Kind === 'event')
+			return place(component.File, new RegExp('\\$Emit\\(\\s*([\'"])' + word.Name + '\\1')) || {File: component.File, Line: component.Line || 0, Character: 0};
+
+		item = prop(component, word.Name);
+
+		if (item && item.Line !== undefined && !component.Library)
+			return {File: component.File, Line: item.Line, Character: 0};
+
+		/* The key of the definition (one tab in), not the one of its $Meta; else any key of that name. */
+		return item ? place(component.File, new RegExp('\\n\\t' + item.Name + '\\s*:')) || place(component.File, new RegExp('\\n\\t+' + item.Name + '\\s*:')) || {File: component.File, Line: component.Line || 0, Character: 0} : null;
+	}
+
+	/* #Name: to the first $Ref('Name') of the code of its Component. */
+	if (at.Kind === 'attribute-name' && at.Attribute && at.Attribute.Name.charAt(0) === '#') {
+		own = owner(knowledge, file);
+		word = own ? read(own.File) : null;
+		item = word ? new RegExp('\\$Ref\\(\\s*([\'"])' + at.Attribute.Name.substring(1).replace(/\$/g, '\\$') + '\\1').exec(word) : null;
+
+		if (!own || !own.File) return null;
+
+		return item ? {File: own.File, Line: Position(word, item.index).line, Character: Position(word, item.index).character} : {File: own.File, Line: own.Line || 0, Character: 0};
+	}
 
 	if (at.Kind === 'tag-name' && at.Tag) {
 		component = knowledge.Component(at.Tag.Name);
@@ -1059,9 +1273,28 @@ function Definition (knowledge, text, offset, language, file) {
 	return null;
 }
 
-function Diagnose (knowledge, text, language) {
+function Diagnose (knowledge, text, language, file) {
 	var problems = [];
 	var told;
+	var template;
+	var names;
+	var pattern = /(?:this|self)\.\$Ref\(\s*(['"])([\w$-]+)\1/g;
+	var match;
+
+	/* The code of a Component: this.$Ref('Name') with no #Name in its template (a $Ref of another component is not known). */
+	if (language === 'js') {
+		template = /Elemenx\.Component\(/.test(text) ? templateOf(file, text) : null;
+		names = template ? refs(template.Text).map(function (each) {
+			return each.Name;
+		}) : null;
+
+		while (names && (match = pattern.exec(text))) {
+			if (names.indexOf(match[2]) === -1)
+				problems.push({Start: match.index + match[0].length - 1 - match[2].length, End: match.index + match[0].length - 1, Severity: 'warning', Message: 'No #' + match[2] + ' in ' + path.basename(template.File)});
+		}
+
+		return problems;
+	}
 
 	if (language !== 'html' || knowledge.Empty()) return problems;
 
@@ -1081,6 +1314,9 @@ function Diagnose (knowledge, text, language) {
 		tag.Attributes.forEach(function (attribute) {
 			var bound = binding(attribute.Name);
 			var name = plain(bound.Name);
+
+			/* A reference (#Name): no prop, the element is the one of $Ref. */
+			if (attribute.Name.charAt(0) === '#') return;
 
 			if (bound.Kind === 'prop' || bound.Kind === 'bind') {
 				if (prop(component, bound.Name) || Globals.indexOf(name) !== -1 || /^(data-|aria-|on)/.test(lower(bound.Name)) || !name) return;

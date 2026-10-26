@@ -1,6 +1,6 @@
 {
 	"name": "@qybercom/elemenx",
-	"version": "0.10.1",
+	"version": "0.10.2",
 	"description": "A browser UI framework in one ES5 file: components, reactive state, routing, services, storage, messaging and network, with its CLI and the ElemenxUI component library",
 	"keywords": [
 		"ui",
@@ -66,9 +66,9 @@
 		"example:advanced:dist": "node elemenx-cli.js serve examples/Advanced",
 		"test:tools": "vitest run --config vitest.node.config.mjs",
 		"lint": "eslint && stylelint \"**/*.{css,html}\"",
-		"prepack": "npm run dist",
+		"prepack": "npm run dist -- --no-editors",
 		"preversion": "node scripts/version.js check",
-		"version": "node scripts/version.js sync && git add packages/elemenx/package.json elemenx.js examples/Advanced/package.json",
+		"version": "node scripts/version.js sync && git add packages/elemenx/package.json elemenx.js examples/Advanced/package.json editors/vscode/package.json editors/intellij/build.gradle.kts",
 		"version:set": "node scripts/version.js set",
 		"version:tag": "node scripts/version.js tag",
 		"release": "node scripts/release.js"

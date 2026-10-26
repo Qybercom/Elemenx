@@ -32,8 +32,8 @@ class ElemenxInspectionSuppressor : InspectionSuppressor {
 		/** The inspections of unknown tags and attributes, of HTML and of XML, and of an empty tag (<CallTile />: a Component closes itself). */
 		val quieted = setOf("HtmlUnknownTag", "HtmlUnknownAttribute", "HtmlUnknownBooleanAttribute", "XmlUnboundNsPrefix", "CheckTagEmptyBody", "HtmlExtraClosingTag", "CheckEmptyScriptTag")
 
-		/** A binding of a template: [prop], (event) or *directive. */
-		fun isBinding(name: String): Boolean = name.startsWith("[") || name.startsWith("(") || name.startsWith("*")
+		/** A binding of a template: [prop], (event), *directive, or a reference #name (this.$Ref). */
+		fun isBinding(name: String): Boolean = name.startsWith("[") || name.startsWith("(") || name.startsWith("*") || name.startsWith("#")
 
 		/** A Component: its name as it is written starts with a capital (HTML keeps the case of the source, not of the DOM). */
 		fun isComponent(tag: XmlTag): Boolean {

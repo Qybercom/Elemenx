@@ -26,12 +26,14 @@ object ElemenxColors {
 	val EVENT: TextAttributesKey = TextAttributesKey.createTextAttributesKey("ELEMENX_EVENT", DefaultLanguageHighlighterColors.FUNCTION_DECLARATION)
 	val DIRECTIVE: TextAttributesKey = TextAttributesKey.createTextAttributesKey("ELEMENX_DIRECTIVE", DefaultLanguageHighlighterColors.KEYWORD)
 	val INTERPOLATION: TextAttributesKey = TextAttributesKey.createTextAttributesKey("ELEMENX_INTERPOLATION", DefaultLanguageHighlighterColors.BRACES)
+	val REF: TextAttributesKey = TextAttributesKey.createTextAttributesKey("ELEMENX_REF", DefaultLanguageHighlighterColors.STATIC_FIELD)
 
-	/** The color of an attribute: a binding [prop], an event (event), a directive *directive, or none. */
+	/** The color of an attribute: a binding [prop], an event (event), a directive *directive, a reference #name, or none. */
 	fun ofAttribute(name: String): TextAttributesKey? = when {
 		name.startsWith("[") -> BINDING
 		name.startsWith("(") -> EVENT
 		name.startsWith("*") -> DIRECTIVE
+		name.startsWith("#") && name.length > 1 -> REF
 		else -> null
 	}
 
@@ -94,7 +96,8 @@ class ElemenxColorSettingsPage : ColorSettingsPage {
 		AttributesDescriptor("Binding [prop]", ElemenxColors.BINDING),
 		AttributesDescriptor("Event (event)", ElemenxColors.EVENT),
 		AttributesDescriptor("Directive *directive", ElemenxColors.DIRECTIVE),
-		AttributesDescriptor("Interpolation {{ }}", ElemenxColors.INTERPOLATION)
+		AttributesDescriptor("Interpolation {{ }}", ElemenxColors.INTERPOLATION),
+		AttributesDescriptor("Reference #name", ElemenxColors.REF)
 	)
 
 	override fun getDisplayName(): String = "Elemenx"
@@ -106,7 +109,7 @@ class ElemenxColorSettingsPage : ColorSettingsPage {
 	override fun getDemoText(): String = """
 		<div class="stage">
 			<<component>CallStage</component> <binding>[layout]</binding>="Layout" Side="true" <event>(corner)</event>="Moved">
-				<<component>CallTile</component> slot="main" <directive>*if</directive>="Shown" Name="Ada" />
+				<<component>CallTile</component> <ref>#Main</ref> slot="main" <directive>*if</directive>="Shown" Name="Ada" />
 				<span <directive>*for</directive>="item of Items"><interpolation>{{</interpolation> item.Name <interpolation>}}</interpolation></span>
 			</<component>CallStage</component>>
 		</div>
@@ -117,7 +120,8 @@ class ElemenxColorSettingsPage : ColorSettingsPage {
 		"binding" to ElemenxColors.BINDING,
 		"event" to ElemenxColors.EVENT,
 		"directive" to ElemenxColors.DIRECTIVE,
-		"interpolation" to ElemenxColors.INTERPOLATION
+		"interpolation" to ElemenxColors.INTERPOLATION,
+		"ref" to ElemenxColors.REF
 	)
 
 	override fun getAttributeDescriptors(): Array<AttributesDescriptor> = descriptors

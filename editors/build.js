@@ -2,7 +2,7 @@
  * Builds the extensions of the editors into dist/editors (npm run dist builds them after the files of the framework;
  * npm run editors alone):
  * - the one of VS Code, elemenx-vscode.vsix, with @vscode/vsce through npx;
- * - the plugin of the IDEs of JetBrains, elemenx-intellij-<version>.zip, with the Gradle of editors/intellij. It is
+ * - the plugin of the IDEs of JetBrains, elemenx-intellij.zip, with the Gradle of editors/intellij. It is
  *   built against an IDE of the machine when there is one (IntelliJ IDEA, WebStorm, PhpStorm... found where they are
  *   installed, or named by ELEMENX_IDEA or --idea <folder>), with the JDK it carries; else, with ELEMENX_INTELLIJ=download
  *   (a release), against an IntelliJ IDEA that Gradle downloads, with a JDK of 21 or more (JAVA_HOME, JAVA_HOME_21_X64...);
@@ -21,6 +21,24 @@ var intellij = path.join(__dirname, 'intellij');
 function copy (from, to) {
 	fs.mkdirSync(path.dirname(to), {recursive: true});
 	fs.copyFileSync(from, to);
+}
+
+/* The sources of a Library the definitions go to: its meta.json, the .js and .html of its Components, its directives and Services. */
+function sources (library, to) {
+	fs.rmSync(to, {recursive: true, force: true});
+
+	copy(path.join(library, 'data', 'meta.json'), path.join(to, 'data', 'meta.json'));
+
+	['components', 'directives', 'services'].forEach(function (folder) {
+		(function walk (directory) {
+			fs.readdirSync(directory, {withFileTypes: true}).forEach(function (entry) {
+				var file = path.join(directory, entry.name);
+
+				if (entry.isDirectory()) walk(file);
+				else if (/\.(js|html)$/.test(entry.name)) copy(file, path.join(to, path.relative(library, file)));
+			});
+		})(path.join(library, folder));
+	});
 }
 
 /* A command of npx or Gradle: on Windows through the shell (they are .cmd files), its arguments quoted (a folder with spaces). */
@@ -102,6 +120,7 @@ function Build (options) {
 	var made = [];
 	var ide = settings.Idea || process.env.ELEMENX_IDEA || installedIdes()[0] || null;
 	var download = process.env.ELEMENX_INTELLIJ === 'download';
+	var gradle = ['buildPlugin', '--no-daemon'].concat(ide ? ['-PideaLocal=' + ide] : []);
 	var java;
 
 	fs.mkdirSync(output, {recursive: true});
@@ -109,6 +128,12 @@ function Build (options) {
 	/* VS Code: the core beside the extension, then the package. */
 	copy(path.join(__dirname, 'core', 'elemenx-language.js'), path.join(vscode, 'core', 'elemenx-language.js'));
 	copy(path.join(root, 'libraries', 'ElemenxUI', 'data', 'meta.json'), path.join(vscode, 'core', 'meta.json'));
+
+	/* The sources of Elemenx and ElemenxUI of this version: a project with a build of dist alone goes to their definitions here. */
+	copy(path.join(root, 'elemenx.js'), path.join(vscode, 'core', 'elemenx.js'));
+
+	sources(path.join(root, 'libraries', 'ElemenxUI'), path.join(vscode, 'core', 'library'));
+
 	copy(path.join(root, 'LICENSE'), path.join(vscode, 'LICENSE'));
 
 	run('npx', ['--yes', '@vscode/vsce@4.0.0', 'package', '--out', path.join(output, 'elemenx-vscode.vsix')], vscode);
@@ -119,18 +144,17 @@ function Build (options) {
 	java = jdk(ide);
 
 	if (settings.IntelliJ !== false && (ide || download) && java) {
-		run(path.join(intellij, process.platform === 'win32' ? 'gradlew.bat' : 'gradlew'), ['buildPlugin', '--no-daemon'].concat(ide ? ['-PideaLocal=' + ide] : []), intellij, Object.assign({}, process.env, {JAVA_HOME: java}));
+		/*
+		 * On Linux and macOS gradlew goes through sh: a checkout keeps no mode the repository did not record, and a
+		 * gradlew committed from Windows is no program there (regression: the release failed on Linux, permission denied).
+		 */
+		if (process.platform === 'win32') run(path.join(intellij, 'gradlew.bat'), gradle, intellij, Object.assign({}, process.env, {JAVA_HOME: java}));
+		else run('sh', [path.join(intellij, 'gradlew')].concat(gradle), intellij, Object.assign({}, process.env, {JAVA_HOME: java}));
 
-		/* The archive just made: the ones of the versions before stay in the folder of Gradle. */
-		fs.readdirSync(path.join(intellij, 'build', 'distributions')).filter(function (name) {
-			return /\.zip$/.test(name);
-		}).sort(function (a, b) {
-			return fs.statSync(path.join(intellij, 'build', 'distributions', b)).mtimeMs - fs.statSync(path.join(intellij, 'build', 'distributions', a)).mtimeMs;
-		}).slice(0, 1).forEach(function (name) {
-			copy(path.join(intellij, 'build', 'distributions', name), path.join(output, name));
+		/* The archive Gradle made: no version in its name (archiveFileName of build.gradle.kts). */
+		copy(path.join(intellij, 'build', 'distributions', 'elemenx-intellij.zip'), path.join(output, 'elemenx-intellij.zip'));
 
-			made.push(name);
-		});
+		made.push('elemenx-intellij.zip');
 	}
 	else if (settings.IntelliJ === true) {
 		throw new Error('Elemenx editors: the plugin of IntelliJ needs an IDE of JetBrains (ELEMENX_IDEA) or ELEMENX_INTELLIJ=download, and a JDK of 21 or more');

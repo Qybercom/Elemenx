@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- The colors of a template of Elemenx in the dark schemes (Darcula, Dark): each 4.5:1 or more on their backgrounds. -->
+<list>
+	<option name="ELEMENX_COMPONENT">
+		<value>
+			<option name="FOREGROUND" value="4ec9b0" />
+			<option name="FONT_TYPE" value="1" />
+		</value>
+	</option>
+	<option name="ELEMENX_BINDING">
+		<value>
+			<option name="FOREGROUND" value="c77dbb" />
+		</value>
+	</option>
+	<option name="ELEMENX_EVENT">
+		<value>
+			<option name="FOREGROUND" value="ffc66d" />
+		</value>
+	</option>
+	<option name="ELEMENX_DIRECTIVE">
+		<value>
+			<option name="FOREGROUND" value="d98e50" />
+			<option name="FONT_TYPE" value="1" />
+		</value>
+	</option>
+	<option name="ELEMENX_INTERPOLATION">
+		<value>
+			<option name="FOREGROUND" value="d98e50" />
+			<option name="FONT_TYPE" value="1" />
+		</value>
+	</option>
+	<option name="ELEMENX_REF">
+		<value>
+			<option name="FOREGROUND" value="f07178" />
+			<option name="FONT_TYPE" value="2" />
+		</value>
+	</option>
+</list>

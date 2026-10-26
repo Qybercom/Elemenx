@@ -21,7 +21,14 @@
 		<lang.inspectionSuppressor language="HTML" implementationClass="com.qybercom.elemenx.ElemenxInspectionSuppressor" />
 		<annotator language="HTML" implementationClass="com.qybercom.elemenx.ElemenxAnnotator" />
 		<colorSettingsPage implementation="com.qybercom.elemenx.ElemenxColorSettingsPage" />
+		<!-- Colors of their own in the light and the dark schemes: the ones of the theme (a class name...) were plain text in IntelliJ Light. -->
+		<additionalTextAttributes scheme="Default" file="colorSchemes/ElemenxDefault.xml" />
+		<additionalTextAttributes scheme="Darcula" file="colorSchemes/ElemenxDarcula.xml" />
 		<multiHostInjector implementation="com.qybercom.elemenx.ElemenxInjector" />
+		<!-- A name of an expression goes to the member of its Component, not to the parameter of the wrapping. -->
+		<gotoDeclarationHandler implementation="com.qybercom.elemenx.ElemenxGotoDeclaration" />
+		<!-- A Component is an element of its own, not the tag of HTML of its name (<Input> is no <input>). -->
+		<xml.elementDescriptorProvider implementation="com.qybercom.elemenx.ElemenxElementDescriptorProvider" />
 	</extensions>
 
 	<extensions defaultExtensionNs="com.redhat.devtools.lsp4ij">

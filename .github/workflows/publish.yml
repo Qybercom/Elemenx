@@ -3,9 +3,11 @@
 # included, in parallel jobs) must pass; then npm publish, whose prepack builds dist. It signs in with npm trusted
 # publishing (OpenID Connect, no token): on npmjs.com, the settings of each package name this repository, this
 # workflow file and the environment npm as its trusted publisher, with npm publish allowed. A version with a
-# prerelease part (0.9.1-beta.1) goes to the dist-tag next, not latest. Last it creates the GitHub release of the
-# tag, with notes made of the changes since the last release and the files of dist attached: every script,
-# manifest.json, and all of dist in one zip.
+# prerelease part (0.9.1-beta.1) goes to the dist-tag next, not latest. Last, in a job of its own, it creates the
+# GitHub release of the tag, with notes made of the changes since the last release and the files of dist attached:
+# every script, manifest.json, the extensions of the editors, and all of dist in one zip. The extensions need an
+# IntelliJ IDEA that Gradle downloads (its cache comes from the builds of main in ci.yml): a failure there leaves npm
+# published, and Re-run failed jobs makes the release alone.
 name: Publish
 
 on:
@@ -42,16 +44,13 @@ jobs:
       e2e: true
 
   publish:
-    name: npm and GitHub release
+    name: npm
     needs: test
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 20
     environment: npm
-    # dist builds the extensions of the editors: the plugin of IntelliJ against an IntelliJ IDEA that Gradle downloads.
-    env:
-      ELEMENX_INTELLIJ: download
     permissions:
-      contents: write
+      contents: read
       id-token: write
     steps:
       - uses: actions/checkout@v5
@@ -60,10 +59,6 @@ jobs:
           node-version: 24
           registry-url: https://registry.npmjs.org
           cache: npm
-      - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 21
       - name: npm with trusted publishing
         run: npm install -g npm@^11.5.1
       - run: npm ci
@@ -85,6 +80,37 @@ jobs:
           else
             (cd packages/elemenx && npm publish --tag "$tag")
           fi
+
+  release:
+    name: GitHub release with the editors
+    needs: publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    # dist builds the extensions of the editors: the plugin of IntelliJ against an IntelliJ IDEA that Gradle downloads.
+    # The marketplaces take them when their secrets are set (docs/EDITORS.md): a step without its secret is skipped.
+    env:
+      ELEMENX_INTELLIJ: download
+      VSCE_PAT: ${{ secrets.VSCE_PAT }}
+      OVSX_PAT: ${{ secrets.OVSX_PAT }}
+      JETBRAINS_TOKEN: ${{ secrets.JETBRAINS_TOKEN }}
+      JETBRAINS_CERTIFICATE_CHAIN: ${{ secrets.JETBRAINS_CERTIFICATE_CHAIN }}
+      JETBRAINS_PRIVATE_KEY: ${{ secrets.JETBRAINS_PRIVATE_KEY }}
+      JETBRAINS_PRIVATE_KEY_PASSWORD: ${{ secrets.JETBRAINS_PRIVATE_KEY_PASSWORD }}
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 21
+      # The Gradle and the IntelliJ IDEA of the builds of main: read here, not written (a tag is no default branch).
+      - uses: gradle/actions/setup-gradle@v5
+      - run: npm ci
       - name: GitHub release with the files of dist
         env:
           GH_TOKEN: ${{ github.token }}
@@ -98,6 +124,34 @@ jobs:
           case "$version" in
             *-*) prerelease="--prerelease" ;;
           esac
-          [ -f dist/manifest.json ] || npm run dist
+          npm run dist
           (cd dist && zip -qr "../elemenx-$version.zip" .)
           gh release create "$GITHUB_REF_NAME" --verify-tag --title "Elemenx $version" --generate-notes $prerelease dist/*.js dist/manifest.json dist/editors/* "elemenx-$version.zip"
+      # The extensions in the marketplaces, with the version of Elemenx; a prerelease as a pre-release (VS Code) or in the
+      # channel beta (JetBrains). A version there already is skipped, so Re-run failed jobs goes on from the step that failed.
+      - name: VS Code Marketplace
+        if: env.VSCE_PAT != ''
+        run: |
+          [ -f dist/editors/elemenx-vscode.vsix ] || npm run dist
+          case "$(node -p "require('./package.json').version")" in
+            *-*) pre=--pre-release ;;
+            *) pre= ;;
+          esac
+          npx --yes @vscode/vsce@4.0.0 publish --packagePath dist/editors/elemenx-vscode.vsix --skip-duplicate $pre -p "$VSCE_PAT"
+      - name: Open VSX (VSCodium, Cursor, Windsurf)
+        if: env.OVSX_PAT != ''
+        run: |
+          [ -f dist/editors/elemenx-vscode.vsix ] || npm run dist
+          case "$(node -p "require('./package.json').version")" in
+            *-*) pre=--pre-release ;;
+            *) pre= ;;
+          esac
+          npx --yes ovsx@0.10.1 publish dist/editors/elemenx-vscode.vsix --skip-duplicate $pre -p "$OVSX_PAT"
+      - name: JetBrains Marketplace
+        if: env.JETBRAINS_TOKEN != ''
+        run: |
+          channel=default
+          case "$(node -p "require('./package.json').version")" in
+            *-*) channel=beta ;;
+          esac
+          sh editors/intellij/gradlew --project-dir editors/intellij publishPlugin --no-daemon -PpluginChannel="$channel"

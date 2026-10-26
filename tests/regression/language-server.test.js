@@ -29,7 +29,9 @@ describe('Contract: the language of Elemenx for the editors (the core, and its L
 			Services: [{Name: 'Toast', Description: 'Toasts.', Methods: ['Show(options)']}],
 			Directives: [{Name: 'tip', Description: 'A tip.'}]
 		}));
-		write('libraries/Kit/components/Card/Card.js', "Elemenx.Component('Card', {});\n");
+		write('libraries/Kit/components/Card/Card.js', "Elemenx.Component('Card', {\n\tTitle: '',\n\n\tPick: function () {\n\t\tthis.$Emit('pick', {});\n\t}\n});\n");
+		write('libraries/Kit/directives/Tip.js', "/* A tip. */\nElemenx.Directive('tip', {});\n");
+		write('elemenx.js', "(function () {\n\tvar Runtime = {};\n\n\tRuntime.Directive.Register('if', {});\n})();\n");
 		write('application/components/Board/Board.js', "/* The board of the project. */\nElemenx.Component('Board', {\n\t$TemplateURL: 'Board.html',\n\tCount: 0,\n\tItems: [],\n\n\t$OnCreate: function () {\n\t\tthis.Counted = function (count) {\n\t\t\treturn count;\n\t\t};\n\t},\n\n\tPicked: function () {\n\t\tthis.$Emit('chosen', {});\n\t}\n});\n");
 		write('application/components/Board/Board.html', template);
 		write('application/services/Store.js', "Elemenx.Service('Store', {\n\tGet: function () {}\n});\nElemenx.Directive('unless', {});\n");
@@ -95,6 +97,90 @@ describe('Contract: the language of Elemenx for the editors (the core, and its L
 		expect(language.Definition(knowledge, '<Board />', 2, 'html', file)).toEqual({File: path.join(project, 'application/components/Board/Board.js'), Line: 1, Character: 0});
 		expect(language.Definition(knowledge, '<Card (pick)="Picked" />', 17, 'html', file)).toMatchObject({File: path.join(project, 'application/components/Board/Board.js'), Line: 12});
 		expect(language.Definition(knowledge, "$Service('Store')", 11, 'js')).toMatchObject({File: path.join(project, 'application/services/Store.js'), Line: 0});
+	});
+
+	it('knows the references of a template (#Name): completes, tells and finds them from $Ref, and marks a $Ref of none', function () {
+		var code = "Elemenx.Component('Panel', {\n\t$TemplateURL: 'Panel.html',\n\n\t$OnReady: function () {\n\t\tthis.$Ref('Theme').focus();\n\t\tthis.$Ref('Gone');\n\t}\n});\n";
+		var markup = '<header>\n\t<button class="a" #Theme (click)="Toggle">{{Theme}}</button>\n\t<Card #Box Title="x" />\n</header>\n';
+		var js = path.join(project, 'application/components/Panel/Panel.js');
+		var html = path.join(project, 'application/components/Panel/Panel.html');
+		var labels;
+
+		write('application/components/Panel/Panel.js', code);
+		write('application/components/Panel/Panel.html', markup);
+
+		knowledge.Refresh();
+
+		labels = language.Complete(knowledge, "this.$Ref('", 11, 'js', js).map(function (item) {
+			return item.Label;
+		});
+
+		expect(labels).toEqual(['Theme', 'Box']);
+		expect(language.Complete(knowledge, "this.$Ref('B", 12, 'js', js).map(function (item) {
+			return item.Label;
+		})).toEqual(['Box']);
+
+		/* From $Ref to the element, and from the element to its first $Ref. */
+		expect(language.Definition(knowledge, code, code.indexOf("'Theme'") + 2, 'js', js)).toEqual({File: html, Line: 1, Character: 19});
+		expect(language.Definition(knowledge, markup, markup.indexOf('#Theme') + 2, 'html', html)).toEqual({File: js, Line: 4, Character: 7});
+		expect(language.Hover(knowledge, code, code.indexOf("'Theme'") + 2, 'js', js).Markdown).toContain('**#Theme** · the element of Panel.html');
+		expect(language.Hover(knowledge, markup, markup.indexOf('#Box') + 1, 'html', html).Markdown).toContain("this.$Ref('Box')");
+
+		/* A $Ref of no element is marked; the references are no props or unknown attributes. */
+		expect(language.Diagnose(knowledge, code, 'js', js).map(function (problem) {
+			return [problem.Severity, problem.Message, code.substring(problem.Start, problem.End)];
+		})).toEqual([['warning', 'No #Gone in Panel.html', 'Gone']]);
+		expect(language.Diagnose(knowledge, markup, 'html', html)).toEqual([]);
+	});
+
+	/* Regression: a click on *if, on a prop or on an event of a template went nowhere. */
+	it('goes from a directive to its definition (the core ones in elemenx.js), and from a prop or an event to its Component', function () {
+		var file = path.join(project, 'application/components/Board/Board.html');
+		var card = path.join(project, 'libraries/Kit/components/Card/Card.js');
+
+		expect(language.Definition(knowledge, '<div *if="x">', 6, 'html', file)).toEqual({File: path.join(project, 'elemenx.js'), Line: 3, Character: 9});
+		expect(language.Definition(knowledge, '<div *tip="x">', 6, 'html', file)).toEqual({File: path.join(project, 'libraries/Kit/directives/Tip.js'), Line: 1, Character: 0});
+		expect(language.Definition(knowledge, '<div *unless="x">', 6, 'html', file)).toMatchObject({File: path.join(project, 'application/services/Store.js'), Line: 3});
+		expect(language.Definition(knowledge, '<Card Title="x" />', 8, 'html', file)).toEqual({File: card, Line: 1, Character: 1});
+		expect(language.Definition(knowledge, '<Card [Title]="x" />', 8, 'html', file)).toEqual({File: card, Line: 1, Character: 1});
+		expect(language.Definition(knowledge, '<Card (pick)="x" />', 8, 'html', file)).toEqual({File: card, Line: 4, Character: 7});
+		expect(language.Definition(knowledge, '<Board Count="1" />', 9, 'html', file)).toMatchObject({File: path.join(project, 'application/components/Board/Board.js'), Line: 3});
+	});
+
+	/* A project with builds of dist alone: the sources the extension carries, never its bundles (regression: *tip went into a bundle). */
+	it('goes to the sources the extension carries in a project that has only builds of dist, and reads no bundle', function () {
+		var extension = fs.mkdtempSync(path.join(os.tmpdir(), 'elemenx-extension-'));
+		var site = fs.mkdtempSync(path.join(os.tmpdir(), 'elemenx-site-'));
+		var core = path.join(extension, 'core');
+		var carried;
+		var copy;
+		var page = path.join(site, 'index.html');
+
+		try {
+			fs.mkdirSync(path.join(core, 'library', 'data'), {recursive: true});
+			fs.mkdirSync(path.join(core, 'library', 'directives'), {recursive: true});
+			fs.mkdirSync(path.join(core, 'library', 'components', 'Card'), {recursive: true});
+			fs.mkdirSync(path.join(site, 'vendor'), {recursive: true});
+			fs.copyFileSync(path.join(root, 'editors', 'core', 'elemenx-language.js'), path.join(core, 'elemenx-language.js'));
+			fs.writeFileSync(path.join(core, 'library', 'data', 'meta.json'), JSON.stringify({Components: [{Name: 'Card', Props: [{Name: 'Title', Type: 'text'}]}], Directives: [{Name: 'tip', Description: 'A tip.'}]}));
+			fs.writeFileSync(path.join(core, 'library', 'directives', 'Tip.js'), "/* A tip. */\nElemenx.Directive('tip', {});\n");
+			fs.writeFileSync(path.join(core, 'library', 'components', 'Card', 'Card.js'), "Elemenx.Component('Card', {\n\tTitle: ''\n});\n");
+			fs.writeFileSync(path.join(core, 'elemenx.js'), "(function () {\n\tRuntime.Directive.Register('if', {});\n})();\n");
+			fs.writeFileSync(path.join(site, 'vendor', 'elemenx.all.js'), "/*! Elemenx 0.10.1 | LGPL-3.0 */\nElemenx.Directive('tip', {});\nElemenx.Component('Card', {\n\tTitle: ''\n});\n");
+			fs.writeFileSync(path.join(site, 'vendor', 'elemenx-ui.min.js'), "Elemenx.Directive('tip',{});Elemenx.Component('Card',{Title:''});");
+
+			copy = require(path.join(core, 'elemenx-language.js'));
+			carried = copy.Create({Roots: [site]});
+
+			expect(copy.Definition(carried, '<div *tip="x">', 6, 'html', page)).toEqual({File: path.join(core, 'library', 'directives', 'Tip.js'), Line: 1, Character: 0});
+			expect(copy.Definition(carried, '<div *if="x">', 6, 'html', page)).toEqual({File: path.join(core, 'elemenx.js'), Line: 1, Character: 9});
+			expect(copy.Definition(carried, '<Card Title="x" />', 8, 'html', page)).toEqual({File: path.join(core, 'library', 'components', 'Card', 'Card.js'), Line: 1, Character: 1});
+			expect(copy.Hover(carried, '<div *tip="x">', 7, 'html', page).Markdown).toContain('A tip.');
+		}
+		finally {
+			fs.rmSync(extension, {recursive: true, force: true});
+			fs.rmSync(site, {recursive: true, force: true});
+		}
 	});
 
 	it('marks the unknown Components, props, events and directives of a template, not the attributes of every element', function () {

@@ -10,6 +10,9 @@
 		},
 		{
 			"include": "#directive"
+		},
+		{
+			"include": "#ref"
 		}
 	],
 	"repository": {
@@ -90,6 +93,14 @@
 					"include": "source.js"
 				}
 			]
+		},
+		"ref": {
+			"match": "(?<=\\s)(#[A-Za-z_$][\\w$-]*)(?=[\\s/>=])",
+			"captures": {
+				"1": {
+					"name": "entity.other.attribute-name.ref.elemenx variable.other.constant.ref.elemenx"
+				}
+			}
 		}
 	}
 }

@@ -14,7 +14,8 @@ import com.intellij.psi.xml.XmlText
 /**
  * JavaScript in a template: the expressions of {{ }}, the values of the bindings, events and directives (*for="item of
  * Items" as the head of a loop of for); and HTML in the $Template of a definition. JavaScript is the one of the IDE
- * when it has it (WebStorm, IntelliJ IDEA Ultimate, PhpStorm): without it nothing is injected.
+ * when it has it (WebStorm, IntelliJ IDEA Ultimate, PhpStorm): without it nothing is injected. An expression is the body
+ * of a function whose parameters are the names of the template (ElemenxScope): its names resolve to the Component.
  */
 class ElemenxInjector : MultiHostInjector {
 	override fun getLanguagesToInject(registrar: MultiHostRegistrar, context: PsiElement) {
@@ -28,14 +29,19 @@ class ElemenxInjector : MultiHostInjector {
 
 				if (javascript == null || range.isEmpty) return
 
-				registrar.startInjecting(javascript).addPlace(wrap.first, wrap.second, context as PsiLanguageInjectionHost, range).doneInjecting()
+				val scope = scoped(ElemenxScope.typedNames(context))
+
+				registrar.startInjecting(javascript).addPlace(scope + wrap.first, wrap.second + " });", context as PsiLanguageInjectionHost, range).doneInjecting()
 			}
 
 			is XmlText -> {
 				if (javascript == null) return
 
-				ElemenxColors.interpolations(context.text).filter { range -> !range.isEmpty }.forEach { range ->
-					registrar.startInjecting(javascript).addPlace("(", ");", context as PsiLanguageInjectionHost, range).doneInjecting()
+				val ranges = ElemenxColors.interpolations(context.text).filter { range -> !range.isEmpty }
+				val scope = if (ranges.isEmpty()) "" else scoped(ElemenxScope.typedNames(context))
+
+				ranges.forEach { range ->
+					registrar.startInjecting(javascript).addPlace(scope + "return (", "); });", context as PsiLanguageInjectionHost, range).doneInjecting()
 				}
 			}
 
@@ -50,10 +56,20 @@ class ElemenxInjector : MultiHostInjector {
 	override fun elementsToInjectIn(): List<Class<out PsiElement>> = listOf(XmlAttributeValue::class.java, XmlText::class.java, PsiLanguageInjectionHost::class.java)
 
 	companion object {
-		/** What a value is wrapped in to be JavaScript: an expression, or the head of a loop (*for). */
+		/**
+		 * The head of the function an expression is the body of: its parameters are the names of the template, its JSDoc
+		 * their types (ElemenxGotoDeclaration goes from a name, or a key of one, to its member).
+		 */
+		fun scoped(names: List<ElemenxScope.Name>): String {
+			val types = names.filter { each -> each.type != null }.joinToString("") { each -> " * @param {" + each.type + "} " + each.name + "\n" }
+
+			return "(/**\n" + types + " */ function (" + names.joinToString(", ") { each -> each.name } + ") { "
+		}
+
+		/** What a value is wrapped in to be JavaScript: an expression the function returns (no statement of nothing: the JavaScript of the IDE marks one), or the head of a loop (*for). */
 		fun wrapping(name: String): Pair<String, String>? = when {
 			name == "*for" -> "for (var " to ") {}"
-			ElemenxInspectionSuppressor.isBinding(name) -> "(" to ");"
+			ElemenxInspectionSuppressor.isBinding(name) -> "return (" to ");"
 			else -> null
 		}
 

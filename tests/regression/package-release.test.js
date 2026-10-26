@@ -84,7 +84,8 @@ describe('Elemenx npm release surface', function () {
 		expect(manifest.bin).toEqual({elemenx: 'elemenx-cli.js'});
 		expect(manifest.unpkg).toBe('dist/elemenx.min.js');
 		expect(manifest.jsdelivr).toBe('dist/elemenx.min.js');
-		expect(manifest.scripts.prepack).toBe('npm run dist');
+		/* The package has no editors/: they go to the GitHub release (publish.yml), and npm publish waits for no IntelliJ IDEA. */
+		expect(manifest.scripts.prepack).toBe('npm run dist -- --no-editors');
 		expect(manifest.exports).toBeUndefined();
 		expect(files).toContain(manifest.main);
 		expect(files).toContain(manifest.bin.elemenx);
@@ -130,6 +131,23 @@ describe('Elemenx npm release surface', function () {
 		expect(publish.indexOf('cd packages/elemenx')).toBeLessThan(publish.indexOf('gh release create'));
 		expect(publish).toContain('gh release create "$GITHUB_REF_NAME" --verify-tag');
 		expect(publish).toContain('dist/*.js dist/manifest.json');
+
+		/* Regression: the plugin of IntelliJ failed the publication. npm goes first, the editors in a job of their own after it. */
+		expect(publish.indexOf('npm publish --access public')).toBeLessThan(publish.indexOf('ELEMENX_INTELLIJ: download'));
+		expect(publish.indexOf('needs: publish')).toBeLessThan(publish.indexOf('ELEMENX_INTELLIJ: download'));
+		expect(publish).toContain('uses: gradle/actions/setup-gradle@');
+
+		/* Every push starts the Gradle of the plugin as the build does on Linux; a change of editors/ builds them. */
+		expect(ci).toContain('run: sh editors/intellij/gradlew --version');
+		expect(ci).toContain('run: node editors/build.js --intellij');
+		expect(ci).toContain('&& !inputs.e2e');
+
+		/* The marketplaces of the editors, each when its secret is set, a version there already skipped. */
+		expect(publish).toContain("if: env.VSCE_PAT != ''");
+		expect(publish).toContain("if: env.OVSX_PAT != ''");
+		expect(publish).toContain("if: env.JETBRAINS_TOKEN != ''");
+		expect(publish).toContain('publish --packagePath dist/editors/elemenx-vscode.vsix --skip-duplicate');
+		expect(publish).toContain('publishPlugin --no-daemon');
 	});
 
 	it('describes the package: name, license, author, repository, Node version', function () {
@@ -200,7 +218,7 @@ describe('Elemenx npm release surface', function () {
 		temporary.push(site);
 
 		expect(manifest.scripts.preversion).toBe('node scripts/version.js check');
-		expect(manifest.scripts.version).toBe('node scripts/version.js sync && git add packages/elemenx/package.json elemenx.js examples/Advanced/package.json');
+		expect(manifest.scripts.version).toBe('node scripts/version.js sync && git add packages/elemenx/package.json elemenx.js examples/Advanced/package.json editors/vscode/package.json editors/intellij/build.gradle.kts');
 		expect(manifest.scripts['version:set']).toBe('node scripts/version.js set');
 		expect(manifest.scripts['version:tag']).toBe('node scripts/version.js tag');
 
@@ -211,6 +229,12 @@ describe('Elemenx npm release surface', function () {
 		fs.copyFileSync(path.join(wrapper, 'package.json'), path.join(site, 'packages', 'elemenx', 'package.json'));
 		fs.writeFileSync(path.join(site, 'elemenx.js'), '(function () {\n\tvar Version = \'' + manifest.version + '\';\n})();\n');
 		fs.mkdirSync(path.join(site, 'examples', 'Advanced'), {recursive: true});
+		/* The extensions of the editors, with the version of Elemenx. */
+		fs.mkdirSync(path.join(site, 'editors', 'vscode'), {recursive: true});
+		fs.mkdirSync(path.join(site, 'editors', 'intellij'), {recursive: true});
+		fs.writeFileSync(path.join(site, 'editors', 'vscode', 'package.json'), '{\n\t"name": "elemenx",\n\t"version": "' + manifest.version + '",\n\t"engines": {\n\t\t"vscode": "^1.80.0"\n\t}\n}\n');
+		fs.writeFileSync(path.join(site, 'editors', 'intellij', 'build.gradle.kts'), 'plugins {\n\tid("org.jetbrains.intellij.platform") version "2.19.0"\n}\n\ngroup = "com.qybercom"\nversion = "' + manifest.version + '"\n');
+
 		/* The example on the range of the versions 0.9.x the test sets first: they leave it as it is. */
 		fs.writeFileSync(path.join(site, 'examples', 'Advanced', 'package.json'), JSON.stringify({name: 'advanced', dependencies: {'@qybercom/elemenx': '^0.9.0'}}, null, '\t') + '\n');
 		fs.writeFileSync(path.join(site, 'package.json'), JSON.stringify({name: manifest.name, version: manifest.version, scripts: {preversion: manifest.scripts.preversion, version: manifest.scripts.version, 'version:set': manifest.scripts['version:set'], 'version:tag': manifest.scripts['version:tag']}}, null, '\t') + '\n');
@@ -245,7 +269,10 @@ describe('Elemenx npm release surface', function () {
 		expect(fs.readFileSync(path.join(site, 'elemenx.js'), 'utf8')).toContain("var Version = '0.9.7';");
 		expect(git(['tag'])).toBe('v0.9.7');
 		expect(git(['rev-list', '-n', '1', 'v0.9.7'])).toBe(git(['rev-parse', 'HEAD']));
-		expect(git(['show', '--name-only', '--format=', 'HEAD']).split('\n').sort()).toEqual(['elemenx.js', 'package.json', 'packages/elemenx/package.json']);
+		expect(git(['show', '--name-only', '--format=', 'HEAD']).split('\n').sort()).toEqual(['editors/intellij/build.gradle.kts', 'editors/vscode/package.json', 'elemenx.js', 'package.json', 'packages/elemenx/package.json']);
+		expect(read('editors/vscode/package.json').version).toBe('0.9.7');
+		expect(fs.readFileSync(path.join(site, 'editors', 'intellij', 'build.gradle.kts'), 'utf8')).toContain('\nversion = "0.9.7"\n');
+		expect(fs.readFileSync(path.join(site, 'editors', 'intellij', 'build.gradle.kts'), 'utf8')).toContain('version "2.19.0"');
 		expect(git(['status', '--porcelain'])).toBe('');
 
 		/* The other way: the version in a commit of the author, then the tag. */
@@ -293,7 +320,7 @@ describe('Elemenx npm release surface', function () {
 		run = script('version:tag');
 
 		expect(run.status).not.toBe(0);
-		expect(run.stderr).toContain('Elemenx version: package.json has the version 0.9.9, but packages/elemenx/package.json depends on @qybercom/elemenx 0.9.8, elemenx.js has the version 0.9.8. Run npm run version:set (it puts 0.9.9 everywhere), commit, then npm run version:tag');
+		expect(run.stderr).toContain('Elemenx version: package.json has the version 0.9.9, but packages/elemenx/package.json depends on @qybercom/elemenx 0.9.8, elemenx.js has the version 0.9.8, editors/vscode/package.json has the version 0.9.8, editors/intellij/build.gradle.kts has the version 0.9.8. Run npm run version:set (it puts 0.9.9 everywhere), commit, then npm run version:tag');
 		expect(git(['tag', '--list', 'v0.9.9'])).toBe('');
 
 		/* version:set without a version puts the one of package.json everywhere. */

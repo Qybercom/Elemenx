@@ -31,16 +31,27 @@ class ElemenxLanguageServer(@Suppress("UNUSED_PARAMETER") project: Project) : OS
 	}
 }
 
-/** The files of the server, copied out of the plugin once for its version: Node cannot read them inside its jar. */
+/**
+ * The files of the server, copied out of the plugin once for its version: Node cannot read them inside its jar. They are
+ * the ones files.txt lists (the server, its core, and the sources of Elemenx and ElemenxUI the definitions go to).
+ */
 object ElemenxServerFiles {
-	private val files = listOf("server/elemenx-language-server.js", "core/elemenx-language.js", "core/meta.json")
+	private val essential = listOf("server/elemenx-language-server.js", "core/elemenx-language.js", "core/meta.json")
+
+	private fun files(): List<String> {
+		val listed = ElemenxServerFiles::class.java.getResourceAsStream("/elemenx/files.txt")?.use { input ->
+			input.bufferedReader().readLines().map { line -> line.trim() }.filter { line -> line.isNotEmpty() }
+		}
+
+		return listed ?: essential
+	}
 
 	@Synchronized
 	fun server(): Path {
 		val version = ElemenxServerFiles::class.java.`package`?.implementationVersion ?: "dev"
 		val folder = Path.of(PathManager.getSystemPath(), "elemenx-language-server", version)
 
-		files.forEach { name ->
+		files().forEach { name ->
 			val target = folder.resolve(name)
 
 			if (version == "dev" || !Files.exists(target)) {

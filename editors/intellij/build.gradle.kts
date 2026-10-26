@@ -2,7 +2,8 @@
  * The plugin of Elemenx for the IDEs of JetBrains (IntelliJ IDEA, WebStorm, PhpStorm...): the language server of
  * ../server through LSP4IJ. The server, its core and the meta.json of ElemenxUI go into the resources of the plugin.
  * Built against an IDE of the machine with -PideaLocal=<its folder>, or against the one it names below; tested
- * against IntelliJ IDEA Community: gradlew test -PideaCommunity=2025.2.6.3.
+ * against IntelliJ IDEA Community (gradlew test -PideaCommunity=2025.2.6.3) and WebStorm, for the JavaScript of the
+ * expressions (gradlew test -Pwebstorm=2026.2.3).
  */
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.intellij.platform.gradle.TestFrameworkType
@@ -14,7 +15,7 @@ plugins {
 }
 
 group = "com.qybercom"
-version = "1.0.2"
+version = "0.10.2"
 
 repositories {
 	mavenCentral()
@@ -28,9 +29,12 @@ dependencies {
 	intellijPlatform {
 		val ide = providers.gradleProperty("ideaLocal").orNull
 		val community = providers.gradleProperty("ideaCommunity").orNull
+		val webstorm = providers.gradleProperty("webstorm").orNull
 
 		/* The tests run against IntelliJ IDEA Community (-PideaCommunity=2025.2.6.3): the light IDE of the tests starts there. */
+		/* With -Pwebstorm=2026.2.3 they run in WebStorm: the JavaScript of the expressions, which IntelliJ IDEA Community has not. */
 		if (community != null) intellijIdeaCommunity(community)
+		else if (webstorm != null) webstorm(webstorm)
 		else if (ide != null) local(ide)
 		else intellijIdea("2026.2.3")
 
@@ -65,6 +69,27 @@ intellijPlatform {
 			untilBuild = provider { null }
 		}
 	}
+
+	/*
+	 * The JetBrains Marketplace (publish.yml, a release of Elemenx): the plugin signed with the certificate of the
+	 * vendor, then uploaded; a prerelease version to the channel beta (-PpluginChannel=beta). The secrets come as
+	 * variables of the environment; docs/EDITORS.md tells how to make them.
+	 */
+	signing {
+		certificateChain = providers.environmentVariable("JETBRAINS_CERTIFICATE_CHAIN")
+		privateKey = providers.environmentVariable("JETBRAINS_PRIVATE_KEY")
+		password = providers.environmentVariable("JETBRAINS_PRIVATE_KEY_PASSWORD")
+	}
+
+	publishing {
+		token = providers.environmentVariable("JETBRAINS_TOKEN")
+		channels = providers.gradleProperty("pluginChannel").map { channel -> listOf(channel) }.orElse(listOf("default"))
+	}
+}
+
+/* The archive without the version in its name, as the one of VS Code: the version is the one of Elemenx, in plugin.xml. */
+tasks.buildPlugin {
+	archiveFileName.set("elemenx-intellij.zip")
 }
 
 /* The language server and what it knows, from the folders beside the plugin. */
@@ -79,5 +104,25 @@ tasks.processResources {
 
 	from("../../libraries/ElemenxUI/data/meta.json") {
 		into("elemenx/core")
+	}
+
+	/*
+	 * The sources of Elemenx and of ElemenxUI of this version: a project that has only a build of dist goes to their
+	 * definitions in this copy (*if to elemenx.js, a Component to its file). files.txt lists what the plugin copies out.
+	 */
+	from("../../elemenx.js") {
+		into("elemenx/core")
+	}
+
+	from("../../libraries/ElemenxUI") {
+		include("data/meta.json", "components/**/*.js", "components/**/*.html", "directives/*.js", "services/*.js")
+		into("elemenx/core/library")
+	}
+
+	doLast {
+		val folder = destinationDir.resolve("elemenx")
+		val list = folder.walkTopDown().filter { file -> file.isFile && file.name != "files.txt" }.map { file -> file.relativeTo(folder).invariantSeparatorsPath }.sorted().joinToString("\n")
+
+		folder.resolve("files.txt").writeText(list + "\n")
 	}
 }
