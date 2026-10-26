@@ -41,7 +41,7 @@ Every command below but `npm run release` (which commits the working tree) start
    git push --follow-tags
    ```
 
-   `version:set` puts the version in every place that holds it: `package.json`, `package-lock.json`, and the version and the dependency of `packages/elemenx`. It takes the same values as `npm version` (`patch`, `minor`...); without one it puts the version of `package.json` everywhere, after `package.json` was changed by hand. It commits and tags nothing. Do not change the versions by hand otherwise. `version:tag` tags the last commit `v0.9.1` when the working tree is clean, both packages have that version and the tag does not exist yet.
+   `version:set` puts the version in every place that holds it: `package.json`, `package-lock.json`, the version and the dependency of `packages/elemenx`, and the dependency of `examples/Advanced` on its minor version (`^0.10.0` for `0.10.3`). It takes the same values as `npm version` (`patch`, `minor`...); without one it puts the version of `package.json` everywhere, after `package.json` was changed by hand. It commits and tags nothing. Do not change the versions by hand otherwise. `version:tag` tags the last commit `v0.9.1` when the working tree is clean, both packages have that version and the tag does not exist yet.
 
 3. Follow the workflow Publish in GitHub Actions. When it is green, both versions are on npm and the release is in Releases on GitHub:
 

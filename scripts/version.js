@@ -23,6 +23,8 @@ var childProcess = require('child_process');
 var Root = path.resolve(__dirname, '..');
 var Wrapper = path.join(Root, 'packages', 'elemenx', 'package.json');
 var Framework = path.join(Root, 'elemenx.js');
+/* The example that installs the package from npm: it depends on the minor version (^0.10.0), as a site would. */
+var Example = path.join(Root, 'examples', 'Advanced', 'package.json');
 
 function read (file) {
 	return JSON.parse(fs.readFileSync(file, 'utf8'));
@@ -65,14 +67,27 @@ function frameworkVersion () {
 	return match ? match[1] : null;
 }
 
+/* The range the example depends on for a version: ^0.10.0 for 0.10.3. */
+function range (version) {
+	return '^' + version.replace(/\.\d+$/, '.0');
+}
+
 function sync () {
 	var main = read(path.join(Root, 'package.json'));
 	var wrapper = read(Wrapper);
+	var example;
 
 	wrapper.version = main.version;
 	wrapper.dependencies[main.name] = main.version;
 
 	fs.writeFileSync(Wrapper, JSON.stringify(wrapper, null, '\t') + '\n');
+
+	/* Regression: a release of a minor version (0.10.0) left the example on ^0.9.0. The range alone changes in its text. */
+	if (fs.existsSync(Example)) {
+		example = fs.readFileSync(Example, 'utf8');
+
+		fs.writeFileSync(Example, example.replace(new RegExp('("' + main.name.replace(/[.*+?^${}()|[\]\\\/]/g, '\\$&') + '"\\s*:\\s*")[^"]*(")'), '$1' + range(main.version) + '$2'));
+	}
 
 	if (fs.existsSync(Framework))
 		fs.writeFileSync(Framework, fs.readFileSync(Framework, 'utf8').replace(/(\n\tvar Version = ')[^']*(';)/, '$1' + main.version + '$2'));
@@ -84,7 +99,7 @@ function sync () {
 
 /*
  * Puts a version in every place that holds it: package.json, package-lock.json, packages/elemenx (its version and its
- * dependency on @qybercom/elemenx). It takes a version or patch, minor, major, prerelease; without one it puts the
+ * dependency on @qybercom/elemenx), the dependency of examples/Advanced (^ its minor version). It takes a version or patch, minor, major, prerelease; without one it puts the
  * version of package.json everywhere (after package.json was changed by hand). It commits and tags nothing.
  */
 function set (value) {
@@ -116,6 +131,9 @@ function tag () {
 
 	if (frameworkVersion() !== null && frameworkVersion() !== main.version)
 		wrong.push('elemenx.js has the version ' + frameworkVersion());
+
+	if (fs.existsSync(Example) && read(Example).dependencies[main.name] !== range(main.version))
+		wrong.push('examples/Advanced/package.json depends on ' + main.name + ' ' + read(Example).dependencies[main.name]);
 
 	if (lock().version !== main.version)
 		wrong.push('package-lock.json has the version ' + lock().version);

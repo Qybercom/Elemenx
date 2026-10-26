@@ -877,6 +877,9 @@ for (const origin of origins) {
 			await expect.poll(function () {
 				return picker.locator('.elemenx-emoji-group[data-group="food"]').evaluate(function (node) {
 					return Math.round(node.getBoundingClientRect().top - node.parentElement.closest('.elemenx-emoji-body').getBoundingClientRect().top);
+				}).catch(function () {
+					/* Not drawn yet: read again. */
+					return null;
 				});
 			}).toBe(0);
 
@@ -1598,6 +1601,9 @@ for (const origin of origins) {
 			await expect.poll(function () {
 				return page.evaluate(function () {
 					return !!document.activeElement.closest('.elemenx-popup');
+				}).catch(function () {
+					/* Not drawn yet: read again. */
+					return null;
 				});
 			}).toBe(true);
 
@@ -1742,37 +1748,45 @@ for (const origin of origins) {
 
 			await pads.scrollIntoViewIfNeeded();
 
-			expect(await pads.evaluate(function (node) {
-				var rows = node.querySelectorAll('.ui-kit-pad');
+			await expect.poll(function () {
+				return pads.evaluate(function (node) {
+					var rows = node.querySelectorAll('.ui-kit-pad');
 
-				function glyph (row, button) {
-					return rows[row].querySelector('.elemenx-game-key.button-' + button + ' .elemenx-game-key-glyph');
-				}
+					function glyph (row, button) {
+						return rows[row].querySelector('.elemenx-game-key.button-' + button + ' .elemenx-game-key-glyph');
+					}
 
-				function token (name) {
-					var probe = document.createElement('i');
-					var color;
+					function token (name) {
+						var probe = document.createElement('i');
+						var color;
 
-					probe.style.color = 'var(' + name + ')';
+						probe.style.color = 'var(' + name + ')';
 
-					node.appendChild(probe);
+						node.appendChild(probe);
 
-					color = getComputedStyle(probe).color;
+						color = getComputedStyle(probe).color;
 
-					probe.remove();
+						probe.remove();
 
-					return color;
-				}
+						return color;
+					}
 
-				return [
-					glyph(0, 'a').textContent, getComputedStyle(glyph(0, 'a')).backgroundColor === token('--elemenx-gamepad-green'), getComputedStyle(glyph(0, 'b')).backgroundColor === token('--elemenx-gamepad-red'),
-					glyph(1, 'a').textContent, getComputedStyle(glyph(1, 'a')).color === token('--elemenx-gamepad-blue'), glyph(1, 'y').textContent,
-					glyph(2, 'a').textContent, glyph(2, 'lt').textContent, glyph(2, 'start').textContent,
-					getComputedStyle(glyph(3, 'a')).color, getComputedStyle(glyph(3, 'a'), '::before').maskImage.indexOf('svg') !== -1,
-					getComputedStyle(glyph(0, 'up'), '::before').maskImage.indexOf('svg') !== -1, glyph(0, 'up').textContent,
-					getComputedStyle(glyph(0, 'ls')).boxShadow.indexOf('inset') !== -1
-				];
-			})).toEqual(['A', true, true, '✕', true, '△', 'B', 'ZL', '+', 'rgba(0, 0, 0, 0)', true, true, '↑', true]);
+					return [
+						glyph(0, 'a').textContent, getComputedStyle(glyph(0, 'a')).backgroundColor === token('--elemenx-gamepad-green'), getComputedStyle(glyph(0, 'b')).backgroundColor === token('--elemenx-gamepad-red'),
+						glyph(1, 'a').textContent, getComputedStyle(glyph(1, 'a')).color === token('--elemenx-gamepad-blue'), glyph(1, 'y').textContent,
+						glyph(2, 'a').textContent, glyph(2, 'lt').textContent, glyph(2, 'start').textContent,
+						getComputedStyle(glyph(3, 'a')).color, getComputedStyle(glyph(3, 'a'), '::before').maskImage.indexOf('svg') !== -1,
+						getComputedStyle(glyph(0, 'up'), '::before').maskImage.indexOf('svg') !== -1, glyph(0, 'up').textContent,
+						getComputedStyle(glyph(0, 'ls')).boxShadow.indexOf('inset') !== -1
+					];
+				}).catch(function () {
+					/* Not drawn yet: read again. */
+					return null;
+				}).catch(function () {
+					/* Not drawn yet: read again. */
+					return null;
+				});
+			}).toEqual(['A', true, true, '✕', true, '△', 'B', 'ZL', '+', 'rgba(0, 0, 0, 0)', true, true, '↑', true]);
 
 			expect(errors).toEqual([]);
 		});
@@ -2019,6 +2033,9 @@ for (const origin of origins) {
 			await expect.poll(function () {
 				return copy.evaluate(function (node) {
 					return getComputedStyle(node).backgroundColor;
+				}).catch(function () {
+					/* Not drawn yet: read again. */
+					return null;
 				});
 			}).not.toBe(before);
 
@@ -2043,15 +2060,20 @@ for (const origin of origins) {
 			await start.scrollIntoViewIfNeeded();
 
 			/* Width and Height in cells, the sizes tall and xlarge; the groups side by side in a grid that scrolls on its own. */
-			expect(await start.evaluate(function (node) {
-				function cells (id) {
-					var box = node.querySelector('[data-id="' + id + '"]').getBoundingClientRect();
+			await expect.poll(function () {
+				return start.evaluate(function (node) {
+					function cells (id) {
+						var box = node.querySelector('[data-id="' + id + '"]').getBoundingClientRect();
 
-					return [Math.round((box.width + 8) / 56), Math.round((box.height + 8) / 56)];
-				}
+						return [Math.round((box.width + 8) / 56), Math.round((box.height + 8) / 56)];
+					}
 
-				return [cells('calendar'), cells('board'), cells('notes'), cells('games'), getComputedStyle(node).overflowX, getComputedStyle(node).flexWrap, node.scrollHeight > node.clientHeight];
-			})).toEqual([[3, 2], [6, 4], [2, 4], [4, 4], 'auto', 'nowrap', true]);
+					return [cells('calendar'), cells('board'), cells('notes'), cells('games'), getComputedStyle(node).overflowX, getComputedStyle(node).flexWrap, node.scrollHeight > node.clientHeight];
+				}).catch(function () {
+					/* Not drawn yet: read again. */
+					return null;
+				});
+			}).toEqual([[3, 2], [6, 4], [2, 4], [4, 4], 'auto', 'nowrap', true]);
 
 			/* The button declared in the slot actions of the group stands in its header and keeps its binding. */
 			await work.locator('.elemenx-tile-group-header').getByRole('button', {name: 'Add a tile'}).click();
@@ -2106,9 +2128,9 @@ for (const origin of origins) {
 			var box;
 			var clicks;
 
-			/* A drag of the mouse along x from the middle of a box, in steps, as a hand does. */
+			/* A drag of the mouse along x from the middle of a box, in steps, as a hand does; the box in view and still (see settled). */
 			async function drag (locator, dx) {
-				box = await locator.boundingBox();
+				box = await settled(locator);
 
 				await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
 				await page.mouse.down();
@@ -2623,12 +2645,15 @@ for (const origin of origins) {
 
 			/* A long press of 0 puts +, the keys their digits. */
 			zero = phone.locator('.elemenx-dial-pad-key').nth(10);
-			box = await zero.boundingBox();
+			box = await settled(zero);
 
 			await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
-			/* Held well past its Hold (500 ms): a busy page fires the timer late. */
+
+			/* Held until its Hold (500 ms) has put + in, by the clock of the page (regression: held 1.5 s by the one of the test, a busy page fired the timer after the release). */
 			await page.mouse.down();
-			await page.waitForTimeout(1500);
+
+			await expect(field).toHaveValue('+');
+
 			await page.mouse.up();
 
 			await phone.locator('.elemenx-dial-pad-key').nth(3).click();
@@ -2828,6 +2853,9 @@ for (const origin of origins) {
 			await expect.poll(function () {
 				return calls.locator('.elemenx-call-invite').getByRole('button', {name: 'Accept', exact: true}).evaluate(function (node) {
 					return getComputedStyle(node).backgroundImage;
+				}).catch(function () {
+					/* Not drawn yet: read again. */
+					return null;
 				});
 			}).toContain('linear-gradient');
 
@@ -3374,12 +3402,17 @@ for (const origin of origins) {
 			await ios.scrollIntoViewIfNeeded();
 
 			/* The two looks: rows on cards with square tiles, rows across with round tiles. */
-			expect(await ios.evaluate(function (node) {
-				var list = getComputedStyle(node.querySelector('.elemenx-settings-menu-list'));
-				var tile = node.querySelector('.elemenx-settings-menu-tile');
+			await expect.poll(function () {
+				return ios.evaluate(function (node) {
+					var list = getComputedStyle(node.querySelector('.elemenx-settings-menu-list'));
+					var tile = node.querySelector('.elemenx-settings-menu-tile');
 
-				return [list.backgroundColor !== 'rgba(0, 0, 0, 0)', parseFloat(list.borderTopLeftRadius) > 0, tile.offsetWidth, getComputedStyle(tile).borderTopLeftRadius];
-			})).toEqual([true, true, 29, '8px']);
+					return [list.backgroundColor !== 'rgba(0, 0, 0, 0)', parseFloat(list.borderTopLeftRadius) > 0, tile.offsetWidth, getComputedStyle(tile).borderTopLeftRadius];
+				}).catch(function () {
+					/* Not drawn yet: read again. */
+					return null;
+				});
+			}).toEqual([true, true, 29, '8px']);
 
 			expect(await material.evaluate(function (node) {
 				var tile = node.querySelector('.elemenx-settings-menu-tile');
@@ -3501,11 +3534,16 @@ for (const origin of origins) {
 				await open(page, origin);
 
 				/* Under 16 pixels iOS zooms the page in at every focus of a field. */
-				expect(await page.evaluate(function () {
-					return Array.prototype.filter.call(document.querySelectorAll('.elemenx-input-control, .elemenx-terminal-input, .elemenx-settings-menu-query, .elemenx-table-filter-select, .elemenx-pagination-size, .elemenx-rich-editor-content, .elemenx-code-editor-input'), function (node) {
-						return node.offsetWidth && parseFloat(getComputedStyle(node).fontSize) < 16;
-					}).length;
-				})).toBe(0);
+				await expect.poll(function () {
+					return page.evaluate(function () {
+						return Array.prototype.filter.call(document.querySelectorAll('.elemenx-input-control, .elemenx-terminal-input, .elemenx-settings-menu-query, .elemenx-table-filter-select, .elemenx-pagination-size, .elemenx-rich-editor-content, .elemenx-code-editor-input'), function (node) {
+							return node.offsetWidth && parseFloat(getComputedStyle(node).fontSize) < 16;
+						}).length;
+					}).catch(function () {
+						/* Not drawn yet: read again. */
+						return null;
+					});
+				}).toBe(0);
 
 				/* The note of a section never lies over its title: a narrow header puts it beside or under the title. */
 				expect(await page.evaluate(function () {
@@ -4208,9 +4246,14 @@ for (const origin of origins) {
 
 			await stripe.hover();
 
-			expect(await stripe.evaluate(function (node) {
-				return getComputedStyle(node).backgroundColor;
-			})).not.toBe(plain);
+			await expect.poll(function () {
+				return stripe.evaluate(function (node) {
+					return getComputedStyle(node).backgroundColor;
+				}).catch(function () {
+					/* Not drawn yet: read again. */
+					return null;
+				});
+			}).not.toBe(plain);
 
 			await table.getByRole('button', {name: 'Commits'}).click();
 
@@ -4291,6 +4334,16 @@ for (const origin of origins) {
 			await shaken();
 
 			await expect(required).not.toHaveClass(/refused/);
+
+			/* The start of the shake, which a busy page tells late (regression: one look 300 ms after found none). */
+			await expect.poll(function () {
+				return required.evaluate(function (node) {
+					return node.testStarts.indexOf('elemenx-dialog-refuse') !== -1;
+				}).catch(function () {
+					/* Not drawn yet: read again. */
+					return null;
+				});
+			}).toBe(true);
 
 			await page.waitForTimeout(300);
 
@@ -4609,13 +4662,18 @@ for (const origin of origins) {
 
 			await list.scrollIntoViewIfNeeded();
 
-			expect(await list.evaluate(function (node) {
-				var rows = node.querySelectorAll('.elemenx-property');
-				var first = rows[0].getBoundingClientRect();
-				var second = rows[1].getBoundingClientRect();
+			await expect.poll(function () {
+				return list.evaluate(function (node) {
+					var rows = node.querySelectorAll('.elemenx-property');
+					var first = rows[0].getBoundingClientRect();
+					var second = rows[1].getBoundingClientRect();
 
-				return [node.tagName, node.classList.contains('double'), rows.length, Math.round(first.top) === Math.round(second.top) && second.left > first.right, rows[0].querySelector('dt').textContent, rows[0].querySelector('dd').textContent.trim(), rows[3].querySelector('dd code').textContent, getComputedStyle(rows[3].querySelector('.elemenx-property-text')).display, getComputedStyle(rows[2].querySelector('dd')).textAlign];
-			})).toEqual(['DL', true, 4, true, 'Uptime', '99.9%', 'v2.32', 'none', 'end']);
+					return [node.tagName, node.classList.contains('double'), rows.length, Math.round(first.top) === Math.round(second.top) && second.left > first.right, rows[0].querySelector('dt').textContent, rows[0].querySelector('dd').textContent.trim(), rows[3].querySelector('dd code').textContent, getComputedStyle(rows[3].querySelector('.elemenx-property-text')).display, getComputedStyle(rows[2].querySelector('dd')).textAlign];
+				}).catch(function () {
+					/* Not drawn yet: read again. */
+					return null;
+				});
+			}).toEqual(['DL', true, 4, true, 'Uptime', '99.9%', 'v2.32', 'none', 'end']);
 
 			/* Tones color the value with the colors of the theme. */
 			expect(await list.evaluate(function (node) {
@@ -4814,12 +4872,17 @@ for (const origin of origins) {
 			await feedback.locator('.ui-kit-meters').scrollIntoViewIfNeeded();
 
 			/* Upwards: the fill grows from the bottom, the value is over the bar and the label under it. */
-			expect(await feedback.getByRole('meter', {name: 'Fuel'}).evaluate(function (node) {
-				var track = node.querySelector('.elemenx-meter-track').getBoundingClientRect();
-				var fill = node.querySelector('.elemenx-meter-fill').getBoundingClientRect();
+			await expect.poll(function () {
+				return feedback.getByRole('meter', {name: 'Fuel'}).evaluate(function (node) {
+					var track = node.querySelector('.elemenx-meter-track').getBoundingClientRect();
+					var fill = node.querySelector('.elemenx-meter-fill').getBoundingClientRect();
 
-				return [node.classList.contains('vertical'), Math.round(fill.height / track.height * 100), Math.round(fill.bottom) === Math.round(track.bottom), node.querySelector('.elemenx-meter-value').getBoundingClientRect().bottom <= track.top, node.querySelector('.elemenx-meter-label').getBoundingClientRect().top >= track.bottom];
-			})).toEqual([true, 72, true, true, true]);
+					return [node.classList.contains('vertical'), Math.round(fill.height / track.height * 100), Math.round(fill.bottom) === Math.round(track.bottom), node.querySelector('.elemenx-meter-value').getBoundingClientRect().bottom <= track.top, node.querySelector('.elemenx-meter-label').getBoundingClientRect().top >= track.bottom];
+				}).catch(function () {
+					/* Not drawn yet: read again. */
+					return null;
+				});
+			}).toEqual([true, 72, true, true, true]);
 
 			/* A dial: the fill of its ring is the share of the range, its ticks spread along it, the value in its middle. */
 			expect(await feedback.getByRole('meter', {name: 'Speed'}).evaluate(function (node) {
@@ -5142,9 +5205,14 @@ for (const origin of origins) {
 
 			wrap = page.locator('.elemenx-table-wrap').first();
 
-			expect(await wrap.evaluate(function (node) {
-				return node.scrollWidth - node.clientWidth;
-			})).toBe(0);
+			await expect.poll(function () {
+				return wrap.evaluate(function (node) {
+					return node.scrollWidth - node.clientWidth;
+				}).catch(function () {
+					/* Not drawn yet: read again. */
+					return null;
+				});
+			}).toBe(0);
 		});
 
 		test('chat keeps to its last message when what it holds grows later: a picture that loads, more messages', async function ({ page }) {
@@ -5873,6 +5941,9 @@ for (const origin of origins) {
 			await expect.poll(function () {
 				return page.evaluate(function () {
 					return window.printed.length;
+				}).catch(function () {
+					/* Not drawn yet: read again. */
+					return null;
 				});
 			}).toBe(1);
 
@@ -6081,6 +6152,9 @@ for (const origin of origins) {
 			await expect.poll(function () {
 				return page.evaluate(function () {
 					return window.printed.length;
+				}).catch(function () {
+					/* Not drawn yet: read again. */
+					return null;
 				});
 			}).toBe(1);
 
@@ -6326,7 +6400,9 @@ for (const origin of origins) {
 
 			await scope.locator('.ui-kit-desktop').scrollIntoViewIfNeeded();
 
-			expect(await place(properties)).toEqual([24, 24, 320, 260]);
+			await expect.poll(function () {
+				return place(properties);
+			}).toEqual([24, 24, 320, 260]);
 			await expect(properties).toHaveAttribute('role', 'dialog');
 			await expect(properties).toHaveAccessibleName('Properties');
 
@@ -6700,6 +6776,9 @@ for (const origin of origins) {
 					var box = mark.getBoundingClientRect();
 
 					return [getComputedStyle(mark).backgroundImage.split('linear-gradient').length - 1, Math.round(cell.left - box.left), Math.round(box.bottom - cell.bottom)];
+				}).catch(function () {
+					/* Not drawn yet: read again. */
+					return null;
 				});
 			}).toEqual([4, 3, 3]);
 			expect(await game.getByRole('option', {name: /Ember rune/}).evaluate(function (node) {
@@ -6861,6 +6940,9 @@ for (const origin of origins) {
 					var card = node.querySelector('.elemenx-game-inventory-card');
 
 					return card ? Math.round(card.getBoundingClientRect().top - Math.max(4, Math.min(node.getBoundingClientRect().top, window.innerHeight - 200))) + 0 : null;
+				}).catch(function () {
+					/* Not drawn yet: read again. */
+					return null;
 				});
 			}).toBe(0);
 
@@ -7580,7 +7662,9 @@ for (const origin of origins) {
 
 			await grid.scrollIntoViewIfNeeded();
 
-			expect(await width()).toBe(216);
+			await expect.poll(function () {
+				return width();
+			}).toBe(216);
 			await expect(grid.locator('.elemenx-tile-group[data-group="pinned"] .elemenx-tile-group-resize')).toHaveCount(0);
 
 			box = await handle.boundingBox();
@@ -7659,6 +7743,9 @@ for (const origin of origins) {
 			await expect.poll(function () {
 				return page.evaluate(function () {
 					return window.sawGrowing;
+				}).catch(function () {
+					/* Not drawn yet: read again. */
+					return null;
 				});
 			}).toBe(true);
 
@@ -7943,6 +8030,9 @@ for (const origin of origins) {
 			await expect.poll(function () {
 				return section(page, 'Tiles').evaluate(function (node) {
 					return Math.abs(node.getBoundingClientRect().top) < 200;
+				}).catch(function () {
+					/* Not drawn yet: read again. */
+					return null;
 				});
 			}).toBe(true);
 
@@ -8563,7 +8653,9 @@ for (const origin of origins) {
 
 			await tree.scrollIntoViewIfNeeded();
 
-			expect(await rows()).toEqual(['1:src', '2:components', '2:services', '2:index.js', '1:remote (loads on open)', '1:locked.bin', '1:README.md']);
+			await expect.poll(function () {
+				return rows();
+			}).toEqual(['1:src', '2:components', '2:services', '2:index.js', '1:remote (loads on open)', '1:locked.bin', '1:README.md']);
 
 			await row('components').locator('.elemenx-tree-twisty').click();
 			await row('Table.js').click();
@@ -8636,7 +8728,9 @@ for (const origin of origins) {
 
 			await list.scrollIntoViewIfNeeded();
 
-			expect(await list.locator('.elemenx-virtual-row').count()).toBeLessThan(30);
+			await expect.poll(function () {
+				return list.locator('.elemenx-virtual-row').count();
+			}).toBeLessThan(30);
 			expect(await list.evaluate(function (node) {
 				return node.scrollHeight;
 			})).toBe(3200000);

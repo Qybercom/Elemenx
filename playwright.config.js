@@ -5,7 +5,8 @@ export default defineConfig({
 	testMatch: ['history/**/*.spec.js', 'production/**/*.spec.js', 'examples/**/*.spec.js', 'dist/**/*.spec.js'],
 	/*
 	 * The tests, not the files, are split between the workers and the shards of CI: most of them are in ui-kit.spec.js.
-	 * ELEMENX_WORKERS sets the number of workers; by default half of the processors, and 2 on a runner of CI.
+	 * ELEMENX_WORKERS sets the number of workers; by default 4 (each runs a browser: more froze a machine of 16 threads),
+	 * and 2 on a runner of CI.
 	 */
 	fullyParallel: true,
 	/*
@@ -15,7 +16,7 @@ export default defineConfig({
 	 */
 	timeout: 120000,
 	expect: {timeout: 20000},
-	workers: process.env.ELEMENX_WORKERS ? Number(process.env.ELEMENX_WORKERS) : (process.env.CI ? 2 : '50%'),
+	workers: process.env.ELEMENX_WORKERS ? Number(process.env.ELEMENX_WORKERS) : (process.env.CI ? 2 : 4),
 	forbidOnly: !!process.env.CI,
 	/*
 	 * In CI a failed test runs once more: one that passes then is reported flaky (an annotation of the github reporter),

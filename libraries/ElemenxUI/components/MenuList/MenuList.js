@@ -72,19 +72,34 @@ Elemenx.Component('MenuList', {
 			return root && (root.querySelector(':scope > .elemenx-menu-entry > .elemenx-option[data-index="' + index + '"]') || root.querySelector(':scope > .elemenx-menu-entry > .elemenx-option:not(.disabled)'));
 		}
 
-		var item = root && !root.hidden ? find() : null;
+		this.Settle(function () {
+			return root && !root.hidden ? find() : null;
+		});
+	},
 
-		if (item) {
-			item.focus();
+	/*
+	 * Gives the focus to what find() returns once it can take it: drawn, in a panel shown. Tried again while the menu is
+	 * open, for up to 5 seconds (regression: a busy page had not drawn or shown it a task later, and the menu never had
+	 * the focus: its keys and Escape did nothing).
+	 */
+	Settle: function (find) {
+		var self = this;
+		var tries = 0;
 
-			return;
+		function attempt () {
+			var item = find();
+			if (item)
+				item.focus();
+
+			if (item && item.ownerDocument.activeElement === item) return;
+
+			tries++;
+
+			if (self.Open && tries < 300)
+				window.setTimeout(attempt, 16);
 		}
 
-		window.setTimeout(function () {
-			var later = find();
-			if (later)
-				later.focus();
-		}, 0);
+		attempt();
 	},
 
 	Enabled: function (index) {
@@ -300,11 +315,9 @@ Elemenx.Component('MenuList', {
 	SheetFocus: function () {
 		var root = this.$Element();
 
-		window.setTimeout(function () {
-			var first = root && root.querySelector('.elemenx-menu.sheet > .elemenx-menu-entry > .elemenx-option:not(.disabled)');
-			if (first)
-				first.focus();
-		}, 0);
+		this.Settle(function () {
+			return root && root.querySelector('.elemenx-menu.sheet > .elemenx-menu-entry > .elemenx-option:not(.disabled)');
+		});
 	},
 
 	/* The keys of the sheet: the arrows go through its rows, Escape goes back a level or closes it. */

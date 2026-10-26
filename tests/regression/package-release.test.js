@@ -200,7 +200,7 @@ describe('Elemenx npm release surface', function () {
 		temporary.push(site);
 
 		expect(manifest.scripts.preversion).toBe('node scripts/version.js check');
-		expect(manifest.scripts.version).toBe('node scripts/version.js sync && git add packages/elemenx/package.json elemenx.js');
+		expect(manifest.scripts.version).toBe('node scripts/version.js sync && git add packages/elemenx/package.json elemenx.js examples/Advanced/package.json');
 		expect(manifest.scripts['version:set']).toBe('node scripts/version.js set');
 		expect(manifest.scripts['version:tag']).toBe('node scripts/version.js tag');
 
@@ -210,6 +210,9 @@ describe('Elemenx npm release surface', function () {
 		fs.copyFileSync(path.join(root, 'scripts', 'version.js'), path.join(site, 'scripts', 'version.js'));
 		fs.copyFileSync(path.join(wrapper, 'package.json'), path.join(site, 'packages', 'elemenx', 'package.json'));
 		fs.writeFileSync(path.join(site, 'elemenx.js'), '(function () {\n\tvar Version = \'' + manifest.version + '\';\n})();\n');
+		fs.mkdirSync(path.join(site, 'examples', 'Advanced'), {recursive: true});
+		/* The example on the range of the versions 0.9.x the test sets first: they leave it as it is. */
+		fs.writeFileSync(path.join(site, 'examples', 'Advanced', 'package.json'), JSON.stringify({name: 'advanced', dependencies: {'@qybercom/elemenx': '^0.9.0'}}, null, '\t') + '\n');
 		fs.writeFileSync(path.join(site, 'package.json'), JSON.stringify({name: manifest.name, version: manifest.version, scripts: {preversion: manifest.scripts.preversion, version: manifest.scripts.version, 'version:set': manifest.scripts['version:set'], 'version:tag': manifest.scripts['version:tag']}}, null, '\t') + '\n');
 
 		git(['init', '-q']);
@@ -307,6 +310,22 @@ describe('Elemenx npm release surface', function () {
 
 		expect(run.status, run.stderr).toBe(0);
 		expect(git(['tag', '--list', 'v0.9.9'])).toBe('v0.9.9');
+
+		/* A minor version: the example depends on it (regression: 0.10.0 left the example on ^0.9.0 and the tests of CI failed). */
+		run = script('version:set', ['0.10.0']);
+
+		expect(run.status, run.stderr).toBe(0);
+		expect(read('examples/Advanced/package.json').dependencies).toEqual({'@qybercom/elemenx': '^0.10.0'});
+
+		/* Changed back by hand: no tag, the message names it. */
+		fs.writeFileSync(path.join(site, 'examples', 'Advanced', 'package.json'), JSON.stringify({name: 'advanced', dependencies: {'@qybercom/elemenx': '^0.9.0'}}, null, '\t') + '\n');
+
+		git(['commit', '-q', '-am', '0.10.0']);
+
+		run = script('version:tag');
+
+		expect(run.status).not.toBe(0);
+		expect(run.stderr).toContain('examples/Advanced/package.json depends on @qybercom/elemenx ^0.9.0');
 	}, 60000);
 
 	it('npm run release <version> checks first, then tests, sets the version, commits, tags and pushes, and stops at a step that fails', function () {

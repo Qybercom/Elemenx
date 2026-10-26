@@ -8,6 +8,8 @@ export default defineConfig({
 		__ELEMENX_SCRIPT__: JSON.stringify(process.env.ELEMENX_SCRIPT || '/elemenx.js')
 	},
 	test: {
+		/* 4 files at a time, as the end-to-end tests (ELEMENX_WORKERS sets it): all of the processors froze the machine. */
+		maxWorkers: Number(process.env.ELEMENX_WORKERS) || 4,
 		browser: {
 			enabled: true,
 			provider: playwright({

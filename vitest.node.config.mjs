@@ -3,6 +3,8 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
 	test: {
 		environment: 'node',
+		/* 4 files at a time, as the end-to-end tests (ELEMENX_WORKERS sets it): all of the processors froze the machine. */
+		maxWorkers: Number(process.env.ELEMENX_WORKERS) || 4,
 		/*
 		 * These tests build Applications, minify, spawn the CLI and servers: real work, not units. Alone a build takes a
 		 * quarter of a second, beside the browser tests of a full run (or a second run) more than the 5 seconds of Vitest

@@ -42,7 +42,7 @@ Run the complete suite:
 npm test
 ```
 
-`npm test` runs the browser contract suite, Node/tooling regressions, and real-browser Playwright end-to-end tests. Playwright runs its tests in parallel, on half of the processors; `ELEMENX_WORKERS=2 npm run test:history` sets the number of workers.
+`npm test` runs the browser contract suite, Node/tooling regressions, and real-browser Playwright end-to-end tests. The tests run 4 at a time (Vitest files and Playwright workers); `ELEMENX_WORKERS=2 npm test` sets the number.
 
 ## Editors
 
