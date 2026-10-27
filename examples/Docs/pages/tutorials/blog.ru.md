@@ -145,7 +145,7 @@ Elemenx.Component('PostList', {
 <PostCard *for="post of Shown(Posts, $Params)" *key="post.ID" Layout="horizontal" [title]="post.Title" [excerpt]="post.Excerpt" [tags]="post.Tags" [date]="post.Date" [readTime]="post.ReadTime" [href]="'/post/' + post.ID" />
 ```
 
-Функцию, которую вызывает шаблон, задают в `$OnCreate` (`this.Shown = function ...`); методы определения — это обработчики событий.
+Функция, которую вызывает шаблон, — метод или хелпер, заданный в `$OnCreate` (`this.Shown = function ...`), как здесь; обработчики событий находятся теми же двумя путями.
 
 ## 4. Пост
 

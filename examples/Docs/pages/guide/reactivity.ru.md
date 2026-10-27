@@ -50,15 +50,13 @@ this.$Batch(function (state) {
 
 ## Хелперы и вычисляемые значения
 
-Выражение шаблона вычисляется заново, когда меняются поля, которые оно читает. Вычисляемое значение, нужное в нескольких местах, выносите в хелпер, заданный в `$OnCreate`, который принимает поля аргументами:
+Выражение шаблона вычисляется заново, когда меняются поля, которые оно читает. Вычисляемое значение, нужное в нескольких местах, выносите в метод, который принимает поля аргументами:
 
 ```js
-$OnCreate: function () {
-	this.Visible = function (items, filter) {
-		return items.filter(function (item) {
-			return !filter || item.Tags.indexOf(filter) !== -1;
-		});
-	};
+Visible: function (items, filter) {
+	return items.filter(function (item) {
+		return !filter || item.Tags.indexOf(filter) !== -1;
+	});
 }
 ```
 

@@ -144,7 +144,7 @@ Elemenx.Component('PostList', {
 <PostCard *for="post of Shown(Posts, $Params)" *key="post.ID" Layout="horizontal" [title]="post.Title" [excerpt]="post.Excerpt" [tags]="post.Tags" [date]="post.Date" [readTime]="post.ReadTime" [href]="'/post/' + post.ID" />
 ```
 
-A function a template calls is set in `$OnCreate` (`this.Shown = function ...`); the methods of the definition are the handlers of the events.
+A function a template calls is a method, or a helper set in `$OnCreate` (`this.Shown = function ...`) as here; the handlers of the events are found the same two ways.
 
 ## 4. A post
 

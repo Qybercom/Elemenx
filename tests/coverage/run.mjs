@@ -3,7 +3,10 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-/* npm run test:coverage:all — Vitest coverage, Playwright coverage, then the combined report in coverage/all. */
+/*
+ * npm run test:coverage:all — Vitest coverage, the one of elemenx.js without a DOM (headless.test.js, in Node), Playwright
+ * coverage, then the combined report in coverage/all.
+ */
 
 var root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 var raw = path.join(root, 'coverage', 'playwright');
@@ -20,6 +23,7 @@ function run (command, args, env) {
 }
 
 run('npx', ['vitest', 'run', '--coverage']);
+run('npx', ['vitest', 'run', '--config', 'vitest.node.config.mjs', 'tests/regression/headless.test.js', '--coverage', '--coverage.include=elemenx.js', '--coverage.reporter=json', '--coverage.reportsDirectory=coverage/headless']);
 
 fs.rmSync(raw, {recursive: true, force: true});
 

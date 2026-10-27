@@ -52,7 +52,7 @@ The fields of the definition are its state and its props at once: a parent sets 
 ## What is different
 
 - **No build is needed.** A page with one `<script>` runs Elemenx; the CLI adds a development server, generators and a build when the project grows. The code is ES5 that every browser runs as it is.
-- **A function of a template is set in `$OnCreate`.** `this.Total = function (items) {...}` there, and `{{Total(Items)}}` in the template: the template passes what it reads, so it follows it. The methods of the definition are the handlers of the events.
+- **A function of a template is a method.** `Total: function (items) {...}` in the definition, and `{{Total(Items)}}` in the template: the template passes what it reads, so it follows it. The handlers of the events are methods too (or functions `$OnCreate` sets).
 - **No Promise in the API.** A Service or a request answers with a callback `(error, result)` or with events; a guard waits with `this.$Wait(function (done) {...})`.
 - **The Library is part of it.** ElemenxUI (`$Use: ['ElemenxUI']`) has the components of an application, from a button to a calendar, a code editor and a game world, with themes, languages and the keys of a keyboard and a gamepad.
 - **One file of a framework.** `elemenx.js` holds the router, the network (XHR, WebSocket, SSE, WebRTC...), the storage, the messaging between tabs and workers, and the service worker of a PWA; a build leaves out what the Application does not use.

@@ -258,6 +258,7 @@ function definitions (source, file) {
 		var found = keys(source, open, end);
 		var description = /\$Meta\s*:\s*\{[\s\S]*?Description\s*:\s*(['"])((?:[^\\]|\\.)*?)\1/.exec(body);
 		var events = emitted(body);
+		var template = /\$TemplateID\s*:\s*(['"])([^'"]+)\1/.exec(body);
 		var closures = /this\.([A-Z][\w$]*)\s*=\s*function\s*\(([^)]*)\)/g;
 		var closure;
 		var methods = [];
@@ -290,7 +291,9 @@ function definitions (source, file) {
 			Slots: [],
 			File: file,
 			Line: lineOf(source, match.index),
-			Library: false
+			Library: false,
+			/* The <template id> of a page it takes ($TemplateID: 'x'), or null. */
+			TemplateID: template ? template[2] : null
 		});
 
 		pattern.lastIndex = end;
@@ -468,7 +471,8 @@ function Create (options) {
 				if (!Skipped[entry.name])
 					count = walk(file, count + 1);
 			}
-			else if (/\.(js|mjs)$/.test(entry.name)) {
+			/* A page defines Components in its scripts too: the ones of its <template id>. */
+			else if (/\.(js|mjs|html?)$/.test(entry.name)) {
 				count++;
 
 				scanFile(file);
@@ -806,18 +810,55 @@ function prop (component, name) {
 	})[0] || null;
 }
 
-/* The Component a template belongs to: the one defined next to it with its name (Name.html beside Name.js). */
-function owner (knowledge, file) {
+/*
+ * The Component a template belongs to: in a <template id="x"> of a page (text, at offset), the one of that page or of
+ * its folder with $TemplateID: 'x'; else the one defined next to it with its name (Name.html beside Name.js).
+ */
+function owner (knowledge, file, text, offset) {
 	var name;
 	var component;
+	var id;
+	var folder;
 
 	if (!file)
 		return null;
+
+	id = text === undefined ? null : templateAt(text, offset);
+
+	if (id) {
+		folder = path.dirname(path.resolve(file));
+
+		return knowledge.Components().filter(function (each) {
+			return each.TemplateID === id && each.File && path.dirname(each.File) === folder;
+		}).sort(function (a, b) {
+			return (b.File === path.resolve(file)) - (a.File === path.resolve(file));
+		})[0] || null;
+	}
 
 	name = path.basename(file).replace(/\.[^.]+$/, '');
 	component = knowledge.Component(name);
 
 	return component && component.File && path.dirname(component.File) === path.dirname(path.resolve(file)) ? component : null;
+}
+
+/* The id of the <template id> of a page around an offset, or null. */
+function templateAt (text, offset) {
+	var pattern = /<template\b([^>]*)>|<\/template\s*>/gi;
+	var open = [];
+	var match;
+	var id;
+
+	while ((match = pattern.exec(text)) && match.index < offset) {
+		id = match[1] === undefined ? undefined : /\sid\s*=\s*(['"])([^'"]+)\1/.exec(match[1]);
+
+		if (id === undefined) open.pop();
+		else open.push(id ? id[2] : null);
+	}
+
+	/* The nearest template with an id: a <template slot> inside one is part of it. */
+	return open.filter(function (each) {
+		return each;
+	}).pop() || null;
 }
 
 function describe (component) {
@@ -1014,7 +1055,7 @@ function candidates (knowledge, text, offset, language, file) {
 		if (bound.Kind === 'prop') return items;
 
 		/* An expression or a handler: the fields and the functions of the Component of the template. */
-		own = owner(knowledge, file);
+		own = owner(knowledge, file, text, offset);
 
 		if (own) {
 			own.Props.forEach(function (each) {
@@ -1147,7 +1188,7 @@ function Hover (knowledge, text, offset, language, file) {
 		bound = binding(at.Attribute.Name);
 
 		if (at.Attribute.Name.charAt(0) === '#') {
-			own = owner(knowledge, file);
+			own = owner(knowledge, file, text, offset);
 
 			return {Markdown: '**' + at.Attribute.Name + '** · a reference: `this.$Ref(\'' + at.Attribute.Name.substring(1) + '\')`' + (own ? ' in ' + own.Name : '') + ' gives this element', Start: at.Attribute.Start, End: at.Attribute.End};
 		}
@@ -1174,7 +1215,7 @@ function Hover (knowledge, text, offset, language, file) {
 	}
 
 	if (at.Kind === 'attribute-value' || at.Kind === 'expression') {
-		own = owner(knowledge, file);
+		own = owner(knowledge, file, text, offset);
 		word = (/^[\w$]*/.exec(text.substring(offset)) || [''])[0];
 		word = (/[\w$]*$/.exec(text.substring(0, offset)) || [''])[0] + word;
 
@@ -1261,7 +1302,7 @@ function Definition (knowledge, text, offset, language, file) {
 
 	/* #Name: to the first $Ref('Name') of the code of its Component. */
 	if (at.Kind === 'attribute-name' && at.Attribute && at.Attribute.Name.charAt(0) === '#') {
-		own = owner(knowledge, file);
+		own = owner(knowledge, file, text, offset);
 		word = own ? read(own.File) : null;
 		item = word ? new RegExp('\\$Ref\\(\\s*([\'"])' + at.Attribute.Name.substring(1).replace(/\$/g, '\\$') + '\\1').exec(word) : null;
 
@@ -1277,7 +1318,7 @@ function Definition (knowledge, text, offset, language, file) {
 	}
 
 	if (at.Kind === 'attribute-value' || at.Kind === 'expression') {
-		own = owner(knowledge, file);
+		own = owner(knowledge, file, text, offset);
 		word = (/[\w$]*$/.exec(text.substring(0, offset)) || [''])[0] + (/^[\w$]*/.exec(text.substring(offset)) || [''])[0];
 
 		if (!own || !word) return null;
@@ -1298,7 +1339,12 @@ function Diagnose (knowledge, text, language, file) {
 	var template;
 	var names;
 	var pattern = /(?:this|self)\.\$Ref\(\s*(['"])([\w$-]+)\1/g;
+	var named = /\$Template\s*:\s*(['"])#([A-Za-z_][\w:.-]*)\1/g;
 	var match;
+
+	/* $Template is the template itself: a name in it (Elemenx took one once) throws, the name goes to $TemplateID. */
+	while ((match = named.exec(text)))
+		problems.push({Start: match.index, End: match.index + match[0].length, Severity: 'error', Message: '$Template is the template itself, not a name: use $TemplateID: \'' + match[2] + '\''});
 
 	/* The code of a Component: this.$Ref('Name') with no #Name in its template (a $Ref of another component is not known). */
 	if (language === 'js') {

@@ -49,15 +49,13 @@ this.$Batch(function (state) {
 
 ## Helpers and computed values
 
-A template expression is computed again when the fields it reads change. A computed value that several places use belongs in a helper, set in `$OnCreate`, that takes the fields as arguments:
+A template expression is computed again when the fields it reads change. A computed value that several places use belongs in a method that takes the fields as arguments:
 
 ```js
-$OnCreate: function () {
-	this.Visible = function (items, filter) {
-		return items.filter(function (item) {
-			return !filter || item.Tags.indexOf(filter) !== -1;
-		});
-	};
+Visible: function (items, filter) {
+	return items.filter(function (item) {
+		return !filter || item.Tags.indexOf(filter) !== -1;
+	});
 }
 ```
 

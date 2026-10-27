@@ -133,8 +133,8 @@ function handle (message) {
 			if (documents[params.textDocument.uri] && params.contentChanges.length)
 				documents[params.textDocument.uri].Text = params.contentChanges[params.contentChanges.length - 1].text;
 
-			/* A Component changed in the code: what the templates know of it changes too. */
-			if (kindOf(params.textDocument.uri) === 'js' && knowledge)
+			/* A Component changed in the code (or in a script of a page): what the templates know of it changes too. */
+			if (knowledge && documents[params.textDocument.uri])
 				knowledge.Update(toPath(params.textDocument.uri), documents[params.textDocument.uri].Text);
 
 			later(params.textDocument.uri);
@@ -149,7 +149,7 @@ function handle (message) {
 			return;
 
 		case 'textDocument/didSave':
-			if (knowledge && /\.(m?js|json)$/i.test(params.textDocument.uri))
+			if (knowledge && /\.(m?js|json|html?)$/i.test(params.textDocument.uri))
 				knowledge.Update(toPath(params.textDocument.uri));
 
 			return;

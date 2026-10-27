@@ -127,7 +127,7 @@ object ElemenxScope {
 			Member(field.name, field.offset, ElemenxTypes.typeOf(field), field.value)
 		}.toMutableList()
 		val body = source.substring(match.range.first, definition.end)
-		val templateId = definition.field("\$TemplateID")?.value?.let { value -> source.substring(value.start, value.end).trim('\'', '"', '`') }
+		val templateId = text(source, definition.field("\$TemplateID"))
 
 		set.findAll(body).forEach { found ->
 			val name = found.groupValues[1]
@@ -138,6 +138,9 @@ object ElemenxScope {
 
 		Definition(match.range.first, definition.end, templateId, members)
 	}.toList()
+
+	/** The text of the string a field holds, without its quotes, or null. */
+	private fun text(source: String, field: ElemenxTypes.Field?): String? = field?.value?.let { value -> source.substring(value.start, value.end).trim('\'', '"', '`') }
 
 	/** The names of the members of the first definition of a source. */
 	fun members(source: String): List<String> = definitions(source).firstOrNull()?.members?.map { member -> member.name } ?: emptyList()

@@ -25,7 +25,7 @@ A project that has only the built files (`dist/elemenx.all.min.js`) still gets a
 
 ## The template and its Component
 
-The template of a Component is its `$TemplateURL`, the `.html` of its name beside it (`Board.html` next to `Board.js`), or a `<template id>` of a page for a definition with `$TemplateID`. The expressions of the template see what Elemenx gives them: the fields and functions of the Component, the variables of the loops around them, `$T` and `$index`.
+The template of a Component is its `$TemplateURL`, the `.html` of its name beside it (`Board.html` next to `Board.js`), or a `<template id="x">` of a page for a definition with `$TemplateID: 'x'`. A name in `$Template` (`'#x'`) is marked as an error. The expressions of the template see what Elemenx gives them: the fields and functions of the Component, the variables of the loops around them, `$T` and `$index`.
 
 In WebStorm and IntelliJ IDEA the expressions are JavaScript of the IDE, with the types of the fields taken from their values: `Title: ''` is a string, `Rows: [{ID: 1}]` an array of `{ID: number}`, so `Rows[0].` completes `ID`, and the item of `*for="row of Rows"` has the type of the items. A JSDoc above a key gives it a type where the value tells too little:
 

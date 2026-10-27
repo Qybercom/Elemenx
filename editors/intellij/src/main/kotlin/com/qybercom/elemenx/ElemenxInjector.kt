@@ -29,7 +29,9 @@ class ElemenxInjector : MultiHostInjector {
 
 				if (javascript == null || range.isEmpty) return
 
-				val scope = scoped(ElemenxScope.typedNames(context), range.substring(context.text))
+				/* The head of a loop declares its variables: they are no parameters of it (regression: "Duplicate declaration"). */
+				val own = if (attribute.name == "*for") ElemenxScope.loopVariables(range.substring(context.text)) else emptyList()
+				val scope = scoped(ElemenxScope.typedNames(context).filter { each -> each.name !in own }, range.substring(context.text))
 
 				registrar.startInjecting(javascript).addPlace(scope + wrap.first, wrap.second + " });", context as PsiLanguageInjectionHost, range).doneInjecting()
 			}

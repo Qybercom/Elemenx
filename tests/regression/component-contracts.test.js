@@ -36,7 +36,7 @@ describe('Regression: Template and Component contracts', function () {
 		}).toThrow('Elemenx.Template.Loader expects a function');
 	});
 
-	it('an inline $Template "#name" uses a registered Template, then a <template> element, and fails when neither exists', function () {
+	it('$TemplateID names a registered Template or a <template> of the page', function () {
 		var registered = unique('InlineRegistered');
 		var element = unique('InlineElement');
 
@@ -44,14 +44,21 @@ describe('Regression: Template and Component contracts', function () {
 
 		document.body.insertAdjacentHTML('beforeend', '<template id="' + element + '"><p class="from-element">element</p></template>');
 
-		var first = mounted(Elemenx.Component(unique('InlineA'), {$Template: '#' + registered})());
-		var second = mounted(Elemenx.Component(unique('InlineB'), {$Template: '#' + element})());
+		var first = mounted(Elemenx.Component(unique('InlineA'), {$TemplateID: registered})());
+		var second = mounted(Elemenx.Component(unique('InlineB'), {$TemplateID: element})());
 
 		expect(first.$Element().className).toBe('from-registry');
 		expect(second.$Element().className).toBe('from-element');
+	});
+
+	/* $Template is the template itself: a name in it ('#cart', which it used to take) says to use $TemplateID. */
+	it('a name in $Template is refused, a text that starts with # is a template', function () {
+		var name = unique('Named');
+
 		expect(function () {
-			Elemenx.Component(unique('InlineC'), {$Template: '#' + unique('Absent')})();
-		}).toThrow('Elemenx template not found: #Absent');
+			Elemenx.Component(unique('Refused'), {$Template: '#' + name})();
+		}).toThrow('Elemenx $Template is the template itself, not a name: use $TemplateID: \'' + name + '\'');
+		expect(mounted(Elemenx.Component(unique('Hashed'), {$Template: '#1 of 3'})()).$Element().textContent).toBe('#1 of 3');
 	});
 
 	it('a <template> of the page finds its Components in any case (the parser writes their names in lower case)', function () {
@@ -62,7 +69,7 @@ describe('Regression: Template and Component contracts', function () {
 
 		document.body.insertAdjacentHTML('beforeend', '<template id="' + element + '"><section class="case-owner"><' + child + ' [Text]="\'found\'"></' + child + '><button class="native">native</button></section></template>');
 
-		var owner = mounted(Elemenx.Component(unique('CaseOwner'), {$Template: '#' + element})());
+		var owner = mounted(Elemenx.Component(unique('CaseOwner'), {$TemplateID: element})());
 
 		expect(owner.$Element().querySelector('.case-child').textContent).toBe('found');
 		expect(owner.$Element().querySelector('.native').tagName).toBe('BUTTON');
@@ -76,7 +83,7 @@ describe('Regression: Template and Component contracts', function () {
 
 		document.body.insertAdjacentHTML('beforeend', '<template id="' + element + '"><' + child + ' [Text]="\'root\'"></' + child + '></template>');
 
-		var owner = mounted(Elemenx.Component(unique('CaseRootOwner'), {$Template: '#' + element})());
+		var owner = mounted(Elemenx.Component(unique('CaseRootOwner'), {$TemplateID: element})());
 
 		expect(owner.$Element().querySelector('.case-root').textContent).toBe('root');
 	});
@@ -90,7 +97,7 @@ describe('Regression: Template and Component contracts', function () {
 
 		document.body.insertAdjacentHTML('beforeend', '<script type="text/html" id="' + element + '"><p class="from-script">{{Text}} <' + name + '></' + name + '></p></script>');
 
-		var owner = mounted(Elemenx.Component(unique('ScriptOwner'), {$Template: '#' + element, Text: 'script'})());
+		var owner = mounted(Elemenx.Component(unique('ScriptOwner'), {$TemplateID: element, Text: 'script'})());
 
 		expect(owner.$Element().className).toBe('from-script');
 		expect(owner.$Element().textContent).toBe('script mixed');

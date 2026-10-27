@@ -1,6 +1,6 @@
 # Templates
 
-A template is HTML with the bindings of Elemenx. Its expressions are JavaScript, read against the fields of the component (and the helpers it set in `$OnCreate`), and every binding follows the fields it reads: change a field, and exactly the texts, attributes and elements that use it change.
+A template is HTML with the bindings of Elemenx. Its expressions are JavaScript, read against the fields of the component (its methods, and the helpers it set in `$OnCreate`), and every binding follows the fields it reads: change a field, and exactly the texts, attributes and elements that use it change.
 
 | Syntax | What it does |
 | --- | --- |
@@ -93,11 +93,15 @@ A template may be:
 
 - a text in the definition: `$Template: '<p>{{Text}}</p>'`;
 - a file next to the script: `$TemplateURL: 'Card.html'` (a production build inlines it);
-- a template of the page: `$Template: '#cart'` takes `<template id="cart">` or `<script type="text/html" id="cart">`;
+- a template of the page: `$TemplateID: 'cart'` takes `<template id="cart">` or `<script type="text/html" id="cart">`;
 - a function that returns a text, called for every new instance: `$Template: function () { return '...'; }`;
-- a template of the registry: `Elemenx.Template('cart', '<ul>...</ul>')` registers one, and `$Template: '#cart'` names it.
+- a template of the registry: `Elemenx.Template('cart', '<ul>...</ul>')` registers one, and `$TemplateID: 'cart'` names it.
 
-The parser of a `<template>` writes the names of its tags in lower case. Elemenx finds the components anyway, except those named as an element of HTML (`Button`, `Select`, `Dialog`, `Image`, `Section`...): give those a `<script type="text/html">`, which keeps the case, or `data-elemenx-component="Button"` on the tag.
+`$Template` is the template itself; a name in it (`$Template: '#cart'`) throws `Elemenx $Template is the template itself, not a name: use $TemplateID: 'cart'`.
+
+The browser parses a `<template>` as HTML: it writes the names of its tags in lower case (`<Table>` becomes the `table` of HTML, and the parser moves out of it what a table may not hold), `<TextArea />` takes the rest of the page as its text, `<Card />` holds the tags after it. So the servers and the builds of Elemenx (`elemenx dev`, `elemenx serve`, `elemenx build`, `Server.Create`) send every `<template id>` of a page as a `<script type="text/html" id>`, whose text the browser does not parse: write the templates of a page in `<template id>`, as the files of a project, and they reach Elemenx as they are written. A template that holds a `</script>` stays a `<template>`.
+
+A page that another server sends (PHP, Python, Java...) gets its `<template id>` parsed by the browser. There Elemenx finds the components of an unknown tag in any case, but not the ones named as an element of HTML (`Button`, `Input`, `Select`, `Table`, `TextArea`, `Dialog`...), nor a self-closing tag: write such a template as `<script type="text/html" id>`, or let the server pass its pages through `require('@qybercom/elemenx/tools/templates.js').Page(html)` (Node).
 
 ## The registry of templates
 

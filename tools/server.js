@@ -5,6 +5,7 @@ var fs = require('fs');
 var path = require('path');
 var zlib = require('zlib');
 var crypto = require('crypto');
+var Templates = require('./templates');
 
 var Types = {
 	'.html': 'text/html; charset=utf-8',
@@ -239,10 +240,17 @@ function create (options) {
 	var compression = options.Compression !== false;
 	var threshold = options.CompressionThreshold === undefined ? 1024 : Number(options.CompressionThreshold);
 
-	/* The page of the root (index.html) through options.Page (text in, text out): the splash of development. */
-	function page (request, response, file) {
+	/*
+	 * A page whose text the server changes: the page of the root (index.html) through options.Page (text in, text out),
+	 * the splash of development, and the <template id> of every page as scripts of text (see templates.js), unless
+	 * options.Templates is false. A page neither changes is sent as a file.
+	 */
+	function page (request, response, file, index) {
 		fs.readFile(file, 'utf8', function (error, text) {
+			var changed;
 			var body;
+			var tag;
+			var headers;
 
 			if (error) {
 				response.writeHead(404, {'Content-Type': 'text/plain; charset=utf-8'});
@@ -251,20 +259,54 @@ function create (options) {
 				return;
 			}
 
-			body = Buffer.from(options.Page(text), 'utf8');
+			changed = options.Templates === false ? text : Templates.Page(text);
 
-			response.writeHead(200, {'Content-Type': Types['.html'], 'Content-Length': body.length, 'Cache-Control': 'no-cache'});
+			if (index)
+				changed = options.Page(changed);
+
+			if (!index && changed === text) {
+				sendFile(request, response, file);
+
+				return;
+			}
+
+			body = Buffer.from(changed, 'utf8');
+			tag = '"' + crypto.createHash('sha1').update(body).digest('hex').substring(0, 20) + '"';
+			headers = {'Content-Type': Types['.html'], 'ETag': tag, 'Cache-Control': index ? 'no-cache' : String(options.CacheControl || 'no-cache')};
+
+			if (request.headers['if-none-match'] === tag) {
+				response.writeHead(304, headers);
+				response.end();
+
+				return;
+			}
+
+			if (compression && body.length >= threshold && acceptsGzip(request)) {
+				body = zlib.gzipSync(body);
+				headers['Content-Encoding'] = 'gzip';
+				headers.Vary = 'Accept-Encoding';
+			}
+
+			headers['Content-Length'] = body.length;
+
+			response.writeHead(200, headers);
 			response.end(request.method === 'HEAD' ? undefined : body);
 		});
 	}
 
 	function send (request, response, file) {
-		if (typeof options.Page === 'function' && path.resolve(file) === path.join(root, 'index.html')) {
-			page(request, response, file);
+		var index = typeof options.Page === 'function' && path.resolve(file) === path.join(root, 'index.html');
+
+		if (index || (options.Templates !== false && path.extname(file).toLowerCase() === '.html')) {
+			page(request, response, file, index);
 
 			return;
 		}
 
+		sendFile(request, response, file);
+	}
+
+	function sendFile (request, response, file) {
 		fs.stat(file, function (error, stat) {
 			if (error || !stat.isFile()) {
 				response.writeHead(404, {'Content-Type': 'text/plain; charset=utf-8'});
@@ -440,7 +482,7 @@ if (require.main === module) {
 	var settings = fs.existsSync(configFile) ? require(configFile) : {};
 	var serverSettings = settings.Server || {};
 
-	create({Root: root, Request: serverSettings.Request || null, WebSocket: serverSettings.WebSocket || null}).Listen(port, '127.0.0.1', function () {
+	create({Root: root, Request: serverSettings.Request || null, Templates: serverSettings.Templates !== false, WebSocket: serverSettings.WebSocket || null}).Listen(port, '127.0.0.1', function () {
 		console.log('Elemenx server: http://127.0.0.1:' + port + '/');
 	});
 }

@@ -51,7 +51,7 @@ Parts of it:
 - `npm run test:tools` the Node tests of the CLI, the build and the tooling;
 - `npm run test:history` the Playwright end-to-end tests, `npm run test:stress` the same five times each with no retry (to find the ones that fail under load);
 - `npm run test:native` the desktop program built with Electron;
-- `npm run test:coverage` and `npm run test:coverage:all` measure the coverage (see `tests/TEST-COVERAGE.md`).
+- `npm run test:coverage` and `npm run test:coverage:all` measure the coverage of `elemenx.js`, `npm run test:coverage:tools` the one of the CLI and `tools/` (see `tests/TEST-COVERAGE.md`).
 
 ## Editors
 

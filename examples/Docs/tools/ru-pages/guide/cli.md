@@ -32,7 +32,7 @@
 | --- | --- |
 | `Application`, `Applications` | корень исходников или список приложений проекта, где их несколько |
 | `Entry`, `Index`, `Output` | скрипт приложений, страница, папка сборки |
-| `Server` | порты и сжатие; `Request(request, response, pathname)` отвечает на собственные пути (API проекта во время разработки: верните `true`, если ответили); `WebSocket: {Path, Message(connection, message)}` отвечает сокету (`connection.Send(text)`, `connection.Close()`) |
+| `Server` | порты и сжатие; `Templates: false` отдаёт страницы как есть (по умолчанию `<template id>` страницы уходит как `<script type="text/html" id>`, см. [Шаблоны](/guide/templates)); `Request(request, response, pathname)` отвечает на собственные пути (API проекта во время разработки: верните `true`, если ответили); `WebSocket: {Path, Message(connection, message)}` отвечает сокету (`connection.Send(text)`, `connection.Close()`) |
 | `Single`, `Widget`, `Full`, `Precompile`, `Packs` | значения по умолчанию параметров `build` |
 | `Extension` | `Surface`, `Name`, `Description`, `Version`, `ID`, `Icons`, `Manifest` расширения браузера |
 | `Native` | `Desktop` и `Mobile`: настройки нативных программ |

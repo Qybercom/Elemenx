@@ -6,6 +6,7 @@ var common = require('./common.js');
 var Minify = require('./minify.js');
 var Shake = require('./shake.js');
 var Splash = require('./splash.js');
+var Templates = require('./templates.js');
 var PWA = require('./pwa.js');
 var AppIcon = require('./appicon.js');
 var Expressions = require('./expressions.js');
@@ -807,6 +808,9 @@ function build (project, options) {
 		else productionIndex = styleMarkup + '\n' + productionIndex;
 	}
 
+	/* The <template id> of the page as scripts of text, which keep the case of its tags (see templates.js). */
+	productionIndex = Templates.Page(productionIndex);
+
 	/* The splash of the Application, at the top of its body (see splash.js). */
 	if (options.splash !== false)
 		productionIndex = Splash.Inject(productionIndex, Splash.Settings(project, options.splash));
@@ -1093,7 +1097,7 @@ function single (job) {
 
 	copyBuildPublic(job);
 
-	page = Splash.Inject(page, job.Splash);
+	page = Splash.Inject(Templates.Page(page), job.Splash);
 
 	if (job.Icon)
 		page = AppIcon.Page(page, job.Icon, null, true);
@@ -1139,7 +1143,7 @@ function widget (job) {
 	copyBuildPublic(job);
 
 	fs.writeFileSync(path.join(job.Output, 'widget.js'), text);
-	fs.writeFileSync(path.join(job.Output, 'index.html'), page);
+	fs.writeFileSync(path.join(job.Output, 'index.html'), Templates.Page(page));
 
 	process.stdout.write('Elemenx Builder: ' + path.join(job.Output, 'widget.js') + ' (' + Math.round(Buffer.byteLength(text) / 1024) + ' KB)\n');
 

@@ -125,6 +125,7 @@ To find a section in `elemenx.js`, search for its header, for example `/* Router
 | `ComponentTag` | the name of the Component an element of a template declares: `data-elemenx-component`, otherwise its tag, in any case for an element HTML does not know | Structural |
 | `ReloadComponentTemplate` | reloads the external template of a component | Application |
 | `ComponentValues` | reactive state of a component instance | Structural |
+| `CallHandler` | calls the handler of an `(event)` by its name when the event comes: a method of the instance, or a function its state holds (set in `$OnCreate`), on the owner of that state | Structural |
 | `UpdateComponentRouteContext` | pushes `$Path`, `$Params`, `$Query`, `$Hash` into a routed component | Router |
 | `CreateComponent` | creates an anonymous component factory from a definition | Structural |
 | `BeginComponentReload` | starts a component reload: remembers live instances | Application |

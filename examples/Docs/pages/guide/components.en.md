@@ -25,7 +25,8 @@ Elemenx.Component('Counter', {
 
 | Key | Meaning |
 | --- | --- |
-| `$Template` | the template: a text, `'#name'` (a template of the registry or a `<template id>` / `<script type="text/html" id>` of the page), or a function that returns a text (called for every instance) |
+| `$Template` | the template itself: a text, or a function that returns a text (called for every instance) |
+| `$TemplateID` | the name of a template of the registry or of a `<template id>` / `<script type="text/html" id>` of the page (a name in `$Template`, `'#cart'`, throws) |
 | `$TemplateURL` | a file of the template, relative to the script of the definition |
 | `$Style` | its CSS as a text |
 | `$StyleURL` | a file of its CSS; the stylesheet of a component is placed once, when its first instance renders |
@@ -81,22 +82,20 @@ Elemenx.Component('Panel', {
 
 ## What a template sees
 
-A template sees the fields of its component, the helpers the component sets on itself in `$OnCreate` (`this.Format = function (value) {...}`), `$T` for phrases, the values of the route (`$Params`, `$Query`, `$Hash`, `$Path`) and the globals of the page. It does not see the methods: they are for events and for code. Put what a template computes in a helper:
+A template sees the fields of its component, its methods, the helpers the component sets on itself in `$OnCreate` (`this.Format = function (value) {...}`), `$T` for phrases, the values of the route (`$Params`, `$Query`, `$Hash`, `$Path`) and the globals of the page. Put what a template computes in a method or a helper:
 
 ```js
 Elemenx.Component('Price', {
 	$Template: '<span>{{Money(Value)}}</span>',
 	Value: 0,
 
-	$OnCreate: function () {
-		this.Money = function (value) {
-			return Number(value).toFixed(2) + ' €';
-		};
+	Money: function (value) {
+		return Number(value).toFixed(2) + ' €';
 	}
 });
 ```
 
-A helper reads its arguments, not `this`: pass it the fields it needs, so the template follows them. The other way round, the handler of an event (`(click)="Save"`, `(change)="Picked"`) is a method of the definition: the template binds it as it renders, so a helper set in `$OnCreate` is not one. A method that needs an object kept out of the state (a canvas, a socket) gets it from a helper: `this.Socket = function () { return socket; }` in `$OnCreate`, `this.Socket().Send(...)` in the method.
+Pass a method the fields it needs as arguments: the template then plainly follows them. The handler of an event (`(click)="Save"`, `(change)="Picked"`) is a method, or a function `$OnCreate` sets: it is looked up by its name when the event comes, and runs on the component (also from a `*if` or a row of a `*for`). A method that needs an object kept out of the state (a canvas, a socket) gets it from a helper: `this.Socket = function () { return socket; }` in `$OnCreate`, `this.Socket().Send(...)` in the method.
 
 ## The instance
 

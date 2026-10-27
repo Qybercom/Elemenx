@@ -48,7 +48,7 @@ The Component takes its template from a `<script type="text/html" id>` of the pa
 </script>
 ```
 
-A script of type `text/html` is neither run nor shown: Elemenx renders its template where the Application mounts. A `<template id>` would do too, but the browser parses it as HTML: the names of its tags in lower case (`<Table>` becomes the `table` of HTML, `<Select>` a `select`) and `<TextArea />` taking the rest of the page as its text. The script keeps the template as it is written, as the files of a project (`$TemplateURL`) do.
+A script of type `text/html` is neither run nor shown: Elemenx renders its template where the Application mounts. The servers of Elemenx write a `<template id>` of a page so themselves, but this page comes from the server of the site, and a `<template id>` the browser parses as HTML: the names of its tags in lower case (`<Table>` becomes the `table` of HTML, `<Select>` a `select`) and `<TextArea />` taking the rest of the page as its text. The script keeps the template as it is written, as the files of a project (`$TemplateURL`) do. A server in Node may keep `<template id>` in its pages and send them through `Page(html)` of `@qybercom/elemenx/tools/templates.js`.
 
 ## 4. The Component and the Application
 

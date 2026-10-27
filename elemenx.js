@@ -44,7 +44,7 @@
 	 * Elemenx: the namespace of this copy of the framework. The window gets it last (see Export), unless a copy of the
 	 * same version is there already: then this one stops here and the page keeps the first.
 	 */
-	var Version = '0.10.3';
+	var Version = '0.10.4';
 	var Elemenx = {};
 	if (typeof ElemenxIsolated !== 'object' && (typeof globalThis !== 'undefined' ? globalThis : self).Elemenx && (typeof globalThis !== 'undefined' ? globalThis : self).Elemenx.Version === Version) return;
 
@@ -3051,6 +3051,9 @@
 		var componentOutlets = new WeakMap();
 		var componentValues = new WeakMap();
 		var componentRouteUpdaters = new WeakMap();
+		/* The methods of a Component its expressions call, by its state; the owner of the state an instance holds. */
+		var expressionMethods = new WeakMap();
+		var stateOwners = new WeakMap();
 		/* The placeholders of deferred components, and the behavioral directives of their tags set on them for now. */
 		var deferredPlaceholders = new WeakSet();
 		var placedDirectives = new WeakMap();
@@ -3945,11 +3948,14 @@
 				};
 			}
 
-			/* The names of the framework ($T) are seen under the values of the Component, which come first. */
+			/*
+			 * The methods of the Component and the names of the framework ($T) are seen under the values of the Component,
+			 * which come first.
+			 */
 			if (!expressionCache[source]) {
 				expressionCache[source] = (function (evaluate) {
 					return function (scope) {
-						return evaluate(Runtime.TemplateGlobals, scope);
+						return evaluate((scope && expressionMethods.get(scope)) || Runtime.TemplateGlobals, scope);
 					};
 				})(own(precompiledExpressions, source) ? precompiledExpressions[source] : compileSource(source));
 			}
@@ -3996,28 +4002,14 @@
 			return compileExpression(source)(scope || {});
 		};
 
+		/*
+		 * The text of the template of a definition: $Template is the template itself, a text or a function that returns
+		 * one. A name ('#cart') is no template: a template of the registry or of the page is named by $TemplateID.
+		 */
 		function resolveTemplate (template) {
-			var source;
-			var node;
-
-			if (typeof template === 'function') {
-				source = template();
-			}
-			else {
-				source = template || '';
-			}
-
-			if (typeof source === 'string' && source.charAt(0) === '#') {
-				var registered = Runtime.Template.Get(source.substring(1));
-				if (registered !== null && registered !== undefined) return registered;
-
-				node = document.getElementById(source.substring(1));
-
-				if (node && node.tagName === 'TEMPLATE') return node.innerHTML;
-				if (node && templateScript(node)) return node.textContent;
-
-				throw new Error('Elemenx template not found: ' + source);
-			}
+			var source = typeof template === 'function' ? template() : template || '';
+			if (typeof source === 'string' && /^#[A-Za-z_][\w:.-]*$/.test(source))
+				throw new Error('Elemenx $Template is the template itself, not a name: use $TemplateID: \'' + source.substring(1) + '\'');
 
 			return String(source);
 		}
@@ -4948,7 +4940,7 @@
 			return null;
 		}
 
-		function bindEvents (root, api, listen, definition) {
+		function bindEvents (root, api, listen) {
 			var nodes = [];
 			var all;
 			var i = 0;
@@ -4956,8 +4948,6 @@
 			var attrs;
 			var attr;
 			var eventName;
-			var methodName;
-			var method;
 
 			if (root.nodeType === 1)
 				nodes.push(root);
@@ -4989,17 +4979,13 @@
 
 					eventName = Runtime.Directive.Event(attr.name);
 
+					/* The handler is looked up when the event comes: $OnCreate may set it after the binding. */
 					if (eventName !== null) {
-						methodName = attr.value;
-						method = definition[methodName];
-
-						if (typeof method === 'function') {
-							(function (node, eventName, method) {
-								listen(node, eventName, function (e) {
-									method.call(api, e, node);
-								});
-							})(nodes[i], eventName, method);
-						}
+						(function (node, eventName, methodName) {
+							listen(node, eventName, function (e) {
+								Runtime.CallHandler(api, methodName, [e, node]);
+							});
+						})(nodes[i], eventName, attr.value);
 
 						nodes[i].removeAttribute(attr.name);
 					}
@@ -5182,6 +5168,44 @@
 		}
 
 		/* Definition methods and $On* hooks become methods of the instance API. */
+		/* The plain methods of a definition, as the instance has them now (one may replace them), over the names of the framework. */
+		function expressionScope (definition, api) {
+			var scope = Object.create(Runtime.TemplateGlobals);
+			var name;
+
+			for (name in definition) {
+				if (own(definition, name) && typeof definition[name] === 'function' && name.charAt(0) !== '$') {
+					(function (name) {
+						scope[name] = function () {
+							return api[name].apply(api, arguments);
+						};
+					})(name);
+				}
+			}
+
+			return scope;
+		}
+
+		/*
+		 * Calls the handler of an (event) when the event comes: a method of the Component, or a function its state holds
+		 * (one $OnCreate set). A part of a *if or a row of a *for calls it on the Component that owns the state.
+		 */
+		Runtime.CallHandler = function (component, name, args) {
+			var values = componentValues.get(component);
+
+			if (typeof component[name] === 'function') {
+				component[name].apply(component, args);
+
+				return true;
+			}
+
+			if (!values || typeof values[name] !== 'function') return false;
+
+			values[name].apply(stateOwners.get(component) || component, args);
+
+			return true;
+		};
+
 		function copyComponentMethods (definition, target) {
 			var methodName;
 
@@ -5773,6 +5797,17 @@
 				 */
 				copyComponentMethods(definition, apiTarget);
 
+				/*
+				 * The expressions of the template call the methods of the definition ({{Format(Price)}}); a part of a *if
+				 * shares this state and sees them as well. An instance that holds the state of its owner only points to it.
+				 */
+				if (!directState) {
+					expressionMethods.set(values, expressionScope(definition, api));
+				}
+				else if (options.Owner) {
+					stateOwners.set(api, stateOwners.get(options.Owner) || options.Owner);
+				}
+
 				/* Instance: bindings and structural hosts */
 				/*
 				 * Models must bind before semantic DOM events.
@@ -5785,7 +5820,7 @@
 
 				bindModels(models, values, effects, listen);
 
-				bindEvents(root, api, listen, definition);
+				bindEvents(root, api, listen);
 
 				structural = Runtime.Structural(api, definition, pristineRoot);
 
@@ -8389,6 +8424,22 @@
 			var records = [];
 			var projectionBlueprintRoot = null;
 			var ownerToken = {};
+			/* While the content of the tag of a Component compiles: the $OnCreate of its directives, run once it is shown. */
+			var deferredCreates = null;
+
+			/* The $OnCreate of a structural directive: now, or with the content of the tag of a Component it is in. */
+			function created (definition, context) {
+				if (typeof definition.$OnCreate !== 'function') return;
+
+				if (deferredCreates) {
+					deferredCreates.push(function () {
+						definition.$OnCreate(context);
+					});
+				}
+				else {
+					definition.$OnCreate(context);
+				}
+			}
 
 			function factoryFor (tag) {
 				var name = String(tag);
@@ -8437,9 +8488,7 @@
 					if (own(eventMap, eventName)) {
 						(function (name, method) {
 							result.push({Name: name, Callback: function (data, source) {
-								if (typeof component[method] === 'function') {
-									component[method](data, source);
-								}
+								Runtime.CallHandler(component, method, [data, source]);
 							}});
 						})(eventName, eventMap[eventName]);
 					}
@@ -8592,6 +8641,11 @@
 				var destroying = false;
 				var watchers = [];
 				var context;
+				var projectedRecords = [];
+				var projectedCreates = [];
+				var projectedStarted = false;
+				var outerRecords;
+				var outerCreates;
 
 				/* The element of the instance, to the directives of the tag. */
 				function placed () {
@@ -8613,8 +8667,33 @@
 					});
 				}
 
+				/*
+				 * The content of the tag starts with its first instance, before the hooks of the instance (they see it
+				 * built): a Component never shown makes nothing of its content (regression: <Section *if="false"> made the
+				 * Components of its content, and its *lazy rendered them, in a tree no page held).
+				 */
+				function startProjection (data) {
+					var i = 0;
+
+					if (projectedStarted) return;
+
+					projectedStarted = true;
+
+					projectedCreates.forEach(function (create) {
+						create();
+					});
+
+					while (i < projectedRecords.length) {
+						projectedRecords[i].$Update(data || {});
+
+						i++;
+					}
+				}
+
 				function createChild (data) {
 					var childProps = props(blueprint, data, factory.Definition);
+
+					startProjection(data);
 
 					/* The factory registers the listeners and the parent before the hooks of the child run. */
 					child = Runtime.Untracked(function () {
@@ -8682,11 +8761,20 @@
 				 * DOM first; a later structural mount would then snapshot rendered text
 				 * instead of the original {{expression}} template.
 				 */
-				if (projected)
+				if (projected) {
+					outerRecords = records;
+					outerCreates = deferredCreates;
+					records = projectedRecords;
+					deferredCreates = projectedCreates;
+
 					compileProjection(projected);
 
-				if (context && typeof structuralDirective.Definition.$OnCreate === 'function')
-					structuralDirective.Definition.$OnCreate(context);
+					records = outerRecords;
+					deferredCreates = outerCreates;
+				}
+
+				if (context)
+					created(structuralDirective.Definition, context);
 
 				var effect = Runtime.Effect(function () {
 					var data = Runtime.ComponentValues(component);
@@ -8732,6 +8820,8 @@
 					},
 
 					$Destroy: function () {
+						var i = projectedRecords.length - 1;
+
 						effect.Destroy();
 
 						destroying = true;
@@ -8755,6 +8845,14 @@
 							previousProps = null;
 						}
 
+						/* The content of the tag goes with it; content never started has nothing to undo. */
+						while (projectedStarted && i >= 0) {
+							projectedRecords[i].$Destroy();
+
+							i--;
+						}
+
+						projectedRecords = [];
 						currentData = null;
 					}
 				};
@@ -8932,7 +9030,7 @@
 							record.Scope = scope;
 						}
 						else {
-							child = Runtime.CreateComponent(iterationDefinition())(scope, null, {DirectState: true, Application: component.$Application()});
+							child = Runtime.CreateComponent(iterationDefinition())(scope, null, {DirectState: true, Owner: component, Application: component.$Application()});
 
 							child.$Parent(component);
 
@@ -9000,9 +9098,7 @@
 					Render: render
 				};
 
-				if (typeof directive.Definition.$OnCreate === 'function') {
-					directive.Definition.$OnCreate(context);
-				}
+				created(directive.Definition, context);
 
 				var collectionEffect = Runtime.Effect(function () {
 					if (typeof directive.Definition.$OnUpdate === 'function') {
@@ -9065,6 +9161,7 @@
 
 						child = Runtime.CreateComponent(subtreeDefinition)(Runtime.ComponentValues(component), null, {
 							DirectState: true,
+							Owner: component,
 							Application: component.$Application()
 						});
 
@@ -9096,9 +9193,7 @@
 
 				context.Marker = end;
 
-				if (typeof directive.Definition.$OnCreate === 'function') {
-					directive.Definition.$OnCreate(context);
-				}
+				created(directive.Definition, context);
 
 				var structuralEffect = Runtime.Effect(function () {
 					context.Value = field ? expression(Runtime.ComponentValues(component), field) : undefined;
@@ -13902,6 +13997,59 @@
 			return value;
 		}
 
+		/*
+		 * The storage of the browser of a name (localStorage, sessionStorage), or one in memory where the page may not use
+		 * it: a sandboxed frame without allow-same-origin, storage the user blocked, no DOM (Node). Reading the property
+		 * there throws a SecurityError, and Elemenx did not load at all.
+		 */
+		var memoryStorages = {};
+
+		function browserStorage (name) {
+			var storage = null;
+
+			try {
+				storage = global[name] || null;
+			}
+			catch (error) {
+				storage = null;
+			}
+
+			if (!storage && !own(memoryStorages, name))
+				memoryStorages[name] = memoryStorage();
+
+			return storage || memoryStorages[name];
+		}
+
+		/* A Storage of the browser in memory: what it keeps goes with the page. */
+		function memoryStorage () {
+			var items = {};
+			var storage = {
+				length: 0,
+				key: function (index) {
+					var names = Object.keys(items);
+
+					return index < names.length ? names[index] : null;
+				},
+				getItem: function (name) {
+					return own(items, name) ? items[name] : null;
+				},
+				setItem: function (name, value) {
+					items[name] = String(value);
+					storage.length = Object.keys(items).length;
+				},
+				removeItem: function (name) {
+					delete items[name];
+					storage.length = Object.keys(items).length;
+				},
+				clear: function () {
+					items = {};
+					storage.length = 0;
+				}
+			};
+
+			return storage;
+		}
+
 		function createWebStorage (storage, prefix) {
 			prefix = prefix || '';
 
@@ -14742,8 +14890,8 @@
 				IndexedDB: {Stores: {}}
 			};
 			var cookie = createCookieStorage('');
-			var session = createWebStorage(global.sessionStorage, '');
-			var local = createWebStorage(global.localStorage, '');
+			var session = createWebStorage(browserStorage('sessionStorage'), '');
+			var local = createWebStorage(browserStorage('localStorage'), '');
 			var i = 0;
 
 			resolveContext(context, resolved, []);
@@ -16476,7 +16624,8 @@
 
 		Runtime.AttachWorkerMessaging = Attach;
 
-		if (!Runtime.HasDOM && !global.clients) {
+		/* Inside a worker: one that listens and posts (Node, without a DOM, is no worker and threw here). */
+		if (!Runtime.HasDOM && !global.clients && typeof global.addEventListener === 'function' && typeof global.postMessage === 'function') {
 			Attach();
 		}
 

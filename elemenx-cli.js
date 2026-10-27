@@ -147,6 +147,7 @@ function listen (directory, port, settings, production, options) {
 			CacheControl: cacheControl,
 			FrameworkFallback: !production,
 			Request: serverSettings.Request || null,
+			Templates: serverSettings.Templates !== false,
 			/* In development the page gets its splash as a build would write it, splash.html read again each time. */
 			Page: production ? null : function (text) {
 				return Splash.Inject(text, Splash.Settings(directory, settings.Splash));

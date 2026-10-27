@@ -257,3 +257,57 @@ describe('Elemenx production server', function () {
 		}
 	});
 });
+describe('Templates of a page', function () {
+	var Templates = require('../../tools/templates.js');
+
+	it('writes a <template id> as a script of text, its tags as they were written', function () {
+		var page = '<body><template id="app"><Table [rows]="Rows"><TableColumn Name="a" /></Table><TextArea /><p>after</p></template><main></main></body>';
+
+		expect(Templates.Page(page)).toBe('<body><script type="text/html" id="app"><Table [rows]="Rows"><TableColumn Name="a" /></Table><TextArea /><p>after</p></script><main></main></body>');
+	});
+
+	it('keeps nested templates inside the text and finds the end of the outer one', function () {
+		var page = '<template id="outer" class="x"><Tabs><template slot="a"><b>a</b></template></Tabs></template><template id="second"><i></i></template>';
+
+		expect(Templates.Page(page)).toBe('<script type="text/html" id="outer" class="x"><Tabs><template slot="a"><b>a</b></template></Tabs></script><script type="text/html" id="second"><i></i></script>');
+	});
+
+	it('leaves templates with no id, of a shadow root, holding a script, or inside a script or a comment', function () {
+		var page = [
+			'<template><b></b></template>',
+			'<template id="shadow" shadowrootmode="open"><b></b></template>',
+			'<template id="scripted"><script>go()</script></template>',
+			'<script>var html = \'<template id="text"></template>\';</script>',
+			'<!-- <template id="comment"></template> -->',
+			'<template id="open"><b>'
+		].join('\n');
+
+		expect(Templates.Page(page)).toBe(page);
+	});
+
+	it('serves the pages with their templates as scripts, and as files when the option is off', async function () {
+		var root = fs.mkdtempSync(path.join(os.tmpdir(), 'elemenx-server-templates-'));
+		var body = '<main></main><template id="app"><Input /><TextArea /></template>';
+
+		fs.writeFileSync(path.join(root, 'index.html'), body);
+
+		try {
+			await withServer({Root: root}, async function (port) {
+				var first = await request(port, 'GET');
+				var second = await request(port, 'GET', {'If-None-Match': first.Headers.etag});
+
+				expect(first.Status).toBe(200);
+				expect(first.Body.toString('utf8')).toBe('<main></main><script type="text/html" id="app"><Input /><TextArea /></script>');
+				expect(Number(first.Headers['content-length'])).toBe(first.Body.length);
+				expect(second.Status).toBe(304);
+			});
+
+			await withServer({Root: root, Templates: false}, async function (port) {
+				expect((await request(port, 'GET')).Body.toString('utf8')).toBe(body);
+			});
+		}
+		finally {
+			fs.rmSync(root, {recursive: true, force: true});
+		}
+	});
+});

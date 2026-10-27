@@ -15,11 +15,11 @@ import com.intellij.xml.util.XmlTagUtil
  */
 class ElemenxInspectionSuppressor : InspectionSuppressor {
 	override fun isSuppressedFor(element: PsiElement, toolId: String): Boolean {
-		if (toolId !in quieted) return false
+		if (toolId !in quieted && !isRuleOfHtml(toolId)) return false
 
 		val attribute = PsiTreeUtil.getParentOfType(element, XmlAttribute::class.java, false)
 
-		if (attribute != null && isBinding(attribute.name)) return true
+		if (toolId in quieted && attribute != null && isBinding(attribute.name)) return true
 
 		val tag = (attribute?.parent) ?: PsiTreeUtil.getParentOfType(element, XmlTag::class.java, false) ?: return false
 
@@ -31,6 +31,12 @@ class ElemenxInspectionSuppressor : InspectionSuppressor {
 	companion object {
 		/** The inspections of unknown tags and attributes, of HTML and of XML, and of an empty tag (<CallTile />: a Component closes itself). */
 		val quieted = setOf("HtmlUnknownTag", "HtmlUnknownAttribute", "HtmlUnknownBooleanAttribute", "XmlUnboundNsPrefix", "CheckTagEmptyBody", "HtmlExtraClosingTag", "CheckEmptyScriptTag")
+
+		/**
+		 * A rule of an element of HTML, which a Component of its name does not follow: an Input needs no label (regression:
+		 * HtmlFormInputWithoutLabel marked every <Input>), an Image no alt, a Table no headers.
+		 */
+		fun isRuleOfHtml(toolId: String): Boolean = toolId.startsWith("Html") || toolId in setOf("RequiredAttributes", "CheckImageSize", "CheckValidXmlInScriptTagBody", "XmlDeprecatedElement")
 
 		/** A binding of a template: [prop], (event), *directive, or a reference #name (this.$Ref). */
 		fun isBinding(name: String): Boolean = name.startsWith("[") || name.startsWith("(") || name.startsWith("*") || name.startsWith("#")

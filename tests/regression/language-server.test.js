@@ -135,6 +135,28 @@ describe('Contract: the language of Elemenx for the editors (the core, and its L
 		expect(language.Diagnose(knowledge, markup, 'html', html)).toEqual([]);
 	});
 
+	/* Regression: a <template id> of a page knew no Component, so its names and references went nowhere. */
+	it('finds the Component of a <template id> of a page by its $TemplateID, and marks a name in $Template', function () {
+		var page = '<html>\n<head>\n<script>\n\tElemenx.Component(\'PageApp\', {\n\t\t$TemplateID: \'page-app\',\n\t\tTheme: \'light\',\n\n\t\tToggle: function () {\n\t\t\tthis.$Ref(\'Theme\').blur();\n\t\t}\n\t});\n\tElemenx.Component(\'PageOther\', {\n\t\t$TemplateID: \'page-other\',\n\t\tCount: 0\n\t});\n</script>\n</head>\n<body>\n<template id="page-app">\n\t<button #Theme (click)="Toggle">{{Theme}}</button>\n\t<template slot="x"></template>\n\t<i>{{Theme}}</i>\n</template>\n<template id="page-other"><b>{{Count}}</b></template>\n</body>\n</html>\n';
+		var file = path.join(project, 'pages/index.html');
+
+		write('pages/index.html', page);
+
+		knowledge.Refresh();
+
+		expect(language.Definition(knowledge, page, page.indexOf('{{Theme}}') + 3, 'html', file)).toEqual({File: file, Line: 5, Character: 0});
+		expect(language.Definition(knowledge, page, page.lastIndexOf('{{Theme}}') + 3, 'html', file)).toEqual({File: file, Line: 5, Character: 0});
+		expect(language.Definition(knowledge, page, page.indexOf('"Toggle"') + 2, 'html', file)).toEqual({File: file, Line: 7, Character: 2});
+		expect(language.Definition(knowledge, page, page.indexOf('#Theme') + 2, 'html', file)).toEqual({File: file, Line: 8, Character: 8});
+		expect(language.Definition(knowledge, page, page.indexOf('{{Count}}') + 3, 'html', file)).toEqual({File: file, Line: 13, Character: 0});
+		expect(language.Complete(knowledge, page, page.indexOf('Toggle"'), 'html', file).map(function (item) {
+			return item.Label;
+		})).toContain('Toggle');
+		expect(language.Diagnose(knowledge, "Elemenx.Component('Old', {\n\t$Template: '#old-app'\n});\n", 'js', path.join(project, 'pages/old.js')).map(function (problem) {
+			return [problem.Severity, problem.Message];
+		})).toEqual([['error', '$Template is the template itself, not a name: use $TemplateID: \'old-app\'']]);
+	});
+
 	/* Regression: a click on *if, on a prop or on an event of a template went nowhere. */
 	it('goes from a directive to its definition (the core ones in elemenx.js), and from a prop or an event to its Component', function () {
 		var file = path.join(project, 'application/components/Board/Board.html');

@@ -75,7 +75,7 @@ module.exports = {
 | --- | --- |
 | `Application`, `Applications` | the root of the sources, or the list of the Applications of a project with several |
 | `Entry`, `Index`, `Output` | the script of the Applications, the page, the folder of the build |
-| `Server` | the ports and the compression; `Request(request, response, pathname)` answers paths of its own (an API of the project while it is developed: return `true` when it answered); `WebSocket: {Path, Message(connection, message)}` answers a socket (`connection.Send(text)`, `connection.Close()`) |
+| `Server` | the ports and the compression; `Templates: false` sends the pages as they are (by default the `<template id>` of a page goes as a `<script type="text/html" id>`, see [Templates](/guide/templates)); `Request(request, response, pathname)` answers paths of its own (an API of the project while it is developed: return `true` when it answered); `WebSocket: {Path, Message(connection, message)}` answers a socket (`connection.Send(text)`, `connection.Close()`) |
 | `Single`, `Widget`, `Full`, `Precompile`, `Packs` | the defaults of the options of `build` |
 | `Extension` | `Surface`, `Name`, `Description`, `Version`, `ID`, `Icons`, `Manifest` of a browser extension |
 | `Native` | `Desktop` and `Mobile`: the settings of the native programs |

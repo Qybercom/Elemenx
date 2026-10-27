@@ -7,8 +7,9 @@ import { createCoverageMap } from '@vitest/istanbul-lib-coverage';
 import { createContext, create } from '@vitest/istanbul-lib-report';
 
 /*
- * Adds the Playwright V8 coverage of elemenx.js (coverage/playwright) to the Vitest coverage
- * (coverage/coverage-final.json) and writes the combined report to coverage/all.
+ * Adds the Playwright V8 coverage of elemenx.js (coverage/playwright), and the one of elemenx.js in Node without a DOM
+ * (coverage/headless), to the Vitest coverage (coverage/coverage-final.json) and writes the combined report to
+ * coverage/all.
  *
  * Both sides are converted the way Vitest does it (vitest parseAstAsync + ast-v8-to-istanbul), so they describe the
  * same statements, functions and branches in the same order. Their end positions may be written differently, so the
@@ -108,6 +109,18 @@ if (merged)
 	addCounters(vitest[key], playwright.fileCoverageFor(playwright.files()[0]).toJSON());
 
 console.log('Playwright page coverages added: ' + merged + (skipped ? ', skipped (another source): ' + skipped : ''));
+
+var headlessFile = path.join(root, 'coverage', 'headless', 'coverage-final.json');
+var headless = fs.existsSync(headlessFile) ? JSON.parse(fs.readFileSync(headlessFile, 'utf8')) : {};
+var headlessKey = Object.keys(headless).filter(function (name) {
+	return path.resolve(name) === file;
+})[0];
+
+if (headlessKey) {
+	addCounters(vitest[key], headless[headlessKey]);
+
+	console.log('Node coverage without a DOM added');
+}
 
 var context = createContext({dir: output, coverageMap: createCoverageMap(vitest)});
 

@@ -83,6 +83,8 @@ The router of an Application starts with its root: the page of the first route i
 
 For a component with children in its template: the parent's `$OnCreate`, then its rendering, which creates every child (each with its `$OnCreate`, rendering and `$OnReady`), then the parent's `$OnReady`. Destroying goes the other way: the parent's `$OnDestroy`, then its children.
 
+The content of the tag of a component (what goes into its slots: `<Section><Window /></Section>`) is made with the first instance of that component, before its `$OnCreate`, so its hooks see it built. A component never shown (`<Section *if="false">`) makes nothing of its content, and a `*lazy` in that content waits too.
+
 ## Example
 
 The child logs its hooks. `*if` destroys it; with `*keep` it sleeps and wakes instead:

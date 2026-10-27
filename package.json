@@ -1,6 +1,6 @@
 {
 	"name": "@qybercom/elemenx",
-	"version": "0.10.3",
+	"version": "0.10.4",
 	"description": "A browser UI framework in one ES5 file: components, reactive state, routing, services, storage, messaging and network, with its CLI and the ElemenxUI component library",
 	"keywords": [
 		"ui",
@@ -52,6 +52,7 @@
 		"test:watch": "vitest",
 		"test:coverage": "vitest run --coverage",
 		"test:coverage:all": "node tests/coverage/run.mjs",
+		"test:coverage:tools": "node tests/coverage/tools.mjs",
 		"test:history": "playwright test",
 		"test:stress": "playwright test --repeat-each 5 --retries 0",
 		"examples": "vite --host 127.0.0.1",
