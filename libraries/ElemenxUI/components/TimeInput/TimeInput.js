@@ -201,7 +201,11 @@ Elemenx.Component('TimeInput', {
 
 		if (!this.Open) return;
 
-		window.setTimeout(function () {
+		/*
+		 * The focus goes to the selected time at once, so a key pressed right after the click reaches the list; a list not
+		 * drawn yet gets it a task later.
+		 */
+		function place () {
 			var columns = root.querySelectorAll('.elemenx-time-column');
 			var first = null;
 			var i = 0;
@@ -220,9 +224,16 @@ Elemenx.Component('TimeInput', {
 
 			first = first || root.querySelector('.elemenx-time-column button');
 
-			if (first)
-				first.focus();
-		}, 0);
+			if (!first)
+				return false;
+
+			first.focus();
+
+			return root.ownerDocument.activeElement === first;
+		}
+
+		if (!place())
+			window.setTimeout(place, 0);
 	},
 
 	Pick: function (event, node) {

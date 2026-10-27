@@ -493,12 +493,30 @@ Elemenx.Component('Ribbon', {
 			this.Floating = true;
 
 		panel = this.Current();
-		first = panel && panel.querySelector('button:not([disabled]), input:not([disabled]), [tabindex="0"]');
 
-		if (first)
-			window.setTimeout(function () {
-				first.focus();
-			}, 0);
+		if (!panel) return;
+
+		/*
+		 * The first control of the panel a person can see (the toggle of a group shows only when the group is folded), at
+		 * once, so the next key moves in the panel; a panel not shown yet (floating) takes it a task later.
+		 */
+		first = function () {
+			var controls = panel.querySelectorAll('button:not([disabled]), input:not([disabled]), [tabindex="0"]');
+			var i = 0;
+
+			while (i < controls.length) {
+				controls[i].focus();
+
+				if (panel.ownerDocument.activeElement === controls[i]) return true;
+
+				i++;
+			}
+
+			return false;
+		};
+
+		if (!first())
+			window.setTimeout(first, 0);
 	},
 
 	Key: function (event) {

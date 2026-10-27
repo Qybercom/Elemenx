@@ -63,12 +63,22 @@ Elemenx.Component('Menu', {
 
 		if (!this.Open) return;
 
-		/* The list becomes visible after the update of the MenuList, so the first item is focused on the next task. */
-		window.setTimeout(function () {
+		/*
+		 * The first item takes the focus at once, so a key pressed right after the click moves in the list; a list not
+		 * visible yet gets it a task later.
+		 */
+		function focus () {
 			var first = root.querySelector('.elemenx-menu:not([hidden]) > .elemenx-menu-entry > .elemenx-option:not(.disabled)');
-			if (first)
-				first.focus();
-		}, 0);
+			if (!first)
+				return false;
+
+			first.focus();
+
+			return root.ownerDocument.activeElement === first;
+		}
+
+		if (!focus())
+			window.setTimeout(focus, 0);
 	},
 
 	/* The focus back to the button; regression: an owner whose select takes the menu away (sign out) left it no button. */

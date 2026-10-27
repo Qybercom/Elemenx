@@ -350,12 +350,23 @@ Elemenx.Component('DateInput', {
 		this.FocusCursor(node.closest('.elemenx-date'));
 	},
 
+	/*
+	 * The focus goes to the day of the cursor at once: the calendar is drawn by then, and a key pressed right after the
+	 * click (PageDown) must reach it, not the button. A calendar not drawn yet gets it a task later.
+	 */
 	FocusCursor: function (root) {
-		window.setTimeout(function () {
+		function focus () {
 			var target = root.querySelector('.elemenx-calendar [data-cursor="true"]') || root.querySelector('.elemenx-calendar button:not(:disabled)');
-			if (target)
-				target.focus();
-		}, 0);
+			if (!target)
+				return false;
+
+			target.focus();
+
+			return root.ownerDocument.activeElement === target;
+		}
+
+		if (!focus())
+			window.setTimeout(focus, 0);
 	},
 
 	Shift: function (months, node) {

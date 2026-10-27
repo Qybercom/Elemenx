@@ -240,11 +240,26 @@ Elemenx.Component('DateRangeInput', {
 
 		this.Cursor = this.Value && this.Value.length === 2 ? this.Value[0] : this.Clamp(this.Today());
 
-		window.setTimeout(function () {
+		this.FocusCursor(root);
+	},
+
+	/*
+	 * The focus goes to the day of the cursor at once, so a key pressed right after reaches it; a calendar not drawn yet
+	 * gets it a task later.
+	 */
+	FocusCursor: function (root) {
+		function focus () {
 			var cursor = root.querySelector('.elemenx-calendar-day[data-cursor="true"]');
-			if (cursor)
-				cursor.focus();
-		}, 0);
+			if (!cursor)
+				return false;
+
+			cursor.focus();
+
+			return root.ownerDocument.activeElement === cursor;
+		}
+
+		if (!focus())
+			window.setTimeout(focus, 0);
 	},
 
 	PickDay: function (event, node) {
@@ -331,11 +346,7 @@ Elemenx.Component('DateRangeInput', {
 		if (this.Pending)
 			this.Hover = this.Cursor;
 
-		window.setTimeout(function () {
-			var cursor = root.querySelector('.elemenx-calendar-day[data-cursor="true"]');
-			if (cursor)
-				cursor.focus();
-		}, 0);
+		this.FocusCursor(root);
 	},
 
 	Clear: function () {

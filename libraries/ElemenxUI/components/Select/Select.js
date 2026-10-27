@@ -110,7 +110,11 @@ Elemenx.Component('Select', {
 		var root = node.closest('.elemenx-select');
 		var searchable = this.Searchable;
 
-		window.setTimeout(function () {
+		/*
+		 * The search takes the focus at once, so the letters typed right after the click reach it; a list not drawn yet
+		 * gets it a task later.
+		 */
+		function reveal () {
 			var search = root.querySelector('.elemenx-popup-search input');
 			var active = root.querySelector('.elemenx-popup .elemenx-option.active');
 
@@ -119,7 +123,12 @@ Elemenx.Component('Select', {
 
 			if (active)
 				active.scrollIntoView({block: 'nearest'});
-		}, 0);
+
+			return !searchable || root.ownerDocument.activeElement === search;
+		}
+
+		if (!reveal())
+			window.setTimeout(reveal, 0);
 	},
 
 	Move: function (direction) {

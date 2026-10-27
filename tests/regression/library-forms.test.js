@@ -72,6 +72,27 @@ describe('Contract: the form fields of ElemenxUI', function () {
 		expect(changes[changes.length - 1]).not.toBe('2030-01-01');
 	});
 
+	/* A bug: the focus went into the calendar a task later, so a key pressed at once (PageDown) went to the button and was lost. */
+	it('DateInput puts the focus on the day of its calendar as it opens, so the next key moves it', async function () {
+		var host = mount('<div><DateInput Value="2024-11-30" /></div>');
+		var toggle;
+
+		await tick();
+
+		toggle = host.$Element().querySelector('.elemenx-input-action');
+
+		toggle.focus();
+		toggle.click();
+
+		expect(document.activeElement.getAttribute('data-date')).toBe('2024-11-30');
+
+		document.activeElement.dispatchEvent(new KeyboardEvent('keydown', {key: 'PageDown', bubbles: true}));
+
+		await tick();
+
+		expect(host.$Element().querySelector('.elemenx-calendar-day[data-cursor="true"]').getAttribute('data-date')).toBe('2024-12-30');
+	});
+
 	it('TimeInput keeps 24 hours, gives HH:MM, and Seconds adds them', async function () {
 		var changes = [];
 		var host = mount('<div><TimeInput (change)="Changed" /><TimeInput Seconds="true" (change)="Changed" /></div>', {
