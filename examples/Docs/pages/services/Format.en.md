@@ -1,7 +1,7 @@
 <!-- generated -->
 # Format
 
-The formats the cards share, in the language of the page (Locale): Count(12400) is '12K', Date(value, style) a date ('short', 'medium', 'long', or Intl.DateTimeFormat options), Day(value) {Day, Month} for a date badge, Relative(value) the time from now ('5 minutes ago'), Money(amount, code) an amount of a currency. A value is a Date, a timestamp or an ISO string; an invalid one gives ''.
+The formats the cards share, in the language of the page (Locale): Count(12400) is '12K', Date(value, style) a date ('short', 'medium', 'long', or Intl.DateTimeFormat options), Day(value) {Day, Month} for a date badge, Relative(value) the time from now ('5 minutes ago'), Money(amount, code) an amount of a currency, Bytes(size) the size of a file ('1.5 MB', in units of 1024). A value is a Date, a timestamp or an ISO string; an invalid one gives ''.
 
 ## Methods
 
@@ -9,6 +9,7 @@ The formats the cards share, in the language of the page (Locale): Count(12400) 
 - `Date(value, style)`
 - `Day(value)`
 - `Relative(value, now)`
+- `Bytes(size)`
 - `Money(amount, code)`
 
 ## Example

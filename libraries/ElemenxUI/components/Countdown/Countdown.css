@@ -1,0 +1,42 @@
+.elemenx-countdown {
+	display: inline-flex;
+	align-items: flex-start;
+	gap: 12px;
+	font-variant-numeric: tabular-nums;
+}
+
+.elemenx-countdown-part {
+	display: inline-flex;
+	flex-direction: column;
+	align-items: center;
+	min-width: 2.5em;
+}
+
+.elemenx-countdown-value {
+	font-size: 1.75rem;
+	font-weight: 600;
+	line-height: 1.1;
+}
+
+.elemenx-countdown-unit {
+	font-size: 0.75rem;
+	color: var(--elemenx-text-muted);
+}
+
+.elemenx-countdown-line {
+	font-size: 1.25rem;
+	font-weight: 600;
+}
+
+.elemenx-countdown.small .elemenx-countdown-value {
+	font-size: 1.25rem;
+}
+
+.elemenx-countdown.large .elemenx-countdown-value {
+	font-size: 2.5rem;
+}
+
+.elemenx-countdown.ended .elemenx-countdown-value,
+.elemenx-countdown.ended .elemenx-countdown-line {
+	color: var(--elemenx-text-muted);
+}

@@ -1,0 +1,7 @@
+<div class="elemenx-diff-view" [class.split]="Mode === 'split'" [class.wrap]="Wrap && Wrap !== 'false'">
+	<header class="elemenx-diff-header">
+		<span class="elemenx-diff-title" *if="Title">{{Title}}</span>
+		<span class="elemenx-diff-stats"><span class="elemenx-diff-added">+{{Stats(Before, After).Added}}</span> <span class="elemenx-diff-removed">&minus;{{Stats(Before, After).Removed}}</span></span>
+	</header>
+	<div class="elemenx-diff-body" role="table" [attribute.aria-label]="Title || $T('ui.diffView.label')" [property.innerHTML]="Markup(Before, After, Mode, Context, Opened)" (click)="Clicked"></div>
+</div>

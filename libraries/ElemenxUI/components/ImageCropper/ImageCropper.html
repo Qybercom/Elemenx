@@ -1,0 +1,9 @@
+<div class="elemenx-cropper" [class.round]="Round && Round !== 'false'" [class.disabled]="Disabled && Disabled !== 'false'">
+	<div class="elemenx-cropper-field" [style.height]="Height + 'px'" (pointermove)="Move" (pointerup)="Up" (pointercancel)="Up">
+		<img class="elemenx-cropper-image" alt="" draggable="false" crossorigin="anonymous" [attribute.src]="Src || null" [attribute.style]="Picture(Shown)" (load)="Loaded" />
+		<div class="elemenx-cropper-box" tabindex="0" role="group" [attribute.aria-label]="(Label || $T('ui.imageCropper.label')) + ': ' + Text(Value)" [attribute.aria-roledescription]="$T('ui.imageCropper.frame')" [attribute.style]="Box(Value, Scale, Shown)" (pointerdown)="Down" (keydown)="Key">
+			<span class="elemenx-cropper-handle" *for="edge of Edges" [attribute.data-edge]="edge" [class]="[edge]" aria-hidden="true" (pointerdown)="Down"></span>
+		</div>
+	</div>
+	<span class="elemenx-cropper-size elemenx-text small muted" *if="Value">{{Text(Value)}}</span>
+</div>

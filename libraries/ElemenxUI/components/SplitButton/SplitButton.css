@@ -1,0 +1,25 @@
+.elemenx-split-button {
+	position: relative;
+	display: inline-flex;
+	align-items: stretch;
+}
+
+.elemenx-split-button-main {
+	border-start-end-radius: 0;
+	border-end-end-radius: 0;
+}
+
+.elemenx-split-button-arrow {
+	margin-inline-start: -1px;
+	border-start-start-radius: 0;
+	border-end-start-radius: 0;
+}
+
+/* The one under the pointer or the focus is drawn over the other: its border is whole. */
+.elemenx-split-button-main:hover,
+.elemenx-split-button-main:focus-visible,
+.elemenx-split-button-arrow:hover,
+.elemenx-split-button-arrow:focus-visible {
+	position: relative;
+	z-index: 1;
+}

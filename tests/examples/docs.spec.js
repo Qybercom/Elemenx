@@ -180,6 +180,31 @@ test.describe('Elemenx documentation', function () {
 		expect(errors).toEqual([]);
 	});
 
+	test('draws a block ```diagram as an SVG of the page, in the colors of the theme, kept out of the search', async function ({ page }) {
+		var diagram = page.locator('.docs-diagram svg').first();
+		var colors = function () {
+			return diagram.evaluate(function (svg) {
+				return [getComputedStyle(svg.querySelector('rect.box')).fill, getComputedStyle(svg.querySelector('text')).fill];
+			});
+		};
+		var light;
+
+		await page.goto(origin + '/core/overview');
+
+		await expect(diagram).toHaveAttribute('role', 'img');
+		await expect(diagram.locator('text').first()).toBeVisible();
+
+		light = await colors();
+
+		await page.getByRole('button', {name: /dark/i}).first().click();
+
+		await expect.poll(colors).not.toEqual(light);
+
+		expect(await page.evaluate(async function () {
+			return (await (await fetch('/pages/search.en.json')).text()).indexOf('class=\\"box');
+		})).toBe(-1);
+	});
+
 	test('tells a page that does not exist', async function ({ page }) {
 		await page.goto(origin + '/components/Nothing');
 

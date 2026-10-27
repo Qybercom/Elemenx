@@ -1,0 +1,27 @@
+<main class="kit">
+	<h1 class="elemenx-title">Acme kit</h1>
+	<section class="kit-live" aria-label="Live">
+		<div class="kit-stats">
+			<StatCard Label="Revenue" Value="48.2K" Unit="€" Delta="12" (open)="Opened" />
+			<StatCard Label="Refunds" Value="312" Delta="-8" Inverse="true" (open)="Opened" />
+			<StatCard Label="Errors" Value="27" Delta="5" Inverse="true" (open)="Opened" />
+		</div>
+		<div class="kit-row">
+			<PriceTag Amount="79" Old="99" Currency="EUR" Size="large" />
+			<PriceTag Amount="12.5" Currency="USD" />
+		</div>
+		<CopyField Value="acme-demo-0000-1111-2222" Label="Demo key" (copy)="Copied" />
+		<p class="elemenx-text small muted kit-said" role="status">{{Said}}</p>
+	</section>
+	<section class="kit-reference" *for="meta of Metas" *key="meta.Name" [attribute.data-name]="meta.Name">
+		<h2 class="elemenx-card-title">{{meta.Name}} <span class="elemenx-badge">{{meta.Group}}</span></h2>
+		<p class="elemenx-text">{{meta.Description}}</p>
+		<table class="elemenx-table kit-props">
+			<thead><tr><th>Prop</th><th>Type</th><th>Default</th><th>Meaning</th></tr></thead>
+			<tbody>
+				<tr *for="prop of meta.Props" *key="prop.Name"><td><code>{{prop.Name}}</code></td><td>{{prop.Type}}{{prop.Options ? ': ' + prop.Options.join(', ') : ''}}</td><td>{{Shown(prop.Default)}}</td><td>{{prop.Description}}</td></tr>
+			</tbody>
+		</table>
+		<p class="elemenx-text small kit-events" *if="meta.Events.length">Events: <code *for="name of meta.Events" *key="name">{{name}}</code></p>
+	</section>
+</main>

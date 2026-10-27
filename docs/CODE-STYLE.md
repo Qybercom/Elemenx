@@ -2,6 +2,8 @@
 
 This is the binding style for all code in the repository. Most of it is checked by `npm run lint` (ESLint: `eslint.config.mjs` with local rules in `eslint/`; stylelint: `stylelint.config.mjs` with local rules in `stylelint/`) and by the ES5 syntax test (`tests/regression/es5-syntax.test.js`). When this document and the code disagree, this document wins and the code is fixed.
 
+`docs/FRONTEND-CODE-STYLE.md` is this style for other front-end projects: written for AI agents first, ES5 a switch, and the linters with their rules included, so the one file sets a project up. `tests/regression/frontend-style.test.js` keeps its rules the same as these; after a change of a rule, `node tools/frontend-style.js` writes them into it again.
+
 Tests (`tests/`) and the root tool configs (`*.config.js`, `*.config.mjs`) are the only exception to the **Language** section: they may use modern syntax (ES modules, `async`/`await`, arrow functions, `let`/`const`...). The stylelint plugin in `stylelint/` must be an ES module, so it uses `import`/`export` and is otherwise written in ES5. Everything else in this document applies to them unchanged: `if` layout, indentation, blank lines, spacing, quotes, braces, naming.
 
 ## Language

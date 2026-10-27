@@ -706,6 +706,7 @@ function build (project, options) {
 	var bundle;
 	var shared = {};
 	var shaken;
+	var meta;
 	var i = 0;
 
 	if (!fs.existsSync(app))
@@ -735,11 +736,18 @@ function build (project, options) {
 		i++;
 	}
 
+	/* The $Meta of the libraries stays when the Application reads it: in its entry, its page or its own definitions. */
+	meta = /\bElemenx\.Meta\b|Designer/.test([templateBundle || '', indexSource, appSource].concat(Object.keys(entities).map(function (type) {
+		return Object.keys(entities[type]).map(function (name) {
+			return entities[type][name];
+		}).join('\n');
+	})).join('\n'));
+
 	i = 0;
 	while (i < libraries.length) {
 		var catalog = {};
 
-		scan(libraries[i].Directory, libraries[i].Directory, catalog, {}, true, options.single, /\bElemenx\.Meta\b|Designer/.test((templateBundle || '') + '\n' + indexSource + '\n' + appSource));
+		scan(libraries[i].Directory, libraries[i].Directory, catalog, {}, true, options.single, meta);
 
 		markShared(entities, catalog, shared);
 

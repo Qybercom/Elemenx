@@ -1,0 +1,58 @@
+.acme-stat {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 4px;
+	inline-size: 100%;
+	padding: 16px;
+	border: 1px solid var(--acme-line);
+	border-radius: var(--acme-radius);
+	background: var(--acme-surface);
+	color: inherit;
+	font: inherit;
+	text-align: start;
+	cursor: pointer;
+}
+
+.acme-stat:hover {
+	border-color: var(--acme-brand);
+}
+
+.acme-stat:focus-visible {
+	outline: 2px solid var(--acme-brand);
+	outline-offset: 2px;
+}
+
+.acme-stat-label {
+	color: var(--acme-muted);
+	font-size: 13px;
+}
+
+.acme-stat-value {
+	font-size: 28px;
+	font-variant-numeric: tabular-nums;
+}
+
+.acme-stat-unit {
+	color: var(--acme-muted);
+	font-size: 16px;
+	font-weight: 400;
+}
+
+.acme-stat-delta {
+	font-size: 13px;
+	font-weight: 600;
+}
+
+.acme-stat-delta.good {
+	color: var(--acme-good);
+}
+
+.acme-stat-delta.bad {
+	color: var(--acme-bad);
+}
+
+.acme-stat-period {
+	color: var(--acme-muted);
+	font-weight: 400;
+}

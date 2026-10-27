@@ -1,0 +1,5 @@
+<button type="button" class="acme-stat" (click)="Pressed">
+	<span class="acme-stat-label">{{Label}}</span>
+	<strong class="acme-stat-value">{{Value}}<span class="acme-stat-unit" *if="Unit"> {{Unit}}</span></strong>
+	<span class="acme-stat-delta" *if="Delta !== null && Delta !== ''" [class]="Trend(Delta, Inverse)">{{Number(Delta) > 0 ? '+' : ''}}{{Delta}}% <span class="acme-stat-period">{{$T('acme.stat.period')}}</span></span>
+</button>

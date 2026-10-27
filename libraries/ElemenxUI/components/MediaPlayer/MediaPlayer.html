@@ -1,0 +1,27 @@
+<div class="elemenx-media-player" tabindex="0" role="region" [class]="[Kind === 'audio' ? 'audio' : 'video', Playing ? 'playing' : 'paused', Full ? 'full' : '']" [attribute.aria-label]="Label || Title || $T('ui.mediaPlayer.label')" (keydown)="Key">
+	<div class="elemenx-media-stage" *if="Kind !== 'audio'" [style.aspect-ratio]="String(Ratio)" (click)="Toggle">
+		<video class="elemenx-media-element" playsinline [attribute.src]="Src || null" [attribute.poster]="Poster || null" [autoplay]="Autoplay && Autoplay !== 'false'" [loop]="Loop && Loop !== 'false'" crossorigin="anonymous" (play)="Played" (pause)="Paused" (ended)="Ended" (loadedmetadata)="Metadata" (durationchange)="Metadata" (progress)="Progress" (timeupdate)="Timed" (volumechange)="Volumed">
+			<track *for="track of Tracks" kind="subtitles" [attribute.src]="track.Src" [attribute.srclang]="track.Lang || null" [attribute.label]="track.Label || track.Lang || null" />
+		</video>
+		<span class="elemenx-media-big" *if="!Playing" aria-hidden="true"><Icon Name="play" Size="32" /></span>
+	</div>
+	<audio class="elemenx-media-element" *if="Kind === 'audio'" [attribute.src]="Src || null" [autoplay]="Autoplay && Autoplay !== 'false'" [loop]="Loop && Loop !== 'false'" (play)="Played" (pause)="Paused" (ended)="Ended" (loadedmetadata)="Metadata" (durationchange)="Metadata" (progress)="Progress" (timeupdate)="Timed" (volumechange)="Volumed"></audio>
+	<div class="elemenx-media-controls">
+		<div class="elemenx-media-title" *if="Title">{{Title}}</div>
+		<input class="elemenx-media-seek" type="range" min="0" step="0.1" [attribute.max]="Duration || 0" [value]="Time" [attribute.style]="Track(Time, Buffered, Duration)" [attribute.aria-label]="$T('ui.mediaPlayer.seek')" [attribute.aria-valuetext]="Clock(Time) + ' / ' + Clock(Duration)" (input)="Sought" />
+		<div class="elemenx-media-row">
+			<button type="button" class="elemenx-media-button play" [attribute.aria-label]="Playing ? $T('ui.mediaPlayer.pause') : $T('ui.mediaPlayer.play')" (click)="Toggle"><Icon [name]="Playing ? 'pause' : 'play'" /></button>
+			<span class="elemenx-media-time">{{Clock(Time)}} / {{Clock(Duration)}}</span>
+			<span class="elemenx-media-spacer"></span>
+			<button type="button" class="elemenx-media-button" [attribute.aria-label]="Silent ? $T('ui.mediaPlayer.unmute') : $T('ui.mediaPlayer.mute')" [attribute.aria-pressed]="String(Silent)" (click)="Mute"><Icon [name]="Silent || Volume === 0 ? 'volume-off' : Volume < 0.5 ? 'volume-low' : 'volume-high'" /></button>
+			<input class="elemenx-media-volume" type="range" min="0" max="1" step="0.05" [value]="Silent ? 0 : Volume" [attribute.aria-label]="$T('ui.mediaPlayer.volume')" (input)="Loudness" />
+			<span class="elemenx-media-speed elemenx-popup-anchor">
+				<button type="button" class="elemenx-media-button text" [attribute.aria-label]="$T('ui.mediaPlayer.speed')" [attribute.aria-expanded]="String(SpeedOpen)" (click)="SpeedMenu">{{Speed}}×</button>
+				<MenuList [items]="SpeedItems(Speeds, Speed)" [open]="SpeedOpen" Placement="top-end" [title]="$T('ui.mediaPlayer.speed')" (select)="SpeedPicked" (dismiss)="SpeedClosed" />
+			</span>
+			<button type="button" class="elemenx-media-button" *if="Kind !== 'audio' && Tracks.length" [attribute.aria-label]="$T('ui.mediaPlayer.subtitles')" [attribute.aria-pressed]="String(Captions)" (click)="Subtitles"><Icon Name="comment" /></button>
+			<button type="button" class="elemenx-media-button" *if="PipSupported()" [attribute.aria-label]="$T('ui.mediaPlayer.pip')" (click)="Pip"><Icon Name="pip" /></button>
+			<button type="button" class="elemenx-media-button" *if="Kind !== 'audio'" [attribute.aria-label]="Full ? $T('ui.mediaPlayer.exitFull') : $T('ui.mediaPlayer.full')" (click)="FullScreen"><Icon [name]="Full ? 'minimize' : 'maximize'" /></button>
+		</div>
+	</div>
+</div>

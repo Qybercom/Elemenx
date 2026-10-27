@@ -427,6 +427,17 @@ function create (options) {
 		});
 	});
 
+	var sockets = [];
+
+	/* The connections open, so Close can end the ones that would not end on their own (a stream, a WebSocket). */
+	server.on('connection', function (socket) {
+		sockets.push(socket);
+
+		socket.on('close', function () {
+			sockets.splice(sockets.indexOf(socket), 1);
+		});
+	});
+
 
 	if (options.WebSocket) {
 		server.on('upgrade', function (request, socket) {
@@ -467,6 +478,10 @@ function create (options) {
 		},
 		Close: function (callback) {
 			server.close(callback);
+
+			sockets.slice().forEach(function (socket) {
+				socket.destroy();
+			});
 		}
 	};
 }

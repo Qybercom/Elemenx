@@ -1,0 +1,14 @@
+{
+	"name": "elemenx-tutorial-extension",
+	"private": true,
+	"version": "1.0.0",
+	"scripts": {
+		"dev": "elemenx dev",
+		"build": "elemenx build",
+		"serve": "elemenx serve",
+		"extension": "elemenx build --extension"
+	},
+	"dependencies": {
+		"@qybercom/elemenx": "^0.10.0"
+	}
+}

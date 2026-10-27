@@ -1,0 +1,29 @@
+.call {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 12px;
+	box-sizing: border-box;
+	min-height: 100vh;
+	padding: 16px;
+}
+
+.call-lobby {
+	width: min(400px, 100%);
+}
+
+.call-lobby .elemenx-card-body {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.call-stage {
+	width: 100%;
+	height: calc(100vh - 80px);
+}
+
+.call-status {
+	font-variant-numeric: tabular-nums;
+}

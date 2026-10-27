@@ -1,0 +1,28 @@
+.acme-price {
+	display: inline-flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: 8px;
+	font-variant-numeric: tabular-nums;
+}
+
+.acme-price.small {
+	font-size: 13px;
+}
+
+.acme-price.large {
+	font-size: 22px;
+}
+
+.acme-price-old {
+	color: var(--acme-muted);
+}
+
+.acme-price-off {
+	padding: 2px 6px;
+	border-radius: var(--acme-radius);
+	background: var(--acme-brand);
+	color: var(--acme-on-brand);
+	font-size: 0.8em;
+	font-weight: 700;
+}

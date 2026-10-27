@@ -1,7 +1,7 @@
 <!-- generated -->
 # Field
 
-A label, a hint and an error around a control. Error shows an error of its own. In a form it shows the errors of a control of the Forms Service once the control is touched (left once, or the form submitted):
+A label, a hint and an error around a control; the label names the control for a screen reader (aria-labelledby, unless the control has a name of its own). Error shows an error of its own. In a form it shows the errors of a control of the Forms Service once the control is touched (left once, or the form submitted):
 
 - Control: a control made in code (Forms.Control, or Model.Get('email') of a Group);
 - or Name, inside a Form: the Field asks the Form for the control of that name; when the Model of the Form has none, it is made of the Field: its first value (Value, or the value of the control inside), and its validators Required, Email, Min, Max, MinLength, MaxLength, Pattern and Match (the name of a field whose value it must repeat).

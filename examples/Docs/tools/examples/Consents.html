@@ -1,0 +1,33 @@
+<Button Label="Allow analytics" Size="small" (click)="Allow" />
+<Button Label="Forget" Variant="ghost" Size="small" (click)="Forget" />
+<p class="elemenx-text">Analytics allowed: {{Allowed ? 'yes' : 'no'}}</p>
+<script>
+({
+	Allowed: false,
+
+	$OnCreate: function () {
+		var self = this;
+		var consents = this.$Service('Consents');
+
+		this.Allowed = consents.Granted('docs-service', 'analytics');
+
+		this.Listener = function () {
+			self.Allowed = consents.Granted('docs-service', 'analytics');
+		};
+
+		consents.OnChange(this.Listener);
+	},
+
+	$OnDestroy: function () {
+		this.$Service('Consents').OffChange(this.Listener);
+	},
+
+	Allow: function () {
+		this.$Service('Consents').Set('docs-service', '1', {analytics: true});
+	},
+
+	Forget: function () {
+		this.$Service('Consents').Clear('docs-service');
+	}
+})
+</script>

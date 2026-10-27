@@ -1,0 +1,27 @@
+<main class="signup">
+	<h1 class="elemenx-title">Create an account</h1>
+	<div class="elemenx-callout success" *if="Created">
+		<p>Welcome, {{Created}}! Your account is ready.</p>
+		<Button Variant="ghost" Size="small" Label="Sign up someone else" (click)="Again" />
+	</div>
+	<Form *if="!Created" Label="Sign up" [model]="Account" [disabled]="Busy" (submit)="Submitted">
+		<Field Label="Name" Name="Name" Required="true" Hint="Letters, digits and _" [messages]="{pattern: 'Letters, digits and _ only'}"><Input Autocomplete="username" /></Field>
+		<Field Label="Email" Name="Email" Required="true" [error]="EmailError"><Input Type="email" Autocomplete="email" /></Field>
+		<Field Label="Password" Name="Password" Required="true" Hint="8 characters or more, a digit among them"><Input Type="password" Autocomplete="new-password" /></Field>
+		<Field Label="Repeat the password" Name="Repeat" Required="true" [error]="Mismatch ? 'The passwords differ' : ''"><Input Type="password" Autocomplete="new-password" /></Field>
+		<fieldset class="signup-phones">
+			<legend class="elemenx-label">Phones</legend>
+			<div class="signup-phone" *for="phone of Account.Get('Phones').Controls" *key="phone.ID" [attribute.data-id]="phone.ID">
+				<Field [control]="phone" [messages]="{pattern: 'Digits, spaces and a + only'}"><Input Type="tel" Label="Phone" Placeholder="+44 20 7946 0000" /></Field>
+				<button type="button" class="signup-remove" aria-label="Remove the phone" (click)="RemovePhone"><Icon Name="close" /></button>
+			</div>
+			<Button Variant="ghost" Size="small" Icon="add" Label="Add a phone" (click)="AddPhone" />
+		</fieldset>
+		<Field Name="Terms"><Checkbox Label="I accept the terms" /></Field>
+		<p class="elemenx-callout danger" *if="Failure">{{Failure}}</p>
+		<footer class="signup-footer">
+			<span class="elemenx-text small muted signup-status">{{Account.Status}}</span>
+			<Button Type="submit" Variant="primary" Label="Create my account" [loading]="Busy" />
+		</footer>
+	</Form>
+</main>

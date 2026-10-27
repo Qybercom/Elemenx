@@ -10,6 +10,7 @@
 			<Markdown *if="segment.Kind === 'text'" Look="interface" [value]="segment.Text" />
 			<CodeView *if="segment.Kind === 'code'" Fold="true" [language]="segment.Language" [value]="segment.Code" />
 			<DocsExample *if="segment.Kind === 'example'" [code]="segment.Code" />
+			<figure class="docs-diagram" *if="segment.Kind === 'diagram'" *mount="Diagram(segment.Code)"></figure>
 		</div>
 		<section class="docs-source" *if="Sources.length">
 			<h2>{{$T('docs.source')}}</h2>

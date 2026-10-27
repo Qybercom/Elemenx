@@ -1,0 +1,10 @@
+<div class="elemenx-signature-pad" [class.readonly]="ReadOnly && ReadOnly !== 'false'" [class.empty]="!(Value || []).length">
+	<div class="elemenx-signature-field" [style.height]="Height + 'px'">
+		<canvas class="elemenx-signature-canvas" role="img" [attribute.aria-label]="(Label || $T('ui.signaturePad.label')) + ((Value || []).length ? '' : ': ' + $T('ui.signaturePad.empty'))" (pointerdown)="Down" (pointermove)="Move" (pointerup)="Up" (pointercancel)="Up"></canvas>
+		<span class="elemenx-signature-line" aria-hidden="true"><span class="elemenx-signature-placeholder">{{Placeholder || $T('ui.signaturePad.placeholder')}}</span></span>
+	</div>
+	<div class="elemenx-signature-controls" *if="Controls && Controls !== 'false' && !(ReadOnly && ReadOnly !== 'false')">
+		<Button Variant="ghost" Size="small" Icon="undo" [label]="$T('ui.signaturePad.undo')" [disabled]="!(Value || []).length" (click)="Undo" />
+		<Button Variant="ghost" Size="small" Icon="delete" [label]="$T('ui.signaturePad.clear')" [disabled]="!(Value || []).length" (click)="Clear" />
+	</div>
+</div>

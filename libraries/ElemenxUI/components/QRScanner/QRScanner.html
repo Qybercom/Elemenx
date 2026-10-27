@@ -1,0 +1,9 @@
+<div class="elemenx-qr-scanner" [class]="[State]" role="region" [attribute.aria-label]="Label || $T('ui.qrScanner.label')">
+	<div class="elemenx-qr-scanner-view" [style.height]="Height + 'px'" [attribute.hidden]="State === 'unsupported' || State === 'denied' || State === 'camera' ? '' : null">
+		<video class="elemenx-qr-scanner-video" muted playsinline autoplay aria-hidden="true"></video>
+		<span class="elemenx-qr-scanner-frame" aria-hidden="true"></span>
+		<span class="elemenx-qr-scanner-status elemenx-text small" aria-live="polite">{{State === 'done' ? $T('ui.qrScanner.done') : State === 'starting' ? $T('ui.qrScanner.starting') : $T('ui.qrScanner.aim')}}</span>
+	</div>
+	<p class="elemenx-callout warning elemenx-qr-scanner-problem" *if="State === 'unsupported' || State === 'denied' || State === 'camera'">{{$T(Problem(State))}}</p>
+	<div class="elemenx-qr-scanner-fallback" *if="State === 'unsupported' || State === 'denied' || State === 'camera'"><slot></slot></div>
+</div>

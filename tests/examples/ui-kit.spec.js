@@ -218,7 +218,7 @@ for (const origin of origins) {
 
 			await open(page, origin);
 
-			await expect(page.locator('.ui-kit > .elemenx-section')).toHaveCount(48);
+			await expect(page.locator('.ui-kit > .elemenx-section')).toHaveCount(49);
 
 			await expect(page.locator('#elemenx-icons')).toHaveAttribute('data-ready', 'true');
 			await expect(page.locator('.ui-kit-icon svg').first()).toHaveAttribute('data-icon', 'add');
@@ -1943,6 +1943,43 @@ for (const origin of origins) {
 			await expect(styled.locator('ul').first()).toHaveClass('elemenx-ul');
 			await expect(styled.locator('pre').first()).toHaveClass('elemenx-code');
 			await expect(styled.locator('pre[data-language="js"] .elemenx-syntax-string').first()).toBeVisible();
+
+			expect(errors).toEqual([]);
+		});
+
+		test('more components: each renders, and reports into the note of its section', async function ({ page }) {
+			var errors = captureErrors(page);
+			var more;
+			var note;
+
+			await open(page, origin, ['More components']);
+
+			more = section(page, 'More components');
+			note = more.locator(':scope > .elemenx-section-header .elemenx-caption');
+
+			await expect(more.locator('.elemenx-split-button')).toHaveCount(1);
+			await expect(more.locator('.elemenx-accordion .elemenx-section')).toHaveCount(2);
+			await expect(more.locator('.elemenx-countdown-line')).toHaveText(/^1:30:0\d$/);
+			await expect(more.locator('.elemenx-clock-face')).toHaveCount(1);
+			await expect(more.locator('.elemenx-diff-row.add .elemenx-diff-word')).toHaveText(['Math', 'PI']);
+			await expect(more.locator('.elemenx-qr-code svg path')).toHaveCount(1);
+			await expect(more.locator('.elemenx-signature-canvas')).toHaveCount(1);
+			await expect(more.locator('.elemenx-cropper-box')).toHaveAttribute('aria-label', /^Crop: 180 × 180$/);
+			await expect(more.locator('.elemenx-file-browser-name')).toHaveText(['Documents', 'notes.md', 'song.mp3']);
+			await expect(more.locator('.elemenx-media-player.audio')).toHaveCount(1);
+
+			await more.locator('.elemenx-split-button-main').click();
+
+			await expect(note).toHaveText('Saved');
+
+			await more.locator('.elemenx-consent').getByRole('button', {name: 'Accept all'}).click();
+
+			await expect(note).toHaveText('Analytics allowed');
+			await expect(more.locator('.elemenx-consent')).toBeHidden();
+
+			await more.locator('.elemenx-file-browser-item[data-id="notes"]').dblclick();
+
+			await expect(note).toHaveText('Opened notes.md');
 
 			expect(errors).toEqual([]);
 		});

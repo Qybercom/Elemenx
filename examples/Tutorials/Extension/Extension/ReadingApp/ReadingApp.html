@@ -1,0 +1,18 @@
+<main class="reading">
+	<header class="reading-header">
+		<h1 class="reading-title">Reading list</h1>
+		<span class="elemenx-badge reading-count">{{Items.length}}</span>
+	</header>
+	<Button Variant="primary" Icon="add" Label="Save this page" Block="true" (click)="Save" />
+	<p class="elemenx-text small muted reading-saved" role="status">{{Saved ? 'Saved: ' + Saved : ''}}</p>
+	<p class="elemenx-text muted" *if="!Items.length">Nothing to read yet. Press Save on a page you want to come back to.</p>
+	<ul class="reading-list">
+		<li class="reading-item" *for="item of Items" *key="item.URL" [attribute.data-url]="item.URL">
+			<button type="button" class="reading-open" (click)="Opened">
+				<span class="reading-name">{{item.Title}}</span>
+				<span class="reading-host">{{Host(item.URL)}}</span>
+			</button>
+			<Button Variant="ghost" Size="small" Icon="close" Title="Remove" (click)="Removed" />
+		</li>
+	</ul>
+</main>

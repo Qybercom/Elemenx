@@ -1,0 +1,25 @@
+<div class="elemenx-file-browser" [class.grid]="View === 'grid'" role="region" [attribute.aria-label]="Label || $T('ui.fileBrowser.label')">
+	<div class="elemenx-file-browser-bar">
+		<Button Variant="ghost" Size="small" Icon="arrow-up" [arialabel]="$T('ui.fileBrowser.up')" [disabled]="!Path.length" (click)="Up" />
+		<Breadcrumbs class="elemenx-file-browser-path" [items]="Crumbs(Items, Path, Root)" (select)="Crumb" />
+		<span class="elemenx-file-browser-views" role="group" [attribute.aria-label]="$T('ui.fileBrowser.view')">
+			<button type="button" class="elemenx-file-browser-view" data-view="list" [attribute.aria-pressed]="String(View !== 'grid')" [attribute.aria-label]="$T('ui.fileBrowser.list')" (click)="Viewed"><Icon Name="list" /></button>
+			<button type="button" class="elemenx-file-browser-view" data-view="grid" [attribute.aria-pressed]="String(View === 'grid')" [attribute.aria-label]="$T('ui.fileBrowser.grid')" (click)="Viewed"><Icon Name="grid" /></button>
+		</span>
+	</div>
+	<div class="elemenx-file-browser-head" *if="View !== 'grid'" role="presentation">
+		<button type="button" class="elemenx-file-browser-sort name" data-sort="Name" [class.active]="Sort === 'Name'" (click)="Sorted">{{$T('ui.fileBrowser.name')}}<Icon *if="Sort === 'Name'" Size="12" [name]="Descending ? 'chevron-up' : 'chevron-down'" /></button>
+		<button type="button" class="elemenx-file-browser-sort size" data-sort="Size" [class.active]="Sort === 'Size'" (click)="Sorted">{{$T('ui.fileBrowser.size')}}<Icon *if="Sort === 'Size'" Size="12" [name]="Descending ? 'chevron-up' : 'chevron-down'" /></button>
+		<button type="button" class="elemenx-file-browser-sort modified" data-sort="Modified" [class.active]="Sort === 'Modified'" (click)="Sorted">{{$T('ui.fileBrowser.modified')}}<Icon *if="Sort === 'Modified'" Size="12" [name]="Descending ? 'chevron-up' : 'chevron-down'" /></button>
+	</div>
+	<div class="elemenx-file-browser-items" role="listbox" [attribute.aria-multiselectable]="Multiple ? 'true' : 'false'" [style.height]="Height + 'px'" (keydown)="Key">
+		<div class="elemenx-file-browser-item" role="option" *for="item of Shown(Items, Path, Sort, Descending)" *key="item.ID" [attribute.data-id]="item.ID" [class.selected]="Picked(Selected, item.ID)" [class.folder]="Folder(item)" [attribute.aria-selected]="String(Picked(Selected, item.ID))" [attribute.tabindex]="$index === 0 ? 0 : -1" (click)="Pressed" (dblclick)="Opened">
+			<span class="elemenx-file-browser-icon"><Icon *if="Folder(item)" [name]="item.Icon || 'folder'" [size]="View === 'grid' ? 40 : 18" /><FileIcon *if="!Folder(item)" [name]="item.Name" [size]="View === 'grid' ? 40 : 18" /></span>
+			<span class="elemenx-file-browser-name">{{item.Name}}</span>
+			<span class="elemenx-file-browser-size">{{Size(item)}}</span>
+			<span class="elemenx-file-browser-modified">{{When(item.Modified)}}</span>
+		</div>
+		<div class="elemenx-file-browser-empty elemenx-text muted" *if="!Loading(Items, Path) && !Shown(Items, Path, Sort, Descending).length">{{$T('ui.fileBrowser.empty')}}</div>
+		<div class="elemenx-file-browser-empty" *if="Loading(Items, Path)"><Spinner Size="small" /></div>
+	</div>
+</div>

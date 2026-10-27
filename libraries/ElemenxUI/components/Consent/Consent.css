@@ -1,0 +1,80 @@
+.elemenx-consent {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+	max-width: 100%;
+	padding: 20px;
+	border: 1px solid var(--elemenx-border);
+	border-radius: var(--elemenx-radius-large);
+	background: var(--elemenx-surface);
+	color: var(--elemenx-text);
+	box-shadow: var(--elemenx-shadow);
+}
+
+.elemenx-consent[hidden] {
+	display: none;
+}
+
+.elemenx-consent.inline {
+	box-shadow: none;
+}
+
+.elemenx-consent.bottom {
+	position: fixed;
+	z-index: 900;
+	inset-inline: 0;
+	bottom: 16px;
+	margin-inline: auto;
+	width: min(960px, calc(100% - 32px));
+}
+
+.elemenx-consent.center {
+	position: fixed;
+	z-index: 900;
+	top: 50%;
+	left: 50%;
+	width: min(520px, calc(100% - 32px));
+	max-height: calc(100% - 32px);
+	overflow: auto;
+	transform: translate(-50%, -50%);
+}
+
+.elemenx-consent-body {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.elemenx-consent-title {
+	margin: 0;
+	font-size: 1.125rem;
+}
+
+.elemenx-consent-text p {
+	margin: 0;
+}
+
+.elemenx-consent-purposes {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	margin-top: 8px;
+}
+
+.elemenx-consent-actions {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: flex-end;
+	gap: 8px;
+}
+
+/* A banner not being customized: the text and the buttons side by side, the buttons under the text on a phone. */
+.elemenx-consent.bottom:not(.editing) {
+	flex-direction: row;
+	align-items: center;
+	flex-wrap: wrap;
+}
+
+.elemenx-consent.bottom:not(.editing) .elemenx-consent-body {
+	flex: 1 1 20rem;
+}

@@ -61,4 +61,29 @@ describe('Elemenx without a DOM', function () {
 		expect(Elemenx.Application('HeadlessServices', {}).$Service('HeadlessCounter').Count(1)).toBe(2);
 		expect(Elemenx.Install.State()).toEqual({Available: false, Installed: false, Manual: false, Waiting: false, Version: null});
 	});
+
+	it('keeps cookies in memory, and a transport without its class of the browser says so', function () {
+		Elemenx.Storage.Cookie.Set('Session', 'abc');
+
+		expect(Elemenx.Storage.Cookie.Get('Session')).toBe('abc');
+
+		Elemenx.Storage.Cookie.Remove('Session');
+
+		expect(Elemenx.Storage.Cookie.Has('Session')).toBe(false);
+
+		var socket = Elemenx.Network.WebSocket('ws://127.0.0.1:1/');
+		var Socket = globalThis.WebSocket;
+
+		delete globalThis.WebSocket;
+
+		try {
+			expect(function () {
+				socket.Connect();
+			}).toThrow('Elemenx Network.WebSocket needs WebSocket, which this environment has not');
+		}
+		finally {
+			globalThis.WebSocket = Socket;
+		}
+	});
 });
+

@@ -1,0 +1,13 @@
+<span class="elemenx-clock" role="timer" [class]="[Mode || 'digital', Size || 'medium']" [attribute.aria-label]="(Label ? Label + ': ' : '') + Time(Now, false)">
+	<span class="elemenx-clock-time" aria-hidden="true" *if="Mode !== 'analog'">{{Time(Now, Seconds)}}</span>
+	<svg class="elemenx-clock-face" viewBox="0 0 100 100" aria-hidden="true" *if="Mode === 'analog'">
+		<circle class="elemenx-clock-rim" cx="50" cy="50" r="47"></circle>
+		<line class="elemenx-clock-mark" *for="mark of Marks" x1="50" y1="7" x2="50" [attribute.y2]="mark % 3 === 0 ? 15 : 11" [attribute.transform]="'rotate(' + mark * 30 + ' 50 50)'"></line>
+		<line class="elemenx-clock-hour" x1="50" y1="50" x2="50" y2="27" [attribute.transform]="'rotate(' + Hands(Now).Hour + ' 50 50)'"></line>
+		<line class="elemenx-clock-minute" x1="50" y1="50" x2="50" y2="15" [attribute.transform]="'rotate(' + Hands(Now).Minute + ' 50 50)'"></line>
+		<line class="elemenx-clock-second" x1="50" y1="56" x2="50" y2="12" *if="Seconds && Seconds !== 'false'" [attribute.transform]="'rotate(' + Hands(Now).Second + ' 50 50)'"></line>
+		<circle class="elemenx-clock-pin" cx="50" cy="50" r="2.5"></circle>
+	</svg>
+	<span class="elemenx-clock-date" aria-hidden="true" *if="Mode !== 'analog' && ShowDate && ShowDate !== 'false'">{{Day(Now)}}</span>
+	<span class="elemenx-clock-label" *if="Label">{{Label}}</span>
+</span>

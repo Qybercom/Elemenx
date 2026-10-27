@@ -1,0 +1,30 @@
+.auth-header {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 16px;
+	padding: 12px 16px;
+	border-bottom: 1px solid var(--elemenx-border);
+}
+
+.auth-brand {
+	color: inherit;
+	font-weight: 700;
+	text-decoration: none;
+}
+
+.auth-nav {
+	display: flex;
+	gap: 12px;
+}
+
+.auth-nav a {
+	color: var(--elemenx-text-muted);
+	text-decoration: none;
+}
+
+.auth-main {
+	display: flex;
+	justify-content: center;
+	padding: 40px 16px;
+}

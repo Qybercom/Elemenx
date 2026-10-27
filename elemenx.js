@@ -44,7 +44,7 @@
 	 * Elemenx: the namespace of this copy of the framework. The window gets it last (see Export), unless a copy of the
 	 * same version is there already: then this one stops here and the page keeps the first.
 	 */
-	var Version = '0.10.4';
+	var Version = '0.10.5';
 	var Elemenx = {};
 	if (typeof ElemenxIsolated !== 'object' && (typeof globalThis !== 'undefined' ? globalThis : self).Elemenx && (typeof globalThis !== 'undefined' ? globalThis : self).Elemenx.Version === Version) return;
 
@@ -3844,7 +3844,7 @@
 					else parentNode.appendChild(element);
 				}
 
-				moveDirectives(placeholder, element);
+				moveDirectives(placeholder, element, currentDefinition);
 
 				reloadParent = null;
 				reloadNext = null;
@@ -3908,7 +3908,7 @@
 				if (placeholder.parentNode)
 					placeholder.parentNode.replaceChild(element, placeholder);
 
-				moveDirectives(placeholder, element);
+				moveDirectives(placeholder, element, currentDefinition);
 
 				if (lifecycle && (!current._Component || current._Component()))
 					lifecycleCall('$OnChildReady', null);
@@ -5206,6 +5206,27 @@
 			return true;
 		};
 
+		/*
+		 * New values of props, from the tag that declares a Component or from the page of a widget: its $OnProps hears
+		 * them, with the props that changed, once its state holds them. Untracked, as the other hooks: what it reads does
+		 * not tie it to the effect of its owner.
+		 */
+		Runtime.UpdateProps = function (component, changed) {
+			var instance = component;
+
+			component.$Update(changed);
+
+			/* A deferred Component hears them once it is made; before, they are the props it is made with. */
+			while (instance && instance._Component && instance._Component() && instance._Component() !== instance)
+				instance = instance._Component();
+
+			if (instance && !instance._Component && typeof instance.$OnProps === 'function') {
+				Runtime.Untracked(function () {
+					instance.$OnProps(changed);
+				});
+			}
+		};
+
 		function copyComponentMethods (definition, target) {
 			var methodName;
 
@@ -5327,8 +5348,66 @@
 		 * the component reloads): the directives of its tag go along (regression: *hotkey on a Button that loaded later
 		 * bound a span gone from the page).
 		 */
-		function moveDirectives (from, to) {
+		/*
+		 * The class and the style the tag of a Component writes, on the root of its instance: {Class, Style}, texts or
+		 * null. The classes and the properties it added before go when they change; the ones of the template stay.
+		 */
+		Runtime.RootAttributes = function (element, values, definition) {
+			var placed = element.__ElemenxRoot || {Classes: [], Styles: []};
+			var known = element.__ElemenxRootDefinition || definition || {};
+			var classes = values.Class && !propNamed(known, 'class') ? String(values.Class).split(/\s+/).filter(function (name) {
+				return name;
+			}) : [];
+			var styles = [];
+
+			placed.Classes.forEach(function (name) {
+				if (classes.indexOf(name) === -1)
+					element.classList.remove(name);
+			});
+
+			classes.forEach(function (name) {
+				element.classList.add(name);
+			});
+
+			String(!propNamed(known, 'style') && values.Style || '').split(';').forEach(function (declaration) {
+				var colon = declaration.indexOf(':');
+				var property = colon === -1 ? '' : declaration.substring(0, colon).trim();
+				if (!property) return;
+
+				styles.push(property);
+
+				element.style.setProperty(property, declaration.substring(colon + 1).trim());
+			});
+
+			placed.Styles.forEach(function (property) {
+				if (styles.indexOf(property) === -1)
+					element.style.removeProperty(property);
+			});
+
+			element.__ElemenxRoot = {Classes: classes, Styles: styles, Values: values};
+		};
+
+		/* Whether a definition has a prop of a name in any case (Class for class). */
+		function propNamed (definition, name) {
+			var key;
+
+			for (key in definition) {
+				if (own(definition, key) && key.toLowerCase() === name) return true;
+			}
+
+			return false;
+		}
+
+		function moveDirectives (from, to, definition) {
 			var records = placedDirectives.get(from);
+
+			/* The class and the style of the tag go from the placeholder to the element of the instance, now that its definition is known. */
+			if (definition && to && to.nodeType === 1)
+				to.__ElemenxRootDefinition = definition;
+
+			if (from.__ElemenxRoot && to && to.nodeType === 1)
+				Runtime.RootAttributes(to, from.__ElemenxRoot.Values, definition);
+
 			if (!records) return;
 
 			placedDirectives.delete(from);
@@ -8032,6 +8111,35 @@
 			current[path[path.length - 1]] = value;
 		}
 
+		/*
+		 * class and style of the tag of a Component go on the root of its instance, unless it has props of those names
+		 * (they reach it as props too: a deferred Component, whose definition is not known yet, takes them as its props
+		 * name them, and its root the others).
+		 */
+		function rootAttribute (name, definition) {
+			return (name === 'class' || name === 'style') && !own(definition || {}, canonicalPropKey(definition, name));
+		}
+
+		/* The class and the style of the tag of a Component for the root of its instance, their {{ }} computed: {Class, Style}, or null. */
+		function rootValues (node, data, definition) {
+			var values = {Class: null, Style: null};
+			var found = false;
+
+			['class', 'style'].forEach(function (name) {
+				var text = node.getAttribute(name);
+				if (text === null || !rootAttribute(name, definition)) return;
+
+				found = true;
+				values[name === 'class' ? 'Class' : 'Style'] = text.replace(/{{\s*([\s\S]+?)\s*}}/g, function (match, source) {
+					var value = expression(data, source);
+
+					return value === null || value === undefined ? '' : String(value);
+				});
+			});
+
+			return found ? values : null;
+		}
+
 		function props (node, data, definition) {
 			var result = {};
 			var attrs = node.attributes;
@@ -8644,6 +8752,8 @@
 				var projectedRecords = [];
 				var projectedCreates = [];
 				var projectedStarted = false;
+				var rebuilt = [];
+				var stale = false;
 				var outerRecords;
 				var outerCreates;
 
@@ -8675,6 +8785,12 @@
 				function startProjection (data) {
 					var i = 0;
 
+					if (stale) {
+						rebuildProjection();
+
+						return;
+					}
+
 					if (projectedStarted) return;
 
 					projectedStarted = true;
@@ -8688,6 +8804,78 @@
 
 						i++;
 					}
+				}
+
+				/*
+				 * The content of the tag goes with its Component: hidden by a *if (not kept asleep), destroyed, or dropped
+				 * asleep by the Cache. Its Components hear $OnDestroy; the next instance builds it again.
+				 */
+				function dropProjection () {
+					var i = projectedRecords.length - 1;
+					var groups;
+					var name;
+
+					if (!projected || (!projectedStarted && !rebuilt.length)) return;
+
+					while (projectedStarted && i >= 0) {
+						projectedRecords[i].$Destroy();
+
+						i--;
+					}
+
+					rebuilt.forEach(function (part) {
+						part.$Destroy();
+					});
+
+					projectedRecords = [];
+					projectedStarted = false;
+					rebuilt = [];
+					stale = true;
+					groups = projected.Groups();
+
+					for (name in groups) {
+						if (own(groups, name)) {
+							while (groups[name][0].firstChild)
+								groups[name][0].removeChild(groups[name][0].firstChild);
+						}
+					}
+				}
+
+				/*
+				 * The content of the tag built again from its template, as the part of a *if is: a part for each group of
+				 * slots, which shares the state of the owner.
+				 */
+				function rebuildProjection () {
+					var groups = projected.Groups();
+					var blueprints = projected.Blueprints();
+					var name;
+					var part;
+
+					stale = false;
+
+					for (name in groups) {
+						if (own(groups, name) && blueprints[name]) {
+							part = Runtime.CreateComponent(bindMethods(definition, component, {$Template: templateHTML(blueprints[name])}, subtreeMethod))(Runtime.ComponentValues(component), null, {
+								DirectState: true,
+								Owner: component,
+								Application: component.$Application()
+							});
+
+							part.$Parent(component);
+
+							groups[name][0].appendChild(part.$Element());
+
+							rebuilt.push(part);
+						}
+					}
+				}
+
+				/* The class and the style of the tag on the root of the instance (a deferred one takes them from its placeholder). */
+				function rootUpdate (data) {
+					var values = rootValues(blueprint, data, factory.Definition);
+					var element = child && child.$Element();
+					if (values && element && element.nodeType === 1)
+						Runtime.RootAttributes(element, values, factory.Definition);
 				}
 
 				function createChild (data) {
@@ -8705,6 +8893,8 @@
 					end.parentNode.insertBefore(child.$Element(), end);
 
 					previousProps = childProps;
+
+					rootUpdate(data);
 
 					placed();
 				}
@@ -8743,12 +8933,16 @@
 						if (!destroying && Runtime.CacheKeeps('structural', factory.Definition, keep)) {
 							asleep = sleep(child, factory.ComponentName || blueprint.tagName, function () {
 								asleep = null;
+
+								dropProjection();
 							});
 						}
 						else {
 							child.$Destroy();
 
 							previousProps = null;
+
+							dropProjection();
 						}
 
 						child = null;
@@ -8807,9 +9001,11 @@
 					 */
 					var changedProps = changedValues(previousProps, childProps);
 					if (changedProps)
-						child.$Update(changedProps);
+						Runtime.UpdateProps(child, changedProps);
 
 					previousProps = childProps;
+
+					rootUpdate(data);
 
 					return true;
 				}, true);
@@ -8820,8 +9016,6 @@
 					},
 
 					$Destroy: function () {
-						var i = projectedRecords.length - 1;
-
 						effect.Destroy();
 
 						destroying = true;
@@ -8846,13 +9040,8 @@
 						}
 
 						/* The content of the tag goes with it; content never started has nothing to undo. */
-						while (projectedStarted && i >= 0) {
-							projectedRecords[i].$Destroy();
+						dropProjection();
 
-							i--;
-						}
-
-						projectedRecords = [];
 						currentData = null;
 					}
 				};
@@ -9124,10 +9313,49 @@
 				});
 			}
 
+			/*
+			 * The content of the tag of this Component that its slots put inside node (a slot in a *if of its template):
+			 * {Groups()} for the part node makes, or null. The part is made from the pristine template, where the slot is
+			 * empty: the groups go into it each time the part is made (regression: a slot in a *if that turned on later
+			 * stayed empty).
+			 */
+			function projectedInto (node) {
+				var groups = {};
+				var found = false;
+
+				/* A group holds the content of the tag: the groups inside it are of the Components of that content. */
+				function walk (parent) {
+					var child = parent.firstChild;
+					var name;
+
+					while (child) {
+						if (child.nodeType === 1 && child.__ElemenxSlotGroup !== undefined && child.__ElemenxProjectionOwner !== ownerToken) {
+							name = child.__ElemenxSlotGroup;
+							groups[name] = (groups[name] || []).concat([child]);
+							found = true;
+						}
+						else if (child.nodeType === 1) {
+							walk(child);
+						}
+
+						child = child.nextSibling;
+					}
+				}
+
+				walk(node);
+
+				return found ? {
+					Groups: function () {
+						return groups;
+					}
+				} : null;
+			}
+
 			function compileStructural (node, directive) {
 				var field = directive.Expression;
 				var template = blueprintFor(node).cloneNode(true);
 				var keep = keepArgument(template);
+				var projected = projectedInto(node);
 				var end;
 				var child = null;
 				var asleep = null;
@@ -9159,7 +9387,7 @@
 
 						var subtreeDefinition = bindMethods(definition, component, {$Template: svgSource(template, templateHTML(template))}, subtreeMethod);
 
-						child = Runtime.CreateComponent(subtreeDefinition)(Runtime.ComponentValues(component), null, {
+						child = Runtime.CreateComponent(subtreeDefinition)(Runtime.ComponentValues(component), projected, {
 							DirectState: true,
 							Owner: component,
 							Application: component.$Application()
@@ -9517,6 +9745,14 @@
 		var own = Runtime.Own;
 		var invoke = Runtime.Invoke;
 		var NetworkProtocols = {};
+
+		/* A class of the browser a transport needs, or a plain error where there is none (Node, an old browser): it was "is not a constructor". */
+		function browserClass (name, transport) {
+			if (typeof global[name] !== 'function')
+				throw new Error('Elemenx Network.' + transport + ' needs ' + name + ', which this environment has not');
+
+			return global[name];
+		}
 
 		/* Network: shared helpers */
 		var textEncoder = global.TextEncoder ? new global.TextEncoder() : null;
@@ -10043,7 +10279,7 @@
 						api._LifecycleConnected();
 
 					var currentExecution = ++execution;
-					var currentXHR = new global.XMLHttpRequest();
+					var currentXHR = new (browserClass('XMLHttpRequest', 'XHR'))();
 
 					xhr = currentXHR;
 
@@ -10535,7 +10771,7 @@
 			function poll (currentGeneration) {
 				if (!active || currentGeneration !== generation || request) return;
 
-				var current = new global.XMLHttpRequest();
+				var current = new (browserClass('XMLHttpRequest', 'LongPolling'))();
 
 				request = current;
 
@@ -10822,7 +11058,7 @@
 						WithCredentials: withCredentials
 					});
 
-					var currentSource = new global.EventSource(url, {
+					var currentSource = new (browserClass('EventSource', 'SSE'))(url, {
 						withCredentials: withCredentials
 					});
 
@@ -12516,16 +12752,19 @@
 					return events.Off(name, callback);
 				},
 				Connect: function () {
+					var Socket;
+
 					if (connecting) return api;
 
+					Socket = browserClass('WebSocket', 'WebSocket');
 					connecting = true;
 					closing = false;
 					saturated = false;
 
 					stopDrainWatch();
 
-					if (protocols === null || protocols === undefined) socket = new global.WebSocket(url);
-					else socket = new global.WebSocket(url, protocols);
+					if (protocols === null || protocols === undefined) socket = new Socket(url);
+					else socket = new Socket(url, protocols);
 
 					socket.binaryType = binaryType;
 
@@ -12941,7 +13180,7 @@
 				active = true;
 
 				var currentGeneration = ++generation;
-				var currentConnection = new global.RTCPeerConnection(rtcConfig);
+				var currentConnection = new (browserClass('RTCPeerConnection', 'WebRTC'))(rtcConfig);
 
 				connection = currentConnection;
 
@@ -14158,6 +14397,36 @@
 			return output;
 		}
 
+		/*
+		 * The cookies of the document, or ones in memory where the page has none it may use: a sandboxed frame without
+		 * allow-same-origin (document.cookie throws a SecurityError), no DOM (Node). What memory keeps goes with the page.
+		 */
+		var memoryCookies = {};
+
+		function readCookies () {
+			try {
+				return document.cookie || '';
+			}
+			catch (error) {
+				return Object.keys(memoryCookies).map(function (name) {
+					return name + '=' + memoryCookies[name];
+				}).join('; ');
+			}
+		}
+
+		function writeCookie (text) {
+			var pair = text.split(';')[0];
+			var separator = pair.indexOf('=');
+
+			try {
+				document.cookie = text;
+			}
+			catch (error) {
+				if (/;\s*Max-Age=0(;|$)/.test(text)) delete memoryCookies[pair.substring(0, separator)];
+				else memoryCookies[pair.substring(0, separator)] = pair.substring(separator + 1);
+			}
+		}
+
 		function createCookieStorage (prefix) {
 			prefix = prefix || '';
 
@@ -14167,7 +14436,8 @@
 
 			function all () {
 				var result = {};
-				var parts = document.cookie ? document.cookie.split(';') : [];
+				var text = readCookies();
+				var parts = text ? text.split(';') : [];
 				var i = 0;
 
 				while (i < parts.length) {
@@ -14198,7 +14468,7 @@
 				},
 
 				Set: function (name, value, options) {
-					document.cookie = cookieString(key(name), value, options);
+					writeCookie(cookieString(key(name), value, options));
 
 					return this;
 				},
@@ -14217,7 +14487,7 @@
 					removeOptions.MaxAge = 0;
 					removeOptions.Expires = new Date(0);
 
-					document.cookie = cookieString(key(name), '', removeOptions);
+					writeCookie(cookieString(key(name), '', removeOptions));
 
 					return this;
 				},
@@ -17505,7 +17775,7 @@
 			var key;
 
 			if (entry.Instance) {
-				entry.Instance.$Update(props || {});
+				Runtime.UpdateProps(entry.Instance, props || {});
 
 				return;
 			}

@@ -29,6 +29,21 @@
 			]
 		},
 		{
+			"ID": "core",
+			"Title": {"en": "How it works", "ru": "Как это устроено"},
+			"Pages": [
+				{"ID": "overview", "Title": {"en": "The big picture", "ru": "Общая картина"}},
+				{"ID": "startup", "Title": {"en": "From a script to the first screen", "ru": "От скрипта до первого экрана"}},
+				{"ID": "templates", "Title": {"en": "From a template to the page", "ru": "От шаблона до страницы"}},
+				{"ID": "reactivity", "Title": {"en": "How state updates the page", "ru": "Как состояние обновляет страницу"}},
+				{"ID": "components", "Title": {"en": "The life of a component", "ru": "Жизнь компонента"}},
+				{"ID": "services", "Title": {"en": "Services, events and messages", "ru": "Сервисы, события и сообщения"}},
+				{"ID": "router", "Title": {"en": "How a navigation happens", "ru": "Как происходит навигация"}},
+				{"ID": "network", "Title": {"en": "Network and storage", "ru": "Сеть и хранилища"}},
+				{"ID": "build", "Title": {"en": "What a build does", "ru": "Что делает сборка"}}
+			]
+		},
+		{
 			"ID": "tutorials",
 			"Title": {"en": "Tutorials", "ru": "Туториалы"},
 			"Pages": [
@@ -44,6 +59,19 @@
 				{"ID": "game", "Title": {"en": "A browser game", "ru": "Браузерная игра"}},
 				{"ID": "editor", "Title": {"en": "An editor in the manner of an IDE", "ru": "Редактор в стиле IDE"}},
 				{"ID": "backend", "Title": {"en": "Elemenx on the pages of a server", "ru": "Elemenx на страницах сервера"}},
+				{"ID": "forms", "Title": {"en": "Forms and validation", "ru": "Формы и валидация"}},
+				{"ID": "dashboard", "Title": {"en": "A live dashboard", "ru": "Живая панель"}},
+				{"ID": "offline", "Title": {"en": "Working offline: sync", "ru": "Работа офлайн: синхронизация"}},
+				{"ID": "auth", "Title": {"en": "Signing in", "ru": "Вход в аккаунт"}},
+				{"ID": "languages", "Title": {"en": "An application in several languages", "ru": "Приложение на нескольких языках"}},
+				{"ID": "extension", "Title": {"en": "A browser extension", "ru": "Расширение браузера"}},
+				{"ID": "call", "Title": {"en": "A video call", "ru": "Видеозвонок"}},
+				{"ID": "library", "Title": {"en": "A library of your own", "ru": "Своя библиотека"}},
+				{"ID": "directive", "Title": {"en": "A directive of your own", "ru": "Своя директива"}},
+				{"ID": "accessibility", "Title": {"en": "An accessible application", "ru": "Доступное приложение"}},
+				{"ID": "testing", "Title": {"en": "Testing an application", "ru": "Тестирование приложения"}},
+				{"ID": "performance", "Title": {"en": "A fast application", "ru": "Быстрое приложение"}},
+				{"ID": "deploy", "Title": {"en": "Putting it online", "ru": "Публикация в интернете"}},
 				{"ID": "migrate", "Title": {"en": "For those who know Vue, React or Angular", "ru": "Для знающих Vue, React или Angular"}}
 			]
 		},

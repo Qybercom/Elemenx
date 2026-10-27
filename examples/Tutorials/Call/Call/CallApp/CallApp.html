@@ -1,0 +1,18 @@
+<div class="call">
+	<form class="elemenx-card spacious call-lobby" *if="State === 'idle'" (submit)="Joined">
+		<div class="elemenx-card-body">
+			<h1 class="elemenx-title">Join a call</h1>
+			<Field Label="Your name"><Input [value]="Name" Autocomplete="name" (input)="Named" /></Field>
+			<Field Label="Room" Hint="Everyone in the same room sees each other."><Input [value]="RoomName" (input)="Roomed" /></Field>
+			<Button Type="submit" Variant="primary" Icon="video" Label="Join" Block="true" />
+		</div>
+	</form>
+	<p class="elemenx-text muted call-joining" *if="State === 'joining'" role="status">Joining…</p>
+	<CallStage class="call-stage" *if="State === 'joined'" Layout="grid">
+		<CallTile slot="participants" *for="person of People" *key="person.ID" [name]="person.Name" [stream]="person.Stream" [muted]="person.Muted" [camera]="person.Camera" />
+		<CallTile slot="self" [name]="Self.Name" [stream]="Self.Stream" [muted]="Self.Muted" [camera]="Self.Camera" Self="true" />
+		<span slot="status" class="call-status">{{RoomName}} · {{People.length + 1}}</span>
+		<CallControls slot="controls" [muted]="Self.Muted" [camera]="Self.Camera" [hide]="['share', 'hand', 'react', 'chat', 'people', 'layout']" (mute)="Muted" (camera)="Filmed" (leave)="Left" />
+	</CallStage>
+	<p class="elemenx-text muted call-alone" *if="State === 'joined' && !People.length">Nobody else is here yet: open this page in another window and join the same room.</p>
+</div>

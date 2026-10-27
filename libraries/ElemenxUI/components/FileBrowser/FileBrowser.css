@@ -1,0 +1,161 @@
+.elemenx-file-browser {
+	display: flex;
+	flex-direction: column;
+	border: 1px solid var(--elemenx-border);
+	border-radius: var(--elemenx-radius-large);
+	background: var(--elemenx-surface);
+	overflow: hidden;
+}
+
+.elemenx-file-browser-bar {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 6px 8px;
+	border-bottom: 1px solid var(--elemenx-border);
+}
+
+.elemenx-file-browser-path {
+	flex: 1 1 auto;
+	min-width: 0;
+}
+
+.elemenx-file-browser-views {
+	display: inline-flex;
+	gap: 2px;
+}
+
+.elemenx-file-browser-view,
+.elemenx-file-browser-sort {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	padding: 4px 6px;
+	border: 0;
+	border-radius: var(--elemenx-radius);
+	background: none;
+	color: var(--elemenx-text-muted);
+	font: inherit;
+	cursor: pointer;
+}
+
+.elemenx-file-browser-view[aria-pressed='true'],
+.elemenx-file-browser-sort.active,
+.elemenx-file-browser-view:hover,
+.elemenx-file-browser-sort:hover {
+	color: var(--elemenx-text);
+	background: var(--elemenx-surface-hover);
+}
+
+.elemenx-file-browser-head,
+.elemenx-file-browser-item {
+	display: grid;
+	grid-template-columns: 1fr 7rem 10rem;
+	align-items: center;
+	gap: 8px;
+	padding: 4px 12px;
+}
+
+.elemenx-file-browser-head {
+	border-bottom: 1px solid var(--elemenx-border);
+	font-size: 0.8125rem;
+}
+
+.elemenx-file-browser-sort {
+	justify-self: start;
+}
+
+.elemenx-file-browser-items {
+	overflow: auto;
+	outline: none;
+}
+
+.elemenx-file-browser-item {
+	grid-template-columns: 24px 1fr 7rem 10rem;
+	border-radius: var(--elemenx-radius);
+	cursor: default;
+	user-select: none;
+	outline: none;
+}
+
+.elemenx-file-browser-head {
+	padding-inline-start: 44px;
+}
+
+.elemenx-file-browser-item:hover {
+	background: var(--elemenx-surface-hover);
+}
+
+.elemenx-file-browser-item:focus-visible {
+	box-shadow: inset 0 0 0 2px var(--elemenx-accent);
+}
+
+.elemenx-file-browser-item.selected {
+	background: rgba(var(--elemenx-accent-rgb), 0.14);
+}
+
+.elemenx-file-browser-icon {
+	display: inline-flex;
+}
+
+.elemenx-file-browser-name {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.elemenx-file-browser-size,
+.elemenx-file-browser-modified {
+	color: var(--elemenx-text-muted);
+	font-size: 0.8125rem;
+	white-space: nowrap;
+}
+
+.elemenx-file-browser-empty {
+	display: flex;
+	justify-content: center;
+	padding: 24px;
+}
+
+.elemenx-file-browser.grid .elemenx-file-browser-items {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+	align-content: start;
+	gap: 4px;
+	padding: 8px;
+}
+
+.elemenx-file-browser.grid .elemenx-file-browser-item {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	padding: 8px;
+	text-align: center;
+}
+
+.elemenx-file-browser.grid .elemenx-file-browser-name {
+	width: 100%;
+	white-space: normal;
+	overflow-wrap: anywhere;
+}
+
+.elemenx-file-browser.grid .elemenx-file-browser-modified {
+	display: none;
+}
+
+/* On a phone the dates go; the sizes stay. */
+@media (max-width: 480px) {
+	.elemenx-file-browser-head,
+	.elemenx-file-browser-item {
+		grid-template-columns: 1fr 6rem;
+	}
+
+	.elemenx-file-browser-item {
+		grid-template-columns: 24px 1fr 6rem;
+	}
+
+	.elemenx-file-browser-modified,
+	.elemenx-file-browser-sort.modified {
+		display: none;
+	}
+}

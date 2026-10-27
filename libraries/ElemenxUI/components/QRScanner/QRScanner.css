@@ -1,0 +1,49 @@
+.elemenx-qr-scanner {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	width: 100%;
+}
+
+.elemenx-qr-scanner-view {
+	position: relative;
+	overflow: hidden;
+	border-radius: var(--elemenx-radius-large);
+	background: var(--elemenx-overlay);
+}
+
+.elemenx-qr-scanner-view[hidden] {
+	display: none;
+}
+
+.elemenx-qr-scanner-video {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+/* The square to aim at, the rest darkened. */
+.elemenx-qr-scanner-frame {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	width: min(60%, 220px);
+	aspect-ratio: 1;
+	border: 2px solid var(--elemenx-overlay-text);
+	border-radius: var(--elemenx-radius-large);
+	box-shadow: 0 0 0 9999px var(--elemenx-overlay-soft);
+	transform: translate(-50%, -50%);
+	pointer-events: none;
+}
+
+.elemenx-qr-scanner.done .elemenx-qr-scanner-frame {
+	border-color: var(--elemenx-success);
+}
+
+.elemenx-qr-scanner-status {
+	position: absolute;
+	inset-inline: 0;
+	bottom: 12px;
+	color: var(--elemenx-overlay-text);
+	text-align: center;
+}

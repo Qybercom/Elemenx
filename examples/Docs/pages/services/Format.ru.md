@@ -1,7 +1,7 @@
 <!-- generated -->
 # Format
 
-Общие форматы карточек на языке страницы (Locale): Count(12400) — '12K', Date(value, style) — дата ('short', 'medium', 'long' или параметры Intl.DateTimeFormat), Day(value) — {Day, Month} для значка даты, Relative(value) — время от текущего момента («5 минут назад»), Money(amount, code) — сумма в валюте. Значение — Date, метка времени или строка ISO; недопустимое даёт ''.
+Общие форматы карточек на языке страницы (Locale): Count(12400) — '12K', Date(value, style) — дата ('short', 'medium', 'long' или параметры Intl.DateTimeFormat), Day(value) — {Day, Month} для значка даты, Relative(value) — время от текущего момента («5 минут назад»), Money(amount, code) — сумма в валюте, Bytes(size) — размер файла ('1,5 МБ', в единицах по 1024). Значение — Date, метка времени или строка ISO; недопустимое даёт ''.
 
 ## Методы
 
@@ -9,6 +9,7 @@
 - `Date(value, style)`
 - `Day(value)`
 - `Relative(value, now)`
+- `Bytes(size)`
 - `Money(amount, code)`
 
 ## Пример

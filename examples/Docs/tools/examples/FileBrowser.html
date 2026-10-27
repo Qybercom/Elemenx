@@ -1,0 +1,26 @@
+<FileBrowser [items]="Items" Height="240" (open)="Opened" (select)="Chosen" />
+<p class="elemenx-text small muted">{{Note}}</p>
+<script>
+({
+	Items: [
+		{ID: 'docs', Name: 'Documents', Items: [
+			{ID: 'cv', Name: 'cv.pdf', Size: 182000, Modified: '2026-09-12'},
+			{ID: 'budget', Name: 'budget.xlsx', Size: 46000, Modified: '2026-10-02'}
+		]},
+		{ID: 'photos', Name: 'Photos', Items: [
+			{ID: 'beach', Name: 'beach.jpg', Size: 3400000, Modified: '2026-08-20'}
+		]},
+		{ID: 'notes', Name: 'notes.md', Size: 2100, Modified: '2026-10-25'},
+		{ID: 'song', Name: 'song.mp3', Size: 5800000, Modified: '2026-07-01'}
+	],
+	Note: 'Open a folder by a double press; select with Ctrl and Shift.',
+
+	Opened: function (item) {
+		this.Note = 'Opened ' + item.Name;
+	},
+
+	Chosen: function (items) {
+		this.Note = items.length + ' selected';
+	}
+})
+</script>

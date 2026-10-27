@@ -26,17 +26,18 @@ var Inner = [
 	'				this.$Storage.Local.Set(\'Seen\', 2);',
 	'			},',
 	'			$OnReady: function () {',
-	'				parent.postMessage({Text: this.$Element().textContent, Seen: Elemenx.Storage.Local.Get(\'Seen\'), Visit: Elemenx.Storage.Session.Get(\'Visit\')}, \'*\');',
+	'				parent.postMessage({Text: this.$Element().textContent, Seen: Elemenx.Storage.Local.Get(\'Seen\'), Visit: Elemenx.Storage.Session.Get(\'Visit\'), Cookie: Elemenx.Storage.Cookie.Get(\'Seen\')}, \'*\');',
 	'			}',
 	'		});',
 	'		Elemenx.Storage.Session.Set(\'Visit\', 1);',
+	'		Elemenx.Storage.Cookie.Set(\'Seen\', \'yes\');',
 	'		Elemenx.Application(\'Sandbox\', {$Component: \'SandboxApp\', $Mount: \'#app\'});',
 	'	</script>',
 	'</body>',
 	'</html>'
 ].join('\n');
 
-test('Elemenx loads in a sandboxed frame, its storage kept in memory', async function ({ page }) {
+test('Elemenx loads in a sandboxed frame, its storage and its cookies kept in memory', async function ({ page }) {
 	var root = fs.mkdtempSync(path.join(os.tmpdir(), 'elemenx-sandbox-'));
 	var server = Server.Create({Root: root});
 	var errors = [];
@@ -71,7 +72,7 @@ test('Elemenx loads in a sandboxed frame, its storage kept in memory', async fun
 
 		await page.goto('http://127.0.0.1:' + server.Server.address().port + '/');
 
-		expect(await report).toEqual({Text: 'mounted', Seen: 2, Visit: 1});
+		expect(await report).toEqual({Text: 'mounted', Seen: 2, Visit: 1, Cookie: 'yes'});
 		expect(errors).toEqual([]);
 	}
 	finally {

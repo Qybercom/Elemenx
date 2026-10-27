@@ -1,5 +1,6 @@
 /*
- * A label, a hint and an error around a control. Error shows an error of its own. In a form it shows the errors of a
+ * A label, a hint and an error around a control; the label names the control for a screen reader (aria-labelledby,
+ * unless the control has a name of its own). Error shows an error of its own. In a form it shows the errors of a
  * control of the Forms Service once the control is touched (left once, or the form submitted):
  * - Control: a control made in code (Forms.Control, or Model.Get('email') of a Group);
  * - or Name, inside a Form: the Field asks the Form for the control of that name; when the Model of the Form has none,
@@ -60,6 +61,8 @@ Elemenx.Component('Field', {
 	$OnCreate: function () {
 		var self = this;
 
+		this.LabelID = 'elemenx-field-' + Math.random().toString(36).substring(2, 10);
+
 		/* The error shown: Error, or the first error of a touched control in error. */
 		this.Shown = function (error, control, messages) {
 			var errors;
@@ -91,6 +94,36 @@ Elemenx.Component('Field', {
 
 	$OnReady: function () {
 		this.Join(0);
+		this.Labelled(0);
+	},
+
+	/*
+	 * The Label names the control inside for a screen reader (aria-labelledby), unless the control has a name of its own.
+	 * A Component inside may render its control a little later: it looks again a task later, a few times at most.
+	 */
+	Labelled: function (attempt) {
+		var self = this;
+		var label = this.$Element().querySelector('.elemenx-field-label');
+		var control = this.Native() || this.$Element().querySelector('.elemenx-field-body button:not([tabindex="-1"]), .elemenx-field-body [tabindex="0"]');
+
+		if (this.Gone || !label) return;
+
+		if (!control) {
+			if (attempt < 50) {
+				window.setTimeout(function () {
+					self.Labelled(attempt + 1);
+				}, 0);
+			}
+
+			return;
+		}
+
+		if (!control.hasAttribute('aria-label') && !control.hasAttribute('aria-labelledby') && !(control.labels && control.labels.length))
+			control.setAttribute('aria-labelledby', label.id);
+
+		/* The mark of a required field is not read (it is drawn by CSS): the control says it is required instead. */
+		if ((this.Required === true || this.Required === 'true') && !control.hasAttribute('aria-required'))
+			control.setAttribute('aria-required', 'true');
 	},
 
 	/*

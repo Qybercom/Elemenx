@@ -1,0 +1,19 @@
+{
+	"trip": {
+		"title": "Seaside",
+		"language": "Language",
+		"hotel": "Hotel by the bay",
+		"photos": {
+			"label": "Photos",
+			"room": "The room",
+			"view": "The view",
+			"pool": "The pool"
+		},
+		"previous": "Previous photo",
+		"next": "Next photo",
+		"stay": "How many nights",
+		"dates": "{from} – {to}",
+		"nights": {"one": "{count} night", "other": "{count} nights"},
+		"total": "Total: {sum}"
+	}
+}

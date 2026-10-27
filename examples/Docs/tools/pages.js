@@ -88,11 +88,32 @@ function markdown (source) {
 	}).join('').trim() + '\n';
 }
 
+/* A file written only when its text changes: the others stay as they are, for the watchers and indexers of editors. */
+function save (file, text) {
+	if (fs.existsSync(file) && fs.readFileSync(file, 'utf8') === text) return;
+
+	fs.mkdirSync(path.dirname(file), {recursive: true});
+
+	/* An editor that indexes the file may hold it for a moment (on Windows the write fails then): a few tries. */
+	for (var attempt = 1; ; attempt++) {
+		try {
+			fs.writeFileSync(file, text);
+
+			return;
+		}
+		catch (error) {
+			if (attempt === 10 || ['UNKNOWN', 'EBUSY', 'EPERM'].indexOf(error.code) === -1)
+				throw error;
+
+			Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 100);
+		}
+	}
+}
+
 function write (file, text) {
 	if (fs.existsSync(file) && fs.readFileSync(file, 'utf8').indexOf(Marker) !== 0) return;
 
-	fs.mkdirSync(path.dirname(file), {recursive: true});
-	fs.writeFileSync(file, text);
+	save(file, text);
 }
 
 var Words = {
@@ -297,7 +318,7 @@ kinds.forEach(function (kind) {
 	});
 });
 
-fs.writeFileSync(path.join(Pages, 'index.json'), JSON.stringify({Sections: sections}, null, '\t') + '\n');
+save(path.join(Pages, 'index.json'), JSON.stringify({Sections: sections}, null, '\t') + '\n');
 
 /*
  * The Russian pages written by hand: tools/ru-pages/<section>/<page>.md, the text in Russian, and a line "@block N"
@@ -334,8 +355,9 @@ translations(path.join(__dirname, 'ru-pages'), '');
  * The text of a page for the search: its words without the marks of Markdown (headings, emphasis, links: their text),
  * its code kept, its lines joined.
  */
+/* The text of a page for the search: no markup, and no diagram (its SVG is no text to find). */
 function plain (text) {
-	return text.replace(Marker, '').replace(/^# .*$/m, '').replace(/^```\w*$/gm, '').replace(/^#+\s*/gm, '').replace(/!?\[([^\]]*)\]\([^)]*\)/g, '$1').replace(/[*_`]+/g, '').replace(/\s+/g, ' ').trim();
+	return text.replace(Marker, '').replace(/^```diagram\n[\s\S]*?^```$/gm, '').replace(/^# .*$/m, '').replace(/^```\w*$/gm, '').replace(/^#+\s*/gm, '').replace(/!?\[([^\]]*)\]\([^)]*\)/g, '$1').replace(/[*_`]+/g, '').replace(/\s+/g, ' ').trim();
 }
 
 /* The search of the reference in each language: every page, its section, its title and its text (the English one when it has none). */
@@ -352,5 +374,5 @@ function plain (text) {
 		});
 	});
 
-	fs.writeFileSync(path.join(Pages, 'search.' + language + '.json'), JSON.stringify(entries) + '\n');
+	save(path.join(Pages, 'search.' + language + '.json'), JSON.stringify(entries) + '\n');
 });

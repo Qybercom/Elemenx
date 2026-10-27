@@ -1,0 +1,108 @@
+.elemenx-cropper {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	width: 100%;
+}
+
+.elemenx-cropper-field {
+	position: relative;
+	overflow: hidden;
+	border-radius: var(--elemenx-radius-large);
+	background: var(--elemenx-surface-raised);
+	touch-action: none;
+	user-select: none;
+}
+
+.elemenx-cropper-image {
+	position: absolute;
+	max-width: none;
+	pointer-events: none;
+}
+
+/* The frame: what is outside it is darkened by its shadow. */
+.elemenx-cropper-box {
+	position: absolute;
+	box-sizing: border-box;
+	border: 1px solid var(--elemenx-overlay-text);
+	box-shadow: 0 0 0 9999px var(--elemenx-overlay);
+	cursor: move;
+	outline: none;
+}
+
+.elemenx-cropper-box:focus-visible {
+	border-color: var(--elemenx-accent);
+	border-width: 2px;
+}
+
+.elemenx-cropper.round .elemenx-cropper-box {
+	border-radius: 50%;
+}
+
+.elemenx-cropper.disabled .elemenx-cropper-box {
+	cursor: default;
+}
+
+.elemenx-cropper-handle {
+	position: absolute;
+	width: 14px;
+	height: 14px;
+	margin: -7px;
+	border: 2px solid var(--elemenx-overlay-text);
+	border-radius: 50%;
+	background: var(--elemenx-accent);
+}
+
+.elemenx-cropper.disabled .elemenx-cropper-handle {
+	display: none;
+}
+
+.elemenx-cropper-handle.n,
+.elemenx-cropper-handle.s {
+	left: 50%;
+	cursor: ns-resize;
+}
+
+.elemenx-cropper-handle.e,
+.elemenx-cropper-handle.w {
+	top: 50%;
+	cursor: ew-resize;
+}
+
+.elemenx-cropper-handle.n,
+.elemenx-cropper-handle.ne,
+.elemenx-cropper-handle.nw {
+	top: 0;
+}
+
+.elemenx-cropper-handle.s,
+.elemenx-cropper-handle.se,
+.elemenx-cropper-handle.sw {
+	top: 100%;
+}
+
+.elemenx-cropper-handle.w,
+.elemenx-cropper-handle.nw,
+.elemenx-cropper-handle.sw {
+	left: 0;
+}
+
+.elemenx-cropper-handle.e,
+.elemenx-cropper-handle.ne,
+.elemenx-cropper-handle.se {
+	left: 100%;
+}
+
+.elemenx-cropper-handle.ne,
+.elemenx-cropper-handle.sw {
+	cursor: nesw-resize;
+}
+
+.elemenx-cropper-handle.nw,
+.elemenx-cropper-handle.se {
+	cursor: nwse-resize;
+}
+
+.elemenx-cropper-size {
+	align-self: flex-end;
+}

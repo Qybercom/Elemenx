@@ -1,0 +1,7 @@
+<span class="elemenx-countdown" role="timer" [class]="[Size || 'medium', Compact && Compact !== 'false' ? 'compact' : '', Left === 0 ? 'ended' : '']" [attribute.aria-label]="(Label ? Label + ': ' : '') + Line(Left, Units)">
+	<span class="elemenx-countdown-line" aria-hidden="true" *if="Compact && Compact !== 'false'">{{Line(Left, Units)}}</span>
+	<span class="elemenx-countdown-part" aria-hidden="true" *for="part of (Compact && Compact !== 'false' ? [] : Parts(Left, Units))" *key="part.Unit">
+		<span class="elemenx-countdown-value">{{part.Value}}</span>
+		<span class="elemenx-countdown-unit">{{$T(UnitKey(part.Unit), {count: Number(part.Value)})}}</span>
+	</span>
+</span>

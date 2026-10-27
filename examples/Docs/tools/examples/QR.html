@@ -1,0 +1,15 @@
+<p class="elemenx-text">Version {{Code.Version}}, {{Code.Size}} by {{Code.Size}} modules, level {{Code.Level}}, mask {{Code.Mask}}.</p>
+<span style="display: inline-block; width: 120px;" [property.innerHTML]="Drawing"></span>
+<script>
+({
+	Code: {},
+	Drawing: '',
+
+	$OnCreate: function () {
+		var qr = this.$Service('QR');
+
+		this.Code = qr.Encode('WIFI:T:WPA;S:Home;P:secret;;', 'Q');
+		this.Drawing = qr.SVG('WIFI:T:WPA;S:Home;P:secret;;', {Level: 'Q'});
+	}
+})
+</script>

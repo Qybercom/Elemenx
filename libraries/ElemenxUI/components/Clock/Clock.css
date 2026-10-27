@@ -1,0 +1,73 @@
+.elemenx-clock {
+	display: inline-flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 4px;
+	font-variant-numeric: tabular-nums;
+}
+
+.elemenx-clock-time {
+	font-size: 1.75rem;
+	font-weight: 600;
+	line-height: 1.1;
+}
+
+.elemenx-clock.small .elemenx-clock-time {
+	font-size: 1.125rem;
+}
+
+.elemenx-clock.large .elemenx-clock-time {
+	font-size: 2.75rem;
+}
+
+.elemenx-clock-date,
+.elemenx-clock-label {
+	font-size: 0.8125rem;
+	color: var(--elemenx-text-muted);
+}
+
+.elemenx-clock-face {
+	width: 96px;
+	height: 96px;
+	stroke-linecap: round;
+}
+
+.elemenx-clock.small .elemenx-clock-face {
+	width: 56px;
+	height: 56px;
+}
+
+.elemenx-clock.large .elemenx-clock-face {
+	width: 160px;
+	height: 160px;
+}
+
+.elemenx-clock-rim {
+	fill: var(--elemenx-surface);
+	stroke: var(--elemenx-border);
+	stroke-width: 2;
+}
+
+.elemenx-clock-mark {
+	stroke: var(--elemenx-text-muted);
+	stroke-width: 2;
+}
+
+.elemenx-clock-hour {
+	stroke: var(--elemenx-text);
+	stroke-width: 5;
+}
+
+.elemenx-clock-minute {
+	stroke: var(--elemenx-text);
+	stroke-width: 3;
+}
+
+.elemenx-clock-second {
+	stroke: var(--elemenx-danger);
+	stroke-width: 1.5;
+}
+
+.elemenx-clock-pin {
+	fill: var(--elemenx-text);
+}

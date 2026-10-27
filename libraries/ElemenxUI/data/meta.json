@@ -6324,6 +6324,1260 @@
 			}
 		},
 		{
+			"Name": "SplitButton",
+			"Kind": "Component",
+			"Group": "buttons",
+			"Icon": "chevron-down",
+			"Description": "A button with a main action and an arrow beside it that opens a menu of the other actions.",
+			"Props": [
+				{
+					"Name": "Label",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The text of the main button."
+				},
+				{
+					"Name": "Icon",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The icon of the main button."
+				},
+				{
+					"Name": "Items",
+					"Type": "json",
+					"Default": [],
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The items of the menu: [{ID, Label, Icon, Shortcut, Disabled, Danger, Items, Separator}]."
+				},
+				{
+					"Name": "Variant",
+					"Type": "text",
+					"Default": "primary",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The look of both buttons, as in Button."
+				},
+				{
+					"Name": "Size",
+					"Type": "select",
+					"Default": "medium",
+					"Options": [
+						"small",
+						"medium",
+						"large"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "Its size: small, medium or large."
+				},
+				{
+					"Name": "Placement",
+					"Type": "select",
+					"Default": "bottom-end",
+					"Options": [
+						"bottom-start",
+						"bottom-end",
+						"top-start",
+						"top-end"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "Where the menu opens."
+				},
+				{
+					"Name": "Sheet",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Shows the menu as a sheet from the bottom: true, or auto on a narrow or a touch screen."
+				},
+				{
+					"Name": "Loading",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Shows that the main action runs; the main button takes no press."
+				},
+				{
+					"Name": "Disabled",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Turns it off: it takes no input and looks so."
+				},
+				{
+					"Name": "Open",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Shows the menu."
+				}
+			],
+			"Slots": [],
+			"Container": true,
+			"Children": [
+				"MenuItem"
+			],
+			"Current": "",
+			"Events": [
+				"click",
+				"select"
+			],
+			"EventDescriptions": {
+				"click": "The main button was pressed.",
+				"select": "An item of the menu was chosen: the item."
+			},
+			"Methods": [],
+			"Sample": {
+				"Label": "Save",
+				"Icon": "save",
+				"Variant": "primary",
+				"Items": [
+					{
+						"ID": "copy",
+						"Label": "Save a copy"
+					},
+					{
+						"ID": "export",
+						"Label": "Export"
+					}
+				]
+			}
+		},
+		{
+			"Name": "Accordion",
+			"Kind": "Component",
+			"Group": "layout",
+			"Icon": "list",
+			"Description": "Sections that fold, one under the other: the Sections inside it.",
+			"Props": [
+				{
+					"Name": "Exclusive",
+					"Type": "bool",
+					"Default": true,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Keeps one section open at a time."
+				},
+				{
+					"Name": "Bordered",
+					"Type": "bool",
+					"Default": true,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Draws the sections as one block with lines between them."
+				},
+				{
+					"Name": "Label",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The name of the group for screen readers."
+				}
+			],
+			"Slots": [],
+			"Container": true,
+			"Children": [
+				"Section"
+			],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [],
+			"Sample": {}
+		},
+		{
+			"Name": "Countdown",
+			"Kind": "Component",
+			"Group": "display",
+			"Icon": "clock",
+			"Description": "The time left: to a moment (To) or of a length (Duration, in seconds).",
+			"Props": [
+				{
+					"Name": "To",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The moment it counts to: a date, a text of a date or a timestamp."
+				},
+				{
+					"Name": "Duration",
+					"Type": "number",
+					"Default": 0,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "A length in seconds to count down, without To."
+				},
+				{
+					"Name": "Running",
+					"Type": "bool",
+					"Default": true,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Counts while true; false pauses a Duration."
+				},
+				{
+					"Name": "Units",
+					"Type": "select",
+					"Default": "auto",
+					"Options": [
+						"auto",
+						"dhms",
+						"hms",
+						"ms"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "The units it shows: auto drops the leading ones while they are 0."
+				},
+				{
+					"Name": "Compact",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "One line (01:02:03) instead of numbers with labels."
+				},
+				{
+					"Name": "Size",
+					"Type": "select",
+					"Default": "medium",
+					"Options": [
+						"small",
+						"medium",
+						"large"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "Its size: small, medium or large."
+				},
+				{
+					"Name": "Label",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The name of the countdown for screen readers."
+				}
+			],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [
+				"end"
+			],
+			"EventDescriptions": {
+				"end": "The time ran out."
+			},
+			"Methods": [],
+			"Sample": {
+				"Duration": 90
+			}
+		},
+		{
+			"Name": "Clock",
+			"Kind": "Component",
+			"Group": "display",
+			"Icon": "clock",
+			"Description": "The time now: digital or analog, of a time zone.",
+			"Props": [
+				{
+					"Name": "Mode",
+					"Type": "select",
+					"Default": "digital",
+					"Options": [
+						"digital",
+						"analog"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "digital (the time as text) or analog (a face with hands)."
+				},
+				{
+					"Name": "TimeZone",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "A time zone of the IANA (Europe/Paris); the one of the device by default."
+				},
+				{
+					"Name": "Seconds",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Shows the seconds."
+				},
+				{
+					"Name": "Hour12",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "true for 12 hours, false for 24; the one of the language by default."
+				},
+				{
+					"Name": "ShowDate",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Shows the date under a digital clock."
+				},
+				{
+					"Name": "Label",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "A name under the time (a city)."
+				},
+				{
+					"Name": "Size",
+					"Type": "select",
+					"Default": "medium",
+					"Options": [
+						"small",
+						"medium",
+						"large"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "Its size: small, medium or large."
+				}
+			],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [],
+			"Sample": {
+				"Seconds": true
+			}
+		},
+		{
+			"Name": "Consent",
+			"Kind": "Component",
+			"Group": "feedback",
+			"Icon": "check",
+			"Description": "A request for consent, of any kind: cookies and analytics, the terms of a service, mail of news.",
+			"Props": [
+				{
+					"Name": "Key",
+					"Type": "text",
+					"Default": "default",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The name of the consent in the Consents Service."
+				},
+				{
+					"Name": "Version",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The version of its text: a decision of another version asks again."
+				},
+				{
+					"Name": "Purposes",
+					"Type": "json",
+					"Default": [],
+					"Options": null,
+					"Schema": {
+						"ID": "text",
+						"Label": "text",
+						"Description": "text",
+						"Required": "bool"
+					},
+					"Body": false,
+					"Description": "What it asks for: [{ID, Label, Description, Required}]."
+				},
+				{
+					"Name": "Title",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its title."
+				},
+				{
+					"Name": "Text",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its text, without content in its tag."
+				},
+				{
+					"Name": "Policy",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The address of the full text (a policy, the terms)."
+				},
+				{
+					"Name": "PolicyLabel",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The text of the link to it."
+				},
+				{
+					"Name": "Placement",
+					"Type": "select",
+					"Default": "bottom",
+					"Options": [
+						"bottom",
+						"center",
+						"inline"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "bottom (a banner), center (a card in the middle) or inline (in its place)."
+				},
+				{
+					"Name": "Reject",
+					"Type": "bool",
+					"Default": true,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Shows Reject (only the required purposes)."
+				},
+				{
+					"Name": "Customize",
+					"Type": "bool",
+					"Default": true,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Shows Customize (a switch for each purpose)."
+				},
+				{
+					"Name": "Open",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Shows it (true) or hides it (false); by default it shows while no decision of its Version is kept."
+				}
+			],
+			"Slots": [],
+			"Container": true,
+			"Children": [],
+			"Current": "",
+			"Events": [
+				"change",
+				"close"
+			],
+			"EventDescriptions": {
+				"change": "A decision was made: {Version, Choices: {purpose: true or false}, Time}.",
+				"close": "It was hidden after a decision."
+			},
+			"Methods": [],
+			"Sample": {
+				"Key": "sample",
+				"Placement": "inline",
+				"Purposes": [
+					{
+						"ID": "necessary",
+						"Label": "Necessary",
+						"Required": true
+					},
+					{
+						"ID": "analytics",
+						"Label": "Analytics"
+					}
+				]
+			}
+		},
+		{
+			"Name": "DiffView",
+			"Kind": "Component",
+			"Group": "display",
+			"Icon": "branch",
+			"Description": "The differences between two texts, to read: Before and After, line by line, with the words that changed marked.",
+			"Props": [
+				{
+					"Name": "Before",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The text before."
+				},
+				{
+					"Name": "After",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The text after."
+				},
+				{
+					"Name": "Mode",
+					"Type": "select",
+					"Default": "unified",
+					"Options": [
+						"unified",
+						"split"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "unified (one column) or split (before on the left, after on the right)."
+				},
+				{
+					"Name": "Context",
+					"Type": "number",
+					"Default": 3,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The unchanged lines shown around each change (3)."
+				},
+				{
+					"Name": "LineNumbers",
+					"Type": "bool",
+					"Default": true,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Shows the numbers of the lines."
+				},
+				{
+					"Name": "Wrap",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Wraps long lines instead of scrolling sideways."
+				},
+				{
+					"Name": "Title",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "A name over it (a file)."
+				}
+			],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [],
+			"Sample": {
+				"Before": "var total = 0;\nfor (var i = 0; i < 3; i++)\n\ttotal += i;\nconsole.log(total);",
+				"After": "var total = 0;\nfor (var i = 0; i < 5; i++)\n\ttotal += i * 2;\nconsole.log(total);",
+				"Title": "sum.js"
+			}
+		},
+		{
+			"Name": "SignaturePad",
+			"Kind": "Component",
+			"Group": "inputs",
+			"Icon": "edit",
+			"Description": "A field to sign with a pen, a finger or the mouse.",
+			"Props": [
+				{
+					"Name": "Value",
+					"Type": "json",
+					"Default": [],
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The strokes: [[{X, Y, P}]]."
+				},
+				{
+					"Name": "Color",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The color of the ink (the color of the text by default)."
+				},
+				{
+					"Name": "Width",
+					"Type": "number",
+					"Default": 2.5,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The width of a stroke at a usual speed, in pixels."
+				},
+				{
+					"Name": "Height",
+					"Type": "number",
+					"Default": 180,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The height of the field in pixels."
+				},
+				{
+					"Name": "Placeholder",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The text on the line while it is empty."
+				},
+				{
+					"Name": "Controls",
+					"Type": "bool",
+					"Default": true,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Shows Undo and Clear under it."
+				},
+				{
+					"Name": "ReadOnly",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Shows the signature without letting it change."
+				},
+				{
+					"Name": "Label",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The name of the field for screen readers."
+				}
+			],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [
+				"change"
+			],
+			"EventDescriptions": {
+				"change": "A stroke was drawn, or strokes were taken away: Value."
+			},
+			"Methods": [],
+			"Sample": {}
+		},
+		{
+			"Name": "ImageCropper",
+			"Kind": "Component",
+			"Group": "media",
+			"Icon": "image",
+			"Description": "The part of a picture to keep: a frame over Src that the pointer moves and resizes.",
+			"Props": [
+				{
+					"Name": "Src",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The address of the picture."
+				},
+				{
+					"Name": "Value",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The frame in pixels of the picture: {X, Y, Width, Height}."
+				},
+				{
+					"Name": "Aspect",
+					"Type": "number",
+					"Default": 0,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The shape of the frame: width / height (1, 16 / 9), 0 for free."
+				},
+				{
+					"Name": "Round",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Shows the frame as a circle (an avatar)."
+				},
+				{
+					"Name": "MinSize",
+					"Type": "number",
+					"Default": 32,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The least width and height of the frame in pixels of the picture."
+				},
+				{
+					"Name": "Height",
+					"Type": "number",
+					"Default": 320,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The height of the field in pixels."
+				},
+				{
+					"Name": "Disabled",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Turns it off: it takes no input and looks so."
+				},
+				{
+					"Name": "Label",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The name of the frame for screen readers."
+				}
+			],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [
+				"change",
+				"load"
+			],
+			"EventDescriptions": {
+				"change": "The frame moved or changed its size: Value.",
+				"load": "The picture loaded: {Width, Height}."
+			},
+			"Methods": [],
+			"Sample": {}
+		},
+		{
+			"Name": "QRCode",
+			"Kind": "Component",
+			"Group": "media",
+			"Icon": "grid",
+			"Description": "The QR code of a text: an address, a contact, the details of a payment.",
+			"Props": [
+				{
+					"Name": "Value",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The text of the code."
+				},
+				{
+					"Name": "Level",
+					"Type": "select",
+					"Default": "M",
+					"Options": [
+						"L",
+						"M",
+						"Q",
+						"H"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "The error correction: L, M, Q or H (7, 15, 25 or 30% of the code may be damaged)."
+				},
+				{
+					"Name": "Size",
+					"Type": "number",
+					"Default": 160,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its width and height in pixels."
+				},
+				{
+					"Name": "Margin",
+					"Type": "number",
+					"Default": 4,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The quiet zone around it, in modules (4)."
+				},
+				{
+					"Name": "Dark",
+					"Type": "text",
+					"Default": "#000000",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The color of the dark modules."
+				},
+				{
+					"Name": "Light",
+					"Type": "text",
+					"Default": "#ffffff",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The color of the light ones."
+				},
+				{
+					"Name": "Label",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "What the code holds, for screen readers (the text by default)."
+				}
+			],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [
+				"error"
+			],
+			"EventDescriptions": {
+				"error": "The text is too long for a code: the error."
+			},
+			"Methods": [],
+			"Sample": {
+				"Value": "https://example.com",
+				"Size": 160
+			}
+		},
+		{
+			"Name": "QRScanner",
+			"Kind": "Component",
+			"Group": "media",
+			"Icon": "camera",
+			"Description": "Reads QR codes (and other barcodes) from the camera.",
+			"Props": [
+				{
+					"Name": "Active",
+					"Type": "bool",
+					"Default": true,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Runs the camera."
+				},
+				{
+					"Name": "Continuous",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Goes on reading after a code."
+				},
+				{
+					"Name": "Repeat",
+					"Type": "number",
+					"Default": 2000,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The milliseconds before the same code counts again (2000)."
+				},
+				{
+					"Name": "Formats",
+					"Type": "json",
+					"Default": [
+						"qr_code"
+					],
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The formats read: ['qr_code'] by default (ean_13, code_128...)."
+				},
+				{
+					"Name": "Height",
+					"Type": "number",
+					"Default": 280,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The height of the picture in pixels."
+				},
+				{
+					"Name": "Label",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The name of the scanner for screen readers."
+				}
+			],
+			"Slots": [],
+			"Container": true,
+			"Children": [],
+			"Current": "",
+			"Events": [
+				"scan",
+				"error"
+			],
+			"EventDescriptions": {
+				"scan": "A code was read: {Value, Format}.",
+				"error": "It cannot read: {Reason: unsupported, denied or camera}."
+			},
+			"Methods": [],
+			"Sample": {}
+		},
+		{
+			"Name": "FileBrowser",
+			"Kind": "Component",
+			"Group": "data",
+			"Icon": "folder-open",
+			"Description": "Folders and files to go through, as the explorer of a system.",
+			"Props": [
+				{
+					"Name": "Items",
+					"Type": "json",
+					"Default": [],
+					"Options": null,
+					"Schema": {
+						"ID": "text",
+						"Name": "text",
+						"Size": "number",
+						"Modified": "text",
+						"Icon": "icon"
+					},
+					"Body": false,
+					"Description": "The tree: [{ID, Name, Items, Size, Modified, Icon}]; a folder has Items (null while not loaded)."
+				},
+				{
+					"Name": "Path",
+					"Type": "json",
+					"Default": [],
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The IDs of the folders open from the root."
+				},
+				{
+					"Name": "View",
+					"Type": "select",
+					"Default": "list",
+					"Options": [
+						"list",
+						"grid"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "list (with sizes and dates) or grid (big icons)."
+				},
+				{
+					"Name": "Sort",
+					"Type": "select",
+					"Default": "Name",
+					"Options": [
+						"Name",
+						"Size",
+						"Modified"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "The column it sorts by."
+				},
+				{
+					"Name": "Descending",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Sorts from the last to the first."
+				},
+				{
+					"Name": "Multiple",
+					"Type": "bool",
+					"Default": true,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Lets several items be selected."
+				},
+				{
+					"Name": "Selected",
+					"Type": "json",
+					"Default": [],
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The IDs of the items selected."
+				},
+				{
+					"Name": "Root",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The name of the root in the path."
+				},
+				{
+					"Name": "Height",
+					"Type": "number",
+					"Default": 360,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The height of the list in pixels (it scrolls)."
+				},
+				{
+					"Name": "Label",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The name of the browser for screen readers."
+				}
+			],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [
+				"navigate",
+				"load",
+				"open",
+				"select"
+			],
+			"EventDescriptions": {
+				"navigate": "A folder was opened, or left: {Path, Folder}.",
+				"load": "A folder whose Items are null was opened: {Folder, Path}.",
+				"open": "A file was opened: the item.",
+				"select": "The selection changed: the items selected."
+			},
+			"Methods": [],
+			"Sample": {
+				"Items": [
+					{
+						"ID": "docs",
+						"Name": "Documents",
+						"Items": [
+							{
+								"ID": "cv",
+								"Name": "cv.pdf",
+								"Size": 182000
+							}
+						]
+					},
+					{
+						"ID": "photo",
+						"Name": "photo.jpg",
+						"Size": 2400000
+					}
+				]
+			}
+		},
+		{
+			"Name": "MediaPlayer",
+			"Kind": "Component",
+			"Group": "media",
+			"Icon": "play",
+			"Description": "The controls of a video or a piece of sound over the player of the browser.",
+			"Props": [
+				{
+					"Name": "Src",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The address of the video or the sound."
+				},
+				{
+					"Name": "Kind",
+					"Type": "select",
+					"Default": "video",
+					"Options": [
+						"video",
+						"audio"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "video or audio."
+				},
+				{
+					"Name": "Poster",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "A picture shown before a video plays."
+				},
+				{
+					"Name": "Title",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The title over the controls."
+				},
+				{
+					"Name": "Tracks",
+					"Type": "json",
+					"Default": [],
+					"Options": null,
+					"Schema": {
+						"Src": "text",
+						"Lang": "text",
+						"Label": "text",
+						"Default": "bool"
+					},
+					"Body": false,
+					"Description": "The subtitles: [{Src, Lang, Label, Default}]."
+				},
+				{
+					"Name": "Speeds",
+					"Type": "json",
+					"Default": [
+						0.5,
+						0.75,
+						1,
+						1.25,
+						1.5,
+						2
+					],
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The speeds offered: [0.5, 1, 1.5, 2]."
+				},
+				{
+					"Name": "Autoplay",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Starts playing when it can (muted, as the browsers allow)."
+				},
+				{
+					"Name": "Loop",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Starts again at the end."
+				},
+				{
+					"Name": "Muted",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Starts without sound."
+				},
+				{
+					"Name": "Ratio",
+					"Type": "number",
+					"Default": 1.7777777777777777,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The shape of a video: width / height (16 / 9)."
+				},
+				{
+					"Name": "Label",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The name of the player for screen readers (the Title by default)."
+				}
+			],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [
+				"play",
+				"pause",
+				"ended",
+				"time",
+				"volume"
+			],
+			"EventDescriptions": {
+				"play": "It started playing.",
+				"pause": "It paused.",
+				"ended": "It reached the end.",
+				"time": "The time moved: {Time, Duration} (four times a second at most).",
+				"volume": "The volume changed: {Volume, Muted}."
+			},
+			"Methods": [],
+			"Sample": {
+				"Kind": "audio",
+				"Title": "A piece of sound"
+			}
+		},
+		{
 			"Name": "MenuBar",
 			"Kind": "Component",
 			"Group": "buttons",
@@ -17974,7 +19228,7 @@
 			"Kind": "Service",
 			"Group": "",
 			"Icon": "",
-			"Description": "The formats the cards share, in the language of the page (Locale): Count(12400) is '12K', Date(value, style) a date ('short', 'medium', 'long', or Intl.DateTimeFormat options), Day(value) {Day, Month} for a date badge, Relative(value) the time from now ('5 minutes ago'), Money(amount, code) an amount of a currency.",
+			"Description": "The formats the cards share, in the language of the page (Locale): Count(12400) is '12K', Date(value, style) a date ('short', 'medium', 'long', or Intl.DateTimeFormat options), Day(value) {Day, Month} for a date badge, Relative(value) the time from now ('5 minutes ago'), Money(amount, code) an amount of a currency, Bytes(size) the size of a file.",
 			"Props": [],
 			"Slots": [],
 			"Container": false,
@@ -17987,7 +19241,8 @@
 				"Date(value, style)",
 				"Day(value)",
 				"Relative(value, now)",
-				"Money(amount, code)"
+				"Money(amount, code)",
+				"Bytes(size)"
 			],
 			"Sample": {}
 		},
@@ -18119,6 +19374,49 @@
 				"Place()",
 				"OnChange(callback)",
 				"OffChange(callback)"
+			],
+			"Sample": {}
+		},
+		{
+			"Name": "Consents",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "The consents the user gave, of any kind: cookies and analytics, the terms of a service, the use of the camera.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [
+				"Get(key)",
+				"Granted(key, purpose)",
+				"Valid(key, version)",
+				"Set(key, version, choices)",
+				"Clear(key)",
+				"OnChange(callback)",
+				"OffChange(callback)"
+			],
+			"Sample": {}
+		},
+		{
+			"Name": "QR",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "QR codes: Encode(text, level) returns the modules of the code of a text, SVG(text, options) a drawing of it.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [
+				"Encode(text, level)",
+				"SVG(text, options)"
 			],
 			"Sample": {}
 		},
@@ -19989,6 +21287,141 @@
 		"elemenx-menu-back": [],
 		"elemenx-menu-cancel": [],
 		"elemenx-menu-root": [],
+		"elemenx-split-button": [],
+		"elemenx-split-button-main": [],
+		"elemenx-split-button-arrow": [],
+		"elemenx-accordion": [
+			"bordered"
+		],
+		"elemenx-countdown": [
+			"ended",
+			"large",
+			"small"
+		],
+		"elemenx-countdown-part": [],
+		"elemenx-countdown-value": [],
+		"elemenx-countdown-unit": [],
+		"elemenx-countdown-line": [],
+		"elemenx-clock": [
+			"large",
+			"small"
+		],
+		"elemenx-clock-time": [],
+		"elemenx-clock-date": [],
+		"elemenx-clock-label": [],
+		"elemenx-clock-face": [],
+		"elemenx-clock-rim": [],
+		"elemenx-clock-mark": [],
+		"elemenx-clock-hour": [],
+		"elemenx-clock-minute": [],
+		"elemenx-clock-second": [],
+		"elemenx-clock-pin": [],
+		"elemenx-consent": [
+			"bottom",
+			"center",
+			"inline"
+		],
+		"elemenx-consent-body": [],
+		"elemenx-consent-title": [],
+		"elemenx-consent-text": [],
+		"elemenx-consent-purposes": [],
+		"elemenx-consent-actions": [],
+		"elemenx-diff-view": [
+			"split",
+			"wrap"
+		],
+		"elemenx-diff-header": [],
+		"elemenx-diff-title": [],
+		"elemenx-diff-added": [],
+		"elemenx-diff-removed": [],
+		"elemenx-diff-body": [],
+		"elemenx-diff-row": [
+			"add",
+			"folded",
+			"remove"
+		],
+		"elemenx-diff-side": [
+			"add",
+			"empty",
+			"remove"
+		],
+		"elemenx-diff-number": [],
+		"elemenx-diff-sign": [],
+		"elemenx-diff-text": [],
+		"elemenx-diff-word": [],
+		"elemenx-diff-fold": [],
+		"elemenx-signature-pad": [
+			"readonly"
+		],
+		"elemenx-signature-field": [],
+		"elemenx-signature-canvas": [],
+		"elemenx-signature-line": [],
+		"elemenx-signature-placeholder": [],
+		"elemenx-signature-controls": [],
+		"elemenx-cropper": [
+			"disabled",
+			"round"
+		],
+		"elemenx-cropper-field": [],
+		"elemenx-cropper-image": [],
+		"elemenx-cropper-box": [],
+		"elemenx-cropper-handle": [
+			"e",
+			"n",
+			"ne",
+			"nw",
+			"s",
+			"se",
+			"sw",
+			"w"
+		],
+		"elemenx-cropper-size": [],
+		"elemenx-qr-code": [],
+		"elemenx-qr-scanner": [
+			"done"
+		],
+		"elemenx-qr-scanner-view": [],
+		"elemenx-qr-scanner-video": [],
+		"elemenx-qr-scanner-frame": [],
+		"elemenx-qr-scanner-status": [],
+		"elemenx-file-browser": [
+			"grid"
+		],
+		"elemenx-file-browser-bar": [],
+		"elemenx-file-browser-path": [],
+		"elemenx-file-browser-views": [],
+		"elemenx-file-browser-view": [],
+		"elemenx-file-browser-sort": [
+			"active",
+			"modified"
+		],
+		"elemenx-file-browser-head": [],
+		"elemenx-file-browser-item": [
+			"selected"
+		],
+		"elemenx-file-browser-items": [],
+		"elemenx-file-browser-icon": [],
+		"elemenx-file-browser-name": [],
+		"elemenx-file-browser-size": [],
+		"elemenx-file-browser-modified": [],
+		"elemenx-file-browser-empty": [],
+		"elemenx-media-player": [
+			"full"
+		],
+		"elemenx-media-stage": [],
+		"elemenx-media-element": [],
+		"elemenx-media-big": [],
+		"elemenx-media-controls": [],
+		"elemenx-media-title": [],
+		"elemenx-media-row": [],
+		"elemenx-media-spacer": [],
+		"elemenx-media-time": [],
+		"elemenx-media-button": [
+			"text"
+		],
+		"elemenx-media-speed": [],
+		"elemenx-media-seek": [],
+		"elemenx-media-volume": [],
 		"elemenx-menu-bar-host": [],
 		"elemenx-menu-bar": [],
 		"elemenx-menu-bar-entry": [],

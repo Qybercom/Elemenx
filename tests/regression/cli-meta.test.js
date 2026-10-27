@@ -175,6 +175,32 @@ describe('elemenx meta', function () {
 		expect(Builder.StripMeta(source)).toBe('Elemenx.Component(\'Card\', {\n\t$TemplateURL: \'Card.html\',\n\tTitle: \'\'\n});\n');
 	});
 
+	/* A bug: only the entry and the page were looked at, so a component that read Elemenx.Meta got nothing in a build. */
+	it('keeps the $Meta of the libraries in a build whose own component reads Elemenx.Meta, and leaves it out otherwise', function () {
+		var root = folder();
+		var button = function (reads) {
+			var source;
+			var start;
+
+			fs.writeFileSync(path.join(root, 'Shop', 'Page', 'Page.js'), 'Elemenx.Component(\'Page\', {\n\t$Template: \'<Button Label="Buy" />\',\n\tProps: function () {\n\t\treturn ' + (reads ? 'Elemenx.Meta(\'Button\').Props' : '[]') + ';\n\t}\n});\n');
+
+			childProcess.execFileSync(process.execPath, [path.resolve('elemenx-cli.js'), 'build', root], {stdio: 'ignore'});
+
+			source = fs.readFileSync(path.join(root, 'dist', 'app.js'), 'utf8');
+			start = source.indexOf('Elemenx.Component(\'Button\'');
+
+			return source.substring(start, source.indexOf('Elemenx.Component(', start + 1));
+		};
+
+		fs.mkdirSync(path.join(root, 'Shop', 'Page'), {recursive: true});
+		fs.writeFileSync(path.join(root, 'index.html'), '<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width, initial-scale=1" /><script src="/elemenx.js"></script><script src="/app.js"></script></head><body></body></html>\n');
+		fs.writeFileSync(path.join(root, 'app.js'), 'Elemenx.Application(\'Shop\', {$Component: \'Page\', $Root: \'Shop\', $Mount: \'body\', $Use: [\'ElemenxUI\']});\n');
+		fs.writeFileSync(path.join(root, 'Shop', 'index.js'), '[\'Page/Page.js\'];\n');
+
+		expect(button(true)).toContain('$Meta:');
+		expect(button(false)).not.toContain('$Meta:');
+	});
+
 	it('runs from the command line', function () {
 		var root = folder();
 		var output = childProcess.execFileSync(process.execPath, [path.resolve('elemenx-cli.js'), 'meta', library, path.join(root, 'meta.json')], {encoding: 'utf8'});

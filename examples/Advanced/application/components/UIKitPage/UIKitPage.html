@@ -1412,6 +1412,41 @@
 		</div>
 	</Section>
 
+	<Section *if="Shows('More components')" Title="More components" [note]="MoreNote">
+		<div class="ui-kit-lazy" *lazy="400">
+			<div class="ui-kit-grid">
+				<div class="ui-kit-stack">
+					<h5>SplitButton</h5>
+					<div class="ui-kit-row"><SplitButton Label="Save" Icon="save" [items]="MoreActions" (click)="MoreSaved" (select)="MorePicked" /></div>
+					<h5>Accordion</h5>
+					<Accordion>
+						<Section Title="Shipping" Collapsible="true">Delivery in 2 to 4 days.</Section>
+						<Section Title="Returns" Collapsible="true" Collapsed="true">30 days to send it back.</Section>
+					</Accordion>
+					<h5>Countdown and Clock</h5>
+					<div class="ui-kit-row"><Countdown Duration="5400" Compact="true" /><Clock Seconds="true" /><Clock Mode="analog" Size="small" Seconds="true" /></div>
+					<h5>Consent</h5>
+					<Consent Key="ui-kit" Placement="inline" Open="true" [purposes]="MorePurposes" (change)="MoreDecided">We keep a few things in your browser.</Consent>
+				</div>
+				<div class="ui-kit-stack">
+					<h5>DiffView</h5>
+					<DiffView Title="area.js" [before]="MoreBefore" [after]="MoreAfter" Context="1" />
+					<h5>QRCode</h5>
+					<div class="ui-kit-row"><QRCode Value="https://elemenx.dev" Size="112" /><QRScanner Active="false" Height="112" /></div>
+					<h5>SignaturePad</h5>
+					<SignaturePad Height="120" (change)="MoreSigned" />
+				</div>
+				<div class="ui-kit-stack">
+					<h5>ImageCropper</h5>
+					<ImageCropper [src]="MorePicture" Aspect="1" Round="true" Height="200" />
+					<h5>FileBrowser</h5>
+					<FileBrowser [items]="MoreFiles" Height="180" (open)="MoreOpened" />
+					<h5>MediaPlayer</h5>
+					<MediaPlayer Kind="audio" Title="Silence" />
+				</div>
+			</div>
+		</div>
+	</Section>
 	<Section *if="Shows('Windows')" Title="Windows" [note]="WindowNote">
 		<div class="ui-kit-lazy" *lazy>
 			<div class="ui-kit-row">

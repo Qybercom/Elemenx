@@ -2,9 +2,10 @@
  * A page of the reference: the navigation of all the pages (pages/index.json) beside the page of the route, read from
  * pages/<section>/<page>.<language>.md (the English page when the language has none); the components in the navigation
  * by their groups, the group of the page open. The text is shown by Markdown; a block ```example holds a template that
- * runs beside its code (DocsExample). The page of a component, a service or a directive ends with its source, read from
- * the Library: a listing for each of its files (its template, its script, its stylesheet), a tab each. Beside the page,
- * on a wide screen, its contents: its headings, the one read now marked as the page scrolls; a press goes to one.
+ * runs beside its code (DocsExample), a block ```diagram an SVG drawn in the colors of the theme. The page of a
+ * component, a service or a directive ends with its source, read from the Library: a listing for each of its files (its
+ * template, its script, its stylesheet), a tab each. Beside the page, on a wide screen, its contents: its headings, the
+ * one read now marked as the page scrolls; a press goes to one.
  */
 Elemenx.Component('DocsPage', {
 	$TemplateURL: 'DocsPage.html',
@@ -21,6 +22,18 @@ Elemenx.Component('DocsPage', {
 
 	$OnCreate: function () {
 		var self = this;
+		var diagrams = {};
+
+		/*
+		 * A block ```diagram: an SVG of the page itself, put inline so its colors are the tokens of the theme
+		 * (var(--elemenx-text)...) and follow the scheme. One element for each text, so a new render moves nothing.
+		 */
+		this.Diagram = function (code) {
+			if (!diagrams[code])
+				diagrams[code] = document.importNode(new DOMParser().parseFromString(code, 'image/svg+xml').documentElement, true);
+
+			return diagrams[code];
+		};
 
 		/* The language of the pages: the language of the page, without its region. */
 		this.Lang = function () {
@@ -215,6 +228,7 @@ Elemenx.Component('DocsPage', {
 			 * component, made for its own code (a key by the place alone kept the example of the first page shown).
 			 */
 			if (match[1] === 'example') segments.push({Key: 'example-' + segments.length + '-' + this.Hash(match[2]), Kind: 'example', Code: match[2].replace(/\n$/, '')});
+			else if (match[1] === 'diagram') segments.push({Key: 'diagram-' + segments.length + '-' + this.Hash(match[2]), Kind: 'diagram', Code: match[2]});
 			else segments.push({Key: 'code-' + segments.length + '-' + this.Hash(match[2]), Kind: 'code', Language: match[1] || 'text', Code: match[2].replace(/\n$/, '')});
 
 			last = match.index + match[0].length;

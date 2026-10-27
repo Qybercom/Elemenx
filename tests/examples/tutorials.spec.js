@@ -1,3 +1,4 @@
+import { chromium } from '@playwright/test';
 import { test, expect } from '../coverage/playwright.js';
 import childProcess from 'child_process';
 import fs from 'fs';
@@ -32,6 +33,412 @@ var Checks = {
 		await page.getByRole('button', {name: 'Create my account'}).click();
 
 		await expect(page.locator('#signup .elemenx-callout.success')).toHaveText('Thank you! Check your mail.');
+	},
+
+	Todo: async function (page) {
+		var field = page.getByLabel('New task');
+
+		await field.fill('Buy milk');
+		await field.press('Enter');
+		await field.fill('Call Ada');
+
+		await page.getByRole('button', {name: 'Add'}).click();
+
+		await expect(page.locator('.todo-title')).toHaveText(['Buy milk', 'Call Ada']);
+
+		await page.getByText('Buy milk').click();
+
+		await expect(page.locator('.todo-left')).toHaveText('1 left');
+
+		await page.getByRole('button', {name: 'Clear done'}).click();
+		await page.reload();
+
+		await expect(page.locator('.todo-title')).toHaveText(['Call Ada']);
+	},
+
+	Signup: async function (page) {
+		var field = function (label) {
+			return page.locator('.elemenx-field').filter({has: page.getByText(label, {exact: true})});
+		};
+
+		/* An empty form: every field shows its error, nothing is sent. */
+		await page.getByRole('button', {name: 'Create my account'}).click();
+
+		await expect(field('Name').locator('.elemenx-field-error')).toBeVisible();
+		await expect(field('Email').locator('.elemenx-field-error')).toBeVisible();
+
+		/* The server knows the name; a free one passes. */
+		await page.getByLabel('Name', {exact: true}).fill('ada');
+
+		await expect(field('Name').locator('.elemenx-field-error')).toHaveText('This name is taken');
+
+		await page.getByLabel('Name', {exact: true}).fill('linus');
+
+		await expect(field('Name').locator('.elemenx-field-error')).toHaveCount(0);
+
+		await page.getByLabel('Email', {exact: true}).fill('ada@example.com');
+		await page.getByLabel('Password', {exact: true}).fill('longenough');
+		await page.getByLabel('Repeat the password').fill('different1');
+		await page.getByLabel('Repeat the password').blur();
+
+		await expect(field('Password').locator('.elemenx-field-error')).toHaveText('Add a digit');
+		await expect(field('Repeat the password').locator('.elemenx-field-error')).toHaveText('The passwords differ');
+
+		await page.getByLabel('Password', {exact: true}).fill('different1');
+
+		await expect(field('Repeat the password').locator('.elemenx-field-error')).toHaveCount(0);
+
+		/* The phones: a wrong one shows its error, a second row comes and goes. */
+		await page.getByLabel('Phone').first().fill('call me');
+		await page.getByLabel('Phone').first().blur();
+
+		await expect(page.locator('.signup-phone .elemenx-field-error')).toHaveText('Digits, spaces and a + only');
+
+		await page.getByLabel('Phone').first().fill('+44 20 7946 0000');
+		await page.getByRole('button', {name: 'Add a phone'}).click();
+
+		await expect(page.locator('.signup-phone')).toHaveCount(2);
+
+		await page.getByRole('button', {name: 'Remove the phone'}).last().click();
+
+		await expect(page.locator('.signup-phone')).toHaveCount(1);
+
+		await page.getByText('I accept the terms').click();
+
+		/* Valid in the browser, refused by the server: its error goes under the email, until the email changes. */
+		await page.getByRole('button', {name: 'Create my account'}).click();
+
+		await expect(field('Email').locator('.elemenx-field-error')).toHaveText('This email has an account already');
+
+		await page.getByLabel('Email', {exact: true}).fill('linus@example.com');
+
+		await expect(field('Email').locator('.elemenx-field-error')).toHaveCount(0);
+
+		await page.getByRole('button', {name: 'Create my account'}).click();
+
+		await expect(page.locator('.elemenx-callout.success')).toContainText('Welcome, linus!');
+	},
+
+	Dashboard: async function (page) {
+		var visitors;
+
+		/* The stream: the state, the numbers, the chart and the orders come as the server sends them. */
+		await expect(page.locator('.live-state')).toHaveText('Live');
+		await expect(page.locator('.live-orders')).not.toHaveText('0', {timeout: 10000});
+		await expect(page.locator('.live-orders-list li').first()).toContainText('#1001');
+		await expect(page.locator('.live-revenue')).toContainText('€');
+		await expect(page.getByRole('img', {name: 'Visitors, the last minute'})).toBeVisible();
+
+		/* Paused: nothing more comes; resumed: the server goes on after the last tick, so no order comes twice. */
+		await page.getByRole('button', {name: 'Pause'}).click();
+
+		await expect(page.locator('.live-state')).toHaveText('Paused');
+
+		visitors = await page.locator('.live-orders').textContent();
+
+		await page.waitForTimeout(1500);
+
+		await expect(page.locator('.live-orders')).toHaveText(visitors);
+
+		await page.getByRole('button', {name: 'Resume'}).click();
+
+		await expect(page.locator('.live-state')).toHaveText('Live');
+		await expect(page.locator('.live-orders')).not.toHaveText(visitors, {timeout: 10000});
+
+		expect(await page.locator('.live-orders-list li').evaluateAll(function (rows) {
+			var names = rows.map(function (row) {
+				return row.textContent.split(' · ')[0];
+			});
+
+			return names.length === new Set(names).size;
+		})).toBe(true);
+	},
+
+	Notes: async function (page) {
+		var other;
+		var compose = page.getByLabel('Note', {exact: true});
+		var server = function () {
+			return page.evaluate(async function () {
+				return (await (await fetch('/api/notes')).json()).Notes.filter(function (note) {
+					return !note.Deleted;
+				}).map(function (note) {
+					return note.Text;
+				}).sort();
+			});
+		};
+
+		await expect(page.locator('.notes-status')).toHaveText('Synced');
+
+		await compose.fill('Online note');
+
+		await page.getByRole('button', {name: 'Add'}).click();
+
+		await expect(page.locator('.notes-text')).toHaveText(['Online note']);
+		await expect(page.locator('.notes-status')).toHaveText('Synced');
+
+		/* Offline: the notes still change, and the changes wait in the outbox. */
+		await page.context().setOffline(true);
+
+		await expect(page.locator('.notes-status')).toHaveText('Offline');
+
+		await compose.fill('Written on a train');
+
+		await page.getByRole('button', {name: 'Add'}).click();
+
+		await page.locator('.notes-item').filter({hasText: 'Online note'}).getByRole('button', {name: 'Edit'}).click();
+
+		await expect(compose).toHaveValue('Online note');
+
+		await compose.fill('Online note, edited offline');
+
+		await page.getByRole('button', {name: 'Save'}).click();
+
+		await expect(page.locator('.notes-text')).toHaveText(['Online note, edited offline', 'Written on a train']);
+		await expect(page.locator('.notes-status')).toHaveText('Offline · 2 waiting');
+
+		/* Back online: the outbox goes to the server. */
+		await page.context().setOffline(false);
+
+		await expect(page.locator('.notes-status')).toHaveText('Synced');
+
+		expect(await server()).toEqual(['Online note, edited offline', 'Written on a train']);
+
+		await page.locator('.notes-item').filter({hasText: 'Written on a train'}).getByRole('button', {name: 'Delete'}).click();
+
+		await expect(page.locator('.notes-text')).toHaveText(['Online note, edited offline']);
+		await expect(page.locator('.notes-status')).toHaveText('Synced');
+
+		expect(await server()).toEqual(['Online note, edited offline']);
+
+		/* Another device, a browser with an empty database: it takes the notes from the server. */
+		other = await page.context().browser().newPage();
+
+		try {
+			await other.goto(page.url());
+
+			await expect(other.locator('.notes-text')).toHaveText(['Online note, edited offline']);
+		}
+		finally {
+			await other.close();
+		}
+	},
+
+	Auth: async function (page) {
+		var origin = new URL(page.url()).origin;
+		var refused = false;
+
+		/* A guest who asks for the account goes to sign in, and comes back after it. */
+		await page.goto(origin + '/account');
+
+		await expect(page).toHaveURL(/\/login\?return=%2Faccount$/);
+
+		await page.getByLabel('Email').fill('ada@example.com');
+		await page.getByLabel('Password', {exact: true}).fill('wrong password');
+		await page.getByRole('button', {name: 'Sign in'}).click();
+
+		await expect(page.getByRole('alert').filter({hasText: 'The email or the password is wrong.'})).toBeVisible();
+
+		await page.getByLabel('Password', {exact: true}).fill('correct horse 7');
+		await page.getByRole('button', {name: 'Sign in'}).click();
+
+		await expect(page).toHaveURL(/\/account$/);
+		await expect(page.locator('.account-name')).toHaveText('Ada Lovelace');
+
+		/* The refresh token is a cookie the page cannot read; a reload restores the session with it. */
+		expect(await page.evaluate(function () {
+			return document.cookie;
+		})).not.toContain('refresh');
+
+		/* And an access token that expired: the first answer of /api/me is 401, the Session renews it and asks again. */
+		await page.route('**/api/me', function (route) {
+			if (refused)
+				return route.continue();
+
+			refused = true;
+
+			return route.fulfill({status: 401, contentType: 'application/json', body: '{"Error": "The token expired."}'});
+		});
+
+		await page.reload();
+
+		await expect(page.locator('.account-name')).toHaveText('Ada Lovelace');
+		await expect(page.locator('.auth-user')).toHaveText('Ada Lovelace');
+
+		expect(refused).toBe(true);
+
+		await page.unroute('**/api/me');
+
+		/* Out: the cookie is forgotten, the account asks to sign in again, even after a reload. */
+		await page.getByRole('button', {name: 'Sign out'}).click();
+
+		await expect(page).toHaveURL(origin + '/');
+
+		await page.goto(origin + '/account');
+
+		await expect(page).toHaveURL(/\/login\?return=%2Faccount$/);
+
+		/* A return to another site is refused. */
+		await page.goto(origin + '/login?return=' + encodeURIComponent('//example.com/'));
+		await page.getByLabel('Email').fill('ada@example.com');
+		await page.getByLabel('Password', {exact: true}).fill('correct horse 7');
+		await page.getByRole('button', {name: 'Sign in'}).click();
+
+		await expect(page).toHaveURL(origin + '/account');
+	},
+
+	Languages: async function (page) {
+		var language = async function (name) {
+			await page.locator('.trip-header .elemenx-select-trigger, .trip-header [role="combobox"]').first().click();
+			await page.getByRole('option', {name: name}).click();
+		};
+		var nights = async function (count) {
+			var slider = page.getByRole('slider');
+
+			await slider.focus();
+			await slider.press('Home');
+
+			for (var i = 1; i < count; i++)
+				await slider.press('ArrowUp');
+		};
+
+		/* English: the plural of en, the dates and the price in its manner. */
+		await expect(page.locator('h1')).toHaveText('Seaside');
+		await expect(page.locator('.trip-nights')).toHaveText('3 nights');
+		await expect(page.locator('.trip-dates')).toHaveText('July 14 – July 17');
+		await expect(page.locator('.trip-total')).toHaveText('Total: €252.00');
+
+		await nights(1);
+
+		await expect(page.locator('.trip-nights')).toHaveText('1 night');
+
+		/* Russian: one, few, many. */
+		await language('Русский');
+
+		await expect(page.locator('h1')).toHaveText('У моря');
+		await expect(page.locator('html')).toHaveAttribute('lang', 'ru');
+		await expect(page.locator('.trip-nights')).toHaveText('1 ночь');
+		await expect(page.locator('.trip-dates')).toHaveText('14 июля – 15 июля');
+
+		await nights(3);
+
+		await expect(page.locator('.trip-nights')).toHaveText('3 ночи');
+
+		await nights(5);
+
+		await expect(page.locator('.trip-nights')).toHaveText('5 ночей');
+		await expect(page.locator('.trip-total')).toContainText('420,00');
+
+		/* Arabic: right to left, its own plural forms, and the arrow keys that keep their meaning. */
+		await language('العربية');
+
+		await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
+		await expect(page.locator('h1')).toHaveText('على البحر');
+
+		await nights(2);
+
+		await expect(page.locator('.trip-nights')).toHaveText('ليلتان');
+
+		expect(await page.locator('.trip-next').evaluate(function (button) {
+			return button.getBoundingClientRect().left < button.parentNode.getBoundingClientRect().left + 100;
+		})).toBe(true);
+
+		await page.locator('.trip-photo').focus();
+		await page.keyboard.press('ArrowLeft');
+
+		await expect(page.locator('.trip-photo-name')).toHaveText('الإطلالة');
+
+		/* The page remembers the language. */
+		await page.reload();
+
+		await expect(page.locator('h1')).toHaveText('على البحر');
+
+		await language('English');
+
+		await expect(page.locator('html')).toHaveAttribute('dir', 'ltr');
+
+		await page.locator('.trip-photo').focus();
+		await page.keyboard.press('ArrowRight');
+
+		await expect(page.locator('.trip-photo-name')).toHaveText('The view');
+	},
+
+	Extension: async function (page) {
+		/* On a page of a site the storage of the page stands in for the one of the extension. */
+		await expect(page.locator('.reading-count')).toHaveText('0');
+
+		await page.getByRole('button', {name: 'Save this page'}).click();
+
+		await expect(page.locator('.reading-name')).toHaveText(['Reading list']);
+		await expect(page.locator('.reading-saved')).toHaveText('Saved: Reading list');
+
+		await page.reload();
+
+		await expect(page.locator('.reading-count')).toHaveText('1');
+
+		await page.getByRole('button', {name: 'Remove'}).click();
+
+		await expect(page.locator('.reading-item')).toHaveCount(0);
+	},
+
+	Call: async function (page) {
+		var other = await page.context().newPage();
+		var join = async function (tab, name) {
+			await tab.getByLabel('Your name').fill(name);
+			await tab.getByRole('button', {name: 'Join'}).click();
+		};
+
+		try {
+			/* Alone in the room: the own tile only. */
+			await join(page, 'Ada');
+
+			await expect(page.locator('.call-alone')).toBeVisible();
+			await expect(page.locator('.elemenx-call-tile.self')).toHaveAttribute('aria-label', 'Ada');
+
+			/* A second one joins: each sees the other, through the signaling and then their own connection. */
+			await other.goto(page.url());
+
+			await join(other, 'Grace');
+
+			await expect(page.locator('.elemenx-call-tile:not(.self)')).toHaveAttribute('aria-label', 'Grace');
+			await expect(other.locator('.elemenx-call-tile:not(.self)')).toHaveAttribute('aria-label', 'Ada');
+			await expect(page.locator('.call-status')).toHaveText('team · 2');
+
+			/* The microphone of Grace goes off: the data channel tells Ada. */
+			await other.locator('.elemenx-call-controls button').first().click();
+
+			await expect(page.locator('.elemenx-call-tile[aria-label="Grace"] .elemenx-call-tile-name .elemenx-icon, .elemenx-call-tile[aria-label="Grace"] .elemenx-call-tile-name svg').first()).toBeVisible();
+
+			/* Grace leaves: her tile goes. */
+			await other.close();
+
+			await expect(page.locator('.elemenx-call-tile:not(.self)')).toHaveCount(0);
+		}
+		finally {
+			if (!other.isClosed())
+				await other.close();
+		}
+	},
+
+	Kit: async function (page) {
+		/* The components of the library live: their phrases, their service, their events. */
+		await expect(page.locator('.acme-stat')).toHaveCount(3);
+		await expect(page.locator('.acme-stat-delta').first()).toHaveText('+12% vs last month');
+		await expect(page.locator('.acme-stat-delta.good')).toHaveCount(2);
+		await expect(page.locator('.acme-stat-delta.bad')).toHaveCount(1);
+		await expect(page.locator('.acme-price-now').first()).toHaveText('€79.00');
+		await expect(page.locator('.acme-price-off')).toHaveText('−20%');
+		await expect(page.locator('.acme-copy-button')).toHaveText('Copy');
+
+		await page.getByRole('button', {name: /Revenue/}).click();
+
+		await expect(page.locator('.kit-said')).toHaveText('open: Revenue');
+
+		/* The reference, made of $Meta: the props with their types and defaults, the events. */
+		await expect(page.locator('.kit-reference')).toHaveCount(3);
+		await expect(page.locator('[data-name="PriceTag"] .kit-props tbody tr')).toHaveCount(4);
+		await expect(page.locator('[data-name="PriceTag"] .kit-props tbody tr').nth(1)).toContainText('select: EUR, USD, GBP, RUB');
+		await expect(page.locator('[data-name="StatCard"] .kit-events')).toContainText('open');
+		await expect(page.locator('[data-name="CopyField"] .kit-events')).toContainText('copy');
 	},
 
 	Blog: async function (page) {
@@ -339,6 +746,12 @@ var Checks = {
 	}
 };
 
+/* What the console of a tutorial may say: a refusal of its server that the tutorial shows on purpose. */
+var Expected = {
+	Signup: /status of 422/,
+	Auth: /status of 401/
+};
+
 test.describe('Tutorials: every project of examples/Tutorials builds and does what its tutorial says', function () {
 	fs.readdirSync(root).filter(function (name) {
 		return fs.existsSync(path.join(root, name, 'elemenx.config.js'));
@@ -347,6 +760,7 @@ test.describe('Tutorials: every project of examples/Tutorials builds and does wh
 			var folder = fs.mkdtempSync(path.join(os.tmpdir(), 'elemenx-tutorial-'));
 			var errors = [];
 			var server;
+			var settings;
 
 			expect(Checks[name], 'the checks of ' + name).toBeTruthy();
 
@@ -355,13 +769,16 @@ test.describe('Tutorials: every project of examples/Tutorials builds and does wh
 			}});
 
 			/* A project with an entry is built; a page without one (Backend) is served as it is, as elemenx dev does. */
+			/* The server answers the paths of the project too (Server.Request of its elemenx.config.js: an API, a stream; its Server.WebSocket). */
+			settings = require(path.join(folder, 'elemenx.config.js')).Server || {};
+
 			if (/\n\s*Entry\s*:/.test(fs.readFileSync(path.join(folder, 'elemenx.config.js'), 'utf8'))) {
 				childProcess.execFileSync(process.execPath, [cli, 'build', folder], {stdio: 'ignore'});
 
-				server = Server.Create({Root: path.join(folder, 'dist')});
+				server = Server.Create({Root: path.join(folder, 'dist'), Request: settings.Request || null, WebSocket: settings.WebSocket || null});
 			}
 			else {
-				server = Server.Create({Root: folder});
+				server = Server.Create({Root: folder, Request: settings.Request || null, WebSocket: settings.WebSocket || null});
 			}
 
 			await new Promise(function (resolve) {
@@ -372,7 +789,7 @@ test.describe('Tutorials: every project of examples/Tutorials builds and does wh
 				errors.push(error.message + ' ' + String(error.stack || '').split('\n').slice(1, 4).join(' | '));
 			});
 			page.on('console', function (message) {
-				if (message.type() === 'error')
+				if (message.type() === 'error' && !(Expected[name] && Expected[name].test(message.text())))
 					errors.push(message.text());
 			});
 
@@ -392,4 +809,128 @@ test.describe('Tutorials: every project of examples/Tutorials builds and does wh
 			}
 		});
 	});
+});
+
+/*
+ * The tutorial on extensions, as an extension: built by elemenx build --extension (as a tab here: a popup has no page
+ * of its own to open in a test), loaded into Edge, its list kept in chrome.storage. Where Edge is not installed the
+ * test is skipped.
+ */
+test('Tutorials: Extension runs as an extension, its list in chrome.storage', async function () {
+	var folder = fs.mkdtempSync(path.join(os.tmpdir(), 'elemenx-tutorial-'));
+	var profile = fs.mkdtempSync(path.join(os.tmpdir(), 'elemenx-profile-'));
+	var errors = [];
+	var manifest;
+	var context;
+	var worker;
+	var page;
+
+	fs.cpSync(path.join(root, 'Extension'), folder, {recursive: true, filter: function (file) {
+		return path.basename(file) !== 'dist' && path.basename(file) !== 'node_modules';
+	}});
+
+	try {
+		childProcess.execFileSync(process.execPath, [cli, 'build', folder, '--extension', '--surface', 'tab'], {stdio: 'ignore'});
+
+		manifest = JSON.parse(fs.readFileSync(path.join(folder, 'dist', 'extension', 'chrome', 'manifest.json'), 'utf8'));
+
+		expect([manifest.name, manifest.permissions]).toEqual(['Reading list', ['activeTab', 'storage']]);
+
+		try {
+			context = await chromium.launchPersistentContext(profile, {channel: 'msedge', headless: true, args: ['--disable-extensions-except=' + path.join(folder, 'dist', 'extension', 'chrome'), '--load-extension=' + path.join(folder, 'dist', 'extension', 'chrome')]});
+		}
+		catch (error) {
+			test.skip(true, 'Microsoft Edge is not installed: ' + error.message.split('\n')[0]);
+		}
+
+		worker = context.serviceWorkers()[0] || await context.waitForEvent('serviceworker');
+		page = await context.newPage();
+
+		page.on('pageerror', function (error) {
+			errors.push(error.message);
+		});
+
+		page.on('console', function (message) {
+			if (message.type() === 'error')
+				errors.push(message.text());
+		});
+
+		await page.goto('chrome-extension://' + worker.url().split('/')[2] + '/index.html');
+		await page.getByRole('button', {name: 'Save this page'}).click();
+
+		await expect(page.locator('.reading-item')).toHaveCount(1);
+
+		expect(await page.evaluate(function () {
+			return new Promise(function (resolve) {
+				chrome.storage.sync.get({items: []}, function (value) {
+					resolve(value.items.length);
+				});
+			});
+		})).toBe(1);
+
+		expect(errors).toEqual([]);
+	}
+	finally {
+		if (context)
+			await context.close();
+
+		fs.rmSync(profile, {recursive: true, force: true});
+		fs.rmSync(folder, {recursive: true, force: true});
+	}
+});
+
+/*
+ * The tutorial on calls with a camera and a microphone: the fake devices of Chrome stand in for them, and the video of
+ * each one plays in the tile of the other, directly between the two pages.
+ */
+test('Tutorials: Call sends the video of each one to the other', async function () {
+	var folder = fs.mkdtempSync(path.join(os.tmpdir(), 'elemenx-tutorial-'));
+	var settings;
+	var server;
+	var browser;
+	var pages;
+
+	fs.cpSync(path.join(root, 'Call'), folder, {recursive: true, filter: function (file) {
+		return path.basename(file) !== 'dist' && path.basename(file) !== 'node_modules';
+	}});
+
+	childProcess.execFileSync(process.execPath, [cli, 'build', folder], {stdio: 'ignore'});
+
+	settings = require(path.join(folder, 'elemenx.config.js')).Server;
+	server = Server.Create({Root: path.join(folder, 'dist'), WebSocket: settings.WebSocket});
+
+	await new Promise(function (resolve) {
+		server.Listen(0, '127.0.0.1', resolve);
+	});
+
+	try {
+		browser = await chromium.launch({channel: 'chrome', headless: true, args: ['--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream']});
+		pages = [await browser.newPage(), await browser.newPage()];
+
+		for (var i = 0; i < pages.length; i++) {
+			await pages[i].goto('http://127.0.0.1:' + server.Server.address().port + '/');
+			await pages[i].getByLabel('Your name').fill(['Ada', 'Grace'][i]);
+			await pages[i].getByRole('button', {name: 'Join'}).click();
+		}
+
+		for (var j = 0; j < pages.length; j++) {
+			await expect.poll(function () {
+				return pages[j].locator('.elemenx-call-tile:not(.self) video').evaluate(function (video) {
+					return video.videoWidth > 0 && !video.paused;
+				}).catch(function () {
+					return false;
+				});
+			}, {timeout: 20000}).toBe(true);
+		}
+	}
+	finally {
+		if (browser)
+			await browser.close();
+
+		await new Promise(function (resolve) {
+			server.Close(resolve);
+		});
+
+		fs.rmSync(folder, {recursive: true, force: true});
+	}
 });

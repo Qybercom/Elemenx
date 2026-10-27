@@ -1,0 +1,10 @@
+.elemenx-qr-code {
+	display: inline-block;
+	flex: none;
+	line-height: 0;
+}
+
+.elemenx-qr-code svg {
+	width: 100%;
+	height: 100%;
+}

@@ -1,0 +1,26 @@
+.acme-copy {
+	display: inline-flex;
+	align-items: stretch;
+	max-inline-size: 100%;
+	border: 1px solid var(--acme-line);
+	border-radius: var(--acme-radius);
+	overflow: hidden;
+}
+
+.acme-copy-value {
+	padding: 6px 10px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.acme-copy-button {
+	padding: 6px 12px;
+	border: 0;
+	border-inline-start: 1px solid var(--acme-line);
+	background: var(--acme-surface);
+	color: var(--acme-brand);
+	font: inherit;
+	font-weight: 600;
+	cursor: pointer;
+}

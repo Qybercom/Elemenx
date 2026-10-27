@@ -32,7 +32,7 @@ Elemenx.Component('Counter', {
 | `$StyleURL` | a file of its CSS; the stylesheet of a component is placed once, when its first instance renders |
 | `$Title` | the title of the document while it renders (a page of the router) |
 | `$KeepAlive` | `true` or `false`: whether it sleeps instead of going (see [Lazy rendering and cache](/guide/cache)) |
-| `$OnCreate(data)`, `$OnReady()`, `$OnDestroy()`, `$OnSleep()`, `$OnWake()` | its life (see [Lifecycle](/guide/lifecycle)) |
+| `$OnCreate(data)`, `$OnReady()`, `$OnProps(changed)`, `$OnDestroy()`, `$OnSleep()`, `$OnWake()` | its life (see [Lifecycle](/guide/lifecycle)) |
 | `$OnChildPending(child)`, `$OnChildReady(child)`, `$OnChildError(child)` | the components inside it that load later |
 | `$OnRouteLeave(context)` | a page of the router asked whether it may be left (see [Guards](/guide/guards)) |
 | `$Events` and `$OnEvent`, `$Messaging` and `$OnMessage` | the channels it listens to ([events](/data/events), [messages](/data/messaging)) |
@@ -52,7 +52,9 @@ A tag passes props to a component by its attributes:
 
 Numbers in plain attributes stay texts (`Step="5"` is `'5'`): use `[step]="5"`, or `Number(this.Step)` in the component.
 
-A prop flows down: when the parent's value changes, the child gets the new one. A component may change its own copy (an open menu, a typed text); the next change of the parent's value replaces it. A parent that must know about a change listens to an event.
+A prop flows down: when the parent's value changes, the child gets the new one. A component may change its own copy (an open menu, a typed text); the next change of the parent's value replaces it. A parent that must know about a change listens to an event. A component that must act when a prop changes (load the data of a new `ID`) has `$OnProps(changed)` (see [Lifecycle](/guide/lifecycle)).
+
+`class` and `style` on the tag of a component are no props: they go on the root element of the component, beside its own classes and style, and follow their `{{ }}` (`<Card class="wide {{Kind}}" style="margin: 8px">`). A template of several elements is held by one root `div`, which takes them. A component that has props named `Class` or `Style` keeps them as props.
 
 ## Events
 

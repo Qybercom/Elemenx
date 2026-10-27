@@ -8,6 +8,7 @@ A component is created, rendered, maybe put to sleep and woken, and destroyed; a
 | --- | --- | --- |
 | `$OnCreate(data)` | the state has its first values (the defaults, then the props of the tag in `data`), before the first rendering | the helpers of the template, values computed from the props, listeners of services |
 | `$OnReady()` | the template is rendered and in the component's element; the values of the route are there | measuring the DOM, focusing a field, starting a request, a timer |
+| `$OnProps(changed)` | its tag (or the page of a widget) gives it new values of props: `changed` holds the props that changed, the state already holds them; not called for the first values | recomputing what depends on a prop, reloading data for a new id |
 | `$OnSleep()` | the component leaves the page but is kept (see [Lazy rendering and cache](/guide/cache)) | pausing timers, media, sockets |
 | `$OnWake()` | it comes back as it was | resuming them |
 | `$OnDestroy()` | it goes for good | removing what it added outside itself: listeners of `window` and of services, timers |
@@ -48,7 +49,7 @@ What a component owns ends with it without a hook: its requests and sockets (`$N
 
 The listeners of its tag and its `$Parent()` are there before `$OnCreate`: an event it emits from `$OnCreate` or `$OnReady` reaches its owner.
 
-`$OnCreate`, `$OnReady`, `$OnDestroy`, `$OnSleep` and `$OnWake` run untracked: what they read does not make the template of the parent that creates the component (a row of a `*for`) depend on it.
+`$OnCreate`, `$OnReady`, `$OnProps`, `$OnDestroy`, `$OnSleep` and `$OnWake` run untracked: what they read does not make the template of the parent that creates the component (a row of a `*for`) depend on it.
 
 ## Components that load later
 
@@ -83,7 +84,7 @@ The router of an Application starts with its root: the page of the first route i
 
 For a component with children in its template: the parent's `$OnCreate`, then its rendering, which creates every child (each with its `$OnCreate`, rendering and `$OnReady`), then the parent's `$OnReady`. Destroying goes the other way: the parent's `$OnDestroy`, then its children.
 
-The content of the tag of a component (what goes into its slots: `<Section><Window /></Section>`) is made with the first instance of that component, before its `$OnCreate`, so its hooks see it built. A component never shown (`<Section *if="false">`) makes nothing of its content, and a `*lazy` in that content waits too.
+The content of the tag of a component (what goes into its slots: `<Section><Window /></Section>`) is made with the first instance of that component, before its `$OnCreate`, so its hooks see it built. A component never shown (`<Section *if="false">`) makes nothing of its content, and a `*lazy` in that content waits too. A component a `*if` hides takes that content with it (its components hear `$OnDestroy`), and the next time it shows the content is made again from the template; with `*keep` the content sleeps with the component and comes back as it was.
 
 ## Example
 

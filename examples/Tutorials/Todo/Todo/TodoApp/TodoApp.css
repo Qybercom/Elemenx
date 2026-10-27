@@ -1,0 +1,61 @@
+.todo {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+	max-width: 520px;
+	margin: 40px auto;
+	padding: 0 16px;
+}
+
+.todo-add {
+	display: flex;
+	align-items: flex-end;
+	gap: 8px;
+}
+
+.todo-add .elemenx-field {
+	flex: 1 1 auto;
+}
+
+.todo-list {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.todo-item {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+	padding: 8px 12px;
+	border-radius: var(--elemenx-radius);
+	background: var(--elemenx-surface);
+}
+
+.todo-item.done .todo-title {
+	color: var(--elemenx-text-muted);
+	text-decoration: line-through;
+}
+
+.todo-check {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.todo-remove {
+	border: 0;
+	background: none;
+	color: var(--elemenx-text-muted);
+	cursor: pointer;
+}
+
+.todo-footer {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}

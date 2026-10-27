@@ -12,6 +12,8 @@ local.Has('settings');    /* true */
 local.Remove('settings');
 ```
 
+Where the page may not use the storages of the browser (a sandboxed frame without `allow-same-origin`, storage the user blocked, Node), `Local`, `Session` and `Cookie` keep their values in memory, for the page alone: an Application still loads and runs, and what it keeps goes with the page.
+
 ## Local and Session
 
 | Method | Meaning |

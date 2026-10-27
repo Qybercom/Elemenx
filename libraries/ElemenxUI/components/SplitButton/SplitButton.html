@@ -1,0 +1,6 @@
+<div class="elemenx-split-button elemenx-popup-anchor" role="group" [attribute.aria-label]="Label || null">
+	<Button class="elemenx-split-button-main" [label]="Label" [icon]="Icon" [variant]="Variant" [size]="Size" [disabled]="Disabled" [loading]="Loading" (click)="Pressed" />
+	<Button class="elemenx-split-button-arrow" Icon="chevron-down" [variant]="Variant" [size]="Size" [disabled]="Disabled" [expanded]="Open" [arialabel]="$T('ui.splitButton.more')" (click)="Toggle" />
+	<span class="elemenx-split-button-sources" hidden><slot></slot></span>
+	<MenuList [items]="Items.concat(Declared)" [open]="Open" [placement]="Placement" [sheet]="Sheet" [title]="Label" (select)="Picked" (dismiss)="Close" />
+</div>

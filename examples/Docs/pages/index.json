@@ -164,6 +164,78 @@
 			]
 		},
 		{
+			"ID": "core",
+			"Title": {
+				"en": "How it works",
+				"ru": "Как это устроено"
+			},
+			"Pages": [
+				{
+					"ID": "overview",
+					"Title": {
+						"en": "The big picture",
+						"ru": "Общая картина"
+					}
+				},
+				{
+					"ID": "startup",
+					"Title": {
+						"en": "From a script to the first screen",
+						"ru": "От скрипта до первого экрана"
+					}
+				},
+				{
+					"ID": "templates",
+					"Title": {
+						"en": "From a template to the page",
+						"ru": "От шаблона до страницы"
+					}
+				},
+				{
+					"ID": "reactivity",
+					"Title": {
+						"en": "How state updates the page",
+						"ru": "Как состояние обновляет страницу"
+					}
+				},
+				{
+					"ID": "components",
+					"Title": {
+						"en": "The life of a component",
+						"ru": "Жизнь компонента"
+					}
+				},
+				{
+					"ID": "services",
+					"Title": {
+						"en": "Services, events and messages",
+						"ru": "Сервисы, события и сообщения"
+					}
+				},
+				{
+					"ID": "router",
+					"Title": {
+						"en": "How a navigation happens",
+						"ru": "Как происходит навигация"
+					}
+				},
+				{
+					"ID": "network",
+					"Title": {
+						"en": "Network and storage",
+						"ru": "Сеть и хранилища"
+					}
+				},
+				{
+					"ID": "build",
+					"Title": {
+						"en": "What a build does",
+						"ru": "Что делает сборка"
+					}
+				}
+			]
+		},
+		{
 			"ID": "tutorials",
 			"Title": {
 				"en": "Tutorials",
@@ -252,6 +324,97 @@
 					"Title": {
 						"en": "Elemenx on the pages of a server",
 						"ru": "Elemenx на страницах сервера"
+					}
+				},
+				{
+					"ID": "forms",
+					"Title": {
+						"en": "Forms and validation",
+						"ru": "Формы и валидация"
+					}
+				},
+				{
+					"ID": "dashboard",
+					"Title": {
+						"en": "A live dashboard",
+						"ru": "Живая панель"
+					}
+				},
+				{
+					"ID": "offline",
+					"Title": {
+						"en": "Working offline: sync",
+						"ru": "Работа офлайн: синхронизация"
+					}
+				},
+				{
+					"ID": "auth",
+					"Title": {
+						"en": "Signing in",
+						"ru": "Вход в аккаунт"
+					}
+				},
+				{
+					"ID": "languages",
+					"Title": {
+						"en": "An application in several languages",
+						"ru": "Приложение на нескольких языках"
+					}
+				},
+				{
+					"ID": "extension",
+					"Title": {
+						"en": "A browser extension",
+						"ru": "Расширение браузера"
+					}
+				},
+				{
+					"ID": "call",
+					"Title": {
+						"en": "A video call",
+						"ru": "Видеозвонок"
+					}
+				},
+				{
+					"ID": "library",
+					"Title": {
+						"en": "A library of your own",
+						"ru": "Своя библиотека"
+					}
+				},
+				{
+					"ID": "directive",
+					"Title": {
+						"en": "A directive of your own",
+						"ru": "Своя директива"
+					}
+				},
+				{
+					"ID": "accessibility",
+					"Title": {
+						"en": "An accessible application",
+						"ru": "Доступное приложение"
+					}
+				},
+				{
+					"ID": "testing",
+					"Title": {
+						"en": "Testing an application",
+						"ru": "Тестирование приложения"
+					}
+				},
+				{
+					"ID": "performance",
+					"Title": {
+						"en": "A fast application",
+						"ru": "Быстрое приложение"
+					}
+				},
+				{
+					"ID": "deploy",
+					"Title": {
+						"en": "Putting it online",
+						"ru": "Публикация в интернете"
 					}
 				},
 				{
@@ -497,9 +660,23 @@
 						"en": "Designer",
 						"ru": "Конструктор"
 					}
+				},
+				{
+					"ID": "other",
+					"Title": {
+						"en": "Other",
+						"ru": "Другое"
+					}
 				}
 			],
 			"Pages": [
+				{
+					"ID": "Accordion",
+					"Title": {
+						"en": "Accordion"
+					},
+					"Group": "layout"
+				},
 				{
 					"ID": "AchievementHost",
 					"Title": {
@@ -669,6 +846,13 @@
 					"Group": "inputs"
 				},
 				{
+					"ID": "Clock",
+					"Title": {
+						"en": "Clock"
+					},
+					"Group": "display"
+				},
+				{
 					"ID": "CodeEditor",
 					"Title": {
 						"en": "CodeEditor"
@@ -711,11 +895,25 @@
 					"Group": "social"
 				},
 				{
+					"ID": "Consent",
+					"Title": {
+						"en": "Consent"
+					},
+					"Group": "other"
+				},
+				{
 					"ID": "ContextMenu",
 					"Title": {
 						"en": "ContextMenu"
 					},
 					"Group": "buttons"
+				},
+				{
+					"ID": "Countdown",
+					"Title": {
+						"en": "Countdown"
+					},
+					"Group": "display"
 				},
 				{
 					"ID": "CurrencySelect",
@@ -837,6 +1035,13 @@
 					"Group": "overlays"
 				},
 				{
+					"ID": "DiffView",
+					"Title": {
+						"en": "DiffView"
+					},
+					"Group": "display"
+				},
+				{
 					"ID": "Drawer",
 					"Title": {
 						"en": "Drawer"
@@ -870,6 +1075,13 @@
 						"en": "Field"
 					},
 					"Group": "inputs"
+				},
+				{
+					"ID": "FileBrowser",
+					"Title": {
+						"en": "FileBrowser"
+					},
+					"Group": "data"
 				},
 				{
 					"ID": "FileIcon",
@@ -1054,6 +1266,13 @@
 					"Group": "display"
 				},
 				{
+					"ID": "ImageCropper",
+					"Title": {
+						"en": "ImageCropper"
+					},
+					"Group": "other"
+				},
+				{
 					"ID": "Input",
 					"Title": {
 						"en": "Input"
@@ -1087,6 +1306,13 @@
 						"en": "MasterDetail"
 					},
 					"Group": "layout"
+				},
+				{
+					"ID": "MediaPlayer",
+					"Title": {
+						"en": "MediaPlayer"
+					},
+					"Group": "other"
 				},
 				{
 					"ID": "Menu",
@@ -1285,6 +1511,20 @@
 					"Group": "layout"
 				},
 				{
+					"ID": "QRCode",
+					"Title": {
+						"en": "QRCode"
+					},
+					"Group": "other"
+				},
+				{
+					"ID": "QRScanner",
+					"Title": {
+						"en": "QRScanner"
+					},
+					"Group": "other"
+				},
+				{
 					"ID": "Radio",
 					"Title": {
 						"en": "Radio"
@@ -1404,6 +1644,13 @@
 					"Group": "display"
 				},
 				{
+					"ID": "SignaturePad",
+					"Title": {
+						"en": "SignaturePad"
+					},
+					"Group": "inputs"
+				},
+				{
 					"ID": "Skeleton",
 					"Title": {
 						"en": "Skeleton"
@@ -1430,6 +1677,13 @@
 						"en": "Spinner"
 					},
 					"Group": "display"
+				},
+				{
+					"ID": "SplitButton",
+					"Title": {
+						"en": "SplitButton"
+					},
+					"Group": "buttons"
 				},
 				{
 					"ID": "Splitter",
@@ -1681,6 +1935,12 @@
 					}
 				},
 				{
+					"ID": "Consents",
+					"Title": {
+						"en": "Consents"
+					}
+				},
+				{
 					"ID": "Countries",
 					"Title": {
 						"en": "Countries"
@@ -1840,6 +2100,12 @@
 					"ID": "Push",
 					"Title": {
 						"en": "Push"
+					}
+				},
+				{
+					"ID": "QR",
+					"Title": {
+						"en": "QR"
 					}
 				},
 				{

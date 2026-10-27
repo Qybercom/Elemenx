@@ -1,0 +1,5 @@
+<span class="acme-price" [class]="[Size || 'medium']">
+	<strong class="acme-price-now">{{Price(Amount, Currency)}}</strong>
+	<s class="acme-price-old" *if="Discount(Amount, Old)"><span class="acme-hidden">{{$T('acme.price.was')}} </span>{{Price(Old, Currency)}}</s>
+	<span class="acme-price-off" *if="Discount(Amount, Old)">−{{Discount(Amount, Old)}}%</span>
+</span>

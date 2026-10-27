@@ -1,0 +1,23 @@
+<main class="notes">
+	<header class="notes-header">
+		<h1 class="elemenx-title">Notes</h1>
+		<span class="elemenx-badge notes-status" [class.success]="Status === 'synced'" [class.warning]="Status === 'offline' || Status === 'pending'" [class.danger]="Status === 'error'" role="status">{{Said(Status, Pending)}}</span>
+	</header>
+	<form class="notes-compose" (submit)="Saved">
+		<TextArea Label="Note" Placeholder="Write a note" Rows="3" [value]="Draft" (input)="Typed" />
+		<div class="notes-actions">
+			<Button Type="submit" Variant="primary" [label]="Editing ? 'Save' : 'Add'" />
+			<Button *if="Editing" Variant="ghost" Label="Cancel" (click)="Cancelled" />
+		</div>
+	</form>
+	<p class="elemenx-text muted" *if="!Notes.length">No notes yet. They are kept on this device and synced when there is a network.</p>
+	<ul class="notes-list">
+		<li class="notes-item" *for="note of Notes" *key="note.ID" [attribute.data-id]="note.ID">
+			<p class="notes-text">{{note.Text}}</p>
+			<div class="notes-row-actions">
+				<Button Variant="ghost" Size="small" Icon="edit" Title="Edit" (click)="Edited" />
+				<Button Variant="ghost" Size="small" Icon="delete" Title="Delete" (click)="Removed" />
+			</div>
+		</li>
+	</ul>
+</main>

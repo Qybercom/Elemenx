@@ -1,0 +1,19 @@
+{
+	"trip": {
+		"title": "У моря",
+		"language": "Язык",
+		"hotel": "Отель у залива",
+		"photos": {
+			"label": "Фотографии",
+			"room": "Номер",
+			"view": "Вид",
+			"pool": "Бассейн"
+		},
+		"previous": "Предыдущее фото",
+		"next": "Следующее фото",
+		"stay": "Сколько ночей",
+		"dates": "{from} – {to}",
+		"nights": {"one": "{count} ночь", "few": "{count} ночи", "many": "{count} ночей", "other": "{count} ночи"},
+		"total": "Итого: {sum}"
+	}
+}

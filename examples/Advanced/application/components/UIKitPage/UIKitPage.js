@@ -429,6 +429,13 @@ Elemenx.Component('UIKitPage', {
 	GamePads: ['xbox', 'playstation', 'nintendo', 'generic'],
 	GamePadButtons: ['a', 'b', 'x', 'y', 'lb', 'rb', 'lt', 'rt', 'ls', 'rs', 'up', 'down', 'left', 'right', 'select', 'start', 'home'],
 	ViewerMarkdown: '## Elemenx 0.9\n\nA **viewer** of Markdown: the *same* look as the rich editor, ~~nothing~~ that runs.\n\n- Tables, quotes and lists\n- Code that names its language:\n\n```js\nElemenx.Component(\'Hello\', {$Template: \'<b>{{Name}}</b>\', Name: \'world\'});\n```\n\n| Key | Does |\n| --- | --- |\n| Mod+F | Finds |\n| Mod+H | Replaces |\n',
+	MoreNote: 'SplitButton · Accordion · Countdown · Clock · Consent · DiffView · QRCode · SignaturePad · ImageCropper · FileBrowser · MediaPlayer',
+	MoreActions: [{ID: 'copy', Label: 'Save a copy'}, {ID: 'pdf', Label: 'Export PDF'}],
+	MorePurposes: [{ID: 'necessary', Label: 'Necessary', Required: true}, {ID: 'analytics', Label: 'Analytics'}],
+	MoreBefore: 'function Area (radius) {\n\treturn 3.14 * radius * radius;\n}\n',
+	MoreAfter: 'function Area (radius) {\n\treturn Math.PI * radius * radius;\n}\n',
+	MorePicture: 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22320%22 height=%22200%22%3E%3Crect width=%22320%22 height=%22200%22 fill=%22%235f7d95%22/%3E%3Ccircle cx=%22160%22 cy=%2290%22 r=%2250%22 fill=%22%23f2c79a%22/%3E%3C/svg%3E',
+	MoreFiles: [{ID: 'docs', Name: 'Documents', Items: [{ID: 'cv', Name: 'cv.pdf', Size: 182000}]}, {ID: 'notes', Name: 'notes.md', Size: 2100}, {ID: 'song', Name: 'song.mp3', Size: 5800000}],
 	ViewerCode: 'function Area (radius) {\n\t/* The area of a circle. */\n\tvar square = radius * radius;\n\n\treturn Math.PI * square;\n}\n',
 	DeclaredChart: {Type: 'bar', Labels: ['Q1', 'Q2', 'Q3', 'Q4'], Series: [{Name: 'Sales', Values: [12, 18, 15, 24]}], Label: 'Sales'},
 	DeclaredTab: '',
@@ -3459,5 +3466,26 @@ Elemenx.Component('UIKitPage', {
 
 	ClearPerson: function () {
 		this.PersonID = null;
+	},
+
+	/* More components: what they report shows in the note of their section. */
+	MoreSaved: function () {
+		this.MoreNote = 'Saved';
+	},
+
+	MorePicked: function (item) {
+		this.MoreNote = item.Label;
+	},
+
+	MoreDecided: function (decision) {
+		this.MoreNote = 'Analytics ' + (decision.Choices.analytics ? 'allowed' : 'refused');
+	},
+
+	MoreSigned: function (strokes) {
+		this.MoreNote = strokes.length + ' strokes signed';
+	},
+
+	MoreOpened: function (item) {
+		this.MoreNote = 'Opened ' + item.Name;
 	}
 });

@@ -1566,3 +1566,123 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 ## Formula
 
 - `elemenx-formula`: `display`
+
+## SplitButton
+
+- `elemenx-split-button`
+- `elemenx-split-button-arrow`
+- `elemenx-split-button-main`
+
+## Accordion
+
+- `elemenx-accordion`: `bordered`
+
+## Countdown
+
+- `elemenx-countdown`: `ended`, `large`, `small`
+- `elemenx-countdown-line`
+- `elemenx-countdown-part`
+- `elemenx-countdown-unit`
+- `elemenx-countdown-value`
+
+## Clock
+
+- `elemenx-clock`: `large`, `small`
+- `elemenx-clock-date`
+- `elemenx-clock-face`
+- `elemenx-clock-hour`
+- `elemenx-clock-label`
+- `elemenx-clock-mark`
+- `elemenx-clock-minute`
+- `elemenx-clock-pin`
+- `elemenx-clock-rim`
+- `elemenx-clock-second`
+- `elemenx-clock-time`
+
+## Consent
+
+- `elemenx-consent`: `bottom`, `center`, `inline`
+- `elemenx-consent-actions`
+- `elemenx-consent-body`
+- `elemenx-consent-purposes`
+- `elemenx-consent-text`
+- `elemenx-consent-title`
+
+## DiffView
+
+- `elemenx-diff-added`
+- `elemenx-diff-body`
+- `elemenx-diff-fold`
+- `elemenx-diff-header`
+- `elemenx-diff-number`
+- `elemenx-diff-removed`
+- `elemenx-diff-row`: `add`, `folded`, `remove`
+- `elemenx-diff-side`: `add`, `empty`, `remove`
+- `elemenx-diff-sign`
+- `elemenx-diff-text`
+- `elemenx-diff-title`
+- `elemenx-diff-view`: `split`, `wrap`
+- `elemenx-diff-word`
+
+## SignaturePad
+
+- `elemenx-signature-canvas`
+- `elemenx-signature-controls`
+- `elemenx-signature-field`
+- `elemenx-signature-line`
+- `elemenx-signature-pad`: `readonly`
+- `elemenx-signature-placeholder`
+
+## ImageCropper
+
+- `elemenx-cropper`: `disabled`, `round`
+- `elemenx-cropper-box`
+- `elemenx-cropper-field`
+- `elemenx-cropper-handle`: `e`, `n`, `ne`, `nw`, `s`, `se`, `sw`, `w`
+- `elemenx-cropper-image`
+- `elemenx-cropper-size`
+
+## QRCode
+
+- `elemenx-qr-code`
+
+## QRScanner
+
+- `elemenx-qr-scanner`: `done`
+- `elemenx-qr-scanner-frame`
+- `elemenx-qr-scanner-status`
+- `elemenx-qr-scanner-video`
+- `elemenx-qr-scanner-view`
+
+## FileBrowser
+
+- `elemenx-file-browser`: `grid`
+- `elemenx-file-browser-bar`
+- `elemenx-file-browser-empty`
+- `elemenx-file-browser-head`
+- `elemenx-file-browser-icon`
+- `elemenx-file-browser-item`: `selected`
+- `elemenx-file-browser-items`
+- `elemenx-file-browser-modified`
+- `elemenx-file-browser-name`
+- `elemenx-file-browser-path`
+- `elemenx-file-browser-size`
+- `elemenx-file-browser-sort`: `active`, `modified`
+- `elemenx-file-browser-view`
+- `elemenx-file-browser-views`
+
+## MediaPlayer
+
+- `elemenx-media-big`
+- `elemenx-media-button`: `text`
+- `elemenx-media-controls`
+- `elemenx-media-element`
+- `elemenx-media-player`: `full`
+- `elemenx-media-row`
+- `elemenx-media-seek`
+- `elemenx-media-spacer`
+- `elemenx-media-speed`
+- `elemenx-media-stage`
+- `elemenx-media-time`
+- `elemenx-media-title`
+- `elemenx-media-volume`

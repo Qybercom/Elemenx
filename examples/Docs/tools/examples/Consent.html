@@ -1,0 +1,26 @@
+<Consent Key="docs-example" Placement="inline" [open]="Open" [purposes]="Purposes" Policy="#" (change)="Decided">
+	<p>This site keeps a few things in your browser. Choose what it may use.</p>
+</Consent>
+<p class="elemenx-text small muted">{{Note}} <Button Label="Ask again" Variant="ghost" Size="small" (click)="Again" /></p>
+<script>
+({
+	Open: true,
+	Purposes: [
+		{ID: 'necessary', Label: 'Necessary', Description: 'Your session and your settings', Required: true},
+		{ID: 'analytics', Label: 'Analytics', Description: 'Which pages are read'},
+		{ID: 'news', Label: 'News by mail'}
+	],
+	Note: 'No decision yet.',
+
+	Decided: function (decision) {
+		var choices = decision.Choices;
+
+		this.Open = false;
+		this.Note = 'Analytics ' + (choices.analytics ? 'on' : 'off') + ', news ' + (choices.news ? 'on' : 'off') + '.';
+	},
+
+	Again: function () {
+		this.Open = true;
+	}
+})
+</script>

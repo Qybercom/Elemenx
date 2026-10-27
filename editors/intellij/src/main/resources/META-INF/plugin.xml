@@ -20,6 +20,7 @@
 		<multiHostInjector implementation="com.qybercom.elemenx.ElemenxInjector" />
 		<!-- A name of an expression goes to the member of its Component, not to the parameter of the wrapping. -->
 		<gotoDeclarationHandler implementation="com.qybercom.elemenx.ElemenxGotoDeclaration" />
+		<lang.directNavigationProvider implementation="com.qybercom.elemenx.ElemenxDirectNavigation" />
 		<!-- A Component is an element of its own, not the tag of HTML of its name (<Input> is no <input>). -->
 		<xml.elementDescriptorProvider implementation="com.qybercom.elemenx.ElemenxElementDescriptorProvider" />
 	</extensions>

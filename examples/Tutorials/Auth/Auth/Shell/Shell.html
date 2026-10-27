@@ -1,0 +1,14 @@
+<div class="auth">
+	<header class="auth-header">
+		<a class="auth-brand" href="/">Northwind</a>
+		<nav class="auth-nav" aria-label="Pages">
+			<a href="/">Home</a>
+			<a href="/account">Account</a>
+		</nav>
+		<span class="elemenx-spacer"></span>
+		<span class="auth-user" *if="User">{{User.Name}}</span>
+		<Button *if="User" Variant="ghost" Size="small" Label="Sign out" (click)="Out" />
+		<a class="elemenx-link" href="/login" *if="!User">Sign in</a>
+	</header>
+	<main class="auth-main" *outlet="Content"></main>
+</div>

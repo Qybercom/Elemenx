@@ -1,13 +1,13 @@
 /*
  * The formats the cards share, in the language of the page (Locale): Count(12400) is '12K', Date(value, style) a date
  * ('short', 'medium', 'long', or Intl.DateTimeFormat options), Day(value) {Day, Month} for a date badge, Relative(value)
- * the time from now ('5 minutes ago'), Money(amount, code) an amount of a currency. A value is a Date, a timestamp or
- * an ISO string; an invalid one gives ''.
+ * the time from now ('5 minutes ago'), Money(amount, code) an amount of a currency, Bytes(size) the size of a file
+ * ('1.5 MB', in units of 1024). A value is a Date, a timestamp or an ISO string; an invalid one gives ''.
  */
 Elemenx.Service('Format', {
 	$Meta: {
-		Description: 'The formats the cards share, in the language of the page (Locale): Count(12400) is \'12K\', Date(value, style) a date (\'short\', \'medium\', \'long\', or Intl.DateTimeFormat options), Day(value) {Day, Month} for a date badge, Relative(value) the time from now (\'5 minutes ago\'), Money(amount, code) an amount of a currency.',
-		Methods: ['Count(value)', 'Date(value, style)', 'Day(value)', 'Relative(value, now)', 'Money(amount, code)']
+		Description: 'The formats the cards share, in the language of the page (Locale): Count(12400) is \'12K\', Date(value, style) a date (\'short\', \'medium\', \'long\', or Intl.DateTimeFormat options), Day(value) {Day, Month} for a date badge, Relative(value) the time from now (\'5 minutes ago\'), Money(amount, code) an amount of a currency, Bytes(size) the size of a file.',
+		Methods: ['Count(value)', 'Date(value, style)', 'Day(value)', 'Relative(value, now)', 'Money(amount, code)', 'Bytes(size)']
 	},
 	Locale: '',
 
@@ -84,6 +84,29 @@ Elemenx.Service('Format', {
 		}
 		catch (error) {
 			return Math.abs(amount) + ' ' + unit + (Math.abs(amount) === 1 ? '' : 's') + (amount < 0 ? ' ago' : '');
+		}
+	},
+
+	/* A size in bytes in the unit it reads best in: 512 B, 1.5 KB, 23 MB (units of 1024); '' for no number. */
+	Bytes: function (size) {
+		var units = ['byte', 'kilobyte', 'megabyte', 'gigabyte', 'terabyte'];
+		var short = ['B', 'KB', 'MB', 'GB', 'TB'];
+		var value = Number(size);
+		var index = 0;
+
+		if (size === null || size === undefined || size === '' || !isFinite(value)) return '';
+
+		while (Math.abs(value) >= 1024 && index < units.length - 1) {
+			value /= 1024;
+
+			index++;
+		}
+
+		try {
+			return new Intl.NumberFormat(this.Language(), {style: 'unit', unit: units[index], unitDisplay: index ? 'short' : 'long', maximumFractionDigits: index && Math.abs(value) < 10 ? 1 : 0}).format(value);
+		}
+		catch (error) {
+			return (index && Math.abs(value) < 10 ? value.toFixed(1) : Math.round(value)) + ' ' + short[index];
 		}
 	},
 

@@ -1,0 +1,71 @@
+/* A popup is as wide as its page asks, up to 800 pixels: it asks for 360. */
+.reading {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	box-sizing: border-box;
+	width: 360px;
+	max-width: 100%;
+	padding: 16px;
+}
+
+.reading-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.reading-title {
+	margin: 0;
+	font-size: 18px;
+}
+
+.reading-saved {
+	min-height: 1.4em;
+	margin: 0;
+}
+
+.reading-list {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.reading-item {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.reading-open {
+	display: flex;
+	flex: 1 1 auto;
+	flex-direction: column;
+	min-width: 0;
+	padding: 8px;
+	border: 0;
+	border-radius: var(--elemenx-radius);
+	background: none;
+	color: inherit;
+	text-align: start;
+	cursor: pointer;
+}
+
+.reading-open:hover {
+	background: var(--elemenx-surface);
+}
+
+.reading-name,
+.reading-host {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.reading-host {
+	color: var(--elemenx-text-muted);
+	font-size: 12px;
+}

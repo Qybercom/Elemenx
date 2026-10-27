@@ -833,6 +833,96 @@
 			"zoomIn": "Zoom in",
 			"zoomOut": "Zoom out",
 			"fit": "Show all"
+		},
+		"splitButton": {
+			"more": "More actions"
+		},
+		"countdown": {
+			"days": {
+				"one": "day",
+				"other": "days"
+			},
+			"hours": {
+				"one": "hour",
+				"other": "hours"
+			},
+			"minutes": {
+				"one": "minute",
+				"other": "minutes"
+			},
+			"seconds": {
+				"one": "second",
+				"other": "seconds"
+			}
+		},
+		"consent": {
+			"title": "Your privacy",
+			"accept": "Accept all",
+			"reject": "Reject",
+			"customize": "Customize",
+			"save": "Save choices",
+			"required": "always on",
+			"policy": "Read the policy"
+		},
+		"diffView": {
+			"label": "Differences",
+			"fold": {
+				"one": "Show {count} unchanged line",
+				"other": "Show {count} unchanged lines"
+			}
+		},
+		"signaturePad": {
+			"label": "Signature",
+			"empty": "empty",
+			"placeholder": "Sign here",
+			"undo": "Undo",
+			"clear": "Clear"
+		},
+		"imageCropper": {
+			"label": "Crop",
+			"frame": "crop frame, arrows move it, Shift with arrows resizes it"
+		},
+		"qrCode": {
+			"label": "QR code: {value}"
+		},
+		"qrScanner": {
+			"label": "Code scanner",
+			"aim": "Point the camera at a code",
+			"starting": "Starting the camera…",
+			"done": "Code read",
+			"unsupported": "This browser cannot read codes from the camera.",
+			"denied": "The camera is not allowed for this page.",
+			"camera": "The camera cannot be used."
+		},
+		"fileBrowser": {
+			"label": "Files",
+			"root": "Files",
+			"up": "Up a folder",
+			"view": "View",
+			"list": "List",
+			"grid": "Icons",
+			"name": "Name",
+			"size": "Size",
+			"modified": "Modified",
+			"empty": "This folder is empty",
+			"items": {
+				"one": "{count} item",
+				"other": "{count} items"
+			}
+		},
+		"mediaPlayer": {
+			"label": "Player",
+			"play": "Play",
+			"pause": "Pause",
+			"seek": "Time",
+			"mute": "Mute",
+			"unmute": "Unmute",
+			"volume": "Volume",
+			"speed": "Speed",
+			"subtitles": "Subtitles",
+			"pip": "Picture in picture",
+			"full": "Full screen",
+			"exitFull": "Exit full screen"
 		}
 	}
 }

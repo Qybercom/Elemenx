@@ -1,0 +1,21 @@
+{
+	"name": "elemenx-tutorial-todo",
+	"private": true,
+	"version": "1.0.0",
+	"scripts": {
+		"dev": "elemenx dev",
+		"build": "elemenx build",
+		"serve": "elemenx serve",
+		"test": "vitest run && playwright test",
+		"test:unit": "vitest run",
+		"test:e2e": "playwright test"
+	},
+	"dependencies": {
+		"@qybercom/elemenx": "^0.10.0"
+	},
+	"devDependencies": {
+		"@playwright/test": "^1.63.0",
+		"@vitest/browser-playwright": "^5.0.1",
+		"vitest": "^5.0.1"
+	}
+}

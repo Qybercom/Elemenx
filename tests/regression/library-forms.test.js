@@ -32,7 +32,7 @@ describe('Contract: the form fields of ElemenxUI', function () {
 	beforeAll(async function () {
 		await loadElemenx();
 
-		Use(['DateInput', 'TimeInput', 'PhoneInput', 'MoneyInput', 'MultiSelect', 'FileUpload', 'TextArea']);
+		Use(['DateInput', 'TimeInput', 'PhoneInput', 'MoneyInput', 'MultiSelect', 'FileUpload', 'TextArea', 'Field', 'Input', 'Select']);
 	});
 
 	beforeEach(function () {
@@ -244,5 +244,32 @@ describe('Contract: the form fields of ElemenxUI', function () {
 
 		expect(events).toEqual(['input 27', 'change 27']);
 		expect(area.offsetHeight).toBeGreaterThan(before);
+	});
+
+	/* A bug: the Label of a Field named nothing, so a screen reader read a field without a name (and getByLabel found none). */
+	it('Field names the control inside by its Label, unless the control has a name of its own', async function () {
+		var host = mount('<div><Field Label="Email" Required="true"><Input Type="email" /></Field><Field Label="Password"><Input Type="password" /></Field><Field Label="Field"><Input Label="Its own" /></Field><Field Label="Plan"><Select [options]="Plans" /></Field></div>', {
+			Plans: [{Value: 'free', Label: 'Free'}]
+		});
+		var root = host.$Element();
+		var labels;
+		var inputs;
+
+		await waitFor(function () {
+			return root.querySelector('.elemenx-input-control[aria-labelledby]');
+		});
+
+		labels = root.querySelectorAll('.elemenx-field-label');
+		inputs = root.querySelectorAll('.elemenx-input-control');
+
+		expect(labels[0].id).toBeTruthy();
+		expect(labels[0].id).not.toBe(labels[1].id);
+		expect(inputs[0].getAttribute('aria-labelledby')).toBe(labels[0].id);
+		expect(inputs[1].getAttribute('aria-labelledby')).toBe(labels[1].id);
+		expect(inputs[0].getAttribute('aria-required')).toBe('true');
+		expect(inputs[1].getAttribute('aria-required')).toBe(null);
+		expect(inputs[2].getAttribute('aria-labelledby')).toBe(null);
+		expect(inputs[2].getAttribute('aria-label')).toBe('Its own');
+		expect(root.querySelectorAll('.elemenx-field')[3].querySelector('[aria-labelledby="' + labels[3].id + '"]')).toBeTruthy();
 	});
 });

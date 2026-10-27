@@ -123,6 +123,71 @@
 	color: var(--elemenx-text-muted);
 }
 
+/* A diagram: as wide as the text at most; on a narrow screen it keeps a size its labels can be read at, and scrolls. */
+.docs-diagram {
+	margin: 8px 0 16px;
+	overflow-x: auto;
+}
+
+.docs-diagram svg {
+	display: block;
+	width: 100%;
+	min-width: 620px;
+	max-width: 760px;
+	height: auto;
+	margin-inline: auto;
+	font-family: inherit;
+	font-size: 13px;
+}
+
+/* The parts of a diagram, by their classes: the colors are the tokens of the theme, in both schemes. */
+.docs-diagram .box {
+	fill: var(--elemenx-surface);
+	stroke: var(--elemenx-border-strong);
+	stroke-width: 1.5;
+}
+
+.docs-diagram .box.accent {
+	fill: rgba(var(--elemenx-accent-rgb), 0.1);
+	stroke: var(--elemenx-accent);
+}
+
+.docs-diagram .box.soft {
+	fill: none;
+	stroke: var(--elemenx-border);
+	stroke-dasharray: 5 4;
+}
+
+.docs-diagram .box.good {
+	stroke: var(--elemenx-success);
+}
+
+.docs-diagram .box.bad {
+	stroke: var(--elemenx-danger);
+}
+
+.docs-diagram text {
+	fill: var(--elemenx-text);
+}
+
+.docs-diagram text.muted {
+	fill: var(--elemenx-text-muted);
+}
+
+.docs-diagram text.strong {
+	font-weight: 700;
+}
+
+.docs-diagram .line {
+	fill: none;
+	stroke: var(--elemenx-text-muted);
+	stroke-width: 1.5;
+}
+
+.docs-diagram .head {
+	fill: var(--elemenx-text-muted);
+}
+
 /* On a phone the navigation goes above the page, as high as a third of the screen. */
 @media (max-width: 760px) {
 	.docs-page {

@@ -71,7 +71,7 @@ The helper reads `items` and `filter` through the arguments, so the list follows
 
 - **Services** are not reactive: a component copies what it shows into its own fields, and the service tells it when to (`OnChange(callback)`), or the component reads the service in a helper whose argument changes.
 - **Callbacks** of the network, timers and events of other objects run outside the template: they only assign fields, and the template follows.
-- The hooks (`$OnCreate`, `$OnReady`, `$OnDestroy`, `$OnSleep`, `$OnWake`) run untracked: what they read does not tie the component that created them to it.
+- The hooks (`$OnCreate`, `$OnReady`, `$OnProps`, `$OnDestroy`, `$OnSleep`, `$OnWake`) run untracked: what they read does not tie the component that created them to it.
 
 ## Example
 

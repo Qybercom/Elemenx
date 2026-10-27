@@ -1,0 +1,143 @@
+.elemenx-diff-view {
+	display: flex;
+	flex-direction: column;
+	/* Its width comes from its place, not from its longest line (which scrolls): on a phone it does not widen the page. */
+	contain: inline-size;
+	border: 1px solid var(--elemenx-border);
+	border-radius: var(--elemenx-radius-large);
+	overflow: hidden;
+	background: var(--elemenx-surface);
+	font-size: 0.8125rem;
+}
+
+.elemenx-diff-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	padding: 8px 12px;
+	border-bottom: 1px solid var(--elemenx-border);
+	background: var(--elemenx-surface-raised);
+}
+
+.elemenx-diff-title {
+	font-weight: 600;
+	overflow-wrap: anywhere;
+}
+
+.elemenx-diff-added {
+	color: var(--elemenx-success);
+}
+
+.elemenx-diff-removed {
+	color: var(--elemenx-danger);
+}
+
+.elemenx-diff-body {
+	overflow-x: auto;
+	font-family: var(--elemenx-font-mono);
+	line-height: 1.5;
+}
+
+.elemenx-diff-row {
+	display: flex;
+	min-width: max-content;
+}
+
+.elemenx-diff-view.wrap .elemenx-diff-row {
+	min-width: 0;
+}
+
+.elemenx-diff-view.split .elemenx-diff-row {
+	min-width: 0;
+}
+
+.elemenx-diff-side {
+	display: flex;
+	flex: 1 1 50%;
+	min-width: 0;
+	overflow: hidden;
+}
+
+.elemenx-diff-side + .elemenx-diff-side {
+	border-left: 1px solid var(--elemenx-border);
+}
+
+.elemenx-diff-row.add,
+.elemenx-diff-side.add {
+	background: rgba(var(--elemenx-success-rgb), 0.12);
+}
+
+.elemenx-diff-row.remove,
+.elemenx-diff-side.remove {
+	background: rgba(var(--elemenx-danger-rgb), 0.12);
+}
+
+.elemenx-diff-side.empty {
+	background: var(--elemenx-surface-raised);
+}
+
+.elemenx-diff-number {
+	flex: none;
+	width: 3.5em;
+	padding-inline-end: 8px;
+	text-align: right;
+	color: var(--elemenx-text-muted);
+	user-select: none;
+}
+
+.elemenx-diff-sign {
+	flex: none;
+	width: 1.5em;
+	text-align: center;
+	color: var(--elemenx-text-muted);
+	user-select: none;
+}
+
+.elemenx-diff-text {
+	flex: 1 1 auto;
+	padding-inline-end: 12px;
+	white-space: pre;
+}
+
+.elemenx-diff-view.wrap .elemenx-diff-text,
+.elemenx-diff-view.split .elemenx-diff-text {
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
+}
+
+.elemenx-diff-word {
+	border-radius: var(--elemenx-radius-small);
+	color: inherit;
+}
+
+.elemenx-diff-row.add .elemenx-diff-word,
+.elemenx-diff-side.add .elemenx-diff-word {
+	background: rgba(var(--elemenx-success-rgb), 0.32);
+}
+
+.elemenx-diff-row.remove .elemenx-diff-word,
+.elemenx-diff-side.remove .elemenx-diff-word {
+	background: rgba(var(--elemenx-danger-rgb), 0.32);
+}
+
+.elemenx-diff-row.folded {
+	background: var(--elemenx-surface-raised);
+}
+
+.elemenx-diff-fold {
+	flex: 1 1 auto;
+	padding: 4px 12px;
+	border: 0;
+	background: none;
+	color: var(--elemenx-text-muted);
+	font: inherit;
+	text-align: start;
+	cursor: pointer;
+}
+
+.elemenx-diff-fold:hover,
+.elemenx-diff-fold:focus-visible {
+	color: var(--elemenx-text);
+	background: var(--elemenx-surface-hover);
+}

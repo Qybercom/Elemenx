@@ -1,0 +1,13 @@
+<div style="display: flex; gap: 16px; align-items: center; flex-wrap: wrap;">
+	<QRCode [value]="Text" Size="144" />
+	<Input Label="Text" [value]="Text" (input)="Typed" />
+</div>
+<script>
+({
+	Text: 'https://elemenx.dev',
+
+	Typed: function (value) {
+		this.Text = value;
+	}
+})
+</script>

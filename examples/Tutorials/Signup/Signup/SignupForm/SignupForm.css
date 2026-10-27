@@ -1,0 +1,43 @@
+.signup {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+	max-width: 480px;
+	margin: 40px auto;
+	padding: 0 16px;
+}
+
+.signup-phones {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 8px;
+	margin: 0;
+	padding: 0;
+	border: 0;
+}
+
+.signup-phone {
+	display: flex;
+	align-items: flex-start;
+	gap: 8px;
+	width: 100%;
+}
+
+.signup-phone .elemenx-field {
+	flex: 1 1 auto;
+}
+
+.signup-remove {
+	margin-top: 8px;
+	border: 0;
+	background: none;
+	color: var(--elemenx-text-muted);
+	cursor: pointer;
+}
+
+.signup-footer {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}

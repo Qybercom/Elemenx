@@ -156,6 +156,53 @@ describe('Elemenx production server', function () {
 			fs.rmSync(root, {recursive: true, force: true});
 		}
 	});
+	/* A bug: Close waited for every connection, and a stream (SSE) of a request handler never ends on its own. */
+	it('closes while a response of a request handler stays open, and ends that response', async function () {
+		var server = Server.Create({Root: os.tmpdir(), Request: function (request, response, pathname) {
+			if (pathname !== '/stream') return false;
+
+			response.writeHead(200, {'Content-Type': 'text/event-stream'});
+			response.write('data: one\n\n');
+
+			return true;
+		}});
+		var ended;
+		var closed;
+
+		await new Promise(function (resolve) {
+			server.Listen(0, '127.0.0.1', resolve);
+		});
+
+		ended = await new Promise(function (resolve, reject) {
+			var req = http.request({host: '127.0.0.1', port: server.Server.address().port, path: '/stream', method: 'GET'}, function (response) {
+				response.once('data', function () {
+					/* In an object: a promise given to resolve would be waited for. */
+					resolve({Closed: new Promise(function (done) {
+						response.on('close', done);
+					})});
+				});
+			});
+
+			req.on('error', function () {});
+			req.end();
+		});
+
+		closed = await Promise.race([
+			new Promise(function (resolve) {
+				server.Close(function () {
+					resolve('closed');
+				});
+			}),
+			new Promise(function (resolve) {
+				setTimeout(resolve, 2000, 'waiting');
+			})
+		]);
+
+		expect(closed).toBe('closed');
+
+		await ended.Closed;
+	});
+
 	it('reassembles fragmented WebSocket messages before dispatching them', async function () {
 		var root = fs.mkdtempSync(path.join(os.tmpdir(), 'elemenx-server-websocket-fragment-'));
 

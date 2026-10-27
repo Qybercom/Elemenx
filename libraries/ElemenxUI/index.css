@@ -739,6 +739,7 @@ a {
 
 .elemenx-label.required::after {
 	content: '*';
+	content: '*' / '';
 	color: var(--elemenx-danger);
 }
 

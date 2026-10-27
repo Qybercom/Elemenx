@@ -1,0 +1,7 @@
+{
+	"acme": {
+		"stat": {"period": "vs last month"},
+		"price": {"was": "Was"},
+		"copy": {"action": "Copy", "done": "Copied"}
+	}
+}

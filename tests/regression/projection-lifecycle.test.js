@@ -112,4 +112,124 @@ describe('Regression: the content of the tag of a Component', function () {
 
 		owner.$Destroy();
 	});
+
+	/* A slot in a *if of the template of the Component: the part of the *if is made from the template, where it was empty. */
+	test('a slot in a *if takes the content of the tag each time the *if shows', function () {
+		var parts = components();
+		var panel = unique('ProjectionPanel');
+
+		Elemenx.Component(panel, {
+			$Template: '<article class="panel"><header><slot name="head"></slot></header><div class="body" *if="Open"><slot></slot></div></article>',
+			Open: false
+		});
+
+		var owner = Elemenx.Component(unique('ProjectionPanelOwner'), {
+			$Template: '<main><' + panel + ' [Open]="Show"><i slot="head" class="head">{{Text}}</i><b class="content">{{Text}}</b><' + parts.Child + ' [Label]="Text"></' + parts.Child + '></' + panel + '></main>',
+			Show: false,
+			Text: 'one'
+		})();
+		var element = owner.$Element();
+
+		document.body.appendChild(element);
+
+		expect(element.querySelector('.panel > header .head').textContent).toBe('one');
+		expect(element.querySelector('.body')).toBe(null);
+
+		owner.Show = true;
+
+		expect(element.querySelector('.body .content').textContent).toBe('one');
+		expect(element.querySelector('.body .child').textContent).toBe('one');
+
+		owner.Text = 'two';
+
+		expect(element.querySelector('.body .content').textContent).toBe('two');
+
+		owner.Show = false;
+
+		expect(element.querySelector('.body')).toBe(null);
+
+		owner.Show = true;
+
+		expect(element.querySelector('.body .content').textContent).toBe('two');
+		expect(element.querySelectorAll('.body .child').length).toBe(1);
+		expect(parts.Made.filter(function (entry) {
+			return entry.indexOf('child') === 0;
+		})).toEqual(['child one']);
+
+		owner.$Destroy();
+	});
+
+	/* Hidden by a *if, a Component takes the content of its tag with it; shown again, the content is made again. */
+	test('a Component hidden by a *if destroys the content of its tag, shown again makes it anew', function () {
+		var parts = components();
+		var clicks = [];
+		var owner = Elemenx.Component(unique('ProjectionHidden'), {
+			$Template: '<main><' + parts.Box + ' *if="Show"><b class="text">{{Text}}</b><button #Press (click)="Pressed">press</button><' + parts.Child + ' [Label]="Text"></' + parts.Child + '></' + parts.Box + '></main>',
+			Show: true,
+			Text: 'one',
+			Pressed: function () {
+				clicks.push(this.Text);
+			}
+		})();
+		var element = owner.$Element();
+
+		document.body.appendChild(element);
+
+		owner.Show = false;
+
+		expect(parts.Made).toEqual(['child one', 'box sees 1', 'gone one']);
+		expect(element.querySelector('.box')).toBe(null);
+
+		owner.Text = 'two';
+		owner.Show = true;
+
+		expect(parts.Made).toEqual(['child one', 'box sees 1', 'gone one', 'child two', 'box sees 1']);
+		expect(element.querySelector('.box .text').textContent).toBe('two');
+		expect(element.querySelectorAll('.box .child').length).toBe(1);
+
+		owner.Text = 'three';
+
+		expect(element.querySelector('.box .text').textContent).toBe('three');
+		expect(element.querySelector('.box .child').textContent).toBe('three');
+
+		element.querySelector('.box button').click();
+
+		expect(clicks).toEqual(['three']);
+		expect(owner.$Ref('Press')).toBe(element.querySelector('.box button'));
+
+		owner.$Destroy();
+
+		expect(parts.Made[parts.Made.length - 1]).toBe('gone three');
+	});
+
+	test('with *keep the content of the tag sleeps with its Component and comes back as it was', function () {
+		var parts = components();
+		var policy = Elemenx.Cache();
+
+		Elemenx.Cache({Instances: {Scope: 'marked'}});
+
+		try {
+			var owner = Elemenx.Component(unique('ProjectionKept'), {
+				$Template: '<main><' + parts.Box + ' *if="Show" *keep><' + parts.Child + ' [Label]="Text"></' + parts.Child + '></' + parts.Box + '></main>',
+				Show: true,
+				Text: 'one'
+			})();
+
+			document.body.appendChild(owner.$Element());
+
+			owner.Show = false;
+			owner.Show = true;
+
+			expect(parts.Made).toEqual(['child one', 'box sees 1']);
+			expect(owner.$Element().querySelectorAll('.box .child').length).toBe(1);
+
+			owner.$Destroy();
+
+			expect(parts.Made).toEqual(['child one', 'box sees 1', 'gone one']);
+		}
+		finally {
+			Elemenx.Cache(policy);
+		}
+	});
 });
+

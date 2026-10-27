@@ -1,0 +1,20 @@
+<main class="trip">
+	<header class="trip-header">
+		<h1 class="elemenx-title">{{$T('trip.title')}}</h1>
+		<Select [label]="$T('trip.language')" [options]="Languages" [value]="Language" (change)="Switched" />
+	</header>
+	<section class="elemenx-card trip-card">
+		<div class="trip-photo" tabindex="0" role="group" [attribute.aria-label]="$T('trip.photos.label')" (keydown)="Stepped">
+			<button type="button" class="trip-arrow trip-previous" [attribute.aria-label]="$T('trip.previous')" (click)="Previous"><Icon Name="arrow-left" /></button>
+			<span class="trip-photo-name" aria-live="polite">{{$T(Photos[Photo])}}</span>
+			<button type="button" class="trip-arrow trip-next" [attribute.aria-label]="$T('trip.next')" (click)="Next"><Icon Name="arrow-right" /></button>
+		</div>
+		<div class="elemenx-card-body trip-body">
+			<h2 class="elemenx-card-title">{{$T('trip.hotel')}}</h2>
+			<p class="trip-dates">{{Dates(Nights, Language)}}</p>
+			<Slider [label]="$T('trip.stay')" Min="1" Max="14" [value]="Nights" (input)="Stayed" />
+			<p class="trip-nights">{{$T('trip.nights', {count: Nights})}}</p>
+			<p class="trip-total">{{$T('trip.total', {sum: Money(Nights * Rate, Language)})}}</p>
+		</div>
+	</section>
+</main>

@@ -1,0 +1,18 @@
+<section class="elemenx-consent" role="dialog" aria-modal="false" [class]="[Placement || 'bottom', Editing ? 'editing' : '']" [attribute.hidden]="Shown ? null : ''" [attribute.aria-labelledby]="TitleID">
+	<div class="elemenx-consent-body">
+		<h2 class="elemenx-consent-title" [attribute.id]="TitleID">{{Title || $T('ui.consent.title')}}</h2>
+		<div class="elemenx-consent-text"><slot></slot><p *if="Text">{{Text}}</p></div>
+		<a class="elemenx-consent-policy" *if="Policy" [attribute.href]="Policy" target="_blank" rel="noopener">{{PolicyLabel || $T('ui.consent.policy')}}</a>
+		<div class="elemenx-consent-purposes" *if="Editing">
+			<span class="elemenx-consent-purpose" *for="purpose of Purposes" *key="purpose.ID" [attribute.data-id]="purpose.ID" (change)="Chosen">
+				<Toggle [label]="purpose.Label" [description]="Required(purpose) ? (purpose.Description ? purpose.Description + ' · ' : '') + $T('ui.consent.required') : purpose.Description" [checked]="On(Choices, purpose)" [disabled]="Required(purpose)" />
+			</span>
+		</div>
+	</div>
+	<div class="elemenx-consent-actions">
+		<Button *if="Customize && Customize !== 'false' && !Editing && Purposes.length" Variant="ghost" [label]="$T('ui.consent.customize')" (click)="Edit" />
+		<Button *if="Editing" Variant="secondary" [label]="$T('ui.consent.save')" (click)="Save" />
+		<Button *if="Reject && Reject !== 'false'" Variant="secondary" [label]="$T('ui.consent.reject')" (click)="RejectAll" />
+		<Button Variant="primary" [label]="$T('ui.consent.accept')" (click)="AcceptAll" />
+	</div>
+</section>

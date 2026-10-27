@@ -1,0 +1,27 @@
+<main class="live">
+	<header class="live-header">
+		<h1 class="elemenx-title">Shop, live</h1>
+		<span class="elemenx-badge live-state" [class.success]="State === 'live'" [class.warning]="State === 'reconnecting' || State === 'connecting'" role="status">{{States[State]}}</span>
+		<Button Variant="ghost" Size="small" [icon]="State === 'paused' ? 'play' : 'pause'" [label]="State === 'paused' ? 'Resume' : 'Pause'" (click)="Toggle" />
+	</header>
+	<section class="live-tiles">
+		<div class="elemenx-card"><div class="elemenx-card-body"><span class="elemenx-caption">Visitors now</span><strong class="live-number live-visitors">{{Visitors}}</strong></div></div>
+		<div class="elemenx-card"><div class="elemenx-card-body"><span class="elemenx-caption">Orders</span><strong class="live-number live-orders">{{Orders}}</strong></div></div>
+		<div class="elemenx-card"><div class="elemenx-card-body"><span class="elemenx-caption">Revenue</span><strong class="live-number live-revenue">{{Money(Revenue)}}</strong></div></div>
+	</section>
+	<section class="elemenx-card">
+		<div class="elemenx-card-body">
+			<h2 class="elemenx-card-title">Visitors, the last minute</h2>
+			<Chart Type="area" [labels]="Labels" [series]="[{Name: 'Visitors', Values: Values}]" Height="220" Min="0" Label="Visitors, the last minute" />
+		</div>
+	</section>
+	<section class="elemenx-card">
+		<div class="elemenx-card-body">
+			<h2 class="elemenx-card-title">Newest orders</h2>
+			<p class="elemenx-text muted" *if="!Recent.length">No orders yet.</p>
+			<ul class="live-orders-list" aria-live="polite">
+				<li *for="order of Recent" *key="order.ID"><span>#{{order.ID}} · {{order.Customer}}</span><strong>{{Money(order.Amount)}}</strong></li>
+			</ul>
+		</div>
+	</section>
+</main>

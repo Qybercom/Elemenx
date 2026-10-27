@@ -1,0 +1,5 @@
+[
+	'index.css',
+	'services',
+	'components'
+];

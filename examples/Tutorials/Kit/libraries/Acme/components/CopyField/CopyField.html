@@ -1,0 +1,5 @@
+<span class="acme-copy">
+	<code class="acme-copy-value" [attribute.aria-label]="Label || null">{{Value}}</code>
+	<button type="button" class="acme-copy-button" (click)="Copy">{{Copied ? $T('acme.copy.done') : $T('acme.copy.action')}}</button>
+	<span class="acme-hidden" role="status">{{Copied ? $T('acme.copy.done') : ''}}</span>
+</span>

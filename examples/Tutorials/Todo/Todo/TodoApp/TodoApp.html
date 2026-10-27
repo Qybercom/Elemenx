@@ -1,0 +1,19 @@
+<main class="todo">
+	<h1 class="elemenx-title">Tasks</h1>
+	<form class="todo-add" (submit)="Add">
+		<Input Label="New task" Placeholder="What needs doing?" [value]="Draft" (input)="Typed" />
+		<Button Type="submit" Variant="primary" Label="Add" />
+	</form>
+	<RadioGroup Variant="segmented" Label="Show" [options]="Filters" [value]="Filter" (change)="Filtered" />
+	<ul class="todo-list">
+		<li class="todo-item" *for="item of Items" *key="item.ID" [attribute.data-id]="item.ID" [class.done]="item.Done">
+			<label class="todo-check"><input type="checkbox" [checked]="item.Done" (change)="Ticked" /> <span class="todo-title">{{item.Title}}</span></label>
+			<button type="button" class="todo-remove" [attribute.aria-label]="'Remove ' + item.Title" (click)="Removed"><Icon Name="close" /></button>
+		</li>
+	</ul>
+	<p class="todo-empty elemenx-text muted" *if="!Items.length">Nothing here.</p>
+	<footer class="todo-footer">
+		<span class="todo-left">{{Left}} left</span>
+		<Button Variant="ghost" Size="small" Label="Clear done" (click)="Cleared" />
+	</footer>
+</main>

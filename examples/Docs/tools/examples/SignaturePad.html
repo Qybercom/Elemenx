@@ -1,0 +1,11 @@
+<SignaturePad Height="160" (change)="Signed" />
+<p class="elemenx-text small muted">{{Strokes}} strokes</p>
+<script>
+({
+	Strokes: 0,
+
+	Signed: function (value) {
+		this.Strokes = value.length;
+	}
+})
+</script>

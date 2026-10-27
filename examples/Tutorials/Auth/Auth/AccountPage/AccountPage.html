@@ -1,0 +1,13 @@
+<section class="elemenx-card spacious" style="width: min(480px, 100%);">
+	<div class="elemenx-card-body">
+		<h1 class="elemenx-title">Your account</h1>
+		<div class="elemenx-callout danger" role="alert" *if="Error">{{Error}}</div>
+		<Skeleton *if="!Data && !Error" Lines="3" />
+		<dl class="account-data" *if="Data">
+			<dt>Name</dt><dd class="account-name">{{Data.Name}}</dd>
+			<dt>Email</dt><dd>{{Data.Email}}</dd>
+			<dt>Plan</dt><dd>{{Data.Plan}}</dd>
+			<dt>Token until</dt><dd>{{Expires(Data.Expires)}}</dd>
+		</dl>
+	</div>
+</section>

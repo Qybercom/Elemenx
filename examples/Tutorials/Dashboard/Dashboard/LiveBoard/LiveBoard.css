@@ -1,0 +1,48 @@
+.live {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+	max-width: 960px;
+	margin: 32px auto;
+	padding: 0 16px;
+}
+
+.live-header {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 12px;
+}
+
+.live-header .elemenx-title {
+	margin: 0 auto 0 0;
+}
+
+.live-tiles {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+	gap: 16px;
+}
+
+.live-number {
+	display: block;
+	font-size: 28px;
+	font-variant-numeric: tabular-nums;
+}
+
+.live-orders-list {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.live-orders-list li {
+	display: flex;
+	justify-content: space-between;
+	gap: 8px;
+	padding: 8px 0;
+	border-bottom: 1px solid var(--elemenx-border);
+}

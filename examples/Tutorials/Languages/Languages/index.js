@@ -1,0 +1,3 @@
+[
+	'TripCard/TripCard.js'
+];

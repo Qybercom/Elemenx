@@ -8,6 +8,9 @@ import com.intellij.lang.Language
 import com.intellij.lang.injection.InjectedLanguageManager
 import com.intellij.injected.editor.EditorWindow
 import com.intellij.lang.annotation.HighlightSeverity
+import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.application.ReadAction
+import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
 
@@ -50,6 +53,43 @@ class ElemenxNavigationTest : BasePlatformTestCase() {
 		assertEquals(listOf("Board.js:" + code.indexOf("NewNamed:")), targets(file, template.indexOf("\"NewNamed\"") + 2))
 		assertEquals(listOf("Board.js:" + code.indexOf("Kinds =")), targets(file, template.indexOf("Kinds(") + 1))
 		assertEquals(listOf("Board.js:" + code.indexOf("Title:")), targets(file, template.indexOf("{{Title}}") + 3))
+	}
+
+	/**
+	 * Ctrl+click as the IDE runs it (GotoDeclarationOrUsageHandler2, internal: called by its name): in the injected
+	 * JavaScript, the direct navigation of the plugin before the references (regression: the reference to the parameter
+	 * of the wrapping won, and the click went nowhere).
+	 */
+	fun testCtrlClickTakesTheMemberBeforeTheReferencesOfJavaScript() {
+		if (Language.findLanguageByID("JavaScript") == null) return
+
+		val method = try {
+			Class.forName("com.intellij.codeInsight.navigation.impl.GtduKt").getMethod("gotoDeclarationOrUsages", PsiFile::class.java, Int::class.javaPrimitiveType)
+		}
+		catch (error: Exception) {
+			return
+		}
+
+		myFixture.addFileToProject("app/Board.js", code)
+
+		val file = myFixture.addFileToProject("app/Board.html", template)
+
+		listOf("{{Title}}" to "Title:", "\"Page\"" to "Page:", "\"Paged\"" to "Paged:").forEach { (needle, member) ->
+			val injected = InjectedLanguageManager.getInstance(project).findInjectedElementAt(file, template.indexOf(needle) + 3)!!
+			val data = ApplicationManager.getApplication().executeOnPooledThread<Any?> {
+				ReadAction.compute<Any?, Throwable> { method.invoke(null, injected.containingFile, injected.textRange.startOffset + 1) }
+			}.get()
+			val direct = data?.javaClass?.declaredFields?.map { field ->
+				field.isAccessible = true
+				field.get(data)
+			}?.firstOrNull { value -> value != null && value.javaClass.simpleName == "DirectNavigationData" }
+			val targets = direct?.javaClass?.declaredFields?.mapNotNull { field ->
+				field.isAccessible = true
+				(field.get(direct) as? PsiElement)?.let { element -> element.containingFile.name + ":" + element.textRange.startOffset }
+			} ?: emptyList()
+
+			assertTrue(needle + " " + targets, targets.contains("Board.js:" + code.indexOf(member)))
+		}
 	}
 
 	fun testAVariableOfALoopGoesToItsFor() {

@@ -1,0 +1,24 @@
+/*
+ * The tokens of Acme. They start from the ones of ElemenxUI, so the library follows its light and dark schemes and its
+ * themes; a product changes them in one place: :root { --acme-brand: #7c3aed; }.
+ */
+:root {
+	--acme-brand: var(--elemenx-accent);
+	--acme-on-brand: var(--elemenx-accent-text);
+	--acme-surface: var(--elemenx-surface);
+	--acme-line: var(--elemenx-border);
+	--acme-muted: var(--elemenx-text-muted);
+	--acme-good: var(--elemenx-success);
+	--acme-bad: var(--elemenx-danger);
+	--acme-radius: var(--elemenx-radius);
+}
+
+/* A text for screen readers only. */
+.acme-hidden {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+	clip-path: inset(50%);
+	white-space: nowrap;
+}

@@ -1,0 +1,13 @@
+<DiffView Title="sum.js" [before]="Before" [after]="After" [mode]="Mode" Context="1" />
+<RadioGroup Variant="segmented" Label="Mode" [options]="[{Value: 'unified', Label: 'Unified'}, {Value: 'split', Label: 'Side by side'}]" [value]="Mode" (change)="Moded" />
+<script>
+({
+	Mode: 'unified',
+	Before: 'function sum (list) {\n\tvar total = 0;\n\n\tfor (var i = 0; i < list.length; i++)\n\t\ttotal += list[i];\n\n\treturn total;\n}\n\nmodule.exports = sum;',
+	After: 'function sum (list) {\n\tvar total = 0;\n\n\tlist.forEach(function (value) {\n\t\ttotal += value;\n\t});\n\n\treturn total;\n}\n\nmodule.exports = sum;',
+
+	Moded: function (value) {
+		this.Mode = value;
+	}
+})
+</script>
