@@ -9,7 +9,9 @@ Elemenx.Component('Toggle', {
 		Group: 'inputs',
 		Icon: 'sliders',
 		Description: 'A switch: a check box drawn as a track with a thumb (role switch).',
-		Events: ['change'],
+		Events: {
+			change: 'It was switched: Checked.'
+		},
 		Props: {
 			Checked: 'Whether it is on.',
 			Label: 'The text beside it.',

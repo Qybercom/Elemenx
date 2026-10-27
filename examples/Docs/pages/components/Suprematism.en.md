@@ -13,3 +13,24 @@ A picture in the manner of Suprematism, made of Seed: always the same for the sa
 | `Palette` | `'classic'` |
 | `Density` | `0.5` |
 | `Title` | `''` |
+
+## Example
+
+```example
+<div class="elemenx-container wrappable" style="gap: 12px;">
+	<Suprematism [seed]="Seed" Width="320" Height="200" Title="A composition" />
+	<Suprematism [seed]="Seed" Width="200" Height="200" Palette="theme" Density="0.3" />
+</div>
+<Field Label="Seed: the same seed, the same picture">
+	<Input [value]="Seed" (input)="Typed" />
+</Field>
+<script>
+({
+	Seed: 'Elemenx',
+
+	Typed: function (value) {
+		this.Seed = value;
+	}
+})
+</script>
+```

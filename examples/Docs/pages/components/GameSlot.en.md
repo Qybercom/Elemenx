@@ -27,7 +27,9 @@ A slot of an action bar (hotbar): a button with an Icon or an Image, a Label for
 
 ## Events
 
-`use`, `ready`, `drop`
+- `use`: Pressed (or its key) while ready: {Label, Key}.
+- `ready`: Its cooldown ended: {Label, Key}.
+- `drop`: An item was dropped on it: {Item, From, To, Current, Type}.
 
 ## Methods
 

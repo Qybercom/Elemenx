@@ -11,7 +11,8 @@ The structure of the page of a designer of pages (the Designer Service): every e
 
 ## Events
 
-`select`, `move`
+- `select`: An element was pressed: its ID, or null.
+- `move`: An element or a kind was dragged in the tree: {ID, Target, Position, Type}.
 
 ## Example
 

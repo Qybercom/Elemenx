@@ -22,7 +22,8 @@ A picture that is easy to place. Src and Alt; Lazy (on by default) loads it when
 
 ## Events
 
-`load`, `error`
+- `load`: The picture loaded: {Src}.
+- `error`: The picture did not load: {Src}.
 
 ## Example
 

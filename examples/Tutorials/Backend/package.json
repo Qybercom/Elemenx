@@ -1,0 +1,11 @@
+{
+	"name": "elemenx-tutorial-backend",
+	"private": true,
+	"version": "1.0.0",
+	"scripts": {
+		"dev": "elemenx dev"
+	},
+	"dependencies": {
+		"@qybercom/elemenx": "^0.10.0"
+	}
+}

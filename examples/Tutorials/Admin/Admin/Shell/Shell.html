@@ -1,0 +1,16 @@
+<div class="admin" [class.signed]="!!User">
+	<aside class="admin-side" *if="User">
+		<strong class="admin-name">Shop admin</strong>
+		<NavList [items]="Pages" [value]="Path" Label="Pages" (select)="Opened" />
+	</aside>
+	<div class="admin-body">
+		<header class="admin-header" *if="User">
+			<span class="elemenx-spacer"></span>
+			<ThemeSwitch Compact="true" />
+			<Menu [label]="User.Name" Icon="user" Variant="ghost" [items]="UserMenu" (select)="Chosen" />
+		</header>
+		<main class="admin-main" *outlet="Content"></main>
+	</div>
+	<ToastHost />
+	<DialogHost />
+</div>

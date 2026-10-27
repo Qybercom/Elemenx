@@ -21,7 +21,9 @@ Value хранит 3 или 4 цифры кода безопасности (Leng
 
 ## События
 
-`input`, `validate`, `change`
+- `input`: Цифры изменились: Value.
+- `validate`: Код проверен: {Value, Complete, Valid}.
+- `change`: Код зафиксирован: Value.
 
 ## Пример
 

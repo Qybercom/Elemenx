@@ -19,7 +19,7 @@ A panel that slides in from an edge of the window over the page (modal: the page
 
 ## Events
 
-`close`
+- `close`: It asks to close (the owner sets Open to false): the reason, close, escape or backdrop.
 
 ## Slots
 

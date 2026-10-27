@@ -23,7 +23,8 @@ A knob: a rotary input with the look of the dial Meter, an open ring of three qu
 
 ## Events
 
-`input`, `change`
+- `input`: The value changed while turning: Value.
+- `change`: The value was committed (released): Value.
 
 ## Example
 

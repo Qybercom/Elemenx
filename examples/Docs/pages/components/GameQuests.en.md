@@ -20,7 +20,8 @@ Label names the list for screen readers, Empty is the text without quests.
 
 ## Events
 
-`change`, `track`
+- `change`: Another quest was opened: its ID.
+- `track`: A quest was tracked or untracked: {ID, Tracked}.
 
 ## Example
 

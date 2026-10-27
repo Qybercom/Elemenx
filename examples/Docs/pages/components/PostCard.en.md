@@ -30,7 +30,9 @@ The card of a post of a blog: Image, Category, Title, Excerpt, Tags, the Author 
 
 ## Events
 
-`like`, `comment`, `share`
+- `like`: The like button: {Liked, Likes}.
+- `comment`: The comments button: {Title}.
+- `share`: The share button: {Title, Href}.
 
 ## Slots
 

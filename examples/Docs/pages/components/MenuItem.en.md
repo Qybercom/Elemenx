@@ -20,7 +20,7 @@ An item of a menu declared in the template of a Menu (its default slot) or of a 
 
 ## Events
 
-`select`
+- `select`: It was chosen in its menu: the item.
 
 ## Slots
 

@@ -15,3 +15,42 @@ The notifications of the Application drawn by ElemenxUI (Native.Notify with Look
 | `Close` | `null` |
 | `Hold` | `null` |
 | `Release` | `null` |
+
+## Example
+
+```example
+<Button Label="Notify" Icon="bell" Variant="primary" (click)="Add" />
+<Button Label="Clear" Variant="ghost" (click)="Clear" />
+<NotificationHost Page="true" Corner="bottom-right" [items]="Items" [choose]="Choose" [close]="Close" />
+<p class="elemenx-text small muted">{{Note}}</p>
+<script>
+({
+	Note: 'The cards are in the corner of the page: Native.Notify with Look elemenx shows them so on the web, and by the corner of the screen in a program.',
+	Count: 0,
+	Items: [],
+
+	$OnCreate: function () {
+		var self = this;
+
+		this.Choose = function (item, action) {
+			self.Note = item.Title + ': ' + (action ? action.Label || action.ID : 'the card');
+		};
+
+		this.Close = function (item) {
+			self.Items = self.Items.filter(function (each) {
+				return each.ID !== item.ID;
+			});
+		};
+	},
+
+	Clear: function () {
+		this.Items = [];
+	},
+
+	Add: function () {
+		this.Count++;
+		this.Items = [this.Count % 2 ? {ID: 'mail-' + this.Count, Title: 'New mail', Text: 'Ada sent the report.', Icon: 'mail', Actions: [{ID: 'open', Label: 'Open'}]} : {ID: 'task-' + this.Count, Title: 'Upload ' + this.Count, Text: 'photos.zip', Icon: 'upload', Progress: 0.4}].concat(this.Items);
+	}
+})
+</script>
+```

@@ -19,7 +19,7 @@ An infinite canvas, as the one of Figma: its content (the default slot) lives in
 
 ## Events
 
-`view`
+- `view`: The view moved or zoomed: {X, Y, Zoom}.
 
 ## Slots
 
@@ -33,3 +33,25 @@ default
 - `Pan(dx, dy)`
 - `CenterOn(x, y)`
 - `FitContent(margin)`
+
+## Example
+
+```example
+<div style="height: 320px; border: 1px solid var(--elemenx-border); border-radius: 8px; overflow: hidden;">
+	<Board Grid="dots" Controls="true" (view)="Viewed">
+		<div class="elemenx-card" style="position: absolute; left: 40px; top: 40px; width: 180px; padding: 12px;">Drag the empty place to move</div>
+		<div class="elemenx-card" style="position: absolute; left: 320px; top: 160px; width: 180px; padding: 12px;">Ctrl and the wheel zoom</div>
+		<div class="elemenx-card" style="position: absolute; left: 900px; top: 600px; width: 180px; padding: 12px;">Far away: Shift+1 fits all</div>
+	</Board>
+</div>
+<p class="elemenx-text small muted">X {{View.X}}, Y {{View.Y}}, zoom {{View.Zoom}}</p>
+<script>
+({
+	View: {X: 0, Y: 0, Zoom: 1},
+
+	Viewed: function (view) {
+		this.View = {X: Math.round(view.X), Y: Math.round(view.Y), Zoom: Math.round(view.Zoom * 100) / 100};
+	}
+})
+</script>
+```

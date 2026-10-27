@@ -17,7 +17,10 @@ Elemenx.Component('Chat', {
 		Description: 'A chat layout built on elemenx-screen, elemenx-container and elemenx-column.',
 		Container: true,
 		Slots: ['sidebar', 'header', 'selection', 'composer'],
-		Events: ['clear', 'resize'],
+		Events: {
+			clear: 'The selection of messages was let go (its button, or Escape).',
+			resize: 'The sidebar was resized: SidebarWidth.'
+		},
 		Props: {
 			SidebarOpen: 'Shows the sidebar of the conversations.',
 			SidebarWidth: 'The width of the sidebar, in pixels (it can be dragged).',

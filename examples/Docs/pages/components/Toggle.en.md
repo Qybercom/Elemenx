@@ -16,7 +16,7 @@ A switch: a check box drawn as a track with a thumb (role switch). Checked is it
 
 ## Events
 
-`change`
+- `change`: It was switched: Checked.
 
 ## Example
 

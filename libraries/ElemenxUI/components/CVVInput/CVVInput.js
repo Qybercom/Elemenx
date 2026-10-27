@@ -8,7 +8,11 @@ Elemenx.Component('CVVInput', {
 		Group: 'inputs',
 		Icon: 'credit-card',
 		Description: 'Value holds the 3 or 4 security code digits (Length).',
-		Events: ['input', 'validate', 'change'],
+		Events: {
+			input: 'The digits changed: Value.',
+			validate: 'The code was checked: {Value, Complete, Valid}.',
+			change: 'The code was committed: Value.'
+		},
 		Props: {
 			Value: 'The digits of the code.',
 			Length: 'How many digits: 3, or 4.',

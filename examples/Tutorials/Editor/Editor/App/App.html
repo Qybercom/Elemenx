@@ -1,0 +1,25 @@
+<div class="studio">
+	<Workspace Persist="studio">
+		<WorkspaceToolbar slot="header" Label="Toolbar">
+			<strong>Studio</strong>
+			<span class="elemenx-divider vertical"></span>
+			<Button Icon="save" Title="Save (Mod+S)" Variant="ghost" Size="small" *hotkey="'Mod+S'" (click)="Save" />
+			<Button Icon="terminal" Title="Terminal" Variant="ghost" Size="small" [pressed]="Terminal" (click)="Toggle" />
+			<span class="elemenx-spacer"></span>
+			<ThemeSwitch Compact="true" Size="small" />
+		</WorkspaceToolbar>
+		<WorkspaceToolWindow slot="left" Title="Project" Icon="folder">
+			<Tree [items]="Tree" [value]="Current" [expanded]="['src/', 'styles/']" Label="Files" (select)="Picked" />
+		</WorkspaceToolWindow>
+		<div slot="main" class="elemenx-column fill studio-main">
+			<Tabs Variant="editor" [tabs]="Tabs(Open, Drafts)" [value]="Current" Label="Open files" (change)="Switched" (close)="Closed" />
+			<div class="studio-code" *if="Current"><CodeEditor [value]="Text(Current, Drafts)" [language]="Language(Current)" LineNumbers="true" ActiveLine="true" Pairs="true" Label="Code" (input)="Edited" /></div>
+			<EmptyState *if="!Current" Title="No file open" Description="Open a file from the tree, or press Mod+K." />
+		</div>
+		<WorkspaceToolWindow slot="bottom" *if="Terminal" Title="Terminal" Icon="terminal" Closable="true" (close)="Toggle">
+			<Terminal [lines]="Lines" (command)="Ran" (clear)="Cleared" />
+		</WorkspaceToolWindow>
+		<span slot="status">{{Current || 'No file'}} · {{Current ? Language(Current) : ''}}</span>
+	</Workspace>
+	<CommandPalette [commands]="Commands" (run)="Command" />
+</div>

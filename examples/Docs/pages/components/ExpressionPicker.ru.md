@@ -13,7 +13,9 @@
 
 ## События
 
-`kind`, `pick`, `dismiss`
+- `kind`: Показана другая вкладка: {Kind}, emoji или stickers.
+- `pick`: Выбрано эмодзи или стикер: {Type: 'emoji', Emoji, Name} или {Type: 'sticker', Sticker}.
+- `dismiss`: Нажат Escape: закрыть.
 
 ## Пример
 

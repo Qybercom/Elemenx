@@ -10,7 +10,9 @@ Elemenx.Component('GameTabs', {
 		Group: 'game',
 		Icon: 'trophy',
 		Description: 'The tabs of a game window: Items [{ID, Label, Disabled}] in a column (Orientation \'vertical\', the default) or a row, numbered 01, 02...',
-		Events: ['change'],
+		Events: {
+			change: 'Another tab was opened: its ID.'
+		},
 		Props: {
 			Items: {Schema: {ID: 'text', Label: 'text', Icon: 'icon'}, Description: 'The tabs: [{ID, Label, Disabled}].'},
 			Value: 'The ID of the open tab.',

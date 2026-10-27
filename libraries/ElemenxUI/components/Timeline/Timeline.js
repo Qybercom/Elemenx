@@ -35,7 +35,14 @@ Elemenx.Component('Timeline', {
 		Description: 'A line of time: its scale, marks with labels that stack when they are close, ranges in lanes, a progress and a playhead.',
 		Container: true,
 		Children: ['TimelineMark', 'TimelineRange', 'TimelineLane', 'TimelineProgress'],
-		Events: ['select', 'seek', 'view', 'move', 'resize', 'create'],
+		Events: {
+			select: 'A mark or a range was pressed: {Kind (mark or range), ID, Item}.',
+			seek: 'The line or the playhead was pressed or dragged: {At}.',
+			view: 'The part in view changed: {From, To}.',
+			move: 'A mark or a range was dragged: {Kind, ID, Item, At} for a mark, {Kind, ID, Item, From, To} for a range.',
+			resize: 'An edge of a range was dragged: {ID, Item, From, To}.',
+			create: 'A range was drawn on a lane: {Lane, From, To}.'
+		},
 		Props: {
 			Start: 'The start of the line: a date (YYYY-MM-DD, YYYY-MM-DDTHH:mm) or a number.',
 			End: 'The end of the line.',

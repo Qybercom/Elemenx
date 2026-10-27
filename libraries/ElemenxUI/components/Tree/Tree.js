@@ -19,8 +19,14 @@ Elemenx.Component('Tree', {
 	$Meta: {
 		Group: 'navigation',
 		Icon: 'tree',
-		Description: 'A tree.',
-		Events: ['check', 'expand', 'load', 'select', 'move'],
+		Description: 'A tree that opens, checks, filters, loads its branches lazily and moves its items.',
+		Events: {
+			select: 'An item was selected: the item.',
+			expand: 'An item opened or closed: the IDs of the open items.',
+			check: 'The check boxes changed: the IDs of the checked items.',
+			load: 'A Lazy item was opened: the item, which asks for its Items.',
+			move: 'An item was dragged onto another (Movable): {ID, Target, Position (before, after or inside), Type}.'
+		},
 		Props: {
 			Items: 'The items: [{ID, Label, Icon, Badge, Items, Disabled, Lazy}].',
 			Value: 'The ID of the selected item.',

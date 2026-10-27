@@ -14,7 +14,12 @@ Elemenx.Component('TagInput', {
 		Group: 'inputs',
 		Icon: 'tag',
 		Description: 'A field of tags.',
-		Events: ['invalid', 'add', 'change', 'remove'],
+		Events: {
+			add: 'A tag was added: the tag.',
+			remove: 'A tag was removed: the tag.',
+			change: 'The tags changed: the list of the tags.',
+			invalid: 'A text was refused: {Text, Reason (pattern, duplicate, max or unknown)}.'
+		},
 		Props: {
 			Value: 'The tags.',
 			Suggestions: 'Tags offered while typing.',

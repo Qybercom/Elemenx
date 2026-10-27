@@ -11,7 +11,10 @@ Elemenx.Component('DateInput', {
 		Group: 'inputs',
 		Icon: 'calendar',
 		Description: 'A date field with its own calendar.',
-		Events: ['input', 'change'],
+		Events: {
+			input: 'The date changed while typing or in the calendar: Value (ISO, or \'\').',
+			change: 'The date was committed: Value.'
+		},
 		Props: {
 			Value: 'The date: YYYY-MM-DD, or YYYY-MM in the month mode; empty when none.',
 			Mode: {Options: ['date', 'month'], Description: 'date or month.'},

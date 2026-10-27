@@ -23,7 +23,7 @@ Pages of a list of Count items, PageSize (10) on each: the range shown ('11–20
 
 ## Events
 
-`page`
+- `page`: Another page or page size was chosen: {Page, PageSize}.
 
 ## Example
 

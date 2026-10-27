@@ -15,7 +15,9 @@ Elemenx.Component('DateRangeInput', {
 		Group: 'inputs',
 		Icon: 'calendar',
 		Description: 'A range of dates.',
-		Events: ['change'],
+		Events: {
+			change: 'A range was picked: [start, end]; [] when it was cleared.'
+		},
 		Props: {
 			Value: 'The range: [start, end] as YYYY-MM-DD, or [] for none.',
 			Min: 'The first day that can be chosen.',

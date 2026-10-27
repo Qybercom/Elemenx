@@ -21,7 +21,10 @@
 
 ## События
 
-`tab`, `collapse`, `command`, `backstage`
+- `tab`: Открыта другая вкладка: {ID}.
+- `collapse`: Лента свёрнута или закреплена: {Collapsed}.
+- `command`: Выполнена команда любого её элемента: {ID, Item}.
+- `backstage`: Backstage открылся или закрылся: {Open}.
 
 ## Слоты
 

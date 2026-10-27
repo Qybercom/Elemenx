@@ -12,7 +12,10 @@ Elemenx.Component('RibbonButton', {
 		Group: 'navigation',
 		Icon: 'menu',
 		Description: 'A command of a RibbonGroup: <RibbonButton ID="paste" Label="Paste" Icon="paste" Size="large" />.',
-		Events: ['click', 'select'],
+		Events: {
+			click: 'Pressed: {ID, Pressed}.',
+			select: 'An item of its menu was chosen: the item.'
+		},
 		Props: {
 			ID: 'The ID of the command.',
 			Label: 'The text of the button (the name of an icon button).',

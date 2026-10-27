@@ -1,0 +1,21 @@
+<CallControls [muted]="State.Muted" [camera]="State.Camera" [sharing]="State.Sharing" [hand]="State.Hand" (mute)="Set" (camera)="Set" (share)="Set" (hand)="Set" (react)="Reacted" (leave)="Left" />
+<p class="elemenx-text small muted">{{Note}}</p>
+<script>
+({
+	Note: 'Press the buttons',
+	State: {Muted: false, Camera: true, Sharing: false, Hand: false},
+
+	Set: function (change) {
+		this.State = Object.assign({}, this.State, change);
+		this.Note = JSON.stringify(change);
+	},
+
+	Reacted: function (event) {
+		this.Note = 'Reaction ' + event.Emoji;
+	},
+
+	Left: function () {
+		this.Note = 'Left the call';
+	}
+})
+</script>

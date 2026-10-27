@@ -12,7 +12,9 @@ Elemenx.Component('RibbonGallery', {
 		Group: 'navigation',
 		Icon: 'menu',
 		Description: 'A gallery of a RibbonGroup: a strip of samples (styles, layouts, colors) that scrolls row by row, and a button that shows all of them.',
-		Events: ['select'],
+		Events: {
+			select: 'A sample was chosen: {ID, Item}.'
+		},
 		Props: {
 			ID: 'The ID of the gallery, in the command.',
 			Label: 'The name of the gallery.',

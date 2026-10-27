@@ -18,6 +18,34 @@ function folder () {
 	return root;
 }
 
+/* The text of the first argument of a call whose arguments start at index: up to its comma or its parenthesis. */
+function firstArgument (source, index) {
+	var depth = 0;
+	var quote = '';
+	var at;
+
+	for (at = index; at < source.length; at++) {
+		if (quote) {
+			if (source[at] === '\\') at++;
+			else if (source[at] === quote) quote = '';
+		}
+		else if (source[at] === '\'' || source[at] === '"') {
+			quote = source[at];
+		}
+		else if ('([{'.indexOf(source[at]) !== -1) {
+			depth++;
+		}
+		else if (depth && ')]}'.indexOf(source[at]) !== -1) {
+			depth--;
+		}
+		else if (!depth && (source[at] === ',' || source[at] === ')')) {
+			break;
+		}
+	}
+
+	return source.substring(index, at);
+}
+
 afterEach(function () {
 	while (temporary.length) {
 		fs.rmSync(temporary.pop(), {recursive: true, force: true});
@@ -33,21 +61,21 @@ describe('elemenx meta', function () {
 		fs.mkdirSync(path.join(root, 'services'));
 		fs.mkdirSync(path.join(root, 'directives'));
 		fs.writeFileSync(path.join(root, 'index.css'), '.my-row { display: flex; }\n.my-row.fill { flex: 1; }\n');
-		fs.writeFileSync(path.join(root, 'components', 'Card', 'Card.js'), 'Elemenx.Component(\'Card\', {$Meta: {Group: \'layout\', Props: {Title: \'The title.\', Look: {Options: [\'flat\', \'raised\'], Description: \'Its look.\'}}}, Title: \'\', Look: \'flat\', Count: 0});\n');
+		fs.writeFileSync(path.join(root, 'components', 'Card', 'Card.js'), 'Elemenx.Component(\'Card\', {$Meta: {Group: \'layout\', Events: {open: \'It opened.\'}, Props: {Title: \'The title.\', Look: {Options: [\'flat\', \'raised\'], Description: \'Its look.\'}}}, Title: \'\', Look: \'flat\', Count: 0});\n');
 		fs.writeFileSync(path.join(root, 'components', 'Card', 'Card.css'), '.my-card { color: red; }\n.my-card.raised { color: blue; }\n');
 		fs.writeFileSync(path.join(root, 'services', 'Count.js'), 'Elemenx.Service(\'Count\', {$Meta: {Description: \'Counts.\', Methods: [\'Count()\']}, Count: function () { return 1; }});\nElemenx.Service(\'Count\').Count();\n');
 		fs.writeFileSync(path.join(root, 'directives', 'Mark.js'), 'Elemenx.Directive(\'Mark\', {$Meta: {Description: \'Marks.\'}});\n');
 
 		expect(Meta.Build(root, path.join(root, 'meta.json'))).toEqual({
 			Components: [{
-				Name: 'Card', Kind: 'Component', Group: 'layout', Icon: '', Description: '', Slots: [], Container: false, Children: [], Current: '', Events: [], Methods: [], Sample: {},
+				Name: 'Card', Kind: 'Component', Group: 'layout', Icon: '', Description: '', Slots: [], Container: false, Children: [], Current: '', Events: ['open'], EventDescriptions: {open: 'It opened.'}, Methods: [], Sample: {},
 				Props: [
 					{Name: 'Title', Type: 'text', Default: '', Options: null, Schema: null, Body: false, Description: 'The title.'},
 					{Name: 'Look', Type: 'select', Default: 'flat', Options: ['flat', 'raised'], Schema: null, Body: false, Description: 'Its look.'}
 				]
 			}],
-			Services: [{Name: 'Count', Kind: 'Service', Group: '', Icon: '', Description: 'Counts.', Props: [], Slots: [], Container: false, Children: [], Current: '', Events: [], Methods: ['Count()'], Sample: {}}],
-			Directives: [{Name: 'mark', Kind: 'Directive', Group: '', Icon: '', Description: 'Marks.', Props: [], Slots: [], Container: false, Children: [], Current: '', Events: [], Methods: [], Sample: {}}],
+			Services: [{Name: 'Count', Kind: 'Service', Group: '', Icon: '', Description: 'Counts.', Props: [], Slots: [], Container: false, Children: [], Current: '', Events: [], EventDescriptions: {}, Methods: ['Count()'], Sample: {}}],
+			Directives: [{Name: 'mark', Kind: 'Directive', Group: '', Icon: '', Description: 'Marks.', Props: [], Slots: [], Container: false, Children: [], Current: '', Events: [], EventDescriptions: {}, Methods: [], Sample: {}}],
 			Classes: {}
 		});
 
@@ -86,6 +114,46 @@ describe('elemenx meta', function () {
 		expect(result.Classes['elemenx-container']).toEqual(expect.arrayContaining(['wrappable', 'centered', 'grid', 'fill']));
 		expect(result.Services.length).toBeGreaterThan(30);
 		expect(result.Directives.length).toBeGreaterThan(10);
+	});
+
+	/* Regression: MoneyInput emitted input and change without declaring them, CallStage declared a layout it never emitted. */
+	it('every event a Component of ElemenxUI emits by its name is in its $Meta.Events, with a description, and no other', function () {
+		var result = Meta.Build(library, path.join(folder(), 'meta.json'));
+		var wrong = [];
+
+		result.Components.forEach(function (meta) {
+			var base = path.join(library, 'components', meta.Name, meta.Name);
+			var source = fs.readFileSync(base + '.js', 'utf8') + (fs.existsSync(base + '.html') ? fs.readFileSync(base + '.html', 'utf8') : '');
+			var calls = /(?:\$Emit|this\.Emit)\(/g;
+			var emitted = {};
+			var match;
+
+			/* The names in the first argument of an $Emit: $Emit('close'), $Emit(open ? 'popout' : 'popin'). */
+			match = calls.exec(source);
+
+			while (match) {
+				firstArgument(source, match.index + match[0].length).replace(/'([a-z][\w-]*)'(?!\s*[=!]==)/g, function (all, name) {
+					emitted[name] = true;
+				});
+
+				match = calls.exec(source);
+			}
+
+			Object.keys(emitted).forEach(function (event) {
+				if (meta.Events.indexOf(event) === -1)
+					wrong.push(meta.Name + ' emits ' + event + ' and does not declare it');
+			});
+
+			meta.Events.forEach(function (event) {
+				if (!emitted[event])
+					wrong.push(meta.Name + ' declares ' + event + ' and does not emit it');
+
+				if (!meta.EventDescriptions[event])
+					wrong.push(meta.Name + ' does not describe ' + event);
+			});
+		});
+
+		expect(wrong).toEqual([]);
 	});
 
 	it('keeps data/meta.json of ElemenxUI, where the Designer Service reads it, as elemenx meta makes it now', function () {

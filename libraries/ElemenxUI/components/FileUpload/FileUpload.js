@@ -10,7 +10,10 @@ Elemenx.Component('FileUpload', {
 		Group: 'inputs',
 		Icon: 'upload',
 		Description: 'Picks files by dialog or drag and drop; it does not upload them.',
-		Events: ['reject', 'change'],
+		Events: {
+			change: 'The files changed: the list of File.',
+			reject: 'Files were refused by Accept, MaxSize or MaxFiles: [{Name, Reason}].'
+		},
 		Props: {
 			Variant: {Options: ['dropzone', 'inline', 'gallery', 'avatar'], Description: 'dropzone, inline, gallery or avatar.'},
 			Accept: 'The types of files taken: image/*, .pdf...',

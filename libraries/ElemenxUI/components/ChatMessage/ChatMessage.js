@@ -31,7 +31,11 @@ Elemenx.Component('ChatMessage', {
 		Icon: 'comment',
 		Description: 'One message of a Chat.',
 		Container: true,
-		Events: ['react', 'select', 'action'],
+		Events: {
+			react: 'A reaction was pressed or picked: {ID, Emoji, Mine}, Mine the state it asks for.',
+			select: 'The message was selected or let go: {ID, Selected}.',
+			action: 'An item of its menu was chosen: {ID, Action, Item}.'
+		},
 		Props: {
 			ID: 'The ID of the message, in its events.',
 			Author: 'The name of the author.',

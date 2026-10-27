@@ -13,7 +13,11 @@ Elemenx.Component('PostCard', {
 		Icon: 'quote',
 		Description: 'The card of a post of a blog: Image, Category, Title, Excerpt, Tags, the Author (Avatar, or initials), its Date and ReadTime (minutes), and the counts of Likes and Comments (null hides them).',
 		Container: true,
-		Events: ['like', 'comment', 'share'],
+		Events: {
+			like: 'The like button: {Liked, Likes}.',
+			comment: 'The comments button: {Title}.',
+			share: 'The share button: {Title, Href}.'
+		},
 		Props: {
 			Title: 'The title of the post.',
 			Excerpt: 'The beginning of the post.',

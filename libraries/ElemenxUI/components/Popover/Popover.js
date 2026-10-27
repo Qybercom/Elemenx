@@ -12,7 +12,9 @@ Elemenx.Component('Popover', {
 		Description: 'Floating content next to a trigger.',
 		Container: true,
 		Slots: ['trigger'],
-		Events: ['toggle'],
+		Events: {
+			toggle: 'It opened or closed: true or false.'
+		},
 		Props: {
 			Open: 'Shows the content.',
 			Trigger: {Options: ['click', 'hover'], Description: 'click or hover.'},

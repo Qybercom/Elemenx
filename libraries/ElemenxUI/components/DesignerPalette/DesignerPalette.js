@@ -12,7 +12,9 @@ Elemenx.Component('DesignerPalette', {
 		Group: 'tools',
 		Icon: 'add',
 		Description: 'The palette of a designer of pages: its kinds by group, with a search.',
-		Events: ['add'],
+		Events: {
+			add: 'A kind was placed on the page: the ID of the new element.'
+		},
 		Props: {
 			Query: 'The text of the search: the kinds whose name holds it.'
 		}

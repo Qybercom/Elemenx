@@ -14,7 +14,10 @@ Elemenx.Component('CommandPalette', {
 		Group: 'navigation',
 		Icon: 'search',
 		Description: 'A command palette: a search over the actions of the application, opened by Hotkey (\'Mod+K\' by default; \'\' for none) or by Open.',
-		Events: ['close', 'run'],
+		Events: {
+			run: 'A command was chosen: the command (its Run is called too).',
+			close: 'It closed (Escape, the hotkey again, a press outside, or a command run).'
+		},
 		Methods: ['Run(index)'],
 		Props: {
 			Commands: 'The commands: [{ID, Label, Icon, Group, Keys, Hint, Keywords, Disabled, Run}].',

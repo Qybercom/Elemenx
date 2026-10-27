@@ -15,7 +15,7 @@ An audio mixer (the look and the controls; the sound is the application's): a ro
 
 ## Events
 
-`change`
+- `change`: A control of a strip changed: {ID (the channel, or 'master'), Key, Value}.
 
 ## Example
 

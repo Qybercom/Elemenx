@@ -1,0 +1,10 @@
+<Form Label="The user" (submit)="Submitted">
+	<Field Label="Name" Name="name" Required="true" [value]="User.Name"><Input /></Field>
+	<Field Label="Email" Name="email" Required="true" Email="true" [value]="User.Email"><Input Type="email" /></Field>
+	<Field Label="Role" Name="role" [value]="User.Role"><RadioGroup Variant="horizontal" [options]="Roles" /></Field>
+	<div class="elemenx-container" style="gap: 8px;">
+		<Button Type="submit" Label="Save" Variant="primary" />
+		<span class="elemenx-spacer"></span>
+		<Button Label="Remove" Variant="danger" Icon="delete" (click)="Remove" />
+	</div>
+</Form>

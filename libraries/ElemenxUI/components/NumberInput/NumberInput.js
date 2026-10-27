@@ -12,7 +12,10 @@ Elemenx.Component('NumberInput', {
 		Group: 'inputs',
 		Icon: 'edit',
 		Description: 'A number field.',
-		Events: ['input', 'change'],
+		Events: {
+			input: 'The number changed while typing or by the arrows: Value (a number or null).',
+			change: 'The number was committed, bounded and rounded: Value.'
+		},
 		Props: {
 			Value: 'The number, or null.',
 			Min: 'The least number.',

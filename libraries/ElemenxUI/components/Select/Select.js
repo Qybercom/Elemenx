@@ -12,7 +12,9 @@ Elemenx.Component('Select', {
 		Group: 'inputs',
 		Icon: 'chevrons-up-down',
 		Description: 'A select: a button that opens a list of Options and shows the chosen one.',
-		Events: ['change'],
+		Events: {
+			change: 'Another option was chosen: Value, with its type; null when it was cleared.'
+		},
 		Props: {
 			Label: 'The name of the field for screen readers, when no Field names it.',
 			Options: {Schema: {Value: 'text', Label: 'text', Icon: 'icon', Disabled: 'bool'}, Description: 'The options: [{Value, Label, Hint, Icon, Group, Disabled}].'},

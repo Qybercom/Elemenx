@@ -24,7 +24,14 @@
 
 ## События
 
-`view`, `select`, `order`, `arrive`, `cell`, `load`, `error`, `ready`
+- `view`: Вид сдвинулся или изменил масштаб: {X, Y, Zoom}.
+- `select`: Изменилось выделение: {IDs, Objects}.
+- `order`: Выделенным юнитам отдан приказ: {Kind (move, attack или stop), IDs, X, Y, Target}.
+- `arrive`: Юнит дошёл до конца пути: {ID, X, Y}.
+- `cell`: Нажата клетка: {X, Y, Button, Object}, объект на ней или null.
+- `load`: Карта загружена: {Width, Height} в клетках.
+- `error`: Карту не удалось загрузить: ошибка.
+- `ready`: Мир готов: сам компонент, чтобы вызывать его методы.
 
 ## Слоты
 
@@ -51,3 +58,57 @@
 - `CenterOn(x, y)`
 - `ToCell(clientX, clientY)`
 - `ToScreen(x, y)`
+
+## Пример
+
+```example
+<div style="height: 360px;">
+	<GameWorld Team="blue" Minimap="true" [fog]="Fog" (select)="Selected" (order)="Ordered" (arrive)="Arrived">
+		<GameLayer Name="ground" [rows]="Rows" />
+		<GameBuilding ID="keep" X="2" Y="4" Width="3" Height="2" Team="blue" Type="keep" />
+		<GameUnit *for="unit of Units" [id]="unit.ID" [x]="unit.X" [y]="unit.Y" [team]="unit.Team" [type]="unit.Type" />
+		<GameObject ID="oak" Kind="tree" X="7" Y="1" Blocks="true" Opaque="true" />
+	</GameWorld>
+</div>
+<Toggle Label="Fog of war" [checked]="Fog" (change)="Fogged" />
+<p class="elemenx-text small muted">{{Note}}</p>
+<script>
+({
+	Note: 'Select the blue units (a click, or a frame), then a right click sends them there.',
+	Fog: false,
+	Rows: [
+		'TTT.........~~......',
+		'TT..........~~......',
+		'T...........=~......',
+		'............~~..^^..',
+		'.....__________..^^.',
+		'.....____.....~~....',
+		'............:~~:....',
+		'...##.......:~~:....',
+		'...##........~~.....',
+		'.............~~.....'
+	],
+	Units: [
+		{ID: 'archer-1', X: 6, Y: 5, Team: 'blue', Type: 'archer'},
+		{ID: 'archer-2', X: 7, Y: 6, Team: 'blue', Type: 'archer'},
+		{ID: 'raider', X: 17, Y: 8, Team: 'red', Type: 'raider'}
+	],
+
+	Fogged: function (checked) {
+		this.Fog = checked;
+	},
+
+	Selected: function (event) {
+		this.Note = 'Selected: ' + (event.IDs.join(', ') || 'none');
+	},
+
+	Ordered: function (event) {
+		this.Note = event.Kind + ' to ' + event.X + ', ' + event.Y + ': ' + event.IDs.join(', ');
+	},
+
+	Arrived: function (event) {
+		this.Note = event.ID + ' arrived at ' + event.X + ', ' + event.Y;
+	}
+})
+</script>
+```

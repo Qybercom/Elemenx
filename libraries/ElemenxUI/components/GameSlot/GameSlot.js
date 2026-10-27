@@ -22,7 +22,11 @@ Elemenx.Component('GameSlot', {
 		Group: 'game',
 		Icon: 'trophy',
 		Description: 'A slot of an action bar (hotbar): a button with an Icon or an Image, a Label for the hint and screen readers, Count and Rarity (common, uncommon, rare, epic, legendary).',
-		Events: ['use', 'ready', 'drop'],
+		Events: {
+			use: 'Pressed (or its key) while ready: {Label, Key}.',
+			ready: 'Its cooldown ended: {Label, Key}.',
+			drop: 'An item was dropped on it: {Item, From, To, Current, Type}.'
+		},
 		Methods: ['Cool(milliseconds)'],
 		Props: {
 			Icon: 'The icon of the action.',

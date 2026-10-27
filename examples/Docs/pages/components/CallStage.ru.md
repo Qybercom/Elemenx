@@ -14,8 +14,34 @@
 
 ## События
 
-`page`, `corner`
+- `page`: Показана другая страница сетки: {Page}.
+- `corner`: Своё видео перетащено в другой угол: {Corner}.
 
 ## Слоты
 
 `status`, `main`, `participants`, `self`, `side`, `controls`
+
+## Пример
+
+```example
+<RadioGroup Variant="segmented" Label="Layout" [options]="Layouts" [value]="Layout" (change)="Laid" />
+<div style="height: 360px; margin-top: 12px;">
+	<CallStage [layout]="Layout">
+		<CallTile slot="main" Name="Ada Lovelace" Camera="false" Speaking="true" Pinned="true" />
+		<CallTile slot="participants" *for="person of People" [name]="person" Camera="false" />
+		<CallTile slot="self" Name="Me" Self="true" Camera="false" />
+		<CallControls slot="controls" [hide]="['chat', 'people']" />
+	</CallStage>
+</div>
+<script>
+({
+	Layout: 'speaker',
+	Layouts: [{Value: 'grid', Label: 'Grid'}, {Value: 'speaker', Label: 'Speaker'}, {Value: 'screen', Label: 'Screen'}],
+	People: ['Alan Turing', 'Grace Hopper', 'Edsger Dijkstra'],
+
+	Laid: function (value) {
+		this.Layout = value;
+	}
+})
+</script>
+```

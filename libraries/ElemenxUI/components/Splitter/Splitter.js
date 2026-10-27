@@ -12,7 +12,9 @@ Elemenx.Component('Splitter', {
 		Description: 'Two panes with a draggable divider.',
 		Container: true,
 		Slots: ['first', 'second'],
-		Events: ['resize'],
+		Events: {
+			resize: 'The divider was released: Size, of the first pane.'
+		},
 		Props: {
 			Direction: {Options: ['horizontal', 'vertical'], Description: 'horizontal (side by side) or vertical (stacked).'},
 			Size: 'The size of the first pane, in pixels.',

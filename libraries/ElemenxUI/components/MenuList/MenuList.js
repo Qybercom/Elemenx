@@ -16,7 +16,10 @@ Elemenx.Component('MenuList', {
 		Group: 'buttons',
 		Icon: 'launcher',
 		Description: 'One level of a Menu.',
-		Events: ['select', 'dismiss'],
+		Events: {
+			select: 'A leaf item was chosen: the item.',
+			dismiss: 'It asks to close (the owner sets Open to false): the reason, outside, escape, tab, back, swipe, backdrop or cancel.'
+		},
 		Props: {
 			Items: 'The items: [{ID, Label, Icon, Shortcut, Disabled, Danger, Checked, Items, Separator, Group}].',
 			Open: 'Shows the list under the closest elemenx-popup-anchor around it.',

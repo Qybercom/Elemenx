@@ -15,7 +15,12 @@ Elemenx.Component('ProductCard', {
 		Icon: 'cart',
 		Description: 'The card of a product: its Images (dots switch them, and a swipe across, of a finger or of the mouse) or Image, a Badge (\'Sale\', \'New\'; BadgeVariant), the favorite heart (Favorable, Favorite), Brand, Title, Rating (halves) and Reviews, Price and OldPrice in Currency, the Colors ([{Value, Color, Label}]) and Sizes to choose (Color, Size), and the cart button (Cart, InCart).',
 		Container: true,
-		Events: ['favorite', 'color', 'size', 'add'],
+		Events: {
+			favorite: 'The heart: {Favorite}.',
+			color: 'Another color was chosen: {Color}.',
+			size: 'Another size was chosen: {Size}.',
+			add: 'The cart button: {Color, Size}.'
+		},
 		Props: {
 			Title: 'The name of the product.',
 			Brand: 'The brand above the name.',

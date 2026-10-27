@@ -1,0 +1,39 @@
+.landing {
+	min-height: 100vh;
+}
+
+.landing-header {
+	position: sticky;
+	top: 0;
+	z-index: 1;
+	display: flex;
+	align-items: center;
+	gap: 24px;
+	padding: 12px 24px;
+	background: var(--elemenx-surface);
+	border-bottom: 1px solid var(--elemenx-border);
+}
+
+.landing-logo {
+	font-size: 20px;
+}
+
+.landing-nav {
+	display: flex;
+	flex: 1;
+	gap: 16px;
+}
+
+.landing-main {
+	display: flex;
+	flex-direction: column;
+	gap: 64px;
+	max-width: 1040px;
+	margin: 0 auto;
+	padding: 48px 24px;
+}
+
+.landing-footer {
+	padding: 24px;
+	text-align: center;
+}

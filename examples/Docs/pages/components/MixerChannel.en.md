@@ -26,7 +26,7 @@ A channel strip of an audio mixer (the look and the controls; the sound is the a
 
 ## Events
 
-`change`
+- `change`: A control of the strip changed: {ID, Key (Volume, Pan, Mute, Solo or the Label of a knob), Value}.
 
 ## Example
 

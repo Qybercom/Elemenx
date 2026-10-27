@@ -161,7 +161,7 @@ test.describe('Elemenx builder', function () {
 		await add(page, 'Button');
 
 		await expect(canvas.locator('.elemenx-card .elemenx-button.primary')).toHaveText('Primary');
-		await expect(inspector.locator('.elemenx-designer-inspector-description')).toHaveText('A button.');
+		await expect(inspector.locator('.elemenx-designer-inspector-description')).toHaveText('A button: primary, secondary, ghost, danger or link, with an icon, a spinner, a badge or a pressed state.');
 		await expect(inspector).toContainText('Its look: primary, secondary, ghost, danger or link.');
 
 		await inspector.locator('input[name="Label"]').fill('Go');

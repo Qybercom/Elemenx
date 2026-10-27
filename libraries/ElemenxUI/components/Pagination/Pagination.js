@@ -14,7 +14,9 @@ Elemenx.Component('Pagination', {
 		Group: 'navigation',
 		Icon: 'menu',
 		Description: 'Pages of a list of Count items, PageSize (10) on each: the range shown (\'11–20 of 57\'), a choice of PageSizes (none when empty), and the buttons of the first page, the previous one, the numbers (the first, the last and the ones around Page, with gaps between), the next one and the last.',
-		Events: ['page'],
+		Events: {
+			page: 'Another page or page size was chosen: {Page, PageSize}.'
+		},
 		Props: {
 			Page: 'The current page, from 1.',
 			Count: 'How many items the list has.',

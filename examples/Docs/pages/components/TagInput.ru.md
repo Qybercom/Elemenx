@@ -25,7 +25,10 @@
 
 ## События
 
-`invalid`, `add`, `change`, `remove`
+- `invalid`: Текст отклонён: {Text, Reason (pattern, duplicate, max или unknown)}.
+- `add`: Добавлен тег: сам тег.
+- `change`: Теги изменились: список тегов.
+- `remove`: Удалён тег: сам тег.
 
 ## Пример
 

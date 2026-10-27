@@ -1,0 +1,13 @@
+{
+	"name": "elemenx-tutorial-shop",
+	"private": true,
+	"version": "1.0.0",
+	"scripts": {
+		"dev": "elemenx dev",
+		"build": "elemenx build",
+		"serve": "elemenx serve"
+	},
+	"dependencies": {
+		"@qybercom/elemenx": "^0.10.0"
+	}
+}

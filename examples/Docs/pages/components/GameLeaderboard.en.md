@@ -15,7 +15,7 @@ The leaderboard of a game. Items [{ID, Name, Score, Rank, Avatar, Icon, Note, Ch
 
 ## Events
 
-`select`
+- `select`: A row was pressed: its item.
 
 ## Example
 

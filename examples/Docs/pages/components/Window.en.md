@@ -46,7 +46,11 @@ A window over the page or over its container: a header with its Title (and an Ov
 
 ## Events
 
-`front`, `restore`, `close`, `resize`, `move`
+- `front`: It came to the front of the other windows.
+- `restore`: It came back from minimized or maximized.
+- `close`: Its close button was pressed (Open becomes false).
+- `resize`: Its size changed: {Width, Height}.
+- `move`: It moved: {X, Y}.
 
 ## Slots
 

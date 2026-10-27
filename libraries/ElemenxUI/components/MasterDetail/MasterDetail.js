@@ -13,7 +13,9 @@ Elemenx.Component('MasterDetail', {
 		Description: 'A list and the card of the chosen item, built on elemenx-container and elemenx-column.',
 		Container: true,
 		Slots: ['list-header', 'list', 'detail-header', 'detail'],
-		Events: ['back'],
+		Events: {
+			back: 'The back button of the card on a narrow layout: clear the detail.'
+		},
 		Props: {
 			Empty: 'The text of the card while nothing is chosen.',
 			EmptyIcon: 'The icon of the card while nothing is chosen.'

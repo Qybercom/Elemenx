@@ -23,7 +23,9 @@ Value хранит только цифры. Платёжная система, �
 
 ## События
 
-`input`, `validate`, `change`
+- `input`: Цифры изменились: Value.
+- `validate`: Номер проверен: {Value, Brand, Complete, Valid}.
+- `change`: Номер зафиксирован: Value.
 
 ## Пример
 

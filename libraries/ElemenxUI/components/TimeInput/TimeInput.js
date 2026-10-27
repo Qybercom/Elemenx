@@ -10,7 +10,10 @@ Elemenx.Component('TimeInput', {
 		Group: 'inputs',
 		Icon: 'clock',
 		Description: 'A 24-hour time field with its own picker.',
-		Events: ['input', 'change'],
+		Events: {
+			input: 'The time changed while typing or in the picker: Value (\'HH:MM\', or \'\').',
+			change: 'The time was committed: Value.'
+		},
 		Props: {
 			Value: 'The time: HH:MM, or HH:MM:SS with Seconds; empty when none.',
 			Seconds: 'Takes the seconds too.',

@@ -21,7 +21,8 @@ A long list that draws only the rows in view (and Overscan more on each side): a
 
 ## Events
 
-`range`, `select`
+- `range`: The rows drawn changed: {Start, End}.
+- `select`: An item was chosen: the item.
 
 ## Methods
 

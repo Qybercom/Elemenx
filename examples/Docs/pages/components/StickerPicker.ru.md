@@ -17,7 +17,8 @@
 
 ## События
 
-`pick`, `dismiss`
+- `pick`: Выбран стикер: {Sticker: {ID, Pack, URL, Title}}.
+- `dismiss`: Нажат Escape: закрыть.
 
 ## Пример
 

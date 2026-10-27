@@ -236,4 +236,55 @@ describe('Regression: IndexedDB contracts', function () {
 
 		await operation(db.Delete());
 	});
+
+	it('a connection the browser closed under a waiting operation is opened again once, and the operation goes on', async function () {
+		var name = unique('elemenx-idb-reopen-');
+		var db = Elemenx.Storage.IndexedDB(name, {Stores: {items: {}}});
+		var store = db.Store('items');
+		var native = IDBDatabase.prototype.transaction;
+		var close = IDBDatabase.prototype.close;
+		var closes = 0;
+		var failed = 0;
+
+		await operation(store.Put('a', {value: 1}));
+
+		/* The next transaction finds its connection closed (a version change elsewhere, the browser), as InvalidStateError tells. */
+		IDBDatabase.prototype.transaction = function () {
+			IDBDatabase.prototype.transaction = native;
+			failed++;
+
+			throw new DOMException('The database connection is closing.', 'InvalidStateError');
+		};
+
+		IDBDatabase.prototype.close = function () {
+			closes++;
+
+			return close.apply(this, arguments);
+		};
+
+		try {
+			expect(await operation(store.Get('a'))).toEqual({value: 1});
+		}
+		finally {
+			IDBDatabase.prototype.transaction = native;
+			IDBDatabase.prototype.close = close;
+		}
+
+		expect(failed).toBe(1);
+		expect(closes).toBe(1);
+
+		/* An error of another kind is not retried. */
+		IDBDatabase.prototype.transaction = function () {
+			throw new DOMException('Not allowed.', 'NotAllowedError');
+		};
+
+		try {
+			await expect(operation(store.Get('a'))).rejects.toMatchObject({name: 'NotAllowedError'});
+		}
+		finally {
+			IDBDatabase.prototype.transaction = native;
+		}
+
+		await operation(db.Delete());
+	});
 });

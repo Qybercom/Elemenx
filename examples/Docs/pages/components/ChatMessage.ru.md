@@ -28,7 +28,9 @@
 
 ## События
 
-`react`, `select`, `action`
+- `react`: Нажата или выбрана реакция: {ID, Emoji, Mine}, Mine — запрошенное состояние.
+- `select`: Сообщение выделено или снято: {ID, Selected}.
+- `action`: Выбран пункт его меню: {ID, Action, Item}.
 
 ## Слоты
 

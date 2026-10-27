@@ -12,3 +12,25 @@ An invitation to a call, as a messenger shows it: the picture and the name of wh
 | `Text` | `''` |
 | `Video` | `false` |
 | `Notification` | `null` |
+
+## Example
+
+```example
+<div style="max-width: 360px;">
+	<CallInvite Name="Grace Hopper" Video="true" (accept)="Accepted" (decline)="Declined" />
+</div>
+<p class="elemenx-text small muted">{{Answer}}</p>
+<script>
+({
+	Answer: 'Waiting for an answer',
+
+	Accepted: function (event) {
+		this.Answer = event.Video ? 'Accepted with the camera' : 'Accepted';
+	},
+
+	Declined: function () {
+		this.Answer = 'Declined';
+	}
+})
+</script>
+```

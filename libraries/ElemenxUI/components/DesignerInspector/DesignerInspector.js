@@ -18,7 +18,9 @@ Elemenx.Component('DesignerInspector', {
 		Group: 'tools',
 		Icon: 'sliders',
 		Description: 'The layout and the props of the selected element of a designer of pages, in two blocks.',
-		Events: ['select'],
+		Events: {
+			select: 'Another element was selected from it (its parent): its ID, or null.'
+		},
 		Props: {
 			Style: 'Shows the blocks of the layout (DesignerStyle) and of the rules of CSS (DesignerRules) above the props.'
 		}

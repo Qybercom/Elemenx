@@ -15,7 +15,9 @@ Elemenx.Component('Breadcrumbs', {
 		Description: 'The path to the present page: Items [{ID, Label, Icon, File, Href, Disabled, Class}], the last one the present page (aria-current="page", not pressed unless CurrentClickable).',
 		Container: true,
 		Slots: ['start', 'end'],
-		Events: ['select'],
+		Events: {
+			select: 'An item was pressed, or chosen in the menu of the hidden ones: {Item, Index}.'
+		},
 		Props: {
 			Items: {Schema: {ID: 'text', Label: 'text', Icon: 'icon', Href: 'text', Disabled: 'bool'}, Description: 'The path: [{ID, Label, Icon, File, Href, Disabled, Class}], the last item the present page.'},
 			Separator: 'Between the items: chevron, slash, arrow, dot, or a text of its own.',

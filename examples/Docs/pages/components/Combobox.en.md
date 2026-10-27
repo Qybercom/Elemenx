@@ -25,7 +25,9 @@ A field that suggests: typing filters Options ([{Value, Label, Hint, Icon, Group
 
 ## Events
 
-`search`, `create`, `change`
+- `search`: The text changed: the text, to load Options from a server.
+- `create`: A text that is no option was taken (AllowCustom): the text.
+- `change`: An option was picked: Value.
 
 ## Example
 

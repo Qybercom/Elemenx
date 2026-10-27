@@ -23,7 +23,7 @@ A select: a button that opens a list of Options and shows the chosen one. Option
 
 ## Events
 
-`change`
+- `change`: Another option was chosen: Value, with its type; null when it was cleared.
 
 ## Example
 

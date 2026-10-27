@@ -11,7 +11,7 @@ The selected element of a designer of pages (the Designer Service), in blocks of
 
 ## Events
 
-`select`
+- `select`: Another element was selected from it (its parent): its ID, or null.
 
 ## Example
 

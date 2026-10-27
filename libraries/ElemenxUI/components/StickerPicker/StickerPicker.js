@@ -11,7 +11,10 @@ Elemenx.Component('StickerPicker', {
 		Group: 'inputs',
 		Icon: 'sticker',
 		Description: 'A picker of the stickers of the Stickers Service: a tab for the stickers sent last, one for the starred ones and one per pack, and a search over titles and keywords.',
-		Events: ['pick', 'dismiss'],
+		Events: {
+			pick: 'A sticker was picked: {Sticker: {ID, Pack, URL, Title}}.',
+			dismiss: 'Escape was pressed: close it.'
+		},
 		Props: {
 			Label: 'The name of the picker for screen readers.',
 			Placeholder: 'The text shown while it is empty.',

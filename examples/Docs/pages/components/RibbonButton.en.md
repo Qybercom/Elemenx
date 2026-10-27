@@ -21,7 +21,8 @@ A command of a RibbonGroup: <RibbonButton ID="paste" Label="Paste" Icon="paste" 
 
 ## Events
 
-`click`, `select`
+- `click`: Pressed: {ID, Pressed}.
+- `select`: An item of its menu was chosen: the item.
 
 ## Example
 

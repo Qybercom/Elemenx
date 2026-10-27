@@ -20,7 +20,8 @@ Picks files by dialog or drag and drop; it does not upload them. Variant: dropzo
 
 ## Events
 
-`reject`, `change`
+- `reject`: Files were refused by Accept, MaxSize or MaxFiles: [{Name, Reason}].
+- `change`: The files changed: the list of File.
 
 ## Example
 

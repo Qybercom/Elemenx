@@ -29,7 +29,10 @@ A one-time code of Length characters. Value holds the characters only. Variant: 
 
 ## Events
 
-`input`, `validate`, `complete`, `change`
+- `input`: The characters changed: Value.
+- `validate`: The code was checked: {Value, Complete, Valid}.
+- `complete`: All Length characters are in: Value.
+- `change`: The code was committed: Value.
 
 ## Example
 

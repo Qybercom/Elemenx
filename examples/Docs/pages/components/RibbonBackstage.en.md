@@ -12,7 +12,7 @@ The backstage of a Ribbon, as the File view of Microsoft Office: <RibbonBackstag
 
 ## Events
 
-`page`
+- `page`: Another page was opened: {ID}.
 
 ## Slots
 

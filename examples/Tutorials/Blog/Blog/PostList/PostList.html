@@ -1,0 +1,14 @@
+<section class="elemenx-column" style="gap: 24px;">
+	<div class="elemenx-container" style="gap: 12px; align-items: center;">
+		<h1 class="elemenx-title" style="margin: 0;">{{$Params.tag ? '#' + $Params.tag : 'All posts'}}</h1>
+		<a class="elemenx-link" href="/" *if="$Params.tag">Show all</a>
+	</div>
+	<Spinner *if="Loading" />
+	<div class="elemenx-callout danger" *if="Failed">{{Failed}}</div>
+	<div class="elemenx-column" style="gap: 16px;">
+		<PostCard *for="post of Shown(Posts, $Params)" *key="post.ID" Layout="horizontal" [title]="post.Title" [excerpt]="post.Excerpt" [tags]="post.Tags" [date]="post.Date" [readTime]="post.ReadTime" [href]="'/post/' + post.ID" />
+	</div>
+	<div class="elemenx-container wrappable" style="gap: 8px;">
+		<a class="elemenx-chip" *for="tag of ['css', 'javascript', 'tools']" *key="tag" [attribute.href]="'/tag/' + tag">#{{tag}}</a>
+	</div>
+</section>

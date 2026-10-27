@@ -96,7 +96,7 @@ Elemenx.Component('Price', {
 });
 ```
 
-A helper reads its arguments, not `this`: pass it the fields it needs, so the template follows them.
+A helper reads its arguments, not `this`: pass it the fields it needs, so the template follows them. The other way round, the handler of an event (`(click)="Save"`, `(change)="Picked"`) is a method of the definition: the template binds it as it renders, so a helper set in `$OnCreate` is not one. A method that needs an object kept out of the state (a canvas, a socket) gets it from a helper: `this.Socket = function () { return socket; }` in `$OnCreate`, `this.Socket().Send(...)` in the method.
 
 ## The instance
 

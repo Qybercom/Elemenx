@@ -12,7 +12,10 @@ Elemenx.Component('EmojiPicker', {
 		Group: 'inputs',
 		Icon: 'smile',
 		Description: 'A picker of the emoji of Unicode (the Emoji Service): a search over names and keywords, the groups with a tab each, the emoji used last first, a skin tone for the emoji that take one, and the name of the emoji under the pointer.',
-		Events: ['pick', 'dismiss'],
+		Events: {
+			pick: 'An emoji was picked: {Emoji (with the skin tone), Name, Base}.',
+			dismiss: 'Escape was pressed: close it.'
+		},
 		Props: {
 			Label: 'The name of the picker for screen readers.',
 			Placeholder: 'The text shown while it is empty.',

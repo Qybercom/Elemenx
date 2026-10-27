@@ -1,0 +1,49 @@
+<pre style="font: 14px/1.2 var(--elemenx-font-mono, monospace);">{{Picture}}</pre>
+<p class="elemenx-text small muted">{{Note}}</p>
+<Toggle Label="Diagonal steps" [checked]="Diagonal" (change)="Toggled" />
+<script>
+({
+	Diagonal: false,
+	Picture: '',
+	Note: '',
+	Rows: [
+		'S.....#.....',
+		'.####.#.###.',
+		'.#....#...#.',
+		'.#.####.#.#.',
+		'.#......#..G',
+		'.########.##',
+		'..........9.'
+	],
+
+	$OnCreate: function () {
+		this.Find();
+	},
+
+	Toggled: function (checked) {
+		this.Diagonal = checked;
+		this.Find();
+	},
+
+	Find: function () {
+		var paths = this.$Service('Pathfinding');
+		var rows = this.Rows.map(function (row) {
+			return row.replace('S', '.').replace('G', '.');
+		});
+		var grid = paths.Grid(rows);
+		var path = paths.Path(grid, {X: 0, Y: 0}, {X: 11, Y: 4}, {Diagonal: this.Diagonal});
+		var cells = this.Rows.map(function (row) {
+			return row.split('');
+		});
+
+		(path || []).slice(1, -1).forEach(function (cell) {
+			cells[cell.Y][cell.X] = '*';
+		});
+
+		this.Picture = cells.map(function (row) {
+			return row.join(' ');
+		}).join('\n');
+		this.Note = path ? 'A way of ' + (path.length - 1) + ' steps (# blocks, 9 costs nine).' : 'No way.';
+	}
+})
+</script>

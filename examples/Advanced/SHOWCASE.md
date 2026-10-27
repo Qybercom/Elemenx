@@ -8,6 +8,7 @@ Status values:
 - `PARTIAL` — the subsystem is present, but part of its public behavior is not demonstrated.
 - `MISSING` — supported public behavior has no Advanced demonstration yet.
 - `WORKFLOW` — demonstrated by building/running Advanced rather than by an in-page widget.
+- `ELSEWHERE` — demonstrated by another example of the repository, the one named, where it belongs better.
 
 ## Application and lifecycle
 
@@ -211,6 +212,22 @@ Status values:
 | `elemenx serve` | WORKFLOW | Advanced `npm run serve`. |
 | `elemenx generate` | WORKFLOW | Document commands in Advanced README; do not fake them inside browser UI. |
 | `public/` → build output | WORKFLOW | Existing network data asset demonstrates the behavior. |
+
+## Later runtime features
+
+| Capability | Status | Current / required showcase |
+| --- | --- | --- |
+| `Elemenx.Library` / `$Use` | YES | `app.js` uses ElemenxUI; the `/ui` catalogue renders every component of it. |
+| `Elemenx.Locale` / `$T` | YES | The `/ui` catalogue switches the language of ElemenxUI (`Elemenx.Locale.Language`). |
+| Application `$Locales` | ELSEWHERE | `examples/Docs` and `examples/Builder` have dictionaries of their own. |
+| `Elemenx.Cache`, `*keep`, `*lazy`, `$KeepAlive` | YES | `app.js` sets the cache policy; the Keep-alive section of `/ui` sleeps a panel with `*keep`, and its sections render lazily (`*lazy`). |
+| `Elemenx.Meta` / `$Meta` | ELSEWHERE | `examples/Builder` builds its palette from it; `examples/Docs` its reference. |
+| `Elemenx.Style` in shadow roots, `$Shadow` | ELSEWHERE | `examples/Widgets`: every widget renders in a shadow root. |
+| `Elemenx.Resource` | WORKFLOW | `elemenx build --single` embeds the resources of a project into one file. |
+| `Elemenx.Install` (PWA) | ELSEWHERE | `examples/PWA`: installs, runs offline and updates itself. |
+| `Elemenx.Widgets` | ELSEWHERE | `examples/Widgets`: a cart, the buttons of the products and their reviews on a page of another site. |
+| `Elemenx.Splash` | ELSEWHERE | `examples/Native` (`Splash` of its `elemenx.config.js`). |
+| Native programs (`elemenx build --native`) | ELSEWHERE | `examples/Native`: Electron and Capacitor. |
 
 ## Phase 7 status
 

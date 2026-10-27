@@ -19,7 +19,7 @@ A single radio button, for layouts of your own; RadioGroup renders a whole set f
 
 ## Events
 
-`change`
+- `change`: It was checked: Value.
 
 ## Slots
 

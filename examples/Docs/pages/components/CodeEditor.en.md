@@ -42,7 +42,11 @@ An editor of source code: a real <textarea> (typing, IME, the undo of the browse
 
 ## Events
 
-`ready`, `cursor`, `input`, `change`, `complete`
+- `ready`: The editor is ready: the component itself, to call its methods.
+- `cursor`: The caret or the selection moved: {Line, Column, Start, End}.
+- `input`: The code changed while typing: Value.
+- `change`: The code was committed when the focus left: Value.
+- `complete`: A completion was accepted: the item chosen.
 
 ## Methods
 

@@ -17,7 +17,8 @@ A picker of the stickers of the Stickers Service: a tab for the stickers sent la
 
 ## Events
 
-`pick`, `dismiss`
+- `pick`: A sticker was picked: {Sticker: {ID, Pack, URL, Title}}.
+- `dismiss`: Escape was pressed: close it.
 
 ## Example
 

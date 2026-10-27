@@ -14,7 +14,9 @@ Elemenx.Component('Steps', {
 		Group: 'navigation',
 		Icon: 'list-ordered',
 		Description: 'Steps joined by lines.',
-		Events: ['select'],
+		Events: {
+			select: 'A Clickable step was pressed: its item.'
+		},
 		Props: {
 			Items: {Schema: {ID: 'text', Label: 'text', Description: 'text', Disabled: 'bool'}, Description: 'The steps: [{ID, Label, Description, Icon, Status, Class, Disabled, Readonly, Element, Render}].'},
 			Active: 'The IDs of the active steps.',

@@ -19,7 +19,12 @@ An inventory: a grid of Slots cells (Items.length by default) in Columns columns
 
 ## Events
 
-`select`, `use`, `move`, `discard`, `receive`, `give`
+- `select`: Another cell was selected: {Index, Item}.
+- `use`: An item was used (Enter or a double press): {Index, Item}.
+- `move`: An item moved to another cell: {From, To, Items}, the cells after the move.
+- `discard`: An item was discarded (Delete): {Index, Item}.
+- `receive`: An item came from another inventory or slot: {Item, From, To, Current}.
+- `give`: An item was dropped on another place: {Index, Item, From, Target}.
 
 ## Methods
 

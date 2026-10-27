@@ -1,0 +1,10 @@
+[
+	'services/Catalog.js',
+	'services/Cart.js',
+	'guards/CartNotEmpty.js',
+	'Layout/Layout.js',
+	'ProductTile/ProductTile.js',
+	'CatalogPage/CatalogPage.js',
+	'ProductPage/ProductPage.js',
+	'CheckoutPage/CheckoutPage.js'
+];

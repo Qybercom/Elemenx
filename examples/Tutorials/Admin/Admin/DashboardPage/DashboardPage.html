@@ -1,0 +1,15 @@
+<section class="elemenx-column" style="gap: 24px;">
+	<h1 class="elemenx-title">Dashboard</h1>
+	<Skeleton *if="!Stats" Lines="4" />
+	<div class="elemenx-container grid" style="gap: 16px; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));" *if="Stats">
+		<div class="elemenx-card"><div class="elemenx-card-body"><span class="elemenx-caption">Users</span><strong style="display: block; font-size: 28px;">{{Stats.Users}}</strong></div></div>
+		<div class="elemenx-card"><div class="elemenx-card-body"><span class="elemenx-caption">Orders</span><strong style="display: block; font-size: 28px;">{{Stats.Orders}}</strong></div></div>
+		<div class="elemenx-card"><div class="elemenx-card-body"><span class="elemenx-caption">Revenue</span><strong style="display: block; font-size: 28px;">{{Money(Stats.Revenue)}}</strong></div></div>
+	</div>
+	<div class="elemenx-card" *if="Stats">
+		<div class="elemenx-card-body">
+			<h2 class="elemenx-card-title">Sales</h2>
+			<Chart Type="area" [labels]="Stats.Months" [series]="[{Name: 'Sales', Values: Stats.Sales}]" Unit=" €" Height="240" Label="Sales by month" />
+		</div>
+	</div>
+</section>

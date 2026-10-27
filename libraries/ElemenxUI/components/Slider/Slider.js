@@ -11,8 +11,11 @@ Elemenx.Component('Slider', {
 	$Meta: {
 		Group: 'inputs',
 		Icon: 'sliders',
-		Description: 'A slider.',
-		Events: ['input', 'change'],
+		Description: 'A slider of a value or a range, with marks, across or upright.',
+		Events: {
+			input: 'The value changed while dragging or by the keys: Value.',
+			change: 'The value was committed (released): Value.'
+		},
 		Props: {
 			Value: 'The value, or [low, high] with Range.',
 			Range: 'Two thumbs: a range.',

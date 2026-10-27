@@ -15,8 +15,40 @@ A bar of menus, as at the top of the window of a program: File, Edit, View... It
 
 ## Events
 
-`select`
+- `select`: A leaf item of a menu was chosen: the item.
 
 ## Slots
 
 default
+
+## Example
+
+```example
+<MenuBar (select)="Selected">
+	<MenuItem Label="File">
+		<MenuItem ID="new" Label="New" Shortcut="Ctrl+N" />
+		<MenuItem ID="open" Label="Open..." Shortcut="Ctrl+O" />
+		<MenuItem Separator="true" />
+		<MenuItem ID="quit" Label="Quit" Danger="true" />
+	</MenuItem>
+	<MenuItem Label="Edit">
+		<MenuItem ID="copy" Label="Copy" Shortcut="Ctrl+C" />
+		<MenuItem Label="Paste special">
+			<MenuItem ID="paste-text" Label="Text only" />
+		</MenuItem>
+	</MenuItem>
+	<MenuItem Label="Help">
+		<MenuItem ID="about" Label="About" />
+	</MenuItem>
+</MenuBar>
+<p class="elemenx-text small muted">Chosen: {{Chosen}}</p>
+<script>
+({
+	Chosen: 'nothing yet',
+
+	Selected: function (item) {
+		this.Chosen = item.Label;
+	}
+})
+</script>
+```

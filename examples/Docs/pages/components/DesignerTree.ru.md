@@ -11,7 +11,8 @@
 
 ## События
 
-`select`, `move`
+- `select`: Нажат элемент: его ID или null.
+- `move`: В дереве перетащен элемент или вид: {ID, Target, Position, Type}.
 
 ## Пример
 

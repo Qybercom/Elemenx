@@ -11,7 +11,10 @@ Elemenx.Component('GameMenu', {
 		Icon: 'trophy',
 		Description: 'A menu of a game: the main menu, a pause menu, a list of saves.',
 		Container: true,
-		Events: ['select', 'back'],
+		Events: {
+			select: 'An item was chosen: {ID, Item}.',
+			back: 'Escape was pressed: go back.'
+		},
 		Props: {
 			Title: 'The title above the items.',
 			Subtitle: 'A line under the title.',

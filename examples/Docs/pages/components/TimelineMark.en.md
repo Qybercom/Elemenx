@@ -17,3 +17,13 @@ A mark of a Timeline, declared in it: a moment (At) with its Label, Text, Icon, 
 ## Slots
 
 default
+
+## Example
+
+```example
+<Timeline Start="2026-01-01" End="2026-12-31">
+	<TimelineMark ID="kickoff" At="2026-01-15" Label="Kickoff" Icon="flag" />
+	<TimelineMark ID="beta" At="2026-06-01" Tone="info" Side="after"><strong>Beta</strong> for testers</TimelineMark>
+	<TimelineMark ID="release" At="2026-10-20" Label="Release" Tone="success" />
+</Timeline>
+```

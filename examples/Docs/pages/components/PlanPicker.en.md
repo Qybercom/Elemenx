@@ -21,7 +21,8 @@ A choice of a plan: a PlanCard for each of Plans ([{ID, Name, Description, Price
 
 ## Events
 
-`change`, `period`
+- `change`: Another plan was chosen: {ID, Period}.
+- `period`: The monthly or yearly prices were chosen: {Period}.
 
 ## Example
 

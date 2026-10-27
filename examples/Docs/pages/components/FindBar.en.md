@@ -20,7 +20,12 @@ The bar of find and replace of an editor (CodeEditor, RichEditor) or a terminal:
 
 ## Events
 
-`find`, `close`, `next`, `previous`, `replace`, `replaceall`
+- `find`: The text or an option changed: {Query, Case, Word, RegExp}, what to look for.
+- `close`: Closed by Escape or its button.
+- `next`: Go to the next match (Enter, or its button).
+- `previous`: Go to the previous match (Shift+Enter, or its button).
+- `replace`: Replace the current match: {Text}, the replacement.
+- `replaceall`: Replace every match: {Text}, the replacement.
 
 ## Methods
 

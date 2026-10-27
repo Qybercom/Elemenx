@@ -17,7 +17,8 @@ A picker of the emoji of Unicode (the Emoji Service): a search over names and ke
 
 ## Events
 
-`pick`, `dismiss`
+- `pick`: An emoji was picked: {Emoji (with the skin tone), Name, Base}.
+- `dismiss`: Escape was pressed: close it.
 
 ## Example
 

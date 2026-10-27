@@ -28,7 +28,9 @@ One message of a Chat. Text, or the default slot for rich content. Own puts the 
 
 ## Events
 
-`react`, `select`, `action`
+- `react`: A reaction was pressed or picked: {ID, Emoji, Mine}, Mine the state it asks for.
+- `select`: The message was selected or let go: {ID, Selected}.
+- `action`: An item of its menu was chosen: {ID, Action, Item}.
 
 ## Slots
 

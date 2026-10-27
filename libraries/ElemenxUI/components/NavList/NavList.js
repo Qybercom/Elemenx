@@ -11,7 +11,10 @@ Elemenx.Component('NavList', {
 		Group: 'navigation',
 		Icon: 'menu',
 		Description: 'A navigation list or tree.',
-		Events: ['expand', 'select'],
+		Events: {
+			expand: 'A group opened or closed: the IDs of the open groups.',
+			select: 'An item was chosen: the item.'
+		},
 		Props: {
 			Items: 'The items: [{ID, Label, Icon, Badge, Items, Disabled}]; Items make a group.',
 			Value: 'The ID of the current item.',

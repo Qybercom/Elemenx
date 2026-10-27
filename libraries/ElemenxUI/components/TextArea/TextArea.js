@@ -10,7 +10,10 @@ Elemenx.Component('TextArea', {
 		Group: 'inputs',
 		Icon: 'text-align-justify',
 		Description: 'A field of several lines of text.',
-		Events: ['input', 'change'],
+		Events: {
+			input: 'The text changed while typing: Value.',
+			change: 'The value was committed when the focus left: Value.'
+		},
 		Props: {
 			Label: 'The name of the field for screen readers, when no Field names it.',
 			Value: 'The text.',

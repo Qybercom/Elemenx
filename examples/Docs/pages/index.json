@@ -139,6 +139,127 @@
 						"en": "Builds",
 						"ru": "Сборки"
 					}
+				},
+				{
+					"ID": "widgets",
+					"Title": {
+						"en": "Widgets on other sites",
+						"ru": "Виджеты на чужих сайтах"
+					}
+				},
+				{
+					"ID": "builder",
+					"Title": {
+						"en": "The visual builder",
+						"ru": "Визуальный конструктор"
+					}
+				},
+				{
+					"ID": "editors",
+					"Title": {
+						"en": "Editors and IDEs",
+						"ru": "Редакторы и IDE"
+					}
+				}
+			]
+		},
+		{
+			"ID": "tutorials",
+			"Title": {
+				"en": "Tutorials",
+				"ru": "Туториалы"
+			},
+			"Pages": [
+				{
+					"ID": "landing",
+					"Title": {
+						"en": "A landing page",
+						"ru": "Лендинг"
+					}
+				},
+				{
+					"ID": "blog",
+					"Title": {
+						"en": "A blog",
+						"ru": "Блог"
+					}
+				},
+				{
+					"ID": "admin",
+					"Title": {
+						"en": "An admin panel",
+						"ru": "Админка"
+					}
+				},
+				{
+					"ID": "shop",
+					"Title": {
+						"en": "A shop",
+						"ru": "Магазин"
+					}
+				},
+				{
+					"ID": "widget",
+					"Title": {
+						"en": "Widgets on another site",
+						"ru": "Виджеты на чужом сайте"
+					}
+				},
+				{
+					"ID": "chat",
+					"Title": {
+						"en": "A chat",
+						"ru": "Чат"
+					}
+				},
+				{
+					"ID": "pwa",
+					"Title": {
+						"en": "An application that works offline",
+						"ru": "Приложение, работающее офлайн"
+					}
+				},
+				{
+					"ID": "desktop",
+					"Title": {
+						"en": "A desktop program",
+						"ru": "Десктоп-программа"
+					}
+				},
+				{
+					"ID": "mobile",
+					"Title": {
+						"en": "A mobile application",
+						"ru": "Мобильное приложение"
+					}
+				},
+				{
+					"ID": "game",
+					"Title": {
+						"en": "A browser game",
+						"ru": "Браузерная игра"
+					}
+				},
+				{
+					"ID": "editor",
+					"Title": {
+						"en": "An editor in the manner of an IDE",
+						"ru": "Редактор в стиле IDE"
+					}
+				},
+				{
+					"ID": "backend",
+					"Title": {
+						"en": "Elemenx on the pages of a server",
+						"ru": "Elemenx на страницах сервера"
+					}
+				},
+				{
+					"ID": "migrate",
+					"Title": {
+						"en": "For those who know Vue, React or Angular",
+						"ru": "Для знающих Vue, React или Angular"
+					}
 				}
 			]
 		},

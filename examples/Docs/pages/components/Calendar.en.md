@@ -27,7 +27,11 @@ A calendar of events. Events: [{ID, Title, Start, End, AllDay, Color, Repeat}], 
 
 ## Events
 
-`change`, `select`, `move`, `day`, `slot`
+- `change`: The period shown changed: {Date, View}.
+- `select`: An event was pressed: the event.
+- `move`: An event was dragged or resized: {Event, Start, End}, and Occurrence for one of a repeated event.
+- `day`: A day was pressed: its date ('YYYY-MM-DD').
+- `slot`: A time of a day was pressed in the week or the day view: {Date, Time ('HH:MM')}.
 
 ## Example
 

@@ -29,7 +29,7 @@ class ElemenxInjector : MultiHostInjector {
 
 				if (javascript == null || range.isEmpty) return
 
-				val scope = scoped(ElemenxScope.typedNames(context))
+				val scope = scoped(ElemenxScope.typedNames(context), range.substring(context.text))
 
 				registrar.startInjecting(javascript).addPlace(scope + wrap.first, wrap.second + " });", context as PsiLanguageInjectionHost, range).doneInjecting()
 			}
@@ -38,9 +38,11 @@ class ElemenxInjector : MultiHostInjector {
 				if (javascript == null) return
 
 				val ranges = ElemenxColors.interpolations(context.text).filter { range -> !range.isEmpty }
-				val scope = if (ranges.isEmpty()) "" else scoped(ElemenxScope.typedNames(context))
+				val names = if (ranges.isEmpty()) emptyList() else ElemenxScope.typedNames(context)
 
 				ranges.forEach { range ->
+					val scope = scoped(names, range.substring(context.text))
+
 					registrar.startInjecting(javascript).addPlace(scope + "return (", "); });", context as PsiLanguageInjectionHost, range).doneInjecting()
 				}
 			}
@@ -60,8 +62,10 @@ class ElemenxInjector : MultiHostInjector {
 		 * The head of the function an expression is the body of: its parameters are the names of the template, its JSDoc
 		 * their types (ElemenxGotoDeclaration goes from a name, or a key of one, to its member).
 		 */
-		fun scoped(names: List<ElemenxScope.Name>): String {
-			val types = names.filter { each -> each.type != null }.joinToString("") { each -> " * @param {" + each.type + "} " + each.name + "\n" }
+		fun scoped(names: List<ElemenxScope.Name>, expression: String): String {
+			/* The types of the names the expression has (regression: the hundreds of the catalogue in each of its thousand expressions hung the IDE). */
+			val words = Regex("[A-Za-z_$][\\w$]*").findAll(expression).map { word -> word.value }.toSet()
+			val types = names.filter { each -> each.type != null && each.name in words }.joinToString("") { each -> " * @param {" + each.type + "} " + each.name + "\n" }
 
 			return "(/**\n" + types + " */ function (" + names.joinToString(", ") { each -> each.name } + ") { "
 		}

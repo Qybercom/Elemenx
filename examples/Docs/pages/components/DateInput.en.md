@@ -26,7 +26,8 @@ A date field with its own calendar. Value is an ISO date ('2024-11-22'), or a mo
 
 ## Events
 
-`input`, `change`
+- `input`: The date changed while typing or in the calendar: Value (ISO, or '').
+- `change`: The date was committed: Value.
 
 ## Example
 

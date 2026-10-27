@@ -12,7 +12,7 @@ A list and the card of the chosen item, built on elemenx-container and elemenx-c
 
 ## Events
 
-`back`
+- `back`: The back button of the card on a narrow layout: clear the detail.
 
 ## Slots
 

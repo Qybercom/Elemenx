@@ -15,7 +15,8 @@ A terminal: a scrolling output above a command line. Lines: [{ID, Kind, Text}] w
 
 ## Events
 
-`command`, `clear`
+- `command`: Enter on the command line: the text of the command.
+- `clear`: Ctrl+L: clear the output.
 
 ## Slots
 

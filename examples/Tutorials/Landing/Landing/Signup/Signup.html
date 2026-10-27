@@ -1,0 +1,13 @@
+<section id="signup" class="elemenx-card spacious signup">
+	<div class="elemenx-card-body">
+		<h2 class="elemenx-title">Try it free for 30 days</h2>
+		<p class="elemenx-text muted" *if="!Sent">No card needed. Cancel any time.</p>
+		<div class="elemenx-callout success" *if="Sent">Thank you! Check your mail.</div>
+		<Form *if="!Sent" Label="Sign up" (submit)="Submitted">
+			<Field Label="Email" Name="email" Required="true" Email="true"><Input Type="email" Placeholder="ada@example.com" /></Field>
+			<Field Label="Plan" Name="plan" Value="pro"><Select [options]="Plans" /></Field>
+			<Field Name="terms" Required="true"><Checkbox Label="I accept the terms" /></Field>
+			<Button Type="submit" Label="Create my account" Variant="primary" />
+		</Form>
+	</div>
+</section>

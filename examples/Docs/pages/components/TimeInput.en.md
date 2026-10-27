@@ -25,7 +25,8 @@ A 24-hour time field with its own picker. Value is 'HH:MM' ('HH:MM:SS' with Seco
 
 ## Events
 
-`input`, `change`
+- `input`: The time changed while typing or in the picker: Value ('HH:MM', or '').
+- `change`: The time was committed: Value.
 
 ## Example
 

@@ -12,7 +12,9 @@ Elemenx.Component('Mixer', {
 		Group: 'music',
 		Icon: 'headphones',
 		Description: 'An audio mixer (the look and the controls; the sound is the application\'s): a row of MixerChannel strips and the strip of the master bus at the end.',
-		Events: ['change'],
+		Events: {
+			change: 'A control of a strip changed: {ID (the channel, or \'master\'), Key, Value}.'
+		},
 		Props: {
 			Channels: 'The strips: [{ID, Label, Color, Volume, Pan, Mute, Solo, Level, Peak, Knobs}].',
 			Master: 'The strip of the master bus (null for none).',

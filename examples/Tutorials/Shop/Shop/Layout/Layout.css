@@ -1,0 +1,35 @@
+.shop {
+	min-height: 100vh;
+}
+
+.shop-header {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 12px 24px;
+	border-bottom: 1px solid var(--elemenx-border);
+}
+
+.shop-name {
+	color: inherit;
+	font-size: 20px;
+	font-weight: 700;
+	text-decoration: none;
+}
+
+.shop-main {
+	max-width: 1080px;
+	margin: 0 auto;
+	padding: 24px;
+}
+
+.shop-line {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 8px 0;
+}
+
+.shop-line-text {
+	flex: 1;
+}

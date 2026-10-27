@@ -18,7 +18,12 @@ Elemenx.Component('OTPInput', {
 		Group: 'inputs',
 		Icon: 'edit',
 		Description: 'A one-time code of Length characters.',
-		Events: ['input', 'validate', 'complete', 'change'],
+		Events: {
+			input: 'The characters changed: Value.',
+			validate: 'The code was checked: {Value, Complete, Valid}.',
+			complete: 'All Length characters are in: Value.',
+			change: 'The code was committed: Value.'
+		},
 		Props: {
 			Value: 'The characters of the code.',
 			Length: 'How many characters.',

@@ -20,7 +20,10 @@ Elemenx.Component('Gallery', {
 		Group: 'display',
 		Icon: 'image',
 		Description: 'A gallery: one picture at a time out of Items [{ID, Image, Thumb, Alt, Title, Description, Tags}], with buttons to the previous and the next one, dots, a counter and thumbnails.',
-		Events: ['change', 'select'],
+		Events: {
+			change: 'Another picture is shown: its Index.',
+			select: 'The picture was pressed: its item.'
+		},
 		Props: {
 			Items: {Schema: {ID: 'text', Image: 'text', Title: 'text', Description: 'text'}, Description: 'The pictures: [{ID, Image, Thumb, Alt, Title, Description, Tags}].'},
 			Index: 'The picture shown.',

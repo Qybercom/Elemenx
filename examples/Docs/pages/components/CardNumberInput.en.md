@@ -23,7 +23,9 @@ Value holds digits only. Brand, mask and validity follow from it; Valid is the L
 
 ## Events
 
-`input`, `validate`, `change`
+- `input`: The digits changed: Value.
+- `validate`: The number was checked: {Value, Brand, Complete, Valid}.
+- `change`: The number was committed: Value.
 
 ## Example
 

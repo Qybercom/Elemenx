@@ -30,8 +30,11 @@ function copy (value) {
 function normalize (name, kind, definition) {
 	var meta = definition.$Meta;
 	var props = [];
+	var events;
 
 	if (!meta || typeof meta !== 'object') return null;
+
+	events = meta.Events || [];
 
 	Object.keys(meta.Props || {}).forEach(function (key) {
 		var entry = typeof meta.Props[key] === 'string' ? {Description: meta.Props[key]} : meta.Props[key] || {};
@@ -58,7 +61,8 @@ function normalize (name, kind, definition) {
 		Container: !!meta.Container,
 		Children: (meta.Children || []).slice(),
 		Current: meta.Current || '',
-		Events: (meta.Events || []).slice(),
+		Events: Array.isArray(events) ? events.slice() : Object.keys(events),
+		EventDescriptions: Array.isArray(events) ? {} : copy(events),
 		Methods: (meta.Methods || []).slice(),
 		Sample: copy(meta.Sample || {})
 	};

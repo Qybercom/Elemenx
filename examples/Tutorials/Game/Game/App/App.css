@@ -1,0 +1,34 @@
+.gems {
+	position: relative;
+	height: 100vh;
+}
+
+.gems-hud {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 12px;
+	padding: 12px;
+	pointer-events: none;
+}
+
+.gems-score {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	min-width: 220px;
+	padding: 8px 12px;
+}
+
+.gems-help {
+	padding: 8px 12px;
+}
+
+.gems-menu {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: rgb(0 0 0 / 40%);
+}

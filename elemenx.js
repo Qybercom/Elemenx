@@ -44,7 +44,7 @@
 	 * Elemenx: the namespace of this copy of the framework. The window gets it last (see Export), unless a copy of the
 	 * same version is there already: then this one stops here and the page keeps the first.
 	 */
-	var Version = '0.10.2';
+	var Version = '0.10.3';
 	var Elemenx = {};
 	if (typeof ElemenxIsolated !== 'object' && (typeof globalThis !== 'undefined' ? globalThis : self).Elemenx && (typeof globalThis !== 'undefined' ? globalThis : self).Elemenx.Version === Version) return;
 
@@ -3051,6 +3051,9 @@
 		var componentOutlets = new WeakMap();
 		var componentValues = new WeakMap();
 		var componentRouteUpdaters = new WeakMap();
+		/* The placeholders of deferred components, and the behavioral directives of their tags set on them for now. */
+		var deferredPlaceholders = new WeakSet();
+		var placedDirectives = new WeakMap();
 		var componentReloading = false;
 		var templateResources = {};
 		var templatePending = {};
@@ -3606,6 +3609,8 @@
 
 			placeholder.style.display = 'contents';
 
+			deferredPlaceholders.add(placeholder);
+
 			markPending(placeholder, !ownWaiting);
 
 			function renderStatus (source) {
@@ -3766,6 +3771,9 @@
 					else reloadParent.appendChild(placeholder);
 				}
 
+				if (oldElement && oldElement !== placeholder)
+					moveDirectives(oldElement, placeholder);
+
 				if (lifecycle)
 					lifecycleCall('$OnChildPending', null);
 
@@ -3833,6 +3841,8 @@
 					else parentNode.appendChild(element);
 				}
 
+				moveDirectives(placeholder, element);
+
 				reloadParent = null;
 				reloadNext = null;
 
@@ -3894,6 +3904,8 @@
 
 				if (placeholder.parentNode)
 					placeholder.parentNode.replaceChild(element, placeholder);
+
+				moveDirectives(placeholder, element);
 
 				if (lifecycle && (!current._Component || current._Component()))
 					lifecycleCall('$OnChildReady', null);
@@ -5038,9 +5050,26 @@
 			var record;
 			var context;
 			var effect;
+			var host;
 
 			while (i < customDirectives.length) {
 				record = customDirectives[i];
+				host = Runtime.ComponentHosts.get(record.Element);
+
+				/*
+				 * On the tag of a Component, which an instance took the place of: the element of the instance, and the next
+				 * ones (regression: *hotkey on a Button stayed on the tag gone from the page, and never pressed it).
+				 */
+				if (host) {
+					record.Element = host.Element() || record.Element;
+
+					(function (record) {
+						host.Watch(function (element) {
+							retargetDirectives([record], element);
+						});
+					})(record);
+				}
+
 				context = {
 					Name: record.Name,
 					Element: record.Element,
@@ -5051,6 +5080,9 @@
 				};
 
 				record.Context = context;
+				record.Owner = api;
+
+				placeDirectives([record]);
 
 				if (typeof record.Definition.$OnSleep === 'function' || typeof record.Definition.$OnWake === 'function') {
 					record.Asleep = {
@@ -5214,10 +5246,70 @@
 				if (typeof record.Definition.$OnDestroy === 'function')
 					record.Definition.$OnDestroy.call(api, record.Context);
 
+				record.Destroyed = true;
+
 				i--;
 			}
 
 			customDirectives.length = 0;
+		}
+
+		/* Directives set on the placeholder of a deferred component, kept with it to follow the element that comes. */
+		function placeDirectives (records) {
+			records.forEach(function (record) {
+				if (!deferredPlaceholders.has(record.Element)) return;
+
+				if (!placedDirectives.has(record.Element))
+					placedDirectives.set(record.Element, []);
+
+				placedDirectives.get(record.Element).push(record);
+			});
+		}
+
+		/*
+		 * Behavioral directives of the tag of a Component, onto the element its instance has now: each ends on the old
+		 * element and starts again on the new one with its value.
+		 */
+		function retargetDirectives (records, to) {
+			var moved = records.filter(function (record) {
+				return !record.Destroyed && to && record.Element !== to;
+			});
+
+			moved.forEach(function (record) {
+				var context = record.Context;
+
+				if (typeof record.Definition.$OnDestroy === 'function')
+					record.Definition.$OnDestroy.call(record.Owner, context);
+
+				record.Element = to;
+				context.Element = to;
+				context.Data = {};
+
+				if (record.Asleep)
+					record.Asleep.Root = to;
+
+				if (typeof record.Definition.$OnCreate === 'function')
+					record.Definition.$OnCreate.call(record.Owner, context);
+
+				if (typeof record.Definition.$OnUpdate === 'function')
+					record.Definition.$OnUpdate.call(record.Owner, context);
+			});
+
+			placeDirectives(moved);
+		}
+
+		/*
+		 * The placeholder of a deferred component gives its place to the element of the instance (or takes it back while
+		 * the component reloads): the directives of its tag go along (regression: *hotkey on a Button that loaded later
+		 * bound a span gone from the page).
+		 */
+		function moveDirectives (from, to) {
+			var records = placedDirectives.get(from);
+			if (!records) return;
+
+			placedDirectives.delete(from);
+
+			retargetDirectives(records, to);
 		}
 
 		/* Component: factory */
@@ -6105,19 +6197,23 @@
 
 		/*
 		 * What a definition declares of itself in $Meta, normalized: {Name, Kind, Group, Icon, Description, Props, Slots,
-		 * Container, Children, Current, Events, Methods, Sample}. $Meta.Props names the public props, each a description or
-		 * {Type, Options, Schema, Body, Description}; its Default is the value of the definition, its Type that of the default
-		 * unless Meta names one. Schema describes the items of a list prop ({ID: 'text', Disabled: 'bool'}); Body marks a text
+		 * Container, Children, Current, Events, EventDescriptions, Methods, Sample}. $Meta.Props names the public props, each
+		 * a description or {Type, Options, Schema, Body, Description}; its Default is the value of the definition, its Type
+		 * that of the default unless Meta names one. Schema describes the items of a list prop ({ID: 'text', Disabled: 'bool'}); Body marks a text
 		 * the component also takes from its body, written there by tools (the code of a CodeView); Children names
-		 * the components declared inside it (Tab in Tabs) and Current the prop that names the one shown (Value).
+		 * the components declared inside it (Tab in Tabs) and Current the prop that names the one shown (Value). $Meta.Events
+		 * is a list of names, or {name: description}: Events lists the names, EventDescriptions holds the descriptions.
 		 */
 		function normalize (name, kind, definition) {
 			var meta = definition.$Meta;
 			var props = [];
+			var events;
 			var key;
 			var entry;
 
 			if (!meta || typeof meta !== 'object') return null;
+
+			events = meta.Events || [];
 
 			for (key in meta.Props || {}) {
 				if (!own(meta.Props, key)) continue;
@@ -6146,7 +6242,8 @@
 				Container: !!meta.Container,
 				Children: (meta.Children || []).slice(),
 				Current: meta.Current || '',
-				Events: (meta.Events || []).slice(),
+				Events: Array.isArray(events) ? events.slice() : Object.keys(events),
+				EventDescriptions: Array.isArray(events) ? {} : copy(events),
 				Methods: (meta.Methods || []).slice(),
 				Sample: copy(meta.Sample || {})
 			};
@@ -7724,6 +7821,13 @@
 
 		var own = Runtime.Own;
 
+		/*
+		 * The tag of a Component in a template, replaced by the element of its instance: {Element(), Watch(callback)}, the
+		 * element of now (null while none is mounted) and callback(element) at each new one. The behavioral directives
+		 * of the tag follow it (Template and Component).
+		 */
+		Runtime.ComponentHosts = new WeakMap();
+
 		/* Structural: bindings and props */
 		function expression (data, source) {
 			try {
@@ -8460,7 +8564,7 @@
 				if (projected && pristineProjection && pristineProjection.Blueprints)
 					projected.PrimeBlueprints(pristineProjection.Blueprints());
 
-				records.push(componentRecord(replaceWithMarker(node, markerText), factory, blueprint, structuralDirective, eventMap, projected, keepArgument(node)));
+				records.push(componentRecord(replaceWithMarker(node, markerText), factory, blueprint, structuralDirective, eventMap, projected, keepArgument(node), node));
 			}
 
 			/* *keep on a conditional host: true (an empty value too) or false; undefined without it. */
@@ -8480,13 +8584,34 @@
 				return Runtime.CacheSleep(child, element, name, evicted);
 			}
 
-			function componentRecord (end, factory, blueprint, structuralDirective, eventMap, projected, keep) {
+			function componentRecord (end, factory, blueprint, structuralDirective, eventMap, projected, keep, tag) {
 				var child = null;
 				var previousProps = null;
 				var currentData = null;
 				var asleep = null;
 				var destroying = false;
+				var watchers = [];
 				var context;
+
+				/* The element of the instance, to the directives of the tag. */
+				function placed () {
+					var element = child.$Element();
+
+					watchers.slice().forEach(function (callback) {
+						callback(element);
+					});
+				}
+
+				if (tag) {
+					Runtime.ComponentHosts.set(tag, {
+						Element: function () {
+							return child ? child.$Element() : null;
+						},
+						Watch: function (callback) {
+							watchers.push(callback);
+						}
+					});
+				}
 
 				function createChild (data) {
 					var childProps = props(blueprint, data, factory.Definition);
@@ -8501,6 +8626,8 @@
 					end.parentNode.insertBefore(child.$Element(), end);
 
 					previousProps = childProps;
+
+					placed();
 				}
 
 				context = structuralDirective ? {
@@ -8520,6 +8647,8 @@
 							child = asleep.Component;
 
 							end.parentNode.insertBefore(child.$Element(), end);
+
+							placed();
 						}
 
 						asleep = null;

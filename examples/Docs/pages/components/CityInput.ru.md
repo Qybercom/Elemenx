@@ -22,7 +22,7 @@
 
 ## События
 
-`change`
+- `change`: Выбран город: {ID, Name, Country, Region, Latitude, Longitude, TimeZone}; null, если очищено.
 
 ## Пример
 

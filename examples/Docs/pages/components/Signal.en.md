@@ -13,3 +13,25 @@ The strength of a signal: bars that grow from left to right, as many lit as it i
 | `Tone` | `''` |
 | `Size` | `'medium'` |
 | `Label` | `''` |
+
+## Example
+
+```example
+<div class="elemenx-container wrappable" style="gap: 24px; align-items: center;">
+	<Signal Quality="good" Label="Good connection" />
+	<Signal Quality="fair" Label="Fair connection" />
+	<Signal Quality="poor" Label="Poor connection" />
+	<Signal Bars="5" [value]="Strength" Label="Strength" />
+</div>
+<p class="elemenx-text small muted">Good, fair and poor; then five bars at {{Math.round(Strength * 100)}}%.</p>
+<Slider Min="0" Max="1" Step="0.05" [value]="Strength" (input)="Changed" />
+<script>
+({
+	Strength: 0.6,
+
+	Changed: function (value) {
+		this.Strength = value;
+	}
+})
+</script>
+```

@@ -1,0 +1,10 @@
+[
+	'services/Session.js',
+	'services/Api.js',
+	'guards/SignedIn.js',
+	'Shell/Shell.js',
+	'LoginPage/LoginPage.js',
+	'DashboardPage/DashboardPage.js',
+	'UsersPage/UsersPage.js',
+	'UserForm/UserForm.js'
+];

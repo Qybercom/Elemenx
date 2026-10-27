@@ -25,7 +25,8 @@ A number field. Value is a number or null. Min and Max bound it, Step is the ste
 
 ## Events
 
-`input`, `change`
+- `input`: The number changed while typing or by the arrows: Value (a number or null).
+- `change`: The number was committed, bounded and rounded: Value.
 
 ## Example
 

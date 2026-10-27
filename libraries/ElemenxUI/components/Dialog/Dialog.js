@@ -12,7 +12,9 @@ Elemenx.Component('Dialog', {
 		Description: 'A modal dialog.',
 		Container: true,
 		Slots: ['footer'],
-		Events: ['close'],
+		Events: {
+			close: 'It asks to close (the owner sets Open to false): the reason, close, escape or backdrop.'
+		},
 		Props: {
 			Open: 'Shows the dialog; its close event asks the owner to set it back to false.',
 			Title: 'The title of the dialog.',

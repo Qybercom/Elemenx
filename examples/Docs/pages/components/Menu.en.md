@@ -23,7 +23,7 @@ Menu is the button and the menu it opens; MenuList is one level of a menu alone 
 
 ## Events
 
-`select`
+- `select`: A leaf item was chosen: the item.
 
 ## Slots
 

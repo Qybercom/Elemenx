@@ -1,0 +1,24 @@
+.blog {
+	min-height: 100vh;
+}
+
+.blog-header {
+	display: flex;
+	align-items: center;
+	gap: 16px;
+	padding: 16px 24px;
+	border-bottom: 1px solid var(--elemenx-border);
+}
+
+.blog-name {
+	color: inherit;
+	font-size: 20px;
+	font-weight: 700;
+	text-decoration: none;
+}
+
+.blog-main {
+	max-width: 880px;
+	margin: 0 auto;
+	padding: 32px 24px;
+}

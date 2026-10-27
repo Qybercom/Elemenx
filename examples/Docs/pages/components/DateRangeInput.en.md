@@ -23,7 +23,7 @@ A range of dates. Value: [start, end] as 'YYYY-MM-DD' (or [] for none). The fiel
 
 ## Events
 
-`change`
+- `change`: A range was picked: [start, end]; [] when it was cleared.
 
 ## Example
 

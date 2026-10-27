@@ -10,7 +10,11 @@ Elemenx.Component('CardExpiryInput', {
 		Group: 'inputs',
 		Icon: 'credit-card',
 		Description: 'The expiry date of a payment card: Value holds the digits MMYY (\'0927\'), shown as MM/YY.',
-		Events: ['input', 'validate', 'change'],
+		Events: {
+			input: 'The digits changed: Value (MMYY).',
+			validate: 'The date was checked: {Value, Complete, Valid}.',
+			change: 'The date was committed: Value.'
+		},
 		Props: {
 			Value: 'The digits MMYY (0927), shown as MM/YY.',
 			Placeholder: 'The text shown while it is empty.',

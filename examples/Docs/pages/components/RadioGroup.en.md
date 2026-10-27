@@ -18,7 +18,7 @@ A set of radio buttons, one of them chosen. Options: [{Value, Label, Description
 
 ## Events
 
-`change`
+- `change`: Another option was chosen: Value, with its type.
 
 ## Example
 

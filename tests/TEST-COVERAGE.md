@@ -30,6 +30,14 @@ Contract files grouped by subsystem (`tests/regression/`):
 
 When a bug is found, add a regression test that reproduces it before changing runtime behavior. New public API should ship with a direct contract test or a stronger end-to-end test.
 
+The library ElemenxUI, the examples and the editors:
+
+- the components, Services and directives of ElemenxUI in the browser contracts: `tests/library.js` (`Use(names)`) defines them from their sources with what they use, and `library-*.test.js` drive them (`library-services`, `library-directives`, `library-inputs`, `library-pickers`, `library-overlays`, `library-forms`, `library-controls`, `library-misc`, `library-contracts` for `Elemenx.Library` and `$Use`), besides the tests of one component each (`board`, `title-bar`, `tip`, `popup`...);
+- the meta of ElemenxUI (`cli-meta.test.js`): every Component declares its group, icon, the description of each prop, and every event it emits with a description, and no other;
+- every page of the reference and every example in it (`tests/examples/docs-pages.spec.js`), so each Component, Service and directive runs at least in its example; the `/ui` catalogue of Advanced in development and production (`ui-kit.spec.js`);
+- the examples as projects: `widgets-example.spec.js`, `pwa-example.spec.js`, `tests/native/desktop.spec.js`, and `tutorials.spec.js`, which builds every project of `examples/Tutorials` and walks its tutorial;
+- the editors: the language server and its core (`language-server.test.js`), the build of the extensions (`editors-build.test.js`), their branding (`editors-branding.test.js`); the plugin of JetBrains has tests of its own in Kotlin (`gradlew test` in `editors/intellij`, not part of `npm test`).
+
 ## Coverage levels
 
 `COVERED` means a subsystem has direct automated contract/regression coverage. `E2E VERIFIED` is stronger: the behavior is also exercised through a real application and browser workflow.
@@ -53,4 +61,6 @@ The browser suite prints nothing to the console. A test that expects an error or
 
 Coverage is a map of what the tests do not touch yet, not a goal by itself: before refactoring a function, check that its paths are covered and add contract tests where they are not.
 
-Combined coverage of `elemenx.js` on 2026-10-11: lines 94.0%, statements 91.5%, branches 81.2%, functions 98.0%. Code that runs inside a worker (`WebWorker` Attach, the service worker bootstrap side) cannot be measured from the page.
+The tooling in Node (`npx vitest run --config vitest.node.config.mjs --coverage --coverage.include="tools/**/*.js"`), on 2026-10-27: lines 66%, most modules of `tools/` 83-98% (`electron.js` 95%, `zip.js` 88%, `generator.js` 93%, `builder.js` 76%). The figure counts only what runs in the process of the tests: `elemenx-cli.js` and `tools/extension.js` run as child processes of the tests (and of the end-to-end tests of the dist), and the bridges of `tools/electron` and `tools/capacitor` run inside the programs (`tests/native`).
+
+Combined coverage of `elemenx.js` on 2026-10-27: lines 94.5%, statements 92.6%, branches 83.9%, functions 95.8% (the browser contracts alone: lines 91.3%). The sections least covered: `Install` (the PWA, driven mostly by `pwa-example.spec.js` through a real service worker), then `WebWorker` and the service worker bootstrap: code that runs inside a worker (`WebWorker` Attach, the service worker bootstrap side) cannot be measured from the page.

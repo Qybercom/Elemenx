@@ -12,3 +12,35 @@ Pictures in the manner of Suprematism (Malevich, 1915-1920s): flat figures of pu
 - `Figures(options)`
 - `Generate(options)`
 - `DataURL(options)`
+
+## Example
+
+```example
+<img [src]="Picture" alt="A composition" width="320" height="200" style="border-radius: 8px;" />
+<Button Label="Another seed" Icon="refresh" (click)="Next" />
+<p class="elemenx-text small muted">Seed {{Seed}}: {{Count}} figures. The same seed, the same picture.</p>
+<script>
+({
+	Seed: 1,
+	Picture: '',
+	Count: 0,
+
+	$OnCreate: function () {
+		this.Draw();
+	},
+
+	Next: function () {
+		this.Seed++;
+		this.Draw();
+	},
+
+	Draw: function () {
+		var suprematist = this.$Service('Suprematist');
+		var options = {Seed: 'cover-' + this.Seed, Width: 320, Height: 200, Density: 0.6};
+
+		this.Picture = suprematist.DataURL(options);
+		this.Count = suprematist.Figures(options).length;
+	}
+})
+</script>
+```

@@ -16,7 +16,7 @@ The path to the present page: Items [{ID, Label, Icon, File, Href, Disabled, Cla
 
 ## Events
 
-`select`
+- `select`: An item was pressed, or chosen in the menu of the hidden ones: {Item, Index}.
 
 ## Slots
 

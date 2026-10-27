@@ -36,7 +36,12 @@ Start и End — вся линия; From и To — видимая часть (п
 
 ## События
 
-`view`, `select`, `seek`, `create`, `move`, `resize`
+- `view`: Изменилась видимая часть: {From, To}.
+- `select`: Нажата метка или отрезок: {Kind (mark или range), ID, Item}.
+- `seek`: Нажата или перетащена линия или указатель воспроизведения: {At}.
+- `create`: На дорожке нарисован отрезок: {Lane, From, To}.
+- `move`: Перетащена метка или отрезок: {Kind, ID, Item, At} для метки, {Kind, ID, Item, From, To} для отрезка.
+- `resize`: Перетащен край отрезка: {ID, Item, From, To}.
 
 ## Слоты
 

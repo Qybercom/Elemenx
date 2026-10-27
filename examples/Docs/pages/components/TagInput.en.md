@@ -25,7 +25,10 @@ A field of tags. Value: the tags (strings). Typing and Enter (or a Separator: ',
 
 ## Events
 
-`invalid`, `add`, `change`, `remove`
+- `invalid`: A text was refused: {Text, Reason (pattern, duplicate, max or unknown)}.
+- `add`: A tag was added: the tag.
+- `change`: The tags changed: the list of the tags.
+- `remove`: A tag was removed: the tag.
 
 ## Example
 

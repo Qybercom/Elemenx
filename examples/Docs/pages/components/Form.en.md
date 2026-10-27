@@ -13,7 +13,9 @@ A form: a <form> that collects its fields into Model, a Group of the Forms Servi
 
 ## Events
 
-`submit`, `invalid`, `reset`
+- `submit`: Submitted and valid: {Value, Model}, the values of the fields and the Group.
+- `invalid`: Submitted with errors: {Errors, Model}; the focus goes to the first field in error.
+- `reset`: Reset to its first values: {Model}.
 
 ## Slots
 

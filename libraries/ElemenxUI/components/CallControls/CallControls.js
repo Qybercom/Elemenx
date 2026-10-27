@@ -13,7 +13,18 @@ Elemenx.Component('CallControls', {
 		Group: 'social',
 		Icon: 'call-end',
 		Description: 'The bar of a call: the microphone, the camera, the screen, the hand, reactions, the chat, the people, the layout and leaving.',
-		Events: ['mute', 'camera', 'share', 'hand', 'react', 'chat', 'people', 'layout', 'device', 'leave'],
+		Events: {
+			mute: 'The microphone button: {Muted}, the state it asks for.',
+			camera: 'The camera button: {Camera}, the state it asks for.',
+			share: 'The screen button: {Sharing}, the state it asks for.',
+			hand: 'The hand button: {Hand}, the state it asks for.',
+			react: 'A reaction was chosen: {Emoji}.',
+			chat: 'The chat button: {Open}, the state it asks for.',
+			people: 'The people button: {Open}, the state it asks for.',
+			layout: 'Another layout was chosen: {Layout}.',
+			device: 'Another device was chosen: {Kind (microphone, speaker or camera), ID}.',
+			leave: 'The leave button was pressed.'
+		},
 		Props: {
 			Muted: 'The microphone is off.',
 			Camera: 'The camera is on (true by default).',

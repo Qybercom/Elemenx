@@ -19,7 +19,7 @@ A searchable select of currencies: every ISO 4217 currency of the Currencies Ser
 
 ## Events
 
-`change`
+- `change`: Another currency was chosen: its code.
 
 ## Example
 

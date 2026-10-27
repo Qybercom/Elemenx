@@ -25,7 +25,7 @@ A keyboard of a computer, drawn key by key (the look and the controls): to show 
 
 ## Events
 
-`press`
+- `press`: A key was pressed on the screen: {Code, Label}.
 
 ## Example
 

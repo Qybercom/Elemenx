@@ -30,7 +30,9 @@
 
 ## События
 
-`like`, `comment`, `share`
+- `like`: Кнопка «нравится»: {Liked, Likes}.
+- `comment`: Кнопка комментариев: {Title}.
+- `share`: Кнопка «поделиться»: {Title, Href}.
 
 ## Слоты
 

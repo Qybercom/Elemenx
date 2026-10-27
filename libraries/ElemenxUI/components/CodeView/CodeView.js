@@ -17,7 +17,9 @@ Elemenx.Component('CodeView', {
 		Group: 'text',
 		Icon: 'code',
 		Description: 'Source code shown, not edited: Value highlighted by the Syntax Service in Language, as a CodeEditor draws it.',
-		Events: ['fold'],
+		Events: {
+			fold: 'A block was folded or unfolded: {Line, Folded}.'
+		},
 		Props: {
 			Value: {Body: true, Description: 'The code; without it, the body of the element.'},
 			Language: 'The language that highlights it.',

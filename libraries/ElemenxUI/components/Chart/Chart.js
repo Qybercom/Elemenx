@@ -13,7 +13,10 @@ Elemenx.Component('Chart', {
 		Group: 'data',
 		Icon: 'chart',
 		Description: 'A chart in SVG, as wide as its container.',
-		Events: ['hover', 'toggle'],
+		Events: {
+			hover: 'The pointer moved to another label: {Index, Label}.',
+			toggle: 'A series or a slice was turned off or on in the legend: Hidden, the names turned off.'
+		},
 		Props: {
 			Type: {Options: ['line', 'area', 'bar', 'pie', 'donut'], Description: 'line, area, bar, pie or donut.'},
 			Labels: 'The names of the points of the x axis, or of the slices of a pie.',

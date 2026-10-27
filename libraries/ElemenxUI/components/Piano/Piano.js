@@ -18,7 +18,10 @@ Elemenx.Component('Piano', {
 		Group: 'music',
 		Icon: 'volume',
 		Description: 'The keys of a piano (the look and the controls; the sound is the application\'s).',
-		Events: ['noteon', 'noteoff'],
+		Events: {
+			noteon: 'A note started: {Note, Midi, Velocity}.',
+			noteoff: 'A note ended: {Note, Midi}.'
+		},
 		Props: {
 			From: 'The first note (C3).',
 			Octaves: 'How many octaves follow it.',

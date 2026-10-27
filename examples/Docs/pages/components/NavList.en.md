@@ -16,7 +16,8 @@ A navigation list or tree. Items: [{ID, Label, Icon, Badge, Items, Disabled}]; V
 
 ## Events
 
-`expand`, `select`
+- `expand`: A group opened or closed: the IDs of the open groups.
+- `select`: An item was chosen: the item.
 
 ## Example
 

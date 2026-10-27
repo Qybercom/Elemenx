@@ -12,7 +12,10 @@ Elemenx.Component('PlanPicker', {
 		Group: 'commerce',
 		Icon: 'cart',
 		Description: 'A choice of a plan: a PlanCard for each of Plans ([{ID, Name, Description, Price, YearlyPrice, Currency, Note, Features, Popular, Color, Current, Disabled, Action}]) in a grid, one of them chosen (Value), as a group of radios: the arrows move the choice.',
-		Events: ['change', 'period'],
+		Events: {
+			change: 'Another plan was chosen: {ID, Period}.',
+			period: 'The monthly or yearly prices were chosen: {Period}.'
+		},
 		Props: {
 			Plans: 'The plans: [{ID, Name, Description, Price, YearlyPrice, Currency, Note, Features, Popular, Color, Current, Disabled, Action}].',
 			Value: 'The ID of the plan chosen.',

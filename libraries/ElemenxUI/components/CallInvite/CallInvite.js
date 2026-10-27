@@ -13,7 +13,10 @@ Elemenx.Component('CallInvite', {
 		Group: 'social',
 		Icon: 'phone',
 		Description: 'An invitation to a call: who calls, and the buttons to accept or decline it.',
-		Events: ['accept', 'decline'],
+		Events: {
+			accept: 'The call was accepted: {Video}, true when with the camera.',
+			decline: 'The call was declined.'
+		},
 		Props: {
 			Name: 'Who calls.',
 			Image: 'The URL of a picture of who calls; none: the avatar of the name.',

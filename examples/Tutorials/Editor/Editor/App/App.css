@@ -1,0 +1,16 @@
+.studio {
+	height: 100vh;
+}
+
+.studio-main {
+	min-height: 0;
+}
+
+.studio-code {
+	flex: 1;
+	min-height: 0;
+}
+
+.studio-code > * {
+	height: 100%;
+}

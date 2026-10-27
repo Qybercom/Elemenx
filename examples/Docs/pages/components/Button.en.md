@@ -25,7 +25,7 @@ A button. Variant: primary, secondary (default), ghost, danger or link; Size: sm
 
 ## Events
 
-`click`
+- `click`: Pressed (not while Disabled or Loading): the DOM event of the press.
 
 ## Slots
 

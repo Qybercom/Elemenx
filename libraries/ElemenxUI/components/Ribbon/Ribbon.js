@@ -28,7 +28,12 @@ Elemenx.Component('Ribbon', {
 		Children: ['RibbonTab', 'RibbonBackstage'],
 		Current: 'Tab',
 		Slots: ['quick', 'end', 'backstage'],
-		Events: ['tab', 'collapse', 'command', 'backstage'],
+		Events: {
+			tab: 'Another tab was opened: {ID}.',
+			collapse: 'It was collapsed or pinned: {Collapsed}.',
+			command: 'A command of any of its controls ran: {ID, Item}.',
+			backstage: 'The backstage opened or closed: {Open}.'
+		},
 		Props: {
 			Tab: 'The ID of the current tab.',
 			Collapsed: 'Shows only the tabs; a tab opens its panel over the page.',

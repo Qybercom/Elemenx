@@ -142,6 +142,7 @@ To find a section in `elemenx.js`, search for its header, for example `/* Router
 | Field | Purpose | Used by |
 |---|---|---|
 | `Structural` | structural host engine of a component template: conditional and collection mounting, deferred children | Template and Component |
+| `ComponentHosts` | `WeakMap` tag of a Component in a template → `{Element(), Watch(callback)}`: the element of the instance that took its place, and each next one; the behavioral directives of the tag follow it | Template and Component |
 
 ## Cache
 

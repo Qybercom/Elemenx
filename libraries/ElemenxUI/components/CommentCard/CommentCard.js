@@ -14,7 +14,14 @@ Elemenx.Component('CommentCard', {
 		Icon: 'comment',
 		Description: 'A comment, a post of a social network or a tweet: the Author (Avatar, Verified, Handle), the Time it was written (shown from now: \'5 minutes ago\'), Text, up to four images of Media, and the counts of Replies, Reposts and Likes (null hides one) with Reposted and Liked.',
 		Container: true,
-		Events: ['reply', 'repost', 'like', 'share', 'mention', 'tag'],
+		Events: {
+			reply: 'The reply button: {Author, Handle}.',
+			repost: 'The repost button: {Reposted, Reposts}.',
+			like: 'The like button: {Liked, Likes}.',
+			share: 'The share button: {Author, Text}.',
+			mention: 'A @mention of the text was pressed: {Handle}.',
+			tag: 'A #tag of the text was pressed: {Tag}.'
+		},
 		Props: {
 			Author: 'The name of the author.',
 			Handle: 'The handle of the author (without @).',

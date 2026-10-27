@@ -19,7 +19,7 @@ A rating of Max stars (5). Value: 0 to Max, in halves with Half. The pointer sho
 
 ## Events
 
-`change`
+- `change`: A rating was given or cleared: Value.
 
 ## Example
 

@@ -66,9 +66,26 @@ describe('Contract: Elemenx.Meta', function () {
 			Children: ['MetaTab'],
 			Current: 'Variant',
 			Events: ['open'],
+			EventDescriptions: {},
 			Methods: ['Open()'],
 			Sample: {Title: 'Hello'}
 		});
+	});
+
+	it('takes the events as {name: description}: Events lists their names, EventDescriptions their descriptions, a copy', function () {
+		var name = unique('MetaEvents');
+		var meta;
+
+		Elemenx.Component(name, {$Template: '<b></b>', $Meta: {Events: {change: 'The value changed: the new value.', close: 'It closed.'}}});
+
+		meta = Elemenx.Meta(name);
+
+		expect(meta.Events).toEqual(['change', 'close']);
+		expect(meta.EventDescriptions).toEqual({change: 'The value changed: the new value.', close: 'It closed.'});
+
+		meta.EventDescriptions.change = 'changed';
+
+		expect(Elemenx.Meta(name).EventDescriptions.change).toBe('The value changed: the new value.');
 	});
 
 	it('gives a copy: a change of what it returns does not reach the definition', function () {

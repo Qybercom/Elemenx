@@ -1,13 +1,6 @@
 <idea-plugin>
 	<id>com.qybercom.elemenx</id>
-	<name>Elemenx</name>
-	<vendor url="https://github.com/Qybercom/Elemenx">Qybercom</vendor>
-	<description><![CDATA[
-		Elemenx and ElemenxUI in the editor: completion of the Components, their props, events and the directives in
-		the templates, the Services in the code, their documentation on hover, go to the definition of a Component or of
-		a function of a template, and the diagnostics of unknown Components, props, events and directives. Through the
-		language server of Elemenx and LSP4IJ; it needs Node.js (ELEMENX_NODE names another one than the node of PATH).
-	]]></description>
+	<!-- The name, the vendor and the description come from editors/extension.json (build.gradle.kts). -->
 
 	<depends>com.intellij.modules.platform</depends>
 	<depends>com.intellij.modules.xml</depends>

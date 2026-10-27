@@ -14,3 +14,48 @@ What can be seen on a grid: lines, the line of sight, the field of view and the 
 - `Sight(opaque, x0, y0, x1, y1)`
 - `Field(opaque, x, y, radius)`
 - `Fog(width, height)`
+
+## Example
+
+```example
+<pre style="font: 14px/1.2 var(--elemenx-font-mono, monospace);">{{Picture}}</pre>
+<Slider Min="1" Max="8" [value]="Radius" (input)="Changed" />
+<p class="elemenx-text small muted">What the @ sees within {{Radius}} cells: the walls (#) hide what is behind them; the rest is fog (~).</p>
+<script>
+({
+	Radius: 5,
+	Picture: '',
+	Rows: [
+		'..............',
+		'....###.......',
+		'..........#...',
+		'......@...#...',
+		'..##......#...',
+		'..............',
+		'.......####...'
+	],
+
+	$OnCreate: function () {
+		this.See();
+	},
+
+	Changed: function (value) {
+		this.Radius = value;
+		this.See();
+	},
+
+	See: function () {
+		var rows = this.Rows;
+		var field = this.$Service('Visibility').Field(function (x, y) {
+			return !rows[y] || rows[y].charAt(x) === '#';
+		}, 6, 3, this.Radius);
+
+		this.Picture = rows.map(function (row, y) {
+			return row.split('').map(function (cell, x) {
+				return field.Has(x, y) ? cell : '~';
+			}).join(' ');
+		}).join('\n');
+	}
+})
+</script>
+```

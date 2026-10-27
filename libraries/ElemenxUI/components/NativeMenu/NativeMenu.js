@@ -21,7 +21,10 @@ Elemenx.Component('NativeMenu', {
 		Description: 'The menu of a program declared as a menu of the page: <NativeMenu> with MenuItem children.',
 		Container: true,
 		Children: ['MenuItem'],
-		Events: ['select', 'apply'],
+		Events: {
+			select: 'An item was chosen in the menu of the program: the item.',
+			apply: 'The menu was given to the system: {Error}, null when it went well.'
+		},
 		Props: {
 			Target: {Options: ['window', 'tray'], Description: 'The menu of the window of the program, or of its icon in the tray.'},
 			Look: {Options: ['elemenx', 'system'], Description: 'Drawn by ElemenxUI (a bar of menus, a menu window by the tray), or by the system.'},

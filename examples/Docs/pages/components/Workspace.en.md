@@ -16,7 +16,8 @@ Tool windows the user arranges: a WorkspaceToolWindow with an ID in the slot too
 
 ## Events
 
-`layout`, `resize`
+- `layout`: The arrangement of the tool windows changed (moved, opened, closed, resized): Layout, {Areas, Order, Open, Sizes}.
+- `resize`: A panel was resized by its edge: {Panel, Size}.
 
 ## Slots
 

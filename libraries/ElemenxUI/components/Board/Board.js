@@ -17,7 +17,9 @@ Elemenx.Component('Board', {
 		Icon: 'grid',
 		Description: 'An infinite canvas: its content in coordinates of its own, moved and zoomed as on the canvas of Figma.',
 		Container: true,
-		Events: ['view'],
+		Events: {
+			view: 'The view moved or zoomed: {X, Y, Zoom}.'
+		},
 		Props: {
 			X: 'The point of the world at the left of the view.',
 			Y: 'The point of the world at the top of the view.',

@@ -1,0 +1,10 @@
+.talk {
+	height: 100vh;
+}
+
+.talk-join {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 100%;
+}

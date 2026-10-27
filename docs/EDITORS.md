@@ -41,6 +41,16 @@ Elemenx.Component('Team', {
 
 A field set only from code (`state.People = Load()`) has its name but no type. Its tests run in a light IDE that Gradle downloads, of IntelliJ IDEA Community (`gradlew test -PideaCommunity=2025.2.6.3` in `editors/intellij`) and of WebStorm for the JavaScript of the expressions (`gradlew test -Pwebstorm=2026.2.3`).
 
+- `editors/visualstudio`: the extension of Visual Studio 2022 (17.10 or later). It is a C# project that gives the language server to the LSP client of Visual Studio for the HTML and the JavaScript; like the plugin of JetBrains, it carries the server and needs Node.js (`ELEMENX_NODE`).
+
+The name, the summary, the description, the vendor, the links, the keywords, the categories and the logo of all of them are written once, in `editors/extension.json`:
+
+- `Description` names a Markdown file (`editors/branding/description.md`): it becomes the `README.md` of VS Code, the HTML description of the JetBrains plugin and the overview of the Visual Studio Marketplace;
+- `Icon` names the SVG logo (`editors/branding/logo.svg`); `npm run editors:icons` draws its PNGs (128 for VS Code, 90 and 200 for Visual Studio) and the `pluginIcon.svg` of JetBrains, with the Chrome of the machine;
+- `Categories` has the categories of each marketplace.
+
+`editors/build.js` writes the generated files from it: the fields and the `README.md` of `editors/vscode`, and the manifest, overview and `publishManifest.json` of `editors/visualstudio`; Gradle reads it for the plugin of JetBrains. `tests/regression/editors-branding.test.js` checks that they agree.
+
 The extensions have the version of Elemenx: `npm run version:set` puts it in `editors/vscode/package.json` and `editors/intellij/build.gradle.kts` too.
 
 ## Building
@@ -57,17 +67,19 @@ node editors/build.js --intellij --idea "C:/Program Files/JetBrains/IntelliJ IDE
 
 This also makes `dist/editors/elemenx-intellij.zip` with Gradle (the wrapper of `editors/intellij`; `JAVA_HOME` a JDK of 21 or more, the JBR of an IDE will do). `--idea` builds against an IDE of the machine; without it, Gradle downloads IntelliJ IDEA. Install it with Settings → Plugins → ⚙ → Install Plugin from Disk; LSP4IJ comes from the Marketplace.
 
+On Windows with a Visual Studio 2022 that has the workload **Visual Studio extension development**, it also makes `dist/editors/elemenx-visualstudio.vsix` with the MSBuild of that Visual Studio (found by `vswhere`); elsewhere it is left out, and told so. `--visualstudio` needs it, `--no-visualstudio` leaves it out. Install it by opening the `.vsix` (VSIXInstaller), with Visual Studio closed. A version of Visual Studio has no prerelease part: `0.11.0-beta.1` is `0.11.0` there.
+
 `tests/regression/language-server.test.js` checks the core and the server over stdio.
 
 ## The marketplaces
 
-A release of Elemenx (`publish.yml`, its job **GitHub release with the editors**) publishes the extensions to the VS Code Marketplace, to Open VSX (VSCodium, Cursor, Windsurf...) and to the JetBrains Marketplace, each when its secrets are set in the repository (Settings → Secrets and variables → Actions); a marketplace without them is skipped. A prerelease version (`0.11.0-beta.1`) goes as a pre-release (VS Code, Open VSX) or to the channel `beta` (JetBrains). A version that is there already is skipped, so **Re-run failed jobs** goes on from the marketplace that failed. Once, for each of them:
+A release of Elemenx (`publish.yml`, its job **GitHub release with the editors**) publishes the extensions to the VS Code Marketplace, to Open VSX (VSCodium, Cursor, Windsurf...) to the JetBrains Marketplace and to the Visual Studio Marketplace (the job **Visual Studio**, on Windows, which also attaches `elemenx-visualstudio.vsix` to the release), each when its secrets are set in the repository (Settings → Secrets and variables → Actions); a marketplace without them is skipped. A prerelease version (`0.11.0-beta.1`) goes as a pre-release (VS Code, Open VSX) or to the channel `beta` (JetBrains). A version that is there already is skipped, so **Re-run failed jobs** goes on from the marketplace that failed. Once, for each of them:
 
 **VS Code Marketplace**
 
 1. Sign in to <https://marketplace.visualstudio.com/manage> with a Microsoft account and create the publisher `qybercom` (the `publisher` of `editors/vscode/package.json`).
 2. In Azure DevOps (<https://dev.azure.com>, an organization of the same account), User settings → Personal access tokens → New token: Organization **All accessible organizations**, Scopes **Custom defined** → **Marketplace: Manage**.
-3. The token is the secret `VSCE_PAT`.
+3. The token is the secret `VSCE_PAT`. The Visual Studio Marketplace is the same site with the same publisher, so the extension of Visual Studio goes with the same token (`VsixPublisher`, with `editors/visualstudio/publishManifest.json`).
 
 **Open VSX**
 

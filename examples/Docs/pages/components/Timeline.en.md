@@ -36,7 +36,12 @@ Events: select ({Kind: mark or range, ID, Item}), seek ({At}), view ({From, To})
 
 ## Events
 
-`view`, `select`, `seek`, `create`, `move`, `resize`
+- `view`: The part in view changed: {From, To}.
+- `select`: A mark or a range was pressed: {Kind (mark or range), ID, Item}.
+- `seek`: The line or the playhead was pressed or dragged: {At}.
+- `create`: A range was drawn on a lane: {Lane, From, To}.
+- `move`: A mark or a range was dragged: {Kind, ID, Item, At} for a mark, {Kind, ID, Item, From, To} for a range.
+- `resize`: An edge of a range was dragged: {ID, Item, From, To}.
 
 ## Slots
 

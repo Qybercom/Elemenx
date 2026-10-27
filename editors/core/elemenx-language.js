@@ -412,6 +412,7 @@ function Create (options) {
 						return {Name: prop.Name, Type: prop.Type || '', Options: prop.Options || null, Default: prop.Default, Description: prop.Description || ''};
 					}),
 					Events: component.Events || [],
+					EventDescriptions: component.EventDescriptions || {},
 					Slots: component.Slots || [],
 					Methods: (component.Methods || []).map(function (method) {
 						return {Name: String(method).replace(/\(.*$/, ''), Signature: method};
@@ -501,6 +502,7 @@ function Create (options) {
 						Events: (known.Events || []).concat((item.Events || []).filter(function (each) {
 							return (known.Events || []).indexOf(each) === -1;
 						})),
+						EventDescriptions: known.EventDescriptions || {},
 						Slots: known.Slots,
 						Methods: item.Methods,
 						File: item.File,
@@ -834,6 +836,11 @@ function describe (component) {
 		lines.push('', 'Events: ' + component.Events.map(function (each) {
 			return '`' + each + '`';
 		}).join(', '));
+
+		component.Events.forEach(function (each) {
+			if (eventDescription(component, each))
+				lines.push('- `' + each + '`: ' + eventDescription(component, each));
+		});
 	}
 
 	if (component.Slots && component.Slots.length) {
@@ -843,6 +850,18 @@ function describe (component) {
 	}
 
 	return lines.join('\n');
+}
+
+/* The description of an event of a component ($Meta.Events as {name: description}), or ''. */
+function eventDescription (component, name) {
+	var descriptions = component.EventDescriptions || {};
+	var key;
+
+	for (key in descriptions) {
+		if (Object.prototype.hasOwnProperty.call(descriptions, key) && lower(key) === lower(name)) return descriptions[key];
+	}
+
+	return '';
 }
 
 function describeProp (component, item) {
@@ -952,7 +971,7 @@ function candidates (knowledge, text, offset, language, file) {
 
 			component.Events.forEach(function (each) {
 				if (kind === '(' || !kind)
-					push('(' + each + ')', '(' + each + ')="$1"', 'event', 'The ' + each + ' event of ' + component.Name + '.');
+					push('(' + each + ')', '(' + each + ')="$1"', 'event', eventDescription(component, each) || 'The ' + each + ' event of ' + component.Name + '.');
 			});
 		}
 		else if (kind === '(' || !kind) {
@@ -1146,7 +1165,7 @@ function Hover (knowledge, text, offset, language, file) {
 		if (bound.Kind === 'event') {
 			return component.Events.some(function (each) {
 				return lower(each) === lower(bound.Name);
-			}) ? {Markdown: '**(' + bound.Name + ')** · an event of ' + component.Name, Start: at.Attribute.Start, End: at.Attribute.End} : null;
+			}) ? {Markdown: '**(' + bound.Name + ')** · an event of ' + component.Name + (eventDescription(component, bound.Name) ? '\n\n' + eventDescription(component, bound.Name) : ''), Start: at.Attribute.Start, End: at.Attribute.End} : null;
 		}
 
 		item = prop(component, bound.Name);

@@ -38,7 +38,11 @@ Elemenx.Directive('resizable', {
 				element.style.height = height + 'px';
 			}
 
-			element.dispatchEvent(new CustomEvent(final ? 'resizeend' : 'resize', {detail: {Width: element.offsetWidth, Height: element.offsetHeight, Edge: edge}}));
+			/* Every change is a resize, the last one of a drag or a step of the keys a resizeend too (regression: a key sent none). */
+			element.dispatchEvent(new CustomEvent('resize', {detail: {Width: element.offsetWidth, Height: element.offsetHeight, Edge: edge}}));
+
+			if (final)
+				element.dispatchEvent(new CustomEvent('resizeend', {detail: {Width: element.offsetWidth, Height: element.offsetHeight, Edge: edge}}));
 		};
 
 		data.Start = function (event) {

@@ -10,7 +10,10 @@ Elemenx.Component('ColorInput', {
 		Group: 'inputs',
 		Icon: 'color',
 		Description: 'A color field with its own picker.',
-		Events: ['input', 'change'],
+		Events: {
+			input: 'The color changed while dragging in the picker: Value.',
+			change: 'The color was committed (the drag released, a swatch or the eyedropper): Value.'
+		},
 		Props: {
 			Value: 'The color: #rrggbb, or #rrggbbaa with Alpha.',
 			Alpha: 'Adds the slider of the opacity.',

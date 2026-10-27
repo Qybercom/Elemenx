@@ -26,7 +26,12 @@ An editor of rich text (WYSIWYG). Value is the HTML of the document, kept to the
 
 ## Events
 
-`ready`, `input`, `formats`, `link`, `files`, `change`
+- `ready`: The editor is ready: the component itself, to call Command.
+- `input`: The document changed: its HTML.
+- `formats`: The styles at the caret changed: {Bold, Italic, Underline, Strike, Code, Block, Level, Quote, List, Link, Table}, to light the buttons of a toolbar.
+- `link`: A link was pressed: {Href, Text}.
+- `files`: Files were pasted or dropped: a list of File, for the Application to upload.
+- `change`: The document was committed when the focus left: Value.
 
 ## Methods
 

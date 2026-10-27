@@ -29,7 +29,8 @@ The card of a person: a Cover (an image, or Color), the Avatar (or initials) wit
 
 ## Events
 
-`follow`, `message`
+- `follow`: The follow button: {Following}.
+- `message`: The message button: {Name}.
 
 ## Slots
 

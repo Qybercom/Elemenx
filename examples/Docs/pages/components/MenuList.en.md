@@ -16,7 +16,8 @@ One level of a Menu. Items: [{ID, Label, Icon, Shortcut, Disabled, Danger, Check
 
 ## Events
 
-`select`, `dismiss`
+- `select`: A leaf item was chosen: the item.
+- `dismiss`: It asks to close (the owner sets Open to false): the reason, outside, escape, tab, back, swipe, backdrop or cancel.
 
 ## Example
 

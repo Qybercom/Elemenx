@@ -19,7 +19,8 @@ The canvas of a designer of pages (the Designer Service): the page of the docume
 
 ## Events
 
-`select`, `drop`
+- `select`: An element was pressed: its ID, or null for the page.
+- `drop`: A kind or an element was dropped on the canvas: {Kind, Node, Parent, Index, ID}, ID the element made or moved.
 
 ## Example
 

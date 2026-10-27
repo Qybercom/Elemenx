@@ -27,7 +27,10 @@ Elemenx.Component('Workspace', {
 		Description: 'An IDE-like application frame built on elemenx-screen, elemenx-container and elemenx-column.',
 		Container: true,
 		Slots: ['header', 'ribbon', 'top-stripe', 'left-stripe', 'left', 'main', 'bottom', 'right', 'right-stripe', 'bottom-stripe', 'status', 'tools'],
-		Events: ['layout', 'resize'],
+		Events: {
+			layout: 'The arrangement of the tool windows changed (moved, opened, closed, resized): Layout, {Areas, Order, Open, Sizes}.',
+			resize: 'A panel was resized by its edge: {Panel, Size}.'
+		},
 		Methods: ['ResetLayout()'],
 		Props: {
 			Variant: {Options: ['', 'ribbon'], Description: 'empty, or ribbon: a slim title bar that joins a Ribbon.'},

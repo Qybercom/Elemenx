@@ -15,7 +15,12 @@ Elemenx.Component('PhoneInput', {
 		Group: 'inputs',
 		Icon: 'phone',
 		Description: 'Value is the international number: "+" with the dialling code and the local digits ("+79991234567").',
-		Events: ['input', 'validate', 'change', 'country'],
+		Events: {
+			input: 'The number changed: Value, international (\'+79991234567\').',
+			validate: 'The number was checked: {Value, Country, Complete, Valid}.',
+			change: 'The number was committed: Value.',
+			country: 'The country changed, picked or found by the dialling code: its code.'
+		},
 		Props: {
 			Value: 'The international number: + with the dialling code and the digits.',
 			Country: 'The country of the number (when its code does not tell another).',

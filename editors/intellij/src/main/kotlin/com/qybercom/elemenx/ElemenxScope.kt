@@ -6,6 +6,7 @@ import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiElement
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.xml.XmlTag
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * The names an expression of a template sees, with their types: the fields and functions of its Component, the
@@ -21,6 +22,12 @@ import com.intellij.psi.xml.XmlTag
 object ElemenxScope {
 	private val identifier = Regex("^[A-Za-z_$][\\w$]*$")
 	private val start = Regex("Elemenx\\.Component\\(\\s*(['\"])[A-Za-z][\\w-]*\\1\\s*,\\s*\\{")
+	/*
+	 * The definitions of a file, read once for each change of it (regression: a template of a thousand bindings read its
+	 * Component of three thousand lines again for each of them, and the IDE hung on it).
+	 */
+	private val read = ConcurrentHashMap<String, Pair<Long, List<Definition>>>()
+
 	private val set = Regex("\\b(?:this|self|state|component)\\.([A-Z][\\w$]*)\\s*=(?!=)")
 
 	/** A field or a function of a Component: where its file of code declares it, its type in JSDoc, its value. */
@@ -74,16 +81,30 @@ object ElemenxScope {
 			val candidates = listOf(file) + folder.children.filter { each -> each.extension == "js" }
 
 			candidates.forEach { candidate ->
-				val found = definitions(text(candidate)).firstOrNull { definition -> definition.templateId == template }
+				val found = definitionsOf(candidate).firstOrNull { definition -> definition.templateId == template }
 
 				if (found != null) return Owner(candidate, found.members)
 			}
 		}
 
 		val code = folder.findChild(file.nameWithoutExtension + ".js") ?: return null
-		val found = definitions(text(code)).firstOrNull() ?: return null
+		val found = definitionsOf(code).firstOrNull() ?: return null
 
 		return Owner(code, found.members)
+	}
+
+	/** The definitions of a file: the ones read before while it has not changed (its document, or the file of the disk). */
+	fun definitionsOf(file: VirtualFile): List<Definition> {
+		val stamp = FileDocumentManager.getInstance().getCachedDocument(file)?.modificationStamp ?: file.modificationStamp
+		val known = read[file.path]
+
+		if (known != null && known.first == stamp) return known.second
+
+		val found = definitions(text(file))
+
+		read[file.path] = stamp to found
+
+		return found
 	}
 
 	/** The id of the <template> a host is in, or null. */

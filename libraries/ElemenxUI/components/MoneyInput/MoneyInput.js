@@ -10,6 +10,10 @@ Elemenx.Component('MoneyInput', {
 		Group: 'inputs',
 		Icon: 'credit-card',
 		Description: 'An amount of money with its currency.',
+		Events: {
+			input: 'The amount or the currency changed while typing: {Amount, Currency}.',
+			change: 'The amount was committed, or the currency changed: {Amount, Currency}.'
+		},
 		Props: {
 			Amount: 'The amount: a number, or null.',
 			Currency: 'The code of the currency (USD).',

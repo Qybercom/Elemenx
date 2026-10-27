@@ -8,6 +8,18 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.intellij.platform.gradle.TestFrameworkType
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import groovy.json.JsonSlurper
+
+/* commonmark: the Markdown of the description of editors/extension.json as the HTML plugin.xml takes. */
+buildscript {
+	repositories {
+		mavenCentral()
+	}
+
+	dependencies {
+		classpath("org.commonmark:commonmark:0.24.0")
+	}
+}
 
 plugins {
 	id("org.jetbrains.kotlin.jvm") version "2.4.21"
@@ -15,7 +27,7 @@ plugins {
 }
 
 group = "com.qybercom"
-version = "0.10.2"
+version = "0.10.3"
 
 repositories {
 	mavenCentral()
@@ -63,7 +75,21 @@ tasks.withType<KotlinCompile>().configureEach {
 intellijPlatform {
 	buildSearchableOptions = false
 
+	/* The name, the vendor and the description of editors/extension.json, the one source of the three extensions. */
 	pluginConfiguration {
+		val extension = JsonSlurper().parse(file("../extension.json")) as Map<*, *>
+		val vendorOf = extension["Vendor"] as Map<*, *>
+		val markdown = file("../" + extension["Description"]).readText()
+
+		name = extension["DisplayName"] as String
+		description = "<p>" + extension["Summary"] + "</p>\n" + org.commonmark.renderer.html.HtmlRenderer.builder().build().render(org.commonmark.parser.Parser.builder().build().parse(markdown))
+
+		vendor {
+			name = vendorOf["Name"] as String
+			url = vendorOf["Url"] as String
+			(vendorOf["Email"] as String).takeIf { it.isNotEmpty() }?.let { email = it }
+		}
+
 		ideaVersion {
 			sinceBuild = "243"
 			untilBuild = provider { null }

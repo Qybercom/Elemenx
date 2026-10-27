@@ -1,0 +1,25 @@
+<div class="elemenx-screen shop">
+	<header class="shop-header">
+		<a class="shop-name" href="/">Old Town Goods</a>
+		<span class="elemenx-spacer"></span>
+		<ThemeSwitch Compact="true" />
+		<Button Icon="cart" Label="Cart" Variant="ghost" [badge]="Count" (click)="Show" />
+	</header>
+	<main class="shop-main" *outlet="Content"></main>
+	<Drawer [open]="Open" Title="Your cart" Size="small" (close)="Hide">
+		<EmptyState *if="!Count" Title="The cart is empty" Description="Add something you like." />
+		<ul class="elemenx-list divided" *if="Count">
+			<li class="shop-line" *for="line of Lines" *key="line.ID + line.Color">
+				<span class="shop-line-text"><strong>{{line.Title}}</strong> <span class="elemenx-text small muted">{{line.Color}} · ×{{line.Count}}</span></span>
+				<span>{{Money(line.Price * line.Count)}}</span>
+				<button class="elemenx-input-action" type="button" [attribute.data-id]="line.ID" [attribute.data-color]="line.Color" [attribute.aria-label]="'Remove ' + line.Title" (click)="Remove"><Icon Name="close" /></button>
+			</li>
+		</ul>
+		<div slot="footer" class="elemenx-container" style="gap: 12px; align-items: center;" *if="Count">
+			<strong>Total {{Money(Total)}}</strong>
+			<span class="elemenx-spacer"></span>
+			<Button Label="Checkout" Variant="primary" (click)="Checkout" />
+		</div>
+	</Drawer>
+	<ToastHost />
+</div>

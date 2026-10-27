@@ -142,6 +142,18 @@ function members (source) {
 	return result;
 }
 
+/* The descriptions of the events in Russian: {'Component.event': text}. */
+var RussianEvents = JSON.parse(fs.readFileSync(path.join(__dirname, 'ru-events.json'), 'utf8'));
+
+/* The descriptions of the events of a component in data/meta.json, or null when it describes none. */
+function eventDescriptions (name) {
+	var found = meta.Components.filter(function (component) {
+		return component.Name === name;
+	})[0];
+
+	return found && found.EventDescriptions && Object.keys(found.EventDescriptions).length ? found.EventDescriptions : null;
+}
+
 /*
  * The API of a page: the props of a component with their defaults, its events and its slots, and the methods of a
  * component or a service. Only the public members are listed (tools/public.js): the other members are its state.
@@ -189,10 +201,19 @@ function api (kind, name, source, template, comment, language) {
 		}
 	}
 
-	if (events.length)
+	/* The events with their descriptions ($Meta.Events as {name: description}; in Russian those of tools/ru-events.json), their names alone otherwise. */
+	if (events.length && eventDescriptions(name)) {
+		text += '\n## ' + words.Events + '\n\n' + events.map(function (event) {
+			var described = language === 'ru' ? RussianEvents[name + '.' + event] : eventDescriptions(name)[event];
+
+			return '- `' + event + '`' + (described ? ': ' + described : '');
+		}).join('\n') + '\n';
+	}
+	else if (events.length) {
 		text += '\n## ' + words.Events + '\n\n' + events.map(function (event) {
 			return '`' + event + '`';
 		}).join(', ') + '\n';
+	}
 
 	if (slots.length)
 		text += '\n## ' + words.Slots + '\n\n' + slots.map(function (slot) {

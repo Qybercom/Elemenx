@@ -33,7 +33,8 @@ A gallery: one picture at a time out of Items [{ID, Image, Thumb, Alt, Title, De
 
 ## Events
 
-`change`, `select`
+- `change`: Another picture is shown: its Index.
+- `select`: The picture was pressed: its item.
 
 ## Example
 

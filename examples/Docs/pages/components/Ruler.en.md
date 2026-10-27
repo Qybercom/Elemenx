@@ -18,7 +18,7 @@ A ruler, as the rulers of an editor of pages or pictures: Orientation horizontal
 
 ## Events
 
-`pull`
+- `pull`: A guide is pulled out of the ruler: {Value, ClientX, ClientY}.
 
 ## Example
 

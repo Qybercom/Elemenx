@@ -12,7 +12,10 @@ Elemenx.Component('GameDialogue', {
 		Group: 'game',
 		Icon: 'trophy',
 		Description: 'The line of a character in a dialogue: Speaker, Portrait (an image URL) and Text, typed out at Speed characters a second (0 shows it at once).',
-		Events: ['next', 'choose'],
+		Events: {
+			next: 'The line without choices was read on (its continue button).',
+			choose: 'A choice was made: {ID, Choice}.'
+		},
 		Props: {
 			Speaker: 'The name of the one who speaks.',
 			Portrait: 'The URL of the portrait.',

@@ -29,7 +29,12 @@ A comment, a post of a social network or a tweet: the Author (Avatar, Verified, 
 
 ## Events
 
-`reply`, `repost`, `like`, `share`, `mention`, `tag`
+- `reply`: The reply button: {Author, Handle}.
+- `repost`: The repost button: {Reposted, Reposts}.
+- `like`: The like button: {Liked, Likes}.
+- `share`: The share button: {Author, Text}.
+- `mention`: A @mention of the text was pressed: {Handle}.
+- `tag`: A #tag of the text was pressed: {Tag}.
 
 ## Slots
 

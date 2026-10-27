@@ -36,7 +36,13 @@ A data table. Columns: [{Key, Title, Width, MinWidth, Align (left, center, right
 
 ## Events
 
-`sort`, `filter`, `page`, `expand`, `select`, `activate`, `resize`
+- `sort`: A sortable title was pressed: {Key, Direction}.
+- `filter`: A filter of a column changed: {Key: text}.
+- `page`: Another page or page size was chosen: {Page, PageSize}.
+- `expand`: A row was expanded or folded: the keys of the expanded rows.
+- `select`: The selection changed: the keys of the selected rows.
+- `activate`: A row was opened (a double press or Enter): the row.
+- `resize`: A column was resized: {Key, Width}.
 
 ## Example
 

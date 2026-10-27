@@ -22,7 +22,8 @@ A slider. Value is a number, or [low, high] with Range. Min, Max and Step bound 
 
 ## Events
 
-`input`, `change`
+- `input`: The value changed while dragging or by the keys: Value.
+- `change`: The value was committed (released): Value.
 
 ## Example
 

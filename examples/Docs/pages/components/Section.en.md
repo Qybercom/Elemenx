@@ -17,7 +17,7 @@ A titled section. Collapsible lets the user fold its body; Collapsed is the stat
 
 ## Events
 
-`toggle`
+- `toggle`: It was folded or unfolded: Collapsed.
 
 ## Slots
 

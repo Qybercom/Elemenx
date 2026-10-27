@@ -23,7 +23,9 @@
 
 ## События
 
-`toggle`, `select`, `navigate`
+- `toggle`: Переключена строка-переключатель: {ID, Item, Checked}.
+- `select`: Выбрана строка: {ID, Item, Path}.
+- `navigate`: Открыто или покинуто подменю: {Path}, ID открытых подменю.
 
 ## Пример
 

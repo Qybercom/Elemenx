@@ -15,7 +15,10 @@ Elemenx.Component('Terminal', {
 		Description: 'A terminal: a scrolling output above a command line.',
 		Container: true,
 		Slots: ['actions'],
-		Events: ['command', 'clear'],
+		Events: {
+			command: 'Enter on the command line: the text of the command.',
+			clear: 'Ctrl+L: clear the output.'
+		},
 		Props: {
 			Lines: 'The output: [{ID, Kind, Text}], Kind input, output, error, info or success.',
 			Title: 'The title of its bar.',

@@ -1,0 +1,12 @@
+<section id="features" class="elemenx-column" style="gap: 24px;">
+	<h2 class="elemenx-title">Everything a note needs</h2>
+	<div class="elemenx-container grid" style="gap: 16px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));">
+		<article class="elemenx-card" *for="item of Items" *key="item.Title">
+			<div class="elemenx-card-body">
+				<Icon [name]="item.Icon" Size="28" />
+				<h3 class="elemenx-card-title">{{item.Title}}</h3>
+				<p class="elemenx-card-text">{{item.Text}}</p>
+			</div>
+		</article>
+	</div>
+</section>

@@ -1,8 +1,8 @@
 {
 	"name": "elemenx",
 	"displayName": "Elemenx",
-	"description": "Completion, hover, go to definition, diagnostics and the syntax of the templates of Elemenx and ElemenxUI.",
-	"version": "0.10.2",
+	"description": "Completion, documentation, go to definition, diagnostics and the colors of the templates of Elemenx and ElemenxUI.",
+	"version": "0.10.3",
 	"publisher": "qybercom",
 	"license": "LGPL-3.0-only",
 	"repository": {
@@ -20,7 +20,9 @@
 		"elemenx",
 		"elemenxui",
 		"templates",
-		"components"
+		"components",
+		"ui framework",
+		"es5"
 	],
 	"main": "./extension.js",
 	"activationEvents": [
@@ -103,5 +105,10 @@
 				}
 			}
 		]
+	},
+	"icon": "icon.png",
+	"homepage": "https://github.com/Qybercom/Elemenx",
+	"bugs": {
+		"url": "https://github.com/Qybercom/Elemenx/issues"
 	}
 }

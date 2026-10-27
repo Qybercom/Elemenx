@@ -18,7 +18,7 @@ A modal dialog. Open shows it; the close event (with the reason: 'close', 'escap
 
 ## Events
 
-`close`
+- `close`: It asks to close (the owner sets Open to false): the reason, close, escape or backdrop.
 
 ## Slots
 

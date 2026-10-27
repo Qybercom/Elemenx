@@ -29,7 +29,12 @@
 
 ## События
 
-`reply`, `repost`, `like`, `share`, `mention`, `tag`
+- `reply`: Кнопка ответа: {Author, Handle}.
+- `repost`: Кнопка репоста: {Reposted, Reposts}.
+- `like`: Кнопка «нравится»: {Liked, Likes}.
+- `share`: Кнопка «поделиться»: {Author, Text}.
+- `mention`: Нажато @упоминание в тексте: {Handle}.
+- `tag`: Нажат #тег в тексте: {Tag}.
 
 ## Слоты
 

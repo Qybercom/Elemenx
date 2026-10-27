@@ -19,7 +19,10 @@ Elemenx.Component('Tabs', {
 		Container: true,
 		Children: ['Tab'],
 		Current: 'Value',
-		Events: ['change', 'close'],
+		Events: {
+			change: 'Another tab was opened: its ID.',
+			close: 'A tab asks to close (its cross, the middle button, Delete or Ctrl+W): its ID.'
+		},
 		Props: {
 			Tabs: {Schema: {ID: 'text', Label: 'text', Icon: 'icon', Badge: 'text', Closable: 'bool', Disabled: 'bool'}, Description: 'The tabs: [{ID, Label, Icon, Badge, Closable, Disabled}] (Tab children add more).'},
 			Value: 'The ID of the current tab.',

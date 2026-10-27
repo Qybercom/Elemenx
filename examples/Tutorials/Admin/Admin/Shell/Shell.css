@@ -1,0 +1,44 @@
+.admin {
+	display: flex;
+	min-height: 100vh;
+}
+
+.admin-side {
+	display: flex;
+	flex: 0 0 220px;
+	flex-direction: column;
+	gap: 16px;
+	padding: 16px;
+	border-right: 1px solid var(--elemenx-border);
+}
+
+.admin-name {
+	padding: 4px 8px;
+	font-size: 18px;
+}
+
+.admin-body {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	min-width: 0;
+}
+
+.admin-header {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 8px 16px;
+	border-bottom: 1px solid var(--elemenx-border);
+}
+
+.admin-main {
+	padding: 24px;
+}
+
+.admin:not(.signed) .admin-main {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 100vh;
+}

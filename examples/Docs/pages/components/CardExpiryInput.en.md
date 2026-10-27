@@ -17,7 +17,9 @@ The expiry date of a payment card: Value holds the digits MMYY ('0927'), shown a
 
 ## Events
 
-`input`, `validate`, `change`
+- `input`: The digits changed: Value (MMYY).
+- `validate`: The date was checked: {Value, Complete, Valid}.
+- `change`: The date was committed: Value.
 
 ## Example
 

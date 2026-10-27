@@ -15,6 +15,17 @@ test-results/
 /examples/Native/ios
 /editors/vscode/core
 /editors/vscode/LICENSE
+/editors/vscode/icon.png
+/editors/visualstudio/bin
+/editors/visualstudio/obj
+/editors/visualstudio/server
+/editors/visualstudio/core
+/editors/visualstudio/source.extension.vsixmanifest
+/editors/visualstudio/overview.md
+/editors/visualstudio/publishManifest.json
+/editors/visualstudio/icon.png
+/editors/visualstudio/preview.png
+/editors/visualstudio/LICENSE.txt
 /editors/intellij/build
 /editors/intellij/.gradle
 /editors/intellij/.kotlin

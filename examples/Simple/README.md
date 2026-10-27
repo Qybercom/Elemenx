@@ -1,6 +1,8 @@
 # Elemenx simple example
 
-This directory can be copied as a standalone project. It contains neither a copy of `elemenx.js` nor a private copy of the development server.
+The smallest Elemenx application: one page, `index.html`, with one Component, its template and its Application. It shows reactive state (`$Batch`), references (`#Increment`, `$Ref`) and the persistent `Storage` (the theme survives a reload).
+
+This directory can be copied as a standalone project. It contains neither a copy of `elemenx.js` nor a private copy of the development server: they come from the `@qybercom/elemenx` package.
 
 After copying the directory:
 
@@ -9,15 +11,11 @@ npm install
 npm start
 ```
 
-The installed `elemenx` package provides the shared `tools/server.js` and the framework exposed by that server as `/elemenx.js`.
+`npm start` runs `elemenx dev`, the development server of the package, which also serves the framework as `/elemenx.js`. From the Elemenx repository, `npm run example:simple` starts it the same way.
 
-The component keeps its source and markup together:
+Everything is in `index.html`:
 
-```text
-components/
-  simple-app/
-    simple-app.js
-    simple-app.html
-```
+- `Elemenx.Component('SimpleApp', {$TemplateID: 'simple-app', ...})` defines the Component; its template is the `<template id="simple-app">` of the page;
+- `Elemenx.Application('SimpleExample', {$Component: 'SimpleApp', $Mount: '#app'})` mounts it into `<div id="app">`.
 
-`simple-app.js` uses `$TemplateURL: 'simple-app.html'`, so the template is resolved next to the component definition script.
+A larger application keeps each Component in a folder of its own (`Counter/Counter.js` and `Counter/Counter.html`), as `npx elemenx generate application MyApp` makes it; see `examples/Advanced`.

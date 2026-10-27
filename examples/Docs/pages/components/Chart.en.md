@@ -24,7 +24,8 @@ A chart in SVG, as wide as its container. Type: line, area, bar, pie or donut. L
 
 ## Events
 
-`hover`, `toggle`
+- `hover`: The pointer moved to another label: {Index, Label}.
+- `toggle`: A series or a slice was turned off or on in the legend: Hidden, the names turned off.
 
 ## Example
 

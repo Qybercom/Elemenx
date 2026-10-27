@@ -30,7 +30,16 @@ Elemenx.Component('GameWorld', {
 		Container: true,
 		Children: ['GameTerrain', 'GameLayer', 'GameBuilding', 'GameUnit', 'GameObject'],
 		Slots: ['hud'],
-		Events: ['ready', 'load', 'select', 'order', 'arrive', 'cell', 'view', 'error'],
+		Events: {
+			ready: 'The world is ready: the component itself, to call its methods.',
+			load: 'The map was loaded: {Width, Height} in cells.',
+			select: 'The selection changed: {IDs, Objects}.',
+			order: 'The selected units were ordered: {Kind (move, attack or stop), IDs, X, Y, Target}.',
+			arrive: 'A unit reached the end of its way: {ID, X, Y}.',
+			cell: 'A cell was pressed: {X, Y, Button, Object}, the object on it or null.',
+			view: 'The view moved or zoomed: {X, Y, Zoom}.',
+			error: 'The map could not be loaded: the error.'
+		},
 		Methods: ['Load(map, callback)', 'Add(object)', 'Change(id, changes)', 'Remove(id)', 'Get(id)', 'Objects(filter)', 'Select(ids)', 'Selection()', 'Order(ids, target, kind)', 'Stop(ids)', 'Cell(x, y)', 'Paint(x, y, key, layer)', 'Near(x, y, radius, filter)', 'Route(from, to)', 'PathGrid()', 'FogOfWar()', 'CenterOn(x, y)', 'ToCell(clientX, clientY)', 'ToScreen(x, y)'],
 		Props: {
 			Map: 'The map: its JSON ({Width, Height, Projection, Terrain, Layers, Objects}), or the URL of a JSON of its own or of Tiled.',

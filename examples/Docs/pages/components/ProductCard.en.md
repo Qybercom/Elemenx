@@ -42,7 +42,10 @@ The card of a product: its Images (dots switch them, and a swipe across, of a fi
 
 ## Events
 
-`favorite`, `color`, `size`, `add`
+- `favorite`: The heart: {Favorite}.
+- `color`: Another color was chosen: {Color}.
+- `size`: Another size was chosen: {Size}.
+- `add`: The cart button: {Color, Size}.
 
 ## Slots
 

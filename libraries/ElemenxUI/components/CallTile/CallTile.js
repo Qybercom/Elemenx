@@ -13,7 +13,9 @@ Elemenx.Component('CallTile', {
 		Group: 'social',
 		Icon: 'user',
 		Description: 'The tile of a participant of a call: their video, or their avatar while the camera is off.',
-		Events: ['pin'],
+		Events: {
+			pin: 'Its pin button or a double click: {Pinned, Name}, the state it asks for.'
+		},
 		Props: {
 			Name: 'The name of the participant.',
 			Image: 'The picture of their avatar.',

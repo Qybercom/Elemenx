@@ -20,4 +20,39 @@
 
 ## События
 
-`mute`, `camera`, `share`, `hand`, `chat`, `people`, `leave`, `react`, `layout`, `device`
+- `mute`: Кнопка микрофона: {Muted}, запрошенное состояние.
+- `camera`: Кнопка камеры: {Camera}, запрошенное состояние.
+- `share`: Кнопка экрана: {Sharing}, запрошенное состояние.
+- `hand`: Кнопка руки: {Hand}, запрошенное состояние.
+- `chat`: Кнопка чата: {Open}, запрошенное состояние.
+- `people`: Кнопка участников: {Open}, запрошенное состояние.
+- `leave`: Нажата кнопка выхода.
+- `react`: Выбрана реакция: {Emoji}.
+- `layout`: Выбрана другая раскладка: {Layout}.
+- `device`: Выбрано другое устройство: {Kind (microphone, speaker или camera), ID}.
+
+## Пример
+
+```example
+<CallControls [muted]="State.Muted" [camera]="State.Camera" [sharing]="State.Sharing" [hand]="State.Hand" (mute)="Set" (camera)="Set" (share)="Set" (hand)="Set" (react)="Reacted" (leave)="Left" />
+<p class="elemenx-text small muted">{{Note}}</p>
+<script>
+({
+	Note: 'Press the buttons',
+	State: {Muted: false, Camera: true, Sharing: false, Hand: false},
+
+	Set: function (change) {
+		this.State = Object.assign({}, this.State, change);
+		this.Note = JSON.stringify(change);
+	},
+
+	Reacted: function (event) {
+		this.Note = 'Reaction ' + event.Emoji;
+	},
+
+	Left: function () {
+		this.Note = 'Left the call';
+	}
+})
+</script>
+```

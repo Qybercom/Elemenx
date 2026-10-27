@@ -12,7 +12,9 @@ Elemenx.Component('GameLeaderboard', {
 		Group: 'game',
 		Icon: 'trophy',
 		Description: 'The leaderboard of a game.',
-		Events: ['select'],
+		Events: {
+			select: 'A row was pressed: its item.'
+		},
 		Props: {
 			Items: 'The players: [{ID, Name, Score, Rank, Avatar, Icon, Note, Change, Me}].',
 			Limit: 'How many rows of the top show.',

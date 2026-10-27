@@ -13,7 +13,9 @@ Elemenx.Component('RibbonBackstage', {
 		Container: true,
 		Children: ['RibbonPage'],
 		Current: 'Page',
-		Events: ['page'],
+		Events: {
+			page: 'Another page was opened: {ID}.'
+		},
 		Props: {
 			Title: 'The title of the backstage.',
 			Page: 'The ID of the current page.'

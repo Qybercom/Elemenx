@@ -16,7 +16,8 @@ A strip of tabs. Tabs: [{ID, Label, Icon, Badge, Closable, Disabled}]; Value is 
 
 ## Events
 
-`change`, `close`
+- `change`: Another tab was opened: its ID.
+- `close`: A tab asks to close (its cross, the middle button, Delete or Ctrl+W): its ID.
 
 ## Slots
 

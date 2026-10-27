@@ -14,7 +14,10 @@ Elemenx.Component('Image', {
 		Group: 'display',
 		Icon: 'image',
 		Description: 'A picture that is easy to place.',
-		Events: ['load', 'error'],
+		Events: {
+			load: 'The picture loaded: {Src}.',
+			error: 'The picture did not load: {Src}.'
+		},
 		Props: {
 			Src: 'The URL of the picture.',
 			Alt: 'The text of the picture for screen readers.',

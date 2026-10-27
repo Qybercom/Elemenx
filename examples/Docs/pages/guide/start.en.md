@@ -135,3 +135,5 @@ New parts come from the command line too: `npx elemenx g component components/Pr
 3. [Directives](/guide/directives), [Services](/guide/services), the [Router](/guide/router) and its [guards](/guide/guards).
 4. [Network](/network/overview) and [Data and messaging](/data/storage): talking to servers, storing data, other tabs and workers.
 5. [ElemenxUI](/guide/library), [Themes](/guide/theming) and the pages of every component, service and directive in the sections below.
+
+To learn by building, the [tutorials](/tutorials/landing) make whole projects step by step: a landing page, a blog, an admin panel, a shop, a chat, a game, an editor and more. Coming from another framework: [for those who know Vue, React or Angular](/tutorials/migrate).

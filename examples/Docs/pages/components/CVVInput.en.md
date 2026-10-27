@@ -21,7 +21,9 @@ Value holds the 3 or 4 security code digits (Length). The code is hidden unless 
 
 ## Events
 
-`input`, `validate`, `change`
+- `input`: The digits changed: Value.
+- `validate`: The code was checked: {Value, Complete, Valid}.
+- `change`: The code was committed: Value.
 
 ## Example
 

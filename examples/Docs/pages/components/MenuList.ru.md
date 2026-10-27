@@ -16,7 +16,8 @@
 
 ## События
 
-`select`, `dismiss`
+- `select`: Выбран конечный пункт: сам пункт.
+- `dismiss`: Просит закрыться (владелец ставит Open в false): причина — outside, escape, tab, back, swipe, backdrop или cancel.
 
 ## Пример
 

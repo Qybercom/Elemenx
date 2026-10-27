@@ -15,7 +15,12 @@ Elemenx.Component('ChatComposer', {
 		Group: 'social',
 		Icon: 'send',
 		Description: 'The message field of a Chat.',
-		Events: ['input', 'sticker', 'send', 'attach'],
+		Events: {
+			input: 'The text changed: Value.',
+			send: 'Enter (or the send button): the text.',
+			sticker: 'A sticker was sent: {Sticker}.',
+			attach: 'The attach button was pressed.'
+		},
 		Props: {
 			Placeholder: 'The text shown while it is empty.',
 			MaxRows: 'How many lines the field grows to.',

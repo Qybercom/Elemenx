@@ -16,7 +16,11 @@ Elemenx.Component('Form', {
 		Icon: 'file-text',
 		Description: 'A form: a <form> that collects its fields into Model, a Group of the Forms Service, and validates them.',
 		Container: true,
-		Events: ['submit', 'invalid', 'reset'],
+		Events: {
+			submit: 'Submitted and valid: {Value, Model}, the values of the fields and the Group.',
+			invalid: 'Submitted with errors: {Errors, Model}; the focus goes to the first field in error.',
+			reset: 'Reset to its first values: {Model}.'
+		},
 		Methods: ['Submit()', 'Reset()'],
 		Props: {
 			Model: 'A Group of the Forms Service made in code; without one the Form makes it of its Fields.',

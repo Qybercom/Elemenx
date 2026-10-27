@@ -14,7 +14,8 @@ A menu of a game: the main menu, a pause menu, a list of saves. Title and Subtit
 
 ## Events
 
-`select`, `back`
+- `select`: An item was chosen: {ID, Item}.
+- `back`: Escape was pressed: go back.
 
 ## Slots
 

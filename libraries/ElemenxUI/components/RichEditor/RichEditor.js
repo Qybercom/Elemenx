@@ -28,7 +28,14 @@ Elemenx.Component('RichEditor', {
 		Group: 'inputs',
 		Icon: 'bold',
 		Description: 'An editor of rich text (WYSIWYG).',
-		Events: ['ready', 'input', 'formats', 'link', 'files', 'change'],
+		Events: {
+			ready: 'The editor is ready: the component itself, to call Command.',
+			input: 'The document changed: its HTML.',
+			formats: 'The styles at the caret changed: {Bold, Italic, Underline, Strike, Code, Block, Level, Quote, List, Link, Table}, to light the buttons of a toolbar.',
+			link: 'A link was pressed: {Href, Text}.',
+			files: 'Files were pasted or dropped: a list of File, for the Application to upload.',
+			change: 'The document was committed when the focus left: Value.'
+		},
 		Methods: ['Find(query, options)', 'FindNext()', 'FindPrevious()', 'ReplaceCurrent(text)', 'ReplaceAll(text)', 'ClearFind()', 'Formats()', 'Command(name, value)', 'Focus()', 'Insert(html)', 'Markdown()', 'SetMarkdown(text)', 'Text()', 'Print(options, callback)'],
 		Props: {
 			Value: 'The HTML of the document.',

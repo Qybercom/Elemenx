@@ -35,7 +35,7 @@ The card of a plan of a subscription: Name and Description in a header (in Color
 
 ## Events
 
-`select`
+- `select`: The plan was chosen: {ID}.
 
 ## Slots
 

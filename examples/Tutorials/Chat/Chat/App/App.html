@@ -1,0 +1,16 @@
+<div class="talk">
+	<div class="talk-join" *if="!Name"><Join (join)="Joined" /></div>
+	<Chat *if="Name">
+		<div slot="sidebar" class="elemenx-column" style="gap: 8px; padding: 8px;">
+			<strong style="padding: 4px 8px;">Rooms</strong>
+			<NavList [items]="Rooms" [value]="Room" Label="Rooms" (select)="Opened" />
+		</div>
+		<div slot="header" class="elemenx-container" style="gap: 8px; align-items: center;">
+			<strong class="talk-room">#{{Room}}</strong>
+			<span class="elemenx-spacer"></span>
+			<Avatar [name]="Name" Size="small" Status="online" />
+		</div>
+		<ChatMessage *for="message of Messages" *key="message.ID" [id]="message.ID" [author]="message.Author" [text]="message.Text" [time]="Clock(message.Time)" [own]="message.Author === Name" [position]="Position(Messages, $index)" />
+		<ChatComposer slot="composer" Placeholder="A message" (send)="Sent" />
+	</Chat>
+</div>

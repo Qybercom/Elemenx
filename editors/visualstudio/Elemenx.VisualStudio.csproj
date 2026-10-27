@@ -1,0 +1,46 @@
+<Project>
+	<Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
+
+	<!--
+		The extension of Elemenx for Visual Studio 2022: the language server of ../server through the LSP client of Visual
+		Studio. editors/build.js writes its manifest, its icons and its description from editors/extension.json, and copies
+		the server and the core (with the sources of Elemenx and ElemenxUI) beside it, then builds it with the MSBuild of
+		Visual Studio: node editors/build.js (on Windows, with the workload Visual Studio extension development).
+	-->
+	<PropertyGroup>
+		<TargetFramework>net472</TargetFramework>
+		<RootNamespace>Qybercom.Elemenx.VisualStudio</RootNamespace>
+		<AssemblyName>Elemenx.VisualStudio</AssemblyName>
+		<LangVersion>latest</LangVersion>
+		<GeneratePkgDefFile>false</GeneratePkgDefFile>
+		<IncludeAssemblyInVSIXContainer>true</IncludeAssemblyInVSIXContainer>
+		<IncludeDebugSymbolsInVSIXContainer>false</IncludeDebugSymbolsInVSIXContainer>
+		<IncludeDebugSymbolsInLocalVSIXDeployment>false</IncludeDebugSymbolsInLocalVSIXDeployment>
+		<CreateVsixContainer>true</CreateVsixContainer>
+		<DeployExtension>false</DeployExtension>
+		<CopyBuildOutputToOutputDirectory>true</CopyBuildOutputToOutputDirectory>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.VisualStudio.SDK" Version="17.10.40171" ExcludeAssets="runtime" />
+		<PackageReference Include="Microsoft.VisualStudio.LanguageServer.Client" Version="17.10.124" ExcludeAssets="runtime" />
+		<PackageReference Include="Microsoft.VSSDK.BuildTools" Version="17.14.2142" PrivateAssets="all" GeneratePathProperty="true" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Reference Include="System.ComponentModel.Composition" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="source.extension.vsixmanifest" SubType="Designer" />
+		<Content Include="server\**\*" IncludeInVSIX="true" />
+		<Content Include="core\**\*" IncludeInVSIX="true" />
+		<Content Include="icon.png" IncludeInVSIX="true" />
+		<Content Include="preview.png" IncludeInVSIX="true" />
+		<Content Include="LICENSE.txt" IncludeInVSIX="true" />
+	</ItemGroup>
+
+	<!-- The targets that make the .vsix: a project of the SDK style does not import them by itself; they go after the ones of the SDK. -->
+	<Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
+	<Import Project="$(PkgMicrosoft_VSSDK_BuildTools)\tools\vssdk\Microsoft.VsSDK.targets" Condition="'$(PkgMicrosoft_VSSDK_BuildTools)' != ''" />
+</Project>

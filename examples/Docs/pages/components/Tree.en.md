@@ -22,7 +22,11 @@ A tree. Items: [{ID, Label, Icon, Badge, Items, Disabled, Lazy}]; Value is the I
 
 ## Events
 
-`check`, `expand`, `load`, `select`, `move`
+- `check`: The check boxes changed: the IDs of the checked items.
+- `expand`: An item opened or closed: the IDs of the open items.
+- `load`: A Lazy item was opened: the item, which asks for its Items.
+- `select`: An item was selected: the item.
+- `move`: An item was dragged onto another (Movable): {ID, Target, Position (before, after or inside), Type}.
 
 ## Example
 

@@ -17,7 +17,9 @@
 
 ## События
 
-`input`, `validate`, `change`
+- `input`: Цифры изменились: Value (MMYY).
+- `validate`: Дата проверена: {Value, Complete, Valid}.
+- `change`: Дата зафиксирована: Value.
 
 ## Пример
 

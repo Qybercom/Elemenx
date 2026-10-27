@@ -15,8 +15,38 @@ The menu of a program declared as a menu of the page: <NativeMenu> with MenuItem
 
 ## Events
 
-`apply`, `select`
+- `apply`: The menu was given to the system: {Error}, null when it went well.
+- `select`: An item was chosen in the menu of the program: the item.
 
 ## Slots
 
 default
+
+## Example
+
+```example
+<TitleBar Title="Notes" Icon="file-text">
+	<NativeMenu (select)="Selected">
+		<MenuItem Label="File">
+			<MenuItem ID="new" Label="New note" Shortcut="Alt+Shift+N" />
+			<MenuItem ID="export" Label="Export..." />
+			<MenuItem Separator="true" />
+			<MenuItem Role="quit" Label="Quit" />
+		</MenuItem>
+		<MenuItem Label="Edit">
+			<MenuItem Role="undo" Label="Undo" />
+			<MenuItem ID="find" Label="Find" />
+		</MenuItem>
+	</NativeMenu>
+</TitleBar>
+<p class="elemenx-text small muted">On the web the menu is a MenuBar without the items of the system (Quit, Undo). Chosen: {{Chosen}}</p>
+<script>
+({
+	Chosen: 'nothing yet',
+
+	Selected: function (item) {
+		this.Chosen = item.Label;
+	}
+})
+</script>
+```

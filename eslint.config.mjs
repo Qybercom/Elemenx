@@ -71,7 +71,7 @@ export default [
 		rules: formatting
 	},
 	{
-		files: ['tests/**/*.test.js', 'tests/**/*.spec.js', 'tests/setup.js', 'tests/coverage/**/*.js', 'tests/**/*.mjs', '*.config.js', '*.config.mjs', 'stylelint/**/*.mjs'],
+		files: ['tests/**/*.test.js', 'tests/**/*.spec.js', 'tests/setup.js', 'tests/library.js', 'tests/coverage/**/*.js', 'tests/**/*.mjs', '*.config.js', '*.config.mjs', 'stylelint/**/*.mjs'],
 		languageOptions: {
 			ecmaVersion: 'latest',
 			sourceType: 'module'

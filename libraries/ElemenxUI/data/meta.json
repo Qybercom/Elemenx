@@ -76,6 +76,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [],
 			"Sample": {
 				"Name": "home",
@@ -122,6 +123,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [],
 			"Sample": {
 				"Size": 40
@@ -132,7 +134,7 @@
 			"Kind": "Component",
 			"Group": "buttons",
 			"Icon": "launcher",
-			"Description": "A button.",
+			"Description": "A button: primary, secondary, ghost, danger or link, with an icon, a spinner, a badge or a pressed state.",
 			"Props": [
 				{
 					"Name": "Label",
@@ -292,6 +294,9 @@
 			"Events": [
 				"click"
 			],
+			"EventDescriptions": {
+				"click": "Pressed (not while Disabled or Loading): the DOM event of the press."
+			},
 			"Methods": [],
 			"Sample": {
 				"Label": "Primary",
@@ -338,6 +343,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [],
 			"Sample": {
 				"Attached": true,
@@ -510,6 +516,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [],
 			"Sample": {
 				"Label": "Name",
@@ -561,6 +568,11 @@
 				"invalid",
 				"reset"
 			],
+			"EventDescriptions": {
+				"submit": "Submitted and valid: {Value, Model}, the values of the fields and the Group.",
+				"invalid": "Submitted with errors: {Errors, Model}; the focus goes to the first field in error.",
+				"reset": "Reset to its first values: {Model}."
+			},
 			"Methods": [
 				"Submit()",
 				"Reset()"
@@ -673,12 +685,20 @@
 			"Current": "",
 			"Events": [
 				"find",
-				"close",
 				"next",
 				"previous",
 				"replace",
-				"replaceall"
+				"replaceall",
+				"close"
 			],
+			"EventDescriptions": {
+				"find": "The text or an option changed: {Query, Case, Word, RegExp}, what to look for.",
+				"next": "Go to the next match (Enter, or its button).",
+				"previous": "Go to the previous match (Shift+Enter, or its button).",
+				"replace": "Replace the current match: {Text}, the replacement.",
+				"replaceall": "Replace every match: {Text}, the replacement.",
+				"close": "Closed by Escape or its button."
+			},
 			"Methods": [
 				"Focus()"
 			],
@@ -738,6 +758,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [],
 			"Sample": {
 				"Value": "## A title\n\nSome **bold** and *italic* text, and a [link](https://example.com).\n\n- One\n- Two"
@@ -857,6 +878,9 @@
 			"Events": [
 				"fold"
 			],
+			"EventDescriptions": {
+				"fold": "A block was folded or unfolded: {Line, Folded}."
+			},
 			"Methods": [],
 			"Sample": {
 				"Value": "function greet (name) {\n\tvar text = 'Hello, ' + name;\n\n\treturn text.toUpperCase();\n}",
@@ -908,6 +932,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [],
 			"Sample": {
 				"Value": "x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}",
@@ -919,7 +944,7 @@
 			"Kind": "Component",
 			"Group": "inputs",
 			"Icon": "edit",
-			"Description": "A text field.",
+			"Description": "A text field, with a format of its own (email, url, decimal...) and a password eye.",
 			"Props": [
 				{
 					"Name": "Type",
@@ -1183,9 +1208,14 @@
 			"Current": "",
 			"Events": [
 				"input",
-				"validate",
-				"change"
+				"change",
+				"validate"
 			],
+			"EventDescriptions": {
+				"input": "The text changed while typing: Value.",
+				"change": "The value was committed (Enter, the focus left): Value, normalized by its Preset.",
+				"validate": "A Preset checked the committed value: {Valid, Value, Message}."
+			},
 			"Methods": [],
 			"Sample": {
 				"Placeholder": "Search",
@@ -1321,6 +1351,10 @@
 				"input",
 				"change"
 			],
+			"EventDescriptions": {
+				"input": "The text changed while typing: Value.",
+				"change": "The value was committed when the focus left: Value."
+			},
 			"Methods": [],
 			"Sample": {
 				"Placeholder": "Write something",
@@ -1553,6 +1587,13 @@
 				"change",
 				"complete"
 			],
+			"EventDescriptions": {
+				"ready": "The editor is ready: the component itself, to call its methods.",
+				"cursor": "The caret or the selection moved: {Line, Column, Start, End}.",
+				"input": "The code changed while typing: Value.",
+				"change": "The code was committed when the focus left: Value.",
+				"complete": "A completion was accepted: the item chosen."
+			},
 			"Methods": [
 				"Indent()",
 				"Outdent()",
@@ -1683,6 +1724,14 @@
 				"files",
 				"change"
 			],
+			"EventDescriptions": {
+				"ready": "The editor is ready: the component itself, to call Command.",
+				"input": "The document changed: its HTML.",
+				"formats": "The styles at the caret changed: {Bold, Italic, Underline, Strike, Code, Block, Level, Quote, List, Link, Table}, to light the buttons of a toolbar.",
+				"link": "A link was pressed: {Href, Text}.",
+				"files": "Files were pasted or dropped: a list of File, for the Application to upload.",
+				"change": "The document was committed when the focus left: Value."
+			},
 			"Methods": [
 				"Find(query, options)",
 				"FindNext()",
@@ -1967,11 +2016,26 @@
 			"Current": "",
 			"Events": [
 				"front",
+				"minimize",
+				"maximize",
 				"restore",
 				"close",
 				"resize",
-				"move"
+				"move",
+				"popout",
+				"popin"
 			],
+			"EventDescriptions": {
+				"front": "It came to the front of the other windows.",
+				"minimize": "It was folded to its header.",
+				"maximize": "It filled its bounds.",
+				"restore": "It came back from minimized or maximized.",
+				"close": "Its close button was pressed (Open becomes false).",
+				"resize": "Its size changed: {Width, Height}.",
+				"move": "It moved: {X, Y}.",
+				"popout": "It went out into a window of the system of its own.",
+				"popin": "It came back from a window of the system into the page."
+			},
 			"Methods": [
 				"Front()",
 				"Minimize()",
@@ -2029,6 +2093,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [],
 			"Sample": {
 				"Label": "An example game"
@@ -2123,6 +2188,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [],
 			"Sample": {
 				"Label": "Health"
@@ -2159,6 +2225,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [],
 			"Sample": {
 				"Item": {
@@ -2352,6 +2419,11 @@
 				"ready",
 				"drop"
 			],
+			"EventDescriptions": {
+				"use": "Pressed (or its key) while ready: {Label, Key}.",
+				"ready": "Its cooldown ended: {Label, Key}.",
+				"drop": "An item was dropped on it: {Item, From, To, Current, Type}."
+			},
 			"Methods": [
 				"Cool(milliseconds)"
 			],
@@ -2428,6 +2500,14 @@
 				"receive",
 				"give"
 			],
+			"EventDescriptions": {
+				"select": "Another cell was selected: {Index, Item}.",
+				"use": "An item was used (Enter or a double press): {Index, Item}.",
+				"move": "An item moved to another cell: {From, To, Items}, the cells after the move.",
+				"discard": "An item was discarded (Delete): {Index, Item}.",
+				"receive": "An item came from another inventory or slot: {Item, From, To, Current}.",
+				"give": "An item was dropped on another place: {Index, Item, From, Target}."
+			},
 			"Methods": [
 				"Move(from, to)"
 			],
@@ -2499,6 +2579,10 @@
 				"next",
 				"choose"
 			],
+			"EventDescriptions": {
+				"next": "The line without choices was read on (its continue button).",
+				"choose": "A choice was made: {ID, Choice}."
+			},
 			"Methods": [],
 			"Sample": {
 				"Speed": 60
@@ -2556,6 +2640,10 @@
 				"select",
 				"back"
 			],
+			"EventDescriptions": {
+				"select": "An item was chosen: {ID, Item}.",
+				"back": "Escape was pressed: go back."
+			},
 			"Methods": [],
 			"Sample": {
 				"Title": "Paused",
@@ -2617,6 +2705,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [],
 			"Sample": {
 				"Label": "Jump",
@@ -2690,6 +2779,9 @@
 			"Events": [
 				"change"
 			],
+			"EventDescriptions": {
+				"change": "Another tab was opened: its ID."
+			},
 			"Methods": [],
 			"Sample": {
 				"Items": [
@@ -2774,6 +2866,10 @@
 				"change",
 				"track"
 			],
+			"EventDescriptions": {
+				"change": "Another quest was opened: its ID.",
+				"track": "A quest was tracked or untracked: {ID, Tracked}."
+			},
 			"Methods": [],
 			"Sample": {
 				"Label": "Quest log"
@@ -2888,6 +2984,10 @@
 				"marker",
 				"zoom"
 			],
+			"EventDescriptions": {
+				"marker": "A marker was pressed: the marker.",
+				"zoom": "A zoom button was pressed: 1 (in) or -1 (out)."
+			},
 			"Methods": [],
 			"Sample": {
 				"Heading": 35,
@@ -2955,6 +3055,9 @@
 			"Events": [
 				"select"
 			],
+			"EventDescriptions": {
+				"select": "A row was pressed: its item."
+			},
 			"Methods": [],
 			"Sample": {
 				"Limit": 5,
@@ -3029,6 +3132,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [],
 			"Sample": {
 				"Key": "~",
@@ -3068,6 +3172,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [],
 			"Sample": {
 				"Name": "ground"
@@ -3194,6 +3299,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [],
 			"Sample": {
 				"ID": "archer-1",
@@ -3351,6 +3457,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [],
 			"Sample": {
 				"ID": "barracks",
@@ -3473,6 +3580,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [],
 			"Sample": {
 				"Kind": "tree",
@@ -3640,6 +3748,16 @@
 				"view",
 				"error"
 			],
+			"EventDescriptions": {
+				"ready": "The world is ready: the component itself, to call its methods.",
+				"load": "The map was loaded: {Width, Height} in cells.",
+				"select": "The selection changed: {IDs, Objects}.",
+				"order": "The selected units were ordered: {Kind (move, attack or stop), IDs, X, Y, Target}.",
+				"arrive": "A unit reached the end of its way: {ID, X, Y}.",
+				"cell": "A cell was pressed: {X, Y, Button, Object}, the object on it or null.",
+				"view": "The view moved or zoomed: {X, Y, Zoom}.",
+				"error": "The map could not be loaded: the error."
+			},
 			"Methods": [
 				"Load(map, callback)",
 				"Add(object)",
@@ -3833,6 +3951,10 @@
 				"input",
 				"change"
 			],
+			"EventDescriptions": {
+				"input": "The number changed while typing or by the arrows: Value (a number or null).",
+				"change": "The number was committed, bounded and rounded: Value."
+			},
 			"Methods": [],
 			"Sample": {
 				"Min": 0,
@@ -4008,6 +4130,10 @@
 				"input",
 				"change"
 			],
+			"EventDescriptions": {
+				"input": "The date changed while typing or in the calendar: Value (ISO, or '').",
+				"change": "The date was committed: Value."
+			},
 			"Methods": [],
 			"Sample": {}
 		},
@@ -4166,6 +4292,10 @@
 				"input",
 				"change"
 			],
+			"EventDescriptions": {
+				"input": "The time changed while typing or in the picker: Value ('HH:MM', or '').",
+				"change": "The time was committed: Value."
+			},
 			"Methods": [],
 			"Sample": {
 				"MinuteStep": 15
@@ -4280,6 +4410,10 @@
 				"input",
 				"change"
 			],
+			"EventDescriptions": {
+				"input": "The color changed while dragging in the picker: Value.",
+				"change": "The color was committed (the drag released, a swatch or the eyedropper): Value."
+			},
 			"Methods": [],
 			"Sample": {}
 		},
@@ -4527,6 +4661,11 @@
 				"validate",
 				"change"
 			],
+			"EventDescriptions": {
+				"input": "The digits changed: Value.",
+				"validate": "The number was checked: {Value, Brand, Complete, Valid}.",
+				"change": "The number was committed: Value."
+			},
 			"Methods": [],
 			"Sample": {}
 		},
@@ -4614,6 +4753,11 @@
 				"validate",
 				"change"
 			],
+			"EventDescriptions": {
+				"input": "The digits changed: Value (MMYY).",
+				"validate": "The date was checked: {Value, Complete, Valid}.",
+				"change": "The date was committed: Value."
+			},
 			"Methods": [],
 			"Sample": {}
 		},
@@ -4737,6 +4881,11 @@
 				"validate",
 				"change"
 			],
+			"EventDescriptions": {
+				"input": "The digits changed: Value.",
+				"validate": "The code was checked: {Value, Complete, Valid}.",
+				"change": "The code was committed: Value."
+			},
 			"Methods": [],
 			"Sample": {}
 		},
@@ -4940,6 +5089,12 @@
 				"complete",
 				"change"
 			],
+			"EventDescriptions": {
+				"input": "The characters changed: Value.",
+				"validate": "The code was checked: {Value, Complete, Valid}.",
+				"complete": "All Length characters are in: Value.",
+				"change": "The code was committed: Value."
+			},
 			"Methods": [],
 			"Sample": {
 				"Group": 3
@@ -5078,6 +5233,12 @@
 				"change",
 				"country"
 			],
+			"EventDescriptions": {
+				"input": "The number changed: Value, international ('+79991234567').",
+				"validate": "The number was checked: {Value, Country, Complete, Valid}.",
+				"change": "The number was committed: Value.",
+				"country": "The country changed, picked or found by the dialling code: its code."
+			},
 			"Methods": [],
 			"Sample": {}
 		},
@@ -5086,7 +5247,7 @@
 			"Kind": "Component",
 			"Group": "inputs",
 			"Icon": "check",
-			"Description": "A check box.",
+			"Description": "A check box, a toggle chip or a selectable tile, with a mixed state.",
 			"Props": [
 				{
 					"Name": "Checked",
@@ -5203,6 +5364,9 @@
 			"Events": [
 				"change"
 			],
+			"EventDescriptions": {
+				"change": "It was checked or unchecked: Checked."
+			},
 			"Methods": [],
 			"Sample": {
 				"Label": "Remember me"
@@ -5311,6 +5475,9 @@
 			"Events": [
 				"change"
 			],
+			"EventDescriptions": {
+				"change": "It was checked: Value."
+			},
 			"Methods": [],
 			"Sample": {
 				"Label": "By post",
@@ -5420,6 +5587,9 @@
 			"Events": [
 				"change"
 			],
+			"EventDescriptions": {
+				"change": "Another option was chosen: Value, with its type."
+			},
 			"Methods": [],
 			"Sample": {
 				"Variant": "segmented",
@@ -5498,6 +5668,9 @@
 			"Events": [
 				"change"
 			],
+			"EventDescriptions": {
+				"change": "It was switched: Checked."
+			},
 			"Methods": [],
 			"Sample": {
 				"Label": "Notifications",
@@ -5612,9 +5785,13 @@
 			"Children": [],
 			"Current": "",
 			"Events": [
-				"reject",
-				"change"
+				"change",
+				"reject"
 			],
+			"EventDescriptions": {
+				"change": "The files changed: the list of File.",
+				"reject": "Files were refused by Accept, MaxSize or MaxFiles: [{Name, Reason}]."
+			},
 			"Methods": [],
 			"Sample": {
 				"Accept": "image/*,.pdf",
@@ -5762,6 +5939,9 @@
 			"Events": [
 				"change"
 			],
+			"EventDescriptions": {
+				"change": "Another option was chosen: Value, with its type; null when it was cleared."
+			},
 			"Methods": [],
 			"Sample": {}
 		},
@@ -5900,6 +6080,9 @@
 			"Events": [
 				"change"
 			],
+			"EventDescriptions": {
+				"change": "The selection changed: the list of the Values."
+			},
 			"Methods": [],
 			"Sample": {
 				"Placeholder": "Pick colors",
@@ -5981,6 +6164,10 @@
 				"select",
 				"dismiss"
 			],
+			"EventDescriptions": {
+				"select": "A leaf item was chosen: the item.",
+				"dismiss": "It asks to close (the owner sets Open to false): the reason, outside, escape, tab, back, swipe, backdrop or cancel."
+			},
 			"Methods": [],
 			"Sample": {
 				"Items": [
@@ -6127,6 +6314,9 @@
 			"Events": [
 				"select"
 			],
+			"EventDescriptions": {
+				"select": "A leaf item was chosen: the item."
+			},
 			"Methods": [],
 			"Sample": {
 				"Label": "Edit",
@@ -6199,6 +6389,9 @@
 			"Events": [
 				"select"
 			],
+			"EventDescriptions": {
+				"select": "A leaf item of a menu was chosen: the item."
+			},
 			"Methods": [],
 			"Sample": {
 				"Items": [
@@ -6347,6 +6540,9 @@
 			"Events": [
 				"select"
 			],
+			"EventDescriptions": {
+				"select": "It was chosen in its menu: the item."
+			},
 			"Methods": [],
 			"Sample": {
 				"ID": "undo",
@@ -6428,6 +6624,10 @@
 				"select",
 				"apply"
 			],
+			"EventDescriptions": {
+				"select": "An item was chosen in the menu of the program: the item.",
+				"apply": "The menu was given to the system: {Error}, null when it went well."
+			},
 			"Methods": [],
 			"Sample": {}
 		},
@@ -6462,6 +6662,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [],
 			"Sample": {
 				"Items": [
@@ -6543,6 +6744,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [],
 			"Sample": {
 				"Title": "Notes",
@@ -6637,6 +6839,10 @@
 				"change",
 				"close"
 			],
+			"EventDescriptions": {
+				"change": "Another tab was opened: its ID.",
+				"close": "A tab asks to close (its cross, the middle button, Delete or Ctrl+W): its ID."
+			},
 			"Methods": [],
 			"Sample": {}
 		},
@@ -6725,6 +6931,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [],
 			"Sample": {}
 		},
@@ -6759,6 +6966,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [],
 			"Sample": {
 				"Label": "Editor toolbar"
@@ -6857,6 +7065,9 @@
 			"Events": [
 				"close"
 			],
+			"EventDescriptions": {
+				"close": "Its close button was pressed."
+			},
 			"Methods": [],
 			"Sample": {
 				"Title": "Project",
@@ -6935,6 +7146,10 @@
 				"layout",
 				"resize"
 			],
+			"EventDescriptions": {
+				"layout": "The arrangement of the tool windows changed (moved, opened, closed, resized): Layout, {Areas, Order, Open, Sizes}.",
+				"resize": "A panel was resized by its edge: {Panel, Size}."
+			},
 			"Methods": [
 				"ResetLayout()"
 			],
@@ -7059,6 +7274,10 @@
 				"click",
 				"select"
 			],
+			"EventDescriptions": {
+				"click": "Pressed: {ID, Pressed}.",
+				"select": "An item of its menu was chosen: the item."
+			},
 			"Methods": [],
 			"Sample": {
 				"ID": "save",
@@ -7145,6 +7364,9 @@
 			"Events": [
 				"select"
 			],
+			"EventDescriptions": {
+				"select": "A sample was chosen: {ID, Item}."
+			},
 			"Methods": [],
 			"Sample": {
 				"ID": "style",
@@ -7215,6 +7437,9 @@
 			"Events": [
 				"launch"
 			],
+			"EventDescriptions": {
+				"launch": "The launcher at the corner of its title was pressed: {Title}."
+			},
 			"Methods": [],
 			"Sample": {
 				"Title": "Clipboard",
@@ -7301,6 +7526,7 @@
 			],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [],
 			"Sample": {
 				"ID": "home",
@@ -7357,6 +7583,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [],
 			"Sample": {
 				"ID": "info",
@@ -7399,6 +7626,9 @@
 			"Events": [
 				"page"
 			],
+			"EventDescriptions": {
+				"page": "Another page was opened: {ID}."
+			},
 			"Methods": [],
 			"Sample": {
 				"Title": "File"
@@ -7492,6 +7722,12 @@
 				"command",
 				"backstage"
 			],
+			"EventDescriptions": {
+				"tab": "Another tab was opened: {ID}.",
+				"collapse": "It was collapsed or pinned: {Collapsed}.",
+				"command": "A command of any of its controls ran: {ID, Item}.",
+				"backstage": "The backstage opened or closed: {Open}."
+			},
 			"Methods": [],
 			"Sample": {}
 		},
@@ -7542,6 +7778,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [],
 			"Sample": {}
 		},
@@ -7631,6 +7868,9 @@
 			"Events": [
 				"toggle"
 			],
+			"EventDescriptions": {
+				"toggle": "It was folded or unfolded: Collapsed."
+			},
 			"Methods": [],
 			"Sample": {
 				"Title": "Settings",
@@ -7704,6 +7944,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [],
 			"Sample": {
 				"Title": "Reactor",
@@ -7743,6 +7984,7 @@
 			],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [],
 			"Sample": {
 				"Columns": 2,
@@ -7804,6 +8046,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [],
 			"Sample": {
 				"Label": "Uptime",
@@ -7949,6 +8192,9 @@
 			"Events": [
 				"page"
 			],
+			"EventDescriptions": {
+				"page": "Another page or page size was chosen: {Page, PageSize}."
+			},
 			"Methods": [],
 			"Sample": {
 				"Count": 240,
@@ -8041,6 +8287,9 @@
 			"Events": [
 				"select"
 			],
+			"EventDescriptions": {
+				"select": "An item was pressed, or chosen in the menu of the hidden ones: {Item, Index}."
+			},
 			"Methods": [],
 			"Sample": {
 				"Items": [
@@ -8120,6 +8369,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [],
 			"Sample": {
 				"ShowLabel": true
@@ -8207,6 +8457,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [],
 			"Sample": {
 				"Quality": "fair"
@@ -8327,6 +8578,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [],
 			"Sample": {
 				"Name": "Ada Lovelace",
@@ -8404,6 +8656,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [],
 			"Sample": {
 				"Seed": "Elemenx",
@@ -8550,6 +8803,10 @@
 				"load",
 				"error"
 			],
+			"EventDescriptions": {
+				"load": "The picture loaded: {Src}.",
+				"error": "The picture did not load: {Src}."
+			},
 			"Methods": [],
 			"Sample": {
 				"Alt": "Mountains",
@@ -8563,7 +8820,7 @@
 			"Kind": "Component",
 			"Group": "data",
 			"Icon": "table",
-			"Description": "A data table.",
+			"Description": "A data table that sorts, filters, pages, selects, expands and resizes its columns.",
 			"Props": [
 				{
 					"Name": "Label",
@@ -8822,6 +9079,15 @@
 				"activate",
 				"resize"
 			],
+			"EventDescriptions": {
+				"sort": "A sortable title was pressed: {Key, Direction}.",
+				"filter": "A filter of a column changed: {Key: text}.",
+				"page": "Another page or page size was chosen: {Page, PageSize}.",
+				"expand": "A row was expanded or folded: the keys of the expanded rows.",
+				"select": "The selection changed: the keys of the selected rows.",
+				"activate": "A row was opened (a double press or Enter): the row.",
+				"resize": "A column was resized: {Key, Width}."
+			},
 			"Methods": [],
 			"Sample": {
 				"Selectable": "multiple",
@@ -8932,6 +9198,9 @@
 			"Events": [
 				"change"
 			],
+			"EventDescriptions": {
+				"change": "Another currency was chosen: its code."
+			},
 			"Methods": [],
 			"Sample": {
 				"Value": "EUR"
@@ -9064,6 +9333,9 @@
 			"Events": [
 				"change"
 			],
+			"EventDescriptions": {
+				"change": "A city was picked: {ID, Name, Country, Region, Latitude, Longitude, TimeZone}; null when it was cleared."
+			},
 			"Methods": [],
 			"Sample": {
 				"Clearable": true
@@ -9202,7 +9474,14 @@
 			"Container": false,
 			"Children": [],
 			"Current": "",
-			"Events": [],
+			"Events": [
+				"input",
+				"change"
+			],
+			"EventDescriptions": {
+				"input": "The amount or the currency changed while typing: {Amount, Currency}.",
+				"change": "The amount was committed, or the currency changed: {Amount, Currency}."
+			},
 			"Methods": [],
 			"Sample": {}
 		},
@@ -9300,6 +9579,9 @@
 			"Events": [
 				"close"
 			],
+			"EventDescriptions": {
+				"close": "It asks to close (the owner sets Open to false): the reason, close, escape or backdrop."
+			},
 			"Methods": [],
 			"Sample": {
 				"Title": "Project settings",
@@ -9319,6 +9601,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [],
 			"Sample": {}
 		},
@@ -9392,6 +9675,9 @@
 			"Events": [
 				"toggle"
 			],
+			"EventDescriptions": {
+				"toggle": "It opened or closed: true or false."
+			},
 			"Methods": [],
 			"Sample": {
 				"Title": "Popover"
@@ -9426,6 +9712,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [],
 			"Sample": {}
 		},
@@ -9528,6 +9815,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [],
 			"Sample": {
 				"Items": [
@@ -9607,6 +9895,10 @@
 				"accept",
 				"decline"
 			],
+			"EventDescriptions": {
+				"accept": "The call was accepted: {Video}, true when with the camera.",
+				"decline": "The call was declined."
+			},
 			"Methods": [],
 			"Sample": {
 				"Name": "Ada Lovelace",
@@ -9749,6 +10041,9 @@
 			"Events": [
 				"pin"
 			],
+			"EventDescriptions": {
+				"pin": "Its pin button or a double click: {Pinned, Name}, the state it asks for."
+			},
 			"Methods": [],
 			"Sample": {
 				"Name": "Ada Lovelace",
@@ -9882,6 +10177,18 @@
 				"device",
 				"leave"
 			],
+			"EventDescriptions": {
+				"mute": "The microphone button: {Muted}, the state it asks for.",
+				"camera": "The camera button: {Camera}, the state it asks for.",
+				"share": "The screen button: {Sharing}, the state it asks for.",
+				"hand": "The hand button: {Hand}, the state it asks for.",
+				"react": "A reaction was chosen: {Emoji}.",
+				"chat": "The chat button: {Open}, the state it asks for.",
+				"people": "The people button: {Open}, the state it asks for.",
+				"layout": "Another layout was chosen: {Layout}.",
+				"device": "Another device was chosen: {Kind (microphone, speaker or camera), ID}.",
+				"leave": "The leave button was pressed."
+			},
 			"Methods": [],
 			"Sample": {
 				"Muted": true
@@ -9961,10 +10268,13 @@
 			"Children": [],
 			"Current": "",
 			"Events": [
-				"layout",
 				"corner",
 				"page"
 			],
+			"EventDescriptions": {
+				"corner": "The own video was dragged to another corner: {Corner}.",
+				"page": "Another page of the grid was shown: {Page}."
+			},
 			"Methods": [],
 			"Sample": {
 				"Layout": "grid"
@@ -9992,6 +10302,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [],
 			"Sample": {}
 		},
@@ -10000,7 +10311,7 @@
 			"Kind": "Component",
 			"Group": "inputs",
 			"Icon": "sliders",
-			"Description": "A slider.",
+			"Description": "A slider of a value or a range, with marks, across or upright.",
 			"Props": [
 				{
 					"Name": "Value",
@@ -10130,6 +10441,10 @@
 				"input",
 				"change"
 			],
+			"EventDescriptions": {
+				"input": "The value changed while dragging or by the keys: Value.",
+				"change": "The value was committed (released): Value."
+			},
 			"Methods": [],
 			"Sample": {
 				"ShowValue": "always"
@@ -10223,6 +10538,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [],
 			"Sample": {
 				"Label": "Upload",
@@ -10409,6 +10725,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [],
 			"Sample": {
 				"Low": 50,
@@ -10556,6 +10873,10 @@
 				"input",
 				"change"
 			],
+			"EventDescriptions": {
+				"input": "The value changed while turning: Value.",
+				"change": "The value was committed (released): Value."
+			},
 			"Methods": [],
 			"Sample": {
 				"Default": 50,
@@ -10638,6 +10959,11 @@
 				"select",
 				"navigate"
 			],
+			"EventDescriptions": {
+				"toggle": "A switch row was switched: {ID, Item, Checked}.",
+				"select": "A row was chosen: {ID, Item, Path}.",
+				"navigate": "A submenu was opened or left: {Path}, the IDs of the open submenus."
+			},
 			"Methods": [],
 			"Sample": {
 				"Title": "Settings",
@@ -10743,6 +11069,11 @@
 				"press",
 				"call"
 			],
+			"EventDescriptions": {
+				"input": "The number changed: the number.",
+				"press": "A key was pressed: {Value}.",
+				"call": "The key that calls (or Enter): the number."
+			},
 			"Methods": [],
 			"Sample": {}
 		},
@@ -10905,6 +11236,9 @@
 			"Events": [
 				"change"
 			],
+			"EventDescriptions": {
+				"change": "A control of the strip changed: {ID, Key (Volume, Pan, Mute, Solo or the Label of a knob), Value}."
+			},
 			"Methods": [],
 			"Sample": {
 				"ID": "guitar",
@@ -10989,6 +11323,9 @@
 			"Events": [
 				"change"
 			],
+			"EventDescriptions": {
+				"change": "A control of a strip changed: {ID (the channel, or 'master'), Key, Value}."
+			},
 			"Methods": [],
 			"Sample": {
 				"Label": "Studio"
@@ -11107,6 +11444,9 @@
 			"Events": [
 				"press"
 			],
+			"EventDescriptions": {
+				"press": "A key was pressed on the screen: {Code, Label}."
+			},
 			"Methods": [],
 			"Sample": {
 				"Layout": "compact",
@@ -11220,6 +11560,10 @@
 				"noteon",
 				"noteoff"
 			],
+			"EventDescriptions": {
+				"noteon": "A note started: {Note, Midi, Velocity}.",
+				"noteoff": "A note ended: {Note, Midi}."
+			},
 			"Methods": [],
 			"Sample": {
 				"From": "C4"
@@ -11269,6 +11613,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [],
 			"Sample": {
 				"Size": "small"
@@ -11327,6 +11672,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [],
 			"Sample": {
 				"Shape": "circle",
@@ -11391,6 +11737,9 @@
 			"Events": [
 				"resize"
 			],
+			"EventDescriptions": {
+				"resize": "The divider was released: Size, of the first pane."
+			},
 			"Methods": [],
 			"Sample": {
 				"Size": 180,
@@ -11498,6 +11847,9 @@
 			"Events": [
 				"view"
 			],
+			"EventDescriptions": {
+				"view": "The view moved or zoomed: {X, Y, Zoom}."
+			},
 			"Methods": [],
 			"Sample": {
 				"Grid": "dots",
@@ -11583,6 +11935,10 @@
 				"pick",
 				"dismiss"
 			],
+			"EventDescriptions": {
+				"pick": "An emoji was picked: {Emoji (with the skin tone), Name, Base}.",
+				"dismiss": "Escape was pressed: close it."
+			},
 			"Methods": [],
 			"Sample": {
 				"Autofocus": false
@@ -11667,6 +12023,10 @@
 				"pick",
 				"dismiss"
 			],
+			"EventDescriptions": {
+				"pick": "A sticker was picked: {Sticker: {ID, Pack, URL, Title}}.",
+				"dismiss": "Escape was pressed: close it."
+			},
 			"Methods": [],
 			"Sample": {}
 		},
@@ -11717,6 +12077,11 @@
 				"pick",
 				"dismiss"
 			],
+			"EventDescriptions": {
+				"kind": "Another tab was shown: {Kind}, emoji or stickers.",
+				"pick": "An emoji or a sticker was picked: {Type: 'emoji', Emoji, Name} or {Type: 'sticker', Sticker}.",
+				"dismiss": "Escape was pressed: close it."
+			},
 			"Methods": [],
 			"Sample": {}
 		},
@@ -11845,6 +12210,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [],
 			"Sample": {
 				"Variant": "elevated",
@@ -12048,6 +12414,10 @@
 				"change",
 				"select"
 			],
+			"EventDescriptions": {
+				"change": "Another picture is shown: its Index.",
+				"select": "The picture was pressed: its item."
+			},
 			"Methods": [],
 			"Sample": {
 				"Items": [
@@ -12267,6 +12637,11 @@
 				"comment",
 				"share"
 			],
+			"EventDescriptions": {
+				"like": "The like button: {Liked, Likes}.",
+				"comment": "The comments button: {Title}.",
+				"share": "The share button: {Title, Href}."
+			},
 			"Methods": [],
 			"Sample": {
 				"Title": "Ten passes through the Caucasus",
@@ -12470,6 +12845,10 @@
 				"follow",
 				"message"
 			],
+			"EventDescriptions": {
+				"follow": "The follow button: {Following}.",
+				"message": "The message button: {Name}."
+			},
 			"Methods": [],
 			"Sample": {
 				"Name": "Ada Lovelace",
@@ -12688,6 +13067,14 @@
 				"mention",
 				"tag"
 			],
+			"EventDescriptions": {
+				"reply": "The reply button: {Author, Handle}.",
+				"repost": "The repost button: {Reposted, Reposts}.",
+				"like": "The like button: {Liked, Likes}.",
+				"share": "The share button: {Author, Text}.",
+				"mention": "A @mention of the text was pressed: {Handle}.",
+				"tag": "A #tag of the text was pressed: {Tag}."
+			},
 			"Methods": [],
 			"Sample": {
 				"Author": "Grace Hopper",
@@ -13008,6 +13395,12 @@
 				"size",
 				"add"
 			],
+			"EventDescriptions": {
+				"favorite": "The heart: {Favorite}.",
+				"color": "Another color was chosen: {Color}.",
+				"size": "Another size was chosen: {Size}.",
+				"add": "The cart button: {Color, Size}."
+			},
 			"Methods": [],
 			"Sample": {
 				"Title": "Studio headphones",
@@ -13263,6 +13656,9 @@
 			"Events": [
 				"select"
 			],
+			"EventDescriptions": {
+				"select": "The plan was chosen: {ID}."
+			},
 			"Methods": [],
 			"Sample": {
 				"ID": "free",
@@ -13398,6 +13794,10 @@
 				"change",
 				"period"
 			],
+			"EventDescriptions": {
+				"change": "Another plan was chosen: {ID, Period}.",
+				"period": "The monthly or yearly prices were chosen: {Period}."
+			},
 			"Methods": [],
 			"Sample": {
 				"Discount": "Save 20%"
@@ -13451,6 +13851,10 @@
 				"clear",
 				"resize"
 			],
+			"EventDescriptions": {
+				"clear": "The selection of messages was let go (its button, or Escape).",
+				"resize": "The sidebar was resized: SidebarWidth."
+			},
 			"Methods": [],
 			"Sample": {}
 		},
@@ -13645,6 +14049,11 @@
 				"select",
 				"action"
 			],
+			"EventDescriptions": {
+				"react": "A reaction was pressed or picked: {ID, Emoji, Mine}, Mine the state it asks for.",
+				"select": "The message was selected or let go: {ID, Selected}.",
+				"action": "An item of its menu was chosen: {ID, Action, Item}."
+			},
 			"Methods": [],
 			"Sample": {
 				"Author": "Grace Hopper",
@@ -13743,10 +14152,16 @@
 			"Current": "",
 			"Events": [
 				"input",
-				"sticker",
 				"send",
+				"sticker",
 				"attach"
 			],
+			"EventDescriptions": {
+				"input": "The text changed: Value.",
+				"send": "Enter (or the send button): the text.",
+				"sticker": "A sticker was sent: {Sticker}.",
+				"attach": "The attach button was pressed."
+			},
 			"Methods": [],
 			"Sample": {
 				"Attach": false
@@ -13833,6 +14248,9 @@
 			"Events": [
 				"select"
 			],
+			"EventDescriptions": {
+				"select": "A Clickable step was pressed: its item."
+			},
 			"Methods": [],
 			"Sample": {
 				"Items": [
@@ -13896,6 +14314,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [],
 			"Sample": {
 				"Items": [
@@ -14146,6 +14565,14 @@
 				"resize",
 				"create"
 			],
+			"EventDescriptions": {
+				"select": "A mark or a range was pressed: {Kind (mark or range), ID, Item}.",
+				"seek": "The line or the playhead was pressed or dragged: {At}.",
+				"view": "The part in view changed: {From, To}.",
+				"move": "A mark or a range was dragged: {Kind, ID, Item, At} for a mark, {Kind, ID, Item, From, To} for a range.",
+				"resize": "An edge of a range was dragged: {ID, Item, From, To}.",
+				"create": "A range was drawn on a lane: {Lane, From, To}."
+			},
 			"Methods": [],
 			"Sample": {
 				"Start": "2026-01-01",
@@ -14243,6 +14670,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [],
 			"Sample": {
 				"ID": "release",
@@ -14326,6 +14754,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [],
 			"Sample": {
 				"ID": "sprint",
@@ -14365,6 +14794,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [],
 			"Sample": {
 				"ID": "design",
@@ -14402,6 +14832,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [],
 			"Sample": {
 				"To": "2026-11-08"
@@ -14470,6 +14901,10 @@
 				"command",
 				"clear"
 			],
+			"EventDescriptions": {
+				"command": "Enter on the command line: the text of the command.",
+				"clear": "Ctrl+L: clear the output."
+			},
 			"Methods": [],
 			"Sample": {
 				"Title": "Shell"
@@ -14602,6 +15037,12 @@
 				"change",
 				"groupcreate"
 			],
+			"EventDescriptions": {
+				"open": "A tile was pressed: the tile.",
+				"groupaction": "An action of a group header was pressed: {Group, Action}.",
+				"change": "The tiles or the groups were moved or resized: Groups, as they are now.",
+				"groupcreate": "A tile dropped beside the groups made a new group: {Group, Tile}."
+			},
 			"Methods": [
 				"Arrangement()",
 				"Restore(arrangement)"
@@ -14705,6 +15146,7 @@
 			],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [],
 			"Sample": {
 				"ID": "pinned",
@@ -14849,6 +15291,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [],
 			"Sample": {
 				"ID": "clock",
@@ -14926,6 +15369,10 @@
 				"expand",
 				"select"
 			],
+			"EventDescriptions": {
+				"expand": "A group opened or closed: the IDs of the open groups.",
+				"select": "An item was chosen: the item."
+			},
 			"Methods": [],
 			"Sample": {
 				"Searchable": true
@@ -14947,6 +15394,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [],
 			"Sample": {}
 		},
@@ -15011,6 +15459,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [],
 			"Sample": {
 				"Title": "Sales",
@@ -15054,6 +15503,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [],
 			"Sample": {
 				"Description": "Options of the code editor"
@@ -15097,6 +15547,9 @@
 			"Events": [
 				"back"
 			],
+			"EventDescriptions": {
+				"back": "The back button of the card on a narrow layout: clear the detail."
+			},
 			"Methods": [],
 			"Sample": {
 				"Empty": "Select a person"
@@ -15177,6 +15630,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [],
 			"Sample": {
 				"Title": "Sign in",
@@ -15270,9 +15724,13 @@
 			"Children": [],
 			"Current": "",
 			"Events": [
-				"close",
-				"run"
+				"run",
+				"close"
 			],
+			"EventDescriptions": {
+				"run": "A command was chosen: the command (its Run is called too).",
+				"close": "It closed (Escape, the hotkey again, a press outside, or a command run)."
+			},
 			"Methods": [
 				"Run(index)"
 			],
@@ -15361,6 +15819,10 @@
 				"open",
 				"select"
 			],
+			"EventDescriptions": {
+				"open": "It is about to open: {Target, X, Y}; the owner may change Items for that target.",
+				"select": "A leaf item was chosen: {Item, Target}."
+			},
 			"Methods": [],
 			"Sample": {}
 		},
@@ -15473,6 +15935,9 @@
 			"Events": [
 				"close"
 			],
+			"EventDescriptions": {
+				"close": "It asks to close (the owner sets Open to false): the reason, close, escape or backdrop."
+			},
 			"Methods": [],
 			"Sample": {
 				"Title": "Filters",
@@ -15569,6 +16034,11 @@
 				"finish",
 				"close"
 			],
+			"EventDescriptions": {
+				"change": "Another step is shown: Step.",
+				"finish": "Done was pressed on the last step.",
+				"close": "It closed: the reason, skip, escape or done."
+			},
 			"Methods": [],
 			"Sample": {}
 		},
@@ -15722,11 +16192,17 @@
 			"Children": [],
 			"Current": "",
 			"Events": [
-				"invalid",
 				"add",
+				"remove",
 				"change",
-				"remove"
+				"invalid"
 			],
+			"EventDescriptions": {
+				"add": "A tag was added: the tag.",
+				"remove": "A tag was removed: the tag.",
+				"change": "The tags changed: the list of the tags.",
+				"invalid": "A text was refused: {Text, Reason (pattern, duplicate, max or unknown)}."
+			},
 			"Methods": [],
 			"Sample": {
 				"Suggestions": [
@@ -15901,6 +16377,11 @@
 				"create",
 				"change"
 			],
+			"EventDescriptions": {
+				"search": "The text changed: the text, to load Options from a server.",
+				"create": "A text that is no option was taken (AllowCustom): the text.",
+				"change": "An option was picked: Value."
+			},
 			"Methods": [],
 			"Sample": {
 				"Placeholder": "Type to search",
@@ -16073,6 +16554,9 @@
 			"Events": [
 				"change"
 			],
+			"EventDescriptions": {
+				"change": "A range was picked: [start, end]; [] when it was cleared."
+			},
 			"Methods": [],
 			"Sample": {}
 		},
@@ -16081,7 +16565,7 @@
 			"Kind": "Component",
 			"Group": "navigation",
 			"Icon": "tree",
-			"Description": "A tree.",
+			"Description": "A tree that opens, checks, filters, loads its branches lazily and moves its items.",
 			"Props": [
 				{
 					"Name": "Items",
@@ -16197,12 +16681,19 @@
 			"Children": [],
 			"Current": "",
 			"Events": [
-				"check",
-				"expand",
-				"load",
 				"select",
+				"expand",
+				"check",
+				"load",
 				"move"
 			],
+			"EventDescriptions": {
+				"select": "An item was selected: the item.",
+				"expand": "An item opened or closed: the IDs of the open items.",
+				"check": "The check boxes changed: the IDs of the checked items.",
+				"load": "A Lazy item was opened: the item, which asks for its Items.",
+				"move": "An item was dragged onto another (Movable): {ID, Target, Position (before, after or inside), Type}."
+			},
 			"Methods": [],
 			"Sample": {
 				"Checkable": true,
@@ -16299,6 +16790,9 @@
 			"Events": [
 				"pull"
 			],
+			"EventDescriptions": {
+				"pull": "A guide is pulled out of the ruler: {Value, ClientX, ClientY}."
+			},
 			"Methods": [],
 			"Sample": {
 				"Start": 0,
@@ -16336,6 +16830,9 @@
 			"Events": [
 				"add"
 			],
+			"EventDescriptions": {
+				"add": "A kind was placed on the page: the ID of the new element."
+			},
 			"Methods": [],
 			"Sample": {}
 		},
@@ -16431,6 +16928,10 @@
 				"select",
 				"drop"
 			],
+			"EventDescriptions": {
+				"select": "An element was pressed: its ID, or null for the page.",
+				"drop": "A kind or an element was dropped on the canvas: {Kind, Node, Parent, Index, ID}, ID the element made or moved."
+			},
 			"Methods": [],
 			"Sample": {}
 		},
@@ -16459,6 +16960,10 @@
 				"select",
 				"move"
 			],
+			"EventDescriptions": {
+				"select": "An element was pressed: its ID, or null.",
+				"move": "An element or a kind was dragged in the tree: {ID, Target, Position, Type}."
+			},
 			"Methods": [],
 			"Sample": {}
 		},
@@ -16474,6 +16979,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [],
 			"Sample": {}
 		},
@@ -16489,6 +16995,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [],
 			"Sample": {}
 		},
@@ -16516,6 +17023,9 @@
 			"Events": [
 				"select"
 			],
+			"EventDescriptions": {
+				"select": "Another element was selected from it (its parent): its ID, or null."
+			},
 			"Methods": [],
 			"Sample": {}
 		},
@@ -16531,6 +17041,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [],
 			"Sample": {}
 		},
@@ -16559,6 +17070,10 @@
 				"open",
 				"settings"
 			],
+			"EventDescriptions": {
+				"open": "A page or a component was opened: {ID}.",
+				"settings": "The settings of the Application were pressed."
+			},
 			"Methods": [],
 			"Sample": {}
 		},
@@ -16574,6 +17089,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [],
 			"Sample": {}
 		},
@@ -16609,7 +17125,7 @@
 					"Options": null,
 					"Schema": null,
 					"Body": false,
-					"Description": "The height of the list (a CSS length)."
+					"Description": "The height of the list: a CSS length, or a number of pixels."
 				},
 				{
 					"Name": "Overscan",
@@ -16689,9 +17205,13 @@
 			"Children": [],
 			"Current": "",
 			"Events": [
-				"range",
-				"select"
+				"select",
+				"range"
 			],
+			"EventDescriptions": {
+				"select": "An item was chosen: the item.",
+				"range": "The rows drawn changed: {Start, End}."
+			},
 			"Methods": [
 				"ScrollTo(index)"
 			],
@@ -16769,6 +17289,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [],
 			"Sample": {
 				"Title": "Nothing found",
@@ -16876,6 +17397,9 @@
 			"Events": [
 				"change"
 			],
+			"EventDescriptions": {
+				"change": "A rating was given or cleared: Value."
+			},
 			"Methods": [],
 			"Sample": {
 				"Half": true
@@ -16979,6 +17503,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [],
 			"Sample": {
 				"Height": 28
@@ -17141,6 +17666,10 @@
 				"hover",
 				"toggle"
 			],
+			"EventDescriptions": {
+				"hover": "The pointer moved to another label: {Index, Label}.",
+				"toggle": "A series or a slice was turned off or on in the legend: Hidden, the names turned off."
+			},
 			"Methods": [],
 			"Sample": {
 				"Label": "Visits and sign-ups"
@@ -17332,6 +17861,13 @@
 				"day",
 				"slot"
 			],
+			"EventDescriptions": {
+				"change": "The period shown changed: {Date, View}.",
+				"select": "An event was pressed: the event.",
+				"move": "An event was dragged or resized: {Event, Start, End}, and Occurrence for one of a repeated event.",
+				"day": "A day was pressed: its date ('YYYY-MM-DD').",
+				"slot": "A time of a day was pressed in the week or the day view: {Date, Time ('HH:MM')}."
+			},
 			"Methods": [],
 			"Sample": {
 				"Editable": true
@@ -17351,6 +17887,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [
 				"Scope(element, name, callback)"
 			],
@@ -17368,6 +17905,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [
 				"Register(name, source)",
 				"Href(name)",
@@ -17391,6 +17929,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [
 				"Load(callback)",
 				"LoadLanguage(locale, callback)",
@@ -17417,6 +17956,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [
 				"Register(pack)",
 				"ByEmoji(char, limit)",
@@ -17441,6 +17981,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [
 				"Count(value)",
 				"Date(value, style)",
@@ -17462,6 +18003,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [
 				"Register(name, format)",
 				"Find(name)",
@@ -17483,6 +18025,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [
 				"Register(name, grammar)",
 				"Find(name)",
@@ -17505,6 +18048,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [
 				"Document(target, options)",
 				"Element(target, options, callback)"
@@ -17523,6 +18067,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [
 				"Sanitize(html)",
 				"Text(html)",
@@ -17543,6 +18088,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [
 				"Pads()",
 				"Kind()",
@@ -17565,6 +18111,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [
 				"Front(entry)",
 				"Active()",
@@ -17587,6 +18134,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [
 				"Stacks(a, b)",
 				"Move(item, current)",
@@ -17608,6 +18156,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [
 				"Show(options)",
 				"Dismiss(id)",
@@ -17631,6 +18180,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [
 				"Lines(before, after)",
 				"Words(before, after)",
@@ -17651,6 +18201,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [
 				"Supported()",
 				"Permission()",
@@ -17675,6 +18226,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [
 				"Supported()",
 				"Request(options, callback)",
@@ -17696,6 +18248,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [
 				"Supported()",
 				"Request(options, callback)",
@@ -17716,6 +18269,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [
 				"Supported()",
 				"Scan(callback)",
@@ -17737,6 +18291,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [
 				"List(locale)",
 				"Find(code, locale)",
@@ -17756,6 +18311,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [
 				"List(locale)",
 				"Find(code, locale)",
@@ -17775,6 +18331,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [
 				"Configure(options)",
 				"Show(options)",
@@ -17799,6 +18356,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [
 				"Confirm(options, callback)",
 				"Alert(options, callback)",
@@ -17820,6 +18378,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [
 				"Guard(callback)",
 				"Toggle(field, kind)"
@@ -17838,6 +18397,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [
 				"Bind(keys, callback, options)",
 				"Unbind(id)",
@@ -17863,6 +18423,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [
 				"Available(callback)",
 				"Register(options, callback)",
@@ -17878,13 +18439,14 @@
 			"Kind": "Service",
 			"Group": "",
 			"Icon": "",
-			"Description": "The clipboard.",
+			"Description": "Copies text to the clipboard (with a toast) and reads it back.",
 			"Props": [],
 			"Slots": [],
 			"Container": false,
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [
 				"Copy(text, callback, options)",
 				"Read(callback)"
@@ -17903,6 +18465,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [
 				"Start(options)",
 				"Stop()",
@@ -17924,6 +18487,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [
 				"Supported(kind)",
 				"Active()",
@@ -17947,6 +18511,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [
 				"Query(name, callback)",
 				"Request(name, callback)",
@@ -17967,6 +18532,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [
 				"Available()",
 				"Platform()",
@@ -18023,6 +18589,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [
 				"Load(callback)",
 				"Search(text, options, callback)",
@@ -18046,6 +18613,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [
 				"Describe(value)",
 				"Classes(value)"
@@ -18064,6 +18632,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [
 				"Control(value, validators)",
 				"Group(controls, validators)",
@@ -18084,6 +18653,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [
 				"Read(container)",
 				"Watch(container, callback)",
@@ -18103,6 +18673,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [
 				"Read(root, selector, owner)",
 				"Data(panel)",
@@ -18122,6 +18693,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [
 				"Ranges(root, query, options)",
 				"Show(owner, ranges, index)",
@@ -18141,6 +18713,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [
 				"MathML(text, display)"
 			],
@@ -18158,6 +18731,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [
 				"Load(callback)",
 				"Use(meta)",
@@ -18234,6 +18808,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [
 				"Create(seed)",
 				"Hash(text)",
@@ -18253,6 +18828,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [
 				"Create(options)",
 				"Distance(x, y, thing)"
@@ -18271,6 +18847,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [
 				"Grid(width, height, cost)",
 				"Path(grid, from, to, options)",
@@ -18293,6 +18870,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [
 				"Line(x0, y0, x1, y1)",
 				"Sight(opaque, x0, y0, x1, y1)",
@@ -18313,6 +18891,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [
 				"Create(options)"
 			],
@@ -18330,6 +18909,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [
 				"Normalize(map)",
 				"FromTiled(data, base)",
@@ -18349,6 +18929,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [
 				"Generate(options)",
 				"DataURL(options)",
@@ -18370,6 +18951,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [],
 			"Sample": {}
 		},
@@ -18385,6 +18967,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [],
 			"Sample": {}
 		},
@@ -18400,6 +18983,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [],
 			"Sample": {}
 		},
@@ -18415,6 +18999,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [],
 			"Sample": {}
 		},
@@ -18430,6 +19015,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [],
 			"Sample": {}
 		},
@@ -18445,6 +19031,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [],
 			"Sample": {}
 		},
@@ -18460,6 +19047,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [],
 			"Sample": {}
 		},
@@ -18475,6 +19063,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [],
 			"Sample": {}
 		},
@@ -18490,6 +19079,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [],
 			"Sample": {}
 		},
@@ -18505,6 +19095,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [],
 			"Sample": {}
 		},
@@ -18520,6 +19111,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [],
 			"Sample": {}
 		},
@@ -18535,6 +19127,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [],
 			"Sample": {}
 		},
@@ -18550,6 +19143,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [],
 			"Sample": {}
 		},
@@ -18565,6 +19159,7 @@
 			"Children": [],
 			"Current": "",
 			"Events": [],
+			"EventDescriptions": {},
 			"Methods": [],
 			"Sample": {}
 		}

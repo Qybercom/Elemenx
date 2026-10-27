@@ -13,7 +13,9 @@ Emoji and stickers in one picker, a tab each: an EmojiPicker and, while the Stic
 
 ## Events
 
-`kind`, `pick`, `dismiss`
+- `kind`: Another tab was shown: {Kind}, emoji or stickers.
+- `pick`: An emoji or a sticker was picked: {Type: 'emoji', Emoji, Name} or {Type: 'sticker', Sticker}.
+- `dismiss`: Escape was pressed: close it.
 
 ## Example
 

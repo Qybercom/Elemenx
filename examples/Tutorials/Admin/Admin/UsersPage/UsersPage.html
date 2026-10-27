@@ -1,0 +1,8 @@
+<section class="elemenx-column" style="gap: 16px;">
+	<h1 class="elemenx-title">Users</h1>
+	<Spinner *if="Loading" />
+	<Table *if="!Loading" Label="Users" [columns]="Columns" [rows]="Users" RowKey="ID" SortLocal="true" FilterLocal="true" PageLocal="true" PageSize="5" [pageSizes]="[5, 10, 20]" Selectable="single" Striped="true" (select)="Selected" />
+	<Drawer [open]="!!Editing" Title="Edit the user" (close)="Closed">
+		<UserForm *if="Editing" [user]="Editing" (save)="Saved" (remove)="Removed" />
+	</Drawer>
+</section>

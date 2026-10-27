@@ -148,6 +148,12 @@ describe('Elemenx npm release surface', function () {
 		expect(publish).toContain("if: env.JETBRAINS_TOKEN != ''");
 		expect(publish).toContain('publish --packagePath dist/editors/elemenx-vscode.vsix --skip-duplicate');
 		expect(publish).toContain('publishPlugin --no-daemon');
+
+		/* Visual Studio: built on Windows after the release, attached to it, and published with VsixPublisher. */
+		expect(publish).toMatch(/\n {2}visualstudio:\n(?:.*\n)*? {4}needs: release\n {4}runs-on: windows-latest\n/);
+		expect(publish).toContain('run: node editors/build.js --visualstudio --no-intellij');
+		expect(publish).toContain('dist/editors/elemenx-visualstudio.vsix --clobber');
+		expect(publish).toContain('-publishManifest editors\\visualstudio\\publishManifest.json');
 	});
 
 	it('describes the package: name, license, author, repository, Node version', function () {
@@ -158,6 +164,22 @@ describe('Elemenx npm release surface', function () {
 		expect(fs.readFileSync(path.join(root, 'LICENSE'), 'utf8')).toContain('GNU LESSER GENERAL PUBLIC LICENSE');
 		expect(manifest.repository).toEqual({type: 'git', url: 'git+https://github.com/Qybercom/Elemenx.git'});
 		expect(manifest.engines.node).toBe('>=20');
+
+		/* Every example that installs Elemenx from npm depends on the minor version of this release (regression: Simple on elemenx ^1.0.0). */
+		fs.readdirSync(path.join(root, 'examples')).forEach(function (name) {
+			var file = path.join(root, 'examples', name, 'package.json');
+			var dependencies;
+
+			if (!fs.existsSync(file)) return;
+
+			dependencies = JSON.parse(fs.readFileSync(file, 'utf8')).dependencies || {};
+
+			expect(dependencies.elemenx, file).toBeUndefined();
+
+			if (dependencies['@qybercom/elemenx'])
+				expect(dependencies['@qybercom/elemenx'], file).toBe('^' + manifest.version.replace(/\.\d+$/, '.0'));
+		});
+
 		expect(JSON.parse(fs.readFileSync(path.join(root, 'examples', 'Advanced', 'package.json'), 'utf8')).dependencies['@qybercom/elemenx']).toBe('^' + manifest.version.replace(/\.\d+$/, '.0'));
 	});
 
@@ -218,7 +240,7 @@ describe('Elemenx npm release surface', function () {
 		temporary.push(site);
 
 		expect(manifest.scripts.preversion).toBe('node scripts/version.js check');
-		expect(manifest.scripts.version).toBe('node scripts/version.js sync && git add packages/elemenx/package.json elemenx.js examples/Advanced/package.json editors/vscode/package.json editors/intellij/build.gradle.kts');
+		expect(manifest.scripts.version).toBe('node scripts/version.js sync --add');
 		expect(manifest.scripts['version:set']).toBe('node scripts/version.js set');
 		expect(manifest.scripts['version:tag']).toBe('node scripts/version.js tag');
 
@@ -237,6 +259,11 @@ describe('Elemenx npm release surface', function () {
 
 		/* The example on the range of the versions 0.9.x the test sets first: they leave it as it is. */
 		fs.writeFileSync(path.join(site, 'examples', 'Advanced', 'package.json'), JSON.stringify({name: 'advanced', dependencies: {'@qybercom/elemenx': '^0.9.0'}}, null, '\t') + '\n');
+		/* Regression: Simple depended on ^1.0.0, a version that does not exist; every example follows the release. */
+		fs.mkdirSync(path.join(site, 'examples', 'Simple'), {recursive: true});
+		fs.writeFileSync(path.join(site, 'examples', 'Simple', 'package.json'), JSON.stringify({name: 'simple', dependencies: {'@qybercom/elemenx': '^1.0.0'}}, null, '\t') + '\n');
+		/* Regression: the README kept the links of an older minor version to the CDN. */
+		fs.writeFileSync(path.join(site, 'README.md'), '<script src="https://cdn.jsdelivr.net/npm/@qybercom/elemenx@0.8/dist/elemenx.all.min.js"></script>\nnpm deprecate @qybercom/elemenx@0.8.1\n');
 		fs.writeFileSync(path.join(site, 'package.json'), JSON.stringify({name: manifest.name, version: manifest.version, scripts: {preversion: manifest.scripts.preversion, version: manifest.scripts.version, 'version:set': manifest.scripts['version:set'], 'version:tag': manifest.scripts['version:tag']}}, null, '\t') + '\n');
 
 		git(['init', '-q']);
@@ -269,7 +296,9 @@ describe('Elemenx npm release surface', function () {
 		expect(fs.readFileSync(path.join(site, 'elemenx.js'), 'utf8')).toContain("var Version = '0.9.7';");
 		expect(git(['tag'])).toBe('v0.9.7');
 		expect(git(['rev-list', '-n', '1', 'v0.9.7'])).toBe(git(['rev-parse', 'HEAD']));
-		expect(git(['show', '--name-only', '--format=', 'HEAD']).split('\n').sort()).toEqual(['editors/intellij/build.gradle.kts', 'editors/vscode/package.json', 'elemenx.js', 'package.json', 'packages/elemenx/package.json']);
+		expect(git(['show', '--name-only', '--format=', 'HEAD']).split('\n').sort()).toEqual(['README.md', 'editors/intellij/build.gradle.kts', 'editors/vscode/package.json', 'elemenx.js', 'examples/Simple/package.json', 'package.json', 'packages/elemenx/package.json']);
+		expect(read('examples/Simple/package.json').dependencies).toEqual({'@qybercom/elemenx': '^0.9.0'});
+		expect(fs.readFileSync(path.join(site, 'README.md'), 'utf8')).toBe('<script src="https://cdn.jsdelivr.net/npm/@qybercom/elemenx@0.9/dist/elemenx.all.min.js"></script>\nnpm deprecate @qybercom/elemenx@0.8.1\n');
 		expect(read('editors/vscode/package.json').version).toBe('0.9.7');
 		expect(fs.readFileSync(path.join(site, 'editors', 'intellij', 'build.gradle.kts'), 'utf8')).toContain('\nversion = "0.9.7"\n');
 		expect(fs.readFileSync(path.join(site, 'editors', 'intellij', 'build.gradle.kts'), 'utf8')).toContain('version "2.19.0"');

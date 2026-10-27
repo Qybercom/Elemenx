@@ -1,0 +1,25 @@
+<section class="elemenx-column" style="gap: 24px; max-width: 640px;">
+	<h1 class="elemenx-title">Checkout</h1>
+	<div class="elemenx-column" style="gap: 24px;" *if="!Placed">
+		<ul class="elemenx-list divided">
+			<li *for="line of Lines" *key="line.ID + line.Color">{{line.Title}} ({{line.Color}}) ×{{line.Count}}</li>
+		</ul>
+		<strong>Total €{{Total.toFixed(2)}}</strong>
+		<Form Label="Checkout" (submit)="Submitted">
+			<Field Label="Name" Name="name" Required="true"><Input Placeholder="Ada Lovelace" /></Field>
+			<Field Label="Phone" Name="phone" Required="true"><PhoneInput Country="GB" /></Field>
+			<Field Label="Address" Name="address" Required="true"><TextArea Rows="2" /></Field>
+			<Field Label="Card number" Name="card" Required="true"><CardNumberInput Conceal="xxxx ???? ???? xxxx" /></Field>
+			<div class="elemenx-container" style="gap: 12px;">
+				<Field Label="Expiry" Name="expiry" Required="true"><CardExpiryInput /></Field>
+				<Field Label="CVV" Name="cvv" Required="true"><CVVInput /></Field>
+			</div>
+			<Button Type="submit" Label="Place the order" Variant="primary" />
+		</Form>
+	</div>
+	<div class="elemenx-column" style="gap: 16px;" *if="Placed">
+		<div class="elemenx-callout success">The order {{Placed}} is placed.</div>
+		<Steps [items]="[{ID: 'placed', Label: 'Placed', Status: 'done'}, {ID: 'packed', Label: 'Packed', Status: 'active'}, {ID: 'sent', Label: 'Sent'}, {ID: 'delivered', Label: 'Delivered'}]" />
+		<a class="elemenx-link" href="/">Back to the catalogue</a>
+	</div>
+</section>

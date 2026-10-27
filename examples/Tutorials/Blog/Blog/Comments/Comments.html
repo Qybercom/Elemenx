@@ -1,0 +1,8 @@
+<section class="elemenx-column" style="gap: 16px;">
+	<h2 class="elemenx-title">Comments ({{Items.length}})</h2>
+	<CommentCard *for="item of Items" *key="item.ID" [author]="item.Author" [text]="item.Text" [time]="item.Time" [likes]="null" [replies]="null" [reposts]="null" />
+	<Field Label="Your comment">
+		<TextArea [value]="Draft" Rows="3" (input)="Typed" />
+	</Field>
+	<div><Button Label="Comment" Variant="primary" [disabled]="!Draft.trim()" (click)="Add" /></div>
+</section>

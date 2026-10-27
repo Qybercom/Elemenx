@@ -1,0 +1,22 @@
+{
+	"Name": "elemenx",
+	"DisplayName": "Elemenx",
+	"Publisher": "qybercom",
+	"Vendor": {
+		"Name": "Qybercom",
+		"Url": "https://github.com/Qybercom/Elemenx",
+		"Email": ""
+	},
+	"Summary": "Completion, documentation, go to definition, diagnostics and the colors of the templates of Elemenx and ElemenxUI.",
+	"Description": "branding/description.md",
+	"Icon": "branding/logo.svg",
+	"License": "LGPL-3.0-only",
+	"Homepage": "https://github.com/Qybercom/Elemenx",
+	"Repository": "https://github.com/Qybercom/Elemenx",
+	"Issues": "https://github.com/Qybercom/Elemenx/issues",
+	"Keywords": ["elemenx", "elemenxui", "templates", "components", "ui framework", "es5"],
+	"Categories": {
+		"VSCode": ["Programming Languages", "Snippets"],
+		"VisualStudio": ["coding", "languages"]
+	}
+}

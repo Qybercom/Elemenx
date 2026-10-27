@@ -26,7 +26,7 @@
 
 ## События
 
-`change`
+- `change`: Изменился элемент полосы: {ID, Key (Volume, Pan, Mute, Solo или Label ручки), Value}.
 
 ## Пример
 

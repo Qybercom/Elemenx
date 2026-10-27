@@ -18,7 +18,9 @@ A guided tour: the page is shaded except the element of the current step, and a 
 
 ## Events
 
-`change`, `finish`, `close`
+- `change`: Another step is shown: Step.
+- `finish`: Done was pressed on the last step.
+- `close`: It closed: the reason, skip, escape or done.
 
 ## Example
 

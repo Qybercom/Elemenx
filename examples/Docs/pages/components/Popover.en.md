@@ -15,7 +15,7 @@ Floating content next to a trigger. Slots: trigger (the anchor: a Button, a link
 
 ## Events
 
-`toggle`
+- `toggle`: It opened or closed: true or false.
 
 ## Slots
 

@@ -5,7 +5,7 @@
  */
 Elemenx.Service('Clipboard', {
 	$Meta: {
-		Description: 'The clipboard.',
+		Description: 'Copies text to the clipboard (with a toast) and reads it back.',
 		Methods: ['Copy(text, callback, options)', 'Read(callback)']
 	},
 	Message: 'Copied',

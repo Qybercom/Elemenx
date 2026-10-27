@@ -12,9 +12,13 @@ Elemenx.Component('Input', {
 	$Meta: {
 		Group: 'inputs',
 		Icon: 'edit',
-		Description: 'A text field.',
+		Description: 'A text field, with a format of its own (email, url, decimal...) and a password eye.',
 		Container: true,
-		Events: ['input', 'validate', 'change'],
+		Events: {
+			input: 'The text changed while typing: Value.',
+			change: 'The value was committed (Enter, the focus left): Value, normalized by its Preset.',
+			validate: 'A Preset checked the committed value: {Valid, Value, Message}.'
+		},
 		Props: {
 			Type: {Options: ['text', 'email', 'password', 'search', 'tel', 'url', 'number'], Description: 'The type of the native field: text, email, password, search, tel, url, number...'},
 			Value: 'The text.',

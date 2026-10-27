@@ -9,9 +9,11 @@ Elemenx.Component('Checkbox', {
 	$Meta: {
 		Group: 'inputs',
 		Icon: 'check',
-		Description: 'A check box.',
+		Description: 'A check box, a toggle chip or a selectable tile, with a mixed state.',
 		Container: true,
-		Events: ['change'],
+		Events: {
+			change: 'It was checked or unchecked: Checked.'
+		},
 		Props: {
 			Checked: 'Whether it is checked.',
 			Indeterminate: 'Shows a dash: a set that is partly checked.',

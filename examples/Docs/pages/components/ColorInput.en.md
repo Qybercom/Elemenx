@@ -19,7 +19,8 @@ A color field with its own picker. Value is '#rrggbb', or '#rrggbbaa' with Alpha
 
 ## Events
 
-`input`, `change`
+- `input`: The color changed while dragging in the picker: Value.
+- `change`: The color was committed (the drag released, a swatch or the eyedropper): Value.
 
 ## Example
 

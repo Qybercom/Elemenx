@@ -22,7 +22,7 @@ A field that finds a city of the Cities Service (the cities of the world from Ge
 
 ## Events
 
-`change`
+- `change`: A city was picked: {ID, Name, Country, Region, Latitude, Longitude, TimeZone}; null when it was cleared.
 
 ## Example
 

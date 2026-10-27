@@ -11,7 +11,9 @@ Elemenx.Component('Rating', {
 		Group: 'display',
 		Icon: 'star-filled',
 		Description: 'A rating of Max stars (5).',
-		Events: ['change'],
+		Events: {
+			change: 'A rating was given or cleared: Value.'
+		},
 		Props: {
 			Value: 'The rating, 0 to Max.',
 			Max: 'How many stars.',

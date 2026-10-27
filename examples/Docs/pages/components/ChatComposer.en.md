@@ -18,7 +18,10 @@ The message field of a Chat. Enter sends (the send event carries the text), Shif
 
 ## Events
 
-`input`, `sticker`, `send`, `attach`
+- `input`: The text changed: Value.
+- `sticker`: A sticker was sent: {Sticker}.
+- `send`: Enter (or the send button): the text.
+- `attach`: The attach button was pressed.
 
 ## Example
 

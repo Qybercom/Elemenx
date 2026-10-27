@@ -15,7 +15,11 @@ Elemenx.Component('DialPad', {
 		Group: 'inputs',
 		Icon: 'phone',
 		Description: 'A dial pad: the number in a field over a grid of keys, a key that erases and a key that calls.',
-		Events: ['input', 'press', 'call'],
+		Events: {
+			input: 'The number changed: the number.',
+			press: 'A key was pressed: {Value}.',
+			call: 'The key that calls (or Enter): the number.'
+		},
 		Props: {
 			Value: 'The number.',
 			Keys: 'The keys row by row: [{Value, Label, Sub, Hold, Icon, Class}]; a phone pad without them.',

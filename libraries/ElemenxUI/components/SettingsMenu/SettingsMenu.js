@@ -22,7 +22,11 @@ Elemenx.Component('SettingsMenu', {
 		Group: 'layout',
 		Icon: 'settings',
 		Description: 'A menu of settings as on a phone: rows in groups, each with an Icon on a tile of its Color, a Label, a Description under it, a Value and a chevron to the submenu of its Items.',
-		Events: ['toggle', 'select', 'navigate'],
+		Events: {
+			toggle: 'A switch row was switched: {ID, Item, Checked}.',
+			select: 'A row was chosen: {ID, Item, Path}.',
+			navigate: 'A submenu was opened or left: {Path}, the IDs of the open submenus.'
+		},
 		Props: {
 			Items: 'The rows: [{ID, Label, Description, Icon, Color, Value, Badge, Items, Choice, Toggle, Checked, Disabled, Danger}], and {Group, Note} for a group.',
 			Title: 'The large title of the top menu.',

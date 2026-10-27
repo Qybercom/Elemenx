@@ -16,7 +16,9 @@ Elemenx.Component('Menu', {
 		Description: 'A button that opens a multi-level MenuList.',
 		Container: true,
 		Children: ['MenuItem'],
-		Events: ['select'],
+		Events: {
+			select: 'A leaf item was chosen: the item.'
+		},
 		Props: {
 			Items: 'The items: [{ID, Label, Icon, Shortcut, Disabled, Danger, Checked, Items, Separator, Group}].',
 			Label: 'The text of the button.',
@@ -69,21 +71,27 @@ Elemenx.Component('Menu', {
 		}, 0);
 	},
 
+	/* The focus back to the button; regression: an owner whose select takes the menu away (sign out) left it no button. */
 	Picked: function (item) {
+		var button = this.$Element() ? this.$Element().querySelector('.elemenx-button') : null;
+
 		this.Open = false;
 
 		this.$Service('Menus').Pick(item);
 
 		this.$Emit('select', item);
 
-		this.$Element().querySelector('.elemenx-button').focus();
+		if (button && button.isConnected)
+			button.focus();
 	},
 
 	Close: function (reason) {
+		var button = this.$Element() ? this.$Element().querySelector('.elemenx-button') : null;
+
 		this.Open = false;
 
-		if (reason === 'escape' || reason === 'back')
-			this.$Element().querySelector('.elemenx-button').focus();
+		if (button && (reason === 'escape' || reason === 'back'))
+			button.focus();
 	},
 
 	$OnDestroy: function () {

@@ -220,4 +220,89 @@ describe('Regression: Component / Binding / Directive integration', function () 
 		expect(rowDestroyed).toEqual({a: 1, b: 2, c: 1});
 		expect(directiveDestroyed).toEqual({a: 1, b: 2, c: 1});
 	});
+
+	/* Regression: a behavioral directive on the tag of a component stayed on the tag, which its instance took the place of. */
+	test('a behavioral directive on the tag of a component acts on the element of its instance, and on the next one', function () {
+		var directive = unique('tagmark').toLowerCase();
+		var childName = unique('TagMarked');
+		var parent;
+
+		Elemenx.Directive(directive, {
+			$OnUpdate: function (context) {
+				context.Element.setAttribute('data-marked', String(context.Value));
+			}
+		});
+
+		Elemenx.Component(childName, {$Template: '<section class="tag-marked">{{Title}}</section>', Title: 'inline'});
+
+		parent = Elemenx.Component(unique('TagMarkedParent'), {
+			$Template: '<main><' + childName + ' *' + directive + '="Mark"></' + childName + '><' + childName + ' *if="Second" *' + directive + '="Mark"></' + childName + '></main>',
+			Mark: 'first',
+			Second: false
+		})();
+
+		document.body.appendChild(parent.$Element());
+
+		expect(parent.$Element().querySelector('.tag-marked').getAttribute('data-marked')).toBe('first');
+
+		parent.Mark = 'second';
+
+		parent.$Update();
+
+		expect(parent.$Element().querySelector('.tag-marked').getAttribute('data-marked')).toBe('second');
+
+		parent.$Destroy();
+	});
+
+	/* Regression: a behavioral directive on the tag of a deferred component stayed on its placeholder, gone from the page. */
+	test('a behavioral directive on the tag of a component that loads later follows the element of the component', async function () {
+		var directive = unique('marker').toLowerCase();
+		var childName = unique('DeferredMarked');
+		var seen = [];
+		var parent;
+		var panel;
+
+		Elemenx.Directive(directive, {
+			$OnUpdate: function (context) {
+				context.Element.setAttribute('data-marked', String(context.Value));
+
+				seen.push(context.Element.tagName + ':' + context.Element.isConnected);
+			},
+			$OnDestroy: function (context) {
+				context.Element.removeAttribute('data-marked');
+			}
+		});
+
+		Elemenx.Component(childName, {$TemplateURL: '/component-contracts/Panel.html', Title: 'deferred'});
+
+		parent = Elemenx.Component(unique('DeferredMarkedParent'), {
+			$Template: '<main><' + childName + ' *' + directive + '="Mark"></' + childName + '></main>',
+			Mark: 'first'
+		})();
+
+		document.body.appendChild(parent.$Element());
+
+		for (var i = 0; i < 100 && !parent.$Element().querySelector('.contract-panel'); i++)
+			await new Promise(function (resolve) {
+				setTimeout(resolve, 10);
+			});
+
+		panel = parent.$Element().querySelector('.contract-panel');
+
+		expect(panel.getAttribute('data-marked')).toBe('first');
+		expect(seen[seen.length - 1]).toBe('SECTION:true');
+
+		parent.Mark = 'second';
+
+		await Promise.resolve();
+		await new Promise(function (resolve) {
+			setTimeout(resolve, 0);
+		});
+
+		expect(panel.getAttribute('data-marked')).toBe('second');
+
+		parent.$Destroy();
+
+		expect(panel.hasAttribute('data-marked')).toBe(false);
+	});
 });

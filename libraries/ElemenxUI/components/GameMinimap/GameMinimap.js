@@ -14,7 +14,10 @@ Elemenx.Component('GameMinimap', {
 		Icon: 'trophy',
 		Description: 'The frame of a minimap: the map in its default slot (an image, a canvas), round or square (Shape), Size pixels wide.',
 		Container: true,
-		Events: ['marker', 'zoom'],
+		Events: {
+			marker: 'A marker was pressed: the marker.',
+			zoom: 'A zoom button was pressed: 1 (in) or -1 (out).'
+		},
 		Props: {
 			Shape: {Options: ['round', 'square'], Description: 'round or square.'},
 			Size: 'The width in pixels.',

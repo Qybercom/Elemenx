@@ -20,7 +20,9 @@ Elemenx.Component('Keyboard', {
 		Group: 'music',
 		Icon: 'grid',
 		Description: 'A keyboard of a computer, drawn key by key (the look and the controls): to show hotkeys, the keys held, or to take presses on a screen.',
-		Events: ['press'],
+		Events: {
+			press: 'A key was pressed on the screen: {Code, Label}.'
+		},
 		Props: {
 			Layout: {Options: ['full', 'tkl', 'compact'], Description: 'full (with the number pad), tkl (without it) or compact (the main block).'},
 			Pressed: 'The codes of the keys shown pressed.',

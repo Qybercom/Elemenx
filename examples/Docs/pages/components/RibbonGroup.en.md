@@ -15,7 +15,7 @@ A group of commands of a RibbonTab: <RibbonGroup Title="Clipboard" Icon="paste">
 
 ## Events
 
-`launch`
+- `launch`: The launcher at the corner of its title was pressed: {Title}.
 
 ## Slots
 

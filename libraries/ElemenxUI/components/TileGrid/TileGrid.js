@@ -43,7 +43,12 @@ Elemenx.Component('TileGrid', {
 		Description: 'Groups of tiles on a grid of 48px cells, like a start screen.',
 		Container: true,
 		Children: ['TileGroup'],
-		Events: ['open', 'groupaction', 'change', 'groupcreate'],
+		Events: {
+			open: 'A tile was pressed: the tile.',
+			groupaction: 'An action of a group header was pressed: {Group, Action}.',
+			change: 'The tiles or the groups were moved or resized: Groups, as they are now.',
+			groupcreate: 'A tile dropped beside the groups made a new group: {Group, Tile}.'
+		},
 		Methods: ['Arrangement()', 'Restore(arrangement)'],
 		Props: {
 			Groups: 'The groups: [{ID, Title, Tiles, Locked, Actions, Element, Render}] (TileGroup children add more).',

@@ -22,3 +22,26 @@ A building of a GameWorld, declared in it: ID, X and Y (its first cell), Width a
 | `Health` | `null` |
 | `MaxHealth` | `null` |
 | `Sight` | `4` |
+
+## Example
+
+```example
+<div style="height: 280px;">
+	<GameWorld Team="blue">
+		<GameLayer [rows]="Rows" />
+		<GameBuilding ID="hall" X="1" Y="1" Width="3" Height="2" Team="blue" Type="hall" Name="Town hall" Tall="2" Health="400" MaxHealth="500" />
+		<GameBuilding ID="tower" X="8" Y="2" Team="red" Type="tower" Roof="#3a2e1f" />
+	</GameWorld>
+</div>
+<script>
+({
+	Rows: [
+		'............',
+		'............',
+		'............',
+		'............',
+		'............'
+	]
+})
+</script>
+```

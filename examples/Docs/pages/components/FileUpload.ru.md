@@ -20,7 +20,8 @@
 
 ## События
 
-`reject`, `change`
+- `reject`: Файлы отклонены по Accept, MaxSize или MaxFiles: [{Name, Reason}].
+- `change`: Файлы изменились: список File.
 
 ## Пример
 

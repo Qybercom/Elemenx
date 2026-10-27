@@ -10,7 +10,9 @@ Elemenx.Component('RadioGroup', {
 		Group: 'inputs',
 		Icon: 'list-bulleted',
 		Description: 'A set of radio buttons, one of them chosen.',
-		Events: ['change'],
+		Events: {
+			change: 'Another option was chosen: Value, with its type.'
+		},
 		Props: {
 			Options: {Schema: {Value: 'text', Label: 'text', Hint: 'text', Disabled: 'bool'}, Description: 'The options: [{Value, Label, Description, Disabled}].'},
 			Value: 'The Value of the option chosen.',

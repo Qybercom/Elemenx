@@ -16,7 +16,10 @@ Elemenx.Component('GameQuests', {
 		Group: 'game',
 		Icon: 'trophy',
 		Description: 'The quests of a game.',
-		Events: ['change', 'track'],
+		Events: {
+			change: 'Another quest was opened: its ID.',
+			track: 'A quest was tracked or untracked: {ID, Tracked}.'
+		},
 		Props: {
 			Items: 'The quests: [{ID, Title, Group, Level, Status, Tracked, Text, Objectives, Rewards}].',
 			Value: 'The ID of the open quest.',

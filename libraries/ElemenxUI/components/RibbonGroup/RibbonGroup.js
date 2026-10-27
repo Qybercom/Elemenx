@@ -15,7 +15,9 @@ Elemenx.Component('RibbonGroup', {
 		Description: 'A group of commands of a RibbonTab: <RibbonGroup Title="Clipboard" Icon="paste">.',
 		Container: true,
 		Children: ['RibbonButton', 'RibbonGallery'],
-		Events: ['launch'],
+		Events: {
+			launch: 'The launcher at the corner of its title was pressed: {Title}.'
+		},
 		Props: {
 			Title: 'The title under the group.',
 			Icon: 'The icon of the group when it shrinks into one button.',

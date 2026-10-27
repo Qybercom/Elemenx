@@ -10,7 +10,11 @@ Elemenx.Component('ExpressionPicker', {
 		Group: 'inputs',
 		Icon: 'edit',
 		Description: 'Emoji and stickers in one picker, a tab each: an EmojiPicker and, while the Stickers Service has packs and Stickers is on, a StickerPicker.',
-		Events: ['kind', 'pick', 'dismiss'],
+		Events: {
+			kind: 'Another tab was shown: {Kind}, emoji or stickers.',
+			pick: 'An emoji or a sticker was picked: {Type: \'emoji\', Emoji, Name} or {Type: \'sticker\', Sticker}.',
+			dismiss: 'Escape was pressed: close it.'
+		},
 		Props: {
 			Kind: {Options: ['emoji', 'stickers'], Description: 'The tab shown: emoji or stickers.'},
 			Stickers: 'Shows the tab of the stickers (while the Stickers Service has packs).',

@@ -20,8 +20,8 @@ npx elemenx dev
 A page with no build and no server takes the distribution from a CDN or from `node_modules/@qybercom/elemenx/dist` (see "Distribution of the framework" in `docs/BUILDER.md`):
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/@qybercom/elemenx@0.9/dist/elemenx.all.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@qybercom/elemenx@0.9/dist/elemenx-ui.emoji.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@qybercom/elemenx@0.10/dist/elemenx.all.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@qybercom/elemenx@0.10/dist/elemenx-ui.emoji.min.js"></script>
 ```
 
 `elemenx.all.min.js` is the framework and ElemenxUI; the scripts of the packs (`emoji`, `emoji.ru`, `brands`, `files`) are needed only by the pages that use them.
@@ -44,20 +44,39 @@ npm test
 
 `npm test` runs the browser contract suite, Node/tooling regressions, and real-browser Playwright end-to-end tests. The tests run 4 at a time (Vitest files and Playwright workers); `ELEMENX_WORKERS=2 npm test` sets the number.
 
+Parts of it:
+
+- `npm run test:browser` the browser contracts, `npm run test:watch` the same while files change;
+- `npm run test:min` the browser contracts against the minified `dist/elemenx.min.js` (after `npm run dist`);
+- `npm run test:tools` the Node tests of the CLI, the build and the tooling;
+- `npm run test:history` the Playwright end-to-end tests, `npm run test:stress` the same five times each with no retry (to find the ones that fail under load);
+- `npm run test:native` the desktop program built with Electron;
+- `npm run test:coverage` and `npm run test:coverage:all` measure the coverage (see `tests/TEST-COVERAGE.md`).
+
 ## Editors
 
-The extension of VS Code, the plugin of the IDEs of JetBrains (through LSP4IJ) and a language server for the other editors complete, document, check and color the templates and the code of Elemenx: see [docs/EDITORS.md](docs/EDITORS.md). `npm run editors` builds them into `dist/editors`.
+The extension of VS Code, the plugin of the IDEs of JetBrains (through LSP4IJ), the extension of Visual Studio 2022 and a language server for the other editors complete, document, check and color the templates and the code of Elemenx: see [docs/EDITORS.md](docs/EDITORS.md). `npm run editors` builds them into `dist/editors`.
 
 ## Examples
 
-The maintained examples are `examples/Simple` and `examples/Advanced`. From the Elemenx repository they can be started with:
+The examples, each a project of its own:
+
+- `examples/Simple`: the smallest application, one page;
+- `examples/Advanced`: the showcase of the runtime (Components, Router, Storage, Messaging, workers, Network) and the catalogue of ElemenxUI at `/ui`;
+- `examples/PWA`: an application that installs and runs offline, and updates itself (`Elemenx.Install`);
+- `examples/Widgets`: the Components of an application mounted as widgets on a page of another site (`Elemenx.Widgets`, `elemenx build --widget`);
+- `examples/Native`: the desktop program (Electron) and the Android and iOS programs (Capacitor) of one application (`elemenx build --native`);
+- `examples/Tutorials`: the projects of the tutorials of the reference (a landing page, a blog, an admin panel, a shop, a chat, a game, an editor, a page of a server);
+- `examples/Docs` and `examples/Builder`, below.
+
+From the Elemenx repository they can be started with:
 
 ```bash
 npm run example:simple
 npm run example:advanced
 ```
 
-Two applications are built with ElemenxUI as well: `examples/Docs`, the reference of Elemenx and of the Library in English and Russian (its pages are Markdown files, `pages/<section>/<page>.<language>.md`; `npm run docs:pages` makes the pages of the Library again from the comments of its sources), and `examples/Builder`, a visual builder of pages that exports and imports their templates (its palette holds every component of the Library and the classes of its layouts; `npm run builder:palette` makes it again from the sources):
+Two applications are built with ElemenxUI as well: `examples/Docs`, the reference of Elemenx and of the Library in English and Russian (its pages are Markdown files, `pages/<section>/<page>.<language>.md`; `npm run docs:pages` makes the pages of the Library again from the comments of its sources), and `examples/Builder`, a visual builder of pages that exports and imports their templates (its palette holds every component of the Library and the classes of its layouts; it takes them from the `data/meta.json` of the Library, which `npm run meta` makes again from the `$Meta` of the sources):
 
 ```bash
 npm run example:docs
@@ -73,6 +92,8 @@ npm run build:advanced
 npm run example:advanced:dist
 ```
 
+`npm run examples` serves the whole repository statically with Vite (as the end-to-end tests see it): every example and test page at its path, `http://127.0.0.1:5173/examples/Simple/`.
+
 ## Continuous integration and releases
 
 `.github/workflows/ci.yml` runs the checks of `npm test` in parallel jobs. Every push to `main` and every pull request run the fast ones, in a few minutes: lint, the browser contracts against `elemenx.js` and against `dist/elemenx.min.js`, the tooling on Node 20, 22 and 24 (and on Windows). The end-to-end tests, three jobs of two Playwright workers each, run on a pull request, by hand (Actions, CI, Run workflow), every night when `main` has new commits, and before every release (`publish.yml` calls the whole CI and publishes when it passes). A change of the documentation alone runs nothing. The built `dist/` is kept as an artifact of the run.
@@ -80,9 +101,10 @@ npm run example:advanced:dist
 `.github/workflows/publish.yml` publishes a release of `@qybercom/elemenx` and of its short name `elemenx` (`packages/elemenx`) when a tag `v<version>` is pushed. The steps of a release, and of the first one, are in `docs/RELEASING.md`; in short:
 
 ```bash
-npm version 0.9.1
-git push --follow-tags
+npm run release 0.10.3
 ```
+
+It checks the branch and the tag, runs `npm test`, sets the version everywhere, commits, tags and pushes; the tag starts the publish workflow.
 
 ## Regression coverage
 

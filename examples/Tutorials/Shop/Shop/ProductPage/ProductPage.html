@@ -1,0 +1,12 @@
+<section class="elemenx-column" style="gap: 16px; max-width: 560px;">
+	<a class="elemenx-link" href="/">← The catalogue</a>
+	<EmptyState *if="!Product($Params.id)" Variant="search" Title="No such product" />
+	<div class="elemenx-column" style="gap: 16px;" *if="Product($Params.id)">
+		<h1 class="elemenx-title">{{Product($Params.id).Title}}</h1>
+		<Rating [value]="Product($Params.id).Rating" Half="true" ReadOnly="true" />
+		<p class="elemenx-text">{{Product($Params.id).Text}}</p>
+		<strong class="elemenx-text large">€{{Product($Params.id).Price.toFixed(2)}}</strong>
+		<RadioGroup Variant="segmented" Label="Color" [options]="Options(Product($Params.id))" [value]="Color || Product($Params.id).Colors[0]" (change)="Picked" />
+		<div><Button Label="Add to the cart" Icon="cart" Variant="primary" (click)="Add" /></div>
+	</div>
+</section>

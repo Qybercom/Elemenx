@@ -14,7 +14,7 @@ Two panes with a draggable divider. Direction: horizontal (side by side) or vert
 
 ## Events
 
-`resize`
+- `resize`: The divider was released: Size, of the first pane.
 
 ## Slots
 

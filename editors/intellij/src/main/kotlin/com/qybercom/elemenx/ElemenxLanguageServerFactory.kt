@@ -1,5 +1,7 @@
 package com.qybercom.elemenx
 
+import com.intellij.ide.plugins.PluginManagerCore
+import com.intellij.openapi.extensions.PluginId
 import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.openapi.application.PathManager
 import com.intellij.openapi.project.Project
@@ -48,7 +50,8 @@ object ElemenxServerFiles {
 
 	@Synchronized
 	fun server(): Path {
-		val version = ElemenxServerFiles::class.java.`package`?.implementationVersion ?: "dev"
+		/* The version of the plugin (regression: the jar names none, every start copied all the files again as dev). */
+		val version = PluginManagerCore.getPlugin(PluginId.getId("com.qybercom.elemenx"))?.version ?: "dev"
 		val folder = Path.of(PathManager.getSystemPath(), "elemenx-language-server", version)
 
 		files().forEach { name ->

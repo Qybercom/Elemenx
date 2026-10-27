@@ -1,0 +1,18 @@
+<div class="gems">
+	<GameWorld Team="blue" Projection="orthogonal" [paused]="Menu" Label="The map" (ready)="Ready" (cell)="Pressed" (arrive)="Arrived">
+		<GameLayer Name="ground" [rows]="Rows" />
+		<GameUnit ID="hero" X="1" Y="1" Team="blue" Type="hero" Name="Hero" Speed="4" />
+		<GameObject *for="gem of Gems" *key="gem.ID" [id]="gem.ID" Kind="gem" [x]="gem.X" [y]="gem.Y" Color="#c47dff" Name="A gem" />
+		<div slot="hud" class="gems-hud">
+			<div class="elemenx-game-panel gems-score">
+				<strong>Gems</strong>
+				<GameBar [value]="Found" Max="5" Kind="mana" Segments="5" ShowValue="true" Label="Gems found" />
+			</div>
+			<span class="elemenx-game-panel gems-help" *if="!Menu">{{Target ? 'Going to ' + Target : 'Press a cell: the hero goes there'}} · Escape pauses</span>
+		</div>
+	</GameWorld>
+	<div class="gems-menu" *if="Menu">
+		<GameMenu [title]="Started ? 'Paused' : 'Gem hunt'" [subtitle]="Found === 5 ? 'You found them all!' : ''" [items]="Items(Started)" (select)="Chosen" />
+	</div>
+	<AchievementHost />
+</div>

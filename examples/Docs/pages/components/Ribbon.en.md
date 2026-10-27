@@ -21,7 +21,10 @@ Slots: quick (the quick access toolbar, before the tabs), end (after them: a sea
 
 ## Events
 
-`tab`, `collapse`, `command`, `backstage`
+- `tab`: Another tab was opened: {ID}.
+- `collapse`: It was collapsed or pinned: {Collapsed}.
+- `command`: A command of any of its controls ran: {ID, Item}.
+- `backstage`: The backstage opened or closed: {Open}.
 
 ## Slots
 

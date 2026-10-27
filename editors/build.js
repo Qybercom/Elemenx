@@ -7,8 +7,11 @@
  *   installed, or named by ELEMENX_IDEA or --idea <folder>), with the JDK it carries; else, with ELEMENX_INTELLIJ=download
  *   (a release), against an IntelliJ IDEA that Gradle downloads, with a JDK of 21 or more (JAVA_HOME, JAVA_HOME_21_X64...);
  *   else it is left out, and told so.
- * The core of the language and the meta.json of ElemenxUI go into each of them. Build({Output, Idea, IntelliJ, Log})
- * returns [{Name, Size}] of the files made; IntelliJ: false leaves the plugin out, true needs it.
+ * - the one of Visual Studio 2022, elemenx-visualstudio.vsix, with the MSBuild of the Visual Studio of the machine (found
+ *   by vswhere, with the workload Visual Studio extension development); on Windows only, else it is left out, and told so.
+ * The core of the language, the meta.json of ElemenxUI and the sources of Elemenx and ElemenxUI go into each of them;
+ * their names, descriptions and icons come from editors/extension.json. Build({Output, Idea, IntelliJ, VisualStudio,
+ * Log}) returns [{Name, Size}] of the files made; IntelliJ or VisualStudio: false leaves it out, true needs it.
  */
 var fs = require('fs');
 var path = require('path');
@@ -17,10 +20,39 @@ var child = require('child_process');
 var root = path.resolve(__dirname, '..');
 var vscode = path.join(__dirname, 'vscode');
 var intellij = path.join(__dirname, 'intellij');
+var visualstudio = path.join(__dirname, 'visualstudio');
 
 function copy (from, to) {
 	fs.mkdirSync(path.dirname(to), {recursive: true});
 	fs.copyFileSync(from, to);
+}
+
+/*
+ * The extension of VS Code as editors/extension.json describes it: the fields of its package.json, its README (the
+ * page of the Marketplace: the Markdown of Description under the name), its icon (the PNG of 128 of the logo).
+ */
+function brand (extension) {
+	var manifest = path.join(vscode, 'package.json');
+	var text = fs.readFileSync(manifest, 'utf8');
+	var data = JSON.parse(text);
+	var description = fs.readFileSync(path.join(__dirname, extension.Description), 'utf8');
+
+	data.name = extension.Name;
+	data.displayName = extension.DisplayName;
+	data.description = extension.Summary;
+	data.publisher = extension.Publisher;
+	data.license = extension.License;
+	data.icon = 'icon.png';
+	data.homepage = extension.Homepage;
+	data.repository = {type: 'git', url: extension.Repository};
+	data.bugs = {url: extension.Issues};
+	data.keywords = extension.Keywords;
+	data.categories = extension.Categories.VSCode;
+
+	fs.writeFileSync(manifest, JSON.stringify(data, null, '\t') + '\n');
+	fs.writeFileSync(path.join(vscode, 'README.md'), '# ' + extension.DisplayName + '\n\n' + description);
+
+	copy(path.join(__dirname, path.dirname(extension.Icon), 'logo-128.png'), path.join(vscode, 'icon.png'));
 }
 
 /* The sources of a Library the definitions go to: its meta.json, the .js and .html of its Components, its directives and Services. */
@@ -47,7 +79,8 @@ function run (command, list, folder, environment) {
 		return /[\s"]/.test(value) ? '"' + value.replace(/"/g, '\\"') + '"' : value;
 	})).join(' ');
 	var settings = {cwd: folder, stdio: 'inherit', env: environment || process.env};
-	var result = process.platform === 'win32' ? child.spawnSync(line, Object.assign({shell: true}, settings)) : child.spawnSync(command, list, settings);
+	/* A program (.exe: MSBuild in C:\Program Files) goes without the shell: a shell line breaks its path at the space. */
+	var result = process.platform === 'win32' && !/\.exe$/i.test(command) ? child.spawnSync(line, Object.assign({shell: true}, settings)) : child.spawnSync(command, list, settings);
 	if (result.status !== 0)
 		throw new Error('Elemenx editors: ' + command + ' ' + list.join(' ') + ' failed');
 }
@@ -111,6 +144,92 @@ function jdk (ide) {
 	return null;
 }
 
+/* The MSBuild of the Visual Studio of the machine that builds extensions (vswhere), or null. */
+function msbuild () {
+	var vswhere = path.join(process.env['ProgramFiles(x86)'] || 'C:\\Program Files (x86)', 'Microsoft Visual Studio', 'Installer', 'vswhere.exe');
+	var found;
+
+	if (process.platform !== 'win32' || !fs.existsSync(vswhere)) return null;
+
+	found = child.spawnSync(vswhere, ['-latest', '-requires', 'Microsoft.VisualStudio.Component.VSSDK', '-find', 'MSBuild\\**\\Bin\\MSBuild.exe'], {encoding: 'utf8'});
+
+	return found.status === 0 && found.stdout.trim() ? found.stdout.trim().split(/\r?\n/)[0] : null;
+}
+
+/* Text for XML. */
+function xml (value) {
+	return String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+/*
+ * The files of the extension of Visual Studio beside its project: the server and the core it carries, its manifest of
+ * editors/extension.json (a version of Visual Studio has no prerelease part: 0.11.0 of 0.11.0-beta.1), its icon, its
+ * preview, its license, and the overview and the manifest the Marketplace takes on a release.
+ */
+function stageVisualStudio (extension, version) {
+	var description = fs.readFileSync(path.join(__dirname, extension.Description), 'utf8');
+	var branding = path.join(__dirname, path.dirname(extension.Icon));
+
+	fs.rmSync(path.join(visualstudio, 'server'), {recursive: true, force: true});
+	fs.rmSync(path.join(visualstudio, 'core'), {recursive: true, force: true});
+
+	copy(path.join(__dirname, 'server', 'elemenx-language-server.js'), path.join(visualstudio, 'server', 'elemenx-language-server.js'));
+	copy(path.join(__dirname, 'core', 'elemenx-language.js'), path.join(visualstudio, 'core', 'elemenx-language.js'));
+	copy(path.join(root, 'libraries', 'ElemenxUI', 'data', 'meta.json'), path.join(visualstudio, 'core', 'meta.json'));
+	copy(path.join(root, 'elemenx.js'), path.join(visualstudio, 'core', 'elemenx.js'));
+
+	sources(path.join(root, 'libraries', 'ElemenxUI'), path.join(visualstudio, 'core', 'library'));
+
+	copy(path.join(branding, 'logo-90.png'), path.join(visualstudio, 'icon.png'));
+	copy(path.join(branding, 'logo-200.png'), path.join(visualstudio, 'preview.png'));
+	copy(path.join(root, 'LICENSE'), path.join(visualstudio, 'LICENSE.txt'));
+
+	fs.writeFileSync(path.join(visualstudio, 'source.extension.vsixmanifest'), [
+		'<?xml version="1.0" encoding="utf-8"?>',
+		'<!-- Written by editors/build.js from editors/extension.json. -->',
+		'<PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">',
+		'\t<Metadata>',
+		'\t\t<Identity Id="' + xml(extension.Vendor.Name + '.' + extension.DisplayName) + '" Version="' + xml(version.replace(/-.*$/, '')) + '" Language="en-US" Publisher="' + xml(extension.Vendor.Name) + '" />',
+		'\t\t<DisplayName>' + xml(extension.DisplayName) + '</DisplayName>',
+		'\t\t<Description xml:space="preserve">' + xml(extension.Summary) + '</Description>',
+		'\t\t<MoreInfo>' + xml(extension.Homepage) + '</MoreInfo>',
+		'\t\t<License>LICENSE.txt</License>',
+		'\t\t<Icon>icon.png</Icon>',
+		'\t\t<PreviewImage>preview.png</PreviewImage>',
+		'\t\t<Tags>' + xml(extension.Keywords.join(', ')) + '</Tags>',
+		'\t</Metadata>',
+		'\t<Installation>',
+		'\t\t<InstallationTarget Id="Microsoft.VisualStudio.Community" Version="[17.10,18.0)">',
+		'\t\t\t<ProductArchitecture>amd64</ProductArchitecture>',
+		'\t\t</InstallationTarget>',
+		'\t</Installation>',
+		'\t<Dependencies>',
+		'\t\t<Dependency Id="Microsoft.Framework.NDP" DisplayName="Microsoft .NET Framework" d:Source="Manual" Version="[4.7.2,)" />',
+		'\t</Dependencies>',
+		'\t<Prerequisites>',
+		'\t\t<Prerequisite Id="Microsoft.VisualStudio.Component.CoreEditor" Version="[17.0,18.0)" DisplayName="Visual Studio core editor" />',
+		'\t</Prerequisites>',
+		'\t<Assets>',
+		'\t\t<Asset Type="Microsoft.VisualStudio.MefComponent" d:Source="Project" d:ProjectName="%CurrentProject%" Path="|%CurrentProject%|" />',
+		'\t</Assets>',
+		'</PackageManifest>',
+		''
+	].join('\n'));
+
+	fs.writeFileSync(path.join(visualstudio, 'overview.md'), '# ' + extension.DisplayName + '\n\n' + description);
+	fs.writeFileSync(path.join(visualstudio, 'publishManifest.json'), JSON.stringify({
+		$schema: 'http://json.schemastore.org/vsix-publish',
+		categories: extension.Categories.VisualStudio,
+		identity: {internalName: extension.Name},
+		overview: 'overview.md',
+		priceCategory: 'free',
+		publisher: extension.Publisher,
+		private: false,
+		qna: true,
+		repo: extension.Repository
+	}, null, '\t') + '\n');
+}
+
 function Build (options) {
 	var settings = options || {};
 	var output = path.resolve(settings.Output || path.join(root, 'dist', 'editors'));
@@ -121,11 +240,15 @@ function Build (options) {
 	var ide = settings.Idea || process.env.ELEMENX_IDEA || installedIdes()[0] || null;
 	var download = process.env.ELEMENX_INTELLIJ === 'download';
 	var gradle = ['buildPlugin', '--no-daemon'].concat(ide ? ['-PideaLocal=' + ide] : []);
+	var extension = JSON.parse(fs.readFileSync(path.join(__dirname, 'extension.json'), 'utf8'));
+	var builder;
 	var java;
 
 	fs.mkdirSync(output, {recursive: true});
 
 	/* VS Code: the core beside the extension, then the package. */
+	brand(extension);
+
 	copy(path.join(__dirname, 'core', 'elemenx-language.js'), path.join(vscode, 'core', 'elemenx-language.js'));
 	copy(path.join(root, 'libraries', 'ElemenxUI', 'data', 'meta.json'), path.join(vscode, 'core', 'meta.json'));
 
@@ -163,6 +286,25 @@ function Build (options) {
 		log('Elemenx editors: the plugin of IntelliJ is left out: no IDE of JetBrains found (ELEMENX_IDEA names one; ELEMENX_INTELLIJ=download, with a JDK of 21 or more, downloads one)');
 	}
 
+	/* Visual Studio: its MSBuild, on Windows. */
+	builder = settings.VisualStudio === false ? null : msbuild();
+
+	if (builder) {
+		stageVisualStudio(extension, require(path.join(root, 'package.json')).version);
+
+		run(builder, [path.join(visualstudio, 'Elemenx.VisualStudio.csproj'), '/restore', '/p:Configuration=Release', '/v:minimal', '/nologo'], visualstudio);
+
+		copy(path.join(visualstudio, 'bin', 'Release', 'net472', 'Elemenx.VisualStudio.vsix'), path.join(output, 'elemenx-visualstudio.vsix'));
+
+		made.push('elemenx-visualstudio.vsix');
+	}
+	else if (settings.VisualStudio === true) {
+		throw new Error('Elemenx editors: the extension of Visual Studio needs Windows and a Visual Studio 2022 with the workload Visual Studio extension development');
+	}
+	else if (settings.VisualStudio !== false) {
+		log('Elemenx editors: the extension of Visual Studio is left out: it needs Windows and a Visual Studio 2022 with the workload Visual Studio extension development');
+	}
+
 	return made.map(function (name) {
 		return {Name: name, Size: fs.statSync(path.join(output, name)).size};
 	});
@@ -178,7 +320,8 @@ if (require.main === module) {
 		try {
 			Build({
 				Idea: args.indexOf('--idea') !== -1 ? args[args.indexOf('--idea') + 1] : null,
-				IntelliJ: args.indexOf('--intellij') !== -1 ? true : args.indexOf('--no-intellij') !== -1 ? false : undefined
+				IntelliJ: args.indexOf('--intellij') !== -1 ? true : args.indexOf('--no-intellij') !== -1 ? false : undefined,
+				VisualStudio: args.indexOf('--visualstudio') !== -1 ? true : args.indexOf('--no-visualstudio') !== -1 ? false : undefined
 			}).forEach(function (file) {
 				process.stdout.write('  editors/' + file.Name + '  ' + Math.round(file.Size / 1024) + ' KB\n');
 			});

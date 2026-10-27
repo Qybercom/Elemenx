@@ -18,7 +18,8 @@ A command palette: a search over the actions of the application, opened by Hotke
 
 ## Events
 
-`close`, `run`
+- `close`: It closed (Escape, the hotkey again, a press outside, or a command run).
+- `run`: A command was chosen: the command (its Run is called too).
 
 ## Methods
 

@@ -13,7 +13,11 @@ Elemenx.Component('CardNumberInput', {
 		Group: 'inputs',
 		Icon: 'credit-card',
 		Description: 'Value holds digits only.',
-		Events: ['input', 'validate', 'change'],
+		Events: {
+			input: 'The digits changed: Value.',
+			validate: 'The number was checked: {Value, Brand, Complete, Valid}.',
+			change: 'The number was committed: Value.'
+		},
 		Props: {
 			Value: 'The digits of the number.',
 			Placeholder: 'The text shown while it is empty.',

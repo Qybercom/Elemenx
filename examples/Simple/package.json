@@ -3,9 +3,9 @@
 	"private": true,
 	"version": "1.0.0",
 	"scripts": {
-		"start": "node node_modules/elemenx/tools/server.js . 4174"
+		"start": "elemenx dev --port 4174"
 	},
 	"dependencies": {
-		"elemenx": "^1.0.0"
+		"@qybercom/elemenx": "^0.10.0"
 	}
 }

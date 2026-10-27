@@ -15,7 +15,10 @@ Elemenx.Component('CallStage', {
 		Description: 'The stage of a call: the video in front, the tiles of the participants, the own video, the controls and a side panel.',
 		Container: true,
 		Slots: ['main', 'participants', 'self', 'controls', 'side', 'status'],
-		Events: ['layout', 'corner', 'page'],
+		Events: {
+			corner: 'The own video was dragged to another corner: {Corner}.',
+			page: 'Another page of the grid was shown: {Page}.'
+		},
 		Props: {
 			Layout: {Options: ['grid', 'speaker', 'screen'], Description: 'grid, speaker (main large, a strip under it) or screen (main large, a column beside it).'},
 			Side: 'Shows the side panel.',

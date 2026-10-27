@@ -20,8 +20,16 @@ Elemenx.Component('Table', {
 	$Meta: {
 		Group: 'data',
 		Icon: 'table',
-		Description: 'A data table.',
-		Events: ['sort', 'filter', 'page', 'expand', 'select', 'activate', 'resize'],
+		Description: 'A data table that sorts, filters, pages, selects, expands and resizes its columns.',
+		Events: {
+			sort: 'A sortable title was pressed: {Key, Direction}.',
+			filter: 'A filter of a column changed: {Key: text}.',
+			page: 'Another page or page size was chosen: {Page, PageSize}.',
+			expand: 'A row was expanded or folded: the keys of the expanded rows.',
+			select: 'The selection changed: the keys of the selected rows.',
+			activate: 'A row was opened (a double press or Enter): the row.',
+			resize: 'A column was resized: {Key, Width}.'
+		},
 		Props: {
 			Label: 'The name of the table for screen readers.',
 			Columns: 'The columns: [{Key, Title, Width, MinWidth, Align, Sortable, Resizable, Format, Filter, Options}].',

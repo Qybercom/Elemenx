@@ -23,7 +23,8 @@
 
 ## События
 
-`noteon`, `noteoff`
+- `noteon`: Нота началась: {Note, Midi, Velocity}.
+- `noteoff`: Нота закончилась: {Note, Midi}.
 
 ## Пример
 

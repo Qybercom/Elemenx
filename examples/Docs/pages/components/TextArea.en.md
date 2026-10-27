@@ -22,7 +22,8 @@ A field of several lines of text. Value, Placeholder, Rows (the height in lines)
 
 ## Events
 
-`input`, `change`
+- `input`: The text changed while typing: Value.
+- `change`: The value was committed when the focus left: Value.
 
 ## Example
 

@@ -10,7 +10,9 @@ Elemenx.Component('CurrencySelect', {
 		Group: 'inputs',
 		Icon: 'credit-card',
 		Description: 'A searchable select of currencies: every ISO 4217 currency of the Currencies Service, or only the Codes given ([\'EUR\', \'USD\']), each with its code, its symbol and its name in the language of the page (Locale changes it).',
-		Events: ['change'],
+		Events: {
+			change: 'Another currency was chosen: its code.'
+		},
 		Props: {
 			Value: 'The code of the currency (USD).',
 			Codes: 'Only these codes ([\'EUR\', \'USD\']); every ISO 4217 currency without them.',

@@ -13,7 +13,9 @@ Elemenx.Component('Section', {
 		Description: 'A titled section.',
 		Container: true,
 		Slots: ['before', 'after', 'note', 'actions'],
-		Events: ['toggle'],
+		Events: {
+			toggle: 'It was folded or unfolded: Collapsed.'
+		},
 		Props: {
 			Title: 'The title of the section.',
 			Icon: 'An icon before the title.',

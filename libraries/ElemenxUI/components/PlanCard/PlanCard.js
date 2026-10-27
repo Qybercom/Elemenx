@@ -15,7 +15,9 @@ Elemenx.Component('PlanCard', {
 		Icon: 'cart',
 		Description: 'The card of a plan of a subscription: Name and Description in a header (in Color, as a tile of the Metro style), Popular (the label of the plan to point out: \'Most popular\'), the Price of a month in Currency (0 is Free) or of a year (Period \'year\': YearlyPrice, otherwise twelve months), a Note, the Features ([{Label, Included, Hint}] or labels; Included false crosses one out) and the button (Action) that chooses it.',
 		Container: true,
-		Events: ['select'],
+		Events: {
+			select: 'The plan was chosen: {ID}.'
+		},
 		Props: {
 			ID: 'The ID of the plan, in the select event.',
 			Name: 'The name of the plan.',

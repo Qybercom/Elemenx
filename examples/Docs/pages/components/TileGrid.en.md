@@ -21,7 +21,10 @@ Groups of tiles on a grid of 48px cells, like a start screen. Groups: [{ID, Titl
 
 ## Events
 
-`open`, `groupaction`, `change`, `groupcreate`
+- `open`: A tile was pressed: the tile.
+- `groupaction`: An action of a group header was pressed: {Group, Action}.
+- `change`: The tiles or the groups were moved or resized: Groups, as they are now.
+- `groupcreate`: A tile dropped beside the groups made a new group: {Group, Tile}.
 
 ## Slots
 

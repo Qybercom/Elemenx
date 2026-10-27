@@ -29,7 +29,8 @@
 
 ## События
 
-`follow`, `message`
+- `follow`: Кнопка подписки: {Following}.
+- `message`: Кнопка сообщения: {Name}.
 
 ## Слоты
 

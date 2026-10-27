@@ -6,8 +6,9 @@
  * npm version 0.9.1 (or patch, minor, prerelease) runs two of the commands, then commits the version alone and tags it:
  *   node scripts/version.js check         preversion: stops when the working tree has anything to commit, untracked
  *                                         files too
- *   node scripts/version.js sync          version: gives packages/elemenx the version of package.json and makes it
- *                                         depend on exactly that version
+ *   node scripts/version.js sync --add    version: gives packages/elemenx the version of package.json and makes it
+ *                                         depend on exactly that version, puts it in elemenx.js, the examples and the
+ *                                         editors, and stages those files for the commit of npm
  * The version in a commit of its own author, then a tag on it:
  *   npm run version:set -- 0.9.1          puts the version in every place: package.json, package-lock.json and
  *                                         packages/elemenx (its version and its dependency); without a version, puts
@@ -23,11 +24,13 @@ var childProcess = require('child_process');
 var Root = path.resolve(__dirname, '..');
 var Wrapper = path.join(Root, 'packages', 'elemenx', 'package.json');
 var Framework = path.join(Root, 'elemenx.js');
-/* The example that installs the package from npm: it depends on the minor version (^0.10.0), as a site would. */
-var Example = path.join(Root, 'examples', 'Advanced', 'package.json');
+/* The folders of the examples that install the package from npm: each depends on the minor version (^0.10.0), as a site would. */
+var Examples = [path.join(Root, 'examples'), path.join(Root, 'examples', 'Tutorials')];
 /* The extensions of the editors: the version of Elemenx, so a release of Elemenx is one of them too. */
 var VSCode = path.join(Root, 'editors', 'vscode', 'package.json');
 var IntelliJ = path.join(Root, 'editors', 'intellij', 'build.gradle.kts');
+/* The README: its links to the CDN name the minor version (@qybercom/elemenx@0.10/dist/...). */
+var Readme = path.join(Root, 'README.md');
 
 function read (file) {
 	return JSON.parse(fs.readFileSync(file, 'utf8'));
@@ -77,15 +80,41 @@ function editorVersions () {
 	return {VSCode: fs.existsSync(VSCode) ? read(VSCode).version : null, IntelliJ: gradle ? gradle[1] : null};
 }
 
+/* The package.json of the examples that depend on the package (name), relative to the root. */
+function examples (name) {
+	var found = [];
+
+	Examples.forEach(function (folder) {
+		if (!fs.existsSync(folder)) return;
+
+		fs.readdirSync(folder).sort().forEach(function (entry) {
+			var file = path.join(folder, entry, 'package.json');
+
+			if (fs.existsSync(file) && (read(file).dependencies || {})[name])
+				found.push(path.relative(Root, file).replace(/\\/g, '/'));
+		});
+	});
+
+	return found;
+}
+
+/* The minor version of a version: 0.10 for 0.10.3. */
+function minor (version) {
+	return version.replace(/^(\d+\.\d+)[\s\S]*$/, '$1');
+}
+
 /* The range the example depends on for a version: ^0.10.0 for 0.10.3. */
 function range (version) {
 	return '^' + version.replace(/\.\d+$/, '.0');
 }
 
-function sync () {
+/* Puts the version of package.json in the other places; sync --add also stages them (the version script of npm). */
+function sync (option) {
 	var main = read(path.join(Root, 'package.json'));
 	var wrapper = read(Wrapper);
-	var example;
+	var written = [Wrapper].concat(examples(main.name).map(function (name) {
+		return path.join(Root, name);
+	}), [VSCode, IntelliJ, Framework, Readme]);
 
 	wrapper.version = main.version;
 	wrapper.dependencies[main.name] = main.version;
@@ -93,11 +122,11 @@ function sync () {
 	fs.writeFileSync(Wrapper, JSON.stringify(wrapper, null, '\t') + '\n');
 
 	/* Regression: a release of a minor version (0.10.0) left the example on ^0.9.0. The range alone changes in its text. */
-	if (fs.existsSync(Example)) {
-		example = fs.readFileSync(Example, 'utf8');
+	examples(main.name).forEach(function (name) {
+		var file = path.join(Root, name);
 
-		fs.writeFileSync(Example, example.replace(new RegExp('("' + main.name.replace(/[.*+?^${}()|[\]\\\/]/g, '\\$&') + '"\\s*:\\s*")[^"]*(")'), '$1' + range(main.version) + '$2'));
-	}
+		fs.writeFileSync(file, fs.readFileSync(file, 'utf8').replace(new RegExp('("' + main.name.replace(/[.*+?^${}()|[\]\\\/]/g, '\\$&') + '"\\s*:\\s*")[^"]*(")'), '$1' + range(main.version) + '$2'));
+	});
 
 	if (fs.existsSync(VSCode))
 		fs.writeFileSync(VSCode, fs.readFileSync(VSCode, 'utf8').replace(/(\n\t"version": ")[^"]*(")/, '$1' + main.version + '$2'));
@@ -108,6 +137,20 @@ function sync () {
 	if (fs.existsSync(Framework))
 		fs.writeFileSync(Framework, fs.readFileSync(Framework, 'utf8').replace(/(\n\tvar Version = ')[^']*(';)/, '$1' + main.version + '$2'));
 
+	/* Regression: the README kept the links of 0.9 to the CDN after 0.10. */
+	if (fs.existsSync(Readme))
+		fs.writeFileSync(Readme, fs.readFileSync(Readme, 'utf8').split(main.name + '@').map(function (part, index) {
+			return index ? part.replace(/^\d+\.\d+\//, minor(main.version) + '/') : part;
+		}).join(main.name + '@'));
+
+	if (option === '--add') {
+		git(['add', '--'].concat(written.filter(function (name) {
+			return fs.existsSync(name);
+		}).map(function (name) {
+			return path.relative(Root, name).replace(/\\/g, '/');
+		})));
+	}
+
 	process.stdout.write('Elemenx version: elemenx ' + wrapper.version + ' -> ' + main.name + ' ' + main.version + '\n');
 
 	return true;
@@ -115,7 +158,7 @@ function sync () {
 
 /*
  * Puts a version in every place that holds it: package.json, package-lock.json, packages/elemenx (its version and its
- * dependency on @qybercom/elemenx), the dependency of examples/Advanced (^ its minor version), and the extensions of
+ * dependency on @qybercom/elemenx), the dependency of the examples (^ its minor version), and the extensions of
  * the editors (editors/vscode and editors/intellij). It takes a version or patch, minor, major, prerelease; without one it puts the
  * version of package.json everywhere (after package.json was changed by hand). It commits and tags nothing.
  */
@@ -149,8 +192,12 @@ function tag () {
 	if (frameworkVersion() !== null && frameworkVersion() !== main.version)
 		wrong.push('elemenx.js has the version ' + frameworkVersion());
 
-	if (fs.existsSync(Example) && read(Example).dependencies[main.name] !== range(main.version))
-		wrong.push('examples/Advanced/package.json depends on ' + main.name + ' ' + read(Example).dependencies[main.name]);
+	examples(main.name).forEach(function (name) {
+		var dependency = read(path.join(Root, name)).dependencies[main.name];
+
+		if (dependency !== range(main.version))
+			wrong.push(name + ' depends on ' + main.name + ' ' + dependency);
+	});
 
 	if (editorVersions().VSCode !== null && editorVersions().VSCode !== main.version)
 		wrong.push('editors/vscode/package.json has the version ' + editorVersions().VSCode);

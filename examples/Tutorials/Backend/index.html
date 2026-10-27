@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+	<title>Orders · Old Town Goods</title>
+
+	<!--
+		A page a server renders (PHP, Django, Rails...), with no build. Elemenx and ElemenxUI come in one script: here
+		from the server of the project; on a site of yours from a CDN:
+		<script src="https://cdn.jsdelivr.net/npm/@qybercom/elemenx@0.10/dist/elemenx.all.min.js"></script>
+	-->
+	<script src="/elemenx.js"></script>
+	<style>
+		body {
+			margin: 0;
+			font: 16px/1.5 system-ui, sans-serif;
+		}
+
+		.page {
+			max-width: 960px;
+			margin: 0 auto;
+			padding: 24px;
+		}
+	</style>
+</head>
+<body>
+	<div class="page">
+		<!-- The server rendered this part: it stays as it is. -->
+		<header>
+			<h1>Orders</h1>
+			<p>Signed in as <strong>ada@example.com</strong> · <a href="/logout">Sign out</a></p>
+		</header>
+
+		<!-- The data of the page, written by the server: the Application reads it, no request needed. -->
+		<script type="application/json" id="orders-data">
+			[
+				{"ID": 1041, "Customer": "Grace Hopper", "Total": 129, "Status": "paid", "Date": "2026-10-21"},
+				{"ID": 1042, "Customer": "Alan Turing", "Total": 54.5, "Status": "sent", "Date": "2026-10-22"},
+				{"ID": 1043, "Customer": "Ada Lovelace", "Total": 89, "Status": "new", "Date": "2026-10-24"},
+				{"ID": 1044, "Customer": "Edsger Dijkstra", "Total": 23, "Status": "paid", "Date": "2026-10-25"},
+				{"ID": 1045, "Customer": "Barbara Liskov", "Total": 212, "Status": "new", "Date": "2026-10-26"}
+			]
+		</script>
+
+		<!-- Where Elemenx renders: the rest of the page is the server's. -->
+		<div id="orders"></div>
+
+		<!-- A template of the page in a script of type text/html: the browser leaves its text as it is, the case of the tags too. -->
+		<script type="text/html" id="orders-table">
+			<section style="display: flex; flex-direction: column; gap: 16px;">
+				<div class="elemenx-container wrappable" style="gap: 12px; align-items: center;">
+					<RadioGroup Variant="segmented" Label="Status" [options]="Statuses" [value]="Status" (change)="Filtered" />
+					<span class="elemenx-text muted">{{Shown(Orders, Status).length}} orders · €{{Sum(Shown(Orders, Status))}}</span>
+				</div>
+				<Table Label="Orders" [columns]="Columns" [rows]="Shown(Orders, Status)" RowKey="ID" SortLocal="true" Striped="true" />
+				<Form Label="A note to the team" (submit)="Sent">
+					<Field Label="A note to the team" Name="note" Required="true" MinLength="3"><TextArea Rows="2" /></Field>
+					<Button Type="submit" Label="Send" Variant="primary" [loading]="Sending" />
+				</Form>
+				<div class="elemenx-callout success" *if="Done">{{Done}}</div>
+			</section>
+		</script>
+	</div>
+
+	<script>
+		/* The Component of the part Elemenx renders: its template is the script orders-table of the page. */
+		Elemenx.Component('OrdersTable', {
+			$TemplateID: 'orders-table',
+			Orders: [],
+			Status: 'all',
+			Statuses: [{Value: 'all', Label: 'All'}, {Value: 'new', Label: 'New'}, {Value: 'paid', Label: 'Paid'}, {Value: 'sent', Label: 'Sent'}],
+			Columns: [
+				{Key: 'ID', Title: '#', Sortable: true},
+				{Key: 'Customer', Title: 'Customer', Sortable: true},
+				{Key: 'Total', Title: 'Total', Sortable: true, Align: 'right'},
+				{Key: 'Status', Title: 'Status', Sortable: true},
+				{Key: 'Date', Title: 'Date', Sortable: true}
+			],
+			Sending: false,
+			Done: '',
+
+			$OnCreate: function () {
+				this.Orders = JSON.parse(document.getElementById('orders-data').textContent);
+
+				this.Shown = function (orders, status) {
+					return orders.filter(function (order) {
+						return status === 'all' || order.Status === status;
+					});
+				};
+
+				this.Sum = function (orders) {
+					return orders.reduce(function (sum, order) {
+						return sum + order.Total;
+					}, 0).toFixed(2);
+				};
+			},
+
+			Filtered: function (value) {
+				this.Status = value;
+			},
+
+			/* The form goes to the server as a page would send it; here the answer is made up. */
+			Sent: function (event) {
+				var self = this;
+				var request = this.$Network().XHR({Method: 'POST', URL: '/notes', Headers: {'Content-Type': 'application/json'}, Data: JSON.stringify(event.Value)});
+
+				this.Sending = true;
+
+				request.On('Transport.Success', function () {
+					self.Sending = false;
+					self.Done = 'Sent: ' + event.Value.note;
+				});
+
+				request.On('Transport.Error', function () {
+					self.Sending = false;
+					self.Done = 'Sent (the example has no server): ' + event.Value.note;
+				});
+
+				request.Execute();
+			}
+		});
+
+		Elemenx.Application('Orders', {
+			$Component: 'OrdersTable',
+			$Mount: '#orders',
+			$Use: ['ElemenxUI']
+		});
+	</script>
+</body>
+</html>

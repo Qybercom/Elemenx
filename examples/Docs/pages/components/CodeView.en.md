@@ -21,7 +21,7 @@ Source code shown, not edited: Value highlighted by the Syntax Service in Langua
 
 ## Events
 
-`fold`
+- `fold`: A block was folded or unfolded: {Line, Folded}.
 
 ## Slots
 

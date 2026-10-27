@@ -37,7 +37,9 @@ A text field. A password field has an eye button: Guarded asks before it shows t
 
 ## Events
 
-`input`, `validate`, `change`
+- `input`: The text changed while typing: Value.
+- `validate`: A Preset checked the committed value: {Valid, Value, Message}.
+- `change`: The value was committed (Enter, the focus left): Value, normalized by its Preset.
 
 ## Slots
 

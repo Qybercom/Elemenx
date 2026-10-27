@@ -20,7 +20,8 @@ The frame of a minimap: the map in its default slot (an image, a canvas), round 
 
 ## Events
 
-`marker`, `zoom`
+- `marker`: A marker was pressed: the marker.
+- `zoom`: A zoom button was pressed: 1 (in) or -1 (out).
 
 ## Slots
 

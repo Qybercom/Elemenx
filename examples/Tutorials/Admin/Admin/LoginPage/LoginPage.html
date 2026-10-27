@@ -1,0 +1,11 @@
+<section class="elemenx-card spacious" style="width: min(400px, 100%);">
+	<div class="elemenx-card-body">
+		<h1 class="elemenx-title">Sign in</h1>
+		<div class="elemenx-callout danger" *if="Error">{{Error}}</div>
+		<Form Label="Sign in" (submit)="Submitted">
+			<Field Label="Email" Name="email" Required="true" Email="true"><Input Type="email" Placeholder="ada@example.com" /></Field>
+			<Field Label="Password" Name="password" Required="true" MinLength="8" Hint="Any 8 characters in this example"><Input Type="password" /></Field>
+			<Button Type="submit" Label="Sign in" Variant="primary" Block="true" [loading]="Busy" />
+		</Form>
+	</div>
+</section>

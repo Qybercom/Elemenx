@@ -10,7 +10,9 @@ Elemenx.Component('MultiSelect', {
 		Group: 'inputs',
 		Icon: 'edit',
 		Description: 'A select of several options.',
-		Events: ['change'],
+		Events: {
+			change: 'The selection changed: the list of the Values.'
+		},
 		Props: {
 			Options: {Schema: {Value: 'text', Label: 'text', Icon: 'icon', Disabled: 'bool'}, Description: 'The options: [{Value, Label, Hint, Icon, Group, Disabled}].'},
 			Value: 'The Values chosen.',

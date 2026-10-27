@@ -13,7 +13,9 @@ Elemenx.Component('MixerChannel', {
 		Group: 'music',
 		Icon: 'headphones',
 		Description: 'A channel strip of an audio mixer (the look and the controls; the sound is the application\'s): its Label, Knobs (an equalizer, sends: [{Label, Value, Min, Max, Origin, Default, Unit}]), the Pan (-100 left to 100 right), the buttons Mute and Solo, the fader of its Volume in decibels between Min and Max, and the meter of its Level beside it: a level in decibels, or [left, right] for stereo, with the Peak held over it.',
-		Events: ['change'],
+		Events: {
+			change: 'A control of the strip changed: {ID, Key (Volume, Pan, Mute, Solo or the Label of a knob), Value}.'
+		},
 		Props: {
 			ID: 'The ID of the channel, in its events.',
 			Label: 'The name of the strip.',

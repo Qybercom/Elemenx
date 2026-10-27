@@ -23,7 +23,9 @@ A menu of settings as on a phone: rows in groups, each with an Icon on a tile of
 
 ## Events
 
-`toggle`, `select`, `navigate`
+- `toggle`: A switch row was switched: {ID, Item, Checked}.
+- `select`: A row was chosen: {ID, Item, Path}.
+- `navigate`: A submenu was opened or left: {Path}, the IDs of the open submenus.
 
 ## Example
 

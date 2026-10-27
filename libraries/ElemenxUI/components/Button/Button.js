@@ -13,9 +13,11 @@ Elemenx.Component('Button', {
 	$Meta: {
 		Group: 'buttons',
 		Icon: 'launcher',
-		Description: 'A button.',
+		Description: 'A button: primary, secondary, ghost, danger or link, with an icon, a spinner, a badge or a pressed state.',
 		Container: true,
-		Events: ['click'],
+		Events: {
+			click: 'Pressed (not while Disabled or Loading): the DOM event of the press.'
+		},
 		Props: {
 			Label: 'The text of the button; without one it is an icon button named by Title.',
 			Variant: {Options: ['primary', 'secondary', 'ghost', 'danger', 'link'], Description: 'Its look: primary, secondary, ghost, danger or link.'},

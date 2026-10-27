@@ -23,7 +23,8 @@ Events: noteon ({Note, Midi, Velocity}), noteoff ({Note, Midi}).
 
 ## Events
 
-`noteon`, `noteoff`
+- `noteon`: A note started: {Note, Midi, Velocity}.
+- `noteoff`: A note ended: {Note, Midi}.
 
 ## Example
 

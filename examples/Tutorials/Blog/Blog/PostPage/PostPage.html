@@ -1,0 +1,7 @@
+<article class="elemenx-column" style="gap: 24px;">
+	<a class="elemenx-link" href="/">← All posts</a>
+	<div class="elemenx-callout danger" *if="Failed">{{Failed}}</div>
+	<Skeleton *if="!Text && !Failed" Lines="6" />
+	<Markdown *if="Text" [value]="Text" />
+	<Comments *if="Text" [post]="ID" />
+</article>

@@ -22,7 +22,7 @@ A select of several options. Options: [{Value, Label, Hint, Icon, Group, Disable
 
 ## Events
 
-`change`
+- `change`: The selection changed: the list of the Values.
 
 ## Example
 

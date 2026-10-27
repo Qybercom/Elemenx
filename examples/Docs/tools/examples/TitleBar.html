@@ -1,0 +1,20 @@
+<div style="border: 1px solid var(--elemenx-border); border-radius: 8px; overflow: hidden;">
+	<TitleBar Title="Notes" Icon="file-text" Controls="true">
+		<MenuBar [items]="Menus" (select)="Selected" />
+		<Button slot="actions" Icon="search" Title="Search" Variant="ghost" Size="small" />
+	</TitleBar>
+	<p class="elemenx-text small muted" style="padding: 12px;">On the web the buttons of the window do nothing; in a program of Electron they minimize, maximize and close it. Chosen: {{Chosen}}</p>
+</div>
+<script>
+({
+	Chosen: 'nothing yet',
+	Menus: [
+		{Label: 'File', Items: [{ID: 'new', Label: 'New note'}, {ID: 'export', Label: 'Export...'}]},
+		{Label: 'View', Items: [{ID: 'zoom', Label: 'Zoom in'}]}
+	],
+
+	Selected: function (item) {
+		this.Chosen = item.Label;
+	}
+})
+</script>

@@ -19,7 +19,12 @@
 
 ## События
 
-`select`, `use`, `move`, `discard`, `receive`, `give`
+- `select`: Выбрана другая ячейка: {Index, Item}.
+- `use`: Предмет использован (Enter или двойное нажатие): {Index, Item}.
+- `move`: Предмет перемещён в другую ячейку: {From, To, Items}, ячейки после перемещения.
+- `discard`: Предмет выброшен (Delete): {Index, Item}.
+- `receive`: Пришёл предмет из другого инвентаря или слота: {Item, From, To, Current}.
+- `give`: Предмет брошен в другое место: {Index, Item, From, Target}.
 
 ## Методы
 

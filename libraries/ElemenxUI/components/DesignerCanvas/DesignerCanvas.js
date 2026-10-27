@@ -28,7 +28,10 @@ Elemenx.Component('DesignerCanvas', {
 		Group: 'tools',
 		Icon: 'layout',
 		Description: 'The canvas of a designer of pages: the page as it is built, with the selection and the drops.',
-		Events: ['select', 'drop'],
+		Events: {
+			select: 'An element was pressed: its ID, or null for the page.',
+			drop: 'A kind or an element was dropped on the canvas: {Kind, Node, Parent, Index, ID}, ID the element made or moved.'
+		},
 		Props: {
 			Width: {Options: ['desktop', 'tablet', 'phone'], Description: 'The width of the page: desktop (all of it), tablet (768 pixels) or phone (390).'},
 			Preview: 'Takes the layer away: the page works as it will.',

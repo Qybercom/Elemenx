@@ -16,7 +16,10 @@ Elemenx.Component('ContextMenu', {
 		Description: 'A context menu over its content: a right click, the Menu key or Shift+F10 inside the default slot opens a multi-level MenuList at the pointer (or under the focused element).',
 		Container: true,
 		Slots: ['items'],
-		Events: ['open', 'select'],
+		Events: {
+			open: 'It is about to open: {Target, X, Y}; the owner may change Items for that target.',
+			select: 'A leaf item was chosen: {Item, Target}.'
+		},
 		Props: {
 			Items: 'The items of the menu, as MenuList (more may be declared with MenuItem).',
 			Disabled: 'Turns it off: it takes no input and looks so.',

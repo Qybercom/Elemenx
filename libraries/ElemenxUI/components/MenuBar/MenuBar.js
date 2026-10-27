@@ -16,7 +16,9 @@ Elemenx.Component('MenuBar', {
 		Description: 'A bar of menus, as at the top of the window of a program: File, Edit, View...',
 		Container: true,
 		Children: ['MenuItem'],
-		Events: ['select'],
+		Events: {
+			select: 'A leaf item of a menu was chosen: the item.'
+		},
 		Props: {
 			Items: 'The menus: [{ID, Label, Icon, Disabled, Items}], the items of each as in Menu.',
 			Variant: 'The look of its buttons, as in Button.',

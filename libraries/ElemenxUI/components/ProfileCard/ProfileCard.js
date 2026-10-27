@@ -13,7 +13,10 @@ Elemenx.Component('ProfileCard', {
 		Icon: 'user',
 		Description: 'The card of a person: a Cover (an image, or Color), the Avatar (or initials) with its Status (online, away, busy or offline), Name (Verified), Role, Bio, Stats ([{Label, Value}]; numbers are shortened: 12.4K) and the buttons Follow (Following) and Message.',
 		Container: true,
-		Events: ['follow', 'message'],
+		Events: {
+			follow: 'The follow button: {Following}.',
+			message: 'The message button: {Name}.'
+		},
 		Props: {
 			Name: 'The name of the person.',
 			Role: 'The role under the name.',

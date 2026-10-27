@@ -12,7 +12,10 @@ Elemenx.Component('DesignerTree', {
 		Group: 'tools',
 		Icon: 'tree',
 		Description: 'The structure of the page of a designer of pages: its elements in a tree, to select and to move.',
-		Events: ['select', 'move'],
+		Events: {
+			select: 'An element was pressed: its ID, or null.',
+			move: 'An element or a kind was dragged in the tree: {ID, Target, Position, Type}.'
+		},
 		Props: {
 			Label: 'The name of the tree for screen readers; the phrase of the language of the page without one.'
 		}

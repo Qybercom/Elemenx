@@ -12,7 +12,11 @@ Elemenx.Component('Tour', {
 		Group: 'navigation',
 		Icon: 'help',
 		Description: 'A guided tour: the page is shaded except the element of the current step, and a card next to it explains it.',
-		Events: ['change', 'finish', 'close'],
+		Events: {
+			change: 'Another step is shown: Step.',
+			finish: 'Done was pressed on the last step.',
+			close: 'It closed: the reason, skip, escape or done.'
+		},
 		Props: {
 			Steps: 'The steps: [{Target, Title, Text, Placement}].',
 			Open: 'Shows the tour.',

@@ -1,0 +1,24 @@
+<TitleBar Title="Notes" Icon="file-text">
+	<NativeMenu (select)="Selected">
+		<MenuItem Label="File">
+			<MenuItem ID="new" Label="New note" Shortcut="Alt+Shift+N" />
+			<MenuItem ID="export" Label="Export..." />
+			<MenuItem Separator="true" />
+			<MenuItem Role="quit" Label="Quit" />
+		</MenuItem>
+		<MenuItem Label="Edit">
+			<MenuItem Role="undo" Label="Undo" />
+			<MenuItem ID="find" Label="Find" />
+		</MenuItem>
+	</NativeMenu>
+</TitleBar>
+<p class="elemenx-text small muted">On the web the menu is a MenuBar without the items of the system (Quit, Undo). Chosen: {{Chosen}}</p>
+<script>
+({
+	Chosen: 'nothing yet',
+
+	Selected: function (item) {
+		this.Chosen = item.Label;
+	}
+})
+</script>

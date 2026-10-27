@@ -18,3 +18,29 @@
 | `Image` | `''` |
 | `Blocks` | `false` |
 | `Opaque` | `false` |
+
+## Пример
+
+```example
+<div style="height: 280px;">
+	<GameWorld Team="blue">
+		<GameLayer [rows]="Rows" />
+		<GameObject *for="tree of Trees" Kind="tree" [id]="tree.ID" [x]="tree.X" [y]="tree.Y" Blocks="true" Opaque="true" />
+		<GameObject ID="stone" Kind="rock" X="6" Y="3" Blocks="true" />
+		<GameObject ID="gold" Kind="gold" X="9" Y="1" Color="#e0b33c" Name="Gold mine" />
+		<GameUnit ID="worker" X="0" Y="4" Team="blue" Type="worker" />
+	</GameWorld>
+</div>
+<script>
+({
+	Rows: [
+		'............',
+		'............',
+		'............',
+		'............',
+		'............'
+	],
+	Trees: [{ID: 't1', X: 3, Y: 1}, {ID: 't2', X: 4, Y: 1}, {ID: 't3', X: 3, Y: 2}, {ID: 't4', X: 4, Y: 3}]
+})
+</script>
+```

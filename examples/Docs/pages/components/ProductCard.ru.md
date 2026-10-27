@@ -42,7 +42,10 @@
 
 ## События
 
-`favorite`, `color`, `size`, `add`
+- `favorite`: Сердечко: {Favorite}.
+- `color`: Выбран другой цвет: {Color}.
+- `size`: Выбран другой размер: {Size}.
+- `add`: Кнопка корзины: {Color, Size}.
 
 ## Слоты
 

@@ -22,7 +22,10 @@ Value is the international number: "+" with the dialling code and the local digi
 
 ## Events
 
-`input`, `validate`, `change`, `country`
+- `input`: The number changed: Value, international ('+79991234567').
+- `validate`: The number was checked: {Value, Country, Complete, Valid}.
+- `change`: The number was committed: Value.
+- `country`: The country changed, picked or found by the dialling code: its code.
 
 ## Example
 

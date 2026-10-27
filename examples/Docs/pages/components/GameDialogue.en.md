@@ -15,7 +15,8 @@ The line of a character in a dialogue: Speaker, Portrait (an image URL) and Text
 
 ## Events
 
-`next`, `choose`
+- `next`: The line without choices was read on (its continue button).
+- `choose`: A choice was made: {ID, Choice}.
 
 ## Example
 

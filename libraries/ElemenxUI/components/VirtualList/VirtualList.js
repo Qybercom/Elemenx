@@ -12,12 +12,15 @@ Elemenx.Component('VirtualList', {
 		Group: 'layout',
 		Icon: 'list',
 		Description: 'A long list that draws only the rows in view (and Overscan more on each side): a hundred thousand items scroll as lightly as ten.',
-		Events: ['range', 'select'],
+		Events: {
+			select: 'An item was chosen: the item.',
+			range: 'The rows drawn changed: {Start, End}.'
+		},
 		Methods: ['ScrollTo(index)'],
 		Props: {
 			Items: 'The items: objects, or texts.',
 			ItemHeight: 'The height of a row, in pixels.',
-			Height: 'The height of the list (a CSS length).',
+			Height: 'The height of the list: a CSS length, or a number of pixels.',
 			Overscan: 'Rows drawn beyond the view on each side.',
 			ItemKey: 'The field that identifies an item.',
 			LabelKey: 'The field shown as the label.',
@@ -45,6 +48,11 @@ Elemenx.Component('VirtualList', {
 
 	$OnCreate: function () {
 		var self = this;
+
+		/* The height of the viewport: a number is pixels (regression: Height 300 made it as tall as every row, and drew them all). */
+		this.Length = function (value) {
+			return typeof value === 'number' || /^\d+(\.\d+)?$/.test(String(value)) ? value + 'px' : value;
+		};
 
 		/* The rows to draw: [{Item, Index, Top, Key}]. */
 		this.Window = function (items, start, visible, height) {

@@ -11,7 +11,9 @@ Elemenx.Component('Radio', {
 		Icon: 'edit',
 		Description: 'A single radio button, for layouts of your own; RadioGroup renders a whole set from Options.',
 		Container: true,
-		Events: ['change'],
+		Events: {
+			change: 'It was checked: Value.'
+		},
 		Props: {
 			Checked: 'Whether it is chosen.',
 			Label: 'The text beside it.',

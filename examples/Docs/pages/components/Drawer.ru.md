@@ -19,7 +19,7 @@
 
 ## События
 
-`close`
+- `close`: Просит закрыться (владелец ставит Open в false): причина — close, escape или backdrop.
 
 ## Слоты
 

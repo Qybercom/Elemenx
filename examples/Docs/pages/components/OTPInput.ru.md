@@ -29,7 +29,10 @@
 
 ## События
 
-`input`, `validate`, `complete`, `change`
+- `input`: Символы изменились: Value.
+- `validate`: Код проверен: {Value, Complete, Valid}.
+- `complete`: Введены все Length символов: Value.
+- `change`: Код зафиксирован: Value.
 
 ## Пример
 

@@ -5,7 +5,7 @@ The palette of a designer of pages (the Designer Service): the kinds it can plac
 
 ## Events
 
-`add`
+- `add`: A kind was placed on the page: the ID of the new element.
 
 ## Example
 

@@ -14,7 +14,14 @@ Elemenx.Component('FindBar', {
 		Group: 'navigation',
 		Icon: 'search',
 		Description: 'The bar of find and replace of an editor (CodeEditor, RichEditor) or a terminal: a field for the text, the options Case, Word and RegExp, the place of the match (\'3 of 12\', from Index and Count) with the previous and the next one, and with Replacing a field for the replacement with Replace and Replace all (CanReplace: false leaves them out).',
-		Events: ['find', 'close', 'next', 'previous', 'replace', 'replaceall'],
+		Events: {
+			find: 'The text or an option changed: {Query, Case, Word, RegExp}, what to look for.',
+			next: 'Go to the next match (Enter, or its button).',
+			previous: 'Go to the previous match (Shift+Enter, or its button).',
+			replace: 'Replace the current match: {Text}, the replacement.',
+			replaceall: 'Replace every match: {Text}, the replacement.',
+			close: 'Closed by Escape or its button.'
+		},
 		Methods: ['Focus()'],
 		Props: {
 			Query: 'The text to find.',

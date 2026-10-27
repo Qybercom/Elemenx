@@ -10,7 +10,9 @@ Elemenx.Component('CityInput', {
 		Group: 'inputs',
 		Icon: 'map-pin',
 		Description: 'A field that finds a city of the Cities Service (the cities of the world from GeoNames, loaded when it is first used): typing lists the cities by name, with their region, country and local time.',
-		Events: ['change'],
+		Events: {
+			change: 'A city was picked: {ID, Name, Country, Region, Latitude, Longitude, TimeZone}; null when it was cleared.'
+		},
 		Props: {
 			Value: 'The ID of the city picked.',
 			Country: 'Keeps the cities of one country (an ISO 3166 code).',

@@ -13,7 +13,9 @@ Elemenx.Component('Ruler', {
 		Group: 'display',
 		Icon: 'columns',
 		Description: 'A ruler, as the rulers of an editor of pages or pictures: ticks, numbers, a marker, a range and guides.',
-		Events: ['pull'],
+		Events: {
+			pull: 'A guide is pulled out of the ruler: {Value, ClientX, ClientY}.'
+		},
 		Props: {
 			Orientation: {Options: ['horizontal', 'vertical'], Description: 'horizontal (along the top) or vertical (along the side).'},
 			Start: 'The value at the start of the ruler.',

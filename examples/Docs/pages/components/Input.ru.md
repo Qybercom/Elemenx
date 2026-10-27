@@ -37,7 +37,9 @@
 
 ## События
 
-`input`, `validate`, `change`
+- `input`: Текст изменился при вводе: Value.
+- `validate`: Preset проверил зафиксированное значение: {Valid, Value, Message}.
+- `change`: Значение зафиксировано (Enter, уход фокуса): Value, нормализованное Preset.
 
 ## Слоты
 

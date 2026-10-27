@@ -23,4 +23,22 @@
 
 ## События
 
-`pin`
+- `pin`: Кнопка закрепления или двойное нажатие: {Pinned, Name}, запрошенное состояние.
+
+## Пример
+
+```example
+<div class="elemenx-container wrappable" style="gap: 12px;">
+	<div style="width: 240px; height: 160px;"><CallTile Name="Ada Lovelace" Camera="false" Speaking="true" Level="0.6" Quality="good" [pinned]="Pinned" (pin)="Pin" /></div>
+	<div style="width: 240px; height: 160px;"><CallTile Name="Alan Turing" Camera="false" Muted="true" Hand="true" Quality="poor" /></div>
+</div>
+<script>
+({
+	Pinned: false,
+
+	Pin: function (event) {
+		this.Pinned = event.Pinned;
+	}
+})
+</script>
+```

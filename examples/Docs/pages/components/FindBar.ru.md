@@ -20,7 +20,12 @@
 
 ## События
 
-`find`, `close`, `next`, `previous`, `replace`, `replaceall`
+- `find`: Изменился текст или параметр: {Query, Case, Word, RegExp}, что искать.
+- `close`: Закрыта по Escape или кнопкой.
+- `next`: К следующему совпадению (Enter или кнопка).
+- `previous`: К предыдущему совпадению (Shift+Enter или кнопка).
+- `replace`: Заменить текущее совпадение: {Text}, замена.
+- `replaceall`: Заменить все совпадения: {Text}, замена.
 
 ## Методы
 

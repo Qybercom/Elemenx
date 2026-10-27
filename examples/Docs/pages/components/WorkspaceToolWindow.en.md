@@ -18,7 +18,7 @@ A tool window for a Workspace area: a title bar with actions (slot "actions") ab
 
 ## Events
 
-`close`
+- `close`: Its close button was pressed.
 
 ## Slots
 

@@ -27,7 +27,17 @@ Elemenx.Component('Window', {
 		Description: 'A window over the page or over its container: a header with its Title (and an Overline above it, an Icon), the body (the default slot) and a footer (slot footer); the slot header puts controls into the header.',
 		Container: true,
 		Slots: ['header', 'footer'],
-		Events: ['front', 'restore', 'close', 'resize', 'move'],
+		Events: {
+			front: 'It came to the front of the other windows.',
+			minimize: 'It was folded to its header.',
+			maximize: 'It filled its bounds.',
+			restore: 'It came back from minimized or maximized.',
+			close: 'Its close button was pressed (Open becomes false).',
+			resize: 'Its size changed: {Width, Height}.',
+			move: 'It moved: {X, Y}.',
+			popout: 'It went out into a window of the system of its own.',
+			popin: 'It came back from a window of the system into the page.'
+		},
 		Methods: ['Front()', 'Minimize()', 'Maximize()', 'Restore()', 'Close()', 'Center()'],
 		Props: {
 			Title: 'The title in the header.',

@@ -21,7 +21,7 @@ A check box. Checked is its state, Indeterminate shows a dash for a set that is 
 
 ## Events
 
-`change`
+- `change`: It was checked or unchecked: Checked.
 
 ## Slots
 

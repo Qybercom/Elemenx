@@ -16,7 +16,7 @@ Steps joined by lines. Items: [{ID, Label, Description, Icon, Status, Class, Dis
 
 ## Events
 
-`select`
+- `select`: A Clickable step was pressed: its item.
 
 ## Example
 

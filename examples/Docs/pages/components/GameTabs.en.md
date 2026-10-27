@@ -15,7 +15,7 @@ The tabs of a game window: Items [{ID, Label, Disabled}] in a column (Orientatio
 
 ## Events
 
-`change`
+- `change`: Another tab was opened: its ID.
 
 ## Example
 

@@ -13,7 +13,9 @@ Elemenx.Component('WorkspaceToolWindow', {
 		Description: 'A tool window for a Workspace area: a title bar with actions (slot "actions") above a scrolling body (default slot).',
 		Container: true,
 		Slots: ['actions'],
-		Events: ['close'],
+		Events: {
+			close: 'Its close button was pressed.'
+		},
 		Props: {
 			Title: 'The title of its bar.',
 			Icon: 'Its icon, and the icon of its button on the stripe.',

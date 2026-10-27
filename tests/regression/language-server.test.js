@@ -25,7 +25,7 @@ describe('Contract: the language of Elemenx for the editors (the core, and its L
 		project = fs.mkdtempSync(path.join(os.tmpdir(), 'elemenx-language-'));
 
 		write('libraries/Kit/data/meta.json', JSON.stringify({
-			Components: [{Name: 'Card', Description: 'A card.', Group: 'layout', Props: [{Name: 'Title', Type: 'text', Description: 'Its title.'}, {Name: 'Variant', Type: 'text', Options: ['flat', 'raised'], Description: 'Its look.'}], Events: ['pick'], Slots: ['footer']}],
+			Components: [{Name: 'Card', Description: 'A card.', Group: 'layout', Props: [{Name: 'Title', Type: 'text', Description: 'Its title.'}, {Name: 'Variant', Type: 'text', Options: ['flat', 'raised'], Description: 'Its look.'}], Events: ['pick'], EventDescriptions: {pick: 'A card was picked.'}, Slots: ['footer']}],
 			Services: [{Name: 'Toast', Description: 'Toasts.', Methods: ['Show(options)']}],
 			Directives: [{Name: 'tip', Description: 'A tip.'}]
 		}));
@@ -92,6 +92,8 @@ describe('Contract: the language of Elemenx for the editors (the core, and its L
 		expect(language.Hover(knowledge, '<Card />', 2, 'html', file).Markdown).toContain('**Card** · Elemenx');
 		expect(language.Hover(knowledge, '<Card Variant="flat" />', 8, 'html', file).Markdown).toContain('One of: `flat`, `raised`');
 		expect(language.Hover(knowledge, '<div *tip="x">', 7, 'html', file).Markdown).toContain('A tip.');
+		expect(language.Hover(knowledge, '<Card (pick)="x" />', 8, 'html', file).Markdown).toContain('A card was picked.');
+		expect(language.Hover(knowledge, '<Card />', 2, 'html', file).Markdown).toContain('- `pick`: A card was picked.');
 		expect(language.Hover(knowledge, "$Service('Toast')", 11, 'js').Markdown).toContain('`Show(options)`');
 
 		expect(language.Definition(knowledge, '<Board />', 2, 'html', file)).toEqual({File: path.join(project, 'application/components/Board/Board.js'), Line: 1, Character: 0});

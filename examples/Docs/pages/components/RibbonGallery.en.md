@@ -17,7 +17,7 @@ A gallery of a RibbonGroup: a strip of samples (styles, layouts, colors) that sc
 
 ## Events
 
-`select`
+- `select`: A sample was chosen: {ID, Item}.
 
 ## Example
 

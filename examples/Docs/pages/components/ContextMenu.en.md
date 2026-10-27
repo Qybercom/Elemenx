@@ -19,7 +19,8 @@ A context menu over its content: a right click, the Menu key or Shift+F10 inside
 
 ## Events
 
-`open`, `select`
+- `open`: It is about to open: {Target, X, Y}; the owner may change Items for that target.
+- `select`: A leaf item was chosen: {Item, Target}.
 
 ## Slots
 

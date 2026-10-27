@@ -11,7 +11,10 @@ Elemenx.Component('DesignerProject', {
 		Group: 'tools',
 		Icon: 'folder',
 		Description: 'The project of a designer of pages: the settings of the Application, its pages and its components.',
-		Events: ['open', 'settings'],
+		Events: {
+			open: 'A page or a component was opened: {ID}.',
+			settings: 'The settings of the Application were pressed.'
+		},
 		Props: {
 			Settings: 'Marks the settings of the Application as the open item.'
 		}

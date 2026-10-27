@@ -1,0 +1,6 @@
+<section class="elemenx-column" style="gap: 24px;">
+	<Tabs [tabs]="Categories" [value]="Category" Variant="pill" Label="Categories" (change)="Switched" />
+	<div class="elemenx-container grid" style="gap: 16px; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));">
+		<ProductTile *for="product of Shown(Products, Category)" *key="product.ID" [product]="product" />
+	</div>
+</section>

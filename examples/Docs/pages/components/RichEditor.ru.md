@@ -26,7 +26,12 @@
 
 ## События
 
-`ready`, `input`, `formats`, `link`, `files`, `change`
+- `ready`: Редактор готов: сам компонент, чтобы вызывать Command.
+- `input`: Документ изменился: его HTML.
+- `formats`: Изменились стили у курсора: {Bold, Italic, Underline, Strike, Code, Block, Level, Quote, List, Link, Table}, чтобы подсветить кнопки панели.
+- `link`: Нажата ссылка: {Href, Text}.
+- `files`: Вставлены или брошены файлы: список File, чтобы приложение их загрузило.
+- `change`: Документ зафиксирован при уходе фокуса: Value.
 
 ## Методы
 
