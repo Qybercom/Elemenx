@@ -16,6 +16,9 @@
  *   npm run version:tag                   tags the last commit v0.9.1, when the working tree is clean and both
  *                                         packages have that version
  * Then git push --follow-tags sends the commit and the tag, and the tag starts the publish workflow.
+ *   npm run version:built                 stops when a file of dist (a script, manifest.json, an extension of the
+ *                                         editors and the elemenx.js in it) is not of the version of package.json;
+ *                                         -- --all requires the three extensions (npm run release builds and checks)
  */
 var fs = require('fs');
 var path = require('path');
@@ -78,6 +81,124 @@ function editorVersions () {
 	var gradle = fs.existsSync(IntelliJ) ? /\nversion = "([^"]*)"/.exec(fs.readFileSync(IntelliJ, 'utf8')) : null;
 
 	return {VSCode: fs.existsSync(VSCode) ? read(VSCode).version : null, IntelliJ: gradle ? gradle[1] : null};
+}
+
+/* The version a source of elemenx.js names, or null. */
+function named (source) {
+	var match = /\n\tvar Version = '([^']*)';/.exec(source);
+
+	return match ? match[1] : null;
+}
+
+/*
+ * What in a build of dist (directory) is not of the version: the scripts (their banners, elemenx.js its Version),
+ * manifest.json, and in each extension of the editors its own version and the one of the elemenx.js it carries.
+ * all: each of the three extensions is required (a release from the machine of the maintainer). [] when all is right.
+ */
+function built (directory, version, all) {
+	var Zip = require(path.join(Root, 'tools', 'zip.js'));
+	var wrong = [];
+	var editors = path.join(directory, 'editors');
+
+	function archive (name, check) {
+		var file = path.join(editors, name);
+
+		if (!fs.existsSync(file)) {
+			if (all) wrong.push('editors/' + name + ' is not built');
+
+			return;
+		}
+
+		try {
+			check(Zip.Read(fs.readFileSync(file)));
+		}
+		catch (error) {
+			wrong.push('editors/' + name + ' cannot be read: ' + error.message);
+		}
+	}
+
+	function core (name, files, entry) {
+		var found = files[entry] ? named(files[entry].toString('utf8')) : null;
+
+		if (found !== version)
+			wrong.push('editors/' + name + ' carries elemenx.js ' + found);
+	}
+
+	if (!fs.existsSync(path.join(directory, 'manifest.json')))
+		return ['dist is not built'];
+
+	if (read(path.join(directory, 'manifest.json')).Version !== version)
+		wrong.push('manifest.json has the version ' + read(path.join(directory, 'manifest.json')).Version);
+
+	fs.readdirSync(directory).filter(function (name) {
+		return /\.js$/.test(name);
+	}).sort().forEach(function (name) {
+		var text = fs.readFileSync(path.join(directory, name), 'utf8');
+		var banner = /^\/\*! \S+ (\S+) /.exec(text);
+
+		if (!banner || banner[1] !== version)
+			wrong.push(name + ' has the version ' + (banner ? banner[1] : null));
+		else if (/^elemenx(\.all)?\.js$/.test(name) && named(text) !== version)
+			wrong.push(name + ' has Elemenx.Version ' + named(text));
+	});
+
+	archive('elemenx-vscode.vsix', function (files) {
+		var manifest = files['extension/package.json'] ? JSON.parse(files['extension/package.json'].toString('utf8')).version : null;
+
+		if (manifest !== version)
+			wrong.push('editors/elemenx-vscode.vsix has the version ' + manifest);
+
+		core('elemenx-vscode.vsix', files, 'extension/core/elemenx.js');
+	});
+
+	/* The plugin of IntelliJ: its jar is named by its version, and its plugin.xml says it. */
+	archive('elemenx-intellij.zip', function (files) {
+		var jars = Object.keys(files).filter(function (name) {
+			return /^elemenx-intellij\/lib\/elemenx-intellij-.*\.jar$/.test(name);
+		});
+		var jar = files['elemenx-intellij/lib/elemenx-intellij-' + version + '.jar'];
+		var inside;
+		var xml;
+
+		if (jars.length !== 1 || !jar) {
+			wrong.push('editors/elemenx-intellij.zip has ' + (jars.join(', ') || 'no jar'));
+
+			return;
+		}
+
+		inside = Zip.Read(jar);
+		xml = inside['META-INF/plugin.xml'] ? /<version>([^<]*)<\/version>/.exec(inside['META-INF/plugin.xml'].toString('utf8')) : null;
+
+		if (!xml || xml[1] !== version)
+			wrong.push('editors/elemenx-intellij.zip has the version ' + (xml ? xml[1] : null) + ' in plugin.xml');
+
+		core('elemenx-intellij.zip', inside, 'elemenx/core/elemenx.js');
+	});
+
+	/* Visual Studio takes no prerelease in its version: 1.0.0 for 1.0.0-beta.1. */
+	archive('elemenx-visualstudio.vsix', function (files) {
+		var identity = files['extension.vsixmanifest'] ? /<Identity [^>]*Version="([^"]*)"/.exec(files['extension.vsixmanifest'].toString('utf8')) : null;
+
+		if (!identity || identity[1] !== version.replace(/-.*$/, ''))
+			wrong.push('editors/elemenx-visualstudio.vsix has the version ' + (identity ? identity[1] : null));
+
+		core('elemenx-visualstudio.vsix', files, 'core/elemenx.js');
+	});
+
+	return wrong;
+}
+
+/* Stops when the build of dist is not all of the version of package.json (built --all: with the three extensions of the editors). */
+function checkBuilt (option) {
+	var version = read(path.join(Root, 'package.json')).version;
+	var wrong = built(path.join(Root, 'dist'), version, option === '--all');
+
+	if (wrong.length)
+		return stop('dist is not all of the version ' + version + ': ' + wrong.join('; ') + '. Build it again: npm run dist');
+
+	process.stdout.write('Elemenx version: dist is all of the version ' + version + '\n');
+
+	return true;
 }
 
 /* The package.json of the examples that depend on the package (name), relative to the root. */
@@ -221,7 +342,11 @@ function tag () {
 	return true;
 }
 
-var Commands = {check: check, sync: sync, set: set, tag: tag};
+var Commands = {check: check, sync: sync, set: set, tag: tag, built: checkBuilt};
 
-if (Commands[process.argv[2]]) Commands[process.argv[2]](process.argv[3]);
-else stop('usage: node scripts/version.js check | sync | set <version> | tag');
+module.exports = {Built: built};
+
+if (require.main === module) {
+	if (Commands[process.argv[2]]) Commands[process.argv[2]](process.argv[3]);
+	else stop('usage: node scripts/version.js check | sync | set <version> | tag | built [--all]');
+}

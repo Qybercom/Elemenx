@@ -1,6 +1,6 @@
 {
 	"name": "@qybercom/elemenx",
-	"version": "0.10.6",
+	"version": "0.10.7",
 	"description": "A browser UI framework in one ES5 file: components, reactive state, routing, services, storage, messaging and network, with its CLI and the ElemenxUI component library",
 	"keywords": [
 		"ui",
@@ -73,6 +73,7 @@
 		"version": "node scripts/version.js sync --add",
 		"version:set": "node scripts/version.js set",
 		"version:tag": "node scripts/version.js tag",
+		"version:built": "node scripts/version.js built",
 		"release": "node scripts/release.js"
 	},
 	"devDependencies": {

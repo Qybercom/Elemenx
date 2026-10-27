@@ -1,4 +1,4 @@
-import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, onTestFinished } from 'vitest';
 import { loadElemenx, mount, resetDOM, tick, unique, waitFor } from '../setup.js';
 
 /* Elemenx.Cache: idle definitions unloaded, instances asleep instead of destroyed (keep-alive). */
@@ -411,7 +411,13 @@ describe('Contract: Elemenx.Cache', function () {
 		component.$Destroy();
 	});
 
+	/*
+	 * A bug of the test: it gave the style 2 seconds to come, and a loaded machine served it later. Here the style comes
+	 * 2.5 seconds late each time, and the test waits for it as long as the test may last.
+	 */
 	it('Definitions: a remote definition forgets its template and style and loads them again', async function () {
+		var send = XMLHttpRequest.prototype.send;
+		var open = XMLHttpRequest.prototype.open;
 		var name = unique('CacheRemote');
 		var factory = Elemenx.Component(name, {
 			$Template: '<div class="cache-remote">remote</div>',
@@ -423,11 +429,35 @@ describe('Contract: Elemenx.Cache', function () {
 				return style.textContent.indexOf('.remote-style-test') !== -1;
 			}).length;
 		};
-		var component = factory();
+		var component;
+
+		XMLHttpRequest.prototype.open = function (method, url) {
+			this.slow = String(url).indexOf('component-style/Component.css') !== -1;
+
+			return open.apply(this, arguments);
+		};
+		XMLHttpRequest.prototype.send = function () {
+			var request = this;
+			var args = arguments;
+
+			if (!request.slow)
+				return send.apply(request, args);
+
+			setTimeout(function () {
+				send.apply(request, args);
+			}, 2500);
+		};
+
+		onTestFinished(function () {
+			XMLHttpRequest.prototype.send = send;
+			XMLHttpRequest.prototype.open = open;
+		});
+
+		component = factory();
 
 		document.getElementById('mount').appendChild(component.$Element());
 
-		expect(await waitFor(function () { return document.querySelector('.cache-remote'); }, 2000)).not.toBe(false);
+		expect(await waitFor(function () { return document.querySelector('.cache-remote'); }, 9000)).not.toBe(false);
 
 		component.$Destroy();
 
@@ -439,8 +469,8 @@ describe('Contract: Elemenx.Cache', function () {
 
 		document.getElementById('mount').appendChild(component.$Element());
 
-		expect(await waitFor(function () { return styles() === 1; }, 2000)).toBe(true);
+		expect(await waitFor(function () { return styles() === 1; }, 9000)).toBe(true);
 
 		component.$Destroy();
-	});
+	}, 25000);
 });

@@ -133,6 +133,46 @@ function archive (list, level) {
 	return Buffer.concat(parts.concat(central, [end]));
 }
 
+/*
+ * The files of a zip archive (a .vsix, a .jar...): {name: Buffer}, from its central directory; stored or deflated
+ * files only. Throws on what is no zip archive.
+ */
+function read (buffer) {
+	var result = {};
+	var end = buffer.length - 22;
+	var count;
+	var at;
+	var i;
+
+	while (end >= 0 && buffer.readUInt32LE(end) !== 0x06054B50)
+		end--;
+
+	if (end < 0)
+		throw new Error('no zip archive');
+
+	count = buffer.readUInt16LE(end + 10);
+	at = buffer.readUInt32LE(end + 16);
+
+	for (i = 0; i < count; i++) {
+		var method = buffer.readUInt16LE(at + 10);
+		var compressed = buffer.readUInt32LE(at + 20);
+		var length = buffer.readUInt16LE(at + 28);
+		var extra = buffer.readUInt16LE(at + 30);
+		var comment = buffer.readUInt16LE(at + 32);
+		var local = buffer.readUInt32LE(at + 42);
+		var name = buffer.toString('utf8', at + 46, at + 46 + length);
+		var start = local + 30 + buffer.readUInt16LE(local + 26) + buffer.readUInt16LE(local + 28);
+		var data = buffer.subarray(start, start + compressed);
+
+		if (name.charAt(name.length - 1) !== '/')
+			result[name] = method === 8 ? zlib.inflateRawSync(data) : Buffer.from(data);
+
+		at += 46 + length + extra + comment;
+	}
+
+	return result;
+}
+
 /* The zip archive of a directory, written to target. */
 function directory (source, target) {
 	fs.writeFileSync(target, archive(files(source)));
@@ -142,6 +182,7 @@ function directory (source, target) {
 
 module.exports = {
 	Archive: archive,
+	Read: read,
 	Directory: directory,
 	Files: files,
 	CRC32: crc32

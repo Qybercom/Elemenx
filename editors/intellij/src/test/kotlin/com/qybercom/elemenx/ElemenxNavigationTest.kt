@@ -2,6 +2,7 @@ package com.qybercom.elemenx
 
 import com.intellij.codeInsight.daemon.impl.HighlightInfo
 import com.intellij.codeInsight.navigation.actions.GotoDeclarationAction
+import com.intellij.codeInsight.navigation.actions.GotoDeclarationHandler
 import com.intellij.codeInspection.LocalInspectionEP
 import com.intellij.codeInspection.LocalInspectionTool
 import com.intellij.lang.Language
@@ -20,8 +21,8 @@ import com.intellij.testFramework.fixtures.BasePlatformTestCase
  * went anywhere, <Input> wanted a label, a *for declared its variable twice).
  */
 class ElemenxNavigationTest : BasePlatformTestCase() {
-	private val code = "Elemenx.Component('Board', {\n\t\$TemplateURL: 'Board.html',\n\tTitle: 'Board',\n\tPage: 'export',\n\tNewName: '',\n\n\t\$OnCreate: function () {\n\t\tthis.Kinds = function (language) {\n\t\t\treturn [];\n\t\t};\n\t},\n\n\tPaged: function (value) {\n\t\tthis.Page = value;\n\t},\n\n\tNewNamed: function (value) {\n\t\tthis.NewName = value;\n\t}\n});\n"
-	private val template = "<RibbonBackstage slot=\"backstage\" [title]=\"Title\" [page]=\"Page\" (page)=\"Paged\">\n\t<Field [label]=\"Title\">\n\t\t<Input [value]=\"NewName\" [placeholder]=\"Title\" (input)=\"NewNamed\" />\n\t</Field>\n\t<button type=\"button\" *for=\"kind of Kinds(Title)\" #Theme>{{kind.Icon}} {{Title}}</button>\n</RibbonBackstage>\n"
+	private val code = "Elemenx.Component('Board', {\n\t\$TemplateURL: 'Board.html',\n\tTitle: 'Board',\n\tPage: 'export',\n\tNewName: '',\n\tHide: [],\n\n\t\$OnCreate: function () {\n\t\tthis.Kinds = function (language) {\n\t\t\treturn [];\n\t\t};\n\n\t\tthis.Shows = function (hide, name) {\n\t\t\treturn (hide || []).indexOf(name) === -1;\n\t\t};\n\t},\n\n\tPaged: function (value) {\n\t\tthis.Page = value;\n\t},\n\n\tNewNamed: function (value) {\n\t\tthis.NewName = value;\n\t}\n});\n"
+	private val template = "<RibbonBackstage slot=\"backstage\" [title]=\"Title\" [page]=\"Page\" (page)=\"Paged\">\n\t<Field [label]=\"Title\">\n\t\t<Input [value]=\"NewName\" [placeholder]=\"Title\" (input)=\"NewNamed\" />\n\t</Field>\n\t<button type=\"button\" *for=\"kind of Kinds(Title)\" #Theme>{{kind.Icon}} {{Title}}</button>\n\t<span *if=\"Shows(Hide, 'leave')\"><Button Shape=\"round\" (click)=\"Paged\" /></span>\n</RibbonBackstage>\n"
 
 	/** Where Ctrl+click at an offset of the editor of the page goes: the file and the offset in it of each target. */
 	private fun targets(file: PsiFile, offset: Int): List<String> {
@@ -74,7 +75,7 @@ class ElemenxNavigationTest : BasePlatformTestCase() {
 
 		val file = myFixture.addFileToProject("app/Board.html", template)
 
-		listOf("{{Title}}" to "Title:", "\"Page\"" to "Page:", "\"Paged\"" to "Paged:").forEach { (needle, member) ->
+		listOf("{{Title}}" to "Title:", "\"Page\"" to "Page:", "\"Paged\"" to "Paged:", "Kinds(" to "Kinds =", "Shows(" to "Shows =", "(Hide" to "Hide:").forEach { (needle, member) ->
 			val injected = InjectedLanguageManager.getInstance(project).findInjectedElementAt(file, template.indexOf(needle) + 3)!!
 			val data = ApplicationManager.getApplication().executeOnPooledThread<Any?> {
 				ReadAction.compute<Any?, Throwable> { method.invoke(null, injected.containingFile, injected.textRange.startOffset + 1) }
@@ -90,6 +91,20 @@ class ElemenxNavigationTest : BasePlatformTestCase() {
 
 			assertTrue(needle + " " + targets, targets.contains("Board.js:" + code.indexOf(member)))
 		}
+	}
+
+	/**
+	 * Ctrl+click asks the handlers in their order, the ones of LSP4IJ first: on a name its language server does not
+	 * declare, LSP4IJ cancels the click (ProcessCanceledException, but for the hover of Ctrl), and no handler after it is
+	 * asked (regression: the hover showed the name, the click went nowhere). The plugin answers before it.
+	 */
+	fun testTheHandlerOfThePluginIsAskedBeforeTheOneOfLsp4ij() {
+		val handlers = GotoDeclarationHandler.EP_NAME.extensionList.map { handler -> handler.javaClass.simpleName }
+		val lsp = handlers.indexOf("LSPGotoDeclarationHandler")
+
+		if (lsp == -1) return
+
+		assertTrue(handlers.toString(), handlers.indexOf("ElemenxGotoDeclaration") in 0 until lsp)
 	}
 
 	fun testAVariableOfALoopGoesToItsFor() {

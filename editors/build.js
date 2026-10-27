@@ -292,6 +292,13 @@ function Build (options) {
 	if (builder) {
 		stageVisualStudio(extension, require(path.join(root, 'package.json')).version);
 
+		/*
+		 * A build from nothing: the incremental one kept the extension.vsixmanifest it made first (regression: the .vsix
+		 * of 0.10.6 said 0.10.2). The restore of the packages stays in obj.
+		 */
+		fs.rmSync(path.join(visualstudio, 'obj', 'Release'), {recursive: true, force: true});
+		fs.rmSync(path.join(visualstudio, 'bin', 'Release'), {recursive: true, force: true});
+
 		run(builder, [path.join(visualstudio, 'Elemenx.VisualStudio.csproj'), '/restore', '/p:Configuration=Release', '/v:minimal', '/nologo'], visualstudio);
 
 		copy(path.join(visualstudio, 'bin', 'Release', 'net472', 'Elemenx.VisualStudio.vsix'), path.join(output, 'elemenx-visualstudio.vsix'));

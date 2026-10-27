@@ -5,8 +5,9 @@
  * --yes). It takes an exact version only (0.9.5, 1.0.0-beta.1), greater than the one of package.json, and stops before
  * changing anything when the branch is not main, the tag exists (here or on origin) or main is behind origin/main.
  * It shows the changes it will commit and asks (--yes does not), runs the whole npm test (--skip-tests does not),
- * then: npm run version:set -- <version>, git add --all, git commit -m v<version>, npm run version:tag,
- * git push --follow-tags. A step that fails stops it, and it says what is done and how to go on; it undoes nothing.
+ * then: npm run version:set -- <version>, npm run dist (dist and the extensions of the editors, of that version),
+ * npm run version:built -- --all, git add --all, git commit -m v<version>, npm run version:tag, git push --follow-tags.
+ * A step that fails stops it, and it says what is done and how to go on; it undoes nothing.
  */
 var path = require('path');
 var childProcess = require('child_process');
@@ -24,6 +25,12 @@ function steps (version, options) {
 		list.push(['the tests', npm[0], [npm[1], 'test']]);
 
 	list.push(['the version', npm[0], [npm[1], 'run', 'version:set', '--', version]]);
+	/*
+	 * dist and the extensions of the editors again, from the code of the release and with its version, then each file
+	 * of it checked (regression: the ones of the machine kept the version before, as the tests built them).
+	 */
+	list.push(['the build', npm[0], [npm[1], 'run', 'dist']]);
+	list.push(['the check of the build', npm[0], [npm[1], 'run', 'version:built', '--', '--all']]);
 	list.push(['git add', 'git', ['add', '--all']]);
 	list.push(['the commit', 'git', ['commit', '-m', 'v' + version]]);
 	list.push(['the tag', npm[0], [npm[1], 'run', 'version:tag']]);

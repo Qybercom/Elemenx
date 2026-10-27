@@ -32,8 +32,10 @@ describe('Regression: Router / Guards', function () {
 		var home = unique('Home');
 		var sp = unique('SlowPage');
 		var fp = unique('FastPage');
+		var release = null;
 
-		Elemenx.Guard(slow, function () {return this.$Wait(function (done) {setTimeout(function () {done(true);}, 120);});});
+		/* The guard answers when the test says so, after the newer navigation: timers raced on a loaded machine. */
+		Elemenx.Guard(slow, function () {return this.$Wait(function (done) {release = done;});});
 		Elemenx.Component(home, {$Template: '<div>HOME</div>'});
 		Elemenx.Component(sp, {$Template: '<div id="slow">SLOW</div>'});
 		Elemenx.Component(fp, {$Template: '<div id="fast">FAST</div>'});
@@ -42,9 +44,15 @@ describe('Regression: Router / Guards', function () {
 
 		x.Router.Go('/slow');
 
-		setTimeout(function () {x.Router.Go('/fast');}, 20);
+		expect(await waitFor(function () {return release;}, 3000)).toBeTruthy();
 
-		await tick(220);
+		x.Router.Go('/fast');
+
+		expect(await waitFor(function () {return document.getElementById('fast');}, 3000)).toBeTruthy();
+
+		release(true);
+
+		await tick(20);
 
 		expect(document.getElementById('fast')).not.toBeNull();
 		expect(document.getElementById('slow')).toBeNull();
@@ -57,19 +65,22 @@ describe('Regression: Router / Guards', function () {
 	it('Destroy invalidates a pending guarded navigation', async function () {
 		var guard = unique('DestroyGuard');
 		var page = unique('DestroyPage');
+		var release = null;
 
-		Elemenx.Guard(guard, function () {return this.$Wait(function (done) {setTimeout(function () {done(true);}, 100);});});
+		Elemenx.Guard(guard, function () {return this.$Wait(function (done) {release = done;});});
 		Elemenx.Component(page, {$Template: '<div id="destroy-page">PAGE</div>'});
 
 		var x = boot([{Path: '/destroy-pending', Component: page, Guard: guard}]);
 
 		x.Router.Go('/destroy-pending');
 
-		await tick(20);
+		expect(await waitFor(function () {return release;}, 3000)).toBeTruthy();
 
 		x.Router.Destroy();
 
-		await tick(130);
+		release(true);
+
+		await tick(20);
 
 		expect(document.getElementById('destroy-page')).toBeNull();
 
@@ -188,8 +199,10 @@ describe('Regression: Router / Guards', function () {
 		var home = unique('WaitingHome');
 		var page = unique('WaitingPage');
 		var waiting = unique('WaitingPageLoading');
+		var release = null;
 
-		Elemenx.Guard(guard, function () {return this.$Wait(function (done) {setTimeout(function () {done(true);}, 80);});});
+		/* The guard answers when the test says so: a timer of its own raced the checks of a loaded machine. */
+		Elemenx.Guard(guard, function () {return this.$Wait(function (done) {release = done;});});
 		Elemenx.Component(home, {$Template: '<div id="waiting-home">HOME</div>'});
 		Elemenx.Component(page, {$Template: '<div id="waiting-target">TARGET</div>'});
 		Elemenx.Component(waiting, {$Template: '<div id="waiting-global">WAIT</div>'});
@@ -211,12 +224,13 @@ describe('Regression: Router / Guards', function () {
 
 		router.Go('/waiting');
 
-		await tick(20);
-
+		expect(await waitFor(function () {return release;}, 3000)).toBeTruthy();
 		expect(document.getElementById('waiting-global')).not.toBeNull();
 		expect(document.getElementById('waiting-global').parentNode.hasAttribute('*outlet')).toBe(false);
 		expect(document.getElementById('waiting-home')).not.toBeNull();
 		expect(document.getElementById('waiting-target')).toBeNull();
+
+		release(true);
 
 		await waitFor(function () {
 			return !document.getElementById('waiting-global');
@@ -336,8 +350,9 @@ describe('Regression: Router / Guards', function () {
 		var page = unique('RouteWaitingPage');
 		var globalWaiting = unique('GlobalWaiting');
 		var routeWaiting = unique('RouteWaiting');
+		var release = null;
 
-		Elemenx.Guard(guard, function () {return this.$Wait(function (done) {setTimeout(function () {done(true);}, 80);});});
+		Elemenx.Guard(guard, function () {return this.$Wait(function (done) {release = done;});});
 		Elemenx.Component(page, {$Template: '<div id="route-waiting-target">TARGET</div>'});
 		Elemenx.Component(globalWaiting, {$Template: '<div id="global-waiting">GLOBAL</div>'});
 		Elemenx.Component(routeWaiting, {$Template: '<div id="route-waiting">ROUTE</div>'});
@@ -353,10 +368,11 @@ describe('Regression: Router / Guards', function () {
 		router.Start();
 		router.Go('/route-waiting');
 
-		await tick(20);
-
+		expect(await waitFor(function () {return release;}, 3000)).toBeTruthy();
 		expect(document.getElementById('route-waiting')).not.toBeNull();
 		expect(document.getElementById('global-waiting')).toBeNull();
+
+		release(true);
 
 		await waitFor(function () {
 			return !document.getElementById('route-waiting');
@@ -375,8 +391,9 @@ describe('Regression: Router / Guards', function () {
 		var guard = unique('CustomWaitingOutletGuard');
 		var page = unique('CustomWaitingOutletPage');
 		var waiting = unique('CustomWaitingOutletLoading');
+		var release = null;
 
-		Elemenx.Guard(guard, function () {return this.$Wait(function (done) {setTimeout(function () {done(true);}, 80);});});
+		Elemenx.Guard(guard, function () {return this.$Wait(function (done) {release = done;});});
 		Elemenx.Component(page, {$Template: '<div id="custom-waiting-target">TARGET</div>'});
 		Elemenx.Component(waiting, {$Template: '<div id="custom-waiting-loader">WAIT</div>'});
 
@@ -391,10 +408,11 @@ describe('Regression: Router / Guards', function () {
 		router.Start();
 		router.Go('/custom-waiting');
 
-		await tick(20);
-
+		expect(await waitFor(function () {return release;}, 3000)).toBeTruthy();
 		expect(document.getElementById('custom-waiting-loader')).not.toBeNull();
 		expect(document.getElementById('custom-waiting-loader').parentNode.hasAttribute('*outlet')).toBe(false);
+
+		release(true);
 
 		await waitFor(function () {
 			return !document.getElementById('custom-waiting-loader');
@@ -513,8 +531,9 @@ describe('Regression: Router / Guards', function () {
 		var slow = unique('RedirectSlow');
 		var fast = unique('RedirectFast');
 		var target = unique('RedirectTarget');
+		var release = null;
 
-		Elemenx.Guard(guard, function () {return this.$Wait(function (done) {setTimeout(function () {done('/redirect-target');}, 120);});});
+		Elemenx.Guard(guard, function () {return this.$Wait(function (done) {release = done;});});
 		Elemenx.Component(home, {$Template: '<div>HOME</div>'});
 		Elemenx.Component(slow, {$Template: '<div id="redirect-slow">SLOW</div>'});
 		Elemenx.Component(fast, {$Template: '<div id="redirect-fast">FAST</div>'});
@@ -524,9 +543,15 @@ describe('Regression: Router / Guards', function () {
 
 		x.Router.Go('/redirect-slow');
 
-		setTimeout(function () {x.Router.Go('/redirect-fast');}, 20);
+		expect(await waitFor(function () {return release;}, 3000)).toBeTruthy();
 
-		await tick(220);
+		x.Router.Go('/redirect-fast');
+
+		expect(await waitFor(function () {return document.getElementById('redirect-fast');}, 3000)).toBeTruthy();
+
+		release('/redirect-target');
+
+		await tick(20);
 
 		expect(document.getElementById('redirect-fast')).not.toBeNull();
 		expect(document.getElementById('redirect-target')).toBeNull();
@@ -624,8 +649,9 @@ describe('Regression: Router lifecycle hardening', function () {
 		var guard = unique('DestroyWaitingGuard');
 		var page = unique('DestroyWaitingPage');
 		var waiting = unique('DestroyWaitingLoader');
+		var release = null;
 
-		Elemenx.Guard(guard, function () {return this.$Wait(function (done) {setTimeout(function () {done(true);}, 100);});});
+		Elemenx.Guard(guard, function () {return this.$Wait(function (done) {release = done;});});
 		Elemenx.Component(page, {$Template: '<div id="destroy-waiting-target">TARGET</div>'});
 		Elemenx.Component(waiting, {$Template: '<div id="destroy-waiting-loader">WAIT</div>'});
 
@@ -640,15 +666,17 @@ describe('Regression: Router lifecycle hardening', function () {
 		router.Start();
 		router.Go('/destroy-waiting');
 
-		await tick(20);
-
+		expect(await waitFor(function () {return release;}, 3000)).toBeTruthy();
 		expect(document.getElementById('destroy-waiting-loader')).not.toBeNull();
 
 		router.Destroy();
 
 		expect(document.getElementById('destroy-waiting-loader')).toBeNull();
 
-		await tick(120);
+		/* The guard answers after the Router is gone: nothing comes back. */
+		release(true);
+
+		await tick(20);
 
 		expect(document.getElementById('destroy-waiting-target')).toBeNull();
 
@@ -661,6 +689,8 @@ describe('Regression: Router lifecycle hardening', function () {
 		var page = unique('PendingServicePage');
 		var waiting = unique('PendingServiceWaiting');
 		var destroyed = 0;
+		var guarded = false;
+		var frame = window.requestAnimationFrame;
 
 		Elemenx.Service(service, {
 			Authorized: true,
@@ -669,6 +699,8 @@ describe('Regression: Router lifecycle hardening', function () {
 		Elemenx.Guard(guard, function () {
 			var session = this.$Service(service);
 			var authorized = session.Authorized;
+
+			guarded = true;
 
 			return this.$Wait(function (done) {
 				setTimeout(function () {done(authorized);}, 100);
@@ -685,10 +717,22 @@ describe('Regression: Router lifecycle hardening', function () {
 		var app = Elemenx.Application(appName, {$Component: root, $Mount: '#mount'});
 		var router = Elemenx.Router({Root: app.$Component(), Waiting: waiting, Routes: [{Path: '/pending-service', Component: page, Guard: guard}]});
 
-		router.Start();
-		router.Go('/pending-service');
+		/*
+		 * A bug of the test: it took the guard as started 20 ms after Go, but the guard runs once the frame of the waiting
+		 * component is painted (or 100 ms later), and a frame of a loaded machine came later (destroyed stayed 0). Here no
+		 * frame comes at all, and the test waits for the guard itself.
+		 */
+		window.requestAnimationFrame = function () {return 0;};
 
-		await tick(20);
+		try {
+			router.Start();
+			router.Go('/pending-service');
+
+			expect(await waitFor(function () {return guarded;}, 3000)).toBe(true);
+		}
+		finally {
+			window.requestAnimationFrame = frame;
+		}
 
 		expect(document.getElementById('pending-service-waiting')).not.toBeNull();
 		expect(destroyed).toBe(0);

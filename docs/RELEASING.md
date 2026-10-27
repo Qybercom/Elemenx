@@ -21,7 +21,7 @@ Every command below but `npm run release` (which commits the working tree) start
    npm run release 0.9.1
    ```
 
-   It takes an exact version only (`0.9.1`, `1.0.0-beta.1`), greater than the one of `package.json`, and changes nothing when the branch is not `main`, the tag `v0.9.1` exists (here or on `origin`) or `main` is behind `origin/main`. It shows the changes it will commit and asks before it goes on, runs the whole `npm test`, then `npm run version:set -- 0.9.1`, `git add --all`, `git commit -m v0.9.1`, `npm run version:tag` and `git push --follow-tags`. `npm run release -- 0.9.1 --yes` does not ask, `--skip-tests` runs no tests. A step that fails stops it: it says what is done, undoes nothing, and the rest goes by hand as below.
+   It takes an exact version only (`0.9.1`, `1.0.0-beta.1`), greater than the one of `package.json`, and changes nothing when the branch is not `main`, the tag `v0.9.1` exists (here or on `origin`) or `main` is behind `origin/main`. It shows the changes it will commit and asks before it goes on, runs the whole `npm test`, then `npm run version:set -- 0.9.1`, `npm run dist` (all of `dist/` and the three extensions of the editors again, from the code of the release and with its version: the machine needs what `npm run editors` needs, see `docs/EDITORS.md`), `npm run version:built -- --all` (opens each file of `dist/` and each extension, and the `elemenx.js` it carries, and stops on one that is not `0.9.1` or not built, before anything is committed), `git add --all`, `git commit -m v0.9.1`, `npm run version:tag` and `git push --follow-tags`. `npm run release -- 0.9.1 --yes` does not ask, `--skip-tests` runs no tests. A step that fails stops it: it says what is done, undoes nothing, and the rest goes by hand as below.
 
    **The version in a commit of its own** (the commit `0.9.1` holds only the versions of `package.json`, `package-lock.json` and `packages/elemenx/package.json`, and gets the tag):
 
@@ -41,7 +41,7 @@ Every command below but `npm run release` (which commits the working tree) start
    git push --follow-tags
    ```
 
-   `version:set` puts the version in every place that holds it: `package.json`, `package-lock.json`, the version and the dependency of `packages/elemenx`, the dependency of every example that installs `@qybercom/elemenx` (`examples/*/package.json`, `examples/Tutorials/*/package.json`) on its minor version (`^0.10.0` for `0.10.3`), the version of the extensions of the editors (`editors/vscode/package.json`, `editors/intellij/build.gradle.kts`), which is the one of Elemenx, and the minor version of the links of `README.md` to the CDN (`@qybercom/elemenx@0.10/dist/...`). It takes the same values as `npm version` (`patch`, `minor`...); without one it puts the version of `package.json` everywhere, after `package.json` was changed by hand. It commits and tags nothing. Do not change the versions by hand otherwise. `version:tag` tags the last commit `v0.9.1` when the working tree is clean, both packages have that version and the tag does not exist yet.
+   `version:set` puts the version in every place that holds it: `package.json`, `package-lock.json`, the version and the dependency of `packages/elemenx`, the dependency of every example that installs `@qybercom/elemenx` (`examples/*/package.json`, `examples/Tutorials/*/package.json`) on its minor version (`^0.10.0` for `0.10.3`), the version of the extensions of the editors (`editors/vscode/package.json`, `editors/intellij/build.gradle.kts`), which is the one of Elemenx, and the minor version of the links of `README.md` to the CDN (`@qybercom/elemenx@0.10/dist/...`). It takes the same values as `npm version` (`patch`, `minor`...); without one it puts the version of `package.json` everywhere, after `package.json` was changed by hand. It commits and tags nothing. Do not change the versions by hand otherwise. `version:tag` tags the last commit `v0.9.1` when the working tree is clean, both packages have that version and the tag does not exist yet. `npm run version:built` checks a build of `dist/` against the version of `package.json` (the banners of the scripts, `manifest.json`, each extension of the editors there and the `elemenx.js` in it; `-- --all` requires the three extensions); the workflow Publish runs it before it attaches the files to the release.
 
 3. Follow the workflow Publish in GitHub Actions. When it is green, both versions are on npm and the release is in Releases on GitHub:
 
@@ -70,7 +70,7 @@ cd packages/elemenx
 npm publish
 ```
 
-After both packages are published but the GitHub release is not: do not run the workflow again (npm takes no version twice). Create the release on GitHub (Releases, Draft a new release, the tag `v0.9.1`, Generate release notes) and attach the files of `dist/` built from the tagged commit (`npm run dist`).
+After both packages are published but the GitHub release is not: do not run the workflow again (npm takes no version twice). Create the release on GitHub (Releases, Draft a new release, the tag `v0.9.1`, Generate release notes) and attach the files of `dist/` built from the tagged commit (`npm run dist`, then `npm run version:built -- --all`).
 
 A published version with a defect is fixed by the next version (`npm version patch`); `npm deprecate @qybercom/elemenx@0.9.1 "use 0.9.2"` warns its users.
 

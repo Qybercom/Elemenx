@@ -132,6 +132,12 @@ describe('Elemenx npm release surface', function () {
 		expect(publish).toContain('gh release create "$GITHUB_REF_NAME" --verify-tag');
 		expect(publish).toContain('dist/*.js dist/manifest.json');
 
+		/* Regression: files of another version went out. The ones of the release are checked first, in both jobs. */
+		expect(publish.indexOf('npm run version:built')).toBeGreaterThan(publish.indexOf('npm run dist\n'));
+		expect(publish.indexOf('npm run version:built')).toBeLessThan(publish.indexOf('gh release create'));
+		expect(publish.lastIndexOf('npm run version:built')).toBeGreaterThan(publish.indexOf('node editors/build.js --visualstudio'));
+		expect(publish.lastIndexOf('npm run version:built')).toBeLessThan(publish.indexOf('gh release upload'));
+
 		/* Regression: the plugin of IntelliJ failed the publication. npm goes first, the editors in a job of their own after it. */
 		expect(publish.indexOf('npm publish --access public')).toBeLessThan(publish.indexOf('ELEMENX_INTELLIJ: download'));
 		expect(publish.indexOf('needs: publish')).toBeLessThan(publish.indexOf('ELEMENX_INTELLIJ: download'));
@@ -151,7 +157,7 @@ describe('Elemenx npm release surface', function () {
 
 		/* Visual Studio: built on Windows after the release, attached to it, and published with VsixPublisher. */
 		expect(publish).toMatch(/\n {2}visualstudio:\n(?:.*\n)*? {4}needs: release\n {4}runs-on: windows-latest\n/);
-		expect(publish).toContain('run: node editors/build.js --visualstudio --no-intellij');
+		expect(publish).toContain('npm run dist -- --no-editors\n          node editors/build.js --visualstudio --no-intellij');
 		expect(publish).toContain('dist/editors/elemenx-visualstudio.vsix --clobber');
 		expect(publish).toContain('-publishManifest editors\\visualstudio\\publishManifest.json');
 	});
@@ -441,7 +447,7 @@ describe('Elemenx npm release surface', function () {
 
 		/* Confirmed: the whole of it, in this order. */
 		expect(go({Yes: true})).toBe(null);
-		expect(ran).toEqual(['test', 'run version:set -- 0.9.5', 'add --all', 'commit -m v0.9.5', 'run version:tag', 'push --follow-tags']);
+		expect(ran).toEqual(['test', 'run version:set -- 0.9.5', 'run dist', 'run version:built -- --all', 'add --all', 'commit -m v0.9.5', 'run version:tag', 'push --follow-tags']);
 
 		expect(go({Yes: true, SkipTests: true})).toBe(null);
 		expect(ran[0]).toBe('run version:set -- 0.9.5');
@@ -451,7 +457,14 @@ describe('Elemenx npm release surface', function () {
 			ran.push(args.join(' '));
 
 			return args.indexOf('version:tag') === -1;
-		}})).toBe('Elemenx release: the tag failed. Done: the tests, the version, git add, the commit. Fix it and go on by hand from the tag (docs/RELEASING.md).');
+		}})).toBe('Elemenx release: the tag failed. Done: the tests, the version, the build, the check of the build, git add, the commit. Fix it and go on by hand from the tag (docs/RELEASING.md).');
+
+		/* A build not of the version stops it before the commit. */
+		expect(go({Yes: true, SkipTests: true, Run: function (command, args) {
+			ran.push(args.join(' '));
+
+			return args.indexOf('version:built') === -1;
+		}})).toBe('Elemenx release: the check of the build failed. Done: the version, the build. Fix it and go on by hand from the check of the build (docs/RELEASING.md).');
 
 		/* What stops it before it changes anything. */
 		answers['rev-parse --abbrev-ref HEAD'] = 'feature\n';
@@ -463,6 +476,63 @@ describe('Elemenx npm release surface', function () {
 
 		/* The command of package.json. */
 		expect(manifest.scripts.release).toBe('node scripts/release.js');
+	});
+
+	/*
+	 * A bug: the files of the machine of the maintainer kept the version before the release (the tests built them before
+	 * version:set), and the incremental build of Visual Studio kept the manifest of 0.10.2 in 0.10.6.
+	 */
+	it('npm run version:built finds each file of dist, each extension of the editors and the elemenx.js in it, that is not of the version', function () {
+		var Version = require(path.join(root, 'scripts', 'version.js'));
+		var Zip = require(path.join(root, 'tools', 'zip.js'));
+		var Build = fs.readFileSync(path.join(root, 'editors', 'build.js'), 'utf8');
+		var directory = fs.mkdtempSync(path.join(os.tmpdir(), 'elemenx-built-'));
+
+		temporary.push(directory);
+
+		function framework (version) {
+			return '/*! Elemenx ' + version + ' | LGPL-3.0 */\n(function () {\n\tvar Version = \'' + version + '\';\n})();\n';
+		}
+
+		/* A dist of the versions: {Dist, Core, VSCode, IntelliJ, Jar, VisualStudio}, each 1.2.3 unless given. */
+		function make (versions) {
+			var v = Object.assign({Dist: '1.2.3', Core: '1.2.3', VSCode: '1.2.3', IntelliJ: '1.2.3', Jar: '1.2.3', VisualStudio: '1.2.3'}, versions);
+			var jar = Zip.Archive([{Name: 'META-INF/plugin.xml', Data: '<idea-plugin>\n  <version>' + v.IntelliJ + '</version>\n</idea-plugin>\n'}, {Name: 'elemenx/core/elemenx.js', Data: framework(v.Core)}]);
+
+			fs.rmSync(path.join(directory, 'dist'), {recursive: true, force: true});
+			fs.mkdirSync(path.join(directory, 'dist', 'editors'), {recursive: true});
+			fs.writeFileSync(path.join(directory, 'dist', 'manifest.json'), JSON.stringify({Name: '@qybercom/elemenx', Version: v.Dist}));
+			fs.writeFileSync(path.join(directory, 'dist', 'elemenx.js'), framework(v.Dist));
+			fs.writeFileSync(path.join(directory, 'dist', 'elemenx-ui.min.js'), '/*! ElemenxUI ' + v.Dist + ' | LGPL-3.0 */\n');
+			fs.writeFileSync(path.join(directory, 'dist', 'editors', 'elemenx-vscode.vsix'), Zip.Archive([{Name: 'extension/package.json', Data: JSON.stringify({version: v.VSCode})}, {Name: 'extension/core/elemenx.js', Data: framework(v.Core)}]));
+			fs.writeFileSync(path.join(directory, 'dist', 'editors', 'elemenx-intellij.zip'), Zip.Archive([{Name: 'elemenx-intellij/lib/elemenx-intellij-' + v.Jar + '.jar', Data: jar}]));
+			fs.writeFileSync(path.join(directory, 'dist', 'editors', 'elemenx-visualstudio.vsix'), Zip.Archive([{Name: 'extension.vsixmanifest', Data: '<PackageManifest><Metadata><Identity Id="Qybercom.Elemenx" Version="' + v.VisualStudio + '" /></Metadata></PackageManifest>'}, {Name: 'core/elemenx.js', Data: framework(v.Core)}]));
+
+			return path.join(directory, 'dist');
+		}
+
+		expect(Version.Built(make({}), '1.2.3', true)).toEqual([]);
+
+		/* Visual Studio takes no prerelease: 1.2.3 is the version of 1.2.3-beta.1 there. */
+		expect(Version.Built(make({Dist: '1.2.3-beta.1', Core: '1.2.3-beta.1', VSCode: '1.2.3-beta.1', IntelliJ: '1.2.3-beta.1', Jar: '1.2.3-beta.1'}), '1.2.3-beta.1', true)).toEqual([]);
+
+		expect(Version.Built(make({Dist: '1.2.2'}), '1.2.3', true)).toEqual(['manifest.json has the version 1.2.2', 'elemenx-ui.min.js has the version 1.2.2', 'elemenx.js has the version 1.2.2']);
+		expect(Version.Built(make({VSCode: '1.2.2', VisualStudio: '1.2.0'}), '1.2.3', true)).toEqual(['editors/elemenx-vscode.vsix has the version 1.2.2', 'editors/elemenx-visualstudio.vsix has the version 1.2.0']);
+		expect(Version.Built(make({IntelliJ: '1.2.2'}), '1.2.3', true)).toEqual(['editors/elemenx-intellij.zip has the version 1.2.2 in plugin.xml']);
+		expect(Version.Built(make({Jar: '1.2.2'}), '1.2.3', true)).toEqual(['editors/elemenx-intellij.zip has elemenx-intellij/lib/elemenx-intellij-1.2.2.jar']);
+		expect(Version.Built(make({Core: '1.2.2'}), '1.2.3', true)).toEqual(['editors/elemenx-vscode.vsix carries elemenx.js 1.2.2', 'editors/elemenx-intellij.zip carries elemenx.js 1.2.2', 'editors/elemenx-visualstudio.vsix carries elemenx.js 1.2.2']);
+
+		/* An extension not built: required by a release (--all), left out by the jobs of CI that build some of them. */
+		fs.rmSync(path.join(make({}), 'editors', 'elemenx-visualstudio.vsix'));
+
+		expect(Version.Built(path.join(directory, 'dist'), '1.2.3', true)).toEqual(['editors/elemenx-visualstudio.vsix is not built']);
+		expect(Version.Built(path.join(directory, 'dist'), '1.2.3', false)).toEqual([]);
+		expect(Version.Built(path.join(directory, 'nothing'), '1.2.3', true)).toEqual(['dist is not built']);
+
+		/* The build of Visual Studio starts from nothing, before its MSBuild. */
+		expect(Build.indexOf('path.join(visualstudio, \'obj\', \'Release\')')).toBeGreaterThan(-1);
+		expect(Build.indexOf('path.join(visualstudio, \'obj\', \'Release\')')).toBeLessThan(Build.indexOf('Elemenx.VisualStudio.csproj\'), \'/restore\''));
+		expect(manifest.scripts['version:built']).toBe('node scripts/version.js built');
 	});
 
 	afterAll(function () {

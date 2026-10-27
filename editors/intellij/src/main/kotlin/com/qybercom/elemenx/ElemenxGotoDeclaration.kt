@@ -66,10 +66,10 @@ class ElemenxGotoDeclaration : GotoDeclarationHandler {
 }
 
 /**
- * Ctrl+click and Go to Declaration (GotoDeclarationOrUsageHandler2) ask this first, in the injected JavaScript, before
- * its references: a name of an expression goes to its member, not to the parameter of the function its expression is
- * wrapped in (regression: they went to that parameter, which is not in the file, so a click went nowhere; the
- * GotoDeclarationHandler alone is not asked on that path).
+ * Ctrl+click and Go to Declaration (GotoDeclarationOrUsageHandler2) ask the GotoDeclarationHandlers, then this, in the
+ * injected JavaScript, before its references: a name of an expression goes to its member, not to the parameter of the
+ * function its expression is wrapped in (regression: they went to that parameter, which is not in the file, so a click
+ * went nowhere).
  */
 class ElemenxDirectNavigation : DirectNavigationProvider {
 	override fun getNavigationElement(element: PsiElement): PsiElement? = ElemenxGotoDeclaration().getGotoDeclarationTargets(element, element.textRange.startOffset, null)?.firstOrNull()
