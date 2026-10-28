@@ -10,6 +10,7 @@
 
 - Validators: Required, RequiredTrue, Email, Min(number), Max(number), MinLength(length), MaxLength(length), Pattern(выражение или текст), Equal(name, other) для группы и Custom(key, test(value, control)).
 - Message(errors): фраза первой ошибки (ui.forms.<ключ>, ui.forms.invalid для ключа без своей фразы) или текст, который ошибка задаёт сама ({ключ: 'текст'}).
+- Имена полей, как их читают формы на сервере: Path(name) даёт части user[address][city] (или user.address.city), items[2][name] и tags[] (['tags', '']: конец массива). Get тоже их принимает. Place(group, path, node) кладёт узел по такому пути, создавая группы и массивы по дороге (массив, если следующая часть — номер или []): тогда Value вложено, {user: {address: {city}}, items: [{name}], tags: [...]}, а в массиве нет мест, которые не заполнило ни одно поле (items[5] в одиночку — [value]). Detach(node) убирает узел (массив сохраняет места остальных) и группы и массивы, созданные Place, которые после этого пусты.
 
 Form и Field используют эти модели: Form раздаёт полям Field их элементы по Name и проверяет их при отправке.
 
@@ -18,6 +19,9 @@ Form и Field используют эти модели: Form раздаёт по
 - `Control(value, validators)`
 - `Group(controls, validators)`
 - `Array(controls, validators)`
+- `Place(group, path, item)`
+- `Detach(item)`
+- `Path(name)`
 - `Message(errors)`
 
 ## Пример

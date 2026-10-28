@@ -78,6 +78,7 @@ elemenx serve [project] [--host 127.0.0.1] [--port 4175]
               [--compression-threshold 1024]
               [--cache-control "public, max-age=0, must-revalidate"]
 elemenx icons <directory> <output.svg> [--current-color]
+elemenx docs [--port 4179] [--host 127.0.0.1] [--open]
 elemenx version
 ```
 
@@ -86,6 +87,8 @@ elemenx version
 The command registry is intentionally extensible for future command groups such as `generate component`, `generate service`, `generate guard`, `generate directive`, `inspect`, and other project operations.
 
 `elemenx icons` builds an icon set for the `Icons` Service of ElemenxUI from a directory of SVG files (Lucide, Tabler, Phosphor, exported designs...): one `<symbol>` per file, named after the file (`Arrow Left.svg` becomes `arrow-left`), with the `viewBox` of the file (or its `width` and `height`) and the `fill` and `stroke` attributes of its root, so a filled or a colored icon keeps its paint. The ids inside an icon (gradients, masks) get the name of the icon before them, so the icons do not collide in one page. `--current-color` turns every color but `none` into `currentColor`, so the icons take the color of the text.
+
+`elemenx docs` serves the reference of the installed version (`docs-site/` of the package, built by `prepack` with `tools/docs-site.js`: the Docs Application with all of the framework, every entity of ElemenxUI and every pack) with the answers of the server of its live examples; ElemenxUI itself is answered from `libraries/` of the package. In the repository of Elemenx the command builds it again from the sources each time.
 
 An optional `elemenx.config.js` may export `Application`, `Entry`, `Index`, `Output`, and `Server` settings. CLI options override configuration, and configuration overrides Elemenx defaults.
 
@@ -181,6 +184,14 @@ The page reaches the device through `elemenx-native.js`, the bridge the build pu
 `elemenx build --native android-library` makes the Application the interface of an Android program you write yourself (in Java or Kotlin, with its own classes and its NDK code): a module of Gradle in `dist/native/android-library/elemenx`, to include in the project of the program (`include ':elemenx'`, `implementation project(':elemenx')`; `dist/native/android-library/README.md` says how). The module holds the production build in its assets (`assets/elemenx`) and `ElemenxView`, a `WebView` that serves them at `https://appassets.androidplatform.net/` (`androidx.webkit`, `WebViewAssetLoader`): the absolute paths, the Router, `fetch` and the workers of the Application work as from a server, an address of the Router is its page, a link out of it opens in the browser of the system. It needs no Capacitor.
 
 The program answers the Application: `view.handle(name, args -> result)` answers a call of the `Native` Service by its name at once (a `JSONObject`, a `Map`, a `List`, a text, a number or `null`; a thrown exception is the error of the call), `view.handleAsync(name, (args, reply) -> ...)` later by `reply.resolve(value)` or `reply.reject(message)`, from any thread; `view.emit(name, value)` is an event of `Native.On(name)`, `view.setFeatures(names)` the features `Native.Has` tells. In the page the Service asks with `Native.Ask(name, args, callback)` and with its own calls (`message`, `external`...): what the program has no handler for it does as on the web (`Open` with the file picker of the view). `Native.Platform()` is `android`. The bridge is `elemenx-android.js`, first in the page; the view answers its own page only. `Native.Android` of `elemenx.config.js`: `Package` (the Java package of `ElemenxView` and the namespace of the module, `dev.elemenx.ui` by default) and `Module` (the name of its folder, `elemenx`). The program builds the module with its own Gradle (`androidx.webkit` 1.14, Java 8, `minSdk` 24 or the `minSdkVersion` of its root project).
+
+## A Docker image
+
+`elemenx build --docker` builds the site, then writes beside its files (`tools/docker.js`) a `Dockerfile` (`nginx:1.27-alpine`, the files copied in, port 80, a `HEALTHCHECK` on `/healthz`), its `nginx.conf` (gzip for the text of 1024 bytes and more; `try_files $uri $uri/ /index.html`, so the routes of the Router survive a reload; `index.html` and `elemenx-pwa.js` with `Cache-Control: no-cache`, the other files revalidated by their `ETag`; `X-Content-Type-Options`, `Referrer-Policy`, `X-Frame-Options: SAMEORIGIN`, repeated in every `location` that adds a header of its own) and a `.dockerignore`. With `docker` installed it then runs `docker build -t <image> <folder>`; the image is `Docker.Image` of `elemenx.config.js`, or the name of `package.json` without its scope and its version (`@acme/shop` 1.4.2 is `shop:1.4.2`). `Docker.Image: false` writes the files only; `Docker.Headers` adds headers of its own (`{'Content-Security-Policy': "default-src 'self'"}`). Without `docker` the build says the command that makes the image later; `--strict` fails instead. `--docker` is a build of the site: not with `--single` or `--widget`.
+
+## Several targets
+
+`Build.Targets` of `elemenx.config.js` (or `--target a,b`, which goes over it) builds several targets from one `elemenx build`: `web`, `single`, `widget`, `extension`, `desktop`, `mobile`, `android-library`, `docker` (`Builder.BuildTargets`). One target goes where its own build goes (`dist`, `dist/extension`, `dist/native/desktop`...); several go each into a folder of its own under `--out`: `dist/web`, `dist/single`, `dist/widget`, `dist/docker`, and `dist/extension` and `dist/native/<platform>` as always. An option of a mode on the command line (`--single`, `--widget`, `--extension`, `--native`, `--docker`) builds that one alone, the targets aside. The targets build in their order; one that fails stops the build, its name in the error. The end of the build lists each target and its folder.
 
 ## A widget
 

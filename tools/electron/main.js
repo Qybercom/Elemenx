@@ -86,6 +86,7 @@ var Groups = {
 	traywindow: 'tray',
 	traymenu: 'tray',
 	traypopup: 'tray',
+	trayicon: 'tray',
 	role: 'window',
 	external: 'external',
 	notify: 'notifications',
@@ -93,6 +94,7 @@ var Groups = {
 	badge: 'taskbar',
 	progress: 'taskbar',
 	attention: 'taskbar',
+	icon: 'taskbar',
 	thumbar: 'taskbar',
 	tasks: 'taskbar',
 	shortcuts: 'hotkeys',
@@ -233,6 +235,15 @@ function filters (accept) {
 	});
 
 	return extensions.length ? [{name: extensions.join(', '), extensions: extensions}] : [];
+}
+
+/* A picture the page gives: Image, a data URL of a PNG (drawn by the page), or Icon, a path in the Application. */
+function image (args) {
+	var picture = args.Image ? electron.nativeImage.createFromDataURL(String(args.Image)) : electron.nativeImage.createFromPath(path.join(root, String(args.Icon)));
+	if (typeof picture.isEmpty === 'function' && picture.isEmpty())
+		throw new Error('Elemenx Native could not read the picture ' + (args.Image ? 'of the page' : args.Icon));
+
+	return picture;
 }
 
 /* The calls of the bridge: (args, window, send) to a value for the page. */
@@ -445,6 +456,34 @@ var handlers = {
 
 			send('tray', {ID: null, Kind: 'right'});
 		});
+
+		return null;
+	},
+	/* The picture of the icon in the tray (a path in the Application, or a data URL of a PNG) and its tooltip, in their place. */
+	trayicon: function (args) {
+		if (!tray)
+			throw new Error('Elemenx Native has no icon in the tray: Native.Tray makes it');
+
+		if (args.Icon || args.Image)
+			tray.setImage(image(args));
+
+		if (args.Tooltip !== null && args.Tooltip !== undefined)
+			tray.setToolTip(String(args.Tooltip));
+
+		return null;
+	},
+	/* The icon of the windows (the taskbar, the title bar; the dock on macOS): the one given, or back to the one of the program. */
+	icon: function (args) {
+		var picture = args.Icon || args.Image ? image(args) : (settings.Icon ? electron.nativeImage.createFromPath(path.join(root, settings.Icon)) : null);
+		if (!picture) return null;
+
+		electron.BrowserWindow.getAllWindows().forEach(function (each) {
+			if (!each.isDestroyed() && typeof each.setIcon === 'function')
+				each.setIcon(picture);
+		});
+
+		if (process.platform === 'darwin' && app.dock)
+			app.dock.setIcon(picture);
 
 		return null;
 	},

@@ -5,7 +5,7 @@
 
 export default {
 	plugins: ['@stylistic/stylelint-plugin', './stylelint/plugin.mjs'],
-	ignoreFiles: ['node_modules/**', '**/dist/**', 'test-results/**', 'playwright-report/**', 'coverage/**', 'examples/Native/android/**', 'examples/Native/ios/**', 'editors/intellij/build/**', 'editors/intellij/.gradle/**', 'editors/intellij/.intellijPlatform/**', 'editors/vscode/core/**'],
+	ignoreFiles: ['node_modules/**', '**/dist/**', 'docs-site/**', 'test-results/**', 'playwright-report/**', 'coverage/**', 'examples/Native/android/**', 'examples/Native/ios/**', 'editors/intellij/build/**', 'editors/intellij/.gradle/**', 'editors/intellij/.intellijPlatform/**', 'editors/vscode/core/**'],
 	overrides: [
 		{
 			files: ['**/*.html'],

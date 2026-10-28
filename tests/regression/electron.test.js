@@ -106,6 +106,9 @@ function fakeElectron () {
 		this.flashFrame = function (on) {
 			self.Taskbar.push(['flash', on]);
 		};
+		this.setIcon = function (image) {
+			self.Icon = image.From;
+		};
 		this.setThumbarButtons = function (buttons) {
 			self.Thumbar = buttons;
 
@@ -185,6 +188,9 @@ function fakeElectron () {
 			dock: {
 				bounce: function (kind) {
 					fake.Bounced.push(kind);
+				},
+				setIcon: function (image) {
+					fake.Dock = image.From;
 				}
 			},
 			requestSingleInstanceLock: function () {
@@ -292,7 +298,9 @@ function fakeElectron () {
 		},
 		nativeImage: {
 			createFromDataURL: function (data) {
-				return {From: 'data ' + data.substring(0, 15)};
+				return {From: 'data ' + data.substring(0, 15), isEmpty: function () {
+					return data === 'data:,';
+				}};
 			},
 			createFromPath: function (file) {
 				return {From: file};
@@ -308,6 +316,9 @@ function fakeElectron () {
 			};
 			this.setToolTip = function (text) {
 				tray.Tooltip = text;
+			};
+			this.setImage = function (picture) {
+				tray.Image = picture.From;
 			};
 			this.setContextMenu = function (menu) {
 				tray.Menu = menu;
@@ -996,6 +1007,57 @@ describe('Builder: a desktop program (Electron)', function () {
 			expect(function () {
 				bridge(fake.Event(0), 'thumbar', {Buttons: []});
 			}).toThrow('Elemenx Native thumbnail buttons need Windows');
+		}
+		finally {
+			Object.defineProperty(process, 'platform', platform);
+			delete global.fakeElectron;
+			fs.rmSync(folder, {recursive: true, force: true});
+		}
+	});
+
+	/* The AppIcon Service: the icon of the windows and the picture of the icon of the tray change while the program runs. */
+	it('changes the icon of its windows (and of the dock) and the picture and tooltip of the icon of its tray, and refuses a picture it cannot read', function () {
+		var folder = fs.mkdtempSync(path.join(os.tmpdir(), 'elemenx-electron-'));
+		var fake = fakeElectron();
+		var platform = Object.getOwnPropertyDescriptor(process, 'platform');
+		var bridge;
+
+		try {
+			build();
+
+			fs.cpSync(path.join(output, 'native', 'desktop'), folder, {recursive: true});
+
+			write(path.join(folder, 'node_modules', 'electron', 'index.js'), 'module.exports = global.fakeElectron;');
+
+			global.fakeElectron = fake.Electron;
+
+			Object.defineProperty(process, 'platform', {value: 'darwin'});
+
+			require(path.join(folder, 'main.js'));
+
+			bridge = fake.Handlers['elemenx:native'];
+
+			/* No icon in the tray yet: nothing to change. */
+			expect(function () {
+				bridge(fake.Event(0), 'trayicon', {Image: 'data:image/png;base64,AAAA', Tooltip: 'Online'});
+			}).toThrow('Elemenx Native has no icon in the tray: Native.Tray makes it');
+
+			bridge(fake.Event(0), 'tray', {Icon: 'icons/tray.png', Tooltip: 'Elemenx'});
+			bridge(fake.Event(0), 'trayicon', {Image: 'data:image/png;base64,BBBB', Tooltip: 'Offline'});
+
+			expect([fake.Trays.length, fake.Trays[0].Image, fake.Trays[0].Tooltip]).toEqual([1, 'data data:image/png;', 'Offline']);
+
+			bridge(fake.Event(0), 'trayicon', {Icon: 'icons/online.png', Tooltip: null});
+
+			expect([fake.Trays[0].Image, fake.Trays[0].Tooltip]).toEqual([path.join(folder, 'app', 'icons', 'online.png'), 'Offline']);
+
+			/* The windows and the dock take the picture; a picture that cannot be read is refused. */
+			bridge(fake.Event(0), 'icon', {Image: 'data:image/png;base64,CCCC'});
+
+			expect([fake.Windows[0].Icon, fake.Dock]).toEqual(['data data:image/png;', 'data data:image/png;']);
+			expect(function () {
+				bridge(fake.Event(0), 'icon', {Image: 'data:,'});
+			}).toThrow('Elemenx Native could not read the picture of the page');
 		}
 		finally {
 			Object.defineProperty(process, 'platform', platform);

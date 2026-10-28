@@ -2,12 +2,20 @@
 	<Toggle Label="Notifications" Description="Get a message on every reply" [checked]="Notify" (change)="Notified" />
 	<Toggle Label="Sound" Size="small" [checked]="Sound" [disabled]="!Notify" (change)="Sounded" />
 	<Toggle Label="Always off" Disabled="true" />
+	<Toggle Label="Dark theme" States="3" ShowLabels="true" Labels="Light,System,Dark" [value]="Dark" (change)="Darkened" />
+	<div class="docs-row">
+		<Toggle Label="Light" Orientation="vertical" [checked]="Light" (change)="Lit" />
+		<Toggle Label="Fan" Orientation="vertical" States="3" ShowLabels="true" Labels="Off,Low,High" [value]="Fan" (change)="Fanned" />
+	</div>
 </div>
-<p class="elemenx-text small muted">Notifications {{Notify ? 'on' : 'off'}}, sound {{Notify && Sound ? 'on' : 'off'}}.</p>
+<p class="elemenx-text small muted">Notifications {{Notify ? 'on' : 'off'}}, sound {{Notify && Sound ? 'on' : 'off'}}, theme {{Dark === null ? 'of the system' : Dark ? 'dark' : 'light'}}, fan {{Fan === null ? 'low' : Fan ? 'high' : 'off'}}.</p>
 <script>
 ({
 	Notify: true,
 	Sound: false,
+	Dark: null,
+	Light: true,
+	Fan: false,
 
 	Notified: function (value) {
 		this.Notify = value;
@@ -15,6 +23,18 @@
 
 	Sounded: function (value) {
 		this.Sound = value;
+	},
+
+	Darkened: function (value) {
+		this.Dark = value;
+	},
+
+	Lit: function (value) {
+		this.Light = value;
+	},
+
+	Fanned: function (value) {
+		this.Fan = value;
 	}
 })
 </script>

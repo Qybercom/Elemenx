@@ -15,7 +15,7 @@ A template is HTML with the bindings of Elemenx. Its expressions are JavaScript,
 | `(click)="Method"` | an event: the method gets `(event, element)`; on a component tag, `(data, component)` |
 | `[(value)]="Name"` | two-way, on an `input`, `textarea` or `select`: the field follows what is typed (`input`), and the element follows the field |
 | `[(checked)]="Agreed"`, `[(selected)]="Picked"` | two-way, on a check box, a radio, an option (on `change`) |
-| `#name` | marks an element for `this.$Ref('name')` |
+| `#name` | marks an element for `this.$Ref('name')` (all of them, the rows of a `*for`: `this.$Refs('name')`) |
 | `*if`, `*for`, `*key`... | structure: see below and [Directives](/guide/directives) |
 | `{{$T('key', params)}}` | a phrase in the language of the page ([Languages](/guide/locale)) |
 

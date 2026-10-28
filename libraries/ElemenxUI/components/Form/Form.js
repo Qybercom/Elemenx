@@ -2,11 +2,13 @@
  * A form: a <form> that collects its fields into Model, a Group of the Forms Service, and validates them. Model is a
  * Group made in code (Forms.Group, Forms.Control and their validators), or, without one, a Group the Form makes of its
  * Fields: a Field with a Name and its validators (Required, Email, Min, Max, MinLength, MaxLength, Pattern, Match) adds
- * its control to it; a Field whose Name is in the Model takes the control of the Model. On submit (a button of type
- * submit, Enter in a field, or Submit()) every field is touched, so their errors show, and once nothing is pending the
- * form emits submit with {Value, Model} if it is valid, or invalid with {Errors, Model} and the focus goes to the first
- * field in error. A reset (a button of type reset, or Reset()) brings the Model back to its first values; event reset.
- * Disabled disables the fieldset of the form.
+ * its control to it; a Field whose Name is in the Model takes the control of the Model. A Name of parts, as the forms
+ * of a server read them (user[address][city], items[2][name], tags[] for the next item of a list, or user.address.city),
+ * nests its control in groups and arrays: Value is {user: {address: {city}}, items: [{name}], tags: [...]}, and the
+ * groups a Field leaving empties go with it. On submit (a button of type submit, Enter in a field, or Submit()) every
+ * field is touched, so their errors show, and once nothing is pending the form emits submit with {Value, Model} if it
+ * is valid, or invalid with {Errors, Model} and the focus goes to the first field in error. A reset (a button of type
+ * reset, or Reset()) brings the Model back to its first values; event reset. Disabled disables the fieldset of the form.
  */
 Elemenx.Component('Form', {
 	$TemplateURL: 'Form.html',
@@ -45,16 +47,27 @@ Elemenx.Component('Form', {
 		};
 	},
 
-	/* The controls the Fields added, in the order of the Fields on the page, whatever order they came in. */
+	/*
+	 * The controls the Fields added, in the order of the Fields on the page, whatever order they came in: a name of the
+	 * Model (user, of user[address][city]) where its first Field is.
+	 */
 	Order: function () {
 		var fields = this.Fields();
+		var forms = this.$Service('Forms');
 		var controls = this.Model.Controls;
+		var first = {};
 		var ordered = {};
 
-		Object.keys(controls).sort(function (a, b) {
-			if (!fields[a] || !fields[b]) return 0;
+		Object.keys(fields).forEach(function (id) {
+			var name = forms.Path(fields[id].Name)[0];
+			if (!first[name] || first[name].compareDocumentPosition(fields[id].Element) & Node.DOCUMENT_POSITION_PRECEDING)
+				first[name] = fields[id].Element;
+		});
 
-			return fields[a].compareDocumentPosition(fields[b]) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1;
+		Object.keys(controls).sort(function (a, b) {
+			if (!first[a] || !first[b]) return 0;
+
+			return first[a].compareDocumentPosition(first[b]) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1;
 		}).forEach(function (name) {
 			ordered[name] = controls[name];
 		});
@@ -62,17 +75,21 @@ Elemenx.Component('Form', {
 		this.Model.Controls = ordered;
 	},
 
-	/* A Field inside asks for its control (the event elemenx-form-field): the one of the Model, or one made of the Field. */
+	/*
+	 * A Field inside asks for its control (the event elemenx-form-field): the one of the Model, or one made of the Field,
+	 * put at its Name (user[address][city]: nested in the groups and arrays of its parts).
+	 */
 	Registered: function (event) {
 		var detail = event.detail;
 		var model = this.Model;
+		var forms = this.$Service('Forms');
 		var control = model.Get(detail.Name);
 
 		event.stopPropagation();
 
 		if (!control && model.Add) {
-			control = model.Add(detail.Name, this.$Service('Forms').Control(detail.Value, detail.Validators));
-			this.Fields()[detail.Name] = event.target;
+			control = forms.Place(model, detail.Name, forms.Control(detail.Value, detail.Validators));
+			this.Fields()[control.ID] = {Name: detail.Name, Element: event.target};
 
 			this.Order();
 		}
@@ -80,13 +97,16 @@ Elemenx.Component('Form', {
 		detail.Control = control;
 	},
 
-	/* A Field that goes leaves the Group the Form made of its Fields. */
+	/* A Field that goes takes the control the Form made of it out of the Model (and the groups made for it that are empty then). */
 	Unregistered: function (event) {
+		var control = event.detail.Control;
+
 		event.stopPropagation();
 
-		if (this.Model.Remove && this.Model.Get(event.detail.Name) === event.detail.Control) {
-			delete this.Fields()[event.detail.Name];
-			this.Model.Remove(event.detail.Name);
+		if (control && this.Fields()[control.ID]) {
+			delete this.Fields()[control.ID];
+
+			this.$Service('Forms').Detach(control);
 		}
 	},
 

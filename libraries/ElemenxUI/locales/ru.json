@@ -939,6 +939,36 @@
 			"pip": "Картинка в картинке",
 			"full": "Во весь экран",
 			"exitFull": "Выйти из полноэкранного режима"
+		},
+		"toggle": {
+			"off": "Выкл",
+			"auto": "Авто",
+			"on": "Вкл"
+		},
+		"commitGraph": {
+			"label": "Коммиты",
+			"commit": "{message}, {author}, {date}, {id}"
+		},
+		"barcode": {
+			"label": "Штрихкод: {value}"
+		},
+		"diagram": {
+			"label": "Диаграмма"
+		},
+		"spectrum": {
+			"label": "Спектр"
+		},
+		"waveform": {
+			"label": "Форма звука"
+		},
+		"jog": {
+			"label": "Джог"
+		},
+		"pianoRoll": {
+			"label": "Пианоролл"
+		},
+		"sampler": {
+			"label": "Сэмплер"
 		}
 	}
 }

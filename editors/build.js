@@ -10,8 +10,10 @@
  * - the one of Visual Studio 2022, elemenx-visualstudio.vsix, with the MSBuild of the Visual Studio of the machine (found
  *   by vswhere, with the workload Visual Studio extension development); on Windows only, else it is left out, and told so.
  * The core of the language, the meta.json of ElemenxUI and the sources of Elemenx and ElemenxUI go into each of them;
- * their names, descriptions and icons come from editors/extension.json. Build({Output, Idea, IntelliJ, VisualStudio,
- * Log}) returns [{Name, Size}] of the files made; IntelliJ or VisualStudio: false leaves it out, true needs it.
+ * their names, descriptions and icons come from editors/extension.json. Build({Output, Idea, VSCode, IntelliJ,
+ * VisualStudio, Only, Log}) returns [{Name, Size}] of the files made; VSCode false leaves it out; IntelliJ or
+ * VisualStudio: false leaves it out, true needs it; Only (vscode, intellij or visualstudio; --only) builds that one alone
+ * and needs it: CI builds each in a job of its own, in parallel.
  */
 var fs = require('fs');
 var path = require('path');
@@ -55,19 +57,19 @@ function brand (extension) {
 	copy(path.join(__dirname, path.dirname(extension.Icon), 'logo-128.png'), path.join(vscode, 'icon.png'));
 }
 
-/* The sources of a Library the definitions go to: its meta.json, the .js and .html of its Components, its directives and Services. */
+/* The sources of a Library the definitions go to: its meta.json, the .js and .html of its Components, its directives and Services, its locales (the keys of $T). */
 function sources (library, to) {
 	fs.rmSync(to, {recursive: true, force: true});
 
 	copy(path.join(library, 'data', 'meta.json'), path.join(to, 'data', 'meta.json'));
 
-	['components', 'directives', 'services'].forEach(function (folder) {
+	['components', 'directives', 'services', 'locales'].forEach(function (folder) {
 		(function walk (directory) {
 			fs.readdirSync(directory, {withFileTypes: true}).forEach(function (entry) {
 				var file = path.join(directory, entry.name);
 
 				if (entry.isDirectory()) walk(file);
-				else if (/\.(js|html)$/.test(entry.name)) copy(file, path.join(to, path.relative(library, file)));
+				else if (/\.(js|html|json)$/.test(entry.name)) copy(file, path.join(to, path.relative(library, file)));
 			});
 		})(path.join(library, folder));
 	});
@@ -246,22 +248,32 @@ function Build (options) {
 
 	fs.mkdirSync(output, {recursive: true});
 
+	/* Only: one extension alone, required (a job of CI for each, in parallel). */
+	if (settings.Only) {
+		if (['vscode', 'intellij', 'visualstudio'].indexOf(settings.Only) === -1)
+			throw new Error('Elemenx editors: --only takes vscode, intellij or visualstudio, not ' + settings.Only);
+
+		settings = Object.assign({}, settings, {VSCode: settings.Only === 'vscode', IntelliJ: settings.Only === 'intellij', VisualStudio: settings.Only === 'visualstudio'});
+	}
+
 	/* VS Code: the core beside the extension, then the package. */
-	brand(extension);
+	if (settings.VSCode !== false) {
+		brand(extension);
 
-	copy(path.join(__dirname, 'core', 'elemenx-language.js'), path.join(vscode, 'core', 'elemenx-language.js'));
-	copy(path.join(root, 'libraries', 'ElemenxUI', 'data', 'meta.json'), path.join(vscode, 'core', 'meta.json'));
+		copy(path.join(__dirname, 'core', 'elemenx-language.js'), path.join(vscode, 'core', 'elemenx-language.js'));
+		copy(path.join(root, 'libraries', 'ElemenxUI', 'data', 'meta.json'), path.join(vscode, 'core', 'meta.json'));
 
-	/* The sources of Elemenx and ElemenxUI of this version: a project with a build of dist alone goes to their definitions here. */
-	copy(path.join(root, 'elemenx.js'), path.join(vscode, 'core', 'elemenx.js'));
+		/* The sources of Elemenx and ElemenxUI of this version: a project with a build of dist alone goes to their definitions here. */
+		copy(path.join(root, 'elemenx.js'), path.join(vscode, 'core', 'elemenx.js'));
 
-	sources(path.join(root, 'libraries', 'ElemenxUI'), path.join(vscode, 'core', 'library'));
+		sources(path.join(root, 'libraries', 'ElemenxUI'), path.join(vscode, 'core', 'library'));
 
-	copy(path.join(root, 'LICENSE'), path.join(vscode, 'LICENSE'));
+		copy(path.join(root, 'LICENSE'), path.join(vscode, 'LICENSE'));
 
-	run('npx', ['--yes', '@vscode/vsce@4.0.0', 'package', '--out', path.join(output, 'elemenx-vscode.vsix')], vscode);
+		run('npx', ['--yes', '@vscode/vsce@4.0.0', 'package', '--out', path.join(output, 'elemenx-vscode.vsix')], vscode);
 
-	made.push('elemenx-vscode.vsix');
+		made.push('elemenx-vscode.vsix');
+	}
 
 	/* IntelliJ: against the IDE of the machine, or one downloaded for a release, or not at all. */
 	java = jdk(ide);
@@ -327,6 +339,7 @@ if (require.main === module) {
 		try {
 			Build({
 				Idea: args.indexOf('--idea') !== -1 ? args[args.indexOf('--idea') + 1] : null,
+				Only: args.indexOf('--only') !== -1 ? args[args.indexOf('--only') + 1] : null,
 				IntelliJ: args.indexOf('--intellij') !== -1 ? true : args.indexOf('--no-intellij') !== -1 ? false : undefined,
 				VisualStudio: args.indexOf('--visualstudio') !== -1 ? true : args.indexOf('--no-visualstudio') !== -1 ? false : undefined
 			}).forEach(function (file) {

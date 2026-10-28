@@ -434,6 +434,79 @@ Elemenx.Component('UIKitPage', {
 	MorePurposes: [{ID: 'necessary', Label: 'Necessary', Required: true}, {ID: 'analytics', Label: 'Analytics'}],
 	MoreBefore: 'function Area (radius) {\n\treturn 3.14 * radius * radius;\n}\n',
 	MoreAfter: 'function Area (radius) {\n\treturn Math.PI * radius * radius;\n}\n',
+	CodesNote: 'CommitGraph · Barcode · QRCode · Diagram · Markdown with plugins',
+	CodesCommits: [
+		{ID: 'f6a1c20', Parents: ['e5b2d31', 'd4c3e42'], Message: 'Merge branch feature/charts', Author: 'Ada', Date: '2026-10-20', Refs: [{Name: 'main', Kind: 'head'}, {Name: 'v0.10', Kind: 'tag'}]},
+		{ID: 'e5b2d31', Parents: ['c3d4f53'], Message: 'Fix the router on a hash', Author: 'Linus', Date: '2026-10-19'},
+		{ID: 'd4c3e42', Parents: ['b2e5a64'], Message: 'Charts: a legend', Author: 'Grace', Date: '2026-10-18', Refs: [{Name: 'feature/charts', Kind: 'branch'}]},
+		{ID: 'c3d4f53', Parents: ['a1f6b75'], Message: 'Docs of the CLI', Author: 'Ada', Date: '2026-10-17'},
+		{ID: 'b2e5a64', Parents: ['a1f6b75'], Message: 'Charts: bars and lines', Author: 'Grace', Date: '2026-10-16'},
+		{ID: 'a1f6b75', Parents: [], Message: 'The first commit', Author: 'Ada', Date: '2026-10-15'}
+	],
+	CodesFlow: 'flowchart LR\n  A([Order]) --> B{Paid?}\n  B -->|yes| C[[Pack]]\n  B -. no .-> D>Remind]\n  C ==> E[(Shipped)]\n  D --> B',
+	CodesSequence: 'sequenceDiagram\n  actor U as User\n  U->>+S: Places an order\n  S-->>-U: The number',
+	CodesMarkdown: '::: tip title="Plugins"\nA fence of a language a plugin takes draws its Component:\n:::\n\n```mermaid\nstateDiagram-v2\n  [*] --> Draft\n  Draft --> Published : approve\n  Published --> [*]\n```\n',
+	SoundNote: 'Spectrum · Waveform · Jog · Sampler · PianoRoll: the Audio Service plays and hears',
+	SoundLevels: [0.35, 0.62, 0.88, 0.95, 0.8, 0.7, 0.76, 0.6, 0.52, 0.58, 0.47, 0.4, 0.44, 0.36, 0.3, 0.33, 0.27, 0.22, 0.2, 0.16, 0.14, 0.1, 0.08, 0.05],
+	SoundPeaks: Array.apply(null, Array(160)).map(function (nothing, index) {
+		return Math.abs(Math.sin(index / 5)) * (0.3 + 0.7 * Math.abs(Math.sin(index / 37)));
+	}),
+	SoundTime: 12,
+	SoundPart: {Start: 20, End: 28},
+	/* The pads, their sounds made here: WAV files of a falling tone or of noise. */
+	SoundPads: (function () {
+		function sound (seconds, shape) {
+			var rate = 22050;
+			var count = Math.round(seconds * rate);
+			var buffer = new ArrayBuffer(44 + count * 2);
+			var view = new DataView(buffer);
+			var i;
+
+			function text (at, value) {
+				for (var k = 0; k < value.length; k++) view.setUint8(at + k, value.charCodeAt(k));
+			}
+
+			text(0, 'RIFF');
+
+			view.setUint32(4, 36 + count * 2, true);
+
+			text(8, 'WAVEfmt ');
+
+			view.setUint32(16, 16, true);
+			view.setUint16(20, 1, true);
+			view.setUint16(22, 1, true);
+			view.setUint32(24, rate, true);
+			view.setUint32(28, rate * 2, true);
+			view.setUint16(32, 2, true);
+			view.setUint16(34, 16, true);
+
+			text(36, 'data');
+
+			view.setUint32(40, count * 2, true);
+
+			for (i = 0; i < count; i++) view.setInt16(44 + i * 2, Math.round(Math.max(-1, Math.min(1, shape(i / rate))) * 30000), true);
+
+			return buffer;
+		}
+
+		return [
+			{ID: 'kick', Label: 'Kick', Key: 'Q', Color: '#c0392b', Sample: sound(0.3, function (t) {
+				return Math.sin(2 * Math.PI * (50 * t + 2 * (1 - Math.exp(-t * 30)))) * Math.exp(-t * 9);
+			})},
+			{ID: 'snare', Label: 'Snare', Key: 'W', Color: '#d99a1e', Sample: sound(0.2, function (t) {
+				return (Math.random() * 2 - 1) * Math.exp(-t * 18) * 0.7;
+			})},
+			{ID: 'hat', Label: 'Hat', Key: 'E', Color: '#2f8f83', Sample: sound(0.06, function (t) {
+				return (Math.random() * 2 - 1) * Math.exp(-t * 60) * 0.5;
+			})},
+			{ID: 'clap', Label: 'Clap', Key: 'R', Color: '#7a4fb0'}
+		];
+	})(),
+	SoundNotes: [
+		{ID: 'a', Note: 60, Start: 0, Length: 1}, {ID: 'b', Note: 64, Start: 1, Length: 1}, {ID: 'c', Note: 67, Start: 2, Length: 1},
+		{ID: 'd', Note: 72, Start: 3, Length: 1}, {ID: 'e', Note: 71, Start: 4, Length: 0.5}, {ID: 'f', Note: 67, Start: 4.5, Length: 0.5},
+		{ID: 'g', Note: 64, Start: 5, Length: 1}, {ID: 'h', Note: 62, Start: 6, Length: 2}
+	],
 	MorePicture: 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22320%22 height=%22200%22%3E%3Crect width=%22320%22 height=%22200%22 fill=%22%235f7d95%22/%3E%3Ccircle cx=%22160%22 cy=%2290%22 r=%2250%22 fill=%22%23f2c79a%22/%3E%3C/svg%3E',
 	MoreFiles: [{ID: 'docs', Name: 'Documents', Items: [{ID: 'cv', Name: 'cv.pdf', Size: 182000}]}, {ID: 'notes', Name: 'notes.md', Size: 2100}, {ID: 'song', Name: 'song.mp3', Size: 5800000}],
 	ViewerCode: 'function Area (radius) {\n\t/* The area of a circle. */\n\tvar square = radius * radius;\n\n\treturn Math.PI * square;\n}\n',
@@ -3487,5 +3560,46 @@ Elemenx.Component('UIKitPage', {
 
 	MoreOpened: function (item) {
 		this.MoreNote = 'Opened ' + item.Name;
+	},
+
+	/* Codes and diagrams, Sound: what they report shows in the note of their section. */
+	CommitPicked: function (commit) {
+		this.CodesNote = 'Commit ' + commit.ID + ': ' + commit.Message;
+	},
+
+	DiagramFailed: function (error) {
+		this.CodesNote = error.message;
+	},
+
+	SoundSought: function (time) {
+		this.SoundTime = time;
+		this.SoundNote = 'Playhead at ' + time.toFixed(1) + ' s';
+	},
+
+	SoundSelected: function (part) {
+		this.SoundPart = part;
+		this.SoundNote = part ? 'Selected ' + part.Start.toFixed(1) + ' to ' + part.End.toFixed(1) + ' s' : 'Nothing selected';
+	},
+
+	SoundScratched: function (move) {
+		this.SoundTime = Math.max(0, Math.min(42, move.Time));
+		this.SoundNote = 'Scratched to ' + this.SoundTime.toFixed(2) + ' s';
+	},
+
+	SoundNudged: function (nudge) {
+		this.SoundNote = 'Pitch bend ' + (nudge.Delta > 0 ? '+' : '') + nudge.Delta.toFixed(2);
+	},
+
+	SoundPad: function (hit) {
+		this.SoundNote = 'Pad ' + hit.ID + ', velocity ' + hit.Velocity.toFixed(2);
+	},
+
+	SoundNotesChanged: function (notes) {
+		this.SoundNotes = notes;
+		this.SoundNote = notes.length + ' notes';
+	},
+
+	SoundKey: function (note) {
+		this.SoundNote = 'Key ' + this.$Service('Audio').NoteName(note);
 	}
 });

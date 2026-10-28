@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
@@ -80,6 +80,49 @@ describe('elemenx meta', function () {
 		});
 
 		expect(JSON.parse(fs.readFileSync(path.join(root, 'meta.json'), 'utf8')).Components[0].Name).toBe('Card');
+	});
+
+	/* A bug: an IDE that indexed data/meta.json held it a moment, and elemenx meta failed (UNKNOWN on Windows). */
+	it('writes its file again while it is held a moment, and gives up on another error', function () {
+		var root = folder();
+		var write = fs.writeFileSync;
+		var tries = 0;
+
+		fs.writeFileSync(path.join(root, 'index.js'), '[]');
+
+		vi.spyOn(fs, 'writeFileSync').mockImplementation(function (file, text) {
+			var error;
+
+			if (/meta\.json$/.test(String(file)) && ++tries < 3) {
+				error = new Error('UNKNOWN: unknown error, open \'' + file + '\'');
+				error.code = 'UNKNOWN';
+
+				throw error;
+			}
+
+			return write.call(fs, file, text);
+		});
+
+		Meta.Build(root, path.join(root, 'meta.json'));
+
+		expect(tries).toBe(3);
+		expect(JSON.parse(fs.readFileSync(path.join(root, 'meta.json'), 'utf8')).Components).toEqual([]);
+
+		vi.restoreAllMocks();
+
+		vi.spyOn(fs, 'writeFileSync').mockImplementation(function () {
+			var error = new Error('ENOSPC: no space left on device');
+
+			error.code = 'ENOSPC';
+
+			throw error;
+		});
+
+		expect(function () {
+			Meta.Build(root, path.join(root, 'other.json'));
+		}).toThrow('ENOSPC');
+
+		vi.restoreAllMocks();
 	});
 
 	it('every Component of ElemenxUI declares $Meta with its group, its icon and a description of each prop', function () {

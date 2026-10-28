@@ -379,7 +379,17 @@ describe('Contract: the new Components of ElemenxUI', function () {
 
 		expect(root.getAttribute('aria-label')).toBe('QR code: https://example.com');
 		expect(root.querySelector('svg').getAttribute('viewBox')).toBe('0 0 ' + (code.Size + 8) + ' ' + (code.Size + 8));
-		expect(root.querySelector('path').getAttribute('d').split('z').length - 1).toBe(dark);
+
+		/*
+		 * A square for each dark module but the ones of the three eyes (33 each: a ring of 24 and a center of 9), which
+		 * are drawn whole in two paths of their own: their frames and their balls.
+		 */
+		var paths = root.querySelectorAll('path');
+
+		expect(paths.length).toBe(3);
+		expect(paths[0].getAttribute('d').split('z').length - 1).toBe(dark - 3 * 33);
+		expect(paths[1].getAttribute('d').split('z').length - 1).toBe(6);
+		expect(paths[2].getAttribute('d').split('z').length - 1).toBe(3);
 
 		host.Text = 'x'.repeat(2000);
 

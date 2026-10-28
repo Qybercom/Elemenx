@@ -15,9 +15,9 @@ Every release of Elemenx attaches the files of the extensions to its GitHub rele
 
 ## What they do
 
-- **Completion**: Components and their props, bindings (`[Variant]`), events (`(click)`) and the options of a prop (`Variant="ghost"`); directives (`*if`, `*for`, `*tip`...); the fields and functions of the Component in the expressions of its template; Services in `$Service('...')`; references in `$Ref('...')`.
+- **Completion**: Components and their props, bindings (`[Variant]`), events (`(click)`) and the options of a prop (`Variant="ghost"`); directives (`*if`, `*for`, `*tip`...); the fields and functions of the Component in the expressions of its template; Services in `$Service('...')`; references in `$Ref('...')` and `$Refs('...')`.
 - **Hover**: the documentation of a Component, a prop, a directive, a Service, a field or a reference.
-- **Go to definition** (Ctrl+click): a Component, a Service, a field or a function of the template, a directive (the core ones too), a prop (its key in the definition), an event (the `$Emit` that sends it), a reference (`#Name` and `$Ref('Name')` lead to each other).
+- **Go to definition** (Ctrl+click): a Component, a Service, a field or a function of the template, a directive (the core ones too), a prop (its key in the definition), an event (the `$Emit` that sends it), a reference (`#Name` and `$Ref('Name')` lead to each other), `$T` (its definition in `elemenx.js`) and the key of `$T('ui.call.leave')` (its phrase in the nearest `locales/*.json`, English first; its hover shows the phrase in each language).
 - **Diagnostics**: an unknown Component or directive, a prop or an event a Component does not have, a `$Ref` with no element of that name in the template.
 - **Colors**: Components, bindings, events, directives, references and `{{ }}` take colors of their own, and their expressions are colored as JavaScript.
 

@@ -5601,7 +5601,7 @@
 			"Kind": "Component",
 			"Group": "inputs",
 			"Icon": "sliders",
-			"Description": "A switch: a check box drawn as a track with a thumb (role switch).",
+			"Description": "A switch: a check box drawn as a track with a thumb (role switch), of two positions or three.",
 			"Props": [
 				{
 					"Name": "Checked",
@@ -5643,6 +5643,57 @@
 					"Description": "small or medium."
 				},
 				{
+					"Name": "Orientation",
+					"Type": "select",
+					"Default": "horizontal",
+					"Options": [
+						"horizontal",
+						"vertical"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "horizontal, or vertical (on at the top)."
+				},
+				{
+					"Name": "States",
+					"Type": "number",
+					"Default": 2,
+					"Options": [
+						2,
+						3
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "2, or 3: off, the middle and on (Value)."
+				},
+				{
+					"Name": "Value",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "With States 3: false, null (the middle) or true."
+				},
+				{
+					"Name": "Labels",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "With States 3: the names of the three positions, [off, middle, on]."
+				},
+				{
+					"Name": "ShowLabels",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "With States 3: writes the names of the positions along the track."
+				},
+				{
 					"Name": "Name",
 					"Type": "json",
 					"Default": null,
@@ -5669,7 +5720,7 @@
 				"change"
 			],
 			"EventDescriptions": {
-				"change": "It was switched: Checked."
+				"change": "It was switched: Checked (Value with States 3)."
 			},
 			"Methods": [],
 			"Sample": {
@@ -6924,6 +6975,169 @@
 			}
 		},
 		{
+			"Name": "CommitGraph",
+			"Kind": "Component",
+			"Group": "data",
+			"Icon": "branch",
+			"Description": "The history of a repository as git draws it: commits in lanes of their colors, merges and branches.",
+			"Props": [
+				{
+					"Name": "Commits",
+					"Type": "json",
+					"Default": [],
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The commits, newest first: [{ID, Parents, Message, Author, Date, Refs: [{Name, Kind}]}]."
+				},
+				{
+					"Name": "Layout",
+					"Type": "select",
+					"Default": "list",
+					"Options": [
+						"list",
+						"scheme"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "list (a row for each commit) or scheme (across, a lane for each branch)."
+				},
+				{
+					"Name": "Selected",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The ID of the commit chosen."
+				},
+				{
+					"Name": "Columns",
+					"Type": "json",
+					"Default": [
+						"message",
+						"author",
+						"date",
+						"id"
+					],
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The columns of the list: message, author, date and id."
+				},
+				{
+					"Name": "Height",
+					"Type": "number",
+					"Default": 360,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The height of the list in pixels (it shows the rows in view only), or auto."
+				},
+				{
+					"Name": "ShowMessages",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "In a scheme, writes the message under each commit."
+				},
+				{
+					"Name": "Label",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The name of the history for screen readers."
+				}
+			],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [
+				"select",
+				"open"
+			],
+			"EventDescriptions": {
+				"select": "A commit was chosen: the commit.",
+				"open": "A commit was opened (Enter, a double press): the commit."
+			},
+			"Methods": [],
+			"Sample": {
+				"Commits": [
+					{
+						"ID": "f3a9c21",
+						"Parents": [
+							"b81d07e",
+							"e42c9aa"
+						],
+						"Message": "Merge feature/login",
+						"Author": "Ada",
+						"Date": "2026-10-27",
+						"Refs": [
+							{
+								"Name": "main",
+								"Kind": "branch"
+							},
+							{
+								"Name": "HEAD",
+								"Kind": "head"
+							}
+						]
+					},
+					{
+						"ID": "e42c9aa",
+						"Parents": [
+							"c17be50"
+						],
+						"Message": "Remember the user",
+						"Author": "Grace",
+						"Date": "2026-10-26",
+						"Refs": [
+							{
+								"Name": "feature/login",
+								"Kind": "branch"
+							}
+						]
+					},
+					{
+						"ID": "b81d07e",
+						"Parents": [
+							"c17be50"
+						],
+						"Message": "Fix the footer",
+						"Author": "Ada",
+						"Date": "2026-10-25"
+					},
+					{
+						"ID": "c17be50",
+						"Parents": [
+							"0a1b2c3"
+						],
+						"Message": "The login form",
+						"Author": "Grace",
+						"Date": "2026-10-24",
+						"Refs": [
+							{
+								"Name": "v1.0",
+								"Kind": "tag"
+							}
+						]
+					},
+					{
+						"ID": "0a1b2c3",
+						"Parents": [],
+						"Message": "First commit",
+						"Author": "Ada",
+						"Date": "2026-10-20"
+					}
+				]
+			}
+		},
+		{
 			"Name": "SignaturePad",
 			"Kind": "Component",
 			"Group": "inputs",
@@ -7116,7 +7330,7 @@
 			"Kind": "Component",
 			"Group": "media",
 			"Icon": "grid",
-			"Description": "The QR code of a text: an address, a contact, the details of a payment.",
+			"Description": "The QR code of a text: an address, a contact, the details of a payment; styled, and saved as a picture.",
 			"Props": [
 				{
 					"Name": "Value",
@@ -7175,7 +7389,80 @@
 					"Options": null,
 					"Schema": null,
 					"Body": false,
-					"Description": "The color of the light ones."
+					"Description": "The color of the light ones (transparent for none)."
+				},
+				{
+					"Name": "Modules",
+					"Type": "select",
+					"Default": "square",
+					"Options": [
+						"square",
+						"dots",
+						"rounded",
+						"diamond"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "The shape of the modules."
+				},
+				{
+					"Name": "Eyes",
+					"Type": "select",
+					"Default": null,
+					"Options": [
+						"square",
+						"rounded",
+						"circle",
+						"leaf"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "The shape of the three corners (by the modules by default)."
+				},
+				{
+					"Name": "EyeColor",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The color of the three corners."
+				},
+				{
+					"Name": "Gradient",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "A gradient over the dark modules: {From, To, Angle}."
+				},
+				{
+					"Name": "Logo",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "A logo in the middle (a URL); the level goes to H."
+				},
+				{
+					"Name": "LogoSize",
+					"Type": "number",
+					"Default": 0.22,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The width of the logo, a part of the width of the code (0.22)."
+				},
+				{
+					"Name": "Text",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "A word in the middle instead of a logo."
 				},
 				{
 					"Name": "Label",
@@ -7192,15 +7479,257 @@
 			"Children": [],
 			"Current": "",
 			"Events": [
-				"error"
+				"error",
+				"ready"
 			],
 			"EventDescriptions": {
-				"error": "The text is too long for a code: the error."
+				"error": "The text is too long for a code: the error.",
+				"ready": "It is made: the component itself, to call Download, Png or SVG."
 			},
-			"Methods": [],
+			"Methods": [
+				"SVG()",
+				"Image(size)",
+				"Png(size, callback)",
+				"Download(name, format)"
+			],
 			"Sample": {
 				"Value": "https://example.com",
 				"Size": 160
+			}
+		},
+		{
+			"Name": "Barcode",
+			"Kind": "Component",
+			"Group": "media",
+			"Icon": "tag",
+			"Description": "A barcode of a text: Code 128, EAN, UPC, Code 39, ITF-14, DataMatrix, PDF417 or a format of its own.",
+			"Props": [
+				{
+					"Name": "Value",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The text of the code."
+				},
+				{
+					"Name": "Format",
+					"Type": "select",
+					"Default": "code128",
+					"Options": [
+						"code128",
+						"ean13",
+						"ean8",
+						"upca",
+						"code39",
+						"itf14",
+						"datamatrix",
+						"pdf417"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "The format (or one of Barcodes.Register)."
+				},
+				{
+					"Name": "Module",
+					"Type": "number",
+					"Default": 2,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The width of a module in pixels (2)."
+				},
+				{
+					"Name": "Height",
+					"Type": "number",
+					"Default": 80,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The height of the bars in pixels (80)."
+				},
+				{
+					"Name": "ShowText",
+					"Type": "bool",
+					"Default": true,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Writes the human text under the bars."
+				},
+				{
+					"Name": "FontSize",
+					"Type": "number",
+					"Default": 14,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The size of the text in pixels (14)."
+				},
+				{
+					"Name": "Dark",
+					"Type": "text",
+					"Default": "#000000",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The color of the bars."
+				},
+				{
+					"Name": "Light",
+					"Type": "text",
+					"Default": "#ffffff",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The color of the background (transparent for none)."
+				},
+				{
+					"Name": "Round",
+					"Type": "number",
+					"Default": 0,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The ends of the bars round, from 0 to 1."
+				},
+				{
+					"Name": "Shape",
+					"Type": "select",
+					"Default": "square",
+					"Options": [
+						"square",
+						"dots",
+						"rounded",
+						"diamond"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "The shape of the modules of a matrix (DataMatrix)."
+				},
+				{
+					"Name": "Check",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Code 39: adds its check digit."
+				},
+				{
+					"Name": "Bearer",
+					"Type": "bool",
+					"Default": true,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "ITF-14: its frame (true)."
+				},
+				{
+					"Name": "Columns",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "PDF417: the codewords of a row (1 to 30)."
+				},
+				{
+					"Name": "Level",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "PDF417: the error correction (0 to 8)."
+				},
+				{
+					"Name": "Label",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "What the code holds, for screen readers (the text by default)."
+				}
+			],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [
+				"error",
+				"ready"
+			],
+			"EventDescriptions": {
+				"error": "The format cannot write the text: the error.",
+				"ready": "It is made: the component itself, to call Download, Png or SVG."
+			},
+			"Methods": [
+				"SVG()",
+				"Png(scale, callback)",
+				"Download(name, format)"
+			],
+			"Sample": {
+				"Value": "ELEMENX-2026",
+				"Format": "code128"
+			}
+		},
+		{
+			"Name": "Diagram",
+			"Kind": "Component",
+			"Group": "media",
+			"Icon": "share-2",
+			"Description": "A diagram written as text (a subset of Mermaid): a flowchart, a sequence, states, ER, Gantt, classes or a mind map.",
+			"Props": [
+				{
+					"Name": "Value",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": true,
+					"Description": "The text of the diagram; without it, the body of the element."
+				},
+				{
+					"Name": "FontSize",
+					"Type": "number",
+					"Default": 14,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The size of its text in pixels (14)."
+				},
+				{
+					"Name": "Label",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "What the diagram shows, for screen readers."
+				}
+			],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [
+				"error",
+				"ready"
+			],
+			"EventDescriptions": {
+				"error": "The text cannot be read: the error, its Line the number of the line.",
+				"ready": "It is made: the component itself, to call Download, Png or SVG."
+			},
+			"Methods": [
+				"SVG()",
+				"Png(scale, callback)",
+				"Download(name, format)"
+			],
+			"Sample": {
+				"Value": "flowchart LR\n  A[Start] --> B{Ready?}\n  B -->|yes| C[Go]\n  B -->|no| A"
 			}
 		},
 		{
@@ -12583,6 +13112,768 @@
 			"Methods": [],
 			"Sample": {
 				"Label": "Studio"
+			}
+		},
+		{
+			"Name": "Spectrum",
+			"Kind": "Component",
+			"Group": "music",
+			"Icon": "chart",
+			"Description": "The spectrum of a sound as it plays, live: bars, mirrored bars, a curve or a circle.",
+			"Props": [
+				{
+					"Name": "Source",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "What it hears: an audio or video element, a MediaStream or an AudioNode."
+				},
+				{
+					"Name": "Values",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The levels of the bands from 0 to 1, given instead of a Source."
+				},
+				{
+					"Name": "Bands",
+					"Type": "number",
+					"Default": 48,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The count of the bands (48)."
+				},
+				{
+					"Name": "Mode",
+					"Type": "select",
+					"Default": "bars",
+					"Options": [
+						"bars",
+						"mirror",
+						"line",
+						"radial"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "How the levels are drawn."
+				},
+				{
+					"Name": "Scale",
+					"Type": "select",
+					"Default": "log",
+					"Options": [
+						"log",
+						"linear"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "The frequencies of the bands: log as an ear hears, or linear."
+				},
+				{
+					"Name": "MinFrequency",
+					"Type": "number",
+					"Default": 30,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The lowest frequency in Hz (30)."
+				},
+				{
+					"Name": "MaxFrequency",
+					"Type": "number",
+					"Default": 16000,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The highest frequency in Hz (16000)."
+				},
+				{
+					"Name": "Smoothing",
+					"Type": "number",
+					"Default": 0.8,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "How slowly the levels move, from 0 to 1 (0.8)."
+				},
+				{
+					"Name": "MinDb",
+					"Type": "number",
+					"Default": -100,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The quietest level of the analysis in decibels (-100)."
+				},
+				{
+					"Name": "MaxDb",
+					"Type": "number",
+					"Default": -20,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The loudest level of the analysis in decibels (-20)."
+				},
+				{
+					"Name": "Colors",
+					"Type": "json",
+					"Default": [],
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The colors of the levels from low to high ([]: the accent)."
+				},
+				{
+					"Name": "Gap",
+					"Type": "number",
+					"Default": 2,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The space between the bars in pixels (2)."
+				},
+				{
+					"Name": "Peaks",
+					"Type": "bool",
+					"Default": true,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Marks the highest levels, held, then falling."
+				},
+				{
+					"Name": "Height",
+					"Type": "number",
+					"Default": 120,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The height in pixels (120)."
+				},
+				{
+					"Name": "Paused",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Stops it where it is."
+				},
+				{
+					"Name": "Label",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "What it shows, for screen readers."
+				}
+			],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [
+				"error",
+				"ready"
+			],
+			"EventDescriptions": {
+				"error": "The Source cannot be heard: the error.",
+				"ready": "It is made: the component itself, to call Levels."
+			},
+			"Methods": [
+				"Levels()"
+			],
+			"Sample": {
+				"Values": [
+					0.2,
+					0.45,
+					0.8,
+					0.95,
+					0.7,
+					0.6,
+					0.75,
+					0.5,
+					0.42,
+					0.55,
+					0.38,
+					0.3,
+					0.33,
+					0.24,
+					0.18,
+					0.12
+				],
+				"Bands": 16
+			}
+		},
+		{
+			"Name": "Waveform",
+			"Kind": "Component",
+			"Group": "music",
+			"Icon": "volume",
+			"Description": "The shape of a sound file: the playhead, a part selected, the time; it follows an audio or video element.",
+			"Props": [
+				{
+					"Name": "Src",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The sound: a URL, a Blob, an ArrayBuffer or an AudioBuffer."
+				},
+				{
+					"Name": "Peaks",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its shape given instead: [{Min, Max}] from -1 to 1, or levels from 0 to 1."
+				},
+				{
+					"Name": "Duration",
+					"Type": "number",
+					"Default": 0,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its length in seconds (read from Src)."
+				},
+				{
+					"Name": "Time",
+					"Type": "number",
+					"Default": 0,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The place of the playhead in seconds."
+				},
+				{
+					"Name": "Selection",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The part selected: {Start, End} in seconds, or null."
+				},
+				{
+					"Name": "Selectable",
+					"Type": "bool",
+					"Default": true,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "A drag selects a part."
+				},
+				{
+					"Name": "Media",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "An audio or video element it follows and moves."
+				},
+				{
+					"Name": "Mode",
+					"Type": "select",
+					"Default": "bars",
+					"Options": [
+						"bars",
+						"wave"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "Bars, or a filled line."
+				},
+				{
+					"Name": "Bar",
+					"Type": "number",
+					"Default": 2,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The width of a bar in pixels (2)."
+				},
+				{
+					"Name": "Gap",
+					"Type": "number",
+					"Default": 1,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The space between the bars in pixels (1)."
+				},
+				{
+					"Name": "ShowTime",
+					"Type": "bool",
+					"Default": true,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Writes the time and the selection."
+				},
+				{
+					"Name": "Height",
+					"Type": "number",
+					"Default": 96,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The height in pixels (96)."
+				},
+				{
+					"Name": "Label",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "What it shows, for screen readers."
+				}
+			],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [
+				"load",
+				"seek",
+				"select",
+				"error",
+				"ready"
+			],
+			"EventDescriptions": {
+				"load": "The file is read: {Duration, Channels, SampleRate}.",
+				"seek": "The playhead was moved: the time in seconds.",
+				"select": "A part was selected: {Start, End} in seconds, or null.",
+				"error": "The file cannot be read: the error.",
+				"ready": "It is made: the component itself, to call Seek, Select or Buffer."
+			},
+			"Methods": [
+				"Seek(time)",
+				"Select(selection)",
+				"Buffer()"
+			],
+			"Sample": {
+				"Peaks": [
+					0.1,
+					0.3,
+					0.5,
+					0.42,
+					0.8,
+					0.95,
+					0.62,
+					0.7,
+					0.4,
+					0.55,
+					0.9,
+					0.75,
+					0.35,
+					0.5,
+					0.65,
+					0.3,
+					0.45,
+					0.2,
+					0.25,
+					0.1
+				],
+				"Duration": 20,
+				"Time": 7
+			}
+		},
+		{
+			"Name": "Jog",
+			"Kind": "Component",
+			"Group": "music",
+			"Icon": "play",
+			"Description": "The jog wheel of a DJ: a platter that turns as the track plays, scratched by a hand on the record, its ring bending the pitch.",
+			"Props": [
+				{
+					"Name": "Time",
+					"Type": "number",
+					"Default": 0,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The place of the track in seconds: where the marker is."
+				},
+				{
+					"Name": "Playing",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The track plays: the platter turns."
+				},
+				{
+					"Name": "Rpm",
+					"Type": "number",
+					"Default": 33.3,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The turns a minute of the record (33.3)."
+				},
+				{
+					"Name": "Title",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The first line of the label of the record."
+				},
+				{
+					"Name": "Subtitle",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The second line of the label."
+				},
+				{
+					"Name": "Size",
+					"Type": "number",
+					"Default": 220,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its width in pixels (220)."
+				},
+				{
+					"Name": "Disabled",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Turns it off: it takes no input and looks so."
+				},
+				{
+					"Name": "Label",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its name for screen readers."
+				}
+			],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [
+				"touch",
+				"scratch",
+				"nudge"
+			],
+			"EventDescriptions": {
+				"touch": "A hand on the record (true) or off it (false).",
+				"scratch": "The record was turned by hand: {Delta (seconds, forward positive), Time}.",
+				"nudge": "The ring was turned: {Delta}, from -1 to 1 for a quarter turn."
+			},
+			"Methods": [],
+			"Sample": {
+				"Title": "Deck A",
+				"Subtitle": "128 BPM",
+				"Time": 12
+			}
+		},
+		{
+			"Name": "PianoRoll",
+			"Kind": "Component",
+			"Group": "music",
+			"Icon": "grid",
+			"Description": "The notes of a part on the keys of a piano, to see and to edit: put, move, resize and take away notes.",
+			"Props": [
+				{
+					"Name": "Notes",
+					"Type": "json",
+					"Default": [],
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The notes: [{ID, Note (MIDI), Start, Length (beats), Velocity}]."
+				},
+				{
+					"Name": "Low",
+					"Type": "number",
+					"Default": 48,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The lowest key (MIDI: 48, C3)."
+				},
+				{
+					"Name": "High",
+					"Type": "number",
+					"Default": 84,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The highest key (MIDI: 84, C6)."
+				},
+				{
+					"Name": "Bars",
+					"Type": "number",
+					"Default": 4,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The count of bars (4)."
+				},
+				{
+					"Name": "Beats",
+					"Type": "number",
+					"Default": 4,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The beats of a bar (4)."
+				},
+				{
+					"Name": "Snap",
+					"Type": "number",
+					"Default": 0.25,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The step of the times in beats (0.25)."
+				},
+				{
+					"Name": "BeatWidth",
+					"Type": "number",
+					"Default": 48,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The width of a beat in pixels (48)."
+				},
+				{
+					"Name": "KeyHeight",
+					"Type": "number",
+					"Default": 16,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The height of a key in pixels (16)."
+				},
+				{
+					"Name": "Position",
+					"Type": "number",
+					"Default": -1,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The playhead in beats (-1: none)."
+				},
+				{
+					"Name": "Loop",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The loop marked on the ruler: {Start, End} in beats, or null."
+				},
+				{
+					"Name": "Selected",
+					"Type": "json",
+					"Default": [],
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The IDs of the notes selected."
+				},
+				{
+					"Name": "ReadOnly",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Shows the notes without letting them change."
+				},
+				{
+					"Name": "Height",
+					"Type": "number",
+					"Default": 320,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The height in pixels (320)."
+				},
+				{
+					"Name": "Label",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its name for screen readers."
+				}
+			],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [
+				"change",
+				"select",
+				"key",
+				"seek"
+			],
+			"EventDescriptions": {
+				"change": "The notes changed: Notes.",
+				"select": "The selection changed: the IDs of the notes.",
+				"key": "A key of the piano was pressed: its MIDI number.",
+				"seek": "The ruler was pressed: the beat."
+			},
+			"Methods": [],
+			"Sample": {
+				"Notes": [
+					{
+						"ID": "a",
+						"Note": 60,
+						"Start": 0,
+						"Length": 1
+					},
+					{
+						"ID": "b",
+						"Note": 64,
+						"Start": 1,
+						"Length": 1
+					},
+					{
+						"ID": "c",
+						"Note": 67,
+						"Start": 2,
+						"Length": 2
+					}
+				],
+				"Bars": 2,
+				"Height": 220
+			}
+		},
+		{
+			"Name": "Sampler",
+			"Kind": "Component",
+			"Group": "music",
+			"Icon": "grid",
+			"Description": "The pads of a sampler, as on a drum machine: each plays its sample (or a note of an instrument), by a press or a key.",
+			"Props": [
+				{
+					"Name": "Pads",
+					"Type": "json",
+					"Default": [],
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The pads: [{ID, Label, Color, Key, Sample, Note}]."
+				},
+				{
+					"Name": "Columns",
+					"Type": "number",
+					"Default": 4,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The pads in a row (4)."
+				},
+				{
+					"Name": "Instrument",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "An Instrument of the Audio Service: it plays the Note of a pad without a Sample."
+				},
+				{
+					"Name": "Mode",
+					"Type": "select",
+					"Default": "oneshot",
+					"Options": [
+						"oneshot",
+						"hold"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "A sample plays to its end, or while the pad is held."
+				},
+				{
+					"Name": "Gain",
+					"Type": "number",
+					"Default": 0.8,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The loudness of the samples, from 0 to 1 (0.8)."
+				},
+				{
+					"Name": "Label",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its name for screen readers."
+				}
+			],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [
+				"play",
+				"release",
+				"load",
+				"error"
+			],
+			"EventDescriptions": {
+				"play": "A pad was played: {ID, Velocity}.",
+				"release": "A pad was let go: {ID}.",
+				"load": "A sound file was dropped on a pad: {ID, File}.",
+				"error": "A sample cannot be read: the error, its ID the pad."
+			},
+			"Methods": [
+				"Trigger(id, velocity)",
+				"Output()"
+			],
+			"Sample": {
+				"Pads": [
+					{
+						"ID": "kick",
+						"Label": "Kick",
+						"Key": "Q"
+					},
+					{
+						"ID": "snare",
+						"Label": "Snare",
+						"Key": "W"
+					},
+					{
+						"ID": "hat",
+						"Label": "Hat",
+						"Key": "E"
+					},
+					{
+						"ID": "clap",
+						"Label": "Clap",
+						"Key": "R"
+					}
+				]
 			}
 		},
 		{
@@ -19327,7 +20618,10 @@
 				"Sanitize(html)",
 				"Text(html)",
 				"ToMarkdown(html)",
-				"FromMarkdown(text)"
+				"FromMarkdown(text)",
+				"Extend(plugin)",
+				"Plugins()",
+				"Mount(container, options)"
 			],
 			"Sample": {}
 		},
@@ -19406,7 +20700,7 @@
 			"Kind": "Service",
 			"Group": "",
 			"Icon": "",
-			"Description": "QR codes: Encode(text, level) returns the modules of the code of a text, SVG(text, options) a drawing of it.",
+			"Description": "QR codes: Encode(text, level) returns the modules of the code of a text, SVG(text, options) a drawing of it, styled.",
 			"Props": [],
 			"Slots": [],
 			"Container": false,
@@ -19416,7 +20710,82 @@
 			"EventDescriptions": {},
 			"Methods": [
 				"Encode(text, level)",
+				"SVG(text, options)",
+				"LevelFor(options)",
+				"Raster(svg, width, height, callback)",
+				"ModulePath(x, y, shape)"
+			],
+			"Sample": {}
+		},
+		{
+			"Name": "Barcodes",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "Barcodes: Code 128, EAN-13, EAN-8, UPC-A, Code 39, ITF-14, DataMatrix, PDF417 and formats of its own, drawn in SVG.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [
+				"Formats()",
+				"Register(name, format)",
+				"Encode(format, text, options)",
+				"SVG(format, text, options)"
+			],
+			"Sample": {}
+		},
+		{
+			"Name": "Diagrams",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "Diagrams written as text (a subset of Mermaid): flowcharts, sequences, states, ER, Gantt, classes and mind maps, drawn in SVG.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [
+				"Types()",
+				"Parse(text)",
 				"SVG(text, options)"
+			],
+			"Sample": {}
+		},
+		{
+			"Name": "Audio",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "The sound of the Application (Web Audio): one AudioContext, the analysis of what plays, the reading of sound files, instruments and a transport.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [
+				"Supported()",
+				"Context()",
+				"Node(source)",
+				"Analyser(source, options)",
+				"Release(analyser)",
+				"Bands(analyser, count, options)",
+				"Levels(analyser)",
+				"Decode(source, callback)",
+				"Peaks(buffer, count, from, to)",
+				"Midi(note)",
+				"NoteName(midi)",
+				"Frequency(note)",
+				"Instrument(options)",
+				"Transport(options)"
 			],
 			"Sample": {}
 		},
@@ -19850,6 +21219,8 @@
 				"TrayMenu(items, callback)",
 				"TrayPopup(options, callback)",
 				"ShowTrayPopup(show, callback)",
+				"TrayIcon(options, callback)",
+				"Icon(options, callback)",
 				"Role(role, callback)",
 				"External(url, callback)",
 				"Notify(options, callback)",
@@ -19872,6 +21243,30 @@
 				"Update(callback)",
 				"On(name, callback)",
 				"Off(name, callback)"
+			],
+			"Sample": {}
+		},
+		{
+			"Name": "AppIcon",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "The icon of the Application: the favicon on the web, the icon of the windows and of the tray in a program.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [
+				"Set(icon, callback)",
+				"Badge(count, callback)",
+				"Progress(value, callback)",
+				"Attention(on, callback)",
+				"Tray(icon, tooltip, callback)",
+				"Reset(callback)",
+				"Current()"
 			],
 			"Sample": {}
 		},
@@ -19935,7 +21330,10 @@
 				"Control(value, validators)",
 				"Group(controls, validators)",
 				"Array(controls, validators)",
-				"Message(errors)"
+				"Message(errors)",
+				"Path(name)",
+				"Place(group, path, node)",
+				"Detach(node)"
 			],
 			"Sample": {}
 		},
@@ -20505,6 +21903,18 @@
 		"elemenx-code": [],
 		"elemenx-syntax-comment": [],
 		"elemenx-document": [],
+		"elemenx-rich-plugin": [
+			"editing",
+			"error"
+		],
+		"elemenx-callout": [
+			"danger",
+			"neutral",
+			"success",
+			"warning"
+		],
+		"elemenx-callout-title": [],
+		"elemenx-rich-plugin-editor": [],
 		"elemenx-syntax-keyword": [],
 		"elemenx-syntax-string": [],
 		"elemenx-syntax-number": [],
@@ -20655,12 +22065,6 @@
 			"vertical"
 		],
 		"elemenx-spacer": [],
-		"elemenx-callout": [
-			"danger",
-			"neutral",
-			"success",
-			"warning"
-		],
 		"elemenx-icon": [
 			"colored",
 			"spin"
@@ -21249,10 +22653,19 @@
 		"elemenx-toggle": [
 			"checked",
 			"disabled",
-			"small"
+			"position-1",
+			"position-2",
+			"small",
+			"three",
+			"vertical"
 		],
 		"elemenx-toggle-track": [],
 		"elemenx-toggle-thumb": [],
+		"elemenx-toggle-stop": [],
+		"elemenx-toggle-names": [],
+		"elemenx-toggle-name": [
+			"current"
+		],
 		"elemenx-upload": [
 			"avatar",
 			"disabled",
@@ -21350,6 +22763,35 @@
 		"elemenx-diff-text": [],
 		"elemenx-diff-word": [],
 		"elemenx-diff-fold": [],
+		"elemenx-commit-graph": [],
+		"elemenx-commit-graph-body": [],
+		"elemenx-commit-graph-space": [],
+		"elemenx-commit-graph-row": [
+			"selected"
+		],
+		"elemenx-commit-graph-lanes": [],
+		"elemenx-commit-graph-line": [],
+		"elemenx-commit-graph-dot": [
+			"merge"
+		],
+		"elemenx-commit-graph-refs": [],
+		"elemenx-commit-graph-ref": [
+			"head",
+			"remote",
+			"tag"
+		],
+		"elemenx-commit-graph-message": [],
+		"elemenx-commit-graph-author": [],
+		"elemenx-commit-graph-date": [],
+		"elemenx-commit-graph-id": [],
+		"elemenx-commit-graph-scheme": [],
+		"elemenx-commit-graph-scheme-track": [],
+		"elemenx-commit-graph-scheme-name": [],
+		"elemenx-commit-graph-scheme-commit": [
+			"selected"
+		],
+		"elemenx-commit-graph-scheme-ref": [],
+		"elemenx-commit-graph-scheme-message": [],
 		"elemenx-signature-pad": [
 			"readonly"
 		],
@@ -21377,6 +22819,9 @@
 		],
 		"elemenx-cropper-size": [],
 		"elemenx-qr-code": [],
+		"elemenx-barcode": [],
+		"elemenx-diagram": [],
+		"elemenx-diagram-error": [],
 		"elemenx-qr-scanner": [
 			"done"
 		],
@@ -21935,6 +23380,57 @@
 		"elemenx-mixer-readout": [],
 		"elemenx-mixer": [],
 		"elemenx-mixer-channels": [],
+		"elemenx-spectrum": [],
+		"elemenx-spectrum-canvas": [],
+		"elemenx-waveform": [
+			"selectable"
+		],
+		"elemenx-waveform-canvas": [],
+		"elemenx-waveform-time": [],
+		"elemenx-waveform-selection": [],
+		"elemenx-jog": [
+			"disabled",
+			"touched"
+		],
+		"elemenx-jog-face": [],
+		"elemenx-jog-ring": [],
+		"elemenx-jog-ring-mark": [],
+		"elemenx-jog-platter": [],
+		"elemenx-jog-vinyl": [],
+		"elemenx-jog-groove": [],
+		"elemenx-jog-label": [],
+		"elemenx-jog-title": [],
+		"elemenx-jog-subtitle": [],
+		"elemenx-jog-marker": [],
+		"elemenx-jog-spindle": [],
+		"elemenx-piano-roll": [
+			"readonly"
+		],
+		"elemenx-piano-roll-scroll": [],
+		"elemenx-piano-roll-corner": [],
+		"elemenx-piano-roll-ruler": [],
+		"elemenx-piano-roll-bar-number": [],
+		"elemenx-piano-roll-loop": [],
+		"elemenx-piano-roll-keys": [],
+		"elemenx-piano-roll-key": [
+			"black"
+		],
+		"elemenx-piano-roll-grid": [],
+		"elemenx-piano-roll-row": [
+			"black"
+		],
+		"elemenx-piano-roll-note": [
+			"selected"
+		],
+		"elemenx-piano-roll-playhead": [],
+		"elemenx-sampler": [],
+		"elemenx-sampler-pad": [
+			"active",
+			"empty",
+			"over"
+		],
+		"elemenx-sampler-label": [],
+		"elemenx-sampler-key": [],
 		"elemenx-keyboard": [
 			"clickable",
 			"large",

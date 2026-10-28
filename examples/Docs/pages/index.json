@@ -692,6 +692,13 @@
 					"Group": "display"
 				},
 				{
+					"ID": "Barcode",
+					"Title": {
+						"en": "Barcode"
+					},
+					"Group": "other"
+				},
+				{
 					"ID": "Block",
 					"Title": {
 						"en": "Block"
@@ -895,6 +902,13 @@
 					"Group": "social"
 				},
 				{
+					"ID": "CommitGraph",
+					"Title": {
+						"en": "CommitGraph"
+					},
+					"Group": "data"
+				},
+				{
 					"ID": "Consent",
 					"Title": {
 						"en": "Consent"
@@ -1012,6 +1026,13 @@
 						"en": "DesignerTree"
 					},
 					"Group": "tools"
+				},
+				{
+					"ID": "Diagram",
+					"Title": {
+						"en": "Diagram"
+					},
+					"Group": "other"
 				},
 				{
 					"ID": "DialPad",
@@ -1280,6 +1301,13 @@
 					"Group": "inputs"
 				},
 				{
+					"ID": "Jog",
+					"Title": {
+						"en": "Jog"
+					},
+					"Group": "music"
+				},
+				{
 					"ID": "Keyboard",
 					"Title": {
 						"en": "Keyboard"
@@ -1437,6 +1465,13 @@
 					"ID": "Piano",
 					"Title": {
 						"en": "Piano"
+					},
+					"Group": "music"
+				},
+				{
+					"ID": "PianoRoll",
+					"Title": {
+						"en": "PianoRoll"
 					},
 					"Group": "music"
 				},
@@ -1609,6 +1644,13 @@
 					"Group": "display"
 				},
 				{
+					"ID": "Sampler",
+					"Title": {
+						"en": "Sampler"
+					},
+					"Group": "music"
+				},
+				{
 					"ID": "Section",
 					"Title": {
 						"en": "Section"
@@ -1670,6 +1712,13 @@
 						"en": "Sparkline"
 					},
 					"Group": "data"
+				},
+				{
+					"ID": "Spectrum",
+					"Title": {
+						"en": "Spectrum"
+					},
+					"Group": "music"
 				},
 				{
 					"ID": "Spinner",
@@ -1868,6 +1917,13 @@
 					"Group": "layout"
 				},
 				{
+					"ID": "Waveform",
+					"Title": {
+						"en": "Waveform"
+					},
+					"Group": "music"
+				},
+				{
 					"ID": "Window",
 					"Title": {
 						"en": "Window"
@@ -1911,9 +1967,27 @@
 					}
 				},
 				{
+					"ID": "AppIcon",
+					"Title": {
+						"en": "AppIcon"
+					}
+				},
+				{
+					"ID": "Audio",
+					"Title": {
+						"en": "Audio"
+					}
+				},
+				{
 					"ID": "Badges",
 					"Title": {
 						"en": "Badges"
+					}
+				},
+				{
+					"ID": "Barcodes",
+					"Title": {
+						"en": "Barcodes"
 					}
 				},
 				{
@@ -1956,6 +2030,12 @@
 					"ID": "Designer",
 					"Title": {
 						"en": "Designer"
+					}
+				},
+				{
+					"ID": "Diagrams",
+					"Title": {
+						"en": "Diagrams"
 					}
 				},
 				{

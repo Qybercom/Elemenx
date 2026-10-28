@@ -27,7 +27,7 @@ plugins {
 }
 
 group = "com.qybercom"
-version = "0.10.7"
+version = "0.10.8"
 
 repositories {
 	mavenCentral()
@@ -141,7 +141,7 @@ tasks.processResources {
 	}
 
 	from("../../libraries/ElemenxUI") {
-		include("data/meta.json", "components/**/*.js", "components/**/*.html", "directives/*.js", "services/*.js")
+		include("data/meta.json", "components/**/*.js", "components/**/*.html", "directives/*.js", "services/*.js", "locales/*.json")
 		into("elemenx/core/library")
 	}
 

@@ -8,7 +8,11 @@
  * - Command(name, value): bold, italic, underline, strike, code; paragraph, heading (value 1-4), quote, codeblock;
  *   bullets, numbers, indent, outdent; link (value: the URL; empty removes it), unlink; image (value: {Src, Alt} or
  *   the URL), table (value: {Rows, Columns}), row, column, row-delete, column-delete, table-delete; rule; clear;
- *   undo, redo. It returns false for a name it does not know or while it cannot edit.
+ *   undo, redo; plugin (value: the name of a plugin of the RichText Service, or {Name, Text, Attributes}: a diagram, a
+ *   chart, a callout..., its Insert data by default). It returns false for a name it does not know or while it
+ *   cannot edit.
+ * - A plugin in the document is one block the caret does not enter, drawn by its Component; a double press edits its
+ *   text in place (its own editor when it has Edit), Mod+Enter or leaving it keeps the text, Escape leaves it as it was.
  * - Typing Markdown at the start of a paragraph makes blocks: '# ' to '#### ' headings, '- ' a list, '1. ' a
  *   numbered list, '> ' a quote, '``` ' code. Keys: Mod+B, Mod+I, Mod+U, Mod+E (code), Mod+K (the link event),
  *   Tab and Shift+Tab in a list nest its items.
@@ -72,7 +76,7 @@ Elemenx.Component('RichEditor', {
 
 	$OnCreate: function () {
 		var self = this;
-		var own = {Last: null, Range: null, Changed: false, ReadyTimer: null, Listener: null};
+		var own = {Last: null, Range: null, Changed: false, ReadyTimer: null, Listener: null, Plugins: []};
 		var last;
 		var sync;
 
@@ -121,6 +125,8 @@ Elemenx.Component('RichEditor', {
 
 	$OnDestroy: function () {
 		window.clearTimeout(this.Own().ReadyTimer);
+
+		this.Unplug();
 
 		this.$Service('Find').Clear(this);
 
@@ -348,9 +354,28 @@ Elemenx.Component('RichEditor', {
 
 		this.Own().Last = value;
 
+		this.Unplug();
+
 		content.innerHTML = html || '<p><br></p>';
 
 		content.classList.toggle('empty', !html);
+
+		this.Plug();
+	},
+
+	/* The plugins of the document drawn (a diagram, a chart...): the ones not drawn yet; each one block the caret does not enter. */
+	Plug: function () {
+		var content = this.Content();
+		if (content)
+			this.Own().Plugins.push(this.Rich().Mount(content, {Editable: true, Application: this.$Application()}));
+	},
+
+	Unplug: function () {
+		this.Own().Plugins.forEach(function (mounted) {
+			mounted.Destroy();
+		});
+
+		this.Own().Plugins = [];
 	},
 
 	/* The document changed in the page: Value follows. */
@@ -573,6 +598,9 @@ Elemenx.Component('RichEditor', {
 			case 'redo': this.Run('redo');
 
 				break;
+			case 'plugin': done = this.PutPlugin(value);
+
+				break;
 			default:
 				cell = this.Closest(['TD', 'TH']);
 				done = /^(row|column|row-delete|column-delete|table-delete)$/.test(name) && !!cell && this.Cells(name, cell);
@@ -585,6 +613,116 @@ Elemenx.Component('RichEditor', {
 		this.Selected();
 
 		return true;
+	},
+
+	/* Puts a plugin at the caret: a name of one, or {Name, Text, Attributes}, over its Insert data. */
+	PutPlugin: function (value) {
+		var rich = this.Rich();
+		var name = typeof value === 'string' ? value : value && value.Name;
+		var plugin = name && rich.Registry[String(name).toLowerCase()];
+		var insert = plugin && plugin.Insert || {};
+		var data;
+
+		if (!plugin)
+			return false;
+
+		data = Object.assign({Kind: plugin.Fences ? 'fence' : plugin.Directives ? 'directive' : 'inline', Language: (plugin.Fences || plugin.Directives || plugin.Inline || [plugin.Name])[0], Attributes: {}, Text: ''}, insert, typeof value === 'object' ? value : {}, {Name: plugin.Name});
+
+		this.Run('insertHTML', rich.PluginHTML(data) + (data.Kind === 'inline' ? '' : '<p><br></p>'));
+		this.Plug();
+
+		return true;
+	},
+
+	/* A double press on a plugin edits its text: in place, or in the editor of the plugin (Edit). */
+	Twice: function (event) {
+		var self = this;
+		var node = event.target && event.target.closest ? event.target.closest('[data-elemenx-plugin]') : null;
+		var rich = this.Rich();
+		var data;
+		var plugin;
+		var area;
+		var finished = false;
+
+		if (!node || !this.Editable() || !this.Content().contains(node) || node.classList.contains('editing')) return;
+
+		data = rich.PluginData(node);
+		plugin = data && rich.Registry[String(data.Name || '').toLowerCase()];
+
+		if (!data) return;
+
+		event.preventDefault();
+
+		function done (next) {
+			if (finished) return;
+
+			finished = true;
+
+			if (node.__ElemenxPlugin) {
+				if (node.__ElemenxPlugin.Instance)
+					node.__ElemenxPlugin.Instance.$Destroy();
+
+				if (typeof node.__ElemenxPlugin.Cleanup === 'function')
+					node.__ElemenxPlugin.Cleanup();
+
+				node.__ElemenxPlugin = null;
+			}
+
+			node.classList.remove('editing');
+
+			node.textContent = '';
+
+			if (next)
+				node.setAttribute('data-elemenx-data', JSON.stringify(next));
+
+			self.Own().Plugins.push(rich.Mount(node, {Editable: true, Application: self.$Application()}));
+
+			self.Read();
+
+			self.Own().Changed = true;
+		}
+
+		if (plugin && typeof plugin.Edit === 'function') {
+			plugin.Edit(node, data, done);
+
+			return;
+		}
+
+		if (node.__ElemenxPlugin && node.__ElemenxPlugin.Instance)
+			node.__ElemenxPlugin.Instance.$Destroy();
+
+		node.__ElemenxPlugin = null;
+
+		node.classList.add('editing');
+
+		node.textContent = '';
+
+		area = this.Doc().createElement('textarea');
+		area.className = 'elemenx-rich-plugin-editor';
+		area.value = String(data.Text || '');
+		area.rows = Math.min(16, Math.max(3, area.value.split('\n').length + 1));
+
+		area.setAttribute('aria-label', plugin && plugin.Label || data.Name);
+
+		area.addEventListener('keydown', function (key) {
+			key.stopPropagation();
+
+			if (key.key === 'Escape') done(null);
+			else if (key.key === 'Enter' && (key.ctrlKey || key.metaKey)) done(Object.assign({}, data, {Text: area.value}));
+		});
+
+		/* What is typed there is the text of the plugin, not of the document. */
+		area.addEventListener('input', function (typed) {
+			typed.stopPropagation();
+		});
+
+		area.addEventListener('blur', function () {
+			done(Object.assign({}, data, {Text: area.value}));
+		});
+
+		node.appendChild(area);
+
+		area.focus();
 	},
 
 	/* Code inside a line: the selection becomes code, or the code at the caret becomes text again. */
@@ -985,13 +1123,22 @@ Elemenx.Component('RichEditor', {
 
 	Print: function (options, callback) {
 		var box = document.createElement('div');
+		var mounted;
 
 		options = options || {};
 
 		box.className = 'elemenx-rich-editor-content elemenx-rich-editor-print';
 		box.innerHTML = this.Rich().Sanitize(this.Value);
 
-		this.$Service('Print').Element(box, {Title: options.Title || this.Label || '', Theme: options.Theme, Class: options.Class, Style: options.Style, Margin: options.Margin, Language: options.Language}, callback);
+		/* Its plugins drawn on the page printed too, and taken away after. */
+		mounted = this.Rich().Mount(box, {Application: this.$Application()});
+
+		this.$Service('Print').Element(box, {Title: options.Title || this.Label || '', Theme: options.Theme, Class: options.Class, Style: options.Style, Margin: options.Margin, Language: options.Language}, function (error, result) {
+			mounted.Destroy();
+
+			if (callback)
+				callback(error, result);
+		});
 
 		return this;
 	}

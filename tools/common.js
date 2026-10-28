@@ -96,8 +96,33 @@ function installed (project, name) {
 	return null;
 }
 
+/*
+ * Writes a file, a few tries: an editor or a server that reads it may hold it for a moment, and on Windows the write
+ * fails then (UNKNOWN, EBUSY, EPERM). wait(milliseconds) waits between tries (a blocking sleep by default).
+ */
+function writeFile (file, text, wait) {
+	var attempt;
+
+	for (attempt = 1; ; attempt++) {
+		try {
+			fs.writeFileSync(file, text);
+
+			return;
+		}
+		catch (error) {
+			if (attempt === 10 || ['UNKNOWN', 'EBUSY', 'EPERM'].indexOf(error.code) === -1)
+				throw error;
+
+			(wait || function (milliseconds) {
+				Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, milliseconds);
+			})(100);
+		}
+	}
+}
+
 module.exports = {
 	fail: fail,
+	writeFile: writeFile,
 	installed: installed,
 	parseIndex: parseIndex,
 	readPacks: readPacks,

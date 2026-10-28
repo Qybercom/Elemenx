@@ -227,6 +227,24 @@ describe('Regression: binding and event syntax', function () {
 		child.$Destroy();
 	});
 
+	/* A bug: an item of several classes ('three position-1') threw in DOMTokenList, and the component did not render. */
+	test('[class] takes an item that names several classes, as the attribute class does', function () {
+		var factory = Elemenx.Component(unique('ClassWords'), {
+			$Template: '<div class="static" [class]="Classes"></div>'
+		});
+		var child = factory({Classes: ['three  position-1', ' card ', '']});
+
+		document.body.appendChild(child.$Element());
+
+		expect(child.$Element().className.split(' ').sort()).toEqual(['card', 'position-1', 'static', 'three']);
+
+		child.$Update({Classes: ['three position-2']});
+
+		expect(child.$Element().className.split(' ').sort()).toEqual(['position-2', 'static', 'three']);
+
+		child.$Destroy();
+	});
+
 	test('class bindings render on SVG elements, whose className is read-only', function () {
 		var name = unique('SVGClassBindings');
 		var factory = Elemenx.Component(name, {

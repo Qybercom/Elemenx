@@ -1,7 +1,7 @@
 <!-- generated -->
 # Markdown
 
-Документ на Markdown для показа: Value читает сервис RichText (CommonMark с таблицами, зачёркиванием и блоками кода GitHub) и приводит к своей схеме, так что ничего в нём не выполняется. Код блока, где указан язык (```js), подсвечивается сервисом Syntax (Highlight, по умолчанию включено). Look: 'document' (по умолчанию) — как текст RichEditor (классы elemenx-document); 'interface' — с классами интерфейса библиотеки, как страница приложения: таблица — elemenx-table, список — elemenx-ul или elemenx-ol, цитата — elemenx-callout, ссылка — elemenx-link, код (блок или в строке) — elemenx-code, черта — elemenx-divider. Без Value текст берётся из тела элемента (<Markdown>## Заголовок</Markdown>) без общего отступа его строк; тело отслеживается при изменениях.
+Документ на Markdown для показа: Value читает сервис RichText (CommonMark с таблицами, зачёркиванием и блоками кода GitHub) и приводит к своей схеме, так что ничего в нём не выполняется. Код блока, где указан язык (```js), подсвечивается сервисом Syntax (Highlight, по умолчанию включено). Look: 'document' (по умолчанию) — как текст RichEditor (классы elemenx-document); 'interface' — с классами интерфейса библиотеки, как страница приложения: таблица — elemenx-table, список — elemenx-ul или elemenx-ol, цитата — elemenx-callout, ссылка — elemenx-link, код (блок или в строке) — elemenx-code, черта — elemenx-divider. Без Value текст берётся из тела элемента (<Markdown>## Заголовок</Markdown>) без общего отступа его строк; тело отслеживается при изменениях. Плагины сервиса RichText рисуют то, для чего в Markdown нет элемента: ```mermaid — Diagram, ```chart — Chart, ::: warning — выноску... (RichText.Extend добавляет свои).
 
 ## Свойства
 

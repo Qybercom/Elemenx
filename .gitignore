@@ -30,3 +30,4 @@ test-results/
 /editors/intellij/.gradle
 /editors/intellij/.kotlin
 /editors/intellij/.intellijPlatform
+/docs-site

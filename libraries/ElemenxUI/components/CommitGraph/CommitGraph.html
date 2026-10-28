@@ -1,0 +1,32 @@
+<div class="elemenx-commit-graph" [class]="[Layout === 'scheme' ? 'scheme' : 'list']">
+	<div class="elemenx-commit-graph-body" #Body *if="Layout !== 'scheme'" role="listbox" tabindex="0" [attribute.aria-label]="Label || $T('ui.commitGraph.label')" [attribute.aria-activedescendant]="Selected === null ? null : 'elemenx-commit-' + Selected" [style.height]="Height === 'auto' ? null : Height + 'px'" (scroll)="Scrolled" (keydown)="Keyed">
+		<div class="elemenx-commit-graph-space" [style.height]="Graph(Commits).Rows.length * Row + 'px'">
+			<div class="elemenx-commit-graph-row" *for="row of Visible(Commits, Top, Height)" *key="row.Commit.ID" role="option" [attribute.id]="'elemenx-commit-' + row.Commit.ID" [attribute.data-id]="row.Commit.ID" [attribute.aria-selected]="String(String(row.Commit.ID) === String(Selected))" [attribute.aria-label]="Spoken(row.Commit)" [class.selected]="String(row.Commit.ID) === String(Selected)" [style.top]="row.Index * Row + 'px'" [style.height]="Row + 'px'" (click)="Pressed" (dblclick)="Opened">
+				<svg class="elemenx-commit-graph-lanes" [attribute.width]="GraphWidth(Commits)" [attribute.height]="Row" [attribute.viewBox]="'0 0 ' + GraphWidth(Commits) + ' ' + Row" aria-hidden="true">
+					<path class="elemenx-commit-graph-line" *for="path of Paths(row)" *key="$index" [attribute.d]="path.D" [attribute.stroke]="path.Color"></path>
+					<circle class="elemenx-commit-graph-dot" [class.merge]="(row.Commit.Parents || []).length > 1" [attribute.cx]="row.Lane * Lane + Lane / 2" [attribute.cy]="Row / 2" r="4" [attribute.fill]="ColorOf(row.Lane)" [attribute.stroke]="ColorOf(row.Lane)"></circle>
+				</svg>
+				<span class="elemenx-commit-graph-refs" *if="(row.Commit.Refs || []).length"><span class="elemenx-commit-graph-ref" *for="ref of row.Commit.Refs" *key="ref.Name" [class]="[ref.Kind || 'branch']">{{ref.Name}}</span></span>
+				<span class="elemenx-commit-graph-message" *if="Shown(Columns, 'message')">{{row.Commit.Message}}</span>
+				<span class="elemenx-commit-graph-author" *if="Shown(Columns, 'author')">{{row.Commit.Author}}</span>
+				<span class="elemenx-commit-graph-date" *if="Shown(Columns, 'date')">{{When(row.Commit.Date)}}</span>
+				<code class="elemenx-commit-graph-id" *if="Shown(Columns, 'id')">{{Short(row.Commit.ID)}}</code>
+			</div>
+		</div>
+	</div>
+	<div class="elemenx-commit-graph-scheme" *if="Layout === 'scheme'" role="list" tabindex="0" [attribute.aria-label]="Label || $T('ui.commitGraph.label')" (keydown)="Keyed">
+		<svg [attribute.width]="Scheme(Commits, ShowMessages).Width" [attribute.height]="Scheme(Commits, ShowMessages).Height" [attribute.viewBox]="'0 0 ' + Scheme(Commits, ShowMessages).Width + ' ' + Scheme(Commits, ShowMessages).Height">
+			<g class="elemenx-commit-graph-scheme-lane" *for="lane of Scheme(Commits, ShowMessages).Lanes" *key="lane.Key" aria-hidden="true">
+				<line class="elemenx-commit-graph-scheme-track" [attribute.x1]="lane.From" [attribute.x2]="lane.To" [attribute.y1]="lane.Y" [attribute.y2]="lane.Y" [attribute.stroke]="lane.Color"></line>
+				<text class="elemenx-commit-graph-scheme-name" x="8" [attribute.y]="lane.Y + 4" [attribute.fill]="lane.Color">{{lane.Name}}</text>
+			</g>
+			<path class="elemenx-commit-graph-line" *for="edge of Scheme(Commits, ShowMessages).Edges" *key="edge.Key" [attribute.d]="edge.D" [attribute.stroke]="edge.Color" aria-hidden="true"></path>
+			<g class="elemenx-commit-graph-scheme-commit" *for="dot of Scheme(Commits, ShowMessages).Dots" *key="dot.Key" role="listitem" [attribute.data-id]="dot.Commit.ID" [attribute.aria-label]="Spoken(dot.Commit)" [attribute.aria-current]="String(dot.Commit.ID) === String(Selected) ? 'true' : null" [class.selected]="String(dot.Commit.ID) === String(Selected)" (click)="Pressed" (dblclick)="Opened">
+				<title>{{RefNames(dot.Refs) ? RefNames(dot.Refs) + ": " : ""}}{{dot.Commit.Message}}</title>
+				<circle class="elemenx-commit-graph-dot" [class.merge]="(dot.Commit.Parents || []).length > 1" [attribute.cx]="dot.X" [attribute.cy]="dot.Y" r="7" [attribute.fill]="dot.Color" [attribute.stroke]="dot.Color"></circle>
+				<text class="elemenx-commit-graph-scheme-ref" *if="dot.Refs.length" [attribute.x]="dot.X" [attribute.y]="dot.Y - 13" text-anchor="middle">{{Clip(RefNames(dot.Refs), ShowMessages ? 22 : 12)}}</text>
+				<text class="elemenx-commit-graph-scheme-message" *if="ShowMessages" [attribute.x]="dot.X" [attribute.y]="dot.Y + 22" text-anchor="middle">{{Clip(dot.Commit.Message, 18)}}</text>
+			</g>
+		</svg>
+	</div>
+</div>

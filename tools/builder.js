@@ -14,6 +14,7 @@ var Extension = require('./extension.js');
 var Electron = require('./electron.js');
 var Capacitor = require('./capacitor.js');
 var AndroidLibrary = require('./androidlibrary.js');
+var Docker = require('./docker.js');
 var fail = common.fail;
 
 /*
@@ -690,12 +691,15 @@ function build (project, options) {
 	if (options.native)
 		return native(project, options);
 
+	if (options.docker && (options.single || options.widget))
+		fail('--docker is a build of the site: not with --single or --widget');
+
 	var appName = options.entry || 'app.js';
 	var indexName = options.index || 'index.html';
 	var outputName = options.out || 'dist';
 	var app = path.join(project, appName);
 	var index = path.join(project, indexName);
-	var output = path.join(project, outputName);
+	var output = path.resolve(project, outputName);
 	var framework = path.resolve(__dirname, '..', 'elemenx.js');
 	var entities = {};
 	var appSource;
@@ -751,7 +755,20 @@ function build (project, options) {
 
 		markShared(entities, catalog, shared);
 
-		selectLibraryEntities(entities, catalog, (templateBundle || '') + '\n' + indexSource + '\n' + appSource);
+		/* allLibraries: every entity of the Libraries, for an Application that makes its templates at run time (the reference: its live examples). */
+		if (options.allLibraries) {
+			Object.keys(catalog).forEach(function (type) {
+				entities[type] = entities[type] || {};
+
+				Object.keys(catalog[type]).forEach(function (name) {
+					if (!entities[type][name])
+						entities[type][name] = catalog[type][name];
+				});
+			});
+		}
+		else {
+			selectLibraryEntities(entities, catalog, (templateBundle || '') + '\n' + indexSource + '\n' + appSource);
+		}
 
 		i++;
 	}
@@ -839,7 +856,67 @@ function build (project, options) {
 
 	process.stdout.write('Elemenx Builder: ' + output + '\n');
 
+	/* A Docker image of the site (see docker.js): its files beside the build, and the image when docker is here. */
+	if (options.docker)
+		Docker.Pack(output, project, options.dockerSettings || {}, {Strict: !!options.strict});
+
 	return output;
+}
+
+/* The targets of a build: Build.Targets of elemenx.config.js, or --target. */
+var Targets = ['web', 'single', 'widget', 'extension', 'desktop', 'mobile', 'android-library', 'docker'];
+
+/*
+ * Builds each target of a list, from one command (elemenx build with Build.Targets, or --target a,b): one target goes
+ * where a build of its own goes (dist, dist/extension, dist/native/desktop...); several go each into a folder of its
+ * own under out: out/web, out/single, out/widget, out/docker, and out/extension and out/native/<platform> as always.
+ * options are the ones of build (their mode is set by each target). Returns [{Target, Output}]; a target that fails
+ * stops the build, and says which.
+ */
+function buildTargets (project, options, list) {
+	var outputName = options.out || 'dist';
+	var several = list.length > 1;
+	var made = [];
+
+	list.forEach(function (target) {
+		if (Targets.indexOf(target) === -1)
+			fail('unknown build target: ' + target + ' (' + Targets.join(', ') + ')');
+	});
+
+	list.forEach(function (target) {
+		var own = Object.assign({}, options, {single: false, widget: false, extension: false, native: false, docker: false});
+		var output;
+
+		if (target === 'single' || target === 'widget' || target === 'docker' || target === 'web')
+			own.out = several ? path.join(outputName, target) : outputName;
+
+		if (target === 'single') own.single = true;
+		else if (target === 'widget') own.widget = true;
+		else if (target === 'extension') own.extension = true;
+		else if (target === 'docker') own.docker = true;
+		else if (target !== 'web') own.native = target;
+
+		process.stdout.write('Elemenx Builder: the target ' + target + '\n');
+
+		try {
+			output = build(project, own);
+		}
+		catch (error) {
+			error.message = 'the target ' + target + ' failed: ' + error.message;
+
+			throw error;
+		}
+
+		made.push({Target: target, Output: output});
+	});
+
+	if (several) {
+		process.stdout.write('Elemenx Builder: ' + made.map(function (item) {
+			return item.Target + ' ' + path.relative(project, item.Output || path.join(project, outputName));
+		}).join(', ') + '\n');
+	}
+
+	return made;
 }
 
 /*
@@ -848,7 +925,7 @@ function build (project, options) {
  */
 function extension (project, options) {
 	var outputName = options.out || 'dist';
-	var target = path.join(project, outputName, 'extension');
+	var target = path.resolve(project, outputName, 'extension');
 	var folder = path.join(target, 'app');
 	var settings = options.extensionSettings || {};
 	var result;
@@ -869,7 +946,7 @@ function extension (project, options) {
 		packs: options.packs,
 		splash: false,
 		precompile: true,
-		excludes: [path.join(project, outputName)]
+		excludes: [path.resolve(project, outputName)]
 	});
 
 	result = Extension.Pack(folder, target, project, {
@@ -906,8 +983,8 @@ var NativeTargets = NativePlatforms.concat(['android-library']);
  */
 function native (project, options) {
 	var outputName = options.out || 'dist';
-	var root = path.join(project, outputName, 'native');
-	var staging = path.join(project, outputName, 'native-app');
+	var root = path.resolve(project, outputName, 'native');
+	var staging = path.resolve(project, outputName, 'native-app');
 	var platforms = options.native === true || options.native === 'all' ? NativePlatforms : [options.native];
 	var settings = options.nativeSettings || {};
 	/* The splash of the Application: its color is the one of the window, and of the screen of a phone, before the page paints. */
@@ -940,7 +1017,7 @@ function native (project, options) {
 		icon: options.icon,
 		icons: options.icons,
 		precompile: true,
-		excludes: [path.join(project, outputName)]
+		excludes: [path.resolve(project, outputName)]
 	});
 
 	platforms.forEach(function (platform, index) {
@@ -1180,7 +1257,9 @@ module.exports = {
 	ApplicationRoots: applicationRoots,
 	LibraryRoots: libraryRoots,
 	LibraryDeclarations: libraryDeclarations,
-	SelectLibraryEntities: selectLibraryEntities
+	SelectLibraryEntities: selectLibraryEntities,
+	BuildTargets: buildTargets,
+	Targets: Targets
 };
 
 if (require.main === module) {

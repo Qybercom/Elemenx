@@ -10,6 +10,7 @@ Every node has ID (a number of its own: the key of a list in a template), Value 
 
 - Validators: Required, RequiredTrue, Email, Min(number), Max(number), MinLength(length), MaxLength(length), Pattern(expression or text), Equal(name, other) for a group, and Custom(key, test(value, control)).
 - Message(errors): the phrase of the first error (ui.forms.<key>, ui.forms.invalid for a key without one), or the text an error gives itself ({key: 'text'}).
+- The names of fields, as the forms of a server read them: Path(name) gives the parts of user[address][city] (or user.address.city), items[2][name] and tags[] (['tags', '']: the end of an array). Get takes them too. Place(group, path, node) puts a node at such a path, making the groups and arrays on the way (an array where the next part is an index or []): Value is then nested, {user: {address: {city}}, items: [{name}], tags: [...]}, an array without the places no field filled (items[5] alone is [value]). Detach(node) takes a node out (an array keeps the places of the others), and the groups and arrays Place made that are empty then.
 
 Form and Field use these models: a Form gives Fields their controls by Name and validates them on submit.
 
@@ -18,6 +19,9 @@ Form and Field use these models: a Form gives Fields their controls by Name and 
 - `Control(value, validators)`
 - `Group(controls, validators)`
 - `Array(controls, validators)`
+- `Place(group, path, item)`
+- `Detach(item)`
+- `Path(name)`
 - `Message(errors)`
 
 ## Example

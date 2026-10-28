@@ -19,7 +19,7 @@
 var fs = require('fs');
 var path = require('path');
 
-var Skipped = {'node_modules': true, 'dist': true, '.git': true, 'build': true, '.gradle': true, '.idea': true, '.vscode': true, 'coverage': true, 'test-results': true, 'playwright-report': true, '.vitest': true, 'android': true, 'ios': true};
+var Skipped = {'node_modules': true, 'dist': true, 'docs-site': true, '.git': true, 'build': true, '.gradle': true, '.idea': true, '.vscode': true, 'coverage': true, 'test-results': true, 'playwright-report': true, '.vitest': true, 'android': true, 'ios': true};
 
 /*
  * A build, not a source: a minified file, or one with the banner of a build of Elemenx (/*! Elemenx 0.10.1, /*! ElemenxUI):
@@ -388,6 +388,8 @@ function Create (options) {
 	});
 	var library = {Components: {}, Services: {}, Directives: {}};
 	var project = {};
+	/* The files of the phrases of $T: the locales/*.json of the project and of the Libraries. */
+	var locales = {};
 	var knowledge;
 
 	function loadMeta () {
@@ -396,6 +398,8 @@ function Create (options) {
 		metaFiles(roots, settings.Meta).forEach(function (file) {
 			var data;
 			var base = path.dirname(path.dirname(file));
+
+			addLocales(path.join(base, 'locales'));
 
 			try {
 				data = JSON.parse(read(file) || '{}');
@@ -440,6 +444,22 @@ function Create (options) {
 		});
 	}
 
+	function addLocales (folder) {
+		var entries;
+
+		try {
+			entries = fs.readdirSync(folder);
+		}
+		catch (error) {
+			return;
+		}
+
+		entries.forEach(function (name) {
+			if (/\.json$/.test(name))
+				locales[path.join(folder, name)] = true;
+		});
+	}
+
 	function scanFile (file, text) {
 		var source = text === undefined ? read(file) : text;
 
@@ -468,6 +488,9 @@ function Create (options) {
 			if (count > 20000) return;
 
 			if (entry.isDirectory()) {
+				if (entry.name === 'locales')
+					addLocales(file);
+
 				if (!Skipped[entry.name])
 					count = walk(file, count + 1);
 			}
@@ -527,6 +550,7 @@ function Create (options) {
 		Roots: roots,
 		Refresh: function () {
 			project = {};
+			locales = {};
 
 			loadMeta();
 
@@ -613,6 +637,12 @@ function Create (options) {
 			});
 
 			return result;
+		},
+		/* The files of the phrases of $T, those of English first (the language the keys are written in). */
+		Locales: function () {
+			return Object.keys(locales).sort(function (a, b) {
+				return (/[\\/]en\.json$/.test(b) ? 1 : 0) - (/[\\/]en\.json$/.test(a) ? 1 : 0) || (a < b ? -1 : a > b ? 1 : 0);
+			});
 		},
 		/* elemenx.js, where the core directives are (*if, *for...). */
 		Framework: function () {
@@ -954,7 +984,7 @@ function candidates (knowledge, text, offset, language, file) {
 
 	if (language === 'js') {
 		/* $Ref('...'): the references (#Name) of the template of the Component of the file. */
-		found = /\$Ref\(\s*['"]([\w$-]*)$/.exec(text.substring(Math.max(0, offset - 200), offset));
+		found = /\$Refs?\(\s*['"]([\w$-]*)$/.exec(text.substring(Math.max(0, offset - 200), offset));
 
 		if (found) {
 			own = templateOf(file, text);
@@ -1107,7 +1137,7 @@ function refs (text) {
 
 /* The $Ref('Name') of the code under offset: {Name, Start, End} of the name, or null. */
 function refAt (text, offset) {
-	var pattern = /\$Ref\(\s*(['"])([\w$-]*)\1/g;
+	var pattern = /\$Refs?\(\s*(['"])([\w$-]*)\1/g;
 	var match;
 	var start;
 
@@ -1119,6 +1149,128 @@ function refAt (text, offset) {
 	}
 
 	return null;
+}
+
+/* The key of the $T('key') under offset (in a template or in code): {Key, Start, End}, or null. */
+function phraseAt (text, offset) {
+	var pattern = /\$T\(\s*(['"])([^'"\n]*)\1/g;
+	var match;
+	var start;
+
+	while ((match = pattern.exec(text))) {
+		start = match.index + match[0].length - 1 - match[2].length;
+
+		if (offset >= start && offset <= start + match[2].length)
+			return {Key: match[2], Start: start, End: start + match[2].length};
+	}
+
+	return null;
+}
+
+/*
+ * Where a key of phrases (ui.call.leave) is in the text of a JSON of a locale: the offset of the name of its last
+ * part, nested ({"ui": {"call": {"leave": ...}}}) or written whole ({"ui.call.leave": ...}); -1 when it is not there.
+ */
+function phraseOffset (source, key) {
+	var trail = [];
+	var pending = null;
+	var i = 0;
+	var c;
+	var end;
+	var name;
+
+	while (i < source.length) {
+		c = source.charAt(i);
+
+		if (c === '"') {
+			end = i + 1;
+
+			while (end < source.length && source.charAt(end) !== '"')
+				end += source.charAt(end) === '\\' ? 2 : 1;
+
+			name = source.substring(i + 1, end);
+
+			/* A name is a key when a colon follows it. */
+			if (/^\s*:/.test(source.substring(end + 1, end + 40))) {
+				if (trail.filter(Boolean).concat([name]).join('.') === key) return i + 1;
+
+				pending = name;
+			}
+
+			i = end + 1;
+
+			continue;
+		}
+
+		if (c === '{') {
+			trail.push(pending === null ? '' : pending);
+
+			pending = null;
+		}
+		else if (c === '}') {
+			trail.pop();
+		}
+		else if (c === ',' || c === '[') {
+			pending = null;
+		}
+
+		i++;
+	}
+
+	return -1;
+}
+
+/*
+ * The phrases of a key in the locales of the project and of its Libraries: [{File, Language, At, Text, Line,
+ * Character}] of the folder of locales nearest to the file asking (its Application, its Library), English first.
+ */
+function phrases (knowledge, key, from) {
+	var found = [];
+	var best = -1;
+	var near = function (file) {
+		var a = path.resolve(path.dirname(file)).split(/[\\/]/);
+		var b = path.resolve(from || '').split(/[\\/]/);
+		var i = 0;
+
+		while (i < a.length && i < b.length && a[i].toLowerCase() === b[i].toLowerCase())
+			i++;
+
+		return i;
+	};
+
+	knowledge.Locales().forEach(function (file) {
+		var text = read(file);
+		var at = text === null ? -1 : phraseOffset(text, key);
+		var value;
+
+		if (at === -1) return;
+
+		value = /^(?:[^"\\]|\\.)*"\s*:\s*("(?:[^"\\]|\\.)*")/.exec(text.substring(at));
+
+		try {
+			value = value ? JSON.parse(value[1]) : null;
+		}
+		catch (error) {
+			value = null;
+		}
+
+		found.push({File: file, Language: path.basename(file, '.json'), Near: near(file), At: at, Text: value, Line: Position(text, at).line, Character: Position(text, at).character});
+
+		best = Math.max(best, near(file));
+	});
+
+	return found.filter(function (each) {
+		return each.Near === best && path.dirname(each.File) === path.dirname(found.filter(function (other) {
+			return other.Near === best;
+		})[0].File);
+	});
+}
+
+/* The place of a key of phrases: in the English of the nearest locales, else in another language of them; null when none has it. */
+function phrasePlace (knowledge, key, from) {
+	var found = phrases(knowledge, key, from)[0];
+
+	return found ? {File: found.File, Line: found.Line, Character: found.Character} : null;
 }
 
 /* The place of the first match of pattern in a file: {File, Line, Character} (at the text matched, past a new line), or null. */
@@ -1151,6 +1303,17 @@ function Hover (knowledge, text, offset, language, file) {
 	var service;
 	var own;
 	var word;
+
+	/* The key of $T('key'): its phrase in each language of the nearest locales. */
+	word = phraseAt(text, offset);
+
+	if (word) {
+		item = phrases(knowledge, word.Key, file);
+
+		return {Markdown: '`' + word.Key + '`' + (item.length ? '\n\n' + item.map(function (each) {
+			return '- **' + each.Language + '**: ' + (each.Text === null ? '_not a text_' : String(each.Text).replace(/([\\`*_[\]])/g, '\\$1'));
+		}).join('\n') : '\n\nNo phrase of this key in the locales of the project.'), Start: word.Start, End: word.End};
+	}
 
 	if (language === 'js') {
 		word = refAt(text, offset);
@@ -1239,6 +1402,12 @@ function Definition (knowledge, text, offset, language, file) {
 	var word;
 	var item;
 
+	/* The key of $T('key'), in a template or in code: to its phrase in the locales (English first). */
+	word = phraseAt(text, offset);
+
+	if (word)
+		return phrasePlace(knowledge, word.Key, file);
+
 	if (language === 'js') {
 		word = refAt(text, offset);
 
@@ -1304,7 +1473,7 @@ function Definition (knowledge, text, offset, language, file) {
 	if (at.Kind === 'attribute-name' && at.Attribute && at.Attribute.Name.charAt(0) === '#') {
 		own = owner(knowledge, file, text, offset);
 		word = own ? read(own.File) : null;
-		item = word ? new RegExp('\\$Ref\\(\\s*([\'"])' + at.Attribute.Name.substring(1).replace(/\$/g, '\\$') + '\\1').exec(word) : null;
+		item = word ? new RegExp('\\$Refs?\\(\\s*([\'"])' + at.Attribute.Name.substring(1).replace(/\$/g, '\\$') + '\\1').exec(word) : null;
 
 		if (!own || !own.File) return null;
 
@@ -1320,6 +1489,10 @@ function Definition (knowledge, text, offset, language, file) {
 	if (at.Kind === 'attribute-value' || at.Kind === 'expression') {
 		own = owner(knowledge, file, text, offset);
 		word = (/[\w$]*$/.exec(text.substring(0, offset)) || [''])[0] + (/^[\w$]*/.exec(text.substring(offset)) || [''])[0];
+
+		/* $T of the templates: to its definition in elemenx.js. */
+		if (word === '$T')
+			return knowledge.Framework() ? place(knowledge.Framework(), /\n\t+\$T: function/) : null;
 
 		if (!own || !word) return null;
 
@@ -1338,7 +1511,7 @@ function Diagnose (knowledge, text, language, file) {
 	var told;
 	var template;
 	var names;
-	var pattern = /(?:this|self)\.\$Ref\(\s*(['"])([\w$-]+)\1/g;
+	var pattern = /(?:this|self)\.\$Refs?\(\s*(['"])([\w$-]+)\1/g;
 	var named = /\$Template\s*:\s*(['"])#([A-Za-z_][\w:.-]*)\1/g;
 	var match;
 

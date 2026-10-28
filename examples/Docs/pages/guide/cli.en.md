@@ -8,6 +8,7 @@ elemenx generate <component|service|guard|directive> <path/Name> [project] [--ap
 elemenx dev [project] [--port 4173] [--host 127.0.0.1]
 elemenx serve [project] [--port 4175] [--host 127.0.0.1] [--out dist] [--compression true|false] [--compression-threshold 1024] [--cache-control "..."]
 elemenx build [project] [options]
+elemenx docs [--port 4179] [--open]
 elemenx native add [desktop|mobile|all] [project]
 elemenx icons <directory> <output.svg> [--current-color]
 elemenx version
@@ -37,6 +38,10 @@ npx elemenx g directive Tooltip
 ## serve
 
 `elemenx serve` serves the build in `dist` as a production server would: gzip and brotli for the responses of 1024 bytes and more, `ETag`, `Last-Modified`, `Cache-Control`, `Vary: Accept-Encoding`, `304` for the conditional requests, `HEAD` with the headers and no body. Development and production can run at once on their two ports.
+
+## docs
+
+`elemenx docs` serves this reference, of the version of Elemenx the project installed, from the package itself: no network is needed, and its live examples run (the ones of the network too, against the server of the command). `--open` opens it in the browser of the system; the port is 4179 (`--port`).
 
 ## The configuration
 

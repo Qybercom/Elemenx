@@ -44,7 +44,7 @@
 	 * Elemenx: the namespace of this copy of the framework. The window gets it last (see Export), unless a copy of the
 	 * same version is there already: then this one stops here and the page keeps the first.
 	 */
-	var Version = '0.10.7';
+	var Version = '0.10.8';
 	var Elemenx = {};
 	if (typeof ElemenxIsolated !== 'object' && (typeof globalThis !== 'undefined' ? globalThis : self).Elemenx && (typeof globalThis !== 'undefined' ? globalThis : self).Elemenx.Version === Version) return;
 
@@ -3616,6 +3616,40 @@
 
 			markPending(placeholder, !ownWaiting);
 
+			/*
+			 * The props it is made with: the ones of its tag, and over them the ones its owner changed while it loaded, so
+			 * that its $OnCreate and $OnReady see them (a Router packet keeps its identity: they follow it as updates).
+			 */
+			function madeWith (definition) {
+				var made = canonicalDeferredData(data, definition, options);
+				var merged = {};
+				var change;
+				var key;
+				var i = 0;
+
+				if (!updates.length || (options && options.RoutePacket === data) || (made && (typeof made !== 'object' || Array.isArray(made)))) return made;
+
+				for (key in made || {}) {
+					if (own(made, key))
+						merged[key] = made[key];
+				}
+
+				while (i < updates.length) {
+					change = canonicalDeferredInput(updates[i], definition);
+
+					for (key in change || {}) {
+						if (own(change, key))
+							merged[key] = change[key];
+					}
+
+					i++;
+				}
+
+				updates = [];
+
+				return merged;
+			}
+
 			function renderStatus (source) {
 				if (!source) return;
 
@@ -3718,6 +3752,14 @@
 				return current.$Ref(name);
 			};
 
+			api.$Refs = function (name) {
+				return current && current.$Refs ? current.$Refs(name) : [];
+			};
+
+			api._Definition = function () {
+				return currentDefinition;
+			};
+
 			/* Inputs keep the declaration spelling ([hint]); the resolved Definition knows the real name (Hint). */
 			api.$Update = function (value) {
 				if (current) current.$Update(canonicalDeferredInput(value, currentDefinition));
@@ -3809,7 +3851,7 @@
 				if (current)
 					current.$Destroy();
 
-				current = factory(canonicalDeferredData(data, factory.Definition, options), slotProjection, options);
+				current = factory(madeWith(factory.Definition), slotProjection, options);
 				currentDefinition = factory.Definition;
 
 				var currentRouter = Runtime.ComponentRouters.get(api);
@@ -3878,7 +3920,7 @@
 					return;
 				}
 
-				current = factory(canonicalDeferredData(data, factory.Definition, options), slotProjection, options);
+				current = factory(madeWith(factory.Definition), slotProjection, options);
 				currentDefinition = factory.Definition;
 
 				var currentRouter = Runtime.ComponentRouters.get(api);
@@ -4205,7 +4247,11 @@
 			return root;
 		}
 
-		function collectRefs (root, refs) {
+		/* A Component (its object, and its Proxy) to the owner of its references: its own, or the one of the Component it is a part of. */
+		var refOwners = new WeakMap();
+
+		/* The #name of the elements of a root, in refs; owner marks whose references they are ($Refs). */
+		function collectRefs (root, refs, owner) {
 			var nodes = [];
 			var all;
 			var i = 0;
@@ -4240,6 +4286,8 @@
 						refs[name] = nodes[i];
 
 						nodes[i].__ElemenxRefName = name;
+						/* Whose reference it is: $Refs keeps out the ones of a child Component placed inside. */
+						nodes[i].__ElemenxRefOwner = owner;
 
 						nodes[i].removeAttribute(attrs[j].name);
 					}
@@ -4700,10 +4748,13 @@
 
 				binding.state.list = [];
 
+				/* An item may name several classes, as the attribute class does ('three position-1'): a DOMTokenList refused the space and the render threw. */
 				var i = 0;
 				while (i < value.length) {
 					if (value[i] != null && String(value[i]))
-						binding.state.list.push(String(value[i]));
+						binding.state.list.push.apply(binding.state.list, String(value[i]).split(/\s+/).filter(function (word) {
+							return word !== '';
+						}));
 
 					i++;
 				}
@@ -5216,9 +5267,16 @@
 
 			component.$Update(changed);
 
-			/* A deferred Component hears them once it is made; before, they are the props it is made with. */
-			while (instance && instance._Component && instance._Component() && instance._Component() !== instance)
+			/*
+			 * A deferred Component hears them once it is made; before, they are the props it is made with. It hears them
+			 * under the names of its state ([label] is Label), as its definition spells them.
+			 */
+			while (instance && instance._Component && instance._Component() && instance._Component() !== instance) {
+				if (instance._Definition && instance._Definition())
+					changed = canonicalDeferredInput(changed, instance._Definition());
+
 				instance = instance._Component();
+			}
 
 			if (instance && !instance._Component && typeof instance.$OnProps === 'function') {
 				Runtime.Untracked(function () {
@@ -5408,6 +5466,12 @@
 			if (from.__ElemenxRoot && to && to.nodeType === 1)
 				Runtime.RootAttributes(to, from.__ElemenxRoot.Values, definition);
 
+			/* The #name of the tag goes with it, as the class and the style do. */
+			if (from.__ElemenxRefName && to && to.nodeType === 1) {
+				to.__ElemenxRefName = from.__ElemenxRefName;
+				to.__ElemenxRefOwner = from.__ElemenxRefOwner;
+			}
+
 			if (!records) return;
 
 			placedDirectives.delete(from);
@@ -5570,6 +5634,8 @@
 
 				/* Instance: state */
 				var refs = {};
+				/* The references of a part of a Component (a row of its *for, the content of its *if) are the Component's, for $Refs. */
+				var refOwner = (directState && options.Owner && refOwners.get(options.Owner)) || refs;
 				var outlets = {};
 				var bindings = [];
 				var models = [];
@@ -5600,7 +5666,7 @@
 				structuralSeen = new Map();
 
 				try {
-					collectRefs(root, refs);
+					collectRefs(root, refs, refOwner);
 
 					collectOutlets(root, outlets);
 
@@ -5627,6 +5693,28 @@
 
 				function Ref (name) {
 					return findRef(root, refs, name);
+				}
+
+				/* Every element of the Component named #name (the rows of a *for), in the order of the document. */
+				function Refs (name) {
+					var key = String(name).toLowerCase();
+					var found = [];
+					var nodes;
+					var i = 0;
+
+					if (root.nodeType === 1 && root.__ElemenxRefName === key && root.__ElemenxRefOwner === refOwner)
+						found.push(root);
+
+					nodes = root.querySelectorAll ? root.querySelectorAll('*') : [];
+
+					while (i < nodes.length) {
+						if (nodes[i].__ElemenxRefName === key && nodes[i].__ElemenxRefOwner === refOwner)
+							found.push(nodes[i]);
+
+						i++;
+					}
+
+					return found;
 				}
 
 				function listen (node, name, callback) {
@@ -5801,6 +5889,7 @@
 						return root;
 					},
 					$Ref: Ref,
+					$Refs: Refs,
 					$On: On,
 					$Emit: Emit,
 					$Parent: Parent,
@@ -5843,6 +5932,9 @@
 						}
 					});
 				}
+
+				refOwners.set(api, refOwner);
+				refOwners.set(apiTarget, refOwner);
 
 				/* Instance: ownership and router */
 				Runtime.AttachOwnerFacades(api, name || 'Component', messagingInstanceSequence++);
@@ -8876,6 +8968,12 @@
 					var element = child && child.$Element();
 					if (values && element && element.nodeType === 1)
 						Runtime.RootAttributes(element, values, factory.Definition);
+
+					/* A bug: #name on a Component tag named nothing, the tag gone; it names the root of the instance. */
+					if (tag && tag.__ElemenxRefName && element && element.nodeType === 1) {
+						element.__ElemenxRefName = tag.__ElemenxRefName;
+						element.__ElemenxRefOwner = tag.__ElemenxRefOwner;
+					}
 				}
 
 				function createChild (data) {

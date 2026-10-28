@@ -1,0 +1,22 @@
+.elemenx-diagram {
+	display: block;
+	width: 100%;
+	max-width: 100%;
+	overflow-x: auto;
+}
+
+.elemenx-diagram svg {
+	display: block;
+	max-width: 100%;
+	height: auto;
+}
+
+.elemenx-diagram-error {
+	padding: 8px 12px;
+	border: 1px solid var(--elemenx-danger);
+	border-radius: var(--elemenx-radius-small);
+	color: var(--elemenx-danger);
+	font-family: var(--elemenx-font-mono), monospace;
+	font-size: var(--elemenx-font-size-small);
+	white-space: pre-wrap;
+}

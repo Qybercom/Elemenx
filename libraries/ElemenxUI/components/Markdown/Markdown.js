@@ -6,7 +6,8 @@
  * of the Library instead, as a page of an Application: a table is an elemenx-table, a list an elemenx-ul or an
  * elemenx-ol, a quote an elemenx-callout, a link an elemenx-link, code (a block or in a line) an elemenx-code, a rule
  * an elemenx-divider. Without Value the text is the body of the element (<Markdown>## A title</Markdown>), without the
- * indentation its lines share: the body follows its changes.
+ * indentation its lines share: the body follows its changes. The plugins of the RichText Service draw what Markdown
+ * has no element for: ```mermaid a Diagram, ```chart a Chart, ::: warning a callout... (RichText.Extend adds more).
  */
 Elemenx.Component('Markdown', {
 	$TemplateURL: 'Markdown.html',
@@ -65,10 +66,13 @@ Elemenx.Component('Markdown', {
 			return {Source: source, Text: bodyText};
 		};
 
-		/* The languages of the fences of a text, in their order. */
+		var mounted = null;
+
+		/* The languages of the fences of a text that stay code, in their order: a fence of a plugin is no <pre>. */
 		function languages (text) {
 			var list = [];
 			var open = null;
+			var rich = self.$Service('RichText');
 
 			String(text || '').split('\n').forEach(function (line) {
 				var match = /^ {0,3}(`{3,}|~{3,})\s*([\w+#.-]*)/.exec(line);
@@ -83,12 +87,21 @@ Elemenx.Component('Markdown', {
 				if (!open) {
 					open = match[1];
 
-					list.push(match[2].toLowerCase());
+					if (!match[2] || !rich.PluginFor('fence', match[2]))
+						list.push(match[2].toLowerCase());
 				}
 			});
 
 			return list;
 		}
+
+		/* The plugins drawn last, taken away before the next drawing and with the component. */
+		this.Unmount = function () {
+			if (mounted)
+				mounted.Destroy();
+
+			mounted = null;
+		};
 
 		/* The classes of the interface of the Library on the elements of a document (Look 'interface'). */
 		var looks = {table: 'elemenx-table', ul: 'elemenx-ul', ol: 'elemenx-ol', blockquote: 'elemenx-callout neutral', a: 'elemenx-link', pre: 'elemenx-code', 'code:not(pre code)': 'elemenx-code', hr: 'elemenx-divider'};
@@ -104,6 +117,8 @@ Elemenx.Component('Markdown', {
 
 			return {
 				Render: function (container) {
+					self.Unmount();
+
 					container.innerHTML = html;
 
 					if (source)
@@ -116,16 +131,19 @@ Elemenx.Component('Markdown', {
 							});
 						});
 
-					if (highlight === false || highlight === 'false') return;
+					if (highlight !== false && highlight !== 'false') {
+						Array.prototype.forEach.call(container.querySelectorAll('pre'), function (pre, index) {
+							var language = names[index];
+							if (!language || !syntax.Find(language)) return;
 
-					Array.prototype.forEach.call(container.querySelectorAll('pre'), function (pre, index) {
-						var language = names[index];
-						if (!language || !syntax.Find(language)) return;
+							pre.setAttribute('data-language', language);
 
-						pre.setAttribute('data-language', language);
+							pre.innerHTML = syntax.HTML(pre.textContent, language);
+						});
+					}
 
-						pre.innerHTML = syntax.HTML(pre.textContent, language);
-					});
+					/* The plugins of the document (a diagram, a chart, a callout), last: the looks above are not theirs. */
+					mounted = self.$Service('RichText').Mount(container, {Application: self.$Application()});
 				}
 			};
 		};
@@ -151,5 +169,7 @@ Elemenx.Component('Markdown', {
 	$OnDestroy: function () {
 		if (this.Watcher)
 			this.Watcher.disconnect();
+
+		this.Unmount();
 	}
 });

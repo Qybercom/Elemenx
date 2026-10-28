@@ -1,0 +1,6 @@
+<div class="elemenx-sampler" [style.--elemenx-sampler-columns]="Columns" tabindex="0" role="group" [attribute.aria-label]="Label || $T('ui.sampler.label')" (keydown)="KeyDown" (keyup)="KeyUp">
+	<button type="button" class="elemenx-sampler-pad" *for="pad of Pads" *key="pad.ID" tabindex="-1" [class.active]="Lit.indexOf(pad.ID) !== -1" [class.empty]="!Ready(pad, Loaded)" [class.over]="Over === pad.ID" [style.--elemenx-sampler-color]="pad.Color || null" [attribute.data-id]="pad.ID" [attribute.aria-label]="pad.Label || pad.ID" [attribute.aria-pressed]="Lit.indexOf(pad.ID) !== -1 ? 'true' : 'false'" (pointerdown)="Down" (pointerup)="Up" (pointercancel)="Up" (pointerleave)="Up" (dragover)="DragOver" (dragleave)="DragLeave" (drop)="Drop">
+		<span class="elemenx-sampler-label">{{pad.Label || pad.ID}}</span>
+		<span class="elemenx-sampler-key" *if="pad.Key">{{pad.Key}}</span>
+	</button>
+</div>

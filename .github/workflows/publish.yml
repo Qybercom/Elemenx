@@ -5,9 +5,9 @@
 # workflow file and the environment npm as its trusted publisher, with npm publish allowed. A version with a
 # prerelease part (0.9.1-beta.1) goes to the dist-tag next, not latest. Last, in a job of its own, it creates the
 # GitHub release of the tag, with notes made of the changes since the last release and the files of dist attached:
-# every script, manifest.json, the extensions of the editors, and all of dist in one zip. The extensions need an
-# IntelliJ IDEA that Gradle downloads (its cache comes from the builds of main in ci.yml): a failure there leaves npm
-# published, and Re-run failed jobs makes the release alone.
+# every script, manifest.json and all of dist in one zip. Then each extension of the editors in a job of its own, in
+# parallel, attached to the release and put in its marketplaces: a failure there leaves npm and the release made, and
+# Re-run failed jobs makes that extension alone.
 name: Publish
 
 on:
@@ -82,20 +82,10 @@ jobs:
           fi
 
   release:
-    name: GitHub release with the editors
+    name: GitHub release
     needs: publish
     runs-on: ubuntu-latest
-    timeout-minutes: 40
-    # dist builds the extensions of the editors: the plugin of IntelliJ against an IntelliJ IDEA that Gradle downloads.
-    # The marketplaces take them when their secrets are set (docs/EDITORS.md): a step without its secret is skipped.
-    env:
-      ELEMENX_INTELLIJ: download
-      VSCE_PAT: ${{ secrets.VSCE_PAT }}
-      OVSX_PAT: ${{ secrets.OVSX_PAT }}
-      JETBRAINS_TOKEN: ${{ secrets.JETBRAINS_TOKEN }}
-      JETBRAINS_CERTIFICATE_CHAIN: ${{ secrets.JETBRAINS_CERTIFICATE_CHAIN }}
-      JETBRAINS_PRIVATE_KEY: ${{ secrets.JETBRAINS_PRIVATE_KEY }}
-      JETBRAINS_PRIVATE_KEY_PASSWORD: ${{ secrets.JETBRAINS_PRIVATE_KEY_PASSWORD }}
+    timeout-minutes: 20
     permissions:
       contents: write
     steps:
@@ -104,12 +94,6 @@ jobs:
         with:
           node-version: 24
           cache: npm
-      - uses: actions/setup-java@v5
-        with:
-          distribution: temurin
-          java-version: 21
-      # The Gradle and the IntelliJ IDEA of the builds of main: read here, not written (a tag is no default branch).
-      - uses: gradle/actions/setup-gradle@v5
       - run: npm ci
       - name: GitHub release with the files of dist
         env:
@@ -124,70 +108,100 @@ jobs:
           case "$version" in
             *-*) prerelease="--prerelease" ;;
           esac
-          npm run dist
-          # Every file of the release of the version of the tag: the scripts, manifest.json, the extensions.
+          npm run dist -- --no-editors
+          # Every file of the release of the version of the tag: the scripts, manifest.json.
           npm run version:built
           (cd dist && zip -qr "../elemenx-$version.zip" .)
-          gh release create "$GITHUB_REF_NAME" --verify-tag --title "Elemenx $version" --generate-notes $prerelease dist/*.js dist/manifest.json dist/editors/* "elemenx-$version.zip"
-      # The extensions in the marketplaces, with the version of Elemenx; a prerelease as a pre-release (VS Code) or in the
-      # channel beta (JetBrains). A version there already is skipped, so Re-run failed jobs goes on from the step that failed.
-      - name: VS Code Marketplace
-        if: env.VSCE_PAT != ''
-        run: |
-          [ -f dist/editors/elemenx-vscode.vsix ] || npm run dist
-          case "$(node -p "require('./package.json').version")" in
-            *-*) pre=--pre-release ;;
-            *) pre= ;;
-          esac
-          npx --yes @vscode/vsce@4.0.0 publish --packagePath dist/editors/elemenx-vscode.vsix --skip-duplicate $pre -p "$VSCE_PAT"
-      - name: Open VSX (VSCodium, Cursor, Windsurf)
-        if: env.OVSX_PAT != ''
-        run: |
-          [ -f dist/editors/elemenx-vscode.vsix ] || npm run dist
-          case "$(node -p "require('./package.json').version")" in
-            *-*) pre=--pre-release ;;
-            *) pre= ;;
-          esac
-          npx --yes ovsx@0.10.1 publish dist/editors/elemenx-vscode.vsix --skip-duplicate $pre -p "$OVSX_PAT"
-      - name: JetBrains Marketplace
-        if: env.JETBRAINS_TOKEN != ''
-        run: |
-          channel=default
-          case "$(node -p "require('./package.json').version")" in
-            *-*) channel=beta ;;
-          esac
-          sh editors/intellij/gradlew --project-dir editors/intellij publishPlugin --no-daemon -PpluginChannel="$channel"
+          gh release create "$GITHUB_REF_NAME" --verify-tag --title "Elemenx $version" --generate-notes $prerelease dist/*.js dist/manifest.json "elemenx-$version.zip"
 
-  visualstudio:
-    name: Visual Studio
+  editors:
+    name: Editor ${{ matrix.editor }}
     needs: release
-    runs-on: windows-latest
-    timeout-minutes: 30
-    # The extension of Visual Studio 2022: built with the MSBuild of the Visual Studio of the runner, attached to the
-    # release, and published to the Visual Studio Marketplace with the token of VS Code (the same publisher) when it is set.
+    # Each extension in a job of its own, in parallel: built from the tag, checked to be of its version, attached to the
+    # release, then put in its marketplaces when their secrets are set (docs/EDITORS.md); a step without its secret is
+    # skipped, a version there already too, so Re-run failed jobs goes on from the step that failed. The plugin of
+    # IntelliJ is built against an IntelliJ IDEA that Gradle downloads (its cache comes from the builds of main in ci.yml).
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - editor: vscode
+            os: ubuntu-latest
+            file: elemenx-vscode.vsix
+          - editor: intellij
+            os: ubuntu-latest
+            file: elemenx-intellij.zip
+          - editor: visualstudio
+            os: windows-latest
+            file: elemenx-visualstudio.vsix
     env:
+      ELEMENX_INTELLIJ: download
       VSCE_PAT: ${{ secrets.VSCE_PAT }}
+      OVSX_PAT: ${{ secrets.OVSX_PAT }}
+      JETBRAINS_TOKEN: ${{ secrets.JETBRAINS_TOKEN }}
+      JETBRAINS_CERTIFICATE_CHAIN: ${{ secrets.JETBRAINS_CERTIFICATE_CHAIN }}
+      JETBRAINS_PRIVATE_KEY: ${{ secrets.JETBRAINS_PRIVATE_KEY }}
+      JETBRAINS_PRIVATE_KEY_PASSWORD: ${{ secrets.JETBRAINS_PRIVATE_KEY_PASSWORD }}
     permissions:
       contents: write
+    defaults:
+      run:
+        shell: bash
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
         with:
           node-version: 24
           cache: npm
+      - uses: actions/setup-java@v5
+        if: matrix.editor == 'intellij'
+        with:
+          distribution: temurin
+          java-version: 21
+      # The Gradle and the IntelliJ IDEA of the builds of main: read here, not written (a tag is no default branch).
+      - uses: gradle/actions/setup-gradle@v5
+        if: matrix.editor == 'intellij'
       - run: npm ci
-      - name: The extension of Visual Studio
+      - name: The extension, of the version of the tag
         run: |
           npm run dist -- --no-editors
-          node editors/build.js --visualstudio --no-intellij
-      - name: Of the version of the tag
-        run: npm run version:built
+          node editors/build.js --only ${{ matrix.editor }}
+          npm run version:built
       - name: Attached to the release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release upload "$env:GITHUB_REF_NAME" dist/editors/elemenx-visualstudio.vsix --clobber
+        run: gh release upload "$GITHUB_REF_NAME" dist/editors/${{ matrix.file }} --clobber
+      # The extensions in the marketplaces, with the version of Elemenx; a prerelease as a pre-release (VS Code) or in the
+      # channel beta (JetBrains).
+      - name: VS Code Marketplace
+        if: matrix.editor == 'vscode' && env.VSCE_PAT != ''
+        run: |
+          case "$(node -p "require('./package.json').version")" in
+            *-*) pre=--pre-release ;;
+            *) pre= ;;
+          esac
+          npx --yes @vscode/vsce@4.0.0 publish --packagePath dist/editors/elemenx-vscode.vsix --skip-duplicate $pre -p "$VSCE_PAT"
+      - name: Open VSX (VSCodium, Cursor, Windsurf)
+        if: matrix.editor == 'vscode' && env.OVSX_PAT != ''
+        run: |
+          case "$(node -p "require('./package.json').version")" in
+            *-*) pre=--pre-release ;;
+            *) pre= ;;
+          esac
+          npx --yes ovsx@0.10.1 publish dist/editors/elemenx-vscode.vsix --skip-duplicate $pre -p "$OVSX_PAT"
+      - name: JetBrains Marketplace
+        if: matrix.editor == 'intellij' && env.JETBRAINS_TOKEN != ''
+        run: |
+          channel=default
+          case "$(node -p "require('./package.json').version")" in
+            *-*) channel=beta ;;
+          esac
+          sh editors/intellij/gradlew --project-dir editors/intellij publishPlugin --no-daemon -PpluginChannel="$channel"
       - name: Visual Studio Marketplace
-        if: env.VSCE_PAT != ''
+        if: matrix.editor == 'visualstudio' && env.VSCE_PAT != ''
+        shell: pwsh
         run: |
           $publisher = Get-ChildItem "$env:USERPROFILE\.nuget\packages\microsoft.vssdk.buildtools" -Recurse -Filter VsixPublisher.exe | Where-Object { $_.Directory.Name -eq 'bin' } | Select-Object -First 1
           & $publisher.FullName publish -payload dist\editors\elemenx-visualstudio.vsix -publishManifest editors\visualstudio\publishManifest.json -personalAccessToken $env:VSCE_PAT -ignoreWarnings "VSIXValidatorWarning01,VSIXValidatorWarning02"

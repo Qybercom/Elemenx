@@ -1,6 +1,9 @@
-<label class="elemenx-toggle" [class]="[Size || 'medium', Checked ? 'checked' : '', Disabled ? 'disabled' : '']">
-	<input class="elemenx-check-input" type="checkbox" role="switch" [checked]="Checked" [disabled]="Disabled" [attribute.name]="Name" [attribute.aria-checked]="String(!!Checked)" (change)="Toggled" />
-	<span class="elemenx-toggle-track" aria-hidden="true"><span class="elemenx-toggle-thumb"></span></span>
+<label class="elemenx-toggle" [class]="[Size || 'medium', Orientation === 'vertical' ? 'vertical' : '', Three(States) ? 'three position-' + Position(Value) : '', !Three(States) && Checked ? 'checked' : '', Disabled ? 'disabled' : '']" (click)="Pressed">
+	<input class="elemenx-check-input" type="checkbox" role="switch" *if="!Three(States)" [checked]="Checked" [disabled]="Disabled" [attribute.name]="Name" [attribute.aria-checked]="String(!!Checked)" (change)="Toggled" />
+	<span class="elemenx-toggle-track" aria-hidden="true" *if="!Three(States)"><span class="elemenx-toggle-thumb"></span></span>
+	<span class="elemenx-toggle-track" #Track *if="Three(States)" role="slider" [attribute.tabindex]="Disabled ? '-1' : '0'" aria-valuemin="0" aria-valuemax="2" [attribute.aria-valuenow]="String(Position(Value))" [attribute.aria-valuetext]="Names(Labels)[Position(Value)]" [attribute.aria-label]="Label || null" [attribute.aria-disabled]="Disabled ? 'true' : null" [attribute.aria-orientation]="Orientation === 'vertical' ? 'vertical' : 'horizontal'" (keydown)="Keyed"><span class="elemenx-toggle-stop" aria-hidden="true" *for="name of Names(Labels)" *key="$index"></span><span class="elemenx-toggle-thumb"></span></span>
+	<input type="hidden" *if="Three(States) && Name" [attribute.name]="Name" [value]="String([false, null, true][Position(Value)])" />
+	<span class="elemenx-toggle-names" aria-hidden="true" *if="Three(States) && ShowLabels"><span class="elemenx-toggle-name" *for="name of Names(Labels)" *key="$index" [class.current]="$index === Position(Value)">{{name}}</span></span>
 	<span class="elemenx-check-text" *if="Label || Description">
 		<span class="elemenx-check-label" *if="Label">{{Label}}</span>
 		<span class="elemenx-caption" *if="Description">{{Description}}</span>

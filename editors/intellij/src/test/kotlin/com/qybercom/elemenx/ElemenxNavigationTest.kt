@@ -107,6 +107,28 @@ class ElemenxNavigationTest : BasePlatformTestCase() {
 		assertTrue(handlers.toString(), handlers.indexOf("ElemenxGotoDeclaration") in 0 until lsp)
 	}
 
+	/** Regression: Ctrl+click on $T, or on its key, went nowhere. $T goes to elemenx.js, a key to the name of its phrase in the nearest locales. */
+	fun testTAndItsKeyGoToTheFrameworkAndToThePhrase() {
+		if (Language.findLanguageByID("JavaScript") == null) return
+
+		val framework = "(function () {\n\tvar Locale = {\n\t\t\t\$T: function (key) {\n\t\t\t\treturn key;\n\t\t\t}\n\t};\n})();\n"
+		val library = "{\n\t\"ui\": {\n\t\t\"label\": \"Label\",\n\t\t\"call\": {\n\t\t\t\"label\": \"Call\",\n\t\t\t\"leave\": \"Leave\"\n\t\t}\n\t}\n}\n"
+		val application = "{\n\t\"board\": {\n\t\t\"title\": \"Board\"\n\t}\n}\n"
+		val page = "<button [title]=\"\$T('ui.call.leave')\">{{ \$T('board.title') }}</button>\n"
+
+		myFixture.addFileToProject("elemenx.js", framework)
+		myFixture.addFileToProject("libraries/Kit/locales/ru.json", "{\"ui\": {\"call\": {\"leave\": \"Выйти\"}}}\n")
+		myFixture.addFileToProject("libraries/Kit/locales/en.json", library)
+		myFixture.addFileToProject("app/locales/en.json", application)
+		myFixture.addFileToProject("app/Board.js", "Elemenx.Component('Board', {\n\t\$TemplateURL: 'Board.html'\n});\n")
+
+		val file = myFixture.addFileToProject("app/Board.html", page)
+
+		assertEquals(listOf("elemenx.js:" + framework.indexOf("\$T:")), targets(file, page.indexOf("\$T(") + 1))
+		assertEquals(listOf("en.json:" + library.indexOf("\"leave\"")), targets(file, page.indexOf("ui.call") + 4))
+		assertEquals(listOf("en.json:" + application.indexOf("\"title\"")), targets(file, page.indexOf("board.title") + 2))
+	}
+
 	fun testAVariableOfALoopGoesToItsFor() {
 		if (Language.findLanguageByID("JavaScript") == null) return
 

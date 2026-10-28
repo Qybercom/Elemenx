@@ -32,7 +32,7 @@ describe('Contract: the form fields of ElemenxUI', function () {
 	beforeAll(async function () {
 		await loadElemenx();
 
-		Use(['DateInput', 'TimeInput', 'PhoneInput', 'MoneyInput', 'MultiSelect', 'FileUpload', 'TextArea', 'Field', 'Input', 'Select']);
+		Use(['DateInput', 'TimeInput', 'PhoneInput', 'MoneyInput', 'MultiSelect', 'FileUpload', 'TextArea', 'Field', 'Input', 'Select', 'Form', 'service:Forms']);
 	});
 
 	beforeEach(function () {
@@ -265,6 +265,62 @@ describe('Contract: the form fields of ElemenxUI', function () {
 
 		expect(events).toEqual(['input 27', 'change 27']);
 		expect(area.offsetHeight).toBeGreaterThan(before);
+	});
+
+	it('Form nests the values of Fields named by parts (user[name], items[ID][title], tags[]) and follows the rows of a *for that come and go', async function () {
+		var sent = [];
+		var host = mount('<div><Form (submit)="Sent"><Field Name="user[name]" Label="Name"><Input Value="Ada" /></Field><Field Name="user[address][city]" Label="City"><Input Value="London" /></Field><Field *for="item of Items" *key="item.ID" [name]="\'items[\' + item.ID + \'][title]\'" Label="Title"><Input [value]="item.Title" /></Field><Field Name="tags[]" Label="Tag"><Input Value="red" /></Field><Field Name="tags[]" Label="Tag"><Input Value="blue" /></Field><button type="submit">Send</button></Form></div>', {
+			Items: [{ID: 1, Title: 'Pen'}, {ID: 4, Title: 'Ink'}],
+			Sent: function (detail) {
+				sent.push(JSON.parse(JSON.stringify(detail.Value)));
+			}
+		});
+		var send = function () {
+			host.$Element().querySelector('button[type="submit"]').click();
+		};
+
+		/* The Fields join the Form once they are in the page, a task later: until the last of them has, the value lacks it. */
+		expect(await waitFor(function () {
+			sent = [];
+
+			send();
+
+			return sent.length && sent[0].tags && sent[0].tags.length === 2;
+		}, 3000)).toBeTruthy();
+
+		type(host.$Element().querySelectorAll('.elemenx-input-control')[1], 'Paris');
+
+		sent = [];
+
+		send();
+
+		expect(await waitFor(function () {
+			return sent.length === 1;
+		})).toBe(true);
+		expect(sent[0]).toEqual({user: {name: 'Ada', address: {city: 'Paris'}}, items: [{title: 'Pen'}, {title: 'Ink'}], tags: ['red', 'blue']});
+
+		/* A row that goes takes its value with it; one that comes adds its own; the last one takes the list. */
+		host.Items = [{ID: 4, Title: 'Ink'}, {ID: 9, Title: 'Nib'}];
+
+		await tick();
+
+		send();
+
+		expect(await waitFor(function () {
+			return sent.length === 2;
+		})).toBe(true);
+		expect(sent[1].items).toEqual([{title: 'Ink'}, {title: 'Nib'}]);
+
+		host.Items = [];
+
+		await tick();
+
+		send();
+
+		expect(await waitFor(function () {
+			return sent.length === 3;
+		})).toBe(true);
+		expect(sent[2]).toEqual({user: {name: 'Ada', address: {city: 'Paris'}}, tags: ['red', 'blue']});
 	});
 
 	/* A bug: the Label of a Field named nothing, so a screen reader read a field without a name (and getByLabel found none). */

@@ -196,6 +196,73 @@ describe('Regression: deferred structural composition', function () {
 		}
 	});
 
+	it('a child whose script loads later is made with the [props] its owner changed while it loaded', async function () {
+		var head = document.head;
+		var append = head.appendChild;
+		var held = null;
+		var root = unique('DeferredLateRoot');
+		var app;
+
+		window.DeferredLateReady = null;
+		window.DeferredLateHeard = [];
+
+		head.appendChild = function (node) {
+			if (node.tagName === 'SCRIPT' && String(node.src).toLowerCase().indexOf('deferredlatechild.js') !== -1) {
+				held = node;
+
+				return node;
+			}
+
+			return append.call(this, node);
+		};
+
+		try {
+			Elemenx.Component(root, {
+				$Template: '<main><b #Mark>mark</b><DeferredLateChild [label]="Text" [node]="Mark"></DeferredLateChild></main>',
+				Text: 'first',
+				Mark: null,
+
+				/* As an example sets an element of its template, once it is there. */
+				$OnReady: function () {
+					this.Mark = this.$Ref('Mark');
+				}
+			});
+
+			app = Elemenx.Application(unique('DeferredLateApp'), {
+				$Component: root,
+				$Root: '/deferred-structural',
+				$Mount: '#mount'
+			});
+
+			live.push(app);
+
+			expect(await appReady(app)).not.toBe(false);
+			expect(await waitFor(function () { return held; }, 1500)).not.toBe(false);
+
+			app.$Component().$Update({Text: 'second'});
+
+			head.appendChild = append;
+
+			append.call(head, held);
+
+			expect(await waitFor(function () { return document.querySelector('.deferred-late-child'); }, 1500)).not.toBe(false);
+
+			expect(window.DeferredLateReady).toEqual({Label: 'second', Node: 'B'});
+			expect(document.querySelector('.deferred-late-label').textContent).toBe('second');
+			expect(document.querySelector('.deferred-late-node').textContent).toBe('B');
+
+			app.$Component().$Update({Text: 'third'});
+
+			expect(document.querySelector('.deferred-late-label').textContent).toBe('third');
+			expect(window.DeferredLateHeard).toEqual([['Label']]);
+		}
+		finally {
+			head.appendChild = append;
+		}
+
+		destroy(app);
+	});
+
 	it('deferred-for-direct: unresolved component works directly under keyed data-for', async function () {
 		var app = appWithTemplate('<div><DeferredDirectChild *for="item of items" *key="item.id" id="{{item.id}}" name="{{item.name}}"></DeferredDirectChild></div>', function () {
 			this.items = [{id: 1, name: 'A'}, {id: 2, name: 'B'}];

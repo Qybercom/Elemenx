@@ -18,12 +18,18 @@
  *   Pattern(expression or text), Equal(name, other) for a group, and Custom(key, test(value, control)).
  * - Message(errors): the phrase of the first error (ui.forms.<key>, ui.forms.invalid for a key without one), or the
  *   text an error gives itself ({key: 'text'}).
+ * - The names of fields, as the forms of a server read them: Path(name) gives the parts of user[address][city] (or
+ *   user.address.city), items[2][name] and tags[] (['tags', '']: the end of an array). Get takes them too.
+ *   Place(group, path, node) puts a node at such a path, making the groups and arrays on the way (an array where the
+ *   next part is an index or []): Value is then nested, {user: {address: {city}}, items: [{name}], tags: [...]}, an
+ *   array without the places no field filled (items[5] alone is [value]). Detach(node) takes a node out (an array keeps
+ *   the places of the others), and the groups and arrays Place made that are empty then.
  * Form and Field use these models: a Form gives Fields their controls by Name and validates them on submit.
  */
 Elemenx.Service('Forms', {
 	$Meta: {
 		Description: 'The models of forms: the values a form collects and their validation, as the forms of Angular have them.',
-		Methods: ['Control(value, validators)', 'Group(controls, validators)', 'Array(controls, validators)', 'Message(errors)']
+		Methods: ['Control(value, validators)', 'Group(controls, validators)', 'Array(controls, validators)', 'Message(errors)', 'Path(name)', 'Place(group, path, node)', 'Detach(node)']
 	},
 	$OnCreate: function () {
 		var self = this;
@@ -190,12 +196,12 @@ Elemenx.Service('Forms', {
 			},
 
 			Get: function (path) {
-				var names = Array.isArray(path) ? path : String(path).split('.');
+				var names = Array.isArray(path) ? path : self.Path(path);
 				var node = this;
 				var i = 0;
 
 				while (node && i < names.length) {
-					node = node.Controls ? node.Controls[names[i]] || null : null;
+					node = node.Controls && names[i] !== '' ? node.Controls[names[i]] || null : null;
 
 					i++;
 				}
@@ -442,30 +448,42 @@ Elemenx.Service('Forms', {
 					});
 				},
 
+				/* The keys of the nodes: the names of a group; the indexes of an array that hold one (items[5] alone leaves 0 to 4 empty). */
 				Keys: function () {
-					return kind === 'array' ? this.Controls.map(function (item, index) {
-						return index;
-					}) : Object.keys(this.Controls);
+					var keys = [];
+
+					if (kind !== 'array')
+						return Object.keys(this.Controls);
+
+					this.Controls.forEach(function (item, index) {
+						keys.push(index);
+					});
+
+					return keys;
 				},
 
 				SetValue: function (next) {
 					this.Patch(next);
 				},
 
+				/* The values given by name (a group), or in the order of the nodes (an array: its value has no empty places). */
 				Patch: function (next) {
 					var controls = this.Controls;
 
-					this.Keys().forEach(function (key) {
-						if (next && Object.prototype.hasOwnProperty.call(next, key))
-							controls[key].Patch(next[key]);
+					this.Keys().forEach(function (key, order) {
+						var at = kind === 'array' ? order : key;
+						if (next && Object.prototype.hasOwnProperty.call(next, at))
+							controls[key].Patch(next[at]);
 					});
 				},
 
 				Reset: function (next) {
 					var controls = this.Controls;
 
-					this.Keys().forEach(function (key) {
-						if (next && Object.prototype.hasOwnProperty.call(next, key)) controls[key].Reset(next[key]);
+					this.Keys().forEach(function (key, order) {
+						var at = kind === 'array' ? order : key;
+
+						if (next && Object.prototype.hasOwnProperty.call(next, at)) controls[key].Reset(next[at]);
 						else controls[key].Reset();
 					});
 				},
@@ -541,6 +559,87 @@ Elemenx.Service('Forms', {
 
 			return array;
 		};
+
+		/* Puts a node at a key of a group or an array: '' at the end of an array (tags[]). */
+		function put (parent, key, item) {
+			if (parent.Kind === 'array') {
+				if (key === '')
+					return parent.Push(item);
+
+				parent.Controls[Number(key)] = parent.Adopt(item);
+
+				parent.Changed();
+
+				return item;
+			}
+
+			return parent.Add(key, item);
+		}
+
+		/*
+		 * Puts a node at a path of a group (Path: user[address][city], items[2][name], tags[]), making the groups and the
+		 * arrays on the way that are not there (an array where the next part is an index or []); they are Made, so
+		 * Detach takes them away once empty.
+		 */
+		this.Place = function (group, path, item) {
+			var names = Array.isArray(path) ? path : self.Path(path);
+			var node = group;
+			var child;
+			var i = 0;
+
+			while (i < names.length - 1) {
+				child = names[i] === '' ? null : node.Controls[names[i]] || null;
+
+				if (child && !child.Controls)
+					throw new Error('Elemenx Forms: ' + names.slice(0, i + 1).join('.') + ' is a value, not a group, in ' + names.join('.'));
+
+				if (!child) {
+					child = names[i + 1] === '' || /^\d+$/.test(names[i + 1]) ? self.Array([]) : self.Group({});
+					child.Made = true;
+
+					put(node, names[i], child);
+				}
+
+				node = child;
+
+				i++;
+			}
+
+			return put(node, names[names.length - 1], item);
+		};
+
+		/* Takes a node out of its group or array (an array keeps the places of the others), and the Made ones around it that are empty then. */
+		this.Detach = function (item) {
+			var parent = item.Parent;
+			if (!parent) return;
+
+			/* By ID: a node read through the state of a Component is a reactive copy, never the same object. */
+			parent.Keys().forEach(function (key) {
+				if (parent.Controls[key] && parent.Controls[key].ID === item.ID)
+					delete parent.Controls[key];
+			});
+
+			item.Parent = null;
+
+			if (parent.Made && !parent.Keys().length) self.Detach(parent);
+			else parent.Changed();
+		};
+	},
+
+	/*
+	 * The parts of the name of a field: user[address][city] and user.address.city give ['user', 'address', 'city'],
+	 * items[2][name] ['items', '2', 'name'], tags[] ['tags', ''] (the end of an array).
+	 */
+	Path: function (name) {
+		var parts = [];
+		var pattern = /\[([^\]]*)\]|([^.[\]]+)/g;
+		var match;
+
+		while ((match = pattern.exec(String(name)))) {
+			parts.push(match[1] !== undefined ? match[1] : match[2]);
+		}
+
+		return parts;
 	},
 
 	/* The phrase of the first error: the text an error gives itself, or ui.forms.<key> with its params. */

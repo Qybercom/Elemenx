@@ -4,6 +4,7 @@ import com.intellij.codeInsight.navigation.actions.GotoDeclarationHandler
 import com.intellij.lang.injection.InjectedLanguageManager
 import com.intellij.navigation.DirectNavigationProvider
 import com.intellij.openapi.editor.Editor
+import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiManager
 import com.intellij.psi.util.PsiTreeUtil
@@ -30,9 +31,19 @@ class ElemenxGotoDeclaration : GotoDeclarationHandler {
 
 		if ((host !is XmlText && host !is XmlAttributeValue) || !element.containingFile.text.startsWith("(/**")) return null
 
+		val page = host.containingFile?.originalFile?.virtualFile ?: return null
+
+		/* The key of $T('key'): to its phrase in the nearest locales (regression: Ctrl+click on it went nowhere). */
+		ElemenxPhrases.keyAt(element.containingFile.text, element.textRange.startOffset + 1)?.let { key ->
+			return ElemenxPhrases.phrase(page, key)?.let { (file, at) -> target(element, file, at) }
+		}
+
 		/* The path of keys that ends at the name: CallState.Muted for Muted, Title for Title. */
 		val before = element.containingFile.text.substring(0, element.textRange.endOffset)
 		val path = Regex("([A-Za-z_$][\\w$]*(?:\\s*\\.\\s*[A-Za-z_$][\\w$]*)*)$").find(before)?.groupValues?.get(1)?.split('.')?.map { key -> key.trim() } ?: return null
+
+		/* $T: to its definition in elemenx.js. */
+		if (path == listOf("\$T")) return ElemenxPhrases.framework(page)?.let { (file, at) -> target(element, file, at) }
 
 		/* A variable of a loop goes to the *for that declares it: the item of a row comes before the fields of its Component. */
 		loop(host, path.first())?.let { target -> return arrayOf(target) }
@@ -43,6 +54,9 @@ class ElemenxGotoDeclaration : GotoDeclarationHandler {
 
 		return file.findElementAt(at)?.let { target -> arrayOf(target) }
 	}
+
+	/** The element at an offset of a file, as a target. */
+	private fun target(source: PsiElement, file: VirtualFile, at: Int): Array<PsiElement>? = PsiManager.getInstance(source.project).findFile(file)?.findElementAt(at)?.let { found -> arrayOf(found) }
 
 	/** The name in the *for of a tag around the host that declares a variable of that name, or null. */
 	private fun loop(host: PsiElement, name: String): PsiElement? {

@@ -923,6 +923,36 @@
 			"pip": "Picture in picture",
 			"full": "Full screen",
 			"exitFull": "Exit full screen"
+		},
+		"toggle": {
+			"off": "Off",
+			"auto": "Auto",
+			"on": "On"
+		},
+		"commitGraph": {
+			"label": "Commits",
+			"commit": "{message}, {author}, {date}, {id}"
+		},
+		"barcode": {
+			"label": "Barcode: {value}"
+		},
+		"diagram": {
+			"label": "Diagram"
+		},
+		"spectrum": {
+			"label": "Spectrum"
+		},
+		"waveform": {
+			"label": "Waveform"
+		},
+		"jog": {
+			"label": "Jog wheel"
+		},
+		"pianoRoll": {
+			"label": "Piano roll"
+		},
+		"sampler": {
+			"label": "Sampler"
 		}
 	}
 }

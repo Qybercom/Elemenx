@@ -68,6 +68,11 @@
 	--elemenx-call-dim: rgba(255, 255, 255, 0.35);
 	--elemenx-game-world-background: #0b0e12;
 	--elemenx-game-world-frame: #3a3226;
+	--elemenx-jog-vinyl: #17181b;
+	--elemenx-jog-edge: #000000;
+	--elemenx-jog-groove: rgba(255, 255, 255, 0.07);
+	--elemenx-jog-marker: #f2f3f5;
+	--elemenx-jog-spindle: #c9ccd1;
 	--elemenx-hairline: rgba(128, 128, 128, 0.32);
 	--elemenx-scrollbar: rgba(128, 128, 128, 0.44);
 	--elemenx-scrollbar-hover: rgba(128, 128, 128, 0.64);

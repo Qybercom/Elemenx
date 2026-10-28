@@ -16,7 +16,7 @@
 | `(click)="Method"` | событие: метод получает `(event, element)`; на теге компонента — `(data, component)` |
 | `[(value)]="Name"` | двусторонняя привязка у `input`, `textarea` или `select`: поле следует за вводом (`input`), а элемент — за полем |
 | `[(checked)]="Agreed"`, `[(selected)]="Picked"` | двусторонняя привязка у флажка, радиокнопки, варианта (по `change`) |
-| `#name` | отмечает элемент для `this.$Ref('name')` |
+| `#name` | отмечает элемент для `this.$Ref('name')` (все такие элементы, строки `*for`: `this.$Refs('name')`) |
 | `*if`, `*for`, `*key`... | структура: см. ниже и [Директивы](/guide/directives) |
 | `{{$T('key', params)}}` | фраза на языке страницы ([Языки](/guide/locale)) |
 

@@ -1447,6 +1447,66 @@
 			</div>
 		</div>
 	</Section>
+	<Section *if="Shows('Codes and diagrams')" Title="Codes and diagrams" [note]="CodesNote">
+		<div class="ui-kit-lazy" *lazy="400">
+			<div class="ui-kit-grid">
+				<div class="ui-kit-stack">
+					<h5>CommitGraph</h5>
+					<CommitGraph [commits]="CodesCommits" Height="220" (select)="CommitPicked" />
+					<CommitGraph [commits]="CodesCommits" Layout="scheme" />
+				</div>
+				<div class="ui-kit-stack">
+					<h5>Barcode</h5>
+					<div class="ui-kit-row">
+						<Barcode Format="ean13" Value="400638133393" Module="2" Height="60" />
+						<Barcode Format="code128" Value="ELEMENX" Module="1.5" Height="60" Round="1" />
+						<Barcode Format="datamatrix" Value="https://elemenx.dev" Module="4" Shape="dots" />
+					</div>
+					<Barcode Format="pdf417" Value="Elemenx: a boarding pass" Module="1.5" />
+					<h5>QRCode, styled</h5>
+					<div class="ui-kit-row">
+						<QRCode Value="https://elemenx.dev" Size="120" Modules="dots" Eyes="rounded" EyeColor="#c0392b" />
+						<QRCode Value="https://elemenx.dev" Size="120" Modules="rounded" [gradient]="{From: '#3f6c9e', To: '#2f8f83', Angle: 45}" Text="EX" />
+					</div>
+				</div>
+				<div class="ui-kit-stack">
+					<h5>Diagram</h5>
+					<Diagram [value]="CodesFlow" (error)="DiagramFailed" />
+					<Diagram [value]="CodesSequence" FontSize="12" />
+					<h5>Markdown with plugins</h5>
+					<Markdown [value]="CodesMarkdown" />
+				</div>
+			</div>
+		</div>
+	</Section>
+
+	<Section *if="Shows('Sound')" Title="Sound" [note]="SoundNote">
+		<div class="ui-kit-lazy" *lazy="400">
+			<div class="ui-kit-grid">
+				<div class="ui-kit-stack">
+					<h5>Spectrum</h5>
+					<Spectrum [values]="SoundLevels" Bands="24" [colors]="['#2f8f83', '#d99a1e', '#c0392b']" Height="90" />
+					<div class="ui-kit-row">
+						<Spectrum [values]="SoundLevels" Bands="24" Mode="radial" Height="120" />
+						<Spectrum [values]="SoundLevels" Bands="24" Mode="line" Height="120" />
+					</div>
+					<h5>Waveform</h5>
+					<Waveform [peaks]="SoundPeaks" Duration="42" [time]="SoundTime" [selection]="SoundPart" (seek)="SoundSought" (select)="SoundSelected" />
+				</div>
+				<div class="ui-kit-stack">
+					<h5>Jog</h5>
+					<Jog [time]="SoundTime" Title="Deck A" Subtitle="124 BPM" Size="180" (scratch)="SoundScratched" (nudge)="SoundNudged" />
+					<h5>Sampler</h5>
+					<Sampler [pads]="SoundPads" Columns="4" (play)="SoundPad" />
+				</div>
+				<div class="ui-kit-stack">
+					<h5>PianoRoll</h5>
+					<PianoRoll [notes]="SoundNotes" Bars="2" Low="55" High="79" BeatWidth="32" KeyHeight="12" Height="260" [loop]="{Start: 0, End: 8}" (change)="SoundNotesChanged" (key)="SoundKey" />
+				</div>
+			</div>
+		</div>
+	</Section>
+
 	<Section *if="Shows('Windows')" Title="Windows" [note]="WindowNote">
 		<div class="ui-kit-lazy" *lazy>
 			<div class="ui-kit-row">

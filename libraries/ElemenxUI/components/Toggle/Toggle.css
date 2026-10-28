@@ -1,4 +1,6 @@
 .elemenx-toggle {
+	/* The way the thumb goes to on: to the end of the line, so to the left in a page from right to left. */
+	--elemenx-toggle-way: 1;
 	position: relative;
 	display: inline-flex;
 	align-items: flex-start;
@@ -7,6 +9,10 @@
 	color: var(--elemenx-text);
 	cursor: pointer;
 	user-select: none;
+}
+
+.elemenx-toggle:dir(rtl) {
+	--elemenx-toggle-way: -1;
 }
 
 .elemenx-toggle.disabled {
@@ -47,10 +53,11 @@
 
 .elemenx-toggle.checked .elemenx-toggle-thumb {
 	background: var(--elemenx-accent-text);
-	transform: translateX(12px);
+	transform: translateX(calc(12px * var(--elemenx-toggle-way)));
 }
 
-.elemenx-check-input:focus-visible + .elemenx-toggle-track {
+.elemenx-check-input:focus-visible + .elemenx-toggle-track,
+.elemenx-toggle.three .elemenx-toggle-track:focus-visible {
 	outline: 2px solid var(--elemenx-focus);
 	outline-offset: 2px;
 }
@@ -71,5 +78,170 @@
 }
 
 .elemenx-toggle.small.checked .elemenx-toggle-thumb {
-	transform: translateX(8px);
+	transform: translateX(calc(8px * var(--elemenx-toggle-way)));
+}
+
+/* Three positions: a longer track, a stop for each, the middle half lit. */
+.elemenx-toggle.three .elemenx-toggle-track {
+	width: 48px;
+	outline: none;
+}
+
+.elemenx-toggle.three.small .elemenx-toggle-track {
+	width: 36px;
+}
+
+.elemenx-toggle-stop {
+	position: absolute;
+	top: 8px;
+	inset-inline-start: 8px;
+	width: 4px;
+	height: 4px;
+	background: rgba(var(--elemenx-text-rgb), 0.32);
+	border-radius: 50%;
+}
+
+.elemenx-toggle-stop:nth-child(2) {
+	inset-inline-start: 22px;
+}
+
+.elemenx-toggle-stop:nth-child(3) {
+	inset-inline-start: 36px;
+}
+
+.elemenx-toggle.small .elemenx-toggle-stop {
+	top: 6px;
+	inset-inline-start: 6px;
+}
+
+.elemenx-toggle.small .elemenx-toggle-stop:nth-child(2) {
+	inset-inline-start: 16px;
+}
+
+.elemenx-toggle.small .elemenx-toggle-stop:nth-child(3) {
+	inset-inline-start: 26px;
+}
+
+.elemenx-toggle.three.position-1 .elemenx-toggle-track {
+	background: rgba(var(--elemenx-accent-rgb), 0.48);
+}
+
+.elemenx-toggle.three.position-2 .elemenx-toggle-track {
+	background: var(--elemenx-accent);
+}
+
+.elemenx-toggle.three.position-1 .elemenx-toggle-thumb {
+	transform: translateX(calc(14px * var(--elemenx-toggle-way)));
+}
+
+.elemenx-toggle.three.position-2 .elemenx-toggle-thumb {
+	background: var(--elemenx-accent-text);
+	transform: translateX(calc(28px * var(--elemenx-toggle-way)));
+}
+
+.elemenx-toggle.three.small.position-1 .elemenx-toggle-thumb {
+	transform: translateX(calc(10px * var(--elemenx-toggle-way)));
+}
+
+.elemenx-toggle.three.small.position-2 .elemenx-toggle-thumb {
+	transform: translateX(calc(20px * var(--elemenx-toggle-way)));
+}
+
+.elemenx-toggle-names {
+	display: inline-flex;
+	gap: 6px;
+	align-self: center;
+	color: var(--elemenx-text-muted);
+	font-size: var(--elemenx-font-size-small);
+	line-height: var(--elemenx-line-height-small);
+}
+
+.elemenx-toggle-name.current {
+	color: var(--elemenx-text);
+	font-weight: 600;
+}
+
+/* Vertical: the track stands, on at the top (as the switch of a light), the names in a column from on down. */
+.elemenx-toggle.vertical .elemenx-toggle-track {
+	width: 20px;
+	height: 32px;
+}
+
+.elemenx-toggle.vertical .elemenx-toggle-thumb {
+	top: auto;
+	bottom: 2px;
+	inset-inline-start: 2px;
+}
+
+.elemenx-toggle.vertical.checked .elemenx-toggle-thumb {
+	transform: translateY(-12px);
+}
+
+.elemenx-toggle.vertical.small .elemenx-toggle-track {
+	width: 16px;
+	height: 24px;
+}
+
+.elemenx-toggle.vertical.small.checked .elemenx-toggle-thumb {
+	transform: translateY(-8px);
+}
+
+.elemenx-toggle.vertical.three .elemenx-toggle-track {
+	width: 20px;
+	height: 48px;
+}
+
+.elemenx-toggle.vertical.three.small .elemenx-toggle-track {
+	width: 16px;
+	height: 36px;
+}
+
+.elemenx-toggle.vertical .elemenx-toggle-stop {
+	top: auto;
+	bottom: 8px;
+	inset-inline-start: 8px;
+}
+
+.elemenx-toggle.vertical .elemenx-toggle-stop:nth-child(2) {
+	bottom: 22px;
+}
+
+.elemenx-toggle.vertical .elemenx-toggle-stop:nth-child(3) {
+	bottom: 36px;
+}
+
+.elemenx-toggle.vertical.small .elemenx-toggle-stop {
+	bottom: 6px;
+	inset-inline-start: 6px;
+}
+
+.elemenx-toggle.vertical.small .elemenx-toggle-stop:nth-child(2) {
+	bottom: 16px;
+}
+
+.elemenx-toggle.vertical.small .elemenx-toggle-stop:nth-child(3) {
+	bottom: 26px;
+}
+
+.elemenx-toggle.vertical.three.position-1 .elemenx-toggle-thumb {
+	transform: translateY(-14px);
+}
+
+.elemenx-toggle.vertical.three.position-2 .elemenx-toggle-thumb {
+	transform: translateY(-28px);
+}
+
+.elemenx-toggle.vertical.three.small.position-1 .elemenx-toggle-thumb {
+	transform: translateY(-10px);
+}
+
+.elemenx-toggle.vertical.three.small.position-2 .elemenx-toggle-thumb {
+	transform: translateY(-20px);
+}
+
+.elemenx-toggle.vertical .elemenx-toggle-names {
+	flex-direction: column-reverse;
+	gap: 0;
+	align-self: stretch;
+	justify-content: space-between;
 }

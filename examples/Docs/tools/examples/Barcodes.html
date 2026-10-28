@@ -1,0 +1,34 @@
+<p class="elemenx-text small">A format of its own: each letter a bar and a gap, as wide as its place in the alphabet.</p>
+<span style="display: inline-block; width: 320px;" [property.innerHTML]="Drawing"></span>
+<p class="elemenx-text small muted">{{Formats}}</p>
+<script>
+({
+	Drawing: '',
+	Formats: '',
+
+	$OnCreate: function () {
+		var barcodes = this.$Service('Barcodes');
+
+		barcodes.Register('alphabet', {
+			Label: 'Alphabet',
+			Encode: function (text) {
+				var modules = '';
+
+				String(text).toLowerCase().replace(/[^a-z]/g, '').split('').forEach(function (letter) {
+					var width = letter.charCodeAt(0) - 96;
+
+					modules += new Array(Math.ceil(width / 4) + 1).join('1') + '0';
+				});
+
+				if (!modules)
+					throw new Error('The alphabet format takes letters');
+
+				return {Kind: 'linear', Modules: modules, Texts: [{Text: text, From: 0, To: modules.length}], Quiet: {Left: 4, Right: 4}};
+			}
+		});
+
+		this.Drawing = barcodes.SVG('alphabet', 'Elemenx', {Height: 20, FontSize: 6, Round: 1});
+		this.Formats = 'The formats: ' + barcodes.Formats().join(', ');
+	}
+})
+</script>

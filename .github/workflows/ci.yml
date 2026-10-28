@@ -5,9 +5,10 @@
 # night when main has new commits, and before every release (publish.yml calls this workflow with e2e). They are split
 # by test between three jobs of two workers each. A change of the documentation alone runs nothing.
 #
-# The extensions of the editors: every push checks that the Gradle of the plugin of IntelliJ starts (a few seconds);
-# a push or a pull request that changes editors/ builds both extensions, the plugin against an IntelliJ IDEA that
-# Gradle downloads once: its cache, written by the builds of main, serves the next ones and the releases.
+# The extensions of the editors, each in a job of its own, in parallel: every push checks that the Gradle of the plugin
+# of IntelliJ starts (a few seconds); a push or a pull request that changes editors/ builds the extensions (VS Code and
+# IntelliJ on Linux, Visual Studio on Windows), the plugin against an IntelliJ IDEA that Gradle downloads once: its
+# cache, written by the builds of main, serves the next ones and the releases.
 name: CI
 
 on:
@@ -82,23 +83,40 @@ jobs:
       - run: npm run test:tools
 
   editors:
-    name: Editors
-    # Not for a release (publish.yml calls with e2e): its job release builds them, after npm, which they never hold back.
+    name: Editor ${{ matrix.editor }}
+    # Not for a release (publish.yml calls with e2e): its jobs of the editors build them, after npm, which they never hold back.
+    # Each extension in a job of its own, in parallel: VS Code and the plugin of IntelliJ on Linux, Visual Studio on Windows.
     if: (github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch') && !inputs.e2e
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - editor: vscode
+            os: ubuntu-latest
+          - editor: intellij
+            os: ubuntu-latest
+          - editor: visualstudio
+            os: windows-latest
+    defaults:
+      run:
+        shell: bash
     steps:
       - uses: actions/checkout@v5
         with:
           fetch-depth: 0
       - uses: actions/setup-java@v5
+        if: matrix.editor == 'intellij'
         with:
           distribution: temurin
           java-version: 21
       # The cache of Gradle and of the IntelliJ IDEA it downloads: written by main, read by the other branches and the tags.
       - uses: gradle/actions/setup-gradle@v5
+        if: matrix.editor == 'intellij'
       # As editors/build.js starts it on Linux: through sh, whatever mode the checkout gave it.
       - name: The Gradle of the plugin of IntelliJ starts
+        if: matrix.editor == 'intellij'
         run: sh editors/intellij/gradlew --version --project-dir editors/intellij
       - name: What the commits change in editors/
         id: changed
@@ -119,11 +137,21 @@ jobs:
           cache: npm
       - if: steps.changed.outputs.editors == 'true'
         run: npm ci
-      - name: Both extensions, the plugin of IntelliJ against the IntelliJ IDEA of Gradle
+      # dist without the extensions, for the check of the versions; then the one extension of the job, against the IntelliJ IDEA of Gradle.
+      - name: The extension
         if: steps.changed.outputs.editors == 'true'
         env:
           ELEMENX_INTELLIJ: download
-        run: node editors/build.js --intellij
+        run: |
+          npm run dist -- --no-editors
+          node editors/build.js --only ${{ matrix.editor }}
+          npm run version:built
+      - uses: actions/upload-artifact@v5
+        if: steps.changed.outputs.editors == 'true'
+        with:
+          name: editor-${{ matrix.editor }}
+          path: dist/editors/
+          retention-days: 14
 
   recent:
     name: New commits for the nightly run

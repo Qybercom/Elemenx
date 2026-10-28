@@ -79,3 +79,15 @@
 ## Фреймворк
 
 `npm run dist` в репозитории Elemenx собирает файлы дистрибутива в `dist/` пакета: `elemenx.js` и `elemenx.min.js`, `elemenx-ui.js` (ElemenxUI со всем встроенным, кроме пакетов), скрипт для каждого пакета (`elemenx-ui.emoji.js`, `elemenx-ui.cities.js`...), `elemenx.all.js` (оба в одном файле), `elemenx-ui/` (ElemenxUI файлами) и `manifest.json` (размеры и хеши целостности каждого файла). Им не нужны ни сборка, ни сервер.
+
+## Образ Docker
+
+`elemenx build --docker` собирает сайт и пишет рядом `Dockerfile` и `nginx.conf` для `nginx:alpine`: gzip для текста, любой путь, который не файл, получает `index.html` (маршруты роутера переживают перезагрузку), страница и воркер PWA никогда не кэшируются, заголовки безопасной страницы и проверка здоровья по `/healthz`. Если установлен `docker`, собирается и образ, названный по `package.json` (`my-shop:1.4.2`): `docker run -p 8080:80 my-shop:1.4.2` запускает его. `Docker` в `elemenx.config.js` задаёт `Image` (своё имя или `false`, чтобы получить только файлы) и `Headers` (`Content-Security-Policy`...). Без `docker` сборка говорит, как собрать образ потом; с `--strict` — падает.
+
+## Несколько целей сразу
+
+`Build.Targets` в `elemenx.config.js` перечисляет, что собирает `npx elemenx build`, — всё одной командой:
+
+@block 2
+
+Цели: `web`, `single`, `widget`, `extension`, `desktop`, `mobile`, `android-library` и `docker`. Одна цель попадает туда же, куда её отдельная сборка; несколько — каждая в свою папку: `dist/web`, `dist/single`, `dist/widget`, `dist/docker`, а `dist/extension` и `dist/native/<платформа>` как обычно. `--target web,docker` собирает только их, а опция режима (`--single`, `--extension`...) — только его. Цель, которая не собралась, останавливает сборку и называет себя.

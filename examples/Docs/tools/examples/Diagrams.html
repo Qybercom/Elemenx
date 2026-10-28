@@ -1,0 +1,17 @@
+<p class="elemenx-text small">The model of a diagram, as Parse reads it, and its drawing.</p>
+<span [property.innerHTML]="Drawing"></span>
+<pre class="elemenx-code">{{Model}}</pre>
+<script>
+({
+	Drawing: '',
+	Model: '',
+
+	$OnCreate: function () {
+		var diagrams = this.$Service('Diagrams');
+		var text = 'erDiagram\n  AUTHOR ||--o{ BOOK : writes\n  BOOK }o--|| SHELF : "stands on"';
+
+		this.Drawing = diagrams.SVG(text, {FontSize: 13});
+		this.Model = JSON.stringify(diagrams.Parse(text).Relations, null, 2);
+	}
+})
+</script>

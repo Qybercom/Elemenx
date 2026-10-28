@@ -6,11 +6,15 @@ The document of rich text: the HTML RichEditor keeps and the Markdown it reads a
 - Sanitize(html) keeps only the schema of the document: paragraphs, headings h1-h4, quotes, preformatted code, lists, rules, tables, images and links, with strong, em, u, s, code and line breaks inside. Other tags give their text (b becomes strong, i em, strike and del s, h5 and h6 h4); scripts, styles, frames, forms and their content go. Attributes go too, but href and title of a link (http, https, mailto, tel or a relative URL), src and alt of an image (also a data: URL of a picture), colspan and rowspan of a cell and start of a list. Text outside a block goes into a paragraph.
 - ToMarkdown(html) and FromMarkdown(text): the document as Markdown (CommonMark with the tables, the strike and the fenced code of GitHub) and back. Underline has no Markdown: it stays <u>.
 - Text(html) is the plain text of a document, a line for each block.
+- Plugins: what the schema has no element for, drawn by a Component or a function of its own. Extend(plugin) adds one (see Extend below); in Markdown it is a fence of its language (```mermaid), a block of a directive (::: warning title="Careful" ... :::) or an inline (:name[text]{key=value}), in the HTML a node of its data (data-elemenx-plugin, data-elemenx-data) that Sanitize keeps and ToMarkdown writes back as it was. Mount(container, options) draws the plugins of a document (Markdown and RichEditor do), {Destroy()} takes them away. Built in: diagram (```mermaid or ```diagram, the Diagram Component), chart (```chart, a JSON of the props of Chart), qrcode (```qr), barcode (```barcode format=ean13) and callout (::: info, note, tip, success, warning, danger; title=...). Plugins() lists their names.
 
 The HTML is read in an inert template: nothing of it runs or loads while it is read.
 
 ## Methods
 
+- `Extend(plugin)`
+- `Plugins()`
+- `Mount(container, options)`
 - `Sanitize(html)`
 - `Text(html)`
 - `ToMarkdown(html)`

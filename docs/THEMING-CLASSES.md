@@ -17,6 +17,7 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-calendar-title`
 - `elemenx-calendar-weekday`
 - `elemenx-callout`: `danger`, `neutral`, `success`, `warning`
+- `elemenx-callout-title`
 - `elemenx-caption`
 - `elemenx-card`: `compact`, `elevated`, `filled`, `flat`, `horizontal`, `linked`, `spacious`, `structured`
 - `elemenx-card-action`: `on`, `repost`
@@ -111,6 +112,8 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-radio-group`: `horizontal`, `segmented`, `small`, `tile`
 - `elemenx-resizable`: `resizing`
 - `elemenx-resize-handle`: `bottom`, `corner`, `left`, `right`, `top`
+- `elemenx-rich-plugin`: `editing`, `error`
+- `elemenx-rich-plugin-editor`
 - `elemenx-screen`: `fill`, `fill-fixed`, `non-fill`
 - `elemenx-section`: `collapsed`
 - `elemenx-section-header`
@@ -437,6 +440,29 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-comment-time`
 - `elemenx-comment-token`
 
+## CommitGraph
+
+- `elemenx-commit-graph`
+- `elemenx-commit-graph-author`
+- `elemenx-commit-graph-body`
+- `elemenx-commit-graph-date`
+- `elemenx-commit-graph-dot`: `merge`
+- `elemenx-commit-graph-id`
+- `elemenx-commit-graph-lanes`
+- `elemenx-commit-graph-line`
+- `elemenx-commit-graph-message`
+- `elemenx-commit-graph-ref`: `head`, `remote`, `tag`
+- `elemenx-commit-graph-refs`
+- `elemenx-commit-graph-row`: `selected`
+- `elemenx-commit-graph-scheme`
+- `elemenx-commit-graph-scheme-commit`: `selected`
+- `elemenx-commit-graph-scheme-message`
+- `elemenx-commit-graph-scheme-name`
+- `elemenx-commit-graph-scheme-ref`
+- `elemenx-commit-graph-scheme-track`
+- `elemenx-commit-graph-space`
+
+
 ## ContextMenu
 
 - `elemenx-context`
@@ -602,6 +628,12 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 
 - `elemenx-designer-tree`
 - `elemenx-designer-tree-start`
+
+## Diagram
+
+- `elemenx-diagram`
+- `elemenx-diagram-error`
+
 
 ## DialPad
 
@@ -1062,6 +1094,22 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-piano-name`
 - `elemenx-piano-typing`
 
+## PianoRoll
+
+- `elemenx-piano-roll`: `readonly`
+- `elemenx-piano-roll-bar-number`
+- `elemenx-piano-roll-corner`
+- `elemenx-piano-roll-grid`
+- `elemenx-piano-roll-key`: `black`
+- `elemenx-piano-roll-keys`
+- `elemenx-piano-roll-loop`
+- `elemenx-piano-roll-note`: `selected`
+- `elemenx-piano-roll-playhead`
+- `elemenx-piano-roll-row`: `black`
+- `elemenx-piano-roll-ruler`
+- `elemenx-piano-roll-scroll`
+
+
 ## PlanCard
 
 - `elemenx-plan`: `disabled`, `popular`, `selected`
@@ -1211,6 +1259,14 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-ruler-marker`
 - `elemenx-ruler-range`
 
+## Sampler
+
+- `elemenx-sampler`
+- `elemenx-sampler-key`
+- `elemenx-sampler-label`
+- `elemenx-sampler-pad`: `active`, `empty`, `over`
+
+
 ## Section
 
 - `elemenx-section-actions`
@@ -1286,6 +1342,12 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-sparkline-bar`
 - `elemenx-sparkline-dot`
 - `elemenx-sparkline-line`
+
+## Spectrum
+
+- `elemenx-spectrum`
+- `elemenx-spectrum-canvas`
+
 
 ## Splitter
 
@@ -1415,7 +1477,10 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 
 ## Toggle
 
-- `elemenx-toggle`: `checked`, `disabled`, `small`
+- `elemenx-toggle`: `checked`, `disabled`, `position-1`, `position-2`, `small`, `three`, `vertical`
+- `elemenx-toggle-name`: `current`
+- `elemenx-toggle-names`
+- `elemenx-toggle-stop`
 - `elemenx-toggle-thumb`
 - `elemenx-toggle-track`
 
@@ -1447,6 +1512,14 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-virtual-row`: `active`, `selected`
 - `elemenx-virtual-space`
 - `elemenx-virtual-viewport`
+
+## Waveform
+
+- `elemenx-waveform`: `selectable`
+- `elemenx-waveform-canvas`
+- `elemenx-waveform-selection`
+- `elemenx-waveform-time`
+
 
 ## Window
 
@@ -1526,6 +1599,11 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-avatar-image`
 - `elemenx-avatar-initials`
 - `elemenx-avatar-status`
+
+## Barcode
+
+- `elemenx-barcode`
+
 
 ## Image
 
@@ -1641,6 +1719,22 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-cropper-handle`: `e`, `n`, `ne`, `nw`, `s`, `se`, `sw`, `w`
 - `elemenx-cropper-image`
 - `elemenx-cropper-size`
+
+## Jog
+
+- `elemenx-jog`: `disabled`, `touched`
+- `elemenx-jog-face`
+- `elemenx-jog-groove`
+- `elemenx-jog-label`
+- `elemenx-jog-marker`
+- `elemenx-jog-platter`
+- `elemenx-jog-ring`
+- `elemenx-jog-ring-mark`
+- `elemenx-jog-spindle`
+- `elemenx-jog-subtitle`
+- `elemenx-jog-title`
+- `elemenx-jog-vinyl`
+
 
 ## QRCode
 

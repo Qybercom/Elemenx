@@ -13,7 +13,7 @@ var Meta = require('./tools/meta.js');
 var Package = require('./package.json');
 var fail = require('./tools/common.js').fail;
 
-var BooleanOptions = {force: true, 'current-color': true, single: true, widget: true, full: true, precompile: true, extension: true, help: true};
+var BooleanOptions = {force: true, 'current-color': true, single: true, widget: true, full: true, precompile: true, extension: true, help: true, docker: true, strict: true, open: true};
 
 /* Options whose value may be left out: --native alone builds all the platforms. */
 var OptionalValues = {native: ['desktop', 'mobile', 'android-library', 'all']};
@@ -103,6 +103,9 @@ function buildOptions (parsed, settings) {
 		extensionSettings: settings.Extension || {},
 		native: parsed.Options.native === undefined ? false : parsed.Options.native,
 		nativeSettings: settings.Native || {},
+		docker: parsed.Options.docker === true,
+		dockerSettings: settings.Docker || {},
+		strict: parsed.Options.strict === true,
 		packs: listValue(value(parsed.Options, 'packs', settings.Packs, [])),
 		splash: settings.Splash,
 		pwa: settings.PWA,
@@ -245,10 +248,21 @@ command('build', 'Build an Application into dist: a site, one file, a widget, a 
 	var project = projectPath(parsed.Arguments[0]);
 	var settings = config(project);
 
-	Builder.Build(project, buildOptions(parsed, settings));
+	var options = buildOptions(parsed, settings);
+	var mode = options.single || options.widget || options.extension || options.native || options.docker;
+	var targets = parsed.Options.target !== undefined ? listValue(parsed.Options.target) : ((settings.Build || {}).Targets || null);
+
+	/* The targets of elemenx.config.js (Build.Targets) or of --target, each into its folder; an option of a mode builds that one alone. */
+	if (targets && targets.length && (!mode || parsed.Options.target !== undefined)) {
+		Builder.BuildTargets(project, options, targets);
+
+		return;
+	}
+
+	Builder.Build(project, options);
 }, {
 	Usage: ['elemenx build [project] [options]'],
-	Text: ['Without an option the build is a site: the framework, the Application and its Libraries for any static server. The settings of elemenx.config.js are the defaults of the options (docs/BUILDER.md).'],
+	Text: ['Without an option the build is a site: the framework, the Application and its Libraries for any static server. The settings of elemenx.config.js are the defaults of the options (docs/BUILDER.md).', 'Build.Targets of elemenx.config.js (or --target) builds several at once: web, single, widget, extension, desktop, mobile, android-library, docker; one goes where its build goes, several each into a folder of its own (dist/web, dist/single, dist/widget, dist/docker, dist/extension, dist/native/<platform>). An option of a mode (--single...) builds that one alone.'],
 	Options: [
 		['--out <folder>', 'the folder of the build (dist)'],
 		['--entry <file>', 'the script of the Applications (app.js)'],
@@ -261,6 +275,9 @@ command('build', 'Build an Application into dist: a site, one file, a widget, a 
 		['--precompile', 'the expressions of the templates as code, for a page that forbids eval'],
 		['--extension', 'a browser extension for Chrome, Edge and Firefox'],
 		['--surface <popup|tab|side>', 'where the extension shows (popup)'],
+		['--docker', 'the site and a Docker image of it, served by nginx (the image when docker is installed)'],
+		['--target <a,b>', 'the targets to build (Build.Targets): web, single, widget, extension, desktop, mobile, android-library, docker'],
+		['--strict', 'fails a target whose tool is missing (docker) instead of leaving it out'],
 		['--native [desktop|mobile|android-library]', 'native programs: desktop (Electron) or mobile (Capacitor: Android and iOS), without a platform both (elemenx native add installs what they need); android-library: the interface for an Android program of its own, a module of Gradle with ElemenxView']
 	]
 });
@@ -285,7 +302,7 @@ command('serve', 'Serve the production dist with gzip and HTTP caching.', functi
 	var project = projectPath(parsed.Arguments[0]);
 	var settings = config(project);
 	var output = value(parsed.Options, 'out', settings.Output, 'dist');
-	var directory = path.basename(project) === output ? project : path.join(project, output);
+	var directory = path.basename(project) === output ? project : path.resolve(project, output);
 	var server = settings.Server || {};
 	var port = Number(value(parsed.Options, 'port', server.ProductionPort, 4175));
 
@@ -305,6 +322,49 @@ command('serve', 'Serve the production dist with gzip and HTTP caching.', functi
 		['--cache-control <value>', 'the Cache-Control of the files']
 	]
 });
+
+/*
+ * The reference of this version of Elemenx, served from the package (docs-site/, built by prepack); in the repository
+ * of Elemenx it is built again from the sources each time (tools/docs-site.js).
+ */
+command('docs', 'Serve the reference of this version of Elemenx, offline.', function (parsed) {
+	var directory = path.join(__dirname, 'docs-site');
+	var port = Number(value(parsed.Options, 'port', undefined, 4179));
+	var url;
+
+	/* In the repository of Elemenx the reference is built again each time: a build left from before would be of another version. */
+	if (fs.existsSync(path.join(__dirname, 'examples', 'Docs', 'app.js'))) {
+		process.stdout.write('Elemenx docs: building the reference of the sources...\n');
+
+		require('./tools/docs-site.js').Build({Output: directory});
+	}
+	else if (!fs.existsSync(path.join(directory, 'index.html'))) {
+		fail('the reference is not in this package: docs-site/ is missing (reinstall @qybercom/elemenx)');
+	}
+
+	listen(directory, port, config(directory), true, parsed.Options);
+
+	url = 'http://' + value(parsed.Options, 'host', undefined, '127.0.0.1') + ':' + port + '/';
+
+	if (parsed.Options.open === true)
+		openBrowser(url);
+}, {
+	Usage: ['elemenx docs [--port 4179] [--open]'],
+	Text: ['The reference of the version of Elemenx the project installed (the guide, the core, every Component, Service and Directive of ElemenxUI with its live example), served from the package: no network needed.'],
+	Options: [
+		['--port <number>', 'the port (4179)'],
+		['--host <address>', 'the address it listens on (127.0.0.1)'],
+		['--open', 'opens it in the browser of the system']
+	]
+});
+
+/* Opens a URL in the browser of the system. */
+function openBrowser (url) {
+	var child = require('child_process');
+
+	if (process.platform === 'win32') child.spawn('cmd', ['/c', 'start', '""', url], {detached: true, stdio: 'ignore'}).unref();
+	else child.spawn(process.platform === 'darwin' ? 'open' : 'xdg-open', [url], {detached: true, stdio: 'ignore'}).unref();
+}
 
 command('icons', 'Build an icon set (a sprite) from a directory of SVG files.', function (parsed) {
 	var directory = parsed.Arguments[0];

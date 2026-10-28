@@ -42,7 +42,7 @@ var plugins = {
 
 export default [
 	{
-		ignores: ['node_modules/**', 'test-results/**', 'playwright-report/**', 'coverage/**', '**/dist/**', '.vitest/**', '.idea/**', 'examples/Docs/tools/examples/**', 'examples/Native/android/**', 'examples/Native/ios/**', 'editors/vscode/core/**', 'editors/intellij/build/**', 'editors/intellij/.gradle/**', 'editors/intellij/.intellijPlatform/**']
+		ignores: ['node_modules/**', 'test-results/**', 'playwright-report/**', 'coverage/**', '**/dist/**', 'docs-site/**', '.vitest/**', '.idea/**', 'examples/Docs/tools/examples/**', 'examples/Native/android/**', 'examples/Native/ios/**', 'editors/vscode/core/**', 'editors/intellij/build/**', 'editors/intellij/.gradle/**', 'editors/intellij/.intellijPlatform/**']
 	},
 	{
 		linterOptions: {

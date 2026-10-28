@@ -40,6 +40,9 @@
  *   staying (a NativeMenu with Target tray does). TrayPopup({Component, Props, Element, Width, Height}, callback) is
  *   a menu of the tray drawn by the Application: a window of it that the right button of the icon opens at the pointer,
  *   in place of the menu of the system (ShowTrayPopup(show) shows it, hides it, or sizes it with {Width, Height}).
+ *   TrayIcon({Icon or Image, Tooltip}, callback) changes the picture of the icon (and its tooltip) in its place, Image a
+ *   data URL of a PNG (online, offline...). Icon({Icon or Image}, callback): the icon of the windows of the program (the
+ *   taskbar, the title bar, the dock on macOS); null for the one it was built with. The AppIcon Service uses both.
  * - Role(role, callback): what the system does for an item of a menu with that role (undo, copy, reload, zoomIn,
  *   togglefullscreen, quit...), for a menu the Application draws.
  * - External(url, callback): opens an http, https or mailto link in the browser of the system.
@@ -92,7 +95,7 @@
 Elemenx.Service('Native', {
 	$Meta: {
 		Description: 'The native features of the system around the Application, one API wherever it runs.',
-		Methods: ['Available()', 'Platform()', 'Has(feature)', 'Window(action, callback, id)', 'Frame(id)', 'TitleBarOverlay(colors, callback)', 'Scheme(scheme, callback)', 'Title(text, callback)', 'Open(options, callback)', 'Save(options, callback)', 'Message(options, callback)', 'Menu(items, callback)', 'ContextMenu(items, callback)', 'Tray(options, callback)', 'TrayWindow(show, callback)', 'TrayMenu(items, callback)', 'TrayPopup(options, callback)', 'ShowTrayPopup(show, callback)', 'Role(role, callback)', 'External(url, callback)', 'Notify(options, callback)', 'CloseNotification(id)', 'Notifications(settings)', 'Badge(count, callback)', 'Progress(value, callback)', 'Attention(on, callback)', 'Thumbar(buttons, callback)', 'Tasks(callback)', 'OpenWindow(options, callback)', 'Windows()', 'FocusWindow(id)', 'CloseWindow(id)', 'Shortcuts(keys, callback)', 'Autostart(enabled, callback)', 'Links(callback)', 'Power(callback)', 'Awake(on, callback)', 'Update(callback)', 'On(name, callback)', 'Off(name, callback)']
+		Methods: ['Available()', 'Platform()', 'Has(feature)', 'Window(action, callback, id)', 'Frame(id)', 'TitleBarOverlay(colors, callback)', 'Scheme(scheme, callback)', 'Title(text, callback)', 'Open(options, callback)', 'Save(options, callback)', 'Message(options, callback)', 'Menu(items, callback)', 'ContextMenu(items, callback)', 'Tray(options, callback)', 'TrayWindow(show, callback)', 'TrayMenu(items, callback)', 'TrayPopup(options, callback)', 'ShowTrayPopup(show, callback)', 'TrayIcon(options, callback)', 'Icon(options, callback)', 'Role(role, callback)', 'External(url, callback)', 'Notify(options, callback)', 'CloseNotification(id)', 'Notifications(settings)', 'Badge(count, callback)', 'Progress(value, callback)', 'Attention(on, callback)', 'Thumbar(buttons, callback)', 'Tasks(callback)', 'OpenWindow(options, callback)', 'Windows()', 'FocusWindow(id)', 'CloseWindow(id)', 'Shortcuts(keys, callback)', 'Autostart(enabled, callback)', 'Links(callback)', 'Power(callback)', 'Awake(on, callback)', 'Update(callback)', 'On(name, callback)', 'Off(name, callback)']
 	},
 	$OnCreate: function () {
 		var self = this;
@@ -528,6 +531,20 @@ Elemenx.Service('Native', {
 		this.Ask('role', {Role: String(role || '')}, callback, ['undo', 'redo', 'cut', 'copy', 'paste', 'selectAll'].indexOf(role) === -1 ? null : function (done) {
 			done(document.execCommand(role) ? null : new Error('Elemenx Native role ' + role + ' was refused by the page'), null);
 		});
+	},
+
+	/* The picture of the icon in the tray, and its tooltip, in its place (the icon, its menu and its window stay): {Icon (a path in the Application) or Image (a data URL of a PNG), Tooltip}. */
+	TrayIcon: function (options, callback) {
+		options = options || {};
+
+		this.Ask('trayicon', {Icon: options.Icon || null, Image: options.Image || null, Tooltip: options.Tooltip === undefined ? null : String(options.Tooltip)}, callback);
+	},
+
+	/* The icon of the windows of the program (the taskbar, the title bar; the dock on macOS): {Icon (a path in the Application) or Image (a data URL of a PNG)}, null for the one of the program. */
+	Icon: function (options, callback) {
+		options = options || {};
+
+		this.Ask('icon', {Icon: options.Icon || null, Image: options.Image || null}, callback);
 	},
 
 	/* Shows the window of the tray by its icon (true) or hides it (false). */

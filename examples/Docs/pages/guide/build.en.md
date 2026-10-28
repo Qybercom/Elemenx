@@ -82,3 +82,20 @@ A project with several Application graphs (`Shop/`, `Admin/`, each with its `ind
 ## The framework
 
 `npm run dist` in the repository of Elemenx builds the files of the distribution, in the package's `dist/`: `elemenx.js` and `elemenx.min.js`, `elemenx-ui.js` (ElemenxUI with everything embedded but its packs), a script for each pack (`elemenx-ui.emoji.js`, `elemenx-ui.cities.js`...), `elemenx.all.js` (both in one file), `elemenx-ui/` (ElemenxUI as files) and `manifest.json` (the sizes and the integrity hashes of every file). These need no build and no server.
+
+## A Docker image
+
+`elemenx build --docker` builds the site and writes beside it a `Dockerfile` and the `nginx.conf` of `nginx:alpine`: gzip for the text, every path that is not a file answered with `index.html` (the routes of the router survive a reload), the page and the worker of a PWA never cached, the headers of a safe page, and a health check on `/healthz`. When `docker` is installed it builds the image too, named after `package.json` (`my-shop:1.4.2`): `docker run -p 8080:80 my-shop:1.4.2` serves it. `Docker` in `elemenx.config.js` sets `Image` (a name of its own, or `false` for the files alone) and `Headers` (a `Content-Security-Policy`...). Without `docker` the build says how to make the image later; `--strict` fails instead.
+
+## Several targets at once
+
+`Build.Targets` in `elemenx.config.js` lists what `npx elemenx build` makes, all from one command:
+
+```js
+module.exports = {
+	Build: {Targets: ['web', 'docker', 'extension', 'desktop', 'mobile']},
+	Docker: {Image: 'registry.example.com/shop'}
+};
+```
+
+The targets are `web`, `single`, `widget`, `extension`, `desktop`, `mobile`, `android-library` and `docker`. One target goes where its build goes; several go each into a folder of its own: `dist/web`, `dist/single`, `dist/widget`, `dist/docker`, and `dist/extension` and `dist/native/<platform>` as always. `--target web,docker` builds those instead, and an option of a mode (`--single`, `--extension`...) builds that one alone. A target that fails stops the build and says which.

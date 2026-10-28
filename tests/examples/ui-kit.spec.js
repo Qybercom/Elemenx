@@ -218,7 +218,7 @@ for (const origin of origins) {
 
 			await open(page, origin);
 
-			await expect(page.locator('.ui-kit > .elemenx-section')).toHaveCount(49);
+			await expect(page.locator('.ui-kit > .elemenx-section')).toHaveCount(51);
 
 			await expect(page.locator('#elemenx-icons')).toHaveAttribute('data-ready', 'true');
 			await expect(page.locator('.ui-kit-icon svg').first()).toHaveAttribute('data-icon', 'add');
@@ -1962,7 +1962,7 @@ for (const origin of origins) {
 			await expect(more.locator('.elemenx-countdown-line')).toHaveText(/^1:30:0\d$/);
 			await expect(more.locator('.elemenx-clock-face')).toHaveCount(1);
 			await expect(more.locator('.elemenx-diff-row.add .elemenx-diff-word')).toHaveText(['Math', 'PI']);
-			await expect(more.locator('.elemenx-qr-code svg path')).toHaveCount(1);
+			await expect(more.locator('.elemenx-qr-code svg path')).toHaveCount(3);
 			await expect(more.locator('.elemenx-signature-canvas')).toHaveCount(1);
 			await expect(more.locator('.elemenx-cropper-box')).toHaveAttribute('aria-label', /^Crop: 180 × 180$/);
 			await expect(more.locator('.elemenx-file-browser-name')).toHaveText(['Documents', 'notes.md', 'song.mp3']);
@@ -9356,6 +9356,63 @@ for (const origin of origins) {
 
 			await expect(custom.locator('.elemenx-step').nth(2)).toHaveClass(/active/);
 			await expect(custom.locator('.elemenx-step').nth(0)).toHaveClass(/pending/);
+		});
+
+		test('codes and diagrams: a commit graph, barcodes, styled QR codes, diagrams and the plugins of Markdown', async function ({ page }) {
+			var codes;
+
+			await open(page, origin, ['Codes and diagrams']);
+
+			codes = section(page, 'Codes and diagrams');
+
+			await expect(codes.locator('.elemenx-commit-graph')).toHaveCount(2);
+			await expect(codes.locator('.elemenx-barcode svg')).toHaveCount(4);
+			await expect(codes.locator('.elemenx-qr-code svg')).toHaveCount(2);
+			await expect(codes.locator('.elemenx-diagram svg.elemenx-diagram-flowchart g.node')).toHaveCount(5);
+			await expect(codes.locator('.elemenx-diagram svg.elemenx-diagram-sequence')).toHaveCount(1);
+
+			/* The Markdown draws its callout and the Diagram of its fence. */
+			await expect(codes.locator('.elemenx-markdown .elemenx-callout')).toContainText('Plugins');
+			await expect(codes.locator('.elemenx-markdown .elemenx-diagram svg.elemenx-diagram-state g.state')).toHaveCount(2);
+
+			await codes.getByText('Charts: a legend').first().click();
+
+			await expect(codes.locator('.elemenx-section-aside .elemenx-caption')).toHaveText('Commit d4c3e42: Charts: a legend');
+		});
+
+		test('sound: a spectrum, a waveform that seeks and selects, a jog, the pads of a sampler and a piano roll', async function ({ page }) {
+			var sound;
+
+			await open(page, origin, ['Sound']);
+
+			sound = section(page, 'Sound');
+
+			await expect(sound.locator('.elemenx-spectrum')).toHaveCount(3);
+			await expect(sound.locator('.elemenx-spectrum.mode-radial')).toHaveCount(1);
+			await expect(sound.locator('.elemenx-waveform-time')).toHaveText('0:12.0 / 0:42.0');
+			await expect(sound.locator('.elemenx-waveform-selection')).toHaveText('0:20.0 – 0:28.0');
+
+			/* A press on the waveform moves its playhead, and the jog follows it. */
+			await sound.locator('.elemenx-waveform canvas').click();
+
+			await expect(sound.locator('.elemenx-section-aside .elemenx-caption')).toHaveText('Playhead at 21.0 s');
+			await expect(sound.locator('.elemenx-jog')).toHaveAttribute('aria-valuenow', '21');
+
+			/* A pad with its sound plays; the one without waits for a file (its dashes). */
+			await expect(sound.locator('.elemenx-sampler-pad.empty')).toHaveText(/Clap/);
+
+			await sound.locator('.elemenx-sampler-pad', {hasText: 'Snare'}).click();
+
+			await expect(sound.locator('.elemenx-section-aside .elemenx-caption')).toContainText('Pad snare, velocity');
+
+			/* The piano roll: a press puts a note. */
+			await expect(sound.locator('.elemenx-piano-roll-note')).toHaveCount(8);
+
+			/* F#4 (thirteen keys under G5) at beat 7. */
+			await sound.locator('.elemenx-piano-roll-grid').click({position: {x: 32 * 7 + 4, y: 13 * 12 + 6}});
+
+			await expect(sound.locator('.elemenx-piano-roll-note')).toHaveCount(9);
+			await expect(sound.locator('.elemenx-section-aside .elemenx-caption')).toHaveText('9 notes');
 		});
 
 		test('layouts: dashboard, settings, master-detail and centered pages', async function ({ page }) {

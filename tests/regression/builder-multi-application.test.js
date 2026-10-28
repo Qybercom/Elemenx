@@ -60,6 +60,24 @@ describe('Elemenx multi-Application Builder', function () {
 		expect(fs.existsSync(path.join(root, 'dist', 'BarApp'))).toBe(false);
 	});
 
+	/* A bug: an absolute --out was joined to the project (D:\project\C:\elsewhere), and the build failed or went inside it. */
+	it('builds into an absolute out where it says, not inside the project', function () {
+		var root = project();
+		var elsewhere = fs.mkdtempSync(path.join(os.tmpdir(), 'elemenx-builder-out-'));
+
+		temporary.push(elsewhere);
+
+		application(root, 'FooApp', 'FooRoot');
+
+		fs.writeFileSync(path.join(root, 'app.js'), "Elemenx.Application('FooApp', {$Component:'FooRoot', $Root:'FooApp', $Mount:'#foo'});");
+
+		Builder.Build(root, {application: 'FooApp', entry: 'app.js', index: 'index.html', out: path.join(elsewhere, 'site')});
+
+		expect(fs.existsSync(path.join(elsewhere, 'site', 'app.js'))).toBe(true);
+		expect(fs.existsSync(path.join(elsewhere, 'site', 'index.html'))).toBe(true);
+		expect(fs.readdirSync(root).sort()).toEqual(['FooApp', 'app.js', 'index.html']);
+	});
+
 	it('accepts Applications from configuration/build options', function () {
 		var root = project();
 

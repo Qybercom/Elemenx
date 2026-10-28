@@ -23,7 +23,7 @@ describe('Contract: the controls and cards of ElemenxUI', function () {
 	beforeAll(async function () {
 		await loadElemenx();
 
-		Use(['Knob', 'DialPad', 'Ruler', 'NavList', 'Mixer', 'ThemeSwitch', 'PlanPicker', 'PostCard', 'ProfileCard', 'CommentCard', 'ProductCard', 'EmptyState', 'Chronicle', 'service:Theme']);
+		Use(['Knob', 'DialPad', 'Ruler', 'NavList', 'Mixer', 'ThemeSwitch', 'PlanPicker', 'PostCard', 'ProfileCard', 'CommentCard', 'ProductCard', 'EmptyState', 'Chronicle', 'Toggle', 'service:Theme']);
 	});
 
 	beforeEach(function () {
@@ -70,6 +70,98 @@ describe('Contract: the controls and cards of ElemenxUI', function () {
 		expect(events.filter(function (event) {
 			return event.indexOf('change') === 0;
 		}).length).toBeGreaterThan(0);
+	});
+
+	it('Toggle stands vertical with on at the top, and with States 3 goes from false to null to true by its keys, a press on its text and on its track', async function () {
+		var changes = [];
+		var host = mount('<form><Toggle Orientation="vertical" Label="Light" [checked]="Light" (change)="Lit" /><Toggle States="3" Label="Sync" Name="sync" [value]="Sync" ShowLabels="true" (change)="Synced" /><Toggle States="3" Orientation="vertical" Labels="Low,Mid,High" [value]="Level" (change)="Leveled" /></form>', {
+			Light: false,
+			Sync: false,
+			Level: true,
+			Lit: function (value) {
+				this.Light = value;
+			},
+			Synced: function (value) {
+				changes.push(value);
+
+				this.Sync = value;
+			},
+			Leveled: function (value) {
+				changes.push('level ' + value);
+
+				this.Level = value;
+			}
+		});
+		var toggles;
+		var light;
+		var sync;
+		var level;
+		var thumb;
+		var box;
+
+		await tick();
+
+		toggles = host.$Element().querySelectorAll('.elemenx-toggle');
+		light = toggles[0];
+		sync = toggles[1].querySelector('[role="slider"]');
+		level = toggles[2].querySelector('[role="slider"]');
+
+		/* Vertical: the track stands, and on moves the thumb up. */
+		expect(light.classList.contains('vertical')).toBe(true);
+		expect(light.querySelector('.elemenx-toggle-track').offsetHeight).toBeGreaterThan(light.querySelector('.elemenx-toggle-track').offsetWidth);
+
+		thumb = light.querySelector('.elemenx-toggle-thumb').getBoundingClientRect().top;
+
+		light.querySelector('input').click();
+
+		await tick(250);
+
+		expect(host.Light).toBe(true);
+		expect(light.querySelector('.elemenx-toggle-thumb').getBoundingClientRect().top).toBeLessThan(thumb);
+
+		/* Three positions: a slider of 0 to 2, named by the language of the page, its value in the form. */
+		expect([sync.getAttribute('aria-valuenow'), sync.getAttribute('aria-valuetext'), sync.getAttribute('aria-label')]).toEqual(['0', 'Off', 'Sync']);
+		expect(toggles[1].querySelector('input[type="hidden"]').value).toBe('false');
+		expect(Array.prototype.map.call(toggles[1].querySelectorAll('.elemenx-toggle-name'), function (node) {
+			return node.textContent + (node.classList.contains('current') ? '*' : '');
+		})).toEqual(['Off*', 'Auto', 'On']);
+
+		key(sync, 'ArrowRight');
+
+		await tick();
+
+		expect([sync.getAttribute('aria-valuenow'), sync.getAttribute('aria-valuetext'), toggles[1].querySelector('input[type="hidden"]').value]).toEqual(['1', 'Auto', 'null']);
+
+		key(sync, 'End');
+		key(sync, 'End');
+		key(sync, ' ');
+
+		await tick();
+
+		/* The text cycles to the next position; the track takes the one under the pointer. */
+		toggles[1].querySelector('.elemenx-check-label').click();
+
+		await tick();
+
+		box = sync.getBoundingClientRect();
+
+		sync.dispatchEvent(new MouseEvent('click', {bubbles: true, clientX: box.right - 2, clientY: box.top + box.height / 2}));
+
+		await tick();
+
+		/* Vertical: the bottom is off, ArrowDown goes down; Labels name the positions. */
+		expect(level.getAttribute('aria-valuetext')).toBe('High');
+
+		key(level, 'ArrowDown');
+
+		box = level.getBoundingClientRect();
+
+		level.dispatchEvent(new MouseEvent('click', {bubbles: true, clientX: box.left + box.width / 2, clientY: box.bottom - 2}));
+
+		await tick();
+
+		expect(changes).toEqual([null, true, false, null, true, 'level null', 'level false']);
+		expect(level.getAttribute('aria-orientation')).toBe('vertical');
 	});
 
 	it('DialPad puts the keys pressed into the number, erases the last one, and calls with it', async function () {

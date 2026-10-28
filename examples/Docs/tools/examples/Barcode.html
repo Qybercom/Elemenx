@@ -1,0 +1,61 @@
+<div class="docs-stack">
+	<div class="docs-row">
+		<Select Label="Format" [value]="Format" [options]="Formats" (change)="Chosen" />
+		<Input Label="Text" [value]="Value" (input)="Typed" />
+		<Checkbox Label="Round bars" [checked]="Round" (change)="Rounded" />
+	</div>
+	<Barcode [format]="Format" [value]="Value" Module="2" [round]="Round ? 1 : 0" Shape="rounded" (ready)="Made" (error)="Failed" />
+	<p class="elemenx-text small" [class.danger]="!!Problem">{{Problem || 'Every format takes its own text: digits for EAN, UPC and ITF-14, any text for DataMatrix and PDF417.'}}</p>
+	<div class="docs-row">
+		<Button Label="PNG" Icon="download" (click)="SavePng" />
+		<Button Label="SVG" Icon="download" (click)="SaveSvg" />
+	</div>
+</div>
+<script>
+(function () {
+	var code = null;
+	var samples = {code128: 'ELEMENX-2026', ean13: '400638133393', ean8: '9638507', upca: '03600029145', code39: 'ELEMENX 39', itf14: '1540014128876', datamatrix: 'https://elemenx.dev', pdf417: 'Elemenx: the boarding pass of a train.'};
+
+	return {
+		Format: 'ean13',
+		Value: '400638133393',
+		Round: false,
+		Problem: '',
+		Formats: Object.keys(samples).map(function (name) {
+			return {Value: name, Label: name};
+		}),
+
+		/* ready gives the Barcode itself: its methods save the picture. */
+		Made: function (instance) {
+			code = instance;
+		},
+
+		Chosen: function (value) {
+			this.Format = value;
+			this.Value = samples[value];
+			this.Problem = '';
+		},
+
+		Typed: function (value) {
+			this.Value = value;
+			this.Problem = '';
+		},
+
+		Rounded: function (value) {
+			this.Round = value;
+		},
+
+		Failed: function (error) {
+			this.Problem = error.message;
+		},
+
+		SavePng: function () {
+			code.Download('barcode-' + this.Format, 'png');
+		},
+
+		SaveSvg: function () {
+			code.Download('barcode-' + this.Format, 'svg');
+		}
+	};
+})()
+</script>

@@ -17,5 +17,6 @@
 	'DeferredRouterRoot.js',
 	'DeferredMultiAppRemoteChild.js',
 	'DeferredMultiAppRemoteRoot.js',
-	'DeferredInputChild.js'
+	'DeferredInputChild.js',
+	'DeferredLateChild.js'
 ];

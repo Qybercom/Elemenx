@@ -1,0 +1,15 @@
+<div class="elemenx-jog" [class]="[Touched ? 'touched' : '', Playing && Playing !== 'false' ? 'playing' : '', Disabled ? 'disabled' : '']" [style.width]="Size + 'px'" [style.height]="Size + 'px'" role="slider" [attribute.tabindex]="Disabled ? null : 0" [attribute.aria-label]="Label || $T('ui.jog.label')" aria-valuemin="0" [attribute.aria-valuenow]="Round(Time)" [attribute.aria-valuetext]="Round(Time) + ' s'" [attribute.aria-disabled]="Disabled ? 'true' : null" (pointerdown)="Down" (pointermove)="Move" (pointerup)="Up" (pointercancel)="Up" (wheel)="Wheel" (keydown)="Key">
+	<svg class="elemenx-jog-face" viewBox="0 0 200 200" aria-hidden="true">
+		<circle class="elemenx-jog-ring" cx="100" cy="100" r="98"></circle>
+		<circle class="elemenx-jog-ring-mark" cx="100" cy="100" r="93"></circle>
+		<g class="elemenx-jog-platter">
+			<circle class="elemenx-jog-vinyl" cx="100" cy="100" r="86"></circle>
+			<circle class="elemenx-jog-groove" *for="radius of Grooves" cx="100" cy="100" [attribute.r]="radius"></circle>
+			<circle class="elemenx-jog-label" cx="100" cy="100" r="30"></circle>
+			<text class="elemenx-jog-title" x="100" y="91" text-anchor="middle" *if="Title">{{Title}}</text>
+			<text class="elemenx-jog-subtitle" x="100" y="116" text-anchor="middle" *if="Subtitle">{{Subtitle}}</text>
+			<rect class="elemenx-jog-marker" x="98" y="15" width="4" height="24" rx="2"></rect>
+		</g>
+		<circle class="elemenx-jog-spindle" cx="100" cy="100" r="3"></circle>
+	</svg>
+</div>

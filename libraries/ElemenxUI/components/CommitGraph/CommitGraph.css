@@ -1,0 +1,168 @@
+.elemenx-commit-graph {
+	display: block;
+	width: 100%;
+	min-width: 0;
+	/* Its width comes from its place, not from what it draws (which scrolls): on a phone it does not widen the page. */
+	contain: inline-size;
+	color: var(--elemenx-text);
+	font-size: var(--elemenx-font-size-small);
+	line-height: var(--elemenx-line-height-small);
+}
+
+.elemenx-commit-graph-body {
+	position: relative;
+	overflow: auto;
+	background: var(--elemenx-surface);
+	border: 1px solid var(--elemenx-border);
+	border-radius: var(--elemenx-radius);
+	outline: none;
+}
+
+.elemenx-commit-graph-body:focus-visible {
+	outline: 2px solid var(--elemenx-focus);
+	outline-offset: 2px;
+}
+
+.elemenx-commit-graph-space {
+	position: relative;
+	min-width: 100%;
+}
+
+.elemenx-commit-graph-row {
+	position: absolute;
+	inset-inline: 0;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding-inline-end: 12px;
+	white-space: nowrap;
+	cursor: default;
+}
+
+.elemenx-commit-graph-row:hover {
+	background: var(--elemenx-surface-hover);
+}
+
+.elemenx-commit-graph-row.selected {
+	background: rgba(var(--elemenx-accent-rgb), 0.14);
+}
+
+.elemenx-commit-graph-lanes {
+	flex: none;
+	margin-inline-start: 6px;
+	overflow: visible;
+}
+
+.elemenx-commit-graph-line {
+	fill: none;
+	stroke-width: 2;
+	stroke-linecap: round;
+}
+
+.elemenx-commit-graph-dot {
+	stroke-width: 2;
+}
+
+/* A merge: a ring, as git tools draw it. */
+.elemenx-commit-graph-dot.merge {
+	fill: var(--elemenx-surface);
+}
+
+.elemenx-commit-graph-refs {
+	display: inline-flex;
+	flex: none;
+	gap: 4px;
+}
+
+.elemenx-commit-graph-ref {
+	padding: 0 6px;
+	color: var(--elemenx-accent);
+	font-size: 11px;
+	font-weight: 600;
+	line-height: 18px;
+	background: rgba(var(--elemenx-accent-rgb), 0.12);
+	border-radius: var(--elemenx-radius-pill);
+}
+
+.elemenx-commit-graph-ref.tag {
+	color: var(--elemenx-warning);
+	background: rgba(var(--elemenx-text-rgb), 0.08);
+}
+
+.elemenx-commit-graph-ref.remote {
+	color: var(--elemenx-text-muted);
+	background: rgba(var(--elemenx-text-rgb), 0.08);
+}
+
+.elemenx-commit-graph-ref.head {
+	color: var(--elemenx-accent-text);
+	background: var(--elemenx-accent);
+}
+
+.elemenx-commit-graph-message {
+	flex: 1 1 auto;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.elemenx-commit-graph-author,
+.elemenx-commit-graph-date {
+	flex: none;
+	color: var(--elemenx-text-muted);
+}
+
+.elemenx-commit-graph-id {
+	flex: none;
+	color: var(--elemenx-text-muted);
+	font-family: var(--elemenx-font-mono);
+}
+
+/* The scheme: across, a lane for each branch. */
+.elemenx-commit-graph-scheme {
+	overflow-x: auto;
+	padding-block: 4px;
+	outline: none;
+}
+
+.elemenx-commit-graph-scheme:focus-visible {
+	outline: 2px solid var(--elemenx-focus);
+	outline-offset: 2px;
+}
+
+.elemenx-commit-graph-scheme svg {
+	display: block;
+	overflow: visible;
+}
+
+.elemenx-commit-graph-scheme-track {
+	stroke-width: 2;
+	stroke-dasharray: 2 6;
+	opacity: 0.5;
+}
+
+.elemenx-commit-graph-scheme-name {
+	font-weight: 600;
+}
+
+.elemenx-commit-graph-scheme-commit {
+	cursor: pointer;
+}
+
+.elemenx-commit-graph-scheme-commit .elemenx-commit-graph-dot {
+	stroke-width: 3;
+}
+
+.elemenx-commit-graph-scheme-commit.selected .elemenx-commit-graph-dot {
+	stroke: var(--elemenx-text);
+}
+
+.elemenx-commit-graph-scheme-ref {
+	fill: var(--elemenx-text);
+	font-weight: 600;
+}
+
+.elemenx-commit-graph-scheme-message {
+	fill: var(--elemenx-text-muted);
+	font-size: 11px;
+}

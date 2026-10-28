@@ -72,4 +72,72 @@ describe('Elemenx editors: the build of the extensions', function () {
 
 		vi.unstubAllEnvs();
 	});
+
+	/* CI builds each extension in a job of its own, in parallel: --only builds that one, needs it, and touches no other. */
+	it('builds one extension alone with Only, and refuses one it cannot build or does not know', function () {
+		var root = fs.mkdtempSync(path.join(os.tmpdir(), 'elemenx-editors-'));
+		var jdk = path.join(root, 'jdk');
+		var distributions = path.resolve(process.cwd(), 'editors', 'intellij', 'build', 'distributions');
+		var archive = path.join(distributions, 'elemenx-intellij.zip');
+		var kept = fs.existsSync(archive) ? fs.readFileSync(archive) : null;
+		var calls = [];
+		var build = function (only) {
+			calls = [];
+
+			return Editors.Build({Output: path.join(root, 'out-' + only), Idea: null, Only: only, Log: function () {}}).map(function (file) {
+				return file.Name;
+			});
+		};
+
+		made.push(root);
+
+		fs.mkdirSync(jdk);
+		fs.writeFileSync(path.join(jdk, 'release'), 'JAVA_VERSION="21.0.5"\n');
+
+		Object.defineProperty(process, 'platform', {value: 'linux'});
+
+		vi.stubEnv('JAVA_HOME', jdk);
+		vi.stubEnv('ELEMENX_IDEA', '');
+		vi.stubEnv('ELEMENX_INTELLIJ', 'download');
+
+		vi.spyOn(child, 'spawnSync').mockImplementation(function (command, list) {
+			calls.push([command].concat(list || []).join(' '));
+
+			if (list && list.indexOf('--out') !== -1)
+				fs.writeFileSync(list[list.indexOf('--out') + 1], 'an extension');
+
+			if (command === 'sh') {
+				fs.mkdirSync(distributions, {recursive: true});
+				fs.writeFileSync(archive, 'a plugin');
+			}
+
+			return {status: 0};
+		});
+
+		try {
+			expect(build('intellij')).toEqual(['elemenx-intellij.zip']);
+			expect(calls.some(function (call) {
+				return /vsce/.test(call);
+			})).toBe(false);
+
+			expect(build('vscode')).toEqual(['elemenx-vscode.vsix']);
+			expect(calls.some(function (call) {
+				return /gradlew/.test(call);
+			})).toBe(false);
+
+			/* Visual Studio needs Windows: alone, it is required, so its absence fails the job instead of passing it empty. */
+			expect(function () {
+				build('visualstudio');
+			}).toThrow('Elemenx editors: the extension of Visual Studio needs Windows');
+			expect(function () {
+				build('emacs');
+			}).toThrow('Elemenx editors: --only takes vscode, intellij or visualstudio, not emacs');
+		}
+		finally {
+			if (kept) fs.writeFileSync(archive, kept);
+			else fs.rmSync(archive, {force: true});
+		}
+
+		vi.unstubAllEnvs();
+	});
 });

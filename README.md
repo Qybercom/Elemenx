@@ -17,6 +17,12 @@ npx elemenx generate application MyApp
 npx elemenx dev
 ```
 
+The reference of the installed version (the guide, the core, every Component, Service and Directive of ElemenxUI with its live example) comes with the package and opens offline:
+
+```bash
+npx elemenx docs --open
+```
+
 A page with no build and no server takes the distribution from a CDN or from `node_modules/@qybercom/elemenx/dist` (see "Distribution of the framework" in `docs/BUILDER.md`):
 
 ```html

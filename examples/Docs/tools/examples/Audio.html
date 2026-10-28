@@ -1,0 +1,66 @@
+<div class="docs-stack">
+	<div class="docs-row">
+		<Button [label]="Running ? 'Stop' : 'Listen to 440 Hz'" Icon="play" (click)="Toggle" />
+	</div>
+	<p class="elemenx-text small">{{Text}}</p>
+</div>
+<script>
+(function () {
+	var oscillator = null;
+	var analyser = null;
+	var timer = null;
+
+	return {
+		Running: false,
+		Text: 'The Audio Service hears an oscillator: the loudest of 24 bands, and the loudness.',
+
+		$OnDestroy: function () {
+			this.Stop();
+		},
+
+		Stop: function () {
+			clearInterval(timer);
+
+			if (oscillator)
+				oscillator.stop();
+
+			this.$Service('Audio').Release(analyser);
+
+			oscillator = null;
+			analyser = null;
+			this.Running = false;
+		},
+
+		Toggle: function () {
+			var self = this;
+			var audio = this.$Service('Audio');
+			var context;
+
+			if (this.Running) {
+				this.Stop();
+
+				return;
+			}
+
+			context = audio.Context();
+			context.resume();
+
+			oscillator = context.createOscillator();
+			oscillator.frequency.value = 440;
+			oscillator.start();
+
+			/* Heard, not played: the oscillator goes to the analyser alone. */
+			analyser = audio.Analyser(oscillator, {Smoothing: 0.5});
+			this.Running = true;
+
+			timer = setInterval(function () {
+				var bands = audio.Bands(analyser, 24);
+				var loudest = bands.indexOf(Math.max.apply(null, bands));
+				var levels = audio.Levels(analyser);
+
+				self.Text = 'The loudest band: ' + (loudest + 1) + ' of 24; RMS ' + levels.Rms.toFixed(2) + ', peak ' + levels.Peak.toFixed(2) + '.';
+			}, 200);
+		}
+	};
+})()
+</script>

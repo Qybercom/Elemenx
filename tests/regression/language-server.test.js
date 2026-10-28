@@ -133,6 +133,15 @@ describe('Contract: the language of Elemenx for the editors (the core, and its L
 			return [problem.Severity, problem.Message, code.substring(problem.Start, problem.End)];
 		})).toEqual([['warning', 'No #Gone in Panel.html', 'Gone']]);
 		expect(language.Diagnose(knowledge, markup, 'html', html)).toEqual([]);
+
+		/* $Refs as $Ref: its names completed, a name to its element, and one of no element marked. */
+		expect(language.Complete(knowledge, "this.$Refs('", 12, 'js', js).map(function (item) {
+			return item.Label;
+		})).toEqual(['Theme', 'Box']);
+		expect(language.Definition(knowledge, "this.$Refs('Box');", 13, 'js', js)).toEqual({File: html, Line: 2, Character: 7});
+		expect(language.Diagnose(knowledge, "Elemenx.Component('Panel', {\n\t$TemplateURL: 'Panel.html',\n\tGo: function () {\n\t\tthis.$Refs('None');\n\t}\n});\n", 'js', js).map(function (problem) {
+			return problem.Message;
+		})).toEqual(['No #None in Panel.html']);
 	});
 
 	/* Regression: a <template id> of a page knew no Component, so its names and references went nowhere. */
@@ -219,6 +228,50 @@ describe('Contract: the language of Elemenx for the editors (the core, and its L
 		expect(language.Diagnose(knowledge, '<Card class="a" id="b" data-x="1" aria-label="c" slot="footer" page-title="no" />', 'html').map(function (problem) {
 			return problem.Message;
 		})).toEqual(['Card has no prop page-title']);
+	});
+
+	/* A bug: Ctrl+click on $T or on its key went nowhere (and in IntelliJ, LSP4IJ cancelled the click). */
+	it('goes from $T to elemenx.js and from its key to the phrase of the nearest locales, and tells the phrase in each language', function () {
+		var own = fs.mkdtempSync(path.join(os.tmpdir(), 'elemenx-phrases-'));
+		var put = function (file, text) {
+			fs.mkdirSync(path.dirname(path.join(own, file)), {recursive: true});
+			fs.writeFileSync(path.join(own, file), text);
+		};
+		var page = '<button [title]="$T(\'ui.call.leave\')">{{ $T(\'app.title\') }}</button>\n';
+		var at = function (text, needle, shift) {
+			return text.indexOf(needle) + (shift || 1);
+		};
+		var phrases;
+
+		put('elemenx.js', '(function () {\n\tvar Locale = {\n\t\t\t$T: function (key, params) {\n\t\t\t\treturn key;\n\t\t\t}\n\t};\n})();\n');
+		put('libraries/Kit/data/meta.json', '{"Components": []}');
+		put('libraries/Kit/locales/en.json', '{\n\t"ui": {\n\t\t"label": "Label",\n\t\t"call": {\n\t\t\t"label": "Call",\n\t\t\t"leave": "Leave"\n\t\t}\n\t}\n}\n');
+		put('libraries/Kit/locales/ru.json', '{\n\t"ui": {\n\t\t"call": {\n\t\t\t"leave": "Выйти"\n\t\t}\n\t}\n}\n');
+		put('application/locales/en.json', '{\n\t"app.title": "My \\"app\\"",\n\t"ui": {"call": {"leave": "Go away"}}\n}\n');
+		put('other/locales/en.json', '{"app": {"title": "Not this one"}}\n');
+		put('application/components/Board/Board.js', "Elemenx.Component('Board', {\n\t$TemplateURL: 'Board.html'\n});\n");
+		put('application/components/Board/Board.html', page);
+
+		phrases = language.Create({Roots: [own]});
+
+		try {
+			/* $T: to its definition in elemenx.js. */
+			expect(language.Definition(phrases, page, at(page, '$T(') + 1, 'html', path.join(own, 'application/components/Board/Board.html'))).toEqual({File: path.join(own, 'elemenx.js'), Line: 2, Character: 3});
+
+			/* A key: to its last part in the locales nearest to the file (the Application before the Library, and the one beside it before other/). */
+			expect(language.Definition(phrases, page, at(page, 'app.title', 3), 'html', path.join(own, 'application/components/Board/Board.html'))).toEqual({File: path.join(own, 'application/locales/en.json'), Line: 1, Character: 2});
+			expect(language.Definition(phrases, page, at(page, 'ui.call', 4), 'html', path.join(own, 'application/components/Board/Board.html'))).toEqual({File: path.join(own, 'application/locales/en.json'), Line: 2, Character: 18});
+			expect(language.Definition(phrases, "this.$T('ui.call.leave');", 12, 'js', path.join(own, 'libraries/Kit/components/Card/Card.js'))).toEqual({File: path.join(own, 'libraries/Kit/locales/en.json'), Line: 5, Character: 4});
+			expect(language.Definition(phrases, "this.$T('ui.none');", 12, 'js', path.join(own, 'libraries/Kit/components/Card/Card.js'))).toBe(null);
+
+			/* The hover: the phrase in each language of those locales, English first. */
+			expect(language.Hover(phrases, "this.$T('ui.call.leave');", 12, 'js', path.join(own, 'libraries/Kit/components/Card/Card.js')).Markdown).toBe('`ui.call.leave`\n\n- **en**: Leave\n- **ru**: Выйти');
+			expect(language.Hover(phrases, page, at(page, 'app.title', 3), 'html', path.join(own, 'application/components/Board/Board.html')).Markdown).toBe('`app.title`\n\n- **en**: My "app"');
+			expect(language.Hover(phrases, "this.$T('ui.none');", 12, 'js', path.join(own, 'libraries/Kit/components/Card/Card.js')).Markdown).toContain('No phrase of this key');
+		}
+		finally {
+			fs.rmSync(own, {recursive: true, force: true});
+		}
 	});
 
 	it('speaks LSP over stdio: initialize, a document opened, its diagnostics, a completion, shutdown', async function () {

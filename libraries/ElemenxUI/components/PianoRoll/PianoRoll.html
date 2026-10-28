@@ -1,0 +1,17 @@
+<div class="elemenx-piano-roll" [class.readonly]="ReadOnly && ReadOnly !== 'false'" [style.height]="Height + 'px'" tabindex="0" role="application" [attribute.aria-label]="Label || $T('ui.pianoRoll.label')" (keydown)="Key">
+	<div class="elemenx-piano-roll-scroll" [style.--elemenx-piano-roll-beat]="BeatWidth + 'px'" [style.--elemenx-piano-roll-bar]="BeatWidth * Beats + 'px'" [style.--elemenx-piano-roll-key]="KeyHeight + 'px'">
+		<div class="elemenx-piano-roll-corner"></div>
+		<div class="elemenx-piano-roll-ruler" [style.width]="Width() + 'px'" (pointerdown)="RulerDown">
+			<span class="elemenx-piano-roll-bar-number" *for="bar of BarList()" [style.left]="bar * BeatWidth * Beats + 'px'">{{bar + 1}}</span>
+			<span class="elemenx-piano-roll-loop" *if="Loop && Loop.End > Loop.Start" [style.left]="Loop.Start * BeatWidth + 'px'" [style.width]="(Loop.End - Loop.Start) * BeatWidth + 'px'"></span>
+		</div>
+		<div class="elemenx-piano-roll-keys">
+			<button type="button" tabindex="-1" class="elemenx-piano-roll-key" *for="key of KeyList()" [class.black]="key.Black" [class.c]="key.C" [style.height]="KeyHeight + 'px'" [attribute.aria-label]="key.Name" [attribute.data-note]="key.Midi" (pointerdown)="KeyDown">{{key.C ? key.Name : ''}}</button>
+		</div>
+		<div class="elemenx-piano-roll-grid" [style.width]="Width() + 'px'" [style.height]="(High - Low + 1) * KeyHeight + 'px'" (pointerdown)="Down" (pointermove)="Move" (pointerup)="Up" (pointercancel)="Up" (dblclick)="Double">
+			<div class="elemenx-piano-roll-row" *for="key of KeyList()" [class.black]="key.Black" [style.height]="KeyHeight + 'px'"></div>
+			<div class="elemenx-piano-roll-note" *for="note of Notes" *key="note.ID" [class.selected]="Selected.indexOf(note.ID) !== -1" [attribute.data-id]="note.ID" [style.left]="note.Start * BeatWidth + 'px'" [style.top]="(High - note.Note) * KeyHeight + 'px'" [style.width]="Math.max(4, note.Length * BeatWidth - 1) + 'px'" [style.height]="KeyHeight - 1 + 'px'" [style.opacity]="0.45 + 0.55 * (note.Velocity === undefined ? 0.8 : note.Velocity)"></div>
+			<div class="elemenx-piano-roll-playhead" *if="Position >= 0" [style.left]="Position * BeatWidth + 'px'"></div>
+		</div>
+	</div>
+</div>

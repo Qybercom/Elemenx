@@ -4,6 +4,7 @@ var fs = require('fs');
 var path = require('path');
 var vm = require('vm');
 var fail = require('./common.js').fail;
+var writeFile = require('./common.js').writeFile;
 
 /*
  * The meta of a library for its tools (a builder, a reference): what its Components, Services and Directives declare
@@ -172,7 +173,8 @@ function Build (library, output) {
 	});
 
 	if (output)
-		fs.writeFileSync(output, JSON.stringify(result, null, '\t') + '\n');
+		/* Regression: the IDE that indexed data/meta.json held it, and the write failed (UNKNOWN on Windows). */
+		writeFile(output, JSON.stringify(result, null, '\t') + '\n');
 
 	return result;
 }

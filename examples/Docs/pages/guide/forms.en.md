@@ -39,6 +39,10 @@ A `Form` makes its model of its `Field`s. A field with a `Name` and validators a
 
 The validators of a `Field`: `Required`, `Email`, `Min`, `Max`, `MinLength`, `MaxLength`, `Pattern` (a regular expression as a text) and `Match` (the `Name` of another field that must hold the same value). `Messages` replaces the text of an error by its key (`{required: 'Tell us your name'}`). A form with `Disabled` disables every field; `Submit()` and `Reset()` do in code what its buttons do.
 
+## Names of parts
+
+A `Name` is read as the forms of a server read it: `user[name]` and `user[address][city]` (or `user.address.city`) put their controls in a group `user` and a group `address` in it, `items[2][title]` in an array `items`, and every `tags[]` adds one more item to the array `tags`. The value of the form is nested the same way: `{user: {name, address: {city}}, items: [{title}], tags: ['red', 'blue']}`; an array holds only the items that have a field (`items[2]` alone is the first item of the value). A field of a row of `*for` names its item by its key (`[name]="'items[' + item.ID + '][title]'"`): when the row goes, its control goes, and with the last one the group and the array made for them. `Get` takes the same names (`Model.Get('items[2][title]')`), and the errors of `invalid` are by the path of their control (`user.address.city`).
+
 ## In code
 
 The `Forms` service makes the model: `Control(value, validators)`, `Group({name: node}, validators)` and `Array([node], validators)`. A form takes it by `[model]`, and a field takes a control of it by its `Name` (a path: `'address.city'`) or by `[control]`.

@@ -73,7 +73,7 @@ describe('Elemenx npm release surface', function () {
 
 	it('leaves out the examples, the tests and the development files', function () {
 		var outside = files.filter(function (file) {
-			return /^(examples|tests|scripts|packages|coverage|test-results|playwright-report|node_modules|eslint|stylelint|\.github)\//.test(file) || /^(AGENTS|CLAUDE)\.md$|\.config\.m?js$|^elemenx\.zip$/.test(file);
+			return /^(examples|tests|scripts|packages|coverage|test-results|playwright-report|node_modules|eslint|stylelint|\.github)\//.test(file) || /^(AGENTS|CLAUDE)\.md$|\.config\.m?js$|^elemenx\.zip$/.test(file === 'docs-site/elemenx.config.js' ? 'the server of the reference' : file);
 		});
 
 		expect(outside).toEqual([]);
@@ -85,7 +85,8 @@ describe('Elemenx npm release surface', function () {
 		expect(manifest.unpkg).toBe('dist/elemenx.min.js');
 		expect(manifest.jsdelivr).toBe('dist/elemenx.min.js');
 		/* The package has no editors/: they go to the GitHub release (publish.yml), and npm publish waits for no IntelliJ IDEA. */
-		expect(manifest.scripts.prepack).toBe('npm run dist -- --no-editors');
+		/* The reference too (docs-site/, with the elemenx.config.js of its server): npx elemenx docs serves it. */
+		expect(manifest.scripts.prepack).toBe('npm run dist -- --no-editors && npm run docs:site');
 		expect(manifest.exports).toBeUndefined();
 		expect(files).toContain(manifest.main);
 		expect(files).toContain(manifest.bin.elemenx);
@@ -132,33 +133,38 @@ describe('Elemenx npm release surface', function () {
 		expect(publish).toContain('gh release create "$GITHUB_REF_NAME" --verify-tag');
 		expect(publish).toContain('dist/*.js dist/manifest.json');
 
-		/* Regression: files of another version went out. The ones of the release are checked first, in both jobs. */
-		expect(publish.indexOf('npm run version:built')).toBeGreaterThan(publish.indexOf('npm run dist\n'));
+		/* Regression: files of another version went out. The ones of the release are checked first, in every job. */
+		expect(publish.indexOf('npm run version:built')).toBeGreaterThan(publish.indexOf('npm run dist -- --no-editors\n'));
 		expect(publish.indexOf('npm run version:built')).toBeLessThan(publish.indexOf('gh release create'));
-		expect(publish.lastIndexOf('npm run version:built')).toBeGreaterThan(publish.indexOf('node editors/build.js --visualstudio'));
+		expect(publish.lastIndexOf('npm run version:built')).toBeGreaterThan(publish.indexOf('node editors/build.js --only ${{ matrix.editor }}'));
 		expect(publish.lastIndexOf('npm run version:built')).toBeLessThan(publish.indexOf('gh release upload'));
 
-		/* Regression: the plugin of IntelliJ failed the publication. npm goes first, the editors in a job of their own after it. */
+		/*
+		 * Regression: the plugin of IntelliJ failed the publication. npm goes first, the release after it; then each
+		 * extension in a job of its own, in parallel (VS Code and IntelliJ on Linux, Visual Studio on Windows).
+		 */
 		expect(publish.indexOf('npm publish --access public')).toBeLessThan(publish.indexOf('ELEMENX_INTELLIJ: download'));
-		expect(publish.indexOf('needs: publish')).toBeLessThan(publish.indexOf('ELEMENX_INTELLIJ: download'));
+		expect(publish).toMatch(/\n {2}release:\n(?:.*\n)*? {4}needs: publish\n/);
+		expect(publish).toMatch(/\n {2}editors:\n(?:.*\n)*? {4}needs: release\n(?:.*\n)*? {4}runs-on: \$\{\{ matrix\.os \}\}\n(?:.*\n)*? {6}fail-fast: false\n/);
+		expect(publish).toContain('          - editor: vscode\n            os: ubuntu-latest\n');
+		expect(publish).toContain('          - editor: intellij\n            os: ubuntu-latest\n');
+		expect(publish).toContain('          - editor: visualstudio\n            os: windows-latest\n');
 		expect(publish).toContain('uses: gradle/actions/setup-gradle@');
+		expect(publish).toContain('gh release upload "$GITHUB_REF_NAME" dist/editors/${{ matrix.file }} --clobber');
 
-		/* Every push starts the Gradle of the plugin as the build does on Linux; a change of editors/ builds them. */
+		/* Every push starts the Gradle of the plugin as the build does on Linux; a change of editors/ builds each extension in its job. */
 		expect(ci).toContain('run: sh editors/intellij/gradlew --version');
-		expect(ci).toContain('run: node editors/build.js --intellij');
+		expect(ci).toContain('node editors/build.js --only ${{ matrix.editor }}');
+		expect(ci).toContain('          - editor: visualstudio\n            os: windows-latest\n');
 		expect(ci).toContain('&& !inputs.e2e');
 
-		/* The marketplaces of the editors, each when its secret is set, a version there already skipped. */
-		expect(publish).toContain("if: env.VSCE_PAT != ''");
-		expect(publish).toContain("if: env.OVSX_PAT != ''");
-		expect(publish).toContain("if: env.JETBRAINS_TOKEN != ''");
+		/* The marketplaces of the editors, each in the job of its extension when its secret is set, a version there already skipped. */
+		expect(publish).toContain("if: matrix.editor == 'vscode' && env.VSCE_PAT != ''");
+		expect(publish).toContain("if: matrix.editor == 'vscode' && env.OVSX_PAT != ''");
+		expect(publish).toContain("if: matrix.editor == 'intellij' && env.JETBRAINS_TOKEN != ''");
+		expect(publish).toContain("if: matrix.editor == 'visualstudio' && env.VSCE_PAT != ''");
 		expect(publish).toContain('publish --packagePath dist/editors/elemenx-vscode.vsix --skip-duplicate');
 		expect(publish).toContain('publishPlugin --no-daemon');
-
-		/* Visual Studio: built on Windows after the release, attached to it, and published with VsixPublisher. */
-		expect(publish).toMatch(/\n {2}visualstudio:\n(?:.*\n)*? {4}needs: release\n {4}runs-on: windows-latest\n/);
-		expect(publish).toContain('npm run dist -- --no-editors\n          node editors/build.js --visualstudio --no-intellij');
-		expect(publish).toContain('dist/editors/elemenx-visualstudio.vsix --clobber');
 		expect(publish).toContain('-publishManifest editors\\visualstudio\\publishManifest.json');
 	});
 

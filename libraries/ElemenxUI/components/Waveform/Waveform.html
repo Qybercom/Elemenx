@@ -1,0 +1,5 @@
+<div class="elemenx-waveform" [class.selectable]="Selectable !== false && Selectable !== 'false'" [class.empty]="!Duration" [style.height]="Height + 'px'" tabindex="0" role="slider" aria-valuemin="0" [attribute.aria-valuemax]="Round(Duration)" [attribute.aria-valuenow]="Round(Time)" [attribute.aria-valuetext]="Clock(Time) + ' / ' + Clock(Duration)" [attribute.aria-label]="Label || $T('ui.waveform.label')" (pointerdown)="Down" (pointermove)="Move" (pointerup)="Up" (pointercancel)="Up" (keydown)="Key">
+	<canvas class="elemenx-waveform-canvas" aria-hidden="true"></canvas>
+	<span class="elemenx-waveform-time" *if="ShowTime !== false && ShowTime !== 'false' && Duration">{{Clock(Time)}} / {{Clock(Duration)}}</span>
+	<span class="elemenx-waveform-selection" *if="Selection && Selection.End > Selection.Start && ShowTime !== false && ShowTime !== 'false'">{{Clock(Selection.Start)}} – {{Clock(Selection.End)}}</span>
+</div>
