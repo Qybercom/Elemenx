@@ -1397,7 +1397,7 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 
 - `elemenx-tab`: `active`, `disabled`
 - `elemenx-tab-close`
-- `elemenx-tabs`: `editor`, `large`, `line`, `pill`, `small`
+- `elemenx-tabs`: `editor`, `large`, `left`, `line`, `pill`, `right`, `rotated`, `small`, `vertical`
 - `elemenx-tabs-extra`
 - `elemenx-tabs-list`
 

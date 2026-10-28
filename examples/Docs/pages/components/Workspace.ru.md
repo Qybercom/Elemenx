@@ -78,3 +78,9 @@
 })
 </script>
 ```
+
+## Тесты
+
+- [a workspace places its tool windows by their buttons on the stripes; in Customize they are dragged to another side, and the layout is kept](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L1667) — `tests/examples/ui-kit.spec.js`
+- [radio groups and tab strips with their own state do not affect each other](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L4008) — `tests/examples/ui-kit.spec.js`
+- [workspace shows the tool windows the page puts in it and resizes them](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L5172) — `tests/examples/ui-kit.spec.js`

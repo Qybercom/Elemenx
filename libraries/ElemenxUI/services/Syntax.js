@@ -1,7 +1,8 @@
 /*
  * The highlighting of source code: the grammars of the languages and the tokens of a text in one of them. Built in:
- * javascript (js, mjs, cjs, jsx), typescript (ts, tsx), json, html (xml, svg), css, markdown (md), sql, python (py)
- * and shell (sh, bash, zsh); text has no rules. Used by CodeEditor; any component may show highlighted code with it.
+ * javascript (js, mjs, cjs, jsx), typescript (ts, tsx), json, html (xml, svg), css, markdown (md), sql, python (py),
+ * shell (sh, bash, zsh), yaml (yml), toml, ini (cfg, conf, properties, env) and csv (tsv); text has no rules. Used by
+ * CodeEditor; any component may show highlighted code with it.
  * - Register(name, grammar) adds a language (or replaces one): {Aliases, Rules, Comment, Indent}. Rules are
  *   [Type, RegExp, Options]: the first rule that matches nearest wins (a rule must not match empty text). Type is the
  *   class of the token (elemenx-syntax-<Type>; null for plain text). Options: Inside (a language name, or a
@@ -188,6 +189,62 @@ Elemenx.Service('Syntax', {
 				['attribute', /(?:^|\s)--?[A-Za-z][\w-]*/m],
 				['number', /\b\d+\b/],
 				['operator', /&&|\|\||[|&;<>]+|=/]
+			]
+		});
+
+		this.Register('yaml', {
+			Aliases: ['yml'],
+			Comment: {Line: '#'},
+			Indent: /:\s*(?:[|>][-+]?\d*)?\s*$|^\s*-\s*$/,
+			Rules: [
+				['comment', /(?:^|[ \t])#[^\n]*/m],
+				['meta', /^(?:---|\.\.\.)(?=\s|$)/m],
+				['string', /'(?:''|[^'])*'?|"(?:\\[\s\S]|[^\\"])*"?/],
+				['property', /[^\s#:'"\-[\]{},&*!|>][^\n:#]*?(?=:(?:\s|$))/],
+				['variable', /[&*][^\s,[\]{}]+/],
+				['type', /!{1,2}[^\s]*/],
+				['operator', /[|>][-+]?\d*(?=\s*(?:#|$))/m],
+				['literal', /\b(?:true|false|True|False|TRUE|FALSE|null|Null|NULL|yes|no)\b|~/],
+				['number', /[-+]?(?:\b0x[\da-fA-F]+|\b0o[0-7]+|(?:\b\d[\d_]*(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?|\.inf\b|\.nan\b)/],
+				['punctuation', /[-:,[\]{}?]/]
+			]
+		});
+
+		this.Register('toml', {
+			Comment: {Line: '#'},
+			Indent: /[[{]\s*$/,
+			Rules: [
+				['comment', /#[^\n]*/],
+				['selector', /^[ \t]*\[\[?[^\]\n]*\]\]?/m],
+				['string', /"""[\s\S]*?(?:"""|$(?![\s\S]))|'''[\s\S]*?(?:'''|$(?![\s\S]))/],
+				['string', /"(?:\\.|[^\\"\n])*"?|'[^'\n]*'?/],
+				['property', /[A-Za-z0-9_.-]+(?=\s*=)/],
+				['number', /\d{4}-\d{2}-\d{2}(?:[T ]\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[-+]\d{2}:\d{2})?)?|[-+]?(?:0x[\da-fA-F_]+|0o[0-7_]+|0b[01_]+|\d[\d_]*(?:\.[\d_]+)?(?:[eE][-+]?\d+)?|inf|nan)\b/],
+				['literal', /\b(?:true|false)\b/],
+				['punctuation', /[[\]{}=,.]/]
+			]
+		});
+
+		this.Register('ini', {
+			Aliases: ['cfg', 'conf', 'properties', 'env'],
+			Comment: {Line: ';'},
+			Rules: [
+				['comment', /^[ \t]*[;#][^\n]*/m],
+				['selector', /^[ \t]*\[[^\]\n]*\]/m],
+				['property', /^[ \t]*[^=:;#\s[][^=:\n]*?(?=\s*[=:])/m],
+				['string', /"(?:\\.|[^\\"\n])*"?|'[^'\n]*'?/],
+				['number', /\b\d+(?:\.\d+)?\b/],
+				['literal', /\b(?:true|false|yes|no|on|off)\b/i],
+				['punctuation', /[=:[\]]/]
+			]
+		});
+
+		this.Register('csv', {
+			Aliases: ['tsv'],
+			Rules: [
+				['string', /"(?:""|[^"])*"?/],
+				['number', /-?\b\d+(?:[.,]\d+)?\b/],
+				['punctuation', /[,;\t]/]
 			]
 		});
 

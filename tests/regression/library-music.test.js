@@ -356,6 +356,37 @@ describe('Contract: notes, instruments and the transport of the Audio Service, P
 		expect(keys[keys.length - 1]).toBe(62);
 	});
 
+	it('PianoRoll opens on its notes, also when it is put in the page after it is made', async function () {
+		var roll = Elemenx.Component('PianoRoll')({Notes: [{ID: 'a', Note: 48, Start: 0, Length: 1}, {ID: 'b', Note: 50, Start: 1, Length: 1}], Low: 36, High: 96, KeyHeight: 10, Height: 120});
+		var box = document.createElement('div');
+		var scroll;
+
+		owned.push(roll);
+
+		box.style.width = '400px';
+
+		box.appendChild(roll.$Element());
+
+		await new Promise(function (resolve) {
+			setTimeout(resolve, 120);
+		});
+
+		document.getElementById('mount').appendChild(box);
+
+		scroll = roll.$Element().querySelector('.elemenx-piano-roll-scroll');
+
+		/* The middle of its notes (C3 and D3, far under the top key) in the middle of what it shows. */
+		expect(await waitFor(function () {
+			return scroll.scrollTop > 0;
+		}, 3000)).toBe(true);
+
+		var note = roll.$Element().querySelector('.elemenx-piano-roll-note').getBoundingClientRect();
+		var view = scroll.getBoundingClientRect();
+
+		expect(note.top).toBeGreaterThan(view.top);
+		expect(note.bottom).toBeLessThan(view.bottom);
+	});
+
 	it('PianoRoll is as wide as its place, its grid scrolling inside it: it does not widen a column of a grid (a phone)', async function () {
 		var host = mount('<div style="display: grid; grid-template-columns: 1fr; width: 200px"><div style="display: flex; flex-direction: column; align-items: flex-start"><PianoRoll Bars="4" Height="160" /></div></div>');
 		var roll = await waitFor(function () {

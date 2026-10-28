@@ -59,3 +59,7 @@ default
 })
 </script>
 ```
+
+## Tests
+
+- [Ribbon: the first control of the panel a person can see, after ArrowDown on its tab](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/focus-on-open.test.js#L84) — `tests/regression/focus-on-open.test.js`

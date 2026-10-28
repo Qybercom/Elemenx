@@ -31,3 +31,7 @@ The differences between two texts, to read (the Diff Service): Before and After,
 })
 </script>
 ```
+
+## Tests
+
+- [DiffView shows the lines removed and added with the words that changed, folds the unchanged runs and opens them](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-new.test.js#L208) — `tests/regression/library-new.test.js`

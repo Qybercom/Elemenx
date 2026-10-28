@@ -28,3 +28,7 @@
 })
 </script>
 ```
+
+## Тесты
+
+- [*draggable and *droppable: an item dragged by the pointer onto a target that accepts its type is dropped with its data](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-directives.test.js#L135) — `tests/regression/library-directives.test.js`

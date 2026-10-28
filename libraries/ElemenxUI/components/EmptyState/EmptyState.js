@@ -7,7 +7,7 @@ Elemenx.Component('EmptyState', {
 	$TemplateURL: 'EmptyState.html',
 	$StyleURL: 'EmptyState.css',
 	$Meta: {
-		Group: 'display',
+		Group: 'feedback',
 		Icon: 'folder-open',
 		Description: 'What a list, a table or a panel shows when it has nothing: an icon, a title, a description and actions (the actions slot), the default slot for more.',
 		Container: true,

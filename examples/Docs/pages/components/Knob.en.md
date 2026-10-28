@@ -50,3 +50,7 @@ A knob: a rotary input with the look of the dial Meter, an open ring of three qu
 })
 </script>
 ```
+
+## Tests
+
+- [Knob turns by its keys in Steps within Min and Max, tells input and change, and goes back to Default on a double click](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-controls.test.js#L37) — `tests/regression/library-controls.test.js`

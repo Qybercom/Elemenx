@@ -620,5 +620,40 @@ describe('Contract: the new Components of ElemenxUI', function () {
 
 		expect(audio.currentTime).toBe(2);
 	});
-});
 
+	it('MenuList as a sheet takes the focus when it opens, closes on Escape, and gives the focus back to what had it', async function () {
+		var dismissed = [];
+		var host = mount('<div><button class="opener" type="button">Open</button><MenuList [items]="Items" [open]="Open" Sheet="true" Title="Actions" (dismiss)="Dismissed" /></div>', {
+			Open: false,
+			Items: [{ID: 'open', Label: 'Open'}, {ID: 'rename', Label: 'Rename'}],
+			Dismissed: function (reason) {
+				dismissed.push(reason);
+
+				this.Open = false;
+			}
+		});
+		var opener = host.$Element().querySelector('.opener');
+		var sheet;
+
+		opener.focus();
+
+		host.Open = true;
+
+		sheet = await waitFor(function () {
+			var element = host.$Element().querySelector('.elemenx-menu.sheet');
+
+			return element && element.contains(document.activeElement) ? element : null;
+		}, 3000);
+
+		expect(sheet).toBeTruthy();
+		expect(document.activeElement.textContent.trim()).toBe('Open');
+
+		document.activeElement.dispatchEvent(new KeyboardEvent('keydown', {key: 'Escape', bubbles: true, cancelable: true}));
+
+		await tick();
+
+		expect(dismissed).toEqual(['escape']);
+		expect(host.$Element().querySelector('.elemenx-menu.sheet')).toBe(null);
+		expect(document.activeElement).toBe(opener);
+	});
+});

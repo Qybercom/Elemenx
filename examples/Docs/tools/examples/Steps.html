@@ -30,8 +30,11 @@
 		this.Mark();
 	},
 
+	/* The step pressed, by its ID: the item select gives is the copy of the Steps, not the object of this list. */
 	Selected: function (item) {
-		this.Index = this.Items.indexOf(item);
+		this.Index = this.Items.map(function (each) {
+			return each.ID;
+		}).indexOf(item.ID);
 		this.Mark();
 	}
 })

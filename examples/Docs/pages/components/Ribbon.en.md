@@ -123,3 +123,15 @@ Slots: quick (the quick access toolbar, before the tabs), end (after them: a sea
 })
 </script>
 ```
+
+## Tests
+
+- [Ribbon: the first control of the panel a person can see, after ArrowDown on its tab](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/focus-on-open.test.js#L84) — `tests/regression/focus-on-open.test.js`
+- [adds components from the Insert tab of its Ribbon, edits their props and text, and undoes and redoes the changes](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/builder.spec.js#L142) — `tests/examples/builder.spec.js`
+- [drops components from the Ribbon where the line shows, with words saying where, and moves elements by the grip of the selection](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/builder.spec.js#L213) — `tests/examples/builder.spec.js`
+- [moves elements in the structure by dragging them, and takes a kind dragged from the Ribbon into it](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/builder.spec.js#L561) — `tests/examples/builder.spec.js`
+- [opens a group of the Ribbon over the canvas, its rulers and the handles of the panels](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/builder.spec.js#L1436) — `tests/examples/builder.spec.js`
+- [embeds in ElemenxUI its styles, sprites, data and every entity with its template and style](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/dist.test.js#L47) — `tests/regression/dist.test.js`
+- [ribbon switches tabs, runs commands, menus and galleries, and shows a contextual tab](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L579) — `tests/examples/ui-kit.spec.js`
+- [ribbon shrinks its groups to fit, folds them into buttons and collapses to its tabs](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L649) — `tests/examples/ui-kit.spec.js`
+- [ribbon key tips open tabs and run commands from the keyboard, and the backstage opens over the window](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L763) — `tests/examples/ui-kit.spec.js`

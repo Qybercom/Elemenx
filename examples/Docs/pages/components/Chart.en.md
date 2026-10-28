@@ -54,3 +54,7 @@ A chart in SVG, as wide as its container. Type: line, area, bar, pie or donut. L
 })
 </script>
 ```
+
+## Tests
+
+- [builds the Libraries of $Discovery: a folder with its index.js and a graph file of any name, with their dictionaries](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/builder-multi-application.test.js#L257) — `tests/regression/builder-multi-application.test.js`

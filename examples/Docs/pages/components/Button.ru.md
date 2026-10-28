@@ -79,3 +79,20 @@
 })
 </script>
 ```
+
+## Тесты
+
+- [AriaLabel names it whatever its text; without one its text names it, and an icon button its Title](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/button-names.test.js#L45) — `tests/regression/button-names.test.js`
+- [Expanded true or false is its aria-expanded, as it changes; empty, it has none](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/button-names.test.js#L54) — `tests/regression/button-names.test.js`
+- [Component tags preserve case and do not capture native HTML tags](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/templates.test.js#L69) — `tests/regression/templates.test.js`
+- [adds components from the Insert tab of its Ribbon, edits their props and text, and undoes and redoes the changes](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/builder.spec.js#L142) — `tests/examples/builder.spec.js`
+- [drops components from the Ribbon where the line shows, with words saying where, and moves elements by the grip of the selection](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/builder.spec.js#L213) — `tests/examples/builder.spec.js`
+- [declares the tabs of a Tabs as its children: adds them, shows the one selected on the canvas and exports them](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/builder.spec.js#L470) — `tests/examples/builder.spec.js`
+- [sets the layout of an element above its props: its box, its sizes and the alignment of a flex container by icons](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/builder.spec.js#L506) — `tests/examples/builder.spec.js`
+- [shows a page of the guide and a page of the reference with its live example](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/docs.spec.js#L30) — `tests/examples/docs.spec.js`
+- [switches to Russian, keeps the language and finds a page by the search of the whole reference in its header](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/docs.spec.js#L52) — `tests/examples/docs.spec.js`
+- [keeps the $Meta of the libraries in a build whose own component reads Elemenx.Meta, and leaves it out otherwise](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/cli-meta.test.js#L222) — `tests/regression/cli-meta.test.js`
+- [ButtonGroup groups its buttons for screen readers, attached or in a column, and FileIcon names the icon of a file by its name](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-misc.test.js#L123) — `tests/regression/library-misc.test.js`
+- [overrides the CSS of an element, of every element of its kind and in a state, in a <style> of the template](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/builder.spec.js#L874) — `tests/examples/builder.spec.js`
+
++2 ещё в тех же файлах

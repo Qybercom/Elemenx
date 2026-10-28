@@ -1,7 +1,7 @@
 /*
  * A text field. A password field has an eye button: Guarded asks before it shows the password, HideAfter hides it
  * again (see the Reveal Service).
- * Preset: a format of the Formats Service (email, url, semver, ipv4, ipv6, uuid, iban, postal-code, integer, decimal,
+ * Preset: a format of the FieldFormats Service (email, url, semver, ipv4, ipv6, uuid, iban, postal-code, integer, decimal,
  * or one the Application registers): the field gets its keyboard and autofill, keeps only the characters the format
  * holds, and checks the value when it is committed: it normalizes it, looks invalid when it is wrong and emits
  * validate with {Valid, Value, Message} (put Message in the Error of a Field); the change event carries the
@@ -30,7 +30,7 @@ Elemenx.Component('Input', {
 			Prefix: 'A text inside the field before the value ($).',
 			Suffix: 'A text inside the field after the value (kg).',
 			Mask: 'A mask of the value: # a digit, A a letter (###-###).',
-			Preset: 'A format of the Formats Service: email, url, iban, postal-code...',
+			Preset: 'A format of the FieldFormats Service: email, url, iban, postal-code...',
 			Country: 'The country of a postal-code Preset.',
 			Name: 'The name of its value in a form.',
 			Autocomplete: 'The autocomplete of the native field.',
@@ -83,7 +83,7 @@ Elemenx.Component('Input', {
 	Complete: false,
 
 	$OnCreate: function () {
-		var formats = this.$Service('Formats');
+		var formats = this.$Service('FieldFormats');
 
 		/* An attribute of the field: its own value, or the one of the Preset. */
 		this.PresetAttribute = function (preset, key, own) {
@@ -103,7 +103,7 @@ Elemenx.Component('Input', {
 	},
 
 	Typed: function (event, node) {
-		var formats = this.$Service('Formats');
+		var formats = this.$Service('FieldFormats');
 		var text = node.value;
 		var kept;
 		var caret;
@@ -134,7 +134,7 @@ Elemenx.Component('Input', {
 
 	/* Checks the value against the Preset; normalize (on commit) puts the normalized value in the field. */
 	Validate: function (normalize) {
-		var formats = this.$Service('Formats');
+		var formats = this.$Service('FieldFormats');
 		var result = formats.Check(this.Preset, this.Value, {Country: this.Country, Min: this.Min, Max: this.Max});
 		if (normalize && result.Value !== this.Value)
 			this.Value = formats.Display(this.Preset, result.Value);

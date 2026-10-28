@@ -12,7 +12,7 @@ Elemenx.Component('DialPad', {
 	$TemplateURL: 'DialPad.html',
 	$StyleURL: 'DialPad.css',
 	$Meta: {
-		Group: 'inputs',
+		Group: 'social',
 		Icon: 'phone',
 		Description: 'A dial pad: the number in a field over a grid of keys, a key that erases and a key that calls.',
 		Events: {

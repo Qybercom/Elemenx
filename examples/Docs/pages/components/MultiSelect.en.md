@@ -47,3 +47,7 @@ A select of several options. Options: [{Value, Label, Hint, Icon, Group, Disable
 })
 </script>
 ```
+
+## Tests
+
+- [MultiSelect toggles its options and gives the list of the Values chosen](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-forms.test.js#L174) — `tests/regression/library-forms.test.js`

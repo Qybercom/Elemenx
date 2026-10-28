@@ -46,7 +46,7 @@
 		},
 
 		Failed: function (error) {
-			this.Problem = error.message;
+			this.Problem = 'Line ' + error.Line + ' cannot be read: the diagram says why.';
 		},
 
 		SavePng: function () {

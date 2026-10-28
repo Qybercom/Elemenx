@@ -106,6 +106,7 @@ Pass a method the fields it needs as arguments: the template then plainly follow
 | `$Element()` | the root element |
 | `$Ref(name)` | the element marked `#name` in the template |
 | `$Refs(name)` | every element marked `#name` (the rows of a `*for`), in the order of the page; `[]` when there is none |
+| `$Ref(name, true)`, `$Refs(name, true)` | the instance of the component marked `#name` (`null` for an element of no component), the instances of those among the elements |
 | `$Emit(name, data)`, `$On(name, callback)` | its events |
 | `$Parent()` | the component whose template holds it |
 | `$Application()` | its Application |

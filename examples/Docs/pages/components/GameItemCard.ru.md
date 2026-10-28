@@ -27,3 +27,7 @@
 })
 </script>
 ```
+
+## Тесты
+
+- [GameItemCard shows the name, the rarity and type, and the stats of an item, and nothing without one](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-misc.test.js#L219) — `tests/regression/library-misc.test.js`

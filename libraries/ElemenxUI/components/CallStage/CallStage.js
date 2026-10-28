@@ -10,7 +10,7 @@ Elemenx.Component('CallStage', {
 	$TemplateURL: 'CallStage.html',
 	$StyleURL: 'CallStage.css',
 	$Meta: {
-		Group: 'layout',
+		Group: 'social',
 		Icon: 'users',
 		Description: 'The stage of a call: the video in front, the tiles of the participants, the own video, the controls and a side panel.',
 		Container: true,

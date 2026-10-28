@@ -41,3 +41,8 @@ The formats the cards share, in the language of the page (Locale): Count(12400) 
 })
 </script>
 ```
+
+## Tests
+
+- [DateInput takes the digits of its Format, gives an ISO date, and refuses a date out of Min and Max](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-forms.test.js#L46) — `tests/regression/library-forms.test.js`
+- [Format: counts in short, dates, the parts of a date badge, the time from now, and nothing of an invalid date](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-services.test.js#L21) — `tests/regression/library-services.test.js`

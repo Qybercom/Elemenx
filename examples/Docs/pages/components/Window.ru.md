@@ -103,3 +103,20 @@
 })
 </script>
 ```
+
+## Тесты
+
+- [Messaging.Window and a Component $Messaging declaration validate their arguments](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/messaging-contracts.test.js#L95) — `tests/regression/messaging-contracts.test.js`
+- [posts Messaging packets to a Window with the configured target origin](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/messaging.test.js#L285) — `tests/regression/messaging.test.js`
+- [does not inspect contentWindow on a Window-like target](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/messaging.test.js#L304) — `tests/regression/messaging.test.js`
+- [accepts an iframe directly instead of requiring contentWindow boilerplate](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/messaging.test.js#L321) — `tests/regression/messaging.test.js`
+- [accepts a document selector directly](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/messaging.test.js#L336) — `tests/regression/messaging.test.js`
+- [owner-aware $Messaging.Window resolves an iframe selector inside its owner](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/messaging.test.js#L352) — `tests/regression/messaging.test.js`
+- [deduplicates repeated Window bridge registration for the same target and origin](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/messaging.test.js#L370) — `tests/regression/messaging.test.js`
+- [automatically accepts a same-origin Window HELLO announcement](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/messaging.test.js#L385) — `tests/regression/messaging.test.js`
+- [requires explicit mutual trust before accepting a cross-origin Window announcement](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/messaging.test.js#L408) — `tests/regression/messaging.test.js`
+- [queues Window Messaging until a trusted discovery bridge becomes active](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/messaging.test.js#L438) — `tests/regression/messaging.test.js`
+- [accepts only messages from the attached Window and configured origin](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/messaging.test.js#L475) — `tests/regression/messaging.test.js`
+- [owner-aware $Messaging.Window is destroyed with its Component](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/messaging.test.js#L510) — `tests/regression/messaging.test.js`
+
++2 ещё в тех же файлах

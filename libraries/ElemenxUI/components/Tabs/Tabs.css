@@ -167,6 +167,114 @@
 	background: var(--elemenx-accent);
 }
 
+/*
+ * Vertical: the strip in a column on a side, the panels of the declared tabs beside it (the other actions of the default
+ * slot under the tabs). Rotated, the text of a tab is on its side: from the top down on the right (vertical-rl), from
+ * the bottom up on the left (its parts in the other order, each turned over).
+ */
+.elemenx-tabs.vertical {
+	display: grid;
+	grid-template-columns: auto minmax(0, 1fr);
+	grid-auto-rows: min-content;
+	align-items: start;
+	column-gap: 0;
+}
+
+.elemenx-tabs.vertical.right {
+	grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.elemenx-tabs.vertical .elemenx-tabs-list {
+	flex-direction: column;
+	grid-column: 1;
+	overflow-x: visible;
+	overflow-y: auto;
+}
+
+.elemenx-tabs.vertical.right .elemenx-tabs-list,
+.elemenx-tabs.vertical.right .elemenx-tabs-extra > :not(.elemenx-tab-panel) {
+	grid-column: 2;
+}
+
+.elemenx-tabs.vertical .elemenx-tabs-extra > :not(.elemenx-tab-panel) {
+	grid-column: 1;
+}
+
+.elemenx-tabs.vertical .elemenx-tab-panel {
+	grid-column: 2;
+	grid-row: 1 / span 100;
+	padding-top: 0;
+	padding-inline-start: 16px;
+}
+
+.elemenx-tabs.vertical.right .elemenx-tab-panel {
+	grid-column: 1;
+	padding-inline: 0 16px;
+}
+
+.elemenx-tabs.vertical .elemenx-tab {
+	height: auto;
+	min-height: var(--elemenx-control);
+	padding: 8px 12px;
+}
+
+.elemenx-tabs.vertical.rotated .elemenx-tab {
+	writing-mode: vertical-rl;
+	min-height: 0;
+	padding: 12px 0;
+	width: var(--elemenx-control);
+	justify-content: center;
+}
+
+.elemenx-tabs.vertical.rotated.left .elemenx-tab {
+	flex-direction: row-reverse;
+}
+
+.elemenx-tabs.vertical.rotated.left .elemenx-tab > * {
+	transform: rotate(180deg);
+}
+
+/* The number of a badge stays level, on any side. */
+.elemenx-tabs.vertical.rotated .elemenx-tab > .elemenx-badge {
+	writing-mode: horizontal-tb;
+	transform: none;
+}
+
+.elemenx-tabs.vertical.line {
+	border-bottom: 0;
+}
+
+.elemenx-tabs.vertical.line .elemenx-tabs-list {
+	border-inline-end: 1px solid var(--elemenx-border);
+}
+
+.elemenx-tabs.vertical.line.right .elemenx-tabs-list {
+	border-inline: 1px solid var(--elemenx-border) 0;
+}
+
+.elemenx-tabs.vertical.line .elemenx-tab.active::after,
+.elemenx-tabs.vertical.editor .elemenx-tab.active::after {
+	inset: 8px -1px 8px auto;
+	width: 2px;
+	height: auto;
+	border-radius: var(--elemenx-radius-small) 0 0 var(--elemenx-radius-small);
+}
+
+.elemenx-tabs.vertical.right.line .elemenx-tab.active::after,
+.elemenx-tabs.vertical.right.editor .elemenx-tab.active::after {
+	inset: 8px auto 8px -1px;
+	border-radius: 0 var(--elemenx-radius-small) var(--elemenx-radius-small) 0;
+}
+
+.elemenx-tabs.vertical.editor {
+	border-bottom: 0;
+}
+
+.elemenx-tabs.vertical.editor .elemenx-tab {
+	border-inline-end: 0;
+	border-bottom: 1px solid var(--elemenx-border);
+}
+
 /* What shows on hover, a touch screen has no hover: every tab that closes shows its cross. */
 @media (hover: none) {
 	.elemenx-tab-close {

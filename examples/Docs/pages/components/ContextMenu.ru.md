@@ -63,3 +63,7 @@
 })
 </script>
 ```
+
+## Тесты
+
+- [ContextMenu opens at the pointer on a right click, tells the target first, and gives the item chosen with it](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-overlays.test.js#L149) — `tests/regression/library-overlays.test.js`

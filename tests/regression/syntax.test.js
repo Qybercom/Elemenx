@@ -58,6 +58,42 @@ describe('ElemenxUI Syntax', function () {
 		});
 	});
 
+	it('reads YAML, TOML, INI and CSV: their keys, sections, strings, numbers, anchors and comments', function () {
+		var samples = {
+			yaml: '# config\nname: "Elemenx"\nbase: &base\n  port: 8080\nother:\n  <<: *base\n  on: true\nlist: [a, b]\ntext: |\n  line\n---\n- 1.5',
+			toml: 'title = "T" # note\n[owner]\nname = \'x\'\ndob = 1979-05-27\n[[items]]\nn = 0xFF\nok = true',
+			ini: '; note\n[server]\nport = 8080\nhost = "a b"\non = yes',
+			csv: 'name,age\n"Smith, J",42'
+		};
+		var yaml = typed(samples.yaml, 'yml');
+		var toml = typed(samples.toml, 'toml');
+		var ini = typed(samples.ini, 'ini');
+
+		Object.keys(samples).forEach(function (language) {
+			expect(syntax.Tokens(samples[language], language).map(function (token) {
+				return token.Text;
+			}).join('')).toBe(samples[language]);
+		});
+
+		expect(yaml).toContainEqual(['comment', '# config']);
+		expect(yaml).toContainEqual(['property', 'name']);
+		expect(yaml).toContainEqual(['string', '"Elemenx"']);
+		expect(yaml).toContainEqual(['variable', '&base']);
+		expect(yaml).toContainEqual(['variable', '*base']);
+		expect(yaml).toContainEqual(['number', '8080']);
+		expect(yaml).toContainEqual(['literal', 'true']);
+		expect(yaml).toContainEqual(['meta', '---']);
+		expect(toml).toContainEqual(['selector', '[owner]']);
+		expect(toml).toContainEqual(['selector', '[[items]]']);
+		expect(toml).toContainEqual(['property', 'title']);
+		expect(toml).toContainEqual(['number', '1979-05-27']);
+		expect(toml).toContainEqual(['number', '0xFF']);
+		expect(ini).toContainEqual(['comment', '; note']);
+		expect(ini).toContainEqual(['selector', '[server]']);
+		expect(ini).toContainEqual(['property', 'port']);
+		expect(syntax.Find('yml')).toBe(syntax.Find('yaml'));
+	});
+
 	it('reads JavaScript: comments, strings, regular expressions, numbers, keywords and calls', function () {
 		var tokens = typed("// a\nvar x = /b+/gi; if (n === 0x1F) go('c', 1.5e3, 10n); a / b / c;", 'js');
 

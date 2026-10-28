@@ -35,3 +35,7 @@
 })
 </script>
 ```
+
+## Тесты
+
+- [CurrencySelect lists only the Codes given, with their symbols, and shows the one chosen](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-misc.test.js#L113) — `tests/regression/library-misc.test.js`

@@ -61,3 +61,7 @@ The bar of find and replace of an editor (CodeEditor, RichEditor) or a terminal:
 })
 </script>
 ```
+
+## Tests
+
+- [FindBar tells what to find as the text and the options change, the next and previous match by Enter, and its close by Escape](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-pickers.test.js#L196) — `tests/regression/library-pickers.test.js`

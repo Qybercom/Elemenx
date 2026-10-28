@@ -30,7 +30,7 @@ To find a section in `elemenx.js`, search for its header, for example `/* Router
 | `MessageListeners` | listeners of the global `message` event added through a wrapper, removable by their own callback | Messaging, WebWorker |
 | `Assign` | copies the own enumerable properties of a source into a target and returns the target | Template and Component, Router, Structural, Storage, WebWorker, ServiceWorker |
 | `Report` | reports an exception as an uncaught error at once, like the DOM does for event listeners (`reportError`; without it, rethrown from a timer) | Application, Install, Locale, Router, Widgets |
-| `Notify` | calls one event listener in isolation: its exception is reported and the dispatch continues | Template and Component, Router, Network, Events, Messaging |
+| `Notify` | calls one event listener in isolation: its exception is reported and the dispatch continues | Template and Component, Router, Network, Events, Messaging, Identity |
 | `Invoke` | calls a callback `(error, value)` from a promise handler; an exception thrown by the callback is reported instead of being swallowed | Network, ServiceWorker |
 
 ## Outlet
@@ -75,13 +75,13 @@ To find a section in `elemenx.js`, search for its header, for example `/* Router
 
 | Field | Purpose | Used by |
 |---|---|---|
-| `Discovery` | development loading of `index.js` graphs and entity scripts for an owner (Application or Library) | Library, Service and Guard, Template and Component, Router, Structural, Application |
+| `Discovery` | development loading of `index.js` graphs (or a graph file of another name) and entity scripts for an owner (Application or Library); `Files(owner)` lists the other files its graphs name | Library, Service and Guard, Template and Component, Router, Structural, Application |
 
 ## Library
 
 | Field | Purpose | Used by |
 |---|---|---|
-| `Library` | `Use(application, names, callback)`, `ResolvedURL(application, name)` and `Names(application)` for `$Use` libraries | Application, Discovery, Structural, Template and Component |
+| `Library` | `Use(application, names, callback, discovered)`, `ResolvedURL(application, name)` and `Names(application)` for `$Use` libraries and the ones of `$Discovery` | Application, Discovery, Structural, Template and Component |
 
 ## Service and Guard
 
@@ -135,6 +135,10 @@ To find a section in `elemenx.js`, search for its header, for example `/* Router
 | `ReloadComponentInstances` | recreates live instances after a component reload | Application |
 | `ResolveOutlet` | finds a named outlet of a component | Router |
 | `HasPendingComponents` | whether an element holds a deferred component that waits for its definition | Router |
+| `HeadOwn` | takes the `$Title` and the `$Icon` of an owner (a Component or an Application), their `{{ }}` read in its state and followed; the page follows that owner from now | Application |
+| `HeadSet` | `this.$Title(value)` and `this.$Icon(value)`: the owner gives its own title or icon, and the page follows it | Application |
+| `HeadForget` | an owner destroyed: the page keeps its title and icon and follows no owner until the next | Application |
+| `HeadOfPage` | the title and the icon of a page of a Router: those of its deepest component that has them, else those of the Application | Router |
 | `ComponentUse` | the definitions in use or used once: `{Name, Instances, IdleSince, Cached}` | Cache |
 | `EvictComponent` | unloads an idle definition: the text of its template and style, its stylesheet, the compiled expressions | Cache |
 | `SleepTree` | puts to sleep the components and directives with `$OnSleep` inside an element and empties its password and card fields | Cache |

@@ -41,3 +41,7 @@ A field to sign with a pen, a finger or the mouse: the strokes are smoothed, thi
 })
 </script>
 ```
+
+## Tests
+
+- [SignaturePad draws a stroke of the pointer, emits change with the strokes, undoes, clears and gives a picture and an SVG](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-new.test.js#L237) — `tests/regression/library-new.test.js`

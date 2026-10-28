@@ -7,7 +7,7 @@ Elemenx.Component('Progress', {
 	$TemplateURL: 'Progress.html',
 	$StyleURL: 'Progress.css',
 	$Meta: {
-		Group: 'display',
+		Group: 'feedback',
 		Icon: 'loader',
 		Description: 'The progress of a task.',
 		Props: {

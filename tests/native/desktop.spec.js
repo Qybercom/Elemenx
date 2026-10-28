@@ -6,7 +6,7 @@ import path from 'path';
 
 /*
  * The desktop program of examples/Native, built by elemenx build --native desktop and run: the Application in its
- * window, from app://bundle/, reaching the system through the bridge of the program (the Native Service of ElemenxUI).
+ * window, from app://bundle/, reaching the system through the bridge of the program (the Platform Service of ElemenxUI).
  * The dialogs of the system and the browser are stood in for in the main process, so nothing waits for a hand.
  */
 var project = path.resolve('examples/Native');

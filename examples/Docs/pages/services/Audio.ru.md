@@ -6,6 +6,7 @@
 - Node(source): AudioNode источника: AudioNode как есть, <audio> или <video> (его звук по-прежнему идёт в динамики; у элемента навсегда один узел, тот же при каждом вызове), MediaStream микрофона (не в динамики: без эха).
 - Analyser(source, options): AnalyserNode, который получает звук источника; options — Size (размер его БПФ, 2048), Smoothing (от 0 до 1, 0.8), MinDb (-100) и MaxDb (-20). Release(analyser) отключает его.
 - Bands(analyser, count, options): уровни count полос того, что он слышит сейчас, от 0 до 1; options — Scale (log по умолчанию, как слышит ухо, или linear), MinFrequency (30) и MaxFrequency (16000) в Гц. Levels(analyser) — громкость звука сейчас, {Rms, Peak} от 0 до 1.
+- Curve(analyser, count, options): спектр в count точках от MinFrequency (20) до MaxFrequency (20000; Scale log или linear), каждая от 0 до 1 между MinDb и MaxDb анализатора, как рисуют его анализаторы студий: между двумя бинами точка берёт линию между ними, на нескольких бинах — самый громкий; Tilt (дБ на октаву вокруг 1 кГц, 0) поднимает верха, которые в миксе тише.
 - Decode(source, callback): звуковой файл как AudioBuffer: callback(error, buffer); источник — адрес, Blob (File), ArrayBuffer или AudioBuffer.
 - Peaks(buffer, count, from, to): форма звука в count столбцах: [{Min, Max}] от -1 до 1, каналы смешаны; from и to (секунды) берут его часть.
 Ноты и инструменты:
@@ -21,6 +22,7 @@
 - `Analyser(source, options)`
 - `Release(analyser)`
 - `Bands(analyser, count, options)`
+- `Curve(analyser, count, options)`
 - `Levels(analyser)`
 - `Decode(source, callback)`
 - `Peaks(buffer, count, from, to)`
@@ -100,3 +102,20 @@
 })()
 </script>
 ```
+
+## Тесты
+
+- [hears a tone: its band is the loudest, its loudness is there, one node for an element for good](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-audio.test.js#L127) — `tests/regression/library-audio.test.js`
+- [reads a sound file from an ArrayBuffer, a Blob and a URL, and gives its shape](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-audio.test.js#L165) — `tests/regression/library-audio.test.js`
+- [Spectrum draws levels given, or hears its Source live, and stops while Paused](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-audio.test.js#L193) — `tests/regression/library-audio.test.js`
+- [Curve reads the spectrum at points on a log scale of frequency, its loudest point at the tone, Tilt raising the highs](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-audio.test.js#L289) — `tests/regression/library-audio.test.js`
+- [Spectrum draws the curve of an analyser with its grid and its peaks, and a spectrogram that moves to the left](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-audio.test.js#L321) — `tests/regression/library-audio.test.js`
+- [Waveform reads its file, moves its playhead, selects a part by a drag and by the keys](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-audio.test.js#L406) — `tests/regression/library-audio.test.js`
+- [Waveform draws the Peaks it is given and follows the element of Media](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-audio.test.js#L496) — `tests/regression/library-audio.test.js`
+- [names notes, their MIDI numbers and their pitches](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-music.test.js#L94) — `tests/regression/library-music.test.js`
+- [a synth plays a note at its pitch and lets it go; a sampler plays its sample faster for a higher note](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-music.test.js#L112) — `tests/regression/library-music.test.js`
+- [a transport plays its notes and its beats on time, goes round its loop, and stops after its last note](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-music.test.js#L177) — `tests/regression/library-music.test.js`
+- [PianoRoll puts, moves, resizes and takes away notes by the pointer and by the keys](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-music.test.js#L247) — `tests/regression/library-music.test.js`
+- [PianoRoll opens on its notes, also when it is put in the page after it is made](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-music.test.js#L359) — `tests/regression/library-music.test.js`
+
++2 ещё в тех же файлах

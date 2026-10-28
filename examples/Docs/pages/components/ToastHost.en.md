@@ -43,3 +43,7 @@ Shows the toasts of the Toast Service: place one in the layout of the Applicatio
 })
 </script>
 ```
+
+## Tests
+
+- [ToastHost shows the toasts of the Toast Service, runs an action, and lets one go by its close button](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-overlays.test.js#L273) — `tests/regression/library-overlays.test.js`

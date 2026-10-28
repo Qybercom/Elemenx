@@ -17,7 +17,7 @@ Elemenx.Component('Keyboard', {
 	$TemplateURL: 'Keyboard.html',
 	$StyleURL: 'Keyboard.css',
 	$Meta: {
-		Group: 'music',
+		Group: 'display',
 		Icon: 'grid',
 		Description: 'A keyboard of a computer, drawn key by key (the look and the controls): to show hotkeys, the keys held, or to take presses on a screen.',
 		Events: {

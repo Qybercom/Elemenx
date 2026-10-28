@@ -13,7 +13,7 @@ Elemenx.Component('MenuList', {
 	$TemplateURL: 'MenuList.html',
 	$StyleURL: 'MenuList.css',
 	$Meta: {
-		Group: 'buttons',
+		Group: 'menus',
 		Icon: 'launcher',
 		Description: 'One level of a Menu.',
 		Events: {
@@ -42,6 +42,12 @@ Elemenx.Component('MenuList', {
 
 	$OnCreate: function () {
 		var self = this;
+		/* What renders nothing: whether the sheet shows, and the element that had the focus before it. */
+		var sheet = {Return: null, Shown: false};
+
+		this.SheetMemory = function () {
+			return sheet;
+		};
 
 		/* Whether the menu shows as a sheet now. */
 		this.Sheeted = function (sheet) {
@@ -64,6 +70,42 @@ Elemenx.Component('MenuList', {
 		this.Parent = function (items, path) {
 			return path && path.length ? self.Level(items, path.slice(0, -1))[path[path.length - 1]] || null : null;
 		};
+	},
+
+	$OnReady: function () {
+		this.SheetOpened();
+	},
+
+	$OnProps: function (changed) {
+		if ('Open' in changed || 'Sheet' in changed)
+			this.SheetOpened();
+	},
+
+	/*
+	 * A sheet that opens takes the focus (its first row), so its keys and Escape work at once; it gives the focus back to
+	 * where it was once it closes (regression: the button that opened it kept the focus, and Escape did nothing).
+	 */
+	SheetOpened: function () {
+		var own = this.SheetMemory();
+		var shown = !!this.Open && this.Sheeted(this.Sheet);
+		var back = own.Return;
+
+		if (shown === own.Shown) return;
+
+		own.Shown = shown;
+
+		if (shown) {
+			own.Return = document.activeElement;
+
+			this.SheetFocus();
+
+			return;
+		}
+
+		own.Return = null;
+
+		if (back && back.isConnected && typeof back.focus === 'function')
+			back.focus();
 	},
 
 	/*
@@ -339,8 +381,14 @@ Elemenx.Component('MenuList', {
 			event.preventDefault();
 			event.stopPropagation();
 
-			if (this.Path.length) this.SheetBack();
-			else this.SheetCancel();
+			if (this.Path.length) {
+				this.SheetBack();
+			}
+			else {
+				this.Reset();
+
+				this.$Emit('dismiss', 'escape');
+			}
 		}
 		else if ((key === 'Enter' || key === ' ') && event.target.classList.contains('elemenx-option')) {
 			event.preventDefault();

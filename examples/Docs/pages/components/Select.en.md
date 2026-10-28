@@ -54,3 +54,12 @@ A select: a button that opens a list of Options and shows the chosen one. Option
 })
 </script>
 ```
+
+## Tests
+
+- [Select with Searchable: its search field](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/focus-on-open.test.js#L64) — `tests/regression/focus-on-open.test.js`
+- [nested structural recreation keeps keyed Components and behavioral directives lifecycle-safe](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/component-directive-integration.test.js#L119) — `tests/regression/component-directive-integration.test.js`
+- [a component named like a native element receives \[prop\] inputs that the element would refuse](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/directive-syntax.test.js#L244) — `tests/regression/directive-syntax.test.js`
+- [chat messages: a tap opens the menu, a long press starts a choice of several, the bar counts and deletes them](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L1549) — `tests/examples/ui-kit.spec.js`
+- [chat messages show their state, open their menu by a right click or the dots, and sum up reactions and views](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L5323) — `tests/examples/ui-kit.spec.js`
+- [Field names the control inside by its Label, unless the control has a name of its own](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-forms.test.js#L327) — `tests/regression/library-forms.test.js`

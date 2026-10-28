@@ -35,15 +35,15 @@
 		<Tile ID="photos" Title="Photos" Icon="image" Size="medium" Color="#3f6c9e" />
 	</TileGroup>
 </TileGrid>
-<p class="elemenx-text small muted">Opened: {{Opened || '—'}}</p>
+<p class="elemenx-text small muted">Opened: {{Last || '—'}}</p>
 <script>
 ({
 	Time: new Date().toLocaleTimeString().slice(0, 5),
 	Plays: 0,
-	Opened: '',
+	Last: '',
 
 	Opened: function (tile) {
-		this.Opened = tile.Title;
+		this.Last = tile.Title;
 
 		if (tile.ID === 'music')
 			this.Plays++;
@@ -51,3 +51,9 @@
 })
 </script>
 ```
+
+## Тесты
+
+- [never puts a component into itself, nor into one it holds; renames it where it is held, and keeps one that is held](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/designer-project.test.js#L162) — `tests/regression/designer-project.test.js`
+- [keeps a history for each document](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/designer-project.test.js#L187) — `tests/regression/designer-project.test.js`
+- [writes the project into the text of a file and reads it back as a project of its own](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/designer-project.test.js#L285) — `tests/regression/designer-project.test.js`

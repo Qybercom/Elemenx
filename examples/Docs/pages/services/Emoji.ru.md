@@ -47,9 +47,13 @@
 			self.Found = found.map(function (item) {
 				return item.Char;
 			}).join(' ');
-			self.Note = found.length ? found[0].Char + ' is ' + emoji.Name(found[0].Char) : 'Nothing found';
+			self.Note = found.length ? found[0].Char + ' is ' + emoji.Name(found[0]) : 'Nothing found';
 		});
 	}
 })
 </script>
 ```
+
+## Тесты
+
+- [embeds in ElemenxUI its styles, sprites, data and every entity with its template and style](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/dist.test.js#L47) — `tests/regression/dist.test.js`

@@ -3,10 +3,10 @@
  * with MenuItems inside is a submenu). Target window (by default) is the menu of the window, its top-level items the
  * menus of a bar (File, Edit...); Target tray is the menu of the icon in the tray, opened by its right button. Look:
  * elemenx (by default) draws them with ElemenxUI: the menu of the window a MenuBar where the layout places the
- * NativeMenu (Caret, Variant and Size as in MenuBar; a program has no menu of the system without one), the menu of the tray a window of the Application at the pointer (Native.TrayPopup, a
- * NativeMenuPanel); system has the system draw them (Native.Menu, Native.TrayMenu). Both follow the template.
+ * NativeMenu (Caret, Variant and Size as in MenuBar; a program has no menu of the system without one), the menu of the tray a window of the Application at the pointer (Platform.TrayPopup, a
+ * NativeMenuPanel); system has the system draw them (Platform.Menu, Platform.TrayMenu). Both follow the template.
  * A MenuItem with a Role (undo, redo, cut, copy, paste, selectAll, reload, toggleDevTools, resetZoom, zoomIn, zoomOut,
- * togglefullscreen, minimize, close, quit) does what the system does for it (Native.Role), with the usual shortcut of
+ * togglefullscreen, minimize, close, quit) does what the system does for it (Platform.Role), with the usual shortcut of
  * the role when it names none; its Shortcut is a hotkey of the program (Ctrl+N, Mod+N for Ctrl or Cmd). A choice is
  * the select of its MenuItem, as in the page, and the select of the NativeMenu with the item. On the web the menu of a
  * window is the bar without the items of the system, their shortcuts hotkeys of the page; a menu of the tray shows
@@ -16,7 +16,7 @@ Elemenx.Component('NativeMenu', {
 	$TemplateURL: 'NativeMenu.html',
 	$StyleURL: 'NativeMenu.css',
 	$Meta: {
-		Group: 'buttons',
+		Group: 'menus',
 		Icon: 'menu',
 		Description: 'The menu of a program declared as a menu of the page: <NativeMenu> with MenuItem children.',
 		Container: true,
@@ -51,7 +51,7 @@ Elemenx.Component('NativeMenu', {
 	$OnCreate: function () {
 		var self = this;
 
-		this.Web = !this.$Service('Native').Available();
+		this.Web = !this.$Service('Platform').Available();
 
 		/* Whether ElemenxUI draws the menu: always on the web, in a program but with Look system. */
 		this.Drawn = function (look) {
@@ -69,7 +69,7 @@ Elemenx.Component('NativeMenu', {
 	/* The items its MenuItems declare: drawn or given to the system as they change, their choices told to their MenuItems. */
 	$OnReady: function () {
 		var self = this;
-		var native = this.$Service('Native');
+		var native = this.$Service('Platform');
 		var own = {Picked: {}, Bound: [], Panel: null};
 
 		this.Own = function () {
@@ -100,7 +100,7 @@ Elemenx.Component('NativeMenu', {
 	},
 
 	$OnDestroy: function () {
-		var native = this.$Service('Native');
+		var native = this.$Service('Platform');
 		var own = this.Own ? this.Own() : null;
 
 		if (this.Unwatch)
@@ -154,7 +154,7 @@ Elemenx.Component('NativeMenu', {
 	/* The menu drawn by the system (Look system). */
 	Apply: function (items) {
 		var self = this;
-		var native = this.$Service('Native');
+		var native = this.$Service('Platform');
 		var picked = {};
 		var menu = this.Native(items, picked, 'm');
 		var done = function (error) {
@@ -244,7 +244,7 @@ Elemenx.Component('NativeMenu', {
 			return;
 		}
 
-		this.$Service('Native').TrayPopup({Component: 'NativeMenuPanel', Props: {Items: shown, Choose: function (item) {
+		this.$Service('Platform').TrayPopup({Component: 'NativeMenuPanel', Props: {Items: shown, Choose: function (item) {
 			self.Chosen(item);
 		}}}, function (error, result) {
 			if (result)
@@ -257,7 +257,7 @@ Elemenx.Component('NativeMenu', {
 	/* An item chosen: a role is done by the system; another is the select of its MenuItem and of the NativeMenu. */
 	Chosen: function (item) {
 		if (item.Role && !this.Web) {
-			this.$Service('Native').Role(item.Role);
+			this.$Service('Platform').Role(item.Role);
 
 			return;
 		}

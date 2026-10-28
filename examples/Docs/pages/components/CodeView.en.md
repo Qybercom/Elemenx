@@ -45,3 +45,7 @@ default
 })
 </script>
 ```
+
+## Tests
+
+- [writes the text of a Markdown and the code of a CodeView as their body, edited in a field of many lines](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/builder.spec.js#L1289) — `tests/examples/builder.spec.js`

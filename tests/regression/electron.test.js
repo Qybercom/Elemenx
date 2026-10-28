@@ -689,7 +689,7 @@ describe('Builder: a desktop program (Electron)', function () {
 			expect([cards.Visible, cards.Inactive]).toEqual([true, true]);
 			expect(cards.Bounds).toMatchObject({width: 360, height: 200, x: 1920 - 360, y: process.platform === 'darwin' ? 0 : 1040 - 200});
 
-			/* Another corner of the screen, as Native.Notifications asks. */
+			/* Another corner of the screen, as Platform.Notifications asks. */
 			bridge(fake.Event(0), 'notifications', {Show: true, Corner: 'top-left'});
 
 			expect(cards.Bounds).toMatchObject({x: 0, y: 0});
@@ -1015,7 +1015,7 @@ describe('Builder: a desktop program (Electron)', function () {
 		}
 	});
 
-	/* The AppIcon Service: the icon of the windows and the picture of the icon of the tray change while the program runs. */
+	/* The Platform Service: the icon of the windows and the picture of the icon of the tray change while the program runs. */
 	it('changes the icon of its windows (and of the dock) and the picture and tooltip of the icon of its tray, and refuses a picture it cannot read', function () {
 		var folder = fs.mkdtempSync(path.join(os.tmpdir(), 'elemenx-electron-'));
 		var fake = fakeElectron();
@@ -1040,7 +1040,7 @@ describe('Builder: a desktop program (Electron)', function () {
 			/* No icon in the tray yet: nothing to change. */
 			expect(function () {
 				bridge(fake.Event(0), 'trayicon', {Image: 'data:image/png;base64,AAAA', Tooltip: 'Online'});
-			}).toThrow('Elemenx Native has no icon in the tray: Native.Tray makes it');
+			}).toThrow('Elemenx Native has no icon in the tray: Platform.Tray makes it');
 
 			bridge(fake.Event(0), 'tray', {Icon: 'icons/tray.png', Tooltip: 'Elemenx'});
 			bridge(fake.Event(0), 'trayicon', {Image: 'data:image/png;base64,BBBB', Tooltip: 'Offline'});
@@ -1244,7 +1244,7 @@ describe('Builder: a desktop program (Electron)', function () {
 			expect(fake.Menus[fake.Menus.length - 1].map(function (item) {
 				return item.label;
 			})).toEqual(['Show']);
-			/* A menu of ElemenxUI (Native.TrayPopup): its window opens at the pointer at the right button, in place of the one of the system. */
+			/* A menu of ElemenxUI (Platform.TrayPopup): its window opens at the pointer at the right button, in place of the one of the system. */
 			expect(fake.Windows[0].OpenHandler({url: 'about:blank', frameName: 'elemenx-traypopup'})).toMatchObject({action: 'allow', overrideBrowserWindowOptions: {show: false, frame: false, skipTaskbar: true}});
 
 			popup = new fake.Electron.BrowserWindow({width: 240, height: 120});

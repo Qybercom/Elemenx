@@ -11,7 +11,7 @@ Elemenx.Component('CommandPalette', {
 	$TemplateURL: 'CommandPalette.html',
 	$StyleURL: 'CommandPalette.css',
 	$Meta: {
-		Group: 'navigation',
+		Group: 'menus',
 		Icon: 'search',
 		Description: 'A command palette: a search over the actions of the application, opened by Hotkey (\'Mod+K\' by default; \'\' for none) or by Open.',
 		Events: {

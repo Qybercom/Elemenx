@@ -2,7 +2,7 @@
 
 The same Application as a program of Windows, macOS and Linux, with Electron: its own title bar and menu, the tray, notifications, the dialogs to open and save files, and an installer. The finished project is `examples/Native`.
 
-What you learn: `Native.Desktop` of `elemenx.config.js`, the `Native` Service of ElemenxUI (the system from the page), `TitleBar` and `NativeMenu`, and the builds of a program.
+What you learn: `Native.Desktop` of `elemenx.config.js`, the `Platform` Service of ElemenxUI (the system from the page), `TitleBar` and `NativeMenu`, and the builds of a program.
 
 ## 1. Electron in the project
 
@@ -10,7 +10,7 @@ What you learn: `Native.Desktop` of `elemenx.config.js`, the `Native` Service of
 npx elemenx native add desktop
 ```
 
-It installs Electron and its packager into the project, once (Elemenx carries neither: Electron is about 100 MB, and the project picks its version). `elemenx dev` still runs the Application in a browser, where the `Native` Service does what the web can.
+It installs Electron and its packager into the project, once (Elemenx carries neither: Electron is about 100 MB, and the project picks its version). `elemenx dev` still runs the Application in a browser, where the `Platform` Service does what the web can.
 
 ## 2. The program
 
@@ -77,13 +77,13 @@ On the web the menu is a `MenuBar` of the page without the items of the system, 
 
 ## 4. The system from the page
 
-The window runs no Node: the page asks the system through the `Native` Service, as a callback `(error, result)`:
+The window runs no Node: the page asks the system through the `Platform` Service, as a callback `(error, result)`:
 
 ```js
 Opened: function () {
 	var self = this;
 
-	this.$Service('Native').Open({Accept: ['.txt', '.md', '.json'], Read: 'text'}, function (error, files) {
+	this.$Service('Platform').Open({Accept: ['.txt', '.md', '.json'], Read: 'text'}, function (error, files) {
 		if (error) {
 			self.Said('Open: error, ' + error.message);
 
@@ -97,7 +97,7 @@ Opened: function () {
 },
 
 Saved: function () {
-	this.$Service('Native').Save({Name: 'elemenx.txt', Text: 'Saved by Elemenx at ' + new Date().toISOString() + '\n'}, this.Answer('Save'));
+	this.$Service('Platform').Save({Name: 'elemenx.txt', Text: 'Saved by Elemenx at ' + new Date().toISOString() + '\n'}, this.Answer('Save'));
 }
 ```
 

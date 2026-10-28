@@ -52,3 +52,7 @@
 })
 </script>
 ```
+
+## Тесты
+
+- [Panels: reads the panels of a root but not those of a nested owner, their data-* attributes, and hears them change](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-services.test.js#L179) — `tests/regression/library-services.test.js`

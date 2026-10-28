@@ -32,7 +32,7 @@ Elemenx.Service('Hotkeys', {
 			self.Handle(event);
 		};
 
-		/* A window the Application opened (Native.OpenWindow) is of the page: its keys are heard too, while it is open. */
+		/* A window the Application opened (Platform.OpenWindow) is of the page: its keys are heard too, while it is open. */
 		this.Opened = function (event) {
 			var child = event.detail && event.detail.Window;
 			if (!child || !child.document) return;

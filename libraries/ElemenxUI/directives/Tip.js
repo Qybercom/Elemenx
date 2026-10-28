@@ -5,7 +5,7 @@
  * top, left or right, the other side when there is no room; Delay the time before it shows under the pointer (500 ms;
  * a focus from the keyboard shows it at once). Pointer away, a press, Escape or a scroll hide it. One tip shows at a
  * time, an element of its own in the body (role tooltip, the aria-describedby of the element): the body of the document
- * the element is in, so a window of its own (Native.OpenWindow) shows its tips in itself.
+ * the element is in, so a window of its own (Platform.OpenWindow) shows its tips in itself.
  */
 Elemenx.Directive('tip', {
 	$Meta: {

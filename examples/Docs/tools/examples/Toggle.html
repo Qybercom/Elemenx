@@ -7,8 +7,10 @@
 		<Toggle Label="Light" Orientation="vertical" [checked]="Light" (change)="Lit" />
 		<Toggle Label="Fan" Orientation="vertical" States="3" ShowLabels="true" Labels="Off,Low,High" [value]="Fan" (change)="Fanned" />
 	</div>
+	<Toggle Label="Units" [values]="['metric', 'imperial']" [value]="Units" (change)="Unit" />
+	<Toggle Label="Quality" ShowLabels="true" Labels="480p,720p,1080p" [values]="[480, 720, 1080]" [value]="Quality" (change)="Chose" />
 </div>
-<p class="elemenx-text small muted">Notifications {{Notify ? 'on' : 'off'}}, sound {{Notify && Sound ? 'on' : 'off'}}, theme {{Dark === null ? 'of the system' : Dark ? 'dark' : 'light'}}, fan {{Fan === null ? 'low' : Fan ? 'high' : 'off'}}.</p>
+<p class="elemenx-text small muted">Notifications {{Notify ? 'on' : 'off'}}, sound {{Notify && Sound ? 'on' : 'off'}}, theme {{Dark === null ? 'of the system' : Dark ? 'dark' : 'light'}}, fan {{Fan === null ? 'low' : Fan ? 'high' : 'off'}}, units {{Units}}, quality {{Quality}}.</p>
 <script>
 ({
 	Notify: true,
@@ -16,6 +18,8 @@
 	Dark: null,
 	Light: true,
 	Fan: false,
+	Units: 'metric',
+	Quality: 720,
 
 	Notified: function (value) {
 		this.Notify = value;
@@ -23,6 +27,14 @@
 
 	Sounded: function (value) {
 		this.Sound = value;
+	},
+
+	Unit: function (value) {
+		this.Units = value;
+	},
+
+	Chose: function (value) {
+		this.Quality = value;
 	},
 
 	Darkened: function (value) {

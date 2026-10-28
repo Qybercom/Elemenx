@@ -48,3 +48,7 @@
 })
 </script>
 ```
+
+## Тесты
+
+- [Countdown shows the time left in its units, waits while not Running, and emits end once at 0](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-new.test.js#L100) — `tests/regression/library-new.test.js`

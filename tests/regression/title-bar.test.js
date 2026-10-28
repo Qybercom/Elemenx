@@ -45,11 +45,11 @@ function mount (template) {
 	return component;
 }
 
-describe('Contract: the frames of the windows of a program (Native.Frame) and TitleBar', function () {
+describe('Contract: the frames of the windows of a program (Platform.Frame) and TitleBar', function () {
 	beforeAll(async function () {
 		await loadElemenx();
 		await import('../../libraries/ElemenxUI/services/Theme.js');
-		await import('../../libraries/ElemenxUI/services/Native.js');
+		await import('../../libraries/ElemenxUI/services/Platform.js');
 
 		/* The TitleBar with its template inline: the page of the tests serves no Library. */
 		new Function(titleBarSource.replace("$StyleURL: 'TitleBar.css',\n", '').replace("$TemplateURL: 'TitleBar.html'", function () {
@@ -68,7 +68,7 @@ describe('Contract: the frames of the windows of a program (Native.Frame) and Ti
 	});
 
 	it('names the frame of the program, web on the web, and gives the buttons of the system the colors asked', function () {
-		var native = Elemenx.Service('Native');
+		var native = Elemenx.Service('Platform');
 		var answer = null;
 
 		expect(native.Frame()).toBe('web');
@@ -118,7 +118,7 @@ describe('Contract: the frames of the windows of a program (Native.Frame) and Ti
 	});
 
 	it('opens a window of the Application with a frame of its own, the frame on its <html>', function () {
-		var native = Elemenx.Service('Native');
+		var native = Elemenx.Service('Platform');
 		var frame = document.createElement('iframe');
 		var open = window.open;
 		var features = null;
@@ -152,7 +152,7 @@ describe('Contract: the frames of the windows of a program (Native.Frame) and Ti
 	});
 
 	it('empties a window of the name left by a page before (reloaded), and keeps its own frame as the page changes', async function () {
-		var native = Elemenx.Service('Native');
+		var native = Elemenx.Service('Platform');
 		var frame = document.createElement('iframe');
 		var open = window.open;
 		var first;

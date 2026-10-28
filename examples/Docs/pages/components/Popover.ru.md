@@ -34,3 +34,7 @@
 	<p class="elemenx-text small">A hint shown on hover.</p>
 </Popover>
 ```
+
+## Тесты
+
+- [Popover opens and closes by its trigger, tells it, and closes on Escape](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-overlays.test.js#L180) — `tests/regression/library-overlays.test.js`

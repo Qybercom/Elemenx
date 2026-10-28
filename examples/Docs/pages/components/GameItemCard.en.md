@@ -27,3 +27,7 @@ The card of an item of a game: its Name in the color of its Rarity, its Rarity a
 })
 </script>
 ```
+
+## Tests
+
+- [GameItemCard shows the name, the rarity and type, and the stats of an item, and nothing without one](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-misc.test.js#L219) — `tests/regression/library-misc.test.js`

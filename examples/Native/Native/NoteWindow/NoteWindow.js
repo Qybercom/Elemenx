@@ -1,5 +1,5 @@
 /*
- * A window of notes, opened by the main window of the program (Native.OpenWindow): a kind chosen in a list, a text,
+ * A window of notes, opened by the main window of the program (Platform.OpenWindow): a kind chosen in a list, a text,
  * and the notes of the one list the main window shows too.
  */
 Elemenx.Component('NoteWindow', {

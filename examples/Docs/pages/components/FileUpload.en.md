@@ -49,3 +49,7 @@ Picks files by dialog or drag and drop; it does not upload them. Variant: dropzo
 })
 </script>
 ```
+
+## Tests
+
+- [FileUpload gives the files chosen and rejects the ones over MaxSize or past MaxFiles, with the reason](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-forms.test.js#L208) — `tests/regression/library-forms.test.js`

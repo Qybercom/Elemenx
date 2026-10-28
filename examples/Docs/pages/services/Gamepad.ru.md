@@ -63,3 +63,7 @@ On(name, callback) / Off(callback). Pads() перечисляет [{Index, ID, K
 })
 </script>
 ```
+
+## Тесты
+
+- [Gamepad: names the buttons of each kind of pad, and lists no pad while none is pressed](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-services.test.js#L210) — `tests/regression/library-services.test.js`

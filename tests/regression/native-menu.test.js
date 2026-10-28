@@ -60,7 +60,7 @@ describe('Contract: NativeMenu, the menu of the system declared with MenuItem', 
 	beforeAll(async function () {
 		await loadElemenx();
 		await import('../../libraries/ElemenxUI/services/Menus.js');
-		await import('../../libraries/ElemenxUI/services/Native.js');
+		await import('../../libraries/ElemenxUI/services/Platform.js');
 		await import('../../libraries/ElemenxUI/directives/Mount.js');
 
 		define(menuItemSource, 'MenuItem', menuItemTemplate);

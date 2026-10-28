@@ -34,3 +34,8 @@ A picture in the manner of Suprematism, made of Seed: always the same for the sa
 })
 </script>
 ```
+
+## Tests
+
+- [makes the same picture of the same seed, another of another, in its palette, as SVG text or a data URL](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/suprematism.test.js#L46) — `tests/regression/suprematism.test.js`
+- [draws it in the page as a component, again when its seed changes, and as an avatar](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/suprematism.test.js#L74) — `tests/regression/suprematism.test.js`

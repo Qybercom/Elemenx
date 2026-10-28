@@ -1,6 +1,6 @@
 /*
  * An invitation to a call, as a messenger shows it: the picture and the name of who calls, what kind of call, and the
- * buttons to accept it (with the camera too when Video) or to decline it. In a card of Native.Notify (Component
+ * buttons to accept it (with the camera too when Video) or to decline it. In a card of Platform.Notify (Component
  * CallInvite, Look elemenx, Bare, Priority high, Timeout 0, a Sound with Loop) its Notification takes the choice:
  * the notification event with the Action accept, accept-video or decline. Alone in a page its events are accept
  * ({Video}) and decline. Name, Image (the URL of the picture; none: the avatar of the name), Text (the kind of the call,
@@ -22,7 +22,7 @@ Elemenx.Component('CallInvite', {
 			Image: 'The URL of a picture of who calls; none: the avatar of the name.',
 			Text: 'The kind of the call; Incoming call by default.',
 			Video: 'A video call: a button accepts it with the camera.',
-			Notification: 'The notification it is in (Native.Notify): it takes the choice.'
+			Notification: 'The notification it is in (Platform.Notify): it takes the choice.'
 		},
 		Sample: {Name: 'Ada Lovelace', Video: true}
 	},

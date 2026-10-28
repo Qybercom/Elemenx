@@ -47,3 +47,7 @@ Value is the international number: "+" with the dialling code and the local digi
 })
 </script>
 ```
+
+## Tests
+
+- [PhoneInput writes the national number in the mask of its Country and gives the international one](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-forms.test.js#L121) — `tests/regression/library-forms.test.js`

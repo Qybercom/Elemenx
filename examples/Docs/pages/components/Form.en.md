@@ -58,3 +58,9 @@ default
 })
 </script>
 ```
+
+## Tests
+
+- [keeps the controls of its Fields in their order on the page, whatever order they register in](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/form-order.test.js#L40) — `tests/regression/form-order.test.js`
+- [nests the controls of names of parts (user\[address\]\[city\], items\[2\]\[name\], tags\[\]) and takes the groups made for them out with the last](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/form-order.test.js#L73) — `tests/regression/form-order.test.js`
+- [Form nests the values of Fields named by parts (user\[name\], items\[ID\]\[title\], tags\[\]) and follows the rows of a *for that come and go](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-forms.test.js#L270) — `tests/regression/library-forms.test.js`

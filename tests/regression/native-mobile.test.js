@@ -29,12 +29,12 @@ var filesystem = {
 	}
 };
 
-describe('Contract: the Native Service of ElemenxUI in a mobile program (Capacitor)', function () {
+describe('Contract: the Platform Service of ElemenxUI in a mobile program (Capacitor)', function () {
 	beforeAll(async function () {
 		await loadElemenx();
-		await import('../../libraries/ElemenxUI/services/Native.js');
+		await import('../../libraries/ElemenxUI/services/Platform.js');
 
-		native = Elemenx.Service('Native');
+		native = Elemenx.Service('Platform');
 	});
 
 	afterEach(function () {

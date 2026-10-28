@@ -218,7 +218,7 @@ for (const origin of origins) {
 
 			await open(page, origin);
 
-			await expect(page.locator('.ui-kit > .elemenx-section')).toHaveCount(51);
+			await expect(page.locator('.ui-kit > .elemenx-section')).toHaveCount(52);
 
 			await expect(page.locator('#elemenx-icons')).toHaveAttribute('data-ready', 'true');
 			await expect(page.locator('.ui-kit-icon svg').first()).toHaveAttribute('data-icon', 'add');
@@ -3050,9 +3050,9 @@ for (const origin of origins) {
 			var drums;
 			var bass;
 
-			await open(page, origin, ['Music and input']);
+			await open(page, origin, ['Music']);
 
-			music = section(page, 'Music and input');
+			music = section(page, 'Music');
 			header = music.locator('.elemenx-section-header');
 			mixer = music.getByRole('group', {name: 'Studio'});
 			drums = mixer.getByRole('group', {name: 'Drums'});
@@ -3126,9 +3126,9 @@ for (const origin of origins) {
 			var compact;
 			var unit;
 
-			await open(page, origin, ['Music and input']);
+			await open(page, origin, ['Keyboard']);
 
-			music = section(page, 'Music and input');
+			music = section(page, 'Keyboard');
 			full = music.getByRole('group', {name: 'Hotkeys'});
 			compact = music.getByRole('group', {name: 'Compact'});
 
@@ -3187,9 +3187,9 @@ for (const origin of origins) {
 			var d4;
 			var box;
 
-			await open(page, origin, ['Music and input']);
+			await open(page, origin, ['Music']);
 
-			music = section(page, 'Music and input');
+			music = section(page, 'Music');
 			header = music.locator('.elemenx-section-header');
 			piano = music.getByRole('group', {name: 'Piano', exact: true});
 
@@ -3280,11 +3280,11 @@ for (const origin of origins) {
 			var keyboard;
 			var colors;
 
-			await open(page, origin, ['Music and input']);
+			await open(page, origin, ['Music', 'Keyboard']);
 
-			music = section(page, 'Music and input');
+			music = section(page, 'Music');
 			piano = music.getByRole('group', {name: 'Piano with its keys'});
-			keyboard = music.getByRole('group', {name: 'Two layouts'});
+			keyboard = section(page, 'Keyboard').getByRole('group', {name: 'Two layouts'});
 
 			await piano.scrollIntoViewIfNeeded();
 
@@ -4756,9 +4756,9 @@ for (const origin of origins) {
 				route.fulfill({contentType: 'text/html', body: '<title>Example</title>'});
 			});
 
-			await open(page, origin, ['Native']);
+			await open(page, origin, ['Platform']);
 
-			native = section(page, 'Native');
+			native = section(page, 'Platform');
 			state = native.locator('.ui-kit-native-state');
 
 			await native.scrollIntoViewIfNeeded();
@@ -4801,11 +4801,11 @@ for (const origin of origins) {
 			/* A feature the web has not: an error that says so. */
 			await native.getByRole('button', {name: 'Set the menu'}).click();
 
-			await expect(state).toHaveText('Elemenx Native menu needs a native program');
+			await expect(state).toHaveText('Elemenx Platform menu needs a native program');
 
 			await native.getByRole('button', {name: 'Global hotkey'}).click();
 
-			await expect(state).toHaveText('Elemenx Native shortcuts needs a native program');
+			await expect(state).toHaveText('Elemenx Platform shortcuts needs a native program');
 
 			/* Power on the web: the battery of the Battery Status API. */
 			await native.getByRole('button', {name: 'Power'}).click();
@@ -4846,9 +4846,9 @@ for (const origin of origins) {
 				};
 			});
 
-			await open(page, origin, ['Native']);
+			await open(page, origin, ['Platform']);
 
-			native = section(page, 'Native');
+			native = section(page, 'Platform');
 			state = native.locator('.ui-kit-native-state');
 
 			await native.scrollIntoViewIfNeeded();
@@ -4871,13 +4871,18 @@ for (const origin of origins) {
 
 			await expect(state).toHaveText('The menu is set');
 
-			/* The calls of the buttons; the Theme gives the program its scheme too (Native.Scheme), as it starts. */
+			/* The calls of the buttons; the Theme gives the program its scheme too (Platform.Scheme), as it starts, and the page its title (Platform follows Elemenx.Title). */
 			calls = await page.evaluate(function () {
 				return window.nativeCalls.filter(function (call) {
-					return call.Name !== 'scheme';
+					return call.Name !== 'scheme' && call.Name !== 'title';
 				});
 			});
 
+			expect(await page.evaluate(function () {
+				return window.nativeCalls.some(function (call) {
+					return call.Name === 'title' && call.Args.Text === document.title;
+				});
+			})).toBe(true);
 			expect(calls.map(function (call) {
 				return call.Name;
 			})).toEqual(['open', 'save', 'message', 'menu']);

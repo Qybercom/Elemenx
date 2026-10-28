@@ -40,3 +40,7 @@ A bar of a game: health, mana, experience, stamina or any other amount. Value of
 })
 </script>
 ```
+
+## Tests
+
+- [has every component of ElemenxUI from its $Meta and the classes of its layouts on the Insert tab, with a search](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/builder.spec.js#L360) — `tests/examples/builder.spec.js`

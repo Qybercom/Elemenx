@@ -1,6 +1,6 @@
 /*
  * The bridge of an Elemenx program made with Capacitor (elemenx build --native mobile) between its page and the
- * device: window.ElemenxNative, as the preload of a desktop program gives it, for the Native Service of ElemenxUI.
+ * device: window.ElemenxNative, as the preload of a desktop program gives it, for the Platform Service of ElemenxUI.
  * It answers with the plugins the project installed: external (@capacitor/browser, or the browser of the system),
  * message (@capacitor/dialog), title, links (@capacitor/app: the link that opened the program, the link event for
  * the next ones), power (@capacitor/app: the power event, suspend and resume, as the program goes to the back

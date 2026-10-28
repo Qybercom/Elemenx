@@ -34,10 +34,10 @@ import java.util.Map;
  * https://appassets.androidplatform.net/, so its absolute paths, its Router, fetch and its workers work as from a
  * server; a link out of it opens in the browser of the system.
  *
- * The program answers the Application: handle(name, call) gives the result of a call of the Native Service of
- * ElemenxUI by its name (Native.Ask, and the features of the Service: message, external...), handleAsync(name, call)
- * answers later by its reply; emit(name, value) is an event of the Native Service (Native.On). setFeatures(names)
- * are the features the Service tells it has (Native.Has). A call without a handler the Service does as on the web.
+ * The program answers the Application: handle(name, call) gives the result of a call of the Platform Service of
+ * ElemenxUI by its name (Platform.Ask, and the features of the Service: message, external...), handleAsync(name, call)
+ * answers later by its reply; emit(name, value) is an event of the Platform Service (Platform.On). setFeatures(names)
+ * are the features the Service tells it has (Platform.Has). A call without a handler the Service does as on the web.
  *
  * <pre>
  * ElemenxView view = new ElemenxView(context);
@@ -162,7 +162,7 @@ public class ElemenxView extends WebView {
 		return this;
 	}
 
-	/** An event of the Native Service (Native.On(name, callback)) with its value. */
+	/** An event of the Platform Service (Platform.On(name, callback)) with its value. */
 	public void emit(@NonNull final String name, @Nullable final Object value) {
 		run("window.ElemenxNative && window.ElemenxNative.Emit(" + JSONObject.quote(name) + ", " + json(value) + ")");
 	}

@@ -85,7 +85,7 @@ function native (info, settings, splash) {
 	if (settings.CloseToTray)
 		result.CloseToTray = true;
 
-	/* The jump list of the program on Windows: [{ID, Label, Description}], each a task the page hears (Native.Tasks, the task event). */
+	/* The jump list of the program on Windows: [{ID, Label, Description}], each a task the page hears (Platform.Tasks, the task event). */
 	if (settings.Tasks !== undefined) {
 		if (!Array.isArray(settings.Tasks) || settings.Tasks.some(function (task) {
 			return !task || !/^[\w-]+$/.test(String(task.ID || '')) || !String(task.Label || '').trim();

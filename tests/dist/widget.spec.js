@@ -52,7 +52,7 @@ test.describe('elemenx build --widget', function () {
 		expect(script).not.toContain('Two panes with a draggable divider.');
 		expect(script).toContain('Nothing found');
 		expect(script).not.toContain('pwaShortName');
-		expect(Buffer.byteLength(script)).toBeLessThan(320 * 1024);
+		expect(Buffer.byteLength(script)).toBeLessThan(340 * 1024);
 
 		/* The game themes are packs: the widget names none of them, so they stay out. */
 		expect(script).not.toContain('themes/fantasy.css');

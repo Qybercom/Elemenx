@@ -1,7 +1,7 @@
 <!-- generated -->
 # Spectrum
 
-The spectrum of a sound as it plays: the levels of its bands, live (the Audio Service: an AnalyserNode). Source is what it hears: an <audio> or a <video>, a MediaStream of a microphone or an AudioNode; or Values, the levels of the bands from 0 to 1, given by the application (no Web Audio then). Bands is their count, Scale log (as an ear hears) or linear between MinFrequency and MaxFrequency in Hz, Smoothing (0 to 1) how slowly they move, MinDb and MaxDb the range of the analysis. Mode: bars (the default), mirror (the bars both ways from the middle), line (a filled curve) or radial (the bars around a circle). Colors are the colors of the levels from low to high ([] the accent), Gap the space between the bars in pixels, Peaks the marks of the highest levels, held then falling. Paused stops it. Levels() is what it shows now; error tells a Source it cannot hear, ready gives the component itself.
+The spectrum of a sound as it plays: the levels of its bands, live (the Audio Service: an AnalyserNode). Source is what it hears: an <audio> or a <video>, a MediaStream of a microphone or an AudioNode; or Values, the levels of the bands from 0 to 1, given by the application (no Web Audio then). Bands is their count, Scale log (as an ear hears) or linear between MinFrequency and MaxFrequency in Hz, Smoothing (0 to 1) how slowly they move, MinDb and MaxDb the range of the analysis. Mode: bars (the default), mirror (the bars both ways from the middle), line (a filled curve of the bands), radial (the bars around a circle), curve (the analyser of a studio: a point every two pixels, read from the bins of the analysis on a log scale of frequency, a linear one of dB, with Tilt in dB by octave raising the highs, the lines of the Grid and the Fill under it; Peaks a line of the highest levels) or spectrogram (the spectrum in time: a column of colors each frame, the low frequencies at the bottom, scrolling to the left). Colors are the colors of the levels from low to high ([] the accent; for a spectrogram from the quiet to the loudest, over a clear silence: [] the accent, danger, warning, white), Gap the space between the bars in pixels, Peaks the marks of the highest levels, held then falling. Paused stops it. Levels() is what it shows now; error tells a Source it cannot hear, ready gives the component itself.
 
 ## Properties
 
@@ -20,6 +20,9 @@ The spectrum of a sound as it plays: the levels of its bands, live (the Audio Se
 | `Colors` | `[]` |
 | `Gap` | `2` |
 | `Peaks` | `true` |
+| `Tilt` | `3` |
+| `Grid` | `true` |
+| `Fill` | `true` |
 | `Paused` | `false` |
 | `Label` | `''` |
 
@@ -56,7 +59,7 @@ The spectrum of a sound as it plays: the levels of its bands, live (the Audio Se
 		Mode: 'bars',
 		Problem: '',
 		Levels: [0.2, 0.5, 0.8, 0.6, 0.9, 0.4, 0.7, 0.3, 0.5, 0.2, 0.35, 0.1],
-		Modes: ['bars', 'mirror', 'line', 'radial'].map(function (name) {
+		Modes: ['bars', 'mirror', 'line', 'radial', 'curve', 'spectrogram'].map(function (name) {
 			return {Value: name, Label: name};
 		}),
 
@@ -148,3 +151,13 @@ The spectrum of a sound as it plays: the levels of its bands, live (the Audio Se
 })()
 </script>
 ```
+
+## Tests
+
+- [hears a tone: its band is the loudest, its loudness is there, one node for an element for good](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-audio.test.js#L127) — `tests/regression/library-audio.test.js`
+- [reads a sound file from an ArrayBuffer, a Blob and a URL, and gives its shape](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-audio.test.js#L165) — `tests/regression/library-audio.test.js`
+- [Spectrum draws levels given, or hears its Source live, and stops while Paused](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-audio.test.js#L193) — `tests/regression/library-audio.test.js`
+- [Curve reads the spectrum at points on a log scale of frequency, its loudest point at the tone, Tilt raising the highs](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-audio.test.js#L289) — `tests/regression/library-audio.test.js`
+- [Spectrum draws the curve of an analyser with its grid and its peaks, and a spectrogram that moves to the left](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-audio.test.js#L321) — `tests/regression/library-audio.test.js`
+- [Waveform reads its file, moves its playhead, selects a part by a drag and by the keys](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-audio.test.js#L406) — `tests/regression/library-audio.test.js`
+- [Waveform draws the Peaks it is given and follows the element of Media](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-audio.test.js#L496) — `tests/regression/library-audio.test.js`

@@ -22,12 +22,12 @@ function bridge () {
 	};
 }
 
-describe('Contract: the Native Service of ElemenxUI with the taskbar and the tray of a program', function () {
+describe('Contract: the Platform Service of ElemenxUI with the taskbar and the tray of a program', function () {
 	beforeAll(async function () {
 		await loadElemenx();
-		await import('../../libraries/ElemenxUI/services/Native.js');
+		await import('../../libraries/ElemenxUI/services/Platform.js');
 
-		native = Elemenx.Service('Native');
+		native = Elemenx.Service('Platform');
 	});
 
 	afterEach(function () {
@@ -102,7 +102,7 @@ describe('Contract: the Native Service of ElemenxUI with the taskbar and the tra
 
 			await tick();
 
-			expect(errors).toEqual(['Elemenx Native thumbar needs a native program', 'Elemenx Native tasks needs a native program']);
+			expect(errors).toEqual(['Elemenx Platform thumbar needs a native program', 'Elemenx Platform tasks needs a native program']);
 		}
 		finally {
 			delete document.visibilityState;

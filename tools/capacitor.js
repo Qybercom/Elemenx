@@ -9,7 +9,7 @@
  * mobile installs them).
  *
  * The page reaches the device through the bridge of elemenx-native.js (window.ElemenxNative, Platform 'capacitor'),
- * which the Native Service of ElemenxUI uses: links in the browser of the system (@capacitor/browser), messages
+ * which the Platform Service of ElemenxUI uses: links in the browser of the system (@capacitor/browser), messages
  * (@capacitor/dialog), files saved in the Documents of the device (@capacitor/filesystem), the links of the scheme of
  * the program and the pause and resume of the program (@capacitor/app). Files are opened with the picker of the web view.
  */

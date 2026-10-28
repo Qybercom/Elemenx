@@ -51,3 +51,9 @@ A keyboard of a computer, drawn key by key (the look and the controls): to show 
 })
 </script>
 ```
+
+## Tests
+
+- [a keyboard lays out its keys, marks hotkeys, shows the keys held and takes presses](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L3122) — `tests/examples/ui-kit.spec.js`
+- [a piano lights its black keys too and names its notes and the keys that play them; a keyboard shows a second layout](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L3276) — `tests/examples/ui-kit.spec.js`
+- [shows the keys held in the page when made in a template, and in another document once it is put there](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/other-document.test.js#L87) — `tests/regression/other-document.test.js`

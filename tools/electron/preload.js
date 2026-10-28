@@ -2,7 +2,7 @@
 
 /*
  * The bridge of an Elemenx program between its page and its main process: window.ElemenxNative, the only native door
- * of the page (the Native Service of ElemenxUI uses it). Call(name, args, callback) asks the main process, callback
+ * of the page (the Platform Service of ElemenxUI uses it). Call(name, args, callback) asks the main process, callback
  * (error, result); On(name, callback) hears its events (menu, tray, window). Features lists the features it answers.
  */
 

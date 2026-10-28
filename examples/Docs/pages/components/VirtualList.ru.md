@@ -62,3 +62,7 @@
 })
 </script>
 ```
+
+## Тесты
+
+- [VirtualList draws only the rows in view of a long list, tells their range, and selects one with the keys](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-pickers.test.js#L243) — `tests/regression/library-pickers.test.js`

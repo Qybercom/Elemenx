@@ -11,7 +11,7 @@ Elemenx.Component('MenuBar', {
 	$TemplateURL: 'MenuBar.html',
 	$StyleURL: 'MenuBar.css',
 	$Meta: {
-		Group: 'buttons',
+		Group: 'menus',
 		Icon: 'menu',
 		Description: 'A bar of menus, as at the top of the window of a program: File, Edit, View...',
 		Container: true,

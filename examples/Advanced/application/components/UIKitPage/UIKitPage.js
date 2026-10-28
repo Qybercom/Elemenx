@@ -225,6 +225,7 @@ Elemenx.Component('UIKitPage', {
 	ChatSelection: [],
 	DialNumber: '',
 	MusicNote: '',
+	KeyboardNote: '',
 	KeepShown: true,
 	KeepNote: 'Elemenx.Cache · *keep',
 	MixerPlaying: false,
@@ -1016,7 +1017,7 @@ Elemenx.Component('UIKitPage', {
 		this.$Service('Reveal').Guard(null);
 		this.$Service('Icons').Override('save', null);
 		this.$Service('Theme').OffChange(this.ThemeListener);
-		this.$Service('Native').Off('menu', this.NativeListener);
+		this.$Service('Platform').Off('menu', this.NativeListener);
 
 		if (this.$Service('Theme').Theme() === 'mine')
 			this.$Service('Theme').Use('default');
@@ -1671,7 +1672,7 @@ Elemenx.Component('UIKitPage', {
 	},
 
 	KeyPressed: function (detail) {
-		this.MusicNote = 'Key ' + detail.Code;
+		this.KeyboardNote = 'Key ' + detail.Code;
 	},
 
 	NotePlayed: function (detail) {
@@ -2323,7 +2324,7 @@ Elemenx.Component('UIKitPage', {
 	NativeOpen: function () {
 		var self = this;
 
-		this.$Service('Native').Open({Accept: ['.txt', '.md', '.json'], Read: 'text'}, function (error, files) {
+		this.$Service('Platform').Open({Accept: ['.txt', '.md', '.json'], Read: 'text'}, function (error, files) {
 			if (error) self.NativeState = error.message;
 			else self.NativeState = files.length ? files[0].Name + ' · ' + files[0].Text.length + ' characters' : 'Cancelled';
 		});
@@ -2332,7 +2333,7 @@ Elemenx.Component('UIKitPage', {
 	NativeSave: function () {
 		var self = this;
 
-		this.$Service('Native').Save({Name: 'notes.txt', Text: 'Saved by Elemenx Native'}, function (error, result) {
+		this.$Service('Platform').Save({Name: 'notes.txt', Text: 'Saved by Elemenx Native'}, function (error, result) {
 			if (error) self.NativeState = error.message;
 			else self.NativeState = result ? 'Saved' + (result.Path ? ' to ' + result.Path : ' as a download') : 'Cancelled';
 		});
@@ -2341,7 +2342,7 @@ Elemenx.Component('UIKitPage', {
 	NativeAsk: function () {
 		var self = this;
 
-		this.$Service('Native').Message({Title: 'Elemenx', Text: 'Keep the changes?', Buttons: ['Keep', 'Discard'], Kind: 'question'}, function (error, index) {
+		this.$Service('Platform').Message({Title: 'Elemenx', Text: 'Keep the changes?', Buttons: ['Keep', 'Discard'], Kind: 'question'}, function (error, index) {
 			self.NativeState = error ? error.message : 'Pressed: ' + ['Keep', 'Discard'][index];
 		});
 	},
@@ -2349,7 +2350,7 @@ Elemenx.Component('UIKitPage', {
 	NativeFullscreen: function () {
 		var self = this;
 
-		this.$Service('Native').Window('fullscreen', function (error) {
+		this.$Service('Platform').Window('fullscreen', function (error) {
 			if (error)
 				self.NativeState = error.message;
 		});
@@ -2358,7 +2359,7 @@ Elemenx.Component('UIKitPage', {
 	NativeExternal: function () {
 		var self = this;
 
-		this.$Service('Native').External('https://example.com/', function (error) {
+		this.$Service('Platform').External('https://example.com/', function (error) {
 			self.NativeState = error ? error.message : 'Opened example.com';
 		});
 	},
@@ -2366,7 +2367,7 @@ Elemenx.Component('UIKitPage', {
 	NativePower: function () {
 		var self = this;
 
-		this.$Service('Native').Power(function (error, power) {
+		this.$Service('Platform').Power(function (error, power) {
 			self.NativeState = error ? error.message : 'Power: ' + (power.OnBattery ? 'on battery' : 'plugged in') + ' · ' + power.State;
 		});
 	},
@@ -2374,7 +2375,7 @@ Elemenx.Component('UIKitPage', {
 	NativeHotkey: function () {
 		var self = this;
 
-		this.$Service('Native').Shortcuts(['CommandOrControl+Shift+E'], function (error, keys) {
+		this.$Service('Platform').Shortcuts(['CommandOrControl+Shift+E'], function (error, keys) {
 			self.NativeState = error ? error.message : 'Hotkeys: ' + keys.join(', ');
 		});
 	},
@@ -2382,7 +2383,7 @@ Elemenx.Component('UIKitPage', {
 	NativeMenu: function () {
 		var self = this;
 
-		this.$Service('Native').Menu([
+		this.$Service('Platform').Menu([
 			{Label: 'File', Items: [{ID: 'open', Label: 'Open', Hotkey: 'CmdOrCtrl+O'}, {Separator: true}, {ID: 'quit', Label: 'Quit', Role: 'quit'}]},
 			{Label: 'Help', Items: [{ID: 'about', Label: 'About'}]}
 		], function (error) {
@@ -2913,12 +2914,12 @@ Elemenx.Component('UIKitPage', {
 		this.GameLine = this.GameScript[0];
 
 		/* The native features: their place, and the clicks of the menu of a native program. */
-		this.NativePlatform = this.$Service('Native').Platform();
+		this.NativePlatform = this.$Service('Platform').Platform();
 		this.NativeListener = function (value) {
 			self.NativeChosen(value);
 		};
 
-		this.$Service('Native').On('menu', this.NativeListener);
+		this.$Service('Platform').On('menu', this.NativeListener);
 
 		/* The menu of a message: everyone may reply and copy, the author edits and deletes. */
 		this.MessageActions = function (message) {

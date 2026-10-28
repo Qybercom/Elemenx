@@ -55,3 +55,10 @@ A city is {ID, Name, Country, Region, Latitude, Longitude, TimeZone}: Name and R
 })
 </script>
 ```
+
+## Tests
+
+- [loads the data once for every caller, with the names of the language when it has a pack](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/cities.test.js#L130) — `tests/regression/cities.test.js`
+- [finds the names that start with the text first, then the words, by name; without diacritics and across alphabets](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/cities.test.js#L161) — `tests/regression/cities.test.js`
+- [finds a city by ID and the nearest city, and tells the place, the label and the time there](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/cities.test.js#L185) — `tests/regression/cities.test.js`
+- [calls back the error of a file that does not load](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/cities.test.js#L214) — `tests/regression/cities.test.js`

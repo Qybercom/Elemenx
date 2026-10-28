@@ -39,3 +39,7 @@ Two panes with a draggable divider. Direction: horizontal (side by side) or vert
 })
 </script>
 ```
+
+## Tests
+
+- [builds with the classes of the layouts, the props of any component, its expressions and its named slots](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/builder.spec.js#L407) — `tests/examples/builder.spec.js`

@@ -1,5 +1,6 @@
 /*
- * The native features of the system around the Application, one API wherever it runs. In a program of elemenx build
+ * The platform the Application runs on, one API wherever it runs: its windows, its icon, the taskbar, the tray, the
+ * dialogs, the notifications and the other features of the system. In a program of elemenx build
  * --native (desktop: Electron, mobile: Capacitor) it asks the system through the bridge of the program
  * (window.ElemenxNative); in a browser it does what the web can: a file picker, a download, confirm, a new tab, the
  * full screen. Every call takes callback(error, result); a feature the place lacks calls back an error.
@@ -11,7 +12,8 @@
  * - Window(action, callback, id): minimize, maximize, restore, toggle-maximize, fullscreen, focus, close, show (a
  *   window hidden in the tray comes back) and quit (the program quits, even with CloseToTray); the result is the state
  *   {Maximized, Minimized, Fullscreen, Focused}. id is a window of OpenWindow (its own buttons); the first one without.
- *   Title(text, callback): the title of the window.
+ *   Title(text, callback): the title of the page and of the windows (Elemenx.Title; a program follows every change of
+ *   it, $Title of the Components too).
  * - Frame(id): the frame of the windows of the program (Native.Desktop.Frame), or of the window id of OpenWindow:
  *   system, hidden (the title bar of the
  *   system hidden under the page, its buttons over it, their place in env(titlebar-area-*)), none or transparent (the
@@ -40,9 +42,15 @@
  *   staying (a NativeMenu with Target tray does). TrayPopup({Component, Props, Element, Width, Height}, callback) is
  *   a menu of the tray drawn by the Application: a window of it that the right button of the icon opens at the pointer,
  *   in place of the menu of the system (ShowTrayPopup(show) shows it, hides it, or sizes it with {Width, Height}).
- *   TrayIcon({Icon or Image, Tooltip}, callback) changes the picture of the icon (and its tooltip) in its place, Image a
- *   data URL of a PNG (online, offline...). Icon({Icon or Image}, callback): the icon of the windows of the program (the
- *   taskbar, the title bar, the dock on macOS); null for the one it was built with. The AppIcon Service uses both.
+ *   TrayIcon({Icon or Image, Tooltip}, callback) changes the picture of the icon (and its tooltip) in its place: Icon a
+ *   path in the Application, the text of an SVG, a data URL or {Light, Dark} (drawn into a PNG), Image a data URL of a
+ *   PNG (online, offline...).
+ * - Icon(icon, callback): the icon of the Application (Elemenx.Icon): the favicon on the web, the icon of the windows
+ *   of a program (the taskbar, the title bar, the dock on macOS; drawn into a PNG). icon is a URL (or a path in the
+ *   Application), the text of an SVG, a data URL, or {Light, Dark}, one for each scheme of the system; null brings
+ *   back the icon of the page (and the one a program was built with). A program follows every change of Elemenx.Icon,
+ *   $Icon of the Components too. ResetIcon(callback): the icon of the page, no badge, no progress. IconState() is
+ *   {Icon, Badge, Progress}.
  * - Role(role, callback): what the system does for an item of a menu with that role (undo, copy, reload, zoomIn,
  *   togglefullscreen, quit...), for a menu the Application draws.
  * - External(url, callback): opens an http, https or mailto link in the browser of the system.
@@ -61,11 +69,13 @@
  *   CloseNotification(id) takes one away. The
  *   notification event {ID, Kind, Action}: click (the notification pressed), action (a button of it, Action its ID),
  *   close (closed by the user) or timeout.
- * - Badge(count, callback): a number on the icon of the program (0 removes it; on Windows a small picture over the
- *   icon, drawn here). Progress(value, callback): a progress from 0 to 1 on the button of the window (null removes it),
- *   or {Value, State} with State normal, indeterminate (no value: it runs), paused or error.
+ * - Badge(count, callback): a number on the icon: the badge of the system in a program (on Windows a small picture over
+ *   the icon, drawn here) and in an installed web Application, and a red disc with the number drawn over the favicon
+ *   (99+ past 99; 'dot' a disc alone; 0 removes it). Progress(value, callback): a progress from 0 to 1 on the button
+ *   of the window and a ring around the favicon (null removes it), or {Value, State} with State normal,
+ *   indeterminate (no value: it runs), paused or error.
  * - Attention(on, callback): the button of the window flashes (the dock bounces) until the window comes to the front;
- *   on the web the title of the page blinks while the page is hidden.
+ *   on the web the title of the page and the favicon blink while the page is hidden.
  * - Thumbar(buttons, callback): the buttons under the thumbnail of the window on Windows ([{ID, Icon, Tooltip,
  *   Disabled}], seven at most; [] removes them); a press is the thumbar event {ID}.
  * - Tasks(callback): the tasks of the jump list of the program (Native.Desktop.Tasks: [{ID, Label, Description}], on
@@ -92,10 +102,10 @@
  * - On(name, callback) / Off(name, callback): the events menu, tray, window ({Maximized, Minimized, Fullscreen,
  *   Focused}), shortcut, link, task, thumbar, closed and power.
  */
-Elemenx.Service('Native', {
+Elemenx.Service('Platform', {
 	$Meta: {
-		Description: 'The native features of the system around the Application, one API wherever it runs.',
-		Methods: ['Available()', 'Platform()', 'Has(feature)', 'Window(action, callback, id)', 'Frame(id)', 'TitleBarOverlay(colors, callback)', 'Scheme(scheme, callback)', 'Title(text, callback)', 'Open(options, callback)', 'Save(options, callback)', 'Message(options, callback)', 'Menu(items, callback)', 'ContextMenu(items, callback)', 'Tray(options, callback)', 'TrayWindow(show, callback)', 'TrayMenu(items, callback)', 'TrayPopup(options, callback)', 'ShowTrayPopup(show, callback)', 'TrayIcon(options, callback)', 'Icon(options, callback)', 'Role(role, callback)', 'External(url, callback)', 'Notify(options, callback)', 'CloseNotification(id)', 'Notifications(settings)', 'Badge(count, callback)', 'Progress(value, callback)', 'Attention(on, callback)', 'Thumbar(buttons, callback)', 'Tasks(callback)', 'OpenWindow(options, callback)', 'Windows()', 'FocusWindow(id)', 'CloseWindow(id)', 'Shortcuts(keys, callback)', 'Autostart(enabled, callback)', 'Links(callback)', 'Power(callback)', 'Awake(on, callback)', 'Update(callback)', 'On(name, callback)', 'Off(name, callback)']
+		Description: 'The platform the Application runs on: its windows, its icon, the taskbar, the tray and the features of the system, one API wherever it runs.',
+		Methods: ['Available()', 'Platform()', 'Has(feature)', 'Window(action, callback, id)', 'Frame(id)', 'TitleBarOverlay(colors, callback)', 'Scheme(scheme, callback)', 'Title(text, callback)', 'Open(options, callback)', 'Save(options, callback)', 'Message(options, callback)', 'Menu(items, callback)', 'ContextMenu(items, callback)', 'Tray(options, callback)', 'TrayWindow(show, callback)', 'TrayMenu(items, callback)', 'TrayPopup(options, callback)', 'ShowTrayPopup(show, callback)', 'TrayIcon(options, callback)', 'Icon(icon, callback)', 'ResetIcon(callback)', 'IconState()', 'Role(role, callback)', 'External(url, callback)', 'Notify(options, callback)', 'CloseNotification(id)', 'Notifications(settings)', 'Badge(count, callback)', 'Progress(value, callback)', 'Attention(on, callback)', 'Thumbar(buttons, callback)', 'Tasks(callback)', 'OpenWindow(options, callback)', 'Windows()', 'FocusWindow(id)', 'CloseWindow(id)', 'Shortcuts(keys, callback)', 'Autostart(enabled, callback)', 'Links(callback)', 'Power(callback)', 'Awake(on, callback)', 'Update(callback)', 'On(name, callback)', 'Off(name, callback)']
 	},
 	$OnCreate: function () {
 		var self = this;
@@ -119,6 +129,47 @@ Elemenx.Service('Native', {
 		this.WebState = function () {
 			self.Emit('window', self.State());
 		};
+
+		/* The badge and the ring drawn over the favicon; the last drawing (an older one that ends later is dropped). */
+		this.Count = 0;
+		this.Part = null;
+		this.Sequence = 0;
+		this.WindowTurn = 0;
+		this.Blinking = null;
+
+		this.DarkQuery = typeof window !== 'undefined' && window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+
+		this.SchemeChanged = function () {
+			if (Elemenx.Icon() && typeof Elemenx.Icon() === 'object')
+				self.Render(true, function () {});
+		};
+
+		if (this.DarkQuery && this.DarkQuery.addEventListener)
+			this.DarkQuery.addEventListener('change', this.SchemeChanged);
+
+		/* A program follows the title and the icon of the page, whoever gives them ($Title, $Icon, Elemenx.Title...). */
+		this.TitleChanged = function (text) {
+			if (self.Bridge() && !self.Titling)
+				self.Ask('title', {Text: text});
+		};
+
+		this.IconChanged = function () {
+			if (!self.Iconing)
+				self.Render(true, function () {});
+		};
+
+		Elemenx.Title.OnChange(this.TitleChanged);
+		Elemenx.Icon.OnChange(this.IconChanged);
+	},
+
+	$OnDestroy: function () {
+		Elemenx.Title.OffChange(this.TitleChanged);
+		Elemenx.Icon.OffChange(this.IconChanged);
+
+		if (this.DarkQuery && this.DarkQuery.removeEventListener)
+			this.DarkQuery.removeEventListener('change', this.SchemeChanged);
+
+		this.Blink(false);
 	},
 
 	/* The bridge of a native program, or null in a browser. */
@@ -167,7 +218,7 @@ Elemenx.Service('Native', {
 		}
 
 		if (!web) {
-			callback(new Error('Elemenx Native ' + name + ' needs a native program'));
+			callback(new Error('Elemenx Platform ' + name + ' needs a native program'));
 
 			return;
 		}
@@ -202,7 +253,7 @@ Elemenx.Service('Native', {
 				window.close();
 			}
 			else {
-				done(new Error('Elemenx Native window ' + action + ' needs a native program'));
+				done(new Error('Elemenx Platform window ' + action + ' needs a native program'));
 
 				return;
 			}
@@ -234,9 +285,17 @@ Elemenx.Service('Native', {
 	},
 
 	Title: function (text, callback) {
-		document.title = String(text == null ? '' : text);
+		/* The change of Elemenx.Title is not told again: the program hears it once, with the callback. */
+		this.Titling = true;
 
-		this.Ask('title', {Text: document.title}, callback, function (done) {
+		try {
+			Elemenx.Title(text == null ? '' : text);
+		}
+		finally {
+			this.Titling = false;
+		}
+
+		this.Ask('title', {Text: Elemenx.Title()}, callback, function (done) {
 			done(null, null);
 		});
 	},
@@ -316,7 +375,7 @@ Elemenx.Service('Native', {
 
 				failed = true;
 
-				callback(reader.error || new Error('Elemenx Native could not read ' + file.name));
+				callback(reader.error || new Error('Elemenx Platform could not read ' + file.name));
 			};
 
 			if (read === 'data') reader.readAsDataURL(file);
@@ -416,7 +475,7 @@ Elemenx.Service('Native', {
 			entry = this.Spawn('elemenx-tray', view, width, height, 'none');
 
 			if (!entry) {
-				callback(new Error('Elemenx Native could not open the window of the tray'));
+				callback(new Error('Elemenx Platform could not open the window of the tray'));
 
 				return;
 			}
@@ -486,7 +545,7 @@ Elemenx.Service('Native', {
 		}
 
 		if (!this.Bridge()) {
-			callback(new Error('Elemenx Native TrayPopup needs a native program'));
+			callback(new Error('Elemenx Platform TrayPopup needs a native program'));
 
 			return;
 		}
@@ -494,7 +553,7 @@ Elemenx.Service('Native', {
 		entry = this.Spawn('elemenx-traypopup', options, width, height, 'transparent');
 
 		if (!entry) {
-			callback(new Error('Elemenx Native could not open the menu of the tray'));
+			callback(new Error('Elemenx Platform could not open the menu of the tray'));
 
 			return;
 		}
@@ -529,22 +588,322 @@ Elemenx.Service('Native', {
 	 */
 	Role: function (role, callback) {
 		this.Ask('role', {Role: String(role || '')}, callback, ['undo', 'redo', 'cut', 'copy', 'paste', 'selectAll'].indexOf(role) === -1 ? null : function (done) {
-			done(document.execCommand(role) ? null : new Error('Elemenx Native role ' + role + ' was refused by the page'), null);
+			done(document.execCommand(role) ? null : new Error('Elemenx Platform role ' + role + ' was refused by the page'), null);
 		});
 	},
 
-	/* The picture of the icon in the tray, and its tooltip, in its place (the icon, its menu and its window stay): {Icon (a path in the Application) or Image (a data URL of a PNG), Tooltip}. */
+	/*
+	 * The picture of the icon in the tray, and its tooltip, in its place (the icon, its menu and its window stay): {Icon
+	 * (a path in the Application; the text of an SVG, a data URL or {Light, Dark} go drawn into a PNG) or Image (a data
+	 * URL of a PNG), Tooltip}.
+	 */
 	TrayIcon: function (options, callback) {
-		options = options || {};
+		var self = this;
+		var icon;
+		var tooltip;
 
-		this.Ask('trayicon', {Icon: options.Icon || null, Image: options.Image || null, Tooltip: options.Tooltip === undefined ? null : String(options.Tooltip)}, callback);
+		options = options || {};
+		icon = this.Chosen(options.Icon || null);
+		tooltip = options.Tooltip === undefined ? null : String(options.Tooltip);
+
+		if (!this.Bridge() || !icon || options.Image || (typeof options.Icon !== 'object' && !/^(<|data:)/i.test(String(icon).trim()))) {
+			this.Ask('trayicon', {Icon: icon ? String(icon) : null, Image: options.Image || null, Tooltip: tooltip}, callback);
+
+			return;
+		}
+
+		this.Draw(this.Source(icon), function (picture) {
+			self.Ask('trayicon', picture ? {Icon: null, Image: picture, Tooltip: tooltip} : {Icon: self.Source(icon), Image: null, Tooltip: tooltip}, callback);
+		}, true);
 	},
 
-	/* The icon of the windows of the program (the taskbar, the title bar; the dock on macOS): {Icon (a path in the Application) or Image (a data URL of a PNG)}, null for the one of the program. */
-	Icon: function (options, callback) {
-		options = options || {};
+	/* The icon of the Application: Elemenx.Icon, which the favicon and the windows of a program follow. */
+	Icon: function (icon, callback) {
+		/* The change of Elemenx.Icon is drawn here once, with the callback. */
+		this.Iconing = true;
 
-		this.Ask('icon', {Icon: options.Icon || null, Image: options.Image || null}, callback);
+		try {
+			Elemenx.Icon(icon === undefined ? null : icon);
+		}
+		finally {
+			this.Iconing = false;
+		}
+
+		this.Render(true, function (error) {
+			(callback || function () {})(error || null);
+		});
+	},
+
+	ResetIcon: function (callback) {
+		var self = this;
+
+		this.Blink(false);
+
+		this.Iconing = true;
+
+		try {
+			Elemenx.Icon(null);
+		}
+		finally {
+			this.Iconing = false;
+		}
+
+		this.Badge(0, function () {
+			self.Progress(null, function () {
+				self.Render(true, function (error) {
+					(callback || function () {})(error || null);
+				});
+			});
+		});
+	},
+
+	IconState: function () {
+		return {Icon: Elemenx.Icon(), Badge: this.Blinking ? this.Blinking.Count : this.Count, Progress: this.Part};
+	},
+
+	/* The icon for the scheme of now: a {Light, Dark} gives the one of the scheme. */
+	Chosen: function (icon) {
+		if (icon && typeof icon === 'object')
+			return this.DarkQuery && this.DarkQuery.matches ? icon.Dark || icon.Light || null : icon.Light || icon.Dark || null;
+
+		return icon || null;
+	},
+
+	/* A URL of an icon: the text of an SVG made a data URL, the others as they are. */
+	Source: function (icon) {
+		var text = String(icon).trim();
+		if (/^<svg[\s>]/i.test(text) || /^<\?xml/i.test(text))
+			return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(text);
+
+		return text;
+	},
+
+	/* The URL of the icon under the badge and the ring: the one of Elemenx.Icon, or the one the page named. */
+	Base: function () {
+		var icon = this.Chosen(Elemenx.Icon());
+		var link = document.querySelector('link[rel~="icon"]');
+
+		if (icon)
+			return this.Source(icon);
+
+		if (!link)
+			return null;
+
+		return (link.hasAttribute('data-elemenx-href') ? link.getAttribute('data-elemenx-href') : link.getAttribute('href')) || null;
+	},
+
+	/*
+	 * Puts a picture drawn here in the favicon (the href and the type of each link kept on it, to bring them back), or
+	 * with null brings back the ones of the links. A page without a link gets one, which goes with the picture.
+	 */
+	Place: function (href) {
+		var links = Array.prototype.slice.call(document.querySelectorAll('link[rel~="icon"]'));
+		var link;
+
+		if (href === null) {
+			links.forEach(function (each) {
+				if (each.hasAttribute('data-elemenx-badge')) {
+					each.parentNode.removeChild(each);
+
+					return;
+				}
+
+				if (!each.hasAttribute('data-elemenx-href')) return;
+
+				if (each.getAttribute('data-elemenx-href')) each.setAttribute('href', each.getAttribute('data-elemenx-href'));
+				else each.removeAttribute('href');
+
+				if (each.hasAttribute('data-elemenx-type')) each.setAttribute('type', each.getAttribute('data-elemenx-type'));
+				else each.removeAttribute('type');
+
+				each.removeAttribute('data-elemenx-href');
+				each.removeAttribute('data-elemenx-type');
+			});
+
+			return;
+		}
+
+		if (!links.length) {
+			link = document.createElement('link');
+			link.rel = 'icon';
+
+			/* Of Elemenx: Elemenx.Icon takes it away with its own, and keeps it not as an icon of the page. */
+			link.setAttribute('data-elemenx-icon', '');
+			link.setAttribute('data-elemenx-badge', '');
+
+			document.head.appendChild(link);
+
+			links = [link];
+		}
+
+		links.forEach(function (each) {
+			if (!each.hasAttribute('data-elemenx-href')) {
+				each.setAttribute('data-elemenx-href', each.getAttribute('href') || '');
+
+				if (each.hasAttribute('type'))
+					each.setAttribute('data-elemenx-type', each.getAttribute('type'));
+			}
+
+			each.setAttribute('href', href);
+			each.setAttribute('type', 'image/png');
+		});
+	},
+
+	/*
+	 * Draws the badge and the ring of now over the favicon (or brings it back without them), and with changed gives the
+	 * windows of a program the icon of Elemenx.Icon, drawn into a PNG. A drawing that ends after a newer one is dropped:
+	 * of the favicon by a newer favicon, of the windows by a newer icon.
+	 */
+	Render: function (changed, callback) {
+		var self = this;
+		var sequence = ++this.Sequence;
+		var turn = changed ? ++this.WindowTurn : 0;
+
+		function windows () {
+			var icon = self.Chosen(Elemenx.Icon());
+
+			if (!changed || !self.Bridge() || turn !== self.WindowTurn) {
+				callback(null);
+
+				return;
+			}
+
+			if (!icon) {
+				self.Ask('icon', {Icon: null, Image: null}, callback);
+
+				return;
+			}
+
+			self.Draw(self.Source(icon), function (picture) {
+				if (turn !== self.WindowTurn) {
+					callback(null);
+
+					return;
+				}
+
+				self.Ask('icon', picture ? {Icon: null, Image: picture} : {Icon: self.Source(icon), Image: null}, callback);
+			}, true);
+		}
+
+		if (typeof document === 'undefined') {
+			callback(null);
+
+			return;
+		}
+
+		if (!this.Count && this.Part === null) {
+			this.Place(null);
+
+			windows();
+
+			return;
+		}
+
+		this.Draw(this.Base(), function (drawn) {
+			if (sequence === self.Sequence)
+				self.Place(drawn);
+
+			windows();
+		});
+	},
+
+	/* A picture loaded from a URL, or null when it cannot be read (another origin without CORS, a broken file). */
+	Load: function (url, callback) {
+		var picture = new Image();
+
+		picture.crossOrigin = /^(data|blob):/.test(url) ? null : 'anonymous';
+
+		picture.onload = function () {
+			callback(picture);
+		};
+
+		picture.onerror = function () {
+			callback(null);
+		};
+
+		picture.src = url;
+	},
+
+	/* A color of the theme (the danger of the badge, the accent of the ring), or fallback without a theme. */
+	Color: function (token, fallback) {
+		var value = typeof getComputedStyle === 'function' ? getComputedStyle(document.documentElement).getPropertyValue(token).trim() : '';
+
+		return value || fallback;
+	},
+
+	/* The icon at url drawn on a canvas of 64 pixels, with the badge and the ring of now (none with bare), as a data URL of a PNG; null when it cannot be read. */
+	Draw: function (url, callback, bare) {
+		var self = this;
+
+		function paint (picture) {
+			var canvas = document.createElement('canvas');
+			var ring = !bare && self.Part !== null;
+			var context;
+			var text;
+
+			canvas.width = 64;
+			canvas.height = 64;
+			context = canvas.getContext('2d');
+
+			if (!context) {
+				callback(null);
+
+				return;
+			}
+
+			if (picture)
+				context.drawImage(picture, ring ? 6 : 0, ring ? 6 : 0, ring ? 52 : 64, ring ? 52 : 64);
+
+			if (ring) {
+				context.lineWidth = 6;
+				context.strokeStyle = 'rgba(128, 128, 128, 0.35)';
+
+				context.beginPath();
+				context.arc(32, 32, 29, 0, Math.PI * 2);
+				context.stroke();
+
+				context.strokeStyle = self.Color('--elemenx-accent', '#1a73e8');
+
+				context.beginPath();
+				context.arc(32, 32, 29, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * self.Part);
+				context.stroke();
+			}
+
+			if (!bare && self.Count) {
+				text = self.Count === 'dot' ? '' : self.Count > 99 ? '99+' : String(self.Count);
+
+				context.fillStyle = self.Color('--elemenx-danger', '#d93025');
+
+				context.beginPath();
+				context.arc(text ? 40 : 48, text ? 40 : 16, text ? 24 : 14, 0, Math.PI * 2);
+				context.fill();
+
+				if (text) {
+					context.fillStyle = '#ffffff';
+					context.font = 'bold ' + (text.length > 2 ? 20 : text.length > 1 ? 26 : 32) + 'px sans-serif';
+					context.textAlign = 'center';
+					context.textBaseline = 'middle';
+
+					context.fillText(text, 40, 42);
+				}
+			}
+
+			try {
+				callback(canvas.toDataURL('image/png'));
+			}
+			catch (error) {
+				/* A picture of another origin taints the canvas: the favicon stays the icon alone. */
+				callback(null);
+			}
+		}
+
+		if (!url) {
+			paint(null);
+
+			return;
+		}
+
+		this.Load(url, paint);
 	},
 
 	/* Shows the window of the tray by its icon (true) or hides it (false). */
@@ -554,7 +913,7 @@ Elemenx.Service('Native', {
 
 	External: function (url, callback) {
 		if (!/^(https?|mailto):/i.test(String(url))) {
-			(callback || function () {})(new Error('Elemenx Native opens only http, https and mailto links: ' + url));
+			(callback || function () {})(new Error('Elemenx Platform opens only http, https and mailto links: ' + url));
 
 			return;
 		}
@@ -597,22 +956,54 @@ Elemenx.Service('Native', {
 		return canvas.toDataURL('image/png');
 	},
 
+	/* The badge of the system (a program, an installed web Application: navigator.setAppBadge), and the one drawn over the favicon. */
 	Badge: function (count, callback) {
-		this.Ask('badge', {Count: Number(count) || 0, Image: this.Bridge() ? this.BadgeImage(Number(count) || 0) : null}, callback, typeof navigator !== 'undefined' && typeof navigator.setAppBadge === 'function' ? function (done) {
-			(Number(count) ? navigator.setAppBadge(Number(count)) : navigator.clearAppBadge()).then(function () {
-				done(null, null);
-			}, done);
-		} : null);
+		var self = this;
+		var value = count === 'dot' ? 'dot' : Math.max(0, Math.floor(Number(count) || 0));
+		var number = value === 'dot' ? 1 : value;
+		var done = callback || function () {};
+
+		if (this.Blinking) this.Blinking.Count = value;
+		else this.Count = value;
+
+		this.Ask('badge', {Count: number, Image: this.Bridge() ? this.BadgeImage(number) : null}, function (error) {
+			self.Render(false, function () {
+				done(error || null, null);
+			});
+		}, function (web) {
+			if (typeof navigator === 'undefined' || typeof navigator.setAppBadge !== 'function') {
+				web(null, null);
+
+				return;
+			}
+
+			/* A page that is not installed may be refused the badge of the system: the favicon has it still. */
+			(number ? navigator.setAppBadge(number) : navigator.clearAppBadge()).then(function () {
+				web(null, null);
+			}, function () {
+				web(null, null);
+			});
+		});
 	},
 
 	Progress: function (value, callback) {
+		var self = this;
 		var options = value !== null && typeof value === 'object' ? value : {Value: value};
-		var part = options.Value === null || options.Value === undefined ? null : Math.max(0, Math.min(1, Number(options.Value)));
+		var part = options.Value === null || options.Value === undefined ? null : Math.max(0, Math.min(1, Number(options.Value) || 0));
+		var done = callback || function () {};
 
-		this.Ask('progress', {Value: part, State: options.State || 'normal'}, callback);
+		this.Part = part;
+
+		this.Ask('progress', {Value: part, State: options.State || 'normal'}, function (error) {
+			self.Render(false, function () {
+				done(error || null, null);
+			});
+		}, function (web) {
+			web(null, null);
+		});
 	},
 
-	/* The window asks for attention; on the web the title of the page blinks while the page is hidden, and stops when it is seen. */
+	/* The window asks for attention; on the web the title of the page and the favicon blink while the page is hidden, and stop when it is seen. */
 	Attention: function (on, callback) {
 		var self = this;
 
@@ -625,6 +1016,7 @@ Elemenx.Service('Native', {
 
 	Blink: function (on) {
 		var self = this;
+		var shown = true;
 
 		if (this.Blinking) {
 			window.clearInterval(this.Blinking.Timer);
@@ -632,21 +1024,29 @@ Elemenx.Service('Native', {
 			document.removeEventListener('visibilitychange', this.Blinking.Seen);
 
 			document.title = this.Blinking.Title;
+			this.Count = this.Blinking.Count;
 			this.Blinking = null;
+
+			this.Render(false, function () {});
 		}
 
-		if (!on || document.visibilityState === 'visible') return;
+		if (!on || typeof document === 'undefined' || document.visibilityState === 'visible') return;
 
-		this.Blinking = {Title: document.title, Timer: 0, Seen: function () {
+		this.Blinking = {Title: document.title, Count: this.Count, Timer: 0, Seen: function () {
 			if (document.visibilityState === 'visible')
 				self.Blink(false);
 		}};
 
-		this.Blinking.Timer = window.setInterval(function () {
-			document.title = document.title === self.Blinking.Title ? '\u2022 ' + self.Blinking.Title : self.Blinking.Title;
-		}, 1000);
-
 		document.addEventListener('visibilitychange', this.Blinking.Seen);
+
+		this.Blinking.Timer = window.setInterval(function () {
+			shown = !shown;
+
+			document.title = shown ? self.Blinking.Title : '\u2022 ' + self.Blinking.Title;
+			self.Count = shown ? self.Blinking.Count : self.Blinking.Count || 'dot';
+
+			self.Render(false, function () {});
+		}, 1000);
 	},
 
 	Thumbar: function (buttons, callback) {
@@ -739,7 +1139,7 @@ Elemenx.Service('Native', {
 		callback = callback || function () {};
 
 		if (!/^[\w-]+$/.test(id)) {
-			callback(new Error('Elemenx Native OpenWindow needs an ID of letters, digits, _ and -'));
+			callback(new Error('Elemenx Platform OpenWindow needs an ID of letters, digits, _ and -'));
 
 			return;
 		}
@@ -757,7 +1157,7 @@ Elemenx.Service('Native', {
 		entry = this.Spawn('elemenx-window-' + id, options, width, height, this.Frames[id]);
 
 		if (!entry) {
-			callback(new Error('Elemenx Native could not open the window ' + id + ' (a browser opens one only after a press or a key)'));
+			callback(new Error('Elemenx Platform could not open the window ' + id + ' (a browser opens one only after a press or a key)'));
 
 			return;
 		}
@@ -983,7 +1383,7 @@ Elemenx.Service('Native', {
 		callback = callback || function () {};
 
 		if (!settings.Title && !settings.Text && !(settings.Look === 'elemenx' && settings.Component)) {
-			callback(new Error('Elemenx Native Notify needs a Title or a Text'));
+			callback(new Error('Elemenx Platform Notify needs a Title or a Text'));
 
 			return;
 		}
@@ -1000,7 +1400,7 @@ Elemenx.Service('Native', {
 			callback(error || null, error ? null : {ID: id});
 		}, function (done) {
 			if (typeof Notification === 'undefined') {
-				done(new Error('Elemenx Native Notify: this browser has no notifications'));
+				done(new Error('Elemenx Platform Notify: this browser has no notifications'));
 
 				return;
 			}
@@ -1009,7 +1409,7 @@ Elemenx.Service('Native', {
 				var notification;
 
 				if (permission !== 'granted') {
-					done(new Error('Elemenx Native Notify: the user did not allow notifications'));
+					done(new Error('Elemenx Platform Notify: the user did not allow notifications'));
 
 					return;
 				}

@@ -54,3 +54,7 @@
 })
 </script>
 ```
+
+## Тесты
+
+- [builds the Libraries of $Discovery: a folder with its index.js and a graph file of any name, with their dictionaries](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/builder-multi-application.test.js#L257) — `tests/regression/builder-multi-application.test.js`

@@ -13,11 +13,11 @@
  * program, Protocol of elemenx-native.json), task (a task of the jump list of the program, Tasks), thumbar (a button
  * under the thumbnail of the window) and power (sleep, the lock, the battery).
  *
- * The page opens more windows of the same Application (Native.OpenWindow): an empty page of its own origin named
+ * The page opens more windows of the same Application (Platform.OpenWindow): an empty page of its own origin named
  * elemenx-window-<ID>, which the Application fills; such a window never navigates (a link out of the Application opens in
  * the browser of the system) and opens no window, and all of them close with the first window.
  *
- * The window of the tray (Native.Tray with Window) is one of them too, named elemenx-tray: no frame, off the taskbar,
+ * The window of the tray (Platform.Tray with Window) is one of them too, named elemenx-tray: no frame, off the taskbar,
  * shown by the icon at a click (its menu then waits for the right button) and hidden when it loses the focus.
  *
  * CloseToTray keeps the program in its tray: while it has an icon there, closing the window hides it and a click on
@@ -37,15 +37,15 @@ var origin = 'app://bundle/';
 var tray = null;
 var awake = null;
 
-/* The window of the tray (Native.Tray with Window): shown by the icon, and when it last hid on losing the focus. */
+/* The window of the tray (Platform.Tray with Window): shown by the icon, and when it last hid on losing the focus. */
 var trayWindow = null;
 
-/* The items of the menu of the tray (Native.Tray, Native.TrayMenu): they stay when the icon comes again. */
+/* The items of the menu of the tray (Platform.Tray, Platform.TrayMenu): they stay when the icon comes again. */
 var trayItems = null;
 var trayMenuBuilt = null;
 var trayHasWindow = false;
 
-/* The window of the menu of the tray (Native.TrayPopup: a menu of ElemenxUI), which the right button opens at the pointer. */
+/* The window of the menu of the tray (Platform.TrayPopup: a menu of ElemenxUI), which the right button opens at the pointer. */
 var trayPopup = null;
 
 /* The notifications of the system shown (kept, or they go before they are pressed), and the window of the cards of the Application. */
@@ -329,7 +329,7 @@ var handlers = {
 	/* The window of the cards of the Application (Notify with Look elemenx): its size, by the corner of the screen, or hidden. */
 	notifications: function (args) {
 		if (!notificationWindow || notificationWindow.isDestroyed())
-			throw new Error('Elemenx Native has no window of its notifications: Native.Notify with Look elemenx makes it');
+			throw new Error('Elemenx Native has no window of its notifications: Platform.Notify with Look elemenx makes it');
 
 		if (args.Width && args.Height)
 			notificationWindow.setContentSize(Math.round(args.Width), Math.round(args.Height));
@@ -431,7 +431,7 @@ var handlers = {
 		if (args.Tooltip)
 			tray.setToolTip(String(args.Tooltip));
 
-		/* Its Items, or the ones of Native.TrayMenu (a NativeMenu of the tray) when it gives none. */
+		/* Its Items, or the ones of Platform.TrayMenu (a NativeMenu of the tray) when it gives none. */
 		if (args.Items !== undefined)
 			trayItems = args.Items || null;
 
@@ -462,7 +462,7 @@ var handlers = {
 	/* The picture of the icon in the tray (a path in the Application, or a data URL of a PNG) and its tooltip, in their place. */
 	trayicon: function (args) {
 		if (!tray)
-			throw new Error('Elemenx Native has no icon in the tray: Native.Tray makes it');
+			throw new Error('Elemenx Native has no icon in the tray: Platform.Tray makes it');
 
 		if (args.Icon || args.Image)
 			tray.setImage(image(args));
@@ -499,7 +499,7 @@ var handlers = {
 	/* The window of the menu of the tray: its size (it measures its list), or shown at the pointer, or hidden. */
 	traypopup: function (args) {
 		if (!trayPopup || trayPopup.isDestroyed())
-			throw new Error('Elemenx Native has no menu of the tray of its own: Native.TrayPopup makes it');
+			throw new Error('Elemenx Native has no menu of the tray of its own: Platform.TrayPopup makes it');
 
 		if (args.Width && args.Height)
 			trayPopup.setContentSize(Math.round(args.Width), Math.round(args.Height));
@@ -530,7 +530,7 @@ var handlers = {
 	},
 	traywindow: function (args) {
 		if (!tray || !trayWindow)
-			throw new Error('Elemenx Native has no window of the tray: Native.Tray with Window makes it');
+			throw new Error('Elemenx Native has no window of the tray: Platform.Tray with Window makes it');
 
 		showTray(args.Show !== false);
 

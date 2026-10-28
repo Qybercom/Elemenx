@@ -49,3 +49,7 @@
 })
 </script>
 ```
+
+## Тесты
+
+- [PlanPicker chooses a plan as a group of radios, tells it with its period, and switches the yearly prices](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-controls.test.js#L416) — `tests/regression/library-controls.test.js`

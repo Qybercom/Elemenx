@@ -59,3 +59,9 @@ Serial ports (COM ports, UART: Arduino, GPS, scales, printers...) through Web Se
 })
 </script>
 ```
+
+## Tests
+
+- [asks for a port by its filters, reads text and lines, writes, and closes](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/devices.test.js#L69) — `tests/regression/devices.test.js`
+- [calls back NotSupportedError without Web Serial, and reports the ports that come and go](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/devices.test.js#L156) — `tests/regression/devices.test.js`
+- [devices: the browser tells which of Push, Serial, USB and NFC it has, and each calls back its result or its error](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L8263) — `tests/examples/ui-kit.spec.js`

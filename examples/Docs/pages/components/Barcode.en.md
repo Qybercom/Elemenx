@@ -98,3 +98,7 @@ A barcode of a text (the Barcodes Service): Format code128 (the default), ean13,
 })()
 </script>
 ```
+
+## Tests
+
+- [Barcode draws its format at its sizes, emits why it cannot, and gives its picture as an SVG, a PNG and a download](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-codes.test.js#L142) — `tests/regression/library-codes.test.js`

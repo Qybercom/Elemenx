@@ -60,3 +60,7 @@ default
 })
 </script>
 ```
+
+## Tests
+
+- [the cards of posts, profiles, comments and products tell their buttons, and a comment makes buttons of its mentions and tags](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-controls.test.js#L454) — `tests/regression/library-controls.test.js`

@@ -21,7 +21,7 @@ Elemenx.Component('App', {
 
 	$OnCreate: function () {
 		var self = this;
-		var native = this.$Service('Native');
+		var native = this.$Service('Platform');
 
 		/* The language of the switch: the one of the Locale, as it changes (here or by the system at the start). */
 		this.Language = Elemenx.Locale.Language();
@@ -43,7 +43,7 @@ Elemenx.Component('App', {
 	 */
 	$OnReady: function () {
 		var self = this;
-		var native = this.$Service('Native');
+		var native = this.$Service('Platform');
 
 		this.Heard = function (name) {
 			return function (value) {
@@ -77,7 +77,7 @@ Elemenx.Component('App', {
 	},
 
 	$OnDestroy: function () {
-		var native = this.$Service('Native');
+		var native = this.$Service('Platform');
 
 		Elemenx.Locale.OffChange(this.Spoken);
 
@@ -113,7 +113,7 @@ Elemenx.Component('App', {
 
 	/* A command of the menu, of a thumbnail button or of the menu of the tray. */
 	Commanded: function (id) {
-		var native = this.$Service('Native');
+		var native = this.$Service('Platform');
 
 		if (id === 'note') this.$Service('Notes').Add('idea', 'A note #' + (this.$Service('Notes').Items.length + 1));
 		else if (id === 'notes') this.Windowed();
@@ -141,13 +141,13 @@ Elemenx.Component('App', {
 	},
 
 	Messaged: function () {
-		this.$Service('Native').Message({Title: 'Elemenx', Text: 'A message of the system.', Buttons: ['OK', 'Cancel']}, this.Answer('Message'));
+		this.$Service('Platform').Message({Title: 'Elemenx', Text: 'A message of the system.', Buttons: ['OK', 'Cancel']}, this.Answer('Message'));
 	},
 
 	Opened: function () {
 		var self = this;
 
-		this.$Service('Native').Open({Accept: ['.txt', '.md', '.json'], Read: 'text'}, function (error, files) {
+		this.$Service('Platform').Open({Accept: ['.txt', '.md', '.json'], Read: 'text'}, function (error, files) {
 			if (error) {
 				self.Said('Open: error, ' + error.message);
 
@@ -161,28 +161,28 @@ Elemenx.Component('App', {
 	},
 
 	Saved: function () {
-		this.$Service('Native').Save({Name: 'elemenx.txt', Text: 'Saved by Elemenx at ' + new Date().toISOString() + '\n'}, this.Answer('Save'));
+		this.$Service('Platform').Save({Name: 'elemenx.txt', Text: 'Saved by Elemenx at ' + new Date().toISOString() + '\n'}, this.Answer('Save'));
 	},
 
 	Linked: function () {
-		this.$Service('Native').External('https://example.com/', this.Answer('External'));
+		this.$Service('Platform').External('https://example.com/', this.Answer('External'));
 	},
 
 	Maximized: function () {
-		this.$Service('Native').Window('toggle-maximize', this.Answer('Window'));
+		this.$Service('Platform').Window('toggle-maximize', this.Answer('Window'));
 	},
 
 	/* The progress on the button of the window, a step further at each press: a part, paused, in error, running, none. */
 	Progressed: function () {
 		var steps = [{Value: 0.25}, {Value: 0.5, State: 'paused'}, {Value: 0.75, State: 'error'}, {State: 'indeterminate'}, null];
 
-		this.$Service('Native').Progress(steps[this.Step % steps.length], this.Answer('Progress'));
+		this.$Service('Platform').Progress(steps[this.Step % steps.length], this.Answer('Progress'));
 
 		this.Step++;
 	},
 
 	Attended: function () {
-		this.$Service('Native').Attention(true, this.Answer('Attention'));
+		this.$Service('Platform').Attention(true, this.Answer('Attention'));
 	},
 
 	/*
@@ -190,14 +190,14 @@ Elemenx.Component('App', {
 	 * back by Show and the program quits by Quit.
 	 */
 	Trayed: function () {
-		this.$Service('Native').Tray({Icon: 'icons/tray.png', Tooltip: 'Elemenx native', Window: {Component: 'TrayPanel', Width: 280, Height: 240}}, this.Answer('Tray'));
+		this.$Service('Platform').Tray({Icon: 'icons/tray.png', Tooltip: 'Elemenx native', Window: {Component: 'TrayPanel', Width: 280, Height: 240}}, this.Answer('Tray'));
 	},
 
 	/* One more window of the same Application: the notes, the list of which this window counts. */
 	Windowed: function () {
 		var self = this;
 
-		this.$Service('Native').OpenWindow({ID: 'notes', Component: 'NoteWindow', Title: 'Notes', Width: 460, Height: 380, Frame: 'none'}, function (error, result) {
+		this.$Service('Platform').OpenWindow({ID: 'notes', Component: 'NoteWindow', Title: 'Notes', Width: 460, Height: 380, Frame: 'none'}, function (error, result) {
 			self.Said('OpenWindow: ' + (error ? 'error, ' + error.message : result.ID));
 		});
 	},
@@ -206,7 +206,7 @@ Elemenx.Component('App', {
 	Notified: function () {
 		var self = this;
 
-		this.$Service('Native').Notify({ID: 'system', Title: 'Elemenx native', Text: 'A notification of the system', Icon: '/icons/app.png'}, function (error) {
+		this.$Service('Platform').Notify({ID: 'system', Title: 'Elemenx native', Text: 'A notification of the system', Icon: '/icons/app.png'}, function (error) {
 			self.Said('Notify: ' + (error ? 'error, ' + error.message : 'system'));
 		});
 	},
@@ -214,7 +214,7 @@ Elemenx.Component('App', {
 	Carded: function () {
 		var self = this;
 
-		this.$Service('Native').Notify({ID: 'card', Title: 'Elemenx native', Text: 'A card of ElemenxUI by the corner of the screen', Icon: 'bell', Look: 'elemenx', Actions: [{ID: 'open', Label: 'Open'}, {ID: 'later', Label: 'Later'}]}, function (error) {
+		this.$Service('Platform').Notify({ID: 'card', Title: 'Elemenx native', Text: 'A card of ElemenxUI by the corner of the screen', Icon: 'bell', Look: 'elemenx', Actions: [{ID: 'open', Label: 'Open'}, {ID: 'later', Label: 'Later'}]}, function (error) {
 			self.Said('Notify: ' + (error ? 'error, ' + error.message : 'elemenx'));
 		});
 	},
@@ -230,12 +230,12 @@ Elemenx.Component('App', {
 
 	/* An invitation to a call, as a messenger shows it: by the corner of the screen, over the others, until it is answered. */
 	Called: function () {
-		this.$Service('Native').Notify({ID: 'call', Look: 'elemenx', Component: 'CallInvite', Props: {Name: 'Ada Lovelace', Video: true}, Bare: true, Priority: 'high', Timeout: 0});
+		this.$Service('Platform').Notify({ID: 'call', Look: 'elemenx', Component: 'CallInvite', Props: {Name: 'Ada Lovelace', Video: true}, Bare: true, Priority: 'high', Timeout: 0});
 	},
 
 	/* A task in a card: the same card, its progress new, until it is done. */
 	Downloaded: function () {
-		var native = this.$Service('Native');
+		var native = this.$Service('Platform');
 		var progress = 0;
 		var timer = window.setInterval(function () {
 			progress = Math.min(1, progress + 0.1);
@@ -250,6 +250,6 @@ Elemenx.Component('App', {
 	Badged: function () {
 		this.Count++;
 
-		this.$Service('Native').Badge(this.Count, this.Answer('Badge'));
+		this.$Service('Platform').Badge(this.Count, this.Answer('Badge'));
 	}
 });

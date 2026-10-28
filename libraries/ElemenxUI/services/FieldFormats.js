@@ -10,7 +10,7 @@
  * point). Display(name, value) is the text a field shows for a value (an IBAN in groups of four). Register(name, format)
  * adds a format of the Application, Find(name) returns one, Names() lists them.
  */
-Elemenx.Service('Formats', {
+Elemenx.Service('FieldFormats', {
 	$Meta: {
 		Description: 'Formats of text fields: an Input with Preset="email" (url, semver, ipv4, ipv6, uuid, iban, postal-code, integer, decimal) gets the right keyboard and autofill, drops the characters the format cannot hold while the user types, and checks and normalizes the value when it is committed.',
 		Methods: ['Register(name, format)', 'Find(name)', 'Names()', 'Check(name, text, options)', 'Display(name, value)']
@@ -250,7 +250,7 @@ Elemenx.Service('Formats', {
 
 	Register: function (name, format) {
 		if (!name || !format || typeof format !== 'object')
-			throw new Error('Formats.Register expects (name, format)');
+			throw new Error('FieldFormats.Register expects (name, format)');
 
 		this.Registry[name] = format;
 	},

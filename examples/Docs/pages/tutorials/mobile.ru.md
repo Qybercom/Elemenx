@@ -1,7 +1,7 @@
 <!-- generated -->
 # Мобильное приложение
 
-Тот же проект как программы для Android и iOS на Capacitor: приложение в нативном окне телефона, его иконка и заставка и возможности телефона через тот же сервис `Native`. Готовый проект — `examples/Native`.
+Тот же проект как программы для Android и iOS на Capacitor: приложение в нативном окне телефона, его иконка и заставка и возможности телефона через тот же сервис `Platform`. Готовый проект — `examples/Native`.
 
 Чему вы научитесь: `Native.Mobile` в `elemenx.config.js`, проект Capacitor, который делает сборка, и как одно приложение работает на телефоне, на десктопе и в вебе.
 
@@ -28,11 +28,11 @@ Native: {
 
 ## 3. Одно приложение, три места
 
-Сервис `Native` сообщает, где он работает и что умеет система:
+Сервис `Platform` сообщает, где он работает и что умеет система:
 
 ```js
 $OnCreate: function () {
-	var native = this.$Service('Native');
+	var native = this.$Service('Platform');
 
 	this.Platform = native.Platform();
 	this.Features = ['dialogs', 'notifications', 'external', 'tray', 'taskbar'].filter(function (feature) {

@@ -39,3 +39,7 @@
 })
 </script>
 ```
+
+## Тесты
+
+- [Currencies: lists the ISO 4217 currencies with their names and digits, and formats an amount](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-services.test.js#L52) — `tests/regression/library-services.test.js`

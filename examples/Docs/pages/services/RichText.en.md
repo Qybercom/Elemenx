@@ -55,3 +55,12 @@ The HTML is read in an inert template: nothing of it runs or loads while it is r
 })
 </script>
 ```
+
+## Tests
+
+- [reads fences, directives and inlines of plugins into their nodes, keeps them through Sanitize and writes them back as they were](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/rich-plugins.test.js#L33) — `tests/regression/rich-plugins.test.js`
+- [Markdown draws its plugins by their Components and functions, highlights the other fences, and takes them away again](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/rich-plugins.test.js#L75) — `tests/regression/rich-plugins.test.js`
+- [Markdown in an Application draws a plugin whose Component its Library has not loaded yet](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/rich-plugins.test.js#L102) — `tests/regression/rich-plugins.test.js`
+- [RichEditor draws its plugins as blocks the caret does not enter, puts one in by Command, edits its text in place, and writes it in Markdown](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/rich-plugins.test.js#L132) — `tests/regression/rich-plugins.test.js`
+- [takes away a link and an image whose URL hides javascript: behind %s](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/rich-text.test.js#L28) — `tests/regression/rich-text.test.js`
+- [keeps the URLs it allows, without the characters a browser drops](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/rich-text.test.js#L34) — `tests/regression/rich-text.test.js`

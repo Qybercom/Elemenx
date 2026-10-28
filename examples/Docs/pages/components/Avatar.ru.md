@@ -35,3 +35,7 @@
 </div>
 <p class="elemenx-text small muted">The initials take a color of the name; an image that does not load falls back to them.</p>
 ```
+
+## Тесты
+
+- [draws it in the page as a component, again when its seed changes, and as an avatar](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/suprematism.test.js#L74) — `tests/regression/suprematism.test.js`

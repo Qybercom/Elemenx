@@ -1,5 +1,5 @@
 <!-- generated -->
-# Formats
+# FieldFormats
 
 Formats of text fields: an Input with Preset="email" (url, semver, ipv4, ipv6, uuid, iban, postal-code, integer, decimal) gets the right keyboard and autofill, drops the characters the format cannot hold while the user types, and checks and normalizes the value when it is committed. A format is {Type, InputMode, Autocomplete, Direction, Filter, Normalize(text, options), Validate(value, options)}: Direction ltr keeps Latin text (an address, a code) from left to right on a right-to-left page; Filter is a RegExp of the characters it keeps; Validate returns '' or the message of the error. Options: {Country} for postal-code, {Min, Max} for integer and decimal. Check(name, text, options) returns {Valid, Value, Message}: Value normalized (an IBAN without spaces, a decimal with a point). Display(name, value) is the text a field shows for a value (an IBAN in groups of four). Register(name, format) adds a format of the Application, Find(name) returns one, Names() lists them.
 
@@ -23,7 +23,7 @@ Formats of text fields: an Input with Preset="email" (url, semver, ipv4, ipv6, u
 	Checks: [],
 
 	$OnCreate: function () {
-		var formats = this.$Service('Formats');
+		var formats = this.$Service('FieldFormats');
 
 		this.Checks = [['email', ' Ada@Example.COM '], ['url', 'example.com/docs'], ['ipv4', '256.1.1.1'], ['decimal', '3,14']].map(function (pair) {
 			var result = formats.Check(pair[0], pair[1]);
@@ -34,3 +34,14 @@ Formats of text fields: an Input with Preset="email" (url, semver, ipv4, ipv6, u
 })
 </script>
 ```
+
+## Tests
+
+- [has the formats of the text fields](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/formats.test.js#L50) — `tests/regression/formats.test.js`
+- [checks and normalizes an email and a web address](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/formats.test.js#L54) — `tests/regression/formats.test.js`
+- [checks versions, addresses and identifiers](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/formats.test.js#L64) — `tests/regression/formats.test.js`
+- [checks an IBAN by its country length and its check digits, and shows it in groups of four](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/formats.test.js#L80) — `tests/regression/formats.test.js`
+- [checks a postal code by its country, and any country by a loose rule](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/formats.test.js#L91) — `tests/regression/formats.test.js`
+- [checks whole and decimal numbers in their bounds; a comma is a decimal point](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/formats.test.js#L100) — `tests/regression/formats.test.js`
+- [keeps while typing only the characters a format holds; an empty value is valid](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/formats.test.js#L109) — `tests/regression/formats.test.js`
+- [takes the formats of the Application](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/formats.test.js#L117) — `tests/regression/formats.test.js`

@@ -72,6 +72,74 @@ describe('Contract: the controls and cards of ElemenxUI', function () {
 		}).length).toBeGreaterThan(0);
 	});
 
+	it('Toggle takes Values of its own: two for a switch, three for three positions, given back by change and to a form', async function () {
+		var changes = [];
+		var host = mount('<form><Toggle Label="Mode" Name="mode" [values]="[\'light\', \'dark\']" [value]="Mode" (change)="Moded" /><Toggle Name="level" Values="low,mid,high" [value]="Level" (change)="Leveled" /><Toggle [values]="[0, 5, 10]" [value]="Speed" (change)="Sped" /></form>', {
+			Mode: 'dark',
+			Level: 'nothing',
+			Speed: 10,
+			Moded: function (value) {
+				changes.push(value);
+
+				this.Mode = value;
+			},
+			Leveled: function (value) {
+				changes.push(value);
+
+				this.Level = value;
+			},
+			Sped: function (value) {
+				changes.push(value);
+
+				this.Speed = value;
+			}
+		});
+		var toggles;
+		var mode;
+		var level;
+		var speed;
+
+		await tick();
+
+		toggles = host.$Element().querySelectorAll('.elemenx-toggle');
+		mode = toggles[0];
+		level = toggles[1].querySelector('[role="slider"]');
+		speed = toggles[2].querySelector('[role="slider"]');
+
+		/* Two values: on is the second one, the form gets its text, change gives the value. */
+		expect(mode.querySelector('input[type="checkbox"]').checked).toBe(true);
+		expect(mode.querySelector('input[type="checkbox"]').getAttribute('name')).toBe(null);
+		expect(mode.querySelector('input[type="hidden"]').value).toBe('dark');
+
+		mode.querySelector('input[type="checkbox"]').click();
+
+		await tick();
+
+		expect(changes).toEqual(['light']);
+		expect(host.Mode).toBe('light');
+		expect(mode.querySelector('input[type="hidden"]').value).toBe('light');
+
+		/* Three values (three positions without States): a value that is none of them stands in the middle. */
+		expect(level.getAttribute('aria-valuenow')).toBe('1');
+
+		key(level, 'Home');
+
+		await tick();
+
+		expect(changes[1]).toBe('low');
+		expect(toggles[1].querySelector('input[type="hidden"]').value).toBe('low');
+
+		/* Values of any kind: the numbers come back as numbers. */
+		expect(speed.getAttribute('aria-valuenow')).toBe('2');
+
+		key(speed, 'ArrowLeft');
+
+		await tick();
+
+		expect(changes[2]).toBe(5);
+		expect(host.Speed).toBe(5);
+	});
+
 	it('Toggle stands vertical with on at the top, and with States 3 goes from false to null to true by its keys, a press on its text and on its track', async function () {
 		var changes = [];
 		var host = mount('<form><Toggle Orientation="vertical" Label="Light" [checked]="Light" (change)="Lit" /><Toggle States="3" Label="Sync" Name="sync" [value]="Sync" ShowLabels="true" (change)="Synced" /><Toggle States="3" Orientation="vertical" Labels="Low,Mid,High" [value]="Level" (change)="Leveled" /></form>', {

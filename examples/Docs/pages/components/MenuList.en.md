@@ -72,3 +72,7 @@ One level of a Menu. Items: [{ID, Label, Icon, Shortcut, Disabled, Danger, Check
 })
 </script>
 ```
+
+## Tests
+
+- [MenuList as a sheet takes the focus when it opens, closes on Escape, and gives the focus back to what had it](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-new.test.js#L624) — `tests/regression/library-new.test.js`

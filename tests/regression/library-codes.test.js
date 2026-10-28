@@ -61,7 +61,7 @@ describe('Contract: the barcodes and the QR codes of ElemenxUI', function () {
 	beforeAll(async function () {
 		await loadElemenx();
 
-		Use(['Barcode', 'QRCode', 'service:Barcodes', 'service:QR', 'service:Native']);
+		Use(['Barcode', 'QRCode', 'service:Barcodes', 'service:QR', 'service:Platform']);
 	});
 
 	beforeEach(function () {
@@ -142,7 +142,7 @@ describe('Contract: the barcodes and the QR codes of ElemenxUI', function () {
 	it('Barcode draws its format at its sizes, emits why it cannot, and gives its picture as an SVG, a PNG and a download', async function () {
 		var errors = [];
 		var saved = [];
-		var native = Elemenx.Service('Native');
+		var native = Elemenx.Service('Platform');
 		var save = native.Save;
 		var host = mount('<div><Barcode Format="ean13" Value="400638133393" Module="3" Height="90" /><Barcode Format="ean13" Value="123" (error)="Failed" /></div>', {
 			Failed: function (error) {
@@ -209,7 +209,7 @@ describe('Contract: the barcodes and the QR codes of ElemenxUI', function () {
 		var instance;
 		var png = null;
 		var saved = [];
-		var native = Elemenx.Service('Native');
+		var native = Elemenx.Service('Platform');
 		var save = native.Save;
 
 		/* The plain code is the one it always was: squares, the eyes of its modules, crisp. */

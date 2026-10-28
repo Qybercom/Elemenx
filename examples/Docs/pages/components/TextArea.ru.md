@@ -42,3 +42,9 @@
 })
 </script>
 ```
+
+## Тесты
+
+- [TextArea tells its text while typing and when it is committed, and AutoSize grows with it](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-forms.test.js#L243) — `tests/regression/library-forms.test.js`
+- [writes a <template id> as a script of text, its tags as they were written](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/server.test.js#L310) — `tests/regression/server.test.js`
+- [serves the pages with their templates as scripts, and as files when the option is off](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/server.test.js#L335) — `tests/regression/server.test.js`

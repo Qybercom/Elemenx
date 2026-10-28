@@ -9,7 +9,7 @@ Elemenx.Component('DiffView', {
 	$TemplateURL: 'DiffView.html',
 	$StyleURL: 'DiffView.css',
 	$Meta: {
-		Group: 'display',
+		Group: 'text',
 		Icon: 'branch',
 		Description: 'The differences between two texts, to read: Before and After, line by line, with the words that changed marked.',
 		Props: {

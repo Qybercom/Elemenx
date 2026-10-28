@@ -99,3 +99,7 @@ SVG() возвращает его как текст SVG, Png(scale, callback) �
 })()
 </script>
 ```
+
+## Тесты
+
+- [Barcode draws its format at its sizes, emits why it cannot, and gives its picture as an SVG, a PNG and a download](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-codes.test.js#L142) — `tests/regression/library-codes.test.js`

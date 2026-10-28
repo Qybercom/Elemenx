@@ -51,3 +51,7 @@
 })
 </script>
 ```
+
+## Тесты
+
+- [FileBrowser opens folders and files, loads a folder not loaded, sorts, selects with Ctrl and Shift, and follows the keys](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-new.test.js#L467) — `tests/regression/library-new.test.js`

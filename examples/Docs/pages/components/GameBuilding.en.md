@@ -45,3 +45,7 @@ A building of a GameWorld, declared in it: ID, X and Y (its first cell), Width a
 })
 </script>
 ```
+
+## Tests
+
+- [GameWorld: the map and the objects it declares, the ways round its buildings, its methods, the order walked to the end](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/game-world.test.js#L137) — `tests/regression/game-world.test.js`

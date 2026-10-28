@@ -13,7 +13,7 @@ Elemenx.Component('Barcode', {
 	$TemplateURL: 'Barcode.html',
 	$StyleURL: 'Barcode.css',
 	$Meta: {
-		Group: 'media',
+		Group: 'codes',
 		Icon: 'tag',
 		Description: 'A barcode of a text: Code 128, EAN, UPC, Code 39, ITF-14, DataMatrix, PDF417 or a format of its own.',
 		Events: {
@@ -120,7 +120,7 @@ Elemenx.Component('Barcode', {
 
 	/* Saves the code as name.png (format png) or name.svg (svg): callback(error) after. */
 	Download: function (name, format, callback) {
-		var native = this.$Service('Native');
+		var native = this.$Service('Platform');
 		var file = String(name || 'barcode').replace(/\.(png|svg)$/i, '');
 		var done = callback || function () {};
 

@@ -52,3 +52,8 @@
 })
 </script>
 ```
+
+## Тесты
+
+- [Barcodes writes each format as the reference decoder read it, checks the digits, and tells what a format cannot write](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-codes.test.js#L75) — `tests/regression/library-codes.test.js`
+- [Barcodes takes a format of its own, and draws the guards of EAN longer, the text under the bars and the frame of ITF-14](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-codes.test.js#L113) — `tests/regression/library-codes.test.js`

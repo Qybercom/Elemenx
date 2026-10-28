@@ -1,6 +1,6 @@
 <div class="docs-page">
-	<aside class="docs-nav">
-		<NavList [label]="$T('docs.contents')" [items]="NavItems(Index, Lang())" [value]="Current($Params)" [expanded]="Expanded(Index, Current($Params))" (select)="Picked" />
+	<aside class="docs-nav" *resizable="{Edges: 'right', MinWidth: 200, MaxWidth: 560}" [style.width]="NavWidth ? NavWidth + 'px' : null" (resizeend)="NavResized">
+		<div class="docs-nav-scroll"><NavList [label]="$T('docs.contents')" [items]="NavItems(Index, Lang())" [value]="Current($Params)" [expanded]="Expanded(Index, Current($Params))" (select)="Picked" /></div>
 	</aside>
 	<article class="docs-article" [attribute.lang]="Lang()">
 		<i class="docs-sync" hidden *mount="Load(Current($Params), Lang())"></i>

@@ -45,3 +45,7 @@
 })
 </script>
 ```
+
+## Тесты
+
+- [shows a bold title over its text after the delay, beside the element, and hides when the pointer leaves](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/tip.test.js#L33) — `tests/regression/tip.test.js`

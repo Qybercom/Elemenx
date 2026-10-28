@@ -57,3 +57,7 @@ A command palette: a search over the actions of the application, opened by Hotke
 })
 </script>
 ```
+
+## Tests
+
+- [CommandPalette finds the commands by the letters of the query in their order, runs one with Enter, and closes](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-pickers.test.js#L149) — `tests/regression/library-pickers.test.js`

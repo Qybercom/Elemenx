@@ -164,7 +164,7 @@
 		</div>
 	</Section>
 
-	<Section *if="Shows('Native')" Title="Native" [note]="'Platform: ' + NativePlatform">
+	<Section *if="Shows('Platform')" Title="Platform" [note]="'Platform: ' + NativePlatform">
 		<div class="ui-kit-lazy" *lazy>
 			<div class="ui-kit-row">
 				<Button Label="Open a file" (click)="NativeOpen" />
@@ -693,16 +693,20 @@
 		</div>
 	</Section>
 
-	<Section *if="Shows('Music and input')" Title="Music and input" [note]="MusicNote || 'Mixer · MixerChannel · Keyboard · Piano: the controls; the sound is the application\'s'">
+	<Section *if="Shows('Keyboard')" Title="Keyboard" [note]="KeyboardNote || 'Keyboard: the keys of the computer, the hotkeys marked, the keys held'">
+		<div class="ui-kit-lazy" *lazy>
+			<Keyboard Layout="full" Live="true" Clickable="true" [marks]="KeyboardMarks" Label="Hotkeys" (press)="KeyPressed" />
+			<Keyboard Layout="compact" Size="small" Native="true" [pressed]="['ShiftLeft', 'KeyS']" Label="Compact" />
+			<Keyboard Layout="compact" Alternate="ru" [pressed]="['KeyF']" Label="Two layouts" />
+		</div>
+	</Section>
+
+	<Section *if="Shows('Music')" Title="Music" [note]="MusicNote || 'Mixer · MixerChannel · Piano: the controls; the sound is the application\'s'">
 		<div class="ui-kit-lazy" *lazy>
 			<div class="ui-kit-row">
 				<Toggle Label="Play the meters" [checked]="MixerPlaying" (change)="MixerPlayed" />
 			</div>
 			<Mixer [channels]="MixerChannels" [master]="MixerMaster" Label="Studio" (change)="MixerChanged" />
-			<h5>Keyboard</h5>
-			<Keyboard Layout="full" Live="true" Clickable="true" [marks]="KeyboardMarks" Label="Hotkeys" (press)="KeyPressed" />
-			<Keyboard Layout="compact" Size="small" Native="true" [pressed]="['ShiftLeft', 'KeyS']" Label="Compact" />
-			<Keyboard Layout="compact" Alternate="ru" [pressed]="['KeyF']" Label="Two layouts" />
 			<h5>Piano</h5>
 			<Piano From="C3" Octaves="2" [marks]="PianoMarks" Label="Piano" (noteon)="NotePlayed" (noteoff)="NoteReleased" />
 			<Piano From="C4" Octaves="1" Size="small" Labels="both" [pressed]="['C#4', 'E4']" Label="Piano with its keys" />

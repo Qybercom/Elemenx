@@ -8,7 +8,7 @@
  * The panel keeps to its anchor while the page scrolls or resizes and while its own size changes. It opens in the top
  * layer (a popover of the browser): no overflow, transform or stacking of the parts of the page around it cuts or hides
  * it; a browser without popovers places it as a fixed panel over the page. It works in the document of its element: in
- * a window of its own (Native.OpenWindow), its window measures it and hears the presses and the keys.
+ * a window of its own (Platform.OpenWindow), its window measures it and hears the presses and the keys.
  */
 Elemenx.Directive('popup', {
 	$Meta: {

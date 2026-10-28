@@ -5,15 +5,15 @@
 		<Tile ID="photos" Title="Photos" Icon="image" Size="medium" Color="#3f6c9e" />
 	</TileGroup>
 </TileGrid>
-<p class="elemenx-text small muted">Opened: {{Opened || '—'}}</p>
+<p class="elemenx-text small muted">Opened: {{Last || '—'}}</p>
 <script>
 ({
 	Time: new Date().toLocaleTimeString().slice(0, 5),
 	Plays: 0,
-	Opened: '',
+	Last: '',
 
 	Opened: function (tile) {
-		this.Opened = tile.Title;
+		this.Last = tile.Title;
 
 		if (tile.ID === 'music')
 			this.Plays++;

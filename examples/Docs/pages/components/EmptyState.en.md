@@ -28,3 +28,7 @@ default, `actions`
 	<EmptyState Icon="warning" Title="Something went wrong" Description="The server did not answer." Variant="error" Size="small" />
 </div>
 ```
+
+## Tests
+
+- [the cards of posts, profiles, comments and products tell their buttons, and a comment makes buttons of its mentions and tags](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-controls.test.js#L454) — `tests/regression/library-controls.test.js`

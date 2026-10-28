@@ -92,3 +92,7 @@ A calendar of events. Events: [{ID, Title, Start, End, AllDay, Color, Repeat}], 
 })
 </script>
 ```
+
+## Tests
+
+- [NavList opens a group, selects an item with the keys, and its search opens the branches that match](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-controls.test.js#L304) — `tests/regression/library-controls.test.js`

@@ -57,3 +57,7 @@
 })
 </script>
 ```
+
+## Тесты
+
+- [Drawer asks to close with the reason: its close button, Escape; a Dismissible false one shakes and stays](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-overlays.test.js#L53) — `tests/regression/library-overlays.test.js`

@@ -24,3 +24,7 @@ The time now: digital (the time as the language of the page writes it) or analog
 	<Clock TimeZone="Asia/Tokyo" Label="Tokyo" Size="small" />
 </div>
 ```
+
+## Tests
+
+- [Clock shows the time of its zone, digital or analog, and a zone the browser does not know is the one of the device](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-new.test.js#L131) — `tests/regression/library-new.test.js`

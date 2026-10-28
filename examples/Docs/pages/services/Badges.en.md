@@ -31,3 +31,7 @@ The badges of *badge and of the Badge of a Button. Describe(value) reads a value
 })
 </script>
 ```
+
+## Tests
+
+- [Badges: a count (none at 0, 99+ past Max), a dot, a busy ring and a text, with their tones and labels](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-services.test.js#L63) — `tests/regression/library-services.test.js`

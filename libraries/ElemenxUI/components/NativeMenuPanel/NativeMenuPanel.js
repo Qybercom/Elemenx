@@ -1,6 +1,6 @@
 /*
  * The menu of the tray of a program drawn by ElemenxUI: the list a NativeMenu of the tray puts in its window
- * (Native.TrayPopup), as a MenuList draws it. Items: [{ID, Label, Icon, Shortcut, Disabled, Danger, Checked, Items,
+ * (Platform.TrayPopup), as a MenuList draws it. Items: [{ID, Label, Icon, Shortcut, Disabled, Danger, Checked, Items,
  * Separator, Group}]; an item with Items opens them in its place, with a row back; Choose(item) is called with a leaf
  * chosen, and the window hides. The window is see-through and takes the size of the list, so the list has the corners
  * and the shadow of a menu of the page. The pointer and the arrows light an item (Enter or the right arrow takes it,
@@ -10,7 +10,7 @@ Elemenx.Component('NativeMenuPanel', {
 	$TemplateURL: 'NativeMenuPanel.html',
 	$StyleURL: 'NativeMenuPanel.css',
 	$Meta: {
-		Group: 'buttons',
+		Group: 'menus',
 		Icon: 'menu',
 		Description: 'The menu of the tray of a program drawn by ElemenxUI: the list a NativeMenu of the tray puts in its window.',
 		Props: {
@@ -86,7 +86,7 @@ Elemenx.Component('NativeMenuPanel', {
 			}
 
 			if (box && box.width && box.height) {
-				self.$Service('Native').ShowTrayPopup({
+				self.$Service('Platform').ShowTrayPopup({
 					Width: Math.ceil(box.width + (parseFloat(style.marginLeft) || 0) + (parseFloat(style.marginRight) || 0)),
 					Height: Math.ceil(box.height + (parseFloat(style.marginTop) || 0) + (parseFloat(style.marginBottom) || 0))
 				});
@@ -143,7 +143,7 @@ Elemenx.Component('NativeMenuPanel', {
 		this.Path = [];
 		this.Active = -1;
 
-		this.$Service('Native').ShowTrayPopup(false);
+		this.$Service('Platform').ShowTrayPopup(false);
 
 		if (typeof this.Choose === 'function')
 			this.Choose(item);
@@ -190,6 +190,6 @@ Elemenx.Component('NativeMenuPanel', {
 			return;
 		}
 
-		this.$Service('Native').ShowTrayPopup(false);
+		this.$Service('Platform').ShowTrayPopup(false);
 	}
 });

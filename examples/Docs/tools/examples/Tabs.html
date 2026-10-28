@@ -4,6 +4,15 @@
 <Tabs Variant="editor" [tabs]="Files" [value]="File" Closable="true" (change)="Opened" (close)="Closed">
 	<Button Icon="add" Title="A new file" Size="small" Variant="ghost" (click)="Add" />
 </Tabs>
+<div class="docs-row" style="align-items: stretch; margin-top: 16px;">
+	<Tabs Orientation="vertical" [value]="Tool" (change)="Tooled">
+		<Tab ID="project" Label="Project" Icon="folder">The files of the project.</Tab>
+		<Tab ID="commit" Label="Commit" Icon="commit">Two changes to commit.</Tab>
+		<Tab ID="search" Label="Search" Icon="search">Find in the files.</Tab>
+	</Tabs>
+	<Tabs Orientation="vertical" Placement="right" Variant="pill" [tabs]="Tabs" [value]="Current" (change)="Changed" />
+	<Tabs Orientation="vertical" Rotate="false" Variant="pill" [tabs]="Tabs" [value]="Current" (change)="Changed" />
+</div>
 <script>
 ({
 	Current: 'general',
@@ -12,6 +21,11 @@
 	File: 'app.js',
 	Files: [{ID: 'app.js', Label: 'app.js'}, {ID: 'index.html', Label: 'index.html'}, {ID: 'style.css', Label: 'style.css'}],
 	Count: 1,
+	Tool: 'project',
+
+	Tooled: function (id) {
+		this.Tool = id;
+	},
 
 	Changed: function (id) {
 		this.Current = id;

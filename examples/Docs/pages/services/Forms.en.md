@@ -63,3 +63,10 @@ Form and Field use these models: a Form gives Fields their controls by Name and 
 })
 </script>
 ```
+
+## Tests
+
+- [phone input keeps to its mask and picks the country of a pasted number](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L1319) — `tests/examples/ui-kit.spec.js`
+- [forms collect their fields, validate them in the template or by a model in code, and submit only when valid](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L2437) — `tests/examples/ui-kit.spec.js`
+- [phone guide keeps the template and lists every country](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L5050) — `tests/examples/ui-kit.spec.js`
+- [combobox filters, picks, creates a value, restores on Escape and loads options from a server](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L8494) — `tests/examples/ui-kit.spec.js`

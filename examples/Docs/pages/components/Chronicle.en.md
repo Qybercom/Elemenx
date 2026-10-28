@@ -31,3 +31,7 @@ The chronicle of an activity, like the activity of a merge request (Timeline is 
 })
 </script>
 ```
+
+## Tests
+
+- [Chronicle lists its events in order with their author, action and time, small ones as dots](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-misc.test.js#L171) — `tests/regression/library-misc.test.js`

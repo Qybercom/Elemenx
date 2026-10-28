@@ -37,3 +37,7 @@ A color field with its own picker. Value is '#rrggbb', or '#rrggbbaa' with Alpha
 })
 </script>
 ```
+
+## Tests
+
+- [ColorInput takes a color typed as #rrggbb, and #rrggbbaa only with Alpha](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-misc.test.js#L83) — `tests/regression/library-misc.test.js`

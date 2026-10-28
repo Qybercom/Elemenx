@@ -54,3 +54,7 @@ The permissions of the browser. Query(name, callback) tells the state: 'granted'
 })
 </script>
 ```
+
+## Tests
+
+- [Permissions: a name the browser does not know is unsupported](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-services.test.js#L168) — `tests/regression/library-services.test.js`

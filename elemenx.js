@@ -20,7 +20,7 @@
  *   Service and Guard        Elemenx.Service, Elemenx.Guard and Application-owned service instances
  *   Router ownership         which Router a component belongs to
  *   Directive registry       directive metadata and the built-in if, for, key, outlet, pending, error
- *   Template and Component   Elemenx.Template, Elemenx.Directive, Elemenx.Component: compiler, bindings, factory
+ *   Template and Component   Elemenx.Template, Elemenx.Directive, Elemenx.Component, Elemenx.Instance: compiler, bindings, factory
  *   Meta                     Elemenx.Meta: what Components, Services and Directives declare of themselves ($Meta)
  *   Router                   Elemenx.Router: routes, guards, browser history
  *   Structural               structural hosts: conditional and collection mounting, deferred children
@@ -44,7 +44,7 @@
 	 * Elemenx: the namespace of this copy of the framework. The window gets it last (see Export), unless a copy of the
 	 * same version is there already: then this one stops here and the page keeps the first.
 	 */
-	var Version = '0.10.8';
+	var Version = '0.10.9';
 	var Elemenx = {};
 	if (typeof ElemenxIsolated !== 'object' && (typeof globalThis !== 'undefined' ? globalThis : self).Elemenx && (typeof globalThis !== 'undefined' ? globalThis : self).Elemenx.Version === Version) return;
 
@@ -337,6 +337,29 @@
 			return new Date(Runtime.StartedAt.getTime());
 		};
 
+		/* The listeners of the title and of the icon of the page: a native program follows them (the Platform Service). */
+		var headListeners = {Title: [], Icon: []};
+
+		function headListen (kind, callback, on) {
+			var list = headListeners[kind];
+			var index = list.indexOf(callback);
+
+			if (typeof callback !== 'function')
+				throw new Error('Elemenx.' + kind + '.' + (on ? 'OnChange' : 'OffChange') + ' expects a function');
+
+			if (on && index === -1)
+				list.push(callback);
+
+			if (!on && index !== -1)
+				list.splice(index, 1);
+		}
+
+		function headChanged (kind, value) {
+			headListeners[kind].slice().forEach(function (callback) {
+				Runtime.Notify(callback, null, [value]);
+			});
+		}
+
 		Elemenx.Title = function (value) {
 			if (!Runtime.HasDOM)
 				return arguments.length ? Elemenx : '';
@@ -344,7 +367,116 @@
 			if (!arguments.length)
 				return global.document.title;
 
-			global.document.title = value == null ? '' : String(value);
+			var text = value == null ? '' : String(value);
+
+			if (global.document.title !== text) {
+				global.document.title = text;
+
+				headChanged('Title', text);
+			}
+
+			return Elemenx;
+		};
+
+		Elemenx.Title.OnChange = function (callback) {
+			headListen('Title', callback, true);
+
+			return Elemenx;
+		};
+
+		Elemenx.Title.OffChange = function (callback) {
+			headListen('Title', callback, false);
+
+			return Elemenx;
+		};
+
+		/*
+		 * The icon of the page (its favicon): a URL, the text of an SVG, a data URL, or {Light, Dark} (the browser takes
+		 * the one of the scheme of the system); null brings back the icons the page named. Without a value, the icon given
+		 * last (null for those of the page).
+		 */
+		var pageIcons = null;
+		var currentIcon = null;
+
+		function iconURL (icon) {
+			var text = String(icon).trim();
+
+			return /^<svg[\s>]/i.test(text) || /^<\?xml/i.test(text) ? 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(text) : text;
+		}
+
+		function iconKey (icon) {
+			return icon && typeof icon === 'object' ? JSON.stringify({Light: icon.Light || null, Dark: icon.Dark || null}) : icon == null ? '' : String(icon);
+		}
+
+		Elemenx.Icon = function (value) {
+			var head;
+			var links;
+
+			if (!arguments.length) return currentIcon;
+
+			if (!Runtime.HasDOM || iconKey(value) === iconKey(currentIcon)) return Elemenx;
+
+			head = global.document.head;
+			links = Array.prototype.slice.call(head.querySelectorAll('link[rel~="icon"]'));
+
+			/*
+			 * The icons the page named (one it adds later too), kept to bring them back; while they show, one the page took
+			 * away itself is forgotten.
+			 */
+			pageIcons = (pageIcons || []).filter(function (link) {
+				return currentIcon !== null || link.parentNode === head;
+			});
+
+			links.forEach(function (link) {
+				if (!link.hasAttribute('data-elemenx-icon') && pageIcons.indexOf(link) === -1)
+					pageIcons.push(link);
+			});
+
+			links.forEach(function (link) {
+				if (link.parentNode)
+					link.parentNode.removeChild(link);
+			});
+
+			currentIcon = value == null || value === '' ? null : value;
+
+			if (currentIcon === null) {
+				pageIcons.forEach(function (link) {
+					head.appendChild(link);
+				});
+			}
+			else {
+				/* {Light, Dark}: one link for each scheme; one of them alone is the icon of both. */
+				(typeof currentIcon !== 'object' ? [[currentIcon, null]] : currentIcon.Light && currentIcon.Dark ? [[currentIcon.Light, '(prefers-color-scheme: light)'], [currentIcon.Dark, '(prefers-color-scheme: dark)']] : [[currentIcon.Light || currentIcon.Dark, null]]).forEach(function (pair) {
+					var link;
+
+					if (!pair[0]) return;
+
+					link = global.document.createElement('link');
+					link.rel = 'icon';
+					link.href = iconURL(pair[0]);
+
+					link.setAttribute('data-elemenx-icon', '');
+
+					if (pair[1])
+						link.media = pair[1];
+
+					head.appendChild(link);
+				});
+			}
+
+			headChanged('Icon', currentIcon);
+
+			return Elemenx;
+		};
+
+		Elemenx.Icon.OnChange = function (callback) {
+			headListen('Icon', callback, true);
+
+			return Elemenx;
+		};
+
+		Elemenx.Icon.OffChange = function (callback) {
+			headListen('Icon', callback, false);
 
 			return Elemenx;
 		};
@@ -1544,6 +1676,9 @@
 		var maps = new WeakMap();
 		var roots = new WeakMap();
 		var builds = new WeakMap();
+		/* The graph file of a root of another name than index.js, and the other files the graphs of an owner list (dictionaries, data). */
+		var graphs = new WeakMap();
+		var files = new WeakMap();
 		var scripts = {};
 		var pending = {};
 		var revision = 0;
@@ -1600,9 +1735,9 @@
 			}
 		}
 
-		function buildDirectory (base, map, visited, callback) {
+		function buildDirectory (base, map, visited, found, callback, graph) {
 			var directory = trimSlash(base);
-			var url = directory + '/index.js';
+			var url = graph || directory + '/index.js';
 
 			if (visited[directory]) {
 				callback(null);
@@ -1689,12 +1824,14 @@
 
 
 						if (/\.[a-z0-9]+(?:[?#].*)?$/i.test(value)) {
+							found.push(target);
+
 							complete(null);
 
 							return;
 						}
 
-						buildDirectory(target, map, visited, complete);
+						buildDirectory(target, map, visited, found, complete);
 					})(entries[i]);
 
 					i++;
@@ -1702,8 +1839,10 @@
 			});
 		}
 
-		function build (application, root, callback) {
+		/* graph: the URL of the graph file of the root when it is not its index.js (it is kept for the builds after). */
+		function build (application, root, callback, graph) {
 			var map = maps.get(application);
+			var found = [];
 			var callbacks;
 			var current;
 			var i;
@@ -1727,6 +1866,9 @@
 
 			roots.set(application, root);
 
+			if (graph)
+				graphs.set(application, new URL(String(graph), global.location.href).href);
+
 			if (map) {
 				callback(null, map);
 
@@ -1747,13 +1889,15 @@
 
 			map = {};
 
-			buildDirectory(root, map, {}, function (error) {
+			buildDirectory(root, map, {}, found, function (error) {
 				callbacks = builds.get(application) || [];
 
 				builds.delete(application);
 
-				if (!error)
+				if (!error) {
 					maps.set(application, map);
+					files.set(application, found);
+				}
 
 				i = 0;
 				while (i < callbacks.length) {
@@ -1761,7 +1905,7 @@
 
 					i++;
 				}
-			});
+			}, graphs.get(application) || null);
 		}
 
 		function scriptURL (url, force) {
@@ -1960,6 +2104,11 @@
 				var map = maps.get(application);
 
 				return map ? Object.keys(map) : [];
+			},
+
+			/* The URLs of the other files its graphs list: dictionaries, data, pictures. */
+			Files: function (application) {
+				return (files.get(application) || []).slice();
 			}
 		};
 	})(typeof globalThis !== 'undefined' ? globalThis : self);
@@ -1995,7 +2144,26 @@
 			return Runtime.DefinitionURL(definition, definition.$Root || definition.Root) || null;
 		}
 
-		function use (application, value, callback) {
+		/*
+		 * The dictionaries of a Library found by $Discovery: locales/{language}.json next to its graph, in the languages its
+		 * graph lists.
+		 */
+		function discoveredLocales (entry) {
+			var base = entry.Definition.$Root.replace(/\/+$/, '') + '/locales/';
+			var languages = [];
+
+			Runtime.Discovery.Files(entry.Owner).forEach(function (url) {
+				var match = url.indexOf(base) === 0 ? /^([A-Za-z]{2,3}(?:-[A-Za-z0-9]+)*)\.json$/.exec(url.substring(base.length)) : null;
+				if (match && languages.indexOf(match[1]) === -1)
+					languages.push(match[1]);
+			});
+
+			if (languages.length)
+				Elemenx.Locale.Source(base + '{language}.json', languages);
+		}
+
+		/* discovered: the Libraries of $Discovery of the Application, [{Name, Root, Graph}], besides the ones it names. */
+		function use (application, value, callback, discovered) {
 			var values = list(value);
 			var entries = [];
 			var i = 0;
@@ -2021,6 +2189,10 @@
 
 				i++;
 			}
+
+			(discovered || []).forEach(function (library) {
+				entries.push({Name: library.Name, Definition: {$Root: library.Root, $Graph: library.Graph}, Owner: {}, Discovered: true});
+			});
 
 			applications.set(application, entries);
 
@@ -2063,6 +2235,9 @@
 							return;
 						}
 
+						if (entry.Discovered)
+							discoveredLocales(entry);
+
 						Runtime.Discovery.LoadDirectives(entry.Owner, function (directiveError) {
 							if (directiveError) {
 								complete(directiveError);
@@ -2072,7 +2247,7 @@
 
 							Runtime.Discovery.LoadServices(entry.Owner, complete);
 						});
-					});
+					}, entry.Definition.$Graph || null);
 				})(entries[i]);
 
 				i++;
@@ -3057,6 +3232,134 @@
 		/* The placeholders of deferred components, and the behavioral directives of their tags set on them for now. */
 		var deferredPlaceholders = new WeakSet();
 		var placedDirectives = new WeakMap();
+		/* The instance of each root element of a Component (the placeholder of a deferred one: its deferred instance). */
+		var elementInstances = new WeakMap();
+
+		/*
+		 * The title and the icon of the page: the $Title and the $Icon of an instance (or of an Application), their {{ }}
+		 * read in its state and followed; the page shows the ones of the instance it follows now, the last made or shown.
+		 */
+		var headParts = new WeakMap();
+		var headOwners = {Title: null, Icon: null};
+
+		function headValue (part) {
+			var source = part.Source;
+			if (typeof source !== 'string' || source.indexOf('{{') === -1) return source;
+
+			return source.replace(/\{\{\s*([\s\S]+?)\s*\}\}/g, function (all, expression) {
+				var value;
+
+				try {
+					value = Runtime.EvaluateExpression(expression, part.Scope);
+				}
+				catch (error) {
+					value = '';
+				}
+
+				return value == null ? '' : String(value);
+			});
+		}
+
+		function headSet (kind, value) {
+			Runtime.Untracked(function () {
+				if (kind === 'Title') Elemenx.Title(value);
+				else Elemenx.Icon(value);
+			});
+		}
+
+		/* The $Title and the $Icon of an owner, read in scope: the page follows them from now. */
+		Runtime.HeadOwn = function (owner, definition, scope, effects) {
+			var parts = headParts.get(owner) || {};
+
+			['Title', 'Icon'].forEach(function (kind) {
+				if (definition['$' + kind] === undefined) return;
+
+				parts[kind] = {Source: definition['$' + kind], Scope: scope};
+				headOwners[kind] = owner;
+
+				/* A text with {{ }} follows what it reads, while this owner is the one of the page. */
+				effects.push(Runtime.Effect(function () {
+					var value = headValue(parts[kind]);
+
+					if (headOwners[kind] === owner)
+						headSet(kind, value);
+				}));
+			});
+
+			headParts.set(owner, parts);
+		};
+
+		/* this.$Title(value) and this.$Icon(value): the owner says it itself; without a value, the one of the page. */
+		Runtime.HeadSet = function (owner, kind, value, scope) {
+			var parts = headParts.get(owner) || {};
+
+			parts[kind] = {Source: value, Scope: scope};
+
+			headParts.set(owner, parts);
+
+			headOwners[kind] = owner;
+
+			headSet(kind, headValue(parts[kind]));
+		};
+
+		/* An owner destroyed: the page keeps what it shows, and follows no one until the next. */
+		Runtime.HeadForget = function (owner) {
+			if (headOwners.Title === owner)
+				headOwners.Title = null;
+
+			if (headOwners.Icon === owner)
+				headOwners.Icon = null;
+		};
+
+		/*
+		 * The title and the icon of a page of a Router: each the one of the deepest of its components that has one, else
+		 * the one of the Application (a page without its own does not keep the one of the page before).
+		 */
+		Runtime.HeadOfPage = function (components, application) {
+			['Title', 'Icon'].forEach(function (kind) {
+				var owners = components.slice().reverse().concat(application ? [application] : []);
+				var i = 0;
+
+				while (i < owners.length) {
+					var owner = owners[i];
+					var parts;
+
+					while (owner && owner._Component && owner._Component() && owner._Component() !== owner) owner = owner._Component();
+
+					parts = owner ? headParts.get(owner) : null;
+
+					if (parts && parts[kind]) {
+						headOwners[kind] = owner;
+
+						headSet(kind, headValue(parts[kind]));
+
+						return;
+					}
+
+					i++;
+				}
+			});
+		};
+
+		/* The instance of a Component whose element this is, or null. */
+		function instanceOf (element) {
+			return element && elementInstances.get(element) || null;
+		}
+
+		/* What a reference gives: its element, or with instance true the instance of the Component of it (or null). */
+		function referred (element, instance) {
+			return instance ? instanceOf(element) : element;
+		}
+
+		/* The instances of the Components among the elements of a reference, in their order. */
+		function referredAll (elements, instance) {
+			if (!instance)
+				return elements;
+
+			return elements.map(instanceOf).filter(function (each) {
+				return each !== null;
+			});
+		}
 		var componentReloading = false;
 		var templateResources = {};
 		var templatePending = {};
@@ -3614,6 +3917,8 @@
 
 			deferredPlaceholders.add(placeholder);
 
+			elementInstances.set(placeholder, api);
+
 			markPending(placeholder, !ownWaiting);
 
 			/*
@@ -3746,14 +4051,14 @@
 				return current ? current.$Parent() : api._parent;
 			};
 
-			api.$Ref = function (name) {
+			api.$Ref = function (name, instance) {
 				if (!current || !current.$Ref) return null;
 
-				return current.$Ref(name);
+				return current.$Ref(name, instance);
 			};
 
-			api.$Refs = function (name) {
-				return current && current.$Refs ? current.$Refs(name) : [];
+			api.$Refs = function (name, instance) {
+				return current && current.$Refs ? current.$Refs(name, instance) : [];
 			};
 
 			api._Definition = function () {
@@ -3779,6 +4084,8 @@
 				destroyed = true;
 				updates = [];
 				listeners = [];
+
+				elementInstances.delete(placeholder);
 
 				markPending(placeholder, false);
 
@@ -5691,12 +5998,16 @@
 					return api;
 				}
 
-				function Ref (name) {
-					return findRef(root, refs, name);
+				/* The element named #name; with instance true the instance of the Component of it. */
+				function Ref (name, instance) {
+					return referred(findRef(root, refs, name), instance);
 				}
 
-				/* Every element of the Component named #name (the rows of a *for), in the order of the document. */
-				function Refs (name) {
+				/*
+				 * Every element of the Component named #name (the rows of a *for), in the order of the document; with instance
+				 * true the instances of the Components among them.
+				 */
+				function Refs (name, instance) {
 					var key = String(name).toLowerCase();
 					var found = [];
 					var nodes;
@@ -5714,7 +6025,7 @@
 						i++;
 					}
 
-					return found;
+					return referredAll(found, instance);
 				}
 
 				function listen (node, name, callback) {
@@ -5813,6 +6124,11 @@
 
 					destroyed = true;
 
+					if (elementInstances.get(root) === api)
+						elementInstances.delete(root);
+
+					Runtime.HeadForget(api);
+
 					Runtime.DetachRouterOwner(api);
 
 					if (structural) {
@@ -5895,7 +6211,22 @@
 					$Parent: Parent,
 					$Router: Router,
 					$Service: Runtime.Service,
-					$Title: Elemenx.Title,
+					$Title: function (value) {
+						if (!arguments.length)
+							return Elemenx.Title();
+
+						Runtime.HeadSet(api, 'Title', value, values);
+
+						return Elemenx;
+					},
+					$Icon: function (value) {
+						if (!arguments.length)
+							return Elemenx.Icon();
+
+						Runtime.HeadSet(api, 'Icon', value, values);
+
+						return Elemenx;
+					},
 					$Batch: Batch,
 					$Update: Update,
 					$Destroy: Destroy
@@ -5932,6 +6263,9 @@
 						}
 					});
 				}
+
+				if (root && root.nodeType === 1)
+					elementInstances.set(root, api);
 
 				refOwners.set(api, refOwner);
 				refOwners.set(apiTarget, refOwner);
@@ -6014,8 +6348,8 @@
 					Update(data);
 				}
 
-				if (definition.$Title !== undefined)
-					api.$Title(definition.$Title);
+				/* Its title and its icon ($Title, $Icon; {{ }} follows its state): the page shows them from now. */
+				Runtime.HeadOwn(api, definition, values, effects);
 
 				Runtime.InitializeOwnerSubscriptions(api, definition);
 
@@ -6354,6 +6688,11 @@
 			if (!outlets) return null;
 
 			return outlets[name] || null;
+		};
+
+		/* The instance of the Component whose root element (or placeholder, for a deferred one) this is, or null. */
+		Elemenx.Instance = function (element) {
+			return instanceOf(element);
 		};
 
 		Elemenx.Component = function (name, definition) {
@@ -7352,6 +7691,11 @@
 
 					i++;
 				}
+
+				/* The title and the icon of the page: of its deepest component that has them, else of the Application. */
+				Runtime.HeadOfPage(active.map(function (entry) {
+					return entry.Component;
+				}), application());
 
 				return true;
 			}
@@ -18435,6 +18779,43 @@
 			return inspectFactory(factory);
 		}
 
+		/*
+		 * The Libraries of $Discovery: [{Name, Root, Graph}] from paths (from the definition, as $Root) of a folder with its
+		 * index.js or of a graph file of any name, or {Path, Name}. A Library is named by Name, its graph file other than
+		 * index.js, or its folder.
+		 */
+		function discoveredLibraries (definition) {
+			var value = definition.$Discovery;
+			if (value === undefined || value === null) return [];
+
+			if (!Array.isArray(value))
+				throw new Error('Elemenx.Application $Discovery expects an Array of paths or {Path, Name}');
+
+			return value.map(function (entry) {
+				var item = typeof entry === 'string' ? {Path: entry} : entry;
+				var target;
+				var graph;
+				var root;
+
+				if (!item || typeof item.Path !== 'string' || !item.Path || (item.Name !== undefined && typeof item.Name !== 'string'))
+					throw new Error('Elemenx.Application $Discovery expects an Array of paths or {Path, Name}');
+
+				target = Runtime.DefinitionURL(definition, item.Path.replace(/\/+$/, ''));
+
+				if (Runtime.HasDOM)
+					target = new URL(target, global.location.href).href;
+
+				graph = /\.js(?:[?#].*)?$/i.test(target) ? target : null;
+				root = graph ? target.substring(0, target.lastIndexOf('/')) : target;
+
+				return {
+					Name: item.Name || (graph && !/\/index\.js(?:[?#].*)?$/i.test(graph) ? graph.substring(graph.lastIndexOf('/') + 1).replace(/\.js(?:[?#].*)?$/i, '') : root.substring(root.lastIndexOf('/') + 1)),
+					Root: root,
+					Graph: graph
+				};
+			});
+		}
+
 		/* Application: reload */
 		function reloadApplicationEntity (application, type, entityName, callback) {
 			var bundled = Runtime.Bundle.ResolvedName(type, entityName);
@@ -18519,11 +18900,31 @@
 			definition = definition || {};
 
 			/* Instance: public API */
-			api.$Title = Elemenx.Title;
+			/*
+			 * Its title and its icon ($Title, $Icon; {{ }} read in it), the ones of the page while a page of its Router has
+			 * none of its own.
+			 */
+			var headEffects = [];
 
-			if (definition.$Title !== undefined) {
-				api.$Title(definition.$Title);
-			}
+			api.$Title = function (value) {
+				if (!arguments.length)
+					return Elemenx.Title();
+
+				Runtime.HeadSet(api, 'Title', value, api);
+
+				return Elemenx;
+			};
+
+			api.$Icon = function (value) {
+				if (!arguments.length)
+					return Elemenx.Icon();
+
+				Runtime.HeadSet(api, 'Icon', value, api);
+
+				return Elemenx;
+			};
+
+			Runtime.HeadOwn(api, definition, api, headEffects);
 
 			api.$Name = function () {
 				return name;
@@ -18640,6 +19041,12 @@
 				if (destroyed) return;
 
 				destroyed = true;
+
+				headEffects.forEach(function (effect) {
+					effect.Destroy();
+				});
+
+				Runtime.HeadForget(api);
 
 				if (router && router.$Destroy)
 					router.$Destroy();
@@ -18943,14 +19350,16 @@
 				if (definition.$Locales)
 					Elemenx.Locale.Source(Runtime.DefinitionURL(definition, definition.$Locales.URL || definition.$Locales), definition.$Locales.Languages);
 
-				if (!use || !Runtime.Library) {
+				if ((!use && !discovered.length) || !Runtime.Library) {
 					startLocalized();
 
 					return;
 				}
 
-				Runtime.Library.Use(api, use, loaded(startLocalized));
+				Runtime.Library.Use(api, use || [], loaded(startLocalized), discovered);
 			}
+
+			var discovered = discoveredLibraries(definition);
 
 			if (Runtime.HasDOM && global.document.readyState === 'loading') {
 				global.document.addEventListener('DOMContentLoaded', startRoot, {once: true});

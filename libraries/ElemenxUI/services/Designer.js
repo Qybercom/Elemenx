@@ -66,7 +66,7 @@ Elemenx.Service('Designer', {
 	StorageKey: 'elemenx-designer:document',
 	ProjectKey: 'elemenx-designer:project',
 	ProjectsKey: 'elemenx-designer:projects',
-	Groups: ['layout', 'text', 'inputs', 'buttons', 'navigation', 'display', 'data', 'overlays', 'social', 'commerce', 'music', 'game'],
+	Groups: ['layout', 'text', 'inputs', 'buttons', 'menus', 'navigation', 'display', 'feedback', 'data', 'codes', 'media', 'overlays', 'social', 'commerce', 'music', 'game'],
 
 	/* The layout a node may set, in the order of its style; the last five in a flex container only. */
 	Layout: ['padding', 'margin', 'width', 'height', 'min-width', 'max-width', 'min-height', 'max-height', 'flex-direction', 'flex-wrap', 'align-items', 'justify-content', 'gap'],

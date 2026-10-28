@@ -52,3 +52,7 @@
 })
 </script>
 ```
+
+## Тесты
+
+- [TagInput adds a tag on Enter and on its separators, refuses one its Pattern refuses or a duplicate, and removes one on Backspace](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-pickers.test.js#L45) — `tests/regression/library-pickers.test.js`

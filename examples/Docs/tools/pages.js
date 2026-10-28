@@ -4,7 +4,9 @@
  * description (the files of tools/ru) when they are there; and pages/index.json, the contents (the components in the
  * groups their $Meta names, as data/meta.json has them), and pages/search.<language>.json, the text of every page in a
  * language for the search of the reference. A page it made starts with the line <!-- generated -->: it is made again
- * each time; a page without that line was written by hand and is kept. node examples/Docs/tools/pages.js
+ * each time; a page without that line was written by hand and is kept. A page of the Library lists the tests of its
+ * component, service or directive too (tests/regression, tests/examples), their names linked to their lines in the
+ * repository. node examples/Docs/tools/pages.js
  */
 var fs = require('fs');
 var path = require('path');
@@ -117,9 +119,93 @@ function write (file, text) {
 }
 
 var Words = {
-	en: {Properties: 'Properties', Property: 'Property', Default: 'Default', Events: 'Events', Slots: 'Slots', Slot: 'default', Methods: 'Methods'},
-	ru: {Properties: 'Свойства', Property: 'Свойство', Default: 'По умолчанию', Events: 'События', Slots: 'Слоты', Slot: 'по умолчанию', Methods: 'Методы'}
+	en: {Properties: 'Properties', Property: 'Property', Default: 'Default', Events: 'Events', Slots: 'Slots', Slot: 'default', Methods: 'Methods', Tests: 'Tests', More: 'more in the same files'},
+	ru: {Properties: 'Свойства', Property: 'Свойство', Default: 'По умолчанию', Events: 'События', Slots: 'Слоты', Slot: 'по умолчанию', Methods: 'Методы', Tests: 'Тесты', More: 'ещё в тех же файлах'}
 };
+
+var Root = path.resolve(Docs, '..', '..');
+
+/* The files of the repository on its site: the repository of package.json, its main branch. */
+var Repository = String((JSON.parse(fs.readFileSync(path.join(Root, 'package.json'), 'utf8')).repository || {}).url || '').replace(/^git\+/, '').replace(/\.git$/, '') + '/blob/main/';
+
+/*
+ * The tests of the repository, one entry for each: {File (from the root), Line, Title, Describe (the title of the
+ * describe it is in), Body (its code up to the next test)}. A title is a string in quotes (its escapes read).
+ */
+var Tests = (function () {
+	var result = [];
+
+	['tests/regression', 'tests/examples'].forEach(function (folder) {
+		fs.readdirSync(path.join(Root, folder)).filter(function (file) {
+			return /\.(test|spec)\.[cm]?js$/.test(file);
+		}).sort().forEach(function (file) {
+			var source = fs.readFileSync(path.join(Root, folder, file), 'utf8');
+			var pattern = /(^|[^\w.$])(describe|it|test)(?:\.(?:only|skip|each\([^)]*\)))?\(\s*(['"])((?:\\.|(?!\3)[^\\\n])*)\3/g;
+			var marks = [];
+			var match = pattern.exec(source);
+			var describe = '';
+
+			while (match) {
+				marks.push({Kind: match[2], Title: match[4].replace(/\\(.)/g, '$1'), At: match.index + match[1].length});
+
+				match = pattern.exec(source);
+			}
+
+			marks.forEach(function (mark, index) {
+				if (mark.Kind === 'describe') {
+					describe = mark.Title;
+
+					return;
+				}
+
+				result.push({
+					File: folder + '/' + file,
+					Line: source.substring(0, mark.At).split('\n').length,
+					Title: mark.Title,
+					Describe: describe,
+					Body: source.substring(mark.At, index + 1 < marks.length ? marks[index + 1].At : source.length)
+				});
+			});
+		});
+	});
+
+	return result;
+})();
+
+/*
+ * The tests of a component, a service or a directive, the closest first: the ones whose name or describe names it,
+ * then the ones that make it or ask for it by its name, then the ones whose templates have its tag; at most limit.
+ * {List, More}.
+ */
+function testsOf (kind, name, limit) {
+	var escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+	var word = kind.ID === 'directives' ? new RegExp('\\*' + escaped + '\\b') : new RegExp('(^|[^\\w$])' + escaped + '(?![\\w$])');
+	var asked = kind.ID === 'directives' ? new RegExp('\\*' + escaped + '\\b|[\'"]directive:' + escaped + '[\'"]') : new RegExp('[\'"](?:service:)?' + escaped + '[\'"]');
+	var tag = kind.ID === 'components' ? new RegExp('<' + escaped + '[\\s/>]') : null;
+	var ranked = [[], [], []];
+	var list;
+
+	Tests.forEach(function (test) {
+		if (word.test(test.Title) || word.test(test.Describe)) ranked[0].push(test);
+		else if (asked.test(test.Body)) ranked[1].push(test);
+		else if (tag && tag.test(test.Body)) ranked[2].push(test);
+	});
+
+	list = ranked[0].concat(ranked[1], ranked[2]);
+
+	return {List: list.slice(0, limit), More: Math.max(0, list.length - limit)};
+}
+
+/* The section of the tests of a page: their names linked to their lines, the file beside each. */
+function tests (kind, name, language) {
+	var words = Words[language];
+	var found = testsOf(kind, name, 12);
+	if (!found.List.length) return '';
+
+	return '\n## ' + words.Tests + '\n\n' + found.List.map(function (test) {
+		return '- [' + test.Title.replace(/([[\]\\])/g, '\\$1') + '](' + Repository + test.File + '#L' + test.Line + ') — `' + test.File + '`';
+	}).join('\n') + (found.More ? '\n\n+' + found.More + ' ' + words.More : '') + '\n';
+}
 
 /*
  * The members of a definition: the entries of its object one tab in (a value, or a method with its arguments), and the
@@ -256,7 +342,7 @@ function page (kind, name, description, language, reference) {
 	if (example)
 		text += '\n## ' + kind.Example[language] + '\n\n```example\n' + example + '\n```\n';
 
-	return text;
+	return text + tests(kind, name.replace(/^\*/, ''), language);
 }
 
 var sections = guide.Sections.slice();
@@ -264,7 +350,7 @@ var sections = guide.Sections.slice();
 /* The groups of the components: the one each names in its $Meta, in the order of the palette, by the names of the Library. */
 var meta = JSON.parse(fs.readFileSync(path.join(Library, 'data', 'meta.json'), 'utf8'));
 var labels = {en: JSON.parse(fs.readFileSync(path.join(Library, 'locales', 'en.json'), 'utf8')).ui.designer.groups, ru: JSON.parse(fs.readFileSync(path.join(Library, 'locales', 'ru.json'), 'utf8')).ui.designer.groups};
-var order = ['layout', 'text', 'inputs', 'buttons', 'navigation', 'display', 'data', 'overlays', 'social', 'commerce', 'music', 'game', 'tools', 'other'];
+var order = ['layout', 'text', 'inputs', 'buttons', 'menus', 'navigation', 'display', 'feedback', 'data', 'codes', 'media', 'overlays', 'social', 'commerce', 'music', 'game', 'tools', 'other'];
 var groupOf = {};
 
 meta.Components.forEach(function (component) {

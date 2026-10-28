@@ -84,3 +84,7 @@
 })
 </script>
 ```
+
+## Тесты
+
+- [shows the code of an example in listings of its own and the source files of the component of the page](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/docs.spec.js#L136) — `tests/examples/docs.spec.js`

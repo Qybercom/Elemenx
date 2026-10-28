@@ -80,3 +80,8 @@
 })
 </script>
 ```
+
+## Тесты
+
+- [keeps the structure in view, runs the page at the width of a phone from its header and speaks Russian](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/builder.spec.js#L632) — `tests/examples/builder.spec.js`
+- [shows the example of the page it goes to through the contents, not the one of the page before](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/docs.spec.js#L111) — `tests/examples/docs.spec.js`

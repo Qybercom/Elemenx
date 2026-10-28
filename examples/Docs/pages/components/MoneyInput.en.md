@@ -37,3 +37,7 @@ An amount of money with its currency. Amount is a number (or null) with the frac
 })
 </script>
 ```
+
+## Tests
+
+- [MoneyInput takes no more digits than its currency has, bounds the amount, and groups it when not edited](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-forms.test.js#L140) — `tests/regression/library-forms.test.js`

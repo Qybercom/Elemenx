@@ -63,3 +63,7 @@ On(name, callback) / Off(callback). Pads() lists [{Index, ID, Kind}]; Kind() is 
 })
 </script>
 ```
+
+## Tests
+
+- [Gamepad: names the buttons of each kind of pad, and lists no pad while none is pressed](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-services.test.js#L210) — `tests/regression/library-services.test.js`

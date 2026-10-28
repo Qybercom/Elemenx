@@ -18,3 +18,7 @@
 <ThemeSwitch Compact="true" />
 <span class="elemenx-text small muted">Both switch the policy of the page: system, light or dark.</span>
 ```
+
+## Тесты
+
+- [ThemeSwitch shows the policy of the Theme Service and sets it](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-controls.test.js#L390) — `tests/regression/library-controls.test.js`

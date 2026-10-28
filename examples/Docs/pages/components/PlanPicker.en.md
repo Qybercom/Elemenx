@@ -49,3 +49,7 @@ A choice of a plan: a PlanCard for each of Plans ([{ID, Name, Description, Price
 })
 </script>
 ```
+
+## Tests
+
+- [PlanPicker chooses a plan as a group of radios, tells it with its period, and switches the yearly prices](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-controls.test.js#L416) — `tests/regression/library-controls.test.js`

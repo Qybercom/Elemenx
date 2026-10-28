@@ -62,3 +62,7 @@ A gallery of a RibbonGroup: a strip of samples (styles, layouts, colors) that sc
 })
 </script>
 ```
+
+## Tests
+
+- [RibbonGallery marks the chosen sample and tells another one chosen](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-misc.test.js#L192) — `tests/regression/library-misc.test.js`

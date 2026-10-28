@@ -124,3 +124,7 @@
 })
 </script>
 ```
+
+## Тесты
+
+- [radio groups and tab strips with their own state do not affect each other](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L4008) — `tests/examples/ui-kit.spec.js`

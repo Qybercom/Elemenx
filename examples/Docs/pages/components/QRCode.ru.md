@@ -102,3 +102,8 @@ QR-код текста (сервис QR): адреса, контакта, рек
 })()
 </script>
 ```
+
+## Тесты
+
+- [QRCode takes a style: its modules, eyes, gradient and logo (the level H then), and saves its whole style as a PNG and an SVG](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-codes.test.js#L204) — `tests/regression/library-codes.test.js`
+- [QRCode draws the modules of its text, and tells once that a text is too long](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-new.test.js#L361) — `tests/regression/library-new.test.js`

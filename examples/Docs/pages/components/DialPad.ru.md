@@ -43,3 +43,7 @@
 })
 </script>
 ```
+
+## Тесты
+
+- [DialPad puts the keys pressed into the number, erases the last one, and calls with it](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-controls.test.js#L235) — `tests/regression/library-controls.test.js`

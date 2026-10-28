@@ -7,6 +7,9 @@
  * Tabs may be declared in the template too, with their content: <Tab ID="general" Label="General">...</Tab> in the
  * default slot (see Tab). Their tabs follow the ones of Tabs in the strip, and the Tabs shows the content of the current
  * one under the strip (the first tab that is not Disabled while Value names none).
+ * Orientation vertical stands the strip on a side of the content, Placement left (the default) or right, the text of
+ * its tabs turned on its side (read from the bottom up on the left, from the top down on the right, as the tool windows
+ * of an editor); Rotate false keeps it level (a list of sections, as in the settings). Its keys are then Up and Down.
  * Events: change (the ID), close (the ID).
  */
 Elemenx.Component('Tabs', {
@@ -29,6 +32,9 @@ Elemenx.Component('Tabs', {
 			Variant: {Options: ['line', 'pill', 'editor'], Description: 'line (an underline), pill (rounded buttons) or editor (the tabs of files).'},
 			Size: {Options: ['small', 'medium', 'large'], Description: 'small, medium or large.'},
 			Closable: 'Every tab has a cross.',
+			Orientation: {Options: ['horizontal', 'vertical'], Description: 'horizontal, or vertical: the strip on a side of the content.'},
+			Placement: {Options: ['left', 'right'], Description: 'Vertical: the side of the strip.'},
+			Rotate: 'Vertical: the text of the tabs on its side (true), or level (false).',
 			Label: 'The name of the strip for screen readers.'
 		}
 	},
@@ -37,11 +43,18 @@ Elemenx.Component('Tabs', {
 	Variant: 'line',
 	Size: 'medium',
 	Closable: false,
+	Orientation: 'horizontal',
+	Placement: 'left',
+	Rotate: true,
 	Label: '',
 	Declared: [],
 
 	$OnCreate: function () {
 		var self = this;
+
+		this.Vertical = function (orientation) {
+			return orientation === 'vertical';
+		};
 
 		/* The tabs of the strip: the ones of Tabs, then the declared ones. */
 		this.Items = function (tabs, declared) {
@@ -166,8 +179,10 @@ Elemenx.Component('Tabs', {
 
 		if (!current || !count) return;
 
-		if (Elemenx.Locale.Key(event) === 'ArrowRight') direction = 1;
-		else if (Elemenx.Locale.Key(event) === 'ArrowLeft') direction = -1;
+		var vertical = this.Vertical(this.Orientation);
+
+		if (Elemenx.Locale.Key(event) === (vertical ? 'ArrowDown' : 'ArrowRight')) direction = 1;
+		else if (Elemenx.Locale.Key(event) === (vertical ? 'ArrowUp' : 'ArrowLeft')) direction = -1;
 		else if (Elemenx.Locale.Key(event) === 'Home') next = -1;
 		else if (Elemenx.Locale.Key(event) === 'End') next = count;
 

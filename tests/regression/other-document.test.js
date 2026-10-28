@@ -7,7 +7,7 @@ var owned = [];
 var frames = [];
 var open;
 
-/* Another document of the same origin, as the window the Application opens (Native.OpenWindow), with the styles of the Library. */
+/* Another document of the same origin, as the window the Application opens (Platform.OpenWindow), with the styles of the Library. */
 function other () {
 	var frame = document.createElement('iframe');
 
@@ -34,7 +34,7 @@ describe('Regression: ElemenxUI in another document (a window the Application op
 		await import('../../libraries/ElemenxUI/directives/Tip.js');
 		await import('../../libraries/ElemenxUI/services/Find.js');
 		await import('../../libraries/ElemenxUI/services/Hotkeys.js');
-		await import('../../libraries/ElemenxUI/services/Native.js');
+		await import('../../libraries/ElemenxUI/services/Platform.js');
 
 		/* The Keyboard with its template inline: the page of the tests serves no Library. */
 		new Function(keyboardSource.replace("$StyleURL: 'Keyboard.css',", '').replace("$TemplateURL: 'Keyboard.html'", function () {
@@ -143,7 +143,7 @@ describe('Regression: ElemenxUI in another document (a window the Application op
 
 	it('opens a window with the element in it and hears the hotkeys pressed there until it closes', async function () {
 		var view = other();
-		var native = Elemenx.Service('Native');
+		var native = Elemenx.Service('Platform');
 		var hotkeys = Elemenx.Service('Hotkeys');
 		var element = document.createElement('p');
 		var pressed = 0;

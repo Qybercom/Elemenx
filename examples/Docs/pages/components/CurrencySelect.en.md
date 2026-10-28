@@ -35,3 +35,7 @@ A searchable select of currencies: every ISO 4217 currency of the Currencies Ser
 })
 </script>
 ```
+
+## Tests
+
+- [CurrencySelect lists only the Codes given, with their symbols, and shows the one chosen](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-misc.test.js#L113) — `tests/regression/library-misc.test.js`

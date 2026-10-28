@@ -56,3 +56,8 @@
 })
 </script>
 ```
+
+## Тесты
+
+- [reads the records of the tags until it stops, and writes texts, links and records](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/devices.test.js#L251) — `tests/regression/devices.test.js`
+- [devices: the browser tells which of Push, Serial, USB and NFC it has, and each calls back its result or its error](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L8263) — `tests/examples/ui-kit.spec.js`

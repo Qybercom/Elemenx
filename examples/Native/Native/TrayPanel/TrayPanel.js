@@ -1,5 +1,5 @@
 /*
- * The window of the tray (Native.Tray with Window): a press on the icon opens it by the icon, as the tray windows of
+ * The window of the tray (Platform.Tray with Window): a press on the icon opens it by the icon, as the tray windows of
  * programs do. It shows the last notes of the one list and brings the program back or quits it.
  */
 Elemenx.Component('TrayPanel', {
@@ -25,13 +25,13 @@ Elemenx.Component('TrayPanel', {
 
 	/* The main window comes back; the window of the tray hides. */
 	Shown: function () {
-		var native = this.$Service('Native');
+		var native = this.$Service('Platform');
 
 		native.TrayWindow(false);
 		native.Window('show');
 	},
 
 	Quitted: function () {
-		this.$Service('Native').Window('quit');
+		this.$Service('Platform').Window('quit');
 	}
 });

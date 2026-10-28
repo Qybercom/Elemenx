@@ -41,3 +41,7 @@
 })
 </script>
 ```
+
+## Тесты
+
+- [SignaturePad draws a stroke of the pointer, emits change with the strokes, undoes, clears and gives a picture and an SVG](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-new.test.js#L237) — `tests/regression/library-new.test.js`

@@ -55,3 +55,7 @@
 })
 </script>
 ```
+
+## Тесты
+
+- [QRScanner reads a code from the camera through BarcodeDetector, and without it says so and shows its content](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-new.test.js#L406) — `tests/regression/library-new.test.js`

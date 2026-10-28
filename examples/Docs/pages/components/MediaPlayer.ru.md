@@ -82,3 +82,7 @@
 })
 </script>
 ```
+
+## Тесты
+
+- [MediaPlayer loads the sound, shows its time, mutes, changes the speed and follows the keys](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-new.test.js#L540) — `tests/regression/library-new.test.js`

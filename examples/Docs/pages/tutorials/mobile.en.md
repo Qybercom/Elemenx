@@ -1,6 +1,6 @@
 # A mobile application
 
-The same project as the programs of Android and iOS, with Capacitor: the Application in a native window of the phone, its icon and splash screen, and the features of the phone through the same `Native` Service. The finished project is `examples/Native`.
+The same project as the programs of Android and iOS, with Capacitor: the Application in a native window of the phone, its icon and splash screen, and the features of the phone through the same `Platform` Service. The finished project is `examples/Native`.
 
 What you learn: `Native.Mobile` of `elemenx.config.js`, the Capacitor project the build makes, and how one Application reads the phone, the desktop and the web.
 
@@ -27,11 +27,11 @@ Native: {
 
 ## 3. One Application, three places
 
-The `Native` Service tells where it runs, and what the system can do:
+The `Platform` Service tells where it runs, and what the system can do:
 
 ```js
 $OnCreate: function () {
-	var native = this.$Service('Native');
+	var native = this.$Service('Platform');
 
 	this.Platform = native.Platform();
 	this.Features = ['dialogs', 'notifications', 'external', 'tray', 'taskbar'].filter(function (feature) {

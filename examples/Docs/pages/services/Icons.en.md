@@ -46,3 +46,9 @@ The icon sets of the page. The library sprite (index.svg) is the set without a n
 })
 </script>
 ```
+
+## Tests
+
+- [icon sets load on demand, paint with the theme colors, come from markup and override library icons](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L255) — `tests/examples/ui-kit.spec.js`
+- [the six themed icon sets load as packs and draw every icon of theirs](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L3344) — `tests/examples/ui-kit.spec.js`
+- [money input formats the amount of its currency and file icons follow the format](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L5139) — `tests/examples/ui-kit.spec.js`

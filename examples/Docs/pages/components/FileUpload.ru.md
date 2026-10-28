@@ -49,3 +49,7 @@
 })
 </script>
 ```
+
+## Тесты
+
+- [FileUpload gives the files chosen and rejects the ones over MaxSize or past MaxFiles, with the reason](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-forms.test.js#L208) — `tests/regression/library-forms.test.js`

@@ -20,3 +20,7 @@
 })
 </script>
 ```
+
+## Tests
+
+- [*resizable adds its handles, and the arrow keys on a handle resize the element within its bounds](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-directives.test.js#L108) — `tests/regression/library-directives.test.js`

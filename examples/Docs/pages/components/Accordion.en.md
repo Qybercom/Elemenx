@@ -24,3 +24,7 @@ default
 	<Section Title="Warranty" Collapsible="true" Collapsed="true">Two years, on the parts and the work.</Section>
 </Accordion>
 ```
+
+## Tests
+
+- [Accordion keeps one section open: opening one folds the others, each with its toggle](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-new.test.js#L76) — `tests/regression/library-new.test.js`

@@ -1,6 +1,6 @@
 /*
  * The bridge of an Elemenx Application in the ElemenxView of an Android program of its own (elemenx build --native
- * android-library): window.ElemenxNative for the Native Service of ElemenxUI, over the door the view gives the page
+ * android-library): window.ElemenxNative for the Platform Service of ElemenxUI, over the door the view gives the page
  * (window.ElemenxAndroid). A call goes to the handler the program registered (ElemenxView.handle), its answer comes
  * back by Reply; the events of the program come by Emit. Can tells whether the program handles a call: the Service
  * does the others as on the web.

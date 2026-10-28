@@ -62,3 +62,7 @@
 })
 </script>
 ```
+
+## Тесты
+
+- [RibbonGallery marks the chosen sample and tells another one chosen](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-misc.test.js#L192) — `tests/regression/library-misc.test.js`

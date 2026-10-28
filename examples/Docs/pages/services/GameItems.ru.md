@@ -44,3 +44,7 @@
 })
 </script>
 ```
+
+## Тесты
+
+- [GameItems: piles join up to their Stack and the rest goes back, other items swap, and an item is used up](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-services.test.js#L91) — `tests/regression/library-services.test.js`

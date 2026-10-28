@@ -1,0 +1,3 @@
+[
+	'components/FolderBadge.js'
+];

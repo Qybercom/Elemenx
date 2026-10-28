@@ -32,3 +32,7 @@
 })
 </script>
 ```
+
+## Тесты
+
+- [DialogHost shows the dialogs of the Dialogs Service, and an action pressed closes one with its ID](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-overlays.test.js#L250) — `tests/regression/library-overlays.test.js`

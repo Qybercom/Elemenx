@@ -286,6 +286,139 @@ describe('Contract: the Audio Service, Spectrum and Waveform', function () {
 		expect(given.Levels()).toEqual([0.25, 0.5, 1, 0.1]);
 	});
 
+	it('Curve reads the spectrum at points on a log scale of frequency, its loudest point at the tone, Tilt raising the highs', async function () {
+		var audio = Elemenx.Service('Audio');
+		var context = audio.Context();
+		var analyser;
+		var points;
+		var tilted;
+
+		await context.resume();
+
+		analyser = audio.Analyser(tone(1000), {Size: 4096, Smoothing: 0});
+
+		/* 61 points from 100 to 10000 Hz: 1000 Hz is the middle one, the thirty-first. */
+		points = await waitFor(function () {
+			var now = audio.Curve(analyser, 61, {MinFrequency: 100, MaxFrequency: 10000});
+
+			return Math.max.apply(null, now) > 0.8 ? now : null;
+		}, 3000);
+
+		expect(points.length).toBe(61);
+		expect(points.indexOf(Math.max.apply(null, points))).toBe(30);
+		expect(Math.min.apply(null, points)).toBeGreaterThanOrEqual(0);
+
+		audio.Release(analyser);
+
+		/*
+		 * Tilt, on an analyser of a flat spectrum at -60 dB (the same data at each read, unlike a live one): 0.5 of -100 to
+		 * -20 dB everywhere; 6 dB by octave take 100 Hz down by 19.9 dB and 10 kHz up by as much, 1000 Hz staying.
+		 */
+		var flat = {
+			frequencyBinCount: 2048,
+			context: {sampleRate: 48000},
+			minDecibels: -100,
+			maxDecibels: -20,
+			getFloatFrequencyData: function (data) {
+				data.fill(-60);
+			}
+		};
+
+		points = audio.Curve(flat, 61, {MinFrequency: 100, MaxFrequency: 10000});
+		tilted = audio.Curve(flat, 61, {MinFrequency: 100, MaxFrequency: 10000, Tilt: 6});
+
+		expect(points[0]).toBeCloseTo(0.5, 5);
+		expect(points[60]).toBeCloseTo(0.5, 5);
+		expect(tilted[30]).toBeCloseTo(0.5, 5);
+		expect(tilted[0]).toBeCloseTo(0.5 - 6 * Math.log2(10) / 80, 5);
+		expect(tilted[60]).toBeCloseTo(0.5 + 6 * Math.log2(10) / 80, 5);
+	});
+
+	it('Spectrum draws the curve of an analyser with its grid and its peaks, and a spectrogram that moves to the left', async function () {
+		/* Their props come from a host, as in an Application. */
+		var host = Elemenx.Component(unique('SpectrumModes'), {
+			$Template: '<div style="width: 300px"><Spectrum Mode="curve" [values]="Curve" MinFrequency="20" MaxFrequency="20000" Height="100" [grid]="Grid" [fill]="Fill" /></div><div style="width: 200px"><Spectrum Mode="spectrogram" [values]="Flow" Height="40" /></div>',
+			Curve: [0, 0.2, 0.9, 0.3, 0.1],
+			Flow: [0, 0, 0, 0],
+			Grid: true,
+			Fill: true
+		})();
+		var canvas;
+		var context;
+		var ratio;
+		var line;
+		var column;
+
+		/* The column of a spectrogram at x pixels of its canvas: the alphas from the top to the bottom. */
+		function alphas (target, x) {
+			var image = target.getContext('2d').getImageData(x, 0, 1, target.height).data;
+			var list = [];
+			var i;
+
+			for (i = 3; i < image.length; i += 4) list.push(image[i]);
+
+			return list;
+		}
+
+		owned.push(host);
+
+		document.getElementById('mount').appendChild(host.$Element());
+
+		canvas = host.$Element().querySelector('.mode-curve canvas');
+		context = canvas.getContext('2d');
+
+		await waitFor(function () {
+			return inked(canvas) > 0;
+		});
+
+		ratio = canvas.width / 300;
+
+		/* The middle of the width is the top of the curve (0.9), the area under it filled, the air over it clear but for the grid. */
+		line = context.getImageData(Math.round(150 * ratio), 0, 1, canvas.height).data;
+
+		expect(line[Math.round(12 * ratio) * 4 + 3]).toBeGreaterThan(0);
+		expect(line[Math.round(60 * ratio) * 4 + 3]).toBeGreaterThan(0);
+
+		/* The line of 1 kHz: 2/3 of the width on 20 Hz to 20 kHz, drawn over the whole height. */
+		column = context.getImageData(Math.round(200 * ratio), Math.round(2 * ratio), 1, 1).data;
+
+		expect(column[3]).toBeGreaterThan(0);
+
+		/* Without the Grid nor the Fill, the air at 1 kHz is empty. */
+		host.Grid = false;
+		host.Fill = false;
+
+		await tick();
+
+		expect(context.getImageData(Math.round(200 * ratio), Math.round(2 * ratio), 1, 1).data[3]).toBe(0);
+
+		/* The spectrogram: a column of a loud low tone at the right, then it moves on to the left at each frame of levels. */
+		var picture = host.$Element().querySelector('.mode-spectrogram canvas');
+		var step = Math.max(1, Math.round(window.devicePixelRatio || 1));
+		var k;
+
+		await waitFor(function () {
+			return picture.width > 0;
+		});
+
+		host.Flow = [1, 0, 0, 0];
+
+		await tick();
+
+		expect(alphas(picture, picture.width - 1).slice(-1)[0]).toBeGreaterThan(200);
+		expect(alphas(picture, picture.width - 1)[0]).toBeLessThan(10);
+		expect(alphas(picture, picture.width - step - 1).slice(-1)[0]).toBeLessThan(10);
+
+		for (k = 0; k < 10; k++) {
+			host.Flow = [0, 0, 0, k % 2 ? 0 : 0.001];
+
+			await tick();
+		}
+
+		expect(Math.max.apply(null, alphas(picture, picture.width - 1))).toBeLessThan(10);
+		expect(alphas(picture, picture.width - step * 11).slice(-1)[0]).toBeGreaterThan(200);
+	});
+
 	it('Waveform reads its file, moves its playhead, selects a part by a drag and by the keys', async function () {
 		var events = [];
 		var url = URL.createObjectURL(new Blob([wav(2, 220, 0.9, true)], {type: 'audio/wav'}));

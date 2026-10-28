@@ -42,3 +42,7 @@ Value хранит только цифры. Платёжная система, �
 })
 </script>
 ```
+
+## Тесты
+
+- [CardNumberInput keeps the digits, finds the brand, checks the number by Luhn, and conceals its middle](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-inputs.test.js#L48) — `tests/regression/library-inputs.test.js`

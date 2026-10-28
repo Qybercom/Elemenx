@@ -12,7 +12,7 @@
  * The policy and the theme are remembered in localStorage (StorageKey, Persist) and changes are reported, including
  * system changes under 'system'. The first policy comes from localStorage, then from the data-theme of the page,
  * then from Default. In a native program the parts of the system (dialogs, menus, the buttons of the window) take the
- * scheme too (Native.Scheme).
+ * scheme too (Platform.Scheme).
  */
 Elemenx.Service('Theme', {
 	$Meta: {
@@ -372,7 +372,7 @@ Elemenx.Service('Theme', {
 
 		/* In a program the parts of the system follow (its dialogs, menus and buttons of the window): the policy, or the one scheme of a theme. */
 		if (window.ElemenxNative)
-			this.$Service('Native').Scheme(this.Current === 'system' && this.Registry[this.Name].Schemes.length > 1 ? 'system' : this.Resolved());
+			this.$Service('Platform').Scheme(this.Current === 'system' && this.Registry[this.Name].Schemes.length > 1 ? 'system' : this.Resolved());
 	},
 
 	/*

@@ -54,3 +54,7 @@
 })
 </script>
 ```
+
+## Тесты
+
+- [Permissions: a name the browser does not know is unsupported](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-services.test.js#L168) — `tests/regression/library-services.test.js`

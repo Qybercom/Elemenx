@@ -6,7 +6,7 @@
 Elemenx.Component('Skeleton', {
 	$TemplateURL: 'Skeleton.html',
 	$Meta: {
-		Group: 'display',
+		Group: 'feedback',
 		Icon: 'star',
 		Description: 'A placeholder of content that loads: grey shapes that shimmer, in the place and the size of what will come.',
 		Props: {

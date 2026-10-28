@@ -50,3 +50,7 @@ The consents the user gave, of any kind: cookies and analytics, the terms of a s
 })
 </script>
 ```
+
+## Tests
+
+- [Consent asks while no decision of its version is kept, keeps the choices in Consents and asks again for a new version](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-new.test.js#L146) — `tests/regression/library-new.test.js`

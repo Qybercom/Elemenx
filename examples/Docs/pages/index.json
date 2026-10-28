@@ -599,6 +599,13 @@
 					}
 				},
 				{
+					"ID": "menus",
+					"Title": {
+						"en": "Menus",
+						"ru": "Меню"
+					}
+				},
+				{
 					"ID": "navigation",
 					"Title": {
 						"en": "Navigation",
@@ -613,10 +620,31 @@
 					}
 				},
 				{
+					"ID": "feedback",
+					"Title": {
+						"en": "Feedback",
+						"ru": "Состояние и отклик"
+					}
+				},
+				{
 					"ID": "data",
 					"Title": {
 						"en": "Data",
 						"ru": "Данные"
+					}
+				},
+				{
+					"ID": "codes",
+					"Title": {
+						"en": "Codes and diagrams",
+						"ru": "Коды и диаграммы"
+					}
+				},
+				{
+					"ID": "media",
+					"Title": {
+						"en": "Media",
+						"ru": "Медиа"
 					}
 				},
 				{
@@ -660,13 +688,6 @@
 						"en": "Designer",
 						"ru": "Конструктор"
 					}
-				},
-				{
-					"ID": "other",
-					"Title": {
-						"en": "Other",
-						"ru": "Другое"
-					}
 				}
 			],
 			"Pages": [
@@ -696,7 +717,7 @@
 					"Title": {
 						"en": "Barcode"
 					},
-					"Group": "other"
+					"Group": "codes"
 				},
 				{
 					"ID": "Block",
@@ -766,7 +787,7 @@
 					"Title": {
 						"en": "CallStage"
 					},
-					"Group": "layout"
+					"Group": "social"
 				},
 				{
 					"ID": "CallTile",
@@ -892,7 +913,7 @@
 					"Title": {
 						"en": "CommandPalette"
 					},
-					"Group": "navigation"
+					"Group": "menus"
 				},
 				{
 					"ID": "CommentCard",
@@ -913,14 +934,14 @@
 					"Title": {
 						"en": "Consent"
 					},
-					"Group": "other"
+					"Group": "feedback"
 				},
 				{
 					"ID": "ContextMenu",
 					"Title": {
 						"en": "ContextMenu"
 					},
-					"Group": "buttons"
+					"Group": "menus"
 				},
 				{
 					"ID": "Countdown",
@@ -1032,14 +1053,14 @@
 					"Title": {
 						"en": "Diagram"
 					},
-					"Group": "other"
+					"Group": "codes"
 				},
 				{
 					"ID": "DialPad",
 					"Title": {
 						"en": "DialPad"
 					},
-					"Group": "inputs"
+					"Group": "social"
 				},
 				{
 					"ID": "Dialog",
@@ -1060,7 +1081,7 @@
 					"Title": {
 						"en": "DiffView"
 					},
-					"Group": "display"
+					"Group": "text"
 				},
 				{
 					"ID": "Drawer",
@@ -1081,7 +1102,7 @@
 					"Title": {
 						"en": "EmptyState"
 					},
-					"Group": "display"
+					"Group": "feedback"
 				},
 				{
 					"ID": "ExpressionPicker",
@@ -1291,7 +1312,7 @@
 					"Title": {
 						"en": "ImageCropper"
 					},
-					"Group": "other"
+					"Group": "media"
 				},
 				{
 					"ID": "Input",
@@ -1312,7 +1333,7 @@
 					"Title": {
 						"en": "Keyboard"
 					},
-					"Group": "music"
+					"Group": "display"
 				},
 				{
 					"ID": "Knob",
@@ -1340,35 +1361,35 @@
 					"Title": {
 						"en": "MediaPlayer"
 					},
-					"Group": "other"
+					"Group": "media"
 				},
 				{
 					"ID": "Menu",
 					"Title": {
 						"en": "Menu"
 					},
-					"Group": "buttons"
+					"Group": "menus"
 				},
 				{
 					"ID": "MenuBar",
 					"Title": {
 						"en": "MenuBar"
 					},
-					"Group": "buttons"
+					"Group": "menus"
 				},
 				{
 					"ID": "MenuItem",
 					"Title": {
 						"en": "MenuItem"
 					},
-					"Group": "buttons"
+					"Group": "menus"
 				},
 				{
 					"ID": "MenuList",
 					"Title": {
 						"en": "MenuList"
 					},
-					"Group": "buttons"
+					"Group": "menus"
 				},
 				{
 					"ID": "Meter",
@@ -1410,14 +1431,14 @@
 					"Title": {
 						"en": "NativeMenu"
 					},
-					"Group": "buttons"
+					"Group": "menus"
 				},
 				{
 					"ID": "NativeMenuPanel",
 					"Title": {
 						"en": "NativeMenuPanel"
 					},
-					"Group": "buttons"
+					"Group": "menus"
 				},
 				{
 					"ID": "NavList",
@@ -1431,7 +1452,7 @@
 					"Title": {
 						"en": "NotificationHost"
 					},
-					"Group": "overlays"
+					"Group": "feedback"
 				},
 				{
 					"ID": "NumberInput",
@@ -1529,7 +1550,7 @@
 					"Title": {
 						"en": "Progress"
 					},
-					"Group": "display"
+					"Group": "feedback"
 				},
 				{
 					"ID": "Properties",
@@ -1550,14 +1571,14 @@
 					"Title": {
 						"en": "QRCode"
 					},
-					"Group": "other"
+					"Group": "codes"
 				},
 				{
 					"ID": "QRScanner",
 					"Title": {
 						"en": "QRScanner"
 					},
-					"Group": "other"
+					"Group": "media"
 				},
 				{
 					"ID": "Radio",
@@ -1697,7 +1718,7 @@
 					"Title": {
 						"en": "Skeleton"
 					},
-					"Group": "display"
+					"Group": "feedback"
 				},
 				{
 					"ID": "Slider",
@@ -1725,7 +1746,7 @@
 					"Title": {
 						"en": "Spinner"
 					},
-					"Group": "display"
+					"Group": "feedback"
 				},
 				{
 					"ID": "SplitButton",
@@ -1795,7 +1816,7 @@
 					"Title": {
 						"en": "Terminal"
 					},
-					"Group": "data"
+					"Group": "text"
 				},
 				{
 					"ID": "TextArea",
@@ -1886,7 +1907,7 @@
 					"Title": {
 						"en": "ToastHost"
 					},
-					"Group": "overlays"
+					"Group": "feedback"
 				},
 				{
 					"ID": "Toggle",
@@ -1967,12 +1988,6 @@
 					}
 				},
 				{
-					"ID": "AppIcon",
-					"Title": {
-						"en": "AppIcon"
-					}
-				},
-				{
 					"ID": "Audio",
 					"Title": {
 						"en": "Audio"
@@ -2027,6 +2042,12 @@
 					}
 				},
 				{
+					"ID": "DataFormats",
+					"Title": {
+						"en": "DataFormats"
+					}
+				},
+				{
 					"ID": "Designer",
 					"Title": {
 						"en": "Designer"
@@ -2057,6 +2078,12 @@
 					}
 				},
 				{
+					"ID": "FieldFormats",
+					"Title": {
+						"en": "FieldFormats"
+					}
+				},
+				{
 					"ID": "Find",
 					"Title": {
 						"en": "Find"
@@ -2066,12 +2093,6 @@
 					"ID": "Format",
 					"Title": {
 						"en": "Format"
-					}
-				},
-				{
-					"ID": "Formats",
-					"Title": {
-						"en": "Formats"
 					}
 				},
 				{
@@ -2141,12 +2162,6 @@
 					}
 				},
 				{
-					"ID": "Native",
-					"Title": {
-						"en": "Native"
-					}
-				},
-				{
 					"ID": "Panels",
 					"Title": {
 						"en": "Panels"
@@ -2168,6 +2183,12 @@
 					"ID": "PictureInPicture",
 					"Title": {
 						"en": "PictureInPicture"
+					}
+				},
+				{
+					"ID": "Platform",
+					"Title": {
+						"en": "Platform"
 					}
 				},
 				{

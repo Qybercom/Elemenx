@@ -87,3 +87,8 @@ The jog wheel of a DJ: a platter with a record on it that turns as the track pla
 })()
 </script>
 ```
+
+## Tests
+
+- [puts its marker where Time is, a turn every 60 / Rpm seconds, and turns by itself while Playing](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-jog.test.js#L44) — `tests/regression/library-jog.test.js`
+- [a hand on the record touches and scratches it; on the ring, the wheel and the keys it nudges](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-jog.test.js#L104) — `tests/regression/library-jog.test.js`

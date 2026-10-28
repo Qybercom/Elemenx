@@ -55,3 +55,8 @@
 })
 </script>
 ```
+
+## Тесты
+
+- [finds the text of another document and paints its highlights in that window](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/other-document.test.js#L119) — `tests/regression/other-document.test.js`
+- [code editor finds and replaces, switches languages, wraps and prints through its methods](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L5897) — `tests/examples/ui-kit.spec.js`

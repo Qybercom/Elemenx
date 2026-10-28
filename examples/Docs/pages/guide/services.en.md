@@ -95,7 +95,7 @@ A build leaves out the services an Application does not use: it keeps the ones n
 
 ## ElemenxUI
 
-The library brings services of its own: `Theme`, `Toast`, `Dialogs`, `Hotkeys`, `Clipboard`, `Format`, `Formats`, `Forms`, `Icons`, `Emoji`, `Cities`, `Countries`, `Currencies`, `Gamepad`, `Native`, `Push`, `Print`, `Syntax`, `Diff`, `RichText` and more: see the section Services.
+The library brings services of its own: `Theme`, `Toast`, `Dialogs`, `Hotkeys`, `Clipboard`, `Format`, `Formats`, `Forms`, `Icons`, `Emoji`, `Cities`, `Countries`, `Currencies`, `Gamepad`, `Platform`, `Push`, `Print`, `Syntax`, `Diff`, `RichText` and more: see the section Services.
 
 ## Example
 

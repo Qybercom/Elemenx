@@ -34,7 +34,7 @@
 
 ## ElemenxUI
 
-Библиотека приносит свои сервисы: `Theme`, `Toast`, `Dialogs`, `Hotkeys`, `Clipboard`, `Format`, `Formats`, `Forms`, `Icons`, `Emoji`, `Cities`, `Countries`, `Currencies`, `Gamepad`, `Native`, `Push`, `Print`, `Syntax`, `Diff`, `RichText` и другие: см. раздел «Сервисы».
+Библиотека приносит свои сервисы: `Theme`, `Toast`, `Dialogs`, `Hotkeys`, `Clipboard`, `Format`, `Formats`, `Forms`, `Icons`, `Emoji`, `Cities`, `Countries`, `Currencies`, `Gamepad`, `Platform`, `Push`, `Print`, `Syntax`, `Diff`, `RichText` и другие: см. раздел «Сервисы».
 
 ## Пример
 

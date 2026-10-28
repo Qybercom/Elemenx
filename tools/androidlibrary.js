@@ -5,7 +5,7 @@
  * android-library): a module of Gradle in dist/native/android-library/<Module> (elemenx by default) to include in
  * the project of the program. It holds the production build in its assets (assets/elemenx, with the bridge
  * elemenx-android.js first in the page) and ElemenxView, a WebView that serves them at
- * https://appassets.androidplatform.net/ and answers the Native Service of ElemenxUI with the handlers the program
+ * https://appassets.androidplatform.net/ and answers the Platform Service of ElemenxUI with the handlers the program
  * registers in Java or Kotlin. Native.Android of elemenx.config.js: Package (the Java package and the namespace of
  * the module, dev.elemenx.ui by default), Module (the name of its folder). Nothing is built here: the program
  * builds the module with its own Gradle.
@@ -80,7 +80,7 @@ function guide (info) {
 		'   view.emit("server", mapOf("State" to "running"))',
 		'   ```',
 		'',
-		'   In the page the Native Service of ElemenxUI asks it: `Native.Ask(\'server.start\', {Port: 8080}, callback)` and its features (`message`, `external`...), `Native.On(\'server\', callback)` hears `emit`. A call the program has no handler for, the Service does as on the web.',
+		'   In the page the Platform Service of ElemenxUI asks it: `Platform.Ask(\'server.start\', {Port: 8080}, callback)` and its features (`message`, `external`...), `Native.On(\'server\', callback)` hears `emit`. A call the program has no handler for, the Service does as on the web.',
 		'',
 		'The page is https://appassets.androidplatform.net/ (its absolute paths, its Router, `fetch` and its workers work), a link out of it opens in the browser of the system. Build again with `elemenx build --native android-library`: the module is made again, the program keeps its code.',
 		''

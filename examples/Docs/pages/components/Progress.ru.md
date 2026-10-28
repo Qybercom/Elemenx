@@ -33,3 +33,8 @@
 })
 </script>
 ```
+
+## Тесты
+
+- [puts an icon in the favicon, draws a count and a ring over it, and brings the icon of the page back](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/platform-icon.test.js#L99) — `tests/regression/platform-icon.test.js`
+- [in a program gives the windows the icon drawn into a PNG at every change of Elemenx.Icon, and the count and the progress to the system](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/platform-icon.test.js#L207) — `tests/regression/platform-icon.test.js`

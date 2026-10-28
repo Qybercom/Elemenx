@@ -4,7 +4,8 @@
  */
 .docs-page {
 	display: grid;
-	grid-template-columns: 280px minmax(0, 1fr) 240px;
+	/* The navigation as wide as it is (280 pixels, or as the reader drags it). */
+	grid-template-columns: auto minmax(0, 1fr) 240px;
 	/* As high as the page: the window scrolls it, the navigation and the contents stay (sticky). */
 	flex: 1 0 auto;
 	box-sizing: border-box;
@@ -16,12 +17,19 @@
 
 .docs-nav {
 	position: sticky;
+	width: 280px;
 	top: var(--docs-header, 56px);
 	height: calc(100vh - var(--docs-header, 56px));
-	padding: 16px 12px;
-	overflow: auto;
 	background: var(--elemenx-surface);
 	border-inline-end: 1px solid var(--elemenx-border);
+	box-sizing: border-box;
+}
+
+/* The list scrolls inside: its scrollbar stays off the handle that resizes the navigation, on its edge. */
+.docs-nav-scroll {
+	height: 100%;
+	padding: 16px 12px;
+	overflow: auto;
 	box-sizing: border-box;
 }
 
@@ -93,7 +101,7 @@
 /* Without the room for the contents, the page takes it. */
 @media (max-width: 1240px) {
 	.docs-page {
-		grid-template-columns: 280px minmax(0, 1fr);
+		grid-template-columns: auto minmax(0, 1fr);
 	}
 
 	.docs-toc {
@@ -196,10 +204,19 @@
 
 	.docs-nav {
 		position: static;
+		/* Over the page on a phone: as wide as it, whatever width it was dragged to. */
+		width: auto !important;
 		height: auto;
-		max-height: 33vh;
 		border-inline-end: 0;
 		border-bottom: 1px solid var(--elemenx-border);
+	}
+
+	.docs-nav-scroll {
+		max-height: 33vh;
+	}
+
+	.docs-nav .elemenx-resize-handle {
+		display: none;
 	}
 
 	.docs-article {

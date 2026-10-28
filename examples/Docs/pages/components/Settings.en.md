@@ -44,3 +44,7 @@ A settings layout like the settings of an IDE, built on elemenx-screen, elemenx-
 })
 </script>
 ```
+
+## Tests
+
+- [a settings menu goes into submenus and back, chooses, turns switches, finds rows on every level and follows the keys](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L3425) — `tests/examples/ui-kit.spec.js`

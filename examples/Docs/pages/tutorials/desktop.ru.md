@@ -3,7 +3,7 @@
 
 То же приложение как программа для Windows, macOS и Linux на Electron: своя шапка окна и меню, трей, уведомления, диалоги открытия и сохранения файлов и установщик. Готовый проект — `examples/Native`.
 
-Чему вы научитесь: `Native.Desktop` в `elemenx.config.js`, сервис `Native` из ElemenxUI (система из страницы), `TitleBar` и `NativeMenu`, сборки программы.
+Чему вы научитесь: `Native.Desktop` в `elemenx.config.js`, сервис `Platform` из ElemenxUI (система из страницы), `TitleBar` и `NativeMenu`, сборки программы.
 
 ## 1. Electron в проекте
 
@@ -11,7 +11,7 @@
 npx elemenx native add desktop
 ```
 
-Команда один раз устанавливает Electron и его упаковщик в проект (Elemenx не несёт ни того, ни другого: Electron весит около 100 МБ, и версию выбирает проект). `elemenx dev` по-прежнему запускает приложение в браузере, где сервис `Native` делает то, что может веб.
+Команда один раз устанавливает Electron и его упаковщик в проект (Elemenx не несёт ни того, ни другого: Electron весит около 100 МБ, и версию выбирает проект). `elemenx dev` по-прежнему запускает приложение в браузере, где сервис `Platform` делает то, что может веб.
 
 ## 2. Программа
 
@@ -78,13 +78,13 @@ module.exports = {
 
 ## 4. Система из страницы
 
-В окне нет Node: страница обращается к системе через сервис `Native` с колбэком `(error, result)`:
+В окне нет Node: страница обращается к системе через сервис `Platform` с колбэком `(error, result)`:
 
 ```js
 Opened: function () {
 	var self = this;
 
-	this.$Service('Native').Open({Accept: ['.txt', '.md', '.json'], Read: 'text'}, function (error, files) {
+	this.$Service('Platform').Open({Accept: ['.txt', '.md', '.json'], Read: 'text'}, function (error, files) {
 		if (error) {
 			self.Said('Open: error, ' + error.message);
 
@@ -98,7 +98,7 @@ Opened: function () {
 },
 
 Saved: function () {
-	this.$Service('Native').Save({Name: 'elemenx.txt', Text: 'Saved by Elemenx at ' + new Date().toISOString() + '\n'}, this.Answer('Save'));
+	this.$Service('Platform').Save({Name: 'elemenx.txt', Text: 'Saved by Elemenx at ' + new Date().toISOString() + '\n'}, this.Answer('Save'));
 }
 ```
 

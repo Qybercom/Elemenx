@@ -44,3 +44,8 @@
 })
 </script>
 ```
+
+## Тесты
+
+- [TimeInput: the time chosen](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/focus-on-open.test.js#L53) — `tests/regression/focus-on-open.test.js`
+- [TimeInput keeps 24 hours, gives HH:MM, and Seconds adds them](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-forms.test.js#L96) — `tests/regression/library-forms.test.js`

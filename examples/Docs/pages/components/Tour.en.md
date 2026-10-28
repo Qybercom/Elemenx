@@ -59,3 +59,7 @@ A guided tour: the page is shaded except the element of the current step, and a 
 })
 </script>
 ```
+
+## Tests
+
+- [Tour goes step by step with Next and Back, tells each step, finishes at the last, and closes with the reason](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-overlays.test.js#L97) — `tests/regression/library-overlays.test.js`

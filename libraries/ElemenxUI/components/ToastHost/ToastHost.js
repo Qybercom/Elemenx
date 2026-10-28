@@ -7,7 +7,7 @@ Elemenx.Component('ToastHost', {
 	$TemplateURL: 'ToastHost.html',
 	$StyleURL: 'ToastHost.css',
 	$Meta: {
-		Group: 'overlays',
+		Group: 'feedback',
 		Icon: 'bell',
 		Description: 'Shows the toasts of the Toast Service: place one in the layout of the Application.',
 		Props: {

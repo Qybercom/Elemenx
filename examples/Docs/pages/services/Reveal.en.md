@@ -39,3 +39,7 @@ Showing what a field hides: a password (Input), a card number (CardNumberInput),
 })
 </script>
 ```
+
+## Tests
+
+- [CVVInput keeps Length digits hidden, and shows them by its eye; a Guarded one only once the guard allows it](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-inputs.test.js#L105) — `tests/regression/library-inputs.test.js`

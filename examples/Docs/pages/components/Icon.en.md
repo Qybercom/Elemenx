@@ -41,3 +41,12 @@ An icon of a sprite: <Icon Name="add" />, or of another icon set: <Icon Name="we
 })
 </script>
 ```
+
+## Tests
+
+- [keeps the badge over an icon that changes by Elemenx.Icon or $Icon, and over the icon of the page brought back](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/platform-icon.test.js#L138) — `tests/regression/platform-icon.test.js`
+- [in a program gives the windows the icon drawn into a PNG at every change of Elemenx.Icon, and the count and the progress to the system](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/platform-icon.test.js#L207) — `tests/regression/platform-icon.test.js`
+- [Elemenx.Icon sets the favicon (one for each scheme), brings back the icons of the page, and tells its listeners and those of the title](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/title.test.js#L186) — `tests/regression/title.test.js`
+- [puts an icon in the favicon, draws a count and a ring over it, and brings the icon of the page back](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/platform-icon.test.js#L99) — `tests/regression/platform-icon.test.js`
+- [makes a favicon for a page that named none, takes it away on ResetIcon, and keeps an icon of each scheme](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/platform-icon.test.js#L167) — `tests/regression/platform-icon.test.js`
+- [on the web blinks the favicon and the title of a hidden page, and tells that the tray needs a program](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/platform-icon.test.js#L289) — `tests/regression/platform-icon.test.js`

@@ -10,7 +10,7 @@ Elemenx.Component('Terminal', {
 	$TemplateURL: 'Terminal.html',
 	$StyleURL: 'Terminal.css',
 	$Meta: {
-		Group: 'data',
+		Group: 'text',
 		Icon: 'terminal',
 		Description: 'A terminal: a scrolling output above a command line.',
 		Container: true,

@@ -27,7 +27,7 @@ function program () {
 	};
 }
 
-describe('Contract: Native.Notify, the notifications of the system or of ElemenxUI', function () {
+describe('Contract: Platform.Notify, the notifications of the system or of ElemenxUI', function () {
 	var native;
 	var heard;
 	var listener = function (event) {
@@ -37,7 +37,7 @@ describe('Contract: Native.Notify, the notifications of the system or of Elemenx
 	beforeAll(async function () {
 		await loadElemenx();
 		await import('../../libraries/ElemenxUI/directives/Mount.js');
-		await import('../../libraries/ElemenxUI/services/Native.js');
+		await import('../../libraries/ElemenxUI/services/Platform.js');
 
 		new Function(hostSource.replace("$StyleURL: 'NotificationHost.css',\n", '').replace("$TemplateURL: 'NotificationHost.html'", function () {
 			return '$Template: ' + JSON.stringify(hostTemplate);
@@ -52,7 +52,7 @@ describe('Contract: Native.Notify, the notifications of the system or of Elemenx
 			return '$Template: ' + JSON.stringify(buttonTemplate);
 		}))();
 
-		native = Elemenx.Service('Native');
+		native = Elemenx.Service('Platform');
 	});
 
 	beforeEach(function () {
@@ -337,6 +337,6 @@ describe('Contract: Native.Notify, the notifications of the system or of Elemenx
 			error = value;
 		});
 
-		expect(error.message).toBe('Elemenx Native Notify needs a Title or a Text');
+		expect(error.message).toBe('Elemenx Platform Notify needs a Title or a Text');
 	});
 });

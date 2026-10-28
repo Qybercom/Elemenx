@@ -47,3 +47,8 @@ A date field with its own calendar. Value is an ISO date ('2024-11-22'), or a mo
 })
 </script>
 ```
+
+## Tests
+
+- [DateInput takes the digits of its Format, gives an ISO date, and refuses a date out of Min and Max](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-forms.test.js#L46) — `tests/regression/library-forms.test.js`
+- [DateInput puts the focus on the day of its calendar as it opens, so the next key moves it](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-forms.test.js#L76) — `tests/regression/library-forms.test.js`

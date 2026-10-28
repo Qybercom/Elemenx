@@ -1,0 +1,114 @@
+<div class="docs-stack">
+	<Properties>
+		<Property Label="Platform" [value]="Platform" />
+		<Property Label="Features here" [value]="Features" />
+	</Properties>
+	<div class="docs-row">
+		<Button Label="Open a text file" Icon="folder-open" (click)="Open" />
+		<Button Label="Save a file" Icon="save" (click)="Save" />
+		<Button Label="Full screen" Icon="maximize" Variant="ghost" (click)="Full" />
+	</div>
+	<p class="elemenx-text small muted">{{Note}}</p>
+	<p class="elemenx-text small muted">Look at the icon of this tab while you press the buttons.</p>
+	<div class="docs-row">
+		<Button Label="A new icon" (click)="Changed" />
+		<Button Label="One more message" Icon="comment" (click)="Counted" />
+		<Button Label="Upload" Icon="upload" (click)="Uploaded" />
+		<Button Label="As it was" Variant="ghost" (click)="Reset" />
+	</div>
+	<p class="elemenx-text small">Messages: {{Count}}, upload: {{Part === null ? 'none' : Math.round(Part * 100) + '%'}}.</p>
+</div>
+<script>
+({
+	Platform: '',
+	Features: '',
+	Note: 'In a browser the features are those of the web; in a program of elemenx build --native they are those of the system.',
+	Count: 0,
+	Part: null,
+	Timer: 0,
+
+	$OnCreate: function () {
+		var platform = this.$Service('Platform');
+
+		this.Platform = platform.Platform();
+		this.Features = ['window', 'dialogs', 'menu', 'tray', 'external', 'taskbar', 'hotkeys', 'autostart', 'links', 'power', 'update'].filter(function (feature) {
+			return platform.Has(feature);
+		}).join(', ');
+	},
+
+	$OnDestroy: function () {
+		window.clearInterval(this.Timer);
+	},
+
+	Open: function () {
+		var self = this;
+
+		this.$Service('Platform').Open({Accept: ['.txt', '.md', '.json'], Read: 'text'}, function (error, files) {
+			self.Note = error ? error.message : files.length ? files[0].Name + ': ' + files[0].Text.slice(0, 80) : 'Cancelled';
+		});
+	},
+
+	Save: function () {
+		var self = this;
+
+		this.$Service('Platform').Save({Name: 'hello.txt', Text: 'Hello from Elemenx'}, function (error, result) {
+			self.Note = error ? error.message : result ? 'Saved' : 'Cancelled';
+		});
+	},
+
+	Full: function () {
+		var self = this;
+
+		this.$Service('Platform').Window('fullscreen', function (error) {
+			if (error)
+				self.Note = error.message;
+		});
+	},
+
+	Changed: function () {
+		this.$Service('Platform').Icon({
+			Light: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#1a73e8"/><path d="M18 34l10 10 18-22" stroke="#fff" stroke-width="7" fill="none" stroke-linecap="round"/></svg>',
+			Dark: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#8ab4f8"/><path d="M18 34l10 10 18-22" stroke="#202124" stroke-width="7" fill="none" stroke-linecap="round"/></svg>'
+		});
+	},
+
+	Counted: function () {
+		this.Count++;
+
+		this.$Service('Platform').Badge(this.Count);
+	},
+
+	Uploaded: function () {
+		var self = this;
+
+		window.clearInterval(this.Timer);
+
+		this.Part = 0;
+
+		this.Timer = window.setInterval(function () {
+			self.Part = Math.min(1, self.Part + 0.1);
+
+			self.$Service('Platform').Progress(self.Part);
+
+			if (self.Part >= 1) {
+				window.clearInterval(self.Timer);
+
+				window.setTimeout(function () {
+					self.Part = null;
+
+					self.$Service('Platform').Progress(null);
+				}, 600);
+			}
+		}, 300);
+	},
+
+	Reset: function () {
+		window.clearInterval(this.Timer);
+
+		this.Count = 0;
+		this.Part = null;
+
+		this.$Service('Platform').ResetIcon();
+	}
+})
+</script>

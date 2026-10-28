@@ -254,6 +254,52 @@ describe('Elemenx multi-Application Builder', function () {
 		expect(fs.existsSync(path.join(root, 'dist', 'libraries', 'UI', 'icons.svg'))).toBe(true);
 	});
 
+	it('builds the Libraries of $Discovery: a folder with its index.js and a graph file of any name, with their dictionaries', function () {
+		var root = project();
+		var kit = path.join(root, 'vendor', 'kit');
+		var folder = path.join(root, 'vendor', 'charts');
+
+		application(root, 'FooApp', 'FooRoot');
+
+		fs.writeFileSync(path.join(root, 'FooApp', 'FooRoot', 'FooRoot.html'), '<div><KitCard /><Chart /></div>');
+
+		fs.mkdirSync(path.join(kit, 'cards'), {recursive: true});
+		fs.mkdirSync(path.join(kit, 'locales'), {recursive: true});
+		fs.mkdirSync(folder, {recursive: true});
+		fs.writeFileSync(path.join(kit, 'kit.js'), "['cards', 'locales/en.json', 'locales/ru.json', 'kit.css']");
+		fs.writeFileSync(path.join(kit, 'cards', 'index.js'), "['KitCard.js', 'KitUnused.js']");
+		fs.writeFileSync(path.join(kit, 'cards', 'KitCard.js'), "Elemenx.Component('KitCard', {$Template:'<p>{{$T(\\'kit.title\\')}}</p>'});");
+		fs.writeFileSync(path.join(kit, 'cards', 'KitUnused.js'), "Elemenx.Component('KitUnused', {$Template:'<p>unused</p>'});");
+		fs.writeFileSync(path.join(kit, 'locales', 'en.json'), '{"kit": {"title": "Kit"}}');
+		fs.writeFileSync(path.join(kit, 'locales', 'ru.json'), '{"kit": {"title": "Набор"}}');
+		fs.writeFileSync(path.join(kit, 'kit.css'), '.kit{color:red}');
+		fs.writeFileSync(path.join(folder, 'index.js'), "['Chart.js']");
+		fs.writeFileSync(path.join(folder, 'Chart.js'), "Elemenx.Component('Chart', {$Template:'<canvas></canvas>'});");
+		fs.writeFileSync(path.join(root, 'app.js'), "Elemenx.Application('FooApp', {$Discovery: ['vendor/charts', {Path: 'vendor/kit/kit.js', Name: 'Kit'}], $Component:'FooRoot',$Root:'FooApp',$Mount:'#foo'});");
+
+		expect(Builder.LibraryDeclarations(root, fs.readFileSync(path.join(root, 'app.js'), 'utf8')).map(function (library) {
+			return [library.Name, library.Root, library.Graph ? path.basename(library.Graph) : null];
+		})).toEqual([['charts', 'vendor/charts', null], ['Kit', 'vendor/kit', 'kit.js']]);
+
+		Builder.Build(root, {application: 'FooApp', entry: 'app.js', index: 'index.html', out: 'dist'});
+
+		var bundle = fs.readFileSync(path.join(root, 'dist', 'app.js'), 'utf8');
+
+		expect(bundle).toContain('"KitCard": function');
+		expect(bundle).toContain('"Chart": function');
+		expect(bundle).not.toContain('"KitUnused": function');
+		expect(bundle).toContain('Elemenx.Locale.Source("/vendor/kit/locales/{language}.json", ["en","ru"]);');
+		expect(fs.existsSync(path.join(root, 'dist', 'vendor', 'kit', 'locales', 'ru.json'))).toBe(true);
+		expect(fs.readFileSync(path.join(root, 'dist', 'index.html'), 'utf8')).toContain('<link rel="stylesheet" href="/vendor/kit/kit.css">');
+
+		/* A graph that is not there stops the build, and says which. */
+		fs.writeFileSync(path.join(root, 'app.js'), "Elemenx.Application('FooApp', {$Discovery: ['vendor/none'], $Component:'FooRoot',$Root:'FooApp',$Mount:'#foo'});");
+
+		expect(function () {
+			Builder.Build(root, {application: 'FooApp', entry: 'app.js', index: 'index.html', out: 'dist'});
+		}).toThrow('$Discovery graph not found: ' + path.join(root, 'vendor', 'none', 'index.js'));
+	});
+
 	it('takes the Library Services, Directives and Guards the Application names, and the ones they name', function () {
 		var root = project();
 

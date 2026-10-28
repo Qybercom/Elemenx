@@ -47,3 +47,7 @@
 })
 </script>
 ```
+
+## Тесты
+
+- [MultiSelect toggles its options and gives the list of the Values chosen](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-forms.test.js#L174) — `tests/regression/library-forms.test.js`

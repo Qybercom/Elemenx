@@ -34,3 +34,7 @@ Floating content next to a trigger. Slots: trigger (the anchor: a Button, a link
 	<p class="elemenx-text small">A hint shown on hover.</p>
 </Popover>
 ```
+
+## Tests
+
+- [Popover opens and closes by its trigger, tells it, and closes on Escape](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-overlays.test.js#L180) — `tests/regression/library-overlays.test.js`

@@ -2,7 +2,7 @@
 # Spectrum
 
 Спектр звука, пока он звучит: уровни его полос вживую (сервис Audio: AnalyserNode). Source — то, что он слушает: <audio> или <video>, MediaStream микрофона или AudioNode; или Values — уровни полос от 0 до 1, которые даёт приложение (тогда Web Audio не нужен). Bands — число полос, Scale — log (как слышит ухо) или linear между MinFrequency и MaxFrequency в Гц, Smoothing (от 0 до 1) — насколько медленно они меняются, MinDb и MaxDb — диапазон анализа.
-Mode: bars (по умолчанию), mirror (столбцы в обе стороны от середины), line (залитая кривая) или radial (столбцы по кругу). Colors — цвета уровней от низких к высоким ([] — акцентный), Gap — промежуток между столбцами в пикселях, Peaks — отметки наибольших уровней: держатся, потом опускаются. Paused останавливает его. Levels() — то, что он показывает сейчас; error сообщает, что Source не слышно, ready отдаёт сам компонент.
+Mode: bars (по умолчанию), mirror (столбцы в обе стороны от середины), line (залитая кривая полос), radial (столбцы по кругу), curve (анализатор студии: точка каждые два пикселя, прочитанная из бинов анализа, по логарифмической шкале частот и линейной шкале дБ; Tilt в дБ на октаву поднимает верха, Grid — линии частот и дБ, Fill — заливка под кривой, Peaks — линия наибольших уровней) или spectrogram (спектр во времени: каждый кадр — столбец цветов, низкие частоты внизу, всё сдвигается влево). Colors — цвета уровней от низких к высоким ([] — акцентный; для спектрограммы — от тихого к самому громкому, поверх прозрачной тишины: [] — акцентный, danger, warning, белый), Gap — промежуток между столбцами в пикселях, Peaks — отметки наибольших уровней: держатся, потом опускаются. Paused останавливает его. Levels() — то, что он показывает сейчас; error сообщает, что Source не слышно, ready отдаёт сам компонент.
 
 ## Свойства
 
@@ -21,6 +21,9 @@ Mode: bars (по умолчанию), mirror (столбцы в обе стор�
 | `Colors` | `[]` |
 | `Gap` | `2` |
 | `Peaks` | `true` |
+| `Tilt` | `3` |
+| `Grid` | `true` |
+| `Fill` | `true` |
 | `Paused` | `false` |
 | `Label` | `''` |
 
@@ -57,7 +60,7 @@ Mode: bars (по умолчанию), mirror (столбцы в обе стор�
 		Mode: 'bars',
 		Problem: '',
 		Levels: [0.2, 0.5, 0.8, 0.6, 0.9, 0.4, 0.7, 0.3, 0.5, 0.2, 0.35, 0.1],
-		Modes: ['bars', 'mirror', 'line', 'radial'].map(function (name) {
+		Modes: ['bars', 'mirror', 'line', 'radial', 'curve', 'spectrogram'].map(function (name) {
 			return {Value: name, Label: name};
 		}),
 
@@ -149,3 +152,13 @@ Mode: bars (по умолчанию), mirror (столбцы в обе стор�
 })()
 </script>
 ```
+
+## Тесты
+
+- [hears a tone: its band is the loudest, its loudness is there, one node for an element for good](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-audio.test.js#L127) — `tests/regression/library-audio.test.js`
+- [reads a sound file from an ArrayBuffer, a Blob and a URL, and gives its shape](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-audio.test.js#L165) — `tests/regression/library-audio.test.js`
+- [Spectrum draws levels given, or hears its Source live, and stops while Paused](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-audio.test.js#L193) — `tests/regression/library-audio.test.js`
+- [Curve reads the spectrum at points on a log scale of frequency, its loudest point at the tone, Tilt raising the highs](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-audio.test.js#L289) — `tests/regression/library-audio.test.js`
+- [Spectrum draws the curve of an analyser with its grid and its peaks, and a spectrogram that moves to the left](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-audio.test.js#L321) — `tests/regression/library-audio.test.js`
+- [Waveform reads its file, moves its playhead, selects a part by a drag and by the keys](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-audio.test.js#L406) — `tests/regression/library-audio.test.js`
+- [Waveform draws the Peaks it is given and follows the element of Media](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-audio.test.js#L496) — `tests/regression/library-audio.test.js`

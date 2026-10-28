@@ -18,7 +18,7 @@ function text (key, params) {
 
 var english = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), 'libraries', 'ElemenxUI', 'locales', 'en.json'), 'utf8'));
 
-/* The Formats Service of ElemenxUI, run outside a page: its definition with $OnCreate called, as Elemenx would. */
+/* The FieldFormats Service of ElemenxUI, run outside a page: its definition with $OnCreate called, as Elemenx would. */
 function load () {
 	var definition = null;
 	var context = {
@@ -31,7 +31,7 @@ function load () {
 		}
 	};
 
-	vm.runInNewContext(fs.readFileSync(path.resolve(process.cwd(), 'libraries', 'ElemenxUI', 'services', 'Formats.js'), 'utf8'), context);
+	vm.runInNewContext(fs.readFileSync(path.resolve(process.cwd(), 'libraries', 'ElemenxUI', 'services', 'FieldFormats.js'), 'utf8'), context);
 
 	definition.$OnCreate.call(definition);
 
@@ -42,7 +42,7 @@ function check (name, text, options) {
 	return formats.Check(name, text, options);
 }
 
-describe('ElemenxUI Formats', function () {
+describe('ElemenxUI FieldFormats', function () {
 	beforeAll(function () {
 		formats = load();
 	});
@@ -125,6 +125,6 @@ describe('ElemenxUI Formats', function () {
 		expect(formats.Find('ticket')).not.toBeNull();
 		expect(function () {
 			formats.Register('broken');
-		}).toThrow('Formats.Register expects (name, format)');
+		}).toThrow('FieldFormats.Register expects (name, format)');
 	});
 });

@@ -51,3 +51,7 @@ Folders and files to go through, as the explorer of a system: Items is the tree,
 })
 </script>
 ```
+
+## Tests
+
+- [FileBrowser opens folders and files, loads a folder not loaded, sorts, selects with Ctrl and Shift, and follows the keys](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-new.test.js#L467) — `tests/regression/library-new.test.js`

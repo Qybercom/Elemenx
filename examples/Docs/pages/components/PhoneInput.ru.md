@@ -47,3 +47,7 @@ Value — номер в международном формате: «+», код
 })
 </script>
 ```
+
+## Тесты
+
+- [PhoneInput writes the national number in the mask of its Country and gives the international one](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-forms.test.js#L121) — `tests/regression/library-forms.test.js`

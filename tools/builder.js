@@ -26,10 +26,11 @@ function warnViewport (page, name) {
 		process.stderr.write('Elemenx Builder: ' + name + ' has no <meta name="viewport" content="width=device-width, initial-scale=1">: phones show it as a desktop page, zoomed out\n');
 }
 
-function readIndex (directory) {
-	var file = path.join(directory, 'index.js');
+/* The graph of a folder: its index.js, or graph, a graph file of another name ($Discovery). */
+function readIndex (directory, graph) {
+	var file = graph || path.join(directory, 'index.js');
 	if (!fs.existsSync(file))
-		fail('index.js not found: ' + directory);
+		fail(graph ? 'graph not found: ' + graph : 'index.js not found: ' + directory);
 
 	return common.parseIndex(file);
 }
@@ -123,13 +124,13 @@ function stripMeta (source) {
 	return source;
 }
 
-function scan (directory, root, entities, visited, declaredNames, min, meta) {
+function scan (directory, root, entities, visited, declaredNames, min, meta, graph) {
 	var absolute = path.resolve(directory);
 	if (visited[absolute]) return;
 
 	visited[absolute] = true;
 
-	var entries = readIndex(absolute);
+	var entries = readIndex(absolute, graph);
 	var i = 0;
 
 	while (i < entries.length) {
@@ -393,6 +394,14 @@ function libraryDeclarations (project, appSource) {
 		names[match[2]] = true;
 	}
 
+	discoveredLibraries(project, appSource).forEach(function (library) {
+		if (names[library.Name]) return;
+
+		result.push(library);
+
+		names[library.Name] = true;
+	});
+
 	var usePattern = /(?:\$Use|Use)\s*:\s*(?:\[([\s\S]*?)\]|(['"])([^'"]+)\2)/g;
 
 	while ((match = usePattern.exec(appSource))) {
@@ -412,6 +421,70 @@ function libraryDeclarations (project, appSource) {
 	return result;
 }
 
+/*
+ * The Libraries of $Discovery in the entry: paths from the project of a folder with its index.js or of a graph file of
+ * any name, or {Path, Name}; named as the runtime names them (Name, a graph file other than index.js, or the folder).
+ * [{Name, Root, Directory, Graph, Discovered}].
+ */
+function discoveredLibraries (project, appSource) {
+	var result = [];
+	var pattern = /\$Discovery\s*:\s*\[([\s\S]*?)\]/g;
+	var match;
+
+	while ((match = pattern.exec(appSource))) {
+		var itemPattern = /\{([^{}]*)\}|(['"])([^'"]+)\2/g;
+		var item;
+
+		while ((item = itemPattern.exec(match[1]))) {
+			var given = item[1] ? /\bPath\s*:\s*(['"])([^'"]+)\1/.exec(item[1]) : null;
+			var named = item[1] ? /\bName\s*:\s*(['"])([^'"]+)\1/.exec(item[1]) : null;
+			var value = (item[1] ? given && given[2] : item[3]) || '';
+			var relative = value.replace(/^\/+|\/+$/g, '');
+			var target = path.resolve(project, relative);
+			var graph = /\.js$/i.test(relative) ? target : null;
+			var directory = graph ? path.dirname(target) : target;
+
+			if (!relative) continue;
+
+			if (!fs.existsSync(graph || path.join(directory, 'index.js')))
+				fail('$Discovery graph not found: ' + (graph || path.join(directory, 'index.js')));
+
+			result.push({
+				Name: named ? named[2] : graph && path.basename(graph).toLowerCase() !== 'index.js' ? path.basename(graph, path.extname(graph)) : path.basename(directory),
+				Root: path.relative(project, directory).replace(/\\/g, '/'),
+				Directory: directory,
+				Graph: graph,
+				Discovered: true
+			});
+		}
+	}
+
+	return result;
+}
+
+/*
+ * The dictionaries of the Libraries of $Discovery for a build, which finds no graph at run time: a place of
+ * dictionaries for each one whose graph lists locales/{language}.json.
+ */
+function discoveredLocales (libraries) {
+	return libraries.filter(function (library) {
+		return library.Discovered;
+	}).map(function (library) {
+		var list = [];
+		var languages = [];
+
+		libraryResources(library.Directory, library.Directory, list, {}, library.Graph);
+
+		list.forEach(function (item) {
+			var match = /^locales\/([A-Za-z]{2,3}(?:-[A-Za-z0-9]+)*)\.json$/.exec(item.Relative.replace(/\\/g, '/'));
+			if (match && languages.indexOf(match[1]) === -1)
+				languages.push(match[1]);
+		});
+
+		return languages.length ? '\nElemenx.Locale.Source(' + JSON.stringify('/' + library.Root + '/locales/{language}.json') + ', ' + JSON.stringify(languages) + ');' : '';
+	}).join('');
+}
+
 function libraryRoots (project, appSource) {
 	var declarations = libraryDeclarations(project, appSource);
 	var roots = [];
@@ -428,7 +501,7 @@ function libraryRoots (project, appSource) {
 
 /*
  * Whether a text uses a Component: by its tag, or by its name as code makes it, Component: 'Name' (a window that
- * Native.OpenWindow or Native.TrayPopup opens) or Elemenx.Component('Name').
+ * Platform.OpenWindow or Platform.TrayPopup opens) or Elemenx.Component('Name').
  */
 function sourceUsesComponent (source, name) {
 	var escaped = String(name).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -514,13 +587,13 @@ function selectLibraryEntities (entities, catalog, text) {
 	}
 }
 
-function libraryResources (directory, root, result, visited) {
+function libraryResources (directory, root, result, visited, graph) {
 	var absolute = path.resolve(directory);
 	if (visited[absolute]) return;
 
 	visited[absolute] = true;
 
-	var entries = readIndex(absolute);
+	var entries = readIndex(absolute, graph);
 	var i = 0;
 
 	while (i < entries.length) {
@@ -625,7 +698,7 @@ function copyLibraryResources (output, declarations, choice) {
 		var resources = [];
 		var packs = choice ? common.readPacks(declaration.Directory) : {};
 
-		libraryResources(declaration.Directory, declaration.Directory, resources, {});
+		libraryResources(declaration.Directory, declaration.Directory, resources, {}, declaration.Graph);
 
 		var ri = 0;
 
@@ -751,7 +824,7 @@ function build (project, options) {
 	while (i < libraries.length) {
 		var catalog = {};
 
-		scan(libraries[i].Directory, libraries[i].Directory, catalog, {}, true, options.single, meta);
+		scan(libraries[i].Directory, libraries[i].Directory, catalog, {}, true, options.single, meta, libraries[i].Graph);
 
 		markShared(entities, catalog, shared);
 
@@ -773,7 +846,7 @@ function build (project, options) {
 		i++;
 	}
 
-	bundle = render(entities);
+	bundle = render(entities) + discoveredLocales(libraries);
 
 	/* With precompile, the expressions of the templates go as code before the bundle (see expressions.js). */
 	if (options.precompile)
@@ -1094,7 +1167,7 @@ function libraryAssets (job, page) {
 		var root = '/' + String(declaration.Root).replace(/^\/+|\/+$/g, '');
 		var packs = common.readPacks(declaration.Directory);
 
-		libraryResources(declaration.Directory, declaration.Directory, list, {});
+		libraryResources(declaration.Directory, declaration.Directory, list, {}, declaration.Graph);
 
 		/* ElemenxUI takes its files from next to elemenx.js; in one file they are embedded under this root, so it keeps it. */
 		if (declaration.Name === 'ElemenxUI')

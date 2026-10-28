@@ -52,3 +52,7 @@
 })
 </script>
 ```
+
+## Тесты
+
+- [Combobox filters its options as the text is typed, tells every text, picks with the keys, and creates a text of its own](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-pickers.test.js#L98) — `tests/regression/library-pickers.test.js`

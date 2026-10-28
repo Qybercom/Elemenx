@@ -1,5 +1,5 @@
 /*
- * The notifications of the Application drawn by ElemenxUI (Native.Notify with Look elemenx): cards of Items
+ * The notifications of the Application drawn by ElemenxUI (Platform.Notify with Look elemenx): cards of Items
  * ([{ID, Title, Text, Icon, Image, Variant, Actions: [{ID, Label}], Progress, Duration, Stamp, Component, Props, Bare}]),
  * the newest next to the corner, in the window by the corner of the screen of a program or in the corner of the page
  * on the web (Page, Corner). A card with a Duration shows the time it has left, held while the pointer is over it
@@ -13,7 +13,7 @@ Elemenx.Component('NotificationHost', {
 	$TemplateURL: 'NotificationHost.html',
 	$StyleURL: 'NotificationHost.css',
 	$Meta: {
-		Group: 'overlays',
+		Group: 'feedback',
 		Icon: 'bell',
 		Description: 'The notifications of the Application drawn by ElemenxUI, in a window by the corner of the screen or in the page.',
 		Props: {

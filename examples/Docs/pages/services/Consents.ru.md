@@ -50,3 +50,7 @@
 })
 </script>
 ```
+
+## Тесты
+
+- [Consent asks while no decision of its version is kept, keeps the choices in Consents and asks again for a new version](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-new.test.js#L146) — `tests/regression/library-new.test.js`

@@ -27,3 +27,7 @@
 })
 </script>
 ```
+
+## Тесты
+
+- [opens in the top layer and closes on Escape when it was open before its element was in the page](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/popup.test.js#L36) — `tests/regression/popup.test.js`

@@ -41,3 +41,7 @@ The part of a picture to keep: a frame over Src that the pointer moves (inside i
 })
 </script>
 ```
+
+## Tests
+
+- [ImageCropper puts a frame of its shape in the middle, moves and resizes it inside the picture, by the pointer and by the keys](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-new.test.js#L295) — `tests/regression/library-new.test.js`

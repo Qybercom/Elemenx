@@ -39,3 +39,7 @@
 })
 </script>
 ```
+
+## Тесты
+
+- [builds with the classes of the layouts, the props of any component, its expressions and its named slots](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/builder.spec.js#L407) — `tests/examples/builder.spec.js`

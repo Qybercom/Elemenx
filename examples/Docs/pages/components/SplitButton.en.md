@@ -45,3 +45,7 @@ default
 })
 </script>
 ```
+
+## Tests
+
+- [SplitButton: the main button emits click, the arrow opens the menu of Items and declared MenuItems, an item emits select](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-new.test.js#L33) — `tests/regression/library-new.test.js`

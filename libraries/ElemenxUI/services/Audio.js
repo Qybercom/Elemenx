@@ -11,6 +11,10 @@
  * - Bands(analyser, count, options): the levels of count bands of what it hears now, from 0 to 1; options Scale (log, the
  *   default, as an ear hears, or linear), MinFrequency (30) and MaxFrequency (16000) in Hz. Levels(analyser) is the
  *   loudness of the sound now, {Rms, Peak} from 0 to 1.
+ * - Curve(analyser, count, options): the spectrum at count points spread from MinFrequency (20) to MaxFrequency (20000;
+ *   Scale log or linear), each from 0 to 1 between the MinDb and the MaxDb of the analyser, as the analysers of the
+ *   studios draw it: between two bins a point takes the line between them, over several bins the loudest; Tilt (dB by
+ *   octave around 1 kHz, 0) raises the highs, which a mix has quieter.
  * - Decode(source, callback): a sound file as an AudioBuffer: callback(error, buffer); the source is a URL, a Blob (a
  *   File), an ArrayBuffer or an AudioBuffer.
  * - Peaks(buffer, count, from, to): the shape of a sound in count columns: [{Min, Max}] from -1 to 1, the channels
@@ -34,7 +38,7 @@
 Elemenx.Service('Audio', {
 	$Meta: {
 		Description: 'The sound of the Application (Web Audio): one AudioContext, the analysis of what plays, the reading of sound files, instruments and a transport.',
-		Methods: ['Supported()', 'Context()', 'Node(source)', 'Analyser(source, options)', 'Release(analyser)', 'Bands(analyser, count, options)', 'Levels(analyser)', 'Decode(source, callback)', 'Peaks(buffer, count, from, to)', 'Midi(note)', 'NoteName(midi)', 'Frequency(note)', 'Instrument(options)', 'Transport(options)']
+		Methods: ['Supported()', 'Context()', 'Node(source)', 'Analyser(source, options)', 'Release(analyser)', 'Bands(analyser, count, options)', 'Curve(analyser, count, options)', 'Levels(analyser)', 'Decode(source, callback)', 'Peaks(buffer, count, from, to)', 'Midi(note)', 'NoteName(midi)', 'Frequency(note)', 'Instrument(options)', 'Transport(options)']
 	},
 	Names: ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'],
 
@@ -171,6 +175,60 @@ Elemenx.Service('Audio', {
 		}
 
 		return bands;
+	},
+
+	Curve: function (analyser, count, options) {
+		var settings = options || {};
+		var bins = analyser.frequencyBinCount;
+		var data = new Float32Array(bins);
+		var rate = analyser.context.sampleRate;
+		var hertz = rate / 2 / bins;
+		var low = Math.max(1, Number(settings.MinFrequency) || 20);
+		var high = Math.min(Number(settings.MaxFrequency) || 20000, rate / 2);
+		var linear = settings.Scale === 'linear';
+		var total = Math.max(2, Math.round(Number(count) || 2));
+		var tilt = Number(settings.Tilt) || 0;
+		var min = analyser.minDecibels;
+		var max = analyser.maxDecibels;
+		var points = [];
+		var k;
+
+		analyser.getFloatFrequencyData(data);
+
+		function frequency (at) {
+			return linear ? low + (high - low) * at : low * Math.pow(high / low, at);
+		}
+
+		/* The level of a bin in dB; a silent one (-Infinity) is the floor. */
+		function level (bin) {
+			var value = data[Math.max(0, Math.min(bins - 1, bin))];
+
+			return isFinite(value) ? value : min;
+		}
+
+		for (k = 0; k < total; k++) {
+			var at = frequency(k / (total - 1));
+			var from = Math.ceil(frequency(Math.max(0, k - 0.5) / (total - 1)) / hertz);
+			var to = Math.floor(frequency(Math.min(total - 1, k + 0.5) / (total - 1)) / hertz);
+			var place = at / hertz;
+			var value;
+			var i;
+
+			if (to > from) {
+				value = -Infinity;
+
+				for (i = from; i <= to; i++) value = Math.max(value, level(i));
+			}
+			else {
+				value = level(Math.floor(place)) + (level(Math.floor(place) + 1) - level(Math.floor(place))) * (place - Math.floor(place));
+			}
+
+			value += tilt * Math.log(at / 1000) / Math.LN2;
+
+			points.push(Math.max(0, Math.min(1, (value - min) / (max - min))));
+		}
+
+		return points;
 	},
 
 	Levels: function (analyser) {

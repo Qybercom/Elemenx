@@ -14,7 +14,7 @@ Elemenx.Component('QRCode', {
 	$TemplateURL: 'QRCode.html',
 	$StyleURL: 'QRCode.css',
 	$Meta: {
-		Group: 'media',
+		Group: 'codes',
 		Icon: 'grid',
 		Description: 'The QR code of a text: an address, a contact, the details of a payment; styled, and saved as a picture.',
 		Events: {
@@ -138,7 +138,7 @@ Elemenx.Component('QRCode', {
 
 	/* Saves the code as name.png (format png) or name.svg (svg): callback(error) after. */
 	Download: function (name, format, callback) {
-		var native = this.$Service('Native');
+		var native = this.$Service('Platform');
 		var file = String(name || 'qr-code').replace(/\.(png|svg)$/i, '');
 		var done = callback || function () {};
 

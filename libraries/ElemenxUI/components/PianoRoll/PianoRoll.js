@@ -66,14 +66,32 @@ Elemenx.Component('PianoRoll', {
 
 	/* The notes in sight at first: the middle of their pitches (C4 without notes) in the middle of the roll. */
 	$OnReady: function () {
+		var self = this;
 		var scroll = this.$Element().querySelector('.elemenx-piano-roll-scroll');
-		var notes = this.Notes || [];
-		var middle = notes.length ? notes.reduce(function (sum, note) {
-			return sum + Number(note.Note);
-		}, 0) / notes.length : 60;
+		var tries = 0;
 
-		if (scroll)
-			scroll.scrollTop = Math.max(0, (Number(this.High) - middle) * Number(this.KeyHeight) - scroll.clientHeight / 2);
+		/* Once it has its size on the screen (a page lays it out later; a tab hidden shows it later still). */
+		function center () {
+			var notes = self.Notes || [];
+			var middle = notes.length ? notes.reduce(function (sum, note) {
+				return sum + Number(note.Note);
+			}, 0) / notes.length : 60;
+
+			if (!scroll) return;
+
+			if (!scroll.isConnected || !scroll.clientHeight || scroll.scrollHeight <= scroll.clientHeight) {
+				tries++;
+
+				if (tries < 120)
+					window.setTimeout(center, 50);
+
+				return;
+			}
+
+			scroll.scrollTop = Math.max(0, (Number(self.High) - middle) * Number(self.KeyHeight) - scroll.clientHeight / 2);
+		}
+
+		center();
 	},
 
 	Editable: function () {

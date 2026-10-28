@@ -1,0 +1,66 @@
+<div class="docs-stack">
+	<div class="docs-row">
+		<Select Label="From" [value]="From" [options]="Names" (change)="Source" />
+		<Select Label="To" [value]="To" [options]="Names" (change)="Target" />
+	</div>
+	<CodeEditor [language]="From" [value]="Text" Rows="10" (input)="Typed" />
+	<p class="elemenx-text small" [class.danger]="!!Problem">{{Problem || 'Edit the text: it is read in the first format and written in the second.'}}</p>
+	<CodeView [language]="To === 'query' || To === 'base64' ? 'text' : To" [value]="Output" />
+</div>
+<script>
+(function () {
+	var samples = {
+		yaml: 'name: Elemenx\nversion: 0.11\ntags: [ui, es5]\nauthor:\n  name: Ada\n  langs:\n    - en\n    - ru\n',
+		json: '{\n  "name": "Elemenx",\n  "tags": ["ui", "es5"],\n  "author": {"name": "Ada"}\n}',
+		toml: 'name = "Elemenx"\ntags = ["ui", "es5"]\n\n[author]\nname = "Ada"\n',
+		ini: 'name = Elemenx\n\n[author]\nname = Ada\n',
+		xml: '<book lang="en">\n  <title>Elemenx</title>\n  <author>Ada</author>\n</book>\n',
+		csv: 'name,age\nAda,36\nAlan,41\n',
+		query: 'name=Elemenx&tags[]=ui&tags[]=es5'
+	};
+
+	return {
+		From: 'yaml',
+		To: 'json',
+		Text: samples.yaml,
+		Output: '',
+		Problem: '',
+		Names: ['yaml', 'json', 'toml', 'ini', 'xml', 'csv', 'query', 'base64'].map(function (name) {
+			return {Value: name, Label: name.toUpperCase()};
+		}),
+
+		$OnCreate: function () {
+			this.Convert();
+		},
+
+		/* The text read in its format, written in the other one; what cannot be read is named with its line. */
+		Convert: function () {
+			var formats = this.$Service('DataFormats');
+
+			try {
+				this.Output = formats.Stringify(this.To, formats.Parse(this.From, this.Text));
+				this.Problem = '';
+			}
+			catch (error) {
+				this.Problem = error.message;
+			}
+		},
+
+		Source: function (name) {
+			this.From = name;
+			this.Text = samples[name] || this.Text;
+			this.Convert();
+		},
+
+		Target: function (name) {
+			this.To = name;
+			this.Convert();
+		},
+
+		Typed: function (text) {
+			this.Text = text;
+			this.Convert();
+		}
+	};
+})()
+</script>

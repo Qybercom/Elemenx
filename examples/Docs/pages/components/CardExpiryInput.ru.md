@@ -36,3 +36,7 @@
 })
 </script>
 ```
+
+## Тесты
+
+- [CardExpiryInput takes MMYY, keeps the month in 01-12, and finds a date already past invalid](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-inputs.test.js#L80) — `tests/regression/library-inputs.test.js`

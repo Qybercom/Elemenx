@@ -110,4 +110,56 @@ describe('Contract: $Refs', function () {
 		}, 5000)).toBe(true);
 		expect(texts(component.$Refs('Item'))).toEqual(['one', 'two']);
 	});
+
+	it('$Ref(name, true) and $Refs(name, true) give the instances of the Components marked #name; Elemenx.Instance(element) the one of an element', async function () {
+		var child = unique('RefsChild');
+		var host;
+		var first;
+		var rows;
+		var element;
+
+		Elemenx.Component(child, {
+			$Template: '<b class="refs-child">{{Label}}</b>',
+			Label: '',
+			Shout: function () {
+				return this.Label.toUpperCase();
+			}
+		});
+
+		host = mount('<div><' + child + ' #One Label="one" /><i #Plain>plain</i><' + child + ' #Row *for="label of Labels" [label]="label" /></div>', {Labels: ['a', 'b']});
+
+		await tick();
+
+		first = host.$Ref('One', true);
+		rows = host.$Refs('Row', true);
+		element = host.$Ref('One');
+
+		/* The instance: its element is the one of the reference, its methods and its state are there. */
+		expect(first.$Element()).toBe(element);
+		expect(first.Shout()).toBe('ONE');
+		expect(Elemenx.Instance(element)).toBe(first);
+		expect(rows.map(function (row) {
+			return row.Label;
+		})).toEqual(['a', 'b']);
+
+		/* An element of no Component: null, and none among the instances. */
+		expect(host.$Ref('Plain', true)).toBe(null);
+		expect(host.$Refs('Plain', true)).toEqual([]);
+		expect(host.$Ref('Nothing', true)).toBe(null);
+		expect(Elemenx.Instance(document.body)).toBe(null);
+		expect(Elemenx.Instance(null)).toBe(null);
+
+		/* Without true, the elements as before; an instance destroyed is no more the one of its element. */
+		expect(host.$Ref('Plain').textContent).toBe('plain');
+
+		host.Labels = ['a'];
+
+		await tick();
+
+		expect(host.$Refs('Row', true).length).toBe(1);
+
+		first.$Destroy();
+
+		expect(Elemenx.Instance(element)).toBe(null);
+	});
 });

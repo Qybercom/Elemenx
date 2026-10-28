@@ -44,3 +44,8 @@ Pictures in the manner of Suprematism (Malevich, 1915-1920s): flat figures of pu
 })
 </script>
 ```
+
+## Tests
+
+- [Random: the same numbers for the same seed, its helpers in their bounds, a fork of its own, a smooth noise](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/game-services.test.js#L27) — `tests/regression/game-services.test.js`
+- [makes the same picture of the same seed, another of another, in its palette, as SVG text or a data URL](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/suprematism.test.js#L46) — `tests/regression/suprematism.test.js`

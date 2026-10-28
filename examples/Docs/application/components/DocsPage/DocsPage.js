@@ -19,10 +19,19 @@ Elemenx.Component('DocsPage', {
 	Headings: [],
 	Active: '',
 	Source: '',
+	/* The width of the navigation the reader dragged it to (pixels; 0: its own), remembered. */
+	NavWidth: 0,
 
 	$OnCreate: function () {
 		var self = this;
 		var diagrams = {};
+
+		try {
+			this.NavWidth = Number(window.localStorage.getItem('elemenx-docs-nav')) || 0;
+		}
+		catch (error) {
+			/* No storage (a private window): the navigation keeps its own width. */
+		}
 
 		/*
 		 * A block ```diagram: an SVG of the page itself, put inline so its colors are the tokens of the theme
@@ -336,6 +345,18 @@ Elemenx.Component('DocsPage', {
 		var target = document.getElementById(node.getAttribute('data-id'));
 		if (target)
 			target.scrollIntoView({behavior: 'smooth', block: 'start'});
+	},
+
+	/* The navigation dragged wider or narrower: its width from now on. */
+	NavResized: function (event) {
+		this.NavWidth = event.detail.Width;
+
+		try {
+			window.localStorage.setItem('elemenx-docs-nav', String(this.NavWidth));
+		}
+		catch (error) {
+			/* No storage: the width holds for this visit. */
+		}
 	},
 
 	Picked: function (item) {

@@ -26,7 +26,7 @@ function door (features, handled) {
 describe('Contract: the bridge of an Android program of its own (elemenx build --native android-library)', function () {
 	beforeAll(async function () {
 		await loadElemenx();
-		await import('../../libraries/ElemenxUI/services/Native.js');
+		await import('../../libraries/ElemenxUI/services/Platform.js');
 	});
 
 	afterEach(function () {
@@ -71,9 +71,9 @@ describe('Contract: the bridge of an Android program of its own (elemenx build -
 		expect(heard).toEqual([{State: 'running'}]);
 	});
 
-	it('is what the Native Service asks: its handlers in the program, the rest as on the web', function () {
+	it('is what the Platform Service asks: its handlers in the program, the rest as on the web', function () {
 		var calls = door(['dialogs'], ['message']);
-		var native = Elemenx.Service('Native');
+		var native = Elemenx.Service('Platform');
 		var result = null;
 
 		expect([native.Available(), native.Platform(), native.Has('dialogs'), native.Has('tray')]).toEqual([true, 'android', true, false]);

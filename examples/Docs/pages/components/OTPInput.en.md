@@ -53,3 +53,7 @@ A one-time code of Length characters. Value holds the characters only. Variant: 
 })
 </script>
 ```
+
+## Tests
+
+- [OTPInput drops what its Pattern refuses, changes the case, never grows past Length, and tells once it is complete](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-inputs.test.js#L147) — `tests/regression/library-inputs.test.js`

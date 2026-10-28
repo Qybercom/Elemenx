@@ -10,7 +10,7 @@ Elemenx.Component('Diagram', {
 	$TemplateURL: 'Diagram.html',
 	$StyleURL: 'Diagram.css',
 	$Meta: {
-		Group: 'media',
+		Group: 'codes',
 		Icon: 'share-2',
 		Description: 'A diagram written as text (a subset of Mermaid): a flowchart, a sequence, states, ER, Gantt, classes or a mind map.',
 		Events: {
@@ -140,7 +140,7 @@ Elemenx.Component('Diagram', {
 
 	/* Saves the diagram as name.png (format png) or name.svg (svg): callback(error) after. */
 	Download: function (name, format, callback) {
-		var native = this.$Service('Native');
+		var native = this.$Service('Platform');
 		var file = String(name || 'diagram').replace(/\.(png|svg)$/i, '');
 		var done = callback || function () {};
 

@@ -37,7 +37,7 @@ Elemenx.Component('TitleBar', {
 
 	$OnCreate: function () {
 		var self = this;
-		var native = this.$Service('Native');
+		var native = this.$Service('Platform');
 
 		this.Frame = native.Frame(this.Window || null);
 
@@ -72,7 +72,7 @@ Elemenx.Component('TitleBar', {
 			view.requestAnimationFrame(function () {
 				var style = view.getComputedStyle(self.$Element().querySelector('.elemenx-title-bar'));
 
-				self.$Service('Native').TitleBarOverlay({Color: self.Hex(style.backgroundColor), Symbol: self.Hex(style.color), Height: self.$Element().querySelector('.elemenx-title-bar').getBoundingClientRect().height});
+				self.$Service('Platform').TitleBarOverlay({Color: self.Hex(style.backgroundColor), Symbol: self.Hex(style.color), Height: self.$Element().querySelector('.elemenx-title-bar').getBoundingClientRect().height});
 			});
 		};
 
@@ -98,24 +98,24 @@ Elemenx.Component('TitleBar', {
 	},
 
 	Minimize: function () {
-		this.$Service('Native').Window('minimize', null, this.Window || null);
+		this.$Service('Platform').Window('minimize', null, this.Window || null);
 	},
 
 	Maximize: function () {
 		var self = this;
 
-		this.$Service('Native').Window('toggle-maximize', function (error, state) {
+		this.$Service('Platform').Window('toggle-maximize', function (error, state) {
 			if (!error && state)
 				self.Maximized = !!state.Maximized;
 		}, this.Window || null);
 	},
 
 	Close: function () {
-		this.$Service('Native').Window('close', null, this.Window || null);
+		this.$Service('Platform').Window('close', null, this.Window || null);
 	},
 
 	$OnDestroy: function () {
-		this.$Service('Native').Off('window', this.Heard);
+		this.$Service('Platform').Off('window', this.Heard);
 
 		if (this.Listener)
 			this.$Service('Theme').OffChange(this.Listener);

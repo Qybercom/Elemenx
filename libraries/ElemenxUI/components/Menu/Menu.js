@@ -11,7 +11,7 @@ Elemenx.Component('Menu', {
 	$TemplateURL: 'Menu.html',
 	$StyleURL: 'Menu.css',
 	$Meta: {
-		Group: 'buttons',
+		Group: 'menus',
 		Icon: 'launcher',
 		Description: 'A button that opens a multi-level MenuList.',
 		Container: true,

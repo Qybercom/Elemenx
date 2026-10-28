@@ -37,3 +37,7 @@
 })
 </script>
 ```
+
+## Тесты
+
+- [ColorInput takes a color typed as #rrggbb, and #rrggbbaa only with Alpha](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-misc.test.js#L83) — `tests/regression/library-misc.test.js`

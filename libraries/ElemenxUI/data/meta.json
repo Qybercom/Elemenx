@@ -1055,7 +1055,7 @@
 					"Options": null,
 					"Schema": null,
 					"Body": false,
-					"Description": "A format of the Formats Service: email, url, iban, postal-code..."
+					"Description": "A format of the FieldFormats Service: email, url, iban, postal-code..."
 				},
 				{
 					"Name": "Country",
@@ -5673,7 +5673,16 @@
 					"Options": null,
 					"Schema": null,
 					"Body": false,
-					"Description": "With States 3: false, null (the middle) or true."
+					"Description": "With States 3: false, null (the middle) or true; with Values, one of them."
+				},
+				{
+					"Name": "Values",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The values of the positions: [off, on] or [off, middle, on] (three positions)."
 				},
 				{
 					"Name": "Labels",
@@ -5720,7 +5729,7 @@
 				"change"
 			],
 			"EventDescriptions": {
-				"change": "It was switched: Checked (Value with States 3)."
+				"change": "It was switched: Checked (Value with States 3 or Values)."
 			},
 			"Methods": [],
 			"Sample": {
@@ -6143,7 +6152,7 @@
 		{
 			"Name": "MenuList",
 			"Kind": "Component",
-			"Group": "buttons",
+			"Group": "menus",
 			"Icon": "launcher",
 			"Description": "One level of a Menu.",
 			"Props": [
@@ -6243,7 +6252,7 @@
 		{
 			"Name": "Menu",
 			"Kind": "Component",
-			"Group": "buttons",
+			"Group": "menus",
 			"Icon": "launcher",
 			"Description": "A button that opens a multi-level MenuList.",
 			"Props": [
@@ -6890,7 +6899,7 @@
 		{
 			"Name": "DiffView",
 			"Kind": "Component",
-			"Group": "display",
+			"Group": "text",
 			"Icon": "branch",
 			"Description": "The differences between two texts, to read: Before and After, line by line, with the words that changed marked.",
 			"Props": [
@@ -7328,7 +7337,7 @@
 		{
 			"Name": "QRCode",
 			"Kind": "Component",
-			"Group": "media",
+			"Group": "codes",
 			"Icon": "grid",
 			"Description": "The QR code of a text: an address, a contact, the details of a payment; styled, and saved as a picture.",
 			"Props": [
@@ -7500,7 +7509,7 @@
 		{
 			"Name": "Barcode",
 			"Kind": "Component",
-			"Group": "media",
+			"Group": "codes",
 			"Icon": "tag",
 			"Description": "A barcode of a text: Code 128, EAN, UPC, Code 39, ITF-14, DataMatrix, PDF417 or a format of its own.",
 			"Props": [
@@ -7679,7 +7688,7 @@
 		{
 			"Name": "Diagram",
 			"Kind": "Component",
-			"Group": "media",
+			"Group": "codes",
 			"Icon": "share-2",
 			"Description": "A diagram written as text (a subset of Mermaid): a flowchart, a sequence, states, ER, Gantt, classes or a mind map.",
 			"Props": [
@@ -8109,7 +8118,7 @@
 		{
 			"Name": "MenuBar",
 			"Kind": "Component",
-			"Group": "buttons",
+			"Group": "menus",
 			"Icon": "menu",
 			"Description": "A bar of menus, as at the top of the window of a program: File, Edit, View...",
 			"Props": [
@@ -8219,7 +8228,7 @@
 		{
 			"Name": "MenuItem",
 			"Kind": "Component",
-			"Group": "buttons",
+			"Group": "menus",
 			"Icon": "launcher",
 			"Description": "An item of a menu declared in the template of a Menu (its default slot) or of a ContextMenu (slot items): ID, Label, Icon, Shortcut, Disabled, Danger, Checked, Group; Separator draws a line instead; MenuItem children make a submenu.",
 			"Props": [
@@ -8337,7 +8346,7 @@
 		{
 			"Name": "NativeMenu",
 			"Kind": "Component",
-			"Group": "buttons",
+			"Group": "menus",
 			"Icon": "menu",
 			"Description": "The menu of a program declared as a menu of the page: <NativeMenu> with MenuItem children.",
 			"Props": [
@@ -8417,7 +8426,7 @@
 		{
 			"Name": "NativeMenuPanel",
 			"Kind": "Component",
-			"Group": "buttons",
+			"Group": "menus",
 			"Icon": "menu",
 			"Description": "The menu of the tray of a program drawn by ElemenxUI: the list a NativeMenu of the tray puts in its window.",
 			"Props": [
@@ -8601,6 +8610,39 @@
 					"Schema": null,
 					"Body": false,
 					"Description": "Every tab has a cross."
+				},
+				{
+					"Name": "Orientation",
+					"Type": "select",
+					"Default": "horizontal",
+					"Options": [
+						"horizontal",
+						"vertical"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "horizontal, or vertical: the strip on a side of the content."
+				},
+				{
+					"Name": "Placement",
+					"Type": "select",
+					"Default": "left",
+					"Options": [
+						"left",
+						"right"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "Vertical: the side of the strip."
+				},
+				{
+					"Name": "Rotate",
+					"Type": "bool",
+					"Default": true,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Vertical: the text of the tabs on its side (true), or level (false)."
 				},
 				{
 					"Name": "Label",
@@ -11469,7 +11511,7 @@
 		{
 			"Name": "ToastHost",
 			"Kind": "Component",
-			"Group": "overlays",
+			"Group": "feedback",
 			"Icon": "bell",
 			"Description": "Shows the toasts of the Toast Service: place one in the layout of the Application.",
 			"Props": [
@@ -11502,7 +11544,7 @@
 		{
 			"Name": "NotificationHost",
 			"Kind": "Component",
-			"Group": "overlays",
+			"Group": "feedback",
 			"Icon": "bell",
 			"Description": "The notifications of the Application drawn by ElemenxUI, in a window by the corner of the screen or in the page.",
 			"Props": [
@@ -11667,7 +11709,7 @@
 					"Options": null,
 					"Schema": null,
 					"Body": false,
-					"Description": "The notification it is in (Native.Notify): it takes the choice."
+					"Description": "The notification it is in (Platform.Notify): it takes the choice."
 				}
 			],
 			"Slots": [],
@@ -11980,7 +12022,7 @@
 		{
 			"Name": "CallStage",
 			"Kind": "Component",
-			"Group": "layout",
+			"Group": "social",
 			"Icon": "users",
 			"Description": "The stage of a call: the video in front, the tiles of the participants, the own video, the controls and a side panel.",
 			"Props": [
@@ -12236,7 +12278,7 @@
 		{
 			"Name": "Progress",
 			"Kind": "Component",
-			"Group": "display",
+			"Group": "feedback",
 			"Icon": "loader",
 			"Description": "The progress of a task.",
 			"Props": [
@@ -12757,7 +12799,7 @@
 		{
 			"Name": "DialPad",
 			"Kind": "Component",
-			"Group": "inputs",
+			"Group": "social",
 			"Icon": "phone",
 			"Description": "A dial pad: the number in a field over a grid of keys, a key that erases and a key that calls.",
 			"Props": [
@@ -13119,7 +13161,7 @@
 			"Kind": "Component",
 			"Group": "music",
 			"Icon": "chart",
-			"Description": "The spectrum of a sound as it plays, live: bars, mirrored bars, a curve or a circle.",
+			"Description": "The spectrum of a sound as it plays, live: bars, mirrored bars, a curve, a circle, the curve of an analyser or a spectrogram.",
 			"Props": [
 				{
 					"Name": "Source",
@@ -13156,7 +13198,9 @@
 						"bars",
 						"mirror",
 						"line",
-						"radial"
+						"radial",
+						"curve",
+						"spectrogram"
 					],
 					"Schema": null,
 					"Body": false,
@@ -13244,7 +13288,34 @@
 					"Options": null,
 					"Schema": null,
 					"Body": false,
-					"Description": "Marks the highest levels, held, then falling."
+					"Description": "Marks the highest levels, held, then falling (a line of them in curve)."
+				},
+				{
+					"Name": "Tilt",
+					"Type": "number",
+					"Default": 3,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "In curve and spectrogram, the dB by octave around 1 kHz that raise the highs (3)."
+				},
+				{
+					"Name": "Grid",
+					"Type": "bool",
+					"Default": true,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "In curve, the lines of the frequencies and of the dB."
+				},
+				{
+					"Name": "Fill",
+					"Type": "bool",
+					"Default": true,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "In curve, the area under it filled."
 				},
 				{
 					"Name": "Height",
@@ -13879,7 +13950,7 @@
 		{
 			"Name": "Keyboard",
 			"Kind": "Component",
-			"Group": "music",
+			"Group": "display",
 			"Icon": "grid",
 			"Description": "A keyboard of a computer, drawn key by key (the look and the controls): to show hotkeys, the keys held, or to take presses on a screen.",
 			"Props": [
@@ -14117,7 +14188,7 @@
 		{
 			"Name": "Spinner",
 			"Kind": "Component",
-			"Group": "display",
+			"Group": "feedback",
 			"Icon": "loader",
 			"Description": "A busy indicator: a turning ring.",
 			"Props": [
@@ -14167,7 +14238,7 @@
 		{
 			"Name": "Skeleton",
 			"Kind": "Component",
-			"Group": "display",
+			"Group": "feedback",
 			"Icon": "star",
 			"Description": "A placeholder of content that loads: grey shapes that shimmer, in the place and the size of what will come.",
 			"Props": [
@@ -17386,7 +17457,7 @@
 		{
 			"Name": "Terminal",
 			"Kind": "Component",
-			"Group": "data",
+			"Group": "text",
 			"Icon": "terminal",
 			"Description": "A terminal: a scrolling output above a command line.",
 			"Props": [
@@ -18187,7 +18258,7 @@
 		{
 			"Name": "CommandPalette",
 			"Kind": "Component",
-			"Group": "navigation",
+			"Group": "menus",
 			"Icon": "search",
 			"Description": "A command palette: a search over the actions of the application, opened by Hotkey ('Mod+K' by default; '' for none) or by Open.",
 			"Props": [
@@ -18286,7 +18357,7 @@
 		{
 			"Name": "ContextMenu",
 			"Kind": "Component",
-			"Group": "buttons",
+			"Group": "menus",
 			"Icon": "launcher",
 			"Description": "A context menu over its content: a right click, the Menu key or Shift+F10 inside the default slot opens a multi-level MenuList at the pointer (or under the focused element).",
 			"Props": [
@@ -19769,7 +19840,7 @@
 		{
 			"Name": "EmptyState",
 			"Kind": "Component",
-			"Group": "display",
+			"Group": "feedback",
 			"Icon": "folder-open",
 			"Description": "What a list, a table or a panel shows when it has nothing: an icon, a title, a description and actions (the actions slot), the default slot for more.",
 			"Props": [
@@ -20538,7 +20609,7 @@
 			"Sample": {}
 		},
 		{
-			"Name": "Formats",
+			"Name": "FieldFormats",
 			"Kind": "Service",
 			"Group": "",
 			"Icon": "",
@@ -20759,6 +20830,29 @@
 			"Sample": {}
 		},
 		{
+			"Name": "DataFormats",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "The formats of data and of files: JSON, YAML, CSV, INI, TOML, XML, query strings and Base64 read and written, and formats of your own.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [
+				"Parse(name, text, options)",
+				"Stringify(name, value, options)",
+				"Register(name, format)",
+				"Find(name)",
+				"Names()",
+				"For(file)"
+			],
+			"Sample": {}
+		},
+		{
 			"Name": "Audio",
 			"Kind": "Service",
 			"Group": "",
@@ -20778,6 +20872,7 @@
 				"Analyser(source, options)",
 				"Release(analyser)",
 				"Bands(analyser, count, options)",
+				"Curve(analyser, count, options)",
 				"Levels(analyser)",
 				"Decode(source, callback)",
 				"Peaks(buffer, count, from, to)",
@@ -21188,11 +21283,11 @@
 			"Sample": {}
 		},
 		{
-			"Name": "Native",
+			"Name": "Platform",
 			"Kind": "Service",
 			"Group": "",
 			"Icon": "",
-			"Description": "The native features of the system around the Application, one API wherever it runs.",
+			"Description": "The platform the Application runs on: its windows, its icon, the taskbar, the tray and the features of the system, one API wherever it runs.",
 			"Props": [],
 			"Slots": [],
 			"Container": false,
@@ -21220,7 +21315,9 @@
 				"TrayPopup(options, callback)",
 				"ShowTrayPopup(show, callback)",
 				"TrayIcon(options, callback)",
-				"Icon(options, callback)",
+				"Icon(icon, callback)",
+				"ResetIcon(callback)",
+				"IconState()",
 				"Role(role, callback)",
 				"External(url, callback)",
 				"Notify(options, callback)",
@@ -21243,30 +21340,6 @@
 				"Update(callback)",
 				"On(name, callback)",
 				"Off(name, callback)"
-			],
-			"Sample": {}
-		},
-		{
-			"Name": "AppIcon",
-			"Kind": "Service",
-			"Group": "",
-			"Icon": "",
-			"Description": "The icon of the Application: the favicon on the web, the icon of the windows and of the tray in a program.",
-			"Props": [],
-			"Slots": [],
-			"Container": false,
-			"Children": [],
-			"Current": "",
-			"Events": [],
-			"EventDescriptions": {},
-			"Methods": [
-				"Set(icon, callback)",
-				"Badge(count, callback)",
-				"Progress(value, callback)",
-				"Attention(on, callback)",
-				"Tray(icon, tooltip, callback)",
-				"Reset(callback)",
-				"Current()"
 			],
 			"Sample": {}
 		},
@@ -22889,9 +22962,13 @@
 		"elemenx-tabs": [
 			"editor",
 			"large",
+			"left",
 			"line",
 			"pill",
-			"small"
+			"right",
+			"rotated",
+			"small",
+			"vertical"
 		],
 		"elemenx-tabs-list": [],
 		"elemenx-tabs-extra": [],

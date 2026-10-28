@@ -41,3 +41,13 @@
 })
 </script>
 ```
+
+## Тесты
+
+- [reads a flowchart: shapes, links with their texts, chains, groups, classes](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-diagrams.test.js#L48) — `tests/regression/library-diagrams.test.js`
+- [reads the other types: a sequence, states, ER, Gantt, classes and a mind map](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-diagrams.test.js#L67) — `tests/regression/library-diagrams.test.js`
+- [fails on a line it cannot read with its number, and on a broken structure](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-diagrams.test.js#L114) — `tests/regression/library-diagrams.test.js`
+- [draws each type in SVG: its parts scoped by its id, its nodes apart](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-diagrams.test.js#L137) — `tests/regression/library-diagrams.test.js`
+- [shows its Value or its body, follows its changes, tells what it cannot read, and gives an SVG and a PNG](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-diagrams.test.js#L187) — `tests/regression/library-diagrams.test.js`
+- [is as wide as its place, a wide diagram scrolling inside it: it does not widen a column of a grid (a phone)](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-diagrams.test.js#L245) — `tests/regression/library-diagrams.test.js`
+- [is the plugin of a ```mermaid fence in Markdown](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-diagrams.test.js#L255) — `tests/regression/library-diagrams.test.js`

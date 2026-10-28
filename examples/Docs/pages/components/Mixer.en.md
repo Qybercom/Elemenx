@@ -38,3 +38,7 @@ An audio mixer (the look and the controls; the sound is the application's): a ro
 })
 </script>
 ```
+
+## Tests
+
+- [Mixer keeps what its strips change in their channels, tells it, and dims the others while one is on Solo](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-controls.test.js#L364) — `tests/regression/library-controls.test.js`

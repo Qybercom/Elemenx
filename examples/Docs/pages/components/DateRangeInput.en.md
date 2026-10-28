@@ -39,3 +39,8 @@ A range of dates. Value: [start, end] as 'YYYY-MM-DD' (or [] for none). The fiel
 })
 </script>
 ```
+
+## Tests
+
+- [DateRangeInput: the day of the cursor](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/focus-on-open.test.js#L43) — `tests/regression/focus-on-open.test.js`
+- [DateRangeInput picks a range by two presses in either order, and a preset picks a whole one](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-misc.test.js#L41) — `tests/regression/library-misc.test.js`

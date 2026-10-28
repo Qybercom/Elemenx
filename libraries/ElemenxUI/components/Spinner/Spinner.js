@@ -5,7 +5,7 @@
 Elemenx.Component('Spinner', {
 	$TemplateURL: 'Spinner.html',
 	$Meta: {
-		Group: 'display',
+		Group: 'feedback',
 		Icon: 'loader',
 		Description: 'A busy indicator: a turning ring.',
 		Props: {

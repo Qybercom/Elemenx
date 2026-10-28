@@ -56,3 +56,7 @@
 })
 </script>
 ```
+
+## Тесты
+
+- [CallControls asks for the opposite of the state it shows, and leaves out the buttons of Hide](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-misc.test.js#L139) — `tests/regression/library-misc.test.js`

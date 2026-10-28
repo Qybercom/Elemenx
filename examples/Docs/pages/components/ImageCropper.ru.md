@@ -41,3 +41,7 @@
 })
 </script>
 ```
+
+## Тесты
+
+- [ImageCropper puts a frame of its shape in the middle, moves and resizes it inside the picture, by the pointer and by the keys](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-new.test.js#L295) — `tests/regression/library-new.test.js`

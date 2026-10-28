@@ -49,3 +49,7 @@ The sticker packs of the Application. Register({ID, Title, Icon, Items: [{ID, UR
 })
 </script>
 ```
+
+## Tests
+
+- [chat composer puts emoji at the caret and sends stickers; messages take reactions](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L999) — `tests/examples/ui-kit.spec.js`
