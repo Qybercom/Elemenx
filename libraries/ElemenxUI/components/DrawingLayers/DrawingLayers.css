@@ -1,0 +1,101 @@
+.elemenx-drawing-layers {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	min-width: 180px;
+}
+
+.elemenx-drawing-layers-list {
+	display: flex;
+	flex-direction: column;
+	border: 1px solid var(--elemenx-border);
+	border-radius: var(--elemenx-radius-large);
+	background: var(--elemenx-surface);
+	overflow: hidden;
+}
+
+.elemenx-drawing-layer {
+	display: flex;
+	align-items: center;
+	gap: 2px;
+	min-height: 36px;
+	padding: 0 8px 0 4px;
+	border-bottom: 1px solid var(--elemenx-border);
+	cursor: pointer;
+}
+
+.elemenx-drawing-layer:last-child {
+	border-bottom: 0;
+}
+
+.elemenx-drawing-layer:hover {
+	background: var(--elemenx-surface-hover);
+}
+
+.elemenx-drawing-layer.current {
+	background: rgba(var(--elemenx-accent-rgb), 0.12);
+	box-shadow: inset 3px 0 0 var(--elemenx-accent);
+}
+
+.elemenx-drawing-layer:focus-visible {
+	outline: 2px solid var(--elemenx-focus);
+	outline-offset: -2px;
+}
+
+.elemenx-drawing-layer.hidden .elemenx-drawing-layer-name {
+	color: var(--elemenx-text-muted);
+}
+
+.elemenx-drawing-layer-toggle {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 28px;
+	height: 28px;
+	padding: 0;
+	border: 0;
+	border-radius: var(--elemenx-radius);
+	background: transparent;
+	color: var(--elemenx-text-muted);
+	cursor: pointer;
+}
+
+.elemenx-drawing-layer-toggle:hover:not(:disabled) {
+	color: var(--elemenx-text);
+}
+
+.elemenx-drawing-layer-toggle[aria-pressed="true"] {
+	color: var(--elemenx-text);
+}
+
+.elemenx-drawing-layer-name {
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.elemenx-drawing-layer-field {
+	flex: 1;
+	min-width: 0;
+	height: 26px;
+	padding: 0 4px;
+	border: 1px solid var(--elemenx-accent);
+	border-radius: var(--elemenx-radius-small);
+	background: var(--elemenx-surface);
+	color: var(--elemenx-text);
+	font: inherit;
+}
+
+.elemenx-drawing-layer-count {
+	color: var(--elemenx-text-muted);
+	font-size: var(--elemenx-font-size-small);
+	font-variant-numeric: tabular-nums;
+}
+
+.elemenx-drawing-layers-actions {
+	display: flex;
+	justify-content: flex-end;
+	gap: 2px;
+}

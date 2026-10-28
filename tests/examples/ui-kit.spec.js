@@ -218,7 +218,7 @@ for (const origin of origins) {
 
 			await open(page, origin);
 
-			await expect(page.locator('.ui-kit > .elemenx-section')).toHaveCount(52);
+			await expect(page.locator('.ui-kit > .elemenx-section')).toHaveCount(54);
 
 			await expect(page.locator('#elemenx-icons')).toHaveAttribute('data-ready', 'true');
 			await expect(page.locator('.ui-kit-icon svg').first()).toHaveAttribute('data-icon', 'add');
@@ -9418,6 +9418,88 @@ for (const origin of origins) {
 
 			await expect(sound.locator('.elemenx-piano-roll-note')).toHaveCount(9);
 			await expect(sound.locator('.elemenx-section-aside .elemenx-caption')).toHaveText('9 notes');
+		});
+
+		test('drawing: a rectangle drawn with its tool, selected, layers chosen and hidden', async function ({ page }) {
+			var drawing;
+			var stage;
+			var box;
+
+			await open(page, origin, ['Drawing']);
+
+			drawing = section(page, 'Drawing');
+			stage = drawing.locator('.elemenx-drawing-svg');
+
+			await expect(stage.locator('[data-id]')).toHaveCount(5);
+			await expect(drawing.locator('.elemenx-drawing-layer-name')).toHaveText(['Sketch', 'Shapes', 'Paper']);
+
+			/* A rectangle drawn on the current layer. */
+			await drawing.getByRole('button', {name: 'Rectangle'}).click();
+
+			box = await stage.boundingBox();
+
+			await page.mouse.move(box.x + box.width * 0.1, box.y + box.height * 0.1);
+			await page.mouse.down();
+			await page.mouse.move(box.x + box.width * 0.25, box.y + box.height * 0.3, {steps: 4});
+			await page.mouse.up();
+
+			await expect(drawing.locator('.elemenx-section-aside .elemenx-caption')).toHaveText('6 items on 3 layers');
+			await expect(drawing.locator('.elemenx-drawing-layer-count').first()).toHaveText('3');
+
+			/* The select tool: a press on the circle selects it. */
+			await drawing.getByRole('button', {name: 'Select'}).click();
+
+			/* The press on the button may have scrolled the page: the box of the drawing is read again. */
+			box = await stage.boundingBox();
+
+			await page.mouse.click(box.x + box.width * (230 + 60) / 480, box.y + box.height * 50 / 300);
+
+			await expect(drawing.locator('.elemenx-section-aside .elemenx-caption')).toHaveText('Selected disc');
+			await expect(stage.locator('.elemenx-drawing-handle')).toHaveCount(8);
+
+			/* The layer of the shapes hidden: its items leave the drawing. */
+			await drawing.locator('.elemenx-drawing-layer', {hasText: 'Shapes'}).getByRole('button', {name: 'Visible'}).click();
+
+			await expect(stage.locator('[data-layer="shapes"]')).toHaveCount(0);
+		});
+
+		test('media collection: a facet filters the shelf, a card opens, a track plays and pauses, the timeline cuts', async function ({ page }) {
+			var media;
+			var note;
+
+			await open(page, origin, ['Media collection']);
+
+			media = section(page, 'Media collection');
+			note = media.locator('.elemenx-section-aside .elemenx-caption');
+
+			await expect(media.locator('.elemenx-media-shelf .elemenx-media-card')).toHaveCount(5);
+			await expect(note).toHaveText('5 of 5 films');
+
+			await media.locator('[data-facet="genre"]').getByText('Drama').click();
+
+			await expect(media.locator('.elemenx-media-shelf .elemenx-media-card')).toHaveCount(2);
+			await expect(note).toHaveText('2 of 5 films');
+
+			await media.locator('.elemenx-media-card', {hasText: 'Harbor'}).click();
+
+			await expect(note).toHaveText('Opened Harbor');
+
+			await media.locator('.elemenx-track', {hasText: 'Lantern'}).click();
+
+			await expect(note).toHaveText('Paused Lantern');
+
+			await media.locator('.elemenx-track', {hasText: 'Morning Tide'}).click();
+
+			await expect(note).toHaveText('Playing Morning Tide');
+			await expect(media.locator('.elemenx-cast-person')).toHaveCount(3);
+
+			/* The video timeline: S cuts the clips under the playhead (8 s: the intro and the music). */
+			await media.locator('.elemenx-video-timeline').focus();
+
+			await page.keyboard.press('s');
+
+			await expect(note).toHaveText('5 clips');
+			await expect(media.locator('.elemenx-video-timeline-clip.selected')).toHaveCount(2);
 		});
 
 		test('layouts: dashboard, settings, master-detail and centered pages', async function ({ page }) {

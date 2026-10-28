@@ -1,0 +1,28 @@
+<div class="docs-stack">
+	<RadioGroup Variant="segmented" [value]="Layout" [options]="Layouts" (change)="Laid" />
+	<CastList Title="Cast" [items]="People" [layout]="Layout" (open)="Opened" />
+	<p class="elemenx-text small muted">{{Note}}</p>
+</div>
+<script>
+({
+	Layout: 'row',
+	Note: 'A person without a photo gets an avatar of the name.',
+	Layouts: [{Value: 'row', Label: 'Row'}, {Value: 'grid', Label: 'Grid'}, {Value: 'list', Label: 'List'}],
+	People: [
+		{ID: 'ada', Name: 'Ada Lovelace', Role: 'Captain Mara Holt'},
+		{ID: 'alan', Name: 'Alan Turing', Role: 'The keeper'},
+		{ID: 'grace', Name: 'Grace Hopper', Role: 'Navigator'},
+		{ID: 'linus', Name: 'Linus Pauling', Role: 'The stranger'},
+		{ID: 'emmy', Name: 'Emmy Noether', Role: 'Director'},
+		{ID: 'carl', Name: 'Carl Gauss', Role: 'Music'}
+	],
+
+	Laid: function (value) {
+		this.Layout = value;
+	},
+
+	Opened: function (person) {
+		this.Note = person.Name + ', ' + person.Role;
+	}
+})
+</script>

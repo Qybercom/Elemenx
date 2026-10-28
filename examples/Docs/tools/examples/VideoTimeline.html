@@ -1,0 +1,65 @@
+<div class="docs-stack">
+	<VideoTimeline [tracks]="Tracks" [time]="Time" [markers]="Markers" Scale="24" (change)="Changed" (seek)="Sought" (play)="Toggle" (select)="Selected" />
+	<div class="docs-row">
+		<Button [label]="Playing ? 'Pause' : 'Play'" [icon]="Playing ? 'pause' : 'play'" (click)="Toggle" />
+		<span class="elemenx-text small muted">{{Note}}</span>
+	</div>
+</div>
+<script>
+(function () {
+	var timer = null;
+	var thumbnail = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 45"><rect width="80" height="45" fill="#2f4f7f"/><circle cx="58" cy="14" r="8" fill="#ffe08a"/><path d="M0 45L22 20l14 14 10-8 34 19z" fill="#1b2f4d"/><rect width="80" height="45" fill="none" stroke="#000" stroke-opacity="0.35"/></svg>');
+	var peaks = [];
+	var k;
+
+	for (k = 0; k < 120; k++) peaks.push(0.25 + Math.abs(Math.sin(k / 5)) * 0.5 + (k % 7) / 40);
+
+	return {
+		Time: 3,
+		Playing: false,
+		Note: 'Drag a clip or its edges, S cuts at the playhead, Space plays.',
+		Markers: [{ID: 'cut', Time: 12, Label: 'Cut to the interview'}],
+		Tracks: [
+			{ID: 'titles', Kind: 'text', Name: 'Titles', Clips: [{ID: 't1', Name: 'Title', Text: 'The Long Light', Start: 1, Duration: 4}]},
+			{ID: 'v1', Kind: 'video', Name: 'Video 1', Clips: [
+				{ID: 'intro', Name: 'Intro', Start: 0, Duration: 12, Length: 20, Thumbnail: thumbnail},
+				{ID: 'interview', Name: 'Interview', Start: 12, Duration: 16, In: 4, Length: 60, Thumbnail: thumbnail}
+			]},
+			{ID: 'v2', Kind: 'video', Name: 'Video 2', Clips: [{ID: 'broll', Name: 'B-roll', Start: 18, Duration: 6, Length: 10}]},
+			{ID: 'a1', Kind: 'audio', Name: 'Music', Clips: [{ID: 'music', Name: 'Theme', Start: 0, Duration: 30, Length: 180, Peaks: peaks}]}
+		],
+
+		$OnDestroy: function () {
+			clearInterval(timer);
+		},
+
+		Changed: function (tracks) {
+			this.Tracks = tracks;
+		},
+
+		Sought: function (value) {
+			this.Time = value.Time;
+		},
+
+		Selected: function (ids) {
+			this.Note = ids.length ? 'Selected: ' + ids.join(', ') : 'Nothing selected';
+		},
+
+		/* Playing here moves the playhead only: the timeline is an interface. */
+		Toggle: function () {
+			var self = this;
+
+			this.Playing = !this.Playing;
+
+			clearInterval(timer);
+
+			if (this.Playing)
+				timer = setInterval(function () {
+					self.Time = Math.round((self.Time + 0.1) * 10) / 10;
+
+					if (self.Time >= 40) self.Time = 0;
+				}, 100);
+		}
+	};
+})()
+</script>

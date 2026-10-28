@@ -7335,6 +7335,1257 @@
 			"Sample": {}
 		},
 		{
+			"Name": "Drawing",
+			"Kind": "Component",
+			"Group": "media",
+			"Icon": "brush",
+			"Description": "A vector drawing: shapes, lines, arrows, freehand brushes and texts on layers, with groups and an export to SVG and PNG.",
+			"Props": [
+				{
+					"Name": "Value",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The model: {Width, Height, Background, Layers: [{ID, Name, Visible, Locked, Items}]}."
+				},
+				{
+					"Name": "Tool",
+					"Type": "select",
+					"Default": "select",
+					"Options": [
+						"select",
+						"rect",
+						"ellipse",
+						"line",
+						"arrow",
+						"path",
+						"text",
+						"eraser"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "The tool in hand."
+				},
+				{
+					"Name": "Brush",
+					"Type": "select",
+					"Default": "pen",
+					"Options": [
+						"pen",
+						"marker",
+						"highlighter",
+						"calligraphy"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "The brush of the freehand tool."
+				},
+				{
+					"Name": "Stroke",
+					"Type": "text",
+					"Default": "#1f2328",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The color of the lines of new items."
+				},
+				{
+					"Name": "Fill",
+					"Type": "text",
+					"Default": "none",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The color inside new shapes (none: no fill)."
+				},
+				{
+					"Name": "StrokeWidth",
+					"Type": "number",
+					"Default": 3,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The width of the lines in the units of the drawing."
+				},
+				{
+					"Name": "Layer",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The ID of the layer new items go into."
+				},
+				{
+					"Name": "Toolbar",
+					"Type": "bool",
+					"Default": true,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Shows the tools, the colors and the actions over it."
+				},
+				{
+					"Name": "ReadOnly",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Shows the drawing alone."
+				},
+				{
+					"Name": "Label",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "What it shows, for screen readers."
+				}
+			],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [
+				"change",
+				"select"
+			],
+			"EventDescriptions": {
+				"change": "The drawing changed: its model.",
+				"select": "The selection changed: the IDs of the items selected."
+			},
+			"Methods": [
+				"Undo()",
+				"Redo()",
+				"Delete()",
+				"Group()",
+				"Ungroup()",
+				"Forward()",
+				"Backward()",
+				"Select(ids)",
+				"Selected()",
+				"Add(item, layer)",
+				"Clear()",
+				"SVG()",
+				"PNG(callback, scale)"
+			],
+			"Sample": {
+				"Value": {
+					"Width": 320,
+					"Height": 200,
+					"Layers": [
+						{
+							"ID": "layer-1",
+							"Name": "Layer 1",
+							"Visible": true,
+							"Locked": false,
+							"Items": [
+								{
+									"ID": "a",
+									"Type": "rect",
+									"X": 30,
+									"Y": 30,
+									"W": 120,
+									"H": 80,
+									"Stroke": "#3f6c9e",
+									"Fill": "#dbe7f5",
+									"Width": 2
+								},
+								{
+									"ID": "b",
+									"Type": "ellipse",
+									"X": 170,
+									"Y": 60,
+									"W": 110,
+									"H": 90,
+									"Stroke": "#c0392b",
+									"Fill": "none",
+									"Width": 3
+								}
+							]
+						}
+					]
+				}
+			}
+		},
+		{
+			"Name": "DrawingLayers",
+			"Kind": "Component",
+			"Group": "media",
+			"Icon": "layers",
+			"Description": "The layers of a Drawing: shown or hidden, locked, named, ordered.",
+			"Props": [
+				{
+					"Name": "Value",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The model of the Drawing."
+				},
+				{
+					"Name": "Layer",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The ID of the current layer."
+				},
+				{
+					"Name": "ReadOnly",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Shows the layers without letting them change."
+				}
+			],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [
+				"change",
+				"select"
+			],
+			"EventDescriptions": {
+				"change": "The layers changed: the model of the drawing.",
+				"select": "A layer was chosen: its ID."
+			},
+			"Methods": [],
+			"Sample": {
+				"Value": {
+					"Width": 320,
+					"Height": 200,
+					"Layers": [
+						{
+							"ID": "back",
+							"Name": "Background",
+							"Visible": true,
+							"Locked": true,
+							"Items": [
+								{
+									"ID": "a",
+									"Type": "rect",
+									"X": 0,
+									"Y": 0,
+									"W": 320,
+									"H": 200
+								}
+							]
+						},
+						{
+							"ID": "sketch",
+							"Name": "Sketch",
+							"Visible": true,
+							"Locked": false,
+							"Items": []
+						}
+					]
+				},
+				"Layer": "sketch"
+			}
+		},
+		{
+			"Name": "MediaCard",
+			"Kind": "Component",
+			"Group": "media",
+			"Icon": "image",
+			"Description": "The card of a title of a collection: a poster or a cover, its name, its score, how much of it was seen, a play button and the heart.",
+			"Props": [
+				{
+					"Name": "Item",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "What its events give back: the item of a list it shows."
+				},
+				{
+					"Name": "Title",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The name of the title."
+				},
+				{
+					"Name": "Subtitle",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "A line under it: a year, an artist, a platform."
+				},
+				{
+					"Name": "Image",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The URL of the poster or the cover."
+				},
+				{
+					"Name": "Ratio",
+					"Type": "text",
+					"Default": "2:3",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The shape of the picture: 2:3 a poster, 1:1 a cover, 16:9 a frame."
+				},
+				{
+					"Name": "Kind",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "A word on the picture: Film, Album, Game."
+				},
+				{
+					"Name": "Badge",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Another word on the picture: New, 4K."
+				},
+				{
+					"Name": "BadgeVariant",
+					"Type": "select",
+					"Default": "accent",
+					"Options": [
+						"accent",
+						"info",
+						"success",
+						"warning",
+						"danger"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "The tone of the badge (accent)."
+				},
+				{
+					"Name": "Rating",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The score, 0 to Max."
+				},
+				{
+					"Name": "Max",
+					"Type": "number",
+					"Default": 10,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The highest score (10; 5 shows stars)."
+				},
+				{
+					"Name": "Progress",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The part seen or played, 0 to 1."
+				},
+				{
+					"Name": "Tags",
+					"Type": "json",
+					"Default": [],
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its genres."
+				},
+				{
+					"Name": "Playable",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Shows a play button over the picture."
+				},
+				{
+					"Name": "Favorable",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Shows the heart."
+				},
+				{
+					"Name": "Favorite",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The heart is on."
+				},
+				{
+					"Name": "Href",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Makes the card a link."
+				},
+				{
+					"Name": "Size",
+					"Type": "select",
+					"Default": "medium",
+					"Options": [
+						"small",
+						"medium",
+						"large"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "Its width: small, medium or large."
+				}
+			],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [
+				"open",
+				"play",
+				"favorite"
+			],
+			"EventDescriptions": {
+				"open": "The card was pressed: Item.",
+				"play": "The play button: Item.",
+				"favorite": "The heart: {Favorite}."
+			},
+			"Methods": [],
+			"Sample": {
+				"Title": "The Long Light",
+				"Subtitle": "2024 · 2 h 10 min",
+				"Kind": "Film",
+				"Rating": 8.4,
+				"Progress": 0.35,
+				"Tags": [
+					"Drama",
+					"Mystery"
+				],
+				"Playable": true
+			}
+		},
+		{
+			"Name": "MediaShelf",
+			"Kind": "Component",
+			"Group": "media",
+			"Icon": "columns",
+			"Description": "A shelf of a collection: a row of titles that scrolls across, with its title, a link to all of them and arrows.",
+			"Props": [
+				{
+					"Name": "Title",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The name of the shelf."
+				},
+				{
+					"Name": "Items",
+					"Type": "json",
+					"Default": [],
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The titles: [{ID, Title, Subtitle, Image, Kind, Badge, Rating, Progress, Tags, Href}]."
+				},
+				{
+					"Name": "Ratio",
+					"Type": "text",
+					"Default": "2:3",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The shape of the pictures: 2:3, 1:1, 16:9."
+				},
+				{
+					"Name": "Max",
+					"Type": "number",
+					"Default": 10,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The highest score of the titles (10)."
+				},
+				{
+					"Name": "Size",
+					"Type": "select",
+					"Default": "medium",
+					"Options": [
+						"small",
+						"medium",
+						"large"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "The width of the cards."
+				},
+				{
+					"Name": "Playable",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Shows a play button on each title."
+				},
+				{
+					"Name": "Favorable",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Shows the heart on each title."
+				},
+				{
+					"Name": "More",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The text of the link to all of them; none without."
+				}
+			],
+			"Slots": [],
+			"Container": true,
+			"Children": [],
+			"Current": "",
+			"Events": [
+				"open",
+				"play",
+				"more"
+			],
+			"EventDescriptions": {
+				"open": "A title was pressed: its item.",
+				"play": "The play button of a title: its item.",
+				"more": "The link to all of them."
+			},
+			"Methods": [
+				"Scroll(step)"
+			],
+			"Sample": {
+				"Title": "Continue watching",
+				"More": "See all",
+				"Items": [
+					{
+						"ID": "a",
+						"Title": "North",
+						"Subtitle": "2023",
+						"Progress": 0.4
+					},
+					{
+						"ID": "b",
+						"Title": "Harbor",
+						"Subtitle": "2021",
+						"Progress": 0.8
+					},
+					{
+						"ID": "c",
+						"Title": "Ember",
+						"Subtitle": "2024"
+					}
+				]
+			}
+		},
+		{
+			"Name": "MediaHero",
+			"Kind": "Component",
+			"Group": "media",
+			"Icon": "video",
+			"Description": "The head of the page of a title: its backdrop and poster, its name, facts, score, genres and story, and the buttons to play it and to keep it.",
+			"Props": [
+				{
+					"Name": "Title",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The name of the title."
+				},
+				{
+					"Name": "Subtitle",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "A line over the name: an original title, an artist, a studio."
+				},
+				{
+					"Name": "Image",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The URL of the backdrop."
+				},
+				{
+					"Name": "Poster",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The URL of the poster beside the text."
+				},
+				{
+					"Name": "PosterRatio",
+					"Type": "text",
+					"Default": "2:3",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The shape of the poster (2:3; 1:1 for a cover)."
+				},
+				{
+					"Name": "Facts",
+					"Type": "json",
+					"Default": [],
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The facts: a year, a length, a rating of age."
+				},
+				{
+					"Name": "Rating",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The score, 0 to Max."
+				},
+				{
+					"Name": "Max",
+					"Type": "number",
+					"Default": 10,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The highest score (10)."
+				},
+				{
+					"Name": "Tags",
+					"Type": "json",
+					"Default": [],
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The genres."
+				},
+				{
+					"Name": "Description",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The story."
+				},
+				{
+					"Name": "Playable",
+					"Type": "bool",
+					"Default": true,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Shows the play button."
+				},
+				{
+					"Name": "PlayLabel",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The text of the play button."
+				},
+				{
+					"Name": "ResumeLabel",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The text of the play button once some of it was seen."
+				},
+				{
+					"Name": "Progress",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "How much of it was seen, 0 to 1."
+				},
+				{
+					"Name": "Favorable",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Shows the heart."
+				},
+				{
+					"Name": "Favorite",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The heart is on."
+				},
+				{
+					"Name": "Size",
+					"Type": "select",
+					"Default": "default",
+					"Options": [
+						"default",
+						"compact"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "default, or compact (a band of a shelf)."
+				}
+			],
+			"Slots": [],
+			"Container": true,
+			"Children": [],
+			"Current": "",
+			"Events": [
+				"play",
+				"favorite"
+			],
+			"EventDescriptions": {
+				"play": "The play button.",
+				"favorite": "The heart: {Favorite}."
+			},
+			"Methods": [],
+			"Sample": {
+				"Title": "The Long Light",
+				"Subtitle": "An Elemenx film",
+				"Facts": [
+					"2024",
+					"2 h 10 min",
+					"12+"
+				],
+				"Rating": 8.4,
+				"Tags": [
+					"Drama",
+					"Mystery"
+				],
+				"Description": "A keeper of a lighthouse finds that its light reaches further than the sea.",
+				"Playable": true,
+				"Favorable": true
+			}
+		},
+		{
+			"Name": "FacetFilter",
+			"Kind": "Component",
+			"Group": "data",
+			"Icon": "filter",
+			"Description": "The filters of a collection by its facets: values to check, a choice, a range, a rating, a toggle; with the count each would leave and chips of what is chosen.",
+			"Props": [
+				{
+					"Name": "Facets",
+					"Type": "json",
+					"Default": [],
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The facets: [{ID, Label, Type, Field, Options: [{Value, Label}], Min, Max, Step, Unit, Collapsed}]."
+				},
+				{
+					"Name": "Value",
+					"Type": "json",
+					"Default": {},
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "What is chosen: {ID: [values] | value | [from, to] | true}."
+				},
+				{
+					"Name": "Items",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The items of the collection, for the counts and the filter event."
+				},
+				{
+					"Name": "Limit",
+					"Type": "number",
+					"Default": 8,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The options shown before Show all (8)."
+				},
+				{
+					"Name": "Chips",
+					"Type": "bool",
+					"Default": true,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Shows the chips of what is chosen."
+				},
+				{
+					"Name": "Label",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The name of the filters for screen readers."
+				}
+			],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [
+				"change",
+				"filter"
+			],
+			"EventDescriptions": {
+				"change": "What is chosen changed: Value.",
+				"filter": "The items left (with Items)."
+			},
+			"Methods": [
+				"Filter(items)",
+				"Clear()"
+			],
+			"Sample": {
+				"Facets": [
+					{
+						"ID": "genre",
+						"Label": "Genre",
+						"Options": [
+							{
+								"Value": "drama",
+								"Label": "Drama"
+							},
+							{
+								"Value": "comedy",
+								"Label": "Comedy"
+							}
+						]
+					},
+					{
+						"ID": "year",
+						"Label": "Year",
+						"Type": "range",
+						"Min": 1990,
+						"Max": 2025
+					}
+				],
+				"Value": {
+					"genre": [
+						"drama"
+					]
+				}
+			}
+		},
+		{
+			"Name": "TrackList",
+			"Kind": "Component",
+			"Group": "media",
+			"Icon": "list-ordered",
+			"Description": "The tracks of an album or of a playlist: their numbers, titles, artists and lengths, the one playing marked; a press plays one.",
+			"Props": [
+				{
+					"Name": "Items",
+					"Type": "json",
+					"Default": [],
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The tracks: [{ID, Number, Title, Artist, Album, Duration, Explicit, Disabled}]."
+				},
+				{
+					"Name": "Current",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The ID of the track playing (or paused)."
+				},
+				{
+					"Name": "Playing",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The current track is playing."
+				},
+				{
+					"Name": "Columns",
+					"Type": "json",
+					"Default": [],
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The optional columns: album, artist."
+				},
+				{
+					"Name": "Total",
+					"Type": "bool",
+					"Default": true,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Shows the count and the total length under the list."
+				},
+				{
+					"Name": "Label",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The name of the list for screen readers."
+				}
+			],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [
+				"play",
+				"pause"
+			],
+			"EventDescriptions": {
+				"play": "A track was chosen: the track.",
+				"pause": "The track playing was pressed: the track."
+			},
+			"Methods": [],
+			"Sample": {
+				"Items": [
+					{
+						"ID": 1,
+						"Title": "Morning Tide",
+						"Artist": "Elemenx Quartet",
+						"Duration": 214
+					},
+					{
+						"ID": 2,
+						"Title": "Lantern",
+						"Artist": "Elemenx Quartet",
+						"Duration": 187,
+						"Explicit": true
+					}
+				],
+				"Current": 1,
+				"Playing": true
+			}
+		},
+		{
+			"Name": "CastList",
+			"Kind": "Component",
+			"Group": "media",
+			"Icon": "users",
+			"Description": "The cast and the crew of a title: photos, names and roles, in a row, a grid or a list.",
+			"Props": [
+				{
+					"Name": "Items",
+					"Type": "json",
+					"Default": [],
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The people: [{ID, Name, Role, Image, Href}]."
+				},
+				{
+					"Name": "Title",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The name of the list."
+				},
+				{
+					"Name": "Layout",
+					"Type": "select",
+					"Default": "row",
+					"Options": [
+						"row",
+						"grid",
+						"list"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "row (scrolls across), grid or list."
+				},
+				{
+					"Name": "Label",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The name of the list for screen readers, without a Title."
+				}
+			],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [
+				"open"
+			],
+			"EventDescriptions": {
+				"open": "A person was pressed: the item."
+			},
+			"Methods": [],
+			"Sample": {
+				"Title": "Cast",
+				"Items": [
+					{
+						"ID": "a",
+						"Name": "Ada Lovelace",
+						"Role": "Captain"
+					},
+					{
+						"ID": "b",
+						"Name": "Alan Turing",
+						"Role": "Engineer"
+					},
+					{
+						"ID": "c",
+						"Name": "Grace Hopper",
+						"Role": "Navigator"
+					}
+				]
+			}
+		},
+		{
+			"Name": "VideoTimeline",
+			"Kind": "Component",
+			"Group": "media",
+			"Icon": "video",
+			"Description": "The timeline of a video editor: tracks of video, audio and text with their clips, a ruler in timecode, a playhead, moves, trims, cuts, snapping and zoom.",
+			"Props": [
+				{
+					"Name": "Tracks",
+					"Type": "json",
+					"Default": [],
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The tracks: [{ID, Kind, Name, Muted, Locked, Hidden, Clips: [{ID, Name, Start, Duration, In, Length, Color, Thumbnail, Peaks, Text}]}]."
+				},
+				{
+					"Name": "Time",
+					"Type": "number",
+					"Default": 0,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The playhead, in seconds."
+				},
+				{
+					"Name": "Duration",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The length of the timeline (its clips and 10 seconds more by default)."
+				},
+				{
+					"Name": "Scale",
+					"Type": "number",
+					"Default": 40,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The pixels of a second."
+				},
+				{
+					"Name": "MinScale",
+					"Type": "number",
+					"Default": 2,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The lowest scale (2)."
+				},
+				{
+					"Name": "MaxScale",
+					"Type": "number",
+					"Default": 400,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The highest scale (400)."
+				},
+				{
+					"Name": "FPS",
+					"Type": "number",
+					"Default": 30,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The frames of a second (30)."
+				},
+				{
+					"Name": "Markers",
+					"Type": "json",
+					"Default": [],
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The marks over the ruler: [{ID, Time, Label, Color}]."
+				},
+				{
+					"Name": "Snap",
+					"Type": "bool",
+					"Default": true,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Draws a moved edge to the edges, the playhead and the marks near it."
+				},
+				{
+					"Name": "Follow",
+					"Type": "bool",
+					"Default": true,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Keeps the playhead in view as Time changes."
+				},
+				{
+					"Name": "ReadOnly",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Shows the timeline without letting the clips change."
+				},
+				{
+					"Name": "Label",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The name of the timeline for screen readers."
+				}
+			],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [
+				"change",
+				"seek",
+				"select",
+				"play",
+				"zoom"
+			],
+			"EventDescriptions": {
+				"change": "The tracks changed: Tracks.",
+				"seek": "The playhead was moved: {Time}.",
+				"select": "The selection changed: the IDs of the clips.",
+				"play": "Space: play or pause.",
+				"zoom": "The scale changed: {Scale}."
+			},
+			"Methods": [
+				"Split()",
+				"Delete()",
+				"Select(ids)",
+				"Selected()",
+				"Zoom(scale)",
+				"Fit()",
+				"Timecode(seconds)"
+			],
+			"Sample": {
+				"Time": 4,
+				"Tracks": [
+					{
+						"ID": "v1",
+						"Kind": "video",
+						"Name": "Video 1",
+						"Clips": [
+							{
+								"ID": "a",
+								"Name": "Intro",
+								"Start": 0,
+								"Duration": 6
+							},
+							{
+								"ID": "b",
+								"Name": "Interview",
+								"Start": 6,
+								"Duration": 10
+							}
+						]
+					},
+					{
+						"ID": "a1",
+						"Kind": "audio",
+						"Name": "Music",
+						"Clips": [
+							{
+								"ID": "m",
+								"Name": "Theme",
+								"Start": 0,
+								"Duration": 16,
+								"Peaks": [
+									0.2,
+									0.6,
+									0.4,
+									0.8,
+									0.5,
+									0.3
+								]
+							}
+						]
+					}
+				]
+			}
+		},
+		{
 			"Name": "QRCode",
 			"Kind": "Component",
 			"Group": "codes",
@@ -22891,6 +24142,165 @@
 			"w"
 		],
 		"elemenx-cropper-size": [],
+		"elemenx-drawing": [
+			"readonly"
+		],
+		"elemenx-drawing-toolbar": [],
+		"elemenx-drawing-group": [],
+		"elemenx-drawing-tool": [
+			"active"
+		],
+		"elemenx-drawing-stage": [],
+		"elemenx-drawing-brush": [],
+		"elemenx-drawing-color": [],
+		"elemenx-drawing-width": [],
+		"elemenx-drawing-svg": [],
+		"elemenx-drawing-selection": [],
+		"elemenx-drawing-marquee": [],
+		"elemenx-drawing-handle": [],
+		"elemenx-drawing-editor": [],
+		"elemenx-drawing-layers": [],
+		"elemenx-drawing-layers-list": [],
+		"elemenx-drawing-layer": [
+			"current",
+			"hidden"
+		],
+		"elemenx-drawing-layer-name": [],
+		"elemenx-drawing-layer-toggle": [],
+		"elemenx-drawing-layer-field": [],
+		"elemenx-drawing-layer-count": [],
+		"elemenx-drawing-layers-actions": [],
+		"elemenx-media-card": [
+			"large",
+			"small"
+		],
+		"elemenx-media-card-poster": [],
+		"elemenx-media-card-blank": [],
+		"elemenx-media-card-kind": [],
+		"elemenx-media-card-badge": [],
+		"elemenx-media-card-score": [
+			"high",
+			"low"
+		],
+		"elemenx-media-card-play": [],
+		"elemenx-media-card-favorite": [
+			"on"
+		],
+		"elemenx-media-card-progress": [],
+		"elemenx-media-card-text": [],
+		"elemenx-media-card-title": [],
+		"elemenx-media-card-subtitle": [],
+		"elemenx-media-card-tags": [],
+		"elemenx-media-card-link": [],
+		"elemenx-media-shelf": [],
+		"elemenx-media-shelf-header": [],
+		"elemenx-media-shelf-title": [],
+		"elemenx-media-shelf-more": [],
+		"elemenx-media-shelf-arrows": [],
+		"elemenx-media-shelf-track": [],
+		"elemenx-media-shelf-item": [],
+		"elemenx-media-hero": [
+			"backdrop",
+			"compact"
+		],
+		"elemenx-media-hero-backdrop": [],
+		"elemenx-media-hero-inner": [],
+		"elemenx-media-hero-poster": [],
+		"elemenx-media-hero-text": [],
+		"elemenx-media-hero-subtitle": [],
+		"elemenx-media-hero-title": [],
+		"elemenx-media-hero-meta": [],
+		"elemenx-media-hero-score": [],
+		"elemenx-media-hero-tags": [],
+		"elemenx-media-hero-description": [],
+		"elemenx-media-hero-progress": [],
+		"elemenx-media-hero-actions": [],
+		"elemenx-facet-filter": [],
+		"elemenx-facet-filter-head": [],
+		"elemenx-facet-filter-clear": [],
+		"elemenx-facet-more": [],
+		"elemenx-facet-filter-chips": [],
+		"elemenx-facet-filter-chip": [],
+		"elemenx-facet-filter-remove": [],
+		"elemenx-facet": [
+			"active"
+		],
+		"elemenx-facet-header": [],
+		"elemenx-facet-label": [],
+		"elemenx-facet-body": [],
+		"elemenx-facet-options": [],
+		"elemenx-facet-option": [],
+		"elemenx-facet-option-label": [],
+		"elemenx-facet-count": [],
+		"elemenx-facet-search": [],
+		"elemenx-facet-range": [],
+		"elemenx-facet-unit": [],
+		"elemenx-track-list": [
+			"with-album",
+			"with-artist"
+		],
+		"elemenx-track-list-rows": [],
+		"elemenx-track": [
+			"current",
+			"disabled",
+			"playing"
+		],
+		"elemenx-track-number": [],
+		"elemenx-track-bars": [],
+		"elemenx-track-action": [],
+		"elemenx-track-index": [],
+		"elemenx-track-main": [],
+		"elemenx-track-title": [],
+		"elemenx-track-artist": [],
+		"elemenx-track-column": [],
+		"elemenx-track-explicit": [],
+		"elemenx-track-duration": [],
+		"elemenx-track-list-total": [],
+		"elemenx-cast": [
+			"grid",
+			"list",
+			"row"
+		],
+		"elemenx-cast-title": [],
+		"elemenx-cast-people": [],
+		"elemenx-cast-person": [],
+		"elemenx-cast-text": [],
+		"elemenx-cast-name": [],
+		"elemenx-cast-role": [],
+		"elemenx-video-timeline": [],
+		"elemenx-video-timeline-toolbar": [],
+		"elemenx-video-timeline-timecode": [],
+		"elemenx-video-timeline-body": [],
+		"elemenx-video-timeline-heads": [],
+		"elemenx-video-timeline-corner": [],
+		"elemenx-video-timeline-head": [],
+		"elemenx-video-timeline-name": [],
+		"elemenx-video-timeline-toggle": [],
+		"elemenx-video-timeline-scroller": [],
+		"elemenx-video-timeline-content": [],
+		"elemenx-video-timeline-ruler": [],
+		"elemenx-video-timeline-tick": [
+			"major"
+		],
+		"elemenx-video-timeline-marker": [],
+		"elemenx-video-timeline-lane": [
+			"hidden",
+			"locked",
+			"muted"
+		],
+		"elemenx-video-timeline-clip": [
+			"pictured",
+			"selected"
+		],
+		"elemenx-video-timeline-label": [],
+		"elemenx-video-timeline-wave": [],
+		"elemenx-video-timeline-edge": [
+			"end",
+			"start"
+		],
+		"elemenx-video-timeline-guide": [],
+		"elemenx-video-timeline-playhead": [],
+		"elemenx-video-timeline-knob": [],
 		"elemenx-qr-code": [],
 		"elemenx-barcode": [],
 		"elemenx-diagram": [],

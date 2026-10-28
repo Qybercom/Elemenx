@@ -1,0 +1,8 @@
+<div class="collection-title" *if="Title($Params.id)">
+	<MediaHero [title]="Title($Params.id).Title" [subtitle]="Subtitle($Params.id)" [image]="Title($Params.id).Backdrop" [poster]="Title($Params.id).Poster" [posterratio]="Ratio($Params.id)" [facts]="Facts($Params.id)" [rating]="Title($Params.id).Score" [tags]="Title($Params.id).Genres" [description]="Title($Params.id).Description" [progress]="Title($Params.id).Progress" [playlabel]="Title($Params.id).Kind === 'game' ? 'Play' : Title($Params.id).Kind === 'album' ? 'Listen' : 'Watch'" Favorable="true" [favorite]="Kept($Params.id)" (play)="Started" (favorite)="Keep" />
+	<p class="elemenx-text muted collection-status" *if="Status" role="status">{{Status}}</p>
+	<TrackList *if="Title($Params.id).Tracks" [items]="Title($Params.id).Tracks" [current]="Current" [playing]="Playing" (play)="Played" (pause)="Paused" />
+	<CastList *if="Title($Params.id).Cast" [title]="Title($Params.id).Kind === 'game' ? 'Voices' : 'Cast'" [items]="Title($Params.id).Cast" />
+	<MediaShelf *if="Like($Params.id).length" Title="More like this" [items]="Like($Params.id)" [ratio]="Ratio($Params.id)" (open)="Opened" />
+</div>
+<EmptyState *if="!Title($Params.id)" Title="Not in the collection" Description="This title is not here, or no longer." />

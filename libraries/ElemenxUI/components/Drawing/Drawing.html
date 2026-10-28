@@ -1,0 +1,25 @@
+<div class="elemenx-drawing" [class.readonly]="!Editable()" [attribute.data-tool]="Tool">
+	<div class="elemenx-drawing-toolbar" role="toolbar" [attribute.aria-label]="$T('ui.drawing.tools')" *if="Toolbar && Toolbar !== 'false' && Editable()">
+		<div class="elemenx-drawing-group">
+			<button type="button" class="elemenx-drawing-tool" *for="tool of Tools" *key="tool.ID" [class.active]="Tool === tool.ID" [attribute.data-tool]="tool.ID" [attribute.aria-pressed]="Tool === tool.ID ? 'true' : 'false'" [attribute.title]="$T(tool.Key)" [attribute.aria-label]="$T(tool.Key)" (click)="Pick"><Icon [name]="tool.Icon" Size="18" /></button>
+		</div>
+		<div class="elemenx-drawing-group elemenx-drawing-brush" *if="Tool === 'path'">
+			<Select Size="small" [label]="$T('ui.drawing.brush')" [value]="Brush" [options]="BrushOptions()" (change)="Brushed" />
+		</div>
+		<div class="elemenx-drawing-group">
+			<label class="elemenx-drawing-color" [attribute.title]="$T('ui.drawing.stroke')"><input type="color" class="elemenx-drawing-stroke" [value]="Stroke" [attribute.aria-label]="$T('ui.drawing.stroke')" (change)="Stroked" /></label>
+			<label class="elemenx-drawing-color" [attribute.title]="$T('ui.drawing.fill')"><input type="checkbox" class="elemenx-drawing-filled" [checked]="Fill && Fill !== 'none'" [attribute.aria-label]="$T('ui.drawing.filled')" (change)="Unfilled" /><input type="color" class="elemenx-drawing-fill" [value]="Fill && Fill !== 'none' ? Fill : '#dbe7f5'" [attribute.aria-label]="$T('ui.drawing.fill')" (change)="Filled" /></label>
+			<input type="number" class="elemenx-drawing-width" min="0.5" max="100" step="0.5" [value]="StrokeWidth" [attribute.title]="$T('ui.drawing.width')" [attribute.aria-label]="$T('ui.drawing.width')" (change)="Widened" />
+		</div>
+		<div class="elemenx-drawing-group">
+			<Button Variant="ghost" Size="small" Icon="undo" [title]="$T('ui.drawing.undo')" [disabled]="!Past" (click)="Undo" />
+			<Button Variant="ghost" Size="small" Icon="redo" [title]="$T('ui.drawing.redo')" [disabled]="!Future" (click)="Redo" />
+			<Button Variant="ghost" Size="small" Icon="group" [title]="$T('ui.drawing.group')" [disabled]="Chosen.length < 2" (click)="Group" />
+			<Button Variant="ghost" Size="small" Icon="ungroup" [title]="$T('ui.drawing.ungroup')" [disabled]="!Chosen.length" (click)="Ungroup" />
+			<Button Variant="ghost" Size="small" Icon="arrow-up" [title]="$T('ui.drawing.forward')" [disabled]="!Chosen.length" (click)="Forward" />
+			<Button Variant="ghost" Size="small" Icon="arrow-down" [title]="$T('ui.drawing.backward')" [disabled]="!Chosen.length" (click)="Backward" />
+			<Button Variant="ghost" Size="small" Icon="delete" [title]="$T('ui.drawing.delete')" [disabled]="!Chosen.length" (click)="Delete" />
+		</div>
+	</div>
+	<div class="elemenx-drawing-stage" tabindex="0" (pointerdown)="Down" (pointermove)="Move" (pointerup)="Up" (pointercancel)="Up" (dblclick)="Edit" (keydown)="Key"></div>
+</div>

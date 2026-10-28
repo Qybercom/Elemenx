@@ -271,6 +271,13 @@
 					}
 				},
 				{
+					"ID": "collection",
+					"Title": {
+						"en": "A media collection",
+						"ru": "Медиаколлекция"
+					}
+				},
+				{
 					"ID": "widget",
 					"Title": {
 						"en": "Widgets on another site",
@@ -338,6 +345,13 @@
 					"Title": {
 						"en": "A live dashboard",
 						"ru": "Живая панель"
+					}
+				},
+				{
+					"ID": "telemetry",
+					"Title": {
+						"en": "A board of live telemetry",
+						"ru": "Панель живой телеметрии"
 					}
 				},
 				{
@@ -818,6 +832,13 @@
 					"Group": "inputs"
 				},
 				{
+					"ID": "CastList",
+					"Title": {
+						"en": "CastList"
+					},
+					"Group": "media"
+				},
+				{
 					"ID": "Centered",
 					"Title": {
 						"en": "Centered"
@@ -1091,6 +1112,20 @@
 					"Group": "overlays"
 				},
 				{
+					"ID": "Drawing",
+					"Title": {
+						"en": "Drawing"
+					},
+					"Group": "media"
+				},
+				{
+					"ID": "DrawingLayers",
+					"Title": {
+						"en": "DrawingLayers"
+					},
+					"Group": "media"
+				},
+				{
 					"ID": "EmojiPicker",
 					"Title": {
 						"en": "EmojiPicker"
@@ -1110,6 +1145,13 @@
 						"en": "ExpressionPicker"
 					},
 					"Group": "inputs"
+				},
+				{
+					"ID": "FacetFilter",
+					"Title": {
+						"en": "FacetFilter"
+					},
+					"Group": "data"
 				},
 				{
 					"ID": "Field",
@@ -1357,9 +1399,30 @@
 					"Group": "layout"
 				},
 				{
+					"ID": "MediaCard",
+					"Title": {
+						"en": "MediaCard"
+					},
+					"Group": "media"
+				},
+				{
+					"ID": "MediaHero",
+					"Title": {
+						"en": "MediaHero"
+					},
+					"Group": "media"
+				},
+				{
 					"ID": "MediaPlayer",
 					"Title": {
 						"en": "MediaPlayer"
+					},
+					"Group": "media"
+				},
+				{
+					"ID": "MediaShelf",
+					"Title": {
+						"en": "MediaShelf"
 					},
 					"Group": "media"
 				},
@@ -1924,11 +1987,25 @@
 					"Group": "navigation"
 				},
 				{
+					"ID": "TrackList",
+					"Title": {
+						"en": "TrackList"
+					},
+					"Group": "media"
+				},
+				{
 					"ID": "Tree",
 					"Title": {
 						"en": "Tree"
 					},
 					"Group": "navigation"
+				},
+				{
+					"ID": "VideoTimeline",
+					"Title": {
+						"en": "VideoTimeline"
+					},
+					"Group": "media"
 				},
 				{
 					"ID": "VirtualList",

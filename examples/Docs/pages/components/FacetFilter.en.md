@@ -1,0 +1,72 @@
+<!-- generated -->
+# FacetFilter
+
+The filters of a collection, by its facets: Facets [{ID, Label, Type, Field, Options: [{Value, Label}], Min, Max, Step, Unit, Collapsed}], each of a Type: options (any of the values checked, the default), choice (one of them, or any), range (from Min to Max: two numbers), rating (that score or more) or toggle (only the items that have it). Value holds what is chosen, {ID: [values] | value | [from, to] | true}. With Items, a facet without Options takes the values its Field has in them (an array of genres counts each), and each option tells how many items it would leave with the other facets as they are; filter emits the items left. Field is the name of the field of an item (a path: info.year), the ID of the facet without. The chips over the facets show what is chosen and take it away; Clear() and the button empty them all. Limit options show (8), the others under "Show all"; a facet of more than 12 options has a field that finds them. Filter(items) gives the items Value leaves. Events: change (Value), filter (the items).
+
+## Properties
+
+| Property | Default |
+| --- | --- |
+| `Facets` | `[]` |
+| `Value` | `{}` |
+| `Items` | `null` |
+| `Limit` | `8` |
+| `Label` | `''` |
+
+## Events
+
+- `change`: What is chosen changed: Value.
+- `filter`: The items left (with Items).
+
+## Methods
+
+- `Filter(items, skip)`
+- `Clear()`
+
+## Example
+
+```example
+<div class="docs-row" style="align-items: flex-start">
+	<FacetFilter [facets]="Facets" [items]="Films" [value]="Value" (change)="Changed" (filter)="Filtered" />
+	<div class="docs-stack">
+		<p class="elemenx-text small muted">{{Left.length}} of {{Films.length}} films</p>
+		<ul>
+			<li *for="film of Left" *key="film.ID">{{film.Title}} ({{film.Year}}, {{film.Genres.join(', ')}}, {{film.Score}})</li>
+		</ul>
+	</div>
+</div>
+<script>
+({
+	Value: {genre: ['Drama']},
+	Left: [],
+	Facets: [
+		{ID: 'genre', Label: 'Genre', Field: 'Genres'},
+		{ID: 'year', Label: 'Year', Field: 'Year', Type: 'range', Min: 1990, Max: 2025},
+		{ID: 'score', Label: 'Score', Field: 'Score', Type: 'rating', Max: 10},
+		{ID: 'language', Label: 'Language', Field: 'Language', Type: 'choice', Collapsed: true},
+		{ID: 'subtitles', Label: 'Subtitles', Field: 'Subtitles', Type: 'toggle', Hint: 'With subtitles'}
+	],
+	Films: [
+		{ID: 1, Title: 'North', Genres: ['Drama', 'Mystery'], Year: 2019, Score: 8.1, Language: 'English', Subtitles: true},
+		{ID: 2, Title: 'Harbor', Genres: ['Drama'], Year: 2021, Score: 6.4, Language: 'French', Subtitles: false},
+		{ID: 3, Title: 'Ember', Genres: ['Comedy'], Year: 2024, Score: 7.2, Language: 'English', Subtitles: true},
+		{ID: 4, Title: 'Tide', Genres: ['Mystery', 'Comedy'], Year: 2015, Score: 4.9, Language: 'Spanish', Subtitles: true},
+		{ID: 5, Title: 'Lantern', Genres: ['Drama', 'Romance'], Year: 2009, Score: 7.8, Language: 'French', Subtitles: true},
+		{ID: 6, Title: 'Atlas', Genres: ['Adventure'], Year: 2022, Score: 8.6, Language: 'English', Subtitles: false}
+	],
+
+	Changed: function (value) {
+		this.Value = value;
+	},
+
+	Filtered: function (films) {
+		this.Left = films;
+	}
+})
+</script>
+```
+
+## Tests
+
+- [FacetFilter counts each option with the other facets as they are, filters by options, a range, a rating and a toggle, and takes them back by chips](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-media.test.js#L148) — `tests/regression/library-media.test.js`
+- [FacetFilter: a toggle, a choice, Show all and the search of a long facet](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-media.test.js#L270) — `tests/regression/library-media.test.js`

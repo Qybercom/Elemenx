@@ -1,0 +1,7 @@
+<div class="collection-home">
+	<MediaHero [title]="Featured().Title" Subtitle="Featured film" [image]="Featured().Backdrop" [poster]="Featured().Poster" [facts]="[String(Featured().Year), Featured().Length]" [rating]="Featured().Score" [tags]="Featured().Genres" [description]="Featured().Description" [progress]="Featured().Progress" Favorable="true" [favorite]="Kept(Featured().ID)" (play)="PlayFeatured" (favorite)="KeepFeatured" />
+	<MediaShelf Title="Continue" [items]="Begun()" Ratio="2:3" Playable="true" (open)="Opened" (play)="Opened" />
+	<MediaShelf Title="Films" More="See all" [items]="Items('film')" Ratio="2:3" (open)="Opened" (more)="Films" />
+	<MediaShelf Title="Music" More="See all" [items]="Items('album')" Ratio="1:1" (open)="Opened" (more)="Music" />
+	<MediaShelf Title="Games" More="See all" [items]="Items('game')" Ratio="16:9" Size="large" (open)="Opened" (more)="Games" />
+</div>

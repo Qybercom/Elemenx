@@ -137,7 +137,7 @@ function listen (directory, port, settings, production, options) {
 	var compression = production ? booleanValue(value(options, 'compression', serverSettings.Compression, true), true) : false;
 	var threshold = Number(value(options, 'compression-threshold', serverSettings.CompressionThreshold, 1024));
 	var host = value(options, 'host', serverSettings.Host, '127.0.0.1');
-	var cacheControl = production ? value(options, 'cache-control', serverSettings.CacheControl, 'public, max-age=0, must-revalidate') : false;
+	var cacheControl = production ? value(options, 'cache-control', serverSettings.CacheControl, 'public, max-age=0, must-revalidate') : 'no-cache';
 
 	if (!isFinite(threshold) || threshold < 0)
 		fail('compression threshold must be a non-negative number');

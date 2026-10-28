@@ -10,7 +10,8 @@ Elemenx.Component('UIKitPage', {
 		'calendar', 'clock', 'history', 'user', 'users', 'mail', 'phone', 'credit-card', 'cart', 'globe', 'map-pin', 'tag', 'color', 'sun', 'moon', 'monitor',
 		'terminal', 'code', 'branch', 'commit', 'merge', 'play', 'pause', 'stop', 'debug', 'database', 'server', 'cloud', 'layout', 'panel-left', 'panel-right', 'panel-bottom', 'columns', 'list', 'grid', 'tree', 'structure',
 		'sort-ascending', 'sort-descending',
-		'justify-start', 'justify-center', 'justify-end', 'justify-between', 'justify-around', 'justify-evenly', 'align-baseline', 'flex-wrap', 'smartphone', 'tablet'
+		'justify-start', 'justify-center', 'justify-end', 'justify-between', 'justify-around', 'justify-evenly', 'align-baseline', 'flex-wrap', 'smartphone', 'tablet',
+		'pointer', 'square', 'circle', 'line', 'arrow-line', 'freehand', 'brush', 'eraser', 'type', 'layers', 'group', 'ungroup'
 	],
 	MediaIcons: [
 		'mic', 'mic-off', 'video', 'video-off', 'camera', 'camera-off', 'volume', 'volume-low', 'volume-high', 'volume-off', 'speaker', 'speaker-off', 'headphones', 'headphones-off',
@@ -448,6 +449,54 @@ Elemenx.Component('UIKitPage', {
 	CodesSequence: 'sequenceDiagram\n  actor U as User\n  U->>+S: Places an order\n  S-->>-U: The number',
 	CodesMarkdown: '::: tip title="Plugins"\nA fence of a language a plugin takes draws its Component:\n:::\n\n```mermaid\nstateDiagram-v2\n  [*] --> Draft\n  Draft --> Published : approve\n  Published --> [*]\n```\n',
 	SoundNote: 'Spectrum · Waveform · Jog · Sampler · PianoRoll: the Audio Service plays and hears',
+	DrawingNote: 'Drawing · DrawingLayers: shapes, brushes, texts, groups and layers',
+	DrawingLayer: 'sketch',
+	MediaNote: 'MediaHero · MediaShelf · MediaCard · FacetFilter · TrackList · CastList',
+	MediaValue: {},
+	MediaItems: [
+		{ID: 'north', Title: 'North', Subtitle: '2019', Genres: ['Drama', 'Adventure'], Year: 2019, Rating: 7.9, Progress: 0.8},
+		{ID: 'harbor', Title: 'Harbor', Subtitle: '2021', Genres: ['Drama', 'Romance'], Year: 2021, Rating: 6.8},
+		{ID: 'ember', Title: 'Ember', Subtitle: '2023', Genres: ['Comedy'], Year: 2023, Rating: 7.1, Progress: 0.1},
+		{ID: 'quiet', Title: 'Quiet Hours', Subtitle: '2016', Genres: ['Mystery'], Year: 2016, Rating: 7.6},
+		{ID: 'atlas', Title: 'Atlas', Subtitle: '2022', Genres: ['Adventure'], Year: 2022, Rating: 8.7}
+	],
+	MediaLeft: [],
+	MediaFacets: [
+		{ID: 'genre', Label: 'Genre', Field: 'Genres'},
+		{ID: 'score', Label: 'Score', Field: 'Rating', Type: 'rating', Max: 10}
+	],
+	MediaTime: 8,
+	MediaEdit: [
+		{ID: 'v1', Kind: 'video', Name: 'Video 1', Clips: [{ID: 'intro', Name: 'Intro', Start: 0, Duration: 12}, {ID: 'talk', Name: 'Interview', Start: 12, Duration: 14}]},
+		{ID: 'a1', Kind: 'audio', Name: 'Music', Clips: [{ID: 'theme', Name: 'Theme', Start: 0, Duration: 26, Peaks: [0.3, 0.7, 0.5, 0.9, 0.4, 0.6, 0.8, 0.3]}]}
+	],
+	MediaTrack: 2,
+	MediaPlaying: true,
+	MediaTracks: [
+		{ID: 1, Title: 'Morning Tide', Artist: 'Elemenx Quartet', Duration: 214},
+		{ID: 2, Title: 'Lantern', Artist: 'Elemenx Quartet', Duration: 187},
+		{ID: 3, Title: 'Low Water', Artist: 'Elemenx Quartet', Duration: 305}
+	],
+	MediaCast: [
+		{ID: 'ada', Name: 'Ada Lovelace', Role: 'The keeper'},
+		{ID: 'alan', Name: 'Alan Turing', Role: 'Captain'},
+		{ID: 'grace', Name: 'Grace Hopper', Role: 'Navigator'}
+	],
+	DrawingModel: {
+		Width: 480,
+		Height: 300,
+		Layers: [
+			{ID: 'paper', Name: 'Paper', Visible: true, Locked: true, Items: [{ID: 'paper-back', Type: 'rect', X: 0, Y: 0, W: 480, H: 300, Stroke: 'none', Fill: '#f4f1ea', Width: 0}]},
+			{ID: 'shapes', Name: 'Shapes', Visible: true, Locked: false, Items: [
+				{ID: 'box', Type: 'rect', X: 40, Y: 60, W: 140, H: 100, Stroke: '#3f6c9e', Fill: '#dbe7f5', Width: 3},
+				{ID: 'disc', Type: 'ellipse', X: 230, Y: 50, W: 120, H: 120, Stroke: '#c0392b', Fill: 'none', Width: 4}
+			]},
+			{ID: 'sketch', Name: 'Sketch', Visible: true, Locked: false, Items: [
+				{ID: 'mark', Type: 'path', Brush: 'highlighter', Points: [{X: 50, Y: 220}, {X: 150, Y: 215}, {X: 260, Y: 225}], Stroke: '#d99a1e', Width: 3},
+				{ID: 'title', Type: 'text', X: 300, Y: 220, Text: 'Sketch', Size: 28, Stroke: '#2f8f83'}
+			]}
+		]
+	},
 	SoundLevels: [0.35, 0.62, 0.88, 0.95, 0.8, 0.7, 0.76, 0.6, 0.52, 0.58, 0.47, 0.4, 0.44, 0.36, 0.3, 0.33, 0.27, 0.22, 0.2, 0.16, 0.14, 0.1, 0.08, 0.05],
 	SoundPeaks: Array.apply(null, Array(160)).map(function (nothing, index) {
 		return Math.abs(Math.sin(index / 5)) * (0.3 + 0.7 * Math.abs(Math.sin(index / 37)));
@@ -3561,6 +3610,63 @@ Elemenx.Component('UIKitPage', {
 
 	MoreOpened: function (item) {
 		this.MoreNote = 'Opened ' + item.Name;
+	},
+
+	/* Media collection: the facets filter the shelf; what is pressed shows in the note of its section. */
+	MediaChanged: function (value) {
+		this.MediaValue = value;
+	},
+
+	MediaFiltered: function (items) {
+		this.MediaLeft = items;
+		this.MediaNote = items.length + ' of ' + this.MediaItems.length + ' films';
+	},
+
+	MediaOpened: function (item) {
+		this.MediaNote = 'Opened ' + item.Title;
+	},
+
+	MediaPlayed: function () {
+		this.MediaNote = 'Playing The Long Light';
+	},
+
+	MediaTrackPlayed: function (track) {
+		this.MediaTrack = track.ID;
+		this.MediaPlaying = true;
+		this.MediaNote = 'Playing ' + track.Title;
+	},
+
+	MediaEdited: function (tracks) {
+		this.MediaEdit = tracks;
+		this.MediaNote = tracks.reduce(function (count, track) {
+			return count + track.Clips.length;
+		}, 0) + ' clips';
+	},
+
+	MediaSought: function (value) {
+		this.MediaTime = value.Time;
+	},
+
+	MediaTrackPaused: function (track) {
+		this.MediaPlaying = false;
+		this.MediaNote = 'Paused ' + track.Title;
+	},
+
+	/* Drawing: its model goes between the drawing and its layers; what it does shows in the note of its section. */
+	DrawingChanged: function (model) {
+		this.DrawingModel = model;
+		this.DrawingNote = model.Layers.reduce(function (count, layer) {
+			return count + layer.Items.length;
+		}, 0) + ' items on ' + model.Layers.length + ' layers';
+	},
+
+	DrawingSelected: function (ids) {
+		this.DrawingNote = ids.length ? 'Selected ' + ids.join(', ') : 'Nothing selected';
+	},
+
+	DrawingPicked: function (id) {
+		this.DrawingLayer = id;
+		this.DrawingNote = 'Layer ' + id;
 	},
 
 	/* Codes and diagrams, Sound: what they report shows in the note of their section. */

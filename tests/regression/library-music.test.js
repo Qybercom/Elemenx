@@ -244,6 +244,45 @@ describe('Contract: notes, instruments and the transport of the Audio Service, P
 		synth.Destroy();
 	});
 
+	it('a transport late on its timers (a busy page) still tells every note and beat, in order, before its end', async function () {
+		var audio = Elemenx.Service('Audio');
+		var transport = audio.Transport({Bpm: 480, Beats: 4, Notes: [{Note: 'C4', Start: 0, Length: 1}, {Note: 'E4', Start: 2, Length: 1}, {Note: 'G4', Start: 3.5, Length: 0.5}]});
+		var heard = [];
+		var ended = false;
+		var until;
+
+		await audio.Context().resume();
+
+		transport.On('note', function (note) {
+			heard.push(['note', note.Note]);
+		});
+
+		transport.On('beat', function (beat) {
+			heard.push(['beat', beat.Beat]);
+		});
+
+		transport.On('end', function () {
+			ended = true;
+		});
+
+		transport.Play();
+
+		/* The page busy past the end of the bar (half a second at 480 beats a minute): its timers come late, all at once. */
+		until = performance.now() + 700;
+
+		while (performance.now() < until) {
+			/* Busy. */
+		}
+
+		await waitFor(function () {
+			return ended;
+		}, 3000);
+
+		expect(heard).toEqual([['note', 'C4'], ['beat', 0], ['beat', 1], ['note', 'E4'], ['beat', 2], ['beat', 3], ['note', 'G4']]);
+
+		transport.Destroy();
+	});
+
 	it('PianoRoll puts, moves, resizes and takes away notes by the pointer and by the keys', async function () {
 		var changes = [];
 		var keys = [];

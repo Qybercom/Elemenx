@@ -130,6 +130,21 @@ describe('Elemenx docs: the reference in the package', function () {
 		}
 	});
 
+	it('elemenx dev has every file checked again before it is used (no-cache), so a change shows at the next reload', async function () {
+		var port = 4300 + Math.floor(Math.random() * 500);
+
+		await serve(['dev', 'examples/Simple', '--port', String(port)], async function () {
+			var sprite = await fetch('http://127.0.0.1:' + port + '/libraries/ElemenxUI/index.svg');
+			var framework = await fetch('http://127.0.0.1:' + port + '/elemenx.js');
+
+			/* Without it a browser keeps a file it got for a while by its age alone, and a changed icon or script stays old. */
+			expect(sprite.status).toBe(200);
+			expect(sprite.headers.get('cache-control')).toBe('no-cache');
+			expect(sprite.headers.get('etag')).toBeTruthy();
+			expect(framework.headers.get('cache-control')).toBe('no-cache');
+		});
+	});
+
 	it('goes into the package of npm, built by prepack, and the CLI tells of it', function () {
 		var help = child.execFileSync(process.execPath, [path.join(root, 'elemenx-cli.js'), 'help', 'docs'], {encoding: 'utf8'});
 

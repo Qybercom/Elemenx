@@ -33,7 +33,7 @@ npx elemenx g directive Tooltip
 
 ## dev
 
-`elemenx dev` serves the project as it is, with the framework and ElemenxUI of the package: the page loads the files of the graph one by one, and a reload shows every change. It answers every path that is not a file with `index.html`, so the routes of the router work on a reload. `--host 0.0.0.0` opens it to the other devices of the network.
+`elemenx dev` serves the project as it is, with the framework and ElemenxUI of the package: the page loads the files of the graph one by one, and a reload shows every change (each file goes with `Cache-Control: no-cache`: the browser checks it again by its ETag). It answers every path that is not a file with `index.html`, so the routes of the router work on a reload. `--host 0.0.0.0` opens it to the other devices of the network.
 
 ## serve
 

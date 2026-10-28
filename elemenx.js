@@ -44,7 +44,7 @@
 	 * Elemenx: the namespace of this copy of the framework. The window gets it last (see Export), unless a copy of the
 	 * same version is there already: then this one stops here and the page keeps the first.
 	 */
-	var Version = '0.10.9';
+	var Version = '0.10.10';
 	var Elemenx = {};
 	if (typeof ElemenxIsolated !== 'object' && (typeof globalThis !== 'undefined' ? globalThis : self).Elemenx && (typeof globalThis !== 'undefined' ? globalThis : self).Elemenx.Version === Version) return;
 
@@ -281,6 +281,49 @@
 					}
 				}
 			};
+		};
+
+		/*
+		 * The own key of source that is key in another case (the attributes of a template come in lower case: value is
+		 * Value), or null when none is, or more than one. Of a value and a method of the same letters (FPS and Fps), the
+		 * value is the one: a prop is never a method. The names of an object are kept by its lower case once, and read
+		 * again when it has another count of keys: a definition is read so at every render of its tags.
+		 */
+		var caseNames = new WeakMap();
+
+		Runtime.CaseName = function (source, key) {
+			var count = Object.keys(source).length;
+			var entry = caseNames.get(source);
+			var found = {};
+			var lower;
+			var name;
+
+			if (!entry || entry.Count !== count) {
+				entry = {Count: count, Names: {}};
+
+				for (name in source) {
+					if (!Runtime.Own(source, name)) continue;
+
+					lower = name.toLowerCase();
+					found[lower] = found[lower] || {Values: [], Methods: []};
+
+					found[lower][typeof source[name] === 'function' ? 'Methods' : 'Values'].push(name);
+				}
+
+				/* Two values (or two methods and no value) of the same letters: none of them is chosen. */
+				for (lower in found) {
+					if (!Runtime.Own(found, lower)) continue;
+
+					if (found[lower].Values.length) entry.Names[lower] = found[lower].Values.length === 1 ? found[lower].Values[0] : null;
+					else entry.Names[lower] = found[lower].Methods.length === 1 ? found[lower].Methods[0] : null;
+				}
+
+				caseNames.set(source, entry);
+			}
+
+			lower = String(key).toLowerCase();
+
+			return Runtime.Own(entry.Names, lower) ? entry.Names[lower] : null;
 		};
 
 		/* Copies the own enumerable properties of source into target and returns target. */
@@ -3854,34 +3897,14 @@
 			var result = Array.isArray(value) ? [] : {};
 			var key;
 			var target;
-			var name;
-			var match;
-			var lower;
 
 			for (key in value) {
 				if (!own(value, key)) continue;
 
 				target = key;
 
-				if (!own(definition, target) && typeof key === 'string') {
-					lower = key.toLowerCase();
-					match = null;
-
-					for (name in definition) {
-						if (!own(definition, name) || name.toLowerCase() !== lower) continue;
-
-						if (match !== null) {
-							match = key;
-
-							break;
-						}
-
-						match = name;
-					}
-
-					if (match !== null)
-						target = match;
-				}
+				if (!own(definition, target) && typeof key === 'string')
+					target = Runtime.CaseName(definition, key) || key;
 
 				result[target] = canonicalDeferredInput(value[key], definition[target]);
 			}
@@ -6378,6 +6401,14 @@
 				}
 
 				/*
+				 * Router context becomes part of the component once $OnCreate has completed (it is about the component
+				 * itself), and before the first render: a method that an expression calls reads this.$Params as the
+				 * template reads $Params, from its first render on.
+				 */
+				if (options && options.RoutePacket)
+					updateRouteContext(options.RoutePacket);
+
+				/*
 				 * Bootstrap is intentionally delayed until after $OnCreate().
 				 * This preserves the established semantics: components may populate their
 				 * initial state in $OnCreate without expressions seeing an empty scope.
@@ -6409,14 +6440,6 @@
 				 * subsequent Proxy updates.
 				 */
 				syncModels(models, values);
-
-				/*
-				 * Router context becomes part of the component only after Create has
-				 * completed, but before ComponentReady. This keeps $OnCreate about
-				 * the component itself while Ready may safely consume route state.
-				 */
-				if (options && options.RoutePacket)
-					updateRouteContext(options.RoutePacket);
 
 				if (options && options.GuardFailure)
 					api.$GuardFailure = options.GuardFailure;
@@ -8477,23 +8500,10 @@
 		}
 
 		function canonicalPropKey (source, key) {
-			var name;
-			var match = null;
-			var lower;
-
-			if (!source || typeof key !== 'string') return key;
+			if (!source || (typeof source !== 'object' && typeof source !== 'function') || typeof key !== 'string') return key;
 			if (own(source, key)) return key;
 
-			lower = key.toLowerCase();
-
-			for (name in source) {
-				if (!own(source, name) || name.toLowerCase() !== lower) continue;
-				if (match !== null) return key;
-
-				match = name;
-			}
-
-			return match === null ? key : match;
+			return Runtime.CaseName(source, key) || key;
 		}
 
 		function canonicalBindingPath (target, definition) {
@@ -9569,8 +9579,13 @@
 
 					reference(source);
 
+					/*
+					 * The plain object behind the state: copying through its proxy would run its trap for every value
+					 * of the Component, on every render of the collection. The values the template names are read
+					 * again below, through the proxy, tracked.
+					 */
 					Runtime.Untracked(function () {
-						Runtime.Assign(scope, values);
+						Runtime.Assign(scope, values.__raw__ || values);
 					});
 
 					/* A tracked read, also of a name that is not a value yet, so that adding it renders again. */

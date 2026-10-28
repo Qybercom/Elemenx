@@ -1511,6 +1511,43 @@
 		</div>
 	</Section>
 
+	<Section *if="Shows('Drawing')" Title="Drawing" [note]="DrawingNote">
+		<div class="ui-kit-lazy" *lazy="400">
+			<div class="ui-kit-grid">
+				<div class="ui-kit-stack">
+					<Drawing [value]="DrawingModel" [layer]="DrawingLayer" (change)="DrawingChanged" (select)="DrawingSelected" />
+				</div>
+				<div class="ui-kit-stack">
+					<h5>DrawingLayers</h5>
+					<DrawingLayers [value]="DrawingModel" [layer]="DrawingLayer" (change)="DrawingChanged" (select)="DrawingPicked" />
+				</div>
+			</div>
+		</div>
+	</Section>
+
+	<Section *if="Shows('Media collection')" Title="Media collection" [note]="MediaNote">
+		<div class="ui-kit-lazy" *lazy="400">
+			<div class="ui-kit-stack">
+				<MediaHero Size="compact" Title="The Long Light" Subtitle="Featured film" [facts]="['2024', '2 h 10 min']" Rating="8.4" [tags]="['Drama', 'Mystery']" Description="A keeper of a lighthouse finds that its light reaches further than the sea." Progress="0.35" Favorable="true" (play)="MediaPlayed" />
+				<MediaShelf Title="Films" More="See all" [items]="MediaLeft" Playable="true" (open)="MediaOpened" (play)="MediaOpened" />
+				<div class="ui-kit-grid">
+					<div class="ui-kit-stack">
+						<h5>FacetFilter</h5>
+						<FacetFilter [facets]="MediaFacets" [items]="MediaItems" [value]="MediaValue" (change)="MediaChanged" (filter)="MediaFiltered" />
+					</div>
+					<div class="ui-kit-stack">
+						<h5>TrackList</h5>
+						<TrackList [items]="MediaTracks" [current]="MediaTrack" [playing]="MediaPlaying" (play)="MediaTrackPlayed" (pause)="MediaTrackPaused" />
+						<h5>CastList</h5>
+						<CastList [items]="MediaCast" />
+					</div>
+				</div>
+				<h5>VideoTimeline</h5>
+				<VideoTimeline [tracks]="MediaEdit" [time]="MediaTime" Scale="16" (change)="MediaEdited" (seek)="MediaSought" />
+			</div>
+		</div>
+	</Section>
+
 	<Section *if="Shows('Windows')" Title="Windows" [note]="WindowNote">
 		<div class="ui-kit-lazy" *lazy>
 			<div class="ui-kit-row">

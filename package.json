@@ -1,6 +1,6 @@
 {
 	"name": "@qybercom/elemenx",
-	"version": "0.10.9",
+	"version": "0.10.10",
 	"description": "A browser UI framework in one ES5 file: components, reactive state, routing, services, storage, messaging and network, with its CLI and the ElemenxUI component library",
 	"keywords": [
 		"ui",
@@ -61,6 +61,7 @@
 		"example:advanced": "node elemenx-cli.js dev examples/Advanced",
 		"example:docs": "node elemenx-cli.js dev examples/Docs",
 		"example:builder": "node elemenx-cli.js dev examples/Builder",
+		"tutorial": "node scripts/tutorial.js",
 		"docs:pages": "node examples/Docs/tools/pages.js",
 		"docs:site": "node tools/docs-site.js",
 		"editors": "node editors/build.js",

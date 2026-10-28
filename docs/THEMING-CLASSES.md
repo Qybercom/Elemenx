@@ -1711,6 +1711,149 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-signature-pad`: `readonly`
 - `elemenx-signature-placeholder`
 
+## Drawing
+
+- `elemenx-drawing`: `readonly`
+- `elemenx-drawing-brush`
+- `elemenx-drawing-color`
+- `elemenx-drawing-editor`
+- `elemenx-drawing-group`
+- `elemenx-drawing-handle`
+- `elemenx-drawing-marquee`
+- `elemenx-drawing-selection`
+- `elemenx-drawing-stage`
+- `elemenx-drawing-svg`
+- `elemenx-drawing-tool`: `active`
+- `elemenx-drawing-toolbar`
+- `elemenx-drawing-width`
+
+## DrawingLayers
+
+- `elemenx-drawing-layer`: `current`, `hidden`
+- `elemenx-drawing-layer-count`
+- `elemenx-drawing-layer-field`
+- `elemenx-drawing-layer-name`
+- `elemenx-drawing-layer-toggle`
+- `elemenx-drawing-layers`
+- `elemenx-drawing-layers-actions`
+- `elemenx-drawing-layers-list`
+
+## MediaCard
+
+- `elemenx-media-card`: `large`, `small`
+- `elemenx-media-card-badge`
+- `elemenx-media-card-blank`
+- `elemenx-media-card-favorite`: `on`
+- `elemenx-media-card-kind`
+- `elemenx-media-card-link`
+- `elemenx-media-card-play`
+- `elemenx-media-card-poster`
+- `elemenx-media-card-progress`
+- `elemenx-media-card-score`: `high`, `low`
+- `elemenx-media-card-subtitle`
+- `elemenx-media-card-tags`
+- `elemenx-media-card-text`
+- `elemenx-media-card-title`
+
+## MediaShelf
+
+- `elemenx-media-shelf`
+- `elemenx-media-shelf-arrows`
+- `elemenx-media-shelf-header`
+- `elemenx-media-shelf-item`
+- `elemenx-media-shelf-more`
+- `elemenx-media-shelf-title`
+- `elemenx-media-shelf-track`
+
+## MediaHero
+
+- `elemenx-media-hero`: `backdrop`, `compact`
+- `elemenx-media-hero-actions`
+- `elemenx-media-hero-backdrop`
+- `elemenx-media-hero-description`
+- `elemenx-media-hero-inner`
+- `elemenx-media-hero-meta`
+- `elemenx-media-hero-poster`
+- `elemenx-media-hero-progress`
+- `elemenx-media-hero-score`
+- `elemenx-media-hero-subtitle`
+- `elemenx-media-hero-tags`
+- `elemenx-media-hero-text`
+- `elemenx-media-hero-title`
+
+## FacetFilter
+
+- `elemenx-facet`: `active`
+- `elemenx-facet-body`
+- `elemenx-facet-count`
+- `elemenx-facet-filter`
+- `elemenx-facet-filter-chip`
+- `elemenx-facet-filter-chips`
+- `elemenx-facet-filter-clear`
+- `elemenx-facet-filter-head`
+- `elemenx-facet-filter-remove`
+- `elemenx-facet-header`
+- `elemenx-facet-label`
+- `elemenx-facet-more`
+- `elemenx-facet-option`
+- `elemenx-facet-option-label`
+- `elemenx-facet-options`
+- `elemenx-facet-range`
+- `elemenx-facet-search`
+- `elemenx-facet-unit`
+
+## TrackList
+
+- `elemenx-track`: `current`, `disabled`, `playing`
+- `elemenx-track-action`
+- `elemenx-track-artist`
+- `elemenx-track-bars`
+- `elemenx-track-column`
+- `elemenx-track-duration`
+- `elemenx-track-explicit`
+- `elemenx-track-index`
+- `elemenx-track-list`: `with-album`, `with-artist`
+- `elemenx-track-list-rows`
+- `elemenx-track-list-total`
+- `elemenx-track-main`
+- `elemenx-track-number`
+- `elemenx-track-title`
+
+## CastList
+
+- `elemenx-cast`: `grid`, `list`, `row`
+- `elemenx-cast-name`
+- `elemenx-cast-people`
+- `elemenx-cast-person`
+- `elemenx-cast-role`
+- `elemenx-cast-text`
+- `elemenx-cast-title`
+
+## VideoTimeline
+
+- `elemenx-video-timeline`
+- `elemenx-video-timeline-body`
+- `elemenx-video-timeline-clip`: `pictured`, `selected`
+- `elemenx-video-timeline-content`
+- `elemenx-video-timeline-corner`
+- `elemenx-video-timeline-edge`: `end`, `start`
+- `elemenx-video-timeline-guide`
+- `elemenx-video-timeline-head`
+- `elemenx-video-timeline-heads`
+- `elemenx-video-timeline-knob`
+- `elemenx-video-timeline-label`
+- `elemenx-video-timeline-lane`: `hidden`, `locked`, `muted`
+- `elemenx-video-timeline-marker`
+- `elemenx-video-timeline-name`
+- `elemenx-video-timeline-playhead`
+- `elemenx-video-timeline-ruler`
+- `elemenx-video-timeline-scroller`
+- `elemenx-video-timeline-tick`: `major`
+- `elemenx-video-timeline-timecode`
+- `elemenx-video-timeline-toggle`
+- `elemenx-video-timeline-toolbar`
+- `elemenx-video-timeline-wave`
+
 ## ImageCropper
 
 - `elemenx-cropper`: `disabled`, `round`

@@ -1,0 +1,200 @@
+.elemenx-media-card {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	width: 160px;
+	min-width: 0;
+	border-radius: var(--elemenx-radius-large);
+	color: var(--elemenx-text);
+	cursor: pointer;
+}
+
+.elemenx-media-card.small {
+	width: 120px;
+}
+
+.elemenx-media-card.large {
+	width: 220px;
+}
+
+.elemenx-media-card:focus-visible {
+	outline: 2px solid var(--elemenx-focus);
+	outline-offset: 3px;
+}
+
+.elemenx-media-card-poster {
+	position: relative;
+	overflow: hidden;
+	border-radius: var(--elemenx-radius-large);
+	background: var(--elemenx-surface-hover);
+	box-shadow: var(--elemenx-shadow-small);
+	transition: box-shadow var(--elemenx-duration) var(--elemenx-easing);
+}
+
+.elemenx-media-card:hover .elemenx-media-card-poster {
+	box-shadow: var(--elemenx-shadow);
+}
+
+.elemenx-media-card-poster img {
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+.elemenx-media-card-blank {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	height: 100%;
+	color: var(--elemenx-text-muted);
+	font-size: 2.5rem;
+	font-weight: var(--elemenx-font-weight-bold);
+}
+
+.elemenx-media-card-kind,
+.elemenx-media-card-badge {
+	position: absolute;
+	top: 8px;
+}
+
+.elemenx-media-card-kind {
+	inset-inline-start: 8px;
+	padding: 1px 6px;
+	border-radius: var(--elemenx-radius-small);
+	background: var(--elemenx-overlay);
+	color: var(--elemenx-overlay-text);
+	font-size: var(--elemenx-font-size-small);
+}
+
+.elemenx-media-card-badge {
+	inset-inline-end: 8px;
+}
+
+.elemenx-media-card-score {
+	position: absolute;
+	bottom: 10px;
+	inset-inline-start: 8px;
+	min-width: 32px;
+	padding: 2px 6px;
+	border-radius: var(--elemenx-radius-pill);
+	background: var(--elemenx-overlay);
+	color: var(--elemenx-overlay-text);
+	font-size: var(--elemenx-font-size-small);
+	font-weight: var(--elemenx-font-weight-bold);
+	text-align: center;
+	box-shadow: inset 0 0 0 2px var(--elemenx-warning);
+}
+
+.elemenx-media-card-score.high {
+	box-shadow: inset 0 0 0 2px var(--elemenx-success);
+}
+
+.elemenx-media-card-score.low {
+	box-shadow: inset 0 0 0 2px var(--elemenx-danger);
+}
+
+.elemenx-media-card-play {
+	position: absolute;
+	inset: 0;
+	margin: auto;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 48px;
+	height: 48px;
+	padding: 0;
+	border: 0;
+	border-radius: 50%;
+	background: var(--elemenx-overlay);
+	color: var(--elemenx-overlay-text);
+	cursor: pointer;
+	opacity: 0;
+	transition: opacity var(--elemenx-duration) var(--elemenx-easing);
+}
+
+.elemenx-media-card:hover .elemenx-media-card-play,
+.elemenx-media-card:focus-within .elemenx-media-card-play {
+	opacity: 1;
+}
+
+.elemenx-media-card-favorite {
+	position: absolute;
+	bottom: 8px;
+	inset-inline-end: 8px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 32px;
+	height: 32px;
+	padding: 0;
+	border: 0;
+	border-radius: 50%;
+	background: var(--elemenx-overlay);
+	color: var(--elemenx-overlay-text);
+	cursor: pointer;
+}
+
+.elemenx-media-card-favorite.on {
+	color: var(--elemenx-danger);
+}
+
+.elemenx-media-card-progress {
+	position: absolute;
+	inset-inline: 0;
+	bottom: 0;
+	height: 4px;
+	background: var(--elemenx-overlay-soft);
+}
+
+.elemenx-media-card-progress > span {
+	display: block;
+	height: 100%;
+	background: var(--elemenx-accent);
+}
+
+.elemenx-media-card-text {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	min-width: 0;
+}
+
+.elemenx-media-card-title {
+	margin: 0;
+	overflow: hidden;
+	font-size: var(--elemenx-font-size);
+	font-weight: var(--elemenx-font-weight-strong);
+	line-height: var(--elemenx-line-height-small);
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.elemenx-media-card-subtitle,
+.elemenx-media-card-tags {
+	overflow: hidden;
+	color: var(--elemenx-text-muted);
+	font-size: var(--elemenx-font-size-small);
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.elemenx-media-card-link {
+	color: inherit;
+	text-decoration: none;
+}
+
+/* The link of the title covers the card; the buttons on the poster stay over it. */
+.elemenx-media-card-link::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	z-index: 1;
+}
+
+.elemenx-media-card-play,
+.elemenx-media-card-favorite {
+	z-index: 2;
+}

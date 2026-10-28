@@ -1,0 +1,22 @@
+<div class="docs-row">
+	<DrawingLayers [value]="Model" [layer]="Layer" (change)="Changed" (select)="Picked" />
+	<p class="elemenx-text small muted">Current: {{Layer}}. A double press renames a layer.</p>
+</div>
+<script>
+({
+	Layer: 'sketch',
+	Model: {Width: 320, Height: 200, Layers: [
+		{ID: 'paper', Name: 'Paper', Visible: true, Locked: true, Items: [{ID: 'a', Type: 'rect', X: 0, Y: 0, W: 320, H: 200}]},
+		{ID: 'sketch', Name: 'Sketch', Visible: true, Locked: false, Items: []},
+		{ID: 'notes', Name: 'Notes', Visible: false, Locked: false, Items: []}
+	]},
+
+	Changed: function (model) {
+		this.Model = model;
+	},
+
+	Picked: function (id) {
+		this.Layer = id;
+	}
+})
+</script>

@@ -1,0 +1,164 @@
+.elemenx-drawing {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	width: 100%;
+	min-width: 0;
+}
+
+.elemenx-drawing-toolbar {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 4px 12px;
+}
+
+.elemenx-drawing-group {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 2px;
+}
+
+.elemenx-drawing-tool {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 32px;
+	height: 32px;
+	padding: 0;
+	border: 1px solid transparent;
+	border-radius: var(--elemenx-radius);
+	background: transparent;
+	color: var(--elemenx-text);
+	cursor: pointer;
+}
+
+.elemenx-drawing-tool:hover {
+	background: var(--elemenx-surface-hover);
+}
+
+.elemenx-drawing-tool.active {
+	border-color: var(--elemenx-accent);
+	background: rgba(var(--elemenx-accent-rgb), 0.12);
+	color: var(--elemenx-accent);
+}
+
+.elemenx-drawing-tool:focus-visible,
+.elemenx-drawing-stage:focus-visible {
+	outline: 2px solid var(--elemenx-focus);
+	outline-offset: 2px;
+}
+
+.elemenx-drawing-brush {
+	min-width: 140px;
+}
+
+.elemenx-drawing-color {
+	display: inline-flex;
+	align-items: center;
+	gap: 2px;
+}
+
+.elemenx-drawing-color input[type="color"] {
+	width: 30px;
+	height: 30px;
+	padding: 2px;
+	border: 1px solid var(--elemenx-border);
+	border-radius: var(--elemenx-radius);
+	background: var(--elemenx-surface);
+	cursor: pointer;
+}
+
+.elemenx-drawing-width {
+	width: 64px;
+	height: 30px;
+	padding: 0 6px;
+	border: 1px solid var(--elemenx-border);
+	border-radius: var(--elemenx-radius);
+	background: var(--elemenx-surface);
+	color: var(--elemenx-text);
+	font: inherit;
+}
+
+.elemenx-drawing-stage {
+	position: relative;
+	border: 1px solid var(--elemenx-border);
+	border-radius: var(--elemenx-radius-large);
+	background: var(--elemenx-surface);
+	overflow: hidden;
+	touch-action: none;
+}
+
+.elemenx-drawing-svg {
+	display: block;
+	width: 100%;
+	height: auto;
+	color: var(--elemenx-text);
+	cursor: crosshair;
+	user-select: none;
+}
+
+.elemenx-drawing[data-tool="select"] .elemenx-drawing-svg {
+	cursor: default;
+}
+
+.elemenx-drawing[data-tool="text"] .elemenx-drawing-svg {
+	cursor: text;
+}
+
+.elemenx-drawing.readonly .elemenx-drawing-svg {
+	cursor: default;
+}
+
+.elemenx-drawing-selection,
+.elemenx-drawing-marquee {
+	fill: none;
+	stroke: var(--elemenx-accent);
+	stroke-dasharray: 4 3;
+	vector-effect: non-scaling-stroke;
+	pointer-events: none;
+}
+
+.elemenx-drawing-marquee {
+	fill: var(--elemenx-accent);
+	fill-opacity: 0.08;
+}
+
+.elemenx-drawing-handle {
+	fill: var(--elemenx-surface);
+	stroke: var(--elemenx-accent);
+	vector-effect: non-scaling-stroke;
+	cursor: nwse-resize;
+}
+
+.elemenx-drawing-handle[data-handle="ne"],
+.elemenx-drawing-handle[data-handle="sw"] {
+	cursor: nesw-resize;
+}
+
+.elemenx-drawing-handle[data-handle="n"],
+.elemenx-drawing-handle[data-handle="s"] {
+	cursor: ns-resize;
+}
+
+.elemenx-drawing-handle[data-handle="e"],
+.elemenx-drawing-handle[data-handle="w"] {
+	cursor: ew-resize;
+}
+
+.elemenx-drawing-editor {
+	position: absolute;
+	z-index: 1;
+	min-width: 80px;
+	min-height: 1.4em;
+	margin: 0;
+	padding: 0;
+	border: 1px dashed var(--elemenx-accent);
+	background: transparent;
+	font-family: sans-serif;
+	line-height: 1.25;
+	resize: none;
+	overflow: hidden;
+	field-sizing: content;
+}

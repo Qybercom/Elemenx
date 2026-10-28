@@ -1,0 +1,11 @@
+<div class="elemenx-screen collection">
+	<header class="collection-header">
+		<a class="collection-name" href="/">Collection</a>
+		<nav class="collection-nav" aria-label="Kinds">
+			<a *for="link of Links" *key="link.Path" [href]="link.Path" [class.active]="Active(link.Path)" [attribute.aria-current]="Active(link.Path) ? 'page' : null">{{link.Label}}</a>
+		</nav>
+		<span class="elemenx-spacer"></span>
+		<ThemeSwitch Compact="true" />
+	</header>
+	<main class="collection-main" *outlet="Content"></main>
+</div>

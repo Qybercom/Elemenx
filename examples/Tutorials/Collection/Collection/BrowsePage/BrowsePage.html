@@ -1,0 +1,11 @@
+<div class="collection-browse">
+	<FacetFilter [facets]="Facets($Params.kind)" [items]="Titles($Params.kind)" [value]="Value" Label="Filters" (change)="Changed" (filter)="Filtered" />
+	<section aria-label="Titles">
+		<h1>{{Kind($Params.kind).Title}}</h1>
+		<p class="collection-count">{{Left.length}} of {{Titles($Params.kind).length}}</p>
+		<EmptyState *if="!Left.length" Title="Nothing left" Description="Take a filter away to see more." />
+		<div class="collection-grid" [class.wide]="Kind($Params.kind).Kind === 'game'" *if="Left.length">
+			<MediaCard *for="title of Left" *key="title.ID" [item]="title" [title]="title.Title" [subtitle]="Item(title).Subtitle" [image]="title.Poster" [ratio]="Kind($Params.kind).Ratio" [rating]="title.Score" [progress]="title.Progress" [tags]="title.Genres" [href]="'/title/' + title.ID" />
+		</div>
+	</section>
+</div>

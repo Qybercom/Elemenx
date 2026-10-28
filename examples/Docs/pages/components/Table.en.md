@@ -96,5 +96,5 @@ A data table. Columns: [{Key, Title, Width, MinWidth, Align (left, center, right
 ## Tests
 
 - [table sorts, selects and opens rows](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L4261) — `tests/examples/ui-kit.spec.js`
-- [tables fit their container without a horizontal scroll](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L5238) — `tests/examples/ui-kit.spec.js`
+- [tables fit their container without a horizontal scroll](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L5243) — `tests/examples/ui-kit.spec.js`
 - [writes a <template id> as a script of text, its tags as they were written](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/server.test.js#L310) — `tests/regression/server.test.js`

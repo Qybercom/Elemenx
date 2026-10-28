@@ -56,6 +56,130 @@ var Checks = {
 		await expect(page.locator('.todo-title')).toHaveText(['Call Ada']);
 	},
 
+	Collection: async function (page) {
+		var hero = page.locator('.elemenx-media-hero');
+
+		/* The home page: the featured film begun (Resume), a shelf of the titles begun and one of each kind. */
+		await expect(hero.locator('h1')).toHaveText('The Long Light');
+		await expect(hero.getByRole('button', {name: 'Resume'})).toBeVisible();
+		await expect(page.locator('.elemenx-media-shelf')).toHaveCount(4);
+
+		/* See all of the music: four albums; the facet of Jazz leaves two, its count told before. */
+		await page.locator('.elemenx-media-shelf', {hasText: 'Music'}).getByRole('button', {name: 'See all'}).click();
+
+		await expect(page).toHaveURL(/\/browse\/music$/);
+		await expect(page.locator('h1')).toHaveText('Music');
+		await expect(page.locator('.collection-count')).toHaveText('4 of 4');
+		await expect(page.locator('[data-facet="genre"] .elemenx-facet-option', {hasText: 'Jazz'}).locator('.elemenx-facet-count')).toHaveText('2');
+
+		await page.locator('[data-facet="genre"]').getByText('Jazz').click();
+
+		await expect(page.locator('.collection-count')).toHaveText('2 of 4');
+		await expect(page.locator('.elemenx-facet-filter-chip')).toHaveText('Genre: Jazz');
+
+		/* An album: its tracks; a press plays one, a press on it again pauses it. */
+		await page.locator('.elemenx-media-card', {hasText: 'Tides'}).click();
+
+		await expect(page).toHaveURL(/\/title\/tides$/);
+		await expect(hero.locator('h1')).toHaveText('Tides');
+		await expect(page.locator('.elemenx-track')).toHaveCount(6);
+
+		await page.locator('.elemenx-track', {hasText: 'Morning Tide'}).click();
+
+		await expect(page.locator('.collection-status')).toHaveText('Playing Morning Tide');
+		await expect(page.locator('.elemenx-track.playing')).toContainText('Morning Tide');
+
+		await page.locator('.elemenx-track', {hasText: 'Morning Tide'}).click();
+
+		await expect(page.locator('.collection-status')).toHaveText('Paused Morning Tide');
+
+		/* Kept with the heart, still kept after a reload. */
+		await hero.getByRole('button', {name: 'Favorite'}).click();
+
+		await page.reload();
+
+		await expect(page.locator('.elemenx-media-hero').getByRole('button', {name: 'Favorite'})).toHaveAttribute('aria-pressed', 'true');
+
+		/* A film: its cast, and more of its genre. */
+		await page.locator('.elemenx-media-shelf', {hasText: 'More like this'}).locator('.elemenx-media-card').first().click();
+
+		await expect(page.locator('.elemenx-media-hero h1')).not.toHaveText('Tides');
+
+		await page.goto(new URL(page.url()).origin + '/title/north');
+
+		await expect(page.locator('.elemenx-cast-person')).toHaveCount(6);
+	},
+
+	Telemetry: async function (page) {
+		/* What the board shows a second, and how far behind the feed its latest packet is (the server and the page share the clock). */
+		var stats = function () {
+			return page.evaluate(function () {
+				var board = Elemenx.Instance(document.querySelector('.telemetry'));
+				var feed = board.$Service('Feed');
+
+				return Object.assign({Received: feed.Received, Behind: feed.Latest ? Date.now() - feed.Latest.Time : null}, board.Stats);
+			});
+		};
+
+		/* The packets the page received a second over a few seconds, whatever one second of them was. */
+		var rate = async function () {
+			var first = await stats();
+
+			await page.waitForTimeout(3000);
+
+			return ((await stats()).Received - first.Received) / 3;
+		};
+
+		/* The race car: its channels, then the feed at 20 packets a second, each shown. */
+		await expect(page.locator('.telemetry-group h2').first()).toHaveText('Drive');
+		await expect(page.locator('.telemetry-channel')).toHaveCount(37);
+
+		await expect.poll(async function () {
+			return (await stats()).Updates;
+		}, {timeout: 10000}).toBeGreaterThanOrEqual(10);
+
+		expect(await rate()).toBeGreaterThanOrEqual(17);
+
+		/* The cluster: sixty channels, its own theme gone from the board (the car had darcula). */
+		await page.locator('.telemetry-header').getByText('Server cluster').click();
+
+		await expect(page.locator('.telemetry-channel')).toHaveCount(60);
+		await expect(page.locator('.telemetry')).not.toHaveAttribute('data-theme', 'darcula');
+
+		/*
+		 * 120 packets a second on a processor four times slower (a busy machine): they all come, the board keeps up
+		 * with the feed (it skips frames rather than fall behind), and its updates follow its frames.
+		 */
+		var cdp = await page.context().newCDPSession(page);
+
+		await cdp.send('Emulation.setCPUThrottlingRate', {rate: 4});
+
+		await page.evaluate(function () {
+			Elemenx.Instance(document.querySelector('.telemetry')).Rated(120);
+		});
+
+		await page.waitForTimeout(1000);
+
+		expect(await rate()).toBeGreaterThanOrEqual(100);
+
+		var at = await stats();
+
+		expect(at.Behind).toBeLessThan(500);
+		expect(at.Updates).toBeGreaterThanOrEqual(1);
+
+		/* Half of the frames at most carry an update: the page keeps time for the rest (without it, every frame had one). */
+		expect(at.Fps).toBeGreaterThanOrEqual(at.Updates * 2);
+
+		await cdp.send('Emulation.setCPUThrottlingRate', {rate: 1});
+
+		/* Paused: the packets go on, the board stays. */
+		await page.getByRole('button', {name: 'Pause'}).click();
+
+		await expect.poll(async function () {
+			return (await stats()).Updates;
+		}, {timeout: 5000}).toBe(0);
+	},
+
 	Signup: async function (page) {
 		var field = function (label) {
 			return page.locator('.elemenx-field').filter({has: page.getByText(label, {exact: true})});

@@ -61,6 +61,32 @@ describe('Regression: Template and Component contracts', function () {
 		expect(mounted(Elemenx.Component(unique('Hashed'), {$Template: '#1 of 3'})()).$Element().textContent).toBe('#1 of 3');
 	});
 
+	it('a prop goes to the value of its letters, not to a method whose name differs only in case (FPS and Fps)', async function () {
+		var child = unique('CaseChild');
+		var made = null;
+
+		Elemenx.Component(child, {
+			$Template: '<span class="case-child">{{Fps()}}</span>',
+			FPS: 30,
+			$OnCreate: function () {
+				made = this;
+			},
+			Fps: function () {
+				return Number(this.FPS);
+			}
+		});
+
+		mounted(Elemenx.Component(unique('CaseHost'), {$Template: '<div><' + child + ' FPS="25" /></div>'})());
+
+		await waitFor(function () {
+			return made;
+		});
+
+		expect(Number(made.FPS)).toBe(25);
+		expect(typeof made.Fps).toBe('function');
+		expect(document.querySelector('.case-child').textContent).toBe('25');
+	});
+
 	it('a <template> of the page finds its Components in any case (the parser writes their names in lower case)', function () {
 		var child = unique('CaseChild');
 		var element = unique('CaseTemplate');

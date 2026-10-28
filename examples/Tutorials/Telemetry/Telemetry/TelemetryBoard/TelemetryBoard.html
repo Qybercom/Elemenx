@@ -1,0 +1,40 @@
+<div class="elemenx-screen telemetry">
+	<header class="telemetry-header">
+		<strong class="telemetry-name">Telemetry</strong>
+		<RadioGroup Variant="segmented" [value]="Scene" [options]="Scenes" Label="Scene" (change)="Picked" />
+		<div class="telemetry-rate">
+			<Slider [value]="Hz" Min="1" Max="120" Label="Packets a second" Unit="Hz" ShowValue="always" (change)="Rated" />
+		</div>
+		<Button [label]="Paused ? 'Resume' : 'Pause'" [icon]="Paused ? 'play' : 'pause'" Variant="secondary" Size="small" (click)="Toggle" />
+		<span class="elemenx-spacer"></span>
+		<dl class="telemetry-stats" aria-live="off">
+			<div><dt>FPS</dt><dd class="telemetry-fps">{{Stats.Fps}}</dd></div>
+			<div><dt>Packets/s</dt><dd class="telemetry-packets">{{Stats.Packets}}</dd></div>
+			<div><dt>Updates/s</dt><dd class="telemetry-updates">{{Stats.Updates}}</dd></div>
+		</dl>
+	</header>
+	<main class="telemetry-main">
+		<section class="telemetry-group" *for="group of Groups" *key="group.Name" [attribute.aria-label]="group.Name">
+			<h2>{{group.Name}}</h2>
+			<div class="telemetry-channels">
+				<div class="telemetry-channel" *for="item of group.Channels" *key="item.ID" [class]="[item.Kind, Lit[item.ID] ? 'alarm' : '']" [attribute.data-channel]="item.ID">
+					<Meter *if="item.Kind === 'dial'" Shape="dial" Needle="true" Ticks="9" [value]="Math.round(Values[item.ID] || item.Min)" [min]="item.Min" [max]="item.Max" [high]="item.Alarm" [label]="item.Label" [unit]="item.Unit" ShowValue="true" Size="small" />
+					<Meter *if="item.Kind === 'bar'" [value]="Values[item.ID] || item.Min" [min]="item.Min" [max]="item.Max" [high]="item.Alarm" [label]="item.Label" [unit]="item.Unit" ShowValue="true" Size="small" />
+					<span class="telemetry-label" *if="item.Kind === 'number' || item.Kind === 'spark' || item.Kind === 'signal' || item.Kind === 'lamp'">{{item.Label}}</span>
+					<span class="telemetry-number" *if="item.Kind === 'number'">{{Text(item, Values[item.ID])}}</span>
+					<Sparkline *if="item.Kind === 'spark'" [values]="Series[item.ID] || []" Type="area" Width="160" Height="36" [min]="item.Min" [max]="item.Max" Dot="true" [label]="item.Label" />
+					<span class="telemetry-value" *if="item.Kind === 'spark'">{{Text(item, Values[item.ID])}}</span>
+					<Signal *if="item.Kind === 'signal'" [value]="Values[item.ID] || 0" Bars="4" />
+					<span class="telemetry-lamp" *if="item.Kind === 'lamp'" [class.on]="!!Lit[item.ID]" role="img" [attribute.aria-label]="item.Label + (Lit[item.ID] ? ': on' : ': off')"></span>
+				</div>
+			</div>
+		</section>
+		<section class="telemetry-group telemetry-log" aria-label="Alarms">
+			<h2>Alarms</h2>
+			<p class="elemenx-text small muted" *if="!Log.length">None yet.</p>
+			<ol>
+				<li *for="line of Log" *key="line.ID"><time>{{line.Time}}</time> {{line.Text}}</li>
+			</ol>
+		</section>
+	</main>
+</div>

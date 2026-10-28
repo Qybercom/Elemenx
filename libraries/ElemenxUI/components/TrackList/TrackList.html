@@ -1,0 +1,19 @@
+<div class="elemenx-track-list" [class.with-album]="Shows('album')" [class.with-artist]="Shows('artist')">
+	<div class="elemenx-track-list-rows" role="list" [attribute.aria-label]="Label || $T('ui.media.tracks')">
+		<div class="elemenx-track" role="listitem" *for="track of Items" *key="track.ID" [class.current]="IsCurrent(track)" [class.playing]="IsCurrent(track) && Playing" [class.disabled]="!!track.Disabled" [attribute.tabindex]="track.Disabled ? '-1' : '0'" [attribute.aria-current]="IsCurrent(track) ? 'true' : null" [attribute.aria-disabled]="track.Disabled ? 'true' : null" [attribute.data-track]="track.ID" [attribute.aria-label]="(track.Number || $index + 1) + '. ' + track.Title + (track.Artist ? ', ' + track.Artist : '') + ', ' + Time(track.Duration)" (click)="Pressed" (keydown)="Key">
+			<span class="elemenx-track-number">
+				<span class="elemenx-track-index">{{track.Number || $index + 1}}</span>
+				<span class="elemenx-track-bars" aria-hidden="true"><i></i><i></i><i></i></span>
+				<span class="elemenx-track-action" aria-hidden="true"><Icon [name]="IsCurrent(track) && Playing ? 'pause' : 'play'" Size="16" /></span>
+			</span>
+			<span class="elemenx-track-main">
+				<span class="elemenx-track-title">{{track.Title}}<span class="elemenx-track-explicit" *if="track.Explicit" [attribute.title]="$T('ui.media.explicit')">E</span></span>
+				<span class="elemenx-track-artist" *if="track.Artist && !Shows('artist')">{{track.Artist}}</span>
+			</span>
+			<span class="elemenx-track-column" *if="Shows('artist')">{{track.Artist || ''}}</span>
+			<span class="elemenx-track-column" *if="Shows('album')">{{track.Album || ''}}</span>
+			<span class="elemenx-track-duration">{{track.Duration ? Time(track.Duration) : ''}}</span>
+		</div>
+	</div>
+	<div class="elemenx-track-list-total" *if="Total && Total !== 'false' && (Items || []).length">{{$T('ui.media.trackCount', {count: (Items || []).length})}} · {{Time(Length())}}</div>
+</div>

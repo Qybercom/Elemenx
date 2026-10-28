@@ -466,6 +466,44 @@ describe('Regression: Router / Guards', function () {
 		x.App.$Destroy();
 	});
 
+	it('a method an expression calls reads this.$Params from the first render of a routed page', async function () {
+		var page = unique('ParamsPage');
+		var seen = [];
+		var errors = [];
+		var consoleError = console.error;
+
+		Elemenx.Component(page, {
+			$Template: '<p id="kind">{{Label()}}</p>',
+			Label: function () {
+				seen.push(this.$Params && this.$Params.kind);
+
+				return 'kind ' + this.$Params.kind;
+			}
+		});
+
+		console.error = function () {
+			errors.push(Array.prototype.join.call(arguments, ' '));
+		};
+
+		try {
+			var x = boot([{Path: '/kinds/:kind', Component: page}]);
+
+			x.Router.Go('/kinds/music');
+
+			await tick(50);
+
+			expect(document.getElementById('kind').textContent).toBe('kind music');
+			expect(seen[0]).toBe('music');
+			expect(errors).toEqual([]);
+
+			x.Router.Destroy();
+			x.App.$Destroy();
+		}
+		finally {
+			console.error = consoleError;
+		}
+	});
+
 	it('failed leave guard cancels navigation and keeps current route', async function () {
 		var a = unique('LeaveA');
 		var b = unique('LeaveB');

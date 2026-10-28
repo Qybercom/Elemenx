@@ -1,0 +1,79 @@
+<div class="docs-drawing">
+	<Drawing [value]="Model" [layer]="Layer" (change)="Changed" (select)="Selected" />
+	<div class="docs-stack">
+		<DrawingLayers [value]="Model" [layer]="Layer" (change)="Changed" (select)="Picked" />
+		<div class="docs-row">
+			<Button Label="SVG" Icon="download" Size="small" (click)="Svg" />
+			<Button Label="PNG" Icon="image" Size="small" (click)="Png" />
+		</div>
+		<p class="elemenx-text small muted">{{Note}}</p>
+	</div>
+</div>
+<style>
+	.docs-drawing {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) 200px;
+		gap: 12px;
+	}
+
+	@media (max-width: 640px) {
+		.docs-drawing {
+			grid-template-columns: minmax(0, 1fr);
+		}
+	}
+</style>
+<script>
+({
+	Layer: 'sketch',
+	Note: 'Draw with the tools, choose a layer on the right, press an item to select it.',
+	Model: {
+		Width: 640,
+		Height: 400,
+		Layers: [
+			{ID: 'sky', Name: 'Sky', Visible: true, Locked: true, Items: [
+				{ID: 'sky-back', Type: 'rect', X: 0, Y: 0, W: 640, H: 400, Stroke: 'none', Fill: '#dbe7f5', Width: 0},
+				{ID: 'sun', Type: 'ellipse', X: 470, Y: 40, W: 90, H: 90, Stroke: '#d99a1e', Fill: '#f5c542', Width: 4}
+			]},
+			{ID: 'house', Name: 'House', Visible: true, Locked: false, Items: [
+				{ID: 'walls', Type: 'rect', X: 140, Y: 200, W: 200, H: 150, Stroke: '#5b3a29', Fill: '#e8c39e', Width: 4},
+				{ID: 'roof', Type: 'path', Points: [{X: 120, Y: 205}, {X: 240, Y: 110}, {X: 360, Y: 205}], Brush: 'marker', Stroke: '#c0392b', Width: 4},
+				{ID: 'door', Type: 'rect', X: 215, Y: 270, W: 50, H: 80, Stroke: '#5b3a29', Fill: '#8e5b3a', Width: 3}
+			]},
+			{ID: 'sketch', Name: 'Sketch', Visible: true, Locked: false, Items: [
+				{ID: 'note', Type: 'text', X: 400, Y: 300, Text: 'Home', Size: 32, Stroke: '#2f8f83'},
+				{ID: 'pointer', Type: 'arrow', Points: [{X: 395, Y: 315}, {X: 345, Y: 290}], Stroke: '#2f8f83', Width: 3}
+			]}
+		]
+	},
+
+	Changed: function (model) {
+		this.Model = model;
+	},
+
+	Picked: function (id) {
+		this.Layer = id;
+	},
+
+	Selected: function (ids) {
+		this.Note = ids.length ? 'Selected: ' + ids.length + ' (Ctrl+G groups them, Delete removes them)' : 'Nothing selected';
+	},
+
+	Drawing: function () {
+		return Elemenx.Instance(this.$Element().querySelector('.elemenx-drawing'));
+	},
+
+	Svg: function () {
+		var text = this.Drawing().SVG();
+
+		this.Note = 'An SVG of ' + text.length + ' characters';
+	},
+
+	Png: function () {
+		var self = this;
+
+		this.Drawing().PNG(function (error, url) {
+			self.Note = error ? error.message : 'A PNG of ' + Math.round(url.length * 3 / 4 / 1024) + ' KB';
+		});
+	}
+})
+</script>

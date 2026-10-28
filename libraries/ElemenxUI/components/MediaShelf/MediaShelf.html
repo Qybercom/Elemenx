@@ -1,0 +1,16 @@
+<section class="elemenx-media-shelf" [attribute.aria-label]="Title">
+	<header class="elemenx-media-shelf-header">
+		<h2 class="elemenx-media-shelf-title" *if="Title">{{Title}}</h2>
+		<button class="elemenx-media-shelf-more" type="button" *if="More" (click)="Moved">{{More}}<Icon Name="chevron-right" Size="16" /></button>
+		<span class="elemenx-media-shelf-arrows">
+			<Button Variant="ghost" Size="small" Shape="round" Icon="chevron-left" [title]="$T('ui.media.back')" [disabled]="Start" (click)="Back" />
+			<Button Variant="ghost" Size="small" Shape="round" Icon="chevron-right" [title]="$T('ui.media.forward')" [disabled]="End" (click)="Forward" />
+		</span>
+	</header>
+	<div class="elemenx-media-shelf-track" role="list" (keydown)="Key">
+		<div class="elemenx-media-shelf-item" role="listitem" *for="item of Items" *key="item.ID">
+			<MediaCard [item]="item" [title]="item.Title" [subtitle]="item.Subtitle || ''" [image]="item.Image || ''" [ratio]="item.Ratio || Ratio" [kind]="item.Kind || ''" [badge]="item.Badge || ''" [rating]="item.Rating === undefined ? null : item.Rating" [max]="Max" [progress]="item.Progress === undefined ? null : item.Progress" [tags]="item.Tags || []" [href]="item.Href || ''" [size]="Size" [playable]="Playable" [favorable]="Favorable" [favorite]="!!item.Favorite" (open)="Opened" (play)="Played" />
+		</div>
+		<slot></slot>
+	</div>
+</section>

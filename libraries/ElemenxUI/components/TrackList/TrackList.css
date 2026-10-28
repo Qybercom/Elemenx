@@ -1,0 +1,162 @@
+.elemenx-track-list {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	min-width: 0;
+}
+
+.elemenx-track-list-rows {
+	display: flex;
+	flex-direction: column;
+}
+
+.elemenx-track {
+	display: grid;
+	grid-template-columns: 32px minmax(0, 1fr) auto;
+	align-items: center;
+	gap: 12px;
+	min-height: 48px;
+	padding: 4px 12px 4px 8px;
+	border-radius: var(--elemenx-radius);
+	cursor: pointer;
+}
+
+.elemenx-track-list.with-artist .elemenx-track {
+	grid-template-columns: 32px minmax(0, 2fr) minmax(0, 1fr) auto;
+}
+
+.elemenx-track-list.with-album .elemenx-track {
+	grid-template-columns: 32px minmax(0, 2fr) minmax(0, 1fr) auto;
+}
+
+.elemenx-track-list.with-artist.with-album .elemenx-track {
+	grid-template-columns: 32px minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr) auto;
+}
+
+.elemenx-track:hover {
+	background: var(--elemenx-surface-hover);
+}
+
+.elemenx-track:focus-visible {
+	outline: 2px solid var(--elemenx-focus);
+	outline-offset: -2px;
+}
+
+.elemenx-track.disabled {
+	cursor: default;
+	opacity: 0.5;
+}
+
+.elemenx-track-number {
+	position: relative;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 24px;
+	color: var(--elemenx-text-muted);
+	font-variant-numeric: tabular-nums;
+}
+
+.elemenx-track-bars,
+.elemenx-track-action {
+	display: none;
+}
+
+.elemenx-track:not(.disabled):hover .elemenx-track-index,
+.elemenx-track:not(.disabled):focus-visible .elemenx-track-index,
+.elemenx-track.playing .elemenx-track-index {
+	display: none;
+}
+
+.elemenx-track:not(.disabled):hover .elemenx-track-action,
+.elemenx-track:not(.disabled):focus-visible .elemenx-track-action {
+	display: inline-flex;
+	color: var(--elemenx-text);
+}
+
+.elemenx-track.playing:not(:hover):not(:focus-visible) .elemenx-track-bars {
+	display: inline-flex;
+	align-items: flex-end;
+	gap: 2px;
+	height: 14px;
+}
+
+.elemenx-track-bars i {
+	width: 3px;
+	height: 100%;
+	background: var(--elemenx-accent);
+	animation: elemenx-track-bars 0.9s ease-in-out infinite alternate;
+}
+
+.elemenx-track-bars i:nth-child(2) {
+	animation-delay: -0.3s;
+}
+
+.elemenx-track-bars i:nth-child(3) {
+	animation-delay: -0.6s;
+}
+
+@keyframes elemenx-track-bars {
+	from {
+		transform: scaleY(0.25);
+	}
+
+	to {
+		transform: scaleY(1);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.elemenx-track-bars i {
+		animation: none;
+	}
+}
+
+.elemenx-track-main {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+}
+
+.elemenx-track-title,
+.elemenx-track-artist,
+.elemenx-track-column {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.elemenx-track.current .elemenx-track-title {
+	color: var(--elemenx-accent);
+	font-weight: var(--elemenx-font-weight-strong);
+}
+
+.elemenx-track-explicit {
+	display: inline-block;
+	margin-inline-start: 6px;
+	padding: 0 4px;
+	border-radius: var(--elemenx-radius-small);
+	background: var(--elemenx-text-muted);
+	color: var(--elemenx-surface);
+	font-size: 0.6875rem;
+	font-weight: var(--elemenx-font-weight-bold);
+	line-height: 1.4;
+	vertical-align: 1px;
+}
+
+.elemenx-track-artist,
+.elemenx-track-column,
+.elemenx-track-duration {
+	color: var(--elemenx-text-muted);
+	font-size: var(--elemenx-font-size-small);
+}
+
+.elemenx-track-duration {
+	font-variant-numeric: tabular-nums;
+}
+
+.elemenx-track-list-total {
+	padding: 0 12px;
+	color: var(--elemenx-text-muted);
+	font-size: var(--elemenx-font-size-small);
+}

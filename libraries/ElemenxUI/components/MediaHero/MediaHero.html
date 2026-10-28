@@ -1,0 +1,22 @@
+<section class="elemenx-media-hero" [class]="[Size === 'compact' ? 'compact' : '', Image ? 'backdrop' : '']" [attribute.aria-label]="Title">
+	<img class="elemenx-media-hero-backdrop" *if="Image" [src]="Image" alt="" />
+	<div class="elemenx-media-hero-inner">
+		<div class="elemenx-media-hero-poster" *if="Poster" [attribute.style]="'aspect-ratio: ' + String(PosterRatio || '2:3').replace(':', ' / ')"><img [src]="Poster" alt="" /></div>
+		<div class="elemenx-media-hero-text">
+			<span class="elemenx-media-hero-subtitle" *if="Subtitle">{{Subtitle}}</span>
+			<h1 class="elemenx-media-hero-title">{{Title}}</h1>
+			<div class="elemenx-media-hero-meta" *if="(Facts && Facts.length) || (Rating !== null && Rating !== '')">
+				<span class="elemenx-media-hero-score" *if="Rating !== null && Rating !== ''" [attribute.aria-label]="$T('ui.media.score') + ' ' + Rating"><Icon Name="star-filled" Size="16" />{{Math.round(Number(Rating) * 10) / 10}}<small>/{{Max}}</small></span>
+				<span class="elemenx-media-hero-fact" *for="fact of Facts || []" *key="fact">{{fact}}</span>
+			</div>
+			<div class="elemenx-media-hero-tags" *if="Tags && Tags.length"><span class="elemenx-chip" *for="tag of Tags" *key="tag">{{tag}}</span></div>
+			<p class="elemenx-media-hero-description" *if="Description">{{Description}}</p>
+			<div class="elemenx-media-hero-progress" *if="Seen()" role="progressbar" aria-valuemin="0" aria-valuemax="100" [attribute.aria-valuenow]="Math.round(Number(Progress) * 100)" [attribute.aria-label]="$T('ui.media.progress')"><span [style.width]="Number(Progress) * 100 + '%'"></span></div>
+			<div class="elemenx-media-hero-actions">
+				<Button *if="Playable" Variant="primary" Icon="play" [label]="Seen() ? (ResumeLabel || $T('ui.media.resume')) : (PlayLabel || $T('ui.media.play'))" (click)="Play" />
+				<Button *if="Favorable" Variant="secondary" Icon="heart" [pressed]="!!Favorite" [title]="$T('ui.media.favorite')" (click)="Star" />
+				<slot></slot>
+			</div>
+		</div>
+	</div>
+</section>

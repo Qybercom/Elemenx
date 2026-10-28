@@ -61,4 +61,4 @@ A gallery: one picture at a time out of Items [{ID, Image, Thumb, Alt, Title, De
 
 - [a mouse drags a gallery and the pictures of a product card across, and the click that ends the drag presses nothing](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L2161) — `tests/examples/ui-kit.spec.js`
 - [a finger swipes a gallery and the pictures of a product card across, and drags a menu sheet down to close it](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L2223) — `tests/examples/ui-kit.spec.js`
-- [gallery shows one picture with its caption, goes by arrows, dots, thumbnails, keys and swipes, and plays by itself](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L5404) — `tests/examples/ui-kit.spec.js`
+- [gallery shows one picture with its caption, goes by arrows, dots, thumbnails, keys and swipes, and plays by itself](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L5409) — `tests/examples/ui-kit.spec.js`

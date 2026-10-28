@@ -597,10 +597,16 @@ Elemenx.Service('Audio', {
 		/* The beat scheduled up to (the notes and the clicks before it are on their way). */
 		var cursor = 0;
 		var paused = 0;
+		/* The end on its way (its timer): the last note was scheduled, end comes after it. */
+		var ending = null;
 		var transport;
 
-		function emit (name, value, time) {
-			var delay = Math.max(0, (time - context.currentTime) * 1000);
+		/*
+		 * An event at a time of the clock of the context, now the clock as the tick read it: the events of one tick wait
+		 * from the same moment, so the ones of the same time come in the order they were scheduled.
+		 */
+		function emit (name, value, time, now) {
+			var delay = Math.max(0, (time - now) * 1000);
 
 			timeouts.push(setTimeout(function () {
 				listeners[name].slice().forEach(function (callback) {
@@ -638,7 +644,8 @@ Elemenx.Service('Audio', {
 		}
 
 		/* The notes and the beats in [from, to) of the beats, at their times from base (the time of the beat from). */
-		function schedule (from, to, base) {
+		function schedule (from, to, base, now) {
+			var events = [];
 			var beat;
 
 			settings.Notes.forEach(function (note) {
@@ -652,7 +659,7 @@ Elemenx.Service('Audio', {
 				if (settings.Instrument)
 					settings.Instrument.Play(note.Note, {Time: time, Duration: seconds(Number(note.Length) || 0.25), Velocity: note.Velocity});
 
-				emit('note', note, time);
+				events.push({Name: 'note', Value: note, Time: time, Order: events.length});
 			});
 
 			for (beat = Math.ceil(from - 1e-9) || 0; beat < to; beat++) {
@@ -663,13 +670,24 @@ Elemenx.Service('Audio', {
 				if (settings.Metronome)
 					click(time, accent);
 
-				emit('beat', {Beat: beat, Bar: Math.floor(beat / beats), Accent: accent}, time);
+				events.push({Name: 'beat', Value: {Beat: beat, Bar: Math.floor(beat / beats), Accent: accent}, Time: time, Order: events.length});
 			}
+
+			/*
+			 * The events in the order of their times (a note before the beat of its time): a page that comes late gives
+			 * them all at once, in the order they are given.
+			 */
+			events.sort(function (a, b) {
+				return a.Time - b.Time || a.Order - b.Order;
+			}).forEach(function (event) {
+				emit(event.Name, event.Value, event.Time, now);
+			});
 		}
 
 		/* A tick: what comes in the next tenth of a second goes to the clock of the context. */
 		function tick () {
-			var ahead = context.currentTime + 0.12;
+			var now = context.currentTime;
+			var ahead = now + 0.12;
 			var horizon = origin.Beat + (ahead - origin.Time) / seconds(1);
 			var loop = settings.Loop;
 			var end;
@@ -685,7 +703,7 @@ Elemenx.Service('Audio', {
 					end = Number(loop.End);
 				}
 
-				schedule(cursor, end, origin.Time + seconds(cursor - origin.Beat));
+				schedule(cursor, end, origin.Time + seconds(cursor - origin.Beat), now);
 
 				if (loop && Number(loop.End) > Number(loop.Start) && end >= Number(loop.End)) {
 					/* Round the loop: its start goes on at the time its end comes. */
@@ -700,14 +718,24 @@ Elemenx.Service('Audio', {
 				cursor = end;
 			}
 
-			if (!loop && cursor >= last() && transport.Position() >= last()) {
-				transport.Pause();
+			/*
+			 * Without a loop, the end is an event of the time of the end of the last note, after its events: a page late
+			 * on its timers still hears every note before it, and the end stops nothing that was to come.
+			 */
+			if (!loop && cursor >= last() && !ending) {
+				ending = setTimeout(function () {
+					ending = null;
 
-				paused = 0;
+					transport.Pause();
 
-				listeners.end.slice().forEach(function (callback) {
-					callback();
-				});
+					paused = 0;
+
+					listeners.end.slice().forEach(function (callback) {
+						callback();
+					});
+				}, Math.max(0, (origin.Time + seconds(last() - origin.Beat) - now) * 1000));
+
+				timeouts.push(ending);
 			}
 		}
 
@@ -726,6 +754,9 @@ Elemenx.Service('Audio', {
 
 				/* A new tempo from where it is now; what was on its way at the old one plays out. */
 				if (transport.Playing) {
+					clearTimeout(ending);
+
+					ending = null;
 					previous = null;
 					origin = {Beat: position, Time: context.currentTime};
 					cursor = Math.max(cursor, position);
@@ -741,6 +772,7 @@ Elemenx.Service('Audio', {
 					context.resume();
 
 				transport.Playing = true;
+				ending = null;
 				previous = null;
 				origin = {Beat: paused, Time: context.currentTime + 0.05};
 				cursor = paused;
@@ -763,6 +795,7 @@ Elemenx.Service('Audio', {
 
 				timeouts = [];
 				timer = null;
+				ending = null;
 
 				if (settings.Instrument)
 					settings.Instrument.Stop();

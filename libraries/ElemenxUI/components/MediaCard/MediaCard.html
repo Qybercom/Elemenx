@@ -1,0 +1,19 @@
+<article class="elemenx-media-card" [class]="[Size || 'medium', Href ? 'linked' : '']" tabindex="0" [attribute.aria-label]="Title + (Subtitle ? ', ' + Subtitle : '')" (click)="Open" (keydown)="Key">
+	<div class="elemenx-media-card-poster" [attribute.style]="'aspect-ratio: ' + String(Ratio || '2:3').replace(':', ' / ')">
+		<img *if="Image" [src]="Image" alt="" loading="lazy" />
+		<span class="elemenx-media-card-blank" *if="!Image" aria-hidden="true">{{String(Title || '?').charAt(0)}}</span>
+		<span class="elemenx-media-card-kind" *if="Kind">{{Kind}}</span>
+		<span class="elemenx-badge elemenx-media-card-badge" *if="Badge" [class]="[BadgeVariant || 'accent']">{{Badge}}</span>
+		<span class="elemenx-media-card-score" *if="Rating !== null && Rating !== '' && !Stars()" [class]="[Tone()]" [attribute.aria-label]="$T('ui.media.score') + ' ' + Score()">{{Score()}}</span>
+		<button class="elemenx-media-card-play" type="button" *if="Playable" [attribute.aria-label]="$T('ui.media.play') + ' ' + Title" (click)="Play"><Icon Name="play" /></button>
+		<button class="elemenx-media-card-favorite" type="button" *if="Favorable" [class.on]="!!Favorite" [attribute.aria-pressed]="String(!!Favorite)" [attribute.aria-label]="$T('ui.media.favorite')" (click)="Star"><Icon Name="heart" /></button>
+		<span class="elemenx-media-card-progress" *if="Progress !== null && Progress !== ''" role="progressbar" aria-valuemin="0" aria-valuemax="100" [attribute.aria-valuenow]="Math.round(Part() * 100)" [attribute.aria-label]="$T('ui.media.progress')"><span [style.width]="Part() * 100 + '%'"></span></span>
+	</div>
+	<div class="elemenx-media-card-text">
+		<h3 class="elemenx-media-card-title"><a class="elemenx-media-card-link" *if="Href" [href]="Href" tabindex="-1">{{Title}}</a><span *if="!Href">{{Title}}</span></h3>
+		<span class="elemenx-media-card-subtitle" *if="Subtitle">{{Subtitle}}</span>
+		<Rating *if="Rating !== null && Rating !== '' && Stars()" [value]="Rating" Half="true" ReadOnly="true" Size="small" [label]="$T('ui.media.score')" />
+		<span class="elemenx-media-card-tags" *if="Tags && Tags.length">{{Tags.join(' · ')}}</span>
+		<slot></slot>
+	</div>
+</article>

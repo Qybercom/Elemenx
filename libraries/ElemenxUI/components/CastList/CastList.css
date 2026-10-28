@@ -1,0 +1,90 @@
+.elemenx-cast {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	min-width: 0;
+	contain: inline-size;
+}
+
+.elemenx-cast-title {
+	margin: 0;
+	font-size: var(--elemenx-font-size-large);
+	font-weight: var(--elemenx-font-weight-bold);
+}
+
+.elemenx-cast-people {
+	display: flex;
+	gap: 16px;
+}
+
+.elemenx-cast.row .elemenx-cast-people {
+	padding: 4px 2px 10px;
+	overflow-x: auto;
+	scrollbar-width: thin;
+}
+
+.elemenx-cast.grid .elemenx-cast-people {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+}
+
+.elemenx-cast.list .elemenx-cast-people {
+	flex-direction: column;
+	gap: 4px;
+}
+
+.elemenx-cast-person {
+	display: flex;
+	flex: none;
+	flex-direction: column;
+	align-items: center;
+	gap: 6px;
+	width: 110px;
+	padding: 6px;
+	border-radius: var(--elemenx-radius-large);
+	text-align: center;
+	cursor: pointer;
+}
+
+.elemenx-cast.grid .elemenx-cast-person {
+	width: auto;
+}
+
+.elemenx-cast.list .elemenx-cast-person {
+	flex-direction: row;
+	width: auto;
+	text-align: start;
+}
+
+.elemenx-cast-person:hover {
+	background: var(--elemenx-surface-hover);
+}
+
+.elemenx-cast-person:focus-visible {
+	outline: 2px solid var(--elemenx-focus);
+	outline-offset: -2px;
+}
+
+.elemenx-cast-text {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+	max-width: 100%;
+}
+
+.elemenx-cast-name {
+	overflow: hidden;
+	color: var(--elemenx-text);
+	font-weight: var(--elemenx-font-weight-strong);
+	text-decoration: none;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.elemenx-cast-role {
+	overflow: hidden;
+	color: var(--elemenx-text-muted);
+	font-size: var(--elemenx-font-size-small);
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}

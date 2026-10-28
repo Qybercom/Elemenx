@@ -1,0 +1,282 @@
+.elemenx-video-timeline {
+	--elemenx-video-timeline-head: 160px;
+	--elemenx-video-timeline-row: 52px;
+	--elemenx-video-timeline-ruler: 28px;
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+	overflow: hidden;
+	border: 1px solid var(--elemenx-border);
+	border-radius: var(--elemenx-radius-large);
+	background: var(--elemenx-surface);
+	color: var(--elemenx-text);
+	contain: inline-size;
+	user-select: none;
+}
+
+.elemenx-video-timeline:focus-visible {
+	outline: 2px solid var(--elemenx-focus);
+	outline-offset: 2px;
+}
+
+.elemenx-video-timeline-toolbar {
+	display: flex;
+	align-items: center;
+	gap: 2px;
+	padding: 4px 8px;
+	border-bottom: 1px solid var(--elemenx-border);
+}
+
+.elemenx-video-timeline-timecode {
+	font-family: var(--elemenx-font-mono);
+	font-size: var(--elemenx-font-size);
+	font-variant-numeric: tabular-nums;
+}
+
+.elemenx-video-timeline-body {
+	display: flex;
+	min-width: 0;
+}
+
+.elemenx-video-timeline-heads {
+	flex: none;
+	width: var(--elemenx-video-timeline-head);
+	border-inline-end: 1px solid var(--elemenx-border);
+}
+
+.elemenx-video-timeline-corner {
+	height: var(--elemenx-video-timeline-ruler);
+	border-bottom: 1px solid var(--elemenx-border);
+}
+
+.elemenx-video-timeline-head {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	height: var(--elemenx-video-timeline-row);
+	padding: 0 4px 0 8px;
+	border-bottom: 1px solid var(--elemenx-border);
+	box-sizing: border-box;
+	color: var(--elemenx-text-muted);
+}
+
+.elemenx-video-timeline-name {
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	color: var(--elemenx-text);
+	font-size: var(--elemenx-font-size-small);
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.elemenx-video-timeline-toggle {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 26px;
+	height: 26px;
+	padding: 0;
+	border: 0;
+	border-radius: var(--elemenx-radius);
+	background: transparent;
+	color: var(--elemenx-text-muted);
+	cursor: pointer;
+}
+
+.elemenx-video-timeline-toggle:hover,
+.elemenx-video-timeline-toggle[aria-pressed="true"] {
+	color: var(--elemenx-text);
+}
+
+.elemenx-video-timeline-scroller {
+	position: relative;
+	flex: 1;
+	min-width: 0;
+	overflow-x: auto;
+	overflow-y: hidden;
+	scrollbar-width: thin;
+	touch-action: pan-y;
+}
+
+.elemenx-video-timeline-content {
+	position: relative;
+	min-width: 100%;
+}
+
+.elemenx-video-timeline-ruler {
+	position: relative;
+	height: var(--elemenx-video-timeline-ruler);
+	border-bottom: 1px solid var(--elemenx-border);
+	background: var(--elemenx-surface-raised);
+	cursor: ew-resize;
+}
+
+.elemenx-video-timeline-tick {
+	position: absolute;
+	bottom: 0;
+	height: 5px;
+	border-inline-start: 1px solid var(--elemenx-border);
+}
+
+.elemenx-video-timeline-tick.major {
+	height: 10px;
+	border-color: var(--elemenx-text-muted);
+}
+
+.elemenx-video-timeline-tick.major:not(:empty) {
+	height: var(--elemenx-video-timeline-ruler);
+	padding-inline-start: 4px;
+	color: var(--elemenx-text-muted);
+	font-family: var(--elemenx-font-mono);
+	font-size: 0.6875rem;
+	line-height: 16px;
+	white-space: nowrap;
+}
+
+.elemenx-video-timeline-marker {
+	position: absolute;
+	top: 0;
+	width: 10px;
+	height: 10px;
+	margin-inline-start: -5px;
+	background: var(--elemenx-marker, var(--elemenx-warning));
+	clip-path: polygon(0 0, 100% 0, 50% 100%);
+}
+
+.elemenx-video-timeline-lane {
+	position: relative;
+	height: var(--elemenx-video-timeline-row);
+	border-bottom: 1px solid var(--elemenx-border);
+	box-sizing: border-box;
+}
+
+.elemenx-video-timeline-lane.hidden .elemenx-video-timeline-clip,
+.elemenx-video-timeline-lane.muted .elemenx-video-timeline-clip {
+	opacity: 0.4;
+}
+
+.elemenx-video-timeline-lane.locked {
+	background: repeating-linear-gradient(-45deg, transparent 0 6px, var(--elemenx-surface-hover) 6px 8px);
+}
+
+.elemenx-video-timeline-clip {
+	position: absolute;
+	top: 4px;
+	bottom: 4px;
+	display: flex;
+	align-items: flex-end;
+	overflow: hidden;
+	border: 1px solid var(--elemenx-clip);
+	border-radius: var(--elemenx-radius-small);
+	background: var(--elemenx-clip);
+	box-sizing: border-box;
+	cursor: grab;
+}
+
+/* A veil of the surface over the color of a clip: its label and its wave read over it. */
+.elemenx-video-timeline-clip::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	background: var(--elemenx-surface);
+	opacity: 0.62;
+}
+
+.elemenx-video-timeline-clip.pictured::before {
+	opacity: 0;
+}
+
+.elemenx-video-timeline-clip.pictured {
+	background-image: var(--elemenx-clip-picture);
+	background-repeat: repeat-x;
+	background-size: auto 100%;
+}
+
+.elemenx-video-timeline-lane.locked .elemenx-video-timeline-clip {
+	cursor: default;
+}
+
+.elemenx-video-timeline-clip.selected {
+	box-shadow: 0 0 0 2px var(--elemenx-text);
+}
+
+.elemenx-video-timeline-label {
+	position: relative;
+	z-index: 1;
+	max-width: 100%;
+	padding: 1px 6px;
+	overflow: hidden;
+	color: var(--elemenx-text);
+	font-size: 0.6875rem;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.elemenx-video-timeline-clip.pictured .elemenx-video-timeline-label {
+	background: var(--elemenx-overlay);
+	color: var(--elemenx-overlay-text);
+}
+
+.elemenx-video-timeline-wave {
+	position: absolute;
+	inset: 0;
+	z-index: 1;
+	width: 100%;
+	height: 100%;
+}
+
+.elemenx-video-timeline-wave path {
+	fill: var(--elemenx-clip);
+	opacity: 0.7;
+}
+
+.elemenx-video-timeline-edge {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	z-index: 2;
+	width: 6px;
+	cursor: ew-resize;
+}
+
+.elemenx-video-timeline-edge.start {
+	inset-inline-start: 0;
+}
+
+.elemenx-video-timeline-edge.end {
+	inset-inline-end: 0;
+}
+
+.elemenx-video-timeline-clip:hover .elemenx-video-timeline-edge {
+	background: var(--elemenx-clip);
+}
+
+.elemenx-video-timeline-guide {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	z-index: 3;
+	border-inline-start: 1px dashed var(--elemenx-warning);
+	pointer-events: none;
+}
+
+.elemenx-video-timeline-playhead {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	z-index: 4;
+	border-inline-start: 2px solid var(--elemenx-danger);
+	margin-inline-start: -1px;
+	pointer-events: none;
+}
+
+.elemenx-video-timeline-knob {
+	position: absolute;
+	top: 0;
+	inset-inline-start: -7px;
+	width: 12px;
+	height: 12px;
+	background: var(--elemenx-danger);
+	clip-path: polygon(0 0, 100% 0, 100% 60%, 50% 100%, 0 60%);
+}
