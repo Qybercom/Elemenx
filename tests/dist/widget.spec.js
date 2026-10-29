@@ -55,10 +55,10 @@ test.describe('elemenx build --widget', function () {
 		expect(script).not.toContain('pwaShortName');
 		expect(Buffer.byteLength(script)).toBeLessThan(340 * 1024);
 
-		/* The game themes are packs: the widget names none of them, so they stay out. */
+		/* The themes are packs: the widget names none of them, so they stay out. */
 		expect(script).not.toContain('themes/fantasy.css');
 		expect(script).not.toContain('themes/scifi.css');
-		expect(script).toContain('themes/darcula.css');
+		expect(script).not.toContain('themes/darcula.css');
 		expect(page.match(/<script/g).length).toBe(1);
 		expect(page).toContain('<script src="widget.js"></script>');
 	});

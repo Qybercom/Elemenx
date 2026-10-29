@@ -129,7 +129,10 @@ describe('Contract: the graphs of ElemenxUI', function () {
 		key(body, 'ArrowDown');
 		key(body, 'End');
 
-		await tick(50);
+		/* The rows of the end come after the scroll that brings them, on a frame of their own: waited for (a busy machine is slower). */
+		expect(await waitFor(function () {
+			return !!body.querySelector('[data-id="c399"]');
+		}, 5000)).toBe(true);
 
 		expect(chosen).toEqual(['c1', 'c2', 'c399']);
 		expect(body.scrollTop).toBeGreaterThan(400 * 28 - 200);

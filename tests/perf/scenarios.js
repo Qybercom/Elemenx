@@ -63,6 +63,13 @@
 		Hint: ''
 	});
 
+	/* A child of a larger template of plain elements, two bindings in it: most of a page is markup. */
+	Elemenx.Component('BenchCard', {
+		$Template: '<article class="bench-card"><header class="bench-card-head"><div class="bench-card-avatar"><span class="bench-card-initials">AB</span></div><div class="bench-card-names"><h3 class="bench-card-title">{{Title}}</h3><p class="bench-card-sub">A card of the bench</p></div></header><section class="bench-card-body"><ul class="bench-card-list"><li><span class="bench-card-key">Owner</span><span class="bench-card-value">Ada</span></li><li><span class="bench-card-key">Team</span><span class="bench-card-value">Core</span></li><li><span class="bench-card-key">Place</span><span class="bench-card-value">London</span></li><li><span class="bench-card-key">Since</span><span class="bench-card-value">2024</span></li></ul><div class="bench-card-tags"><span class="bench-card-tag">One</span><span class="bench-card-tag">Two</span><span class="bench-card-tag">Three</span></div></section><footer class="bench-card-foot"><span class="bench-card-count">{{Count}}</span><small class="bench-card-note">Updated today</small></footer></article>',
+		Title: '',
+		Count: 0
+	});
+
 	var Scenarios = {
 		/* 1000 rows of a list: an element each, its bindings and a handler. */
 		'mount-list': function () {
@@ -89,6 +96,23 @@
 			for (k = 0; k < 7; k++) {
 				var start = performance.now();
 				var component = make('<div><BenchItem *for="row of Rows" *key="row.ID" [title]="row.Title" [count]="row.Count" [done]="row.Done" Size="small" Tone="success" Label="Item" Hint="A row" /></div>', {Rows: rows(300)});
+
+				times.push(performance.now() - start);
+
+				clear(component);
+			}
+
+			return median(times);
+		},
+
+		/* 200 cards of a larger template of plain elements, a Component each. */
+		'mount-cards': function () {
+			var times = [];
+			var k;
+
+			for (k = 0; k < 7; k++) {
+				var start = performance.now();
+				var component = make('<div><BenchCard *for="row of Rows" *key="row.ID" [title]="row.Title" [count]="row.Count" /></div>', {Rows: rows(200)});
 
 				times.push(performance.now() - start);
 

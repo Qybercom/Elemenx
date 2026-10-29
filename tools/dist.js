@@ -11,7 +11,17 @@ var Package = require('../package.json');
 
 var Root = path.resolve(__dirname, '..');
 var Library = path.join(Root, 'libraries', 'ElemenxUI');
-var Packs = common.readPacks(Library);
+/* The packs its bundles carry in scripts of their own: a Bundled one (the themes of every day) stays in elemenx-ui.js. */
+var Packs = (function (packs) {
+	var result = {};
+
+	Object.keys(packs).forEach(function (name) {
+		if (!packs[name].Bundled)
+			result[name] = packs[name];
+	});
+
+	return result;
+})(common.readPacks(Library));
 
 /* The dictionaries of ElemenxUI: locales/<language>.json, the source of Elemenx.Locale its declaration names. */
 var Locales = {URL: 'locales/{language}.json', Languages: fs.readdirSync(path.join(Library, 'locales')).filter(function (name) {

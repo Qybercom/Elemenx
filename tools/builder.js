@@ -524,7 +524,61 @@ function discoveredLibraries (project, appSource) {
  * The dictionaries of the Libraries of $Discovery for a build, which finds no graph at run time: a place of
  * dictionaries for each one whose graph lists locales/{language}.json.
  */
-function discoveredLocales (libraries) {
+/*
+ * The languages of an Application, for a build that carries the dictionaries of its Libraries inside it (one file, a
+ * widget, an extension, a native program): those of its $Locales or of an Elemenx.Locale.Source of its code, and the
+ * lang of its page, with en and the one of an Elemenx.Locale.Fallback (the phrases a missing one falls back to). Null
+ * when it names none: its language comes from the browser, every dictionary stays.
+ */
+function appLanguages (appSource, indexSource) {
+	var found = [];
+	var named = false;
+	/* The URL of $Locales holds a { of its own ({language}): its Languages are looked for in the next characters. */
+	var pattern = /(?:\$Locales\s*:\s*\{[\s\S]{0,400}?\bLanguages\s*:|\bLocale\.Source\s*\([^,()]+,)\s*\[([^\]]*)\]/g;
+	var lang = /<html\b[^>]*\blang\s*=\s*["']?([A-Za-z]{2,3})/i.exec(indexSource || '');
+	var fallback = /\bLocale\.Fallback\s*\(\s*['"]([A-Za-z]{2,3})/.exec(appSource || '');
+	var match;
+
+	function add (code) {
+		code = String(code).toLowerCase().split('-')[0];
+
+		if (code && found.indexOf(code) === -1)
+			found.push(code);
+	}
+
+	while ((match = pattern.exec(appSource || ''))) {
+		named = true;
+
+		(match[1].match(/['"][A-Za-z]{2,3}(?:-[A-Za-z0-9]+)*['"]/g) || []).forEach(function (code) {
+			add(code.slice(1, -1));
+		});
+	}
+
+	if (lang) {
+		named = true;
+
+		add(lang[1]);
+	}
+
+	if (!named)
+		return null;
+
+	add('en');
+
+	if (fallback)
+		add(fallback[1]);
+
+	return found;
+}
+
+/* Whether a dictionary of a Library (locales/<language>.json) is of a language a build keeps (languages: null for all). */
+function keptDictionary (relative, languages) {
+	var match = /^locales\/([A-Za-z]{2,3})(?:-[A-Za-z0-9]+)*\.json$/i.exec(String(relative).replace(/\\/g, '/'));
+
+	return !languages || !match || languages.indexOf(match[1].toLowerCase()) !== -1;
+}
+
+function discoveredLocales (libraries, kept) {
 	return libraries.filter(function (library) {
 		return library.Discovered;
 	}).map(function (library) {
@@ -535,7 +589,7 @@ function discoveredLocales (libraries) {
 
 		list.forEach(function (item) {
 			var match = /^locales\/([A-Za-z]{2,3}(?:-[A-Za-z0-9]+)*)\.json$/.exec(item.Relative.replace(/\\/g, '/'));
-			if (match && languages.indexOf(match[1]) === -1)
+			if (match && languages.indexOf(match[1]) === -1 && keptDictionary(item.Relative, kept || null))
 				languages.push(match[1]);
 		});
 
@@ -788,6 +842,13 @@ function copyLibraryResources (output, declarations, choice, minify, framework) 
 				continue;
 			}
 
+			/* A dictionary of a language the Application has not (an extension, a native program: they carry their files). */
+			if (choice && !keptDictionary(resources[ri].Relative, choice.Languages)) {
+				ri++;
+
+				continue;
+			}
+
 			var target = path.resolve(output, declaration.Root, resources[ri].Relative);
 
 			fs.mkdirSync(path.dirname(target), {recursive: true});
@@ -918,7 +979,10 @@ function build (project, options) {
 		i++;
 	}
 
-	bundle = render(entities) + discoveredLocales(libraries);
+	/* A build that carries the dictionaries of its Libraries inside it keeps those of the languages of the Application. */
+	var languages = options.single || options.widget || options.packaged ? appLanguages(appSource, indexSource) : null;
+
+	bundle = render(entities) + discoveredLocales(libraries, languages);
 
 	/* With precompile, the expressions of the templates go as code before the bundle (see expressions.js). */
 	var expressions = options.precompile ? Expressions.Render([bundle, appSource], [indexSource]) : '';
@@ -937,7 +1001,7 @@ function build (project, options) {
 	var pieces = options.split !== false && !options.single ? splitBundle(entities, [templateBundle || '', indexSource, appSource]) : null;
 
 	if (pieces) {
-		bundle = expressions + render(pieces.Main) + '\n' + pieces.Declarations + discoveredLocales(libraries);
+		bundle = expressions + render(pieces.Main) + '\n' + pieces.Declarations + discoveredLocales(libraries, languages);
 
 		process.stdout.write('Elemenx Builder: split by its routes, ' + pieces.Parts.map(function (piece) {
 			return 'parts/' + piece.Name + '.js (' + piece.Names.length + ')';
@@ -963,7 +1027,8 @@ function build (project, options) {
 			Compress: options.minify !== false && options.compress !== false,
 			Full: !!options.full,
 			Uses: ownCode(entities, shared) + '\n' + indexSource + '\n' + appSource,
-			Packs: options.packs || []
+			Packs: options.packs || [],
+			Languages: languages
 		});
 	}
 
@@ -983,7 +1048,7 @@ function build (project, options) {
 
 	copyPublic(project, output, excludedPaths);
 
-	var choice = options.full ? null : {Uses: ownCode(entities, shared) + '\n' + indexSource + '\n' + appSource, Packs: options.packs || [], Removed: {}, Code: (templateBundle || '') + '\n' + whole + '\n' + indexSource + '\n' + appSource};
+	var choice = options.full ? null : {Uses: ownCode(entities, shared) + '\n' + indexSource + '\n' + appSource, Packs: options.packs || [], Removed: {}, Code: (templateBundle || '') + '\n' + whole + '\n' + indexSource + '\n' + appSource, Languages: languages};
 	var libraryStyleHrefs = copyLibraryResources(output, libraries, choice, options.minify !== false, shaken);
 
 	Object.keys(choice ? choice.Removed : {}).forEach(function (name) {
@@ -1128,6 +1193,7 @@ function extension (project, options) {
 		minify: options.minify,
 		compress: false,
 		split: false,
+		packaged: true,
 		packs: options.packs,
 		splash: false,
 		precompile: true,
@@ -1200,6 +1266,7 @@ function native (project, options) {
 		minify: options.minify,
 		compress: false,
 		split: false,
+		packaged: true,
 		packs: options.packs,
 		splash: options.splash,
 		icon: options.icon,
@@ -1340,6 +1407,7 @@ function libraryAssets (job, page) {
 			var relative = item.Relative.replace(/\\/g, '/');
 			var pack = common.packOf(packs, relative);
 			if (pack && !needed(pack, packs[pack])) return;
+			if (!keptDictionary(relative, job.Languages || null)) return;
 
 			var text = fs.readFileSync(item.Source, 'utf8');
 

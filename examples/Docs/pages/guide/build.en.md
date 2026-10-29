@@ -19,7 +19,7 @@
 - **Components** the Application does not render: the build follows the tags of its templates, then the templates of the components it took.
 - **Services, guards and directives** it does not name: it keeps the ones named in quotes in its code (`$Service('Toast')`, `Guards: ['SignedIn']`) and the directives its templates put on elements, and the ones these use in turn.
 - **Files of the libraries**: of the packs (emoji, cities, icon sets, game themes) a build in a folder copies the ones the Application uses, with every language of them (see below).
-- **Phrases of the libraries**: their dictionaries keep the phrases the code of the build names, by their key or the start of one.
+- **Phrases of the libraries**: their dictionaries keep the phrases the code of the build names, by their key or the start of one; a build in one file, a widget, an extension and a native program keep only the languages of the Application (its `$Locales`, the `lang` of its page, and `en`), all of them when it names none.
 - **Parts of the framework**: Router, Network, Storage, Events, Messaging, WebWorker and ServiceWorker stay only when the code of the build uses them (`$Router`, `$Network`, `$Storage`, `$Events` or `$OnEvent`, `$Messaging` or `$OnMessage`, `$WebWorker`, `$ServiceWorker`, `Elemenx.Network`...). Messaging keeps Events; an Application with workers keeps all of the framework, since their scripts are files the build does not read.
 
 The build says what it left out. A name built at run time (`$Service(name)`) cannot show a use: name it in quotes somewhere, or build with `--full`, which keeps all of the framework and every file of the libraries.
@@ -48,7 +48,7 @@ A site and a widget are split by the routes of the Application: the page of a ro
 
 `--single` (or `Single: true`) puts the framework, the Application, its templates and styles and its libraries (their stylesheets, sprites and data through `Elemenx.Resource`) into one `index.html`, minified. The page must load `elemenx.js` and `app.js` with `<script src>`: they take their places. Images and other files are copied next to it.
 
-The packs of a library (emoji, cities, icon sets, game themes) go in only when the Application uses them: a text of their `Uses` in its code or templates (`'Emoji'`, `CityInput`, `brands:`, `'fantasy'`), and a pack of a language when it is the `lang` of `<html>`. `--packs emoji,brands` (or `all`) adds packs the code cannot show.
+The packs of a library (emoji, cities, icon sets, themes) go in only when the Application uses them: a text of their `Uses` in its code or templates (`'Emoji'`, `CityInput`, `brands:`, `'darcula'`, `data-theme="soft"`; `Theme.Themes()` takes every theme), and a pack of a language when it is the `lang` of `<html>`. `--packs emoji,brands` (or `all`) adds packs the code cannot show.
 
 The file runs from any static server and from `file://`, with limits: no worker from a file; a service worker needs a script of its own; the router keeps its route in memory (use `$Router: {Mode: 'hash'}` for routes in the URL); a Content Security Policy must allow inline scripts and styles.
 

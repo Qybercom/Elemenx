@@ -45,7 +45,7 @@
 	 * Elemenx: the namespace of this copy of the framework. The window gets it last (see Export), unless a copy of the
 	 * same version is there already: then this one stops here and the page keeps the first.
 	 */
-	var Version = '0.11.1';
+	var Version = '0.11.2';
 	var Elemenx = {};
 	if (typeof ElemenxIsolated !== 'object' && (typeof globalThis !== 'undefined' ? globalThis : self).Elemenx && (typeof globalThis !== 'undefined' ? globalThis : self).Elemenx.Version === Version) return;
 
@@ -4636,6 +4636,122 @@
 		var fragmentCache = {};
 		var fragmentCount = 0;
 
+		/*
+		 * The plans of the templates by their text (as many as the parsed ones, emptied with them): where the compiler has
+		 * something to read in a fresh root of a template, before its slots are filled. Elements and Texts are the paths
+		 * (the indexes of the children from the root) of its elements with a binding, an event, a directive, a ref or a
+		 * {{ }} in a value (Flags: which, as templateSpecial tells), and of its texts with {{ }}, in the order of the document; Inert the paths of the largest parts
+		 * that have none of them, no Component and no slot (Structural passes them by); Slots whether it has a slot.
+		 */
+		var planCache = {};
+		var planCount = 0;
+
+		/* The inert parts of the templates of the instances being made: Structural passes each by once (it forgets it then). */
+		var inertNodes = Runtime.InertNodes = new WeakSet();
+
+		function templatePlan (root) {
+			var plan = {Elements: [], Flags: [], Texts: [], Inert: [], Slots: false};
+
+			/* Whether a part has something for the compiler: the paths of what it has go into the plan on the way. */
+			function walk (node, path) {
+				var busy = false;
+				var children = [];
+				var child = node.firstChild;
+				var index = 0;
+				var flag = templateSpecial(node);
+				var i = 0;
+
+				if (flag) {
+					plan.Elements.push(path);
+					plan.Flags.push(flag);
+
+					busy = true;
+				}
+
+				if (componentDeclaration(node) || node.tagName.toLowerCase() === 'slot') {
+					plan.Slots = plan.Slots || node.tagName.toLowerCase() === 'slot';
+					busy = true;
+				}
+
+				while (child) {
+					if (child.nodeType === 1) children.push({Path: path.concat(index), Busy: walk(child, path.concat(index))});
+					else if (child.nodeType === 3 && child.nodeValue.indexOf('{{') !== -1) plan.Texts.push(path.concat(index));
+
+					if (child.nodeType === 3 && child.nodeValue.indexOf('{{') !== -1)
+						busy = true;
+
+					child = child.nextSibling;
+
+					index++;
+				}
+
+				while (i < children.length) {
+					busy = busy || children[i].Busy;
+
+					i++;
+				}
+
+				/* The children of a busy part that have nothing are inert: Structural need not go into them. */
+				if (busy) {
+					children.forEach(function (entry) {
+						if (!entry.Busy)
+							plan.Inert.push(entry.Path);
+					});
+				}
+
+				return busy;
+			}
+
+			/* A root with nothing at all: each of its children is inert. */
+			if (root.nodeType === 1 && !walk(root, [])) {
+				Array.prototype.forEach.call(root.childNodes, function (child, index) {
+					if (child.nodeType === 1)
+						plan.Inert.push([index]);
+				});
+			}
+
+			return plan;
+		}
+
+		/* The plan of a template (its text) made once, from the fresh root of an instance. */
+		function componentPlan (key, root) {
+			if (own(planCache, key)) return planCache[key];
+
+			if (planCount >= 1000) {
+				planCache = {};
+				planCount = 0;
+			}
+
+			planCount++;
+
+			return (planCache[key] = templatePlan(root));
+		}
+
+		/* The node of a path in a root, or null. */
+		function planNode (root, path) {
+			var node = root;
+			var i = 0;
+
+			while (node && i < path.length) {
+				node = node.childNodes[path[i]];
+
+				i++;
+			}
+
+			return node || null;
+		}
+
+		/* The nodes of a plan in a fresh root of its template, before its slots are filled: {Listed (by what they have), Texts, Inert}. */
+		function planNodes (plan, root) {
+			function nodes (paths) {
+				return paths.map(function (path) {
+					return planNode(root, path);
+				});
+			}
+
+			return {Listed: templateListed(nodes(plan.Elements), plan.Flags), Texts: nodes(plan.Texts), Inert: nodes(plan.Inert)};
+		}
+
 		function createFragment (html) {
 			var key = String(html);
 			var parsed = own(fragmentCache, key) ? fragmentCache[key] : null;
@@ -4700,29 +4816,95 @@
 		/* A Component (its object, and its Proxy) to the owner of its references: its own, or the one of the Component it is a part of. */
 		var refOwners = new WeakMap();
 
-		/* The #name of the elements of a root, in refs; owner marks whose references they are ($Refs). */
-		function collectRefs (root, refs, owner) {
-			var nodes = [];
-			var all;
+		/*
+		 * Whether an element of a template has something for the compiler: a [binding], an (event), a *directive, a #ref
+		 * (the first character of its name tells) or a {{ }} in a value. The others give the collectors nothing to read.
+		 */
+		/* What an element has for the compiler, as flags: a #ref 1, a [binding] or a {{ }} 2, a *directive 4, an (event) 8; 0 for nothing. */
+		function templateSpecial (node) {
+			var attrs = node.attributes;
+			var flags = 0;
+			var code;
 			var i = 0;
-			var j;
-			var attrs;
-			var name;
 
-			if (root.nodeType === 1)
+			while (i < attrs.length) {
+				code = attrs[i].name.charCodeAt(0);
+
+				if (code === 35) flags |= 1;
+				else if (code === 91) flags |= 2;
+				else if (code === 42) flags |= 4;
+				else if (code === 40) flags |= 8;
+
+				if (attrs[i].value.indexOf('{{') !== -1)
+					flags |= 2;
+
+				i++;
+			}
+
+			return flags;
+		}
+
+		/* The elements of a list by what they have (flags as templateSpecial gives them): {Refs, Bindings, Directives, Events}. */
+		function templateListed (nodes, flags) {
+			var listed = {Refs: [], Bindings: [], Directives: [], Events: []};
+			var i = 0;
+
+			while (i < nodes.length) {
+				if (flags[i] & 1)
+					listed.Refs.push(nodes[i]);
+
+				if (flags[i] & 2)
+					listed.Bindings.push(nodes[i]);
+
+				if (flags[i] & 4)
+					listed.Directives.push(nodes[i]);
+
+				if (flags[i] & 8)
+					listed.Events.push(nodes[i]);
+
+				i++;
+			}
+
+			return listed;
+		}
+
+		/* The elements of a root the compiler reads, in the order of the document (the root first), by what they have: one walk for all the collectors. */
+		function templateElements (root) {
+			var nodes = [];
+			var flags = [];
+			var all;
+			var flag;
+			var i = 0;
+
+			if (root.nodeType === 1 && (flag = templateSpecial(root))) {
 				nodes.push(root);
+				flags.push(flag);
+			}
 
 			if (root.querySelectorAll) {
 				all = root.querySelectorAll('*');
 
 				while (i < all.length) {
-					nodes.push(all[i]);
+					if ((flag = templateSpecial(all[i]))) {
+						nodes.push(all[i]);
+						flags.push(flag);
+					}
 
 					i++;
 				}
 			}
 
-			i = 0;
+			return templateListed(nodes, flags);
+		}
+
+		/* The #name of the elements of a root, in refs; owner marks whose references they are ($Refs). listed: the elements to read (all of them by default). */
+		function collectRefs (root, refs, owner, listed) {
+			var nodes = (listed || templateElements(root)).Refs;
+			var i = 0;
+			var j;
+			var attrs;
+			var name;
+
 			while (i < nodes.length) {
 				attrs = Array.prototype.slice.call(nodes[i].attributes);
 				j = 0;
@@ -4856,8 +5038,9 @@
 			return result;
 		};
 
-		function collectTextBindings (root, bindings) {
-			var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null);
+		/* The {{ }} of the texts of a root (listed: the texts with one, by the plan of its template; all of them by default). */
+		function collectTextBindings (root, bindings, listed) {
+			var walker = listed ? null : document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null);
 			var nodes = [];
 			var node;
 			var fragment;
@@ -4867,7 +5050,14 @@
 			var j;
 			var bindingNode;
 
-			while ((node = walker.nextNode())) {
+			if (listed) {
+				listed.forEach(function (each) {
+					if (each && !structuralOwned(each, root))
+						nodes.push(each);
+				});
+			}
+
+			while (walker && (node = walker.nextNode())) {
 				if (!structuralOwned(node, root))
 					nodes.push(node);
 			}
@@ -5151,9 +5341,8 @@
 			return binding;
 		}
 
-		function collectElementBindings (root, bindings, models) {
-			var nodes = [];
-			var all;
+		function collectElementBindings (root, bindings, models, listed) {
+			var nodes = (listed || templateElements(root)).Bindings;
 			var i = 0;
 			var j;
 			var attrs;
@@ -5167,20 +5356,6 @@
 			var styleState;
 			var states;
 
-			if (root.nodeType === 1)
-				nodes.push(root);
-
-			if (root.querySelectorAll) {
-				all = root.querySelectorAll('*');
-
-				while (i < all.length) {
-					nodes.push(all[i]);
-
-					i++;
-				}
-			}
-
-			i = 0;
 			while (i < nodes.length) {
 				if (structuralOwned(nodes[i], root)) {
 					i++;
@@ -5292,9 +5467,8 @@
 			}
 		}
 
-		function collectCustomDirectives (root, directives) {
-			var nodes = [];
-			var all;
+		function collectCustomDirectives (root, directives, listed) {
+			var nodes = (listed || templateElements(root)).Directives;
 			var i = 0;
 			var j;
 			var attrs;
@@ -5303,20 +5477,6 @@
 			var parent;
 			var skip;
 
-			if (root.nodeType === 1)
-				nodes.push(root);
-
-			if (root.querySelectorAll) {
-				all = root.querySelectorAll('*');
-
-				while (i < all.length) {
-					nodes.push(all[i]);
-
-					i++;
-				}
-			}
-
-			i = 0;
 			while (i < nodes.length) {
 				skip = false;
 				parent = nodes[i];
@@ -5484,27 +5644,14 @@
 			}
 		}
 
-		function collectOutlets (root, outlets) {
-			var nodes = [];
-			var all;
+		function collectOutlets (root, outlets, listed) {
+			var attribute = Runtime.Directive.AttributeForRole('outlet');
+			var nodes = (listed || templateElements(root)).Directives.filter(function (node) {
+				return node.hasAttribute(attribute);
+			});
 			var i = 0;
 			var name;
-			var attribute = Runtime.Directive.AttributeForRole('outlet');
-			if (root.nodeType === 1 && root.hasAttribute(attribute))
-				nodes.push(root);
 
-			if (root.querySelectorAll) {
-				all = root.querySelectorAll('*');
-
-				while (i < all.length) {
-					if (all[i].hasAttribute(attribute))
-						nodes.push(all[i]);
-
-					i++;
-				}
-			}
-
-			i = 0;
 			while (i < nodes.length) {
 				name = nodes[i].getAttribute(attribute);
 
@@ -5663,29 +5810,15 @@
 			return null;
 		}
 
-		function bindEvents (root, api, listen) {
-			var nodes = [];
-			var all;
+		/* The (events) of the elements of a root (listed: the ones to read, all of them by default). */
+		function bindEvents (root, api, listen, listed) {
+			var nodes = (listed || templateElements(root)).Events;
 			var i = 0;
 			var j;
 			var attrs;
 			var attr;
 			var eventName;
 
-			if (root.nodeType === 1)
-				nodes.push(root);
-
-			if (root.querySelectorAll) {
-				all = root.querySelectorAll('*');
-
-				while (i < all.length) {
-					nodes.push(all[i]);
-
-					i++;
-				}
-			}
-
-			i = 0;
 			while (i < nodes.length) {
 				/* A Component declaration keeps its (events) for Structural, also while the Component is still loading. */
 				if (nodes[i].hasAttribute('data-elemenx-component') || Runtime.ResolveComponentRegistered(Runtime.ComponentTag(nodes[i], api.$Application ? api.$Application() : null))) {
@@ -6047,10 +6180,15 @@
 		 * Keep the host transparent to layout while allowing the real root to
 		 * participate in the same structural ownership path as nested directives.
 		 */
-		function componentRoot (template) {
+		/* found, when given, gets the text of the template (Key): its plan is kept under it. */
+		function componentRoot (template, found) {
 			/* The blank around a template (the final newline of its file) is not content: the element alone is the root. */
-			var root = createFragment(resolveTemplate(template).replace(/^\s+|\s+$/g, ''));
+			var text = resolveTemplate(template).replace(/^\s+|\s+$/g, '');
+			var root = createFragment(text);
 			var host;
+
+			if (found)
+				found.Key = text;
 
 			/* A structural host or a Component declaration at the root gets a host of its own, so it is compiled like a child. */
 			if (root.nodeType !== 1 || (!Runtime.Directive.Find(root, 'structural') && !componentDeclaration(root))) return root;
@@ -6362,7 +6500,11 @@
 				var startedAt = new Date();
 				var directState = options && options.DirectState === true;
 				var initialValues = directState ? {} : definitionValues(definition);
-				var root = componentRoot(definition.$Template);
+				var found = {Key: ''};
+				var root = componentRoot(definition.$Template, found);
+				/* Where the compiler has something to read, by the plan of the template: found before the slots are filled. */
+				var plan = componentPlan(found.Key, root);
+				var planned = planNodes(plan, root);
 
 				/*
 				 * Preserve the untouched component DOM before projection/binding/
@@ -6396,24 +6538,32 @@
 				var componentEvents = {};
 				var asleep = null;
 				var seenOuter;
+				var listed;
 				var api;
 
-				/* Instance: template compilation */
-				projectSlots(root, slotProjection);
+				/* Instance: template compilation (a template without a slot has nothing to fill) */
+				if (plan.Slots)
+					projectSlots(root, slotProjection);
 
 				seenOuter = structuralSeen;
 				structuralSeen = new Map();
 
 				try {
-					collectRefs(root, refs, refOwner);
+					/*
+					 * The elements the collectors read: those of the plan, or, in a template with a slot (what fills it is part of
+					 * the root now), those of one walk of it. Most elements of a template have nothing for them.
+					 */
+					listed = plan.Slots ? templateElements(root) : planned.Listed;
 
-					collectOutlets(root, outlets);
+					collectRefs(root, refs, refOwner, listed);
 
-					collectTextBindings(root, bindings);
+					collectOutlets(root, outlets, listed);
 
-					collectElementBindings(root, bindings, models);
+					collectTextBindings(root, bindings, plan.Slots ? null : planned.Texts);
 
-					collectCustomDirectives(root, customDirectives);
+					collectElementBindings(root, bindings, models, listed);
+
+					collectCustomDirectives(root, customDirectives, listed);
 				}
 				finally {
 					structuralSeen = seenOuter;
@@ -6757,7 +6907,13 @@
 
 				bindModels(models, values, effects, listen);
 
-				bindEvents(root, api, listen);
+				bindEvents(root, api, listen, listed);
+
+				/* The parts of the template with nothing for it: Structural passes them by, once. */
+				planned.Inert.forEach(function (node) {
+					if (node)
+						inertNodes.add(node);
+				});
 
 				structural = Runtime.Structural(api, definition, pristineRoot);
 
@@ -9614,6 +9770,13 @@
 
 			function compile (node) {
 				if (node.nodeType !== 1) return;
+
+				/* A part of the template with no directive, no Component and no slot in it (its plan): nothing to compile there. */
+				if (Runtime.InertNodes.has(node)) {
+					Runtime.InertNodes.delete(node);
+
+					return;
+				}
 
 				/* A foreign Application mount owns its complete subtree. */
 				if (Runtime.ApplicationBoundary(component.$Application(), node)) return;

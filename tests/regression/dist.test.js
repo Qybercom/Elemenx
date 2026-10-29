@@ -68,7 +68,7 @@ describe('Elemenx dist', function () {
 	it('leaves the packs of ElemenxUI (packs.json) to scripts of their own that put their files next to the script', function () {
 		var packs = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), 'libraries', 'ElemenxUI', 'packs.json'), 'utf8'));
 
-		expect(Object.keys(packs)).toEqual(['emoji', 'emoji.ru', 'cities', 'cities.ru', 'meta', 'brands', 'files', 'sport', 'racing', 'science', 'art', 'cinema', 'games', 'fantasy', 'scifi']);
+		expect(Object.keys(packs)).toEqual(['emoji', 'emoji.ru', 'cities', 'cities.ru', 'meta', 'brands', 'files', 'sport', 'racing', 'science', 'art', 'cinema', 'games', 'contrast', 'darcula', 'soft', 'fantasy', 'scifi']);
 
 		Object.keys(packs).filter(function (name) {
 			return !/\.css$/.test(packs[name].Files[0]);
@@ -175,15 +175,16 @@ describe('Elemenx dist', function () {
 			expect(embedded('data/emoji-en.json')).toBe(true);
 			expect(embedded('data/emoji-ru.json')).toBe(false);
 
-			/* The game themes go in when the Application names them, or by --packs. */
+			/* The themes go in when the Application names them, or by --packs. */
 			expect(html).not.toContain("[data-theme][data-theme='fantasy']");
-			expect(html).toContain("[data-theme][data-theme='darcula']");
+			expect(html).not.toContain("[data-theme][data-theme='darcula']");
 
-			Builder.Build(project, {single: true, out: '../single-packs-output', packs: ['fantasy']});
+			Builder.Build(project, {single: true, out: '../single-packs-output', packs: ['fantasy', 'darcula']});
 
 			html = fs.readFileSync(path.join(target, 'index.html'), 'utf8');
 
 			expect(html).toContain("[data-theme][data-theme='fantasy']");
+			expect(html).toContain("[data-theme][data-theme='darcula']");
 			expect(html).not.toContain("[data-theme][data-theme='scifi']");
 		}
 		finally {
@@ -214,9 +215,11 @@ describe('Elemenx dist', function () {
 			expect(copied('data/cities.txt')).toBe(false);
 			expect(copied('themes/fantasy.css')).toBe(false);
 			expect(index).not.toContain('themes/fantasy.css');
-			expect(index).toContain('themes/darcula.css');
+			/* The themes the code does not name are packs too: no stylesheet of them linked from the page. */
+			expect(index).not.toContain('themes/darcula.css');
+			expect(copied('themes/contrast.css')).toBe(false);
 
-			Builder.Build(project, {out: '../folder-packs-output', packs: ['emoji', 'fantasy']});
+			Builder.Build(project, {out: '../folder-packs-output', packs: ['emoji', 'fantasy', 'darcula']});
 
 			index = fs.readFileSync(path.join(target, 'index.html'), 'utf8');
 
@@ -225,6 +228,18 @@ describe('Elemenx dist', function () {
 			expect(copied('data/emoji-ru.json')).toBe(true);
 			expect(copied('themes/fantasy.css')).toBe(true);
 			expect(index).toContain('themes/fantasy.css');
+			expect(index).toContain('themes/darcula.css');
+
+			/* A list of the themes (a picker of them) takes every one. */
+			fs.appendFileSync(path.join(project, 'app.js'), '\nwindow.ThemeList = function (theme) {\n\treturn theme.Themes();\n};\n');
+
+			Builder.Build(project, {out: '../folder-packs-output'});
+
+			index = fs.readFileSync(path.join(target, 'index.html'), 'utf8');
+
+			['contrast', 'darcula', 'soft', 'fantasy', 'scifi'].forEach(function (name) {
+				expect(index).toContain('themes/' + name + '.css');
+			});
 
 			Builder.Build(project, {out: '../folder-packs-output', full: true});
 

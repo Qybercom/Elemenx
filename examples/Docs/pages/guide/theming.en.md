@@ -31,7 +31,7 @@ The policy and the theme are kept in `localStorage` and come back on the next vi
 | `Channels(color)` | the channels of a color (`'75, 68, 61'`) for the `-rgb` tokens |
 | `OnChange(callback)`, `OffChange(callback)` | `{Policy, Theme, Name}` after every change, including a change of the system under `system` |
 
-ElemenxUI brings `contrast` (high contrast, light and dark), `darcula` (the dark theme of the JetBrains IDEs), `soft` (round corners, roomier controls, a violet accent), and two themes for games, `fantasy` and `scifi`.
+ElemenxUI brings `contrast` (high contrast, light and dark), `darcula` (the dark theme of the JetBrains IDEs), `soft` (round corners, roomier controls, a violet accent), and two themes for games, `fantasy` and `scifi`. A build takes a theme only when the Application names it (`Theme.Use('soft')`, `data-theme="soft"`) or lists the themes (`Theme.Themes()`); `--packs soft` adds one it cannot see.
 
 ## A theme file
 

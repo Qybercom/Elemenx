@@ -12,6 +12,9 @@
 	"art": {"Files": ["icons/art.svg"], "Uses": ["art:"]},
 	"cinema": {"Files": ["icons/cinema.svg"], "Uses": ["cinema:"]},
 	"games": {"Files": ["icons/games.svg"], "Uses": ["games:"]},
-	"fantasy": {"Files": ["themes/fantasy.css"], "Uses": ["'fantasy'", "\"fantasy\""]},
-	"scifi": {"Files": ["themes/scifi.css"], "Uses": ["'scifi'", "\"scifi\""]}
+	"contrast": {"Bundled": true, "Files": ["themes/contrast.css"], "Uses": ["'contrast'", "\"contrast\"", ".Themes()"]},
+	"darcula": {"Bundled": true, "Files": ["themes/darcula.css"], "Uses": ["'darcula'", "\"darcula\"", ".Themes()"]},
+	"soft": {"Bundled": true, "Files": ["themes/soft.css"], "Uses": ["'soft'", "\"soft\"", ".Themes()"]},
+	"fantasy": {"Files": ["themes/fantasy.css"], "Uses": ["'fantasy'", "\"fantasy\"", ".Themes()"]},
+	"scifi": {"Files": ["themes/scifi.css"], "Uses": ["'scifi'", "\"scifi\"", ".Themes()"]}
 }

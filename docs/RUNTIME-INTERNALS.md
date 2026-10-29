@@ -132,6 +132,7 @@ To find a section in `elemenx.js`, search for its header, for example `/* Router
 | `CallHandler` | calls the handler of an `(event)` when the event comes: by its name, a method of the instance or a function its state holds (set in `$OnCreate`), on the owner of that state; any other text is an expression with `$event` and `$node`, a row of a `*for` writing the names of its owner to the owner | Structural |
 | `Interpolation` | the parts of a text with `{{ }}`: its texts and its expressions (`{Source}`), `\{{` a `{{` of the text; `null` without `{{` | Structural |
 | `InterpolationValue` | the value of those parts: the one expression as it is, or the texts and the values as one text | Structural |
+| `InertNodes` | a `WeakSet` of the parts of the templates of the instances being made that the plan of their template finds inert (no directive, no Component, no slot): `compile` of Structural passes each by once and forgets it | Structural |
 | `UpdateComponentRouteContext` | pushes `$Path`, `$Params`, `$Query`, `$Hash` into a routed component | Router |
 | `CreateComponent` | creates an anonymous component factory from a definition | Structural |
 | `BeginComponentReload` | starts a component reload: remembers live instances | Application |
