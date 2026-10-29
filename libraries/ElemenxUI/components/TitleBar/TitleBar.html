@@ -2,7 +2,7 @@
 	<header class="elemenx-title-bar elemenx-native-drag" [class.overlay]="Frame === 'hidden'" [class.controls]="Own(Controls, Frame)">
 		<span class="elemenx-title-bar-icon" *if="Image || Icon"><img *if="Image" [src]="Image" alt="" /><Icon *if="!Image && Icon" [name]="Icon" /></span>
 		<div class="elemenx-title-bar-content elemenx-native-nodrag"><slot></slot></div>
-		<span class="elemenx-title-bar-title" *if="Title">{{Title}}</span>
+		<span class="elemenx-title-bar-title elemenx-ellipsis" *if="Title">{{Title}}</span>
 		<span class="elemenx-title-bar-space" *if="!Title"></span>
 		<div class="elemenx-title-bar-actions elemenx-native-nodrag"><slot name="actions"></slot></div>
 		<div class="elemenx-title-bar-controls elemenx-native-nodrag" *if="Own(Controls, Frame)">

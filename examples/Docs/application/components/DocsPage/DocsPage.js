@@ -5,7 +5,9 @@
  * runs beside its code (DocsExample), a block ```diagram an SVG drawn in the colors of the theme. The page of a
  * component, a service or a directive ends with its source, read from the Library: a listing for each of its files (its
  * template, its script, its stylesheet), a tab each. Beside the page, on a wide screen, its contents: its headings, the
- * one read now marked as the page scrolls; a press goes to one.
+ * one read now marked as the page scrolls; a press goes to one. An article of a tutorial (data/tutorials.json) offers
+ * its finished project under its title: to download (tutorials/<Project>.zip), and, when it runs without a server of
+ * its own, as a demo on the page (tutorials/<Project>/, in a frame of a blob: URL) or in a tab of its own.
  */
 Elemenx.Component('DocsPage', {
 	$TemplateURL: 'DocsPage.html',
@@ -19,6 +21,12 @@ Elemenx.Component('DocsPage', {
 	Headings: [],
 	Active: '',
 	Source: '',
+	Tutorials: [],
+	/* The demo of the tutorial of the page: shown, its page (a blob: URL), or not loaded. */
+	DemoOpen: false,
+	Demo: '',
+	DemoBusy: false,
+	DemoFailed: false,
 	/* The width of the navigation the reader dragged it to (pixels; 0: its own), remembered. */
 	NavWidth: 0,
 
@@ -105,6 +113,15 @@ Elemenx.Component('DocsPage', {
 			return page && page.Group ? [parts[0], parts[0] + ':' + page.Group] : [parts[0]];
 		};
 
+		/* The project of the article of a tutorial, or null. */
+		this.Tutorial = function (current, tutorials) {
+			var parts = String(current).split('/');
+
+			return parts[0] === 'tutorials' ? (tutorials || []).filter(function (entry) {
+				return entry.Page === parts[1];
+			})[0] || null : null;
+		};
+
 		/* The page of a route in a language, loaded when either changes (a hidden element of the template asks for it). */
 		this.Load = function (current, language) {
 			return {
@@ -158,6 +175,11 @@ Elemenx.Component('DocsPage', {
 			if (!error)
 				self.Index = JSON.parse(text).Sections;
 		});
+
+		Elemenx.Resource.Load('/data/tutorials.json', function (error, text) {
+			if (!error && !/^\s*<!DOCTYPE/i.test(text))
+				self.Tutorials = JSON.parse(text);
+		});
 	},
 
 	Fetch: function (current, language) {
@@ -168,6 +190,7 @@ Elemenx.Component('DocsPage', {
 		this.Loaded = key;
 
 		this.Read(current, key);
+		this.Shut();
 
 		/* A server that answers every path with the page of the Application (for its routes) answers a missing page so. */
 		function page (error, text) {
@@ -301,7 +324,59 @@ Elemenx.Component('DocsPage', {
 		this.Source = id;
 	},
 
+	/* The demo of the tutorial shown or hidden: its page loaded once, made a blob: URL (its Router keeps its routes in memory there). */
+	DemoToggled: function () {
+		var self = this;
+		var entry = this.Tutorial(this.Current(this.$Params), this.Tutorials);
+		var key = this.Loaded;
+
+		this.DemoOpen = !this.DemoOpen;
+
+		if (!this.DemoOpen || this.Demo || this.DemoBusy || !entry) return;
+
+		this.DemoBusy = true;
+		this.DemoFailed = false;
+
+		Elemenx.Resource.Load('/tutorials/' + entry.Project + '/index.html', function (error, text) {
+			if (self.Loaded !== key) return;
+
+			self.DemoBusy = false;
+
+			/* A server that answers every path with the page of the reference has no demo there. */
+			if (error || !/<script id="elemenx">/.test(text)) {
+				self.DemoFailed = true;
+
+				return;
+			}
+
+			/* Its files (its dictionaries, its data, its images) are beside its page: the folder is the base of its URLs. */
+			text = text.replace(/<head([^>]*)>/i, function (head) {
+				return head + '<base href="' + location.origin + '/tutorials/' + entry.Project + '/">';
+			});
+
+			self.Demo = URL.createObjectURL(new Blob([text], {type: 'text/html'}));
+		});
+	},
+
+	DemoTab: function () {
+		if (this.Demo)
+			window.open(this.Demo, '_blank');
+	},
+
+	/* The demo of another page goes: hidden, its page let go. */
+	Shut: function () {
+		if (this.Demo)
+			URL.revokeObjectURL(this.Demo);
+
+		this.Demo = '';
+		this.DemoOpen = false;
+		this.DemoBusy = false;
+		this.DemoFailed = false;
+	},
+
 	$OnDestroy: function () {
+		this.Shut();
+
 		window.removeEventListener('scroll', this.OnScroll);
 		window.cancelAnimationFrame(this.Frame);
 

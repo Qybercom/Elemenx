@@ -6,10 +6,10 @@
 		<div class="elemenx-column elemenx-workspace-stripe left elemenx-layout-area">
 			<slot name="left-stripe"></slot>
 			<span class="elemenx-workspace-dock" data-area="left" *droppable="{Accept: ['workspace-tool'], Sort: 'vertical', Disabled: !Customize || Customize === 'false'}" (dropped)="Docked">
-				<button class="elemenx-workspace-tool-button" type="button" *for="tool of ToolsIn('left', Tools, Layout)" *key="tool.ID" [attribute.data-tool]="tool.ID" [attribute.title]="tool.Title" [attribute.aria-label]="tool.Title" [attribute.aria-pressed]="String(OpenIn('left', Tools, Layout) === tool.ID)" *badge="tool.Badge" *draggable="{Data: tool.ID, Type: 'workspace-tool', Disabled: !Customize || Customize === 'false'}" (click)="Toggled"><Icon [name]="tool.Icon" /></button>
+				<button class="elemenx-workspace-tool-button elemenx-bare" type="button" *for="tool of ToolsIn('left', Tools, Layout)" *key="tool.ID" [attribute.data-tool]="tool.ID" [attribute.title]="tool.Title" [attribute.aria-label]="tool.Title" [attribute.aria-pressed]="String(OpenIn('left', Tools, Layout) === tool.ID)" *badge="tool.Badge" *draggable="{Data: tool.ID, Type: 'workspace-tool', Disabled: !Customize || Customize === 'false'}" (click)="Toggled"><Icon [name]="tool.Icon" /></button>
 			</span>
 			<span class="elemenx-workspace-dock bottom" data-area="bottom" *droppable="{Accept: ['workspace-tool'], Sort: 'vertical', Disabled: !Customize || Customize === 'false'}" (dropped)="Docked">
-				<button class="elemenx-workspace-tool-button" type="button" *for="tool of ToolsIn('bottom', Tools, Layout)" *key="tool.ID" [attribute.data-tool]="tool.ID" [attribute.title]="tool.Title" [attribute.aria-label]="tool.Title" [attribute.aria-pressed]="String(OpenIn('bottom', Tools, Layout) === tool.ID)" *badge="tool.Badge" *draggable="{Data: tool.ID, Type: 'workspace-tool', Disabled: !Customize || Customize === 'false'}" (click)="Toggled"><Icon [name]="tool.Icon" /></button>
+				<button class="elemenx-workspace-tool-button elemenx-bare" type="button" *for="tool of ToolsIn('bottom', Tools, Layout)" *key="tool.ID" [attribute.data-tool]="tool.ID" [attribute.title]="tool.Title" [attribute.aria-label]="tool.Title" [attribute.aria-pressed]="String(OpenIn('bottom', Tools, Layout) === tool.ID)" *badge="tool.Badge" *draggable="{Data: tool.ID, Type: 'workspace-tool', Disabled: !Customize || Customize === 'false'}" (click)="Toggled"><Icon [name]="tool.Icon" /></button>
 			</span>
 		</div>
 		<div class="elemenx-column elemenx-workspace-panel left elemenx-layout-area" data-panel="left" *resizable="{Edges: 'right', MinWidth: 160, MaxWidth: 640}" [style.width]="SizeOf('left', Layout)" (resizeend)="Resized" (elemenx-tool-close)="ToolClosed"><slot name="left"></slot><span class="elemenx-workspace-tools" *mount="Mounted('left', Tools, Layout)"></span></div>
@@ -21,7 +21,7 @@
 		<div class="elemenx-column elemenx-workspace-stripe right elemenx-layout-area">
 			<slot name="right-stripe"></slot>
 			<span class="elemenx-workspace-dock" data-area="right" *droppable="{Accept: ['workspace-tool'], Sort: 'vertical', Disabled: !Customize || Customize === 'false'}" (dropped)="Docked">
-				<button class="elemenx-workspace-tool-button" type="button" *for="tool of ToolsIn('right', Tools, Layout)" *key="tool.ID" [attribute.data-tool]="tool.ID" [attribute.title]="tool.Title" [attribute.aria-label]="tool.Title" [attribute.aria-pressed]="String(OpenIn('right', Tools, Layout) === tool.ID)" *badge="tool.Badge" *draggable="{Data: tool.ID, Type: 'workspace-tool', Disabled: !Customize || Customize === 'false'}" (click)="Toggled"><Icon [name]="tool.Icon" /></button>
+				<button class="elemenx-workspace-tool-button elemenx-bare" type="button" *for="tool of ToolsIn('right', Tools, Layout)" *key="tool.ID" [attribute.data-tool]="tool.ID" [attribute.title]="tool.Title" [attribute.aria-label]="tool.Title" [attribute.aria-pressed]="String(OpenIn('right', Tools, Layout) === tool.ID)" *badge="tool.Badge" *draggable="{Data: tool.ID, Type: 'workspace-tool', Disabled: !Customize || Customize === 'false'}" (click)="Toggled"><Icon [name]="tool.Icon" /></button>
 			</span>
 		</div>
 	</div>

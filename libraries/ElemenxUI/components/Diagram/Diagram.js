@@ -34,29 +34,11 @@ Elemenx.Component('Diagram', {
 		var self = this;
 		var failed = null;
 		var id = 'elemenx-diagram-' + Math.random().toString(36).slice(2, 10);
+		var helpers = this.$Service('ElemenxHelpers');
 
 		/* The text of the body without the indentation its lines share and the blank lines around them. */
 		function bodyText (node) {
-			var lines = String(node ? node.textContent : '').replace(/\r\n?/g, '\n').split('\n');
-			var indent = null;
-
-			while (lines.length && !lines[0].trim()) {
-				lines.shift();
-			}
-
-			while (lines.length && !lines[lines.length - 1].trim()) {
-				lines.pop();
-			}
-
-			lines.forEach(function (line) {
-				var lead = /^[ \t]*/.exec(line)[0];
-				if (line.trim() && (indent === null || lead.length < indent.length))
-					indent = lead;
-			});
-
-			return lines.map(function (line) {
-				return indent && line.indexOf(indent) === 0 ? line.substring(indent.length) : line.replace(/^[ \t]+$/, '');
-			}).join('\n');
+			return helpers.BodyText(node);
 		}
 
 		/* What renders nothing: the place of the body and the id of the drawing, kept out of state. */

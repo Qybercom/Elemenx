@@ -17,10 +17,7 @@
 	justify-content: center;
 	flex: 1;
 	padding: 0;
-	background: transparent;
-	border: 0;
 	color: var(--elemenx-text-muted);
-	cursor: pointer;
 }
 
 .elemenx-number-step + .elemenx-number-step {

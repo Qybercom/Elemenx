@@ -32,6 +32,8 @@ describe('Regression: ElemenxUI in another document (a window the Application op
 	beforeAll(async function () {
 		await loadElemenx();
 		await import('../../libraries/ElemenxUI/directives/Tip.js');
+		/* The helpers the Services of ElemenxUI share (their lists of listeners). */
+		await import('../../libraries/ElemenxUI/services/ElemenxHelpers.js');
 		await import('../../libraries/ElemenxUI/services/Find.js');
 		await import('../../libraries/ElemenxUI/services/Hotkeys.js');
 		await import('../../libraries/ElemenxUI/services/Platform.js');

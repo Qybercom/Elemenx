@@ -1,10 +1,13 @@
 'use strict';
 
 /*
- * A minifier with no dependencies and no renaming: comments and the blanks that carry no meaning go, every name stays,
- * so nothing of a public API can break. Comments that start with /*! (licenses) stay. JavaScript keeps a line break
- * where a statement could end at it, so the automatic semicolons of the source keep their meaning.
+ * A minifier with no dependencies: comments and the blanks that carry no meaning go. Comments that start with /*!
+ * (licenses) stay. JavaScript keeps a line break where a statement could end at it, so the automatic semicolons of the
+ * source keep their meaning. JavaScript renames nothing; Script also gives the local names of ES5 code short ones
+ * (tools/mangle.js): properties, keys and globals stay, so nothing of a public API can break.
  */
+
+var Mangle = require('./mangle.js');
 
 var Word = /[A-Za-z0-9_$\u0080-￿]/;
 
@@ -272,12 +275,18 @@ function HTML (source) {
 		});
 }
 
+/* JavaScript with short local names (ES5 code; other code keeps its names), then without its blanks; keep: names that stay. */
+function Script (source, keep) {
+	return JavaScript(Mangle.Mangle(source, keep).Source);
+}
+
 function JSONText (source) {
 	return JSON.stringify(JSON.parse(source));
 }
 
 module.exports = {
 	JavaScript: JavaScript,
+	Script: Script,
 	CSS: CSS,
 	HTML: HTML,
 	JSON: JSONText

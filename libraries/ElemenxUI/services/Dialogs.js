@@ -17,13 +17,14 @@ Elemenx.Service('Dialogs', {
 	},
 	$OnCreate: function () {
 		this.Items = [];
-		this.Listeners = [];
+		this.Listeners = this.$Service('ElemenxHelpers').Listeners();
 		this.Sequence = 0;
 	},
 
 	$OnDestroy: function () {
 		this.Items = [];
-		this.Listeners = [];
+
+		this.Listeners.Clear();
 	},
 
 	Confirm: function (options, callback) {
@@ -95,38 +96,14 @@ Elemenx.Service('Dialogs', {
 	},
 
 	OnChange: function (callback) {
-		this.Listeners.push(callback);
-
-		return callback;
+		return this.Listeners.On(callback);
 	},
 
 	OffChange: function (callback) {
-		var index = this.Listeners.indexOf(callback);
-		if (index !== -1)
-			this.Listeners.splice(index, 1);
+		this.Listeners.Off(callback);
 	},
 
 	Changed: function () {
-		var listeners = this.Listeners.slice();
-		var items = this.Items.slice();
-		var i = 0;
-
-		while (i < listeners.length) {
-			try {
-				listeners[i](items);
-			}
-			catch (error) {
-				if (typeof window.reportError === 'function') window.reportError(error);
-				else window.setTimeout(this.Rethrow(error), 0);
-			}
-
-			i++;
-		}
-	},
-
-	Rethrow: function (error) {
-		return function () {
-			throw error;
-		};
+		this.Listeners.Tell(this.Items.slice());
 	}
 });

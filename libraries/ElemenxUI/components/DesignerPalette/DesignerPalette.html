@@ -4,7 +4,7 @@
 	<div class="elemenx-designer-palette-group" *for="group of Groups(Version, Query)" *key="group.ID">
 		<h3 class="elemenx-label elemenx-designer-palette-title">{{group.Label}}</h3>
 		<div class="elemenx-designer-palette-items">
-			<button type="button" class="elemenx-designer-palette-item" *for="kind of group.Kinds" *key="kind.ID" [attribute.data-kind]="kind.ID" *tip="{Title: kind.Label, Text: kind.Hint}" *draggable="{Data: kind.ID, Type: 'elemenx-designer-kind'}" (click)="Added">
+			<button type="button" class="elemenx-designer-palette-item elemenx-focus-ring" *for="kind of group.Kinds" *key="kind.ID" [attribute.data-kind]="kind.ID" *tip="{Title: kind.Label, Text: kind.Hint}" *draggable="{Data: kind.ID, Type: 'elemenx-designer-kind'}" (click)="Added">
 				<Icon [name]="kind.Icon" />
 				<span>{{kind.Label}}</span>
 			</button>

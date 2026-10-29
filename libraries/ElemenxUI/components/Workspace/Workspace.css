@@ -83,7 +83,6 @@
 }
 
 
-
 .elemenx-workspace-stripe {
 	flex: none;
 	align-items: center;
@@ -180,11 +179,8 @@
 	width: 32px;
 	height: 32px;
 	padding: 0;
-	background: transparent;
-	border: 0;
 	border-radius: var(--elemenx-radius);
 	color: var(--elemenx-text-muted);
-	cursor: pointer;
 }
 
 .elemenx-workspace-tool-button:hover {

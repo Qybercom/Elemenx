@@ -1,6 +1,7 @@
 .elemenx-diff-view {
 	display: flex;
 	flex-direction: column;
+	width: 100%;
 	/* Its width comes from its place, not from its longest line (which scrolls): on a phone it does not widen the page. */
 	contain: inline-size;
 	border: 1px solid var(--elemenx-border);

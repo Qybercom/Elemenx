@@ -49,7 +49,7 @@
 						<div class="elemenx-designer-list-head">
 							<span class="elemenx-label">{{field.Name}}</span>
 							<span class="elemenx-spacer"></span>
-							<button type="button" class="elemenx-designer-list-button" [attribute.title]="$T('ui.designer.raw')" [attribute.data-field]="field.Name" (click)="Rawed">{ }</button>
+							<button type="button" class="elemenx-designer-list-button elemenx-focus-ring" [attribute.title]="$T('ui.designer.raw')" [attribute.data-field]="field.Name" (click)="Rawed">{ }</button>
 						</div>
 						<p class="elemenx-text small muted">{{field.Hint}}</p>
 						<div class="elemenx-designer-list-item" *for="item of field.Items" *key="item.Index">
@@ -57,20 +57,20 @@
 								<span class="elemenx-designer-list-key" *if="key.Type === 'bool'" [attribute.data-field]="field.Name" [attribute.data-index]="item.Index" [attribute.data-key]="key.Name" (change)="Itemed"><Checkbox Size="small" [label]="key.Name" [checked]="!!item.Values[key.Name]" /></span>
 								<label class="elemenx-designer-list-key" *if="key.Type !== 'bool'">
 									<span>{{key.Name}}</span>
-									<input type="text" class="elemenx-designer-list-input" [value]="item.Values[key.Name] === undefined ? '' : String(item.Values[key.Name])" [attribute.data-field]="field.Name" [attribute.data-index]="item.Index" [attribute.data-key]="key.Name" (change)="Itemed" />
+									<input type="text" class="elemenx-designer-list-input elemenx-focus-ring" [value]="item.Values[key.Name] === undefined ? '' : String(item.Values[key.Name])" [attribute.data-field]="field.Name" [attribute.data-index]="item.Index" [attribute.data-key]="key.Name" (change)="Itemed" />
 								</label>
 							</span>
 							<div class="elemenx-designer-list-actions">
-								<button type="button" class="elemenx-designer-list-button" [attribute.title]="$T('ui.designer.up')" [attribute.data-field]="field.Name" [attribute.data-index]="item.Index" data-step="-1" (click)="Shifted"><Icon Name="arrow-up" Size="14" /></button>
-								<button type="button" class="elemenx-designer-list-button" [attribute.title]="$T('ui.designer.down')" [attribute.data-field]="field.Name" [attribute.data-index]="item.Index" data-step="1" (click)="Shifted"><Icon Name="arrow-down" Size="14" /></button>
-								<button type="button" class="elemenx-designer-list-button" [attribute.title]="$T('ui.designer.delete')" [attribute.data-field]="field.Name" [attribute.data-index]="item.Index" data-step="0" (click)="Shifted"><Icon Name="delete" Size="14" /></button>
+								<button type="button" class="elemenx-designer-list-button elemenx-focus-ring" [attribute.title]="$T('ui.designer.up')" [attribute.data-field]="field.Name" [attribute.data-index]="item.Index" data-step="-1" (click)="Shifted"><Icon Name="arrow-up" Size="14" /></button>
+								<button type="button" class="elemenx-designer-list-button elemenx-focus-ring" [attribute.title]="$T('ui.designer.down')" [attribute.data-field]="field.Name" [attribute.data-index]="item.Index" data-step="1" (click)="Shifted"><Icon Name="arrow-down" Size="14" /></button>
+								<button type="button" class="elemenx-designer-list-button elemenx-focus-ring" [attribute.title]="$T('ui.designer.delete')" [attribute.data-field]="field.Name" [attribute.data-index]="item.Index" data-step="0" (click)="Shifted"><Icon Name="delete" Size="14" /></button>
 							</div>
 						</div>
 						<span class="elemenx-designer-list-add" [attribute.data-field]="field.Name" [attribute.data-key]="field.Keys[0].Name"><Button Variant="ghost" Size="small" Icon="add" [label]="$T('ui.designer.addItem')" (click)="Added" /></span>
 					</div>
 					<Field *if="field.Type === 'json' && !field.Items" [label]="field.Name" [hint]="field.Hint">
 						<TextArea class="elemenx-designer-inspector-expression" Rows="1" AutoSize="true" [name]="field.Name" [value]="field.Value" (input)="Changed" />
-						<button type="button" class="elemenx-designer-list-button" *if="field.Schema" [attribute.title]="$T('ui.designer.list')" [attribute.data-field]="field.Name" (click)="Rawed"><Icon Name="list" Size="14" /></button>
+						<button type="button" class="elemenx-designer-list-button elemenx-focus-ring" *if="field.Schema" [attribute.title]="$T('ui.designer.list')" [attribute.data-field]="field.Name" (click)="Rawed"><Icon Name="list" Size="14" /></button>
 					</Field>
 					<Toggle *if="field.Type === 'bool'" [name]="field.Name" [label]="field.Name" [description]="field.Hint" [checked]="field.Value" (change)="Changed" />
 				</div>

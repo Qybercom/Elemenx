@@ -2,9 +2,11 @@
 
 var fs = require('fs');
 var path = require('path');
+var zlib = require('zlib');
 var common = require('./common.js');
 var Minify = require('./minify.js');
 var Shake = require('./shake.js');
+var CSSShake = require('./cssshake.js');
 var Splash = require('./splash.js');
 var Templates = require('./templates.js');
 var PWA = require('./pwa.js');
@@ -684,12 +686,23 @@ function dictionary (relative) {
 	return /^locales\/[^/]+\.json$/i.test(String(relative).replace(/\\/g, '/'));
 }
 
+/* The minifier of a file of a Library by its kind (a stylesheet, a drawing or a page, data), or null for one copied as it is. */
+function minifier (relative) {
+	if (/\.css$/i.test(relative)) return Minify.CSS;
+	if (/\.(svg|html)$/i.test(relative)) return Minify.HTML;
+	if (/\.json$/i.test(relative)) return Minify.JSON;
+
+	return null;
+}
+
 /*
  * The files of the Libraries next to a build in a folder; the paths of their stylesheets. choice {Uses, Packs,
  * Removed, Code}: the packs of a Library its code does not use stay out, their names in Removed[Library], and its
- * dictionaries keep the phrases Code names (null: every file, whole).
+ * dictionaries keep the phrases Code names (null: every file, whole). minify: its stylesheets, drawings and data
+ * without their comments and blanks, the stylesheets without the rules nothing of Code and the framework (its
+ * source) can match and the sprites without the icons they do not name (see cssshake.js; all of them with --full).
  */
-function copyLibraryResources (output, declarations, choice) {
+function copyLibraryResources (output, declarations, choice, minify, framework) {
 	var hrefs = [];
 	var i = 0;
 
@@ -724,6 +737,9 @@ function copyLibraryResources (output, declarations, choice) {
 			fs.mkdirSync(path.dirname(target), {recursive: true});
 
 			if (choice && dictionary(resources[ri].Relative)) fs.writeFileSync(target, trimDictionary(fs.readFileSync(resources[ri].Source, 'utf8'), choice.Code));
+			else if (minify && choice && resources[ri].Style) fs.writeFileSync(target, CSSShake.Shake(Minify.CSS(fs.readFileSync(resources[ri].Source, 'utf8')), choice.Code + '\n' + framework).CSS);
+			else if (minify && choice && /\.svg$/i.test(resources[ri].Relative)) fs.writeFileSync(target, CSSShake.Sprite(Minify.HTML(fs.readFileSync(resources[ri].Source, 'utf8')), choice.Code + '\n' + framework).SVG);
+			else if (minify && minifier(resources[ri].Relative)) fs.writeFileSync(target, minifier(resources[ri].Relative)(fs.readFileSync(resources[ri].Source, 'utf8')));
 			else fs.copyFileSync(resources[ri].Source, target);
 
 			if (resources[ri].Style)
@@ -868,6 +884,9 @@ function build (project, options) {
 			Roots: roots,
 			Libraries: libraries,
 			Code: (templateBundle ? templateBundle + '\n' : '') + bundle + '\n' + appSource,
+			Parts: [(templateBundle ? templateBundle + '\n' : '') + bundle, appSource],
+			Readable: options.minify === false,
+			Compress: options.minify !== false && options.compress !== false,
 			Full: !!options.full,
 			Uses: ownCode(entities, shared) + '\n' + indexSource + '\n' + appSource,
 			Packs: options.packs || []
@@ -891,7 +910,7 @@ function build (project, options) {
 	copyPublic(project, output, excludedPaths);
 
 	var choice = options.full ? null : {Uses: ownCode(entities, shared) + '\n' + indexSource + '\n' + appSource, Packs: options.packs || [], Removed: {}, Code: (templateBundle || '') + '\n' + bundle + '\n' + indexSource + '\n' + appSource};
-	var libraryStyleHrefs = copyLibraryResources(output, libraries, choice);
+	var libraryStyleHrefs = copyLibraryResources(output, libraries, choice, options.minify !== false, shaken);
 
 	Object.keys(choice ? choice.Removed : {}).forEach(function (name) {
 		process.stdout.write('Elemenx Builder: without the packs of ' + name + ': ' + choice.Removed[name].join(', ') + ' (unused; --packs or --full keeps them)\n');
@@ -919,13 +938,24 @@ function build (project, options) {
 		productionIndex = AppIcon.Page(productionIndex, icon, output, false);
 
 	fs.writeFileSync(path.join(output, 'index.html'), productionIndex);
-	fs.writeFileSync(path.join(output, 'elemenx.js'), shaken);
-	fs.writeFileSync(path.join(output, 'app.js'), (templateBundle ? templateBundle + '\n' : '') + bundle + '\n' + appSource.replace(/^\s+/, ''));
+
+	/* Minified unless readable: the framework with its banner (its version) and short local names, the code in its parts (see minified). */
+	if (options.minify === false) {
+		fs.writeFileSync(path.join(output, 'elemenx.js'), shaken);
+		fs.writeFileSync(path.join(output, 'app.js'), (templateBundle ? templateBundle + '\n' : '') + bundle + '\n' + appSource.replace(/^\s+/, ''));
+	}
+	else {
+		fs.writeFileSync(path.join(output, 'elemenx.js'), '/*! Elemenx ' + frameworkVersion(shaken) + ' | LGPL-3.0 */\n' + minified([shaken], false, ['Version']));
+		fs.writeFileSync(path.join(output, 'app.js'), minified([(templateBundle ? templateBundle + '\n' : '') + bundle, appSource], false));
+	}
 
 	/* An installable application of the system, last: its worker keeps every file of the build (see pwa.js). */
 	var pwa = PWA.Settings(project, options.pwa, productionIndex, output, options.splash === false ? null : Splash.Settings(project, options.splash), AppIcon.ManifestIcons(icon));
 	if (pwa)
 		process.stdout.write('Elemenx Builder: a PWA, ' + PWA.Apply(output, pwa).join(', ') + (pwa.Icons.length ? '' : ' (no PWA.Icon: a browser installs it with an icon of 192 and of 512 pixels)') + '\n');
+
+	if (options.minify !== false && options.compress !== false)
+		precompress(output);
 
 	process.stdout.write('Elemenx Builder: ' + output + '\n');
 
@@ -1016,6 +1046,8 @@ function extension (project, options) {
 		index: options.index,
 		out: path.relative(project, folder),
 		full: options.full,
+		minify: options.minify,
+		compress: false,
 		packs: options.packs,
 		splash: false,
 		precompile: true,
@@ -1085,6 +1117,8 @@ function native (project, options) {
 		index: options.index,
 		out: path.relative(project, staging),
 		full: options.full,
+		minify: options.minify,
+		compress: false,
 		packs: options.packs,
 		splash: options.splash,
 		icon: options.icon,
@@ -1142,6 +1176,54 @@ function frameworkSource (file, code, full) {
 	return result.Source;
 }
 
+/* The files a server sends compressed: text, of 1 KB and more. */
+var Compressible = /\.(js|mjs|css|html|svg|json|webmanifest|txt|xml|map)$/i;
+
+/*
+ * Each text file of a build, compressed beside it as it is sent: file.gz (gzip) and file.br (Brotli). A static server
+ * sends them as they are to a browser that takes them (nginx gzip_static and brotli_static, elemenx serve), instead of
+ * compressing every answer again, and at their best ratio. An extension and a native program take none.
+ */
+function precompress (folder) {
+	fs.readdirSync(folder, {withFileTypes: true}).forEach(function (entry) {
+		var file = path.join(folder, entry.name);
+		var data;
+		var params;
+
+		if (entry.isDirectory()) {
+			precompress(file);
+
+			return;
+		}
+
+		if (!Compressible.test(entry.name) || fs.statSync(file).size < 1024) return;
+
+		data = fs.readFileSync(file);
+		params = {};
+		params[zlib.constants.BROTLI_PARAM_QUALITY] = zlib.constants.BROTLI_MAX_QUALITY;
+		params[zlib.constants.BROTLI_PARAM_SIZE_HINT] = data.length;
+
+		fs.writeFileSync(file + '.gz', zlib.gzipSync(data, {level: 9}));
+		fs.writeFileSync(file + '.br', zlib.brotliCompressSync(data, {params: params}));
+	});
+}
+
+/* The version a source of the framework names in its Version, or ''. */
+function frameworkVersion (source) {
+	return (/\n\tvar Version = '([^']*)';/.exec(source) || [])[1] || '';
+}
+
+/*
+ * Scripts minified one by one and joined: each with short local names (tools/mangle.js) unless readable, only without
+ * blanks then. A part that is not ES5 (the code of an Application may be newer) keeps its names, and the others (the
+ * Libraries, the framework) still take short ones. keep: names that stay (the Version of the framework).
+ */
+function minified (parts, readable, keep) {
+	return parts.map(function (part) {
+		return readable ? Minify.JavaScript(part) : Minify.Script(part, keep);
+	}).join('');
+}
+
 /* Text for a <script> of the page: the HTML parser ends a script at </script and changes state at <!--. */
 function scriptText (source) {
 	return source.replace(/<\/(script)/gi, '<\\/$1').replace(/<!--/g, '<\\!--');
@@ -1184,7 +1266,8 @@ function libraryAssets (job, page) {
 			if (!job.Full && dictionary(relative))
 				text = trimDictionary(text, job.Code + '\n' + job.Uses);
 
-			if (item.Style) styles.push({Name: root + '/' + relative, Text: Minify.CSS(text)});
+			if (item.Style) styles.push({Name: root + '/' + relative, Text: job.Full || job.Readable ? Minify.CSS(text) : CSSShake.Shake(Minify.CSS(text), job.Code + '\n' + page + '\n' + job.FrameworkSource).CSS});
+			else if (/\.svg$/i.test(relative) && !job.Full && !job.Readable) resources.push('Elemenx.Resource(' + JSON.stringify(root + '/' + relative) + ', ' + JSON.stringify(CSSShake.Sprite(Minify.HTML(text), job.Code + '\n' + page + '\n' + job.FrameworkSource).SVG) + ');');
 			else resources.push('Elemenx.Resource(' + JSON.stringify(root + '/' + relative) + ', ' + JSON.stringify(/\.json$/i.test(relative) ? Minify.JSON(text) : /\.txt$/i.test(relative) ? text : Minify.HTML(text)) + ');');
 		});
 	});
@@ -1220,11 +1303,27 @@ function single (job) {
 	var styles = assets.Styles.map(function (style) {
 		return style.Text;
 	});
-	var framework = scriptText(Minify.JavaScript(job.FrameworkSource));
-	var code = scriptText(Minify.JavaScript(assets.Resources.join('\n') + '\n' + job.Code));
+	var framework = scriptText(minified([job.FrameworkSource], job.Readable, ['Version']));
+	var code = scriptText(minified([assets.Resources.join('\n')].concat(job.Parts), job.Readable));
 	var replaced = {Framework: false, Entry: false};
 
 	warnViewport(page, path.basename(job.Index));
+
+	/*
+	 * The page is made whole before the scripts go into it: their code may hold the text of a page of its own (a </head>,
+	 * a <body>, as a page to print), which the changes of the page would take for its own.
+	 */
+	if (styles.length) {
+		if (/<\/head>/i.test(page)) page = page.replace(/<\/head>/i, '<style>' + styles.join('') + '</style>\n</head>');
+		else page = '<style>' + styles.join('') + '</style>\n' + page;
+	}
+
+	copyBuildPublic(job);
+
+	page = Splash.Inject(Templates.Page(page), job.Splash);
+
+	if (job.Icon)
+		page = AppIcon.Page(page, job.Icon, null, true);
 
 	/* The framework and the Application take the places of their <script src>: the framework stays one script of its own, so the workers can load it. */
 	page = page.replace(/<script\b[^>]*\bsrc\s*=\s*(["'])([^"']*)\1[^>]*>\s*<\/script>/gi, function (tag, quote, src) {
@@ -1248,18 +1347,6 @@ function single (job) {
 	if (!replaced.Framework || !replaced.Entry)
 		fail('index.html must load elemenx.js and ' + path.basename(job.Entry) + ' with <script src> for a single-file build');
 
-	if (styles.length) {
-		if (/<\/head>/i.test(page)) page = page.replace(/<\/head>/i, '<style>' + styles.join('') + '</style>\n</head>');
-		else page = '<style>' + styles.join('') + '</style>\n' + page;
-	}
-
-	copyBuildPublic(job);
-
-	page = Splash.Inject(Templates.Page(page), job.Splash);
-
-	if (job.Icon)
-		page = AppIcon.Page(page, job.Icon, null, true);
-
 	fs.writeFileSync(path.join(job.Output, 'index.html'), page);
 
 	process.stdout.write('Elemenx Builder: ' + path.join(job.Output, 'index.html') + ' (' + Math.round(Buffer.byteLength(page) / 1024) + ' KB)\n');
@@ -1280,9 +1367,9 @@ function widget (job) {
 	var styles = assets.Styles.map(function (style) {
 		return 'Elemenx.Style(' + JSON.stringify('library:' + style.Name) + ', ' + JSON.stringify(style.Text) + ');';
 	});
-	var framework = Minify.JavaScript(job.FrameworkSource);
-	var code = Minify.JavaScript(styles.concat(assets.Resources).join('\n') + '\n' + job.Code);
-	var version = (/\n\tvar Version = '([^']*)';/.exec(job.FrameworkSource) || [])[1] || '';
+	var framework = minified([job.FrameworkSource], job.Readable, ['Version']);
+	var code = minified([styles.concat(assets.Resources).join('\n')].concat(job.Parts), job.Readable);
+	var version = frameworkVersion(job.FrameworkSource);
 	/* Loaded twice in a page (two script tags, two places that each bring it), it runs once: its widgets are mounted once. */
 	var key = JSON.stringify('elemenx-widget:' + path.basename(job.Project));
 	var text = '/*! ' + path.basename(job.Project) + ' | Elemenx ' + version + ', isolated */\n(function () {\nif (window[' + key + ']) return;\nwindow[' + key + '] = true;\nvar ElemenxIsolated = {};\n' + framework + '(function (Elemenx) {\n' + code + '})(ElemenxIsolated.Elemenx);\n})();\n';
@@ -1302,6 +1389,9 @@ function widget (job) {
 
 	fs.writeFileSync(path.join(job.Output, 'widget.js'), text);
 	fs.writeFileSync(path.join(job.Output, 'index.html'), Templates.Page(page));
+
+	if (job.Compress)
+		precompress(job.Output);
 
 	process.stdout.write('Elemenx Builder: ' + path.join(job.Output, 'widget.js') + ' (' + Math.round(Buffer.byteLength(text) / 1024) + ' KB)\n');
 

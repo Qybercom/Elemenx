@@ -1,9 +1,14 @@
 /*
  * The server of the reference answers the live examples of the network: a JSON resource, an echo of what a request
  * sends, server-sent events, a held long-polling response, a streamed response of lines of JSON, and an echo over a
- * WebSocket. Everything else is the files of the reference.
+ * WebSocket. In development (beside examples/Tutorials) it makes the projects of the tutorials, to download, and their
+ * demos (tools/tutorials.js); the reference built for the package has them as files. Everything else is the files of
+ * the reference.
  */
+var fs = require('fs');
+var path = require('path');
 var sequence = 0;
+var tutorials = fs.existsSync(path.join(__dirname, '..', 'Tutorials')) && fs.existsSync(path.join(__dirname, '..', '..', 'tools', 'tutorials.js')) ? require(path.join(__dirname, '..', '..', 'tools', 'tutorials.js')).Request(path.join(__dirname, '..', 'Tutorials')) : null;
 
 function json (response, status, value) {
 	response.writeHead(status, {'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-cache'});
@@ -56,6 +61,8 @@ module.exports = {
 		DevelopmentPort: 4177,
 		ProductionPort: 4178,
 		Request: function (request, response, pathname) {
+			if (tutorials && tutorials(request, response, pathname)) return true;
+
 			if (pathname === '/api/hello') {
 				json(response, 200, {Message: 'Hello from the server', Time: new Date().toISOString()});
 

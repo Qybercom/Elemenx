@@ -1,0 +1,97 @@
+[
+	{
+		"Page": "admin",
+		"Project": "Admin",
+		"Demo": true
+	},
+	{
+		"Page": "auth",
+		"Project": "Auth",
+		"Demo": false
+	},
+	{
+		"Page": "backend",
+		"Project": "Backend",
+		"Demo": false
+	},
+	{
+		"Page": "blog",
+		"Project": "Blog",
+		"Demo": false
+	},
+	{
+		"Page": "call",
+		"Project": "Call",
+		"Demo": false
+	},
+	{
+		"Page": "chat",
+		"Project": "Chat",
+		"Demo": true
+	},
+	{
+		"Page": "collection",
+		"Project": "Collection",
+		"Demo": true
+	},
+	{
+		"Page": "dashboard",
+		"Project": "Dashboard",
+		"Demo": false
+	},
+	{
+		"Page": "editor",
+		"Project": "Editor",
+		"Demo": true
+	},
+	{
+		"Page": "extension",
+		"Project": "Extension",
+		"Demo": false
+	},
+	{
+		"Page": "forms",
+		"Project": "Signup",
+		"Demo": false
+	},
+	{
+		"Page": "game",
+		"Project": "Game",
+		"Demo": true
+	},
+	{
+		"Page": "landing",
+		"Project": "Landing",
+		"Demo": true
+	},
+	{
+		"Page": "languages",
+		"Project": "Languages",
+		"Demo": true
+	},
+	{
+		"Page": "library",
+		"Project": "Kit",
+		"Demo": true
+	},
+	{
+		"Page": "offline",
+		"Project": "Notes",
+		"Demo": false
+	},
+	{
+		"Page": "shop",
+		"Project": "Shop",
+		"Demo": true
+	},
+	{
+		"Page": "telemetry",
+		"Project": "Telemetry",
+		"Demo": false
+	},
+	{
+		"Page": "testing",
+		"Project": "Todo",
+		"Demo": true
+	}
+]

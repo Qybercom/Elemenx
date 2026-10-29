@@ -1,0 +1,18 @@
+<div class="elemenx-tab-group" [class.declared]="Declaration" [attribute.data-group]="GroupName()" (keydown)="GroupKey">
+	<ContextMenu *if="!Declaration" [items]="MenuItems(MenuFor, List(Items, Declared, Order, Pins), Splittable)" (select)="MenuPicked">
+		<div class="elemenx-tab-group-strip" role="tablist" [attribute.aria-label]="Label || null" *droppable="{Accept: [DragType()], Sort: 'horizontal'}" (dropped)="StripDropped" (keydown)="Key">
+			<div class="elemenx-tab-group-tab elemenx-focus-ring" role="tab" *for="tab of List(Items, Declared, Order, Pins)" *key="tab.ID" [class.active]="tab.ID === Current(Active, List(Items, Declared, Order, Pins))" [class.pinned]="tab.Pinned" [class.disabled]="!!tab.Disabled" [attribute.aria-selected]="String(tab.ID === Current(Active, List(Items, Declared, Order, Pins)))" [attribute.aria-disabled]="tab.Disabled ? 'true' : null" [attribute.tabindex]="tab.ID === Current(Active, List(Items, Declared, Order, Pins)) ? 0 : -1" [attribute.data-id]="tab.ID" [attribute.title]="tab.Title || tab.Label || null" *draggable="{Data: {ID: tab.ID, Group: GroupName()}, Type: DragType(), Disabled: !!tab.Disabled}" (click)="Pick" (auxclick)="Middle" (contextmenu)="Menu">
+				<Icon *if="tab.Icon" [name]="tab.Icon" Size="16" />
+				<span class="elemenx-tab-group-label elemenx-ellipsis">{{tab.Label}}</span>
+				<span class="elemenx-badge" *if="tab.Badge != null && tab.Badge !== ''">{{tab.Badge}}</span>
+				<span class="elemenx-tab-group-pin" *if="tab.Pinned" [attribute.title]="$T('ui.tabGroup.pinned')"><Icon Name="pin" Size="12" /></span>
+				<button class="elemenx-tab-group-close elemenx-bare" type="button" tabindex="-1" [attribute.aria-label]="$T('ui.tabs.close')" *if="!tab.Pinned && (tab.Closable || Closable)" (click)="Closed"><Icon Name="close" Size="12" /></button>
+			</div>
+		</div>
+	</ContextMenu>
+	<div class="elemenx-tab-group-body" *droppable="{Accept: [DragType()]}" (dropmove)="BodyMove" (dropleave)="BodyLeave" (dropped)="BodyDropped">
+		<slot></slot>
+		<span class="elemenx-tab-group-zone" *if="Zone" [class]="[Zone]" aria-hidden="true"></span>
+	</div>
+	<i class="elemenx-tab-group-sync" hidden *mount="Show(Active, Declared, Items, Order, Pins)"></i>
+</div>

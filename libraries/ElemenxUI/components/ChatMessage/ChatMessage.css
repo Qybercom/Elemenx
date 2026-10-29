@@ -163,9 +163,12 @@
 	border-color: var(--elemenx-accent);
 }
 
-.elemenx-chat-reaction:focus-visible,
-.elemenx-chat-react:focus-visible {
+.elemenx-chat-reaction:focus-visible {
 	outline: 2px solid var(--elemenx-focus);
+}
+
+.elemenx-chat-react {
+	--elemenx-focus-offset: 0px;
 }
 
 .elemenx-chat-reaction-emoji {
@@ -348,9 +351,6 @@
 .elemenx-chat-summary-name {
 	flex: 1;
 	min-width: 0;
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
 }
 
 .elemenx-chat-summary-note {
@@ -407,11 +407,6 @@
 .elemenx-chat-message.selected .elemenx-chat-check {
 	background: var(--elemenx-accent);
 	border-color: var(--elemenx-accent);
-}
-
-.elemenx-chat-check:focus-visible {
-	outline: 2px solid var(--elemenx-focus);
-	outline-offset: 2px;
 }
 
 /* What shows on hover, a touch screen has no hover: the buttons beside the bubble show for every message. */

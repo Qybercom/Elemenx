@@ -36,11 +36,6 @@
 	background: var(--elemenx-accent-hover);
 }
 
-.elemenx-ribbon-file:focus-visible {
-	outline: 2px solid var(--elemenx-focus);
-	outline-offset: 2px;
-}
-
 .elemenx-ribbon-quick {
 	display: flex;
 	align-items: center;
@@ -71,6 +66,7 @@
 }
 
 .elemenx-ribbon-tab {
+	--elemenx-focus-offset: -2px;
 	position: relative;
 	display: inline-flex;
 	align-items: center;
@@ -101,11 +97,6 @@
 	height: 2px;
 	background: var(--elemenx-accent);
 	border-radius: var(--elemenx-radius-small) var(--elemenx-radius-small) 0 0;
-}
-
-.elemenx-ribbon-tab:focus-visible {
-	outline: 2px solid var(--elemenx-focus);
-	outline-offset: -2px;
 }
 
 .elemenx-ribbon-tab.disabled {
@@ -142,6 +133,7 @@
 }
 
 .elemenx-ribbon-tabs-button {
+	--elemenx-focus-offset: -2px;
 	position: relative;
 	display: inline-flex;
 	align-items: center;
@@ -170,17 +162,6 @@
 .elemenx-ribbon-tabs-button:hover,
 .elemenx-ribbon-tabs-button[aria-expanded='true'] {
 	background: var(--elemenx-surface-hover);
-}
-
-.elemenx-ribbon-tabs-button:focus-visible {
-	outline: 2px solid var(--elemenx-focus);
-	outline-offset: -2px;
-}
-
-.elemenx-ribbon-tabs-current {
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
 }
 
 .elemenx-ribbon-tabs-list {
@@ -225,6 +206,7 @@
 }
 
 .elemenx-ribbon-pin {
+	--elemenx-focus-offset: 0px;
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
@@ -245,11 +227,6 @@
 	background: var(--elemenx-surface-hover);
 	color: var(--elemenx-text);
 }
-
-.elemenx-ribbon-pin:focus-visible {
-	outline: 2px solid var(--elemenx-focus);
-}
-
 
 
 /* Panels */
@@ -301,7 +278,6 @@
 .elemenx-ribbon-panel > span {
 	display: contents;
 }
-
 
 
 /* Groups */
@@ -445,7 +421,6 @@
 	border-radius: var(--elemenx-radius-large);
 	box-shadow: var(--elemenx-shadow);
 }
-
 
 
 /* Commands */
@@ -625,7 +600,6 @@
 }
 
 
-
 /* Gallery */
 
 .elemenx-ribbon-gallery {
@@ -754,7 +728,6 @@
 }
 
 
-
 /* Key tips */
 
 .elemenx-ribbon-keytips {
@@ -784,7 +757,6 @@
 .elemenx-ribbon-keytip.dim {
 	opacity: 0.24;
 }
-
 
 
 /* Backstage */

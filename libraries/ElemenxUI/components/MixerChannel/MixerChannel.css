@@ -33,12 +33,9 @@
 
 .elemenx-mixer-name {
 	max-width: 100%;
-	overflow: hidden;
 	font-size: var(--elemenx-font-size-small);
 	font-weight: var(--elemenx-font-weight-strong);
 	line-height: var(--elemenx-line-height-small);
-	text-overflow: ellipsis;
-	white-space: nowrap;
 }
 
 .elemenx-mixer-knobs {

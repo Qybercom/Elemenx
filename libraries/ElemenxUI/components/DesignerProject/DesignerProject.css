@@ -22,9 +22,6 @@
 	height: 24px;
 	padding: 0;
 	color: var(--elemenx-text-muted);
-	cursor: pointer;
-	background: transparent;
-	border: 0;
 	border-radius: var(--elemenx-radius-small);
 }
 
@@ -44,9 +41,6 @@
 	font: inherit;
 	font-size: var(--elemenx-font-size-small);
 	text-align: start;
-	cursor: pointer;
-	background: transparent;
-	border: 0;
 	border-radius: var(--elemenx-radius-small);
 }
 
@@ -62,9 +56,6 @@
 .elemenx-designer-project-name {
 	flex: 1 1 auto;
 	min-width: 0;
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
 }
 
 .elemenx-designer-project-route {

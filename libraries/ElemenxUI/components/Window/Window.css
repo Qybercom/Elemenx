@@ -195,10 +195,7 @@
 }
 
 .elemenx-window-title {
-	overflow: hidden;
 	font-weight: var(--elemenx-font-weight-strong);
-	text-overflow: ellipsis;
-	white-space: nowrap;
 }
 
 .elemenx-window-extra {
@@ -214,17 +211,15 @@
 }
 
 .elemenx-window-control {
+	--elemenx-focus-offset: 0px;
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
 	width: 28px;
 	height: 28px;
 	padding: 0;
-	background: transparent;
-	border: 0;
 	border-radius: var(--elemenx-radius);
 	color: var(--elemenx-text-muted);
-	cursor: pointer;
 }
 
 .elemenx-window-control:hover {
@@ -235,10 +230,6 @@
 .elemenx-window-control.close:hover {
 	background: var(--elemenx-danger);
 	color: var(--elemenx-accent-text);
-}
-
-.elemenx-window-control:focus-visible {
-	outline: 2px solid var(--elemenx-focus);
 }
 
 .elemenx-window-body {

@@ -68,4 +68,5 @@
 
 ## Тесты
 
+- [CastList, DiffView, MediaHero, MediaShelf and VideoTimeline are as wide as a column of flex-start](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/inline-size-width.test.js#L39) — `tests/regression/inline-size-width.test.js`
 - [MediaShelf draws its items as cards, gives back the item pressed, turns by its arrows and goes from card to card by the keys](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-media.test.js#L87) — `tests/regression/library-media.test.js`

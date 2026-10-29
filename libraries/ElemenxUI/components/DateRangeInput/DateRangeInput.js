@@ -160,26 +160,7 @@ Elemenx.Component('DateRangeInput', {
 
 	/* The first day of the week: FirstDay, Monday by default; 'locale': the one of Locale where the browser knows it, or Monday. */
 	First: function () {
-		var locale;
-
-		if (this.FirstDay === null || this.FirstDay === '') return 1;
-
-		if (this.FirstDay !== 'locale')
-			return Number(this.FirstDay) % 7;
-
-		try {
-			locale = new Intl.Locale(this.Locale || Elemenx.Locale.Language());
-
-			if (locale.weekInfo)
-				return locale.weekInfo.firstDay % 7;
-
-			if (typeof locale.getWeekInfo === 'function') return locale.getWeekInfo().firstDay % 7;
-		}
-		catch (error) {
-			/* No week data: Monday. */
-		}
-
-		return 1;
+		return this.$Service('ElemenxHelpers').FirstDay(this.FirstDay, this.Locale);
 	},
 
 	/* The range of a preset, as [start, end]. */

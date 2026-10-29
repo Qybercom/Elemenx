@@ -1,5 +1,5 @@
 <div class="elemenx-mixer-channel" role="group" [class]="[Master ? 'master' : '', Mute ? 'muted' : '', Solo ? 'soloed' : '', Silenced ? 'silenced' : '', Disabled ? 'disabled' : '']" [attribute.aria-label]="Label || null" [attribute.style]="Style(Color)">
-	<span class="elemenx-mixer-name" [attribute.title]="Label || null">{{Label}}</span>
+	<span class="elemenx-mixer-name elemenx-ellipsis" [attribute.title]="Label || null">{{Label}}</span>
 	<div class="elemenx-mixer-knobs" *if="(Knobs || []).length">
 		<Knob *for="knob of Knobs" *key="knob.Label" Size="small" [value]="knob.Value || 0" [min]="knob.Min === undefined ? -12 : knob.Min" [max]="knob.Max === undefined ? 12 : knob.Max" [origin]="knob.Origin === undefined ? 0 : knob.Origin" [default]="knob.Default === undefined ? 0 : knob.Default" [unit]="knob.Unit || ''" [label]="knob.Label" [disabled]="!!Disabled" (input)="Turned" />
 	</div>

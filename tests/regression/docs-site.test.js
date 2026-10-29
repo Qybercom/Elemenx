@@ -9,6 +9,22 @@ import { fileURLToPath } from 'url';
 var require = createRequire(import.meta.url);
 var root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 var DocsSite = require(path.join(root, 'tools', 'docs-site.js'));
+
+/* A port no one listens on: the system gives one (a random one of a range met a server that was running, regression). */
+function freePort () {
+	return new Promise(function (resolve, reject) {
+		var probe = require('net').createServer();
+
+		probe.on('error', reject);
+		probe.listen(0, '127.0.0.1', function () {
+			var port = probe.address().port;
+
+			probe.close(function () {
+				resolve(port);
+			});
+		});
+	});
+}
 var manifest = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
 var folder;
 var output;
@@ -80,8 +96,8 @@ describe('Elemenx docs: the reference in the package', function () {
 		expect(fs.existsSync(path.join(output, 'elemenx.config.js'))).toBe(true);
 
 		/* Its live examples use any section of the framework (the network, the storage...) and any pack (the emoji...). */
-		expect(framework).toContain('/* Network');
-		expect(framework).toContain('/* Storage');
+		expect(framework).toContain('Elemenx Network owner is destroyed');
+		expect(framework).toContain('Elemenx.Storage.Context expects');
 
 		/*
 		 * A bug: its live examples make their templates at run time, so the build took no Component they use, and an
@@ -99,10 +115,16 @@ describe('Elemenx docs: the reference in the package', function () {
 
 		/* ElemenxUI is not copied: the package has it, and the server of the CLI answers /libraries/ from there. */
 		expect(fs.existsSync(path.join(output, 'libraries', 'ElemenxUI'))).toBe(false);
+
+		/* The projects of the tutorials, to download, and the demos of those with no server of their own, in one file each. */
+		expect(fs.existsSync(path.join(output, 'tutorials', 'Auth.zip'))).toBe(true);
+		expect(fs.existsSync(path.join(output, 'tutorials', 'Auth', 'index.html'))).toBe(false);
+		expect(fs.readFileSync(path.join(output, 'tutorials', 'Todo', 'index.html'), 'utf8')).toContain('<script id="elemenx">');
+		expect(fs.existsSync(path.join(output, 'tutorials', 'Languages', 'locales', 'ru.json'))).toBe(true);
 	});
 
 	it('is served by elemenx docs with the answers of its examples of the network', async function () {
-		var port = 4300 + Math.floor(Math.random() * 500);
+		var port = await freePort();
 		var site = path.join(root, 'docs-site');
 		/* The CLI serves docs-site/ beside it, which in the repository it builds from the sources first: taken away after when it was not there. */
 		var made = !fs.existsSync(site);
@@ -131,7 +153,7 @@ describe('Elemenx docs: the reference in the package', function () {
 	});
 
 	it('elemenx dev has every file checked again before it is used (no-cache), so a change shows at the next reload', async function () {
-		var port = 4300 + Math.floor(Math.random() * 500);
+		var port = await freePort();
 
 		await serve(['dev', 'examples/Simple', '--port', String(port)], async function () {
 			var sprite = await fetch('http://127.0.0.1:' + port + '/libraries/ElemenxUI/index.svg');
@@ -145,12 +167,48 @@ describe('Elemenx docs: the reference in the package', function () {
 		});
 	});
 
+	/*
+	 * A bug: elemenx dev read the answers of its server once, so a server started before elemenx.config.js changed
+	 * answered as before (the reference gave its page for the archives of its tutorials).
+	 */
+	it('elemenx dev answers as elemenx.config.js says after a change of it, without a restart', async function () {
+		var port = await freePort();
+		var project = fs.mkdtempSync(path.join(os.tmpdir(), 'elemenx-dev-config-'));
+		var file = path.join(project, 'elemenx.config.js');
+		var settings = function (word) {
+			return "module.exports = {Server: {Request: function (request, response, pathname) {\n\tif (pathname !== '/api/word') return false;\n\n\tresponse.end('" + word + "');\n\n\treturn true;\n}}};\n";
+		};
+
+		fs.writeFileSync(path.join(project, 'index.html'), '<!DOCTYPE html><html><head></head><body></body></html>');
+		fs.writeFileSync(file, settings('one'));
+
+		try {
+			await serve(['dev', project, '--port', String(port)], async function () {
+				expect((await get(port, '/api/word')).Text).toBe('one');
+
+				fs.writeFileSync(file, settings('two'));
+				fs.utimesSync(file, new Date(), new Date(Date.now() + 5000));
+
+				expect((await get(port, '/api/word')).Text).toBe('two');
+
+				/* A file that does not load keeps the answers it had. */
+				fs.writeFileSync(file, 'module.exports = {');
+				fs.utimesSync(file, new Date(), new Date(Date.now() + 10000));
+
+				expect((await get(port, '/api/word')).Text).toBe('two');
+			});
+		}
+		finally {
+			fs.rmSync(project, {recursive: true, force: true});
+		}
+	});
+
 	it('goes into the package of npm, built by prepack, and the CLI tells of it', function () {
 		var help = child.execFileSync(process.execPath, [path.join(root, 'elemenx-cli.js'), 'help', 'docs'], {encoding: 'utf8'});
 
 		expect(manifest.files).toContain('docs-site');
 		expect(manifest.scripts['docs:site']).toBe('node tools/docs-site.js');
-		expect(manifest.scripts.prepack).toBe('npm run dist -- --no-editors && npm run docs:site');
+		expect(manifest.scripts.prepack).toBe('npm run dist -- --no-editors && npm run docs:site && npm run design:site');
 		expect(fs.readFileSync(path.join(root, '.gitignore'), 'utf8')).toContain('/docs-site\n');
 		expect(help).toContain('elemenx docs [--port 4179] [--open]');
 	});

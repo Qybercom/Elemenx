@@ -48,10 +48,7 @@
 }
 
 .elemenx-media-title {
-	overflow: hidden;
 	font-weight: 600;
-	text-overflow: ellipsis;
-	white-space: nowrap;
 }
 
 .elemenx-media-row {

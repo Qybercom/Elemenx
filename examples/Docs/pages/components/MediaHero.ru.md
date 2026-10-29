@@ -62,4 +62,6 @@
 
 ## Тесты
 
+- [CastList, DiffView, MediaHero, MediaShelf and VideoTimeline are as wide as a column of flex-start](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/inline-size-width.test.js#L39) — `tests/regression/inline-size-width.test.js`
 - [MediaHero: its facts, score and genres, Resume once some of it was seen, play and the heart](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-media.test.js#L339) — `tests/regression/library-media.test.js`
+- [is the same on both sides of a text, smaller on the right of a button to remove it](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/chip-padding.test.js#L45) — `tests/regression/chip-padding.test.js`

@@ -14,7 +14,7 @@
 			<span class="elemenx-color-thumb" [style.left]="A * 100 + '%'"></span>
 		</div>
 		<div class="elemenx-color-swatches">
-			<button class="elemenx-color-preset" type="button" *for="swatch of Swatches" *key="swatch" [attribute.aria-label]="swatch" [attribute.title]="swatch" [attribute.data-color]="swatch" [class.selected]="String(Value).substring(0, 7) === swatch" [style.background-color]="swatch" (click)="Swatch"></button>
+			<button class="elemenx-color-preset elemenx-focus-ring" type="button" *for="swatch of Swatches" *key="swatch" [attribute.aria-label]="swatch" [attribute.title]="swatch" [attribute.data-color]="swatch" [class.selected]="String(Value).substring(0, 7) === swatch" [style.background-color]="swatch" (click)="Swatch"></button>
 		</div>
 		<div class="elemenx-picker-footer">
 			<span class="elemenx-color-value">{{Value}}</span>

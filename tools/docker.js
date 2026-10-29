@@ -4,7 +4,8 @@
  * A build of the Application as a Docker image (elemenx build --docker, or the target docker): the files of its site
  * served by nginx (nginx:alpine, about 20 MB). Pack(folder, project, settings) writes beside the files of the build:
  * - Dockerfile: nginx with the configuration below, the files of the build, port 80, a health check (/healthz);
- * - nginx.conf: gzip for the text of 1024 bytes and more; every path that is not a file answered with index.html (the
+ * - nginx.conf: gzip for the text of 1024 bytes and more (the .gz a build writes beside a file sent as it is:
+ *   gzip_static); every path that is not a file answered with index.html (the
  *   routes of the Router on a reload); index.html and the worker of a PWA never kept by a cache, the other files kept
  *   until they change (ETag); the headers of a safe page (nosniff, a referrer policy, frames of the same origin only)
  *   and Docker.Headers, {name: value} of its own (a Content-Security-Policy...);
@@ -47,6 +48,7 @@ function configuration (headers) {
 		'\tserver_tokens off;',
 		'',
 		'\tgzip on;',
+		'\tgzip_static on;',
 		'\tgzip_min_length 1024;',
 		'\tgzip_vary on;',
 		'\tgzip_types text/plain text/css application/javascript application/json application/manifest+json image/svg+xml;',

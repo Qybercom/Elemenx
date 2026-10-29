@@ -16,6 +16,7 @@
 }
 
 .elemenx-emoji-tone {
+	--elemenx-focus-offset: 0px;
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
@@ -34,10 +35,6 @@
 
 .elemenx-emoji-tone:hover {
 	background: var(--elemenx-surface-hover);
-}
-
-.elemenx-emoji-tone:focus-visible {
-	outline: 2px solid var(--elemenx-focus);
 }
 
 .elemenx-emoji-tones {
@@ -79,6 +76,7 @@
 }
 
 .elemenx-emoji-item {
+	--elemenx-focus-offset: -2px;
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
@@ -97,11 +95,6 @@
 .elemenx-emoji-item:hover,
 .elemenx-emoji-item:focus-visible {
 	background: var(--elemenx-surface-hover);
-}
-
-.elemenx-emoji-item:focus-visible {
-	outline: 2px solid var(--elemenx-focus);
-	outline-offset: -2px;
 }
 
 .elemenx-emoji-item.selected {
@@ -125,10 +118,7 @@
 
 .elemenx-emoji-preview-name {
 	min-width: 0;
-	overflow: hidden;
 	color: var(--elemenx-text-muted);
 	font-size: var(--elemenx-font-size-small);
 	line-height: var(--elemenx-line-height-small);
-	text-overflow: ellipsis;
-	white-space: nowrap;
 }

@@ -11,6 +11,7 @@
 }
 
 .elemenx-track {
+	--elemenx-focus-offset: -2px;
 	display: grid;
 	grid-template-columns: 32px minmax(0, 1fr) auto;
 	align-items: center;
@@ -35,11 +36,6 @@
 
 .elemenx-track:hover {
 	background: var(--elemenx-surface-hover);
-}
-
-.elemenx-track:focus-visible {
-	outline: 2px solid var(--elemenx-focus);
-	outline-offset: -2px;
 }
 
 .elemenx-track.disabled {
@@ -119,8 +115,7 @@
 }
 
 .elemenx-track-title,
-.elemenx-track-artist,
-.elemenx-track-column {
+.elemenx-track-artist {
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;

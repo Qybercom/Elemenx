@@ -7,7 +7,7 @@
 		<div class="elemenx-nav-row" role="treeitem" tabindex="0" *for="row of Rows(Items, Expanded, Filter)" *key="row.Item.ID" [class.active]="String(row.Item.ID) === String(Value)" [class.group]="row.Group" [class.disabled]="!!row.Item.Disabled" [style.--elemenx-nav-depth]="row.Depth" [attribute.aria-expanded]="row.Group ? String(row.Open) : null" [attribute.aria-current]="String(row.Item.ID) === String(Value) ? 'page' : null" [attribute.title]="Collapsed ? row.Item.Label : null" [attribute.data-id]="row.Item.ID" (click)="Pick" (keydown)="Key">
 			<span class="elemenx-nav-twisty"><Icon *if="row.Group" [name]="row.Open ? 'chevron-down' : 'chevron-right'" Size="12" /></span>
 			<Icon *if="row.Item.Icon" [name]="row.Item.Icon" />
-			<span class="elemenx-nav-label">{{row.Item.Label}}</span>
+			<span class="elemenx-nav-label elemenx-ellipsis">{{row.Item.Label}}</span>
 			<span class="elemenx-badge" *if="row.Item.Badge != null && row.Item.Badge !== '' && !Collapsed">{{row.Item.Badge}}</span>
 		</div>
 	</div>

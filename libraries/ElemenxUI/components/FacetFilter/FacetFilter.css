@@ -38,14 +38,13 @@
 .elemenx-facet-filter-remove {
 	display: inline-flex;
 	padding: 0;
-	border: 0;
-	background: transparent;
 	color: inherit;
-	cursor: pointer;
 }
 
+/* A facet shows its name on a raised band, as a section of an Accordion does, not over a line. */
 .elemenx-facet {
-	border-top: 1px solid var(--elemenx-border);
+	display: flex;
+	flex-direction: column;
 }
 
 .elemenx-facet-header {
@@ -53,15 +52,18 @@
 	align-items: center;
 	justify-content: space-between;
 	width: 100%;
-	min-height: 36px;
-	padding: 0;
-	border: 0;
-	background: transparent;
+	min-height: 32px;
+	padding: 0 8px;
+	border-radius: var(--elemenx-radius);
+	background: var(--elemenx-surface-raised);
 	color: var(--elemenx-text);
 	font: inherit;
 	font-weight: var(--elemenx-font-weight-strong);
 	text-align: start;
-	cursor: pointer;
+}
+
+.elemenx-facet-header:hover {
+	background: var(--elemenx-surface-hover);
 }
 
 .elemenx-facet.active .elemenx-facet-label::after {
@@ -79,7 +81,7 @@
 	display: flex;
 	flex-direction: column;
 	gap: 2px;
-	padding-bottom: 8px;
+	padding: 8px 8px 4px;
 }
 
 .elemenx-facet-options {

@@ -1,0 +1,46 @@
+/* The groups of a split, each at its place in it; the dividers over the lines between them. */
+.elemenx-tab-split {
+	position: relative;
+	width: 100%;
+	height: 100%;
+	min-height: 160px;
+	overflow: hidden;
+	background: var(--elemenx-border);
+}
+
+.elemenx-tab-split-group {
+	position: absolute;
+	box-sizing: border-box;
+	display: flex;
+	padding: 0.5px;
+}
+
+.elemenx-tab-split-group > .elemenx-tab-group {
+	flex: 1;
+}
+
+/* A divider: a band a little wider than the line it is over, so a pointer finds it. */
+.elemenx-tab-split-divider {
+	position: absolute;
+	z-index: 3;
+	box-sizing: border-box;
+	outline: none;
+	touch-action: none;
+}
+
+.elemenx-tab-split-divider.row {
+	width: 6px !important;
+	margin-inline-start: -3px;
+	cursor: col-resize;
+}
+
+.elemenx-tab-split-divider.column {
+	height: 6px !important;
+	margin-top: -3px;
+	cursor: row-resize;
+}
+
+.elemenx-tab-split-divider:hover,
+.elemenx-tab-split-divider:focus-visible {
+	background: rgba(var(--elemenx-accent-rgb), 0.48);
+}

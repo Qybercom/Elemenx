@@ -1,6 +1,6 @@
 <div class="elemenx-phone elemenx-popup-anchor">
 	<div class="elemenx-input elemenx-phone-input" [class]="[Size || 'medium', Shape === 'round' ? 'round' : '', Invalid ? 'invalid' : '', Disabled ? 'disabled' : '']">
-		<button class="elemenx-phone-country" type="button" aria-haspopup="listbox" [disabled]="Disabled || Countries.length < 2" [attribute.aria-expanded]="String(Open)" [attribute.aria-label]="'Country: ' + Effective(Countries, Country, Value).Name" (click)="Toggle">
+		<button class="elemenx-phone-country elemenx-bare elemenx-focus-ring" type="button" aria-haspopup="listbox" [disabled]="Disabled || Countries.length < 2" [attribute.aria-expanded]="String(Open)" [attribute.aria-label]="'Country: ' + Effective(Countries, Country, Value).Name" (click)="Toggle">
 			<span class="elemenx-phone-code">{{Effective(Countries, Country, Value).Code}}</span>
 			<Icon Name="chevron-down" Size="12" *if="Countries.length > 1" />
 		</button>

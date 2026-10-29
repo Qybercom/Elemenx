@@ -35,5 +35,5 @@
 
 - [puts the actions of a folder Block at the end of its header, without a padding after them](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/folder-shapes.test.js#L61) — `tests/regression/folder-shapes.test.js`
 - [draws the slope of a folder Block in a game panel whose band is a gradient](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/folder-shapes.test.js#L67) — `tests/regression/folder-shapes.test.js`
-- [a block frames its content under a title on a band set into the frame, with a note, actions and paddings](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L4642) — `tests/examples/ui-kit.spec.js`
-- [properties set a value apart from its name, in one column or two, with tones and values of their own](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L4692) — `tests/examples/ui-kit.spec.js`
+- [a block frames its content under a title on a band set into the frame, with a note, actions and paddings](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L4718) — `tests/examples/ui-kit.spec.js`
+- [properties set a value apart from its name, in one column or two, with tones and values of their own](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L4768) — `tests/examples/ui-kit.spec.js`

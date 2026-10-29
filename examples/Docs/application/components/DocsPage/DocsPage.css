@@ -223,3 +223,49 @@
 		padding: 16px;
 	}
 }
+
+/* The finished project of a tutorial, under the title of its article: to download, and its demo on the page. */
+.docs-tutorial {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	margin: 8px 0 24px;
+}
+
+.docs-tutorial-head {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+}
+
+.docs-tutorial-text {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	min-width: 0;
+}
+
+.docs-tutorial-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+
+.docs-tutorial-download {
+	text-decoration: none;
+}
+
+.docs-tutorial-failed {
+	margin: 0;
+	color: var(--elemenx-danger);
+}
+
+.docs-tutorial-frame {
+	width: 100%;
+	height: min(640px, 75vh);
+	border: 1px solid var(--elemenx-border);
+	border-radius: var(--elemenx-radius-large);
+	background: var(--elemenx-background);
+}

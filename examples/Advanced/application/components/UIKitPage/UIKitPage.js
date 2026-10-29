@@ -194,6 +194,9 @@ Elemenx.Component('UIKitPage', {
 	],
 	MenuChoice: '',
 	Tab: 'app',
+	SplitFiles: ['app.js', 'index.html', 'styles.css', 'README.md'],
+	SplitNote: '',
+	GroupTabs: ['Notes', 'Plan', 'Budget', 'Ideas'],
 	EditorTabs: [
 		{ID: 'app', Label: 'app.js', Icon: 'file-code', Closable: true},
 		{ID: 'index', Label: 'index.html', Icon: 'file-code', Closable: true},
@@ -2015,6 +2018,30 @@ Elemenx.Component('UIKitPage', {
 
 	TabChanged: function (id) {
 		this.Tab = id;
+	},
+
+	/* The layout of the tab groups, as the TabSplit tells it: the groups and the tabs in each. */
+	SplitChanged: function (layout) {
+		var groups = [];
+
+		(function walk (node) {
+			if (node.Split) node.Children.forEach(walk);
+			else groups.push(node.Tabs.length);
+		})(layout);
+
+		this.SplitNote = groups.length + (groups.length === 1 ? ' group: ' : ' groups: ') + groups.join(' + ') + ' tabs';
+	},
+
+	SplitClosed: function (id) {
+		this.SplitFiles = this.SplitFiles.filter(function (file) {
+			return file !== id;
+		});
+	},
+
+	GroupTabClosed: function (id) {
+		this.GroupTabs = this.GroupTabs.filter(function (tab) {
+			return tab !== id;
+		});
 	},
 
 	TabClosed: function (id) {

@@ -11,7 +11,7 @@ To find a section in `elemenx.js`, search for its header, for example `/* Router
 | Field | Purpose | Used by |
 |---|---|---|
 | `ScriptURL` | URL of the loaded `elemenx.js` (a `blob:` URL of its text when it is inline in its page); workers load the same file from it, and ElemenxUI is taken from `libraries/ElemenxUI` next to it | Library, WebWorker, ServiceWorker |
-| `HasDOM` | `true` in a document, `false` inside workers | Application, Discovery, Identity, Install, Locale, Messaging, ServiceWorker, ServiceWorker bootstrap, Splash, Style, Template and Component, Utilities, WebWorker, Widgets |
+| `HasDOM` | `true` in a document, `false` inside workers | Application, Discovery, Identity, Install, Locale, Messaging, Motion, ServiceWorker, ServiceWorker bootstrap, Splash, Style, Template and Component, Utilities, WebWorker, Widgets |
 | `StartedAt` | time this runtime started | Identity |
 | `Isolated` | true in an isolated build (`ElemenxIsolated`): the html element of the page is left alone | Application, Locale, Style, Widgets |
 | `ShadowHosts` | the hosts of the Applications that render in a shadow root | Application, Locale, Widgets |
@@ -21,6 +21,7 @@ To find a section in `elemenx.js`, search for its header, for example `/* Router
 | Field | Purpose | Used by |
 |---|---|---|
 | `Own` | `Object.prototype.hasOwnProperty.call(object, key)`; modules alias it as `var own = Runtime.Own;` | Application, Bundle, Cache, Directive registry, Discovery, Locale, Messaging, Meta, Network, Reactive, Router, Service and Guard, Storage, Structural, Template and Component, Widgets |
+| `BaseURL` | the base of the relative URLs of the document: its address, or for one that is no base (a page of a `blob:` or `about:` URL) its base URI, the root of its origin or `file:///` | Application, Discovery |
 | `AbsoluteURL` | resolves a URL against the document; in a worker the value is kept as it is | Locale, Resource, ServiceWorker, WebWorker |
 | `CurrentScriptURL` | the URL of the executing script without query and hash, or `null`: the base of the relative paths of its definitions | Library, Template and Component, Application |
 | `DefinitionURL` | resolves a relative path of a definition against its `$DefinitionURL`; absolute and root paths are kept | Library, Template and Component, Application |
@@ -128,7 +129,9 @@ To find a section in `elemenx.js`, search for its header, for example `/* Router
 | `ComponentValues` | reactive state of a component instance | Structural |
 | `RootAttributes` | puts the `class` and `style` of the tag of a Component on the root of its instance, taking away the ones it put before; a deferred Component takes them from its placeholder | Structural |
 | `UpdateProps` | gives a Component new values of props and calls its `$OnProps` with the ones that changed (a deferred Component once it is made) | Structural, Widgets |
-| `CallHandler` | calls the handler of an `(event)` by its name when the event comes: a method of the instance, or a function its state holds (set in `$OnCreate`), on the owner of that state | Structural |
+| `CallHandler` | calls the handler of an `(event)` when the event comes: by its name, a method of the instance or a function its state holds (set in `$OnCreate`), on the owner of that state; any other text is an expression with `$event` and `$node`, a row of a `*for` writing the names of its owner to the owner | Structural |
+| `Interpolation` | the parts of a text with `{{ }}`: its texts and its expressions (`{Source}`), `\{{` a `{{` of the text; `null` without `{{` | Structural |
+| `InterpolationValue` | the value of those parts: the one expression as it is, or the texts and the values as one text | Structural |
 | `UpdateComponentRouteContext` | pushes `$Path`, `$Params`, `$Query`, `$Hash` into a routed component | Router |
 | `CreateComponent` | creates an anonymous component factory from a definition | Structural |
 | `BeginComponentReload` | starts a component reload: remembers live instances | Application |

@@ -9,18 +9,16 @@
 }
 
 .elemenx-table-sort {
+	--elemenx-focus-offset: 0px;
 	display: inline-flex;
 	align-items: center;
 	gap: 4px;
 	max-width: 100%;
 	margin: 0 -4px;
 	padding: 2px 4px;
-	background: transparent;
-	border: 0;
 	border-radius: var(--elemenx-radius);
 	color: inherit;
 	font: inherit;
-	cursor: pointer;
 }
 
 .elemenx-table-sort span {
@@ -31,10 +29,6 @@
 .elemenx-table-sort:hover {
 	background: var(--elemenx-surface-hover);
 	color: var(--elemenx-text);
-}
-
-.elemenx-table-sort:focus-visible {
-	outline: 2px solid var(--elemenx-focus);
 }
 
 .elemenx-table th[aria-sort='ascending'],
@@ -163,11 +157,8 @@
 	width: 20px;
 	height: 20px;
 	padding: 0;
-	background: transparent;
-	border: 0;
 	border-radius: var(--elemenx-radius);
 	color: var(--elemenx-text-muted);
-	cursor: pointer;
 }
 
 button.elemenx-table-twisty:hover {

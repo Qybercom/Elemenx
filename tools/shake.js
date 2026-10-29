@@ -104,7 +104,117 @@ function Shake (source, code) {
 			output.push(line);
 	});
 
+	/* An Application that starts a worker keeps every part too: the scripts of its workers may use any. */
+	if (!Groups.some(function (group) {
+		return group.All && keep[group.Name];
+	})) {
+		Parts.forEach(function (rule) {
+			output = shakeParts(output, rule, String(code || ''), removed);
+		});
+	}
+
 	return {Source: output.join('\n'), Removed: removed};
+}
+
+/*
+ * The sections whose parts (their sub-headers, "/* Network: WebRTC") a build takes one by one: a part that puts a
+ * transport into Registry goes when the code names that transport nowhere (Network.WebRTC, $Network().Transfer) and
+ * no part that stays calls a function or reads a variable it declares; a part with no transport stays when one that
+ * stays needs it. A part that does more than declare (a statement of its own at the level of the section) stays.
+ */
+var Parts = [
+	{Section: 'Network', Registry: 'NetworkFactories'}
+];
+
+function shakeParts (lines, rule, code, removed) {
+	var header = '\t/* ' + rule.Section + ' */';
+	var start = lines.indexOf(header);
+	var marks = [];
+	var parts = [];
+	var end = -1;
+	var i;
+	var changed = true;
+	var registry = new RegExp('^\\t\\t' + rule.Registry + '\\.(\\w+) = ');
+	var drop = {};
+
+	if (start === -1) return lines;
+
+	for (i = start + 1; i < lines.length; i++) {
+		if (/^\t\}\)\(/.test(lines[i])) {
+			end = i;
+
+			break;
+		}
+
+		if (lines[i].indexOf('\t\t/* ' + rule.Section + ': ') === 0)
+			marks.push(i);
+	}
+
+	if (end === -1 || !marks.length) return lines;
+
+	marks.forEach(function (mark, index) {
+		var to = index + 1 < marks.length ? marks[index + 1] : end;
+		var part = {Name: /^\t\t\/\* ([^*]+?) \*\/$/.exec(lines[mark])[1], From: mark, To: to, Declared: [], Factories: [], Fixed: index === marks.length - 1, Text: lines.slice(mark, to).join('\n')};
+
+		lines.slice(mark, to).forEach(function (line) {
+			var declared = /^\t\t(?:function|var) ([A-Za-z_$][\w$]*)/.exec(line);
+			var factory = registry.exec(line);
+
+			if (declared) part.Declared.push(declared[1]);
+			else if (factory) part.Factories.push(factory[1]);
+			else if (/^\t\t[^\t\s}\])\/*]/.test(line)) part.Fixed = true;
+		});
+
+		parts.push(part);
+	});
+
+	function wanted (part) {
+		return part.Fixed || part.Factories.some(function (name) {
+			return new RegExp('\\b' + name + '\\b').test(code);
+		});
+	}
+
+	parts.forEach(function (part) {
+		part.Kept = wanted(part);
+	});
+
+	/* What the parts that stay call or read, until it holds: a part stays when one that stays names what it declares. */
+	while (changed) {
+		changed = false;
+
+		(function () {
+			var text = lines.slice(start, marks[0]).join('\n') + '\n' + parts.filter(function (part) {
+				return part.Kept;
+			}).map(function (part) {
+				return part.Text;
+			}).join('\n');
+
+			parts.forEach(function (part) {
+				if (part.Kept) return;
+
+				if (part.Declared.some(function (name) {
+					return new RegExp('(^|[^\\w$.])' + name.replace(/\$/g, '\\$') + '(?![\\w$])').test(text);
+				})) {
+					part.Kept = true;
+					changed = true;
+				}
+			});
+		})();
+	}
+
+	parts.forEach(function (part) {
+		if (part.Kept) return;
+
+		removed.push(part.Name);
+
+		for (i = part.From; i < part.To; i++) {
+			drop[i] = true;
+		}
+	});
+
+	return lines.filter(function (line, index) {
+		return !drop[index];
+	});
 }
 
 module.exports = {

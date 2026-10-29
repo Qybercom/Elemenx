@@ -4,7 +4,7 @@
 			<div class="elemenx-game-quests-heading" *if="group.Name">{{group.Name}}</div>
 			<button class="elemenx-game-quest" type="button" role="option" *for="entry of group.Items" *key="entry.Quest.ID" [class]="[entry.Quest.Status || 'active']" [class.active]="IsOpen(Items, Value, entry.Quest)" [attribute.aria-selected]="IsOpen(Items, Value, entry.Quest) ? 'true' : 'false'" [attribute.tabindex]="IsOpen(Items, Value, entry.Quest) ? 0 : -1" [attribute.data-index]="entry.Index" (click)="Pressed">
 				<span class="elemenx-game-quest-mark"><Icon *if="entry.Quest.Status === 'done' || entry.Quest.Status === 'failed' || entry.Quest.Tracked" [name]="entry.Quest.Status === 'done' ? 'check' : entry.Quest.Status === 'failed' ? 'close' : 'star-filled'" /></span>
-				<span class="elemenx-game-quest-title">{{entry.Quest.Title}}</span>
+				<span class="elemenx-game-quest-title elemenx-ellipsis">{{entry.Quest.Title}}</span>
 				<span class="elemenx-game-quest-level" *if="entry.Quest.Level != null">{{entry.Quest.Level}}</span>
 			</button>
 		</div>
@@ -45,7 +45,7 @@
 		</div>
 	</article>
 	<div class="elemenx-game-tracker" *if="Variant === 'tracker'" [attribute.aria-label]="Label || $T('ui.game.quests')" role="region">
-		<button class="elemenx-game-tracker-quest" type="button" *for="quest of Tracked(Items)" *key="quest.ID" [attribute.data-id]="quest.ID" (click)="Followed">
+		<button class="elemenx-game-tracker-quest elemenx-bare" type="button" *for="quest of Tracked(Items)" *key="quest.ID" [attribute.data-id]="quest.ID" (click)="Followed">
 			<span class="elemenx-game-tracker-title">{{quest.Title}}</span>
 			<span class="elemenx-game-tracker-objective" *for="objective of quest.Objectives || []" *key="$index" [class.done]="Reached(objective)">{{objective.Label}}<span class="elemenx-game-objective-count" *if="objective.Max != null"> {{Count(objective)}}</span></span>
 		</button>

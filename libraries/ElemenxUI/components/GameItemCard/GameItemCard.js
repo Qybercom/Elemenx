@@ -21,6 +21,11 @@ Elemenx.Component('GameItemCard', {
 	Place: '',
 
 	$OnCreate: function () {
+		/* A card placed beside an element (GameItems.Place) floats over the page in the top layer; one placed in the flow (position: static) stays there. */
+		this.Floating = function (place) {
+			return !!place && !/position\s*:\s*(static|relative)/.test(place);
+		};
+
 		/* The classes an item asks for (Class: a text of names or a list), for a look of its own. */
 		this.Classes = function (value) {
 			var list = Array.isArray(value) ? value : String(value || '').split(/\s+/);

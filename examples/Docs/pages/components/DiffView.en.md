@@ -34,4 +34,5 @@ The differences between two texts, to read (the Diff Service): Before and After,
 
 ## Tests
 
+- [CastList, DiffView, MediaHero, MediaShelf and VideoTimeline are as wide as a column of flex-start](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/inline-size-width.test.js#L39) — `tests/regression/inline-size-width.test.js`
 - [DiffView shows the lines removed and added with the words that changed, folds the unchanged runs and opens them](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-new.test.js#L208) — `tests/regression/library-new.test.js`

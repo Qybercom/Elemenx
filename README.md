@@ -23,11 +23,17 @@ The reference of the installed version (the guide, the core, every Component, Se
 npx elemenx docs --open
 ```
 
+The Designer of the installed version opens on a project: its applications, routes and components as a tree, its components on the canvas as they run, a copy of one to edit; nothing is written to its files:
+
+```bash
+npx elemenx design --open
+```
+
 A page with no build and no server takes the distribution from a CDN or from `node_modules/@qybercom/elemenx/dist` (see "Distribution of the framework" in `docs/BUILDER.md`):
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/@qybercom/elemenx@0.10/dist/elemenx.all.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@qybercom/elemenx@0.10/dist/elemenx-ui.emoji.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@qybercom/elemenx@0.11/dist/elemenx.all.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@qybercom/elemenx@0.11/dist/elemenx-ui.emoji.min.js"></script>
 ```
 
 `elemenx.all.min.js` is the framework and ElemenxUI; the scripts of the packs (`emoji`, `emoji.ru`, `brands`, `files`) are needed only by the pages that use them.

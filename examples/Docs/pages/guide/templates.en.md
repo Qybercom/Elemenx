@@ -13,6 +13,8 @@ A template is HTML with the bindings of Elemenx. Its expressions are JavaScript,
 | `[style]="{'width': Width + 'px', '--accent': Color}"` | styles from an object of CSS names; `null` removes one |
 | `[style.width]="Width + 'px'"` | one style; custom properties too: `[style.--size]` |
 | `(click)="Method"` | an event: the method gets `(event, element)`; on a component tag, `(data, component)` |
+| `(click)="Pick(item, $event)"`, `(click)="Open = !Open"` | an expression run on the event: `$event` is the event (on a component tag, what it told), `$node` the element (the component) |
+| `\{{` | a `{{` of the template itself, not an expression |
 | `[(value)]="Name"` | two-way, on an `input`, `textarea` or `select`: the field follows what is typed (`input`), and the element follows the field |
 | `[(checked)]="Agreed"`, `[(selected)]="Picked"` | two-way, on a check box, a radio, an option (on `change`) |
 | `#name` | marks an element for `this.$Ref('name')` (all of them, the rows of a `*for`: `this.$Refs('name')`) |
@@ -66,26 +68,24 @@ A component tag may be self-closed (`<Icon Name="save" />`), even when the templ
 
 ## Events in lists
 
-The value of an event binding is the name of a method. A method that must know which item was pressed reads it from its element:
+The value of an event binding is the name of a method, or an expression run when the event comes. In a list, an expression gives the method the item that was pressed:
 
 ```html
-<li *for="product of Products" *key="product.ID">
-	{{product.Title}}
-	<button type="button" [attribute.data-id]="product.ID" (click)="Remove">Remove</button>
+<li *for="product of Products" *key="product.ID" [class.selected]="product === Selected">
+	<button type="button" (click)="Selected = product">{{product.Title}}</button>
+	<button type="button" (click)="Remove(product)">Remove</button>
 </li>
 ```
 
 ```js
-Remove: function (event, button) {
-	var id = Number(button.getAttribute('data-id'));
-
-	this.Products = this.Products.filter(function (product) {
-		return product.ID !== id;
+Remove: function (product) {
+	this.Products = this.Products.filter(function (each) {
+		return each !== product;
 	});
 }
 ```
 
-Or make the row a component of its own that emits an event with its item.
+An assignment goes to the component: `Selected = product` in a row sets the `Selected` of the component, while a name of the row (`product`, `$index`) stays the row's. `$event` is the event and `$node` its element: `(input)="Query = $event.target.value"`. A plain name, `(click)="Remove"`, calls the method with `(event, element)` as always.
 
 ## Where a template comes from
 

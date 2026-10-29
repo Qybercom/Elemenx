@@ -33,4 +33,4 @@ Formulas written as in LaTeX, drawn by the browser as MathML. MathML(text, displ
 
 ## Tests
 
-- [Formulas: LaTeX as MathML, a fraction, a root, powers and indices, a display formula, and an error for what it cannot read](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-services.test.js#L76) — `tests/regression/library-services.test.js`
+- [Formulas: LaTeX as MathML, a fraction, a root, powers and indices, a display formula, and an error for what it cannot read](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-services.test.js#L126) — `tests/regression/library-services.test.js`

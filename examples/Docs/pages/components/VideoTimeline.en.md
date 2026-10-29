@@ -114,6 +114,7 @@ Methods: Split() (the clips selected, or the ones under the playhead, cut at it)
 
 ## Tests
 
+- [CastList, DiffView, MediaHero, MediaShelf and VideoTimeline are as wide as a column of flex-start](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/inline-size-width.test.js#L39) — `tests/regression/inline-size-width.test.js`
 - [draws the tracks, their clips in place, a wave, the ruler in seconds and the timecode](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-video-timeline.test.js#L80) — `tests/regression/library-video-timeline.test.js`
 - [seeks by a press and a drag on the ruler, steps by frames and seconds by the arrows, and asks to play by Space](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-video-timeline.test.js#L105) — `tests/regression/library-video-timeline.test.js`
 - [selects and moves a clip, carries it to another track of its kind, and keeps it off a track of another kind](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-video-timeline.test.js#L137) — `tests/regression/library-video-timeline.test.js`

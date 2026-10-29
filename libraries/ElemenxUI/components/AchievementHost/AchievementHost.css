@@ -52,11 +52,6 @@
 	animation: elemenx-achievement-open 1100ms var(--elemenx-easing) both;
 }
 
-.elemenx-achievement:focus-visible {
-	outline: 2px solid var(--elemenx-focus);
-	outline-offset: 2px;
-}
-
 .elemenx-achievement.uncommon {
 	--elemenx-achievement-color: var(--elemenx-game-uncommon);
 }

@@ -98,9 +98,6 @@
 .elemenx-game-quest-title {
 	flex: 1;
 	min-width: 0;
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
 }
 
 .elemenx-game-quest-level {
@@ -305,13 +302,10 @@
 	flex-direction: column;
 	gap: 2px;
 	padding: 0;
-	background: transparent;
-	border: 0;
 	color: var(--elemenx-game-text);
 	font: inherit;
 	text-align: start;
 	text-shadow: var(--elemenx-game-text-shadow);
-	cursor: pointer;
 }
 
 .elemenx-game-tracker-quest:focus-visible {

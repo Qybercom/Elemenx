@@ -78,6 +78,19 @@
 		"fileFailed": "This file holds no project of the builder.",
 		"openFile": "Open a file",
 		"saveFile": "Save to a file",
-		"closeTab": "Close"
+		"closeTab": "Close",
+		"disk": {
+			"title": "Project files",
+			"note": "The files of the project stay as they are: a Component picked here opens as a copy, kept in this browser.",
+			"applications": "Applications",
+			"components": "Components",
+			"services": "Services",
+			"directives": "Directives",
+			"guards": "Guards",
+			"libraries": "Libraries",
+			"taken": "name taken",
+			"notCopied": "The Component {name} is not here to copy: the framework has one of that name already, or its file did not run.",
+			"notApplication": "A copy of {name} goes into an application: create one, or open the application of this project."
+		}
 	}
 }

@@ -1,7 +1,7 @@
 <div class="elemenx-range elemenx-popup-anchor">
 	<div class="elemenx-input" [class]="[Size || 'medium', Shape === 'round' ? 'round' : '', Invalid ? 'invalid' : '', Disabled ? 'disabled' : '']">
-		<button class="elemenx-range-toggle" type="button" aria-haspopup="dialog" [attribute.aria-expanded]="String(Open)" [disabled]="Disabled" (click)="Toggle">
-			<span class="elemenx-range-text" [class.placeholder]="!Text(Value, Locale)">{{Text(Value, Locale) || (Placeholder || $T('ui.dateRangeInput.placeholder'))}}</span>
+		<button class="elemenx-range-toggle elemenx-bare" type="button" aria-haspopup="dialog" [attribute.aria-expanded]="String(Open)" [disabled]="Disabled" (click)="Toggle">
+			<span class="elemenx-range-text elemenx-ellipsis" [class.placeholder]="!Text(Value, Locale)">{{Text(Value, Locale) || (Placeholder || $T('ui.dateRangeInput.placeholder'))}}</span>
 			<Icon Name="calendar" />
 		</button>
 	</div>

@@ -3,6 +3,8 @@
 	flex-direction: column;
 	gap: 8px;
 	min-width: 0;
+	width: 100%;
+	/* Its width comes from its place, not from what it shows: on a phone it does not widen the page. */
 	contain: inline-size;
 }
 
@@ -23,11 +25,8 @@
 	align-items: center;
 	gap: 2px;
 	padding: 0;
-	border: 0;
-	background: transparent;
 	color: var(--elemenx-accent);
 	font: inherit;
-	cursor: pointer;
 }
 
 .elemenx-media-shelf-arrows {

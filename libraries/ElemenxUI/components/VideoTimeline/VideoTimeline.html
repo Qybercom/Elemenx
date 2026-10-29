@@ -1,4 +1,4 @@
-<div class="elemenx-video-timeline" tabindex="0" role="application" [class.readonly]="!Editable()" [attribute.aria-label]="(Label || $T('ui.videoTimeline.label')) + ', ' + Timecode(Time)" (keydown)="Key">
+<div class="elemenx-video-timeline elemenx-focus-ring" tabindex="0" role="application" [class.readonly]="!Editable()" [attribute.aria-label]="(Label || $T('ui.videoTimeline.label')) + ', ' + Timecode(Time)" (keydown)="Key">
 	<div class="elemenx-video-timeline-toolbar">
 		<span class="elemenx-video-timeline-timecode" aria-live="off">{{Timecode(Time)}}</span>
 		<span class="elemenx-spacer"></span>
@@ -13,10 +13,10 @@
 			<div class="elemenx-video-timeline-corner"></div>
 			<div class="elemenx-video-timeline-head" *for="track of Tracks" *key="track.ID" [class]="[track.Kind || 'video']" [attribute.data-track]="track.ID">
 				<Icon [name]="KindIcon(track.Kind)" Size="16" />
-				<span class="elemenx-video-timeline-name">{{track.Name || track.ID}}</span>
-				<button type="button" class="elemenx-video-timeline-toggle" *if="track.Kind === 'audio'" [attribute.aria-pressed]="track.Muted ? 'true' : 'false'" [attribute.title]="$T('ui.videoTimeline.mute')" [attribute.aria-label]="$T('ui.videoTimeline.mute') + ' ' + (track.Name || track.ID)" (click)="Muted"><Icon [name]="track.Muted ? 'volume-off' : 'volume'" Size="16" /></button>
-				<button type="button" class="elemenx-video-timeline-toggle" *if="track.Kind !== 'audio'" [attribute.aria-pressed]="track.Hidden ? 'true' : 'false'" [attribute.title]="$T('ui.videoTimeline.hide')" [attribute.aria-label]="$T('ui.videoTimeline.hide') + ' ' + (track.Name || track.ID)" (click)="Hid"><Icon [name]="track.Hidden ? 'eye-off' : 'eye'" Size="16" /></button>
-				<button type="button" class="elemenx-video-timeline-toggle" [attribute.aria-pressed]="track.Locked ? 'true' : 'false'" [attribute.title]="$T('ui.videoTimeline.lock')" [attribute.aria-label]="$T('ui.videoTimeline.lock') + ' ' + (track.Name || track.ID)" (click)="Locked"><Icon [name]="track.Locked ? 'lock' : 'unlock'" Size="16" /></button>
+				<span class="elemenx-video-timeline-name elemenx-ellipsis">{{track.Name || track.ID}}</span>
+				<button type="button" class="elemenx-video-timeline-toggle elemenx-bare" *if="track.Kind === 'audio'" [attribute.aria-pressed]="track.Muted ? 'true' : 'false'" [attribute.title]="$T('ui.videoTimeline.mute')" [attribute.aria-label]="$T('ui.videoTimeline.mute') + ' ' + (track.Name || track.ID)" (click)="Muted"><Icon [name]="track.Muted ? 'volume-off' : 'volume'" Size="16" /></button>
+				<button type="button" class="elemenx-video-timeline-toggle elemenx-bare" *if="track.Kind !== 'audio'" [attribute.aria-pressed]="track.Hidden ? 'true' : 'false'" [attribute.title]="$T('ui.videoTimeline.hide')" [attribute.aria-label]="$T('ui.videoTimeline.hide') + ' ' + (track.Name || track.ID)" (click)="Hid"><Icon [name]="track.Hidden ? 'eye-off' : 'eye'" Size="16" /></button>
+				<button type="button" class="elemenx-video-timeline-toggle elemenx-bare" [attribute.aria-pressed]="track.Locked ? 'true' : 'false'" [attribute.title]="$T('ui.videoTimeline.lock')" [attribute.aria-label]="$T('ui.videoTimeline.lock') + ' ' + (track.Name || track.ID)" (click)="Locked"><Icon [name]="track.Locked ? 'lock' : 'unlock'" Size="16" /></button>
 			</div>
 		</div>
 		<div class="elemenx-video-timeline-scroller" (pointerdown)="Down" (pointermove)="Move" (pointerup)="Up" (pointercancel)="Up">
@@ -29,7 +29,7 @@
 					<div class="elemenx-video-timeline-clip" *for="clip of track.Clips || []" *key="clip.ID" [class.selected]="IsChosen(clip)" [class.pictured]="!!clip.Thumbnail" [attribute.data-clip]="clip.ID" [attribute.style]="Place(clip, track)" [attribute.title]="(clip.Name || '') + ' ' + Timecode(clip.Start) + ' – ' + Timecode(End(clip))">
 						<span class="elemenx-video-timeline-edge start" *if="!track.Locked && Editable()"></span>
 						<svg class="elemenx-video-timeline-wave" *if="track.Kind === 'audio' && clip.Peaks && clip.Peaks.length" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path [attribute.d]="Wave(clip)"></path></svg>
-						<span class="elemenx-video-timeline-label">{{track.Kind === 'text' ? (clip.Text || clip.Name || '') : (clip.Name || '')}}</span>
+						<span class="elemenx-video-timeline-label elemenx-ellipsis">{{track.Kind === 'text' ? (clip.Text || clip.Name || '') : (clip.Name || '')}}</span>
 						<span class="elemenx-video-timeline-edge end" *if="!track.Locked && Editable()"></span>
 					</div>
 				</div>

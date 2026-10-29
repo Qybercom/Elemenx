@@ -39,7 +39,7 @@ Elemenx.Service('Theme', {
 		var name = null;
 		var key;
 
-		this.Listeners = [];
+		this.Listeners = this.$Service('ElemenxHelpers').Listeners();
 		this.Registry = {default: {Name: 'default', Label: 'Default', Key: 'ui.theme.default', Schemes: ['light', 'dark'], URL: '', Link: null, State: 'ready', Callbacks: []}};
 		this.Name = 'default';
 		this.Media = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
@@ -89,7 +89,7 @@ Elemenx.Service('Theme', {
 		if (this.Observer)
 			this.Observer.disconnect();
 
-		this.Listeners = [];
+		this.Listeners.Clear();
 	},
 
 	Valid: function (policy) {
@@ -416,27 +416,15 @@ Elemenx.Service('Theme', {
 	},
 
 	OnChange: function (callback) {
-		this.Listeners.push(callback);
-
-		return callback;
+		return this.Listeners.On(callback);
 	},
 
 	OffChange: function (callback) {
-		var index = this.Listeners.indexOf(callback);
-		if (index !== -1)
-			this.Listeners.splice(index, 1);
+		this.Listeners.Off(callback);
 	},
 
 	Changed: function () {
-		var listeners = this.Listeners.slice();
-		var state = {Policy: this.Current, Theme: this.Resolved(), Name: this.Name};
-		var i = 0;
-
-		while (i < listeners.length) {
-			this.Notify(listeners[i], state);
-
-			i++;
-		}
+		this.Listeners.Tell({Policy: this.Current, Theme: this.Resolved(), Name: this.Name});
 	},
 
 	/* Like a DOM listener: an exception is reported and the other listeners still run. */

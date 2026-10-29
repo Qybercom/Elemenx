@@ -1,11 +1,11 @@
-<div class="elemenx-tile-grid" [class.editable]="Editable" [class.sorting]="!!Dragging" [class.horizontal]="Direction === 'horizontal'" [class.columns]="Direction === 'columns'" [class.scroll]="!!Scroll && Scroll !== 'false'" [style.--elemenx-tile-columns]="Columns" *droppable="{Accept: ['tile'], Disabled: !Editable}" (dropmove)="Beside" (dropped)="Beside">
+<div class="elemenx-tile-grid" [class.editable]="Editable" [class.sorting]="!!Dragging" [class.horizontal]="Direction === 'horizontal'" [class.columns]="Direction === 'columns'" [class.stacks]="Direction !== 'horizontal'" [class.scroll]="!!Scroll && Scroll !== 'false'" [style.--elemenx-tile-columns]="Columns" *droppable="{Accept: ['tile'], Disabled: !Editable}" (dropmove)="Beside" (dropped)="Beside">
 	<div class="elemenx-tile-stack" *for="stack of Stacks(Groups, Direction)" *key="stack.Key">
-		<div class="elemenx-tile-gap side" *if="Dragging && Direction === 'columns' && GroupPolicy !== 'none'" *droppable="{Accept: ['tile']}" [attribute.data-stack]="stack.Value - 0.5" (dropped)="DropSide"></div>
+		<div class="elemenx-tile-gap side" *if="Dragging && Stacked(Direction, GroupPolicy)" *droppable="{Accept: ['tile']}" [attribute.data-stack]="stack.Value - 0.5" (dropped)="DropSide"></div>
 		<div class="elemenx-tile-lane" *for="group of stack.Groups" *key="group.ID">
 			<div class="elemenx-tile-gap" *if="Dragging && (GroupPolicy === 'between' || (Direction === 'columns' && GroupPolicy !== 'none'))" *droppable="{Accept: ['tile']}" [attribute.data-index]="IndexOf(Groups, group)" [attribute.data-stack]="stack.Value" (dropped)="DropBetween"></div>
 			<section class="elemenx-tile-group" [class.locked]="!!group.Locked" [style.--elemenx-tile-columns]="group.Columns || Room ? ColumnsOf(group, Room) : null" [style.--elemenx-tile-rows]="group.Rows || null" [class.growing]="Growing === String(group.ID)" *droppable="{Accept: ['tile'], Disabled: !Editable || !!group.Locked}" [attribute.data-group]="group.ID" (dropmove)="Preview" (dropleave)="Leave" (dropped)="Preview">
 				<header class="elemenx-tile-group-header">
-					<h3 class="elemenx-tile-group-title">{{group.Title || ''}}</h3>
+					<h3 class="elemenx-tile-group-title elemenx-ellipsis">{{group.Title || ''}}</h3>
 					<span class="elemenx-tile-group-actions">
 						<span class="elemenx-tile-group-action" *for="action of group.Actions || []" *key="action.ID" [attribute.data-group]="group.ID" [attribute.data-action]="action.ID"><Button Variant="ghost" Size="small" [icon]="action.Icon || ''" [label]="action.Label || ''" [title]="action.Title || action.Label || ''" (click)="Act" /></span>
 						<span class="elemenx-tile-group-custom" *if="group.Element || group.Render" *mount="group"></span>
@@ -15,7 +15,7 @@
 					<div class="elemenx-tile" role="button" tabindex="0" *for="tile of group.Tiles" *key="tile.ID" *draggable="{Data: tile.ID, Type: 'tile', Hold: 350, Disabled: !Editable || !!tile.Locked || !!group.Locked}" [class]="[tile.Size || 'medium', tile.Width || tile.Height ? 'spanned' : '', tile.Locked || group.Locked ? 'locked' : '', tile.Element || tile.Render ? 'custom' : '', String(tile.ID) === Dragging ? 'dragging' : ''].concat(String(tile.Class || '').split(' '))" [style.--elemenx-tile-color]="tile.Color || null" [style.grid-area]="Area(group, tile)" [attribute.data-id]="tile.ID" [attribute.aria-label]="tile.Title" (click)="Open" (keydown)="Key" (dragbegin)="Begin">
 						<Icon *if="tile.Icon && !tile.Element && !tile.Render" [name]="tile.Icon" Size="24" />
 						<span class="elemenx-tile-text" *if="tile.Text && tile.Size !== 'small' && !tile.Element && !tile.Render">{{tile.Text}}</span>
-						<span class="elemenx-tile-title" *if="tile.Size !== 'small' && !tile.Element && !tile.Render">{{tile.Title}}</span>
+						<span class="elemenx-tile-title elemenx-ellipsis" *if="tile.Size !== 'small' && !tile.Element && !tile.Render">{{tile.Title}}</span>
 						<div class="elemenx-tile-content" *if="tile.Element || tile.Render" *mount="tile"></div>
 						<span class="elemenx-tile-badge" *if="tile.Badge">{{tile.Badge}}</span>
 					</div>
@@ -24,14 +24,14 @@
 				<span class="elemenx-tile-group-stretch bottom" role="separator" tabindex="0" aria-orientation="horizontal" [attribute.aria-label]="$T('ui.tileGrid.groupHeight')" *if="Editable && !group.Locked" [attribute.aria-valuenow]="RowsOf(group)" [attribute.data-group]="group.ID" data-edge="s" (pointerdown)="ResizeStart" (pointermove)="ResizeMove" (pointerup)="ResizeEnd" (pointercancel)="ResizeEnd" (keydown)="ResizeKey"></span>
 				<span class="elemenx-tile-group-stretch corner" aria-hidden="true" *if="Editable && !group.Locked" [attribute.data-group]="group.ID" data-edge="se" (pointerdown)="ResizeStart" (pointermove)="ResizeMove" (pointerup)="ResizeEnd" (pointercancel)="ResizeEnd"></span>
 			</section>
-			<div class="elemenx-tile-gap below" *if="Dragging && Direction === 'columns' && GroupPolicy !== 'none' && String(group.ID) === String(stack.Groups[stack.Groups.length - 1].ID)" *droppable="{Accept: ['tile']}" [attribute.data-index]="IndexOf(Groups, group) + 1" [attribute.data-stack]="stack.Value" (dropped)="DropBetween"></div>
+			<div class="elemenx-tile-gap below" *if="Dragging && Stacked(Direction, GroupPolicy) && String(group.ID) === String(stack.Groups[stack.Groups.length - 1].ID)" *droppable="{Accept: ['tile']}" [attribute.data-index]="IndexOf(Groups, group) + 1" [attribute.data-stack]="stack.Value" (dropped)="DropBetween"></div>
 		</div>
-		<div class="elemenx-tile-gap side after" *if="Dragging && Direction === 'columns' && GroupPolicy !== 'none'" *droppable="{Accept: ['tile']}" [attribute.data-stack]="stack.Value + 0.5" (dropped)="DropSide"></div>
+		<div class="elemenx-tile-gap side after" *if="Dragging && Stacked(Direction, GroupPolicy)" *droppable="{Accept: ['tile']}" [attribute.data-stack]="stack.Value + 0.5" (dropped)="DropSide"></div>
 	</div>
 	<div class="elemenx-tile-lane" *if="Dragging && GroupPolicy !== 'none'">
 		<section class="elemenx-tile-group new" *droppable="{Accept: ['tile']}" (dropped)="DropOnNew">
 			<header class="elemenx-tile-group-header">
-				<h3 class="elemenx-tile-group-title">{{(NewGroupTitle || $T('ui.tileGrid.newGroupTitle'))}}</h3>
+				<h3 class="elemenx-tile-group-title elemenx-ellipsis">{{(NewGroupTitle || $T('ui.tileGrid.newGroupTitle'))}}</h3>
 			</header>
 			<div class="elemenx-tile-new">{{$T('ui.tileGrid.dropNewGroup')}}</div>
 		</section>

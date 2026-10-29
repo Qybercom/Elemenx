@@ -13,11 +13,8 @@
 }
 
 .elemenx-property-label {
-	overflow: hidden;
 	background: var(--elemenx-property-label);
 	color: var(--elemenx-property-label-text);
-	text-overflow: ellipsis;
-	white-space: nowrap;
 }
 
 .elemenx-property-value {

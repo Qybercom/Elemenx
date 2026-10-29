@@ -1,0 +1,142 @@
+/* A group of tabs: the strip over the body, as the tabs of the files of an editor; the body takes the rest of its height. */
+.elemenx-tab-group {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+	min-height: 0;
+	background: var(--elemenx-surface);
+}
+
+/* In the source of a TabSplit: a part of a layout, nothing to show. */
+.elemenx-tab-group.declared {
+	display: contents;
+}
+
+.elemenx-tab-group-strip {
+	display: flex;
+	flex: none;
+	min-width: 0;
+	overflow-x: auto;
+	background: var(--elemenx-surface-raised);
+	border-bottom: 1px solid var(--elemenx-border);
+	scrollbar-width: none;
+}
+
+.elemenx-tab-group-tab {
+	--elemenx-focus-offset: -2px;
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	flex: none;
+	max-width: 240px;
+	height: var(--elemenx-control);
+	padding: 0 6px 0 12px;
+	border-inline-end: 1px solid var(--elemenx-border);
+	color: var(--elemenx-text-muted);
+	white-space: nowrap;
+	cursor: pointer;
+	user-select: none;
+}
+
+.elemenx-tab-group-tab:hover {
+	background: var(--elemenx-surface-hover);
+	color: var(--elemenx-text);
+}
+
+.elemenx-tab-group-tab.active {
+	background: var(--elemenx-surface);
+	color: var(--elemenx-text);
+}
+
+.elemenx-tab-group-tab.active::after {
+	content: '';
+	position: absolute;
+	inset-inline-end: 0;
+	bottom: -1px;
+	inset-inline-start: 0;
+	height: 2px;
+	background: var(--elemenx-accent);
+}
+
+.elemenx-tab-group-tab.pinned {
+	padding-inline-end: 8px;
+}
+
+.elemenx-tab-group-tab.disabled {
+	opacity: 0.48;
+	cursor: default;
+	pointer-events: none;
+}
+
+.elemenx-tab-group-tab.dragging {
+	opacity: 0.4;
+}
+
+.elemenx-tab-group-label {
+	min-width: 0;
+}
+
+.elemenx-tab-group-pin {
+	display: inline-flex;
+	color: var(--elemenx-text-muted);
+}
+
+.elemenx-tab-group-close {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 20px;
+	height: 20px;
+	padding: 0;
+	border-radius: var(--elemenx-radius-small);
+	color: inherit;
+	opacity: 0.6;
+}
+
+.elemenx-tab-group-close:hover {
+	background: var(--elemenx-surface-active);
+	opacity: 1;
+}
+
+/* The body: the panel of the current tab fills it, the others are hidden. */
+.elemenx-tab-group-body {
+	position: relative;
+	flex: 1;
+	min-width: 0;
+	min-height: 0;
+	overflow: auto;
+}
+
+.elemenx-tab-group-body > .elemenx-tab-panel {
+	height: 100%;
+	padding-top: 0;
+	box-sizing: border-box;
+}
+
+/* Where a dragged tab would go: an edge of the body (a split there), or all of it (into the group). */
+.elemenx-tab-group-zone {
+	position: absolute;
+	z-index: 2;
+	inset: 0;
+	background: rgba(var(--elemenx-accent-rgb), 0.16);
+	border: 2px solid var(--elemenx-accent);
+	pointer-events: none;
+}
+
+/* The sides of the screen, as the ones of the split it makes (a split is laid out from the left, on any page). */
+.elemenx-tab-group-zone.left {
+	right: 50%;
+}
+
+.elemenx-tab-group-zone.right {
+	left: 50%;
+}
+
+.elemenx-tab-group-zone.top {
+	bottom: 50%;
+}
+
+.elemenx-tab-group-zone.bottom {
+	top: 50%;
+}

@@ -102,21 +102,15 @@
 }
 
 .elemenx-toast-action {
+	--elemenx-focus-offset: 0px;
 	flex: none;
 	padding: 0 4px;
-	background: transparent;
-	border: 0;
 	border-radius: var(--elemenx-radius);
 	color: var(--elemenx-text);
 	font: inherit;
 	font-weight: var(--elemenx-font-weight-strong);
 	text-decoration: underline;
 	text-underline-offset: 2px;
-	cursor: pointer;
-}
-
-.elemenx-toast-action:focus-visible {
-	outline: 2px solid var(--elemenx-focus);
 }
 
 .elemenx-toast-action.primary {

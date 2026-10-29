@@ -30,19 +30,17 @@
 }
 
 .elemenx-pagination-page {
+	--elemenx-focus-offset: 0px;
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
 	min-width: 28px;
 	height: 28px;
 	padding: 0 6px;
-	background: transparent;
-	border: 0;
 	border-radius: var(--elemenx-radius);
 	color: var(--elemenx-text);
 	font: inherit;
 	font-variant-numeric: tabular-nums;
-	cursor: pointer;
 }
 
 .elemenx-pagination-page:hover:not(:disabled) {
@@ -58,10 +56,6 @@
 .elemenx-pagination-page:disabled {
 	opacity: 0.32;
 	cursor: default;
-}
-
-.elemenx-pagination-page:focus-visible {
-	outline: 2px solid var(--elemenx-focus);
 }
 
 .elemenx-pagination-gap {

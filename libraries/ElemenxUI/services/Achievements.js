@@ -18,7 +18,7 @@ Elemenx.Service('Achievements', {
 	$OnCreate: function () {
 		this.Shown = null;
 		this.Waiting = [];
-		this.Listeners = [];
+		this.Listeners = this.$Service('ElemenxHelpers').Listeners();
 		this.Timer = null;
 		this.Sequence = 0;
 	},
@@ -26,7 +26,7 @@ Elemenx.Service('Achievements', {
 	$OnDestroy: function () {
 		window.clearTimeout(this.Timer);
 
-		this.Listeners = [];
+		this.Listeners.Clear();
 	},
 
 	Show: function (options) {
@@ -103,22 +103,14 @@ Elemenx.Service('Achievements', {
 	},
 
 	OnChange: function (callback) {
-		this.Listeners.push(callback);
-
-		return callback;
+		return this.Listeners.On(callback);
 	},
 
 	OffChange: function (callback) {
-		this.Listeners = this.Listeners.filter(function (item) {
-			return item !== callback;
-		});
+		this.Listeners.Off(callback);
 	},
 
 	Changed: function () {
-		var state = {Current: this.Shown, Queue: this.Waiting.slice()};
-
-		this.Listeners.slice().forEach(function (callback) {
-			callback(state);
-		});
+		this.Listeners.Tell({Current: this.Shown, Queue: this.Waiting.slice()});
 	}
 });

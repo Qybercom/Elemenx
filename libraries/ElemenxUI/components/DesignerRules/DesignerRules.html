@@ -17,10 +17,10 @@
 		</div>
 		<div class="elemenx-designer-rules-list">
 			<div class="elemenx-designer-rules-row" *for="item of Props(Current(Version), Who, When, Where, Scheme, Version)" *key="item.Name">
-				<code class="elemenx-designer-rules-name">{{item.Name}}</code>
+				<code class="elemenx-designer-rules-name elemenx-ellipsis">{{item.Name}}</code>
 				<div class="elemenx-designer-rules-field">
 					<Combobox Size="small" AllowCustom="true" [options]="Tokens(Scheme)" [name]="item.Name" [value]="item.Value" (change)="Valued" />
-					<code class="elemenx-designer-rules-computed" *if="Computed(item.Value, Scheme)">{{Computed(item.Value, Scheme)}}</code>
+					<code class="elemenx-designer-rules-computed elemenx-ellipsis" *if="Computed(item.Value, Scheme)">{{Computed(item.Value, Scheme)}}</code>
 				</div>
 				<button type="button" class="elemenx-designer-list-button" [attribute.title]="$T('ui.designer.delete')" [attribute.data-property]="item.Name" (click)="Removed"><Icon Name="delete" Size="14" /></button>
 			</div>
@@ -36,7 +36,7 @@
 		</div>
 		<div class="elemenx-designer-rules-others" *if="Others(Current(Version), Who, When, Where, Scheme, Version).length">
 			<span class="elemenx-label">{{$T('ui.designer.rules.others')}}</span>
-			<button type="button" class="elemenx-designer-rules-other" *for="other of Others(Current(Version), Who, When, Where, Scheme, Version)" *key="other.Index" [class.active]="other.Active" [attribute.data-index]="other.Index" (click)="Picked">{{other.Text}}</button>
+			<button type="button" class="elemenx-designer-rules-other elemenx-focus-ring" *for="other of Others(Current(Version), Who, When, Where, Scheme, Version)" *key="other.Index" [class.active]="other.Active" [attribute.data-index]="other.Index" (click)="Picked">{{other.Text}}</button>
 		</div>
 	</div>
 </div>

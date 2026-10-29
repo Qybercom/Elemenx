@@ -14,6 +14,8 @@
 | `[style]="{'width': Width + 'px', '--accent': Color}"` | стили из объекта с именами CSS; `null` удаляет стиль |
 | `[style.width]="Width + 'px'"` | один стиль; пользовательские свойства тоже: `[style.--size]` |
 | `(click)="Method"` | событие: метод получает `(event, element)`; на теге компонента — `(data, component)` |
+| `(click)="Pick(item, $event)"`, `(click)="Open = !Open"` | выражение, выполняемое при событии: `$event` — событие (на теге компонента — то, что он сообщил), `$node` — элемент (компонент) |
+| `\{{` | `{{` самого шаблона, а не выражение |
 | `[(value)]="Name"` | двусторонняя привязка у `input`, `textarea` или `select`: поле следует за вводом (`input`), а элемент — за полем |
 | `[(checked)]="Agreed"`, `[(selected)]="Picked"` | двусторонняя привязка у флажка, радиокнопки, варианта (по `change`) |
 | `#name` | отмечает элемент для `this.$Ref('name')` (все такие элементы, строки `*for`: `this.$Refs('name')`) |
@@ -67,26 +69,24 @@
 
 ## События в списках
 
-Значение привязки события — имя метода. Метод, которому надо знать, какой элемент нажали, читает его из своего элемента DOM:
+Значение привязки события — имя метода или выражение, которое выполняется при событии. В списке выражение передаёт методу нажатый элемент данных:
 
 ```html
-<li *for="product of Products" *key="product.ID">
-	{{product.Title}}
-	<button type="button" [attribute.data-id]="product.ID" (click)="Remove">Remove</button>
+<li *for="product of Products" *key="product.ID" [class.selected]="product === Selected">
+	<button type="button" (click)="Selected = product">{{product.Title}}</button>
+	<button type="button" (click)="Remove(product)">Remove</button>
 </li>
 ```
 
 ```js
-Remove: function (event, button) {
-	var id = Number(button.getAttribute('data-id'));
-
-	this.Products = this.Products.filter(function (product) {
-		return product.ID !== id;
+Remove: function (product) {
+	this.Products = this.Products.filter(function (each) {
+		return each !== product;
 	});
 }
 ```
 
-Или сделайте строку отдельным компонентом, который отправляет событие со своим элементом данных.
+Присваивание попадает в компонент: `Selected = product` в строке задаёт `Selected` компонента, а имена самой строки (`product`, `$index`) остаются её собственными. `$event` — событие, `$node` — его элемент: `(input)="Query = $event.target.value"`. Простое имя, `(click)="Remove"`, вызывает метод с `(event, element)`, как и раньше.
 
 ## Откуда берётся шаблон
 

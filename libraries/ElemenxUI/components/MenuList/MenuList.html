@@ -12,7 +12,7 @@
 			</div>
 		</div>
 	</div>
-	<div class="elemenx-menu-layer" *if="Open && Sheeted(Sheet)" (keydown)="SheetKey">
+	<div class="elemenx-menu-layer" *if="Open && Sheeted(Sheet)" *layer (keydown)="SheetKey">
 		<div class="elemenx-menu-shade" (click)="SheetCancel"></div>
 		<div class="elemenx-menu sheet" role="menu" tabindex="-1" [attribute.aria-label]="Parent(Items, Path) ? Parent(Items, Path).Label : Title || null">
 			<div class="elemenx-menu-head" *swipe="{Axis: 'y', Mouse: true}" (swipemove)="SheetDragged" (swipe)="SheetSwiped" (swipecancel)="SheetSettled">

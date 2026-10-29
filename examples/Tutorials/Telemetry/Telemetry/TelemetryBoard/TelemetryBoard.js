@@ -78,10 +78,11 @@ Elemenx.Component('TelemetryBoard', {
 			 * At most half of the time of the page goes to the board. A frame with an update lasts its script and the
 			 * layout and the painting that follow; what it took past a frame, the next update waits (a frame of 40 ms:
 			 * 23 ms more). A fast computer draws each frame; a busy one skips some, and the packets, the input and the
-			 * rest of the page still get their turn, instead of a queue that grows behind the board.
+			 * rest of the page still get their turn, instead of a queue that grows behind the board. A frame of more than
+			 * a second is the page held up (a busy machine), not the board: the update after it waits a second at most.
 			 */
 			if (own.Drew) {
-				own.Next = now + Math.max(0, now - own.Last - 17);
+				own.Next = now + Math.min(1000, Math.max(0, now - own.Last - 17));
 				own.Drew = false;
 			}
 

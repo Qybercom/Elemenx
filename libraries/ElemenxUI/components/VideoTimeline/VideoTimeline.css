@@ -10,13 +10,10 @@
 	border-radius: var(--elemenx-radius-large);
 	background: var(--elemenx-surface);
 	color: var(--elemenx-text);
+	width: 100%;
+	/* Its width comes from its place, not from what it shows: on a phone it does not widen the page. */
 	contain: inline-size;
 	user-select: none;
-}
-
-.elemenx-video-timeline:focus-visible {
-	outline: 2px solid var(--elemenx-focus);
-	outline-offset: 2px;
 }
 
 .elemenx-video-timeline-toolbar {
@@ -63,11 +60,8 @@
 .elemenx-video-timeline-name {
 	flex: 1;
 	min-width: 0;
-	overflow: hidden;
 	color: var(--elemenx-text);
 	font-size: var(--elemenx-font-size-small);
-	text-overflow: ellipsis;
-	white-space: nowrap;
 }
 
 .elemenx-video-timeline-toggle {
@@ -77,11 +71,8 @@
 	width: 26px;
 	height: 26px;
 	padding: 0;
-	border: 0;
 	border-radius: var(--elemenx-radius);
-	background: transparent;
 	color: var(--elemenx-text-muted);
-	cursor: pointer;
 }
 
 .elemenx-video-timeline-toggle:hover,
@@ -206,11 +197,8 @@
 	z-index: 1;
 	max-width: 100%;
 	padding: 1px 6px;
-	overflow: hidden;
 	color: var(--elemenx-text);
 	font-size: 0.6875rem;
-	text-overflow: ellipsis;
-	white-space: nowrap;
 }
 
 .elemenx-video-timeline-clip.pictured .elemenx-video-timeline-label {

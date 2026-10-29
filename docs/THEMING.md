@@ -126,6 +126,10 @@ Colors of both schemes:
 
 Components also have their own variables, set by their variants (`--elemenx-progress-color`, `--elemenx-step-size`, `--elemenx-drawer-size`...): a theme changes them on the class of the Component, `[data-theme][data-theme='ocean'] .elemenx-progress { --elemenx-progress-color: ...; }`.
 
+Three classes of `index.css` are shared by the Components, put on their elements beside their own: `elemenx-ellipsis` (a line that ends in an ellipsis), `elemenx-bare` (a button with no look of its own: no background, no border, a pointer) and `elemenx-focus-ring` (the ring of the keyboard focus, `2px` of `--elemenx-focus`, kept away from its element by `--elemenx-focus-offset`, `2px` by default and of that element only). A theme changes the ring of every Component at once with `[data-theme][data-theme='ocean'] .elemenx-focus-ring:focus-visible { ... }`; a rule of a Component comes after these classes and changes them for its elements.
+
+An endless animation whose keyframes are named `elemenx-*` (a spinner, a skeleton, a pulse, the ring of a call) rests while its element is out of the viewport and runs again when it comes back: Elemenx pauses it, so a long page of them does not paint itself at every frame. A theme that adds an endless animation of its own gets the same by naming its keyframes `elemenx-*`; other names are left running.
+
 `tests/regression/theming.test.js` keeps the Library themable: the stylesheets of the Components name no color, round no corner and time no transition other than through tokens, every token is in the template and here, every rule of a Library theme starts with its attribute, and `THEMING-CLASSES.md` matches the classes of the stylesheets.
 
 ## Browsers

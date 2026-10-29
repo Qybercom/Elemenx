@@ -4,7 +4,7 @@
 		<span class="elemenx-ribbon-label">{{Title}}</span>
 		<Icon Name="chevron-down" Size="12" />
 	</button>
-	<div class="elemenx-ribbon-group-popup" (keydown)="Key">
+	<div class="elemenx-ribbon-group-popup" *layer="Open" (keydown)="Key">
 		<div class="elemenx-ribbon-group-body"><slot></slot></div>
 		<div class="elemenx-ribbon-group-footer">
 			<span class="elemenx-ribbon-group-title">{{Title}}</span>

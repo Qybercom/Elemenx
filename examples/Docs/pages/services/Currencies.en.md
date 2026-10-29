@@ -42,4 +42,4 @@ The active ISO 4217 currencies. List(locale) returns [{Code, Name, Symbol, Digit
 
 ## Tests
 
-- [Currencies: lists the ISO 4217 currencies with their names and digits, and formats an amount](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-services.test.js#L52) — `tests/regression/library-services.test.js`
+- [Currencies: lists the ISO 4217 currencies with their names and digits, and formats an amount](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-services.test.js#L102) — `tests/regression/library-services.test.js`

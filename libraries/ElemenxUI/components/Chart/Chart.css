@@ -155,13 +155,10 @@
 	align-items: center;
 	gap: 6px;
 	padding: 2px 4px;
-	background: transparent;
-	border: 0;
 	border-radius: var(--elemenx-radius);
 	color: var(--elemenx-text);
 	font: inherit;
 	font-size: var(--elemenx-font-size-small);
-	cursor: pointer;
 }
 
 .elemenx-chart-key:hover {

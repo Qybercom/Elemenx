@@ -61,3 +61,7 @@ An inventory: a grid of Slots cells (Items.length by default) in Columns columns
 })
 </script>
 ```
+
+## Tests
+
+- [the card of a GameSlot and of a GameInventory follows its element when the page moves it without a scroll](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-misc.test.js#L241) — `tests/regression/library-misc.test.js`

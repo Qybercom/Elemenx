@@ -46,11 +46,14 @@ describe('Elemenx dist', function () {
 
 	it('embeds in ElemenxUI its styles, sprites, data and every entity with its template and style', function () {
 		var ui = read('elemenx-ui.min.js');
+		/* The root of the Library is a local name of the script: a short one in the minified script. */
+		var root = (/Elemenx\.Library\('ElemenxUI',\{\$Root:([\w$]+),/.exec(ui) || [])[1];
 
-		expect(ui).toContain('Elemenx.Library(\'ElemenxUI\',{$Root:root,$Locales:{"URL":"locales/{language}.json","Languages":["en","ru"]}});');
-		expect(ui).toContain('Elemenx.Resource(root+"/locales/ru.json",');
-		expect(ui).toContain('Elemenx.Resource(root+"/index.svg",');
-		expect(ui).toContain('Elemenx.Resource(root+"/icons/weather.svg",');
+		expect(root).toBeTruthy();
+		expect(ui).toContain('Elemenx.Library(\'ElemenxUI\',{$Root:' + root + ',$Locales:{"URL":"locales/{language}.json","Languages":["en","ru"]}});');
+		expect(ui).toContain('Elemenx.Resource(' + root + '+"/locales/ru.json",');
+		expect(ui).toContain('Elemenx.Resource(' + root + '+"/index.svg",');
+		expect(ui).toContain('Elemenx.Resource(' + root + '+"/icons/weather.svg",');
 		expect(ui).not.toContain('"/data/emoji');
 		expect(ui).not.toContain('"/icons/brands.svg"');
 		expect(ui).not.toContain('"/icons/files.svg"');
@@ -227,7 +230,8 @@ describe('Elemenx dist', function () {
 
 			expect(copied('data/cities.txt')).toBe(true);
 			expect(copied('icons/files.svg')).toBe(true);
-			expect(fs.readFileSync(path.join(target, 'libraries', 'ElemenxUI', 'locales', 'en.json'), 'utf8')).toBe(fs.readFileSync(path.join(process.cwd(), 'libraries', 'ElemenxUI', 'locales', 'en.json'), 'utf8'));
+			/* Every phrase (the file minified, as the build minifies its data). */
+			expect(JSON.parse(fs.readFileSync(path.join(target, 'libraries', 'ElemenxUI', 'locales', 'en.json'), 'utf8'))).toEqual(JSON.parse(fs.readFileSync(path.join(process.cwd(), 'libraries', 'ElemenxUI', 'locales', 'en.json'), 'utf8')));
 		}
 		finally {
 			fs.rmSync(sandbox.Root, {recursive: true, force: true});

@@ -1,10 +1,10 @@
 <div class="elemenx-drawing-layers" [class.readonly]="!Editable()">
 	<div class="elemenx-drawing-layers-list" role="listbox" [attribute.aria-label]="$T('ui.drawing.layers')">
-		<div class="elemenx-drawing-layer" role="option" tabindex="0" *for="layer of Rows()" *key="layer.ID" [class.current]="layer.ID === Current()" [class.hidden]="layer.Visible === false" [attribute.aria-selected]="layer.ID === Current() ? 'true' : 'false'" [attribute.data-layer]="layer.ID" (click)="Picked" (dblclick)="Rename" (keydown)="Key">
-			<button type="button" class="elemenx-drawing-layer-toggle" [disabled]="!Editable()" [attribute.aria-pressed]="layer.Visible === false ? 'false' : 'true'" [attribute.title]="$T('ui.drawing.visible')" [attribute.aria-label]="$T('ui.drawing.visible')" (click)="Shown"><Icon [name]="layer.Visible === false ? 'eye-off' : 'eye'" Size="16" /></button>
-			<button type="button" class="elemenx-drawing-layer-toggle" [disabled]="!Editable()" [attribute.aria-pressed]="layer.Locked ? 'true' : 'false'" [attribute.title]="$T('ui.drawing.locked')" [attribute.aria-label]="$T('ui.drawing.locked')" (click)="Locked"><Icon [name]="layer.Locked ? 'lock' : 'unlock'" Size="16" /></button>
+		<div class="elemenx-drawing-layer elemenx-focus-ring" role="option" tabindex="0" *for="layer of Rows()" *key="layer.ID" [class.current]="layer.ID === Current()" [class.hidden]="layer.Visible === false" [attribute.aria-selected]="layer.ID === Current() ? 'true' : 'false'" [attribute.data-layer]="layer.ID" (click)="Picked" (dblclick)="Rename" (keydown)="Key">
+			<button type="button" class="elemenx-drawing-layer-toggle elemenx-bare" [disabled]="!Editable()" [attribute.aria-pressed]="layer.Visible === false ? 'false' : 'true'" [attribute.title]="$T('ui.drawing.visible')" [attribute.aria-label]="$T('ui.drawing.visible')" (click)="Shown"><Icon [name]="layer.Visible === false ? 'eye-off' : 'eye'" Size="16" /></button>
+			<button type="button" class="elemenx-drawing-layer-toggle elemenx-bare" [disabled]="!Editable()" [attribute.aria-pressed]="layer.Locked ? 'true' : 'false'" [attribute.title]="$T('ui.drawing.locked')" [attribute.aria-label]="$T('ui.drawing.locked')" (click)="Locked"><Icon [name]="layer.Locked ? 'lock' : 'unlock'" Size="16" /></button>
 			<input class="elemenx-drawing-layer-field" *if="Renaming === layer.ID" [value]="layer.Name" [attribute.aria-label]="$T('ui.drawing.rename')" (blur)="Named" (keydown)="Typed" />
-			<span class="elemenx-drawing-layer-name" *if="Renaming !== layer.ID">{{layer.Name}}</span>
+			<span class="elemenx-drawing-layer-name elemenx-ellipsis" *if="Renaming !== layer.ID">{{layer.Name}}</span>
 			<span class="elemenx-drawing-layer-count">{{Count(layer.Items)}}</span>
 		</div>
 	</div>

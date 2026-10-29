@@ -30,28 +30,28 @@
 			<div class="elemenx-designer-document-prop" *for="row of Rows(Current(Version))" *key="row.Index">
 				<label class="elemenx-designer-document-key">
 					<span>{{$T('ui.designer.project.name')}}</span>
-					<input type="text" class="elemenx-designer-document-input" [value]="row.Name" [attribute.data-index]="row.Index" data-key="Name" (change)="Propped" />
+					<input type="text" class="elemenx-designer-document-input elemenx-focus-ring" [value]="row.Name" [attribute.data-index]="row.Index" data-key="Name" (change)="Propped" />
 				</label>
 				<label class="elemenx-designer-document-key">
 					<span>{{$T('ui.designer.project.type')}}</span>
-					<select class="elemenx-designer-document-input" [attribute.data-index]="row.Index" data-key="Type" (change)="Propped">
+					<select class="elemenx-designer-document-input elemenx-focus-ring" [attribute.data-index]="row.Index" data-key="Type" (change)="Propped">
 						<option *for="type of Types(Version)" *key="type.Value" [value]="type.Value" [selected]="type.Value === row.Type">{{type.Label}}</option>
 					</select>
 				</label>
 				<label class="elemenx-designer-document-key" *if="row.Type !== 'bool'">
 					<span>{{$T('ui.designer.project.default')}}</span>
-					<input type="text" class="elemenx-designer-document-input" [value]="row.Default" [attribute.data-index]="row.Index" data-key="Default" (change)="Propped" />
+					<input type="text" class="elemenx-designer-document-input elemenx-focus-ring" [value]="row.Default" [attribute.data-index]="row.Index" data-key="Default" (change)="Propped" />
 				</label>
 				<span class="elemenx-designer-document-key" *if="row.Type === 'bool'" [attribute.data-index]="row.Index" data-key="Default" (change)="Propped"><Checkbox Size="small" [label]="$T('ui.designer.project.default')" [checked]="!!row.Default" /></span>
 				<label class="elemenx-designer-document-key" *if="row.Type === 'select'">
 					<span>{{$T('ui.designer.project.options')}}</span>
-					<input type="text" class="elemenx-designer-document-input" [value]="row.Options" [attribute.data-index]="row.Index" data-key="Options" (change)="Propped" />
+					<input type="text" class="elemenx-designer-document-input elemenx-focus-ring" [value]="row.Options" [attribute.data-index]="row.Index" data-key="Options" (change)="Propped" />
 				</label>
 				<label class="elemenx-designer-document-key wide">
 					<span>{{$T('ui.designer.project.description')}}</span>
-					<input type="text" class="elemenx-designer-document-input" [value]="row.Description" [attribute.data-index]="row.Index" data-key="Description" (change)="Propped" />
+					<input type="text" class="elemenx-designer-document-input elemenx-focus-ring" [value]="row.Description" [attribute.data-index]="row.Index" data-key="Description" (change)="Propped" />
 				</label>
-				<button type="button" class="elemenx-designer-document-drop" [attribute.title]="$T('ui.designer.delete')" [attribute.aria-label]="$T('ui.designer.delete')" [attribute.data-index]="row.Index" (click)="Dropped"><Icon Name="delete" Size="14" /></button>
+				<button type="button" class="elemenx-designer-document-drop elemenx-bare" [attribute.title]="$T('ui.designer.delete')" [attribute.aria-label]="$T('ui.designer.delete')" [attribute.data-index]="row.Index" (click)="Dropped"><Icon Name="delete" Size="14" /></button>
 			</div>
 			<p class="elemenx-text small danger" *if="Wrong === 'Props'">{{$T('ui.designer.project.propTaken')}}</p>
 			<div>

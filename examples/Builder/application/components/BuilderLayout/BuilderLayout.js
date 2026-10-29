@@ -38,10 +38,12 @@ Elemenx.Component('BuilderLayout', {
 	Settings: false,
 	PackageFailed: '',
 	ImportFailed: false,
+	DiskFailed: '',
 
 	$OnCreate: function () {
 		var self = this;
 		var designer = this.$Service('Designer');
+		var disk = this.$Service('Disk');
 		var keys = [];
 		var saved = null;
 		var icons = {layout: 'layout', text: 'text-color', inputs: 'edit', buttons: 'launcher', navigation: 'menu', display: 'star', data: 'chart', overlays: 'panel-right', social: 'users', commerce: 'cart', music: 'headphones', game: 'trophy', tools: 'settings'};
@@ -68,6 +70,19 @@ Elemenx.Component('BuilderLayout', {
 
 		function kind (entry) {
 			return {ID: entry.ID, Label: designer.Label(entry.ID), Icon: entry.Icon, Hint: designer.Hint(entry.ID)};
+		}
+
+		/* Opened by elemenx design on a project: its projects of the Designer apart, its Components in the palette. */
+		if (disk.Project()) {
+			designer.Scope(disk.Project().Name);
+
+			disk.Load(function (error, components) {
+				designer.Extend(components);
+
+				self.DiskFailed = error ? error.message : '';
+
+				changed();
+			});
 		}
 
 		designer.OnChange(changed);
@@ -148,6 +163,15 @@ Elemenx.Component('BuilderLayout', {
 
 		this.Name = function (version) {
 			return version >= 0 ? designer.Project().Name : '';
+		};
+
+		/* The project of elemenx design, its files as a tree (none out of it). */
+		this.OnDisk = function () {
+			return !!disk.Project();
+		};
+
+		this.DiskTree = function (version, language) {
+			return version >= 0 && language ? disk.Tree() : [];
 		};
 
 		/* The kinds of a new project, for its cards. */
@@ -298,6 +322,30 @@ Elemenx.Component('BuilderLayout', {
 
 	/* A document opened by the explorer or the settings: the canvas shows it. */
 	Opened: function () {
+		this.Settings = false;
+	},
+
+	/*
+	 * A Component of the files of the project picked in its tree: a copy of it in the project, edited at once (the files
+	 * stay as they are). One the framework has already, or a project that is not an application, says so.
+	 */
+	DiskPicked: function (item) {
+		var designer = this.$Service('Designer');
+		var name = item && /^component:/.test(item.ID) ? item.ID.substring('component:'.length) : '';
+		var id;
+
+		if (!name) return;
+
+		id = designer.Copy(name);
+
+		if (!id) {
+			this.$Service('Toast').Show({Message: Elemenx.Locale.Text(designer.Project().Mode === 'application' ? 'builder.disk.notCopied' : 'builder.disk.notApplication', {name: name})});
+
+			return;
+		}
+
+		designer.Open(id);
+
 		this.Settings = false;
 	},
 

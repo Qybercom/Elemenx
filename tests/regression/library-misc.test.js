@@ -27,7 +27,7 @@ describe('Contract: more components of ElemenxUI', function () {
 	beforeAll(async function () {
 		await loadElemenx();
 
-		Use(['DateRangeInput', 'ColorInput', 'CurrencySelect', 'ButtonGroup', 'FileIcon', 'CallControls', 'Chronicle', 'RibbonGallery', 'GameItemCard', 'Button']);
+		Use(['DateRangeInput', 'ColorInput', 'CurrencySelect', 'ButtonGroup', 'FileIcon', 'CallControls', 'Chronicle', 'RibbonGallery', 'GameItemCard', 'GameSlot', 'GameInventory', 'Button']);
 	});
 
 	beforeEach(function () {
@@ -236,5 +236,55 @@ describe('Contract: more components of ElemenxUI', function () {
 		await tick();
 
 		expect(host.$Element().querySelector('.elemenx-game-inventory-card')).toBe(null);
+	});
+
+	it('the card of a GameSlot and of a GameInventory follows its element when the page moves it without a scroll', async function () {
+		var item = {Name: 'Old sword', Rarity: 'rare', Icon: 'star', Stats: [{Label: 'Damage', Value: 12}]};
+		/* Fixed to the viewport, as the stylesheet of the library places it (in the top layer: without the place of a popover). */
+		var style = document.createElement('style');
+
+		style.textContent = '.elemenx-game-inventory-card { position: fixed; } :where(.elemenx-layer[popover]) { inset: auto; margin: 0; }';
+
+		document.head.appendChild(style);
+
+		var host = mount('<div><div class="above" style="height: 10px"></div><GameSlot Icon="star" Label="Sword" [data]="Item" /><GameInventory [items]="Items" Slots="2" /></div>', {
+			Item: item,
+			Items: [item]
+		});
+		var above;
+		var targets;
+
+		await tick();
+
+		above = host.$Element().querySelector('.above');
+		targets = [host.$Element().querySelector('.elemenx-game-slot'), host.$Element().querySelector('.elemenx-game-inventory-cell')];
+
+		for (var target of targets) {
+			above.style.height = '10px';
+
+			target.dispatchEvent(new MouseEvent('mouseenter'));
+
+			var card = await waitFor(function () {
+				return host.$Element().querySelector('.elemenx-game-inventory-card');
+			});
+
+			expect(await waitFor(function () {
+				return Math.round(card.getBoundingClientRect().top) === Math.round(Math.max(4, target.getBoundingClientRect().top));
+			})).toBe(true);
+
+			above.style.height = '140px';
+
+			expect(await waitFor(function () {
+				return Math.round(card.getBoundingClientRect().top) === Math.round(target.getBoundingClientRect().top);
+			})).toBe(true);
+
+			target.dispatchEvent(new MouseEvent('mouseleave'));
+
+			await waitFor(function () {
+				return !host.$Element().querySelector('.elemenx-game-inventory-card');
+			});
+		}
+
+		style.remove();
 	});
 });

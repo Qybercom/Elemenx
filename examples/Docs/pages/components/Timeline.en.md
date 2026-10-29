@@ -95,4 +95,4 @@ default
 
 ## Tests
 
-- [timeline draws its scale, stacks close labels, edits ranges, zooms and seeks](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L5547) — `tests/examples/ui-kit.spec.js`
+- [timeline draws its scale, stacks close labels, edits ranges, zooms and seeks](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L5623) — `tests/examples/ui-kit.spec.js`

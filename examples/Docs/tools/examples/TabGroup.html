@@ -1,0 +1,22 @@
+<div style="display: flex; height: 180px; border: 1px solid var(--elemenx-border); border-radius: var(--elemenx-radius); overflow: hidden;">
+	<TabGroup Closable="true" Label="Documents" style="flex: 1;" (close)="Closed" (select)="Opened">
+		<Tab *for="tab of Tabs" *key="tab" [id]="tab" [label]="tab" [pinned]="tab === 'Notes'"><p class="elemenx-text small" style="margin: 0; padding: 12px;">{{tab}}: its menu closes the others, the ones to a side, or pins it.</p></Tab>
+	</TabGroup>
+</div>
+<p class="elemenx-text small muted">Opened: {{Current}}</p>
+<script>
+({
+	Tabs: ['Notes', 'Plan', 'Budget', 'Ideas'],
+	Current: 'Notes',
+
+	Opened: function (id) {
+		this.Current = id;
+	},
+
+	Closed: function (id) {
+		this.Tabs = this.Tabs.filter(function (tab) {
+			return tab !== id;
+		});
+	}
+})
+</script>

@@ -44,6 +44,7 @@
 }
 
 .elemenx-designer-document-input {
+	--elemenx-focus-offset: -1px;
 	box-sizing: border-box;
 	width: 100%;
 	height: 26px;
@@ -53,11 +54,6 @@
 	background: var(--elemenx-surface);
 	border: 1px solid var(--elemenx-border);
 	border-radius: var(--elemenx-radius-small);
-}
-
-.elemenx-designer-document-input:focus-visible {
-	outline: 2px solid var(--elemenx-focus);
-	outline-offset: -1px;
 }
 
 .elemenx-designer-document-drop {
@@ -71,9 +67,6 @@
 	height: 22px;
 	padding: 0;
 	color: var(--elemenx-text-muted);
-	cursor: pointer;
-	background: transparent;
-	border: 0;
 	border-radius: var(--elemenx-radius-small);
 }
 

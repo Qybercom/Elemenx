@@ -3,7 +3,8 @@
  * Icon, Badge, Closable and Disabled describe its tab in the strip (as the items of Tabs); the Tabs shows the content of
  * the current tab under the strip and hides the others. The content in the tab is made with the page; Component names a
  * component made only when the tab first opens (with Props as its props), for the content that costs: a page of
- * settings, a chart, a table of data. Its panel is an elemenx-tab-panel (the Panels Service reads it).
+ * settings, a chart, a table of data. Its panel is an elemenx-tab-panel (the Panels Service reads it). In a TabGroup
+ * or a TabSplit, Pinned keeps the tab first in its strip, and a close of all the tabs, or of the others, leaves it.
  */
 Elemenx.Component('Tab', {
 	$TemplateURL: 'Tab.html',
@@ -20,6 +21,7 @@ Elemenx.Component('Tab', {
 			Badge: 'A badge after the label.',
 			Closable: 'Adds the cross that emits close on the Tabs.',
 			Disabled: 'The tab cannot be chosen.',
+			Pinned: 'In a TabGroup or a TabSplit: first in its strip, and left by a close of all the tabs or of the others.',
 			Component: 'A component made only when the tab first opens.',
 			Props: 'The props of that component.'
 		}
@@ -30,6 +32,7 @@ Elemenx.Component('Tab', {
 	Badge: '',
 	Closable: false,
 	Disabled: false,
+	Pinned: false,
 	Component: '',
 	Props: null,
 	Opened: false,

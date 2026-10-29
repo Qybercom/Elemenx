@@ -4,6 +4,16 @@
 	gap: 40px;
 }
 
+/*
+ * A section far from the viewport is not laid out or painted: a theme switched, a window resized lays out the ones
+ * near it only. Its parts fixed to the viewport (menus, windows, hosts, tours) are in the top layer (*layer, *popup,
+ * *modal), so the containment of the section places none of them. A section keeps the size it last had.
+ */
+.ui-kit > .elemenx-section {
+	content-visibility: auto;
+	contain-intrinsic-size: auto 640px;
+}
+
 .ui-kit-intro {
 	display: flex;
 	flex-direction: column;
@@ -26,6 +36,31 @@
 	background: var(--elemenx-surface);
 	border: 1px solid var(--elemenx-border);
 	border-radius: var(--elemenx-radius);
+}
+
+/* The tab groups: a TabSplit fills its box, as the editors of a window. */
+.ui-kit-tab-split {
+	height: 320px;
+	overflow: hidden;
+	border: 1px solid var(--elemenx-border);
+	border-radius: var(--elemenx-radius);
+}
+
+.ui-kit-tab-group {
+	display: flex;
+	height: 160px;
+	overflow: hidden;
+	border: 1px solid var(--elemenx-border);
+	border-radius: var(--elemenx-radius);
+}
+
+.ui-kit-tab-group > .elemenx-tab-group {
+	flex: 1;
+}
+
+.ui-kit-tab-body {
+	margin: 0;
+	padding: 12px;
 }
 
 .ui-kit-grid {

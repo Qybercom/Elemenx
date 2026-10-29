@@ -52,12 +52,9 @@
 	width: 36px;
 	height: 36px;
 	padding: 0;
-	background: transparent;
-	border: 0;
 	border-radius: var(--elemenx-radius);
 	font-size: 22px;
 	line-height: 1;
-	cursor: pointer;
 }
 
 .elemenx-chat-hint:hover,

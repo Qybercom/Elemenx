@@ -24,6 +24,61 @@ describe('Regression: the edges of reactivity and of the state of instances', fu
 		while (owned.length) owned.pop().$Destroy();
 	});
 
+	it('a list given back as a copy of itself (Rows.slice()) keeps its items as they were, not wrapped again at each assignment', function () {
+		var component = mounted(Elemenx.Component(unique('Copied'), {
+			$Template: '<ul><li *for="row of Rows" *key="row.ID">{{row.Title}} {{row.Count}}</li></ul>',
+			Rows: [{ID: 'a', Title: 'A', Count: 0}, {ID: 'b', Title: 'B', Count: 0}, {ID: 'c', Title: 'C', Count: 0}]
+		})());
+		var first = component.Rows[1];
+		var times = [];
+		var k;
+
+		/* An item changes, the others come back as the proxies the state gave: each assignment costs the same. */
+		for (k = 0; k < 40; k++) {
+			var start = performance.now();
+			var next = component.Rows.slice();
+
+			next[0] = Object.assign({}, next[0], {Count: k});
+			component.Rows = next;
+
+			times.push(performance.now() - start);
+		}
+
+		expect(component.Rows[1]).toBe(first);
+		expect(component.$Element().textContent).toBe('A 39B 0C 0');
+		expect(Math.max.apply(null, times.slice(-5))).toBeLessThan(20);
+	});
+
+	it('the rows of a collection see the values of their owner named in a binding, a directive and a text', async function () {
+		var component = mounted(Elemenx.Component(unique('Named'), {
+			$Template: '<ul><li *for="row of Rows" *key="row" [title]="Prefix + row" [class.on]="row === Selected"><b *if="row === Shown">{{row}}{{Tag}}</b></li></ul>',
+			Rows: ['a', 'b'],
+			Prefix: 'p',
+			Selected: 'a',
+			Shown: 'a',
+			Tag: 't'
+		})());
+		var items = function () {
+			return component.$Element().querySelectorAll('li');
+		};
+
+		expect(items()[1].getAttribute('title')).toBe('pb');
+		expect(items()[0].classList.contains('on')).toBe(true);
+		expect(component.$Element().textContent).toBe('at');
+
+		component.Prefix = 'q';
+		component.Selected = 'b';
+		component.Shown = 'b';
+		component.Tag = 'u';
+
+		await tick(10);
+
+		expect(items()[1].getAttribute('title')).toBe('qb');
+		expect(items()[0].classList.contains('on')).toBe(false);
+		expect(items()[1].classList.contains('on')).toBe(true);
+		expect(component.$Element().textContent).toBe('bu');
+	});
+
 	it('an array made shorter by its length renders its removed items again: {{Items[1]}} shows nothing', async function () {
 		var component = mounted(Elemenx.Component(unique('Shorter'), {
 			$Template: '<p>{{Items[1] || \'none\'}}|{{Items.length}}</p>',

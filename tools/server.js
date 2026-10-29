@@ -54,7 +54,40 @@ function notModified (request, stat, tag) {
 }
 
 function acceptsGzip (request) {
-	return /(?:^|,|\s)gzip(?:\s*;|\s*,|$)/i.test(request.headers['accept-encoding'] || '');
+	return accepts(request, 'gzip');
+}
+
+/* Whether the browser takes a coding (Accept-Encoding: br, gzip), and not with a weight of 0. */
+function accepts (request, coding) {
+	var match = new RegExp('(?:^|,)\\s*' + coding + '\\s*(?:;\\s*q\\s*=\\s*([0-9.]+))?\\s*(?:,|$)', 'i').exec(request.headers['accept-encoding'] || '');
+
+	return !!match && (match[1] === undefined || Number(match[1]) > 0);
+}
+
+/* The copy of a file a build compressed beside it that the browser takes: {File, Encoding, Stat}, Brotli first, or null. */
+function precompressed (request, file, stat) {
+	var found = null;
+
+	[['br', '.br'], ['gzip', '.gz']].some(function (pair) {
+		var copy;
+
+		if (!accepts(request, pair[0])) return false;
+
+		try {
+			copy = fs.statSync(file + pair[1]);
+		}
+		catch (error) {
+			return false;
+		}
+
+		if (!copy.isFile() || copy.mtimeMs < stat.mtimeMs) return false;
+
+		found = {File: file + pair[1], Encoding: pair[0], Stat: copy};
+
+		return true;
+	});
+
+	return found;
 }
 
 
@@ -326,12 +359,19 @@ function create (options) {
 			if (options.CacheControl)
 				headers['Cache-Control'] = String(options.CacheControl);
 
-			var useGzip = compression && Compressible[ext] && stat.size >= threshold && acceptsGzip(request);
+			var coded = compression && Compressible[ext] ? precompressed(request, file, stat) : null;
+			var useGzip = !coded && compression && Compressible[ext] && stat.size >= threshold && acceptsGzip(request);
 
 			if (Compressible[ext])
 				headers.Vary = 'Accept-Encoding';
 
-			if (notModified(request, stat, tag)) {
+			/* A file a build compressed beside it (file.br, file.gz, newer than it): sent as it is, with a tag of its own. */
+			if (coded) {
+				headers.ETag = etag(coded.Stat).replace(/"$/, '-' + coded.Encoding + '"');
+				headers['Content-Encoding'] = coded.Encoding;
+			}
+
+			if (notModified(request, stat, headers.ETag)) {
 				response.writeHead(304, headers);
 				response.end();
 
@@ -339,10 +379,17 @@ function create (options) {
 			}
 
 			if (request.method === 'HEAD') {
-				headers['Content-Length'] = stat.size;
+				headers['Content-Length'] = coded ? coded.Stat.size : stat.size;
 
 				response.writeHead(200, headers);
 				response.end();
+			}
+			else if (coded) {
+				headers['Content-Length'] = coded.Stat.size;
+
+				response.writeHead(200, headers);
+
+				fs.createReadStream(coded.File).pipe(response);
 			}
 			else if (useGzip) {
 				headers['Content-Encoding'] = 'gzip';

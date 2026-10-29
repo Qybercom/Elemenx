@@ -86,7 +86,7 @@ describe('Elemenx npm release surface', function () {
 		expect(manifest.jsdelivr).toBe('dist/elemenx.min.js');
 		/* The package has no editors/: they go to the GitHub release (publish.yml), and npm publish waits for no IntelliJ IDEA. */
 		/* The reference too (docs-site/, with the elemenx.config.js of its server): npx elemenx docs serves it. */
-		expect(manifest.scripts.prepack).toBe('npm run dist -- --no-editors && npm run docs:site');
+		expect(manifest.scripts.prepack).toBe('npm run dist -- --no-editors && npm run docs:site && npm run design:site');
 		expect(manifest.exports).toBeUndefined();
 		expect(files).toContain(manifest.main);
 		expect(files).toContain(manifest.bin.elemenx);

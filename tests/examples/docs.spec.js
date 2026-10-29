@@ -210,6 +210,43 @@ test.describe('Elemenx documentation', function () {
 
 		await expect(page.locator('.docs-missing')).toHaveText('There is no such page.');
 	});
+
+	test('offers the finished project of a tutorial to download, and its demo on the page, its routes in memory', async function ({ page }) {
+		var errors = captureErrors(page);
+		var card = page.locator('.docs-tutorial');
+		var frame;
+		var zip;
+
+		await page.goto(origin + '/tutorials/testing');
+
+		await expect(card).toContainText('The finished project');
+		await expect(card.locator('.docs-tutorial-download')).toHaveAttribute('href', '/tutorials/Todo.zip');
+
+		zip = await page.evaluate(async function () {
+			var response = await fetch('/tutorials/Todo.zip');
+
+			return response.headers.get('content-type') + ' ' + (await response.arrayBuffer()).byteLength;
+		});
+
+		expect(zip).toMatch(/^application\/zip [1-9]\d+$/);
+
+		/* The demo in a frame of a blob: URL: the page of the reference keeps its own URL. */
+		await card.getByRole('button', {name: 'Show the demo'}).click();
+
+		frame = page.frameLocator('.docs-tutorial-frame');
+
+		await expect(frame.locator('body')).toContainText('Tasks', {timeout: 60000});
+		await expect(card.getByRole('button', {name: 'Open in a new tab'})).toBeVisible();
+		expect(new URL(page.url()).pathname).toBe('/tutorials/testing');
+
+		/* A tutorial with a server of its own: to download only. */
+		await page.goto(origin + '/tutorials/auth');
+
+		await expect(card).toContainText('It runs with a server of its own');
+		await expect(card.getByRole('button', {name: 'Show the demo'})).toHaveCount(0);
+
+		expect(errors).toEqual([]);
+	});
 });
 
 test.describe('Elemenx documentation in a browser of another language', function () {

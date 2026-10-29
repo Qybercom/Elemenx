@@ -53,8 +53,8 @@ default
 
 ## Tests
 
-- [gives the system the menu of its MenuItems with Look system, their shortcuts and roles, and tells a choice to its MenuItem](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/native-menu.test.js#L90) — `tests/regression/native-menu.test.js`
-- [draws the menu of the window of a program with ElemenxUI by default: a bar, the menu of the system taken away, a role done by the system](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/native-menu.test.js#L135) — `tests/regression/native-menu.test.js`
-- [draws the menu of the tray of a program in a window of its own at the right button, a choice told to its MenuItem](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/native-menu.test.js#L162) — `tests/regression/native-menu.test.js`
-- [is a bar of menus on the web, without the items of the system, its shortcuts hotkeys of the page](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/native-menu.test.js#L248) — `tests/regression/native-menu.test.js`
-- [gives the icon in the tray its menu of the system with Look system, and hears the choices of that menu only](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/native-menu.test.js#L284) — `tests/regression/native-menu.test.js`
+- [gives the system the menu of its MenuItems with Look system, their shortcuts and roles, and tells a choice to its MenuItem](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/native-menu.test.js#L92) — `tests/regression/native-menu.test.js`
+- [draws the menu of the window of a program with ElemenxUI by default: a bar, the menu of the system taken away, a role done by the system](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/native-menu.test.js#L137) — `tests/regression/native-menu.test.js`
+- [draws the menu of the tray of a program in a window of its own at the right button, a choice told to its MenuItem](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/native-menu.test.js#L164) — `tests/regression/native-menu.test.js`
+- [is a bar of menus on the web, without the items of the system, its shortcuts hotkeys of the page](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/native-menu.test.js#L250) — `tests/regression/native-menu.test.js`
+- [gives the icon in the tray its menu of the system with Look system, and hears the choices of that menu only](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/native-menu.test.js#L286) — `tests/regression/native-menu.test.js`

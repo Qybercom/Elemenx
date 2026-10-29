@@ -15,7 +15,7 @@
 	<div class="elemenx-file-browser-items" role="listbox" [attribute.aria-multiselectable]="Multiple ? 'true' : 'false'" [style.height]="Height + 'px'" (keydown)="Key">
 		<div class="elemenx-file-browser-item" role="option" *for="item of Shown(Items, Path, Sort, Descending)" *key="item.ID" [attribute.data-id]="item.ID" [class.selected]="Picked(Selected, item.ID)" [class.folder]="Folder(item)" [attribute.aria-selected]="String(Picked(Selected, item.ID))" [attribute.tabindex]="$index === 0 ? 0 : -1" (click)="Pressed" (dblclick)="Opened">
 			<span class="elemenx-file-browser-icon"><Icon *if="Folder(item)" [name]="item.Icon || 'folder'" [size]="View === 'grid' ? 40 : 18" /><FileIcon *if="!Folder(item)" [name]="item.Name" [size]="View === 'grid' ? 40 : 18" /></span>
-			<span class="elemenx-file-browser-name">{{item.Name}}</span>
+			<span class="elemenx-file-browser-name elemenx-ellipsis">{{item.Name}}</span>
 			<span class="elemenx-file-browser-size">{{Size(item)}}</span>
 			<span class="elemenx-file-browser-modified">{{When(item.Modified)}}</span>
 		</div>

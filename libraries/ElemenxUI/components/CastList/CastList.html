@@ -1,12 +1,12 @@
 <section class="elemenx-cast" [class]="[Layout === 'grid' || Layout === 'list' ? Layout : 'row']" [attribute.aria-label]="Title || Label || $T('ui.media.cast')">
 	<h2 class="elemenx-cast-title" *if="Title">{{Title}}</h2>
 	<div class="elemenx-cast-people" role="list">
-		<div class="elemenx-cast-person" role="listitem" tabindex="0" *for="person of Items" *key="person.ID" [attribute.data-person]="person.ID" [attribute.aria-label]="person.Name + (person.Role ? ', ' + person.Role : '')" (click)="Pressed" (keydown)="Key">
+		<div class="elemenx-cast-person elemenx-focus-ring" role="listitem" tabindex="0" *for="person of Items" *key="person.ID" [attribute.data-person]="person.ID" [attribute.aria-label]="person.Name + (person.Role ? ', ' + person.Role : '')" (click)="Pressed" (keydown)="Key">
 			<Avatar [name]="person.Name" [image]="person.Image || ''" Size="large" />
 			<span class="elemenx-cast-text">
-				<a class="elemenx-cast-name" *if="person.Href" [href]="person.Href" tabindex="-1">{{person.Name}}</a>
-				<span class="elemenx-cast-name" *if="!person.Href">{{person.Name}}</span>
-				<span class="elemenx-cast-role" *if="person.Role">{{person.Role}}</span>
+				<a class="elemenx-cast-name elemenx-ellipsis" *if="person.Href" [href]="person.Href" tabindex="-1">{{person.Name}}</a>
+				<span class="elemenx-cast-name elemenx-ellipsis" *if="!person.Href">{{person.Name}}</span>
+				<span class="elemenx-cast-role elemenx-ellipsis" *if="person.Role">{{person.Role}}</span>
 			</span>
 		</div>
 	</div>

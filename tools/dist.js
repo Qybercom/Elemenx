@@ -183,15 +183,15 @@ function Build (output) {
 	var manifest = {Name: Package.name, Version: Package.version, Files: {}};
 
 	outputs['elemenx.js'] = banner('Elemenx') + framework;
-	outputs['elemenx.min.js'] = banner('Elemenx') + Minify.JavaScript(framework);
+	outputs['elemenx.min.js'] = banner('Elemenx') + Minify.Script(framework, ['Version']);
 	outputs['elemenx-ui.js'] = banner('ElemenxUI') + library(false);
-	outputs['elemenx-ui.min.js'] = banner('ElemenxUI') + Minify.JavaScript(library(true));
+	outputs['elemenx-ui.min.js'] = banner('ElemenxUI') + Minify.Script(library(true));
 	outputs['elemenx.all.js'] = outputs['elemenx.js'] + '\n' + outputs['elemenx-ui.js'];
 	outputs['elemenx.all.min.js'] = outputs['elemenx.min.js'] + outputs['elemenx-ui.min.js'];
 
 	Object.keys(Packs).forEach(function (name) {
 		outputs['elemenx-ui.' + name + '.js'] = banner('ElemenxUI') + pack(name, false);
-		outputs['elemenx-ui.' + name + '.min.js'] = banner('ElemenxUI') + Minify.JavaScript(pack(name, true));
+		outputs['elemenx-ui.' + name + '.min.js'] = banner('ElemenxUI') + Minify.Script(pack(name, true));
 	});
 
 	if (fs.existsSync(target))

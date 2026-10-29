@@ -35,6 +35,7 @@
  *   Install                  Elemenx.Install: the page as an application of the system (PWA), its prompt and worker
  *   Widgets                  Elemenx.Widgets: Components of an Application mounted on a page of another site
  *   Splash                   Elemenx.Splash: the splash of the page, gone when the first Application is ready
+ *   Motion                   the endless animations of Elemenx rest while their element is out of the viewport
  *   Application              Elemenx.Application: ownership, mounting, startup lifecycle
  *   Export                   Elemenx.Version, Elemenx.NoConflict; the window gets this copy, an isolated build keeps it
  *   ServiceWorker bootstrap  runs inside a service worker started by Elemenx.ServiceWorker
@@ -44,7 +45,7 @@
 	 * Elemenx: the namespace of this copy of the framework. The window gets it last (see Export), unless a copy of the
 	 * same version is there already: then this one stops here and the page keeps the first.
 	 */
-	var Version = '0.10.10';
+	var Version = '0.11.0';
 	var Elemenx = {};
 	if (typeof ElemenxIsolated !== 'object' && (typeof globalThis !== 'undefined' ? globalThis : self).Elemenx && (typeof globalThis !== 'undefined' ? globalThis : self).Elemenx.Version === Version) return;
 
@@ -118,11 +119,30 @@
 			}
 		};
 
+		/*
+		 * The base of the relative URLs of the document: its address, or for an address that is no base (a page of a blob:
+		 * or about: URL, as a frame a script made) the base of the document, else the root of its origin, else file:///.
+		 */
+		Runtime.BaseURL = function () {
+			var candidates = [global.location.href, global.document && global.document.baseURI, global.location.origin + '/'];
+
+			function base (url) {
+				try {
+					return !!url && !!new URL('x', url).href;
+				}
+				catch (error) {
+					return false;
+				}
+			}
+
+			return candidates.filter(base)[0] || 'file:///';
+		};
+
 		/* Resolves a URL against the document; outside a document (in a worker) the value is kept as it is. */
 		Runtime.AbsoluteURL = function (url) {
 			if (!Runtime.HasDOM) return String(url);
 
-			return new URL(String(url), global.location.href).href;
+			return new URL(String(url), Runtime.BaseURL()).href;
 		};
 
 		/* The URL of the script being executed, without query and hash: the base of the relative paths of its definitions. */
@@ -711,6 +731,12 @@
 
 		function wrap (value) {
 			if (!reactiveTarget(value)) return value;
+
+			/*
+			 * A value that is a proxy already stays as it is: the items of a list copied from the state (Rows.slice())
+			 * are proxies, and wrapped again at each assignment they would nest, each layer reading the one under it.
+			 */
+			if (rawCache.has(value)) return value;
 
 			var proxy = proxyCache.get(value);
 			if (proxy)
@@ -1905,12 +1931,12 @@
 			// Freeze the Discovery root against the document URL at build time.
 			// Route navigation may change location.href later; entity URLs must not
 			// change their meaning with the current browser route.
-			root = new URL(String(root), global.location.href).href;
+			root = new URL(String(root), Runtime.BaseURL()).href;
 
 			roots.set(application, root);
 
 			if (graph)
-				graphs.set(application, new URL(String(graph), global.location.href).href);
+				graphs.set(application, new URL(String(graph), Runtime.BaseURL()).href);
 
 			if (map) {
 				callback(null, map);
@@ -2108,7 +2134,7 @@
 			Root: function (application, root) {
 				if (!application || !root) return null;
 
-				root = new URL(String(root), global.location.href).href;
+				root = new URL(String(root), Runtime.BaseURL()).href;
 
 				roots.set(application, root);
 
@@ -3894,6 +3920,12 @@
 		function canonicalDeferredInput (value, definition) {
 			if (!value || typeof value !== 'object' || !definition || typeof definition !== 'object') return value;
 
+			/*
+			 * An array has no names to put in the case of the definition, unless its default holds objects whose names
+			 * its items may take: a list of numbers (the levels of a Sparkline) goes as it is, not copied at each update.
+			 */
+			if (Array.isArray(value) && !(Array.isArray(definition) && definition.length && definition[0] && typeof definition[0] === 'object')) return value;
+
 			var result = Array.isArray(value) ? [] : {};
 			var key;
 			var target;
@@ -4680,16 +4712,71 @@
 			return false;
 		}
 
+		/*
+		 * The parts of a text with {{ }}: its plain texts (strings) and its expressions ({Source}), in order; \{{ is a
+		 * {{ of the text itself, for a template that shows one. Null for a text without {{. Dynamic tells whether an
+		 * expression is among the parts (a text of escapes only is a plain text).
+		 */
+		Runtime.Interpolation = function (text) {
+			var pattern = /\\\{\{|\{\{\s*([\s\S]+?)\s*\}\}/g;
+			var parts = [];
+			var last = 0;
+			var dynamic = false;
+			var match;
+
+			text = String(text);
+
+			if (text.indexOf('{{') === -1) return null;
+
+			while ((match = pattern.exec(text))) {
+				if (match.index > last)
+					parts.push(text.substring(last, match.index));
+
+				if (match[1] === undefined) {
+					parts.push('{{');
+				}
+				else {
+					parts.push({Source: match[1]});
+
+					dynamic = true;
+				}
+
+				last = pattern.lastIndex;
+			}
+
+			if (last < text.length)
+				parts.push(text.substring(last));
+
+			return {Parts: parts, Dynamic: dynamic};
+		};
+
+		/* The value of the parts of an interpolation: the one expression as it is, or the texts and the values as one text (null and undefined as nothing). */
+		Runtime.InterpolationValue = function (parts, evaluate) {
+			var result = '';
+			var value;
+			var i = 0;
+
+			if (parts.length === 1 && typeof parts[0] !== 'string') return evaluate(parts[0]);
+
+			while (i < parts.length) {
+				value = typeof parts[i] === 'string' ? parts[i] : evaluate(parts[i]);
+				result += value == null ? '' : String(value);
+
+				i++;
+			}
+
+			return result;
+		};
+
 		function collectTextBindings (root, bindings) {
 			var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null);
 			var nodes = [];
 			var node;
-			var match;
-			var regex;
-			var last;
 			var fragment;
 			var text;
-			var key;
+			var interpolated;
+			var part;
+			var j;
 			var bindingNode;
 
 			while ((node = walker.nextNode())) {
@@ -4702,31 +4789,34 @@
 				node = nodes[i];
 				text = node.nodeValue;
 
-				if (text.indexOf('{{') !== -1) {
-					regex = /\{\{\s*([\s\S]+?)\s*\}\}/g;
-					last = 0;
+				interpolated = Runtime.Interpolation(text);
+
+				/* A text of escapes only (\{{) is that text without them; one with expressions is its texts and a text node for each expression. */
+				if (interpolated && !interpolated.Dynamic) {
+					node.nodeValue = interpolated.Parts.join('');
+				}
+				else if (interpolated) {
 					fragment = document.createDocumentFragment();
+					j = 0;
 
-					while ((match = regex.exec(text))) {
-						if (match.index > last)
-							fragment.appendChild(document.createTextNode(text.substring(last, match.index)));
+					while (j < interpolated.Parts.length) {
+						part = interpolated.Parts[j];
 
-						key = match[1];
-						bindingNode = document.createTextNode('');
+						if (typeof part === 'string') {
+							fragment.appendChild(document.createTextNode(part));
+						}
+						else {
+							bindingNode = document.createTextNode('');
 
-						fragment.appendChild(bindingNode);
+							fragment.appendChild(bindingNode);
 
-						addBinding(bindings, key, {type: 'text', node: bindingNode});
+							addBinding(bindings, part.Source, {type: 'text', node: bindingNode});
+						}
 
-						last = regex.lastIndex;
+						j++;
 					}
 
-					if (last !== 0) {
-						if (last < text.length)
-							fragment.appendChild(document.createTextNode(text.substring(last)));
-
-						node.parentNode.replaceChild(fragment, node);
-					}
+					node.parentNode.replaceChild(fragment, node);
 				}
 
 				i++;
@@ -4737,6 +4827,7 @@
 			var state = {
 				node: node,
 				base: {},
+				text: [],
 				list: [],
 				points: {},
 				applied: {}
@@ -4762,6 +4853,14 @@
 				if (own(state.base, name))
 					names[name] = true;
 
+			/* The classes of class="card {{Kind}}", then the ones of [class], then the ones of [class.name]. */
+			while (i < state.text.length) {
+				names[state.text[i]] = true;
+
+				i++;
+			}
+
+			i = 0;
 			while (i < state.list.length) {
 				names[state.list[i]] = true;
 
@@ -4780,13 +4879,15 @@
 			 * the element (elemenx-draggable, an open state...) stays when the bindings render again.
 			 */
 			for (name in state.applied) {
-				if (own(state.applied, name) && !own(names, name))
+				if (own(state.applied, name) && !own(names, name) && state.node.classList.contains(name))
 					state.node.classList.remove(name);
 			}
 
-			for (name in names)
-				if (own(names, name))
+			/* A class there already is not added again: classList.add writes the attribute even then, and the styles are computed again. */
+			for (name in names) {
+				if (own(names, name) && !state.node.classList.contains(name))
 					state.node.classList.add(name);
+			}
 
 			state.applied = names;
 		}
@@ -4795,6 +4896,7 @@
 			var state = {
 				node: node,
 				base: {},
+				text: {},
 				map: {},
 				points: {},
 				managed: {}
@@ -4817,42 +4919,148 @@
 			return state;
 		}
 
+		/*
+		 * The style of the element as its attribute and its bindings say: the properties a binding no longer sets go back
+		 * to the attribute (or go), and only the ones whose value differs are written. Removing them all and setting them
+		 * again changed the style at every render, and the browser computed it again each time.
+		 */
 		function renderStyleBinding (state) {
+			var wanted = {};
 			var names = {};
+			var style = state.node.style;
 			var name;
 			var item;
 
-			for (name in state.managed)
-				if (own(state.managed, name))
-					state.node.style.removeProperty(name);
-
 			for (name in state.base) {
-				if (!own(state.base, name)) continue;
+				if (own(state.base, name))
+					wanted[name] = state.base[name];
+			}
 
-				item = state.base[name];
+			/* The properties of style="width: {{W}}px", then the ones of [style], then the ones of [style.name]. */
+			for (name in state.text) {
+				if (!own(state.text, name)) continue;
 
-				state.node.style.setProperty(name, item.value, item.priority);
+				names[name] = true;
+				wanted[name] = state.text[name];
 			}
 
 			for (name in state.map) {
 				if (!own(state.map, name)) continue;
 
 				names[name] = true;
-
-				if (state.map[name] == null) state.node.style.removeProperty(name);
-				else state.node.style.setProperty(name, String(state.map[name]));
+				wanted[name] = state.map[name] == null ? null : {value: String(state.map[name]), priority: ''};
 			}
 
 			for (name in state.points) {
 				if (!own(state.points, name)) continue;
 
 				names[name] = true;
+				wanted[name] = state.points[name] == null ? null : {value: String(state.points[name]), priority: ''};
+			}
 
-				if (state.points[name] == null) state.node.style.removeProperty(name);
-				else state.node.style.setProperty(name, String(state.points[name]));
+			for (name in state.managed) {
+				if (own(state.managed, name) && !own(wanted, name) && style.getPropertyValue(name) !== '')
+					style.removeProperty(name);
+			}
+
+			for (name in wanted) {
+				if (!own(wanted, name)) continue;
+
+				item = wanted[name];
+
+				if (item === null) {
+					if (style.getPropertyValue(name) !== '')
+						style.removeProperty(name);
+				}
+				else if (style.getPropertyValue(name) !== item.value || style.getPropertyPriority(name) !== (item.priority || '')) {
+					style.setProperty(name, item.value, item.priority);
+				}
 			}
 
 			state.managed = names;
+		}
+
+		/* The declarations of a text of style, as the browser reads them: {name: {value, priority}}. */
+		var styleProbe = null;
+
+		function styleDeclarations (text) {
+			var result = {};
+			var i = 0;
+			var name;
+
+			styleProbe = styleProbe || document.createElement('div').style;
+			styleProbe.cssText = text;
+
+			while (i < styleProbe.length) {
+				name = styleProbe.item(i);
+				result[name] = {value: styleProbe.getPropertyValue(name), priority: styleProbe.getPropertyPriority(name)};
+
+				i++;
+			}
+
+			return result;
+		}
+
+		/*
+		 * The plain attributes of an element with {{ }} (title="{{Hint}}", href="/users/{{ID}}", class="card {{Kind}}"):
+		 * a binding of each, and the attribute taken away until it renders, so no browser reads it as it is (an <img>
+		 * would ask for src="{{Image}}"). A class and a style are the base of [class.x] and [style.x] of the element.
+		 * A Component declaration is left as it is: its attributes are its props.
+		 */
+		function collectInterpolatedAttributes (node, bindings, states) {
+			var attrs = Array.prototype.slice.call(node.attributes);
+			var i = 0;
+			var name;
+			var interpolated;
+
+			while (i < attrs.length) {
+				name = attrs[i].name;
+				interpolated = /^[[(*#]/.test(name) || Runtime.Directive.Reserved(name) ? null : Runtime.Interpolation(attrs[i].value);
+
+				if (interpolated && !interpolated.Dynamic) {
+					node.setAttribute(name, interpolated.Parts.join(''));
+				}
+				else if (interpolated) {
+					node.removeAttribute(name);
+
+					if (name === 'class') {
+						states.Class = states.Class || classBindingState(node);
+
+						bindings.push(interpolationBinding({type: 'class-text', node: node, state: states.Class}, attrs[i].value, interpolated.Parts));
+					}
+					else if (name === 'style') {
+						states.Style = states.Style || styleBindingState(node);
+
+						bindings.push(interpolationBinding({type: 'style-text', node: node, state: states.Style}, attrs[i].value, interpolated.Parts));
+					}
+					else {
+						bindings.push(interpolationBinding({type: 'attribute-text', node: node, name: name}, attrs[i].value, interpolated.Parts));
+					}
+				}
+
+				i++;
+			}
+		}
+
+		/* A binding of the parts of an interpolation: each expression compiled once, the value of all of them for each render. */
+		function interpolationBinding (binding, source, parts) {
+			var i = 0;
+
+			while (i < parts.length) {
+				if (typeof parts[i] !== 'string')
+					parts[i].Evaluate = compileExpression(parts[i].Source);
+
+				i++;
+			}
+
+			binding.expression = source;
+			binding.evaluate = function (state) {
+				return Runtime.InterpolationValue(parts, function (part) {
+					return part.Evaluate(state);
+				});
+			};
+
+			return binding;
 		}
 
 		function collectElementBindings (root, bindings, models) {
@@ -4869,6 +5077,7 @@
 			var name;
 			var classState;
 			var styleState;
+			var states;
 
 			if (root.nodeType === 1)
 				nodes.push(root);
@@ -4891,10 +5100,15 @@
 					continue;
 				}
 
+				states = {Class: null, Style: null};
+
+				if (!componentDeclaration(nodes[i]))
+					collectInterpolatedAttributes(nodes[i], bindings, states);
+
 				attrs = Array.prototype.slice.call(nodes[i].attributes);
 				j = 0;
-				classState = null;
-				styleState = null;
+				classState = states.Class;
+				styleState = states.Style;
 
 				while (j < attrs.length) {
 					attr = attrs[j];
@@ -5058,16 +5272,56 @@
 			}
 		}
 
+		/*
+		 * A binding writes the DOM only where it differs (the text, the attribute, the property the element holds now): a
+		 * write of the same value still makes the browser compute the styles of the element again. The DOM is what is
+		 * compared, not the last value written, so a field the user changed takes the value of its state back.
+		 */
 		function applyBinding (binding, value) {
+			var text;
+
 			if (binding.type === 'text') {
-				binding.node.nodeValue = value == null ? '' : String(value);
+				text = value == null ? '' : String(value);
+
+				if (binding.node.nodeValue !== text)
+					binding.node.nodeValue = text;
 			}
 			else if (binding.type === 'property') {
-				binding.node[binding.name] = value;
+				if (binding.node[binding.name] !== value)
+					binding.node[binding.name] = value;
 			}
 			else if (binding.type === 'attribute') {
-				if (value == null) binding.node.removeAttribute(binding.name);
-				else binding.node.setAttribute(binding.name, String(value));
+				if (value == null) {
+					if (binding.node.hasAttribute(binding.name))
+						binding.node.removeAttribute(binding.name);
+				}
+				else if (binding.node.getAttribute(binding.name) !== String(value)) {
+					binding.node.setAttribute(binding.name, String(value));
+				}
+			}
+			/* title="{{Hint}}" is the value itself (null, undefined and false take the attribute away, true leaves it empty); title="{{A}}, {{B}}" is a text. */
+			else if (binding.type === 'attribute-text') {
+				text = value === true ? '' : value == null || value === false ? null : String(value);
+
+				if (text === null) {
+					if (binding.node.hasAttribute(binding.name))
+						binding.node.removeAttribute(binding.name);
+				}
+				else if (binding.node.getAttribute(binding.name) !== text) {
+					binding.node.setAttribute(binding.name, text);
+				}
+			}
+			else if (binding.type === 'class-text') {
+				binding.state.text = String(value == null || value === false ? '' : value).split(/\s+/).filter(function (word) {
+					return word !== '';
+				});
+
+				renderClassBinding(binding.state);
+			}
+			else if (binding.type === 'style-text') {
+				binding.state.text = styleDeclarations(value == null || value === false ? '' : String(value));
+
+				renderStyleBinding(binding.state);
 			}
 			else if (binding.type === 'class-list') {
 				if (value == null)
@@ -5574,6 +5828,11 @@
 		Runtime.CallHandler = function (component, name, args) {
 			var values = componentValues.get(component);
 
+			name = String(name).replace(/^\s+|\s+$/g, '');
+
+			if (!handlerName.test(name))
+				return handlerExpression(component, name, args || []);
+
 			if (typeof component[name] === 'function') {
 				component[name].apply(component, args);
 
@@ -5586,6 +5845,68 @@
 
 			return true;
 		};
+
+		/* An (event) that names a handler: one name, as (click)="Save" has always been. */
+		var handlerName = /^[A-Za-z_$][\w$]*$/;
+
+		/*
+		 * An (event) that is no name is an expression, run when the event comes: (click)="Pick(row)", (click)="Open =
+		 * !Open", (input)="Query = $event.target.value". It sees the state of the instance and its methods, $event (the
+		 * DOM event, or what a Component told with its event) and $node (the element, or the Component, that told it).
+		 * In a part of a *if the state is the one of its owner. A row of a *for holds copies of the values of its owner:
+		 * a name of the owner is written to the owner (the row has it again at the render that follows), and the names
+		 * of the row itself (row, $index) stay its own.
+		 */
+		function handlerExpression (component, source, args) {
+			var values = componentValues.get(component) || {};
+			var owner = stateOwners.get(component);
+			var shared = owner ? componentValues.get(owner) : null;
+			var methods = expressionMethods.get(values) || (shared && expressionMethods.get(shared)) || Runtime.TemplateGlobals;
+			var locals = {$event: args[0], $node: args[1]};
+			var scope;
+
+			if (shared === values)
+				shared = null;
+
+			/* A name of the owner the row has as it is (its copy), or that the row does not have. */
+			function ownerName (key) {
+				return !!shared && key in shared && (!(key in values) || values[key] === shared[key]);
+			}
+
+			scope = new Proxy(values, {
+				/* Every name but the methods and the globals (Math, console) is a name of the state: an assignment to a new one lands there, not in the window. */
+				has: function (target, key) {
+					if (typeof key !== 'string') return false;
+
+					return own(locals, key) || key in values || !!shared && key in shared || !(key in methods) && !(key in global);
+				},
+				get: function (target, key) {
+					if (typeof key !== 'string') return undefined;
+					if (own(locals, key)) return locals[key];
+
+					return key in values || !shared ? values[key] : shared[key];
+				},
+				set: function (target, key, value) {
+					if (own(locals, key)) locals[key] = value;
+					else if (ownerName(key)) shared[key] = value;
+					else values[key] = value;
+
+					return true;
+				}
+			});
+
+			expressionMethods.set(scope, methods);
+
+			try {
+				compileExpression(source)(scope);
+			}
+			catch (error) {
+				if (global.console && console.error)
+					console.error('Elemenx handler expression failed: ' + source, error);
+			}
+
+			return true;
+		}
 
 		/*
 		 * New values of props, from the tag that declares a Component or from the page of a widget: its $OnProps hears
@@ -7906,9 +8227,12 @@
 				return new URL(/^https?:$/.test(global.location.protocol) ? global.location.pathname + global.location.search : '/', routeBase());
 			}
 
-			/* The base of the route URLs outside Mode history: a file URL of a page has the path of the file (and a drive letter on Windows). */
+			/*
+			 * The base of the route URLs outside Mode history: a file URL of a page has the path of the file (and a drive letter
+			 * on Windows); a page of a blob: URL has the origin it was made in, one of no origin (about:, sandboxed) none.
+			 */
 			function routeBase () {
-				return global.location.protocol === 'file:' ? 'file:///' : global.location.origin + '/';
+				return global.location.protocol !== 'file:' && global.location.origin && global.location.origin !== 'null' ? global.location.origin + '/' : 'file:///';
 			}
 
 			function writeState (method, url) {
@@ -7941,7 +8265,7 @@
 				}
 
 				var target = new URL(href, (committedURL || routeURL()).href);
-				if (target.protocol !== global.location.protocol) return null;
+				if (target.protocol !== new URL(routeBase()).protocol) return null;
 
 				return target;
 			}
@@ -8228,7 +8552,8 @@
 			function navigate (url, mode, redirect) {
 				var target = new URL(url, urlMode === 'history' ? global.location.href : (committedURL || routeURL()).href);
 
-				if (target.origin !== global.location.origin || target.protocol !== global.location.protocol) {
+				/* Outside Mode history a route URL has the protocol of the base of the routes: the page of a blob: URL keeps its routes. */
+				if (target.origin !== global.location.origin || target.protocol !== (urlMode === 'history' ? global.location.protocol : new URL(routeBase()).protocol)) {
 					global.location.href = target.href;
 
 					return api;
@@ -8528,8 +8853,8 @@
 			return path;
 		}
 
-		function bindingAssign (result, target, value, definition) {
-			var path = canonicalBindingPath(target, definition);
+		/* A value put at a path of props ([style.width] is Style.width), the objects and the arrays on the way made. */
+		function assignPath (result, path, value) {
 			var root = path[0];
 			var current;
 			var i = 1;
@@ -8586,41 +8911,89 @@
 			return found ? values : null;
 		}
 
-		function props (node, data, definition) {
-			var result = {};
+		/*
+		 * The props of the tag of a Component, read once for its blueprint and its definition: the names of its plain
+		 * attributes, their values (an expression for a {{ }}), and the paths of its bindings. A tag renders its props
+		 * at every change its expressions depend on; what it says of them stays, and is not read again each time.
+		 */
+		var propsPlans = new WeakMap();
+
+		function propsPlan (node, definition) {
+			var plan = propsPlans.get(node);
 			var attrs = node.attributes;
 			var i = 0;
 			var name;
 			var target;
+			var interpolated;
 
-			/*
-			 * Plain attributes establish root values first. Path bindings then
-			 * overlay their target without depending on source attribute order.
-			 */
+			if (plan && plan.Definition === definition && plan.Count === attrs.length) return plan;
+
+			plan = {Definition: definition, Count: attrs.length, Plain: [], Bound: []};
+
 			while (i < attrs.length) {
 				name = attrs[i].name;
 				target = Runtime.Directive.Binding(name);
 
 				if (target === null && !Runtime.Directive.Reserved(name)) {
-					name = name.replace(/-([a-z])/g, function (match, letter) {
+					name = canonicalPropKey(definition, name.replace(/-([a-z])/g, function (all, letter) {
 						return letter.toUpperCase();
+					}));
+					interpolated = Runtime.Interpolation(attrs[i].value);
+
+					/* Label="{{Name}}" is the value itself, Label="Hello, {{Name}}" a text, Label="\{{x}}" the text {{x}}. */
+					if (interpolated && interpolated.Parts.length === 1 && typeof interpolated.Parts[0] !== 'string') {
+						plan.Plain.push({Name: name, Expression: interpolated.Parts[0].Source, Parts: null, Value: undefined});
+					}
+					else if (interpolated && interpolated.Dynamic) {
+						plan.Plain.push({Name: name, Expression: null, Parts: interpolated.Parts, Value: undefined});
+					}
+					else {
+						plan.Plain.push({Name: name, Expression: null, Parts: null, Value: interpolated ? interpolated.Parts.join('') : propValue(attrs[i].value, null)});
+					}
+				}
+				else if (target !== null) {
+					plan.Bound.push({Path: canonicalBindingPath(target, definition), Expression: attrs[i].value});
+				}
+
+				i++;
+			}
+
+			propsPlans.set(node, plan);
+
+			return plan;
+		}
+
+		function props (node, data, definition) {
+			var plan = propsPlan(node, definition);
+			var result = {};
+			var i = 0;
+			var entry;
+
+			/*
+			 * Plain attributes establish root values first. Path bindings then
+			 * overlay their target without depending on source attribute order.
+			 */
+			while (i < plan.Plain.length) {
+				entry = plan.Plain[i];
+
+				if (entry.Expression !== null) {
+					result[entry.Name] = expression(data, entry.Expression);
+				}
+				else if (entry.Parts) {
+					result[entry.Name] = Runtime.InterpolationValue(entry.Parts, function (part) {
+						return expression(data, part.Source);
 					});
-
-					name = canonicalPropKey(definition, name);
-
-					result[name] = propValue(attrs[i].value, data);
+				}
+				else {
+					result[entry.Name] = entry.Value;
 				}
 
 				i++;
 			}
 
 			i = 0;
-			while (i < attrs.length) {
-				name = attrs[i].name;
-				target = Runtime.Directive.Binding(name);
-
-				if (target !== null)
-					bindingAssign(result, target, expression(data, attrs[i].value), definition);
+			while (i < plan.Bound.length) {
+				assignPath(result, plan.Bound[i].Path, expression(data, plan.Bound[i].Expression));
 
 				i++;
 			}
@@ -8795,6 +9168,27 @@
 			return '<svg data-elemenx-svg="">' + html + '</svg>';
 		}
 
+		/*
+		 * The expressions of a template as one text: the {{ }} of its texts and its attributes, and the values of its
+		 * bindings, its handlers and its directives ([name]="...", (event)="...", *name="..."; a handler set in $OnCreate
+		 * is a value, not a method). The names of its tags, its attributes, its classes and its plain texts are no names
+		 * of its state: a collection that depended on them read them at every render.
+		 */
+		function expressionText (html) {
+			var parts = [];
+			var match;
+			var expressions = /\{\{([\s\S]*?)\}\}/g;
+			var bound = /\s(?:\[[^\]\s=]+\]|\([^)\s=]+\)|\*[A-Za-z][A-Za-z0-9_-]*)="([^"]*)"/g;
+
+			while ((match = expressions.exec(html)))
+				parts.push(match[1]);
+
+			while ((match = bound.exec(html)))
+				parts.push(match[1]);
+
+			return parts.join('\n');
+		}
+
 		function templateHTML (element) {
 			var entities = {amp: '&', lt: '<', gt: '>', quot: '"'};
 
@@ -8905,10 +9299,29 @@
 		}
 
 		/* Structural: definition methods */
+		/*
+		 * A method of a definition called on a Component, made once for each (the same function at every render): the
+		 * scopes of the iterations of a collection compare their values, and a new function each time would tell every
+		 * row that its methods changed.
+		 */
+		var boundMethods = new WeakMap();
+
 		function boundMethod (definition, component, name) {
-			return function () {
-				return definition[name].apply(component, arguments);
-			};
+			var cache = boundMethods.get(component);
+
+			if (!cache || cache.Definition !== definition) {
+				cache = {Definition: definition, Methods: {}};
+
+				boundMethods.set(component, cache);
+			}
+
+			if (!own(cache.Methods, name)) {
+				cache.Methods[name] = function () {
+					return definition[name].apply(component, arguments);
+				};
+			}
+
+			return cache.Methods[name];
 		}
 
 		/* Copies the methods of definition accepted by include into target, called on the owning component. */
@@ -9555,20 +9968,21 @@
 				}
 
 				/*
-				 * The scope of the iterations copies every value of the Component, but depends only on the values
-				 * that the template and the expressions name: a value they never name cannot reach an iteration,
-				 * and depending on it would render the whole collection again on every change of the Component.
+				 * The scope of the iterations holds the values of the Component that the template and the expressions
+				 * name, and depends only on them: a value they never name cannot reach an iteration, and depending on
+				 * it would render the whole collection again on every change of the Component.
 				 */
 				function baseScope (source) {
 					var values = Runtime.ComponentValues(component);
 					var scope = {};
 					var name;
 					var value;
+					var raw;
 
 					if (!referencedNames) {
 						referencedNames = {};
 
-						reference(templateHTML(template));
+						reference(expressionText(templateHTML(template)));
 						reference(directive.Expression);
 
 						for (name in argumentsMap) {
@@ -9580,20 +9994,18 @@
 					reference(source);
 
 					/*
-					 * The plain object behind the state: copying through its proxy would run its trap for every value
-					 * of the Component, on every render of the collection. The values the template names are read
-					 * again below, through the proxy, tracked.
+					 * The values the template and the expressions name, and only them: a value they never name cannot reach
+					 * an iteration, and copying all of the values of the Component went through its state at every render
+					 * of the collection. A tracked read, also of a name that is not a value yet, so that adding it renders
+					 * again; the plain object behind the state tells which names are values.
 					 */
-					Runtime.Untracked(function () {
-						Runtime.Assign(scope, values.__raw__ || values);
-					});
+					raw = values.__raw__ || values;
 
-					/* A tracked read, also of a name that is not a value yet, so that adding it renders again. */
 					for (name in referencedNames) {
 						if (own(referencedNames, name)) {
 							value = values[name];
 
-							if (own(scope, name))
+							if (own(raw, name))
 								scope[name] = value;
 						}
 					}
@@ -9628,8 +10040,55 @@
 					keyed = {};
 				}
 
+				/*
+				 * The items of the last render and the values of the Component they saw: a render of the same items in
+				 * the same order only gives the rows the values that changed (the selected one, a value of a form), and
+				 * keeps them as they are, without a scope made again for each.
+				 */
+				var lastItems = null;
+				var lastBase = null;
+
+				/* The items of a collection of 'of' as a plain list (read through the state: the collection depends on them), or null. */
+				function itemList (items) {
+					var list = [];
+					var i = 0;
+					var source;
+
+					if (!Array.isArray(items)) return null;
+
+					/* The items as the plain array holds them: the collection depends on all of them at once, not on each. */
+					Runtime.TrackIteration(items);
+
+					source = items.__raw__ || items;
+
+					while (i < source.length && i < collectionIterationLimit) {
+						list.push(source[i]);
+
+						i++;
+					}
+
+					return list;
+				}
+
+				function sameItems (list) {
+					var i = 0;
+
+					if (!list || !lastItems || list.length !== lastItems.length) return false;
+
+					while (i < list.length) {
+						if (list[i] !== lastItems[i]) return false;
+
+						i++;
+					}
+
+					return true;
+				}
+
 				function render (items, options) {
-					var nextScopes = collectionScopes(baseScope(), items, options || {});
+					var base = baseScope();
+					var mode = (options && options.Mode) || 'of';
+					var list = mode === 'of' ? itemList(items) : null;
+					var nextScopes;
 					var keySource = options && options.Key ? options.Key : null;
 					var nextChildren = [];
 					var nextKeyed = {};
@@ -9643,6 +10102,26 @@
 					var placeBefore;
 					var element;
 					var changed;
+
+					/* The same items: the rows stay, the values of the Component that changed go to each of them. */
+					if (list && lastBase && sameItems(list) && children.length === list.length) {
+						changed = changedScope(lastBase, base);
+
+						if (changed) {
+							/* The scope of a row is the state of its iteration: $Update writes the values into it. */
+							while (i < children.length) {
+								children[i].Child.$Update(changed);
+
+								i++;
+							}
+						}
+
+						lastBase = base;
+
+						return children.length;
+					}
+
+					nextScopes = collectionScopes(base, items, options || {});
 
 					if (!keySource)
 						destroyAll();
@@ -9724,6 +10203,8 @@
 
 					children = nextChildren;
 					keyed = nextKeyed;
+					lastItems = list;
+					lastBase = list ? base : null;
 
 					return children.length;
 				}
@@ -10213,6 +10694,12 @@
 
 		/* Network: shared helpers */
 		var textEncoder = global.TextEncoder ? new global.TextEncoder() : null;
+
+		/*
+		 * The transports of Network.X(...), by name: each part puts its own in after its function (a build leaves out the
+		 * parts its code names nowhere: tools/shake.js), and the facade makes one method of each that is there.
+		 */
+		var NetworkFactories = {};
 
 		/* Size of a payload in bytes: a string counts as UTF-8, a binary value by its length. */
 		function NetworkByteLength (value) {
@@ -10850,6 +11337,8 @@
 			return api;
 		}
 
+		NetworkFactories.XHR = NetworkXHR;
+
 		/* Network: Stream */
 		function NetworkStream (configuration) {
 			var config = configuration || {};
@@ -11183,6 +11672,8 @@
 			return api;
 		}
 
+		NetworkFactories.Stream = NetworkStream;
+
 		/* Network: LongPolling */
 		function NetworkLongPolling (configuration) {
 			var config = configuration || {};
@@ -11450,6 +11941,8 @@
 			return api;
 		}
 
+		NetworkFactories.LongPolling = NetworkLongPolling;
+
 		/* Network: SSE */
 		function NetworkSSE (configuration) {
 			var config = configuration || {};
@@ -11593,6 +12086,8 @@
 
 			return api;
 		}
+
+		NetworkFactories.SSE = NetworkSSE;
 
 		/* Network: Transfer helpers */
 		/* Delivers callback (error, value) in a microtask: never synchronously, and as soon as a resolved Promise would. */
@@ -12908,6 +13403,8 @@
 			return api;
 		}
 
+		NetworkFactories.Transfer = NetworkTransfer;
+
 		/* Network: TransferReceiver */
 		/* The received chunks in index order, or null when their count differs from the announced one. */
 		function orderedChunks (chunks, count) {
@@ -13104,6 +13601,8 @@
 
 			return api;
 		}
+
+		NetworkFactories.TransferReceiver = NetworkTransferReceiver;
 
 		/* Network: WebSocket */
 		function NetworkWebSocket (configuration) {
@@ -13369,6 +13868,8 @@
 
 			return api;
 		}
+
+		NetworkFactories.WebSocket = NetworkWebSocket;
 
 		/* Network: WebRTC */
 		/*
@@ -13960,6 +14461,8 @@
 			return api;
 		}
 
+		NetworkFactories.WebRTC = NetworkWebRTC;
+
 		/* Network: Metrics */
 		function metricsNow () {
 			return global.performance && typeof global.performance.now === 'function' ? global.performance.now() : Date.now();
@@ -14412,22 +14915,13 @@
 			return api;
 		}
 
-		var NetworkFactories = {
-			XHR: NetworkXHR,
-			WebSocket: NetworkWebSocket,
-			SSE: NetworkSSE,
-			LongPolling: NetworkLongPolling,
-			Stream: NetworkStream,
-			WebRTC: NetworkWebRTC,
-			Transfer: NetworkTransfer,
-			TransferReceiver: NetworkTransferReceiver,
-			Metrics: NetworkMetrics
-		};
+		NetworkFactories.Metrics = NetworkMetrics;
+
+		/* Network: ownership */
 		var NetworkOwners = new WeakMap();
 		var DestroyedNetworkOwners = new WeakSet();
 		var NetworkContexts = {};
 
-		/* Network: ownership */
 		function destroyNetworkResource (resource) {
 			if (!resource) return;
 
@@ -18544,6 +19038,93 @@
 		else limit();
 	})(typeof globalThis !== 'undefined' ? globalThis : self);
 
+	/* Motion */
+	(function (global) {
+		'use strict';
+
+		/*
+		 * The endless animations of Elemenx (a spinner, a skeleton, a pulse: the names of the framework, elemenx-*) rest
+		 * while their element is out of the viewport. One that runs anywhere on a long page made the browser walk and
+		 * paint the whole page at every frame: a page of many of them took a whole core while nothing on it moved for the
+		 * reader. An animation of the application (another name) is left as it is.
+		 */
+
+		if (!Runtime.HasDOM || typeof global.IntersectionObserver !== 'function' || !global.Element || !global.Element.prototype.getAnimations) return;
+
+		var watched = new WeakSet();
+		var hidden = new WeakSet();
+		var rested = new WeakSet();
+		var observer;
+
+		/* The endless animations of the framework on element and on its pseudo-elements (::after), not on its children. */
+		function endless (element) {
+			return element.getAnimations({subtree: true}).filter(function (animation) {
+				var effect = animation.effect;
+
+				return effect && effect.target === element && /^elemenx-/.test(animation.animationName || '') && effect.getTiming().iterations === Number.POSITIVE_INFINITY;
+			});
+		}
+
+		function rest (animation) {
+			if (animation.playState !== 'running') return;
+
+			animation.pause();
+
+			rested.add(animation);
+		}
+
+		function wake (animation) {
+			if (!rested.has(animation)) return;
+
+			rested.delete(animation);
+
+			if (animation.playState === 'paused')
+				animation.play();
+		}
+
+		function forget (element) {
+			observer.unobserve(element);
+
+			watched.delete(element);
+			hidden.delete(element);
+		}
+
+		observer = new global.IntersectionObserver(function (entries) {
+			entries.forEach(function (entry) {
+				var element = entry.target;
+				var list = element.isConnected ? endless(element) : [];
+
+				if (!list.length) {
+					forget(element);
+
+					return;
+				}
+
+				if (entry.isIntersecting) hidden.delete(element);
+				else hidden.add(element);
+
+				list.forEach(entry.isIntersecting ? wake : rest);
+			});
+		});
+
+		/* An animation that starts on an element out of the viewport rests at once; the observer tells the first answer. */
+		global.document.addEventListener('animationstart', function (event) {
+			var element = event.target;
+			if (!/^elemenx-/.test(event.animationName || '') || !element || element.nodeType !== 1) return;
+
+			if (!watched.has(element)) {
+				watched.add(element);
+
+				observer.observe(element);
+
+				return;
+			}
+
+			if (hidden.has(element))
+				endless(element).forEach(rest);
+		}, true);
+	})(typeof globalThis !== 'undefined' ? globalThis : self);
+
 	/* Application */
 	(function (global) {
 		'use strict';
@@ -18818,7 +19399,7 @@
 				target = Runtime.DefinitionURL(definition, item.Path.replace(/\/+$/, ''));
 
 				if (Runtime.HasDOM)
-					target = new URL(target, global.location.href).href;
+					target = new URL(target, Runtime.BaseURL()).href;
 
 				graph = /\.js(?:[?#].*)?$/i.test(target) ? target : null;
 				root = graph ? target.substring(0, target.lastIndexOf('/')) : target;

@@ -168,8 +168,7 @@
 
 .elemenx-gallery-arrow:focus-visible,
 .elemenx-gallery-play:focus-visible,
-.elemenx-gallery-dot:focus-visible,
-.elemenx-gallery-thumb:focus-visible {
+.elemenx-gallery-dot:focus-visible {
 	outline: 2px solid var(--elemenx-focus);
 	outline-offset: 2px;
 }

@@ -25,7 +25,7 @@ Elemenx.Service('Hotkeys', {
 		this.Paused = 0;
 		this.Pending = [];
 		this.PendingTimer = 0;
-		this.Listeners = [];
+		this.Listeners = this.$Service('ElemenxHelpers').Listeners();
 		this.Mac = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent || '');
 
 		this.Listener = function (event) {
@@ -108,20 +108,15 @@ Elemenx.Service('Hotkeys', {
 	},
 
 	OnChange: function (callback) {
-		if (this.Listeners.indexOf(callback) === -1)
-			this.Listeners.push(callback);
+		return this.Listeners.On(callback);
 	},
 
 	OffChange: function (callback) {
-		this.Listeners = this.Listeners.filter(function (listener) {
-			return listener !== callback;
-		});
+		this.Listeners.Off(callback);
 	},
 
 	Changed: function () {
-		this.Listeners.slice().forEach(function (listener) {
-			listener();
-		});
+		this.Listeners.Tell();
 	},
 
 	List: function () {

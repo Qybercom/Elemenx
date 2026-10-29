@@ -67,4 +67,4 @@ Menu — это кнопка и открываемое ею меню; MenuList �
 
 - [Menu: its first item](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/focus-on-open.test.js#L74) — `tests/regression/focus-on-open.test.js`
 - [Menu lets its owner take it away in its select (a sign out) without an error](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-overlays.test.js#L211) — `tests/regression/library-overlays.test.js`
-- [a drawer is a side menu from either side, and drawers stack: Escape closes the top one](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L8127) — `tests/examples/ui-kit.spec.js`
+- [a drawer is a side menu from either side, and drawers stack: Escape closes the top one](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L8232) — `tests/examples/ui-kit.spec.js`

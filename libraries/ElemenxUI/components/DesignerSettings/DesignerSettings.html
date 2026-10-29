@@ -104,7 +104,7 @@
 				<Field [label]="$T('ui.designer.project.failed')">
 					<Select [name]="route.ID + '|Failed'" [options]="Choices(Project(Version), 'page')" [value]="route.Failed" (change)="Routed" />
 				</Field>
-				<button type="button" class="elemenx-designer-settings-remove" [attribute.title]="$T('ui.designer.project.remove')" [attribute.aria-label]="$T('ui.designer.project.remove')" [attribute.data-route]="route.ID" (click)="RouteRemoved"><Icon Name="delete" Size="16" /></button>
+				<button type="button" class="elemenx-designer-settings-remove elemenx-bare" [attribute.title]="$T('ui.designer.project.remove')" [attribute.aria-label]="$T('ui.designer.project.remove')" [attribute.data-route]="route.ID" (click)="RouteRemoved"><Icon Name="delete" Size="16" /></button>
 			</div>
 			<div>
 				<span class="elemenx-designer-settings-add-route"><Button Size="small" Icon="add" [label]="$T('ui.designer.project.addRoute')" (click)="RouteAdded" /></span>

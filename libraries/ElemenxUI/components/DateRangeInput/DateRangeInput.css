@@ -16,12 +16,9 @@
 	gap: 8px;
 	min-width: 0;
 	padding: 0 8px 0 12px;
-	background: transparent;
-	border: 0;
 	color: var(--elemenx-text);
 	font: inherit;
 	text-align: start;
-	cursor: pointer;
 	outline: none;
 }
 
@@ -32,9 +29,6 @@
 .elemenx-range-text {
 	flex: 1;
 	min-width: 0;
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
 	font-variant-numeric: tabular-nums;
 }
 

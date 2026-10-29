@@ -20,7 +20,7 @@ Elemenx.Service('Stickers', {
 		var stored = null;
 
 		this.List = [];
-		this.Listeners = [];
+		this.Listeners = this.$Service('ElemenxHelpers').Listeners();
 		this.Last = [];
 		this.Stars = [];
 
@@ -218,32 +218,14 @@ Elemenx.Service('Stickers', {
 	},
 
 	OnChange: function (callback) {
-		this.Listeners.push(callback);
-
-		return callback;
+		return this.Listeners.On(callback);
 	},
 
 	OffChange: function (callback) {
-		var index = this.Listeners.indexOf(callback);
-		if (index !== -1)
-			this.Listeners.splice(index, 1);
+		this.Listeners.Off(callback);
 	},
 
 	Changed: function () {
-		var listeners = this.Listeners.slice();
-		var i = 0;
-
-		while (i < listeners.length) {
-			try {
-				listeners[i]();
-			}
-			catch (error) {
-				window.setTimeout(function () {
-					throw error;
-				}, 0);
-			}
-
-			i++;
-		}
+		this.Listeners.Tell();
 	}
 });

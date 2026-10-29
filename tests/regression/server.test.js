@@ -102,6 +102,50 @@ describe('Elemenx production server', function () {
 		}
 	});
 
+	it('sends the copy a build compressed beside a file (Brotli first, then gzip) to a browser that takes it, and not a stale one', async function () {
+		var zlib = require('zlib');
+		var root = fs.mkdtempSync(path.join(os.tmpdir(), 'elemenx-server-coded-'));
+		var text = 'var answer = 42;\n'.repeat(200);
+		var get = function (port, file, encoding) {
+			return new Promise(function (resolve, reject) {
+				var req = http.request({host: '127.0.0.1', port: port, path: '/' + file, headers: encoding === undefined ? {} : {'Accept-Encoding': encoding}}, function (response) {
+					var chunks = [];
+
+					response.on('data', function (chunk) { chunks.push(chunk); });
+					response.on('end', function () { resolve({Headers: response.headers, Body: Buffer.concat(chunks)}); });
+				});
+
+				req.on('error', reject);
+				req.end();
+			});
+		};
+
+		fs.writeFileSync(path.join(root, 'index.html'), '<main></main>');
+		fs.writeFileSync(path.join(root, 'app.js'), text);
+		fs.writeFileSync(path.join(root, 'app.js.br'), zlib.brotliCompressSync(text));
+		fs.writeFileSync(path.join(root, 'app.js.gz'), zlib.gzipSync(text));
+		fs.writeFileSync(path.join(root, 'old.js'), text);
+		fs.writeFileSync(path.join(root, 'old.js.br'), 'stale');
+		fs.utimesSync(path.join(root, 'old.js.br'), new Date(2000, 0, 1), new Date(2000, 0, 1));
+
+		try {
+			await withServer({Root: root}, async function (port) {
+				var brotli = await get(port, 'app.js', 'gzip, deflate, br');
+				var gzip = await get(port, 'app.js', 'gzip, br;q=0');
+				var plain = await get(port, 'app.js');
+				var stale = await get(port, 'old.js', 'br');
+
+				expect([brotli.Headers['content-encoding'], zlib.brotliDecompressSync(brotli.Body).toString(), /-br"$/.test(brotli.Headers.etag)]).toEqual(['br', text, true]);
+				expect([gzip.Headers['content-encoding'], zlib.gunzipSync(gzip.Body).toString()]).toEqual(['gzip', text]);
+				expect([plain.Headers['content-encoding'], plain.Body.toString()]).toEqual([undefined, text]);
+				expect([stale.Headers['content-encoding'], stale.Body.toString()]).toEqual([undefined, text]);
+			});
+		}
+		finally {
+			fs.rmSync(root, {recursive: true, force: true});
+		}
+	});
+
 	it('answers HEAD without sending the file body', async function () {
 		var root = fs.mkdtempSync(path.join(os.tmpdir(), 'elemenx-server-head-'));
 		var body = '<main>head</main>';

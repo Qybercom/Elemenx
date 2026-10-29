@@ -37,4 +37,4 @@
 
 ## Тесты
 
-- [Countries: finds a country, and the country of an international number by the longest code, then the preferred one](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-services.test.js#L40) — `tests/regression/library-services.test.js`
+- [Countries: finds a country, and the country of an international number by the longest code, then the preferred one](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-services.test.js#L90) — `tests/regression/library-services.test.js`

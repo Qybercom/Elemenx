@@ -75,4 +75,27 @@ describe('tools/shake.js', function () {
 			new Function(Shake.Shake(source, '').Source);
 		}).not.toThrow();
 	});
+
+	it('leaves out the transports of Network the code names nowhere, and keeps the parts the others need', function () {
+		function transports (code) {
+			var result = Shake.Shake(source, code);
+			var window = {document: {readyState: 'complete', addEventListener: function () {}}, addEventListener: function () {}};
+
+			new Function('globalThis', 'self', 'window', result.Source)(window, window, window);
+
+			return {Removed: result.Removed, Network: Object.keys(window.Elemenx.Network).sort()};
+		}
+
+		var xhr = transports('this.$Network().XHR({URL: "/x"});');
+		var transfer = transports('this.$Network().Transfer({});');
+
+		expect(xhr.Network).toEqual(['Context', 'Protocol', 'XHR']);
+		expect(xhr.Removed).toEqual(expect.arrayContaining(['Network: WebRTC', 'Network: WebSocket', 'Network: Transfer', 'Network: Transfer outbound engine', 'Network: Metrics']));
+		expect(xhr.Removed).not.toContain('Network: lifecycle and structured envelope');
+
+		/* A Transfer keeps the parts it calls (its engine, its sources and chunks), not the other transports. */
+		expect(transfer.Network).toEqual(['Context', 'Protocol', 'Transfer']);
+		expect(transfer.Removed).not.toContain('Network: Transfer outbound engine');
+		expect(transfer.Removed).toContain('Network: WebRTC');
+	});
 });

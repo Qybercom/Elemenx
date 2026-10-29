@@ -26,7 +26,7 @@
 		<span class="elemenx-chart-tip-row" *if="G().Round"><b>{{Text((Series[0] && Series[0].Values || [])[Hover])}}</b><span>{{Percent((Series[0] && Series[0].Values || [])[Hover])}}</span></span>
 	</div>
 	<div class="elemenx-chart-legend" *if="Legend">
-		<button class="elemenx-chart-key" type="button" *for="item of Legend(Type, Labels, Series)" *key="item.Name" [class.off]="IsHidden(Hidden, item.Name)" [attribute.aria-pressed]="String(!IsHidden(Hidden, item.Name))" [attribute.data-name]="item.Name" (click)="Toggle"><i class="elemenx-chart-swatch" [style.background]="item.Color"></i>{{item.Name}}</button>
+		<button class="elemenx-chart-key elemenx-bare" type="button" *for="item of Legend(Type, Labels, Series)" *key="item.Name" [class.off]="IsHidden(Hidden, item.Name)" [attribute.aria-pressed]="String(!IsHidden(Hidden, item.Name))" [attribute.data-name]="item.Name" (click)="Toggle"><i class="elemenx-chart-swatch" [style.background]="item.Color"></i>{{item.Name}}</button>
 	</div>
 	<table class="elemenx-chart-data">
 		<caption>{{(Label || $T('ui.chart.label'))}}</caption>

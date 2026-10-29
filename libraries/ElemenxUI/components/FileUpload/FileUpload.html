@@ -9,7 +9,7 @@
 		<Button [label]="(Label || $T('ui.fileUpload.label'))" Icon="attachment" [disabled]="Disabled" (click)="Browse" />
 		<span class="elemenx-caption" *if="Hint">{{Hint}}</span>
 	</div>
-	<div class="elemenx-upload-avatar" role="button" *if="Variant === 'avatar'" [attribute.tabindex]="Disabled ? null : 0" [attribute.aria-label]="(Label || $T('ui.fileUpload.label'))" (click)="Browse" (keydown)="ZoneKey">
+	<div class="elemenx-upload-avatar elemenx-focus-ring" role="button" *if="Variant === 'avatar'" [attribute.tabindex]="Disabled ? null : 0" [attribute.aria-label]="(Label || $T('ui.fileUpload.label'))" (click)="Browse" (keydown)="ZoneKey">
 		<img *if="Files.length && Files[0].URL" [src]="(Files[0] || {}).URL" alt="" />
 		<Icon *if="!(Files[0] || {}).URL" Name="user" Size="32" />
 		<span class="elemenx-upload-avatar-edit" aria-hidden="true"><Icon Name="edit" Size="12" /></span>
@@ -17,7 +17,7 @@
 	<ul class="elemenx-upload-list" *if="(Variant === 'dropzone' || Variant === 'inline') && Files.length">
 		<li class="elemenx-upload-item" *for="file of Files" *key="file.ID">
 			<span class="elemenx-upload-thumb"><img *if="file.URL" [src]="file.URL" alt="" /><FileIcon *if="!file.URL" [name]="file.Name" Size="24" /></span>
-			<span class="elemenx-upload-name" [attribute.title]="file.Name">{{file.Name}}</span>
+			<span class="elemenx-upload-name elemenx-ellipsis" [attribute.title]="file.Name">{{file.Name}}</span>
 			<span class="elemenx-caption">{{FormatSize(file.Size)}}</span>
 			<button class="elemenx-input-action" type="button" [attribute.aria-label]="$T('ui.common.remove', {name: file.Name})" [attribute.data-index]="$index" *if="!Disabled" (click)="Remove"><Icon Name="close" /></button>
 		</li>

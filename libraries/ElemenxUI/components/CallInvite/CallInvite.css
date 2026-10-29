@@ -32,10 +32,7 @@
 }
 
 .elemenx-call-invite-name {
-	overflow: hidden;
 	font-size: var(--elemenx-font-size-large);
-	text-overflow: ellipsis;
-	white-space: nowrap;
 }
 
 .elemenx-call-invite-kind {

@@ -605,6 +605,35 @@ h3 {
 	flex-wrap: wrap;
 }
 
+/*
+ * Shared parts of the look of the Components, put on their elements in their templates beside their own classes: a
+ * line that ends in an ellipsis, a button with no look of its own (a part of a row, a tab, a control), and the ring
+ * of the keyboard focus. The rules of a Component come after these and change them.
+ */
+.elemenx-ellipsis {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.elemenx-bare {
+	background: transparent;
+	border: 0;
+	cursor: pointer;
+}
+
+/* The ring keeps away from its element by --elemenx-focus-offset, of the element only (an inner one keeps its own). */
+@property --elemenx-focus-offset {
+	syntax: '<length>';
+	inherits: false;
+	initial-value: 2px;
+}
+
+.elemenx-focus-ring:focus-visible {
+	outline: 2px solid var(--elemenx-focus);
+	outline-offset: var(--elemenx-focus-offset);
+}
+
 /* A grid of equal columns, as many as fit at --elemenx-grid-min each: cards, tiles, galleries. */
 .elemenx-container.grid {
 	display: grid;
@@ -1974,6 +2003,24 @@ span.elemenx-rich-plugin {
 	margin: 0;
 }
 
+/*
+ * *layer: an element in the top layer keeps its own place, size and look, not those of a popover of the browser (in
+ * its middle, with a frame, a padding and the colors of the system). Its own rules, of any weight, come over these.
+ */
+:where(.elemenx-layer[popover]) {
+	inset: auto;
+	width: auto;
+	height: auto;
+	max-width: none;
+	max-height: none;
+	margin: 0;
+	padding: 0;
+	overflow: visible;
+	color: inherit;
+	background: transparent;
+	border: 0;
+}
+
 .elemenx-popup-search {
 	flex: none;
 	margin: 0 0 4px;
@@ -2278,12 +2325,17 @@ span.elemenx-rich-plugin {
 	gap: 4px;
 	max-width: 100%;
 	height: 24px;
-	padding: 0 4px 0 8px;
+	padding: 0 8px;
 	background: var(--elemenx-surface-hover);
 	border-radius: var(--elemenx-radius);
 	font-size: var(--elemenx-font-size-small);
 	line-height: var(--elemenx-line-height-small);
 	white-space: nowrap;
+}
+
+/* Its button to remove it (a TagInput, a MultiSelect, a filter) has its own room on the right: the text alone is in the middle. */
+.elemenx-chip:has(> button) {
+	padding-right: 4px;
 }
 
 .elemenx-chip-label {

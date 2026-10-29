@@ -8,7 +8,7 @@
 			<span class="elemenx-tree-twisty" (click)="Twist"><Icon *if="row.Group && !IsLoading(Loading, row.Item)" [name]="row.Open ? 'chevron-down' : 'chevron-right'" Size="12" /><Icon *if="IsLoading(Loading, row.Item)" Name="loader" Size="12" Spin="true" /></span>
 			<span class="elemenx-check" *if="Checkable" [class.checked]="row.Check === 'true'" [class.indeterminate]="row.Check === 'mixed'" (click)="Tick"><span class="elemenx-check-box"><Icon Name="check" Size="12" /><Icon Name="remove" Size="12" /></span></span>
 			<Icon *if="row.Item.Icon" [name]="row.Item.Icon" />
-			<span class="elemenx-tree-label">{{row.Item.Label}}</span>
+			<span class="elemenx-tree-label elemenx-ellipsis">{{row.Item.Label}}</span>
 			<span class="elemenx-badge" *if="row.Item.Badge != null && row.Item.Badge !== ''">{{row.Item.Badge}}</span>
 		</div>
 		<div class="elemenx-popup-empty" *if="!Rows(Items, Expanded, Filter, Checked).length">{{(Empty || $T('ui.tree.empty'))}}</div>

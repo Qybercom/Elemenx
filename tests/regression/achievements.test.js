@@ -5,6 +5,21 @@ import vm from 'vm';
 
 var source = fs.readFileSync(path.join(import.meta.dirname, '../../libraries/ElemenxUI/services/Achievements.js'), 'utf8');
 
+/* The ElemenxHelpers Service of ElemenxUI, out of a page. */
+function helpers () {
+	var definition;
+
+	vm.runInNewContext(fs.readFileSync(path.join(import.meta.dirname, '../../libraries/ElemenxUI/services/ElemenxHelpers.js'), 'utf8'), {
+		Elemenx: {
+			Service: function (name, value) {
+				definition = value;
+			}
+		}
+	});
+
+	return definition;
+}
+
 /* The GameAchievements Service on the timers of the test. */
 function create () {
 	var definition;
@@ -23,6 +38,10 @@ function create () {
 	});
 
 	instance = Object.assign({}, definition);
+	/* The helpers it asks for (its list of listeners), as ElemenxUI has them. */
+	instance.$Service = function () {
+		return helpers();
+	};
 
 	instance.$OnCreate();
 

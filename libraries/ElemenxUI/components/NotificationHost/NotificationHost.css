@@ -49,6 +49,7 @@
 }
 
 .elemenx-notification {
+	--elemenx-focus-offset: 0px;
 	position: relative;
 	display: flex;
 	align-items: flex-start;
@@ -63,10 +64,6 @@
 	color: var(--elemenx-text);
 	cursor: default;
 	pointer-events: auto;
-}
-
-.elemenx-notification:focus-visible {
-	outline: 2px solid var(--elemenx-focus);
 }
 
 .elemenx-notification.success {
@@ -117,11 +114,8 @@
 .elemenx-notification-close {
 	display: inline-flex;
 	padding: 2px;
-	background: transparent;
-	border: 0;
 	border-radius: var(--elemenx-radius);
 	color: var(--elemenx-text-muted);
-	cursor: pointer;
 }
 
 .elemenx-notification-close:hover,

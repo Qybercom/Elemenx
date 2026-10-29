@@ -85,14 +85,20 @@ function definitions (file) {
 	});
 	var record = function (kind) {
 		return function (name, definition) {
-			if (definition && typeof definition === 'object')
+			/* A Guard is a function; the others are definitions. */
+			if (definition && (typeof definition === 'object' || kind === 'Guard' && typeof definition === 'function'))
 				found.push({Kind: kind, Name: kind === 'Directive' ? String(name).toLowerCase() : name, Definition: definition});
 
 			return nothing;
 		};
 	};
 	var sandbox = {
-		Elemenx: {Component: record('Component'), Service: record('Service'), Directive: record('Directive')},
+		/* The rest of the framework a script names at its top (Elemenx.Network.Protocol(...)) answers nothing too. */
+		Elemenx: new Proxy({Component: record('Component'), Service: record('Service'), Directive: record('Directive'), Guard: record('Guard')}, {
+			get: function (target, key) {
+				return Object.prototype.hasOwnProperty.call(target, key) ? target[key] : nothing;
+			}
+		}),
 		window: {},
 		document: {},
 		navigator: {},
@@ -156,7 +162,7 @@ function Build (library, output) {
 		if (/\.js$/.test(file)) {
 			definitions(full).forEach(function (entry) {
 				var meta = normalize(entry.Name, entry.Kind, entry.Definition);
-				if (meta)
+				if (meta && result[entry.Kind + 's'])
 					result[entry.Kind + 's'].push(meta);
 			});
 
@@ -181,5 +187,6 @@ function Build (library, output) {
 
 module.exports = {
 	Build: Build,
-	Normalize: normalize
+	Normalize: normalize,
+	Definitions: definitions
 };

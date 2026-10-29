@@ -77,6 +77,12 @@ describe('Contract: the language of Elemenx for the editors (the core, and its L
 		expect(labels('<Card Variant="r')).toEqual(['raised']);
 		expect(labels('<Card [title]="Co')).toEqual(['Count', 'Counted']);
 		expect(labels('<Card (pick)="P')).toEqual(['Picked']);
+
+		/* An (event) that is an expression, and {{ }} in the value of a plain attribute. */
+		expect(labels('<Card (pick)="Count = Co')).toEqual(['Count', 'Counted']);
+		expect(labels('<button (click)="Picked($')).toEqual(['$event', '$node']);
+		expect(labels('<a title="Hello, {{Co')).toEqual(['Count', 'Counted']);
+		expect(labels('<a title="Hello, Co')).toEqual([]);
 		expect(labels('{{ It')).toEqual(['Items']);
 		expect(labels("this.$Service('To", 'js')).toEqual(['Toast']);
 

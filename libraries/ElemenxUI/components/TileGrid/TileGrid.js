@@ -14,8 +14,10 @@
  * Direction 'horizontal' puts the groups in one row, as on a start screen; 'columns' stacks them in columns, as the
  * Start menu of Windows: a group has the Stack (a number) of its column, and the columns wrap to a new row when the
  * grid is narrower than they are, each whole; a tile dragged above or below a group, or beside a column, starts a
- * group there (unless GroupPolicy is 'none'). Scroll makes the grid scroll on its own (give
- * it a height), and a tile dragged to its edge scrolls it. On a touch screen a finger scrolls over the tiles, and a
+ * group there (unless GroupPolicy is 'none'). In wrap (the default) the stacks wrap the same way, a group a stack of
+ * its own until another goes above or below it: with GroupPolicy 'between' a tile dragged above or below a group starts
+ * a group in its stack (the room under its lowest tile stays the group's), and beside a stack a new stack. Scroll makes the grid scroll on its own (give it a height), and a
+ * tile dragged to its edge scrolls it. On a touch screen a finger scrolls over the tiles, and a
  * press held still takes a tile.
  * Arrangement() returns the places of the tiles and the sizes of the groups ([{ID, Title, Columns, Rows, Stack, Tiles: [{ID,
  * Row, Column, Size, Width, Height}]}]); Restore(arrangement) brings them back (tiles and groups it does not name stay
@@ -108,18 +110,19 @@ Elemenx.Component('TileGrid', {
 
 		/* The width of a group in cells: its own Columns, or the Columns of the grid; with Fit, no more than there is room for. */
 		/*
-		 * The stacks of the groups: in columns, the groups of one Stack (in their order), the stacks by their Stack; else one
-		 * stack for each group, a stack that is no box of its own. A group without a Stack has its place in Groups.
+		 * The stacks of the groups: the groups of one Stack (in their order), the stacks by their Stack, a group without a
+		 * Stack a stack of its own at its place in Groups; in one row (horizontal) a stack for each group, no box of its own.
 		 */
 		this.Stacks = function (groups, direction) {
 			var stacks = [];
 			var byValue = {};
+			var stacked = direction !== 'horizontal';
 
 			(groups || []).forEach(function (group, index) {
-				var value = direction === 'columns' && typeof group.Stack === 'number' ? group.Stack : index;
+				var value = stacked && typeof group.Stack === 'number' ? group.Stack : index;
 
-				if (direction !== 'columns' || !byValue[value]) {
-					byValue[value] = {Key: direction === 'columns' ? 'stack-' + value : 'group-' + group.ID, Value: value, Groups: []};
+				if (!stacked || !byValue[value]) {
+					byValue[value] = {Key: stacked ? 'stack-' + value : 'group-' + group.ID, Value: value, Groups: []};
 
 					stacks.push(byValue[value]);
 				}
@@ -127,9 +130,14 @@ Elemenx.Component('TileGrid', {
 				byValue[value].Groups.push(group);
 			});
 
-			return direction === 'columns' ? stacks.sort(function (a, b) {
+			return stacked ? stacks.sort(function (a, b) {
 				return a.Value - b.Value;
 			}) : stacks;
+		};
+
+		/* Whether a drag may start a group above or below a group, or beside a stack: in columns, and in wrap with GroupPolicy between. */
+		this.Stacked = function (direction, policy) {
+			return policy !== 'none' && (direction === 'columns' || (direction !== 'horizontal' && policy === 'between'));
 		};
 
 		/* The place of a group in Groups, by its ID. */
@@ -881,7 +889,7 @@ Elemenx.Component('TileGrid', {
 	},
 
 	DropBetween: function (event, node) {
-		this.Start(event, Number(node.getAttribute('data-index')), node.hasAttribute('data-stack') && this.Direction === 'columns' ? Number(node.getAttribute('data-stack')) : null);
+		this.Start(event, Number(node.getAttribute('data-index')), node.hasAttribute('data-stack') && this.Direction !== 'horizontal' ? Number(node.getAttribute('data-stack')) : null);
 	},
 
 	/* A new column beside a column: a group of its own, its Stack between the ones around it. */
@@ -890,8 +898,8 @@ Elemenx.Component('TileGrid', {
 	},
 
 	/*
-	 * A new group for the dropped tile, at position at (null: after the last group); in columns in the column stack (a
-	 * value between two columns makes a new one there), the columns numbered again from 0.
+	 * A new group for the dropped tile, at position at (null: after the last group); out of one row (horizontal) in
+	 * the stack stack names (a value between two stacks makes a new one there), the stacks numbered again from 0.
 	 */
 	Start: function (event, at, stack) {
 		var created = null;
@@ -904,7 +912,7 @@ Elemenx.Component('TileGrid', {
 
 		if (!groups) return;
 
-		if (this.Direction === 'columns') {
+		if (this.Direction !== 'horizontal') {
 			groups.forEach(function (group, index) {
 				if (typeof group.Stack !== 'number')
 					group.Stack = index;

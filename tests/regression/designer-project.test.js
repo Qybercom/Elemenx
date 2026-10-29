@@ -307,6 +307,67 @@ describe('Contract: the Designer Service edits projects of pages, components, ro
 
 		expect(JSON.parse(localStorage.getItem('elemenx-designer:projects')).Current).toBe(shop);
 	});
+
+	it('keeps the projects of a project of elemenx design apart, takes its Components and edits a copy of one, its bindings kept', function () {
+		var shop = designer.Project().ID;
+		var basket = '<section>\n\t<h2>{{Title}}</h2>\n\t<Pill Label="Pay" [disabled]="!Items.length" (click)="Pay" />\n</section>';
+		var copy;
+
+		designer.Scope('Store');
+
+		expect(designer.ProjectsKey).toBe('elemenx-designer:projects:Store');
+		expect(designer.Project()).toMatchObject({Mode: 'application', Name: 'Store'});
+		expect(designer.Projects().length).toBe(1);
+
+		designer.Extend([
+			{Name: 'Basket', Description: 'The basket.', Props: [{Name: 'Title', Type: 'text', Default: 'Cart'}, {Name: 'Items', Type: 'json', Default: []}], Slots: [], Template: basket, Definition: {Title: 'Cart', Items: [], Pay: function () {}}},
+			{Name: 'Pill', Props: [{Name: 'Label', Type: 'text', Default: ''}, {Name: 'Disabled', Type: 'bool', Default: false}], Template: '<b>{{Label}}</b>', Definition: {Label: '', Disabled: false}},
+			{Name: 'not a name'}
+		]);
+
+		expect(designer.Kinds().filter(function (group) {
+			return group.ID === 'files';
+		})[0].Kinds.map(function (kind) {
+			return kind.ID;
+		})).toEqual(['Basket', 'Pill']);
+
+		copy = designer.Copy('Basket');
+
+		expect(designer.Copy('Basket')).toBe(copy);
+		expect(designer.Copy('Nothing')).toBe(null);
+		expect(designer.Project().Documents.filter(function (item) {
+			return item.ID === copy;
+		})[0]).toMatchObject({Type: 'component', Name: 'Basket', Description: 'The basket.', Origin: 'Basket', Props: [{Name: 'Title', Type: 'text', Default: 'Cart'}, {Name: 'Items', Type: 'json', Default: '[]'}]});
+		expect(designer.Source(copy)).toBe(basket);
+
+		/* The copy is the Basket of the palette now; on the canvas it runs as a Component of the definition it came with. */
+		expect(groups()).toContain('project');
+		expect(designer.Kinds().filter(function (group) {
+			return group.ID === 'files';
+		})[0].Kinds.map(function (kind) {
+			return kind.ID;
+		})).toEqual(['Pill']);
+
+		designer.Insert('Basket', 'root');
+
+		expect(designer.Template(false)).toBe('<Basket />');
+		expect(designer.Template(true)).toMatch(/<DesignerPart\d+/);
+
+		/* Its canvas shows what the page is made of, not the expressions of the copy. */
+		designer.Open(copy);
+
+		expect(designer.Template(true)).not.toContain('(click)');
+		expect(designer.Template(true)).toContain('{{ \'{{\' }}Title}}');
+		expect(designer.Template(false)).toBe(basket);
+
+		designer.Scope('');
+
+		expect(designer.ProjectsKey).toBe('elemenx-designer:projects');
+		expect(designer.Project().ID).toBe(shop);
+		expect(JSON.parse(localStorage.getItem('elemenx-designer:projects:Store')).Projects).toBeTruthy();
+
+		designer.Extend([]);
+	});
 });
 
 function flat () {

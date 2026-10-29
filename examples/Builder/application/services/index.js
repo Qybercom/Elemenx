@@ -1,3 +1,4 @@
 [
-	'Packager.js'
+	'Packager.js',
+	'Disk.js'
 ];

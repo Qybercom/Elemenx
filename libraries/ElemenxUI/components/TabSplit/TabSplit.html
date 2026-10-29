@@ -1,0 +1,8 @@
+<div class="elemenx-tab-split" (focusin)="Focused">
+	<div class="elemenx-tab-split-source" hidden><slot></slot></div>
+	<div class="elemenx-tab-split-group" *for="group of Groups(Tree, Metas)" *key="group.ID" [attribute.data-group]="group.ID" [attribute.style]="Place(group)">
+		<TabGroup [scope]="Scope()" [group]="group.ID" [items]="group.Items" [active]="group.Active" [closable]="Closable" [label]="Label" Splittable="true" (select)="Selected" (close)="Asked" (pin)="Pinned" (order)="Ordered" (move)="Moved" (drop)="Dropped" (split)="Splitted"></TabGroup>
+	</div>
+	<div class="elemenx-tab-split-divider" role="separator" tabindex="0" *for="divider of Dividers(Tree)" *key="divider.Key" [class]="[divider.Direction]" [attribute.data-key]="divider.Key" [attribute.style]="Place(divider)" [attribute.aria-orientation]="divider.Direction === 'row' ? 'vertical' : 'horizontal'" [attribute.aria-label]="$T('ui.tabSplit.divider')" (pointerdown)="DividerDown" (pointermove)="DividerMove" (pointerup)="DividerUp" (pointercancel)="DividerUp" (keydown)="DividerKey"></div>
+	<i class="elemenx-tab-split-sync" hidden *mount="Sync(Tree, Metas)"></i>
+</div>

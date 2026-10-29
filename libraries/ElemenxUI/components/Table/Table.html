@@ -8,7 +8,7 @@
 						<span class="elemenx-table-check-box" (change)="CheckAll"><Checkbox Size="small" [label]="$T('ui.table.selectAll')" [checked]="AllSelected(Paged(Entries(Rows, Sort, SortLocal, Filters, FilterLocal, Expanded, Tree), Page, PageSize, PageLocal), Selected)" [indeterminate]="!AllSelected(Paged(Entries(Rows, Sort, SortLocal, Filters, FilterLocal, Expanded, Tree), Page, PageSize, PageLocal), Selected) && (Selected || []).length > 0" /></span>
 					</th>
 					<th *for="column of Columns" *key="column.Key" *resizable="column.Resizable === false ? '' : {Edges: 'right', MinWidth: column.MinWidth || 48}" scope="col" [class]="['align-' + (column.Align || 'left')]" [style.width]="Widths[column.Key] || column.Width || null" [attribute.aria-sort]="AriaSort(Sort, column)" [attribute.data-key]="column.Key" (resizeend)="Resized">
-						<button class="elemenx-table-sort" type="button" *if="column.Sortable" [attribute.data-key]="column.Key" (click)="SortBy"><span>{{column.Title}}</span><Icon [name]="SortIcon(Sort, column)" Size="12" /></button>
+						<button class="elemenx-table-sort elemenx-bare elemenx-focus-ring" type="button" *if="column.Sortable" [attribute.data-key]="column.Key" (click)="SortBy"><span>{{column.Title}}</span><Icon [name]="SortIcon(Sort, column)" Size="12" /></button>
 						<span *if="!column.Sortable">{{column.Title}}</span>
 					</th>
 				</tr>
@@ -33,8 +33,8 @@
 					</td>
 					<td *for="column of Columns" *key="column.Key" [class]="['align-' + (column.Align || 'left')]">
 						<span class="elemenx-table-tree" *if="Tree && $index === 0" [style.--elemenx-table-depth]="entry.Depth">
-							<button class="elemenx-table-twisty" type="button" tabindex="-1" *if="entry.Children" [attribute.aria-label]="entry.Open ? $T('ui.common.collapse') : $T('ui.common.expand')" (click)="Twist"><Icon [name]="entry.Open ? 'chevron-down' : 'chevron-right'" Size="12" /></button>
-							<span class="elemenx-table-twisty" *if="!entry.Children"></span>
+							<button class="elemenx-table-twisty elemenx-bare" type="button" tabindex="-1" *if="entry.Children" [attribute.aria-label]="entry.Open ? $T('ui.common.collapse') : $T('ui.common.expand')" (click)="Twist"><Icon [name]="entry.Open ? 'chevron-down' : 'chevron-right'" Size="12" /></button>
+							<span class="elemenx-table-twisty elemenx-bare" *if="!entry.Children"></span>
 						</span>{{Cell(entry.Row, column)}}
 					</td>
 				</tr>

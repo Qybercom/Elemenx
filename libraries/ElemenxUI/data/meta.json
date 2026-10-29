@@ -9984,6 +9984,15 @@
 					"Description": "The tab cannot be chosen."
 				},
 				{
+					"Name": "Pinned",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "In a TabGroup or a TabSplit: first in its strip, and left by a close of all the tabs or of the others."
+				},
+				{
 					"Name": "Component",
 					"Type": "text",
 					"Default": "",
@@ -10005,6 +10014,234 @@
 			"Slots": [],
 			"Container": true,
 			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [],
+			"Sample": {}
+		},
+		{
+			"Name": "TabGroup",
+			"Kind": "Component",
+			"Group": "navigation",
+			"Icon": "panel-bottom",
+			"Description": "A group of tabs: their strip and the content of the current one, as the tabs of the files of an editor.",
+			"Props": [
+				{
+					"Name": "Items",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": {
+						"ID": "text",
+						"Label": "text",
+						"Icon": "icon",
+						"Badge": "text",
+						"Closable": "bool",
+						"Disabled": "bool",
+						"Pinned": "bool"
+					},
+					"Body": false,
+					"Description": "The tabs, when the owner puts their content in the body: [{ID, Label, Icon, Badge, Closable, Disabled, Pinned}]."
+				},
+				{
+					"Name": "Active",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The ID of the current tab."
+				},
+				{
+					"Name": "Closable",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Every tab that is not pinned has a cross."
+				},
+				{
+					"Name": "Splittable",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its menu splits the group, and a tab dropped on an edge splits it there (a TabSplit sets it)."
+				},
+				{
+					"Name": "Group",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its name, in the details of its events and in a layout declared in a TabSplit."
+				},
+				{
+					"Name": "Scope",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The groups whose tabs it takes by a drag: the ones of the same Scope (a TabSplit sets it; its own without it)."
+				},
+				{
+					"Name": "Label",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The name of the strip for screen readers."
+				}
+			],
+			"Slots": [],
+			"Container": true,
+			"Children": [
+				"Tab"
+			],
+			"Current": "Active",
+			"Events": [
+				"select",
+				"close",
+				"pin",
+				"order",
+				"move",
+				"drop",
+				"split"
+			],
+			"EventDescriptions": {
+				"select": "Another tab was opened: its ID.",
+				"close": "A tab asks to close: its ID (the owner takes its Tab away).",
+				"pin": "A tab was pinned or unpinned: {ID, Pinned}.",
+				"order": "With Items: a tab was put at another place of the strip: {ID, Index}.",
+				"move": "With Items: a tab of another group was put in the strip: {ID, From, Index}.",
+				"drop": "With Items: a tab was put on the body: {ID, From, Side}.",
+				"split": "With Items: its menu splits the group to a side with the tab: {ID, Side}."
+			},
+			"Methods": [],
+			"Sample": {}
+		},
+		{
+			"Name": "TabSplit",
+			"Kind": "Component",
+			"Group": "layout",
+			"Icon": "layout",
+			"Description": "Groups of tabs side by side and one over another, as the editors of a code editor, with dividers between them.",
+			"Props": [
+				{
+					"Name": "Layout",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The layout, as change tells it: {Split: row or column, Sizes, Children} of {Group, Tabs, Active, Pinned}."
+				},
+				{
+					"Name": "Closable",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Every tab that is not pinned has a cross."
+				},
+				{
+					"Name": "Label",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The name of the strips for screen readers."
+				}
+			],
+			"Slots": [],
+			"Container": true,
+			"Children": [
+				"TabRow",
+				"TabColumn",
+				"TabGroup",
+				"Tab"
+			],
+			"Current": "",
+			"Events": [
+				"change",
+				"select",
+				"close"
+			],
+			"EventDescriptions": {
+				"change": "The layout changed: {Split, Sizes, Children} of {Group, Tabs, Active, Pinned}.",
+				"select": "A tab was opened: its ID.",
+				"close": "A tab asks to close: its ID (the owner takes its Tab away)."
+			},
+			"Methods": [
+				"Open(id)",
+				"Close(id)",
+				"Split(id, side)",
+				"Model()"
+			],
+			"Sample": {}
+		},
+		{
+			"Name": "TabRow",
+			"Kind": "Component",
+			"Group": "layout",
+			"Icon": "columns",
+			"Description": "A part of the layout of a TabSplit declared in its template: the groups and the splits in it side by side.",
+			"Props": [
+				{
+					"Name": "Sizes",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The shares of its parts in percents: 25,75 (equal without it)."
+				}
+			],
+			"Slots": [],
+			"Container": true,
+			"Children": [
+				"TabGroup",
+				"TabColumn",
+				"Tab"
+			],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [],
+			"Sample": {}
+		},
+		{
+			"Name": "TabColumn",
+			"Kind": "Component",
+			"Group": "layout",
+			"Icon": "panel-bottom",
+			"Description": "A part of the layout of a TabSplit declared in its template: the groups and the splits in it one over another.",
+			"Props": [
+				{
+					"Name": "Sizes",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The shares of its parts in percents: 60,40 (equal without it)."
+				}
+			],
+			"Slots": [],
+			"Container": true,
+			"Children": [
+				"TabGroup",
+				"TabRow",
+				"Tab"
+			],
 			"Current": "",
 			"Events": [],
 			"EventDescriptions": {},
@@ -21743,6 +21980,26 @@
 	],
 	"Services": [
 		{
+			"Name": "ElemenxHelpers",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "The helpers the Components and the Services of ElemenxUI share: the text of a body, the first day of a week, a list of listeners.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [
+				"BodyText(node)",
+				"FirstDay(setting, locale)",
+				"Listeners()"
+			],
+			"Sample": {}
+		},
+		{
 			"Name": "Theme",
 			"Kind": "Service",
 			"Group": "",
@@ -22811,6 +23068,9 @@
 				"RemoveGuard(name)",
 				"SetSetting(name, value)",
 				"Source(id)",
+				"Scope(name)",
+				"Extend(components)",
+				"Copy(name)",
 				"OnChange(listener)",
 				"OffChange(listener)"
 			],
@@ -23136,6 +23396,22 @@
 			"Sample": {}
 		},
 		{
+			"Name": "layer",
+			"Kind": "Directive",
+			"Group": "",
+			"Icon": "",
+			"Description": "*layer puts its element in the top layer of the page while it is in the page (*layer=\"Open\": while the expression is truthy), placed by the viewport wherever it is.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [],
+			"Sample": {}
+		},
+		{
 			"Name": "badge",
 			"Kind": "Directive",
 			"Group": "",
@@ -23199,6 +23475,9 @@
 			"non-fill",
 			"wrappable"
 		],
+		"elemenx-ellipsis": [],
+		"elemenx-bare": [],
+		"elemenx-focus-ring": [],
 		"elemenx-column": [
 			"fill",
 			"fill-fixed",
@@ -23421,6 +23700,7 @@
 		],
 		"elemenx-modal-shade": [],
 		"elemenx-popup": [],
+		"elemenx-layer": [],
 		"elemenx-popup-search": [],
 		"elemenx-popup-empty": [],
 		"elemenx-popup-group": [],
@@ -23998,7 +24278,6 @@
 			"invalid"
 		],
 		"elemenx-upload-zone": [],
-		"elemenx-upload-avatar": [],
 		"elemenx-upload-title": [],
 		"elemenx-upload-bar": [],
 		"elemenx-upload-list": [],
@@ -24009,6 +24288,7 @@
 		"elemenx-upload-gallery": [],
 		"elemenx-upload-tile": [],
 		"elemenx-upload-tile-remove": [],
+		"elemenx-upload-avatar": [],
 		"elemenx-upload-avatar-edit": [],
 		"elemenx-menu": [
 			"dragging",
@@ -24030,6 +24310,9 @@
 		"elemenx-accordion": [
 			"bordered"
 		],
+		"elemenx-section-toggle": [],
+		"elemenx-section-body": [],
+		"elemenx-section-note": [],
 		"elemenx-countdown": [
 			"ended",
 			"large",
@@ -24150,10 +24433,10 @@
 		"elemenx-drawing-tool": [
 			"active"
 		],
-		"elemenx-drawing-stage": [],
 		"elemenx-drawing-brush": [],
 		"elemenx-drawing-color": [],
 		"elemenx-drawing-width": [],
+		"elemenx-drawing-stage": [],
 		"elemenx-drawing-svg": [],
 		"elemenx-drawing-selection": [],
 		"elemenx-drawing-marquee": [],
@@ -24252,8 +24535,8 @@
 		"elemenx-track-main": [],
 		"elemenx-track-title": [],
 		"elemenx-track-artist": [],
-		"elemenx-track-column": [],
 		"elemenx-track-explicit": [],
+		"elemenx-track-column": [],
 		"elemenx-track-duration": [],
 		"elemenx-track-list-total": [],
 		"elemenx-cast": [
@@ -24329,10 +24612,10 @@
 		],
 		"elemenx-file-browser-items": [],
 		"elemenx-file-browser-icon": [],
-		"elemenx-file-browser-name": [],
 		"elemenx-file-browser-size": [],
 		"elemenx-file-browser-modified": [],
 		"elemenx-file-browser-empty": [],
+		"elemenx-file-browser-name": [],
 		"elemenx-media-player": [
 			"full"
 		],
@@ -24387,6 +24670,34 @@
 			"disabled"
 		],
 		"elemenx-tab-panel": [],
+		"elemenx-tab-group": [
+			"declared"
+		],
+		"elemenx-tab-group-strip": [],
+		"elemenx-tab-group-tab": [
+			"active",
+			"disabled",
+			"dragging",
+			"pinned"
+		],
+		"elemenx-tab-group-label": [],
+		"elemenx-tab-group-pin": [],
+		"elemenx-tab-group-close": [],
+		"elemenx-tab-group-body": [],
+		"elemenx-tab-group-zone": [
+			"bottom",
+			"left",
+			"right",
+			"top"
+		],
+		"elemenx-tab-split": [],
+		"elemenx-tab-split-group": [],
+		"elemenx-tab-split-divider": [
+			"column",
+			"row"
+		],
+		"elemenx-tab-row": [],
+		"elemenx-tab-column": [],
 		"elemenx-workspace-toolbar": [],
 		"elemenx-workspace-tool-window": [],
 		"elemenx-workspace-tool-window-header": [],
@@ -24443,7 +24754,6 @@
 		],
 		"elemenx-ribbon-tabs-menu": [],
 		"elemenx-ribbon-tabs-button": [],
-		"elemenx-ribbon-tabs-current": [],
 		"elemenx-ribbon-tabs-list": [],
 		"elemenx-ribbon-end": [],
 		"elemenx-ribbon-label": [],
@@ -24509,10 +24819,7 @@
 		"elemenx-section-slot": [],
 		"elemenx-section-actions": [],
 		"elemenx-section-aside": [],
-		"elemenx-section-note": [],
-		"elemenx-section-toggle": [],
 		"elemenx-section-static": [],
-		"elemenx-section-body": [],
 		"elemenx-block-header": [],
 		"elemenx-block-body": [],
 		"elemenx-block-tab": [],
@@ -24807,7 +25114,6 @@
 			"material"
 		],
 		"elemenx-settings-menu-back": [],
-		"elemenx-settings-menu-back-label": [],
 		"elemenx-settings-menu-title": [],
 		"elemenx-settings-menu-search": [],
 		"elemenx-settings-menu-query": [],
@@ -24843,9 +25149,9 @@
 		"elemenx-dial-pad-erase": [],
 		"elemenx-dial-pad-keys": [],
 		"elemenx-dial-pad-key": [],
-		"elemenx-dial-pad-call": [],
 		"elemenx-dial-pad-digit": [],
 		"elemenx-dial-pad-sub": [],
+		"elemenx-dial-pad-call": [],
 		"elemenx-mixer-channel": [
 			"disabled",
 			"master",
@@ -25012,12 +25318,12 @@
 			"previous"
 		],
 		"elemenx-gallery-play": [],
-		"elemenx-gallery-thumb": [
-			"active"
-		],
 		"elemenx-gallery-counter": [],
 		"elemenx-gallery-dots": [],
 		"elemenx-gallery-thumbs": [],
+		"elemenx-gallery-thumb": [
+			"active"
+		],
 		"elemenx-post-category": [],
 		"elemenx-post-excerpt": [],
 		"elemenx-post": [
@@ -25219,13 +25525,13 @@
 			"narrow",
 			"selected"
 		],
-		"elemenx-timeline-point": [
-			"selected"
-		],
 		"elemenx-timeline-range-label": [],
 		"elemenx-timeline-range-edge": [
 			"end",
 			"start"
+		],
+		"elemenx-timeline-point": [
+			"selected"
 		],
 		"elemenx-timeline-leader": [],
 		"elemenx-timeline-label": [
@@ -25259,7 +25565,8 @@
 			"editable",
 			"horizontal",
 			"scroll",
-			"sorting"
+			"sorting",
+			"stacks"
 		],
 		"elemenx-tile-stack": [],
 		"elemenx-tile-lane": [],
@@ -25667,7 +25974,6 @@
 			"dragged",
 			"short"
 		],
-		"elemenx-cal-more": [],
 		"elemenx-cal-views": [],
 		"elemenx-cal-month": [],
 		"elemenx-cal-weekday": [],
@@ -25678,6 +25984,7 @@
 		],
 		"elemenx-cal-date": [],
 		"elemenx-cal-time": [],
+		"elemenx-cal-more": [],
 		"elemenx-cal-week": [],
 		"elemenx-cal-week-head": [],
 		"elemenx-cal-week-allday": [],

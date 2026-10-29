@@ -9,6 +9,6 @@
 		"extension": "elemenx build --extension"
 	},
 	"dependencies": {
-		"@qybercom/elemenx": "^0.10.0"
+		"@qybercom/elemenx": "^0.11.0"
 	}
 }

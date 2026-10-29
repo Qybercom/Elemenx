@@ -127,7 +127,7 @@ Elemenx.Component('GameSlot', {
 			this.Hotkeys().Unbind(own.Binding);
 	},
 
-	/* The card of what the slot holds, beside it; a scroll of the page takes it along with the slot. */
+	/* The card of what the slot holds, beside it; a scroll of the page, or a move of the slot without one, takes it along. */
 	ShowCard: function (event, node) {
 		var self = this;
 		var own = this.Own();
@@ -145,6 +145,15 @@ Elemenx.Component('GameSlot', {
 			own.View = (this.$Element().ownerDocument || document).defaultView || window;
 
 			own.View.addEventListener('scroll', own.Scroll, true);
+
+			/* The page moves the slot without a scroll too (a part above it renders later): the card looks at each frame. */
+			own.Follow = function () {
+				own.Scroll();
+
+				own.CardFrame = own.View.requestAnimationFrame(own.Follow);
+			};
+
+			own.CardFrame = own.View.requestAnimationFrame(own.Follow);
 		}
 
 		this.CardStyle = items.Place(node);
@@ -156,6 +165,7 @@ Elemenx.Component('GameSlot', {
 
 		if (own.Scroll) {
 			(own.View || window).removeEventListener('scroll', own.Scroll, true);
+			(own.View || window).cancelAnimationFrame(own.CardFrame);
 
 			own.Scroll = null;
 		}

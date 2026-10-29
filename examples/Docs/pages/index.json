@@ -1854,6 +1854,34 @@
 					"Group": "navigation"
 				},
 				{
+					"ID": "TabColumn",
+					"Title": {
+						"en": "TabColumn"
+					},
+					"Group": "layout"
+				},
+				{
+					"ID": "TabGroup",
+					"Title": {
+						"en": "TabGroup"
+					},
+					"Group": "navigation"
+				},
+				{
+					"ID": "TabRow",
+					"Title": {
+						"en": "TabRow"
+					},
+					"Group": "layout"
+				},
+				{
+					"ID": "TabSplit",
+					"Title": {
+						"en": "TabSplit"
+					},
+					"Group": "layout"
+				},
+				{
 					"ID": "Table",
 					"Title": {
 						"en": "Table"
@@ -2149,6 +2177,12 @@
 					}
 				},
 				{
+					"ID": "ElemenxHelpers",
+					"Title": {
+						"en": "ElemenxHelpers"
+					}
+				},
+				{
 					"ID": "Emoji",
 					"Title": {
 						"en": "Emoji"
@@ -2413,6 +2447,12 @@
 					"ID": "itemCard",
 					"Title": {
 						"en": "*itemCard"
+					}
+				},
+				{
+					"ID": "layer",
+					"Title": {
+						"en": "*layer"
 					}
 				},
 				{

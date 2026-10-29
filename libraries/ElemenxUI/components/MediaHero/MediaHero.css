@@ -4,6 +4,8 @@
 	border-radius: var(--elemenx-radius-large);
 	background: var(--elemenx-surface-raised);
 	color: var(--elemenx-text);
+	width: 100%;
+	/* Its width comes from its place, not from what it shows: on a phone it does not widen the page. */
 	contain: inline-size;
 }
 

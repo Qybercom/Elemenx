@@ -1,5 +1,5 @@
 <article class="elemenx-chat-message" [class]="[Position || 'single', Own ? 'own' : '', Selecting ? 'selecting' : '', Selected ? 'selected' : '']" (contextmenu)="Context" (keydown)="Key" (pointerdown)="Down" (pointermove)="Moved" (pointerup)="Released" (pointercancel)="Released" (click)="Pressed">
-	<button class="elemenx-chat-check" type="button" role="checkbox" *if="Selecting" [attribute.aria-checked]="String(!!Selected)" [attribute.aria-label]="$T('ui.chatMessage.select')" (click)="Checked"><Icon *if="Selected" Name="check" Size="14" /></button>
+	<button class="elemenx-chat-check elemenx-focus-ring" type="button" role="checkbox" *if="Selecting" [attribute.aria-checked]="String(!!Selected)" [attribute.aria-label]="$T('ui.chatMessage.select')" (click)="Checked"><Icon *if="Selected" Name="check" Size="14" /></button>
 	<span class="elemenx-chat-avatar" aria-hidden="true"><Avatar *if="Position === 'single' || Position === 'last'" [name]="Author" [image]="Avatar" [size]="32" /></span>
 	<div class="elemenx-chat-body elemenx-popup-anchor">
 		<div class="elemenx-chat-line">
@@ -16,7 +16,7 @@
 				</span>
 			</div>
 			<span class="elemenx-chat-tools">
-				<button class="elemenx-chat-react" type="button" *if="React && React !== 'false'" [attribute.aria-label]="$T('ui.chatMessage.react')" [attribute.title]="$T('ui.chatMessage.react')" [attribute.aria-expanded]="String(Picking)" (click)="Pick"><Icon Name="reaction" /></button>
+				<button class="elemenx-chat-react elemenx-focus-ring" type="button" *if="React && React !== 'false'" [attribute.aria-label]="$T('ui.chatMessage.react')" [attribute.title]="$T('ui.chatMessage.react')" [attribute.aria-expanded]="String(Picking)" (click)="Pick"><Icon Name="reaction" /></button>
 				<button class="elemenx-chat-more" type="button" *if="(Actions || []).length" [attribute.aria-label]="$T('ui.chatMessage.actions')" [attribute.title]="$T('ui.chatMessage.actions')" aria-haspopup="menu" [attribute.aria-expanded]="String(MenuOpen)" (click)="More"><Icon Name="more" /></button>
 			</span>
 		</div>
@@ -33,12 +33,12 @@
 			<ul class="elemenx-chat-summary-list">
 				<li class="elemenx-chat-summary-row" *for="row of SummaryRows(Reactions, Viewers, SummaryTab)" *key="$index">
 					<span class="elemenx-chat-summary-avatar" aria-hidden="true"><Avatar [name]="row.Name" [image]="row.Avatar" [size]="24" /></span>
-					<span class="elemenx-chat-summary-name">{{row.Name}}</span>
+					<span class="elemenx-chat-summary-name elemenx-ellipsis">{{row.Name}}</span>
 					<span class="elemenx-chat-summary-note" *if="row.Emoji || row.Note">{{row.Emoji || row.Note}}</span>
 				</li>
 				<li class="elemenx-chat-summary-empty" *if="!SummaryRows(Reactions, Viewers, SummaryTab).length">{{SummaryTab === 'views' ? $T('ui.chatMessage.viewsUnknown', {count: ViewCount(Views, Viewers)}) : $T('ui.chatMessage.nobody')}}</li>
 			</ul>
 		</div>
 	</div>
-	<span class="elemenx-chat-menu-point elemenx-popup-anchor" [style.left]="MenuX + 'px'" [style.top]="MenuY + 'px'"><MenuList [items]="Actions || []" [open]="MenuOpen" Sheet="auto" [title]="Text || null" (select)="Chosen" (dismiss)="MenuClosed" /></span>
+	<span class="elemenx-chat-menu-point elemenx-popup-anchor" *layer [style.left]="MenuX + 'px'" [style.top]="MenuY + 'px'"><MenuList [items]="Actions || []" [open]="MenuOpen" Sheet="auto" [title]="Text || null" (select)="Chosen" (dismiss)="MenuClosed" /></span>
 </article>

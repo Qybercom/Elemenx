@@ -48,6 +48,8 @@ function mount (template) {
 describe('Contract: the frames of the windows of a program (Platform.Frame) and TitleBar', function () {
 	beforeAll(async function () {
 		await loadElemenx();
+		/* The helpers the Services of ElemenxUI share (their lists of listeners). */
+		await import('../../libraries/ElemenxUI/services/ElemenxHelpers.js');
 		await import('../../libraries/ElemenxUI/services/Theme.js');
 		await import('../../libraries/ElemenxUI/services/Platform.js');
 

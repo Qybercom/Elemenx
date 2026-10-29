@@ -6,8 +6,9 @@
  *
  * The templates are the $Template strings of the definitions and the <template> elements of the page, and the strings
  * given to Elemenx.Template. The sources are the ones the runtime compiles, by the same rules: the {{ }} of texts and
- * attributes, the values of [bindings] and of *directives, and the parts of a *for (its source, or the three parts of
- * a classic loop). A text that is not an expression is left out: it would not compile at run time either.
+ * attributes, the values of [bindings], of *directives and of the (events) that are no name of a handler ((click)="Open
+ * = !Open"), and the parts of a *for (its source, or the three parts of a classic loop). A {{ escaped as \{{ is a text.
+ * A text that is not an expression is left out: it would not compile at run time either.
  */
 
 var Entities = {amp: '&', lt: '<', gt: '>', quot: '"', apos: '\'', nbsp: ' '};
@@ -22,13 +23,14 @@ function decode (text) {
 	});
 }
 
-/* The {{ }} of a text, as the runtime finds them. */
+/* The {{ }} of a text, as the runtime finds them (Runtime.Interpolation): \{{ is a {{ of the text. */
 function interpolations (text, add) {
-	var pattern = /\{\{\s*([\s\S]+?)\s*\}\}/g;
+	var pattern = /\\{\{|\{\{\s*([\s\S]+?)\s*\}\}/g;
 	var match;
 
 	while ((match = pattern.exec(text))) {
-		add(match[1]);
+		if (match[1] !== undefined)
+			add(match[1]);
 	}
 }
 
@@ -96,6 +98,9 @@ function templateSources (html, add) {
 				name = list[j].Name;
 
 				if (name.charAt(0) === '[' && name.charAt(1) !== '(' && name.charAt(name.length - 1) === ']') {
+					add(list[j].Value);
+				}
+				else if (/^\([^)]+\)$/.test(name) && !/^\s*[A-Za-z_$][\w$]*\s*$/.test(list[j].Value)) {
 					add(list[j].Value);
 				}
 				else if (name.charAt(0) === '*') {

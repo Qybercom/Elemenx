@@ -36,8 +36,7 @@
 	color: var(--elemenx-text);
 }
 
-.elemenx-upload-zone:focus-visible,
-.elemenx-upload-avatar:focus-visible {
+.elemenx-upload-zone:focus-visible {
 	outline: 2px solid var(--elemenx-focus);
 	outline-offset: 2px;
 }
@@ -106,9 +105,6 @@
 .elemenx-upload-name {
 	flex: 1;
 	min-width: 0;
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
 }
 
 .elemenx-upload-errors {

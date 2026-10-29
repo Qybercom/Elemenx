@@ -44,6 +44,9 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-color-swatch`
 - `elemenx-column`: `fill`, `fill-fixed`, `non-fill`
 - `elemenx-container`: `block`, `centered`, `fill`, `fill-fixed`, `grid`, `non-fill`, `wrappable`
+- `elemenx-ellipsis`
+- `elemenx-bare`
+- `elemenx-focus-ring`
 - `elemenx-divider`: `vertical`
 - `elemenx-drag-ghost`
 - `elemenx-document`
@@ -104,6 +107,7 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-pip-body`
 - `elemenx-pip-placeholder`
 - `elemenx-popup`
+- `elemenx-layer`
 - `elemenx-popup-empty`
 - `elemenx-popup-group`
 - `elemenx-popup-search`
@@ -1235,7 +1239,6 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-ribbon-tab`: `active`, `contextual`, `disabled`
 - `elemenx-ribbon-tabs`
 - `elemenx-ribbon-tabs-button`
-- `elemenx-ribbon-tabs-current`
 - `elemenx-ribbon-tabs-list`
 - `elemenx-ribbon-tabs-menu`
 
@@ -1298,7 +1301,6 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 
 - `elemenx-settings-menu`: `ios`, `material`
 - `elemenx-settings-menu-back`
-- `elemenx-settings-menu-back-label`
 - `elemenx-settings-menu-badge`
 - `elemenx-settings-menu-check`
 - `elemenx-settings-menu-chevron`
@@ -1401,6 +1403,31 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-tabs-extra`
 - `elemenx-tabs-list`
 
+## TabGroup
+
+- `elemenx-tab-group`: `declared`
+- `elemenx-tab-group-body`
+- `elemenx-tab-group-close`
+- `elemenx-tab-group-label`
+- `elemenx-tab-group-pin`
+- `elemenx-tab-group-strip`
+- `elemenx-tab-group-tab`: `active`, `disabled`, `dragging`, `pinned`
+- `elemenx-tab-group-zone`: `bottom`, `left`, `right`, `top`
+
+## TabSplit
+
+- `elemenx-tab-split`
+- `elemenx-tab-split-divider`: `column`, `row`
+- `elemenx-tab-split-group`
+
+## TabRow
+
+- `elemenx-tab-row`
+
+## TabColumn
+
+- `elemenx-tab-column`
+
 ## TagInput
 
 - `elemenx-tags`
@@ -1431,7 +1458,7 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-tile-cells`
 - `elemenx-tile-content`
 - `elemenx-tile-gap`: `after`, `below`, `drop-over`, `drop-target`, `side`
-- `elemenx-tile-grid`: `columns`, `drop-over`, `drop-target`, `editable`, `horizontal`, `scroll`, `sorting`
+- `elemenx-tile-grid`: `columns`, `drop-over`, `drop-target`, `editable`, `horizontal`, `scroll`, `sorting`, `stacks`
 - `elemenx-tile-group`: `drop-over`, `drop-target`, `growing`, `new`
 - `elemenx-tile-group-action`
 - `elemenx-tile-group-actions`

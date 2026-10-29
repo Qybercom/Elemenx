@@ -45,9 +45,9 @@ default, `actions`
 
 ## Tests
 
-- [names the frame of the program, web on the web, and gives the buttons of the system the colors asked](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/title-bar.test.js#L70) — `tests/regression/title-bar.test.js`
-- [gives the parts of the system in a program the scheme of the theme: its policy, or the one scheme of a theme](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/title-bar.test.js#L96) — `tests/regression/title-bar.test.js`
-- [opens a window of the Application with a frame of its own, the frame on its <html>](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/title-bar.test.js#L120) — `tests/regression/title-bar.test.js`
-- [empties a window of the name left by a page before (reloaded), and keeps its own frame as the page changes](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/title-bar.test.js#L154) — `tests/regression/title-bar.test.js`
-- [draws the buttons of the window where the system draws none, and they act on its window](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/title-bar.test.js#L206) — `tests/regression/title-bar.test.js`
-- [with Frame hidden leaves the buttons to the system and gives them its colors](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/title-bar.test.js#L269) — `tests/regression/title-bar.test.js`
+- [names the frame of the program, web on the web, and gives the buttons of the system the colors asked](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/title-bar.test.js#L72) — `tests/regression/title-bar.test.js`
+- [gives the parts of the system in a program the scheme of the theme: its policy, or the one scheme of a theme](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/title-bar.test.js#L98) — `tests/regression/title-bar.test.js`
+- [opens a window of the Application with a frame of its own, the frame on its <html>](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/title-bar.test.js#L122) — `tests/regression/title-bar.test.js`
+- [empties a window of the name left by a page before (reloaded), and keeps its own frame as the page changes](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/title-bar.test.js#L156) — `tests/regression/title-bar.test.js`
+- [draws the buttons of the window where the system draws none, and they act on its window](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/title-bar.test.js#L208) — `tests/regression/title-bar.test.js`
+- [with Frame hidden leaves the buttons to the system and gives them its colors](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/title-bar.test.js#L271) — `tests/regression/title-bar.test.js`

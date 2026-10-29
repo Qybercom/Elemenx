@@ -10,5 +10,5 @@
 			<span class="elemenx-dial-pad-sub" *if="key.Sub || Subbed(Keys)" aria-hidden="true">{{key.Sub || ''}}</span>
 		</button>
 	</div>
-	<button class="elemenx-dial-pad-call" type="button" *if="ShowCall" [disabled]="!!Disabled || !Value" [attribute.aria-label]="CallLabel || $T('ui.dialPad.call')" [attribute.title]="CallLabel || $T('ui.dialPad.call')" (click)="Call"><Icon Name="phone" Size="24" /></button>
+	<button class="elemenx-dial-pad-call elemenx-focus-ring" type="button" *if="ShowCall" [disabled]="!!Disabled || !Value" [attribute.aria-label]="CallLabel || $T('ui.dialPad.call')" [attribute.title]="CallLabel || $T('ui.dialPad.call')" (click)="Call"><Icon Name="phone" Size="24" /></button>
 </div>

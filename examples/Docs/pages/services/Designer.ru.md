@@ -14,9 +14,10 @@
 - Import(text) читает шаблон обратно вместе с правилами его <style> (непонятные правила сохраняются как есть): виды палитры там, где элемент им соответствует, а любой другой элемент — как есть.
 - Свойство, которое компонент объявляет как Body (Value у Markdown, CodeView), — многострочный текст: пишется в тело элемента (с отступом шаблона, тег в нём — как &lt;) и читается из него обратно.
 - Проекты, редактируемый среди них, каждый хранится в хранилище браузера (ProjectsKey): Projects() перечисляет их, Create(mode, name) создаёт проект своего типа, который не меняется: template (одна страница), component (компонент с публичными свойствами и слотами) или application (страницы и компоненты, маршруты, гварды и настройки приложения); Switch(id) открывает другой, RemoveProject(id) удаляет; ExportProject() — редактируемый проект как текст файла, ImportProject(text) читает его обратно как новый проект.
-- Project() — редактируемый проект: {ID, Mode, Name, Settings, Current, Tabs, Documents, Routes, Guards}. Документ — {ID, Type (page или component), Name, Title (у страницы), Description и Props ([{Name, Type, Default, Options, Description}], у компонента), Slots (слоты его элементов Slot, '' — по умолчанию), Outlet (есть ли в нём место страницы)}; Opened() — ID редактируемого, Tabs — открытые во вкладках. AddDocument(type, name), RemoveDocument(id) (не компонент, который держит другой документ: их называет Used(id)), Open(id) (во вкладке; у каждого документа своя история), Close(id) (его вкладку), SetDocument(id, name, value); Source(id) — шаблон документа.
-- Маршруты приложения: [{ID, Path, Page, Guards, Failed}], AddRoute(path, page), SetRoute(id, name, value), RemoveRoute(id); его гварды — [{Name, Description, Code}] (Code — тело функции гварда), AddGuard(name), SetGuard(name, field, value), RemoveGuard(name); его настройки — SetSetting(name, value): Name, Title, Description, Icon, Language, Theme, Router, Component (компонент, внутри которого страницы), NotFound и заставка страницы: Splash ('true' или ''), SplashImage, SplashBackground, SplashColor, SplashText, SplashSpinner, SplashMinTime и SplashHTML (её собственное содержимое); и его установка как приложения системы: PWA ('true' или ''), PWAShortName, PWAIcon, PWATheme, PWADisplay и PWAOffline ('true' или '').
+- Project() — редактируемый проект: {ID, Mode, Name, Settings, Current, Tabs, Documents, Routes, Guards}. Документ — {ID, Type (page или component), Name, Title (у страницы), Description и Props ([{Name, Type, Default, Options, Description}], у компонента), Slots (слоты его элементов Slot, '' — по умолчанию), Outlet (есть ли в нём место страницы), Origin (компонент файлов, копией которого он сделан, '' — ничей)}; Opened() — ID редактируемого, Tabs — открытые во вкладках. AddDocument(type, name), RemoveDocument(id) (не компонент, который держит другой документ: их называет Used(id)), Open(id) (во вкладке; у каждого документа своя история), Close(id) (его вкладку), SetDocument(id, name, value); Source(id) — шаблон документа.
+- Маршруты приложения: [{ID, Path, Page, Guards, Failed}], AddRoute(path, page), SetRoute(id, name, value), RemoveRoute(id); его гварды — [{Name, Description, Code}] (Code — тело функции гварда), AddGuard(name), SetGuard(name, field, value), RemoveGuard(name); его настройки — SetSetting(name, value): Name, Title, Description, Icon, Language, Theme, Router, Component (компонент, внутри которого страницы), NotFound и заставка страницы: Splash ('true' или ''), SplashImage, SplashBackground, SplashColor, SplashText, SplashSpinner, SplashMinTime и SplashHTML (её собственное содержимое); и его установка как приложения системы: PWA ('true' или ''), PWAShortName, PWAIcon, PWATheme, PWADisplay, PWAOffline ('true' или '') и PWAUpdate (auto, prompt или manual).
 - В приложении компоненты проекта — виды палитры (группа project), которые может взять редактируемый документ, кроме него самого и тех, что держат его; на холсте каждый работает как компонент, сделанный из своего документа. Вид slot (только в компоненте) отмечает, куда компонент помещает переданное ему содержимое, вид outlet (компонент приложения) — куда идут страницы маршрутов.
+- Проект другого места (elemenx design): Scope(name) хранит его проекты отдельно, Extend(components) даёт его компоненты (группа палитры files), а Copy(name) делает один из них компонентом проекта для правки (Origin — его имя): узлы его шаблона, тексты которого сохраняют свои выражения, а на холсте — определение, с которым он пришёл.
 
 ## Методы
 
@@ -67,6 +68,9 @@
 - `RemoveGuard(name)`
 - `SetSetting(name, value)`
 - `Source(id)`
+- `Extend(components)`
+- `Copy(name)`
+- `Scope(name)`
 
 ## Пример
 
@@ -134,6 +138,9 @@
 ## Тесты
 
 - [keeps data/meta.json of ElemenxUI, where the Designer Service reads it, as elemenx meta makes it now](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/cli-meta.test.js#L202) — `tests/regression/cli-meta.test.js`
+- [describes its Applications with their routes and guards, and its Components, Services and Guards from their files](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/design.test.js#L59) — `tests/regression/design.test.js`
+- [answers its description and its files, read only, and nothing outside the project or in node_modules](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/design.test.js#L86) — `tests/regression/design.test.js`
+- [gives the page of the Designer the description as a script, before the application starts](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/design.test.js#L116) — `tests/regression/design.test.js`
 - [takes a project kept before as the first of the projects, its routes from its pages](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/designer-project.test.js#L22) — `tests/regression/designer-project.test.js`
 - [makes a project of a mode that stays its own: an application of a page on /, a component, a template](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/designer-project.test.js#L37) — `tests/regression/designer-project.test.js`
 - [opens documents in tabs, each with its tree, and closes them, never the last one](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/designer-project.test.js#L65) — `tests/regression/designer-project.test.js`
@@ -142,6 +149,5 @@
 - [shows a component of the project on the canvas as a Component made of its document](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/designer-project.test.js#L144) — `tests/regression/designer-project.test.js`
 - [never puts a component into itself, nor into one it holds; renames it where it is held, and keeps one that is held](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/designer-project.test.js#L162) — `tests/regression/designer-project.test.js`
 - [keeps a history for each document](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/designer-project.test.js#L187) — `tests/regression/designer-project.test.js`
-- [routes the pages of an application, guarded by the guards of the project, a refusal shown by a page](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/designer-project.test.js#L204) — `tests/regression/designer-project.test.js`
-- [sets the component of the Application, one that holds the place of the pages, and the other settings](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/designer-project.test.js#L253) — `tests/regression/designer-project.test.js`
-- [writes the project into the text of a file and reads it back as a project of its own](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/designer-project.test.js#L285) — `tests/regression/designer-project.test.js`
+
++5 ещё в тех же файлах

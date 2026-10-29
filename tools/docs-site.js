@@ -5,7 +5,8 @@
  * the version the project installed. It takes all of the framework, every Component, Service and Directive of
  * ElemenxUI and every pack (its live examples use any of them), not the tools that write its pages, and the
  * elemenx.config.js of the reference beside it, for the answers of the server its examples of the network ask (a JSON,
- * an echo, events, a stream, a WebSocket).
+ * an echo, events, a stream, a WebSocket). The projects of the tutorials go into tutorials/, to download, and those
+ * that run without a server of their own as demos of one file (tutorials.js).
  * Build({Output}) returns the folder; node tools/docs-site.js [folder] (npm run docs:site; prepack runs it).
  */
 var fs = require('fs');
@@ -43,6 +44,8 @@ function Build (options) {
 		fs.rmdirSync(path.join(output, 'libraries'));
 
 	fs.copyFileSync(path.join(Docs, 'elemenx.config.js'), path.join(output, 'elemenx.config.js'));
+
+	require(path.join(__dirname, 'tutorials.js')).Build(output);
 
 	return output;
 }

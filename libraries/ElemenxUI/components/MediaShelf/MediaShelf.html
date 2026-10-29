@@ -1,7 +1,7 @@
 <section class="elemenx-media-shelf" [attribute.aria-label]="Title">
 	<header class="elemenx-media-shelf-header">
 		<h2 class="elemenx-media-shelf-title" *if="Title">{{Title}}</h2>
-		<button class="elemenx-media-shelf-more" type="button" *if="More" (click)="Moved">{{More}}<Icon Name="chevron-right" Size="16" /></button>
+		<button class="elemenx-media-shelf-more elemenx-bare" type="button" *if="More" (click)="Moved">{{More}}<Icon Name="chevron-right" Size="16" /></button>
 		<span class="elemenx-media-shelf-arrows">
 			<Button Variant="ghost" Size="small" Shape="round" Icon="chevron-left" [title]="$T('ui.media.back')" [disabled]="Start" (click)="Back" />
 			<Button Variant="ghost" Size="small" Shape="round" Icon="chevron-right" [title]="$T('ui.media.forward')" [disabled]="End" (click)="Forward" />

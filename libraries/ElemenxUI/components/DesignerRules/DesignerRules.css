@@ -26,11 +26,8 @@
 }
 
 .elemenx-designer-rules-name {
-	overflow: hidden;
 	font-family: var(--elemenx-font-mono);
 	font-size: var(--elemenx-font-size-small);
-	text-overflow: ellipsis;
-	white-space: nowrap;
 }
 
 .elemenx-designer-rules-others {
@@ -45,6 +42,7 @@
 }
 
 .elemenx-designer-rules-other {
+	--elemenx-focus-offset: 1px;
 	padding: 2px 8px;
 	color: var(--elemenx-text);
 	font: inherit;
@@ -65,19 +63,11 @@
 	border-color: var(--elemenx-accent);
 }
 
-.elemenx-designer-rules-other:focus-visible {
-	outline: 2px solid var(--elemenx-focus);
-	outline-offset: 1px;
-}
-
 /* What a value that holds a token comes to on the canvas, under its field. */
 .elemenx-designer-rules-computed {
 	display: block;
 	margin-top: 2px;
-	overflow: hidden;
 	color: var(--elemenx-text-muted);
 	font-family: var(--elemenx-font-mono);
 	font-size: var(--elemenx-font-size-small);
-	text-overflow: ellipsis;
-	white-space: nowrap;
 }

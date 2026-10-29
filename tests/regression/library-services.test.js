@@ -11,7 +11,7 @@ describe('Contract: the Services of ElemenxUI', function () {
 	beforeAll(async function () {
 		await loadElemenx();
 
-		Use(['service:Format', 'service:Countries', 'service:Currencies', 'service:Badges', 'service:Formulas', 'service:GameItems', 'service:Dialogs', 'service:Idle', 'service:Permissions', 'service:Panels', 'service:Gamepad']);
+		Use(['service:Format', 'service:Countries', 'service:Currencies', 'service:Badges', 'service:Formulas', 'service:GameItems', 'service:Dialogs', 'service:Idle', 'service:Permissions', 'service:Panels', 'service:Gamepad', 'service:ElemenxHelpers']);
 	});
 
 	afterEach(function () {
@@ -35,6 +35,56 @@ describe('Contract: the Services of ElemenxUI', function () {
 		expect(format.Money(1234.5, 'USD')).toBe('$1,234.50');
 
 		format.Locale = '';
+	});
+
+	it('ElemenxHelpers: the text of a body without its indentation, the first day of a week, and listeners that throw apart', function () {
+		var helpers = service('ElemenxHelpers');
+		var node = document.createElement('pre');
+		var listeners = helpers.Listeners();
+		var heard = [];
+		var errors = [];
+		var reported = window.reportError;
+		var first;
+
+		node.textContent = '\n\t\t\tline one\n\t\t\t\tindented\n\n\t\t\tline three\n\t\t';
+
+		expect(helpers.BodyText(node)).toBe('line one\n\tindented\n\nline three');
+		expect([helpers.FirstDay(null), helpers.FirstDay(''), helpers.FirstDay(0), helpers.FirstDay('6'), helpers.FirstDay(7)]).toEqual([1, 1, 0, 6, 0]);
+		expect([0, 1, 6]).toContain(helpers.FirstDay('locale', 'en-US'));
+
+		window.reportError = function (error) {
+			errors.push(error.message);
+		};
+
+		try {
+			first = listeners.On(function (value) {
+				heard.push('first ' + value);
+
+				throw new Error('broken listener');
+			});
+
+			listeners.On(first);
+			listeners.On(function (value, other) {
+				heard.push('second ' + value + ' ' + other);
+			});
+			listeners.Tell(1, 2);
+
+			expect(heard).toEqual(['first 1', 'second 1 2']);
+			expect(errors).toEqual(['broken listener']);
+			expect(listeners.Count()).toBe(2);
+
+			listeners.Off(first);
+			listeners.Tell(3, 4);
+
+			expect(heard).toEqual(['first 1', 'second 1 2', 'second 3 4']);
+
+			listeners.Clear();
+
+			expect(listeners.Count()).toBe(0);
+		}
+		finally {
+			window.reportError = reported;
+		}
 	});
 
 	it('Countries: finds a country, and the country of an international number by the longest code, then the preferred one', function () {

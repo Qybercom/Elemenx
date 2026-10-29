@@ -94,7 +94,8 @@ test.describe('Example: PWA, notes that install, run offline and update when ask
 
 		await expect(page.locator('.pwa-said')).toHaveText('This is the newest build.');
 
-		fs.appendFileSync(path.join(folder, 'PWA', 'App', 'App.js'), '\n/* A new build. */\n');
+		/* Code, not a comment: a build is minified, and a comment changes nothing of it. */
+		fs.appendFileSync(path.join(folder, 'PWA', 'App', 'App.js'), '\nwindow.BuildMark = \'A new build\';\n');
 
 		build();
 

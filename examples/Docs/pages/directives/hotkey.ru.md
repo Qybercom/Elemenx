@@ -26,4 +26,4 @@
 
 ## Тесты
 
-- [*hotkey clicks its element on the keys, tells them by aria-keyshortcuts, and leaves a disabled element alone](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-directives.test.js#L85) — `tests/regression/library-directives.test.js`
+- [*hotkey clicks its element on the keys, tells them by aria-keyshortcuts, and leaves a disabled element alone](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-directives.test.js#L88) — `tests/regression/library-directives.test.js`

@@ -51,6 +51,7 @@ describe('Builder: the targets of a build, and a Docker image', function () {
 		expect(file).toContain('HEALTHCHECK');
 
 		expect(config).toContain('gzip on;');
+		expect(config).toContain('gzip_static on;');
 		expect(config).toContain('try_files $uri $uri/ /index.html;');
 		expect(config).toContain('location = /healthz');
 		expect(config).toContain('add_header Cache-Control "no-cache" always;');

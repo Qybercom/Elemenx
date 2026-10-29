@@ -69,11 +69,8 @@
 	height: 16px;
 	margin-inline-end: -4px;
 	padding: 0;
-	background: transparent;
-	border: 0;
 	border-radius: var(--elemenx-radius);
 	color: var(--elemenx-text-muted);
-	cursor: pointer;
 	visibility: hidden;
 }
 
@@ -99,7 +96,6 @@
 	height: var(--elemenx-control-large);
 	padding: 0 16px;
 }
-
 
 
 .elemenx-tabs.line {

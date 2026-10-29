@@ -1069,6 +1069,10 @@ function candidates (knowledge, text, offset, language, file) {
 	if (at.Kind === 'attribute-value' || at.Kind === 'expression') {
 		bound = at.Attribute ? binding(at.Attribute.Name) : {Kind: 'expression'};
 
+		/* A {{ }} open in the value of an attribute (title="{{Na"): an expression, also in a plain attribute. */
+		if (at.Kind === 'attribute-value' && at.Attribute && bound.Kind !== 'event' && /\{\{(?:(?!\}\})[\s\S])*$/.test(text.substring(at.Attribute.ValueStart, offset)))
+			bound = {Kind: 'expression'};
+
 		component = at.Tag ? knowledge.Component(at.Tag.Name) : null;
 
 		/* A plain prop with options: its options. */
@@ -1084,12 +1088,12 @@ function candidates (knowledge, text, offset, language, file) {
 		/* The text of a plain attribute is no expression. */
 		if (bound.Kind === 'prop') return items;
 
-		/* An expression or a handler: the fields and the functions of the Component of the template. */
+		/* An expression or a handler (a name, or an expression: (click)="Open = !Open"): the fields and the functions of the Component of the template. */
 		own = owner(knowledge, file, text, offset);
 
 		if (own) {
 			own.Props.forEach(function (each) {
-				if (starts(each.Name, at.Prefix) && bound.Kind !== 'event')
+				if (starts(each.Name, at.Prefix))
 					items.push({Label: each.Name, Kind: 'field', Detail: own.Name, Documentation: each.Description || '', Insert: each.Name, Start: at.PrefixStart, End: offset});
 			});
 
@@ -1097,6 +1101,14 @@ function candidates (knowledge, text, offset, language, file) {
 				if (starts(each.Name, at.Prefix))
 					items.push({Label: each.Name, Kind: 'method', Detail: own.Name + (each.Arguments !== undefined ? '(' + each.Arguments + ')' : ''), Documentation: '', Insert: each.Name, Start: at.PrefixStart, End: offset});
 			});
+		}
+
+		if (bound.Kind === 'event') {
+			if (starts('$event', at.Prefix))
+				items.push({Label: '$event', Kind: 'field', Detail: 'the event', Documentation: 'The DOM event, or what a Component told with its event.', Insert: '$event', Start: at.PrefixStart, End: offset});
+
+			if (starts('$node', at.Prefix))
+				items.push({Label: '$node', Kind: 'field', Detail: 'the element', Documentation: 'The element, or the Component, that told the event.', Insert: '$node', Start: at.PrefixStart, End: offset});
 		}
 
 		if (bound.Kind !== 'event' && starts('$T', at.Prefix))

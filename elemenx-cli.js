@@ -13,7 +13,7 @@ var Meta = require('./tools/meta.js');
 var Package = require('./package.json');
 var fail = require('./tools/common.js').fail;
 
-var BooleanOptions = {force: true, 'current-color': true, single: true, widget: true, full: true, precompile: true, extension: true, help: true, docker: true, strict: true, open: true};
+var BooleanOptions = {force: true, 'current-color': true, single: true, widget: true, full: true, readable: true, precompile: true, extension: true, help: true, docker: true, strict: true, open: true};
 
 /* Options whose value may be left out: --native alone builds all the platforms. */
 var OptionalValues = {native: ['desktop', 'mobile', 'android-library', 'all']};
@@ -75,6 +75,43 @@ function config (project) {
 	return value;
 }
 
+/*
+ * The settings of elemenx dev, the answers of its server (Server.Request) read again from elemenx.config.js when the
+ * file changes: a server started before a change answered as the file said at its start (regression), and a file that
+ * does not load keeps the answers it had.
+ */
+function reloaded (project, settings) {
+	var file = path.join(project, 'elemenx.config.js');
+	var current = settings;
+	var time = changed();
+
+	function changed () {
+		return fs.existsSync(file) ? fs.statSync(file).mtimeMs : 0;
+	}
+
+	return Object.assign({}, settings, {Server: Object.assign({}, settings.Server, {Request: function (request, response, pathname) {
+		var now = changed();
+		var handler;
+
+		if (now !== time) {
+			time = now;
+
+			try {
+				delete require.cache[require.resolve(file)];
+
+				current = require(file) || current;
+			}
+			catch (error) {
+				process.stderr.write('Elemenx dev: elemenx.config.js is not read again: ' + (error.message || error) + '\n');
+			}
+		}
+
+		handler = (current.Server || {}).Request;
+
+		return typeof handler === 'function' ? handler(request, response, pathname) : false;
+	}})});
+}
+
 function value (options, name, configured, fallback) {
 	if (options[name] !== undefined) return options[name];
 	if (configured !== undefined) return configured;
@@ -97,6 +134,7 @@ function buildOptions (parsed, settings) {
 		single: parsed.Options.single === true || settings.Single === true,
 		widget: parsed.Options.widget === true || settings.Widget === true,
 		full: parsed.Options.full === true || settings.Full === true,
+		minify: !(parsed.Options.readable === true || settings.Minify === false),
 		precompile: parsed.Options.precompile === true || settings.Precompile === true,
 		extension: parsed.Options.extension === true,
 		surface: value(parsed.Options, 'surface', (settings.Extension || {}).Surface, 'popup'),
@@ -272,6 +310,7 @@ command('build', 'Build an Application into dist: a site, one file, a widget, a 
 		['--widget', 'one isolated widget.js for a page of another site'],
 		['--packs <a,b>', 'the Library packs it always takes (all: every pack)'],
 		['--full', 'all of the framework, not only the sections the build uses'],
+		['--readable', 'keeps the comments, the blanks and the names of the scripts, to read the build (Minify: false in elemenx.config.js)'],
 		['--precompile', 'the expressions of the templates as code, for a page that forbids eval'],
 		['--extension', 'a browser extension for Chrome, Edge and Firefox'],
 		['--surface <popup|tab|side>', 'where the extension shows (popup)'],
@@ -288,7 +327,7 @@ command('dev', 'Serve application sources for development.', function (parsed) {
 	var server = settings.Server || {};
 	var port = Number(value(parsed.Options, 'port', server.DevelopmentPort, 4173));
 
-	listen(project, port, settings, false, parsed.Options);
+	listen(project, port, reloaded(project, settings), false, parsed.Options);
 }, {
 	Usage: ['elemenx dev [project] [--port 4173] [--host 127.0.0.1]'],
 	Text: ['Serves the sources as they are, with the framework of the package: a reload shows every change.'],
@@ -353,6 +392,64 @@ command('docs', 'Serve the reference of this version of Elemenx, offline.', func
 	Text: ['The reference of the version of Elemenx the project installed (the guide, the core, every Component, Service and Directive of ElemenxUI with its live example), served from the package: no network needed.'],
 	Options: [
 		['--port <number>', 'the port (4179)'],
+		['--host <address>', 'the address it listens on (127.0.0.1)'],
+		['--open', 'opens it in the browser of the system']
+	]
+});
+
+command('design', 'Open the Designer on a project: its pages, components and routes, nothing written to its files.', function (parsed) {
+	var project = projectPath(parsed.Arguments[0]);
+	var directory = path.join(__dirname, 'design-site');
+	var port = Number(value(parsed.Options, 'port', undefined, 4180));
+	var settings = config(project);
+	var describe = require('./tools/design.js').Request(project, settings.Entry || 'app.js', path.join(directory, 'index.html'));
+	var url;
+
+	if (!fs.existsSync(project) || !fs.statSync(project).isDirectory())
+		fail('no project at ' + project);
+
+	/* In the repository of Elemenx the Designer is built again each time: a build left from before would be of another version. */
+	if (fs.existsSync(path.join(__dirname, 'examples', 'Builder', 'app.js'))) {
+		process.stdout.write('Elemenx design: building the Designer of the sources...\n');
+
+		require('./tools/design-site.js').Build({Output: directory});
+	}
+	else if (!fs.existsSync(path.join(directory, 'index.html'))) {
+		fail('the Designer is not in this package: design-site/ is missing (reinstall @qybercom/elemenx)');
+	}
+
+	process.stdout.write('Elemenx design: ' + project + ' (read only: the Designer keeps its changes in the browser)\n');
+
+	listen(directory, port, {Server: {
+		/* The project (its description and its files, read only), then the bundles an export of the Designer puts into its file. */
+		Request: function (request, response, pathname) {
+			var match;
+			var file;
+
+			if (describe(request, response, pathname)) return true;
+
+			match = /^\/bundles\/(elemenx\.min\.js|elemenx-ui\.min\.js)$/.exec(pathname);
+			file = match ? path.join(__dirname, 'dist', match[1]) : '';
+
+			if (!match || !fs.existsSync(file)) return false;
+
+			response.writeHead(200, {'Content-Type': 'text/javascript; charset=utf-8'});
+
+			fs.createReadStream(file).pipe(response);
+
+			return true;
+		}
+	}}, true, parsed.Options);
+
+	url = 'http://' + value(parsed.Options, 'host', undefined, '127.0.0.1') + ':' + port + '/';
+
+	if (parsed.Options.open === true)
+		openBrowser(url);
+}, {
+	Usage: ['elemenx design [project] [--port 4180] [--open]'],
+	Text: ['The Designer of the version of Elemenx the project installed, on the project: its Applications, routes, guards and Libraries as a tree, its Components in the palette and on the canvas as they run. A Component of the project opens as a copy to edit; the copies and the new pages and components stay in the storage of the browser, one place for each project: nothing is written to the files of the project.'],
+	Options: [
+		['--port <number>', 'the port (4180)'],
 		['--host <address>', 'the address it listens on (127.0.0.1)'],
 		['--open', 'opens it in the browser of the system']
 	]

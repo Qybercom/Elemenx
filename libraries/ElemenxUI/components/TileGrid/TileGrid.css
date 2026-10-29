@@ -17,14 +17,15 @@
 }
 
 /*
- * The stacks of the groups: no box of their own, but in columns (as the Start menu), where a stack is a column of
- * groups and the columns wrap, each whole, to a new row when the grid is narrower than they are.
+ * The stacks of the groups: no box of their own in one row (horizontal); otherwise a stack is a column of groups (a
+ * group alone, until a group goes above or below it) and the stacks wrap, each whole, to a new row when the grid is
+ * narrower than they are.
  */
 .elemenx-tile-stack {
 	display: contents;
 }
 
-.elemenx-tile-grid.columns .elemenx-tile-stack {
+.elemenx-tile-grid.stacks .elemenx-tile-stack {
 	position: relative;
 	display: flex;
 	flex-direction: column;
@@ -68,13 +69,10 @@
 	min-width: 0;
 	margin: 0;
 	padding: 0 4px;
-	overflow: hidden;
 	color: var(--elemenx-text-muted);
 	font-size: var(--elemenx-font-size);
 	line-height: var(--elemenx-line-height);
 	font-weight: var(--elemenx-font-weight-strong);
-	text-overflow: ellipsis;
-	white-space: nowrap;
 }
 
 .elemenx-tile-group-actions {
@@ -293,12 +291,9 @@
 
 .elemenx-tile-title {
 	position: relative;
-	overflow: hidden;
 	font-size: var(--elemenx-font-size-small);
 	line-height: var(--elemenx-line-height-small);
 	font-weight: var(--elemenx-font-weight-strong);
-	text-overflow: ellipsis;
-	white-space: nowrap;
 }
 
 .elemenx-tile-badge {
@@ -369,8 +364,8 @@
 	border-radius: var(--elemenx-radius-large);
 }
 
-/* In columns: a new group above a group, below the last one of a column, or a new column beside a column. */
-.elemenx-tile-grid.columns .elemenx-tile-gap {
+/* In stacks: a new group above a group, below the last one of a stack, or a new stack beside a stack. */
+.elemenx-tile-grid.stacks .elemenx-tile-gap {
 	top: -24px;
 	bottom: auto;
 	inset-inline-start: 0;
@@ -387,12 +382,17 @@
 	padding-bottom: 152px;
 }
 
-.elemenx-tile-grid.columns .elemenx-tile-gap.below {
+/* In wrap the room under the lowest tile of a group is the group's: the place of a new group under it is a strip. */
+.elemenx-tile-grid.stacks .elemenx-tile-gap.below {
 	top: calc(100% + 8px);
+	height: 16px;
+}
+
+.elemenx-tile-grid.columns .elemenx-tile-gap.below {
 	height: 136px;
 }
 
-.elemenx-tile-grid.columns .elemenx-tile-gap.side {
+.elemenx-tile-grid.stacks .elemenx-tile-gap.side {
 	top: 0;
 	bottom: 0;
 	inset-inline-start: -24px;
@@ -401,7 +401,7 @@
 	height: auto;
 }
 
-.elemenx-tile-grid.columns .elemenx-tile-gap.side.after {
+.elemenx-tile-grid.stacks .elemenx-tile-gap.side.after {
 	inset-inline-start: auto;
 	inset-inline-end: -24px;
 }

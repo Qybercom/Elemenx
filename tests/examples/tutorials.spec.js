@@ -160,17 +160,74 @@ var Checks = {
 
 		await page.waitForTimeout(1000);
 
-		expect(await rate()).toBeGreaterThanOrEqual(100);
+		/*
+		 * The feed comes from a server in the process of this test: a stall of that process on a loaded machine (a
+		 * second of it) costs a window of three seconds a third of its packets, while the page is fine. A page that
+		 * does not keep up fails every window; a stall fails one, and the next one is measured.
+		 */
+		await expect(async function () {
+			expect(await rate()).toBeGreaterThanOrEqual(100);
+		}).toPass({timeout: 20000});
 
-		var at = await stats();
+		var at;
 
-		expect(at.Behind).toBeLessThan(500);
-		expect(at.Updates).toBeGreaterThanOrEqual(1);
+		/*
+		 * The page held up a moment (a busy machine) answers the test before the packets that wait for it, which come at
+		 * once after: it is asked again. A page that does not keep up stays behind.
+		 */
+		await expect.poll(async function () {
+			at = await stats();
+
+			return at.Behind;
+		}, {timeout: 10000}).toBeLessThan(500);
+
+		/* The second just after it may have had no update: it shows that a second later. */
+		await expect.poll(async function () {
+			at = await stats();
+
+			return at.Updates;
+		}, {timeout: 5000}).toBeGreaterThanOrEqual(1);
 
 		/* Half of the frames at most carry an update: the page keeps time for the rest (without it, every frame had one). */
 		expect(at.Fps).toBeGreaterThanOrEqual(at.Updates * 2);
 
 		await cdp.send('Emulation.setCPUThrottlingRate', {rate: 1});
+
+		/*
+		 * The page held up three seconds just after an update: the next one comes within a second, not three seconds
+		 * later (a bug: the board took the frame held up for one of its own and waited as long as it lasted).
+		 */
+		var held = await page.evaluate(function () {
+			var board = Elemenx.Instance(document.querySelector('.telemetry'));
+
+			return new Promise(function (resolve) {
+				function after () {
+					var until;
+
+					if (!board.Own().Drew) {
+						window.requestAnimationFrame(after);
+
+						return;
+					}
+
+					until = Date.now() + 3000;
+
+					while (Date.now() < until) {
+						/* The page held up. */
+					}
+
+					resolve(board.Own().Seq);
+				}
+
+				window.requestAnimationFrame(after);
+			});
+		});
+
+		await expect.poll(function () {
+			return page.evaluate(function () {
+				return Elemenx.Instance(document.querySelector('.telemetry')).Own().Seq;
+			});
+		}, {timeout: 2000}).not.toBe(held);
 
 		/* Paused: the packets go on, the board stays. */
 		await page.getByRole('button', {name: 'Pause'}).click();

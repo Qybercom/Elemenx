@@ -1,5 +1,5 @@
 <div class="elemenx-commit-graph" [class]="[Layout === 'scheme' ? 'scheme' : 'list']">
-	<div class="elemenx-commit-graph-body" #Body *if="Layout !== 'scheme'" role="listbox" tabindex="0" [attribute.aria-label]="Label || $T('ui.commitGraph.label')" [attribute.aria-activedescendant]="Selected === null ? null : 'elemenx-commit-' + Selected" [style.height]="Height === 'auto' ? null : Height + 'px'" (scroll)="Scrolled" (keydown)="Keyed">
+	<div class="elemenx-commit-graph-body elemenx-focus-ring" #Body *if="Layout !== 'scheme'" role="listbox" tabindex="0" [attribute.aria-label]="Label || $T('ui.commitGraph.label')" [attribute.aria-activedescendant]="Selected === null ? null : 'elemenx-commit-' + Selected" [style.height]="Height === 'auto' ? null : Height + 'px'" (scroll)="Scrolled" (keydown)="Keyed">
 		<div class="elemenx-commit-graph-space" [style.height]="Graph(Commits).Rows.length * Row + 'px'">
 			<div class="elemenx-commit-graph-row" *for="row of Visible(Commits, Top, Height)" *key="row.Commit.ID" role="option" [attribute.id]="'elemenx-commit-' + row.Commit.ID" [attribute.data-id]="row.Commit.ID" [attribute.aria-selected]="String(String(row.Commit.ID) === String(Selected))" [attribute.aria-label]="Spoken(row.Commit)" [class.selected]="String(row.Commit.ID) === String(Selected)" [style.top]="row.Index * Row + 'px'" [style.height]="Row + 'px'" (click)="Pressed" (dblclick)="Opened">
 				<svg class="elemenx-commit-graph-lanes" [attribute.width]="GraphWidth(Commits)" [attribute.height]="Row" [attribute.viewBox]="'0 0 ' + GraphWidth(Commits) + ' ' + Row" aria-hidden="true">
@@ -14,7 +14,7 @@
 			</div>
 		</div>
 	</div>
-	<div class="elemenx-commit-graph-scheme" *if="Layout === 'scheme'" role="list" tabindex="0" [attribute.aria-label]="Label || $T('ui.commitGraph.label')" (keydown)="Keyed">
+	<div class="elemenx-commit-graph-scheme elemenx-focus-ring" *if="Layout === 'scheme'" role="list" tabindex="0" [attribute.aria-label]="Label || $T('ui.commitGraph.label')" (keydown)="Keyed">
 		<svg [attribute.width]="Scheme(Commits, ShowMessages).Width" [attribute.height]="Scheme(Commits, ShowMessages).Height" [attribute.viewBox]="'0 0 ' + Scheme(Commits, ShowMessages).Width + ' ' + Scheme(Commits, ShowMessages).Height">
 			<g class="elemenx-commit-graph-scheme-lane" *for="lane of Scheme(Commits, ShowMessages).Lanes" *key="lane.Key" aria-hidden="true">
 				<line class="elemenx-commit-graph-scheme-track" [attribute.x1]="lane.From" [attribute.x2]="lane.To" [attribute.y1]="lane.Y" [attribute.y2]="lane.Y" [attribute.stroke]="lane.Color"></line>

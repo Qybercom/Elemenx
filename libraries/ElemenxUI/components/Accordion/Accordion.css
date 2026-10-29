@@ -4,6 +4,36 @@
 	gap: 8px;
 }
 
+/* A section of it shows its title on a raised band, not over a line: the line between the sections is enough. */
+.elemenx-accordion .elemenx-section {
+	gap: 0;
+}
+
+.elemenx-accordion .elemenx-section-header {
+	padding: 8px 12px;
+	border-bottom: 0;
+	border-radius: var(--elemenx-radius);
+	background: var(--elemenx-surface-raised);
+	transition: background var(--elemenx-duration) var(--elemenx-easing);
+}
+
+.elemenx-accordion .elemenx-section-header:has(.elemenx-section-toggle:hover) {
+	background: var(--elemenx-surface-hover);
+}
+
+.elemenx-accordion .elemenx-section-toggle:hover {
+	background: transparent;
+}
+
+.elemenx-accordion .elemenx-section-body {
+	padding: 12px;
+}
+
+.elemenx-accordion .elemenx-section-note {
+	margin: 0;
+	padding: 8px 12px 0;
+}
+
 .elemenx-accordion.bordered {
 	gap: 0;
 	border: 1px solid var(--elemenx-border);
@@ -12,8 +42,16 @@
 }
 
 .elemenx-accordion.bordered .elemenx-section {
-	padding: 12px 16px;
 	border-radius: 0;
+}
+
+.elemenx-accordion.bordered .elemenx-section-header {
+	padding: 10px 16px;
+	border-radius: 0;
+}
+
+.elemenx-accordion.bordered .elemenx-section-body {
+	padding: 12px 16px;
 }
 
 .elemenx-accordion.bordered .elemenx-section + .elemenx-section {

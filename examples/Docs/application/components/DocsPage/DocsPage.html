@@ -8,6 +8,21 @@
 		<div class="docs-missing" *if="Missing">{{$T('docs.missing')}}</div>
 		<div class="docs-segment" *for="segment of Segments" *key="segment.Key">
 			<Markdown *if="segment.Kind === 'text'" Look="interface" [value]="segment.Text" />
+			<section class="elemenx-card docs-tutorial" *if="segment.Key === 'text-0' && Tutorial(Current($Params), Tutorials)" [attribute.aria-label]="$T('docs.tutorial.title')">
+				<div class="docs-tutorial-head">
+					<div class="docs-tutorial-text">
+						<strong>{{$T('docs.tutorial.title')}}</strong>
+						<span class="elemenx-caption">{{Tutorial(Current($Params), Tutorials).Demo ? $T('docs.tutorial.text') : $T('docs.tutorial.server')}}</span>
+					</div>
+					<div class="docs-tutorial-actions">
+						<a class="elemenx-button secondary medium docs-tutorial-download" [attribute.href]="'/tutorials/' + Tutorial(Current($Params), Tutorials).Project + '.zip'" [attribute.download]="Tutorial(Current($Params), Tutorials).Project + '.zip'"><Icon Name="download" /><span class="elemenx-button-label">{{$T('docs.tutorial.download')}}</span></a>
+						<Button *if="Tutorial(Current($Params), Tutorials).Demo" Icon="play" [variant]="DemoOpen ? 'secondary' : 'primary'" [pressed]="DemoOpen" [loading]="DemoBusy" [label]="DemoOpen ? $T('docs.tutorial.hide') : $T('docs.tutorial.demo')" (click)="DemoToggled" />
+						<Button *if="DemoOpen && Demo" Variant="ghost" Icon="external" [label]="$T('docs.tutorial.tab')" (click)="DemoTab" />
+					</div>
+				</div>
+				<p class="docs-tutorial-failed" role="alert" *if="DemoOpen && DemoFailed">{{$T('docs.tutorial.failed')}}</p>
+				<iframe class="docs-tutorial-frame" *if="DemoOpen && Demo" [attribute.src]="Demo" [attribute.title]="$T('docs.tutorial.demo')"></iframe>
+			</section>
 			<CodeView *if="segment.Kind === 'code'" Fold="true" [language]="segment.Language" [value]="segment.Code" />
 			<DocsExample *if="segment.Kind === 'example'" [code]="segment.Code" />
 			<figure class="docs-diagram" *if="segment.Kind === 'diagram'" *mount="Diagram(segment.Code)"></figure>

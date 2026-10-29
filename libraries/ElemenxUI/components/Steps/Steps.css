@@ -82,11 +82,6 @@
 	box-shadow: 0 0 0 4px rgba(var(--elemenx-step-rgb), 0.24);
 }
 
-.elemenx-step-node:focus-visible {
-	outline: 2px solid var(--elemenx-focus);
-	outline-offset: 2px;
-}
-
 .elemenx-step-text {
 	display: flex;
 	flex-direction: column;
@@ -127,7 +122,6 @@
 .elemenx-step:last-child::after {
 	display: none;
 }
-
 
 
 .elemenx-steps.horizontal {

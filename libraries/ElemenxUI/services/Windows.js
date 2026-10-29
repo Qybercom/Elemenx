@@ -16,7 +16,7 @@ Elemenx.Service('Windows', {
 
 	$OnCreate: function () {
 		this.Stack = [];
-		this.Listeners = [];
+		this.Listeners = this.$Service('ElemenxHelpers').Listeners();
 		this.Cascade = 0;
 		this.Current = null;
 	},
@@ -102,20 +102,14 @@ Elemenx.Service('Windows', {
 	},
 
 	OnChange: function (callback) {
-		this.Listeners.push(callback);
-
-		return callback;
+		return this.Listeners.On(callback);
 	},
 
 	OffChange: function (callback) {
-		this.Listeners = this.Listeners.filter(function (item) {
-			return item !== callback;
-		});
+		this.Listeners.Off(callback);
 	},
 
 	Changed: function () {
-		this.Listeners.slice().forEach(function (callback) {
-			callback();
-		});
+		this.Listeners.Tell();
 	}
 });

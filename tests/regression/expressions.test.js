@@ -25,6 +25,12 @@ describe('Builder: precompiled expressions', function () {
 		], ['<template id="t"><b *if="ok">{{ $T(\'a.b\') }}</b></template>'])).toEqual(['$T(\'a.b\')', '0', '[a, b]', 'i < n', 'i++', 'list', 'ok', 'row.Cell', 't', 'x.Name', 'y > 2']);
 	});
 
+	it('takes the (events) that are expressions, not the names of handlers, and leaves out a {{ escaped as \\{{', function () {
+		expect(sources([
+			"Elemenx.Component('D', {$Template: '<p (click)=\"Open = !Open\" (input)=\" Typed \" (pick)=\"Pick(row, $event)\" title=\"\\\\{{raw}} {{t}}\">\\\\{{shown}}</p>'});"
+		], [])).toEqual(['Open = !Open', 'Pick(row, $event)', 't']);
+	});
+
 	it('leaves out what is not an expression, and gives nothing for templates without one', function () {
 		expect(sources(["Elemenx.Component('B', {$Template: '<p *for=\"x of\">{{ ) }}</p>'});"], [])).toEqual([]);
 		expect(Expressions.Render(["Elemenx.Component('C', {$Template: '<p>Plain</p>'});"], [])).toBe('');

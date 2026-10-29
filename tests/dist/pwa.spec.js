@@ -106,7 +106,8 @@ test.describe('elemenx build with PWA', function () {
 		function build (text) {
 			var original = process.stdout.write;
 
-			fs.appendFileSync(path.join(folder, 'app.js'), '\n/* ' + text + ' */\n');
+			/* Code, not a comment: a build is minified, and a comment changes nothing of it. */
+			fs.appendFileSync(path.join(folder, 'app.js'), '\nwindow.BuildMark = ' + JSON.stringify(text) + ';\n');
 
 			process.stdout.write = function () {
 				return true;

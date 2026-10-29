@@ -236,7 +236,8 @@
 				"game": "Game",
 				"tools": "Designer",
 				"other": "Other",
-				"project": "Project"
+				"project": "Project",
+				"files": "Project files"
 			},
 			"kinds": {
 				"row": "Row",
@@ -754,6 +755,22 @@
 		},
 		"tabs": {
 			"close": "Close tab"
+		},
+		"tabGroup": {
+			"closeOthers": "Close others",
+			"closeRight": "Close to the right",
+			"closeLeft": "Close to the left",
+			"closeAll": "Close all",
+			"pin": "Pin",
+			"unpin": "Unpin",
+			"pinned": "Pinned",
+			"splitRight": "Split right",
+			"splitLeft": "Split left",
+			"splitDown": "Split down",
+			"splitUp": "Split up"
+		},
+		"tabSplit": {
+			"divider": "Divider between groups of tabs"
 		},
 		"tagInput": {
 			"placeholder": "Add a tag"

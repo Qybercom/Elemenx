@@ -1,0 +1,4 @@
+/* A part of a layout declared in a TabSplit: the TabSplit reads it, and it shows nothing of its own. */
+.elemenx-tab-row {
+	display: contents;
+}

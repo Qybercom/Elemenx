@@ -1,4 +1,4 @@
-<section class="elemenx-consent" role="dialog" aria-modal="false" [class]="[Placement || 'bottom', Editing ? 'editing' : '']" [attribute.hidden]="Shown ? null : ''" [attribute.aria-labelledby]="TitleID">
+<section class="elemenx-consent" *layer="Placement !== 'inline'" role="dialog" aria-modal="false" [class]="[Placement || 'bottom', Editing ? 'editing' : '']" [attribute.hidden]="Shown ? null : ''" [attribute.aria-labelledby]="TitleID">
 	<div class="elemenx-consent-body">
 		<h2 class="elemenx-consent-title" [attribute.id]="TitleID">{{Title || $T('ui.consent.title')}}</h2>
 		<div class="elemenx-consent-text"><slot></slot><p *if="Text">{{Text}}</p></div>

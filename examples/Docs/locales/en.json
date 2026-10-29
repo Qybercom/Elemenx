@@ -11,6 +11,16 @@
 		"onPage": "On this page",
 		"search": "Search the reference",
 		"searching": "Searching…",
-		"nothing": "Nothing found."
+		"nothing": "Nothing found.",
+		"tutorial": {
+			"title": "The finished project",
+			"text": "Download it, then npm install and npm run dev; or try it here.",
+			"server": "It runs with a server of its own: download it, then npm install and npm run dev.",
+			"download": "Download the project (.zip)",
+			"demo": "Show the demo",
+			"hide": "Hide the demo",
+			"tab": "Open in a new tab",
+			"failed": "The demo did not load."
+		}
 	}
 }

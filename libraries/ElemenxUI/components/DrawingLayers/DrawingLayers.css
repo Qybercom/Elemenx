@@ -15,6 +15,7 @@
 }
 
 .elemenx-drawing-layer {
+	--elemenx-focus-offset: -2px;
 	display: flex;
 	align-items: center;
 	gap: 2px;
@@ -37,11 +38,6 @@
 	box-shadow: inset 3px 0 0 var(--elemenx-accent);
 }
 
-.elemenx-drawing-layer:focus-visible {
-	outline: 2px solid var(--elemenx-focus);
-	outline-offset: -2px;
-}
-
 .elemenx-drawing-layer.hidden .elemenx-drawing-layer-name {
 	color: var(--elemenx-text-muted);
 }
@@ -53,11 +49,8 @@
 	width: 28px;
 	height: 28px;
 	padding: 0;
-	border: 0;
 	border-radius: var(--elemenx-radius);
-	background: transparent;
 	color: var(--elemenx-text-muted);
-	cursor: pointer;
 }
 
 .elemenx-drawing-layer-toggle:hover:not(:disabled) {
@@ -71,9 +64,6 @@
 .elemenx-drawing-layer-name {
 	flex: 1;
 	min-width: 0;
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
 }
 
 .elemenx-drawing-layer-field {

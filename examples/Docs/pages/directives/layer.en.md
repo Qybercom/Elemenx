@@ -1,0 +1,10 @@
+<!-- generated -->
+# *layer
+
+*layer puts its element in the top layer of the page (a popover of the browser) while it is in the page; *layer="Open" only while the expression is truthy. A part fixed to the viewport (a host of toasts, a tour, a window of the page, a point a menu opens at) is placed by the viewport there, wherever it is in the page: a box around it with containment (content-visibility, contain), a transform or a filter would otherwise place it by that box, and an overflow or a stacking context would cut or hide it. The element keeps its own place, size and look (elemenx-layer takes back the defaults of the browser for a popover), stays in the DOM where it is, so it takes the theme and the styles of that part of the page and its events bubble as before. An element put in the page later (a part of a *if, a component placed after it is built, one Elemenx.Cache brings back) goes in when it is there. Out of the top layer it is the element it was (no popover: the panel of a group that is part of its bar while it is not open). The last one shown is on top, and a new truthy value brings it on top again (*layer="Z": windows in the order of their stack), the focus inside it kept. A browser without popovers leaves it fixed as it was.
+
+## Tests
+
+- [*layer puts its element in the top layer, placed by the viewport inside a box with containment and a transform](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-directives.test.js#L211) — `tests/regression/library-directives.test.js`
+- [*layer="Open" is a popover only while it is true, and a new value brings it on top of the others again, the focus kept](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-directives.test.js#L222) — `tests/regression/library-directives.test.js`
+- [*layer on a part of a *if is in the top layer at the end of the task that opened it, not a frame later](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-directives.test.js#L262) — `tests/regression/library-directives.test.js`

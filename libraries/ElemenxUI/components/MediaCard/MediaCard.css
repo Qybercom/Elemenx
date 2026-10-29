@@ -1,4 +1,5 @@
 .elemenx-media-card {
+	--elemenx-focus-offset: 3px;
 	position: relative;
 	display: flex;
 	flex-direction: column;
@@ -16,11 +17,6 @@
 
 .elemenx-media-card.large {
 	width: 220px;
-}
-
-.elemenx-media-card:focus-visible {
-	outline: 2px solid var(--elemenx-focus);
-	outline-offset: 3px;
 }
 
 .elemenx-media-card-poster {
@@ -164,12 +160,9 @@
 
 .elemenx-media-card-title {
 	margin: 0;
-	overflow: hidden;
 	font-size: var(--elemenx-font-size);
 	font-weight: var(--elemenx-font-weight-strong);
 	line-height: var(--elemenx-line-height-small);
-	text-overflow: ellipsis;
-	white-space: nowrap;
 }
 
 .elemenx-media-card-subtitle,

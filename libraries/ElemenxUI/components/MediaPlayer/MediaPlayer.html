@@ -7,7 +7,7 @@
 	</div>
 	<audio class="elemenx-media-element" *if="Kind === 'audio'" [attribute.src]="Src || null" [autoplay]="Autoplay && Autoplay !== 'false'" [loop]="Loop && Loop !== 'false'" (play)="Played" (pause)="Paused" (ended)="Ended" (loadedmetadata)="Metadata" (durationchange)="Metadata" (progress)="Progress" (timeupdate)="Timed" (volumechange)="Volumed"></audio>
 	<div class="elemenx-media-controls">
-		<div class="elemenx-media-title" *if="Title">{{Title}}</div>
+		<div class="elemenx-media-title elemenx-ellipsis" *if="Title">{{Title}}</div>
 		<input class="elemenx-media-seek" type="range" min="0" step="0.1" [attribute.max]="Duration || 0" [value]="Time" [attribute.style]="Track(Time, Buffered, Duration)" [attribute.aria-label]="$T('ui.mediaPlayer.seek')" [attribute.aria-valuetext]="Clock(Time) + ' / ' + Clock(Duration)" (input)="Sought" />
 		<div class="elemenx-media-row">
 			<button type="button" class="elemenx-media-button play" [attribute.aria-label]="Playing ? $T('ui.mediaPlayer.pause') : $T('ui.mediaPlayer.play')" (click)="Toggle"><Icon [name]="Playing ? 'pause' : 'play'" /></button>

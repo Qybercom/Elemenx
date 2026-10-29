@@ -4,10 +4,10 @@
 		<button class="elemenx-facet-filter-clear" type="button" *if="Tags().length" (click)="Clear">{{$T('ui.media.clear')}}</button>
 	</div>
 	<div class="elemenx-facet-filter-chips" *if="Chips && Chips !== 'false' && Tags().length">
-		<span class="elemenx-chip elemenx-facet-filter-chip" *for="tag of Tags()" *key="tag.Key" [attribute.data-tag]="tag.Key" [attribute.data-facet]="tag.Facet" [attribute.data-value]="tag.Value === null ? '' : tag.Value">{{tag.Label}}<button type="button" class="elemenx-facet-filter-remove" [attribute.aria-label]="$T('ui.media.remove') + ' ' + tag.Label" (click)="Removed"><Icon Name="close" Size="14" /></button></span>
+		<span class="elemenx-chip elemenx-facet-filter-chip" *for="tag of Tags()" *key="tag.Key" [attribute.data-tag]="tag.Key" [attribute.data-facet]="tag.Facet" [attribute.data-value]="tag.Value === null ? '' : tag.Value">{{tag.Label}}<button type="button" class="elemenx-facet-filter-remove elemenx-bare" [attribute.aria-label]="$T('ui.media.remove') + ' ' + tag.Label" (click)="Removed"><Icon Name="close" Size="14" /></button></span>
 	</div>
 	<section class="elemenx-facet" *for="facet of Facets" *key="facet.ID" [attribute.data-facet]="facet.ID" [class.active]="Active(facet)">
-		<button class="elemenx-facet-header" type="button" [attribute.aria-expanded]="String(Expanded(facet))" (click)="Toggled">
+		<button class="elemenx-facet-header elemenx-bare" type="button" [attribute.aria-expanded]="String(Expanded(facet))" (click)="Toggled">
 			<span class="elemenx-facet-label">{{facet.Label}}</span>
 			<Icon [name]="Expanded(facet) ? 'chevron-up' : 'chevron-down'" Size="16" />
 		</button>
@@ -15,7 +15,7 @@
 			<div class="elemenx-facet-options" *if="TypeOf(facet) === 'options'">
 				<input class="elemenx-facet-search" type="search" *if="Choices(facet).length > 12" [value]="Searches[facet.ID] || ''" [attribute.placeholder]="$T('ui.media.find')" [attribute.aria-label]="$T('ui.media.find') + ' ' + facet.Label" (input)="Searched" />
 				<label class="elemenx-facet-option" *for="option of Visible(facet)" *key="option.Value" [attribute.data-value]="option.Value"><input type="checkbox" [checked]="Chosen(facet).map(String).indexOf(String(option.Value)) !== -1" (change)="Checked" /><span class="elemenx-facet-option-label">{{option.Label}}</span><span class="elemenx-facet-count" *if="Count(facet, option) !== null">{{Count(facet, option)}}</span></label>
-				<button class="elemenx-facet-more" type="button" *if="Hidden(facet)" (click)="ShowAll">{{$T('ui.media.showAll')}} ({{Hidden(facet)}})</button>
+				<button class="elemenx-facet-more elemenx-bare" type="button" *if="Hidden(facet)" (click)="ShowAll">{{$T('ui.media.showAll')}} ({{Hidden(facet)}})</button>
 			</div>
 			<div class="elemenx-facet-options" *if="TypeOf(facet) === 'choice'">
 				<label class="elemenx-facet-option" data-value=""><input type="radio" [attribute.name]="'facet-' + facet.ID" value="" [checked]="Chosen(facet) === null" (change)="Picked" /><span class="elemenx-facet-option-label">{{$T('ui.media.any')}}</span></label>

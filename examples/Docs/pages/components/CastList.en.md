@@ -51,4 +51,5 @@ The people of a title: its cast and its crew, Items [{ID, Name, Role, Image, Hre
 
 ## Tests
 
+- [CastList, DiffView, MediaHero, MediaShelf and VideoTimeline are as wide as a column of flex-start](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/inline-size-width.test.js#L39) — `tests/regression/inline-size-width.test.js`
 - [CastList: photos or avatars of the names, their roles, in a row, a grid or a list; a press opens a person](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-media.test.js#L432) — `tests/regression/library-media.test.js`

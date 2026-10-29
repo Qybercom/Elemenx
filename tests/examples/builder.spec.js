@@ -1478,4 +1478,66 @@ test.describe('Elemenx builder', function () {
 
 		expect(errors).toEqual([]);
 	});
+
+	/* elemenx design: the description of the project in the page, its files under /__project/files/ (here from the test). */
+	test('opens a project of elemenx design: its tree, its Components in the palette and on the canvas, a copy of one to edit', async function ({ page }) {
+		var errors = captureErrors(page);
+		var canvas = page.locator('.elemenx-designer-page-host');
+		var files = {
+			'Demo/components/Greeting/Greeting.js': "Elemenx.Component('Greeting', {$TemplateURL: 'Greeting.html', Name: 'World', Waved: 0, Wave: function () {\n\tthis.Waved++;\n}});\n",
+			'Demo/components/Greeting/Greeting.html': '<p class="demo-greeting" (click)="Wave">Hello, {{Name}}: {{Waved}}</p>'
+		};
+
+		await page.addInitScript(function () {
+			window.ElemenxDesign = {Name: 'Demo', Entry: 'app.js', Applications: [{Name: 'Demo', Title: 'The demo', Root: 'Demo', Component: 'Greeting', Use: ['ElemenxUI'], Routes: [{Path: '/', Component: 'Greeting', Guards: ['Open'], Redirect: ''}], Guards: ['Open']}], Components: [{Name: 'Greeting', Root: 'Demo', File: 'Demo/components/Greeting/Greeting.js', Template: 'Demo/components/Greeting/Greeting.html', Style: '', Inline: '', Description: '', Props: [{Name: 'Name', Type: 'text', Default: 'World', Description: ''}, {Name: 'Waved', Type: 'number', Default: 0, Description: ''}], Events: [], Slots: [], Methods: ['Wave']}], Services: [], Directives: [], Guards: [{Name: 'Open', Root: 'Demo', File: 'Demo/guards/Open.js', Code: 'return true;'}], Libraries: ['ElemenxUI']};
+		});
+
+		await page.route(/\/__project\/files\//, function (route) {
+			var file = decodeURIComponent(new URL(route.request().url()).pathname.substring('/__project/files/'.length));
+
+			return files[file] ? route.fulfill({status: 200, contentType: /\.js$/.test(file) ? 'text/javascript' : 'text/html', body: files[file]}) : route.fulfill({status: 404, body: 'Not Found'});
+		});
+
+		await open(page);
+
+		/* Its tree, read only; the projects of the Designer kept apart for it. */
+		await expect(page.locator('.builder-disk .elemenx-tree-row[data-id="components"]')).toContainText('Components (1)');
+		await expect(page.locator('.builder-disk .elemenx-tree-row[data-id="guards"]')).toContainText('Guards (1)');
+
+		expect(await page.evaluate(function () {
+			return [!!localStorage.getItem('elemenx-designer:projects'), Elemenx.Application('ElemenxBuilder').$Service('Designer').Project().Name];
+		})).toEqual([false, 'Demo']);
+
+		/* Its Component in the palette, and on the canvas as it runs, from its own files. */
+		await add(page, 'Greeting');
+
+		await expect(canvas.locator('.demo-greeting')).toHaveText('Hello, World: 0');
+
+		/* A copy to edit: a component of the project, its template as it is, its expressions kept. */
+		await page.locator('.builder-disk .elemenx-tree-row[data-id="components"] .elemenx-tree-twisty').click();
+		await page.locator('.builder-disk .elemenx-tree-row[data-id="component:Greeting"]').click();
+
+		await expect(page.locator('.builder-document-open[aria-selected="true"]')).toHaveText('Greeting');
+
+		expect(await page.evaluate(function () {
+			var designer = Elemenx.Application('ElemenxBuilder').$Service('Designer');
+
+			return designer.Template(false);
+		})).toBe('<p class="demo-greeting" (click)="Wave">Hello, {{Name}}: {{Waved}}</p>');
+
+		/* On the page the copy runs with the definition it came with: its state and its methods. */
+		await page.locator('.builder-document-open').filter({hasText: 'Home'}).click();
+
+		await canvas.locator('.demo-greeting').evaluate(function (element) {
+			element.click();
+		});
+
+		await expect(canvas.locator('.demo-greeting')).toHaveText('Hello, World: 1');
+
+		expect(await page.evaluate(function () {
+			return !!localStorage.getItem('elemenx-designer:projects:Demo');
+		})).toBe(true);
+
+		expect(errors).toEqual([]);
+	});
 });

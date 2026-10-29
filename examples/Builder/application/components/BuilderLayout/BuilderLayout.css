@@ -254,3 +254,22 @@ button.builder-document,
 	margin-inline-end: 12px;
 	font-weight: var(--elemenx-font-weight-bold);
 }
+
+/* The files of the project of elemenx design: read only, a note on top of their tree. */
+.builder-disk {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	padding: 8px;
+}
+
+.builder-disk-note {
+	margin: 0;
+	font-size: var(--elemenx-font-size-small);
+	color: var(--elemenx-text-muted);
+}
+
+.builder-disk-failed {
+	margin: 0;
+	color: var(--elemenx-danger);
+}

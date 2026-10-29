@@ -41,6 +41,7 @@
 }
 
 .elemenx-designer-box-side {
+	--elemenx-focus-offset: -1px;
 	box-sizing: border-box;
 	width: 44px;
 	height: 24px;
@@ -52,11 +53,6 @@
 	background: var(--elemenx-surface);
 	border: 1px solid var(--elemenx-border);
 	border-radius: var(--elemenx-radius-small);
-}
-
-.elemenx-designer-box-side:focus-visible {
-	outline: 2px solid var(--elemenx-focus);
-	outline-offset: -1px;
 }
 
 .elemenx-designer-box-side.top {
@@ -112,6 +108,7 @@
 }
 
 .elemenx-designer-style-choice {
+	--elemenx-focus-offset: 1px;
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
@@ -139,7 +136,3 @@
 	transform: rotate(90deg);
 }
 
-.elemenx-designer-style-choice:focus-visible {
-	outline: 2px solid var(--elemenx-focus);
-	outline-offset: 1px;
-}

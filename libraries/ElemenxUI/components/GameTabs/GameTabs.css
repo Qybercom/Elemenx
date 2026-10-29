@@ -71,10 +71,7 @@
 }
 
 .elemenx-game-tab-label {
-	overflow: hidden;
 	font-size: var(--elemenx-font-size-small);
 	letter-spacing: var(--elemenx-game-letter-spacing);
-	text-overflow: ellipsis;
 	text-transform: var(--elemenx-game-text-transform);
-	white-space: nowrap;
 }

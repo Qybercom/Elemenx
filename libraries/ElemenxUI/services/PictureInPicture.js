@@ -18,7 +18,7 @@ Elemenx.Service('PictureInPicture', {
 	},
 	$OnCreate: function () {
 		this.Current = null;
-		this.Listeners = [];
+		this.Listeners = this.$Service('ElemenxHelpers').Listeners();
 	},
 
 	$OnDestroy: function () {
@@ -37,22 +37,15 @@ Elemenx.Service('PictureInPicture', {
 	},
 
 	OnChange: function (callback) {
-		if (this.Listeners.indexOf(callback) === -1)
-			this.Listeners.push(callback);
+		return this.Listeners.On(callback);
 	},
 
 	OffChange: function (callback) {
-		this.Listeners = this.Listeners.filter(function (listener) {
-			return listener !== callback;
-		});
+		this.Listeners.Off(callback);
 	},
 
 	Changed: function () {
-		var state = this.Active();
-
-		this.Listeners.slice().forEach(function (listener) {
-			listener(state);
-		});
+		this.Listeners.Tell(this.Active());
 	},
 
 	Video: function (video, callback) {

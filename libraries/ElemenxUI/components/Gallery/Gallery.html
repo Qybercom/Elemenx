@@ -24,6 +24,6 @@
 		<button class="elemenx-gallery-dot" type="button" role="tab" *for="item of Items" *key="item.ID || $index" [class.active]="$index === Current(Items, Index)" [attribute.aria-selected]="String($index === Current(Items, Index))" [attribute.aria-label]="($index + 1) + ' / ' + Items.length" [attribute.tabindex]="$index === Current(Items, Index) ? 0 : -1" [attribute.data-index]="$index" (click)="Picked"></button>
 	</div>
 	<div class="elemenx-gallery-thumbs" *if="On(ShowThumbs) && Items.length > 1">
-		<button class="elemenx-gallery-thumb" type="button" *for="item of Items" *key="item.ID || $index" [class.active]="$index === Current(Items, Index)" [attribute.aria-label]="item.Title || ($index + 1) + ' / ' + Items.length" [attribute.aria-current]="$index === Current(Items, Index) ? 'true' : null" [attribute.data-index]="$index" (click)="Picked"><img [src]="item.Thumb || item.Image" alt="" draggable="false" loading="lazy" /></button>
+		<button class="elemenx-gallery-thumb elemenx-focus-ring" type="button" *for="item of Items" *key="item.ID || $index" [class.active]="$index === Current(Items, Index)" [attribute.aria-label]="item.Title || ($index + 1) + ' / ' + Items.length" [attribute.aria-current]="$index === Current(Items, Index) ? 'true' : null" [attribute.data-index]="$index" (click)="Picked"><img [src]="item.Thumb || item.Image" alt="" draggable="false" loading="lazy" /></button>
 	</div>
 </section>

@@ -40,10 +40,10 @@
  * - Project() is the project being edited: {ID, Mode, Name, Settings, Current, Tabs, Documents, Routes, Guards}. A
  *   document is {ID, Type (page or component), Name, Title (a page), Description and Props ([{Name, Type, Default,
  *   Options, Description}], a component), Slots (those its Slot elements make, '' the default one), Outlet (whether it
- *   holds the place of the pages)}; Opened() is the ID of the one being edited, Tabs those open. AddDocument(type,
- *   name), RemoveDocument(id) (not a component another document holds: Used(id) names them), Open(id) (in a tab;
- *   each document keeps its own history), Close(id) (its tab), SetDocument(id, name, value); Source(id) is the
- *   template of a document.
+ *   holds the place of the pages), Origin (the Component of the files it is a copy of, '' for none)}; Opened() is the
+ *   ID of the one being edited, Tabs those open. AddDocument(type, name), RemoveDocument(id) (not a component another
+ *   document holds: Used(id) names them), Open(id) (in a tab; each document keeps its own history), Close(id) (its
+ *   tab), SetDocument(id, name, value); Source(id) is the template of a document.
  * - The routes of an application: [{ID, Path, Page, Guards, Failed}], AddRoute(path, page), SetRoute(id, name,
  *   value), RemoveRoute(id); its guards, [{Name, Description, Code}] (Code the body of the function of the guard),
  *   AddGuard(name), SetGuard(name, field, value), RemoveGuard(name); its settings, SetSetting(name, value): Name,
@@ -56,11 +56,15 @@
  *   edited may take, but itself and those holding it; on the canvas each runs as a Component made of its document. The
  *   kind slot (a component only) marks where the component puts what it is given, the kind outlet (a component of an
  *   application) where the pages of the routes go.
+ * - A project of another place (elemenx design): Scope(name) keeps its projects apart in the storage, Extend(components)
+ *   gives its Components (group files of the palette), and Copy(name) makes one of them a component of the project to
+ *   edit (Origin its name): the nodes of its template, whose texts keep their expressions, and on the canvas the
+ *   definition it came with.
  */
 Elemenx.Service('Designer', {
 	$Meta: {
 		Description: 'The document of a designer of pages: its nodes, their props and layout, the selection, the history and the template.',
-		Methods: ['Load(callback)', 'Use(meta)', 'Ready()', 'Literal(value)', 'Parse(expression)', 'Rules()', 'Rule(context)', 'SetRule(context, property, value)', 'RootClass(id)', 'Kinds()', 'Kind(id)', 'Label(kind)', 'Hint(kind)', 'GroupLabel(group)', 'Root()', 'Find(id)', 'Parent(id)', 'Container(id)', 'Within(id, within)', 'Slots(id)', 'Insert(kind, parent, index)', 'Move(id, parent, index)', 'Remove(id)', 'Duplicate(id)', 'Set(id, name, value)', 'SetStyle(id, property, value)', 'Clear()', 'Select(id)', 'Selected()', 'Count()', 'CanUndo()', 'CanRedo()', 'Undo()', 'Redo()', 'Template(canvas, empty)', 'Import(text)', 'Project()', 'Opened()', 'Projects()', 'Create(mode, name)', 'Switch(id)', 'RemoveProject(id)', 'ExportProject()', 'ImportProject(text)', 'AddDocument(type, name)', 'RemoveDocument(id)', 'Used(id)', 'Open(id)', 'Close(id)', 'SetDocument(id, name, value)', 'AddRoute(path, page)', 'SetRoute(id, name, value)', 'RemoveRoute(id)', 'AddGuard(name)', 'SetGuard(name, field, value)', 'RemoveGuard(name)', 'SetSetting(name, value)', 'Source(id)', 'OnChange(listener)', 'OffChange(listener)']
+		Methods: ['Load(callback)', 'Use(meta)', 'Ready()', 'Literal(value)', 'Parse(expression)', 'Rules()', 'Rule(context)', 'SetRule(context, property, value)', 'RootClass(id)', 'Kinds()', 'Kind(id)', 'Label(kind)', 'Hint(kind)', 'GroupLabel(group)', 'Root()', 'Find(id)', 'Parent(id)', 'Container(id)', 'Within(id, within)', 'Slots(id)', 'Insert(kind, parent, index)', 'Move(id, parent, index)', 'Remove(id)', 'Duplicate(id)', 'Set(id, name, value)', 'SetStyle(id, property, value)', 'Clear()', 'Select(id)', 'Selected()', 'Count()', 'CanUndo()', 'CanRedo()', 'Undo()', 'Redo()', 'Template(canvas, empty)', 'Import(text)', 'Project()', 'Opened()', 'Projects()', 'Create(mode, name)', 'Switch(id)', 'RemoveProject(id)', 'ExportProject()', 'ImportProject(text)', 'AddDocument(type, name)', 'RemoveDocument(id)', 'Used(id)', 'Open(id)', 'Close(id)', 'SetDocument(id, name, value)', 'AddRoute(path, page)', 'SetRoute(id, name, value)', 'RemoveRoute(id)', 'AddGuard(name)', 'SetGuard(name, field, value)', 'RemoveGuard(name)', 'SetSetting(name, value)', 'Source(id)', 'Scope(name)', 'Extend(components)', 'Copy(name)', 'OnChange(listener)', 'OffChange(listener)']
 	},
 	Library: 'ElemenxUI',
 	StorageKey: 'elemenx-designer:document',
@@ -84,6 +88,7 @@ Elemenx.Service('Designer', {
 		var selected = null;
 		var state = 'idle';
 		var waiting = [];
+		var keys = {Storage: this.StorageKey, Project: this.ProjectKey, Projects: this.ProjectsKey};
 
 		/*
 		 * The project: its documents and the one being edited (its tree is root, kept in its Root on every change), the
@@ -97,6 +102,15 @@ Elemenx.Service('Designer', {
 		var made = 0;
 		var building = [];
 		var aliasing = false;
+		var bound = false;
+
+		/*
+		 * The Components of another place (Extend: the files of a project), as kinds of the palette in the group files, and
+		 * what a copy of each is made of (Copy): its template and its definition, by its name; the meta of the Library.
+		 */
+		var extra = [];
+		var disks = {};
+		var used = null;
 
 		/* The names of the components of an imported template, by the name HTML gives their elements (elemenx-c-<name>). */
 		var named = {};
@@ -460,12 +474,28 @@ Elemenx.Service('Designer', {
 			}
 		}
 
+		/* Runs with the texts of a copy of a Component kept as expressions, or written as text. */
+		function expressed (on, run) {
+			var saved = bound;
+
+			bound = on;
+
+			try {
+				return run();
+			}
+			finally {
+				bound = saved;
+			}
+		}
+
 		/*
 		 * The Component that shows a component of the project on the canvas, made of its document (its template with its
-		 * rules, its props with their defaults) under a name of its own, made again when what it is made of changes.
+		 * rules, its props with their defaults) under a name of its own, made again when what it is made of changes. A copy
+		 * of a Component of the files (Copy) keeps the definition it came with: its state, its methods, its style.
 		 */
 		function part (definition) {
 			var item = documentOf(definition.Project);
+			var origin = item && item.Origin && disks[item.Origin] ? disks[item.Origin].Definition : null;
 			var values = {};
 			var source;
 			var key;
@@ -475,17 +505,25 @@ Elemenx.Service('Designer', {
 			building.push(item.ID);
 
 			try {
-				source = within(treeOf(item), function () {
-					return template(false, '');
+				source = expressed(!!item.Origin, function () {
+					return within(treeOf(item), function () {
+						return template(false, '');
+					});
 				});
 			}
 			finally {
 				building.pop();
 			}
 
-			key = JSON.stringify([item.Name, item.Props, source]);
+			key = JSON.stringify([item.Name, item.Props, source, !!origin]);
 
 			if (!parts[key]) {
+				Object.keys(origin || {}).forEach(function (name) {
+					/* What it is made of, not where its template comes from: the template is the one of the copy. */
+					if (!/^\$(Template(URL|ID)?|DefinitionURL|Meta)$/.test(name))
+						values[name] = origin[name];
+				});
+
 				(item.Props || []).forEach(function (prop) {
 					var value = prop.Type === 'json' ? self.Parse(String(prop.Default || 'null')) : prop.Default;
 
@@ -667,7 +705,16 @@ Elemenx.Service('Designer', {
 				kind.Props.Modifiers = '';
 			});
 
-			kinds = kinds.concat((meta && meta.Components || []).map(component));
+			kinds = kinds.concat((meta && meta.Components || []).map(component)).concat(extra.map(function (item) {
+				var kind = component(item);
+
+				kind.Group = 'files';
+				kind.Disk = true;
+
+				return kind;
+			}));
+
+			used = meta;
 
 			refresh();
 		}
@@ -781,8 +828,11 @@ Elemenx.Service('Designer', {
 			return String(text).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 		}
 
+		/* A text of the template: a {{ of its own is written as text, but not in a copy of a Component, whose texts keep their expressions (bound). */
 		function text (value) {
-			return String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\{\{/g, '{{ \'{{\' }}');
+			var written = String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+			return bound ? written : written.replace(/\{\{/g, '{{ \'{{\' }}');
 		}
 
 		/* The layout of a node as a style: its properties in the order of Layout, those of a flex container in one only. */
@@ -949,6 +999,9 @@ Elemenx.Service('Designer', {
 
 				result.push(name + '="' + escape(value === true ? 'true' : value === false ? 'false' : value) + '"');
 			});
+
+			if (bound && node.Bound)
+				result.push(node.Bound);
 
 			return result.length ? ' ' + result.join(' ') : '';
 		}
@@ -1343,6 +1396,20 @@ Elemenx.Service('Designer', {
 				});
 			}
 
+			/* In a copy of a Component its events, directives and bindings to its state stay as they are (Bound), the props they set at their defaults. */
+			if (bound)
+				node.Bound = Array.prototype.filter.call(element.attributes, function (attribute) {
+					return /^[(*]/.test(attribute.name) || (/^\[.+\]$/.test(attribute.name) && self.Parse(attribute.value) === undefined);
+				}).map(function (attribute) {
+					var field = definition.Fields.filter(function (item) {
+						return '[' + item.Name.toLowerCase() + ']' === attribute.name;
+					})[0];
+					if (field)
+						node.Props[field.Name] = field.Default !== undefined ? field.Default : field.Type === 'bool' ? false : field.Type === 'number' ? null : '';
+
+					return attribute.name + '="' + escape(attribute.value) + '"';
+				}).join(' ');
+
 			if (bodyOf(definition) && !element.hasAttribute(bodyOf(definition).Name.toLowerCase()) && !element.hasAttribute('[' + bodyOf(definition).Name.toLowerCase() + ']') && element.textContent.trim())
 				node.Props[bodyOf(definition).Name] = dedent(element.textContent.split('{{ \'{{\' }}').join('{{'));
 
@@ -1683,6 +1750,9 @@ Elemenx.Service('Designer', {
 				if (kind.ID === 'outlet')
 					return opened().Type === 'component' && project.Mode === 'application';
 
+				/* A Component of the files the project has a copy of: the copy is the one shown. */
+				if (byID[kind.ID] !== kind) return false;
+
 				return !kind.Project || (project.Mode === 'application' && usable(kind));
 			});
 
@@ -1962,20 +2032,25 @@ Elemenx.Service('Designer', {
 			return css && body ? css + '\n' + body : css || body;
 		}
 
-		/* On the canvas the components of the project are the Components made of their documents (part). */
+		/*
+		 * On the canvas the components of the project are the Components made of their documents (part); out of it the
+		 * texts of a copy of a Component keep their expressions.
+		 */
 		this.Template = function (canvas, empty) {
 			aliasing = !!canvas;
 
 			try {
-				return template(canvas, empty);
+				return expressed(!canvas && !!opened().Origin, function () {
+					return template(canvas, empty);
+				});
 			}
 			finally {
 				aliasing = false;
 			}
 		};
 
-		/* Reads a template into the document, in place of what it held; false when the text holds no element. */
-		this.Import = function (source) {
+		/* The nodes and the rules of a template, as Import reads it; null when the text holds no element. */
+		function parsed (source) {
 			var template = document.createElement('template');
 			var nodes;
 			var elements;
@@ -2023,12 +2098,19 @@ Elemenx.Service('Designer', {
 
 			marks = [];
 
-			if (!elements.length) return false;
+			return elements.length ? {Nodes: nodes, Rules: read} : null;
+		}
+
+		/* Reads a template into the document, in place of what it held; false when the text holds no element. */
+		this.Import = function (source) {
+			var result = parsed(source);
+			if (!result)
+				return false;
 
 			remember();
 
-			root.Children = nodes;
-			root.Rules = read;
+			root.Children = result.Nodes;
+			root.Rules = result.Rules;
 			selected = null;
 
 			changed();
@@ -2116,7 +2198,7 @@ Elemenx.Service('Designer', {
 				Current: project.Current,
 				Tabs: project.Tabs.slice(),
 				Documents: project.Documents.map(function (item) {
-					return {ID: item.ID, Type: item.Type, Name: item.Name, Title: item.Title || '', Description: item.Description || '', Props: clone(item.Props || []), Slots: slotsOf(treeOf(item)), Outlet: holdsOutlet(treeOf(item))};
+					return {ID: item.ID, Type: item.Type, Name: item.Name, Title: item.Title || '', Description: item.Description || '', Props: clone(item.Props || []), Slots: slotsOf(treeOf(item)), Outlet: holdsOutlet(treeOf(item)), Origin: item.Origin || ''};
 				}),
 				Routes: clone(project.Routes),
 				Guards: clone(project.Guards)
@@ -2606,9 +2688,70 @@ Elemenx.Service('Designer', {
 			if (!item)
 				return '';
 
-			return within(treeOf(item), function () {
-				return template(false, '');
+			return expressed(!!item.Origin, function () {
+				return within(treeOf(item), function () {
+					return template(false, '');
+				});
 			});
+		};
+
+		/*
+		 * Components of another place, kinds of the palette in the group files beside those of the Library: each as
+		 * Elemenx.Meta gives it ({Name, Description, Props, Slots, Container, Events}), with its Template (the text) and
+		 * its Definition (the one its file declares), what a copy of it is made of. Extend([]) takes them away.
+		 */
+		this.Extend = function (components) {
+			extra = [].concat(components || []).filter(function (item) {
+				return item && /^[A-Z][A-Za-z0-9]*$/.test(item.Name || '');
+			});
+			disks = {};
+
+			extra.forEach(function (item) {
+				disks[item.Name] = {Template: String(item.Template || ''), Definition: item.Definition || null, Meta: item};
+			});
+
+			prepare(used);
+
+			notify();
+		};
+
+		/*
+		 * A Component of the files (Extend) as a component of the project (an application), to edit: its name, its
+		 * description and its props, the nodes of its template, and on the canvas the definition it came with. Its ID, the
+		 * one of the copy there is when the project has it; null when there is no such Component. It is not opened.
+		 */
+		this.Copy = function (name) {
+			var source = disks[name];
+			var item = project.Documents.filter(function (entry) {
+				return entry.Type === 'component' && entry.Name === name;
+			})[0];
+			var read;
+
+			if (item)
+				return item.ID;
+
+			if (!source || project.Mode !== 'application') return null;
+
+			read = expressed(true, function () {
+				return parsed(source.Template);
+			}) || {Nodes: [], Rules: []};
+
+			item = {ID: 'd' + (Math.max.apply(Math, project.Documents.map(function (entry) {
+				return Number(String(entry.ID).substring(1)) || 0;
+			})) + 1), Type: 'component', Name: name, Title: '', Description: source.Meta.Description || '', Props: (source.Meta.Props || []).map(function (prop) {
+				var type = ['bool', 'number', 'text', 'select'].indexOf(prop.Type) !== -1 ? prop.Type : 'json';
+
+				return {Name: prop.Name, Type: type, Default: type === 'json' ? self.Literal(prop.Default) : prop.Default, Options: (prop.Options || []).slice(), Description: prop.Description || ''};
+			}), Root: fresh(), Origin: name};
+
+			item.Root.Children = read.Nodes;
+			item.Root.Rules = read.Rules;
+
+			project.Documents.push(item);
+
+			changed();
+
+			return item.ID;
 		};
 
 		this.OnChange = function (listener) {
@@ -2621,40 +2764,65 @@ Elemenx.Service('Designer', {
 				listeners.splice(index, 1);
 		};
 
-		/* The projects and the document as they were left: the document is the one of the project being edited. */
-		try {
-			store = JSON.parse(window.localStorage.getItem(this.ProjectsKey) || 'null');
+		/*
+		 * The projects of another place apart from the others (a project of elemenx design): the keys of the storage end
+		 * with :name ('' for the ones of every place), and the projects and the document are read again from there; the
+		 * first project of a place with none is an application of that name.
+		 */
+		this.Scope = function (name) {
+			var scope = String(name || '').trim();
 
-			/* A project kept before there were several: it becomes the first of them. */
-			if (!store && window.localStorage.getItem(this.ProjectKey)) {
-				old = upgrade(JSON.parse(window.localStorage.getItem(this.ProjectKey)));
-				old.ID = old.ID || identity();
-				store = {Current: old.ID, Projects: {}};
-				store.Projects[old.ID] = old;
+			self.StorageKey = keys.Storage + (scope ? ':' + scope : '');
+			self.ProjectKey = keys.Project + (scope ? ':' + scope : '');
+			self.ProjectsKey = keys.Projects + (scope ? ':' + scope : '');
+
+			restore(scope);
+
+			refresh();
+
+			notify();
+		};
+
+		/* The projects and the document as they were left: the document is the one of the project being edited. */
+		function restore (scope) {
+			try {
+				store = JSON.parse(window.localStorage.getItem(self.ProjectsKey) || 'null');
+
+				/* A project kept before there were several: it becomes the first of them. */
+				if (!store && window.localStorage.getItem(self.ProjectKey)) {
+					old = upgrade(JSON.parse(window.localStorage.getItem(self.ProjectKey)));
+					old.ID = old.ID || identity();
+					store = {Current: old.ID, Projects: {}};
+					store.Projects[old.ID] = old;
+				}
+
+				if (!store || !store.Projects || !valid(store.Projects[store.Current]))
+					throw new Error('Elemenx designer projects are not there');
+
+				project = upgrade(clone(store.Projects[store.Current]));
+				root = window.localStorage.getItem(self.StorageKey) ? JSON.parse(window.localStorage.getItem(self.StorageKey)) : opened() && opened().Root || fresh();
+			}
+			catch (error) {
+				store = {Current: '', Projects: {}};
+				project = scope ? blank('application', scope) : blank('template', '');
+				root = fresh();
 			}
 
-			if (!store || !store.Projects || !valid(store.Projects[store.Current]))
-				throw new Error('Elemenx designer projects are not there');
+			if (!opened())
+				project.Current = project.Documents[0].ID;
 
-			project = upgrade(clone(store.Projects[store.Current]));
+			opened().Root = root;
+			histories = {};
+			past = [];
+			future = [];
+			selected = null;
 
-			if (window.localStorage.getItem(this.StorageKey))
-				root = JSON.parse(window.localStorage.getItem(this.StorageKey));
+			project.Documents.forEach(function (item) {
+				next = Math.max(next, highest(treeOf(item)) + 1);
+			});
 		}
-		catch (error) {
-			store = {Current: '', Projects: {}};
-			project = blank('template', '');
-			root = fresh();
-		}
 
-		if (!opened())
-			project.Current = project.Documents[0].ID;
-
-		opened().Root = root;
-
-		project.Documents.forEach(function (item) {
-			next = Math.max(next, highest(treeOf(item)) + 1);
-		});
+		restore('');
 
 		prepare(null);
 	}

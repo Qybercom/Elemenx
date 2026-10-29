@@ -33,32 +33,14 @@ Elemenx.Component('Markdown', {
 	$OnCreate: function () {
 		var self = this;
 		var source = null;
+		var helpers = this.$Service('ElemenxHelpers');
 
 		/*
 		 * The text of the body: its lines without the indentation they all share, and without the blank lines around them,
 		 * so a text indented as the template around it reads as it was written.
 		 */
 		function bodyText (node) {
-			var lines = String(node ? node.textContent : '').replace(/\r\n?/g, '\n').split('\n');
-			var indent = null;
-
-			while (lines.length && !lines[0].trim()) {
-				lines.shift();
-			}
-
-			while (lines.length && !lines[lines.length - 1].trim()) {
-				lines.pop();
-			}
-
-			lines.forEach(function (line) {
-				var lead = /^[ \t]*/.exec(line)[0];
-				if (line.trim() && (indent === null || lead.length < indent.length))
-					indent = lead;
-			});
-
-			return lines.map(function (line) {
-				return indent && line.indexOf(indent) === 0 ? line.substring(indent.length) : line.replace(/^[ \t]+$/, '');
-			}).join('\n');
+			return helpers.BodyText(node);
 		}
 
 		/* What renders nothing: the place of the body, kept out of state. */

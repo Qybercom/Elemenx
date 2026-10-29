@@ -14,6 +14,7 @@
 }
 
 .elemenx-product-favorite {
+	--elemenx-focus-offset: 0px;
 	position: absolute;
 	top: 8px;
 	inset-inline-end: 8px;
@@ -34,10 +35,6 @@
 
 .elemenx-product-favorite:hover {
 	color: var(--elemenx-danger);
-}
-
-.elemenx-product-favorite:focus-visible {
-	outline: 2px solid var(--elemenx-focus);
 }
 
 .elemenx-product-favorite.on {
@@ -94,11 +91,6 @@
 
 .elemenx-product-dot.active {
 	background: var(--elemenx-accent);
-}
-
-.elemenx-product-dot:focus-visible {
-	outline: 2px solid var(--elemenx-focus);
-	outline-offset: 2px;
 }
 
 .elemenx-product-brand {
@@ -160,12 +152,8 @@
 	box-shadow: 0 0 0 2px var(--elemenx-accent);
 }
 
-.elemenx-product-color:focus-visible {
-	outline: 2px solid var(--elemenx-focus);
-	outline-offset: 2px;
-}
-
 .elemenx-product-size {
+	--elemenx-focus-offset: 0px;
 	min-width: var(--elemenx-control);
 	height: var(--elemenx-control-small);
 	padding: 0 8px;
@@ -187,10 +175,6 @@
 	background: var(--elemenx-accent);
 	border-color: var(--elemenx-accent);
 	color: var(--elemenx-accent-text);
-}
-
-.elemenx-product-size:focus-visible {
-	outline: 2px solid var(--elemenx-focus);
 }
 
 .elemenx-product-footer {

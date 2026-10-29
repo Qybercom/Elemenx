@@ -169,6 +169,14 @@
 			<DesignerProject [settings]="Settings" (open)="Opened" (settings)="Configured" />
 		</WorkspaceToolWindow>
 
+		<WorkspaceToolWindow slot="tools" ID="disk" Icon="folder-open" Area="left" Open="true" *if="OnDisk()" [title]="$T('builder.disk.title')">
+			<div class="builder-disk">
+				<p class="builder-disk-note">{{$T('builder.disk.note')}}</p>
+				<p class="builder-disk-failed" role="alert" *if="DiskFailed">{{DiskFailed}}</p>
+				<Tree [items]="DiskTree(Version, Language)" [label]="$T('builder.disk.title')" (select)="DiskPicked" />
+			</div>
+		</WorkspaceToolWindow>
+
 		<WorkspaceToolWindow slot="tools" ID="structure" Icon="tree" Area="left" Open="true" [title]="$T('builder.structure')">
 			<DesignerTree />
 		</WorkspaceToolWindow>

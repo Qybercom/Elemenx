@@ -1,4 +1,4 @@
-<div class="elemenx-ribbon-backstage" role="dialog" aria-modal="true" [attribute.aria-label]="(Title || $T('ui.ribbonBackstage.title'))" (keydown)="Key">
+<div class="elemenx-ribbon-backstage" *layer role="dialog" aria-modal="true" [attribute.aria-label]="(Title || $T('ui.ribbonBackstage.title'))" (keydown)="Key">
 	<nav class="elemenx-column elemenx-ribbon-backstage-nav">
 		<button class="elemenx-ribbon-backstage-back" type="button" [attribute.aria-label]="$T('ui.common.back')" [attribute.title]="$T('ui.common.back') + ' (Escape)'" (click)="Back"><Icon Name="arrow-left" Size="24" /></button>
 		<button class="elemenx-ribbon-backstage-item" type="button" *for="page of Pages" *key="page.ID" [class.active]="!page.Command && page.ID === Shown(Page, Pages)" [class.command]="page.Command" [attribute.aria-current]="!page.Command && page.ID === Shown(Page, Pages) ? 'page' : null" [attribute.data-id]="page.ID" (click)="Choose">

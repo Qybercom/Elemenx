@@ -138,7 +138,7 @@ Elemenx.Component('GameInventory', {
 
 	/*
 	 * Shows the card of the item of a cell next to it, on the side with room. The card is fixed to the viewport, so a
-	 * window or a panel that scrolls its content does not cut it; it follows the cell when the page scrolls.
+	 * window or a panel that scrolls its content does not cut it; it follows the cell when the page scrolls or moves it.
 	 */
 	ShowCard: function (index) {
 		var self = this;
@@ -162,6 +162,15 @@ Elemenx.Component('GameInventory', {
 			own.View = (this.$Element().ownerDocument || document).defaultView || window;
 
 			own.View.addEventListener('scroll', own.Scroll, true);
+
+			/* The page moves the cell without a scroll too (a part above it renders later): the card looks at each frame. */
+			own.Follow = function () {
+				own.Scroll();
+
+				own.Frame = own.View.requestAnimationFrame(own.Follow);
+			};
+
+			own.Frame = own.View.requestAnimationFrame(own.Follow);
 		}
 
 		this.CardStyle = this.$Service('GameItems').Place(cell);
@@ -173,6 +182,7 @@ Elemenx.Component('GameInventory', {
 
 		if (own.Scroll) {
 			(own.View || window).removeEventListener('scroll', own.Scroll, true);
+			(own.View || window).cancelAnimationFrame(own.Frame);
 
 			own.Scroll = null;
 		}

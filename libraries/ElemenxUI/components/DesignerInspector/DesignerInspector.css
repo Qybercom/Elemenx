@@ -72,6 +72,7 @@
 }
 
 .elemenx-designer-list-input {
+	--elemenx-focus-offset: -1px;
 	box-sizing: border-box;
 	width: 100%;
 	height: 26px;
@@ -83,11 +84,6 @@
 	border-radius: var(--elemenx-radius-small);
 }
 
-.elemenx-designer-list-input:focus-visible {
-	outline: 2px solid var(--elemenx-focus);
-	outline-offset: -1px;
-}
-
 .elemenx-designer-list-actions {
 	display: flex;
 	align-items: flex-end;
@@ -95,6 +91,7 @@
 }
 
 .elemenx-designer-list-button {
+	--elemenx-focus-offset: 1px;
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
@@ -115,11 +112,6 @@
 	color: var(--elemenx-text);
 	background: var(--elemenx-surface-hover);
 	border-color: var(--elemenx-border);
-}
-
-.elemenx-designer-list-button:focus-visible {
-	outline: 2px solid var(--elemenx-focus);
-	outline-offset: 1px;
 }
 
 .elemenx-designer-list-add {

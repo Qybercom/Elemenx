@@ -1,7 +1,7 @@
 <section class="elemenx-column elemenx-terminal" [attribute.aria-label]="Title || $T('ui.terminal.title')" [class.busy]="Busy">
 	<header class="elemenx-container elemenx-terminal-header">
 		<Icon Name="terminal" />
-		<span class="elemenx-terminal-title">{{Title}}</span>
+		<span class="elemenx-terminal-title elemenx-ellipsis">{{Title}}</span>
 		<span class="elemenx-terminal-actions"><slot name="actions"></slot></span>
 	</header>
 	<div class="elemenx-terminal-find" *if="Finding"><FindBar Autofocus="true" [query]="FindQuery" [count]="FindCount" [index]="FindIndex" CanReplace="false" (find)="BarFind" (next)="BarNext" (previous)="BarPrevious" (close)="CloseFind" /></div>

@@ -37,7 +37,10 @@ describe('Contract: the Directives of ElemenxUI', function () {
 	beforeAll(async function () {
 		await loadElemenx();
 
-		Use(['*modal', '*hotkey', '*resizable', '*draggable', '*droppable', '*itemcard']);
+		Use(['*modal', '*hotkey', '*resizable', '*draggable', '*droppable', '*itemcard', '*layer']);
+
+		/* As the stylesheet of the library: an element of *layer keeps its own place, not the one of a popover. */
+		document.head.appendChild(document.createElement('style')).textContent = ':where(.elemenx-layer[popover]) { inset: auto; margin: 0; }';
 	});
 
 	beforeEach(function () {
@@ -203,5 +206,97 @@ describe('Contract: the Directives of ElemenxUI', function () {
 		expect(Array.prototype.some.call(document.querySelectorAll('.elemenx-game-inventory-card'), function (node) {
 			return node.matches(':popover-open') && node.textContent.indexOf('Stone') !== -1;
 		})).toBe(false);
+	});
+
+	it('*layer puts its element in the top layer, placed by the viewport inside a box with containment and a transform', async function () {
+		var host = mount('<div style="margin-top: 200px; content-visibility: auto; contain: strict; height: 50px; transform: translateX(30px)"><span class="point" *layer style="position: fixed; top: 7px; left: 9px; width: 4px; height: 4px"></span></div>');
+		var point = host.$Element().querySelector('.point');
+
+		expect(await waitFor(function () {
+			return point.matches(':popover-open');
+		})).toBe(true);
+
+		expect([Math.round(point.getBoundingClientRect().top), Math.round(point.getBoundingClientRect().left), point.classList.contains('elemenx-layer')]).toEqual([7, 9, true]);
+	});
+
+	it('*layer="Open" is a popover only while it is true, and a new value brings it on top of the others again, the focus kept', async function () {
+		var host = mount('<div><div class="a" *layer="A" style="position: fixed; top: 0; left: 0; width: 40px; height: 40px"><button class="inside">a</button></div><div class="b" *layer="B" style="position: fixed; top: 0; left: 0; width: 40px; height: 40px">b</div></div>', {
+			A: 0,
+			B: 0
+		});
+		var a = host.$Element().querySelector('.a');
+		var b = host.$Element().querySelector('.b');
+		var top = function () {
+			var node = document.elementFromPoint(20, 20);
+
+			return node && node.closest('.a, .b') ? node.closest('.a, .b').className.split(' ')[0] : null;
+		};
+
+		await tick();
+
+		expect([a.hasAttribute('popover'), b.hasAttribute('popover')]).toEqual([false, false]);
+
+		host.A = 1;
+		host.B = 2;
+
+		await tick();
+
+		expect([a.matches(':popover-open'), b.matches(':popover-open'), top()]).toEqual([true, true, 'b']);
+
+		a.querySelector('.inside').focus();
+
+		host.A = 3;
+
+		await tick();
+
+		expect(top()).toBe('a');
+		expect(document.activeElement).toBe(a.querySelector('.inside'));
+
+		host.A = 0;
+
+		await tick();
+
+		expect([a.hasAttribute('popover'), top()]).toEqual([false, 'b']);
+	});
+
+	it('*layer on a part of a *if is in the top layer at the end of the task that opened it, not a frame later', async function () {
+		var host = mount('<div><div class="sheet" *if="Open" *layer style="position: fixed; inset: 0">sheet</div></div>', {
+			Open: false
+		});
+
+		await tick();
+
+		host.Open = true;
+
+		await null;
+
+		expect(host.$Element().querySelector('.sheet').matches(':popover-open')).toBe(true);
+	});
+
+	it('*itemcard follows its element when the page moves it without a scroll (a part above that renders later)', async function () {
+		var host = mount('<div><div class="above" style="height: 10px"></div><span class="sword" tabindex="0" *itemcard="Sword" style="display: inline-block">Sword</span></div>', {
+			Sword: {Name: 'Old sword', Rarity: 'rare', Stats: [{Label: 'Damage', Value: 12}]}
+		});
+		var sword;
+		var card;
+
+		await tick();
+
+		sword = host.$Element().querySelector('.sword');
+
+		sword.focus();
+
+		card = await waitFor(function () {
+			return Array.prototype.filter.call(document.querySelectorAll('.elemenx-game-inventory-card'), function (node) {
+				return node.matches(':popover-open');
+			})[0];
+		});
+
+		host.$Element().querySelector('.above').style.height = '120px';
+
+		await frame();
+		await frame();
+
+		expect(Math.round(card.getBoundingClientRect().top)).toBe(Math.round(sword.getBoundingClientRect().top));
 	});
 });

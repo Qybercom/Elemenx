@@ -14,9 +14,10 @@ The document of a designer of pages, shared by its components (DesignerPalette, 
 - Template() is the document as a template of Elemenx, its rules first in a <style> (@media for the widths); Template(true, empty) the same for a canvas, every node in an element that names it (data-designer-id), a container marked (data-designer-container, data-designer-gap), an empty one holding the text empty (none when it is ''), and the rules inside the page of the canvas (@container for the widths).
 - Import(text) reads a template back: the kinds of the palette where an element is one, any other element as it is, and the rules of its <style> (those it does not understand kept as they are).
 - Projects, the one being edited among them, each kept in the storage of the browser (ProjectsKey): Projects() lists them, Create(mode, name) makes one of a mode that stays its own, template (one page), component (a Component with its public props and slots) or application (pages and components, routes, guards and the settings of the Application), Switch(id) edits another, RemoveProject(id) takes one away; ExportProject() is the one being edited as the text of a file, ImportProject(text) reads one back as a new project.
-- Project() is the project being edited: {ID, Mode, Name, Settings, Current, Tabs, Documents, Routes, Guards}. A document is {ID, Type (page or component), Name, Title (a page), Description and Props ([{Name, Type, Default, Options, Description}], a component), Slots (those its Slot elements make, '' the default one), Outlet (whether it holds the place of the pages)}; Opened() is the ID of the one being edited, Tabs those open. AddDocument(type, name), RemoveDocument(id) (not a component another document holds: Used(id) names them), Open(id) (in a tab; each document keeps its own history), Close(id) (its tab), SetDocument(id, name, value); Source(id) is the template of a document.
+- Project() is the project being edited: {ID, Mode, Name, Settings, Current, Tabs, Documents, Routes, Guards}. A document is {ID, Type (page or component), Name, Title (a page), Description and Props ([{Name, Type, Default, Options, Description}], a component), Slots (those its Slot elements make, '' the default one), Outlet (whether it holds the place of the pages), Origin (the Component of the files it is a copy of, '' for none)}; Opened() is the ID of the one being edited, Tabs those open. AddDocument(type, name), RemoveDocument(id) (not a component another document holds: Used(id) names them), Open(id) (in a tab; each document keeps its own history), Close(id) (its tab), SetDocument(id, name, value); Source(id) is the template of a document.
 - The routes of an application: [{ID, Path, Page, Guards, Failed}], AddRoute(path, page), SetRoute(id, name, value), RemoveRoute(id); its guards, [{Name, Description, Code}] (Code the body of the function of the guard), AddGuard(name), SetGuard(name, field, value), RemoveGuard(name); its settings, SetSetting(name, value): Name, Title, Description, Icon, Language, Theme, Router, Component (the component that holds the pages), NotFound and the splash of its page: Splash ('true' or ''), SplashImage, SplashBackground, SplashColor, SplashText, SplashSpinner, SplashMinTime and SplashHTML (its own content); and its install as an application of the system: PWA ('true' or ''), PWAShortName, PWAIcon, PWATheme, PWADisplay, PWAOffline ('true' or '') and PWAUpdate (auto, prompt or manual).
 - In an application the components of the project are kinds of the palette (group project) the document being edited may take, but itself and those holding it; on the canvas each runs as a Component made of its document. The kind slot (a component only) marks where the component puts what it is given, the kind outlet (a component of an application) where the pages of the routes go.
+- A project of another place (elemenx design): Scope(name) keeps its projects apart in the storage, Extend(components) gives its Components (group files of the palette), and Copy(name) makes one of them a component of the project to edit (Origin its name): the nodes of its template, whose texts keep their expressions, and on the canvas the definition it came with.
 
 ## Methods
 
@@ -67,6 +68,9 @@ The document of a designer of pages, shared by its components (DesignerPalette, 
 - `RemoveGuard(name)`
 - `SetSetting(name, value)`
 - `Source(id)`
+- `Extend(components)`
+- `Copy(name)`
+- `Scope(name)`
 
 ## Example
 
@@ -134,6 +138,9 @@ The document of a designer of pages, shared by its components (DesignerPalette, 
 ## Tests
 
 - [keeps data/meta.json of ElemenxUI, where the Designer Service reads it, as elemenx meta makes it now](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/cli-meta.test.js#L202) — `tests/regression/cli-meta.test.js`
+- [describes its Applications with their routes and guards, and its Components, Services and Guards from their files](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/design.test.js#L59) — `tests/regression/design.test.js`
+- [answers its description and its files, read only, and nothing outside the project or in node_modules](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/design.test.js#L86) — `tests/regression/design.test.js`
+- [gives the page of the Designer the description as a script, before the application starts](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/design.test.js#L116) — `tests/regression/design.test.js`
 - [takes a project kept before as the first of the projects, its routes from its pages](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/designer-project.test.js#L22) — `tests/regression/designer-project.test.js`
 - [makes a project of a mode that stays its own: an application of a page on /, a component, a template](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/designer-project.test.js#L37) — `tests/regression/designer-project.test.js`
 - [opens documents in tabs, each with its tree, and closes them, never the last one](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/designer-project.test.js#L65) — `tests/regression/designer-project.test.js`
@@ -142,6 +149,5 @@ The document of a designer of pages, shared by its components (DesignerPalette, 
 - [shows a component of the project on the canvas as a Component made of its document](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/designer-project.test.js#L144) — `tests/regression/designer-project.test.js`
 - [never puts a component into itself, nor into one it holds; renames it where it is held, and keeps one that is held](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/designer-project.test.js#L162) — `tests/regression/designer-project.test.js`
 - [keeps a history for each document](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/designer-project.test.js#L187) — `tests/regression/designer-project.test.js`
-- [routes the pages of an application, guarded by the guards of the project, a refusal shown by a page](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/designer-project.test.js#L204) — `tests/regression/designer-project.test.js`
-- [sets the component of the Application, one that holds the place of the pages, and the other settings](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/designer-project.test.js#L253) — `tests/regression/designer-project.test.js`
-- [writes the project into the text of a file and reads it back as a project of its own](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/designer-project.test.js#L285) — `tests/regression/designer-project.test.js`
+
++5 more in the same files

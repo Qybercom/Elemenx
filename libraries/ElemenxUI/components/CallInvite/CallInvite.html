@@ -2,7 +2,7 @@
 	<div class="elemenx-call-invite-caller">
 		<span class="elemenx-call-invite-avatar"><Avatar [name]="Name" [image]="Image" Size="large" /></span>
 		<div class="elemenx-call-invite-text">
-			<strong class="elemenx-call-invite-name">{{Name}}</strong>
+			<strong class="elemenx-call-invite-name elemenx-ellipsis">{{Name}}</strong>
 			<span class="elemenx-call-invite-kind"><Icon [name]="Video ? 'video' : 'phone'" />{{Text || $T('ui.call.incoming')}}</span>
 		</div>
 	</div>

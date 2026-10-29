@@ -218,7 +218,7 @@ for (const origin of origins) {
 
 			await open(page, origin);
 
-			await expect(page.locator('.ui-kit > .elemenx-section')).toHaveCount(54);
+			await expect(page.locator('.ui-kit > .elemenx-section')).toHaveCount(55);
 
 			await expect(page.locator('#elemenx-icons')).toHaveAttribute('data-ready', 'true');
 			await expect(page.locator('.ui-kit-icon svg').first()).toHaveAttribute('data-icon', 'add');
@@ -3663,7 +3663,14 @@ for (const origin of origins) {
 					return [document.documentElement.scrollWidth, window.innerWidth];
 				})).toEqual([390, 390]);
 
-				/* A submenu without room beside its item opens under it, a step in, not over it. */
+				/*
+				 * A submenu without room beside its item opens under it, a step in, not over it. The bar at the top of the
+				 * screen, so there is room under the menu (the sections far away keep the height they had: where a bar
+				 * ends up on the screen depends on them).
+				 */
+				await page.locator('.elemenx-menu-root').filter({has: page.getByRole('button', {name: 'Edit', exact: true})}).evaluate(function (node) {
+					node.scrollIntoView({block: 'start'});
+				});
 				await page.locator('.elemenx-menu-root').filter({has: page.getByRole('button', {name: 'Edit', exact: true})}).locator('.elemenx-button').first().click();
 				await page.getByRole('menuitem', {name: /Paste special/}).click();
 
@@ -3757,6 +3764,75 @@ for (const origin of origins) {
 			finally {
 				await context.close();
 			}
+		});
+
+		test('tab groups: a tab dragged to an edge splits its group, its menu closes the others but the pinned one, a divider shares the room', async function ({ page }) {
+			var errors = captureErrors(page);
+			var groups;
+			var split;
+			var tabs;
+			var box;
+			var target;
+
+			await open(page, origin, ['Tab groups']);
+
+			split = section(page, 'Tab groups').locator('.elemenx-tab-split');
+			groups = split.locator('.elemenx-tab-split-group');
+			tabs = function (index) {
+				return groups.nth(index).locator('.elemenx-tab-group-tab');
+			};
+
+			await split.scrollIntoViewIfNeeded();
+
+			await expect(groups).toHaveCount(2);
+			await expect(tabs(0)).toHaveText(['Project']);
+			await expect(tabs(1)).toHaveText(['app.js', 'index.html', 'styles.css', 'README.md']);
+
+			/* index.html dragged to the right edge of its group: a group of its own on the right. */
+			box = await groups.nth(1).locator('.elemenx-tab-group-body').boundingBox();
+			target = await tabs(1).nth(1).boundingBox();
+
+			await page.mouse.move(target.x + target.width / 2, target.y + target.height / 2);
+			await page.mouse.down();
+			await page.mouse.move(target.x + target.width / 2 + 20, target.y + 30, {steps: 4});
+			await page.mouse.move(box.x + box.width - 12, box.y + box.height / 2, {steps: 8});
+
+			await expect(groups.nth(1).locator('.elemenx-tab-group-zone.right')).toBeVisible();
+
+			await page.mouse.up();
+
+			await expect(groups).toHaveCount(3);
+			await expect(tabs(1)).toHaveText(['app.js', 'styles.css', 'README.md']);
+			await expect(tabs(2)).toHaveText(['index.html']);
+			await expect(groups.nth(2).locator('.elemenx-tab-panel.active')).toContainText('The text of index.html');
+			await expect(section(page, 'Tab groups').locator(':scope > .elemenx-section-header .elemenx-caption')).toHaveText('3 groups: 1 + 3 + 1 tabs');
+
+			/* The menu of README.md: Close others closes app.js and styles.css; the pinned Files stays. */
+			await tabs(1).nth(2).click({button: 'right'});
+			await page.getByRole('menuitem', {name: 'Close others'}).click();
+
+			await expect(tabs(1)).toHaveText(['README.md']);
+			await expect(tabs(0)).toHaveText(['Project']);
+			await expect(tabs(0).first()).toHaveClass(/pinned/);
+
+			/* The divider between Files and the rest, moved by the pointer: the side group grows. */
+			box = await groups.nth(0).boundingBox();
+			target = await split.locator('.elemenx-tab-split-divider').first().boundingBox();
+
+			await page.mouse.move(target.x + target.width / 2, target.y + target.height / 2);
+			await page.mouse.down();
+			await page.mouse.move(target.x + target.width / 2 + 120, target.y + target.height / 2, {steps: 6});
+			await page.mouse.up();
+
+			expect(Math.round((await groups.nth(0).boundingBox()).width - box.width)).toBeGreaterThan(100);
+
+			/* One group of its own: its menu pins a tab, which goes first. */
+			await section(page, 'Tab groups').locator('.ui-kit-tab-group .elemenx-tab-group-tab').filter({hasText: 'Budget'}).click({button: 'right'});
+			await page.getByRole('menuitem', {name: 'Pin'}).click();
+
+			await expect(section(page, 'Tab groups').locator('.ui-kit-tab-group .elemenx-tab-group-tab')).toHaveText(['Notes', 'Budget', 'Plan', 'Ideas']);
+
+			expect(errors).toEqual([]);
 		});
 
 		test('a mobile menu is a sheet from the bottom: large rows, levels inside it with a way back, Cancel and the shade close it', async function ({ page }) {
@@ -6611,12 +6687,15 @@ for (const origin of origins) {
 			await expect(quests.locator('.elemenx-item-card')).toContainText('Healing potion');
 			await expect(quests.locator('.elemenx-item-card')).toContainText('Uncommon · Potion');
 			await expect(quests.locator('.elemenx-item-card')).toContainText('Restores 30 health.');
-			expect(await quests.locator('.elemenx-item-card').evaluate(function (node) {
-				var reward = node.previousElementSibling.getBoundingClientRect();
-				var card = node.getBoundingClientRect();
+			/* The card follows its reward at the next frame when the page, still rendering, moves it. */
+			await expect.poll(function () {
+				return quests.locator('.elemenx-item-card').evaluate(function (node) {
+					var reward = node.previousElementSibling.getBoundingClientRect();
+					var card = node.getBoundingClientRect();
 
-				return [node.matches(':popover-open'), Math.round(card.left - reward.right) === 8 || Math.round(reward.left - card.right) === 8, Math.abs(card.top - reward.top) < 220, document.getElementById(node.previousElementSibling.getAttribute('aria-describedby')) === node];
-			})).toEqual([true, true, true, true]);
+					return [node.matches(':popover-open'), Math.round(card.left - reward.right) === 8 || Math.round(reward.left - card.right) === 8, Math.abs(card.top - reward.top) < 220, document.getElementById(node.previousElementSibling.getAttribute('aria-describedby')) === node];
+				});
+			}).toEqual([true, true, true, true]);
 
 			/* Regression: a scroll of the page (the reader's, or the page that grows as more of it renders) closed the card; it follows its element. */
 			await page.evaluate(function () {
@@ -7532,10 +7611,10 @@ for (const origin of origins) {
 			expect((await state())[1]).toBe('Tools:terminal@1,1 settings@1,3 database@1,4 calendar@2,3 cloud@4,1');
 			expect((await state())[2]).toBe('Pinned:clock@1,1');
 
-			/* GroupPolicy between: a new group between two groups. */
+			/* GroupPolicy between: a new group between two groups, beside them. */
 			await drag('chat', from.x, from.y);
 
-			to = await grid.locator('.elemenx-tile-gap').nth(1).boundingBox();
+			to = await grid.locator('.elemenx-tile-stack').nth(1).locator('.elemenx-tile-gap.side').first().boundingBox();
 
 			await page.mouse.move(to.x + to.width / 2, to.y + 40, {steps: 10});
 			await page.mouse.up();
@@ -7546,6 +7625,32 @@ for (const origin of origins) {
 				'Tools:terminal@1,1 settings@1,3 database@1,4 calendar@2,3 cloud@4,1',
 				'Pinned:clock@1,1'
 			]);
+
+			/* Above a group: a new group over it, in its stack. */
+			from = await grid.locator('.elemenx-tile[data-id="phone"]').boundingBox();
+
+			await drag('phone', from.x + 40, from.y + 40);
+
+			to = await grid.locator('.elemenx-tile-lane:has(.elemenx-tile-group[data-group="tools"]) > .elemenx-tile-gap:not(.below)').boundingBox();
+
+			await page.mouse.move(to.x + to.width / 2, to.y + to.height / 2, {steps: 10});
+			await page.mouse.up();
+
+			expect(await state()).toEqual([
+				'Work:mail@1,1 tasks@3,3',
+				'New group:chat@1,1',
+				'New group:phone@1,1',
+				'Tools:terminal@1,1 settings@1,3 database@1,4 calendar@2,3 cloud@4,1',
+				'Pinned:clock@1,1'
+			]);
+
+			expect(await grid.locator('.elemenx-tile-stack').evaluateAll(function (stacks) {
+				return stacks.map(function (stack) {
+					return Array.prototype.map.call(stack.querySelectorAll('.elemenx-tile-group-title'), function (title) {
+						return title.textContent;
+					}).join(' + ');
+				});
+			})).toEqual(['Work', 'New group', 'New group + Tools', 'Pinned']);
 
 			await grid.locator('.elemenx-tile-group', {hasText: 'Tools'}).getByRole('button', {name: 'Rename'}).click();
 

@@ -17,7 +17,7 @@ Elemenx.Service('Consents', {
 	$OnCreate: function () {
 		var self = this;
 
-		this.Listeners = [];
+		this.Listeners = this.$Service('ElemenxHelpers').Listeners();
 
 		/* A decision of another tab of the site. */
 		this.Shared = function (event) {
@@ -80,22 +80,14 @@ Elemenx.Service('Consents', {
 	},
 
 	OnChange: function (callback) {
-		this.Listeners.push(callback);
-
-		return callback;
+		return this.Listeners.On(callback);
 	},
 
 	OffChange: function (callback) {
-		this.Listeners = this.Listeners.filter(function (item) {
-			return item !== callback;
-		});
+		this.Listeners.Off(callback);
 	},
 
 	Changed: function (key) {
-		var decision = this.Get(key);
-
-		this.Listeners.slice().forEach(function (callback) {
-			callback(key, decision);
-		});
+		this.Listeners.Tell(key, this.Get(key));
 	}
 });

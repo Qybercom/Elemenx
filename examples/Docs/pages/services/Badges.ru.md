@@ -34,4 +34,4 @@
 
 ## Тесты
 
-- [Badges: a count (none at 0, 99+ past Max), a dot, a busy ring and a text, with their tones and labels](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-services.test.js#L63) — `tests/regression/library-services.test.js`
+- [Badges: a count (none at 0, 99+ past Max), a dot, a busy ring and a text, with their tones and labels](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-services.test.js#L113) — `tests/regression/library-services.test.js`

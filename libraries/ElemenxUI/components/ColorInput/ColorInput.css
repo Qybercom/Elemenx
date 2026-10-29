@@ -41,8 +41,7 @@
 
 .elemenx-color-swatch:focus-visible,
 .elemenx-color-area:focus-visible,
-.elemenx-color-slider:focus-visible,
-.elemenx-color-preset:focus-visible {
+.elemenx-color-slider:focus-visible {
 	outline: 2px solid var(--elemenx-focus);
 	outline-offset: 2px;
 }

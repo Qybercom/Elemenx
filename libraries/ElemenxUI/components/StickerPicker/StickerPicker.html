@@ -15,7 +15,7 @@
 	<div class="elemenx-stickers-body">
 		<div class="elemenx-stickers-grid" role="listbox" [attribute.aria-label]="(Label || $T('ui.stickerPicker.label'))">
 			<div class="elemenx-sticker" *for="sticker of Items(Tab, Tabs, Query, Version)" *key="sticker.Pack + '/' + sticker.ID">
-				<button class="elemenx-sticker-pick" type="button" role="option" [attribute.aria-label]="sticker.Title || sticker.ID" [attribute.title]="sticker.Title || null" [attribute.data-key]="sticker.Pack + '/' + sticker.ID" (click)="Pick"><img [src]="sticker.URL" alt="" loading="lazy" draggable="false" /></button>
+				<button class="elemenx-sticker-pick elemenx-focus-ring" type="button" role="option" [attribute.aria-label]="sticker.Title || sticker.ID" [attribute.title]="sticker.Title || null" [attribute.data-key]="sticker.Pack + '/' + sticker.ID" (click)="Pick"><img [src]="sticker.URL" alt="" loading="lazy" draggable="false" /></button>
 				<button class="elemenx-sticker-star" type="button" tabindex="-1" [class.on]="Starred(sticker, Version)" [attribute.aria-label]="Starred(sticker, Version) ? $T('ui.stickerPicker.unstar') : $T('ui.stickerPicker.star')" [attribute.aria-pressed]="String(Starred(sticker, Version))" [attribute.data-key]="sticker.Pack + '/' + sticker.ID" (click)="Star"><Icon Name="star" Size="12" /></button>
 			</div>
 		</div>

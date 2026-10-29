@@ -2,7 +2,7 @@
 	<header class="elemenx-section-header">
 		<div class="elemenx-section-heading">
 			<span class="elemenx-section-slot"><slot name="before"></slot></span>
-			<button class="elemenx-section-toggle" type="button" *if="Collapsible" [attribute.aria-expanded]="String(!Collapsed)" (click)="Toggle">
+			<button class="elemenx-section-toggle elemenx-focus-ring" type="button" *if="Collapsible" [attribute.aria-expanded]="String(!Collapsed)" (click)="Toggle">
 				<Icon Name="chevron-down" />
 				<Icon *if="Icon" [name]="Icon" />
 				<span class="elemenx-section-title" role="heading" [attribute.aria-level]="Level" [class]="['level-' + Level]">{{Title}}</span>

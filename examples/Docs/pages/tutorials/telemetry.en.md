@@ -73,7 +73,7 @@ this.Series = series;
 this.Lit = lit;
 ```
 
-One more rule keeps a busy computer in step: a frame with an update lasts its script and the layout and the painting that follow, and what it took past a frame the next update waits. The board takes half of the time of the page at most; on a slow processor it skips frames and stays close to the feed, instead of filling every frame and letting the packets queue behind it.
+One more rule keeps a busy computer in step: a frame with an update lasts its script and the layout and the painting that follow, and what it took past a frame the next update waits. The board takes half of the time of the page at most; on a slow processor it skips frames and stays close to the feed, instead of filling every frame and letting the packets queue behind it. A frame of more than a second is the page held up, not the board: the update after it waits a second at most.
 
 ## 4. A widget for each kind
 

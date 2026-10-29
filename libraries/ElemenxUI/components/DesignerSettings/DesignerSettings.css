@@ -51,9 +51,6 @@
 	height: 32px;
 	padding: 0;
 	color: var(--elemenx-text-muted);
-	cursor: pointer;
-	background: transparent;
-	border: 0;
 	border-radius: var(--elemenx-radius-small);
 }
 

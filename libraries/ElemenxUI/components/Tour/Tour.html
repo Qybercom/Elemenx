@@ -1,5 +1,5 @@
 <div class="elemenx-tour" [attribute.data-step]="Track(Open, Step)">
-	<div class="elemenx-tour-layer" *if="Open && Current(Steps, Step)" (keydown)="Key">
+	<div class="elemenx-tour-layer" *if="Open && Current(Steps, Step)" *layer (keydown)="Key">
 		<div class="elemenx-tour-block"></div>
 		<div class="elemenx-tour-hole" *if="Hole" [style.left]="Hole.X + 'px'" [style.top]="Hole.Y + 'px'" [style.width]="Hole.Width + 'px'" [style.height]="Hole.Height + 'px'"></div>
 		<div class="elemenx-tour-shade" *if="!Hole"></div>

@@ -1,6 +1,6 @@
 {
 	"scopeName": "elemenx.template.interpolation",
-	"injectionSelector": "L:text.html -comment -meta.tag -meta.embedded",
+	"injectionSelector": "L:text.html -comment -meta.embedded",
 	"patterns": [
 		{
 			"begin": "\\{\\{",

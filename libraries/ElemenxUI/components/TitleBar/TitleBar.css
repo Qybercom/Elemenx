@@ -54,10 +54,7 @@
 
 .elemenx-title-bar-title {
 	flex: 1;
-	overflow: hidden;
 	text-align: center;
-	text-overflow: ellipsis;
-	white-space: nowrap;
 }
 
 .elemenx-title-bar-space {

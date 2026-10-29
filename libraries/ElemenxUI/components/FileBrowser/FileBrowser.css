@@ -98,12 +98,6 @@
 	display: inline-flex;
 }
 
-.elemenx-file-browser-name {
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
-}
-
 .elemenx-file-browser-size,
 .elemenx-file-browser-modified {
 	color: var(--elemenx-text-muted);

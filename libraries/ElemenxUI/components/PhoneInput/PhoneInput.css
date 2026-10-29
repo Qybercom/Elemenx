@@ -9,28 +9,21 @@
 }
 
 .elemenx-phone-country {
+	--elemenx-focus-offset: -2px;
 	display: inline-flex;
 	align-items: center;
 	gap: 4px;
 	flex: none;
 	align-self: stretch;
 	padding: 0 8px;
-	background: transparent;
-	border: 0;
 	border-inline-end: 1px solid var(--elemenx-border);
 	border-radius: calc(var(--elemenx-radius) - 1px) 0 0 calc(var(--elemenx-radius) - 1px);
 	color: var(--elemenx-text);
 	font: inherit;
-	cursor: pointer;
 }
 
 .elemenx-phone-country:hover {
 	background: var(--elemenx-surface-hover);
-}
-
-.elemenx-phone-country:focus-visible {
-	outline: 2px solid var(--elemenx-focus);
-	outline-offset: -2px;
 }
 
 .elemenx-phone-country:disabled {

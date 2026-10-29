@@ -49,8 +49,7 @@
 .elemenx-cal-nav:focus-visible,
 .elemenx-cal-view:focus-visible,
 .elemenx-cal-event:focus-visible,
-.elemenx-cal-block:focus-visible,
-.elemenx-cal-more:focus-visible {
+.elemenx-cal-block:focus-visible {
 	outline: 2px solid var(--elemenx-focus);
 	outline-offset: 1px;
 }
@@ -150,9 +149,6 @@
 	min-width: 0;
 	height: 20px;
 	padding: 0 6px;
-	overflow: hidden;
-	background: transparent;
-	border: 0;
 	border-inline-start: 3px solid var(--elemenx-cal-color);
 	border-radius: calc(var(--elemenx-radius) - 1px);
 	color: var(--elemenx-text);
@@ -160,9 +156,6 @@
 	font-size: var(--elemenx-font-size-small);
 	line-height: var(--elemenx-line-height-small);
 	text-align: start;
-	text-overflow: ellipsis;
-	white-space: nowrap;
-	cursor: pointer;
 }
 
 .elemenx-cal-event:hover {
@@ -180,16 +173,14 @@
 }
 
 .elemenx-cal-more {
+	--elemenx-focus-offset: 1px;
 	align-self: flex-start;
 	padding: 0 6px;
-	background: transparent;
-	border: 0;
 	border-radius: calc(var(--elemenx-radius) - 1px);
 	color: var(--elemenx-text-muted);
 	font: inherit;
 	font-size: var(--elemenx-font-size-small);
 	font-weight: var(--elemenx-font-weight-strong);
-	cursor: pointer;
 }
 
 .elemenx-cal-more:hover {

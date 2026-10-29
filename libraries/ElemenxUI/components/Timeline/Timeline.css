@@ -12,11 +12,6 @@
 	user-select: none;
 }
 
-.elemenx-timeline:focus-visible {
-	outline: 2px solid var(--elemenx-focus);
-	outline-offset: 2px;
-}
-
 .elemenx-timeline.vertical {
 	height: 420px;
 	padding: 0 8px;
@@ -92,14 +87,11 @@
 	box-sizing: border-box;
 	display: flex;
 	align-items: center;
-	overflow: hidden;
 	width: 150px;
 	padding: 0 12px;
 	border-top: 1px solid var(--elemenx-border);
 	color: var(--elemenx-text-muted);
 	font-weight: var(--elemenx-font-weight-strong);
-	text-overflow: ellipsis;
-	white-space: nowrap;
 }
 
 .elemenx-timeline.vertical .elemenx-timeline-lane-name {
@@ -256,8 +248,7 @@
 	background: rgba(var(--elemenx-timeline-rgb, var(--elemenx-accent-rgb)), 0.24);
 }
 
-.elemenx-timeline-range:focus-visible,
-.elemenx-timeline-point:focus-visible {
+.elemenx-timeline-range:focus-visible {
 	outline: 2px solid var(--elemenx-focus);
 	outline-offset: 1px;
 }
@@ -347,6 +338,7 @@
 
 /* The marks: a point on the axis, a leader to its label in its row. */
 .elemenx-timeline-point {
+	--elemenx-focus-offset: 1px;
 	z-index: 2;
 	background: var(--elemenx-surface);
 	border: 2px solid var(--elemenx-timeline-color, var(--elemenx-accent));

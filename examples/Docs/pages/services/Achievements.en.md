@@ -56,5 +56,5 @@ The achievements of an Application (a game, a course, a profile...), shown one a
 
 ## Tests
 
-- [shows the achievements one after another, each for its Duration, and reports every change](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/achievements.test.js#L41) — `tests/regression/achievements.test.js`
-- [keeps an achievement of Duration 0 until it is dismissed, takes one out of the queue, and clears all](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/achievements.test.js#L75) — `tests/regression/achievements.test.js`
+- [shows the achievements one after another, each for its Duration, and reports every change](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/achievements.test.js#L60) — `tests/regression/achievements.test.js`
+- [keeps an achievement of Duration 0 until it is dismissed, takes one out of the queue, and clears all](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/achievements.test.js#L94) — `tests/regression/achievements.test.js`

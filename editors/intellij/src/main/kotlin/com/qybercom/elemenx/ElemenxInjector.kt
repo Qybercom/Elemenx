@@ -24,14 +24,28 @@ class ElemenxInjector : MultiHostInjector {
 		when (context) {
 			is XmlAttributeValue -> {
 				val attribute = context.parent as? XmlAttribute ?: return
-				val wrap = wrapping(attribute.name) ?: return
+				val wrap = wrapping(attribute.name)
 				val range = ElementManipulators.getValueTextRange(context)
 
 				if (javascript == null || range.isEmpty) return
 
+				/* A plain attribute with {{ }} (title="Hello, {{Name}}"): each {{ }} is an expression, as in a text. */
+				if (wrap == null) {
+					val ranges = ElemenxColors.interpolations(context.text).filter { each -> !each.isEmpty && range.contains(each) }
+					val names = if (ranges.isEmpty()) emptyList() else ElemenxScope.typedNames(context)
+
+					ranges.forEach { each ->
+						registrar.startInjecting(javascript).addPlace(scoped(names, each.substring(context.text)) + "return (", "); });", context as PsiLanguageInjectionHost, each).doneInjecting()
+					}
+
+					return
+				}
+
 				/* The head of a loop declares its variables: they are no parameters of it (regression: "Duplicate declaration"). */
 				val own = if (attribute.name == "*for") ElemenxScope.loopVariables(range.substring(context.text)) else emptyList()
-				val scope = scoped(ElemenxScope.typedNames(context).filter { each -> each.name !in own }, range.substring(context.text))
+				/* An (event) that is an expression ((click)="Pick(row, $event)") sees the event and its element too. */
+				val told = if (attribute.name.startsWith("(") && !attribute.name.startsWith("[(")) listOf(ElemenxScope.Name("\$event", null), ElemenxScope.Name("\$node", null)) else emptyList()
+				val scope = scoped(ElemenxScope.typedNames(context).filter { each -> each.name !in own } + told, range.substring(context.text))
 
 				registrar.startInjecting(javascript).addPlace(scope + wrap.first, wrap.second + " });", context as PsiLanguageInjectionHost, range).doneInjecting()
 			}

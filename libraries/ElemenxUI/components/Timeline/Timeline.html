@@ -1,6 +1,6 @@
-<div class="elemenx-timeline" tabindex="0" role="group" [class.vertical]="Orientation === 'vertical'" [class.editable]="Editable" [class.seekable]="Seekable" [attribute.aria-label]="Label || $T('ui.timeline.label')" [attribute.data-drawn]="Drawn(Current())" (keydown)="Key" (wheel)="Wheel" (pointerdown)="Down" (pointermove)="Move" (pointerup)="Up" (pointercancel)="Cancel">
+<div class="elemenx-timeline elemenx-focus-ring" tabindex="0" role="group" [class.vertical]="Orientation === 'vertical'" [class.editable]="Editable" [class.seekable]="Seekable" [attribute.aria-label]="Label || $T('ui.timeline.label')" [attribute.data-drawn]="Drawn(Current())" (keydown)="Key" (wheel)="Wheel" (pointerdown)="Down" (pointermove)="Move" (pointerup)="Up" (pointercancel)="Cancel">
 	<div class="elemenx-timeline-body" [attribute.style]="Current().Box">
-		<div class="elemenx-timeline-lane-names" *if="Current().Header"><span class="elemenx-timeline-lane-name" *for="lane of Current().Lanes" *key="lane.ID" [attribute.style]="lane.Style">{{lane.Label}}</span></div>
+		<div class="elemenx-timeline-lane-names" *if="Current().Header"><span class="elemenx-timeline-lane-name elemenx-ellipsis" *for="lane of Current().Lanes" *key="lane.ID" [attribute.style]="lane.Style">{{lane.Label}}</span></div>
 		<div class="elemenx-timeline-track" [attribute.style]="Current().TrackStyle">
 			<div class="elemenx-timeline-lane" *for="lane of Current().Lanes" *key="lane.ID" [attribute.data-lane]="lane.ID" [attribute.style]="lane.Style"></div>
 			<div class="elemenx-timeline-axis" [attribute.style]="Current().AxisStyle"></div>
@@ -18,7 +18,7 @@
 				<span class="elemenx-timeline-label-text" *if="!mark.Custom"><Icon *if="mark.Icon" [name]="mark.Icon" [size]="12" /><span>{{mark.Label}}</span></span>
 				<span class="elemenx-timeline-label-text" *if="mark.Custom" *mount="mark.Custom"></span>
 			</span>
-			<span class="elemenx-timeline-point" *for="mark of Current().Marks" *key="mark.ID" [class]="[mark.Tone, mark.Selected ? 'selected' : '']" [attribute.style]="mark.PointStyle" data-kind="mark" [attribute.data-id]="mark.ID" tabindex="0" role="button" [attribute.aria-label]="mark.Name" [attribute.aria-pressed]="String(mark.Selected)" *tip="{Title: mark.Label || mark.ID, Text: Tip(mark).Text, Placement: Tip(mark).Placement}"></span>
+			<span class="elemenx-timeline-point elemenx-focus-ring" *for="mark of Current().Marks" *key="mark.ID" [class]="[mark.Tone, mark.Selected ? 'selected' : '']" [attribute.style]="mark.PointStyle" data-kind="mark" [attribute.data-id]="mark.ID" tabindex="0" role="button" [attribute.aria-label]="mark.Name" [attribute.aria-pressed]="String(mark.Selected)" *tip="{Title: mark.Label || mark.ID, Text: Tip(mark).Text, Placement: Tip(mark).Placement}"></span>
 			<span class="elemenx-timeline-now" *if="Current().Now" [attribute.style]="Current().Now.Style" [attribute.title]="$T('ui.timeline.now')"></span>
 			<span class="elemenx-timeline-playhead" *if="Current().Playhead" [attribute.style]="Current().Playhead.Style" role="slider" tabindex="-1" [attribute.aria-label]="$T('ui.timeline.playhead')" [attribute.aria-valuetext]="Current().Playhead.Name || ''"></span>
 		</div>

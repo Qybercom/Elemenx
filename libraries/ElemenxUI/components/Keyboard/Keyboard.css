@@ -27,6 +27,7 @@
 }
 
 .elemenx-keyboard-key {
+	--elemenx-focus-offset: 1px;
 	display: flex;
 	align-items: flex-start;
 	justify-content: flex-start;
@@ -87,11 +88,6 @@
 
 .elemenx-keyboard.clickable .elemenx-keyboard-key:hover {
 	background: linear-gradient(rgba(var(--elemenx-text-rgb), 0.06), rgba(var(--elemenx-text-rgb), 0.06)), var(--elemenx-surface);
-}
-
-.elemenx-keyboard-key:focus-visible {
-	outline: 2px solid var(--elemenx-focus);
-	outline-offset: 1px;
 }
 
 /* A marked key (a hotkey, the keys of a game) in the accent; a pressed key and a key held (Live) go down. */

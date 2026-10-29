@@ -48,7 +48,7 @@ describe('Elemenx multi-Application Builder', function () {
 
 		fs.writeFileSync(path.join(root, 'app.js'), "Elemenx.Application('FooApp', {$Component:'FooRoot', $Root:'FooApp', $Mount:'#foo'});\nElemenx.Application('BarApp', {$Component:'BarRoot', $Root:'BarApp', $Mount:'#bar'});");
 
-		Builder.Build(root, {application: 'FooApp', entry: 'app.js', index: 'index.html', out: 'dist'});
+		Builder.Build(root, {minify: false, application: 'FooApp', entry: 'app.js', index: 'index.html', out: 'dist'});
 
 		var bundle = fs.readFileSync(path.join(root, 'dist', 'app.js'), 'utf8');
 
@@ -71,7 +71,7 @@ describe('Elemenx multi-Application Builder', function () {
 
 		fs.writeFileSync(path.join(root, 'app.js'), "Elemenx.Application('FooApp', {$Component:'FooRoot', $Root:'FooApp', $Mount:'#foo'});");
 
-		Builder.Build(root, {application: 'FooApp', entry: 'app.js', index: 'index.html', out: path.join(elsewhere, 'site')});
+		Builder.Build(root, {minify: false, application: 'FooApp', entry: 'app.js', index: 'index.html', out: path.join(elsewhere, 'site')});
 
 		expect(fs.existsSync(path.join(elsewhere, 'site', 'app.js'))).toBe(true);
 		expect(fs.existsSync(path.join(elsewhere, 'site', 'index.html'))).toBe(true);
@@ -86,7 +86,7 @@ describe('Elemenx multi-Application Builder', function () {
 
 		fs.writeFileSync(path.join(root, 'app.js'), "Elemenx.Application('Host', {$Component:'FooRoot', $Mount:'body'});");
 
-		Builder.Build(root, {applications: ['FooApp', 'BarApp'], entry: 'app.js', index: 'index.html', out: 'dist'});
+		Builder.Build(root, {minify: false, applications: ['FooApp', 'BarApp'], entry: 'app.js', index: 'index.html', out: 'dist'});
 
 		var bundle = fs.readFileSync(path.join(root, 'dist', 'app.js'), 'utf8');
 
@@ -102,7 +102,7 @@ describe('Elemenx multi-Application Builder', function () {
 
 		fs.writeFileSync(path.join(root, 'app.js'), "Elemenx.Application('FooApp', {$Component:'FooRoot', $Root:'FooApp', $Mount:'body'});\nElemenx.Application('BarApp', {$Component:'BarRoot', $Root:'BarApp', $Mount:'#bar'});");
 
-		Builder.Build(root, {application: 'FooApp', applicationExplicit: true, entry: 'app.js', index: 'index.html', out: 'dist'});
+		Builder.Build(root, {minify: false, application: 'FooApp', applicationExplicit: true, entry: 'app.js', index: 'index.html', out: 'dist'});
 
 		var bundle = fs.readFileSync(path.join(root, 'dist', 'app.js'), 'utf8');
 
@@ -120,7 +120,7 @@ describe('Elemenx multi-Application Builder', function () {
 		fs.writeFileSync(path.join(app, 'domain', 'Authorized.js'), "Elemenx.Guard('Authorized', function () { return true; });");
 		fs.writeFileSync(path.join(root, 'app.js'), "Elemenx.Application('FooApp', {$Root:'FooApp', $Mount:'body'});");
 
-		Builder.Build(root, {application: 'FooApp', entry: 'app.js', index: 'index.html', out: 'dist'});
+		Builder.Build(root, {minify: false, application: 'FooApp', entry: 'app.js', index: 'index.html', out: 'dist'});
 
 		var bundle = fs.readFileSync(path.join(root, 'dist', 'app.js'), 'utf8');
 
@@ -140,7 +140,7 @@ describe('Elemenx multi-Application Builder', function () {
 		fs.writeFileSync(path.join(root, 'app.js'), "Elemenx.Application('FooApp', {$Root:'FooApp'});\nElemenx.Application('BarApp', {$Root:'BarApp'});");
 
 		expect(function () {
-			Builder.Build(root, {applications: ['FooApp', 'BarApp'], entry: 'app.js', index: 'index.html', out: 'dist'});
+			Builder.Build(root, {minify: false, applications: ['FooApp', 'BarApp'], entry: 'app.js', index: 'index.html', out: 'dist'});
 		}).toThrow(/duplicate entity Component:Shared/);
 	});
 	it('keeps toolchain files and Application sources out of dist', function () {
@@ -158,7 +158,7 @@ describe('Elemenx multi-Application Builder', function () {
 			fs.writeFileSync(path.join(root, file), 'x');
 		});
 
-		Builder.Build(root, {application: 'FooApp', entry: 'app.js', index: 'index.html', out: 'dist'});
+		Builder.Build(root, {minify: false, application: 'FooApp', entry: 'app.js', index: 'index.html', out: 'dist'});
 
 		['node_modules', 'android', 'ios', 'capacitor.config.json', '.git'].forEach(function (name) {
 			expect(fs.existsSync(path.join(root, 'dist', name)), name).toBe(false);
@@ -180,7 +180,7 @@ describe('Elemenx multi-Application Builder', function () {
 		fs.writeFileSync(path.join(root, 'app.js'), "Elemenx.Application('FooApp', {$Root:'FooApp'});");
 		fs.writeFileSync(path.join(root, 'asset.txt'), 'asset');
 
-		Builder.Build(root, {application: 'FooApp', entry: 'app.js', index: 'index.html', out: 'build'});
+		Builder.Build(root, {minify: false, application: 'FooApp', entry: 'app.js', index: 'index.html', out: 'build'});
 
 		expect(fs.readFileSync(path.join(root, 'build', 'asset.txt'), 'utf8')).toBe('asset');
 		expect(fs.existsSync(path.join(root, 'build', 'build'))).toBe(false);
@@ -198,7 +198,7 @@ describe('Elemenx multi-Application Builder', function () {
 		fs.writeFileSync(path.join(root, 'public', 'app.js'), 'nested app');
 		fs.writeFileSync(path.join(root, 'public', 'package.json'), 'nested package');
 
-		Builder.Build(root, {application: 'FooApp', entry: 'bootstrap.js', index: 'shell.html', out: 'dist'});
+		Builder.Build(root, {minify: false, application: 'FooApp', entry: 'bootstrap.js', index: 'shell.html', out: 'dist'});
 
 		expect(fs.existsSync(path.join(root, 'dist', 'bootstrap.js'))).toBe(false);
 		expect(fs.existsSync(path.join(root, 'dist', 'shell.html'))).toBe(false);
@@ -215,7 +215,7 @@ describe('Elemenx multi-Application Builder', function () {
 		fs.writeFileSync(path.join(root, 'index.html'), '<!DOCTYPE html><html><body><template id="Probe"><strong>{{Value}}</strong></template><div id="foo"></div><script src="/elemenx.js"></script><script src="/app.js"></script></body></html>');
 		fs.writeFileSync(path.join(root, 'app.js'), "Elemenx.Application('FooApp', {$Component:'FooRoot', $Root:'FooApp', $Mount:'#foo'});");
 
-		Builder.Build(root, {application: 'FooApp', entry: 'app.js', index: 'index.html', out: 'dist'});
+		Builder.Build(root, {minify: false, application: 'FooApp', entry: 'app.js', index: 'index.html', out: 'dist'});
 
 		var output = fs.readFileSync(path.join(root, 'dist', 'app.js'), 'utf8');
 
@@ -243,7 +243,7 @@ describe('Elemenx multi-Application Builder', function () {
 		fs.writeFileSync(path.join(library, 'icons.svg'), '<svg></svg>');
 		fs.writeFileSync(path.join(root, 'app.js'), "Elemenx.Library('UI', {$Root:'libraries/UI'});\nElemenx.Application('FooApp', {$Use:['UI'],$Component:'FooRoot',$Root:'FooApp',$Mount:'#foo'});");
 
-		Builder.Build(root, {application: 'FooApp', entry: 'app.js', index: 'index.html', out: 'dist'});
+		Builder.Build(root, {minify: false, application: 'FooApp', entry: 'app.js', index: 'index.html', out: 'dist'});
 
 		var bundle = fs.readFileSync(path.join(root, 'dist', 'app.js'), 'utf8');
 
@@ -281,7 +281,7 @@ describe('Elemenx multi-Application Builder', function () {
 			return [library.Name, library.Root, library.Graph ? path.basename(library.Graph) : null];
 		})).toEqual([['charts', 'vendor/charts', null], ['Kit', 'vendor/kit', 'kit.js']]);
 
-		Builder.Build(root, {application: 'FooApp', entry: 'app.js', index: 'index.html', out: 'dist'});
+		Builder.Build(root, {minify: false, application: 'FooApp', entry: 'app.js', index: 'index.html', out: 'dist'});
 
 		var bundle = fs.readFileSync(path.join(root, 'dist', 'app.js'), 'utf8');
 
@@ -296,7 +296,7 @@ describe('Elemenx multi-Application Builder', function () {
 		fs.writeFileSync(path.join(root, 'app.js'), "Elemenx.Application('FooApp', {$Discovery: ['vendor/none'], $Component:'FooRoot',$Root:'FooApp',$Mount:'#foo'});");
 
 		expect(function () {
-			Builder.Build(root, {application: 'FooApp', entry: 'app.js', index: 'index.html', out: 'dist'});
+			Builder.Build(root, {minify: false, application: 'FooApp', entry: 'app.js', index: 'index.html', out: 'dist'});
 		}).toThrow('$Discovery graph not found: ' + path.join(root, 'vendor', 'none', 'index.js'));
 	});
 
@@ -323,7 +323,7 @@ describe('Elemenx multi-Application Builder', function () {
 		fs.writeFileSync(path.join(library, 'guards', 'Admin.js'), "Elemenx.Guard('Admin', function () { return true; });");
 		fs.writeFileSync(path.join(root, 'app.js'), "Elemenx.Library('UI', {$Root:'libraries/UI'});\nElemenx.Application('FooApp', {$Use:['UI'],$Component:'FooRoot',$Root:'FooApp',$Mount:'#foo',$Router:{Routes:[{Path:'/',Component:'FooRoot',Guards:['Auth']}]}});");
 
-		Builder.Build(root, {application: 'FooApp', entry: 'app.js', index: 'index.html', out: 'dist'});
+		Builder.Build(root, {minify: false, application: 'FooApp', entry: 'app.js', index: 'index.html', out: 'dist'});
 
 		var bundle = fs.readFileSync(path.join(root, 'dist', 'app.js'), 'utf8');
 
@@ -336,6 +336,41 @@ describe('Elemenx multi-Application Builder', function () {
 		expect(bundle).not.toContain('"Admin": function');
 	});
 
+	it('minifies the build: the framework with its banner and short local names, the code without its comments; readable keeps them', function () {
+		var root = project();
+		var framework;
+		var code;
+
+		application(root, 'FooApp', 'FooRoot');
+
+		fs.writeFileSync(path.join(root, 'app.js'), "/* The application. */\nElemenx.Application('FooApp', {$Component:'FooRoot',$Root:'FooApp',$Mount:'#foo'});\n");
+
+		Builder.Build(root, {application: 'FooApp', entry: 'app.js', index: 'index.html', out: 'dist'});
+
+		framework = fs.readFileSync(path.join(root, 'dist', 'elemenx.js'), 'utf8');
+		code = fs.readFileSync(path.join(root, 'dist', 'app.js'), 'utf8');
+
+		expect(framework.indexOf('/*! Elemenx ' + require('../../package.json').version + ' | LGPL-3.0 */\n')).toBe(0);
+		expect(framework).toContain('var Version=\'' + require('../../package.json').version + '\'');
+		expect(framework).not.toContain('\n\t/* Storage */\n');
+		expect(framework).not.toContain('function trimSlash');
+		expect(code).not.toContain('The application.');
+		expect(function () {
+			new Function(framework);
+			new Function(code);
+		}).not.toThrow();
+
+		/* Each text file of 1 KB and more, compressed beside it for a static server (gzip and Brotli). */
+		expect(require('zlib').gunzipSync(fs.readFileSync(path.join(root, 'dist', 'elemenx.js.gz'))).toString()).toBe(framework);
+		expect(require('zlib').brotliDecompressSync(fs.readFileSync(path.join(root, 'dist', 'elemenx.js.br'))).toString()).toBe(framework);
+
+		Builder.Build(root, {minify: false, application: 'FooApp', entry: 'app.js', index: 'index.html', out: 'dist'});
+
+		expect(fs.readFileSync(path.join(root, 'dist', 'elemenx.js'), 'utf8')).toContain('function trimSlash');
+		expect(fs.readFileSync(path.join(root, 'dist', 'app.js'), 'utf8')).toContain('The application.');
+		expect(fs.existsSync(path.join(root, 'dist', 'elemenx.js.gz'))).toBe(false);
+	});
+
 	it('leaves out of elemenx.js the sections the build does not use, and keeps all of it with full', function () {
 		var root = project();
 		var framework;
@@ -344,7 +379,7 @@ describe('Elemenx multi-Application Builder', function () {
 
 		fs.writeFileSync(path.join(root, 'app.js'), "Elemenx.Application('FooApp', {$Component:'FooRoot',$Root:'FooApp',$Mount:'#foo',$Storage:{Prefix:'foo'}});");
 
-		Builder.Build(root, {application: 'FooApp', entry: 'app.js', index: 'index.html', out: 'dist'});
+		Builder.Build(root, {minify: false, application: 'FooApp', entry: 'app.js', index: 'index.html', out: 'dist'});
 
 		framework = fs.readFileSync(path.join(root, 'dist', 'elemenx.js'), 'utf8');
 
@@ -357,7 +392,7 @@ describe('Elemenx multi-Application Builder', function () {
 			new Function(framework);
 		}).not.toThrow();
 
-		Builder.Build(root, {application: 'FooApp', entry: 'app.js', index: 'index.html', out: 'dist', full: true});
+		Builder.Build(root, {minify: false, application: 'FooApp', entry: 'app.js', index: 'index.html', out: 'dist', full: true});
 
 		expect(fs.readFileSync(path.join(root, 'dist', 'elemenx.js'), 'utf8')).toBe(fs.readFileSync(path.resolve('elemenx.js'), 'utf8'));
 	});
