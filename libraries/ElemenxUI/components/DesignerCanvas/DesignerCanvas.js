@@ -11,7 +11,9 @@
  * component of declared children (Tabs, Ribbon) selects the child it shows, and the canvas shows the child the
  * selection is in. While a drag goes on, a bar over the canvas names the container the drop goes into and those around
  * it: a drop on one of them puts the element at its end, whatever the edges. The canvas is the body of the page: as
- * high as the room it has (a screen with Sizing fill fills it), as wide as Width says. Outlines draws the frame of
+ * high as the room it has (a screen with Sizing fill fills it), as wide as Width says. It is the frame of a Board (Bounds
+ * frame): the wheel moves the view of a page taller or wider than the room, Ctrl with the wheel zooms it (Controls: the
+ * buttons of the zoom), and every mark, distance and ruler is in pixels of the page at any zoom. Outlines draws the frame of
  * every container, Gaps gives the containers without a padding of their own some room to drop into (8 pixels); neither
  * is in the page. Preview takes the layer away, the outlines and the places to drop with it: the page works as it will.
  * Inspect (in a preview) shows the box of the element under the pointer as the tools of a browser do: its margin, its
@@ -40,6 +42,7 @@ Elemenx.Component('DesignerCanvas', {
 			Inspect: 'In a preview, shows the margin, the padding and the size of the element under the pointer.',
 			Lines: 'Draws the frame of every container in a preview too.',
 			Rulers: 'Shows the rulers along the top and the side, with the pointer and the selected element marked on them.',
+			Controls: 'Shows the buttons of the zoom of the canvas and its percent.',
 			Empty: 'The text of an empty container; the phrase of the language of the page without one.'
 		}
 	},
@@ -50,6 +53,7 @@ Elemenx.Component('DesignerCanvas', {
 	Inspect: false,
 	Lines: false,
 	Rulers: true,
+	Controls: true,
 	Empty: '',
 	Version: 0,
 	Hovered: null,
@@ -67,6 +71,8 @@ Elemenx.Component('DesignerCanvas', {
 	RulerY: 0,
 	PointX: null,
 	PointY: null,
+	Scaled: 1,
+	Size: {Width: 0, Height: 0},
 
 	$OnCreate: function () {
 		var self = this;
@@ -107,6 +113,19 @@ Elemenx.Component('DesignerCanvas', {
 
 		this.Style = style;
 
+		/*
+		 * The size of the page on the board: a desktop as wide as the room of the canvas, a tablet and a phone as wide as
+		 * theirs; as high as the room at least. The room is the stage less the margin of the board around the page.
+		 */
+		this.Room = function (width, size) {
+			var widths = {tablet: 768, phone: 390};
+
+			if (!size.Width)
+				return {Width: '', Height: ''};
+
+			return {Width: (widths[width] || Math.max(0, size.Width - 32)) + 'px', Height: Math.max(0, size.Height - 32) + 'px'};
+		};
+
 		/* The span of the selected element along a ruler (x or y), in the units of the page. */
 		this.Span = function (id, tick, axis) {
 			var rect = tick >= 0 && id ? self.Rect(id) : null;
@@ -140,18 +159,8 @@ Elemenx.Component('DesignerCanvas', {
 
 	$OnReady: function () {
 		var self = this;
-		var surface = this.$Element().querySelector('.elemenx-designer-surface');
-		var resize = new ResizeObserver(function () {
-			self.Measure();
-		});
-		var mutation = new MutationObserver(function () {
-			self.Measure();
-		});
 
-		resize.observe(surface);
-		mutation.observe(surface.querySelector('.elemenx-designer-page-host'), {childList: true, subtree: true, attributes: true});
-
-		this.Own().Observers = [resize, mutation];
+		this.Attach();
 
 		/*
 		 * Shift held while a drag goes over the canvas takes the drop one level up; in an inspection it measures at once,
@@ -172,6 +181,41 @@ Elemenx.Component('DesignerCanvas', {
 
 		window.addEventListener('keydown', this.Own().Keys, true);
 		window.addEventListener('keyup', this.Own().Keys, true);
+	},
+
+	/* The Board loads after the canvas: its page is there when it is. */
+	$OnChildReady: function () {
+		this.Attach();
+	},
+
+	/* The observers that measure the page again, and the page, once the surface is there (the Board that holds it is). */
+	Attach: function () {
+		var self = this;
+		var own = this.Own();
+		var surface = this.$Element().querySelector('.elemenx-designer-surface');
+		var stage = this.$Element().querySelector('.elemenx-designer-stage');
+		var resize;
+		var mutation;
+
+		if (!surface || own.Observers.length) return;
+
+		resize = new ResizeObserver(function () {
+			if (self.Size.Width !== stage.clientWidth || self.Size.Height !== stage.clientHeight)
+				self.Size = {Width: stage.clientWidth, Height: stage.clientHeight};
+
+			self.Measure();
+		});
+		mutation = new MutationObserver(function () {
+			self.Measure();
+		});
+
+		resize.observe(surface);
+		resize.observe(stage);
+		mutation.observe(surface.querySelector('.elemenx-designer-page-host'), {childList: true, subtree: true, attributes: true});
+
+		own.Observers = [resize, mutation];
+
+		this.Paint();
 	},
 
 	$OnDestroy: function () {
@@ -202,7 +246,7 @@ Elemenx.Component('DesignerCanvas', {
 		var source = designer.Ready() ? designer.Template(true, this.Preview ? '' : this.Empty || Elemenx.Locale.Text('ui.designer.drop')) : '';
 		var page = Elemenx.Component('DesignerCanvasPage');
 
-		if (own.Instance && own.Source === source) return;
+		if (!host || (own.Instance && own.Source === source)) return;
 
 		if (own.Instance)
 			own.Instance.$Destroy();
@@ -239,13 +283,25 @@ Elemenx.Component('DesignerCanvas', {
 		return this.$Element().querySelector('.elemenx-designer-page-host [data-designer-id="' + id + '"]');
 	},
 
-	/* The box of a node, relative to the surface: the box of its content (the wrapper itself has none); exact: not rounded. */
+	/* The pixels of the screen for a pixel of the page: the zoom of the board, as it is drawn. */
+	Scale: function () {
+		var surface = this.$Element().querySelector('.elemenx-designer-surface');
+
+		return surface && surface.offsetWidth ? surface.getBoundingClientRect().width / surface.offsetWidth || 1 : 1;
+	},
+
+	/*
+	 * The box of a node, relative to the surface, in pixels of the page: the box of its content (the wrapper itself has
+	 * none); exact: not rounded.
+	 */
 	Rect: function (id, exact) {
 		var wrapper = id === 'root' ? this.$Element().querySelector('.elemenx-designer-page-host') : this.Wrapper(id);
 		var surface = this.$Element().querySelector('.elemenx-designer-surface');
+		var scale = this.Scale();
 		var range;
 		var rect;
 		var base;
+		var box;
 
 		if (!wrapper || !surface) return null;
 
@@ -258,10 +314,12 @@ Elemenx.Component('DesignerCanvas', {
 
 		if (!rect.width && !rect.height) return null;
 
-		if (exact)
-			return {Left: rect.left - base.left, Top: rect.top - base.top, Width: rect.width, Height: rect.height, Right: rect.right - base.left, Bottom: rect.bottom - base.top};
+		box = {Left: (rect.left - base.left) / scale, Top: (rect.top - base.top) / scale, Width: rect.width / scale, Height: rect.height / scale, Right: (rect.right - base.left) / scale, Bottom: (rect.bottom - base.top) / scale};
 
-		return {Left: Math.round(rect.left - base.left), Top: Math.round(rect.top - base.top), Width: Math.round(rect.width), Height: Math.round(rect.height), Right: Math.round(rect.right - base.left), Bottom: Math.round(rect.bottom - base.top)};
+		if (exact)
+			return box;
+
+		return {Left: Math.round(box.Left), Top: Math.round(box.Top), Width: Math.round(box.Width), Height: Math.round(box.Height), Right: Math.round(box.Right), Bottom: Math.round(box.Bottom)};
 	},
 
 	/*
@@ -347,8 +405,9 @@ Elemenx.Component('DesignerCanvas', {
 		var designer = this.$Service('Designer');
 		var surface = this.$Element().querySelector('.elemenx-designer-surface').getBoundingClientRect();
 		var id = this.At(x, y);
-		var px = x - surface.left;
-		var py = y - surface.top;
+		var scale = this.Scale();
+		var px = (x - surface.left) / scale;
+		var py = (y - surface.top) / scale;
 		var rect;
 		var parent;
 		var across;
@@ -635,15 +694,17 @@ Elemenx.Component('DesignerCanvas', {
 		this.Target = null;
 	},
 
-	Scrolled: function () {
+	/* The board moved or zoomed the page: the marks, the rulers and their scale follow. */
+	Viewed: function () {
 		this.Measure();
 	},
 
-	/* Where the rulers start in the units of the page: 0 is the edge of the page, wherever the stage scrolled it. */
+	/* Where the rulers start in the units of the page, and their scale: 0 is the edge of the page, wherever the board shows it. */
 	Origin: function () {
 		var surface = this.$Element().querySelector('.elemenx-designer-surface');
 		var top = this.$Element().querySelector('.elemenx-designer-ruler.horizontal');
 		var side = this.$Element().querySelector('.elemenx-designer-ruler.vertical');
+		var scale = this.Scale();
 		var box;
 		var x;
 		var y;
@@ -651,8 +712,15 @@ Elemenx.Component('DesignerCanvas', {
 		if (!surface || !top || !side) return;
 
 		box = surface.getBoundingClientRect();
-		x = Math.round(top.getBoundingClientRect().left - box.left);
-		y = Math.round(side.getBoundingClientRect().top - box.top);
+		x = Math.round((top.getBoundingClientRect().left - box.left) / scale);
+		y = Math.round((side.getBoundingClientRect().top - box.top) / scale);
+
+		if (this.Scaled !== scale) {
+			this.Scaled = scale;
+
+			/* The marks over the page (the frames, the names, the distances) keep their size at any zoom. */
+			this.$Element().style.setProperty('--elemenx-designer-unscale', String(1 / scale));
+		}
 
 		if (this.RulerX !== x)
 			this.RulerX = x;
@@ -664,9 +732,10 @@ Elemenx.Component('DesignerCanvas', {
 	/* The pointer over the stage, marked on the rulers in the units of the page. */
 	Pointed: function (event) {
 		var box = this.$Element().querySelector('.elemenx-designer-surface').getBoundingClientRect();
+		var scale = this.Scale();
 
-		this.PointX = Math.round(event.clientX - box.left);
-		this.PointY = Math.round(event.clientY - box.top);
+		this.PointX = Math.round((event.clientX - box.left) / scale);
+		this.PointY = Math.round((event.clientY - box.top) / scale);
 	},
 
 	Unpointed: function () {
@@ -698,12 +767,14 @@ Elemenx.Component('DesignerCanvas', {
 	Boxes: function (element) {
 		var designer = this.$Service('Designer');
 		var base = this.$Element().querySelector('.elemenx-designer-surface').getBoundingClientRect();
-		var rect = element.getBoundingClientRect();
+		var scale = this.Scale();
+		var screen = element.getBoundingClientRect();
+		var rect = {width: screen.width / scale, height: screen.height / scale};
 		var style = window.getComputedStyle(element);
 		var wrapper = element.parentNode && element.parentNode.getAttribute ? element.parentNode.getAttribute('data-designer-id') : null;
 		var node = wrapper ? designer.Find(wrapper) : null;
-		var left = rect.left - base.left;
-		var top = rect.top - base.top;
+		var left = (screen.left - base.left) / scale;
+		var top = (screen.top - base.top) / scale;
 		var margin;
 		var padding;
 		var border;
@@ -781,11 +852,11 @@ Elemenx.Component('DesignerCanvas', {
 		this.Distances = own.Shift && element && element !== own.Pinned ? this.Spacing(own.Pinned ? this.Boxes(own.Pinned).Border : this.Edges(), this.Measured.Border) : [];
 	},
 
-	/* The box of the canvas itself, the page: Shift without an element pressed measures to its edges. */
+	/* The box of the canvas itself, the page (in its own pixels): Shift without an element pressed measures to its edges. */
 	Edges: function () {
-		var box = this.$Element().querySelector('.elemenx-designer-surface').getBoundingClientRect();
+		var surface = this.$Element().querySelector('.elemenx-designer-surface');
 
-		return {Left: 0, Top: 0, Width: box.width, Height: box.height};
+		return {Left: 0, Top: 0, Width: surface.offsetWidth, Height: surface.offsetHeight};
 	},
 
 	Uninspected: function () {

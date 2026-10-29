@@ -17,6 +17,7 @@ var Electron = require('./electron.js');
 var Capacitor = require('./capacitor.js');
 var AndroidLibrary = require('./androidlibrary.js');
 var Docker = require('./docker.js');
+var Split = require('./split.js');
 var fail = common.fail;
 
 /*
@@ -214,6 +215,61 @@ function render (entities) {
 	lines.push('});');
 
 	return lines.join('\n');
+}
+
+/*
+ * The bundle split by the routes of the entry (see split.js): {Main (the entities the bundle keeps), Declarations
+ * (Elemenx.Bundle.Part of each part), Parts ([{Name, Names, Code}])}; null when no Component goes into a part.
+ */
+function splitBundle (entities, sources) {
+	var components = entities.Component || {};
+	var rest = sources.concat(Object.keys(entities).filter(function (type) {
+		return type !== 'Component';
+	}).map(function (type) {
+		return Object.keys(entities[type]).map(function (name) {
+			return entities[type][name];
+		}).join('\n');
+	})).join('\n');
+	var plan = Split.Plan(components, rest, Split.Routes(sources.join('\n')));
+	var keys = Object.keys(plan.Parts).sort();
+	var main = {};
+
+	if (!keys.length) return null;
+
+	Object.keys(entities).forEach(function (type) {
+		main[type] = type === 'Component' ? {} : entities[type];
+	});
+
+	plan.Main.forEach(function (name) {
+		main.Component[name] = components[name];
+	});
+
+	return {
+		Main: main,
+		Declarations: keys.map(function (key) {
+			return 'Elemenx.Bundle.Part(' + JSON.stringify('parts/' + key + '.js') + ', ' + JSON.stringify({Component: plan.Parts[key]}) + ');';
+		}).join('\n'),
+		Parts: keys.map(function (key) {
+			var only = {Component: {}};
+
+			plan.Parts[key].forEach(function (name) {
+				only.Component[name] = components[name];
+			});
+
+			return {Name: key, Names: plan.Parts[key], Code: render(only)};
+		})
+	};
+}
+
+/* The parts of a split bundle into output/parts: each as wrap gives its code, minified unless readable. */
+function writePieces (output, pieces, readable, wrap) {
+	if (!pieces.length) return;
+
+	fs.mkdirSync(path.join(output, 'parts'), {recursive: true});
+
+	pieces.forEach(function (piece) {
+		fs.writeFileSync(path.join(output, 'parts', piece.Name + '.js'), wrap(readable ? piece.Code : minified([piece.Code], false)));
+	});
 }
 
 function indexTemplates (source) {
@@ -865,11 +921,28 @@ function build (project, options) {
 	bundle = render(entities) + discoveredLocales(libraries);
 
 	/* With precompile, the expressions of the templates go as code before the bundle (see expressions.js). */
-	if (options.precompile)
-		bundle = Expressions.Render([bundle, appSource], [indexSource]) + bundle;
+	var expressions = options.precompile ? Expressions.Render([bundle, appSource], [indexSource]) : '';
+
+	bundle = expressions + bundle;
 
 	/* The splash and the worker of a PWA the build puts in the page keep their sections of the framework. */
 	shaken = frameworkSource(framework, (templateBundle || '') + '\n' + bundle + '\n' + indexSource + '\n' + appSource + (options.splash !== false && !options.widget && Splash.Settings(project, options.splash) ? '\nelemenx-splash' : '') + (options.pwa && !options.single && !options.widget ? '\nelemenx-pwa-worker' : ''), options.full);
+
+	/*
+	 * Split by its routes (not a build in one file): the Components one route alone needs go into parts of their own,
+	 * the bundle names them (see split.js). What the build reads of all of its code (the dictionaries, the styles to
+	 * keep) reads the whole of it.
+	 */
+	var whole = bundle;
+	var pieces = options.split !== false && !options.single ? splitBundle(entities, [templateBundle || '', indexSource, appSource]) : null;
+
+	if (pieces) {
+		bundle = expressions + render(pieces.Main) + '\n' + pieces.Declarations + discoveredLocales(libraries);
+
+		process.stdout.write('Elemenx Builder: split by its routes, ' + pieces.Parts.map(function (piece) {
+			return 'parts/' + piece.Name + '.js (' + piece.Names.length + ')';
+		}).join(', ') + ' (--no-split keeps one bundle)\n');
+	}
 
 	if (options.single || options.widget) {
 		return (options.widget ? widget : single)({
@@ -883,8 +956,9 @@ function build (project, options) {
 			FrameworkSource: shaken,
 			Roots: roots,
 			Libraries: libraries,
-			Code: (templateBundle ? templateBundle + '\n' : '') + bundle + '\n' + appSource,
+			Code: (templateBundle ? templateBundle + '\n' : '') + whole + '\n' + appSource,
 			Parts: [(templateBundle ? templateBundle + '\n' : '') + bundle, appSource],
+			Pieces: pieces ? pieces.Parts : [],
 			Readable: options.minify === false,
 			Compress: options.minify !== false && options.compress !== false,
 			Full: !!options.full,
@@ -909,7 +983,7 @@ function build (project, options) {
 
 	copyPublic(project, output, excludedPaths);
 
-	var choice = options.full ? null : {Uses: ownCode(entities, shared) + '\n' + indexSource + '\n' + appSource, Packs: options.packs || [], Removed: {}, Code: (templateBundle || '') + '\n' + bundle + '\n' + indexSource + '\n' + appSource};
+	var choice = options.full ? null : {Uses: ownCode(entities, shared) + '\n' + indexSource + '\n' + appSource, Packs: options.packs || [], Removed: {}, Code: (templateBundle || '') + '\n' + whole + '\n' + indexSource + '\n' + appSource};
 	var libraryStyleHrefs = copyLibraryResources(output, libraries, choice, options.minify !== false, shaken);
 
 	Object.keys(choice ? choice.Removed : {}).forEach(function (name) {
@@ -948,6 +1022,11 @@ function build (project, options) {
 		fs.writeFileSync(path.join(output, 'elemenx.js'), '/*! Elemenx ' + frameworkVersion(shaken) + ' | LGPL-3.0 */\n' + minified([shaken], false, ['Version']));
 		fs.writeFileSync(path.join(output, 'app.js'), minified([(templateBundle ? templateBundle + '\n' : '') + bundle, appSource], false));
 	}
+
+	/* The parts of the bundle beside it, each fetched the first time its route is shown. */
+	writePieces(output, pieces ? pieces.Parts : [], options.minify === false, function (code) {
+		return code;
+	});
 
 	/* An installable application of the system, last: its worker keeps every file of the build (see pwa.js). */
 	var pwa = PWA.Settings(project, options.pwa, productionIndex, output, options.splash === false ? null : Splash.Settings(project, options.splash), AppIcon.ManifestIcons(icon));
@@ -1048,6 +1127,7 @@ function extension (project, options) {
 		full: options.full,
 		minify: options.minify,
 		compress: false,
+		split: false,
 		packs: options.packs,
 		splash: false,
 		precompile: true,
@@ -1119,6 +1199,7 @@ function native (project, options) {
 		full: options.full,
 		minify: options.minify,
 		compress: false,
+		split: false,
 		packs: options.packs,
 		splash: options.splash,
 		icon: options.icon,
@@ -1372,7 +1453,10 @@ function widget (job) {
 	var version = frameworkVersion(job.FrameworkSource);
 	/* Loaded twice in a page (two script tags, two places that each bring it), it runs once: its widgets are mounted once. */
 	var key = JSON.stringify('elemenx-widget:' + path.basename(job.Project));
-	var text = '/*! ' + path.basename(job.Project) + ' | Elemenx ' + version + ', isolated */\n(function () {\nif (window[' + key + ']) return;\nwindow[' + key + '] = true;\nvar ElemenxIsolated = {};\n' + framework + '(function (Elemenx) {\n' + code + '})(ElemenxIsolated.Elemenx);\n})();\n';
+	/* Its parts (a build split by its routes) reach its Elemenx, which the window has not, through a function of the window. */
+	var hook = JSON.stringify('elemenx-widget:' + path.basename(job.Project) + ':part');
+	var parts = job.Pieces.length ? 'window[' + hook + '] = function (run) {\nrun(ElemenxIsolated.Elemenx);\n};\n' : '';
+	var text = '/*! ' + path.basename(job.Project) + ' | Elemenx ' + version + ', isolated */\n(function () {\nif (window[' + key + ']) return;\nwindow[' + key + '] = true;\nvar ElemenxIsolated = {};\n' + framework + parts + '(function (Elemenx) {\n' + code + '})(ElemenxIsolated.Elemenx);\n})();\n';
 	var placed = false;
 
 	page = page.replace(/<script\b[^>]*\bsrc\s*=\s*(["'])([^"']*)\1[^>]*>\s*<\/script>\s*/gi, function (tag, quote, src) {
@@ -1389,6 +1473,10 @@ function widget (job) {
 
 	fs.writeFileSync(path.join(job.Output, 'widget.js'), text);
 	fs.writeFileSync(path.join(job.Output, 'index.html'), Templates.Page(page));
+
+	writePieces(job.Output, job.Pieces, job.Readable, function (code) {
+		return '(window[' + hook + '] || function () {})(function (Elemenx) {\n' + code + '\n});\n';
+	});
 
 	if (job.Compress)
 		precompress(job.Output);

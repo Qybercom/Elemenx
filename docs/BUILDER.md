@@ -17,6 +17,10 @@ Application/
 
 `dist/app.js` contains the generated Bundle Registry followed by the original application bootstrap from `app.js`. Component `$TemplateURL` and `$StyleURL` resources are inlined into the bundle.
 
+## Split by its routes
+
+A site and a widget are split by the routes of the entry (`$Router.Routes`, a route of a `Path` and a `Component` of a name): the Components only one route needs (its Component, those it renders, of the Application and of the Libraries, with their templates and styles) go into `dist/parts/<Component>.js`, a script beside the bundle that the bundle names (`Elemenx.Bundle.Part`) and the page fetches the first time the route is shown. The bundle keeps what the rest of the code uses (the page, the shell, the services, the directives, the Components of `Waiting`, `NotFound` and `GuardFailed`), the route of `/` (the first screen) and what several routes use; a Component it cannot tell a route alone uses stays in it. The build says the parts it made (`split by its routes, parts/UsersPage.js (8)`). The parts of a widget reach its own Elemenx through a function of the window (`elemenx-widget:<name>:part`), as the window has none. `--no-split` (`Split: false` in `elemenx.config.js`) keeps one bundle; a build in one file, an extension and a native program are never split.
+
 `dist/index.html` is copied from the normal development `index.html`; a separate production HTML file is not required. `elemenx.js` goes into `dist`, so the result can be served independently of the source tree.
 
 ## What a build leaves out

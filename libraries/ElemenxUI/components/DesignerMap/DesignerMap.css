@@ -1,0 +1,134 @@
+/*
+ * The map: the board fills it, the frames of the pages are in its world; the names and the arrows are over it, in
+ * pixels of the screen, and take the pointer only on the names.
+ */
+.elemenx-designer-map {
+	position: relative;
+	display: flex;
+	flex: 1 1 auto;
+	flex-direction: column;
+	min-width: 0;
+	min-height: 0;
+	overflow: hidden;
+}
+
+.elemenx-designer-map > .elemenx-board-host {
+	flex: 1 1 auto;
+	height: auto;
+	min-height: 0;
+}
+
+/* A page in its frame, as it runs: a column at the width of the frame, the pointer kept from it. */
+.elemenx-designer-map-frame {
+	position: absolute;
+	top: 0;
+	display: flex;
+	flex-direction: column;
+	container-type: inline-size;
+	container-name: elemenx-designer;
+	overflow: hidden;
+	cursor: pointer;
+	background: var(--elemenx-surface);
+	border: 1px solid var(--elemenx-border);
+	border-radius: var(--elemenx-radius);
+	box-shadow: var(--elemenx-shadow-small);
+}
+
+.elemenx-designer-map-frame:hover {
+	border-color: var(--elemenx-accent);
+}
+
+.elemenx-designer-map-host {
+	display: flex;
+	flex: 1 0 auto;
+	flex-direction: column;
+	pointer-events: none;
+}
+
+.elemenx-designer-map .elemenx-designer-page {
+	display: flex;
+	flex: 1 0 auto;
+	flex-direction: column;
+}
+
+/* The wrappers the canvas puts around the nodes take no room. */
+.elemenx-designer-map .elemenx-designer-node,
+.elemenx-designer-map .elemenx-designer-part {
+	display: contents;
+}
+
+.elemenx-designer-map .elemenx-designer-slot,
+.elemenx-designer-map .elemenx-designer-outlet {
+	padding: 12px;
+	color: var(--elemenx-text-muted);
+	font-size: var(--elemenx-font-size-small);
+	text-align: center;
+	border: 1px dashed var(--elemenx-border-strong);
+	border-radius: var(--elemenx-radius-small);
+}
+
+.elemenx-designer-map-marks {
+	position: absolute;
+	inset: 0;
+	z-index: 1;
+	overflow: hidden;
+	pointer-events: none;
+}
+
+.elemenx-designer-map-links {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	overflow: visible;
+}
+
+.elemenx-designer-map-link {
+	fill: none;
+	stroke: var(--elemenx-accent);
+	stroke-width: 2;
+}
+
+.elemenx-designer-map-link-start,
+.elemenx-designer-map-link-head {
+	fill: var(--elemenx-accent);
+}
+
+/* The name of a frame over its top left corner, with its paths. */
+.elemenx-designer-map-label {
+	position: absolute;
+	display: inline-flex;
+	gap: 8px;
+	align-items: baseline;
+	max-width: 320px;
+	padding: 2px 0;
+	color: var(--elemenx-text-muted);
+	font-size: var(--elemenx-font-size-small);
+	line-height: var(--elemenx-line-height-small);
+	white-space: nowrap;
+	cursor: pointer;
+	transform: translateY(calc(-100% - 6px));
+	pointer-events: auto;
+}
+
+.elemenx-designer-map-label:hover strong {
+	color: var(--elemenx-accent);
+}
+
+.elemenx-designer-map-label strong {
+	color: var(--elemenx-text);
+}
+
+.elemenx-designer-map-path {
+	font-family: var(--elemenx-font-mono);
+}
+
+.elemenx-designer-map-empty {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	margin: 0;
+	color: var(--elemenx-text-muted);
+}

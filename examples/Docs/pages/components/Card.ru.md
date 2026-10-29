@@ -48,9 +48,9 @@
 - [knows the Components, Services and Directives of the Libraries and of the project](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/language-server.test.js#L46) — `tests/regression/language-server.test.js`
 - [completes the tags, props, bindings, events, directives and options of a template, and the fields of its Component](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/language-server.test.js#L63) — `tests/regression/language-server.test.js`
 - [goes to the sources the extension carries in a project that has only builds of dist, and reads no bundle](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/language-server.test.js#L190) — `tests/regression/language-server.test.js`
+- [puts what one route alone uses into its part, and keeps the first screen, the shared and what the rest uses](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/split.test.js#L17) — `tests/regression/split.test.js`
 - [adds components from the Insert tab of its Ribbon, edits their props and text, and undoes and redoes the changes](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/builder.spec.js#L142) — `tests/examples/builder.spec.js`
 - [has rulers along the canvas that mark the selected element, and makes nothing of a press on them](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/builder.spec.js#L1066) — `tests/examples/builder.spec.js`
-- [tells of a Component, a prop, a directive and a Service on hover, and finds their definitions](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/language-server.test.js#L95) — `tests/regression/language-server.test.js`
-- [knows the references of a template (#Name): completes, tells and finds them from $Ref, and marks a $Ref of none](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/language-server.test.js#L110) — `tests/regression/language-server.test.js`
+- [zooms the page on its board, keeps the view to the page, and marks and measures in pixels of the page at any zoom](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/builder.spec.js#L1098) — `tests/examples/builder.spec.js`
 
-+6 ещё в тех же файлах
++9 ещё в тех же файлах

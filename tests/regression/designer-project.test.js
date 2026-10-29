@@ -250,6 +250,63 @@ describe('Contract: the Designer Service edits projects of pages, components, ro
 		})).toEqual(['/']);
 	});
 
+	it('maps the pages of an application in the order of their routes, each with its paths, its template and its links to the others', function () {
+		var home;
+		var about;
+		var user;
+		var draft;
+		var link;
+		var map;
+		var before = designer.Project().ID;
+
+		designer.Create('application', 'Map');
+
+		home = designer.Opened();
+		about = designer.AddDocument('page', 'About');
+		user = designer.AddDocument('page', 'User');
+		draft = designer.AddDocument('page', 'Draft');
+
+		designer.SetRoute(designer.Project().Routes.filter(function (entry) {
+			return entry.Page === user;
+		})[0].ID, 'Path', '/users/:id');
+		designer.RemoveRoute(designer.Project().Routes.filter(function (entry) {
+			return entry.Page === draft;
+		})[0].ID);
+
+		/* Home: a link to About and one to nowhere of the project; About: one to a user (a part of its route), one to itself. */
+		link = designer.Insert('link', 'root');
+
+		designer.Set(link, 'Href', '/about');
+		designer.Set(designer.Insert('link', 'root'), 'Href', 'https://example.com/about');
+
+		designer.Open(about);
+
+		designer.Set(designer.Insert('link', 'root'), 'Href', '/users/7?tab=orders');
+		designer.Set(designer.Insert('link', 'root'), 'Href', '/about#team');
+
+		map = designer.Map();
+
+		/* The pages with a route first, in their order; the one without last. */
+		expect(map.map(function (page) {
+			return [page.ID, page.Name, page.Paths];
+		})).toEqual([[home, 'Home', ['/']], [about, 'About', ['/about']], [user, 'User', ['/users/:id']], [draft, 'Draft', []]]);
+
+		expect(map[0].Links).toEqual([{Node: link, Page: about}]);
+		expect(map[1].Links.map(function (entry) {
+			return entry.Page;
+		})).toEqual([user]);
+		expect(map[3].Links).toEqual([]);
+
+		/* The template of a page as the canvas shows it: every node in its wrapper, for the arrows to start from. */
+		expect(map[0].Template).toContain('data-designer-id="' + link + '"');
+		expect(map[0].Template).toContain('href="/about"');
+
+		/* The page being edited stays the one it was. */
+		expect(designer.Opened()).toBe(about);
+
+		designer.Switch(before);
+	});
+
 	it('sets the component of the Application, one that holds the place of the pages, and the other settings', function () {
 		var layout = designer.AddDocument('component', 'Frame');
 		var home = designer.Project().Documents[0].ID;

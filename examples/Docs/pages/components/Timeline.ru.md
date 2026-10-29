@@ -5,7 +5,7 @@
 
 Start и End — вся линия; From и To — видимая часть (по умолчанию вся). Scale: time (даты: YYYY-MM-DD, YYYY-MM-DDTHH:mm, Date, миллисекунды) или number (секунды видео, шаги: Unit называет их, Format(value, step) пишет подписи); по умолчанию — тип Start. Orientation: horizontal или vertical. Marks [{ID, At, Label, Text, Icon, Tone, Side, Element, Render}], Ranges [{ID, From, To, Label, Tone, Color, Lane, Element, Render}], Lanes [{ID, Label}], Progress (момент или {To, Buffer}), Playhead (момент; Seekable показывает её и даёт перемещать), Now. То же можно объявить внутри: TimelineMark, TimelineRange (любое содержимое внутри них — их подпись), TimelineLane, TimelineProgress.
 
-Управление: Ctrl (⌘) с колесом, щипок или кнопки (Controls) масштабируют у указателя, от MinSpan до всей линии; Shift с колесом, горизонтальное колесо, перетаскивание пустого места или средняя кнопка сдвигают; стрелки сдвигают, + и − масштабируют, 0 показывает всё; нажатие на ось перематывает (Seekable: позиция идёт за указателем). Отметки и отрезки — кнопки: нажатие или Enter выбирает, стрелки переходят к следующей, подсказка показывает их целиком. Editable: отметку и отрезок перетаскивают во времени, отрезок — и за края, новый отрезок рисуют на пустой дорожке; Alt со стрелками сдвигает тот, что в фокусе, на Snap (minute, hour, day, week, month, year или число; по умолчанию шаг делений). Escape отменяет перетаскивание. Timeline не меняет данные сам: события просят об этом владельца.
+Управление: Ctrl (⌘) с колесом, щипок или кнопки (Controls) масштабируют у указателя, от MinSpan до всей линии; Shift с колесом, горизонтальное колесо, перетаскивание пустого места или средняя кнопка сдвигают; стрелки сдвигают, + и − масштабируют, 0 показывает всё; нажатие на ось перематывает (Seekable: позиция идёт за указателем). Отметки и отрезки — кнопки: нажатие или Enter выбирает, стрелки переходят к следующей, подсказка показывает их целиком. Overview показывает рядом полосу всей линии: её отметки и отрезки мелко и рамку на видимой части; перетаскивание рамки сдвигает вид, перетаскивание её края масштабирует, нажатие в другом месте полосы ставит туда середину вида. Editable: отметку и отрезок перетаскивают во времени, отрезок — и за края, новый отрезок рисуют на пустой дорожке; Alt со стрелками сдвигает тот, что в фокусе, на Snap (minute, hour, day, week, month, year или число; по умолчанию шаг делений). Escape отменяет перетаскивание. Timeline не меняет данные сам: события просят об этом владельца.
 
 События: select ({Kind, ID, Item}), seek ({At}), view ({From, To}), move ({Kind, ID, Item, At} отметки, {Kind, ID, Item, From, To} отрезка), resize ({ID, Item, From, To}), create ({Lane, From, To}). Моменты в них того же вида, что Start: дата (YYYY-MM-DD, когда шаг привязки — день и больше) или число.
 
@@ -32,6 +32,7 @@ Start и End — вся линия; From и To — видимая часть (п
 | `Unit` | `''` |
 | `Format` | `null` |
 | `Controls` | `true` |
+| `Overview` | `false` |
 | `Label` | `''` |
 
 ## События
@@ -50,7 +51,7 @@ Start и End — вся линия; From и To — видимая часть (п
 ## Пример
 
 ```example
-<Timeline Start="2026-01-01" End="2026-12-31" [marks]="Marks" [ranges]="Ranges" [lanes]="Lanes" Editable="true" Snap="day" (move)="Moved" (resize)="Moved" (select)="Selected" />
+<Timeline Start="2026-01-01" End="2026-12-31" [marks]="Marks" [ranges]="Ranges" [lanes]="Lanes" Overview="true" Editable="true" Snap="day" (move)="Moved" (resize)="Moved" (select)="Selected" />
 <p>{{Note}}</p>
 <Timeline Start="0" End="300" Unit="s" [playhead]="At" Seekable="true" (seek)="Seek">
 	<TimelineProgress [to]="At" Buffer="120" />

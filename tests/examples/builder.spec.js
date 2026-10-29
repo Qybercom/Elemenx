@@ -1095,6 +1095,125 @@ test.describe('Elemenx builder', function () {
 		expect(errors).toEqual([]);
 	});
 
+	test('zooms the page on its board, keeps the view to the page, and marks and measures in pixels of the page at any zoom', async function ({ page }) {
+		var errors = captureErrors(page);
+		var stage = page.locator('.elemenx-designer-stage');
+		var card = page.locator('.elemenx-designer-page-host .elemenx-card').first();
+		var labels = page.locator('.elemenx-designer-ruler.horizontal .elemenx-ruler-label');
+		var box;
+		var selection;
+		var surface;
+		var first;
+		var second;
+
+		await open(page);
+
+		await add(page, 'Card');
+
+		/* Ctrl and the wheel zoom the page at the pointer. */
+		box = await stage.boundingBox();
+
+		await page.mouse.move(box.x + 100, box.y + 100);
+		await page.keyboard.down('Control');
+		await page.mouse.wheel(0, -300);
+		await page.keyboard.up('Control');
+
+		await expect(stage.locator('.elemenx-board-zoom')).toHaveText('200%');
+
+		/* The selection is where the card is drawn, at its size on the screen. */
+		await expect.poll(async function () {
+			var drawn = await card.boundingBox();
+			var marked = await page.locator('.elemenx-designer-selection').boundingBox();
+
+			return Math.round(Math.abs(drawn.x - marked.x) + Math.abs(drawn.width - marked.width) + Math.abs(drawn.y - marked.y));
+		}).toBeLessThan(8);
+
+		/* The rulers count pixels of the page: a hundred of them between two numbers, two hundred pixels of the screen. */
+		first = await labels.nth(0).boundingBox();
+		second = await labels.nth(1).boundingBox();
+
+		expect(Number(await labels.nth(1).innerText()) - Number(await labels.nth(0).innerText())).toBe(100);
+		expect(Math.round(second.x - first.x)).toBe(200);
+
+		/* The wheel moves the view, never past the page and its margin (16 pixels of the page, 32 of the screen). */
+		await page.mouse.wheel(-5000, -5000);
+
+		surface = await page.locator('.elemenx-designer-surface').boundingBox();
+		box = await stage.boundingBox();
+
+		expect(Math.round(surface.x - box.x)).toBe(32);
+		expect(Math.round(surface.y - box.y)).toBe(32);
+
+		/* A press on the card still selects it; the percent fits the page in the view again. */
+		await page.locator('.elemenx-designer-surface').click({position: {x: 300, y: 20}});
+
+		selection = await page.locator('.elemenx-designer-inspector-title').innerText();
+
+		expect(selection.length).toBeGreaterThan(0);
+
+		await stage.locator('.elemenx-board-zoom button').click();
+
+		surface = await page.locator('.elemenx-designer-surface').boundingBox();
+
+		expect(surface.width).toBeLessThanOrEqual(box.width);
+
+		expect(errors).toEqual([]);
+	});
+
+	test('shows the pages of an application on a map, its links as arrows between them, and opens a page from it', async function ({ page }) {
+		var errors = captureErrors(page);
+		var map = page.locator('.elemenx-designer-map');
+		var board;
+		var frame;
+
+		await open(page);
+
+		/* An application of three pages: Home links to About, About to Home (a link) and to Contacts (a Card, its Href). */
+		await page.evaluate(function () {
+			var designer = Elemenx.Instance(document.querySelector('.elemenx-designer-canvas')).$Service('Designer');
+			var about;
+
+			designer.Create('application', 'Shop');
+			designer.Insert('heading', 'root');
+			designer.Set(designer.Insert('link', 'root'), 'Href', '/about');
+			designer.AddDocument('page', 'Contacts');
+
+			about = designer.AddDocument('page', 'About');
+
+			designer.Open(about);
+			designer.Insert('heading', 'root');
+			designer.Set(designer.Insert('link', 'root'), 'Href', '/');
+			designer.Set(designer.Insert('Card', 'root'), 'Href', '/contacts');
+		});
+
+		await page.locator('.builder-documents [data-map]').click();
+
+		await expect(map.locator('.elemenx-designer-map-frame')).toHaveCount(3);
+		await expect(map.locator('.elemenx-designer-map-label')).toHaveText([/^\s*Home\s+\/\s*$/, /^\s*Contacts\s+\/contacts\s*$/, /^\s*About\s+\/about\s*$/]);
+		await expect(map.locator('.elemenx-designer-map-frame[aria-label="About"]')).toContainText('Heading');
+		await expect(map.locator('.elemenx-designer-map-link')).toHaveCount(3);
+		await expect(page.locator('.elemenx-designer-canvas')).toHaveCount(0);
+
+		/* All of the map in view at the start: every frame on the board. */
+		board = await map.boundingBox();
+
+		for (var index = 0; index < 3; index++) {
+			frame = await map.locator('.elemenx-designer-map-frame').nth(index).boundingBox();
+
+			expect(frame.x).toBeGreaterThanOrEqual(board.x);
+			expect(frame.x + frame.width).toBeLessThanOrEqual(board.x + board.width + 1);
+		}
+
+		/* A press on the name of a page opens it on the canvas. */
+		await map.locator('.elemenx-designer-map-label').filter({hasText: 'Contacts'}).click();
+
+		await expect(map).toHaveCount(0);
+		await expect(page.locator('.builder-document.active')).toHaveText('Contacts');
+		await expect(page.locator('.elemenx-designer-canvas')).toHaveCount(1);
+
+		expect(errors).toEqual([]);
+	});
+
 	test('makes an application of pages and components: a component with its props and slot, used on a page, routes, guards, settings and a download', async function ({ page }) {
 		var errors = captureErrors(page);
 		var canvas = page.locator('.elemenx-designer-canvas');
@@ -1113,7 +1232,7 @@ test.describe('Elemenx builder', function () {
 		/* An application: its kind chosen when it is made; a tab for each document open over the canvas, and its settings. */
 		await create(page, 'application', 'Shop');
 
-		await expect(page.locator('.builder-document')).toHaveText(['Application', 'Home']);
+		await expect(page.locator('.builder-document')).toHaveText(['Application', 'Map', 'Home']);
 
 		/* A component: a paragraph and the slot of what it is given. */
 		await page.locator('.elemenx-ribbon-tab[data-id="project"]').click();
@@ -1167,7 +1286,7 @@ test.describe('Elemenx builder', function () {
 		/* A tab closes by its cross; the document stays in the project, the explorer opens it again. */
 		await page.locator('.builder-document').filter({hasText: 'HeroBanner'}).locator('.builder-document-close').click();
 
-		await expect(page.locator('.builder-document')).toHaveText(['Application', 'Home']);
+		await expect(page.locator('.builder-document')).toHaveText(['Application', 'Map', 'Home']);
 
 		/* The settings of the Application in the main area: a guard, and a route it guards. */
 		await page.locator('.builder-document').filter({hasText: 'Application'}).click();
@@ -1246,7 +1365,7 @@ test.describe('Elemenx builder', function () {
 		await reopen(page, 'Shop');
 
 		await expect(page.locator('.elemenx-workspace-tool-button[data-tool="project"]')).toHaveCount(1);
-		await expect(page.locator('.builder-document')).toHaveText(['Application', 'Home']);
+		await expect(page.locator('.builder-document')).toHaveText(['Application', 'Map', 'Home']);
 
 		/* The kinds stay their own: the component has its slot, no tab of documents, no tab of the project. */
 		await reopen(page, 'Badge');

@@ -1,7 +1,8 @@
 /*
  * The canvas is the body of the page: the viewport as high as the room the canvas has (as wide as Width says), the
- * page in it a column that fills it, so a screen with Sizing fill fills it too; taller, the canvas scrolls. Its layers
- * (the rulers, the page and what floats in it) stay inside it: a popup of the page around it goes over them.
+ * page in it a column that fills it, so a screen with Sizing fill fills it too. The viewport is the frame of a Board:
+ * taller or wider than the room, the board moves the view over it, and zooms it. Its layers (the rulers, the page and
+ * what floats in it) stay inside it: a popup of the page around it goes over them.
  */
 .elemenx-designer-canvas {
 	position: relative;
@@ -13,7 +14,7 @@
 	background: var(--elemenx-background);
 }
 
-/* The rulers along the top and the side, out of the scroll; the stage that scrolls takes the rest. */
+/* The rulers along the top and the side, out of the board; the stage of the board takes the rest. */
 .elemenx-designer-canvas.rulers {
 	padding: 20px 0 0 20px;
 }
@@ -25,8 +26,13 @@
 	flex-direction: column;
 	min-width: 0;
 	min-height: 0;
-	padding: 16px;
-	overflow: auto;
+	overflow: hidden;
+}
+
+.elemenx-designer-stage > .elemenx-board-host {
+	flex: 1 1 auto;
+	height: auto;
+	min-height: 0;
 }
 
 .elemenx-designer-rulers-corner,
@@ -58,23 +64,16 @@
 	left: 0;
 }
 
+/* The page in the world of the board, at its origin: its width and its height (at least) are those of Room. */
 .elemenx-designer-viewport {
+	position: absolute;
+	top: 0;
+	left: 0;
 	display: flex;
-	flex: 1 0 auto;
 	flex-direction: column;
-	align-self: center;
-	width: 100%;
 	container-type: inline-size;
 	container-name: elemenx-designer;
 	transition: width var(--elemenx-duration) var(--elemenx-easing);
-}
-
-.elemenx-designer-viewport.tablet {
-	width: 768px;
-}
-
-.elemenx-designer-viewport.phone {
-	width: 390px;
 }
 
 .elemenx-designer-surface {
@@ -109,7 +108,7 @@
 
 /* Outlines: the frame of every container; Gaps: room to drop into the containers without a padding of their own. */
 .elemenx-designer-canvas.outlines [data-designer-container] > * {
-	outline: 1px dashed var(--elemenx-border-strong);
+	outline: calc(1px * var(--elemenx-designer-unscale, 1)) dashed var(--elemenx-border-strong);
 	outline-offset: -1px;
 }
 
@@ -151,17 +150,18 @@
 	pointer-events: none;
 }
 
+/* The marks keep their size at any zoom of the board: --elemenx-designer-unscale is one over the zoom. */
 .elemenx-designer-hover {
-	border: 1px dashed var(--elemenx-accent);
+	border: calc(1px * var(--elemenx-designer-unscale, 1)) dashed var(--elemenx-accent);
 }
 
 .elemenx-designer-selection {
-	border: 2px solid var(--elemenx-accent);
+	border: calc(2px * var(--elemenx-designer-unscale, 1)) solid var(--elemenx-accent);
 }
 
 .elemenx-designer-target {
 	background: rgba(var(--elemenx-accent-rgb), 0.12);
-	border: 1px solid var(--elemenx-accent);
+	border: calc(1px * var(--elemenx-designer-unscale, 1)) solid var(--elemenx-accent);
 }
 
 .elemenx-designer-marker {
@@ -182,6 +182,8 @@
 	white-space: nowrap;
 	background: var(--elemenx-accent);
 	border-radius: var(--elemenx-radius-small);
+	transform-origin: top left;
+	scale: var(--elemenx-designer-unscale, 1);
 }
 
 .elemenx-designer-grip {
@@ -199,18 +201,25 @@
 	cursor: grab;
 	background: var(--elemenx-accent);
 	border-radius: var(--elemenx-radius-small) var(--elemenx-radius-small) 0 0;
+	transform-origin: bottom left;
+	scale: var(--elemenx-designer-unscale, 1);
 	pointer-events: auto;
 }
 
-/* The bar of a drag: the containers from the page to the one a drop goes into; a drop on one puts it at its end. */
+/*
+ * The bar of a drag, over the board at its top: the containers from the page to the one a drop goes into; a drop on one
+ * puts it at its end.
+ */
 .elemenx-designer-chain {
-	position: sticky;
-	top: 0;
+	position: absolute;
+	top: 4px;
+	right: 0;
+	left: 0;
 	z-index: 3;
 	display: flex;
-	flex: none;
 	justify-content: center;
 	height: 0;
+	pointer-events: none;
 }
 
 .elemenx-designer-chain-bar {
@@ -219,8 +228,8 @@
 	align-items: center;
 	gap: 4px;
 	height: max-content;
-	margin-top: -12px;
 	padding: 4px 6px;
+	pointer-events: auto;
 	background: var(--elemenx-surface);
 	border: 1px solid var(--elemenx-border);
 	border-radius: var(--elemenx-radius);
@@ -273,7 +282,7 @@
 }
 
 .elemenx-designer-measure.pinned {
-	border: 2px solid var(--elemenx-accent);
+	border: calc(2px * var(--elemenx-designer-unscale, 1)) solid var(--elemenx-accent);
 }
 
 .elemenx-designer-distance {
@@ -292,6 +301,7 @@
 	background: var(--elemenx-danger);
 	border-radius: var(--elemenx-radius-small);
 	transform: translate(-50%, -50%);
+	scale: var(--elemenx-designer-unscale, 1);
 }
 
 .elemenx-designer-tip {
@@ -307,6 +317,8 @@
 	border: 1px solid var(--elemenx-border);
 	border-radius: var(--elemenx-radius-small);
 	box-shadow: var(--elemenx-shadow-small);
+	transform-origin: top left;
+	scale: var(--elemenx-designer-unscale, 1);
 }
 
 .elemenx-designer-tip-row {

@@ -269,6 +269,7 @@
 	'components/Ruler/Ruler.js',
 	'components/DesignerPalette/DesignerPalette.js',
 	'components/DesignerCanvas/DesignerCanvas.js',
+	'components/DesignerMap/DesignerMap.js',
 	'components/DesignerTree/DesignerTree.js',
 	'components/DesignerStyle/DesignerStyle.js',
 	'components/DesignerRules/DesignerRules.js',

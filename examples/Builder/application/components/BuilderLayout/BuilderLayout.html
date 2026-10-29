@@ -156,13 +156,15 @@
 		<div slot="main" class="builder-main">
 			<div class="builder-documents" role="tablist" *if="Mode(Version) === 'application'" [attribute.aria-label]="$T('builder.documents')">
 				<button type="button" role="tab" class="builder-document" data-settings [class.active]="Settings" [attribute.aria-selected]="Settings ? 'true' : 'false'" (click)="Configured"><Icon Name="settings" Size="14" /><span>{{$T('builder.settings')}}</span></button>
-				<div class="builder-document" *for="item of Tabs(Version)" *key="item.ID" [class.active]="item.Active && !Settings" [attribute.data-document]="item.ID">
-					<button type="button" role="tab" class="builder-document-open" [attribute.aria-selected]="item.Active && !Settings ? 'true' : 'false'" [attribute.data-document]="item.ID" (click)="Switched"><Icon Size="14" [name]="item.Icon" /><span>{{item.Name}}</span></button>
+				<button type="button" role="tab" class="builder-document" data-map [class.active]="Mapped && !Settings" [attribute.aria-selected]="Mapped && !Settings ? 'true' : 'false'" (click)="Mapping"><Icon Name="map" Size="14" /><span>{{$T('builder.map')}}</span></button>
+				<div class="builder-document" *for="item of Tabs(Version)" *key="item.ID" [class.active]="item.Active && !Settings && !Mapped" [attribute.data-document]="item.ID">
+					<button type="button" role="tab" class="builder-document-open" [attribute.aria-selected]="item.Active && !Settings && !Mapped ? 'true' : 'false'" [attribute.data-document]="item.ID" (click)="Switched"><Icon Size="14" [name]="item.Icon" /><span>{{item.Name}}</span></button>
 					<button type="button" class="builder-document-close" *if="Tabs(Version).length > 1" [attribute.title]="$T('builder.closeTab')" [attribute.aria-label]="$T('builder.closeTab')" [attribute.data-document]="item.ID" (click)="Closed"><Icon Name="close" Size="12" /></button>
 				</div>
 			</div>
 			<DesignerSettings *if="Settings && Mode(Version) === 'application'" (open)="Opened" />
-			<DesignerCanvas *if="!Settings || Mode(Version) !== 'application'" [width]="Width" [preview]="Preview" [outlines]="Outlines" [gaps]="Gaps" [inspect]="Inspect" [lines]="Lines" [rulers]="Rulers" />
+			<DesignerMap *if="Mapped && !Settings && Mode(Version) === 'application'" [width]="Width" (open)="MapOpened" />
+			<DesignerCanvas *if="(!Settings && !Mapped) || Mode(Version) !== 'application'" [width]="Width" [preview]="Preview" [outlines]="Outlines" [gaps]="Gaps" [inspect]="Inspect" [lines]="Lines" [rulers]="Rulers" />
 		</div>
 
 		<WorkspaceToolWindow slot="tools" ID="project" Icon="folder" Area="left" *if="Mode(Version) === 'application'" [title]="$T('builder.project')">

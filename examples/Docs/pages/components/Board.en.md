@@ -1,7 +1,7 @@
 <!-- generated -->
 # Board
 
-An infinite canvas, as the one of Figma: its content (the default slot) lives in coordinates of its own (the world, in pixels at zoom 1: place the elements in it with position absolute, left and top) and the board shows a part of it, moved and scaled. The wheel moves it (a trackpad with two fingers too), Ctrl with the wheel or a pinch zooms at the pointer, a drag with the middle button, with Space held or on an empty place (Drag) moves it; when it has the focus, the arrows move it, + and - zoom, 0 gives zoom 1 and Shift+1 fits the content. X and Y are the point of the world at the top left corner of the view, Zoom its scale (MinZoom to MaxZoom); Grid dots, lines or none, of GridSize pixels of the world. Controls shows the buttons of the zoom and its percent. The view event tells {X, Y, Zoom} as it changes. Methods: ZoomTo(zoom, point), Pan(dx, dy), FitContent(margin), CenterOn(x, y), ToWorld(clientX, clientY), ToScreen(x, y).
+An infinite canvas, as the one of Figma: its content (the default slot) lives in coordinates of its own (the world, in pixels at zoom 1: place the elements in it with position absolute, left and top) and the board shows a part of it, moved and scaled. The wheel moves it (a trackpad with two fingers too; over an element of the content that scrolls that way, a list, it scrolls that element), Ctrl with the wheel or a pinch zooms at the pointer, a drag with the middle button, with Space held or on an empty place (Drag) moves it; when it has the focus, the arrows move it, + and - zoom, 0 gives zoom 1 and Shift+1 fits the content. X and Y are the point of the world at the top left corner of the view, Zoom its scale (MinZoom to MaxZoom); Grid dots, lines or none, of GridSize pixels of the world. Controls shows the buttons of the zoom and its percent. The view event tells {X, Y, Zoom} as it changes. Bounds keeps the view to a part of the world: none (anywhere, by default), content (the content with BoundsMargin pixels of the world around) or frame (the element of the content with data-frame="Frame", the first one without a Frame, BoundsMargin around it); a part smaller than the view stays in its middle, and the view follows the part as it changes. Methods: ZoomTo(zoom, point), Pan(dx, dy), FitContent(margin) (the frame alone with Bounds frame), CenterOn(x, y), ToWorld(clientX, clientY), ToScreen(x, y), Limits() (the part of the world the view is kept to, {Left, Top, Right, Bottom}, or null).
 
 ## Properties
 
@@ -16,6 +16,9 @@ An infinite canvas, as the one of Figma: its content (the default slot) lives in
 | `GridSize` | `24` |
 | `Drag` | `true` |
 | `Controls` | `true` |
+| `Bounds` | `'none'` |
+| `BoundsMargin` | `40` |
+| `Frame` | `''` |
 
 ## Events
 
@@ -27,6 +30,7 @@ default
 
 ## Methods
 
+- `Limits()`
 - `ToWorld(clientX, clientY)`
 - `ToScreen(x, y)`
 - `ZoomTo(zoom, point)`
@@ -60,6 +64,9 @@ default
 
 - [moves its world by the wheel, zooms at the pointer with Ctrl, and keeps the point of the world under it](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/board.test.js#L54) — `tests/regression/board.test.js`
 - [moves by a drag on an empty place, keeps its zoom in bounds, converts its points and fits its content](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/board.test.js#L94) — `tests/regression/board.test.js`
+- [leaves the wheel to an element of its content that scrolls that way, and zooms over it with Ctrl](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/board.test.js#L146) — `tests/regression/board.test.js`
+- [keeps the view to its content with Bounds content: a margin around it, a smaller part in the middle](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/board.test.js#L184) — `tests/regression/board.test.js`
+- [keeps the view to one frame with Bounds frame, follows the Frame named and its size, and fits it](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/board.test.js#L215) — `tests/regression/board.test.js`
 - [asks for a device, opens and claims it, and transfers data in, out and by control](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/devices.test.js#L178) — `tests/regression/devices.test.js`
 - [knows the Components, Services and Directives of the Libraries and of the project](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/language-server.test.js#L46) — `tests/regression/language-server.test.js`
 - [goes from $T to elemenx.js and from its key to the phrase of the nearest locales, and tells the phrase in each language](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/language-server.test.js#L240) — `tests/regression/language-server.test.js`

@@ -43,7 +43,9 @@
  *   holds the place of the pages), Origin (the Component of the files it is a copy of, '' for none)}; Opened() is the
  *   ID of the one being edited, Tabs those open. AddDocument(type, name), RemoveDocument(id) (not a component another
  *   document holds: Used(id) names them), Open(id) (in a tab; each document keeps its own history), Close(id) (its
- *   tab), SetDocument(id, name, value); Source(id) is the template of a document.
+ *   tab), SetDocument(id, name, value); Source(id) is the template of a document. Map() is the map of the pages of an
+ *   application: [{ID, Name, Paths (its routes), Template (as the canvas shows it), Links ([{Node, Page}]: an element
+ *   whose Href a route of another page matches)}], in the order of the routes.
  * - The routes of an application: [{ID, Path, Page, Guards, Failed}], AddRoute(path, page), SetRoute(id, name,
  *   value), RemoveRoute(id); its guards, [{Name, Description, Code}] (Code the body of the function of the guard),
  *   AddGuard(name), SetGuard(name, field, value), RemoveGuard(name); its settings, SetSetting(name, value): Name,
@@ -64,7 +66,7 @@
 Elemenx.Service('Designer', {
 	$Meta: {
 		Description: 'The document of a designer of pages: its nodes, their props and layout, the selection, the history and the template.',
-		Methods: ['Load(callback)', 'Use(meta)', 'Ready()', 'Literal(value)', 'Parse(expression)', 'Rules()', 'Rule(context)', 'SetRule(context, property, value)', 'RootClass(id)', 'Kinds()', 'Kind(id)', 'Label(kind)', 'Hint(kind)', 'GroupLabel(group)', 'Root()', 'Find(id)', 'Parent(id)', 'Container(id)', 'Within(id, within)', 'Slots(id)', 'Insert(kind, parent, index)', 'Move(id, parent, index)', 'Remove(id)', 'Duplicate(id)', 'Set(id, name, value)', 'SetStyle(id, property, value)', 'Clear()', 'Select(id)', 'Selected()', 'Count()', 'CanUndo()', 'CanRedo()', 'Undo()', 'Redo()', 'Template(canvas, empty)', 'Import(text)', 'Project()', 'Opened()', 'Projects()', 'Create(mode, name)', 'Switch(id)', 'RemoveProject(id)', 'ExportProject()', 'ImportProject(text)', 'AddDocument(type, name)', 'RemoveDocument(id)', 'Used(id)', 'Open(id)', 'Close(id)', 'SetDocument(id, name, value)', 'AddRoute(path, page)', 'SetRoute(id, name, value)', 'RemoveRoute(id)', 'AddGuard(name)', 'SetGuard(name, field, value)', 'RemoveGuard(name)', 'SetSetting(name, value)', 'Source(id)', 'Scope(name)', 'Extend(components)', 'Copy(name)', 'OnChange(listener)', 'OffChange(listener)']
+		Methods: ['Load(callback)', 'Use(meta)', 'Ready()', 'Literal(value)', 'Parse(expression)', 'Rules()', 'Rule(context)', 'SetRule(context, property, value)', 'RootClass(id)', 'Kinds()', 'Kind(id)', 'Label(kind)', 'Hint(kind)', 'GroupLabel(group)', 'Root()', 'Find(id)', 'Parent(id)', 'Container(id)', 'Within(id, within)', 'Slots(id)', 'Insert(kind, parent, index)', 'Move(id, parent, index)', 'Remove(id)', 'Duplicate(id)', 'Set(id, name, value)', 'SetStyle(id, property, value)', 'Clear()', 'Select(id)', 'Selected()', 'Count()', 'CanUndo()', 'CanRedo()', 'Undo()', 'Redo()', 'Template(canvas, empty)', 'Import(text)', 'Project()', 'Opened()', 'Projects()', 'Create(mode, name)', 'Switch(id)', 'RemoveProject(id)', 'ExportProject()', 'ImportProject(text)', 'AddDocument(type, name)', 'RemoveDocument(id)', 'Used(id)', 'Open(id)', 'Close(id)', 'SetDocument(id, name, value)', 'AddRoute(path, page)', 'SetRoute(id, name, value)', 'RemoveRoute(id)', 'AddGuard(name)', 'SetGuard(name, field, value)', 'RemoveGuard(name)', 'SetSetting(name, value)', 'Source(id)', 'Map()', 'Scope(name)', 'Extend(components)', 'Copy(name)', 'OnChange(listener)', 'OffChange(listener)']
 	},
 	Library: 'ElemenxUI',
 	StorageKey: 'elemenx-designer:document',
@@ -2692,6 +2694,79 @@ Elemenx.Service('Designer', {
 				return within(treeOf(item), function () {
 					return template(false, '');
 				});
+			});
+		};
+
+		/*
+		 * The map of the pages of an application, in the order of their routes (a page without one last): each with its
+		 * paths, its template as the canvas shows it (every node in its wrapper) and the links of its elements to the
+		 * other pages, an Href that a route of one of them matches.
+		 */
+		this.Map = function () {
+			var order = project.Routes.map(function (route) {
+				return route.Page;
+			});
+
+			/* The page of the route a path of a link matches; a part of a route (:id) matches any part, * the rest. */
+			function target (href) {
+				var path = String(href || '').split(/[?#]/)[0];
+				var route;
+
+				if (path.charAt(0) !== '/') return null;
+
+				route = project.Routes.filter(function (each) {
+					var pattern = String(each.Path || '').split('/').map(function (part) {
+						if (part === '*') return '.*';
+						if (part.charAt(0) === ':') return '[^/]+';
+
+						return part.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+					}).join('/');
+
+					return new RegExp('^' + pattern + '/?$').test(path);
+				})[0];
+
+				return route ? route.Page : null;
+			}
+
+			return project.Documents.filter(function (item) {
+				return item.Type === 'page';
+			}).sort(function (a, b) {
+				var left = order.indexOf(a.ID);
+				var right = order.indexOf(b.ID);
+
+				return (left === -1 ? Infinity : left) - (right === -1 ? Infinity : right) || 0;
+			}).map(function (item) {
+				var tree = treeOf(item);
+				var links = [];
+
+				(function walk (node) {
+					var page = node.Props ? target(node.Props.Href || node.Props.To) : null;
+					if (page && page !== item.ID)
+						links.push({Node: node.ID, Page: page});
+
+					(node.Children || []).forEach(walk);
+				})(tree);
+
+				return {
+					ID: item.ID,
+					Name: item.Name,
+					Paths: project.Routes.filter(function (route) {
+						return route.Page === item.ID;
+					}).map(function (route) {
+						return route.Path;
+					}),
+					Template: within(tree, function () {
+						aliasing = true;
+
+						try {
+							return template(true, '');
+						}
+						finally {
+							aliasing = false;
+						}
+					}),
+					Links: links
+				};
 			});
 		};
 

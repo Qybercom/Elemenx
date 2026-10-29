@@ -13,7 +13,7 @@ var Meta = require('./tools/meta.js');
 var Package = require('./package.json');
 var fail = require('./tools/common.js').fail;
 
-var BooleanOptions = {force: true, 'current-color': true, single: true, widget: true, full: true, readable: true, precompile: true, extension: true, help: true, docker: true, strict: true, open: true};
+var BooleanOptions = {force: true, 'current-color': true, single: true, widget: true, full: true, readable: true, precompile: true, extension: true, help: true, docker: true, strict: true, open: true, 'no-split': true};
 
 /* Options whose value may be left out: --native alone builds all the platforms. */
 var OptionalValues = {native: ['desktop', 'mobile', 'android-library', 'all']};
@@ -135,6 +135,7 @@ function buildOptions (parsed, settings) {
 		widget: parsed.Options.widget === true || settings.Widget === true,
 		full: parsed.Options.full === true || settings.Full === true,
 		minify: !(parsed.Options.readable === true || settings.Minify === false),
+		split: !(parsed.Options['no-split'] === true || settings.Split === false),
 		precompile: parsed.Options.precompile === true || settings.Precompile === true,
 		extension: parsed.Options.extension === true,
 		surface: value(parsed.Options, 'surface', (settings.Extension || {}).Surface, 'popup'),
@@ -312,6 +313,7 @@ command('build', 'Build an Application into dist: a site, one file, a widget, a 
 		['--full', 'all of the framework, not only the sections the build uses'],
 		['--readable', 'keeps the comments, the blanks and the names of the scripts, to read the build (Minify: false in elemenx.config.js)'],
 		['--precompile', 'the expressions of the templates as code, for a page that forbids eval'],
+		['--no-split', 'one bundle: the Components of the routes not in parts of their own (Split: false in elemenx.config.js)'],
 		['--extension', 'a browser extension for Chrome, Edge and Firefox'],
 		['--surface <popup|tab|side>', 'where the extension shows (popup)'],
 		['--docker', 'the site and a Docker image of it, served by nginx (the image when docker is installed)'],

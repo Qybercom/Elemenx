@@ -1,0 +1,22 @@
+<div class="elemenx-designer-map">
+	<i class="elemenx-designer-sync" hidden *mount="Draw(Version, Width)"></i>
+	<Board Bounds="content" BoundsMargin="160" MinZoom="0.05" MaxZoom="2" [controls]="Controls" (view)="Viewed">
+		<div class="elemenx-designer-map-frame" *for="page of Pages" *key="page.ID" [attribute.data-page]="page.ID" [attribute.aria-label]="page.Name" [style.left]="Place(page.Index, Width)" [style.width]="Size(Width).Width" [style.min-height]="Size(Width).Height" (click)="Opened">
+			<div class="elemenx-designer-map-host"></div>
+		</div>
+	</Board>
+	<div class="elemenx-designer-map-marks">
+		<svg class="elemenx-designer-map-links" aria-hidden="true">
+			<g *for="link of Arrows" *key="link.Key">
+				<path class="elemenx-designer-map-link" [attribute.d]="link.Path"></path>
+				<circle class="elemenx-designer-map-link-start" r="4" [attribute.cx]="link.X1" [attribute.cy]="link.Y1"></circle>
+				<path class="elemenx-designer-map-link-head" [attribute.d]="link.Head"></path>
+			</g>
+		</svg>
+		<button type="button" class="elemenx-designer-map-label elemenx-bare" *for="label of Labels" *key="label.ID" [attribute.data-page]="label.ID" [style.left]="label.Left + 'px'" [style.top]="label.Top + 'px'" (click)="Opened">
+			<strong>{{label.Name}}</strong>
+			<span class="elemenx-designer-map-path" *for="path of label.Paths" *key="path">{{path}}</span>
+		</button>
+	</div>
+	<p class="elemenx-designer-map-empty" *if="!Pages.length">{{$T('ui.designer.mapEmpty')}}</p>
+</div>

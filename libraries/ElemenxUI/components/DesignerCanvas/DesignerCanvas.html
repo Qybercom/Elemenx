@@ -3,45 +3,47 @@
 	<div class="elemenx-designer-rulers" *if="Rulers">
 		<span class="elemenx-designer-rulers-corner"></span>
 		<div class="elemenx-designer-ruler horizontal">
-			<Ruler [start]="RulerX" [marker]="PointX" [range]="Span(Selected(Version), Tick, 'x')" />
+			<Ruler [start]="RulerX" [scale]="Scaled" [marker]="PointX" [range]="Span(Selected(Version), Tick, 'x')" />
 		</div>
 		<div class="elemenx-designer-ruler vertical">
-			<Ruler Orientation="vertical" [start]="RulerY" [marker]="PointY" [range]="Span(Selected(Version), Tick, 'y')" />
+			<Ruler Orientation="vertical" [start]="RulerY" [scale]="Scaled" [marker]="PointY" [range]="Span(Selected(Version), Tick, 'y')" />
 		</div>
 	</div>
-	<div class="elemenx-designer-stage" (scroll)="Scrolled" (pointermove)="Pointed" (pointerleave)="Unpointed">
+	<div class="elemenx-designer-stage" (pointermove)="Pointed" (pointerleave)="Unpointed">
 		<div class="elemenx-designer-chain" *if="Chain.length">
 			<div class="elemenx-designer-chain-bar" *droppable="{Accept: ['elemenx-designer-kind', 'elemenx-designer-node']}" (dropmove)="ChainOver" (dropped)="ChainDropped" (dropleave)="ChainLeft">
 				<span class="elemenx-designer-chain-title">{{$T('ui.designer.end')}}</span>
 				<span class="elemenx-designer-chain-item" *for="link of Chain" *key="link.ID" [class.active]="link.ID === Into" [attribute.data-id]="link.ID">{{link.Label}}</span>
 			</div>
 		</div>
-		<div class="elemenx-designer-viewport" [class]="[Width || 'desktop']">
-			<div class="elemenx-designer-surface" [attribute.aria-label]="$T('ui.designer.canvas')">
-				<div class="elemenx-designer-page-host"></div>
-				<div class="elemenx-designer-layer" *if="!Preview" *droppable="{Accept: ['elemenx-designer-kind', 'elemenx-designer-node']}" (pointermove)="Moved" (pointerleave)="Left" (click)="Pressed" (dropmove)="Over" (dropped)="Dropped" (dropleave)="Left">
-					<div class="elemenx-designer-hover" *if="Hovered && Hovered !== Selected(Version)" [attribute.style]="Box(Hovered, Tick)"></div>
-					<div class="elemenx-designer-target" *if="Target" [attribute.style]="Style(Target)"></div>
-					<div class="elemenx-designer-selection" *if="Selected(Version)" [attribute.style]="Box(Selected(Version), Tick)">
-						<span class="elemenx-designer-grip" *draggable="{Data: Selected(Version), Type: 'elemenx-designer-node'}"><Icon Name="grip" Size="12" />{{Label(Selected(Version), Version)}}</span>
+		<Board Bounds="frame" Frame="page" BoundsMargin="16" Grid="none" MinZoom="0.1" MaxZoom="4" [controls]="Controls" (view)="Viewed">
+			<div class="elemenx-designer-viewport" data-frame="page" [class]="[Width || 'desktop']" [style.width]="Room(Width, Size).Width" [style.min-height]="Room(Width, Size).Height">
+				<div class="elemenx-designer-surface" [attribute.aria-label]="$T('ui.designer.canvas')">
+					<div class="elemenx-designer-page-host"></div>
+					<div class="elemenx-designer-layer" *if="!Preview" *droppable="{Accept: ['elemenx-designer-kind', 'elemenx-designer-node']}" (pointermove)="Moved" (pointerleave)="Left" (click)="Pressed" (dropmove)="Over" (dropped)="Dropped" (dropleave)="Left">
+						<div class="elemenx-designer-hover" *if="Hovered && Hovered !== Selected(Version)" [attribute.style]="Box(Hovered, Tick)"></div>
+						<div class="elemenx-designer-target" *if="Target" [attribute.style]="Style(Target)"></div>
+						<div class="elemenx-designer-selection" *if="Selected(Version)" [attribute.style]="Box(Selected(Version), Tick)">
+							<span class="elemenx-designer-grip" *draggable="{Data: Selected(Version), Type: 'elemenx-designer-node'}"><Icon Name="grip" Size="12" />{{Label(Selected(Version), Version)}}</span>
+						</div>
+						<div class="elemenx-designer-distance" *for="line of Spaces" *key="line.Key" [class.across]="line.Across" [attribute.style]="Style(line)"><span>{{line.Text}}</span></div>
+						<div class="elemenx-designer-marker" *if="Marker" [attribute.style]="Style(Marker)"><span class="elemenx-designer-marker-note" *if="Note">{{Note}}</span></div>
 					</div>
-					<div class="elemenx-designer-distance" *for="line of Spaces" *key="line.Key" [class.across]="line.Across" [attribute.style]="Style(line)"><span>{{line.Text}}</span></div>
-					<div class="elemenx-designer-marker" *if="Marker" [attribute.style]="Style(Marker)"><span class="elemenx-designer-marker-note" *if="Note">{{Note}}</span></div>
-				</div>
-				<div class="elemenx-designer-layer inspect" *if="Preview && Inspect" (pointermove)="Inspected" (pointerleave)="Uninspected" (click)="Pinned">
-					<div class="elemenx-designer-measure margin" *if="Measured" [attribute.style]="Style(Measured.Margin)"></div>
-					<div class="elemenx-designer-measure padding" *if="Measured" [attribute.style]="Style(Measured.Border)"></div>
-					<div class="elemenx-designer-measure content" *if="Measured" [attribute.style]="Style(Measured.Content)"></div>
-					<div class="elemenx-designer-measure pinned" *if="Pin" [attribute.style]="Style(Pin.Border)"></div>
-					<div class="elemenx-designer-distance" *for="line of Distances" *key="line.Key" [class.across]="line.Across" [attribute.style]="Style(line)"><span>{{line.Text}}</span></div>
-					<div class="elemenx-designer-tip" *if="Measured" [attribute.style]="Tip(Measured)">
-						<strong>{{Measured.Name}}</strong>
-						<span>{{Measured.Size}}</span>
-						<span class="elemenx-designer-tip-row" *if="Measured.Margins">margin {{Measured.Margins}}</span>
-						<span class="elemenx-designer-tip-row" *if="Measured.Paddings">padding {{Measured.Paddings}}</span>
+					<div class="elemenx-designer-layer inspect" *if="Preview && Inspect" (pointermove)="Inspected" (pointerleave)="Uninspected" (click)="Pinned">
+						<div class="elemenx-designer-measure margin" *if="Measured" [attribute.style]="Style(Measured.Margin)"></div>
+						<div class="elemenx-designer-measure padding" *if="Measured" [attribute.style]="Style(Measured.Border)"></div>
+						<div class="elemenx-designer-measure content" *if="Measured" [attribute.style]="Style(Measured.Content)"></div>
+						<div class="elemenx-designer-measure pinned" *if="Pin" [attribute.style]="Style(Pin.Border)"></div>
+						<div class="elemenx-designer-distance" *for="line of Distances" *key="line.Key" [class.across]="line.Across" [attribute.style]="Style(line)"><span>{{line.Text}}</span></div>
+						<div class="elemenx-designer-tip" *if="Measured" [attribute.style]="Tip(Measured)">
+							<strong>{{Measured.Name}}</strong>
+							<span>{{Measured.Size}}</span>
+							<span class="elemenx-designer-tip-row" *if="Measured.Margins">margin {{Measured.Margins}}</span>
+							<span class="elemenx-designer-tip-row" *if="Measured.Paddings">padding {{Measured.Paddings}}</span>
+						</div>
 					</div>
 				</div>
 			</div>
-		</div>
+		</Board>
 	</div>
 </div>

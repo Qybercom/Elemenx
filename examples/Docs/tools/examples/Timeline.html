@@ -1,4 +1,4 @@
-<Timeline Start="2026-01-01" End="2026-12-31" [marks]="Marks" [ranges]="Ranges" [lanes]="Lanes" Editable="true" Snap="day" (move)="Moved" (resize)="Moved" (select)="Selected" />
+<Timeline Start="2026-01-01" End="2026-12-31" [marks]="Marks" [ranges]="Ranges" [lanes]="Lanes" Overview="true" Editable="true" Snap="day" (move)="Moved" (resize)="Moved" (select)="Selected" />
 <p>{{Note}}</p>
 <Timeline Start="0" End="300" Unit="s" [playhead]="At" Seekable="true" (seek)="Seek">
 	<TimelineProgress [to]="At" Buffer="120" />

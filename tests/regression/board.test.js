@@ -142,4 +142,114 @@ describe('Contract: Board, an infinite canvas', function () {
 		expect(host.$Element().querySelector('.elemenx-board-zoom').textContent.trim()).toBe('400%');
 		expect(component).not.toBe(null);
 	});
+
+	it('leaves the wheel to an element of its content that scrolls that way, and zooms over it with Ctrl', async function () {
+		var host = mount('<div style="height: 100%"><Board Controls="false"><div class="list" style="position: absolute; left: 0; top: 0; width: 200px; height: 100px; overflow: auto"><div style="height: 400px"></div></div></Board></div>');
+		var component;
+		var list;
+		var wheel;
+
+		await tick(20);
+
+		component = Elemenx.Instance(host.$Element().querySelector('.elemenx-board-host'));
+		list = host.$Element().querySelector('.list');
+		wheel = function (target, deltaY, ctrlKey) {
+			var event = new WheelEvent('wheel', {deltaY: deltaY, ctrlKey: !!ctrlKey, clientX: 10, clientY: 10, bubbles: true, cancelable: true});
+
+			target.dispatchEvent(event);
+
+			return event.defaultPrevented;
+		};
+
+		/* Down over the list: the list scrolls (the browser does it), the view stays. */
+		expect(wheel(list.firstChild, 60)).toBe(false);
+		expect(component.Y).toBe(0);
+
+		/* Up at its top, it scrolls no further: the view moves. */
+		expect(wheel(list.firstChild, -60)).toBe(true);
+		expect(component.Y).toBe(-60);
+
+		/* At its end, down moves the view too; Ctrl zooms anywhere. */
+		list.scrollTop = 1000;
+
+		expect(wheel(list.firstChild, 60)).toBe(true);
+		expect(component.Y).toBe(0);
+
+		list.scrollTop = 0;
+
+		expect(wheel(list.firstChild, -300, true)).toBe(true);
+		expect(component.Zoom).toBeCloseTo(2, 5);
+	});
+
+	it('keeps the view to its content with Bounds content: a margin around it, a smaller part in the middle', async function () {
+		var views = [];
+		var host = mount('<div style="height: 100%"><Board Controls="false" Bounds="content" BoundsMargin="20" (view)="Viewed"><div style="position: absolute; left: 0; top: 0; width: 1600px; height: 1200px"></div></Board></div>', {Viewed: function (view) {
+			views.push(view);
+		}});
+		var component;
+
+		await tick(20);
+
+		component = Elemenx.Instance(host.$Element().querySelector('.elemenx-board-host'));
+
+		expect(component.Limits()).toEqual({Left: -20, Top: -20, Right: 1620, Bottom: 1220});
+
+		/* Far out on either side: at the edge of the content and its margin. */
+		component.Pan(-500, -500);
+
+		expect([component.X, component.Y]).toEqual([-20, -20]);
+
+		component.Pan(5000, 5000);
+
+		expect([component.X, component.Y]).toEqual([1620 - 800, 1220 - 600]);
+
+		/* Zoomed out until all of it is smaller than the view: it stays in the middle, wherever the view is moved. */
+		component.ZoomTo(0.25);
+		component.Pan(300, -300);
+
+		expect(component.X).toBeCloseTo(-20 - (800 / 0.25 - 1640) / 2, 5);
+		expect(component.Y).toBeCloseTo(-20 - (600 / 0.25 - 1240) / 2, 5);
+		expect(views[views.length - 1].Zoom).toBe(0.25);
+	});
+
+	it('keeps the view to one frame with Bounds frame, follows the Frame named and its size, and fits it', async function () {
+		var host = mount('<div style="height: 100%"><Board Controls="false" Bounds="frame" BoundsMargin="0" [frame]="Shown">' +
+			'<div data-frame="home" style="position: absolute; left: 0; top: 0; width: 800px; height: 1000px"></div>' +
+			'<div data-frame="about" class="about" style="position: absolute; left: 2000px; top: 0; width: 400px; height: 300px"></div>' +
+			'</Board></div>', {Shown: 'home'});
+		var component;
+
+		await tick(20);
+
+		component = Elemenx.Instance(host.$Element().querySelector('.elemenx-board-host'));
+
+		/* As wide as the view: across it does not move; down it goes as far as the frame. */
+		component.Pan(300, 5000);
+
+		expect([component.X, component.Y]).toEqual([0, 400]);
+
+		/* Another frame: the view goes to it, in its middle (it is smaller than the view). */
+		host.Shown = 'about';
+
+		await tick(20);
+
+		expect([component.X, component.Y]).toEqual([2000 - 200, -150]);
+
+		/* The frame grows: the view follows it. */
+		host.$Element().querySelector('.about').style.width = '1200px';
+
+		await tick(60);
+
+		expect(component.X).toBe(2000);
+
+		component.Pan(5000, 0);
+
+		expect(component.X).toBe(2000 + 1200 - 800);
+
+		/* Fitting fits the frame alone, not all of the content. */
+		component.FitContent(0);
+
+		expect(component.Zoom).toBeCloseTo(800 / 1200, 5);
+		expect(component.X).toBeCloseTo(2000, 5);
+	});
 });

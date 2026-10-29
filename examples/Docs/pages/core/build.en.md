@@ -62,6 +62,7 @@ What stays is packed:
 - the code, the templates and the styles are minified;
 - `$Meta` is dropped, unless the Application reads it (`Elemenx.Meta`, the Designer);
 - with `--precompile` (always for extensions and native programs), the expressions of the templates are written as functions, for pages that forbid `eval`.
+- a site and a widget are split by their routes: what one route alone needs goes into a part of its own (`dist/parts/`), fetched when the route is first shown (`--no-split` keeps one bundle).
 
 ## 3. It writes `dist/`
 

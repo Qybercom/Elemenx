@@ -187,6 +187,7 @@
 			"found": "Nothing found.",
 			"canvas": "Canvas",
 			"drop": "Drop here",
+			"mapEmpty": "The application has no pages yet.",
 			"structure": "Structure",
 			"start": "Drag components from the palette onto the canvas, or press one to add it.",
 			"nothing": "Select an element on the canvas or in the structure to edit its props.",

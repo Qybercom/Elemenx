@@ -1028,6 +1028,13 @@
 					"Group": "tools"
 				},
 				{
+					"ID": "DesignerMap",
+					"Title": {
+						"en": "DesignerMap"
+					},
+					"Group": "tools"
+				},
+				{
 					"ID": "DesignerPalette",
 					"Title": {
 						"en": "DesignerPalette"

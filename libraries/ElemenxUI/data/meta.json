@@ -15942,6 +15942,37 @@
 					"Schema": null,
 					"Body": false,
 					"Description": "Shows the buttons of the zoom and its percent."
+				},
+				{
+					"Name": "Bounds",
+					"Type": "select",
+					"Default": "none",
+					"Options": [
+						"none",
+						"content",
+						"frame"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "Keeps the view to a part of the world: none (anywhere), content (the content with BoundsMargin around), frame (the element of the content of Frame)."
+				},
+				{
+					"Name": "BoundsMargin",
+					"Type": "number",
+					"Default": 40,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The room around the content or the frame the view goes to, in pixels of the world."
+				},
+				{
+					"Name": "Frame",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The frame Bounds frame keeps the view to: the element of the content with data-frame of this name (the first one without a name)."
 				}
 			],
 			"Slots": [],
@@ -18643,6 +18674,15 @@
 					"Description": "Shows the buttons of the zoom."
 				},
 				{
+					"Name": "Overview",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Shows a strip of the whole line, a frame on the part in view that moves and zooms it."
+				},
+				{
 					"Name": "Label",
 					"Type": "text",
 					"Default": "",
@@ -21015,6 +21055,15 @@
 					"Description": "Shows the rulers along the top and the side, with the pointer and the selected element marked on them."
 				},
 				{
+					"Name": "Controls",
+					"Type": "bool",
+					"Default": true,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Shows the buttons of the zoom of the canvas and its percent."
+				},
+				{
 					"Name": "Empty",
 					"Type": "text",
 					"Default": "",
@@ -21035,6 +21084,49 @@
 			"EventDescriptions": {
 				"select": "An element was pressed: its ID, or null for the page.",
 				"drop": "A kind or an element was dropped on the canvas: {Kind, Node, Parent, Index, ID}, ID the element made or moved."
+			},
+			"Methods": [],
+			"Sample": {}
+		},
+		{
+			"Name": "DesignerMap",
+			"Kind": "Component",
+			"Group": "tools",
+			"Icon": "map",
+			"Description": "The map of the pages of an application of the Designer: a frame each on a board, the links between them as arrows.",
+			"Props": [
+				{
+					"Name": "Width",
+					"Type": "select",
+					"Default": "desktop",
+					"Options": [
+						"desktop",
+						"tablet",
+						"phone"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "The width of the frames: desktop (1280 pixels), tablet (768) or phone (390)."
+				},
+				{
+					"Name": "Controls",
+					"Type": "bool",
+					"Default": true,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Shows the buttons of the zoom and its percent."
+				}
+			],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [
+				"open"
+			],
+			"EventDescriptions": {
+				"open": "A frame or its name was pressed: the ID of its page."
 			},
 			"Methods": [],
 			"Sample": {}
@@ -23068,6 +23160,7 @@
 				"RemoveGuard(name)",
 				"SetSetting(name, value)",
 				"Source(id)",
+				"Map()",
 				"Scope(name)",
 				"Extend(components)",
 				"Copy(name)",
@@ -25503,11 +25596,13 @@
 		"elemenx-chronicle-body": [],
 		"elemenx-timeline": [
 			"editable",
+			"overview",
 			"seekable",
 			"vertical"
 		],
 		"elemenx-timeline-body": [],
 		"elemenx-timeline-track": [],
+		"elemenx-timeline-overview": [],
 		"elemenx-timeline-lane-names": [],
 		"elemenx-timeline-lane-name": [],
 		"elemenx-timeline-lane": [],
@@ -25542,6 +25637,13 @@
 		"elemenx-timeline-now": [],
 		"elemenx-timeline-playhead": [],
 		"elemenx-timeline-controls": [],
+		"elemenx-timeline-overview-mark": [],
+		"elemenx-timeline-overview-range": [],
+		"elemenx-timeline-overview-window": [],
+		"elemenx-timeline-overview-edge": [
+			"end",
+			"start"
+		],
 		"elemenx-terminal": [],
 		"elemenx-terminal-header": [],
 		"elemenx-terminal-title": [],
@@ -25766,10 +25868,7 @@
 			"horizontal",
 			"vertical"
 		],
-		"elemenx-designer-viewport": [
-			"phone",
-			"tablet"
-		],
+		"elemenx-designer-viewport": [],
 		"elemenx-designer-surface": [],
 		"elemenx-designer-page-host": [],
 		"elemenx-designer-page": [],
@@ -25802,6 +25901,17 @@
 		"elemenx-designer-slot": [],
 		"elemenx-designer-outlet": [],
 		"elemenx-designer-part": [],
+		"elemenx-designer-map": [],
+		"elemenx-designer-map-frame": [],
+		"elemenx-designer-map-host": [],
+		"elemenx-designer-map-marks": [],
+		"elemenx-designer-map-links": [],
+		"elemenx-designer-map-link": [],
+		"elemenx-designer-map-link-start": [],
+		"elemenx-designer-map-link-head": [],
+		"elemenx-designer-map-label": [],
+		"elemenx-designer-map-path": [],
+		"elemenx-designer-map-empty": [],
 		"elemenx-designer-tree": [],
 		"elemenx-designer-tree-start": [],
 		"elemenx-designer-style": [],

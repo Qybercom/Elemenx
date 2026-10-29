@@ -5630,6 +5630,8 @@ for (const origin of origins) {
 			var research;
 			var lane;
 			var ticks;
+			var strip;
+			var frame;
 
 			await open(page, origin, ['Timeline']);
 
@@ -5732,6 +5734,57 @@ for (const origin of origins) {
 			await expect.poll(function () {
 				return plan.locator('.elemenx-timeline-tick').allTextContents();
 			}).toEqual(ticks);
+
+			/* The overview: the whole line small under it (with the range drawn above), a frame on the part in view (all of it now). */
+			strip = plan.locator('.elemenx-timeline-overview');
+
+			await expect(strip.locator('.elemenx-timeline-overview-range')).toHaveCount(6);
+			await expect(strip.locator('.elemenx-timeline-overview-mark')).toHaveCount(5);
+
+			await plan.getByRole('button', {name: 'Zoom in'}).click();
+			await plan.getByRole('button', {name: 'Zoom in'}).click();
+
+			frame = await strip.locator('.elemenx-timeline-overview-window').boundingBox();
+			box = await strip.boundingBox();
+
+			expect(frame.width).toBeLessThan(box.width * 0.6);
+
+			/* A drag of the frame moves the view, of its end edge zooms it out. */
+			ticks = await plan.locator('.elemenx-timeline-tick').allTextContents();
+
+			await page.mouse.move(frame.x + frame.width / 2, frame.y + frame.height / 2);
+			await page.mouse.down();
+			await page.mouse.move(frame.x + frame.width / 2 + 120, frame.y + frame.height / 2, {steps: 6});
+			await page.mouse.up();
+
+			await expect.poll(async function () {
+				return Math.round((await strip.locator('.elemenx-timeline-overview-window').boundingBox()).x - frame.x);
+			}).toBe(120);
+			await expect.poll(function () {
+				return plan.locator('.elemenx-timeline-tick').allTextContents();
+			}).not.toEqual(ticks);
+
+			frame = await strip.locator('.elemenx-timeline-overview-window').boundingBox();
+
+			await page.mouse.move(frame.x + frame.width - 1, frame.y + frame.height / 2);
+			await page.mouse.down();
+			await page.mouse.move(frame.x + frame.width + 60, frame.y + frame.height / 2, {steps: 6});
+			await page.mouse.up();
+
+			await expect.poll(async function () {
+				return Math.round((await strip.locator('.elemenx-timeline-overview-window').boundingBox()).width - frame.width);
+			}).toBe(61);
+
+			/* A press elsewhere on the strip centers the view there (the strip measured again: the page may have scrolled). */
+			box = await strip.boundingBox();
+
+			await page.mouse.click(box.x + 20, box.y + box.height / 2);
+
+			frame = await strip.locator('.elemenx-timeline-overview-window').boundingBox();
+
+			expect(Math.round(frame.x - box.x)).toBe(0);
+
+			await plan.getByRole('button', {name: 'Show all'}).click();
 
 			/* Declared inside it: marks (one with its own content as its label), a range, a progress; a press on the axis seeks. */
 			await expect(video.locator('.elemenx-timeline-point')).toHaveCount(6);

@@ -45,32 +45,38 @@
 }
 
 /* The tones of marks and ranges. */
-.elemenx-timeline-track .accent {
+.elemenx-timeline-track .accent,
+.elemenx-timeline-overview .accent {
 	--elemenx-timeline-color: var(--elemenx-accent);
 	--elemenx-timeline-rgb: var(--elemenx-accent-rgb);
 }
 
-.elemenx-timeline-track .info {
+.elemenx-timeline-track .info,
+.elemenx-timeline-overview .info {
 	--elemenx-timeline-color: var(--elemenx-info);
 	--elemenx-timeline-rgb: var(--elemenx-info-rgb);
 }
 
-.elemenx-timeline-track .success {
+.elemenx-timeline-track .success,
+.elemenx-timeline-overview .success {
 	--elemenx-timeline-color: var(--elemenx-success);
 	--elemenx-timeline-rgb: var(--elemenx-success-rgb);
 }
 
-.elemenx-timeline-track .warning {
+.elemenx-timeline-track .warning,
+.elemenx-timeline-overview .warning {
 	--elemenx-timeline-color: var(--elemenx-warning);
 	--elemenx-timeline-rgb: var(--elemenx-warning-rgb);
 }
 
-.elemenx-timeline-track .danger {
+.elemenx-timeline-track .danger,
+.elemenx-timeline-overview .danger {
 	--elemenx-timeline-color: var(--elemenx-danger);
 	--elemenx-timeline-rgb: var(--elemenx-danger-rgb);
 }
 
-.elemenx-timeline-track .muted {
+.elemenx-timeline-track .muted,
+.elemenx-timeline-overview .muted {
 	--elemenx-timeline-color: var(--elemenx-text-muted);
 	--elemenx-timeline-rgb: var(--elemenx-text-muted-rgb);
 }
@@ -446,4 +452,87 @@
 	border: 1px solid var(--elemenx-border);
 	border-radius: var(--elemenx-radius);
 	box-shadow: var(--elemenx-shadow-subtle);
+}
+
+/*
+ * The overview: the whole line in a strip beside it, its marks and ranges small, the frame of the part in view; the
+ * frame is moved by a drag, zoomed by its edges.
+ */
+.elemenx-timeline-overview {
+	position: relative;
+	box-sizing: border-box;
+	margin-top: 6px;
+	background: var(--elemenx-surface-hover);
+	border-radius: var(--elemenx-radius-small);
+	cursor: pointer;
+}
+
+.elemenx-timeline.vertical.overview {
+	display: flex;
+}
+
+.elemenx-timeline.vertical.overview .elemenx-timeline-body {
+	flex: 1 1 auto;
+}
+
+.elemenx-timeline.vertical .elemenx-timeline-overview {
+	flex: none;
+	margin-top: 0;
+	margin-left: 6px;
+}
+
+.elemenx-timeline-overview > * {
+	position: absolute;
+	box-sizing: border-box;
+}
+
+.elemenx-timeline-overview-mark {
+	background: var(--elemenx-timeline-color);
+	border-radius: 1px;
+}
+
+.elemenx-timeline-overview-range {
+	background: rgba(var(--elemenx-timeline-rgb), 0.55);
+	border-radius: 1px;
+}
+
+.elemenx-timeline-overview-window {
+	background: rgba(var(--elemenx-accent-rgb), 0.12);
+	border: 1px solid var(--elemenx-accent);
+	border-radius: var(--elemenx-radius-small);
+	cursor: grab;
+}
+
+.elemenx-timeline-overview-edge {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	width: 8px;
+	cursor: ew-resize;
+}
+
+.elemenx-timeline-overview-edge.start {
+	left: -4px;
+}
+
+.elemenx-timeline-overview-edge.end {
+	right: -4px;
+}
+
+.elemenx-timeline.vertical .elemenx-timeline-overview-edge {
+	top: auto;
+	right: 0;
+	bottom: auto;
+	left: 0;
+	width: auto;
+	height: 8px;
+	cursor: ns-resize;
+}
+
+.elemenx-timeline.vertical .elemenx-timeline-overview-edge.start {
+	top: -4px;
+}
+
+.elemenx-timeline.vertical .elemenx-timeline-overview-edge.end {
+	bottom: -4px;
 }

@@ -40,6 +40,10 @@ The build says what it left out. A name built at run time (`$Service(name)`) can
 
 `--precompile` writes the expressions of the templates into the build as functions (`Elemenx.Expressions({...})`), so it runs on a page whose Content Security Policy forbids `eval`. The builder reads `$Template` texts (and sums of texts), `$TemplateURL` files, `Elemenx.Template(name, text)` and the `<template>` elements of the page; a template made at run time is not read, and its expressions throw on such a page. Extensions and native programs always precompile.
 
+## Parts of the routes
+
+A site and a widget are split by the routes of the Application: the page of a route and the components only it uses (yours and those of the libraries, with their templates and styles) go into `dist/parts/<Component>.js`, fetched the first time the route is shown; the bundle keeps the first screen (the route of `/`), the shell, the services and what several routes use. The build prints the parts it made. `--no-split` (or `Split: false`) keeps one bundle; one file, an extension and a native program are never split.
+
 ## One file
 
 `--single` (or `Single: true`) puts the framework, the Application, its templates and styles and its libraries (their stylesheets, sprites and data through `Elemenx.Resource`) into one `index.html`, minified. The page must load `elemenx.js` and `app.js` with `<script src>`: they take their places. Images and other files are copied next to it.

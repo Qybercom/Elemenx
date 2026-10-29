@@ -17,7 +17,9 @@
  * the whole line; Shift with the wheel, a sideways wheel, a drag of the empty line or the middle button move it; the
  * arrows move it too, + and - zoom, 0 shows it all; a press on the axis seeks (Seekable: the playhead follows the
  * pointer). Marks and ranges are buttons: a press or Enter selects them, the arrows go from one to the next, a tip shows
- * them whole. Editable: a mark or a range is dragged in time, a range by its edges too, a new range drawn on an empty
+ * them whole. Overview shows a strip of the whole line beside it, its marks and ranges small, a frame on the part in
+ * view: a drag of the frame moves the view, a drag of an edge of it zooms, a press elsewhere on the strip centers the
+ * view there. Editable: a mark or a range is dragged in time, a range by its edges too, a new range drawn on an empty
  * lane; Alt with the arrows moves the one with the focus, by Snap (minute, hour, day, week, month, year, or a number:
  * milliseconds or units of the scale; by default the step of the ticks). Escape cancels a drag. The Timeline does not
  * change its data itself: its events ask the owner to.
@@ -63,6 +65,7 @@ Elemenx.Component('Timeline', {
 			Unit: 'The unit of a number scale, after its numbers (s).',
 			Format: 'A function (value, step) that writes the label of a tick.',
 			Controls: 'Shows the buttons of the zoom.',
+			Overview: 'Shows a strip of the whole line, a frame on the part in view that moves and zooms it.',
 			Label: 'The name of the Timeline for screen readers.'
 		},
 		Sample: {Start: '2026-01-01', End: '2026-12-31', Marks: [{ID: 'release', At: '2026-06-01', Label: 'Release'}], Ranges: [{ID: 'beta', From: '2026-03-01', To: '2026-05-15', Label: 'Beta'}]}
@@ -86,6 +89,7 @@ Elemenx.Component('Timeline', {
 	Unit: '',
 	Format: null,
 	Controls: true,
+	Overview: false,
 	Label: '',
 	Selected: '',
 	Version: 0,
@@ -564,11 +568,51 @@ Elemenx.Component('Timeline', {
 			model.AxisStyle = self.Place(0, model.AxisAt, null, axisSize);
 			model.Box = (vertical ? 'width:' : 'height:') + model.Cross + 'px;';
 			model.TrackStyle = vertical ? 'top:' + header + 'px;' : 'left:' + header + 'px;';
+			model.Overview = self.Overview ? self.Strip(data, view, length, header, lanes, ranges) : null;
 
 			cache.Arguments = args;
 			cache.Model = model;
 
 			return model;
+		};
+
+		/*
+		 * The strip of the whole line: its marks as thin lines, its ranges as thin bars in the rows of their lanes, the frame of
+		 * the part in view with its two edges; as long as the track, beside it.
+		 */
+		this.Strip = function (data, view, length, header, lanes, ranges) {
+			var vertical = self.Orientation === 'vertical';
+			var whole = self.Whole();
+			var size = 32;
+			var row = Math.max(2, Math.min(6, Math.floor((size - 8) / Math.max(1, lanes.length)) - 1));
+			var at = function (value) {
+				return Math.max(0, Math.min(length, (value - whole.From) / (whole.To - whole.From) * length));
+			};
+			var from = at(view.From);
+			var to = at(view.To);
+
+			return {
+				Style: (vertical ? 'margin-top:' + header + 'px;height:' + length + 'px;width:' : 'margin-left:' + header + 'px;width:' + length + 'px;height:') + size + 'px;',
+				Marks: data.Marks.map(function (mark, index) {
+					var value = self.Value(mark.At);
+
+					return {Key: String(mark.ID !== undefined && mark.ID !== null && mark.ID !== '' ? mark.ID : 'mark-' + index), Value: value, Tone: mark.Tone || 'accent'};
+				}).filter(function (mark) {
+					return isFinite(mark.Value);
+				}).map(function (mark) {
+					mark.Style = self.Place(at(mark.Value) - 1, 3, 2, size - 6);
+
+					return mark;
+				}),
+				Ranges: ranges.filter(function (range) {
+					return !range.Draft;
+				}).map(function (range) {
+					var a = at(range.From);
+
+					return {Key: range.ID, Tone: range.Tone, Style: self.Place(a, 4 + lanes.indexOf(range.LaneOf) * (row + 1), Math.max(2, at(range.To) - a), row) + (range.Color ? 'background:' + range.Color + ';' : '')};
+				}),
+				Window: self.Place(from, 0, Math.max(6, to - from), size)
+			};
 		};
 
 		this.Bar = function (value, view, position, length, model) {
@@ -592,7 +636,7 @@ Elemenx.Component('Timeline', {
 
 		/* The model of now: what it is made of are its arguments (a template calls it). */
 		this.Current = function () {
-			return self.Model(self.Marks, self.Ranges, self.Lanes, self.Progress, self.Playhead, self.Version, self.Selected, self.Orientation, self.Start, self.End, self.From, self.To, self.Scale, self.Now, self.Seekable);
+			return self.Model(self.Marks, self.Ranges, self.Lanes, self.Progress, self.Playhead, self.Version, self.Selected, self.Orientation, self.Start, self.End, self.From, self.To, self.Scale, self.Now, self.Seekable, self.Overview);
 		};
 
 		/* After a drawing: the widths of the labels, measured (a template calls it). */
@@ -768,6 +812,49 @@ Elemenx.Component('Timeline', {
 		return view.From + offset / Math.max(1, length) * (view.To - view.From);
 	},
 
+	/* The moment of the whole line under a point of the screen, on the strip of the overview. */
+	Overall: function (event) {
+		var box = this.$Element().querySelector('.elemenx-timeline-overview').getBoundingClientRect();
+		var whole = this.Whole();
+		var vertical = this.Orientation === 'vertical';
+		var offset = vertical ? event.clientY - box.top : event.clientX - box.left;
+
+		return whole.From + offset / Math.max(1, vertical ? box.height : box.width) * (whole.To - whole.From);
+	},
+
+	/* A press on the strip: on the frame it moves the view, on an edge of it zooms it; elsewhere the view is centered there first. */
+	Glance: function (event) {
+		var strip = event.target.closest('.elemenx-timeline-overview');
+		var part = event.target.getAttribute('data-edge') || (event.target.closest('.elemenx-timeline-overview-window') ? 'window' : '');
+		var at = this.Overall(event);
+		var view = this.Window();
+
+		if (event.button !== 0) return;
+
+		event.preventDefault();
+
+		if (!part) {
+			this.SetView(at - (view.To - view.From) / 2, at + (view.To - view.From) / 2);
+
+			part = 'window';
+		}
+
+		if (strip.setPointerCapture)
+			strip.setPointerCapture(event.pointerId);
+
+		this.Own().Drag = {Kind: 'overview', Part: part, Start: at, View: this.Window()};
+	},
+
+	/* The drag on the strip: the frame by the time the pointer went, or one edge of it (never past the other). */
+	Glanced: function (event, drag) {
+		var shift = this.Overall(event) - drag.Start;
+		var least = Number(this.MinSpan) || (this.Kind() === 'number' ? 1e-3 : 60000);
+
+		if (drag.Part === 'start') this.SetView(Math.min(drag.View.From + shift, drag.View.To - least), drag.View.To);
+		else if (drag.Part === 'end') this.SetView(drag.View.From, Math.max(drag.View.To + shift, drag.View.From + least));
+		else this.SetView(drag.View.From + shift, drag.View.To + shift);
+	},
+
 	Find: function (kind, id) {
 		var model = this.Current();
 
@@ -818,6 +905,12 @@ Elemenx.Component('Timeline', {
 
 		if (target.closest('.elemenx-timeline-controls')) return;
 
+		if (target.closest('.elemenx-timeline-overview')) {
+			this.Glance(event);
+
+			return;
+		}
+
 		own.Pointers[event.pointerId] = {X: event.clientX, Y: event.clientY};
 		ids = Object.keys(own.Pointers);
 
@@ -864,6 +957,12 @@ Elemenx.Component('Timeline', {
 			own.Pointers[event.pointerId] = {X: event.clientX, Y: event.clientY};
 
 		if (!drag) return;
+
+		if (drag.Kind === 'overview') {
+			this.Glanced(event, drag);
+
+			return;
+		}
 
 		if (drag.Kind === 'pinch') {
 			factor = drag.Distance / Math.max(1, this.Spread());
@@ -951,6 +1050,8 @@ Elemenx.Component('Timeline', {
 		}
 
 		own.Drag = null;
+
+		if (drag.Kind === 'overview') return;
 
 		if (drag.Kind === 'seek') {
 			this.Seek(this.At(event), true);

@@ -38,4 +38,5 @@ The picture of a person, a team or a product. Image shows a picture; without one
 
 ## Tests
 
+- [puts what one route alone uses into its part, and keeps the first screen, the shared and what the rest uses](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/split.test.js#L17) — `tests/regression/split.test.js`
 - [draws it in the page as a component, again when its seed changes, and as an avatar](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/suprematism.test.js#L74) — `tests/regression/suprematism.test.js`

@@ -275,7 +275,7 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 
 ## Timeline
 
-- `elemenx-timeline`: `editable`, `seekable`, `vertical`
+- `elemenx-timeline`: `editable`, `overview`, `seekable`, `vertical`
 - `elemenx-timeline-axis`
 - `elemenx-timeline-body`
 - `elemenx-timeline-buffer`
@@ -287,6 +287,11 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-timeline-lane-names`
 - `elemenx-timeline-leader`
 - `elemenx-timeline-now`
+- `elemenx-timeline-overview`
+- `elemenx-timeline-overview-edge`: `end`, `start`
+- `elemenx-timeline-overview-mark`
+- `elemenx-timeline-overview-range`
+- `elemenx-timeline-overview-window`
 - `elemenx-timeline-playhead`
 - `elemenx-timeline-point`: `selected`
 - `elemenx-timeline-progress`
@@ -537,7 +542,21 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-designer-target`
 - `elemenx-designer-tip`
 - `elemenx-designer-tip-row`
-- `elemenx-designer-viewport`: `phone`, `tablet`
+- `elemenx-designer-viewport`
+
+## DesignerMap
+
+- `elemenx-designer-map`
+- `elemenx-designer-map-empty`
+- `elemenx-designer-map-frame`
+- `elemenx-designer-map-host`
+- `elemenx-designer-map-label`
+- `elemenx-designer-map-link`
+- `elemenx-designer-map-link-head`
+- `elemenx-designer-map-link-start`
+- `elemenx-designer-map-links`
+- `elemenx-designer-map-marks`
+- `elemenx-designer-map-path`
 
 ## DesignerDocument
 

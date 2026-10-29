@@ -1,4 +1,4 @@
-<div class="elemenx-timeline elemenx-focus-ring" tabindex="0" role="group" [class.vertical]="Orientation === 'vertical'" [class.editable]="Editable" [class.seekable]="Seekable" [attribute.aria-label]="Label || $T('ui.timeline.label')" [attribute.data-drawn]="Drawn(Current())" (keydown)="Key" (wheel)="Wheel" (pointerdown)="Down" (pointermove)="Move" (pointerup)="Up" (pointercancel)="Cancel">
+<div class="elemenx-timeline elemenx-focus-ring" tabindex="0" role="group" [class.vertical]="Orientation === 'vertical'" [class.editable]="Editable" [class.seekable]="Seekable" [class.overview]="Overview" [attribute.aria-label]="Label || $T('ui.timeline.label')" [attribute.data-drawn]="Drawn(Current())" (keydown)="Key" (wheel)="Wheel" (pointerdown)="Down" (pointermove)="Move" (pointerup)="Up" (pointercancel)="Cancel">
 	<div class="elemenx-timeline-body" [attribute.style]="Current().Box">
 		<div class="elemenx-timeline-lane-names" *if="Current().Header"><span class="elemenx-timeline-lane-name elemenx-ellipsis" *for="lane of Current().Lanes" *key="lane.ID" [attribute.style]="lane.Style">{{lane.Label}}</span></div>
 		<div class="elemenx-timeline-track" [attribute.style]="Current().TrackStyle">
@@ -22,6 +22,11 @@
 			<span class="elemenx-timeline-now" *if="Current().Now" [attribute.style]="Current().Now.Style" [attribute.title]="$T('ui.timeline.now')"></span>
 			<span class="elemenx-timeline-playhead" *if="Current().Playhead" [attribute.style]="Current().Playhead.Style" role="slider" tabindex="-1" [attribute.aria-label]="$T('ui.timeline.playhead')" [attribute.aria-valuetext]="Current().Playhead.Name || ''"></span>
 		</div>
+	</div>
+	<div class="elemenx-timeline-overview" *if="Current().Overview" aria-hidden="true" [attribute.style]="Current().Overview.Style">
+		<span class="elemenx-timeline-overview-range" *for="range of Current().Overview.Ranges" *key="range.Key" [class]="[range.Tone]" [attribute.style]="range.Style"></span>
+		<span class="elemenx-timeline-overview-mark" *for="mark of Current().Overview.Marks" *key="mark.Key" [class]="[mark.Tone]" [attribute.style]="mark.Style"></span>
+		<span class="elemenx-timeline-overview-window" [attribute.style]="Current().Overview.Window"><span class="elemenx-timeline-overview-edge start" data-edge="start"></span><span class="elemenx-timeline-overview-edge end" data-edge="end"></span></span>
 	</div>
 	<div class="elemenx-timeline-controls" *if="Controls">
 		<Button Variant="ghost" Size="small" Icon="zoom-out" [AriaLabel]="$T('ui.timeline.zoomOut')" *tip="$T('ui.timeline.zoomOut')" (click)="ZoomOut" />

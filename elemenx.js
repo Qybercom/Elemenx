@@ -45,7 +45,7 @@
 	 * Elemenx: the namespace of this copy of the framework. The window gets it last (see Export), unless a copy of the
 	 * same version is there already: then this one stops here and the page keeps the first.
 	 */
-	var Version = '0.11.0';
+	var Version = '0.11.1';
 	var Elemenx = {};
 	if (typeof ElemenxIsolated !== 'object' && (typeof globalThis !== 'undefined' ? globalThis : self).Elemenx && (typeof globalThis !== 'undefined' ? globalThis : self).Elemenx.Version === Version) return;
 
@@ -924,6 +924,9 @@
 		var own = Runtime.Own;
 		var registry = {};
 		var loaded = {};
+		/* The entities the parts of a bundle carry, type to name to the URL of the part, and the parts being fetched. */
+		var parts = {};
+		var fetches = {};
 
 		function bucket (type) {
 			if (!registry[type])
@@ -1004,6 +1007,84 @@
 			}
 		}
 
+		/*
+		 * A part of a bundle: a script (url, from the script that names it) that brings the loaders of the entities it
+		 * names, {Type: [names]}, fetched the first time one of them is wanted (a build split by its routes).
+		 */
+		function part (url, entities) {
+			var target;
+			var type;
+			var i;
+
+			if (typeof url !== 'string' || !url || !entities || typeof entities !== 'object')
+				throw new Error('Elemenx.Bundle.Part expects a URL and {Type: [names]}');
+
+			target = Runtime.HasDOM ? new URL(url, Runtime.CurrentScriptURL() || Runtime.BaseURL()).href : url;
+
+			for (type in entities) {
+				if (!own(entities, type)) continue;
+
+				if (!Array.isArray(entities[type]))
+					throw new Error('Elemenx.Bundle.Part expects a URL and {Type: [names]}');
+
+				parts[type] = parts[type] || {};
+
+				for (i = 0; i < entities[type].length; i++)
+					parts[type][String(entities[type][i])] = target;
+			}
+
+			return Elemenx;
+		}
+
+		/* The URL of the part that carries an entity the bundles do not have yet; null when none does. */
+		function deferred (type, name) {
+			return !resolvedName(type, name) && parts[type] && own(parts[type], name) ? parts[type][name] : null;
+		}
+
+		/* Fetches the part of an entity (one script for all of its entities), then calls back with null or an error. */
+		function fetchPart (type, name, callback) {
+			var url = deferred(type, name);
+			var script;
+
+			function done (error) {
+				var callbacks = fetches[url] || [];
+				var i;
+
+				delete fetches[url];
+
+				for (i = 0; i < callbacks.length; i++)
+					callbacks[i](error);
+			}
+
+			if (!url) {
+				callback(resolvedName(type, name) ? null : new Error('Elemenx Bundle has no part of ' + type + ': ' + name));
+
+				return;
+			}
+
+			if (fetches[url]) {
+				fetches[url].push(callback);
+
+				return;
+			}
+
+			fetches[url] = [callback];
+
+			script = global.document.createElement('script');
+			script.src = url;
+			script.async = true;
+
+			script.onload = function () {
+				done(deferred(type, name) ? new Error('Elemenx Bundle part did not bring ' + type + ': ' + name + ' (' + url + ')') : null);
+			};
+
+			script.onerror = function () {
+				done(new Error('Elemenx Bundle part failed: ' + url));
+			};
+
+			(global.document.head || global.document.documentElement).appendChild(script);
+		}
+
 		Runtime.Bundle = {
 			Install: install,
 			Reload: function (type, name) {
@@ -1027,15 +1108,22 @@
 			},
 			ResolvedName: resolvedName,
 
-			/* The names of the entities of a type the bundles carry. */
+			/* The names of the entities of a type the bundles carry, those of their parts too. */
 			Names: function (type) {
-				return Object.keys(registry[type] || {});
+				var names = Object.keys(registry[type] || {});
+
+				return names.concat(Object.keys(parts[type] || {}).filter(function (name) {
+					return names.indexOf(name) === -1;
+				}));
 			},
 
 			Load: load,
-			LoadType: loadType
+			LoadType: loadType,
+			Deferred: deferred,
+			Fetch: fetchPart
 		};
 		Elemenx.Bundle = install;
+		Elemenx.Bundle.Part = part;
 	})(typeof globalThis !== 'undefined' ? globalThis : self);
 
 	/* Resource */
@@ -6801,6 +6889,26 @@
 				return Runtime.ResolveComponentRegistered(name);
 			}
 
+			/* In a part of the bundle: made once the part is fetched, a placeholder until then. */
+			if (Runtime.Bundle.Deferred('Component', name)) {
+				var partFactory = function (data, slotProjection, options) {
+					return deferredComponent(function (ready) {
+						Runtime.Bundle.Fetch('Component', name, function (error) {
+							var factory = !error && Runtime.Bundle.Load('Component', name) ? Runtime.ResolveComponentRegistered(name) : null;
+
+							ready(error || (factory ? null : new Error('Elemenx unknown Component: ' + name)), factory);
+						});
+					}, data, slotProjection, options);
+				};
+
+				partFactory.ComponentName = name;
+				partFactory.ElemenxLazy = true;
+
+				componentRegistry[name] = partFactory;
+
+				return partFactory;
+			}
+
 			if (Runtime.Discovery) {
 				var lazyFactory = function (data, slotProjection, options) {
 					return deferredComponent(function (ready) {
@@ -7611,6 +7719,15 @@
 
 					if (bundledComponent(route.Component)) {
 						next(null);
+
+						return;
+					}
+
+					/* The part of the bundle the component of the route is in (a build split by its routes). */
+					if (typeof route.Component === 'string' && Runtime.Bundle.Deferred('Component', route.Component)) {
+						Runtime.Bundle.Fetch('Component', route.Component, function (error) {
+							next(error || (bundledComponent(route.Component) ? null : new Error('Elemenx route component did not register: ' + route.Component)));
+						});
 
 						return;
 					}
@@ -9416,7 +9533,7 @@
 
 				var application = component.$Application();
 
-				if (Runtime.Bundle.ResolvedName('Component', name)) {
+				if (Runtime.Bundle.ResolvedName('Component', name) || Runtime.Bundle.Deferred('Component', name)) {
 					return Runtime.ResolveComponent(name);
 				}
 

@@ -57,6 +57,7 @@ describe('Regression: public API surface', function () {
 		expect(surface(Elemenx, 'Elemenx.', 3)).toEqual([
 			'Elemenx.Application:function',
 			'Elemenx.Bundle:function',
+			'Elemenx.Bundle.Part:function',
 			'Elemenx.Cache:function',
 			'Elemenx.Cache.Clear:function',
 			'Elemenx.Cache.Stats:function',

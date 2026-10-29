@@ -1276,7 +1276,7 @@
 
 	<Section *if="Shows('Timeline')" Title="Timeline" [note]="TimelineNote || 'Timeline · TimelineMark · TimelineRange · TimelineLane · TimelineProgress'">
 		<div class="ui-kit-lazy ui-kit-stack" *lazy="360">
-			<Timeline Start="2026-01-01" End="2026-12-31" [marks]="PlanMarks" [ranges]="PlanRanges" [lanes]="PlanLanes" Now="true" Editable="true" Snap="day" Label="The plan of the year" (select)="PlanSelected" (move)="PlanMoved" (resize)="PlanResized" (create)="PlanCreated" />
+			<Timeline Start="2026-01-01" End="2026-12-31" [marks]="PlanMarks" [ranges]="PlanRanges" [lanes]="PlanLanes" Now="true" Overview="true" Editable="true" Snap="day" Label="The plan of the year" (select)="PlanSelected" (move)="PlanMoved" (resize)="PlanResized" (create)="PlanCreated" />
 			<Timeline Start="0" End="600" Unit="s" [playhead]="VideoAt" Seekable="true" Label="A video" (seek)="VideoSeek">
 				<TimelineProgress [to]="VideoAt" Buffer="240" />
 				<TimelineMark ID="intro" At="0" Label="Intro" Tone="muted" />
@@ -1288,7 +1288,7 @@
 				<TimelineRange ID="ad" From="120" To="150" Label="Ad break" Tone="danger" />
 			</Timeline>
 			<div class="ui-kit-grid">
-				<Timeline Orientation="vertical" Start="1900-01-01" End="2030-01-01" [marks]="HistoryMarks" Controls="false" Label="A century" />
+				<Timeline Orientation="vertical" Start="1900-01-01" End="2030-01-01" [marks]="HistoryMarks" Controls="false" Overview="true" Label="A century" />
 				<Timeline Orientation="vertical" Start="2026-10-26T08:00" End="2026-10-26T20:00" Controls="false" Label="A day">
 					<TimelineLane ID="room" Label="Room" />
 					<TimelineRange ID="standup" From="2026-10-26T09:30" To="2026-10-26T10:00" Label="Stand-up" Lane="room" />

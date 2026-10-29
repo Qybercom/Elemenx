@@ -36,6 +36,7 @@ Elemenx.Component('BuilderLayout', {
 	NewName: '',
 	FileFailed: false,
 	Settings: false,
+	Mapped: false,
 	PackageFailed: '',
 	ImportFailed: false,
 	DiskFailed: '',
@@ -314,6 +315,7 @@ Elemenx.Component('BuilderLayout', {
 			designer.Open(id);
 
 		this.Settings = false;
+		this.Mapped = false;
 	},
 
 	Configured: function () {
@@ -323,6 +325,20 @@ Elemenx.Component('BuilderLayout', {
 	/* A document opened by the explorer or the settings: the canvas shows it. */
 	Opened: function () {
 		this.Settings = false;
+		this.Mapped = false;
+	},
+
+	/* The tab of the map: the pages of the application side by side, the links between them. */
+	Mapping: function () {
+		this.Settings = false;
+		this.Mapped = true;
+	},
+
+	/* A page pressed on the map: its tab, on the canvas. */
+	MapOpened: function (id) {
+		this.$Service('Designer').Open(id);
+
+		this.Mapped = false;
 	},
 
 	/*
@@ -347,6 +363,7 @@ Elemenx.Component('BuilderLayout', {
 		designer.Open(id);
 
 		this.Settings = false;
+		this.Mapped = false;
 	},
 
 	/* The tab of a document pressed. */
@@ -354,6 +371,7 @@ Elemenx.Component('BuilderLayout', {
 		this.$Service('Designer').Open(node.getAttribute('data-document'));
 
 		this.Settings = false;
+		this.Mapped = false;
 	},
 
 	/* The cross of a tab: the document stays in the project, its tab goes. */
@@ -371,6 +389,7 @@ Elemenx.Component('BuilderLayout', {
 
 		this.NewName = '';
 		this.Settings = false;
+		this.Mapped = false;
 
 		this.Shut();
 	},
@@ -380,6 +399,7 @@ Elemenx.Component('BuilderLayout', {
 		this.$Service('Designer').Switch(node.getAttribute('data-project'));
 
 		this.Settings = false;
+		this.Mapped = false;
 
 		this.Shut();
 	},
@@ -418,6 +438,7 @@ Elemenx.Component('BuilderLayout', {
 			if (!id) return;
 
 			self.Settings = false;
+			self.Mapped = false;
 
 			self.Shut();
 		};
