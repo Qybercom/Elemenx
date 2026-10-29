@@ -847,3 +847,16 @@
 	color: var(--elemenx-overlay-text);
 	font-size: var(--elemenx-font-size-small);
 }
+
+.ui-kit-calculators {
+	display: grid;
+	grid-template-columns: minmax(0, 320px) minmax(0, 1fr);
+	gap: 24px;
+	align-items: start;
+}
+
+@media (max-width: 720px) {
+	.ui-kit-calculators {
+		grid-template-columns: minmax(0, 1fr);
+	}
+}

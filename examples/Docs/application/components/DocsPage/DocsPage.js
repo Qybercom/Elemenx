@@ -1,5 +1,5 @@
 /*
- * A page of the reference: the navigation of all the pages (pages/index.json) beside the page of the route, read from
+ * A page of the Docs: the navigation of all the pages (pages/index.json) beside the page of the route, read from
  * pages/<section>/<page>.<language>.md (the English page when the language has none); the components in the navigation
  * by their groups, the group of the page open. The text is shown by Markdown; a block ```example holds a template that
  * runs beside its code (DocsExample), a block ```diagram an SVG drawn in the colors of the theme. The page of a
@@ -342,7 +342,7 @@ Elemenx.Component('DocsPage', {
 
 			self.DemoBusy = false;
 
-			/* A server that answers every path with the page of the reference has no demo there. */
+			/* A server that answers every path with the page of the Docs has no demo there. */
 			if (error || !/<script id="elemenx">/.test(text)) {
 				self.DemoFailed = true;
 

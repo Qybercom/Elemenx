@@ -1,0 +1,15 @@
+<section class="elemenx-landing-cta" [class]="[Tone === 'neutral' ? 'neutral' : 'accent', Layout === 'center' ? 'center' : 'row']">
+	<div class="elemenx-landing-header" [class]="[Layout === 'center' ? 'center' : '']">
+		<h2 class="elemenx-landing-title elemenx-landing-cta-title" *if="Title">{{Title}}</h2>
+		<p class="elemenx-landing-lead" *if="Text">{{Text}}</p>
+	</div>
+	<div class="elemenx-landing-cta-side">
+		<div class="elemenx-landing-actions" *if="Actions && Actions.length" [class]="[Layout === 'center' ? 'center' : '']">
+			<Fragment *for="action of Actions" *key="action.ID || action.Label">
+				<a class="elemenx-landing-action" *if="action.Href" [class]="[action.Variant || 'primary']" [attribute.href]="action.Href" [attribute.data-action]="action.ID || null" (click)="Acted(action, $event)"><Icon *if="action.Icon" [name]="action.Icon" />{{action.Label}}</a>
+				<button type="button" class="elemenx-landing-action" *if="!action.Href" [class]="[action.Variant || 'primary']" [attribute.data-action]="action.ID || null" (click)="Acted(action, $event)"><Icon *if="action.Icon" [name]="action.Icon" />{{action.Label}}</button>
+			</Fragment>
+		</div>
+		<slot></slot>
+	</div>
+</section>

@@ -125,5 +125,5 @@ Command: function (command) {
 
 ## Дальше
 
-- Офисное приложение под лентой: `Ribbon`, `RibbonTab`, `RibbonGroup` и `Workspace Variant="ribbon"` (см. визуальный [конструктор](/guide/builder)).
+- Офисное приложение под лентой: `Ribbon`, `RibbonTab`, `RibbonGroup` и `Workspace Variant="ribbon"` (см. [Конструктор](/guide/designer)).
 - [Десктоп-программа](/tutorials/desktop): студия как программа.

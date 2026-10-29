@@ -133,6 +133,10 @@ To find a section in `elemenx.js`, search for its header, for example `/* Router
 | `Interpolation` | the parts of a text with `{{ }}`: its texts and its expressions (`{Source}`), `\{{` a `{{` of the text; `null` without `{{` | Structural |
 | `InterpolationValue` | the value of those parts: the one expression as it is, or the texts and the values as one text | Structural |
 | `InertNodes` | a `WeakSet` of the parts of the templates of the instances being made that the plan of their template finds inert (no directive, no Component, no slot): `compile` of Structural passes each by once and forgets it | Structural |
+| `Place` | puts an element before a node of a parent; the element of a part made of a `<Fragment>` (a row of a `*for`, the content of an `*if`) puts its nodes there, between two comments of its own | Structural |
+| `Detach` | takes an element out of the page; the nodes of a part made of a `<Fragment>` go back into its element | Structural |
+| `First` | the first node of an element in the page: itself, or the comment that starts the nodes of a part made of a `<Fragment>` | Structural |
+| `Last` | the last one: itself, or the comment that ends them | Structural |
 | `UpdateComponentRouteContext` | pushes `$Path`, `$Params`, `$Query`, `$Hash` into a routed component | Router |
 | `CreateComponent` | creates an anonymous component factory from a definition | Structural |
 | `BeginComponentReload` | starts a component reload: remembers live instances | Application |
@@ -155,6 +159,7 @@ To find a section in `elemenx.js`, search for its header, for example `/* Router
 |---|---|---|
 | `Structural` | structural host engine of a component template: conditional and collection mounting, deferred children | Template and Component |
 | `ComponentHosts` | `WeakMap` tag of a Component in a template → `{Element(), Watch(callback)}`: the element of the instance that took its place, and each next one; the behavioral directives of the tag follow it | Template and Component |
+| `CopyParts` | `WeakMap` copy of a tag (`$Copy`) → the part of its owner it was made in, destroyed with the copy | Template and Component |
 
 ## Cache
 

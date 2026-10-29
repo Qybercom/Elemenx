@@ -131,4 +131,40 @@ describe('Contract: the *tip directive of ElemenxUI', function () {
 
 		expect(tip.hidden).toBe(true);
 	});
+
+	it('shows in the top layer, over a panel opened before it, and not for an element a panel covers', async function () {
+		var component = mounted(Elemenx.Component(unique('TippedLayer'), {
+			$Template: '<div><button type="button" class="beside" style="position: fixed; left: 10px; top: 10px; width: 80px; height: 30px" *tip="{Text: \x27Beside\x27, Delay: 0}">a</button><button type="button" class="under" style="position: fixed; left: 320px; top: 10px; width: 80px; height: 30px" *tip="{Text: \x27Under\x27, Delay: 0}">b</button><div class="panel" popover="manual" style="position: fixed; inset: auto; margin: 0; left: 300px; top: 0; width: 200px; height: 200px; padding: 0">A panel</div></div>'
+		})());
+		var root = component.$Element();
+		var panel = root.querySelector('.panel');
+		var tip;
+
+		panel.showPopover();
+
+		/* A tip shown after a panel of the top layer opened: in the top layer too, the last one, over it; at its own place. */
+		pointer(root.querySelector('.beside'), 'pointerenter');
+
+		await tick(20);
+
+		tip = document.getElementById('elemenx-tip');
+
+		expect(tip.hidden).toBe(false);
+		expect(tip.matches(':popover-open')).toBe(true);
+		expect(Math.round(tip.getBoundingClientRect().top)).toBeGreaterThanOrEqual(40);
+		expect(Math.round(tip.getBoundingClientRect().left)).toBeLessThan(200);
+
+		pointer(root.querySelector('.beside'), 'pointerleave');
+
+		expect(tip.matches(':popover-open')).toBe(false);
+
+		/* An element under the panel: no tip of what cannot be seen. */
+		pointer(root.querySelector('.under'), 'pointerenter');
+
+		await tick(20);
+
+		expect(tip.hidden).toBe(true);
+
+		panel.hidePopover();
+	});
 });

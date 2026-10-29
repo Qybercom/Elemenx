@@ -1,0 +1,35 @@
+<div class="elemenx-business-calculator" [class]="[Layout === 'stack' ? 'stack' : 'side']">
+	<h3 class="elemenx-business-calculator-title" *if="Title">{{Title}}</h3>
+	<div class="elemenx-business-calculator-body">
+		<div class="elemenx-business-calculator-fields">
+			<Field *for="field of Model(Fields, Results, Values, Typed, Version, Currency, Locale, Breakdown).Fields" *key="field.ID" [label]="field.Label" [hint]="field.Hint">
+				<div class="elemenx-business-calculator-control">
+					<NumberInput *if="field.Type === 'number' || field.Type === 'money' || field.Type === 'percent'" [value]="field.Value" [min]="field.Min" [max]="field.Max" [step]="field.Step || 1" (input)="Entered(field.ID, $event)" />
+					<Slider *if="field.Type === 'range'" [value]="field.Value" [min]="field.Min === null ? 0 : field.Min" [max]="field.Max === null ? 100 : field.Max" [step]="field.Step" [label]="field.Label" (input)="Entered(field.ID, $event)" />
+					<Select *if="field.Type === 'select'" [options]="field.Options" [value]="field.Value" [label]="field.Label" (change)="Entered(field.ID, $event)" />
+					<Toggle *if="field.Type === 'toggle'" [checked]="field.Value" (change)="Entered(field.ID, $event)" />
+					<span class="elemenx-business-calculator-unit" *if="field.Type === 'range'">{{field.Shown}}</span>
+					<span class="elemenx-business-calculator-unit" *if="field.Unit && field.Type !== 'range' && field.Type !== 'select' && field.Type !== 'toggle'">{{field.Unit}}</span>
+				</div>
+			</Field>
+		</div>
+		<aside class="elemenx-business-calculator-results" aria-live="polite">
+			<div class="elemenx-business-calculator-primary" *for="result of Model(Fields, Results, Values, Typed, Version, Currency, Locale, Breakdown).Primary" *key="result.ID" [attribute.data-result]="result.ID" [attribute.title]="result.Error || null">
+				<span class="elemenx-business-calculator-label">{{result.Label}}</span>
+				<strong class="elemenx-business-calculator-value">{{result.Text}}</strong>
+				<span class="elemenx-business-calculator-hint" *if="result.Hint">{{result.Hint}}</span>
+			</div>
+			<div class="elemenx-business-calculator-bar" *if="Model(Fields, Results, Values, Typed, Version, Currency, Locale, Breakdown).Bar.length" role="img" [attribute.aria-label]="Model(Fields, Results, Values, Typed, Version, Currency, Locale, Breakdown).BarLabel">
+				<span class="elemenx-business-calculator-part" *for="part of Model(Fields, Results, Values, Typed, Version, Currency, Locale, Breakdown).Bar" *key="part.ID" [attribute.style]="part.Style" [attribute.title]="part.Label + ': ' + part.Text"></span>
+			</div>
+			<dl class="elemenx-business-calculator-list">
+				<div class="elemenx-business-calculator-row" *for="result of Model(Fields, Results, Values, Typed, Version, Currency, Locale, Breakdown).Others" *key="result.ID" [attribute.data-result]="result.ID" [attribute.title]="result.Error || null">
+					<dt><span class="elemenx-business-calculator-swatch" *if="result.Swatch" [attribute.style]="result.Swatch"></span>{{result.Label}}</dt>
+					<dd>{{result.Text}}</dd>
+				</div>
+			</dl>
+			<slot name="actions"></slot>
+		</aside>
+	</div>
+	<div class="elemenx-business-calculator-sources" hidden><slot></slot></div>
+</div>

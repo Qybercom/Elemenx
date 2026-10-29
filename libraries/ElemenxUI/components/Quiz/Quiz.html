@@ -1,0 +1,56 @@
+<div class="elemenx-quiz" role="group" [attribute.aria-label]="Title || $T('ui.quiz.label')">
+	<div class="elemenx-quiz-intro" *if="Stage === 'intro'">
+		<h3 class="elemenx-quiz-title" *if="Title">{{Title}}</h3>
+		<p class="elemenx-quiz-text" *if="Intro">{{Intro}}</p>
+		<div class="elemenx-quiz-actions"><Button Variant="primary" class="elemenx-quiz-start" [label]="$T('ui.quiz.start')" (click)="Start" /></div>
+	</div>
+	<div class="elemenx-quiz-question" *for="question of Present(Current, Version, Draft, Checked, Stage)" *key="question.ID" [attribute.data-question]="question.ID">
+		<div class="elemenx-quiz-top">
+			<Progress Size="small" class="elemenx-quiz-progress" [value]="Place(Current, Version).Index - 1" [max]="Place(Current, Version).Count" [label]="$T('ui.quiz.progress', {index: Place(Current, Version).Index, count: Place(Current, Version).Count})" />
+			<span class="elemenx-quiz-clock" *if="TimeLimit > 0" role="timer" [class]="[Left <= 10 ? 'ending' : '']">{{Clock(Left)}}</span>
+		</div>
+		<h4 class="elemenx-quiz-text" [attribute.id]="'quiz-' + question.ID">{{question.Text}}</h4>
+		<img class="elemenx-quiz-image" *if="question.Image" [attribute.src]="question.Image" alt="" />
+		<div class="elemenx-quiz-options" *if="question.Type === 'single' || question.Type === 'multiple'" [attribute.role]="question.Type === 'single' ? 'radiogroup' : 'group'" [attribute.aria-labelledby]="'quiz-' + question.ID">
+			<button type="button" class="elemenx-quiz-option elemenx-focus-ring" *for="option of question.Options" *key="option.ID" [class]="[question.Type, option.Chosen ? 'chosen' : '', option.State]" [attribute.role]="question.Type === 'single' ? 'radio' : 'checkbox'" [attribute.aria-checked]="String(option.Chosen)" [attribute.data-option]="option.ID" [attribute.aria-disabled]="Checked ? 'true' : null" (click)="Picked">
+				<span class="elemenx-quiz-mark" aria-hidden="true"><Icon Size="12" name="check" *if="option.Chosen" /></span>
+				<span class="elemenx-quiz-label">{{option.Label}}</span>
+				<Icon Size="16" class="elemenx-quiz-state" *if="option.State" [name]="option.State === 'right' ? 'check' : 'close'" />
+			</button>
+		</div>
+		<Input *if="question.Type === 'text'" class="elemenx-quiz-input" [value]="question.Value" [label]="question.Text" [readOnly]="Checked" (input)="Chosen" />
+		<NumberInput *if="question.Type === 'number'" class="elemenx-quiz-input" [value]="question.Value" [readOnly]="Checked" (input)="Chosen" />
+		<ol class="elemenx-quiz-order" *if="question.Type === 'order'" [attribute.aria-labelledby]="'quiz-' + question.ID">
+			<li class="elemenx-quiz-item" *for="item of question.Order" *key="item.ID" [attribute.data-item]="item.ID">
+				<span class="elemenx-quiz-label">{{item.Text}}</span>
+				<Button Variant="ghost" Size="small" Icon="chevron-up" class="elemenx-quiz-up" [title]="$T('ui.quiz.up', {name: item.Text})" [disabled]="Checked" (click)="Moved(item.ID, -1)" />
+				<Button Variant="ghost" Size="small" Icon="chevron-down" class="elemenx-quiz-down" [title]="$T('ui.quiz.down', {name: item.Text})" [disabled]="Checked" (click)="Moved(item.ID, 1)" />
+			</li>
+		</ol>
+		<div class="elemenx-quiz-feedback" *if="Checked" role="status" [class]="[question.Correct ? 'right' : 'wrong']">
+			<strong>{{$T(question.Correct ? 'ui.quiz.right' : 'ui.quiz.wrong')}}</strong>
+			<span *if="question.Explanation">{{question.Explanation}}</span>
+		</div>
+		<div class="elemenx-quiz-actions">
+			<Button Variant="ghost" class="elemenx-quiz-back" *if="Back && Back !== 'false' && Way.length" [label]="$T('ui.quiz.back')" (click)="Previous" />
+			<Button Variant="primary" class="elemenx-quiz-next" [disabled]="!question.Ready" [label]="$T(Feedback === 'instant' && Mode !== 'survey' && !Checked ? 'ui.quiz.check' : 'ui.quiz.next')" (click)="Next" />
+		</div>
+	</div>
+	<div class="elemenx-quiz-result" *for="result of Outcome(Answers, Stage)" *key="'result'" aria-live="polite">
+		<h3 class="elemenx-quiz-title">{{Mode === 'survey' ? $T('ui.quiz.thanks') : $T(result.Passed ? 'ui.quiz.passed' : 'ui.quiz.failed')}}</h3>
+		<p class="elemenx-quiz-score" *if="Mode !== 'survey'"><strong>{{result.Percent}}%</strong> {{$T('ui.quiz.score', {score: result.Score, max: result.Max})}}</p>
+		<ol class="elemenx-quiz-review" *if="Mode !== 'survey' && Feedback !== 'none'">
+			<li class="elemenx-quiz-reviewed" *for="item of result.Review" *key="item.ID" [class]="[item.Correct ? 'right' : 'wrong']" [attribute.data-question]="item.ID">
+				<Icon Size="16" class="elemenx-quiz-state" [name]="item.Correct ? 'check' : 'close'" />
+				<span class="elemenx-quiz-review-body">
+					<span class="elemenx-quiz-review-text">{{item.Text}}</span>
+					<span class="elemenx-quiz-review-answer">{{item.Answer || '—'}}</span>
+					<span class="elemenx-quiz-review-explanation" *if="item.Explanation">{{item.Explanation}}</span>
+				</span>
+			</li>
+		</ol>
+		<slot name="result"></slot>
+		<div class="elemenx-quiz-actions"><Button class="elemenx-quiz-restart" [label]="$T('ui.quiz.restart')" (click)="Restart" /></div>
+	</div>
+	<div class="elemenx-quiz-sources" hidden><slot></slot></div>
+</div>

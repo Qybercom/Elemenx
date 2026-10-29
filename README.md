@@ -17,7 +17,7 @@ npx elemenx generate application MyApp
 npx elemenx dev
 ```
 
-The reference of the installed version (the guide, the core, every Component, Service and Directive of ElemenxUI with its live example) comes with the package and opens offline:
+The Docs of the installed version (the guide, the core, every Component, Service and Directive of ElemenxUI with its live example) comes with the package and opens offline:
 
 ```bash
 npx elemenx docs --open
@@ -26,7 +26,7 @@ npx elemenx docs --open
 The Designer of the installed version opens on a project: its applications, routes and components as a tree, its components on the canvas as they run, a copy of one to edit; nothing is written to its files:
 
 ```bash
-npx elemenx design --open
+npx elemenx designer --open
 ```
 
 A page with no build and no server takes the distribution from a CDN or from `node_modules/@qybercom/elemenx/dist` (see "Distribution of the framework" in `docs/BUILDER.md`):
@@ -61,7 +61,7 @@ Parts of it:
 - `npm run test:browser` the browser contracts, `npm run test:watch` the same while files change;
 - `npm run test:min` the browser contracts against the minified `dist/elemenx.min.js` (after `npm run dist`);
 - `npm run test:tools` the Node tests of the CLI, the build and the tooling;
-- `npm run test:history` the Playwright end-to-end tests, `npm run test:stress` the same five times each with no retry (to find the ones that fail under load);
+- `npm run test:e2e` the Playwright end-to-end tests, `npm run test:stress` the same five times each with no retry (to find the ones that fail under load);
 - `npm run test:native` the desktop program built with Electron;
 - `npm run test:coverage` and `npm run test:coverage:all` measure the coverage of `elemenx.js`, `npm run test:coverage:tools` the one of the CLI and `tools/` (see `tests/TEST-COVERAGE.md`).
 
@@ -78,8 +78,8 @@ The examples, each a project of its own:
 - `examples/PWA`: an application that installs and runs offline, and updates itself (`Elemenx.Install`);
 - `examples/Widgets`: the Components of an application mounted as widgets on a page of another site (`Elemenx.Widgets`, `elemenx build --widget`);
 - `examples/Native`: the desktop program (Electron) and the Android and iOS programs (Capacitor) of one application (`elemenx build --native`);
-- `examples/Tutorials`: the projects of the tutorials of the reference (a landing page, a blog, an admin panel, a shop, a chat, a game, an editor, a page of a server);
-- `examples/Docs` and `examples/Builder`, below.
+- `examples/Tutorials`: the projects of the tutorials of the Docs (a landing page, a blog, an admin panel, a shop, a chat, a game, an editor, a page of a server);
+- `examples/Docs` and `examples/Designer`, below.
 
 From the Elemenx repository they can be started with:
 
@@ -88,11 +88,11 @@ npm run example:simple
 npm run example:advanced
 ```
 
-Two applications are built with ElemenxUI as well: `examples/Docs`, the reference of Elemenx and of the Library in English and Russian (its pages are Markdown files, `pages/<section>/<page>.<language>.md`; `npm run docs:pages` makes the pages of the Library again from the comments of its sources), and `examples/Builder`, a visual builder of pages that exports and imports their templates (its palette holds every component of the Library and the classes of its layouts; it takes them from the `data/meta.json` of the Library, which `npm run meta` makes again from the `$Meta` of the sources):
+Two applications are built with ElemenxUI as well: `examples/Docs`, the Docs of Elemenx and of the Library in English and Russian (its pages are Markdown files, `pages/<section>/<page>.<language>.md`; `npm run docs:pages` makes the pages of the Library again from the comments of its sources), and `examples/Designer`, a visual builder of pages that exports and imports their templates (its palette holds every component of the Library and the classes of its layouts; it takes them from the `data/meta.json` of the Library, which `npm run meta` makes again from the `$Meta` of the sources):
 
 ```bash
 npm run example:docs
-npm run example:builder
+npm run example:designer
 ```
 
 `Advanced` is also a standalone package consumer: after copying it outside the repository, run `npm install` and `npm run dev`. Its `@qybercom/elemenx` dependency provides the framework and CLI; the example does not carry a private copy of `elemenx.js` or the server.
@@ -100,8 +100,8 @@ npm run example:builder
 The production path is exercised with:
 
 ```bash
-npm run build:advanced
-npm run example:advanced:dist
+npm run example:advanced:build
+npm run example:advanced:serve
 ```
 
 `npm run examples` serves the whole repository statically with Vite (as the end-to-end tests see it): every example and test page at its path, `http://127.0.0.1:5173/examples/Simple/`.

@@ -1,13 +1,19 @@
-/* An invitation to a call: a dark card of its own (it goes in a card of a notification with Bare), its picture ringing. */
+/*
+ * An invitation to a call: a card of its own in the colors of the theme (it goes in a card of a notification with
+ * Bare), as wide as a card of a notification (or its room), its picture ringing.
+ */
 .elemenx-call-invite {
 	display: flex;
 	flex-direction: column;
 	gap: 14px;
+	box-sizing: border-box;
+	inline-size: min(100%, 360px);
 	padding: 16px;
-	background: var(--elemenx-text);
+	background: var(--elemenx-surface-raised);
+	border: 1px solid var(--elemenx-border);
 	border-radius: var(--elemenx-radius-large);
 	box-shadow: var(--elemenx-shadow);
-	color: var(--elemenx-background);
+	color: var(--elemenx-text);
 	font-family: var(--elemenx-font);
 }
 
@@ -39,7 +45,7 @@
 	display: inline-flex;
 	align-items: center;
 	gap: 6px;
-	opacity: 0.75;
+	color: var(--elemenx-text-muted);
 }
 
 .elemenx-call-invite-actions {

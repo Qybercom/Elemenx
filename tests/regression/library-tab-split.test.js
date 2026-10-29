@@ -114,8 +114,8 @@ describe('Contract: TabGroup and TabSplit', function () {
 		expect(boxes).toEqual([200, 600]);
 		expect(split.Model()).toEqual({Split: 'row', Sizes: [25, 75], Children: [{Group: 'side', Tabs: ['files'], Active: 'files', Pinned: []}, {Group: 'main', Tabs: ['one', 'two'], Active: 'one', Pinned: []}]});
 
-		/* The menu of two.js: Split down. The group of one tab splits nothing. */
-		split.Split('two', 'bottom');
+		/* The menu of two.js: Split and move down. The group of one tab moves nothing. */
+		split.Split('two', 'bottom', true);
 
 		await waitFor(function () {
 			return host.$Element().querySelectorAll('.elemenx-tab-split-group').length === 3;
@@ -124,7 +124,7 @@ describe('Contract: TabGroup and TabSplit', function () {
 		expect(groups(host.$Element())).toEqual(['Files=The files', 'one.js=One', 'two.js=Two']);
 		expect(changes[changes.length - 1].Children[1]).toMatchObject({Split: 'column', Sizes: [50, 50]});
 
-		split.Split('files', 'right');
+		split.Split('files', 'right', true);
 
 		await tick(20);
 
@@ -216,5 +216,87 @@ describe('Contract: TabGroup and TabSplit', function () {
 		});
 
 		expect(groups(host.$Element())).toEqual(['y,z,w=w']);
+	});
+
+	it('a Split of the menu copies the tab into a new group, its content made again, and Split and move takes the tab there', async function () {
+		var copies = [];
+		var changes = [];
+		var host = mount('<div style="width: 800px; height: 400px"><TabSplit [copyid]="Named" [layout]="Saved" (copy)="Copied" (change)="Changed"><TabGroup Group="main"><Tab ID="one" Label="one.js"><span class="text">{{Text}}</span><input class="field" /></Tab><Tab ID="two" Label="two.js">Two</Tab></TabGroup></TabSplit></div>', {
+			Text: 'One',
+			Saved: null,
+			Named: function (id, n) {
+				return id + ' (' + n + ')';
+			},
+			Copied: function (detail) {
+				copies.push(detail);
+			},
+			Changed: function (layout) {
+				changes.push(layout);
+			}
+		});
+		var root;
+		var split;
+		var group;
+		var saved;
+
+		await waitFor(function () {
+			return host.$Element().querySelectorAll('.elemenx-tab-split-group .elemenx-tab-panel.active').length === 1;
+		});
+
+		root = host.$Element();
+		split = Elemenx.Instance(root.querySelector('.elemenx-tab-split'));
+		group = Elemenx.Instance(root.querySelector('.elemenx-tab-split-group .elemenx-tab-group'));
+
+		/* The menu of one.js: Split right. The tab stays, a copy of it opens beside, of an ID of CopyID. */
+		group.$Emit('split', {ID: 'one', Side: 'right', Group: 'main', Move: false});
+
+		await waitFor(function () {
+			return root.querySelectorAll('.elemenx-tab-split-group .elemenx-tab-panel.active').length === 2;
+		});
+
+		expect(groups(root)).toEqual(['one.js,two.js=One', 'one.js=One']);
+		expect(copies).toEqual([{ID: 'one (2)', Of: 'one', Group: copies[0].Group}]);
+		expect(split.Model().Children[1]).toMatchObject({Tabs: ['one (2)'], Copies: [{ID: 'one (2)', Of: 'one'}]});
+
+		/* The same bindings, a state of its own: the field of the copy is not the field of the tab. */
+		root.querySelectorAll('.field')[1].value = 'only here';
+		host.Text = 'Changed';
+
+		await tick(20);
+
+		expect(Array.prototype.map.call(root.querySelectorAll('.text'), function (node) {
+			return node.textContent;
+		})).toEqual(['Changed', 'Changed']);
+		expect(root.querySelectorAll('.field')[0].value).toBe('');
+
+		saved = split.Model();
+
+		/* A copy closes at once: the owner has no Tab of it. */
+		split.Close('one (2)');
+
+		await waitFor(function () {
+			return root.querySelectorAll('.elemenx-tab-split-group').length === 1;
+		});
+
+		expect(root.querySelectorAll('.field').length).toBe(1);
+
+		/* A layout with a copy, given back: the copy is made again. */
+		host.Saved = saved;
+
+		await waitFor(function () {
+			return root.querySelectorAll('.elemenx-tab-split-group .elemenx-tab-panel.active').length === 2;
+		});
+
+		expect(groups(root)).toEqual(['one.js,two.js=Changed', 'one.js=Changed']);
+
+		/* Split and move down: two.js out of its group into a new one. */
+		group.$Emit('split', {ID: 'two', Side: 'bottom', Group: 'main', Move: true});
+
+		await waitFor(function () {
+			return root.querySelectorAll('.elemenx-tab-split-group').length === 3;
+		});
+
+		expect(groups(root).sort()).toEqual(['one.js=Changed', 'one.js=Changed', 'two.js=Two'].sort());
+		expect(copies.length).toBe(1);
 	});
 });

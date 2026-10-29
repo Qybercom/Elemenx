@@ -85,7 +85,7 @@ describe('Builder: the splash of an Application', function () {
 		var vm = require('vm');
 		var settings = {Image: '/logo.svg', Background: '#102030', Color: 'white', Text: 'Loading', Spinner: false, MinTime: 300};
 
-		vm.runInNewContext(fs.readFileSync(path.resolve(process.cwd(), 'examples', 'Builder', 'application', 'services', 'Packager.js'), 'utf8'), {Elemenx: {Service: function (name, value) {
+		vm.runInNewContext(fs.readFileSync(path.resolve(process.cwd(), 'examples', 'Designer', 'application', 'services', 'Packager.js'), 'utf8'), {Elemenx: {Service: function (name, value) {
 			definition = value;
 		}}});
 

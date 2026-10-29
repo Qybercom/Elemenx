@@ -92,4 +92,4 @@
 - [runs a deferred route Component leave hook on the resolved Component instance](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/router.test.js#L916) — `tests/regression/router.test.js`
 - [switches to Russian, keeps the language and finds a page by the search of the whole reference in its header](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/docs.spec.js#L52) — `tests/examples/docs.spec.js`
 - [shows the example of the page it goes to through the contents, not the one of the page before](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/docs.spec.js#L111) — `tests/examples/docs.spec.js`
-- [exports the page as a template and imports a template back from the backstage, keeping the elements it does not know](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/builder.spec.js#L317) — `tests/examples/builder.spec.js`
+- [exports the page as a template and imports a template back from the backstage, keeping the elements it does not know](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/designer.spec.js#L317) — `tests/examples/designer.spec.js`

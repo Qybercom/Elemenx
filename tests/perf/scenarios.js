@@ -1,5 +1,5 @@
 /*
- * The scenarios of the bench (npm run bench): each makes its components in #mount, measures, and takes them away.
+ * The scenarios of the bench (npm run test:bench): each makes its components in #mount, measures, and takes them away.
  * Bench.Run(name, callback) calls back {Name, Ms} — the median of its runs, each with the layout it causes (a read of
  * offsetHeight), as the page pays for it. Updates come in a loop of assignments, as a feed of data would make them.
  */

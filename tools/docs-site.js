@@ -1,10 +1,10 @@
 'use strict';
 
 /*
- * The reference (examples/Docs) built for the package of npm, into docs-site/: npx elemenx docs serves it, offline, of
+ * The Docs (examples/Docs) built for the package of npm, into docs-site/: npx elemenx docs serves it, offline, of
  * the version the project installed. It takes all of the framework, every Component, Service and Directive of
  * ElemenxUI and every pack (its live examples use any of them), not the tools that write its pages, and the
- * elemenx.config.js of the reference beside it, for the answers of the server its examples of the network ask (a JSON,
+ * elemenx.config.js of the Docs beside it, for the answers of the server its examples of the network ask (a JSON,
  * an echo, events, a stream, a WebSocket). The projects of the tutorials go into tutorials/, to download, and those
  * that run without a server of their own as demos of one file (tutorials.js).
  * Build({Output}) returns the folder; node tools/docs-site.js [folder] (npm run docs:site; prepack runs it).
@@ -21,7 +21,7 @@ function Build (options) {
 	var Builder = require(path.join(__dirname, 'builder.js'));
 
 	if (!fs.existsSync(path.join(Docs, 'app.js')))
-		throw new Error('Elemenx docs: the reference is not here (examples/Docs): build it from the repository of Elemenx');
+		throw new Error('Elemenx docs: the Docs is not here (examples/Docs): build it from the repository of Elemenx');
 
 	Builder.Build(Docs, {
 		application: 'application',

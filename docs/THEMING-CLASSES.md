@@ -174,6 +174,148 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-button`: `badged`, `block`, `danger`, `ghost`, `giant`, `icon-only`, `large`, `link`, `loading`, `pressed`, `primary`, `round`, `secondary`, `small`
 - `elemenx-button-group`: `attached`, `vertical`
 
+## Pipeline
+
+- `elemenx-pipeline`
+- `elemenx-pipeline-action`
+- `elemenx-pipeline-board`
+- `elemenx-pipeline-content`
+- `elemenx-pipeline-count`
+- `elemenx-pipeline-header`
+- `elemenx-pipeline-job`: `failed`, `faded`, `inner`, `related`, `running`, `selected`
+- `elemenx-pipeline-job-body`
+- `elemenx-pipeline-job-name`
+- `elemenx-pipeline-job-text`
+- `elemenx-pipeline-link`: `faded`, `related`
+- `elemenx-pipeline-links`
+- `elemenx-pipeline-stage`
+- `elemenx-pipeline-stage-header`
+- `elemenx-pipeline-status`: `failed`, `manual`, `running`, `small`, `success`, `warning`
+- `elemenx-pipeline-summary`
+- `elemenx-pipeline-time`
+
+## Calculator
+
+- `elemenx-calculator`: `scientific`
+- `elemenx-calculator-display`
+- `elemenx-calculator-history`
+- `elemenx-calculator-key`: `equals`, `function`, `operator`, `pressed`
+- `elemenx-calculator-keys`
+- `elemenx-calculator-line`
+- `elemenx-calculator-record`
+- `elemenx-calculator-record-line`
+- `elemenx-calculator-result`
+
+## BusinessCalculator
+
+- `elemenx-business-calculator`: `side`
+- `elemenx-business-calculator-bar`
+- `elemenx-business-calculator-body`
+- `elemenx-business-calculator-control`
+- `elemenx-business-calculator-fields`
+- `elemenx-business-calculator-hint`
+- `elemenx-business-calculator-label`
+- `elemenx-business-calculator-list`
+- `elemenx-business-calculator-part`
+- `elemenx-business-calculator-primary`
+- `elemenx-business-calculator-results`
+- `elemenx-business-calculator-row`
+- `elemenx-business-calculator-swatch`
+- `elemenx-business-calculator-title`
+- `elemenx-business-calculator-unit`
+- `elemenx-business-calculator-value`
+
+## Quiz
+
+- `elemenx-quiz`
+- `elemenx-quiz-actions`
+- `elemenx-quiz-clock`: `ending`
+- `elemenx-quiz-feedback`: `wrong`
+- `elemenx-quiz-image`
+- `elemenx-quiz-intro`
+- `elemenx-quiz-item`
+- `elemenx-quiz-label`
+- `elemenx-quiz-mark`
+- `elemenx-quiz-option`: `chosen`, `right`, `single`, `wrong`
+- `elemenx-quiz-options`
+- `elemenx-quiz-order`
+- `elemenx-quiz-progress`
+- `elemenx-quiz-question`
+- `elemenx-quiz-result`
+- `elemenx-quiz-review`
+- `elemenx-quiz-review-answer`
+- `elemenx-quiz-review-body`
+- `elemenx-quiz-review-explanation`
+- `elemenx-quiz-reviewed`
+- `elemenx-quiz-score`
+- `elemenx-quiz-state`
+- `elemenx-quiz-text`
+- `elemenx-quiz-title`
+- `elemenx-quiz-top`
+
+## Experiment
+
+- `elemenx-experiment`
+- `elemenx-variant`
+
+## Landing
+
+- `elemenx-landing-action`: `ghost`, `primary`, `secondary`
+- `elemenx-landing-actions`: `center`
+- `elemenx-landing-header`: `center`
+- `elemenx-landing-lead`
+- `elemenx-landing-title`
+
+## LandingHero
+
+- `elemenx-landing-hero`: `center`, `cover`
+- `elemenx-landing-hero-body`
+- `elemenx-landing-hero-image`
+- `elemenx-landing-hero-media`
+- `elemenx-landing-hero-title`
+
+## LandingFeatures
+
+- `elemenx-landing-feature`
+- `elemenx-landing-feature-icon`
+- `elemenx-landing-feature-image`
+- `elemenx-landing-feature-text`
+- `elemenx-landing-feature-title`
+- `elemenx-landing-features`: `cards`, `center`
+- `elemenx-landing-features-grid`
+
+## LandingStats
+
+- `elemenx-landing-stat`
+- `elemenx-landing-stat-label`
+- `elemenx-landing-stat-value`
+- `elemenx-landing-stats`
+- `elemenx-landing-stats-list`
+
+## LandingTestimonials
+
+- `elemenx-landing-testimonial`
+- `elemenx-landing-testimonial-author`
+- `elemenx-landing-testimonial-role`
+- `elemenx-landing-testimonial-text`
+- `elemenx-landing-testimonial-who`
+- `elemenx-landing-testimonials`
+- `elemenx-landing-testimonials-grid`
+
+## LandingFAQ
+
+- `elemenx-landing-faq`
+- `elemenx-landing-faq-answer`
+- `elemenx-landing-faq-item`
+- `elemenx-landing-faq-list`
+- `elemenx-landing-faq-question`
+
+## LandingCTA
+
+- `elemenx-landing-cta`: `accent`, `center`
+- `elemenx-landing-cta-side`
+- `elemenx-landing-cta-title`
+
 ## Properties
 
 - `elemenx-properties`: `double`
@@ -1016,6 +1158,16 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-money`
 - `elemenx-money-input`
 
+## Mosaic
+
+- `elemenx-mosaic`: `selectable`, `treemap`
+- `elemenx-mosaic-caption`
+- `elemenx-mosaic-content`
+- `elemenx-mosaic-custom`
+- `elemenx-mosaic-image`
+- `elemenx-mosaic-item`: `colored`, `parent`, `picture`
+- `elemenx-mosaic-text`
+
 ## NotificationHost
 
 - `elemenx-notification-action`
@@ -1755,6 +1907,7 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-signature-field`
 - `elemenx-signature-line`
 - `elemenx-signature-pad`: `readonly`
+- `elemenx-signature-result`: `match`, `mismatch`
 - `elemenx-signature-placeholder`
 
 ## Drawing

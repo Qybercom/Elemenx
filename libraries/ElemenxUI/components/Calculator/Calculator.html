@@ -1,0 +1,12 @@
+<div class="elemenx-calculator elemenx-focus-ring" tabindex="0" role="application" [class]="[Mode === 'scientific' ? 'scientific' : 'basic']" [attribute.aria-label]="Label || $T('ui.calculator.label')" (keydown)="Key">
+	<div class="elemenx-calculator-display" aria-live="polite">
+		<div class="elemenx-calculator-line">{{Shown(Value)}}</div>
+		<output class="elemenx-calculator-result">{{Preview(Value, Angle, Precision) || (Value ? '…' : '0')}}</output>
+	</div>
+	<div class="elemenx-calculator-keys">
+		<button type="button" class="elemenx-calculator-key elemenx-bare" tabindex="-1" *for="key of Keys(Mode, Shift, Angle)" *key="key.ID" [class]="[key.Kind || 'digit', key.Pressed ? 'pressed' : '']" [attribute.data-key]="key.ID" [attribute.aria-label]="key.Name ? $T('ui.calculator.keys.' + key.Name) : key.Label" [attribute.aria-pressed]="key.ID === 'shift' ? String(!!key.Pressed) : null" (click)="Pressed">{{key.Label}}</button>
+	</div>
+	<ol class="elemenx-calculator-history" *if="History && History !== 'false' && Records.length" [attribute.aria-label]="$T('ui.calculator.history')">
+		<li *for="record of Records" *key="$index + ':' + record.Expression"><button type="button" class="elemenx-calculator-record elemenx-bare" [attribute.data-index]="$index" (click)="Recalled"><span class="elemenx-calculator-record-line">{{Shown(record.Expression)}}</span><strong>{{record.Text}}</strong></button></li>
+	</ol>
+</div>

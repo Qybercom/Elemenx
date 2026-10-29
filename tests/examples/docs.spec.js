@@ -27,7 +27,7 @@ test.describe('Elemenx documentation', function () {
 		});
 	});
 
-	test('shows a page of the guide and a page of the reference with its live example', async function ({ page }) {
+	test('shows a page of the guide and a page of the Docs with its live example', async function ({ page }) {
 		var errors = captureErrors(page);
 		var article = page.locator('.docs-article');
 
@@ -58,7 +58,7 @@ test.describe('Elemenx documentation', function () {
 		await page.goto(origin + '/components/Button');
 
 		/* The field of the search has a name of its own, not only its placeholder: there is no Field round it. */
-		await expect(search.locator('input.elemenx-input-control')).toHaveAttribute('aria-label', 'Search the reference');
+		await expect(search.locator('input.elemenx-input-control')).toHaveAttribute('aria-label', 'Search the docs');
 
 		/* The components by their groups, the group of the page open. */
 		await expect(nav.getByText('Buttons', {exact: true})).toBeVisible();
@@ -230,7 +230,7 @@ test.describe('Elemenx documentation', function () {
 
 		expect(zip).toMatch(/^application\/zip [1-9]\d+$/);
 
-		/* The demo in a frame of a blob: URL: the page of the reference keeps its own URL. */
+		/* The demo in a frame of a blob: URL: the page of the Docs keeps its own URL. */
 		await card.getByRole('button', {name: 'Show the demo'}).click();
 
 		frame = page.frameLocator('.docs-tutorial-frame');

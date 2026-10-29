@@ -1,0 +1,12 @@
+<LandingHero Overline="New" Title="Ship faster" Text="One file, no build step, two hundred components." [actions]="Actions" (action)="Acted" />
+<p class="elemenx-text small muted">{{Text}}</p>
+<script>
+({
+	Text: 'Press an action.',
+	Actions: [{ID: 'start', Label: 'Start free'}, {ID: 'docs', Label: 'Read the docs', Variant: 'secondary'}],
+
+	Acted: function (event) {
+		this.Text = 'Pressed ' + event.ID;
+	}
+})
+</script>

@@ -1,0 +1,9 @@
+<section class="elemenx-landing-stats">
+	<h2 class="elemenx-landing-title elemenx-landing-stats-title" *if="Title">{{Title}}</h2>
+	<dl class="elemenx-landing-stats-list">
+		<div class="elemenx-landing-stat" *for="item of Items" *key="item.ID || item.Label" [attribute.data-id]="item.ID || null">
+			<dt class="elemenx-landing-stat-label">{{item.Label}}</dt>
+			<dd class="elemenx-landing-stat-value" [attribute.aria-label]="Shown(item, 1)">{{Shown(item, Progress)}}</dd>
+		</div>
+	</dl>
+</section>

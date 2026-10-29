@@ -31,5 +31,5 @@
 
 ## Тесты
 
-- [shows a page of the guide and a page of the reference with its live example](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/docs.spec.js#L30) — `tests/examples/docs.spec.js`
-- [breadcrumbs lead back, fold the middle into a menu; avatars are made of names; presence, badges and pictures](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L2551) — `tests/examples/ui-kit.spec.js`
+- [shows a page of the guide and a page of the Docs with its live example](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/docs.spec.js#L30) — `tests/examples/docs.spec.js`
+- [breadcrumbs lead back, fold the middle into a menu; avatars are made of names; presence, badges and pictures](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L2586) — `tests/examples/ui-kit.spec.js`

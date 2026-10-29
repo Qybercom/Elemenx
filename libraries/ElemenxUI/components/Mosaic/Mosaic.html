@@ -1,0 +1,8 @@
+<div class="elemenx-mosaic" role="list" [class]="[Arranged(Layout, Items, Room, Version, Columns, ColumnWidth, CellHeight, RowHeight, MaxRowHeight, LastRow, Height, Gap).Layout]" [class.selectable]="Selectable" [attribute.aria-label]="Label || null" [attribute.style]="Arranged(Layout, Items, Room, Version, Columns, ColumnWidth, CellHeight, RowHeight, MaxRowHeight, LastRow, Height, Gap).Style">
+	<div class="elemenx-mosaic-item" *for="spot of Arranged(Layout, Items, Room, Version, Columns, ColumnWidth, CellHeight, RowHeight, MaxRowHeight, LastRow, Height, Gap).Spots" *key="spot.Key" role="listitem" [class]="[spot.Class]" [attribute.style]="spot.Style" [attribute.data-id]="spot.ID" [attribute.tabindex]="Selectable && !spot.Parent ? 0 : null" [attribute.aria-label]="spot.Name" (click)="Pressed" (keydown)="Key">
+		<img class="elemenx-mosaic-image" *if="spot.Image && !spot.Custom" [attribute.src]="spot.Image" alt="" loading="lazy" draggable="false" />
+		<div class="elemenx-mosaic-caption" *if="!spot.Custom && (spot.Title || spot.Text)"><strong class="elemenx-mosaic-title elemenx-ellipsis">{{spot.Title}}</strong><span class="elemenx-mosaic-text" *if="spot.Text && !spot.Parent">{{spot.Text}}</span></div>
+		<div class="elemenx-mosaic-custom" *if="spot.Custom" *mount="spot.Custom"></div>
+	</div>
+	<div class="elemenx-mosaic-sources" hidden><slot></slot></div>
+</div>

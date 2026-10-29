@@ -1,6 +1,6 @@
 <div class="docs-shell">
 	<header class="docs-header">
-		<a class="docs-brand" href="/"><span class="docs-brand-mark">E</span><strong>Elemenx</strong><span class="docs-brand-note">{{$T('docs.reference')}}</span></a>
+		<a class="docs-brand" href="/"><span class="docs-brand-mark">E</span><strong>Elemenx</strong><span class="docs-brand-note">{{$T('docs.docs')}}</span></a>
 		<div class="docs-search" (keydown)="Keyed" (focusin)="Opened" (focusout)="Blurred">
 			<Input Icon="search" Size="small" Clearable="true" [placeholder]="$T('docs.search')" [label]="$T('docs.search')" [value]="Query" (input)="Searched" />
 			<div class="docs-search-results" role="listbox" *if="Open && Query.trim()" [attribute.aria-label]="$T('docs.search')">

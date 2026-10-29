@@ -1,3 +1,0 @@
-[
-	'BuilderLayout/BuilderLayout.js'
-];

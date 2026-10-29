@@ -58,7 +58,7 @@
  *   edited may take, but itself and those holding it; on the canvas each runs as a Component made of its document. The
  *   kind slot (a component only) marks where the component puts what it is given, the kind outlet (a component of an
  *   application) where the pages of the routes go.
- * - A project of another place (elemenx design): Scope(name) keeps its projects apart in the storage, Extend(components)
+ * - A project of another place (elemenx designer): Scope(name) keeps its projects apart in the storage, Extend(components)
  *   gives its Components (group files of the palette), and Copy(name) makes one of them a component of the project to
  *   edit (Origin its name): the nodes of its template, whose texts keep their expressions, and on the canvas the
  *   definition it came with.
@@ -72,7 +72,7 @@ Elemenx.Service('Designer', {
 	StorageKey: 'elemenx-designer:document',
 	ProjectKey: 'elemenx-designer:project',
 	ProjectsKey: 'elemenx-designer:projects',
-	Groups: ['layout', 'text', 'inputs', 'buttons', 'menus', 'navigation', 'display', 'feedback', 'data', 'codes', 'media', 'overlays', 'social', 'commerce', 'music', 'game'],
+	Groups: ['layout', 'text', 'inputs', 'buttons', 'menus', 'navigation', 'display', 'feedback', 'data', 'codes', 'media', 'overlays', 'social', 'commerce', 'landing', 'music', 'game'],
 
 	/* The layout a node may set, in the order of its style; the last five in a flex container only. */
 	Layout: ['padding', 'margin', 'width', 'height', 'min-width', 'max-width', 'min-height', 'max-height', 'flex-direction', 'flex-wrap', 'align-items', 'justify-content', 'gap'],
@@ -2840,7 +2840,7 @@ Elemenx.Service('Designer', {
 		};
 
 		/*
-		 * The projects of another place apart from the others (a project of elemenx design): the keys of the storage end
+		 * The projects of another place apart from the others (a project of elemenx designer): the keys of the storage end
 		 * with :name ('' for the ones of every place), and the projects and the document are read again from there; the
 		 * first project of a place with none is an application of that name.
 		 */

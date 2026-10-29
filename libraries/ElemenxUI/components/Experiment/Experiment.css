@@ -1,0 +1,9 @@
+/* An experiment and its variants take no room of their own: their content stands in the layout of the page. */
+.elemenx-experiment,
+.elemenx-variant {
+	display: contents;
+}
+
+.elemenx-variant[hidden] {
+	display: none;
+}

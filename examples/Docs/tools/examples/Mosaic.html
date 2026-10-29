@@ -1,0 +1,27 @@
+<RadioGroup Variant="segmented" [options]="Layouts" [value]="Layout" (change)="Laid" />
+<Mosaic ColumnWidth="90" RowHeight="110" Height="260" Selectable="true" [layout]="Layout" [items]="Items" (select)="Chosen">
+	<MosaicItem ID="declared" Title="Declared" Width="2" Ratio="2" Value="20" Color="#2f8f83" />
+</Mosaic>
+<p class="elemenx-text small muted">{{Text}}</p>
+<script>
+({
+	Layout: 'bento',
+	Layouts: [{Value: 'bento', Label: 'Bento'}, {Value: 'masonry', Label: 'Masonry'}, {Value: 'justified', Label: 'Justified'}, {Value: 'treemap', Label: 'Treemap'}],
+	Text: 'Press an item.',
+	Items: [
+		{ID: 'a', Title: 'Wide', Width: 2, Height: 2, Ratio: 1.5, Value: 40, Color: '#3f6c9e'},
+		{ID: 'b', Title: 'One', Ratio: 0.8, Value: 25, Color: '#c2477f'},
+		{ID: 'c', Title: 'Tall', Height: 2, Ratio: 1, Value: 15, Color: '#d99a1e'},
+		{ID: 'd', Title: 'Two', Ratio: 1.7, Value: 10, Color: '#7a4fb0'},
+		{ID: 'e', Title: 'Three', Ratio: 1.2, Value: 8, Color: '#d25f3a'}
+	],
+
+	Laid: function (value) {
+		this.Layout = value;
+	},
+
+	Chosen: function (item) {
+		this.Text = 'Chosen: ' + (item.Title || item.ID);
+	}
+})
+</script>

@@ -36,12 +36,28 @@ Elemenx.Directive('tip', {
 
 				node.setAttribute('role', 'tooltip');
 
+				/* In the top layer, as the panels of *popup: the tip shown last is over them. */
+				if (typeof node.showPopover === 'function')
+					node.setAttribute('popover', 'manual');
+
 				node.hidden = true;
 
 				owner().body.appendChild(node);
 			}
 
 			return node;
+		}
+
+		/*
+		 * Whether something is over the middle of the element (a panel opened over it while the tip waited): a tip of
+		 * what cannot be seen is not shown.
+		 */
+		function covered () {
+			var box = element.getBoundingClientRect();
+			var root = element.getRootNode && element.getRootNode().elementFromPoint ? element.getRootNode() : owner();
+			var hit = root.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2);
+
+			return !!hit && hit !== element && !element.contains(hit);
 		}
 
 		/* The tip beside the element, on the side of Placement when there is room, on the other side when not. */
@@ -83,6 +99,7 @@ Elemenx.Directive('tip', {
 			window.clearTimeout(data.Timer);
 
 			if (options.Disabled || !element.isConnected || !element.getClientRects().length || (!options.Title && !options.Text && !options.Element && !options.Render)) return;
+			if (covered()) return;
 
 			node = tip();
 			node.textContent = '';
@@ -113,6 +130,14 @@ Elemenx.Directive('tip', {
 			node.hidden = false;
 			node.ElemenxOwner = element;
 
+			/* Shown again: on top of the top layer, over a panel opened since it was shown last. */
+			if (node.hasAttribute('popover')) {
+				if (node.matches(':popover-open'))
+					node.hidePopover();
+
+				node.showPopover();
+			}
+
 			element.setAttribute('aria-describedby', id);
 
 			data.Listened = owner();
@@ -139,6 +164,9 @@ Elemenx.Directive('tip', {
 				element.removeAttribute('aria-describedby');
 
 			if (node && node.ElemenxOwner === element) {
+				if (node.hasAttribute('popover') && node.matches(':popover-open'))
+					node.hidePopover();
+
 				node.hidden = true;
 				node.ElemenxOwner = null;
 			}

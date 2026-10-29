@@ -73,7 +73,7 @@ describe('Elemenx npm release surface', function () {
 
 	it('leaves out the examples, the tests and the development files', function () {
 		var outside = files.filter(function (file) {
-			return /^(examples|tests|scripts|packages|coverage|test-results|playwright-report|node_modules|eslint|stylelint|\.github)\//.test(file) || /^(AGENTS|CLAUDE)\.md$|\.config\.m?js$|^elemenx\.zip$/.test(file === 'docs-site/elemenx.config.js' ? 'the server of the reference' : file);
+			return /^(examples|tests|scripts|packages|coverage|test-results|playwright-report|node_modules|eslint|stylelint|\.github)\//.test(file) || /^(AGENTS|CLAUDE)\.md$|\.config\.m?js$|^elemenx\.zip$/.test(file === 'docs-site/elemenx.config.js' ? 'the server of the Docs' : file);
 		});
 
 		expect(outside).toEqual([]);
@@ -85,8 +85,8 @@ describe('Elemenx npm release surface', function () {
 		expect(manifest.unpkg).toBe('dist/elemenx.min.js');
 		expect(manifest.jsdelivr).toBe('dist/elemenx.min.js');
 		/* The package has no editors/: they go to the GitHub release (publish.yml), and npm publish waits for no IntelliJ IDEA. */
-		/* The reference too (docs-site/, with the elemenx.config.js of its server): npx elemenx docs serves it. */
-		expect(manifest.scripts.prepack).toBe('npm run dist -- --no-editors && npm run docs:site && npm run design:site');
+		/* The Docs too (docs-site/, with the elemenx.config.js of its server): npx elemenx docs serves it. */
+		expect(manifest.scripts.prepack).toBe('npm run dist -- --no-editors && npm run docs:site && npm run designer:site');
 		expect(manifest.exports).toBeUndefined();
 		expect(files).toContain(manifest.main);
 		expect(files).toContain(manifest.bin.elemenx);
@@ -110,10 +110,10 @@ describe('Elemenx npm release surface', function () {
 			return step.trim().replace(/^npm run /, '');
 		});
 
-		expect(steps).toEqual(['lint', 'test:browser', 'test:tools', 'dist', 'test:min', 'test:history']);
+		expect(steps).toEqual(['lint', 'test:browser', 'test:tools', 'dist', 'test:min', 'test:e2e']);
 
 		steps.forEach(function (step) {
-			expect(ci, step).toContain(step === 'test:history' ? 'npx playwright test' : 'run: npm run ' + step);
+			expect(ci, step).toContain(step === 'test:e2e' ? 'npx playwright test' : 'run: npm run ' + step);
 		});
 
 		expect(publish).toContain('tags: [\'v*\']');

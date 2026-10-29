@@ -31,6 +31,13 @@ describe('Builder: precompiled expressions', function () {
 		], [])).toEqual(['Open = !Open', 'Pick(row, $event)', 't']);
 	});
 
+	/* A bug: a text ended at its first <, so {{ n < 3 ? ... }} was cut and left out, and a page that forbids eval failed it. */
+	it('takes an expression of a text with a < in it: only a tag, a closing tag or a comment ends a text', function () {
+		expect(sources([
+			"Elemenx.Component('E', {$Template: '<p>{{ Count < 3 ? \\'few\\' : \\'many\\' }}</p><!-- {{ hidden }} --><i>{{ c }}</i>'});"
+		], [])).toEqual(["Count < 3 ? 'few' : 'many'", 'c']);
+	});
+
 	it('leaves out what is not an expression, and gives nothing for templates without one', function () {
 		expect(sources(["Elemenx.Component('B', {$Template: '<p *for=\"x of\">{{ ) }}</p>'});"], [])).toEqual([]);
 		expect(Expressions.Render(["Elemenx.Component('C', {$Template: '<p>Plain</p>'});"], [])).toBe('');

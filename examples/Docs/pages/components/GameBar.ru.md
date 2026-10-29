@@ -43,4 +43,4 @@
 
 ## Тесты
 
-- [has every component of ElemenxUI from its $Meta and the classes of its layouts on the Insert tab, with a search](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/builder.spec.js#L360) — `tests/examples/builder.spec.js`
+- [has every component of ElemenxUI from its $Meta and the classes of its layouts on the Insert tab, with a search](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/designer.spec.js#L360) — `tests/examples/designer.spec.js`

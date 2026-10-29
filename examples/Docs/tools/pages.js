@@ -1,9 +1,9 @@
 /*
- * Makes the pages of the Library for the reference: one for every component, service and directive of ElemenxUI, from
+ * Makes the pages of the Library for the Docs: one for every component, service and directive of ElemenxUI, from
  * the comment at the head of its source (in English), with its example (tools/examples/<Name>.html) and its Russian
  * description (the files of tools/ru) when they are there; and pages/index.json, the contents (the components in the
  * groups their $Meta names, as data/meta.json has them), and pages/search.<language>.json, the text of every page in a
- * language for the search of the reference. A page it made starts with the line <!-- generated -->: it is made again
+ * language for the search of the Docs. A page it made starts with the line <!-- generated -->: it is made again
  * each time; a page without that line was written by hand and is kept. A page of the Library lists the tests of its
  * component, service or directive too (tests/regression, tests/examples), their names linked to their lines in the
  * repository. node examples/Docs/tools/pages.js
@@ -446,7 +446,7 @@ function plain (text) {
 	return text.replace(Marker, '').replace(/^```diagram\n[\s\S]*?^```$/gm, '').replace(/^# .*$/m, '').replace(/^```\w*$/gm, '').replace(/^#+\s*/gm, '').replace(/!?\[([^\]]*)\]\([^)]*\)/g, '$1').replace(/[*_`]+/g, '').replace(/\s+/g, ' ').trim();
 }
 
-/* The search of the reference in each language: every page, its section, its title and its text (the English one when it has none). */
+/* The search of the Docs in each language: every page, its section, its title and its text (the English one when it has none). */
 ['en', 'ru'].forEach(function (language) {
 	var entries = [];
 

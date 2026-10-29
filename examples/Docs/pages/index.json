@@ -148,10 +148,10 @@
 					}
 				},
 				{
-					"ID": "builder",
+					"ID": "designer",
 					"Title": {
-						"en": "The visual builder",
-						"ru": "Визуальный конструктор"
+						"en": "The Designer",
+						"ru": "Конструктор"
 					}
 				},
 				{
@@ -702,6 +702,13 @@
 						"en": "Designer",
 						"ru": "Конструктор"
 					}
+				},
+				{
+					"ID": "other",
+					"Title": {
+						"en": "Other",
+						"ru": "Другое"
+					}
 				}
 			],
 			"Pages": [
@@ -755,6 +762,13 @@
 					"Group": "navigation"
 				},
 				{
+					"ID": "BusinessCalculator",
+					"Title": {
+						"en": "BusinessCalculator"
+					},
+					"Group": "inputs"
+				},
+				{
 					"ID": "Button",
 					"Title": {
 						"en": "Button"
@@ -772,6 +786,27 @@
 					"ID": "CVVInput",
 					"Title": {
 						"en": "CVVInput"
+					},
+					"Group": "inputs"
+				},
+				{
+					"ID": "Calculator",
+					"Title": {
+						"en": "Calculator"
+					},
+					"Group": "inputs"
+				},
+				{
+					"ID": "CalculatorField",
+					"Title": {
+						"en": "CalculatorField"
+					},
+					"Group": "inputs"
+				},
+				{
+					"ID": "CalculatorResult",
+					"Title": {
+						"en": "CalculatorResult"
 					},
 					"Group": "inputs"
 				},
@@ -1147,6 +1182,13 @@
 					"Group": "feedback"
 				},
 				{
+					"ID": "Experiment",
+					"Title": {
+						"en": "Experiment"
+					},
+					"Group": "layout"
+				},
+				{
 					"ID": "ExpressionPicker",
 					"Title": {
 						"en": "ExpressionPicker"
@@ -1392,6 +1434,48 @@
 					"Group": "inputs"
 				},
 				{
+					"ID": "LandingCTA",
+					"Title": {
+						"en": "LandingCTA"
+					},
+					"Group": "other"
+				},
+				{
+					"ID": "LandingFAQ",
+					"Title": {
+						"en": "LandingFAQ"
+					},
+					"Group": "other"
+				},
+				{
+					"ID": "LandingFeatures",
+					"Title": {
+						"en": "LandingFeatures"
+					},
+					"Group": "other"
+				},
+				{
+					"ID": "LandingHero",
+					"Title": {
+						"en": "LandingHero"
+					},
+					"Group": "other"
+				},
+				{
+					"ID": "LandingStats",
+					"Title": {
+						"en": "LandingStats"
+					},
+					"Group": "other"
+				},
+				{
+					"ID": "LandingTestimonials",
+					"Title": {
+						"en": "LandingTestimonials"
+					},
+					"Group": "other"
+				},
+				{
 					"ID": "Markdown",
 					"Title": {
 						"en": "Markdown"
@@ -1490,6 +1574,20 @@
 					"Group": "inputs"
 				},
 				{
+					"ID": "Mosaic",
+					"Title": {
+						"en": "Mosaic"
+					},
+					"Group": "layout"
+				},
+				{
+					"ID": "MosaicItem",
+					"Title": {
+						"en": "MosaicItem"
+					},
+					"Group": "layout"
+				},
+				{
 					"ID": "MultiSelect",
 					"Title": {
 						"en": "MultiSelect"
@@ -1565,6 +1663,27 @@
 						"en": "PianoRoll"
 					},
 					"Group": "music"
+				},
+				{
+					"ID": "Pipeline",
+					"Title": {
+						"en": "Pipeline"
+					},
+					"Group": "data"
+				},
+				{
+					"ID": "PipelineJob",
+					"Title": {
+						"en": "PipelineJob"
+					},
+					"Group": "data"
+				},
+				{
+					"ID": "PipelineStage",
+					"Title": {
+						"en": "PipelineStage"
+					},
+					"Group": "data"
 				},
 				{
 					"ID": "PlanCard",
@@ -1649,6 +1768,27 @@
 						"en": "QRScanner"
 					},
 					"Group": "media"
+				},
+				{
+					"ID": "Quiz",
+					"Title": {
+						"en": "Quiz"
+					},
+					"Group": "inputs"
+				},
+				{
+					"ID": "QuizOption",
+					"Title": {
+						"en": "QuizOption"
+					},
+					"Group": "inputs"
+				},
+				{
+					"ID": "QuizQuestion",
+					"Title": {
+						"en": "QuizQuestion"
+					},
+					"Group": "inputs"
 				},
 				{
 					"ID": "Radio",
@@ -2036,6 +2176,13 @@
 					"Group": "navigation"
 				},
 				{
+					"ID": "Variant",
+					"Title": {
+						"en": "Variant"
+					},
+					"Group": "layout"
+				},
+				{
 					"ID": "VideoTimeline",
 					"Title": {
 						"en": "VideoTimeline"
@@ -2100,6 +2247,12 @@
 					}
 				},
 				{
+					"ID": "Audience",
+					"Title": {
+						"en": "Audience"
+					}
+				},
+				{
 					"ID": "Audio",
 					"Title": {
 						"en": "Audio"
@@ -2121,6 +2274,12 @@
 					"ID": "Biometric",
 					"Title": {
 						"en": "Biometric"
+					}
+				},
+				{
+					"ID": "Calculations",
+					"Title": {
+						"en": "Calculations"
 					}
 				},
 				{
@@ -2268,6 +2427,12 @@
 					}
 				},
 				{
+					"ID": "Layouts",
+					"Title": {
+						"en": "Layouts"
+					}
+				},
+				{
 					"ID": "Menus",
 					"Title": {
 						"en": "Menus"
@@ -2349,6 +2514,12 @@
 					"ID": "Serial",
 					"Title": {
 						"en": "Serial"
+					}
+				},
+				{
+					"ID": "Signatures",
+					"Title": {
+						"en": "Signatures"
 					}
 				},
 				{

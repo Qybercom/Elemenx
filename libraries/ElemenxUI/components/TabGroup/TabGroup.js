@@ -6,13 +6,14 @@
  * A Pinned tab stays first in the strip, has no cross, and a close of all the tabs, of the others, or of the ones to a
  * side leaves it. The menu of a tab (its right button, a long press, the key of the menu or Shift+F10) closes it, the
  * others, the ones to its right or its left, or all of them, pins it or unpins it; in a TabSplit (Splittable) it also
- * splits the group to a side with the tab. A tab is dragged to another place of its strip, and in a TabSplit to another
+ * splits the group to a side with a copy of the tab (Split), or with the tab itself (Split and move). A tab is dragged to another place of its strip, and in a TabSplit to another
  * group, or to an edge of a group to split it there: the edge it would take shows while it is over it.
  * Keys in the strip: the arrows, Home and End move between the tabs, Delete closes one, the key of the menu opens its
  * menu; Ctrl+Page Down and Ctrl+Page Up anywhere in the group go to the next tab and the one before.
  * Events: select (the ID), close (the ID, once a tab: the owner takes its Tab away), pin ({ID, Pinned}), and with
  * Items, for its owner: order ({ID, Index}), move ({ID, From, Index}: a tab of another group put in its strip), drop
- * ({ID, From, Side: left, right, top, bottom or center}) and split ({ID, Side}). Each detail has Group, its name.
+ * ({ID, From, Side: left, right, top, bottom or center}) and split ({ID, Side, Move}: Move true takes the tab there, false
+ * puts a copy of it there). Each detail has Group, its name.
  * In a TabSplit it is also a part of a layout declared in the template: <TabGroup Group="side">...</TabGroup>.
  */
 Elemenx.Component('TabGroup', {
@@ -32,7 +33,7 @@ Elemenx.Component('TabGroup', {
 			order: 'With Items: a tab was put at another place of the strip: {ID, Index}.',
 			move: 'With Items: a tab of another group was put in the strip: {ID, From, Index}.',
 			drop: 'With Items: a tab was put on the body: {ID, From, Side}.',
-			split: 'With Items: its menu splits the group to a side with the tab: {ID, Side}.'
+			split: 'With Items: its menu splits the group to a side with a copy of the tab, or with the tab (Move): {ID, Side, Move}.'
 		},
 		Props: {
 			Items: {Schema: {ID: 'text', Label: 'text', Icon: 'icon', Badge: 'text', Closable: 'bool', Disabled: 'bool', Pinned: 'bool'}, Description: 'The tabs, when the owner puts their content in the body: [{ID, Label, Icon, Badge, Closable, Disabled, Pinned}].'},
@@ -137,7 +138,12 @@ Elemenx.Component('TabGroup', {
 					{ID: 'split-right', Label: Elemenx.Locale.Text('ui.tabGroup.splitRight')},
 					{ID: 'split-left', Label: Elemenx.Locale.Text('ui.tabGroup.splitLeft')},
 					{ID: 'split-bottom', Label: Elemenx.Locale.Text('ui.tabGroup.splitDown')},
-					{ID: 'split-top', Label: Elemenx.Locale.Text('ui.tabGroup.splitUp')}
+					{ID: 'split-top', Label: Elemenx.Locale.Text('ui.tabGroup.splitUp')},
+					{Separator: true},
+					{ID: 'move-right', Label: Elemenx.Locale.Text('ui.tabGroup.moveRight'), Disabled: list.length < 2},
+					{ID: 'move-left', Label: Elemenx.Locale.Text('ui.tabGroup.moveLeft'), Disabled: list.length < 2},
+					{ID: 'move-bottom', Label: Elemenx.Locale.Text('ui.tabGroup.moveDown'), Disabled: list.length < 2},
+					{ID: 'move-top', Label: Elemenx.Locale.Text('ui.tabGroup.moveUp'), Disabled: list.length < 2}
 				]);
 			}
 
@@ -321,7 +327,8 @@ Elemenx.Component('TabGroup', {
 		else if (item === 'left') this.Close(ids(tabs.slice(0, index)));
 		else if (item === 'all') this.Close(ids(tabs));
 		else if (item === 'pin') this.Pin(id);
-		else if (/^split-/.test(item)) this.$Emit('split', {ID: id, Side: item.substring(6), Group: this.GroupName()});
+		else if (/^split-/.test(item)) this.$Emit('split', {ID: id, Side: item.substring(6), Group: this.GroupName(), Move: false});
+		else if (/^move-/.test(item)) this.$Emit('split', {ID: id, Side: item.substring(5), Group: this.GroupName(), Move: true});
 	},
 
 	Key: function (event, node) {

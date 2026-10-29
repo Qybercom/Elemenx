@@ -45,7 +45,7 @@
 	 * Elemenx: the namespace of this copy of the framework. The window gets it last (see Export), unless a copy of the
 	 * same version is there already: then this one stops here and the page keeps the first.
 	 */
-	var Version = '0.11.2';
+	var Version = '0.11.3';
 	var Elemenx = {};
 	if (typeof ElemenxIsolated !== 'object' && (typeof globalThis !== 'undefined' ? globalThis : self).Elemenx && (typeof globalThis !== 'undefined' ? globalThis : self).Elemenx.Version === Version) return;
 
@@ -4204,6 +4204,14 @@
 				return current && current.$Refs ? current.$Refs(name, instance) : [];
 			};
 
+			/* A copy of the tag: of the instance made, once its definition is in. */
+			api.$Copy = function (props) {
+				if (!current || !current.$Copy)
+					throw new Error('Elemenx $Copy: the Component is not loaded yet');
+
+				return current.$Copy(props);
+			};
+
 			api._Definition = function () {
 				return currentDefinition;
 			};
@@ -4567,6 +4575,61 @@
 			}
 		}
 
+		/*
+		 * A <Fragment> groups nodes without an element of its own. The HTML parser takes it out of a table (an element it does
+		 * not know cannot stand there), so it is read as a <template>, which may stand anywhere; openFragments makes it an
+		 * element again once the text is parsed. A part written back as text (a row of a *for) has its elemenx-fragment.
+		 */
+		function fragmentTags (html) {
+			return String(html || '').replace(/<(?:Fragment|elemenx-fragment)(?=[\s>])/gi, '<template data-elemenx-fragment').replace(/<\/(?:Fragment|elemenx-fragment)\s*>/gi, '</template>');
+		}
+
+		/*
+		 * The <template data-elemenx-fragment> of a parsed text, those inside them too: one with nothing on it (no
+		 * directive, no slot) leaves its nodes in its place, the one of the whole text excepted; another becomes an
+		 * elemenx-fragment element with them, for a *directive or for the slot it fills.
+		 */
+		function openFragments (container, whole) {
+			var found = container.querySelectorAll('template[data-elemenx-fragment]');
+			var i = 0;
+			var fragment;
+			var element;
+			var attributes;
+			var j;
+
+			while (i < found.length) {
+				fragment = found[i];
+
+				fragment.removeAttribute('data-elemenx-fragment');
+
+				openFragments(fragment.content, null);
+
+				if (!fragment.attributes.length && fragment !== whole) {
+					fragment.parentNode.replaceChild(fragment.content, fragment);
+				}
+				else {
+					element = document.createElement('elemenx-fragment');
+					attributes = fragment.attributes;
+
+					for (j = 0; j < attributes.length; j++)
+						element.setAttribute(attributes[j].name, attributes[j].value);
+
+					element.appendChild(fragment.content);
+
+					fragment.parentNode.replaceChild(element, fragment);
+				}
+
+				i++;
+			}
+		}
+
+		/* The <Fragment> that is the whole of a parsed text, or null. */
+		function wholeFragment (content) {
+			var only = soleElement(content);
+
+			return only && only.tagName === 'TEMPLATE' && only.hasAttribute('data-elemenx-fragment') ? only : null;
+		}
+
 		function preserveComponentNames (html) {
 			return String(html || '').replace(/<([A-Z][A-Za-z0-9_.:-]*)(?=\s|\/?>)/g, function (match, name) {
 				return '<' + name + ' data-elemenx-component="' + name + '"';
@@ -4792,7 +4855,10 @@
 			var protectedExpressions = protectExpressionAttributes(html);
 			var only;
 
-			template.innerHTML = preserveComponentNames(normalizeSelfClosingComponents(protectedExpressions.Source));
+			template.innerHTML = preserveComponentNames(fragmentTags(normalizeSelfClosingComponents(protectedExpressions.Source)));
+
+			/* The fragments first: the expressions of what they hold are restored with the others. */
+			openFragments(template.content, wholeFragment(template.content));
 
 			restoreExpressionAttributes(template.content, protectedExpressions.Expressions);
 
@@ -6180,15 +6246,36 @@
 		 * Keep the host transparent to layout while allowing the real root to
 		 * participate in the same structural ownership path as nested directives.
 		 */
-		/* found, when given, gets the text of the template (Key): its plan is kept under it. */
-		function componentRoot (template, found) {
+		/*
+		 * found, when given, gets the text of the template (Key): its plan is kept under it. A template that is a <Fragment>
+		 * is the root of a part (part: a row of a *for, the content of an *if), whose nodes stand in the page with no element
+		 * of their own; the one of a Component has an element of its own that takes no room (display: contents).
+		 */
+		function componentRoot (template, found, part) {
 			/* The blank around a template (the final newline of its file) is not content: the element alone is the root. */
 			var text = resolveTemplate(template).replace(/^\s+|\s+$/g, '');
 			var root = createFragment(text);
 			var host;
 
 			if (found)
-				found.Key = text;
+				found.Key = part ? text + '\u0000part' : text;
+
+			if (root.nodeType === 1 && root.tagName === 'ELEMENX-FRAGMENT' && !root.attributes.length) {
+				if (part) {
+					root.__ElemenxFragmentRoot = true;
+
+					return root;
+				}
+
+				host = document.createElement('span');
+				host.style.display = 'contents';
+
+				while (root.firstChild) {
+					host.appendChild(root.firstChild);
+				}
+
+				return host;
+			}
 
 			/* A structural host or a Component declaration at the root gets a host of its own, so it is compiled like a child. */
 			if (root.nodeType !== 1 || (!Runtime.Directive.Find(root, 'structural') && !componentDeclaration(root))) return root;
@@ -6201,6 +6288,58 @@
 
 			return host;
 		}
+
+		/*
+		 * The element of a part made of a <Fragment> holds its nodes only while it is out of the page: placed, they stand in
+		 * the parent between two comments of their own, and go back into it when it is taken away. Place, Detach, First and
+		 * Last are those of any element too (an element is its own first and last node).
+		 */
+		function fragmentRange (element) {
+			var range = element.__ElemenxRange;
+
+			if (!range) {
+				range = element.__ElemenxRange = {Start: document.createComment('elemenx:fragment'), End: document.createComment('elemenx:fragment:end')};
+
+				element.insertBefore(range.Start, element.firstChild);
+				element.appendChild(range.End);
+			}
+
+			return range;
+		}
+
+		/* The nodes of a range moved before a node of a parent (at its end without one), the comments that bound it with them. */
+		function moveRange (range, parent, before) {
+			var node = range.Start;
+			var next;
+
+			while (node) {
+				next = node === range.End ? null : node.nextSibling;
+
+				parent.insertBefore(node, before || null);
+
+				node = next;
+			}
+		}
+
+		Runtime.Place = function (element, parent, before) {
+			if (element.__ElemenxFragmentRoot) moveRange(fragmentRange(element), parent, before);
+			else parent.insertBefore(element, before || null);
+		};
+
+		Runtime.Detach = function (element) {
+			var range = element.__ElemenxFragmentRoot ? fragmentRange(element) : null;
+
+			if (range && range.Start.parentNode !== element) moveRange(range, element, null);
+			else if (!range && element.parentNode) element.parentNode.removeChild(element);
+		};
+
+		Runtime.First = function (element) {
+			return element.__ElemenxFragmentRoot ? fragmentRange(element).Start : element;
+		};
+
+		Runtime.Last = function (element) {
+			return element.__ElemenxFragmentRoot ? fragmentRange(element).End : element;
+		};
 
 		/* Runs the effects in order: Run evaluates each one and starts tracking its dependencies. */
 		function runEffects (effects) {
@@ -6501,7 +6640,7 @@
 				var directState = options && options.DirectState === true;
 				var initialValues = directState ? {} : definitionValues(definition);
 				var found = {Key: ''};
-				var root = componentRoot(definition.$Template, found);
+				var root = componentRoot(definition.$Template, found, directState);
 				/* Where the compiler has something to read, by the plan of the template: found before the slots are filled. */
 				var plan = componentPlan(found.Key, root);
 				var planned = planNodes(plan, root);
@@ -6702,9 +6841,18 @@
 				}
 
 				function Destroy () {
+					var part = Runtime.CopyParts.get(api);
+
 					if (destroyed) return;
 
 					destroyed = true;
+
+					/* A copy ($Copy) takes the part it was made in with it. */
+					if (part) {
+						Runtime.CopyParts.delete(api);
+
+						part.$Destroy();
+					}
 
 					if (elementInstances.get(root) === api)
 						elementInstances.delete(root);
@@ -6765,8 +6913,7 @@
 
 					children.length = 0;
 
-					if (root.parentNode)
-						root.parentNode.removeChild(root);
+					Runtime.Detach(root);
 				}
 
 				/* Instance: API object */
@@ -6811,6 +6958,17 @@
 					},
 					$Batch: Batch,
 					$Update: Update,
+					$Copy: function (props) {
+						var make = options && options.Copy;
+
+						if (!definition.$Copyable)
+							throw new Error('Elemenx $Copy: ' + (name || 'the Component') + ' is not $Copyable');
+
+						if (!make)
+							throw new Error('Elemenx $Copy: ' + (name || 'the Component') + ' was not made from a tag of a template');
+
+						return make(props);
+					},
 					$Destroy: Destroy
 				};
 
@@ -8999,6 +9157,9 @@
 		 */
 		Runtime.ComponentHosts = new WeakMap();
 
+		/* $Copy: a copy of a tag → the part of its owner it was made in, destroyed with it (Template and Component). */
+		Runtime.CopyParts = new WeakMap();
+
 		/* Structural: bindings and props */
 		function expression (data, source) {
 			try {
@@ -9528,6 +9689,18 @@
 					host.appendChild(group);
 				}
 
+				/* A <Fragment slot="name"> gives what it holds to the slot, without itself (one with a directive stays a host). */
+				if (child.nodeType === 1 && child.tagName === 'ELEMENX-FRAGMENT' && !Runtime.Directive.Find(child, 'structural')) {
+					while (child.firstChild) {
+						blueprints[name].appendChild(child.firstChild.cloneNode(true));
+						group.appendChild(child.firstChild);
+					}
+
+					node.removeChild(child);
+
+					continue;
+				}
+
 				blueprints[name].appendChild(child.cloneNode(true));
 
 				/*
@@ -9874,8 +10047,8 @@
 			/* Takes the element of a component out of the page and gives it to the Cache asleep. */
 			function sleep (child, name, evicted) {
 				var element = child.$Element();
-				if (element.parentNode)
-					element.parentNode.removeChild(element);
+
+				Runtime.Detach(element);
 
 				return Runtime.CacheSleep(child, element, name, evicted);
 			}
@@ -9895,6 +10068,55 @@
 				var stale = false;
 				var outerRecords;
 				var outerCreates;
+				var copies = [];
+
+				/*
+				 * Another instance of the tag ($Copy of a $Copyable Component): the tag as it was declared, compiled again in
+				 * the scope of its owner (the same bindings and content, a state of its own), the props given in place of
+				 * their attributes; out of the page until its caller places it, destroyed with the tag or on its own.
+				 */
+				function copy (props) {
+					var given = props || {};
+					var names = Object.keys(given).map(function (key) {
+						return key.toLowerCase();
+					});
+					var source = blueprint.cloneNode(true);
+					var part;
+					var host;
+					var made;
+
+					Array.prototype.slice.call(source.attributes).forEach(function (attribute) {
+						var bare = attribute.name.replace(/^\[|\]$/g, '').toLowerCase();
+						if (names.indexOf(bare) !== -1 || attribute.name === '*key' || attribute.name.charAt(0) === '#' || (structuralDirective && attribute.name === structuralDirective.Attribute))
+							source.removeAttribute(attribute.name);
+					});
+
+					part = Runtime.CreateComponent(bindMethods(definition, component, {$Template: svgSource(source, templateHTML(source))}, subtreeMethod))(Runtime.ComponentValues(component), null, {
+						DirectState: true,
+						Owner: component,
+						Application: component.$Application()
+					});
+
+					part.$Parent(component);
+
+					host = part.$Element();
+					made = Elemenx.Instance(host.__ElemenxStructuralRoot ? host.firstElementChild : host);
+
+					if (!made) {
+						part.$Destroy();
+
+						throw new Error('Elemenx $Copy: the tag made no instance');
+					}
+
+					copies.push(part);
+
+					Runtime.CopyParts.set(made, part);
+
+					if (names.length)
+						made.$Update(given);
+
+					return made;
+				}
 
 				/* The element of the instance, to the directives of the tag. */
 				function placed () {
@@ -10030,7 +10252,7 @@
 
 					/* The factory registers the listeners and the parent before the hooks of the child run. */
 					child = Runtime.Untracked(function () {
-						return factory(childProps, projected, asyncOptions(blueprint, factory.ComponentName || blueprint.tagName, {Listeners: listenersFor(eventMap), Parent: component}));
+						return factory(childProps, projected, asyncOptions(blueprint, factory.ComponentName || blueprint.tagName, {Listeners: listenersFor(eventMap), Parent: component, Copy: copy}));
 					});
 
 					child.$Parent(component);
@@ -10164,6 +10386,11 @@
 						effect.Destroy();
 
 						destroying = true;
+
+						/* Its copies go with it. */
+						copies.splice(0).forEach(function (part) {
+							part.$Destroy();
+						});
 
 						if (asleep) {
 							Runtime.CacheDrop(asleep);
@@ -10473,10 +10700,11 @@
 					while (i >= 0) {
 						element = nextChildren[i].Child.$Element();
 
-						if (element.nextSibling !== placeBefore)
-							end.parentNode.insertBefore(element, placeBefore);
+						/* A row of a <Fragment> is its nodes between its two comments: the last one is where the next row follows. */
+						if (Runtime.Last(element).nextSibling !== placeBefore || Runtime.First(element).parentNode !== end.parentNode)
+							Runtime.Place(element, end.parentNode, placeBefore);
 
-						placeBefore = element;
+						placeBefore = Runtime.First(element);
 
 						i--;
 					}
@@ -10596,7 +10824,7 @@
 							child = asleep.Component;
 							asleep = null;
 
-							end.parentNode.insertBefore(child.$Element(), end);
+							Runtime.Place(child.$Element(), end.parentNode, end);
 
 							return child;
 						}
@@ -10613,7 +10841,7 @@
 
 						child.$Parent(component);
 
-						end.parentNode.insertBefore(child.$Element(), end);
+						Runtime.Place(child.$Element(), end.parentNode, end);
 
 						return child;
 					},

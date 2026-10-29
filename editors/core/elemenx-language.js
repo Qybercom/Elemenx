@@ -1015,6 +1015,9 @@ function candidates (knowledge, text, offset, language, file) {
 	at = scan(text, offset).At;
 
 	if (at.Kind === 'tag-name') {
+		if (starts('Fragment', at.Prefix))
+			items.push({Label: 'Fragment', Kind: 'component', Detail: 'Elemenx', Documentation: 'Groups nodes with no element of its own: an *if or a *for over several of them, several nodes for one slot (slot="name"), a root of several nodes.', Insert: 'Fragment', Start: at.PrefixStart, End: offset});
+
 		knowledge.Components().forEach(function (each) {
 			if (starts(each.Name, at.Prefix))
 				items.push({Label: each.Name, Kind: 'component', Detail: each.Library ? 'Elemenx Component' + (each.Group ? ' · ' + each.Group : '') : 'Component of the project', Documentation: each.Description, Insert: each.Name, Start: at.PrefixStart, End: offset});
@@ -1553,7 +1556,8 @@ function Diagnose (knowledge, text, language, file) {
 	scan(text, -1).Tags.forEach(function (tag) {
 		var component = knowledge.Component(tag.Name);
 
-		if (!/^[A-Z]/.test(tag.Name)) return;
+		/* A <Fragment> is of the framework: it groups nodes with no element of its own. */
+		if (!/^[A-Z]/.test(tag.Name) || tag.Name === 'Fragment') return;
 
 		if (!component) {
 			problems.push({Start: tag.Start, End: tag.End, Severity: 'warning', Message: 'Unknown Elemenx Component: ' + tag.Name});

@@ -1,0 +1,25 @@
+<RadioGroup Variant="segmented" [options]="Sources" [value]="Source" (change)="Visited" />
+<Experiment Name="docs-hero" [visitor]="Visitor" (choose)="Chosen">
+	<Variant ID="ads" Source="google"><LandingHero Layout="center" Title="20% off for the spring" Text="Found us in a search? The code is applied at checkout." [actions]="Actions" /></Variant>
+	<Variant ID="a"><LandingHero Layout="center" Title="Build interfaces in one file" [actions]="Actions" /></Variant>
+	<Variant ID="b"><LandingHero Layout="center" Title="Ship the interface today" [actions]="Actions" /></Variant>
+</Experiment>
+<p class="elemenx-text small muted">{{Text}}</p>
+<script>
+({
+	Text: '',
+	Source: 'direct',
+	Sources: [{Value: 'direct', Label: 'Direct'}, {Value: 'google', Label: 'Google ads'}],
+	Visitor: {URL: '/'},
+	Actions: [{ID: 'start', Label: 'Start', Goal: 'start'}],
+
+	Visited: function (value) {
+		this.Source = value;
+		this.Visitor = {URL: value === 'google' ? '/?utm_source=google' : '/'};
+	},
+
+	Chosen: function (event) {
+		this.Text = 'Variant ' + event.ID + ' (' + event.Reason + ')';
+	}
+})
+</script>

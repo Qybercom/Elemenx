@@ -3,7 +3,7 @@ import fs from 'fs';
 import path from 'path';
 
 /*
- * Every page of the reference, in English and in Russian: it opens, it is in its language (no English stand-in), its
+ * Every page of the Docs, in English and in Russian: it opens, it is in its language (no English stand-in), its
  * examples run (no failure shown, no error in the console) and show something.
  */
 var origin = 'http://127.0.0.1:4277';

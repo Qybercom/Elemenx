@@ -1,5 +1,5 @@
 /*
- * The bench of the framework: node tests/perf/bench.mjs (npm run bench) serves the repository, opens Chrome on
+ * The bench of the framework: node tests/perf/bench.mjs (npm run test:bench) serves the repository, opens Chrome on
  * tests/perf/page.html and runs each scenario of scenarios.js three times, keeping its median. It prints the times
  * beside the ones of tests/perf/baseline.json (the last saved), and --save writes them there. --min runs the minified
  * framework (dist/elemenx.min.js). It is a measure, not a test: npm test does not run it.

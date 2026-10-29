@@ -1,0 +1,14 @@
+<section class="elemenx-landing-faq">
+	<div class="elemenx-landing-header" *if="Overline || Title || Text">
+		<p class="elemenx-eyebrow" *if="Overline">{{Overline}}</p>
+		<h2 class="elemenx-landing-title" *if="Title">{{Title}}</h2>
+		<p class="elemenx-landing-lead" *if="Text">{{Text}}</p>
+	</div>
+	<div class="elemenx-landing-faq-list">
+		<details class="elemenx-landing-faq-item" *for="item of Items" *key="item.ID || item.Question" [attribute.data-id]="item.ID || null" [attribute.name]="Single && Single !== 'false' ? Group : null" [attribute.open]="Open && item.ID === Open ? '' : null" (toggle)="Toggled">
+			<summary class="elemenx-landing-faq-question">{{item.Question}}<Icon Size="16" name="chevron-down" /></summary>
+			<div class="elemenx-landing-faq-answer">{{item.Answer}}</div>
+		</details>
+		<slot></slot>
+	</div>
+</section>

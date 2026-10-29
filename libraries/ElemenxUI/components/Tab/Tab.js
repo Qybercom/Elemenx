@@ -4,10 +4,12 @@
  * the current tab under the strip and hides the others. The content in the tab is made with the page; Component names a
  * component made only when the tab first opens (with Props as its props), for the content that costs: a page of
  * settings, a chart, a table of data. Its panel is an elemenx-tab-panel (the Panels Service reads it). In a TabGroup
- * or a TabSplit, Pinned keeps the tab first in its strip, and a close of all the tabs, or of the others, leaves it.
+ * or a TabSplit, Pinned keeps the tab first in its strip, and a close of all the tabs, or of the others, leaves it. A
+ * Tab is $Copyable: a TabSplit copies it, its content made again, when the menu splits its group (Split).
  */
 Elemenx.Component('Tab', {
 	$TemplateURL: 'Tab.html',
+	$Copyable: true,
 	$StyleURL: 'Tab.css',
 	$Meta: {
 		Group: 'navigation',

@@ -120,10 +120,9 @@ function templateSources (html, add) {
 			continue;
 		}
 
-		end = html.indexOf('<', i + 1);
-
-		if (end === -1)
-			end = html.length;
+		/* A text ends where a tag, a closing tag or a comment starts: a < of the text itself ({{ A < 3 }}) is the text, as for the parser of HTML. */
+		end = html.slice(i + 1).search(/<[A-Za-z\/!]/);
+		end = end === -1 ? html.length : i + 1 + end;
 
 		interpolations(decode(html.substring(i, end)), add);
 

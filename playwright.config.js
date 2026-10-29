@@ -75,7 +75,7 @@ export default defineConfig({
 			stderr: 'pipe'
 		},
 		{
-			command: 'node tools/server.js examples/Builder',
+			command: 'node tools/server.js examples/Designer',
 			url: 'http://127.0.0.1:4278/',
 			env: {PORT: '4278'},
 			reuseExistingServer: false,

@@ -1,0 +1,23 @@
+<BusinessCalculator Title="Renovation" Currency="EUR" [fields]="Fields" [results]="Results" [breakdown]="['Work', 'Materials']" (change)="Changed">
+	<CalculatorField ID="Premium" Label="Premium materials" Type="toggle" />
+	<CalculatorResult ID="Total" Label="Total" Formula="Work + Materials" Format="money" Primary="true" />
+</BusinessCalculator>
+<p class="elemenx-text small muted">{{Text}}</p>
+<script>
+({
+	Text: 'Change a field.',
+	Fields: [
+		{ID: 'Area', Label: 'Area', Value: 50, Unit: 'm²'},
+		{ID: 'Rate', Label: 'Work for 1 m²', Type: 'money', Value: 30},
+		{ID: 'Rooms', Label: 'Rooms', Type: 'range', Value: 2, Min: 1, Max: 6}
+	],
+	Results: [
+		{ID: 'Work', Label: 'Work', Formula: 'Area * Rate * (1 + Rooms / 10)', Format: 'money'},
+		{ID: 'Materials', Label: 'Materials', Formula: 'Area * if(Premium, 25, 12)', Format: 'money'}
+	],
+
+	Changed: function (event) {
+		this.Text = 'Total ' + event.Results.Total.toFixed(2);
+	}
+})
+</script>

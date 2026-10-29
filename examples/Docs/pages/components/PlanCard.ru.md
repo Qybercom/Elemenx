@@ -59,3 +59,7 @@
 })
 </script>
 ```
+
+## Тесты
+
+- [binds every instance of a template with a slot, filled or not, the content of the slot by its owner](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/template-plan.test.js#L34) — `tests/regression/template-plan.test.js`

@@ -1,0 +1,88 @@
+/*
+ * The first screen of a landing: the text and the picture side by side (split), one under the other (center), or the
+ * text over the picture darkened (cover); one column on a narrow room.
+ */
+.elemenx-landing-hero {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+	gap: 40px;
+	align-items: center;
+	padding: 48px 0;
+	container-type: inline-size;
+}
+
+.elemenx-landing-hero-body {
+	display: flex;
+	flex-direction: column;
+	gap: 24px;
+	min-width: 0;
+}
+
+.elemenx-landing-hero-title {
+	font-size: clamp(32px, 6cqi, 56px);
+}
+
+.elemenx-landing-hero-media {
+	min-width: 0;
+}
+
+.elemenx-landing-hero-media:not(:has(> *)) {
+	display: none;
+}
+
+/* Without a picture the text takes the whole width. */
+.elemenx-landing-hero:not(:has(.elemenx-landing-hero-media > *)) {
+	grid-template-columns: minmax(0, 1fr);
+}
+
+.elemenx-landing-hero-image {
+	display: block;
+	width: 100%;
+	height: auto;
+	border-radius: var(--elemenx-radius-large);
+	object-fit: cover;
+}
+
+.elemenx-landing-hero.center {
+	grid-template-columns: minmax(0, 1fr);
+	justify-items: center;
+	text-align: center;
+}
+
+.elemenx-landing-hero.center .elemenx-landing-hero-body {
+	align-items: center;
+}
+
+.elemenx-landing-hero.cover {
+	grid-template-columns: minmax(0, 1fr);
+	justify-items: center;
+	min-height: 420px;
+	padding: 64px 24px;
+	border-radius: var(--elemenx-radius-large);
+	background-color: var(--elemenx-overlay);
+	background-position: center;
+	background-size: cover;
+	background-blend-mode: multiply;
+	color: var(--elemenx-overlay-text);
+	text-align: center;
+}
+
+.elemenx-landing-hero.cover .elemenx-landing-hero-body {
+	align-items: center;
+}
+
+.elemenx-landing-hero.cover .elemenx-landing-lead,
+.elemenx-landing-hero.cover .elemenx-eyebrow {
+	color: inherit;
+	opacity: 0.85;
+}
+
+@container (max-width: 720px) {
+	.elemenx-landing-hero-body {
+		grid-column: 1 / -1;
+	}
+
+	.elemenx-landing-hero-media {
+		grid-column: 1 / -1;
+	}
+}

@@ -12,11 +12,14 @@
  * it changes, so an Application keeps it and gives it back: {Split: 'row' or 'column', Sizes: [percents], Children}
  * of {Group, Tabs: [IDs], Active, Pinned: [IDs]}. A tab declared later opens in the group of the focus, current.
  * A tab is dragged to another group, or to an edge of one to split it there; the menu of a tab splits its group to a
- * side with it (a group of one tab stays as it is). A group left with no tab goes, and its room goes to the others.
+ * side with a copy of it (Split: its Tab made again with $Copy, the same content and a state of its own, an ID of
+ * CopyID(id, n), <ID>:2 by default), or with the tab itself (Split and move: a group of one tab stays as it is). A copy
+ * closes at once (the owner has no Tab of it); the layout keeps the copies of each group in its Copies ({ID, Of}) and a
+ * Layout given makes them again. A group left with no tab goes, and its room goes to the others.
  * Its parts keep their content as they move: their panels go from group to group, never made again.
  * Events: change (the layout), select (the ID of the tab opened), close (the ID of a tab that asks to close: the
- * owner takes its Tab away; until it does the tab stays out of the groups). Methods: Open(id), Close(id), Split(id,
- * side), Model().
+ * owner takes its Tab away; until it does the tab stays out of the groups), copy ({ID, Of, Group}: a copy of a tab made
+ * in a new group). Methods: Open(id), Close(id), Split(id, side, move), Model().
  */
 Elemenx.Component('TabSplit', {
 	$TemplateURL: 'TabSplit.html',
@@ -30,24 +33,27 @@ Elemenx.Component('TabSplit', {
 		Events: {
 			change: 'The layout changed: {Split, Sizes, Children} of {Group, Tabs, Active, Pinned}.',
 			select: 'A tab was opened: its ID.',
-			close: 'A tab asks to close: its ID (the owner takes its Tab away).'
+			close: 'A tab asks to close: its ID (the owner takes its Tab away).',
+			copy: 'A copy of a tab was made in a new group: {ID, Of, Group}.'
 		},
 		Props: {
 			Layout: 'The layout, as change tells it: {Split: row or column, Sizes, Children} of {Group, Tabs, Active, Pinned}.',
 			Closable: 'Every tab that is not pinned has a cross.',
-			Label: 'The name of the strips for screen readers.'
+			Label: 'The name of the strips for screen readers.',
+			CopyID: 'A function (id, n) giving the ID of the n-th copy of a tab (<ID>:n by default).'
 		},
-		Methods: ['Open(id)', 'Close(id)', 'Split(id, side)', 'Model()']
+		Methods: ['Open(id)', 'Close(id)', 'Split(id, side, move)', 'Model()']
 	},
 	Layout: null,
 	Closable: false,
 	Label: '',
+	CopyID: null,
 	Tree: null,
 	Metas: {},
 
 	$OnCreate: function () {
 		var self = this;
-		var own = {Closed: new WeakSet(), Focused: null, Sequence: 0, Drag: null, Pinned: {}};
+		var own = {Closed: new WeakSet(), Focused: null, Sequence: 0, Drag: null, Pinned: {}, Copies: {}};
 
 		/* What renders nothing: the panels closed, the group of the focus, the drag of a divider, the tabs pinned once. */
 		this.Own = function () {
@@ -147,8 +153,11 @@ Elemenx.Component('TabSplit', {
 	},
 
 	$OnProps: function (changed) {
-		if (Object.prototype.hasOwnProperty.call(changed, 'Layout') && changed.Layout && JSON.stringify(changed.Layout) !== JSON.stringify(this.Tree))
-			this.Use(this.Normal(JSON.parse(JSON.stringify(changed.Layout)), true), false);
+		if (!Object.prototype.hasOwnProperty.call(changed, 'Layout') || !changed.Layout || JSON.stringify(changed.Layout) === JSON.stringify(this.Tree)) return;
+
+		/* The copies it names first: the groups take them. */
+		this.Restore(changed.Layout);
+		this.Use(this.Normal(JSON.parse(JSON.stringify(changed.Layout)), true), false);
 	},
 
 	$OnDestroy: function () {
@@ -193,6 +202,16 @@ Elemenx.Component('TabSplit', {
 		var tree;
 		var known = {};
 		var missing;
+		var copies = this.Own().Copies;
+
+		/* The copies a layout given names are made first; a copy whose tab went is gone with it. */
+		if (this.Layout && !this.Tree)
+			this.Restore(this.Layout);
+
+		Object.keys(copies).forEach(function (id) {
+			if (!Elemenx.Instance(copies[id].Instance.$Element()))
+				delete copies[id];
+		});
 
 		this.Panels().forEach(function (panel) {
 			var data = panels.Data(panel);
@@ -326,6 +345,7 @@ Elemenx.Component('TabSplit', {
 	 */
 	Normal: function (node, root) {
 		var self = this;
+		var copies;
 		var children;
 		var sizes;
 		var total;
@@ -339,6 +359,16 @@ Elemenx.Component('TabSplit', {
 			node.Pinned = (node.Pinned || []).filter(function (id) {
 				return node.Tabs.indexOf(id) !== -1;
 			});
+
+			/* The copies among its tabs, as a layout keeps them to make them again: {ID, Of}. */
+			copies = node.Tabs.filter(function (id) {
+				return !!self.Own().Copies[id];
+			}).map(function (id) {
+				return {ID: id, Of: self.Own().Copies[id].Of};
+			});
+
+			if (copies.length) node.Copies = copies;
+			else delete node.Copies;
 
 			if (!node.Tabs.length && !root) return null;
 
@@ -548,6 +578,7 @@ Elemenx.Component('TabSplit', {
 
 	/* A tab out of the groups: asked of the owner, who takes its Tab away. */
 	Close: function (id) {
+		var copy;
 		var panel = this.Panels().filter(function (each) {
 			return each.getAttribute('data-id') === id;
 		})[0];
@@ -567,28 +598,125 @@ Elemenx.Component('TabSplit', {
 				group.Active = group.Tabs[Math.min(index, group.Tabs.length - 1)] || null;
 		});
 
+		/* A copy is its own: it goes at once; a tab of the owner is asked of it. */
+		if (this.Own().Copies[id]) {
+			copy = this.Own().Copies[id].Instance;
+
+			delete this.Own().Copies[id];
+
+			copy.$Destroy();
+
+			return;
+		}
+
 		this.$Emit('close', id);
 	},
 
-	/* A tab out of its group into a new one beside a group (its own, without another), on a side: left, right, top or bottom. */
-	Split: function (id, side, beside) {
+	/* A copy of a tab in a new group beside its own, on a side (left, right, top or bottom); with move, the tab itself. */
+	Split: function (id, side, move) {
+		this.Part(id, side, null, !!move && move !== 'false');
+	},
+
+	/*
+	 * A new group beside a group (the one of the tab without it), on a side: with a copy of the tab, or with the tab
+	 * itself (move: out of its group, which keeps one tab at least when it is the one beside).
+	 */
+	Part: function (id, side, beside, move) {
 		var from = this.Holder(this.Tree, id);
+		var copied = null;
 		var name;
 
-		if (!from || (!beside || beside === from.Group) && from.Tabs.length < 2) return;
+		if (!from) return;
+		if (move && (!beside || beside === from.Group) && from.Tabs.length < 2) return;
+
+		if (!move) {
+			copied = this.Copy(id);
+
+			if (!copied) return;
+		}
 
 		name = this.Name(null);
 
 		this.Change(function (tree) {
 			var source = this.Holder(tree, id);
 			var target = this.Find(tree, beside || source.Group);
-			var group = {Group: name, Tabs: [id], Active: id, Pinned: (source.Pinned || []).indexOf(id) !== -1 ? [id] : []};
+			var tab = copied || id;
+			var group = {Group: name, Tabs: [tab], Active: tab, Pinned: !copied && (source.Pinned || []).indexOf(id) !== -1 ? [id] : []};
 
-			this.Take(source, id);
+			if (!copied)
+				this.Take(source, id);
+
 			this.Beside(tree, target, group, side);
 		});
 
 		this.Own().Focused = name;
+
+		if (copied) {
+			this.Read();
+
+			this.$Emit('copy', {ID: copied, Of: this.Own().Copies[copied].Of, Group: name});
+		}
+	},
+
+	/*
+	 * A copy of a tab ($Copy of its Tab: the same content, a state of its own), waiting in the source until a group takes
+	 * it: its ID that of CopyID(id, n), else <ID>:2, :3... (n the first one no tab has); a copy of a copy is one of the
+	 * tab it copies. Its ID, or null when the tab cannot be copied.
+	 */
+	Copy: function (id, wanted) {
+		var copies = this.Own().Copies;
+		var origin = copies[id] ? copies[id].Of : id;
+		var panels = this.Panels();
+		var panel = panels.filter(function (each) {
+			return each.getAttribute('data-id') === id;
+		})[0];
+		var tab = panel ? Elemenx.Instance(panel) : null;
+		var n = 2;
+		var made;
+		var copy;
+		var taken = function (candidate) {
+			return !!copies[candidate] || panels.some(function (each) {
+				return each.getAttribute('data-id') === candidate;
+			});
+		};
+
+		if (!tab || typeof tab.$Copy !== 'function') return null;
+
+		made = wanted;
+
+		while (!made || taken(made)) {
+			made = typeof this.CopyID === 'function' ? String(this.CopyID(origin, n)) : origin + ':' + n;
+			n++;
+
+			if (n > 1000) return null;
+		}
+
+		try {
+			copy = tab.$Copy({ID: made});
+		}
+		catch (error) {
+			return null;
+		}
+
+		this.$Element().querySelector('.elemenx-tab-split-source').appendChild(copy.$Element());
+
+		copies[made] = {Of: origin, Instance: copy};
+
+		return made;
+	},
+
+	/* The copies a layout names ({ID, Of} in the Copies of its groups) that are not made yet: made, of their tabs. */
+	Restore: function (layout) {
+		var self = this;
+
+		this.Walk(layout, {Left: 0, Top: 0, Width: 100, Height: 100}, function (node) {
+			if (node.Split) return;
+
+			(node.Copies || []).forEach(function (copy) {
+				if (copy && copy.ID && !self.Own().Copies[copy.ID])
+					self.Copy(copy.Of, String(copy.ID));
+			});
+		});
 	},
 
 	/* A tab out of a group: the next one current. */
@@ -709,13 +837,14 @@ Elemenx.Component('TabSplit', {
 		this.Move(detail.ID, detail.Group, detail.Index);
 	},
 
+	/* A tab dropped on an edge of a group moves there; the menu copies it there, or moves it (Split and move). */
 	Dropped: function (detail) {
 		if (detail.Side === 'center') this.Move(detail.ID, detail.Group, -1);
-		else this.Split(detail.ID, detail.Side, detail.Group);
+		else this.Part(detail.ID, detail.Side, detail.Group, true);
 	},
 
 	Splitted: function (detail) {
-		this.Split(detail.ID, detail.Side, detail.Group);
+		this.Part(detail.ID, detail.Side, detail.Group, !!detail.Move);
 	},
 
 	/* The group of the focus: the one a new tab opens in. */

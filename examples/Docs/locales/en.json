@@ -1,6 +1,6 @@
 {
 	"docs": {
-		"reference": "Reference",
+		"docs": "Docs",
 		"language": "Language",
 		"contents": "Contents",
 		"untranslated": "This page has no translation yet: it is shown in English.",
@@ -9,7 +9,7 @@
 		"code": "Code",
 		"source": "Source",
 		"onPage": "On this page",
-		"search": "Search the reference",
+		"search": "Search the docs",
 		"searching": "Searching…",
 		"nothing": "Nothing found.",
 		"tutorial": {

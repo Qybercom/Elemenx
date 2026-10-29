@@ -1,7 +1,7 @@
 <!-- generated -->
 # TabSplit
 
-Groups of tabs side by side and one over another, as the editors of a code editor: a TabGroup in each part, the dividers between them dragged to share the room. The tabs are declared in it with their content (Tab); their layout is declared too, or comes from Layout: <TabSplit> <TabRow Sizes="25,75"> <TabGroup Group="side"><Tab ID="files" Label="Files" Pinned="true">...</Tab></TabGroup> <TabColumn><TabGroup><Tab ID="main.js" Label="main.js">...</Tab></TabGroup><TabGroup>...</TabGroup></TabColumn> </TabRow> </TabSplit> Tabs declared out of a TabGroup go to the first group. Layout is the same as a model, and change tells it each time it changes, so an Application keeps it and gives it back: {Split: 'row' or 'column', Sizes: [percents], Children} of {Group, Tabs: [IDs], Active, Pinned: [IDs]}. A tab declared later opens in the group of the focus, current. A tab is dragged to another group, or to an edge of one to split it there; the menu of a tab splits its group to a side with it (a group of one tab stays as it is). A group left with no tab goes, and its room goes to the others. Its parts keep their content as they move: their panels go from group to group, never made again. Events: change (the layout), select (the ID of the tab opened), close (the ID of a tab that asks to close: the owner takes its Tab away; until it does the tab stays out of the groups). Methods: Open(id), Close(id), Split(id, side), Model().
+Groups of tabs side by side and one over another, as the editors of a code editor: a TabGroup in each part, the dividers between them dragged to share the room. The tabs are declared in it with their content (Tab); their layout is declared too, or comes from Layout: <TabSplit> <TabRow Sizes="25,75"> <TabGroup Group="side"><Tab ID="files" Label="Files" Pinned="true">...</Tab></TabGroup> <TabColumn><TabGroup><Tab ID="main.js" Label="main.js">...</Tab></TabGroup><TabGroup>...</TabGroup></TabColumn> </TabRow> </TabSplit> Tabs declared out of a TabGroup go to the first group. Layout is the same as a model, and change tells it each time it changes, so an Application keeps it and gives it back: {Split: 'row' or 'column', Sizes: [percents], Children} of {Group, Tabs: [IDs], Active, Pinned: [IDs]}. A tab declared later opens in the group of the focus, current. A tab is dragged to another group, or to an edge of one to split it there; the menu of a tab splits its group to a side with a copy of it (Split: its Tab made again with $Copy, the same content and a state of its own, an ID of CopyID(id, n), <ID>:2 by default), or with the tab itself (Split and move: a group of one tab stays as it is). A copy closes at once (the owner has no Tab of it); the layout keeps the copies of each group in its Copies ({ID, Of}) and a Layout given makes them again. A group left with no tab goes, and its room goes to the others. Its parts keep their content as they move: their panels go from group to group, never made again. Events: change (the layout), select (the ID of the tab opened), close (the ID of a tab that asks to close: the owner takes its Tab away; until it does the tab stays out of the groups), copy ({ID, Of, Group}: a copy of a tab made in a new group). Methods: Open(id), Close(id), Split(id, side, move), Model().
 
 ## Properties
 
@@ -10,12 +10,14 @@ Groups of tabs side by side and one over another, as the editors of a code edito
 | `Layout` | `null` |
 | `Closable` | `false` |
 | `Label` | `''` |
+| `CopyID` | `null` |
 
 ## Events
 
 - `change`: The layout changed: {Split, Sizes, Children} of {Group, Tabs, Active, Pinned}.
 - `select`: A tab was opened: its ID.
 - `close`: A tab asks to close: its ID (the owner takes its Tab away).
+- `copy`: A copy of a tab was made in a new group: {ID, Of, Group}.
 
 ## Slots
 
@@ -26,7 +28,7 @@ default
 - `Model()`
 - `Open(id)`
 - `Close(id)`
-- `Split(id, side, beside)`
+- `Split(id, side, move)`
 
 ## Example
 
@@ -73,3 +75,4 @@ default
 - [a TabSplit lays out the groups it declares side by side, each with its tabs, and splits a group to a side with a tab](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-tab-split.test.js#L94) — `tests/regression/library-tab-split.test.js`
 - [a tab dropped in the middle of another group goes into it, and a group left without a tab goes](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-tab-split.test.js#L134) — `tests/regression/library-tab-split.test.js`
 - [takes the layout of Layout, closes a tab for its owner, and moves a divider by its keys](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-tab-split.test.js#L166) — `tests/regression/library-tab-split.test.js`
+- [a Split of the menu copies the tab into a new group, its content made again, and Split and move takes the tab there](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-tab-split.test.js#L221) — `tests/regression/library-tab-split.test.js`

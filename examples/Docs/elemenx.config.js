@@ -1,9 +1,9 @@
 /*
- * The server of the reference answers the live examples of the network: a JSON resource, an echo of what a request
+ * The server of the Docs answers the live examples of the network: a JSON resource, an echo of what a request
  * sends, server-sent events, a held long-polling response, a streamed response of lines of JSON, and an echo over a
  * WebSocket. In development (beside examples/Tutorials) it makes the projects of the tutorials, to download, and their
- * demos (tools/tutorials.js); the reference built for the package has them as files. Everything else is the files of
- * the reference.
+ * demos (tools/tutorials.js); the Docs built for the package has them as files. Everything else is the files of
+ * the Docs.
  */
 var fs = require('fs');
 var path = require('path');

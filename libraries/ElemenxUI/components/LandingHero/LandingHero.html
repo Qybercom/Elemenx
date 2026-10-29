@@ -1,0 +1,20 @@
+<section class="elemenx-landing-hero" [class]="[Layout === 'center' || Layout === 'cover' ? Layout : 'split']" [attribute.style]="Cover(Layout, Image)">
+	<div class="elemenx-landing-hero-body">
+		<div class="elemenx-landing-header" [class]="[Layout === 'split' ? '' : 'center']">
+			<p class="elemenx-eyebrow" *if="Overline">{{Overline}}</p>
+			<h1 class="elemenx-landing-title elemenx-landing-hero-title" *if="Title">{{Title}}</h1>
+			<p class="elemenx-landing-lead" *if="Text">{{Text}}</p>
+		</div>
+		<div class="elemenx-landing-actions" *if="Actions && Actions.length" [class]="[Layout === 'split' ? '' : 'center']">
+			<Fragment *for="action of Actions" *key="action.ID || action.Label">
+				<a class="elemenx-landing-action" *if="action.Href" [class]="[action.Variant || 'primary']" [attribute.href]="action.Href" [attribute.data-action]="action.ID || null" (click)="Acted(action, $event)"><Icon *if="action.Icon" [name]="action.Icon" />{{action.Label}}</a>
+				<button type="button" class="elemenx-landing-action" *if="!action.Href" [class]="[action.Variant || 'primary']" [attribute.data-action]="action.ID || null" (click)="Acted(action, $event)"><Icon *if="action.Icon" [name]="action.Icon" />{{action.Label}}</button>
+			</Fragment>
+		</div>
+		<slot></slot>
+	</div>
+	<div class="elemenx-landing-hero-media" *if="Layout !== 'cover'">
+		<img class="elemenx-landing-hero-image" *if="Image" [attribute.src]="Image" [attribute.alt]="ImageAlt || ''" />
+		<slot name="media"></slot>
+	</div>
+</section>

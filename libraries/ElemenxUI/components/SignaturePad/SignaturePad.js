@@ -4,6 +4,13 @@
  * size; change emits them after each stroke. Color and Width draw them; Clear() and Undo() (the buttons under it, unless
  * Controls is false) take them away. Image(type) returns the signature as a data URL of a picture (image/png by
  * default), SVG() as the text of an SVG; both are empty for no signature. ReadOnly shows a signature that cannot change.
+ * A point keeps T too, the milliseconds from the start of the signature (its rhythm, for a comparison).
+ *
+ * Reference compares the signature with one on file after each stroke (the Signatures Service): a signature, several
+ * of them (the samples of a person, enrolled), or a reference of Signatures.Enroll. compare emits {Score, Parts, Match,
+ * Threshold}; ShowResult (true) says under the field whether it looks like the one on file. Threshold is the score it
+ * must reach (by default the one of the reference, else 0.75). Compare(reference) returns the same at any time. It is
+ * a help for an interface, not a check of security: a check that matters runs on a server.
  */
 Elemenx.Component('SignaturePad', {
 	$TemplateURL: 'SignaturePad.html',
@@ -13,8 +20,10 @@ Elemenx.Component('SignaturePad', {
 		Icon: 'edit',
 		Description: 'A field to sign with a pen, a finger or the mouse.',
 		Events: {
-			change: 'A stroke was drawn, or strokes were taken away: Value.'
+			change: 'A stroke was drawn, or strokes were taken away: Value.',
+			compare: 'The signature was compared with Reference: {Score, Parts, Match, Threshold}.'
 		},
+		Methods: ['Clear()', 'Undo()', 'Image(type)', 'SVG()', 'Compare(reference)'],
 		Props: {
 			Value: 'The strokes: [[{X, Y, P}]].',
 			Color: 'The color of the ink (the color of the text by default).',
@@ -23,7 +32,10 @@ Elemenx.Component('SignaturePad', {
 			Placeholder: 'The text on the line while it is empty.',
 			Controls: 'Shows Undo and Clear under it.',
 			ReadOnly: 'Shows the signature without letting it change.',
-			Label: 'The name of the field for screen readers.'
+			Label: 'The name of the field for screen readers.',
+			Reference: 'The signature on file to compare with: a signature, several of them, or a reference of Signatures.Enroll.',
+			Threshold: 'The score the signature must reach (0 to 1; by default the one of the reference, else 0.75).',
+			ShowResult: 'Says under the field whether the signature looks like the one on file.'
 		}
 	},
 	Value: [],
@@ -34,9 +46,13 @@ Elemenx.Component('SignaturePad', {
 	Controls: true,
 	ReadOnly: false,
 	Label: '',
+	Reference: null,
+	Threshold: null,
+	ShowResult: true,
+	Result: null,
 
 	$OnCreate: function () {
-		var own = {Stroke: null, Observer: null};
+		var own = {Stroke: null, Observer: null, Start: 0, Enrolled: null, Of: null};
 
 		this.Own = function () {
 			return own;
@@ -56,8 +72,11 @@ Elemenx.Component('SignaturePad', {
 		this.Draw();
 	},
 
-	$OnProps: function () {
+	$OnProps: function (changed) {
 		this.Draw();
+
+		if ('Reference' in changed || 'Threshold' in changed || 'Value' in changed)
+			this.Compared();
 	},
 
 	$OnDestroy: function () {
@@ -157,7 +176,11 @@ Elemenx.Component('SignaturePad', {
 	Point: function (event) {
 		var rect = this.Canvas().getBoundingClientRect();
 
-		return {X: Math.round((event.clientX - rect.left) * 10) / 10, Y: Math.round((event.clientY - rect.top) * 10) / 10, P: event.pointerType === 'pen' ? Math.round((event.pressure || 0.5) * 100) / 100 : 0.5};
+		/* The time from the first point of the signature: a new signature starts its clock. */
+		if (this.Empty() || !this.Own().Start)
+			this.Own().Start = event.timeStamp || Date.now();
+
+		return {X: Math.round((event.clientX - rect.left) * 10) / 10, Y: Math.round((event.clientY - rect.top) * 10) / 10, P: event.pointerType === 'pen' ? Math.round((event.pressure || 0.5) * 100) / 100 : 0.5, T: Math.max(0, Math.round((event.timeStamp || Date.now()) - this.Own().Start))};
 	},
 
 	Down: function (event) {
@@ -200,6 +223,8 @@ Elemenx.Component('SignaturePad', {
 		this.Value = this.Value.slice();
 
 		this.$Emit('change', this.Value);
+
+		this.Compared();
 	},
 
 	Undo: function () {
@@ -209,6 +234,7 @@ Elemenx.Component('SignaturePad', {
 
 		this.Draw();
 		this.$Emit('change', this.Value);
+		this.Compared();
 
 		return this;
 	},
@@ -217,11 +243,60 @@ Elemenx.Component('SignaturePad', {
 		if (this.Empty()) return this;
 
 		this.Value = [];
+		this.Own().Start = 0;
 
 		this.Draw();
 		this.$Emit('change', this.Value);
+		this.Compared();
 
 		return this;
+	},
+
+	/*
+	 * The reference to compare with: one of Signatures.Enroll, or several signatures enrolled once (a list of lists of
+	 * strokes), or one signature.
+	 */
+	ReferenceOf: function (reference) {
+		var own = this.Own();
+		var signatures = this.$Service('Signatures');
+
+		if (!reference) return null;
+		if (reference.Samples) return reference;
+
+		if (own.Of !== reference) {
+			own.Of = reference;
+			own.Enrolled = signatures.Enroll(Array.isArray(reference[0]) && Array.isArray(reference[0][0]) ? reference : [reference]);
+
+			/* One sample tells no spread: the usual threshold. */
+			if (own.Enrolled.Samples.length < 2)
+				own.Enrolled.Threshold = 0.75;
+		}
+
+		return own.Enrolled;
+	},
+
+	/* The signature against a reference (Reference by default): {Score, Parts, Match, Threshold, Percent}, or null for none. */
+	Compare: function (reference) {
+		var enrolled = this.ReferenceOf(reference || this.Reference);
+		var threshold = Number(this.Threshold);
+		var result;
+
+		if (!enrolled || this.Empty()) return null;
+
+		result = this.$Service('Signatures').Match(this.Value, enrolled, this.Threshold !== null && this.Threshold !== '' && isFinite(threshold) ? threshold : undefined);
+		result.Percent = Math.round(result.Score * 100);
+
+		return result;
+	},
+
+	/* The result shown and told after a change: none without a reference or a signature. */
+	Compared: function () {
+		var result = this.Compare();
+
+		this.Result = result;
+
+		if (result)
+			this.$Emit('compare', result);
 	},
 
 	/* The signature as a data URL of a picture of the field, without a background; '' with no signature. */

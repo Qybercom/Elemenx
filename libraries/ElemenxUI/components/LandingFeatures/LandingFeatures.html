@@ -1,0 +1,24 @@
+<section class="elemenx-landing-features" [class]="[Variant === 'plain' ? 'plain' : 'cards', Align === 'center' ? 'center' : '']">
+	<div class="elemenx-landing-header" *if="Overline || Title || Text" [class]="[Align === 'center' ? 'center' : '']">
+		<p class="elemenx-eyebrow" *if="Overline">{{Overline}}</p>
+		<h2 class="elemenx-landing-title" *if="Title">{{Title}}</h2>
+		<p class="elemenx-landing-lead" *if="Text">{{Text}}</p>
+	</div>
+	<div class="elemenx-landing-features-grid" [attribute.style]="Grid(Columns)">
+		<Fragment *for="item of Items" *key="item.ID || item.Title">
+			<a class="elemenx-landing-feature" *if="item.Href" [attribute.href]="item.Href" [attribute.data-id]="item.ID || null">
+				<span class="elemenx-landing-feature-icon" *if="item.Icon && !item.Image"><Icon Size="22" [name]="item.Icon" /></span>
+				<img class="elemenx-landing-feature-image" *if="item.Image" [attribute.src]="item.Image" alt="" />
+				<strong class="elemenx-landing-feature-title">{{item.Title}}</strong>
+				<span class="elemenx-landing-feature-text" *if="item.Text">{{item.Text}}</span>
+			</a>
+			<div class="elemenx-landing-feature" *if="!item.Href" [attribute.data-id]="item.ID || null">
+				<span class="elemenx-landing-feature-icon" *if="item.Icon && !item.Image"><Icon Size="22" [name]="item.Icon" /></span>
+				<img class="elemenx-landing-feature-image" *if="item.Image" [attribute.src]="item.Image" alt="" />
+				<strong class="elemenx-landing-feature-title">{{item.Title}}</strong>
+				<span class="elemenx-landing-feature-text" *if="item.Text">{{item.Text}}</span>
+			</div>
+		</Fragment>
+		<slot></slot>
+	</div>
+</section>

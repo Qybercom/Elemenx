@@ -1,0 +1,55 @@
+/*
+ * The call to act: a band with rounded corners, the text beside its actions (row) or over them (center); in the
+ * accent of the theme, its primary action turned to the color of the page so that it stands out on it.
+ */
+.elemenx-landing-cta {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 24px;
+	align-items: center;
+	justify-content: space-between;
+	padding: 40px;
+	border-radius: var(--elemenx-radius-large);
+	background: var(--elemenx-surface-raised);
+}
+
+.elemenx-landing-cta.center {
+	flex-direction: column;
+	text-align: center;
+}
+
+.elemenx-landing-cta-side {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.elemenx-landing-cta.accent {
+	background: var(--elemenx-accent);
+	color: var(--elemenx-accent-text);
+}
+
+.elemenx-landing-cta.accent .elemenx-landing-lead {
+	color: inherit;
+	opacity: 0.85;
+}
+
+.elemenx-landing-cta.accent .elemenx-landing-action.primary {
+	border-color: var(--elemenx-background);
+	background: var(--elemenx-background);
+	color: var(--elemenx-accent);
+}
+
+.elemenx-landing-cta.accent .elemenx-landing-action.primary:hover {
+	background: var(--elemenx-surface-hover);
+}
+
+.elemenx-landing-cta.accent .elemenx-landing-action.secondary {
+	border-color: currentcolor;
+	background: transparent;
+	color: inherit;
+}
+
+.elemenx-landing-cta-title {
+	font-size: clamp(24px, 3.5vw, 32px);
+}

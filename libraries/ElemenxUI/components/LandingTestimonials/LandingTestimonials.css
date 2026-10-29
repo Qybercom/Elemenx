@@ -1,0 +1,48 @@
+/* The quotes: cards in a grid, the stars and the text over the author. */
+.elemenx-landing-testimonials {
+	display: flex;
+	flex-direction: column;
+	gap: 32px;
+	padding: 40px 0;
+}
+
+.elemenx-landing-testimonials-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(max(240px, calc((100% - (var(--elemenx-landing-columns, 3) - 1) * 20px) / var(--elemenx-landing-columns, 3))), 1fr));
+	gap: 20px;
+}
+
+.elemenx-landing-testimonial {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	margin: 0;
+	padding: 20px;
+	border: 1px solid var(--elemenx-border);
+	border-radius: var(--elemenx-radius-large);
+	background: var(--elemenx-surface);
+}
+
+.elemenx-landing-testimonial-text {
+	flex: 1 1 auto;
+	margin: 0;
+	font-size: var(--elemenx-font-size-large);
+	line-height: var(--elemenx-line-height-large);
+}
+
+.elemenx-landing-testimonial-author {
+	display: flex;
+	gap: 12px;
+	align-items: center;
+}
+
+.elemenx-landing-testimonial-who {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+}
+
+.elemenx-landing-testimonial-role {
+	color: var(--elemenx-text-muted);
+	font-size: var(--elemenx-font-size-small);
+}

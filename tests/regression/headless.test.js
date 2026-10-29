@@ -21,6 +21,30 @@ describe('Elemenx without a DOM', function () {
 		expect(Elemenx.Version).toMatch(/^\d+\.\d+\.\d+/);
 	});
 
+	/* A server checks a signature against the samples it keeps with the code of the page; it lays out with it too. */
+	it('compares signatures and lays out items with the Services of ElemenxUI', function () {
+		var signatures;
+		var line = function (shift, wave) {
+			var points = [];
+
+			for (var i = 0; i <= 40; i++)
+				points.push({X: i * 5 + shift, Y: 40 + Math.sin(i / 3) * wave, P: 0.5, T: i * 10});
+
+			return [points];
+		};
+		var reference;
+
+		require('../../libraries/ElemenxUI/services/Signatures.js');
+		require('../../libraries/ElemenxUI/services/Layouts.js');
+
+		signatures = Elemenx.Service('Signatures');
+		reference = signatures.Enroll([line(0, 20), line(3, 21), line(-2, 19)]);
+
+		expect(signatures.Match(line(40, 20), reference).Match).toBe(true);
+		expect(signatures.Match([[{X: 0, Y: 0, T: 0}, {X: 0, Y: 100, T: 100}, {X: 100, Y: 100, T: 200}]], reference).Match).toBe(false);
+		expect(Elemenx.Service('Layouts').Pack([{ID: 'a', Width: 2}, {ID: 'b'}], {Columns: 2}).Rows).toBe(2);
+	});
+
 	it('keeps Local and Session in memory, one store for every facade', function () {
 		Elemenx.Storage.Local.Set('Theme', 'dark');
 		Elemenx.Storage.Session.Set('Visit', {Count: 2});

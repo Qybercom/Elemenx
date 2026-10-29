@@ -24,7 +24,7 @@
 				{"ID": "cli", "Title": {"en": "The CLI", "ru": "CLI"}},
 				{"ID": "build", "Title": {"en": "Builds", "ru": "Сборки"}},
 				{"ID": "widgets", "Title": {"en": "Widgets on other sites", "ru": "Виджеты на чужих сайтах"}},
-				{"ID": "builder", "Title": {"en": "The visual builder", "ru": "Визуальный конструктор"}},
+				{"ID": "designer", "Title": {"en": "The Designer", "ru": "Конструктор"}},
 				{"ID": "editors", "Title": {"en": "Editors and IDEs", "ru": "Редакторы и IDE"}}
 			]
 		},

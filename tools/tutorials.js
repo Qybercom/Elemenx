@@ -1,17 +1,17 @@
 'use strict';
 
 /*
- * The projects of the tutorials of the reference (examples/Tutorials), for their articles: examples/Docs/data/
+ * The projects of the tutorials of the Docs (examples/Tutorials), for their articles: examples/Docs/data/
  * tutorials.json names them, [{Page (the article: tutorials/<Page>), Project (its folder), Demo (whether it runs
  * without a server of its own)}].
  * - Zip(project) is the project as a zip archive (a Buffer), in a folder of its name, without node_modules, dist and
  *   the results of its tests: npm install, then npm run dev.
  * - Demo(project, output) builds the project into output as one index.html (elemenx build --single), its public files
- *   (its dictionaries, its data, its images) beside it: the reference shows the page in a frame of a blob: URL whose
+ *   (its dictionaries, its data, its images) beside it: the Docs shows the page in a frame of a blob: URL whose
  *   <base> is that folder, where its Router keeps its routes in memory.
  * - Build(output) writes them into output/tutorials: <Project>.zip for each, <Project>/ for each demo (docs-site.js).
  * - Request(tutorials) answers /tutorials/<Project>.zip and /tutorials/<Project>/<file> from the sources, for the server
- *   of the reference in development; each made once.
+ *   of the Docs in development; each made once.
  */
 var fs = require('fs');
 var os = require('os');

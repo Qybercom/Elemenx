@@ -365,7 +365,7 @@ describe('Contract: the Designer Service edits projects of pages, components, ro
 		expect(JSON.parse(localStorage.getItem('elemenx-designer:projects')).Current).toBe(shop);
 	});
 
-	it('keeps the projects of a project of elemenx design apart, takes its Components and edits a copy of one, its bindings kept', function () {
+	it('keeps the projects of a project of elemenx designer apart, takes its Components and edits a copy of one, its bindings kept', function () {
 		var shop = designer.Project().ID;
 		var basket = '<section>\n\t<h2>{{Title}}</h2>\n\t<Pill Label="Pay" [disabled]="!Items.length" (click)="Pay" />\n</section>';
 		var copy;

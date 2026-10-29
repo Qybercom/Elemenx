@@ -365,22 +365,22 @@ command('serve', 'Serve the production dist with gzip and HTTP caching.', functi
 });
 
 /*
- * The reference of this version of Elemenx, served from the package (docs-site/, built by prepack); in the repository
+ * The Docs of this version of Elemenx, served from the package (docs-site/, built by prepack); in the repository
  * of Elemenx it is built again from the sources each time (tools/docs-site.js).
  */
-command('docs', 'Serve the reference of this version of Elemenx, offline.', function (parsed) {
+command('docs', 'Serve the Docs of this version of Elemenx, offline.', function (parsed) {
 	var directory = path.join(__dirname, 'docs-site');
 	var port = Number(value(parsed.Options, 'port', undefined, 4179));
 	var url;
 
-	/* In the repository of Elemenx the reference is built again each time: a build left from before would be of another version. */
+	/* In the repository of Elemenx the Docs is built again each time: a build left from before would be of another version. */
 	if (fs.existsSync(path.join(__dirname, 'examples', 'Docs', 'app.js'))) {
-		process.stdout.write('Elemenx docs: building the reference of the sources...\n');
+		process.stdout.write('Elemenx docs: building the Docs of the sources...\n');
 
 		require('./tools/docs-site.js').Build({Output: directory});
 	}
 	else if (!fs.existsSync(path.join(directory, 'index.html'))) {
-		fail('the reference is not in this package: docs-site/ is missing (reinstall @qybercom/elemenx)');
+		fail('the Docs is not in this package: docs-site/ is missing (reinstall @qybercom/elemenx)');
 	}
 
 	listen(directory, port, config(directory), true, parsed.Options);
@@ -391,7 +391,7 @@ command('docs', 'Serve the reference of this version of Elemenx, offline.', func
 		openBrowser(url);
 }, {
 	Usage: ['elemenx docs [--port 4179] [--open]'],
-	Text: ['The reference of the version of Elemenx the project installed (the guide, the core, every Component, Service and Directive of ElemenxUI with its live example), served from the package: no network needed.'],
+	Text: ['The Docs of the version of Elemenx the project installed (the guide, the core, every Component, Service and Directive of ElemenxUI with its live example), served from the package: no network needed.'],
 	Options: [
 		['--port <number>', 'the port (4179)'],
 		['--host <address>', 'the address it listens on (127.0.0.1)'],
@@ -399,28 +399,28 @@ command('docs', 'Serve the reference of this version of Elemenx, offline.', func
 	]
 });
 
-command('design', 'Open the Designer on a project: its pages, components and routes, nothing written to its files.', function (parsed) {
+command('designer', 'Open the Designer on a project: its pages, components and routes, nothing written to its files.', function (parsed) {
 	var project = projectPath(parsed.Arguments[0]);
-	var directory = path.join(__dirname, 'design-site');
+	var directory = path.join(__dirname, 'designer-site');
 	var port = Number(value(parsed.Options, 'port', undefined, 4180));
 	var settings = config(project);
-	var describe = require('./tools/design.js').Request(project, settings.Entry || 'app.js', path.join(directory, 'index.html'));
+	var describe = require('./tools/designer.js').Request(project, settings.Entry || 'app.js', path.join(directory, 'index.html'));
 	var url;
 
 	if (!fs.existsSync(project) || !fs.statSync(project).isDirectory())
 		fail('no project at ' + project);
 
 	/* In the repository of Elemenx the Designer is built again each time: a build left from before would be of another version. */
-	if (fs.existsSync(path.join(__dirname, 'examples', 'Builder', 'app.js'))) {
-		process.stdout.write('Elemenx design: building the Designer of the sources...\n');
+	if (fs.existsSync(path.join(__dirname, 'examples', 'Designer', 'app.js'))) {
+		process.stdout.write('Elemenx designer: building the Designer of the sources...\n');
 
-		require('./tools/design-site.js').Build({Output: directory});
+		require('./tools/designer-site.js').Build({Output: directory});
 	}
 	else if (!fs.existsSync(path.join(directory, 'index.html'))) {
-		fail('the Designer is not in this package: design-site/ is missing (reinstall @qybercom/elemenx)');
+		fail('the Designer is not in this package: designer-site/ is missing (reinstall @qybercom/elemenx)');
 	}
 
-	process.stdout.write('Elemenx design: ' + project + ' (read only: the Designer keeps its changes in the browser)\n');
+	process.stdout.write('Elemenx designer: ' + project + ' (read only: the Designer keeps its changes in the browser)\n');
 
 	listen(directory, port, {Server: {
 		/* The project (its description and its files, read only), then the bundles an export of the Designer puts into its file. */
@@ -448,7 +448,7 @@ command('design', 'Open the Designer on a project: its pages, components and rou
 	if (parsed.Options.open === true)
 		openBrowser(url);
 }, {
-	Usage: ['elemenx design [project] [--port 4180] [--open]'],
+	Usage: ['elemenx designer [project] [--port 4180] [--open]'],
 	Text: ['The Designer of the version of Elemenx the project installed, on the project: its Applications, routes, guards and Libraries as a tree, its Components in the palette and on the canvas as they run. A Component of the project opens as a copy to edit; the copies and the new pages and components stay in the storage of the browser, one place for each project: nothing is written to the files of the project.'],
 	Options: [
 		['--port <number>', 'the port (4180)'],

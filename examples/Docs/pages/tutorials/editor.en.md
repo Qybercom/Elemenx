@@ -124,5 +124,5 @@ Command: function (command) {
 
 ## Next
 
-- An office application under a ribbon: `Ribbon`, `RibbonTab`, `RibbonGroup` and `Workspace Variant="ribbon"` (see the visual [builder](/guide/builder)).
+- An office application under a ribbon: `Ribbon`, `RibbonTab`, `RibbonGroup` and `Workspace Variant="ribbon"` (see the [Designer](/guide/designer)).
 - [A desktop program](/tutorials/desktop): the studio as a program.

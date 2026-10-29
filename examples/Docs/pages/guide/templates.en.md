@@ -60,6 +60,15 @@ An expression that names a field that does not exist is quiet (it gives `undefin
 
 A collection builds at most 10 000 items: a loop whose condition never ends throws instead of freezing the page.
 
+## Fragment
+
+`<Fragment>` groups nodes with no element of its own: they stand in the parent itself, so `ul > li` and the rows of a table stay what they are.
+
+- With a structural directive it repeats or shows several nodes: `<Fragment *for="item of Items" *key="item.ID"><dt>{{item.Term}}</dt><dd>{{item.Text}}</dd></Fragment>`, two rows of a table for each item, an `*if` over a text and an element.
+- With `slot="name"` it gives several nodes, texts among them, to one named slot of a component.
+- As the whole of the template of a component it gives it several roots, held by an element that takes no room (`display: contents`): the component has one element.
+- Without any of them it is its nodes, nothing more.
+
 ## Components in a template
 
 A component is a tag of its name: `<Button Label="Save" />`. Plain attributes give texts, bindings give values, `(name)` listens to its events, and markup between its tags goes to its slots. See [Components](/guide/components) for the props.

@@ -31,8 +31,7 @@ test('a page with no build and no server runs Elemenx and ElemenxUI from dist/el
 	await browser.locator('.elemenx-emoji-item[data-char="😀"]').click();
 
 	await expect(browser.locator('#picked')).toHaveText('😀');
-	expect(await browser.locator('#standalone .elemenx-button.primary').evaluate(function (node) {
-		return getComputedStyle(node).backgroundColor;
-	})).toBe('rgb(75, 68, 61)');
+	/* The pointer has left the button for the emoji: its background goes back from the hover color in a transition. */
+	await expect(browser.locator('#standalone .elemenx-button.primary')).toHaveCSS('background-color', 'rgb(75, 68, 61)');
 	expect(errors).toEqual([]);
 });

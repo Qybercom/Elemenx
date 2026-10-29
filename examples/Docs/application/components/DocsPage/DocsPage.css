@@ -1,5 +1,5 @@
 /*
- * The reference in the middle of a wide screen: the navigation, the page and its contents, no wider than 1600 pixels.
+ * The Docs in the middle of a wide screen: the navigation, the page and its contents, no wider than 1600 pixels.
  * The text keeps a width that reads well; the examples and the code take all the width of the page.
  */
 .docs-page {
@@ -92,7 +92,7 @@
 	outline-offset: -2px;
 }
 
-/* The headings a press on the contents goes to stand under the header of the reference. */
+/* The headings a press on the contents goes to stand under the header of the Docs. */
 .docs-article h2,
 .docs-article h3 {
 	scroll-margin-top: 68px;

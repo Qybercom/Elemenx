@@ -233,6 +233,7 @@
 				"overlays": "Windows and overlays",
 				"social": "People and chat",
 				"commerce": "Commerce",
+				"landing": "Landings",
 				"music": "Music",
 				"game": "Game",
 				"tools": "Designer",
@@ -768,7 +769,11 @@
 			"splitRight": "Split right",
 			"splitLeft": "Split left",
 			"splitDown": "Split down",
-			"splitUp": "Split up"
+			"splitUp": "Split up",
+			"moveRight": "Split and move right",
+			"moveLeft": "Split and move left",
+			"moveDown": "Split and move down",
+			"moveUp": "Split and move up"
 		},
 		"tabSplit": {
 			"divider": "Divider between groups of tabs"
@@ -898,7 +903,9 @@
 			"empty": "empty",
 			"placeholder": "Sign here",
 			"undo": "Undo",
-			"clear": "Clear"
+			"clear": "Clear",
+			"match": "Looks like the signature on file ({score}%)",
+			"mismatch": "Does not look like the signature on file ({score}%)"
 		},
 		"drawing": {
 			"label": "Drawing",
@@ -1049,6 +1056,54 @@
 		},
 		"sampler": {
 			"label": "Sampler"
+		},
+		"pipeline": {
+			"label": "Pipeline",
+			"retry": "Retry {name}",
+			"cancel": "Cancel {name}",
+			"play": "Run {name}",
+			"status": {
+				"created": "Created",
+				"pending": "Pending",
+				"scheduled": "Scheduled",
+				"running": "Running",
+				"success": "Passed",
+				"failed": "Failed",
+				"warning": "Passed with warnings",
+				"canceled": "Canceled",
+				"skipped": "Skipped",
+				"manual": "Waiting for a run"
+			}
+		},
+		"calculator": {
+			"label": "Calculator",
+			"history": "History",
+			"keys": {
+				"clear": "Clear",
+				"back": "Delete the last",
+				"negate": "Change the sign",
+				"equals": "Equals",
+				"shift": "Second functions",
+				"angle": "Degrees or radians",
+				"inverse": "One over"
+			}
+		},
+		"quiz": {
+			"label": "Quiz",
+			"start": "Start",
+			"progress": "Question {index} of {count}",
+			"check": "Check",
+			"next": "Next",
+			"back": "Back",
+			"right": "Right",
+			"wrong": "Wrong",
+			"up": "Move {name} up",
+			"down": "Move {name} down",
+			"passed": "Passed",
+			"failed": "Not passed",
+			"thanks": "Thank you for your answers",
+			"score": "{score} of {max} points",
+			"restart": "Start again"
 		}
 	}
 }

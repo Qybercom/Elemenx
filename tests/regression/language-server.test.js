@@ -234,6 +234,12 @@ describe('Contract: the language of Elemenx for the editors (the core, and its L
 		expect(language.Diagnose(knowledge, '<Card class="a" id="b" data-x="1" aria-label="c" slot="footer" page-title="no" />', 'html').map(function (problem) {
 			return problem.Message;
 		})).toEqual(['Card has no prop page-title']);
+
+		/* A <Fragment> is of the framework: no warning, and the completion of a tag offers it. */
+		expect(language.Diagnose(knowledge, '<ul><Fragment *for="item of Items"><li>{{item}}</li></Fragment></ul>', 'html')).toEqual([]);
+		expect(language.Complete(knowledge, '<Fra', 4, 'html').map(function (item) {
+			return item.Label;
+		})).toContain('Fragment');
 	});
 
 	/* A bug: Ctrl+click on $T or on its key went nowhere (and in IntelliJ, LSP4IJ cancelled the click). */

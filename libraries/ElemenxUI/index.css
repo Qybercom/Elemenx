@@ -3005,6 +3005,13 @@ span.elemenx-rich-plugin {
 	padding: 8px 10px;
 }
 
+/* In the top layer (a popover of the browser) the tip keeps its own place, size and look, not those of a popover. */
+.elemenx-tip[popover] {
+	inset: auto;
+	margin: 0;
+	overflow: visible;
+}
+
 /* A tip hidden stays hidden, rich (a flex) or not: this rule comes after the ones that show it. */
 .elemenx-tip[hidden] {
 	display: none;
@@ -3562,6 +3569,98 @@ span.elemenx-rich-plugin {
 
 .elemenx-calendar-cell {
 	height: 48px;
+}
+
+/*
+ * Landings: the header of a block (an overline, a large title, its lead) and its actions, links that look as
+ * buttons. Shared by the Landing blocks.
+ */
+.elemenx-landing-header {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	max-width: 720px;
+}
+
+.elemenx-landing-header.center {
+	align-items: center;
+	margin-inline: auto;
+	text-align: center;
+}
+
+.elemenx-landing-title {
+	margin: 0;
+	font-size: clamp(26px, 4vw, 40px);
+	line-height: 1.15;
+	font-weight: var(--elemenx-font-weight-strong);
+	text-wrap: balance;
+}
+
+.elemenx-landing-lead {
+	margin: 0;
+	color: var(--elemenx-text-muted);
+	font-size: var(--elemenx-font-size-large);
+	line-height: var(--elemenx-line-height-large);
+	text-wrap: pretty;
+}
+
+.elemenx-landing-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 12px;
+}
+
+.elemenx-landing-actions.center {
+	justify-content: center;
+}
+
+.elemenx-landing-action {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	height: var(--elemenx-control-large);
+	padding: 0 20px;
+	border: 1px solid var(--elemenx-border-strong);
+	border-radius: var(--elemenx-radius);
+	background: var(--elemenx-surface);
+	color: var(--elemenx-text);
+	font: inherit;
+	font-size: var(--elemenx-font-size-large);
+	font-weight: var(--elemenx-font-weight-strong);
+	white-space: nowrap;
+	text-decoration: none;
+	cursor: pointer;
+	transition: background var(--elemenx-duration) var(--elemenx-easing), border-color var(--elemenx-duration) var(--elemenx-easing);
+}
+
+.elemenx-landing-action:hover {
+	background: var(--elemenx-surface-hover);
+}
+
+.elemenx-landing-action:focus-visible {
+	outline: 2px solid var(--elemenx-focus);
+	outline-offset: 2px;
+}
+
+.elemenx-landing-action.primary {
+	border-color: var(--elemenx-accent);
+	background: var(--elemenx-accent);
+	color: var(--elemenx-accent-text);
+}
+
+.elemenx-landing-action.primary:hover {
+	border-color: var(--elemenx-accent-hover);
+	background: var(--elemenx-accent-hover);
+}
+
+.elemenx-landing-action.ghost {
+	border-color: transparent;
+	background: transparent;
+}
+
+.elemenx-landing-action.ghost:hover {
+	background: var(--elemenx-surface-hover);
 }
 
 /* On a touch screen the text of a field is never under 16 pixels: iOS would zoom the page in at every focus. */

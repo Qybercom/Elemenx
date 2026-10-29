@@ -66,9 +66,9 @@ Development and production can therefore run simultaneously on separate ports.
 For the Advanced example:
 
 ```text
-npm run build:advanced
+npm run example:advanced:build
 npm run example:advanced
-npm run example:advanced:dist
+npm run example:advanced:serve
 ```
 
 ## Elemenx CLI
@@ -88,7 +88,7 @@ elemenx serve [project] [--host 127.0.0.1] [--port 4175]
               [--cache-control "public, max-age=0, must-revalidate"]
 elemenx icons <directory> <output.svg> [--current-color]
 elemenx docs [--port 4179] [--host 127.0.0.1] [--open]
-elemenx design [project] [--port 4180] [--host 127.0.0.1] [--open]
+elemenx designer [project] [--port 4180] [--host 127.0.0.1] [--open]
 elemenx version
 ```
 
@@ -100,7 +100,7 @@ The command registry is intentionally extensible for future command groups such 
 
 `elemenx docs` serves the reference of the installed version (`docs-site/` of the package, built by `prepack` with `tools/docs-site.js`: the Docs Application with all of the framework, every entity of ElemenxUI and every pack) with the answers of the server of its live examples; ElemenxUI itself is answered from `libraries/` of the package. The finished projects of its tutorials come with it (`tools/tutorials.js`, `examples/Docs/data/tutorials.json`): each article offers its project as a zip (`tutorials/<Project>.zip`), and a project with no server of its own also as a demo on the page, built into one file (`tutorials/<Project>/`) and shown in a frame of a `blob:` URL, where its Router keeps its routes in memory. In the repository of Elemenx the command builds it again from the sources each time.
 
-`elemenx design` opens the Designer of the installed version (`design-site/` of the package, built by `prepack` with `tools/design-site.js`: the Builder example with all of the framework and every Component of ElemenxUI) on a project, read only (`tools/design.js`). The server reads the project as the framework would run it: its Applications from the entry (`app.js`, or `Entry` of `elemenx.config.js`) with their routes, guards and Libraries, and the Components, Services, Directives and Guards of their roots from their `index.js` graphs; it answers `/__project/describe.json` (and the same as a script, `/__project/describe.js`, which it puts into the page before the application) and every file of the project under `/__project/files/` (`GET` and `HEAD` only, nothing outside the project, nothing in `node_modules` or `.git`). The Designer shows the project as a tree, runs its Components on the canvas from their own files (a Component whose name ElemenxUI has is not run) and offers them in the palette (the group "Project files"); a Component picked in the tree opens as a copy to edit: a component of the project with its template as it is, its expressions, bindings, events and directives kept, which on the canvas runs with the definition of its file. The copies, the pages and the components made there stay in the storage of the browser, apart for each project (`Scope` of the Designer Service): nothing is written to the files of the project. In the repository of Elemenx the command builds the Designer again from the sources each time.
+`elemenx designer` opens the Designer of the installed version (`designer-site/` of the package, built by `prepack` with `tools/designer-site.js`: the Builder example with all of the framework and every Component of ElemenxUI) on a project, read only (`tools/designer.js`). The server reads the project as the framework would run it: its Applications from the entry (`app.js`, or `Entry` of `elemenx.config.js`) with their routes, guards and Libraries, and the Components, Services, Directives and Guards of their roots from their `index.js` graphs; it answers `/__project/describe.json` (and the same as a script, `/__project/describe.js`, which it puts into the page before the application) and every file of the project under `/__project/files/` (`GET` and `HEAD` only, nothing outside the project, nothing in `node_modules` or `.git`). The Designer shows the project as a tree, runs its Components on the canvas from their own files (a Component whose name ElemenxUI has is not run) and offers them in the palette (the group "Project files"); a Component picked in the tree opens as a copy to edit: a component of the project with its template as it is, its expressions, bindings, events and directives kept, which on the canvas runs with the definition of its file. The copies, the pages and the components made there stay in the storage of the browser, apart for each project (`Scope` of the Designer Service): nothing is written to the files of the project. In the repository of Elemenx the command builds the Designer again from the sources each time.
 
 An optional `elemenx.config.js` may export `Application`, `Entry`, `Index`, `Output`, and `Server` settings. CLI options override configuration, and configuration overrides Elemenx defaults.
 

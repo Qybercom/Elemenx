@@ -1,0 +1,21 @@
+<Quiz Title="Geography" Intro="Three questions, checked at once." Feedback="instant" [questions]="Questions" (finish)="Finished">
+	<QuizQuestion ID="capital" Text="The capital of France?" Explanation="Paris has been the capital since 508.">
+		<QuizOption ID="paris" Correct="true">Paris</QuizOption>
+		<QuizOption ID="lyon">Lyon</QuizOption>
+		<QuizOption ID="marseille">Marseille</QuizOption>
+	</QuizQuestion>
+</Quiz>
+<p class="elemenx-text small muted">{{Text}}</p>
+<script>
+({
+	Text: 'Start the quiz.',
+	Questions: [
+		{ID: 'sea', Text: 'The sea of Odesa?', Type: 'text', Answer: ['Black', 'Black Sea']},
+		{ID: 'rivers', Text: 'From the longest', Type: 'order', Options: [{ID: 'nile', Text: 'Nile'}, {ID: 'amazon', Text: 'Amazon'}, {ID: 'yangtze', Text: 'Yangtze'}]}
+	],
+
+	Finished: function (event) {
+		this.Text = event.Score + ' of ' + event.Max + ' (' + event.Percent + '%)';
+	}
+})
+</script>

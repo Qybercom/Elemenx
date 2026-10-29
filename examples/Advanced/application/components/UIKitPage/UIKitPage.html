@@ -1462,6 +1462,8 @@
 					<div class="ui-kit-row"><QRCode Value="https://elemenx.dev" Size="112" /><QRScanner Active="false" Height="112" /></div>
 					<h5>SignaturePad</h5>
 					<SignaturePad Height="120" (change)="MoreSigned" />
+					<p class="elemenx-text small muted">{{SignatureSamples.length < 3 ? 'Sign ' + (3 - SignatureSamples.length) + ' more times for the samples, then once to compare' : 'Samples kept: sign to compare'}}</p>
+					<SignaturePad #signatureSample Height="120" Label="A signature to compare" [reference]="SignatureSamples.length < 3 ? null : SignatureSamples" (change)="SampleSigned" (compare)="SignatureCompared" />
 				</div>
 				<div class="ui-kit-stack">
 					<h5>ImageCropper</h5>
@@ -1551,7 +1553,7 @@
 	<Section *if="Shows('Media collection')" Title="Media collection" [note]="MediaNote">
 		<div class="ui-kit-lazy" *lazy="400">
 			<div class="ui-kit-stack">
-				<MediaHero Size="compact" Title="The Long Light" Subtitle="Featured film" [facts]="['2024', '2 h 10 min']" Rating="8.4" [tags]="['Drama', 'Mystery']" Description="A keeper of a lighthouse finds that its light reaches further than the sea." Progress="0.35" Favorable="true" (play)="MediaPlayed" />
+				<MediaHero Size="compact" [image]="MediaBackdrop" [poster]="MediaPoster" Title="The Long Light" Subtitle="Featured film" [facts]="['2024', '2 h 10 min']" Rating="8.4" [tags]="['Drama', 'Mystery']" Description="A keeper of a lighthouse finds that its light reaches further than the sea." Progress="0.35" Favorable="true" (play)="MediaPlayed" />
 				<MediaShelf Title="Films" More="See all" [items]="MediaLeft" Playable="true" (open)="MediaOpened" (play)="MediaOpened" />
 				<div class="ui-kit-grid">
 					<div class="ui-kit-stack">
@@ -1795,6 +1797,76 @@
 						<Tile ID="radio" Title="Radio" Icon="headphones" Size="wide" Color="#8a3b5b" />
 					</TileGroup>
 				</TileGrid>
+			</div>
+		</div>
+	</Section>
+	<Section *if="Shows('Mosaic')" Title="Mosaic" [note]="'Mosaic · the Layouts Service: ' + MosaicLayout + (MosaicChosen ? ' · Chosen: ' + MosaicChosen : '')">
+		<div class="ui-kit-lazy" *lazy>
+			<div class="elemenx-column">
+				<RadioGroup Variant="segmented" [options]="MosaicLayouts" [value]="MosaicLayout" (change)="MosaicLaid" />
+				<Mosaic Selectable="true" ColumnWidth="110" RowHeight="140" Height="320" Label="A mosaic" [layout]="MosaicLayout" [items]="MosaicItems(MosaicLayout)" (select)="MosaicSelected">
+					<MosaicItem ID="note" Title="Declared" Width="2" Ratio="2" Value="30" Color="#2f8f83"><div class="ui-kit-mosaic-note">A MosaicItem of the template, its own content</div></MosaicItem>
+				</Mosaic>
+			</div>
+		</div>
+	</Section>
+	<Section *if="Shows('Pipeline')" Title="Pipeline" [note]="PipelineNote">
+		<div class="ui-kit-lazy" *lazy>
+			<Pipeline Title="main · a1b2c3d" Label="The pipeline of main" [stages]="PipelineStages" (select)="PipelineSelected" (action)="PipelineActed">
+				<PipelineStage ID="deploy" Name="Deploy">
+					<PipelineJob ID="staging" Name="Staging" Status="success" Duration="48" Needs="e2e, image" Text="staging.example.com" />
+					<PipelineJob ID="production" Name="Production" Status="manual" Needs="staging" />
+				</PipelineStage>
+			</Pipeline>
+		</div>
+	</Section>
+	<Section *if="Shows('Calculators')" Title="Calculators" [note]="CalculatorNote">
+		<div class="ui-kit-lazy" *lazy>
+			<div class="ui-kit-calculators">
+				<Calculator Mode="scientific" Label="A scientific calculator" (result)="CalculatorCounted" />
+				<BusinessCalculator Title="A loan" Currency="EUR" Locale="en" [fields]="LoanFields" [breakdown]="['Principal', 'Interest']" (change)="LoanChanged">
+					<CalculatorResult ID="Payment" Label="Each month" Formula="Rate == 0 ? Amount / Months : Amount * Rate / 1200 / (1 - (1 + Rate / 1200) ^ -Months)" Format="money" Primary="true" />
+					<CalculatorResult ID="Principal" Label="Borrowed" Formula="Amount" Format="money" />
+					<CalculatorResult ID="Interest" Label="Interest" Formula="Payment * Months - Amount" Format="money" />
+				</BusinessCalculator>
+			</div>
+		</div>
+	</Section>
+	<Section *if="Shows('Quiz')" Title="Quiz" [note]="QuizNote">
+		<div class="ui-kit-lazy" *lazy>
+			<Quiz Title="The solar system" Intro="Four questions, one of them in order; the answers are checked at once." Feedback="instant" PassScore="75" [questions]="QuizQuestions" (finish)="QuizFinished">
+				<QuizQuestion ID="planets" Text="Put them in order from the Sun" Type="order" Points="2">
+					<QuizOption ID="mercury">Mercury</QuizOption>
+					<QuizOption ID="venus">Venus</QuizOption>
+					<QuizOption ID="earth">Earth</QuizOption>
+					<QuizOption ID="mars">Mars</QuizOption>
+				</QuizQuestion>
+			</Quiz>
+		</div>
+	</Section>
+	<Section *if="Shows('Landing')" Title="Landing" [note]="LandingNote">
+		<div class="ui-kit-lazy" *lazy>
+			<div class="elemenx-column">
+				<RadioGroup Variant="segmented" Label="Visit as" [options]="LandingVisitors" [value]="LandingVisitor" (change)="LandingVisited" />
+				<Experiment Name="ui-kit-landing" [visitor]="LandingVisitorOf(LandingVisitor)" (choose)="LandingChosen">
+					<Variant ID="ads" Source="google">
+						<LandingHero Overline="Spring sale" Title="20% off your first year" Text="For those who found us in a search: the code SPRING20 is applied at checkout." [image]="LandingPicture('spring')" ImageAlt="A composition of Suprematism" [actions]="LandingActions" />
+					</Variant>
+					<Variant ID="newsletter" Source="newsletter">
+						<LandingHero Layout="center" Overline="For our readers" Title="The release you read about" Text="Everything from the letter, and a month for free." [actions]="LandingActions" />
+					</Variant>
+					<Variant ID="calm" Weight="1">
+						<LandingHero Title="Build interfaces in one file" Text="An ES5 framework with a library of 200 components." [image]="LandingPicture('calm')" [actions]="LandingActions" />
+					</Variant>
+					<Variant ID="bold" Weight="1">
+						<LandingHero Layout="cover" Title="Ship the interface today" Text="No build step, no dependencies." [image]="LandingPicture('bold')" [actions]="LandingActions" />
+					</Variant>
+				</Experiment>
+				<LandingStats [items]="LandingStatsItems" />
+				<LandingFeatures Overline="Why" Title="Made for the long run" [items]="LandingFeaturesItems" />
+				<LandingTestimonials Title="What the teams say" [items]="LandingQuotes" />
+				<LandingFAQ Title="Questions" Single="true" [items]="LandingQuestions" />
+				<LandingCTA Title="Ready to start?" Text="It takes a minute." [actions]="LandingFinal" (action)="LandingActed" />
 			</div>
 		</div>
 	</Section>

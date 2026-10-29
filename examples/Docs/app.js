@@ -1,5 +1,5 @@
 /*
- * The reference of Elemenx, built with ElemenxUI: a page for every part of the framework and of the Library, with a
+ * The Docs of Elemenx, built with ElemenxUI: a page for every part of the framework and of the Library, with a
  * description and examples that run beside their code. The pages are Markdown files, one for each language:
  * pages/<section>/<page>.<language>.md (English and Russian); a page missing in a language shows its English one.
  */
@@ -7,7 +7,7 @@
 Elemenx.Cache({Instances: {Scope: 'marked'}});
 
 Elemenx.Application('ElemenxDocs', {
-	$Title: 'Elemenx reference',
+	$Title: 'Elemenx Docs',
 	$Component: 'DocsLayout',
 	$Root: 'application',
 	$Mount: 'body',

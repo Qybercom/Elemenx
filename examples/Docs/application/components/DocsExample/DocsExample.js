@@ -137,7 +137,7 @@ Elemenx.Component('DocsExample', {
 				made[name] = true;
 			}
 
-			/* In the Application of the reference: the components of ElemenxUI the example names load as in any template. */
+			/* In the Application of the Docs: the components of ElemenxUI the example names load as in any template. */
 			this.Own().Instance = Elemenx.Component(name)({}, null, {Application: this.$Application()});
 
 			result.appendChild(this.Own().Instance.$Element());

@@ -374,45 +374,16 @@ Elemenx.Component('TileGrid', {
 	 * they fit and are free; the others take the first free place, row by row.
 	 */
 	Layout: function (tiles, columns) {
-		var placed = [];
-		var spots = [];
 		var self = this;
 
-		function fits (spot) {
-			return spot.Column >= 0 && spot.Row >= 0 && spot.Column + spot.Width <= columns && !placed.some(function (other) {
-				return self.Overlaps(spot, other);
-			});
-		}
-
-		(tiles || []).forEach(function (tile, index) {
+		/* The packed grid of the Layouts Service: a tile in its place keeps it, the others take the first free one. */
+		return this.$Service('Layouts').Pack((tiles || []).map(function (tile) {
 			var span = self.Span(tile, columns);
-			var spot = {Tile: tile, Row: Number(tile.Row), Column: Number(tile.Column), Width: span[0], Height: span[1]};
 
-			if (tile.Row != null && tile.Column != null && fits(spot)) placed.push(spot);
-			else spot.Row = -1;
-
-			spots[index] = spot;
+			return {Tile: tile, Row: tile.Row, Column: tile.Column, Width: span[0], Height: span[1]};
+		}), {Columns: columns}).Items.map(function (spot) {
+			return {Tile: spot.Item.Tile, Row: spot.Row, Column: spot.Column, Width: spot.Width, Height: spot.Height};
 		});
-
-		spots.forEach(function (spot) {
-			if (spot.Row !== -1) return;
-
-			spot.Row = 0;
-			spot.Column = 0;
-
-			while (!fits(spot)) {
-				spot.Column++;
-
-				if (spot.Column + spot.Width > columns) {
-					spot.Column = 0;
-					spot.Row++;
-				}
-			}
-
-			placed.push(spot);
-		});
-
-		return spots;
 	},
 
 	/* A copy of tile at a place. */

@@ -168,6 +168,7 @@ describe('Regression: public API surface', function () {
 		expect(systemSurface(component)).toEqual([
 			'$Application:function',
 			'$Batch:function',
+			'$Copy:function',
 			'$Destroy:function',
 			'$Element:function',
 			'$Emit:function',
@@ -280,7 +281,7 @@ describe('Regression: public API surface', function () {
 
 		await tick();
 
-		expect(names(remote)).toEqual(['$Application', '$Destroy', '$Element', '$Generation', '$On', '$Parent', '$Ref', '$Refs', '$Update']);
+		expect(names(remote)).toEqual(['$Application', '$Copy', '$Destroy', '$Element', '$Generation', '$On', '$Parent', '$Ref', '$Refs', '$Update']);
 		expect(names(local.$Network())).toEqual(['LongPolling', 'Metrics', 'Protocol', 'SSE', 'Stream', 'Transfer', 'TransferReceiver', 'WebRTC', 'WebSocket', 'XHR']);
 		expect(names(local.$Storage())).toEqual(['Cookie', 'IndexedDB', 'Local', 'Session']);
 		expect(names(local.$Events())).toEqual(['Channels', 'Deliver', 'Destroy', 'Emit', 'ID', 'Off', 'On', 'Pipe']);

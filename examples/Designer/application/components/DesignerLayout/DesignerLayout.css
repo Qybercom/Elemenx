@@ -1,0 +1,275 @@
+body {
+	margin: 0;
+	background: var(--elemenx-background);
+	color: var(--elemenx-text);
+	font-family: var(--elemenx-font);
+}
+
+.designer-shell {
+	display: flex;
+	flex-direction: column;
+	height: 100vh;
+	height: 100dvh;
+}
+
+.designer-header {
+	gap: 8px;
+	align-items: center;
+	min-width: 0;
+	overflow-x: auto;
+	border-radius: 0;
+}
+
+.designer-brand {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	white-space: nowrap;
+}
+
+.designer-brand-mark {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 24px;
+	height: 24px;
+	color: var(--elemenx-accent-text);
+	font-weight: var(--elemenx-font-weight-bold);
+	background: var(--elemenx-accent);
+	border-radius: var(--elemenx-radius-large);
+}
+
+/* The name of the Designer after Elemenx, as the reference names itself. */
+.designer-brand-note {
+	color: var(--elemenx-text-muted);
+}
+
+/* The search of the Insert tab: its field, and beside it what it found (or that it found nothing). */
+.designer-search {
+	display: flex;
+	grid-row: 1 / -1;
+	align-items: flex-start;
+	align-self: stretch;
+	gap: 8px;
+}
+
+/* The field of the search and the words under it. */
+.designer-find {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	gap: 4px;
+	width: 180px;
+}
+
+.designer-appearance {
+	gap: 6px;
+	justify-content: center;
+}
+
+/* A page of the backstage: the export and the import of the template. */
+.designer-page {
+	gap: 12px;
+	max-width: 880px;
+}
+
+.designer-page > .elemenx-title,
+.designer-page > .elemenx-text {
+	margin: 0;
+}
+
+/* The language of the Designer, a list as narrow as its names. */
+.designer-language {
+	width: 140px;
+}
+
+/* The main area: the tabs of the documents of an application over the canvas, or its settings. */
+.designer-main {
+	display: flex;
+	flex: 1 1 auto;
+	flex-direction: column;
+	min-width: 0;
+	min-height: 0;
+}
+
+.designer-main > .elemenx-designer-canvas,
+.designer-main > .elemenx-designer-settings {
+	flex: 1 1 auto;
+	min-height: 0;
+}
+
+.designer-documents {
+	display: flex;
+	flex: 0 0 auto;
+	gap: 2px;
+	padding: 4px 8px 0;
+	overflow-x: auto;
+	border-bottom: 1px solid var(--elemenx-border);
+}
+
+/* A tab of a document: its name, which opens it, and its cross, which closes it. */
+.designer-document {
+	display: inline-flex;
+	align-items: center;
+	color: var(--elemenx-text-muted);
+	font-size: var(--elemenx-font-size-small);
+	white-space: nowrap;
+	background: transparent;
+	border: 1px solid transparent;
+	border-bottom: 0;
+	border-radius: var(--elemenx-radius-small) var(--elemenx-radius-small) 0 0;
+}
+
+button.designer-document,
+.designer-document-open {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 6px 12px;
+	color: inherit;
+	font: inherit;
+	cursor: pointer;
+	background: transparent;
+	border: 0;
+}
+
+.designer-document-close {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 20px;
+	height: 20px;
+	margin-inline-end: 6px;
+	padding: 0;
+	color: inherit;
+	cursor: pointer;
+	background: transparent;
+	border: 0;
+	border-radius: var(--elemenx-radius-small);
+}
+
+.designer-document-close:hover {
+	background: var(--elemenx-surface-hover);
+}
+
+.designer-document:hover {
+	color: var(--elemenx-text);
+}
+
+.designer-document.active {
+	color: var(--elemenx-text);
+	background: var(--elemenx-surface);
+	border-color: var(--elemenx-border);
+}
+
+/* Create: a card for each kind of project. */
+.designer-kinds {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+	gap: 12px;
+}
+
+.designer-kind {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 8px;
+	padding: 16px;
+	color: inherit;
+	font: inherit;
+	text-align: start;
+	cursor: pointer;
+	background: var(--elemenx-surface);
+	border: 1px solid var(--elemenx-border);
+	border-radius: var(--elemenx-radius-large);
+}
+
+.designer-kind:hover {
+	border-color: var(--elemenx-accent);
+}
+
+/* Open: the projects kept, the one being edited marked. */
+.designer-projects {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.designer-project {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	border-radius: var(--elemenx-radius);
+}
+
+.designer-project:hover,
+.designer-project.current {
+	background: var(--elemenx-surface-hover);
+}
+
+.designer-project-open {
+	display: grid;
+	flex: 1 1 auto;
+	grid-template-columns: auto 1fr;
+	gap: 2px 10px;
+	align-items: center;
+	padding: 8px 10px;
+	color: inherit;
+	font: inherit;
+	text-align: start;
+	cursor: pointer;
+	background: transparent;
+	border: 0;
+}
+
+.designer-project-open .elemenx-icon {
+	grid-row: 1 / 3;
+}
+
+.designer-project-remove {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 32px;
+	height: 32px;
+	margin-inline-end: 6px;
+	padding: 0;
+	color: var(--elemenx-text-muted);
+	cursor: pointer;
+	background: transparent;
+	border: 0;
+	border-radius: var(--elemenx-radius-small);
+}
+
+.designer-project-remove:hover {
+	color: var(--elemenx-danger);
+}
+
+.designer-open-file {
+	cursor: pointer;
+}
+
+/* The document being edited, before the count of its elements. */
+.designer-where {
+	margin-inline-end: 12px;
+	font-weight: var(--elemenx-font-weight-bold);
+}
+
+/* The files of the project of elemenx designer: read only, a note on top of their tree. */
+.designer-disk {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	padding: 8px;
+}
+
+.designer-disk-note {
+	margin: 0;
+	font-size: var(--elemenx-font-size-small);
+	color: var(--elemenx-text-muted);
+}
+
+.designer-disk-failed {
+	margin: 0;
+	color: var(--elemenx-danger);
+}

@@ -1,5 +1,5 @@
 /*
- * The worker of the examples of the reference: it runs with Elemenx loaded (Elemenx.WebWorker does it) and answers on
+ * The worker of the examples of the Docs: it runs with Elemenx loaded (Elemenx.WebWorker does it) and answers on
  * its channel (ElemenxWorkerChannel). {Command: 'count', To} counts to To, off the page, and answers with the sum;
  * {Command: 'ping'} answers pong.
  */

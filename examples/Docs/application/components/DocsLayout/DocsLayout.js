@@ -1,5 +1,5 @@
 /*
- * The frame of the reference: its title, the search of the whole reference, the language of the pages (English or
+ * The frame of the Docs: its title, the search of the whole reference, the language of the pages (English or
  * Russian, kept for the next visit), the theme, and the page of the route under them. The search reads the text of
  * every page in the language (pages/search.<language>.json, the first time it is used): the pages that hold all the
  * words typed, those that name them in their title first, each with its section and the words around the first one

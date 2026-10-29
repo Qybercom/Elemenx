@@ -52,3 +52,21 @@
 	justify-content: flex-end;
 	gap: 4px;
 }
+
+/* Whether the signature looks like the one on file: a line under the field. */
+.elemenx-signature-result {
+	display: flex;
+	gap: 6px;
+	align-items: center;
+	margin-top: 6px;
+	font-size: var(--elemenx-font-size-small);
+	line-height: var(--elemenx-line-height-small);
+}
+
+.elemenx-signature-result.match {
+	color: var(--elemenx-success);
+}
+
+.elemenx-signature-result.mismatch {
+	color: var(--elemenx-warning);
+}

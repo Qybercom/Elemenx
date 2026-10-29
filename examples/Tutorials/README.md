@@ -1,6 +1,6 @@
 # Tutorials
 
-The projects of the tutorials of the reference (`examples/Docs`, section Tutorials). Each folder is a project of its own: copy it out, `npm install`, `npm run dev`.
+The projects of the tutorials of the Docs (`examples/Docs`, section Tutorials). Each folder is a project of its own: copy it out, `npm install`, `npm run dev`.
 
 | Project | Tutorial | What it shows |
 | --- | --- | --- |

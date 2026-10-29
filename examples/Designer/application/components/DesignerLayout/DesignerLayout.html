@@ -1,0 +1,199 @@
+<div class="designer-shell">
+	<Workspace Variant="ribbon" Persist="elemenx-designer:layout">
+		<div slot="header" class="elemenx-container fill designer-header">
+			<span class="designer-brand"><span class="designer-brand-mark">E</span><strong>Elemenx</strong><span class="designer-brand-note">{{$T('designer.title')}}</span></span>
+			<span class="elemenx-spacer"></span>
+			<Button Size="small" [variant]="Preview ? 'danger' : 'primary'" [icon]="Preview ? 'stop' : 'play'" [label]="Preview ? $T('designer.stop') : $T('designer.run')" (click)="Ran" />
+			<span class="elemenx-divider vertical"></span>
+			<div class="designer-language">
+				<Select Size="small" [options]="Languages" [value]="Language" [label]="$T('designer.language')" (change)="Chosen" />
+			</div>
+			<ThemeSwitch Compact="true" />
+		</div>
+
+		<Ribbon slot="ribbon" [tab]="Tab" [label]="$T('designer.title')" (tab)="TabChanged" (command)="Command" (backstage)="Backstaged">
+			<RibbonButton slot="quick" ID="undo" Icon="undo" Size="icon" [label]="$T('designer.undo')" [disabled]="!CanUndo(Version)" />
+			<RibbonButton slot="quick" ID="redo" Icon="redo" Size="icon" [label]="$T('designer.redo')" [disabled]="!CanRedo(Version)" />
+
+			<RibbonBackstage slot="backstage" [title]="$T('designer.file')" [page]="Page" (page)="Paged">
+				<RibbonPage ID="new" Icon="add" [title]="$T('designer.new')">
+					<div class="elemenx-column designer-page">
+						<h2 class="elemenx-title">{{$T('designer.newTitle')}}</h2>
+						<p class="elemenx-text muted">{{$T('designer.newNote')}}</p>
+						<Field [label]="$T('designer.newName')">
+							<Input [value]="NewName" [placeholder]="$T('designer.newNamePlaceholder')" (input)="NewNamed" />
+						</Field>
+						<div class="designer-kinds">
+							<button type="button" class="designer-kind" *for="kind of Kinds(Language)" *key="kind.ID" [attribute.data-mode]="kind.ID" (click)="Made">
+								<Icon Size="32" [name]="kind.Icon" />
+								<strong>{{kind.Title}}</strong>
+								<span class="elemenx-text small muted">{{kind.Text}}</span>
+							</button>
+						</div>
+					</div>
+				</RibbonPage>
+				<RibbonPage ID="open" Icon="folder-open" [title]="$T('designer.open')">
+					<div class="elemenx-column designer-page">
+						<h2 class="elemenx-title">{{$T('designer.openTitle')}}</h2>
+						<div class="designer-projects">
+							<div class="designer-project" *for="entry of Projects(Version, Language)" *key="entry.ID" [class.current]="entry.Current">
+								<button type="button" class="designer-project-open" [attribute.data-project]="entry.ID" (click)="Picked">
+									<Icon Size="20" [name]="entry.Icon" />
+									<strong>{{entry.Name}}</strong>
+									<span class="elemenx-text small muted">{{entry.Kind}} · {{entry.When}}</span>
+								</button>
+								<button type="button" class="designer-project-remove" [attribute.title]="$T('designer.removeProject')" [attribute.aria-label]="$T('designer.removeProject')" [attribute.data-project]="entry.ID" (click)="Unmade"><Icon Name="delete" Size="16" /></button>
+							</div>
+						</div>
+						<div class="elemenx-callout danger" *if="FileFailed">{{$T('designer.fileFailed')}}</div>
+						<div class="elemenx-container">
+							<label class="elemenx-button secondary medium designer-open-file"><Icon Name="upload" Size="16" /><span class="elemenx-button-label">{{$T('designer.openFile')}}</span><input type="file" accept=".json,application/json" hidden (change)="Filed" /></label>
+							<button type="button" class="elemenx-button secondary medium designer-save-file" (click)="Saved"><Icon Name="download" Size="16" /><span class="elemenx-button-label">{{$T('designer.saveFile')}}</span></button>
+						</div>
+					</div>
+				</RibbonPage>
+				<RibbonPage ID="export" Icon="download" [title]="$T('designer.export')">
+					<div class="elemenx-column designer-page">
+						<h2 class="elemenx-title">{{$T('designer.exportTitle')}}</h2>
+						<p class="elemenx-text muted">{{$T('designer.exportNote')}}</p>
+						<CodeView Language="html" Fold="true" Rows="20" [value]="Code(Version)" [label]="$T('designer.template')" />
+						<div class="elemenx-container">
+							<Button Icon="copy" Variant="primary" [label]="$T('designer.copy')" *copy="{Text: Code(Version), Toast: $T('designer.copied')}" />
+						</div>
+					</div>
+				</RibbonPage>
+				<RibbonPage ID="import" Icon="upload" [title]="$T('designer.import')">
+					<div class="elemenx-column designer-page">
+						<h2 class="elemenx-title">{{$T('designer.importTitle')}}</h2>
+						<p class="elemenx-text muted">{{$T('designer.importNote')}}</p>
+						<div class="elemenx-callout danger" *if="ImportFailed">{{$T('designer.importFailed')}}</div>
+						<TextArea Rows="14" [label]="$T('designer.template')" [value]="ImportText" (input)="ImportTyped" />
+						<div class="elemenx-container">
+							<button type="button" class="elemenx-button primary medium designer-import" (click)="Imported"><Icon Name="upload" Size="16" /><span class="elemenx-button-label">{{$T('designer.import')}}</span></button>
+						</div>
+					</div>
+				</RibbonPage>
+				<RibbonPage ID="app" Icon="launcher" [title]="$T('designer.app')">
+					<div class="elemenx-column designer-page">
+						<h2 class="elemenx-title">{{$T('designer.appTitle')}}</h2>
+						<p class="elemenx-text muted">{{$T('designer.appNote')}}</p>
+						<Field [label]="$T('designer.appName')">
+							<Input [value]="Name(Version)" (change)="Named" />
+						</Field>
+						<div class="elemenx-callout danger" *if="PackageFailed">{{PackageFailed}}</div>
+						<div class="elemenx-container designer-downloads">
+							<button type="button" class="elemenx-button primary medium designer-download-html" (click)="DownloadedHtml"><Icon Name="file-code" Size="16" /><span class="elemenx-button-label">{{$T('designer.appHtml')}}</span></button>
+							<button type="button" class="elemenx-button secondary medium designer-download-project" (click)="DownloadedProject"><Icon Name="archive" Size="16" /><span class="elemenx-button-label">{{$T('designer.appProject')}}</span></button>
+						</div>
+					</div>
+				</RibbonPage>
+				<RibbonPage ID="clear" Icon="delete" Command="true" [title]="$T('designer.clear')" />
+			</RibbonBackstage>
+
+			<RibbonTab ID="home" KeyTip="H" [title]="$T('designer.home')">
+				<RibbonGroup Icon="history" Priority="3" [title]="$T('designer.history')">
+					<RibbonButton ID="undo" Icon="undo" Size="large" [label]="$T('designer.undo')" [disabled]="!CanUndo(Version)" />
+					<RibbonButton ID="redo" Icon="redo" Size="large" [label]="$T('designer.redo')" [disabled]="!CanRedo(Version)" />
+				</RibbonGroup>
+				<RibbonGroup Icon="edit" Priority="2" [title]="$T('designer.element')">
+					<RibbonButton ID="duplicate" Icon="copy" Size="large" [label]="$T('designer.duplicate')" [disabled]="!Selected(Version)" />
+					<RibbonButton ID="delete" Icon="delete" Size="large" [label]="$T('designer.delete')" [disabled]="!Selected(Version)" />
+					<RibbonButton ID="up" Icon="arrow-up" [label]="$T('designer.up')" [disabled]="!Selected(Version)" />
+					<RibbonButton ID="down" Icon="arrow-down" [label]="$T('designer.down')" [disabled]="!Selected(Version)" />
+					<RibbonButton ID="parent" Icon="chevron-up" [label]="$T('designer.parent')" [disabled]="!Selected(Version)" />
+				</RibbonGroup>
+			</RibbonTab>
+
+			<RibbonTab ID="project" KeyTip="P" *if="Mode(Version) === 'application'" [title]="$T('designer.project')">
+				<RibbonGroup Icon="add" Priority="2" [title]="$T('designer.documents')">
+					<RibbonButton ID="new-page" Icon="file" Size="large" [label]="$T('designer.newPage')" />
+					<RibbonButton ID="new-component" Icon="layout" Size="large" [label]="$T('designer.newComponent')" />
+					<RibbonButton ID="settings" Icon="settings" Size="large" Toggle="true" [label]="$T('designer.settings')" [pressed]="Settings" />
+				</RibbonGroup>
+			</RibbonTab>
+
+			<RibbonTab ID="insert" KeyTip="N" [title]="$T('designer.insert')">
+				<RibbonGroup Icon="search" Priority="100" Keep="true" [title]="$T('designer.find')">
+					<div class="designer-search">
+						<div class="designer-find">
+							<Input Icon="search" Size="small" Clearable="true" [placeholder]="$T('designer.search')" [value]="Query" (input)="Searched" />
+							<span class="elemenx-text small muted" *if="Query && !Found(Version, Query, Language).length">{{$T('designer.found')}}</span>
+						</div>
+						<div class="designer-found" *if="Query && Found(Version, Query, Language).length">
+							<RibbonGallery ID="found" Columns="4" Labels="true" Drag="elemenx-designer-kind" [label]="$T('designer.find')" [items]="Found(Version, Query, Language)" />
+						</div>
+					</div>
+				</RibbonGroup>
+				<RibbonGroup *for="group of Groups(Version, Language)" *key="group.ID" [title]="group.Label" [icon]="group.Icon" [priority]="group.Priority">
+					<RibbonGallery Columns="3" Labels="true" Drag="elemenx-designer-kind" [id]="'insert-' + group.ID" [label]="group.Label" [items]="group.Kinds" />
+				</RibbonGroup>
+			</RibbonTab>
+
+			<RibbonTab ID="run" KeyTip="R" Contextual="true" Color="#2f7d4f" *if="Preview" [title]="$T('designer.running')" [context]="$T('designer.run')">
+				<RibbonGroup Icon="search" Priority="2" [title]="$T('designer.inspection')">
+					<RibbonButton ID="inspect" Icon="search" Size="large" Toggle="true" [label]="$T('designer.inspect')" [pressed]="Inspect" />
+					<RibbonButton ID="lines" Icon="grid" Size="large" Toggle="true" [label]="$T('designer.outlines')" [pressed]="Lines" />
+				</RibbonGroup>
+				<RibbonGroup Icon="stop" Priority="1" [title]="$T('designer.run')">
+					<RibbonButton ID="stop" Icon="stop" Size="large" [label]="$T('designer.stop')" />
+				</RibbonGroup>
+			</RibbonTab>
+
+			<RibbonTab ID="view" KeyTip="W" [title]="$T('designer.view')">
+				<RibbonGroup Icon="monitor" Priority="3" [title]="$T('designer.width')">
+					<RibbonButton ID="desktop" Icon="monitor" Size="large" Toggle="true" [label]="$T('designer.desktop')" [pressed]="Width === 'desktop'" />
+					<RibbonButton ID="tablet" Icon="tablet" Size="large" Toggle="true" [label]="$T('designer.tablet')" [pressed]="Width === 'tablet'" />
+					<RibbonButton ID="phone" Icon="smartphone" Size="large" Toggle="true" [label]="$T('designer.phone')" [pressed]="Width === 'phone'" />
+				</RibbonGroup>
+				<RibbonGroup Icon="layout" Priority="2" [title]="$T('designer.canvas')">
+					<RibbonButton ID="outlines" Icon="grid" Size="large" Toggle="true" [label]="$T('designer.outlines')" [pressed]="Outlines" />
+					<RibbonButton ID="gaps" Icon="fit-stretch" Size="large" Toggle="true" [label]="$T('designer.gaps')" [pressed]="Gaps" />
+					<RibbonButton ID="rulers" Icon="columns" Size="large" Toggle="true" [label]="$T('designer.rulers')" [pressed]="Rulers" />
+				</RibbonGroup>
+			</RibbonTab>
+		</Ribbon>
+
+		<div slot="main" class="designer-main">
+			<div class="designer-documents" role="tablist" *if="Mode(Version) === 'application'" [attribute.aria-label]="$T('designer.documents')">
+				<button type="button" role="tab" class="designer-document" data-settings [class.active]="Settings" [attribute.aria-selected]="Settings ? 'true' : 'false'" (click)="Configured"><Icon Name="settings" Size="14" /><span>{{$T('designer.settings')}}</span></button>
+				<button type="button" role="tab" class="designer-document" data-map [class.active]="Mapped && !Settings" [attribute.aria-selected]="Mapped && !Settings ? 'true' : 'false'" (click)="Mapping"><Icon Name="map" Size="14" /><span>{{$T('designer.map')}}</span></button>
+				<div class="designer-document" *for="item of Tabs(Version)" *key="item.ID" [class.active]="item.Active && !Settings && !Mapped" [attribute.data-document]="item.ID">
+					<button type="button" role="tab" class="designer-document-open" [attribute.aria-selected]="item.Active && !Settings && !Mapped ? 'true' : 'false'" [attribute.data-document]="item.ID" (click)="Switched"><Icon Size="14" [name]="item.Icon" /><span>{{item.Name}}</span></button>
+					<button type="button" class="designer-document-close" *if="Tabs(Version).length > 1" [attribute.title]="$T('designer.closeTab')" [attribute.aria-label]="$T('designer.closeTab')" [attribute.data-document]="item.ID" (click)="Closed"><Icon Name="close" Size="12" /></button>
+				</div>
+			</div>
+			<DesignerSettings *if="Settings && Mode(Version) === 'application'" (open)="Opened" />
+			<DesignerMap *if="Mapped && !Settings && Mode(Version) === 'application'" [width]="Width" (open)="MapOpened" />
+			<DesignerCanvas *if="(!Settings && !Mapped) || Mode(Version) !== 'application'" [width]="Width" [preview]="Preview" [outlines]="Outlines" [gaps]="Gaps" [inspect]="Inspect" [lines]="Lines" [rulers]="Rulers" />
+		</div>
+
+		<WorkspaceToolWindow slot="tools" ID="project" Icon="folder" Area="left" *if="Mode(Version) === 'application'" [title]="$T('designer.project')">
+			<DesignerProject [settings]="Settings" (open)="Opened" (settings)="Configured" />
+		</WorkspaceToolWindow>
+
+		<WorkspaceToolWindow slot="tools" ID="disk" Icon="folder-open" Area="left" Open="true" *if="OnDisk()" [title]="$T('designer.disk.title')">
+			<div class="designer-disk">
+				<p class="designer-disk-note">{{$T('designer.disk.note')}}</p>
+				<p class="designer-disk-failed" role="alert" *if="DiskFailed">{{DiskFailed}}</p>
+				<Tree [items]="DiskTree(Version, Language)" [label]="$T('designer.disk.title')" (select)="DiskPicked" />
+			</div>
+		</WorkspaceToolWindow>
+
+		<WorkspaceToolWindow slot="tools" ID="structure" Icon="tree" Area="left" Open="true" [title]="$T('designer.structure')">
+			<DesignerTree />
+		</WorkspaceToolWindow>
+
+		<WorkspaceToolWindow slot="tools" ID="properties" Icon="sliders" Area="right" Open="true" [title]="$T('designer.properties')">
+			<DesignerInspector />
+		</WorkspaceToolWindow>
+
+		<WorkspaceToolWindow slot="tools" ID="template" Icon="code" Area="bottom" [title]="$T('designer.template')">
+			<CodeView Language="html" Fold="true" [value]="Code(Version)" [label]="$T('designer.template')" />
+		</WorkspaceToolWindow>
+
+		<span slot="status"><span class="designer-where" *if="Mode(Version) !== 'template'">{{Where(Version)}}</span>{{$T('designer.elements', {count: Count(Version)})}}</span>
+	</Workspace>
+
+	<ToastHost />
+	<DialogHost />
+</div>

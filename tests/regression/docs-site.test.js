@@ -75,8 +75,8 @@ function serve (args, test) {
 	});
 }
 
-/* The reference in the package of npm: built by prepack into docs-site/, served by npx elemenx docs. */
-describe('Elemenx docs: the reference in the package', function () {
+/* The Docs in the package of npm: built by prepack into docs-site/, served by npx elemenx docs. */
+describe('Elemenx docs: the Docs in the package', function () {
 	beforeAll(function () {
 		folder = fs.mkdtempSync(path.join(os.tmpdir(), 'elemenx-docs-'));
 		output = DocsSite.Build({Output: path.join(folder, 'docs-site')});
@@ -86,7 +86,7 @@ describe('Elemenx docs: the reference in the package', function () {
 		fs.rmSync(folder, {recursive: true, force: true});
 	});
 
-	it('builds the reference with all of the framework and every pack, without the tools that write its pages, and with its server', function () {
+	it('builds the Docs with all of the framework and every pack, without the tools that write its pages, and with its server', function () {
 		var framework = fs.readFileSync(path.join(output, 'elemenx.js'), 'utf8');
 
 		expect(fs.existsSync(path.join(output, 'index.html'))).toBe(true);
@@ -169,7 +169,7 @@ describe('Elemenx docs: the reference in the package', function () {
 
 	/*
 	 * A bug: elemenx dev read the answers of its server once, so a server started before elemenx.config.js changed
-	 * answered as before (the reference gave its page for the archives of its tutorials).
+	 * answered as before (the Docs gave its page for the archives of its tutorials).
 	 */
 	it('elemenx dev answers as elemenx.config.js says after a change of it, without a restart', async function () {
 		var port = await freePort();
@@ -208,7 +208,7 @@ describe('Elemenx docs: the reference in the package', function () {
 
 		expect(manifest.files).toContain('docs-site');
 		expect(manifest.scripts['docs:site']).toBe('node tools/docs-site.js');
-		expect(manifest.scripts.prepack).toBe('npm run dist -- --no-editors && npm run docs:site && npm run design:site');
+		expect(manifest.scripts.prepack).toBe('npm run dist -- --no-editors && npm run docs:site && npm run designer:site');
 		expect(fs.readFileSync(path.join(root, '.gitignore'), 'utf8')).toContain('/docs-site\n');
 		expect(help).toContain('elemenx docs [--port 4179] [--open]');
 	});

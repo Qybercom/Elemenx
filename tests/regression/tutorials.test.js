@@ -25,7 +25,7 @@ function get (port, url) {
 	});
 }
 
-/* The finished projects of the tutorials of the reference: to download from their articles, and as demos. */
+/* The finished projects of the tutorials of the Docs: to download from their articles, and as demos. */
 describe('Elemenx docs: the projects of the tutorials', function () {
 	it('names the project of every article that has one, each there, a demo only for one with no server of its own', function () {
 		var listed = Tutorials.List();

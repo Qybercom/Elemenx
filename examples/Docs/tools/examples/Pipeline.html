@@ -1,0 +1,28 @@
+<Pipeline Title="main" [stages]="Stages" (select)="Selected" (action)="Acted">
+	<PipelineStage ID="deploy" Name="Deploy">
+		<PipelineJob ID="ship" Name="Ship" Status="manual" Needs="unit, lint" />
+	</PipelineStage>
+</Pipeline>
+<p class="elemenx-text small muted">{{Text}}</p>
+<script>
+({
+	Text: 'Hover a job, press one or its action.',
+	Stages: [
+		{ID: 'build', Name: 'Build', Jobs: [{ID: 'compile', Name: 'Compile', Status: 'success', Duration: 72}]},
+		{ID: 'test', Name: 'Test', Jobs: [
+			{ID: 'unit', Name: 'Unit', Status: 'success', Duration: 125, Needs: ['compile']},
+			{ID: 'node-20', Name: 'Node 20', Status: 'success', Group: 'node', Needs: ['compile']},
+			{ID: 'node-22', Name: 'Node 22', Status: 'running', Started: Date.now() - 40000, Group: 'node', Needs: ['compile']},
+			{ID: 'lint', Name: 'Lint', Status: 'failed', Duration: 9}
+		]}
+	],
+
+	Selected: function (event) {
+		this.Text = 'Selected ' + event.Job.Name;
+	},
+
+	Acted: function (event) {
+		this.Text = event.Action + ' ' + event.Job.Name;
+	}
+})
+</script>

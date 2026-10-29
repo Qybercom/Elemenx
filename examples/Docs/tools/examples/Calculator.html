@@ -1,0 +1,11 @@
+<Calculator Mode="scientific" (result)="Counted" />
+<p class="elemenx-text small muted">{{Text}}</p>
+<script>
+({
+	Text: 'Type on the keys or the keyboard, then =.',
+
+	Counted: function (result) {
+		this.Text = result.Expression + ' = ' + result.Value;
+	}
+})
+</script>

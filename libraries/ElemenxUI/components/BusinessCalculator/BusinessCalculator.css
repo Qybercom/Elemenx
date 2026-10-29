@@ -1,0 +1,128 @@
+/* A calculator of a business: its fields, its results beside them on a wide screen (side) or under them (stack). */
+.elemenx-business-calculator {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	width: 100%;
+	container-type: inline-size;
+}
+
+.elemenx-business-calculator-title {
+	margin: 0;
+}
+
+.elemenx-business-calculator-body {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+	gap: 16px;
+	align-items: start;
+}
+
+@container (min-width: 640px) {
+	.elemenx-business-calculator.side .elemenx-business-calculator-body {
+		grid-template-columns: minmax(0, 3fr) minmax(220px, 2fr);
+	}
+}
+
+.elemenx-business-calculator-fields {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	min-width: 0;
+}
+
+.elemenx-business-calculator-control {
+	display: flex;
+	gap: 8px;
+	align-items: center;
+	min-width: 0;
+}
+
+.elemenx-business-calculator-control > :first-child {
+	flex: 1 1 auto;
+	min-width: 0;
+}
+
+.elemenx-business-calculator-unit {
+	flex: none;
+	color: var(--elemenx-text-muted);
+	font-size: var(--elemenx-font-size-small);
+	font-variant-numeric: tabular-nums;
+}
+
+/* The results on a raised card: the main ones large, the others in a list, the parts of a total in a bar. */
+.elemenx-business-calculator-results {
+	position: sticky;
+	top: 12px;
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	padding: 16px;
+	background: var(--elemenx-surface-raised);
+	border: 1px solid var(--elemenx-border);
+	border-radius: var(--elemenx-radius-large);
+}
+
+.elemenx-business-calculator-primary {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.elemenx-business-calculator-label,
+.elemenx-business-calculator-hint {
+	color: var(--elemenx-text-muted);
+	font-size: var(--elemenx-font-size-small);
+}
+
+.elemenx-business-calculator-value {
+	font-size: 28px;
+	font-variant-numeric: tabular-nums;
+	line-height: 1.2;
+}
+
+.elemenx-business-calculator-bar {
+	display: flex;
+	gap: 2px;
+	height: 10px;
+	overflow: hidden;
+	border-radius: var(--elemenx-radius-pill);
+}
+
+.elemenx-business-calculator-part {
+	flex-basis: 0;
+	min-width: 2px;
+}
+
+.elemenx-business-calculator-list {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	margin: 0;
+}
+
+.elemenx-business-calculator-row {
+	display: flex;
+	justify-content: space-between;
+	gap: 12px;
+	font-size: var(--elemenx-font-size-small);
+}
+
+.elemenx-business-calculator-row dt {
+	display: flex;
+	gap: 6px;
+	align-items: center;
+	color: var(--elemenx-text-muted);
+}
+
+.elemenx-business-calculator-row dd {
+	margin: 0;
+	font-variant-numeric: tabular-nums;
+	font-weight: var(--elemenx-font-weight-bold);
+}
+
+.elemenx-business-calculator-swatch {
+	width: 8px;
+	height: 8px;
+	border-radius: var(--elemenx-radius-pill);
+}

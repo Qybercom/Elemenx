@@ -218,7 +218,7 @@ for (const origin of origins) {
 
 			await open(page, origin);
 
-			await expect(page.locator('.ui-kit > .elemenx-section')).toHaveCount(55);
+			await expect(page.locator('.ui-kit > .elemenx-section')).toHaveCount(60);
 
 			await expect(page.locator('#elemenx-icons')).toHaveAttribute('data-ready', 'true');
 			await expect(page.locator('.ui-kit-icon svg').first()).toHaveAttribute('data-icon', 'add');
@@ -1963,7 +1963,7 @@ for (const origin of origins) {
 			await expect(more.locator('.elemenx-clock-face')).toHaveCount(1);
 			await expect(more.locator('.elemenx-diff-row.add .elemenx-diff-word')).toHaveText(['Math', 'PI']);
 			await expect(more.locator('.elemenx-qr-code svg path')).toHaveCount(3);
-			await expect(more.locator('.elemenx-signature-canvas')).toHaveCount(1);
+			await expect(more.locator('.elemenx-signature-canvas')).toHaveCount(2);
 			await expect(more.locator('.elemenx-cropper-box')).toHaveAttribute('aria-label', /^Crop: 180 × 180$/);
 			await expect(more.locator('.elemenx-file-browser-name')).toHaveText(['Documents', 'notes.md', 'song.mp3']);
 			await expect(more.locator('.elemenx-media-player.audio')).toHaveCount(1);
@@ -1980,6 +1980,41 @@ for (const origin of origins) {
 			await more.locator('.elemenx-file-browser-item[data-id="notes"]').dblclick();
 
 			await expect(note).toHaveText('Opened notes.md');
+
+			/* Three signatures are the samples, the fourth one is compared with them: a wave alike, then a line that is not. */
+			var pad = more.getByRole('img', {name: /^A signature to compare/});
+			var sign = async function (shape) {
+				var box;
+
+				await pad.scrollIntoViewIfNeeded();
+
+				box = await pad.boundingBox();
+
+				await page.mouse.move(box.x + 20, box.y + 60);
+				await page.mouse.down();
+
+				for (var i = 1; i <= 30; i++)
+					await page.mouse.move(box.x + 20 + i * 8, box.y + 60 + (shape === 'wave' ? Math.sin(i / 3) * 30 : i));
+
+				await page.mouse.up();
+			};
+
+			for (var k = 0; k < 3; k++) {
+				await sign('wave');
+
+				await expect(more).toContainText(k < 2 ? 'Sign ' + (2 - k) + ' more times' : 'Samples kept');
+			}
+
+			await sign('wave');
+
+			await expect(note).toHaveText(/^Signature looks like the samples: \d+%$/);
+			await expect(more.locator('.elemenx-signature-result.match')).toHaveCount(1);
+
+			await pad.locator('xpath=ancestor::div[contains(@class, "elemenx-signature-pad")]').getByRole('button', {name: 'Clear'}).click();
+
+			await sign('line');
+
+			await expect(note).toHaveText(/^Signature does not look like the samples: \d+%$/);
 
 			expect(errors).toEqual([]);
 		});
@@ -2895,6 +2930,32 @@ for (const origin of origins) {
 					return null;
 				});
 			}).toContain('linear-gradient');
+
+			/* The invitation in the colors of the theme, light and dark (once drawn in the color of the text), as wide as a card of a notification. */
+			for (var scheme of ['light', 'dark']) {
+				await page.emulateMedia({colorScheme: scheme});
+
+				await expect.poll(function () {
+					return calls.locator('.elemenx-call-invite').evaluate(function (node) {
+						var probe = document.createElement('div');
+						var raised;
+
+						probe.style.background = 'var(--elemenx-surface-raised)';
+
+						node.parentNode.appendChild(probe);
+
+						raised = getComputedStyle(probe).backgroundColor;
+
+						probe.remove();
+
+						return getComputedStyle(node).backgroundColor === raised && getComputedStyle(node).color !== getComputedStyle(node).backgroundColor;
+					});
+				}).toBe(true);
+			}
+
+			await page.emulateMedia({colorScheme: 'light'});
+
+			expect((await calls.locator('.elemenx-call-invite').boundingBox()).width).toBe(360);
 
 			/* The invitation alone in a page: its events. */
 			await calls.locator('.elemenx-call-invite').getByRole('button', {name: 'Accept with video'}).click();
@@ -7574,6 +7635,257 @@ for (const origin of origins) {
 			expect(errors).toEqual([]);
 		});
 
+		test('mosaic lays its items out as a bento, masonry, justified rows and a treemap, and selects one', async function ({ page }) {
+			var block;
+			var mosaic;
+			var boxes;
+
+			await open(page, origin, ['Mosaic']);
+
+			block = section(page, 'Mosaic');
+			mosaic = block.getByRole('list', {name: 'A mosaic'});
+
+			/* Bento: the given items and the declared one, none over another. */
+			await expect(mosaic.locator('.elemenx-mosaic-item')).toHaveCount(9);
+			await expect(mosaic.locator('[data-id="note"] .ui-kit-mosaic-note')).toHaveText('A MosaicItem of the template, its own content');
+
+			boxes = await mosaic.locator('.elemenx-mosaic-item').evaluateAll(function (items) {
+				return items.map(function (item) {
+					return item.getBoundingClientRect().toJSON();
+				});
+			});
+
+			boxes.forEach(function (a, i) {
+				boxes.forEach(function (b, j) {
+					if (i < j)
+						expect(a.right <= b.left + 1 || b.right <= a.left + 1 || a.bottom <= b.top + 1 || b.bottom <= a.top + 1, i + ' over ' + j).toBe(true);
+				});
+			});
+
+			/* Justified: the rows end where the box does. */
+			await block.locator('.elemenx-radio', {hasText: 'Justified'}).click();
+
+			await expect(mosaic).toHaveClass(/justified/);
+			await expect.poll(async function () {
+				var box = await mosaic.boundingBox();
+				var right = await mosaic.locator('.elemenx-mosaic-item').evaluateAll(function (items) {
+					return Math.max.apply(Math, items.map(function (item) {
+						return item.getBoundingClientRect().right;
+					}));
+				});
+
+				return Math.round(right - box.x - box.width);
+			}).toBeLessThanOrEqual(1);
+
+			/* Treemap: a group with its children inside, a press on one selects it. */
+			await block.locator('.elemenx-radio', {hasText: 'Treemap'}).click();
+
+			await expect(mosaic.locator('.elemenx-mosaic-item.parent')).toHaveCount(1);
+			await expect(mosaic.locator('.elemenx-mosaic-item.parent .elemenx-mosaic-title')).toHaveText('Coast');
+
+			await mosaic.locator('[data-id="harbour"]').click();
+
+			await expect(block).toContainText('Chosen: Harbour');
+		});
+
+		test('pipeline shows its stages, opens a matrix, marks the chain of a job and tells its selection and its action', async function ({ page }) {
+			var block;
+			var pipeline;
+			var note;
+
+			await open(page, origin, ['Pipeline']);
+
+			block = section(page, 'Pipeline');
+			pipeline = block.getByRole('group', {name: 'The pipeline of main'});
+			note = block.locator(':scope > .elemenx-section-header .elemenx-caption');
+
+			await expect(pipeline.locator('.elemenx-pipeline-stage-header')).toHaveText(['Build', 'Test', 'Deploy']);
+			await expect(pipeline.locator('[data-id="staging"] .elemenx-pipeline-job-name')).toHaveText('Staging');
+			await expect(pipeline.locator('.elemenx-pipeline-summary')).toContainText('Failed');
+			await expect(pipeline.locator('.elemenx-pipeline-link')).toHaveCount(6);
+
+			/* Over Staging: what it needs, all the way back, is marked; Lint fades. */
+			await pipeline.locator('[data-id="staging"]').hover();
+
+			await expect(pipeline.locator('[data-id="image"]')).toHaveClass(/related/);
+			await expect(pipeline.locator('[data-id="lint"]')).toHaveClass(/faded/);
+
+			await pipeline.locator('[data-group="node matrix"]').click();
+
+			await expect(pipeline.locator('.elemenx-pipeline-job.inner')).toHaveCount(3);
+
+			await pipeline.locator('[data-id="unit"]').click();
+
+			await expect(note).toHaveText('Selected Unit of test');
+
+			await pipeline.locator('[data-id="production"] .elemenx-pipeline-action').click();
+
+			await expect(note).toHaveText('play Production');
+		});
+
+		test('calculators count on their keys and the keyboard, and a loan computes its payment from its fields', async function ({ page }) {
+			var block;
+			var calculator;
+			var loan;
+			var note;
+
+			await open(page, origin, ['Calculators']);
+
+			block = section(page, 'Calculators');
+			calculator = block.locator('.elemenx-calculator');
+			loan = block.locator('.elemenx-business-calculator');
+			note = block.locator(':scope > .elemenx-section-header .elemenx-caption');
+
+			await calculator.locator('[data-key="2"]').click();
+			await calculator.locator('[data-key="power"]').click();
+			await calculator.locator('[data-key="1"]').click();
+			await calculator.locator('[data-key="0"]').click();
+
+			await expect(calculator.locator('.elemenx-calculator-result')).toHaveText('1024');
+
+			await calculator.locator('[data-key="equals"]').click();
+
+			await expect(note).toHaveText('2^10 = 1024');
+
+			/* 20 000 at 6% for 36 months: 608.44 a month. */
+			await expect(loan.locator('[data-result="Payment"] .elemenx-business-calculator-value')).toHaveText('€608.44');
+			await expect(loan.locator('.elemenx-business-calculator-part')).toHaveCount(2);
+
+			await loan.locator('.elemenx-number-input input').first().fill('10000');
+			await loan.locator('.elemenx-number-input input').first().blur();
+
+			await expect(loan.locator('[data-result="Payment"] .elemenx-business-calculator-value')).toHaveText('€304.22');
+			await expect(note).toHaveText('Each month 304.22');
+		});
+
+		test('quiz starts from its screen, checks each answer at once, and scores the end', async function ({ page }) {
+			var block;
+			var quiz;
+			var note;
+			var next;
+			var items;
+			var order;
+			var wanted;
+
+			await open(page, origin, ['Quiz']);
+
+			block = section(page, 'Quiz');
+			quiz = block.locator('.elemenx-quiz');
+			note = block.locator(':scope > .elemenx-section-header .elemenx-caption');
+			next = quiz.locator('button.elemenx-quiz-next');
+
+			await expect(quiz.locator('.elemenx-quiz-title')).toHaveText('The solar system');
+
+			await quiz.locator('button.elemenx-quiz-start').click();
+
+			await expect(quiz.getByRole('progressbar')).toBeVisible();
+			await expect(next).toBeDisabled();
+
+			await quiz.getByRole('radio', {name: 'Jupiter'}).click();
+			await next.click();
+
+			await expect(quiz.locator('.elemenx-quiz-feedback')).toContainText('Right');
+
+			await next.click();
+
+			/* Several: one of the right ones only is wrong. */
+			await quiz.getByRole('checkbox', {name: 'Saturn'}).click();
+
+			await expect(quiz.getByRole('checkbox', {name: 'Saturn'})).toHaveAttribute('aria-checked', 'true');
+
+			await next.click();
+
+			await expect(quiz.locator('.elemenx-quiz-feedback')).toContainText('Wrong');
+			await expect(quiz.locator('[data-option="uranus"]')).toHaveClass(/right/);
+
+			await next.click();
+
+			await quiz.locator('.elemenx-quiz-input input').fill('2');
+
+			await next.click();
+			await next.click();
+
+			/* The order, moved into place by the buttons of its items. */
+			items = quiz.locator('.elemenx-quiz-item');
+			order = await items.evaluateAll(function (nodes) {
+				return nodes.map(function (node) {
+					return node.getAttribute('data-item');
+				});
+			});
+
+			expect(order.join(',')).not.toBe('mercury,venus,earth,mars');
+
+			while (order.join(',') !== 'mercury,venus,earth,mars') {
+				wanted = ['mercury', 'venus', 'earth', 'mars'].filter(function (id, index) {
+					return order[index] !== id;
+				})[0];
+
+				await quiz.locator('.elemenx-quiz-item[data-item="' + wanted + '"] button.elemenx-quiz-up').click();
+
+				order = await items.evaluateAll(function (nodes) {
+					return nodes.map(function (node) {
+						return node.getAttribute('data-item');
+					});
+				});
+			}
+
+			await next.click();
+			await next.click();
+
+			await expect(quiz.locator('.elemenx-quiz-score')).toContainText('80%');
+			await expect(quiz.locator('.elemenx-quiz-score')).toContainText('4 of 5 points');
+			await expect(quiz.locator('.elemenx-quiz-result .elemenx-quiz-title')).toHaveText('Passed');
+			await expect(quiz.locator('.elemenx-quiz-reviewed.wrong')).toHaveCount(1);
+			await expect(note).toHaveText('Finished: 4 of 5, passed');
+		});
+
+		test('landing shows the variant of its visitor, keeps a split, and tells a conversion of the variant shown', async function ({ page }) {
+			var block;
+			var experiment;
+			var note;
+			var split;
+
+			await open(page, origin, ['Landing']);
+
+			block = section(page, 'Landing');
+			experiment = block.locator('.elemenx-experiment');
+			note = block.locator(':scope > .elemenx-section-header .elemenx-caption');
+
+			/* A direct visit: one of the two of the split, the same after a reload. */
+			await expect(experiment).toHaveAttribute('data-variant', /^(calm|bold)$/);
+
+			split = await experiment.getAttribute('data-variant');
+
+			await expect(note).toHaveText('Variant ' + split + ' (split)');
+			await expect(block.locator('.elemenx-landing-hero:visible')).toHaveCount(1);
+
+			await page.reload();
+
+			await expect(section(page, 'Landing').locator('.elemenx-experiment')).toHaveAttribute('data-variant', split);
+			await expect(note).toHaveText('Variant ' + split + ' (remembered)');
+
+			/* As if from the ads: the hero of the sale. */
+			await block.locator('.elemenx-radio', {hasText: 'Google ads'}).click();
+
+			await expect(experiment).toHaveAttribute('data-variant', 'ads');
+			await expect(block.locator('.elemenx-landing-hero:visible h1')).toHaveText('20% off your first year');
+
+			await block.locator('.elemenx-landing-cta [data-action="signup"]').click();
+
+			await expect(note).toHaveText('Conversion signup of ads');
+
+			/* The numbers are counted up to their values once they come into view; one question open at a time. */
+			await block.locator('.elemenx-landing-stats').scrollIntoViewIfNeeded();
+
+			await expect(block.locator('[data-id="components"] .elemenx-landing-stat-value')).toHaveText('200+');
+
+			await block.locator('.elemenx-landing-faq-item[data-id="free"] summary').click();
+			await block.locator('.elemenx-landing-faq-item[data-id="variants"] summary').click();
+
+			await expect(block.locator('.elemenx-landing-faq-item[open]')).toHaveCount(1);
+			await expect(block.locator('.elemenx-landing-faq-item[open]')).toHaveAttribute('data-id', 'variants');
+		});
+
 		test('tile grid places tiles in cells, keeps locked ones, starts groups and runs group actions', async function ({ page }) {
 			var grid;
 			var state;
@@ -9632,6 +9944,12 @@ for (const origin of origins) {
 
 			await expect(media.locator('.elemenx-media-shelf .elemenx-media-card')).toHaveCount(5);
 			await expect(note).toHaveText('5 of 5 films');
+
+			/* Each film has its poster, the featured one its backdrop and poster: no letters in place of the pictures. */
+			await expect(media.locator('.elemenx-media-shelf .elemenx-media-card img')).toHaveCount(5);
+			await expect(media.locator('.elemenx-media-card-blank')).toHaveCount(0);
+			await expect(media.locator('.elemenx-media-hero-backdrop')).toBeVisible();
+			await expect(media.locator('.elemenx-media-hero-poster img')).toBeVisible();
 
 			await media.locator('[data-facet="genre"]').getByText('Drama').click();
 

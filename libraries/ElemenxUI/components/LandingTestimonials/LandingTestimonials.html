@@ -1,0 +1,21 @@
+<section class="elemenx-landing-testimonials">
+	<div class="elemenx-landing-header center" *if="Overline || Title || Text">
+		<p class="elemenx-eyebrow" *if="Overline">{{Overline}}</p>
+		<h2 class="elemenx-landing-title" *if="Title">{{Title}}</h2>
+		<p class="elemenx-landing-lead" *if="Text">{{Text}}</p>
+	</div>
+	<div class="elemenx-landing-testimonials-grid" [attribute.style]="Grid(Columns)">
+		<figure class="elemenx-landing-testimonial" *for="item of Items" *key="item.ID || item.Name" [attribute.data-id]="item.ID || null">
+			<Rating *if="item.Rating" ReadOnly="true" Size="small" [value]="item.Rating" />
+			<blockquote class="elemenx-landing-testimonial-text">{{item.Text}}</blockquote>
+			<figcaption class="elemenx-landing-testimonial-author">
+				<Avatar Size="medium" [name]="item.Name" [image]="item.Avatar" />
+				<span class="elemenx-landing-testimonial-who">
+					<strong>{{item.Name}}</strong>
+					<span class="elemenx-landing-testimonial-role" *if="item.Role">{{item.Role}}</span>
+				</span>
+			</figcaption>
+		</figure>
+		<slot></slot>
+	</div>
+</section>

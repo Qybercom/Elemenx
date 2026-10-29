@@ -1,0 +1,29 @@
+<div class="elemenx-pipeline" role="group" [attribute.aria-label]="Label || Title || $T('ui.pipeline.label')">
+	<div class="elemenx-pipeline-header" *if="Title || Summary && Summary !== 'false'">
+		<span class="elemenx-pipeline-status" [class]="[Model(Stages, Version, Now, Opened).Status]" *if="Summary && Summary !== 'false'"><Icon Size="14" [name]="Icons[Model(Stages, Version, Now, Opened).Status]" [spin]="Model(Stages, Version, Now, Opened).Status === 'running'" /></span>
+		<strong class="elemenx-pipeline-title" *if="Title">{{Title}}</strong>
+		<span class="elemenx-pipeline-summary" *if="Summary && Summary !== 'false'">{{$T('ui.pipeline.status.' + Model(Stages, Version, Now, Opened).Status)}} · {{Time(Model(Stages, Version, Now, Opened).Seconds)}}</span>
+	</div>
+	<div class="elemenx-pipeline-board">
+		<svg class="elemenx-pipeline-links" aria-hidden="true">
+			<path class="elemenx-pipeline-link" *for="line of Lines" *key="line.Key" [class]="[Mark(line.IDs, Hovered, Model(Stages, Version, Now, Opened))]" [attribute.d]="line.Path"></path>
+		</svg>
+		<section class="elemenx-pipeline-stage" *for="stage of Model(Stages, Version, Now, Opened).Stages" *key="stage.ID" [attribute.data-stage]="stage.ID">
+			<header class="elemenx-pipeline-stage-header"><span class="elemenx-pipeline-status small" [class]="[stage.Status]"><Icon Size="12" [name]="Icons[stage.Status]" [spin]="stage.Status === 'running'" /></span><span class="elemenx-ellipsis">{{stage.Name}}</span></header>
+			<div class="elemenx-pipeline-job" *for="card of stage.Cards" *key="card.Key" tabindex="0" role="button" [class]="[card.Status, card.Inner ? 'inner' : '', card.Group ? 'group' : '', card.ID && card.ID === Selected ? 'selected' : '', card.Group ? Mark(card.IDs, Hovered, Model(Stages, Version, Now, Opened)) : Mark([card.ID], Hovered, Model(Stages, Version, Now, Opened))]" [attribute.data-id]="card.ID || null" [attribute.data-group]="card.Group || null" [attribute.data-group-key]="card.Group ? card.Key : null" [attribute.data-stage]="stage.ID" [attribute.aria-label]="card.Label" [attribute.aria-expanded]="card.Group ? String(card.Open) : null" (click)="Pressed" (keydown)="Key" (pointerenter)="Entered" (pointerleave)="Left">
+				<span class="elemenx-pipeline-status" [class]="[card.Status]"><Icon Size="14" [name]="card.Icon" [spin]="card.Status === 'running'" /></span>
+				<span class="elemenx-pipeline-job-body" *if="!card.Custom">
+					<span class="elemenx-pipeline-job-name elemenx-ellipsis" *if="!card.Href">{{card.Name}}</span>
+					<a class="elemenx-pipeline-job-name elemenx-ellipsis" *if="card.Href" [attribute.href]="card.Href">{{card.Name}}</a>
+					<span class="elemenx-pipeline-job-text elemenx-ellipsis" *if="card.Text">{{card.Text}}</span>
+				</span>
+				<span class="elemenx-pipeline-job-body" *if="card.Custom" *mount="card.Custom"></span>
+				<span class="elemenx-pipeline-count" *if="card.Group">{{card.Count}}</span>
+				<span class="elemenx-pipeline-time" *if="card.Time">{{card.Time}}</span>
+				<button type="button" class="elemenx-pipeline-action elemenx-bare elemenx-focus-ring" *for="action of (Actions && Actions !== 'false' && !card.Group ? card.Actions : [])" *key="action.ID" [attribute.data-job]="card.ID" [attribute.data-action]="action.ID" [attribute.aria-label]="action.Default ? $T('ui.pipeline.' + action.ID, {name: card.Name}) : action.Label || action.ID" *tip="action.Default ? $T('ui.pipeline.' + action.ID, {name: card.Name}) : action.Label || action.ID" (click)="Acted"><Icon Size="14" [name]="action.Icon" /></button>
+				<Icon Size="12" *if="card.Group" [name]="card.Open ? 'chevron-up' : 'chevron-down'" />
+			</div>
+		</section>
+	</div>
+	<div class="elemenx-pipeline-sources" hidden><slot></slot></div>
+</div>

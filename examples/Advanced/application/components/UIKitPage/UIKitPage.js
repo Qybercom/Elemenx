@@ -464,6 +464,8 @@ Elemenx.Component('UIKitPage', {
 		{ID: 'atlas', Title: 'Atlas', Subtitle: '2022', Genres: ['Adventure'], Year: 2022, Rating: 8.7}
 	],
 	MediaLeft: [],
+	MediaPoster: '',
+	MediaBackdrop: '',
 	MediaFacets: [
 		{ID: 'genre', Label: 'Genre', Field: 'Genres'},
 		{ID: 'score', Label: 'Score', Field: 'Rating', Type: 'rating', Max: 10}
@@ -981,6 +983,59 @@ Elemenx.Component('UIKitPage', {
 	],
 	CustomStep: 'upload',
 	OpenedTile: '',
+	MosaicLayout: 'bento',
+	MosaicLayouts: [{Value: 'bento', Label: 'Bento'}, {Value: 'masonry', Label: 'Masonry'}, {Value: 'justified', Label: 'Justified'}, {Value: 'treemap', Label: 'Treemap'}],
+	MosaicChosen: '',
+	SignatureSamples: [],
+	CalculatorNote: 'Calculator · BusinessCalculator · CalculatorField · CalculatorResult: type on the keys or the keyboard',
+	LoanFields: [
+		{ID: 'Amount', Label: 'Amount', Type: 'money', Value: 20000, Min: 0, Step: 500},
+		{ID: 'Rate', Label: 'Rate a year', Type: 'percent', Value: 6, Min: 0, Step: 0.1},
+		{ID: 'Months', Label: 'Months', Type: 'range', Value: 36, Min: 6, Max: 120, Step: 6, Unit: 'months'}
+	],
+	QuizNote: 'Quiz · QuizQuestion · QuizOption: single, multiple, text, number and order',
+	QuizQuestions: [
+		{ID: 'largest', Text: 'The largest planet?', Options: [{ID: 'jupiter', Text: 'Jupiter', Correct: true}, {ID: 'saturn', Text: 'Saturn'}, {ID: 'neptune', Text: 'Neptune'}], Explanation: 'Jupiter holds more than twice the mass of the other planets together.'},
+		{ID: 'rings', Text: 'Which have rings?', Type: 'multiple', Options: [{ID: 'saturn', Text: 'Saturn', Correct: true}, {ID: 'uranus', Text: 'Uranus', Correct: true}, {ID: 'mars', Text: 'Mars'}]},
+		{ID: 'moons', Text: 'How many moons has Mars?', Type: 'number', Answer: 2}
+	],
+	LandingNote: 'Experiment · Variant · LandingHero · LandingFeatures · LandingStats · LandingTestimonials · LandingFAQ · LandingCTA',
+	LandingVisitor: 'direct',
+	LandingVisitors: [{Value: 'direct', Label: 'Direct'}, {Value: 'google', Label: 'Google ads'}, {Value: 'newsletter', Label: 'Newsletter'}],
+	LandingActions: [{ID: 'start', Label: 'Start free', Goal: 'start'}, {ID: 'demo', Label: 'See a demo', Variant: 'secondary'}],
+	LandingFinal: [{ID: 'signup', Label: 'Create an account', Goal: 'signup', Experiment: 'ui-kit-landing'}],
+	LandingStatsItems: [{ID: 'components', Value: 200, Suffix: '+', Label: 'Components'}, {ID: 'size', Value: 1, Label: 'File of the core'}, {ID: 'dependencies', Value: 0, Label: 'Dependencies'}, {ID: 'support', Value: 99.9, Suffix: '%', Label: 'Of the browsers in use'}],
+	LandingFeaturesItems: [
+		{ID: 'one', Icon: 'file-code', Title: 'One file', Text: 'The core is one ES5 file: no build step, no lock file to update.'},
+		{ID: 'library', Icon: 'grid', Title: 'A library', Text: 'Forms, tables, charts, editors, games and landings, themed by tokens.'},
+		{ID: 'native', Icon: 'monitor', Title: 'Native', Text: 'The same application as a site, a PWA, a desktop or a phone application.'}
+	],
+	LandingQuotes: [
+		{ID: 'ada', Text: 'We moved a back office in a week and kept every page working.', Name: 'Ada Lovelace', Role: 'CTO, Analytical', Rating: 5},
+		{ID: 'alan', Text: 'The tables and the forms cover what we used three libraries for.', Name: 'Alan Turing', Role: 'Lead, Bombe', Rating: 4.5},
+		{ID: 'grace', Text: 'No build step: a fix is a save and a reload.', Name: 'Grace Hopper', Role: 'Engineer, COBOL', Rating: 5}
+	],
+	LandingQuestions: [
+		{ID: 'free', Question: 'Is it free?', Answer: 'Yes: the core and the library are open source.'},
+		{ID: 'browsers', Question: 'Which browsers does it run in?', Answer: 'The ones in use: Chrome, Edge, Firefox and Safari of the last years.'},
+		{ID: 'variants', Question: 'How are the variants of this landing chosen?', Answer: 'By the source of the visit, its language and device, or by an A/B split kept for the visitor.\nA link forces one: ?variant=ui-kit-landing:bold.'}
+	],
+	PipelineNote: 'Pipeline · PipelineStage · PipelineJob: hover a job for its chain, press a group to open it',
+	PipelineStages: [
+		{ID: 'build', Name: 'Build', Jobs: [
+			{ID: 'compile', Name: 'Compile', Status: 'success', Duration: 72},
+			{ID: 'image', Name: 'Docker image', Status: 'success', Duration: 141}
+		]},
+		{ID: 'test', Name: 'Test', Jobs: [
+			{ID: 'unit', Name: 'Unit', Status: 'success', Duration: 125, Needs: ['compile']},
+			{ID: 'node-18', Name: 'Node 18', Status: 'success', Duration: 98, Group: 'node matrix', Needs: ['compile']},
+			{ID: 'node-20', Name: 'Node 20', Status: 'warning', Duration: 103, Group: 'node matrix', Needs: ['compile']},
+			{ID: 'node-22', Name: 'Node 22', Status: 'success', Duration: 95, Group: 'node matrix', Needs: ['compile']},
+			{ID: 'e2e', Name: 'End to end', Status: 'running', Started: Date.now() - 83000, Needs: ['image']},
+			{ID: 'lint', Name: 'Lint', Status: 'failed', Duration: 12, Text: '3 problems'}
+		]}
+	],
+	SampleTimer: 0,
 	DashboardNav: [
 		{ID: 'overview', Label: 'Overview', Icon: 'home'},
 		{ID: 'projects', Label: 'Projects', Icon: 'folder', Badge: 12},
@@ -2932,12 +2987,67 @@ Elemenx.Component('UIKitPage', {
 			return all.concat([part], part.split(','));
 		}, []).filter(Boolean);
 
+		/*
+		 * The items of the mosaic for a layout: cells of a bento, heights of a masonry, shapes of the pictures of justified
+		 * rows, values of a treemap (a group of three).
+		 */
+		var pictures = [];
+
+		this.MosaicItems = function (layout) {
+			var names = ['North', 'Harbour', 'Dunes', 'Forest', 'Glacier', 'Canyon', 'Meadow', 'Reef'];
+			var sizes = [[2, 2], [1, 1], [1, 2], [2, 1], [1, 1], [1, 1], [2, 1], [1, 1]];
+
+			if (layout === 'treemap')
+				return [{ID: 'coast', Title: 'Coast', Children: [{ID: 'harbour', Title: 'Harbour', Value: 40}, {ID: 'dunes', Title: 'Dunes', Value: 25}, {ID: 'reef', Title: 'Reef', Value: 15}]}].concat(['North', 'Forest', 'Glacier', 'Canyon'].map(function (name, index) {
+					return {ID: name.toLowerCase(), Title: name, Value: [60, 35, 20, 10][index]};
+				}));
+
+			return names.map(function (name, index) {
+				return {
+					ID: name.toLowerCase(),
+					Title: name,
+					Text: 'Place ' + (index + 1),
+					Image: pictures[index] || (pictures[index] = self.$Service('Suprematist').DataURL({Seed: 'mosaic-' + index, Width: 360, Height: Math.round(360 / [1.5, 0.75, 1, 1.78, 1.33, 0.8, 2, 1][index])})),
+					Width: sizes[index][0],
+					Height: layout === 'masonry' ? 90 + (index * 37) % 120 : sizes[index][1],
+					Ratio: [1.5, 0.75, 1, 1.78, 1.33, 0.8, 2, 1][index]
+				};
+			});
+		};
+
 		/* The sections a link names (?sections=Buttons,Forms or Buttons|Forms: a test opens the ones it needs), all of them without one. */
 		this.Shows = function (title) {
 			return !only.length || only.indexOf(title) !== -1;
 		};
 
 		var videos = {};
+
+		var pictures = {};
+		var visitors = {};
+		var suprematist = this.$Service('Suprematist');
+
+		/* The posters of the films and the backdrop of the featured one: pictures of Suprematism, the same for each film. */
+		this.MediaItems = this.MediaItems.map(function (item) {
+			return Object.assign({}, item, {Image: suprematist.DataURL({Seed: 'film-' + item.ID, Width: 240, Height: 360})});
+		});
+		this.MediaPoster = suprematist.DataURL({Seed: 'film-long-light', Width: 240, Height: 360});
+		this.MediaBackdrop = suprematist.DataURL({Seed: 'film-long-light-backdrop', Width: 960, Height: 360});
+
+		/* The pictures of the landing, made once for each seed (a template calls it). */
+		this.LandingPicture = function (seed) {
+			if (!pictures[seed])
+				pictures[seed] = self.$Service('Suprematist').DataURL({Seed: seed, Width: 640, Height: 420});
+
+			return pictures[seed];
+		};
+
+		/* The visitor the landing is shown to: one object for each, so that the Experiment chooses again only when it changes. */
+		this.LandingVisitorOf = function (source) {
+			if (!visitors[source])
+				visitors[source] = {URL: source === 'direct' ? '/' : '/?utm_source=' + source, Referrer: source === 'google' ? 'https://www.google.com/' : ''};
+
+			return visitors[source];
+		};
 
 		/* The videos of the call: pictures of Suprematism in place of the cameras, one element for each (a template calls it). */
 		this.CallVideo = function (seed) {
@@ -3555,6 +3665,14 @@ Elemenx.Component('UIKitPage', {
 		this.OpenedTile = tile.Title;
 	},
 
+	MosaicLaid: function (value) {
+		this.MosaicLayout = value;
+	},
+
+	MosaicSelected: function (item) {
+		this.MosaicChosen = item.Title || item.ID;
+	},
+
 	CustomStepSelected: function (item) {
 		this.CustomStep = item.ID;
 	},
@@ -3633,6 +3751,62 @@ Elemenx.Component('UIKitPage', {
 
 	MoreSigned: function (strokes) {
 		this.MoreNote = strokes.length + ' strokes signed';
+	},
+
+	/* A signature of the samples, while there are fewer than three: kept when it is done, the pad cleared for the next. */
+	SampleSigned: function (strokes) {
+		var self = this;
+
+		if (this.SignatureSamples.length >= 3 || !strokes.length) return;
+
+		window.clearTimeout(this.SampleTimer);
+
+		this.SampleTimer = window.setTimeout(function () {
+			var pad;
+
+			self.SignatureSamples = self.SignatureSamples.concat([strokes]);
+
+			pad = self.$Ref('signatureSample', true);
+
+			if (pad && pad.Clear)
+				pad.Clear();
+		}, 900);
+	},
+
+	PipelineSelected: function (event) {
+		this.PipelineNote = 'Selected ' + event.Job.Name + ' of ' + event.Stage;
+	},
+
+	PipelineActed: function (event) {
+		this.PipelineNote = event.Action + ' ' + event.Job.Name;
+	},
+
+	CalculatorCounted: function (result) {
+		this.CalculatorNote = result.Expression + ' = ' + result.Value;
+	},
+
+	LoanChanged: function (event) {
+		this.CalculatorNote = 'Each month ' + event.Results.Payment.toFixed(2);
+	},
+
+	QuizFinished: function (event) {
+		this.QuizNote = 'Finished: ' + event.Score + ' of ' + event.Max + (event.Passed ? ', passed' : ', not passed');
+	},
+
+	LandingVisited: function (value) {
+		this.LandingVisitor = value;
+	},
+
+	LandingChosen: function (event) {
+		this.LandingNote = 'Variant ' + event.ID + ' (' + event.Reason + ')';
+	},
+
+	LandingActed: function (event) {
+		this.LandingNote = 'Conversion ' + event.Goal + ' of ' + this.$Service('Audience').Chosen('ui-kit-landing').ID;
+	},
+
+	SignatureCompared: function (result) {
+		this.MoreNote = 'Signature ' + (result.Match ? 'looks like' : 'does not look like') + ' the samples: ' + result.Percent + '%';
 	},
 
 	MoreOpened: function (item) {

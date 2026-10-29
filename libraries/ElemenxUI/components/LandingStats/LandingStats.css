@@ -1,0 +1,34 @@
+/* The numbers: large in a row that wraps, their labels under them. */
+.elemenx-landing-stats {
+	display: flex;
+	flex-direction: column;
+	gap: 24px;
+	padding: 32px 0;
+	text-align: center;
+}
+
+.elemenx-landing-stats-list {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+	gap: 24px;
+	margin: 0;
+}
+
+.elemenx-landing-stat {
+	display: flex;
+	flex-direction: column-reverse;
+	gap: 4px;
+}
+
+.elemenx-landing-stat-label {
+	color: var(--elemenx-text-muted);
+}
+
+.elemenx-landing-stat-value {
+	margin: 0;
+	color: var(--elemenx-accent);
+	font-size: clamp(28px, 5vw, 44px);
+	line-height: 1.1;
+	font-weight: var(--elemenx-font-weight-strong);
+	font-variant-numeric: tabular-nums;
+}

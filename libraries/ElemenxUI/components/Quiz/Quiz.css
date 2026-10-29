@@ -1,0 +1,209 @@
+/*
+ * A quiz: one question at a time under the bar of its progress, the options as wide buttons that tell when they are
+ * chosen (and, once checked, right or wrong), the actions at the end; the result with its review.
+ */
+.elemenx-quiz {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+	min-width: 0;
+	width: 100%;
+	max-width: 640px;
+}
+
+.elemenx-quiz-intro,
+.elemenx-quiz-question,
+.elemenx-quiz-result {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	min-width: 0;
+}
+
+.elemenx-quiz-title,
+.elemenx-quiz-text {
+	margin: 0;
+}
+
+.elemenx-quiz-intro .elemenx-quiz-text {
+	color: var(--elemenx-text-muted);
+	font-weight: normal;
+}
+
+.elemenx-quiz-top {
+	display: flex;
+	gap: 12px;
+	align-items: flex-end;
+}
+
+.elemenx-quiz-progress {
+	flex: 1 1 auto;
+	min-width: 0;
+}
+
+.elemenx-quiz-clock {
+	color: var(--elemenx-text-muted);
+	font-size: var(--elemenx-font-size-small);
+	font-variant-numeric: tabular-nums;
+}
+
+.elemenx-quiz-clock.ending {
+	color: var(--elemenx-danger);
+	font-weight: var(--elemenx-font-weight-bold);
+}
+
+.elemenx-quiz-image {
+	max-width: 100%;
+	max-height: 240px;
+	object-fit: contain;
+	border-radius: var(--elemenx-radius);
+	align-self: flex-start;
+}
+
+.elemenx-quiz-options,
+.elemenx-quiz-order,
+.elemenx-quiz-review {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.elemenx-quiz-option {
+	display: flex;
+	gap: 10px;
+	align-items: center;
+	padding: 10px 12px;
+	border: 1px solid var(--elemenx-border);
+	border-radius: var(--elemenx-radius);
+	background: var(--elemenx-surface);
+	color: var(--elemenx-text);
+	font: inherit;
+	text-align: start;
+	cursor: pointer;
+	transition: border-color var(--elemenx-duration) var(--elemenx-easing), background var(--elemenx-duration) var(--elemenx-easing);
+}
+
+.elemenx-quiz-option:hover {
+	background: var(--elemenx-surface-hover);
+}
+
+.elemenx-quiz-option.chosen {
+	border-color: var(--elemenx-accent);
+}
+
+.elemenx-quiz-option.right {
+	border-color: var(--elemenx-success);
+}
+
+.elemenx-quiz-option.wrong {
+	border-color: var(--elemenx-danger);
+}
+
+.elemenx-quiz-option[aria-disabled="true"] {
+	cursor: default;
+}
+
+.elemenx-quiz-mark {
+	display: inline-flex;
+	flex: none;
+	align-items: center;
+	justify-content: center;
+	width: 18px;
+	height: 18px;
+	border: 1px solid var(--elemenx-border-strong);
+	border-radius: var(--elemenx-radius-small);
+}
+
+.elemenx-quiz-option.single .elemenx-quiz-mark {
+	border-radius: var(--elemenx-radius-pill);
+}
+
+.elemenx-quiz-option.chosen .elemenx-quiz-mark {
+	border-color: var(--elemenx-accent);
+	background: var(--elemenx-accent);
+	color: var(--elemenx-accent-text);
+}
+
+.elemenx-quiz-label {
+	flex: 1 1 auto;
+	min-width: 0;
+}
+
+.elemenx-quiz-state {
+	flex: none;
+}
+
+.right > .elemenx-quiz-state {
+	color: var(--elemenx-success);
+}
+
+.wrong > .elemenx-quiz-state {
+	color: var(--elemenx-danger);
+}
+
+.elemenx-quiz-item {
+	display: flex;
+	gap: 4px;
+	align-items: center;
+	padding: 4px 4px 4px 12px;
+	border: 1px solid var(--elemenx-border);
+	border-radius: var(--elemenx-radius);
+	background: var(--elemenx-surface);
+}
+
+.elemenx-quiz-feedback {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	padding: 10px 12px;
+	border-inline-start: 3px solid var(--elemenx-success);
+	border-radius: var(--elemenx-radius);
+	background: rgba(var(--elemenx-success-rgb), 0.1);
+}
+
+.elemenx-quiz-feedback.wrong {
+	border-inline-start-color: var(--elemenx-danger);
+	background: rgba(var(--elemenx-danger-rgb), 0.1);
+}
+
+.elemenx-quiz-actions {
+	display: flex;
+	gap: 8px;
+	justify-content: flex-end;
+}
+
+.elemenx-quiz-intro .elemenx-quiz-actions {
+	justify-content: flex-start;
+}
+
+.elemenx-quiz-score {
+	margin: 0;
+	color: var(--elemenx-text-muted);
+}
+
+.elemenx-quiz-score strong {
+	color: var(--elemenx-text);
+	font-size: 2em;
+}
+
+.elemenx-quiz-reviewed {
+	display: flex;
+	gap: 10px;
+	align-items: flex-start;
+}
+
+.elemenx-quiz-review-body {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	min-width: 0;
+}
+
+.elemenx-quiz-review-answer,
+.elemenx-quiz-review-explanation {
+	color: var(--elemenx-text-muted);
+	font-size: var(--elemenx-font-size-small);
+}

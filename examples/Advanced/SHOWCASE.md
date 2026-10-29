@@ -219,9 +219,9 @@ Status values:
 | --- | --- | --- |
 | `Elemenx.Library` / `$Use` | YES | `app.js` uses ElemenxUI; the `/ui` catalogue renders every component of it. |
 | `Elemenx.Locale` / `$T` | YES | The `/ui` catalogue switches the language of ElemenxUI (`Elemenx.Locale.Language`). |
-| Application `$Locales` | ELSEWHERE | `examples/Docs` and `examples/Builder` have dictionaries of their own. |
+| Application `$Locales` | ELSEWHERE | `examples/Docs` and `examples/Designer` have dictionaries of their own. |
 | `Elemenx.Cache`, `*keep`, `*lazy`, `$KeepAlive` | YES | `app.js` sets the cache policy; the Keep-alive section of `/ui` sleeps a panel with `*keep`, and its sections render lazily (`*lazy`). |
-| `Elemenx.Meta` / `$Meta` | ELSEWHERE | `examples/Builder` builds its palette from it; `examples/Docs` its reference. |
+| `Elemenx.Meta` / `$Meta` | ELSEWHERE | `examples/Designer` builds its palette from it; `examples/Docs` its reference. |
 | `Elemenx.Style` in shadow roots, `$Shadow` | ELSEWHERE | `examples/Widgets`: every widget renders in a shadow root. |
 | `Elemenx.Resource` | WORKFLOW | `elemenx build --single` embeds the resources of a project into one file. |
 | `Elemenx.Install` (PWA) | ELSEWHERE | `examples/PWA`: installs, runs offline and updates itself. |

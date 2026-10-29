@@ -1,0 +1,98 @@
+/*
+ * The box of a Mosaic: as high as its layout, the items placed in it by their transforms, which move them to their
+ * new places as the layout or the room changes.
+ */
+.elemenx-mosaic {
+	position: relative;
+	width: 100%;
+	contain: inline-size;
+}
+
+.elemenx-mosaic-item {
+	position: absolute;
+	top: 0;
+	left: 0;
+	box-sizing: border-box;
+	overflow: hidden;
+	background: var(--elemenx-surface-raised);
+	border: 1px solid var(--elemenx-border);
+	border-radius: var(--elemenx-radius);
+	transition: transform var(--elemenx-duration) var(--elemenx-easing), width var(--elemenx-duration) var(--elemenx-easing), height var(--elemenx-duration) var(--elemenx-easing);
+}
+
+.elemenx-mosaic-item.colored {
+	color: var(--elemenx-overlay-text);
+	border-color: transparent;
+}
+
+.elemenx-mosaic-item.picture {
+	border: 0;
+}
+
+.elemenx-mosaic.selectable .elemenx-mosaic-item:not(.parent) {
+	cursor: pointer;
+}
+
+.elemenx-mosaic.selectable .elemenx-mosaic-item:not(.parent):hover {
+	box-shadow: var(--elemenx-shadow);
+}
+
+.elemenx-mosaic-item:focus-visible {
+	outline: 2px solid var(--elemenx-focus);
+	outline-offset: 2px;
+}
+
+.elemenx-mosaic-image {
+	position: absolute;
+	inset: 0;
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+/* The title and the text: at the bottom, over a shade of the picture when there is one. */
+.elemenx-mosaic-caption {
+	position: absolute;
+	right: 0;
+	bottom: 0;
+	left: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	padding: 8px 10px;
+	font-size: var(--elemenx-font-size-small);
+	line-height: var(--elemenx-line-height-small);
+}
+
+.elemenx-mosaic-item.picture .elemenx-mosaic-caption {
+	color: var(--elemenx-overlay-text);
+	background: linear-gradient(to top, var(--elemenx-overlay), transparent);
+}
+
+.elemenx-mosaic-text {
+	opacity: 0.85;
+}
+
+.elemenx-mosaic-custom,
+.elemenx-mosaic-content {
+	width: 100%;
+	height: 100%;
+}
+
+/* A parent of a treemap: its name on top, its children over it. */
+.elemenx-mosaic.treemap .elemenx-mosaic-item.parent {
+	background: var(--elemenx-surface-hover);
+	border-color: var(--elemenx-border);
+}
+
+.elemenx-mosaic.treemap .elemenx-mosaic-item.parent .elemenx-mosaic-caption {
+	top: 0;
+	bottom: auto;
+	padding: 2px 6px;
+}
+
+.elemenx-mosaic.treemap .elemenx-mosaic-item:not(.parent) {
+	border: 0;
+	border-radius: var(--elemenx-radius-small);
+}

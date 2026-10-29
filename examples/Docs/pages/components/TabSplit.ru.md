@@ -10,12 +10,14 @@
 | `Layout` | `null` |
 | `Closable` | `false` |
 | `Label` | `''` |
+| `CopyID` | `null` |
 
 ## События
 
 - `change`
 - `select`
 - `close`
+- `copy`
 
 ## Слоты
 
@@ -26,7 +28,7 @@
 - `Model()`
 - `Open(id)`
 - `Close(id)`
-- `Split(id, side, beside)`
+- `Split(id, side, move)`
 
 ## Пример
 
@@ -73,3 +75,4 @@
 - [a TabSplit lays out the groups it declares side by side, each with its tabs, and splits a group to a side with a tab](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-tab-split.test.js#L94) — `tests/regression/library-tab-split.test.js`
 - [a tab dropped in the middle of another group goes into it, and a group left without a tab goes](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-tab-split.test.js#L134) — `tests/regression/library-tab-split.test.js`
 - [takes the layout of Layout, closes a tab for its owner, and moves a divider by its keys](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-tab-split.test.js#L166) — `tests/regression/library-tab-split.test.js`
+- [a Split of the menu copies the tab into a new group, its content made again, and Split and move takes the tab there](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-tab-split.test.js#L221) — `tests/regression/library-tab-split.test.js`

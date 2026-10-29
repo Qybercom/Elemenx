@@ -7224,6 +7224,33 @@
 					"Schema": null,
 					"Body": false,
 					"Description": "The name of the field for screen readers."
+				},
+				{
+					"Name": "Reference",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The signature on file to compare with: a signature, several of them, or a reference of Signatures.Enroll."
+				},
+				{
+					"Name": "Threshold",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The score the signature must reach (0 to 1; by default the one of the reference, else 0.75)."
+				},
+				{
+					"Name": "ShowResult",
+					"Type": "bool",
+					"Default": true,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Says under the field whether the signature looks like the one on file."
 				}
 			],
 			"Slots": [],
@@ -7231,12 +7258,20 @@
 			"Children": [],
 			"Current": "",
 			"Events": [
-				"change"
+				"change",
+				"compare"
 			],
 			"EventDescriptions": {
-				"change": "A stroke was drawn, or strokes were taken away: Value."
+				"change": "A stroke was drawn, or strokes were taken away: Value.",
+				"compare": "The signature was compared with Reference: {Score, Parts, Match, Threshold}."
 			},
-			"Methods": [],
+			"Methods": [
+				"Clear()",
+				"Undo()",
+				"Image(type)",
+				"SVG()",
+				"Compare(reference)"
+			],
 			"Sample": {}
 		},
 		{
@@ -10121,7 +10156,7 @@
 				"order": "With Items: a tab was put at another place of the strip: {ID, Index}.",
 				"move": "With Items: a tab of another group was put in the strip: {ID, From, Index}.",
 				"drop": "With Items: a tab was put on the body: {ID, From, Side}.",
-				"split": "With Items: its menu splits the group to a side with the tab: {ID, Side}."
+				"split": "With Items: its menu splits the group to a side with a copy of the tab, or with the tab (Move): {ID, Side, Move}."
 			},
 			"Methods": [],
 			"Sample": {}
@@ -10159,6 +10194,15 @@
 					"Schema": null,
 					"Body": false,
 					"Description": "The name of the strips for screen readers."
+				},
+				{
+					"Name": "CopyID",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "A function (id, n) giving the ID of the n-th copy of a tab (<ID>:n by default)."
 				}
 			],
 			"Slots": [],
@@ -10173,17 +10217,19 @@
 			"Events": [
 				"change",
 				"select",
-				"close"
+				"close",
+				"copy"
 			],
 			"EventDescriptions": {
 				"change": "The layout changed: {Split, Sizes, Children} of {Group, Tabs, Active, Pinned}.",
 				"select": "A tab was opened: its ID.",
-				"close": "A tab asks to close: its ID (the owner takes its Tab away)."
+				"close": "A tab asks to close: its ID (the owner takes its Tab away).",
+				"copy": "A copy of a tab was made in a new group: {ID, Of, Group}."
 			},
 			"Methods": [
 				"Open(id)",
 				"Close(id)",
-				"Split(id, side)",
+				"Split(id, side, move)",
 				"Model()"
 			],
 			"Sample": {}
@@ -19299,6 +19345,2090 @@
 			}
 		},
 		{
+			"Name": "Mosaic",
+			"Kind": "Component",
+			"Group": "layout",
+			"Icon": "grid",
+			"Description": "Items laid out as a bento grid, masonry, justified rows or a treemap.",
+			"Props": [
+				{
+					"Name": "Layout",
+					"Type": "select",
+					"Default": "bento",
+					"Options": [
+						"bento",
+						"masonry",
+						"justified",
+						"treemap"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "bento, masonry, justified or treemap."
+				},
+				{
+					"Name": "Items",
+					"Type": "json",
+					"Default": [],
+					"Options": null,
+					"Schema": {
+						"ID": "text",
+						"Title": "text",
+						"Text": "text",
+						"Image": "text",
+						"Width": "number",
+						"Height": "number",
+						"Ratio": "number",
+						"Value": "number"
+					},
+					"Body": false,
+					"Description": "The items: [{ID, Title, Text, Image, Color, Width, Height, Ratio, Span, Value, Row, Column, Children, Class, Element, Render}]."
+				},
+				{
+					"Name": "Columns",
+					"Type": "number",
+					"Default": 0,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The columns of a bento or a masonry (0: as many as fit ColumnWidth)."
+				},
+				{
+					"Name": "ColumnWidth",
+					"Type": "number",
+					"Default": 0,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The least width of a column when Columns is 0, in pixels."
+				},
+				{
+					"Name": "CellHeight",
+					"Type": "number",
+					"Default": 0,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The height of a cell of a bento in pixels (its width by default)."
+				},
+				{
+					"Name": "RowHeight",
+					"Type": "number",
+					"Default": 200,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The wanted height of a justified row in pixels."
+				},
+				{
+					"Name": "MaxRowHeight",
+					"Type": "number",
+					"Default": 0,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The largest height of a justified row of few items."
+				},
+				{
+					"Name": "LastRow",
+					"Type": "select",
+					"Default": "left",
+					"Options": [
+						"left",
+						"justify",
+						"hide"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "The last justified row: left (at RowHeight), justify (filling the width) or hide."
+				},
+				{
+					"Name": "Height",
+					"Type": "number",
+					"Default": 360,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The height of a treemap in pixels."
+				},
+				{
+					"Name": "Gap",
+					"Type": "number",
+					"Default": 8,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The room between the items in pixels."
+				},
+				{
+					"Name": "Selectable",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Makes the items buttons: a press or Enter emits select."
+				},
+				{
+					"Name": "Label",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The name of the Mosaic for screen readers."
+				}
+			],
+			"Slots": [],
+			"Container": true,
+			"Children": [
+				"MosaicItem"
+			],
+			"Current": "",
+			"Events": [
+				"select"
+			],
+			"EventDescriptions": {
+				"select": "A Selectable item was pressed: the item."
+			},
+			"Methods": [
+				"Arrangement()"
+			],
+			"Sample": {
+				"Layout": "bento",
+				"Columns": 4,
+				"Items": [
+					{
+						"ID": "a",
+						"Title": "Wide",
+						"Width": 2
+					},
+					{
+						"ID": "b",
+						"Title": "Tall",
+						"Height": 2
+					},
+					{
+						"ID": "c",
+						"Title": "One"
+					},
+					{
+						"ID": "d",
+						"Title": "Two"
+					}
+				]
+			}
+		},
+		{
+			"Name": "Pipeline",
+			"Kind": "Component",
+			"Group": "data",
+			"Icon": "branch",
+			"Description": "A pipeline of CI as GitHub and GitLab show one: stages in columns, jobs with their status and time, the links between them.",
+			"Props": [
+				{
+					"Name": "Stages",
+					"Type": "json",
+					"Default": [],
+					"Options": null,
+					"Schema": {
+						"ID": "text",
+						"Name": "text",
+						"Status": "text"
+					},
+					"Body": false,
+					"Description": "The stages: [{ID, Name, Status, Jobs: [{ID, Name, Status, Duration, Started, Needs, Group, Text, Href, Actions, Element, Render}]}]."
+				},
+				{
+					"Name": "Links",
+					"Type": "select",
+					"Default": "",
+					"Options": [
+						"",
+						"needs",
+						"stages",
+						"none"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "The links: needs, stages or none (needs when a job has some, else stages)."
+				},
+				{
+					"Name": "Title",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The name of the pipeline, above it."
+				},
+				{
+					"Name": "Summary",
+					"Type": "bool",
+					"Default": true,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Shows its status and its time beside the title."
+				},
+				{
+					"Name": "Actions",
+					"Type": "bool",
+					"Default": true,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Shows the action of each job: retry, cancel or play."
+				},
+				{
+					"Name": "Selected",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The ID of the job shown as selected."
+				},
+				{
+					"Name": "Label",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The name of the pipeline for screen readers."
+				}
+			],
+			"Slots": [],
+			"Container": true,
+			"Children": [
+				"PipelineStage"
+			],
+			"Current": "",
+			"Events": [
+				"select",
+				"action"
+			],
+			"EventDescriptions": {
+				"select": "A job was pressed: {Job, Stage}.",
+				"action": "The action of a job was pressed: {Action, Job}."
+			},
+			"Methods": [],
+			"Sample": {
+				"Title": "main",
+				"Stages": [
+					{
+						"ID": "build",
+						"Name": "Build",
+						"Jobs": [
+							{
+								"ID": "compile",
+								"Name": "Compile",
+								"Status": "success",
+								"Duration": 72
+							}
+						]
+					},
+					{
+						"ID": "test",
+						"Name": "Test",
+						"Jobs": [
+							{
+								"ID": "unit",
+								"Name": "Unit",
+								"Status": "running",
+								"Needs": [
+									"compile"
+								]
+							}
+						]
+					}
+				]
+			}
+		},
+		{
+			"Name": "PipelineStage",
+			"Kind": "Component",
+			"Group": "data",
+			"Icon": "columns",
+			"Description": "The declaration of a stage in the template of a Pipeline: <PipelineStage ID=\"test\" Name=\"Test\">.",
+			"Props": [
+				{
+					"Name": "ID",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The ID of the stage."
+				},
+				{
+					"Name": "Name",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its name."
+				},
+				{
+					"Name": "Status",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its status (by default the one of its jobs)."
+				}
+			],
+			"Slots": [],
+			"Container": true,
+			"Children": [
+				"PipelineJob"
+			],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [],
+			"Sample": {
+				"ID": "test",
+				"Name": "Test"
+			}
+		},
+		{
+			"Name": "PipelineJob",
+			"Kind": "Component",
+			"Group": "data",
+			"Icon": "play",
+			"Description": "The declaration of a job in the template of a Pipeline: <PipelineJob ID=\"unit\" Name=\"Unit tests\" Status=\"success\" />.",
+			"Props": [
+				{
+					"Name": "ID",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The ID of the job."
+				},
+				{
+					"Name": "Name",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its name."
+				},
+				{
+					"Name": "Status",
+					"Type": "select",
+					"Default": "created",
+					"Options": [
+						"created",
+						"pending",
+						"scheduled",
+						"running",
+						"success",
+						"failed",
+						"warning",
+						"canceled",
+						"skipped",
+						"manual"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "Its status."
+				},
+				{
+					"Name": "Duration",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "How long it ran, in seconds."
+				},
+				{
+					"Name": "Started",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "When it started (a date, or milliseconds): a running job counts its time from it."
+				},
+				{
+					"Name": "Needs",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The IDs of the jobs it waits for, separated by commas."
+				},
+				{
+					"Name": "Group",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The group of jobs it is one of (a matrix): one card for all of them."
+				},
+				{
+					"Name": "Text",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "A text under its name."
+				},
+				{
+					"Name": "Href",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "A link to the job (its log)."
+				}
+			],
+			"Slots": [],
+			"Container": true,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [],
+			"Sample": {
+				"ID": "unit",
+				"Name": "Unit tests",
+				"Status": "success",
+				"Duration": 84
+			}
+		},
+		{
+			"Name": "Calculator",
+			"Kind": "Component",
+			"Group": "inputs",
+			"Icon": "grid",
+			"Description": "A calculator, basic or scientific, of keys and of the keyboard, with its history.",
+			"Props": [
+				{
+					"Name": "Mode",
+					"Type": "select",
+					"Default": "basic",
+					"Options": [
+						"basic",
+						"scientific"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "basic, or scientific (functions, powers, brackets, degrees or radians)."
+				},
+				{
+					"Name": "Value",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "What is typed."
+				},
+				{
+					"Name": "Angle",
+					"Type": "select",
+					"Default": "degrees",
+					"Options": [
+						"degrees",
+						"radians"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "The unit of the angles of a scientific calculator."
+				},
+				{
+					"Name": "History",
+					"Type": "bool",
+					"Default": true,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Shows the history: the last ten results, one brought back by a press."
+				},
+				{
+					"Name": "Precision",
+					"Type": "number",
+					"Default": 12,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The significant digits shown."
+				},
+				{
+					"Name": "Label",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The name of the calculator for screen readers."
+				}
+			],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [
+				"result",
+				"change"
+			],
+			"EventDescriptions": {
+				"result": "The value was kept by =: {Expression, Value}.",
+				"change": "What is typed changed: Value."
+			},
+			"Methods": [],
+			"Sample": {}
+		},
+		{
+			"Name": "BusinessCalculator",
+			"Kind": "Component",
+			"Group": "inputs",
+			"Icon": "chart",
+			"Description": "A calculator of a business made of its fields and of formulas of its results.",
+			"Props": [
+				{
+					"Name": "Title",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its title."
+				},
+				{
+					"Name": "Fields",
+					"Type": "json",
+					"Default": [],
+					"Options": null,
+					"Schema": {
+						"ID": "text",
+						"Label": "text",
+						"Type": "text",
+						"Value": "number"
+					},
+					"Body": false,
+					"Description": "The fields: [{ID, Label, Type, Value, Min, Max, Step, Unit, Options, Hint}]."
+				},
+				{
+					"Name": "Results",
+					"Type": "json",
+					"Default": [],
+					"Options": null,
+					"Schema": {
+						"ID": "text",
+						"Label": "text",
+						"Formula": "text",
+						"Format": "text"
+					},
+					"Body": false,
+					"Description": "The results: [{ID, Label, Formula, Format, Precision, Unit, Primary, Hidden, Hint}]."
+				},
+				{
+					"Name": "Values",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The values of the fields by their IDs."
+				},
+				{
+					"Name": "Breakdown",
+					"Type": "json",
+					"Default": [],
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The IDs of the results shown as the parts of a bar."
+				},
+				{
+					"Name": "Currency",
+					"Type": "text",
+					"Default": "USD",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The code of the currency of money."
+				},
+				{
+					"Name": "Locale",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The language of the numbers (the language of the page by default)."
+				},
+				{
+					"Name": "Layout",
+					"Type": "select",
+					"Default": "side",
+					"Options": [
+						"side",
+						"stack"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "side (the results beside the fields, on a wide screen) or stack (under them)."
+				}
+			],
+			"Slots": [],
+			"Container": true,
+			"Children": [
+				"CalculatorField",
+				"CalculatorResult"
+			],
+			"Current": "",
+			"Events": [
+				"change"
+			],
+			"EventDescriptions": {
+				"change": "A field changed: {Values, Results} (the numbers of the results by their IDs)."
+			},
+			"Methods": [
+				"Numbers()",
+				"Reset()"
+			],
+			"Sample": {
+				"Title": "Renovation",
+				"Fields": [
+					{
+						"ID": "Area",
+						"Label": "Area",
+						"Value": 50,
+						"Unit": "m²"
+					},
+					{
+						"ID": "Price",
+						"Label": "Price for 1 m²",
+						"Type": "money",
+						"Value": 40
+					}
+				],
+				"Results": [
+					{
+						"ID": "Total",
+						"Label": "Total",
+						"Formula": "Area * Price",
+						"Format": "money",
+						"Primary": true
+					}
+				]
+			}
+		},
+		{
+			"Name": "CalculatorField",
+			"Kind": "Component",
+			"Group": "inputs",
+			"Icon": "edit",
+			"Description": "The declaration of a field in the template of a BusinessCalculator: <CalculatorField ID=\"Area\" Label=\"Area\" Value=\"50\" />.",
+			"Props": [
+				{
+					"Name": "ID",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The name its formulas read (letters, digits, _)."
+				},
+				{
+					"Name": "Label",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its label."
+				},
+				{
+					"Name": "Type",
+					"Type": "select",
+					"Default": "number",
+					"Options": [
+						"number",
+						"money",
+						"percent",
+						"range",
+						"select",
+						"toggle"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "number, money, percent, range, select or toggle."
+				},
+				{
+					"Name": "Value",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its first value."
+				},
+				{
+					"Name": "Min",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The least value."
+				},
+				{
+					"Name": "Max",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The greatest value."
+				},
+				{
+					"Name": "Step",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The step."
+				},
+				{
+					"Name": "Unit",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "A unit after its value."
+				},
+				{
+					"Name": "Options",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The options of a select: [{Value, Label}], the values numbers."
+				},
+				{
+					"Name": "Hint",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "A hint under it."
+				}
+			],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [],
+			"Sample": {
+				"ID": "Area",
+				"Label": "Area",
+				"Value": 50,
+				"Unit": "m²"
+			}
+		},
+		{
+			"Name": "CalculatorResult",
+			"Kind": "Component",
+			"Group": "inputs",
+			"Icon": "chart",
+			"Description": "The declaration of a result in the template of a BusinessCalculator: <CalculatorResult ID=\"Total\" Formula=\"Area * Price\" />.",
+			"Props": [
+				{
+					"Name": "ID",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The name other formulas read."
+				},
+				{
+					"Name": "Label",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its label."
+				},
+				{
+					"Name": "Formula",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its formula: the fields and the other results by their IDs (the Calculations Service)."
+				},
+				{
+					"Name": "Format",
+					"Type": "select",
+					"Default": "number",
+					"Options": [
+						"number",
+						"money",
+						"percent",
+						"integer"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "number, money, percent (0.15 is 15%) or integer."
+				},
+				{
+					"Name": "Precision",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The decimals shown."
+				},
+				{
+					"Name": "Unit",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "A unit after its value."
+				},
+				{
+					"Name": "Primary",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The main result: larger, on top."
+				},
+				{
+					"Name": "Hidden",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Computed for the others, not shown."
+				},
+				{
+					"Name": "Hint",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "A hint under it."
+				}
+			],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [],
+			"Sample": {
+				"ID": "Total",
+				"Label": "Total",
+				"Formula": "Area * Price",
+				"Format": "money"
+			}
+		},
+		{
+			"Name": "Quiz",
+			"Kind": "Component",
+			"Group": "inputs",
+			"Icon": "help",
+			"Description": "A quiz or a survey: questions of one option, several, a text, a number or an order, the score at the end.",
+			"Props": [
+				{
+					"Name": "Questions",
+					"Type": "json",
+					"Default": [],
+					"Options": null,
+					"Schema": {
+						"ID": "text",
+						"Text": "text",
+						"Type": "text",
+						"Points": "number"
+					},
+					"Body": false,
+					"Description": "The questions: [{ID, Text, Type, Options: [{ID, Text, Correct, Next}], Points, Answer, Tolerance, Explanation, Image, Next}]."
+				},
+				{
+					"Name": "Mode",
+					"Type": "select",
+					"Default": "quiz",
+					"Options": [
+						"quiz",
+						"survey"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "quiz (scored) or survey (answers gathered)."
+				},
+				{
+					"Name": "Feedback",
+					"Type": "select",
+					"Default": "end",
+					"Options": [
+						"instant",
+						"end",
+						"none"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "When the answers are checked: instant, end or none."
+				},
+				{
+					"Name": "PassScore",
+					"Type": "number",
+					"Default": 70,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The percent of the points that passes."
+				},
+				{
+					"Name": "TimeLimit",
+					"Type": "number",
+					"Default": 0,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The seconds for all of it (0: no limit)."
+				},
+				{
+					"Name": "Shuffle",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Mixes the options of the questions."
+				},
+				{
+					"Name": "Back",
+					"Type": "bool",
+					"Default": true,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Lets it go back to the question before."
+				},
+				{
+					"Name": "Title",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The title of its start screen."
+				},
+				{
+					"Name": "Intro",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The text of its start screen."
+				}
+			],
+			"Slots": [],
+			"Container": true,
+			"Children": [
+				"QuizQuestion"
+			],
+			"Current": "",
+			"Events": [
+				"start",
+				"answer",
+				"finish"
+			],
+			"EventDescriptions": {
+				"start": "It started.",
+				"answer": "A question was answered: {Question, Value, Correct, Points}.",
+				"finish": "It ended: {Score, Max, Percent, Passed, Answers}."
+			},
+			"Methods": [
+				"Start()",
+				"Restart()"
+			],
+			"Sample": {
+				"Questions": [
+					{
+						"ID": "q1",
+						"Text": "Two plus two?",
+						"Type": "number",
+						"Answer": 4
+					}
+				]
+			}
+		},
+		{
+			"Name": "QuizQuestion",
+			"Kind": "Component",
+			"Group": "inputs",
+			"Icon": "help",
+			"Description": "The declaration of a question in the template of a Quiz: <QuizQuestion ID=\"capital\" Text=\"The capital of France?\">.",
+			"Props": [
+				{
+					"Name": "ID",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The ID of the question."
+				},
+				{
+					"Name": "Text",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The question."
+				},
+				{
+					"Name": "Type",
+					"Type": "select",
+					"Default": "single",
+					"Options": [
+						"single",
+						"multiple",
+						"text",
+						"number",
+						"order"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "single, multiple, text, number or order."
+				},
+				{
+					"Name": "Points",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The points of a right answer (1)."
+				},
+				{
+					"Name": "Answer",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The right answer of a text (texts separated by |) or of a number."
+				},
+				{
+					"Name": "Tolerance",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "How far from the Answer a number may be."
+				},
+				{
+					"Name": "Explanation",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Why the answer is the one it is, shown after."
+				},
+				{
+					"Name": "Image",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "A picture with the question."
+				},
+				{
+					"Name": "Next",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The ID of the question that comes next (end: the end)."
+				}
+			],
+			"Slots": [],
+			"Container": true,
+			"Children": [
+				"QuizOption"
+			],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [],
+			"Sample": {
+				"ID": "capital",
+				"Text": "The capital of France?"
+			}
+		},
+		{
+			"Name": "QuizOption",
+			"Kind": "Component",
+			"Group": "inputs",
+			"Icon": "check",
+			"Description": "The declaration of an option of a question of a Quiz: <QuizOption ID=\"paris\" Correct=\"true\">Paris</QuizOption>.",
+			"Props": [
+				{
+					"Name": "ID",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The ID of the option."
+				},
+				{
+					"Name": "Correct",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Marks a right option."
+				},
+				{
+					"Name": "Next",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The ID of the question an answer of it leads to."
+				}
+			],
+			"Slots": [],
+			"Container": true,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [],
+			"Sample": {
+				"ID": "paris",
+				"Correct": true
+			}
+		},
+		{
+			"Name": "Experiment",
+			"Kind": "Component",
+			"Group": "layout",
+			"Icon": "branch",
+			"Description": "An experiment of a page: the Variant chosen for the visitor by UTM, parameters, referrer, language, device or an A/B split.",
+			"Props": [
+				{
+					"Name": "Name",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its name: the key of the variant kept and of its events."
+				},
+				{
+					"Name": "Variants",
+					"Type": "json",
+					"Default": [],
+					"Options": null,
+					"Schema": {
+						"ID": "text",
+						"Weight": "number"
+					},
+					"Body": false,
+					"Description": "Variants from code: [{ID, When, Weight, Default}]."
+				},
+				{
+					"Name": "Param",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The parameter of a link that forces a variant (variant)."
+				},
+				{
+					"Name": "Track",
+					"Type": "bool",
+					"Default": true,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Tells the Audience Service a view of the variant chosen."
+				},
+				{
+					"Name": "Visitor",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "A visitor to show it to, a preview: {URL, Referrer, Language, Width, UserAgent}."
+				}
+			],
+			"Slots": [],
+			"Container": true,
+			"Children": [
+				"Variant"
+			],
+			"Current": "",
+			"Events": [
+				"choose"
+			],
+			"EventDescriptions": {
+				"choose": "A variant was chosen: {Experiment, ID, Reason}."
+			},
+			"Methods": [
+				"Convert(goal, data)",
+				"Choose()",
+				"Forget()"
+			],
+			"Sample": {
+				"Name": "hero"
+			}
+		},
+		{
+			"Name": "Variant",
+			"Kind": "Component",
+			"Group": "layout",
+			"Icon": "branch",
+			"Description": "A variant of an Experiment, shown when it is chosen for the visitor: <Variant ID=\"ads\" Source=\"google\">.",
+			"Props": [
+				{
+					"Name": "ID",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The ID of the variant."
+				},
+				{
+					"Name": "Weight",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its share of a split (1), when it has no rule."
+				},
+				{
+					"Name": "Default",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Shows it when no other variant does."
+				},
+				{
+					"Name": "Source",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The utm_source it is for (several: separated by commas)."
+				},
+				{
+					"Name": "Medium",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The utm_medium it is for."
+				},
+				{
+					"Name": "Campaign",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The utm_campaign it is for."
+				},
+				{
+					"Name": "Term",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The utm_term it is for."
+				},
+				{
+					"Name": "Content",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The utm_content it is for."
+				},
+				{
+					"Name": "Language",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The languages it is for (ru matches ru-RU)."
+				},
+				{
+					"Name": "Device",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The devices it is for: phone, tablet, desktop."
+				},
+				{
+					"Name": "Referrer",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "A part of the host of the referrer it is for."
+				},
+				{
+					"Name": "Params",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The parameters of the link it is for: name=value&other (given)."
+				},
+				{
+					"Name": "Returning",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "For visitors who came before (true) or for the first time (false)."
+				}
+			],
+			"Slots": [],
+			"Container": true,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [],
+			"Sample": {
+				"ID": "ads",
+				"Source": "google"
+			}
+		},
+		{
+			"Name": "LandingHero",
+			"Kind": "Component",
+			"Group": "landing",
+			"Icon": "layout",
+			"Description": "The first screen of a landing: a title, its text, actions and a picture, beside, under or behind.",
+			"Props": [
+				{
+					"Name": "Overline",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The line above the title."
+				},
+				{
+					"Name": "Title",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The title."
+				},
+				{
+					"Name": "Text",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The text under it."
+				},
+				{
+					"Name": "Image",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The picture."
+				},
+				{
+					"Name": "ImageAlt",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "What the picture shows, for screen readers."
+				},
+				{
+					"Name": "Layout",
+					"Type": "select",
+					"Default": "split",
+					"Options": [
+						"split",
+						"center",
+						"cover"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "split (the picture beside), center (under) or cover (behind)."
+				},
+				{
+					"Name": "Actions",
+					"Type": "json",
+					"Default": [],
+					"Options": null,
+					"Schema": {
+						"ID": "text",
+						"Label": "text",
+						"Href": "text",
+						"Variant": "text"
+					},
+					"Body": false,
+					"Description": "The actions: [{ID, Label, Href, Variant, Icon, Goal}]."
+				}
+			],
+			"Slots": [],
+			"Container": true,
+			"Children": [],
+			"Current": "",
+			"Events": [
+				"action"
+			],
+			"EventDescriptions": {
+				"action": "An action was pressed: {ID, Label, Href, Goal}."
+			},
+			"Methods": [],
+			"Sample": {
+				"Title": "Ship faster",
+				"Text": "One file, no build step.",
+				"Actions": [
+					{
+						"ID": "start",
+						"Label": "Start"
+					}
+				]
+			}
+		},
+		{
+			"Name": "LandingFeatures",
+			"Kind": "Component",
+			"Group": "landing",
+			"Icon": "grid",
+			"Description": "The features of a product: a title and a grid of cards of an icon, a title and a text.",
+			"Props": [
+				{
+					"Name": "Overline",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The line above the title."
+				},
+				{
+					"Name": "Title",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The title."
+				},
+				{
+					"Name": "Text",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The text under it."
+				},
+				{
+					"Name": "Items",
+					"Type": "json",
+					"Default": [],
+					"Options": null,
+					"Schema": {
+						"Icon": "text",
+						"Title": "text",
+						"Text": "text"
+					},
+					"Body": false,
+					"Description": "The features: [{ID, Icon, Image, Title, Text, Href}]."
+				},
+				{
+					"Name": "Columns",
+					"Type": "number",
+					"Default": 3,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "How many columns at most (3)."
+				},
+				{
+					"Name": "Variant",
+					"Type": "select",
+					"Default": "cards",
+					"Options": [
+						"cards",
+						"plain"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "cards (in frames) or plain."
+				},
+				{
+					"Name": "Align",
+					"Type": "select",
+					"Default": "start",
+					"Options": [
+						"start",
+						"center"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "The header and the cards: start or center."
+				}
+			],
+			"Slots": [],
+			"Container": true,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [],
+			"Sample": {
+				"Title": "Why it",
+				"Items": [
+					{
+						"Icon": "star",
+						"Title": "Fast",
+						"Text": "No build step."
+					},
+					{
+						"Icon": "lock",
+						"Title": "Safe",
+						"Text": "No eval."
+					}
+				]
+			}
+		},
+		{
+			"Name": "LandingStats",
+			"Kind": "Component",
+			"Group": "landing",
+			"Icon": "chart",
+			"Description": "The numbers of a product in a row, counted up as they come into view.",
+			"Props": [
+				{
+					"Name": "Title",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The title over them."
+				},
+				{
+					"Name": "Items",
+					"Type": "json",
+					"Default": [],
+					"Options": null,
+					"Schema": {
+						"Value": "number",
+						"Suffix": "text",
+						"Label": "text"
+					},
+					"Body": false,
+					"Description": "The numbers: [{ID, Value, Prefix, Suffix, Label, Precision}]."
+				},
+				{
+					"Name": "Animate",
+					"Type": "bool",
+					"Default": true,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Counts them up the first time they are seen."
+				},
+				{
+					"Name": "Duration",
+					"Type": "number",
+					"Default": 1200,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "How long they count, in milliseconds."
+				},
+				{
+					"Name": "Locale",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The language of the numbers."
+				}
+			],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [],
+			"Sample": {
+				"Items": [
+					{
+						"Value": 12000,
+						"Suffix": "+",
+						"Label": "Users"
+					},
+					{
+						"Value": 99.9,
+						"Suffix": "%",
+						"Label": "Uptime",
+						"Precision": 1
+					}
+				]
+			}
+		},
+		{
+			"Name": "LandingTestimonials",
+			"Kind": "Component",
+			"Group": "landing",
+			"Icon": "quote",
+			"Description": "What the customers say: quotes with an avatar, a name, a role and stars.",
+			"Props": [
+				{
+					"Name": "Overline",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The line above the title."
+				},
+				{
+					"Name": "Title",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The title."
+				},
+				{
+					"Name": "Text",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The text under it."
+				},
+				{
+					"Name": "Items",
+					"Type": "json",
+					"Default": [],
+					"Options": null,
+					"Schema": {
+						"Text": "text",
+						"Name": "text",
+						"Role": "text",
+						"Rating": "number"
+					},
+					"Body": false,
+					"Description": "The quotes: [{ID, Text, Name, Role, Avatar, Rating}]."
+				},
+				{
+					"Name": "Columns",
+					"Type": "number",
+					"Default": 3,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "How many columns at most (3)."
+				}
+			],
+			"Slots": [],
+			"Container": true,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [],
+			"Sample": {
+				"Items": [
+					{
+						"Text": "It just works.",
+						"Name": "Ada",
+						"Role": "CTO",
+						"Rating": 5
+					}
+				]
+			}
+		},
+		{
+			"Name": "LandingFAQ",
+			"Kind": "Component",
+			"Group": "landing",
+			"Icon": "help",
+			"Description": "The questions of the customers, each opened by a press.",
+			"Props": [
+				{
+					"Name": "Overline",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The line above the title."
+				},
+				{
+					"Name": "Title",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The title."
+				},
+				{
+					"Name": "Text",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The text under it."
+				},
+				{
+					"Name": "Items",
+					"Type": "json",
+					"Default": [],
+					"Options": null,
+					"Schema": {
+						"Question": "text",
+						"Answer": "text"
+					},
+					"Body": false,
+					"Description": "The questions: [{ID, Question, Answer}]."
+				},
+				{
+					"Name": "Single",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Keeps one question open at a time."
+				},
+				{
+					"Name": "Open",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The ID of the question open at first."
+				}
+			],
+			"Slots": [],
+			"Container": true,
+			"Children": [],
+			"Current": "",
+			"Events": [
+				"toggle"
+			],
+			"EventDescriptions": {
+				"toggle": "A question opened or closed: {ID, Open}."
+			},
+			"Methods": [],
+			"Sample": {
+				"Items": [
+					{
+						"ID": "price",
+						"Question": "Is it free?",
+						"Answer": "Yes, under the MIT license."
+					}
+				]
+			}
+		},
+		{
+			"Name": "LandingCTA",
+			"Kind": "Component",
+			"Group": "landing",
+			"Icon": "send",
+			"Description": "The call to act of a landing: a band of a title, a text and actions.",
+			"Props": [
+				{
+					"Name": "Title",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The title."
+				},
+				{
+					"Name": "Text",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The text under it."
+				},
+				{
+					"Name": "Actions",
+					"Type": "json",
+					"Default": [],
+					"Options": null,
+					"Schema": {
+						"ID": "text",
+						"Label": "text",
+						"Href": "text",
+						"Variant": "text"
+					},
+					"Body": false,
+					"Description": "The actions: [{ID, Label, Href, Variant, Icon, Goal}]."
+				},
+				{
+					"Name": "Tone",
+					"Type": "select",
+					"Default": "accent",
+					"Options": [
+						"accent",
+						"neutral"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "accent (in the color of the theme) or neutral."
+				},
+				{
+					"Name": "Layout",
+					"Type": "select",
+					"Default": "row",
+					"Options": [
+						"row",
+						"center"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "row (the actions beside the text) or center."
+				}
+			],
+			"Slots": [],
+			"Container": true,
+			"Children": [],
+			"Current": "",
+			"Events": [
+				"action"
+			],
+			"EventDescriptions": {
+				"action": "An action was pressed: {ID, Label, Href, Goal}."
+			},
+			"Methods": [],
+			"Sample": {
+				"Title": "Ready?",
+				"Actions": [
+					{
+						"ID": "start",
+						"Label": "Start now"
+					}
+				]
+			}
+		},
+		{
+			"Name": "MosaicItem",
+			"Kind": "Component",
+			"Group": "layout",
+			"Icon": "grid",
+			"Description": "The declaration of an item in the template of a Mosaic: <MosaicItem ID=\"sea\" Title=\"The sea\" Image=\"sea.jpg\" />.",
+			"Props": [
+				{
+					"Name": "ID",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The ID of the item."
+				},
+				{
+					"Name": "Title",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its title."
+				},
+				{
+					"Name": "Text",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "A text under the title."
+				},
+				{
+					"Name": "Image",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The URL of its picture."
+				},
+				{
+					"Name": "Color",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its color."
+				},
+				{
+					"Name": "Width",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its width in cells (bento)."
+				},
+				{
+					"Name": "Height",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its height: in cells (bento) or in pixels (masonry)."
+				},
+				{
+					"Name": "Ratio",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its width over its height (masonry, justified): the shape of its picture."
+				},
+				{
+					"Name": "Span",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The columns it takes (masonry)."
+				},
+				{
+					"Name": "Value",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its value: its area in a treemap."
+				},
+				{
+					"Name": "Row",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its row (bento), from 0."
+				},
+				{
+					"Name": "Column",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its column (bento), from 0."
+				},
+				{
+					"Name": "Class",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "More classes."
+				}
+			],
+			"Slots": [],
+			"Container": true,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [],
+			"Sample": {
+				"ID": "sea",
+				"Title": "The sea",
+				"Ratio": 1.5
+			}
+		},
+		{
 			"Name": "Tile",
 			"Kind": "Component",
 			"Group": "layout",
@@ -23232,6 +25362,95 @@
 			"Sample": {}
 		},
 		{
+			"Name": "Layouts",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "The places of tiles, cards and pictures in a box: a packed grid (bento), masonry, justified rows and a treemap.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [
+				"Pack(items, options)",
+				"Masonry(items, options)",
+				"Justified(items, options)",
+				"Treemap(items, options)"
+			],
+			"Sample": {}
+		},
+		{
+			"Name": "Signatures",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "How much a signature looks like another or like the samples of a person: a help for an interface, not a check of security.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [
+				"Compare(a, b)",
+				"Enroll(samples)",
+				"Match(signature, reference, threshold)",
+				"Normalize(signature)"
+			],
+			"Sample": {}
+		},
+		{
+			"Name": "Calculations",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "Formulas of numbers read without eval: variables, functions, conditions.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [
+				"Evaluate(text, variables, options)",
+				"Compile(text, options)",
+				"Names(text)"
+			],
+			"Sample": {}
+		},
+		{
+			"Name": "Audience",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "Who came to a page and which variant they see: rules by UTM, parameters, referrer, language and device, A/B tests kept for the visitor, views and conversions.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [
+				"Context(options)",
+				"Match(rule, context)",
+				"Choose(experiment, variants, options)",
+				"Chosen(experiment)",
+				"Forget(experiment)",
+				"View(experiment, data)",
+				"Convert(experiment, goal, data)",
+				"Goal(element, goal, data)",
+				"OnEvent(callback)",
+				"OffEvent(callback)"
+			],
+			"Sample": {}
+		},
+		{
 			"Name": "Visibility",
 			"Kind": "Service",
 			"Group": "",
@@ -23949,6 +26168,19 @@
 		"elemenx-calendar-days": [],
 		"elemenx-calendar-weekday": [],
 		"elemenx-calendar-grid": [],
+		"elemenx-landing-header": [
+			"center"
+		],
+		"elemenx-landing-title": [],
+		"elemenx-landing-lead": [],
+		"elemenx-landing-actions": [
+			"center"
+		],
+		"elemenx-landing-action": [
+			"ghost",
+			"primary",
+			"secondary"
+		],
 		"elemenx-number-step": [],
 		"elemenx-tab-close": [],
 		"elemenx-table-sort": [],
@@ -24500,6 +26732,10 @@
 		"elemenx-signature-line": [],
 		"elemenx-signature-placeholder": [],
 		"elemenx-signature-controls": [],
+		"elemenx-signature-result": [
+			"match",
+			"mismatch"
+		],
 		"elemenx-cropper": [
 			"disabled",
 			"round"
@@ -25712,6 +27948,165 @@
 			"side"
 		],
 		"elemenx-tile-new": [],
+		"elemenx-mosaic": [
+			"selectable",
+			"treemap"
+		],
+		"elemenx-mosaic-item": [
+			"colored",
+			"parent",
+			"picture"
+		],
+		"elemenx-mosaic-image": [],
+		"elemenx-mosaic-caption": [],
+		"elemenx-mosaic-text": [],
+		"elemenx-mosaic-custom": [],
+		"elemenx-mosaic-content": [],
+		"elemenx-pipeline": [],
+		"elemenx-pipeline-header": [],
+		"elemenx-pipeline-summary": [],
+		"elemenx-pipeline-board": [],
+		"elemenx-pipeline-links": [],
+		"elemenx-pipeline-link": [
+			"faded",
+			"related"
+		],
+		"elemenx-pipeline-stage": [],
+		"elemenx-pipeline-stage-header": [],
+		"elemenx-pipeline-job": [
+			"faded",
+			"failed",
+			"inner",
+			"related",
+			"running",
+			"selected"
+		],
+		"elemenx-pipeline-job-body": [],
+		"elemenx-pipeline-job-name": [],
+		"elemenx-pipeline-job-text": [],
+		"elemenx-pipeline-time": [],
+		"elemenx-pipeline-count": [],
+		"elemenx-pipeline-action": [],
+		"elemenx-pipeline-status": [
+			"failed",
+			"manual",
+			"running",
+			"small",
+			"success",
+			"warning"
+		],
+		"elemenx-pipeline-content": [],
+		"elemenx-calculator": [
+			"scientific"
+		],
+		"elemenx-calculator-display": [],
+		"elemenx-calculator-line": [],
+		"elemenx-calculator-result": [],
+		"elemenx-calculator-keys": [],
+		"elemenx-calculator-key": [
+			"equals",
+			"function",
+			"operator",
+			"pressed"
+		],
+		"elemenx-calculator-history": [],
+		"elemenx-calculator-record": [],
+		"elemenx-calculator-record-line": [],
+		"elemenx-business-calculator": [
+			"side"
+		],
+		"elemenx-business-calculator-title": [],
+		"elemenx-business-calculator-body": [],
+		"elemenx-business-calculator-fields": [],
+		"elemenx-business-calculator-control": [],
+		"elemenx-business-calculator-unit": [],
+		"elemenx-business-calculator-results": [],
+		"elemenx-business-calculator-primary": [],
+		"elemenx-business-calculator-label": [],
+		"elemenx-business-calculator-hint": [],
+		"elemenx-business-calculator-value": [],
+		"elemenx-business-calculator-bar": [],
+		"elemenx-business-calculator-part": [],
+		"elemenx-business-calculator-list": [],
+		"elemenx-business-calculator-row": [],
+		"elemenx-business-calculator-swatch": [],
+		"elemenx-quiz": [],
+		"elemenx-quiz-intro": [],
+		"elemenx-quiz-question": [],
+		"elemenx-quiz-result": [],
+		"elemenx-quiz-title": [],
+		"elemenx-quiz-text": [],
+		"elemenx-quiz-top": [],
+		"elemenx-quiz-progress": [],
+		"elemenx-quiz-clock": [
+			"ending"
+		],
+		"elemenx-quiz-image": [],
+		"elemenx-quiz-options": [],
+		"elemenx-quiz-order": [],
+		"elemenx-quiz-review": [],
+		"elemenx-quiz-option": [
+			"chosen",
+			"right",
+			"single",
+			"wrong"
+		],
+		"elemenx-quiz-mark": [],
+		"elemenx-quiz-label": [],
+		"elemenx-quiz-state": [],
+		"elemenx-quiz-item": [],
+		"elemenx-quiz-feedback": [
+			"wrong"
+		],
+		"elemenx-quiz-actions": [],
+		"elemenx-quiz-score": [],
+		"elemenx-quiz-reviewed": [],
+		"elemenx-quiz-review-body": [],
+		"elemenx-quiz-review-answer": [],
+		"elemenx-quiz-review-explanation": [],
+		"elemenx-experiment": [],
+		"elemenx-variant": [],
+		"elemenx-landing-hero": [
+			"center",
+			"cover"
+		],
+		"elemenx-landing-hero-body": [],
+		"elemenx-landing-hero-title": [],
+		"elemenx-landing-hero-media": [],
+		"elemenx-landing-hero-image": [],
+		"elemenx-landing-features": [
+			"cards",
+			"center"
+		],
+		"elemenx-landing-features-grid": [],
+		"elemenx-landing-feature": [],
+		"elemenx-landing-feature-icon": [],
+		"elemenx-landing-feature-image": [],
+		"elemenx-landing-feature-title": [],
+		"elemenx-landing-feature-text": [],
+		"elemenx-landing-stats": [],
+		"elemenx-landing-stats-list": [],
+		"elemenx-landing-stat": [],
+		"elemenx-landing-stat-label": [],
+		"elemenx-landing-stat-value": [],
+		"elemenx-landing-testimonials": [],
+		"elemenx-landing-testimonials-grid": [],
+		"elemenx-landing-testimonial": [],
+		"elemenx-landing-testimonial-text": [],
+		"elemenx-landing-testimonial-author": [],
+		"elemenx-landing-testimonial-who": [],
+		"elemenx-landing-testimonial-role": [],
+		"elemenx-landing-faq": [],
+		"elemenx-landing-faq-list": [],
+		"elemenx-landing-faq-item": [],
+		"elemenx-landing-faq-question": [],
+		"elemenx-landing-faq-answer": [],
+		"elemenx-landing-cta": [
+			"accent",
+			"center"
+		],
+		"elemenx-landing-cta-side": [],
+		"elemenx-landing-cta-title": [],
 		"elemenx-nav": [
 			"collapsed"
 		],
