@@ -706,6 +706,8 @@ Elemenx.Component('GameScene', {
 				visit(object, seen);
 			});
 
+			scene.StarMass = null;
+
 			order.forEach(function (object) {
 				derive(object, objects);
 			});
@@ -826,8 +828,6 @@ Elemenx.Component('GameScene', {
 
 		/* The mass an object goes round, in masses of the Sun. */
 		function massAround (object, parent, objects) {
-			var total = 0;
-
 			if (parent && trait(parent, 'Star'))
 				return number(trait(parent, 'Star').Mass, 1);
 
@@ -837,12 +837,17 @@ Elemenx.Component('GameScene', {
 			if (parent)
 				return astronomy.EarthMass;
 
-			Object.keys(objects).forEach(function (id) {
-				if (trait(objects[id], 'Star') && !objects[id].Parent && !objects[id].Owner)
-					total += number(trait(objects[id], 'Star').Mass, 1);
-			});
+			/* Of all the stars, once when the scene is made: it asks for every object. */
+			if (scene.StarMass === null) {
+				scene.StarMass = 0;
 
-			return total || 1;
+				Object.keys(objects).forEach(function (id) {
+					if (trait(objects[id], 'Star') && !objects[id].Parent && !objects[id].Owner)
+						scene.StarMass += number(trait(objects[id], 'Star').Mass, 1);
+				});
+			}
+
+			return scene.StarMass || 1;
 		}
 
 		function toView (point) {
@@ -2843,7 +2848,7 @@ Elemenx.Component('GameScene', {
 			forget();
 		}
 
-		function frame (now) {
+		function frame (now, quiet) {
 			var elapsed = scene.Last ? Math.min(0.1, (now - scene.Last) / 1000) : 0;
 
 			scene.Last = now;
@@ -2862,7 +2867,7 @@ Elemenx.Component('GameScene', {
 			if (scene.Surface) {
 				surfaceStep(elapsed);
 
-				if (scene.Surface && renderer && !renderer.Lost && scene.Width && scene.Height) {
+				if (scene.Surface && !quiet && renderer && !renderer.Lost && scene.Width && scene.Height) {
 					drawSurface();
 
 					adapt(elapsed);
@@ -2876,7 +2881,7 @@ Elemenx.Component('GameScene', {
 			if (scene.Ground) aimGround(elapsed);
 			else aim(elapsed);
 
-			if (renderer && !renderer.Lost && scene.Width && scene.Height) {
+			if (!quiet && renderer && !renderer.Lost && scene.Width && scene.Height) {
 				draw();
 
 				adapt(elapsed);
@@ -3255,8 +3260,31 @@ Elemenx.Component('GameScene', {
 		if (this.Selected)
 			select(this.Selected, true);
 
+		/* A scene out of view goes on but draws nothing, and an expensive frame leaves the page as much time after it. */
+		scene.Seen = true;
+
+		if (typeof view.IntersectionObserver === 'function') {
+			scene.Sight = new view.IntersectionObserver(function (entries) {
+				scene.Seen = entries[entries.length - 1].isIntersecting;
+			});
+
+			scene.Sight.observe(element);
+		}
+
 		scene.Loop = this.$Service('GameLoop').Create({Window: view, Render: function () {
-			frame(view.performance ? view.performance.now() : Date.now());
+			var now = view.performance ? view.performance.now() : Date.now();
+			var ended;
+
+			if (!scene.Seen || now < scene.Rest) {
+				frame(now, true);
+
+				return;
+			}
+
+			frame(now);
+
+			ended = view.performance ? view.performance.now() : Date.now();
+			scene.Rest = ended - now > 24 ? ended + Math.min(1000, ended - now) : 0;
 		}});
 
 		scene.Loop.Start();
@@ -3291,6 +3319,9 @@ Elemenx.Component('GameScene', {
 
 		scene.Loop.Stop();
 		scene.Watcher.disconnect();
+
+		if (scene.Sight)
+			scene.Sight.disconnect();
 
 		if (scene.Sizes)
 			scene.Sizes.disconnect();

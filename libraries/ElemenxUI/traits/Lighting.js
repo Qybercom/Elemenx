@@ -9,7 +9,7 @@
  * far as the shadows reach).
  *
  * Quality: low, medium, high or ultra; empty chooses by the graphics card and steps down while frames are late.
- * - low: no picture after the drawing, one shadow, the masses nearer.
+ * - low: no picture after the drawing, one shadow, the masses nearer, no grass. A machine with no graphics card gets it.
  * - medium: bloom, the air, edges smoothed (4 samples).
  * - high: two shadow maps, rays, ambient occlusion at half size, the bounce, water that mirrors what is on the screen, and
  *   frames that add up (TAA: the view shakes by less than a pixel, and each frame is mixed with the last), so what is
@@ -31,7 +31,7 @@ Elemenx.Trait('Lighting', {
 		var state = {Width: 0, Height: 0, Level: '', Scene: null, Bloom: [], Dark: null, Soft: null, Programs: null, Late: 0, Frames: 0, Step: 0};
 		var levels = ['low', 'medium', 'high', 'ultra'];
 		var sets = {
-			low: {Post: false, Cascades: 1, Bounce: false, Occlusion: 0, Rays: false, Samples: 0, Reach: 0.6},
+			low: {Post: false, Cascades: 1, Bounce: false, Occlusion: 0, Rays: false, Samples: 0, Reach: 0.6, Grass: false},
 			medium: {Post: true, Cascades: 1, Bounce: false, Occlusion: 0, Rays: false, Samples: 4, Reach: 0.8},
 			high: {Post: true, Cascades: 2, Bounce: true, Occlusion: 0.5, Rays: true, Samples: 4, Reach: 1, Mirror: true, Frames: true},
 			ultra: {Post: true, Cascades: 2, Bounce: true, Occlusion: 1, Rays: true, Samples: 4, Reach: 1.4, Mirror: true, Frames: true}
@@ -44,7 +44,8 @@ Elemenx.Trait('Lighting', {
 			var gl = renderer.GL;
 			var info = gl.getExtension('WEBGL_debug_renderer_info');
 			var name = info ? String(gl.getParameter(info.UNMASKED_RENDERER_WEBGL)) : '';
-			if (/Adreno|Mali|PowerVR|Apple A|Intel|UHD|SwiftShader|llvmpipe/i.test(name)) return 'medium';
+			if (/SwiftShader|llvmpipe|Software|Microsoft Basic/i.test(name)) return 'low';
+			if (/Adreno|Mali|PowerVR|Apple A|Intel|UHD/i.test(name)) return 'medium';
 
 			return 'high';
 		}

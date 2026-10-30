@@ -549,7 +549,7 @@ Elemenx.Trait('Scatter', {
 			var x;
 			var z;
 
-			if (!rule || !ground || ground.Field.Whole) {
+			if (!rule || !ground || ground.Field.Whole || self.Graphics().Grass === false) {
 				if (state.Grass)
 					state.Grass.Blades = 0;
 

@@ -3276,6 +3276,13 @@ for (const origin of origins) {
 			await expect(terrain.locator('.elemenx-section-header')).toContainText('3 going to the village');
 			await expect(terrain.locator('.elemenx-section-header')).toContainText('arrived at', {timeout: 30000});
 
+			/* All three have arrived: the note of one that comes later would take the place of the one of the save. */
+			await expect.poll(async function () {
+				return scene.evaluate(function (node) {
+					return Object.keys(Elemenx.Instance(node).Scene().Ways).length;
+				});
+			}, {timeout: 30000}).toBe(0);
+
 			await terrain.getByRole('button', {name: 'Save'}).click();
 
 			await expect(terrain.locator('.elemenx-section-header')).toContainText('Saved:');
@@ -4448,11 +4455,12 @@ for (const origin of origins) {
 
 			await page.locator('.ui-kit-intro').getByRole('button', {name: 'System theme'}).click();
 
-			expect(await surface()).toBe('rgb(29, 32, 37)');
+			await expect.poll(surface).toBe('rgb(29, 32, 37)');
 
+			/* The browser tells of a change of the system when it can: not at once on a busy machine. */
 			await page.emulateMedia({colorScheme: 'light'});
 
-			expect(await surface()).toBe('rgb(255, 255, 255)');
+			await expect.poll(surface).toBe('rgb(255, 255, 255)');
 			await expect(page.getByRole('button', {name: 'System theme'}).first()).toBeVisible();
 		});
 

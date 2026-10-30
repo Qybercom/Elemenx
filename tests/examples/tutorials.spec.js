@@ -227,7 +227,7 @@ var Checks = {
 			return page.evaluate(function () {
 				return Elemenx.Instance(document.querySelector('.telemetry')).Own().Seq;
 			});
-		}, {timeout: 2000}).not.toBe(held);
+		}, {timeout: 15000}).not.toBe(held);
 
 		/* Paused: the packets go on, the board stays (a page just held up, on a busy machine, answers late). */
 		await page.getByRole('button', {name: 'Pause'}).click();

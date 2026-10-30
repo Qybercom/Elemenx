@@ -32,7 +32,9 @@ export default defineConfig({
 	use: {
 		baseURL: 'http://127.0.0.1:4273',
 		channel: 'chrome',
-		headless: true
+		headless: true,
+		/* ELEMENX_SOFTWARE draws by the processor, as a runner of CI with no graphics card does. */
+		launchOptions: process.env.ELEMENX_SOFTWARE ? {args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader']} : {}
 	},
 	webServer: [
 		{

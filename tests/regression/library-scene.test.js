@@ -661,6 +661,9 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 
 		inner.Wanted = 40;
 		inner.Distance = 40;
+
+		scene.Engine().Frame(performance.now() + 900);
+
 		inner.Ground.Target = [10, 0, 20];
 
 		scene.Engine().Frame(performance.now() + 1000);
@@ -779,6 +782,32 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 
 		expect(world.Get('statue').Kind).toBe('thing');
 		expect(world.Get('statue').Type).toBe('statue');
+	});
+
+	/* Regression: each object summed the stars of all the objects, so 20 000 of them froze the page until it crashed. */
+	it('takes thousands of objects at once in a time that grows with their number', async function () {
+		var mounted = await mount('<GameScene (ready)="Ready">' +
+			'<GameObject ID="land" Kind="ground" Size="400" Height="4" Water="0" Seed="test" />' +
+			'<GameObject ID="sun" Kind="sun" />' +
+		'</GameScene>');
+		var scene = mounted.Space;
+		var list = [];
+		var started;
+		var i;
+
+		for (i = 0; i < 12000; i++)
+			list.push({ID: 'tree-' + i, Kind: 'pine', X: i % 150, Y: Math.floor(i / 150)});
+
+		started = performance.now();
+
+		scene.Add(list);
+
+		expect(performance.now() - started).toBeLessThan(8000);
+		expect(scene.Scene().Roots.length).toBe(12002);
+
+		scene.Engine().Frame(performance.now() + 100);
+
+		expect(scene.Scene().Still.length).toBe(12000);
 	});
 
 	it('keeps what did not change when the scene is made again, and stands what stays still once', async function () {
@@ -1117,6 +1146,8 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 		};
 		var lit;
 		var shaded;
+		var squares = 0;
+		var steady = 0;
 		var i;
 
 		inner.Wanted = 70;
@@ -1127,9 +1158,13 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 			return Object.keys(inner.Ground.Nodes).length > 6;
 		}, 3000);
 
-		/* The view comes to rest and the finest squares of the ground are made. */
-		for (i = 0; i < 120; i++)
-			light();
+		/* The view comes to rest and the finest squares of the ground are made: until no more come. */
+		for (i = 0; i < 200 && steady < 4; i++) {
+			scene.Engine().Frame(performance.now() + (at += 1000));
+
+			steady = Object.keys(inner.Ground.Nodes).length === squares ? steady + 1 : 0;
+			squares = Object.keys(inner.Ground.Nodes).length;
+		}
 
 		shaded = light();
 
