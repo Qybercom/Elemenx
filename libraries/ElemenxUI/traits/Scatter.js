@@ -6,6 +6,10 @@
  * of its patches), Seed, Blocks (no way through them). A GameObject of a kind with the trait Grass (grass) grows blades
  * in the vertex shader round the view: Density, Height, Color, MaxHeight, MaxSlope.
  *
+ * Biome on a ground (the Biomes Service) brings its colors, its rules and its grass by itself, so a whole land is one
+ * attribute; a GameObject of kind village lays out houses and their roads at its X and Y (Houses, Radius, Seed), and what
+ * is sown keeps away from them.
+ *
  * The things live in squares of the ground, typed arrays made a few at a time, the nearest first. Each square in view
  * gives its things to the stream of their model and level: near the whole model, farther two simpler ones (Models.Levels),
  * far a picture baked from all sides that is lit as the model is (Graphics3D.Target). The streams are made again only
@@ -24,7 +28,8 @@ Elemenx.Trait('Scatter', {
 		var vectors = graphics.Vectors;
 		var shaders = this.ScatterShaders(graphics);
 		var size = 48;
-		var state = {Key: '', Squares: [], Waiting: [], Streams: {}, Meshes: {}, Baked: {}, Blocked: {}, Things: 0, Moved: true, Eye: null, Look: null, Grass: null, Field: null, Programs: null};
+		var steps = [[62, 74], [140, 165], [270, 310]];
+		var state = {Kept: {}, Houses: [], Settled: '', Surfaces: {}, Key: '', Squares: [], Waiting: [], Streams: {}, Meshes: {}, Baked: {}, Blocked: {}, Things: 0, Moved: true, Eye: null, Look: null, Grass: null, Field: null, Programs: null};
 
 		this.Sown = function () {
 			return {Things: state.Things, Squares: state.Squares.length, Waiting: state.Waiting.length, Draws: Object.keys(state.Streams).filter(function (key) {
@@ -32,13 +37,21 @@ Elemenx.Trait('Scatter', {
 			}).length, Blades: state.Grass ? state.Grass.Blades : 0};
 		};
 
+		/* A surface that fades as a level gives way to the next: a pattern of holes that grows, so nothing pops. */
+		function dithered (fragment) {
+			var at = fragment.lastIndexOf('void main() {');
+
+			return fragment.slice(0, at) + 'in float vFade;\nvoid main() {\n\tif (vFade < fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715))))) discard;' + fragment.slice(at + 13);
+		}
+
 		function programs () {
 			if (!state.Programs) {
 				state.Programs = {
-					Many: renderer.Program(shaders.Vertex, self.Shaders(graphics).Solid),
+					Many: renderer.Program(shaders.Vertex, dithered(self.Shaders(graphics).Solid)),
+					Files: renderer.Program(shaders.Vertex, dithered(self.Shaders(graphics).Pbr)),
 					Depth: renderer.Program(shaders.Vertex, self.Shaders(graphics).Depth),
 					Bake: renderer.Program(shaders.BakeVertex, shaders.Bake),
-					Picture: renderer.Program(shaders.PictureVertex, shaders.Picture),
+					Picture: renderer.Program(shaders.PictureVertex, dithered(shaders.Picture)),
 					Grass: renderer.Program(shaders.GrassVertex, shaders.Grass)
 				};
 			}
@@ -46,22 +59,108 @@ Elemenx.Trait('Scatter', {
 			return state.Programs;
 		}
 
+		function biome () {
+			var ground = scene.Roots.filter(function (object) {
+				return object.Traits.Terrain;
+			})[0];
+
+			return ground ? self.$Service('Biomes').Get(ground.Values.Biome) : null;
+		}
+
 		function rules () {
-			return scene.Roots.filter(function (object) {
+			var given = scene.Roots.filter(function (object) {
 				return object.Traits.Scatter;
 			}).map(function (object) {
 				return Object.assign({ID: object.ID}, object.Traits.Scatter, object.Values);
 			});
+			var land = biome();
+
+			return land ? given.concat(land.Scatter.map(function (rule, index) {
+				return Object.assign({ID: 'biome-' + index}, rule);
+			})) : given;
+		}
+
+		/* The villages of the ground, once: their houses are objects of the scene, their roads are on the ground. */
+		function settle (field) {
+			var villages = scene.Roots.filter(function (object) {
+				return object.Traits.Settlement;
+			});
+			var key = villages.map(function (object) {
+				return JSON.stringify([object.ID, object.Traits.Settlement, object.Values]);
+			}).join('|') + field.Size + field.Top;
+			var made = [];
+			var roads = [];
+
+			if (state.Settled === key) return;
+
+			state.Settled = key;
+			state.Kept = {};
+
+			state.Houses.forEach(function (id) {
+				self.Remove(id);
+			});
+
+			state.Houses = [];
+
+			villages.forEach(function (object) {
+				var plan = self.$Service('Biomes').Village(field, Object.assign({}, object.Traits.Settlement, object.Values, {Seed: object.Values.Seed === undefined ? object.ID : object.Values.Seed}));
+
+				plan.Objects.forEach(function (house, index) {
+					var id = object.ID + '/house-' + index;
+					var size = house.Size;
+
+					made.push({ID: id, Kind: house.Kind, Name: house.Kind.charAt(0).toUpperCase() + house.Kind.slice(1), X: house.X, Y: house.Y, Size: size, Traits: {Model: {Size: size}}});
+					state.Houses.push(id);
+
+					keep(house.X, house.Y, size * 0.8);
+				});
+
+				roads = roads.concat(plan.Roads);
+			});
+
+			field.Roads = roads.length ? roads : null;
+
+			if (roads.length || made.length) {
+				Object.keys(scene.Ground.Nodes).forEach(function (name) {
+					scene.Ground.Nodes[name].Mesh.Destroy();
+
+					delete scene.Ground.Nodes[name];
+				});
+
+				state.Key = '';
+			}
+
+			if (made.length) {
+				window.setTimeout(function () {
+					self.Add(made);
+				}, 0);
+			}
+		}
+
+		/* The cells of 4 by 4 that nothing is sown on. */
+		function keep (x, z, reach) {
+			var cx;
+			var cz;
+
+			for (cz = Math.floor((z - reach) / 4); cz <= Math.floor((z + reach) / 4); cz++) {
+				for (cx = Math.floor((x - reach) / 4); cx <= Math.floor((x + reach) / 4); cx++)
+					state.Kept[cx + ':' + cz] = true;
+			}
 		}
 
 		/* Everything sown goes when the ground or the rules changed. */
 		function prepare () {
 			var ground = scene.Ground;
 			var given = rules();
-			var key = ground ? ground.Key + JSON.stringify(given) : '';
+			var key;
 			var half;
 			var x;
 			var z;
+
+			if (ground && !ground.Field.Whole)
+				settle(ground.Field);
+
+			key = ground ? ground.Key + JSON.stringify(given) : '';
 
 			if (key === state.Key) return;
 
@@ -85,6 +184,9 @@ Elemenx.Trait('Scatter', {
 		function chance (rule, place, field, noise) {
 			var cover = rule.Cover === undefined ? 1 : Number(rule.Cover);
 			var height = field.Height(place[0], place[1]);
+
+			if (state.Kept[Math.floor(place[0] / 4) + ':' + Math.floor(place[1] / 4)]) return null;
+			if (field.Roads && self.$Service('Terrain').OnRoad(field, place[0], place[1], 3)) return null;
 			if (height < (rule.MinHeight === undefined ? 1 : Number(rule.MinHeight))) return null;
 			if (rule.MaxHeight !== undefined && height > Number(rule.MaxHeight)) return null;
 			if (field.Slope(place[0], place[1]) > (rule.MaxSlope === undefined ? 0.3 : Number(rule.MaxSlope))) return null;
@@ -252,21 +354,59 @@ Elemenx.Trait('Scatter', {
 
 				if (!inside) return;
 
-				level = distance < 70 * quality ? 0 : distance < 160 * quality ? 1 : distance < 300 * quality ? 2 : 3;
+				/* Near a border of two levels a square is in both, and the shaders fade one into the other. */
+				level = steps.filter(function (border) {
+					return distance >= border[1] * quality;
+				}).length;
 
 				Object.keys(square.Lists).forEach(function (key) {
 					append(stream(key, level), square.Lists[key]);
+
+					if (level < 3 && distance > (steps[level][0]) * quality)
+						append(stream(key, level + 1), square.Lists[key]);
 				});
 			});
 
 			Object.keys(state.Streams).forEach(function (name) {
 				var each = state.Streams[name];
-				var mesh = each.Level === 3 ? picture(each.Key).Quad : levels(each.Key)[each.Level];
+				var data = {aInstance: {Size: 4, Data: each.Places.subarray(0, each.Count * 4)}, aInstance2: {Size: 4, Data: each.Extra.subarray(0, each.Count * 4)}};
 
 				if (!each.Count) return;
 
-				mesh.Instance({aInstance: {Size: 4, Data: each.Places.subarray(0, each.Count * 4)}, aInstance2: {Size: 4, Data: each.Extra.subarray(0, each.Count * 4)}}, each.Count);
+				if (each.Level === 0 && surfaces(each.Key)) {
+					surfaces(each.Key).forEach(function (one) {
+						one.Mesh.Instance(data, each.Count);
+					});
+
+					return;
+				}
+
+				(each.Level === 3 ? picture(each.Key).Quad : levels(each.Key)[each.Level]).Instance(data, each.Count);
 			});
+		}
+
+		/* The surfaces of a model of a file, each with its material: near the eye it is drawn with its pictures. */
+		function surfaces (key) {
+			var parts = key.split('~');
+			var model = library.Make(parts[0], {Variant: Number(parts[1])});
+			if (!model.Asset) return null;
+
+			if (!state.Surfaces[key]) {
+				state.Surfaces[key] = library.Surfaces(model).map(function (one) {
+					return Object.assign(one, {Mesh: renderer.Mesh(one.Geometry)});
+				});
+			}
+
+			return state.Surfaces[key];
+		}
+
+		/* Where a level is seen: it comes in between the first two distances, and goes between the last two. */
+		function fadeOf (level) {
+			var quality = self.ScatterReach ? self.ScatterReach() : 1;
+			var from = level ? steps[level - 1] : [-2, -1];
+			var to = level < 3 ? steps[level] : [1e8, 2e8];
+
+			return scene.Camera.Ortho ? [-2, -1, 1e8, 2e8] : [from[0] * quality, from[1] * quality, to[0] * quality, to[1] * quality];
 		}
 
 		/* A picture of a model from all sides: a grid of views of the half of a ball above it, colors and normals. */
@@ -395,7 +535,7 @@ Elemenx.Trait('Scatter', {
 				return object.Traits.Grass;
 			}).map(function (object) {
 				return Object.assign({}, object.Traits.Grass, object.Values);
-			})[0];
+			})[0] || biome() && biome().Grass;
 			var grass;
 			var view;
 			var eye = scene.Eye;
@@ -409,7 +549,12 @@ Elemenx.Trait('Scatter', {
 			var x;
 			var z;
 
-			if (!rule || !ground || ground.Field.Whole) return;
+			if (!rule || !ground || ground.Field.Whole) {
+				if (state.Grass)
+					state.Grass.Blades = 0;
+
+				return;
+			}
 
 			grass = fieldOf(rule);
 
@@ -482,7 +627,7 @@ Elemenx.Trait('Scatter', {
 			var origin = vectors.Subtract([0, 0, 0], scene.Eye);
 
 			each(function (one) {
-				if (one.Level === 3) return;
+				if (one.Level === 3 || one.Level === 0 && surfaces(one.Key)) return;
 
 				renderer.Draw(levels(one.Key)[Math.max(1, one.Level)], programs().Depth, {uViewProjection: matrix, uOrigin: origin, uWind: scene.Seconds, uSway: 0}, {Cull: 'none'});
 			});
@@ -498,15 +643,23 @@ Elemenx.Trait('Scatter', {
 				var made = library.Make(parts[0], {Variant: Number(parts[1])});
 				var baked;
 
+				if (one.Level === 0 && surfaces(one.Key)) {
+					surfaces(one.Key).forEach(function (each) {
+						renderer.Draw(each.Mesh, programs().Files, Object.assign({}, uniforms, {uOrigin: origin, uWind: scene.Seconds, uSway: made.Sway, uFade: fadeOf(0), uSoftness: each.Soft}, engine.Surface(each)), {Cull: each.Material.DoubleSided ? 'none' : 'back'});
+					});
+
+					return;
+				}
+
 				if (one.Level < 3) {
-					renderer.Draw(levels(one.Key)[one.Level], programs().Many, Object.assign({}, uniforms, {uOrigin: origin, uWind: scene.Seconds, uSway: made.Sway, uShine: 8, uSpecular: 0.05, uRough: 0.5, uSoft: made.Sway ? 0.9 : 0}), {Cull: 'back'});
+					renderer.Draw(levels(one.Key)[one.Level], programs().Many, Object.assign({}, uniforms, {uOrigin: origin, uWind: scene.Seconds, uSway: made.Sway, uShine: 8, uSpecular: 0.05, uRough: 0.5, uSoft: made.Sway ? 0.9 : 0, uFade: fadeOf(one.Level)}), {Cull: 'back'});
 
 					return;
 				}
 
 				baked = picture(one.Key);
 
-				renderer.Draw(baked.Quad, programs().Picture, Object.assign({}, uniforms, {uOrigin: origin, uColors: baked.Target.Textures[0], uNormals: baked.Target.Textures[1], uCells: baked.Cells, uRadius: baked.Radius, uMiddle: baked.Middle, uSun: ground.Sun, uSunColor: ground.SunColor, uParallel: scene.Camera.Ortho ? vectors.Normalize(vectors.Subtract(scene.Camera.Position, scene.Camera.Target)).concat([1]) : [0, 0, 0, 0]}), {Cull: 'none'});
+				renderer.Draw(baked.Quad, programs().Picture, Object.assign({}, uniforms, {uOrigin: origin, uColors: baked.Target.Textures[0], uNormals: baked.Target.Textures[1], uFade: fadeOf(3), uCells: baked.Cells, uRadius: baked.Radius, uMiddle: baked.Middle, uSun: ground.Sun, uSunColor: ground.SunColor, uParallel: scene.Camera.Ortho ? vectors.Normalize(vectors.Subtract(scene.Camera.Position, scene.Camera.Target)).concat([1]) : [0, 0, 0, 0]}), {Cull: 'none'});
 			});
 
 			drawGrass(uniforms, matrix);
@@ -529,16 +682,21 @@ Elemenx.Trait('Scatter', {
 				'in vec3 aPosition;',
 				'in vec3 aNormal;',
 				'in vec3 aColor;',
+				'in vec2 aUV;',
 				'in vec4 aInstance;',
 				'in vec4 aInstance2;',
 				'uniform mat4 uViewProjection;',
 				'uniform vec3 uOrigin;',
 				'uniform float uWind;',
 				'uniform float uSway;',
+				'uniform vec4 uFade;',
 				'out vec3 vWorld;',
 				'out vec3 vNormal;',
 				'out vec3 vLocal;',
 				'out vec3 vColor;',
+				'out vec2 vUV;',
+				'out vec3 vTint;',
+				'out float vFade;',
 				'void main() {',
 				'	float c = cos(aInstance2.x);',
 				'	float s = sin(aInstance2.x);',
@@ -551,6 +709,10 @@ Elemenx.Trait('Scatter', {
 				'	vNormal = vec3(c * aNormal.x + s * aNormal.z, aNormal.y, c * aNormal.z - s * aNormal.x);',
 				'	vLocal = aPosition;',
 				'	vColor = aColor * aInstance2.yzw;',
+				'	vUV = aUV;',
+				'	vTint = aInstance2.yzw;',
+				'	float far = length(world);',
+				'	vFade = smoothstep(uFade.x, uFade.y, far) * (1.0 - smoothstep(uFade.z, uFade.w, far));',
 				'	gl_Position = uViewProjection * vec4(world, 1.0);',
 				'}'
 			].join('\n'),
@@ -590,10 +752,12 @@ Elemenx.Trait('Scatter', {
 				'uniform float uRadius;',
 				'uniform float uMiddle;',
 				'uniform vec4 uParallel;',
+				'uniform vec4 uFade;',
 				'out vec2 vUV;',
 				'out vec3 vTint;',
 				'out vec3 vWorld;',
 				'out vec2 vTurn;',
+				'out float vFade;',
 				'void main() {',
 				'	vec3 center = aInstance.xyz + uOrigin + vec3(0.0, uMiddle * aInstance.w, 0.0);',
 				'	vec3 to = uParallel.w > 0.5 ? uParallel.xyz : normalize(-center);',
@@ -610,6 +774,8 @@ Elemenx.Trait('Scatter', {
 				'	vTint = aInstance2.yzw;',
 				'	vWorld = world;',
 				'	vTurn = vec2(c, s);',
+				'	float far = length(world);',
+				'	vFade = smoothstep(uFade.x, uFade.y, far) * (1.0 - smoothstep(uFade.z, uFade.w, far));',
 				'	gl_Position = uViewProjection * vec4(world, 1.0);',
 				'}'
 			].join('\n'),

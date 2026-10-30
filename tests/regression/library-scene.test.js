@@ -1041,6 +1041,53 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 		expect(gl.getError()).toBe(gl.NO_ERROR);
 	});
 
+	it('makes a whole land of one attribute, and a village with its roads that nothing grows on', async function () {
+		var mounted = await mount('<GameScene (ready)="Ready">' +
+			'<GameObject ID="land" Kind="ground" Size="288" Height="24" Water="0.15" Seed="test" Biome="desert" />' +
+			'<GameObject ID="sun" Kind="sun" />' +
+			'<GameObject ID="oasis" Kind="village" X="10" Y="10" Houses="6" Seed="a" />' +
+		'</GameScene>');
+		var scene = mounted.Space;
+		var inner = scene.Scene();
+		var engine = scene.Engine();
+		var terrain = Elemenx.Service('Terrain');
+		var field;
+
+		await waitFor(function () {
+			engine.Frame(performance.now() + 100);
+
+			return inner.Ground && inner.Ground.Field.Roads && scene.Sown().Squares > 0 && scene.Sown().Waiting === 0;
+		}, 8000);
+
+		field = inner.Ground.Field;
+
+		expect(field.Palette).toEqual(Elemenx.Service('Biomes').Get('desert').Ground);
+		expect(scene.Sown().Things).toBeGreaterThan(20);
+
+		await waitFor(function () {
+			return scene.Objects(function (object) {
+				return /house-/.test(object.ID);
+			}).length > 2;
+		}, 3000);
+
+		/* The ground has its colors, its roads are painted, and nothing stands on them. */
+		expect(terrain.Paint(field, 200, 200, 3, 0)).not.toEqual([0.3, 0.5, 0.22]);
+		expect(field.Roads.length).toBeGreaterThan(2);
+		expect(terrain.OnRoad(field, field.Roads[0][0][0], field.Roads[0][0][1], 1)).toBe(true);
+		expect(terrain.Paint(field, field.Roads[0][0][0], field.Roads[0][0][1], 3, 0)).toEqual(Elemenx.Service('Biomes').Get('desert').Ground.Road);
+
+		/* A land of another name is another land. */
+		scene.Change('land', {Biome: 'alien'});
+
+		await waitFor(function () {
+			engine.Frame(performance.now() + 200);
+
+			return inner.Ground && inner.Ground.Field.Palette === Elemenx.Service('Biomes').Get('alien').Ground;
+		}, 3000);
+
+		expect(engine.Renderer.GL.getError()).toBe(engine.Renderer.GL.NO_ERROR);
+	});
+
 	it('casts the shadows of what stands on a ground, or none when told', async function () {
 		var mounted = await mount('<GameScene (ready)="Ready">' +
 			'<GameObject ID="land" Kind="ground" Size="400" Height="4" Water="0" Seed="test" />' +
@@ -1092,6 +1139,33 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 
 		expect(gl.getError()).toBe(gl.NO_ERROR);
 		expect(lit - shaded).toBeGreaterThan(1);
+	});
+
+	/* Regression: the ground had no light of the sky, so its shadows were black. */
+	it('keeps the light of the sky in the shadows on a ground', async function () {
+		var mounted = await mount('<GameScene Quality="low" (ready)="Ready">' +
+			'<GameObject ID="land" Kind="ground" Size="400" Height="4" Water="0" Seed="test" />' +
+			'<GameObject ID="sun" Kind="sun" Elevation="1" Azimuth="90" />' +
+		'</GameScene>');
+		var scene = mounted.Space;
+		var inner = scene.Scene();
+		var engine = scene.Engine();
+		var renderer = engine.Renderer;
+		var gl = renderer.GL;
+		var data = new Uint8Array(4);
+		var i;
+
+		inner.Wanted = 60;
+		inner.Distance = 60;
+		inner.Pitch = 1.2;
+
+		/* With the sun at the horizon nearly all the light of the ground is the one of the sky. */
+		for (i = 0; i < 60; i++)
+			engine.Frame(performance.now() + i * 100);
+
+		gl.readPixels(Math.round(renderer.Width / 2), Math.round(renderer.Height / 2), 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, data);
+
+		expect(data[0] + data[1] + data[2]).toBeGreaterThan(90);
 	});
 
 	it('walks a unit over a ground round the water and what blocks it, sends it by a right press, and saves its place', async function () {
@@ -1212,6 +1286,7 @@ describe('Contract: Gltf, the models other programs make', function () {
 		expect(asset.Materials[0]).toMatchObject({Name: 'Skin', Metallic: 0, Alpha: 'OPAQUE'});
 		expect(asset.Materials[0].Roughness).toBeCloseTo(0.6, 5);
 		expect(asset.Materials[0].ColorMap.Image).toBe(0);
+		expect(asset.Materials[0].Specular).toBe(1);
 		expect(Array.from(asset.Images[0].Data)).toEqual(Array.from(Picture));
 		expect(asset.Skins[0].Joints).toEqual([0, 2]);
 		expect(asset.Skins[0].Inverse[29]).toBe(-1);
@@ -1367,6 +1442,10 @@ describe('Contract: Gltf, the models other programs make', function () {
 		var still = graphics.Apply(models.Pose(model, 'Spin', 0)[crate.ID], [0.2, 0, 0]);
 
 		expect(graphics.Vectors.Distance(turned, still)).toBeGreaterThan(0.1);
+
+		/* Copies at the same frame share one pose: a crowd is no slower for it. */
+		expect(models.Pose(model, 'Spin', 0.5)).toBe(pose);
+		expect(models.Pose(model, 'Spin', 0.8)).not.toBe(pose);
 	});
 
 	it('takes a loop of a clip round, and holds one that does not', function () {
@@ -1378,6 +1457,59 @@ describe('Contract: Gltf, the models other programs make', function () {
 
 		expect(models.Frame(model, 'Spin', 1.5)).toBe(models.Frame(model, 'Spin', 0.5));
 		expect(models.Frame(model, 'die', 5)).toBe(models.Frame(model, 'die', 1));
+	});
+});
+
+describe('Contract: Biomes, the lands of a game', function () {
+	beforeAll(async function () {
+		await loadElemenx();
+	});
+
+	beforeEach(function () {
+		Use(['service:Biomes', 'service:Terrain', 'service:Models', 'service:Graphics3D']);
+	});
+
+	it('lays out the same village of the same seed, on what is level and dry, moved there if it must', function () {
+		var biomes = Elemenx.Service('Biomes');
+		var models = Elemenx.Service('Models');
+		var field = Elemenx.Service('Terrain').Flat({Size: 400, Height: 30, Water: 0.3, Seed: 'test'});
+		var first = biomes.Village(field, {X: 30, Y: -20, Houses: 7, Seed: 'a'});
+		var again = biomes.Village(field, {X: 30, Y: -20, Houses: 7, Seed: 'a'});
+
+		expect(first.Objects.length).toBeGreaterThan(2);
+		expect(first).toEqual(again);
+		expect(first.Roads.length).toBeGreaterThanOrEqual(first.Objects.length);
+
+		first.Objects.forEach(function (house) {
+			expect(field.Height(house.X, house.Y)).toBeGreaterThan(1);
+			expect(field.Slope(house.X, house.Y)).toBeLessThan(0.2);
+			expect(models.Has(house.Kind)).toBe(true);
+		});
+
+		first.Objects.forEach(function (a, i) {
+			first.Objects.forEach(function (b, j) {
+				if (i !== j)
+					expect(Math.abs(a.X - b.X) > 4 || Math.abs(a.Y - b.Y) > 4).toBe(true);
+			});
+		});
+
+		biomes.Names().forEach(function (name) {
+			biomes.Get(name).Scatter.forEach(function (rule) {
+				rule.Shapes.forEach(function (shape) {
+					expect(models.Has(shape)).toBe(true);
+				});
+			});
+		});
+	});
+
+	it('takes the lands of an application', function () {
+		var biomes = Elemenx.Service('Biomes');
+
+		biomes.Define('test-land', {Ground: {Low: [1, 0, 0]}, Scatter: [], Grass: null});
+
+		expect(biomes.Has('test-land')).toBe(true);
+		expect(biomes.Get('test-land').Ground.Low).toEqual([1, 0, 0]);
+		expect(biomes.Get('nothing')).toBe(null);
 	});
 });
 

@@ -7,6 +7,7 @@
 
 - `Flat(options)`
 - `Cells(options)`
+- `OnRoad(field, x, z, width)`
 - `Sphere(options)`
 
 ## Пример
@@ -33,6 +34,8 @@
 
 ## Тесты
 
-- [has continuous heights, chunks with a skirt, and ways that keep out of the sea](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1524) — `tests/regression/library-scene.test.js`
-- [has the ground of a planet whose coasts are the ones its baked surface shows, its squares turned outwards](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1558) — `tests/regression/library-scene.test.js`
+- [has continuous heights, chunks with a skirt, and ways that keep out of the sea](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1656) — `tests/regression/library-scene.test.js`
+- [has the ground of a planet whose coasts are the ones its baked surface shows, its squares turned outwards](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1690) — `tests/regression/library-scene.test.js`
+- [makes a whole land of one attribute, and a village with its roads that nothing grows on](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1044) — `tests/regression/library-scene.test.js`
+- [lays out the same village of the same seed, on what is level and dry, moved there if it must](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1472) — `tests/regression/library-scene.test.js`
 - [terrain draws a ground with its trees and houses, its units walk to the village round what blocks them, and the game saves](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L3239) — `tests/examples/ui-kit.spec.js`

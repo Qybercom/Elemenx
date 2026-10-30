@@ -98,6 +98,7 @@
 	'services/Terrain.js',
 	'services/Gltf.js',
 	'services/Models.js',
+	'services/Biomes.js',
 	'traits/Declared.js',
 	'traits/Strategy.js',
 	'traits/Scatter.js',

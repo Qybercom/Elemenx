@@ -68,5 +68,5 @@ Form и Field используют эти модели: Form раздаёт по
 
 - [phone input keeps to its mask and picks the country of a pasted number](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L1319) — `tests/examples/ui-kit.spec.js`
 - [forms collect their fields, validate them in the template or by a model in code, and submit only when valid](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L2472) — `tests/examples/ui-kit.spec.js`
-- [phone guide keeps the template and lists every country](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L5424) — `tests/examples/ui-kit.spec.js`
-- [combobox filters, picks, creates a value, restores on Escape and loads options from a server](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L9201) — `tests/examples/ui-kit.spec.js`
+- [phone guide keeps the template and lists every country](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L5429) — `tests/examples/ui-kit.spec.js`
+- [combobox filters, picks, creates a value, restores on Escape and loads options from a server](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L9206) — `tests/examples/ui-kit.spec.js`

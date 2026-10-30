@@ -96,6 +96,6 @@ A data table. Columns: [{Key, Title, Width, MinWidth, Align (left, center, right
 ## Tests
 
 - [puts what one route alone uses into its part, and keeps the first screen, the shared and what the rest uses](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/split.test.js#L17) — `tests/regression/split.test.js`
-- [table sorts, selects and opens rows](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L4630) — `tests/examples/ui-kit.spec.js`
-- [tables fit their container without a horizontal scroll](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L5612) — `tests/examples/ui-kit.spec.js`
+- [table sorts, selects and opens rows](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L4635) — `tests/examples/ui-kit.spec.js`
+- [tables fit their container without a horizontal scroll](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L5617) — `tests/examples/ui-kit.spec.js`
 - [writes a <template id> as a script of text, its tags as they were written](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/server.test.js#L399) — `tests/regression/server.test.js`

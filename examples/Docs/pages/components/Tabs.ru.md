@@ -91,7 +91,7 @@
 - [stands the strip left or right of the panels, its text turned or level, and moves by Up and Down](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-tabs.test.js#L37) — `tests/regression/library-tabs.test.js`
 - [declares the tabs of a Tabs as its children: adds them, shows the one selected on the canvas and exports them](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/designer.spec.js#L470) — `tests/examples/designer.spec.js`
 - [a right-to-left language mirrors the components: arrows, sliders, popups and the icons of a direction](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L322) — `tests/examples/ui-kit.spec.js`
-- [tabs declared with their content show the panel of the current one, and make the component of a tab when it first opens](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L4263) — `tests/examples/ui-kit.spec.js`
-- [editor tabs switch and close](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L4316) — `tests/examples/ui-kit.spec.js`
-- [radio groups and tab strips with their own state do not affect each other](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L4377) — `tests/examples/ui-kit.spec.js`
+- [tabs declared with their content show the panel of the current one, and make the component of a tab when it first opens](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L4268) — `tests/examples/ui-kit.spec.js`
+- [editor tabs switch and close](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L4321) — `tests/examples/ui-kit.spec.js`
+- [radio groups and tab strips with their own state do not affect each other](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L4382) — `tests/examples/ui-kit.spec.js`
 - [keeps nested templates inside the text and finds the end of the outer one](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/server.test.js#L405) — `tests/regression/server.test.js`

@@ -59,4 +59,4 @@
 - [sows a ground in masses by its rules, the same for the same seed, with no object for each thing, and grows grass](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L835) — `tests/regression/library-scene.test.js`
 - [draws the model of a file by the same API: fetched, lit, moved and played](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L902) — `tests/regression/library-scene.test.js`
 
-+7 ещё в тех же файлах
++9 ещё в тех же файлах

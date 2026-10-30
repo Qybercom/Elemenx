@@ -13,6 +13,7 @@
 - `Info(name)`
 - `Make(name, options)`
 - `Whole(model)`
+- `Surfaces(model)`
 - `Bake(model)`
 - `Bounds(geometry)`
 - `Levels(name, options)`
@@ -49,12 +50,13 @@
 
 ## Тесты
 
-- [has units, animals, vehicles, plants, rocks, buildings and ships, each of whole triangles, its parents before their pieces](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1399) — `tests/regression/library-scene.test.js`
-- [makes the same shape of the same variant, another of another, and throws on an unknown model](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1432) — `tests/regression/library-scene.test.js`
-- [poses the pieces of a clip on their pivots, children with their parents, and fades from a clip to another](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1444) — `tests/regression/library-scene.test.js`
-- [spins what turns with no end, and leaves a model of one piece still](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1470) — `tests/regression/library-scene.test.js`
-- [makes simpler levels of a model, with fewer faces and the same size](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1477) — `tests/regression/library-scene.test.js`
-- [takes the models of an application](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1497) — `tests/regression/library-scene.test.js`
+- [has units, animals, vehicles, plants, rocks, buildings and ships, each of whole triangles, its parents before their pieces](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1531) — `tests/regression/library-scene.test.js`
+- [makes the same shape of the same variant, another of another, and throws on an unknown model](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1564) — `tests/regression/library-scene.test.js`
+- [poses the pieces of a clip on their pivots, children with their parents, and fades from a clip to another](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1576) — `tests/regression/library-scene.test.js`
+- [spins what turns with no end, and leaves a model of one piece still](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1602) — `tests/regression/library-scene.test.js`
+- [makes simpler levels of a model, with fewer faces and the same size](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1609) — `tests/regression/library-scene.test.js`
+- [takes the models of an application](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1629) — `tests/regression/library-scene.test.js`
 - [draws the model of a file by the same API: fetched, lit, moved and played](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L902) — `tests/regression/library-scene.test.js`
 - [sows the model of a file as it sows the ones of code](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L969) — `tests/regression/library-scene.test.js`
+- [lays out the same village of the same seed, on what is level and dry, moved there if it must](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1472) — `tests/regression/library-scene.test.js`
 - [models stand in their shadows, play their clips, march and turn their shadows off](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L3172) — `tests/examples/ui-kit.spec.js`

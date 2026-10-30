@@ -260,13 +260,14 @@ Elemenx.Component('UIKitPage', {
 	ModelsShadows: true,
 	ModelsList: [],
 	TerrainNote: '',
+	TerrainBiome: 'temperate',
+	TerrainBiomes: ['temperate', 'taiga', 'tundra', 'desert', 'savanna', 'swamp', 'alien'],
 	TerrainSaved: null,
 	TerrainUnits: [
 		{ID: 'scout', Name: 'Scout', X: 0, Y: 10},
 		{ID: 'builder', Name: 'Builder', X: 6, Y: 14},
 		{ID: 'ranger', Name: 'Ranger', X: -6, Y: 16}
 	],
-	TerrainTrees: [],
 	TerrainHouses: [
 		{ID: 'hall', Name: 'Hall', X: 40, Y: 40},
 		{ID: 'mill', Name: 'Mill', X: 58, Y: 32},
@@ -1954,28 +1955,15 @@ Elemenx.Component('UIKitPage', {
 	},
 
 	TerrainReady: function (scene) {
-		var terrain = this.$Service('Terrain').Flat({Size: 900, Height: 55, Water: 0.32, Seed: 'valley'});
-		var random = this.$Service('Random').Create('trees');
-		var trees = [];
-		var x;
-		var y;
-		var i;
-
 		this.Terrained = function () {
 			return scene;
 		};
 
-		for (i = 0; i < 400 && trees.length < 90; i++) {
-			x = random.Float(-250, 250);
-			y = random.Float(-250, 250);
-
-			if (terrain.Height(x, y) > 2 && terrain.Slope(x, y) < 0.25 && Math.abs(x - 50) + Math.abs(y - 45) > 40)
-				trees.push({ID: 'tree-' + i, X: Math.round(x), Y: Math.round(y)});
-		}
-
-		this.TerrainTrees = trees;
-
 		scene.FocusOn('scout');
+	},
+
+	TerrainBiomed: function (value) {
+		this.TerrainBiome = value;
 	},
 
 	TerrainSelected: function (detail) {

@@ -8,7 +8,7 @@
  *   Alpha, Cutoff, DoubleSided, Unlit}], Images: [{Data, Type, URI, Picture}], Skins: [{Joints, Inverse}], Animations:
  *   [{Name, Length, Channels: [{Node, Path, Times, Values, Step}]}], Scene (the indices of its roots)}. A Geometry has
  *   Positions, Normals, UVs, Indices, and Joints and Weights when it is skinned.
- * - The extensions read: KHR_mesh_quantization, KHR_texture_transform, KHR_materials_unlit, EXT_meshopt_compression
+ * - The extensions read: KHR_mesh_quantization, KHR_texture_transform, KHR_materials_unlit, KHR_materials_specular, EXT_meshopt_compression
  *   (Meshopt(mode, source, count, stride, filter) decodes one buffer); a file that requires another is refused:
  *   'Elemenx Gltf: extension <name> is not supported'.
  * The same functions run in Node: they read no page, but for the pictures of Load.
@@ -19,7 +19,7 @@ Elemenx.Service('Gltf', {
 		Methods: ['Parse(data, callback, options)', 'Load(url, callback)', 'Meshopt(mode, source, count, stride, filter)']
 	},
 
-	Supported: ['KHR_mesh_quantization', 'KHR_texture_transform', 'KHR_materials_unlit', 'EXT_meshopt_compression'],
+	Supported: ['KHR_mesh_quantization', 'KHR_texture_transform', 'KHR_materials_unlit', 'KHR_materials_specular', 'EXT_meshopt_compression'],
 
 	Parse: function (data, callback, options) {
 		var asset;
@@ -366,6 +366,7 @@ Elemenx.Service('Gltf', {
 
 	Material: function (material, json) {
 		var pbr = material.pbrMetallicRoughness || {};
+		var specular = material.extensions && material.extensions.KHR_materials_specular || {};
 
 		function texture (info) {
 			var transform;
@@ -391,7 +392,10 @@ Elemenx.Service('Gltf', {
 			Alpha: material.alphaMode || 'OPAQUE',
 			Cutoff: material.alphaCutoff === undefined ? 0.5 : material.alphaCutoff,
 			DoubleSided: !!material.doubleSided,
-			Unlit: !!(material.extensions && material.extensions.KHR_materials_unlit)
+			Unlit: !!(material.extensions && material.extensions.KHR_materials_unlit),
+			Specular: specular.specularFactor === undefined ? 1 : specular.specularFactor,
+			SpecularColor: specular.specularColorFactor || [1, 1, 1],
+			SpecularMap: texture(specular.specularTexture)
 		};
 	},
 

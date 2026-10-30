@@ -88,6 +88,7 @@ Elemenx.Component('GameScene', {
 			Zoom: 'The scale of the view of a map.',
 			MinZoom: 'The smallest zoom of a map.',
 			MaxZoom: 'The largest zoom of a map.',
+			Biome: 'On a ground: what it looks like and what grows on it, by itself (the Biomes Service: temperate, taiga, tundra, desert, savanna, swamp, alien).',
 			Setting: {Options: ['space', 'terrain'], Description: 'The setting: its kinds and systems (space: a star system; terrain: a ground and its walkers).'},
 			System: 'The objects: {Objects: [{ID, Kind, Parent, Values, Traits, Parts, Children}]}.',
 			Seed: 'A whole star system made of a seed (always the same for the same seed).',
@@ -199,7 +200,8 @@ Elemenx.Component('GameScene', {
 			'grove': {Traits: {Scatter: {Shapes: ['oak', 'birch', 'bush'], Density: 0.8, Cover: 0.45, Patch: 40, MaxSlope: 0.25}}},
 			'thicket': {Traits: {Scatter: {Shapes: ['bush', 'bush', 'mushroom', 'stump'], Density: 5, Cover: 0.5, Patch: 25, MaxSlope: 0.3, Size: [0.6, 1.2]}}},
 			'rocks': {Traits: {Scatter: {Shapes: ['rock', 'rock', 'boulder'], Density: 0.5, MinHeight: 0, MaxSlope: 0.8, Size: [0.5, 1.4]}}},
-			'grass': {Traits: {Grass: {Density: 1, Height: 0.75, Color: '#7fae4a', Root: '#2f5a22'}}}
+			'grass': {Traits: {Grass: {Density: 1, Height: 0.75, Color: '#7fae4a', Root: '#2f5a22'}}},
+			'village': {Traits: {Settlement: {Houses: 8, Radius: 30}}}
 		};
 	},
 
@@ -419,7 +421,7 @@ Elemenx.Component('GameScene', {
 		function canonical (raw, of) {
 			var kind = raw.Kind && kinds.Has(raw.Kind) ? raw.Kind : '';
 			var fields = kind || of ? kinds.Fields(kind || of) : {};
-			var common = {clip: 'Clip', type: 'Type', health: 'Health', maxhealth: 'MaxHealth', sight: 'Sight', tall: 'Tall', model: 'Model', roof: 'Roof', speed: 'Speed', shapes: 'Shapes', density: 'Density', size: 'Size', minheight: 'MinHeight', maxheight: 'MaxHeight', maxslope: 'MaxSlope', cover: 'Cover', patch: 'Patch', seed: 'Seed', blocks: 'Blocks', root: 'Root'};
+			var common = {clip: 'Clip', soft: 'Soft', biome: 'Biome', houses: 'Houses', radius: 'Radius', type: 'Type', health: 'Health', maxhealth: 'MaxHealth', sight: 'Sight', tall: 'Tall', model: 'Model', roof: 'Roof', speed: 'Speed', shapes: 'Shapes', density: 'Density', size: 'Size', minheight: 'MinHeight', maxheight: 'MaxHeight', maxslope: 'MaxSlope', cover: 'Cover', patch: 'Patch', seed: 'Seed', blocks: 'Blocks', root: 'Root'};
 			var spec = {ID: raw.ID, Kind: self.Cells ? raw.Kind || '' : kind, Parent: raw.Parent, Part: raw.Part, Values: {}, Traits: {}, Parts: []};
 
 			Object.keys(raw).forEach(function (key) {
@@ -1449,18 +1451,20 @@ Elemenx.Component('GameScene', {
 			var height = renderer.Height;
 			var aspect = width / Math.max(1, height);
 			var viewMatrix = graphics.LookAt([0, 0, 0], vectors.Subtract(camera.Target, camera.Position), camera.Up);
-			var matrix = graphics.Multiply(camera.Projection(aspect), viewMatrix);
+			var matrix = graphics.Multiply(engine.PostJitter(camera.Projection(aspect)), viewMatrix);
 			var right = [viewMatrix[0], viewMatrix[4], viewMatrix[8]];
 			var up = [viewMatrix[1], viewMatrix[5], viewMatrix[9]];
 			var light = lights();
 			var background = scene.Colors.Background;
 			var models = gather();
-			var nodes = scene.Ground ? groundPatches() : null;
+			var nodes;
 			var shade;
 			var posted;
 
+			/* First: a village it lays out makes the ground again. */
 			engine.ScatterFrame(matrix);
 
+			nodes = scene.Ground ? groundPatches() : null;
 			shade = shadowOfScene(models, nodes);
 			posted = engine.PostBegin();
 
@@ -1561,7 +1565,7 @@ Elemenx.Component('GameScene', {
 				var list = models[name];
 
 				if (list.Material) {
-					renderer.Draw(shape(name), list.Skinned ? gpu.PbrSkinned : gpu.Pbr, Object.assign(uniforms({uOrigin: originOf(list), uPalette: list.Skinned ? palette(list.Skinned) : gpu.White, uJointOffset: list.Offset}), surface(list)), {Cull: list.Material.DoubleSided ? 'none' : 'back', Blend: list.Material.Alpha === 'BLEND' ? 'alpha' : 'none'});
+					renderer.Draw(shape(name), list.Skinned ? gpu.PbrSkinned : gpu.Pbr, Object.assign(uniforms({uOrigin: originOf(list), uPalette: list.Skinned ? palette(list.Skinned) : gpu.White, uJointOffset: list.Offset, uSoftness: list.Soft}), surface(list)), {Cull: list.Material.DoubleSided ? 'none' : 'back', Blend: list.Material.Alpha === 'BLEND' ? 'alpha' : 'none'});
 
 					return;
 				}
@@ -1573,6 +1577,9 @@ Elemenx.Component('GameScene', {
 
 			custom('Draw');
 
+			if (scene.Ground)
+				drawSea(matrix, posted);
+
 			later.forEach(function (each) {
 				each();
 			});
@@ -1583,7 +1590,7 @@ Elemenx.Component('GameScene', {
 			}
 
 			if (posted)
-				engine.PostEnd(scene.Ground ? {Matrix: matrix, Sun: scene.Ground.Sun, SunColor: scene.Ground.SunColor, Air: [0.55, 0.72, 1, 0.95], Fog: scene.Camera.Ortho ? 0 : 0.4 / scene.Ground.Field.Size, Sky: true, Reach: Math.max(1, scene.Distance * 0.05)} : {Matrix: matrix});
+				engine.PostEnd(scene.Ground ? {Matrix: matrix, Eye: scene.Eye, Sun: scene.Ground.Sun, SunColor: scene.Ground.SunColor, Air: [0.55, 0.72, 1, 0.95], Fog: scene.Camera.Ortho ? 0 : 0.4 / scene.Ground.Field.Size, Sky: true, Reach: Math.max(1, scene.Distance * 0.05)} : {Matrix: matrix});
 		}
 
 		/* The copies of the shapes of a frame: the rocks of the belts, the models of the objects, their pieces as they stand now. */
@@ -1684,6 +1691,13 @@ Elemenx.Component('GameScene', {
 			return known(name) && library.Ready(name) ? library.Make(name, {Variant: random.Hash(object.ID)}) : null;
 		}
 
+		/* How much light goes under a surface: told by its object, or by its model, by the name of its material or for all. */
+		function softOf (object, made, piece) {
+			var given = object.Values.Soft === undefined ? made.Soft : object.Values.Soft;
+
+			return Number(given && typeof given === 'object' ? given[piece.Material.Name] : given) || 0;
+		}
+
 		/* The textures of a material on this renderer, made once; a white one for what it has none of. */
 		function surface (list) {
 			var material = list.Material;
@@ -1716,6 +1730,10 @@ Elemenx.Component('GameScene', {
 					uUnlit: material.Unlit ? 1 : 0,
 					uNormalScale: material.NormalMap ? material.NormalMap.Scale : 0,
 					uOcclusion: material.OcclusionMap ? material.OcclusionMap.Strength : 0,
+					uSpecularLevel: material.Specular,
+					uSpecularColor: material.SpecularColor,
+					uSpecularOn: material.SpecularMap ? 1 : 0,
+					uSpecularMap: texture(material.SpecularMap, false),
 					uColorMap: texture(material.ColorMap, true),
 					uNormalMap: texture(material.NormalMap, false),
 					uMetalMap: texture(material.MetalMap, false),
@@ -1764,7 +1782,7 @@ Elemenx.Component('GameScene', {
 
 			made.Pieces.forEach(function (piece) {
 				if (made.Asset) {
-					batch(models, (still ? 'still:' : '') + made.Key + '/' + piece.ID, object.World, piece.Skin !== -1 ? base : graphics.Multiply(base, pose ? pose[piece.ID] : piece.Rest), color, {Rough: 0, Geometry: piece.Geometry, Still: still, Material: piece.Material, Asset: made.Asset, Skinned: piece.Skin !== -1 ? made : null, Offset: piece.JointOffset, Frames: piece.Skin !== -1 ? object.Frames || [0, 0, 0, 0] : null});
+					batch(models, (still ? 'still:' : '') + made.Key + '/' + piece.ID, object.World, piece.Skin !== -1 ? base : graphics.Multiply(base, pose ? pose[piece.ID] : piece.Rest), color, {Rough: 0, Geometry: piece.Geometry, Still: still, Material: piece.Material, Asset: made.Asset, Skinned: piece.Skin !== -1 ? made : null, Offset: piece.JointOffset, Frames: piece.Skin !== -1 ? object.Frames || [0, 0, 0, 0] : null, Soft: softOf(object, made, piece)});
 
 					return;
 				}
@@ -1826,7 +1844,7 @@ Elemenx.Component('GameScene', {
 			var i;
 
 			if (!list) {
-				list = models[name] = {Count: 0, Capacity: 0, Matte: !!settings.Matte, Rough: settings.Rough || 0, Geometry: settings.Geometry || null, Still: !!settings.Still, Material: settings.Material || null, Asset: settings.Asset || null, Skinned: settings.Skinned || null, Offset: settings.Offset || 0};
+				list = models[name] = {Count: 0, Capacity: 0, Matte: !!settings.Matte, Rough: settings.Rough || 0, Geometry: settings.Geometry || null, Still: !!settings.Still, Material: settings.Material || null, Asset: settings.Asset || null, Skinned: settings.Skinned || null, Offset: settings.Offset || 0, Soft: settings.Soft || 0};
 			}
 
 			if (list.Count === list.Capacity)
@@ -2128,6 +2146,7 @@ Elemenx.Component('GameScene', {
 			})[0];
 			var settings;
 			var key;
+			var biome;
 			var sun;
 			var azimuth;
 			var elevation;
@@ -2140,6 +2159,11 @@ Elemenx.Component('GameScene', {
 			}
 
 			settings = object ? trait(object, 'Terrain') : null;
+			biome = object && self.$Service('Biomes').Get(object.Values.Biome);
+
+			if (biome)
+				settings = Object.assign({}, settings, {Palette: biome.Ground});
+
 			key = scene.Driven ? scene.Driven.Key : JSON.stringify(settings);
 
 			if (!scene.Ground || scene.Ground.Key !== key) {
@@ -2497,6 +2521,21 @@ Elemenx.Component('GameScene', {
 			}).filter(Boolean);
 		}
 
+		/* The water, over all else: it shows what was drawn before it, mirrored and through it. */
+		function drawSea (matrix, posted) {
+			var ground = scene.Ground;
+			var field = ground.Field;
+			var fog = scene.Camera.Ortho || posted ? 1e9 : field.Size * 0.9;
+			var seen = posted ? engine.PostMiddle() : null;
+
+			if (!field.Water) return;
+
+			if (!gpu.Water)
+				gpu.Water = renderer.Mesh(graphics.Plane({Width: 1, Depth: 1, Segments: 1}));
+
+			renderer.Draw(gpu.Water, gpu.Sea, {uViewProjection: matrix, uModel: graphics.Compose(vectors.Subtract([0, 0, 0], scene.Eye), null, field.Size * 1.6), uSun: ground.Sun, uSunColor: ground.SunColor, uAir: [0.55, 0.72, 1, 0.95], uFog: fog, uSeen: seen ? seen.Color : gpu.NoBounce, uSeenDepth: seen ? seen.Depth : gpu.NoBounce, uMirror: seen ? 1 : 0}, {Blend: 'alpha', DepthWrite: false, Cull: 'none'});
+		}
+
 		/* The sky, the ground and its water, under the things that stand on it. */
 		function drawGround (matrix, nodes, shade) {
 			var ground = scene.Ground;
@@ -2508,15 +2547,8 @@ Elemenx.Component('GameScene', {
 				renderer.Draw(gpu.Quad, gpu.Sky, {uInverse: graphics.Invert(matrix), uSun: ground.Sun, uSunColor: ground.SunColor, uAir: air, uUp: [0, 1, 0], uHigh: 0}, {Depth: false, DepthWrite: false, Blend: 'alpha', Cull: 'none'});
 
 			nodes.forEach(function (node) {
-				renderer.Draw(node.Mesh, gpu.Land, Object.assign({uViewProjection: matrix, uOffset: vectors.Subtract(node.Center, scene.Eye), uSun: ground.Sun, uSunColor: ground.SunColor, uAir: air, uFog: fog}, shade), {Cull: 'back'});
+				renderer.Draw(node.Mesh, gpu.Land, Object.assign({uViewProjection: matrix, uOffset: vectors.Subtract(node.Center, scene.Eye), uSun: ground.Sun, uSunColor: ground.SunColor, uAir: air, uFog: fog, uSkyLight: [0.3, 0.36, 0.46], uFloorLight: [0.1, 0.1, 0.09]}, shade), {Cull: 'back'});
 			});
-
-			if (field.Water > 0) {
-				if (!gpu.Water)
-					gpu.Water = renderer.Mesh(graphics.Plane({Width: 1, Depth: 1, Segments: 1}));
-
-				renderer.Draw(gpu.Water, gpu.Sea, {uViewProjection: matrix, uModel: graphics.Compose(vectors.Subtract([0, 0, 0], scene.Eye), null, field.Size * 1.6), uSun: ground.Sun, uSunColor: ground.SunColor, uAir: air, uFog: fog}, {Blend: 'alpha', DepthWrite: false, Cull: 'none'});
-			}
 
 			Object.keys(ground.Nodes).forEach(function (key) {
 				if (ground.Frame - (ground.Nodes[key].Used || 0) > 240) {
@@ -3125,6 +3157,7 @@ Elemenx.Component('GameScene', {
 
 		engine.Land = land;
 		engine.Known = known;
+		engine.Surface = surface;
 
 		/*
 		 * What leads the scene from outside (a map of cells): a ground of cells to draw and its view, {Key, Field, View, Slant,
@@ -4003,6 +4036,11 @@ Elemenx.Component('GameScene', {
 				'uniform float uUnlit;',
 				'uniform float uNormalScale;',
 				'uniform float uOcclusion;',
+				'uniform float uSpecularLevel;',
+				'uniform vec3 uSpecularColor;',
+				'uniform float uSpecularOn;',
+				'uniform float uSoftness;',
+				'uniform sampler2D uSpecularMap;',
 				'uniform sampler2D uColorMap;',
 				'uniform sampler2D uNormalMap;',
 				'uniform sampler2D uMetalMap;',
@@ -4014,12 +4052,15 @@ Elemenx.Component('GameScene', {
 				'vec3 bump(vec3 n, vec3 v) {',
 				'	vec3 m = texture(uNormalMap, vUV).xyz * 2.0 - 1.0;',
 				'	m.xy *= uNormalScale;',
+				'	m.y = -m.y;',
 				'	vec3 dpx = dFdx(vWorld);',
 				'	vec3 dpy = dFdy(vWorld);',
 				'	vec2 dtx = dFdx(vUV);',
 				'	vec2 dty = dFdy(vUV);',
-				'	vec3 t = dpy * dtx.y * -1.0 + dpx * dty.y;',
-				'	vec3 b = dpy * dtx.x - dpx * dty.x;',
+				'	vec3 side = cross(dpy, n);',
+				'	vec3 over = cross(n, dpx);',
+				'	vec3 t = side * dtx.x + over * dty.x;',
+				'	vec3 b = side * dtx.y + over * dty.y;',
 				'	float scale = max(length(t), length(b));',
 				'	if (scale < 1e-8) return n;',
 				'	return normalize(mat3(t / scale, b / scale, n) * m);',
@@ -4048,14 +4089,20 @@ Elemenx.Component('GameScene', {
 				'	float roughness = clamp(uRoughness * surface.g, 0.04, 1.0);',
 				'	float metallic = clamp(uMetallic * surface.b, 0.0, 1.0);',
 				'	float a = roughness * roughness;',
-				'	vec3 f0 = mix(vec3(0.04), albedo, metallic);',
+				'	float level = uSpecularLevel * (uSpecularOn > 0.5 ? texture(uSpecularMap, vUV).a : 1.0);',
+				'	vec3 f0 = mix(min(vec3(0.04) * uSpecularColor, vec3(1.0)) * level, albedo, metallic);',
 				'	vec3 total = vec3(0.0);',
 				'	float nv = max(dot(n, v), 0.001);',
 				'	lightShade = sunShadow(vWorld, n);',
 				'	for (int i = 0; i < 4; i++) {',
 				'		if (i >= uLightCount) break;',
 				'		vec3 l = normalize(uLightPositions[i] - vWorld);',
-				'		float nl = max(dot(n, l), 0.0);',
+				'		float facing = dot(n, l);',
+				'		float nl = max(facing, 0.0);',
+				'		float wrapped = max((facing + uSoftness * 0.6) / (1.0 + uSoftness * 0.6), 0.0);',
+				'		if (wrapped <= 0.0) continue;',
+				'		vec3 under = albedo * mix(vec3(1.0), vec3(1.0, 0.42, 0.28), uSoftness) * (wrapped - nl) * uLightColors[i] * (i == 0 ? mix(lightShade, 1.0, uSoftness * 0.4) : 1.0);',
+				'		total += under;',
 				'		if (nl <= 0.0) continue;',
 				'		vec3 h = normalize(l + v);',
 				'		vec3 f = f0 + (1.0 - f0) * pow(1.0 - max(dot(h, v), 0.0), 5.0);',
@@ -4521,8 +4568,29 @@ Elemenx.Component('GameScene', {
 				'uniform vec3 uSunColor;',
 				'uniform vec4 uAir;',
 				'uniform float uFog;',
+				'uniform mat4 uViewProjection;',
+				'uniform sampler2D uSeen;',
+				'uniform sampler2D uSeenDepth;',
+				'uniform float uMirror;',
 				'out vec4 outColor;',
 				graphics.Chunks.Noise,
+				'vec4 mirrored(vec3 from, vec3 way) {',
+				'	vec3 at = from;',
+				'	float step = max(length(from) * 0.02, 0.4);',
+				'	for (int i = 0; i < 28; i++) {',
+				'		at += way * step;',
+				'		step *= 1.09;',
+				'		vec4 p = uViewProjection * vec4(at, 1.0);',
+				'		vec3 s = p.xyz / p.w * 0.5 + 0.5;',
+				'		if (p.w <= 0.0 || s.x < 0.0 || s.y < 0.0 || s.x > 1.0 || s.y > 1.0) break;',
+				'		float depth = texture(uSeenDepth, s.xy).r;',
+				'		if (depth < 1.0 && s.z > depth) {',
+				'			vec2 edge = smoothstep(vec2(0.0), vec2(0.08), min(s.xy, 1.0 - s.xy));',
+				'			return vec4(texture(uSeen, s.xy).rgb, edge.x * edge.y * (1.0 - float(i) / 28.0));',
+				'		}',
+				'	}',
+				'	return vec4(0.0);',
+				'}',
 				'void main() {',
 				'	vec3 v = normalize(-vWorld);',
 				'	vec3 n = normalize(vec3((noise3(vWorld * 0.2) - 0.5) * 0.08, 1.0, (noise3(vWorld * 0.2 + 7.0) - 0.5) * 0.08));',
@@ -4530,6 +4598,10 @@ Elemenx.Component('GameScene', {
 				'	float fresnel = pow(1.0 - max(dot(n, v), 0.0), 3.0);',
 				'	vec3 color = vec3(0.07, 0.26, 0.38) * (0.4 + 0.6 * max(uSun.y, 0.0)) + mix(uAir.rgb, vec3(1.0), 0.4) * fresnel * 0.5 + uSunColor * shine;',
 				'	vec3 horizon = mix(uAir.rgb, vec3(1.0), 0.45) * clamp(uSun.y * 3.0 + 0.3, 0.0, 1.0);',
+				'	if (uMirror > 0.5) {',
+				'		vec4 image = mirrored(vWorld, reflect(-v, n));',
+				'		color = mix(color, image.rgb, image.a * clamp(0.35 + fresnel, 0.0, 1.0));',
+				'	}',
 				'	color = mix(color, horizon, 1.0 - exp(-length(vWorld) / uFog));',
 				'	outColor = vec4(color, 0.82 + fresnel * 0.15);',
 				'}'

@@ -8,7 +8,8 @@
  *   z, size, resolution) (a geometry of a square of it, its positions relative to its middle, with Colors of its
  *   heights and slopes and a skirt under its edges so chunks of other sizes leave no gap) and Path(from, to, options)
  *   (a way of points {X, Y, Z} round what cannot be walked, made straight where it can be; null when there is none;
- *   options Step, the finest it looks, MaxSlope, Swim).
+ *   options Step, the finest it looks, MaxSlope, Swim). Palette gives it the colors of a biome; Roads ([[x, z]...]) set
+ *   on a field are painted on it, and OnRoad(field, x, z, width) tells whether a point is on one.
  * - Sphere(options) returns the ground of a planet, the very one its baked surface shows (the noise of Graphics3D, as
  *   the shader of a GameScene bakes it): options Radius (units), Height (its relief), Seed (the number of its pattern),
  *   Ocean (0 to 1), Type (rocky, desert, terran, ocean, ice, lava, dwarf, moon). Its methods: Land(direction) (the
@@ -23,7 +24,7 @@
 Elemenx.Service('Terrain', {
 	$Meta: {
 		Description: 'The ground of a game, continuous: heights of noise anywhere, meshes in chunks, ways over it; the ground of a planet as its surface shows.',
-		Methods: ['Flat(options)', 'Sphere(options)', 'Cells(options)']
+		Methods: ['Flat(options)', 'Sphere(options)', 'Cells(options)', 'OnRoad(field, x, z, width)']
 	},
 
 	Smoothstep: function (from, to, value) {
@@ -56,6 +57,8 @@ Elemenx.Service('Terrain', {
 			Size: size,
 			Top: height,
 			Water: water,
+			Palette: settings.Palette || null,
+			Roads: null,
 
 			Height: function (x, z) {
 				return (raw(x, z) - water) * height / (1 - water);
@@ -153,19 +156,45 @@ Elemenx.Service('Terrain', {
 
 	/* The colors of the ground of a flat map: sand by the sea, grass, rock on the slopes, snow on the heights. */
 	Paint: function (field, x, z, y, slope) {
+		var palette = field.Palette || {};
 		var high = y / Math.max(1, field.Top);
+		var low = palette.Low || [0.3, 0.5, 0.22];
+		var upper = palette.High || [0.39, 0.43, 0.25];
 		var color;
 
-		if (y < -0.5) color = [0.2, 0.26, 0.3];
-		else if (y < 1.2) color = [0.76, 0.7, 0.52];
-		else if (high < 0.45) color = [0.3 + high * 0.2, 0.5 - high * 0.15, 0.22];
-		else if (high < 0.75) color = [0.45, 0.42, 0.36];
-		else color = [0.93, 0.94, 0.96];
+		if (y < -0.5) color = palette.Deep || [0.2, 0.26, 0.3];
+		else if (y < 1.2) color = palette.Sand || [0.76, 0.7, 0.52];
+		else if (high < 0.45) color = [low[0] + (upper[0] - low[0]) * high / 0.45, low[1] + (upper[1] - low[1]) * high / 0.45, low[2] + (upper[2] - low[2]) * high / 0.45];
+		else if (high < 0.75) color = palette.Rock || [0.45, 0.42, 0.36];
+		else color = palette.Snow || [0.93, 0.94, 0.96];
 
 		if (slope > 0.32 && y > 1.2)
-			color = [0.42, 0.39, 0.35];
+			color = palette.Rock || [0.42, 0.39, 0.35];
+
+		if (field.Roads && this.OnRoad(field, x, z, 1.8))
+			color = palette.Road || [0.5, 0.42, 0.32];
 
 		return color;
+	},
+
+	/* Whether a point is within a distance of a road of a field. */
+	OnRoad: function (field, x, z, width) {
+		return (field.Roads || []).some(function (road) {
+			var i;
+
+			for (i = 0; i + 1 < road.length; i++) {
+				var ax = road[i][0];
+				var az = road[i][1];
+				var dx = road[i + 1][0] - ax;
+				var dz = road[i + 1][1] - az;
+				var t = Math.max(0, Math.min(1, ((x - ax) * dx + (z - az) * dz) / (dx * dx + dz * dz || 1)));
+				var px = ax + dx * t - x;
+				var pz = az + dz * t - z;
+				if (px * px + pz * pz < width * width) return true;
+			}
+
+			return false;
+		});
 	},
 
 	/* A square of a flat map as a geometry: its positions relative to its middle, a skirt down its four edges. */

@@ -762,6 +762,7 @@
 	<Section *if="Shows('Terrain')" Title="Terrain" [note]="TerrainNote || 'GameScene · a ground of the Terrain Service: a drag turns, the wheel zooms, WASD moves, a click selects a unit, a right click sends it'">
 		<div class="ui-kit-lazy" *lazy>
 			<div class="ui-kit-row">
+				<Select Label="Biome" [options]="TerrainBiomes" [value]="TerrainBiome" (change)="TerrainBiomed" />
 				<Button Label="To the lake" Icon="map-pin" Variant="ghost" (click)="TerrainLake" />
 				<Button Label="All to the village" Icon="home" Variant="ghost" (click)="TerrainVillage" />
 				<Button Label="Save" Icon="save" Variant="ghost" (click)="TerrainSave" />
@@ -769,15 +770,10 @@
 			</div>
 			<div class="ui-kit-space">
 				<GameScene Setting="terrain" Team="blue" Labels="true" (ready)="TerrainReady" (select)="TerrainSelected" (arrive)="TerrainArrived">
-					<GameObject ID="valley" Kind="ground" Size="900" Height="55" Water="0.32" Seed="valley" />
+					<GameObject ID="valley" Kind="ground" Size="900" Height="55" Water="0.32" Seed="valley" [biome]="TerrainBiome" />
 					<GameObject ID="sun" Kind="sun" Elevation="38" Azimuth="150" />
-					<GameObject ID="woods" Kind="forest" Density="2.2" />
-					<GameObject ID="groves" Kind="grove" />
-					<GameObject ID="undergrowth" Kind="thicket" />
-					<GameObject ID="stones" Kind="rocks" />
-					<GameObject ID="meadow-grass" Kind="grass" />
+					<GameObject ID="hamlet" Kind="village" X="-70" Y="20" Houses="10" />
 					<GameObject *for="unit of TerrainUnits" *key="unit.ID" Kind="unit" [id]="unit.ID" [name]="unit.Name" [x]="unit.X" [y]="unit.Y" Team="blue" />
-					<GameObject *for="tree of TerrainTrees" *key="tree.ID" Kind="tree" [id]="tree.ID" [x]="tree.X" [y]="tree.Y" />
 					<GameObject *for="house of TerrainHouses" *key="house.ID" Kind="house" [id]="house.ID" [name]="house.Name" [x]="house.X" [y]="house.Y" />
 					<GameObject ID="boulder" Kind="rock" X="30" Y="-20" />
 				</GameScene>

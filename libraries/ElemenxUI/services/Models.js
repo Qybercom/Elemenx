@@ -15,7 +15,8 @@
  *   'Run'}}) (Clips: the clips of the game and the animations of the file that play them; idle, walk, run, attack, die
  *   and work are found by their names). Load(name, callback) fetches it, (error, model), and Ready(name) tells whether
  *   it came; a model of a file stands on the ground and is 1 tall, as the others are. Make of one not come yet is null.
- *   Bake(model) makes the moves of its skeletons an array of frames, for a shader that reads them.
+ *   Bake(model) makes the moves of its skeletons an array of frames, for a shader that reads them. Soft (0 to 1, or
+ *   {material: value}) lets light under its surface, as in skin. Surfaces(model) is its geometry material by material.
  * - Make(name, {Variant}) returns a model, made once: {Name, Key, Group, Type, Size, Speed, Sway, Matte, Clips, Pieces:
  *   [{ID, Parent, Pivot, Team, Geometry}]}.
  * - Whole(model) is a model as one geometry, Bounds(geometry) its {Radius, Middle} and Levels(name, {Variant}) its
@@ -30,7 +31,7 @@
 Elemenx.Service('Models', {
 	$Meta: {
 		Description: 'The models of a game made of code: units, animals, plants, buildings and ships of pieces that move, fantasy and sci-fi, and their clips.',
-		Methods: ['Names(filter)', 'Has(name)', 'Info(name)', 'Define(name, recipe)', 'Load(name, callback)', 'Ready(name)', 'Bake(model)', 'Make(name, options)', 'Whole(model)', 'Bounds(geometry)', 'Levels(name, options)', 'Pose(model, clip, time, options)', 'Length(model, clip)']
+		Methods: ['Names(filter)', 'Has(name)', 'Info(name)', 'Define(name, recipe)', 'Load(name, callback)', 'Ready(name)', 'Bake(model)', 'Make(name, options)', 'Surfaces(model)', 'Whole(model)', 'Bounds(geometry)', 'Levels(name, options)', 'Pose(model, clip, time, options)', 'Length(model, clip)']
 	},
 
 	$OnCreate: function () {
@@ -162,6 +163,33 @@ Elemenx.Service('Models', {
 		return graphics.Merge(model.Pieces.map(function (piece) {
 			return piece.Rest ? {Geometry: piece.Geometry, Matrix: piece.Rest} : {Geometry: piece.Geometry};
 		}));
+	},
+
+	/* A model of a file standing still, one geometry for each material: for what is sown near the eye. */
+	Surfaces: function (model) {
+		var graphics = this.$Service('Graphics3D');
+		var soft = model.Soft;
+		var list = [];
+
+		model.Pieces.forEach(function (piece) {
+			var made = list.filter(function (each) {
+				return each.Material === piece.Material;
+			})[0];
+
+			if (!made) {
+				made = {Material: piece.Material, Asset: model.Asset, Parts: [], Soft: typeof soft === 'number' ? soft : soft && soft[piece.Material.Name] || 0};
+
+				list.push(made);
+			}
+
+			made.Parts.push({Geometry: piece.Geometry, Matrix: piece.Rest});
+		});
+
+		return list.map(function (each) {
+			each.Geometry = graphics.Merge(each.Parts);
+
+			return each;
+		});
 	},
 
 	/* The matrix of a node in the model, by its translation, rotation and scale. */
@@ -324,7 +352,7 @@ Elemenx.Service('Models', {
 			piece.Rest = graphics.Multiply(fit, piece.Rest);
 		});
 
-		model = {Name: name, Key: key, Group: recipe.Group || '', Type: recipe.Type || '', Size: recipe.Size || 1, Speed: recipe.Speed || 0, Sway: recipe.Sway || 0, Matte: false, Clips: this.ClipsOf(asset, recipe), Pieces: pieces, Asset: asset, Fit: fit, Joints: joints, Moves: asset.Animations.length > 0};
+		model = {Name: name, Key: key, Group: recipe.Group || '', Type: recipe.Type || '', Size: recipe.Size || 1, Speed: recipe.Speed || 0, Sway: recipe.Sway || 0, Matte: false, Soft: recipe.Soft || 0, Clips: this.ClipsOf(asset, recipe), Pieces: pieces, Asset: asset, Fit: fit, Joints: joints, Moves: asset.Animations.length > 0};
 
 		return model;
 	},
@@ -543,12 +571,23 @@ Elemenx.Service('Models', {
 	PoseOfFile: function (model, clip, time) {
 		var made = model.Clips[clip];
 		var moment = made ? (made.Loop ? time % made.Length : Math.min(made.Length, time)) : 0;
-		var world = this.NodeWorld(model.Asset, this.Sample(model.Asset, made ? made.Animation : null, moment), model.Fit);
-		var matrices = {};
+		var key = (made ? clip : '') + ':' + Math.floor(moment * 30);
+		var kept = model.Poses = model.Poses || {};
+		var world;
+		var matrices;
+
+		/* Copies at the same frame share their pose: a crowd costs no more than one. */
+		if (kept[key])
+			return kept[key];
+
+		world = this.NodeWorld(model.Asset, this.Sample(model.Asset, made ? made.Animation : null, moment), model.Fit);
+		matrices = {};
 
 		model.Pieces.forEach(function (piece) {
 			matrices[piece.ID] = piece.Skin === -1 ? world[piece.Node] : model.Fit;
 		});
+
+		kept[key] = matrices;
 
 		return matrices;
 	},

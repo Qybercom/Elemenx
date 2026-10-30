@@ -153,4 +153,4 @@ Events: ready (the scene, for its methods), select ({ID, Object, Info}: ID empty
 - [plays the clips of a model: walking on a way by itself, a clip that ends going back, a kind for each model](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L584) — `tests/regression/library-scene.test.js`
 - [sees a ground in parallel rays: from above a point is where the plan says, at an angle where the rhombus says](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L653) — `tests/regression/library-scene.test.js`
 
-+8 more in the same files
++10 more in the same files

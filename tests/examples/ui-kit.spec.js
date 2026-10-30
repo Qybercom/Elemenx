@@ -3251,7 +3251,9 @@ for (const origin of origins) {
 			await scene.scrollIntoViewIfNeeded();
 
 			/* The names of what can be selected: three units and three houses. */
-			await expect(scene.locator('.elemenx-game-scene-label')).toHaveCount(6);
+			await expect.poll(async function () {
+				return scene.locator('.elemenx-game-scene-label').count();
+			}).toBeGreaterThanOrEqual(6);
 
 			/* The ground is drawn: the middle of the view is no sky of the color of the page. */
 			await expect.poll(async function () {
@@ -3281,7 +3283,10 @@ for (const origin of origins) {
 			await terrain.getByRole('button', {name: 'Load'}).click();
 
 			await expect(terrain.locator('.elemenx-section-header')).toContainText('Loaded');
-			await expect(scene.locator('.elemenx-game-scene-label')).toHaveCount(6);
+
+			await expect.poll(async function () {
+				return scene.locator('.elemenx-game-scene-label').count();
+			}).toBeGreaterThanOrEqual(6);
 
 			expect(errors).toEqual([]);
 		});

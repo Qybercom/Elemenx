@@ -1,5 +1,5 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { loadElemenx, resetDOM, tick, unique } from '../setup.js';
+import { loadElemenx, resetDOM, tick, unique, waitFor } from '../setup.js';
 import { Use } from '../library.js';
 
 var owned = [];
@@ -284,7 +284,10 @@ describe('Contract: the controls and cards of ElemenxUI', function () {
 		var labels;
 		var box;
 
-		await tick();
+		/* Its length comes from a ResizeObserver: on a busy machine later than a tick. */
+		await waitFor(function () {
+			return ruler.querySelectorAll('.elemenx-ruler-label').length >= 3;
+		});
 
 		labels = Array.prototype.map.call(ruler.querySelectorAll('.elemenx-ruler-label'), function (node) {
 			return Number(node.textContent);

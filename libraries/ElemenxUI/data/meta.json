@@ -3428,6 +3428,14 @@
 					"Description": "The largest zoom of a map."
 				},
 				{
+					"Name": "Biome",
+					"Type": "json",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "On a ground: what it looks like and what grows on it, by itself (the Biomes Service: temperate, taiga, tundra, desert, savanna, swamp, alien)."
+				},
+				{
 					"Name": "Setting",
 					"Type": "select",
 					"Default": "space",
@@ -25549,7 +25557,8 @@
 			"Methods": [
 				"Flat(options)",
 				"Sphere(options)",
-				"Cells(options)"
+				"Cells(options)",
+				"OnRoad(field, x, z, width)"
 			],
 			"Sample": {}
 		},
@@ -25595,11 +25604,34 @@
 				"Ready(name)",
 				"Bake(model)",
 				"Make(name, options)",
+				"Surfaces(model)",
 				"Whole(model)",
 				"Bounds(geometry)",
 				"Levels(name, options)",
 				"Pose(model, clip, time, options)",
 				"Length(model, clip)"
+			],
+			"Sample": {}
+		},
+		{
+			"Name": "Biomes",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "The lands of a game: the colors of a ground, what grows on it, and villages laid out on it.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [
+				"Names()",
+				"Has(name)",
+				"Get(name)",
+				"Define(name, biome)",
+				"Village(field, options)"
 			],
 			"Sample": {}
 		}

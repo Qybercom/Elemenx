@@ -24,4 +24,4 @@
 - [draws a Mosaic of items given and declared, follows its width, and selects an item by a press or Enter](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-layouts.test.js#L124) — `tests/regression/library-layouts.test.js`
 - [compares signatures and lays out items with the Services of ElemenxUI](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/headless.test.js#L25) — `tests/regression/headless.test.js`
 - [themes switch the tokens and the rules of the Components, keep to their schemes and are remembered](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L469) — `tests/examples/ui-kit.spec.js`
-- [layouts: dashboard, settings, master-detail and centered pages](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L10213) — `tests/examples/ui-kit.spec.js`
+- [layouts: dashboard, settings, master-detail and centered pages](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L10218) — `tests/examples/ui-kit.spec.js`

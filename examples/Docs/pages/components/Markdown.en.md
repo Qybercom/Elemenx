@@ -56,7 +56,7 @@ default
 - [writes the text of a Markdown and the code of a CodeView as their body, edited in a field of many lines](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/designer.spec.js#L1409) — `tests/examples/designer.spec.js`
 - [Mod+F finds and Mod+H replaces in the editors, Mod+F finds in a terminal; viewers show Markdown and code, formulas are drawn as MathML](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L1794) — `tests/examples/ui-kit.spec.js`
 - [a Markdown document takes the classes of the interface with Look interface, and the look of a RichEditor by default](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L1923) — `tests/examples/ui-kit.spec.js`
-- [rich editor formats from the toolbar of the page and from its menu, makes blocks of Markdown and pastes through its schema](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L6427) — `tests/examples/ui-kit.spec.js`
-- [rich editor reads and writes Markdown, edits tables, inserts images and prints through its methods](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L6544) — `tests/examples/ui-kit.spec.js`
+- [rich editor formats from the toolbar of the page and from its menu, makes blocks of Markdown and pastes through its schema](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L6432) — `tests/examples/ui-kit.spec.js`
+- [rich editor reads and writes Markdown, edits tables, inserts images and prints through its methods](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L6549) — `tests/examples/ui-kit.spec.js`
 
 +1 more in the same files
