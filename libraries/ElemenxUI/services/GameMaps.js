@@ -1,6 +1,6 @@
 /*
- * The maps of GameWorld: its own JSON, or a map of Tiled (.tmj), made into one form.
- * - Normalize(map) returns the map GameWorld draws: {Width, Height, Projection (orthogonal or isometric), TileWidth,
+ * The maps of GameScene: its own JSON, or a map of Tiled (.tmj), made into one form.
+ * - Normalize(map) returns the map a GameScene draws: {Width, Height, Projection (orthogonal or isometric), TileWidth,
  *   TileHeight, Terrain: {key: {Name, Color, Cost, Opaque, Image, SourceX, SourceY, SourceWidth, SourceHeight}},
  *   Layers: [{Name, Cells (Width * Height keys of Terrain, null where empty)}], Objects: [{ID, Kind, X, Y, Width,
  *   Height, Team, ...}]}. A layer of the JSON gives Rows (lines of text, a character a key of Terrain: '.' grass,
@@ -14,7 +14,7 @@
  */
 Elemenx.Service('GameMaps', {
 	$Meta: {
-		Description: 'The maps of GameWorld: its own JSON, or a map of Tiled (.tmj), made into one form.',
+		Description: 'The maps of GameScene: its own JSON, or a map of Tiled (.tmj), made into one form.',
 		Methods: ['Normalize(map)', 'FromTiled(data, base)', 'Load(url, callback)']
 	},
 

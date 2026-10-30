@@ -58,6 +58,8 @@ describe('elemenx build: Components of a base and of Traits', function () {
 		/* The bundle installs the Trait under its type, loaded when a Component asks for it. */
 		expect(bundle).toMatch(/\n\t"Trait": \{\n/);
 		expect(bundle).toMatch(/\n\t\t"Glow": function \(\) \{\n\t\t\tElemenx\.Trait\('Glow'/);
-		expect(bundle).toMatch(/\n\t\t"Declared": function \(\) \{\n[\s\S]*?Elemenx\.Trait\('Declared'/);
+
+		/* A Trait of a Library goes in only with a Component that names it: no GameScene here, no Strategy. */
+		expect(bundle).not.toContain("Elemenx.Trait('Strategy'");
 	});
 });

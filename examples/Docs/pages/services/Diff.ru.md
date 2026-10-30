@@ -59,4 +59,4 @@
 - [finds the shortest list of changes in long texts quickly](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/diff.test.js#L39) — `tests/regression/diff.test.js`
 - [marks the words that differ in two versions of a line](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/diff.test.js#L60) — `tests/regression/diff.test.js`
 - [groups the lines into changes with their context and the folds between them](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/diff.test.js#L67) — `tests/regression/diff.test.js`
-- [code editor shows a diff with the original text, in one column or side by side, with the words changed and folds that open](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L6248) — `tests/examples/ui-kit.spec.js`
+- [code editor shows a diff with the original text, in one column or side by side, with the words changed and folds that open](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L6266) — `tests/examples/ui-kit.spec.js`

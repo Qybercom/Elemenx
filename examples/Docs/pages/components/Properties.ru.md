@@ -40,5 +40,5 @@
 ## Тесты
 
 - [sets the layout of an element above its props: its box, its sizes and the alignment of a flex container by icons](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/designer.spec.js#L506) — `tests/examples/designer.spec.js`
-- [properties set a value apart from its name, in one column or two, with tones and values of their own](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L5034) — `tests/examples/ui-kit.spec.js`
-- [windows move, resize, come to the front, minimize, maximize, follow the keys, close and remember their place](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L6814) — `tests/examples/ui-kit.spec.js`
+- [properties set a value apart from its name, in one column or two, with tones and values of their own](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L5052) — `tests/examples/ui-kit.spec.js`
+- [windows move, resize, come to the front, minimize, maximize, follow the keys, close and remember their place](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L6832) — `tests/examples/ui-kit.spec.js`

@@ -2137,9 +2137,9 @@ Elemenx.Component('UIKitPage', {
 
 		unit = world.Add({ID: 'recruit-' + this.WorldAdded, Kind: 'unit', X: 8, Y: 5, Team: 'blue', Type: 'worker', Health: 30, MaxHealth: 30, Speed: 3});
 
-		world.Order([unit.ID], {X: 9 + this.WorldAdded % 4, Y: 7});
+		world.Order([unit], {X: 9 + this.WorldAdded % 4, Y: 7});
 
-		this.WorldNote = 'Recruited ' + unit.ID + ' · ' + world.Objects(function (item) {
+		this.WorldNote = 'Recruited ' + unit + ' · ' + world.Objects(function (item) {
 			return item.Kind === 'unit' && item.Team === 'blue';
 		}).length + ' blue units';
 	},

@@ -60,4 +60,4 @@ Alert(options, callback) has one action, OK. A string is the Message of the opti
 
 - [DialogHost shows the dialogs of the Dialogs Service, and an action pressed closes one with its ID](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-overlays.test.js#L250) — `tests/regression/library-overlays.test.js`
 - [Dialogs: a confirmation and an alert in the list, closed with the action pressed or with none](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-services.test.js#L157) — `tests/regression/library-services.test.js`
-- [a dialog that needs an answer shakes on Escape and the backdrop; Dialogs asks from the code](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L4663) — `tests/examples/ui-kit.spec.js`
+- [a dialog that needs an answer shakes on Escape and the backdrop; Dialogs asks from the code](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L4681) — `tests/examples/ui-kit.spec.js`

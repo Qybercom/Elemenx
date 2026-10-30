@@ -1,10 +1,10 @@
 /*
- * An object of a game, of any kind, declared in a GameScene (or a GameWorld): Kind names its kind (the Kinds Service:
+ * An object of a game, of any kind, declared in a GameScene: Kind names its kind (the Kinds Service:
  * what it extends, what it can do, its Traits, and what it is made of, its Parts), and every other attribute is a field
  * of it or of one of its Traits, in any case (Radius, Distance, Speed, Team: whatever its kind has). ID, Name, Team.
  * A GameObject declared inside another goes round it when its kind moves (an Orbit, a Mover: a moon in its planet), and
  * is a part of it otherwise (a module of a station); Part="dock" changes the part of that name that the kind of its
- * parent gives it, Parent names what it goes round instead of its place. For a GameWorld (the map of cells) it is a
+ * parent gives it, Parent names what it goes round instead of its place. On a map of cells it is a
  * thing on a cell: X and Y, Width and Height (1 by 1), Color, Image, Blocks (no way through it), Opaque (it hides what
  * is behind it), Kind tree (the default there), rock or a name of your own. It shows nothing by itself.
  */
@@ -24,8 +24,8 @@ Elemenx.Component('GameObject', {
 			Part: 'The part of its parent it changes (the part of that ID of the kind of the parent).',
 			Parent: 'What it goes round or belongs to, when not the object it is declared in.',
 			Team: 'Its team.',
-			X: 'Its place across (a cell of a GameWorld).',
-			Y: 'Its place down (a cell of a GameWorld).',
+			X: 'Its place across (a cell of a map).',
+			Y: 'Its place down (a cell of a map).',
 			Width: 'The cells it takes across.',
 			Height: 'The cells it takes down.',
 			Color: 'Its color.',

@@ -1,27 +1,8 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { loadElemenx, resetDOM, tick, unique, waitFor } from '../setup.js';
-import worldSource from '../../libraries/ElemenxUI/components/GameWorld/GameWorld.js?raw';
-import worldTemplate from '../../libraries/ElemenxUI/components/GameWorld/GameWorld.html?raw';
-import worldStyle from '../../libraries/ElemenxUI/components/GameWorld/GameWorld.css?raw';
-import layerSource from '../../libraries/ElemenxUI/components/GameLayer/GameLayer.js?raw';
-import layerTemplate from '../../libraries/ElemenxUI/components/GameLayer/GameLayer.html?raw';
-import terrainSource from '../../libraries/ElemenxUI/components/GameTerrain/GameTerrain.js?raw';
-import terrainTemplate from '../../libraries/ElemenxUI/components/GameTerrain/GameTerrain.html?raw';
-import unitSource from '../../libraries/ElemenxUI/components/GameUnit/GameUnit.js?raw';
-import unitTemplate from '../../libraries/ElemenxUI/components/GameUnit/GameUnit.html?raw';
-import buildingSource from '../../libraries/ElemenxUI/components/GameBuilding/GameBuilding.js?raw';
-import buildingTemplate from '../../libraries/ElemenxUI/components/GameBuilding/GameBuilding.html?raw';
-import objectSource from '../../libraries/ElemenxUI/components/GameObject/GameObject.js?raw';
-import objectTemplate from '../../libraries/ElemenxUI/components/GameObject/GameObject.html?raw';
+import { Use } from '../library.js';
 
 var owned = [];
-
-/* A component of the Library with its template inline: the page of the tests serves no Library. */
-function define (source, name, template) {
-	new Function(source.replace(/\$StyleURL: '[^']+',\n/, '').replace("$TemplateURL: '" + name + ".html'", function () {
-		return '$Template: ' + JSON.stringify(template);
-	}))();
-}
 
 /* A world in a box of its size, its ready event caught: the world itself. */
 async function mount (template, state) {
@@ -49,29 +30,13 @@ async function mount (template, state) {
 	return {Host: component, World: ready};
 }
 
-describe('Contract: GameMaps and GameWorld, the world of a strategy game', function () {
+describe('Contract: GameMaps and GameScene, the map of a strategy game', function () {
 	var maps;
 
 	beforeAll(async function () {
 		await loadElemenx();
 
-		await import('../../libraries/ElemenxUI/services/Random.js');
-		await import('../../libraries/ElemenxUI/services/Spatial.js');
-		await import('../../libraries/ElemenxUI/services/Pathfinding.js');
-		await import('../../libraries/ElemenxUI/services/Visibility.js');
-		await import('../../libraries/ElemenxUI/services/GameLoop.js');
-		await import('../../libraries/ElemenxUI/services/GameMaps.js');
-
-		define(worldSource, 'GameWorld', worldTemplate);
-
-		/* Its stylesheet: the canvas fills the world, it does not make it larger. */
-		Elemenx.Style('GameWorld', worldStyle);
-
-		define(layerSource, 'GameLayer', layerTemplate);
-		define(terrainSource, 'GameTerrain', terrainTemplate);
-		define(unitSource, 'GameUnit', unitTemplate);
-		define(buildingSource, 'GameBuilding', buildingTemplate);
-		define(objectSource, 'GameObject', objectTemplate);
+		Use(['GameScene', 'GameObject', 'GameLayer', 'GameTerrain', 'service:GameMaps']);
 
 		maps = Elemenx.Service('GameMaps');
 	});
@@ -113,7 +78,7 @@ describe('Contract: GameMaps and GameWorld, the world of a strategy game', funct
 		expect(tiled.Objects[0]).toMatchObject({ID: '7', Kind: 'unit', Name: 'Ada', X: 1, Y: 2, Team: 'blue'});
 	});
 
-	it('GameWorld: sets no timer of no function while it is made (a page that forbids eval refuses one)', async function () {
+	it('GameScene: sets no timer of no function while it is made (a page that forbids eval refuses one)', async function () {
 		var original = window.setTimeout;
 		var bad = [];
 
@@ -125,7 +90,7 @@ describe('Contract: GameMaps and GameWorld, the world of a strategy game', funct
 		};
 
 		try {
-			await mount('<GameWorld Team="blue" (ready)="Ready"><GameLayer Name="ground">\n....\n....\n</GameLayer><GameUnit ID="scout" X="1" Y="1" Team="blue" /></GameWorld>');
+			await mount('<GameScene Team="blue" (ready)="Ready"><GameLayer Name="ground">\n....\n....\n</GameLayer><GameObject Kind="unit" ID="scout" X="1" Y="1" Team="blue" /></GameScene>');
 		}
 		finally {
 			window.setTimeout = original;
@@ -134,19 +99,19 @@ describe('Contract: GameMaps and GameWorld, the world of a strategy game', funct
 		expect(bad).toEqual([]);
 	});
 
-	it('GameWorld: the map and the objects it declares, the ways round its buildings, its methods, the order walked to the end', async function () {
+	it('GameScene: the map and the objects it declares, the ways round its buildings, its methods, the order walked to the end', async function () {
 		var arrived = [];
 		var ordered = [];
 		var selected = [];
 		var mounted = await mount(
-			'<GameWorld Team="blue" Projection="orthogonal" (ready)="Ready" (arrive)="Arrived" (order)="Ordered" (select)="Selected">' +
+			'<GameScene Team="blue" Projection="orthogonal" (ready)="Ready" (arrive)="Arrived" (order)="Ordered" (select)="Selected">' +
 				'<GameTerrain Key="*" Name="lava" Color="#ff4400" Cost="Infinity" />' +
 				'<GameLayer Name="ground">\n........\n........\n..****..\n........\n</GameLayer>' +
-				'<GameBuilding ID="hall" X="5" Y="0" Width="2" Height="2" Team="blue" />' +
-				'<GameUnit ID="scout" X="0" Y="0" Team="blue" Speed="40" />' +
-				'<GameUnit ID="raider" X="7" Y="3" Team="red" />' +
+				'<GameObject Kind="building" ID="hall" X="5" Y="0" Width="2" Height="2" Team="blue" />' +
+				'<GameObject Kind="unit" ID="scout" X="0" Y="0" Team="blue" Speed="40" />' +
+				'<GameObject Kind="unit" ID="raider" X="7" Y="3" Team="red" />' +
 				'<GameObject ID="tree" Kind="tree" X="0" Y="3" Blocks="true" />' +
-			'</GameWorld>',
+			'</GameScene>',
 			{
 				Arrived: function (detail) {
 					arrived.push(detail);
@@ -200,7 +165,7 @@ describe('Contract: GameMaps and GameWorld, the world of a strategy game', funct
 			return arrived.length;
 		}, 3000);
 
-		expect(arrived[0]).toEqual({ID: 'scout', X: 4, Y: 3});
+		expect(arrived[0]).toEqual({ID: 'scout', At: [4, 3], X: 4, Y: 3});
 		expect(world.Get('scout')).toMatchObject({X: 4, Y: 3, Moving: false});
 		expect(world.Near(4, 3, 1.5)).toEqual(['scout']);
 
@@ -223,12 +188,12 @@ describe('Contract: GameMaps and GameWorld, the world of a strategy game', funct
 		expect(ordered[ordered.length - 1]).toMatchObject({Kind: 'stop', IDs: ['scout']});
 	});
 
-	it('GameWorld: a declaration changed moves its object, one taken away takes it away; a map by its URL loads', async function () {
+	it('GameScene: a declaration changed moves its object, one taken away takes it away; a map by its URL loads', async function () {
 		var loaded = [];
 		var mounted = await mount(
-			'<GameWorld Projection="orthogonal" [map]="Map" (ready)="Ready" (load)="Loaded">' +
-				'<GameUnit *for="unit of Units" [id]="unit.ID" [x]="unit.X" [y]="unit.Y" />' +
-			'</GameWorld>',
+			'<GameScene Projection="orthogonal" [map]="Map" (ready)="Ready" (load)="Loaded">' +
+				'<GameObject Kind="unit" *for="unit of Units" [id]="unit.ID" [x]="unit.X" [y]="unit.Y" />' +
+			'</GameScene>',
 			{
 				Map: {Width: 6, Height: 4, Layers: [{Rows: ['......', '......', '......', '......']}]},
 				Units: [{ID: 'a', X: 1, Y: 1}, {ID: 'b', X: 2, Y: 2}],

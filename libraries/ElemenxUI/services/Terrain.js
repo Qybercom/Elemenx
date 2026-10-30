@@ -15,12 +15,15 @@
  *   ground of the noise: below 0 the sea), Elevation(direction) (above the radius), Point(direction) (on the ground),
  *   Altitude(point) (above the ground under it), Patch(face, u, v, size, resolution) (a geometry of a square of a face
  *   of its cube, from u and v of -1 to 1, its positions relative to its Center, the land in UV.x, the sea in UV.y).
+ * - Cells(options) returns the flat ground of a map of cells, a mesh of one piece: options Width, Height (in cells),
+ *   Depth (the length of a cell along Z, 1), Color(x, y) ([r, g, b], 0 to 1, of a cell); it has the methods of Flat, and
+ *   Whole and Center (the middle of the map: X from 0 to Width, Z from 0 to Height * Depth).
  * The same functions run in Node: they read no page.
  */
 Elemenx.Service('Terrain', {
 	$Meta: {
 		Description: 'The ground of a game, continuous: heights of noise anywhere, meshes in chunks, ways over it; the ground of a planet as its surface shows.',
-		Methods: ['Flat(options)', 'Sphere(options)']
+		Methods: ['Flat(options)', 'Sphere(options)', 'Cells(options)']
 	},
 
 	Smoothstep: function (from, to, value) {
@@ -90,6 +93,62 @@ Elemenx.Service('Terrain', {
 		};
 
 		return field;
+	},
+
+	Cells: function (options) {
+		var graphics = this.$Service('Graphics3D');
+		var settings = options || {};
+		var width = Math.max(1, Math.floor(Number(settings.Width) || 1));
+		var height = Math.max(1, Math.floor(Number(settings.Height) || 1));
+		var depth = Number(settings.Depth) || 1;
+		var center = [width / 2, 0, height * depth / 2];
+
+		return {
+			Size: Math.max(width, height * depth),
+			Top: 1,
+			Water: 0,
+			Whole: true,
+			Center: center,
+
+			Height: function () {
+				return 0;
+			},
+
+			Normal: function () {
+				return [0, 1, 0];
+			},
+
+			Slope: function () {
+				return 0;
+			},
+
+			Walkable: function () {
+				return true;
+			},
+
+			Chunk: function () {
+				var geometry = graphics.Geometry();
+				var x;
+				var y;
+
+				for (y = 0; y < height; y++) {
+					for (x = 0; x < width; x++) {
+						var color = settings.Color ? settings.Color(x, y) : [0.36, 0.6, 0.24];
+						var base = geometry.Positions.length / 3;
+						var left = x - center[0];
+						var top = y * depth - center[2];
+
+						geometry.Positions.push(left, 0, top, left, 0, top + depth, left + 1, 0, top + depth, left + 1, 0, top);
+						geometry.Normals.push(0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0);
+						geometry.UVs.push(0, 0, 0, 1, 1, 1, 1, 0);
+						geometry.Colors.push(color[0], color[1], color[2], color[0], color[1], color[2], color[0], color[1], color[2], color[0], color[1], color[2]);
+						geometry.Indices.push(base, base + 1, base + 2, base, base + 2, base + 3);
+					}
+				}
+
+				return geometry;
+			}
+		};
 	},
 
 	/* The colors of the ground of a flat map: sand by the sea, grass, rock on the slopes, snow on the heights. */

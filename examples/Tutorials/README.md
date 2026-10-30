@@ -10,7 +10,7 @@ The projects of the tutorials of the Docs (`examples/Docs`, section Tutorials). 
 | `Shop` | A shop | A cart shared by the pages, a component for each item, a checkout with card fields |
 | `Collection` | A media collection | MediaHero, MediaShelf, MediaCard, FacetFilter, TrackList, CastList, the parameters of a route |
 | `Chat` | A chat | The Chat layout, Messaging between tabs, a bot |
-| `Game` | A browser game | GameWorld, a HUD, GameMenu, achievements |
+| `Game` | A browser game | GameScene, a HUD, GameMenu, achievements |
 | `Editor` | An editor in the manner of an IDE | Workspace, Tree, Tabs, CodeEditor, Terminal, CommandPalette |
 | `Backend` | Elemenx on the pages of a server | No build: a part of a page rendered by a server |
 | `Signup` | Forms and validation | A model of a form in code, async and group validators, a list of fields, the errors of a server |

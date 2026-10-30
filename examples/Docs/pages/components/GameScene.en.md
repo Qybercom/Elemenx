@@ -13,7 +13,9 @@ The surface: Land(id, {Latitude, Longitude, Altitude}) goes down to the ground o
 
 Kinds of the ground (the setting terrain): ground (Terrain: Size, Height, Water, Scale, Ridges, Seed: a ground of noise, Terrain.Flat, in chunks finer near the eye, with its sea), sun (Sun: its light from far), unit (Walker: Speed, MaxSlope, Swim; a Model), tree, rock and house (Model, Blocks: what stands in the way). An object of it stands at X and Y of the ground; Move(id, [x, y]) walks a walker round what cannot be walked, a right click sends the selected one; the view turns round a point of the ground and the keys move it. Every model of the Models Service is a kind of the same name (knight, mech, wolf, oak, tower, reactor...), of the kind that fits it.
 
-The models stand in the light of their sun and cast shadows on each other and on the ground (Shadows); a Model plays clips of its pieces (Clip: the one it plays when idle): walk on a way by itself, Play(id, clip, callback) the others (attack, cast, work, die); the wind bends what grows.
+The models stand in the light of their sun and cast shadows on each other and on the ground (Shadows); a Model plays clips of its pieces (Clip: the one it plays when idle): walk on a way by itself, Play(id, clip, callback) the others (attack, cast, work, die); the wind bends what grows. View top or isometric sees a ground in parallel rays, as a game of two dimensions.
+
+A map of cells: Map, GameTerrain and GameLayer make the ground of a strategy game (see the trait Strategy): its objects stand on cells, its units are selected in a frame and ordered, Fog, Grid and Minimap come with it.
 
 Events: ready (the scene, for its methods), select ({ID, Object, Info}: ID empty when none is), focus ({ID}), arrive ({ID, At}), land ({ID}), takeoff ({ID}), error ({Reason: webgl2}). Methods: Add(kind, props), Change(id, changes), Remove(id), Attach(parent, object), Detach(id), Get(id), Objects(filter), Describe(id), Position(id), Select(id), FocusOn(id), Move(id, target), Now(), SetTime(days), Play(id, clip, callback), ToScreen(id), Pick(clientX, clientY), Save(), Load(saved), Land(id, options), TakeOff(), Surface(), Supported().
 
@@ -28,6 +30,7 @@ Events: ready (the scene, for its methods), select ({ID, Object, Info}: ID empty
 | `Speed` | `1` |
 | `SurfaceSpeed` | `1 / 120` |
 | `Shadows` | `true` |
+| `View` | `''` |
 | `Paused` | `false` |
 | `Orbits` | `true` |
 | `Labels` | `true` |
@@ -39,12 +42,12 @@ Events: ready (the scene, for its methods), select ({ID, Object, Info}: ID empty
 
 ## Events
 
-- `arrive`: An object reached where it was sent: {ID, At}.
+- `arrive`: An object reached where it was sent: {ID, At} (with a map, X and Y too).
 - `focus`: The view moved to an object: {ID}.
 - `land`: The view went down to the surface of a body: {ID}.
 - `takeoff`: The view went back up to space: {ID}.
-- `select`: An object was selected: {ID, Object, Info} (ID empty when none is).
-- `error`: There is no WebGL2: {Reason: webgl2}.
+- `select`: The selection changed: {ID, Object, Info, IDs, Objects} (ID empty when none is).
+- `error`: There is no WebGL2 ({Reason: webgl2}), or a map could not be loaded (the error).
 - `ready`: The scene is ready: the component itself, to call its methods.
 
 ## Slots
@@ -68,10 +71,10 @@ Events: ready (the scene, for its methods), select ({ID, Object, Info}: ID empty
 - `Play(id, clip, callback)`
 - `Now()`
 - `SetTime(days)`
-- `ToScreen(id)`
+- `ToScreen(id, y)`
 - `Pick(clientX, clientY)`
 - `Save()`
-- `Load(saved)`
+- `Load(saved, callback)`
 - `Supported()`
 - `Land(id, options)`
 - `TakeOff()`
@@ -137,6 +140,10 @@ Events: ready (the scene, for its methods), select ({ID, Object, Info}: ID empty
 
 ## Tests
 
+- [GameMaps: its own JSON with rows of text, and a map of Tiled with its tiles, their properties and its objects](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/game-world.test.js#L52) — `tests/regression/game-world.test.js`
+- [GameScene: sets no timer of no function while it is made (a page that forbids eval refuses one)](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/game-world.test.js#L81) — `tests/regression/game-world.test.js`
+- [GameScene: the map and the objects it declares, the ways round its buildings, its methods, the order walked to the end](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/game-world.test.js#L102) — `tests/regression/game-world.test.js`
+- [GameScene: a declaration changed moves its object, one taken away takes it away; a map by its URL loads](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/game-world.test.js#L191) — `tests/regression/game-world.test.js`
 - [reads the GameObject inside it: each attribute a field of its kind, nested ones going round their holder or a part of it](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L314) — `tests/regression/library-scene.test.js`
 - [draws the star bright, the day side of a body of its baked surface, not its night side, and the same far from the middle](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L361) — `tests/regression/library-scene.test.js`
 - [selects an object by its label and a part by a press when near, flies to it, sends a fleet that arrives](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L402) — `tests/regression/library-scene.test.js`
@@ -144,5 +151,6 @@ Events: ready (the scene, for its methods), select ({ID, Object, Info}: ID empty
 - [runs the systems of the application for traits of their own](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L526) — `tests/regression/library-scene.test.js`
 - [lands on the surface of a body and takes off again; a giant of gas has none](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L543) — `tests/regression/library-scene.test.js`
 - [plays the clips of a model: walking on a way by itself, a clip that ends going back, a kind for each model](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L583) — `tests/regression/library-scene.test.js`
-- [casts the shadows of what stands on a ground, or none when told](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L652) — `tests/regression/library-scene.test.js`
-- [walks a unit over a ground round the water and what blocks it, sends it by a right press, and saves its place](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L705) — `tests/regression/library-scene.test.js`
+- [sees a ground in parallel rays: from above a point is where the plan says, at an angle where the rhombus says](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L652) — `tests/regression/library-scene.test.js`
+
++5 more in the same files

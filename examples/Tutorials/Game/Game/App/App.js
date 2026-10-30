@@ -1,5 +1,5 @@
 /*
- * The game: the world, the gems on it, the HUD over it and the menu. A press on a cell sends the hero there (GameWorld
+ * The game: the world, the gems on it, the HUD over it and the menu. A press on a cell sends the hero there (GameScene
  * finds the way); a gem under the hero when it arrives is found. Escape pauses.
  */
 Elemenx.Component('App', {

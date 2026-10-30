@@ -1,9 +1,9 @@
 <!-- generated -->
 # GameMaps
 
-The maps of GameWorld: its own JSON, or a map of Tiled (.tmj), made into one form.
+The maps of GameScene: its own JSON, or a map of Tiled (.tmj), made into one form.
 
-- Normalize(map) returns the map GameWorld draws: {Width, Height, Projection (orthogonal or isometric), TileWidth, TileHeight, Terrain: {key: {Name, Color, Cost, Opaque, Image, SourceX, SourceY, SourceWidth, SourceHeight}}, Layers: [{Name, Cells (Width * Height keys of Terrain, null where empty)}], Objects: [{ID, Kind, X, Y, Width, Height, Team, ...}]}. A layer of the JSON gives Rows (lines of text, a character a key of Terrain: '.' grass, '~' water...) or Data (the keys, row by row).
+- Normalize(map) returns the map a GameScene draws: {Width, Height, Projection (orthogonal or isometric), TileWidth, TileHeight, Terrain: {key: {Name, Color, Cost, Opaque, Image, SourceX, SourceY, SourceWidth, SourceHeight}}, Layers: [{Name, Cells (Width * Height keys of Terrain, null where empty)}], Objects: [{ID, Kind, X, Y, Width, Height, Team, ...}]}. A layer of the JSON gives Rows (lines of text, a character a key of Terrain: '.' grass, '~' water...) or Data (the keys, row by row).
 - FromTiled(data, base) reads a map of Tiled: its tile layers (each tile a key of Terrain, drawn with the picture of its tileset; the properties cost and opaque of a tile, Color for a picture missing), its object layers (the class or type of an object its Kind: unit, building or anything else, its properties its fields) and its orientation. base: the URL the pictures of the tilesets are relative to.
 - Load(url, callback): fetches a map (JSON of its own or of Tiled) and calls back (error, map).
 
@@ -19,7 +19,7 @@ Positions are in cells: X across, Y down (on an isometric map, along its two edg
 
 ```example
 <div style="height: 260px;">
-	<GameWorld [map]="Map" />
+	<GameScene [map]="Map" />
 </div>
 <p class="elemenx-text small muted">{{Note}}</p>
 <script>
@@ -55,7 +55,7 @@ Positions are in cells: X across, Y down (on an isometric map, along its two edg
 
 ## Tests
 
-- [GameMaps: its own JSON with rows of text, and a map of Tiled with its tiles, their properties and its objects](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/game-world.test.js#L87) — `tests/regression/game-world.test.js`
-- [GameWorld: sets no timer of no function while it is made (a page that forbids eval refuses one)](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/game-world.test.js#L116) — `tests/regression/game-world.test.js`
-- [GameWorld: the map and the objects it declares, the ways round its buildings, its methods, the order walked to the end](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/game-world.test.js#L137) — `tests/regression/game-world.test.js`
-- [GameWorld: a declaration changed moves its object, one taken away takes it away; a map by its URL loads](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/game-world.test.js#L226) — `tests/regression/game-world.test.js`
+- [GameMaps: its own JSON with rows of text, and a map of Tiled with its tiles, their properties and its objects](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/game-world.test.js#L52) — `tests/regression/game-world.test.js`
+- [GameScene: sets no timer of no function while it is made (a page that forbids eval refuses one)](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/game-world.test.js#L81) — `tests/regression/game-world.test.js`
+- [GameScene: the map and the objects it declares, the ways round its buildings, its methods, the order walked to the end](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/game-world.test.js#L102) — `tests/regression/game-world.test.js`
+- [GameScene: a declaration changed moves its object, one taken away takes it away; a map by its URL loads](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/game-world.test.js#L191) — `tests/regression/game-world.test.js`

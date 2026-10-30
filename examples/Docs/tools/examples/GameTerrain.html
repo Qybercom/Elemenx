@@ -1,10 +1,10 @@
 <div style="height: 280px;">
-	<GameWorld Team="blue">
+	<GameScene Team="blue">
 		<GameTerrain Key="o" Name="Lava" Color="#d8453c" Cost="Infinity" />
 		<GameTerrain Key="m" Name="Mud" Color="#6b4f2a" Cost="4" />
 		<GameLayer [rows]="Rows" />
-		<GameUnit ID="scout" X="1" Y="1" Team="blue" Type="scout" />
-	</GameWorld>
+		<GameObject Kind="unit" ID="scout" X="1" Y="1" Team="blue" Type="scout" />
+	</GameScene>
 </div>
 <p class="elemenx-text small muted">The lava blocks the way, the mud costs four times the grass: send the scout across (a click, then a right click).</p>
 <script>

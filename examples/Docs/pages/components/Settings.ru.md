@@ -47,4 +47,4 @@
 
 ## Тесты
 
-- [a settings menu goes into submenus and back, chooses, turns switches, finds rows on every level and follows the keys](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L3691) — `tests/examples/ui-kit.spec.js`
+- [a settings menu goes into submenus and back, chooses, turns switches, finds rows on every level and follows the keys](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L3709) — `tests/examples/ui-kit.spec.js`

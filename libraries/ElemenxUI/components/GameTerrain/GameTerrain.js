@@ -1,14 +1,14 @@
 /*
- * A kind of ground of a GameWorld, declared in it: Key (the character of the rows of a GameLayer), Name, Color,
+ * A kind of ground of the map of a GameScene, declared in it: Key (the character of the rows of a GameLayer), Name, Color,
  * Cost (to enter a cell of it: 1 by default, Infinity blocks), Opaque (it hides what is behind it: a forest), Image
- * (a picture of a tile). It shows nothing by itself: the world reads it.
+ * (a picture of a tile). It shows nothing by itself: the scene reads it.
  */
 Elemenx.Component('GameTerrain', {
 	$TemplateURL: 'GameTerrain.html',
 	$Meta: {
 		Group: 'game',
 		Icon: 'layout',
-		Description: 'A kind of ground of a GameWorld: the character of its rows, its color, its cost and whether it hides.',
+		Description: 'A kind of ground of the map of a GameScene: the character of its rows, its color, its cost and whether it hides.',
 		Props: {
 			Key: 'The character of the kind in the rows of a GameLayer.',
 			Name: 'The name of the kind: water, forest.',
@@ -27,7 +27,7 @@ Elemenx.Component('GameTerrain', {
 	Image: '',
 
 	$OnCreate: function () {
-		/* What it declares, as the world reads it (a template calls it with its props). */
+		/* What it declares, as the scene reads it (a template calls it with its props). */
 		this.Value = function (key, name, color, cost, opaque, image) {
 			return JSON.stringify({Key: key, Name: name, Color: color, Cost: cost, Opaque: opaque, Image: image}, function (field, value) {
 				return value === Infinity ? 'Infinity' : value;

@@ -13,6 +13,8 @@
  *   of its team; tools.Graphics and tools.Rigs (Biped, Quadruped, Tracked: clips to reuse) are at hand.
  * - Make(name, {Variant}) returns a model, made once: {Name, Key, Group, Type, Size, Speed, Sway, Matte, Clips, Pieces:
  *   [{ID, Parent, Pivot, Team, Geometry}]}.
+ * - Whole(model) is a model as one geometry, Bounds(geometry) its {Radius, Middle} and Levels(name, {Variant}) its
+ *   geometries from the finest down: for what is sown in masses and seen from afar.
  * - Pose(model, clip, time, {From, FromTime, Fade}) returns the matrix of each piece at a second of a clip, in the space
  *   of the model; Fade (0 to 1) mixes it from the pose of the clip From. Length(model, clip) is the seconds of a clip.
  * A clip is {Length, Loop, Hold, Stride, Tracks: {piece: [[time 0 to 1, rx, ry, rz, mx, my, mz]...]}, Spins: {piece:
@@ -23,7 +25,7 @@
 Elemenx.Service('Models', {
 	$Meta: {
 		Description: 'The models of a game made of code: units, animals, plants, buildings and ships of pieces that move, fantasy and sci-fi, and their clips.',
-		Methods: ['Names(filter)', 'Has(name)', 'Info(name)', 'Define(name, recipe)', 'Make(name, options)', 'Pose(model, clip, time, options)', 'Length(model, clip)']
+		Methods: ['Names(filter)', 'Has(name)', 'Info(name)', 'Define(name, recipe)', 'Make(name, options)', 'Whole(model)', 'Bounds(geometry)', 'Levels(name, options)', 'Pose(model, clip, time, options)', 'Length(model, clip)']
 	},
 
 	$OnCreate: function () {
@@ -94,6 +96,37 @@ Elemenx.Service('Models', {
 		this.Made[key] = {Name: name, Key: key, Group: recipe.Group || '', Type: recipe.Type || '', Size: recipe.Size || 1, Speed: recipe.Speed || 0, Sway: recipe.Sway || 0, Matte: recipe.Matte !== false, Clips: recipe.Clips || {}, Pieces: pieces};
 
 		return this.Made[key];
+	},
+
+	Whole: function (model) {
+		return this.$Service('Graphics3D').Merge(model.Pieces.map(function (piece) {
+			return {Geometry: piece.Geometry};
+		}));
+	},
+
+	Bounds: function (geometry) {
+		var p = geometry.Positions;
+		var top = -Infinity;
+		var bottom = Infinity;
+		var wide = 0;
+		var i;
+
+		for (i = 0; i < p.length; i += 3) {
+			top = Math.max(top, p[i + 1]);
+			bottom = Math.min(bottom, p[i + 1]);
+			wide = Math.max(wide, Math.abs(p[i]), Math.abs(p[i + 2]));
+		}
+
+		return {Radius: Math.max(wide, (top - bottom) / 2) * 1.05, Middle: (top + bottom) / 2};
+	},
+
+	/* The whole model, then two simpler ones: cells of a thirtieth and of a tenth of its size. */
+	Levels: function (name, options) {
+		var graphics = this.$Service('Graphics3D');
+		var whole = this.Whole(this.Make(name, options));
+		var bounds = this.Bounds(whole);
+
+		return [whole, graphics.Simplify(whole, bounds.Radius / 15), graphics.Simplify(whole, bounds.Radius / 5)];
 	},
 
 	Length: function (model, clip) {

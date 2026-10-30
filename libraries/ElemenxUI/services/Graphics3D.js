@@ -10,7 +10,8 @@
  *   Apply(m, point) (a point [x, y, z] moved by it).
  * - Vectors are arrays [x, y, z]: Vectors.Add(a, b), Subtract, Scale(a, k), Dot, Cross, Length, Normalize, Lerp(a,
  *   b, t), Distance.
- * - Camera(options) returns a camera ({Position, Target, Up, Fov, Near, Far}): View(), Projection(aspect),
+ * - Camera(options) returns a camera ({Position, Target, Up, Fov, Near, Far, Ortho: the height of a view of parallel
+ *   rays, 0 for a perspective}): View(), Projection(aspect),
  *   Matrix(aspect) (both), Orbit(target, yaw, pitch, distance) (it looks at target from round it), Ray(x, y, width,
  *   height) ({Origin, Direction} through a point of the screen), Project(point, width, height) ({X, Y, Depth,
  *   Visible}: where a point of space is on the screen).
@@ -22,7 +23,7 @@
  *   the axis Y), Wedge({Width, Height, Depth}) (a roof of two slopes); Transform(geometry, matrix), Merge(parts) (each a
  *   geometry or {Geometry, Matrix, Color}), Displace(geometry, amount) (each vertex moved along its normal by
  *   amount(position, normal)), Normals(geometry) (made again from the faces), Facets(geometry) (each face flat, of
- *   vertices of its own).
+ *   vertices of its own), Simplify(geometry, cell) (the corners within a cell of a grid made one, for a simpler level).
  * - Noise(seed) returns a smooth noise of space: Value(x, y, z) (0 to 1), Fbm(x, y, z, octaves) (several of it, each
  *   finer and fainter) and Ridge (the folds of mountains). Without a seed it is the very noise of the shaders,
  *   Chunks.Noise (noise3, fbm3, ridge3), to the float: a heightmap of the CPU matches a surface the GPU baked.
@@ -42,6 +43,8 @@
  *   for a uniform sampler2D; Cube(size) a cube of six faces for a samplerCube, which Bake(cube, program, uniforms)
  *   draws once: the program is Shaders.Quad with a fragment shader that takes the direction of each texel from
  *   cubeDirection(uFace, vQuad) (Chunks.Cube): a surface of noise computed once, sampled at every frame.
+ * - Target(width, height, {Colors, Depth}) returns textures to draw into: Textures, Begin(), End(), Destroy();
+ *   Viewport(x, y, width, height) draws in a part of it. Texture takes options Float for an array of floats.
  * - Shadow(size) returns a shadow map, a depth texture for a uniform sampler2DShadow: between its Begin() and End() the
  *   draws write only its depth, as seen from the light; Destroy().
  * - Draw(mesh, program, uniforms, settings): settings Mode (triangles, lines, line-strip, line-loop, points), Blend
@@ -53,7 +56,7 @@
 Elemenx.Service('Graphics3D', {
 	$Meta: {
 		Description: 'The graphics of three dimensions on WebGL2: matrices, a camera, shapes of triangles and a renderer of them.',
-		Methods: ['Create(canvas, options)', 'Camera(options)', 'Identity()', 'Multiply(a, b)', 'Invert(m)', 'Translation(x, y, z)', 'Rotation(axis, angle)', 'Scaling(x, y, z)', 'Compose(position, rotation, scale)', 'Perspective(fov, aspect, near, far)', 'Orthographic(left, right, bottom, top, near, far)', 'LookAt(eye, target, up)', 'NormalMatrix(m)', 'Apply(m, point)', 'Hit(ray, center, radius)', 'Sphere(options)', 'Icosphere(options)', 'Ring(options)', 'Box(options)', 'Cylinder(options)', 'Torus(options)', 'Plane(options)', 'Lathe(options)', 'Wedge(options)', 'Transform(geometry, matrix)', 'Merge(parts)', 'Displace(geometry, amount)', 'Normals(geometry)', 'Facets(geometry)', 'Noise(seed)']
+		Methods: ['Create(canvas, options)', 'Camera(options)', 'Identity()', 'Multiply(a, b)', 'Invert(m)', 'Translation(x, y, z)', 'Rotation(axis, angle)', 'Scaling(x, y, z)', 'Compose(position, rotation, scale)', 'Perspective(fov, aspect, near, far)', 'Orthographic(left, right, bottom, top, near, far)', 'LookAt(eye, target, up)', 'NormalMatrix(m)', 'Apply(m, point)', 'Hit(ray, center, radius)', 'Sphere(options)', 'Icosphere(options)', 'Ring(options)', 'Box(options)', 'Cylinder(options)', 'Torus(options)', 'Plane(options)', 'Lathe(options)', 'Wedge(options)', 'Transform(geometry, matrix)', 'Merge(parts)', 'Displace(geometry, amount)', 'Normals(geometry)', 'Facets(geometry)', 'Simplify(geometry, cell)', 'Noise(seed)']
 	},
 
 	/* The places of the attributes, the same in every program: a mesh binds its buffers to them. */
@@ -268,7 +271,8 @@ Elemenx.Service('Graphics3D', {
 			Up: settings.Up || [0, 1, 0],
 			Fov: settings.Fov || 50,
 			Near: settings.Near || 0.1,
-			Far: settings.Far || 1000
+			Far: settings.Far || 1000,
+			Ortho: settings.Ortho || 0
 		};
 
 		camera.View = function () {
@@ -276,6 +280,10 @@ Elemenx.Service('Graphics3D', {
 		};
 
 		camera.Projection = function (aspect) {
+			var half = camera.Ortho / 2;
+			if (half)
+				return self.Orthographic(-half * (aspect || 1), half * (aspect || 1), -half, half, camera.Near, camera.Far);
+
 			return self.Perspective(camera.Fov, aspect || 1, camera.Near, camera.Far);
 		};
 
@@ -813,6 +821,62 @@ Elemenx.Service('Graphics3D', {
 		}
 
 		return result;
+	},
+
+	/*
+	 * A simpler shape: the corners within one cell of a grid become one, at the middle of them and of their mean color;
+	 * a face that lost a corner goes. The faces stay flat. Fast, and good for what is seen from afar.
+	 */
+	Simplify: function (geometry, cell) {
+		var size = Number(cell) || 0.1;
+		var result = this.Geometry();
+		var cells = {};
+		var map = [];
+		var p = geometry.Positions;
+		var c = geometry.Colors || [];
+		var i;
+		var key;
+		var one;
+
+		for (i = 0; i < p.length; i += 3) {
+			key = Math.round(p[i] / size) + ':' + Math.round(p[i + 1] / size) + ':' + Math.round(p[i + 2] / size);
+			one = cells[key];
+
+			if (!one) {
+				one = cells[key] = {Index: 0, Sum: [0, 0, 0], Color: [0, 0, 0], Count: 0};
+			}
+
+			one.Sum[0] += p[i];
+			one.Sum[1] += p[i + 1];
+			one.Sum[2] += p[i + 2];
+			one.Color[0] += c[i] === undefined ? 1 : c[i];
+			one.Color[1] += c[i + 1] === undefined ? 1 : c[i + 1];
+			one.Color[2] += c[i + 2] === undefined ? 1 : c[i + 2];
+			one.Count++;
+
+			map[i / 3] = one;
+		}
+
+		Object.keys(cells).forEach(function (name, index) {
+			var each = cells[name];
+
+			each.Index = index;
+
+			result.Positions.push(each.Sum[0] / each.Count, each.Sum[1] / each.Count, each.Sum[2] / each.Count);
+			result.Colors.push(each.Color[0] / each.Count, each.Color[1] / each.Count, each.Color[2] / each.Count);
+			result.Normals.push(0, 1, 0);
+			result.UVs.push(0, 0);
+		});
+
+		for (i = 0; i < geometry.Indices.length; i += 3) {
+			var a = map[geometry.Indices[i]].Index;
+			var b = map[geometry.Indices[i + 1]].Index;
+			var d = map[geometry.Indices[i + 2]].Index;
+			if (a !== b && b !== d && a !== d)
+				result.Indices.push(a, b, d);
+		}
+
+		return this.Facets(result);
 	},
 
 	/* The normals made again: each vertex the mean of the faces round it, weighted by their areas. */
@@ -1393,7 +1457,8 @@ Elemenx.Service('Graphics3D', {
 
 				gl.bindTexture(gl.TEXTURE_2D, handle);
 
-				if (source && source.Data) gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, source.Width, source.Height, 0, gl.RGBA, gl.UNSIGNED_BYTE, source.Data instanceof Uint8Array ? source.Data : new Uint8Array(source.Data));
+				if (source && source.Data && settings.Float) gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, source.Width, source.Height, 0, gl.RGBA, gl.FLOAT, source.Data);
+				else if (source && source.Data) gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, source.Width, source.Height, 0, gl.RGBA, gl.UNSIGNED_BYTE, source.Data instanceof Uint8Array ? source.Data : new Uint8Array(source.Data));
 				else gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, source);
 
 				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, settings.Repeat ? gl.REPEAT : gl.CLAMP_TO_EDGE);
@@ -1471,6 +1536,75 @@ Elemenx.Service('Graphics3D', {
 				gl.viewport(0, 0, renderer.Width, renderer.Height);
 
 				return cube;
+			},
+
+			/* Textures to draw into: what is drawn between Begin() and End() goes to them, each output of a shader to its own. */
+			Target: function (width, height, options) {
+				var settings = options || {};
+				var count = settings.Colors || 1;
+				var frame = gl.createFramebuffer();
+				var depth = settings.Depth ? gl.createRenderbuffer() : null;
+				var made = {Width: width, Height: height, Textures: []};
+				var outputs = [];
+				var i;
+
+				gl.bindFramebuffer(gl.FRAMEBUFFER, frame);
+
+				for (i = 0; i < count; i++) {
+					var handle = gl.createTexture();
+
+					gl.bindTexture(gl.TEXTURE_2D, handle);
+					gl.texImage2D(gl.TEXTURE_2D, 0, settings.Float ? gl.RGBA16F : gl.RGBA8, width, height, 0, gl.RGBA, settings.Float ? gl.FLOAT : gl.UNSIGNED_BYTE, null);
+					gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+					gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+					gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+					gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+					gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0 + i, gl.TEXTURE_2D, handle, 0);
+
+					made.Textures.push({Handle: handle});
+					outputs.push(gl.COLOR_ATTACHMENT0 + i);
+				}
+
+				gl.drawBuffers(outputs);
+
+				if (depth) {
+					gl.bindRenderbuffer(gl.RENDERBUFFER, depth);
+					gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT24, width, height);
+					gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, depth);
+				}
+
+				gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+				made.Begin = function () {
+					gl.bindFramebuffer(gl.FRAMEBUFFER, frame);
+					gl.viewport(0, 0, width, height);
+				};
+
+				made.End = function () {
+					gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+					gl.viewport(0, 0, renderer.Width, renderer.Height);
+				};
+
+				made.Destroy = function () {
+					made.Textures.forEach(function (texture) {
+						gl.deleteTexture(texture.Handle);
+					});
+
+					if (depth)
+						gl.deleteRenderbuffer(depth);
+
+					gl.deleteFramebuffer(frame);
+
+					textures.splice(textures.indexOf(made), 1);
+				};
+
+				textures.push(made);
+
+				return made;
+			},
+
+			Viewport: function (x, y, width, height) {
+				gl.viewport(x, y, width, height);
 			},
 
 			/* A depth texture seen from a light: what is drawn between Begin() and End() writes only into it. */

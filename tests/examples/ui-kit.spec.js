@@ -2973,6 +2973,7 @@ for (const origin of origins) {
 			var header;
 			var box;
 			var pixel;
+			var ground;
 			var recruited;
 
 			await page.setViewportSize({width: 1280, height: 900});
@@ -2980,8 +2981,8 @@ for (const origin of origins) {
 			await open(page, origin, ['Game world']);
 
 			game = section(page, 'Game world');
-			world = game.locator('.elemenx-game-world');
-			canvas = world.locator('.elemenx-game-world-canvas');
+			world = game.locator('.elemenx-game-scene');
+			canvas = world.locator('.elemenx-game-scene-marks');
 			header = game.locator('.elemenx-section-header');
 
 			await world.scrollIntoViewIfNeeded();
@@ -2996,10 +2997,29 @@ for (const origin of origins) {
 				}, {X: x, Y: y});
 			};
 
-			/* The map is drawn in the middle of the view. */
+			/* The map is drawn in the middle of the view, by the scene under the canvas of the marks. */
+			ground = async function () {
+				return world.evaluate(function (node) {
+					var instance = Elemenx.Instance(node);
+					var renderer = instance.Engine().Renderer;
+					var gl = renderer.GL;
+					var data = new Uint8Array(4);
+
+					instance.Engine().Frame(performance.now());
+
+					gl.readPixels(Math.round(renderer.Width / 2), Math.round(renderer.Height / 2), 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, data);
+
+					return data[0] + data[1] + data[2];
+				});
+			};
+
+			await expect.poll(ground).toBeGreaterThan(90);
+
 			await expect.poll(async function () {
-				return (await pixel('.elemenx-game-world-canvas', 520, 240))[3];
-			}).toBeGreaterThan(240);
+				return world.evaluate(function (node) {
+					return Elemenx.Instance(node).Objects().length;
+				});
+			}).toBe(16);
 
 			/* Ctrl+A: the units of the team; Escape: none. */
 			await world.focus();
@@ -3036,20 +3056,18 @@ for (const origin of origins) {
 			await recruited();
 
 			/* The fog: the far side of the river, unexplored, black on the minimap. */
-			expect((await pixel('.elemenx-game-world-minimap', 170, 42)).slice(0, 3)).not.toEqual([6, 8, 12]);
+			expect((await pixel('.elemenx-game-scene-minimap', 170, 42)).slice(0, 3)).not.toEqual([6, 8, 12]);
 
 			await game.locator('.elemenx-toggle').filter({hasText: 'Fog of war'}).click();
 
 			await expect.poll(async function () {
-				return (await pixel('.elemenx-game-world-minimap', 170, 42)).slice(0, 3);
+				return (await pixel('.elemenx-game-scene-minimap', 170, 42)).slice(0, 3);
 			}).toEqual([6, 8, 12]);
 
 			/* From above: the same world, drawn again. */
 			await game.locator('.elemenx-check-label', {hasText: 'From above'}).click();
 
-			await expect.poll(async function () {
-				return (await pixel('.elemenx-game-world-canvas', 520, 240))[3];
-			}).toBeGreaterThan(240);
+			await expect.poll(ground).toBeGreaterThan(90);
 
 			expect(errors).toEqual([]);
 		});

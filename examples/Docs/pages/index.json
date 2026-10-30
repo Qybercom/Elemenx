@@ -1266,13 +1266,6 @@
 					"Group": "game"
 				},
 				{
-					"ID": "GameBuilding",
-					"Title": {
-						"en": "GameBuilding"
-					},
-					"Group": "game"
-				},
-				{
 					"ID": "GameDialogue",
 					"Title": {
 						"en": "GameDialogue"
@@ -1374,20 +1367,6 @@
 					"ID": "GameTerrain",
 					"Title": {
 						"en": "GameTerrain"
-					},
-					"Group": "game"
-				},
-				{
-					"ID": "GameUnit",
-					"Title": {
-						"en": "GameUnit"
-					},
-					"Group": "game"
-				},
-				{
-					"ID": "GameWorld",
-					"Title": {
-						"en": "GameWorld"
 					},
 					"Group": "game"
 				},

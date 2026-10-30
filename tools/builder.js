@@ -650,7 +650,8 @@ function ownCode (entities, shared) {
 
 /*
  * Whether a text uses a Library entity: a Component by its tag, a Directive by *name (or its name in quotes), a
- * Service or a Guard by its name in quotes ($Service('Toast'), $Guards: ['Auth']). Other entities always go in.
+ * Service, a Guard or a Trait by its name in quotes ($Service('Toast'), $Guards: ['Auth'], $Traits: ['Declared']).
+ * Other entities always go in.
  */
 function sourceUsesEntity (source, type, name) {
 	var escaped = String(name).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -659,7 +660,7 @@ function sourceUsesEntity (source, type, name) {
 		return sourceUsesComponent(source, name);
 
 	if (type === 'Directive' && new RegExp('\\*' + escaped + '(?![A-Za-z0-9_$-])').test(source || '')) return true;
-	if (type === 'Service' || type === 'Guard' || type === 'Directive') return new RegExp('[\'"]' + escaped + '[\'"]').test(source || '');
+	if (type === 'Service' || type === 'Guard' || type === 'Directive' || type === 'Trait') return new RegExp('[\'"]' + escaped + '[\'"]').test(source || '');
 
 	return true;
 }

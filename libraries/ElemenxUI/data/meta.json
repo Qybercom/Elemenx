@@ -3070,7 +3070,7 @@
 			"Kind": "Component",
 			"Group": "game",
 			"Icon": "layout",
-			"Description": "A kind of ground of a GameWorld: the character of its rows, its color, its cost and whether it hides.",
+			"Description": "A kind of ground of the map of a GameScene: the character of its rows, its color, its cost and whether it hides.",
 			"Props": [
 				{
 					"Name": "Key",
@@ -3146,7 +3146,7 @@
 			"Kind": "Component",
 			"Group": "game",
 			"Icon": "layout",
-			"Description": "A layer of the ground of a GameWorld: its rows of text, a character a kind of the ground.",
+			"Description": "A layer of the ground of the map of a GameScene: its rows of text, a character a kind of the ground.",
 			"Props": [
 				{
 					"Name": "Name",
@@ -3176,296 +3176,6 @@
 			"Methods": [],
 			"Sample": {
 				"Name": "ground"
-			}
-		},
-		{
-			"Name": "GameUnit",
-			"Kind": "Component",
-			"Group": "game",
-			"Icon": "user",
-			"Description": "Deprecated (the 2D world will be made of GameScene and GameObject): a unit of a GameWorld, where it stands, its team, its health, its speed and its sight.",
-			"Props": [
-				{
-					"Name": "ID",
-					"Type": "text",
-					"Default": "",
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The ID of the unit."
-				},
-				{
-					"Name": "X",
-					"Type": "number",
-					"Default": 0,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The cell it stands on, across."
-				},
-				{
-					"Name": "Y",
-					"Type": "number",
-					"Default": 0,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The cell it stands on, down."
-				},
-				{
-					"Name": "Team",
-					"Type": "text",
-					"Default": "",
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "Its team."
-				},
-				{
-					"Name": "Type",
-					"Type": "text",
-					"Default": "",
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "Its kind in the game: archer, worker."
-				},
-				{
-					"Name": "Name",
-					"Type": "text",
-					"Default": "",
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "Its name."
-				},
-				{
-					"Name": "Color",
-					"Type": "text",
-					"Default": "",
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "Its color (of its team by default)."
-				},
-				{
-					"Name": "Image",
-					"Type": "text",
-					"Default": "",
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "A picture of it, standing on its feet."
-				},
-				{
-					"Name": "Health",
-					"Type": "json",
-					"Default": null,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "Its health."
-				},
-				{
-					"Name": "MaxHealth",
-					"Type": "json",
-					"Default": null,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "Its health when whole."
-				},
-				{
-					"Name": "Speed",
-					"Type": "number",
-					"Default": 2,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "Cells a second."
-				},
-				{
-					"Name": "Sight",
-					"Type": "number",
-					"Default": 5,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The cells it sees."
-				}
-			],
-			"Slots": [],
-			"Container": false,
-			"Children": [],
-			"Current": "",
-			"Events": [],
-			"EventDescriptions": {},
-			"Methods": [],
-			"Sample": {
-				"ID": "archer-1",
-				"X": 4,
-				"Y": 6,
-				"Team": "blue",
-				"Type": "archer"
-			}
-		},
-		{
-			"Name": "GameBuilding",
-			"Kind": "Component",
-			"Group": "game",
-			"Icon": "home",
-			"Description": "Deprecated (the 2D world will be made of GameScene and GameObject): a building of a GameWorld, the cells it takes, its team, its colors and its health.",
-			"Props": [
-				{
-					"Name": "ID",
-					"Type": "text",
-					"Default": "",
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The ID of the building."
-				},
-				{
-					"Name": "X",
-					"Type": "number",
-					"Default": 0,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "Its first cell, across."
-				},
-				{
-					"Name": "Y",
-					"Type": "number",
-					"Default": 0,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "Its first cell, down."
-				},
-				{
-					"Name": "Width",
-					"Type": "number",
-					"Default": 2,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The cells it takes across."
-				},
-				{
-					"Name": "Height",
-					"Type": "number",
-					"Default": 2,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The cells it takes down."
-				},
-				{
-					"Name": "Team",
-					"Type": "text",
-					"Default": "",
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "Its team."
-				},
-				{
-					"Name": "Type",
-					"Type": "text",
-					"Default": "",
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "Its kind in the game: barracks."
-				},
-				{
-					"Name": "Name",
-					"Type": "text",
-					"Default": "",
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "Its name."
-				},
-				{
-					"Name": "Color",
-					"Type": "text",
-					"Default": "",
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The color of its walls."
-				},
-				{
-					"Name": "Roof",
-					"Type": "text",
-					"Default": "",
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The color of its roof (of its team by default)."
-				},
-				{
-					"Name": "Tall",
-					"Type": "number",
-					"Default": 1,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "Its walls, in heights of a tile."
-				},
-				{
-					"Name": "Image",
-					"Type": "text",
-					"Default": "",
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "A picture of it, standing on its footprint."
-				},
-				{
-					"Name": "Health",
-					"Type": "json",
-					"Default": null,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "Its health."
-				},
-				{
-					"Name": "MaxHealth",
-					"Type": "json",
-					"Default": null,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "Its health when whole."
-				},
-				{
-					"Name": "Sight",
-					"Type": "number",
-					"Default": 4,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The cells it sees."
-				}
-			],
-			"Slots": [],
-			"Container": false,
-			"Children": [],
-			"Current": "",
-			"Events": [],
-			"EventDescriptions": {},
-			"Methods": [],
-			"Sample": {
-				"ID": "barracks",
-				"X": 8,
-				"Y": 2,
-				"Width": 3,
-				"Height": 3,
-				"Team": "blue"
 			}
 		},
 		{
@@ -3536,7 +3246,7 @@
 					"Options": null,
 					"Schema": null,
 					"Body": false,
-					"Description": "Its place across (a cell of a GameWorld)."
+					"Description": "Its place across (a cell of a map)."
 				},
 				{
 					"Name": "Y",
@@ -3545,7 +3255,7 @@
 					"Options": null,
 					"Schema": null,
 					"Body": false,
-					"Description": "Its place down (a cell of a GameWorld)."
+					"Description": "Its place down (a cell of a map)."
 				},
 				{
 					"Name": "Width",
@@ -3617,11 +3327,11 @@
 			}
 		},
 		{
-			"Name": "GameWorld",
+			"Name": "GameScene",
 			"Kind": "Component",
 			"Group": "game",
-			"Icon": "map-pin",
-			"Description": "The world of a strategy game: a map of cells from above or at an angle, its buildings and units, the selection, the orders and the fog of war.",
+			"Icon": "star",
+			"Description": "The scene of a game in 3D: objects of any kind with their traits and parts; the setting space brings a star system on Kepler orbits, stations and fleets, with a landing on the surfaces of its bodies; the setting terrain a ground of noise and its walkers.",
 			"Props": [
 				{
 					"Name": "Map",
@@ -3630,7 +3340,7 @@
 					"Options": null,
 					"Schema": null,
 					"Body": false,
-					"Description": "The map: its JSON ({Width, Height, Projection, Terrain, Layers, Objects}), or the URL of a JSON of its own or of Tiled."
+					"Description": "A map of cells: its JSON ({Width, Height, Projection, Terrain, Layers, Objects}), or the URL of a JSON of its own or of Tiled."
 				},
 				{
 					"Name": "Projection",
@@ -3643,16 +3353,7 @@
 					],
 					"Schema": null,
 					"Body": false,
-					"Description": "From above (orthogonal) or at an angle (isometric); the one of the map by default."
-				},
-				{
-					"Name": "Team",
-					"Type": "text",
-					"Default": "",
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The team of the player: its units are selected and ordered, the fog is lifted by them."
+					"Description": "A map from above (orthogonal) or at an angle (isometric); the one of the map by default."
 				},
 				{
 					"Name": "Fog",
@@ -3661,7 +3362,7 @@
 					"Options": null,
 					"Schema": null,
 					"Body": false,
-					"Description": "The fog of war: what the team does not see is hidden, what it explored is dimmed."
+					"Description": "The fog of war of a map: what the team does not see is hidden, what it explored is dimmed."
 				},
 				{
 					"Name": "Grid",
@@ -3670,7 +3371,7 @@
 					"Options": null,
 					"Schema": null,
 					"Body": false,
-					"Description": "Draws the lines of the cells."
+					"Description": "Draws the lines of the cells of a map."
 				},
 				{
 					"Name": "Minimap",
@@ -3688,7 +3389,7 @@
 					"Options": null,
 					"Schema": null,
 					"Body": false,
-					"Description": "The point of the world at the left of the view (null: the map in the middle)."
+					"Description": "The point of a map at the left of the view (null: the map in the middle)."
 				},
 				{
 					"Name": "Y",
@@ -3697,7 +3398,7 @@
 					"Options": null,
 					"Schema": null,
 					"Body": false,
-					"Description": "The point of the world at the top of the view."
+					"Description": "The point of a map at the top of the view."
 				},
 				{
 					"Name": "Zoom",
@@ -3706,7 +3407,7 @@
 					"Options": null,
 					"Schema": null,
 					"Body": false,
-					"Description": "The scale of the view."
+					"Description": "The scale of the view of a map."
 				},
 				{
 					"Name": "MinZoom",
@@ -3715,7 +3416,7 @@
 					"Options": null,
 					"Schema": null,
 					"Body": false,
-					"Description": "The smallest zoom."
+					"Description": "The smallest zoom of a map."
 				},
 				{
 					"Name": "MaxZoom",
@@ -3724,113 +3425,8 @@
 					"Options": null,
 					"Schema": null,
 					"Body": false,
-					"Description": "The largest zoom."
+					"Description": "The largest zoom of a map."
 				},
-				{
-					"Name": "Paused",
-					"Type": "bool",
-					"Default": false,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "Holds the time of the game."
-				},
-				{
-					"Name": "Speed",
-					"Type": "number",
-					"Default": 1,
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The speed of the time (1: real time)."
-				},
-				{
-					"Name": "Label",
-					"Type": "text",
-					"Default": "",
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "The name of the world for screen readers."
-				}
-			],
-			"Slots": [
-				"hud"
-			],
-			"Container": true,
-			"Children": [
-				"GameTerrain",
-				"GameLayer",
-				"GameBuilding",
-				"GameUnit",
-				"GameObject"
-			],
-			"Current": "",
-			"Events": [
-				"ready",
-				"load",
-				"select",
-				"order",
-				"arrive",
-				"cell",
-				"view",
-				"error"
-			],
-			"EventDescriptions": {
-				"ready": "The world is ready: the component itself, to call its methods.",
-				"load": "The map was loaded: {Width, Height} in cells.",
-				"select": "The selection changed: {IDs, Objects}.",
-				"order": "The selected units were ordered: {Kind (move, attack or stop), IDs, X, Y, Target}.",
-				"arrive": "A unit reached the end of its way: {ID, X, Y}.",
-				"cell": "A cell was pressed: {X, Y, Button, Object}, the object on it or null.",
-				"view": "The view moved or zoomed: {X, Y, Zoom}.",
-				"error": "The map could not be loaded: the error."
-			},
-			"Methods": [
-				"Load(map, callback)",
-				"Add(object)",
-				"Change(id, changes)",
-				"Remove(id)",
-				"Get(id)",
-				"Objects(filter)",
-				"Select(ids)",
-				"Selection()",
-				"Order(ids, target, kind)",
-				"Stop(ids)",
-				"Cell(x, y)",
-				"Paint(x, y, key, layer)",
-				"Near(x, y, radius, filter)",
-				"Route(from, to)",
-				"PathGrid()",
-				"FogOfWar()",
-				"CenterOn(x, y)",
-				"ToCell(clientX, clientY)",
-				"ToScreen(x, y)"
-			],
-			"Sample": {
-				"Team": "blue",
-				"Map": {
-					"Width": 12,
-					"Height": 12,
-					"Layers": [
-						{
-							"Rows": [
-								"............",
-								".....~~.....",
-								".....~~....."
-							]
-						}
-					]
-				}
-			}
-		},
-		{
-			"Name": "GameScene",
-			"Kind": "Component",
-			"Group": "game",
-			"Icon": "star",
-			"Description": "The scene of a game in 3D: objects of any kind with their traits and parts; the setting space brings a star system on Kepler orbits, stations and fleets, with a landing on the surfaces of its bodies; the setting terrain a ground of noise and its walkers.",
-			"Props": [
 				{
 					"Name": "Setting",
 					"Type": "select",
@@ -3905,6 +3501,19 @@
 					"Schema": null,
 					"Body": false,
 					"Description": "The shadows of a sun on a ground, a surface and a model near the view (true)."
+				},
+				{
+					"Name": "View",
+					"Type": "select",
+					"Default": "",
+					"Options": [
+						"",
+						"top",
+						"isometric"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "A ground seen in parallel rays, as a game of two dimensions: from above or at an angle (empty: in perspective)."
 				},
 				{
 					"Name": "Paused",
@@ -4005,7 +3614,9 @@
 			],
 			"Container": true,
 			"Children": [
-				"GameObject"
+				"GameObject",
+				"GameTerrain",
+				"GameLayer"
 			],
 			"Current": "",
 			"Events": [
@@ -4013,18 +3624,26 @@
 				"select",
 				"focus",
 				"arrive",
+				"load",
+				"order",
+				"cell",
+				"view",
 				"land",
 				"takeoff",
 				"error"
 			],
 			"EventDescriptions": {
 				"ready": "The scene is ready: the component itself, to call its methods.",
-				"select": "An object was selected: {ID, Object, Info} (ID empty when none is).",
+				"select": "The selection changed: {ID, Object, Info, IDs, Objects} (ID empty when none is).",
 				"focus": "The view moved to an object: {ID}.",
-				"arrive": "An object reached where it was sent: {ID, At}.",
+				"arrive": "An object reached where it was sent: {ID, At} (with a map, X and Y too).",
+				"load": "A map was loaded: {Width, Height} in cells.",
+				"order": "The selected units of a map were ordered: {Kind (move, attack or stop), IDs, X, Y, Target}.",
+				"cell": "A cell of a map was pressed: {X, Y, Button, Object}, the object on it or null.",
+				"view": "The view of a map moved or zoomed: {X, Y, Zoom}.",
 				"land": "The view went down to the surface of a body: {ID}.",
 				"takeoff": "The view went back up to space: {ID}.",
-				"error": "There is no WebGL2: {Reason: webgl2}."
+				"error": "There is no WebGL2 ({Reason: webgl2}), or a map could not be loaded (the error)."
 			},
 			"Methods": [
 				"Add(kind, props)",
@@ -4037,6 +3656,7 @@
 				"Describe(id)",
 				"Position(id)",
 				"Select(id)",
+				"Selection()",
 				"FocusOn(id)",
 				"Move(id, target)",
 				"Play(id, clip, callback)",
@@ -4049,7 +3669,17 @@
 				"Land(id, options)",
 				"TakeOff()",
 				"Surface()",
-				"Supported()"
+				"Supported()",
+				"Order(ids, target, kind)",
+				"Stop(ids)",
+				"Cell(x, y)",
+				"Paint(x, y, key, layer)",
+				"Near(x, y, radius, filter)",
+				"Route(from, to)",
+				"PathGrid()",
+				"FogOfWar()",
+				"CenterOn(x, y)",
+				"ToCell(clientX, clientY)"
 			],
 			"Sample": {
 				"Seed": "kepler"
@@ -25753,7 +25383,7 @@
 			"Kind": "Service",
 			"Group": "",
 			"Icon": "",
-			"Description": "The maps of GameWorld: its own JSON, or a map of Tiled (.tmj), made into one form.",
+			"Description": "The maps of GameScene: its own JSON, or a map of Tiled (.tmj), made into one form.",
 			"Props": [],
 			"Slots": [],
 			"Container": false,
@@ -25831,6 +25461,7 @@
 				"Displace(geometry, amount)",
 				"Normals(geometry)",
 				"Facets(geometry)",
+				"Simplify(geometry, cell)",
 				"Noise(seed)"
 			],
 			"Sample": {}
@@ -25902,7 +25533,8 @@
 			"EventDescriptions": {},
 			"Methods": [
 				"Flat(options)",
-				"Sphere(options)"
+				"Sphere(options)",
+				"Cells(options)"
 			],
 			"Sample": {}
 		},
@@ -25925,6 +25557,9 @@
 				"Info(name)",
 				"Define(name, recipe)",
 				"Make(name, options)",
+				"Whole(model)",
+				"Bounds(geometry)",
+				"Levels(name, options)",
 				"Pose(model, clip, time, options)",
 				"Length(model, clip)"
 			],
@@ -26948,14 +26583,10 @@
 			"up"
 		],
 		"elemenx-game-leaderboard-score": [],
-		"elemenx-game-world": [
-			"panning"
-		],
-		"elemenx-game-world-canvas": [],
-		"elemenx-game-world-minimap": [],
-		"elemenx-game-world-hud": [],
 		"elemenx-game-scene": [
-			"dragging"
+			"dragging",
+			"flat",
+			"panning"
 		],
 		"elemenx-game-scene-canvas": [],
 		"elemenx-game-scene-labels": [
@@ -26972,6 +26603,8 @@
 		"elemenx-game-scene-takeoff": [],
 		"elemenx-game-scene-fallback": [],
 		"elemenx-game-scene-hud": [],
+		"elemenx-game-scene-marks": [],
+		"elemenx-game-scene-minimap": [],
 		"elemenx-number-controls": [],
 		"elemenx-date": [],
 		"elemenx-time": [],

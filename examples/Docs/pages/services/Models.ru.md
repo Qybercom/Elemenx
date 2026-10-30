@@ -1,7 +1,7 @@
 <!-- generated -->
 # Models
 
-Модели игры, сделанные кодом: без файлов, одна и та же форма для одного варианта. Модель — дерево частей на шарнирах (тело, руки, башня, крылья мельницы), высотой около 1 (постройка — шириной); Size вида делает её нужного размера. Names({Group, Type}) — список: Group fantasy, scifi, nature, space; Type unit, animal, vehicle, plant, rock, building, ship; Has(name), Info(name). Define(name, {Group, Type, Size, Speed, Variants, Sway, Matte, Smooth, Clips, Build(tools, random)}) добавляет свою: Build возвращает части tools.Piece(id, parts, {Parent, Pivot, Team}) из tools.Box, Cylinder, Ball, Blob, Lathe и Wedge; часть с Team принимает цвет команды. Make(name, {Variant}) — модель, сделанная один раз: {Name, Key, Size, Speed, Sway, Matte, Clips, Pieces: [{ID, Parent, Pivot, Team, Geometry}]}. Pose(model, clip, time, {From, FromTime, Fade}) — матрица каждой части на секунде клипа, Fade смешивает с клипом From; Length(model, clip) — его длина. Клип: {Length, Loop, Hold, Stride, Tracks: {часть: [[время от 0 до 1, rx, ry, rz, mx, my, mz]...]}, Spins: {часть: [x, y, z] градусов в секунду}}. Работает и в Node.
+Модели игры, сделанные кодом: без файлов, одна и та же форма для одного варианта. Модель — дерево частей на шарнирах (тело, руки, башня, крылья мельницы), высотой около 1 (постройка — шириной); Size вида делает её нужного размера. Names({Group, Type}) — список: Group fantasy, scifi, nature, space; Type unit, animal, vehicle, plant, rock, building, ship; Has(name), Info(name). Define(name, {Group, Type, Size, Speed, Variants, Sway, Matte, Smooth, Clips, Build(tools, random)}) добавляет свою: Build возвращает части tools.Piece(id, parts, {Parent, Pivot, Team}) из tools.Box, Cylinder, Ball, Blob, Lathe и Wedge; часть с Team принимает цвет команды. Make(name, {Variant}) — модель, сделанная один раз: {Name, Key, Size, Speed, Sway, Matte, Clips, Pieces: [{ID, Parent, Pivot, Team, Geometry}]}. Whole(model) — модель одной геометрией, Bounds(geometry) — её {Radius, Middle}, Levels(name, {Variant}) — геометрии от самой подробной к простым. Pose(model, clip, time, {From, FromTime, Fade}) — матрица каждой части на секунде клипа, Fade смешивает с клипом From; Length(model, clip) — его длина. Клип: {Length, Loop, Hold, Stride, Tracks: {часть: [[время от 0 до 1, rx, ry, rz, mx, my, mz]...]}, Spins: {часть: [x, y, z] градусов в секунду}}. Работает и в Node.
 
 ## Методы
 
@@ -10,6 +10,9 @@
 - `Names(filter)`
 - `Info(name)`
 - `Make(name, options)`
+- `Whole(model)`
+- `Bounds(geometry)`
+- `Levels(name, options)`
 - `Length(model, clip)`
 - `Pose(model, clip, time, options)`
 
@@ -43,9 +46,10 @@
 
 ## Тесты
 
-- [has units, animals, vehicles, plants, rocks, buildings and ships, each of whole triangles, its parents before their pieces](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L781) — `tests/regression/library-scene.test.js`
-- [makes the same shape of the same variant, another of another, and throws on an unknown model](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L814) — `tests/regression/library-scene.test.js`
-- [poses the pieces of a clip on their pivots, children with their parents, and fades from a clip to another](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L826) — `tests/regression/library-scene.test.js`
-- [spins what turns with no end, and leaves a model of one piece still](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L852) — `tests/regression/library-scene.test.js`
-- [takes the models of an application](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L859) — `tests/regression/library-scene.test.js`
-- [models stand in their shadows, play their clips, march and turn their shadows off](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L3154) — `tests/examples/ui-kit.spec.js`
+- [has units, animals, vehicles, plants, rocks, buildings and ships, each of whole triangles, its parents before their pieces](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1029) — `tests/regression/library-scene.test.js`
+- [makes the same shape of the same variant, another of another, and throws on an unknown model](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1062) — `tests/regression/library-scene.test.js`
+- [poses the pieces of a clip on their pivots, children with their parents, and fades from a clip to another](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1074) — `tests/regression/library-scene.test.js`
+- [spins what turns with no end, and leaves a model of one piece still](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1100) — `tests/regression/library-scene.test.js`
+- [makes simpler levels of a model, with fewer faces and the same size](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1107) — `tests/regression/library-scene.test.js`
+- [takes the models of an application](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1127) — `tests/regression/library-scene.test.js`
+- [models stand in their shadows, play their clips, march and turn their shadows off](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L3172) — `tests/examples/ui-kit.spec.js`

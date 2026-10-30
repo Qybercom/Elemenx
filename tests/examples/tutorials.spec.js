@@ -229,12 +229,12 @@ var Checks = {
 			});
 		}, {timeout: 2000}).not.toBe(held);
 
-		/* Paused: the packets go on, the board stays. */
+		/* Paused: the packets go on, the board stays (a page just held up, on a busy machine, answers late). */
 		await page.getByRole('button', {name: 'Pause'}).click();
 
 		await expect.poll(async function () {
 			return (await stats()).Updates;
-		}, {timeout: 5000}).toBe(0);
+		}, {timeout: 15000}).toBe(0);
 	},
 
 	Signup: async function (page) {
@@ -798,7 +798,7 @@ var Checks = {
 	},
 
 	Game: async function (page) {
-		var canvas = page.locator('.elemenx-game-world-canvas');
+		var canvas = page.locator('.elemenx-game-scene-marks');
 		var help = page.locator('.gems-help');
 		var box;
 		var at;

@@ -1029,7 +1029,7 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 
 ## GameScene
 
-- `elemenx-game-scene`: `dragging`
+- `elemenx-game-scene`: `dragging`, `flat`, `panning`
 - `elemenx-game-scene-canvas`
 - `elemenx-game-scene-card`
 - `elemenx-game-scene-card-actions`
@@ -1042,6 +1042,8 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-game-scene-hud`
 - `elemenx-game-scene-label`
 - `elemenx-game-scene-labels`: `hidden`
+- `elemenx-game-scene-marks`
+- `elemenx-game-scene-minimap`
 - `elemenx-game-scene-takeoff`
 
 ## GameSlot
@@ -1063,12 +1065,6 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-game-tab-number`
 - `elemenx-game-tabs`: `horizontal`, `vertical`
 
-## GameWorld
-
-- `elemenx-game-world`: `panning`
-- `elemenx-game-world-canvas`
-- `elemenx-game-world-hud`
-- `elemenx-game-world-minimap`
 
 ## Keyboard
 

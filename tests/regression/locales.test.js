@@ -42,7 +42,7 @@ function sources (directory, result) {
 function used () {
 	var keys = {};
 
-	sources(path.join(library, 'components'), sources(path.join(library, 'services'), [])).forEach(function (file) {
+	sources(path.join(library, 'components'), sources(path.join(library, 'traits'), sources(path.join(library, 'services'), []))).forEach(function (file) {
 		var text = fs.readFileSync(file, 'utf8');
 
 		Array.from(text.matchAll(/(?:\$T|Elemenx\.Locale\.Text)\('(ui\.[\w.]+)'(?!\s*\+)/g)).concat(Array.from(text.matchAll(/Key: '(ui\.[\w.]+)'/g))).forEach(function (match) {

@@ -181,3 +181,59 @@
 .elemenx-game-scene-hud > * > * {
 	pointer-events: auto;
 }
+
+/* A map of cells: the marks and the fog on a canvas over the scene, or the whole map on it when it is of pictures. */
+.elemenx-game-scene-marks {
+	position: absolute;
+	inset: 0;
+	display: block;
+	width: 100%;
+	height: 100%;
+	cursor: default;
+}
+
+.elemenx-game-scene-marks[hidden] {
+	display: none;
+}
+
+.elemenx-game-scene.panning .elemenx-game-scene-marks {
+	cursor: grabbing;
+}
+
+.elemenx-game-scene.flat .elemenx-game-scene-canvas {
+	visibility: hidden;
+}
+
+/* The minimap: the whole map, the part in view framed; a press there moves the view. */
+.elemenx-game-scene-minimap {
+	position: absolute;
+	left: 12px;
+	bottom: 12px;
+	z-index: 2;
+	width: 180px;
+	height: 180px;
+	background: var(--elemenx-game-scene-map-background);
+	border: 2px solid var(--elemenx-game-scene-map-frame);
+	border-radius: var(--elemenx-radius);
+	box-shadow: var(--elemenx-shadow);
+	cursor: pointer;
+}
+
+/* The HUD over the world: it lets the presses through, its own parts take them. */
+.elemenx-game-scene-hud {
+	position: absolute;
+	inset: 0;
+	z-index: 3;
+	pointer-events: none;
+}
+
+.elemenx-game-scene-hud > * > * {
+	pointer-events: auto;
+}
+
+@media (max-width: 560px) {
+	.elemenx-game-scene-minimap {
+		width: 120px;
+		height: 120px;
+	}
+}

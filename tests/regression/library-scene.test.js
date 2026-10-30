@@ -300,7 +300,7 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	beforeAll(async function () {
 		await loadElemenx();
 
-		Use(['GameScene', 'GameObject']);
+		Use(['GameScene', 'GameObject', 'GameLayer', 'GameTerrain']);
 	});
 
 	beforeEach(function () {
@@ -649,6 +649,255 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 		expect(hero.Clip.Name).toBe('work');
 	});
 
+	it('sees a ground in parallel rays: from above a point is where the plan says, at an angle where the rhombus says', async function () {
+		var mounted = await mount('<GameScene View="top" (ready)="Ready">' +
+			'<GameObject ID="land" Kind="ground" Size="400" Height="4" Water="0" Seed="test" />' +
+			'<GameObject ID="tower" Kind="tower" X="10" Y="20" />' +
+		'</GameScene>');
+		var scene = mounted.Space;
+		var inner = scene.Scene();
+		var at;
+
+		inner.Wanted = 40;
+		inner.Distance = 40;
+		inner.Ground.Target = [10, 0, 20];
+
+		scene.Engine().Frame(performance.now() + 1000);
+
+		expect(inner.Camera.Ortho).toBeCloseTo(40, 3);
+
+		at = inner.Camera.Project([10, 0, 30], 640, 400);
+
+		expect(at.X).toBeCloseTo(320, 1);
+		expect(at.Y).toBeCloseTo(300, 1);
+
+		scene.View = 'isometric';
+
+		scene.Engine().Frame(performance.now() + 1100);
+
+		at = inner.Camera.Project([20, inner.Ground.Target[1], 30], 640, 400);
+
+		/* A step along X and along Z goes straight down the screen, half as far as a step across would go. */
+		expect(at.X).toBeCloseTo(320, 1);
+		expect(at.Y - 200).toBeCloseTo(Math.SQRT2 * 10 * 0.5 * 10, 0);
+
+		scene.View = '';
+
+		scene.Engine().Frame(performance.now() + 1200);
+
+		expect(inner.Camera.Ortho).toBe(0);
+	});
+
+	it('draws a map of cells: its objects with their models, in the places of their cells, by the API of every scene', async function () {
+		var mounted = await mount('<GameScene Team="blue" Projection="isometric" (ready)="Ready">' +
+			'<GameLayer Name="ground">\n........\n........\n........\n........\n</GameLayer>' +
+			'<GameObject ID="hall" Kind="barracks" X="4" Y="0" Width="3" Height="2" Team="blue" />' +
+			'<GameObject ID="hero" Kind="knight" X="1" Y="1" Team="blue" />' +
+			'<GameObject ID="foe" Kind="unit" X="2" Y="2" Team="red" Type="worker" />' +
+			'<GameObject ID="oak" Kind="tree" X="0" Y="3" />' +
+		'</GameScene>');
+		var world = mounted.Space;
+		var inner = world.Scene();
+		var engine = world.Engine();
+		var selected = [];
+		var at;
+
+		await waitFor(function () {
+			engine.Frame(performance.now() + 100);
+
+			return inner.Camera.Ortho > 0;
+		}, 3000);
+
+		expect(world.Cells).toBe(true);
+		expect(world.Flat).toBe(false);
+		expect(inner.Objects.hero.Shape).toBe('knight');
+		expect(inner.Objects.foe.Shape).toBe('villager');
+		expect(inner.Objects.hall.Shape).toBe('barracks');
+		expect(world.Cell(5, 1).Cost).toBe(Infinity);
+		expect(world.Cell(0, 3).Cost).toBe(Infinity);
+		expect(inner.Ground.Field.Whole).toBe(true);
+
+		/* A unit stands in the middle of its cell, and the scene shows it where the map says it is. */
+		engine.Frame(performance.now() + 200);
+
+		at = engine.ToScreen('hero');
+
+		expect(at.X).toBeCloseTo(world.Strategy().ToScreen(1.5, 1.5).X, 0);
+		expect(at.Y).toBeCloseTo(world.Strategy().ToScreen(1.5, 1.5).Y, 0);
+
+		/* The same methods as in any scene: Select one or many, Selection, Move, Get, Change, Remove. */
+		world.$On && world.$On('select', function (event) {
+			selected.push(event);
+		});
+
+		world.Select('hero');
+
+		expect(world.Selection()).toEqual(['hero']);
+
+		world.Select(['hero', 'foe']);
+
+		expect(world.Selection()).toEqual(['hero', 'foe']);
+
+		expect(world.Move('hero', [6, 3])).toBe(true);
+
+		await waitFor(function () {
+			return world.Get('hero').Moving && inner.Objects.hero.Walking > 0;
+		}, 2000);
+
+		expect(world.Change('foe', {Team: 'blue'})).toBeTruthy();
+		expect(world.Get('foe').Team).toBe('blue');
+		expect(world.Get('hero').Moving).toBe(true);
+
+		world.Remove('foe');
+
+		expect(world.Get('foe')).toBe(null);
+		expect(inner.Objects.foe).toBe(undefined);
+		expect(world.Selection()).toEqual(['hero']);
+
+		/* A saved game keeps where a unit walked to. */
+		await waitFor(function () {
+			return !world.Get('hero').Moving;
+		}, 6000);
+
+		var saved = world.Save();
+
+		world.Change('hero', {X: 0, Y: 0});
+
+		expect(world.Get('hero').X).toBe(0);
+
+		world.Load(saved);
+
+		expect(world.Get('hero')).toMatchObject({X: 6, Y: 3});
+
+		/* A map of pictures is drawn on the canvas of the marks. */
+		world.Add({ID: 'statue', Kind: 'statue', X: 1, Y: 3, Image: 'data:image/gif;base64,R0lGODlhAQABAAAAACw='});
+
+		await waitFor(function () {
+			return world.Flat === true;
+		}, 2000);
+
+		expect(world.Get('statue').Kind).toBe('thing');
+		expect(world.Get('statue').Type).toBe('statue');
+	});
+
+	it('keeps what did not change when the scene is made again, and stands what stays still once', async function () {
+		var mounted = await mount('<GameScene (ready)="Ready">' +
+			'<GameObject ID="land" Kind="ground" Size="300" Height="10" Water="0.1" Seed="test" />' +
+			'<GameObject ID="sun" Kind="sun" />' +
+			'<GameObject ID="oak" Kind="oak" X="10" Y="10" />' +
+			'<GameObject ID="hero" Kind="knight" X="0" Y="0" />' +
+		'</GameScene>');
+		var scene = mounted.Space;
+		var inner = scene.Scene();
+		var engine = scene.Engine();
+		var oak;
+		var field;
+		var asked = 0;
+
+		engine.Frame(performance.now() + 100);
+
+		oak = inner.Objects.oak;
+		field = inner.Ground.Field;
+
+		expect(inner.Still).toContain(oak);
+		expect(inner.Active).toContain(inner.Objects.hero);
+
+		/* A new object does not make the old ones again. */
+		scene.Add('rock', {ID: 'stone', X: 5, Y: 5});
+
+		expect(inner.Objects.oak).toBe(oak);
+
+		scene.Change('oak', {Team: 'red'});
+
+		expect(inner.Objects.oak).not.toBe(oak);
+
+		/* A height of the ground is noise: nothing asks for it while nothing moves. */
+		engine.Frame(performance.now() + 200);
+
+		var height = field.Height;
+
+		field.Height = function (x, z) {
+			if (x === 10.5 || x === 10)
+				asked++;
+
+			return height(x, z);
+		};
+
+		engine.Frame(performance.now() + 300);
+		engine.Frame(performance.now() + 400);
+
+		field.Height = height;
+
+		expect(asked).toBe(0);
+	});
+
+	it('sows a ground in masses by its rules, the same for the same seed, with no object for each thing, and grows grass', async function () {
+		var mounted = await mount('<GameScene (ready)="Ready">' +
+			'<GameObject ID="land" Kind="ground" Size="192" Height="20" Water="0.2" Seed="test" />' +
+			'<GameObject ID="sun" Kind="sun" />' +
+			'<GameObject ID="woods" Kind="forest" Density="3" Seed="a" Cover="1" MaxHeight="7" />' +
+			'<GameObject ID="blades" Kind="grass" />' +
+		'</GameScene>');
+		var scene = mounted.Space;
+		var inner = scene.Scene();
+		var engine = scene.Engine();
+		var gl = engine.Renderer.GL;
+		var field;
+		var first;
+
+		inner.Wanted = 60;
+		inner.Distance = 60;
+
+		await waitFor(function () {
+			engine.Frame(performance.now() + 100);
+
+			return scene.Sown().Squares > 0 && scene.Sown().Waiting === 0;
+		}, 8000);
+
+		first = scene.Sown();
+		field = inner.Ground.Field;
+
+		expect(first.Things).toBeGreaterThan(200);
+		expect(scene.Objects().length).toBe(4);
+
+		/* What it may not grow on stays empty: the sea and what is too high. */
+		expect(first.Things).toBeLessThan(3 * 192 * 192 / 100 * 0.95);
+
+		await waitFor(function () {
+			engine.Frame(performance.now() + 200);
+
+			return scene.Sown().Draws > 0 && scene.Sown().Blades > 1000;
+		}, 6000);
+
+		expect(gl.getError()).toBe(gl.NO_ERROR);
+
+		/* A tree is on the way of a walker only where one is: some cell of the map says so. */
+		var cells = 0;
+		var x;
+		var z;
+
+		for (z = -96; z < 96; z += 2) {
+			for (x = -96; x < 96; x += 2) {
+				if (engine.ScatterBlocked(x, z))
+					cells++;
+			}
+		}
+
+		expect(cells).toBeGreaterThan(50);
+		expect(field.Size).toBe(192);
+
+		/* The same rules, the same things. */
+		scene.Change('woods', {Density: 3.0001});
+
+		await waitFor(function () {
+			engine.Frame(performance.now() + 300);
+
+			return scene.Sown().Waiting === 0 && scene.Sown().Squares > 0;
+		}, 8000);
+
+		expect(Math.abs(scene.Sown().Things - first.Things)).toBeLessThan(first.Things * 0.02);
+	});
+
 	it('casts the shadows of what stands on a ground, or none when told', async function () {
 		var mounted = await mount('<GameScene (ready)="Ready">' +
 			'<GameObject ID="land" Kind="ground" Size="400" Height="4" Water="0" Seed="test" />' +
@@ -854,6 +1103,26 @@ describe('Contract: Models, the models of a game made of code', function () {
 
 		expect(models.Pose(mill, 'idle', 1).sails).not.toEqual(models.Pose(mill, 'idle', 2).sails);
 		expect(models.Pose(models.Make('pine'), 'idle', 1).body).toEqual(graphics.Identity());
+	});
+
+	it('makes simpler levels of a model, with fewer faces and the same size', function () {
+		var levels = models.Levels('oak', {Variant: 0});
+		var bounds = levels.map(function (geometry) {
+			return models.Bounds(geometry);
+		});
+
+		expect(levels.length).toBe(3);
+		expect(levels[1].Indices.length).toBeLessThan(levels[0].Indices.length);
+		expect(levels[2].Indices.length).toBeLessThan(levels[1].Indices.length);
+		expect(levels[2].Indices.length).toBeGreaterThan(30);
+
+		expect(Math.abs(bounds[2].Radius - bounds[0].Radius)).toBeLessThan(bounds[0].Radius * 0.35);
+		expect(Math.abs(bounds[2].Middle - bounds[0].Middle)).toBeLessThan(bounds[0].Radius * 0.35);
+
+		levels.forEach(function (geometry) {
+			expect(geometry.Colors.length).toBe(geometry.Positions.length);
+			expect(geometry.Normals.every(Number.isFinite)).toBe(true);
+		});
 	});
 
 	it('takes the models of an application', function () {

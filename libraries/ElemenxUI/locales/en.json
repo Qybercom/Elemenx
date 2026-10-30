@@ -844,6 +844,8 @@
 			"popIn": "Back into the page"
 		},
 		"gameScene": {
+			"minimap": "Minimap",
+			"selected": "{count} selected",
 			"label": "Game scene",
 			"unsupported": "This browser cannot draw in 3D: WebGL2 is off or missing.",
 			"close": "Close",
@@ -900,11 +902,6 @@
 			},
 			"land": "Land",
 			"takeOff": "Take off"
-		},
-		"gameWorld": {
-			"label": "Game world",
-			"minimap": "Minimap",
-			"selected": "{count} selected"
 		},
 		"signal": {
 			"good": "Good connection",

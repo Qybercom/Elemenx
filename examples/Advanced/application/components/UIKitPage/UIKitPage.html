@@ -684,7 +684,7 @@
 		</div>
 	</Section>
 
-	<Section *if="Shows('Game world')" Title="Game world" [note]="WorldNote || 'GameWorld · GameLayer · GameBuilding · GameUnit · GameObject: a click or a frame selects, a right click orders'">
+	<Section *if="Shows('Game world')" Title="Game world" [note]="WorldNote || 'GameScene · GameLayer · GameBuilding · GameUnit · GameObject: a click or a frame selects, a right click orders'">
 		<div class="ui-kit-lazy" *lazy>
 			<div class="ui-kit-row">
 				<RadioGroup Variant="segmented" Label="Projection" [options]="WorldProjections" [value]="WorldProjection" (change)="WorldProjected" />
@@ -693,17 +693,17 @@
 				<Button Label="Recruit" Icon="add" Variant="ghost" (click)="WorldRecruited" />
 			</div>
 			<div class="ui-kit-world">
-				<GameWorld Team="blue" Minimap="true" [projection]="WorldProjection" [fog]="WorldFog" (ready)="WorldReady" (select)="WorldSelected" (order)="WorldOrdered" (arrive)="WorldArrived" (cell)="WorldCell">
+				<GameScene Team="blue" Minimap="true" [projection]="WorldProjection" [fog]="WorldFog" (ready)="WorldReady" (select)="WorldSelected" (order)="WorldOrdered" (arrive)="WorldArrived" (cell)="WorldCell">
 					<GameLayer Name="ground" [rows]="WorldRows" />
-					<GameBuilding ID="barracks" X="5" Y="2" Width="3" Height="3" Team="blue" Type="barracks" Health="400" MaxHealth="400" />
-					<GameBuilding ID="hall" X="23" Y="1" Width="3" Height="2" Team="red" Type="hall" Health="500" MaxHealth="500" />
-					<GameUnit *for="unit of WorldUnits" [id]="unit.ID" [x]="unit.X" [y]="unit.Y" [team]="unit.Team" [type]="unit.Type" [health]="unit.Health" [maxHealth]="unit.MaxHealth" />
+					<GameObject Kind="building" ID="barracks" X="5" Y="2" Width="3" Height="3" Team="blue" Type="barracks" Health="400" MaxHealth="400" />
+					<GameObject Kind="building" ID="hall" X="23" Y="1" Width="3" Height="2" Team="red" Type="hall" Health="500" MaxHealth="500" />
+					<GameObject Kind="unit" *for="unit of WorldUnits" [id]="unit.ID" [x]="unit.X" [y]="unit.Y" [team]="unit.Team" [type]="unit.Type" [health]="unit.Health" [maxHealth]="unit.MaxHealth" />
 					<GameObject *for="tree of WorldTrees" Kind="tree" [id]="tree.ID" [x]="tree.X" [y]="tree.Y" Blocks="true" Opaque="true" />
 					<GameObject ID="stone" Kind="rock" X="4" Y="13" Blocks="true" />
 					<div slot="hud" class="ui-kit-world-hud">
 						<span class="ui-kit-world-resources"><span>Gold 1 250</span><span>Wood 840</span><span>Food 410</span></span>
 					</div>
-				</GameWorld>
+				</GameScene>
 			</div>
 		</div>
 	</Section>
@@ -771,6 +771,11 @@
 				<GameScene Setting="terrain" Team="blue" Labels="true" (ready)="TerrainReady" (select)="TerrainSelected" (arrive)="TerrainArrived">
 					<GameObject ID="valley" Kind="ground" Size="900" Height="55" Water="0.32" Seed="valley" />
 					<GameObject ID="sun" Kind="sun" Elevation="38" Azimuth="150" />
+					<GameObject ID="woods" Kind="forest" Density="2.2" />
+					<GameObject ID="groves" Kind="grove" />
+					<GameObject ID="undergrowth" Kind="thicket" />
+					<GameObject ID="stones" Kind="rocks" />
+					<GameObject ID="meadow-grass" Kind="grass" />
 					<GameObject *for="unit of TerrainUnits" *key="unit.ID" Kind="unit" [id]="unit.ID" [name]="unit.Name" [x]="unit.X" [y]="unit.Y" Team="blue" />
 					<GameObject *for="tree of TerrainTrees" *key="tree.ID" Kind="tree" [id]="tree.ID" [x]="tree.X" [y]="tree.Y" />
 					<GameObject *for="house of TerrainHouses" *key="house.ID" Kind="house" [id]="house.ID" [name]="house.Name" [x]="house.X" [y]="house.Y" />

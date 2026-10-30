@@ -393,7 +393,7 @@ test.describe('Elemenx Designer', function () {
 		/* The search keeps the kinds whose name holds its text, and says when none does. */
 		await page.locator('.designer-find input').fill('game');
 
-		await expect(found).toHaveCount(20);
+		await expect(found).toHaveCount(17);
 		await expect(found.filter({hasText: 'GameBar'})).toHaveCount(1);
 
 		await page.locator('.designer-find input').fill('nothing like it');

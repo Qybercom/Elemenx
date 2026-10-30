@@ -56,8 +56,8 @@
 	--elemenx-call-control-hover: rgba(255, 255, 255, 0.2);
 	--elemenx-call-chip: rgba(0, 0, 0, 0.5);
 	--elemenx-call-dim: rgba(255, 255, 255, 0.35);
-	--elemenx-game-world-background: #0b0e12;
-	--elemenx-game-world-frame: #3a3226;
+	--elemenx-game-scene-map-background: #0b0e12;
+	--elemenx-game-scene-map-frame: #3a3226;
 	--elemenx-game-scene-background: #03050a;
 	--elemenx-game-scene-orbit: rgba(140, 165, 215, 0.32);
 	--elemenx-game-scene-selection: #7fc4ff;

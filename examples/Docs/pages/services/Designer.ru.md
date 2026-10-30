@@ -138,7 +138,7 @@
 
 ## Тесты
 
-- [keeps data/meta.json of ElemenxUI, where the Designer Service reads it, as elemenx meta makes it now](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/cli-meta.test.js#L232) — `tests/regression/cli-meta.test.js`
+- [keeps data/meta.json of ElemenxUI, where the Designer Service reads it, as elemenx meta makes it now](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/cli-meta.test.js#L237) — `tests/regression/cli-meta.test.js`
 - [describes its Applications with their routes and guards, and its Components, Services and Guards from their files](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/designer-cli.test.js#L59) — `tests/regression/designer-cli.test.js`
 - [answers its description and its files, read only, and nothing outside the project or in node_modules](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/designer-cli.test.js#L86) — `tests/regression/designer-cli.test.js`
 - [gives the page of the Designer the description as a script, before the application starts](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/designer-cli.test.js#L116) — `tests/regression/designer-cli.test.js`

@@ -1,8 +1,10 @@
-<div class="elemenx-game-scene" tabindex="0" role="application" [class.dragging]="Dragging" [attribute.data-setting]="Setting || 'space'" [attribute.aria-label]="Label || $T('ui.gameScene.label')" [attribute.data-changed]="Changed(System, Seed, Time, Speed, Paused, Focus, Selected, Orbits, Labels, Scale, Background, Team, Setting)" (keydown)="Key" (keyup)="KeyUp" (blur)="Blurred">
+<div class="elemenx-game-scene" tabindex="0" role="application" [class.dragging]="Dragging" [class.panning]="Panning" [class.flat]="Cells && Flat" [attribute.data-setting]="Setting || 'space'" [attribute.aria-label]="Label || $T('ui.gameScene.label')" [attribute.data-changed]="Changed(System, Seed, Time, Speed, Paused, Focus, Selected, Orbits, Labels, Scale, Background, Team, Setting, Map, Fog, Grid, Projection, X, Y, Zoom)" (keydown)="Key" (keyup)="KeyUp" (blur)="Blurred">
 	<canvas class="elemenx-game-scene-canvas" (pointerdown)="PointerDown" (pointermove)="PointerMove" (pointerup)="PointerUp" (pointercancel)="PointerCancel" (wheel)="Wheel" (dblclick)="Double" (contextmenu)="Menu"></canvas>
-	<div class="elemenx-game-scene-labels" [class.hidden]="!Labels || Labels === 'false'" (click)="LabelPressed" (dblclick)="LabelDouble"></div>
-	<div class="elemenx-game-scene-fallback" *if="Unsupported">{{$T('ui.gameScene.unsupported')}}</div>
-	<aside class="elemenx-game-scene-card" *if="Card && Details && Details !== 'false'" [attribute.aria-label]="Card.Name">
+	<canvas class="elemenx-game-scene-marks" [hidden]="!Cells" (pointerdown)="MarksDown" (pointermove)="MarksMove" (pointerup)="MarksUp" (pointercancel)="MarksCancel" (pointerleave)="MarksLeft" (wheel)="MarksWheel" (contextmenu)="MarksMenu" (dblclick)="MarksDouble"></canvas>
+	<canvas class="elemenx-game-scene-minimap" *if="Minimap && Cells" role="img" [attribute.aria-label]="$T('ui.gameScene.minimap')" (pointerdown)="MapDown" (pointermove)="MapMove" (pointerup)="MapUp" (pointercancel)="MapUp"></canvas>
+	<div class="elemenx-game-scene-labels" [class.hidden]="Cells || !Labels || Labels === 'false'" (click)="LabelPressed" (dblclick)="LabelDouble"></div>
+	<div class="elemenx-game-scene-fallback" *if="Unsupported && !Cells">{{$T('ui.gameScene.unsupported')}}</div>
+	<aside class="elemenx-game-scene-card" *if="Card && !Cells && Details && Details !== 'false'" [attribute.aria-label]="Card.Name">
 		<header class="elemenx-game-scene-card-header">
 			<span class="elemenx-game-scene-card-title"><strong class="elemenx-ellipsis">{{Card.Name}}</strong><span class="elemenx-game-scene-card-kind">{{Card.Kind}}</span></span>
 			<Button Variant="ghost" Size="small" Icon="close" [title]="$T('ui.gameScene.close')" (click)="Unselect" />

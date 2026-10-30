@@ -39,7 +39,11 @@
  *
  * The models stand in the light of their sun and cast shadows on each other and on the ground (Shadows); a Model plays
  * clips of its pieces (Clip: the one it plays when idle): walk on a way by itself, Play(id, clip, callback) the others
- * (attack, cast, work, die); the wind bends what grows.
+ * (attack, cast, work, die); the wind bends what grows. View top or isometric sees a ground in parallel rays, as a game
+ * of two dimensions.
+ *
+ * A map of cells: Map, GameTerrain and GameLayer make the ground of a strategy game (see the trait Strategy): its objects
+ * stand on cells, its units are selected in a frame and ordered, Fog, Grid and Minimap come with it.
  *
  * Events: ready (the scene, for its methods), select ({ID, Object, Info}: ID empty when none is), focus ({ID}),
  * arrive ({ID, At}), land ({ID}), takeoff ({ID}), error ({Reason: webgl2}).
@@ -51,24 +55,39 @@
 Elemenx.Component('GameScene', {
 	$TemplateURL: 'GameScene.html',
 	$StyleURL: 'GameScene.css',
+	$Traits: ['Strategy', 'Scatter'],
 	$Meta: {
 		Group: 'game',
 		Icon: 'star',
 		Description: 'The scene of a game in 3D: objects of any kind with their traits and parts; the setting space brings a star system on Kepler orbits, stations and fleets, with a landing on the surfaces of its bodies; the setting terrain a ground of noise and its walkers.',
 		Container: true,
-		Children: ['GameObject'],
+		Children: ['GameObject', 'GameTerrain', 'GameLayer'],
 		Slots: ['hud'],
 		Events: {
 			ready: 'The scene is ready: the component itself, to call its methods.',
-			select: 'An object was selected: {ID, Object, Info} (ID empty when none is).',
+			select: 'The selection changed: {ID, Object, Info, IDs, Objects} (ID empty when none is).',
 			focus: 'The view moved to an object: {ID}.',
-			arrive: 'An object reached where it was sent: {ID, At}.',
+			arrive: 'An object reached where it was sent: {ID, At} (with a map, X and Y too).',
+			load: 'A map was loaded: {Width, Height} in cells.',
+			order: 'The selected units of a map were ordered: {Kind (move, attack or stop), IDs, X, Y, Target}.',
+			cell: 'A cell of a map was pressed: {X, Y, Button, Object}, the object on it or null.',
+			view: 'The view of a map moved or zoomed: {X, Y, Zoom}.',
 			land: 'The view went down to the surface of a body: {ID}.',
 			takeoff: 'The view went back up to space: {ID}.',
-			error: 'There is no WebGL2: {Reason: webgl2}.'
+			error: 'There is no WebGL2 ({Reason: webgl2}), or a map could not be loaded (the error).'
 		},
-		Methods: ['Add(kind, props)', 'Change(id, changes)', 'Remove(id)', 'Attach(parent, object)', 'Detach(id)', 'Get(id)', 'Objects(filter)', 'Describe(id)', 'Position(id)', 'Select(id)', 'FocusOn(id)', 'Move(id, target)', 'Play(id, clip, callback)', 'Now()', 'SetTime(days)', 'ToScreen(id)', 'Pick(clientX, clientY)', 'Save()', 'Load(saved)', 'Land(id, options)', 'TakeOff()', 'Surface()', 'Supported()'],
+		Methods: ['Add(kind, props)', 'Change(id, changes)', 'Remove(id)', 'Attach(parent, object)', 'Detach(id)', 'Get(id)', 'Objects(filter)', 'Describe(id)', 'Position(id)', 'Select(id)', 'Selection()', 'FocusOn(id)', 'Move(id, target)', 'Play(id, clip, callback)', 'Now()', 'SetTime(days)', 'ToScreen(id)', 'Pick(clientX, clientY)', 'Save()', 'Load(saved)', 'Land(id, options)', 'TakeOff()', 'Surface()', 'Supported()', 'Order(ids, target, kind)', 'Stop(ids)', 'Cell(x, y)', 'Paint(x, y, key, layer)', 'Near(x, y, radius, filter)', 'Route(from, to)', 'PathGrid()', 'FogOfWar()', 'CenterOn(x, y)', 'ToCell(clientX, clientY)'],
 		Props: {
+			Map: 'A map of cells: its JSON ({Width, Height, Projection, Terrain, Layers, Objects}), or the URL of a JSON of its own or of Tiled.',
+			Projection: {Options: ['', 'isometric', 'orthogonal'], Description: 'A map from above (orthogonal) or at an angle (isometric); the one of the map by default.'},
+			Fog: 'The fog of war of a map: what the team does not see is hidden, what it explored is dimmed.',
+			Grid: 'Draws the lines of the cells of a map.',
+			Minimap: 'Shows the whole map in a corner.',
+			X: 'The point of a map at the left of the view (null: the map in the middle).',
+			Y: 'The point of a map at the top of the view.',
+			Zoom: 'The scale of the view of a map.',
+			MinZoom: 'The smallest zoom of a map.',
+			MaxZoom: 'The largest zoom of a map.',
 			Setting: {Options: ['space', 'terrain'], Description: 'The setting: its kinds and systems (space: a star system; terrain: a ground and its walkers).'},
 			System: 'The objects: {Objects: [{ID, Kind, Parent, Values, Traits, Parts, Children}]}.',
 			Seed: 'A whole star system made of a seed (always the same for the same seed).',
@@ -77,6 +96,7 @@ Elemenx.Component('GameScene', {
 			Speed: 'The days of the scene a second.',
 			SurfaceSpeed: 'The days a second on the surface of a body (1/120: a day of two minutes).',
 			Shadows: 'The shadows of a sun on a ground, a surface and a model near the view (true).',
+			View: {Options: ['', 'top', 'isometric'], Description: 'A ground seen in parallel rays, as a game of two dimensions: from above or at an angle (empty: in perspective).'},
 			Paused: 'Holds the time.',
 			Focus: 'The ID of the object in the middle of the view.',
 			Selected: 'The ID of the selected object.',
@@ -98,6 +118,7 @@ Elemenx.Component('GameScene', {
 	Speed: 1,
 	SurfaceSpeed: 1 / 120,
 	Shadows: true,
+	View: '',
 	Paused: false,
 	Focus: '',
 	Selected: '',
@@ -129,6 +150,9 @@ Elemenx.Component('GameScene', {
 		this.Changed = function () {
 			if (self.Engine && self.Engine().Props)
 				window.setTimeout(self.Engine().Props, 0);
+
+			if (self.Strategy && self.Strategy().Props)
+				window.setTimeout(self.Strategy().Props, 0);
 
 			return '';
 		};
@@ -167,7 +191,14 @@ Elemenx.Component('GameScene', {
 			'unit': {Traits: {Walker: {Speed: 8, MaxSlope: 0.45}, Model: {Shape: 'soldier', Size: 1.8, Color: '#ffffff'}, Health: {Max: 100}, Selectable: {}}},
 			'tree': {Traits: {Model: {Shape: 'pine', Size: 8, Color: '#ffffff'}}, Values: {Blocks: true}},
 			'rock': {Traits: {Model: {Shape: 'rock', Size: 2.5, Color: '#ffffff'}}, Values: {Blocks: true}},
-			'house': {Traits: {Model: {Shape: 'house', Size: 8, Color: '#ffffff'}, Health: {Max: 800}, Selectable: {}}, Values: {Blocks: true}}
+			'house': {Traits: {Model: {Shape: 'house', Size: 8, Color: '#ffffff'}, Health: {Max: 800}, Selectable: {}}, Values: {Blocks: true}},
+			'building': {Extends: 'house'},
+			'thing': {Traits: {Model: {Shape: 'crystal', Size: 1, Color: '#ffffff'}}},
+			'forest': {Traits: {Scatter: {Shapes: ['pine', 'pine', 'oak', 'birch', 'bush', 'stump'], Density: 3, Cover: 0.55, Patch: 70, MaxSlope: 0.3}}},
+			'grove': {Traits: {Scatter: {Shapes: ['oak', 'birch', 'bush'], Density: 0.8, Cover: 0.45, Patch: 40, MaxSlope: 0.25}}},
+			'thicket': {Traits: {Scatter: {Shapes: ['bush', 'bush', 'mushroom', 'stump'], Density: 5, Cover: 0.5, Patch: 25, MaxSlope: 0.3, Size: [0.6, 1.2]}}},
+			'rocks': {Traits: {Scatter: {Shapes: ['rock', 'rock', 'boulder'], Density: 0.5, MinHeight: 0, MaxSlope: 0.8, Size: [0.5, 1.4]}}},
+			'grass': {Traits: {Grass: {Density: 1, Height: 0.75, Color: '#7fae4a', Root: '#2f5a22'}}}
 		};
 	},
 
@@ -213,6 +244,10 @@ Elemenx.Component('GameScene', {
 	$OnReady: function () {
 		var self = this;
 		var element = this.$Element();
+
+		/* A map is known before the first objects are made: on it a kind may be of no kind of the scene. */
+		this.Cells = !!this.Map || !!element.querySelector('.elemenx-game-scene-sources .elemenx-game-source[data-type="layer"], .elemenx-game-scene-sources .elemenx-game-source[data-type="terrain"]');
+
 		var canvas = element.querySelector('.elemenx-game-scene-canvas');
 		var labels = element.querySelector('.elemenx-game-scene-labels');
 		var graphics = this.$Service('Graphics3D');
@@ -380,7 +415,8 @@ Elemenx.Component('GameScene', {
 		function canonical (raw, of) {
 			var kind = raw.Kind && kinds.Has(raw.Kind) ? raw.Kind : '';
 			var fields = kind || of ? kinds.Fields(kind || of) : {};
-			var spec = {ID: raw.ID, Kind: kind, Parent: raw.Parent, Part: raw.Part, Values: {}, Traits: {}, Parts: []};
+			var common = {type: 'Type', health: 'Health', maxhealth: 'MaxHealth', sight: 'Sight', tall: 'Tall', model: 'Model', roof: 'Roof', speed: 'Speed', shapes: 'Shapes', density: 'Density', size: 'Size', minheight: 'MinHeight', maxheight: 'MaxHeight', maxslope: 'MaxSlope', cover: 'Cover', patch: 'Patch', seed: 'Seed', blocks: 'Blocks', root: 'Root'};
+			var spec = {ID: raw.ID, Kind: self.Cells ? raw.Kind || '' : kind, Parent: raw.Parent, Part: raw.Part, Values: {}, Traits: {}, Parts: []};
 
 			Object.keys(raw).forEach(function (key) {
 				var field;
@@ -397,7 +433,7 @@ Elemenx.Component('GameScene', {
 					spec.Traits[field.Trait][field.Name] = value;
 				}
 				else {
-					spec.Values[field ? field.Name : key] = value;
+					spec.Values[field ? field.Name : common[key.toLowerCase()] || key] = value;
 				}
 			});
 
@@ -537,15 +573,22 @@ Elemenx.Component('GameScene', {
 		function make (spec) {
 			var override = scene.Overrides[spec.ID] || {};
 			var props = Object.assign({ID: spec.ID}, spec.Values || {}, override.Values || {});
+			var kind = spec.Kind;
 			var object;
 
 			props.Traits = kinds.MergeTraits(spec.Traits || {}, override.Traits || {});
 			props.Parts = kinds.MergeParts(spec.Parts || [], override.Parts || []);
 
-			if (spec.Kind && !kinds.Has(spec.Kind))
-				throw new Error('Elemenx GameScene: unknown kind ' + spec.Kind);
+			/* On a map a thing of no kind is a tree, and a thing of a kind of its own a thing of that Type. */
+			if (self.Cells && (!kind || !kinds.Has(kind))) {
+				props.Type = props.Type || kind;
+				kind = kind ? 'thing' : 'tree';
+			}
 
-			object = kinds.Make(spec.Kind || '', props);
+			if (kind && !kinds.Has(kind))
+				throw new Error('Elemenx GameScene: unknown kind ' + kind);
+
+			object = kinds.Make(kind || '', props);
 			object.Parent = override.Parent !== undefined ? override.Parent : spec.Parent;
 
 			return object;
@@ -553,11 +596,20 @@ Elemenx.Component('GameScene', {
 
 		/* Every object, of the seed, the system, the template, a saved game and the methods; the later over the earlier. */
 		function compose () {
+			composeObjects();
+
+			if (self.Strategy)
+				self.Strategy().Reconcile();
+		}
+
+		function composeObjects () {
 			var specs = [];
 			var byID = {};
 			var objects = {};
 			var order = [];
 			var seen = {};
+			var made = scene.Made || {};
+			var fresh = {};
 			var first;
 			var roots;
 
@@ -590,12 +642,18 @@ Elemenx.Component('GameScene', {
 			});
 
 			roots = specs.map(function (spec) {
-				var object = spec.Restored ? JSON.parse(JSON.stringify(spec.Restored)) : make(spec);
+				var key = spec.Restored ? '' : JSON.stringify([spec.Kind, spec.Parent, spec.Values, spec.Traits, spec.Parts, scene.Overrides[spec.ID] || null, self.Cells]);
+				var kept = key && made[spec.ID] && made[spec.ID].Key === key ? made[spec.ID].Object : null;
+				var object = kept || (spec.Restored ? JSON.parse(JSON.stringify(spec.Restored)) : make(spec));
 
 				if (spec.Restored)
 					object.Parent = spec.Parent;
 
-				crew(object);
+				if (!kept)
+					crew(object);
+
+				if (key)
+					fresh[spec.ID] = {Key: key, Object: object};
 
 				objects[object.ID] = object;
 
@@ -646,9 +704,11 @@ Elemenx.Component('GameScene', {
 				derive(object, objects);
 			});
 
+			scene.Made = fresh;
 			scene.Objects = objects;
 			scene.Order = order;
 			scene.Roots = roots;
+			scene.Version = (scene.Version || 0) + 1;
 
 			Object.keys(scene.Travels).forEach(function (id) {
 				if (!objects[id] || !objects[scene.Travels[id].Target])
@@ -824,7 +884,9 @@ Elemenx.Component('GameScene', {
 
 		/* Where every object is at a time: in AU (Position) and in the view (World), with its turn (Turn). */
 		function place (time) {
-			scene.Order.forEach(function (object) {
+			settle();
+
+			scene.Active.forEach(function (object) {
 				var parent = parentOf(object);
 				var base = parent ? parent.World || [0, 0, 0] : [0, 0, 0];
 				var position = parent ? parent.Position || [0, 0, 0] : [0, 0, 0];
@@ -1021,6 +1083,13 @@ Elemenx.Component('GameScene', {
 
 		/* The plain shapes and the rocks of a belt, or the geometry of a piece of a model: each a mesh made the first time it is drawn. */
 		function shape (name, geometry) {
+			if (!gpu.Shapes[name])
+				gpu.Shapes[name] = renderer.Mesh(geometry || shapeGeometry(name));
+
+			return gpu.Shapes[name];
+		}
+
+		function shapeGeometry (name) {
 			var simple = {
 				box: function () {
 					return graphics.Box({});
@@ -1046,10 +1115,7 @@ Elemenx.Component('GameScene', {
 				}
 			};
 
-			if (!gpu.Shapes[name])
-				gpu.Shapes[name] = renderer.Mesh(geometry || (simple[name] ? simple[name]() : graphics.Box({})));
-
-			return gpu.Shapes[name];
+			return simple[name] ? simple[name]() : graphics.Box({});
 		}
 
 		/* The stars far away: points on a ball round the view, of the colors of their temperatures. */
@@ -1382,7 +1448,12 @@ Elemenx.Component('GameScene', {
 			var background = scene.Colors.Background;
 			var models = gather();
 			var nodes = scene.Ground ? groundPatches() : null;
-			var shade = shadowOfScene(models, nodes);
+			var shade;
+
+			engine.ScatterFrame(matrix);
+
+			shade = shadowOfScene(models, nodes);
+
 			var common = Object.assign({uViewProjection: matrix, uCamera: [0, 0, 0], uLightPositions: light.Positions, uLightColors: light.Colors, uLightCount: light.Count, uAmbient: scene.Ground ? [0.17, 0.19, 0.23] : [0.025, 0.027, 0.035], uOccluderCount: 0, uOccluders: new Array(16).fill(0), uTime: scene.Time, uHighlight: [0, 0, 0, 0], uWind: scene.Seconds}, shade);
 			var selected = scene.Selected ? scene.Objects[scene.Selected] : null;
 			var later = [];
@@ -1421,7 +1492,7 @@ Elemenx.Component('GameScene', {
 				renderer.Draw(gpu.Stars, gpu.Far, {uViewProjection: graphics.Multiply(graphics.Perspective(camera.Fov, aspect, 0.1, 200), viewMatrix), uRatio: renderer.Ratio}, {Depth: false, DepthWrite: false, Blend: 'add'});
 			}
 
-			scene.Order.forEach(function (object) {
+			scene.Active.forEach(function (object) {
 				var parent = parentOf(object);
 				var size = object.World && object.Size ? Math.max(object.Size, pixels(object.World, trait(object, 'Star') ? 4 : 1.5)) : object.Size;
 				var model;
@@ -1479,8 +1550,10 @@ Elemenx.Component('GameScene', {
 			Object.keys(models).forEach(function (name) {
 				var list = models[name];
 
-				renderer.Draw(shape(name), gpu.Many, uniforms({uShine: list.Matte ? 8 : 36, uSpecular: list.Matte ? 0.05 : 0.5, uRough: list.Rough}));
+				renderer.Draw(shape(name), gpu.Many, uniforms({uShine: list.Matte ? 8 : 36, uSpecular: list.Matte ? 0.05 : 0.5, uRough: list.Rough, uOrigin: originOf(list)}));
 			});
+
+			engine.ScatterDraw(common, matrix);
 
 			custom('Draw');
 
@@ -1496,13 +1569,18 @@ Elemenx.Component('GameScene', {
 
 		/* The copies of the shapes of a frame: the rocks of the belts, the models of the objects, their pieces as they stand now. */
 		function gather () {
-			var models = {};
+			var models = scene.Lists = scene.Lists || {};
+			var drawn = {};
 
-			scene.Order.forEach(function (object) {
+			Object.keys(models).forEach(function (name) {
+				models[name].Count = 0;
+			});
+
+			scene.Active.forEach(function (object) {
 				var parent = parentOf(object);
 				var settings = trait(object, 'Model');
 
-				if (!object.World) return;
+				if (!object.World || object.Hidden) return;
 
 				if (trait(object, 'Belt')) {
 					rocksOf(object).Rocks.forEach(function (each) {
@@ -1519,22 +1597,51 @@ Elemenx.Component('GameScene', {
 			});
 
 			Object.keys(models).forEach(function (name) {
-				var list = models[name];
+				if (models[name].Count)
+					upload(name, models[name]);
 
-				shape(name, list.Geometry).Instance({aInstance: {Size: 4, Data: list.Places}, aInstance2: {Size: 4, Data: list.X}, aInstance3: {Size: 4, Data: list.Y}, aInstance4: {Size: 4, Data: list.Z}, aInstance5: {Size: 4, Data: list.Tints}}, list.Count);
+				if (models[name].Count)
+					drawn[name] = models[name];
 			});
 
-			return models;
+			if (!scene.StillLists) {
+				scene.StillLists = {};
+
+				scene.Still.forEach(function (object) {
+					if (object.Hidden) return;
+
+					gatherModel(scene.StillLists, object, trait(object, 'Model'), true);
+				});
+
+				Object.keys(scene.StillLists).forEach(function (name) {
+					upload(name, scene.StillLists[name]);
+				});
+			}
+
+			return Object.assign(drawn, scene.StillLists);
+		}
+
+		function upload (name, list) {
+			var size = list.Count * 4;
+
+			shape(name, list.Geometry).Instance({aInstance: {Size: 4, Data: list.Places.subarray(0, size)}, aInstance2: {Size: 4, Data: list.X.subarray(0, size)}, aInstance3: {Size: 4, Data: list.Y.subarray(0, size)}, aInstance4: {Size: 4, Data: list.Z.subarray(0, size)}, aInstance5: {Size: 4, Data: list.Tints.subarray(0, size)}}, list.Count);
+		}
+
+		/* What is kept in buffers stands in the world: the eye is taken away from it in the shader. */
+		function originOf (list) {
+			return list.Still ? vectors.Subtract([0, 0, 0], scene.Eye) : [0, 0, 0];
 		}
 
 		function modelOf (object, settings) {
-			return library.Has(settings.Shape) ? library.Make(settings.Shape, {Variant: random.Hash(object.ID)}) : null;
+			var name = object.Shape || settings.Shape;
+
+			return library.Has(name) ? library.Make(name, {Variant: random.Hash(object.ID)}) : null;
 		}
 
 		/* An object as copies of its pieces, each in its pose; a piece of a team takes its color. */
-		function gatherModel (models, object, settings) {
+		function gatherModel (models, object, settings, still) {
 			var made = modelOf(object, settings);
-			var scale = vectors.Scale(settings.Scale || [1, 1, 1], object.Size);
+			var scale = object.Scaled || vectors.Scale(settings.Scale || [1, 1, 1], object.Size);
 			var base = graphics.Multiply(object.Turn || graphics.Identity(), graphics.Scaling(scale[0], scale[1], scale[2]));
 			var color = paint(settings.Color || (made ? '#ffffff' : '#c8ccd4')).slice(0, 3);
 			var team = paint(teamColor(object.Team)).slice(0, 3);
@@ -1544,7 +1651,7 @@ Elemenx.Component('GameScene', {
 			if (!made) {
 				plain = object.Team ? 0.35 : 0;
 
-				batch(models, settings.Shape, object.World, base, [color[0] * (1 - plain) + team[0] * plain, color[1] * (1 - plain) + team[1] * plain, color[2] * (1 - plain) + team[2] * plain], {Rough: 0.15});
+				batch(models, (still ? 'still:' : '') + settings.Shape, object.World, base, [color[0] * (1 - plain) + team[0] * plain, color[1] * (1 - plain) + team[1] * plain, color[2] * (1 - plain) + team[2] * plain], {Rough: 0.15, Still: still, Geometry: still ? shapeGeometry(settings.Shape) : null});
 
 				return;
 			}
@@ -1552,10 +1659,10 @@ Elemenx.Component('GameScene', {
 			if (made.Type === 'ship' && object.Team)
 				color = [color[0] * 0.65 + team[0] * 0.35, color[1] * 0.65 + team[1] * 0.35, color[2] * 0.65 + team[2] * 0.35];
 
-			pose = made.Pieces.length > 1 ? poseOf(object, made, settings) : null;
+			pose = made.Pieces.length > 1 && !still ? poseOf(object, made, settings) : null;
 
 			made.Pieces.forEach(function (piece) {
-				batch(models, made.Key + '/' + piece.ID, object.World, pose ? graphics.Multiply(base, pose[piece.ID]) : base, piece.Team ? team : color, {Matte: made.Matte, Rough: made.Matte ? 0.5 : 0.15, Sway: made.Sway, Geometry: piece.Geometry});
+				batch(models, (still ? 'still:' : '') + made.Key + '/' + piece.ID, object.World, pose ? graphics.Multiply(base, pose[piece.ID]) : base, piece.Team ? team : color, {Matte: made.Matte, Rough: made.Matte ? 0.5 : 0.15, Sway: made.Sway, Geometry: piece.Geometry, Still: still});
 			});
 		}
 
@@ -1563,10 +1670,10 @@ Elemenx.Component('GameScene', {
 		function poseOf (object, made, settings) {
 			var way = scene.Ways[object.ID];
 			var state = object.Clip;
-			var wanted = way ? 'walk' : object.Loop || settings.Clip || 'idle';
+			var wanted = way || object.Walking ? 'walk' : object.Loop || settings.Clip || 'idle';
 			var clip = made.Clips[wanted];
 			var seconds = scene.Seconds;
-			var rate = wanted === 'walk' && clip ? way.Speed * (clip.Length || 1) / Math.max(0.01, object.Size * (clip.Stride || 1)) : 1;
+			var rate = wanted === 'walk' && clip ? (way ? way.Speed : object.Walking) * (clip.Length || 1) / Math.max(0.01, object.Size * (clip.Stride || 1)) : 1;
 
 			if (state && state.Once) {
 				if ((seconds - state.Start) * state.Rate < library.Length(made, state.Name)) {
@@ -1604,19 +1711,53 @@ Elemenx.Component('GameScene', {
 			var list = models[name];
 			var m = matrix;
 			var settings = options || {};
-			var at = local(world);
+			var at = settings.Still ? world : local(world);
+			var i;
 
 			if (!list) {
-				list = models[name] = {Count: 0, Places: [], X: [], Y: [], Z: [], Tints: [], Matte: !!settings.Matte, Rough: settings.Rough || 0, Geometry: settings.Geometry || null};
+				list = models[name] = {Count: 0, Capacity: 0, Matte: !!settings.Matte, Rough: settings.Rough || 0, Geometry: settings.Geometry || null, Still: !!settings.Still};
 			}
 
-			list.Places.push(at[0] + m[12], at[1] + m[13], at[2] + m[14], settings.Sway || 0);
-			list.X.push(m[0], m[1], m[2], 0);
-			list.Y.push(m[4], m[5], m[6], 0);
-			list.Z.push(m[8], m[9], m[10], 0);
-			list.Tints.push(color[0], color[1], color[2], world[0] * 0.13 + world[2] * 0.17);
+			if (list.Count === list.Capacity)
+				grow(list);
+
+			i = list.Count * 4;
+
+			list.Places[i] = at[0] + m[12];
+			list.Places[i + 1] = at[1] + m[13];
+			list.Places[i + 2] = at[2] + m[14];
+			list.Places[i + 3] = settings.Sway || 0;
+			list.X[i] = m[0];
+			list.X[i + 1] = m[1];
+			list.X[i + 2] = m[2];
+			list.Y[i] = m[4];
+			list.Y[i + 1] = m[5];
+			list.Y[i + 2] = m[6];
+			list.Z[i] = m[8];
+			list.Z[i + 1] = m[9];
+			list.Z[i + 2] = m[10];
+			list.Tints[i] = color[0];
+			list.Tints[i + 1] = color[1];
+			list.Tints[i + 2] = color[2];
+			list.Tints[i + 3] = world[0] * 0.13 + world[2] * 0.17;
 
 			list.Count++;
+		}
+
+		/* The arrays of a list twice as large, kept from frame to frame. */
+		function grow (list) {
+			var capacity = Math.max(16, list.Capacity * 2);
+
+			['Places', 'X', 'Y', 'Z', 'Tints'].forEach(function (name) {
+				var next = new Float32Array(capacity * 4);
+
+				if (list[name])
+					next.set(list[name]);
+
+				list[name] = next;
+			});
+
+			list.Capacity = capacity;
 		}
 
 		/*
@@ -1661,12 +1802,14 @@ Elemenx.Component('GameScene', {
 
 			function casters (matrix) {
 				Object.keys(models).forEach(function (name) {
-					renderer.Draw(shape(name), gpu.ManyDepth, {uViewProjection: matrix, uWind: scene.Seconds}, {Cull: 'none'});
+					renderer.Draw(shape(name), gpu.ManyDepth, {uViewProjection: matrix, uWind: scene.Seconds, uOrigin: originOf(models[name])}, {Cull: 'none'});
 				});
 
 				(nodes || []).forEach(function (node) {
 					renderer.Draw(node.Mesh, gpu.LandDepth, {uViewProjection: matrix, uOffset: vectors.Subtract(node.Center, scene.Eye)}, {Cull: 'back'});
 				});
+
+				engine.ScatterShadow(matrix);
 			}
 
 			if (!shadowsWanted()) return off;
@@ -1674,7 +1817,7 @@ Elemenx.Component('GameScene', {
 			if (ground) {
 				if (ground.Sun[1] < 0.04) return off;
 
-				extent = Math.max(30, Math.min(ground.Field.Size, scene.Distance * 1.5));
+				extent = Math.max(ground.Field.Whole ? 8 : 30, Math.min(ground.Field.Size, scene.Distance * 1.5));
 
 				return castShadow(ground.Sun, ground.Target, scene.Eye, extent, Math.max(extent * 2, ground.Field.Top * 4), casters);
 			}
@@ -1794,7 +1937,7 @@ Elemenx.Component('GameScene', {
 		/*
 		 * The ground of the setting terrain: the object of a Terrain trait is a flat map of noise (the Terrain Service)
 		 * drawn in squares, the finer the nearer; its water a plane, its sky of its sun (an object of a Sun trait). The
-		 * other objects stand on it at X and Y (across and down the map, as in a GameWorld); a Walker walks a way round
+		 * other objects stand on it at X and Y (across and down the map); a Walker walks a way round
 		 * the slopes, the sea and the things that block it. The view goes round a point of the ground.
 		 */
 		function groundOf () {
@@ -1807,28 +1950,28 @@ Elemenx.Component('GameScene', {
 			var azimuth;
 			var elevation;
 
-			if (!object) {
+			if (!object && !scene.Driven) {
 				if (scene.Ground)
 					dropGround();
 
 				return null;
 			}
 
-			settings = trait(object, 'Terrain');
-			key = JSON.stringify(settings);
+			settings = object ? trait(object, 'Terrain') : null;
+			key = scene.Driven ? scene.Driven.Key : JSON.stringify(settings);
 
 			if (!scene.Ground || scene.Ground.Key !== key) {
 				if (scene.Ground)
 					dropGround();
 
-				scene.Ground = {Key: key, ID: object.ID, Field: terrain.Flat(settings), Nodes: {}, Frame: 0, Keys: {}};
+				scene.Ground = {Key: key, ID: object ? object.ID : '', Field: scene.Driven ? scene.Driven.Field : terrain.Flat(settings), Nodes: {}, Frame: 0, Keys: {}};
 			}
 
 			sun = scene.Roots.filter(function (each) {
 				return trait(each, 'Sun');
 			})[0];
 			azimuth = number(sun ? trait(sun, 'Sun').Azimuth : 140, 140) * Math.PI / 180;
-			elevation = number(sun ? trait(sun, 'Sun').Elevation : 35, 35) * Math.PI / 180;
+			elevation = number(sun ? trait(sun, 'Sun').Elevation : scene.Driven && scene.Driven.Elevation || 35, 35) * Math.PI / 180;
 			scene.Ground.Sun = [Math.cos(elevation) * Math.sin(azimuth), Math.sin(elevation), -Math.cos(elevation) * Math.cos(azimuth)];
 			scene.Ground.SunColor = paint(sun ? trait(sun, 'Sun').Color : '#fff4e0').slice(0, 3);
 
@@ -1844,15 +1987,52 @@ Elemenx.Component('GameScene', {
 		}
 
 		/* What blocks the way at a point: a thing that Blocks, within its size. */
-		function blocked (x, z, self) {
+		function blocked (x, z, mover) {
+			if (engine.ScatterBlocked(x, z)) return true;
+
 			return scene.Roots.some(function (object) {
 				var size;
 
-				if (object === self || !object.Values.Blocks || !object.World) return false;
+				if (object === mover || !object.Values.Blocks || !object.World) return false;
 
 				size = (object.Size || 1) * 0.45 + 0.6;
 
 				return Math.abs(object.World[0] - x) < size && Math.abs(object.World[2] - z) < size;
+			});
+		}
+
+		/* What stands still on a ground and has no moves of its own: it is placed once, and drawn from buffers that stay. */
+		function stillOf (object) {
+			var settings = trait(object, 'Model');
+			var made;
+
+			if (!settings || !settings.Shape || object.Owner || object.Hidden) return false;
+			if (trait(object, 'Orbit') || trait(object, 'Walker') || trait(object, 'Mover') || trait(object, 'Formation')) return false;
+
+			made = modelOf(object, settings);
+
+			return !made || !Object.keys(made.Clips).length;
+		}
+
+		/* Which objects move, after the scene changed: the others stand once. */
+		function settle () {
+			var key = scene.Version + ':' + (scene.Ground ? scene.Ground.Key : '');
+			if (scene.Settled === key) return;
+
+			scene.Settled = key;
+			scene.Active = [];
+			scene.Still = [];
+			scene.StillLists = null;
+
+			scene.Order.forEach(function (object) {
+				if (scene.Ground && stillOf(object)) scene.Still.push(object);
+				else scene.Active.push(object);
+			});
+
+			scene.Still.forEach(function (object) {
+				object.Turn = graphics.Identity();
+
+				stand(object);
 			});
 		}
 
@@ -1894,7 +2074,19 @@ Elemenx.Component('GameScene', {
 				}
 			}
 
-			object.World = [x, Math.max(0, field.Height(x, z)), z];
+			/* On a map X and Y are the corner of its cells. */
+			if (scene.Driven && object.Footprint) {
+				x += object.Footprint[0] / 2;
+				z = (z + object.Footprint[1] / 2) * (scene.Driven.Depth || 1);
+			}
+
+			/* The ground under it is noise: not again while it stands. */
+			if (object.StoodX !== x || object.StoodZ !== z || !object.World) {
+				object.StoodX = x;
+				object.StoodZ = z;
+				object.World = [x, Math.max(0, field.Height(x, z)), z];
+			}
+
 			object.Position = object.World;
 			object.Relative = [0, 0, 0];
 
@@ -1991,7 +2183,15 @@ Elemenx.Component('GameScene', {
 			var forward = [-Math.sin(scene.Yaw), 0, -Math.cos(scene.Yaw)];
 			var right = [Math.cos(scene.Yaw), 0, -Math.sin(scene.Yaw)];
 			var speed = scene.Distance * 0.9 * elapsed;
+			var view = self.View;
 			var floor;
+
+			if (scene.Driven) {
+				ground.Target = scene.Driven.Target;
+				scene.Distance = scene.Wanted = scene.Driven.Height;
+				view = scene.Driven.View;
+				keys = {};
+			}
 
 			if (!ground.Target)
 				ground.Target = [0, Math.max(0, field.Height(0, 0)), 0];
@@ -2011,11 +2211,24 @@ Elemenx.Component('GameScene', {
 			if (focus && focus.World && keys.Follow !== false)
 				ground.Target = vectors.Lerp(ground.Target, focus.World, 1 - Math.exp(-elapsed * 6));
 
-			ground.Target[0] = Math.max(-field.Size / 2, Math.min(field.Size / 2, ground.Target[0]));
-			ground.Target[2] = Math.max(-field.Size / 2, Math.min(field.Size / 2, ground.Target[2]));
+			if (!scene.Driven) {
+				ground.Target[0] = Math.max(-field.Size / 2, Math.min(field.Size / 2, ground.Target[0]));
+				ground.Target[2] = Math.max(-field.Size / 2, Math.min(field.Size / 2, ground.Target[2]));
+			}
+
 			ground.Target[1] = Math.max(0, field.Height(ground.Target[0], ground.Target[2]));
 			scene.Distance += (scene.Wanted - scene.Distance) * (1 - Math.exp(-elapsed * 9));
 			scene.Pitch = Math.max(0.08, Math.min(1.5, scene.Pitch));
+
+			/* In parallel rays the distance is the height of the view; the eye stands far enough to see all of it. */
+			if (view) {
+				parallel(view, ground, field);
+
+				return;
+			}
+
+			camera.Ortho = 0;
+			camera.Up = [0, 1, 0];
 
 			camera.Orbit(ground.Target, scene.Yaw, scene.Pitch, scene.Distance);
 
@@ -2030,12 +2243,41 @@ Elemenx.Component('GameScene', {
 			camera.Far = field.Size * 3 + scene.Distance * 4;
 		}
 
+		/* A ground in parallel rays: from above, or at the angle that makes a cell a rhombus of the given proportion. */
+		function parallel (view, ground, field) {
+			var camera = scene.Camera;
+			var far = Math.max(field.Size * 3, scene.Distance * 4);
+
+			scene.Yaw = view === 'top' ? 0 : Math.PI / 4;
+			scene.Pitch = view === 'top' ? Math.PI / 2 : Math.asin(scene.Driven && scene.Driven.Slant || 0.5);
+
+			camera.Ortho = scene.Distance;
+			camera.Up = view === 'top' ? [0, 0, -1] : [0, 1, 0];
+
+			camera.Orbit(ground.Target, scene.Yaw, scene.Pitch, far);
+
+			scene.Eye = camera.Position.slice();
+			scene.Target = ground.Target.slice();
+			camera.Near = 1;
+			camera.Far = far * 2;
+		}
+
 		/* The squares of the ground in view, the finer the nearer the eye; each made once, a few a frame. */
 		function groundPatches () {
 			var ground = scene.Ground;
 			var field = ground.Field;
 			var wanted = [];
 			var built = 0;
+
+			/* A map of cells is of one piece. */
+			if (field.Whole) {
+				if (!ground.Nodes.whole)
+					ground.Nodes.whole = {Mesh: renderer.Mesh(field.Chunk()), Center: field.Center, Used: 0};
+
+				ground.Nodes.whole.Used = ++ground.Frame;
+
+				return [ground.Nodes.whole];
+			}
 
 			function visit (x, z, size, level) {
 				var key = x.toFixed(3) + ':' + z.toFixed(3) + ':' + level;
@@ -2078,9 +2320,10 @@ Elemenx.Component('GameScene', {
 			var ground = scene.Ground;
 			var field = ground.Field;
 			var air = [0.55, 0.72, 1, 0.95];
-			var fog = field.Size * 0.9;
+			var fog = scene.Camera.Ortho ? 1e9 : field.Size * 0.9;
 
-			renderer.Draw(gpu.Quad, gpu.Sky, {uInverse: graphics.Invert(matrix), uSun: ground.Sun, uSunColor: ground.SunColor, uAir: air, uUp: [0, 1, 0], uHigh: 0}, {Depth: false, DepthWrite: false, Blend: 'alpha', Cull: 'none'});
+			if (!scene.Camera.Ortho)
+				renderer.Draw(gpu.Quad, gpu.Sky, {uInverse: graphics.Invert(matrix), uSun: ground.Sun, uSunColor: ground.SunColor, uAir: air, uUp: [0, 1, 0], uHigh: 0}, {Depth: false, DepthWrite: false, Blend: 'alpha', Cull: 'none'});
 
 			nodes.forEach(function (node) {
 				renderer.Draw(node.Mesh, gpu.Land, Object.assign({uViewProjection: matrix, uOffset: vectors.Subtract(node.Center, scene.Eye), uSun: ground.Sun, uSunColor: ground.SunColor, uAir: air, uFog: fog}, shade), {Cull: 'back'});
@@ -2647,6 +2890,7 @@ Elemenx.Component('GameScene', {
 		};
 
 		engine.Compose = compose;
+		engine.Paint = paint;
 		engine.Place = place;
 		engine.Frame = frame;
 		engine.Pick = pick;
@@ -2690,6 +2934,29 @@ Elemenx.Component('GameScene', {
 		};
 
 		engine.Land = land;
+
+		/*
+		 * What leads the scene from outside (a map of cells): a ground of cells to draw and its view, {Key, Field, View, Slant,
+		 * Target, Height, Elevation}, given again when any of it changes; each object is put where it stands with Stand.
+		 */
+		engine.Drive = function (given) {
+			scene.Driven = given;
+		};
+
+		engine.Stand = function (id, state) {
+			var object = scene.Objects[id];
+			if (!object) return;
+
+			/* What stands still is in a buffer: seen or hidden, it is drawn again. */
+			if (!!state.Hidden !== !!object.Hidden || object.Values.X !== state.X || object.Values.Y !== state.Y)
+				scene.Settled = scene.Settled && scene.Still.indexOf(object) !== -1 ? '' : scene.Settled;
+
+			object.Values.X = state.X;
+			object.Values.Y = state.Y;
+			object.Heading = state.Heading || object.Heading;
+			object.Walking = state.Walking || 0;
+			object.Hidden = !!state.Hidden;
+		};
 
 		/* A clip of an object: one that ends calls back and goes back to what the object was doing, a loop stays. */
 		engine.Play = function (id, name, callback) {
@@ -2773,6 +3040,11 @@ Elemenx.Component('GameScene', {
 		if (!renderer)
 			this.Unsupported = true;
 
+		this.StrategyStart();
+
+		if (renderer)
+			this.ScatterStart();
+
 		window.setTimeout(function () {
 			resize();
 
@@ -2788,6 +3060,8 @@ Elemenx.Component('GameScene', {
 		var renderer = this.Engine ? this.Engine().Renderer : null;
 
 		if (!scene || !scene.Loop) return;
+
+		this.StrategyStop();
 
 		scene.Loop.Stop();
 		scene.Watcher.disconnect();
@@ -2842,7 +3116,7 @@ Elemenx.Component('GameScene', {
 		if (scene.Pinch && ids.length === 2) {
 			distance = Math.max(1, Math.sqrt(Math.pow(pointers[ids[0]].X - pointers[ids[1]].X, 2) + Math.pow(pointers[ids[0]].Y - pointers[ids[1]].Y, 2)));
 
-			this.Zoom(scene.Pinch.Wanted * scene.Pinch.Distance / distance, true);
+			this.ZoomTo(scene.Pinch.Wanted * scene.Pinch.Distance / distance, true);
 
 			return;
 		}
@@ -2885,7 +3159,7 @@ Elemenx.Component('GameScene', {
 		scene.Drag = null;
 		this.Dragging = false;
 
-		if (drag && !drag.Moved && !scene.Surface && drag.Button === 2 && scene.Ground) this.Order(point);
+		if (drag && !drag.Moved && !scene.Surface && drag.Button === 2 && scene.Ground) this.OrderAt(point);
 		else if (drag && !drag.Moved && !scene.Surface) this.Engine().Select(this.Engine().Pick(point.X, point.Y));
 	},
 
@@ -2902,7 +3176,7 @@ Elemenx.Component('GameScene', {
 	},
 
 	/* A right press on a ground: the selected walker goes there. */
-	Order: function (point) {
+	OrderAt: function (point) {
 		var scene = this.Scene();
 		var at = this.Engine().GroundAt(point.X, point.Y);
 		var walker = scene.Selected ? scene.Objects[scene.Selected] : null;
@@ -2912,7 +3186,7 @@ Elemenx.Component('GameScene', {
 	},
 
 	/* The distance of the view, kept between near the object in focus and far beyond the scene. */
-	Zoom: function (wanted, exact) {
+	ZoomTo: function (wanted, exact) {
 		var scene = this.Scene();
 		var focus = scene.Focus ? scene.Objects[scene.Focus] : null;
 		var least = scene.Ground ? 4 : focus && focus.Size ? focus.Size * 1.4 : 0.05;
@@ -2950,7 +3224,7 @@ Elemenx.Component('GameScene', {
 			return;
 		}
 
-		this.Zoom(this.Scene().Wanted * Math.exp(amount * 0.0012));
+		this.ZoomTo(this.Scene().Wanted * Math.exp(amount * 0.0012));
 	},
 
 	Double: function (event) {
@@ -2974,12 +3248,18 @@ Elemenx.Component('GameScene', {
 	},
 
 	Key: function (event) {
+		if (this.Cells) {
+			this.MarksKey(event);
+
+			return;
+		}
+
 		var scene = this.Scene();
 
 		/* Over a map: the keys move the view (the arrows, WASD), + and - zoom, Escape lets the object in focus go. */
 		if (scene.Ground && !scene.Surface) {
-			if (event.key === '+' || event.key === '=') this.Zoom(scene.Wanted / 1.25);
-			else if (event.key === '-' || event.key === '_') this.Zoom(scene.Wanted * 1.25);
+			if (event.key === '+' || event.key === '=') this.ZoomTo(scene.Wanted / 1.25);
+			else if (event.key === '-' || event.key === '_') this.ZoomTo(scene.Wanted * 1.25);
 			else if (event.key === 'Escape') this.FocusOn('');
 			else scene.Ground.Keys[event.code] = true;
 
@@ -3010,8 +3290,8 @@ Elemenx.Component('GameScene', {
 		else if (event.key === 'ArrowRight') scene.Yaw -= 0.08;
 		else if (event.key === 'ArrowUp') scene.Pitch = Math.min(1.5, scene.Pitch + 0.06);
 		else if (event.key === 'ArrowDown') scene.Pitch = Math.max(-1.5, scene.Pitch - 0.06);
-		else if (event.key === '+' || event.key === '=') this.Zoom(scene.Wanted / 1.25);
-		else if (event.key === '-' || event.key === '_') this.Zoom(scene.Wanted * 1.25);
+		else if (event.key === '+' || event.key === '=') this.ZoomTo(scene.Wanted / 1.25);
+		else if (event.key === '-' || event.key === '_') this.ZoomTo(scene.Wanted * 1.25);
 		else if (event.key === 'Enter' && scene.Selected) this.FocusOn(scene.Selected);
 		else if (event.key === ' ') this.Paused = !this.Paused;
 		else if (event.key === 'Escape' && focus) this.FocusOn(parent && (parent.Owner || parent.Parent) ? parent.ID : '');
@@ -3022,6 +3302,12 @@ Elemenx.Component('GameScene', {
 	},
 
 	KeyUp: function (event) {
+		if (this.Cells) {
+			this.MarksKeyUp(event);
+
+			return;
+		}
+
 		var scene = this.Scene();
 		if (scene.Surface)
 			delete scene.Surface.Keys[event.code];
@@ -3031,6 +3317,12 @@ Elemenx.Component('GameScene', {
 	},
 
 	Blurred: function () {
+		if (this.Cells) {
+			this.MarksBlurred();
+
+			return;
+		}
+
 		var scene = this.Scene();
 		if (scene.Surface)
 			scene.Surface.Keys = {};
@@ -3055,7 +3347,30 @@ Elemenx.Component('GameScene', {
 
 	/* The methods of the scene. */
 	Add: function (kind, props) {
+		var self = this;
 		var spec = kind && typeof kind === 'object' ? kind : Object.assign({}, props || {}, {Kind: kind});
+
+		/* A list at once: the scene is made again once. */
+		if (Array.isArray(kind)) {
+			kind.forEach(function (each) {
+				self.Include(each);
+			});
+
+			this.Engine().Compose();
+
+			return kind.map(function (each) {
+				return each.ID;
+			});
+		}
+
+		this.Include(spec);
+
+		this.Engine().Compose();
+
+		return spec.ID;
+	},
+
+	Include: function (spec) {
 		var scene = this.Scene();
 		var values = {};
 
@@ -3069,10 +3384,6 @@ Elemenx.Component('GameScene', {
 		delete scene.Removed[spec.ID];
 
 		scene.Added.push({ID: spec.ID, Kind: spec.Kind || '', Parent: spec.Parent, Values: Object.assign({}, spec.Values || {}, values), Traits: spec.Traits || {}, Parts: spec.Parts || []});
-
-		this.Engine().Compose();
-
-		return spec.ID;
 	},
 
 	/* Changes the fields of an object (or of a part): each to its trait by its name in any case, {Traits} as they are. */
@@ -3190,10 +3501,25 @@ Elemenx.Component('GameScene', {
 	},
 
 	Get: function (id) {
+		var item = this.Cells ? this.World().Objects[String(id)] : null;
+		if (item)
+			return this.Strategy().Outward(item);
+
 		return this.Scene().Objects[id] || null;
 	},
 
 	Objects: function (filter) {
+		var world = this.World();
+		var strategy = this.Strategy();
+
+		if (this.Cells) {
+			return world.Order.map(function (id) {
+				return strategy.Outward(world.Objects[id]);
+			}).filter(function (item) {
+				return typeof filter !== 'function' || !!filter(item);
+			});
+		}
+
 		return this.Scene().Order.filter(function (object) {
 			if (typeof filter === 'function') return filter(object);
 
@@ -3216,8 +3542,24 @@ Elemenx.Component('GameScene', {
 		return object && object.Position ? [object.Position[0], object.Position[1], object.Position[2]] : null;
 	},
 
+	/* An object, or several on a map. */
 	Select: function (id) {
-		this.Engine().Select(id || '');
+		if (this.Cells) {
+			this.Strategy().Select(Array.isArray(id) ? id : id ? [id] : []);
+
+			return;
+		}
+
+		this.Engine().Select(Array.isArray(id) ? id[0] || '' : id || '');
+	},
+
+	Selection: function () {
+		var selected = this.Scene().Selected;
+
+		if (this.Cells)
+			return this.World().Selection.slice();
+
+		return selected ? [selected] : [];
 	},
 
 	FocusOn: function (id) {
@@ -3225,6 +3567,9 @@ Elemenx.Component('GameScene', {
 	},
 
 	Move: function (id, target, callback) {
+		if (this.Cells)
+			return this.Order(Array.isArray(id) ? id : [id], target);
+
 		return this.Engine().Move(id, target, callback);
 	},
 
@@ -3243,7 +3588,18 @@ Elemenx.Component('GameScene', {
 		this.Engine().Place(this.Scene().Time);
 	},
 
-	ToScreen: function (id) {
+	/* Where an object is on the canvas, or a point of a map (x and y) on the page. */
+	ToScreen: function (id, y) {
+		var box;
+		var point;
+
+		if (typeof id === 'number') {
+			box = this.$Element().querySelector('.elemenx-game-scene-marks').getBoundingClientRect();
+			point = this.Strategy().ToScreen(id, y);
+
+			return {X: point.X + box.left, Y: point.Y + box.top};
+		}
+
 		this.Engine().Place(this.Scene().Time);
 
 		return this.Engine().ToScreen(id);
@@ -3273,10 +3629,18 @@ Elemenx.Component('GameScene', {
 		};
 	},
 
-	/* A saved game shown again: its objects alone, at its time. */
-	Load: function (saved) {
+	/* A saved game shown again: its objects alone, at its time; or a map (its JSON or its URL), called back when it came. */
+	Load: function (saved, callback) {
 		var scene = this.Scene();
 		var kinds = this.$Service('Kinds');
+
+		if (!saved || typeof saved === 'string' || saved.Width !== undefined || saved.width !== undefined || saved.tiledversion) {
+			this.World().Given = saved;
+
+			this.Strategy().Load(saved, callback);
+
+			return;
+		}
 
 		scene.Loaded = (saved && saved.Objects || []).map(function (each) {
 			return {ID: each.ID, Parent: each.Parent, Restored: kinds.Restore(each)};
@@ -3360,6 +3724,7 @@ Elemenx.Component('GameScene', {
 				'in vec4 aInstance5;',
 				'uniform mat4 uViewProjection;',
 				'uniform float uWind;',
+				'uniform vec3 uOrigin;',
 				'out vec3 vWorld;',
 				'out vec3 vNormal;',
 				'out vec3 vLocal;',
@@ -3367,7 +3732,7 @@ Elemenx.Component('GameScene', {
 				'out vec3 vColor;',
 				'void main() {',
 				'	mat3 basis = mat3(aInstance2.xyz, aInstance3.xyz, aInstance4.xyz);',
-				'	vec3 world = aInstance.xyz + basis * aPosition;',
+				'	vec3 world = aInstance.xyz + uOrigin + basis * aPosition;',
 				'	float bend = aInstance.w * aPosition.y * aPosition.y * length(aInstance3.xyz) * 0.035;',
 				'	world.xz += vec2(sin(uWind * 1.3 + aInstance5.a), cos(uWind * 0.9 + aInstance5.a * 1.7)) * bend;',
 				'	vWorld = world;',
