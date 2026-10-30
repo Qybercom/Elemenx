@@ -1148,6 +1148,9 @@ Elemenx.Service('Graphics3D', {
 			'uniform highp sampler2DShadow uShadowMap;',
 			'uniform highp sampler2DShadow uShadowNear;',
 			'uniform sampler2D uBounce;',
+			'uniform sampler2D uGlow;',
+			'uniform float uGlowOn;',
+			'uniform vec3 uGlowPlace;',
 			'uniform mat4 uShadowMatrix;',
 			'uniform mat4 uShadowNearMatrix;',
 			'uniform float uShadowBias;',
@@ -1177,9 +1180,14 @@ Elemenx.Service('Graphics3D', {
 			'	return mix(shadowIn(uShadowMap, place, 1.0 / float(textureSize(uShadowMap, 0).x)), 1.0, smoothstep(0.85, 1.0, edge));',
 			'}',
 			'vec3 sunBounce(vec3 position) {',
+			'	if (uGlowOn > 0.5) return texture(uGlow, (position.xz + uGlowPlace.xy) / uGlowPlace.z + 0.5).rgb;',
 			'	if (uBounceOn < 0.5) return vec3(0.0);',
 			'	vec4 at = uShadowMatrix * vec4(position, 1.0);',
 			'	return pow(textureLod(uBounce, at.xy * 0.5 + 0.5, 3.0).rgb, vec3(2.2)) * 0.55;',
+			'}',
+			/* How much of the sky a place sees, of the light of its field. */
+			'float skySeen(vec3 position) {',
+			'	return uGlowOn > 0.5 ? texture(uGlow, (position.xz + uGlowPlace.xy) / uGlowPlace.z + 0.5).a : 1.0;',
 			'}'
 		].join('\n')
 	},
@@ -1482,6 +1490,7 @@ Elemenx.Service('Graphics3D', {
 				var settings = options || {};
 				var handle = gl.createTexture();
 				var texture = {Handle: handle};
+				var slant = settings.Mipmaps ? gl.getExtension('EXT_texture_filter_anisotropic') : null;
 
 				gl.bindTexture(gl.TEXTURE_2D, handle);
 
@@ -1491,6 +1500,10 @@ Elemenx.Service('Graphics3D', {
 
 				if (settings.Mipmaps)
 					gl.generateMipmap(gl.TEXTURE_2D);
+
+				/* A picture seen at a slant stays sharp along its length. */
+				if (settings.Mipmaps && slant)
+					gl.texParameterf(gl.TEXTURE_2D, slant.TEXTURE_MAX_ANISOTROPY_EXT, Math.min(8, gl.getParameter(slant.MAX_TEXTURE_MAX_ANISOTROPY_EXT)));
 
 				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, settings.Repeat ? gl.REPEAT : gl.CLAMP_TO_EDGE);
 				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, settings.Repeat ? gl.REPEAT : gl.CLAMP_TO_EDGE);

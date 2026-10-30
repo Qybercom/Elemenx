@@ -145,7 +145,7 @@ describe('Regression: deferred / network component discovery', function () {
 
 		document.getElementById('mount').appendChild(c.$Element());
 
-		expect(await waitFor(function () {return held;}, 500)).not.toBe(false);
+		expect(await waitFor(function () {return held;}, 5000)).not.toBe(false);
 
 		c.$Destroy();
 

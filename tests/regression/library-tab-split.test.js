@@ -131,6 +131,28 @@ describe('Contract: TabGroup and TabSplit', function () {
 		expect(host.$Element().querySelectorAll('.elemenx-tab-split-group').length).toBe(3);
 	});
 
+	it('keeps a declared pin when its layout is read again, as panels rendered late make it, and an unpin after that', async function () {
+		var host = mount('<div style="width: 800px; height: 400px"><TabSplit><TabRow><TabGroup Group="side"><Tab ID="files" Label="Files" Pinned="true">The files</Tab></TabGroup><TabGroup Group="main"><Tab ID="one" Label="one.js">One</Tab></TabGroup></TabRow></TabSplit></div>');
+		var split;
+
+		await waitFor(function () {
+			return host.$Element().querySelectorAll('.elemenx-tab-split-group .elemenx-tab-panel.active').length === 2;
+		});
+
+		split = Elemenx.Instance(host.$Element().querySelector('.elemenx-tab-split'));
+
+		expect(split.Model().Children[0].Pinned).toEqual(['files']);
+
+		split.Read();
+
+		expect(split.Model().Children[0].Pinned).toEqual(['files']);
+
+		split.Pinned({ID: 'files', Pinned: false});
+		split.Read();
+
+		expect(split.Model().Children[0].Pinned).toEqual([]);
+	});
+
 	it('a tab dropped in the middle of another group goes into it, and a group left without a tab goes', async function () {
 		var host = mount('<div style="width: 800px; height: 400px"><TabSplit><TabRow><TabGroup Group="left"><Tab ID="a" Label="A">Alpha</Tab></TabGroup><TabGroup Group="right"><Tab ID="b" Label="B">Beta</Tab></TabGroup></TabRow></TabSplit></div>');
 		var split;

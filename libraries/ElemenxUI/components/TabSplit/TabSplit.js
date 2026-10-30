@@ -203,6 +203,7 @@ Elemenx.Component('TabSplit', {
 		var known = {};
 		var missing;
 		var copies = this.Own().Copies;
+		var declared = !this.Layout && !this.Own().Touched;
 
 		/* The copies a layout given names are made first; a copy whose tab went is gone with it. */
 		if (this.Layout && !this.Tree)
@@ -253,12 +254,15 @@ Elemenx.Component('TabSplit', {
 			})(this.Find(tree, this.Own().Focused) || this.First(tree));
 		}
 
-		/* A tab declared Pinned is pinned in the layout once, when it first comes: then the layout says it (its menu unpins it). */
+		/*
+		 * A tab declared Pinned is pinned in the layout once, when it first comes: then the layout says it (its menu unpins
+		 * it). A layout read again from the template knows nothing of that, so it is told again.
+		 */
 		this.Walk(tree, {Left: 0, Top: 0, Width: 100, Height: 100}, function (node) {
 			if (node.Split) return;
 
 			node.Tabs.forEach(function (id) {
-				if (!metas[id].Pinned || self.Own().Pinned[id]) return;
+				if (!metas[id].Pinned || self.Own().Pinned[id] && !declared) return;
 
 				self.Own().Pinned[id] = true;
 				node.Pinned = (node.Pinned || []).concat([id]);

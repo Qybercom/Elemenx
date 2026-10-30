@@ -95,6 +95,7 @@ Elemenx.Component('GameScene', {
 			Systems: 'Systems of the application for traits of its own: {Trait: {Update(object, scene), Draw(object, scene)}}.',
 			Time: 'The day of the scene.',
 			Speed: 'The days of the scene a second.',
+			DaySeconds: 'The seconds a day of 24 hours takes, on a body and from space alike, however fast the orbits go (0: as Speed says).',
 			SurfaceSpeed: 'The days a second on the surface of a body (1/120: a day of two minutes).',
 			Shadows: 'The shadows of a sun on a ground, a surface and a model near the view (true).',
 			Quality: {Options: ['', 'low', 'medium', 'high', 'ultra'], Description: 'What the light costs: empty chooses by the graphics card and steps down while frames are late.'},
@@ -118,6 +119,7 @@ Elemenx.Component('GameScene', {
 	Systems: null,
 	Time: 0,
 	Speed: 1,
+	DaySeconds: 0,
 	SurfaceSpeed: 1 / 120,
 	Shadows: true,
 	View: '',
@@ -305,6 +307,9 @@ Elemenx.Component('GameScene', {
 			Target: [0, 0, 0],
 			From: [0, 0, 0],
 			Moving: 1,
+			Flight: null,
+			Pan: [0, 0, 0],
+			Keys: {},
 			Focus: '',
 			Selected: '',
 			Pointers: {},
@@ -312,6 +317,8 @@ Elemenx.Component('GameScene', {
 			Pinch: null,
 			Width: 0,
 			Height: 0,
+			Patience: 90,
+			Steady: 1000,
 			Ratio: Math.min(2, view.devicePixelRatio || 1),
 			Most: Math.min(2, view.devicePixelRatio || 1),
 			Slow: 0,
@@ -418,7 +425,7 @@ Elemenx.Component('GameScene', {
 		}
 
 		/* A spec of an object ({ID, Kind, Parent, Values, Traits, Parts}) of a declaration: each field to its trait, in any case. */
-		function canonical (raw, of) {
+		function canonical (raw, of, given) {
 			var kind = raw.Kind && kinds.Has(raw.Kind) ? raw.Kind : '';
 			var fields = kind || of ? kinds.Fields(kind || of) : {};
 			var common = {clip: 'Clip', soft: 'Soft', biome: 'Biome', houses: 'Houses', radius: 'Radius', type: 'Type', health: 'Health', maxhealth: 'MaxHealth', sight: 'Sight', tall: 'Tall', model: 'Model', roof: 'Roof', speed: 'Speed', shapes: 'Shapes', density: 'Density', size: 'Size', minheight: 'MinHeight', maxheight: 'MaxHeight', maxslope: 'MaxSlope', cover: 'Cover', patch: 'Patch', seed: 'Seed', blocks: 'Blocks', root: 'Root'};
@@ -429,7 +436,7 @@ Elemenx.Component('GameScene', {
 				var value;
 
 				if (key === 'ID' || key === 'Kind' || key === 'Parent' || key === 'Part') return;
-				if (own(places, key) && raw[key] === places[key]) return;
+				if (!given && own(places, key) && raw[key] === places[key]) return;
 
 				value = parsed(raw[key]);
 				field = fields[key.toLowerCase()];
@@ -895,6 +902,9 @@ Elemenx.Component('GameScene', {
 
 		/* Where every object is at a time: in AU (Position) and in the view (World), with its turn (Turn). */
 		function place (time) {
+			/* The days bodies have turned: by the time of the scene, or at the pace of DaySeconds. */
+			var turned = number(self.DaySeconds, 0) ? scene.Seconds / number(self.DaySeconds, 0) : time;
+
 			settle();
 
 			scene.Active.forEach(function (object) {
@@ -952,11 +962,11 @@ Elemenx.Component('GameScene', {
 				/* Its own turn: a body by its day and tilt (one face to its parent without a day), a model by its spin. */
 				if (body) {
 					day = number(body.Day, 24);
-					angle = day ? Math.PI * 2 * time * 24 / day : Math.atan2(object.Relative ? object.Relative[0] : 0, object.Relative ? object.Relative[2] : 1) + Math.PI;
+					angle = day ? Math.PI * 2 * turned * 24 / day : Math.atan2(object.Relative ? object.Relative[0] : 0, object.Relative ? object.Relative[2] : 1) + Math.PI;
 					object.Turn = graphics.Multiply(graphics.Rotation([1, 0, 0], number(body.Tilt, 0) * Math.PI / 180), graphics.Rotation([0, 1, 0], angle));
 				}
 				else if (trait(object, 'Star')) {
-					object.Turn = graphics.Rotation([0, 1, 0], time * 0.1);
+					object.Turn = graphics.Rotation([0, 1, 0], turned * 0.1);
 				}
 				else if (model && !object.Owner && model.Spin) {
 					object.Turn = graphics.Multiply(graphics.Rotation([1, 0, 0], 0.35), graphics.Rotation([0, 1, 0], time * number(model.Spin, 0)));
@@ -1340,24 +1350,42 @@ Elemenx.Component('GameScene', {
 		function adapt (elapsed) {
 			if (!elapsed || !renderer) return;
 
+			/* A quality that was chosen is kept: the picture stays as sharp as it can be. */
+			if (self.Quality) {
+				if (scene.Ratio !== scene.Most) {
+					scene.Ratio = scene.Most;
+
+					renderer.Resize(scene.Width, scene.Height, scene.Ratio);
+				}
+
+				return;
+			}
+
+			scene.Steady++;
+
 			if (elapsed > 0.026) {
 				scene.Slow++;
 				scene.Fast = 0;
 			}
-			else if (elapsed < 0.014) {
+			else if (elapsed < 0.02) {
 				scene.Fast++;
 				scene.Slow = 0;
 			}
 
-			if (scene.Slow > 20 && scene.Ratio > 0.5) {
-				scene.Ratio = Math.max(0.5, scene.Ratio * 0.8);
+			if (scene.Slow > 20 && scene.Ratio > Math.max(0.7, scene.Most * 0.5)) {
+				scene.Ratio = Math.max(0.7, scene.Most * 0.5, scene.Ratio * 0.8);
 				scene.Slow = 0;
+
+				/* It went up and could not hold it: longer before the next try, so the picture does not pump. */
+				if (scene.Steady < 300)
+					scene.Patience = Math.min(3600, scene.Patience * 2);
 
 				renderer.Resize(scene.Width, scene.Height, scene.Ratio);
 			}
-			else if (scene.Fast > 90 && scene.Ratio < scene.Most) {
+			else if (scene.Fast > scene.Patience && scene.Ratio < scene.Most) {
 				scene.Ratio = Math.min(scene.Most, scene.Ratio * 1.15);
 				scene.Fast = 0;
+				scene.Steady = 0;
 
 				renderer.Resize(scene.Width, scene.Height, scene.Ratio);
 			}
@@ -1366,20 +1394,124 @@ Elemenx.Component('GameScene', {
 		/* The view: smoothly to the object in focus (following it as it goes), then round it. */
 		function aim (elapsed) {
 			var focus = scene.Focus ? scene.Objects[scene.Focus] : null;
-			var wanted = focus && focus.World ? focus.World : [0, 0, 0];
 			var camera = scene.Camera;
+			var flight = scene.Flight;
+			var wanted;
+			var moved = scene.Moving;
 			var eased;
 
-			scene.Moving = Math.min(1, scene.Moving + elapsed / 0.9);
-			eased = scene.Moving * scene.Moving * (3 - 2 * scene.Moving);
-			scene.Target = vectors.Lerp(scene.From, wanted, eased);
-			scene.Distance += (scene.Wanted - scene.Distance) * (1 - Math.exp(-elapsed * 9));
+			steer(elapsed);
 
-			camera.Orbit(scene.Target, scene.Yaw, scene.Pitch, scene.Distance);
+			wanted = vectors.Add(focus && focus.World ? focus.World : [0, 0, 0], scene.Pan);
+			scene.Moving = moved = Math.min(1, moved + elapsed / (flight ? flight.Length : 0.9));
+
+			if (flight) {
+				eased = moved * moved * moved * (moved * (moved * 6 - 15) + 10);
+
+				flown(flight, wanted, eased, Math.min(1, moved * 2.5));
+			}
+			else {
+				eased = moved * moved * (3 - 2 * moved);
+				scene.Target = vectors.Lerp(scene.From, wanted, eased);
+				scene.Distance += (scene.Wanted - scene.Distance) * (1 - Math.exp(-elapsed * 9));
+
+				camera.Orbit(scene.Target, scene.Yaw, scene.Pitch, scene.Distance);
+			}
 
 			scene.Eye = camera.Position.slice();
 			camera.Near = Math.max(1e-6, scene.Distance * 0.002);
 			camera.Far = scene.Distance * 40 + extent() * 6;
+		}
+
+		/* The axes of the view: where it looks, to its right, up from it. */
+		function viewAxes () {
+			var forward = vectors.Normalize(vectors.Subtract(scene.Camera.Target, scene.Camera.Position));
+			var right = vectors.Normalize(vectors.Cross(forward, [0, 1, 0]));
+
+			return {Forward: forward, Right: right, Up: vectors.Cross(right, forward)};
+		}
+
+		/* The keys of a free view in space: WASD go, Q and E turn, R and F tilt. */
+		function steer (elapsed) {
+			var keys = scene.Keys;
+			var axes = viewAxes();
+			var speed = scene.Distance * 0.8 * elapsed;
+
+			turnKeys(keys, elapsed);
+
+			if (keys.KeyW)
+				scene.Pan = vectors.Add(scene.Pan, vectors.Scale(axes.Forward, speed));
+
+			if (keys.KeyS)
+				scene.Pan = vectors.Add(scene.Pan, vectors.Scale(axes.Forward, -speed));
+
+			if (keys.KeyD)
+				scene.Pan = vectors.Add(scene.Pan, vectors.Scale(axes.Right, speed));
+
+			if (keys.KeyA)
+				scene.Pan = vectors.Add(scene.Pan, vectors.Scale(axes.Right, -speed));
+		}
+
+		/* Q and E turn the view, R and F tilt it. */
+		function turnKeys (keys, elapsed) {
+			var least = scene.Ground ? 0.04 : -1.5;
+
+			if (keys.KeyQ)
+				scene.Yaw += elapsed * 1.3;
+
+			if (keys.KeyE)
+				scene.Yaw -= elapsed * 1.3;
+
+			if (keys.KeyR)
+				scene.Pitch = Math.min(1.5, scene.Pitch + elapsed);
+
+			if (keys.KeyF)
+				scene.Pitch = Math.max(least, scene.Pitch - elapsed);
+		}
+
+		/* The view moved along the screen by pixels: over a ground it lets the object in focus go. */
+		engine.PanView = function (dx, dy) {
+			var axes = viewAxes();
+			var step = scene.Distance * Math.tan(scene.Camera.Fov * Math.PI / 360) * 2 / Math.max(1, scene.Height);
+			var flat = vectors.Normalize([axes.Forward[0] || 1e-6, 0, axes.Forward[2]]);
+
+			if (scene.Surface) return;
+
+			if (scene.Ground && scene.Ground.Target) {
+				scene.Focus = '';
+				scene.Given.Focus = '';
+				self.Focus = '';
+				scene.Ground.Target = vectors.Add(scene.Ground.Target, vectors.Add(vectors.Scale(axes.Right, -dx * step), vectors.Scale(flat, dy * step / Math.max(0.3, Math.abs(axes.Forward[1])))));
+
+				return;
+			}
+
+			scene.Pan = vectors.Add(scene.Pan, vectors.Add(vectors.Scale(axes.Right, -dx * step), vectors.Scale(axes.Up, dy * step)));
+		};
+
+		/*
+		 * A flight: the eye goes through space from where it was to where it will orbit, over an arc, while the view turns to
+		 * the target in the first part of the way. Nothing else moves, so the system does not seem to turn.
+		 */
+		function flown (flight, wanted, eased, turned) {
+			var camera = scene.Camera;
+			var look = vectors.Lerp(flight.Target, wanted, turned * turned * (3 - 2 * turned));
+			var eye;
+
+			camera.Orbit(wanted, scene.Yaw, scene.Pitch, scene.Wanted);
+
+			eye = vectors.Lerp(flight.Eye, camera.Position, eased);
+			eye[1] += Math.sin(eased * Math.PI) * flight.Arc;
+
+			camera.Position = eye;
+			camera.Target = look;
+			scene.Target = look;
+			scene.Distance = Math.max(1e-6, vectors.Distance(eye, look));
+
+			if (eased >= 1) {
+				scene.Flight = null;
+				scene.Distance = scene.Wanted;
+			}
 		}
 
 		/* How far the scene reaches: the farthest object round the middle. */
@@ -1419,11 +1551,13 @@ Elemenx.Component('GameScene', {
 		function focusOn (id, quiet) {
 			var object = id ? scene.Objects[id] : null;
 			var star;
+			var travel;
 
 			if (id && !object) return false;
 
 			scene.From = scene.Target.slice();
 			scene.Moving = 0;
+			scene.Pan = [0, 0, 0];
 			scene.Focus = object ? object.ID : '';
 			scene.Wanted = object ? closeness(object) : scene.Ground ? scene.Ground.Field.Size * 0.45 : extent() * 1.6;
 			scene.Given.Focus = scene.Focus;
@@ -1437,6 +1571,13 @@ Elemenx.Component('GameScene', {
 
 				if (star && (star.World[0] - object.World[0] || star.World[2] - object.World[2]))
 					scene.Yaw = Math.atan2(star.World[0] - object.World[0], star.World[2] - object.World[2]) + 0.75;
+			}
+
+			scene.Flight = null;
+
+			if (!quiet && !scene.Ground && !scene.Surface) {
+				travel = vectors.Distance(scene.Eye, object && object.World ? object.World : [0, 0, 0]);
+				scene.Flight = {Eye: scene.Eye.slice(), Target: scene.Target.slice(), Length: Math.min(3.6, 1.4 + Math.log(1 + travel / Math.max(scene.Wanted, 1e-6)) * 0.3), Arc: travel * 0.08};
 			}
 
 			if (!quiet)
@@ -1456,7 +1597,9 @@ Elemenx.Component('GameScene', {
 			var height = renderer.Height;
 			var aspect = width / Math.max(1, height);
 			var viewMatrix = graphics.LookAt([0, 0, 0], vectors.Subtract(camera.Target, camera.Position), camera.Up);
-			var matrix = graphics.Multiply(engine.PostJitter(camera.Projection(aspect)), viewMatrix);
+			var projection = camera.Projection(aspect);
+			var plain = graphics.Multiply(projection, viewMatrix);
+			var matrix = scene.Ground ? graphics.Multiply(engine.PostJitter(projection), viewMatrix) : plain;
 			var right = [viewMatrix[0], viewMatrix[4], viewMatrix[8]];
 			var up = [viewMatrix[1], viewMatrix[5], viewMatrix[9]];
 			var light = lights();
@@ -1471,6 +1614,10 @@ Elemenx.Component('GameScene', {
 
 			nodes = scene.Ground ? groundPatches() : null;
 			shade = shadowOfScene(models, nodes);
+
+			if (scene.Ground)
+				Object.assign(shade, engine.FieldLight(matrix));
+
 			posted = engine.PostBegin();
 
 			var common = Object.assign({uViewProjection: matrix, uCamera: [0, 0, 0], uLightPositions: light.Positions, uLightColors: light.Colors, uLightCount: light.Count, uSkyLight: scene.Ground ? [0.3, 0.36, 0.46] : [0.004, 0.004, 0.006], uFloorLight: scene.Ground ? [0.1, 0.1, 0.09] : [0.004, 0.004, 0.006], uAmbient: scene.Ground ? [0.17, 0.19, 0.23] : [0.025, 0.027, 0.035], uOccluderCount: 0, uOccluders: new Array(16).fill(0), uTime: scene.Time, uHighlight: [0, 0, 0, 0], uWind: scene.Seconds}, shade);
@@ -1570,12 +1717,12 @@ Elemenx.Component('GameScene', {
 				var list = models[name];
 
 				if (list.Material) {
-					renderer.Draw(shape(name), list.Skinned ? gpu.PbrSkinned : gpu.Pbr, Object.assign(uniforms({uOrigin: originOf(list), uPalette: list.Skinned ? palette(list.Skinned) : gpu.White, uJointOffset: list.Offset, uSoftness: list.Soft}), surface(list)), {Cull: list.Material.DoubleSided ? 'none' : 'back', Blend: list.Material.Alpha === 'BLEND' ? 'alpha' : 'none'});
+					renderer.Draw(shape(name), list.Skinned ? gpu.PbrSkinned : gpu.Pbr, Object.assign(uniforms({uOrigin: originOf(list), uPalette: list.Skinned ? palette(list.Skinned) : gpu.White, uJointOffset: list.Offset, uSoftness: list.Soft, uMoving: list.Still || list.Material.Alpha === 'BLEND' ? 0 : 1}), surface(list)), {Cull: list.Material.DoubleSided ? 'none' : 'back', Blend: list.Material.Alpha === 'BLEND' ? 'alpha' : 'none'});
 
 					return;
 				}
 
-				renderer.Draw(shape(name), gpu.Many, uniforms({uShine: list.Matte ? 8 : 36, uSpecular: list.Matte ? 0.05 : 0.5, uRough: list.Rough, uOrigin: originOf(list)}));
+				renderer.Draw(shape(name), gpu.Many, uniforms({uShine: list.Matte ? 8 : 36, uSpecular: list.Matte ? 0.05 : 0.5, uRough: list.Rough, uOrigin: originOf(list), uMoving: list.Still ? 0 : 1}));
 			});
 
 			engine.ScatterDraw(common, matrix);
@@ -1595,7 +1742,7 @@ Elemenx.Component('GameScene', {
 			}
 
 			if (posted)
-				engine.PostEnd(scene.Ground ? {Matrix: matrix, Eye: scene.Eye, Sun: scene.Ground.Sun, SunColor: scene.Ground.SunColor, Air: [0.55, 0.72, 1, 0.95], Fog: scene.Camera.Ortho ? 0 : 0.4 / scene.Ground.Field.Size, Sky: true, Reach: Math.max(1, scene.Distance * 0.05)} : {Matrix: matrix});
+				engine.PostEnd(scene.Ground ? {Matrix: matrix, Plain: plain, Eye: scene.Eye, Sun: scene.Ground.Sun, SunColor: scene.Ground.SunColor, Air: [0.55, 0.72, 1, 0.95], Fog: scene.Camera.Ortho ? 0 : 0.4 / scene.Ground.Field.Size, Sky: true, Reach: Math.max(1, scene.Distance * 0.05)} : {Matrix: matrix});
 		}
 
 		/* The copies of the shapes of a frame: the rocks of the belts, the models of the objects, their pieces as they stand now. */
@@ -1924,7 +2071,7 @@ Elemenx.Component('GameScene', {
 
 			(nearMap || gpu.ShadowMap).End();
 
-			return {uShadowMap: gpu.ShadowMap, uShadowNear: nearMap || gpu.ShadowMap, uBounce: gpu.NoBounce, uBounceOn: 0, uShadowMatrix: matrix, uShadowBias: texel * 1.6, uShadowOn: 1};
+			return {uShadowMap: gpu.ShadowMap, uShadowNear: nearMap || gpu.ShadowMap, uBounce: gpu.NoBounce, uBounceOn: 0, uGlow: gpu.NoBounce, uGlowOn: 0, uShadowMatrix: matrix, uShadowBias: texel * 1.6, uShadowOn: 1};
 		}
 
 		/* A second map, of what is near the eye: its shadows are as sharp as a texel of it is small. */
@@ -1938,6 +2085,33 @@ Elemenx.Component('GameScene', {
 
 			return shade;
 		}
+
+		/*
+		 * A map of all of a ground from above, colors and heights: of the land alone, or with all that stands on it. It is
+		 * what the light of a field is worked out on.
+		 */
+		engine.GroundTop = function (matrix, things, view) {
+			var ground = scene.Ground;
+			var field = ground.Field;
+
+			if (!gpu.TopLand) {
+				gpu.TopLand = renderer.Program(shaders.LandVertex, shaders.Top);
+				gpu.TopMany = renderer.Program(shaders.Instanced, shaders.Top);
+			}
+
+			if (!ground.TopMesh)
+				ground.TopMesh = renderer.Mesh(field.Chunk(0, 0, field.Size, 128));
+
+			renderer.Draw(ground.TopMesh, gpu.TopLand, {uViewProjection: matrix, uOffset: [0, 0, 0], uCenter: [0, 0, 0]}, {Cull: 'none'});
+
+			if (!things) return;
+
+			Object.keys(scene.StillLists || {}).forEach(function (name) {
+				renderer.Draw(shape(name), gpu.TopMany, {uViewProjection: matrix, uOrigin: [0, 0, 0], uWind: 0}, {Cull: 'none'});
+			});
+
+			engine.ScatterAll(matrix, shaders.Top, view);
+		};
 
 		/* What the sun sees, in colors and blurred: the light that bounces off it into what is near. */
 		function bounced (shade, nodes, models) {
@@ -1981,7 +2155,7 @@ Elemenx.Component('GameScene', {
 				gpu.NoBounce = renderer.Texture({Width: 1, Height: 1, Data: new Uint8Array([0, 0, 0, 255])}, {Nearest: true});
 			}
 
-			return {uShadowOn: 0, uShadowMap: gpu.NoShadow, uShadowNear: gpu.NoShadow, uBounce: gpu.NoBounce, uBounceOn: 0};
+			return {uShadowOn: 0, uShadowMap: gpu.NoShadow, uShadowNear: gpu.NoShadow, uBounce: gpu.NoBounce, uBounceOn: 0, uGlow: gpu.NoBounce, uGlowOn: 0};
 		}
 
 		function shadowsWanted () {
@@ -2024,7 +2198,7 @@ Elemenx.Component('GameScene', {
 				if (set.Cascades > 1)
 					closer(made, ground.Sun, ground.Target, scene.Eye, extent * 0.3, Math.max(extent * 2, ground.Field.Top * 4), casters);
 
-				return set.Bounce ? bounced(made, nodes, models) : made;
+				return set.Bounce && !engine.FieldOn() ? bounced(made, nodes, models) : made;
 			}
 
 			star = scene.Order.filter(function (object) {
@@ -2193,6 +2367,9 @@ Elemenx.Component('GameScene', {
 			Object.keys(scene.Ground.Nodes).forEach(function (key) {
 				scene.Ground.Nodes[key].Mesh.Destroy();
 			});
+
+			if (scene.Ground.TopMesh)
+				scene.Ground.TopMesh.Destroy();
 
 			scene.Ground = null;
 		}
@@ -2419,6 +2596,8 @@ Elemenx.Component('GameScene', {
 			if (keys.ArrowLeft || keys.KeyA)
 				ground.Target = vectors.Add(ground.Target, vectors.Scale(right, -speed));
 
+			turnKeys(keys, elapsed);
+
 			if (focus && focus.World && keys.Follow !== false)
 				ground.Target = vectors.Lerp(ground.Target, focus.World, 1 - Math.exp(-elapsed * 6));
 
@@ -2429,7 +2608,7 @@ Elemenx.Component('GameScene', {
 
 			ground.Target[1] = Math.max(0, field.Height(ground.Target[0], ground.Target[2]));
 			scene.Distance += (scene.Wanted - scene.Distance) * (1 - Math.exp(-elapsed * 9));
-			scene.Pitch = Math.max(0.08, Math.min(1.5, scene.Pitch));
+			scene.Pitch = Math.max(0.04, Math.min(1.5, scene.Pitch));
 
 			/* In parallel rays the distance is the height of the view; the eye stands far enough to see all of it. */
 			if (view) {
@@ -2478,7 +2657,8 @@ Elemenx.Component('GameScene', {
 			var ground = scene.Ground;
 			var field = ground.Field;
 			var wanted = [];
-			var built = 0;
+			var missing = [];
+			var started = window.performance.now();
 
 			/* A map of cells is of one piece. */
 			if (field.Whole) {
@@ -2490,40 +2670,67 @@ Elemenx.Component('GameScene', {
 				return [ground.Nodes.whole];
 			}
 
-			function visit (x, z, size, level) {
-				var key = x.toFixed(3) + ':' + z.toFixed(3) + ':' + level;
-				var near = vectors.Distance(scene.Eye, [x, Math.max(0, field.Height(x, z)), z]);
-				var half = size / 2;
-
-				if (level < 6 && near < size * 1.4) {
-					visit(x - half / 2, z - half / 2, half, level + 1);
-					visit(x + half / 2, z - half / 2, half, level + 1);
-					visit(x - half / 2, z + half / 2, half, level + 1);
-					visit(x + half / 2, z + half / 2, half, level + 1);
-
-					return;
-				}
-
-				wanted.push({Key: key, X: x, Z: z, Size: size});
+			function keyOf (x, z, level) {
+				return x.toFixed(3) + ':' + z.toFixed(3) + ':' + level;
 			}
 
-			visit(0, 0, field.Size, 0);
+			function build (x, z, size, level) {
+				ground.Nodes[keyOf(x, z, level)] = {Mesh: renderer.Mesh(field.Chunk(x, z, size, 32)), Center: [x, 0, z], Used: ground.Frame};
+			}
+
+			/*
+			 * A square gives way to its four parts only when all of them are made: until then it stays, coarser, and there is
+			 * never a hole in the ground. Squares in use keep their parents, so going back up needs nothing to be made.
+			 */
+			function visit (x, z, size, level) {
+				var near = vectors.Distance(scene.Eye, [x, Math.max(0, field.Height(x, z)), z]);
+				var node = ground.Nodes[keyOf(x, z, level)];
+				var half = size / 2;
+				var parts = [[x - half / 2, z - half / 2], [x + half / 2, z - half / 2], [x - half / 2, z + half / 2], [x + half / 2, z + half / 2]];
+				var absent;
+
+				node.Used = ground.Frame;
+
+				if (level < 6 && near < size * 1.4) {
+					absent = parts.filter(function (part) {
+						return !ground.Nodes[keyOf(part[0], part[1], level + 1)];
+					});
+
+					if (!absent.length) {
+						parts.forEach(function (part) {
+							visit(part[0], part[1], half, level + 1);
+						});
+
+						return;
+					}
+
+					absent.forEach(function (part) {
+						missing.push({X: part[0], Z: part[1], Size: half, Level: level + 1, Near: near});
+					});
+				}
+
+				wanted.push(node);
+			}
 
 			ground.Frame++;
 
-			return wanted.map(function (want) {
-				var node = ground.Nodes[want.Key];
+			if (!ground.Nodes[keyOf(0, 0, 0)])
+				build(0, 0, field.Size, 0);
 
-				if (!node && built < 3) {
-					node = ground.Nodes[want.Key] = {Mesh: renderer.Mesh(field.Chunk(want.X, want.Z, want.Size, 32)), Center: [want.X, 0, want.Z]};
-					built++;
-				}
+			visit(0, 0, field.Size, 0);
 
-				if (node)
-					node.Used = ground.Frame;
+			/* The nearest first, for as long as a frame can spare. */
+			missing.sort(function (a, b) {
+				return a.Near - b.Near;
+			});
 
-				return node;
-			}).filter(Boolean);
+			missing.some(function (one) {
+				build(one.X, one.Z, one.Size, one.Level);
+
+				return window.performance.now() - started > 4;
+			});
+
+			return wanted;
 		}
 
 		/* The water, over all else: it shows what was drawn before it, mirrored and through it. */
@@ -2538,7 +2745,7 @@ Elemenx.Component('GameScene', {
 			if (!gpu.Water)
 				gpu.Water = renderer.Mesh(graphics.Plane({Width: 1, Depth: 1, Segments: 1}));
 
-			renderer.Draw(gpu.Water, gpu.Sea, {uViewProjection: matrix, uModel: graphics.Compose(vectors.Subtract([0, 0, 0], scene.Eye), null, field.Size * 1.6), uSun: ground.Sun, uSunColor: ground.SunColor, uAir: [0.55, 0.72, 1, 0.95], uFog: fog, uSeen: seen ? seen.Color : gpu.NoBounce, uSeenDepth: seen ? seen.Depth : gpu.NoBounce, uMirror: seen ? 1 : 0}, {Blend: 'alpha', DepthWrite: false, Cull: 'none'});
+			renderer.Draw(gpu.Water, gpu.Sea, {uViewProjection: matrix, uModel: graphics.Compose(vectors.Subtract([0, 0, 0], scene.Eye), null, field.Size * 1.6), uSun: ground.Sun, uSunColor: ground.SunColor, uAir: [0.55, 0.72, 1, 0.95], uFog: fog, uSeen: seen ? seen.Color : gpu.NoBounce, uSeenDepth: seen ? seen.Depth : gpu.NoBounce, uMirror: seen ? 1 : 0, uEye: scene.Eye, uTime: scene.Seconds}, {Blend: 'alpha', DepthWrite: false, Cull: 'none'});
 		}
 
 		/* The sky, the ground and its water, under the things that stand on it. */
@@ -2552,7 +2759,7 @@ Elemenx.Component('GameScene', {
 				renderer.Draw(gpu.Quad, gpu.Sky, {uInverse: graphics.Invert(matrix), uSun: ground.Sun, uSunColor: ground.SunColor, uAir: air, uUp: [0, 1, 0], uHigh: 0}, {Depth: false, DepthWrite: false, Blend: 'alpha', Cull: 'none'});
 
 			nodes.forEach(function (node) {
-				renderer.Draw(node.Mesh, gpu.Land, Object.assign({uViewProjection: matrix, uOffset: vectors.Subtract(node.Center, scene.Eye), uSun: ground.Sun, uSunColor: ground.SunColor, uAir: air, uFog: fog, uSkyLight: [0.3, 0.36, 0.46], uFloorLight: [0.1, 0.1, 0.09]}, shade), {Cull: 'back'});
+				renderer.Draw(node.Mesh, gpu.Land, Object.assign({uViewProjection: matrix, uOffset: vectors.Subtract(node.Center, scene.Eye), uCenter: node.Center, uSun: ground.Sun, uSunColor: ground.SunColor, uAir: air, uFog: fog, uSkyLight: [0.3, 0.36, 0.46], uFloorLight: [0.1, 0.1, 0.09]}, shade), {Cull: 'back'});
 			});
 
 			Object.keys(ground.Nodes).forEach(function (key) {
@@ -2577,6 +2784,9 @@ Elemenx.Component('GameScene', {
 			var surface = object ? trait(object, 'Surface') : null;
 			var type = surface ? surface.Type : 'rocky';
 			var up;
+			var high;
+			var arrive;
+			var sweep = 0.5;
 			var relief = {terran: 8, ocean: 6, desert: 7, rocky: 9, moon: 10, dwarf: 6, ice: 5, lava: 6};
 
 			if (!object || !trait(object, 'Body') || type === 'gas' || type === 'ice-giant') return false;
@@ -2588,15 +2798,25 @@ Elemenx.Component('GameScene', {
 			/* The direction in the frame of the body: its own turn taken away, so the ground under the eye stays. */
 			up = graphics.Apply(graphics.Invert(object.Turn) || graphics.Identity(), up);
 
+			/* It starts where the eye stands now: at the height from which the body looks as large as it does from here. */
+			high = Math.max(object.Radius * 0.4, Math.min(object.Radius * 8, object.Radius * (vectors.Distance(scene.Camera.Position, object.World) / Math.max(object.Size, 1e-6) - 1)));
+			arrive = settings.Altitude === undefined ? 0.6 : Math.max(0.0015, Number(settings.Altitude));
+
+			/* A place it was told comes straight under it; else the ground passes under the eye on the way down. */
+			if (settings.Latitude !== undefined)
+				sweep = 0;
+
 			scene.Surface = {
 				ID: object.ID,
 				Field: terrain.Sphere({Radius: object.Radius, Height: relief[type] || 6, Seed: object.Seed, Ocean: object.Look.Ocean, Type: type}),
 				Nodes: {},
 				Up: vectors.Normalize(up),
 				Yaw: 0,
-				Pitch: -1.3,
-				Altitude: object.Radius * 1.4,
-				Wanted: settings.Altitude === undefined ? 0.6 : Math.max(0.0015, Number(settings.Altitude)),
+				Pitch: settings.Instant ? -0.2 : -1.52,
+				Altitude: settings.Instant ? arrive : high,
+				Wanted: arrive,
+				Way: settings.Instant ? null : {Time: 0, Length: 9, From: high, Sweep: sweep, Done: 0, Pitch: -1.52},
+				Heat: 0,
 				Rising: false,
 				Keys: {},
 				Frame: 0
@@ -2618,6 +2838,7 @@ Elemenx.Component('GameScene', {
 
 			surface.Rising = true;
 			surface.Wanted = surface.Field.Radius * 1.6;
+			surface.Way = {Time: 0, Length: 8, From: surface.Altitude, Sweep: 0.3, Done: 0, Pitch: surface.Pitch};
 
 			return true;
 		}
@@ -2639,6 +2860,47 @@ Elemenx.Component('GameScene', {
 			return {Up: up, East: east, North: north};
 		}
 
+		/*
+		 * The way down or up, in one piece: the altitude goes evenly on its scale, the ground passes under the eye, and the
+		 * eye looks at the body from high up and at the horizon near the ground (going up: ahead first, then back at the body).
+		 */
+		function flyWay (surface, elapsed) {
+			var way = surface.Way;
+			var field = surface.Field;
+			var t = Math.min(1, (way.Time += elapsed) / way.Length);
+			var eased = t * t * (3 - 2 * t);
+			var axes = ground(surface.Up);
+			var heading = vectors.Add(vectors.Scale(axes.North, Math.cos(surface.Yaw)), vectors.Scale(axes.East, Math.sin(surface.Yaw)));
+			var air = scene.Objects[surface.ID] ? scene.Objects[surface.ID].Look.Atmosphere[3] : 0;
+			var turned;
+
+			surface.Altitude = Math.exp(Math.log(way.From) + (Math.log(Math.max(0.0005, surface.Wanted)) - Math.log(way.From)) * eased);
+			surface.Up = vectors.Normalize(vectors.Add(surface.Up, vectors.Scale(heading, (eased - way.Done) * way.Sweep)));
+			way.Done = eased;
+
+			if (surface.Rising) {
+				turned = Math.max(0, Math.min(1, (t - 0.4) / 0.55));
+				surface.Heat = 0;
+
+				if (!scene.Drag)
+					surface.Pitch = t < 0.3 ? way.Pitch + (0.15 - way.Pitch) * (t / 0.3) : 0.15 + (-1.52 - 0.15) * turned * turned * (3 - 2 * turned);
+			}
+			else {
+				turned = Math.max(0, Math.min(1, (t - 0.35) / 0.5));
+				surface.Heat = air * 0.2 * Math.pow(Math.max(0, 1 - Math.abs(Math.log(surface.Altitude / 80)) / 1.4), 2);
+
+				if (!scene.Drag)
+					surface.Pitch = way.Pitch + (-0.15 - way.Pitch) * turned * turned * (3 - 2 * turned);
+			}
+
+			if (t >= 1) {
+				surface.Way = null;
+				surface.Heat = 0;
+			}
+
+			return field;
+		}
+
 		/* The eye on the surface: its place, where it looks, and a step of its altitude, its keys and its rising. */
 		function surfaceStep (elapsed) {
 			var surface = scene.Surface;
@@ -2652,10 +2914,20 @@ Elemenx.Component('GameScene', {
 			var eye;
 			var look;
 
-			surface.Altitude = Math.exp(Math.log(Math.max(0.0005, surface.Altitude)) + (Math.log(Math.max(0.0005, surface.Wanted)) - Math.log(Math.max(0.0005, surface.Altitude))) * (1 - Math.exp(-elapsed * (surface.Rising ? 1.6 : 1.2))));
+			if (surface.Way) flyWay(surface, elapsed);
+			else surface.Altitude = Math.exp(Math.log(Math.max(0.0005, surface.Altitude)) + (Math.log(Math.max(0.0005, surface.Wanted)) - Math.log(Math.max(0.0005, surface.Altitude))) * (1 - Math.exp(-elapsed * 1.2)));
 
-			if (surface.Pitch < -0.2 && !surface.Rising && surface.Altitude < field.Radius * 0.2)
-				surface.Pitch += (-0.2 - surface.Pitch) * (1 - Math.exp(-elapsed * 1.5));
+			if (keys.KeyQ)
+				surface.Yaw -= elapsed * 1.3;
+
+			if (keys.KeyE)
+				surface.Yaw += elapsed * 1.3;
+
+			if (keys.KeyR)
+				surface.Pitch = Math.min(1.4, surface.Pitch + elapsed);
+
+			if (keys.KeyF)
+				surface.Pitch = Math.max(-1.55, surface.Pitch - elapsed);
 
 			if (surface.Rising && surface.Altitude > field.Radius * 1.5) {
 				leave();
@@ -2696,6 +2968,7 @@ Elemenx.Component('GameScene', {
 		function leave () {
 			var surface = scene.Surface;
 			var object = surface ? scene.Objects[surface.ID] : null;
+			var away;
 
 			Object.keys(surface.Nodes).forEach(function (key) {
 				if (surface.Nodes[key].Mesh)
@@ -2706,8 +2979,18 @@ Elemenx.Component('GameScene', {
 			labels.hidden = false;
 			self.Landed = '';
 
-			if (object)
+			if (object) {
 				focusOn(object.ID, true);
+
+				/* The view of space takes over where the way up ended: the body as large, on the same side. */
+				place(scene.Time);
+
+				away = graphics.Apply(object.Turn || graphics.Identity(), surface.Up);
+				scene.Yaw = Math.atan2(away[0], away[2]);
+				scene.Pitch = Math.asin(Math.max(-1, Math.min(1, away[1])));
+				scene.Distance = scene.Wanted = object.Size * (surface.Field.Radius + surface.Altitude) / surface.Field.Radius;
+				scene.Moving = 1;
+			}
 
 			self.$Emit('takeoff', {ID: surface.ID});
 		}
@@ -2718,53 +3001,88 @@ Elemenx.Component('GameScene', {
 			var field = surface.Field;
 			var wanted = [];
 			var horizon = Math.acos(Math.min(1, field.Radius / (field.Radius + Math.max(0.001, surface.Altitude) + field.Height)));
-			var built = 0;
+			var missing = [];
+			var started = window.performance.now();
 			var face;
 
+			function keyOf (face, u, v, level) {
+				return face + ':' + u.toFixed(6) + ':' + v.toFixed(6) + ':' + level;
+			}
+
+			function build (face, u, v, size, level) {
+				var made = field.Patch(face, u, v, size, 24);
+
+				surface.Nodes[keyOf(face, u, v, level)] = {Mesh: renderer.Mesh(made.Geometry), Center: made.Center, Used: surface.Frame};
+			}
+
+			/* Behind the horizon: not drawn. */
+			function hidden (direction, size) {
+				return Math.acos(Math.max(-1, Math.min(1, vectors.Dot(direction, vectors.Normalize(surface.Eye))))) - size * 0.9 > horizon + 0.05;
+			}
+
+			/* As on a map: a square gives way to its parts only when all those in view are made, so there is never a hole. */
 			function visit (face, u, v, size, level) {
-				var key = face + ':' + u.toFixed(6) + ':' + v.toFixed(6) + ':' + level;
 				var direction = vectors.Normalize(terrain.Face(face, u, v));
-				var middle = vectors.Scale(direction, field.Radius);
-				var span = field.Radius * size * 0.75;
-				var angle = Math.acos(Math.max(-1, Math.min(1, vectors.Dot(direction, vectors.Normalize(surface.Eye)))));
-				var near = vectors.Distance(middle, surface.Eye);
+				var near = vectors.Distance(vectors.Scale(direction, field.Radius), surface.Eye);
+				var node;
 				var half = size / 2;
+				var parts;
+				var absent;
 
-				/* Behind the horizon: not drawn. */
-				if (angle - size * 0.9 > horizon + 0.05) return;
+				if (hidden(direction, size)) return;
 
-				if (level < 17 && near < span * 2.2) {
-					visit(face, u - half / 2, v - half / 2, half, level + 1);
-					visit(face, u + half / 2, v - half / 2, half, level + 1);
-					visit(face, u - half / 2, v + half / 2, half, level + 1);
-					visit(face, u + half / 2, v + half / 2, half, level + 1);
+				node = surface.Nodes[keyOf(face, u, v, level)];
 
-					return;
+				if (!node) {
+					build(face, u, v, size, level);
+
+					node = surface.Nodes[keyOf(face, u, v, level)];
 				}
 
-				wanted.push({Key: key, Face: face, U: u, V: v, Size: size});
+				node.Used = surface.Frame;
+
+				if (level < 17 && near < field.Radius * size * 0.75 * 2.2) {
+					parts = [[u - half / 2, v - half / 2], [u + half / 2, v - half / 2], [u - half / 2, v + half / 2], [u + half / 2, v + half / 2]].filter(function (part) {
+						return !hidden(vectors.Normalize(terrain.Face(face, part[0], part[1])), half);
+					});
+
+					absent = parts.filter(function (part) {
+						return !surface.Nodes[keyOf(face, part[0], part[1], level + 1)];
+					});
+
+					if (!absent.length) {
+						parts.forEach(function (part) {
+							visit(face, part[0], part[1], half, level + 1);
+						});
+
+						return;
+					}
+
+					absent.forEach(function (part) {
+						missing.push({Face: face, U: part[0], V: part[1], Size: half, Level: level + 1, Near: near});
+					});
+				}
+
+				wanted.push(node);
 			}
+
+			surface.Frame++;
 
 			for (face = 0; face < 6; face++)
 				visit(face, 0, 0, 2, 0);
 
-			surface.Frame++;
+			/* The nearest first, for as long as a frame can spare. */
+			missing.sort(function (a, b) {
+				return a.Near - b.Near;
+			});
 
-			return wanted.map(function (want) {
-				var node = surface.Nodes[want.Key];
-				var made;
+			missing.some(function (one) {
+				build(one.Face, one.U, one.V, one.Size, one.Level);
 
-				if (!node && built < 4) {
-					made = field.Patch(want.Face, want.U, want.V, want.Size, 24);
-					node = surface.Nodes[want.Key] = {Mesh: renderer.Mesh(made.Geometry), Center: made.Center};
-					built++;
-				}
+				return window.performance.now() - started > 5;
+			});
 
-				if (node)
-					node.Used = surface.Frame;
-
-				return node;
-			}).filter(Boolean);
+			return wanted;
 		}
 
 		/* Squares not drawn for a while are let go. */
@@ -2837,13 +3155,15 @@ Elemenx.Component('GameScene', {
 					uWater: object.Look.Water,
 					uIce: object.Look.Ice,
 					uAir: air,
+					uRadius: field.Radius,
+					uTime: scene.Seconds,
 					uFog: Math.max(field.Radius * 0.02, far * 0.6),
 					uHigh: Math.min(1, surface.Altitude / thickness)
 				}, shade), {Cull: 'back'});
 			});
 
 			if (posted)
-				engine.PostEnd({Matrix: matrix, Sun: sun, SunColor: sunColor, Sky: false});
+				engine.PostEnd({Matrix: matrix, Sun: sun, SunColor: sunColor, Sky: false, Heat: surface.Heat});
 
 			forget();
 		}
@@ -3126,6 +3446,7 @@ Elemenx.Component('GameScene', {
 		engine.Local = localPoint;
 		engine.Select = select;
 		engine.FocusOn = focusOn;
+		engine.Canonical = canonical;
 		engine.Describe = describe;
 		engine.Renderer = renderer;
 		engine.Card = card;
@@ -3351,12 +3672,12 @@ Elemenx.Component('GameScene', {
 
 		if (ids.length === 2) {
 			scene.Drag = null;
-			scene.Pinch = {Distance: Math.max(1, Math.sqrt(Math.pow(pointers[ids[0]].X - pointers[ids[1]].X, 2) + Math.pow(pointers[ids[0]].Y - pointers[ids[1]].Y, 2))), Wanted: scene.Wanted};
+			scene.Pinch = {Distance: Math.max(1, Math.sqrt(Math.pow(pointers[ids[0]].X - pointers[ids[1]].X, 2) + Math.pow(pointers[ids[0]].Y - pointers[ids[1]].Y, 2))), Wanted: scene.Wanted, X: (pointers[ids[0]].X + pointers[ids[1]].X) / 2, Y: (pointers[ids[0]].Y + pointers[ids[1]].Y) / 2};
 
 			return;
 		}
 
-		scene.Drag = {X: point.X, Y: point.Y, Yaw: scene.Surface ? scene.Surface.Yaw : scene.Yaw, Pitch: scene.Surface ? scene.Surface.Pitch : scene.Pitch, Moved: false, Button: event.button};
+		scene.Drag = {X: point.X, Y: point.Y, LastX: point.X, LastY: point.Y, Yaw: scene.Surface ? scene.Surface.Yaw : scene.Yaw, Pitch: scene.Surface ? scene.Surface.Pitch : scene.Pitch, Moved: false, Button: event.button, Pan: event.button === 1 || event.shiftKey};
 	},
 
 	PointerMove: function (event) {
@@ -3377,6 +3698,12 @@ Elemenx.Component('GameScene', {
 
 			this.ZoomTo(scene.Pinch.Wanted * scene.Pinch.Distance / distance, true);
 
+			/* Two fingers that go together carry the view. */
+			this.Engine().PanView((pointers[ids[0]].X + pointers[ids[1]].X) / 2 - scene.Pinch.X, (pointers[ids[0]].Y + pointers[ids[1]].Y) / 2 - scene.Pinch.Y);
+
+			scene.Pinch.X = (pointers[ids[0]].X + pointers[ids[1]].X) / 2;
+			scene.Pinch.Y = (pointers[ids[0]].Y + pointers[ids[1]].Y) / 2;
+
 			return;
 		}
 
@@ -3388,6 +3715,16 @@ Elemenx.Component('GameScene', {
 		if (!drag.Moved) return;
 
 		this.Dragging = true;
+
+		/* The middle button, or a drag with Shift, carries the view along the screen. */
+		if (drag.Pan) {
+			this.Engine().PanView(point.X - drag.LastX, point.Y - drag.LastY);
+
+			drag.LastX = point.X;
+			drag.LastY = point.Y;
+
+			return;
+		}
 
 		/* On the ground the eye looks round: right to turn right, up to look up. */
 		if (scene.Surface) {
@@ -3448,7 +3785,7 @@ Elemenx.Component('GameScene', {
 	ZoomTo: function (wanted, exact) {
 		var scene = this.Scene();
 		var focus = scene.Focus ? scene.Objects[scene.Focus] : null;
-		var least = scene.Ground ? 4 : focus && focus.Size ? focus.Size * 1.4 : 0.05;
+		var least = scene.Ground ? 1.5 : focus && focus.Size ? focus.Size * 1.4 : 0.05;
 		var most = scene.Ground ? scene.Ground.Field.Size * 1.2 : this.Reach();
 
 		scene.Wanted = Math.max(least, Math.min(most, wanted));
@@ -3522,7 +3859,7 @@ Elemenx.Component('GameScene', {
 			else if (event.key === 'Escape') this.FocusOn('');
 			else scene.Ground.Keys[event.code] = true;
 
-			if (/^(Arrow|Key[WASD])/.test(event.code))
+			if (/^(Arrow|Key[WASDQERF])/.test(event.code))
 				event.preventDefault();
 
 			return;
@@ -3533,7 +3870,7 @@ Elemenx.Component('GameScene', {
 			if (event.key === 'Escape') this.TakeOff();
 			else scene.Surface.Keys[event.code] = true;
 
-			if (/^(Arrow|Key[WASD])/.test(event.code) || event.key === 'Escape')
+			if (/^(Arrow|Key[WASDQERF])/.test(event.code) || event.key === 'Escape')
 				event.preventDefault();
 
 			return;
@@ -3544,6 +3881,14 @@ Elemenx.Component('GameScene', {
 		var handled = true;
 
 		if (event.target !== this.$Element() && event.key !== 'Escape') return;
+
+		if (/^Key[WASDQERF]$/.test(event.code)) {
+			scene.Keys[event.code] = true;
+
+			event.preventDefault();
+
+			return;
+		}
 
 		if (event.key === 'ArrowLeft') scene.Yaw += 0.08;
 		else if (event.key === 'ArrowRight') scene.Yaw -= 0.08;
@@ -3568,6 +3913,9 @@ Elemenx.Component('GameScene', {
 		}
 
 		var scene = this.Scene();
+
+		delete scene.Keys[event.code];
+
 		if (scene.Surface)
 			delete scene.Surface.Keys[event.code];
 
@@ -3583,6 +3931,9 @@ Elemenx.Component('GameScene', {
 		}
 
 		var scene = this.Scene();
+
+		scene.Keys = {};
+
 		if (scene.Surface)
 			scene.Surface.Keys = {};
 
@@ -3632,6 +3983,7 @@ Elemenx.Component('GameScene', {
 	Include: function (spec) {
 		var scene = this.Scene();
 		var values = {};
+		var made;
 
 		spec.ID = spec.ID ? String(spec.ID) : (spec.Kind || 'object') + '-' + Math.random().toString(36).slice(2, 8);
 
@@ -3642,7 +3994,10 @@ Elemenx.Component('GameScene', {
 
 		delete scene.Removed[spec.ID];
 
-		scene.Added.push({ID: spec.ID, Kind: spec.Kind || '', Parent: spec.Parent, Values: Object.assign({}, spec.Values || {}, values), Traits: spec.Traits || {}, Parts: spec.Parts || []});
+		/* Each field to its trait, as in a declaration: Size of a unit is the size of its Model. */
+		made = this.Engine().Canonical(Object.assign({}, values, {Kind: spec.Kind}), null, true);
+
+		scene.Added.push({ID: spec.ID, Kind: spec.Kind || '', Parent: spec.Parent, Values: Object.assign({}, spec.Values || {}, made.Values), Traits: this.$Service('Kinds').MergeTraits(made.Traits, spec.Traits || {}), Parts: spec.Parts || []});
 	},
 
 	/* Changes the fields of an object (or of a part): each to its trait by its name in any case, {Traits} as they are. */
@@ -4073,6 +4428,7 @@ Elemenx.Component('GameScene', {
 				'uniform vec3 uSpecularColor;',
 				'uniform float uSpecularOn;',
 				'uniform float uSoftness;',
+				'uniform float uMoving;',
 				'uniform sampler2D uSpecularMap;',
 				'uniform sampler2D uColorMap;',
 				'uniform sampler2D uNormalMap;',
@@ -4111,7 +4467,7 @@ Elemenx.Component('GameScene', {
 				'	if (base.a < uCutoff) discard;',
 				'	vec3 albedo = base.rgb * vTint;',
 				'	if (uUnlit > 0.5) {',
-				'		outColor = vec4(pow(albedo, vec3(1.0 / 2.2)), base.a);',
+				'		outColor = vec4(pow(albedo, vec3(1.0 / 2.2)), uMoving > 0.5 ? 0.0 : base.a);',
 				'		return;',
 				'	}',
 				'	vec3 v = normalize(uCamera - vWorld);',
@@ -4145,12 +4501,12 @@ Elemenx.Component('GameScene', {
 				'	}',
 				'	float occlusion = mix(1.0, texture(uOcclusionMap, vUV).r, uOcclusion);',
 				'	vec3 reflected = reflect(-v, n);',
-				'	vec3 around = mix(uFloorLight, uSkyLight, n.y * 0.5 + 0.5) + sunBounce(vWorld);',
+				'	vec3 around = mix(uFloorLight, uSkyLight, n.y * 0.5 + 0.5) * skySeen(vWorld) + sunBounce(vWorld);',
 				'	vec3 mirrored = mix(uFloorLight, uSkyLight, reflected.y * 0.5 + 0.5);',
 				'	vec3 fresnel = f0 + (max(vec3(1.0 - roughness), f0) - f0) * pow(1.0 - nv, 5.0);',
 				'	total += (albedo * (1.0 - metallic) * around + fresnel * mirrored) * occlusion;',
 				'	total += uEmissive * texture(uEmissiveMap, vUV).rgb;',
-				'	outColor = vec4(pow(total, vec3(1.0 / 2.2)), base.a);',
+				'	outColor = vec4(pow(total, vec3(1.0 / 2.2)), uMoving > 0.5 ? 0.0 : base.a);',
 				'}'
 			].join('\n'),
 
@@ -4398,6 +4754,7 @@ Elemenx.Component('GameScene', {
 				'in vec3 vColor;',
 				'uniform vec3 uCamera;',
 				'uniform float uShine;',
+				'uniform float uMoving;',
 				'uniform float uSpecular;',
 				'uniform float uRough;',
 				'out vec4 outColor;',
@@ -4412,13 +4769,14 @@ Elemenx.Component('GameScene', {
 				'	color *= 1.0 - uRough * 0.45 + uRough * 0.45 * fbm3(vLocal * 3.0, 3);',
 				'	vec3 hot = max(vColor - vec3(1.0), 0.0);',
 				'	lightShade = sunShadow(vWorld, n);',
-				'	vec3 light = lighting(vWorld, n, v, uShine, uSpecular) + sunBounce(vWorld);',
+				'	vec3 light = lighting(vWorld, n, v, uShine, uSpecular) - mix(uFloorLight, uSkyLight, n.y * 0.5 + 0.5) * (1.0 - skySeen(vWorld));',
+				'	light = max(light, vec3(0.0)) + sunBounce(vWorld);',
 				'	if (uSoft > 0.0 && uLightCount > 0) {',
 				'		vec3 l = normalize(uLightPositions[0] - vWorld);',
 				'		float through = pow(max(dot(v, -l), 0.0), 3.0) * 0.8 + max(-dot(n, l), 0.0) * 0.35;',
 				'		light += uLightColors[0] * through * lightShade * uSoft * vec3(1.0, 1.05, 0.55);',
 				'	}',
-				'	outColor = vec4(pow(color * light + hot * hot * 4.0, vec3(1.0 / 2.2)), 1.0);',
+				'	outColor = vec4(pow(color * light + hot * hot * 4.0, vec3(1.0 / 2.2)), uMoving > 0.5 ? 0.0 : 1.0);',
 				'}'
 			].join('\n'),
 
@@ -4486,6 +4844,8 @@ Elemenx.Component('GameScene', {
 				'uniform vec4 uAir;',
 				'uniform float uFog;',
 				'uniform float uHigh;',
+				'uniform float uRadius;',
+				'uniform float uTime;',
 				'out vec4 outColor;',
 				graphics.Chunks.Noise,
 				graphics.Chunks.Shadow,
@@ -4508,11 +4868,28 @@ Elemenx.Component('GameScene', {
 				'		float cap = uIce >= 1.0 ? 1.0 : smoothstep(1.0 - uIce, 1.0 - uIce + 0.04, pole);',
 				'		albedo = mix(albedo, vec3(0.93, 0.95, 0.98), cap);',
 				'	}',
-				'	albedo *= 0.85 + 0.3 * noise3(vWorld * 2.0 + up * 300.0);',
+				'	vec3 place = up * uRadius;',
+				'	albedo *= 0.85 + 0.3 * noise3(place * 2.0);',
+				'	float rise = dot(up, uSun);',
+				'	float light = clamp(rise * 3.0 + 0.3, 0.0, 1.0);',
+				'	float dusk = 1.0 - smoothstep(0.0, 0.35, abs(rise));',
+				/* The sky lights what the sun does not reach: at sunset the land is dim and red, not black. */
+				'	vec3 around = vec3(0.05, 0.06, 0.08) + uAir.rgb * uAir.a * 0.3 * smoothstep(-0.25, 0.3, rise) + vec3(0.5, 0.25, 0.15) * dusk * uAir.a * 0.35;',
 				'	float day = max(dot(n, uSun), 0.0) * sunShadow(vWorld, n);',
-				'	float shine = sea > 0.5 ? pow(max(dot(n, normalize(uSun + v)), 0.0), 80.0) * 0.8 : 0.0;',
-				'	vec3 color = albedo * (uSunColor * day + vec3(0.05, 0.06, 0.08)) + uSunColor * shine;',
-				'	float light = clamp(dot(up, uSun) * 3.0 + 0.3, 0.0, 1.0);',
+				'	vec3 color = albedo * (uSunColor * day + around);',
+				/* Water mirrors the sky, more at a glance; waves break the sun into a path of glints that reddens as it sets. */
+				'	if (sea > 0.5) {',
+				'		vec3 drift = vec3(uTime * 0.05, uTime * 0.03, -uTime * 0.04);',
+				'		vec3 wave = vec3(noise3(place * 1.4 + drift), noise3(place * 1.4 + 5.0 - drift), noise3(place * 1.4 + 9.0 + drift)) + vec3(noise3(place * 5.1 - drift * 3.0), noise3(place * 5.1 + 5.0 + drift * 3.0), noise3(place * 5.1 + 9.0)) * 0.5 - 0.75;',
+				'		vec3 w = normalize(up + (wave - up * dot(wave, up)) * 0.16);',
+				'		float fresnel = pow(1.0 - max(dot(w, v), 0.0), 5.0);',
+				'		vec3 mirrored = mix(mix(uAir.rgb, vec3(1.0), 0.45), uAir.rgb * vec3(0.45, 0.6, 1.0), 0.3) * light + vec3(1.0, 0.45, 0.2) * dusk * 0.6;',
+				'		float toward = max(dot(w, normalize(uSun + v)), 0.0);',
+				/* A soft path to the sun, and on it the glints of waves, each lit for a moment. */
+				'		float glint = smoothstep(0.6, 0.8, noise3(place * 31.0 + vec3(0.0, uTime * 1.3, uTime * 0.7)));',
+				'		float shine = (pow(toward, 60.0) * 0.32 + pow(toward, 520.0) * 5.0 * glint) * smoothstep(-0.02, 0.12, rise);',
+				'		color = mix(color, mirrored, 0.04 + 0.9 * fresnel) + uSunColor * mix(vec3(1.0, 0.5, 0.25), vec3(1.0), smoothstep(0.0, 0.3, rise)) * shine;',
+				'	}',
 				'	float haze = (1.0 - exp(-length(vWorld) / uFog)) * uAir.a * (1.0 - uHigh * 0.7);',
 				'	color = mix(color, mix(uAir.rgb, vec3(0.9), 0.35) * light, clamp(haze, 0.0, 1.0));',
 				'	outColor = vec4(color, 1.0);',
@@ -4557,6 +4934,7 @@ Elemenx.Component('GameScene', {
 				'in vec3 aColor;',
 				'uniform mat4 uViewProjection;',
 				'uniform vec3 uOffset;',
+				'uniform vec3 uCenter;',
 				'out vec3 vWorld;',
 				'out vec3 vNormal;',
 				'out vec3 vColor;',
@@ -4565,7 +4943,7 @@ Elemenx.Component('GameScene', {
 				'	vWorld = aPosition + uOffset;',
 				'	vNormal = aNormal;',
 				'	vColor = aColor;',
-				'	vPlace = aPosition;',
+				'	vPlace = aPosition + uCenter;',
 				'	gl_Position = uViewProjection * vec4(vWorld, 1.0);',
 				'}'
 			].join('\n'),
@@ -4586,9 +4964,9 @@ Elemenx.Component('GameScene', {
 				graphics.Chunks.Shadow,
 				'void main() {',
 				'	vec3 n = normalize(vNormal);',
-				'	float grain = 0.88 + 0.24 * noise3(vWorld * 0.35 + vPlace * 0.01);',
+				'	float grain = 0.88 + 0.24 * noise3(vPlace * 0.35);',
 				'	vec3 albedo = pow(vColor * grain, vec3(2.2));',
-				'	vec3 light = uSunColor * 1.35 * max(dot(n, uSun), 0.0) * sunShadow(vWorld, n) + mix(uFloorLight, uSkyLight, n.y * 0.5 + 0.5) + sunBounce(vWorld);',
+				'	vec3 light = uSunColor * 1.35 * max(dot(n, uSun), 0.0) * sunShadow(vWorld, n) + mix(uFloorLight, uSkyLight, n.y * 0.5 + 0.5) * skySeen(vWorld) + sunBounce(vWorld);',
 				'	vec3 horizon = mix(uAir.rgb, vec3(1.0), 0.45) * clamp(uSun.y * 3.0 + 0.3, 0.0, 1.0);',
 				'	vec3 color = mix(pow(albedo * light, vec3(1.0 / 2.2)), horizon, 1.0 - exp(-length(vWorld) / uFog));',
 				'	outColor = vec4(color, 1.0);',
@@ -4605,6 +4983,8 @@ Elemenx.Component('GameScene', {
 				'uniform sampler2D uSeen;',
 				'uniform sampler2D uSeenDepth;',
 				'uniform float uMirror;',
+				'uniform vec3 uEye;',
+				'uniform float uTime;',
 				'out vec4 outColor;',
 				graphics.Chunks.Noise,
 				'vec4 mirrored(vec3 from, vec3 way) {',
@@ -4626,10 +5006,17 @@ Elemenx.Component('GameScene', {
 				'}',
 				'void main() {',
 				'	vec3 v = normalize(-vWorld);',
-				'	vec3 n = normalize(vec3((noise3(vWorld * 0.2) - 0.5) * 0.08, 1.0, (noise3(vWorld * 0.2 + 7.0) - 0.5) * 0.08));',
-				'	float shine = pow(max(dot(n, normalize(uSun + v)), 0.0), 90.0);',
+				'	vec3 place = vWorld + uEye;',
+				'	vec3 drift = vec3(uTime * 0.11, uTime * 0.07, -uTime * 0.09);',
+				'	vec3 n = normalize(vec3((noise3(place * 0.2 + drift) - 0.5) * 0.08 + (noise3(place * 0.9 - drift * 2.0) - 0.5) * 0.05, 1.0, (noise3(place * 0.2 + 7.0 - drift) - 0.5) * 0.08 + (noise3(place * 0.9 + 3.0 + drift * 2.0) - 0.5) * 0.05));',
+				'	float rise = smoothstep(-0.02, 0.1, uSun.y);',
+				'	float toward = max(dot(n, normalize(uSun + v)), 0.0);',
+				/* The path of the sun, soft, and over it the glints of the waves that face it, each for a moment. */
+				'	float glint = smoothstep(0.62, 0.8, noise3(place * 2.3 + vec3(0.0, uTime * 0.9, uTime * 0.4)));',
+				'	float shine = (pow(toward, 70.0) * 0.3 + pow(toward, 420.0) * 3.5 * glint) * rise;',
 				'	float fresnel = pow(1.0 - max(dot(n, v), 0.0), 3.0);',
-				'	vec3 color = vec3(0.07, 0.26, 0.38) * (0.4 + 0.6 * max(uSun.y, 0.0)) + mix(uAir.rgb, vec3(1.0), 0.4) * fresnel * 0.5 + uSunColor * shine;',
+				'	vec3 warm = mix(vec3(1.0, 0.55, 0.28), vec3(1.0), smoothstep(0.02, 0.4, uSun.y));',
+				'	vec3 color = vec3(0.07, 0.26, 0.38) * (0.4 + 0.6 * max(uSun.y, 0.0)) + mix(uAir.rgb, vec3(1.0), 0.4) * fresnel * 0.5 + uSunColor * warm * shine;',
 				'	vec3 horizon = mix(uAir.rgb, vec3(1.0), 0.45) * clamp(uSun.y * 3.0 + 0.3, 0.0, 1.0);',
 				'	if (uMirror > 0.5) {',
 				'		vec4 image = mirrored(vWorld, reflect(-v, n));',
@@ -4637,6 +5024,16 @@ Elemenx.Component('GameScene', {
 				'	}',
 				'	color = mix(color, horizon, 1.0 - exp(-length(vWorld) / uFog));',
 				'	outColor = vec4(color, 0.82 + fresnel * 0.15);',
+				'}'
+			].join('\n'),
+
+			/* A surface seen from above for the map of a field: its color and how high it stands. */
+			Top: head + [
+				'in vec3 vWorld;',
+				'in vec3 vColor;',
+				'out vec4 outColor;',
+				'void main() {',
+				'	outColor = vec4(vWorld.y < 0.0 ? vec3(0.1, 0.22, 0.3) : min(vColor, vec3(1.0)), max(vWorld.y, 0.0));',
 				'}'
 			].join('\n'),
 

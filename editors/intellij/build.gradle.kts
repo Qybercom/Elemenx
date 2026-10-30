@@ -27,7 +27,7 @@ plugins {
 }
 
 group = "com.qybercom"
-version = "0.12.6"
+version = "0.12.7"
 
 repositories {
 	mavenCentral()

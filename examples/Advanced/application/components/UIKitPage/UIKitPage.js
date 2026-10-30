@@ -259,9 +259,12 @@ Elemenx.Component('UIKitPage', {
 	ModelsNote: '',
 	ModelsShadows: true,
 	ModelsList: [],
+	ModelsFiles: [],
+	SceneQuality: 'auto',
+	SceneQualities: [{Value: 'auto', Label: 'Auto'}, {Value: 'low', Label: 'Low'}, {Value: 'medium', Label: 'Medium'}, {Value: 'high', Label: 'High'}, {Value: 'ultra', Label: 'Ultra'}],
 	TerrainNote: '',
 	TerrainBiome: 'temperate',
-	TerrainBiomes: ['temperate', 'taiga', 'tundra', 'desert', 'savanna', 'swamp', 'alien'],
+	TerrainBiomes: [{Value: 'temperate', Label: 'Temperate'}, {Value: 'taiga', Label: 'Taiga'}, {Value: 'tundra', Label: 'Tundra'}, {Value: 'desert', Label: 'Desert'}, {Value: 'savanna', Label: 'Savanna'}, {Value: 'swamp', Label: 'Swamp'}, {Value: 'alien', Label: 'Alien'}],
 	TerrainSaved: null,
 	TerrainUnits: [
 		{ID: 'scout', Name: 'Scout', X: 0, Y: 10},
@@ -1930,6 +1933,51 @@ Elemenx.Component('UIKitPage', {
 
 		scene.Scene().Wanted = 90;
 		scene.Scene().Pitch = 0.55;
+
+		this.ModelsFromFiles(scene);
+	},
+
+	/* The models kept out of git: shown when they are in data/models of this copy (a file nobody has only answers 404). */
+	ModelsFromFiles: function (scene) {
+		var self = this;
+
+		[{ID: 'file-nyx', Name: 'nyx', File: 'nyx_common.glb', X: -84}, {ID: 'file-elf', Name: 'elf', File: 'rigged_elf_woman.glb', X: -76}].forEach(function (model) {
+			var request = new XMLHttpRequest();
+			var address = '/data/models/' + model.File;
+
+			request.open('HEAD', address);
+
+			request.onload = function () {
+				if (request.status !== 200) return;
+
+				scene.Add('unit', {ID: model.ID, Name: model.Name, Model: address, Size: 5, X: model.X, Y: -40});
+
+				self.ModelsFiles = self.ModelsFiles.concat([model.ID]);
+			};
+
+			request.send();
+		});
+	},
+
+	ModelsToFiles: function () {
+		var scene = this.ModelsScene ? this.ModelsScene() : null;
+		if (!scene) return;
+
+		scene.FocusOn(this.ModelsFiles[0]);
+
+		scene.ZoomTo(11);
+	},
+
+	/* The quality of all the scenes of the page: kept while the page is reopened, whatever the frames do. */
+	SceneQualityChosen: function (value) {
+		this.SceneQuality = value;
+
+		try {
+			window.localStorage.setItem('ui-kit-quality', value);
+		}
+		catch (error) {
+			return;
+		}
 	},
 
 	ModelsPlay: function (clip) {
@@ -3188,6 +3236,13 @@ Elemenx.Component('UIKitPage', {
 		var now = new Date();
 		var self = this;
 		var hotkeys = this.$Service('Hotkeys');
+
+		try {
+			this.SceneQuality = window.localStorage.getItem('ui-kit-quality') || 'auto';
+		}
+		catch (error) {
+			this.SceneQuality = 'auto';
+		}
 
 		/* Titles split by | or by commas; a part between | counts whole too, as a title may have a comma (Payment, phone and money). */
 		var only = (new URLSearchParams(window.location.search).get('sections') || '').split('|').reduce(function (all, part) {

@@ -3493,6 +3493,15 @@
 					"Description": "The days of the scene a second."
 				},
 				{
+					"Name": "DaySeconds",
+					"Type": "number",
+					"Default": 0,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The seconds a day of 24 hours takes, on a body and from space alike, however fast the orbits go (0: as Speed says)."
+				},
+				{
 					"Name": "SurfaceSpeed",
 					"Type": "number",
 					"Default": 0.008333333333333333,

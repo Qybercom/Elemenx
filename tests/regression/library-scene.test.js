@@ -594,6 +594,7 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 		var hero = scene.Get('hero');
 		var frame = function (seconds) {
 			inner.Seconds += seconds;
+			inner.Last = 0;
 
 			scene.Engine().Frame(performance.now() + inner.Seconds * 1000);
 		};
@@ -815,6 +816,437 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 	});
 
 	/* Regression: each object summed the stars of all the objects, so 20 000 of them froze the page until it crashed. */
+	it('shakes a view in parallel rays by moving it: a slant would throw it by its whole depth', async function () {
+		var mounted = await mount('<GameScene View="top" Quality="high" (ready)="Ready">' +
+			'<GameObject ID="land" Kind="ground" Size="200" Height="4" Water="0" Seed="test" />' +
+		'</GameScene>');
+		var engine = mounted.Space.Engine();
+		var parallel = [0.1, 0, 0, 0, 0, 0.1, 0, 0, 0, 0, -0.01, 0, 0, 0, -1, 1];
+		var slanted = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, -1, -1, 0, 0, -0.2, 0];
+		var moved = engine.PostJitter(parallel);
+		var turned = engine.PostJitter(slanted);
+
+		expect(mounted.Space.Graphics().Frames).toBe(true);
+
+		expect(moved[8]).toBe(0);
+		expect(moved[9]).toBe(0);
+		expect(Math.abs(moved[12]) + Math.abs(moved[13])).toBeGreaterThan(0);
+		expect(Math.abs(moved[12])).toBeLessThan(2 / engine.Renderer.Width);
+
+		expect(turned[12]).toBe(0);
+		expect(Math.abs(turned[8]) + Math.abs(turned[9])).toBeGreaterThan(0);
+	});
+
+	it('brings the resolution back at the 60 frames of a screen, and holds it where a quality was chosen', async function () {
+		var mounted = await mount('<GameScene Paused="true" (ready)="Ready">' +
+			'<GameObject ID="land" Kind="ground" Size="200" Height="4" Water="0" Seed="test" />' +
+		'</GameScene>');
+		var scene = mounted.Space;
+		var inner = scene.Scene();
+		var engine = scene.Engine();
+		var now = performance.now() + 1000;
+		var i;
+
+		function frames (count, step) {
+			for (i = 0; i < count; i++) {
+				now += step;
+				inner.Rest = 0;
+
+				engine.Frame(now);
+			}
+		}
+
+		inner.Most = 1;
+		inner.Ratio = 0.7;
+
+		frames(200, 16.7);
+
+		expect(inner.Ratio).toBeGreaterThan(0.9);
+
+		/* However late the frames, it stops where the picture still is one. */
+		inner.Ratio = 1;
+
+		frames(200, 40);
+
+		expect(inner.Ratio).toBeGreaterThanOrEqual(0.7);
+
+		/* Chosen by hand, it does not move at all. */
+		scene.Quality = 'medium';
+
+		frames(60, 40);
+
+		expect(inner.Ratio).toBe(1);
+	});
+
+	it('steps down from frames that are late, but not to where the grass goes', async function () {
+		var mounted = await mount('<GameScene Paused="true" (ready)="Ready">' +
+			'<GameObject ID="land" Kind="ground" Size="200" Height="4" Water="0" Seed="test" />' +
+		'</GameScene>');
+		var scene = mounted.Space;
+		var first = scene.Graphics().Level;
+		var i;
+
+		for (i = 0; i < 500; i++)
+			scene.Engine().PostTime(0.05);
+
+		/* A machine with no graphics card starts at low, and stays: nothing lifts it. */
+		expect(scene.Graphics().Level).toBe(first === 'low' ? 'low' : 'medium');
+
+		scene.Quality = 'ultra';
+
+		for (i = 0; i < 500; i++)
+			scene.Engine().PostTime(0.05);
+
+		expect(scene.Graphics().Level).toBe('ultra');
+	});
+
+	it('never leaves a hole in the ground: a square gives way only when its parts are made', async function () {
+		var mounted = await mount('<GameScene Paused="true" (ready)="Ready">' +
+			'<GameObject ID="land" Kind="ground" Size="400" Height="4" Water="0" Seed="test" />' +
+		'</GameScene>');
+		var inner = mounted.Space.Scene();
+		var engine = mounted.Space.Engine();
+		var nodes = inner.Ground.Nodes;
+
+		inner.Wanted = inner.Distance = 6;
+
+		function covered () {
+			var keys = Object.keys(nodes);
+			var used = keys.filter(function (key) {
+				return nodes[key].Used === inner.Ground.Frame;
+			});
+
+			/* The square of all the land is there from the first frame on, whatever is near the eye. */
+			expect(nodes['0.000:0.000:0']).toBeTruthy();
+
+			return used.length;
+		}
+
+		engine.Frame(performance.now() + 100);
+
+		var first = covered();
+
+		await waitFor(function () {
+			engine.Frame(performance.now() + 200);
+
+			return covered() > first;
+		}, 4000);
+	});
+
+	it('keeps the noise of a ground and of water where they are, not where the eye is', async function () {
+		var mounted = await mount('<GameScene (ready)="Ready"><GameObject ID="land" Kind="ground" Size="100" Height="2" Seed="test" /></GameScene>');
+		var shaders = mounted.Space.Shaders(Elemenx.Service('Graphics3D'));
+
+		[shaders.Land, shaders.Sea, shaders.Ground].forEach(function (source) {
+			expect(source).not.toMatch(/noise3\(vWorld/);
+		});
+	});
+
+	it('turns bodies at the pace of DaySeconds, however fast their orbits go', async function () {
+		var mounted = await mount('<GameScene Paused="true" Speed="4" DaySeconds="30" (ready)="Ready">' +
+			'<GameObject ID="sun" Kind="star">' +
+				'<GameObject ID="earth" Kind="planet" Radius="6371" Distance="1" Day="24" />' +
+				'<GameObject ID="mars" Kind="planet" Radius="3390" Distance="1.5" Day="12" />' +
+			'</GameObject>' +
+		'</GameScene>');
+		var inner = mounted.Space.Scene();
+		var engine = mounted.Space.Engine();
+
+		inner.Seconds = 7.5;
+		inner.Rest = 0;
+
+		engine.Frame(performance.now() + 1000);
+
+		/* A quarter of a day: Y to the side; twice as fast is a half. */
+		expect(inner.Objects.earth.Turn[0]).toBeCloseTo(0, 3);
+		expect(inner.Objects.mars.Turn[0]).toBeCloseTo(-1, 3);
+	});
+
+	it('flies to what it focuses on: the eye goes through space, with no turn of the system', async function () {
+		var mounted = await mount('<GameScene Paused="true" (ready)="Ready">' +
+			'<GameObject ID="sun" Kind="star">' +
+				'<GameObject ID="mars" Kind="planet" Radius="3390" Distance="1.5" />' +
+			'</GameObject>' +
+		'</GameScene>');
+		var scene = mounted.Space;
+		var inner = scene.Scene();
+		var engine = scene.Engine();
+		var now = performance.now() + 1000;
+		var path = [];
+
+		function frame () {
+			now += 16;
+			inner.Rest = 0;
+
+			engine.Frame(now);
+
+			path.push(inner.Eye.slice());
+		}
+
+		frame();
+
+		scene.FocusOn('mars');
+
+		expect(inner.Flight.Length).toBeGreaterThan(1);
+
+		while (inner.Flight && path.length < 600)
+			frame();
+
+		expect(inner.Flight).toBe(null);
+
+		/* It left from where it stood, and took no step much longer than those round it. */
+		var steps = path.slice(1).map(function (eye, index) {
+			return Math.hypot(eye[0] - path[index][0], eye[1] - path[index][1], eye[2] - path[index][2]);
+		});
+		var longest = Math.max.apply(null, steps);
+		var total = steps.reduce(function (sum, step) {
+			return sum + step;
+		}, 0);
+
+		expect(steps[1]).toBeLessThan(longest / 10);
+		expect(longest).toBeLessThan(total / 20);
+
+		var mars = inner.Objects.mars.World;
+
+		expect(Math.hypot(inner.Target[0] - mars[0], inner.Target[1] - mars[1], inner.Target[2] - mars[2])).toBeCloseTo(0, 3);
+		expect(inner.Distance).toBeCloseTo(inner.Wanted, 3);
+	});
+
+	it('puts what a square holds in every level one of its things can be seen at', async function () {
+		var mounted = await mount('<GameScene Quality="medium" (ready)="Ready">' +
+			'<GameObject ID="land" Kind="ground" Size="192" Height="2" Water="0" Seed="test" />' +
+			'<GameObject ID="sun" Kind="sun" />' +
+			'<GameObject ID="woods" Kind="forest" Shapes="oak" Density="1" Seed="a" Cover="1" />' +
+		'</GameScene>');
+		var scene = mounted.Space;
+		var inner = scene.Scene();
+		var engine = scene.Engine();
+
+		await waitFor(function () {
+			engine.Frame(performance.now() + 100);
+
+			return scene.Sown().Squares > 0 && scene.Sown().Waiting === 0;
+		}, 8000);
+
+		/* From 160 all of it is in view, its middles inside the third level: what is 44 nearer is also in the second. */
+		inner.Wanted = inner.Distance = 160;
+		inner.Pitch = 1.5;
+		inner.Ground.Target = [0, 0, 0];
+
+		engine.Frame(performance.now() + 200);
+		engine.Frame(performance.now() + 400);
+
+		expect(Math.hypot(inner.Eye[0], inner.Eye[1], inner.Eye[2])).toBeGreaterThan(150);
+		expect(scene.Sown().Copies).toBeGreaterThan(scene.Sown().Things * 1.2);
+	});
+
+	it('gives what Add is told to its traits, as a declaration does: the Size of a unit is the size of its model', async function () {
+		var mounted = await mount('<GameScene (ready)="Ready">' +
+			'<GameObject ID="land" Kind="ground" Size="200" Height="4" Water="0" Seed="test" />' +
+		'</GameScene>');
+		var scene = mounted.Space;
+
+		scene.Add('unit', {ID: 'giant', Size: 7, X: 5, Y: 5, Name: 'Giant'});
+		scene.Engine().Frame(performance.now() + 100);
+
+		expect(scene.Scene().Objects.giant.Size).toBe(7);
+		expect(scene.Scene().Objects.giant.Traits.Model.Size).toBe(7);
+		expect(scene.Scene().Objects.giant.Values.X).toBe(5);
+	});
+
+	it('lets the view go anywhere: over a ground it is carried and lets its object go, in space it leaves its body aside', async function () {
+		var mounted = await mount('<GameScene Paused="true" (ready)="Ready">' +
+			'<GameObject ID="land" Kind="ground" Size="400" Height="4" Water="0" Seed="test" />' +
+			'<GameObject ID="hero" Kind="knight" X="0" Y="0" />' +
+		'</GameScene>');
+		var scene = mounted.Space;
+		var inner = scene.Scene();
+		var engine = scene.Engine();
+
+		engine.Frame(performance.now() + 100);
+
+		scene.FocusOn('hero');
+
+		var before = inner.Ground.Target.slice();
+
+		engine.PanView(100, 0);
+
+		expect(inner.Focus).toBe('');
+		expect(Math.hypot(inner.Ground.Target[0] - before[0], inner.Ground.Target[2] - before[2])).toBeGreaterThan(1);
+
+		var yaw = inner.Yaw;
+		var pitch = inner.Pitch;
+
+		inner.Ground.Keys = {KeyE: true, KeyF: true};
+		inner.Rest = 0;
+
+		engine.Frame(performance.now() + 300);
+
+		inner.Rest = 0;
+
+		engine.Frame(performance.now() + 500);
+
+		inner.Ground.Keys = {};
+
+		expect(inner.Yaw).toBeLessThan(yaw);
+		expect(inner.Pitch).toBeLessThan(pitch);
+
+		var space = await mount('<GameScene Paused="true" (ready)="Ready"><GameObject ID="sun" Kind="star"><GameObject ID="mars" Kind="planet" Radius="3390" Distance="1.5" /></GameObject></GameScene>');
+		var far = space.Space.Scene();
+
+		space.Space.Engine().Frame(performance.now() + 100);
+		space.Space.Engine().PanView(50, 20);
+
+		expect(Math.hypot(far.Pan[0], far.Pan[1], far.Pan[2])).toBeGreaterThan(0);
+
+		space.Space.Engine().FocusOn('mars', true);
+
+		expect(far.Pan).toEqual([0, 0, 0]);
+	});
+
+	it('works out the light of a field: what a hill hides of the sky, and the color that comes from the land round a place', async function () {
+		var mounted = await mount('<GameScene Quality="high" Paused="true" (ready)="Ready">' +
+			'<GameObject ID="land" Kind="ground" Size="300" Height="40" Water="0" Scale="60" Seed="test" />' +
+			'<GameObject ID="sun" Kind="sun" Elevation="40" />' +
+		'</GameScene>');
+		var scene = mounted.Space;
+		var engine = scene.Engine();
+		var field = scene.Scene().Ground.Field;
+		var low = [0, 0];
+		var high = [0, 0];
+		var x;
+		var z;
+
+		expect(scene.Graphics().Field).toBe(true);
+		expect(engine.FieldOn()).toBe(true);
+
+		for (x = -120; x <= 120; x += 12) {
+			for (z = -120; z <= 120; z += 12) {
+				if (field.Height(x, z) < field.Height(low[0], low[1]))
+					low = [x, z];
+
+				if (field.Height(x, z) > field.Height(high[0], high[1]))
+					high = [x, z];
+			}
+		}
+
+		await waitFor(function () {
+			scene.Scene().Rest = 0;
+
+			engine.Frame(performance.now() + 100);
+
+			var read = engine.FieldRead(low[0], low[1]);
+
+			return read && read[3] > 0 && read[0] + read[1] + read[2] > 0;
+		}, 8000);
+
+		for (x = 0; x < 40; x++) {
+			scene.Scene().Rest = 0;
+
+			engine.Frame(performance.now() + 200);
+		}
+
+		var valley = engine.FieldRead(low[0], low[1]);
+		var hill = engine.FieldRead(high[0], high[1]);
+
+		expect(valley[3]).toBeLessThan(hill[3]);
+		expect(valley[1]).toBeGreaterThan(hill[1]);
+		expect(valley.every(Number.isFinite)).toBe(true);
+	});
+
+	it('comes down to a body from where the eye stands and goes back up to the same view, in one piece', async function () {
+		var mounted = await mount('<GameScene (ready)="Ready">' +
+			'<GameObject ID="sun" Kind="star">' +
+				'<GameObject ID="earth" Kind="planet" Surface-Type="terran" Radius="6371" Distance="1" />' +
+			'</GameObject>' +
+		'</GameScene>');
+		var scene = mounted.Space;
+		var inner = scene.Scene();
+		var engine = scene.Engine();
+		var now = performance.now() + 1000;
+		var last;
+
+		function frames (count) {
+			var i;
+
+			for (i = 0; i < count; i++) {
+				now += 100;
+				inner.Rest = 0;
+
+				engine.Frame(now);
+			}
+		}
+
+		frames(1);
+
+		scene.FocusOn('earth');
+
+		frames(50);
+
+		var distance = Math.hypot(inner.Eye[0] - inner.Objects.earth.World[0], inner.Eye[1] - inner.Objects.earth.World[1], inner.Eye[2] - inner.Objects.earth.World[2]);
+
+		expect(scene.Land('earth')).toBe(true);
+
+		/* As large as it looked from space. */
+		expect(inner.Surface.Altitude).toBeCloseTo(6371 * (distance / inner.Objects.earth.Size - 1), -2);
+		expect(inner.Surface.Pitch).toBeLessThan(-1.4);
+
+		last = inner.Surface.Altitude;
+
+		frames(40);
+
+		expect(inner.Surface.Altitude).toBeLessThan(last);
+
+		frames(60);
+
+		expect(inner.Surface.Way).toBe(null);
+		expect(inner.Surface.Altitude).toBeLessThan(1);
+		expect(inner.Surface.Pitch).toBeGreaterThan(-0.3);
+
+		scene.TakeOff();
+
+		frames(90);
+
+		expect(inner.Surface).toBe(null);
+
+		/* The planet is where the way up left it: on the side the eye rose, as large. */
+		expect(inner.Distance).toBeGreaterThan(inner.Objects.earth.Size);
+		expect(inner.Wanted).toBeCloseTo(inner.Distance, 3);
+	});
+
+	it('goes down at once when it is told so', async function () {
+		var mounted = await mount('<GameScene Paused="true" (ready)="Ready"><GameObject ID="sun" Kind="star"><GameObject ID="moon" Kind="planet" Surface-Type="moon" Radius="1737" Distance="1" /></GameObject></GameScene>');
+		var inner = mounted.Space.Scene();
+
+		mounted.Space.Engine().Frame(performance.now() + 100);
+
+		mounted.Space.Land('moon', {Instant: true, Altitude: 2});
+
+		expect(inner.Surface.Altitude).toBe(2);
+		expect(inner.Surface.Way).toBe(null);
+	});
+
+	it('keeps from the shaders what would blur, flicker or show as noise', async function () {
+		var mounted = await mount('<GameScene (ready)="Ready"><GameObject ID="land" Kind="ground" Size="100" Height="2" Seed="test" /></GameScene>');
+		var space = mounted.Space;
+		var graphics = Elemenx.Service('Graphics3D');
+		var lights = space.LightingShaders(graphics);
+		var sown = space.ScatterShaders(graphics);
+
+		/* What moves by itself has no history: the frames are not mixed over it. */
+		expect(lights.Frames).toMatch(/still/);
+		expect(space.Shaders(graphics).Pbr).toMatch(/uMoving/);
+
+		/* Grass: the wind is one wave for a place, a blade stirs only near, and one with no height is not drawn. */
+		expect(sown.GrassVertex).toMatch(/wave \* 0\.16 \* near/);
+		expect(sown.GrassVertex).not.toMatch(/uWind \* 1\.4 \+ place\.x \* 0\.21 \+ seed/);
+		expect(sown.GrassVertex).toMatch(/tall > 0\.01 \?/);
+
+		/* The sun on water: a path and the glints that come and go. */
+		expect(space.Shaders(graphics).Sea).toMatch(/glint/);
+		expect(space.Shaders(graphics).Ground).toMatch(/glint/);
+	});
+
 	it('takes thousands of objects at once in a time that grows with their number', async function () {
 		var mounted = await mount('<GameScene (ready)="Ready">' +
 			'<GameObject ID="land" Kind="ground" Size="400" Height="4" Water="0" Seed="test" />' +
@@ -1407,7 +1839,7 @@ describe('Contract: Gltf, the models other programs make', function () {
 				source.push(lane === 0 ? 2 : 0);
 		}
 
-		var attributes = gltf.Meshopt('ATTRIBUTES', new Uint8Array(source.concat([10, 20, 30, 40], new Array(28).fill(0))), 3, 4, 'NONE');
+		var attributes = gltf.Meshopt('ATTRIBUTES', new Uint8Array(source.concat(new Array(28).fill(0), [10, 20, 30, 40])), 3, 4, 'NONE');
 
 		expect(Array.from(attributes)).toEqual([11, 20, 30, 40, 12, 20, 30, 40, 13, 20, 30, 40]);
 
@@ -1511,6 +1943,93 @@ describe('Contract: Gltf, the models other programs make', function () {
 		/* Copies at the same frame share one pose: a crowd is no slower for it. */
 		expect(models.Pose(model, 'Spin', 0.5)).toBe(pose);
 		expect(models.Pose(model, 'Spin', 0.8)).not.toBe(pose);
+	});
+
+	it('measures a skinned model by where its skeleton holds it, not by the numbers of its vertices', function () {
+		var asset = parsed();
+		var half = Math.SQRT1_2;
+
+		/* As Sketchfab exports: the numbers are Z up, a root over the skeleton turns and scales them. */
+		asset.Nodes[0].Rotation = [half, 0, 0, half];
+		asset.Nodes[0].Scale = [3, 3, 3];
+
+		models.Define('test-root', {URL: 'test.glb'});
+
+		models.Recipes['test-root'].Asset = asset;
+
+		var model = models.Make('test-root');
+		var whole = models.Whole(model);
+		var baked = models.Bake(model);
+		var low = [Infinity, Infinity, Infinity];
+		var high = [-Infinity, -Infinity, -Infinity];
+		var i;
+
+		for (i = 0; i < whole.Positions.length; i++) {
+			low[i % 3] = Math.min(low[i % 3], whole.Positions[i]);
+			high[i % 3] = Math.max(high[i % 3], whole.Positions[i]);
+		}
+
+		/* It lies along Z, 6 long and 1.5 thick: 1 tall means 4 long. */
+		expect(low[1]).toBeCloseTo(0, 4);
+		expect(high[1]).toBeCloseTo(1, 4);
+		expect(high[2] - low[2]).toBeGreaterThan(3.9);
+
+		/* What the shader does to the top of the column at rest lands in that same box. */
+		var row = Array.from(baked.Data.subarray(12, 24));
+		var z = row[8] * 0 + row[9] * 2 + row[10] * 0 + row[11];
+
+		expect(z).toBeCloseTo(high[2], 1);
+
+		var normal = model.Pieces[0].Placed.Normals;
+
+		expect(Math.hypot(normal[0], normal[1], normal[2])).toBeCloseTo(1, 4);
+	});
+
+	it('plays the only clip of a file by itself, and bakes one animation once', function () {
+		var asset = parsed();
+
+		asset.Animations = [asset.Animations[0]];
+		asset.Animations[0].Name = 'Motion';
+
+		models.Define('test-single', {URL: 'test.glb'});
+
+		models.Recipes['test-single'].Asset = asset;
+
+		var model = models.Make('test-single');
+		var baked = models.Bake(model);
+
+		expect(Object.keys(model.Clips).sort()).toEqual(['Motion', 'idle']);
+		expect(model.Clips.idle.Loop).toBe(true);
+		expect(baked.Clips.idle).toBe(baked.Clips.Motion);
+		expect(baked.Height).toBe(baked.Clips.Motion.Count + 2);
+
+		/* A clip that says what it is stays that: nothing is made to stand for idle. */
+		var attack = parsed();
+
+		attack.Animations = [attack.Animations[0]];
+		attack.Animations[0].Name = 'Attack';
+
+		models.Define('test-attack', {URL: 'test.glb'});
+
+		models.Recipes['test-attack'].Asset = attack;
+
+		expect(Object.keys(models.Make('test-attack').Clips).sort()).toEqual(['Attack', 'attack']);
+	});
+
+	it('closes the dish of the radar: seen from above it has a side that faces up', function () {
+		var model = models.Make('radar');
+		var dish = model.Pieces.filter(function (piece) {
+			return piece.ID === 'dish';
+		})[0];
+		var up = 0;
+		var i;
+
+		for (i = 0; i < dish.Geometry.Normals.length; i += 3) {
+			if (dish.Geometry.Normals[i + 1] > 0.7 && Math.hypot(dish.Geometry.Positions[i], dish.Geometry.Positions[i + 2]) > 0.15)
+				up++;
+		}
+
+		expect(up).toBeGreaterThan(10);
 	});
 
 	it('takes a loop of a clip round, and holds one that does not', function () {

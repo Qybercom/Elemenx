@@ -2,7 +2,7 @@
 	"name": "elemenx",
 	"displayName": "Elemenx",
 	"description": "Completion, documentation, go to definition, diagnostics and the colors of the templates of Elemenx and ElemenxUI.",
-	"version": "0.12.6",
+	"version": "0.12.7",
 	"publisher": "qybercom",
 	"license": "LGPL-3.0-only",
 	"repository": {

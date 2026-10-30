@@ -9,7 +9,9 @@ The objects: System ({Objects: [{ID, Kind, Parent, Values, Traits, Parts, Childr
 
 The view: a drag turns it round the object in focus, the wheel or two fingers zoom, a click selects an object (or its label; a part of an object near enough), a double click flies to it (from its day side), Escape goes back, the arrows turn, + and - zoom, Enter flies to the selected one, Space holds the time. Orbits, Labels, Details (a card of the selected object), Background (the far stars), Team, the slot hud. Without WebGL2 it says so (and emits error).
 
-The surface: Land(id, {Latitude, Longitude, Altitude}) goes down to the ground of a body (not of a giant of gas), the very ground its baked surface shows (Terrain.Sphere), in patches finer near the eye, under its sky (its atmosphere and its star); a drag looks round, the wheel rises and comes down, WASD and the arrows walk, Escape or TakeOff() goes back up. The time runs SurfaceSpeed days a second there (1/120).
+The view is free in every 3D scene: a drag turns and tilts it, the wheel zooms, the middle button or a drag with Shift carries it (two fingers on a screen), WASD or the arrows move it, Q and E turn it, R and F tilt it.
+
+The surface: Land(id, {Latitude, Longitude, Altitude, Instant}) flies down in one piece from where the eye stands (Instant: at once) and TakeOff() flies back to the same view of space; it goes down to the ground of a body (not of a giant of gas), the very ground its baked surface shows (Terrain.Sphere), in patches finer near the eye, under its sky (its atmosphere and its star); a drag looks round, the wheel rises and comes down, WASD and the arrows walk, Escape or TakeOff() goes back up. The time runs SurfaceSpeed days a second there (1/120).
 
 Kinds of the ground (the setting terrain): ground (Terrain: Size, Height, Water, Scale, Ridges, Seed: a ground of noise, Terrain.Flat, in chunks finer near the eye, with its sea), sun (Sun: its light from far), unit (Walker: Speed, MaxSlope, Swim; a Model), tree, rock and house (Model, Blocks: what stands in the way). An object of it stands at X and Y of the ground; Move(id, [x, y]) walks a walker round what cannot be walked, a right click sends the selected one; the view turns round a point of the ground and the keys move it. Every model of the Models Service is a kind of the same name (knight, mech, wolf, oak, tower, reactor...), of the kind that fits it.
 
@@ -28,6 +30,7 @@ Events: ready (the scene, for its methods), select ({ID, Object, Info}: ID empty
 | `Systems` | `null` |
 | `Time` | `0` |
 | `Speed` | `1` |
+| `DaySeconds` | `0` |
 | `SurfaceSpeed` | `1 / 120` |
 | `Shadows` | `true` |
 | `View` | `''` |

@@ -690,10 +690,11 @@
 				<RadioGroup Variant="segmented" Label="Projection" [options]="WorldProjections" [value]="WorldProjection" (change)="WorldProjected" />
 				<Toggle Label="Fog of war" [checked]="WorldFog" (change)="WorldFogged" />
 				<Button Label="To the barracks" Icon="home" Variant="ghost" (click)="WorldCentered" />
+				<Select Label="Quality" [options]="SceneQualities" [value]="SceneQuality" (change)="SceneQualityChosen" />
 				<Button Label="Recruit" Icon="add" Variant="ghost" (click)="WorldRecruited" />
 			</div>
 			<div class="ui-kit-world">
-				<GameScene Team="blue" Minimap="true" [projection]="WorldProjection" [fog]="WorldFog" (ready)="WorldReady" (select)="WorldSelected" (order)="WorldOrdered" (arrive)="WorldArrived" (cell)="WorldCell">
+				<GameScene Team="blue" Minimap="true" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" [projection]="WorldProjection" [fog]="WorldFog" (ready)="WorldReady" (select)="WorldSelected" (order)="WorldOrdered" (arrive)="WorldArrived" (cell)="WorldCell">
 					<GameLayer Name="ground" [rows]="WorldRows" />
 					<GameObject Kind="building" ID="barracks" X="5" Y="2" Width="3" Height="3" Team="blue" Type="barracks" Health="400" MaxHealth="400" />
 					<GameObject Kind="building" ID="hall" X="23" Y="1" Width="3" Height="2" Team="red" Type="hall" Health="500" MaxHealth="500" />
@@ -717,9 +718,10 @@
 				<Toggle Label="Real scale" [checked]="SpaceReal" (change)="SpaceScaled" />
 				<Button Icon="pause" Variant="ghost" [label]="SpacePaused ? 'Go on' : 'Hold the time'" [pressed]="SpacePaused" (click)="SpacePausedToggled" />
 				<Button Label="Fleet to Mars" Icon="send" Variant="ghost" *if="SpaceSystem === 'sol'" (click)="SpaceSent" />
+				<Select Label="Quality" [options]="SceneQualities" [value]="SceneQuality" (change)="SceneQualityChosen" />
 			</div>
 			<div class="ui-kit-space">
-				<GameScene *if="SpaceSystem === 'sol'" Team="blue" Speed="4" [orbits]="SpaceOrbits" [scale]="SpaceReal ? 'real' : 'compressed'" [paused]="SpacePaused" (ready)="SpaceReady" (select)="SpaceSelected" (focus)="SpaceFocused" (arrive)="SpaceArrived">
+				<GameScene *if="SpaceSystem === 'sol'" Team="blue" Speed="1" DaySeconds="30" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" [orbits]="SpaceOrbits" [scale]="SpaceReal ? 'real' : 'compressed'" [paused]="SpacePaused" (ready)="SpaceReady" (select)="SpaceSelected" (focus)="SpaceFocused" (arrive)="SpaceArrived">
 					<GameObject ID="sun" Kind="star" Name="Sun" Mass="1">
 						<GameObject ID="mercury" Name="Mercury" Kind="planet" Surface-Type="rocky" Radius="2440" Mass="0.055" Distance="0.387" Eccentricity="0.206" Inclination="7" Node="48" Periapsis="29" Anomaly="174" Day="1408" />
 						<GameObject ID="venus" Name="Venus" Kind="planet" Surface-Type="desert" Radius="6052" Mass="0.815" Distance="0.723" Eccentricity="0.007" Inclination="3.4" Node="77" Periapsis="55" Anomaly="50" Day="-5832" Tilt="177" Clouds="1" Atmosphere="#f0d9a0" Colors="#8a6a3a, #c49a5a, #e3c48a, #f4e2b8" />
@@ -752,7 +754,7 @@
 					<GameObject ID="haulers" Kind="fleet" Name="Haulers" Ship="freighter" Parent="jupiter" Team="yellow" Count="3" />
 					<div slot="hud" class="ui-kit-space-hud"><span>Day {{SpaceDay}}</span></div>
 				</GameScene>
-				<GameScene *if="SpaceSystem === 'seed'" Team="blue" Speed="4" [seed]="SpaceSeed" [orbits]="SpaceOrbits" [scale]="SpaceReal ? 'real' : 'compressed'" [paused]="SpacePaused" (ready)="SpaceReady" (select)="SpaceSelected" (focus)="SpaceFocused">
+				<GameScene *if="SpaceSystem === 'seed'" Team="blue" Speed="1" DaySeconds="30" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" [seed]="SpaceSeed" [orbits]="SpaceOrbits" [scale]="SpaceReal ? 'real' : 'compressed'" [paused]="SpacePaused" (ready)="SpaceReady" (select)="SpaceSelected" (focus)="SpaceFocused">
 					<div slot="hud" class="ui-kit-space-hud"><span>Seed {{SpaceSeed}}</span></div>
 				</GameScene>
 			</div>
@@ -763,13 +765,14 @@
 		<div class="ui-kit-lazy" *lazy>
 			<div class="ui-kit-row">
 				<Select Label="Biome" [options]="TerrainBiomes" [value]="TerrainBiome" (change)="TerrainBiomed" />
+				<Select Label="Quality" [options]="SceneQualities" [value]="SceneQuality" (change)="SceneQualityChosen" />
 				<Button Label="To the lake" Icon="map-pin" Variant="ghost" (click)="TerrainLake" />
 				<Button Label="All to the village" Icon="home" Variant="ghost" (click)="TerrainVillage" />
 				<Button Label="Save" Icon="save" Variant="ghost" (click)="TerrainSave" />
 				<Button Label="Load" Icon="refresh" Variant="ghost" [disabled]="!TerrainSaved" (click)="TerrainLoad" />
 			</div>
 			<div class="ui-kit-space">
-				<GameScene Setting="terrain" Team="blue" Labels="true" (ready)="TerrainReady" (select)="TerrainSelected" (arrive)="TerrainArrived">
+				<GameScene Setting="terrain" Team="blue" Labels="true" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" (ready)="TerrainReady" (select)="TerrainSelected" (arrive)="TerrainArrived">
 					<GameObject ID="valley" Kind="ground" Size="900" Height="55" Water="0.32" Seed="valley" [biome]="TerrainBiome" />
 					<GameObject ID="sun" Kind="sun" Elevation="38" Azimuth="150" />
 					<GameObject ID="hamlet" Kind="village" X="-70" Y="20" Houses="10" />
@@ -791,9 +794,11 @@
 				<Button Label="Stand" Icon="arrow-up" Variant="ghost" (click)="ModelsPlay('idle')" />
 				<Button Label="March" Icon="map-pin" Variant="ghost" (click)="ModelsMarch" />
 				<Toggle Label="Shadows" [checked]="ModelsShadows" (change)="ModelsShadowed" />
+				<Button Label="To the files" Icon="box" Variant="ghost" *if="ModelsFiles.length" (click)="ModelsToFiles" />
+				<Select Label="Quality" [options]="SceneQualities" [value]="SceneQuality" (change)="SceneQualityChosen" />
 			</div>
 			<div class="ui-kit-space">
-				<GameScene Setting="terrain" Team="red" [shadows]="ModelsShadows" (ready)="ModelsReady">
+				<GameScene Setting="terrain" Team="red" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" [shadows]="ModelsShadows" (ready)="ModelsReady">
 					<GameObject ID="meadow" Kind="ground" Size="400" Height="22" Water="0.2" Scale="420" Seed="meadow" />
 					<GameObject ID="noon" Kind="sun" Elevation="36" Azimuth="130" />
 					<GameObject *for="model of ModelsList" *key="model.ID" [kind]="model.Kind" [id]="model.ID" [name]="model.Kind" [x]="model.X" [y]="model.Y" [team]="model.Team" />

@@ -12,8 +12,9 @@ function captureErrors (page) {
 		errors.push(error.message);
 	});
 
+	/* The models kept out of git are asked for with HEAD, and a copy without them answers 404. */
 	page.on('console', function (message) {
-		if (message.type() === 'error')
+		if (message.type() === 'error' && !/\/data\/models\/(nyx_common|rigged_elf_woman)\.glb$/.test(message.location().url))
 			errors.push(message.text());
 	});
 
@@ -3232,6 +3233,36 @@ for (const origin of origins) {
 					return Elemenx.Instance(node).Shadows;
 				});
 			}).toBe(false);
+
+			expect(errors).toEqual([]);
+		});
+
+		test('the quality and the biome of a scene are chosen in their menus, and the choice stays', async function ({ page }) {
+			var errors = captureErrors(page);
+			var menus;
+
+			await open(page, origin, ['Terrain']);
+
+			menus = section(page, 'Terrain').locator('.elemenx-select-trigger');
+
+			await menus.nth(1).click();
+			await page.getByRole('option', {name: 'Medium'}).click();
+
+			await expect(menus.nth(1)).toContainText('Medium');
+			await expect.poll(function () {
+				return section(page, 'Terrain').locator('.elemenx-game-scene').evaluate(function (node) {
+					return Elemenx.Instance(node).Graphics().Level;
+				});
+			}).toBe('medium');
+
+			await menus.nth(0).click();
+			await page.getByRole('option', {name: 'Taiga'}).click();
+
+			await expect(menus.nth(0)).toContainText('Taiga');
+
+			await page.reload();
+
+			await expect(section(page, 'Terrain').locator('.elemenx-select-trigger').nth(1)).toContainText('Medium');
 
 			expect(errors).toEqual([]);
 		});

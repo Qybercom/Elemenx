@@ -161,7 +161,7 @@ Elemenx.Service('Models', {
 		var graphics = this.$Service('Graphics3D');
 
 		return graphics.Merge(model.Pieces.map(function (piece) {
-			return piece.Rest ? {Geometry: piece.Geometry, Matrix: piece.Rest} : {Geometry: piece.Geometry};
+			return piece.Rest ? {Geometry: piece.Placed || piece.Geometry, Matrix: piece.Rest} : {Geometry: piece.Geometry};
 		}));
 	},
 
@@ -182,7 +182,7 @@ Elemenx.Service('Models', {
 				list.push(made);
 			}
 
-			made.Parts.push({Geometry: piece.Geometry, Matrix: piece.Rest});
+			made.Parts.push({Geometry: piece.Placed || piece.Geometry, Matrix: piece.Rest});
 		});
 
 		return list.map(function (each) {
@@ -312,6 +312,11 @@ Elemenx.Service('Models', {
 
 			return start;
 		});
+		var binds = asset.Skins.map(function (skin) {
+			return skin.Joints.map(function (joint, index) {
+				return graphics.Multiply(rest[joint], self.InverseOf(skin, index));
+			});
+		});
 		var fit;
 		var model;
 		var scale;
@@ -324,10 +329,12 @@ Elemenx.Service('Models', {
 				var skinned = node.Skin !== -1 && !!primitive.Geometry.Joints;
 				var geometry = self.Painted(primitive.Geometry, material, asset);
 				var matrix = skinned ? graphics.Identity() : rest[index];
+				var placed = skinned ? self.Placed(geometry, binds[node.Skin]) : null;
+				var seen = placed || geometry;
 				var i;
 
-				for (i = 0; i < geometry.Positions.length; i += 3) {
-					var point = graphics.Apply(matrix, [geometry.Positions[i], geometry.Positions[i + 1], geometry.Positions[i + 2]]);
+				for (i = 0; i < seen.Positions.length; i += 3) {
+					var point = graphics.Apply(matrix, [seen.Positions[i], seen.Positions[i + 1], seen.Positions[i + 2]]);
 
 					[0, 1, 2].forEach(function (axis) {
 						box.Low[axis] = Math.min(box.Low[axis], point[axis]);
@@ -335,7 +342,7 @@ Elemenx.Service('Models', {
 					});
 				}
 
-				pieces.push({ID: 'node-' + index + '-' + part, Parent: '', Pivot: [0, 0, 0], Team: false, Geometry: geometry, Material: material, Node: index, Skin: skinned ? node.Skin : -1, JointOffset: skinned ? offsets[node.Skin] : 0, Rest: matrix});
+				pieces.push({ID: 'node-' + index + '-' + part, Parent: '', Pivot: [0, 0, 0], Team: false, Geometry: geometry, Material: material, Node: index, Skin: skinned ? node.Skin : -1, JointOffset: skinned ? offsets[node.Skin] : 0, Rest: matrix, Placed: placed});
 			});
 		});
 
@@ -375,6 +382,54 @@ Elemenx.Service('Models', {
 		return Object.assign({}, geometry, {Colors: colors});
 	},
 
+	/* The inverse of the place a joint of a skin was bound at. */
+	InverseOf: function (skin, index) {
+		return skin.Inverse ? Array.prototype.slice.call(skin.Inverse, index * 16, index * 16 + 16) : this.$Service('Graphics3D').Identity();
+	},
+
+	/*
+	 * A skinned geometry where its skeleton holds it at rest. Its own numbers can be anything (an export from Z up in
+	 * centimetres): only the skeleton says how tall a model is and where it stands, so that is what it is measured by.
+	 */
+	Placed: function (geometry, binds) {
+		var positions = new Float32Array(geometry.Positions.length);
+		var normals = geometry.Normals ? new Float32Array(geometry.Normals.length) : null;
+		var count = positions.length / 3;
+		var i;
+		var j;
+		var axis;
+
+		for (i = 0; i < count; i++) {
+			var x = geometry.Positions[i * 3];
+			var y = geometry.Positions[i * 3 + 1];
+			var z = geometry.Positions[i * 3 + 2];
+
+			for (j = 0; j < 4; j++) {
+				var weight = geometry.Weights[i * 4 + j];
+				var m = binds[geometry.Joints[i * 4 + j]];
+
+				if (!weight) continue;
+
+				for (axis = 0; axis < 3; axis++) {
+					positions[i * 3 + axis] += weight * (m[axis] * x + m[4 + axis] * y + m[8 + axis] * z + m[12 + axis]);
+
+					if (normals)
+						normals[i * 3 + axis] += weight * (m[axis] * geometry.Normals[i * 3] + m[4 + axis] * geometry.Normals[i * 3 + 1] + m[8 + axis] * geometry.Normals[i * 3 + 2]);
+				}
+			}
+
+			if (normals) {
+				var size = Math.sqrt(normals[i * 3] * normals[i * 3] + normals[i * 3 + 1] * normals[i * 3 + 1] + normals[i * 3 + 2] * normals[i * 3 + 2]) || 1;
+
+				normals[i * 3] /= size;
+				normals[i * 3 + 1] /= size;
+				normals[i * 3 + 2] /= size;
+			}
+		}
+
+		return Object.assign({}, geometry, {Positions: positions, Normals: normals || geometry.Normals});
+	},
+
 	/* The clips of a file: named by the recipe, or found in the names of its animations. */
 	ClipsOf: function (asset, recipe) {
 		var clips = {};
@@ -403,6 +458,10 @@ Elemenx.Service('Models', {
 			});
 		});
 
+		/* The only clip of a file, with a name that says nothing, is what the model does by itself. */
+		if (asset.Animations.length === 1 && Object.keys(clips).length === 1)
+			add('idle', asset.Animations[0]);
+
 		if (!clips.walk && clips.run)
 			clips.walk = clips.run;
 
@@ -420,6 +479,7 @@ Elemenx.Service('Models', {
 		var rate = 30;
 		var frames = [];
 		var starts = {};
+		var done = [];
 		var made;
 
 		if (model.Baked)
@@ -431,8 +491,7 @@ Elemenx.Service('Models', {
 
 			asset.Skins.forEach(function (skin) {
 				skin.Joints.forEach(function (joint, index) {
-					var inverse = skin.Inverse ? Array.prototype.slice.call(skin.Inverse, index * 16, index * 16 + 16) : graphics.Identity();
-					var m = graphics.Multiply(world[joint], inverse);
+					var m = graphics.Multiply(world[joint], self.InverseOf(skin, index));
 
 					line.push(m[0], m[4], m[8], m[12], m[1], m[5], m[9], m[13], m[2], m[6], m[10], m[14]);
 				});
@@ -446,9 +505,21 @@ Elemenx.Service('Models', {
 		Object.keys(model.Clips).forEach(function (name) {
 			var clip = model.Clips[name];
 			var count = Math.max(1, Math.ceil(clip.Length * rate));
+			var same = done.filter(function (each) {
+				return each.Animation === clip.Animation;
+			})[0];
 			var i;
 
+			/* One animation under two names (idle and its own) is the same lines of the texture. */
+			if (same) {
+				starts[name] = same.Place;
+
+				return;
+			}
+
 			starts[name] = {Start: frames.length, Count: count, Rate: rate};
+
+			done.push({Animation: clip.Animation, Place: starts[name]});
 
 			for (i = 0; i <= count; i++)
 				frame(clip.Animation, Math.min(clip.Length, i / rate));
@@ -1167,7 +1238,7 @@ Elemenx.Service('Models', {
 		building('scifi', 'radar', 8, {Matte: false, Clips: {idle: {Length: 1, Loop: true, Spins: {'dish': [0, 36, 0]}}}, Build: function (tools) {
 			return [
 				tools.Piece('body', [tools.Lathe([[0.26, 0], [0.2, 0.06], [0.05, 0.14], [0.04, 0.6], [0, 0.6]], [0, 0, 0], hull, 8), tools.Box(0.6, 0.02, 0.6, [0, 0.01, 0], dark)]),
-				tools.Piece('dish', [tools.Lathe([[0.02, 0], [0.2, 0.05], [0.42, 0.2]], [0, 0.66, 0], hull, 14), tools.Cylinder(0.012, 0.004, 0.24, [0, 0.76, 0], dark)], {Parent: 'body', Pivot: [0, 0.6, 0]})
+				tools.Piece('dish', [tools.Lathe([[0.02, 0], [0.2, 0.05], [0.42, 0.2], [0.41, 0.215], [0.2, 0.085], [0, 0.05]], [0, 0.66, 0], hull, 14), tools.Cylinder(0.012, 0.004, 0.24, [0, 0.76, 0], dark)], {Parent: 'body', Pivot: [0, 0.6, 0]})
 			];
 		}});
 

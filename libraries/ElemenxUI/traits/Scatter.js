@@ -34,14 +34,19 @@ Elemenx.Trait('Scatter', {
 		this.Sown = function () {
 			return {Things: state.Things, Squares: state.Squares.length, Waiting: state.Waiting.length, Draws: Object.keys(state.Streams).filter(function (key) {
 				return state.Streams[key].Count;
-			}).length, Blades: state.Grass ? state.Grass.Blades : 0};
+			}).length, Copies: Object.keys(state.Streams).reduce(function (sum, key) {
+				return sum + state.Streams[key].Count;
+			}, 0), Blades: state.Grass ? state.Grass.Blades : 0};
 		};
 
-		/* A surface that fades as a level gives way to the next: a pattern of holes that grows, so nothing pops. */
+		/*
+		 * A surface that fades as a level gives way to the next: a pattern of holes that grows, so nothing pops. vFade is how
+		 * far it came in and how much of it is left: the one that comes keeps exactly the points the one that goes lost.
+		 */
 		function dithered (fragment) {
 			var at = fragment.lastIndexOf('void main() {');
 
-			return fragment.slice(0, at) + 'in float vFade;\nvoid main() {\n\tif (vFade < fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715))))) discard;' + fragment.slice(at + 13);
+			return fragment.slice(0, at) + 'in vec2 vFade;\nuniform float uDither;\nvoid main() {\n\tfloat hole = fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715))) + uDither * 0.618034);\n\tif (hole >= vFade.y || hole < 1.0 - vFade.x) discard;' + fragment.slice(at + 13);
 		}
 
 		function programs () {
@@ -337,6 +342,7 @@ Elemenx.Trait('Scatter', {
 			var reach = scene.Camera.Ortho ? 0 : 1;
 			var quality = self.ScatterReach ? self.ScatterReach() : 1;
 			var radius = size * 0.75 + 12;
+			var margin = reach ? size * 0.75 + 8 : 0;
 
 			Object.keys(state.Streams).forEach(function (name) {
 				state.Streams[name].Count = 0;
@@ -354,16 +360,23 @@ Elemenx.Trait('Scatter', {
 
 				if (!inside) return;
 
-				/* Near a border of two levels a square is in both, and the shaders fade one into the other. */
+				/* In parallel rays a whole view is at one level. */
 				level = steps.filter(function (border) {
 					return distance >= border[1] * quality;
 				}).length;
 
-				Object.keys(square.Lists).forEach(function (key) {
-					append(stream(key, level), square.Lists[key]);
+				/*
+				 * What a square holds is as far as its middle and up to half of it more or less: it goes in every level one
+				 * of its things can be seen at, and the shaders choose by the distance of each.
+				 */
+				[0, 1, 2, 3].forEach(function (one) {
+					var from = one ? steps[one - 1][0] * quality : -Infinity;
+					var to = one < 3 ? steps[one][1] * quality : Infinity;
+					if (reach ? distance + margin <= from || distance - margin >= to : one !== level) return;
 
-					if (level < 3 && distance > (steps[level][0]) * quality)
-						append(stream(key, level + 1), square.Lists[key]);
+					Object.keys(square.Lists).forEach(function (key) {
+						append(stream(key, one), square.Lists[key]);
+					});
 				});
 			});
 
@@ -491,7 +504,7 @@ Elemenx.Trait('Scatter', {
 		function fieldOf (rule) {
 			var ground = scene.Ground;
 			var field = ground.Field;
-			var side = 384;
+			var side = 256;
 			var key = ground.Key + JSON.stringify(rule);
 			var grass = state.Grass;
 			var started = performance.now();
@@ -623,19 +636,47 @@ Elemenx.Trait('Scatter', {
 			});
 		}
 
+		/* All that is sown, seen by a program of its own: for the map of the light of a field. */
+		engine.ScatterAll = function (matrix, fragment, view) {
+			if (!state.Top)
+				state.Top = renderer.Program(shaders.Vertex, fragment);
+
+			Object.keys(state.Streams).forEach(function (name) {
+				state.Streams[name].Count = 0;
+			});
+
+			state.Squares.forEach(function (square) {
+				Object.keys(square.Lists).forEach(function (key) {
+					append(stream(key, 2), square.Lists[key]);
+				});
+			});
+
+			each(function (one) {
+				var mesh = levels(one.Key)[2];
+
+				mesh.Instance({aInstance: {Size: 4, Data: one.Places.subarray(0, one.Count * 4)}, aInstance2: {Size: 4, Data: one.Extra.subarray(0, one.Count * 4)}}, one.Count);
+
+				renderer.Draw(mesh, state.Top, {uViewProjection: matrix, uOrigin: [0, 0, 0], uWind: 0, uSway: 0, uFade: [-2, -1, 1e8, 2e8]}, {Cull: 'none'});
+			});
+
+			gather(view);
+		};
+
 		engine.ScatterShadow = function (matrix) {
 			var origin = vectors.Subtract([0, 0, 0], scene.Eye);
 
 			each(function (one) {
 				if (one.Level === 3 || one.Level === 0 && surfaces(one.Key)) return;
 
-				renderer.Draw(levels(one.Key)[Math.max(1, one.Level)], programs().Depth, {uViewProjection: matrix, uOrigin: origin, uWind: scene.Seconds, uSway: 0}, {Cull: 'none'});
+				renderer.Draw(levels(one.Key)[Math.max(1, one.Level)], programs().Depth, {uViewProjection: matrix, uOrigin: origin, uWind: scene.Seconds, uSway: 0, uFade: fadeOf(one.Level)}, {Cull: 'none'});
 			});
 		};
 
 		engine.ScatterDraw = function (uniforms, matrix) {
 			var origin = vectors.Subtract([0, 0, 0], scene.Eye);
 			var ground = scene.Ground;
+			var dither = engine.PostStep ? engine.PostStep() : 0;
+
 			if (!ground) return;
 
 			each(function (one) {
@@ -645,21 +686,21 @@ Elemenx.Trait('Scatter', {
 
 				if (one.Level === 0 && surfaces(one.Key)) {
 					surfaces(one.Key).forEach(function (each) {
-						renderer.Draw(each.Mesh, programs().Files, Object.assign({}, uniforms, {uOrigin: origin, uWind: scene.Seconds, uSway: made.Sway, uFade: fadeOf(0), uSoftness: each.Soft}, engine.Surface(each)), {Cull: each.Material.DoubleSided ? 'none' : 'back'});
+						renderer.Draw(each.Mesh, programs().Files, Object.assign({}, uniforms, {uOrigin: origin, uWind: scene.Seconds, uSway: made.Sway, uFade: fadeOf(0), uDither: dither, uSoftness: each.Soft}, engine.Surface(each)), {Cull: each.Material.DoubleSided ? 'none' : 'back'});
 					});
 
 					return;
 				}
 
 				if (one.Level < 3) {
-					renderer.Draw(levels(one.Key)[one.Level], programs().Many, Object.assign({}, uniforms, {uOrigin: origin, uWind: scene.Seconds, uSway: made.Sway, uShine: 8, uSpecular: 0.05, uRough: 0.5, uSoft: made.Sway ? 0.9 : 0, uFade: fadeOf(one.Level)}), {Cull: 'back'});
+					renderer.Draw(levels(one.Key)[one.Level], programs().Many, Object.assign({}, uniforms, {uOrigin: origin, uWind: scene.Seconds, uSway: made.Sway, uShine: 8, uSpecular: 0.05, uRough: 0.5, uSoft: made.Sway ? 0.9 : 0, uFade: fadeOf(one.Level), uDither: dither}), {Cull: 'back'});
 
 					return;
 				}
 
 				baked = picture(one.Key);
 
-				renderer.Draw(baked.Quad, programs().Picture, Object.assign({}, uniforms, {uOrigin: origin, uColors: baked.Target.Textures[0], uNormals: baked.Target.Textures[1], uFade: fadeOf(3), uCells: baked.Cells, uRadius: baked.Radius, uMiddle: baked.Middle, uSun: ground.Sun, uSunColor: ground.SunColor, uParallel: scene.Camera.Ortho ? vectors.Normalize(vectors.Subtract(scene.Camera.Position, scene.Camera.Target)).concat([1]) : [0, 0, 0, 0]}), {Cull: 'none'});
+				renderer.Draw(baked.Quad, programs().Picture, Object.assign({}, uniforms, {uOrigin: origin, uColors: baked.Target.Textures[0], uNormals: baked.Target.Textures[1], uFade: fadeOf(3), uDither: dither, uCells: baked.Cells, uRadius: baked.Radius, uMiddle: baked.Middle, uSun: ground.Sun, uSunColor: ground.SunColor, uParallel: scene.Camera.Ortho ? vectors.Normalize(vectors.Subtract(scene.Camera.Position, scene.Camera.Target)).concat([1]) : [0, 0, 0, 0]}), {Cull: 'none'});
 			});
 
 			drawGrass(uniforms, matrix);
@@ -696,7 +737,7 @@ Elemenx.Trait('Scatter', {
 				'out vec3 vColor;',
 				'out vec2 vUV;',
 				'out vec3 vTint;',
-				'out float vFade;',
+				'out vec2 vFade;',
 				'void main() {',
 				'	float c = cos(aInstance2.x);',
 				'	float s = sin(aInstance2.x);',
@@ -711,9 +752,9 @@ Elemenx.Trait('Scatter', {
 				'	vColor = aColor * aInstance2.yzw;',
 				'	vUV = aUV;',
 				'	vTint = aInstance2.yzw;',
-				'	float far = length(world);',
-				'	vFade = smoothstep(uFade.x, uFade.y, far) * (1.0 - smoothstep(uFade.z, uFade.w, far));',
-				'	gl_Position = uViewProjection * vec4(world, 1.0);',
+				'	float far = length(aInstance.xyz + uOrigin);',
+				'	vFade = vec2(smoothstep(uFade.x, uFade.y, far), 1.0 - smoothstep(uFade.z, uFade.w, far));',
+				'	gl_Position = vFade.x > 0.0 && vFade.y > 0.0 ? uViewProjection * vec4(world, 1.0) : vec4(0.0, 0.0, 2.0, 1.0);',
 				'}'
 			].join('\n'),
 
@@ -757,7 +798,7 @@ Elemenx.Trait('Scatter', {
 				'out vec3 vTint;',
 				'out vec3 vWorld;',
 				'out vec2 vTurn;',
-				'out float vFade;',
+				'out vec2 vFade;',
 				'void main() {',
 				'	vec3 center = aInstance.xyz + uOrigin + vec3(0.0, uMiddle * aInstance.w, 0.0);',
 				'	vec3 to = uParallel.w > 0.5 ? uParallel.xyz : normalize(-center);',
@@ -774,9 +815,9 @@ Elemenx.Trait('Scatter', {
 				'	vTint = aInstance2.yzw;',
 				'	vWorld = world;',
 				'	vTurn = vec2(c, s);',
-				'	float far = length(world);',
-				'	vFade = smoothstep(uFade.x, uFade.y, far) * (1.0 - smoothstep(uFade.z, uFade.w, far));',
-				'	gl_Position = uViewProjection * vec4(world, 1.0);',
+				'	float far = length(aInstance.xyz + uOrigin);',
+				'	vFade = vec2(smoothstep(uFade.x, uFade.y, far), 1.0 - smoothstep(uFade.z, uFade.w, far));',
+				'	gl_Position = vFade.x > 0.0 && vFade.y > 0.0 ? uViewProjection * vec4(world, 1.0) : vec4(0.0, 0.0, 2.0, 1.0);',
 				'}'
 			].join('\n'),
 
@@ -818,6 +859,7 @@ Elemenx.Trait('Scatter', {
 				'out vec3 vWorld;',
 				'out float vAlong;',
 				'out float vTone;',
+				'out float vWave;',
 				'vec2 ground(vec2 place) {',
 				'	vec2 at = (place / uFieldSize.x + 0.5) * (uFieldSize.y - 1.0);',
 				'	ivec2 cell = ivec2(floor(at));',
@@ -834,14 +876,20 @@ Elemenx.Trait('Scatter', {
 				'	float fade = 1.0 - smoothstep(uBlade.w * 0.7, uBlade.w, distance(place, uEye.xz));',
 				'	float tall = uBlade.x * (0.55 + seed * 0.9) * smoothstep(0.35, 0.8, land.y) * fade * step(seed, uBlade.y);',
 				'	vec2 side = vec2(cos(aNormal.y), sin(aNormal.y));',
-				'	vec2 lean = vec2(-side.y, side.x) * (seed - 0.5) * 0.5 + vec2(sin(uWind * 1.4 + place.x * 0.21 + seed * 2.0), cos(uWind * 1.1 + place.y * 0.17)) * 0.32;',
 				'	vec3 world = vec3(place.x, land.x, place.y) + uOrigin;',
+				/* The wind is waves over the field, one for all the blades of a place; a blade of its own stirs only near the eye. */
+				'	float far = length(world);',
+				'	float wave = sin(uWind * 0.9 + dot(place, vec2(0.11, 0.07))) * 0.6 + sin(uWind * 0.53 + dot(place, vec2(-0.05, 0.13))) * 0.4;',
+				'	float near = 1.0 - smoothstep(uBlade.w * 0.12, uBlade.w * 0.45, far);',
+				'	vec2 lean = vec2(-side.y, side.x) * (seed - 0.5) * 0.5 + vec2(0.8, 0.6) * (0.14 + wave * 0.16 * near) + vec2(sin(uWind * 2.6 + seed * 6.28), cos(uWind * 2.1 + seed * 9.0)) * 0.05 * near * near;',
 				'	world.xz += side * aNormal.x * 0.035 * uBlade.z + lean * along * along * tall;',
 				'	world.y += along * tall * step(0.01, tall);',
 				'	vWorld = world;',
 				'	vAlong = along;',
-				'	vTone = 0.85 + seed * 0.3;',
-				'	gl_Position = uViewProjection * vec4(world, 1.0);',
+				'	vTone = 0.85 + seed * 0.3 * near + 0.15 * (1.0 - near);',
+				'	vWave = wave;',
+				/* A blade with no height, under water or on a rock, is not a sliver on the ground: it is not there. */
+				'	gl_Position = tall > 0.01 ? uViewProjection * vec4(world, 1.0) : vec4(0.0, 0.0, 2.0, 1.0);',
 				'}'
 			].join('\n'),
 
@@ -849,6 +897,7 @@ Elemenx.Trait('Scatter', {
 				'in vec3 vWorld;',
 				'in float vAlong;',
 				'in float vTone;',
+				'in float vWave;',
 				'uniform vec3 uRoot;',
 				'uniform vec3 uTip;',
 				'uniform vec3 uSun;',
@@ -859,9 +908,10 @@ Elemenx.Trait('Scatter', {
 				graphics.Chunks.Shadow,
 				'void main() {',
 				'	float light = max(uSun.y, 0.0) * sunShadow(vWorld, vec3(0.0, 1.0, 0.0));',
-				'	vec3 color = pow(mix(uRoot, uTip, vAlong) * vTone, vec3(2.2));',
+				/* What bends in the wind shows its pale side: from afar the wind is a slow sheen. */
+				'	vec3 color = pow(mix(uRoot, uTip, vAlong) * vTone * (1.0 + vWave * 0.05 * vAlong), vec3(2.2));',
 				'	float through = 1.0 + vAlong * 0.6;',
-				'	outColor = vec4(pow(color * (uSunColor * light * 1.35 * through + mix(uFloorLight, uSkyLight, 0.5 + vAlong * 0.5) * (0.4 + vAlong * 0.6) + sunBounce(vWorld)), vec3(1.0 / 2.2)), 1.0);',
+				'	outColor = vec4(pow(color * (uSunColor * light * 1.35 * through + mix(uFloorLight, uSkyLight, 0.5 + vAlong * 0.5) * (0.4 + vAlong * 0.6) * skySeen(vWorld) + sunBounce(vWorld)), vec3(1.0 / 2.2)), 1.0);',
 				'}'
 			].join('\n')
 		};

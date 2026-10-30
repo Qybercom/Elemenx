@@ -643,8 +643,8 @@ Elemenx.Service('Gltf', {
 
 	MeshoptAttributes: function (source, target, count, stride) {
 		var limit = Math.min(Math.floor(8192 / stride) & ~15, 256);
-		var tail = source.length - Math.max(32, stride);
-		var last = new Uint8Array(source.subarray(tail, tail + stride));
+		/* The first element closes the stream, after the padding that makes the end at least 32 long. */
+		var last = new Uint8Array(source.subarray(source.length - stride));
 		var buffer = new Uint8Array(limit + 16);
 		var at = 1;
 		var done = 0;
