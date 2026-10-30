@@ -1,0 +1,26 @@
+<pre class="elemenx-code" style="white-space: pre-wrap;">{{Text}}</pre>
+<script>
+({
+	Text: '',
+
+	$OnCreate: function () {
+		var gltf = this.$Service('Gltf');
+		var self = this;
+		var json = {
+			asset: {version: '2.0'},
+			scenes: [{nodes: [0]}],
+			nodes: [{name: 'Triangle', mesh: 0, translation: [0, 1, 0]}],
+			meshes: [{primitives: [{attributes: {POSITION: 0}}]}],
+			accessors: [{bufferView: 0, componentType: 5126, count: 3, type: 'VEC3'}],
+			bufferViews: [{buffer: 0, byteLength: 36}],
+			buffers: [{byteLength: 36, uri: 'data:application/octet-stream;base64,AAAAAAAAAAAAAAAAAACAPwAAAAAAAAAAAAAAAAAAgD8AAAAA'}]
+		};
+
+		gltf.Parse(json, function (error, asset) {
+			self.Text = error ? String(error) : 'Nodes: ' + asset.Nodes.map(function (node) {
+				return node.Name;
+			}).join(', ') + '\nTriangles: ' + asset.Meshes[0][0].Geometry.Indices.length / 3 + '\n\nIn a scene: <GameObject Kind="unit" Model="assets/hero.glb" Clip="Idle" />';
+		});
+	}
+})
+</script>

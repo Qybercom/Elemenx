@@ -43,8 +43,10 @@
  *   for a uniform sampler2D; Cube(size) a cube of six faces for a samplerCube, which Bake(cube, program, uniforms)
  *   draws once: the program is Shaders.Quad with a fragment shader that takes the direction of each texel from
  *   cubeDirection(uFace, vQuad) (Chunks.Cube): a surface of noise computed once, sampled at every frame.
- * - Target(width, height, {Colors, Depth}) returns textures to draw into: Textures, Begin(), End(), Destroy();
- *   Viewport(x, y, width, height) draws in a part of it. Texture takes options Float for an array of floats.
+ * - Target(width, height, {Colors, Depth, DepthTexture, Float, Samples, Mipmaps}) returns textures to draw into: Textures,
+ *   Depth (with DepthTexture), Begin(), End() (it resolves the samples and makes the mipmaps), Destroy();
+ *   Viewport(x, y, width, height) draws in a part of it. Texture takes options Float for an array of floats, Srgb for
+ *   the colors of a picture, Mipmaps, and Wrap and Filter of a sampler of glTF.
  * - Shadow(size) returns a shadow map, a depth texture for a uniform sampler2DShadow: between its Begin() and End() the
  *   draws write only its depth, as seen from the light; Destroy().
  * - Draw(mesh, program, uniforms, settings): settings Mode (triangles, lines, line-strip, line-loop, points), Blend
@@ -60,7 +62,7 @@ Elemenx.Service('Graphics3D', {
 	},
 
 	/* The places of the attributes, the same in every program: a mesh binds its buffers to them. */
-	Locations: {aPosition: 0, aNormal: 1, aUV: 2, aColor: 3, aInstance: 4, aInstance2: 5, aInstance3: 6, aInstance4: 7, aInstance5: 8},
+	Locations: {aPosition: 0, aNormal: 1, aUV: 2, aColor: 3, aInstance: 4, aInstance2: 5, aInstance3: 6, aInstance4: 7, aInstance5: 8, aJoints: 9, aWeights: 10, aFrames: 11},
 
 	Vectors: {
 		Add: function (a, b) {
@@ -757,7 +759,9 @@ Elemenx.Service('Graphics3D', {
 			count = geometry.Positions.length / 3;
 
 			Array.prototype.push.apply(result.Positions, geometry.Positions);
-			Array.prototype.push.apply(result.Normals, geometry.Normals);
+
+			for (i = 0; i < geometry.Normals.length; i++)
+				result.Normals.push(geometry.Normals[i]);
 
 			for (i = 0; i < count; i++)
 				result.UVs.push(geometry.UVs[i * 2] || 0, geometry.UVs[i * 2 + 1] || 0);
@@ -1105,6 +1109,8 @@ Elemenx.Service('Graphics3D', {
 			'uniform vec3 uAmbient;',
 			'uniform vec4 uOccluders[4];',
 			'uniform int uOccluderCount;',
+			'uniform vec3 uSkyLight;',
+			'uniform vec3 uFloorLight;',
 			'float lightShade = 1.0;',
 			'float shadow(vec3 position, vec3 light) {',
 			'	float lit = 1.0;',
@@ -1123,7 +1129,7 @@ Elemenx.Service('Graphics3D', {
 			'	return lit;',
 			'}',
 			'vec3 lighting(vec3 position, vec3 normal, vec3 view, float shine, float specular) {',
-			'	vec3 total = uAmbient;',
+			'	vec3 total = mix(uFloorLight, uSkyLight, normal.y * 0.5 + 0.5);',
 			'	for (int i = 0; i < 4; i++) {',
 			'		if (i >= uLightCount) break;',
 			'		vec3 toLight = normalize(uLightPositions[i] - position);',
@@ -1140,23 +1146,40 @@ Elemenx.Service('Graphics3D', {
 
 		Shadow: [
 			'uniform highp sampler2DShadow uShadowMap;',
+			'uniform highp sampler2DShadow uShadowNear;',
+			'uniform sampler2D uBounce;',
 			'uniform mat4 uShadowMatrix;',
+			'uniform mat4 uShadowNearMatrix;',
 			'uniform float uShadowBias;',
+			'uniform float uShadowNearBias;',
 			'uniform float uShadowOn;',
+			'uniform float uBounceOn;',
+			'float shadowIn(highp sampler2DShadow map, vec3 place, float texel) {',
+			'	float sum = 0.0;',
+			'	for (int x = -1; x <= 1; x++) {',
+			'		for (int y = -1; y <= 1; y++) {',
+			'			sum += texture(map, vec3(place.xy + vec2(float(x), float(y)) * texel * 1.2, place.z));',
+			'		}',
+			'	}',
+			'	return sum / 9.0;',
+			'}',
 			'float sunShadow(vec3 position, vec3 normal) {',
 			'	if (uShadowOn < 0.5) return 1.0;',
+			'	if (uShadowOn > 1.5) {',
+			'		vec4 near = uShadowNearMatrix * vec4(position + normal * uShadowNearBias, 1.0);',
+			'		float inside = max(abs(near.x), abs(near.y));',
+			'		if (inside < 0.92 && abs(near.z) < 1.0) return shadowIn(uShadowNear, near.xyz * 0.5 + 0.5, 1.0 / float(textureSize(uShadowNear, 0).x));',
+			'	}',
 			'	vec4 at = uShadowMatrix * vec4(position + normal * uShadowBias, 1.0);',
 			'	vec3 place = at.xyz * 0.5 + 0.5;',
 			'	float edge = max(abs(at.x), abs(at.y));',
 			'	if (edge >= 1.0 || place.z >= 1.0) return 1.0;',
-			'	float texel = 1.0 / float(textureSize(uShadowMap, 0).x);',
-			'	float sum = 0.0;',
-			'	for (int x = -1; x <= 1; x++) {',
-			'		for (int y = -1; y <= 1; y++) {',
-			'			sum += texture(uShadowMap, vec3(place.xy + vec2(float(x), float(y)) * texel * 1.2, place.z));',
-			'		}',
-			'	}',
-			'	return mix(sum / 9.0, 1.0, smoothstep(0.85, 1.0, edge));',
+			'	return mix(shadowIn(uShadowMap, place, 1.0 / float(textureSize(uShadowMap, 0).x)), 1.0, smoothstep(0.85, 1.0, edge));',
+			'}',
+			'vec3 sunBounce(vec3 position) {',
+			'	if (uBounceOn < 0.5) return vec3(0.0);',
+			'	vec4 at = uShadowMatrix * vec4(position, 1.0);',
+			'	return pow(textureLod(uBounce, at.xy * 0.5 + 0.5, 3.0).rgb, vec3(2.2)) * 0.55;',
 			'}'
 		].join('\n')
 	},
@@ -1260,6 +1283,11 @@ Elemenx.Service('Graphics3D', {
 				else {
 					gl.disableVertexAttribArray(self.Locations.aColor);
 					gl.vertexAttrib4f(self.Locations.aColor, 1, 1, 1, 1);
+				}
+
+				if (shape.Joints && shape.Joints.length) {
+					attribute(made, 'aJoints', 4, shape.Joints);
+					attribute(made, 'aWeights', 4, shape.Weights);
 				}
 
 				if (shape.Indices && shape.Indices.length) {
@@ -1459,11 +1487,14 @@ Elemenx.Service('Graphics3D', {
 
 				if (source && source.Data && settings.Float) gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, source.Width, source.Height, 0, gl.RGBA, gl.FLOAT, source.Data);
 				else if (source && source.Data) gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, source.Width, source.Height, 0, gl.RGBA, gl.UNSIGNED_BYTE, source.Data instanceof Uint8Array ? source.Data : new Uint8Array(source.Data));
-				else gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, source);
+				else gl.texImage2D(gl.TEXTURE_2D, 0, settings.Srgb ? gl.SRGB8_ALPHA8 : gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, source);
+
+				if (settings.Mipmaps)
+					gl.generateMipmap(gl.TEXTURE_2D);
 
 				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, settings.Repeat ? gl.REPEAT : gl.CLAMP_TO_EDGE);
 				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, settings.Repeat ? gl.REPEAT : gl.CLAMP_TO_EDGE);
-				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, settings.Nearest ? gl.NEAREST : gl.LINEAR);
+				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, settings.Nearest ? gl.NEAREST : settings.Mipmaps ? gl.LINEAR_MIPMAP_LINEAR : gl.LINEAR);
 				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, settings.Nearest ? gl.NEAREST : gl.LINEAR);
 
 				texture.Destroy = function () {
@@ -1544,8 +1575,11 @@ Elemenx.Service('Graphics3D', {
 				var count = settings.Colors || 1;
 				var frame = gl.createFramebuffer();
 				var depth = settings.Depth ? gl.createRenderbuffer() : null;
-				var made = {Width: width, Height: height, Textures: []};
+				var made = {Width: width, Height: height, Textures: [], Depth: null};
 				var outputs = [];
+				var many = settings.Samples ? gl.createFramebuffer() : null;
+				var color = settings.Samples ? gl.createRenderbuffer() : null;
+				var deep = settings.Samples ? gl.createRenderbuffer() : null;
 				var i;
 
 				gl.bindFramebuffer(gl.FRAMEBUFFER, frame);
@@ -1555,7 +1589,7 @@ Elemenx.Service('Graphics3D', {
 
 					gl.bindTexture(gl.TEXTURE_2D, handle);
 					gl.texImage2D(gl.TEXTURE_2D, 0, settings.Float ? gl.RGBA16F : gl.RGBA8, width, height, 0, gl.RGBA, settings.Float ? gl.FLOAT : gl.UNSIGNED_BYTE, null);
-					gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+					gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, settings.Mipmaps ? gl.LINEAR_MIPMAP_LINEAR : gl.LINEAR);
 					gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 					gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
 					gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
@@ -1573,14 +1607,51 @@ Elemenx.Service('Graphics3D', {
 					gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, depth);
 				}
 
+				if (settings.DepthTexture) {
+					made.Depth = {Handle: gl.createTexture()};
+
+					gl.bindTexture(gl.TEXTURE_2D, made.Depth.Handle);
+					gl.texStorage2D(gl.TEXTURE_2D, 1, gl.DEPTH_COMPONENT24, width, height);
+					gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+					gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+					gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+					gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+					gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, made.Depth.Handle, 0);
+				}
+
+				/* What is drawn with samples goes to buffers of its own, and to the textures when it ends. */
+				if (many) {
+					gl.bindFramebuffer(gl.FRAMEBUFFER, many);
+					gl.bindRenderbuffer(gl.RENDERBUFFER, color);
+					gl.renderbufferStorageMultisample(gl.RENDERBUFFER, settings.Samples, settings.Float ? gl.RGBA16F : gl.RGBA8, width, height);
+					gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.RENDERBUFFER, color);
+					gl.bindRenderbuffer(gl.RENDERBUFFER, deep);
+					gl.renderbufferStorageMultisample(gl.RENDERBUFFER, settings.Samples, gl.DEPTH_COMPONENT24, width, height);
+					gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, deep);
+				}
+
 				gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
 				made.Begin = function () {
-					gl.bindFramebuffer(gl.FRAMEBUFFER, frame);
+					gl.bindFramebuffer(gl.FRAMEBUFFER, many || frame);
 					gl.viewport(0, 0, width, height);
 				};
 
 				made.End = function () {
+					if (many) {
+						gl.bindFramebuffer(gl.READ_FRAMEBUFFER, many);
+						gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, frame);
+						gl.blitFramebuffer(0, 0, width, height, 0, 0, width, height, gl.COLOR_BUFFER_BIT, gl.NEAREST);
+						gl.blitFramebuffer(0, 0, width, height, 0, 0, width, height, gl.DEPTH_BUFFER_BIT, gl.NEAREST);
+						gl.bindFramebuffer(gl.READ_FRAMEBUFFER, null);
+						gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, null);
+					}
+
+					if (settings.Mipmaps) {
+						gl.bindTexture(gl.TEXTURE_2D, made.Textures[0].Handle);
+						gl.generateMipmap(gl.TEXTURE_2D);
+					}
+
 					gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 					gl.viewport(0, 0, renderer.Width, renderer.Height);
 				};
@@ -1589,6 +1660,15 @@ Elemenx.Service('Graphics3D', {
 					made.Textures.forEach(function (texture) {
 						gl.deleteTexture(texture.Handle);
 					});
+
+					if (made.Depth)
+						gl.deleteTexture(made.Depth.Handle);
+
+					if (many) {
+						gl.deleteFramebuffer(many);
+						gl.deleteRenderbuffer(color);
+						gl.deleteRenderbuffer(deep);
+					}
 
 					if (depth)
 						gl.deleteRenderbuffer(depth);

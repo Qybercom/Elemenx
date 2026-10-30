@@ -11,6 +11,11 @@
  *   Blob(radius, at, color, rough, scale), Lathe(points, at, color, segments) and Wedge(width, height, depth, at, color,
  *   turn); at is [x, y, z] in the space of the model, turn degrees round x, y and z, a piece with Team takes the color
  *   of its team; tools.Graphics and tools.Rigs (Biped, Quadruped, Tracked: clips to reuse) are at hand.
+ *   A recipe may name a file instead of Build: Define('hero', {URL: 'assets/hero.glb', Type, Size, Speed, Clips: {walk:
+ *   'Run'}}) (Clips: the clips of the game and the animations of the file that play them; idle, walk, run, attack, die
+ *   and work are found by their names). Load(name, callback) fetches it, (error, model), and Ready(name) tells whether
+ *   it came; a model of a file stands on the ground and is 1 tall, as the others are. Make of one not come yet is null.
+ *   Bake(model) makes the moves of its skeletons an array of frames, for a shader that reads them.
  * - Make(name, {Variant}) returns a model, made once: {Name, Key, Group, Type, Size, Speed, Sway, Matte, Clips, Pieces:
  *   [{ID, Parent, Pivot, Team, Geometry}]}.
  * - Whole(model) is a model as one geometry, Bounds(geometry) its {Radius, Middle} and Levels(name, {Variant}) its
@@ -25,7 +30,7 @@
 Elemenx.Service('Models', {
 	$Meta: {
 		Description: 'The models of a game made of code: units, animals, plants, buildings and ships of pieces that move, fantasy and sci-fi, and their clips.',
-		Methods: ['Names(filter)', 'Has(name)', 'Info(name)', 'Define(name, recipe)', 'Make(name, options)', 'Whole(model)', 'Bounds(geometry)', 'Levels(name, options)', 'Pose(model, clip, time, options)', 'Length(model, clip)']
+		Methods: ['Names(filter)', 'Has(name)', 'Info(name)', 'Define(name, recipe)', 'Load(name, callback)', 'Ready(name)', 'Bake(model)', 'Make(name, options)', 'Whole(model)', 'Bounds(geometry)', 'Levels(name, options)', 'Pose(model, clip, time, options)', 'Length(model, clip)']
 	},
 
 	$OnCreate: function () {
@@ -38,8 +43,8 @@ Elemenx.Service('Models', {
 	Define: function (name, recipe) {
 		var made = this.Made;
 
-		if (!name || !recipe || typeof recipe.Build !== 'function')
-			throw new Error('Elemenx Models: Define expects (name, {Build})');
+		if (!name || !recipe || typeof recipe.Build !== 'function' && !recipe.URL)
+			throw new Error('Elemenx Models: Define expects (name, {Build}) or (name, {URL})');
 
 		this.Recipes[name] = recipe;
 
@@ -53,6 +58,51 @@ Elemenx.Service('Models', {
 
 	Has: function (name) {
 		return !!this.Recipes[name];
+	},
+
+	/* Whether a model is made of code, or of a file that came. */
+	Ready: function (name) {
+		var recipe = this.Recipes[name];
+
+		return !!recipe && (!recipe.URL || !!recipe.Asset);
+	},
+
+	Load: function (name, callback) {
+		var self = this;
+		var recipe = this.Recipes[name];
+		var done = callback || function () {};
+
+		if (!recipe || !recipe.URL) {
+			done(recipe ? null : new Error('Elemenx Models: unknown model ' + name), recipe ? this.Make(name) : null);
+
+			return;
+		}
+
+		if (recipe.Asset) {
+			done(null, this.Make(name));
+
+			return;
+		}
+
+		recipe.Waiting = recipe.Waiting || [];
+
+		recipe.Waiting.push(done);
+
+		if (recipe.Waiting.length > 1) return;
+
+		this.$Service('Gltf').Load(recipe.URL, function (error, asset) {
+			var waiting = recipe.Waiting;
+
+			recipe.Waiting = null;
+			recipe.Asset = asset;
+
+			if (error)
+				recipe.Failed = error;
+
+			waiting.forEach(function (each) {
+				each(error, error ? null : self.Make(name));
+			});
+		});
 	},
 
 	Names: function (filter) {
@@ -87,6 +137,14 @@ Elemenx.Service('Models', {
 		if (this.Made[key])
 			return this.Made[key];
 
+		if (recipe.URL) {
+			if (!recipe.Asset) return null;
+
+			this.Made[key] = this.FromFile(name, key, recipe);
+
+			return this.Made[key];
+		}
+
 		pieces = recipe.Build(this.Tools(), this.Random(name + ':' + variant)).map(function (piece) {
 			var geometry = graphics.Merge(piece.Parts);
 
@@ -99,9 +157,298 @@ Elemenx.Service('Models', {
 	},
 
 	Whole: function (model) {
-		return this.$Service('Graphics3D').Merge(model.Pieces.map(function (piece) {
-			return {Geometry: piece.Geometry};
+		var graphics = this.$Service('Graphics3D');
+
+		return graphics.Merge(model.Pieces.map(function (piece) {
+			return piece.Rest ? {Geometry: piece.Geometry, Matrix: piece.Rest} : {Geometry: piece.Geometry};
 		}));
+	},
+
+	/* The matrix of a node in the model, by its translation, rotation and scale. */
+	NodeMatrix: function (t, r, s) {
+		var x = r[0];
+		var y = r[1];
+		var z = r[2];
+		var w = r[3];
+
+		return [
+			(1 - 2 * (y * y + z * z)) * s[0], 2 * (x * y + z * w) * s[0], 2 * (x * z - y * w) * s[0], 0,
+			2 * (x * y - z * w) * s[1], (1 - 2 * (x * x + z * z)) * s[1], 2 * (y * z + x * w) * s[1], 0,
+			2 * (x * z + y * w) * s[2], 2 * (y * z - x * w) * s[2], (1 - 2 * (x * x + y * y)) * s[2], 0,
+			t[0], t[1], t[2], 1
+		];
+	},
+
+	/* What a node of an asset is at a second of an animation: its translation, rotation and scale. */
+	Sample: function (asset, animation, time) {
+		var pose = asset.Nodes.map(function (node) {
+			return {T: node.Translation, R: node.Rotation, S: node.Scale};
+		});
+
+		if (animation) {
+			animation.Channels.forEach(function (channel) {
+				var size = channel.Size;
+				var times = channel.Times;
+				var last = times.length - 1;
+				var at = 0;
+				var t = 0;
+				var step = channel.Cubic ? 3 : 1;
+				var skip = channel.Cubic ? size : 0;
+				var value = [];
+				var i;
+
+				while (at < last && time >= times[at + 1])
+					at++;
+
+				if (at < last && !channel.Step)
+					t = Math.max(0, Math.min(1, (time - times[at]) / (times[at + 1] - times[at])));
+
+				for (i = 0; i < size; i++)
+					value.push(channel.Values[at * step * size + skip + i]);
+
+				if (t) {
+					var next = [];
+					var dot = 0;
+
+					for (i = 0; i < size; i++) {
+						next.push(channel.Values[(at + 1) * step * size + skip + i]);
+
+						dot += value[i] * next[i];
+					}
+
+					/* A rotation goes the short way. */
+					if (channel.Path === 'rotation' && dot < 0) {
+						next = next.map(function (each) {
+							return -each;
+						});
+					}
+
+					value = value.map(function (each, index) {
+						return each + (next[index] - each) * t;
+					});
+
+					if (channel.Path === 'rotation') {
+						var length = Math.sqrt(value[0] * value[0] + value[1] * value[1] + value[2] * value[2] + value[3] * value[3]) || 1;
+
+						value = value.map(function (each) {
+							return each / length;
+						});
+					}
+				}
+
+				if (channel.Path === 'translation') pose[channel.Node].T = value;
+				else if (channel.Path === 'rotation') pose[channel.Node].R = value;
+				else if (channel.Path === 'scale') pose[channel.Node].S = value;
+			});
+		}
+
+		return pose;
+	},
+
+	/* The matrices of the nodes in a pose: each in its parent, the parents first whatever their order. */
+	NodeWorld: function (asset, pose, root) {
+		var self = this;
+		var graphics = this.$Service('Graphics3D');
+		var world = [];
+
+		function visit (index, parent) {
+			var each = pose[index];
+
+			world[index] = graphics.Multiply(parent, self.NodeMatrix(each.T, each.R, each.S));
+
+			asset.Nodes[index].Children.forEach(function (child) {
+				visit(child, world[index]);
+			});
+		}
+
+		asset.Scene.forEach(function (index) {
+			visit(index, root);
+		});
+
+		return world;
+	},
+
+	/* A model of a file: a piece of each primitive of its nodes, standing on the ground, 1 tall. */
+	FromFile: function (name, key, recipe) {
+		var self = this;
+		var graphics = this.$Service('Graphics3D');
+		var asset = recipe.Asset;
+		var rest = this.NodeWorld(asset, this.Sample(asset, null, 0), graphics.Identity());
+		var box = {Low: [Infinity, Infinity, Infinity], High: [-Infinity, -Infinity, -Infinity]};
+		var pieces = [];
+		var joints = 0;
+		var offsets = asset.Skins.map(function (skin) {
+			var start = joints;
+
+			joints += skin.Joints.length;
+
+			return start;
+		});
+		var fit;
+		var model;
+		var scale;
+
+		asset.Nodes.forEach(function (node, index) {
+			if (node.Mesh === -1) return;
+
+			asset.Meshes[node.Mesh].forEach(function (primitive, part) {
+				var material = asset.Materials[primitive.Material] || asset.Materials[0];
+				var skinned = node.Skin !== -1 && !!primitive.Geometry.Joints;
+				var geometry = self.Painted(primitive.Geometry, material, asset);
+				var matrix = skinned ? graphics.Identity() : rest[index];
+				var i;
+
+				for (i = 0; i < geometry.Positions.length; i += 3) {
+					var point = graphics.Apply(matrix, [geometry.Positions[i], geometry.Positions[i + 1], geometry.Positions[i + 2]]);
+
+					[0, 1, 2].forEach(function (axis) {
+						box.Low[axis] = Math.min(box.Low[axis], point[axis]);
+						box.High[axis] = Math.max(box.High[axis], point[axis]);
+					});
+				}
+
+				pieces.push({ID: 'node-' + index + '-' + part, Parent: '', Pivot: [0, 0, 0], Team: false, Geometry: geometry, Material: material, Node: index, Skin: skinned ? node.Skin : -1, JointOffset: skinned ? offsets[node.Skin] : 0, Rest: matrix});
+			});
+		});
+
+		scale = 1 / Math.max(box.High[1] - box.Low[1], 0.0001);
+
+		if (recipe.Fit === false) {
+			fit = graphics.Identity();
+		}
+		else {
+			fit = graphics.Multiply(graphics.Scaling(scale, scale, scale), graphics.Translation(-(box.Low[0] + box.High[0]) / 2, -box.Low[1], -(box.Low[2] + box.High[2]) / 2));
+		}
+
+		pieces.forEach(function (piece) {
+			piece.Rest = graphics.Multiply(fit, piece.Rest);
+		});
+
+		model = {Name: name, Key: key, Group: recipe.Group || '', Type: recipe.Type || '', Size: recipe.Size || 1, Speed: recipe.Speed || 0, Sway: recipe.Sway || 0, Matte: false, Clips: this.ClipsOf(asset, recipe), Pieces: pieces, Asset: asset, Fit: fit, Joints: joints, Moves: asset.Animations.length > 0};
+
+		return model;
+	},
+
+	/* The geometry of a primitive with the color of its material in its corners: for what is far, and has no pictures. */
+	Painted: function (geometry, material, asset) {
+		var image = material.ColorMap ? asset.Images[material.ColorMap.Image] : null;
+		var mean = image && image.Mean ? image.Mean : [1, 1, 1];
+		var color = [material.BaseColor[0] * mean[0], material.BaseColor[1] * mean[1], material.BaseColor[2] * mean[2]];
+		var count = geometry.Positions.length / 3;
+		var colors = new Array(count * 3);
+		var i;
+
+		for (i = 0; i < count; i++) {
+			colors[i * 3] = color[0] * (geometry.Colors ? geometry.Colors[i * 3] : 1);
+			colors[i * 3 + 1] = color[1] * (geometry.Colors ? geometry.Colors[i * 3 + 1] : 1);
+			colors[i * 3 + 2] = color[2] * (geometry.Colors ? geometry.Colors[i * 3 + 2] : 1);
+		}
+
+		return Object.assign({}, geometry, {Colors: colors});
+	},
+
+	/* The clips of a file: named by the recipe, or found in the names of its animations. */
+	ClipsOf: function (asset, recipe) {
+		var clips = {};
+		var named = recipe.Clips || {};
+		var look = {idle: /idle|stand|breath/i, walk: /walk/i, run: /run|sprint/i, attack: /attack|shoot|slash|punch/i, die: /die|death|dead/i, work: /work|gather|build/i};
+
+		function add (name, animation) {
+			clips[name] = {Length: animation.Length || 1, Loop: !/^(attack|die|cast)$/.test(name), Hold: name === 'die', Stride: recipe.Stride || 1, Animation: animation};
+		}
+
+		asset.Animations.forEach(function (animation) {
+			var key = animation.Name;
+
+			add(key, animation);
+
+			Object.keys(look).forEach(function (name) {
+				if (look[name].test(key) && !clips[name])
+					add(name, animation);
+			});
+		});
+
+		Object.keys(named).forEach(function (name) {
+			asset.Animations.forEach(function (animation) {
+				if (animation.Name === named[name])
+					add(name, animation);
+			});
+		});
+
+		if (!clips.walk && clips.run)
+			clips.walk = clips.run;
+
+		return clips;
+	},
+
+	/*
+	 * The skeletons of a model as an array of frames, thirty a second: three rows of a matrix for each joint, a line of
+	 * the texture for each frame. Every copy of a model then only says which line it is at.
+	 */
+	Bake: function (model) {
+		var self = this;
+		var graphics = this.$Service('Graphics3D');
+		var asset = model.Asset;
+		var rate = 30;
+		var frames = [];
+		var starts = {};
+		var made;
+
+		if (model.Baked)
+			return model.Baked;
+
+		function frame (animation, time) {
+			var world = self.NodeWorld(asset, self.Sample(asset, animation, time), model.Fit);
+			var line = [];
+
+			asset.Skins.forEach(function (skin) {
+				skin.Joints.forEach(function (joint, index) {
+					var inverse = skin.Inverse ? Array.prototype.slice.call(skin.Inverse, index * 16, index * 16 + 16) : graphics.Identity();
+					var m = graphics.Multiply(world[joint], inverse);
+
+					line.push(m[0], m[4], m[8], m[12], m[1], m[5], m[9], m[13], m[2], m[6], m[10], m[14]);
+				});
+			});
+
+			frames.push(line);
+		}
+
+		frame(null, 0);
+
+		Object.keys(model.Clips).forEach(function (name) {
+			var clip = model.Clips[name];
+			var count = Math.max(1, Math.ceil(clip.Length * rate));
+			var i;
+
+			starts[name] = {Start: frames.length, Count: count, Rate: rate};
+
+			for (i = 0; i <= count; i++)
+				frame(clip.Animation, Math.min(clip.Length, i / rate));
+		});
+
+		made = new Float32Array(frames.length * model.Joints * 12);
+
+		frames.forEach(function (line, index) {
+			made.set(line, index * model.Joints * 12);
+		});
+
+		model.Baked = {Data: made, Width: Math.max(1, model.Joints * 3), Height: frames.length, Clips: starts};
+
+		return model.Baked;
+	},
+
+	/* The line of a clip at a second of it, and the fraction of the way to the next. */
+	Frame: function (model, clip, time) {
+		var baked = this.Bake(model);
+		var made = model.Clips[clip];
+		var place = baked.Clips[clip];
+		var at;
+
+		if (!made || !place) return 0;
+
+		at = (made.Loop ? time % made.Length : Math.min(made.Length, time)) * place.Rate;
+
+		return place.Start + Math.min(place.Count, Math.floor(at));
 	},
 
 	Bounds: function (geometry) {
@@ -186,6 +533,27 @@ Elemenx.Service('Models', {
 	},
 
 	Pose: function (model, clip, time, options) {
+		if (model.Asset)
+			return this.PoseOfFile(model, clip, time, options);
+
+		return this.PoseOfPieces(model, clip, time, options);
+	},
+
+	/* The matrix of each piece of a model of a file, in the space of the model; a skeleton moves by its frames. */
+	PoseOfFile: function (model, clip, time) {
+		var made = model.Clips[clip];
+		var moment = made ? (made.Loop ? time % made.Length : Math.min(made.Length, time)) : 0;
+		var world = this.NodeWorld(model.Asset, this.Sample(model.Asset, made ? made.Animation : null, moment), model.Fit);
+		var matrices = {};
+
+		model.Pieces.forEach(function (piece) {
+			matrices[piece.ID] = piece.Skin === -1 ? world[piece.Node] : model.Fit;
+		});
+
+		return matrices;
+	},
+
+	PoseOfPieces: function (model, clip, time, options) {
 		var graphics = this.$Service('Graphics3D');
 		var settings = options || {};
 		var state = this.Local(model, clip, time);

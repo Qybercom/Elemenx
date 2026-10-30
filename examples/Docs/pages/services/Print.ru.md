@@ -35,5 +35,5 @@
 
 ## Тесты
 
-- [code editor finds and replaces, switches languages, wraps and prints through its methods](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L6315) — `tests/examples/ui-kit.spec.js`
-- [rich editor reads and writes Markdown, edits tables, inserts images and prints through its methods](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L6535) — `tests/examples/ui-kit.spec.js`
+- [code editor finds and replaces, switches languages, wraps and prints through its methods](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L6324) — `tests/examples/ui-kit.spec.js`
+- [rich editor reads and writes Markdown, edits tables, inserts images and prints through its methods](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L6544) — `tests/examples/ui-kit.spec.js`

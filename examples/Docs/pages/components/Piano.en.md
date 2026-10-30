@@ -61,4 +61,4 @@ Events: noteon ({Note, Midi, Velocity}), noteoff ({Note, Midi}).
 
 ## Tests
 
-- [a piano plays the key pressed, louder lower on it, slides over keys, takes the keys of the computer and marks notes](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L3465) — `tests/examples/ui-kit.spec.js`
+- [a piano plays the key pressed, louder lower on it, slides over keys, takes the keys of the computer and marks notes](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L3474) — `tests/examples/ui-kit.spec.js`

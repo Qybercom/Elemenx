@@ -147,6 +147,13 @@ Elemenx.Trait('Scatter', {
 
 			if (!state.Waiting.length) return;
 
+			/* What is sown from files, once they came. */
+			if (rules().some(function (rule) {
+				return [].concat(rule.Shapes || []).some(function (name) {
+					return engine.Known(name) && !library.Ready(name);
+				});
+			})) return;
+
 			state.Waiting.sort(function (a, b) {
 				return Math.abs(b.X - eye[0]) + Math.abs(b.Z - eye[2]) - Math.abs(a.X - eye[0]) - Math.abs(a.Z - eye[2]);
 			});
@@ -492,7 +499,7 @@ Elemenx.Trait('Scatter', {
 				var baked;
 
 				if (one.Level < 3) {
-					renderer.Draw(levels(one.Key)[one.Level], programs().Many, Object.assign({}, uniforms, {uOrigin: origin, uWind: scene.Seconds, uSway: made.Sway, uShine: 8, uSpecular: 0.05, uRough: 0.5}), {Cull: 'back'});
+					renderer.Draw(levels(one.Key)[one.Level], programs().Many, Object.assign({}, uniforms, {uOrigin: origin, uWind: scene.Seconds, uSway: made.Sway, uShine: 8, uSpecular: 0.05, uRough: 0.5, uSoft: made.Sway ? 0.9 : 0}), {Cull: 'back'});
 
 					return;
 				}
@@ -616,7 +623,8 @@ Elemenx.Trait('Scatter', {
 				'uniform sampler2D uNormals;',
 				'uniform vec3 uSun;',
 				'uniform vec3 uSunColor;',
-				'uniform vec3 uAmbient;',
+				'uniform vec3 uSkyLight;',
+				'uniform vec3 uFloorLight;',
 				'out vec4 outColor;',
 				graphics.Chunks.Shadow,
 				'void main() {',
@@ -625,7 +633,8 @@ Elemenx.Trait('Scatter', {
 				'	vec3 n = texture(uNormals, vUV).xyz * 2.0 - 1.0;',
 				'	n = normalize(vec3(vTurn.x * n.x + vTurn.y * n.z, n.y, vTurn.x * n.z - vTurn.y * n.x));',
 				'	float light = max(dot(n, uSun), 0.0) * sunShadow(vWorld, n);',
-				'	outColor = vec4(color.rgb * vTint * (uSunColor * light * 1.15 + uAmbient), 1.0);',
+				'	vec3 albedo = pow(color.rgb * vTint, vec3(2.2));',
+				'	outColor = vec4(pow(albedo * (uSunColor * light * 1.35 + mix(uFloorLight, uSkyLight, n.y * 0.5 + 0.5) + sunBounce(vWorld)), vec3(1.0 / 2.2)), 1.0);',
 				'}'
 			].join('\n'),
 
@@ -678,13 +687,15 @@ Elemenx.Trait('Scatter', {
 				'uniform vec3 uTip;',
 				'uniform vec3 uSun;',
 				'uniform vec3 uSunColor;',
-				'uniform vec3 uAmbient;',
+				'uniform vec3 uSkyLight;',
+				'uniform vec3 uFloorLight;',
 				'out vec4 outColor;',
 				graphics.Chunks.Shadow,
 				'void main() {',
 				'	float light = max(uSun.y, 0.0) * sunShadow(vWorld, vec3(0.0, 1.0, 0.0));',
-				'	vec3 color = mix(uRoot, uTip, vAlong) * vTone;',
-				'	outColor = vec4(color * (uSunColor * light * 1.1 + uAmbient), 1.0);',
+				'	vec3 color = pow(mix(uRoot, uTip, vAlong) * vTone, vec3(2.2));',
+				'	float through = 1.0 + vAlong * 0.6;',
+				'	outColor = vec4(pow(color * (uSunColor * light * 1.35 * through + mix(uFloorLight, uSkyLight, 0.5 + vAlong * 0.5) * (0.4 + vAlong * 0.6) + sunBounce(vWorld)), vec3(1.0 / 2.2)), 1.0);',
 				'}'
 			].join('\n')
 		};

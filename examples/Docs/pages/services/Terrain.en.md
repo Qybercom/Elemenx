@@ -39,6 +39,6 @@ The same functions run in Node: they read no page.
 
 ## Tests
 
-- [has continuous heights, chunks with a skirt, and ways that keep out of the sea](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1154) — `tests/regression/library-scene.test.js`
-- [has the ground of a planet whose coasts are the ones its baked surface shows, its squares turned outwards](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1188) — `tests/regression/library-scene.test.js`
-- [terrain draws a ground with its trees and houses, its units walk to the village round what blocks them, and the game saves](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L3230) — `tests/examples/ui-kit.spec.js`
+- [has continuous heights, chunks with a skirt, and ways that keep out of the sea](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1524) — `tests/regression/library-scene.test.js`
+- [has the ground of a planet whose coasts are the ones its baked surface shows, its squares turned outwards](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1558) — `tests/regression/library-scene.test.js`
+- [terrain draws a ground with its trees and houses, its units walk to the village round what blocks them, and the game saves](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L3239) — `tests/examples/ui-kit.spec.js`

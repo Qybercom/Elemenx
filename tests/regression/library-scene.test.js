@@ -1,6 +1,7 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { loadElemenx, resetDOM, tick, unique, waitFor } from '../setup.js';
 import { Use } from '../library.js';
+import { Binary, Picture } from '../glb.mjs';
 
 var owned = [];
 
@@ -898,6 +899,148 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 		expect(Math.abs(scene.Sown().Things - first.Things)).toBeLessThan(first.Things * 0.02);
 	});
 
+	it('draws the model of a file by the same API: fetched, lit, moved and played', async function () {
+		var address = URL.createObjectURL(new Blob([Binary()], {type: 'model/gltf-binary'})) + '#.glb';
+		var library = Elemenx.Service('Models');
+		var mounted;
+		var scene;
+		var inner;
+		var engine;
+		var gl;
+
+		library.Define('test-column', {URL: address, Type: 'unit', Clips: {walk: 'Bend', attack: 'Spin'}});
+
+		mounted = await mount('<GameScene (ready)="Ready">' +
+			'<GameObject ID="land" Kind="ground" Size="300" Height="4" Water="0" Seed="test" />' +
+			'<GameObject ID="sun" Kind="sun" />' +
+			'<GameObject ID="hero" Kind="unit" Model="test-column" X="0" Y="0" />' +
+			'<GameObject ID="other" Kind="unit" Model="test-column" X="4" Y="0" />' +
+		'</GameScene>');
+
+		scene = mounted.Space;
+		inner = scene.Scene();
+		engine = scene.Engine();
+		gl = engine.Renderer.GL;
+
+		await waitFor(function () {
+			engine.Frame(performance.now() + 100);
+
+			return library.Ready('test-column') && inner.Lists && Object.keys(inner.Lists).length > 0;
+		}, 4000);
+
+		expect(gl.getError()).toBe(gl.NO_ERROR);
+
+		/* The same model is one draw of two copies, at frames of their own. */
+		var lists = Object.keys(inner.Lists).filter(function (name) {
+			return /test-column/.test(name) && inner.Lists[name].Skinned;
+		});
+
+		expect(lists.length).toBe(1);
+		expect(inner.Lists[lists[0]].Count).toBe(2);
+
+		expect(scene.Play('hero', 'attack')).toBe(true);
+		expect(scene.Play('hero', 'nothing')).toBe(false);
+
+		expect(scene.Move('hero', [20, 5])).toBe(true);
+
+		inner.Seconds += 0.1;
+
+		engine.Frame(performance.now() + 200);
+
+		expect(inner.Objects.hero.Clip.Name).toBe('attack');
+
+		scene.Play('hero', 'walk');
+
+		inner.Seconds += 2;
+
+		engine.Frame(performance.now() + 300);
+
+		inner.Seconds += 0.2;
+
+		engine.Frame(performance.now() + 400);
+
+		expect(inner.Objects.hero.Clip.Name).toBe('walk');
+		expect(inner.Objects.hero.Frames[0]).toBeGreaterThan(0);
+		expect(gl.getError()).toBe(gl.NO_ERROR);
+
+		delete library.Recipes['test-column'];
+	});
+
+	it('sows the model of a file as it sows the ones of code', async function () {
+		var address = URL.createObjectURL(new Blob([Binary()], {type: 'model/gltf-binary'})) + '#.glb';
+		var library = Elemenx.Service('Models');
+		var mounted = await mount('<GameScene (ready)="Ready">' +
+			'<GameObject ID="land" Kind="ground" Size="96" Height="4" Water="0" Seed="test" />' +
+			'<GameObject ID="sun" Kind="sun" />' +
+			'<GameObject ID="posts" Kind="forest" [shapes]="Shapes" Density="2" Cover="1" MinHeight="-100" MaxSlope="1" />' +
+		'</GameScene>', {Shapes: [address]});
+		var scene = mounted.Space;
+		var engine = scene.Engine();
+
+		scene.Scene().Wanted = 40;
+		scene.Scene().Distance = 40;
+
+		await waitFor(function () {
+			engine.Frame(performance.now() + 100);
+
+			return library.Has(address) && library.Ready(address) && scene.Sown().Waiting === 0 && scene.Sown().Draws > 0;
+		}, 6000);
+
+		expect(scene.Sown().Things).toBeGreaterThan(50);
+		expect(engine.Renderer.GL.getError()).toBe(engine.Renderer.GL.NO_ERROR);
+
+		delete library.Recipes[address];
+	});
+
+	it('makes a picture of its light by the quality asked for, and steps down while frames are late when none is', async function () {
+		var mounted = await mount('<GameScene Quality="ultra" (ready)="Ready">' +
+			'<GameObject ID="land" Kind="ground" Size="200" Height="6" Water="0.1" Seed="test" />' +
+			'<GameObject ID="sun" Kind="sun" Elevation="30" />' +
+			'<GameObject ID="keep" Kind="house" X="0" Y="0" />' +
+		'</GameScene>');
+		var scene = mounted.Space;
+		var engine = scene.Engine();
+		var gl = engine.Renderer.GL;
+		var at = 0;
+		var frame = function () {
+			at += 100;
+
+			engine.Frame(performance.now() + at);
+		};
+		var i;
+
+		frame();
+
+		expect(scene.Graphics()).toMatchObject({Level: 'ultra', Post: true, Cascades: 2, Bounce: true, Occlusion: 1});
+		expect(gl.getError()).toBe(gl.NO_ERROR);
+
+		['high', 'medium', 'low'].forEach(function (level) {
+			scene.Quality = level;
+
+			frame();
+			frame();
+
+			expect(scene.Graphics().Level).toBe(level);
+			expect(gl.getError()).toBe(gl.NO_ERROR);
+		});
+
+		expect(scene.Graphics()).toMatchObject({Post: false, Cascades: 1, Bounce: false});
+
+		/* Asked for by nobody: the frames decide. */
+		scene.Quality = '';
+
+		var first = scene.Graphics().Level;
+
+		for (i = 0; i < 100; i++)
+			engine.PostTime(0.05);
+
+		expect(scene.Graphics().Level).not.toBe(first === 'low' ? 'none' : first);
+
+		frame();
+
+		expect(gl.getError()).toBe(gl.NO_ERROR);
+	});
+
 	it('casts the shadows of what stands on a ground, or none when told', async function () {
 		var mounted = await mount('<GameScene (ready)="Ready">' +
 			'<GameObject ID="land" Kind="ground" Size="400" Height="4" Water="0" Seed="test" />' +
@@ -1009,6 +1152,232 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 
 		expect(scene.Get('walker').Values.X).toBeCloseTo(goal[0], 6);
 		expect(field.Path({X: 0, Z: 0}, {X: 0, Z: 0.1}, {})).not.toBe(null);
+	});
+});
+
+describe('Contract: Gltf, the models other programs make', function () {
+	var gltf;
+	var models;
+	var graphics;
+
+	beforeAll(async function () {
+		await loadElemenx();
+	});
+
+	beforeEach(function () {
+		Use(['service:Gltf', 'service:Models', 'service:Graphics3D']);
+
+		gltf = Elemenx.Service('Gltf');
+		models = Elemenx.Service('Models');
+		graphics = Elemenx.Service('Graphics3D');
+	});
+
+	afterEach(function () {
+		delete models.Recipes['test-file'];
+		delete models.Recipes['test-loop'];
+	});
+
+	function parsed (options) {
+		var result = null;
+
+		gltf.Parse(Binary(options), function (error, asset) {
+			if (error)
+				throw error;
+
+			result = asset;
+		});
+
+		return result;
+	}
+
+	it('reads a GLB: its nodes, meshes, materials, skins, animations and pictures', function () {
+		var asset = parsed();
+		var column = asset.Meshes[0][0].Geometry;
+
+		expect(asset.Nodes.map(function (node) {
+			return node.Name;
+		})).toEqual(['Root', 'Column', 'Upper', 'Crate']);
+
+		expect(asset.Nodes[2].Parent).toBe(0);
+		expect(asset.Scene).toEqual([0, 1, 3]);
+		expect(column.Positions.length).toBe(7 * 8 * 3);
+		expect(column.Indices.length).toBe(6 * 8 * 6);
+		expect(column.Joints.length).toBe(7 * 8 * 4);
+		expect(column.Weights[column.Weights.length - 3]).toBeCloseTo(1, 5);
+
+		/* A primitive with no normals gets them of its faces. */
+		expect(asset.Meshes[1][0].Geometry.Normals.every(Number.isFinite)).toBe(true);
+		expect(Math.abs(asset.Meshes[1][0].Geometry.Normals[1])).toBeGreaterThan(0.1);
+
+		expect(asset.Materials[0]).toMatchObject({Name: 'Skin', Metallic: 0, Alpha: 'OPAQUE'});
+		expect(asset.Materials[0].Roughness).toBeCloseTo(0.6, 5);
+		expect(asset.Materials[0].ColorMap.Image).toBe(0);
+		expect(Array.from(asset.Images[0].Data)).toEqual(Array.from(Picture));
+		expect(asset.Skins[0].Joints).toEqual([0, 2]);
+		expect(asset.Skins[0].Inverse[29]).toBe(-1);
+		expect(asset.Animations.map(function (animation) {
+			return [animation.Name, animation.Length];
+		})).toEqual([['Bend', 1], ['Spin', 1]]);
+	});
+
+	it('refuses what it cannot read, and says why', function () {
+		var failure = null;
+
+		gltf.Parse(Binary({Required: ['KHR_draco_mesh_compression']}), function (error) {
+			failure = error;
+		});
+
+		expect(failure.message).toBe('Elemenx Gltf: extension KHR_draco_mesh_compression is not supported');
+
+		gltf.Parse(new Uint8Array([1, 2, 3]), function (error) {
+			failure = error;
+		});
+
+		expect(failure).toBeInstanceOf(Error);
+	});
+
+	it('decodes meshopt: the example of the specification, each mode and each filter', function () {
+		var codes = new Uint8Array(16);
+		var indices;
+		var triangles;
+		var view;
+
+		/* The bytes the specification gives for a group of 4 bits, and the deltas it says they are. */
+		gltf.MeshoptLane(new Uint8Array([0x02, 0, 0, 0, 0, 0x17, 0x5f, 0xf0, 0xbc, 0x77, 0xa9, 0x21, 0x00, 0x34, 0xb5]).subarray(0), 0, codes, 1);
+
+		expect(Array.from(codes).map(function (code) {
+			return code & 1 ? ~(code >> 1) : code >> 1;
+		}).slice(0, 2)).toEqual([0, 0]);
+
+		gltf.MeshoptLane(new Uint8Array([0x02, 0x17, 0x5f, 0xf0, 0xbc, 0x77, 0xa9, 0x21, 0x00, 0x34, 0xb5]), 0, codes, 1);
+
+		expect(Array.from(codes).map(function (code) {
+			return code & 1 ? ~(code >> 1) : code >> 1;
+		})).toEqual([-1, -4, -3, 26, -91, 0, -6, 6, -4, -4, 5, -5, 1, -1, 0, 0]);
+
+		/* Attributes: a block of raw codes over a baseline of 32 bytes, each element one up. */
+		var source = [0xa0];
+		var i;
+		var lane;
+
+		for (lane = 0; lane < 4; lane++) {
+			source.push(0x03);
+
+			for (i = 0; i < 16; i++)
+				source.push(lane === 0 ? 2 : 0);
+		}
+
+		var attributes = gltf.Meshopt('ATTRIBUTES', new Uint8Array(source.concat([10, 20, 30, 40], new Array(28).fill(0))), 3, 4, 'NONE');
+
+		expect(Array.from(attributes)).toEqual([11, 20, 30, 40, 12, 20, 30, 40, 13, 20, 30, 40]);
+
+		/* Indices: two baselines, a delta of 5 on the first, of 7 on the second, of -1 on the first. */
+		indices = gltf.Meshopt('INDICES', new Uint8Array([0xd1, 5 << 2, (7 << 2) | 1, 0 << 2 | 2, 0, 0, 0, 0]), 3, 2, 'NONE');
+		view = new Uint16Array(indices.buffer);
+
+		expect(Array.from(view)).toEqual([5, 7, 4]);
+
+		/* Triangles: a first one of three new vertices, then one on the newest edge with a new vertex. */
+		var table = new Array(16).fill(0);
+
+		triangles = gltf.Meshopt('TRIANGLES', new Uint8Array([0xe1, 0xf0, 0x00].concat(table)), 6, 2, 'NONE');
+
+		expect(Array.from(new Uint16Array(triangles.buffer))).toEqual([0, 1, 2, 0, 2, 3]);
+
+		/* Filters. */
+		var octa = new Int8Array([0, 0, 127, 9]);
+
+		gltf.FilterOctahedral(new Uint8Array(octa.buffer), 1, 4);
+
+		expect(Array.from(octa)).toEqual([0, 0, 127, 9]);
+
+		var quaternion = new Int16Array([0, 0, 0, 32764]);
+
+		gltf.FilterQuaternion(new Uint8Array(quaternion.buffer), 1);
+
+		expect(Array.from(quaternion)).toEqual([32767, 0, 0, 0]);
+
+		var number = new Int32Array([(3 << 24) | 5]);
+		var bytes = new Uint8Array(number.buffer);
+
+		gltf.FilterExponential(bytes, 1, 4);
+
+		expect(new Float32Array(bytes.buffer)[0]).toBe(40);
+
+		expect(function () {
+			gltf.Meshopt('ATTRIBUTES', new Uint8Array(40), 1, 4, 'NONE');
+		}).toThrow('Elemenx Gltf: unknown meshopt attributes header 0x0');
+	});
+
+	it('makes a model of a file: 1 tall on the ground, its clips found by their names, its skeleton in frames of a texture', function () {
+		var asset = parsed();
+		var model;
+		var baked;
+
+		models.Define('test-file', {URL: 'test.glb', Type: 'unit', Clips: {walk: 'Bend'}});
+
+		expect(models.Ready('test-file')).toBe(false);
+		expect(models.Make('test-file')).toBe(null);
+
+		models.Recipes['test-file'].Asset = asset;
+
+		expect(models.Ready('test-file')).toBe(true);
+
+		model = models.Make('test-file');
+
+		expect(Object.keys(model.Clips).sort()).toEqual(['Bend', 'Spin', 'walk']);
+		expect(model.Pieces.length).toBe(2);
+		expect(model.Joints).toBe(2);
+
+		var whole = models.Whole(model);
+		var low = Infinity;
+		var high = -Infinity;
+		var i;
+
+		for (i = 1; i < whole.Positions.length; i += 3) {
+			low = Math.min(low, whole.Positions[i]);
+			high = Math.max(high, whole.Positions[i]);
+		}
+
+		expect(low).toBeCloseTo(0, 4);
+		expect(high).toBeCloseTo(1, 4);
+
+		baked = models.Bake(model);
+
+		expect(baked.Width).toBe(6);
+		expect(baked.Height).toBeGreaterThan(30);
+		expect(baked.Data.length).toBe(baked.Height * 2 * 12);
+
+		/* In the rest pose a joint moves nothing but by what fits the model on the ground: the same in all of its corners. */
+		var frame = Array.from(baked.Data.subarray(0, 12));
+
+		expect(frame[0]).toBeCloseTo(0.5, 4);
+
+		/* Half way the upper bone has turned a quarter: another line of the texture. */
+		var middle = models.Frame(model, 'walk', 0.5);
+		var row = Array.from(baked.Data.subarray(middle * 24 + 12, middle * 24 + 24));
+
+		expect(middle).toBeGreaterThan(0);
+		expect(row[5]).not.toBeCloseTo(frame[5], 2);
+
+		/* A node that is no bone turns as a piece. */
+		var pose = models.Pose(model, 'Spin', 0.5);
+		var crate = model.Pieces[1];
+		var turned = graphics.Apply(pose[crate.ID], [0.2, 0, 0]);
+		var still = graphics.Apply(models.Pose(model, 'Spin', 0)[crate.ID], [0.2, 0, 0]);
+
+		expect(graphics.Vectors.Distance(turned, still)).toBeGreaterThan(0.1);
+	});
+
+	it('takes a loop of a clip round, and holds one that does not', function () {
+		models.Define('test-loop', {URL: 'test.glb', Clips: {die: 'Bend'}});
+
+		models.Recipes['test-loop'].Asset = parsed();
+
+		var model = models.Make('test-loop');
+
+		expect(models.Frame(model, 'Spin', 1.5)).toBe(models.Frame(model, 'Spin', 0.5));
+		expect(models.Frame(model, 'die', 5)).toBe(models.Frame(model, 'die', 1));
 	});
 });
 

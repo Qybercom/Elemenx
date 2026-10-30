@@ -444,6 +444,8 @@ Elemenx.Trait('Strategy', {
 			var aliases = {worker: 'villager', peon: 'villager', footman: 'knight', hall: 'castle', keep: 'castle', mine: 'silo', factory: 'hangar'};
 			var names = [item.Model, item.Type, aliases[item.Type]];
 
+			self.Engine().Known(item.Model);
+
 			if (item.Kind !== 'unit' && item.Kind !== 'building')
 				names.push(item.Kind);
 
@@ -462,7 +464,7 @@ Elemenx.Trait('Strategy', {
 			var model = modelOf(item, object);
 			var flat = item.Width * item.Height;
 			var tall = (Number(item.Tall) || 1) * Math.sqrt(flat);
-			var size = item.Class === 'unit' ? (library.Info(model).Type === 'unit' ? 0.9 : 0.8) : item.Kind === 'tree' ? 1.5 : Math.max(item.Width, item.Height);
+			var size = item.Class === 'unit' ? (library.Info(model).Type !== 'vehicle' ? 0.9 : 0.8) : item.Kind === 'tree' ? 1.5 : Math.max(item.Width, item.Height);
 
 			object.Shape = model;
 			object.Size = size;

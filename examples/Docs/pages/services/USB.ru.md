@@ -43,4 +43,4 @@ USB-устройства через WebUSB (Chrome и Edge; HTTPS или localho
 ## Тесты
 
 - [asks for a device, opens and claims it, and transfers data in, out and by control](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/devices.test.js#L178) — `tests/regression/devices.test.js`
-- [devices: the browser tells which of Push, Serial, USB and NFC it has, and each calls back its result or its error](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L8961) — `tests/examples/ui-kit.spec.js`
+- [devices: the browser tells which of Push, Serial, USB and NFC it has, and each calls back its result or its error](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L8970) — `tests/examples/ui-kit.spec.js`

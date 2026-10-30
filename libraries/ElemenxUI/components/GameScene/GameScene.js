@@ -55,7 +55,7 @@
 Elemenx.Component('GameScene', {
 	$TemplateURL: 'GameScene.html',
 	$StyleURL: 'GameScene.css',
-	$Traits: ['Strategy', 'Scatter'],
+	$Traits: ['Strategy', 'Scatter', 'Lighting'],
 	$Meta: {
 		Group: 'game',
 		Icon: 'star',
@@ -96,6 +96,7 @@ Elemenx.Component('GameScene', {
 			Speed: 'The days of the scene a second.',
 			SurfaceSpeed: 'The days a second on the surface of a body (1/120: a day of two minutes).',
 			Shadows: 'The shadows of a sun on a ground, a surface and a model near the view (true).',
+			Quality: {Options: ['', 'low', 'medium', 'high', 'ultra'], Description: 'What the light costs: empty chooses by the graphics card and steps down while frames are late.'},
 			View: {Options: ['', 'top', 'isometric'], Description: 'A ground seen in parallel rays, as a game of two dimensions: from above or at an angle (empty: in perspective).'},
 			Paused: 'Holds the time.',
 			Focus: 'The ID of the object in the middle of the view.',
@@ -274,6 +275,9 @@ Elemenx.Component('GameScene', {
 			Objects: {},
 			Order: [],
 			Roots: [],
+			Asked: {},
+			Active: [],
+			Still: [],
 			Declared: [],
 			Added: [],
 			Removed: {},
@@ -415,7 +419,7 @@ Elemenx.Component('GameScene', {
 		function canonical (raw, of) {
 			var kind = raw.Kind && kinds.Has(raw.Kind) ? raw.Kind : '';
 			var fields = kind || of ? kinds.Fields(kind || of) : {};
-			var common = {type: 'Type', health: 'Health', maxhealth: 'MaxHealth', sight: 'Sight', tall: 'Tall', model: 'Model', roof: 'Roof', speed: 'Speed', shapes: 'Shapes', density: 'Density', size: 'Size', minheight: 'MinHeight', maxheight: 'MaxHeight', maxslope: 'MaxSlope', cover: 'Cover', patch: 'Patch', seed: 'Seed', blocks: 'Blocks', root: 'Root'};
+			var common = {clip: 'Clip', type: 'Type', health: 'Health', maxhealth: 'MaxHealth', sight: 'Sight', tall: 'Tall', model: 'Model', roof: 'Roof', speed: 'Speed', shapes: 'Shapes', density: 'Density', size: 'Size', minheight: 'MinHeight', maxheight: 'MaxHeight', maxslope: 'MaxSlope', cover: 'Cover', patch: 'Patch', seed: 'Seed', blocks: 'Blocks', root: 'Root'};
 			var spec = {ID: raw.ID, Kind: self.Cells ? raw.Kind || '' : kind, Parent: raw.Parent, Part: raw.Part, Values: {}, Traits: {}, Parts: []};
 
 			Object.keys(raw).forEach(function (key) {
@@ -1066,6 +1070,10 @@ Elemenx.Component('GameScene', {
 			gpu.Ground = renderer.Program(shaders.GroundVertex, shaders.Ground);
 			gpu.Land = renderer.Program(shaders.LandVertex, shaders.Land);
 			gpu.ManyDepth = renderer.Program(shaders.Instanced, shaders.Depth);
+			gpu.Pbr = renderer.Program(shaders.Instanced, shaders.Pbr);
+			gpu.PbrSkinned = renderer.Program(shaders.Skinned, shaders.Pbr);
+			gpu.SkinDepth = renderer.Program(shaders.Skinned, shaders.Depth);
+			gpu.White = null;
 			gpu.LandDepth = renderer.Program(shaders.LandVertex, shaders.Depth);
 			gpu.GroundDepth = renderer.Program(shaders.GroundVertex, shaders.Depth);
 			gpu.ShadowMap = null;
@@ -1449,12 +1457,14 @@ Elemenx.Component('GameScene', {
 			var models = gather();
 			var nodes = scene.Ground ? groundPatches() : null;
 			var shade;
+			var posted;
 
 			engine.ScatterFrame(matrix);
 
 			shade = shadowOfScene(models, nodes);
+			posted = engine.PostBegin();
 
-			var common = Object.assign({uViewProjection: matrix, uCamera: [0, 0, 0], uLightPositions: light.Positions, uLightColors: light.Colors, uLightCount: light.Count, uAmbient: scene.Ground ? [0.17, 0.19, 0.23] : [0.025, 0.027, 0.035], uOccluderCount: 0, uOccluders: new Array(16).fill(0), uTime: scene.Time, uHighlight: [0, 0, 0, 0], uWind: scene.Seconds}, shade);
+			var common = Object.assign({uViewProjection: matrix, uCamera: [0, 0, 0], uLightPositions: light.Positions, uLightColors: light.Colors, uLightCount: light.Count, uSkyLight: scene.Ground ? [0.3, 0.36, 0.46] : [0.004, 0.004, 0.006], uFloorLight: scene.Ground ? [0.1, 0.1, 0.09] : [0.004, 0.004, 0.006], uAmbient: scene.Ground ? [0.17, 0.19, 0.23] : [0.025, 0.027, 0.035], uOccluderCount: 0, uOccluders: new Array(16).fill(0), uTime: scene.Time, uHighlight: [0, 0, 0, 0], uWind: scene.Seconds}, shade);
 			var selected = scene.Selected ? scene.Objects[scene.Selected] : null;
 			var later = [];
 
@@ -1550,6 +1560,12 @@ Elemenx.Component('GameScene', {
 			Object.keys(models).forEach(function (name) {
 				var list = models[name];
 
+				if (list.Material) {
+					renderer.Draw(shape(name), list.Skinned ? gpu.PbrSkinned : gpu.Pbr, Object.assign(uniforms({uOrigin: originOf(list), uPalette: list.Skinned ? palette(list.Skinned) : gpu.White, uJointOffset: list.Offset}), surface(list)), {Cull: list.Material.DoubleSided ? 'none' : 'back', Blend: list.Material.Alpha === 'BLEND' ? 'alpha' : 'none'});
+
+					return;
+				}
+
 				renderer.Draw(shape(name), gpu.Many, uniforms({uShine: list.Matte ? 8 : 36, uSpecular: list.Matte ? 0.05 : 0.5, uRough: list.Rough, uOrigin: originOf(list)}));
 			});
 
@@ -1565,6 +1581,9 @@ Elemenx.Component('GameScene', {
 			if (selected && selected.World && Math.max(selected.Size, 0.001) < pixels(selected.World, 40)) {
 				renderer.Draw(gpu.Quad, gpu.Glow, uniforms({uCenter: local(selected.World), uSize: Math.max(selected.Size * 1.5, pixels(selected.World, 14)), uRight: right, uUp: up, uColor: scene.Colors.Selection.slice(0, 3), uInner: 0, uStyle: 1}), {Blend: 'add', DepthWrite: false, Depth: false, Cull: 'none'});
 			}
+
+			if (posted)
+				engine.PostEnd(scene.Ground ? {Matrix: matrix, Sun: scene.Ground.Sun, SunColor: scene.Ground.SunColor, Air: [0.55, 0.72, 1, 0.95], Fog: scene.Camera.Ortho ? 0 : 0.4 / scene.Ground.Field.Size, Sky: true, Reach: Math.max(1, scene.Distance * 0.05)} : {Matrix: matrix});
 		}
 
 		/* The copies of the shapes of a frame: the rocks of the belts, the models of the objects, their pieces as they stand now. */
@@ -1623,8 +1642,12 @@ Elemenx.Component('GameScene', {
 
 		function upload (name, list) {
 			var size = list.Count * 4;
+			var data = {aInstance: {Size: 4, Data: list.Places.subarray(0, size)}, aInstance2: {Size: 4, Data: list.X.subarray(0, size)}, aInstance3: {Size: 4, Data: list.Y.subarray(0, size)}, aInstance4: {Size: 4, Data: list.Z.subarray(0, size)}, aInstance5: {Size: 4, Data: list.Tints.subarray(0, size)}};
 
-			shape(name, list.Geometry).Instance({aInstance: {Size: 4, Data: list.Places.subarray(0, size)}, aInstance2: {Size: 4, Data: list.X.subarray(0, size)}, aInstance3: {Size: 4, Data: list.Y.subarray(0, size)}, aInstance4: {Size: 4, Data: list.Z.subarray(0, size)}, aInstance5: {Size: 4, Data: list.Tints.subarray(0, size)}}, list.Count);
+			if (list.Skinned)
+				data.aFrames = {Size: 4, Data: list.Frames.subarray(0, size)};
+
+			shape(name, list.Geometry).Instance(data, list.Count);
 		}
 
 		/* What is kept in buffers stands in the world: the eye is taken away from it in the shader. */
@@ -1632,10 +1655,86 @@ Elemenx.Component('GameScene', {
 			return list.Still ? vectors.Subtract([0, 0, 0], scene.Eye) : [0, 0, 0];
 		}
 
-		function modelOf (object, settings) {
-			var name = object.Shape || settings.Shape;
+		/* A name of a model, or the name of a file of one: it is fetched the first time, and the scene is made again when it came. */
+		function known (name) {
+			if (/\.(glb|gltf)(\?|$)/i.test(name || '') && !library.Has(name))
+				library.Define(name, {URL: name});
 
-			return library.Has(name) ? library.Make(name, {Variant: random.Hash(object.ID)}) : null;
+			if (library.Has(name) && !library.Ready(name) && !scene.Asked[name]) {
+				scene.Asked[name] = true;
+
+				library.Load(name, function (error) {
+					if (error)
+						self.$Emit('error', error);
+
+					scene.Version++;
+				});
+			}
+
+			return library.Has(name);
+		}
+
+		function nameOf (object, settings) {
+			return object.Shape || object.Values.Model || settings.Shape;
+		}
+
+		function modelOf (object, settings) {
+			var name = nameOf(object, settings);
+
+			return known(name) && library.Ready(name) ? library.Make(name, {Variant: random.Hash(object.ID)}) : null;
+		}
+
+		/* The textures of a material on this renderer, made once; a white one for what it has none of. */
+		function surface (list) {
+			var material = list.Material;
+			var asset = list.Asset;
+
+			function texture (map, srgb) {
+				var image = map ? asset.Images[map.Image] : null;
+
+				if (!gpu.White)
+					gpu.White = renderer.Texture({Width: 1, Height: 1, Data: new Uint8Array([255, 255, 255, 255])}, {Nearest: true});
+
+				if (!image || !image.Picture) return gpu.White;
+
+				if (!image.Made)
+					image.Made = {};
+
+				if (!image.Made[srgb ? 'Srgb' : 'Plain'])
+					image.Made[srgb ? 'Srgb' : 'Plain'] = renderer.Texture(image.Picture, {Srgb: srgb, Mipmaps: true, Repeat: true});
+
+				return image.Made[srgb ? 'Srgb' : 'Plain'];
+			}
+
+			if (!material.Uniforms) {
+				material.Uniforms = {
+					uBaseColor: material.BaseColor,
+					uMetallic: material.Metallic,
+					uRoughness: material.Roughness,
+					uEmissive: material.Emissive,
+					uCutoff: material.Alpha === 'MASK' ? material.Cutoff : 0,
+					uUnlit: material.Unlit ? 1 : 0,
+					uNormalScale: material.NormalMap ? material.NormalMap.Scale : 0,
+					uOcclusion: material.OcclusionMap ? material.OcclusionMap.Strength : 0,
+					uColorMap: texture(material.ColorMap, true),
+					uNormalMap: texture(material.NormalMap, false),
+					uMetalMap: texture(material.MetalMap, false),
+					uOcclusionMap: texture(material.OcclusionMap, false),
+					uEmissiveMap: texture(material.EmissiveMap, true)
+				};
+			}
+
+			return material.Uniforms;
+		}
+
+		/* The frames of the skeleton of a model, as a texture. */
+		function palette (model) {
+			var baked = library.Bake(model);
+
+			if (!model.Palette)
+				model.Palette = renderer.Texture({Width: baked.Width, Height: baked.Height, Data: baked.Data}, {Float: true, Nearest: true});
+
+			return model.Palette;
 		}
 
 		/* An object as copies of its pieces, each in its pose; a piece of a team takes its color. */
@@ -1648,6 +1747,8 @@ Elemenx.Component('GameScene', {
 			var pose;
 			var plain;
 
+			if (!made && library.Has(nameOf(object, settings))) return;
+
 			if (!made) {
 				plain = object.Team ? 0.35 : 0;
 
@@ -1659,9 +1760,15 @@ Elemenx.Component('GameScene', {
 			if (made.Type === 'ship' && object.Team)
 				color = [color[0] * 0.65 + team[0] * 0.35, color[1] * 0.65 + team[1] * 0.35, color[2] * 0.65 + team[2] * 0.35];
 
-			pose = made.Pieces.length > 1 && !still ? poseOf(object, made, settings) : null;
+			pose = (made.Pieces.length > 1 || made.Moves) && !still ? poseOf(object, made, settings) : null;
 
 			made.Pieces.forEach(function (piece) {
+				if (made.Asset) {
+					batch(models, (still ? 'still:' : '') + made.Key + '/' + piece.ID, object.World, piece.Skin !== -1 ? base : graphics.Multiply(base, pose ? pose[piece.ID] : piece.Rest), color, {Rough: 0, Geometry: piece.Geometry, Still: still, Material: piece.Material, Asset: made.Asset, Skinned: piece.Skin !== -1 ? made : null, Offset: piece.JointOffset, Frames: piece.Skin !== -1 ? object.Frames || [0, 0, 0, 0] : null});
+
+					return;
+				}
+
 				batch(models, (still ? 'still:' : '') + made.Key + '/' + piece.ID, object.World, pose ? graphics.Multiply(base, pose[piece.ID]) : base, piece.Team ? team : color, {Matte: made.Matte, Rough: made.Matte ? 0.5 : 0.15, Sway: made.Sway, Geometry: piece.Geometry, Still: still});
 			});
 		}
@@ -1670,10 +1777,10 @@ Elemenx.Component('GameScene', {
 		function poseOf (object, made, settings) {
 			var way = scene.Ways[object.ID];
 			var state = object.Clip;
-			var wanted = way || object.Walking ? 'walk' : object.Loop || settings.Clip || 'idle';
+			var wanted = way || object.Walking ? 'walk' : object.Loop || object.Values.Clip || settings.Clip || 'idle';
 			var clip = made.Clips[wanted];
 			var seconds = scene.Seconds;
-			var rate = wanted === 'walk' && clip ? (way ? way.Speed : object.Walking) * (clip.Length || 1) / Math.max(0.01, object.Size * (clip.Stride || 1)) : 1;
+			var rate = wanted === 'walk' && clip && (way || object.Walking) ? (way ? way.Speed : object.Walking) * (clip.Length || 1) / Math.max(0.01, object.Size * (clip.Stride || 1)) : 1;
 
 			if (state && state.Once) {
 				if ((seconds - state.Start) * state.Rate < library.Length(made, state.Name)) {
@@ -1703,6 +1810,10 @@ Elemenx.Component('GameScene', {
 
 			state.Rate = rate;
 
+			if (made.Joints) {
+				object.Frames = [library.Frame(made, state.Name, (seconds - state.Start) * rate), state.From ? library.Frame(made, state.From, state.FromTime) : 0, state.From ? Math.max(0, 1 - (seconds - state.Start) / 0.2) : 0, 0];
+			}
+
 			return library.Pose(made, state.Name, (seconds - state.Start) * rate, {From: state.From, FromTime: state.FromTime, Fade: (seconds - state.Start) / 0.2});
 		}
 
@@ -1715,7 +1826,7 @@ Elemenx.Component('GameScene', {
 			var i;
 
 			if (!list) {
-				list = models[name] = {Count: 0, Capacity: 0, Matte: !!settings.Matte, Rough: settings.Rough || 0, Geometry: settings.Geometry || null, Still: !!settings.Still};
+				list = models[name] = {Count: 0, Capacity: 0, Matte: !!settings.Matte, Rough: settings.Rough || 0, Geometry: settings.Geometry || null, Still: !!settings.Still, Material: settings.Material || null, Asset: settings.Asset || null, Skinned: settings.Skinned || null, Offset: settings.Offset || 0};
 			}
 
 			if (list.Count === list.Capacity)
@@ -1741,6 +1852,9 @@ Elemenx.Component('GameScene', {
 			list.Tints[i + 2] = color[2];
 			list.Tints[i + 3] = world[0] * 0.13 + world[2] * 0.17;
 
+			if (settings.Frames)
+				list.Frames.set(settings.Frames, i);
+
 			list.Count++;
 		}
 
@@ -1748,7 +1862,7 @@ Elemenx.Component('GameScene', {
 		function grow (list) {
 			var capacity = Math.max(16, list.Capacity * 2);
 
-			['Places', 'X', 'Y', 'Z', 'Tints'].forEach(function (name) {
+			['Places', 'X', 'Y', 'Z', 'Tints', 'Frames'].forEach(function (name) {
 				var next = new Float32Array(capacity * 4);
 
 				if (list[name])
@@ -1764,8 +1878,8 @@ Elemenx.Component('GameScene', {
 		 * The shadow map of a light from a direction over a square round a point, its depth drawn by casters(matrix). It
 		 * keeps to whole texels of the world, so a moving view does not make the edges of the shadows crawl.
 		 */
-		function castShadow (direction, center, eye, extent, depth, casters) {
-			var side = 2048;
+		function castShadow (direction, center, eye, extent, depth, casters, near) {
+			var side = self.Graphics().Level === 'low' ? 1024 : 2048;
 			var up = Math.abs(direction[1]) > 0.95 ? [0, 0, 1] : [0, 1, 0];
 			var x = vectors.Normalize(vectors.Cross(up, direction));
 			var y = vectors.Cross(direction, x);
@@ -1776,16 +1890,75 @@ Elemenx.Component('GameScene', {
 			var target = vectors.Subtract(snapped, eye);
 			var matrix = graphics.Multiply(graphics.Orthographic(-extent, extent, -extent, extent, 0, depth * 2), graphics.LookAt(vectors.Add(target, vectors.Scale(direction, depth)), target, up));
 
+			var nearMap = near ? gpu.ShadowClose = gpu.ShadowClose || renderer.Shadow(side) : null;
+
 			if (!gpu.ShadowMap)
 				gpu.ShadowMap = renderer.Shadow(side);
 
-			gpu.ShadowMap.Begin();
+			(nearMap || gpu.ShadowMap).Begin();
 
 			casters(matrix);
 
-			gpu.ShadowMap.End();
+			(nearMap || gpu.ShadowMap).End();
 
-			return {uShadowMap: gpu.ShadowMap, uShadowMatrix: matrix, uShadowBias: texel * 1.6, uShadowOn: 1};
+			return {uShadowMap: gpu.ShadowMap, uShadowNear: nearMap || gpu.ShadowMap, uBounce: gpu.NoBounce, uBounceOn: 0, uShadowMatrix: matrix, uShadowBias: texel * 1.6, uShadowOn: 1};
+		}
+
+		/* A second map, of what is near the eye: its shadows are as sharp as a texel of it is small. */
+		function closer (shade, direction, center, eye, extent, depth, casters) {
+			var near = castShadow(direction, center, eye, extent, depth, casters, true);
+
+			shade.uShadowNear = gpu.ShadowClose;
+			shade.uShadowNearMatrix = near.uShadowMatrix;
+			shade.uShadowNearBias = near.uShadowBias;
+			shade.uShadowOn = 2;
+
+			return shade;
+		}
+
+		/* What the sun sees, in colors and blurred: the light that bounces off it into what is near. */
+		function bounced (shade, nodes, models) {
+			var ground = scene.Ground;
+
+			if (!gpu.Bounce) {
+				gpu.Bounce = renderer.Target(128, 128, {Depth: true, Mipmaps: true});
+				gpu.BounceLand = renderer.Program(shaders.LandVertex, shaders.Bounced);
+				gpu.BounceMany = renderer.Program(shaders.Instanced, shaders.Bounced);
+			}
+
+			scene.Bounces = (scene.Bounces || 0) + 1;
+
+			if (scene.Bounces % 6 === 1) {
+				gpu.Bounce.Begin();
+
+				renderer.Clear([0, 0, 0, 1]);
+
+				(nodes || []).forEach(function (node) {
+					renderer.Draw(node.Mesh, gpu.BounceLand, {uViewProjection: shade.uShadowMatrix, uOffset: vectors.Subtract(node.Center, scene.Eye), uSun: ground.Sun, uSunColor: ground.SunColor}, {Cull: 'back'});
+				});
+
+				Object.keys(models).forEach(function (name) {
+					if (!models[name].Skinned)
+						renderer.Draw(shape(name), gpu.BounceMany, {uViewProjection: shade.uShadowMatrix, uWind: 0, uOrigin: originOf(models[name]), uSun: ground.Sun, uSunColor: ground.SunColor}, {Cull: 'back'});
+				});
+
+				gpu.Bounce.End();
+			}
+
+			shade.uBounce = gpu.Bounce.Textures[0];
+			shade.uBounceOn = 1;
+
+			return shade;
+		}
+
+		/* No shadow: the samplers still need textures of their own kinds. */
+		function idle () {
+			if (!gpu.NoShadow) {
+				gpu.NoShadow = renderer.Shadow(1);
+				gpu.NoBounce = renderer.Texture({Width: 1, Height: 1, Data: new Uint8Array([0, 0, 0, 255])}, {Nearest: true});
+			}
+
+			return {uShadowOn: 0, uShadowMap: gpu.NoShadow, uShadowNear: gpu.NoShadow, uBounce: gpu.NoBounce, uBounceOn: 0};
 		}
 
 		function shadowsWanted () {
@@ -1794,15 +1967,19 @@ Elemenx.Component('GameScene', {
 
 		/* The shadows of a frame: of the sun on a ground, or of a star on the model in the focus while near it. */
 		function shadowOfScene (models, nodes) {
-			var off = {uShadowOn: 0};
+			var off = idle();
 			var ground = scene.Ground;
 			var holder = scene.Focus ? scene.Objects[scene.Focus] : null;
 			var star;
 			var extent;
+			var set;
+			var made;
 
 			function casters (matrix) {
 				Object.keys(models).forEach(function (name) {
-					renderer.Draw(shape(name), gpu.ManyDepth, {uViewProjection: matrix, uWind: scene.Seconds, uOrigin: originOf(models[name])}, {Cull: 'none'});
+					var list = models[name];
+
+					renderer.Draw(shape(name), list.Skinned ? gpu.SkinDepth : gpu.ManyDepth, {uViewProjection: matrix, uWind: scene.Seconds, uOrigin: originOf(list), uPalette: list.Skinned ? palette(list.Skinned) : undefined, uJointOffset: list.Offset}, {Cull: 'none'});
 				});
 
 				(nodes || []).forEach(function (node) {
@@ -1818,8 +1995,13 @@ Elemenx.Component('GameScene', {
 				if (ground.Sun[1] < 0.04) return off;
 
 				extent = Math.max(ground.Field.Whole ? 8 : 30, Math.min(ground.Field.Size, scene.Distance * 1.5));
+				set = self.Graphics();
+				made = castShadow(ground.Sun, ground.Target, scene.Eye, extent, Math.max(extent * 2, ground.Field.Top * 4), casters);
 
-				return castShadow(ground.Sun, ground.Target, scene.Eye, extent, Math.max(extent * 2, ground.Field.Top * 4), casters);
+				if (set.Cascades > 1)
+					closer(made, ground.Sun, ground.Target, scene.Eye, extent * 0.3, Math.max(extent * 2, ground.Field.Top * 4), casters);
+
+				return set.Bounce ? bounced(made, nodes, models) : made;
 			}
 
 			star = scene.Order.filter(function (object) {
@@ -2320,7 +2502,7 @@ Elemenx.Component('GameScene', {
 			var ground = scene.Ground;
 			var field = ground.Field;
 			var air = [0.55, 0.72, 1, 0.95];
-			var fog = scene.Camera.Ortho ? 1e9 : field.Size * 0.9;
+			var fog = scene.Camera.Ortho || self.Graphics().Post ? 1e9 : field.Size * 0.9;
 
 			if (!scene.Camera.Ortho)
 				renderer.Draw(gpu.Quad, gpu.Sky, {uInverse: graphics.Invert(matrix), uSun: ground.Sun, uSunColor: ground.SunColor, uAir: air, uUp: [0, 1, 0], uHigh: 0}, {Depth: false, DepthWrite: false, Blend: 'alpha', Cull: 'none'});
@@ -2581,8 +2763,9 @@ Elemenx.Component('GameScene', {
 			var air = object.Look.Atmosphere;
 			var nodes = patches();
 			var thickness = 100;
-			var shade = {uShadowOn: 0};
+			var shade = idle();
 			var extent;
+			var posted;
 
 			sun = vectors.Normalize(sun);
 
@@ -2596,6 +2779,8 @@ Elemenx.Component('GameScene', {
 					});
 				});
 			}
+
+			posted = engine.PostBegin();
 
 			renderer.Clear([0, 0, 0, 1]);
 
@@ -2619,6 +2804,9 @@ Elemenx.Component('GameScene', {
 					uHigh: Math.min(1, surface.Altitude / thickness)
 				}, shade), {Cull: 'back'});
 			});
+
+			if (posted)
+				engine.PostEnd({Matrix: matrix, Sun: sun, SunColor: sunColor, Sky: false});
 
 			forget();
 		}
@@ -2660,6 +2848,8 @@ Elemenx.Component('GameScene', {
 				draw();
 
 				adapt(elapsed);
+
+				engine.PostTime(elapsed);
 
 				scene.Painted++;
 			}
@@ -2934,6 +3124,7 @@ Elemenx.Component('GameScene', {
 		};
 
 		engine.Land = land;
+		engine.Known = known;
 
 		/*
 		 * What leads the scene from outside (a map of cells): a ground of cells to draw and its view, {Key, Field, View, Slant,
@@ -3042,8 +3233,10 @@ Elemenx.Component('GameScene', {
 
 		this.StrategyStart();
 
-		if (renderer)
+		if (renderer) {
 			this.ScatterStart();
+			this.LightingStart();
+		}
 
 		window.setTimeout(function () {
 			resize();
@@ -3717,6 +3910,7 @@ Elemenx.Component('GameScene', {
 				'in vec3 aPosition;',
 				'in vec3 aNormal;',
 				'in vec3 aColor;',
+				'in vec2 aUV;',
 				'in vec4 aInstance;',
 				'in vec4 aInstance2;',
 				'in vec4 aInstance3;',
@@ -3730,6 +3924,7 @@ Elemenx.Component('GameScene', {
 				'out vec3 vLocal;',
 				'out vec2 vUV;',
 				'out vec3 vColor;',
+				'out vec3 vTint;',
 				'void main() {',
 				'	mat3 basis = mat3(aInstance2.xyz, aInstance3.xyz, aInstance4.xyz);',
 				'	vec3 world = aInstance.xyz + uOrigin + basis * aPosition;',
@@ -3738,9 +3933,144 @@ Elemenx.Component('GameScene', {
 				'	vWorld = world;',
 				'	vNormal = normalize(mat3(normalize(aInstance2.xyz), normalize(aInstance3.xyz), normalize(aInstance4.xyz)) * aNormal);',
 				'	vLocal = aPosition;',
-				'	vUV = vec2(0.0);',
+				'	vUV = aUV;',
 				'	vColor = aColor * aInstance5.rgb;',
+				'	vTint = aInstance5.rgb;',
 				'	gl_Position = uViewProjection * vec4(world, 1.0);',
+				'}'
+			].join('\n'),
+
+			/* A copy of a model with a skeleton: its joints are read from a texture of frames, at the frame of the copy. */
+			Skinned: head + [
+				'in vec3 aPosition;',
+				'in vec3 aNormal;',
+				'in vec2 aUV;',
+				'in vec4 aJoints;',
+				'in vec4 aWeights;',
+				'in vec4 aInstance;',
+				'in vec4 aInstance2;',
+				'in vec4 aInstance3;',
+				'in vec4 aInstance4;',
+				'in vec4 aInstance5;',
+				'in vec4 aFrames;',
+				'uniform mat4 uViewProjection;',
+				'uniform vec3 uOrigin;',
+				'uniform sampler2D uPalette;',
+				'uniform float uJointOffset;',
+				'out vec3 vWorld;',
+				'out vec3 vNormal;',
+				'out vec3 vLocal;',
+				'out vec2 vUV;',
+				'out vec3 vColor;',
+				'out vec3 vTint;',
+				'mat4 joint(float index, float frame) {',
+				'	ivec2 at = ivec2((int(index + 0.5) + int(uJointOffset)) * 3, int(frame + 0.5));',
+				'	vec4 a = texelFetch(uPalette, at, 0);',
+				'	vec4 b = texelFetch(uPalette, at + ivec2(1, 0), 0);',
+				'	vec4 c = texelFetch(uPalette, at + ivec2(2, 0), 0);',
+				'	return mat4(a.x, b.x, c.x, 0.0, a.y, b.y, c.y, 0.0, a.z, b.z, c.z, 0.0, a.w, b.w, c.w, 1.0);',
+				'}',
+				'mat4 skin(float frame) {',
+				'	return joint(aJoints.x, frame) * aWeights.x + joint(aJoints.y, frame) * aWeights.y + joint(aJoints.z, frame) * aWeights.z + joint(aJoints.w, frame) * aWeights.w;',
+				'}',
+				'void main() {',
+				'	mat4 moved = skin(aFrames.x);',
+				'	if (aFrames.z > 0.001) moved = moved * (1.0 - aFrames.z) + skin(aFrames.y) * aFrames.z;',
+				'	mat3 basis = mat3(aInstance2.xyz, aInstance3.xyz, aInstance4.xyz);',
+				'	vec3 world = aInstance.xyz + uOrigin + basis * (moved * vec4(aPosition, 1.0)).xyz;',
+				'	vWorld = world;',
+				'	vNormal = normalize(mat3(normalize(aInstance2.xyz), normalize(aInstance3.xyz), normalize(aInstance4.xyz)) * mat3(moved) * aNormal);',
+				'	vLocal = aPosition;',
+				'	vUV = aUV;',
+				'	vColor = aInstance5.rgb;',
+				'	vTint = aInstance5.rgb;',
+				'	gl_Position = uViewProjection * vec4(world, 1.0);',
+				'}'
+			].join('\n'),
+
+			/* The surface of a material of glTF: metal and roughness by GGX, its maps, and the light of the scene. */
+			Pbr: head + [
+				'in vec3 vWorld;',
+				'in vec3 vNormal;',
+				'in vec2 vUV;',
+				'in vec3 vTint;',
+				'uniform vec3 uCamera;',
+				'uniform vec4 uBaseColor;',
+				'uniform float uMetallic;',
+				'uniform float uRoughness;',
+				'uniform vec3 uEmissive;',
+				'uniform float uCutoff;',
+				'uniform float uUnlit;',
+				'uniform float uNormalScale;',
+				'uniform float uOcclusion;',
+				'uniform sampler2D uColorMap;',
+				'uniform sampler2D uNormalMap;',
+				'uniform sampler2D uMetalMap;',
+				'uniform sampler2D uOcclusionMap;',
+				'uniform sampler2D uEmissiveMap;',
+				'out vec4 outColor;',
+				graphics.Chunks.Lights,
+				graphics.Chunks.Shadow,
+				'vec3 bump(vec3 n, vec3 v) {',
+				'	vec3 m = texture(uNormalMap, vUV).xyz * 2.0 - 1.0;',
+				'	m.xy *= uNormalScale;',
+				'	vec3 dpx = dFdx(vWorld);',
+				'	vec3 dpy = dFdy(vWorld);',
+				'	vec2 dtx = dFdx(vUV);',
+				'	vec2 dty = dFdy(vUV);',
+				'	vec3 t = dpy * dtx.y * -1.0 + dpx * dty.y;',
+				'	vec3 b = dpy * dtx.x - dpx * dty.x;',
+				'	float scale = max(length(t), length(b));',
+				'	if (scale < 1e-8) return n;',
+				'	return normalize(mat3(t / scale, b / scale, n) * m);',
+				'}',
+				'float ggx(float nh, float a) {',
+				'	float d = nh * nh * (a * a - 1.0) + 1.0;',
+				'	return a * a / (3.14159265 * d * d);',
+				'}',
+				'float smith(float nv, float nl, float a) {',
+				'	float k = (a + 1.0) * (a + 1.0) / 8.0;',
+				'	return nv / (nv * (1.0 - k) + k) * nl / (nl * (1.0 - k) + k);',
+				'}',
+				'void main() {',
+				'	vec4 base = uBaseColor * texture(uColorMap, vUV);',
+				'	if (base.a < uCutoff) discard;',
+				'	vec3 albedo = base.rgb * vTint;',
+				'	if (uUnlit > 0.5) {',
+				'		outColor = vec4(pow(albedo, vec3(1.0 / 2.2)), base.a);',
+				'		return;',
+				'	}',
+				'	vec3 v = normalize(uCamera - vWorld);',
+				'	vec3 n = normalize(vNormal);',
+				'	if (!gl_FrontFacing) n = -n;',
+				'	if (uNormalScale > 0.0) n = bump(n, v);',
+				'	vec4 surface = texture(uMetalMap, vUV);',
+				'	float roughness = clamp(uRoughness * surface.g, 0.04, 1.0);',
+				'	float metallic = clamp(uMetallic * surface.b, 0.0, 1.0);',
+				'	float a = roughness * roughness;',
+				'	vec3 f0 = mix(vec3(0.04), albedo, metallic);',
+				'	vec3 total = vec3(0.0);',
+				'	float nv = max(dot(n, v), 0.001);',
+				'	lightShade = sunShadow(vWorld, n);',
+				'	for (int i = 0; i < 4; i++) {',
+				'		if (i >= uLightCount) break;',
+				'		vec3 l = normalize(uLightPositions[i] - vWorld);',
+				'		float nl = max(dot(n, l), 0.0);',
+				'		if (nl <= 0.0) continue;',
+				'		vec3 h = normalize(l + v);',
+				'		vec3 f = f0 + (1.0 - f0) * pow(1.0 - max(dot(h, v), 0.0), 5.0);',
+				'		vec3 specular = f * ggx(max(dot(n, h), 0.0), a) * smith(nv, nl, a) / max(4.0 * nv * nl, 0.001);',
+				'		vec3 diffuse = (1.0 - f) * (1.0 - metallic) * albedo / 3.14159265;',
+				'		total += (diffuse + specular) * uLightColors[i] * 3.14159265 * nl * shadow(vWorld, uLightPositions[i]) * (i == 0 ? lightShade : 1.0);',
+				'	}',
+				'	float occlusion = mix(1.0, texture(uOcclusionMap, vUV).r, uOcclusion);',
+				'	vec3 reflected = reflect(-v, n);',
+				'	vec3 around = mix(uFloorLight, uSkyLight, n.y * 0.5 + 0.5) + sunBounce(vWorld);',
+				'	vec3 mirrored = mix(uFloorLight, uSkyLight, reflected.y * 0.5 + 0.5);',
+				'	vec3 fresnel = f0 + (max(vec3(1.0 - roughness), f0) - f0) * pow(1.0 - nv, 5.0);',
+				'	total += (albedo * (1.0 - metallic) * around + fresnel * mirrored) * occlusion;',
+				'	total += uEmissive * texture(uEmissiveMap, vUV).rgb;',
+				'	outColor = vec4(pow(total, vec3(1.0 / 2.2)), base.a);',
 				'}'
 			].join('\n'),
 
@@ -3991,17 +4321,24 @@ Elemenx.Component('GameScene', {
 				'uniform float uSpecular;',
 				'uniform float uRough;',
 				'out vec4 outColor;',
+				'uniform float uSoft;',
 				graphics.Chunks.Noise,
 				graphics.Chunks.Lights,
 				graphics.Chunks.Shadow,
 				'void main() {',
 				'	vec3 n = normalize(vNormal);',
 				'	vec3 v = normalize(uCamera - vWorld);',
-				'	vec3 color = min(vColor, vec3(1.0));',
+				'	vec3 color = pow(min(vColor, vec3(1.0)), vec3(2.2));',
 				'	color *= 1.0 - uRough * 0.45 + uRough * 0.45 * fbm3(vLocal * 3.0, 3);',
 				'	vec3 hot = max(vColor - vec3(1.0), 0.0);',
 				'	lightShade = sunShadow(vWorld, n);',
-				'	outColor = vec4(color * lighting(vWorld, n, v, uShine, uSpecular) + hot * 2.0, 1.0);',
+				'	vec3 light = lighting(vWorld, n, v, uShine, uSpecular) + sunBounce(vWorld);',
+				'	if (uSoft > 0.0 && uLightCount > 0) {',
+				'		vec3 l = normalize(uLightPositions[0] - vWorld);',
+				'		float through = pow(max(dot(v, -l), 0.0), 3.0) * 0.8 + max(-dot(n, l), 0.0) * 0.35;',
+				'		light += uLightColors[0] * through * lightShade * uSoft * vec3(1.0, 1.05, 0.55);',
+				'	}',
+				'	outColor = vec4(pow(color * light + hot * hot * 4.0, vec3(1.0 / 2.2)), 1.0);',
 				'}'
 			].join('\n'),
 
@@ -4162,15 +4499,18 @@ Elemenx.Component('GameScene', {
 				'uniform vec3 uSunColor;',
 				'uniform vec4 uAir;',
 				'uniform float uFog;',
+				'uniform vec3 uSkyLight;',
+				'uniform vec3 uFloorLight;',
 				'out vec4 outColor;',
 				graphics.Chunks.Noise,
 				graphics.Chunks.Shadow,
 				'void main() {',
 				'	vec3 n = normalize(vNormal);',
 				'	float grain = 0.88 + 0.24 * noise3(vWorld * 0.35 + vPlace * 0.01);',
-				'	vec3 color = vColor * grain * (uSunColor * max(dot(n, uSun), 0.0) * sunShadow(vWorld, n) + vec3(0.16, 0.19, 0.24));',
+				'	vec3 albedo = pow(vColor * grain, vec3(2.2));',
+				'	vec3 light = uSunColor * 1.35 * max(dot(n, uSun), 0.0) * sunShadow(vWorld, n) + mix(uFloorLight, uSkyLight, n.y * 0.5 + 0.5) + sunBounce(vWorld);',
 				'	vec3 horizon = mix(uAir.rgb, vec3(1.0), 0.45) * clamp(uSun.y * 3.0 + 0.3, 0.0, 1.0);',
-				'	color = mix(color, horizon, 1.0 - exp(-length(vWorld) / uFog));',
+				'	vec3 color = mix(pow(albedo * light, vec3(1.0 / 2.2)), horizon, 1.0 - exp(-length(vWorld) / uFog));',
 				'	outColor = vec4(color, 1.0);',
 				'}'
 			].join('\n'),
@@ -4192,6 +4532,18 @@ Elemenx.Component('GameScene', {
 				'	vec3 horizon = mix(uAir.rgb, vec3(1.0), 0.45) * clamp(uSun.y * 3.0 + 0.3, 0.0, 1.0);',
 				'	color = mix(color, horizon, 1.0 - exp(-length(vWorld) / uFog));',
 				'	outColor = vec4(color, 0.82 + fresnel * 0.15);',
+				'}'
+			].join('\n'),
+
+			/* What the sun sees of a surface: for the light that bounces. */
+			Bounced: head + [
+				'in vec3 vNormal;',
+				'in vec3 vColor;',
+				'uniform vec3 uSun;',
+				'uniform vec3 uSunColor;',
+				'out vec4 outColor;',
+				'void main() {',
+				'	outColor = vec4(min(vColor, vec3(1.0)) * uSunColor * max(dot(normalize(vNormal), uSun), 0.0), 1.0);',
 				'}'
 			].join('\n'),
 

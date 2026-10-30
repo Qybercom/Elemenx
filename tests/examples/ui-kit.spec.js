@@ -3196,6 +3196,15 @@ for (const origin of origins) {
 				});
 			}).toBeGreaterThan(30);
 
+			/* A model of a file comes by the same attribute, with the clips of the file. */
+			await expect.poll(async function () {
+				return scene.evaluate(function (node) {
+					var object = Elemenx.Instance(node).Scene().Objects['from-file'];
+
+					return object && object.Clip ? object.Clip.Name : '';
+				});
+			}).toBe('Bend');
+
 			await models.getByRole('button', {name: 'Attack'}).click();
 
 			await expect(note).toContainText(/\d+ playing attack/);

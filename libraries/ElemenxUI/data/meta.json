@@ -3503,6 +3503,21 @@
 					"Description": "The shadows of a sun on a ground, a surface and a model near the view (true)."
 				},
 				{
+					"Name": "Quality",
+					"Type": "select",
+					"Default": "",
+					"Options": [
+						"",
+						"low",
+						"medium",
+						"high",
+						"ultra"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "What the light costs: empty chooses by the graphics card and steps down while frames are late."
+				},
+				{
 					"Name": "View",
 					"Type": "select",
 					"Default": "",
@@ -25539,6 +25554,26 @@
 			"Sample": {}
 		},
 		{
+			"Name": "Gltf",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "glTF 2.0 and GLB: meshes, materials, skins and animations of the models other programs make.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [
+				"Parse(data, callback, options)",
+				"Load(url, callback)",
+				"Meshopt(mode, source, count, stride, filter)"
+			],
+			"Sample": {}
+		},
+		{
 			"Name": "Models",
 			"Kind": "Service",
 			"Group": "",
@@ -25556,6 +25591,9 @@
 				"Has(name)",
 				"Info(name)",
 				"Define(name, recipe)",
+				"Load(name, callback)",
+				"Ready(name)",
+				"Bake(model)",
 				"Make(name, options)",
 				"Whole(model)",
 				"Bounds(geometry)",

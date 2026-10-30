@@ -49,5 +49,5 @@
 
 - [an image of src="{{Image}}" asks only for its image, never for the text {{Image}}](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/attribute-interpolation.test.js#L98) — `tests/regression/attribute-interpolation.test.js`
 - [in a program gives the windows the icon drawn into a PNG at every change of Elemenx.Icon, and the count and the progress to the system](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/platform-icon.test.js#L207) — `tests/regression/platform-icon.test.js`
-- [rich editor reads and writes Markdown, edits tables, inserts images and prints through its methods](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L6535) — `tests/examples/ui-kit.spec.js`
+- [rich editor reads and writes Markdown, edits tables, inserts images and prints through its methods](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L6544) — `tests/examples/ui-kit.spec.js`
 - [exports the page as a template and imports a template back from the backstage, keeping the elements it does not know](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/designer.spec.js#L317) — `tests/examples/designer.spec.js`
