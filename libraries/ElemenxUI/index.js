@@ -96,6 +96,7 @@
 	'services/Astronomy.js',
 	'services/Kinds.js',
 	'services/Terrain.js',
+	'services/Models.js',
 	'traits/Declared.js',
 	'components/Icon/Icon.js',
 	'components/FileIcon/FileIcon.js',

@@ -256,6 +256,9 @@ Elemenx.Component('UIKitPage', {
 	SpaceReal: false,
 	SpacePaused: false,
 	SpaceDay: 0,
+	ModelsNote: '',
+	ModelsShadows: true,
+	ModelsList: [],
 	TerrainNote: '',
 	TerrainSaved: null,
 	TerrainUnits: [
@@ -1893,6 +1896,63 @@ Elemenx.Component('UIKitPage', {
 	},
 
 	/* The ground of the game: its scene kept for the buttons; trees where the ground is dry and gentle. */
+	ModelsReady: function (scene) {
+		var library = this.$Service('Models');
+		var rows = [['unit', -34], ['animal', -22], ['vehicle', -22], ['plant', -2], ['rock', -2], ['building', 26]];
+		var list = [];
+		var teams = ['red', 'blue', 'green'];
+		var x = -80;
+		var last = '';
+
+		this.ModelsScene = function () {
+			return scene;
+		};
+
+		rows.forEach(function (row) {
+			if (row[1] !== last)
+				x = -80;
+
+			last = row[1];
+
+			library.Names({Type: row[0]}).forEach(function (name, index) {
+				var size = library.Info(name).Size;
+
+				x += size * 0.7 + 3;
+
+				list.push({ID: 'model-' + name, Kind: name, X: Math.round(x), Y: row[1], Team: teams[index % teams.length]});
+
+				x += size * 0.7 + 3;
+			});
+		});
+
+		this.ModelsList = list;
+
+		scene.Scene().Wanted = 90;
+		scene.Scene().Pitch = 0.55;
+	},
+
+	ModelsPlay: function (clip) {
+		var scene = this.ModelsScene ? this.ModelsScene() : null;
+		if (!scene) return;
+
+		this.ModelsNote = this.ModelsList.filter(function (model) {
+			return scene.Play(model.ID, clip);
+		}).length + ' playing ' + clip;
+	},
+
+	ModelsShadowed: function (value) {
+		this.ModelsShadows = value;
+	},
+
+	ModelsMarch: function () {
+		var scene = this.ModelsScene ? this.ModelsScene() : null;
+		if (!scene) return;
+
+		this.ModelsNote = this.ModelsList.filter(function (model) {
+			return scene.Get(model.ID).Traits.Walker && scene.Move(model.ID, [model.X, model.Y - 18]);
+		}).length + ' marching';
+	},
+
 	TerrainReady: function (scene) {
 		var terrain = this.$Service('Terrain').Flat({Size: 900, Height: 55, Water: 0.32, Seed: 'valley'});
 		var random = this.$Service('Random').Create('trees');

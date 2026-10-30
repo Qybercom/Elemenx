@@ -5,18 +5,19 @@ The graphics of three dimensions on WebGL2, with no library: the numbers of spac
 
 The numbers and the shapes run in Node too (they read no page):
 
-- Matrices of 4 by 4 are arrays of 16 numbers, column by column, as WebGL reads them: Identity(), Multiply(a, b), Invert(m), Translation(x, y, z), Rotation(axis, angle) (radians), Scaling(x, y, z), Compose(position, rotation, scale) (rotation a matrix, or null), Perspective(fov, aspect, near, far) (fov in degrees), LookAt(eye, target, up), NormalMatrix(m) (the 3 by 3 one of the normals), Apply(m, point) (a point [x, y, z] moved by it).
+- Matrices of 4 by 4 are arrays of 16 numbers, column by column, as WebGL reads them: Identity(), Multiply(a, b), Invert(m), Translation(x, y, z), Rotation(axis, angle) (radians), Scaling(x, y, z), Compose(position, rotation, scale) (rotation a matrix, or null), Perspective(fov, aspect, near, far) (fov in degrees), Orthographic(left, right, bottom, top, near, far), LookAt(eye, target, up), NormalMatrix(m) (the 3 by 3 one of the normals), Apply(m, point) (a point [x, y, z] moved by it).
 - Vectors are arrays [x, y, z]: Vectors.Add(a, b), Subtract, Scale(a, k), Dot, Cross, Length, Normalize, Lerp(a, b, t), Distance.
 - Camera(options) returns a camera ({Position, Target, Up, Fov, Near, Far}): View(), Projection(aspect), Matrix(aspect) (both), Orbit(target, yaw, pitch, distance) (it looks at target from round it), Ray(x, y, width, height) ({Origin, Direction} through a point of the screen), Project(point, width, height) ({X, Y, Depth, Visible}: where a point of space is on the screen).
 - Hit(ray, center, radius): how far along the ray it meets a ball (-1: it does not).
-- Geometry is {Positions, Normals, UVs, Colors, Indices} (flat arrays: 3, 3, 2 and 3 numbers a vertex): Sphere({Radius, Segments, Rings}), Icosphere({Radius, Detail}), Ring({Inner, Outer, Segments}) (flat, round the axis Y), Box({Width, Height, Depth}), Cylinder({Radius, Top, Height, Segments, Caps}) (a cone when Top is 0), Torus({Radius, Tube, Segments, Sides}), Plane({Width, Depth, Segments}); Transform(geometry, matrix), Merge(parts) (each a geometry or {Geometry, Matrix, Color}), Displace(geometry, amount) (each vertex moved along its normal by amount(position, normal)), Normals(geometry) (made again from the faces).
-- Noise(seed) returns a smooth noise of space: Value(x, y, z) (0 to 1), Fbm(x, y, z, octaves) (several of it, each finer and fainter) and Ridge (the folds of mountains). Without a seed it is the very noise of the shaders, Chunks.Noise (noise3, fbm3, ridge3), to the float: a heightmap of the CPU matches a surface the GPU baked. Chunks.Lights is the light of up to 4 points on a surface, with the shadows of up to 4 balls (lighting(position, normal, view, shine, specular)).
+- Geometry is {Positions, Normals, UVs, Colors, Indices} (flat arrays: 3, 3, 2 and 3 numbers a vertex): Sphere({Radius, Segments, Rings}), Icosphere({Radius, Detail}), Ring({Inner, Outer, Segments}) (flat, round the axis Y), Box({Width, Height, Depth}), Cylinder({Radius, Top, Height, Segments, Caps}) (a cone when Top is 0), Torus({Radius, Tube, Segments, Sides}), Plane({Width, Depth, Segments}), Lathe({Points: [[radius, y]...], Segments}) (a line turned round the axis Y), Wedge({Width, Height, Depth}) (a roof of two slopes); Transform(geometry, matrix), Merge(parts) (each a geometry or {Geometry, Matrix, Color}), Displace(geometry, amount) (each vertex moved along its normal by amount(position, normal)), Normals(geometry) (made again from the faces), Facets(geometry) (each face flat, of vertices of its own).
+- Noise(seed) returns a smooth noise of space: Value(x, y, z) (0 to 1), Fbm(x, y, z, octaves) (several of it, each finer and fainter) and Ridge (the folds of mountains). Without a seed it is the very noise of the shaders, Chunks.Noise (noise3, fbm3, ridge3), to the float: a heightmap of the CPU matches a surface the GPU baked. Chunks.Lights is the light of up to 4 points on a surface, with the shadows of up to 4 balls (lighting(position, normal, view, shine, specular); the global lightShade dims its first light). Chunks.Shadow reads a shadow map (sunShadow(position, normal): 0 in the shadow, 1 in the light; uniforms uShadowMap, uShadowMatrix, uShadowBias, uShadowOn).
 
 Create(canvas, options) returns a renderer, or null where there is no WebGL2 (options: Alpha, Antialias, Ratio):
 
 - Program(vertex, fragment): the shaders compiled (each one once), their uniforms found; an error of GLSL is thrown with its log. The attributes have fixed places: aPosition, aNormal, aUV, aColor, aInstance (and aInstance2 to aInstance5, one of each copy of an instanced mesh).
 - Mesh(geometry) returns a mesh: Update(geometry), Instance(data, count) (data {aInstance: {Size, Data}, ...}: the copies of the mesh drawn at once), Destroy(); Lines(points, loop) and Points(positions, extra) (extra {aColor: {Size, Data}}) make meshes of lines and of points.
 - Texture(source, options) (a canvas, a picture, or {Width, Height, Data}; options Repeat, Nearest) returns a texture for a uniform sampler2D; Cube(size) a cube of six faces for a samplerCube, which Bake(cube, program, uniforms) draws once: the program is Shaders.Quad with a fragment shader that takes the direction of each texel from cubeDirection(uFace, vQuad) (Chunks.Cube): a surface of noise computed once, sampled at every frame.
+- Shadow(size) returns a shadow map, a depth texture for a uniform sampler2DShadow: between its Begin() and End() the draws write only its depth, as seen from the light; Destroy().
 - Draw(mesh, program, uniforms, settings): settings Mode (triangles, lines, line-strip, line-loop, points), Blend (alpha, add or none), Depth (test, true), DepthWrite (true), Cull (back, front or none), Instances (the copies). The value of a uniform is a number, an array (of a vector, a matrix or a list of them), true or false, or a texture.
 - Resize(width, height, ratio), Clear(color) ([r, g, b, a], 0 to 1), Lost (the context was taken by the browser), Destroy().
 
@@ -30,6 +31,7 @@ Create(canvas, options) returns a renderer, or null where there is no WebGL2 (op
 - `Scaling(x, y, z)`
 - `Compose(position, rotation, scale)`
 - `Perspective(fov, aspect, near, far)`
+- `Orthographic(left, right, bottom, top, near, far)`
 - `LookAt(eye, target, up)`
 - `NormalMatrix(m)`
 - `Apply(m, point)`
@@ -42,9 +44,12 @@ Create(canvas, options) returns a renderer, or null where there is no WebGL2 (op
 - `Cylinder(options)`
 - `Torus(options)`
 - `Plane(options)`
+- `Lathe(options)`
+- `Wedge(options)`
 - `Transform(geometry, matrix)`
 - `Merge(parts)`
 - `Displace(geometry, amount)`
+- `Facets(geometry)`
 - `Normals(geometry)`
 - `Noise(seed)`
 - `Create(canvas, options)`
@@ -138,7 +143,8 @@ Create(canvas, options) returns a renderer, or null where there is no WebGL2 (op
 - [puts a body on its orbit of Kepler at a time, and describes stars and planets](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L55) — `tests/regression/library-scene.test.js`
 - [makes the same system of the same seed: a star, planets by their distance, moons, rings and belts](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L101) — `tests/regression/library-scene.test.js`
 - [multiplies, inverts and projects matrices, and makes shapes of triangles](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L136) — `tests/regression/library-scene.test.js`
-- [has the same noise on the CPU as in the shaders, so a heightmap matches a baked surface](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L167) — `tests/regression/library-scene.test.js`
+- [turns a line into a body, makes a roof of two slopes, flat faces and a box of parallel light](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L167) — `tests/regression/library-scene.test.js`
+- [has the same noise on the CPU as in the shaders, so a heightmap matches a baked surface](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L206) — `tests/regression/library-scene.test.js`
 - [puts planets on their orbits and makes shapes of three dimensions with the Services of ElemenxUI](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/headless.test.js#L48) — `tests/regression/headless.test.js`
-- [draws the star bright, the day side of a body of its baked surface, not its night side, and the same far from the middle](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L321) — `tests/regression/library-scene.test.js`
-- [has the ground of a planet whose coasts are the ones its baked surface shows, its squares turned outwards](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L648) — `tests/regression/library-scene.test.js`
+- [draws the star bright, the day side of a body of its baked surface, not its night side, and the same far from the middle](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L361) — `tests/regression/library-scene.test.js`
+- [has the ground of a planet whose coasts are the ones its baked surface shows, its squares turned outwards](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L920) — `tests/regression/library-scene.test.js`

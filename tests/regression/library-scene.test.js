@@ -164,6 +164,45 @@ describe('Contract: Astronomy and Graphics3D, the numbers of a star system and o
 		expect(graphics.Noise('a').Fbm(0.3, 0.7, 1.1, 4)).toBe(value);
 	});
 
+	it('turns a line into a body, makes a roof of two slopes, flat faces and a box of parallel light', function () {
+		var graphics = Elemenx.Service('Graphics3D');
+		var lathe = graphics.Lathe({Points: [[1, 0], [1, 2]], Segments: 8});
+		var wedge = graphics.Wedge({Width: 2, Height: 1, Depth: 2});
+		var facets = graphics.Facets(graphics.Box({}));
+		var box = graphics.Orthographic(-2, 2, -1, 1, 0, 10);
+		var i;
+
+		expect(lathe.Indices.length).toBe(8 * 6);
+		expect(lathe.Positions.length).toBe(2 * 9 * 3);
+
+		/* The normals of a wall point outwards. */
+		for (i = 0; i < lathe.Positions.length; i += 3) {
+			expect(lathe.Normals[i]).toBeCloseTo(lathe.Positions[i], 5);
+			expect(lathe.Normals[i + 1]).toBeCloseTo(0, 5);
+			expect(lathe.Normals[i + 2]).toBeCloseTo(lathe.Positions[i + 2], 5);
+		}
+
+		/* Its slopes look up, its floor down; its base is at the bottom. */
+		expect(wedge.Indices.length).toBe(8 * 3);
+		expect(Math.max.apply(null, wedge.Normals.filter(function (value, index) {
+			return index % 3 === 1;
+		}))).toBeCloseTo(Math.SQRT1_2, 3);
+		expect(Math.min.apply(null, wedge.Normals.filter(function (value, index) {
+			return index % 3 === 1;
+		}))).toBe(-1);
+		expect(Math.min.apply(null, wedge.Positions.filter(function (value, index) {
+			return index % 3 === 1;
+		}))).toBe(-0.5);
+
+		expect(facets.Positions.length).toBe(36 * 3);
+		expect(facets.Normals.slice(0, 3)).toEqual(facets.Normals.slice(3, 6));
+
+		expect(graphics.Apply(box, [2, 1, -10]).map(function (value) {
+			return Math.round(value * 1000) / 1000;
+		})).toEqual([1, 1, 1]);
+		expect(graphics.Apply(box, [-2, -1, 0])[2]).toBeCloseTo(-1, 6);
+	});
+
 	it('has the same noise on the CPU as in the shaders, so a heightmap matches a baked surface', function () {
 		var canvas = document.createElement('canvas');
 		var renderer = graphics.Create(canvas, {Antialias: false});
@@ -541,6 +580,128 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 		expect(inner.Focus).toBe('rock');
 	});
 
+	it('plays the clips of a model: walking on a way by itself, a clip that ends going back, a kind for each model', async function () {
+		var ended = [];
+		var mounted = await mount('<GameScene (ready)="Ready">' +
+			'<GameObject ID="land" Kind="ground" Size="400" Height="20" Water="0.1" Seed="test" />' +
+			'<GameObject ID="sun" Kind="sun" />' +
+			'<GameObject ID="hero" Kind="knight" X="0" Y="0" Team="red" />' +
+			'<GameObject ID="keep" Kind="tower" X="40" Y="40" />' +
+		'</GameScene>');
+		var scene = mounted.Space;
+		var inner = scene.Scene();
+		var hero = scene.Get('hero');
+		var frame = function (seconds) {
+			inner.Seconds += seconds;
+
+			scene.Engine().Frame(performance.now() + inner.Seconds * 1000);
+		};
+
+		expect(hero.Traits.Walker.Speed).toBe(8);
+		expect(scene.Get('keep').Values.Blocks).toBe(true);
+		expect(scene.Get('keep').Traits.Health.Max).toBe(800);
+
+		frame(0.1);
+
+		expect(hero.Clip.Name).toBe('idle');
+
+		expect(scene.Play('hero', 'dance')).toBe(false);
+		expect(scene.Play('nobody', 'attack')).toBe(false);
+		expect(scene.Play('keep', 'attack')).toBe(false);
+
+		expect(scene.Play('hero', 'attack', function (error, result) {
+			ended.push(result);
+		})).toBe(true);
+
+		frame(0.1);
+
+		expect(hero.Clip.Name).toBe('attack');
+
+		frame(1);
+
+		await tick(20);
+
+		frame(0.05);
+
+		expect(ended).toEqual([{ID: 'hero', Clip: 'attack'}]);
+		expect(hero.Clip.Name).toBe('idle');
+
+		expect(scene.Move('hero', [30, 5])).toBe(true);
+
+		frame(0.1);
+
+		expect(hero.Clip.Name).toBe('walk');
+
+		/* A clip that holds stays, and a loop gets it up again. */
+		scene.Play('hero', 'die');
+
+		frame(3);
+		frame(3);
+
+		expect(hero.Clip.Name).toBe('die');
+
+		delete inner.Ways.hero;
+
+		expect(scene.Play('hero', 'work')).toBe(true);
+
+		frame(0.1);
+
+		expect(hero.Clip.Name).toBe('work');
+	});
+
+	it('casts the shadows of what stands on a ground, or none when told', async function () {
+		var mounted = await mount('<GameScene (ready)="Ready">' +
+			'<GameObject ID="land" Kind="ground" Size="400" Height="4" Water="0" Seed="test" />' +
+			'<GameObject ID="sun" Kind="sun" Elevation="30" Azimuth="90" />' +
+			'<GameObject ID="keep" Kind="castle" X="0" Y="0" />' +
+		'</GameScene>');
+		var scene = mounted.Space;
+		var inner = scene.Scene();
+		var renderer = scene.Engine().Renderer;
+		var gl = renderer.GL;
+		var at = 0;
+		var light = function () {
+			var data = new Uint8Array(renderer.Width * renderer.Height * 4);
+			var sum = 0;
+			var index;
+
+			at += 1000;
+
+			scene.Engine().Frame(performance.now() + at);
+
+			gl.readPixels(0, 0, renderer.Width, renderer.Height, gl.RGBA, gl.UNSIGNED_BYTE, data);
+
+			for (index = 0; index < data.length; index += 4)
+				sum += data[index] + data[index + 1] + data[index + 2];
+
+			return sum / (data.length / 4);
+		};
+		var lit;
+		var shaded;
+		var i;
+
+		inner.Wanted = 70;
+		inner.Distance = 70;
+		inner.Pitch = 0.9;
+
+		await waitFor(function () {
+			return Object.keys(inner.Ground.Nodes).length > 6;
+		}, 3000);
+
+		/* The view comes to rest and the finest squares of the ground are made. */
+		for (i = 0; i < 120; i++)
+			light();
+
+		shaded = light();
+
+		scene.Shadows = false;
+
+		lit = light();
+
+		expect(gl.getError()).toBe(gl.NO_ERROR);
+		expect(lit - shaded).toBeGreaterThan(1);
+	});
+
 	it('walks a unit over a ground round the water and what blocks it, sends it by a right press, and saves its place', async function () {
 		var arrived = [];
 		var mounted = await mount('<GameScene (ready)="Ready" (arrive)="Arrived">' +
@@ -599,6 +760,115 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 
 		expect(scene.Get('walker').Values.X).toBeCloseTo(goal[0], 6);
 		expect(field.Path({X: 0, Z: 0}, {X: 0, Z: 0.1}, {})).not.toBe(null);
+	});
+});
+
+describe('Contract: Models, the models of a game made of code', function () {
+	var models;
+	var graphics;
+
+	beforeAll(async function () {
+		await loadElemenx();
+	});
+
+	beforeEach(function () {
+		Use(['service:Models', 'service:Graphics3D']);
+
+		models = Elemenx.Service('Models');
+		graphics = Elemenx.Service('Graphics3D');
+	});
+
+	it('has units, animals, vehicles, plants, rocks, buildings and ships, each of whole triangles, its parents before their pieces', function () {
+		['unit', 'animal', 'vehicle', 'plant', 'rock', 'building', 'ship'].forEach(function (type) {
+			expect(models.Names({Type: type}).length).toBeGreaterThan(1);
+		});
+
+		expect(models.Names({Group: 'fantasy'})).toEqual(expect.arrayContaining(['knight', 'mage', 'castle', 'windmill']));
+		expect(models.Names({Group: 'scifi'})).toEqual(expect.arrayContaining(['soldier', 'mech', 'tank', 'reactor']));
+
+		models.Names().forEach(function (name) {
+			var variants = models.Info(name).Variants;
+			var variant;
+
+			for (variant = 0; variant < variants; variant++) {
+				var model = models.Make(name, {Variant: variant});
+				var seen = {};
+
+				model.Pieces.forEach(function (piece) {
+					var geometry = piece.Geometry;
+
+					expect(piece.Parent === '' || seen[piece.Parent]).toBeTruthy();
+					expect(geometry.Indices.length).toBeGreaterThan(0);
+					expect(geometry.Indices.length % 3).toBe(0);
+					expect(geometry.Normals.length).toBe(geometry.Positions.length);
+					expect(geometry.Colors.length).toBe(geometry.Positions.length);
+					expect(geometry.Positions.every(Number.isFinite)).toBe(true);
+					expect(geometry.Normals.every(Number.isFinite)).toBe(true);
+
+					seen[piece.ID] = true;
+				});
+			}
+		});
+	});
+
+	it('makes the same shape of the same variant, another of another, and throws on an unknown model', function () {
+		var first = models.Make('oak', {Variant: 1});
+
+		expect(models.Make('oak', {Variant: 1})).toBe(first);
+		expect(models.Make('oak', {Variant: 1 + models.Info('oak').Variants})).toBe(first);
+		expect(models.Make('oak', {Variant: 2}).Pieces[0].Geometry.Positions).not.toEqual(first.Pieces[0].Geometry.Positions);
+
+		expect(function () {
+			models.Make('dragon');
+		}).toThrow('Elemenx Models: unknown model dragon');
+	});
+
+	it('poses the pieces of a clip on their pivots, children with their parents, and fades from a clip to another', function () {
+		var knight = models.Make('knight');
+		var foot = [-0.075, 0.03, 0.03];
+		var hip = [-0.075, 0.47, 0];
+		var forward = graphics.Apply(models.Pose(knight, 'walk', 0)['leg-l'], foot);
+		var backward = graphics.Apply(models.Pose(knight, 'walk', 0.4)['leg-l'], foot);
+		var pose = models.Pose(knight, 'walk', 0);
+		var fading = models.Pose(knight, 'idle', 0, {From: 'walk', FromTime: 0, Fade: 0});
+		var fallen = models.Pose(knight, 'die', 1);
+
+		/* The legs swing round the hips, one way and the other. */
+		expect(forward[2]).toBeGreaterThan(0.1);
+		expect(backward[2]).toBeLessThan(-0.1);
+
+		/* The hip itself stays with the body. */
+		expect(graphics.Vectors.Distance(graphics.Apply(pose['leg-l'], hip), graphics.Apply(pose.body, hip))).toBeLessThan(0.001);
+
+		/* At the start of a fade it is the last clip. */
+		expect(Array.from(fading['leg-l'])).toEqual(Array.from(pose['leg-l']));
+
+		/* The head of a fallen one is near the ground, and stays there. */
+		expect(graphics.Apply(fallen.head, [0, 0.9, 0])[1]).toBeLessThan(0.25);
+		expect(models.Pose(knight, 'die', 5).head).toEqual(fallen.head);
+		expect(models.Length(knight, 'die')).toBe(1);
+	});
+
+	it('spins what turns with no end, and leaves a model of one piece still', function () {
+		var mill = models.Make('windmill');
+
+		expect(models.Pose(mill, 'idle', 1).sails).not.toEqual(models.Pose(mill, 'idle', 2).sails);
+		expect(models.Pose(models.Make('pine'), 'idle', 1).body).toEqual(graphics.Identity());
+	});
+
+	it('takes the models of an application', function () {
+		models.Define('test-crate', {Group: 'fantasy', Type: 'prop', Size: 2, Build: function (tools) {
+			return [tools.Piece('body', [tools.Box(1, 1, 1, [0, 0.5, 0], [1, 1, 1])])];
+		}});
+
+		expect(models.Has('test-crate')).toBe(true);
+		expect(models.Names({Type: 'prop'})).toEqual(['test-crate']);
+		expect(models.Info('test-crate').Size).toBe(2);
+		expect(models.Make('test-crate').Pieces[0].Geometry.Positions.length).toBe(36 * 3);
+
+		expect(function () {
+			models.Define('test-none', {});
+		}).toThrow('Elemenx Models: Define expects (name, {Build})');
 	});
 });
 

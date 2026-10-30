@@ -1,7 +1,7 @@
 <!-- generated -->
 # Graphics3D
 
-Трёхмерная графика на WebGL2 без библиотек: числа пространства (матрицы, векторы, камера, луч), фигуры из треугольников и рендерер, который рисует их заданными шейдерами. Матрицы 4×4 — массивы из 16 чисел по столбцам: Identity, Multiply, Invert, Translation, Rotation, Scaling, Compose, Perspective, LookAt, NormalMatrix, Apply; векторы — Vectors.Add, Subtract, Scale, Dot, Cross, Length, Normalize, Lerp, Distance. Camera(options) — камера с View, Projection, Matrix, Orbit(target, yaw, pitch, distance), Ray(x, y, width, height), Project(point, width, height); Hit(ray, center, radius) — пересечение луча с шаром. Геометрия {Positions, Normals, UVs, Colors, Indices}: Sphere, Icosphere, Ring, Box, Cylinder (конус при Top 0), Torus, Plane; Transform, Merge, Displace, Normals. Noise(seed) — гладкий шум пространства (Value, Fbm), в шейдерах тот же в Chunks.Noise, а Chunks.Lights — свет до 4 точек с тенями до 4 шаров. Create(canvas, options) возвращает рендерер (или null без WebGL2): Program(vertex, fragment), Mesh(geometry) с Update, Instance и Destroy, Lines, Points, Texture, Draw(mesh, program, uniforms, settings) (Mode, Blend, Depth, DepthWrite, Cull, Instances), Resize, Clear, Lost, Destroy. Числа и фигуры работают и в Node.
+Трёхмерная графика на WebGL2 без библиотек: числа пространства (матрицы, векторы, камера, луч), фигуры из треугольников и рендерер, который рисует их заданными шейдерами. Матрицы 4×4 — массивы из 16 чисел по столбцам: Identity, Multiply, Invert, Translation, Rotation, Scaling, Compose, Perspective, Orthographic, LookAt, NormalMatrix, Apply; векторы — Vectors.Add, Subtract, Scale, Dot, Cross, Length, Normalize, Lerp, Distance. Camera(options) — камера с View, Projection, Matrix, Orbit(target, yaw, pitch, distance), Ray(x, y, width, height), Project(point, width, height); Hit(ray, center, radius) — пересечение луча с шаром. Геометрия {Positions, Normals, UVs, Colors, Indices}: Sphere, Icosphere, Ring, Box, Cylinder (конус при Top 0), Torus, Plane, Lathe (линия, повёрнутая вокруг оси Y), Wedge (крыша из двух скатов); Transform, Merge, Displace, Normals, Facets (плоские грани). Noise(seed) — гладкий шум пространства (Value, Fbm), в шейдерах тот же в Chunks.Noise, а Chunks.Lights — свет до 4 точек с тенями до 4 шаров, Chunks.Shadow — чтение карты теней (Shadow(size) рендерера: Begin() и End()). Create(canvas, options) возвращает рендерер (или null без WebGL2): Program(vertex, fragment), Mesh(geometry) с Update, Instance и Destroy, Lines, Points, Texture, Draw(mesh, program, uniforms, settings) (Mode, Blend, Depth, DepthWrite, Cull, Instances), Resize, Clear, Lost, Destroy. Числа и фигуры работают и в Node.
 
 ## Методы
 
@@ -13,6 +13,7 @@
 - `Scaling(x, y, z)`
 - `Compose(position, rotation, scale)`
 - `Perspective(fov, aspect, near, far)`
+- `Orthographic(left, right, bottom, top, near, far)`
 - `LookAt(eye, target, up)`
 - `NormalMatrix(m)`
 - `Apply(m, point)`
@@ -25,9 +26,12 @@
 - `Cylinder(options)`
 - `Torus(options)`
 - `Plane(options)`
+- `Lathe(options)`
+- `Wedge(options)`
 - `Transform(geometry, matrix)`
 - `Merge(parts)`
 - `Displace(geometry, amount)`
+- `Facets(geometry)`
 - `Normals(geometry)`
 - `Noise(seed)`
 - `Create(canvas, options)`
@@ -121,7 +125,8 @@
 - [puts a body on its orbit of Kepler at a time, and describes stars and planets](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L55) — `tests/regression/library-scene.test.js`
 - [makes the same system of the same seed: a star, planets by their distance, moons, rings and belts](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L101) — `tests/regression/library-scene.test.js`
 - [multiplies, inverts and projects matrices, and makes shapes of triangles](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L136) — `tests/regression/library-scene.test.js`
-- [has the same noise on the CPU as in the shaders, so a heightmap matches a baked surface](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L167) — `tests/regression/library-scene.test.js`
+- [turns a line into a body, makes a roof of two slopes, flat faces and a box of parallel light](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L167) — `tests/regression/library-scene.test.js`
+- [has the same noise on the CPU as in the shaders, so a heightmap matches a baked surface](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L206) — `tests/regression/library-scene.test.js`
 - [puts planets on their orbits and makes shapes of three dimensions with the Services of ElemenxUI](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/headless.test.js#L48) — `tests/regression/headless.test.js`
-- [draws the star bright, the day side of a body of its baked surface, not its night side, and the same far from the middle](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L321) — `tests/regression/library-scene.test.js`
-- [has the ground of a planet whose coasts are the ones its baked surface shows, its squares turned outwards](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L648) — `tests/regression/library-scene.test.js`
+- [draws the star bright, the day side of a body of its baked surface, not its night side, and the same far from the middle](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L361) — `tests/regression/library-scene.test.js`
+- [has the ground of a planet whose coasts are the ones its baked surface shows, its squares turned outwards](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L920) — `tests/regression/library-scene.test.js`

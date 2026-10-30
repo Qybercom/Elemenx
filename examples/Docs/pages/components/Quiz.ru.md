@@ -64,4 +64,4 @@
 - [asks its questions given and declared, scores single, multiple, text, number and order, and reviews them at the end](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-quiz.test.js#L44) — `tests/regression/library-quiz.test.js`
 - [checks at once with instant feedback, branches by the option chosen, goes back the way it came, and ends at its time](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-quiz.test.js#L145) — `tests/regression/library-quiz.test.js`
 - [gathers the answers of a survey without scoring them](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-quiz.test.js#L210) — `tests/regression/library-quiz.test.js`
-- [quiz starts from its screen, checks each answer at once, and scores the end](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L7907) — `tests/examples/ui-kit.spec.js`
+- [quiz starts from its screen, checks each answer at once, and scores the end](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L7966) — `tests/examples/ui-kit.spec.js`

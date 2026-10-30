@@ -1,0 +1,23 @@
+<pre class="elemenx-code" style="white-space: pre-wrap;">{{Text}}</pre>
+<script>
+({
+	Text: '',
+
+	$OnCreate: function () {
+		var models = this.$Service('Models');
+		var graphics = this.$Service('Graphics3D');
+		var knight = models.Make('knight');
+		var foot = graphics.Apply(models.Pose(knight, 'walk', 0.2)['leg-l'], [-0.075, 0.03, 0.03]);
+
+		models.Define('crate', {Group: 'fantasy', Type: 'prop', Size: 1, Build: function (tools) {
+			return [tools.Piece('body', [tools.Box(1, 1, 1, [0, 0.5, 0], [0.5, 0.36, 0.23])])];
+		}});
+
+		this.Text = 'Units: ' + models.Names({Type: 'unit'}).join(', ') + '\n\nBuildings: ' + models.Names({Type: 'building'}).join(', ') + '\n\nKnight: ' + knight.Pieces.map(function (piece) {
+			return piece.ID;
+		}).join(', ') + '\nClips: ' + models.Info('knight').Clips.join(', ') + '\nFoot in the walk at 0.2 s: ' + foot.map(function (value) {
+			return value.toFixed(2);
+		}).join(', ') + '\n\nCrate: ' + models.Make('crate').Pieces[0].Geometry.Indices.length / 3 + ' triangles';
+	}
+})
+</script>

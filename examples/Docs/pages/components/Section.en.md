@@ -48,5 +48,5 @@ A titled section. Collapsible lets the user fold its body; Collapsed is the stat
 ## Tests
 
 - [keeps the structure in view, runs the page at the width of a phone from its header and speaks Russian](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/designer.spec.js#L632) — `tests/examples/designer.spec.js`
-- [section folds its body and keeps its actions](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L4509) — `tests/examples/ui-kit.spec.js`
+- [section folds its body and keeps its actions](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L4568) — `tests/examples/ui-kit.spec.js`
 - [Accordion keeps one section open: opening one folds the others, each with its toggle](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-new.test.js#L76) — `tests/regression/library-new.test.js`

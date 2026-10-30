@@ -45,6 +45,6 @@
 
 ## Тесты
 
-- [makes a kind whole of its base, its Traits by their fields and its Parts by their ID, and tells its fields in any case](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L217) — `tests/regression/library-scene.test.js`
-- [makes an object of a kind with parts of its own, and keeps of it only what differs: restored the same](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L238) — `tests/regression/library-scene.test.js`
+- [makes a kind whole of its base, its Traits by their fields and its Parts by their ID, and tells its fields in any case](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L257) — `tests/regression/library-scene.test.js`
+- [makes an object of a kind with parts of its own, and keeps of it only what differs: restored the same](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L278) — `tests/regression/library-scene.test.js`
 - [puts planets on their orbits and makes shapes of three dimensions with the Services of ElemenxUI](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/headless.test.js#L48) — `tests/regression/headless.test.js`

@@ -218,7 +218,7 @@ for (const origin of origins) {
 
 			await open(page, origin);
 
-			await expect(page.locator('.ui-kit > .elemenx-section')).toHaveCount(62);
+			await expect(page.locator('.ui-kit > .elemenx-section')).toHaveCount(63);
 
 			await expect(page.locator('#elemenx-icons')).toHaveAttribute('data-ready', 'true');
 			await expect(page.locator('.ui-kit-icon svg').first()).toHaveAttribute('data-icon', 'add');
@@ -3147,6 +3147,64 @@ for (const origin of origins) {
 			await expect.poll(async function () {
 				return (await sun('star')).Sun;
 			}).toBeGreaterThan(300);
+
+			expect(errors).toEqual([]);
+		});
+
+		test('models stand in their shadows, play their clips, march and turn their shadows off', async function ({ page }) {
+			var errors = captureErrors(page);
+			var models;
+			var scene;
+			var note;
+
+			await page.setViewportSize({width: 1280, height: 900});
+
+			await open(page, origin, ['Models']);
+
+			models = section(page, 'Models');
+			scene = models.locator('.elemenx-game-scene');
+			note = models.locator('.elemenx-section-header');
+
+			await scene.scrollIntoViewIfNeeded();
+
+			/* The units and the buildings that can be selected are named; the plants are not. */
+			await expect.poll(async function () {
+				return scene.locator('.elemenx-game-scene-label').count();
+			}).toBeGreaterThan(20);
+
+			await expect.poll(async function () {
+				return scene.evaluate(function (node) {
+					return Elemenx.Instance(node).Objects().length;
+				});
+			}).toBeGreaterThan(30);
+
+			await models.getByRole('button', {name: 'Attack'}).click();
+
+			await expect(note).toContainText(/\d+ playing attack/);
+
+			await models.getByRole('button', {name: 'Fall'}).click();
+
+			await expect(note).toContainText(/\d+ playing die/);
+
+			await models.getByRole('button', {name: 'Stand'}).click();
+
+			await expect(note).toContainText(/\d+ playing idle/);
+
+			await models.getByRole('button', {name: 'March'}).click();
+
+			await expect(note).toContainText(/\d+ marching/);
+
+			expect(await scene.evaluate(function (node) {
+				return Elemenx.Instance(node).Shadows;
+			})).not.toBe(false);
+
+			await models.locator('.elemenx-toggle', {hasText: 'Shadows'}).click();
+
+			await expect.poll(async function () {
+				return scene.evaluate(function (node) {
+					return Elemenx.Instance(node).Shadows;
+				});
+			}).toBe(false);
 
 			expect(errors).toEqual([]);
 		});

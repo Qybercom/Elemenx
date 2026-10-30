@@ -3898,6 +3898,15 @@
 					"Description": "The days a second on the surface of a body (1/120: a day of two minutes)."
 				},
 				{
+					"Name": "Shadows",
+					"Type": "bool",
+					"Default": true,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The shadows of a sun on a ground, a surface and a model near the view (true)."
+				},
+				{
 					"Name": "Paused",
 					"Type": "bool",
 					"Default": false,
@@ -4030,6 +4039,7 @@
 				"Select(id)",
 				"FocusOn(id)",
 				"Move(id, target)",
+				"Play(id, clip, callback)",
 				"Now()",
 				"SetTime(days)",
 				"ToScreen(id)",
@@ -25802,6 +25812,7 @@
 				"Scaling(x, y, z)",
 				"Compose(position, rotation, scale)",
 				"Perspective(fov, aspect, near, far)",
+				"Orthographic(left, right, bottom, top, near, far)",
 				"LookAt(eye, target, up)",
 				"NormalMatrix(m)",
 				"Apply(m, point)",
@@ -25813,10 +25824,13 @@
 				"Cylinder(options)",
 				"Torus(options)",
 				"Plane(options)",
+				"Lathe(options)",
+				"Wedge(options)",
 				"Transform(geometry, matrix)",
 				"Merge(parts)",
 				"Displace(geometry, amount)",
 				"Normals(geometry)",
+				"Facets(geometry)",
 				"Noise(seed)"
 			],
 			"Sample": {}
@@ -25889,6 +25903,30 @@
 			"Methods": [
 				"Flat(options)",
 				"Sphere(options)"
+			],
+			"Sample": {}
+		},
+		{
+			"Name": "Models",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "The models of a game made of code: units, animals, plants, buildings and ships of pieces that move, fantasy and sci-fi, and their clips.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [
+				"Names(filter)",
+				"Has(name)",
+				"Info(name)",
+				"Define(name, recipe)",
+				"Make(name, options)",
+				"Pose(model, clip, time, options)",
+				"Length(model, clip)"
 			],
 			"Sample": {}
 		}

@@ -780,6 +780,27 @@
 		</div>
 	</Section>
 
+	<Section *if="Shows('Models')" Title="Models" [note]="ModelsNote || 'GameScene · the Models Service: units, animals, plants, buildings of fantasy and sci-fi made of code, with their clips, the shadows of the sun and the wind'">
+		<div class="ui-kit-lazy" *lazy>
+			<div class="ui-kit-row">
+				<Button Label="Attack" Icon="zap" Variant="ghost" (click)="ModelsPlay('attack')" />
+				<Button Label="Cast" Icon="star" Variant="ghost" (click)="ModelsPlay('cast')" />
+				<Button Label="Work" Icon="settings" Variant="ghost" (click)="ModelsPlay('work')" />
+				<Button Label="Fall" Icon="arrow-down" Variant="ghost" (click)="ModelsPlay('die')" />
+				<Button Label="Stand" Icon="arrow-up" Variant="ghost" (click)="ModelsPlay('idle')" />
+				<Button Label="March" Icon="map-pin" Variant="ghost" (click)="ModelsMarch" />
+				<Toggle Label="Shadows" [checked]="ModelsShadows" (change)="ModelsShadowed" />
+			</div>
+			<div class="ui-kit-space">
+				<GameScene Setting="terrain" Team="red" [shadows]="ModelsShadows" (ready)="ModelsReady">
+					<GameObject ID="meadow" Kind="ground" Size="400" Height="22" Water="0.2" Scale="420" Seed="meadow" />
+					<GameObject ID="noon" Kind="sun" Elevation="36" Azimuth="130" />
+					<GameObject *for="model of ModelsList" *key="model.ID" [kind]="model.Kind" [id]="model.ID" [name]="model.Kind" [x]="model.X" [y]="model.Y" [team]="model.Team" />
+				</GameScene>
+			</div>
+		</div>
+	</Section>
+
 	<Section *if="Shows('Keep-alive')" Title="Keep-alive" [note]="KeepNote">
 		<div class="ui-kit-lazy" *lazy>
 			<div class="ui-kit-row">

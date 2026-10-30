@@ -5,8 +5,9 @@
  * The numbers and the shapes run in Node too (they read no page):
  * - Matrices of 4 by 4 are arrays of 16 numbers, column by column, as WebGL reads them: Identity(), Multiply(a, b),
  *   Invert(m), Translation(x, y, z), Rotation(axis, angle) (radians), Scaling(x, y, z), Compose(position, rotation,
- *   scale) (rotation a matrix, or null), Perspective(fov, aspect, near, far) (fov in degrees), LookAt(eye, target,
- *   up), NormalMatrix(m) (the 3 by 3 one of the normals), Apply(m, point) (a point [x, y, z] moved by it).
+ *   scale) (rotation a matrix, or null), Perspective(fov, aspect, near, far) (fov in degrees), Orthographic(left,
+ *   right, bottom, top, near, far), LookAt(eye, target, up), NormalMatrix(m) (the 3 by 3 one of the normals),
+ *   Apply(m, point) (a point [x, y, z] moved by it).
  * - Vectors are arrays [x, y, z]: Vectors.Add(a, b), Subtract, Scale(a, k), Dot, Cross, Length, Normalize, Lerp(a,
  *   b, t), Distance.
  * - Camera(options) returns a camera ({Position, Target, Up, Fov, Near, Far}): View(), Projection(aspect),
@@ -17,14 +18,18 @@
  * - Geometry is {Positions, Normals, UVs, Colors, Indices} (flat arrays: 3, 3, 2 and 3 numbers a vertex): Sphere({Radius,
  *   Segments, Rings}), Icosphere({Radius, Detail}), Ring({Inner, Outer, Segments}) (flat, round the axis Y), Box({Width,
  *   Height, Depth}), Cylinder({Radius, Top, Height, Segments, Caps}) (a cone when Top is 0), Torus({Radius, Tube,
- *   Segments, Sides}), Plane({Width, Depth, Segments}); Transform(geometry, matrix), Merge(parts) (each a geometry or
- *   {Geometry, Matrix, Color}), Displace(geometry, amount) (each vertex moved along its normal by amount(position,
- *   normal)), Normals(geometry) (made again from the faces).
+ *   Segments, Sides}), Plane({Width, Depth, Segments}), Lathe({Points: [[radius, y]...], Segments}) (a line turned round
+ *   the axis Y), Wedge({Width, Height, Depth}) (a roof of two slopes); Transform(geometry, matrix), Merge(parts) (each a
+ *   geometry or {Geometry, Matrix, Color}), Displace(geometry, amount) (each vertex moved along its normal by
+ *   amount(position, normal)), Normals(geometry) (made again from the faces), Facets(geometry) (each face flat, of
+ *   vertices of its own).
  * - Noise(seed) returns a smooth noise of space: Value(x, y, z) (0 to 1), Fbm(x, y, z, octaves) (several of it, each
  *   finer and fainter) and Ridge (the folds of mountains). Without a seed it is the very noise of the shaders,
  *   Chunks.Noise (noise3, fbm3, ridge3), to the float: a heightmap of the CPU matches a surface the GPU baked.
  *   Chunks.Lights is the light of up to 4 points on a surface, with the shadows of up to 4 balls (lighting(position,
- *   normal, view, shine, specular)).
+ *   normal, view, shine, specular); the global lightShade dims its first light). Chunks.Shadow reads a shadow map
+ *   (sunShadow(position, normal): 0 in the shadow, 1 in the light; uniforms uShadowMap, uShadowMatrix, uShadowBias,
+ *   uShadowOn).
  *
  * Create(canvas, options) returns a renderer, or null where there is no WebGL2 (options: Alpha, Antialias, Ratio):
  * - Program(vertex, fragment): the shaders compiled (each one once), their uniforms found; an error of GLSL is thrown
@@ -37,6 +42,8 @@
  *   for a uniform sampler2D; Cube(size) a cube of six faces for a samplerCube, which Bake(cube, program, uniforms)
  *   draws once: the program is Shaders.Quad with a fragment shader that takes the direction of each texel from
  *   cubeDirection(uFace, vQuad) (Chunks.Cube): a surface of noise computed once, sampled at every frame.
+ * - Shadow(size) returns a shadow map, a depth texture for a uniform sampler2DShadow: between its Begin() and End() the
+ *   draws write only its depth, as seen from the light; Destroy().
  * - Draw(mesh, program, uniforms, settings): settings Mode (triangles, lines, line-strip, line-loop, points), Blend
  *   (alpha, add or none), Depth (test, true), DepthWrite (true), Cull (back, front or none), Instances (the copies).
  *   The value of a uniform is a number, an array (of a vector, a matrix or a list of them), true or false, or a texture.
@@ -46,7 +53,7 @@
 Elemenx.Service('Graphics3D', {
 	$Meta: {
 		Description: 'The graphics of three dimensions on WebGL2: matrices, a camera, shapes of triangles and a renderer of them.',
-		Methods: ['Create(canvas, options)', 'Camera(options)', 'Identity()', 'Multiply(a, b)', 'Invert(m)', 'Translation(x, y, z)', 'Rotation(axis, angle)', 'Scaling(x, y, z)', 'Compose(position, rotation, scale)', 'Perspective(fov, aspect, near, far)', 'LookAt(eye, target, up)', 'NormalMatrix(m)', 'Apply(m, point)', 'Hit(ray, center, radius)', 'Sphere(options)', 'Icosphere(options)', 'Ring(options)', 'Box(options)', 'Cylinder(options)', 'Torus(options)', 'Plane(options)', 'Transform(geometry, matrix)', 'Merge(parts)', 'Displace(geometry, amount)', 'Normals(geometry)', 'Noise(seed)']
+		Methods: ['Create(canvas, options)', 'Camera(options)', 'Identity()', 'Multiply(a, b)', 'Invert(m)', 'Translation(x, y, z)', 'Rotation(axis, angle)', 'Scaling(x, y, z)', 'Compose(position, rotation, scale)', 'Perspective(fov, aspect, near, far)', 'Orthographic(left, right, bottom, top, near, far)', 'LookAt(eye, target, up)', 'NormalMatrix(m)', 'Apply(m, point)', 'Hit(ray, center, radius)', 'Sphere(options)', 'Icosphere(options)', 'Ring(options)', 'Box(options)', 'Cylinder(options)', 'Torus(options)', 'Plane(options)', 'Lathe(options)', 'Wedge(options)', 'Transform(geometry, matrix)', 'Merge(parts)', 'Displace(geometry, amount)', 'Normals(geometry)', 'Facets(geometry)', 'Noise(seed)']
 	},
 
 	/* The places of the attributes, the same in every program: a mesh binds its buffers to them. */
@@ -211,6 +218,14 @@ Elemenx.Service('Graphics3D', {
 		var range = 1 / (near - far);
 
 		return [f / aspect, 0, 0, 0, 0, f, 0, 0, 0, 0, (far + near) * range, -1, 0, 0, 2 * far * near * range, 0];
+	},
+
+	Orthographic: function (left, right, bottom, top, near, far) {
+		var width = 1 / (right - left);
+		var height = 1 / (top - bottom);
+		var depth = 1 / (far - near);
+
+		return [2 * width, 0, 0, 0, 0, 2 * height, 0, 0, 0, 0, -2 * depth, 0, -(right + left) * width, -(top + bottom) * height, -(far + near) * depth, 1];
 	},
 
 	LookAt: function (eye, target, up) {
@@ -613,6 +628,74 @@ Elemenx.Service('Graphics3D', {
 		return geometry;
 	},
 
+	/* A line of [radius, y] turned round the axis Y: a tower, a dome, a trunk; its normals follow the line. */
+	Lathe: function (options) {
+		var settings = options || {};
+		var points = settings.Points || [[0.5, 0], [0.5, 1]];
+		var segments = Math.max(3, settings.Segments || 16);
+		var geometry = this.Geometry();
+		var count = points.length;
+		var row;
+		var segment;
+		var angle;
+		var before;
+		var after;
+		var slope;
+		var length;
+		var first;
+
+		for (row = 0; row < count; row++) {
+			before = points[Math.max(0, row - 1)];
+			after = points[Math.min(count - 1, row + 1)];
+			slope = [after[1] - before[1], before[0] - after[0]];
+			length = Math.sqrt(slope[0] * slope[0] + slope[1] * slope[1]) || 1;
+
+			for (segment = 0; segment <= segments; segment++) {
+				angle = segment / segments * Math.PI * 2;
+
+				geometry.Positions.push(Math.cos(angle) * points[row][0], points[row][1], Math.sin(angle) * points[row][0]);
+				geometry.Normals.push(Math.cos(angle) * slope[0] / length, slope[1] / length, Math.sin(angle) * slope[0] / length);
+				geometry.UVs.push(segment / segments, row / Math.max(1, count - 1));
+			}
+		}
+
+		for (row = 0; row < count - 1; row++) {
+			for (segment = 0; segment < segments; segment++) {
+				first = row * (segments + 1) + segment;
+
+				geometry.Indices.push(first, first + segments + 1, first + 1, first + 1, first + segments + 1, first + segments + 2);
+			}
+		}
+
+		return geometry;
+	},
+
+	/* A roof of two slopes: its ridge along Z at the top, its base from -Height / 2 to its top. */
+	Wedge: function (options) {
+		var settings = options || {};
+		var x = (settings.Width || 1) / 2;
+		var y = (settings.Height || 1) / 2;
+		var z = (settings.Depth || 1) / 2;
+		var geometry = this.Geometry();
+		var corners = [[-x, -y, z], [x, -y, z], [0, y, z], [-x, -y, -z], [x, -y, -z], [0, y, -z]];
+
+		[[0, 1, 2], [4, 3, 5], [1, 4, 5, 2], [3, 0, 2, 5], [3, 4, 1, 0]].forEach(function (face) {
+			var base = geometry.Positions.length / 3;
+			var at;
+
+			face.forEach(function (corner) {
+				geometry.Positions.push(corners[corner][0], corners[corner][1], corners[corner][2]);
+				geometry.Normals.push(0, 1, 0);
+				geometry.UVs.push(0, 0);
+			});
+
+			for (at = 1; at < face.length - 1; at++)
+				geometry.Indices.push(base, base + at, base + at + 1);
+		});
+
+		return this.Facets(geometry);
+	},
+
 	Transform: function (geometry, matrix) {
 		var normals = this.NormalMatrix(matrix);
 		var result = this.Geometry();
@@ -701,6 +784,35 @@ Elemenx.Service('Graphics3D', {
 		}
 
 		return this.Normals(result);
+	},
+
+	/* Each face flat: vertices of its own at its corners, their normal the one of the face. */
+	Facets: function (geometry) {
+		var result = this.Geometry();
+		var colors = geometry.Colors && geometry.Colors.length;
+		var vectors = this.Vectors;
+		var p = result.Positions;
+		var i;
+		var normal;
+
+		geometry.Indices.forEach(function (index) {
+			result.Positions.push(geometry.Positions[index * 3], geometry.Positions[index * 3 + 1], geometry.Positions[index * 3 + 2]);
+			result.Normals.push(0, 1, 0);
+			result.UVs.push(0, 0);
+
+			if (colors)
+				result.Colors.push(geometry.Colors[index * 3], geometry.Colors[index * 3 + 1], geometry.Colors[index * 3 + 2]);
+
+			result.Indices.push(result.Indices.length);
+		});
+
+		for (i = 0; i < result.Positions.length; i += 9) {
+			normal = vectors.Normalize(vectors.Cross([p[i + 3] - p[i], p[i + 4] - p[i + 1], p[i + 5] - p[i + 2]], [p[i + 6] - p[i], p[i + 7] - p[i + 1], p[i + 8] - p[i + 2]]));
+
+			result.Normals.splice(i, 9, normal[0], normal[1], normal[2], normal[0], normal[1], normal[2], normal[0], normal[1], normal[2]);
+		}
+
+		return result;
 	},
 
 	/* The normals made again: each vertex the mean of the faces round it, weighted by their areas. */
@@ -929,6 +1041,7 @@ Elemenx.Service('Graphics3D', {
 			'uniform vec3 uAmbient;',
 			'uniform vec4 uOccluders[4];',
 			'uniform int uOccluderCount;',
+			'float lightShade = 1.0;',
 			'float shadow(vec3 position, vec3 light) {',
 			'	float lit = 1.0;',
 			'	vec3 way = light - position;',
@@ -952,12 +1065,34 @@ Elemenx.Service('Graphics3D', {
 			'		vec3 toLight = normalize(uLightPositions[i] - position);',
 			'		float diffuse = max(dot(normal, toLight), 0.0);',
 			'		if (diffuse <= 0.0) continue;',
-			'		float lit = shadow(position, uLightPositions[i]);',
+			'		float lit = shadow(position, uLightPositions[i]) * (i == 0 ? lightShade : 1.0);',
 			'		vec3 middle = normalize(toLight + view);',
 			'		float gloss = pow(max(dot(normal, middle), 0.0), shine) * specular;',
 			'		total += uLightColors[i] * (diffuse + gloss) * lit;',
 			'	}',
 			'	return total;',
+			'}'
+		].join('\n'),
+
+		Shadow: [
+			'uniform highp sampler2DShadow uShadowMap;',
+			'uniform mat4 uShadowMatrix;',
+			'uniform float uShadowBias;',
+			'uniform float uShadowOn;',
+			'float sunShadow(vec3 position, vec3 normal) {',
+			'	if (uShadowOn < 0.5) return 1.0;',
+			'	vec4 at = uShadowMatrix * vec4(position + normal * uShadowBias, 1.0);',
+			'	vec3 place = at.xyz * 0.5 + 0.5;',
+			'	float edge = max(abs(at.x), abs(at.y));',
+			'	if (edge >= 1.0 || place.z >= 1.0) return 1.0;',
+			'	float texel = 1.0 / float(textureSize(uShadowMap, 0).x);',
+			'	float sum = 0.0;',
+			'	for (int x = -1; x <= 1; x++) {',
+			'		for (int y = -1; y <= 1; y++) {',
+			'			sum += texture(uShadowMap, vec3(place.xy + vec2(float(x), float(y)) * texel * 1.2, place.z));',
+			'		}',
+			'	}',
+			'	return mix(sum / 9.0, 1.0, smoothstep(0.85, 1.0, edge));',
 			'}'
 		].join('\n')
 	},
@@ -1155,6 +1290,7 @@ Elemenx.Service('Graphics3D', {
 
 					break;
 				case gl.SAMPLER_2D:
+				case gl.SAMPLER_2D_SHADOW:
 					gl.activeTexture(gl.TEXTURE0 + units.Next);
 					gl.bindTexture(gl.TEXTURE_2D, value ? value.Handle : null);
 					gl.uniform1i(location, units.Next);
@@ -1335,6 +1471,56 @@ Elemenx.Service('Graphics3D', {
 				gl.viewport(0, 0, renderer.Width, renderer.Height);
 
 				return cube;
+			},
+
+			/* A depth texture seen from a light: what is drawn between Begin() and End() writes only into it. */
+			Shadow: function (size) {
+				var side = Math.max(1, Math.round(size || 2048));
+				var handle = gl.createTexture();
+				var target = gl.createFramebuffer();
+				var map = {Handle: handle, Size: side};
+
+				gl.bindTexture(gl.TEXTURE_2D, handle);
+				gl.texStorage2D(gl.TEXTURE_2D, 1, gl.DEPTH_COMPONENT24, side, side);
+				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_COMPARE_MODE, gl.COMPARE_REF_TO_TEXTURE);
+				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_COMPARE_FUNC, gl.LEQUAL);
+				gl.bindTexture(gl.TEXTURE_2D, null);
+
+				gl.bindFramebuffer(gl.FRAMEBUFFER, target);
+				gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, handle, 0);
+				gl.drawBuffers([gl.NONE]);
+				gl.readBuffer(gl.NONE);
+				gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+				map.Begin = function () {
+					gl.bindFramebuffer(gl.FRAMEBUFFER, target);
+					gl.viewport(0, 0, side, side);
+					gl.depthMask(true);
+					gl.clear(gl.DEPTH_BUFFER_BIT);
+					gl.enable(gl.POLYGON_OFFSET_FILL);
+					gl.polygonOffset(1.5, 3);
+				};
+
+				map.End = function () {
+					gl.disable(gl.POLYGON_OFFSET_FILL);
+					gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+					gl.viewport(0, 0, renderer.Width, renderer.Height);
+				};
+
+				map.Destroy = function () {
+					gl.deleteFramebuffer(target);
+					gl.deleteTexture(handle);
+
+					textures.splice(textures.indexOf(map), 1);
+				};
+
+				textures.push(map);
+
+				return map;
 			},
 
 			Resize: function (width, height, ratio) {
