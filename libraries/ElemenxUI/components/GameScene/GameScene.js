@@ -2849,16 +2849,18 @@ Elemenx.Component('GameScene', {
 		}
 
 		function frame (now, quiet) {
-			var elapsed = scene.Last ? Math.min(0.1, (now - scene.Last) / 1000) : 0;
+			/* The time of the game keeps to the clock on a slow machine too (up to a second, a page may have slept); what eases takes small steps. */
+			var spent = scene.Last ? Math.min(1, (now - scene.Last) / 1000) : 0;
+			var elapsed = Math.min(0.1, spent);
 
 			scene.Last = now;
 
 			/* On a surface the days go at their own speed (a day of two minutes by default), not at the one of the orbits. */
 			if (!self.Paused)
-				scene.Time += elapsed * (scene.Surface ? number(self.SurfaceSpeed, 1 / 120) : number(self.Speed, 1));
+				scene.Time += spent * (scene.Surface ? number(self.SurfaceSpeed, 1 / 120) : number(self.Speed, 1));
 
 			if (!self.Paused)
-				scene.Seconds += elapsed;
+				scene.Seconds += spent;
 
 			groundOf();
 

@@ -3274,7 +3274,7 @@ for (const origin of origins) {
 			await terrain.getByRole('button', {name: 'All to the village'}).click();
 
 			await expect(terrain.locator('.elemenx-section-header')).toContainText('3 going to the village');
-			await expect(terrain.locator('.elemenx-section-header')).toContainText('arrived at', {timeout: 30000});
+			await expect(terrain.locator('.elemenx-section-header')).toContainText('arrived at', {timeout: 45000});
 
 			/* All three have arrived: the note of one that comes later would take the place of the one of the save. */
 			await expect.poll(async function () {

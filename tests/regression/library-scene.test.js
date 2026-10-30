@@ -784,6 +784,36 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 		expect(world.Get('statue').Type).toBe('statue');
 	});
 
+	/* Regression: a frame counted 0.1 s at most, so at a few frames a second units walked in slow motion. */
+	it('keeps the time of the game to the clock when frames are slow', async function () {
+		var mounted = await mount('<GameScene Paused="true" (ready)="Ready">' +
+			'<GameObject ID="land" Kind="ground" Size="200" Height="4" Water="0" Seed="test" />' +
+		'</GameScene>');
+		var scene = mounted.Space;
+		var inner = scene.Scene();
+		var engine = scene.Engine();
+		var start = performance.now() + 100000;
+		var seconds;
+
+		scene.Paused = false;
+
+		engine.Frame(start);
+
+		seconds = inner.Seconds;
+
+		engine.Frame(start + 400);
+		engine.Frame(start + 800);
+
+		expect(inner.Seconds - seconds).toBeCloseTo(0.8, 5);
+
+		/* A page that slept does not jump. */
+		seconds = inner.Seconds;
+
+		engine.Frame(start + 60000);
+
+		expect(inner.Seconds - seconds).toBeCloseTo(1, 5);
+	});
+
 	/* Regression: each object summed the stars of all the objects, so 20 000 of them froze the page until it crashed. */
 	it('takes thousands of objects at once in a time that grows with their number', async function () {
 		var mounted = await mount('<GameScene (ready)="Ready">' +
