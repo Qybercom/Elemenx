@@ -68,6 +68,14 @@
 	--elemenx-call-dim: rgba(255, 255, 255, 0.35);
 	--elemenx-game-world-background: #0b0e12;
 	--elemenx-game-world-frame: #3a3226;
+	--elemenx-game-scene-background: #03050a;
+	--elemenx-game-scene-orbit: rgba(140, 165, 215, 0.32);
+	--elemenx-game-scene-selection: #7fc4ff;
+	--elemenx-game-scene-label: #d9e2f0;
+	--elemenx-game-scene-shadow: rgba(0, 0, 0, 0.9);
+	--elemenx-blur-radius: 20px;
+	--elemenx-blur-saturate: 180%;
+	--elemenx-blur-tint: 0.72;
 	--elemenx-jog-vinyl: #17181b;
 	--elemenx-jog-edge: #000000;
 	--elemenx-jog-groove: rgba(255, 255, 255, 0.07);

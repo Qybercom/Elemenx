@@ -1,6 +1,8 @@
 <!-- generated -->
 # GameBuilding
 
+Deprecated: the 2D world will be made of GameScene and GameObject (a GameObject of a kind of its own); this one stays until then.
+
 A building of a GameWorld, declared in it: ID, X and Y (its first cell), Width and Height (the cells it takes, 2 by 2 by default; no way through them), Team, Type (barracks), Name, Color (its walls), Roof (the color of its roof, of its team by default), Tall (its walls, in heights of a tile), Image (a picture standing on its footprint), Health and MaxHealth, Sight. It shows nothing by itself: the world draws it.
 
 ## Properties

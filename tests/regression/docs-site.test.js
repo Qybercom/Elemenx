@@ -123,6 +123,7 @@ describe('Elemenx docs: the Docs in the package', function () {
 		expect(fs.existsSync(path.join(output, 'tutorials', 'Languages', 'locales', 'ru.json'))).toBe(true);
 	});
 
+	/* The CLI builds docs-site/ first, its files compressed by brotli at its best: a minute and more under load. */
 	it('is served by elemenx docs with the answers of its examples of the network', async function () {
 		var port = await freePort();
 		var site = path.join(root, 'docs-site');
@@ -150,7 +151,7 @@ describe('Elemenx docs: the Docs in the package', function () {
 			if (made)
 				fs.rmSync(site, {recursive: true, force: true});
 		}
-	});
+	}, 240000);
 
 	it('elemenx dev has every file checked again before it is used (no-cache), so a change shows at the next reload', async function () {
 		var port = await freePort();

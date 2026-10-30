@@ -58,10 +58,12 @@ export default defineConfig({
 			stdout: 'pipe',
 			stderr: 'pipe'
 		},
+		/* It builds the Advanced example first, its files compressed by brotli at its best: a minute and more under load. */
 		{
 			command: 'node tests/examples/server.js',
 			url: 'http://127.0.0.1:4276/',
 			env: {PORT: '4276'},
+			timeout: 240000,
 			reuseExistingServer: false,
 			stdout: 'pipe',
 			stderr: 'pipe'

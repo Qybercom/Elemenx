@@ -248,6 +248,27 @@ Elemenx.Component('UIKitPage', {
 	WorldProjections: [{Value: 'isometric', Label: 'Isometric'}, {Value: 'orthogonal', Label: 'From above'}],
 	WorldFog: false,
 	WorldAdded: 0,
+	SpaceNote: '',
+	SpaceSystem: 'sol',
+	SpaceSystems: [{Value: 'sol', Label: 'The Sun'}, {Value: 'seed', Label: 'Of a seed'}],
+	SpaceSeed: 'kepler-186',
+	SpaceOrbits: true,
+	SpaceReal: false,
+	SpacePaused: false,
+	SpaceDay: 0,
+	TerrainNote: '',
+	TerrainSaved: null,
+	TerrainUnits: [
+		{ID: 'scout', Name: 'Scout', X: 0, Y: 10},
+		{ID: 'builder', Name: 'Builder', X: 6, Y: 14},
+		{ID: 'ranger', Name: 'Ranger', X: -6, Y: 16}
+	],
+	TerrainTrees: [],
+	TerrainHouses: [
+		{ID: 'hall', Name: 'Hall', X: 40, Y: 40},
+		{ID: 'mill', Name: 'Mill', X: 58, Y: 32},
+		{ID: 'forge', Name: 'Forge', X: 48, Y: 60}
+	],
 	WorldRows: [
 		'TTTT,,,.......:~~:..........',
 		'TTT,,,,.......:~~:.....,,,..',
@@ -1869,6 +1890,144 @@ Elemenx.Component('UIKitPage', {
 
 	CallLeft: function () {
 		this.CallNote = 'Left the call';
+	},
+
+	/* The ground of the game: its scene kept for the buttons; trees where the ground is dry and gentle. */
+	TerrainReady: function (scene) {
+		var terrain = this.$Service('Terrain').Flat({Size: 900, Height: 55, Water: 0.32, Seed: 'valley'});
+		var random = this.$Service('Random').Create('trees');
+		var trees = [];
+		var x;
+		var y;
+		var i;
+
+		this.Terrained = function () {
+			return scene;
+		};
+
+		for (i = 0; i < 400 && trees.length < 90; i++) {
+			x = random.Float(-250, 250);
+			y = random.Float(-250, 250);
+
+			if (terrain.Height(x, y) > 2 && terrain.Slope(x, y) < 0.25 && Math.abs(x - 50) + Math.abs(y - 45) > 40)
+				trees.push({ID: 'tree-' + i, X: Math.round(x), Y: Math.round(y)});
+		}
+
+		this.TerrainTrees = trees;
+
+		scene.FocusOn('scout');
+	},
+
+	TerrainSelected: function (detail) {
+		this.TerrainNote = detail.ID ? 'Selected: ' + detail.Object.Name + (detail.Object.Traits.Walker ? ' (a right click sends it)' : '') : 'Nothing selected';
+	},
+
+	TerrainLake: function () {
+		var scene = this.Terrained ? this.Terrained() : null;
+		var terrain = this.$Service('Terrain').Flat({Size: 900, Height: 55, Water: 0.32, Seed: 'valley'});
+		var best = null;
+		var x;
+		var y;
+
+		if (!scene) return;
+
+		/* The nearest shore: dry ground beside the water, round the scout. */
+		for (x = -200; x <= 200; x += 8) {
+			for (y = -200; y <= 200; y += 8) {
+				if (terrain.Height(x, y) > 0.5 && terrain.Height(x, y) < 2 && terrain.Slope(x, y) < 0.3 && (!best || Math.abs(x) + Math.abs(y) < Math.abs(best[0]) + Math.abs(best[1])))
+					best = [x, y];
+			}
+		}
+
+		this.TerrainNote = best && scene.Move('scout', best) ? 'Scout: to the lake at ' + best.join(', ') : 'No way to the lake';
+	},
+
+	TerrainVillage: function () {
+		var scene = this.Terrained ? this.Terrained() : null;
+		if (!scene) return;
+
+		this.TerrainNote = ['scout', 'builder', 'ranger'].filter(function (id, index) {
+			return scene.Move(id, [30 + index * 6, 48 + index * 4]);
+		}).length + ' going to the village';
+	},
+
+	TerrainSave: function () {
+		this.TerrainSaved = this.Terrained().Save();
+		this.TerrainNote = 'Saved: ' + this.TerrainSaved.Objects.length + ' objects';
+	},
+
+	TerrainLoad: function () {
+		this.Terrained().Load(this.TerrainSaved);
+
+		this.TerrainNote = 'Loaded';
+	},
+
+	TerrainArrived: function (detail) {
+		this.TerrainNote = this.Terrained().Get(detail.ID).Name + ' arrived at ' + detail.At.map(Math.round).join(', ');
+	},
+
+	/* The space of the game: its methods kept for the buttons, its day shown in its HUD. */
+	SpaceReady: function (space) {
+		var self = this;
+
+		this.Spaced = function () {
+			return space;
+		};
+
+		window.clearInterval(this.SpaceTimer);
+
+		this.SpaceTimer = window.setInterval(function () {
+			if (!space.$Element().isConnected) {
+				window.clearInterval(self.SpaceTimer);
+
+				return;
+			}
+
+			self.SpaceDay = Math.floor(space.Now());
+		}, 500);
+	},
+
+	SpaceChosen: function (value) {
+		this.SpaceSystem = value;
+		this.SpaceNote = '';
+	},
+
+	SpaceReseeded: function () {
+		this.SpaceSeed = 'seed-' + Math.floor(Math.random() * 100000);
+	},
+
+	SpaceOrbited: function (value) {
+		this.SpaceOrbits = value;
+	},
+
+	SpaceScaled: function (value) {
+		this.SpaceReal = value;
+	},
+
+	SpacePausedToggled: function () {
+		this.SpacePaused = !this.SpacePaused;
+	},
+
+	SpaceSelected: function (detail) {
+		this.SpaceNote = detail.ID ? 'Selected: ' + detail.Object.Name : 'Nothing selected';
+	},
+
+	SpaceFocused: function (detail) {
+		this.SpaceNote = detail.ID ? 'Flying to ' + this.Spaced().Get(detail.ID).Name : 'The whole system';
+	},
+
+	SpaceSent: function () {
+		var space = this.Spaced ? this.Spaced() : null;
+		var fleet = space ? space.Get('first') : null;
+		if (!fleet) return;
+
+		space.Move('first', fleet.Parent === 'mars' ? 'earth' : 'mars');
+
+		this.SpaceNote = 'First fleet: to ' + (fleet.Parent === 'mars' ? 'Earth' : 'Mars');
+	},
+
+	SpaceArrived: function (detail) {
+		this.SpaceNote = 'Arrived: ' + this.Spaced().Get(detail.ID).Name + ' at ' + this.Spaced().Get(detail.At).Name;
 	},
 
 	/* The world of the game: its methods, kept for the buttons of the section. */

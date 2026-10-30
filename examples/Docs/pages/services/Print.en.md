@@ -35,5 +35,5 @@ Printing of a part of the page: the browser prints a frame of its own with a cop
 
 ## Tests
 
-- [code editor finds and replaces, switches languages, wraps and prints through its methods](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L6092) — `tests/examples/ui-kit.spec.js`
-- [rich editor reads and writes Markdown, edits tables, inserts images and prints through its methods](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L6312) — `tests/examples/ui-kit.spec.js`
+- [code editor finds and replaces, switches languages, wraps and prints through its methods](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L6238) — `tests/examples/ui-kit.spec.js`
+- [rich editor reads and writes Markdown, edits tables, inserts images and prints through its methods](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L6458) — `tests/examples/ui-kit.spec.js`

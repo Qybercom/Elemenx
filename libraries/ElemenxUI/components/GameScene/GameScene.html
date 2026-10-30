@@ -1,0 +1,22 @@
+<div class="elemenx-game-scene" tabindex="0" role="application" [class.dragging]="Dragging" [attribute.data-setting]="Setting || 'space'" [attribute.aria-label]="Label || $T('ui.gameScene.label')" [attribute.data-changed]="Changed(System, Seed, Time, Speed, Paused, Focus, Selected, Orbits, Labels, Scale, Background, Team, Setting)" (keydown)="Key" (keyup)="KeyUp" (blur)="Blurred">
+	<canvas class="elemenx-game-scene-canvas" (pointerdown)="PointerDown" (pointermove)="PointerMove" (pointerup)="PointerUp" (pointercancel)="PointerCancel" (wheel)="Wheel" (dblclick)="Double" (contextmenu)="Menu"></canvas>
+	<div class="elemenx-game-scene-labels" [class.hidden]="!Labels || Labels === 'false'" (click)="LabelPressed" (dblclick)="LabelDouble"></div>
+	<div class="elemenx-game-scene-fallback" *if="Unsupported">{{$T('ui.gameScene.unsupported')}}</div>
+	<aside class="elemenx-game-scene-card" *if="Card && Details && Details !== 'false'" [attribute.aria-label]="Card.Name">
+		<header class="elemenx-game-scene-card-header">
+			<span class="elemenx-game-scene-card-title"><strong class="elemenx-ellipsis">{{Card.Name}}</strong><span class="elemenx-game-scene-card-kind">{{Card.Kind}}</span></span>
+			<Button Variant="ghost" Size="small" Icon="close" [title]="$T('ui.gameScene.close')" (click)="Unselect" />
+		</header>
+		<dl class="elemenx-game-scene-card-rows">
+			<div class="elemenx-game-scene-card-row" *for="row of Card.Rows" *key="row.Key"><dt>{{row.Label}}</dt><dd>{{row.Value}}</dd></div>
+		</dl>
+		<span class="elemenx-game-scene-card-actions">
+			<Button Size="small" Icon="zoom-in" [label]="$T('ui.gameScene.focus')" (click)="FocusSelected" />
+			<Button Size="small" Icon="arrow-down" *if="Card.Land" [label]="$T('ui.gameScene.land')" (click)="LandSelected" />
+		</span>
+	</aside>
+	<Button class="elemenx-game-scene-takeoff" Size="small" Icon="arrow-up" *if="Landed" [label]="$T('ui.gameScene.takeOff')" (click)="TakeOff" />
+	<div class="elemenx-game-scene-hud"><slot name="hud"></slot></div>
+	<div class="elemenx-game-scene-sources" hidden><slot></slot></div>
+	<div class="elemenx-visually-hidden" aria-live="polite">{{Status}}</div>
+</div>

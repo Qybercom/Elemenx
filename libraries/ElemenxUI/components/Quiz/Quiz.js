@@ -19,6 +19,7 @@
 Elemenx.Component('Quiz', {
 	$TemplateURL: 'Quiz.html',
 	$StyleURL: 'Quiz.css',
+	$Traits: ['Declared'],
 	$Meta: {
 		Group: 'inputs',
 		Icon: 'help',
@@ -127,52 +128,43 @@ Elemenx.Component('Quiz', {
 		};
 	},
 
+	/* The QuizQuestion declared inside it, with their QuizOption and texts (the Trait Declared reads them). */
+	DeclaredSources: '.elemenx-quiz-sources',
+	DeclaredText: true,
+
 	$OnReady: function () {
-		var self = this;
-		var own = this.Own();
-		var sources = this.$Element().querySelector('.elemenx-quiz-sources');
-
-		own.Read = function () {
-			var questions = Array.prototype.map.call(sources.querySelectorAll('.elemenx-quiz-question-source'), function (node, index) {
-				var question = JSON.parse(node.getAttribute('data-item') || '{}');
-
-				question.ID = question.ID || 'question-' + index;
-				question.Options = Array.prototype.map.call(node.querySelectorAll('.elemenx-quiz-option-source'), function (option, at) {
-					var item = JSON.parse(option.getAttribute('data-item') || '{}');
-
-					item.ID = item.ID || String(at);
-					item.Text = option.textContent.replace(/\s+/g, ' ').trim();
-
-					return item;
-				});
-
-				return question;
-			});
-			if (JSON.stringify(questions) === JSON.stringify(own.Declared)) return;
-
-			own.Declared = questions;
-			self.Version++;
-
-			if (self.Stage === 'intro' && !self.Title && !self.Intro)
-				self.Start();
-		};
-
-		own.Watcher = new MutationObserver(own.Read);
-
-		own.Watcher.observe(sources, {subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['data-item']});
-
-		own.Read();
-
 		if (this.Stage === 'intro' && !this.Title && !this.Intro && this.List().length)
 			this.Start();
 	},
 
 	$OnDestroy: function () {
-		var own = this.Own();
-		if (own.Watcher)
-			own.Watcher.disconnect();
+		window.clearInterval(this.Own().Timer);
+	},
 
-		window.clearInterval(own.Timer);
+	Declarations: function (sources) {
+		return Array.prototype.map.call(sources.querySelectorAll('.elemenx-quiz-question-source'), function (node, index) {
+			var question = JSON.parse(node.getAttribute('data-item') || '{}');
+
+			question.ID = question.ID || 'question-' + index;
+			question.Options = Array.prototype.map.call(node.querySelectorAll('.elemenx-quiz-option-source'), function (option, at) {
+				var item = JSON.parse(option.getAttribute('data-item') || '{}');
+
+				item.ID = item.ID || String(at);
+				item.Text = option.textContent.replace(/\s+/g, ' ').trim();
+
+				return item;
+			});
+
+			return question;
+		});
+	},
+
+	Declared: function (questions) {
+		this.Own().Declared = questions;
+		this.Version++;
+
+		if (this.Stage === 'intro' && !this.Title && !this.Intro)
+			this.Start();
 	},
 
 	/* The questions given and declared, each with a Type, Options and Points. */

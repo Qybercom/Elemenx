@@ -4,6 +4,7 @@
  * Value}], Description, Class}; an item with nothing more than a name (GameItems.Carded) shows none, and neither does
  * null. The card opens in the top layer (a popover), so no scrolling box, transform or filter around the element cuts
  * or moves it; it follows the element when the page scrolls or moves it (a part above that renders later), and it stays in the DOM next to the element, so it takes the theme of the part of the page it is in.
+ * A card a finger opened (a tap on a tablet) closes when the page scrolls, as the tooltips of the system do.
  * It has the classes of GameItemCard (elemenx-game-inventory-card...).
  */
 Elemenx.Directive('itemcard', {
@@ -99,10 +100,21 @@ Elemenx.Directive('itemcard', {
 
 			data.View = (element.ownerDocument || document).defaultView || window;
 
-			data.View.addEventListener('scroll', data.Move, true);
+			data.View.addEventListener('scroll', data.Scrolled, true);
 
+			data.ByTouch = data.Touched;
 			data.Place = place;
 			data.Frame = data.View.requestAnimationFrame(data.Follow);
+		};
+
+		/* The pointer that pressed the element last: a finger opens a card that a scroll closes. */
+		data.Pressed = function (event) {
+			data.Touched = event.pointerType === 'touch' || event.pointerType === 'pen';
+		};
+
+		data.Scrolled = function () {
+			if (data.ByTouch) data.Hide();
+			else data.Move();
 		};
 
 		/* A scroll (the reader's, or the page that moves as more of it renders) takes the card along with its element. */
@@ -129,7 +141,7 @@ Elemenx.Directive('itemcard', {
 		};
 
 		data.Hide = function () {
-			(data.View || window).removeEventListener('scroll', data.Move, true);
+			(data.View || window).removeEventListener('scroll', data.Scrolled, true);
 			(data.View || window).cancelAnimationFrame(data.Frame);
 
 			if (!data.Card) return;
@@ -145,6 +157,7 @@ Elemenx.Directive('itemcard', {
 			data.Card = null;
 		};
 
+		element.addEventListener('pointerdown', data.Pressed);
 		element.addEventListener('mouseenter', data.Show);
 		element.addEventListener('mouseleave', data.Hide);
 		element.addEventListener('focusin', data.Show);
@@ -164,6 +177,7 @@ Elemenx.Directive('itemcard', {
 
 		data.Hide();
 
+		element.removeEventListener('pointerdown', data.Pressed);
 		element.removeEventListener('mouseenter', data.Show);
 		element.removeEventListener('mouseleave', data.Hide);
 		element.removeEventListener('focusin', data.Show);

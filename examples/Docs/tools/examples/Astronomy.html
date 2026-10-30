@@ -1,0 +1,39 @@
+<Field Label="Seed">
+	<Input [value]="Seed" (input)="Typed" />
+</Field>
+<p>The star <strong>{{Star}}</strong>, its planets:</p>
+<ul class="elemenx-text small">
+	<li *for="planet of Planets" *key="planet.ID">{{planet.Name}}: {{planet.Kind}} at {{planet.Distance}} AU, a year of {{planet.Year}} days, {{planet.Temperature}} K</li>
+</ul>
+<p class="elemenx-text small muted">The same seed makes the same system: hot rocky worlds near the star, gas giants beyond the frost line.</p>
+<script>
+({
+	Seed: 'kepler',
+	Star: '',
+	Planets: [],
+
+	$OnCreate: function () {
+		this.Make();
+	},
+
+	Typed: function (value) {
+		this.Seed = value;
+		this.Make();
+	},
+
+	Make: function () {
+		var astronomy = this.$Service('Astronomy');
+		var system = astronomy.Generate(this.Seed);
+		var star = astronomy.Star(system.Bodies[0]);
+
+		this.Star = system.Name + ' (class ' + star.Class + ', ' + Math.round(star.Temperature) + ' K)';
+		this.Planets = system.Bodies.filter(function (body) {
+			return body.Type === 'planet' && body.Parent === 'star';
+		}).map(function (body) {
+			var info = astronomy.Describe(body, {Star: star, Distance: body.Orbit.Distance, Mass: star.Mass});
+
+			return {ID: body.ID, Name: body.Name, Kind: body.Kind, Distance: body.Orbit.Distance.toFixed(2), Year: Math.round(info.Period), Temperature: Math.round(info.Temperature)};
+		});
+	}
+})
+</script>

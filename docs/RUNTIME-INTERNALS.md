@@ -121,6 +121,7 @@ To find a section in `elemenx.js`, search for its header, for example `/* Router
 | `Template` | named Template Registry behind `Elemenx.Template`: `Set`, `Get`, `Has`, `Remove`, `Resolve`, `Harvest` | Application, Directive registry |
 | `EvaluateExpression` | evaluates a template expression against a scope | Structural |
 | `ResolveComponent` | resolves a component factory by name, through Bundle, Discovery and Libraries | Structural |
+| `CallSuper` | `$Super` of an instance: the method of the layer under the one that runs (`$Extends`, `$Traits`), from the stack of the layered methods | Template and Component only |
 | `ResolveComponentRegistered` | returns a factory only if it is already registered and loaded | Router, Structural, Application |
 | `ComponentDefinition` | the definition of a component registered and loaded under a name, or `null` | Meta |
 | `ComponentNames` | the names of the components registered and loaded | Meta |

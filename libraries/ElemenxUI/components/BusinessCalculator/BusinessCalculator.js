@@ -18,6 +18,7 @@
 Elemenx.Component('BusinessCalculator', {
 	$TemplateURL: 'BusinessCalculator.html',
 	$StyleURL: 'BusinessCalculator.css',
+	$Traits: ['Declared'],
 	$Meta: {
 		Group: 'inputs',
 		Icon: 'chart',
@@ -74,35 +75,24 @@ Elemenx.Component('BusinessCalculator', {
 		};
 	},
 
-	$OnReady: function () {
-		var self = this;
-		var own = this.Own();
-		var sources = this.$Element().querySelector('.elemenx-business-calculator-sources');
+	/* The CalculatorField and CalculatorResult declared inside it (the Trait Declared reads them). */
+	DeclaredSources: '.elemenx-business-calculator-sources',
 
-		own.Read = function () {
-			var fields = Array.prototype.map.call(sources.querySelectorAll('.elemenx-calculator-field-source'), function (node) {
+	Declarations: function (sources) {
+		return {
+			Fields: Array.prototype.map.call(sources.querySelectorAll('.elemenx-calculator-field-source'), function (node) {
 				return JSON.parse(node.getAttribute('data-item') || '{}');
-			});
-			var results = Array.prototype.map.call(sources.querySelectorAll('.elemenx-calculator-result-source'), function (node) {
+			}),
+			Results: Array.prototype.map.call(sources.querySelectorAll('.elemenx-calculator-result-source'), function (node) {
 				return JSON.parse(node.getAttribute('data-item') || '{}');
-			});
-			if (JSON.stringify(fields) === JSON.stringify(own.Fields) && JSON.stringify(results) === JSON.stringify(own.Results)) return;
-
-			own.Fields = fields;
-			own.Results = results;
-			self.Version++;
+			})
 		};
-
-		own.Watcher = new MutationObserver(own.Read);
-
-		own.Watcher.observe(sources, {subtree: true, childList: true, attributes: true, attributeFilter: ['data-item']});
-
-		own.Read();
 	},
 
-	$OnDestroy: function () {
-		if (this.Own().Watcher)
-			this.Own().Watcher.disconnect();
+	Declared: function (declared) {
+		this.Own().Fields = declared.Fields;
+		this.Own().Results = declared.Results;
+		this.Version++;
 	},
 
 	/* The fields and the results given and declared. */

@@ -78,6 +78,51 @@ describe('Elemenx production server', function () {
 		}
 	});
 
+	/* A bug: /ui and /ui/ were both answered with the index.html of the root, and the relative paths of ui/index.html were taken from the root. */
+	it('serves a folder with an index.html at its address with a slash, the routes inside it with its page', async function () {
+		var root = fs.mkdtempSync(path.join(os.tmpdir(), 'elemenx-server-folder-'));
+		var get = function (port, pathname) {
+			return new Promise(function (resolve, reject) {
+				http.get({host: '127.0.0.1', port: port, path: pathname}, function (response) {
+					var chunks = [];
+
+					response.on('data', function (chunk) {
+						chunks.push(chunk);
+					});
+
+					response.on('end', function () {
+						resolve({Status: response.statusCode, Location: response.headers.location, Text: Buffer.concat(chunks).toString('utf8')});
+					});
+				}).on('error', reject);
+			});
+		};
+
+		fs.mkdirSync(path.join(root, 'ui', 'deep'), {recursive: true});
+		fs.mkdirSync(path.join(root, 'empty'));
+		fs.writeFileSync(path.join(root, 'index.html'), '<main>root</main>');
+		fs.writeFileSync(path.join(root, 'ui', 'index.html'), '<main>ui</main>');
+
+		try {
+			await withServer({Root: root}, async function (port) {
+				expect(await get(port, '/ui')).toMatchObject({Status: 301, Location: '/ui/'});
+				expect(await get(port, '/ui?theme=dark')).toMatchObject({Status: 301, Location: '/ui/?theme=dark'});
+				expect(await get(port, '/ui/')).toMatchObject({Status: 200, Text: '<main>ui</main>'});
+				expect(await get(port, '/ui/settings')).toMatchObject({Status: 200, Text: '<main>ui</main>'});
+				expect(await get(port, '/ui/deep/page')).toMatchObject({Status: 200, Text: '<main>ui</main>'});
+				expect(await get(port, '/settings')).toMatchObject({Status: 200, Text: '<main>root</main>'});
+				expect(await get(port, '/empty')).toMatchObject({Status: 200, Text: '<main>root</main>'});
+			});
+
+			await withServer({Root: root, SPA: false}, async function (port) {
+				expect(await get(port, '/ui/')).toMatchObject({Status: 200, Text: '<main>ui</main>'});
+				expect((await get(port, '/ui/settings')).Status).toBe(404);
+			});
+		}
+		finally {
+			fs.rmSync(root, {recursive: true, force: true});
+		}
+	});
+
 	it('emits cache validators and Cache-Control and answers conditional GET with 304', async function () {
 		var root = fs.mkdtempSync(path.join(os.tmpdir(), 'elemenx-server-'));
 

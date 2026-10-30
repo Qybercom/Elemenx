@@ -1,0 +1,79 @@
+<canvas #Canvas style="display: block; width: 100%; height: 260px; border-radius: 8px; background: #05070c;"></canvas>
+<p class="elemenx-text small muted">{{Note}}</p>
+<script>
+({
+	Note: 'A torus, a ball and a bar merged into one mesh, lit and turning.',
+
+	$OnReady: function () {
+		var self = this;
+		var graphics = this.$Service('Graphics3D');
+		var canvas = this.$Ref('Canvas');
+		var renderer = graphics.Create(canvas);
+		var head = '#version 300 es\nprecision highp float;\n';
+		var program;
+		var mesh;
+		var camera = graphics.Camera({Fov: 40});
+		var angle = 0;
+
+		if (!renderer) {
+			this.Note = 'This browser has no WebGL2.';
+
+			return;
+		}
+
+		program = renderer.Program(head + [
+			'in vec3 aPosition;',
+			'in vec3 aNormal;',
+			'in vec3 aColor;',
+			'uniform mat4 uModel;',
+			'uniform mat4 uViewProjection;',
+			'uniform mat3 uNormalMatrix;',
+			'out vec3 vNormal;',
+			'out vec3 vColor;',
+			'void main() {',
+			'	vNormal = uNormalMatrix * aNormal;',
+			'	vColor = aColor;',
+			'	gl_Position = uViewProjection * uModel * vec4(aPosition, 1.0);',
+			'}'
+		].join('\n'), head + [
+			'in vec3 vNormal;',
+			'in vec3 vColor;',
+			'out vec4 outColor;',
+			'void main() {',
+			'	float light = max(dot(normalize(vNormal), normalize(vec3(0.6, 0.8, 0.5))), 0.0);',
+			'	outColor = vec4(vColor * (0.15 + 0.85 * light), 1.0);',
+			'}'
+		].join('\n'));
+
+		/* Three shapes merged into one mesh, each of its color. */
+		mesh = renderer.Mesh(graphics.Merge([
+			{Geometry: graphics.Torus({Radius: 1, Tube: 0.3}), Color: [0.25, 0.55, 1]},
+			{Geometry: graphics.Icosphere({Radius: 0.5, Detail: 2}), Color: [1, 0.6, 0.2]},
+			{Geometry: graphics.Box({Width: 0.3, Height: 2.6, Depth: 0.3}), Color: [0.9, 0.9, 0.95]}
+		]));
+
+		function frame () {
+			var model = graphics.Compose([0, 0, 0], graphics.Multiply(graphics.Rotation([0, 1, 0], angle), graphics.Rotation([1, 0, 0], 0.5)), 1);
+
+			if (!canvas.isConnected) return;
+
+			angle += 0.01;
+
+			renderer.Resize(canvas.clientWidth, canvas.clientHeight, window.devicePixelRatio || 1);
+			renderer.Clear([0.02, 0.03, 0.05, 1]);
+
+			camera.Orbit([0, 0, 0], 0, 0.3, 5);
+
+			renderer.Draw(mesh, program, {uModel: model, uNormalMatrix: graphics.NormalMatrix(model), uViewProjection: camera.Matrix(renderer.Width / renderer.Height)});
+
+			self.Frame = window.requestAnimationFrame(frame);
+		}
+
+		frame();
+	},
+
+	$OnDestroy: function () {
+		window.cancelAnimationFrame(this.Frame);
+	}
+})
+</script>

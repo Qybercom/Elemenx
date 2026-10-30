@@ -131,6 +131,7 @@ function buildOptions (parsed, settings) {
 		entry: value(parsed.Options, 'entry', settings.Entry, 'app.js'),
 		index: value(parsed.Options, 'index', settings.Index, 'index.html'),
 		out: value(parsed.Options, 'out', settings.Output, 'dist'),
+		base: value(parsed.Options, 'base', settings.Base, ''),
 		single: parsed.Options.single === true || settings.Single === true,
 		widget: parsed.Options.widget === true || settings.Widget === true,
 		full: parsed.Options.full === true || settings.Full === true,
@@ -305,6 +306,7 @@ command('build', 'Build an Application into dist: a site, one file, a widget, a 
 	Options: [
 		['--out <folder>', 'the folder of the build (dist)'],
 		['--entry <file>', 'the script of the Applications (app.js)'],
+		['--base <path>', 'the address the site is served from (/ui/: Base of elemenx.config.js): the relative paths of its page are taken from it'],
 		['--index <file>', 'the page (index.html)'],
 		['--application <Name>', 'the Application to build, of a project with several'],
 		['--single', 'all of it in one index.html that runs from a file'],

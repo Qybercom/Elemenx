@@ -206,7 +206,7 @@ describe('ElemenxUI theming', function () {
 			return /\.css$/.test(file);
 		});
 
-		expect(files).toEqual(['contrast.css', 'darcula.css', 'fantasy.css', 'scifi.css', 'soft.css', 'template.css']);
+		expect(files).toEqual(['contrast.css', 'darcula.css', 'fantasy.css', 'glassy.css', 'scifi.css', 'soft.css', 'template.css']);
 
 		files.forEach(function (file) {
 			var name = file === 'template.css' ? 'my-theme' : file.replace(/\.css$/, '');

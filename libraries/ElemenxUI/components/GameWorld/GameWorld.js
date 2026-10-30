@@ -1476,7 +1476,8 @@ Elemenx.Component('GameWorld', {
 					layers.push({Name: value.Name || 'layer-' + layers.length, Rows: rows.map(String)});
 				}
 				else if (value.ID !== undefined && value.ID !== null && value.ID !== '') {
-					value.Kind = node.getAttribute('data-type') === 'object' ? value.Kind || 'object' : node.getAttribute('data-type');
+					/* A GameObject of no Kind is a tree, as it was: the kind of a thing of a map by default. */
+					value.Kind = node.getAttribute('data-type') === 'object' ? value.Kind || 'tree' : node.getAttribute('data-type');
 					objects[String(value.ID)] = value;
 				}
 			});

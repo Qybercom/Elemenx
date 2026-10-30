@@ -1,0 +1,183 @@
+/*
+ * The scene of a game: a canvas of WebGL2 as large as its place, the names of the bodies over it, the card of the
+ * selected body in a corner, the HUD of the game over all.
+ */
+.elemenx-game-scene {
+	position: relative;
+	width: 100%;
+	height: 100%;
+	min-height: 320px;
+	overflow: hidden;
+	background: var(--elemenx-game-scene-background);
+	outline: none;
+	touch-action: none;
+	user-select: none;
+}
+
+.elemenx-game-scene:focus-visible {
+	box-shadow: inset 0 0 0 2px var(--elemenx-focus);
+}
+
+.elemenx-game-scene-canvas {
+	position: absolute;
+	inset: 0;
+	display: block;
+	width: 100%;
+	height: 100%;
+	cursor: grab;
+}
+
+.elemenx-game-scene.dragging .elemenx-game-scene-canvas {
+	cursor: grabbing;
+}
+
+/* The names: buttons over the places of their bodies, moved every frame. */
+.elemenx-game-scene-labels {
+	position: absolute;
+	inset: 0;
+	z-index: 1;
+	pointer-events: none;
+}
+
+.elemenx-game-scene-labels.hidden {
+	display: none;
+}
+
+.elemenx-game-scene-label {
+	position: absolute;
+	top: 0;
+	left: 0;
+	padding: 1px 6px;
+	font: inherit;
+	font-size: 11px;
+	line-height: 16px;
+	color: var(--elemenx-game-scene-label);
+	white-space: nowrap;
+	background: transparent;
+	border: 0;
+	border-radius: var(--elemenx-radius-small);
+	cursor: pointer;
+	pointer-events: auto;
+	text-shadow: 0 1px 2px var(--elemenx-game-scene-shadow);
+}
+
+.elemenx-game-scene-label[data-kind="star"] {
+	font-weight: 600;
+}
+
+.elemenx-game-scene-label[data-kind="station"],
+.elemenx-game-scene-label[data-kind="outpost"],
+.elemenx-game-scene-label[data-kind="fleet"] {
+	color: var(--elemenx-game-scene-selection);
+}
+
+.elemenx-game-scene-label:hover,
+.elemenx-game-scene-label[aria-pressed="true"] {
+	color: var(--elemenx-game-scene-background);
+	background: var(--elemenx-game-scene-selection);
+	text-shadow: none;
+}
+
+.elemenx-game-scene-label:focus-visible {
+	outline: 2px solid var(--elemenx-focus);
+	outline-offset: 1px;
+}
+
+/* The card of the selected body: its numbers. */
+.elemenx-game-scene-card {
+	position: absolute;
+	top: 12px;
+	right: 12px;
+	z-index: 2;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	box-sizing: border-box;
+	inline-size: min(260px, calc(100% - 24px));
+	padding: 10px 12px 12px;
+	color: var(--elemenx-text);
+	background: var(--elemenx-surface-raised);
+	border: 1px solid var(--elemenx-border);
+	border-radius: var(--elemenx-radius);
+	box-shadow: var(--elemenx-shadow);
+	opacity: 0.96;
+}
+
+.elemenx-game-scene-card-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+}
+
+.elemenx-game-scene-card-title {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+}
+
+.elemenx-game-scene-card-kind {
+	font-size: var(--elemenx-font-size-small);
+	color: var(--elemenx-text-muted);
+}
+
+.elemenx-game-scene-card-rows {
+	display: grid;
+	gap: 3px;
+	margin: 0;
+	font-size: var(--elemenx-font-size-small);
+}
+
+.elemenx-game-scene-card-row {
+	display: flex;
+	justify-content: space-between;
+	gap: 12px;
+}
+
+.elemenx-game-scene-card-row dt {
+	color: var(--elemenx-text-muted);
+}
+
+.elemenx-game-scene-card-row dd {
+	margin: 0;
+	font-variant-numeric: tabular-nums;
+	text-align: right;
+}
+
+.elemenx-game-scene-card-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+}
+
+/* On the surface of a body: the way back to space, in a corner. */
+.elemenx-game-scene-takeoff {
+	position: absolute;
+	top: 12px;
+	left: 12px;
+	z-index: 2;
+}
+
+/* Without WebGL2: what is missing, in the middle. */
+.elemenx-game-scene-fallback {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 24px;
+	color: var(--elemenx-game-scene-label);
+	text-align: center;
+}
+
+/* The HUD over the scene: it lets the presses through, its own parts take them. */
+.elemenx-game-scene-hud {
+	position: absolute;
+	inset: 0;
+	z-index: 3;
+	pointer-events: none;
+}
+
+.elemenx-game-scene-hud > * > * {
+	pointer-events: auto;
+}

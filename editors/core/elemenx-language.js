@@ -245,10 +245,10 @@ function emitted (source) {
 }
 
 function definitions (source, file) {
-	var result = {Components: [], Services: [], Directives: [], Emitted: emitted(source)};
+	var result = {Components: [], Services: [], Directives: [], Traits: [], Emitted: emitted(source)};
 	var directive = /Elemenx\.Directive\(\s*(['"])([\w-]+)\1/g;
 	var named;
-	var pattern = /Elemenx\.(Component|Service)\(\s*(['"])([A-Za-z][\w-]*)\2\s*,\s*\{/g;
+	var pattern = /Elemenx\.(Component|Service|Trait)\(\s*(['"])([A-Za-z][\w-]*)\2\s*,\s*\{/g;
 	var match;
 
 	while ((match = pattern.exec(source))) {
@@ -259,6 +259,8 @@ function definitions (source, file) {
 		var description = /\$Meta\s*:\s*\{[\s\S]*?Description\s*:\s*(['"])((?:[^\\]|\\.)*?)\1/.exec(body);
 		var events = emitted(body);
 		var template = /\$TemplateID\s*:\s*(['"])([^'"]+)\1/.exec(body);
+		var base = /\$Extends\s*:\s*(['"])([^'"]+)\1/.exec(body);
+		var traits = /\$Traits\s*:\s*\[([^\]]*)\]/.exec(body);
 		var closures = /this\.([A-Z][\w$]*)\s*=\s*function\s*\(([^)]*)\)/g;
 		var closure;
 		var methods = [];
@@ -282,7 +284,7 @@ function definitions (source, file) {
 				methods.push({Name: closure[1], Line: lineOf(source, open + closure.index), Character: 0, Arguments: closure[2]});
 		}
 
-		(match[1] === 'Component' ? result.Components : result.Services).push({
+		(match[1] === 'Component' ? result.Components : match[1] === 'Trait' ? result.Traits : result.Services).push({
 			Name: match[3],
 			Description: description ? description[2].replace(/\\(.)/g, '$1') : commentBefore(source, match.index),
 			Props: props,
@@ -293,7 +295,12 @@ function definitions (source, file) {
 			Line: lineOf(source, match.index),
 			Library: false,
 			/* The <template id> of a page it takes ($TemplateID: 'x'), or null. */
-			TemplateID: template ? template[2] : null
+			TemplateID: template ? template[2] : null,
+			/* What it is made of: its base ($Extends) and its Traits, whose props, events and methods it has too. */
+			Extends: base ? base[2] : null,
+			Traits: traits ? (traits[1].match(/'[^']+'|"[^"]+"/g) || []).map(function (name) {
+				return name.slice(1, -1);
+			}) : []
 		});
 
 		pattern.lastIndex = end;
@@ -543,7 +550,78 @@ function Create (options) {
 			});
 		});
 
+		return kind === 'Components' ? inherited(result) : result;
+	}
+
+	/* The Traits of the project by name. */
+	function traits () {
+		var result = {};
+
+		Object.keys(project).forEach(function (file) {
+			(project[file].Traits || []).forEach(function (item) {
+				result[item.Name] = item;
+			});
+		});
+
 		return result;
+	}
+
+	/* A Component of a base or of Traits has their props, events and methods too, its own over theirs. */
+	function inherited (components) {
+		var known = traits();
+		var done = {};
+
+		function layer (item, seen) {
+			var layers = [];
+			var result;
+
+			if (!item || (!item.Extends && !(item.Traits || []).length) || done[lower(item.Name)]) return item;
+
+			if (item.Extends && components[lower(item.Extends)] && seen.indexOf(lower(item.Extends)) === -1)
+				layers.push(layer(components[lower(item.Extends)], seen.concat([lower(item.Name)])));
+
+			(item.Traits || []).forEach(function (name) {
+				if (known[name])
+					layers.push(known[name]);
+			});
+
+			layers.push(item);
+
+			result = Object.assign({}, item, {Props: [], Events: [], Methods: []});
+
+			layers.forEach(function (each) {
+				(each.Props || []).forEach(function (one) {
+					result.Props = result.Props.filter(function (other) {
+						return other.Name !== one.Name;
+					}).concat([one]);
+				});
+
+				(each.Events || []).forEach(function (one) {
+					if (result.Events.indexOf(one) === -1)
+						result.Events.push(one);
+				});
+
+				(each.Methods || []).forEach(function (one) {
+					result.Methods = result.Methods.filter(function (other) {
+						return other.Name !== one.Name;
+					}).concat([one]);
+				});
+			});
+
+			result.EventDescriptions = layers.reduce(function (all, each) {
+				return Object.assign(all, each.EventDescriptions || {});
+			}, {});
+			done[lower(item.Name)] = true;
+			components[lower(item.Name)] = result;
+
+			return result;
+		}
+
+		Object.keys(components).forEach(function (key) {
+			layer(components[key], []);
+		});
+
+		return components;
 	}
 
 	knowledge = {

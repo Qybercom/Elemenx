@@ -68,7 +68,7 @@ describe('Elemenx dist', function () {
 	it('leaves the packs of ElemenxUI (packs.json) to scripts of their own that put their files next to the script', function () {
 		var packs = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), 'libraries', 'ElemenxUI', 'packs.json'), 'utf8'));
 
-		expect(Object.keys(packs)).toEqual(['emoji', 'emoji.ru', 'cities', 'cities.ru', 'meta', 'brands', 'files', 'sport', 'racing', 'science', 'art', 'cinema', 'games', 'contrast', 'darcula', 'soft', 'fantasy', 'scifi']);
+		expect(Object.keys(packs)).toEqual(['emoji', 'emoji.ru', 'cities', 'cities.ru', 'meta', 'brands', 'files', 'sport', 'racing', 'science', 'art', 'cinema', 'games', 'contrast', 'darcula', 'soft', 'fantasy', 'scifi', 'glassy']);
 
 		Object.keys(packs).filter(function (name) {
 			return !/\.css$/.test(packs[name].Files[0]);
@@ -237,7 +237,7 @@ describe('Elemenx dist', function () {
 
 			index = fs.readFileSync(path.join(target, 'index.html'), 'utf8');
 
-			['contrast', 'darcula', 'soft', 'fantasy', 'scifi'].forEach(function (name) {
+			['contrast', 'darcula', 'soft', 'fantasy', 'scifi', 'glassy'].forEach(function (name) {
 				expect(index).toContain('themes/' + name + '.css');
 			});
 
@@ -338,7 +338,7 @@ describe('Elemenx dist', function () {
 		expect(manifest.Version).toBe(Package.version);
 		expect(Object.keys(manifest.Files).sort()).toEqual([
 			'elemenx-ui.art.js', 'elemenx-ui.art.min.js', 'elemenx-ui.brands.js', 'elemenx-ui.brands.min.js', 'elemenx-ui.cinema.js', 'elemenx-ui.cinema.min.js', 'elemenx-ui.cities.js', 'elemenx-ui.cities.min.js', 'elemenx-ui.cities.ru.js', 'elemenx-ui.cities.ru.min.js', 'elemenx-ui.emoji.js', 'elemenx-ui.emoji.min.js', 'elemenx-ui.emoji.ru.js', 'elemenx-ui.emoji.ru.min.js',
-			'elemenx-ui.fantasy.js', 'elemenx-ui.fantasy.min.js', 'elemenx-ui.files.js', 'elemenx-ui.files.min.js', 'elemenx-ui.games.js', 'elemenx-ui.games.min.js', 'elemenx-ui.js', 'elemenx-ui.meta.js', 'elemenx-ui.meta.min.js', 'elemenx-ui.min.js',
+			'elemenx-ui.fantasy.js', 'elemenx-ui.fantasy.min.js', 'elemenx-ui.files.js', 'elemenx-ui.files.min.js', 'elemenx-ui.games.js', 'elemenx-ui.games.min.js', 'elemenx-ui.glassy.js', 'elemenx-ui.glassy.min.js', 'elemenx-ui.js', 'elemenx-ui.meta.js', 'elemenx-ui.meta.min.js', 'elemenx-ui.min.js',
 			'elemenx-ui.racing.js', 'elemenx-ui.racing.min.js', 'elemenx-ui.science.js', 'elemenx-ui.science.min.js', 'elemenx-ui.scifi.js', 'elemenx-ui.scifi.min.js', 'elemenx-ui.sport.js', 'elemenx-ui.sport.min.js', 'elemenx.all.js', 'elemenx.all.min.js', 'elemenx.js', 'elemenx.min.js'
 		]);
 		expect(manifest.Files['elemenx.min.js'].Integrity).toBe('sha384-' + crypto.createHash('sha384').update(fs.readFileSync(path.join(output, 'elemenx.min.js'))).digest('base64'));

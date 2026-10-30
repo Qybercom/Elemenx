@@ -1,0 +1,22 @@
+<pre class="elemenx-code" style="white-space: pre-wrap;">{{Text}}</pre>
+<script>
+({
+	Text: '',
+
+	$OnCreate: function () {
+		var kinds = this.$Service('Kinds');
+		var tank;
+
+		kinds.Define('vehicle', {Traits: {Mover: {Speed: 2}, Health: {Max: 100}}, Values: {Team: 'neutral'}});
+		kinds.Define('turret', {Traits: {Model: {Shape: 'cylinder'}, Health: {Max: 40}}});
+		kinds.Define('tank', {Extends: 'vehicle', Traits: {Health: {Max: 400}}, Parts: [{ID: 'hull', Traits: {Model: {Shape: 'box'}}}, {ID: 'turret', Kind: 'turret', Position: [0, 0.6, 0]}]});
+
+		tank = kinds.Make('tank', {ID: 'tank-1', Team: 'red', Parts: [{ID: 'turret', Traits: {Health: {Max: 60}}}]});
+		tank.Parts.splice(0, 1);
+
+		this.Text = 'Resolve(tank): ' + JSON.stringify(kinds.Resolve('tank').Traits) + '\n\nParts: ' + tank.Parts.map(function (part) {
+			return part.ID + ' (' + part.Kind + ')';
+		}).join(', ') + '\n\nDiff (a saved game): ' + JSON.stringify(kinds.Diff(tank));
+	}
+})
+</script>

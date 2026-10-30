@@ -1,4 +1,7 @@
 /*
+ * Deprecated: the 2D world will be made of GameScene and GameObject (a GameObject of a kind of its own); this one stays
+ * until then.
+ *
  * A building of a GameWorld, declared in it: ID, X and Y (its first cell), Width and Height (the cells it takes, 2
  * by 2 by default; no way through them), Team, Type (barracks), Name, Color (its walls), Roof (the color of its
  * roof, of its team by default), Tall (its walls, in heights of a tile), Image (a picture standing on its
@@ -9,7 +12,7 @@ Elemenx.Component('GameBuilding', {
 	$Meta: {
 		Group: 'game',
 		Icon: 'home',
-		Description: 'A building of a GameWorld: the cells it takes, its team, its colors and its health.',
+		Description: 'Deprecated (the 2D world will be made of GameScene and GameObject): a building of a GameWorld, the cells it takes, its team, its colors and its health.',
 		Props: {
 			ID: 'The ID of the building.',
 			X: 'Its first cell, across.',

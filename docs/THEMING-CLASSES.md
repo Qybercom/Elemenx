@@ -7,6 +7,7 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-badge`: `accent`, `busy`, `danger`, `dot`, `info`, `overlay`, `success`, `warning`
 - `elemenx-badged`
 - `elemenx-block`: `compact`, `framed`, `spacious`, `trapezoid`
+- `elemenx-blur`
 - `elemenx-calendar`
 - `elemenx-calendar-cell`: `selected`, `today`
 - `elemenx-calendar-day`: `end`, `outside`, `selected`, `start`, `today`, `within`
@@ -1025,6 +1026,23 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-game-tracker-objective`: `done`
 - `elemenx-game-tracker-quest`
 - `elemenx-game-tracker-title`
+
+## GameScene
+
+- `elemenx-game-scene`: `dragging`
+- `elemenx-game-scene-canvas`
+- `elemenx-game-scene-card`
+- `elemenx-game-scene-card-actions`
+- `elemenx-game-scene-card-header`
+- `elemenx-game-scene-card-kind`
+- `elemenx-game-scene-card-row`
+- `elemenx-game-scene-card-rows`
+- `elemenx-game-scene-card-title`
+- `elemenx-game-scene-fallback`
+- `elemenx-game-scene-hud`
+- `elemenx-game-scene-label`
+- `elemenx-game-scene-labels`: `hidden`
+- `elemenx-game-scene-takeoff`
 
 ## GameSlot
 

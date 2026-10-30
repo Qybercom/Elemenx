@@ -19,6 +19,7 @@
 Elemenx.Component('Pipeline', {
 	$TemplateURL: 'Pipeline.html',
 	$StyleURL: 'Pipeline.css',
+	$Traits: ['Declared'],
 	$Meta: {
 		Group: 'data',
 		Icon: 'branch',
@@ -79,26 +80,13 @@ Elemenx.Component('Pipeline', {
 		};
 	},
 
+	/* The PipelineStage declared inside it (the Trait Declared reads them). */
+	DeclaredSources: '.elemenx-pipeline-sources',
+
 	$OnReady: function () {
 		var self = this;
 		var own = this.Own();
 		var element = this.$Element();
-		var sources = element.querySelector('.elemenx-pipeline-sources');
-
-		own.Read = function () {
-			var before = JSON.stringify(own.Declared);
-
-			own.Declared = self.Declarations(sources);
-
-			if (JSON.stringify(own.Declared) !== before)
-				self.Version++;
-		};
-
-		own.Watcher = new MutationObserver(own.Read);
-
-		own.Watcher.observe(sources, {subtree: true, childList: true, attributes: true, attributeFilter: ['data-item']});
-
-		own.Read();
 
 		if (typeof ResizeObserver === 'function') {
 			own.Sizes = new ResizeObserver(function () {
@@ -113,9 +101,6 @@ Elemenx.Component('Pipeline', {
 
 	$OnDestroy: function () {
 		var own = this.Own();
-		if (own.Watcher)
-			own.Watcher.disconnect();
-
 		if (own.Sizes)
 			own.Sizes.disconnect();
 

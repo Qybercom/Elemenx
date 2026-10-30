@@ -756,6 +756,51 @@
 	border-radius: var(--elemenx-radius-large);
 }
 
+/* *blur over a picture of colors: what the glass blurs. */
+.ui-kit-glass {
+	position: relative;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 12px;
+	padding: 28px 16px;
+	overflow: hidden;
+	border-radius: var(--elemenx-radius-large);
+	background: linear-gradient(135deg, var(--elemenx-danger), var(--elemenx-warning) 40%, var(--elemenx-success) 70%, var(--elemenx-info));
+}
+
+.ui-kit-glass-sun,
+.ui-kit-glass-hill {
+	position: absolute;
+	border-radius: 50%;
+}
+
+.ui-kit-glass-sun {
+	top: 10px;
+	left: 24%;
+	width: 90px;
+	height: 90px;
+	background: var(--elemenx-accent);
+}
+
+.ui-kit-glass-hill {
+	right: -20px;
+	bottom: -50px;
+	width: 220px;
+	height: 140px;
+	background: var(--elemenx-text);
+}
+
+.ui-kit-glass-card {
+	position: relative;
+	display: flex;
+	flex: 1 1 200px;
+	flex-direction: column;
+	gap: 4px;
+	padding: 14px 16px;
+	border: 1px solid var(--elemenx-border);
+	border-radius: var(--elemenx-radius-large);
+}
+
 /* The two looks of the SettingsMenu side by side, each as wide as a phone, on the grouped background of a phone. */
 .ui-kit-settings-menus {
 	display: grid;
@@ -828,6 +873,22 @@
 	height: 480px;
 	overflow: hidden;
 	border-radius: var(--elemenx-radius-large);
+}
+
+/* The space of the game demo: a window on its system, the day of it in a corner. */
+.ui-kit-space {
+	height: 520px;
+	overflow: hidden;
+	border-radius: var(--elemenx-radius-large);
+}
+
+.ui-kit-space-hud {
+	position: absolute;
+	left: 12px;
+	bottom: 10px;
+	font-size: 12px;
+	font-variant-numeric: tabular-nums;
+	color: var(--elemenx-game-scene-label);
 }
 
 /* The bar of the HUD takes the presses over it only: the world round it takes the others. */

@@ -15,7 +15,7 @@ Application/
     └── elemenx.js
 ```
 
-`dist/app.js` contains the generated Bundle Registry followed by the original application bootstrap from `app.js`. Component `$TemplateURL` and `$StyleURL` resources are inlined into the bundle.
+`dist/app.js` contains the generated Bundle Registry followed by the original application bootstrap from `app.js`. Component `$TemplateURL` and `$StyleURL` resources are inlined into the bundle. Its entities are of their folder in the graph (`components/`, `services/`, `guards/`, `directives/`, `traits/`) or of the call that defines them (`Elemenx.Trait('Selectable', ...)` is a Trait): a Trait is installed under its type and made the first time a Component that takes it (`$Traits`) is; a Component that a used one names in `$Extends` goes into the build with it.
 
 ## Split by its routes
 
@@ -104,6 +104,8 @@ The command registry is intentionally extensible for future command groups such 
 
 An optional `elemenx.config.js` may export `Application`, `Entry`, `Index`, `Output`, and `Server` settings. CLI options override configuration, and configuration overrides Elemenx defaults.
 
+A site served from a folder (`https://example.com/ui/`) takes the relative paths of its page from that folder, but only at its address with a slash: at `/ui` the browser takes `elemenx.js` from the root. `elemenx serve` and `elemenx dev` send `/ui` to `/ui/` (as nginx and Apache do) and answer a route inside the folder (`/ui/settings`) with the `index.html` of the nearest folder that has one. For a host that does neither, `--base /ui/` (`Base: '/ui/'` in `elemenx.config.js`) builds the page with its relative paths (`src` and `href` of its scripts, styles, icons and pictures) and the stylesheets of its Libraries taken from that base, so the site loads at `/ui`, `/ui/` and any route inside it; its templates are left as they are.
+
 Production `serve` enables gzip for compressible responses of at least 1024 bytes and sends `ETag`, `Last-Modified`, `Cache-Control`, `Vary: Accept-Encoding`, and conditional `304` responses. `HEAD` returns the same representation headers and `Content-Length` without a response body. Development serving does not compress by default. Server values follow the same precedence as the rest of the CLI: explicit CLI option, then `elemenx.config.js`, then Elemenx defaults.
 
 ## The icon of the Application
@@ -118,7 +120,7 @@ Production `serve` enables gzip for compressible responses of at least 1024 byte
 
 ## A splash screen
 
-`Splash` in `elemenx.config.js` gives the page a splash screen: shown from its first paint, before the framework and the Application load, until the first Application is ready. `Splash: true` is the default look (a spinner in the colors of the light or the dark theme of the system); `{Image, Background, Color, Text, Spinner, MinTime, Timeout}` sets it: a logo (a path of the project, as `/logo.svg`), the colors (CSS colors), a line of text, the spinner (`false` takes it away), the least time it stays (milliseconds from the start of the page, `0`, so a fast start does not flicker) and the most (`10000`). `splash.html` in the project takes the place of the image, the text and the spinner with its own HTML (a splash with neither has `Splash` false).
+`Splash` in `elemenx.config.js` gives the page a splash screen: shown from its first paint, before the framework and the Application load, until the first Application is ready. `Splash: true` is the default look (a spinner in the colors of the light or the dark theme of the system); `{Image, Background, Color, Text, Spinner, Progress, MinTime, Timeout}` sets it: a logo (a path of the project, as `/logo.svg`), the colors (CSS colors), a line of text, the spinner (`false` takes it away), a bar with the percent of the page loaded (`Progress: true`, without the spinner unless `Spinner: true`: the build writes the bytes of the scripts and stylesheets of the page in its `data-total`, `Elemenx.Splash` counts them as the browser loads them, the Application may give its own percent with `Elemenx.Splash.Progress(percent)`; a build in one file and the development server show the bar moving with no percent), the least time it stays (milliseconds from the start of the page, `0`, so a fast start does not flicker) and the most (`10000`). `splash.html` in the project takes the place of the image, the text and the spinner with its own HTML (a splash with neither has `Splash` false).
 
 The build puts the splash at the top of the `<body>` of the page: `#elemenx-splash` with its style inline, and no script, so a Content Security Policy that forbids inline scripts lets it be. `elemenx dev` serves the page with it too, `splash.html` read again on each load. A single file (`--single`) has it, a widget and a browser extension have none. `Elemenx.Splash` takes it away when the first Application is ready (its `$OnReady` ran) or fails: it fades and leaves the page. An Application that loads its data first holds it: `Elemenx.Splash.Hold()` (in `app.js`, or in its `$OnReady`), then `Elemenx.Splash.Hide()` once the data is in.
 

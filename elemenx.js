@@ -45,7 +45,7 @@
 	 * Elemenx: the namespace of this copy of the framework. The window gets it last (see Export), unless a copy of the
 	 * same version is there already: then this one stops here and the page keeps the first.
 	 */
-	var Version = '0.11.3';
+	var Version = '0.12.0';
 	var Elemenx = {};
 	if (typeof ElemenxIsolated !== 'object' && (typeof globalThis !== 'undefined' ? globalThis : self).Elemenx && (typeof globalThis !== 'undefined' ? globalThis : self).Elemenx.Version === Version) return;
 
@@ -4212,6 +4212,22 @@
 				return current.$Copy(props);
 			};
 
+			/* The props the definition does not declare: of the instance made, once its definition is in. */
+			api.$Open = function () {
+				if (!current || !current.$Open)
+					throw new Error('Elemenx $Open: the Component is not loaded yet');
+
+				return current.$Open();
+			};
+
+			/* The method under the one that runs: of the instance made, once its definition is in. */
+			api.$Super = function () {
+				if (!current || !current.$Super)
+					throw new Error('Elemenx $Super: the Component is not loaded yet');
+
+				return current.$Super.apply(current, arguments);
+			};
+
 			api._Definition = function () {
 				return currentDefinition;
 			};
@@ -6495,6 +6511,469 @@
 			retargetDirectives(records, to);
 		}
 
+		/* Template and Component: inheritance */
+		/*
+		 * A Component extends another ($Extends: 'Button') and takes Traits ($Traits: ['Selectable']): reusable sets of
+		 * props, methods and hooks (Elemenx.Trait). The layers merge once, when the Component is registered: the base,
+		 * then the Traits in order, then the definition itself; a later layer wins a value or a method, the hooks
+		 * ($OnCreate, $OnReady...) all run, the base first ($OnDestroy the other way round), $Meta merges its Props,
+		 * Events, Methods, Slots and Children. The template is the one of the last layer that has one; the styles of
+		 * every layer apply. this.$Super('Method', args...) calls the method of the layer under the one that runs.
+		 * A base or a Trait not loaded yet (a part of the bundle, a file of the sources) is loaded on the first use.
+		 */
+		var traitRegistry = {};
+		var inheritors = {};
+		var waiting = {};
+		var superStack = [];
+
+		Elemenx.Trait = function (name, definition) {
+			if (arguments.length === 1 && typeof name === 'string') return resolveTrait(name);
+
+			if (typeof name !== 'string' || !name || !definition || typeof definition !== 'object')
+				throw new Error('Elemenx.Trait expects (name) or (name, definition)');
+
+			if (definition.$Template !== undefined || definition.$TemplateURL !== undefined || definition.$TemplateID !== undefined)
+				throw new Error('Elemenx.Trait ' + name + ' has a template: a Trait gives props, methods and hooks');
+
+			if (definition.$StyleURL && !definition.$DefinitionURL && Runtime.CurrentScriptURL())
+				definition.$DefinitionURL = Runtime.CurrentScriptURL();
+
+			definition.$StyleURL = Runtime.DefinitionURL(definition, definition.$StyleURL);
+			traitRegistry[name] = definition;
+
+			reinherit(name);
+
+			return definition;
+		};
+
+		function resolveTrait (name) {
+			if (own(traitRegistry, name)) return traitRegistry[name];
+
+			if (Runtime.Bundle.Load('Trait', name) && own(traitRegistry, name)) return traitRegistry[name];
+
+			return null;
+		}
+
+		/* The Traits of a definition, checked: their names in order. */
+		function traitNames (name, definition) {
+			var list = definition.$Traits;
+			if (list === undefined || list === null) return [];
+
+			if (!Array.isArray(list) || list.some(function (item) {
+				return typeof item !== 'string' || !item;
+			}))
+				throw new Error('Elemenx Component ' + (name || 'the Component') + ': $Traits expects the names of Traits');
+
+			return list;
+		}
+
+		/* What a definition needs and does not have yet: [{Type: 'Component' or 'Trait', Name}]. */
+		function missingLayers (name, definition) {
+			var missing = [];
+			var base = definition.$Extends;
+			var seen = {};
+
+			function needTrait (trait) {
+				var found;
+
+				if (seen[trait]) return;
+
+				seen[trait] = true;
+				found = resolveTrait(trait);
+
+				if (!found) missing.push({Type: 'Trait', Name: trait});
+				else traitNames(trait, found).forEach(needTrait);
+			}
+
+			if (base !== undefined && (typeof base !== 'string' || !base))
+				throw new Error('Elemenx Component ' + (name || 'the Component') + ': $Extends expects the name of a Component');
+
+			if (base && name && base === name)
+				throw new Error('Elemenx Component ' + name + ': $Extends makes a cycle: ' + name + ', ' + name);
+
+			if (base && !Runtime.ComponentDefinition(base) && !(Runtime.Bundle.Load('Component', base) && Runtime.ComponentDefinition(base)))
+				missing.push({Type: 'Component', Name: base});
+
+			traitNames(name, definition).forEach(needTrait);
+
+			return missing;
+		}
+
+		/* A base that waits for its own base, back to the name: a cycle, told before anything waits for ever. */
+		function checkCycle (name, base) {
+			var chain = [name];
+			var at = base;
+
+			while (at) {
+				chain.push(at);
+
+				if (at === name)
+					throw new Error('Elemenx Component ' + name + ': $Extends makes a cycle: ' + chain.join(', '));
+
+				at = waiting[at];
+			}
+		}
+
+		/* The $Meta of two layers: the later wins its texts, the Props, Events, Methods, Slots and Children add up. */
+		function mergeMeta (under, over) {
+			var result = {};
+			var key;
+			var events;
+
+			if (!under || typeof under !== 'object') return over;
+			if (!over || typeof over !== 'object') return under;
+
+			for (key in under) {
+				if (own(under, key))
+					result[key] = under[key];
+			}
+
+			for (key in over) {
+				if (own(over, key))
+					result[key] = over[key];
+			}
+
+			result.Props = Runtime.Assign(Runtime.Assign({}, under.Props || {}), over.Props || {});
+
+			if (Array.isArray(under.Events || []) && Array.isArray(over.Events || [])) {
+				result.Events = union(under.Events || [], over.Events || []);
+			}
+			else {
+				events = {};
+
+				[under.Events, over.Events].forEach(function (list) {
+					if (Array.isArray(list)) {
+						list.forEach(function (event) {
+							if (!own(events, event))
+								events[event] = '';
+						});
+					}
+					else {
+						Runtime.Assign(events, list || {});
+					}
+				});
+
+				result.Events = events;
+			}
+
+			['Methods', 'Slots', 'Children'].forEach(function (field) {
+				if (under[field] || over[field])
+					result[field] = union(under[field] || [], over[field] || []);
+			});
+
+			return result;
+		}
+
+		function union (a, b) {
+			return a.concat(b.filter(function (item) {
+				return a.indexOf(item) === -1;
+			}));
+		}
+
+		/* Hooks of several layers: each in turn (the base first, or last for $OnDestroy), the last value returned. */
+		function chainHooks (key, list) {
+			var ordered = key === '$OnDestroy' ? list.slice().reverse() : list;
+			if (ordered.length === 1) return ordered[0];
+
+			return function () {
+				var result;
+				var value;
+				var i = 0;
+
+				while (i < ordered.length) {
+					value = ordered[i].apply(this, arguments);
+
+					if (value !== undefined)
+						result = value;
+
+					i++;
+				}
+
+				return result;
+			};
+		}
+
+		/* A method over others: while it runs, $Super of its name reaches the one under it. */
+		function layered (key, list, index) {
+			var method = list[index];
+
+			if (index === 0) return method;
+
+			return function () {
+				superStack.push({Key: key, List: list, Index: index});
+
+				try {
+					return method.apply(this, arguments);
+				}
+				finally {
+					superStack.pop();
+				}
+			};
+		}
+
+		Runtime.CallSuper = function (target, name, method, args) {
+			var i = superStack.length - 1;
+			var entry = null;
+
+			while (i >= 0 && !entry) {
+				if (superStack[i].Key === method)
+					entry = superStack[i];
+
+				i--;
+			}
+
+			if (!entry || entry.Index <= 0)
+				throw new Error('Elemenx $Super: ' + (name || 'the Component') + ' has no ' + method + ' under the one that runs');
+
+			return layered(method, entry.List, entry.Index - 1).apply(target, args);
+		};
+
+		/* The style of a layer under the last one: placed under the name of that layer, once. */
+		function layerStyle (layer) {
+			var definition = layer.Definition;
+			var key = (layer.Type === 'Trait' ? 'trait:' : 'component:') + layer.Name;
+
+			if (definition.$Style !== undefined) {
+				definition.$StyleKey = definition.$StyleKey || key;
+
+				Runtime.AddStyle(definition.$StyleKey, {Text: String(definition.$Style)});
+			}
+			else if (definition.$StyleURL) {
+				loadStyleURL(definition.$StyleURL, function (error, css) {
+					if (error || !global.document) return;
+
+					definition.$StyleKey = definition.$StyleKey || key;
+
+					Runtime.AddStyle(definition.$StyleKey, {Text: String(css)});
+				});
+			}
+		}
+
+		/* The definition of the layers of a Component, merged: the one the factory is made of. */
+		function composeDefinition (name, definition) {
+			var layers = [];
+			var seen = {};
+			var result = {};
+			var hooks = {};
+			var methods = {};
+			var templated = null;
+			var styled = null;
+
+			function addTrait (trait) {
+				var found = resolveTrait(trait);
+
+				if (seen[trait]) return;
+
+				if (!found)
+					throw new Error('Elemenx Component ' + (name || 'the Component') + ': unknown Trait ' + trait);
+
+				seen[trait] = true;
+
+				traitNames(trait, found).forEach(addTrait);
+
+				layers.push({Type: 'Trait', Name: trait, Definition: found});
+			}
+
+			if (definition.$Extends) {
+				if (!Runtime.ComponentDefinition(definition.$Extends))
+					throw new Error('Elemenx Component ' + (name || 'the Component') + ': unknown base ' + definition.$Extends + ' in $Extends');
+
+				layers.push({Type: 'Component', Name: definition.$Extends, Definition: Runtime.ComponentDefinition(definition.$Extends)});
+			}
+
+			traitNames(name, definition).forEach(addTrait);
+
+			layers.push({Type: 'Own', Name: name, Definition: definition});
+
+			layers.forEach(function (layer) {
+				var source = layer.Definition;
+				var key;
+				var value;
+
+				if (source.$Template !== undefined || source.$TemplateURL || source.$TemplateID)
+					templated = layer;
+
+				if (source.$Style !== undefined || source.$StyleURL)
+					styled = layer;
+
+				for (key in source) {
+					if (!own(source, key) || /^\$(Extends|Traits|Layers|Template|TemplateURL|TemplateID|Style|StyleURL|StyleKey|DefinitionURL)$/.test(key)) continue;
+
+					value = source[key];
+
+					if (key === '$Meta') result.$Meta = mergeMeta(result.$Meta, value);
+					else if (/^\$On[A-Z]/.test(key) && typeof value === 'function') (hooks[key] = hooks[key] || []).push(value);
+					else if (typeof value === 'function' && key.charAt(0) !== '$') (methods[key] = methods[key] || []).push(value);
+					else result[key] = value;
+				}
+			});
+
+			Object.keys(hooks).forEach(function (key) {
+				result[key] = chainHooks(key, hooks[key]);
+			});
+
+			Object.keys(methods).forEach(function (key) {
+				result[key] = layered(key, methods[key], methods[key].length - 1);
+			});
+
+			/* The template of the last layer that has one; a base whose template is the one of its name keeps it by that name. */
+			if (templated) {
+				['$Template', '$TemplateURL', '$TemplateID'].forEach(function (key) {
+					if (templated.Definition[key] !== undefined)
+						result[key] = templated.Definition[key];
+				});
+
+				if (templated.Type === 'Component' && result.$Template === undefined && !result.$TemplateURL && !result.$TemplateID)
+					result.$TemplateID = templated.Name;
+			}
+			else if (layers[0].Type === 'Component') {
+				result.$TemplateID = layers[0].Name;
+			}
+
+			if (styled) {
+				['$Style', '$StyleURL', '$StyleKey'].forEach(function (key) {
+					if (styled.Definition[key] !== undefined)
+						result[key] = styled.Definition[key];
+				});
+			}
+
+			layers.forEach(function (layer) {
+				if (layer !== styled && layer.Type !== 'Own' && (layer.Definition.$Style !== undefined || layer.Definition.$StyleURL))
+					layerStyle(layer);
+			});
+
+			/* What it is made of, for the tools: not $Extends, or a definition made again of this one would merge twice. */
+			if (definition.$DefinitionURL)
+				result.$DefinitionURL = definition.$DefinitionURL;
+
+			result.$Layers = layers.slice(0, -1).map(function (layer) {
+				return {Type: layer.Type, Name: layer.Name};
+			});
+
+			return result;
+		}
+
+		/* The Components made of a base or a Trait registered again (a reload) are made again of the new one. */
+		function reinherit (base) {
+			var names = inheritors[base] || [];
+
+			inheritors[base] = [];
+
+			names.forEach(function (child) {
+				if (child.Name !== base)
+					Elemenx.Component(child.Name, child.Definition);
+			});
+		}
+
+		function remember (name, definition) {
+			var bases = (definition.$Extends ? [definition.$Extends] : []).concat(traitNames(name, definition));
+
+			bases.forEach(function (base) {
+				inheritors[base] = (inheritors[base] || []).filter(function (child) {
+					return child.Name !== name;
+				}).concat([{Name: name, Definition: definition}]);
+			});
+		}
+
+		/* Loads what a definition misses (a part of the bundle, a file of the sources), then calls back. */
+		function loadLayers (missing, application, callback) {
+			var left = missing.length;
+			var failed = null;
+
+			function done (error) {
+				if (error && !failed)
+					failed = error;
+
+				left--;
+
+				if (!left)
+					callback(failed);
+			}
+
+			if (!left) {
+				callback(null);
+
+				return;
+			}
+
+			missing.forEach(function (item) {
+				var factory;
+
+				if (item.Type === 'Trait') {
+					if (Runtime.Bundle.Deferred('Trait', item.Name)) Runtime.Bundle.Fetch('Trait', item.Name, done);
+					else if (Runtime.Discovery && application) Runtime.Discovery.Load(application, 'Trait', item.Name, false, done);
+					else done(new Error('Elemenx: unknown Trait ' + item.Name));
+
+					return;
+				}
+
+				factory = Runtime.ResolveComponent(item.Name);
+
+				if (!factory) done(new Error('Elemenx Component: unknown base ' + item.Name + ' in $Extends'));
+				else if (factory.ElemenxResolve) factory.ElemenxResolve(application, done);
+				else if (Runtime.Bundle.Deferred('Component', item.Name)) Runtime.Bundle.Fetch('Component', item.Name, done);
+				else if (Runtime.Discovery && application) Runtime.Discovery.Load(application, 'Component', item.Name, false, done);
+				else done(Runtime.ComponentDefinition(item.Name) ? null : new Error('Elemenx Component: unknown base ' + item.Name + ' in $Extends'));
+			});
+		}
+
+		/* A Component whose base or Traits are not here yet: a placeholder, made of them once they are loaded. */
+		function createInheritingFactory (name, definition, missing) {
+			var lazy = function (data, slotProjection, options) {
+				return deferredComponent(function (ready) {
+					lazy.ElemenxResolve(options && options.Application ? options.Application : null, function (error) {
+						var factory = Runtime.ResolveComponentRegistered(name);
+
+						ready(error || (factory ? null : new Error('Elemenx unknown Component: ' + name)), factory);
+					});
+				}, data, slotProjection, options);
+			};
+
+			lazy.ComponentName = name;
+			lazy.ElemenxLazy = true;
+
+			lazy.ElemenxResolve = function (application, callback) {
+				loadLayers(missing, application, function (error) {
+					var more;
+
+					if (error) {
+						callback(error);
+
+						return;
+					}
+
+					try {
+						more = missingLayers(name, definition);
+
+						if (more.length) {
+							missing = more;
+
+							lazy.ElemenxResolve(application, callback);
+
+							return;
+						}
+
+						delete waiting[name];
+
+						if (componentRegistry[name] === lazy)
+							CreateComponentFactory(name, definition);
+					}
+					catch (failure) {
+						callback(failure);
+
+						return;
+					}
+
+					callback(null);
+				});
+			};
+
+			if (name)
+				componentRegistry[name] = lazy;
+
+			return lazy;
+		}
+
 		/* Component: factory */
 		/* A component whose template or style is not inline: resources load on first use, then a regular factory takes over. */
 		function needsRemoteResources (name, definition) {
@@ -6609,6 +7088,7 @@
 		}
 
 		function CreateComponentFactory (name, definition, generationOverride) {
+			var inherited;
 			var messagingInstanceSequence = 0;
 			var previousFactory = name ? componentRegistry[name] : null;
 			var generation = generationOverride !== undefined ? generationOverride : (name ? (componentGenerations[name] || 0) : 0);
@@ -6621,6 +7101,30 @@
 
 			definition.$TemplateURL = Runtime.DefinitionURL(definition, definition.$TemplateURL);
 			definition.$StyleURL = Runtime.DefinitionURL(definition, definition.$StyleURL);
+
+			/* A Component of a base or of Traits: their layers merged, once they are all here. */
+			if (definition.$Extends !== undefined || definition.$Traits !== undefined) {
+				inherited = missingLayers(name, definition);
+
+				if (name)
+					remember(name, definition);
+
+				if (inherited.length) {
+					if (name && definition.$Extends && inherited.some(function (item) {
+						return item.Type === 'Component';
+					})) {
+						checkCycle(name, definition.$Extends);
+
+						waiting[name] = definition.$Extends;
+					}
+
+					return createInheritingFactory(name, definition, inherited);
+				}
+
+				delete waiting[name];
+
+				definition = composeDefinition(name, definition);
+			}
 
 			if (generationOverride === undefined && name && previousFactory && !previousFactory.ElemenxLazy)
 				generation++;
@@ -6675,6 +7179,8 @@
 				var structural = null;
 				var parentComponent = null;
 				var componentEvents = {};
+				/* The names of the props of the tag the definition does not declare ($Open). */
+				var openNames = {};
 				var asleep = null;
 				var seenOuter;
 				var listed;
@@ -6780,6 +7286,9 @@
 							if (own(next, key)) {
 								if (!directState && String(key).charAt(0) === '$')
 									throw new Error('Elemenx component value uses reserved $ namespace: ' + key);
+
+								if (!directState && !own(definition, key))
+									openNames[key] = true;
 
 								values[key] = next[key];
 							}
@@ -6968,6 +7477,23 @@
 							throw new Error('Elemenx $Copy: ' + (name || 'the Component') + ' was not made from a tag of a template');
 
 						return make(props);
+					},
+					$Super: function (method) {
+						return Runtime.CallSuper(api, name, method, Array.prototype.slice.call(arguments, 1));
+					},
+					$Open: function () {
+						var result = {};
+						var key;
+
+						if (!definition.$Open)
+							throw new Error('Elemenx $Open: ' + (name || 'the Component') + ' is not $Open');
+
+						for (key in openNames) {
+							if (own(openNames, key))
+								result[key] = values[key];
+						}
+
+						return result;
 					},
 					$Destroy: Destroy
 				};
@@ -7462,10 +7988,19 @@
 		};
 
 		Elemenx.Component = function (name, definition) {
+			var factory;
+
 			if (arguments.length === 1)
 				return Runtime.ResolveComponent(name);
 
-			if (arguments.length === 2 && typeof name === 'string') return CreateComponentFactory(name, definition || {});
+			if (arguments.length === 2 && typeof name === 'string') {
+				factory = CreateComponentFactory(name, definition || {});
+
+				/* The Components that extend this one, or wait for it, are made of it now. */
+				reinherit(name);
+
+				return factory;
+			}
 
 			throw new Error('Elemenx.Component expects (name) or (name, definition)');
 		};
@@ -19478,9 +20013,20 @@
 		 * the start of the page, and at the latest data-timeout milliseconds after it; it fades (the class
 		 * elemenx-splash-out) and leaves the page. Elemenx.Splash.Hold() keeps it past the ready until Hide(), which takes
 		 * it away; Visible() tells whether it is still there.
+		 *
+		 * A splash with data-progress shows the percent of the page loaded: data-total is the bytes of the scripts and
+		 * styles of the page (the build writes it), counted as they come (the resources of the Performance API), at most
+		 * 95 until the ready, then 100. Progress(percent) gives the percent of the Application itself instead (the data it
+		 * loads while it holds the splash). The percent is data-progress and the CSS variable --elemenx-splash-progress
+		 * of the splash, the aria-valuenow of its .elemenx-splash-progress and the text of its .elemenx-splash-percent.
 		 */
 		var held = 0;
 		var hidden = null;
+		var shown = -1;
+		var manual = false;
+		var counted = {};
+		var loaded = 0;
+		var tracker = null;
 
 		function node () {
 			return Runtime.HasDOM ? global.document.getElementById('elemenx-splash') : null;
@@ -19491,11 +20037,94 @@
 			return global.performance && typeof global.performance.now === 'function' ? global.performance.now() : 0;
 		}
 
+		/* A percent shown: the attribute and the CSS variable of the splash, its bar for screen readers and its text. */
+		function show (percent) {
+			var element = node();
+			var value;
+			var bar;
+			var text;
+
+			if (!element || element === hidden) return;
+
+			value = Math.max(0, Math.min(100, Math.round(Number(percent) || 0)));
+			shown = value;
+			bar = element.querySelector('.elemenx-splash-progress');
+			text = element.querySelector('.elemenx-splash-percent');
+
+			element.setAttribute('data-progress', String(value));
+			element.style.setProperty('--elemenx-splash-progress', String(value));
+
+			if (bar)
+				bar.setAttribute('aria-valuenow', String(value));
+
+			if (text)
+				text.textContent = value + '%';
+		}
+
+		/* The bytes of the resources loaded so far, each once, of the data-total of the splash: never back, at most 95. */
+		function count (entries) {
+			var element = node();
+			var total = element ? Number(element.getAttribute('data-total')) || 0 : 0;
+			var i;
+
+			if (manual || !element || element === hidden || total <= 0) return;
+
+			for (i = 0; i < entries.length; i++) {
+				if (counted[entries[i].name]) continue;
+
+				counted[entries[i].name] = true;
+				loaded += Number(entries[i].decodedBodySize) || 0;
+			}
+
+			if (Math.min(95, loaded / total * 100) > shown)
+				show(Math.min(95, loaded / total * 100));
+		}
+
+		/* Counting starts once the page has a splash with data-progress and data-total. */
+		function track () {
+			var element = node();
+			var performance = global.performance;
+
+			if (tracker || manual || !element || !element.hasAttribute('data-progress') || !(Number(element.getAttribute('data-total')) > 0)) return;
+			if (!performance || typeof performance.getEntriesByType !== 'function') return;
+
+			count(performance.getEntriesByType('resource'));
+
+			if (typeof global.PerformanceObserver !== 'function') return;
+
+			tracker = new global.PerformanceObserver(function (list) {
+				count(list.getEntries());
+			});
+
+			try {
+				tracker.observe({type: 'resource', buffered: true});
+			}
+			catch (error) {
+				tracker.observe({entryTypes: ['resource']});
+			}
+		}
+
+		function untrack () {
+			if (tracker)
+				tracker.disconnect();
+
+			tracker = null;
+		}
+
 		function hide () {
 			var element = node();
 			if (!element || element === hidden) return;
 
+			if (element.hasAttribute('data-progress') && !manual)
+				show(100);
+
+			untrack();
+
 			hidden = element;
+			shown = -1;
+			manual = false;
+			counted = {};
+			loaded = 0;
 
 			global.setTimeout(function () {
 				element.classList.add('elemenx-splash-out');
@@ -19513,6 +20142,8 @@
 			var timeout = element ? Number(element.getAttribute('data-timeout')) || 0 : 0;
 			if (timeout > 0)
 				global.setTimeout(hide, Math.max(0, timeout - since()));
+
+			track();
 		}
 
 		Runtime.Splash = {
@@ -19525,6 +20156,20 @@
 		Elemenx.Splash = {
 			Hold: function () {
 				held++;
+
+				track();
+
+				return Elemenx.Splash;
+			},
+			Progress: function (percent) {
+				if (!arguments.length)
+					return shown < 0 ? null : shown;
+
+				manual = true;
+
+				untrack();
+
+				show(percent);
 
 				return Elemenx.Splash;
 			},

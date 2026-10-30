@@ -23,4 +23,4 @@
 
 ## Тесты
 
-- [*resizable adds its handles, and the arrow keys on a handle resize the element within its bounds](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-directives.test.js#L111) — `tests/regression/library-directives.test.js`
+- [*resizable adds its handles, and the arrow keys on a handle resize the element within its bounds](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-directives.test.js#L139) — `tests/regression/library-directives.test.js`

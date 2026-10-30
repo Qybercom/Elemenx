@@ -32,8 +32,8 @@ npx elemenx designer --open
 A page with no build and no server takes the distribution from a CDN or from `node_modules/@qybercom/elemenx/dist` (see "Distribution of the framework" in `docs/BUILDER.md`):
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/@qybercom/elemenx@0.11/dist/elemenx.all.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@qybercom/elemenx@0.11/dist/elemenx-ui.emoji.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@qybercom/elemenx@0.12/dist/elemenx.all.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@qybercom/elemenx@0.12/dist/elemenx-ui.emoji.min.js"></script>
 ```
 
 `elemenx.all.min.js` is the framework and ElemenxUI; the scripts of the packs (`emoji`, `emoji.ru`, `brands`, `files`) are needed only by the pages that use them.

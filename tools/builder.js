@@ -46,8 +46,9 @@ function entityType (file, root, source) {
 	if (relative.indexOf('services/') === 0) return 'Service';
 	if (relative.indexOf('guards/') === 0) return 'Guard';
 	if (relative.indexOf('directives/') === 0) return 'Directive';
+	if (relative.indexOf('traits/') === 0) return 'Trait';
 
-	match = /\bElemenx\.(Component|Service|Guard|Directive)\s*\(/.exec(source || '');
+	match = /\bElemenx\.(Component|Service|Guard|Directive|Trait)\s*\(/.exec(source || '');
 
 	if (match)
 		return match[1];
@@ -152,7 +153,7 @@ function scan (directory, root, entities, visited, declaredNames, min, meta, gra
 			var name = path.basename(target, '.js');
 			var source = fs.readFileSync(target, 'utf8');
 			var type = entityType(target, root, source);
-			var declared = declaredNames ? /\bElemenx\.(?:Component|Service|Guard|Directive)\s*\(\s*(['\"])([^'\"]+)\1/.exec(source) : null;
+			var declared = declaredNames ? /\bElemenx\.(?:Component|Service|Guard|Directive|Trait)\s*\(\s*(['\"])([^'\"]+)\1/.exec(source) : null;
 			if (declared)
 				name = declared[2];
 
@@ -613,12 +614,12 @@ function libraryRoots (project, appSource) {
 
 /*
  * Whether a text uses a Component: by its tag, or by its name as code makes it, Component: 'Name' (a window that
- * Platform.OpenWindow or Platform.TrayPopup opens) or Elemenx.Component('Name').
+ * Platform.OpenWindow or Platform.TrayPopup opens), Elemenx.Component('Name') or $Extends: 'Name' (its base).
  */
 function sourceUsesComponent (source, name) {
 	var escaped = String(name).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-	return new RegExp('<\\s*' + escaped + '(?:\\s|/?>)|\\bComponent\\s*(?::|\\(\\s*)\\s*([\'"])' + escaped + '\\1').test(source || '');
+	return new RegExp('<\\s*' + escaped + '(?:\\s|/?>)|(?:\\bComponent|\\$Extends)\\s*(?::|\\(\\s*)\\s*([\'"])' + escaped + '\\1').test(source || '');
 }
 
 /* Marks in shared the Services, Guards and Directives of a Library that the Application does not define: every Application gets them. */
@@ -803,6 +804,57 @@ function minifier (relative) {
 	if (/\.json$/i.test(relative)) return Minify.JSON;
 
 	return null;
+}
+
+/* The address the site is served from (Base, --base): '/ui/' of ui, /ui or /ui/; a URL as it is, with its slash; '' for the root. */
+function baseOf (value) {
+	var text = String(value || '').trim();
+	if (!text || text === '/') return '';
+	if (/^([a-z][a-z0-9+.-]*:)?\/\//i.test(text)) return text.replace(/\/*$/, '/');
+
+	return '/' + text.replace(/^\/+|\/+$/g, '') + '/';
+}
+
+/*
+ * A page served from a folder: its relative paths (src and href of its scripts, styles, icons, pictures) taken from
+ * the base, so /ui and /ui/settings load the files of /ui/ as /ui/ does; the scripts of text of its templates are left
+ * as they are.
+ */
+function based (page, base) {
+	return page.split(/(<script\b[^>]*\btype="text\/html"[^>]*>[\s\S]*?<\/script>)/i).map(function (part, index) {
+		if (index % 2) return part;
+
+		return part.replace(/(<(?:script|link|img|source)\b[^>]*?\s(?:src|href)=")([^"]*)(")/gi, function (whole, before, value, after) {
+			if (!value || /^(?:[a-z][a-z0-9+.-]*:|\/|#|\?|\{)/i.test(value)) return whole;
+
+			return before + base + value.replace(/^\.\//, '') + after;
+		});
+	}).join('');
+}
+
+/* The bytes of the scripts and stylesheets a page names that are files of the build (not of another site). */
+function pageBytes (page, output, base) {
+	var total = 0;
+	var tags = page.match(/<script\b[^>]*\ssrc="[^"]*"[^>]*>|<link\b[^>]*>/gi) || [];
+
+	tags.forEach(function (tag) {
+		var found = /\s(?:src|href)="([^"]*)"/i.exec(tag);
+		var address = found ? found[1].split(/[?#]/)[0] : '';
+		var file;
+
+		if (/^<link/i.test(tag) && !/\srel="stylesheet"/i.test(tag)) return;
+		if (!address || /^(?:[a-z][a-z0-9+.-]*:)?\/\//i.test(address) || /^[a-z][a-z0-9+.-]*:/i.test(address)) return;
+
+		if (base && address.indexOf(base) === 0)
+			address = address.substring(base.length);
+
+		file = path.join(output, address.replace(/^\/+/, ''));
+
+		if (fs.existsSync(file) && fs.statSync(file).isFile())
+			total += fs.statSync(file).size;
+	});
+
+	return total;
 }
 
 /*
@@ -1056,6 +1108,11 @@ function build (project, options) {
 	});
 
 	var productionIndex = fs.readFileSync(index, 'utf8');
+	var base = baseOf(options.base);
+	if (base)
+		libraryStyleHrefs = libraryStyleHrefs.map(function (href) {
+			return base + href.replace(/^\/+/, '');
+		});
 
 	if (libraryStyleHrefs.length) {
 		var styleMarkup = libraryStyleHrefs.map(function (href) { return '<link rel="stylesheet" href="' + href + '">'; }).join('\n');
@@ -1076,6 +1133,9 @@ function build (project, options) {
 	if (icon)
 		productionIndex = AppIcon.Page(productionIndex, icon, output, false);
 
+	if (base)
+		productionIndex = based(productionIndex, base);
+
 	fs.writeFileSync(path.join(output, 'index.html'), productionIndex);
 
 	/* Minified unless readable: the framework with its banner (its version) and short local names, the code in its parts (see minified). */
@@ -1092,6 +1152,13 @@ function build (project, options) {
 	writePieces(output, pieces ? pieces.Parts : [], options.minify === false, function (code) {
 		return code;
 	});
+
+	/* The bytes the splash counts its percent of (Splash.Progress): the scripts and stylesheets of the page, as written. */
+	if (productionIndex.indexOf('data-total="0"') !== -1) {
+		productionIndex = productionIndex.replace('data-total="0"', 'data-total="' + pageBytes(productionIndex, output, base) + '"');
+
+		fs.writeFileSync(path.join(output, 'index.html'), productionIndex);
+	}
 
 	/* An installable application of the system, last: its worker keeps every file of the build (see pwa.js). */
 	var pwa = PWA.Settings(project, options.pwa, productionIndex, output, options.splash === false ? null : Splash.Settings(project, options.splash), AppIcon.ManifestIcons(icon));

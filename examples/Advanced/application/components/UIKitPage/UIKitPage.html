@@ -184,7 +184,7 @@
 		<div class="ui-kit-lazy" *lazy>
 			<div class="ui-kit-grid">
 				<div class="elemenx-column ui-kit-themes">
-					<Field Label="Theme" Hint="contrast, darcula and soft come with the Library; Mine is made by the editor."><Select [options]="ThemeOptions" [value]="ThemeName" (change)="ThemeChosen" /></Field>
+					<Field Label="Theme" Hint="contrast, darcula, soft and glassy come with the Library; Mine is made by the editor."><Select [options]="ThemeOptions" [value]="ThemeName" (change)="ThemeChosen" /></Field>
 					<Field Label="Scheme"><RadioGroup Variant="segmented" [options]="ThemeSchemes" [value]="ThemePolicy" (change)="PolicyChosen" /></Field>
 					<p class="elemenx-text">A theme is one CSS file whose rules start with <code class="elemenx-code">[data-theme][data-theme='name']</code>: tokens of the theme, and the rules of any Component by its classes. The whole page is its preview.</p>
 					<div class="ui-kit-theme-scope" data-theme="darcula" data-scheme="dark">
@@ -201,6 +201,12 @@
 							<Checkbox Label="Checked" Checked="true" Size="small" />
 							<Input Placeholder="A field" Size="small" />
 						</div>
+					</div>
+					<div class="ui-kit-glass">
+						<span class="ui-kit-glass-sun"></span>
+						<span class="ui-kit-glass-hill"></span>
+						<div class="ui-kit-glass-card" *blur><strong>*blur</strong><span class="elemenx-caption">Frosted glass of the theme: the theme glassy gives it to its dialogs, menus and toasts.</span></div>
+						<div class="ui-kit-glass-card" *blur="{Radius: 6, Tint: 0.25}"><strong>Radius 6, tint 0.25</strong><span class="elemenx-caption">Clearer glass, less blur.</span></div>
 					</div>
 				</div>
 				<div class="elemenx-column ui-kit-theme-editor">
@@ -698,6 +704,78 @@
 						<span class="ui-kit-world-resources"><span>Gold 1 250</span><span>Wood 840</span><span>Food 410</span></span>
 					</div>
 				</GameWorld>
+			</div>
+		</div>
+	</Section>
+
+	<Section *if="Shows('Space')" Title="Space" [note]="SpaceNote || 'GameScene · GameObject · Kinds: a drag turns, the wheel zooms, a click selects, a double click flies to a body'">
+		<div class="ui-kit-lazy" *lazy>
+			<div class="ui-kit-row">
+				<RadioGroup Variant="segmented" Label="System" [options]="SpaceSystems" [value]="SpaceSystem" (change)="SpaceChosen" />
+				<Button Label="Another seed" Icon="refresh" Variant="ghost" *if="SpaceSystem === 'seed'" (click)="SpaceReseeded" />
+				<Toggle Label="Orbits" [checked]="SpaceOrbits" (change)="SpaceOrbited" />
+				<Toggle Label="Real scale" [checked]="SpaceReal" (change)="SpaceScaled" />
+				<Button Icon="pause" Variant="ghost" [label]="SpacePaused ? 'Go on' : 'Hold the time'" [pressed]="SpacePaused" (click)="SpacePausedToggled" />
+				<Button Label="Fleet to Mars" Icon="send" Variant="ghost" *if="SpaceSystem === 'sol'" (click)="SpaceSent" />
+			</div>
+			<div class="ui-kit-space">
+				<GameScene *if="SpaceSystem === 'sol'" Team="blue" Speed="4" [orbits]="SpaceOrbits" [scale]="SpaceReal ? 'real' : 'compressed'" [paused]="SpacePaused" (ready)="SpaceReady" (select)="SpaceSelected" (focus)="SpaceFocused" (arrive)="SpaceArrived">
+					<GameObject ID="sun" Kind="star" Name="Sun" Mass="1">
+						<GameObject ID="mercury" Name="Mercury" Kind="planet" Surface-Type="rocky" Radius="2440" Mass="0.055" Distance="0.387" Eccentricity="0.206" Inclination="7" Node="48" Periapsis="29" Anomaly="174" Day="1408" />
+						<GameObject ID="venus" Name="Venus" Kind="planet" Surface-Type="desert" Radius="6052" Mass="0.815" Distance="0.723" Eccentricity="0.007" Inclination="3.4" Node="77" Periapsis="55" Anomaly="50" Day="-5832" Tilt="177" Clouds="1" Atmosphere="#f0d9a0" Colors="#8a6a3a, #c49a5a, #e3c48a, #f4e2b8" />
+						<GameObject ID="earth" Name="Earth" Kind="planet" Surface-Type="terran" Radius="6371" Mass="1" Distance="1" Eccentricity="0.017" Periapsis="114" Anomaly="358" Day="23.93" Tilt="23.4">
+							<GameObject ID="moon" Name="Moon" Kind="moon" Surface-Type="moon" Radius="1737" Mass="0.0123" Distance="384400 km" Eccentricity="0.055" Inclination="5.1" Day="0" />
+						</GameObject>
+						<GameObject ID="mars" Name="Mars" Kind="planet" Surface-Type="desert" Radius="3390" Mass="0.107" Distance="1.524" Eccentricity="0.093" Inclination="1.85" Node="49" Periapsis="286" Anomaly="19" Day="24.6" Tilt="25.2" Ice="0.08" Colors="#5a2a18, #9a4a28, #c26a3a, #e0a070">
+							<GameObject ID="phobos" Name="Phobos" Kind="moon" Surface-Type="moon" Radius="11" Distance="9376 km" Day="0" />
+							<GameObject ID="deimos" Name="Deimos" Kind="moon" Surface-Type="moon" Radius="6" Distance="23460 km" Day="0" />
+						</GameObject>
+						<GameObject ID="main-belt" Kind="belt" Name="Main belt" Inner="2.2" Outer="3.2" Count="320" Inclination="2" />
+						<GameObject ID="jupiter" Name="Jupiter" Kind="planet" Surface-Type="gas" Radius="69911" Mass="317.8" Distance="5.203" Eccentricity="0.048" Inclination="1.3" Node="100" Periapsis="274" Anomaly="20" Day="9.93" Tilt="3.1">
+							<GameObject ID="io" Name="Io" Kind="moon" Surface-Type="lava" Radius="1822" Distance="421700 km" Day="0" />
+							<GameObject ID="europa" Name="Europa" Kind="moon" Surface-Type="ice" Radius="1561" Distance="671000 km" Day="0" />
+							<GameObject ID="ganymede" Name="Ganymede" Kind="moon" Surface-Type="moon" Radius="2634" Distance="1070400 km" Day="0" />
+							<GameObject ID="callisto" Name="Callisto" Kind="moon" Surface-Type="moon" Radius="2410" Distance="1882700 km" Day="0" />
+						</GameObject>
+						<GameObject ID="saturn" Name="Saturn" Kind="planet" Surface-Type="gas" Radius="58232" Mass="95.2" Distance="9.537" Eccentricity="0.054" Inclination="2.5" Node="113" Periapsis="339" Anomaly="317" Day="10.7" Tilt="26.7" Colors="#b89a6a, #d8c08e, #ecdcb4, #c8a46a">
+							<GameObject ID="saturn-rings" Kind="ring" Name="Rings of Saturn" Inner="1.24" Outer="2.27" />
+							<GameObject ID="titan" Name="Titan" Kind="moon" Surface-Type="desert" Radius="2575" Distance="1221870 km" Day="0" Clouds="1" Atmosphere="#e0a050" />
+						</GameObject>
+						<GameObject ID="uranus" Name="Uranus" Kind="planet" Surface-Type="ice-giant" Radius="25362" Mass="14.5" Distance="19.19" Eccentricity="0.047" Inclination="0.8" Node="74" Periapsis="97" Anomaly="142" Day="-17.2" Tilt="97.8" Colors="#7fc4d8, #9ad8e4, #bfe8ee, #6aaec4" />
+						<GameObject ID="neptune" Name="Neptune" Kind="planet" Surface-Type="ice-giant" Radius="24622" Mass="17.1" Distance="30.07" Eccentricity="0.009" Inclination="1.8" Node="132" Periapsis="273" Anomaly="256" Day="16.1" Tilt="28.3">
+							<GameObject ID="triton" Name="Triton" Kind="moon" Surface-Type="ice" Radius="1353" Distance="354759 km" Inclination="157" Day="0" />
+						</GameObject>
+					</GameObject>
+					<GameObject ID="gateway" Kind="station" Name="Gateway" Parent="earth" Team="blue" />
+					<GameObject ID="ares" Kind="outpost" Name="Ares outpost" Parent="mars" Team="red" Distance="2.2" />
+					<GameObject ID="first" Kind="fleet" Name="First fleet" Parent="earth" Team="blue" Count="5" />
+					<GameObject ID="haulers" Kind="fleet" Name="Haulers" Ship="freighter" Parent="jupiter" Team="yellow" Count="3" />
+					<div slot="hud" class="ui-kit-space-hud"><span>Day {{SpaceDay}}</span></div>
+				</GameScene>
+				<GameScene *if="SpaceSystem === 'seed'" Team="blue" Speed="4" [seed]="SpaceSeed" [orbits]="SpaceOrbits" [scale]="SpaceReal ? 'real' : 'compressed'" [paused]="SpacePaused" (ready)="SpaceReady" (select)="SpaceSelected" (focus)="SpaceFocused">
+					<div slot="hud" class="ui-kit-space-hud"><span>Seed {{SpaceSeed}}</span></div>
+				</GameScene>
+			</div>
+		</div>
+	</Section>
+
+	<Section *if="Shows('Terrain')" Title="Terrain" [note]="TerrainNote || 'GameScene · a ground of the Terrain Service: a drag turns, the wheel zooms, WASD moves, a click selects a unit, a right click sends it'">
+		<div class="ui-kit-lazy" *lazy>
+			<div class="ui-kit-row">
+				<Button Label="To the lake" Icon="map-pin" Variant="ghost" (click)="TerrainLake" />
+				<Button Label="All to the village" Icon="home" Variant="ghost" (click)="TerrainVillage" />
+				<Button Label="Save" Icon="save" Variant="ghost" (click)="TerrainSave" />
+				<Button Label="Load" Icon="refresh" Variant="ghost" [disabled]="!TerrainSaved" (click)="TerrainLoad" />
+			</div>
+			<div class="ui-kit-space">
+				<GameScene Setting="terrain" Team="blue" Labels="true" (ready)="TerrainReady" (select)="TerrainSelected" (arrive)="TerrainArrived">
+					<GameObject ID="valley" Kind="ground" Size="900" Height="55" Water="0.32" Seed="valley" />
+					<GameObject ID="sun" Kind="sun" Elevation="38" Azimuth="150" />
+					<GameObject *for="unit of TerrainUnits" *key="unit.ID" Kind="unit" [id]="unit.ID" [name]="unit.Name" [x]="unit.X" [y]="unit.Y" Team="blue" />
+					<GameObject *for="tree of TerrainTrees" *key="tree.ID" Kind="tree" [id]="tree.ID" [x]="tree.X" [y]="tree.Y" />
+					<GameObject *for="house of TerrainHouses" *key="house.ID" Kind="house" [id]="house.ID" [name]="house.Name" [x]="house.X" [y]="house.Y" />
+					<GameObject ID="boulder" Kind="rock" X="30" Y="-20" />
+				</GameScene>
 			</div>
 		</div>
 	</Section>

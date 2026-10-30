@@ -457,8 +457,28 @@ function create (options) {
 		}
 
 		fs.stat(file, function (error, stat) {
+			var query = request.url.indexOf('?') === -1 ? '' : request.url.substring(request.url.indexOf('?'));
+			var folder;
+
 			if (!error && stat.isFile()) {
 				send(request, response, file);
+
+				return;
+			}
+
+			/*
+			 * A folder is its index.html, at its address with a slash: /ui goes to /ui/ (as nginx and Apache do), or the
+			 * paths of its page (elemenx.js, app.js) would be taken from the root.
+			 */
+			if (!error && stat.isDirectory() && fs.existsSync(path.join(file, 'index.html'))) {
+				if (pathname.charAt(pathname.length - 1) !== '/') {
+					response.writeHead(301, {'Location': encodeURI(pathname) + '/' + query});
+					response.end();
+
+					return;
+				}
+
+				send(request, response, path.join(file, 'index.html'));
 
 				return;
 			}
@@ -470,7 +490,13 @@ function create (options) {
 				return;
 			}
 
-			send(request, response, path.join(root, 'index.html'));
+			/* A route of an application in a folder (/ui/settings) is the page of that folder, the nearest one with an index.html. */
+			folder = path.dirname(file);
+
+			while (folder.indexOf(prefix) === 0 && !fs.existsSync(path.join(folder, 'index.html')))
+				folder = path.dirname(folder);
+
+			send(request, response, folder.indexOf(prefix) === 0 ? path.join(folder, 'index.html') : path.join(root, 'index.html'));
 		});
 	});
 

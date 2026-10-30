@@ -17,6 +17,7 @@
 Elemenx.Component('Mosaic', {
 	$TemplateURL: 'Mosaic.html',
 	$StyleURL: 'Mosaic.css',
+	$Traits: ['Declared'],
 	$Meta: {
 		Group: 'layout',
 		Icon: 'grid',
@@ -81,26 +82,13 @@ Elemenx.Component('Mosaic', {
 		};
 	},
 
+	/* The MosaicItem declared inside it (the Trait Declared reads them). */
+	DeclaredSources: '.elemenx-mosaic-sources',
+
 	$OnReady: function () {
 		var self = this;
 		var own = this.Own();
 		var element = this.$Element();
-		var sources = element.querySelector('.elemenx-mosaic-sources');
-
-		own.Read = function () {
-			var before = JSON.stringify(own.Declared);
-
-			own.Declared = self.Declarations(sources);
-
-			if (JSON.stringify(own.Declared) !== before)
-				self.Version++;
-		};
-
-		own.Watcher = new MutationObserver(own.Read);
-
-		own.Watcher.observe(sources, {subtree: true, childList: true, attributes: true, attributeFilter: ['data-item']});
-
-		own.Read();
 
 		own.Measure = function () {
 			if (element.clientWidth && element.clientWidth !== self.Room)
@@ -123,9 +111,6 @@ Elemenx.Component('Mosaic', {
 
 	$OnDestroy: function () {
 		var own = this.Own();
-		if (own.Watcher)
-			own.Watcher.disconnect();
-
 		if (own.Sizes)
 			own.Sizes.disconnect();
 

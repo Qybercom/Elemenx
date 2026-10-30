@@ -94,7 +94,7 @@ function definitions (file) {
 	};
 	var sandbox = {
 		/* The rest of the framework a script names at its top (Elemenx.Network.Protocol(...)) answers nothing too. */
-		Elemenx: new Proxy({Component: record('Component'), Service: record('Service'), Directive: record('Directive'), Guard: record('Guard')}, {
+		Elemenx: new Proxy({Component: record('Component'), Service: record('Service'), Directive: record('Directive'), Guard: record('Guard'), Trait: record('Trait')}, {
 			get: function (target, key) {
 				return Object.prototype.hasOwnProperty.call(target, key) ? target[key] : nothing;
 			}
@@ -114,6 +114,90 @@ function definitions (file) {
 	}
 
 	return found;
+}
+
+/* The $Meta of two layers, as the framework merges them: the later wins its texts, the lists add up (keep both the same). */
+function mergeMeta (under, over) {
+	var result;
+	var events;
+
+	if (!under || typeof under !== 'object') return over;
+	if (!over || typeof over !== 'object') return under;
+
+	result = Object.assign({}, under, over);
+	result.Props = Object.assign({}, under.Props || {}, over.Props || {});
+
+	if (Array.isArray(under.Events || []) && Array.isArray(over.Events || [])) {
+		result.Events = union(under.Events || [], over.Events || []);
+	}
+	else {
+		events = {};
+
+		[under.Events, over.Events].forEach(function (list) {
+			if (Array.isArray(list)) {
+				list.forEach(function (event) {
+					if (!Object.prototype.hasOwnProperty.call(events, event))
+						events[event] = '';
+				});
+			}
+			else {
+				Object.assign(events, list || {});
+			}
+		});
+
+		result.Events = events;
+	}
+
+	['Methods', 'Slots', 'Children'].forEach(function (field) {
+		if (under[field] || over[field])
+			result[field] = union(under[field] || [], over[field] || []);
+	});
+
+	return result;
+}
+
+function union (a, b) {
+	return a.concat(b.filter(function (item) {
+		return a.indexOf(item) === -1;
+	}));
+}
+
+/*
+ * A definition of a base ($Extends) and of Traits ($Traits) made whole, as the framework makes it: the values and the
+ * $Meta of the base, then of the Traits in order, then its own. bases: the Components by name, traits the Traits.
+ */
+function compose (name, definition, bases, traits, chain) {
+	var layers = [];
+	var seen = {};
+	var result = {};
+
+	chain = (chain || []).concat([name]);
+
+	function addTrait (trait) {
+		if (seen[trait] || !traits[trait]) return;
+
+		seen[trait] = true;
+
+		(traits[trait].$Traits || []).forEach(addTrait);
+
+		layers.push(traits[trait]);
+	}
+
+	if (definition.$Extends && bases[definition.$Extends] && chain.indexOf(definition.$Extends) === -1)
+		layers.push(compose(definition.$Extends, bases[definition.$Extends], bases, traits, chain));
+
+	(definition.$Traits || []).forEach(addTrait);
+
+	layers.push(definition);
+
+	layers.forEach(function (layer) {
+		Object.keys(layer).forEach(function (key) {
+			if (key === '$Meta') result.$Meta = mergeMeta(result.$Meta, layer.$Meta);
+			else if (key !== '$Extends' && key !== '$Traits') result[key] = layer[key];
+		});
+	});
+
+	return result;
 }
 
 /* The classes of a stylesheet (elemenx-*) with the modifier classes they are combined with. */
@@ -150,6 +234,9 @@ function Build (library, output) {
 	var index = path.join(library, 'index.js');
 	var files;
 	var result = {Components: [], Services: [], Directives: [], Classes: {}};
+	var entries = [];
+	var bases = {};
+	var traits = {};
 
 	if (!fs.existsSync(index))
 		fail('Elemenx meta: no index.js in ' + library);
@@ -160,11 +247,7 @@ function Build (library, output) {
 		var full = path.join(library, file);
 
 		if (/\.js$/.test(file)) {
-			definitions(full).forEach(function (entry) {
-				var meta = normalize(entry.Name, entry.Kind, entry.Definition);
-				if (meta && result[entry.Kind + 's'])
-					result[entry.Kind + 's'].push(meta);
-			});
+			entries = entries.concat(definitions(full));
 
 			if (fs.existsSync(full.replace(/\.js$/, '.css')))
 				classes(fs.readFileSync(full.replace(/\.js$/, '.css'), 'utf8'), result.Classes);
@@ -172,6 +255,19 @@ function Build (library, output) {
 		else if (/\.css$/.test(file) && file.indexOf('themes/') !== 0) {
 			classes(fs.readFileSync(full, 'utf8'), result.Classes);
 		}
+	});
+
+	/* The Components of a base or of Traits, made whole first: their meta is the one of all of their layers. */
+	entries.forEach(function (entry) {
+		if (entry.Kind === 'Component') bases[entry.Name] = entry.Definition;
+		else if (entry.Kind === 'Trait') traits[entry.Name] = entry.Definition;
+	});
+
+	entries.forEach(function (entry) {
+		var definition = entry.Kind === 'Component' && (entry.Definition.$Extends || entry.Definition.$Traits) ? compose(entry.Name, entry.Definition, bases, traits) : entry.Definition;
+		var meta = normalize(entry.Name, entry.Kind, definition);
+		if (meta && result[entry.Kind + 's'])
+			result[entry.Kind + 's'].push(meta);
 	});
 
 	Object.keys(result.Classes).forEach(function (name) {

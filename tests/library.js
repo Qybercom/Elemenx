@@ -2,13 +2,15 @@
  * The parts of ElemenxUI for the browser contracts: the page of the tests serves no Library, so a test defines the
  * Components, Services and Directives it needs from their sources, the templates and the styles inline. Use(names)
  * defines them and what they use in turn: the Components of their templates, the Services they ask for ($Service) and
- * the Directives of their templates. The phrases of ElemenxUI in English come with them (Elemenx.Locale).
+ * the Directives of their templates, their Traits ($Traits) and their bases ($Extends). The phrases of ElemenxUI in
+ * English come with them (Elemenx.Locale).
  */
 import english from '../libraries/ElemenxUI/locales/en.json';
 
 var components = import.meta.glob('../libraries/ElemenxUI/components/*/*.{js,html,css}', {query: '?raw', import: 'default', eager: true});
 var services = import.meta.glob('../libraries/ElemenxUI/services/*.js', {query: '?raw', import: 'default', eager: true});
 var directives = import.meta.glob('../libraries/ElemenxUI/directives/*.js', {query: '?raw', import: 'default', eager: true});
+var traits = import.meta.glob('../libraries/ElemenxUI/traits/*.js', {query: '?raw', import: 'default', eager: true});
 var defined = {};
 
 function file (list, name) {
@@ -21,11 +23,13 @@ function file (list, name) {
 
 /* The names of the Components of the Library a text names as tags, of the Services it asks for and of its directives. */
 function wants (text) {
-	var found = {Components: [], Services: [], Directives: []};
+	var found = {Components: [], Services: [], Directives: [], Traits: []};
 	var match;
 	var tags = /<([A-Z]\w*)\b/g;
 	var asked = /\$Service\(\s*'(\w+)'/g;
 	var marks = /\s\*([a-z]\w*)\b/g;
+	var extended = /\$Extends\s*:\s*(['"])(\w+)\1/g;
+	var listed = /\$Traits\s*:\s*\[([^\]]*)\]/g;
 
 	while ((match = tags.exec(text)))
 		found.Components.push(match[1]);
@@ -35,6 +39,15 @@ function wants (text) {
 
 	while ((match = marks.exec(text)))
 		found.Directives.push(match[1]);
+
+	while ((match = extended.exec(text)))
+		found.Components.push(match[2]);
+
+	while ((match = listed.exec(text))) {
+		(match[1].match(/'[^']+'|"[^"]+"/g) || []).forEach(function (name) {
+			found.Traits.push(name.slice(1, -1));
+		});
+	}
 
 	return found;
 }
@@ -82,7 +95,19 @@ function component (name) {
 		Elemenx.Style('test:' + name, style);
 }
 
+function trait (name) {
+	var source = file(traits, name + '.js');
+	if (defined['trait:' + name] || !source) return;
+
+	defined['trait:' + name] = true;
+
+	need(wants(source));
+
+	new Function(source)();
+}
+
 function need (found) {
+	found.Traits.forEach(trait);
 	found.Services.forEach(service);
 	found.Directives.forEach(directive);
 	found.Components.forEach(component);

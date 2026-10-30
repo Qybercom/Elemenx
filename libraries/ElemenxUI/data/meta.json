@@ -3183,7 +3183,7 @@
 			"Kind": "Component",
 			"Group": "game",
 			"Icon": "user",
-			"Description": "A unit of a GameWorld: where it stands, its team, its health, its speed and its sight.",
+			"Description": "Deprecated (the 2D world will be made of GameScene and GameObject): a unit of a GameWorld, where it stands, its team, its health, its speed and its sight.",
 			"Props": [
 				{
 					"Name": "ID",
@@ -3314,7 +3314,7 @@
 			"Kind": "Component",
 			"Group": "game",
 			"Icon": "home",
-			"Description": "A building of a GameWorld: the cells it takes, its team, its colors and its health.",
+			"Description": "Deprecated (the 2D world will be made of GameScene and GameObject): a building of a GameWorld, the cells it takes, its team, its colors and its health.",
 			"Props": [
 				{
 					"Name": "ID",
@@ -3472,8 +3472,8 @@
 			"Name": "GameObject",
 			"Kind": "Component",
 			"Group": "game",
-			"Icon": "leaf",
-			"Description": "A thing of a GameWorld: a tree, a rock, a resource; whether it blocks the way and hides.",
+			"Icon": "shapes",
+			"Description": "An object of a game of any kind: its Kind gives its traits and parts, every other attribute is a field of it.",
 			"Props": [
 				{
 					"Name": "ID",
@@ -3482,16 +3482,52 @@
 					"Options": null,
 					"Schema": null,
 					"Body": false,
-					"Description": "The ID of the thing."
+					"Description": "The ID of the object."
 				},
 				{
 					"Name": "Kind",
 					"Type": "text",
-					"Default": "tree",
+					"Default": "",
 					"Options": null,
 					"Schema": null,
 					"Body": false,
-					"Description": "What it is: tree, rock, or a name of your own."
+					"Description": "Its kind (the Kinds Service): planet, station, fleet, tree, or one of your own."
+				},
+				{
+					"Name": "Name",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its name."
+				},
+				{
+					"Name": "Part",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The part of its parent it changes (the part of that ID of the kind of the parent)."
+				},
+				{
+					"Name": "Parent",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "What it goes round or belongs to, when not the object it is declared in."
+				},
+				{
+					"Name": "Team",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its team."
 				},
 				{
 					"Name": "X",
@@ -3500,7 +3536,7 @@
 					"Options": null,
 					"Schema": null,
 					"Body": false,
-					"Description": "Its cell, across."
+					"Description": "Its place across (a cell of a GameWorld)."
 				},
 				{
 					"Name": "Y",
@@ -3509,7 +3545,7 @@
 					"Options": null,
 					"Schema": null,
 					"Body": false,
-					"Description": "Its cell, down."
+					"Description": "Its place down (a cell of a GameWorld)."
 				},
 				{
 					"Name": "Width",
@@ -3528,15 +3564,6 @@
 					"Schema": null,
 					"Body": false,
 					"Description": "The cells it takes down."
-				},
-				{
-					"Name": "Name",
-					"Type": "text",
-					"Default": "",
-					"Options": null,
-					"Schema": null,
-					"Body": false,
-					"Description": "Its name."
 				},
 				{
 					"Name": "Color",
@@ -3576,16 +3603,17 @@
 				}
 			],
 			"Slots": [],
-			"Container": false,
-			"Children": [],
+			"Container": true,
+			"Children": [
+				"GameObject"
+			],
 			"Current": "",
 			"Events": [],
 			"EventDescriptions": {},
 			"Methods": [],
 			"Sample": {
-				"Kind": "tree",
-				"X": 3,
-				"Y": 3
+				"Kind": "planet",
+				"Name": "Earth"
 			}
 		},
 		{
@@ -3794,6 +3822,227 @@
 						}
 					]
 				}
+			}
+		},
+		{
+			"Name": "GameScene",
+			"Kind": "Component",
+			"Group": "game",
+			"Icon": "star",
+			"Description": "The scene of a game in 3D: objects of any kind with their traits and parts; the setting space brings a star system on Kepler orbits, stations and fleets, with a landing on the surfaces of its bodies; the setting terrain a ground of noise and its walkers.",
+			"Props": [
+				{
+					"Name": "Setting",
+					"Type": "select",
+					"Default": "space",
+					"Options": [
+						"space",
+						"terrain"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "The setting: its kinds and systems (space: a star system; terrain: a ground and its walkers)."
+				},
+				{
+					"Name": "System",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The objects: {Objects: [{ID, Kind, Parent, Values, Traits, Parts, Children}]}."
+				},
+				{
+					"Name": "Seed",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "A whole star system made of a seed (always the same for the same seed)."
+				},
+				{
+					"Name": "Systems",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Systems of the application for traits of its own: {Trait: {Update(object, scene), Draw(object, scene)}}."
+				},
+				{
+					"Name": "Time",
+					"Type": "number",
+					"Default": 0,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The day of the scene."
+				},
+				{
+					"Name": "Speed",
+					"Type": "number",
+					"Default": 1,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The days of the scene a second."
+				},
+				{
+					"Name": "SurfaceSpeed",
+					"Type": "number",
+					"Default": 0.008333333333333333,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The days a second on the surface of a body (1/120: a day of two minutes)."
+				},
+				{
+					"Name": "Paused",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Holds the time."
+				},
+				{
+					"Name": "Focus",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The ID of the object in the middle of the view."
+				},
+				{
+					"Name": "Selected",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The ID of the selected object."
+				},
+				{
+					"Name": "Orbits",
+					"Type": "bool",
+					"Default": true,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Draws the orbits."
+				},
+				{
+					"Name": "Labels",
+					"Type": "bool",
+					"Default": true,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Shows the names of the objects."
+				},
+				{
+					"Name": "Details",
+					"Type": "bool",
+					"Default": true,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Shows a card of the selected object."
+				},
+				{
+					"Name": "Background",
+					"Type": "bool",
+					"Default": true,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Draws the stars far away."
+				},
+				{
+					"Name": "Scale",
+					"Type": "select",
+					"Default": "compressed",
+					"Options": [
+						"compressed",
+						"real"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "Large bodies and short distances (compressed), or their real sizes."
+				},
+				{
+					"Name": "Team",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The team of the player."
+				},
+				{
+					"Name": "Label",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The name of the scene for screen readers."
+				}
+			],
+			"Slots": [
+				"hud"
+			],
+			"Container": true,
+			"Children": [
+				"GameObject"
+			],
+			"Current": "",
+			"Events": [
+				"ready",
+				"select",
+				"focus",
+				"arrive",
+				"land",
+				"takeoff",
+				"error"
+			],
+			"EventDescriptions": {
+				"ready": "The scene is ready: the component itself, to call its methods.",
+				"select": "An object was selected: {ID, Object, Info} (ID empty when none is).",
+				"focus": "The view moved to an object: {ID}.",
+				"arrive": "An object reached where it was sent: {ID, At}.",
+				"land": "The view went down to the surface of a body: {ID}.",
+				"takeoff": "The view went back up to space: {ID}.",
+				"error": "There is no WebGL2: {Reason: webgl2}."
+			},
+			"Methods": [
+				"Add(kind, props)",
+				"Change(id, changes)",
+				"Remove(id)",
+				"Attach(parent, object)",
+				"Detach(id)",
+				"Get(id)",
+				"Objects(filter)",
+				"Describe(id)",
+				"Position(id)",
+				"Select(id)",
+				"FocusOn(id)",
+				"Move(id, target)",
+				"Now()",
+				"SetTime(days)",
+				"ToScreen(id)",
+				"Pick(clientX, clientY)",
+				"Save()",
+				"Load(saved)",
+				"Land(id, options)",
+				"TakeOff()",
+				"Surface()",
+				"Supported()"
+			],
+			"Sample": {
+				"Seed": "kepler"
 			}
 		},
 		{
@@ -25528,6 +25777,120 @@
 				"Figures(options)"
 			],
 			"Sample": {}
+		},
+		{
+			"Name": "Graphics3D",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "The graphics of three dimensions on WebGL2: matrices, a camera, shapes of triangles and a renderer of them.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [
+				"Create(canvas, options)",
+				"Camera(options)",
+				"Identity()",
+				"Multiply(a, b)",
+				"Invert(m)",
+				"Translation(x, y, z)",
+				"Rotation(axis, angle)",
+				"Scaling(x, y, z)",
+				"Compose(position, rotation, scale)",
+				"Perspective(fov, aspect, near, far)",
+				"LookAt(eye, target, up)",
+				"NormalMatrix(m)",
+				"Apply(m, point)",
+				"Hit(ray, center, radius)",
+				"Sphere(options)",
+				"Icosphere(options)",
+				"Ring(options)",
+				"Box(options)",
+				"Cylinder(options)",
+				"Torus(options)",
+				"Plane(options)",
+				"Transform(geometry, matrix)",
+				"Merge(parts)",
+				"Displace(geometry, amount)",
+				"Normals(geometry)",
+				"Noise(seed)"
+			],
+			"Sample": {}
+		},
+		{
+			"Name": "Astronomy",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "The numbers of a star system: Kepler orbits, stars and planets, their warmth, and whole systems of a seed.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [
+				"Length(value)",
+				"Period(distance, mass)",
+				"Position(orbit, time, mass)",
+				"Path(orbit, count)",
+				"Star(star)",
+				"Describe(body, context)",
+				"Color(temperature)",
+				"Generate(seed, options)"
+			],
+			"Sample": {}
+		},
+		{
+			"Name": "Kinds",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "The kinds of the objects of a game: what they extend, what they can do (Traits) and what they are made of (Parts).",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [
+				"Define(name, kind)",
+				"Get(name)",
+				"Has(name)",
+				"Names()",
+				"Resolve(name)",
+				"Make(kind, props)",
+				"Field(object, name)",
+				"Fields(kind)",
+				"Diff(object)",
+				"Restore(saved)"
+			],
+			"Sample": {}
+		},
+		{
+			"Name": "Terrain",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "The ground of a game, continuous: heights of noise anywhere, meshes in chunks, ways over it; the ground of a planet as its surface shows.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [
+				"Flat(options)",
+				"Sphere(options)"
+			],
+			"Sample": {}
 		}
 	],
 	"Directives": [
@@ -25761,6 +26124,22 @@
 			"Group": "",
 			"Icon": "",
 			"Description": "*tip shows a tip of the theme over an element, as the ScreenTips of Microsoft Office: a bold Title with Text under it, or any content.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [],
+			"Sample": {}
+		},
+		{
+			"Name": "blur",
+			"Kind": "Directive",
+			"Group": "",
+			"Icon": "",
+			"Description": "*blur makes an element a surface of frosted glass: what is behind it blurred and seen through the tint of the surface.",
 			"Props": [],
 			"Slots": [],
 			"Container": false,
@@ -26028,6 +26407,7 @@
 		"elemenx-option-label": [],
 		"elemenx-option-hint": [],
 		"elemenx-option-check": [],
+		"elemenx-blur": [],
 		"elemenx-visually-hidden": [],
 		"elemenx-input-control": [
 			"concealed"
@@ -26536,6 +26916,24 @@
 		"elemenx-game-world-canvas": [],
 		"elemenx-game-world-minimap": [],
 		"elemenx-game-world-hud": [],
+		"elemenx-game-scene": [
+			"dragging"
+		],
+		"elemenx-game-scene-canvas": [],
+		"elemenx-game-scene-labels": [
+			"hidden"
+		],
+		"elemenx-game-scene-label": [],
+		"elemenx-game-scene-card": [],
+		"elemenx-game-scene-card-header": [],
+		"elemenx-game-scene-card-title": [],
+		"elemenx-game-scene-card-kind": [],
+		"elemenx-game-scene-card-rows": [],
+		"elemenx-game-scene-card-row": [],
+		"elemenx-game-scene-card-actions": [],
+		"elemenx-game-scene-takeoff": [],
+		"elemenx-game-scene-fallback": [],
+		"elemenx-game-scene-hud": [],
 		"elemenx-number-controls": [],
 		"elemenx-date": [],
 		"elemenx-time": [],

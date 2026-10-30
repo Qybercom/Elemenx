@@ -1,0 +1,53 @@
+<div style="height: 380px;">
+	<GameScene Speed="6" (ready)="Ready" (select)="Selected" (arrive)="Arrived">
+		<GameObject ID="sun" Kind="star" Name="Sun">
+			<GameObject ID="earth" Kind="planet" Name="Earth" Surface-Type="terran" Radius="6371" Distance="1" Tilt="23.4">
+				<GameObject ID="moon" Kind="moon" Name="Moon" Radius="1737" Distance="384400 km" />
+				<GameObject ID="gateway" Kind="station" Name="Gateway" Team="blue" />
+			</GameObject>
+			<GameObject ID="mars" Kind="planet" Name="Mars" Surface-Type="desert" Radius="3390" Distance="1.52" Eccentricity="0.09" />
+			<GameObject ID="jupiter" Kind="planet" Name="Jupiter" Surface-Type="gas" Radius="69911" Distance="5.2" Day="9.9" />
+		</GameObject>
+		<GameObject ID="first" Kind="fleet" Name="First fleet" Parent="earth" Team="blue" Count="4" />
+	</GameScene>
+</div>
+<Button Label="Fleet to Mars" Icon="send" (click)="Send" />
+<Button Label="Save" Icon="save" Variant="ghost" (click)="Save" />
+<Button Label="Load" Icon="refresh" Variant="ghost" [disabled]="!Saved" (click)="Load" />
+<p class="elemenx-text small muted">{{Note}}</p>
+<script>
+({
+	Note: 'A drag turns the view, the wheel zooms, a click selects, a double click flies to an object.',
+	Saved: null,
+
+	Ready: function (scene) {
+		this.Scene = function () {
+			return scene;
+		};
+	},
+
+	Selected: function (event) {
+		this.Note = event.ID ? event.Object.Name + (event.Info && event.Info.Gravity ? ': ' + event.Info.Gravity.toFixed(1) + ' m/s²' : '') : 'Nothing selected';
+	},
+
+	Send: function () {
+		var scene = this.Scene();
+
+		scene.Move('first', scene.Get('first').Parent === 'mars' ? 'earth' : 'mars');
+	},
+
+	Save: function () {
+		this.Saved = this.Scene().Save();
+		this.Note = 'Saved: ' + JSON.stringify(this.Saved).length + ' characters, the kinds and what differs from them.';
+	},
+
+	Load: function () {
+		this.Scene().Load(this.Saved);
+		this.Note = 'Loaded at day ' + Math.round(this.Scene().Now());
+	},
+
+	Arrived: function (event) {
+		this.Note = event.ID + ' arrived at ' + event.At;
+	}
+})
+</script>

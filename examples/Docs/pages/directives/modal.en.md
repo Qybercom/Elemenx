@@ -38,4 +38,4 @@
 
 ## Tests
 
-- [*modal opens a dialog while its expression is true, puts the focus in it, and asks to close on Escape](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-directives.test.js#L54) — `tests/regression/library-directives.test.js`
+- [*modal opens a dialog while its expression is true, puts the focus in it, and asks to close on Escape](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-directives.test.js#L82) — `tests/regression/library-directives.test.js`

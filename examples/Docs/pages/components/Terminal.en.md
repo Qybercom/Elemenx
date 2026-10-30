@@ -80,5 +80,5 @@ A terminal: a scrolling output above a command line. Lines: [{ID, Kind, Text}] w
 ## Tests
 
 - [Mod+F finds and Mod+H replaces in the editors, Mod+F finds in a terminal; viewers show Markdown and code, formulas are drawn as MathML](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L1794) — `tests/examples/ui-kit.spec.js`
-- [workspace shows the tool windows the page puts in it and resizes them](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L5314) — `tests/examples/ui-kit.spec.js`
-- [terminal runs commands and recalls its history](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L5877) — `tests/examples/ui-kit.spec.js`
+- [workspace shows the tool windows the page puts in it and resizes them](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L5460) — `tests/examples/ui-kit.spec.js`
+- [terminal runs commands and recalls its history](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L6023) — `tests/examples/ui-kit.spec.js`

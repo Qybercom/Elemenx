@@ -1,0 +1,152 @@
+/*
+ * Glassy: light and calm, as the desktops and phones of today look: the font of the system, round corners, a blue
+ * accent, switches green when on, and the floating parts (dialogs, drawers, menus, popovers, tips, toasts,
+ * notifications, the title and menu bars, windows) of frosted glass, what is under them blurred (the tokens
+ * --elemenx-blur-*, as *blur). Where the browser cannot blur, or the reader asks for less transparency, they are solid.
+ * Every rule starts with [data-theme][data-theme='glassy'].
+ */
+[data-theme][data-theme='glassy'] {
+	--elemenx-font: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI Variable', 'Segoe UI', Inter, Arial, sans-serif;
+	--elemenx-control-small: 26px;
+	--elemenx-control: 32px;
+	--elemenx-control-large: 42px;
+	--elemenx-control-giant: 54px;
+	--elemenx-radius-small: 5px;
+	--elemenx-radius: 8px;
+	--elemenx-radius-large: 12px;
+	--elemenx-radius-huge: 16px;
+	--elemenx-radius-giant: 22px;
+	--elemenx-duration: 180ms;
+	--elemenx-duration-slow: 320ms;
+	--elemenx-easing: cubic-bezier(0.25, 0.1, 0.25, 1);
+	--elemenx-blur-radius: 28px;
+	--elemenx-blur-saturate: 180%;
+	--elemenx-blur-tint: 0.7;
+}
+
+[data-theme][data-theme='glassy'][data-scheme='light'] {
+	--elemenx-background: #f2f2f7;
+	--elemenx-background-rgb: 242, 242, 247;
+	--elemenx-surface: #ffffff;
+	--elemenx-surface-rgb: 255, 255, 255;
+	--elemenx-surface-raised: #ffffff;
+	--elemenx-surface-hover: #e9e9ee;
+	--elemenx-surface-hover-rgb: 233, 233, 238;
+	--elemenx-text: #1d1d1f;
+	--elemenx-text-rgb: 29, 29, 31;
+	--elemenx-text-muted: #6e6e73;
+	--elemenx-text-muted-rgb: 110, 110, 115;
+	--elemenx-accent: #007aff;
+	--elemenx-accent-rgb: 0, 122, 255;
+	--elemenx-accent-hover: #0066d6;
+	--elemenx-accent-text: #ffffff;
+	--elemenx-accent-text-rgb: 255, 255, 255;
+	--elemenx-danger: #ff3b30;
+	--elemenx-danger-rgb: 255, 59, 48;
+	--elemenx-success: #34c759;
+	--elemenx-success-rgb: 52, 199, 89;
+	--elemenx-warning: #ff9500;
+	--elemenx-warning-rgb: 255, 149, 0;
+	--elemenx-info: #32ade6;
+	--elemenx-info-rgb: 50, 173, 230;
+	--elemenx-border: #d8d8de;
+	--elemenx-border-strong: #b6b6be;
+	--elemenx-border-strong-rgb: 182, 182, 190;
+	--elemenx-shadow: 0 12px 36px rgba(0, 0, 0, 0.12), 0 0 0 0.5px rgba(0, 0, 0, 0.08);
+	--elemenx-backdrop: rgba(0, 0, 0, 0.22);
+}
+
+[data-theme][data-theme='glassy'][data-scheme='dark'] {
+	--elemenx-background: #1c1c1e;
+	--elemenx-background-rgb: 28, 28, 30;
+	--elemenx-surface: #2c2c2e;
+	--elemenx-surface-rgb: 44, 44, 46;
+	--elemenx-surface-raised: #3a3a3c;
+	--elemenx-surface-hover: #3a3a3c;
+	--elemenx-surface-hover-rgb: 58, 58, 60;
+	--elemenx-text: #f5f5f7;
+	--elemenx-text-rgb: 245, 245, 247;
+	--elemenx-text-muted: #98989d;
+	--elemenx-text-muted-rgb: 152, 152, 157;
+	--elemenx-accent: #0a84ff;
+	--elemenx-accent-rgb: 10, 132, 255;
+	--elemenx-accent-hover: #409cff;
+	--elemenx-accent-text: #ffffff;
+	--elemenx-accent-text-rgb: 255, 255, 255;
+	--elemenx-danger: #ff453a;
+	--elemenx-danger-rgb: 255, 69, 58;
+	--elemenx-success: #30d158;
+	--elemenx-success-rgb: 48, 209, 88;
+	--elemenx-warning: #ff9f0a;
+	--elemenx-warning-rgb: 255, 159, 10;
+	--elemenx-info: #64d2ff;
+	--elemenx-info-rgb: 100, 210, 255;
+	--elemenx-border: #3d3d40;
+	--elemenx-border-strong: #58585c;
+	--elemenx-border-strong-rgb: 88, 88, 92;
+	--elemenx-shadow: 0 12px 36px rgba(0, 0, 0, 0.5), 0 0 0 0.5px rgba(255, 255, 255, 0.1);
+	--elemenx-backdrop: rgba(0, 0, 0, 0.4);
+}
+
+/* The floating parts: frosted glass. */
+[data-theme][data-theme='glassy'] .elemenx-dialog,
+[data-theme][data-theme='glassy'] .elemenx-drawer,
+[data-theme][data-theme='glassy'] .elemenx-menu,
+[data-theme][data-theme='glassy'] .elemenx-popover,
+[data-theme][data-theme='glassy'] .elemenx-tip,
+[data-theme][data-theme='glassy'] .elemenx-toast,
+[data-theme][data-theme='glassy'] .elemenx-notification,
+[data-theme][data-theme='glassy'] .elemenx-title-bar,
+[data-theme][data-theme='glassy'] .elemenx-menu-bar,
+[data-theme][data-theme='glassy'] .elemenx-window {
+	background: rgba(var(--elemenx-surface-rgb), var(--elemenx-blur-tint));
+	-webkit-backdrop-filter: blur(var(--elemenx-blur-radius)) saturate(var(--elemenx-blur-saturate));
+	backdrop-filter: blur(var(--elemenx-blur-radius)) saturate(var(--elemenx-blur-saturate));
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+	[data-theme][data-theme='glassy'] .elemenx-dialog,
+	[data-theme][data-theme='glassy'] .elemenx-drawer,
+	[data-theme][data-theme='glassy'] .elemenx-menu,
+	[data-theme][data-theme='glassy'] .elemenx-popover,
+	[data-theme][data-theme='glassy'] .elemenx-tip,
+	[data-theme][data-theme='glassy'] .elemenx-toast,
+	[data-theme][data-theme='glassy'] .elemenx-notification,
+	[data-theme][data-theme='glassy'] .elemenx-title-bar,
+	[data-theme][data-theme='glassy'] .elemenx-menu-bar,
+	[data-theme][data-theme='glassy'] .elemenx-window {
+		background: var(--elemenx-surface);
+	}
+}
+
+@media (prefers-reduced-transparency: reduce) {
+	[data-theme][data-theme='glassy'] .elemenx-dialog,
+	[data-theme][data-theme='glassy'] .elemenx-drawer,
+	[data-theme][data-theme='glassy'] .elemenx-menu,
+	[data-theme][data-theme='glassy'] .elemenx-popover,
+	[data-theme][data-theme='glassy'] .elemenx-tip,
+	[data-theme][data-theme='glassy'] .elemenx-toast,
+	[data-theme][data-theme='glassy'] .elemenx-notification,
+	[data-theme][data-theme='glassy'] .elemenx-title-bar,
+	[data-theme][data-theme='glassy'] .elemenx-menu-bar,
+	[data-theme][data-theme='glassy'] .elemenx-window {
+		background: var(--elemenx-surface);
+		-webkit-backdrop-filter: none;
+		backdrop-filter: none;
+	}
+}
+
+/* Buttons: round, the primary one filled with the accent; switches green when on. */
+[data-theme][data-theme='glassy'] .elemenx-button {
+	border-radius: var(--elemenx-radius);
+	font-weight: 500;
+}
+
+[data-theme][data-theme='glassy'] .elemenx-toggle.checked .elemenx-toggle-track {
+	background: var(--elemenx-success);
+	border-color: var(--elemenx-success);
+}
+
+[data-theme][data-theme='glassy'] .elemenx-card {
+	border-radius: var(--elemenx-radius-large);
+}

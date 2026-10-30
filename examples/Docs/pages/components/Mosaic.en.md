@@ -73,4 +73,4 @@ default
 - [fills justified rows of one height, each picture keeping its shape, the last one at the wanted height](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-layouts.test.js#L77) — `tests/regression/library-layouts.test.js`
 - [makes a treemap of areas by value, children inside their parent, the parents first](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-layouts.test.js#L98) — `tests/regression/library-layouts.test.js`
 - [draws a Mosaic of items given and declared, follows its width, and selects an item by a press or Enter](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-layouts.test.js#L124) — `tests/regression/library-layouts.test.js`
-- [mosaic lays its items out as a bento, masonry, justified rows and a treemap, and selects one](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L7638) — `tests/examples/ui-kit.spec.js`
+- [mosaic lays its items out as a bento, masonry, justified rows and a treemap, and selects one](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L7784) — `tests/examples/ui-kit.spec.js`

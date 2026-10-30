@@ -1,7 +1,7 @@
 /*
  * The theme of the page: a policy of the color scheme and a named theme.
  * The policy is 'system' (follows the operating system), 'light' or 'dark'. The theme is 'default' (index.css) or a
- * named one: the Library brings 'contrast', 'darcula', 'soft', 'fantasy' and 'scifi' (themes/), and Register adds the themes of the
+ * named one: the Library brings 'contrast', 'darcula', 'soft', 'fantasy', 'scifi' and 'glassy' (themes/), and Register adds the themes of the
  * Application. A theme is plain CSS whose rules start with its attribute: [data-theme][data-theme='ocean'] { ... } for
  * both schemes, [data-theme][data-theme='ocean'][data-scheme='dark'] { ... } for the dark one; such a rule is more
  * specific than the rule of a Component it overrides, so the order of the stylesheets does not matter.
@@ -29,7 +29,8 @@ Elemenx.Service('Theme', {
 		darcula: {Label: 'Darcula', Key: 'ui.theme.darcula', Schemes: ['dark']},
 		soft: {Label: 'Soft', Key: 'ui.theme.soft', Schemes: ['light', 'dark']},
 		fantasy: {Label: 'Fantasy', Key: 'ui.theme.fantasy', Schemes: ['dark']},
-		scifi: {Label: 'Sci-fi', Key: 'ui.theme.scifi', Schemes: ['dark']}
+		scifi: {Label: 'Sci-fi', Key: 'ui.theme.scifi', Schemes: ['dark']},
+		glassy: {Label: 'Glassy', Key: 'ui.theme.glassy', Schemes: ['light', 'dark']}
 	},
 
 	$OnCreate: function () {

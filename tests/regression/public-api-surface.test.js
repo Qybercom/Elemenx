@@ -121,6 +121,7 @@ describe('Regression: public API surface', function () {
 			'Elemenx.Splash:object',
 			'Elemenx.Splash.Hide:function',
 			'Elemenx.Splash.Hold:function',
+			'Elemenx.Splash.Progress:function',
 			'Elemenx.Splash.Visible:function',
 			'Elemenx.StartedAt:function',
 			'Elemenx.Storage:function',
@@ -135,6 +136,7 @@ describe('Regression: public API surface', function () {
 			'Elemenx.Title:function',
 			'Elemenx.Title.OffChange:function',
 			'Elemenx.Title.OnChange:function',
+			'Elemenx.Trait:function',
 			'Elemenx.Version:string',
 			'Elemenx.WebWorker:function',
 			'Elemenx.Widgets:object',
@@ -178,6 +180,7 @@ describe('Regression: public API surface', function () {
 			'$Messaging:function',
 			'$Network:function',
 			'$On:function',
+			'$Open:function',
 			'$Parent:function',
 			'$Ref:function',
 			'$Refs:function',
@@ -186,6 +189,7 @@ describe('Regression: public API surface', function () {
 			'$ServiceWorker:function',
 			'$StartedAt:function',
 			'$Storage:function',
+			'$Super:function',
 			'$Title:function',
 			'$Update:function',
 			'$WebWorker:function'
@@ -281,7 +285,7 @@ describe('Regression: public API surface', function () {
 
 		await tick();
 
-		expect(names(remote)).toEqual(['$Application', '$Copy', '$Destroy', '$Element', '$Generation', '$On', '$Parent', '$Ref', '$Refs', '$Update']);
+		expect(names(remote)).toEqual(['$Application', '$Copy', '$Destroy', '$Element', '$Generation', '$On', '$Open', '$Parent', '$Ref', '$Refs', '$Super', '$Update']);
 		expect(names(local.$Network())).toEqual(['LongPolling', 'Metrics', 'Protocol', 'SSE', 'Stream', 'Transfer', 'TransferReceiver', 'WebRTC', 'WebSocket', 'XHR']);
 		expect(names(local.$Storage())).toEqual(['Cookie', 'IndexedDB', 'Local', 'Session']);
 		expect(names(local.$Events())).toEqual(['Channels', 'Deliver', 'Destroy', 'Emit', 'ID', 'Off', 'On', 'Pipe']);

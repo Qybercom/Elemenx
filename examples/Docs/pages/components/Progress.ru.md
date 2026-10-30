@@ -36,5 +36,7 @@
 
 ## Тесты
 
+- [puts the bar of Progress in the splash, with the bytes of the scripts and styles of the page in data-total](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/cli-splash.test.js#L65) — `tests/regression/cli-splash.test.js`
+- [shows the percent the Application gives with Progress: its attribute, its CSS variable, its bar and its text](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/splash.test.js#L103) — `tests/regression/splash.test.js`
 - [puts an icon in the favicon, draws a count and a ring over it, and brings the icon of the page back](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/platform-icon.test.js#L99) — `tests/regression/platform-icon.test.js`
 - [in a program gives the windows the icon drawn into a PNG at every change of Elemenx.Icon, and the count and the progress to the system](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/platform-icon.test.js#L207) — `tests/regression/platform-icon.test.js`

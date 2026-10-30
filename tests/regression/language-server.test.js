@@ -35,6 +35,8 @@ describe('Contract: the language of Elemenx for the editors (the core, and its L
 		write('application/components/Board/Board.js', "/* The board of the project. */\nElemenx.Component('Board', {\n\t$TemplateURL: 'Board.html',\n\tCount: 0,\n\tItems: [],\n\n\t$OnCreate: function () {\n\t\tthis.Counted = function (count) {\n\t\t\treturn count;\n\t\t};\n\t},\n\n\tPicked: function () {\n\t\tthis.$Emit('chosen', {});\n\t}\n});\n");
 		write('application/components/Board/Board.html', template);
 		write('application/services/Store.js', "Elemenx.Service('Store', {\n\tGet: function () {}\n});\nElemenx.Directive('unless', {});\n");
+		write('application/traits/Selectable.js', "Elemenx.Trait('Selectable', {\n\tSelected: false,\n\n\tToggle: function () {\n\t\tthis.$Emit('toggle', {});\n\t}\n});\n");
+		write('application/components/BigBoard/BigBoard.js', "Elemenx.Component('BigBoard', {\n\t$Extends: 'Board',\n\t$Traits: ['Selectable'],\n\tSize: 2,\n\tCount: 5\n});\n");
 
 		knowledge = language.Create({Roots: [project]});
 	});
@@ -55,6 +57,15 @@ describe('Contract: the language of Elemenx for the editors (the core, and its L
 		expect(knowledge.Services().map(function (service) {
 			return service.Name;
 		}).sort()).toEqual(['Store', 'Toast']);
+
+		/* A Component of a base and of a Trait: their props, events and methods too, its own over theirs. */
+		expect(knowledge.Component('BigBoard').Props.map(function (prop) {
+			return prop.Name;
+		}).sort()).toEqual(['Count', 'Items', 'Selected', 'Size']);
+		expect(knowledge.Component('BigBoard').Events.sort()).toEqual(['chosen', 'toggle']);
+		expect(knowledge.Component('BigBoard').Methods.map(function (method) {
+			return method.Name;
+		}).sort()).toEqual(['Counted', 'Picked', 'Toggle']);
 		expect(knowledge.Directives().map(function (directive) {
 			return directive.Name;
 		})).toEqual(expect.arrayContaining(['if', 'for', 'tip', 'unless']));

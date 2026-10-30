@@ -1,6 +1,6 @@
 {
 	"name": "@qybercom/elemenx",
-	"version": "0.11.3",
+	"version": "0.12.0",
 	"description": "A browser UI framework in one ES5 file: components, reactive state, routing, services, storage, messaging and network, with its CLI and the ElemenxUI component library",
 	"keywords": [
 		"ui",

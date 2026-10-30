@@ -1,4 +1,7 @@
 /*
+ * Deprecated: the 2D world will be made of GameScene and GameObject (a GameObject of a kind of its own); this one stays
+ * until then.
+ *
  * A unit of a GameWorld, declared in it: ID, X and Y (the cell it stands on), Team (the one of the player is the
  * Team of the world: it selects and orders it), Type (archer, worker: its kind in the game), Name, Color (of its
  * team by default), Image (a picture of it, standing on its feet), Health and MaxHealth, Speed (cells a second),
@@ -9,7 +12,7 @@ Elemenx.Component('GameUnit', {
 	$Meta: {
 		Group: 'game',
 		Icon: 'user',
-		Description: 'A unit of a GameWorld: where it stands, its team, its health, its speed and its sight.',
+		Description: 'Deprecated (the 2D world will be made of GameScene and GameObject): a unit of a GameWorld, where it stands, its team, its health, its speed and its sight.',
 		Props: {
 			ID: 'The ID of the unit.',
 			X: 'The cell it stands on, across.',

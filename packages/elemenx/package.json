@@ -1,6 +1,6 @@
 {
 	"name": "elemenx",
-	"version": "0.11.3",
+	"version": "0.12.0",
 	"description": "The short name of @qybercom/elemenx, the Elemenx browser UI framework: installs it and runs its CLI",
 	"keywords": [
 		"ui",
@@ -32,6 +32,6 @@
 		"node": ">=20"
 	},
 	"dependencies": {
-		"@qybercom/elemenx": "0.11.3"
+		"@qybercom/elemenx": "0.12.0"
 	}
 }

@@ -96,4 +96,4 @@ Start и End — вся линия; From и To — видимая часть (п
 
 ## Тесты
 
-- [timeline draws its scale, stacks close labels, edits ranges, zooms and seeks](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L5684) — `tests/examples/ui-kit.spec.js`
+- [timeline draws its scale, stacks close labels, edits ranges, zooms and seeks](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L5830) — `tests/examples/ui-kit.spec.js`

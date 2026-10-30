@@ -38,3 +38,7 @@ A rating of Max stars (5). Value: 0 to Max, in halves with Half. The pointer sho
 })
 </script>
 ```
+
+## Tests
+
+- [takes the base a Component names in $Extends and the Traits of the project into the bundle, the Traits as their own type](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/build-inheritance.test.js#L52) — `tests/regression/build-inheritance.test.js`

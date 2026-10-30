@@ -62,6 +62,28 @@ describe('Builder: the splash of an Application', function () {
 		expect(build(folder, {splash: true, single: true}).indexOf('id="elemenx-splash"')).not.toBe(-1);
 	});
 
+	it('puts the bar of Progress in the splash, with the bytes of the scripts and styles of the page in data-total', function () {
+		var folder = project();
+		var page = build(folder, {splash: {Progress: true}});
+		var total = Number(/data-total="(\d+)"/.exec(page)[1]);
+		var files = ['elemenx.js', 'app.js'].concat((page.match(/href="\/(libraries\/[^"]+\.css)"/g) || []).map(function (href) {
+			return href.slice(7, -1);
+		}));
+
+		expect(page).toContain('data-progress=""');
+		expect(page).toContain('<span class="elemenx-splash-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100"><span class="elemenx-splash-bar"></span></span><span class="elemenx-splash-percent" aria-hidden="true"></span>');
+		expect(page).not.toContain('elemenx-splash-spinner"');
+		expect(total).toBe(files.reduce(function (sum, file) {
+			return sum + fs.statSync(path.join(folder, 'dist', file)).size;
+		}, 0));
+		expect(build(folder, {splash: {Progress: true, Spinner: true}})).toContain('elemenx-splash-spinner"');
+		expect(build(folder, {splash: true})).not.toContain('data-total');
+
+		expect(function () {
+			Splash.Settings(folder, {Progress: 'yes'});
+		}).toThrow('Splash.Progress must be true or false');
+	});
+
 	it('takes splash.html of the project as its content, and refuses a color that is not one', function () {
 		var folder = project();
 

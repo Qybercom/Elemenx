@@ -1,0 +1,3664 @@
+/*
+ * The scene of a game in three dimensions on WebGL2 (the Graphics3D Service): objects of any kind (the Kinds Service),
+ * each made of what its kind extends, what it can do (its Traits, each run by a system of the scene) and what it is made
+ * of (its Parts, objects of their own placed in it). The setting space (the default) brings the kinds of a star system
+ * and its systems: stars and planets on Kepler orbits (the Astronomy Service), lit by their stars (night sides, the
+ * shadows of moons and planets on each other and on rings), their surfaces of noise baked once into cube textures,
+ * belts and rings, stations of modules, fleets of ships that hold their place by a body and travel to another.
+ *
+ * Kinds of space: star (Star: Mass, Radius, Temperature, Luminosity, Color), planet (Orbit: Distance, Eccentricity,
+ * Inclination, Node, Periapsis, Anomaly, Period; Body: Radius, Mass, Day, Tilt, Albedo; Surface: Type, Colors, Water,
+ * Ocean, Ice, Clouds, Atmosphere, Seed), moon (a planet, small, one face to its planet), belt (Belt: Inner, Outer, Count,
+ * Inclination, Colors), ring (Ring: Inner, Outer, Inclination, Colors), station and outpost (an Orbit in radii of what
+ * they go round, a Model and parts: modules, a dock), fighter, cruiser and freighter (ships: Model, Health), fleet
+ * (Mover: Speed; Formation: Count, Ship, Spacing: its ships are parts). An application defines its own (Kinds.Define)
+ * and systems of its own for traits of its own (Systems: {Trait: {Update(object, scene), Draw(object, scene)}}).
+ *
+ * The objects: System ({Objects: [{ID, Kind, Parent, Values, Traits, Parts, Children}]}), Seed (a whole system of it:
+ * Astronomy.Generate) and GameObject declared inside (a GameObject in another goes round it when it moves, an Orbit or
+ * a Mover, and is a part of it otherwise; Part="dock" changes a part of the kind of its parent). Every attribute of a
+ * GameObject is a field of it or of a Trait, in any case. Time is the day (0), Speed the days of it a second (1),
+ * Paused holds it; Scale compressed (the default: large bodies, short distances) or real.
+ *
+ * The view: a drag turns it round the object in focus, the wheel or two fingers zoom, a click selects an object (or
+ * its label; a part of an object near enough), a double click flies to it (from its day side), Escape goes back, the
+ * arrows turn, + and - zoom, Enter flies to the selected one, Space holds the time. Orbits, Labels, Details (a card of
+ * the selected object), Background (the far stars), Team, the slot hud. Without WebGL2 it says so (and emits error).
+ *
+ * The surface: Land(id, {Latitude, Longitude, Altitude}) goes down to the ground of a body (not of a giant of gas),
+ * the very ground its baked surface shows (Terrain.Sphere), in patches finer near the eye, under its sky (its
+ * atmosphere and its star); a drag looks round, the wheel rises and comes down, WASD and the arrows walk, Escape or
+ * TakeOff() goes back up. The time runs SurfaceSpeed days a second there (1/120).
+ *
+ * Kinds of the ground (the setting terrain): ground (Terrain: Size, Height, Water, Scale, Ridges, Seed: a ground of
+ * noise, Terrain.Flat, in chunks finer near the eye, with its sea), sun (Sun: its light from far), unit (Walker: Speed,
+ * MaxSlope, Swim; a Model), tree, rock and house (Model, Blocks: what stands in the way). An object of it stands at
+ * X and Y of the ground; Move(id, [x, y]) walks a walker round what cannot be walked, a right click sends the selected
+ * one; the view turns round a point of the ground and the keys move it.
+ *
+ * Events: ready (the scene, for its methods), select ({ID, Object, Info}: ID empty when none is), focus ({ID}),
+ * arrive ({ID, At}), land ({ID}), takeoff ({ID}), error ({Reason: webgl2}).
+ * Methods: Add(kind, props), Change(id, changes), Remove(id), Attach(parent, object), Detach(id), Get(id),
+ * Objects(filter), Describe(id), Position(id), Select(id), FocusOn(id), Move(id, target), Now(), SetTime(days),
+ * ToScreen(id), Pick(clientX, clientY), Save(), Load(saved), Land(id, options), TakeOff(), Surface(), Supported().
+ */
+Elemenx.Component('GameScene', {
+	$TemplateURL: 'GameScene.html',
+	$StyleURL: 'GameScene.css',
+	$Meta: {
+		Group: 'game',
+		Icon: 'star',
+		Description: 'The scene of a game in 3D: objects of any kind with their traits and parts; the setting space brings a star system on Kepler orbits, stations and fleets, with a landing on the surfaces of its bodies; the setting terrain a ground of noise and its walkers.',
+		Container: true,
+		Children: ['GameObject'],
+		Slots: ['hud'],
+		Events: {
+			ready: 'The scene is ready: the component itself, to call its methods.',
+			select: 'An object was selected: {ID, Object, Info} (ID empty when none is).',
+			focus: 'The view moved to an object: {ID}.',
+			arrive: 'An object reached where it was sent: {ID, At}.',
+			land: 'The view went down to the surface of a body: {ID}.',
+			takeoff: 'The view went back up to space: {ID}.',
+			error: 'There is no WebGL2: {Reason: webgl2}.'
+		},
+		Methods: ['Add(kind, props)', 'Change(id, changes)', 'Remove(id)', 'Attach(parent, object)', 'Detach(id)', 'Get(id)', 'Objects(filter)', 'Describe(id)', 'Position(id)', 'Select(id)', 'FocusOn(id)', 'Move(id, target)', 'Now()', 'SetTime(days)', 'ToScreen(id)', 'Pick(clientX, clientY)', 'Save()', 'Load(saved)', 'Land(id, options)', 'TakeOff()', 'Surface()', 'Supported()'],
+		Props: {
+			Setting: {Options: ['space', 'terrain'], Description: 'The setting: its kinds and systems (space: a star system; terrain: a ground and its walkers).'},
+			System: 'The objects: {Objects: [{ID, Kind, Parent, Values, Traits, Parts, Children}]}.',
+			Seed: 'A whole star system made of a seed (always the same for the same seed).',
+			Systems: 'Systems of the application for traits of its own: {Trait: {Update(object, scene), Draw(object, scene)}}.',
+			Time: 'The day of the scene.',
+			Speed: 'The days of the scene a second.',
+			SurfaceSpeed: 'The days a second on the surface of a body (1/120: a day of two minutes).',
+			Paused: 'Holds the time.',
+			Focus: 'The ID of the object in the middle of the view.',
+			Selected: 'The ID of the selected object.',
+			Orbits: 'Draws the orbits.',
+			Labels: 'Shows the names of the objects.',
+			Details: 'Shows a card of the selected object.',
+			Background: 'Draws the stars far away.',
+			Scale: {Options: ['compressed', 'real'], Description: 'Large bodies and short distances (compressed), or their real sizes.'},
+			Team: 'The team of the player.',
+			Label: 'The name of the scene for screen readers.'
+		},
+		Sample: {Seed: 'kepler'}
+	},
+	Setting: 'space',
+	System: null,
+	Seed: '',
+	Systems: null,
+	Time: 0,
+	Speed: 1,
+	SurfaceSpeed: 1 / 120,
+	Paused: false,
+	Focus: '',
+	Selected: '',
+	Orbits: true,
+	Labels: true,
+	Details: true,
+	Background: true,
+	Scale: 'compressed',
+	Team: '',
+	Label: '',
+	Status: '',
+	Unsupported: false,
+	Dragging: false,
+	Card: null,
+	Landed: '',
+
+	$OnCreate: function () {
+		var self = this;
+		var kinds = this.$Service('Kinds');
+		var space = Object.assign(this.Space(), this.Ground());
+
+		/* The kinds of the settings, once: an application may have defined some of the same names first. */
+		Object.keys(space).forEach(function (name) {
+			if (!kinds.Has(name))
+				kinds.Define(name, space[name]);
+		});
+
+		/* The props that change the scene, given again (a template calls it): the scene takes them after the drawing. */
+		this.Changed = function () {
+			if (self.Engine && self.Engine().Props)
+				window.setTimeout(self.Engine().Props, 0);
+
+			return '';
+		};
+	},
+
+	/*
+	 * The kinds of the setting terrain: a ground of noise (Terrain: Size, Height, Water, Scale, Ridges, Seed), its sun
+	 * (Sun: Elevation, Azimuth in degrees, Color), units that walk (Walker: Speed, a second; X and Y their place on the
+	 * map), trees, rocks and houses (a Model; Blocks: no way through them).
+	 */
+	Ground: function () {
+		return {
+			'ground': {Traits: {Terrain: {Size: 1000, Height: 60, Water: 0.35, Scale: 180, Ridges: 0.4, Seed: 'ground'}}},
+			'sun': {Traits: {Sun: {Elevation: 35, Azimuth: 140, Color: '#fff4e0'}}},
+			'unit': {Traits: {Walker: {Speed: 8, MaxSlope: 0.45}, Model: {Shape: 'unit', Size: 1.8, Color: '#d0d4dc'}, Health: {Max: 100}, Selectable: {}}},
+			'tree': {Traits: {Model: {Shape: 'tree', Size: 6, Color: '#ffffff'}}, Values: {Blocks: true}},
+			'rock': {Traits: {Model: {Shape: 'rock', Size: 2.5, Color: '#8a8580'}}, Values: {Blocks: true}},
+			'house': {Traits: {Model: {Shape: 'house', Size: 8, Color: '#e8dcc8'}, Health: {Max: 800}, Selectable: {}}, Values: {Blocks: true}}
+		};
+	},
+
+	/* The kinds of the setting space. */
+	Space: function () {
+		var orbit = {Distance: 1, Eccentricity: 0, Inclination: 0, Node: 0, Periapsis: 0, Anomaly: 0, Period: null, Unit: 'AU'};
+
+		return {
+			'star': {Traits: {Star: {Mass: 1, Radius: null, Temperature: null, Luminosity: null, Color: ''}, Selectable: {}}},
+			'planet': {Traits: {Orbit: orbit, Body: {Radius: 6371, Mass: null, Day: 24, Tilt: 0, Albedo: null}, Surface: {Type: 'rocky', Colors: '', Water: '', Ocean: null, Ice: null, Clouds: null, Atmosphere: '', Seed: ''}, Selectable: {}}},
+			'moon': {Extends: 'planet', Traits: {Body: {Radius: 1737, Day: 0}, Surface: {Type: 'moon'}}},
+			'belt': {Traits: {Belt: {Inner: 2.2, Outer: 3.2, Count: 260, Inclination: 0, Colors: ''}}},
+			'ring': {Traits: {Ring: {Inner: 1.3, Outer: 2.3, Inclination: 0, Colors: ''}}},
+			'module': {Traits: {Model: {Shape: 'box', Size: 1, Scale: [1, 1, 1], Color: '#d6d9e0'}, Health: {Max: 200}}},
+			'station': {
+				Traits: {Orbit: {Distance: 1.8, Unit: 'radii', Period: 0.6, Inclination: 12}, Model: {Shape: '', Size: 0.11, Relative: true, Spin: 2}, Health: {Max: 1000}, Selectable: {}},
+				Parts: [
+					{ID: 'ring', Kind: 'module', Traits: {Model: {Shape: 'torus', Color: '#dcdfe6'}}},
+					{ID: 'hub', Kind: 'module', Traits: {Model: {Shape: 'cylinder', Scale: [0.4, 0.8, 0.4], Color: '#8d929c'}}},
+					{ID: 'panel-a', Kind: 'module', Position: [0, 0.55, 0], Traits: {Model: {Shape: 'box', Scale: [1.1, 0.03, 0.34], Color: '#1f3366'}, Health: {Max: 80}}},
+					{ID: 'panel-b', Kind: 'module', Position: [0, -0.55, 0], Traits: {Model: {Shape: 'box', Scale: [1.1, 0.03, 0.34], Color: '#1f3366'}, Health: {Max: 80}}},
+					{ID: 'dock', Kind: 'module', Position: [0, 0, 1.1], Traits: {Model: {Shape: 'box', Scale: [0.3, 0.2, 0.3], Color: '#aeb3bd'}, Container: {Size: 20}}}
+				]
+			},
+			'outpost': {
+				Extends: 'station',
+				Parts: [
+					{ID: 'ring', Removed: true},
+					{ID: 'hub', Traits: {Model: {Shape: 'cylinder', Scale: [0.32, 1.4, 0.32]}}, Rotation: [0, 0, 90]},
+					{ID: 'lab', Kind: 'module', Position: [0.7, 0, 0], Traits: {Model: {Shape: 'box', Scale: [0.5, 0.36, 0.36], Color: '#8d929c'}}},
+					{ID: 'panel-a', Position: [-0.75, 0, 0], Rotation: [0, 0, 90], Traits: {Model: {Scale: [1.6, 0.06, 0.5]}}},
+					{ID: 'panel-b', Removed: true}
+				]
+			},
+			'ship': {Traits: {Model: {Shape: 'fighter', Size: 0.07, Relative: false}, Health: {Max: 100}, Selectable: {}}},
+			'fighter': {Extends: 'ship'},
+			'cruiser': {Extends: 'ship', Traits: {Model: {Shape: 'cruiser'}, Health: {Max: 600}}},
+			'freighter': {Extends: 'ship', Traits: {Model: {Shape: 'freighter'}, Health: {Max: 300}, Container: {Size: 80}}},
+			'fleet': {Traits: {Mover: {Speed: 0.25}, Formation: {Count: 5, Ship: 'fighter', Spacing: 2.4}, Selectable: {}}}
+		};
+	},
+
+	$OnReady: function () {
+		var self = this;
+		var element = this.$Element();
+		var canvas = element.querySelector('.elemenx-game-scene-canvas');
+		var labels = element.querySelector('.elemenx-game-scene-labels');
+		var graphics = this.$Service('Graphics3D');
+		var astronomy = this.$Service('Astronomy');
+		var kinds = this.$Service('Kinds');
+		var random = this.$Service('Random');
+		var vectors = graphics.Vectors;
+		var view = element.ownerDocument.defaultView || window;
+		var shaders = this.Shaders(graphics);
+		var renderer = graphics.Create(canvas, {Restored: function () {
+			build();
+		}});
+		var engine = {};
+		var gpu = {};
+		var KM = astronomy.Units.km;
+		var UNIT = 100;
+		var teams = {blue: '#3d7be0', red: '#d8453c', green: '#3fa34d', yellow: '#e2a915', purple: '#8f5bd6', orange: '#ec7a2c', teal: '#22a39a', gray: '#8a8f98'};
+		var surfaces = {rocky: 0, desert: 0, dwarf: 0, moon: 0, terran: 1, ocean: 1, ice: 2, lava: 3, gas: 4, 'ice-giant': 4};
+		var places = {X: 0, Y: 0, Width: 1, Height: 1, Blocks: false, Opaque: false};
+		var paints = {};
+		var painter = element.ownerDocument.createElement('canvas').getContext('2d');
+		var scene = {
+			Objects: {},
+			Order: [],
+			Roots: [],
+			Declared: [],
+			Added: [],
+			Removed: {},
+			Overrides: {},
+			Loaded: null,
+			Travels: {},
+			Ways: {},
+			Seconds: 0,
+			Ground: null,
+			Rocks: {},
+			Lines: {},
+			Rings: {},
+			Baked: {},
+			Labels: {},
+			Time: Number(this.Time) || 0,
+			Given: {},
+			Camera: graphics.Camera({Fov: 45}),
+			Eye: [0, 0, 0],
+			Yaw: 0.7,
+			Pitch: 0.45,
+			Distance: 60,
+			Wanted: 60,
+			Target: [0, 0, 0],
+			From: [0, 0, 0],
+			Moving: 1,
+			Focus: '',
+			Selected: '',
+			Pointers: {},
+			Drag: null,
+			Pinch: null,
+			Width: 0,
+			Height: 0,
+			Ratio: Math.min(2, view.devicePixelRatio || 1),
+			Most: Math.min(2, view.devicePixelRatio || 1),
+			Slow: 0,
+			Fast: 0,
+			Last: 0,
+			Colors: {Background: [0.01, 0.02, 0.04, 1], Orbit: [0.55, 0.65, 0.85, 0.3], Selection: [0.5, 0.77, 1, 1]},
+			Painted: 0
+		};
+
+		this.Engine = function () {
+			return engine;
+		};
+
+		this.Scene = function () {
+			return scene;
+		};
+
+		/* A CSS color as [r, g, b, a] from 0 to 1: the canvas of 2D reads every form of it. */
+		function paint (color, fallback) {
+			var text;
+			var match;
+
+			if (!color)
+				return fallback || [1, 1, 1, 1];
+
+			if (paints[color])
+				return paints[color];
+
+			painter.fillStyle = '#000000';
+			painter.fillStyle = color;
+			text = String(painter.fillStyle);
+			match = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(text);
+
+			if (match) {
+				paints[color] = [parseInt(match[1], 16) / 255, parseInt(match[2], 16) / 255, parseInt(match[3], 16) / 255, 1];
+			}
+			else {
+				match = /rgba?\(([^)]+)\)/.exec(text);
+				paints[color] = match ? match[1].split(',').map(function (part, index) {
+					return index < 3 ? Number(part) / 255 : Number(part);
+				}) : fallback || [1, 1, 1, 1];
+
+				if (paints[color].length === 3)
+					paints[color].push(1);
+			}
+
+			return paints[color];
+		}
+
+		function teamColor (team) {
+			var names = Object.keys(teams);
+
+			if (!team)
+				return teams.gray;
+
+			if (teams[team])
+				return teams[team];
+
+			if (/^#|^rgb|^hsl/.test(team)) return team;
+
+			return teams[names[random.Hash(team) % names.length]];
+		}
+
+		function theme () {
+			var style = view.getComputedStyle(element);
+
+			scene.Colors.Background = paint(style.getPropertyValue('--elemenx-game-scene-background').trim(), [0.01, 0.02, 0.04, 1]);
+			scene.Colors.Orbit = paint(style.getPropertyValue('--elemenx-game-scene-orbit').trim(), [0.55, 0.65, 0.85, 0.3]);
+			scene.Colors.Selection = paint(style.getPropertyValue('--elemenx-game-scene-selection').trim(), [0.5, 0.77, 1, 1]);
+		}
+
+		function number (value, fallback) {
+			var result = Number(value);
+
+			return value === '' || value === null || value === undefined || !isFinite(result) ? fallback : result;
+		}
+
+		/* A value of an attribute: a number, true and false, a list or an object of JSON as such, else the text. */
+		function parsed (value) {
+			if (typeof value !== 'string') return value;
+			if (/^-?\d+(?:\.\d+)?(?:e[-+]?\d+)?$/i.test(value.trim())) return Number(value);
+			if (value === 'true' || value === 'false') return value === 'true';
+
+			/* A list or an object written as JSON: Position="[0, 1, 0]". */
+			if (/^\s*[\[{]/.test(value)) {
+				try {
+					return JSON.parse(value);
+				}
+				catch (error) {
+					return value;
+				}
+			}
+
+			return value;
+		}
+
+		/* What the object goes round or belongs to: for a part its owner. */
+		function parentOf (object) {
+			return object.Owner || (object.Parent ? scene.Objects[object.Parent] : null) || null;
+		}
+
+		function trait (object, name) {
+			return object && object.Traits ? object.Traits[name] || null : null;
+		}
+
+		/* A spec of an object ({ID, Kind, Parent, Values, Traits, Parts}) of a declaration: each field to its trait, in any case. */
+		function canonical (raw, of) {
+			var kind = raw.Kind && kinds.Has(raw.Kind) ? raw.Kind : '';
+			var fields = kind || of ? kinds.Fields(kind || of) : {};
+			var spec = {ID: raw.ID, Kind: kind, Parent: raw.Parent, Part: raw.Part, Values: {}, Traits: {}, Parts: []};
+
+			Object.keys(raw).forEach(function (key) {
+				var field;
+				var value;
+
+				if (key === 'ID' || key === 'Kind' || key === 'Parent' || key === 'Part') return;
+				if (own(places, key) && raw[key] === places[key]) return;
+
+				value = parsed(raw[key]);
+				field = fields[key.toLowerCase()];
+
+				if (field && field.Trait) {
+					spec.Traits[field.Trait] = spec.Traits[field.Trait] || {};
+					spec.Traits[field.Trait][field.Name] = value;
+				}
+				else {
+					spec.Values[field ? field.Name : key] = value;
+				}
+			});
+
+			return spec;
+		}
+
+		function own (object, key) {
+			return Object.prototype.hasOwnProperty.call(object, key);
+		}
+
+		/* The kind of a part of the kind of a spec (Part="dock" in a station is a module). */
+		function partKind (owner, part) {
+			var found;
+
+			if (!owner.Kind || !kinds.Has(owner.Kind)) return '';
+
+			found = kinds.Resolve(owner.Kind).Parts.filter(function (each) {
+				return String(each.ID) === String(part);
+			})[0];
+
+			return found && found.Kind ? found.Kind : '';
+		}
+
+		/* Whether a kind moves on its own (an Orbit, a Mover): declared in another, it goes round it, not a part of it. */
+		function moving (kind) {
+			var resolved;
+
+			if (!kind || !kinds.Has(kind)) return false;
+
+			resolved = kinds.Resolve(kind);
+
+			return !!(resolved.Traits.Orbit || resolved.Traits.Mover || resolved.Traits.Star || resolved.Traits.Belt || resolved.Traits.Ring);
+		}
+
+		/* The objects declared inside the scene: the GameObject of the template, their nesting their meaning. */
+		function declarations () {
+			var nodes = element.querySelectorAll('.elemenx-game-scene-sources .elemenx-game-source[data-type="object"]');
+			var specs = [];
+			var byNode = [];
+			var before = JSON.stringify(scene.Declared);
+
+			Array.prototype.forEach.call(nodes, function (node, index) {
+				var raw;
+				var spec;
+				var holder = node.parentElement ? node.parentElement.closest('.elemenx-game-source[data-type="object"]') : null;
+				var owner;
+
+				try {
+					raw = JSON.parse(node.getAttribute('data-value') || '{}');
+				}
+				catch (error) {
+					raw = {};
+				}
+
+				owner = holder ? byNode[Array.prototype.indexOf.call(nodes, holder)] : null;
+				spec = canonical(raw, raw.Part && !raw.Kind && owner ? partKind(owner, raw.Part) : '');
+				spec.ID = spec.ID ? String(spec.ID) : spec.Part ? String(spec.Part) : (spec.Kind || 'object') + '-' + index;
+
+				byNode[index] = spec;
+
+				/* Inside another: going round it, or a part of it (the one of its Part, or a new one). */
+				if (owner && !spec.Parent && (moving(spec.Kind) || !spec.Kind && !spec.Part)) {
+					spec.Parent = owner.Root ? owner.Root : owner.ID;
+
+					specs.push(spec);
+				}
+				else if (owner && !spec.Parent) {
+					owner.Parts.push(Object.assign({}, spec.Values, {ID: spec.Part || spec.ID, Kind: spec.Kind || undefined, Traits: spec.Traits}));
+
+					spec.Root = owner.Root || owner.ID;
+				}
+				else {
+					specs.push(spec);
+				}
+			});
+
+			scene.Declared = specs.map(function (spec) {
+				return {ID: spec.ID, Kind: spec.Kind, Parent: spec.Parent, Values: spec.Values, Traits: spec.Traits, Parts: spec.Parts.map(function (part) {
+					var made = Object.assign({}, part, {ID: String(part.ID)});
+					if (!made.Kind)
+						delete made.Kind;
+
+					return made;
+				})};
+			});
+
+			if (JSON.stringify(scene.Declared) !== before)
+				compose();
+		}
+
+		/* The specs of a system of a seed: its bodies as objects of the kinds of space. */
+		function seeded (seed) {
+			return astronomy.Generate(seed).Bodies.map(function (body) {
+				if (body.Type === 'star')
+					return {ID: body.ID, Kind: 'star', Parent: '', Values: {Name: body.Name}, Traits: {Star: {Mass: body.Mass, Radius: body.Radius, Temperature: body.Temperature}}};
+
+				if (body.Type === 'belt' && body.Kind === 'ring')
+					return {ID: body.ID, Kind: 'ring', Parent: body.Parent, Values: {Name: body.Name}, Traits: {Ring: {Inner: body.Inner, Outer: body.Outer}}};
+
+				if (body.Type === 'belt')
+					return {ID: body.ID, Kind: 'belt', Parent: body.Parent, Values: {Name: body.Name}, Traits: {Belt: {Inner: body.Inner, Outer: body.Outer, Count: body.Count}}};
+
+				return {ID: body.ID, Kind: body.Parent === 'star' ? 'planet' : 'moon', Parent: body.Parent, Values: {Name: body.Name}, Traits: {Orbit: body.Orbit, Body: {Radius: body.Radius, Day: body.Day, Tilt: body.Tilt || 0}, Surface: {Type: body.Kind}}};
+			});
+		}
+
+		/* The specs of the System prop: a body may hold its own in Children. */
+		function given (system) {
+			var list = [];
+
+			function put (spec, parent) {
+				var copy = {};
+
+				Object.keys(spec).forEach(function (key) {
+					if (key !== 'Children')
+						copy[key] = spec[key];
+				});
+
+				if (copy.Parent === undefined && parent)
+					copy.Parent = parent;
+
+				list.push(copy);
+
+				(spec.Children || []).forEach(function (child) {
+					put(child, copy.ID);
+				});
+			}
+
+			((system || {}).Objects || []).forEach(function (spec) {
+				put(spec, '');
+			});
+
+			return list;
+		}
+
+		/* A spec made an object of its kind, the changes made by the methods over it. */
+		function make (spec) {
+			var override = scene.Overrides[spec.ID] || {};
+			var props = Object.assign({ID: spec.ID}, spec.Values || {}, override.Values || {});
+			var object;
+
+			props.Traits = kinds.MergeTraits(spec.Traits || {}, override.Traits || {});
+			props.Parts = kinds.MergeParts(spec.Parts || [], override.Parts || []);
+
+			if (spec.Kind && !kinds.Has(spec.Kind))
+				throw new Error('Elemenx GameScene: unknown kind ' + spec.Kind);
+
+			object = kinds.Make(spec.Kind || '', props);
+			object.Parent = override.Parent !== undefined ? override.Parent : spec.Parent;
+
+			return object;
+		}
+
+		/* Every object, of the seed, the system, the template, a saved game and the methods; the later over the earlier. */
+		function compose () {
+			var specs = [];
+			var byID = {};
+			var objects = {};
+			var order = [];
+			var seen = {};
+			var first;
+			var roots;
+
+			function put (spec) {
+				if (!spec || spec.ID === undefined || spec.ID === null) return;
+
+				spec.ID = String(spec.ID);
+
+				if (byID[spec.ID]) specs[specs.indexOf(byID[spec.ID])] = spec;
+				else specs.push(spec);
+
+				byID[spec.ID] = spec;
+			}
+
+			if (scene.Loaded) {
+				scene.Loaded.forEach(put);
+			}
+			else {
+				if (self.Seed !== '' && self.Seed !== null && self.Seed !== undefined)
+					seeded(self.Seed).forEach(put);
+
+				given(self.System).forEach(put);
+				scene.Declared.forEach(put);
+			}
+
+			scene.Added.forEach(put);
+
+			specs = specs.filter(function (spec) {
+				return !scene.Removed[spec.ID];
+			});
+
+			roots = specs.map(function (spec) {
+				var object = spec.Restored ? JSON.parse(JSON.stringify(spec.Restored)) : make(spec);
+
+				if (spec.Restored)
+					object.Parent = spec.Parent;
+
+				crew(object);
+
+				objects[object.ID] = object;
+
+				return object;
+			});
+
+			first = roots.filter(function (object) {
+				return trait(object, 'Star');
+			})[0];
+
+			/* What an object goes round: the one it names, or the first star (a star: the middle of the system). */
+			roots.forEach(function (object) {
+				if (object.Parent && !objects[object.Parent])
+					object.Parent = null;
+
+				if (object.Parent === null || object.Parent === undefined || object.Parent === object.ID)
+					object.Parent = trait(object, 'Star') || !first ? '' : first.ID;
+			});
+
+			function visit (object, seen) {
+				if (seen[object.ID]) return;
+
+				seen[object.ID] = true;
+
+				if (object.Parent && objects[object.Parent])
+					visit(objects[object.Parent], seen);
+
+				order.push(object);
+
+				(function parts (owner) {
+					owner.Parts.forEach(function (part) {
+						part.Owner = owner;
+						part.Root = owner.Root || owner;
+						objects[part.ID] = part;
+
+						order.push(part);
+
+						parts(part);
+					});
+				})(object);
+			}
+
+			roots.forEach(function (object) {
+				visit(object, seen);
+			});
+
+			order.forEach(function (object) {
+				derive(object, objects);
+			});
+
+			scene.Objects = objects;
+			scene.Order = order;
+			scene.Roots = roots;
+
+			Object.keys(scene.Travels).forEach(function (id) {
+				if (!objects[id] || !objects[scene.Travels[id].Target])
+					delete scene.Travels[id];
+			});
+
+			if (scene.Focus && !objects[scene.Focus])
+				scene.Focus = '';
+
+			if (scene.Selected && !objects[scene.Selected])
+				select('', true);
+
+			clear();
+
+			sync();
+		}
+
+		/* The numbers of an object: of a star its light, of a body its gravity and year; its size in the view. */
+		function derive (object, objects) {
+			var parent = object.Owner || (object.Parent ? objects[object.Parent] : null);
+			var star = parent;
+			var orbit = trait(object, 'Orbit');
+			var body = trait(object, 'Body');
+			var model = trait(object, 'Model');
+			var surface = trait(object, 'Surface');
+			var real = self.Scale === 'real';
+			var distance = orbit && orbit.Unit !== 'radii' ? astronomy.Length(orbit.Distance) : 0;
+			var kind;
+
+			while (star && !trait(star, 'Star')) {
+				distance = trait(star, 'Orbit') ? astronomy.Length(trait(star, 'Orbit').Distance) : distance;
+				star = star.Owner || (star.Parent ? objects[star.Parent] : null);
+			}
+
+			object.Name = object.Values.Name || object.Part || object.ID;
+			object.Team = object.Values.Team || (object.Owner ? object.Owner.Team : '') || '';
+			object.Seed = random.Hash(surface && surface.Seed || object.ID) % 1000 / 37;
+			object.Around = massAround(object, parent, objects);
+
+			if (trait(object, 'Star')) {
+				object.Star = astronomy.Star(trait(object, 'Star'));
+				object.Color = trait(object, 'Star').Color || object.Star.Color;
+				object.Size = real ? object.Star.Radius * astronomy.SunRadius * KM * UNIT : 2 * Math.pow(object.Star.Radius, 0.35);
+			}
+			else if (body) {
+				kind = astronomy.Kinds[surface ? surface.Type : 'rocky'] || astronomy.Kinds.rocky;
+				object.Info = astronomy.Describe({Kind: surface ? surface.Type : 'rocky', Radius: body.Radius, Mass: body.Mass, Albedo: body.Albedo, Day: body.Day, Orbit: orbit && orbit.Unit !== 'radii' ? orbit : null}, {Star: star ? star.Star : astronomy.Star({}), Distance: distance, Mass: object.Around});
+				object.Radius = object.Info.Radius;
+				object.Look = look(surface || {Type: 'rocky'}, kind);
+				object.Size = real ? object.Radius * KM * UNIT : 0.5 * Math.pow(object.Radius / astronomy.EarthRadius, 0.45);
+			}
+			else if (model) {
+				object.Size = object.Owner ? object.Owner.Size * number(model.Size, 1) : number(model.Size, 0.1) * (model.Relative && parent ? parent.Size : 1) * (real && !model.Relative ? 0.02 : 1);
+			}
+			else {
+				object.Size = 0;
+			}
+
+			if (trait(object, 'Formation'))
+				object.Size = 0.07 * (real ? 0.02 : 1);
+		}
+
+		/* A formation has its ships as parts: as many as Count, of its Ship kind, the ones its object has not. */
+		function crew (object) {
+			var settings = trait(object, 'Formation');
+			var count;
+			var have;
+			var i;
+			var ship;
+
+			if (!settings) return;
+
+			count = Math.max(0, Math.min(60, Math.round(number(settings.Count, 5))));
+			have = {};
+
+			object.Parts.forEach(function (part) {
+				have[part.Part] = true;
+			});
+
+			for (i = 1; i <= count; i++) {
+				if (have['ship-' + i]) continue;
+
+				ship = kinds.Make(settings.Ship || 'fighter', {ID: object.ID + '/ship-' + i});
+				ship.Part = 'ship-' + i;
+
+				object.Parts.push(ship);
+			}
+
+			object.Parts.forEach(function (part) {
+				if (/^ship-\d+$/.test(part.Part))
+					part.Generated = true;
+			});
+		}
+
+		/* The look of a surface: its kind's colors over its own, the numbers of its shader. */
+		function look (surface, kind) {
+			return {
+				Kind: surfaces[surface.Type] === undefined ? 0 : surfaces[surface.Type],
+				Colors: (Array.isArray(surface.Colors) ? surface.Colors : surface.Colors ? String(surface.Colors).split(',') : kind.Colors).map(function (color) {
+					return paint(String(color).trim()).slice(0, 3);
+				}).concat([[1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1]]).slice(0, 4),
+				Water: paint(surface.Water || kind.Water || '#1d4f8f').slice(0, 3),
+				Ocean: number(surface.Ocean, kind.Ocean || 0),
+				Ice: number(surface.Ice, kind.Ice || 0),
+				Clouds: number(surface.Clouds, kind.Clouds || 0),
+				Atmosphere: surface.Atmosphere === 'none' ? [0, 0, 0, 0] : surface.Atmosphere || kind.Atmosphere ? paint(surface.Atmosphere || kind.Atmosphere).slice(0, 3).concat([surface.Type === 'gas' || surface.Type === 'ice-giant' ? 0.6 : 0.9]) : [0, 0, 0, 0]
+			};
+		}
+
+		/* The mass an object goes round, in masses of the Sun. */
+		function massAround (object, parent, objects) {
+			var total = 0;
+
+			if (parent && trait(parent, 'Star'))
+				return number(trait(parent, 'Star').Mass, 1);
+
+			if (parent && parent.Info)
+				return number(parent.Info.Mass, 1) * astronomy.EarthMass;
+
+			if (parent)
+				return astronomy.EarthMass;
+
+			Object.keys(objects).forEach(function (id) {
+				if (trait(objects[id], 'Star') && !objects[id].Parent && !objects[id].Owner)
+					total += number(trait(objects[id], 'Star').Mass, 1);
+			});
+
+			return total || 1;
+		}
+
+		function toView (point) {
+			return [point[0], point[2], -point[1]];
+		}
+
+		/* A place round a parent in the units of the view: compressed, the far shortened and the near round a body spread out. */
+		function spread (relative, parent) {
+			var a = vectors.Length(relative);
+			var d;
+
+			if (!a)
+				return [0, 0, 0];
+
+			if (self.Scale === 'real')
+				return vectors.Scale(relative, UNIT);
+
+			if (parent && parent.Radius) d = parent.Size * (1 + 0.6 * Math.sqrt(a / (parent.Radius * KM)));
+			else d = 12 * Math.sqrt(a);
+
+			return vectors.Scale(relative, d / a);
+		}
+
+		/* A turn in degrees about X, then Y, then Z, as a matrix. */
+		function turnOf (degrees) {
+			var rad = Math.PI / 180;
+			var angles = degrees || [0, 0, 0];
+
+			return graphics.Multiply(graphics.Rotation([0, 0, 1], (angles[2] || 0) * rad), graphics.Multiply(graphics.Rotation([0, 1, 0], (angles[1] || 0) * rad), graphics.Rotation([1, 0, 0], (angles[0] || 0) * rad)));
+		}
+
+		/* A turn that looks along a heading (the nose of a model along Z). */
+		function heading (direction) {
+			var z = vectors.Normalize(direction);
+			var x = vectors.Normalize(vectors.Cross([0, 1, 0], z));
+			var y;
+
+			if (!vectors.Length(x))
+				x = [1, 0, 0];
+
+			y = vectors.Cross(z, x);
+
+			return [x[0], x[1], x[2], 0, y[0], y[1], y[2], 0, z[0], z[1], z[2], 0, 0, 0, 0, 1];
+		}
+
+		/* Where every object is at a time: in AU (Position) and in the view (World), with its turn (Turn). */
+		function place (time) {
+			scene.Order.forEach(function (object) {
+				var parent = parentOf(object);
+				var base = parent ? parent.World || [0, 0, 0] : [0, 0, 0];
+				var position = parent ? parent.Position || [0, 0, 0] : [0, 0, 0];
+				var orbit = trait(object, 'Orbit');
+				var body = trait(object, 'Body');
+				var model = trait(object, 'Model');
+				var relative;
+				var angle;
+				var tilt;
+				var radius;
+				var offset;
+				var day;
+
+				object.Turn = graphics.Identity();
+
+				if (scene.Ground && !object.Owner && !orbit && !trait(object, 'Terrain') && !trait(object, 'Sun')) {
+					stand(object);
+				}
+				else if (object.Owner && !object.Generated) {
+					offset = graphics.Apply(object.Owner.Turn || graphics.Identity(), vectors.Scale(object.Values.Position || [0, 0, 0], object.Owner.Size || 1));
+					object.World = vectors.Add(base, offset);
+					object.Position = position;
+					object.Turn = graphics.Multiply(object.Owner.Turn || graphics.Identity(), turnOf(object.Values.Rotation));
+				}
+				else if (object.Owner) {
+					object.World = object.World || base;
+					object.Position = position;
+				}
+				else if (trait(object, 'Mover') && (scene.Travels[object.ID] || !orbit)) {
+					hold(object, time);
+				}
+				else if (orbit && orbit.Unit === 'radii') {
+					angle = Math.PI * 2 * time / Math.max(0.01, number(orbit.Period, 0.6)) + object.Seed;
+					tilt = number(orbit.Inclination, 12) * Math.PI / 180;
+					radius = (parent ? parent.Size : 1) * number(orbit.Distance, 1.8);
+					object.World = vectors.Add(base, [Math.cos(angle) * radius, Math.sin(angle) * Math.sin(tilt) * radius, -Math.sin(angle) * Math.cos(tilt) * radius]);
+					object.Relative = vectors.Subtract(object.World, base);
+					object.Position = position;
+				}
+				else if (orbit && astronomy.Length(orbit.Distance)) {
+					relative = astronomy.Position(orbit, time, object.Around);
+					object.Position = vectors.Add(position, relative);
+					object.Relative = spread(toView(relative), parent);
+					object.World = vectors.Add(base, object.Relative);
+				}
+				else {
+					object.Position = position;
+					object.Relative = [0, 0, 0];
+					object.World = base;
+				}
+
+				/* Its own turn: a body by its day and tilt (one face to its parent without a day), a model by its spin. */
+				if (body) {
+					day = number(body.Day, 24);
+					angle = day ? Math.PI * 2 * time * 24 / day : Math.atan2(object.Relative ? object.Relative[0] : 0, object.Relative ? object.Relative[2] : 1) + Math.PI;
+					object.Turn = graphics.Multiply(graphics.Rotation([1, 0, 0], number(body.Tilt, 0) * Math.PI / 180), graphics.Rotation([0, 1, 0], angle));
+				}
+				else if (trait(object, 'Star')) {
+					object.Turn = graphics.Rotation([0, 1, 0], time * 0.1);
+				}
+				else if (model && !object.Owner && model.Spin) {
+					object.Turn = graphics.Multiply(graphics.Rotation([1, 0, 0], 0.35), graphics.Rotation([0, 1, 0], time * number(model.Spin, 0)));
+				}
+
+				if (trait(object, 'Formation'))
+					formation(object);
+			});
+
+			custom('Update');
+		}
+
+		/* The place an object of a Mover holds beside the one it is at, or its way to where it was sent. */
+		function holdAt (object, at, time) {
+			var target = at ? scene.Objects[at] : null;
+			var center = target ? target.World || [0, 0, 0] : [0, 0, 0];
+			var radius = (target ? target.Size : 1) * 2.6 + 0.35;
+			var angle = Math.PI * 2 * time / 3 + object.Seed;
+
+			return {Point: vectors.Add(center, [Math.cos(angle) * radius, 0.12 * radius, -Math.sin(angle) * radius]), Heading: [-Math.sin(angle), 0, -Math.cos(angle)]};
+		}
+
+		function hold (object, time) {
+			var travel = scene.Travels[object.ID];
+			var goal;
+			var progress;
+			var eased;
+			var spot;
+
+			if (!travel) {
+				spot = holdAt(object, object.Parent, time);
+				object.World = spot.Point;
+				object.Heading = spot.Heading;
+				object.Position = object.Parent && scene.Objects[object.Parent] ? scene.Objects[object.Parent].Position || [0, 0, 0] : [0, 0, 0];
+
+				return;
+			}
+
+			goal = holdAt(object, travel.Target, time).Point;
+			progress = Math.max(0, Math.min(1, (time - travel.Start) / travel.Duration));
+			eased = progress * progress * (3 - 2 * progress);
+			object.World = vectors.Lerp(travel.From, goal, eased);
+			object.Heading = vectors.Normalize(vectors.Subtract(goal, travel.From));
+			object.Position = vectors.Lerp(travel.Position, scene.Objects[travel.Target].Position || [0, 0, 0], eased);
+
+			if (progress >= 1) {
+				delete scene.Travels[object.ID];
+
+				object.Parent = travel.Target;
+				scene.Overrides[object.ID] = scene.Overrides[object.ID] || {};
+				scene.Overrides[object.ID].Parent = travel.Target;
+
+				window.setTimeout(function () {
+					self.$Emit('arrive', {ID: object.ID, At: travel.Target});
+
+					if (travel.Callback)
+						travel.Callback(null, {ID: object.ID, At: travel.Target});
+				}, 0);
+			}
+		}
+
+		/* The ships of a formation in a wedge behind the first one, all heading along the way of the formation. */
+		function formation (object) {
+			var settings = trait(object, 'Formation');
+			var spacing = number(settings.Spacing, 2.4);
+			var direction = vectors.Normalize(object.Heading || [0, 0, 1]);
+			var side = vectors.Normalize(vectors.Cross([0, 1, 0], direction));
+			var turn = heading(direction);
+			var index = 0;
+
+			object.Turn = turn;
+
+			object.Parts.forEach(function (part) {
+				var row;
+				var across;
+				var size = part.Size || object.Size;
+
+				if (!/^ship-\d+$/.test(part.Part)) return;
+
+				row = Math.ceil(index / 2);
+				across = index === 0 ? 0 : index % 2 ? -row : row;
+				part.World = vectors.Add(object.World, vectors.Add(vectors.Scale(side, across * size * spacing), vectors.Scale(direction, -row * size * spacing * 1.08)));
+				part.Turn = turn;
+				part.Heading = direction;
+
+				index++;
+			});
+		}
+
+		/* The systems of the application for traits of their own: Update after the places, Draw after the scene. */
+		function custom (stage) {
+			var systems = self.Systems || {};
+
+			Object.keys(systems).forEach(function (name) {
+				var system = systems[name];
+				if (!system || typeof system[stage] !== 'function') return;
+
+				scene.Order.forEach(function (object) {
+					if (trait(object, name))
+						system[stage](object, engine.Context);
+				});
+			});
+		}
+
+		/* The meshes and programs, made once (and again when the browser gives a lost context back). */
+		function build () {
+			if (!renderer) return;
+
+			gpu.Planet = renderer.Program(shaders.Lit, shaders.Planet);
+			gpu.Bake = renderer.Program(graphics.Shaders.Quad, shaders.Bake);
+			gpu.Star = renderer.Program(shaders.Lit, shaders.Star);
+			gpu.Air = renderer.Program(shaders.Lit, shaders.Air);
+			gpu.Ring = renderer.Program(shaders.Lit, shaders.Ring);
+			gpu.Many = renderer.Program(shaders.Instanced, shaders.Solid);
+			gpu.Glow = renderer.Program(shaders.Billboard, shaders.Glow);
+			gpu.Line = renderer.Program(shaders.Line, shaders.Flat);
+			gpu.Far = renderer.Program(shaders.Far, shaders.Dot);
+			gpu.Ground = renderer.Program(shaders.GroundVertex, shaders.Ground);
+			gpu.Land = renderer.Program(shaders.LandVertex, shaders.Land);
+			gpu.Sea = renderer.Program(shaders.Lit, shaders.Sea);
+			gpu.Sky = renderer.Program(graphics.Shaders.Quad, shaders.Sky);
+			gpu.Sphere = renderer.Mesh(graphics.Sphere({Segments: 64, Rings: 40}));
+			gpu.Quad = renderer.Mesh({Positions: [-1, -1, 0, 1, -1, 0, 1, 1, 0, -1, 1, 0], Indices: [0, 1, 2, 0, 2, 3]});
+			gpu.Shapes = {};
+			gpu.Stars = stars();
+			scene.Lines = {};
+			scene.Rings = {};
+			scene.Rocks = {};
+			scene.Baked = {};
+		}
+
+		/* The shapes of the models: the plain ones, the ships, a rock; each a mesh made the first time it is drawn. */
+		function shape (name) {
+			var hull = [0.78, 0.8, 0.84];
+			var dark = [0.35, 0.37, 0.42];
+			var flame = [2.4, 1.8, 1];
+			var ahead = graphics.Rotation([1, 0, 0], Math.PI / 2);
+			var simple = {
+				box: function () {
+					return graphics.Box({});
+				},
+				sphere: function () {
+					return graphics.Sphere({Radius: 0.5, Segments: 24, Rings: 16});
+				},
+				cylinder: function () {
+					return graphics.Cylinder({Radius: 0.5, Height: 1, Segments: 20});
+				},
+				cone: function () {
+					return graphics.Cylinder({Radius: 0.5, Top: 0, Height: 1, Segments: 20});
+				},
+				torus: function () {
+					return graphics.Torus({Radius: 1, Tube: 0.1, Segments: 48, Sides: 10});
+				}
+			};
+			var noise;
+			var geometry;
+
+			if (gpu.Shapes[name])
+				return gpu.Shapes[name];
+
+			if (simple[name]) {
+				geometry = simple[name]();
+			}
+			else if (name === 'cruiser') {
+				geometry = graphics.Merge([
+					{Geometry: graphics.Box({Width: 0.5, Height: 0.34, Depth: 2}), Color: hull},
+					{Geometry: graphics.Cylinder({Radius: 0.25, Top: 0, Height: 0.7, Segments: 10}), Matrix: graphics.Multiply(graphics.Translation(0, 0, 1.35), ahead), Color: hull},
+					{Geometry: graphics.Box({Width: 0.24, Height: 0.3, Depth: 0.5}), Matrix: graphics.Translation(0, 0.3, -0.3), Color: dark},
+					{Geometry: graphics.Box({Width: 1.2, Height: 0.06, Depth: 0.5}), Matrix: graphics.Translation(0, 0, -0.6), Color: dark},
+					{Geometry: graphics.Cylinder({Radius: 0.12, Height: 0.2, Segments: 8}), Matrix: graphics.Multiply(graphics.Translation(0, 0, -1.08), ahead), Color: flame}
+				]);
+			}
+			else if (name === 'freighter') {
+				geometry = graphics.Merge([
+					{Geometry: graphics.Box({Width: 0.8, Height: 0.6, Depth: 1.4}), Color: dark},
+					{Geometry: graphics.Box({Width: 0.6, Height: 0.5, Depth: 0.5}), Matrix: graphics.Translation(0, 0, 0.95), Color: hull},
+					{Geometry: graphics.Box({Width: 0.36, Height: 0.36, Depth: 0.4}), Matrix: graphics.Translation(0.22, 0.48, -0.2), Color: hull},
+					{Geometry: graphics.Box({Width: 0.36, Height: 0.36, Depth: 0.4}), Matrix: graphics.Translation(-0.22, 0.48, 0.25), Color: hull},
+					{Geometry: graphics.Cylinder({Radius: 0.15, Height: 0.2, Segments: 8}), Matrix: graphics.Multiply(graphics.Translation(0, 0, -0.8), ahead), Color: flame}
+				]);
+			}
+			else if (name === 'fighter') {
+				geometry = graphics.Merge([
+					{Geometry: graphics.Cylinder({Radius: 0.28, Top: 0, Height: 1.6, Segments: 10}), Matrix: ahead, Color: hull},
+					{Geometry: graphics.Box({Width: 1.5, Height: 0.05, Depth: 0.5}), Matrix: graphics.Translation(0, 0, -0.45), Color: dark},
+					{Geometry: graphics.Box({Width: 0.06, Height: 0.4, Depth: 0.4}), Matrix: graphics.Translation(0, 0.2, -0.55), Color: dark},
+					{Geometry: graphics.Cylinder({Radius: 0.1, Height: 0.16, Segments: 8}), Matrix: graphics.Multiply(graphics.Translation(0, 0, -0.85), ahead), Color: flame}
+				]);
+			}
+			else if (name === 'unit') {
+				geometry = graphics.Merge([
+					{Geometry: graphics.Cylinder({Radius: 0.22, Top: 0.18, Height: 0.62, Segments: 12}), Matrix: graphics.Translation(0, 0.31, 0), Color: [0.85, 0.86, 0.9]},
+					{Geometry: graphics.Sphere({Radius: 0.13, Segments: 12, Rings: 8}), Matrix: graphics.Translation(0, 0.76, 0), Color: [0.92, 0.8, 0.68]},
+					{Geometry: graphics.Box({Width: 0.08, Height: 0.08, Depth: 0.5}), Matrix: graphics.Translation(0.25, 0.45, 0.15), Color: [0.4, 0.42, 0.46]}
+				]);
+			}
+			else if (name === 'tree') {
+				geometry = graphics.Merge([
+					{Geometry: graphics.Cylinder({Radius: 0.06, Height: 0.35, Segments: 8}), Matrix: graphics.Translation(0, 0.17, 0), Color: [0.42, 0.3, 0.2]},
+					{Geometry: graphics.Cylinder({Radius: 0.32, Top: 0, Height: 0.55, Segments: 10}), Matrix: graphics.Translation(0, 0.55, 0), Color: [0.2, 0.42, 0.22]},
+					{Geometry: graphics.Cylinder({Radius: 0.24, Top: 0, Height: 0.45, Segments: 10}), Matrix: graphics.Translation(0, 0.8, 0), Color: [0.24, 0.48, 0.25]}
+				]);
+			}
+			else if (name === 'house') {
+				geometry = graphics.Merge([
+					{Geometry: graphics.Box({Width: 1, Height: 0.55, Depth: 0.8}), Matrix: graphics.Translation(0, 0.27, 0), Color: [0.9, 0.86, 0.78]},
+					{Geometry: graphics.Cylinder({Radius: 0.78, Top: 0, Height: 0.45, Segments: 4}), Matrix: graphics.Multiply(graphics.Translation(0, 0.77, 0), graphics.Rotation([0, 1, 0], Math.PI / 4)), Color: [0.62, 0.28, 0.22]},
+					{Geometry: graphics.Box({Width: 0.2, Height: 0.3, Depth: 0.02}), Matrix: graphics.Translation(0, 0.15, 0.41), Color: [0.35, 0.25, 0.18]}
+				]);
+			}
+			else if (name === 'rock') {
+				noise = graphics.Noise('rock');
+				geometry = graphics.Displace(graphics.Icosphere({Radius: 1, Detail: 1}), function (point) {
+					return (noise.Fbm(point[0] * 1.6 + 3, point[1] * 1.6, point[2] * 1.6, 3) - 0.5) * 0.9;
+				});
+			}
+			else {
+				geometry = graphics.Box({});
+			}
+
+			gpu.Shapes[name] = renderer.Mesh(geometry);
+
+			return gpu.Shapes[name];
+		}
+
+		/* The stars far away: points on a ball round the view, of the colors of their temperatures. */
+		function stars () {
+			var generator = astronomy.Random('sky');
+			var positions = [];
+			var colors = [];
+			var i;
+			var z;
+			var angle;
+			var radius;
+			var color;
+
+			for (i = 0; i < 2600; i++) {
+				z = generator.Float(-1, 1);
+				angle = generator.Float(0, Math.PI * 2);
+				radius = Math.sqrt(1 - z * z);
+				color = paint(astronomy.Color(generator.Pick([3200, 4500, 5600, 6500, 8000, 12000])));
+
+				positions.push(Math.cos(angle) * radius * 50, z * 50, Math.sin(angle) * radius * 50);
+				colors.push(color[0], color[1], color[2], Math.pow(generator.Next(), 3) * 0.9 + 0.1);
+			}
+
+			return renderer.Points(positions, {aColor: {Size: 4, Data: colors}});
+		}
+
+		/* The meshes of the orbits, rings and belts, made again with the objects; the baked surfaces kept by their look. */
+		function clear () {
+			Object.keys(scene.Lines).forEach(function (id) {
+				scene.Lines[id].Destroy();
+			});
+
+			Object.keys(scene.Rings).forEach(function (id) {
+				scene.Rings[id].Mesh.Destroy();
+			});
+
+			scene.Lines = {};
+			scene.Rings = {};
+			scene.Rocks = {};
+		}
+
+		function orbitLine (object) {
+			var parent = parentOf(object);
+
+			if (!scene.Lines[object.ID])
+				scene.Lines[object.ID] = renderer.Lines(astronomy.Path(trait(object, 'Orbit'), 180).map(function (point) {
+					return spread(toView(point), parent);
+				}), true);
+
+			return scene.Lines[object.ID];
+		}
+
+		function ringOf (object) {
+			var settings = trait(object, 'Ring');
+			var parent = parentOf(object);
+			var round = parent && parent.Radius;
+			var inner = number(settings.Inner, round ? 1.3 : 2.2);
+			var outer = number(settings.Outer, round ? 2.3 : 3.2);
+
+			if (!scene.Rings[object.ID]) {
+				scene.Rings[object.ID] = {
+					Mesh: renderer.Mesh(graphics.Ring({Inner: round ? inner : vectors.Length(spread([inner, 0, 0], null)), Outer: round ? outer : vectors.Length(spread([outer, 0, 0], null)), Segments: 128})),
+					Colors: (settings.Colors ? String(settings.Colors).split(',') : []).concat(['#c9b48f', '#a89070', '#e0d2b4', '#8c7a60']).slice(0, 4).map(function (color) {
+						return paint(String(color).trim()).slice(0, 3);
+					})
+				};
+			}
+
+			return scene.Rings[object.ID];
+		}
+
+		/* The rocks of a belt: each on an orbit of its own, between the edges of the belt. */
+		function rocksOf (object) {
+			var settings = trait(object, 'Belt');
+			var parent = parentOf(object);
+			var round = parent && parent.Radius;
+			var generator = astronomy.Random(object.ID + ':' + object.Seed);
+			var count = Math.max(1, Math.min(4000, Math.round(number(settings.Count, 260))));
+			var inner = number(settings.Inner, round ? 2 : 2.2);
+			var outer = number(settings.Outer, round ? 4 : 3.2);
+			var tilt = number(settings.Inclination, 0);
+			var colors = (settings.Colors ? String(settings.Colors).split(',') : ['#8a7f74', '#6f655c', '#a39684', '#5d5650']).map(function (color) {
+				return paint(String(color).trim()).slice(0, 3);
+			});
+			var rocks = [];
+			var i;
+
+			if (scene.Rocks[object.ID])
+				return scene.Rocks[object.ID];
+
+			for (i = 0; i < count; i++) {
+				rocks.push({
+					Orbit: {Distance: round ? generator.Float(inner, outer) * parent.Radius * KM : generator.Float(inner, outer), Eccentricity: generator.Float(0, 0.12), Inclination: tilt + generator.Float(-6, 6), Node: generator.Float(0, 360), Periapsis: generator.Float(0, 360), Anomaly: generator.Float(0, 360)},
+					Size: generator.Float(0.03, 0.11) * (self.Scale === 'real' ? 0.02 : 1) * (round ? parent.Size : 1),
+					Axis: vectors.Normalize([generator.Float(-1, 1), generator.Float(-1, 1), generator.Float(-1, 1)]),
+					Spin: generator.Float(0.5, 3),
+					Color: generator.Pick(colors)
+				});
+			}
+
+			scene.Rocks[object.ID] = {Rocks: rocks};
+
+			return scene.Rocks[object.ID];
+		}
+
+		/* The surface of a body baked once into two cubes: its ground (color and gloss), its clouds and the glow of its lava. */
+		function baked (object) {
+			var key = JSON.stringify([object.Look, object.Seed]);
+			var made = scene.Baked[object.ID];
+			var size = object.Radius > 3000 ? 512 : object.Radius > 500 ? 256 : 128;
+			var uniforms;
+
+			if (made && made.Key === key) return made;
+
+			if (scene.BakedThisFrame >= 2) return made || null;
+
+			scene.BakedThisFrame++;
+
+			if (made) {
+				made.Ground.Destroy();
+				made.Sky.Destroy();
+			}
+
+			uniforms = {uKind: object.Look.Kind, uColors: [].concat(object.Look.Colors[0], object.Look.Colors[1], object.Look.Colors[2], object.Look.Colors[3]), uWater: object.Look.Water, uOcean: object.Look.Ocean, uIce: object.Look.Ice, uClouds: object.Look.Clouds, uSeed: object.Seed};
+			made = {Key: key, Ground: renderer.Cube(size), Sky: renderer.Cube(size)};
+
+			renderer.Bake(made.Ground, gpu.Bake, Object.assign({uLayer: 0}, uniforms));
+			renderer.Bake(made.Sky, gpu.Bake, Object.assign({uLayer: 1}, uniforms));
+
+			scene.Baked[object.ID] = made;
+
+			return made;
+		}
+
+		/* The lights: the stars, up to four, relative to the eye. */
+		function lights () {
+			var positions = [];
+			var colors = [];
+			var list = scene.Order.filter(function (object) {
+				return trait(object, 'Star') && object.World;
+			}).slice(0, 4);
+
+			list.forEach(function (star) {
+				var color = paint(star.Color);
+				var strength = Math.min(1.6, 0.9 + 0.25 * Math.log(1 + star.Star.Luminosity));
+				var at = vectors.Subtract(star.World, scene.Eye);
+
+				positions.push(at[0], at[1], at[2]);
+				colors.push(color[0] * strength, color[1] * strength, color[2] * strength);
+			});
+
+			/* The sun of a ground: a light so far along its direction that its rays are parallel. */
+			if (!list.length && scene.Ground) {
+				positions.splice(0, 0, scene.Ground.Sun[0] * 1e6, scene.Ground.Sun[1] * 1e6, scene.Ground.Sun[2] * 1e6);
+				colors.splice(0, 0, scene.Ground.SunColor[0] * 1.15, scene.Ground.SunColor[1] * 1.15, scene.Ground.SunColor[2] * 1.15);
+
+				list = [null];
+			}
+
+			while (positions.length < 12) {
+				positions.push(0, 0, 0);
+				colors.push(0, 0, 0);
+			}
+
+			return {Positions: positions, Colors: colors, Count: list.length};
+		}
+
+		/* The balls that may shade a body: what it goes round, and its moons (the largest ones), relative to the eye. */
+		function occluders (object) {
+			var list = [];
+			var parent = parentOf(object);
+			var data = [];
+
+			if (parent && parent.Radius)
+				list.push(parent);
+
+			scene.Order.forEach(function (other) {
+				if (other.Parent === object.ID && other.Radius && !other.Owner)
+					list.push(other);
+			});
+
+			list.sort(function (a, b) {
+				return b.Size - a.Size;
+			}).slice(0, 4).forEach(function (other) {
+				var at = vectors.Subtract(other.World, scene.Eye);
+
+				data.push(at[0], at[1], at[2], other.Size);
+			});
+
+			while (data.length < 16)
+				data.push(0, 0, 0, 0);
+
+			return {Data: data, Count: Math.min(4, list.length)};
+		}
+
+		function resize () {
+			scene.Width = element.clientWidth;
+			scene.Height = element.clientHeight;
+
+			theme();
+
+			if (renderer)
+				renderer.Resize(scene.Width, scene.Height, scene.Ratio);
+		}
+
+		/* The resolution follows the time of a frame: lower while frames are slow, back up while they are fast. */
+		function adapt (elapsed) {
+			if (!elapsed || !renderer) return;
+
+			if (elapsed > 0.026) {
+				scene.Slow++;
+				scene.Fast = 0;
+			}
+			else if (elapsed < 0.014) {
+				scene.Fast++;
+				scene.Slow = 0;
+			}
+
+			if (scene.Slow > 20 && scene.Ratio > 0.5) {
+				scene.Ratio = Math.max(0.5, scene.Ratio * 0.8);
+				scene.Slow = 0;
+
+				renderer.Resize(scene.Width, scene.Height, scene.Ratio);
+			}
+			else if (scene.Fast > 90 && scene.Ratio < scene.Most) {
+				scene.Ratio = Math.min(scene.Most, scene.Ratio * 1.15);
+				scene.Fast = 0;
+
+				renderer.Resize(scene.Width, scene.Height, scene.Ratio);
+			}
+		}
+
+		/* The view: smoothly to the object in focus (following it as it goes), then round it. */
+		function aim (elapsed) {
+			var focus = scene.Focus ? scene.Objects[scene.Focus] : null;
+			var wanted = focus && focus.World ? focus.World : [0, 0, 0];
+			var camera = scene.Camera;
+			var eased;
+
+			scene.Moving = Math.min(1, scene.Moving + elapsed / 0.9);
+			eased = scene.Moving * scene.Moving * (3 - 2 * scene.Moving);
+			scene.Target = vectors.Lerp(scene.From, wanted, eased);
+			scene.Distance += (scene.Wanted - scene.Distance) * (1 - Math.exp(-elapsed * 9));
+
+			camera.Orbit(scene.Target, scene.Yaw, scene.Pitch, scene.Distance);
+
+			scene.Eye = camera.Position.slice();
+			camera.Near = Math.max(1e-6, scene.Distance * 0.002);
+			camera.Far = scene.Distance * 40 + extent() * 6;
+		}
+
+		/* How far the scene reaches: the farthest object round the middle. */
+		function extent () {
+			var far = 4;
+
+			scene.Roots.forEach(function (object) {
+				var parent = parentOf(object);
+				var middle = !parent || trait(parent, 'Star');
+				if (object.Relative && middle)
+					far = Math.max(far, vectors.Length(object.Relative) * (1 + number(trait(object, 'Orbit') && trait(object, 'Orbit').Eccentricity, 0)));
+
+				if (trait(object, 'Belt') && middle)
+					far = Math.max(far, vectors.Length(spread([number(trait(object, 'Belt').Outer, 3), 0, 0], null)));
+			});
+
+			return far;
+		}
+
+		/* How far to stand from an object to see it and what goes round it. */
+		function closeness (object) {
+			var far = Math.max(object.Size, 0.02) * 4.5;
+
+			if (trait(object, 'Star') && !object.Parent) return extent() * 1.6;
+
+			if (scene.Ground)
+				return Math.max(far, 45);
+
+			scene.Roots.forEach(function (other) {
+				if (other.Parent === object.ID && other.Relative)
+					far = Math.max(far, vectors.Length(other.Relative) * 1.7);
+			});
+
+			return far;
+		}
+
+		function focusOn (id, quiet) {
+			var object = id ? scene.Objects[id] : null;
+			var star;
+
+			if (id && !object) return false;
+
+			scene.From = scene.Target.slice();
+			scene.Moving = 0;
+			scene.Focus = object ? object.ID : '';
+			scene.Wanted = object ? closeness(object) : scene.Ground ? scene.Ground.Field.Size * 0.45 : extent() * 1.6;
+			scene.Given.Focus = scene.Focus;
+			self.Focus = scene.Focus;
+
+			/* An object is seen from its day side, a little aside from its star. */
+			if (object && !trait(object, 'Star') && object.World) {
+				star = scene.Order.filter(function (each) {
+					return trait(each, 'Star') && each.World;
+				})[0];
+
+				if (star && (star.World[0] - object.World[0] || star.World[2] - object.World[2]))
+					scene.Yaw = Math.atan2(star.World[0] - object.World[0], star.World[2] - object.World[2]) + 0.75;
+			}
+
+			if (!quiet)
+				self.$Emit('focus', {ID: scene.Focus});
+
+			return true;
+		}
+
+		/* A matrix of an object relative to the eye: what the view draws is near the origin, where floats are exact. */
+		function local (point) {
+			return vectors.Subtract(point, scene.Eye);
+		}
+
+		function draw () {
+			var camera = scene.Camera;
+			var width = renderer.Width;
+			var height = renderer.Height;
+			var aspect = width / Math.max(1, height);
+			var viewMatrix = graphics.LookAt([0, 0, 0], vectors.Subtract(camera.Target, camera.Position), camera.Up);
+			var matrix = graphics.Multiply(camera.Projection(aspect), viewMatrix);
+			var right = [viewMatrix[0], viewMatrix[4], viewMatrix[8]];
+			var up = [viewMatrix[1], viewMatrix[5], viewMatrix[9]];
+			var light = lights();
+			var background = scene.Colors.Background;
+			var common = {uViewProjection: matrix, uCamera: [0, 0, 0], uLightPositions: light.Positions, uLightColors: light.Colors, uLightCount: light.Count, uAmbient: [0.025, 0.027, 0.035], uOccluderCount: 0, uOccluders: new Array(16).fill(0), uTime: scene.Time, uHighlight: [0, 0, 0, 0]};
+			var selected = scene.Selected ? scene.Objects[scene.Selected] : null;
+			var later = [];
+			var models = {};
+
+			scene.BakedThisFrame = 0;
+
+			function uniforms (extra) {
+				return Object.assign({}, common, extra);
+			}
+
+			/* A turn of an object with its place relative to the eye and its size: its model matrix. */
+			function placed (object, size) {
+				var model = graphics.Multiply(graphics.Translation(0, 0, 0), object.Turn || graphics.Identity());
+
+				model = graphics.Multiply(model, graphics.Scaling(size, size, size));
+				model[12] = object.World[0] - scene.Eye[0];
+				model[13] = object.World[1] - scene.Eye[1];
+				model[14] = object.World[2] - scene.Eye[2];
+
+				return model;
+			}
+
+			/* The glow of the selection on the edge of a body near enough to fill much of the view. */
+			function highlight (object) {
+				var color = scene.Colors.Selection;
+
+				return selected && (selected === object || selected.Root === object) ? [color[0], color[1], color[2], 0.9] : [0, 0, 0, 0];
+			}
+
+			renderer.Clear([background[0], background[1], background[2], 1]);
+
+			if (scene.Ground)
+				drawGround(matrix, aspect, viewMatrix);
+
+			if (self.Background && self.Background !== 'false' && !scene.Ground) {
+				renderer.Draw(gpu.Stars, gpu.Far, {uViewProjection: graphics.Multiply(graphics.Perspective(camera.Fov, aspect, 0.1, 200), viewMatrix), uRatio: renderer.Ratio}, {Depth: false, DepthWrite: false, Blend: 'add'});
+			}
+
+			scene.Order.forEach(function (object) {
+				var parent = parentOf(object);
+				var size = object.World && object.Size ? Math.max(object.Size, pixels(object.World, trait(object, 'Star') ? 4 : 1.5)) : object.Size;
+				var model;
+				var shade;
+				var surface;
+				var ring;
+				var rocks;
+				var settings;
+
+				if (!object.World) return;
+
+				if (trait(object, 'Star')) {
+					model = placed(object, size);
+
+					renderer.Draw(gpu.Sphere, gpu.Star, uniforms({uModel: model, uNormalMatrix: graphics.NormalMatrix(model), uColor: paint(object.Color).slice(0, 3), uSeed: object.Seed}));
+
+					later.push(function () {
+						renderer.Draw(gpu.Quad, gpu.Glow, uniforms({uCenter: local(object.World), uSize: size * 4.2, uRight: right, uUp: up, uColor: paint(object.Color).slice(0, 3), uInner: 0.18, uStyle: 0}), {Blend: 'add', DepthWrite: false, Cull: 'none'});
+					});
+				}
+				else if (trait(object, 'Body')) {
+					surface = baked(object);
+
+					if (!surface) return;
+
+					model = placed(object, size);
+					shade = occluders(object);
+
+					renderer.Draw(gpu.Sphere, gpu.Planet, uniforms({uModel: model, uNormalMatrix: graphics.NormalMatrix(model), uGround: surface.Ground, uSky: surface.Sky, uKind: object.Look.Kind, uColors: [].concat(object.Look.Colors[0], object.Look.Colors[1], object.Look.Colors[2], object.Look.Colors[3]), uClouds: object.Look.Clouds, uAtmosphere: object.Look.Atmosphere, uOccluders: shade.Data, uOccluderCount: shade.Count, uHighlight: highlight(object)}));
+
+					if (object.Look.Atmosphere[3]) {
+						later.push(function () {
+							var shell = graphics.Compose(local(object.World), null, size * 1.07);
+
+							renderer.Draw(gpu.Sphere, gpu.Air, uniforms({uModel: shell, uNormalMatrix: graphics.NormalMatrix(shell), uColor: object.Look.Atmosphere.slice(0, 3), uStrength: object.Look.Atmosphere[3], uBody: local(object.World).concat([size]), uShell: size * 1.07}), {Blend: 'add', DepthWrite: false, Cull: 'front'});
+						});
+					}
+				}
+				else if (trait(object, 'Ring')) {
+					ring = ringOf(object);
+
+					later.push(function () {
+						var settings = trait(object, 'Ring');
+						var round = parent && parent.Radius;
+						var turn = graphics.Rotation([1, 0, 0], ((round ? number(trait(parent, 'Body').Tilt, 0) : 0) + number(settings.Inclination, 0)) * Math.PI / 180);
+						var matrix = graphics.Compose(local(parent ? parent.World : [0, 0, 0]), turn, round ? parent.Size : 1);
+						var planet = round ? local(parent.World).concat([parent.Size]).concat(new Array(12).fill(0)) : new Array(16).fill(0);
+
+						renderer.Draw(ring.Mesh, gpu.Ring, uniforms({uModel: matrix, uNormalMatrix: graphics.NormalMatrix(matrix), uColors: [].concat(ring.Colors[0], ring.Colors[1], ring.Colors[2], ring.Colors[3]), uSeed: object.Seed, uOccluders: planet, uOccluderCount: round ? 1 : 0}), {Blend: 'alpha', DepthWrite: false, Cull: 'none'});
+					});
+				}
+				else if (trait(object, 'Belt')) {
+					rocks = rocksOf(object);
+
+					rocks.Rocks.forEach(function (each) {
+						var point = vectors.Add(parent ? parent.World : [0, 0, 0], spread(toView(astronomy.Position(each.Orbit, scene.Time, object.Around)), parent));
+						var turn = graphics.Rotation(each.Axis, scene.Time * each.Spin);
+
+						batch(models, 'rock', point, turn, [each.Size, each.Size, each.Size], each.Color, 1);
+					});
+				}
+
+				/* A model: of its own shape, or of its parts (a station of modules); a part drawn in its owner. */
+				settings = trait(object, 'Model');
+
+				if (settings && settings.Shape)
+					batch(models, settings.Shape, object.World, object.Turn, vectors.Scale(settings.Scale || [1, 1, 1], object.Size), paint(settings.Color || '#c8ccd4').slice(0, 3), object.Team ? 0.35 : 0, paint(teamColor(object.Team)).slice(0, 3));
+
+				if (self.Orbits && self.Orbits !== 'false' && trait(object, 'Orbit') && trait(object, 'Orbit').Unit !== 'radii' && !object.Owner && astronomy.Length(trait(object, 'Orbit').Distance))
+					later.unshift(line(object, parent, uniforms));
+			});
+
+			Object.keys(models).forEach(function (name) {
+				var list = models[name];
+				var mesh = shape(name);
+
+				mesh.Instance({aInstance: {Size: 4, Data: list.Places}, aInstance2: {Size: 4, Data: list.X}, aInstance3: {Size: 4, Data: list.Y}, aInstance4: {Size: 4, Data: list.Z}, aInstance5: {Size: 4, Data: list.Tints}}, list.Count);
+
+				renderer.Draw(mesh, gpu.Many, uniforms({uShine: name === 'rock' ? 8 : 36, uSpecular: name === 'rock' ? 0.05 : 0.5, uRough: name === 'rock' ? 1 : 0.15}));
+			});
+
+			custom('Draw');
+
+			later.forEach(function (each) {
+				each();
+			});
+
+			/* The mark of the selected object while it is small on the screen: near, its own glow shows it. */
+			if (selected && selected.World && Math.max(selected.Size, 0.001) < pixels(selected.World, 40)) {
+				renderer.Draw(gpu.Quad, gpu.Glow, uniforms({uCenter: local(selected.World), uSize: Math.max(selected.Size * 1.5, pixels(selected.World, 14)), uRight: right, uUp: up, uColor: scene.Colors.Selection.slice(0, 3), uInner: 0, uStyle: 1}), {Blend: 'add', DepthWrite: false, Depth: false, Cull: 'none'});
+			}
+		}
+
+		/* A copy of a shape for the one draw of all of them: its place relative to the eye, its axes scaled, its colors. */
+		function batch (models, name, world, turn, scale, color, amount, tint) {
+			var list = models[name];
+			var at;
+			var m = turn || graphics.Identity();
+			var tone = tint || [1, 1, 1];
+
+			if (!list) {
+				list = models[name] = {Count: 0, Places: [], X: [], Y: [], Z: [], Tints: []};
+			}
+
+			at = local(world);
+
+			list.Places.push(at[0], at[1], at[2], 1);
+			list.X.push(m[0] * scale[0], m[1] * scale[0], m[2] * scale[0], 0);
+			list.Y.push(m[4] * scale[1], m[5] * scale[1], m[6] * scale[1], 0);
+			list.Z.push(m[8] * scale[2], m[9] * scale[2], m[10] * scale[2], 0);
+			list.Tints.push(color[0] * (1 - amount) + tone[0] * amount, color[1] * (1 - amount) + tone[1] * amount, color[2] * (1 - amount) + tone[2] * amount, 1);
+
+			list.Count++;
+		}
+
+		function line (object, parent, uniforms) {
+			return function () {
+				var chosen = object.ID === scene.Selected || object.ID === scene.Focus;
+
+				renderer.Draw(orbitLine(object), gpu.Line, uniforms({uOffset: local(parent ? parent.World : [0, 0, 0]), uBody: local(object.World).concat([object.Size]), uColor: chosen ? scene.Colors.Selection.slice(0, 3).concat([0.75]) : scene.Colors.Orbit}), {Blend: 'alpha', DepthWrite: false, Cull: 'none'});
+			};
+		}
+
+		/* The size in the view of some pixels of the screen at a point. */
+		function pixels (point, count) {
+			return vectors.Distance(scene.Camera.Position, point) * Math.tan(scene.Camera.Fov * Math.PI / 360) * 2 * count / Math.max(1, scene.Height);
+		}
+
+		/* The labels: a button of each object that can be selected, over its place on the screen. */
+		function sync () {
+			var wanted = {};
+
+			scene.Roots.forEach(function (object) {
+				var button;
+
+				if (!trait(object, 'Selectable')) return;
+
+				wanted[object.ID] = true;
+				button = scene.Labels[object.ID];
+
+				if (!button) {
+					button = element.ownerDocument.createElement('button');
+					button.type = 'button';
+					button.className = 'elemenx-game-scene-label';
+
+					button.setAttribute('data-id', object.ID);
+
+					labels.appendChild(button);
+
+					scene.Labels[object.ID] = button;
+				}
+
+				button.textContent = object.Name;
+
+				button.setAttribute('data-kind', object.Kind);
+				button.setAttribute('aria-pressed', String(object.ID === scene.Selected));
+			});
+
+			Object.keys(scene.Labels).forEach(function (id) {
+				if (!wanted[id]) {
+					labels.removeChild(scene.Labels[id]);
+
+					delete scene.Labels[id];
+				}
+			});
+		}
+
+		function hidden (object, other) {
+			var ray;
+			var t;
+
+			if (!other || other === object || !other.World || !other.Size || !other.Radius) return false;
+
+			ray = {Origin: scene.Camera.Position, Direction: vectors.Normalize(vectors.Subtract(object.World, scene.Camera.Position))};
+			t = graphics.Hit(ray, other.World, other.Size);
+
+			return t >= 0 && t < vectors.Distance(scene.Camera.Position, object.World) - object.Size;
+		}
+
+		function moveLabels () {
+			var camera = scene.Camera;
+
+			scene.Roots.forEach(function (object) {
+				var button = scene.Labels[object.ID];
+				var parent = parentOf(object);
+				var spot;
+				var near;
+				var shown;
+
+				if (!button || !object.World) return;
+
+				/* Under a body in space; over the head of a thing that stands on a ground. */
+				spot = camera.Project(vectors.Add(object.World, [0, scene.Ground ? object.Size * 1.15 : -object.Size * 1.05, 0]), scene.Width, scene.Height);
+				near = vectors.Distance(camera.Position, object.World);
+				shown = spot.Visible && spot.X > -40 && spot.X < scene.Width + 40 && spot.Y > -20 && spot.Y < scene.Height + 20;
+
+				if (shown && parent && !trait(parent, 'Star') && object.ID !== scene.Selected && object.ID !== scene.Focus)
+					shown = near < Math.max(vectors.Length(object.Relative || [0, 0, 0]), parent.Size * 3) * 14;
+
+				if (shown)
+					shown = !hidden(object, parent) && !hidden(object, scene.Focus ? scene.Objects[scene.Focus] : null);
+
+				if (!shown) {
+					if (!button.hidden)
+						button.hidden = true;
+
+					return;
+				}
+
+				if (button.hidden)
+					button.hidden = false;
+
+				button.style.transform = 'translate(' + Math.round(spot.X) + 'px, ' + Math.round(spot.Y) + 'px) translate(-50%, ' + (scene.Ground ? '-100%' : '4px') + ')';
+			});
+		}
+
+		/*
+		 * The ground of the setting terrain: the object of a Terrain trait is a flat map of noise (the Terrain Service)
+		 * drawn in squares, the finer the nearer; its water a plane, its sky of its sun (an object of a Sun trait). The
+		 * other objects stand on it at X and Y (across and down the map, as in a GameWorld); a Walker walks a way round
+		 * the slopes, the sea and the things that block it. The view goes round a point of the ground.
+		 */
+		function groundOf () {
+			var object = scene.Roots.filter(function (each) {
+				return trait(each, 'Terrain');
+			})[0];
+			var settings;
+			var key;
+			var sun;
+			var azimuth;
+			var elevation;
+
+			if (!object) {
+				if (scene.Ground)
+					dropGround();
+
+				return null;
+			}
+
+			settings = trait(object, 'Terrain');
+			key = JSON.stringify(settings);
+
+			if (!scene.Ground || scene.Ground.Key !== key) {
+				if (scene.Ground)
+					dropGround();
+
+				scene.Ground = {Key: key, ID: object.ID, Field: terrain.Flat(settings), Nodes: {}, Frame: 0, Keys: {}};
+			}
+
+			sun = scene.Roots.filter(function (each) {
+				return trait(each, 'Sun');
+			})[0];
+			azimuth = number(sun ? trait(sun, 'Sun').Azimuth : 140, 140) * Math.PI / 180;
+			elevation = number(sun ? trait(sun, 'Sun').Elevation : 35, 35) * Math.PI / 180;
+			scene.Ground.Sun = [Math.cos(elevation) * Math.sin(azimuth), Math.sin(elevation), -Math.cos(elevation) * Math.cos(azimuth)];
+			scene.Ground.SunColor = paint(sun ? trait(sun, 'Sun').Color : '#fff4e0').slice(0, 3);
+
+			return scene.Ground;
+		}
+
+		function dropGround () {
+			Object.keys(scene.Ground.Nodes).forEach(function (key) {
+				scene.Ground.Nodes[key].Mesh.Destroy();
+			});
+
+			scene.Ground = null;
+		}
+
+		/* What blocks the way at a point: a thing that Blocks, within its size. */
+		function blocked (x, z, self) {
+			return scene.Roots.some(function (object) {
+				var size;
+
+				if (object === self || !object.Values.Blocks || !object.World) return false;
+
+				size = (object.Size || 1) * 0.45 + 0.6;
+
+				return Math.abs(object.World[0] - x) < size && Math.abs(object.World[2] - z) < size;
+			});
+		}
+
+		/* A thing on the ground: at its X and Y, or along its way at the time of the scene. */
+		function stand (object) {
+			var field = scene.Ground.Field;
+			var way = scene.Ways[object.ID];
+			var x = number(object.Values.X, 0);
+			var z = number(object.Values.Y, 0);
+			var covered;
+			var at;
+			var length;
+			var from;
+			var to;
+			var t;
+
+			if (way) {
+				covered = (scene.Seconds - way.Start) * way.Speed;
+				at = 0;
+
+				while (at < way.Lengths.length - 1 && covered > way.Lengths[at + 1])
+					at++;
+
+				if (at >= way.Lengths.length - 1) {
+					from = way.Points[way.Points.length - 1];
+					x = from.X;
+					z = from.Z;
+
+					finishWay(object, way, x, z);
+				}
+				else {
+					from = way.Points[at];
+					to = way.Points[at + 1];
+					length = way.Lengths[at + 1] - way.Lengths[at];
+					t = length ? (covered - way.Lengths[at]) / length : 1;
+					x = from.X + (to.X - from.X) * t;
+					z = from.Z + (to.Z - from.Z) * t;
+					object.Heading = vectors.Normalize([to.X - from.X, 0, to.Z - from.Z]);
+				}
+			}
+
+			object.World = [x, Math.max(0, field.Height(x, z)), z];
+			object.Position = object.World;
+			object.Relative = [0, 0, 0];
+
+			if (object.Heading && vectors.Length(object.Heading))
+				object.Turn = heading(object.Heading);
+		}
+
+		function finishWay (object, way, x, z) {
+			delete scene.Ways[object.ID];
+
+			scene.Overrides[object.ID] = scene.Overrides[object.ID] || {};
+			scene.Overrides[object.ID].Values = Object.assign(scene.Overrides[object.ID].Values || {}, {X: x, Y: z});
+			object.Values.X = x;
+			object.Values.Y = z;
+
+			window.setTimeout(function () {
+				self.$Emit('arrive', {ID: object.ID, At: [x, z]});
+
+				if (way.Callback)
+					way.Callback(null, {ID: object.ID, At: [x, z]});
+			}, 0);
+		}
+
+		/* Sends a walker to a point of the ground: a way of the Terrain round what it cannot walk; false without one. */
+		function walk (id, point, callback) {
+			var object = scene.Objects[id];
+			var walker = object ? trait(object, 'Walker') : null;
+			var field = scene.Ground ? scene.Ground.Field : null;
+			var target = Array.isArray(point) ? {X: point[0], Z: point[1]} : {X: number(point.X, 0), Z: number(point.Z !== undefined ? point.Z : point.Y, 0)};
+			var points;
+			var lengths = [0];
+			var i;
+
+			if (!object || !walker || !field || !object.World) return false;
+
+			points = field.Path({X: object.World[0], Z: object.World[2]}, target, {MaxSlope: number(walker.MaxSlope, 0.45), Step: field.Size / 160, Blocked: function (x, z) {
+				return blocked(x, z, object);
+			}});
+
+			if (!points)
+				return false;
+
+			for (i = 1; i < points.length; i++)
+				lengths.push(lengths[i - 1] + Math.sqrt(Math.pow(points[i].X - points[i - 1].X, 2) + Math.pow(points[i].Z - points[i - 1].Z, 2)));
+
+			scene.Ways[id] = {Points: points, Lengths: lengths, Start: scene.Seconds, Speed: number(walker.Speed, 8), Callback: callback || null};
+
+			return true;
+		}
+
+		/* Where a ray of a point of the canvas meets the ground: [x, z], or null. */
+		function groundAt (x, y) {
+			var field = scene.Ground.Field;
+			var ray = scene.Camera.Ray(x, y, scene.Width, scene.Height);
+			var far = scene.Distance * 6 + field.Size;
+			var step = far / 400;
+			var t = 0;
+			var low;
+			var high;
+			var point;
+			var i;
+
+			function above (at) {
+				var p = vectors.Add(ray.Origin, vectors.Scale(ray.Direction, at));
+
+				return p[1] - Math.max(0, field.Height(p[0], p[2]));
+			}
+
+			while (t < far && above(t) > 0)
+				t += step;
+
+			if (t >= far) return null;
+
+			low = Math.max(0, t - step);
+			high = t;
+
+			for (i = 0; i < 12; i++) {
+				if (above((low + high) / 2) > 0) low = (low + high) / 2;
+				else high = (low + high) / 2;
+			}
+
+			point = vectors.Add(ray.Origin, vectors.Scale(ray.Direction, high));
+
+			return [point[0], point[2]];
+		}
+
+		/* The view over the ground: round its point (or the object in focus), never under the ground; the keys move it. */
+		function aimGround (elapsed) {
+			var ground = scene.Ground;
+			var field = ground.Field;
+			var camera = scene.Camera;
+			var focus = scene.Focus ? scene.Objects[scene.Focus] : null;
+			var keys = ground.Keys;
+			var forward = [-Math.sin(scene.Yaw), 0, -Math.cos(scene.Yaw)];
+			var right = [Math.cos(scene.Yaw), 0, -Math.sin(scene.Yaw)];
+			var speed = scene.Distance * 0.9 * elapsed;
+			var floor;
+
+			if (!ground.Target)
+				ground.Target = [0, Math.max(0, field.Height(0, 0)), 0];
+
+			if (keys.ArrowUp || keys.KeyW)
+				ground.Target = vectors.Add(ground.Target, vectors.Scale(forward, speed));
+
+			if (keys.ArrowDown || keys.KeyS)
+				ground.Target = vectors.Add(ground.Target, vectors.Scale(forward, -speed));
+
+			if (keys.ArrowRight || keys.KeyD)
+				ground.Target = vectors.Add(ground.Target, vectors.Scale(right, speed));
+
+			if (keys.ArrowLeft || keys.KeyA)
+				ground.Target = vectors.Add(ground.Target, vectors.Scale(right, -speed));
+
+			if (focus && focus.World && keys.Follow !== false)
+				ground.Target = vectors.Lerp(ground.Target, focus.World, 1 - Math.exp(-elapsed * 6));
+
+			ground.Target[0] = Math.max(-field.Size / 2, Math.min(field.Size / 2, ground.Target[0]));
+			ground.Target[2] = Math.max(-field.Size / 2, Math.min(field.Size / 2, ground.Target[2]));
+			ground.Target[1] = Math.max(0, field.Height(ground.Target[0], ground.Target[2]));
+			scene.Distance += (scene.Wanted - scene.Distance) * (1 - Math.exp(-elapsed * 9));
+			scene.Pitch = Math.max(0.08, Math.min(1.5, scene.Pitch));
+
+			camera.Orbit(ground.Target, scene.Yaw, scene.Pitch, scene.Distance);
+
+			floor = Math.max(0, field.Height(camera.Position[0], camera.Position[2])) + 1.5;
+
+			if (camera.Position[1] < floor)
+				camera.Position[1] = floor;
+
+			scene.Eye = camera.Position.slice();
+			scene.Target = ground.Target.slice();
+			camera.Near = Math.max(0.05, scene.Distance * 0.01);
+			camera.Far = field.Size * 3 + scene.Distance * 4;
+		}
+
+		/* The squares of the ground in view, the finer the nearer the eye; each made once, a few a frame. */
+		function groundPatches () {
+			var ground = scene.Ground;
+			var field = ground.Field;
+			var wanted = [];
+			var built = 0;
+
+			function visit (x, z, size, level) {
+				var key = x.toFixed(3) + ':' + z.toFixed(3) + ':' + level;
+				var near = vectors.Distance(scene.Eye, [x, Math.max(0, field.Height(x, z)), z]);
+				var half = size / 2;
+
+				if (level < 6 && near < size * 1.4) {
+					visit(x - half / 2, z - half / 2, half, level + 1);
+					visit(x + half / 2, z - half / 2, half, level + 1);
+					visit(x - half / 2, z + half / 2, half, level + 1);
+					visit(x + half / 2, z + half / 2, half, level + 1);
+
+					return;
+				}
+
+				wanted.push({Key: key, X: x, Z: z, Size: size});
+			}
+
+			visit(0, 0, field.Size, 0);
+
+			ground.Frame++;
+
+			return wanted.map(function (want) {
+				var node = ground.Nodes[want.Key];
+
+				if (!node && built < 3) {
+					node = ground.Nodes[want.Key] = {Mesh: renderer.Mesh(field.Chunk(want.X, want.Z, want.Size, 32)), Center: [want.X, 0, want.Z]};
+					built++;
+				}
+
+				if (node)
+					node.Used = ground.Frame;
+
+				return node;
+			}).filter(Boolean);
+		}
+
+		/* The sky, the ground and its water, under the things that stand on it. */
+		function drawGround (matrix, aspect, viewMatrix) {
+			var ground = scene.Ground;
+			var field = ground.Field;
+			var air = [0.55, 0.72, 1, 0.95];
+			var fog = field.Size * 0.9;
+
+			renderer.Draw(gpu.Quad, gpu.Sky, {uInverse: graphics.Invert(matrix), uSun: ground.Sun, uSunColor: ground.SunColor, uAir: air, uUp: [0, 1, 0], uHigh: 0}, {Depth: false, DepthWrite: false, Blend: 'alpha', Cull: 'none'});
+
+			groundPatches().forEach(function (node) {
+				renderer.Draw(node.Mesh, gpu.Land, {uViewProjection: matrix, uOffset: vectors.Subtract(node.Center, scene.Eye), uSun: ground.Sun, uSunColor: ground.SunColor, uAir: air, uFog: fog}, {Cull: 'back'});
+			});
+
+			if (field.Water > 0) {
+				if (!gpu.Water)
+					gpu.Water = renderer.Mesh(graphics.Plane({Width: 1, Depth: 1, Segments: 1}));
+
+				renderer.Draw(gpu.Water, gpu.Sea, {uViewProjection: matrix, uModel: graphics.Compose(vectors.Subtract([0, 0, 0], scene.Eye), null, field.Size * 1.6), uSun: ground.Sun, uSunColor: ground.SunColor, uAir: air, uFog: fog}, {Blend: 'alpha', DepthWrite: false, Cull: 'none'});
+			}
+
+			Object.keys(ground.Nodes).forEach(function (key) {
+				if (ground.Frame - (ground.Nodes[key].Used || 0) > 240) {
+					ground.Nodes[key].Mesh.Destroy();
+
+					delete ground.Nodes[key];
+				}
+			});
+		}
+
+		/*
+		 * The surface of a body (Land): a frame of its own, its middle at the origin and its units kilometres, its ground
+		 * of the noise of its baked surface (the Terrain Service) in squares of the faces of its cube, finer near the eye;
+		 * its sky of its air, lit by its star. The eye stands on the ground at an altitude, turned by Yaw and Pitch.
+		 */
+		var terrain = self.$Service('Terrain');
+
+		function land (id, options) {
+			var object = scene.Objects[id];
+			var settings = options || {};
+			var surface = object ? trait(object, 'Surface') : null;
+			var type = surface ? surface.Type : 'rocky';
+			var up;
+			var relief = {terran: 8, ocean: 6, desert: 7, rocky: 9, moon: 10, dwarf: 6, ice: 5, lava: 6};
+
+			if (!object || !trait(object, 'Body') || type === 'gas' || type === 'ice-giant') return false;
+
+			place(scene.Time);
+
+			up = vectors.Normalize(settings.Latitude !== undefined ? toDirection(Number(settings.Latitude) || 0, Number(settings.Longitude) || 0) : vectors.Subtract(scene.Camera.Position, object.World));
+
+			/* The direction in the frame of the body: its own turn taken away, so the ground under the eye stays. */
+			up = graphics.Apply(graphics.Invert(object.Turn) || graphics.Identity(), up);
+
+			scene.Surface = {
+				ID: object.ID,
+				Field: terrain.Sphere({Radius: object.Radius, Height: relief[type] || 6, Seed: object.Seed, Ocean: object.Look.Ocean, Type: type}),
+				Nodes: {},
+				Up: vectors.Normalize(up),
+				Yaw: 0,
+				Pitch: -1.3,
+				Altitude: object.Radius * 1.4,
+				Wanted: settings.Altitude === undefined ? 0.6 : Math.max(0.0015, Number(settings.Altitude)),
+				Rising: false,
+				Keys: {},
+				Frame: 0
+			};
+
+			labels.hidden = true;
+			self.Landed = object.ID;
+			self.Card = null;
+
+			self.$Emit('land', {ID: object.ID});
+
+			return true;
+		}
+
+		function takeOff () {
+			var surface = scene.Surface;
+			if (!surface)
+				return false;
+
+			surface.Rising = true;
+			surface.Wanted = surface.Field.Radius * 1.6;
+
+			return true;
+		}
+
+		/* A direction of a latitude and a longitude (degrees), Y to the north. */
+		function toDirection (latitude, longitude) {
+			var lat = latitude * Math.PI / 180;
+			var lon = longitude * Math.PI / 180;
+
+			return [Math.cos(lat) * Math.cos(lon), Math.sin(lat), -Math.cos(lat) * Math.sin(lon)];
+		}
+
+		/* The axes of the ground under the eye: up, north along the surface, east. */
+		function ground (up) {
+			var pole = Math.abs(up[1]) > 0.99 ? [1, 0, 0] : [0, 1, 0];
+			var east = vectors.Normalize(vectors.Cross(pole, up));
+			var north = vectors.Cross(up, east);
+
+			return {Up: up, East: east, North: north};
+		}
+
+		/* The eye on the surface: its place, where it looks, and a step of its altitude, its keys and its rising. */
+		function surfaceStep (elapsed) {
+			var surface = scene.Surface;
+			var field = surface.Field;
+			var axes;
+			var forward;
+			var heading;
+			var speed;
+			var move = [0, 0];
+			var keys = surface.Keys;
+			var eye;
+			var look;
+
+			surface.Altitude = Math.exp(Math.log(Math.max(0.0005, surface.Altitude)) + (Math.log(Math.max(0.0005, surface.Wanted)) - Math.log(Math.max(0.0005, surface.Altitude))) * (1 - Math.exp(-elapsed * (surface.Rising ? 1.6 : 1.2))));
+
+			if (surface.Pitch < -0.2 && !surface.Rising && surface.Altitude < field.Radius * 0.2)
+				surface.Pitch += (-0.2 - surface.Pitch) * (1 - Math.exp(-elapsed * 1.5));
+
+			if (surface.Rising && surface.Altitude > field.Radius * 1.5) {
+				leave();
+
+				return;
+			}
+
+			axes = ground(surface.Up);
+			heading = vectors.Add(vectors.Scale(axes.North, Math.cos(surface.Yaw)), vectors.Scale(axes.East, Math.sin(surface.Yaw)));
+
+			if (keys.ArrowUp || keys.KeyW)
+				move[0] += 1;
+
+			if (keys.ArrowDown || keys.KeyS)
+				move[0] -= 1;
+
+			if (keys.ArrowRight || keys.KeyD)
+				move[1] += 1;
+
+			if (keys.ArrowLeft || keys.KeyA)
+				move[1] -= 1;
+
+			/* Walking or flying over the ground: the faster the higher, the way along the surface. */
+			if (move[0] || move[1]) {
+				speed = Math.max(0.004, surface.Altitude) * 0.8 * elapsed / field.Radius;
+				forward = vectors.Add(vectors.Scale(heading, move[0]), vectors.Scale(vectors.Cross(heading, axes.Up), -move[1]));
+				surface.Up = vectors.Normalize(vectors.Add(surface.Up, vectors.Scale(forward, speed)));
+			}
+
+			eye = vectors.Scale(surface.Up, field.Radius + field.Elevation(surface.Up) + surface.Altitude);
+
+			look = vectors.Add(vectors.Scale(heading, Math.cos(surface.Pitch)), vectors.Scale(axes.Up, Math.sin(surface.Pitch)));
+			surface.Eye = eye;
+			surface.Look = look;
+			surface.Axes = axes;
+		}
+
+		function leave () {
+			var surface = scene.Surface;
+			var object = surface ? scene.Objects[surface.ID] : null;
+
+			Object.keys(surface.Nodes).forEach(function (key) {
+				if (surface.Nodes[key].Mesh)
+					surface.Nodes[key].Mesh.Destroy();
+			});
+
+			scene.Surface = null;
+			labels.hidden = false;
+			self.Landed = '';
+
+			if (object)
+				focusOn(object.ID, true);
+
+			self.$Emit('takeoff', {ID: surface.ID});
+		}
+
+		/* The squares of the faces of the cube in view, the finer the nearer; each made once, a few a frame. */
+		function patches () {
+			var surface = scene.Surface;
+			var field = surface.Field;
+			var wanted = [];
+			var horizon = Math.acos(Math.min(1, field.Radius / (field.Radius + Math.max(0.001, surface.Altitude) + field.Height)));
+			var built = 0;
+			var face;
+
+			function visit (face, u, v, size, level) {
+				var key = face + ':' + u.toFixed(6) + ':' + v.toFixed(6) + ':' + level;
+				var direction = vectors.Normalize(terrain.Face(face, u, v));
+				var middle = vectors.Scale(direction, field.Radius);
+				var span = field.Radius * size * 0.75;
+				var angle = Math.acos(Math.max(-1, Math.min(1, vectors.Dot(direction, vectors.Normalize(surface.Eye)))));
+				var near = vectors.Distance(middle, surface.Eye);
+				var half = size / 2;
+
+				/* Behind the horizon: not drawn. */
+				if (angle - size * 0.9 > horizon + 0.05) return;
+
+				if (level < 17 && near < span * 2.2) {
+					visit(face, u - half / 2, v - half / 2, half, level + 1);
+					visit(face, u + half / 2, v - half / 2, half, level + 1);
+					visit(face, u - half / 2, v + half / 2, half, level + 1);
+					visit(face, u + half / 2, v + half / 2, half, level + 1);
+
+					return;
+				}
+
+				wanted.push({Key: key, Face: face, U: u, V: v, Size: size});
+			}
+
+			for (face = 0; face < 6; face++)
+				visit(face, 0, 0, 2, 0);
+
+			surface.Frame++;
+
+			return wanted.map(function (want) {
+				var node = surface.Nodes[want.Key];
+				var made;
+
+				if (!node && built < 4) {
+					made = field.Patch(want.Face, want.U, want.V, want.Size, 24);
+					node = surface.Nodes[want.Key] = {Mesh: renderer.Mesh(made.Geometry), Center: made.Center};
+					built++;
+				}
+
+				if (node)
+					node.Used = surface.Frame;
+
+				return node;
+			}).filter(Boolean);
+		}
+
+		/* Squares not drawn for a while are let go. */
+		function forget () {
+			var surface = scene.Surface;
+
+			Object.keys(surface.Nodes).forEach(function (key) {
+				if (surface.Frame - (surface.Nodes[key].Used || 0) > 240) {
+					surface.Nodes[key].Mesh.Destroy();
+
+					delete surface.Nodes[key];
+				}
+			});
+		}
+
+		function drawSurface () {
+			var surface = scene.Surface;
+			var object = scene.Objects[surface.ID];
+			var field = surface.Field;
+			var width = renderer.Width;
+			var height = renderer.Height;
+			var aspect = width / Math.max(1, height);
+			var near = Math.max(0.0005, surface.Altitude * 0.25);
+			var far = Math.max(50, Math.sqrt(surface.Altitude * (2 * field.Radius + surface.Altitude)) * 3 + field.Radius * 0.1);
+			var view = graphics.LookAt([0, 0, 0], surface.Look, surface.Axes.Up);
+			var projection = graphics.Perspective(scene.Camera.Fov, aspect, near, far);
+			var matrix = graphics.Multiply(projection, view);
+			var star = scene.Order.filter(function (each) {
+				return trait(each, 'Star') && each.World;
+			})[0];
+			var sun = star && object.World ? graphics.Apply(graphics.Invert(object.Turn) || graphics.Identity(), vectors.Normalize(vectors.Subtract(star.World, object.World))) : [0, 1, 0];
+			var sunColor = star ? paint(star.Color).slice(0, 3) : [1, 1, 1];
+			var air = object.Look.Atmosphere;
+			var nodes = patches();
+			var thickness = 100;
+
+			sun = vectors.Normalize(sun);
+
+			renderer.Clear([0, 0, 0, 1]);
+
+			if (self.Background && self.Background !== 'false')
+				renderer.Draw(gpu.Stars, gpu.Far, {uViewProjection: graphics.Multiply(graphics.Perspective(scene.Camera.Fov, aspect, 0.1, 200), view), uRatio: renderer.Ratio}, {Depth: false, DepthWrite: false, Blend: 'add'});
+
+			renderer.Draw(gpu.Quad, gpu.Sky, {uInverse: graphics.Invert(matrix), uSun: sun, uSunColor: sunColor, uAir: air, uUp: surface.Axes.Up, uHigh: Math.min(1, surface.Altitude / thickness)}, {Depth: false, DepthWrite: false, Blend: 'alpha', Cull: 'none'});
+
+			nodes.forEach(function (node) {
+				renderer.Draw(node.Mesh, gpu.Ground, {
+					uViewProjection: matrix,
+					uOffset: vectors.Subtract(node.Center, surface.Eye),
+					uCenter: node.Center,
+					uSun: sun,
+					uSunColor: sunColor,
+					uColors: [].concat(object.Look.Colors[0], object.Look.Colors[1], object.Look.Colors[2], object.Look.Colors[3]),
+					uWater: object.Look.Water,
+					uIce: object.Look.Ice,
+					uAir: air,
+					uFog: Math.max(field.Radius * 0.02, far * 0.6),
+					uHigh: Math.min(1, surface.Altitude / thickness)
+				}, {Cull: 'back'});
+			});
+
+			forget();
+		}
+
+		function frame (now) {
+			var elapsed = scene.Last ? Math.min(0.1, (now - scene.Last) / 1000) : 0;
+
+			scene.Last = now;
+
+			/* On a surface the days go at their own speed (a day of two minutes by default), not at the one of the orbits. */
+			if (!self.Paused)
+				scene.Time += elapsed * (scene.Surface ? number(self.SurfaceSpeed, 1 / 120) : number(self.Speed, 1));
+
+			if (!self.Paused)
+				scene.Seconds += elapsed;
+
+			groundOf();
+
+			place(scene.Time);
+
+			if (scene.Surface) {
+				surfaceStep(elapsed);
+
+				if (scene.Surface && renderer && !renderer.Lost && scene.Width && scene.Height) {
+					drawSurface();
+
+					adapt(elapsed);
+
+					scene.Painted++;
+				}
+
+				return;
+			}
+
+			if (scene.Ground) aimGround(elapsed);
+			else aim(elapsed);
+
+			if (renderer && !renderer.Lost && scene.Width && scene.Height) {
+				draw();
+
+				adapt(elapsed);
+
+				scene.Painted++;
+			}
+
+			moveLabels();
+
+			if (now - (scene.Themed || 0) > 1000) {
+				scene.Themed = now;
+
+				theme();
+			}
+		}
+
+		/* The object under a point of the canvas: a part of one near enough to be seen as made of parts. */
+		function pick (x, y) {
+			var ray = scene.Camera.Ray(x, y, scene.Width, scene.Height);
+			var best = null;
+			var nearest = Infinity;
+
+			function test (object, least) {
+				var t;
+
+				if (!object.World || !(object.Size || least)) return;
+
+				t = graphics.Hit(ray, object.World, Math.max(object.Size, pixels(object.World, least)));
+
+				if (t >= 0 && t < nearest) {
+					nearest = t;
+					best = object;
+				}
+			}
+
+			scene.Roots.forEach(function (object) {
+				if (!trait(object, 'Selectable')) return;
+
+				if (object.Parts.length && object.Size > pixels(object.World || [0, 0, 0], 80)) {
+					object.Parts.forEach(function (part) {
+						test(part, 0);
+					});
+				}
+				else {
+					test(object, trait(object, 'Model') || trait(object, 'Formation') ? 12 : 8);
+				}
+			});
+
+			return best ? best.ID : '';
+		}
+
+		function localPoint (event) {
+			var box = canvas.getBoundingClientRect();
+
+			return {X: event.clientX - box.left, Y: event.clientY - box.top};
+		}
+
+		/* The numbers of an object for its card and for select. */
+		function card (object) {
+			var rows = [];
+			var language = Elemenx.Locale.Language() || undefined;
+			var t = function (key) {
+				return Elemenx.Locale.Text('ui.gameScene.' + key);
+			};
+			var parent = parentOf(object);
+			var info = describe(object.ID);
+			var body = trait(object, 'Body');
+			var orbit = trait(object, 'Orbit');
+			var health = trait(object, 'Health');
+			var formation = trait(object, 'Formation');
+			var kind = object.Kind ? t('kinds.' + object.Kind) : '';
+
+			function add (key, value, unit) {
+				var text = typeof value === 'number' ? value.toLocaleString(language, {maximumFractionDigits: Math.abs(value) >= 100 ? 0 : Math.abs(value) >= 10 ? 1 : 2}) : value;
+
+				rows.push({Key: key, Label: t(key), Value: unit ? text + ' ' + unit : text});
+			}
+
+			if (trait(object, 'Star')) {
+				add('class', info.Class);
+				add('temperature', info.Temperature, 'K');
+				add('mass', info.Mass, 'M☉');
+				add('radius', info.Radius, 'R☉');
+				add('luminosity', info.Luminosity, 'L☉');
+			}
+			else if (body) {
+				add('radius', info.Radius, t('km'));
+				add('mass', info.Mass, 'M⊕');
+				add('gravity', info.Gravity, t('ms2'));
+				add('temperature', info.Temperature, 'K');
+
+				if (parent && parent.Radius) add('distance', astronomy.Length(orbit && orbit.Distance) / KM, t('km'));
+				else add('distance', astronomy.Length(orbit && orbit.Distance), t('au'));
+
+				add('period', info.Period, t('days'));
+				add('day', number(body.Day, 24) ? number(body.Day, 24) : t('locked'), number(body.Day, 24) ? t('hours') : '');
+
+				if (info.Habitable && (!parent || trait(parent, 'Star')))
+					add('habitable', t('yes'));
+			}
+			else {
+				add('at', parent ? parent.Name : '—');
+			}
+
+			if (object.Team)
+				add('team', object.Team);
+
+			if (health)
+				add('health', number(object.Values.Health, number(health.Max, 0)) + ' / ' + number(health.Max, 0));
+
+			if (formation) add('ships', object.Parts.length);
+			else if (object.Parts.length && !body) add('parts', object.Parts.length);
+
+			if (scene.Travels[object.ID])
+				add('heading', scene.Objects[scene.Travels[object.ID].Target].Name);
+
+			if (body && trait(object, 'Surface'))
+				kind = t('surfaces.' + trait(object, 'Surface').Type);
+
+			return {ID: object.ID, Name: object.Name, Kind: /^ui\.gameScene\./.test(kind) ? object.Kind : kind, Rows: rows, Land: !!(body && !/gas|giant/.test(trait(object, 'Surface') ? trait(object, 'Surface').Type : ''))};
+		}
+
+		function describe (id) {
+			var object = scene.Objects[id];
+			if (!object)
+				return null;
+
+			if (object.Star)
+				return object.Star;
+
+			if (object.Info)
+				return Object.assign({}, object.Info);
+
+			return {Kind: object.Kind, At: object.Parent || (object.Owner ? object.Owner.ID : ''), Team: object.Team, Parts: object.Parts.length};
+		}
+
+		function select (id, quiet) {
+			var object = id ? scene.Objects[id] : null;
+
+			scene.Selected = object ? object.ID : '';
+			scene.Given.Selected = scene.Selected;
+			self.Selected = scene.Selected;
+			self.Card = object ? card(object) : null;
+			self.Status = object ? object.Name + ', ' + self.Card.Kind : '';
+
+			Object.keys(scene.Labels).forEach(function (key) {
+				scene.Labels[key].setAttribute('aria-pressed', String(key === scene.Selected || object && object.Root && object.Root.ID === key));
+			});
+
+			if (!quiet)
+				self.$Emit('select', {ID: scene.Selected, Object: object, Info: object ? describe(object.ID) : null});
+		}
+
+		/* The root an address names and the path of parts under it: gateway/dock is the part dock of gateway. */
+		function rootOf (id) {
+			var object = scene.Objects[id];
+
+			return object ? object.Root || object : null;
+		}
+
+		/* The changes of the methods for one object: of a root its own, of a part those of its root, by the path of parts. */
+		function overrideOf (id) {
+			var object = scene.Objects[id];
+			var root = rootOf(id);
+			var path = [];
+			var at = object;
+			var target;
+			var list;
+
+			if (!root)
+				return null;
+
+			scene.Overrides[root.ID] = scene.Overrides[root.ID] || {};
+			target = scene.Overrides[root.ID];
+
+			while (at && at.Owner) {
+				path.unshift(at.Part);
+
+				at = at.Owner;
+			}
+
+			path.forEach(function (part) {
+				target.Parts = target.Parts || [];
+				list = target.Parts.filter(function (each) {
+					return String(each.ID) === part;
+				});
+
+				if (!list.length) {
+					list = [{ID: part}];
+
+					target.Parts.push(list[0]);
+				}
+
+				target = list[0];
+			});
+
+			return target;
+		}
+
+		/* What the template declares inside the scene. */
+		engine.Props = function () {
+			var givenProps = scene.Given;
+
+			if (self.System !== givenProps.System || String(self.Seed) !== givenProps.Seed || self.Scale !== givenProps.Scale) {
+				givenProps.System = self.System;
+				givenProps.Seed = String(self.Seed);
+				givenProps.Scale = self.Scale;
+
+				compose();
+
+				if (!scene.Focus)
+					focusOn('', true);
+			}
+
+			if (number(self.Time, 0) !== givenProps.Time) {
+				givenProps.Time = number(self.Time, 0);
+				scene.Time = givenProps.Time;
+			}
+
+			if ((self.Focus || '') !== givenProps.Focus) {
+				givenProps.Focus = self.Focus || '';
+
+				focusOn(givenProps.Focus, true);
+			}
+
+			if ((self.Selected || '') !== givenProps.Selected) {
+				givenProps.Selected = self.Selected || '';
+
+				select(givenProps.Selected, true);
+			}
+		};
+
+		engine.Compose = compose;
+		engine.Place = place;
+		engine.Frame = frame;
+		engine.Pick = pick;
+		engine.Local = localPoint;
+		engine.Select = select;
+		engine.FocusOn = focusOn;
+		engine.Describe = describe;
+		engine.Renderer = renderer;
+		engine.Card = card;
+		engine.OverrideOf = overrideOf;
+		engine.RootOf = rootOf;
+		engine.Context = {Scene: self, Graphics: graphics, Renderer: renderer, Objects: function () {
+			return scene.Objects;
+		}, Eye: function () {
+			return scene.Eye;
+		}, Time: function () {
+			return scene.Time;
+		}};
+
+		engine.Move = function (id, target, callback) {
+			var object = scene.Objects[id];
+			var goal = typeof target === 'string' ? scene.Objects[target] : null;
+			var distance;
+
+			/* A walker of a ground: to a point ([x, y] or {X, Y}), or to an object. */
+			if (object && trait(object, 'Walker') && scene.Ground) {
+				if (goal && goal.World)
+					return walk(id, [goal.World[0], goal.World[2]], callback);
+
+				return target && typeof target === 'object' ? walk(id, target, callback) : false;
+			}
+
+			if (!object || !trait(object, 'Mover') || !goal || goal.ID === object.Parent && !scene.Travels[id]) return false;
+
+			place(scene.Time);
+
+			distance = vectors.Distance(object.Position || [0, 0, 0], goal.Position || [0, 0, 0]);
+			scene.Travels[id] = {From: object.World.slice(), Position: (object.Position || [0, 0, 0]).slice(), Start: scene.Time, Duration: Math.max(0.2, distance / Math.max(0.0001, number(trait(object, 'Mover').Speed, 0.25))), Target: goal.ID, Callback: callback || null};
+
+			return true;
+		};
+
+		engine.Land = land;
+		engine.Walk = walk;
+		engine.GroundAt = function (x, y) {
+			return scene.Ground ? groundAt(x, y) : null;
+		};
+		engine.TakeOff = takeOff;
+
+		engine.ToScreen = function (id) {
+			var object = scene.Objects[id];
+			var spot;
+
+			if (!object || !object.World) return null;
+
+			spot = scene.Camera.Project(object.World, scene.Width, scene.Height);
+
+			return {X: spot.X, Y: spot.Y, Visible: spot.Visible};
+		};
+
+		build();
+
+		scene.Watcher = new MutationObserver(declarations);
+
+		scene.Watcher.observe(element.querySelector('.elemenx-game-scene-sources'), {subtree: true, childList: true, attributes: true, attributeFilter: ['data-value']});
+
+		if (typeof view.ResizeObserver === 'function') {
+			scene.Sizes = new view.ResizeObserver(resize);
+
+			scene.Sizes.observe(element);
+		}
+
+		scene.Given = {System: this.System, Seed: String(this.Seed), Scale: this.Scale, Time: number(this.Time, 0), Focus: this.Focus || '', Selected: this.Selected || ''};
+
+		declarations();
+
+		compose();
+
+		resize();
+
+		place(scene.Time);
+
+		scene.Focus = this.Focus || '';
+		scene.Wanted = scene.Focus && scene.Objects[scene.Focus] ? closeness(scene.Objects[scene.Focus]) : extent() * 1.6;
+		scene.Distance = scene.Wanted;
+		scene.From = scene.Focus && scene.Objects[scene.Focus] && scene.Objects[scene.Focus].World ? scene.Objects[scene.Focus].World.slice() : [0, 0, 0];
+
+		if (this.Selected)
+			select(this.Selected, true);
+
+		scene.Loop = this.$Service('GameLoop').Create({Window: view, Render: function () {
+			frame(view.performance ? view.performance.now() : Date.now());
+		}});
+
+		scene.Loop.Start();
+
+		if (!renderer)
+			this.Unsupported = true;
+
+		window.setTimeout(function () {
+			resize();
+
+			if (!renderer)
+				self.$Emit('error', {Reason: 'webgl2'});
+
+			self.$Emit('ready', self);
+		}, 0);
+	},
+
+	$OnDestroy: function () {
+		var scene = this.Scene ? this.Scene() : null;
+		var renderer = this.Engine ? this.Engine().Renderer : null;
+
+		if (!scene || !scene.Loop) return;
+
+		scene.Loop.Stop();
+		scene.Watcher.disconnect();
+
+		if (scene.Sizes)
+			scene.Sizes.disconnect();
+
+		if (renderer)
+			renderer.Destroy();
+	},
+
+	/* Pointers: a drag turns the view, two fingers zoom, a press selects. */
+	PointerDown: function (event) {
+		var scene = this.Scene();
+		var point = this.Engine().Local(event);
+		var pointers = scene.Pointers;
+		var ids;
+
+		event.preventDefault();
+
+		this.$Element().focus({preventScroll: true});
+
+		if (event.target.setPointerCapture)
+			event.target.setPointerCapture(event.pointerId);
+
+		pointers[event.pointerId] = point;
+		ids = Object.keys(pointers);
+
+		if (ids.length === 2) {
+			scene.Drag = null;
+			scene.Pinch = {Distance: Math.max(1, Math.sqrt(Math.pow(pointers[ids[0]].X - pointers[ids[1]].X, 2) + Math.pow(pointers[ids[0]].Y - pointers[ids[1]].Y, 2))), Wanted: scene.Wanted};
+
+			return;
+		}
+
+		scene.Drag = {X: point.X, Y: point.Y, Yaw: scene.Surface ? scene.Surface.Yaw : scene.Yaw, Pitch: scene.Surface ? scene.Surface.Pitch : scene.Pitch, Moved: false, Button: event.button};
+	},
+
+	PointerMove: function (event) {
+		var scene = this.Scene();
+		var point = this.Engine().Local(event);
+		var pointers = scene.Pointers;
+		var drag = scene.Drag;
+		var ids;
+		var distance;
+
+		if (pointers[event.pointerId])
+			pointers[event.pointerId] = point;
+
+		ids = Object.keys(pointers);
+
+		if (scene.Pinch && ids.length === 2) {
+			distance = Math.max(1, Math.sqrt(Math.pow(pointers[ids[0]].X - pointers[ids[1]].X, 2) + Math.pow(pointers[ids[0]].Y - pointers[ids[1]].Y, 2)));
+
+			this.Zoom(scene.Pinch.Wanted * scene.Pinch.Distance / distance, true);
+
+			return;
+		}
+
+		if (!drag) return;
+
+		if (Math.abs(point.X - drag.X) + Math.abs(point.Y - drag.Y) > 4)
+			drag.Moved = true;
+
+		if (!drag.Moved) return;
+
+		this.Dragging = true;
+
+		/* On the ground the eye looks round: right to turn right, up to look up. */
+		if (scene.Surface) {
+			scene.Surface.Yaw = drag.Yaw + (point.X - drag.X) * 0.004;
+			scene.Surface.Pitch = Math.max(-1.55, Math.min(1.4, drag.Pitch - (point.Y - drag.Y) * 0.004));
+
+			return;
+		}
+
+		scene.Yaw = drag.Yaw - (point.X - drag.X) * 0.006;
+		scene.Pitch = Math.max(-1.5, Math.min(1.5, drag.Pitch + (point.Y - drag.Y) * 0.006));
+	},
+
+	PointerUp: function (event) {
+		var scene = this.Scene();
+		var drag = scene.Drag;
+		var point = this.Engine().Local(event);
+
+		delete scene.Pointers[event.pointerId];
+
+		if (scene.Pinch) {
+			if (!Object.keys(scene.Pointers).length)
+				scene.Pinch = null;
+
+			return;
+		}
+
+		scene.Drag = null;
+		this.Dragging = false;
+
+		if (drag && !drag.Moved && !scene.Surface && drag.Button === 2 && scene.Ground) this.Order(point);
+		else if (drag && !drag.Moved && !scene.Surface) this.Engine().Select(this.Engine().Pick(point.X, point.Y));
+	},
+
+	PointerCancel: function (event) {
+		delete this.Scene().Pointers[event.pointerId];
+
+		this.Scene().Drag = null;
+		this.Scene().Pinch = null;
+		this.Dragging = false;
+	},
+
+	Menu: function (event) {
+		event.preventDefault();
+	},
+
+	/* A right press on a ground: the selected walker goes there. */
+	Order: function (point) {
+		var scene = this.Scene();
+		var at = this.Engine().GroundAt(point.X, point.Y);
+		var walker = scene.Selected ? scene.Objects[scene.Selected] : null;
+		if (!at || !walker || !walker.Traits.Walker) return;
+
+		this.Move(walker.ID, at);
+	},
+
+	/* The distance of the view, kept between near the object in focus and far beyond the scene. */
+	Zoom: function (wanted, exact) {
+		var scene = this.Scene();
+		var focus = scene.Focus ? scene.Objects[scene.Focus] : null;
+		var least = scene.Ground ? 4 : focus && focus.Size ? focus.Size * 1.4 : 0.05;
+		var most = scene.Ground ? scene.Ground.Field.Size * 1.2 : this.Reach();
+
+		scene.Wanted = Math.max(least, Math.min(most, wanted));
+
+		if (exact)
+			scene.Distance = scene.Wanted;
+	},
+
+	/* The farthest the view goes: four times the scene. */
+	Reach: function () {
+		var far = 40;
+
+		this.Scene().Roots.forEach(function (object) {
+			if (object.Relative)
+				far = Math.max(far, Math.sqrt(object.Relative[0] * object.Relative[0] + object.Relative[1] * object.Relative[1] + object.Relative[2] * object.Relative[2]) * 4);
+		});
+
+		return far;
+	},
+
+	Wheel: function (event) {
+		var amount = event.deltaMode === 1 ? event.deltaY * 16 : event.deltaY;
+		var surface = this.Scene().Surface;
+
+		event.preventDefault();
+
+		/* On the ground the wheel is the altitude: down to the height of an eye, up to where the air ends. */
+		if (surface) {
+			if (!surface.Rising)
+				surface.Wanted = Math.max(0.0015, Math.min(surface.Field.Radius, surface.Wanted * Math.exp(amount * 0.0015)));
+
+			return;
+		}
+
+		this.Zoom(this.Scene().Wanted * Math.exp(amount * 0.0012));
+	},
+
+	Double: function (event) {
+		var engine = this.Engine();
+		var point = engine.Local(event);
+		var id = engine.Pick(point.X, point.Y);
+		if (id)
+			this.FocusOn(id);
+	},
+
+	LabelPressed: function (event) {
+		var button = event.target.closest ? event.target.closest('[data-id]') : null;
+		if (button)
+			this.Engine().Select(button.getAttribute('data-id'));
+	},
+
+	LabelDouble: function (event) {
+		var button = event.target.closest ? event.target.closest('[data-id]') : null;
+		if (button)
+			this.FocusOn(button.getAttribute('data-id'));
+	},
+
+	Key: function (event) {
+		var scene = this.Scene();
+
+		/* Over a map: the keys move the view (the arrows, WASD), + and - zoom, Escape lets the object in focus go. */
+		if (scene.Ground && !scene.Surface) {
+			if (event.key === '+' || event.key === '=') this.Zoom(scene.Wanted / 1.25);
+			else if (event.key === '-' || event.key === '_') this.Zoom(scene.Wanted * 1.25);
+			else if (event.key === 'Escape') this.FocusOn('');
+			else scene.Ground.Keys[event.code] = true;
+
+			if (/^(Arrow|Key[WASD])/.test(event.code))
+				event.preventDefault();
+
+			return;
+		}
+
+		/* On the ground: the keys walk (the arrows, WASD), Escape takes off. */
+		if (scene.Surface) {
+			if (event.key === 'Escape') this.TakeOff();
+			else scene.Surface.Keys[event.code] = true;
+
+			if (/^(Arrow|Key[WASD])/.test(event.code) || event.key === 'Escape')
+				event.preventDefault();
+
+			return;
+		}
+
+		var focus = scene.Focus ? scene.Objects[scene.Focus] : null;
+		var parent = focus ? focus.Owner || (focus.Parent ? scene.Objects[focus.Parent] : null) : null;
+		var handled = true;
+
+		if (event.target !== this.$Element() && event.key !== 'Escape') return;
+
+		if (event.key === 'ArrowLeft') scene.Yaw += 0.08;
+		else if (event.key === 'ArrowRight') scene.Yaw -= 0.08;
+		else if (event.key === 'ArrowUp') scene.Pitch = Math.min(1.5, scene.Pitch + 0.06);
+		else if (event.key === 'ArrowDown') scene.Pitch = Math.max(-1.5, scene.Pitch - 0.06);
+		else if (event.key === '+' || event.key === '=') this.Zoom(scene.Wanted / 1.25);
+		else if (event.key === '-' || event.key === '_') this.Zoom(scene.Wanted * 1.25);
+		else if (event.key === 'Enter' && scene.Selected) this.FocusOn(scene.Selected);
+		else if (event.key === ' ') this.Paused = !this.Paused;
+		else if (event.key === 'Escape' && focus) this.FocusOn(parent && (parent.Owner || parent.Parent) ? parent.ID : '');
+		else handled = false;
+
+		if (handled)
+			event.preventDefault();
+	},
+
+	KeyUp: function (event) {
+		var scene = this.Scene();
+		if (scene.Surface)
+			delete scene.Surface.Keys[event.code];
+
+		if (scene.Ground)
+			delete scene.Ground.Keys[event.code];
+	},
+
+	Blurred: function () {
+		var scene = this.Scene();
+		if (scene.Surface)
+			scene.Surface.Keys = {};
+
+		if (scene.Ground)
+			scene.Ground.Keys = {};
+	},
+
+	Unselect: function () {
+		this.Select('');
+	},
+
+	LandSelected: function () {
+		if (this.Scene().Selected)
+			this.Land(this.Scene().Selected);
+	},
+
+	FocusSelected: function () {
+		if (this.Scene().Selected)
+			this.FocusOn(this.Scene().Selected);
+	},
+
+	/* The methods of the scene. */
+	Add: function (kind, props) {
+		var spec = kind && typeof kind === 'object' ? kind : Object.assign({}, props || {}, {Kind: kind});
+		var scene = this.Scene();
+		var values = {};
+
+		spec.ID = spec.ID ? String(spec.ID) : (spec.Kind || 'object') + '-' + Math.random().toString(36).slice(2, 8);
+
+		Object.keys(spec).forEach(function (key) {
+			if (['ID', 'Kind', 'Parent', 'Values', 'Traits', 'Parts', 'Children'].indexOf(key) === -1)
+				values[key] = spec[key];
+		});
+
+		delete scene.Removed[spec.ID];
+
+		scene.Added.push({ID: spec.ID, Kind: spec.Kind || '', Parent: spec.Parent, Values: Object.assign({}, spec.Values || {}, values), Traits: spec.Traits || {}, Parts: spec.Parts || []});
+
+		this.Engine().Compose();
+
+		return spec.ID;
+	},
+
+	/* Changes the fields of an object (or of a part): each to its trait by its name in any case, {Traits} as they are. */
+	Change: function (id, changes) {
+		var scene = this.Scene();
+		var object = scene.Objects[id];
+		var kinds = this.$Service('Kinds');
+		var target = this.Engine().OverrideOf(id);
+		if (!object || !target) return false;
+
+		Object.keys(changes || {}).forEach(function (key) {
+			var field = key === 'Traits' ? null : kinds.Field(object, key);
+
+			if (key === 'Traits') {
+				target.Traits = kinds.MergeTraits(target.Traits || {}, changes.Traits);
+			}
+			else if (key === 'Parent') {
+				target.Parent = changes.Parent;
+			}
+			else if (field && field.Trait) {
+				target.Traits = target.Traits || {};
+				target.Traits[field.Trait] = Object.assign(target.Traits[field.Trait] || {}, {});
+				target.Traits[field.Trait][field.Name] = changes[key];
+			}
+			else if (object.Owner) {
+				target[field ? field.Name : key] = changes[key];
+			}
+			else {
+				target.Values = target.Values || {};
+				target.Values[field ? field.Name : key] = changes[key];
+			}
+		});
+
+		this.Engine().Compose();
+
+		if (scene.Selected === id)
+			this.Engine().Select(id, true);
+
+		return true;
+	},
+
+	/* Removes an object, or a part of one (the part of its root is taken away). */
+	Remove: function (id) {
+		var scene = this.Scene();
+		var object = scene.Objects[id];
+		var target;
+
+		if (!object)
+			return false;
+
+		if (object.Owner) {
+			target = this.Engine().OverrideOf(id);
+			target.Removed = true;
+		}
+		else {
+			scene.Removed[id] = true;
+		}
+
+		this.Engine().Compose();
+
+		return true;
+	},
+
+	/* Makes an object (or a new one of a spec) a part of another, placed in it: what it was elsewhere it is no more. */
+	Attach: function (parent, object, place) {
+		var scene = this.Scene();
+		var owner = scene.Objects[parent];
+		var kinds = this.$Service('Kinds');
+		var existing = typeof object === 'string' ? scene.Objects[object] : null;
+		var spec = existing ? kinds.Diff(existing) : object;
+		var target;
+		var part;
+
+		if (!owner || !spec) return false;
+
+		target = this.Engine().OverrideOf(owner.ID);
+		/* A part is written flat, its fields beside its ID, as the parts of a kind are. */
+		part = Object.assign({}, spec.Values || {}, place ? {Position: place} : {}, {ID: String(existing ? existing.Part || existing.ID : spec.ID || 'part-' + owner.Parts.length), Traits: spec.Traits || {}, Parts: spec.Parts || []});
+
+		if (spec.Kind)
+			part.Kind = spec.Kind;
+
+		target.Parts = (target.Parts || []).concat([part]);
+
+		if (existing && existing.Owner) this.Engine().OverrideOf(existing.ID).Removed = true;
+		else if (existing) scene.Removed[existing.ID] = true;
+
+		this.Engine().Compose();
+
+		return owner.ID + '/' + part.ID;
+	},
+
+	/* A part taken out of its object: an object of its own from now, where its object is. */
+	Detach: function (id) {
+		var scene = this.Scene();
+		var part = scene.Objects[id];
+		var kinds = this.$Service('Kinds');
+		var root;
+		var saved;
+		var made;
+
+		if (!part || !part.Owner) return '';
+
+		root = part.Root || part.Owner;
+		saved = kinds.Diff(part);
+		made = String(part.Part) + '-' + Math.random().toString(36).slice(2, 6);
+
+		this.Engine().OverrideOf(id).Removed = true;
+
+		scene.Added.push({ID: made, Kind: part.Kind, Parent: root.Parent || root.ID, Values: Object.assign({}, part.Values, saved.Values || {}), Traits: kinds.MergeTraits(part.Traits, {}), Parts: []});
+
+		this.Engine().Compose();
+
+		return made;
+	},
+
+	Get: function (id) {
+		return this.Scene().Objects[id] || null;
+	},
+
+	Objects: function (filter) {
+		return this.Scene().Order.filter(function (object) {
+			if (typeof filter === 'function') return filter(object);
+
+			if (typeof filter === 'string')
+				return object.Kind === filter || !!(object.Traits && object.Traits[filter]);
+
+			return !object.Owner;
+		});
+	},
+
+	Describe: function (id) {
+		return this.Engine().Describe(id);
+	},
+
+	Position: function (id) {
+		var object = this.Scene().Objects[id];
+
+		this.Engine().Place(this.Scene().Time);
+
+		return object && object.Position ? [object.Position[0], object.Position[1], object.Position[2]] : null;
+	},
+
+	Select: function (id) {
+		this.Engine().Select(id || '');
+	},
+
+	FocusOn: function (id) {
+		return this.Engine().FocusOn(id || '');
+	},
+
+	Move: function (id, target, callback) {
+		return this.Engine().Move(id, target, callback);
+	},
+
+	Now: function () {
+		return this.Scene().Time;
+	},
+
+	SetTime: function (days) {
+		this.Scene().Time = Number(days) || 0;
+
+		this.Engine().Place(this.Scene().Time);
+	},
+
+	ToScreen: function (id) {
+		this.Engine().Place(this.Scene().Time);
+
+		return this.Engine().ToScreen(id);
+	},
+
+	Pick: function (clientX, clientY) {
+		var box = this.$Element().querySelector('.elemenx-game-scene-canvas').getBoundingClientRect();
+
+		return this.Engine().Pick(clientX - box.left, clientY - box.top);
+	},
+
+	/* A saved game: each object as its kind and what differs from it, with what it goes round, the time and the journeys. */
+	Save: function () {
+		var scene = this.Scene();
+		var kinds = this.$Service('Kinds');
+
+		return {
+			Time: scene.Time,
+			Objects: scene.Roots.map(function (object) {
+				return Object.assign(kinds.Diff(object), {Parent: object.Parent || ''});
+			}),
+			Travels: Object.keys(scene.Travels).map(function (id) {
+				var travel = scene.Travels[id];
+
+				return {ID: id, Target: travel.Target, Start: travel.Start, Duration: travel.Duration, From: travel.From, Position: travel.Position};
+			})
+		};
+	},
+
+	/* A saved game shown again: its objects alone, at its time. */
+	Load: function (saved) {
+		var scene = this.Scene();
+		var kinds = this.$Service('Kinds');
+
+		scene.Loaded = (saved && saved.Objects || []).map(function (each) {
+			return {ID: each.ID, Parent: each.Parent, Restored: kinds.Restore(each)};
+		});
+		scene.Added = [];
+		scene.Removed = {};
+		scene.Overrides = {};
+		scene.Travels = {};
+		scene.Time = Number(saved && saved.Time) || 0;
+
+		(saved && saved.Travels || []).forEach(function (travel) {
+			scene.Travels[travel.ID] = {Target: travel.Target, Start: travel.Start, Duration: travel.Duration, From: travel.From, Position: travel.Position, Callback: null};
+		});
+
+		this.Engine().Compose();
+		this.Engine().Place(scene.Time);
+	},
+
+	Supported: function () {
+		return !!this.Engine().Renderer;
+	},
+
+	/* Down to the surface of a body (not of a giant of gas): at a latitude and a longitude, or under the eye. */
+	Land: function (id, options) {
+		return this.Engine().Land(id, options);
+	},
+
+	TakeOff: function () {
+		return this.Engine().TakeOff();
+	},
+
+	/* Where the eye is on the surface, or null in space: {ID, Latitude, Longitude, Altitude}. */
+	Surface: function () {
+		var surface = this.Scene().Surface;
+		var up;
+
+		if (!surface) return null;
+
+		up = surface.Up;
+
+		return {ID: surface.ID, Latitude: Math.asin(Math.max(-1, Math.min(1, up[1]))) * 180 / Math.PI, Longitude: Math.atan2(-up[2], up[0]) * 180 / Math.PI, Altitude: surface.Altitude};
+	},
+
+	/* The shaders: lit things, copies, faces to the view, lines, far stars; the surfaces of bodies baked and lit. */
+	Shaders: function (graphics) {
+		var head = '#version 300 es\nprecision highp float;\n';
+
+		return {
+			Lit: head + [
+				'in vec3 aPosition;',
+				'in vec3 aNormal;',
+				'in vec2 aUV;',
+				'in vec3 aColor;',
+				'uniform mat4 uModel;',
+				'uniform mat4 uViewProjection;',
+				'uniform mat3 uNormalMatrix;',
+				'out vec3 vWorld;',
+				'out vec3 vNormal;',
+				'out vec3 vLocal;',
+				'out vec2 vUV;',
+				'out vec3 vColor;',
+				'void main() {',
+				'	vec4 world = uModel * vec4(aPosition, 1.0);',
+				'	vWorld = world.xyz;',
+				'	vNormal = normalize(uNormalMatrix * aNormal);',
+				'	vLocal = aPosition;',
+				'	vUV = aUV;',
+				'	vColor = aColor;',
+				'	gl_Position = uViewProjection * world;',
+				'}'
+			].join('\n'),
+
+			Instanced: head + [
+				'in vec3 aPosition;',
+				'in vec3 aNormal;',
+				'in vec3 aColor;',
+				'in vec4 aInstance;',
+				'in vec4 aInstance2;',
+				'in vec4 aInstance3;',
+				'in vec4 aInstance4;',
+				'in vec4 aInstance5;',
+				'uniform mat4 uViewProjection;',
+				'out vec3 vWorld;',
+				'out vec3 vNormal;',
+				'out vec3 vLocal;',
+				'out vec2 vUV;',
+				'out vec3 vColor;',
+				'void main() {',
+				'	mat3 basis = mat3(aInstance2.xyz, aInstance3.xyz, aInstance4.xyz);',
+				'	vec3 world = aInstance.xyz + basis * aPosition;',
+				'	vWorld = world;',
+				'	vNormal = normalize(mat3(normalize(aInstance2.xyz), normalize(aInstance3.xyz), normalize(aInstance4.xyz)) * aNormal);',
+				'	vLocal = aPosition;',
+				'	vUV = vec2(0.0);',
+				'	vColor = aColor * aInstance5.rgb;',
+				'	gl_Position = uViewProjection * vec4(world, 1.0);',
+				'}'
+			].join('\n'),
+
+			Billboard: head + [
+				'in vec3 aPosition;',
+				'uniform mat4 uViewProjection;',
+				'uniform vec3 uCenter;',
+				'uniform vec3 uRight;',
+				'uniform vec3 uUp;',
+				'uniform float uSize;',
+				'out vec2 vQuad;',
+				'void main() {',
+				'	vQuad = aPosition.xy;',
+				'	gl_Position = uViewProjection * vec4(uCenter + (uRight * aPosition.x + uUp * aPosition.y) * uSize, 1.0);',
+				'}'
+			].join('\n'),
+
+			Line: head + [
+				'in vec3 aPosition;',
+				'uniform mat4 uViewProjection;',
+				'uniform vec3 uOffset;',
+				'out vec3 vWorld;',
+				'void main() {',
+				'	vWorld = aPosition + uOffset;',
+				'	gl_Position = uViewProjection * vec4(vWorld, 1.0);',
+				'}'
+			].join('\n'),
+
+			Far: head + [
+				'in vec3 aPosition;',
+				'in vec4 aColor;',
+				'uniform mat4 uViewProjection;',
+				'uniform float uRatio;',
+				'out vec4 vColor;',
+				'void main() {',
+				'	vColor = aColor;',
+				'	gl_PointSize = (1.0 + aColor.a * 2.2) * uRatio;',
+				'	gl_Position = uViewProjection * vec4(aPosition, 1.0);',
+				'}'
+			].join('\n'),
+
+			/* The surface of a body for its cubes: layer 0 its ground (rgb) and gloss (a), layer 1 its clouds (r) and glow (g). */
+			Bake: head + [
+				'in vec2 vQuad;',
+				'uniform int uLayer;',
+				'uniform int uKind;',
+				'uniform vec3 uColors[4];',
+				'uniform vec3 uWater;',
+				'uniform float uOcean;',
+				'uniform float uIce;',
+				'uniform float uClouds;',
+				'uniform float uSeed;',
+				'out vec4 outColor;',
+				graphics.Chunks.Noise,
+				graphics.Chunks.Cube,
+				'vec3 ground(float h) {',
+				'	if (h < 0.33) return mix(uColors[0], uColors[1], h / 0.33);',
+				'	if (h < 0.66) return mix(uColors[1], uColors[2], (h - 0.33) / 0.33);',
+				'	return mix(uColors[2], uColors[3], (h - 0.66) / 0.34);',
+				'}',
+				'void main() {',
+				'	vec3 p = cubeDirection(uFace, vQuad);',
+				'	vec3 q = p * 2.2 + vec3(uSeed, uSeed * 0.7, uSeed * 1.3);',
+				'	vec3 albedo;',
+				'	float gloss = 0.04;',
+				'	float glow = 0.0;',
+				'	if (uLayer == 1) {',
+				'		float cloud = fbm3(p * 3.2 + vec3(0.0, uSeed * 2.0, 0.0), 5);',
+				'		float edge = 0.5 + (0.5 - uClouds) * 0.4;',
+				'		float cover = uClouds > 0.0 ? smoothstep(edge, edge + 0.12, cloud) * (uClouds >= 1.0 ? 1.0 : 0.85) : 0.0;',
+				'		if (uKind == 3) glow = smoothstep(0.8, 0.93, ridge3(q * 1.6 + 4.0, 5));',
+				'		outColor = vec4(cover, glow, smoothstep(0.88, 0.97, ridge3(q * 1.6 + 4.0, 5)), 1.0);',
+				'		return;',
+				'	}',
+				'	if (uKind == 4) {',
+				'		float warp = fbm3(vec3(p.x * 3.0, p.y * 9.0, p.z * 3.0) + uSeed, 4);',
+				'		float band = sin((p.y * 6.5 + warp * 2.4 + uSeed) * 3.14159);',
+				'		float fine = fbm3(vec3(p.x * 2.0, p.y * 38.0, p.z * 2.0) + uSeed, 3);',
+				'		albedo = mix(uColors[0], uColors[1], band * 0.5 + 0.5);',
+				'		albedo = mix(albedo, uColors[2], smoothstep(0.5, 0.78, fine) * 0.7);',
+				'		float storm = 1.0 - smoothstep(0.0, 0.16, length(vec2((atan(p.z, p.x) - uSeed) * 0.5, (p.y + 0.3) * 1.6)) + (warp - 0.5) * 0.08);',
+				'		albedo = mix(albedo, uColors[3], storm * 0.85);',
+				'		gloss = 0.08;',
+				'	}',
+				'	else {',
+				'		float h = fbm3(q, 6);',
+				'		if (uKind == 3) {',
+				'			albedo = mix(uColors[0], uColors[1], smoothstep(0.3, 0.7, h));',
+				'		}',
+				'		else if (uKind == 2) {',
+				'			float ridges = ridge3(q * 1.4, 5);',
+				'			albedo = mix(ground(h), uColors[0], smoothstep(0.7, 0.9, ridges) * 0.6);',
+				'			gloss = 0.25;',
+				'		}',
+				'		else {',
+				'			float land = uOcean > 0.0 ? (h - uOcean * 0.55 - 0.2) / max(0.05, 0.8 - uOcean * 0.55) : h;',
+				'			if (uKind == 0) {',
+				'				float craters = ridge3(q * 2.6 + 9.0, 3);',
+				'				land += (smoothstep(0.86, 0.96, craters) - 0.4) * 0.18;',
+				'			}',
+				'			albedo = ground(clamp(land, 0.0, 1.0));',
+				'			if (uOcean > 0.0 && land < 0.0) {',
+				'				albedo = mix(uWater * 1.25, uWater * 0.55, clamp(-land * 4.0, 0.0, 1.0));',
+				'				gloss = 0.7;',
+				'			}',
+				'		}',
+				'		if (uIce > 0.0) {',
+				'			float pole = abs(p.y) + (fbm3(q * 3.0, 3) - 0.5) * 0.3;',
+				'			float cap = uIce >= 1.0 ? 1.0 : smoothstep(1.0 - uIce, 1.0 - uIce + 0.04, pole);',
+				'			albedo = mix(albedo, vec3(0.93, 0.95, 0.98), cap * (uKind == 2 ? 0.35 : 1.0));',
+				'		}',
+				'	}',
+				'	outColor = vec4(albedo, gloss);',
+				'}'
+			].join('\n'),
+
+			/* A body lit: its baked ground and clouds, the light of the stars, the shadows of balls, the air at its edge. */
+			Planet: head + [
+				'in vec3 vWorld;',
+				'in vec3 vNormal;',
+				'in vec3 vLocal;',
+				'uniform vec3 uCamera;',
+				'uniform int uKind;',
+				'uniform vec3 uColors[4];',
+				'uniform float uClouds;',
+				'uniform vec4 uAtmosphere;',
+				'uniform vec4 uHighlight;',
+				'uniform float uTime;',
+				'uniform samplerCube uGround;',
+				'uniform samplerCube uSky;',
+				'out vec4 outColor;',
+				graphics.Chunks.Lights,
+				'float daylight(vec3 position, vec3 normal) {',
+				'	float day = 0.0;',
+				'	for (int i = 0; i < 4; i++) {',
+				'		if (i >= uLightCount) break;',
+				'		day += clamp(dot(normal, normalize(uLightPositions[i] - position)) * 2.0 + 0.4, 0.0, 1.0);',
+				'	}',
+				'	return clamp(day, 0.0, 1.0);',
+				'}',
+				'void main() {',
+				'	vec3 n = normalize(vNormal);',
+				'	vec3 v = normalize(uCamera - vWorld);',
+				'	vec3 p = normalize(vLocal);',
+				'	vec4 surface = texture(uGround, p);',
+				'	float gloss = surface.a;',
+				'	vec3 light = lighting(vWorld, n, v, 12.0 + gloss * 70.0, gloss);',
+				'	vec3 color = surface.rgb * light;',
+				'	float turn = uTime * 0.01;',
+				'	vec3 drifted = vec3(p.x * cos(turn) - p.z * sin(turn), p.y, p.x * sin(turn) + p.z * cos(turn));',
+				'	vec4 sky = texture(uSky, drifted);',
+				'	vec4 heat = texture(uSky, p);',
+				'	if (uKind == 3) color += mix(uColors[2], uColors[3], heat.b) * heat.g * 1.6;',
+				'	if (uClouds > 0.0) {',
+				'		vec3 haze = mix(vec3(0.96), uAtmosphere.rgb, uClouds >= 1.0 ? 0.55 * uAtmosphere.a : 0.0);',
+				'		color = mix(color, haze * lighting(vWorld, n, v, 1.0, 0.0), sky.r);',
+				'	}',
+				'	float rim = pow(1.0 - max(dot(n, v), 0.0), 3.0);',
+				'	color += uAtmosphere.rgb * rim * uAtmosphere.a * daylight(vWorld, n);',
+				'	color += uHighlight.rgb * pow(1.0 - max(dot(n, v), 0.0), 6.0) * uHighlight.a;',
+				'	outColor = vec4(color, 1.0);',
+				'}'
+			].join('\n'),
+
+			Star: head + [
+				'in vec3 vWorld;',
+				'in vec3 vNormal;',
+				'in vec3 vLocal;',
+				'uniform vec3 uCamera;',
+				'uniform vec3 uColor;',
+				'uniform float uSeed;',
+				'uniform float uTime;',
+				'out vec4 outColor;',
+				graphics.Chunks.Noise,
+				'void main() {',
+				'	vec3 n = normalize(vNormal);',
+				'	vec3 v = normalize(uCamera - vWorld);',
+				'	vec3 p = normalize(vLocal);',
+				'	float cells = fbm3(p * 9.0 + vec3(0.0, uTime * 0.08, uSeed), 4);',
+				'	float spots = smoothstep(0.7, 0.78, fbm3(p * 2.6 + vec3(uSeed, uTime * 0.01, 0.0), 3));',
+				'	float limb = pow(max(dot(n, v), 0.0), 0.45);',
+				'	vec3 color = uColor * (0.7 + 0.6 * cells) * (0.5 + 0.6 * limb) * (1.0 - spots * 0.45);',
+				'	outColor = vec4(mix(color, vec3(1.0), 0.28 * limb), 1.0);',
+				'}'
+			].join('\n'),
+
+			Air: head + [
+				'in vec3 vWorld;',
+				'in vec3 vNormal;',
+				'uniform vec3 uCamera;',
+				'uniform vec3 uColor;',
+				'uniform float uStrength;',
+				'uniform vec4 uBody;',
+				'uniform float uShell;',
+				'uniform vec3 uLightPositions[4];',
+				'uniform int uLightCount;',
+				'out vec4 outColor;',
+				'void main() {',
+				'	vec3 n = -normalize(vNormal);',
+				'	vec3 look = normalize(vWorld - uCamera);',
+				'	float miss = length(cross(uBody.xyz - uCamera, look));',
+				'	float edge = pow(1.0 - clamp((miss - uBody.w) / (uShell - uBody.w), 0.0, 1.0), 2.4);',
+				'	float day = 0.0;',
+				'	for (int i = 0; i < 4; i++) {',
+				'		if (i >= uLightCount) break;',
+				'		day += clamp(dot(-n, normalize(uLightPositions[i] - vWorld)) * 1.5 + 0.35, 0.0, 1.0);',
+				'	}',
+				'	float glow = edge * clamp(day, 0.0, 1.0) * uStrength;',
+				'	outColor = vec4(uColor * glow, glow);',
+				'}'
+			].join('\n'),
+
+			Ring: head + [
+				'in vec3 vWorld;',
+				'in vec3 vNormal;',
+				'in vec2 vUV;',
+				'uniform vec3 uCamera;',
+				'uniform vec3 uColors[4];',
+				'uniform float uSeed;',
+				'out vec4 outColor;',
+				graphics.Chunks.Noise,
+				graphics.Chunks.Lights,
+				'void main() {',
+				'	float r = vUV.x;',
+				'	float wide = noise3(vec3(r * 22.0, uSeed, 0.5));',
+				'	float fine = noise3(vec3(r * 140.0, uSeed, 3.5));',
+				'	float gap = 1.0 - (1.0 - smoothstep(0.0, 0.015, abs(r - 0.62))) * 0.9;',
+				'	float alpha = (0.2 + 0.55 * wide + 0.25 * fine) * smoothstep(0.0, 0.05, r) * (1.0 - smoothstep(0.92, 1.0, r)) * gap;',
+				'	vec3 albedo = mix(mix(uColors[0], uColors[1], wide), mix(uColors[2], uColors[3], fine), fine * 0.6);',
+				'	vec3 n = normalize(vNormal);',
+				'	vec3 total = uAmbient;',
+				'	for (int i = 0; i < 4; i++) {',
+				'		if (i >= uLightCount) break;',
+				'		vec3 toLight = normalize(uLightPositions[i] - vWorld);',
+				'		total += uLightColors[i] * (0.35 + 0.65 * abs(dot(n, toLight))) * shadow(vWorld, uLightPositions[i]);',
+				'	}',
+				'	outColor = vec4(albedo * total, alpha);',
+				'}'
+			].join('\n'),
+
+			Solid: head + [
+				'in vec3 vWorld;',
+				'in vec3 vNormal;',
+				'in vec3 vLocal;',
+				'in vec3 vColor;',
+				'uniform vec3 uCamera;',
+				'uniform float uShine;',
+				'uniform float uSpecular;',
+				'uniform float uRough;',
+				'out vec4 outColor;',
+				graphics.Chunks.Noise,
+				graphics.Chunks.Lights,
+				'void main() {',
+				'	vec3 n = normalize(vNormal);',
+				'	vec3 v = normalize(uCamera - vWorld);',
+				'	vec3 color = min(vColor, vec3(1.0));',
+				'	color *= 1.0 - uRough * 0.45 + uRough * 0.45 * fbm3(vLocal * 3.0, 3);',
+				'	vec3 hot = max(vColor - vec3(1.0), 0.0);',
+				'	outColor = vec4(color * lighting(vWorld, n, v, uShine, uSpecular) + hot * 2.0, 1.0);',
+				'}'
+			].join('\n'),
+
+			Glow: head + [
+				'in vec2 vQuad;',
+				'uniform vec3 uColor;',
+				'uniform float uInner;',
+				'uniform int uStyle;',
+				'out vec4 outColor;',
+				'void main() {',
+				'	float d = length(vQuad);',
+				'	float a;',
+				'	if (uStyle == 1) {',
+				'		a = smoothstep(0.86, 0.9, d) * (1.0 - smoothstep(0.93, 0.97, d));',
+				'	}',
+				'	else {',
+				'		a = pow(clamp(1.0 - (d - uInner) / (1.0 - uInner), 0.0, 1.0), 2.6) * 0.85;',
+				'	}',
+				'	outColor = vec4(uColor * a, a);',
+				'}'
+			].join('\n'),
+
+			Flat: head + [
+				'in vec3 vWorld;',
+				'uniform vec4 uColor;',
+				'uniform vec4 uBody;',
+				'out vec4 outColor;',
+				'void main() {',
+				'	float near = uBody.w > 0.0 ? smoothstep(uBody.w * 1.3, uBody.w * 4.0, distance(vWorld, uBody.xyz)) : 1.0;',
+				'	outColor = vec4(uColor.rgb, uColor.a * near);',
+				'}'
+			].join('\n'),
+
+			/* The ground of a body seen from its surface: its squares relative to the eye, the colors of its baked surface. */
+			GroundVertex: head + [
+				'in vec3 aPosition;',
+				'in vec3 aNormal;',
+				'in vec2 aUV;',
+				'uniform mat4 uViewProjection;',
+				'uniform vec3 uOffset;',
+				'uniform vec3 uCenter;',
+				'out vec3 vWorld;',
+				'out vec3 vNormal;',
+				'out vec3 vDirection;',
+				'out vec2 vLand;',
+				'void main() {',
+				'	vWorld = aPosition + uOffset;',
+				'	vNormal = aNormal;',
+				'	vDirection = normalize(aPosition + uCenter);',
+				'	vLand = aUV;',
+				'	gl_Position = uViewProjection * vec4(vWorld, 1.0);',
+				'}'
+			].join('\n'),
+
+			Ground: head + [
+				'in vec3 vWorld;',
+				'in vec3 vNormal;',
+				'in vec3 vDirection;',
+				'in vec2 vLand;',
+				'uniform vec3 uSun;',
+				'uniform vec3 uSunColor;',
+				'uniform vec3 uColors[4];',
+				'uniform vec3 uWater;',
+				'uniform float uIce;',
+				'uniform vec4 uAir;',
+				'uniform float uFog;',
+				'uniform float uHigh;',
+				'out vec4 outColor;',
+				graphics.Chunks.Noise,
+				'vec3 ground(float h) {',
+				'	if (h < 0.33) return mix(uColors[0], uColors[1], h / 0.33);',
+				'	if (h < 0.66) return mix(uColors[1], uColors[2], (h - 0.33) / 0.33);',
+				'	return mix(uColors[2], uColors[3], (h - 0.66) / 0.34);',
+				'}',
+				'void main() {',
+				'	vec3 n = normalize(vNormal);',
+				'	vec3 v = normalize(-vWorld);',
+				'	float sea = vLand.y;',
+				'	vec3 albedo = sea > 0.5 ? mix(uWater * 1.25, uWater * 0.55, clamp(-vLand.x * 4.0, 0.0, 1.0)) : ground(clamp(vLand.x, 0.0, 1.0));',
+				'	vec3 up = vDirection;',
+				'	if (sea > 0.5) n = up;',
+				'	float rock = 1.0 - smoothstep(0.55, 0.75, dot(n, up));',
+				'	if (sea < 0.5) albedo = mix(albedo, uColors[1] * 0.8, rock * 0.6);',
+				'	if (uIce > 0.0) {',
+				'		float pole = abs(up.y) + (fbm3(up * 6.6, 3) - 0.5) * 0.3;',
+				'		float cap = uIce >= 1.0 ? 1.0 : smoothstep(1.0 - uIce, 1.0 - uIce + 0.04, pole);',
+				'		albedo = mix(albedo, vec3(0.93, 0.95, 0.98), cap);',
+				'	}',
+				'	albedo *= 0.85 + 0.3 * noise3(vWorld * 2.0 + up * 300.0);',
+				'	float day = max(dot(n, uSun), 0.0);',
+				'	float shine = sea > 0.5 ? pow(max(dot(n, normalize(uSun + v)), 0.0), 80.0) * 0.8 : 0.0;',
+				'	vec3 color = albedo * (uSunColor * day + vec3(0.05, 0.06, 0.08)) + uSunColor * shine;',
+				'	float light = clamp(dot(up, uSun) * 3.0 + 0.3, 0.0, 1.0);',
+				'	float haze = (1.0 - exp(-length(vWorld) / uFog)) * uAir.a * (1.0 - uHigh * 0.7);',
+				'	color = mix(color, mix(uAir.rgb, vec3(0.9), 0.35) * light, clamp(haze, 0.0, 1.0));',
+				'	outColor = vec4(color, 1.0);',
+				'}'
+			].join('\n'),
+
+			/* The sky of a body from its surface: blue of its air by day, red at sunset, black above its air or without one. */
+			Sky: head + [
+				'in vec2 vQuad;',
+				'uniform mat4 uInverse;',
+				'uniform vec3 uSun;',
+				'uniform vec3 uSunColor;',
+				'uniform vec4 uAir;',
+				'uniform vec3 uUp;',
+				'uniform float uHigh;',
+				'out vec4 outColor;',
+				'void main() {',
+				'	vec4 far = uInverse * vec4(vQuad, 1.0, 1.0);',
+				'	vec4 close = uInverse * vec4(vQuad, -1.0, 1.0);',
+				'	vec3 ray = normalize(far.xyz / far.w - close.xyz / close.w);',
+				'	float h = dot(ray, uUp);',
+				'	float s = dot(uSun, uUp);',
+				'	float toward = max(dot(ray, uSun), 0.0);',
+				'	float day = smoothstep(-0.3, 0.25, s);',
+				'	vec3 zenith = uAir.rgb * vec3(0.45, 0.6, 1.0);',
+				'	vec3 horizon = mix(uAir.rgb, vec3(1.0), 0.45);',
+				'	vec3 sky = mix(horizon, zenith, pow(clamp(h, 0.0, 1.0), 0.45)) * day;',
+				'	float dusk = (1.0 - smoothstep(0.0, 0.35, abs(s))) * exp(-max(h, 0.0) * 5.0);',
+				'	sky += vec3(1.0, 0.45, 0.2) * dusk * (0.4 + 0.6 * pow(toward, 4.0));',
+				'	sky += uSunColor * pow(toward, 48.0) * 0.5 * day;',
+				'	float density = uAir.a * (1.0 - uHigh);',
+				'	float disk = smoothstep(0.99996, 0.99999, toward);',
+				'	float alpha = clamp(density * (day * 0.97 + dusk * 0.6), 0.0, 1.0);',
+				'	outColor = vec4(sky * density + uSunColor * disk * 4.0, max(alpha, disk));',
+				'}'
+			].join('\n'),
+
+			/* The ground of a map: its squares relative to the eye, the colors of their heights, its sun and its haze. */
+			LandVertex: head + [
+				'in vec3 aPosition;',
+				'in vec3 aNormal;',
+				'in vec3 aColor;',
+				'uniform mat4 uViewProjection;',
+				'uniform vec3 uOffset;',
+				'out vec3 vWorld;',
+				'out vec3 vNormal;',
+				'out vec3 vColor;',
+				'out vec3 vPlace;',
+				'void main() {',
+				'	vWorld = aPosition + uOffset;',
+				'	vNormal = aNormal;',
+				'	vColor = aColor;',
+				'	vPlace = aPosition;',
+				'	gl_Position = uViewProjection * vec4(vWorld, 1.0);',
+				'}'
+			].join('\n'),
+
+			Land: head + [
+				'in vec3 vWorld;',
+				'in vec3 vNormal;',
+				'in vec3 vColor;',
+				'in vec3 vPlace;',
+				'uniform vec3 uSun;',
+				'uniform vec3 uSunColor;',
+				'uniform vec4 uAir;',
+				'uniform float uFog;',
+				'out vec4 outColor;',
+				graphics.Chunks.Noise,
+				'void main() {',
+				'	vec3 n = normalize(vNormal);',
+				'	float grain = 0.88 + 0.24 * noise3(vWorld * 0.35 + vPlace * 0.01);',
+				'	vec3 color = vColor * grain * (uSunColor * max(dot(n, uSun), 0.0) + vec3(0.16, 0.19, 0.24));',
+				'	vec3 horizon = mix(uAir.rgb, vec3(1.0), 0.45) * clamp(uSun.y * 3.0 + 0.3, 0.0, 1.0);',
+				'	color = mix(color, horizon, 1.0 - exp(-length(vWorld) / uFog));',
+				'	outColor = vec4(color, 1.0);',
+				'}'
+			].join('\n'),
+
+			Sea: head + [
+				'in vec3 vWorld;',
+				'uniform vec3 uSun;',
+				'uniform vec3 uSunColor;',
+				'uniform vec4 uAir;',
+				'uniform float uFog;',
+				'out vec4 outColor;',
+				graphics.Chunks.Noise,
+				'void main() {',
+				'	vec3 v = normalize(-vWorld);',
+				'	vec3 n = normalize(vec3((noise3(vWorld * 0.2) - 0.5) * 0.08, 1.0, (noise3(vWorld * 0.2 + 7.0) - 0.5) * 0.08));',
+				'	float shine = pow(max(dot(n, normalize(uSun + v)), 0.0), 90.0);',
+				'	float fresnel = pow(1.0 - max(dot(n, v), 0.0), 3.0);',
+				'	vec3 color = vec3(0.07, 0.26, 0.38) * (0.4 + 0.6 * max(uSun.y, 0.0)) + mix(uAir.rgb, vec3(1.0), 0.4) * fresnel * 0.5 + uSunColor * shine;',
+				'	vec3 horizon = mix(uAir.rgb, vec3(1.0), 0.45) * clamp(uSun.y * 3.0 + 0.3, 0.0, 1.0);',
+				'	color = mix(color, horizon, 1.0 - exp(-length(vWorld) / uFog));',
+				'	outColor = vec4(color, 0.82 + fresnel * 0.15);',
+				'}'
+			].join('\n'),
+
+			Dot: head + [
+				'in vec4 vColor;',
+				'out vec4 outColor;',
+				'void main() {',
+				'	float d = length(gl_PointCoord - vec2(0.5));',
+				'	float a = (1.0 - smoothstep(0.1, 0.5, d)) * vColor.a;',
+				'	outColor = vec4(vColor.rgb * a, a);',
+				'}'
+			].join('\n')
+		};
+	}
+});

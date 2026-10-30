@@ -1,7 +1,7 @@
 <!-- generated -->
 # *itemCard
 
-*itemcard="item" shows the card of an item of a game on any element: under the pointer or the focus, beside the element (GameItems.Place), as GameInventory and GameSlot show it. The item is {Name, Rarity, Type, Stats: [{Label, Value}], Description, Class}; an item with nothing more than a name (GameItems.Carded) shows none, and neither does null. The card opens in the top layer (a popover), so no scrolling box, transform or filter around the element cuts or moves it; it follows the element when the page scrolls or moves it (a part above that renders later), and it stays in the DOM next to the element, so it takes the theme of the part of the page it is in. It has the classes of GameItemCard (elemenx-game-inventory-card...).
+*itemcard="item" shows the card of an item of a game on any element: under the pointer or the focus, beside the element (GameItems.Place), as GameInventory and GameSlot show it. The item is {Name, Rarity, Type, Stats: [{Label, Value}], Description, Class}; an item with nothing more than a name (GameItems.Carded) shows none, and neither does null. The card opens in the top layer (a popover), so no scrolling box, transform or filter around the element cuts or moves it; it follows the element when the page scrolls or moves it (a part above that renders later), and it stays in the DOM next to the element, so it takes the theme of the part of the page it is in. A card a finger opened (a tap on a tablet) closes when the page scrolls, as the tooltips of the system do. It has the classes of GameItemCard (elemenx-game-inventory-card...).
 
 ## Example
 

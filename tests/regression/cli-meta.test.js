@@ -53,6 +53,36 @@ afterEach(function () {
 });
 
 describe('elemenx meta', function () {
+	it('gives a Component of a base and of Traits the meta of all of its layers, as the framework merges them', function () {
+		var root = folder();
+		var made;
+		var big;
+
+		fs.writeFileSync(path.join(root, 'index.js'), '[\'traits/Selectable.js\', \'components/Card/Card.js\', \'components/BigCard/BigCard.js\']');
+		fs.mkdirSync(path.join(root, 'traits'));
+		fs.mkdirSync(path.join(root, 'components', 'Card'), {recursive: true});
+		fs.mkdirSync(path.join(root, 'components', 'BigCard'), {recursive: true});
+		fs.writeFileSync(path.join(root, 'traits', 'Selectable.js'), "Elemenx.Trait('Selectable', {$Meta: {Props: {Selected: 'Whether it is selected.'}, Events: ['toggle']}, Selected: false});\n");
+		fs.writeFileSync(path.join(root, 'components', 'Card', 'Card.js'), "Elemenx.Component('Card', {$Meta: {Group: 'layout', Description: 'A card.', Props: {Title: 'Its title.'}, Events: {pick: 'Picked.'}}, Title: 'Card'});\n");
+		fs.writeFileSync(path.join(root, 'components', 'BigCard', 'BigCard.js'), "Elemenx.Component('BigCard', {$Extends: 'Card', $Traits: ['Selectable'], $Meta: {Description: 'A big card.', Props: {Size: 'Its size.'}}, Title: 'Big', Size: 2});\n");
+
+		made = Meta.Build(root, null);
+		big = made.Components.filter(function (component) {
+			return component.Name === 'BigCard';
+		})[0];
+
+		expect(big.Description).toBe('A big card.');
+		expect(big.Group).toBe('layout');
+		expect(big.Props.map(function (prop) {
+			return prop.Name + '=' + JSON.stringify(prop.Default);
+		})).toEqual(['Title="Big"', 'Selected=false', 'Size=2']);
+		expect(big.Events).toEqual(['pick', 'toggle']);
+		expect(big.EventDescriptions).toEqual({pick: 'Picked.', toggle: ''});
+		expect(made.Components.map(function (component) {
+			return component.Name;
+		})).toEqual(['Card', 'BigCard']);
+	});
+
 	it('collects the $Meta of every definition of a library, normalized as Elemenx.Meta gives it, and its classes', function () {
 		var root = folder();
 

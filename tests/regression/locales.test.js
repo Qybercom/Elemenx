@@ -83,7 +83,7 @@ describe('ElemenxUI dictionaries', function () {
 	it('has a phrase for every key the components and services name, and no phrase nobody names', function () {
 		var english = dictionary('en');
 		var keys = used();
-		var dynamic = /^ui\.presence\.|^ui\.forms\.|^ui\.designer\.(groups|kinds|hints)\.|^ui\.designer\.rules\.(node|kind|within|when-|where-|scheme-)|^ui\.designer\.(before|after)$|^ui\.emojiPicker\.(group\.|tone\d)|^ui\.game\.(health|mana|experience|stamina|common|uncommon|rare|epic|legendary)$|^ui\.call\.layouts\.|^ui\.signal\.(good|fair|poor)$|^ui\.signaturePad\.(match|mismatch)$|^ui\.pipeline\.(retry|cancel|play|status\.)|^ui\.calculator\.keys\.|^ui\.quiz\.(check|next|right|wrong|passed|failed)$/;
+		var dynamic = /^ui\.presence\.|^ui\.forms\.|^ui\.designer\.(groups|kinds|hints)\.|^ui\.designer\.rules\.(node|kind|within|when-|where-|scheme-)|^ui\.designer\.(before|after)$|^ui\.emojiPicker\.(group\.|tone\d)|^ui\.game\.(health|mana|experience|stamina|common|uncommon|rare|epic|legendary)$|^ui\.call\.layouts\.|^ui\.signal\.(good|fair|poor)$|^ui\.signaturePad\.(match|mismatch)$|^ui\.pipeline\.(retry|cancel|play|status\.)|^ui\.calculator\.keys\.|^ui\.quiz\.(check|next|right|wrong|passed|failed)$|^ui\.gameScene\.(class|temperature|mass|radius|luminosity|gravity|distance|period|day|habitable|at|team|ships|heading|yes|locked|km|au|ms2|days|hours|health|parts|kinds\.|surfaces\.)/;
 
 		expect(Object.keys(keys).filter(function (key) {
 			return !(key in english);

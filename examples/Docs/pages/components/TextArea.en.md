@@ -46,5 +46,5 @@ A field of several lines of text. Value, Placeholder, Rows (the height in lines)
 ## Tests
 
 - [TextArea tells its text while typing and when it is committed, and AutoSize grows with it](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-forms.test.js#L243) — `tests/regression/library-forms.test.js`
-- [writes a <template id> as a script of text, its tags as they were written](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/server.test.js#L354) — `tests/regression/server.test.js`
-- [serves the pages with their templates as scripts, and as files when the option is off](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/server.test.js#L379) — `tests/regression/server.test.js`
+- [writes a <template id> as a script of text, its tags as they were written](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/server.test.js#L399) — `tests/regression/server.test.js`
+- [serves the pages with their templates as scripts, and as files when the option is off](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/server.test.js#L424) — `tests/regression/server.test.js`

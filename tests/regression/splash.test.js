@@ -100,6 +100,73 @@ describe('Contract: Elemenx.Splash, the splash of the page', function () {
 		});
 	});
 
+	it('shows the percent the Application gives with Progress: its attribute, its CSS variable, its bar and its text', async function () {
+		var node = splash();
+
+		node.setAttribute('data-progress', '');
+
+		node.innerHTML = '<span class="elemenx-splash-progress" role="progressbar"><span class="elemenx-splash-bar"></span></span><span class="elemenx-splash-percent"></span>';
+
+		Elemenx.Splash.Hold();
+
+		expect(Elemenx.Splash.Progress()).toBe(null);
+		expect(Elemenx.Splash.Progress(42.4)).toBe(Elemenx.Splash);
+		expect(Elemenx.Splash.Progress()).toBe(42);
+		expect(node.getAttribute('data-progress')).toBe('42');
+		expect(node.style.getPropertyValue('--elemenx-splash-progress')).toBe('42');
+		expect(node.querySelector('.elemenx-splash-progress').getAttribute('aria-valuenow')).toBe('42');
+		expect(node.querySelector('.elemenx-splash-percent').textContent).toBe('42%');
+
+		Elemenx.Splash.Progress(150);
+
+		expect(Elemenx.Splash.Progress()).toBe(100);
+
+		Elemenx.Splash.Hide();
+
+		await waitFor(function () {
+			return node.classList.contains('elemenx-splash-out');
+		});
+	});
+
+	it('counts the bytes of the page loaded of its data-total, at most 95 before the ready, then 100', async function () {
+		var node = splash();
+		var before;
+
+		node.setAttribute('data-progress', '');
+		node.setAttribute('data-total', String(1e9));
+
+		Elemenx.Splash.Hold();
+
+		await tick(20);
+
+		before = Number(node.getAttribute('data-progress'));
+
+		/* A file of about 300 KB: the framework itself, fetched again past the cache. */
+		await fetch(__ELEMENX_SCRIPT__ + '?splash=' + Date.now()).then(function (response) {
+			return response.text();
+		});
+
+		node.setAttribute('data-total', String(Math.round(performance.getEntriesByType('resource').reduce(function (sum, entry) {
+			return sum + (entry.decodedBodySize || 0);
+		}, 0) * 0.5)));
+
+		await fetch(__ELEMENX_SCRIPT__ + '?splash=again' + Date.now()).then(function (response) {
+			return response.text();
+		});
+
+		await waitFor(function () {
+			return Number(node.getAttribute('data-progress')) === 95;
+		});
+
+		expect(before).toBeLessThan(95);
+
+		start();
+
+		Elemenx.Splash.Hide();
+
+		expect(node.getAttribute('data-progress')).toBe('100');
+	});
+
 	it('goes when the Application fails, so its error shows', async function () {
 		var node = splash();
 

@@ -37,7 +37,7 @@ describe('Contract: the Directives of ElemenxUI', function () {
 	beforeAll(async function () {
 		await loadElemenx();
 
-		Use(['*modal', '*hotkey', '*resizable', '*draggable', '*droppable', '*itemcard', '*layer']);
+		Use(['*modal', '*hotkey', '*resizable', '*draggable', '*droppable', '*itemcard', '*layer', '*blur']);
 
 		/* As the stylesheet of the library: an element of *layer keeps its own place, not the one of a popover. */
 		document.head.appendChild(document.createElement('style')).textContent = ':where(.elemenx-layer[popover]) { inset: auto; margin: 0; }';
@@ -49,6 +49,34 @@ describe('Contract: the Directives of ElemenxUI', function () {
 
 	afterEach(function () {
 		while (owned.length) owned.pop().$Destroy();
+	});
+
+	it('*blur makes an element frosted glass: the tokens of the theme alone, its radius as a number, each part of an object', async function () {
+		var host = mount('<div><div class="plain" *blur></div><div class="radius" *blur="Radius"></div><div class="parts" *blur="Parts"></div></div>', {
+			Radius: 12,
+			Parts: {Radius: 24, Saturate: 1.4, Tint: 0.5}
+		});
+		var root;
+		var parts;
+
+		await tick();
+
+		root = host.$Element();
+		parts = root.querySelector('.parts');
+
+		expect(root.querySelector('.plain').classList.contains('elemenx-blur')).toBe(true);
+		expect(root.querySelector('.plain').getAttribute('style')).toBe(null);
+		expect(root.querySelector('.radius').style.getPropertyValue('--elemenx-blur-radius')).toBe('12px');
+		expect(parts.style.getPropertyValue('--elemenx-blur-radius')).toBe('24px');
+		expect(parts.style.getPropertyValue('--elemenx-blur-saturate')).toBe('140%');
+		expect(parts.style.getPropertyValue('--elemenx-blur-tint')).toBe('0.5');
+
+		host.Parts = {Tint: 2};
+
+		await tick();
+
+		expect(parts.style.getPropertyValue('--elemenx-blur-radius')).toBe('');
+		expect(parts.style.getPropertyValue('--elemenx-blur-tint')).toBe('1');
 	});
 
 	it('*modal opens a dialog while its expression is true, puts the focus in it, and asks to close on Escape', async function () {
@@ -298,5 +326,39 @@ describe('Contract: the Directives of ElemenxUI', function () {
 		await frame();
 
 		expect(Math.round(card.getBoundingClientRect().top)).toBe(Math.round(sword.getBoundingClientRect().top));
+	});
+
+	/* A bug: on a tablet the card a tap opened went along with the page as it scrolled, over everything it passed. */
+	it('*itemcard opened by a finger closes when the page scrolls, one opened by the mouse follows its element', async function () {
+		var host = mount('<div><span class="sword" tabindex="0" *itemcard="Sword">Sword</span></div>', {
+			Sword: {Name: 'Old sword', Rarity: 'rare', Stats: [{Label: 'Damage', Value: 12}]}
+		});
+		var sword;
+		var open = function () {
+			return Array.prototype.filter.call(document.querySelectorAll('.elemenx-game-inventory-card'), function (node) {
+				return node.matches(':popover-open');
+			}).length;
+		};
+
+		await tick();
+
+		sword = host.$Element().querySelector('.sword');
+
+		sword.dispatchEvent(new PointerEvent('pointerdown', {pointerType: 'touch', bubbles: true}));
+		sword.dispatchEvent(new MouseEvent('mouseenter'));
+
+		expect(open()).toBe(1);
+
+		window.dispatchEvent(new Event('scroll'));
+
+		expect(open()).toBe(0);
+
+		sword.dispatchEvent(new PointerEvent('pointerdown', {pointerType: 'mouse', bubbles: true}));
+		sword.dispatchEvent(new MouseEvent('mouseenter'));
+		window.dispatchEvent(new Event('scroll'));
+
+		expect(open()).toBe(1);
+
+		sword.dispatchEvent(new MouseEvent('mouseleave'));
 	});
 });

@@ -11,7 +11,7 @@
 		"test:e2e": "playwright test"
 	},
 	"dependencies": {
-		"@qybercom/elemenx": "^0.11.0"
+		"@qybercom/elemenx": "^0.12.0"
 	},
 	"devDependencies": {
 		"@playwright/test": "^1.63.0",

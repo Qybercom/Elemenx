@@ -45,6 +45,41 @@ describe('Elemenx without a DOM', function () {
 		expect(Elemenx.Service('Layouts').Pack([{ID: 'a', Width: 2}, {ID: 'b'}], {Columns: 2}).Rows).toBe(2);
 	});
 
+	it('puts planets on their orbits and makes shapes of three dimensions with the Services of ElemenxUI', function () {
+		var astronomy;
+		var graphics;
+		var quarter;
+
+		require('../../libraries/ElemenxUI/services/Astronomy.js');
+		require('../../libraries/ElemenxUI/services/Graphics3D.js');
+
+		astronomy = Elemenx.Service('Astronomy');
+		graphics = Elemenx.Service('Graphics3D');
+		quarter = astronomy.Position({Distance: 1}, 365.25 / 4, 1);
+
+		expect(quarter[1]).toBeCloseTo(1, 6);
+		expect(astronomy.Generate('node').Bodies[0].Type).toBe('star');
+		expect(graphics.Sphere({Segments: 8, Rings: 4}).Positions.length).toBe(9 * 5 * 3);
+		expect(graphics.Camera({Position: [0, 0, 10]}).Project([0, 0, 0], 100, 100)).toMatchObject({X: 50, Y: 50});
+		expect(graphics.Create({getContext: function () {
+			return null;
+		}})).toBe(null);
+
+		/* The kinds of a game and a saved one, on a server too. */
+		require('../../libraries/ElemenxUI/services/Kinds.js');
+
+		var kinds = Elemenx.Service('Kinds');
+		var made;
+
+		kinds.Define('node-module', {Traits: {Health: {Max: 10}}});
+		kinds.Define('node-station', {Parts: [{ID: 'dock', Kind: 'node-module'}]});
+
+		made = kinds.Make('node-station', {ID: 'base', Parts: [{ID: 'dock', Traits: {Health: {Max: 20}}}]});
+
+		expect(kinds.Diff(made)).toEqual({ID: 'base', Kind: 'node-station', Parts: [{ID: 'dock', Traits: {Health: {Max: 20}}}]});
+		expect(JSON.stringify(kinds.Restore(kinds.Diff(made)))).toBe(JSON.stringify(made));
+	});
+
 	it('keeps Local and Session in memory, one store for every facade', function () {
 		Elemenx.Storage.Local.Set('Theme', 'dark');
 		Elemenx.Storage.Session.Set('Visit', {Count: 2});

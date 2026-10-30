@@ -5,6 +5,6 @@
 
 ## Tests
 
-- [*layer puts its element in the top layer, placed by the viewport inside a box with containment and a transform](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-directives.test.js#L211) — `tests/regression/library-directives.test.js`
-- [*layer="Open" is a popover only while it is true, and a new value brings it on top of the others again, the focus kept](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-directives.test.js#L222) — `tests/regression/library-directives.test.js`
-- [*layer on a part of a *if is in the top layer at the end of the task that opened it, not a frame later](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-directives.test.js#L262) — `tests/regression/library-directives.test.js`
+- [*layer puts its element in the top layer, placed by the viewport inside a box with containment and a transform](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-directives.test.js#L239) — `tests/regression/library-directives.test.js`
+- [*layer="Open" is a popover only while it is true, and a new value brings it on top of the others again, the focus kept](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-directives.test.js#L250) — `tests/regression/library-directives.test.js`
+- [*layer on a part of a *if is in the top layer at the end of the task that opened it, not a frame later](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-directives.test.js#L290) — `tests/regression/library-directives.test.js`

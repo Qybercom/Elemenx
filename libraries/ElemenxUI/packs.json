@@ -16,5 +16,6 @@
 	"darcula": {"Bundled": true, "Files": ["themes/darcula.css"], "Uses": ["'darcula'", "\"darcula\"", ".Themes()"]},
 	"soft": {"Bundled": true, "Files": ["themes/soft.css"], "Uses": ["'soft'", "\"soft\"", ".Themes()"]},
 	"fantasy": {"Files": ["themes/fantasy.css"], "Uses": ["'fantasy'", "\"fantasy\"", ".Themes()"]},
-	"scifi": {"Files": ["themes/scifi.css"], "Uses": ["'scifi'", "\"scifi\"", ".Themes()"]}
+	"scifi": {"Files": ["themes/scifi.css"], "Uses": ["'scifi'", "\"scifi\"", ".Themes()"]},
+	"glassy": {"Files": ["themes/glassy.css"], "Uses": ["'glassy'", "\"glassy\"", ".Themes()"]}
 }

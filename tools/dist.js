@@ -133,7 +133,7 @@ function library (min) {
 
 	list.JS.forEach(function (file) {
 		var source = entity(file, min);
-		var declared = /\bElemenx\.(Component|Service|Guard|Directive)\s*\(\s*(['"])([^'"]+)\2/.exec(source);
+		var declared = /\bElemenx\.(Component|Service|Guard|Directive|Trait)\s*\(\s*(['"])([^'"]+)\2/.exec(source);
 		if (!declared)
 			common.fail('Not an entity of the Library: ' + file);
 

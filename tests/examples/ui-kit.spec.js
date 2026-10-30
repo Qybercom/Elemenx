@@ -218,7 +218,7 @@ for (const origin of origins) {
 
 			await open(page, origin);
 
-			await expect(page.locator('.ui-kit > .elemenx-section')).toHaveCount(60);
+			await expect(page.locator('.ui-kit > .elemenx-section')).toHaveCount(62);
 
 			await expect(page.locator('#elemenx-icons')).toHaveAttribute('data-ready', 'true');
 			await expect(page.locator('.ui-kit-icon svg').first()).toHaveAttribute('data-icon', 'add');
@@ -3050,6 +3050,153 @@ for (const origin of origins) {
 			await expect.poll(async function () {
 				return (await pixel('.elemenx-game-world-canvas', 520, 240))[3];
 			}).toBeGreaterThan(240);
+
+			expect(errors).toEqual([]);
+		});
+
+		test('space draws the Sun and its planets in 3D, selects a body by its name, flies to it, sends a fleet to Mars and makes a system of a seed', async function ({ page }) {
+			var errors = captureErrors(page);
+			var space;
+			var bodies;
+			var sun;
+
+			await page.setViewportSize({width: 1280, height: 900});
+
+			await open(page, origin, ['Space']);
+
+			bodies = section(page, 'Space');
+			space = bodies.locator('.elemenx-game-scene');
+
+			await space.scrollIntoViewIfNeeded();
+
+			/* A name of every body but the belts: the Sun, 8 planets, 9 moons, 2 stations and 2 fleets. */
+			await expect(space.locator('.elemenx-game-scene-label')).toHaveCount(22);
+			await expect(space.locator('.elemenx-game-scene-fallback')).toHaveCount(0);
+
+			/* The Sun is drawn bright in the middle of a dark sky. */
+			sun = async function (id) {
+				return space.evaluate(function (node, star) {
+					var instance = Elemenx.Instance(node);
+					var renderer = instance.Engine().Renderer;
+					var gl = renderer.GL;
+					var spot = instance.ToScreen(star);
+					var at = function (x, y) {
+						var data = new Uint8Array(4);
+
+						gl.readPixels(Math.round(x * renderer.Ratio), Math.round(renderer.Height - y * renderer.Ratio), 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, data);
+
+						return data[0] + data[1] + data[2];
+					};
+
+					instance.Engine().Frame(performance.now());
+
+					return {Sun: at(spot.X, spot.Y), Sky: at(3, 3)};
+				}, id || 'sun');
+			};
+
+			await expect.poll(async function () {
+				return (await sun()).Sun;
+			}).toBeGreaterThan(500);
+
+			expect((await sun()).Sky).toBeLessThan(60);
+
+			/* Its name selects the Earth: the card of its numbers; then the view flies to it. */
+			await space.locator('.elemenx-game-scene-label[data-id="earth"]').click();
+
+			await expect(space.locator('.elemenx-game-scene-card')).toContainText('Earth-like planet');
+			await expect(space.locator('.elemenx-game-scene-card')).toContainText('Habitable zone');
+			await expect(bodies.locator('.elemenx-section-header')).toContainText('Selected: Earth');
+
+			await space.getByRole('button', {name: 'Fly to it'}).click();
+
+			await expect(bodies.locator('.elemenx-section-header')).toContainText('Flying to Earth');
+
+			/* Down to its surface and back: its sky over its ground, then space again. */
+			await space.getByRole('button', {name: 'Land'}).click();
+
+			await expect(space.getByRole('button', {name: 'Take off'})).toBeVisible();
+
+			await expect.poll(async function () {
+				return space.evaluate(function (node) {
+					return Object.keys(Elemenx.Instance(node).Scene().Surface.Nodes).length;
+				});
+			}).toBeGreaterThan(10);
+
+			await space.getByRole('button', {name: 'Take off'}).click();
+
+			await expect(space.getByRole('button', {name: 'Take off'})).toHaveCount(0, {timeout: 15000});
+
+			await page.keyboard.press('Escape');
+
+			/* The first fleet to Mars: it arrives a few days of the system later. */
+			await bodies.getByRole('button', {name: 'Fleet to Mars'}).click();
+
+			await expect(bodies.locator('.elemenx-section-header')).toContainText('First fleet: to Mars');
+			await expect(bodies.locator('.elemenx-section-header')).toContainText('Arrived: First fleet at Mars', {timeout: 15000});
+
+			/* A system of a seed: a star of its own, its planets and their moons. */
+			await bodies.locator('.elemenx-check-label', {hasText: 'Of a seed'}).click();
+
+			await expect(space.locator('.elemenx-game-scene-label[data-kind="star"]')).toHaveCount(1);
+			await expect(space.locator('.elemenx-game-scene-label[data-id="planet-b"]')).toHaveCount(1);
+			await expect(bodies.locator('.ui-kit-space-hud')).toContainText('Seed kepler-186');
+
+			/* At its real size, the star is still drawn: a few pixels at least. */
+			await bodies.locator('.elemenx-toggle', {hasText: 'Real scale'}).click();
+
+			await expect.poll(async function () {
+				return (await sun('star')).Sun;
+			}).toBeGreaterThan(300);
+
+			expect(errors).toEqual([]);
+		});
+
+		test('terrain draws a ground with its trees and houses, its units walk to the village round what blocks them, and the game saves', async function ({ page }) {
+			var errors = captureErrors(page);
+			var terrain;
+			var scene;
+
+			await page.setViewportSize({width: 1280, height: 900});
+
+			await open(page, origin, ['Terrain']);
+
+			terrain = section(page, 'Terrain');
+			scene = terrain.locator('.elemenx-game-scene');
+
+			await scene.scrollIntoViewIfNeeded();
+
+			/* The names of what can be selected: three units and three houses. */
+			await expect(scene.locator('.elemenx-game-scene-label')).toHaveCount(6);
+
+			/* The ground is drawn: the middle of the view is no sky of the color of the page. */
+			await expect.poll(async function () {
+				return scene.evaluate(function (node) {
+					var instance = Elemenx.Instance(node);
+					var renderer = instance.Engine().Renderer;
+					var gl = renderer.GL;
+					var data = new Uint8Array(4);
+
+					instance.Engine().Frame(performance.now());
+
+					gl.readPixels(Math.round(renderer.Width / 2), Math.round(renderer.Height / 3), 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, data);
+
+					return data[1] > data[2] && data[1] > 40 ? 'ground' : 'sky';
+				});
+			}).toBe('ground');
+
+			await terrain.getByRole('button', {name: 'All to the village'}).click();
+
+			await expect(terrain.locator('.elemenx-section-header')).toContainText('3 going to the village');
+			await expect(terrain.locator('.elemenx-section-header')).toContainText('arrived at', {timeout: 30000});
+
+			await terrain.getByRole('button', {name: 'Save'}).click();
+
+			await expect(terrain.locator('.elemenx-section-header')).toContainText('Saved:');
+
+			await terrain.getByRole('button', {name: 'Load'}).click();
+
+			await expect(terrain.locator('.elemenx-section-header')).toContainText('Loaded');
+			await expect(scene.locator('.elemenx-game-scene-label')).toHaveCount(6);
 
 			expect(errors).toEqual([]);
 		});
