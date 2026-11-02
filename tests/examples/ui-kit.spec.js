@@ -219,7 +219,7 @@ for (const origin of origins) {
 
 			await open(page, origin);
 
-			await expect(page.locator('.ui-kit > .elemenx-section')).toHaveCount(63);
+			await expect(page.locator('.ui-kit > .elemenx-section')).toHaveCount(64);
 
 			await expect(page.locator('#elemenx-icons')).toHaveAttribute('data-ready', 'true');
 			await expect(page.locator('.ui-kit-icon svg').first()).toHaveAttribute('data-icon', 'add');
@@ -3117,7 +3117,14 @@ for (const origin of origins) {
 				return (await sun()).Sun;
 			}).toBeGreaterThan(500);
 
-			expect((await sun()).Sky).toBeLessThan(60);
+			/* Without its backdrop of a seed the sky is dark. */
+			await space.evaluate(function (node) {
+				Elemenx.Instance(node).Cosmos = '';
+			});
+
+			await expect.poll(async function () {
+				return (await sun()).Sky;
+			}).toBeLessThan(60);
 
 			/* Its name selects the Earth: the card of its numbers; then the view flies to it. */
 			await space.locator('.elemenx-game-scene-label[data-id="earth"]').click();
@@ -3245,10 +3252,10 @@ for (const origin of origins) {
 
 			menus = section(page, 'Terrain').locator('.elemenx-select-trigger');
 
-			await menus.nth(1).click();
+			await menus.nth(2).click();
 			await page.getByRole('option', {name: 'Medium'}).click();
 
-			await expect(menus.nth(1)).toContainText('Medium');
+			await expect(menus.nth(2)).toContainText('Medium');
 			await expect.poll(function () {
 				return section(page, 'Terrain').locator('.elemenx-game-scene').evaluate(function (node) {
 					return Elemenx.Instance(node).Graphics().Level;
@@ -3262,7 +3269,7 @@ for (const origin of origins) {
 
 			await page.reload();
 
-			await expect(section(page, 'Terrain').locator('.elemenx-select-trigger').nth(1)).toContainText('Medium');
+			await expect(section(page, 'Terrain').locator('.elemenx-select-trigger').nth(2)).toContainText('Medium');
 
 			expect(errors).toEqual([]);
 		});

@@ -1,0 +1,14 @@
+<pre class="elemenx-code" style="white-space: pre-wrap;">{{Text}}</pre>
+<script>
+({
+	Text: '',
+
+	$OnCreate: function () {
+		var source = this.$Service('Fbx').Parse('Objects:  {\n\tModel: 1, "Model::mixamorig:Hips", "LimbNode" {\n\t\tP: "Lcl Translation", "Lcl Translation", "", "A+",0,100,0\n\t}\n}');
+
+		this.Text = 'Bones: ' + source.Bones.map(function (bone) {
+			return bone.Name + ' at ' + bone.Translation.join(', ');
+		}).join('; ') + '\n\nOn a model: Models.Define(\'hero\', {URL: \'hero.glb\', Motions: {walk: \'Walk.fbx\'}})';
+	}
+})
+</script>

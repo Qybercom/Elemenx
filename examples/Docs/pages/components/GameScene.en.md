@@ -3,7 +3,7 @@
 
 The scene of a game in three dimensions on WebGL2 (the Graphics3D Service): objects of any kind (the Kinds Service), each made of what its kind extends, what it can do (its Traits, each run by a system of the scene) and what it is made of (its Parts, objects of their own placed in it). The setting space (the default) brings the kinds of a star system and its systems: stars and planets on Kepler orbits (the Astronomy Service), lit by their stars (night sides, the shadows of moons and planets on each other and on rings), their surfaces of noise baked once into cube textures, belts and rings, stations of modules, fleets of ships that hold their place by a body and travel to another.
 
-Kinds of space: star (Star: Mass, Radius, Temperature, Luminosity, Color), planet (Orbit: Distance, Eccentricity, Inclination, Node, Periapsis, Anomaly, Period; Body: Radius, Mass, Day, Tilt, Albedo; Surface: Type, Colors, Water, Ocean, Ice, Clouds, Atmosphere, Seed), moon (a planet, small, one face to its planet), belt (Belt: Inner, Outer, Count, Inclination, Colors), ring (Ring: Inner, Outer, Inclination, Colors), station and outpost (an Orbit in radii of what they go round, a Model and parts: modules, a dock), fighter, cruiser and freighter (ships: Model, Health), fleet (Mover: Speed; Formation: Count, Ship, Spacing: its ships are parts). An application defines its own (Kinds.Define) and systems of its own for traits of its own (Systems: {Trait: {Update(object, scene), Draw(object, scene)}}).
+Kinds of space: star (Star: Mass, Radius, Temperature, Luminosity, Color, Veil: how far from the disc, in its radii, engines go in its light, 0 for not at all), planet (Orbit: Distance, Eccentricity, Inclination, Node, Periapsis, Anomaly, Period; Body: Radius, Mass, Day, Tilt, Albedo; Surface: Type, Colors, Water, Ocean, Ice, Clouds, Atmosphere, Seed), moon (a planet, small, one face to its planet), belt (Belt: Inner, Outer, Count, Inclination, Colors), ring (Ring: Inner, Outer, Inclination, Colors), station and outpost (an Orbit in radii of what they go round, a Model and parts: modules, a dock), fighter, cruiser and freighter (ships: Model, Health), fleet (Mover: Speed; Formation: Count, Ship, Spacing: its ships are parts). An application defines its own (Kinds.Define) and systems of its own for traits of its own (Systems: {Trait: {Update(object, scene), Draw(object, scene)}}).
 
 The objects: System ({Objects: [{ID, Kind, Parent, Values, Traits, Parts, Children}]}), Seed (a whole system of it: Astronomy.Generate) and GameObject declared inside (a GameObject in another goes round it when it moves, an Orbit or a Mover, and is a part of it otherwise; Part="dock" changes a part of the kind of its parent). Every attribute of a GameObject is a field of it or of a Trait, in any case. Time is the day (0), Speed the days of it a second (1), Paused holds it; Scale compressed (the default: large bodies, short distances) or real.
 
@@ -11,7 +11,9 @@ The view: a drag turns it round the object in focus, the wheel or two fingers zo
 
 The view is free in every 3D scene: a drag turns and tilts it, the wheel zooms, the middle button or a drag with Shift carries it (two fingers on a screen), WASD or the arrows move it, Q and E turn it, R and F tilt it.
 
-The surface: Land(id, {Latitude, Longitude, Altitude, Instant}) flies down in one piece from where the eye stands (Instant: at once) and TakeOff() flies back to the same view of space; it goes down to the ground of a body (not of a giant of gas), the very ground its baked surface shows (Terrain.Sphere), in patches finer near the eye, under its sky (its atmosphere and its star); a drag looks round, the wheel rises and comes down, WASD and the arrows walk, Escape or TakeOff() goes back up. The time runs SurfaceSpeed days a second there (1/120).
+The sky of a ground: a GameObject of kind sun takes Time (18:30, or hours as a number) and goes on at the pace of DaySeconds, Noon is the azimuth it passes at noon (180) and Shade the color of the light of the sky. DayHours is how long a day is (24); with a Latitude the sun goes as the planet turns: Tilt of its axis (23.44), DayOfYear (172) of a year of YearDays (365) give the length of the light of the day, the polar days and nights too. At night the moon lights the land: Moon (false: a sky without one), MoonLight, MoonSize, MoonPhase (0 new, 0.5 full, it goes late by that part of a day), MoonElevation with MoonAzimuth to hold it in a place, MoonTilt with MoonNode (the day of a year its way crosses the sun's: an eclipse, of the sun at a new moon, of the moon at a full one), and NightLight, the light of the air in the dark. SkyGlow (0 to 1) is the light towns throw on the air, of SkyGlowColor, from SkyGlowAzimuth or all round: it lights the clouds from under and hides the faint stars. The stars turn with the planet, round its pole at the height of Latitude, and with them the band of the galaxy (Galaxy, 0 for none). Weather (clear, cloudy, overcast, rain, storm, snow, fog) changes in a few seconds, and rain wets what stands in it; Flare (0 to 2) is how strongly a lens shows the sun. At high and ultra what is glossy or wet mirrors what is on the screen, and past it the sky. Kind light (Color, Power, Radius, Height, Spot, Aim, Flicker, Follow, Z) is a lamp: any number, the nearest 24 at once, the nearest 2 with shadows; what shines in a model of a file is a lamp too (Lamps of the Models Service; Lights: false on an object leaves them out). Kind location (Model, Size, Without, Plane) makes a ground of a model of a file, its floors and walls read from its triangles; Control(id) gives the keys to a walker: a press takes the mouse (Capture), it faces the view, A and D step aside, Shift runs, Shift and Alt sprint, Space jumps, a drag with the right button turns the view and leaves the walk as it was. A skeleton with no clips gets walk and idle made from the names of its bones, Motions of a recipe bring clips of FBX files.
+
+The surface: Land(id, {Latitude, Longitude, Altitude}) goes down to the ground of a body (not of a giant of gas), the very ground its baked surface shows (Terrain.Sphere), in patches finer near the eye, under its sky (its atmosphere and its star); a drag looks round, the wheel rises and comes down, WASD and the arrows walk, Escape or TakeOff() goes back up. The time runs SurfaceSpeed days a second there (1/120).
 
 Kinds of the ground (the setting terrain): ground (Terrain: Size, Height, Water, Scale, Ridges, Seed: a ground of noise, Terrain.Flat, in chunks finer near the eye, with its sea), sun (Sun: its light from far), unit (Walker: Speed, MaxSlope, Swim; a Model), tree, rock and house (Model, Blocks: what stands in the way). An object of it stands at X and Y of the ground; Move(id, [x, y]) walks a walker round what cannot be walked, a right click sends the selected one; the view turns round a point of the ground and the keys move it. Every model of the Models Service is a kind of the same name (knight, mech, wolf, oak, tower, reactor...), of the kind that fits it.
 
@@ -19,7 +21,7 @@ The models stand in the light of their sun and cast shadows on each other and on
 
 A map of cells: Map, GameTerrain and GameLayer make the ground of a strategy game (see the trait Strategy): its objects stand on cells, its units are selected in a frame and ordered, Fog, Grid and Minimap come with it.
 
-Events: ready (the scene, for its methods), select ({ID, Object, Info}: ID empty when none is), focus ({ID}), arrive ({ID, At}), land ({ID}), takeoff ({ID}), error ({Reason: webgl2}). Methods: Add(kind, props), Change(id, changes), Remove(id), Attach(parent, object), Detach(id), Get(id), Objects(filter), Describe(id), Position(id), Select(id), FocusOn(id), Move(id, target), Now(), SetTime(days), Play(id, clip, callback), ToScreen(id), Pick(clientX, clientY), Save(), Load(saved), Land(id, options), TakeOff(), Surface(), Supported().
+Events: ready (the scene, for its methods), select ({ID, Object, Info}: ID empty when none is), focus ({ID}), arrive ({ID, At}), land ({ID}), takeoff ({ID}), error ({Reason: webgl2}). Cosmos (nebula, pillars, galaxy, galaxies, cluster, void, or {Kind, Seed, Colors, Gas, Dust, Stars, Pillars, Band, Galaxies, Clusters, Beacon}) is what lies far behind a system (trait Cosmos). Kind effect (Type: spark, torch, campfire, smoke, steam, dust, exhaust; Size, Power, Aim, Height, Light, Follow, Offset) burns and smokes where it stands, or goes with an object; Burst(type, place, options) happens once, as an explosion (trait Effects). Methods: Add(kind, props), Change(id, changes), Remove(id), Attach(parent, object), Detach(id), Get(id), Objects(filter), Describe(id), Position(id), Select(id), FocusOn(id), Move(id, target), Now(), SetTime(days), Play(id, clip, callback), ToScreen(id), Pick(clientX, clientY), Save(), Load(saved), Land(id, options), TakeOff(), Surface(), Supported().
 
 ## Properties
 
@@ -31,6 +33,7 @@ Events: ready (the scene, for its methods), select ({ID, Object, Info}: ID empty
 | `Time` | `0` |
 | `Speed` | `1` |
 | `DaySeconds` | `0` |
+| `Capture` | `true` |
 | `SurfaceSpeed` | `1 / 120` |
 | `Shadows` | `true` |
 | `View` | `''` |
@@ -52,6 +55,8 @@ Events: ready (the scene, for its methods), select ({ID, Object, Info}: ID empty
 - `takeoff`: The view went back up to space: {ID}.
 - `select`: The selection changed: {ID, Object, Info, IDs, Objects} (ID empty when none is).
 - `ready`: The scene is ready: the component itself, to call its methods.
+- `person`: V took the view of a walker to another place: third, first or shoulder.
+- `shoulder`: B took the view over another shoulder: right or left.
 
 ## Slots
 
@@ -69,6 +74,7 @@ Events: ready (the scene, for its methods), select ({ID, Object, Info}: ID empty
 - `Describe(id)`
 - `Position(id)`
 - `Select(id)`
+- `Control(id)`
 - `FocusOn(id)`
 - `Move(id, target, callback)`
 - `Play(id, clip, callback)`
@@ -147,13 +153,13 @@ Events: ready (the scene, for its methods), select ({ID, Object, Info}: ID empty
 - [GameScene: sets no timer of no function while it is made (a page that forbids eval refuses one)](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/game-world.test.js#L81) — `tests/regression/game-world.test.js`
 - [GameScene: the map and the objects it declares, the ways round its buildings, its methods, the order walked to the end](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/game-world.test.js#L102) — `tests/regression/game-world.test.js`
 - [GameScene: a declaration changed moves its object, one taken away takes it away; a map by its URL loads](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/game-world.test.js#L191) — `tests/regression/game-world.test.js`
-- [reads the GameObject inside it: each attribute a field of its kind, nested ones going round their holder or a part of it](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L315) — `tests/regression/library-scene.test.js`
-- [draws the star bright, the day side of a body of its baked surface, not its night side, and the same far from the middle](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L362) — `tests/regression/library-scene.test.js`
-- [selects an object by its label and a part by a press when near, flies to it, sends a fleet that arrives](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L403) — `tests/regression/library-scene.test.js`
-- [adds, changes, attaches, detaches and removes objects and parts, saves the game and loads it the same](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L465) — `tests/regression/library-scene.test.js`
-- [runs the systems of the application for traits of their own](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L527) — `tests/regression/library-scene.test.js`
-- [lands on the surface of a body and takes off again; a giant of gas has none](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L544) — `tests/regression/library-scene.test.js`
-- [plays the clips of a model: walking on a way by itself, a clip that ends going back, a kind for each model](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L584) — `tests/regression/library-scene.test.js`
-- [sees a ground in parallel rays: from above a point is where the plan says, at an angle where the rhombus says](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L653) — `tests/regression/library-scene.test.js`
+- [reads the GameObject inside it: each attribute a field of its kind, nested ones going round their holder or a part of it](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L327) — `tests/regression/library-scene.test.js`
+- [draws the star bright, the day side of a body of its baked surface, not its night side, and the same far from the middle](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L374) — `tests/regression/library-scene.test.js`
+- [selects an object by its label and a part by a press when near, flies to it, sends a fleet that arrives](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L415) — `tests/regression/library-scene.test.js`
+- [adds, changes, attaches, detaches and removes objects and parts, saves the game and loads it the same](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L477) — `tests/regression/library-scene.test.js`
+- [runs the systems of the application for traits of their own](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L539) — `tests/regression/library-scene.test.js`
+- [lands on the surface of a body and takes off again; a giant of gas has none](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L556) — `tests/regression/library-scene.test.js`
+- [plays the clips of a model: walking on a way by itself, a clip that ends going back, a kind for each model](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L596) — `tests/regression/library-scene.test.js`
+- [sees a ground in parallel rays: from above a point is where the plan says, at an angle where the rhombus says](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L666) — `tests/regression/library-scene.test.js`
 
-+10 more in the same files
++115 more in the same files

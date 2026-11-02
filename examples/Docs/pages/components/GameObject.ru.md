@@ -46,17 +46,17 @@
 
 ## Тесты
 
-- [reads the GameObject inside it: each attribute a field of its kind, nested ones going round their holder or a part of it](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L315) — `tests/regression/library-scene.test.js`
-- [draws the star bright, the day side of a body of its baked surface, not its night side, and the same far from the middle](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L362) — `tests/regression/library-scene.test.js`
-- [selects an object by its label and a part by a press when near, flies to it, sends a fleet that arrives](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L403) — `tests/regression/library-scene.test.js`
-- [adds, changes, attaches, detaches and removes objects and parts, saves the game and loads it the same](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L465) — `tests/regression/library-scene.test.js`
-- [runs the systems of the application for traits of their own](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L527) — `tests/regression/library-scene.test.js`
-- [lands on the surface of a body and takes off again; a giant of gas has none](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L544) — `tests/regression/library-scene.test.js`
-- [plays the clips of a model: walking on a way by itself, a clip that ends going back, a kind for each model](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L584) — `tests/regression/library-scene.test.js`
-- [sees a ground in parallel rays: from above a point is where the plan says, at an angle where the rhombus says](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L653) — `tests/regression/library-scene.test.js`
-- [draws a map of cells: its objects with their models, in the places of their cells, by the API of every scene](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L692) — `tests/regression/library-scene.test.js`
-- [keeps what did not change when the scene is made again, and stands what stays still once](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L784) — `tests/regression/library-scene.test.js`
-- [sows a ground in masses by its rules, the same for the same seed, with no object for each thing, and grows grass](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L835) — `tests/regression/library-scene.test.js`
-- [draws the model of a file by the same API: fetched, lit, moved and played](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L902) — `tests/regression/library-scene.test.js`
+- [reads the GameObject inside it: each attribute a field of its kind, nested ones going round their holder or a part of it](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L327) — `tests/regression/library-scene.test.js`
+- [draws the star bright, the day side of a body of its baked surface, not its night side, and the same far from the middle](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L374) — `tests/regression/library-scene.test.js`
+- [selects an object by its label and a part by a press when near, flies to it, sends a fleet that arrives](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L415) — `tests/regression/library-scene.test.js`
+- [adds, changes, attaches, detaches and removes objects and parts, saves the game and loads it the same](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L477) — `tests/regression/library-scene.test.js`
+- [runs the systems of the application for traits of their own](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L539) — `tests/regression/library-scene.test.js`
+- [lands on the surface of a body and takes off again; a giant of gas has none](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L556) — `tests/regression/library-scene.test.js`
+- [plays the clips of a model: walking on a way by itself, a clip that ends going back, a kind for each model](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L596) — `tests/regression/library-scene.test.js`
+- [sees a ground in parallel rays: from above a point is where the plan says, at an angle where the rhombus says](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L666) — `tests/regression/library-scene.test.js`
+- [draws a map of cells: its objects with their models, in the places of their cells, by the API of every scene](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L708) — `tests/regression/library-scene.test.js`
+- [keeps the time of the game to the clock when frames are slow](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L801) — `tests/regression/library-scene.test.js`
+- [shakes a view in parallel rays by moving it: a slant would throw it by its whole depth](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L831) — `tests/regression/library-scene.test.js`
+- [brings the resolution back at the 60 frames of a screen, and holds it where a quality was chosen](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L852) — `tests/regression/library-scene.test.js`
 
-+9 ещё в тех же файлах
++114 ещё в тех же файлах

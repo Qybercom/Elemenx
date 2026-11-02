@@ -2100,6 +2100,75 @@
 			}
 		},
 		{
+			"Name": "Axes",
+			"Kind": "Component",
+			"Group": "game",
+			"Icon": "move",
+			"Description": "The three axes of a view: how a world stands to the eye; a press on one tells which.",
+			"Props": [
+				{
+					"Name": "Yaw",
+					"Type": "number",
+					"Default": 0,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The turn of the view round the height, in radians."
+				},
+				{
+					"Name": "Pitch",
+					"Type": "number",
+					"Default": 0,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "How far above its middle the eye stands, in radians."
+				},
+				{
+					"Name": "Size",
+					"Type": "number",
+					"Default": 72,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its side in pixels."
+				},
+				{
+					"Name": "Labels",
+					"Type": "bool",
+					"Default": true,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Writes the letters of the axes."
+				},
+				{
+					"Name": "Label",
+					"Type": "text",
+					"Default": "Axes",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The name of it for screen readers."
+				}
+			],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [
+				"axis"
+			],
+			"EventDescriptions": {
+				"axis": "An end of an axis was pressed: {Axis, Sign}."
+			},
+			"Methods": [],
+			"Sample": {
+				"Yaw": 0.6,
+				"Pitch": 0.4
+			}
+		},
+		{
 			"Name": "GameBar",
 			"Kind": "Component",
 			"Group": "game",
@@ -3493,6 +3562,73 @@
 					"Description": "The days of the scene a second."
 				},
 				{
+					"Name": "Capture",
+					"Type": "bool",
+					"Default": true,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "With a walker under the keys (Control), a press takes the pointer: the mouse turns the view, Escape gives it back."
+				},
+				{
+					"Name": "Person",
+					"Type": "select",
+					"Default": "third",
+					"Options": [
+						"third",
+						"first",
+						"shoulder"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "Where the view of a walker stands: behind it (third), in its eyes (first, its head hidden but its body and what it holds seen) or over its shoulder. V changes it while the pointer is taken."
+				},
+				{
+					"Name": "Shoulder",
+					"Type": "select",
+					"Default": "right",
+					"Options": [
+						"right",
+						"left"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "Over which shoulder the view stands. B changes it while the pointer is taken."
+				},
+				{
+					"Name": "Axes",
+					"Type": "select",
+					"Default": "",
+					"Options": [
+						"",
+						"top-left",
+						"top-right",
+						"bottom-left",
+						"bottom-right"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "The corner where the Axes of the view stand, none when empty; a press on one looks along it."
+				},
+				{
+					"Name": "Origin",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Draws the three axes of the world at its middle."
+				},
+				{
+					"Name": "FreeLook",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "A walker that stands does not turn with the view, so it can be looked at from all sides: it comes round when it sets off."
+				},
+				{
 					"Name": "DaySeconds",
 					"Type": "number",
 					"Default": 0,
@@ -3533,6 +3669,60 @@
 					"Schema": null,
 					"Body": false,
 					"Description": "What the light costs: empty chooses by the graphics card and steps down while frames are late."
+				},
+				{
+					"Name": "Flare",
+					"Type": "bool",
+					"Default": true,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "How strongly the rings and the glow a lens makes of the sun show, at high and ultra: 0 to 2 (true is 1)."
+				},
+				{
+					"Name": "Weather",
+					"Type": "select",
+					"Default": "clear",
+					"Options": [
+						"clear",
+						"cloudy",
+						"overcast",
+						"rain",
+						"storm",
+						"snow",
+						"fog",
+						"changing"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "What the air of a ground does; it changes in a few seconds, as a front comes; changing goes from one to the next by itself."
+				},
+				{
+					"Name": "Wind",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "How strong the wind is, 0 to 4, for clouds, rain, grass and trees (empty: as the weather has it)."
+				},
+				{
+					"Name": "WindWay",
+					"Type": "number",
+					"Default": 70,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Where the wind blows to: an azimuth in degrees."
+				},
+				{
+					"Name": "Front",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The seconds a change of the weather takes."
 				},
 				{
 					"Name": "View",
@@ -3593,6 +3783,15 @@
 					"Description": "Shows the names of the objects."
 				},
 				{
+					"Name": "Exposure",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "What a view lets in: a number holds it, empty adapts to the light as an eye does."
+				},
+				{
 					"Name": "Details",
 					"Type": "bool",
 					"Default": true,
@@ -3609,6 +3808,15 @@
 					"Schema": null,
 					"Body": false,
 					"Description": "Draws the stars far away."
+				},
+				{
+					"Name": "Cosmos",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "What lies far behind a system, made of a seed: nebula, pillars, galaxy, galaxies, cluster, void, or {Kind, Seed, Colors, Gas, Dust, Stars, Pillars, Band, Galaxies, Clusters, Beacon}: a kind is a set of these amounts, and what is told comes on top of it."
 				},
 				{
 					"Name": "Scale",
@@ -3655,6 +3863,8 @@
 				"ready",
 				"select",
 				"focus",
+				"person",
+				"shoulder",
 				"arrive",
 				"load",
 				"order",
@@ -3668,6 +3878,8 @@
 				"ready": "The scene is ready: the component itself, to call its methods.",
 				"select": "The selection changed: {ID, Object, Info, IDs, Objects} (ID empty when none is).",
 				"focus": "The view moved to an object: {ID}.",
+				"person": "V took the view of a walker to another place: third, first or shoulder.",
+				"shoulder": "B took the view over another shoulder: right or left.",
 				"arrive": "An object reached where it was sent: {ID, At} (with a map, X and Y too).",
 				"load": "A map was loaded: {Width, Height} in cells.",
 				"order": "The selected units of a map were ordered: {Kind (move, attack or stop), IDs, X, Y, Target}.",
@@ -3678,6 +3890,11 @@
 				"error": "There is no WebGL2 ({Reason: webgl2}), or a map could not be loaded (the error)."
 			},
 			"Methods": [
+				"Burst(type, place, options)",
+				"Effects(types)",
+				"MountsOf(id, kind)",
+				"OpenPart(id, name, amount)",
+				"CosmosKinds()",
 				"Add(kind, props)",
 				"Change(id, changes)",
 				"Remove(id)",
@@ -3690,6 +3907,7 @@
 				"Select(id)",
 				"Selection()",
 				"FocusOn(id)",
+				"Control(id)",
 				"Move(id, target)",
 				"Play(id, clip, callback)",
 				"Now()",
@@ -13654,11 +13872,12 @@
 					"Options": [
 						"always",
 						"active",
+						"end",
 						"never"
 					],
 					"Schema": null,
 					"Body": false,
-					"Description": "When the value shows: always, active (while dragged or focused) or never."
+					"Description": "When and where the value shows: always over the thumb, with room kept for it; active while dragged or focused; end, always, after the track; or never."
 				},
 				{
 					"Name": "Unit",
@@ -13668,6 +13887,15 @@
 					"Schema": null,
 					"Body": false,
 					"Description": "The unit after the value."
+				},
+				{
+					"Name": "Format",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "A function of a value to the text it shows as (the hours as 19:30)."
 				},
 				{
 					"Name": "Size",
@@ -25592,6 +25820,91 @@
 			"Sample": {}
 		},
 		{
+			"Name": "Fbx",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "The skeleton and the animation of an FBX file as text: a clip made for another skeleton.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [
+				"Parse(text)",
+				"Sample(curve, time, fallback)",
+				"Load(url, callback)"
+			],
+			"Sample": {}
+		},
+		{
+			"Name": "Sigils",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "Magic circles of a seed, as data: rings of lines, ticks, dots, arcs, runes and stars, each with a turn of its own.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [
+				"Make(seed, options)",
+				"Uniforms(circle, seconds, spin)"
+			],
+			"Sample": {}
+		},
+		{
+			"Name": "Tracks",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "Closed race tracks of a seed: a middle line, its land, road, kerbs, barriers and stands, as data and as a model.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [
+				"Make(seed, options)",
+				"Near(track, x, z, hint)",
+				"Height(track, x, z)",
+				"Under(track, x, z, hint)",
+				"Asset(track)"
+			],
+			"Sample": {}
+		},
+		{
+			"Name": "Physics",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "How things move, apart from what shows them: steps of one length, springs, a car on its tyres and springs, a ship in space.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [
+				"Steps(clock, elapsed, length, each)",
+				"Blend(from, to, part)",
+				"Spring(value, speed, target, stiffness, damping, elapsed)",
+				"Car(state, input, surface, settings, elapsed)",
+				"Hit(state, normal, depth, at, settings)",
+				"Bounce(way, normal, depth, bounce)",
+				"Ship(state, input, settings, elapsed)"
+			],
+			"Sample": {}
+		},
+		{
 			"Name": "Models",
 			"Kind": "Service",
 			"Group": "",
@@ -26483,6 +26796,13 @@
 			"top",
 			"top-end"
 		],
+		"elemenx-axes": [],
+		"elemenx-axes-x": [],
+		"elemenx-axes-y": [],
+		"elemenx-axes-z": [],
+		"elemenx-axes-end": [
+			"other"
+		],
 		"elemenx-game-bar": [
 			"large",
 			"low",
@@ -26679,6 +26999,7 @@
 		"elemenx-game-scene-card-rows": [],
 		"elemenx-game-scene-card-row": [],
 		"elemenx-game-scene-card-actions": [],
+		"elemenx-game-scene-axes": [],
 		"elemenx-game-scene-takeoff": [],
 		"elemenx-game-scene-fallback": [],
 		"elemenx-game-scene-hud": [],
@@ -27530,12 +27851,14 @@
 			"disabled",
 			"large",
 			"small",
+			"valued",
 			"vertical"
 		],
 		"elemenx-slider-track": [],
 		"elemenx-slider-fill": [],
 		"elemenx-slider-tick": [],
 		"elemenx-slider-value": [],
+		"elemenx-slider-end": [],
 		"elemenx-progress": [
 			"danger",
 			"indeterminate",

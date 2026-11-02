@@ -338,7 +338,7 @@ function isInside (target, parent) {
  * of git, and the native projects of Capacitor (android, ios) with its config.
  */
 function privatePaths (project) {
-	return ['node_modules', '.git', 'android', 'ios', 'capacitor.config.json', 'capacitor.config.ts', 'capacitor.config.js'].map(function (name) {
+	return ['node_modules', '.git', 'android', 'ios', 'tests', 'capacitor.config.json', 'capacitor.config.ts', 'capacitor.config.js', 'vitest.config.js', 'vitest.config.mjs', 'playwright.config.js', 'playwright.config.mjs'].map(function (name) {
 		return path.join(project, name);
 	});
 }

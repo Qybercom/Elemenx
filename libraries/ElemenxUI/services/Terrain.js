@@ -98,6 +98,428 @@ Elemenx.Service('Terrain', {
 		return field;
 	},
 
+	/*
+	 * The ground of a model of a location: what can be stood on and what stops a walker, read from its triangles. parts:
+	 * [{Positions, Indices, Soft}] where they stand in the scene; Soft: leaves and glass, that stop nobody. A place has floors
+	 * one over the other, as a house on a tree has, and only what faces up is a floor. All is lifted by Lift, so that nothing
+	 * is under the sea level of a scene.
+	 * - Height(x, z, y): the highest floor a walker at y can step on or fall to (y when there is none).
+	 * - CanStep(x, z, y): a floor is there for it and no wall at the height of its body. Blocked(x, z, y): a wall only.
+	 * - Push(x, z, y, radius, from, to): where a body stands that comes to x, z: a column of that radius, between from and to over its feet,
+	 *   by the very triangles of what stands, so a narrow passage is as wide as it is drawn: [x, z], out of all it touches.
+	 * - Stands(x, z, y): a floor is there for it.
+	 * - Spots(): the parts of it that hang together, the largest first: [{X, Z, Y, Size}], X and Z a floor near its middle.
+	 * - Start(): where to set a walker down: the middle of the largest.
+	 * Plane (true) lays level ground at its foot, for a model that has none.
+	 */
+	FromModel: function (parts, options) {
+		var settings = options || {};
+		var layers = 6;
+		var step = 0.7;
+		var low = [Infinity, Infinity, Infinity];
+		var high = [-Infinity, -Infinity, -Infinity];
+		var walls = {};
+		var side;
+		var cell;
+		var grid;
+		var floors;
+		var counts;
+		var lift;
+		var field;
+
+		parts.forEach(function (part) {
+			var p = part.Positions;
+			var i;
+
+			for (i = 0; i < p.length; i += 3) {
+				low[0] = Math.min(low[0], p[i]);
+				low[1] = Math.min(low[1], p[i + 1]);
+				low[2] = Math.min(low[2], p[i + 2]);
+				high[0] = Math.max(high[0], p[i]);
+				high[1] = Math.max(high[1], p[i + 1]);
+				high[2] = Math.max(high[2], p[i + 2]);
+			}
+		});
+
+		side = Math.max(high[0] - low[0], high[2] - low[2], 0.01);
+		cell = Math.max(0.25, side / 1024);
+		grid = Math.ceil(side / cell) + 1;
+		floors = new Float32Array(grid * grid * layers);
+		counts = new Uint8Array(grid * grid);
+		lift = -low[1];
+
+		function indexOf (x, z) {
+			var column = Math.floor((x - low[0]) / cell);
+			var row = Math.floor((z - low[2]) / cell);
+
+			return column < 0 || row < 0 || column >= grid || row >= grid ? -1 : row * grid + column;
+		}
+
+		function floor (index, y) {
+			var count = counts[index];
+			var i;
+
+			for (i = 0; i < count; i++) {
+				if (Math.abs(floors[index * layers + i] - y) < 0.3) return;
+			}
+
+			if (count < layers) {
+				floors[index * layers + count] = y;
+				counts[index] = count + 1;
+			}
+		}
+
+		function wall (index, from, to) {
+			var list;
+
+			if (index < 0) return;
+
+			list = walls[index] = walls[index] || [];
+
+			if (list.length < 12 && !list.some(function (each) {
+				return each[0] <= from + 0.2 && each[1] >= to - 0.2;
+			}))
+				list.push([from, to]);
+		}
+
+		/* What faces up covers its cells, each exactly. */
+		function flat (a, b, c) {
+			var area = (b[0] - a[0]) * (c[2] - a[2]) - (b[2] - a[2]) * (c[0] - a[0]);
+			var first = Math.max(0, Math.floor((Math.min(a[0], b[0], c[0]) - low[0]) / cell));
+			var last = Math.min(grid - 1, Math.floor((Math.max(a[0], b[0], c[0]) - low[0]) / cell));
+			var top = Math.max(0, Math.floor((Math.min(a[2], b[2], c[2]) - low[2]) / cell));
+			var bottom = Math.min(grid - 1, Math.floor((Math.max(a[2], b[2], c[2]) - low[2]) / cell));
+			var row;
+			var column;
+
+			if (!area) return;
+
+			for (row = top; row <= bottom; row++) {
+				for (column = first; column <= last; column++) {
+					var x = low[0] + (column + 0.5) * cell;
+					var z = low[2] + (row + 0.5) * cell;
+					var u = ((b[0] - x) * (c[2] - z) - (b[2] - z) * (c[0] - x)) / area;
+					var v = ((c[0] - x) * (a[2] - z) - (c[2] - z) * (a[0] - x)) / area;
+					var w = 1 - u - v;
+					var edge = -cell / Math.sqrt(Math.abs(area));
+					if (u >= edge && v >= edge && w >= edge)
+						floor(row * grid + column, a[1] * u + b[1] * v + c[1] * w);
+				}
+			}
+		}
+
+		/* What stands upright is a line from above: its edges in steps smaller than a cell. */
+		function upright (a, b, c) {
+			var bottom = Math.min(a[1], b[1], c[1]);
+			var top = Math.max(a[1], b[1], c[1]);
+
+			[[a, b], [b, c], [c, a]].forEach(function (pair) {
+				var length = Math.sqrt(Math.pow(pair[1][0] - pair[0][0], 2) + Math.pow(pair[1][2] - pair[0][2], 2));
+				var steps = Math.ceil(length / (cell * 0.6)) + 1;
+				var i;
+
+				for (i = 0; i <= steps; i++)
+					wall(indexOf(pair[0][0] + (pair[1][0] - pair[0][0]) * i / steps, pair[0][2] + (pair[1][2] - pair[0][2]) * i / steps), bottom, top);
+			});
+		}
+
+		/* What is not flat, by squares, for what stands against it. */
+		var hashed = {};
+		var square = Math.max(2, side / 256);
+
+		function hashOf (x, z) {
+			return Math.floor(x / square) + ':' + Math.floor(z / square);
+		}
+
+		function keep (a, b, c) {
+			var fromX = Math.floor(Math.min(a[0], b[0], c[0]) / square);
+			var toX = Math.floor(Math.max(a[0], b[0], c[0]) / square);
+			var fromZ = Math.floor(Math.min(a[2], b[2], c[2]) / square);
+			var toZ = Math.floor(Math.max(a[2], b[2], c[2]) / square);
+			var made = [a, b, c];
+			var x;
+			var z;
+
+			for (x = fromX; x <= toX; x++) {
+				for (z = fromZ; z <= toZ; z++) {
+					var key = x + ':' + z;
+
+					(hashed[key] = hashed[key] || []).push(made);
+				}
+			}
+		}
+
+		/* Of a triangle what lies between two heights, as lines on the ground. */
+		function band (three, low2, high2) {
+			var points = [];
+			var i;
+
+			for (i = 0; i < 3; i++) {
+				var p = three[i];
+				var q = three[(i + 1) % 3];
+
+				if (p[1] >= low2 && p[1] <= high2)
+					points.push(p);
+
+				[low2, high2].forEach(function (level) {
+					if ((p[1] - level) * (q[1] - level) < 0) {
+						var t = (level - p[1]) / (q[1] - p[1]);
+
+						points.push([p[0] + (q[0] - p[0]) * t, level, p[2] + (q[2] - p[2]) * t]);
+					}
+				});
+			}
+
+			return points;
+		}
+
+		function pushOut (place, points, radius) {
+			var moved = false;
+			var i;
+			var j;
+
+			for (i = 0; i < points.length; i++) {
+				for (j = i + 1; j < points.length; j++) {
+					var a = points[i];
+					var b = points[j];
+					var sx = b[0] - a[0];
+					var sz = b[2] - a[2];
+					var part = Math.max(0, Math.min(1, ((place[0] - a[0]) * sx + (place[1] - a[2]) * sz) / (sx * sx + sz * sz || 1)));
+					var dx = place[0] - (a[0] + sx * part);
+					var dz = place[1] - (a[2] + sz * part);
+					var far = Math.sqrt(dx * dx + dz * dz);
+
+					if (far < radius && far > 0.0001) {
+						place[0] += dx / far * (radius - far);
+						place[1] += dz / far * (radius - far);
+						moved = true;
+					}
+				}
+			}
+
+			return moved;
+		}
+
+		function triangle (a, b, c, shown) {
+			var ux = b[0] - a[0];
+			var uy = b[1] - a[1];
+			var uz = b[2] - a[2];
+			var vx = c[0] - a[0];
+			var vy = c[1] - a[1];
+			var vz = c[2] - a[2];
+			var nx = uy * vz - uz * vy;
+			var ny = uz * vx - ux * vz;
+			var nz = ux * vy - uy * vx;
+			var up = Math.abs(ny) / (Math.sqrt(nx * nx + ny * ny + nz * nz) || 1);
+
+			/* The side it shows: by its normals, as many exports wind their triangles either way. The underside of a map is no floor. */
+			if (up > 0.55 && (shown === null ? ny > 0 : shown > 0)) flat(a, b, c);
+			else if (up < 0.35) upright(a, b, c);
+
+			if (up < 0.8)
+				keep(a, b, c);
+		}
+
+		parts.forEach(function (part) {
+			var p = part.Positions;
+			var list = part.Indices;
+			var i;
+
+			if (part.Soft) return;
+
+			function point (at) {
+				return [p[at * 3], p[at * 3 + 1], p[at * 3 + 2]];
+			}
+
+			function facing (a, b, c) {
+				return part.Normals && part.Normals.length ? part.Normals[a * 3 + 1] + part.Normals[b * 3 + 1] + part.Normals[c * 3 + 1] : null;
+			}
+
+			for (i = 0; i < list.length; i += 3)
+				triangle(point(list[i]), point(list[i + 1]), point(list[i + 2]), facing(list[i], list[i + 1], list[i + 2]));
+		});
+
+		function support (index, y) {
+			var best = -Infinity;
+			var i;
+
+			if (index >= 0) {
+				for (i = 0; i < counts[index]; i++) {
+					var level = floors[index * layers + i] + lift;
+					if ((y === undefined || level <= y + step) && level > best)
+						best = level;
+				}
+			}
+
+			if (settings.Plane && best < 0 && (y === undefined || y >= -step))
+				best = 0;
+
+			return best === -Infinity ? null : best;
+		}
+
+		function walled (index, y) {
+			return (walls[index] || []).some(function (each) {
+				return each[1] + lift > y + 0.5 && each[0] + lift < y + 1.5;
+			});
+		}
+
+		/* The floors that hang together: walked over from each that nobody came to yet. */
+		function spots () {
+			var seen = new Uint8Array(grid * grid * layers);
+			var found = [];
+			var start;
+
+			for (start = 0; start < seen.length; start++) {
+				if (!seen[start] && start % layers < counts[Math.floor(start / layers)])
+					found.push(spread(start, seen));
+			}
+
+			return found.sort(function (a, b) {
+				return b.Size - a.Size;
+			}).slice(0, 12);
+		}
+
+		function spread (start, seen) {
+			var stack = [start];
+			var size = 0;
+			var sumX = 0;
+			var sumZ = 0;
+			var best = start;
+			var nearest = Infinity;
+			var cells = [];
+
+			seen[start] = 1;
+
+			while (stack.length) {
+				var at = stack.pop();
+				var index = Math.floor(at / layers);
+				var y = floors[at];
+				var row = Math.floor(index / grid);
+				var column = index % grid;
+
+				size++;
+				sumX += column;
+				sumZ += row;
+
+				if (size < 4096)
+					cells.push(at);
+
+				[column > 0 ? index - 1 : -1, column < grid - 1 ? index + 1 : -1, row > 0 ? index - grid : -1, row < grid - 1 ? index + grid : -1].forEach(function (next) {
+					var i;
+
+					for (i = 0; next >= 0 && i < counts[next]; i++) {
+						var other = next * layers + i;
+
+						if (!seen[other] && Math.abs(floors[other] - y) < step && !walled(next, floors[other] + lift)) {
+							seen[other] = 1;
+
+							stack.push(other);
+						}
+					}
+				});
+			}
+
+			cells.forEach(function (at) {
+				var index = Math.floor(at / layers);
+				var far = Math.pow(index % grid - sumX / size, 2) + Math.pow(Math.floor(index / grid) - sumZ / size, 2);
+
+				if (far < nearest) {
+					nearest = far;
+					best = at;
+				}
+			});
+
+			return {X: low[0] + (Math.floor(best / layers) % grid + 0.5) * cell, Z: low[2] + (Math.floor(Math.floor(best / layers) / grid) + 0.5) * cell, Y: floors[best] + lift, Size: size};
+		}
+
+		field = {
+			Size: Math.max(Math.abs(low[0]), Math.abs(high[0]), Math.abs(low[2]), Math.abs(high[2])) * 2.1,
+			Top: high[1] + lift,
+			Water: 0,
+			Whole: true,
+			Center: [0, 0, 0],
+			Lift: lift,
+
+			Height: function (x, z, y) {
+				var found = support(indexOf(x, z), y);
+
+				return found === null ? y === undefined ? 0 : y : found;
+			},
+
+			CanStep: function (x, z, y) {
+				var index = indexOf(x, z);
+
+				return support(index, y) !== null && (!settings.Plane || Math.abs(x) < field.Size / 2 && Math.abs(z) < field.Size / 2) && !walled(index, y);
+			},
+
+			Blocked: function (x, z, y) {
+				return walled(indexOf(x, z), y);
+			},
+
+			Push: function (x, z, y, radius, from, to) {
+				var place = [x, z];
+				var low2 = y - lift + from;
+				var high2 = y - lift + to;
+				var seen = [];
+
+				[[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(function (corner) {
+					(hashed[hashOf(x + corner[0] * radius, z + corner[1] * radius)] || []).forEach(function (three) {
+						if (seen.indexOf(three) === -1)
+							seen.push(three);
+					});
+				});
+
+				/* Twice over: out of one wall may be into the next. */
+				[0, 1].forEach(function () {
+					seen.forEach(function (three) {
+						pushOut(place, band(three, low2, high2), radius);
+					});
+				});
+
+				return place;
+			},
+
+			Stands: function (x, z, y) {
+				return support(indexOf(x, z), y) !== null && (!settings.Plane || Math.abs(x) < field.Size / 2 && Math.abs(z) < field.Size / 2);
+			},
+
+			Normal: function () {
+				return [0, 1, 0];
+			},
+
+			Slope: function () {
+				return 0;
+			},
+
+			Walkable: function (x, z) {
+				return support(indexOf(x, z)) !== null;
+			},
+
+			Spots: spots,
+
+			Start: function () {
+				var best = spots()[0];
+
+				return best ? [best.X, best.Z, best.Y] : [0, 0, lift];
+			},
+
+			/* A location is drawn by its model: the ground of a scene has nothing to add. */
+			Chunk: function () {
+				var half = settings.Plane ? field.Size : 0.01;
+				var y = settings.Plane ? 0 : -1000;
+				var color = [0.3, 0.42, 0.2];
+
+				return {Positions: [-half, y, -half, half, y, -half, half, y, half, -half, y, half], Normals: [0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0], UVs: [0, 0, 1, 0, 1, 1, 0, 1], Colors: color.concat(color, color, color), Indices: [0, 2, 1, 0, 3, 2]};
+			},
+
+			Path: function (from, to) {
+				return [{X: from[0], Z: from[1]}, {X: to[0], Z: to[1]}];
+			}
+		};
+
+		return field;
+	},
+
 	Cells: function (options) {
 		var graphics = this.$Service('Graphics3D');
 		var settings = options || {};

@@ -34,8 +34,17 @@
 
 ## Тесты
 
-- [has continuous heights, chunks with a skirt, and ways that keep out of the sea](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1656) — `tests/regression/library-scene.test.js`
-- [has the ground of a planet whose coasts are the ones its baked surface shows, its squares turned outwards](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1690) — `tests/regression/library-scene.test.js`
-- [makes a whole land of one attribute, and a village with its roads that nothing grows on](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1044) — `tests/regression/library-scene.test.js`
-- [lays out the same village of the same seed, on what is level and dry, moved there if it must](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1472) — `tests/regression/library-scene.test.js`
-- [terrain draws a ground with its trees and houses, its units walk to the village round what blocks them, and the game saves](https://github.com/Qybercom/Elemenx/blob/main/tests/examples/ui-kit.spec.js#L3239) — `tests/examples/ui-kit.spec.js`
+- [has continuous heights, chunks with a skirt, and ways that keep out of the sea](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L7774) — `tests/regression/library-scene.test.js`
+- [has the ground of a planet whose coasts are the ones its baked surface shows, its squares turned outwards](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L7808) — `tests/regression/library-scene.test.js`
+- [takes a ground from a model: floors one over the other, walls that stop a walker, and a plane at its foot](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1385) — `tests/regression/library-scene.test.js`
+- [walks a hero with the feet of a body: walls stop it at any speed, it slides along them, jumps and falls, and faces the view](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1601) — `tests/regression/library-scene.test.js`
+- [looks from what it follows to where it looks by degrees, so a raised eye makes no leap under the view](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L5050) — `tests/regression/library-scene.test.js`
+- [leaves a hero where it stands when the scene changes round it](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L5185) — `tests/regression/library-scene.test.js`
+- [takes a short drop for no jump, though the body leaves the ground](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L5237) — `tests/regression/library-scene.test.js`
+- [takes no seam of a map for a jump, and still falls and jumps](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L5354) — `tests/regression/library-scene.test.js`
+- [lets a hero stand while the view goes round it with a free look, and brings it round when it sets off](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L5779) — `tests/regression/library-scene.test.js`
+- [brings the eye of a hero down to the ground at its distance, the hero in the frame](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L6026) — `tests/regression/library-scene.test.js`
+- [keeps the eye of a hero on its side of a wall: in at once, out slowly](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L6139) — `tests/regression/library-scene.test.js`
+- [mirrors what is glossy at high quality, not cut-outs, and wets what stands in the rain](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L6201) — `tests/regression/library-scene.test.js`
+
++4 ещё в тех же файлах

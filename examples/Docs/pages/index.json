@@ -734,6 +734,13 @@
 					"Group": "display"
 				},
 				{
+					"ID": "Axes",
+					"Title": {
+						"en": "Axes"
+					},
+					"Group": "game"
+				},
+				{
 					"ID": "Barcode",
 					"Title": {
 						"en": "Barcode"
@@ -2353,6 +2360,12 @@
 					}
 				},
 				{
+					"ID": "Fbx",
+					"Title": {
+						"en": "Fbx"
+					}
+				},
+				{
 					"ID": "FieldFormats",
 					"Title": {
 						"en": "FieldFormats"
@@ -2485,6 +2498,12 @@
 					}
 				},
 				{
+					"ID": "Physics",
+					"Title": {
+						"en": "Physics"
+					}
+				},
+				{
 					"ID": "PictureInPicture",
 					"Title": {
 						"en": "PictureInPicture"
@@ -2539,6 +2558,12 @@
 					}
 				},
 				{
+					"ID": "Sigils",
+					"Title": {
+						"en": "Sigils"
+					}
+				},
+				{
 					"ID": "Signatures",
 					"Title": {
 						"en": "Signatures"
@@ -2584,6 +2609,12 @@
 					"ID": "Toast",
 					"Title": {
 						"en": "Toast"
+					}
+				},
+				{
+					"ID": "Tracks",
+					"Title": {
+						"en": "Tracks"
 					}
 				},
 				{

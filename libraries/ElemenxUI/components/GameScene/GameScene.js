@@ -6,7 +6,8 @@
  * shadows of moons and planets on each other and on rings), their surfaces of noise baked once into cube textures,
  * belts and rings, stations of modules, fleets of ships that hold their place by a body and travel to another.
  *
- * Kinds of space: star (Star: Mass, Radius, Temperature, Luminosity, Color), planet (Orbit: Distance, Eccentricity,
+ * Kinds of space: star (Star: Mass, Radius, Temperature, Luminosity, Color, Veil: how far from the disc, in its radii,
+ * engines go in its light, 0 for not at all), planet (Orbit: Distance, Eccentricity,
  * Inclination, Node, Periapsis, Anomaly, Period; Body: Radius, Mass, Day, Tilt, Albedo; Surface: Type, Colors, Water,
  * Ocean, Ice, Clouds, Atmosphere, Seed), moon (a planet, small, one face to its planet), belt (Belt: Inner, Outer, Count,
  * Inclination, Colors), ring (Ring: Inner, Outer, Inclination, Colors), station and outpost (an Orbit in radii of what
@@ -24,6 +25,28 @@
  * its label; a part of an object near enough), a double click flies to it (from its day side), Escape goes back, the
  * arrows turn, + and - zoom, Enter flies to the selected one, Space holds the time. Orbits, Labels, Details (a card of
  * the selected object), Background (the far stars), Team, the slot hud. Without WebGL2 it says so (and emits error).
+ *
+ * The view is free in every 3D scene: a drag turns and tilts it, the wheel zooms, the middle button or a drag with Shift
+ * carries it (two fingers on a screen), WASD or the arrows move it, Q and E turn it, R and F tilt it.
+ *
+ * The sky of a ground: a GameObject of kind sun takes Time (18:30, or hours as a number) and goes on at the pace of
+ * DaySeconds, Noon is the azimuth it passes at noon (180) and Shade the color of the light of the sky. DayHours is how
+ * long a day is (24); with a Latitude the sun goes as the planet turns: Tilt of its axis (23.44), DayOfYear (172) of a
+ * year of YearDays (365) give the length of the light of the day, the polar days and nights too. At night the moon
+ * lights the land: Moon (false: a sky without one), MoonLight, MoonSize, MoonPhase (0 new, 0.5 full, it goes late by that
+ * part of a day), MoonElevation with MoonAzimuth to hold it in a place, MoonTilt with MoonNode (the day of a year its way crosses
+ * the sun's: an eclipse, of the sun at a new moon, of the moon at a full one), and NightLight, the light of the air in the dark.
+ * SkyGlow (0 to 1) is the light towns throw on the air, of SkyGlowColor, from SkyGlowAzimuth or all round: it lights the clouds
+ * from under and hides the faint stars. The stars turn with the planet, round its pole at the height of Latitude, and with them
+ * the band of the galaxy (Galaxy, 0 for none). Weather (clear, cloudy, overcast, rain, storm, snow, fog) changes in a few
+ * seconds, and rain wets what stands in it; Flare (0 to 2) is how strongly a lens shows the sun. At high and ultra what is glossy
+ * or wet mirrors what is on the screen, and past it the sky. Kind light (Color, Power, Radius, Height, Spot, Aim, Flicker,
+ * Follow, Z) is a lamp: any number, the nearest 24 at once, the nearest 2 with shadows; what shines in a model of a file is
+ * a lamp too (Lamps of the Models Service; Lights: false on an object leaves them out). Kind location (Model, Size, Without,
+ * Plane) makes a ground of a model of a file, its floors and walls read from its triangles; Control(id) gives the keys to a
+ * walker: a press takes the mouse (Capture), it faces the view, A and D step aside, Shift runs, Shift and Alt sprint, Space
+ * jumps, a drag with the right button turns the view and leaves the walk as it was. A
+ * skeleton with no clips gets walk and idle made from the names of its bones, Motions of a recipe bring clips of FBX files.
  *
  * The surface: Land(id, {Latitude, Longitude, Altitude}) goes down to the ground of a body (not of a giant of gas),
  * the very ground its baked surface shows (Terrain.Sphere), in patches finer near the eye, under its sky (its
@@ -47,6 +70,9 @@
  *
  * Events: ready (the scene, for its methods), select ({ID, Object, Info}: ID empty when none is), focus ({ID}),
  * arrive ({ID, At}), land ({ID}), takeoff ({ID}), error ({Reason: webgl2}).
+ * Cosmos (nebula, pillars, galaxy, galaxies, cluster, void, or {Kind, Seed, Colors, Gas, Dust, Stars, Pillars, Band, Galaxies, Clusters, Beacon}) is what lies far behind a system (trait Cosmos).
+ * Kind effect (Type: spark, torch, campfire, smoke, steam, dust, exhaust; Size, Power, Aim, Height, Light, Follow, Offset) burns
+ * and smokes where it stands, or goes with an object; Burst(type, place, options) happens once, as an explosion (trait Effects).
  * Methods: Add(kind, props), Change(id, changes), Remove(id), Attach(parent, object), Detach(id), Get(id),
  * Objects(filter), Describe(id), Position(id), Select(id), FocusOn(id), Move(id, target), Now(), SetTime(days),
  * Play(id, clip, callback), ToScreen(id), Pick(clientX, clientY), Save(), Load(saved), Land(id, options), TakeOff(),
@@ -55,7 +81,7 @@
 Elemenx.Component('GameScene', {
 	$TemplateURL: 'GameScene.html',
 	$StyleURL: 'GameScene.css',
-	$Traits: ['Strategy', 'Scatter', 'Lighting'],
+	$Traits: ['Strategy', 'Scatter', 'Lighting', 'Effects', 'Cosmos', 'Vehicles'],
 	$Meta: {
 		Group: 'game',
 		Icon: 'star',
@@ -67,6 +93,8 @@ Elemenx.Component('GameScene', {
 			ready: 'The scene is ready: the component itself, to call its methods.',
 			select: 'The selection changed: {ID, Object, Info, IDs, Objects} (ID empty when none is).',
 			focus: 'The view moved to an object: {ID}.',
+			person: 'V took the view of a walker to another place: third, first or shoulder.',
+			shoulder: 'B took the view over another shoulder: right or left.',
 			arrive: 'An object reached where it was sent: {ID, At} (with a map, X and Y too).',
 			load: 'A map was loaded: {Width, Height} in cells.',
 			order: 'The selected units of a map were ordered: {Kind (move, attack or stop), IDs, X, Y, Target}.',
@@ -76,7 +104,7 @@ Elemenx.Component('GameScene', {
 			takeoff: 'The view went back up to space: {ID}.',
 			error: 'There is no WebGL2 ({Reason: webgl2}), or a map could not be loaded (the error).'
 		},
-		Methods: ['Add(kind, props)', 'Change(id, changes)', 'Remove(id)', 'Attach(parent, object)', 'Detach(id)', 'Get(id)', 'Objects(filter)', 'Describe(id)', 'Position(id)', 'Select(id)', 'Selection()', 'FocusOn(id)', 'Move(id, target)', 'Play(id, clip, callback)', 'Now()', 'SetTime(days)', 'ToScreen(id)', 'Pick(clientX, clientY)', 'Save()', 'Load(saved)', 'Land(id, options)', 'TakeOff()', 'Surface()', 'Supported()', 'Order(ids, target, kind)', 'Stop(ids)', 'Cell(x, y)', 'Paint(x, y, key, layer)', 'Near(x, y, radius, filter)', 'Route(from, to)', 'PathGrid()', 'FogOfWar()', 'CenterOn(x, y)', 'ToCell(clientX, clientY)'],
+		Methods: ['Burst(type, place, options)', 'Effects(types)', 'MountsOf(id, kind)', 'OpenPart(id, name, amount)', 'CosmosKinds()', 'Add(kind, props)', 'Change(id, changes)', 'Remove(id)', 'Attach(parent, object)', 'Detach(id)', 'Get(id)', 'Objects(filter)', 'Describe(id)', 'Position(id)', 'Select(id)', 'Selection()', 'FocusOn(id)', 'Control(id)', 'Move(id, target)', 'Play(id, clip, callback)', 'Now()', 'SetTime(days)', 'ToScreen(id)', 'Pick(clientX, clientY)', 'Save()', 'Load(saved)', 'Land(id, options)', 'TakeOff()', 'Surface()', 'Supported()', 'Order(ids, target, kind)', 'Stop(ids)', 'Cell(x, y)', 'Paint(x, y, key, layer)', 'Near(x, y, radius, filter)', 'Route(from, to)', 'PathGrid()', 'FogOfWar()', 'CenterOn(x, y)', 'ToCell(clientX, clientY)'],
 		Props: {
 			Map: 'A map of cells: its JSON ({Width, Height, Projection, Terrain, Layers, Objects}), or the URL of a JSON of its own or of Tiled.',
 			Projection: {Options: ['', 'isometric', 'orthogonal'], Description: 'A map from above (orthogonal) or at an angle (isometric); the one of the map by default.'},
@@ -95,18 +123,31 @@ Elemenx.Component('GameScene', {
 			Systems: 'Systems of the application for traits of its own: {Trait: {Update(object, scene), Draw(object, scene)}}.',
 			Time: 'The day of the scene.',
 			Speed: 'The days of the scene a second.',
+			Capture: 'With a walker under the keys (Control), a press takes the pointer: the mouse turns the view, Escape gives it back.',
+			Person: {Options: ['third', 'first', 'shoulder'], Description: 'Where the view of a walker stands: behind it (third), in its eyes (first, its head hidden but its body and what it holds seen) or over its shoulder. V changes it while the pointer is taken.'},
+			Shoulder: {Options: ['right', 'left'], Description: 'Over which shoulder the view stands. B changes it while the pointer is taken.'},
+			Axes: {Options: ['', 'top-left', 'top-right', 'bottom-left', 'bottom-right'], Description: 'The corner where the Axes of the view stand, none when empty; a press on one looks along it.'},
+			Origin: 'Draws the three axes of the world at its middle.',
+			FreeLook: 'A walker that stands does not turn with the view, so it can be looked at from all sides: it comes round when it sets off.',
 			DaySeconds: 'The seconds a day of 24 hours takes, on a body and from space alike, however fast the orbits go (0: as Speed says).',
 			SurfaceSpeed: 'The days a second on the surface of a body (1/120: a day of two minutes).',
 			Shadows: 'The shadows of a sun on a ground, a surface and a model near the view (true).',
 			Quality: {Options: ['', 'low', 'medium', 'high', 'ultra'], Description: 'What the light costs: empty chooses by the graphics card and steps down while frames are late.'},
+			Flare: 'How strongly the rings and the glow a lens makes of the sun show, at high and ultra: 0 to 2 (true is 1).',
+			Weather: {Options: ['clear', 'cloudy', 'overcast', 'rain', 'storm', 'snow', 'fog', 'changing'], Description: 'What the air of a ground does; it changes in a few seconds, as a front comes; changing goes from one to the next by itself.'},
+			Wind: 'How strong the wind is, 0 to 4, for clouds, rain, grass and trees (empty: as the weather has it).',
+			WindWay: 'Where the wind blows to: an azimuth in degrees.',
+			Front: 'The seconds a change of the weather takes.',
 			View: {Options: ['', 'top', 'isometric'], Description: 'A ground seen in parallel rays, as a game of two dimensions: from above or at an angle (empty: in perspective).'},
 			Paused: 'Holds the time.',
 			Focus: 'The ID of the object in the middle of the view.',
 			Selected: 'The ID of the selected object.',
 			Orbits: 'Draws the orbits.',
 			Labels: 'Shows the names of the objects.',
+			Exposure: 'What a view lets in: a number holds it, empty adapts to the light as an eye does.',
 			Details: 'Shows a card of the selected object.',
 			Background: 'Draws the stars far away.',
+			Cosmos: 'What lies far behind a system, made of a seed: nebula, pillars, galaxy, galaxies, cluster, void, or {Kind, Seed, Colors, Gas, Dust, Stars, Pillars, Band, Galaxies, Clusters, Beacon}: a kind is a set of these amounts, and what is told comes on top of it.',
 			Scale: {Options: ['compressed', 'real'], Description: 'Large bodies and short distances (compressed), or their real sizes.'},
 			Team: 'The team of the player.',
 			Label: 'The name of the scene for screen readers.'
@@ -120,6 +161,8 @@ Elemenx.Component('GameScene', {
 	Time: 0,
 	Speed: 1,
 	DaySeconds: 0,
+	Capture: true,
+	FreeLook: false,
 	SurfaceSpeed: 1 / 120,
 	Shadows: true,
 	View: '',
@@ -128,6 +171,12 @@ Elemenx.Component('GameScene', {
 	Selected: '',
 	Orbits: true,
 	Labels: true,
+	Person: 'third',
+	Shoulder: 'right',
+	Axes: '',
+	Origin: false,
+	ViewYaw: 0,
+	ViewPitch: 0,
 	Details: true,
 	Background: true,
 	Scale: 'compressed',
@@ -185,13 +234,16 @@ Elemenx.Component('GameScene', {
 
 	/*
 	 * The kinds of the setting terrain: a ground of noise (Terrain: Size, Height, Water, Scale, Ridges, Seed), its sun
-	 * (Sun: Elevation, Azimuth in degrees, Color), units that walk (Walker: Speed, a second; X and Y their place on the
+	 * (Sun: Elevation, Azimuth in degrees, Color; with Time, Noon: the azimuth at noon of its way, 180; Shade: the color of the light of the sky), units that walk (Walker: Speed, a second; X and Y their place on the
 	 * map), trees, rocks and houses (a Model; Blocks: no way through them).
 	 */
 	Ground: function () {
 		return {
 			'ground': {Traits: {Terrain: {Size: 1000, Height: 60, Water: 0.35, Scale: 180, Ridges: 0.4, Seed: 'ground'}}},
-			'sun': {Traits: {Sun: {Elevation: 35, Azimuth: 140, Color: '#fff4e0'}}},
+			'effect': {Traits: {Effect: {Type: 'campfire', Size: 1, Power: 1, Aim: null, Height: 0, Light: true, On: true, Color: '', Hot: '', Volume: 1, Intensity: 1, Length: 1, Width: 1, Spin: 1, Rings: null, Seed: '', Smoke: 1, Appear: 0.45, Tune: null, Pulse: null}}},
+			'light': {Traits: {Light: {Color: '#ffd39a', Power: 1, Radius: 14, Height: 2.5, Spot: 0, Aim: null, Flicker: 0}}},
+			'location': {Traits: {Model: {Shape: 'rock', Size: 1, Color: '#ffffff'}, Location: {}}},
+			'sun': {Traits: {Sun: {Elevation: 35, Azimuth: 140, Color: '#fff4e0', Time: '', Noon: 180, Shade: '#ffffff', DayHours: 24, Latitude: null, Tilt: 23.44, DayOfYear: 172, YearDays: 365, Moon: true, MoonLight: 1, MoonSize: 1, MoonPhase: 0.5, MoonElevation: null, MoonAzimuth: null, MoonTilt: 5.14, MoonNode: 80, NightLight: 1, SkyGlow: 0, SkyGlowColor: '#ffa860', SkyGlowAzimuth: null, Galaxy: 1}}},
 			'unit': {Traits: {Walker: {Speed: 8, MaxSlope: 0.45}, Model: {Shape: 'soldier', Size: 1.8, Color: '#ffffff'}, Health: {Max: 100}, Selectable: {}}},
 			'tree': {Traits: {Model: {Shape: 'pine', Size: 8, Color: '#ffffff'}}, Values: {Blocks: true}},
 			'rock': {Traits: {Model: {Shape: 'rock', Size: 2.5, Color: '#ffffff'}}, Values: {Blocks: true}},
@@ -212,10 +264,10 @@ Elemenx.Component('GameScene', {
 		var orbit = {Distance: 1, Eccentricity: 0, Inclination: 0, Node: 0, Periapsis: 0, Anomaly: 0, Period: null, Unit: 'AU'};
 
 		return {
-			'star': {Traits: {Star: {Mass: 1, Radius: null, Temperature: null, Luminosity: null, Color: ''}, Selectable: {}}},
+			'star': {Traits: {Star: {Mass: 1, Radius: null, Temperature: null, Luminosity: null, Color: '', Veil: 3}, Selectable: {}}},
 			'planet': {Traits: {Orbit: orbit, Body: {Radius: 6371, Mass: null, Day: 24, Tilt: 0, Albedo: null}, Surface: {Type: 'rocky', Colors: '', Water: '', Ocean: null, Ice: null, Clouds: null, Atmosphere: '', Seed: ''}, Selectable: {}}},
 			'moon': {Extends: 'planet', Traits: {Body: {Radius: 1737, Day: 0}, Surface: {Type: 'moon'}}},
-			'belt': {Traits: {Belt: {Inner: 2.2, Outer: 3.2, Count: 260, Inclination: 0, Colors: ''}}},
+			'belt': {Traits: {Belt: {Inner: 2.2, Outer: 3.2, Count: 260, Inclination: 0, Colors: '', Rocks: 1}}},
 			'ring': {Traits: {Ring: {Inner: 1.3, Outer: 2.3, Inclination: 0, Colors: ''}}},
 			'module': {Traits: {Model: {Shape: 'box', Size: 1, Scale: [1, 1, 1], Color: '#d6d9e0'}, Health: {Max: 200}}},
 			'station': {
@@ -238,6 +290,7 @@ Elemenx.Component('GameScene', {
 					{ID: 'panel-b', Removed: true}
 				]
 			},
+			'craft': {Traits: {Orbit: {Distance: 1.8, Unit: 'radii', Period: 0.6, Inclination: 12, Anomaly: null}, Model: {Shape: '', Size: 0.11, Relative: true}, Health: {Max: 1000}, Selectable: {}}},
 			'ship': {Traits: {Model: {Shape: 'fighter', Size: 0.07, Relative: false}, Health: {Max: 100}, Selectable: {}}},
 			'fighter': {Extends: 'ship'},
 			'cruiser': {Extends: 'ship', Traits: {Model: {Shape: 'cruiser'}, Health: {Max: 600}}},
@@ -249,6 +302,32 @@ Elemenx.Component('GameScene', {
 	$OnReady: function () {
 		var self = this;
 		var element = this.$Element();
+
+		/* What a press had begun ends when the pointer is taken or given back: its place on the screen means nothing any more. */
+		this.LockChanged = function () {
+			if (!self.Scene) return;
+
+			var scene = self.Scene();
+			var now = performance.now();
+			var looks = (scene.Looks || []).filter(function (look) {
+				return now - look.At > 90;
+			});
+
+			/* Given back, the last moves may be the leap of a pointer that comes back to where it was. */
+			if (!document.pointerLockElement && looks.length) {
+				scene.Yaw = looks[looks.length - 1].Yaw;
+				scene.Pitch = looks[looks.length - 1].Pitch;
+			}
+
+			scene.Looks = [];
+			scene.LockAt = now;
+			scene.Drag = null;
+			scene.Pinch = null;
+			scene.Pointers = {};
+			self.Dragging = false;
+		};
+
+		document.addEventListener('pointerlockchange', this.LockChanged);
 
 		/* A map is known before the first objects are made: on it a kind may be of no kind of the scene. */
 		this.Cells = !!this.Map || !!element.querySelector('.elemenx-game-scene-sources .elemenx-game-source[data-type="layer"], .elemenx-game-scene-sources .elemenx-game-source[data-type="terrain"]');
@@ -307,6 +386,7 @@ Elemenx.Component('GameScene', {
 			Target: [0, 0, 0],
 			From: [0, 0, 0],
 			Moving: 1,
+			Asked: {},
 			Flight: null,
 			Pan: [0, 0, 0],
 			Keys: {},
@@ -659,6 +739,13 @@ Elemenx.Component('GameScene', {
 				var kept = key && made[spec.ID] && made[spec.ID].Key === key ? made[spec.ID].Object : null;
 				var object = kept || (spec.Restored ? JSON.parse(JSON.stringify(spec.Restored)) : make(spec));
 
+				/* A hero made again by the change of its place goes on as it was: where it stands, where it faces, what it plays. */
+				if (!kept && made[spec.ID] && spec.ID === scene.Hero) {
+					['Air', 'Rise', 'Grounded', 'Facing', 'Heading', 'Spin', 'Clip', 'Frames', 'Pose', 'Pace', 'Walking', 'Back'].forEach(function (name) {
+						object[name] = made[spec.ID].Object[name];
+					});
+				}
+
 				if (spec.Restored)
 					object.Parent = spec.Parent;
 
@@ -940,7 +1027,7 @@ Elemenx.Component('GameScene', {
 					hold(object, time);
 				}
 				else if (orbit && orbit.Unit === 'radii') {
-					angle = Math.PI * 2 * time / Math.max(0.01, number(orbit.Period, 0.6)) + object.Seed;
+					angle = Math.PI * 2 * time / Math.max(0.01, number(orbit.Period, 0.6)) + (orbit.Anomaly === undefined || orbit.Anomaly === null ? object.Seed : number(orbit.Anomaly, 0) * Math.PI / 180);
 					tilt = number(orbit.Inclination, 12) * Math.PI / 180;
 					radius = (parent ? parent.Size : 1) * number(orbit.Distance, 1.8);
 					object.World = vectors.Add(base, [Math.cos(angle) * radius, Math.sin(angle) * Math.sin(tilt) * radius, -Math.sin(angle) * Math.cos(tilt) * radius]);
@@ -958,6 +1045,16 @@ Elemenx.Component('GameScene', {
 					object.Relative = [0, 0, 0];
 					object.World = base;
 				}
+
+				/* What is driven says itself where it is and how it lies. */
+				if (object.Flight && object.Flight.At) {
+					object.World = object.Flight.At;
+					object.Position = object.World;
+					object.Relative = vectors.Subtract(object.World, base);
+				}
+
+				if (object.Flight && object.Flight.Turn)
+					object.Turn = object.Flight.Turn;
 
 				/* Its own turn: a body by its day and tilt (one face to its parent without a day), a model by its spin. */
 				if (body) {
@@ -1084,6 +1181,7 @@ Elemenx.Component('GameScene', {
 			gpu.Glow = renderer.Program(shaders.Billboard, shaders.Glow);
 			gpu.Line = renderer.Program(shaders.Line, shaders.Flat);
 			gpu.Far = renderer.Program(shaders.Far, shaders.Dot);
+			gpu.StarsTurned = renderer.Program(shaders.FarTurned, shaders.Dot);
 			gpu.Ground = renderer.Program(shaders.GroundVertex, shaders.Ground);
 			gpu.Land = renderer.Program(shaders.LandVertex, shaders.Land);
 			gpu.ManyDepth = renderer.Program(shaders.Instanced, shaders.Depth);
@@ -1167,6 +1265,26 @@ Elemenx.Component('GameScene', {
 			return renderer.Points(positions, {aColor: {Size: 4, Data: colors}});
 		}
 
+		/* The stars of a night sky from the ground: the sky of a planet, faint ones by the thousand and a few bright. */
+		function nightStars () {
+			var generator = astronomy.Random('night');
+			var positions = [];
+			var colors = [];
+			var i;
+
+			for (i = 0; i < 9000; i++) {
+				var z = generator.Float(-1, 1);
+				var angle = generator.Float(0, Math.PI * 2);
+				var radius = Math.sqrt(1 - z * z);
+				var color = paint(astronomy.Color(generator.Pick([3200, 4500, 5600, 6500, 8000, 12000])));
+
+				positions.push(Math.cos(angle) * radius * 50, z * 50, Math.sin(angle) * radius * 50);
+				colors.push(color[0], color[1], color[2], Math.pow(generator.Next(), 6));
+			}
+
+			return renderer.Points(positions, {aColor: {Size: 4, Data: colors}});
+		}
+
 		/* The meshes of the orbits, rings and belts, made again with the objects; the baked surfaces kept by their look. */
 		function clear () {
 			Object.keys(scene.Lines).forEach(function (id) {
@@ -1234,7 +1352,7 @@ Elemenx.Component('GameScene', {
 			for (i = 0; i < count; i++) {
 				rocks.push({
 					Orbit: {Distance: round ? generator.Float(inner, outer) * parent.Radius * KM : generator.Float(inner, outer), Eccentricity: generator.Float(0, 0.12), Inclination: tilt + generator.Float(-6, 6), Node: generator.Float(0, 360), Periapsis: generator.Float(0, 360), Anomaly: generator.Float(0, 360)},
-					Size: generator.Float(0.03, 0.11) * (self.Scale === 'real' ? 0.02 : 1) * (round ? parent.Size : 1),
+					Size: generator.Float(0.03, 0.11) * (self.Scale === 'real' ? 0.02 : 1) * (round ? parent.Size : 1) * number(settings.Rocks, 1),
 					Axis: vectors.Normalize([generator.Float(-1, 1), generator.Float(-1, 1), generator.Float(-1, 1)]),
 					Spin: generator.Float(0.5, 3),
 					Color: generator.Pick(colors)
@@ -1348,7 +1466,7 @@ Elemenx.Component('GameScene', {
 
 		/* The resolution follows the time of a frame: lower while frames are slow, back up while they are fast. */
 		function adapt (elapsed) {
-			if (!elapsed || !renderer) return;
+			if (!elapsed || !renderer || scene.Seconds < 6 || self.Sown && self.Sown().Waiting) return;
 
 			/* A quality that was chosen is kept: the picture stays as sharp as it can be. */
 			if (self.Quality) {
@@ -1399,6 +1517,16 @@ Elemenx.Component('GameScene', {
 			var wanted;
 			var moved = scene.Moving;
 			var eased;
+
+			var flown2 = scene.Objects[scene.Hero];
+
+			if (flown2 && flown2.Values.Vehicle && engine.VehicleStep(flown2, scene.Keys, elapsed) && engine.ShipView(flown2, elapsed)) {
+				scene.Eye = camera.Position.slice();
+				camera.Near = Math.max(1e-6, flown2.Size * 0.05);
+				camera.Far = Math.max(scene.Distance * 40, extent() * 6);
+
+				return;
+			}
 
 			steer(elapsed);
 
@@ -1454,7 +1582,7 @@ Elemenx.Component('GameScene', {
 
 		/* Q and E turn the view, R and F tilt it. */
 		function turnKeys (keys, elapsed) {
-			var least = scene.Ground ? 0.04 : -1.5;
+			var least = scene.Ground ? -1.3 : -1.5;
 
 			if (keys.KeyQ)
 				scene.Yaw += elapsed * 1.3;
@@ -1469,13 +1597,13 @@ Elemenx.Component('GameScene', {
 				scene.Pitch = Math.max(least, scene.Pitch - elapsed);
 		}
 
-		/* The view moved along the screen by pixels: over a ground it lets the object in focus go. */
+		/* The view moved along the screen by pixels: over a ground it lets the object in focus go; a hero it never leaves. */
 		engine.PanView = function (dx, dy) {
 			var axes = viewAxes();
 			var step = scene.Distance * Math.tan(scene.Camera.Fov * Math.PI / 360) * 2 / Math.max(1, scene.Height);
 			var flat = vectors.Normalize([axes.Forward[0] || 1e-6, 0, axes.Forward[2]]);
 
-			if (scene.Surface) return;
+			if (scene.Surface || scene.Hero) return;
 
 			if (scene.Ground && scene.Ground.Target) {
 				scene.Focus = '';
@@ -1586,6 +1714,35 @@ Elemenx.Component('GameScene', {
 			return true;
 		}
 
+		/* The air far off under clouds, in the light of the picture: the bellies of the clouds in rain go to it, so there is no line. */
+		function hazeOf (ground) {
+			var tint = ground.AirTint || [0.55, 0.72, 1];
+			var veil = ground.Air.Fog * (ground.Air.Rain > 0.05 ? 1 : 0.6);
+
+			return [0, 1, 2].map(function (index) {
+				return Math.pow(tint[index] * 0.6 + 0.4, 2.2) * ground.AirLight + Math.pow(ground.Glow[index], 2.2) * 0.3;
+			}).concat([Math.min(0.62, veil * 1.8)]);
+		}
+
+		/* The layer of clouds over a ground: high over its hills, its noise as large as the land allows. */
+		function groundClouds () {
+			var ground = scene.Ground;
+			var low = Math.max(ground.Field.Top * 1.6, 90);
+			var sky = ground.SkyLight;
+			var light = ground.SunColor;
+
+			var day = ground.Day;
+			var rise = ground.Sky[1];
+			var glow = (1 - Math.min(1, Math.abs(rise) / 0.3)) * day;
+			var moonlit = rise < 0 ? 1.3 : 1.6;
+
+			/* By night a cloud shows only by what lights it: without a moon or towns it is dark, and hides the stars. */
+			var tone = (0.5 + 0.7 * day) * Math.min(1, day * 1.6 + ground.MoonLit * 0.6);
+
+			/* The moon lights a cloud faintly; a low sun lights it from under, red over gold. */
+			return {Turn: [1, 0, 0, 0, 1, 0, 0, 0, 1], From: scene.Eye, Sun: ground.Sky[1] > -0.05 ? ground.Sky : ground.Sun, SunLight: [light[0] * moonlit, light[1] * moonlit, light[2] * moonlit], SkyTone: [sky[0] * tone, sky[1] * tone, sky[2] * tone], Under: [1.2 * glow, 0.42 * glow, 0.2 * glow], Below: ground.Glow, BelowWay: ground.GlowWay, Haze: hazeOf(ground), Layer: [low, low * 2.2, 1.1 / low], Over: false};
+		}
+
 		/* A matrix of an object relative to the eye: what the view draws is near the origin, where floats are exact. */
 		function local (point) {
 			return vectors.Subtract(point, scene.Eye);
@@ -1609,6 +1766,8 @@ Elemenx.Component('GameScene', {
 			var shade;
 			var posted;
 
+			engine.CosmosBake();
+
 			/* First: a village it lays out makes the ground again. */
 			engine.ScatterFrame(matrix);
 
@@ -1616,11 +1775,15 @@ Elemenx.Component('GameScene', {
 			shade = shadowOfScene(models, nodes);
 
 			if (scene.Ground)
-				Object.assign(shade, engine.FieldLight(matrix));
+				Object.assign(shade, engine.FieldLight(matrix), localLights(), scene.Camera.Ortho ? {uCloudShade: [0, 0, 1, 0], uSkyFloor: 0} : Object.assign(engine.CloudShade(groundClouds(), scene.Ground.Sun), {uSkyFloor: Math.max(0, 1 - scene.Ground.Day * 3) * 0.55}));
+
+			/* What burns on a ship lights it in space as well. */
+			if (!scene.Ground)
+				Object.assign(shade, localLights());
 
 			posted = engine.PostBegin();
 
-			var common = Object.assign({uViewProjection: matrix, uCamera: [0, 0, 0], uLightPositions: light.Positions, uLightColors: light.Colors, uLightCount: light.Count, uSkyLight: scene.Ground ? [0.3, 0.36, 0.46] : [0.004, 0.004, 0.006], uFloorLight: scene.Ground ? [0.1, 0.1, 0.09] : [0.004, 0.004, 0.006], uAmbient: scene.Ground ? [0.17, 0.19, 0.23] : [0.025, 0.027, 0.035], uOccluderCount: 0, uOccluders: new Array(16).fill(0), uTime: scene.Time, uHighlight: [0, 0, 0, 0], uWind: scene.Seconds}, shade);
+			var common = Object.assign({uViewProjection: matrix, uCamera: [0, 0, 0], uLightPositions: light.Positions, uLightColors: light.Colors, uLightCount: light.Count, uSkyLight: scene.Ground ? scene.Ground.SkyLight : [0.004, 0.004, 0.006], uFloorLight: scene.Ground ? scene.Ground.FloorLight : [0.004, 0.004, 0.006], uAmbient: scene.Ground ? [0.17, 0.19, 0.23] : scene.CosmosShade ? [0.025 + scene.CosmosShade[0], 0.027 + scene.CosmosShade[1], 0.035 + scene.CosmosShade[2]] : [0.025, 0.027, 0.035], uOccluderCount: 0, uOccluders: new Array(16).fill(0), uTime: scene.Time, uHighlight: [0, 0, 0, 0], uWind: scene.Gust || 0, uWet: scene.Ground ? scene.Ground.Air.Wet : 0, uSnowed: scene.Ground ? scene.Ground.Air.Cover || 0 : 0, uRainDrops: scene.Ground ? scene.Ground.Air.Rain : 0, uEyeAt: scene.Eye || [0, 0, 0], uTime2: scene.Seconds % 1000}, shade);
 			var selected = scene.Selected ? scene.Objects[scene.Selected] : null;
 			var later = [];
 
@@ -1654,6 +1817,9 @@ Elemenx.Component('GameScene', {
 			if (scene.Ground)
 				drawGround(matrix, nodes, shade);
 
+			if (!scene.Ground)
+				engine.CosmosDraw(plain, plain);
+
 			if (self.Background && self.Background !== 'false' && !scene.Ground) {
 				renderer.Draw(gpu.Stars, gpu.Far, {uViewProjection: graphics.Multiply(graphics.Perspective(camera.Fov, aspect, 0.1, 200), viewMatrix), uRatio: renderer.Ratio}, {Depth: false, DepthWrite: false, Blend: 'add'});
 			}
@@ -1674,6 +1840,11 @@ Elemenx.Component('GameScene', {
 					renderer.Draw(gpu.Sphere, gpu.Star, uniforms({uModel: model, uNormalMatrix: graphics.NormalMatrix(model), uColor: paint(object.Color).slice(0, 3), uSeed: object.Seed}));
 
 					later.push(function () {
+						/* The wide veil first: the disc does not end at once at black space. */
+						renderer.Draw(gpu.Quad, gpu.Glow, uniforms({uCenter: local(object.World), uSize: size * 11, uRight: right, uUp: up, uColor: paint(object.Color).slice(0, 3).map(function (part) {
+							return part * 0.3;
+						}), uInner: 0.09, uStyle: 0}), {Blend: 'add', DepthWrite: false, Cull: 'none'});
+
 						renderer.Draw(gpu.Quad, gpu.Glow, uniforms({uCenter: local(object.World), uSize: size * 4.2, uRight: right, uUp: up, uColor: paint(object.Color).slice(0, 3), uInner: 0.18, uStyle: 0}), {Blend: 'add', DepthWrite: false, Cull: 'none'});
 					});
 				}
@@ -1717,7 +1888,15 @@ Elemenx.Component('GameScene', {
 				var list = models[name];
 
 				if (list.Material) {
-					renderer.Draw(shape(name), list.Skinned ? gpu.PbrSkinned : gpu.Pbr, Object.assign(uniforms({uOrigin: originOf(list), uPalette: list.Skinned ? palette(list.Skinned) : gpu.White, uJointOffset: list.Offset, uSoftness: list.Soft, uMoving: list.Still || list.Material.Alpha === 'BLEND' ? 0 : 1}), surface(list)), {Cull: list.Material.DoubleSided ? 'none' : 'back', Blend: list.Material.Alpha === 'BLEND' ? 'alpha' : 'none'});
+					var blended = seeThrough(list.Material);
+
+					var drawn = function () {
+						renderer.Draw(shape(name), list.Skinned ? gpu.PbrSkinned : gpu.Pbr, Object.assign(uniforms({uOrigin: originOf(list), uPalette: list.Skinned ? palette(list.Skinned) : gpu.White, uJointOffset: list.Offset, uSoftness: list.Soft, uMoving: list.Still || blended ? 0 : 1, uSteady: list.Still ? 0 : 1, uCut: heroCut(list)}), surface(list)), {Cull: list.Material.DoubleSided ? 'none' : 'back', Blend: blended ? 'over' : 'none', DepthWrite: !blended});
+					};
+
+					/* What is seen through comes after all it shows, and hides nothing of what is drawn after it. */
+					if (blended) later.push(drawn);
+					else drawn();
 
 					return;
 				}
@@ -1727,14 +1906,33 @@ Elemenx.Component('GameScene', {
 
 			engine.ScatterDraw(common, matrix);
 
+			/* What shines has a glow of its own where it stands, but a lamp a body carries: it would hang over it. */
+			(scene.Ground ? scene.Lamps || [] : []).forEach(function (lamp) {
+				if (lamp.Built || lamp.Effect || lamp.Object.Values.Follow || lamp.Settings.Follow) return;
+
+				later.push(function () {
+					renderer.Draw(gpu.Quad, gpu.Glow, uniforms({uCenter: local(lamp.At), uSize: (0.5 + number(lamp.Settings.Radius, 14) * 0.03) * (1 + scene.Ground.Air.Fog * 3), uRight: right, uUp: up, uColor: lamp.Color, uInner: 0, uStyle: 0}), {Blend: 'add', DepthWrite: false, Cull: 'none'});
+				});
+			});
+
 			custom('Draw');
 
 			if (scene.Ground)
 				drawSea(matrix, posted);
 
+			if (scene.Ground && posted)
+				engine.FallDraw(matrix, scene.Eye, scene.Ground);
+
+			engine.BoltDraw(matrix, scene.Eye, scene.Ground);
+
 			later.forEach(function (each) {
 				each();
 			});
+
+			if (self.Origin && self.Origin !== 'false')
+				drawOrigin(matrix);
+
+			engine.EffectsDraw(matrix, {Right: right, Up: up, Forward: [-viewMatrix[2], -viewMatrix[6], -viewMatrix[10]], Near: camera.Near, Far: camera.Far});
 
 			/* The mark of the selected object while it is small on the screen: near, its own glow shows it. */
 			if (selected && selected.World && Math.max(selected.Size, 0.001) < pixels(selected.World, 40)) {
@@ -1742,7 +1940,40 @@ Elemenx.Component('GameScene', {
 			}
 
 			if (posted)
-				engine.PostEnd(scene.Ground ? {Matrix: matrix, Plain: plain, Eye: scene.Eye, Sun: scene.Ground.Sun, SunColor: scene.Ground.SunColor, Air: [0.55, 0.72, 1, 0.95], Fog: scene.Camera.Ortho ? 0 : 0.4 / scene.Ground.Field.Size, Sky: true, Reach: Math.max(1, scene.Distance * 0.05)} : {Matrix: matrix});
+				engine.PostEnd(scene.Ground ? {Matrix: matrix, Plain: plain, Eye: scene.Eye, Sun: scene.Ground.Sun, SunColor: scene.Ground.SunColor, Night: scene.Ground.Night, Shimmer: engine.EffectHeat(matrix, width / Math.max(1, height)), Exposure: self.Exposure, Air: scene.Ground.AirTint, Veil: scene.Ground.Air.Fog * (scene.Ground.Air.Rain > 0.05 ? 1 : 0.6), Clouds: scene.Camera.Ortho ? null : groundClouds(), Glare: scene.Ground.Glare, AirLight: scene.Ground.AirLight, AirGlow: scene.Ground.Glow, AirGlowWay: scene.Ground.GlowWay, Fog: scene.Camera.Ortho ? 0 : (scene.Ground.Field.Whole ? 0.12 : 0.4) / Math.max(scene.Ground.Field.Size, 300) + scene.Ground.Air.Fog * 0.011, FogLow: scene.Camera.Ortho ? [0, 0, 0] : [Math.max(0, scene.Eye[1] - Math.max(0, scene.Ground.Field.Height(scene.Eye[0], scene.Eye[2]))), 1 / Math.max(6, scene.Ground.Field.Top * 0.2), scene.Ground.Air.Fog * 0.03], Sky: true, Reach: Math.max(1, scene.Distance * 0.05)} : Object.assign({Matrix: matrix, Plain: plain}, spaceSun(plain, camera)));
+		}
+
+		function nearestStar () {
+			return scene.Active.filter(function (object) {
+				return trait(object, 'Star') && object.World;
+			}).sort(function (a, b) {
+				return vectors.Distance(a.World, scene.Eye) - vectors.Distance(b.World, scene.Eye);
+			})[0];
+		}
+
+		/* The star that shuts the eye to what stands beside it. */
+		engine.NearestStar = function () {
+			var star = scene.Ground ? null : nearestStar();
+
+			return star ? {At: star.World, Size: star.Size, Veil: number(trait(star, 'Star').Veil, 3)} : null;
+		};
+
+		/*
+		 * The sun of a system to the picture of it: where it is, how large it looks, and from what depth on nothing hides it. It blinds as a
+		 * sun over a ground does, the less the farther off it is.
+		 */
+		function spaceSun (matrix, camera) {
+			var star = nearestStar();
+			if (!star)
+				return {};
+
+			var to = vectors.Subtract(star.World, scene.Eye);
+			var far = vectors.Length(to);
+			var way = vectors.Normalize(to);
+			var front = vectors.Scale(way, Math.max(far - star.Size, camera.Near * 2));
+			var clip = [matrix[2] * front[0] + matrix[6] * front[1] + matrix[10] * front[2] + matrix[14], matrix[3] * front[0] + matrix[7] * front[1] + matrix[11] * front[2] + matrix[15]];
+
+			return {Sun: way, SunColor: paint(star.Color).slice(0, 3), Star: true, Ring: Math.abs(matrix[5]) * 0.5 * star.Size / far, Clear: Math.min(0.9999, (clip[0] / Math.max(clip[1], 1e-6)) * 0.5 + 0.5 - 1e-6), Glare: Math.min(1, Math.pow(star.Size / far * 7, 1.3))};
 		}
 
 		/* The copies of the shapes of a frame: the rocks of the belts, the models of the objects, their pieces as they stand now. */
@@ -1770,7 +2001,7 @@ Elemenx.Component('GameScene', {
 				}
 
 				/* A model: of its own shape, or of its parts (a station of modules); a part drawn in its owner. */
-				if (settings && settings.Shape)
+				if (settings && (settings.Shape || object.Values.Model))
 					gatherModel(models, object, settings);
 			});
 
@@ -1850,6 +2081,15 @@ Elemenx.Component('GameScene', {
 			return Number(given && typeof given === 'object' ? given[piece.Material.Name] : given) || 0;
 		}
 
+		/* Leaves come as blended surfaces of two sides: cut by their alpha they need no order. Glass stays blended. */
+		function cutOut (material) {
+			return material.Alpha === 'BLEND' && material.DoubleSided && !material.Transmission && !/glass/i.test(material.Name);
+		}
+
+		function seeThrough (material) {
+			return material.Alpha === 'BLEND' && !cutOut(material);
+		}
+
 		/* The textures of a material on this renderer, made once; a white one for what it has none of. */
 		function surface (list) {
 			var material = list.Material;
@@ -1857,28 +2097,40 @@ Elemenx.Component('GameScene', {
 
 			function texture (map, srgb) {
 				var image = map ? asset.Images[map.Image] : null;
+				var made;
 
 				if (!gpu.White)
 					gpu.White = renderer.Texture({Width: 1, Height: 1, Data: new Uint8Array([255, 255, 255, 255])}, {Nearest: true});
 
 				if (!image || !image.Picture) return gpu.White;
 
-				if (!image.Made)
-					image.Made = {};
+				/* A model is shared by the scenes of a page, a texture belongs to one of them. */
+				gpu.Pictures = gpu.Pictures || new WeakMap();
 
-				if (!image.Made[srgb ? 'Srgb' : 'Plain'])
-					image.Made[srgb ? 'Srgb' : 'Plain'] = renderer.Texture(image.Picture, {Srgb: srgb, Mipmaps: true, Repeat: true});
+				if (!gpu.Pictures.has(image))
+					gpu.Pictures.set(image, {});
 
-				return image.Made[srgb ? 'Srgb' : 'Plain'];
+				made = gpu.Pictures.get(image);
+
+				if (!made[srgb ? 'Srgb' : 'Plain'])
+					made[srgb ? 'Srgb' : 'Plain'] = renderer.Texture(image.Picture, {Srgb: srgb, Mipmaps: true, Repeat: true});
+
+				return made[srgb ? 'Srgb' : 'Plain'];
 			}
 
-			if (!material.Uniforms) {
-				material.Uniforms = {
+			/* A material is shared by the scenes of a page; what it holds of a renderer is not. */
+			gpu.Surfaces = gpu.Surfaces || new WeakMap();
+
+			if (!gpu.Surfaces.has(material)) {
+				gpu.Surfaces.set(material, {
 					uBaseColor: material.BaseColor,
 					uMetallic: material.Metallic,
 					uRoughness: material.Roughness,
 					uEmissive: material.Emissive,
-					uCutoff: material.Alpha === 'MASK' ? material.Cutoff : 0,
+					uClearcoat: material.Clearcoat || 0,
+					uGlass: material.Alpha === 'BLEND' ? material.Transmission || 0 : 0,
+					uCoatRough: material.CoatRoughness || 0,
+					uCutoff: material.Alpha === 'MASK' ? material.Cutoff : cutOut(material) ? 0.4 : 0,
 					uUnlit: material.Unlit ? 1 : 0,
 					uNormalScale: material.NormalMap ? material.NormalMap.Scale : 0,
 					uOcclusion: material.OcclusionMap ? material.OcclusionMap.Strength : 0,
@@ -1891,20 +2143,33 @@ Elemenx.Component('GameScene', {
 					uMetalMap: texture(material.MetalMap, false),
 					uOcclusionMap: texture(material.OcclusionMap, false),
 					uEmissiveMap: texture(material.EmissiveMap, true)
-				};
+				});
 			}
 
-			return material.Uniforms;
+			return gpu.Surfaces.get(material);
 		}
 
 		/* The frames of the skeleton of a model, as a texture. */
 		function palette (model) {
-			var baked = library.Bake(model);
+			var baked = model.Baked;
+			var textures;
 
-			if (!model.Palette)
-				model.Palette = renderer.Texture({Width: baked.Width, Height: baked.Height, Data: baked.Data}, {Float: true, Nearest: true});
+			gpu.Palettes = gpu.Palettes || {};
+			gpu.Palettes[model.Key] = gpu.Palettes[model.Key] || {};
+			textures = gpu.Palettes[model.Key];
 
-			return model.Palette;
+			/* While its frames are being made a model stands in the first of them. */
+			if (!baked) {
+				if (!textures.Standing)
+					textures.Standing = renderer.Texture({Width: model.Joints * 3, Height: 1, Data: new Float32Array(model.Baking.Frames[0])}, {Float: true, Nearest: true});
+
+				return textures.Standing;
+			}
+
+			if (!textures.Palette)
+				textures.Palette = renderer.Texture({Width: baked.Width, Height: baked.Height, Data: baked.Data}, {Float: true, Nearest: true});
+
+			return textures.Palette;
 		}
 
 		/* An object as copies of its pieces, each in its pose; a piece of a team takes its color. */
@@ -1930,11 +2195,35 @@ Elemenx.Component('GameScene', {
 			if (made.Type === 'ship' && object.Team)
 				color = [color[0] * 0.65 + team[0] * 0.35, color[1] * 0.65 + team[1] * 0.35, color[2] * 0.65 + team[2] * 0.35];
 
+			if (object.Values.Vehicle && !object.Wheels) {
+				engine.OpeningsOf(made, object.Values.Vehicle);
+
+				object.Wheels = engine.WheelsOf(made, object.Values.Vehicle);
+			}
+
 			pose = (made.Pieces.length > 1 || made.Moves) && !still ? poseOf(object, made, settings) : null;
+			object.Worn = made.Asset;
+
+			if (object.ID === scene.Hero && scene.Inside > 0.01 && pose && object.Clip && !object.Values.Vehicle) {
+				var headBone = library.BoneMatrix(made, 'Head', object.Clip.Name, clipMoment(object.Clip));
+
+				object.Head = headBone ? graphics.Apply(base, [headBone[12], headBone[13], headBone[14]]) : null;
+			}
+
+			if (pose && object.Values.Hold)
+				gatherHeld(models, object, made, base);
+
+			if (object.Values.Vehicle && object.Values.Vehicle.Mounts)
+				gatherMounts(models, object, base);
 
 			made.Pieces.forEach(function (piece) {
 				if (made.Asset) {
-					batch(models, (still ? 'still:' : '') + made.Key + '/' + piece.ID, object.World, piece.Skin !== -1 ? base : graphics.Multiply(base, pose ? pose[piece.ID] : piece.Rest), color, {Rough: 0, Geometry: piece.Geometry, Still: still, Material: piece.Material, Asset: made.Asset, Skinned: piece.Skin !== -1 ? made : null, Offset: piece.JointOffset, Frames: piece.Skin !== -1 ? object.Frames || [0, 0, 0, 0] : null, Soft: softOf(object, made, piece)});
+					var rest = pose ? pose[piece.ID] : piece.Rest;
+					var wheel = object.Wheels ? object.Wheels[piece.ID] : null;
+					var shifted = piece.Opening ? engine.OpeningMove(object, piece) : null;
+					var whole = shifted ? graphics.Multiply(base, shifted) : base;
+
+					batch(models, (still ? 'still:' : '') + made.Key + '/' + piece.ID, object.World, piece.Skin !== -1 ? whole : graphics.Multiply(whole, wheel ? graphics.Multiply(engine.WheelTurn(object, wheel), rest) : rest), color, {Rough: 0, Geometry: piece.Geometry, Still: still, Material: piece.Material, Asset: made.Asset, Skinned: piece.Skin !== -1 ? made : null, Offset: piece.JointOffset, Frames: piece.Skin !== -1 ? object.Frames || [0, 0, 0, 0] : null, Soft: softOf(object, made, piece)});
 
 					return;
 				}
@@ -1943,14 +2232,22 @@ Elemenx.Component('GameScene', {
 			});
 		}
 
+		/* What of a hero stands round the eye in its head is not drawn; its shadow is, for that comes of another pass. */
+		function heroCut (list) {
+			var hero = scene.Objects[scene.Hero];
+
+			return hero && !hero.Values.Vehicle && scene.Inside > 0.6 && scene.CutAt && list.Asset && list.Asset === hero.Worn ? local(scene.CutAt).concat([hero.Size * 0.17]) : [0, 0, 0, 0];
+		}
+
 		/* The clip an object plays: what it was told, or walking on a way, or its own; a change fades from the last one. */
 		function poseOf (object, made, settings) {
 			var way = scene.Ways[object.ID];
 			var state = object.Clip;
-			var wanted = way || object.Walking ? 'walk' : object.Loop || object.Values.Clip || settings.Clip || 'idle';
+			var pace = object.Pace && made.Clips[object.Pace] ? object.Pace : 'walk';
+			var wanted = way ? 'walk' : object.Walking ? pace : object.Pose && made.Clips[object.Pose] ? object.Pose : object.Loop || object.Values.Clip || settings.Clip || 'idle';
 			var clip = made.Clips[wanted];
 			var seconds = scene.Seconds;
-			var rate = wanted === 'walk' && clip && (way || object.Walking) ? (way ? way.Speed : object.Walking) * (clip.Length || 1) / Math.max(0.01, object.Size * (clip.Stride || 1)) : 1;
+			var rate = wanted === 'jump' ? 1.8 : wanted === pace && clip && (way || object.Walking) ? (object.Back && !way ? -1 : 1) * (way ? way.Speed : object.Walking) * (clip.Length || 1) / Math.max(0.01, object.Size * (clip.Stride || 1)) : 1;
 
 			if (state && state.Once) {
 				if ((seconds - state.Start) * state.Rate < library.Length(made, state.Name)) {
@@ -1975,16 +2272,105 @@ Elemenx.Component('GameScene', {
 			}
 
 			if (!state || state.Name !== wanted) {
-				state = object.Clip = {Name: wanted, Start: seconds, Rate: rate, From: state ? state.Name : '', FromTime: state ? (seconds - state.Start) * state.Rate : 0, Once: false};
+				state = object.Clip = {Name: wanted, Start: seconds, Rate: rate, From: state ? state.Name : '', FromTime: state ? clipMoment(state) : 0, FromRate: state ? state.Rate : 0, Once: false};
 			}
 
+			/* Its time adds up by the rate of each moment: a rate that changes goes on from where it was. */
+			state.At = (state.At || 0) + (seconds - (state.Seen === undefined ? state.Start : state.Seen)) * rate;
+			state.Seen = seconds;
 			state.Rate = rate;
 
+			/* A loop starts at a place of its own for each copy: a crowd does not dance as one. */
+			state.Phase = clip && clip.Loop ? (object.Seed || 0) * 7.13 % 1 * (clip.Length || 1) : 0;
+
+			var past = state.FromTime + (seconds - state.Start) * (state.FromRate || 0);
+
 			if (made.Joints) {
-				object.Frames = [library.Frame(made, state.Name, (seconds - state.Start) * rate), state.From ? library.Frame(made, state.From, state.FromTime) : 0, state.From ? Math.max(0, 1 - (seconds - state.Start) / 0.2) : 0, 0];
+				var moment = clipMoment(state);
+
+				object.Frames = library.BakeStep(made, 4) ? [library.Frame(made, state.Name, moment), state.From ? library.Frame(made, state.From, past) : 0, state.From ? Math.max(0, 1 - (seconds - state.Start) / 0.2) : 0, library.Between(made, state.Name, moment)] : [0, 0, 0, 0];
 			}
 
-			return library.Pose(made, state.Name, (seconds - state.Start) * rate, {From: state.From, FromTime: state.FromTime, Fade: (seconds - state.Start) / 0.2});
+			return library.Pose(made, state.Name, clipMoment(state), {From: state.From, FromTime: past, Fade: (seconds - state.Start) / 0.2});
+		}
+
+		/* The second of its clip an object is at. */
+		function clipMoment (state) {
+			return (state.At || 0) + (state.Phase || 0);
+		}
+
+		/*
+		 * What an object holds (Hold: {Model, Bone, Aim, At, Turn, Size}): a model that goes with a bone of its skeleton, frame by
+		 * frame. With Aim, a second bone, it lies as the two stand at rest, X from the one to the other, and turns with the first.
+		 */
+		/* What stands on a vehicle, each model where its mount says, in the size of the vehicle. */
+		function gatherMounts (models, object, base) {
+			var degrees = Math.PI / 180;
+
+			object.Values.Vehicle.Mounts.forEach(function (mount) {
+				var turn = mount.Turn || [0, 0, 0];
+				var at = mount.At || [0, 0, 0];
+				var size = number(mount.Size, 1);
+
+				if (!mount.Model || mount.On === false || !known(mount.Model) || !library.Ready(mount.Model)) return;
+
+				var item = library.Make(mount.Model);
+				var place = graphics.Multiply(base, graphics.Multiply(graphics.Translation(at[0], at[1], at[2]), graphics.Multiply(graphics.Multiply(graphics.Rotation([0, 1, 0], turn[1] * degrees), graphics.Multiply(graphics.Rotation([1, 0, 0], turn[0] * degrees), graphics.Rotation([0, 0, 1], turn[2] * degrees))), graphics.Scaling(size, size, size))));
+
+				item.Pieces.forEach(function (piece) {
+					if (item.Asset) {
+						batch(models, item.Key + '/' + piece.ID, object.World, graphics.Multiply(place, piece.Rest), [1, 1, 1], {Rough: 0, Geometry: piece.Geometry, Material: piece.Material, Asset: item.Asset, Soft: 0});
+
+						return;
+					}
+
+					batch(models, item.Key + '/' + piece.ID, object.World, place, [1, 1, 1], {Matte: item.Matte, Rough: item.Matte ? 0.5 : 0.15, Geometry: piece.Geometry});
+				});
+			});
+		}
+
+		function gatherHeld (models, object, made, base) {
+			var hold = object.Values.Hold;
+			var state = object.Clip;
+			var degrees = Math.PI / 180;
+			var turn = hold.Turn || [0, 0, 0];
+			var at = hold.At || [0, 0, 0];
+			var size = number(hold.Size, 1);
+			var fade = state.From ? Math.max(0, 1 - (scene.Seconds - state.Start) / 0.2) : 0;
+			var bone;
+			var item;
+			var place;
+
+			/* A bone as the clip has it, and through the fade from the last one. */
+			function boneNow (name) {
+				var now = library.BoneMatrix(made, name, state.Name, clipMoment(state));
+				var from = fade && now ? library.BoneMatrix(made, name, state.From, state.FromTime + (scene.Seconds - state.Start) * (state.FromRate || 0)) : null;
+
+				return from ? now.map(function (value, index) {
+					return value * (1 - fade) + from[index] * fade;
+				}) : now;
+			}
+
+			if (!known(hold.Model)) return;
+
+			if (!library.Ready(hold.Model)) return;
+
+			item = library.Make(hold.Model);
+			bone = boneNow(hold.Bone || 'HandR');
+
+			if (!bone) return;
+
+			bone = library.Grip(bone, null);
+
+			if (hold.Aim)
+				bone = graphics.Multiply(bone, library.GripTurn(made, hold.Bone || 'HandR', hold.Aim));
+
+			place = graphics.Multiply(graphics.Translation(at[0], at[1], at[2]), graphics.Multiply(graphics.Rotation([0, 0, 1], turn[2] * degrees), graphics.Multiply(graphics.Rotation([0, 1, 0], turn[1] * degrees), graphics.Multiply(graphics.Rotation([1, 0, 0], turn[0] * degrees), graphics.Scaling(size, size, size)))));
+			place = graphics.Multiply(base, graphics.Multiply(bone, place));
+
+			item.Pieces.forEach(function (piece) {
+				batch(models, item.Key + '/' + piece.ID, object.World, graphics.Multiply(place, piece.Rest), [1, 1, 1], {Rough: 0, Geometry: piece.Geometry, Material: piece.Material, Asset: item.Asset, Skinned: null, Offset: piece.JointOffset, Frames: null});
+			});
 		}
 
 		/* A copy of a shape for the one draw of all of them: its place relative to the eye, its axes, its colors. */
@@ -2049,7 +2435,11 @@ Elemenx.Component('GameScene', {
 		 * keeps to whole texels of the world, so a moving view does not make the edges of the shadows crawl.
 		 */
 		function castShadow (direction, center, eye, extent, depth, casters, near) {
-			var side = self.Graphics().Level === 'low' ? 1024 : 2048;
+			var whole = !near && scene.Ground && scene.Ground.Field.Blocked && self.Graphics().Level !== 'low';
+			var side = self.Graphics().Level === 'low' ? 1024 : whole ? 4096 : 2048;
+
+			/* The moon gives a wider light than the sun: it is the air that lights the night, and its shadows are soft. */
+			var sunWidth = scene.Ground && scene.Ground.Night > 0.5 ? 0.05 : 0.012;
 			var up = Math.abs(direction[1]) > 0.95 ? [0, 0, 1] : [0, 1, 0];
 			var x = vectors.Normalize(vectors.Cross(up, direction));
 			var y = vectors.Cross(direction, x);
@@ -2062,7 +2452,7 @@ Elemenx.Component('GameScene', {
 
 			var nearMap = near ? gpu.ShadowClose = gpu.ShadowClose || renderer.Shadow(side) : null;
 
-			if (!gpu.ShadowMap)
+			if (!near && (!gpu.ShadowMap || gpu.ShadowMap.Size !== side))
 				gpu.ShadowMap = renderer.Shadow(side);
 
 			(nearMap || gpu.ShadowMap).Begin();
@@ -2071,7 +2461,7 @@ Elemenx.Component('GameScene', {
 
 			(nearMap || gpu.ShadowMap).End();
 
-			return {uShadowMap: gpu.ShadowMap, uShadowNear: nearMap || gpu.ShadowMap, uBounce: gpu.NoBounce, uBounceOn: 0, uGlow: gpu.NoBounce, uGlowOn: 0, uShadowMatrix: matrix, uShadowBias: texel * 1.6, uShadowOn: 1};
+			return {uShadowMap: gpu.ShadowMap, uShadowNear: nearMap || gpu.ShadowMap, uShadowRaw: gpu.ShadowMap.Raw, uShadowNearRaw: (nearMap || gpu.ShadowMap).Raw, uShadowSoft: [depth * side * sunWidth / extent, depth * side * sunWidth / extent, self.Graphics().Cascades > 1 ? 1 : 0], uBounce: gpu.NoBounce, uCloudMap: gpu.NoBounce, uBounceOn: 0, uGlow: gpu.NoBounce, uGlowOn: 0, uLampShadow0: gpu.NoShadow, uLampShadow1: gpu.NoShadow, uShadowMatrix: matrix, uShadowBias: texel * 1.6, uShadowOn: 1};
 		}
 
 		/* A second map, of what is near the eye: its shadows are as sharp as a texel of it is small. */
@@ -2079,6 +2469,8 @@ Elemenx.Component('GameScene', {
 			var near = castShadow(direction, center, eye, extent, depth, casters, true);
 
 			shade.uShadowNear = gpu.ShadowClose;
+			shade.uShadowNearRaw = gpu.ShadowClose.Raw;
+			shade.uShadowSoft = [shade.uShadowSoft[0], near.uShadowSoft[1], shade.uShadowSoft[2]];
 			shade.uShadowNearMatrix = near.uShadowMatrix;
 			shade.uShadowNearBias = near.uShadowBias;
 			shade.uShadowOn = 2;
@@ -2155,7 +2547,7 @@ Elemenx.Component('GameScene', {
 				gpu.NoBounce = renderer.Texture({Width: 1, Height: 1, Data: new Uint8Array([0, 0, 0, 255])}, {Nearest: true});
 			}
 
-			return {uShadowOn: 0, uShadowMap: gpu.NoShadow, uShadowNear: gpu.NoShadow, uBounce: gpu.NoBounce, uBounceOn: 0, uGlow: gpu.NoBounce, uGlowOn: 0};
+			return {uShadowOn: 0, uShadowMap: gpu.NoShadow, uShadowNear: gpu.NoShadow, uShadowRaw: gpu.NoBounce, uShadowNearRaw: gpu.NoBounce, uShadowSoft: [0, 0, 0], uBounce: gpu.NoBounce, uCloudMap: gpu.NoBounce, uBounceOn: 0, uGlow: gpu.NoBounce, uGlowOn: 0, uLampShadow0: gpu.NoShadow, uLampShadow1: gpu.NoShadow};
 		}
 
 		function shadowsWanted () {
@@ -2175,8 +2567,10 @@ Elemenx.Component('GameScene', {
 			function casters (matrix) {
 				Object.keys(models).forEach(function (name) {
 					var list = models[name];
+					/* Light goes through glass. */
+					if (list.Material && list.Material.Transmission && seeThrough(list.Material)) return;
 
-					renderer.Draw(shape(name), list.Skinned ? gpu.SkinDepth : gpu.ManyDepth, {uViewProjection: matrix, uWind: scene.Seconds, uOrigin: originOf(list), uPalette: list.Skinned ? palette(list.Skinned) : undefined, uJointOffset: list.Offset}, {Cull: 'none'});
+					renderer.Draw(shape(name), list.Skinned ? gpu.SkinDepth : gpu.ManyDepth, {uViewProjection: matrix, uWind: scene.Gust || 0, uOrigin: originOf(list), uPalette: list.Skinned ? palette(list.Skinned) : undefined, uJointOffset: list.Offset}, {Cull: 'none'});
 				});
 
 				(nodes || []).forEach(function (node) {
@@ -2186,17 +2580,20 @@ Elemenx.Component('GameScene', {
 				engine.ScatterShadow(matrix);
 			}
 
+			scene.Casters = casters;
+
 			if (!shadowsWanted()) return off;
 
 			if (ground) {
 				if (ground.Sun[1] < 0.04) return off;
 
-				extent = Math.max(ground.Field.Whole ? 8 : 30, Math.min(ground.Field.Size, scene.Distance * 1.5));
+				/* A location needs room: past the map of the shadows nothing is in shadow, and its edge shows as a square. */
+				extent = Math.max(ground.Field.Blocked ? Math.max(90, ground.Field.Size * 0.55) : ground.Field.Whole ? 8 : 30, Math.min(ground.Field.Size, scene.Distance * 1.5));
 				set = self.Graphics();
 				made = castShadow(ground.Sun, ground.Target, scene.Eye, extent, Math.max(extent * 2, ground.Field.Top * 4), casters);
 
 				if (set.Cascades > 1)
-					closer(made, ground.Sun, ground.Target, scene.Eye, extent * 0.3, Math.max(extent * 2, ground.Field.Top * 4), casters);
+					closer(made, ground.Sun, ground.Target, scene.Eye, Math.min(extent * 0.3, 30), Math.max(extent * 2, ground.Field.Top * 4), casters);
 
 				return set.Bounce && !engine.FieldOn() ? bounced(made, nodes, models) : made;
 			}
@@ -2218,6 +2615,19 @@ Elemenx.Component('GameScene', {
 
 				renderer.Draw(orbitLine(object), gpu.Line, uniforms({uOffset: local(parent ? parent.World : [0, 0, 0]), uBody: local(object.World).concat([object.Size]), uColor: chosen ? scene.Colors.Selection.slice(0, 3).concat([0.75]) : scene.Colors.Orbit}), {Blend: 'alpha', DepthWrite: false, Cull: 'none'});
 			};
+		}
+
+		/* The three axes of the world at its middle: X red, Y green, Z blue. */
+		function drawOrigin (matrix) {
+			var far = scene.Ground ? scene.Ground.Field.Size * 0.12 : extent();
+
+			gpu.Origin = gpu.Origin || [[1, 0, 0, 0.9, 0.3, 0.3], [0, 1, 0, 0.35, 0.85, 0.4], [0, 0, 1, 0.3, 0.55, 1]].map(function (axis) {
+				return {Mesh: renderer.Lines([[0, 0, 0], [axis[0], axis[1], axis[2]]]), Color: [axis[3], axis[4], axis[5], 1], Axis: axis};
+			});
+
+			gpu.Origin.forEach(function (one) {
+				renderer.Draw(one.Mesh, gpu.Line, {uViewProjection: graphics.Multiply(matrix, graphics.Scaling(far, far, far)), uOffset: vectors.Scale(local([0, 0, 0]), 1 / far), uBody: [0, 0, 0, 0], uColor: one.Color}, {Blend: 'alpha', Depth: false, DepthWrite: false});
+			});
 		}
 
 		/* The size in the view of some pixels of the screen at a point. */
@@ -2265,6 +2675,8 @@ Elemenx.Component('GameScene', {
 		}
 
 		function hidden (object, other) {
+			if (object.Values.Vehicle) return true;
+
 			var ray;
 			var t;
 
@@ -2323,14 +2735,31 @@ Elemenx.Component('GameScene', {
 			var object = scene.Roots.filter(function (each) {
 				return trait(each, 'Terrain');
 			})[0];
+			var site = object ? null : scene.Roots.filter(function (each) {
+				return trait(each, 'Location');
+			})[0];
 			var settings;
 			var key;
 			var biome;
 			var sun;
 			var azimuth;
 			var elevation;
+			var hour;
+			var through;
+			var day;
+			var fill;
+			var dusk;
+			var night;
+			var moon;
+			var glow;
+			var dark;
+			var air;
+			var shut;
 
-			if (!object && !scene.Driven) {
+			if (site && !locationReady(site))
+				site = null;
+
+			if (!object && !site && !scene.Driven) {
 				if (scene.Ground)
 					dropGround();
 
@@ -2343,13 +2772,13 @@ Elemenx.Component('GameScene', {
 			if (biome)
 				settings = Object.assign({}, settings, {Palette: biome.Ground});
 
-			key = scene.Driven ? scene.Driven.Key : JSON.stringify(settings);
+			key = scene.Driven ? scene.Driven.Key : site ? 'location:' + site.ID + ':' + site.Values.Model : JSON.stringify(settings);
 
 			if (!scene.Ground || scene.Ground.Key !== key) {
 				if (scene.Ground)
 					dropGround();
 
-				scene.Ground = {Key: key, ID: object ? object.ID : '', Field: scene.Driven ? scene.Driven.Field : terrain.Flat(settings), Nodes: {}, Frame: 0, Keys: {}};
+				scene.Ground = {Key: key, ID: object ? object.ID : '', Field: scene.Driven ? scene.Driven.Field : site ? locationField(site) : terrain.Flat(settings), Nodes: {}, Frame: 0, Keys: {}};
 			}
 
 			sun = scene.Roots.filter(function (each) {
@@ -2357,8 +2786,111 @@ Elemenx.Component('GameScene', {
 			})[0];
 			azimuth = number(sun ? trait(sun, 'Sun').Azimuth : 140, 140) * Math.PI / 180;
 			elevation = number(sun ? trait(sun, 'Sun').Elevation : scene.Driven && scene.Driven.Elevation || 35, 35) * Math.PI / 180;
-			scene.Ground.Sun = [Math.cos(elevation) * Math.sin(azimuth), Math.sin(elevation), -Math.cos(elevation) * Math.cos(azimuth)];
-			scene.Ground.SunColor = paint(sun ? trait(sun, 'Sun').Color : '#fff4e0').slice(0, 3);
+			hour = sun ? hourOf(trait(sun, 'Sun').Time, dayHours(trait(sun, 'Sun'))) : null;
+
+			if (hour !== null) {
+				var place = skyPlace(trait(sun, 'Sun'), hour);
+
+				elevation = place[0];
+				azimuth = place[1];
+			}
+
+			scene.Ground.Sky = skyWay(elevation, azimuth);
+			scene.Ground.Sun = scene.Ground.Sky;
+
+			/* Through more air the lower it is: the blue goes first, and the land turns gold; under the horizon it is gone. */
+			through = 1 / (Math.max(0, Math.sin(elevation)) + 0.045);
+			scene.Ground.SunColor = paint(sun ? trait(sun, 'Sun').Color : '#fff4e0').slice(0, 3).map(function (value, index) {
+				return value * Math.exp(-[0.018, 0.05, 0.12][index] * through) * Math.min(1, Math.max(0, (Math.sin(elevation) + 0.03) / 0.08));
+			});
+
+			/* The moon: how much of it is lit and over the horizon; under the horizon of the sun it lights the land instead. */
+			moon = sun ? moonOf(trait(sun, 'Sun'), hour) : null;
+			night = Math.min(1, Math.max(0, (-Math.sin(elevation) - 0.03) / 0.1));
+
+			/* A moon before the sun takes its light; in the shadow of the planet it goes dark and red. */
+			var solar = 0;
+			var lunar = 0;
+
+			if (moon) {
+				var parted = Math.acos(Math.max(-1, Math.min(1, vectors.Dot(moon.Way, scene.Ground.Sky))));
+				var breadth = 0.018 * moon.Size;
+
+				solar = moon.Size ? Math.min(1, Math.max(0, 1 - parted / (0.0195 + breadth)) * 1.15) : 0;
+				lunar = 1 - Math.min(1, Math.max(0, (Math.PI - parted - 0.035 + breadth) / (2 * breadth || 1)));
+				moon.Shade = lunar;
+				moon.Glow *= 1 - 0.96 * lunar;
+			}
+
+			glow = moon ? moon.Glow * Math.min(1, Math.max(0, moon.Way[1] / 0.15)) : 0;
+			scene.Ground.Moon = moon;
+			scene.Ground.Eclipse = solar;
+			scene.Ground.SunColor = scene.Ground.SunColor.map(function (value) {
+				return value * (1 - solar * 0.995);
+			});
+
+			/*
+			 * The light of the sky goes with the day and on through the twilight, to where the sun is 12 degrees under. A low
+			 * sun is seen against an air that gives less and is cooler: the side it does not reach goes deep.
+			 */
+			day = Math.min(1, Math.max(0, (Math.sin(elevation) + 0.2) / 0.45)) * (1 - solar * 0.93);
+			fill = day * (0.55 + 0.45 * Math.min(1, Math.max(0, (Math.sin(elevation) - 0.06) / 0.34)));
+			dusk = 1 - Math.min(1, Math.abs(Math.sin(elevation)) / 0.35);
+			dark = (sun ? number(trait(sun, 'Sun').NightLight, 1) : 1) * 0.42 + glow * 0.5;
+			scene.Ground.SkyLight = [0.3 * fill + 0.05 * dark + 0.04 * dusk, 0.36 * fill + 0.06 * dark + 0.03 * dusk, 0.46 * fill + 0.1 * dark + 0.05 * dusk].map(function (value, index) {
+				return value * paint(sun ? trait(sun, 'Sun').Shade || '#ffffff' : '#ffffff')[index];
+			});
+			scene.Ground.FloorLight = [0.1 * fill + 0.016 * dark, 0.1 * fill + 0.019 * dark, 0.09 * fill + 0.03 * dark];
+			scene.Ground.Day = day;
+			scene.Ground.Glare = (1 - night) * (1 - solar);
+
+			/* What lights the air itself, and the towns: at night there is nothing to see in it but what they give. */
+			var towns = sun ? Math.max(0, Math.min(1, number(trait(sun, 'Sun').SkyGlow, 0))) : 0;
+			var townColor = paint(sun ? trait(sun, 'Sun').SkyGlowColor || '#ffa860' : '#ffa860');
+			var townWay = sun ? number(trait(sun, 'Sun').SkyGlowAzimuth, null) : null;
+			var shines = Math.min(1, Math.max(0, Math.sin(elevation) * 2.5 + 0.2)) * (1 - solar * 0.93);
+
+			scene.Ground.AirLight = Math.max(shines, 0.05 * glow + 0.002);
+			scene.Ground.MoonLit = glow * night;
+			scene.Ground.Glow = [townColor[0] * towns, townColor[1] * towns, townColor[2] * towns];
+			scene.Ground.GlowWay = townWay === null ? [0, 0, 0] : [Math.sin(townWay * Math.PI / 180), -Math.cos(townWay * Math.PI / 180), 1];
+
+			/* The faintest star that is seen: the sun, the moon and the towns hide the rest. */
+			scene.Ground.StarLimit = 0.02 + Math.min(1, glow) * 0.22 + towns * 0.72 + Math.min(1, Math.max(0, (Math.sin(elevation) + 0.2) / 0.16)) * (1 - solar) * 1.1;
+			scene.Ground.GalaxyLight = sun ? number(trait(sun, 'Sun').Galaxy, 1) : 1;
+			scene.Ground.StarTurn = sun && hour !== null ? skyTurn(trait(sun, 'Sun'), hour) : [1, 0, 0, 0, 1, 0, 0, 0, 1];
+
+			/* Far fainter than the sun, and the air fills what it leaves dark: a night has a soft contrast. */
+			if (night > 0) {
+				scene.Ground.Sun = moon && moon.Way[1] > 0.02 ? moon.Way : vectors.Normalize([-scene.Ground.Sky[0] * 0.5, 0.75, -scene.Ground.Sky[2] * 0.5 + 0.3]);
+				scene.Ground.SunColor = [0.045 * night * glow, 0.058 * night * glow, 0.095 * night * glow];
+			}
+
+			scene.Ground.Night = night;
+
+			/* Clouds take the sun, grey the sky and leave the light flat. */
+			air = engine.WeatherNow();
+			shut = 0.93 * Math.min(1, Math.max(0, (air.Clouds - 0.45) / 0.37));
+			shut = shut * shut * (3 - 2 * shut / 0.93) / 0.93;
+			scene.Ground.Shut = shut;
+			scene.Ground.SunColor = scene.Ground.SunColor.map(function (value) {
+				return value * (1 - shut) * (1 - air.Fog * 0.5);
+			});
+			scene.Ground.Cover = air.Clouds;
+			scene.Ground.AirLight *= Math.max(0.32, 1 - shut * 0.75);
+			scene.Ground.Glare *= (1 - shut) * Math.pow(1 - Math.min(1, air.Fog), 3);
+			scene.Ground.SkyLight = scene.Ground.SkyLight.map(function (value) {
+				return value * (1 - shut * 0.35);
+			});
+			scene.Ground.FloorLight = scene.Ground.FloorLight.map(function (value) {
+				return value * (1 - shut * 0.35);
+			});
+
+			/* Under clouds the air loses the blue of the sky. */
+			scene.Ground.AirTint = [0.55, 0.72, 1, 0.95].map(function (value, index) {
+				return value + ([0.64, 0.65, 0.68, 0.95][index] - value) * Math.min(1, air.Clouds * air.Clouds * 1.1 + air.Fog * 0.7);
+			});
+			scene.Ground.Air = air;
 
 			return scene.Ground;
 		}
@@ -2372,6 +2904,141 @@ Elemenx.Component('GameScene', {
 				scene.Ground.TopMesh.Destroy();
 
 			scene.Ground = null;
+		}
+
+		/* A location is a model of a file, at its own size: true when it has come. */
+		function locationReady (site) {
+			var name = site.Values.Model;
+			if (!name)
+				return false;
+
+			if (!library.Has(name))
+				library.Define(name, {URL: name, Fit: false, Merge: true, Without: site.Values.Without});
+
+			if (library.Ready(name)) return true;
+
+			if (!scene.Asked[name]) {
+				scene.Asked[name] = true;
+
+				library.Load(name);
+			}
+
+			return false;
+		}
+
+		/* The floors and the walls of a location, from where its triangles stand. */
+		function locationField (site) {
+			var model = library.Make(site.Values.Model);
+			var scale = number(trait(site, 'Model').Size, 1);
+
+			return terrain.FromModel(model.Pieces.map(function (piece) {
+				var made = graphics.Transform(piece.Placed || piece.Geometry, graphics.Multiply(graphics.Scaling(scale, scale, scale), piece.Rest));
+
+				return {Positions: made.Positions, Normals: made.Normals, Indices: made.Indices, Soft: piece.Material.Alpha === 'BLEND'};
+			}), {Plane: site.Values.Plane});
+		}
+
+		/* The hour of a sun: Time as 18:30 or a number, going on at the pace of DaySeconds; null when it has none. */
+		function hourOf (time, hours) {
+			var parts = String(time === undefined || time === null ? '' : time).split(':');
+			var pace = number(self.DaySeconds, 0);
+
+			if (parts[0] === '' || isNaN(Number(parts[0]))) return null;
+
+			return (Number(parts[0]) + (Number(parts[1]) || 0) / 60 + (pace ? scene.Seconds / pace * hours : 0)) % hours;
+		}
+
+		/* How long a day of a sun is: a planet need not turn in 24 hours. */
+		function dayHours (values) {
+			return Math.max(1, number(values.DayHours, 24));
+		}
+
+		/*
+		 * Where a sun stands at an hour, as [elevation, azimuth] in radians. With a Latitude it is the turn of the planet: the
+		 * Tilt of its axis and the DayOfYear of a year of YearDays give how far from its equator the sun stands, and with the
+		 * latitude that gives the length of the light of the day, polar days and nights too. Without one it rises at a quarter
+		 * of the day in the east and sets at three quarters. Noon is the azimuth of its noon where the sun stands in the south.
+		 */
+		function skyPlace (values, hour, wander) {
+			var hours = dayHours(values);
+			var noon = number(values.Noon, 180);
+			var latitude = number(values.Latitude, null);
+
+			if (latitude === null) {
+				var part = hour / hours * 24;
+
+				return [number(values.Elevation, 35) * 1.6 * Math.sin((part - 6) / 12 * Math.PI) * Math.PI / 180, (noon - 90 + (part - 6) * 15) * Math.PI / 180];
+			}
+
+			var from = latitude * Math.PI / 180;
+			var aside = wander === undefined ? sunAside(values) : wander;
+			var turn = (hour / hours - 0.5) * Math.PI * 2;
+			var rise = Math.sin(from) * Math.sin(aside) + Math.cos(from) * Math.cos(aside) * Math.cos(turn);
+
+			return [Math.asin(Math.max(-1, Math.min(1, rise))), Math.atan2(-Math.sin(turn) * Math.cos(aside), Math.sin(aside) * Math.cos(from) - Math.cos(aside) * Math.sin(from) * Math.cos(turn)) + (noon - 180) * Math.PI / 180];
+		}
+
+		/* How far from the equator of its planet a sun stands on a day of its year. */
+		function sunAside (values) {
+			return Math.asin(Math.sin(number(values.Tilt, 23.44) * Math.PI / 180) * Math.sin((number(values.DayOfYear, 172) - 80) / number(values.YearDays, 365) * Math.PI * 2));
+		}
+
+		/*
+		 * The stars of a planet at an hour: a matrix from the sky, its pole along Y, to the ground. They go round the pole, which
+		 * stands as high as the latitude, once a day and a little more for the turn round the sun.
+		 */
+		function skyTurn (values, hour) {
+			var latitude = number(values.Latitude, 45) * Math.PI / 180;
+			var round = (hour / dayHours(values) + number(values.DayOfYear, 172) / number(values.YearDays, 365)) * Math.PI * 2;
+			var aside = (number(values.Noon, 180) - 180) * Math.PI / 180;
+			var c = Math.cos(round);
+			var s = Math.sin(round);
+			var up = Math.sin(latitude);
+			var north = Math.cos(latitude);
+
+			/* The axes of the sky on the ground: Y is the pole, X and Z turn with the hour. */
+			var turned = [[c, s * north, s * up], [0, up, -north], [-s, c * north, c * up]];
+
+			return [0, 1, 2].reduce(function (made, column) {
+				var x = turned[column][0];
+				var z = turned[column][2];
+
+				return made.concat([x * Math.cos(aside) + z * Math.sin(aside), turned[column][1], -x * Math.sin(aside) + z * Math.cos(aside)]);
+			}, []);
+		}
+
+		/* The way to a place of the sky from the ground. */
+		function skyWay (elevation, azimuth) {
+			return [Math.cos(elevation) * Math.sin(azimuth), Math.sin(elevation), -Math.cos(elevation) * Math.cos(azimuth)];
+		}
+
+		/*
+		 * The moon of a sun: it goes the way of the sun, late by its MoonPhase of a day (0 new: by the sun, its dark side to
+		 * us; 0.5 full: across the sky), unless MoonElevation and MoonAzimuth hold it. Way, Size (0: none to draw), Glow (the
+		 * light it gives), Lit (where its own sun seems to stand, for the shape of the phase). Moon false: a sky without one.
+		 */
+		function moonOf (values, hour) {
+			var moon = values.Moon;
+			var phase = (number(values.MoonPhase, 0.5) % 1 + 1) % 1;
+			var size = Math.max(0, number(values.MoonSize, 1));
+
+			if (moon === false || moon === 'false') return null;
+
+			var held = number(values.MoonElevation, null);
+			var round = phase * Math.PI * 2;
+
+			/* Over the sun at a new moon, across the sky from it at a full one, and off its way but for the days of its nodes. */
+			var off = number(values.MoonTilt, 5.14) * Math.PI / 180 * Math.sin((number(values.DayOfYear, 172) - number(values.MoonNode, 80)) / number(values.YearDays, 365) * Math.PI * 2);
+			var place = skyPlace(values, (hour || 0) - phase * dayHours(values), sunAside(values) * Math.cos(round) + off);
+
+			if (number(values.Latitude, null) === null)
+				place[0] += off;
+
+			var way = skyWay(held === null ? place[0] : held * Math.PI / 180, held === null ? place[1] : number(values.MoonAzimuth, 180) * Math.PI / 180);
+			var side = vectors.Cross(way, Math.abs(way[1]) > 0.95 ? [1, 0, 0] : [0, 1, 0]);
+			var over = vectors.Normalize(vectors.Cross(side, way));
+
+			return {Way: way, Size: size, Lit: vectors.Add(vectors.Scale(way, Math.cos(round)), vectors.Scale(over, Math.sin(round))), Glow: Math.max(0, number(values.MoonLight, 1)) * (1 - Math.cos(round)) / 2};
 		}
 
 		/* What blocks the way at a point: a thing that Blocks, within its size. */
@@ -2427,6 +3094,15 @@ Elemenx.Component('GameScene', {
 		/* A thing on the ground: at its X and Y, or along its way at the time of the scene. */
 		function stand (object) {
 			var field = scene.Ground.Field;
+
+			if (trait(object, 'Location')) {
+				object.World = [0, field.Lift || 0, 0];
+				object.Position = object.World;
+				object.Relative = [0, 0, 0];
+
+				return;
+			}
+
 			var way = scene.Ways[object.ID];
 			var x = number(object.Values.X, 0);
 			var z = number(object.Values.Y, 0);
@@ -2472,8 +3148,14 @@ Elemenx.Component('GameScene', {
 			if (object.StoodX !== x || object.StoodZ !== z || !object.World) {
 				object.StoodX = x;
 				object.StoodZ = z;
-				object.World = [x, Math.max(0, field.Height(x, z)), z];
+
+				/* Z: the floor it is told, where one stands over another. */
+				object.World = [x, Math.max(0, field.Height(x, z, object.World ? object.World[1] : object.Values.Z === undefined ? undefined : number(object.Values.Z, 0))), z];
 			}
+
+			/* The hero stands where its own steps and falls took it. */
+			if (object.Air !== undefined)
+				object.World = [x, object.Air, z];
 
 			object.Position = object.World;
 			object.Relative = [0, 0, 0];
@@ -2561,18 +3243,207 @@ Elemenx.Component('GameScene', {
 			return [point[0], point[2]];
 		}
 
+		/*
+		 * The hero goes where the keys say and faces where the view looks: A and D step aside, S steps back; the right button
+		 * turns the view and leaves the way as it was. Standing, it turns on the spot once the view went far enough to the side
+		 * (with FreeLook it stands as it stood, and comes round when it sets off).
+		 * It goes in small steps, so no wall is passed at speed; a wall lets it slide along it; off a floor it falls. Space jumps.
+		 * The clips of a model name what it does: walk, run, sprint, idle, jump, strafe-left, strafe-right, the same with -run,
+		 * turn-left, turn-right; a model without one of them walks.
+		 */
+		function walkHero (hero, keys, elapsed) {
+			var field = scene.Ground.Field;
+			var yaw = scene.Drag && scene.Drag.Button === 2 ? scene.Drag.Yaw : scene.Yaw;
+			var forward = [-Math.sin(yaw), 0, -Math.cos(yaw)];
+			var right = [Math.cos(yaw), 0, -Math.sin(yaw)];
+			var running = keys.ShiftLeft || keys.ShiftRight;
+			var sprint = running && (keys.AltLeft || keys.AltRight);
+			var ahead = (keys.ArrowUp || keys.KeyW ? 1 : 0) - (keys.ArrowDown || keys.KeyS ? 1 : 0);
+			var aside = (keys.ArrowRight || keys.KeyD ? 1 : 0) - (keys.ArrowLeft || keys.KeyA ? 1 : 0);
+			var way = vectors.Add(vectors.Scale(forward, ahead), vectors.Scale(right, aside));
+			var x = number(hero.Values.X, 0);
+			var z = number(hero.Values.Y, 0);
+			var y = hero.Air === undefined ? hero.World[1] : hero.Air;
+			var rise = hero.Rise || 0;
+			var landed = !rise && hero.Grounded !== false;
+			var moved = false;
+			var pace = hero.Size * (sprint ? 3.6 : running ? 2.4 : ahead < 0 ? 0.8 : 1.1);
+			var free;
+			var steps;
+			var i;
+
+			function can (at, on) {
+				return !field.CanStep || field.CanStep(at, on, y);
+			}
+
+			/* A body by what stands round it: in a location it goes as far as its sides let it, and slides along what it meets. */
+			var round = hero.Size * 0.15;
+			var knee = Math.max(0.5, hero.Size * 0.22);
+			var tall = hero.Size * 0.9;
+
+			function going (at, on) {
+				var out = field.Push(at, on, y, round, knee, tall);
+
+				if (field.Stands(out[0], out[1], y)) {
+					x = out[0];
+					z = out[1];
+					moved = true;
+				}
+			}
+
+			/* What already stands in a wall may always leave it. */
+			free = !can(x, z);
+
+			if (vectors.Length(way)) {
+				way = vectors.Normalize(way);
+				steps = Math.ceil(pace * elapsed / 0.15) || 1;
+
+				for (i = 0; i < steps; i++) {
+					var nextX = x + way[0] * pace * elapsed / steps;
+					var nextZ = z + way[2] * pace * elapsed / steps;
+
+					if (field.Push) {
+						going(nextX, nextZ);
+					}
+					else if (free || can(nextX, nextZ)) {
+						x = nextX;
+						z = nextZ;
+						moved = true;
+					}
+					else if (can(nextX, z)) {
+						x = nextX;
+						moved = true;
+					}
+					else if (can(x, nextZ)) {
+						z = nextZ;
+						moved = true;
+					}
+				}
+			}
+
+			var floor = Math.max(0, field.Height(x, z, y));
+
+			if (keys.Space && landed)
+				rise = hero.Size * 3;
+
+			y += rise * elapsed;
+			rise -= 18 * elapsed;
+
+			/* A step up comes smoothly; a small one down too, and a seam of a map is no fall. Down from higher, it falls. */
+			if (rise <= 0 && (y <= floor + 0.02 || landed && !keys.Space && y - floor < hero.Size * 0.3)) {
+				hero.Grounded = true;
+				hero.Rise = 0;
+				hero.Hang = 0;
+				y = Math.abs(y - floor) > 0.02 ? y + (floor - y) * Math.min(1, elapsed * 16) : floor;
+			}
+			else {
+				hero.Grounded = false;
+				hero.Rise = rise;
+				hero.Hang = (hero.Hang || 0) + elapsed;
+			}
+
+			hero.Air = y;
+			hero.Walking = moved ? pace : 0;
+			hero.Back = ahead < 0;
+
+			/* It jumps when told; a moment over a gap of the ground is not worth the clip. */
+			if (!hero.Grounded && (hero.Rise > 0 || hero.Hang > 0.22)) {
+				hero.Pace = 'jump';
+				hero.Walking = hero.Walking || pace;
+			}
+			else if (!ahead && aside) {
+				hero.Pace = 'strafe-' + (aside < 0 ? 'left' : 'right') + (running ? '-run' : '');
+			}
+			else {
+				hero.Pace = sprint ? 'sprint' : running ? 'run' : 'walk';
+			}
+
+			faceView(hero, yaw, moved || !hero.Grounded || self.Person === 'first', elapsed);
+
+			if (!moved) return;
+
+			hero.Values.X = x;
+			hero.Values.Y = z;
+
+			scene.Overrides[hero.ID] = scene.Overrides[hero.ID] || {};
+			scene.Overrides[hero.ID].Values = Object.assign(scene.Overrides[hero.ID].Values || {}, {X: x, Y: z});
+		}
+
+		/* The body comes round to where the view looks: at once on the way, on the spot by a turn of its own when it stands. */
+		function faceView (hero, yaw, moving, elapsed) {
+			var wanted = yaw + Math.PI;
+			var facing = hero.Facing === undefined ? wanted : hero.Facing;
+			var apart = Math.atan2(Math.sin(wanted - facing), Math.cos(wanted - facing));
+
+			hero.Pose = '';
+
+			/* With a free look it stands as it stood, to be looked at from all sides. */
+			if (!moving && self.FreeLook && self.FreeLook !== 'false') {
+				hero.Spin = 0;
+				hero.Facing = facing;
+				hero.Heading = [Math.sin(facing), 0, Math.cos(facing)];
+
+				return;
+			}
+
+			if (moving) {
+				facing += apart * Math.min(1, elapsed * 12);
+				hero.Spin = 0;
+			}
+			else {
+				if (Math.abs(apart) > 0.9)
+					hero.Spin = apart > 0 ? 1 : -1;
+
+				if (hero.Spin) {
+					facing += hero.Spin * Math.min(Math.abs(apart), elapsed * 2.4);
+					hero.Pose = hero.Spin > 0 ? 'turn-left' : 'turn-right';
+
+					if (Math.abs(apart) < 0.08)
+						hero.Spin = 0;
+				}
+			}
+
+			hero.Facing = facing;
+			hero.Heading = [Math.sin(facing), 0, Math.cos(facing)];
+		}
+
+		/* Where the view of a hero stands now: each way of it comes and goes in a quarter of a second. */
+		function easePerson (elapsed) {
+			var step = 1 - Math.exp(-elapsed * 10);
+
+			scene.Inside = (scene.Inside || 0) + ((self.Person === 'first' ? 1 : 0) - (scene.Inside || 0)) * step;
+			scene.Aside = (scene.Aside || 0) + ((self.Person === 'shoulder' ? 1 : 0) - (scene.Aside || 0)) * step;
+			scene.Side = (scene.Side === undefined ? 1 : scene.Side) + ((self.Shoulder === 'left' ? -1 : 1) - (scene.Side === undefined ? 1 : scene.Side)) * step;
+		}
+
 		/* The view over the ground: round its point (or the object in focus), never under the ground; the keys move it. */
 		function aimGround (elapsed) {
 			var ground = scene.Ground;
 			var field = ground.Field;
 			var camera = scene.Camera;
-			var focus = scene.Focus ? scene.Objects[scene.Focus] : null;
+			var focus = scene.Objects[scene.Hero] || (scene.Focus ? scene.Objects[scene.Focus] : null);
 			var keys = ground.Keys;
 			var forward = [-Math.sin(scene.Yaw), 0, -Math.cos(scene.Yaw)];
 			var right = [Math.cos(scene.Yaw), 0, -Math.sin(scene.Yaw)];
 			var speed = scene.Distance * 0.9 * elapsed;
 			var view = self.View;
+			var lowest = null;
+			var look;
 			var floor;
+
+			function moveView () {
+				if (keys.ArrowUp || keys.KeyW)
+					ground.Target = vectors.Add(ground.Target, vectors.Scale(forward, speed));
+
+				if (keys.ArrowDown || keys.KeyS)
+					ground.Target = vectors.Add(ground.Target, vectors.Scale(forward, -speed));
+
+				if (keys.ArrowRight || keys.KeyD)
+					ground.Target = vectors.Add(ground.Target, vectors.Scale(right, speed));
+
+				if (keys.ArrowLeft || keys.KeyA)
+					ground.Target = vectors.Add(ground.Target, vectors.Scale(right, -speed));
+			}
 
 			if (scene.Driven) {
 				ground.Target = scene.Driven.Target;
@@ -2584,31 +3455,38 @@ Elemenx.Component('GameScene', {
 			if (!ground.Target)
 				ground.Target = [0, Math.max(0, field.Height(0, 0)), 0];
 
-			if (keys.ArrowUp || keys.KeyW)
-				ground.Target = vectors.Add(ground.Target, vectors.Scale(forward, speed));
-
-			if (keys.ArrowDown || keys.KeyS)
-				ground.Target = vectors.Add(ground.Target, vectors.Scale(forward, -speed));
-
-			if (keys.ArrowRight || keys.KeyD)
-				ground.Target = vectors.Add(ground.Target, vectors.Scale(right, speed));
-
-			if (keys.ArrowLeft || keys.KeyA)
-				ground.Target = vectors.Add(ground.Target, vectors.Scale(right, -speed));
+			/* With a hero the keys walk it, and the view goes after it. */
+			if (scene.Hero && scene.Objects[scene.Hero]) {
+				if (!engine.VehicleStep(scene.Objects[scene.Hero], keys, elapsed))
+					walkHero(scene.Objects[scene.Hero], keys, elapsed);
+			}
+			else {
+				moveView();
+			}
 
 			turnKeys(keys, elapsed);
 
+			/* The view eases to what it follows, but holds a hero at once: an easing that lags by the length of a frame shakes it. */
 			if (focus && focus.World && keys.Follow !== false)
-				ground.Target = vectors.Lerp(ground.Target, focus.World, 1 - Math.exp(-elapsed * 6));
+				ground.Target = scene.Hero === focus.ID ? [focus.World[0], ground.Target[1], focus.World[2]] : vectors.Lerp(ground.Target, focus.World, 1 - Math.exp(-elapsed * 6));
 
 			if (!scene.Driven) {
 				ground.Target[0] = Math.max(-field.Size / 2, Math.min(field.Size / 2, ground.Target[0]));
 				ground.Target[2] = Math.max(-field.Size / 2, Math.min(field.Size / 2, ground.Target[2]));
 			}
 
-			ground.Target[1] = Math.max(0, field.Height(ground.Target[0], ground.Target[2]));
+			ground.Target[1] = scene.Hero && focus ? ground.Target[1] + (focus.World[1] + focus.Size * 0.8 - ground.Target[1]) * (1 - Math.exp(-elapsed * 8)) : Math.max(0, field.Height(ground.Target[0], ground.Target[2]));
 			scene.Distance += (scene.Wanted - scene.Distance) * (1 - Math.exp(-elapsed * 9));
-			scene.Pitch = Math.max(0.04, Math.min(1.5, scene.Pitch));
+			scene.Pitch = Math.max(-1.3, Math.min(1.5, scene.Pitch));
+			look = scene.Pitch;
+
+			if (scene.Hero) easePerson(elapsed);
+			else scene.Inside = scene.Aside = 0;
+
+			var inside = focus ? scene.Inside : 0;
+			var aside = focus ? scene.Aside : 0;
+			var round = aside ? vectors.Add(ground.Target, vectors.Scale([Math.cos(scene.Yaw) * 0.42 * scene.Side, 0.14, -Math.sin(scene.Yaw) * 0.42 * scene.Side], aside * focus.Size)) : ground.Target;
+			var away = scene.Distance * (1 - aside * 0.5);
 
 			/* In parallel rays the distance is the height of the view; the eye stands far enough to see all of it. */
 			if (view) {
@@ -2620,17 +3498,108 @@ Elemenx.Component('GameScene', {
 			camera.Ortho = 0;
 			camera.Up = [0, 1, 0];
 
-			camera.Orbit(ground.Target, scene.Yaw, scene.Pitch, scene.Distance);
+			/* Round a hero the eye comes down to the ground at its distance, and from there it only looks up. */
+			if (scene.Hero && focus && scene.Pitch < 0 && inside < 0.5)
+				lowest = Math.asin(Math.min(0.9, (ground.Target[1] - focus.World[1] - 0.15) / Math.max(0.1, away)));
 
-			floor = Math.max(0, field.Height(camera.Position[0], camera.Position[2])) + 1.5;
+			camera.Orbit(round, scene.Yaw, lowest === null ? scene.Pitch : Math.max(scene.Pitch, -lowest), away);
+
+			/* The floor under the eye comes by steps in a location: the eye goes up and down smoothly. */
+			floor = Math.max(0, field.Height(camera.Position[0], camera.Position[2], ground.Target[1])) + (scene.Hero ? 0.15 : 1.5);
+			scene.Floor = scene.Floor === undefined ? floor : scene.Floor + (floor - scene.Floor) * (1 - Math.exp(-elapsed * 5));
+			floor = Math.min(floor, scene.Floor);
 
 			if (camera.Position[1] < floor)
 				camera.Position[1] = floor;
+
+			/* Behind a hero a wall comes before the eye: it stays on the near side of it. */
+			if (scene.Hero && field.Blocked && !(focus && focus.Values.Vehicle))
+				camera.Position = clearView(field, round, camera.Position, elapsed);
+
+			/* From the ground a hero stays in the frame: the view rises only as far as it keeps the knees at its lower edge. */
+			if (lowest !== null) {
+				var flat = Math.max(0.3, Math.sqrt(Math.pow(focus.World[0] - camera.Position[0], 2) + Math.pow(focus.World[2] - camera.Position[2], 2)));
+				var rise = Math.atan2(focus.World[1] + focus.Size * 0.25 - camera.Position[1], flat) + camera.Fov * Math.PI / 360 * 0.9;
+
+				scene.Pitch = Math.max(scene.Pitch, -Math.max(lowest, rise));
+				look = Math.max(scene.Pitch, -rise);
+			}
+
+			/* Below the point it turns round the eye stops at the ground and looks up, as far as the sky. */
+			if (scene.Pitch < 0) {
+				var skyward = Math.min(1, -scene.Pitch / 0.22);
+				var towards = vectors.Normalize(vectors.Subtract(camera.Target, camera.Position));
+
+				/* From what it looks at to where it looks by degrees: where the eye stands raised the two are not the same way. */
+				camera.Target = vectors.Add(camera.Position, vectors.Lerp(towards, [-Math.sin(scene.Yaw) * Math.cos(look), -Math.sin(look), -Math.cos(scene.Yaw) * Math.cos(look)], skyward * skyward * (3 - 2 * skyward)));
+			}
+
+			/*
+			 * In its eyes: they go with its head, calmed, and turn round its neck as eyes do: to look down is to bring them forward
+			 * and down, so the view leaves the head and stays out of the body.
+			 */
+			var seat = inside > 0.001 && focus.Values.Vehicle ? engine.SeatView(focus, elapsed) : null;
+
+			if (seat) {
+				camera.Position = vectors.Lerp(camera.Position, seat.At, inside);
+				camera.Target = vectors.Lerp(camera.Target, vectors.Add(seat.At, vectors.Scale(seat.Ahead, 10)), inside);
+			}
+			else if (inside > 0.001) {
+				var ahead = [-Math.sin(scene.Yaw) * Math.cos(scene.Pitch), -Math.sin(scene.Pitch), -Math.cos(scene.Yaw) * Math.cos(scene.Pitch)];
+				var over = [-Math.sin(scene.Yaw) * Math.sin(scene.Pitch), Math.cos(scene.Pitch), -Math.cos(scene.Yaw) * Math.sin(scene.Pitch)];
+				var head = focus.Head || [0, focus.Size * 0.93, 0];
+
+				scene.HeadAt = scene.HeadAt ? vectors.Lerp(scene.HeadAt, head, 1 - Math.exp(-elapsed * 14)) : head;
+
+				var neck = vectors.Add([focus.World[0], ground.Target[1] - focus.Size * 0.8, focus.World[2]], scene.HeadAt);
+				var eyes = vectors.Add(neck, vectors.Add(vectors.Scale(ahead, focus.Size * 0.15), vectors.Scale(over, focus.Size * 0.07)));
+
+				scene.CutAt = vectors.Add(neck, [0, focus.Size * 0.05, 0]);
+				camera.Position = vectors.Lerp(camera.Position, eyes, inside);
+				camera.Target = vectors.Lerp(camera.Target, vectors.Add(eyes, vectors.Scale(ahead, 10)), inside);
+			}
 
 			scene.Eye = camera.Position.slice();
 			scene.Target = ground.Target.slice();
 			camera.Near = Math.max(0.05, scene.Distance * 0.01);
 			camera.Far = field.Size * 3 + scene.Distance * 4;
+		}
+
+		/* The last place on the way from what the eye follows to the eye that no wall stands on. */
+		function clearView (field, from, to, elapsed) {
+			var far = vectors.Distance(from, to);
+			var steps = Math.ceil(far / 0.3);
+			var free = far;
+			var i;
+
+			/* A wall at a part of the way: a ray along the ground is measured from the ground under it, which is no wall. */
+			function walled (part) {
+				var at = vectors.Lerp(from, to, part);
+
+				return field.Blocked(at[0], at[2], Math.max(at[1] - 1, field.Height(at[0], at[2], at[1] + 1) + 0.1));
+			}
+
+			for (i = 1; i <= steps; i++) {
+				if (walled(i / steps)) {
+					var near = (i - 1) / steps;
+					var past = i / steps;
+
+					/* Its face is found to a hair: steps of the ray would show as jumps of the eye along a wall. */
+					for (var halves = 0; halves < 5; halves++) {
+						if (walled((near + past) / 2)) past = (near + past) / 2;
+						else near = (near + past) / 2;
+					}
+
+					free = Math.max(0.6, near * far - 0.2);
+
+					break;
+				}
+			}
+
+			/* It comes in fast, and goes out slowly: no flicker on the edge of a wall. */
+			scene.Clear = scene.Clear === undefined ? free : scene.Clear + (free - scene.Clear) * (1 - Math.exp(-elapsed * (free < scene.Clear ? 30 : 2.5)));
+
+			return scene.Clear < far ? vectors.Lerp(from, to, scene.Clear / far) : to;
 		}
 
 		/* A ground in parallel rays: from above, or at the angle that makes a cell a rhombus of the given proportion. */
@@ -2745,7 +3714,133 @@ Elemenx.Component('GameScene', {
 			if (!gpu.Water)
 				gpu.Water = renderer.Mesh(graphics.Plane({Width: 1, Depth: 1, Segments: 1}));
 
-			renderer.Draw(gpu.Water, gpu.Sea, {uViewProjection: matrix, uModel: graphics.Compose(vectors.Subtract([0, 0, 0], scene.Eye), null, field.Size * 1.6), uSun: ground.Sun, uSunColor: ground.SunColor, uAir: [0.55, 0.72, 1, 0.95], uFog: fog, uSeen: seen ? seen.Color : gpu.NoBounce, uSeenDepth: seen ? seen.Depth : gpu.NoBounce, uMirror: seen ? 1 : 0, uEye: scene.Eye, uTime: scene.Seconds}, {Blend: 'alpha', DepthWrite: false, Cull: 'none'});
+			renderer.Draw(gpu.Water, gpu.Sea, {uViewProjection: matrix, uModel: graphics.Compose(vectors.Subtract([0, 0, 0], scene.Eye), null, field.Size * 1.6), uSun: ground.Sun, uSunColor: ground.SunColor, uAir: [0.55, 0.72, 1, 0.95], uFog: fog, uSeen: seen ? seen.Color : gpu.NoBounce, uSeenDepth: seen ? seen.Depth : gpu.NoBounce, uMirror: seen ? 1 : 0, uEye: scene.Eye, uTime: scene.Seconds, uDay: ground.Day * (1 - ground.Cover * ground.Cover * 0.5), uWild: 1 + ground.Air.Rain * 0.9}, {Blend: 'alpha', Cull: 'none'});
+		}
+
+		/* Where a light stands: over the ground at its place, or over what it follows. */
+		function lightPlace (object, settings) {
+			var follows = object.Values.Follow ? scene.Objects[object.Values.Follow] : null;
+			var x = number(object.Values.X, 0);
+			var z = number(object.Values.Y, 0);
+			var height = number(settings.Height, 2.5);
+
+			if (follows && follows.World)
+				return [follows.World[0] + x, follows.World[1] + height, follows.World[2] + z];
+
+			return [x, Math.max(0, scene.Ground.Field.Height(x, z, object.Values.Z === undefined ? undefined : number(object.Values.Z, 0))) + height, z];
+		}
+
+		/*
+		 * The shadows of the two nearest lamps: a wide view down from each, one of them made new each frame. All that casts a
+		 * shadow of the sun casts one of a lamp.
+		 */
+		var lampMaps = [];
+
+		function lampShadows () {
+			var which = scene.LampTurn = ((scene.LampTurn || 0) + 1) % 2;
+			var lamp = scene.Lamps[which];
+			var lit = self.Graphics().Lamps;
+
+			/* A lamp a body carries is inside its shape, as one built into a model is: it has no shadow of its own. */
+			if (lamp && (lamp.Built || lamp.Object.Values.Follow || lamp.Settings.Follow))
+				lamp = null;
+
+			var at;
+			var way;
+			var matrix;
+
+			lampMaps = lampMaps.slice(0, Math.min(lit ? 2 : 0, scene.Lamps.length));
+
+			if (!lit || !lamp || !scene.Casters) return;
+
+			at = vectors.Subtract(lamp.At, scene.Eye);
+			way = vectors.Normalize(lamp.Settings.Aim || [0, -1, 0]);
+			matrix = graphics.Multiply(graphics.Perspective(number(lamp.Settings.Spot, 0) || 150, 1, 0.1, number(lamp.Settings.Radius, 14) * 1.2), graphics.LookAt(at, vectors.Add(at, way), Math.abs(way[1]) > 0.9 ? [0, 0, 1] : [0, 1, 0]));
+
+			gpu.Lamps = gpu.Lamps || [renderer.Shadow(1024), renderer.Shadow(1024)];
+
+			gpu.Lamps[which].Begin();
+
+			scene.Casters(matrix);
+
+			gpu.Lamps[which].End();
+
+			lampMaps[which] = {Map: gpu.Lamps[which], Matrix: matrix};
+		}
+
+		/* The lights of a scene for the shaders: any number of them, the nearest two dozen at once. */
+		function localLights () {
+			var data = [];
+
+			var hero = scene.Objects[scene.Hero];
+			var from = hero && hero.World ? hero.World : scene.Eye;
+
+			/* Those nearest what the view follows, not the eye: to come closer does not change which lamps cast their shadows. */
+			scene.Lamps = scene.Order.filter(function (object) {
+				return trait(object, 'Light') && number(trait(object, 'Light').Power, 1) > 0;
+			}).map(function (object) {
+				var settings = trait(object, 'Light');
+				var at = lightPlace(object, settings);
+
+				return {Object: object, Settings: settings, At: at, Far: vectors.Distance(at, scene.Eye)};
+			}).concat(builtLamps()).concat(engine.EffectLamps()).map(function (lamp) {
+				lamp.Far = vectors.Distance(lamp.At, from);
+
+				return lamp;
+			}).sort(function (a, b) {
+				return a.Far - b.Far;
+			}).slice(0, 24);
+
+			if (scene.Ground)
+				lampShadows();
+
+			scene.Lamps.forEach(function (lamp, index) {
+				var settings = lamp.Settings;
+				var color = Array.isArray(settings.Color) ? settings.Color : paint(settings.Color);
+				var flicker = 1 + number(settings.Flicker, 0) * (Math.sin(scene.Seconds * 11 + (lamp.Object.Seed || 0) * 40) * 0.5 + Math.sin(scene.Seconds * 23 + (lamp.Object.Seed || 0) * 13) * 0.3);
+				var power = number(settings.Power, 1) * flicker * 6;
+				var at = vectors.Subtract(lamp.At, scene.Eye);
+				var spot = number(settings.Spot, 0);
+				var aim = vectors.Normalize(settings.Aim || [0, -1, 0]);
+
+				lamp.Color = color.slice(0, 3);
+
+				data.push(at[0], at[1], at[2], number(settings.Radius, 14), color[0] * power, color[1] * power, color[2] * power, index < 2 && lampMaps[index] ? 1 : 0, aim[0], aim[1], aim[2], spot ? Math.cos(spot * Math.PI / 360) : -2);
+			});
+
+			while (data.length < 288)
+				data.push(0);
+
+			return {uLocal: data, uLocalCount: scene.Lamps.length, uLampShadow0: lampMaps[0] ? lampMaps[0].Map : gpu.NoShadow, uLampShadow1: lampMaps[1] ? lampMaps[1].Map : gpu.NoShadow, uLampMatrix0: lampMaps[0] ? lampMaps[0].Matrix : graphics.Identity(), uLampMatrix1: lampMaps[1] ? lampMaps[1].Matrix : graphics.Identity()};
+		}
+
+		/* The lamps of the models in the scene, where their objects stand: Lights false on an object leaves them out. */
+		function builtLamps () {
+			var lamps = [];
+
+			scene.Order.forEach(function (object) {
+				var settings = trait(object, 'Model');
+				var made;
+
+				if (!settings || object.Values.Lights === false || object.Values.Lights === 'false') return;
+
+				made = modelOf(object, settings);
+
+				if (!made || !made.Lamps || !made.Lamps.length) return;
+
+				var scale = object.Scaled || vectors.Scale(settings.Scale || [1, 1, 1], object.Size || 1);
+				var base = graphics.Multiply(object.Turn || graphics.Identity(), graphics.Scaling(scale[0], scale[1], scale[2]));
+				var world = object.World || [0, 0, 0];
+				var grown = Math.max(scale[0], scale[1], scale[2]);
+
+				made.Lamps.forEach(function (lamp) {
+					var at = vectors.Add(world, graphics.Apply(base, lamp.Place));
+
+					lamps.push({Object: object, Built: true, At: at, Far: vectors.Distance(at, scene.Eye), Settings: {Color: lamp.Color, Power: lamp.Power, Radius: lamp.Radius * grown, Spot: lamp.Spot, Aim: lamp.Aim}});
+				});
+			});
+
+			return lamps;
 		}
 
 		/* The sky, the ground and its water, under the things that stand on it. */
@@ -2755,11 +3850,22 @@ Elemenx.Component('GameScene', {
 			var air = [0.55, 0.72, 1, 0.95];
 			var fog = scene.Camera.Ortho || self.Graphics().Post ? 1e9 : field.Size * 0.9;
 
+			/* The stars first: the air, its sun and its moon come over them. */
+			if (!scene.Camera.Ortho && ground.StarLimit < 1) {
+				engine.CosmosNight(matrix, ground, ground.StarTurn, ground.GalaxyLight);
+
+				var aspect = renderer.Width / Math.max(1, renderer.Height);
+
+				gpu.NightStars = gpu.NightStars || nightStars();
+
+				renderer.Draw(gpu.NightStars, gpu.StarsTurned, {uViewProjection: graphics.Multiply(graphics.Perspective(scene.Camera.Fov, aspect, 0.1, 200), graphics.LookAt([0, 0, 0], vectors.Subtract(scene.Camera.Target, scene.Camera.Position), scene.Camera.Up)), uRatio: renderer.Ratio, uTurn: ground.StarTurn, uLimit: ground.StarLimit, uTime: scene.Seconds}, {Depth: false, DepthWrite: false, Blend: 'add'});
+			}
+
 			if (!scene.Camera.Ortho)
-				renderer.Draw(gpu.Quad, gpu.Sky, {uInverse: graphics.Invert(matrix), uSun: ground.Sun, uSunColor: ground.SunColor, uAir: air, uUp: [0, 1, 0], uHigh: 0}, {Depth: false, DepthWrite: false, Blend: 'alpha', Cull: 'none'});
+				renderer.Draw(gpu.Quad, gpu.Sky, {uInverse: graphics.Invert(matrix), uSun: ground.Sky, uSunColor: ground.SunColor, uAir: air, uUp: [0, 1, 0], uHigh: 0, uCover: ground.Shut, uEclipse: ground.Eclipse, uRainbow: ground.Air.Rainbow || 0, uMoonShade: ground.Moon ? ground.Moon.Shade : 0, uGlow: ground.Glow, uGlowWay: ground.GlowWay, uMoon: ground.Moon ? ground.Moon.Way : [0, 1, 0], uMoonLit: ground.Moon ? ground.Moon.Lit : [0, 1, 0], uMoonSize: ground.Moon ? ground.Moon.Size : 0, uMoonGlow: ground.Moon ? Math.min(1, ground.Moon.Glow) * Math.max(0, Math.min(1, ground.Moon.Way[1] / 0.15)) : 0}, {Depth: false, DepthWrite: false, Blend: 'alpha', Cull: 'none'});
 
 			nodes.forEach(function (node) {
-				renderer.Draw(node.Mesh, gpu.Land, Object.assign({uViewProjection: matrix, uOffset: vectors.Subtract(node.Center, scene.Eye), uCenter: node.Center, uSun: ground.Sun, uSunColor: ground.SunColor, uAir: air, uFog: fog, uSkyLight: [0.3, 0.36, 0.46], uFloorLight: [0.1, 0.1, 0.09]}, shade), {Cull: 'back'});
+				renderer.Draw(node.Mesh, gpu.Land, Object.assign({uViewProjection: matrix, uOffset: vectors.Subtract(node.Center, scene.Eye), uCenter: node.Center, uSun: ground.Sun, uSunColor: ground.SunColor, uAir: air, uFog: fog, uSkyLight: ground.SkyLight, uFloorLight: ground.FloorLight, uWet: ground.Air.Wet, uSnowed: ground.Air.Cover || 0}, shade), {Cull: 'back'});
 			});
 
 			Object.keys(ground.Nodes).forEach(function (key) {
@@ -3098,6 +4204,19 @@ Elemenx.Component('GameScene', {
 			});
 		}
 
+		/* The clouds of a body, as low over its ground as they are from space: a layer of kilometres, in the axes of the eye. */
+		function surfaceClouds (surface, object, sun, sunColor) {
+			var axes = surface.Axes;
+			var cover = Number(object.Look.Clouds) || 0;
+			var day = Math.max(0, Math.min(1, vectors.Dot(sun, axes.Up) * 3 + 0.2));
+
+			if (!cover || !object.Look.Atmosphere[3]) return null;
+
+			self.Weather = cover > 0.7 ? 'overcast' : cover > 0.3 ? 'cloudy' : 'clear';
+
+			return {Turn: [axes.East[0], axes.Up[0], axes.North[0], axes.East[1], axes.Up[1], axes.North[1], axes.East[2], axes.Up[2], axes.North[2]], From: [surface.Eye[0] * 0, surface.Altitude, 0], Sun: [vectors.Dot(sun, axes.East), vectors.Dot(sun, axes.Up), vectors.Dot(sun, axes.North)], SunLight: [sunColor[0] * 2 * day, sunColor[1] * 2 * day, sunColor[2] * 2 * day], SkyTone: [0.34 * day + 0.01, 0.4 * day + 0.012, 0.5 * day + 0.02], Under: [0, 0, 0], Layer: [3, 9, 0.25], Over: true};
+		}
+
 		function drawSurface () {
 			var surface = scene.Surface;
 			var object = scene.Objects[surface.ID];
@@ -3135,9 +4254,13 @@ Elemenx.Component('GameScene', {
 				});
 			}
 
+			engine.CosmosBake();
+
 			posted = engine.PostBegin();
 
 			renderer.Clear([0, 0, 0, 1]);
+
+			engine.CosmosDraw(matrix, matrix);
 
 			if (self.Background && self.Background !== 'false')
 				renderer.Draw(gpu.Stars, gpu.Far, {uViewProjection: graphics.Multiply(graphics.Perspective(scene.Camera.Fov, aspect, 0.1, 200), view), uRatio: renderer.Ratio}, {Depth: false, DepthWrite: false, Blend: 'add'});
@@ -3163,7 +4286,7 @@ Elemenx.Component('GameScene', {
 			});
 
 			if (posted)
-				engine.PostEnd({Matrix: matrix, Sun: sun, SunColor: sunColor, Sky: false, Heat: surface.Heat});
+				engine.PostEnd({Matrix: matrix, Sun: sun, SunColor: sunColor, Sky: false, Heat: surface.Heat, Clouds: surfaceClouds(surface, object, sun, sunColor)});
 
 			forget();
 		}
@@ -3175,12 +4298,19 @@ Elemenx.Component('GameScene', {
 
 			scene.Last = now;
 
+			if (self.Axes && Math.abs(scene.Yaw - self.ViewYaw) + Math.abs(scene.Pitch - self.ViewPitch) > 0.004) {
+				self.ViewYaw = scene.Yaw;
+				self.ViewPitch = scene.Pitch;
+			}
+
 			/* On a surface the days go at their own speed (a day of two minutes by default), not at the one of the orbits. */
 			if (!self.Paused)
 				scene.Time += spent * (scene.Surface ? number(self.SurfaceSpeed, 1 / 120) : number(self.Speed, 1));
 
 			if (!self.Paused)
 				scene.Seconds += spent;
+
+			engine.WeatherStep(spent);
 
 			groundOf();
 
@@ -3446,6 +4576,36 @@ Elemenx.Component('GameScene', {
 		engine.Local = localPoint;
 		engine.Select = select;
 		engine.FocusOn = focusOn;
+
+		/* No renderer, no Lighting: a browser out of contexts still runs the frames of the scene, under a calm sky. */
+		engine.WeatherStep = function () {};
+
+		engine.WeatherNow = function () {
+			return {Clouds: 0, Fog: 0, Rain: 0, Snow: 0, Wet: 0, Storm: 0, Flash: 0};
+		};
+
+		/* The keys walk this object and the view goes after it, close; none gives the view back. */
+		engine.Control = function (id) {
+			var object = id ? scene.Objects[id] : null;
+			var same = !!object && scene.Hero === object.ID;
+			var wanted = scene.Wanted;
+
+			scene.Hero = object ? object.ID : '';
+
+			if (object)
+				focusOn(object.ID, true);
+
+			/* Another body under the same name keeps the view as it is. */
+			if (same) {
+				scene.Wanted = wanted;
+			}
+			else if (object) {
+				scene.Wanted = Math.max(2.5, object.Size * 3.2);
+				scene.Pitch = 0.2;
+			}
+
+			return !!object || !id;
+		};
 		engine.Canonical = canonical;
 		engine.Describe = describe;
 		engine.Renderer = renderer;
@@ -3532,7 +4692,7 @@ Elemenx.Component('GameScene', {
 				return true;
 			}
 
-			object.Clip = {Name: name, Start: scene.Seconds, Rate: 1, From: state ? state.Name : '', FromTime: state ? (scene.Seconds - state.Start) * state.Rate : 0, Once: true, Callback: callback || null};
+			object.Clip = {Name: name, Start: scene.Seconds, Rate: 1, From: state ? state.Name : '', FromTime: state ? (state.At || 0) + (state.Phase || 0) : 0, FromRate: state ? state.Rate : 0, Once: true, Callback: callback || null};
 
 			return true;
 		};
@@ -3594,11 +4754,15 @@ Elemenx.Component('GameScene', {
 			scene.Sight.observe(element);
 		}
 
-		scene.Loop = this.$Service('GameLoop').Create({Window: view, Render: function () {
-			var now = view.performance ? view.performance.now() : Date.now();
+		scene.Loop = this.$Service('GameLoop').Create({Window: view, Render: function (part, loop) {
+			var started = view.performance ? view.performance.now() : Date.now();
 			var ended;
 
-			if (!scene.Seen || now < scene.Rest) {
+			/* The time of the frame the screen shows, not of when its turn came: an uneven turn would shake all that moves. */
+			var now = loop.Now === null ? started : loop.Now;
+
+			/* What a person steers skips no frame: a gap in the picture reads as a shake of the view. */
+			if (!scene.Seen || started < scene.Rest && !scene.Hero) {
 				frame(now, true);
 
 				return;
@@ -3607,7 +4771,7 @@ Elemenx.Component('GameScene', {
 			frame(now);
 
 			ended = view.performance ? view.performance.now() : Date.now();
-			scene.Rest = ended - now > 24 ? ended + Math.min(1000, ended - now) : 0;
+			scene.Rest = ended - started > 24 ? ended + Math.min(1000, ended - started) : 0;
 		}});
 
 		scene.Loop.Start();
@@ -3620,6 +4784,9 @@ Elemenx.Component('GameScene', {
 		if (renderer) {
 			this.ScatterStart();
 			this.LightingStart();
+			this.EffectsStart();
+			this.CosmosStart();
+			this.VehiclesStart();
 		}
 
 		window.setTimeout(function () {
@@ -3633,6 +4800,8 @@ Elemenx.Component('GameScene', {
 	},
 
 	$OnDestroy: function () {
+		document.removeEventListener('pointerlockchange', this.LockChanged);
+
 		var scene = this.Scene ? this.Scene() : null;
 		var renderer = this.Engine ? this.Engine().Renderer : null;
 
@@ -3653,9 +4822,30 @@ Elemenx.Component('GameScene', {
 			renderer.Destroy();
 	},
 
-	/* Pointers: a drag turns the view, two fingers zoom, a press selects. */
-	PointerDown: function (event) {
+	/* A press on an axis looks along it, at the middle of the view. */
+	AxisChosen: function (event) {
 		var scene = this.Scene();
+		var yaw = {X: Math.PI / 2, Z: 0}[event.Axis];
+
+		if (yaw === undefined) {
+			scene.Pitch = event.Sign * 1.5;
+
+			return;
+		}
+
+		scene.Pitch = 0;
+		scene.Yaw = event.Sign > 0 ? yaw : yaw + Math.PI;
+	},
+
+	/* Pointers: a drag turns the view, two fingers zoom, a press selects. */
+	Captured: function () {
+		return !!document.pointerLockElement && this.$Element().contains(document.pointerLockElement);
+	},
+
+	PointerDown: function (event) {
+		var self = this;
+		var scene = this.Scene();
+		var held = null;
 		var point = this.Engine().Local(event);
 		var pointers = scene.Pointers;
 		var ids;
@@ -3664,8 +4854,15 @@ Elemenx.Component('GameScene', {
 
 		this.$Element().focus({preventScroll: true});
 
-		if (event.target.setPointerCapture)
+		if (event.target.setPointerCapture && !document.pointerLockElement)
 			event.target.setPointerCapture(event.pointerId);
+
+		/* With a hero the first press takes the pointer: the mouse then turns the view by itself, Escape gives it back. */
+		if (scene.Hero && self.Capture !== false && self.Capture !== 'false' && event.button === 0 && !this.Captured() && event.target.requestPointerLock)
+			held = event.target.requestPointerLock();
+
+		if (held && held.catch)
+			held.catch(function () {});
 
 		pointers[event.pointerId] = point;
 		ids = Object.keys(pointers);
@@ -3677,7 +4874,7 @@ Elemenx.Component('GameScene', {
 			return;
 		}
 
-		scene.Drag = {X: point.X, Y: point.Y, LastX: point.X, LastY: point.Y, Yaw: scene.Surface ? scene.Surface.Yaw : scene.Yaw, Pitch: scene.Surface ? scene.Surface.Pitch : scene.Pitch, Moved: false, Button: event.button, Pan: event.button === 1 || event.shiftKey};
+		scene.Drag = {X: point.X, Y: point.Y, LastX: point.X, LastY: point.Y, Yaw: scene.Surface ? scene.Surface.Yaw : scene.Yaw, Pitch: scene.Surface ? scene.Surface.Pitch : scene.Pitch, Moved: false, Button: event.button, Pan: !scene.Hero && (event.button === 1 || event.shiftKey)};
 	},
 
 	PointerMove: function (event) {
@@ -3690,6 +4887,28 @@ Elemenx.Component('GameScene', {
 
 		if (pointers[event.pointerId])
 			pointers[event.pointerId] = point;
+
+		if (this.Captured()) {
+			var driven = scene.Objects[scene.Hero];
+
+			/* From the seat of a car the mouse is still, but with the right button down it turns the head. */
+			scene.LookHeld = !!(event.buttons & 2);
+
+			if (driven && driven.Values.Vehicle && driven.Values.Vehicle.Kind === 'car' && this.Person === 'first' && !scene.LookHeld) return;
+
+			/* A browser reports a leap when the pointer is taken or given back: no hand moves so far in one event, or so suddenly. */
+			var far = Math.max(Math.abs(event.movementX || 0), Math.abs(event.movementY || 0));
+			var moment = performance.now();
+			if (far > 400 || moment - (scene.LockAt || 0) < 80 || far > 120 && far > (scene.Flow || 0) * 5) return;
+
+			scene.Looked = moment;
+			scene.Flow = (scene.Flow || 0) * 0.8 + far * 0.2;
+			scene.Looks = (scene.Looks || []).slice(-30).concat([{At: moment, Yaw: scene.Yaw, Pitch: scene.Pitch}]);
+			scene.Yaw -= (event.movementX || 0) * 0.0035;
+			scene.Pitch = Math.max(-1.3, Math.min(1.5, scene.Pitch + (event.movementY || 0) * 0.0035));
+
+			return;
+		}
 
 		ids = Object.keys(pointers);
 
@@ -3734,6 +4953,7 @@ Elemenx.Component('GameScene', {
 			return;
 		}
 
+		scene.Looked = performance.now();
 		scene.Yaw = drag.Yaw - (point.X - drag.X) * 0.006;
 		scene.Pitch = Math.max(-1.5, Math.min(1.5, drag.Pitch + (point.Y - drag.Y) * 0.006));
 	},
@@ -3742,6 +4962,8 @@ Elemenx.Component('GameScene', {
 		var scene = this.Scene();
 		var drag = scene.Drag;
 		var point = this.Engine().Local(event);
+
+		scene.LookHeld = false;
 
 		delete scene.Pointers[event.pointerId];
 
@@ -3754,6 +4976,8 @@ Elemenx.Component('GameScene', {
 
 		scene.Drag = null;
 		this.Dragging = false;
+
+		if (scene.Hero) return;
 
 		if (drag && !drag.Moved && !scene.Surface && drag.Button === 2 && scene.Ground) this.OrderAt(point);
 		else if (drag && !drag.Moved && !scene.Surface) this.Engine().Select(this.Engine().Pick(point.X, point.Y));
@@ -3827,7 +5051,7 @@ Elemenx.Component('GameScene', {
 		var engine = this.Engine();
 		var point = engine.Local(event);
 		var id = engine.Pick(point.X, point.Y);
-		if (id)
+		if (id && !this.Scene().Hero)
 			this.FocusOn(id);
 	},
 
@@ -3839,7 +5063,7 @@ Elemenx.Component('GameScene', {
 
 	LabelDouble: function (event) {
 		var button = event.target.closest ? event.target.closest('[data-id]') : null;
-		if (button)
+		if (button && !this.Scene().Hero)
 			this.FocusOn(button.getAttribute('data-id'));
 	},
 
@@ -3852,14 +5076,28 @@ Elemenx.Component('GameScene', {
 
 		var scene = this.Scene();
 
-		/* Over a map: the keys move the view (the arrows, WASD), + and - zoom, Escape lets the object in focus go. */
+		/* With the pointer taken V goes from one place of the view of a walker to the next. */
+		if (event.code === 'KeyV' && scene.Hero && this.Captured() && !event.repeat) {
+			this.Person = {third: 'first', first: 'shoulder', shoulder: 'third'}[this.Person] || 'third';
+
+			this.$Emit('person', this.Person);
+		}
+
+		/* And B from one shoulder to the other. */
+		if (event.code === 'KeyB' && scene.Hero && this.Captured() && !event.repeat) {
+			this.Shoulder = this.Shoulder === 'left' ? 'right' : 'left';
+
+			this.$Emit('shoulder', this.Shoulder);
+		}
+
+		/* Over a map: the keys move the view (the arrows, WASD), + and - zoom, Escape lets the object in focus go, but a hero: for it the key only gives the pointer back. */
 		if (scene.Ground && !scene.Surface) {
 			if (event.key === '+' || event.key === '=') this.ZoomTo(scene.Wanted / 1.25);
 			else if (event.key === '-' || event.key === '_') this.ZoomTo(scene.Wanted * 1.25);
-			else if (event.key === 'Escape') this.FocusOn('');
-			else scene.Ground.Keys[event.code] = true;
+			else if (event.key === 'Escape' && !scene.Hero) this.FocusOn('');
+			else if (event.key !== 'Escape') scene.Ground.Keys[event.code] = true;
 
-			if (/^(Arrow|Key[WASDQERF])/.test(event.code))
+			if (/^(Arrow|Key[WASDQERF]|Space|Alt)/.test(event.code))
 				event.preventDefault();
 
 			return;
@@ -3882,7 +5120,10 @@ Elemenx.Component('GameScene', {
 
 		if (event.target !== this.$Element() && event.key !== 'Escape') return;
 
-		if (/^Key[WASDQERF]$/.test(event.code)) {
+		if (scene.Hero && /^Shift/.test(event.code))
+			scene.Keys[event.code] = true;
+
+		if (/^Key[WASDQERF]$/.test(event.code) || scene.Hero && /^(Arrow|Space|KeyC|KeyX)/.test(event.code)) {
 			scene.Keys[event.code] = true;
 
 			event.preventDefault();
@@ -3898,7 +5139,7 @@ Elemenx.Component('GameScene', {
 		else if (event.key === '-' || event.key === '_') this.ZoomTo(scene.Wanted * 1.25);
 		else if (event.key === 'Enter' && scene.Selected) this.FocusOn(scene.Selected);
 		else if (event.key === ' ') this.Paused = !this.Paused;
-		else if (event.key === 'Escape' && focus) this.FocusOn(parent && (parent.Owner || parent.Parent) ? parent.ID : '');
+		else if (event.key === 'Escape' && focus && !scene.Hero) this.FocusOn(parent && (parent.Owner || parent.Parent) ? parent.ID : '');
 		else handled = false;
 
 		if (handled)
@@ -3992,7 +5233,9 @@ Elemenx.Component('GameScene', {
 				values[key] = spec[key];
 		});
 
+		/* What comes anew starts from what it is told, not from where its namesake walked to. */
 		delete scene.Removed[spec.ID];
+		delete scene.Overrides[spec.ID];
 
 		/* Each field to its trait, as in a declaration: Size of a unit is the size of its Model. */
 		made = this.Engine().Canonical(Object.assign({}, values, {Kind: spec.Kind}), null, true);
@@ -4176,6 +5419,10 @@ Elemenx.Component('GameScene', {
 		return selected ? [selected] : [];
 	},
 
+	Control: function (id) {
+		return this.Engine().Control(id);
+	},
+
 	FocusOn: function (id) {
 		return this.Engine().FocusOn(id || '');
 	},
@@ -4302,6 +5549,30 @@ Elemenx.Component('GameScene', {
 	Shaders: function (graphics) {
 		var head = '#version 300 es\nprecision highp float;\n';
 
+		/* The slope of water at a point: waves with sharp crests that each bend the next, so lines run together and part, as on water. */
+		var waves = [
+			'vec2 wavesAt(vec2 p, float t, int count) {',
+			'	float frequency = 1.0;',
+			'	float weight = 1.0;',
+			'	float turn = 0.0;',
+			'	float total = 0.0;',
+			'	vec2 sum = vec2(0.0);',
+			'	for (int i = 0; i < count; i++) {',
+			'		vec2 d = vec2(sin(turn), cos(turn));',
+			'		float x = dot(d, p) * frequency + t * (1.0 + float(i) * 0.09);',
+			'		float crest = exp(sin(x) - 1.0);',
+			'		vec2 g = d * crest * cos(x);',
+			'		sum += g * weight;',
+			'		total += weight;',
+			'		p -= g * weight * 0.42;',
+			'		weight *= 0.82;',
+			'		frequency *= 1.18;',
+			'		turn += 1232.4;',
+			'	}',
+			'	return sum / total;',
+			'}'
+		].join('\n');
+
 		return {
 			Lit: head + [
 				'in vec3 aPosition;',
@@ -4391,12 +5662,29 @@ Elemenx.Component('GameScene', {
 				'	vec4 c = texelFetch(uPalette, at + ivec2(2, 0), 0);',
 				'	return mat4(a.x, b.x, c.x, 0.0, a.y, b.y, c.y, 0.0, a.z, b.z, c.z, 0.0, a.w, b.w, c.w, 1.0);',
 				'}',
-				'mat4 skin(float frame) {',
-				'	return joint(aJoints.x, frame) * aWeights.x + joint(aJoints.y, frame) * aWeights.y + joint(aJoints.z, frame) * aWeights.z + joint(aJoints.w, frame) * aWeights.w;',
+				/*
+				 * A joint at this moment. Two poses mixed as matrices shrink what they turn (half of a right angle leaves 0.7 of a limb):
+				 * a fade between clips makes it a turn again, of the size it had, round the place where the joint comes to.
+				 */
+				'mat4 posed(float index) {',
+				'	mat4 m = joint(index, aFrames.x);',
+				'	if (aFrames.w > 0.001) m = m * (1.0 - aFrames.w) + joint(index, aFrames.x + 1.0) * aFrames.w;',
+				'	if (aFrames.z <= 0.001) return m;',
+				'	float size = length(joint(index, aFrames.x)[0].xyz);',
+				'	m = m * (1.0 - aFrames.z) + joint(index, aFrames.y) * aFrames.z;',
+				'	vec3 bound = texelFetch(uPalette, ivec2((int(index + 0.5) + int(uJointOffset)) * 3, textureSize(uPalette, 0).y - 1), 0).xyz;',
+				'	vec3 pivot = (m * vec4(bound, 1.0)).xyz;',
+				'	vec3 x = m[0].xyz;',
+				'	vec3 y = m[1].xyz;',
+				'	float off = dot(x, y) / max(dot(x, x), 1e-12) * 0.5;',
+				'	vec3 side = normalize(x - y * off);',
+				'	vec3 up = normalize(y - x * off);',
+				'	vec3 ahead = normalize(cross(side, up));',
+				'	mat3 turn = mat3(side, up, sign(dot(ahead, m[2].xyz)) * ahead) * size;',
+				'	return mat4(vec4(turn[0], 0.0), vec4(turn[1], 0.0), vec4(turn[2], 0.0), vec4(pivot - turn * bound, 1.0));',
 				'}',
 				'void main() {',
-				'	mat4 moved = skin(aFrames.x);',
-				'	if (aFrames.z > 0.001) moved = moved * (1.0 - aFrames.z) + skin(aFrames.y) * aFrames.z;',
+				'	mat4 moved = posed(aJoints.x) * aWeights.x + posed(aJoints.y) * aWeights.y + posed(aJoints.z) * aWeights.z + posed(aJoints.w) * aWeights.w;',
 				'	mat3 basis = mat3(aInstance2.xyz, aInstance3.xyz, aInstance4.xyz);',
 				'	vec3 world = aInstance.xyz + uOrigin + basis * (moved * vec4(aPosition, 1.0)).xyz;',
 				'	vWorld = world;',
@@ -4420,6 +5708,29 @@ Elemenx.Component('GameScene', {
 				'uniform float uMetallic;',
 				'uniform float uRoughness;',
 				'uniform vec3 uEmissive;',
+				'uniform float uClearcoat;',
+				'uniform float uWet;',
+				'uniform float uSnowed;',
+				'uniform float uRainDrops;',
+				'uniform float uWind;',
+				'uniform vec3 uEyeAt;',
+				'uniform float uTime2;',
+				/* The rings of the drops on standing water: each cell of the surface has its drop, at a moment of its own. */
+				'float rings(vec2 p, float t) {',
+				'	vec2 cell = floor(p);',
+				'	float sum = 0.0;',
+				'	for (int x = -1; x <= 1; x++) {',
+				'		for (int y = -1; y <= 1; y++) {',
+				'			vec2 at = cell + vec2(float(x), float(y));',
+				'			float seed = fract(sin(dot(at, vec2(127.1, 311.7))) * 43758.5453);',
+				'			float age = fract(t * (0.8 + seed * 0.6) + seed * 7.0);',
+				'			float far = length(p - at - vec2(0.5 + (seed - 0.5) * 0.7, 0.5 + (fract(seed * 13.0) - 0.5) * 0.7));',
+				'			sum += sin((far - age * 1.1) * 34.0) * smoothstep(0.14, 0.0, abs(far - age * 1.1)) * (1.0 - age) * (1.0 - age);',
+				'		}',
+				'	}',
+				'	return sum;',
+				'}',
+				'uniform float uCoatRough;',
 				'uniform float uCutoff;',
 				'uniform float uUnlit;',
 				'uniform float uNormalScale;',
@@ -4429,6 +5740,8 @@ Elemenx.Component('GameScene', {
 				'uniform float uSpecularOn;',
 				'uniform float uSoftness;',
 				'uniform float uMoving;',
+				'uniform float uGlass;',
+				'uniform vec4 uCut;',
 				'uniform sampler2D uSpecularMap;',
 				'uniform sampler2D uColorMap;',
 				'uniform sampler2D uNormalMap;',
@@ -4437,6 +5750,7 @@ Elemenx.Component('GameScene', {
 				'uniform sampler2D uEmissiveMap;',
 				'out vec4 outColor;',
 				graphics.Chunks.Lights,
+				graphics.Chunks.Noise,
 				graphics.Chunks.Shadow,
 				'vec3 bump(vec3 n, vec3 v) {',
 				'	vec3 m = texture(uNormalMap, vUV).xyz * 2.0 - 1.0;',
@@ -4463,6 +5777,7 @@ Elemenx.Component('GameScene', {
 				'	return nv / (nv * (1.0 - k) + k) * nl / (nl * (1.0 - k) + k);',
 				'}',
 				'void main() {',
+				'	if (uCut.w > 0.0 && distance(vWorld, uCut.xyz) < uCut.w) discard;',
 				'	vec4 base = uBaseColor * texture(uColorMap, vUV);',
 				'	if (base.a < uCutoff) discard;',
 				'	vec3 albedo = base.rgb * vTint;',
@@ -4472,17 +5787,36 @@ Elemenx.Component('GameScene', {
 				'	}',
 				'	vec3 v = normalize(uCamera - vWorld);',
 				'	vec3 n = normalize(vNormal);',
-				'	if (!gl_FrontFacing) n = -n;',
+				/* The side that shows is the one that faces the eye: exports wind their triangles either way. A normal that only just looks away is smoothed over an edge, and stays. */
+				'	if (dot(n, v) < -0.3) n = -n;',
 				'	if (uNormalScale > 0.0) n = bump(n, v);',
 				'	vec4 surface = texture(uMetalMap, vUV);',
-				'	float roughness = clamp(uRoughness * surface.g, 0.04, 1.0);',
+				/* Water stands where a surface lies flat, and rain makes rings on it; snow lies on what looks up. */
+				'	float flat2 = smoothstep(0.86, 0.97, n.y) * step(0.99, base.a);',
+				'	float pool = uWet * flat2 * smoothstep(0.5, 0.64, noise3((vWorld + uEyeAt) * vec3(0.13, 0.0, 0.13)) + noise3((vWorld + uEyeAt) * vec3(0.6, 0.0, 0.6)) * 0.08);',
+				'	if (pool > 0.02 && uRainDrops > 0.0 && dot(vWorld, vWorld) < 1600.0) {',
+				'		vec2 ring = (vWorld.xz + uEyeAt.xz) * 1.7;',
+				'		float h0 = rings(ring, uTime2);',
+				'		n = normalize(n + vec3(rings(ring + vec2(0.03, 0.0), uTime2) - h0, 0.0, rings(ring + vec2(0.0, 0.03), uTime2) - h0) * 1.1 * uRainDrops * pool);',
+				'	}',
+				'	float roughness = clamp(mix(uRoughness * surface.g * (1.0 - uWet * 0.45), 0.06, pool), 0.04, 1.0);',
+				/* Where the normal turns within a pixel a sharp highlight falls between pixels and flickers as things move: the surface is taken rougher by as much. */
+				'	vec3 stepX = dFdx(n);',
+				'	vec3 stepY = dFdy(n);',
+				'	float spread = min(0.25, (dot(stepX, stepX) + dot(stepY, stepY)) * 1.5);',
+				'	roughness = sqrt(min(1.0, roughness * roughness + spread));',
+				/* Wet things lose their color first: water darkens them and takes the dust off the light. */
+				'	albedo *= 1.0 - uWet * 0.38 - pool * 0.3;',
+				'	float laid = uSnowed * smoothstep(0.3, 0.75, n.y + (noise3((vWorld + uEyeAt) * 0.23) + noise3((vWorld + uEyeAt) * 0.9) * 0.5 - 0.75) * 0.3);',
+				'	albedo = mix(albedo, vec3(0.86, 0.9, 0.95) * (0.72 + dot(albedo, vec3(0.5))), laid);',
+				'	roughness = mix(roughness, 0.7, laid);',
 				'	float metallic = clamp(uMetallic * surface.b, 0.0, 1.0);',
 				'	float a = roughness * roughness;',
 				'	float level = uSpecularLevel * (uSpecularOn > 0.5 ? texture(uSpecularMap, vUV).a : 1.0);',
 				'	vec3 f0 = mix(min(vec3(0.04) * uSpecularColor, vec3(1.0)) * level, albedo, metallic);',
 				'	vec3 total = vec3(0.0);',
 				'	float nv = max(dot(n, v), 0.001);',
-				'	lightShade = sunShadow(vWorld, n);',
+				'	lightShade = sunLit(vWorld, n);',
 				'	for (int i = 0; i < 4; i++) {',
 				'		if (i >= uLightCount) break;',
 				'		vec3 l = normalize(uLightPositions[i] - vWorld);',
@@ -4497,8 +5831,12 @@ Elemenx.Component('GameScene', {
 				'		vec3 f = f0 + (1.0 - f0) * pow(1.0 - max(dot(h, v), 0.0), 5.0);',
 				'		vec3 specular = f * ggx(max(dot(n, h), 0.0), a) * smith(nv, nl, a) / max(4.0 * nv * nl, 0.001);',
 				'		vec3 diffuse = (1.0 - f) * (1.0 - metallic) * albedo / 3.14159265;',
-				'		total += (diffuse + specular) * uLightColors[i] * 3.14159265 * nl * shadow(vWorld, uLightPositions[i]) * (i == 0 ? lightShade : 1.0);',
+				/* A coat of lacquer over the surface: a second, clear gloss. */
+				'		float coatA = max(uCoatRough * uCoatRough, max(0.002, sqrt(spread)));',
+				'		float coat = uClearcoat * (0.04 + 0.96 * pow(1.0 - max(dot(h, v), 0.0), 5.0)) * ggx(max(dot(n, h), 0.0), coatA) * smith(nv, nl, coatA) / max(4.0 * nv * nl, 0.001);',
+				'		total += ((diffuse + specular) * (1.0 - uClearcoat * 0.04) + vec3(coat)) * uLightColors[i] * 3.14159265 * nl * shadow(vWorld, uLightPositions[i]) * (i == 0 ? lightShade : 1.0);',
 				'	}',
+				'	total += albedo * (1.0 - metallic) * localLight(vWorld, n);',
 				'	float occlusion = mix(1.0, texture(uOcclusionMap, vUV).r, uOcclusion);',
 				'	vec3 reflected = reflect(-v, n);',
 				'	vec3 around = mix(uFloorLight, uSkyLight, n.y * 0.5 + 0.5) * skySeen(vWorld) + sunBounce(vWorld);',
@@ -4506,7 +5844,17 @@ Elemenx.Component('GameScene', {
 				'	vec3 fresnel = f0 + (max(vec3(1.0 - roughness), f0) - f0) * pow(1.0 - nv, 5.0);',
 				'	total += (albedo * (1.0 - metallic) * around + fresnel * mirrored) * occlusion;',
 				'	total += uEmissive * texture(uEmissiveMap, vUV).rgb;',
-				'	outColor = vec4(pow(total, vec3(1.0 / 2.2)), uMoving > 0.5 ? 0.0 : base.a);',
+				/* Glass lets through what lies behind it, a little darker, and shows the sky the more the flatter it is seen. */
+				'	if (uGlass > 0.0) {',
+				'		float edge = 0.04 + 0.96 * pow(1.0 - nv, 5.0);',
+				'		vec3 shine = total + mirrored * 1.3 * edge;',
+				'		float cover = clamp(base.a * (1.0 - uGlass * 0.72) + edge * 0.35 + dot(total, vec3(0.3)), 0.02, 0.8);',
+				'		outColor = vec4(pow(min(shine / cover, vec3(8.0)), vec3(1.0 / 2.2)), cover);',
+				'		return;',
+				'	}',
+				/* How much it mirrors, seen from here: the alpha of the scene carries it to the picture. */
+				'	float gloss = base.a < 0.99 ? 0.0 : max(pow(1.0 - roughness, 2.0) * max(fresnel.r, max(fresnel.g, fresnel.b)), uWet * 0.6 * smoothstep(0.55, 0.95, n.y) * (0.04 + 0.96 * pow(1.0 - nv, 5.0)));',
+				'	outColor = vec4(pow(total, vec3(1.0 / 2.2)), uMoving > 0.5 ? 0.0 : base.a < 0.5 ? base.a : 1.0 - gloss * 0.45);',
 				'}'
 			].join('\n'),
 
@@ -4545,6 +5893,28 @@ Elemenx.Component('GameScene', {
 				'	vColor = aColor;',
 				'	gl_PointSize = (1.0 + aColor.a * 2.2) * uRatio;',
 				'	gl_Position = uViewProjection * vec4(aPosition, 1.0);',
+				'}'
+			].join('\n'),
+
+			/* The stars from a ground: they turn with the planet, the air takes them at the horizon and they twinkle there. */
+			FarTurned: head + [
+				'in vec3 aPosition;',
+				'in vec4 aColor;',
+				'uniform mat4 uViewProjection;',
+				'uniform float uRatio;',
+				'uniform mat3 uTurn;',
+				'uniform float uLimit;',
+				'uniform float uTime;',
+				'out vec4 vColor;',
+				'void main() {',
+				'	vec3 place = uTurn * aPosition;',
+				'	float high = place.y / 50.0;',
+				'	float seen = smoothstep(uLimit, uLimit + 0.08, aColor.a + 0.02) * smoothstep(0.0, 0.14, high);',
+				'	float seed = fract(aPosition.x * 7.13 + aPosition.z * 3.71);',
+				'	float twinkle = 1.0 + 0.35 * (1.0 - high) * sin(uTime * (4.0 + seed * 7.0) + seed * 40.0);',
+				'	vColor = vec4(aColor.rgb, seen * twinkle * (0.32 + aColor.a * 1.4));',
+				'	gl_PointSize = (0.8 + aColor.a * 1.7) * uRatio;',
+				'	gl_Position = seen > 0.0 ? uViewProjection * vec4(place, 1.0) : vec4(2.0, 2.0, 2.0, 1.0);',
 				'}'
 			].join('\n'),
 
@@ -4689,7 +6059,8 @@ Elemenx.Component('GameScene', {
 				'	float spots = smoothstep(0.7, 0.78, fbm3(p * 2.6 + vec3(uSeed, uTime * 0.01, 0.0), 3));',
 				'	float limb = pow(max(dot(n, v), 0.0), 0.45);',
 				'	vec3 color = uColor * (0.7 + 0.6 * cells) * (0.5 + 0.6 * limb) * (1.0 - spots * 0.45);',
-				'	outColor = vec4(mix(color, vec3(1.0), 0.28 * limb), 1.0);',
+				/* A sun is far brighter than white: what shows of it to the eye is only that it burns. */
+				'	outColor = vec4(mix(color, vec3(1.0), 0.28 * limb) * 2.4, 1.0);',
 				'}'
 			].join('\n'),
 
@@ -4707,12 +6078,16 @@ Elemenx.Component('GameScene', {
 				'void main() {',
 				'	vec3 n = -normalize(vNormal);',
 				'	vec3 look = normalize(vWorld - uCamera);',
-				'	float miss = length(cross(uBody.xyz - uCamera, look));',
+				/* The nearest the ray comes to the body, on the way it goes: from inside the shell what lies behind the eye is no part of it. */
+				'	vec3 closest = uCamera + look * max(dot(uBody.xyz - uCamera, look), 0.0) - uBody.xyz;',
+				'	float miss = length(closest);',
 				'	float edge = pow(1.0 - clamp((miss - uBody.w) / (uShell - uBody.w), 0.0, 1.0), 2.4);',
+				/* The air glows where the light reaches it: at the point of the limb the ray passes, not on the far side of its shell. */
+				'	vec3 limb = normalize(closest);',
 				'	float day = 0.0;',
 				'	for (int i = 0; i < 4; i++) {',
 				'		if (i >= uLightCount) break;',
-				'		day += clamp(dot(-n, normalize(uLightPositions[i] - vWorld)) * 1.5 + 0.35, 0.0, 1.0);',
+				'		day += smoothstep(-0.06, 0.45, dot(limb, normalize(uLightPositions[i] - vWorld)));',
 				'	}',
 				'	float glow = edge * clamp(day, 0.0, 1.0) * uStrength;',
 				'	outColor = vec4(uColor * glow, glow);',
@@ -4755,6 +6130,8 @@ Elemenx.Component('GameScene', {
 				'uniform vec3 uCamera;',
 				'uniform float uShine;',
 				'uniform float uMoving;',
+				'uniform float uWet;',
+				'uniform float uSnowed;',
 				'uniform float uSpecular;',
 				'uniform float uRough;',
 				'out vec4 outColor;',
@@ -4768,9 +6145,9 @@ Elemenx.Component('GameScene', {
 				'	vec3 color = pow(min(vColor, vec3(1.0)), vec3(2.2));',
 				'	color *= 1.0 - uRough * 0.45 + uRough * 0.45 * fbm3(vLocal * 3.0, 3);',
 				'	vec3 hot = max(vColor - vec3(1.0), 0.0);',
-				'	lightShade = sunShadow(vWorld, n);',
+				'	lightShade = sunLit(vWorld, n);',
 				'	vec3 light = lighting(vWorld, n, v, uShine, uSpecular) - mix(uFloorLight, uSkyLight, n.y * 0.5 + 0.5) * (1.0 - skySeen(vWorld));',
-				'	light = max(light, vec3(0.0)) + sunBounce(vWorld);',
+				'	light = (max(light, vec3(0.0)) + sunBounce(vWorld) + localLight(vWorld, n)) * (1.0 - uWet * 0.25);',
 				'	if (uSoft > 0.0 && uLightCount > 0) {',
 				'		vec3 l = normalize(uLightPositions[0] - vWorld);',
 				'		float through = pow(max(dot(v, -l), 0.0), 3.0) * 0.8 + max(-dot(n, l), 0.0) * 0.35;',
@@ -4849,6 +6226,7 @@ Elemenx.Component('GameScene', {
 				'out vec4 outColor;',
 				graphics.Chunks.Noise,
 				graphics.Chunks.Shadow,
+				waves,
 				'vec3 ground(float h) {',
 				'	if (h < 0.33) return mix(uColors[0], uColors[1], h / 0.33);',
 				'	if (h < 0.66) return mix(uColors[1], uColors[2], (h - 0.33) / 0.33);',
@@ -4879,16 +6257,17 @@ Elemenx.Component('GameScene', {
 				'	vec3 color = albedo * (uSunColor * day + around);',
 				/* Water mirrors the sky, more at a glance; waves break the sun into a path of glints that reddens as it sets. */
 				'	if (sea > 0.5) {',
-				'		vec3 drift = vec3(uTime * 0.05, uTime * 0.03, -uTime * 0.04);',
-				'		vec3 wave = vec3(noise3(place * 1.4 + drift), noise3(place * 1.4 + 5.0 - drift), noise3(place * 1.4 + 9.0 + drift)) + vec3(noise3(place * 5.1 - drift * 3.0), noise3(place * 5.1 + 5.0 + drift * 3.0), noise3(place * 5.1 + 9.0)) * 0.5 - 0.75;',
-				'		vec3 w = normalize(up + (wave - up * dot(wave, up)) * 0.16);',
-				'		float fresnel = pow(1.0 - max(dot(w, v), 0.0), 5.0);',
-				'		vec3 mirrored = mix(mix(uAir.rgb, vec3(1.0), 0.45), uAir.rgb * vec3(0.45, 0.6, 1.0), 0.3) * light + vec3(1.0, 0.45, 0.2) * dusk * 0.6;',
-				'		float toward = max(dot(w, normalize(uSun + v)), 0.0);',
-				/* A soft path to the sun, and on it the glints of waves, each lit for a moment. */
-				'		float glint = smoothstep(0.6, 0.8, noise3(place * 31.0 + vec3(0.0, uTime * 1.3, uTime * 0.7)));',
-				'		float shine = (pow(toward, 60.0) * 0.32 + pow(toward, 520.0) * 5.0 * glint) * smoothstep(-0.02, 0.12, rise);',
-				'		color = mix(color, mirrored, 0.04 + 0.9 * fresnel) + uSunColor * mix(vec3(1.0, 0.5, 0.25), vec3(1.0), smoothstep(0.0, 0.3, rise)) * shine;',
+				'		vec3 side = normalize(cross(up, vec3(0.13, 1.0, 0.07)));',
+				'		vec2 flat2 = vec2(dot(place, side), dot(place, cross(up, side)));',
+				'		vec2 slope = wavesAt(flat2 * 9.0, uTime * 1.2, 10) / (1.0 + length(vWorld) * 0.25);',
+				'		vec3 w = normalize(up - (side * slope.x + cross(up, side) * slope.y) * 0.22);',
+				'		float fresnel = 0.02 + 0.98 * pow(1.0 - max(dot(w, v), 0.0), 5.0);',
+				'		vec3 r = reflect(-v, w);',
+				'		if (dot(r, up) < 0.0) r = r - up * 2.0 * dot(r, up);',
+				'		float toward = max(dot(r, uSun), 0.0);',
+				'		vec3 mirrored = mix(mix(uAir.rgb, vec3(1.0), 0.45), uAir.rgb * vec3(0.45, 0.6, 1.0), pow(max(dot(r, up), 0.0), 0.6)) * light + vec3(1.0, 0.5, 0.2) * dusk * exp(-max(dot(r, up), 0.0) * 5.0) * 0.8;',
+				'		float shine = (pow(toward, 1400.0) * 7.0 + pow(toward, 180.0) * 0.16) * smoothstep(-0.02, 0.1, rise);',
+				'		color = mix(color, mirrored, fresnel) + uSunColor * mix(vec3(1.0, 0.55, 0.25), vec3(1.0), smoothstep(0.0, 0.3, rise)) * shine;',
 				'	}',
 				'	float haze = (1.0 - exp(-length(vWorld) / uFog)) * uAir.a * (1.0 - uHigh * 0.7);',
 				'	color = mix(color, mix(uAir.rgb, vec3(0.9), 0.35) * light, clamp(haze, 0.0, 1.0));',
@@ -4905,7 +6284,18 @@ Elemenx.Component('GameScene', {
 				'uniform vec4 uAir;',
 				'uniform vec3 uUp;',
 				'uniform float uHigh;',
+				'uniform float uCover;',
+				'uniform vec3 uMoon;',
+				'uniform vec3 uMoonLit;',
+				'uniform float uMoonSize;',
+				'uniform float uMoonGlow;',
+				'uniform float uMoonShade;',
+				'uniform float uRainbow;',
+				'uniform float uEclipse;',
+				'uniform vec3 uGlow;',
+				'uniform vec3 uGlowWay;',
 				'out vec4 outColor;',
+				graphics.Chunks.Noise,
 				'void main() {',
 				'	vec4 far = uInverse * vec4(vQuad, 1.0, 1.0);',
 				'	vec4 close = uInverse * vec4(vQuad, -1.0, 1.0);',
@@ -4914,16 +6304,65 @@ Elemenx.Component('GameScene', {
 				'	float s = dot(uSun, uUp);',
 				'	float toward = max(dot(ray, uSun), 0.0);',
 				'	float day = smoothstep(-0.3, 0.25, s);',
-				'	vec3 zenith = uAir.rgb * vec3(0.45, 0.6, 1.0);',
-				'	vec3 horizon = mix(uAir.rgb, vec3(1.0), 0.45);',
-				'	vec3 sky = mix(horizon, zenith, pow(clamp(h, 0.0, 1.0), 0.45)) * day;',
-				'	float dusk = (1.0 - smoothstep(0.0, 0.35, abs(s))) * exp(-max(h, 0.0) * 5.0);',
-				'	sky += vec3(1.0, 0.45, 0.2) * dusk * (0.4 + 0.6 * pow(toward, 4.0));',
-				'	sky += uSunColor * pow(toward, 48.0) * 0.5 * day;',
+				'	float up = clamp(h, 0.0, 1.0);',
+				'	vec3 zenith = uAir.rgb * vec3(0.38, 0.55, 1.0);',
+				'	vec3 horizon = mix(uAir.rgb, vec3(1.0), 0.5);',
+				'	vec3 sky = mix(horizon, zenith, pow(up, 0.5)) * day;',
+				/* The sun low: the air takes its blue, the band of the horizon warms all round, most of all under it. */
+				'	float low = 1.0 - smoothstep(0.0, 0.5, abs(s));',
+				'	vec3 warm = vec3(1.0, 0.54, 0.2);',
+				'	sky *= mix(vec3(1.0), vec3(0.86, 0.74, 0.72), low);',
+				'	float dusk = low * exp(-up * 5.5);',
+				'	sky += warm * dusk * (0.3 + 1.1 * pow(dot(ray, uSun) * 0.5 + 0.5, 4.0));',
+				/* The light the air spreads round the sun: wide and faint, then narrow and bright. */
+				'	vec3 tint = mix(warm * 1.5, vec3(1.0), smoothstep(0.05, 0.5, s));',
+				'	sky += tint * (pow(toward, 6.0) * 0.2 + pow(toward, 48.0) * 0.38 + pow(toward, 500.0) * 1.1) * smoothstep(-0.12, 0.02, s) * (1.0 - uCover);',
+				/* The pink over the gold of a sunset, and high thin clouds drawn out by the wind. */
+				'	sky += vec3(0.85, 0.3, 0.42) * low * exp(-up * 2.2) * 0.42 * smoothstep(-0.2, 0.02, s);',
+				'	if (h > 0.02) {',
+				'		vec2 high = ray.xz / (h + 0.12);',
+				'		float wisp = noise3(vec3(high.x * 1.1, high.y * 3.4, uSun.x * 0.0)) * 0.65 + noise3(vec3(high.x * 3.1, high.y * 7.0, 3.0)) * 0.35;',
+				'		float thin = smoothstep(0.52, 0.8, wisp) * smoothstep(0.02, 0.2, h) * (1.0 - uCover);',
+				'		sky = mix(sky, mix(vec3(1.0, 0.98, 0.95), vec3(1.0, 0.62, 0.42), low) * max(day, 0.04), thin * 0.42);',
+				'	}',
+				'	sky = mix(sky, vec3(0.62, 0.65, 0.7) * day, uCover * 0.8);',
+				/* The moon before the sun: the air goes dark round it, and the crown of the sun shows. */
+				'	sky *= 1.0 - 0.96 * uEclipse;',
+				'	vec3 crown = vec3(0.85, 0.9, 1.0) * smoothstep(0.8, 1.0, uEclipse) * (pow(toward, 2400.0) * 1.3 + pow(toward, 320.0) * 0.3);',
+				/* The towns light the air from the horizon up. */
+				'	float towns = (exp(-max(h, 0.0) * 5.0) * 0.5 + 0.03) * (uGlowWay.z > 0.5 ? pow(dot(normalize(ray.xz + vec2(1e-5)), uGlowWay.xy) * 0.5 + 0.5, 2.0) : 1.0);',
+				'	sky += uGlow * towns;',
 				'	float density = uAir.a * (1.0 - uHigh);',
-				'	float disk = smoothstep(0.99996, 0.99999, toward);',
-				'	float alpha = clamp(density * (day * 0.97 + dusk * 0.6), 0.0, 1.0);',
-				'	outColor = vec4(sky * density + uSunColor * disk * 4.0, max(alpha, disk));',
+				'	float disk = smoothstep(0.99972, 0.99990, toward) * (1.0 - uCover);',
+				/* A moon up lights the air round it a little, more the fuller it is. */
+				/* Past the rain, across the sky from the sun: red outside, violet inside. */
+				'	if (uRainbow > 0.0 && s > 0.0 && h > 0.0) {',
+				'		float bow = (acos(clamp(-dot(ray, uSun), -1.0, 1.0)) - 0.70) / 0.05;',
+				'		if (bow > 0.0 && bow < 1.0) sky += (0.5 + 0.5 * cos(6.28 * (bow * 0.8 + vec3(0.62, 0.33, 0.0)))) * sin(bow * 3.14) * 0.16 * uRainbow * smoothstep(0.0, 0.1, h);',
+				'	}',
+				'	float haze = uMoonGlow * (1.0 - day) * (0.1 + 0.5 * pow(max(dot(ray, uMoon), 0.0), 24.0));',
+				'	sky += vec3(0.32, 0.4, 0.62) * haze;',
+				'	float alpha = clamp(density * (day * 0.97 * (1.0 - uEclipse) + dusk * 0.6 + haze + towns * max(uGlow.r, uGlow.g)), 0.0, 1.0);',
+				/* The ball of the moon, lit from where its sun stands: that is the shape of its phase; what is dark hides the stars. */
+				'	vec3 moon = vec3(0.0);',
+				'	float moonShape = 0.0;',
+				'	float moonFar = dot(ray, uMoon);',
+				'	if (uMoonSize > 0.0 && moonFar > 0.0) {',
+				'		float radius = 0.018 * uMoonSize;',
+				'		vec3 across = (ray - uMoon * moonFar) / radius;',
+				'		float off = length(across);',
+				'		if (off < 1.0) {',
+				'			vec3 face = across - uMoon * sqrt(1.0 - off * off);',
+				'			float lit = smoothstep(-0.04, 0.1, dot(face, uMoonLit));',
+				'			float seas = 0.68 + 0.5 * noise3(face * 3.5 + 11.0);',
+				'			float edge = 1.0 - smoothstep(0.95, 1.0, off);',
+				'			moon = mix(vec3(0.98, 0.98, 1.0), vec3(0.42, 0.11, 0.05), uMoonShade) * lit * seas * edge * (1.0 - uCover) * mix(1.5, 0.5, day);',
+				'			moonShape = edge * max(max(1.0 - day, lit), min(1.0, uEclipse * 4.0)) * (1.0 - uCover);',
+				'		}',
+				'	}',
+				/* A moon before the sun hides it and all its glow in the air. */
+				'	float hidden = moonShape * smoothstep(0.0, 0.05, uEclipse);',
+				'	outColor = vec4((sky + crown) * density * (1.0 - hidden) + tint * disk * (1.0 - smoothstep(0.0, 0.25, moonShape)) * 9.0 * smoothstep(-0.03, 0.01, s) + moon, max(max(alpha, disk), moonShape));',
 				'}'
 			].join('\n'),
 
@@ -4959,17 +6398,25 @@ Elemenx.Component('GameScene', {
 				'uniform float uFog;',
 				'uniform vec3 uSkyLight;',
 				'uniform vec3 uFloorLight;',
+				'uniform float uWet;',
+				'uniform float uSnowed;',
 				'out vec4 outColor;',
 				graphics.Chunks.Noise,
 				graphics.Chunks.Shadow,
 				'void main() {',
 				'	vec3 n = normalize(vNormal);',
 				'	float grain = 0.88 + 0.24 * noise3(vPlace * 0.35);',
-				'	vec3 albedo = pow(vColor * grain, vec3(2.2));',
-				'	vec3 light = uSunColor * 1.35 * max(dot(n, uSun), 0.0) * sunShadow(vWorld, n) + mix(uFloorLight, uSkyLight, n.y * 0.5 + 0.5) * skySeen(vWorld) + sunBounce(vWorld);',
+				'	float pool = uWet * smoothstep(0.42, 0.62, noise3(vPlace * 0.09)) * step(0.92, n.y);',
+				'	vec3 albedo = pow(vColor * grain, vec3(2.2)) * (1.0 - uWet * 0.42);',
+				'	albedo = mix(albedo, vec3(0.86, 0.9, 0.95), uSnowed * smoothstep(0.55, 0.85, n.y + (grain - 1.0)));',
+				'	vec3 light = uSunColor * 1.35 * max(dot(n, uSun), 0.0) * sunLit(vWorld, n) + mix(uFloorLight, uSkyLight, n.y * 0.5 + 0.5) * skySeen(vWorld) + sunBounce(vWorld) + localLight(vWorld, n);',
 				'	vec3 horizon = mix(uAir.rgb, vec3(1.0), 0.45) * clamp(uSun.y * 3.0 + 0.3, 0.0, 1.0);',
-				'	vec3 color = mix(pow(albedo * light, vec3(1.0 / 2.2)), horizon, 1.0 - exp(-length(vWorld) / uFog));',
-				'	outColor = vec4(color, 1.0);',
+				/* Wet ground darkens, and where water stands it mirrors the sky at a glance. */
+				'	vec3 v = normalize(-vWorld);',
+				'	vec3 lit = pow(albedo * light, vec3(1.0 / 2.2));',
+				'	lit = mix(lit, mix(uAir.rgb, vec3(1.0), 0.5) * clamp(uSkyLight.b * 2.4, 0.03, 1.0), pool * (0.25 + 0.65 * pow(1.0 - max(v.y, 0.0), 3.0)));',
+				'	vec3 color = mix(lit, horizon, 1.0 - exp(-length(vWorld) / uFog));',
+				'	outColor = vec4(color, 1.0 - pool * (0.25 + 0.65 * pow(1.0 - max(v.y, 0.0), 3.0)) * 0.45);',
 				'}'
 			].join('\n'),
 
@@ -4985,8 +6432,17 @@ Elemenx.Component('GameScene', {
 				'uniform float uMirror;',
 				'uniform vec3 uEye;',
 				'uniform float uTime;',
+				'uniform float uDay;',
+				'uniform float uWild;',
 				'out vec4 outColor;',
 				graphics.Chunks.Noise,
+				waves,
+				'vec3 reflectedSky(vec3 way) {',
+				'	float up = clamp(way.y, 0.0, 1.0);',
+				'	float low = 1.0 - smoothstep(0.0, 0.5, abs(uSun.y));',
+				'	vec3 sky = mix(mix(uAir.rgb, vec3(1.0), 0.5), uAir.rgb * vec3(0.38, 0.55, 1.0), pow(up, 0.5));',
+				'	return sky + vec3(1.0, 0.54, 0.2) * low * exp(-up * 5.5) * (0.3 + 1.1 * pow(dot(way, uSun) * 0.5 + 0.5, 4.0));',
+				'}',
 				'vec4 mirrored(vec3 from, vec3 way) {',
 				'	vec3 at = from;',
 				'	float step = max(length(from) * 0.02, 0.4);',
@@ -5007,23 +6463,25 @@ Elemenx.Component('GameScene', {
 				'void main() {',
 				'	vec3 v = normalize(-vWorld);',
 				'	vec3 place = vWorld + uEye;',
-				'	vec3 drift = vec3(uTime * 0.11, uTime * 0.07, -uTime * 0.09);',
-				'	vec3 n = normalize(vec3((noise3(place * 0.2 + drift) - 0.5) * 0.08 + (noise3(place * 0.9 - drift * 2.0) - 0.5) * 0.05, 1.0, (noise3(place * 0.2 + 7.0 - drift) - 0.5) * 0.08 + (noise3(place * 0.9 + 3.0 + drift * 2.0) - 0.5) * 0.05));',
-				'	float rise = smoothstep(-0.02, 0.1, uSun.y);',
-				'	float toward = max(dot(n, normalize(uSun + v)), 0.0);',
-				/* The path of the sun, soft, and over it the glints of the waves that face it, each for a moment. */
-				'	float glint = smoothstep(0.62, 0.8, noise3(place * 2.3 + vec3(0.0, uTime * 0.9, uTime * 0.4)));',
-				'	float shine = (pow(toward, 70.0) * 0.3 + pow(toward, 420.0) * 3.5 * glint) * rise;',
-				'	float fresnel = pow(1.0 - max(dot(n, v), 0.0), 3.0);',
-				'	vec3 warm = mix(vec3(1.0, 0.55, 0.28), vec3(1.0), smoothstep(0.02, 0.4, uSun.y));',
-				'	vec3 color = vec3(0.07, 0.26, 0.38) * (0.4 + 0.6 * max(uSun.y, 0.0)) + mix(uAir.rgb, vec3(1.0), 0.4) * fresnel * 0.5 + uSunColor * warm * shine;',
+				/* The farther, the less of the waves a pixel can tell: they calm down instead of shimmering. */
+				'	float far = length(vWorld);',
+				'	vec2 slope = wavesAt(place.xz * 1.5, uTime * 1.6, uMirror > 0.5 ? 14 : 7) / (1.0 + far * 0.012);',
+				'	vec3 n = normalize(vec3(-slope.x * 0.22 * uWild, 1.0, -slope.y * 0.22 * uWild));',
+				'	float fresnel = 0.02 + 0.98 * pow(1.0 - max(dot(n, v), 0.0), 5.0);',
+				'	vec3 r = reflect(-v, n);',
+				'	r.y = abs(r.y);',
+				'	float toward = max(dot(r, uSun), 0.0);',
+				/* What a wave turns to the eye is the sky it faces, and the sun: so the path of light is made of the waves. */
+				'	float shine = (pow(toward, 1400.0) * 7.0 + pow(toward, 180.0) * 0.16) * smoothstep(-0.02, 0.06, uSun.y);',
+				'	vec3 mirror = reflectedSky(r) * uDay + vec3(0.012, 0.016, 0.03);',
+				'	vec3 color = mix(vec3(0.02, 0.11, 0.17) * (0.25 + 0.75 * clamp(uSun.y * 2.0, 0.0, 1.0)), mirror, fresnel) + uSunColor * shine;',
 				'	vec3 horizon = mix(uAir.rgb, vec3(1.0), 0.45) * clamp(uSun.y * 3.0 + 0.3, 0.0, 1.0);',
 				'	if (uMirror > 0.5) {',
 				'		vec4 image = mirrored(vWorld, reflect(-v, n));',
-				'		color = mix(color, image.rgb, image.a * clamp(0.35 + fresnel, 0.0, 1.0));',
+				'		color = mix(color, image.rgb, image.a * clamp(0.3 + fresnel, 0.0, 1.0));',
 				'	}',
 				'	color = mix(color, horizon, 1.0 - exp(-length(vWorld) / uFog));',
-				'	outColor = vec4(color, 0.82 + fresnel * 0.15);',
+				'	outColor = vec4(color, 0.86 + fresnel * 0.14);',
 				'}'
 			].join('\n'),
 

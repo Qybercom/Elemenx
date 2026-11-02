@@ -260,6 +260,142 @@ Elemenx.Component('UIKitPage', {
 	ModelsShadows: true,
 	ModelsList: [],
 	ModelsFiles: [],
+	SceneWeather: 'clear',
+	SceneWeathers: [{Value: 'clear', Label: 'Clear'}, {Value: 'cloudy', Label: 'Cloudy'}, {Value: 'overcast', Label: 'Overcast'}, {Value: 'rain', Label: 'Rain'}, {Value: 'storm', Label: 'Storm'}, {Value: 'snow', Label: 'Snow'}, {Value: 'fog', Label: 'Fog'}, {Value: 'changing', Label: 'Changing'}],
+	SceneWind: 1,
+	PlaceNote: '',
+	PlaceName: 'tree',
+	PlaceHour: 17.5,
+	PlaceSky: {DayHours: 24, Latitude: 45, Tilt: 23.44, DayOfYear: 172, Moon: true, MoonLight: 1, MoonSize: 1, MoonPhase: 0.5, NightLight: 1, SkyGlow: 0},
+	PlaceMoonHeld: false,
+	PlaceFire: {Color: '#ff9a3c', Hot: '#fff0b0', Volume: 1, Intensity: 1, Length: 1, Width: 1, Smoke: 1, Spin: 1},
+	PlaceSpell: {Color: '#7fc4ff', Hot: '#ffffff'},
+	PlacePulse: '',
+	PlacePulseList: [{Value: '', Label: 'Steady'}, {Value: 'breath', Label: 'Breath'}, {Value: 'throb', Label: 'Throb'}, {Value: 'flicker', Label: 'Flicker'}, {Value: 'shift', Label: 'Color shift'}, {Value: 'grow', Label: 'Grows once'}],
+	PlacePulses: {
+		breath: {Intensity: {From: 0.45, To: 1.5, Time: 3.2}, Size: {From: 0.9, To: 1.12, Time: 3.2}},
+		throb: {Intensity: {From: 0.3, To: 1.9, Time: 0.9, Shape: 'ping'}, Spin: {From: 0.6, To: 2.4, Time: 0.9, Shape: 'ping'}},
+		flicker: {Intensity: {From: 0.35, To: 1.7, Time: 1.6, Shape: 'flicker'}},
+		shift: {Color: {From: '#ff4a6a', To: '#4ac8ff', Time: 4}, Hot: {From: '#ffd8a0', To: '#d8f8ff', Time: 4}},
+		grow: {Size: {From: 0.2, To: 1.4, Time: 2.5, Shape: 'once'}, Intensity: {From: 2.2, To: 1, Time: 2.5, Shape: 'once'}}
+	},
+	SpaceBackdrops: [{Value: '', Label: 'Stars'}, {Value: 'nebula', Label: 'Nebula'}, {Value: 'pillars', Label: 'Pillars'}, {Value: 'galaxy', Label: 'Galaxy band'}, {Value: 'galaxies', Label: 'Galaxies'}, {Value: 'cluster', Label: 'Cluster'}, {Value: 'void', Label: 'Void'}],
+	SpaceBackdrop: 'nebula',
+	SpaceSkies: 1,
+	SpaceTab: 'system',
+	SpaceAmounts: {Gas: 1, Dust: 0.7, Stars: 0.6, Band: 0, Galaxies: 1, Clusters: 0, Pillars: 0, Beacon: 1, Bursts: 1},
+	SpaceCosmos: {Kind: 'nebula', Seed: 'sky-1'},
+	PlaceFree: true,
+	PlaceTab: 'place',
+	/* What each car is: how it goes, and where its pipes are in its model. */
+	RaceCars: [
+		{Value: 'mclaren', Label: 'McLaren W1', File: '2025_mclaren_w1.glb', Tune: {Turn: [[14, 55], [28, 60], [56, 70], [83, 75]], Build: [0.45, 0.25], Brake: 36, Bite: 2, Coast: 3, Grip: 1.75, Downforce: 0.9, Power: 950000, Answer: 24, Agility: 2.5, Assist: 0.8, Rear: 1.15, Slide: 0.42, Ride: 0.7, Lock: 0.6, Keep: 115, AntiRoll: 120000, Balance: 0.32}, Pipes: [[0.09, 0.53, -1.94], [-0.09, 0.53, -1.94]], Windows: [0.42, 0.52, -0.33]},
+		{Value: 'aston', Label: 'Aston Martin V12 Vantage', File: '2023_aston_martin_v12_vantage.glb', Tune: {Turn: [[14, 52], [28, 56], [56, 64], [83, 68]], Build: [0.5, 0.3], Brake: 28, Bite: 1.8, Coast: 2.5, Grip: 1.35, Downforce: 0.3, Power: 620000, Answer: 20, Agility: 2, Assist: 0.7, Rear: 1.1, Slide: 0.38, Ride: 1, Lock: 0.56, Keep: 95, AntiRoll: 80000, Balance: 0.36}, Pipes: [[0.06, 0.19, -1.54], [-0.06, 0.19, -1.54]]},
+		{Value: 'veneno', Label: 'Lamborghini Veneno', File: '2013_lamborghini_veneno.glb', Size: 1.17, Tune: {Turn: [[14, 54], [28, 58], [56, 67], [83, 72]], Build: [0.45, 0.27], Mass: 1490, Brake: 32, Bite: 1.9, Coast: 2.8, Grip: 1.5, Downforce: 0.6, Power: 620000, Answer: 22, Agility: 2.2, Assist: 0.75, Rear: 1.12, Slide: 0.42, Ride: 0.8, Lock: 0.58, Keep: 105, AntiRoll: 110000, Balance: 0.34}, Pipes: [[0.037, 0.255, -2.04], [-0.037, 0.255, -2.04], [0.037, 0.155, -2], [-0.037, 0.155, -2]]},
+		{Value: 'porsche', Label: 'Porsche 911 GT3 R', File: '2024_porsche_992_gt3_r.glb', Size: 1.28, Wheels: 'EXT_RIM|Tyre', Seat: [0.31, 0.97, -0.25], Tune: {Turn: [[14, 58], [28, 64], [56, 74], [83, 78]], Build: [0.38, 0.22], Mass: 1250, Top: 82, Brake: 40, Bite: 2.2, Coast: 3.2, Grip: 1.85, Downforce: 1, Power: 420000, Answer: 26, Agility: 2.6, Assist: 0.75, Rear: 1.1, Slide: 0.4, Ride: 0.55, Lock: 0.6, Keep: 120, AntiRoll: 150000, Balance: 0.3}, Pipes: [[0.042, 0.257, -1.81], [-0.042, 0.257, -1.81]]},
+		{Value: 'revuelto', Label: 'Lamborghini Revuelto', File: 'lamborghini_revuelto.glb', Size: 1.16, Wheels: 'Wheel\\.001|M_WheelRim', Held: 'M_Caliper', Tune: {Turn: [[14, 53], [28, 57], [56, 66], [83, 70]], Build: [0.48, 0.28], Mass: 1770, Brake: 34, Bite: 1.9, Coast: 2.8, Grip: 1.6, Downforce: 0.55, Power: 750000, Answer: 22, Agility: 2.2, Assist: 0.8, Rear: 1.2, Slide: 0.45, Ride: 0.85, Lock: 0.58, Keep: 110, AntiRoll: 130000, Balance: 0.33}, Pipes: [[0.106, 0.662, -2.08], [-0.106, 0.662, -2.08], [0.184, 0.662, -2.08], [-0.184, 0.662, -2.08]]},
+		{Value: 'mp420', Label: 'McLaren MP4-20', File: '2005_mclaren_mp4-20 (1).glb', Size: 0.95, Wheels: 'Tyre|MCLARENRIM|MCLHUB|SPOKES|Brake_Disk', Apart: 'Tyre|MCLARENRIM|MCLHUB|SPOKES|Brake_Disk|Caliper', Seat: [0, 0.72, -0.1], Tune: {Turn: [[14, 60], [28, 70], [56, 85], [83, 95]], Build: [0.3, 0.16], Mass: 600, Top: 100, Base: 3.1, Width: 1.5, Brake: 52, Bite: 2.6, Coast: 5, Grip: 2.1, Downforce: 1.6, Power: 690000, Answer: 30, Agility: 3, Assist: 0.85, Rear: 1.1, Slide: 0.5, Ride: 0.45, Lock: 0.5, Keep: 140, AntiRoll: 90000, Balance: 0.24}, Pipes: [[0.135, 0.37, -1.35], [-0.135, 0.37, -1.35]]},
+		{Value: 'mp45', Label: 'McLaren MP4/5', File: 'mclaren_mp45_formula_one.glb', Size: 1, Wheels: 'Object_(18|46)$', Apart: 'Object_(18|46)$', Seat: [0, 0.72, 0.1], Tune: {Turn: [[14, 58], [28, 66], [56, 78], [83, 86]], Build: [0.34, 0.2], Mass: 540, Base: 2.95, Width: 1.5, Brake: 44, Bite: 2.3, Coast: 4.5, Grip: 1.85, Downforce: 1.1, Power: 510000, Answer: 28, Agility: 2.8, Assist: 0.75, Rear: 1.08, Slide: 0.45, Ride: 0.5, Lock: 0.5, Keep: 130, AntiRoll: 80000, Balance: 0.25}, Pipes: [[0.228, 0.14, -1.78], [-0.228, 0.14, -1.78]]},
+		{Value: '350z', Label: 'Nissan 350Z', File: 'rachels_nissan_350z_nfs_underground_2 (1).glb', Size: 1.31, Seat: [0.33, 1.1, -0.25], Tune: {Turn: [[14, 56], [28, 58], [56, 62], [83, 64]], Build: [0.5, 0.32], Mass: 1500, Top: 78, Base: 2.65, Width: 1.6, Brake: 26, Bite: 1.7, Coast: 2.2, Grip: 1.25, Downforce: 0.2, Power: 340000, Answer: 18, Agility: 2, Assist: 0.65, Rear: 0.98, Slide: 0.3, Angle: 0.95, Ride: 1.1, Lock: 0.62, Keep: 90, AntiRoll: 70000, Balance: 0.4}, Pipes: [[0.258, 0.184, -1.63], [-0.258, 0.184, -1.63], [0.338, 0.184, -1.63], [-0.338, 0.184, -1.63]]}
+	],
+	RaceTab: 'drive',
+	RaceTune: {Turn: [[14, 55], [28, 60], [56, 70], [83, 75]], Build: [0.45, 0.25], Brake: 36, Grip: 1.75, Downforce: 0.9, Power: 950000, Answer: 24, Agility: 2.5, Assist: 0.8, Rear: 1.15, Slide: 0.42, Ride: 0.7, Coast: 3},
+	RaceWindows: 0,
+	RaceCar: 'mclaren',
+	RacePerson: 'third',
+	RaceSeed: 1,
+	RaceNote: '',
+	RaceSpeed: 0,
+	OrbitNote: '',
+	OrbitCosmos: {Kind: 'galaxy', Seed: 'orbit'},
+	OrbitSpeed: 0,
+	/* What each ship is built of, in its own measures: the points are read off the model. */
+	OrbitShips: [
+		{Value: 'space_ship (1).glb', Label: 'Interceptor', Yaw: 0, Mounts: [
+			{Kind: 'engine', At: [0.25, 0.485, -1.835], Aim: [0, 0, -1], Mouth: [0.06, 0.08], Size: 0.1},
+			{Kind: 'engine', At: [-0.25, 0.485, -1.835], Aim: [0, 0, -1], Mouth: [0.06, 0.08], Size: 0.1},
+			{Kind: 'engine', At: [0.25, 0.355, -1.75], Aim: [0, 0, -1], Mouth: [0.06, 0.08], Size: 0.1},
+			{Kind: 'engine', At: [-0.25, 0.355, -1.75], Aim: [0, 0, -1], Mouth: [0.06, 0.08], Size: 0.1}
+		]},
+		{Value: 'space_ship.glb', Label: 'Scout', Yaw: 0, Mounts: [
+			{Kind: 'engine', At: [0, 0.84, -1.41], Aim: [0, 0, -1], Mouth: [0.13, 0.085], Size: 0.16}
+		]},
+		{Value: 'unsa_cruiser__spaceship.glb', Label: 'Cruiser', Yaw: 0, Mounts: [
+			{Kind: 'engine', At: [0.317, 0.385, -2.66], Aim: [0, 0, -1], Mouth: [0.055, 0.075], Size: 0.12},
+			{Kind: 'engine', At: [-0.317, 0.385, -2.66], Aim: [0, 0, -1], Mouth: [0.055, 0.075], Size: 0.12},
+			{Kind: 'engine', At: [0.404, 0.385, -2.66], Aim: [0, 0, -1], Mouth: [0.055, 0.075], Size: 0.12},
+			{Kind: 'engine', At: [-0.404, 0.385, -2.66], Aim: [0, 0, -1], Mouth: [0.055, 0.075], Size: 0.12},
+			{Kind: 'engine', At: [0.49, 0.385, -2.66], Aim: [0, 0, -1], Mouth: [0.055, 0.075], Size: 0.12},
+			{Kind: 'engine', At: [-0.49, 0.385, -2.66], Aim: [0, 0, -1], Mouth: [0.055, 0.075], Size: 0.12}
+		]},
+		{Value: 'space_battleship_aquamarine.glb', Label: 'Battleship', Yaw: 0, Mounts: [
+			{Kind: 'engine', At: [0.3125, 0.522, -1.612], Aim: [0, 0, -1], Mouth: 0.05, Size: 0.22},
+			{Kind: 'engine', At: [-0.3125, 0.522, -1.612], Aim: [0, 0, -1], Mouth: 0.05, Size: 0.22},
+			{Kind: 'engine', At: [0.474, 0.517, -1.578], Aim: [0, 0, -1], Mouth: 0.039, Size: 0.18},
+			{Kind: 'engine', At: [-0.474, 0.517, -1.578], Aim: [0, 0, -1], Mouth: 0.039, Size: 0.18},
+			{Kind: 'engine', At: [0.6, 0.512, -1.557], Aim: [0, 0, -1], Mouth: 0.03, Size: 0.14},
+			{Kind: 'engine', At: [-0.6, 0.512, -1.557], Aim: [0, 0, -1], Mouth: 0.03, Size: 0.14},
+			{Kind: 'engine', At: [0.7075, 0.5, -1.512], Aim: [0, 0, -1], Mouth: 0.024, Size: 0.1},
+			{Kind: 'engine', At: [-0.7075, 0.5, -1.512], Aim: [0, 0, -1], Mouth: 0.024, Size: 0.1}
+		]},
+		{Value: 'millenium_falcon_star_wars.glb', Label: 'Millennium Falcon', Yaw: 0, Mounts: [
+			{Kind: 'engine', At: [0, 0.46, -2.06], Aim: [0, 0, -1], Mouth: [0.13, 0.05], Size: 0.2, Length: 0.45, Glare: 0.5},
+			{Kind: 'engine', At: [0.253, 0.46, -2.034], Aim: [0.184, 0, -0.983], Mouth: [0.13, 0.05], Size: 0.2, Length: 0.45, Glare: 0.5, Light: false},
+			{Kind: 'engine', At: [-0.253, 0.46, -2.034], Aim: [-0.184, 0, -0.983], Mouth: [0.13, 0.05], Size: 0.2, Length: 0.45, Glare: 0.5, Light: false},
+			{Kind: 'engine', At: [0.505, 0.46, -1.962], Aim: [0.367, 0, -0.93], Mouth: [0.13, 0.05], Size: 0.2, Length: 0.45, Glare: 0.5, Light: false},
+			{Kind: 'engine', At: [-0.505, 0.46, -1.962], Aim: [-0.367, 0, -0.93], Mouth: [0.13, 0.05], Size: 0.2, Length: 0.45, Glare: 0.5, Light: false},
+			{Kind: 'engine', At: [0.758, 0.46, -1.851], Aim: [0.544, 0, -0.839], Mouth: [0.14, 0.05], Size: 0.2, Length: 0.45, Glare: 0.5},
+			{Kind: 'engine', At: [-0.758, 0.46, -1.851], Aim: [-0.544, 0, -0.839], Mouth: [0.14, 0.05], Size: 0.2, Length: 0.45, Glare: 0.5},
+			{Kind: 'engine', At: [1.01, 0.46, -1.664], Aim: [0.716, 0, -0.698], Mouth: [0.15, 0.05], Size: 0.2, Length: 0.4, Glare: 0.5, Light: false},
+			{Kind: 'engine', At: [-1.01, 0.46, -1.664], Aim: [-0.716, 0, -0.698], Mouth: [0.15, 0.05], Size: 0.2, Length: 0.4, Glare: 0.5, Light: false}
+		]},
+		{Value: 'tempest.glb', Label: 'Tempest', Yaw: -90, Size: 0.007, Mounts: [
+			{Kind: 'engine', At: [-3.25, 0.504, 0.802], Aim: [-1, 0, 0], Mouth: [0.2, 0.085], Size: 0.3, Twist: 31, Length: 0.5},
+			{Kind: 'engine', At: [-3.25, 0.504, -0.802], Aim: [-1, 0, 0], Mouth: [0.2, 0.085], Size: 0.3, Twist: -31, Length: 0.5},
+			{Kind: 'engine', At: [-3.015, 0.12, 1.432], Aim: [-1, 0, 0], Mouth: [0.135, 0.06], Size: 0.22, Twist: 31, Length: 0.5},
+			{Kind: 'engine', At: [-3.015, 0.12, -1.432], Aim: [-1, 0, 0], Mouth: [0.135, 0.06], Size: 0.22, Twist: -31, Length: 0.5}
+		]},
+		{Value: 'uss_enterprise_star_trek_wrath_of_khan.glb', Label: 'USS Enterprise', Yaw: 180, Mounts: [
+			{Kind: 'engine', At: [0.045, 0.875, -0.823], Aim: [0, 0.35, 1], Mouth: [0.04, 0.03], Size: 0.14, Length: 0.7, Color: '#ff3a24', Hot: '#ffd2a8'},
+			{Kind: 'engine', At: [-0.045, 0.875, -0.823], Aim: [0, 0.35, 1], Mouth: [0.04, 0.03], Size: 0.14, Length: 0.7, Color: '#ff3a24', Hot: '#ffd2a8'},
+			{Kind: 'engine', At: [0.673, 0.86, 2.05], Aim: [0, 0, 1], Mouth: 0.045, Size: 0.14},
+			{Kind: 'engine', At: [-0.673, 0.86, 2.05], Aim: [0, 0, 1], Mouth: 0.045, Size: 0.14}
+		]},
+		{Value: 'star_trek_dedication_class_starship.glb', Label: 'USS Dedication', Yaw: 180, Size: 0.008, Mounts: [
+			{Kind: 'engine', At: [0.34, 0.54, -0.37], Aim: [0, 0, 1], Mouth: [0.115, 0.018], Size: 0.14, Length: 0.35, Color: '#ff3a24', Hot: '#ffd2a8'},
+			{Kind: 'engine', At: [-0.34, 0.54, -0.37], Aim: [0, 0, 1], Mouth: [0.115, 0.018], Size: 0.14, Length: 0.35, Color: '#ff3a24', Hot: '#ffd2a8'},
+			{Kind: 'engine', At: [1.27, 0.86, 3.385], Aim: [0, 0, 1], Mouth: 0.035, Size: 0.14},
+			{Kind: 'engine', At: [-1.27, 0.86, 3.385], Aim: [0, 0, 1], Mouth: 0.035, Size: 0.14}
+		]},
+		{Value: 'venator_class_star_destroyer.glb', Label: 'Venator', Yaw: 0, Mounts: [
+			{Kind: 'engine', At: [0.4224, 0.248, -1.63], Aim: [0, 0, -1], Mouth: 0.05, Size: 0.22},
+			{Kind: 'engine', At: [-0.4224, 0.248, -1.63], Aim: [0, 0, -1], Mouth: 0.05, Size: 0.22},
+			{Kind: 'engine', At: [0.224, 0.168, -1.884], Aim: [0, 0, -1], Mouth: 0.05, Size: 0.22},
+			{Kind: 'engine', At: [-0.224, 0.168, -1.884], Aim: [0, 0, -1], Mouth: 0.05, Size: 0.22},
+			{Kind: 'engine', At: [0.3536, 0.357, -1.447], Aim: [0, 0, -1], Mouth: 0.016, Size: 0.08},
+			{Kind: 'engine', At: [-0.3536, 0.357, -1.447], Aim: [0, 0, -1], Mouth: 0.016, Size: 0.08},
+			{Kind: 'engine', At: [0.187, 0.357, -1.635], Aim: [0, 0, -1], Mouth: 0.022, Size: 0.1},
+			{Kind: 'engine', At: [-0.187, 0.357, -1.635], Aim: [0, 0, -1], Mouth: 0.022, Size: 0.1},
+			{Kind: 'engine', At: [0.099, 0.211, -1.49], Aim: [0, 0, -1], Mouth: 0.022, Size: 0.1},
+			{Kind: 'engine', At: [-0.099, 0.211, -1.49], Aim: [0, 0, -1], Mouth: 0.022, Size: 0.1}
+		]}
+	],
+	OrbitShip: 'space_ship (1).glb',
+	PlaceShoulder: 'right',
+	PlaceLamps: true,
+	PlacePerson: 'third',
+	PlacePersons: [{Value: 'third', Label: 'Third person'}, {Value: 'first', Label: 'First person'}, {Value: 'shoulder', Label: 'Over the shoulder'}],
+	PlaceAxes: true,
+	PlaceOrigin: false,
+	PlaceMoonElevation: 45,
+	PlaceMoonAzimuth: 180,
+	PlaceOpen: false,
+	TerrainHour: 16,
+	SceneFlare: 1,
+	/* Who walks on the locations: a line for a file of data/models, and the set of clips that suits it if not the usual one. */
+	PlaceCharacters: [{Value: 'elf', Label: 'Elf', File: 'rigged_elf_woman.glb'}, {Value: 'nyx', Label: 'Nyx', File: 'nyx_common.glb'}, {Value: 'swordsman', Label: 'Swordswoman', File: 'hit2_female_swordsman.glb'}, {Value: 'killjoy', Label: 'Killjoy', File: 'killjoy__valorant.glb'}, {Value: 'warrior', Label: 'Warrior', File: 'low_poly_female_warrior_charctor.glb'}, {Value: 'chief', Label: 'Master Chief', File: 'master_chief_high_poly.glb', Clips: 'rifle'}],
+	PlaceCharacter: 'elf',
+	PlaceList: [{Value: 'tree', Label: 'Tree house'}, {Value: 'forest', Label: 'Forest road'}, {Value: 'gulch', Label: 'Blood Gulch'}, {Value: 'infinity', Label: 'Infinity'}],
 	SceneQuality: 'auto',
 	SceneQualities: [{Value: 'auto', Label: 'Auto'}, {Value: 'low', Label: 'Low'}, {Value: 'medium', Label: 'Medium'}, {Value: 'high', Label: 'High'}, {Value: 'ultra', Label: 'Ultra'}],
 	TerrainNote: '',
@@ -1968,6 +2104,736 @@ Elemenx.Component('UIKitPage', {
 		scene.ZoomTo(11);
 	},
 
+	SceneWeatherChosen: function (value) {
+		this.SceneWeather = value;
+	},
+
+	PlaceReady: function (scene) {
+		this.PlaceScene = function () {
+			return scene;
+		};
+
+		/* A location is tens of megabytes: on the whole catalogue it waits to be asked for. */
+		if (new URLSearchParams(window.location.search).get('sections'))
+			this.PlaceLoad();
+	},
+
+	RaceReady: function (scene) {
+		this.RaceScene = function () {
+			return scene;
+		};
+
+		if (new URLSearchParams(window.location.search).get('sections'))
+			this.RaceBuild();
+	},
+
+	/* A track of a seed, as a location of its own, and a car on its line. */
+	RaceBuild: function () {
+		var self = this;
+		var scene = this.RaceScene ? this.RaceScene() : null;
+		var models = this.$Service('Models');
+		var tracks = this.$Service('Tracks');
+		var seed = 'track-' + this.RaceSeed;
+
+		if (!scene) return;
+
+		var track = tracks.Make(seed);
+
+		this.RaceTrack = track;
+
+		scene.Objects().forEach(function (object) {
+			scene.Remove(object.ID);
+		});
+
+		if (!models.Has(seed))
+			models.Define(seed, {URL: seed, Asset: tracks.Asset(track), Fit: false});
+
+		scene.Add('sun', {ID: 'day', Time: 15, Latitude: 45, DayOfYear: 172, Color: '#fff4e0'});
+		scene.Add('location', {ID: 'place', Model: seed, Size: 1});
+
+		this.RaceWait(0);
+
+		window.clearInterval(this.RaceClock);
+
+		this.RaceClock = window.setInterval(function () {
+			var hero = scene.Scene().Objects.car;
+
+			if (!self.$Element().isConnected) {
+				window.clearInterval(self.RaceClock);
+
+				return;
+			}
+
+			self.RaceSpeed = hero && hero.Car ? Math.round(Math.abs(hero.Car.Forward) * 3.6) : 0;
+		}, 200);
+	},
+
+	RaceWait: function (tries) {
+		var self = this;
+		var scene = this.RaceScene();
+		var ground = scene.Scene().Ground;
+
+		if (!ground || !ground.Field || !ground.Field.Start) {
+			if (tries < 400)
+				window.setTimeout(function () {
+					self.RaceWait(tries + 1);
+				}, 50);
+
+			return;
+		}
+
+		this.RaceCarPut();
+	},
+
+	RaceCarPut: function () {
+		var scene = this.RaceScene();
+		var models = this.$Service('Models');
+		var track = this.RaceTrack;
+		var start = track.Start;
+		var chosen = this.RaceCar;
+		var car = this.RaceCars.filter(function (each) {
+			return each.Value === chosen;
+		})[0];
+		var name = 'car-' + chosen;
+		var mounts = car.Pipes.map(function (at) {
+			return {Kind: 'engine', Type: 'fumes', At: at, Aim: [0, 0, -1], Size: 0.5, Pop: true, Light: false};
+		});
+
+		if (!models.Has(name))
+			models.Define(name, {URL: '/data/models/' + car.File, Type: 'prop', Apart: car.Apart, Materials: {'GrilleNoAlpha[89]A': {ColorMap: null, BaseColor: [0.03, 0.03, 0.035, 1]}}});
+
+		models.Load(name);
+
+		if (scene.Get('car'))
+			scene.Remove('car');
+
+		scene.Add('unit', {ID: 'car', Name: '', Model: name, Size: car.Size || 1.25, X: start.X, Y: start.Z, Z: start.Y, Vehicle: Object.assign({Kind: 'car', Track: track, Heading: start.Heading, Wheels: car.Wheels, Held: car.Held, Yaw: car.Yaw, Seat: car.Seat || [0.3, 0.95, 0], Mass: 1400, Base: 2.85, Width: 1.75, Mounts: mounts, Openings: car.Windows ? [{Name: 'windows', Match: 'Window', Both: true, Low: car.Windows, High: [0.7, 0.95, 0.65], Way: [0, -1, 0], Reach: 0.26, Open: this.RaceWindows}] : []}, car.Tune, this.RaceTune)});
+		scene.Control('car');
+
+		scene.Scene().Wanted = scene.Scene().Distance = 8;
+		scene.Scene().Yaw = start.Heading + Math.PI;
+		scene.Scene().Pitch = 0.16;
+	},
+
+	RaceCarChosen: function (value) {
+		this.RaceCar = value;
+		this.RaceTune = {};
+		this.RaceTune = Object.assign({}, this.RaceCars.filter(function (each) {
+			return each.Value === value;
+		})[0].Tune);
+
+		if (this.RaceTrack)
+			this.RaceCarPut();
+	},
+
+	/* What a slider of the ribbon says of the car: it goes so from now on. */
+	RaceTuned: function (name, value) {
+		var scene = this.RaceScene ? this.RaceScene() : null;
+		var car = scene ? scene.Scene().Objects.car : null;
+
+		this.RaceTune = Object.assign({}, this.RaceTune);
+		this.RaceTune[name] = Number(value);
+
+		if (car)
+			car.Values.Vehicle[name] = Number(value);
+	},
+
+	/* A row of the table of the turn, or an end of how long the steering takes. */
+	RaceTurnOf: function (index) {
+		return this.RaceTune.Turn ? this.RaceTune.Turn[index][1] : 0;
+	},
+
+	RaceBuildOf: function (index) {
+		return this.RaceTune.Build ? this.RaceTune.Build[index] : 0;
+	},
+
+	RaceTurned: function (index, value) {
+		var turn = this.RaceTune.Turn.map(function (row) {
+			return row.slice();
+		});
+
+		turn[index][1] = Number(value);
+
+		this.RaceTable('Turn', turn);
+	},
+
+	RaceBuilt: function (index, value) {
+		var build = this.RaceTune.Build.slice();
+
+		build[index] = Number(value);
+
+		this.RaceTable('Build', build);
+	},
+
+	RaceTable: function (name, value) {
+		var scene = this.RaceScene ? this.RaceScene() : null;
+		var car = scene ? scene.Scene().Objects.car : null;
+
+		this.RaceTune = Object.assign({}, this.RaceTune);
+		this.RaceTune[name] = value;
+
+		if (car)
+			car.Values.Vehicle[name] = value;
+	},
+
+	RaceWindowsMoved: function (value) {
+		var scene = this.RaceScene ? this.RaceScene() : null;
+
+		this.RaceWindows = Number(value);
+
+		if (scene)
+			scene.OpenPart('car', 'windows', this.RaceWindows);
+	},
+
+	RaceNewTrack: function () {
+		this.RaceSeed++;
+
+		this.RaceBuild();
+	},
+
+	OrbitReady: function (scene) {
+		var self = this;
+		var models = this.$Service('Models');
+		var clock;
+
+		this.OrbitScene = function () {
+			return scene;
+		};
+
+		[['ship-cruiser', 'unsa_cruiser__spaceship.glb'], ['ship-battleship', 'space_battleship_aquamarine.glb'], ['station-a', 'space_station_3.glb'], ['station-b', 'i.s.f_space_station.glb'], ['station-c', 'giant_round_spacestation_by_jungle_jim.glb'], ['station-d', '1300_followers_celebration_-_space_station.glb']].forEach(function (one) {
+			if (!models.Has(one[0]))
+				models.Define(one[0], {URL: '/data/models/' + one[1], Type: 'prop'});
+
+			models.Load(one[0]);
+		});
+
+		this.OrbitShipChosen(this.OrbitShip);
+
+		clock = window.setInterval(function () {
+			var hero = scene.Scene().Objects.me;
+
+			if (!self.$Element().isConnected) {
+				window.clearInterval(clock);
+
+				return;
+			}
+
+			self.OrbitSpeed = hero && hero.Ship ? Math.round(Math.sqrt(hero.Ship.Way[0] * hero.Ship.Way[0] + hero.Ship.Way[1] * hero.Ship.Way[1] + hero.Ship.Way[2] * hero.Ship.Way[2]) * 1000) : 0;
+		}, 250);
+	},
+
+	/* Another ship for the same pilot. */
+	OrbitShipChosen: function (value) {
+		var scene = this.OrbitScene ? this.OrbitScene() : null;
+		var models = this.$Service('Models');
+		var name = 'ship-' + value;
+		var ship = this.OrbitShips.filter(function (each) {
+			return each.Value === value;
+		})[0];
+
+		this.OrbitShip = value;
+
+		if (!scene) return;
+
+		if (!models.Has(name))
+			models.Define(name, {URL: '/data/models/' + value, Type: 'prop'});
+
+		models.Load(name);
+
+		if (scene.Get('me'))
+			scene.Remove('me');
+
+		scene.Add('ship', {ID: 'me', Name: '', Model: name, Size: ship.Size || 0.012, Parent: 'terra', Vehicle: {Kind: 'ship', Yaw: ship.Yaw, Mounts: ship.Mounts, Top: 0.09, Around: 'terra', From: [-2.6, 0.3, 1.5], Facing: [1, -0.08, -0.5], Follow: [4.6, 1.1]}});
+		scene.Control('me');
+	},
+
+	/* The lamps of a location, and the one the walker carries, for a picture of the sun alone. */
+	PlaceLampsShown: function (value) {
+		var scene = this.PlaceScene ? this.PlaceScene() : null;
+		var i;
+
+		this.PlaceLamps = value;
+
+		if (!scene) return;
+
+		scene.Change('lantern', {Power: value ? 0.22 : 0});
+
+		for (i = 0; i < 4; i++)
+			scene.Change('lamp-' + i, {Power: value ? 0.35 : 0});
+	},
+
+	/* What a spell is told by the Magic tab of the ribbon. */
+	PlaceSpellLook: function () {
+		var fire = this.PlaceFire;
+		var look = {Volume: fire.Volume, Intensity: fire.Intensity, Length: fire.Length, Width: fire.Width, Spin: fire.Spin, Pulse: this.PlacePulses[this.PlacePulse] || null};
+
+		if (this.PlaceSpell.Color)
+			look.Color = this.PlaceSpell.Color;
+
+		if (this.PlaceSpell.Hot)
+			look.Hot = this.PlaceSpell.Hot;
+
+		return look;
+	},
+
+	PlaceSpellTold: function (key, value) {
+		var scene = this.PlaceScene ? this.PlaceScene() : null;
+		var changes = {};
+
+		this.PlaceSpell = Object.assign({}, this.PlaceSpell);
+		this.PlaceSpell[key] = value;
+
+		changes[key] = value;
+
+		(this.PlaceSpellsMade || []).forEach(function (id) {
+			if (scene && scene.Get(id))
+				scene.Change(id, changes);
+		});
+	},
+
+	/* How a spell changes as it lasts. */
+	PlacePulseChosen: function (value) {
+		this.PlacePulse = value;
+
+		this.PlaceSpellTold('Pulse', this.PlacePulses[value] || null);
+	},
+
+	PlaceSpellColor: function (value) {
+		this.PlaceSpellTold('Color', value);
+	},
+
+	PlaceSpellHot: function (value) {
+		this.PlaceSpellTold('Hot', value);
+	},
+
+	PlaceFireSpin: function (value) {
+		this.PlaceFireTold('Spin', Number(value));
+	},
+
+	PlaceNextPerson: function () {
+		this.PlacePerson = {third: 'first', first: 'shoulder', shoulder: 'third'}[this.PlacePerson];
+	},
+
+	/* Another walker on the same spot: only its model changes. */
+	PlaceCharacterChosen: function (value) {
+		var self = this;
+		var scene = this.PlaceScene ? this.PlaceScene() : null;
+		var hero = scene ? scene.Scene().Objects.hero : null;
+		var character = this.PlaceCharacters.filter(function (each) {
+			return each.Value === value;
+		})[0];
+		var request = new XMLHttpRequest();
+
+		this.PlaceCharacter = value;
+
+		if (!hero) return;
+
+		request.open('HEAD', '/data/models/' + character.File);
+
+		request.onload = function () {
+			if (request.status !== 200) {
+				self.PlaceNote = character.File + ' is not in data/models of this copy';
+
+				return;
+			}
+
+			var place = {X: hero.Values.X, Y: hero.Values.Y, Z: hero.Air === undefined ? hero.Values.Z : hero.Air, Size: hero.Size};
+
+			scene.Remove('hero');
+			scene.Add('unit', Object.assign({ID: 'hero', Name: 'You', Model: self.PlaceHero(), Hold: self.PlaceHold()}, place));
+			scene.Control('hero');
+		};
+
+		request.send();
+	},
+
+	PlaceChosen: function (value) {
+		this.PlaceName = value;
+
+		if (this.PlaceOpen)
+			this.PlaceLoad();
+	},
+
+	PlaceTimed: function (value) {
+		var scene = this.PlaceScene ? this.PlaceScene() : null;
+
+		this.PlaceHour = Number(value);
+
+		if (scene)
+			scene.Change('day', {Time: this.PlaceHour});
+	},
+
+	/* The hours of a slider as a clock shows them. */
+	PlaceClock: function (hours) {
+		var minutes = Math.round(Number(hours) * 60);
+		var part = minutes % 60;
+
+		return (minutes < 600 ? '0' : '') + Math.floor(minutes / 60) + ':' + (part < 10 ? '0' : '') + part;
+	},
+
+	/* A value of the sky of the location changed: the scene takes it at once. */
+	PlaceSkied: function (key, value) {
+		var scene = this.PlaceScene ? this.PlaceScene() : null;
+		var sky = Object.assign({}, this.PlaceSky);
+		var changes = {};
+
+		sky[key] = value;
+		changes[key] = value;
+
+		this.PlaceSky = sky;
+
+		if (scene)
+			scene.Change('day', changes);
+	},
+
+	PlaceDayLength: function (value) {
+		this.PlaceSkied('DayHours', Number(value));
+
+		if (this.PlaceHour > Number(value))
+			this.PlaceTimed(Number(value));
+	},
+
+	SceneWindChosen: function (value) {
+		this.SceneWind = Number(value);
+	},
+
+	/* What burns a few steps before the walker; an explosion happens once. */
+	PlaceEffect: function (type) {
+		var scene = this.PlaceScene ? this.PlaceScene() : null;
+		var hero = scene ? scene.Scene().Objects.hero : null;
+		if (!hero || !hero.World) return;
+
+		var size = hero.Size || 1.8;
+		var heading = hero.Heading || [0, 0, 1];
+		var x = hero.World[0] + heading[0] * size * 2.4;
+		var z = hero.World[2] + heading[2] * size * 2.4;
+
+		this.PlaceEffects = (this.PlaceEffects || 0) + 1;
+
+		if (type === 'explosion' || type === 'teleport') {
+			scene.Burst(type, [x, hero.World[1] + (type === 'teleport' ? 0.05 : size * 0.4), z], {Size: size * 0.6});
+
+			return;
+		}
+
+		if (type === 'fireball') {
+			scene.Burst(type, [hero.World[0] + heading[0] * size * 0.6, hero.World[1] + size * 0.7, hero.World[2] + heading[2] * size * 0.6], {Size: size * 0.5, Aim: heading});
+
+			return;
+		}
+
+		this.PlaceSpellsMade = (this.PlaceSpellsMade || []).concat(['effect-' + this.PlaceEffects]);
+
+		if (['portal', 'beam'].indexOf(type) !== -1) {
+			scene.Add('effect', Object.assign({ID: 'effect-' + this.PlaceEffects, Type: type, X: x, Y: z, Z: hero.World[1] + size, Size: size * 0.8, Aim: heading}, this.PlaceSpellOwn ? this.PlaceSpellLook() : {Spin: this.PlaceFire.Spin}));
+
+			return;
+		}
+
+		if (['aura', 'circle', 'shield', 'lightning', 'healing', 'frost', 'poison', 'pillar'].indexOf(type) !== -1) {
+			scene.Add('effect', Object.assign({ID: 'effect-' + this.PlaceEffects, Type: type, X: x, Y: z, Z: hero.World[1] + size, Size: size * 0.8, Height: 0.04}, this.PlaceSpellOwn ? this.PlaceSpellLook() : {Spin: this.PlaceFire.Spin}));
+
+			return;
+		}
+
+		scene.Add('effect', Object.assign({ID: 'effect-' + this.PlaceEffects, Type: type, X: x, Y: z, Z: hero.World[1] + size, Size: size * 0.55, Height: type === 'torch' ? size * 0.7 : type === 'exhaust' ? size * 0.7 : 0.02, Aim: type === 'exhaust' ? [heading[2], 0, -heading[0]] : null}, type === 'exhaust' ? {Volume: this.PlaceFire.Volume, Intensity: this.PlaceFire.Intensity, Length: this.PlaceFire.Length} : this.PlaceFire));
+	},
+
+	/* What the sliders say goes to all that burns. */
+	PlaceFireTold: function (key, value) {
+		var scene = this.PlaceScene ? this.PlaceScene() : null;
+		var fire = Object.assign({}, this.PlaceFire);
+		var changes = {};
+		var i;
+
+		fire[key] = value;
+		changes[key] = value;
+
+		this.PlaceFire = fire;
+
+		for (i = 1; scene && i <= (this.PlaceEffects || 0); i++) {
+			if (scene.Get('effect-' + i))
+				scene.Change('effect-' + i, changes);
+		}
+	},
+
+	PlaceFireColor: function (value) {
+		this.PlaceFireTold('Color', value);
+	},
+
+	PlaceFireHot: function (value) {
+		this.PlaceFireTold('Hot', value);
+	},
+
+	PlaceFireVolume: function (value) {
+		this.PlaceFireTold('Volume', Number(value));
+	},
+
+	PlaceFireIntensity: function (value) {
+		this.PlaceFireTold('Intensity', Number(value));
+	},
+
+	PlaceFireWidth: function (value) {
+		this.PlaceFireTold('Width', Number(value));
+	},
+
+	PlaceFireLength: function (value) {
+		this.PlaceFireTold('Length', Number(value));
+	},
+
+	PlaceFireSmoke: function (value) {
+		this.PlaceFireTold('Smoke', Number(value));
+	},
+
+	PlaceEffectsGone: function () {
+		var scene = this.PlaceScene ? this.PlaceScene() : null;
+		var left = this.PlaceEffects || 0;
+
+		while (scene && left > 0) {
+			scene.Remove('effect-' + left);
+
+			left--;
+		}
+	},
+
+	SpaceBackdropChosen: function (value) {
+		this.SpaceBackdrop = value;
+
+		if (value && this.SpaceKinds)
+			this.SpaceAmounts = Object.assign({}, this.SpaceKinds[value]);
+
+		this.SpaceMake();
+	},
+
+	/* One sky of all it can hold: what a backdrop chose, as far as the sliders changed it. */
+	SpaceMake: function () {
+		this.SpaceCosmos = this.SpaceBackdrop ? Object.assign({Kind: this.SpaceBackdrop, Seed: 'sky-' + this.SpaceSkies}, this.SpaceAmounts) : '';
+	},
+
+	SpaceAmount: function (name, value) {
+		this.SpaceAmounts = Object.assign({}, this.SpaceAmounts);
+		this.SpaceAmounts[name] = Number(value);
+
+		this.SpaceBackdrop = this.SpaceBackdrop || 'void';
+
+		this.SpaceMake();
+	},
+
+	SpaceSky: function () {
+		this.SpaceSkies++;
+
+		if (this.SpaceBackdrop) this.SpaceMake();
+		else this.SpaceBackdropChosen('nebula');
+	},
+
+	PlaceTownGlow: function (value) {
+		this.PlaceSkied('SkyGlow', Number(value));
+	},
+
+	/* A day on the node of the moon: at a new moon its shadow, at a full one the shadow of the planet on it. */
+	PlaceEclipse: function (kind) {
+		this.PlaceSkied('DayOfYear', 80);
+		this.PlaceSkied('MoonPhase', kind === 'sun' ? 0 : 0.5);
+		this.PlaceTimed(kind === 'sun' ? 12 : 0);
+	},
+
+	PlaceLatitudeChosen: function (value) {
+		this.PlaceSkied('Latitude', Number(value));
+	},
+
+	PlaceTiltChosen: function (value) {
+		this.PlaceSkied('Tilt', Number(value));
+	},
+
+	PlaceDayChosen: function (value) {
+		this.PlaceSkied('DayOfYear', Number(value));
+	},
+
+	PlaceMoonShown: function (value) {
+		this.PlaceSkied('Moon', value);
+	},
+
+	PlaceMoonLight: function (value) {
+		this.PlaceSkied('MoonLight', Number(value));
+	},
+
+	PlaceMoonSize: function (value) {
+		this.PlaceSkied('MoonSize', Number(value));
+	},
+
+	PlaceMoonPhase: function (value) {
+		this.PlaceSkied('MoonPhase', Number(value));
+	},
+
+	PlaceNightLight: function (value) {
+		this.PlaceSkied('NightLight', Number(value));
+	},
+
+	/* The moon goes its way, or stands where the two sliders say. */
+	PlaceMoonHold: function (value) {
+		var scene = this.PlaceScene ? this.PlaceScene() : null;
+
+		this.PlaceMoonHeld = value;
+
+		if (scene)
+			scene.Change('day', {MoonElevation: value ? this.PlaceMoonElevation : null, MoonAzimuth: this.PlaceMoonAzimuth});
+	},
+
+	PlaceMoonHigh: function (value) {
+		this.PlaceMoonElevation = Number(value);
+
+		this.PlaceMoonHold(this.PlaceMoonHeld);
+	},
+
+	PlaceMoonRound: function (value) {
+		this.PlaceMoonAzimuth = Number(value);
+
+		this.PlaceMoonHold(this.PlaceMoonHeld);
+	},
+
+	TerrainTimed: function (value) {
+		this.TerrainHour = Number(value);
+	},
+
+	SceneFlareChosen: function (value) {
+		this.SceneFlare = Number(value);
+	},
+
+	/* A location of the files kept out of git, and a walker on it; a copy without them says so. */
+	PlaceLoad: function () {
+		var self = this;
+		var scene = this.PlaceScene ? this.PlaceScene() : null;
+		var sites = {tree: {File: 'tree_house.glb', Size: 1, Without: 'Sphere_Envi', Plane: true, Under: 15}, forest: {File: 'a_forest_3_with_a_road_at_night_for_game.glb', Size: 5, Without: '', Plane: false}, gulch: {File: 'halo_1multiplayerxboxblood_gulch.glb', Size: 1, Without: '', Plane: false, Hour: 14.5, Noon: 33.7, Latitude: 60, DayOfYear: 121, Color: '#f6e6d0', Shade: '#ffcfa0', Body: 2.9}, infinity: {File: 'halo_1multiplayerpcdefaultinfinity.glb', Size: 1, Without: '', Plane: false, Hour: 14.5, Latitude: 60, DayOfYear: 121, Body: 2.9}};
+		var site = sites[this.PlaceName];
+		var address = '/data/models/' + site.File;
+		var request = new XMLHttpRequest();
+
+		if (!scene) return;
+
+		this.PlaceOpen = true;
+
+		request.open('HEAD', address);
+
+		request.onload = function () {
+			if (request.status !== 200) {
+				self.PlaceNote = site.File + ' is not in data/models of this copy';
+
+				return;
+			}
+
+			scene.Objects().forEach(function (object) {
+				scene.Remove(object.ID);
+			});
+
+			/* The maps of a game are seen by the day they were made for. */
+			if (site.Hour)
+				self.PlaceHour = site.Hour;
+
+			self.PlaceSky = Object.assign({}, self.PlaceSky, {Latitude: site.Latitude || 45, DayOfYear: site.DayOfYear || 172});
+
+			scene.Add('sun', Object.assign({ID: 'day', Time: self.PlaceHour, Noon: site.Noon || 180, Color: site.Color || '#fff4e0', Shade: site.Shade || '#ffffff', MoonElevation: self.PlaceMoonHeld ? self.PlaceMoonElevation : null, MoonAzimuth: self.PlaceMoonAzimuth}, self.PlaceSky));
+			scene.Add('location', {ID: 'place', Model: address, Size: site.Size, Without: site.Without, Plane: site.Plane});
+
+			self.PlaceNote = 'Loading ' + site.File;
+
+			self.PlaceWalker(scene, site, address, 0);
+		};
+
+		request.send();
+	},
+
+	/* The walker chosen, with the clips of their files: they were made for another skeleton, and come to its own. */
+	/* What the character holds: the rifle in the hand of the one that has its clips. */
+	PlaceHold: function () {
+		var chosen = this.PlaceCharacter;
+		var character = this.PlaceCharacters.filter(function (each) {
+			return each.Value === chosen;
+		})[0];
+
+		return character.Clips === 'rifle' ? {Model: 'rifle', Bone: 'HandR', Aim: 'HandL', At: [0.0914, -0.0369, 0], Turn: [0, 180, -4.9], Size: 0.145} : undefined;
+	},
+
+	PlaceHero: function () {
+		var models = this.$Service('Models');
+		var chosen = this.PlaceCharacter;
+		var name = 'walker-' + chosen;
+		var character = this.PlaceCharacters.filter(function (each) {
+			return each.Value === chosen;
+		})[0];
+
+		function rifle (file, stride) {
+			return {URL: '/data/models/riffle_anim/' + file + '.fbx', Stride: stride || 1, Held: true};
+		}
+
+		if (!models.Has('rifle'))
+			models.Define('rifle', {URL: '/data/models/halo_ma4b_assault_rifle.glb', Type: 'prop'});
+
+		if (!models.Has(name))
+			models.Define(name, {URL: '/data/models/' + character.File, Type: 'unit', Motions: character.Clips === 'rifle' ? {
+				idle: rifle('idle'),
+				walk: rifle('walk forward', 0.85),
+				run: rifle('run forward', 1.5),
+				sprint: rifle('sprint forward', 2),
+				jump: rifle('jump loop'),
+				'strafe-left': rifle('walk left', 0.8),
+				'strafe-right': rifle('walk right', 0.8),
+				'strafe-left-run': rifle('run left', 1.4),
+				'strafe-right-run': rifle('run right', 1.4),
+				'turn-left': rifle('turn 90 left'),
+				'turn-right': rifle('turn 90 right')
+			} : {
+				idle: '/data/models/elf_anim/idle.fbx',
+				walk: {URL: '/data/models/elf_anim/walking.fbx', Stride: 0.85},
+				run: {URL: '/data/models/elf_anim/running.fbx', Stride: 1.5},
+				sprint: {URL: '/data/models/Fast Run.fbx', Stride: 2},
+				jump: '/data/models/elf_anim/jump.fbx',
+				'strafe-left': {URL: '/data/models/elf_anim/left strafe walk.fbx', Stride: 0.8},
+				'strafe-right': {URL: '/data/models/elf_anim/right strafe walk.fbx', Stride: 0.8},
+				'strafe-left-run': {URL: '/data/models/elf_anim/left strafe.fbx', Stride: 1.4},
+				'strafe-right-run': {URL: '/data/models/elf_anim/right strafe.fbx', Stride: 1.4},
+				'turn-left': '/data/models/elf_anim/left turn.fbx',
+				'turn-right': '/data/models/elf_anim/right turn.fbx'
+			}});
+
+		models.Load(name);
+
+		return name;
+	},
+
+	/* When the ground has come: the walker on it, a lamp that goes with it and a few along the way. */
+	PlaceWalker: function (scene, site, address, tries) {
+		var self = this;
+		var ground = scene.Scene().Ground;
+		var start;
+		var i;
+
+		if (!ground || !ground.Field.Start || ground.Key.indexOf(address) === -1) {
+			if (tries < 400)
+				window.setTimeout(function () {
+					self.PlaceWalker(scene, site, address, tries + 1);
+				}, 50);
+
+			return;
+		}
+
+		/* On the tree the largest floors are its roofs: the walker starts on what is under them. */
+		start = ground.Field.Spots().filter(function (spot) {
+			return !site.Under || spot.Y < site.Under;
+		})[0];
+
+		scene.Add('unit', {ID: 'hero', Name: 'You', Model: this.PlaceHero(), Hold: this.PlaceHold(), Size: site.Body || 1.8, X: start.X, Y: start.Z, Z: start.Y});
+		scene.Add('light', {ID: 'lantern', Follow: 'hero', Height: (site.Body || 1.8) * 1.15, Radius: 9, Power: 0.22, Color: '#ffd9a8', Flicker: 0.08});
+
+		for (i = 0; i < 4; i++)
+			scene.Add('light', {ID: 'lamp-' + i, X: start.X + Math.cos(i * 1.57) * 9, Y: start.Z + Math.sin(i * 1.57) * 9, Z: start.Y, Height: 2.2, Radius: 8, Power: 0.35, Color: i % 2 ? '#ffb46a' : '#9ad0ff', Flicker: i % 2 ? 0.2 : 0});
+
+		window.setTimeout(function () {
+			scene.Control('hero');
+
+			self.PlaceNote = '';
+		}, 300);
+	},
+
 	/* The quality of all the scenes of the page: kept while the page is reopened, whatever the frames do. */
 	SceneQualityChosen: function (value) {
 		this.SceneQuality = value;
@@ -2069,6 +2935,8 @@ Elemenx.Component('UIKitPage', {
 		this.Spaced = function () {
 			return space;
 		};
+
+		this.SpaceKinds = space.CosmosKinds();
 
 		window.clearInterval(this.SpaceTimer);
 

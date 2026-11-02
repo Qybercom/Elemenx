@@ -711,17 +711,46 @@
 
 	<Section *if="Shows('Space')" Title="Space" [note]="SpaceNote || 'GameScene · GameObject · Kinds: a drag turns, the wheel zooms, a click selects, a double click flies to a body'">
 		<div class="ui-kit-lazy" *lazy>
-			<div class="ui-kit-row">
-				<RadioGroup Variant="segmented" Label="System" [options]="SpaceSystems" [value]="SpaceSystem" (change)="SpaceChosen" />
-				<Button Label="Another seed" Icon="refresh" Variant="ghost" *if="SpaceSystem === 'seed'" (click)="SpaceReseeded" />
-				<Toggle Label="Orbits" [checked]="SpaceOrbits" (change)="SpaceOrbited" />
-				<Toggle Label="Real scale" [checked]="SpaceReal" (change)="SpaceScaled" />
-				<Button Icon="pause" Variant="ghost" [label]="SpacePaused ? 'Go on' : 'Hold the time'" [pressed]="SpacePaused" (click)="SpacePausedToggled" />
-				<Button Label="Fleet to Mars" Icon="send" Variant="ghost" *if="SpaceSystem === 'sol'" (click)="SpaceSent" />
-				<Select Label="Quality" [options]="SceneQualities" [value]="SceneQuality" (change)="SceneQualityChosen" />
-			</div>
+			<Ribbon class="ui-kit-place-ribbon" Label="Space" [tab]="SpaceTab" (tab)="SpaceTab = $event.ID">
+				<RibbonTab ID="system" Title="System">
+					<RibbonGroup Title="System" Icon="globe" Keep="true">
+						<RadioGroup Variant="segmented" Label="System" [options]="SpaceSystems" [value]="SpaceSystem" (change)="SpaceChosen" />
+						<Button Label="Another seed" Icon="refresh" Variant="ghost" Size="small" *if="SpaceSystem === 'seed'" (click)="SpaceReseeded" />
+					</RibbonGroup>
+					<RibbonGroup Title="View" Icon="eye">
+						<Toggle Label="Orbits" [checked]="SpaceOrbits" (change)="SpaceOrbited" />
+						<Toggle Label="Real scale" [checked]="SpaceReal" (change)="SpaceScaled" />
+						<Select Label="Quality" Size="small" [options]="SceneQualities" [value]="SceneQuality" (change)="SceneQualityChosen" />
+					</RibbonGroup>
+					<RibbonGroup Title="Time" Icon="clock">
+						<Button Icon="pause" Variant="ghost" Size="small" [label]="SpacePaused ? 'Go on' : 'Hold the time'" [pressed]="SpacePaused" (click)="SpacePausedToggled" />
+						<Button Label="Fleet to Mars" Icon="send" Variant="ghost" Size="small" *if="SpaceSystem === 'sol'" (click)="SpaceSent" />
+					</RibbonGroup>
+				</RibbonTab>
+				<RibbonTab ID="sky" Title="Sky">
+					<RibbonGroup Title="Backdrop" Icon="star" Keep="true">
+						<Select Label="Starts from" Size="small" [options]="SpaceBackdrops" [value]="SpaceBackdrop" (change)="SpaceBackdropChosen" />
+						<Button Label="Another sky" Icon="refresh" Variant="ghost" Size="small" (click)="SpaceSky" />
+					</RibbonGroup>
+					<RibbonGroup Title="Clouds" Icon="cloud">
+						<label class="ui-kit-tune"><span>Gas</span><Slider Label="Gas" Size="small" ShowValue="end" Min="0" Max="1" Step="0.05" [value]="SpaceAmounts.Gas" (change)="SpaceAmount('Gas', $event)" /></label>
+						<label class="ui-kit-tune"><span>Dust</span><Slider Label="Dust" Size="small" ShowValue="end" Min="0" Max="1" Step="0.05" [value]="SpaceAmounts.Dust" (change)="SpaceAmount('Dust', $event)" /></label>
+						<label class="ui-kit-tune"><span>Pillars</span><Slider Label="Pillars" Size="small" ShowValue="end" Min="0" Max="1" Step="0.05" [value]="SpaceAmounts.Pillars" (change)="SpaceAmount('Pillars', $event)" /></label>
+					</RibbonGroup>
+					<RibbonGroup Title="Stars" Icon="star">
+						<label class="ui-kit-tune"><span>Stars</span><Slider Label="Stars" Size="small" ShowValue="end" Min="0" Max="1" Step="0.05" [value]="SpaceAmounts.Stars" (change)="SpaceAmount('Stars', $event)" /></label>
+						<label class="ui-kit-tune"><span>Young</span><Slider Label="Young stars" Size="small" ShowValue="end" Min="0" Max="1" Step="0.05" [value]="SpaceAmounts.Beacon" (change)="SpaceAmount('Beacon', $event)" /></label>
+						<label class="ui-kit-tune"><span>Bursts</span><Slider Label="Bursts of rays" Size="small" ShowValue="end" Min="0" Max="8" Step="1" [value]="SpaceAmounts.Bursts" (change)="SpaceAmount('Bursts', $event)" /></label>
+						<label class="ui-kit-tune"><span>Clusters</span><Slider Label="Clusters" Size="small" ShowValue="end" Min="0" Max="12" Step="1" [value]="SpaceAmounts.Clusters" (change)="SpaceAmount('Clusters', $event)" /></label>
+					</RibbonGroup>
+					<RibbonGroup Title="Galaxies" Icon="globe">
+						<label class="ui-kit-tune"><span>Band</span><Slider Label="Band of ours" Size="small" ShowValue="end" Min="0" Max="1" Step="0.05" [value]="SpaceAmounts.Band" (change)="SpaceAmount('Band', $event)" /></label>
+						<label class="ui-kit-tune"><span>Far</span><Slider Label="Far galaxies" Size="small" ShowValue="end" Min="0" Max="16" Step="1" [value]="SpaceAmounts.Galaxies" (change)="SpaceAmount('Galaxies', $event)" /></label>
+					</RibbonGroup>
+				</RibbonTab>
+			</Ribbon>
 			<div class="ui-kit-space">
-				<GameScene *if="SpaceSystem === 'sol'" Team="blue" Speed="1" DaySeconds="30" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" [orbits]="SpaceOrbits" [scale]="SpaceReal ? 'real' : 'compressed'" [paused]="SpacePaused" (ready)="SpaceReady" (select)="SpaceSelected" (focus)="SpaceFocused" (arrive)="SpaceArrived">
+				<GameScene *if="SpaceSystem === 'sol'" Team="blue" Speed="1" DaySeconds="30" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" [cosmos]="SpaceCosmos" [orbits]="SpaceOrbits" [scale]="SpaceReal ? 'real' : 'compressed'" [paused]="SpacePaused" (ready)="SpaceReady" (select)="SpaceSelected" (focus)="SpaceFocused" (arrive)="SpaceArrived">
 					<GameObject ID="sun" Kind="star" Name="Sun" Mass="1">
 						<GameObject ID="mercury" Name="Mercury" Kind="planet" Surface-Type="rocky" Radius="2440" Mass="0.055" Distance="0.387" Eccentricity="0.206" Inclination="7" Node="48" Periapsis="29" Anomaly="174" Day="1408" />
 						<GameObject ID="venus" Name="Venus" Kind="planet" Surface-Type="desert" Radius="6052" Mass="0.815" Distance="0.723" Eccentricity="0.007" Inclination="3.4" Node="77" Periapsis="55" Anomaly="50" Day="-5832" Tilt="177" Clouds="1" Atmosphere="#f0d9a0" Colors="#8a6a3a, #c49a5a, #e3c48a, #f4e2b8" />
@@ -754,7 +783,7 @@
 					<GameObject ID="haulers" Kind="fleet" Name="Haulers" Ship="freighter" Parent="jupiter" Team="yellow" Count="3" />
 					<div slot="hud" class="ui-kit-space-hud"><span>Day {{SpaceDay}}</span></div>
 				</GameScene>
-				<GameScene *if="SpaceSystem === 'seed'" Team="blue" Speed="1" DaySeconds="30" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" [seed]="SpaceSeed" [orbits]="SpaceOrbits" [scale]="SpaceReal ? 'real' : 'compressed'" [paused]="SpacePaused" (ready)="SpaceReady" (select)="SpaceSelected" (focus)="SpaceFocused">
+				<GameScene *if="SpaceSystem === 'seed'" Team="blue" Speed="1" DaySeconds="30" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" [seed]="SpaceSeed" [cosmos]="SpaceCosmos" [orbits]="SpaceOrbits" [scale]="SpaceReal ? 'real' : 'compressed'" [paused]="SpacePaused" (ready)="SpaceReady" (select)="SpaceSelected" (focus)="SpaceFocused">
 					<div slot="hud" class="ui-kit-space-hud"><span>Seed {{SpaceSeed}}</span></div>
 				</GameScene>
 			</div>
@@ -765,20 +794,229 @@
 		<div class="ui-kit-lazy" *lazy>
 			<div class="ui-kit-row">
 				<Select Label="Biome" [options]="TerrainBiomes" [value]="TerrainBiome" (change)="TerrainBiomed" />
+				<Select Label="Weather" [options]="SceneWeathers" [value]="SceneWeather" (change)="SceneWeatherChosen" />
 				<Select Label="Quality" [options]="SceneQualities" [value]="SceneQuality" (change)="SceneQualityChosen" />
+				<Field Label="Wind"><Slider Label="Wind" Min="0" Max="4" Step="0.1" ShowValue="always" [value]="SceneWind" (input)="SceneWindChosen" /></Field>
+				<Field Label="Time of day"><Slider Label="Time of day" Min="0" Max="24" Step="0.25" ShowValue="always" [format]="PlaceClock" [value]="TerrainHour" (input)="TerrainTimed" /></Field>
+				<Field Label="Lens flare"><Slider Label="Lens flare" Min="0" Max="2" Step="0.1" ShowValue="always" [value]="SceneFlare" (input)="SceneFlareChosen" /></Field>
 				<Button Label="To the lake" Icon="map-pin" Variant="ghost" (click)="TerrainLake" />
 				<Button Label="All to the village" Icon="home" Variant="ghost" (click)="TerrainVillage" />
 				<Button Label="Save" Icon="save" Variant="ghost" (click)="TerrainSave" />
 				<Button Label="Load" Icon="refresh" Variant="ghost" [disabled]="!TerrainSaved" (click)="TerrainLoad" />
 			</div>
 			<div class="ui-kit-space">
-				<GameScene Setting="terrain" Team="blue" Labels="true" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" (ready)="TerrainReady" (select)="TerrainSelected" (arrive)="TerrainArrived">
+				<GameScene Setting="terrain" Team="blue" Labels="true" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" [weather]="SceneWeather" [wind]="SceneWind" [flare]="SceneFlare" (ready)="TerrainReady" (select)="TerrainSelected" (arrive)="TerrainArrived">
 					<GameObject ID="valley" Kind="ground" Size="900" Height="55" Water="0.32" Seed="valley" [biome]="TerrainBiome" />
-					<GameObject ID="sun" Kind="sun" Elevation="38" Azimuth="150" />
+					<GameObject ID="sun" Kind="sun" Latitude="45" DayOfYear="172" Noon="150" [time]="TerrainHour" />
 					<GameObject ID="hamlet" Kind="village" X="-70" Y="20" Houses="10" />
 					<GameObject *for="unit of TerrainUnits" *key="unit.ID" Kind="unit" [id]="unit.ID" [name]="unit.Name" [x]="unit.X" [y]="unit.Y" Team="blue" />
 					<GameObject *for="house of TerrainHouses" *key="house.ID" Kind="house" [id]="house.ID" [name]="house.Name" [x]="house.X" [y]="house.Y" />
 					<GameObject ID="boulder" Kind="rock" X="30" Y="-20" />
+				</GameScene>
+			</div>
+		</div>
+	</Section>
+
+	<Section *if="Shows('Locations')" Title="Locations" [note]="PlaceNote || 'GameScene · a location of a model: a click takes the mouse, WASD walk, Shift runs, Shift and Alt sprint, A and D step aside, Space jumps, the right button looks round without turning the walk, V changes the camera, Escape frees the mouse'">
+		<div class="ui-kit-lazy" *lazy>
+			<Ribbon class="ui-kit-place-ribbon" Label="Location" [tab]="PlaceTab" (tab)="PlaceTab = $event.ID">
+				<RibbonTab ID="place" Title="Place">
+					<RibbonGroup Title="Where" Icon="map-pin" Keep="true">
+						<Select Label="Location" Size="small" [options]="PlaceList" [value]="PlaceName" (change)="PlaceChosen" />
+						<Select Label="Character" Size="small" [options]="PlaceCharacters" [value]="PlaceCharacter" (change)="PlaceCharacterChosen" />
+						<Button Label="Walk here" Icon="map-pin" Variant="ghost" Size="small" (click)="PlaceLoad" />
+					</RibbonGroup>
+					<RibbonGroup Title="Camera" Icon="eye">
+						<Select Label="Camera" Size="small" [options]="PlacePersons" [value]="PlacePerson" (change)="PlacePerson = $event" />
+						<Toggle Label="Free look" [checked]="PlaceFree" (change)="PlaceFree = $event" />
+						<Button Label="Next camera (V)" Variant="ghost" Size="small" (click)="PlaceNextPerson" />
+					</RibbonGroup>
+					<RibbonGroup Title="Shoulder" Icon="eye">
+						<Toggle Label="Left shoulder (B)" [checked]="PlaceShoulder === 'left'" (change)="PlaceShoulder = $event ? 'left' : 'right'" />
+						<Toggle Label="Lamps" [checked]="PlaceLamps" (change)="PlaceLampsShown" />
+					</RibbonGroup>
+					<RibbonGroup Title="Axes" Icon="move">
+						<Toggle Label="Axes of the view" [checked]="PlaceAxes" (change)="PlaceAxes = $event" />
+						<Toggle Label="Axes of the world" [checked]="PlaceOrigin" (change)="PlaceOrigin = $event" />
+					</RibbonGroup>
+				</RibbonTab>
+				<RibbonTab ID="time" Title="Time">
+					<RibbonGroup Title="Day" Icon="clock">
+						<label class="ui-kit-tune"><span>Time of day</span><Slider Label="Time of day" Size="small" ShowValue="end" Min="0" [max]="PlaceSky.DayHours" Step="0.25" [format]="PlaceClock" [value]="PlaceHour" (input)="PlaceTimed" /></label>
+						<label class="ui-kit-tune"><span>Day length</span><Slider Label="Day length" Size="small" ShowValue="end" Min="6" Max="48" Step="1" Unit=" h" [value]="PlaceSky.DayHours" (input)="PlaceDayLength" /></label>
+						<label class="ui-kit-tune"><span>Day of year</span><Slider Label="Day of year" Size="small" ShowValue="end" Min="1" Max="365" [value]="PlaceSky.DayOfYear" (input)="PlaceDayChosen" /></label>
+					</RibbonGroup>
+					<RibbonGroup Title="Planet" Icon="globe">
+						<label class="ui-kit-tune"><span>Latitude</span><Slider Label="Latitude" Size="small" ShowValue="end" Min="-90" Max="90" Step="1" Unit="°" [value]="PlaceSky.Latitude" (input)="PlaceLatitudeChosen" /></label>
+						<label class="ui-kit-tune"><span>Axis tilt</span><Slider Label="Axis tilt" Size="small" ShowValue="end" Min="0" Max="60" Step="0.5" Unit="°" [value]="PlaceSky.Tilt" (input)="PlaceTiltChosen" /></label>
+					</RibbonGroup>
+					<RibbonGroup Title="Night" Icon="moon">
+						<label class="ui-kit-tune"><span>Night light</span><Slider Label="Night light" Size="small" ShowValue="end" Min="0" Max="3" Step="0.1" [value]="PlaceSky.NightLight" (input)="PlaceNightLight" /></label>
+						<label class="ui-kit-tune"><span>Town glow</span><Slider Label="Town glow" Size="small" ShowValue="end" Min="0" Max="1" Step="0.05" [value]="PlaceSky.SkyGlow" (input)="PlaceTownGlow" /></label>
+					</RibbonGroup>
+					<RibbonGroup Title="Eclipses" Icon="sun">
+						<Button Label="Of the sun" Variant="ghost" Size="small" (click)="PlaceEclipse('sun')" />
+						<Button Label="Of the moon" Variant="ghost" Size="small" (click)="PlaceEclipse('moon')" />
+					</RibbonGroup>
+				</RibbonTab>
+				<RibbonTab ID="moon" Title="Moon">
+					<RibbonGroup Title="Moon" Icon="moon">
+						<Toggle Label="Moon" [checked]="PlaceSky.Moon" (change)="PlaceMoonShown" />
+						<label class="ui-kit-tune"><span>Moon light</span><Slider Label="Moon light" Size="small" ShowValue="end" Min="0" Max="3" Step="0.1" [value]="PlaceSky.MoonLight" (input)="PlaceMoonLight" /></label>
+					</RibbonGroup>
+					<RibbonGroup Title="Disc" Icon="moon">
+						<label class="ui-kit-tune"><span>Moon phase</span><Slider Label="Moon phase" Size="small" ShowValue="end" Min="0" Max="1" Step="0.01" [value]="PlaceSky.MoonPhase" (input)="PlaceMoonPhase" /></label>
+						<label class="ui-kit-tune"><span>Moon size</span><Slider Label="Moon size" Size="small" ShowValue="end" Min="0.3" Max="3" Step="0.1" [value]="PlaceSky.MoonSize" (input)="PlaceMoonSize" /></label>
+					</RibbonGroup>
+					<RibbonGroup Title="Where it stands" Icon="compass">
+						<Toggle Label="Hold the moon" [checked]="PlaceMoonHeld" (change)="PlaceMoonHold" />
+						<label class="ui-kit-tune"><span>Moon height</span><Slider Label="Moon height" Size="small" ShowValue="end" Min="0" Max="90" Unit="°" [disabled]="!PlaceMoonHeld" [value]="PlaceMoonElevation" (input)="PlaceMoonHigh" /></label>
+						<label class="ui-kit-tune"><span>Moon azimuth</span><Slider Label="Moon azimuth" Size="small" ShowValue="end" Min="0" Max="360" Unit="°" [disabled]="!PlaceMoonHeld" [value]="PlaceMoonAzimuth" (input)="PlaceMoonRound" /></label>
+					</RibbonGroup>
+				</RibbonTab>
+				<RibbonTab ID="weather" Title="Weather">
+					<RibbonGroup Title="Air" Icon="cloud">
+						<Select Label="Weather" Size="small" [options]="SceneWeathers" [value]="SceneWeather" (change)="SceneWeatherChosen" />
+						<label class="ui-kit-tune"><span>Wind</span><Slider Label="Wind" Size="small" ShowValue="end" Min="0" Max="4" Step="0.1" [value]="SceneWind" (input)="SceneWindChosen" /></label>
+					</RibbonGroup>
+				</RibbonTab>
+				<RibbonTab ID="effects" Title="Effects">
+					<RibbonGroup Title="Burning" Icon="flame">
+						<Button Label="Campfire" Variant="ghost" Size="small" (click)="PlaceEffect('campfire')" />
+						<Button Label="Torch" Variant="ghost" Size="small" (click)="PlaceEffect('torch')" />
+						<Button Label="Jet" Variant="ghost" Size="small" (click)="PlaceEffect('exhaust')" />
+					</RibbonGroup>
+					<RibbonGroup Title="Sudden" Icon="zap">
+						<Button Label="Explosion" Variant="ghost" Size="small" (click)="PlaceEffect('explosion')" />
+						<Button Label="Sparks" Variant="ghost" Size="small" (click)="PlaceEffect('spark')" />
+						<Button Label="Smoke" Variant="ghost" Size="small" (click)="PlaceEffect('smoke')" />
+					</RibbonGroup>
+					<RibbonGroup Title="Colors" Icon="palette">
+						<ColorInput Label="Fire color" Size="small" [value]="PlaceFire.Color" (input)="PlaceFireColor" />
+						<ColorInput Label="Fire heart" Size="small" [value]="PlaceFire.Hot" (input)="PlaceFireHot" />
+					</RibbonGroup>
+					<RibbonGroup Title="Shape" Icon="sliders">
+						<label class="ui-kit-tune"><span>Volume</span><Slider Label="Volume" Size="small" ShowValue="end" Min="0.1" Max="10" Step="0.1" [value]="PlaceFire.Volume" (input)="PlaceFireVolume" /></label>
+						<label class="ui-kit-tune"><span>Intensity</span><Slider Label="Intensity" Size="small" ShowValue="end" Min="0" Max="5" Step="0.1" [value]="PlaceFire.Intensity" (input)="PlaceFireIntensity" /></label>
+						<label class="ui-kit-tune"><span>Length</span><Slider Label="Length" Size="small" ShowValue="end" Min="0.1" Max="10" Step="0.1" [value]="PlaceFire.Length" (input)="PlaceFireLength" /></label>
+						<label class="ui-kit-tune"><span>Width</span><Slider Label="Width" Size="small" ShowValue="end" Min="0.1" Max="10" Step="0.1" [value]="PlaceFire.Width" (input)="PlaceFireWidth" /></label>
+					</RibbonGroup>
+					<RibbonGroup Title="Rest" Icon="trash">
+						<label class="ui-kit-tune"><span>Smoke</span><Slider Label="Smoke" Size="small" ShowValue="end" Min="0" Max="5" Step="0.1" [value]="PlaceFire.Smoke" (input)="PlaceFireSmoke" /></label>
+						<Button Label="Clear effects" Variant="ghost" Size="small" (click)="PlaceEffectsGone" />
+					</RibbonGroup>
+				</RibbonTab>
+				<RibbonTab ID="magic" Title="Magic">
+					<RibbonGroup Title="Circles" Icon="star">
+						<Button Label="Magic circle" Variant="ghost" Size="small" (click)="PlaceEffect('circle')" />
+						<Button Label="Aura" Variant="ghost" Size="small" (click)="PlaceEffect('aura')" />
+						<Button Label="Portal" Variant="ghost" Size="small" (click)="PlaceEffect('portal')" />
+					</RibbonGroup>
+					<RibbonGroup Title="Light" Icon="sun">
+						<Button Label="Pillar of light" Variant="ghost" Size="small" (click)="PlaceEffect('pillar')" />
+						<Button Label="Beam" Variant="ghost" Size="small" (click)="PlaceEffect('beam')" />
+						<Button Label="Lightning" Variant="ghost" Size="small" (click)="PlaceEffect('lightning')" />
+					</RibbonGroup>
+					<RibbonGroup Title="Spells" Icon="zap">
+						<Button Label="Fireball" Variant="ghost" Size="small" (click)="PlaceEffect('fireball')" />
+						<Button Label="Teleport" Variant="ghost" Size="small" (click)="PlaceEffect('teleport')" />
+						<Button Label="Shield" Variant="ghost" Size="small" (click)="PlaceEffect('shield')" />
+					</RibbonGroup>
+					<RibbonGroup Title="Nature" Icon="heart">
+						<Button Label="Healing" Variant="ghost" Size="small" (click)="PlaceEffect('healing')" />
+						<Button Label="Frost" Variant="ghost" Size="small" (click)="PlaceEffect('frost')" />
+						<Button Label="Poison" Variant="ghost" Size="small" (click)="PlaceEffect('poison')" />
+					</RibbonGroup>
+					<RibbonGroup Title="Look" Icon="palette">
+						<Toggle Label="Colors of my own" [checked]="PlaceSpellOwn" (change)="PlaceSpellOwn = $event" />
+						<ColorInput Label="Spell color" Size="small" [value]="PlaceSpell.Color" (input)="PlaceSpellColor" />
+						<ColorInput Label="Spell heart" Size="small" [value]="PlaceSpell.Hot" (input)="PlaceSpellHot" />
+					</RibbonGroup>
+					<RibbonGroup Title="Rings" Icon="sliders">
+						<label class="ui-kit-tune"><span>Spin</span><Slider Label="Spin" Size="small" ShowValue="end" Min="-5" Max="5" Step="0.1" [value]="PlaceFire.Spin" (input)="PlaceFireSpin" /></label>
+					</RibbonGroup>
+					<RibbonGroup Title="Over time" Icon="clock">
+						<Select Label="Pulse" Size="small" [options]="PlacePulseList" [value]="PlacePulse" (change)="PlacePulseChosen" />
+					</RibbonGroup>
+				</RibbonTab>
+				<RibbonTab ID="view" Title="View">
+					<RibbonGroup Title="Picture" Icon="image">
+						<Select Label="Quality" Size="small" [options]="SceneQualities" [value]="SceneQuality" (change)="SceneQualityChosen" />
+						<label class="ui-kit-tune"><span>Lens flare</span><Slider Label="Lens flare" Size="small" ShowValue="end" Min="0" Max="2" Step="0.1" [value]="SceneFlare" (input)="SceneFlareChosen" /></label>
+					</RibbonGroup>
+				</RibbonTab>
+			</Ribbon>
+			<div class="ui-kit-space">
+				<GameScene Team="blue" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" [weather]="SceneWeather" [wind]="SceneWind" [flare]="SceneFlare" [freelook]="PlaceFree" [person]="PlacePerson" [shoulder]="PlaceShoulder" [axes]="PlaceAxes ? 'top-right' : ''" [origin]="PlaceOrigin" (person)="PlacePerson = $event" (shoulder)="PlaceShoulder = $event" (ready)="PlaceReady" />
+			</div>
+		</div>
+	</Section>
+
+	<Section *if="Shows('Racing')" Title="Racing" [note]="RaceNote || 'GameScene · Tracks · Vehicles: a click takes the mouse, W drives, S goes back, A and D steer, Space brakes, hold Shift to drift, C is the hand brake, V changes the camera'">
+		<div class="ui-kit-lazy" *lazy>
+			<Ribbon class="ui-kit-place-ribbon" Label="Racing" [tab]="RaceTab" (tab)="RaceTab = $event.ID">
+				<RibbonTab ID="drive" Title="Drive">
+					<RibbonGroup Title="Car" Icon="map-pin" Keep="true">
+						<Select Label="Car" Size="small" [options]="RaceCars" [value]="RaceCar" (change)="RaceCarChosen" />
+						<Select Label="Camera" Size="small" [options]="PlacePersons" [value]="RacePerson" (change)="RacePerson = $event" />
+						<Button Label="New track" Icon="map-pin" Variant="ghost" Size="small" (click)="RaceNewTrack" />
+						<span>{{RaceSpeed}} km/h</span>
+					</RibbonGroup>
+				</RibbonTab>
+				<RibbonTab ID="setup" Title="Setup">
+					<RibbonGroup Title="Stopping" Icon="sliders">
+						<label class="ui-kit-tune"><span>Brake</span><Slider Label="Brake" Size="small" ShowValue="end" Min="6" Max="60" Step="1" [value]="RaceTune.Brake" (input)="RaceTuned('Brake', $event)" /></label>
+						<label class="ui-kit-tune"><span>Coast</span><Slider Label="Coast" Size="small" ShowValue="end" Min="0" Max="8" Step="0.1" [value]="RaceTune.Coast" (input)="RaceTuned('Coast', $event)" /></label>
+						<label class="ui-kit-tune"><span>Grip</span><Slider Label="Grip" Size="small" ShowValue="end" Min="0.6" Max="2.4" Step="0.05" [value]="RaceTune.Grip" (input)="RaceTuned('Grip', $event)" /></label>
+						<label class="ui-kit-tune"><span>Downforce</span><Slider Label="Downforce" Size="small" ShowValue="end" Min="0" Max="2" Step="0.1" [value]="RaceTune.Downforce" (input)="RaceTuned('Downforce', $event)" /></label>
+					</RibbonGroup>
+					<RibbonGroup Title="Going" Icon="sliders">
+						<label class="ui-kit-tune"><span>Power</span><Slider Label="Power" Size="small" ShowValue="end" Min="200000" Max="1400000" Step="10000" [value]="RaceTune.Power" (input)="RaceTuned('Power', $event)" /></label>
+						<label class="ui-kit-tune"><span>Steering</span><Slider Label="Steering" Size="small" ShowValue="end" Min="4" Max="40" Step="1" [value]="RaceTune.Answer" (input)="RaceTuned('Answer', $event)" /></label>
+						<label class="ui-kit-tune"><span>Agility</span><Slider Label="Agility" Size="small" ShowValue="end" Min="1" Max="5" Step="0.1" [value]="RaceTune.Agility" (input)="RaceTuned('Agility', $event)" /></label>
+						<label class="ui-kit-tune"><span>Assist</span><Slider Label="Assist" Size="small" ShowValue="end" Min="0" Max="1" Step="0.05" [value]="RaceTune.Assist" (input)="RaceTuned('Assist', $event)" /></label>
+						<label class="ui-kit-tune"><span>Drift grip</span><Slider Label="Drift grip" Size="small" ShowValue="end" Min="0.15" Max="1" Step="0.01" [value]="RaceTune.Slide" (input)="RaceTuned('Slide', $event)" /></label>
+						<label class="ui-kit-tune"><span>Softness</span><Slider Label="Softness" Size="small" ShowValue="end" Min="0.4" Max="2" Step="0.1" [value]="RaceTune.Ride" (input)="RaceTuned('Ride', $event)" /></label>
+					</RibbonGroup>
+					<RibbonGroup Title="Turning" Icon="sliders">
+						<label class="ui-kit-tune"><span>50 km/h</span><Slider Label="Turn at 50 km/h" Size="small" ShowValue="end" Min="20" Max="120" Step="1" [value]="RaceTurnOf(0)" (input)="RaceTurned(0, $event)" /></label>
+						<label class="ui-kit-tune"><span>100 km/h</span><Slider Label="Turn at 100 km/h" Size="small" ShowValue="end" Min="20" Max="120" Step="1" [value]="RaceTurnOf(1)" (input)="RaceTurned(1, $event)" /></label>
+						<label class="ui-kit-tune"><span>200 km/h</span><Slider Label="Turn at 200 km/h" Size="small" ShowValue="end" Min="20" Max="120" Step="1" [value]="RaceTurnOf(2)" (input)="RaceTurned(2, $event)" /></label>
+						<label class="ui-kit-tune"><span>300 km/h</span><Slider Label="Turn at 300 km/h" Size="small" ShowValue="end" Min="20" Max="120" Step="1" [value]="RaceTurnOf(3)" (input)="RaceTurned(3, $event)" /></label>
+						<label class="ui-kit-tune"><span>Wheel, slow</span><Slider Label="Steering time at a walk" Size="small" ShowValue="end" Min="0.05" Max="1" Step="0.05" [value]="RaceBuildOf(0)" (input)="RaceBuilt(0, $event)" /></label>
+						<label class="ui-kit-tune"><span>Wheel, fast</span><Slider Label="Steering time at top speed" Size="small" ShowValue="end" Min="0.05" Max="1" Step="0.05" [value]="RaceBuildOf(1)" (input)="RaceBuilt(1, $event)" /></label>
+					</RibbonGroup>
+					<RibbonGroup Title="Body" Icon="sliders">
+						<label class="ui-kit-tune"><span>Windows</span><Slider Label="Windows" Size="small" ShowValue="end" Min="-0.4" Max="1" Step="0.05" [value]="RaceWindows" (input)="RaceWindowsMoved" /></label>
+					</RibbonGroup>
+				</RibbonTab>
+			</Ribbon>
+			<div class="ui-kit-space">
+				<GameScene Team="blue" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" [person]="RacePerson" Labels="false" (person)="RacePerson = $event" (ready)="RaceReady" />
+			</div>
+		</div>
+	</Section>
+
+	<Section *if="Shows('Orbit')" Title="Orbit" [note]="OrbitNote || 'GameScene · Vehicles: W and S set the speed, A and D yaw, R and F pitch, Q and E roll, C and X lift, Shift boosts, Space stops it, the mouse looks round'">
+		<div class="ui-kit-lazy" *lazy>
+			<div class="ui-kit-row">
+				<Select Label="Ship" [options]="OrbitShips" [value]="OrbitShip" (change)="OrbitShipChosen" />
+				<span>{{OrbitSpeed}} m/s</span>
+			</div>
+			<div class="ui-kit-space">
+				<GameScene Team="blue" Speed="0.004" DaySeconds="600" Orbits="false" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" [cosmos]="OrbitCosmos" (ready)="OrbitReady">
+					<GameObject ID="sol" Kind="star" Name="Star" Mass="1">
+						<GameObject ID="terra" Kind="planet" Name="Terra" Surface-Type="terran" Radius="6371" Mass="1" Distance="1" Day="23.93" Tilt="23.4">
+							<GameObject ID="luna" Kind="moon" Name="Luna" Surface-Type="moon" Radius="1737" Distance="384400 km" Day="0" />
+							<GameObject ID="rocks" Kind="belt" Name="Rocks" Inner="1.3" Outer="1.75" Count="700" Inclination="6" Rocks="0.14" />
+							<GameObject ID="station-1" Kind="craft" Name="Halcyon" Model="station-a" Size="0.32" Distance="1.75" Period="90" Inclination="4" Anomaly="196" />
+							<GameObject ID="station-2" Kind="craft" Name="Meridian" Model="station-b" Size="0.3" Distance="2.05" Period="120" Inclination="-3" Anomaly="214" />
+							<GameObject ID="station-3" Kind="craft" Name="Ring One" Model="station-c" Size="0.4" Distance="1.6" Period="80" Inclination="9" Anomaly="228" />
+							<GameObject ID="station-4" Kind="craft" Name="Anchor" Model="station-d" Size="0.3" Distance="2.3" Period="140" Inclination="2" Anomaly="178" />
+							<GameObject ID="cruiser" Kind="craft" Name="Cruiser" Model="ship-cruiser" Size="0.1" Distance="1.9" Period="60" Inclination="1" Anomaly="205" />
+							<GameObject ID="battleship" Kind="craft" Name="Battleship" Model="ship-battleship" Size="0.14" Distance="2.2" Period="70" Inclination="-2" Anomaly="190" />
+						</GameObject>
+					</GameObject>
 				</GameScene>
 			</div>
 		</div>
@@ -918,7 +1156,7 @@
 			<div class="ui-kit-grid">
 				<Field Label="Volume"><Slider [value]="Volume" Label="Volume" Unit="%" (input)="VolumeChanged" /></Field>
 				<Field Label="Budget"><Slider Range="true" [value]="Budget" Min="0" Max="1000" Step="50" Marks="100" ShowValue="always" Label="Budget" (input)="BudgetChanged" /></Field>
-				<Progress Value="64" Label="Uploading" ShowValue="true" />
+				<Progress Value="64" Label="Uploading" ShowValue="always" />
 				<Progress Label="Indexing" />
 				<Meter Value="72" Low="30" High="80" Optimum="100" Label="Battery" Unit="%" />
 				<Meter Value="91" Low="60" High="85" Optimum="0" Label="Disk usage" Unit="%" />
@@ -936,8 +1174,8 @@
 					<Slider Orientation="vertical" Range="true" [value]="[20, 60]" Marks="20" Size="small" Label="Band" />
 				</div>
 				<div class="ui-kit-row">
-					<Progress Variant="ring" Value="40" ShowValue="true" />
-					<Progress Variant="ring" Tone="success" Value="100" ShowValue="true" Size="large" />
+					<Progress Variant="ring" Value="40" ShowValue="always" />
+					<Progress Variant="ring" Tone="success" Value="100" ShowValue="always" Size="large" />
 					<Progress Variant="ring" Size="small" />
 					<Spinner Size="small" />
 					<Spinner />
@@ -1998,8 +2236,8 @@
 						<span class="elemenx-text small muted">+12% since last week</span>
 					</DashboardWidget>
 					<DashboardWidget Title="Builds" Icon="play" Span="2">
-						<Progress Value="84" Label="Passing" ShowValue="true" Tone="success" />
-						<Progress Value="12" Label="Flaky" ShowValue="true" Tone="warning" />
+						<Progress Value="84" Label="Passing" ShowValue="always" Tone="success" />
+						<Progress Value="12" Label="Flaky" ShowValue="always" Tone="warning" />
 					</DashboardWidget>
 					<DashboardWidget Title="Activity" Icon="history" Span="2" Rows="2">
 						<Chronicle [items]="Activity" Compact="true" />

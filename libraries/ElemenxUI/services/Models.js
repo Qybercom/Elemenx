@@ -14,9 +14,12 @@
  *   A recipe may name a file instead of Build: Define('hero', {URL: 'assets/hero.glb', Type, Size, Speed, Clips: {walk:
  *   'Run'}}) (Clips: the clips of the game and the animations of the file that play them; idle, walk, run, attack, die
  *   and work are found by their names). Load(name, callback) fetches it, (error, model), and Ready(name) tells whether
- *   it came; a model of a file stands on the ground and is 1 tall, as the others are. Make of one not come yet is null.
+ *   it came; a model of a file stands on the ground and is 1 tall, as the others are. Make of one not come yet is null. Apart,
+ *   a word of the name of a material or a node, cuts what a file keeps as one piece at its wide gaps: four wheels in one mesh.
  *   Bake(model) makes the moves of its skeletons an array of frames, for a shader that reads them. Soft (0 to 1, or
  *   {material: value}) lets light under its surface, as in skin. Surfaces(model) is its geometry material by material.
+ * - The Lamps of a model of a file are what shines in it (BuiltLamps): a GameScene lights its world with them.
+ * - BoneMatrix(model, bone, clip, time): the matrix of a bone at a second of a clip; Grip(bone, aim): where a thing in a hand stands.
  * - Make(name, {Variant}) returns a model, made once: {Name, Key, Group, Type, Size, Speed, Sway, Matte, Clips, Pieces:
  *   [{ID, Parent, Pivot, Team, Geometry}]}.
  * - Whole(model) is a model as one geometry, Bounds(geometry) its {Radius, Middle} and Levels(name, {Variant}) its
@@ -92,16 +95,45 @@ Elemenx.Service('Models', {
 		if (recipe.Waiting.length > 1) return;
 
 		this.$Service('Gltf').Load(recipe.URL, function (error, asset) {
-			var waiting = recipe.Waiting;
+			/* Clips of other files (Motions: {clip: URL or {URL, Stride, Held}}) come before the model is said to be ready. */
+			var motions = Object.keys(recipe.Motions || {});
+			var left = motions.length;
 
-			recipe.Waiting = null;
-			recipe.Asset = asset;
+			function ready () {
+				var waiting = recipe.Waiting;
 
-			if (error)
-				recipe.Failed = error;
+				recipe.Waiting = null;
+				recipe.Asset = asset;
 
-			waiting.forEach(function (each) {
-				each(error, error ? null : self.Make(name));
+				if (error)
+					recipe.Failed = error;
+
+				waiting.forEach(function (each) {
+					each(error, error ? null : self.Make(name));
+				});
+			}
+
+			if (error || !left) {
+				ready();
+
+				return;
+			}
+
+			asset.Motions = {};
+
+			motions.forEach(function (clip) {
+				var given = recipe.Motions[clip];
+
+				self.$Service('Fbx').Load(typeof given === 'string' ? given : given.URL, function (failed, source) {
+					var made = failed ? null : self.Retarget(asset, source, clip, given);
+					if (made)
+						asset.Motions[clip] = {Animation: made, Stride: given.Stride || 1};
+
+					left--;
+
+					if (!left)
+						ready();
+				});
 			});
 		});
 	},
@@ -305,6 +337,15 @@ Elemenx.Service('Models', {
 		var box = {Low: [Infinity, Infinity, Infinity], High: [-Infinity, -Infinity, -Infinity]};
 		var pieces = [];
 		var joints = 0;
+
+		/* Materials of a recipe, {word of a name: what to change of it}: a look of the file a game does not want. */
+		Object.keys(recipe.Materials || {}).forEach(function (word) {
+			asset.Materials.forEach(function (material) {
+				if (new RegExp(word).test(material.Name))
+					Object.assign(material, recipe.Materials[word]);
+			});
+		});
+
 		var offsets = asset.Skins.map(function (skin) {
 			var start = joints;
 
@@ -322,14 +363,16 @@ Elemenx.Service('Models', {
 		var scale;
 
 		asset.Nodes.forEach(function (node, index) {
-			if (node.Mesh === -1) return;
+			if (node.Mesh === -1 || recipe.Without && new RegExp(recipe.Without, 'i').test(node.Name)) return;
 
 			asset.Meshes[node.Mesh].forEach(function (primitive, part) {
 				var material = asset.Materials[primitive.Material] || asset.Materials[0];
-				var skinned = node.Skin !== -1 && !!primitive.Geometry.Joints;
-				var geometry = self.Painted(primitive.Geometry, material, asset);
+				var held = node.Skin === -1 && asset.Skins.length && !recipe.Merge && self.Loose(asset, index) ? self.Held(primitive.Geometry, rest[index], binds, asset, rest) : null;
+				var skinned = !!held || node.Skin !== -1 && !!primitive.Geometry.Joints;
+				var skin = held ? held.Skin : node.Skin;
+				var geometry = self.Painted(held ? held.Geometry : primitive.Geometry, material, asset);
 				var matrix = skinned ? graphics.Identity() : rest[index];
-				var placed = skinned ? self.Placed(geometry, binds[node.Skin]) : null;
+				var placed = skinned ? self.Placed(geometry, binds[skin]) : null;
 				var seen = placed || geometry;
 				var i;
 
@@ -342,7 +385,7 @@ Elemenx.Service('Models', {
 					});
 				}
 
-				pieces.push({ID: 'node-' + index + '-' + part, Parent: '', Pivot: [0, 0, 0], Team: false, Geometry: geometry, Material: material, Node: index, Skin: skinned ? node.Skin : -1, JointOffset: skinned ? offsets[node.Skin] : 0, Rest: matrix, Placed: placed});
+				pieces.push({ID: 'node-' + index + '-' + part, Parent: '', Pivot: [0, 0, 0], Team: false, Geometry: geometry, Material: material, Node: index, Skin: skinned ? skin : -1, JointOffset: skinned ? offsets[skin] : 0, Rest: matrix, Placed: placed});
 			});
 		});
 
@@ -352,16 +395,241 @@ Elemenx.Service('Models', {
 			fit = graphics.Identity();
 		}
 		else {
-			fit = graphics.Multiply(graphics.Scaling(scale, scale, scale), graphics.Translation(-(box.Low[0] + box.High[0]) / 2, -box.Low[1], -(box.Low[2] + box.High[2]) / 2));
+			/* A body stands on its hips: what trails behind it is no reason to turn round another point. */
+			var hips = this.HipsOf(asset);
+
+			fit = graphics.Multiply(graphics.Scaling(scale, scale, scale), graphics.Translation(hips === -1 ? -(box.Low[0] + box.High[0]) / 2 : -rest[hips][12], -box.Low[1], hips === -1 ? -(box.Low[2] + box.High[2]) / 2 : -rest[hips][14]));
 		}
 
 		pieces.forEach(function (piece) {
 			piece.Rest = graphics.Multiply(fit, piece.Rest);
 		});
 
-		model = {Name: name, Key: key, Group: recipe.Group || '', Type: recipe.Type || '', Size: recipe.Size || 1, Speed: recipe.Speed || 0, Sway: recipe.Sway || 0, Matte: false, Soft: recipe.Soft || 0, Clips: this.ClipsOf(asset, recipe), Pieces: pieces, Asset: asset, Fit: fit, Joints: joints, Moves: asset.Animations.length > 0};
+		if (recipe.Apart)
+			pieces = this.Apart(asset, pieces, new RegExp(recipe.Apart));
+
+		var lamps = this.BuiltLamps(asset, pieces, rest, fit, Math.max(box.High[0] - box.Low[0], box.High[1] - box.Low[1], box.High[2] - box.Low[2]) * (recipe.Fit === false ? 1 : scale));
+
+		if (recipe.Merge)
+			pieces = this.Merged(pieces);
+
+		model = {Lamps: lamps, Name: name, Key: key, Group: recipe.Group || '', Type: recipe.Type || '', Size: recipe.Size || 1, Speed: recipe.Speed || 0, Sway: recipe.Sway || 0, Matte: false, Soft: recipe.Soft || 0, Clips: this.ClipsOf(asset, recipe), Pieces: pieces, Asset: asset, Fit: fit, Joints: joints, Moves: asset.Animations.length > 0};
 
 		return model;
+	},
+
+	/* What a file keeps as one piece and stands apart, such as four wheels in one mesh: cut at the wide gaps across and along it. */
+	Apart: function (asset, pieces, word) {
+		var graphics = this.$Service('Graphics3D');
+		var out = [];
+
+		function gapOf (values) {
+			var sorted = values.slice().sort(function (a, b) {
+				return a - b;
+			});
+			var best = 0;
+			var at = Infinity;
+			var i;
+
+			for (i = 1; i < sorted.length; i++) {
+				if (sorted[i] - sorted[i - 1] > best) {
+					best = sorted[i] - sorted[i - 1];
+					at = (sorted[i] + sorted[i - 1]) / 2;
+				}
+			}
+
+			return best > (sorted[sorted.length - 1] - sorted[0]) * 0.15 ? at : Infinity;
+		}
+
+		/* A part with the corners of its own, so that all that reads it finds it where it stands. */
+		function partOf (geometry, indices) {
+			var count = geometry.Positions.length / 3;
+			var places = {};
+			var kept = [];
+			var part = {};
+
+			var own = indices.map(function (index) {
+				if (places[index] === undefined) {
+					places[index] = kept.length;
+
+					kept.push(index);
+				}
+
+				return places[index];
+			});
+
+			Object.keys(geometry).forEach(function (name) {
+				var value = geometry[name];
+				var size = value && value.length ? value.length / count : 0;
+
+				part[name] = value;
+
+				if (name === 'Indices' || !size || size !== Math.floor(size)) return;
+
+				part[name] = new value.constructor(kept.length * size);
+
+				kept.forEach(function (index, place) {
+					var i;
+
+					for (i = 0; i < size; i++)
+						part[name][place * size + i] = value[index * size + i];
+				});
+			});
+
+			part.Indices = Array.isArray(geometry.Indices) ? own : new geometry.Indices.constructor(own);
+
+			return part;
+		}
+
+		pieces.forEach(function (piece) {
+			var geometry = piece.Geometry;
+			var count = geometry.Indices ? geometry.Indices.length : 0;
+			var across = [];
+			var along = [];
+			var groups = {};
+			var i;
+
+			if (!count || piece.Skin !== -1 || !word.test(piece.Material ? piece.Material.Name : '') && !word.test(asset.Nodes[piece.Node].Name)) {
+				out.push(piece);
+
+				return;
+			}
+
+			for (i = 0; i < count; i += 3) {
+				var a = geometry.Indices[i] * 3;
+				var b = geometry.Indices[i + 1] * 3;
+				var c = geometry.Indices[i + 2] * 3;
+				var middle = graphics.Apply(piece.Rest, [0, 1, 2].map(function (axis) {
+					return (geometry.Positions[a + axis] + geometry.Positions[b + axis] + geometry.Positions[c + axis]) / 3;
+				}));
+
+				across.push(middle[0]);
+				along.push(middle[2]);
+			}
+
+			var side = gapOf(across);
+			var end = gapOf(along);
+
+			for (i = 0; i < across.length; i++) {
+				var key = (across[i] > side ? 'r' : 'l') + (along[i] > end ? 'f' : 'b');
+
+				groups[key] = groups[key] || [];
+
+				groups[key].push(geometry.Indices[i * 3], geometry.Indices[i * 3 + 1], geometry.Indices[i * 3 + 2]);
+			}
+
+			Object.keys(groups).forEach(function (key) {
+				out.push(Object.assign({}, piece, {ID: piece.ID + '-' + key, Geometry: partOf(geometry, groups[key])}));
+			});
+		});
+
+		return out;
+	},
+
+	/*
+	 * What shines in a model, as lamps in its own space {Place, Color, Power, Radius, Spot, Aim}: the lights of its file, and
+	 * its surfaces that glow, gathered by where they stand, a lamp for each gathering, as strong as what glows there. What
+	 * a skeleton moves is left to its own glow, and so is a sun of a file: the sky has its own.
+	 */
+	BuiltLamps: function (asset, pieces, rest, fit, extent) {
+		var self = this;
+		var graphics = this.$Service('Graphics3D');
+		var vectors = graphics.Vectors;
+		var cell = Math.max(extent, 1e-3) / 24;
+		var cells = {};
+		var lamps = [];
+
+		asset.Nodes.forEach(function (node, index) {
+			var light = node.Light === undefined || node.Light === -1 ? null : asset.Lights[node.Light];
+			var world;
+
+			if (!light || light.Type === 'directional') return;
+
+			world = graphics.Multiply(fit, rest[index]);
+
+			lamps.push({Place: [world[12], world[13], world[14]], Color: light.Color, Power: Math.min(3, 0.05 + light.Intensity * 0.02), Radius: light.Range ? light.Range * Math.hypot(fit[0], fit[1], fit[2]) : cell * 6, Spot: light.Type === 'spot' ? light.Outer * 180 / Math.PI : 0, Aim: vectors.Normalize([-world[8], -world[9], -world[10]]), Energy: Infinity});
+		});
+
+		pieces.forEach(function (piece) {
+			var glow = piece.Material.Emissive || [0, 0, 0];
+			var map = piece.Material.EmissiveMap ? self.Tiny(asset.Images[piece.Material.EmissiveMap.Image]) : null;
+			var geometry = piece.Geometry;
+			var count = geometry.Indices ? geometry.Indices.length : geometry.Positions.length / 3;
+			var i;
+
+			if (piece.Skin !== -1 || glow[0] + glow[1] + glow[2] < 0.02 || piece.Material.EmissiveMap && !map) return;
+
+			function corner (at) {
+				var index = geometry.Indices ? geometry.Indices[at] : at;
+
+				return graphics.Apply(piece.Rest, [geometry.Positions[index * 3], geometry.Positions[index * 3 + 1], geometry.Positions[index * 3 + 2]]);
+			}
+
+			for (i = 0; i + 2 < count; i += 3) {
+				var a = corner(i);
+				var b = corner(i + 1);
+				var c = corner(i + 2);
+				var area = vectors.Length(vectors.Cross(vectors.Subtract(b, a), vectors.Subtract(c, a))) / 2;
+				var seen = glow;
+
+				if (map && geometry.UVs) {
+					var index = geometry.Indices ? geometry.Indices[i] : i;
+					var u = ((geometry.UVs[index * 2] % 1) + 1) % 1;
+					var v = ((geometry.UVs[index * 2 + 1] % 1) + 1) % 1;
+					var texel = (Math.floor(v * map.Size) * map.Size + Math.floor(u * map.Size)) * 4;
+
+					seen = [glow[0] * map.Data[texel] / 255, glow[1] * map.Data[texel + 1] / 255, glow[2] * map.Data[texel + 2] / 255];
+				}
+
+				var strength = Math.max(seen[0], seen[1], seen[2]);
+
+				if (strength > 0.15 && area > 0) {
+					var place = [(a[0] + b[0] + c[0]) / 3, (a[1] + b[1] + c[1]) / 3, (a[2] + b[2] + c[2]) / 3];
+					var key = Math.floor(place[0] / cell) + ':' + Math.floor(place[1] / cell) + ':' + Math.floor(place[2] / cell);
+					var one = cells[key] = cells[key] || {Sum: [0, 0, 0], Tint: [0, 0, 0], Area: 0};
+					var weight = area * strength;
+
+					one.Sum = [one.Sum[0] + place[0] * weight, one.Sum[1] + place[1] * weight, one.Sum[2] + place[2] * weight];
+					one.Tint = [one.Tint[0] + seen[0] * area, one.Tint[1] + seen[1] * area, one.Tint[2] + seen[2] * area];
+					one.Area += area;
+					one.Weight = (one.Weight || 0) + weight;
+				}
+			}
+		});
+
+		Object.keys(cells).forEach(function (key) {
+			var one = cells[key];
+			var top = Math.max(one.Tint[0], one.Tint[1], one.Tint[2]) || 1;
+
+			lamps.push({Place: [one.Sum[0] / one.Weight, one.Sum[1] / one.Weight, one.Sum[2] / one.Weight], Color: [one.Tint[0] / top, one.Tint[1] / top, one.Tint[2] / top], Power: Math.min(1.2, 0.12 + Math.sqrt(one.Weight) / cell * 0.6), Radius: cell * 3 + Math.sqrt(one.Area) * 2, Spot: 0, Aim: [0, -1, 0], Energy: one.Weight});
+		});
+
+		return lamps.sort(function (a, b) {
+			return b.Energy - a.Energy;
+		}).slice(0, 64);
+	},
+
+	/* A picture in a few pixels, to read: its bytes by rows of Size; null with no page or no picture. */
+	Tiny: function (image) {
+		var size = 32;
+		var context;
+		var canvas;
+
+		if (image && image.Tiny) return image.Tiny;
+
+		if (!image || !image.Picture || typeof document === 'undefined') return null;
+
+		canvas = document.createElement('canvas');
+		canvas.width = canvas.height = size;
+		context = canvas.getContext('2d', {willReadFrequently: true});
+
+		if (!context) return null;
+
+		context.drawImage(image.Picture, 0, 0, size, size);
+
+		image.Tiny = {Size: size, Data: context.getImageData(0, 0, size, size).data};
+
+		return image.Tiny;
 	},
 
 	/* The geometry of a primitive with the color of its material in its corners: for what is far, and has no pictures. */
@@ -385,6 +653,131 @@ Elemenx.Service('Models', {
 	/* The inverse of the place a joint of a skin was bound at. */
 	InverseOf: function (skin, index) {
 		return skin.Inverse ? Array.prototype.slice.call(skin.Inverse, index * 16, index * 16 + 16) : this.$Service('Graphics3D').Identity();
+	},
+
+	/*
+	 * What a bone of a role is called in skeletons of other tools: the word of the limb with its side on either end (L_Knee,
+	 * bip_upperArm_L, arm1l). A sidekick of the role, as a skeleton with its own names; null for a role with no word.
+	 */
+	BoneWord: function (role) {
+		var words = {Thigh: 'hip|thigh|leg1', Calf: 'knee|calf|leg2', Foot: 'foot1|foot', Toe: 'toe|foot2', Shoulder: 'clavicle|collar', Arm: 'upper[ _.]*arm|arm1|shoulder', Fore: 'lower[ _.]*arm|elbow|arm2', Hand: 'hand'};
+		var found = /^(Thigh|Calf|Foot|Toe|Shoulder|Arm|Fore|Hand)([LR])$/.exec(role);
+
+		if (role === 'Head')
+			return /(^|[ _.:-])head(_\d+)?$/i;
+
+		var spine = {Spine: 'spine_0', Spine1: 'spine_1', Spine2: 'spine_2'}[role];
+		if (spine)
+			return new RegExp(spine, 'i');
+
+		if (!found)
+			return null;
+
+		var side = found[2].toLowerCase();
+		var word = words[found[1]];
+
+		return new RegExp('(^|[ _.-])' + side + '[ _.-]*(' + word + ')([ _.-]|\\d|$)|(^|[ _.-])(' + word + ')[ _.-]*' + side + '([ _.-]|\\d|$)', 'i');
+	},
+
+	/* The bone of the hips of a skeleton, by its name: -1 with none. */
+	HipsOf: function (asset) {
+		var found = -1;
+
+		asset.Skins.forEach(function (skin) {
+			skin.Joints.forEach(function (joint) {
+				if (found === -1 && /pelvis|hips/i.test(asset.Nodes[joint].Name) && !/sfx/i.test(asset.Nodes[joint].Name))
+					found = joint;
+			});
+		});
+
+		return found;
+	},
+
+	/* Nothing moves a node: no clip, no bone above it, and no clip above it. */
+	Loose: function (asset, index) {
+		var moved = {};
+		var at = index;
+
+		asset.Skins.forEach(function (skin) {
+			skin.Joints.forEach(function (joint) {
+				moved[joint] = true;
+			});
+		});
+
+		asset.Animations.forEach(function (clip) {
+			clip.Channels.forEach(function (channel) {
+				moved[channel.Node] = true;
+			});
+		});
+
+		while (at !== -1 && at !== undefined) {
+			if (moved[at]) return false;
+
+			at = asset.Nodes[at].Parent;
+		}
+
+		return true;
+	},
+
+	/*
+	 * A piece of a skinned model that no skin holds, as the eyes of a body often are: it goes with the bone nearest to it,
+	 * or a clip leaves it hanging where the body stood. The same piece, in the terms of that bone, and the skin of the bone.
+	 */
+	Held: function (geometry, matrix, binds, asset, rest) {
+		var graphics = this.$Service('Graphics3D');
+		var count = geometry.Positions.length / 3;
+		var middle = [0, 0, 0];
+		var nearest = Infinity;
+		var skin = 0;
+		var joint = 0;
+		var i;
+
+		for (i = 0; i < count; i++) {
+			var point = graphics.Apply(matrix, [geometry.Positions[i * 3], geometry.Positions[i * 3 + 1], geometry.Positions[i * 3 + 2]]);
+
+			middle[0] += point[0] / count;
+			middle[1] += point[1] / count;
+			middle[2] += point[2] / count;
+		}
+
+		asset.Skins.forEach(function (each, one) {
+			each.Joints.forEach(function (node, index) {
+				var at = rest[node];
+				var apart = (at[12] - middle[0]) * (at[12] - middle[0]) + (at[13] - middle[1]) * (at[13] - middle[1]) + (at[14] - middle[2]) * (at[14] - middle[2]);
+
+				if (apart < nearest) {
+					nearest = apart;
+					skin = one;
+					joint = index;
+				}
+			});
+		});
+
+		var to = graphics.Multiply(graphics.Invert(binds[skin][joint]), matrix);
+		var positions = new Float32Array(count * 3);
+		var normals = geometry.Normals ? new Float32Array(count * 3) : null;
+		var joints = new Uint16Array(count * 4);
+		var weights = new Float32Array(count * 4);
+
+		for (i = 0; i < count; i++) {
+			var x = geometry.Positions[i * 3];
+			var y = geometry.Positions[i * 3 + 1];
+			var z = geometry.Positions[i * 3 + 2];
+
+			positions[i * 3] = to[0] * x + to[4] * y + to[8] * z + to[12];
+			positions[i * 3 + 1] = to[1] * x + to[5] * y + to[9] * z + to[13];
+			positions[i * 3 + 2] = to[2] * x + to[6] * y + to[10] * z + to[14];
+			joints[i * 4] = joint;
+			weights[i * 4] = 1;
+
+			if (normals) {
+				normals[i * 3] = to[0] * geometry.Normals[i * 3] + to[4] * geometry.Normals[i * 3 + 1] + to[8] * geometry.Normals[i * 3 + 2];
+				normals[i * 3 + 1] = to[1] * geometry.Normals[i * 3] + to[5] * geometry.Normals[i * 3 + 1] + to[9] * geometry.Normals[i * 3 + 2];
+				normals[i * 3 + 2] = to[2] * geometry.Normals[i * 3] + to[6] * geometry.Normals[i * 3 + 1] + to[10] * geometry.Normals[i * 3 + 2];
+			}
+		}
+
+		return {Skin: skin, Geometry: Object.assign({}, geometry, {Positions: positions, Normals: normals || geometry.Normals, Joints: joints, Weights: weights})};
 	},
 
 	/*
@@ -434,10 +827,11 @@ Elemenx.Service('Models', {
 	ClipsOf: function (asset, recipe) {
 		var clips = {};
 		var named = recipe.Clips || {};
+		var gait;
 		var look = {idle: /idle|stand|breath/i, walk: /walk/i, run: /run|sprint/i, attack: /attack|shoot|slash|punch/i, die: /die|death|dead/i, work: /work|gather|build/i};
 
 		function add (name, animation) {
-			clips[name] = {Length: animation.Length || 1, Loop: !/^(attack|die|cast)$/.test(name), Hold: name === 'die', Stride: recipe.Stride || 1, Animation: animation};
+			clips[name] = {Length: animation.Length || 1, Loop: !/^(attack|die|cast|jump)$/.test(name), Hold: name === 'die', Stride: recipe.Stride || 1, Animation: animation};
 		}
 
 		asset.Animations.forEach(function (animation) {
@@ -465,7 +859,683 @@ Elemenx.Service('Models', {
 		if (!clips.walk && clips.run)
 			clips.walk = clips.run;
 
+		Object.keys(asset.Motions || {}).forEach(function (clip) {
+			add(clip, asset.Motions[clip].Animation);
+
+			clips[clip].Stride = asset.Motions[clip].Stride;
+		});
+
+		/* A skeleton that came with no way of walking gets one, made from its bones. */
+		gait = (!clips.walk || !clips.idle) && recipe.Gait !== false ? this.Gait(asset) : null;
+
+		if (gait) {
+			if (!clips.walk) {
+				add('walk', gait.Walk);
+
+				clips.walk.Stride = recipe.Stride || 1.3;
+			}
+
+			if (!clips.idle)
+				add('idle', gait.Idle);
+		}
+
 		return clips;
+	},
+
+	/*
+	 * A clip of another skeleton on this one (source: Fbx.Parse): bones are matched by what they are, not by their names.
+	 * Each turns in the world as its fellow turns from rest; first the bone is laid along its fellow, for a model that stands
+	 * in another pose. The hips go up and down in the proportion of the legs, and the clip stays on the spot.
+	 * Options: Held (the hands of the clip hold something: its arms are taken as they are, with the fingers), Calm ({role: how much of the
+	 * move of that bone is kept, 0 to 1}: a clip made gentler for a body it asks too much of).
+	 */
+	Retarget: function (asset, source, name, options) {
+		var self = this;
+		var fbx = this.$Service('Fbx');
+		var graphics = this.$Service('Graphics3D');
+		var rest = this.NodeWorld(asset, this.Sample(asset, null, 0), graphics.Identity());
+		var degrees = Math.PI / 180;
+		var joints = {};
+		var roles = [
+			['Hips', /hips$/i, /pelvis|hips/i], ['Spine', /spine$/i, /\bspine(_|$)/i], ['Spine1', /spine1$/i, /spine1/i], ['Spine2', /spine2$/i, /spine2/i], ['Neck', /neck$/i, /neck/i], ['Head', /head$/i, /head(_|$)/i],
+			['ShoulderL', /leftshoulder$/i, /\bL[ _.]*Clavicle|left[ _.]*shoulder/i], ['ArmL', /leftarm$/i, /\bL[ _.]*Upper[ _.]*Arm|left[ _.]*arm(?!.*fore)/i], ['ForeL', /leftforearm$/i, /\bL[ _.]*Fore[ _.]*arm|left[ _.]*fore[ _.]*arm/i], ['HandL', /lefthand$/i, /\bL[ _.]*Hand|left[ _.]*hand/i],
+			['ShoulderR', /rightshoulder$/i, /\bR[ _.]*Clavicle|right[ _.]*shoulder/i], ['ArmR', /rightarm$/i, /\bR[ _.]*Upper[ _.]*Arm|right[ _.]*arm(?!.*fore)/i], ['ForeR', /rightforearm$/i, /\bR[ _.]*Fore[ _.]*arm|right[ _.]*fore[ _.]*arm/i], ['HandR', /righthand$/i, /\bR[ _.]*Hand|right[ _.]*hand/i],
+			['ThighL', /leftupleg$/i, /\bL[ _.]*Thigh|left[ _.]*up[ _.]*leg/i], ['CalfL', /leftleg$/i, /\bL[ _.]*Calf|left[ _.]*leg(?!.*up)/i], ['FootL', /leftfoot$/i, /\bL[ _.]*Foot|left[ _.]*foot/i], ['ToeL', /lefttoebase$/i, /\bL[ _.]*Toe0|left[ _.]*toe/i],
+			['ThighR', /rightupleg$/i, /\bR[ _.]*Thigh|right[ _.]*up[ _.]*leg/i], ['CalfR', /rightleg$/i, /\bR[ _.]*Calf|right[ _.]*leg(?!.*up)/i], ['FootR', /rightfoot$/i, /\bR[ _.]*Foot|right[ _.]*foot/i], ['ToeR', /righttoebase$/i, /\bR[ _.]*Toe0|right[ _.]*toe/i]
+		];
+		var next = {Hips: 'Spine', Spine: 'Spine1', Spine1: 'Spine2', Spine2: 'Neck', Neck: 'Head', ShoulderL: 'ArmL', ArmL: 'ForeL', ForeL: 'HandL', ThighL: 'CalfL', CalfL: 'FootL', FootL: 'ToeL', ShoulderR: 'ArmR', ArmR: 'ForeR', ForeR: 'HandR', ThighR: 'CalfR', CalfR: 'FootR', FootR: 'ToeR'};
+		var pairs = {};
+		var order = [];
+		var held = !!(options && options.Held);
+		var followers = {};
+
+		asset.Skins.forEach(function (skin) {
+			skin.Joints.forEach(function (joint) {
+				joints[joint] = true;
+			});
+		});
+
+		function times (a, b) {
+			return [a[3] * b[0] + a[0] * b[3] + a[1] * b[2] - a[2] * b[1], a[3] * b[1] - a[0] * b[2] + a[1] * b[3] + a[2] * b[0], a[3] * b[2] + a[0] * b[1] - a[1] * b[0] + a[2] * b[3], a[3] * b[3] - a[0] * b[0] - a[1] * b[1] - a[2] * b[2]];
+		}
+
+		function back (q) {
+			return [-q[0], -q[1], -q[2], q[3]];
+		}
+
+		function round (axis, angle) {
+			var s = Math.sin(angle / 2);
+
+			return [axis[0] * s, axis[1] * s, axis[2] * s, Math.cos(angle / 2)];
+		}
+
+		function turned (q, v) {
+			var r = times(times(q, [v[0], v[1], v[2], 0]), back(q));
+
+			return [r[0], r[1], r[2]];
+		}
+
+		function unit (v) {
+			var size = Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]) || 1;
+
+			return [v[0] / size, v[1] / size, v[2] / size];
+		}
+
+		function cross (a, b) {
+			return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+		}
+
+		/* The turn that takes a direction to another. */
+		function between (a, b) {
+			var axis = cross(a, b);
+			var size = Math.sqrt(axis[0] * axis[0] + axis[1] * axis[1] + axis[2] * axis[2]);
+
+			return size < 1e-5 ? [0, 0, 0, 1] : round(unit(axis), Math.atan2(size, a[0] * b[0] + a[1] * b[1] + a[2] * b[2]));
+		}
+
+		function euler (v) {
+			return times(times(round([0, 0, 1], v[2] * degrees), round([0, 1, 0], v[1] * degrees)), round([1, 0, 0], v[0] * degrees));
+		}
+
+		/* The bones of the source at a second: their turns in the world, and where they stand. */
+		function pose (time) {
+			var turns = [];
+			var places = [];
+
+			function bone (index) {
+				var one = source.Bones[index];
+				var curves = time === null ? {} : source.Curves[index] || {};
+				var r = curves.R || [];
+				var t = curves.T || [];
+				var local = times(euler(one.Pre), euler([fbx.Sample(r[0], time, one.Rotation[0]), fbx.Sample(r[1], time, one.Rotation[1]), fbx.Sample(r[2], time, one.Rotation[2])]));
+				var move = [fbx.Sample(t[0], time, one.Translation[0]), fbx.Sample(t[1], time, one.Translation[1]), fbx.Sample(t[2], time, one.Translation[2])];
+				var parent = one.Parent;
+
+				if (turns[index]) return;
+
+				if (parent !== -1)
+					bone(parent);
+
+				turns[index] = parent === -1 ? local : times(turns[parent], local);
+
+				var from = parent === -1 ? [0, 0, 0] : turned(turns[parent], move);
+
+				places[index] = parent === -1 ? move : [places[parent][0] + from[0], places[parent][1] + from[1], places[parent][2] + from[2]];
+			}
+
+			source.Bones.forEach(function (one, index) {
+				bone(index);
+			});
+
+			return {Turns: turns, Places: places};
+		}
+
+		function worldTurn (index) {
+			var node = asset.Nodes[index];
+
+			return node.Parent === -1 ? node.Rotation : times(worldTurn(node.Parent), node.Rotation);
+		}
+
+		function at (index) {
+			return [rest[index][12], rest[index][13], rest[index][14]];
+		}
+
+		roles.forEach(function (role) {
+			var from = source.Bones.map(function (bone, index) {
+				return role[1].test(bone.Name) ? index : -1;
+			}).filter(function (index) {
+				return index !== -1;
+			})[0];
+			var bones = Object.keys(joints).filter(function (index) {
+				return !/(^|_)IK|Target|Twst|Ndl|_end|sfx/i.test(asset.Nodes[index].Name);
+			});
+			var to = bones.filter(function (index) {
+				return role[2].test(asset.Nodes[index].Name.replace(/-/g, ' '));
+			})[0];
+			var other = self.BoneWord(role[0]);
+			if (to === undefined && other)
+				to = bones.filter(function (index) {
+					return other.test(asset.Nodes[index].Name) && !/twist/i.test(asset.Nodes[index].Name);
+				})[0];
+
+			if (from !== undefined && to !== undefined)
+				pairs[role[0]] = {From: from, To: Number(to)};
+		});
+
+		if (!pairs.Hips || !pairs.ThighL || !pairs.ThighR || !pairs.FootL) return null;
+
+		/*
+		 * The flesh of a limb may hang on twist bones beside its bone (Bip001 LUpArmTwist under the clavicle, not under the upper
+		 * arm): they go as it goes. A bone that stands away from its twist bone comes to it: that is where the limb bends.
+		 */
+		Object.keys(joints).forEach(function (index) {
+			var named = asset.Nodes[index].Name;
+			var found = /[ _.-]([LR])[ _.-]*(fore|up)/i.exec(named);
+			var pair = found && /twist/i.test(named) ? pairs[(found[2].toLowerCase() === 'fore' ? 'Fore' : 'Arm') + found[1].toUpperCase()] : null;
+			var above = asset.Nodes[index].Parent;
+
+			while (pair && above !== -1 && above !== pair.To)
+				above = asset.Nodes[above].Parent;
+
+			if (!pair || above === pair.To) return;
+
+			followers[index] = {To: pair.To};
+
+			if (asset.Nodes[index].Parent === asset.Nodes[pair.To].Parent) {
+				self.MoveBone(asset, pair.To, at(Number(index)));
+
+				rest = self.NodeWorld(asset, self.Sample(asset, null, 0), graphics.Identity());
+			}
+		});
+
+		if (held)
+			['L', 'R'].forEach(function (side) {
+				var hand = pairs['Hand' + side];
+				var word = side === 'L' ? 'Left' : 'Right';
+
+				['Thumb', 'Index', 'Middle', 'Ring', 'Pinky'].forEach(function (finger, number) {
+					var from = hand ? asset.Nodes[hand.To].Children.filter(function (child) {
+						return new RegExp(finger + '|Finger' + number + '(_|$)', 'i').test(asset.Nodes[child].Name);
+					})[0] : undefined;
+					var i;
+
+					for (i = 1; i <= 3 && from !== undefined; i++) {
+						var role = 'Finger' + side + finger + i;
+						var there = source.Bones.map(function (bone, index) {
+							return bone.Name.replace(/^.*:/, '') === word + 'Hand' + finger + i ? index : -1;
+						}).filter(function (index) {
+							return index !== -1;
+						})[0];
+						if (there !== undefined && joints[from])
+							pairs[role] = {From: there, To: from};
+
+						if (i > 1 && pairs[role])
+							next['Finger' + side + finger + (i - 1)] = role;
+
+						from = asset.Nodes[from].Children[0];
+					}
+				});
+			});
+
+		var start = pose(null);
+		var thighs = [at(pairs.ThighR.To)[0] - at(pairs.ThighL.To)[0], 0, at(pairs.ThighR.To)[2] - at(pairs.ThighL.To)[2]];
+		var forward = unit(cross([0, 1, 0], thighs));
+		var hipsThere = start.Places[pairs.ThighR.From];
+		var hipsLeft = start.Places[pairs.ThighL.From];
+		var ahead = unit(cross([0, 1, 0], [hipsThere[0] - hipsLeft[0], 0, hipsThere[2] - hipsLeft[2]]));
+		var face = between(ahead, forward);
+		var height = Math.abs(at(pairs.Hips.To)[1] - at(pairs.FootL.To)[1]) / Math.max(1e-6, Math.abs(start.Places[pairs.Hips.From][1] - start.Places[pairs.FootL.From][1]));
+
+		Object.keys(pairs).forEach(function (role) {
+			var pair = pairs[role];
+			var fellow = next[role] ? pairs[next[role]] : null;
+
+			pair.Rest = worldTurn(pair.To);
+			pair.Lay = null;
+
+			if (fellow) {
+				var mine = unit([at(fellow.To)[0] - at(pair.To)[0], at(fellow.To)[1] - at(pair.To)[1], at(fellow.To)[2] - at(pair.To)[2]]);
+				var theirs = unit(turned(face, [start.Places[fellow.From][0] - start.Places[pair.From][0], start.Places[fellow.From][1] - start.Places[pair.From][1], start.Places[fellow.From][2] - start.Places[pair.From][2]]));
+
+				pair.Lay = between(mine, theirs);
+			}
+		});
+
+		/* A bone with none to point at (a hand, a head) goes as its parent was laid: it would be twisted against it. */
+		Object.keys(pairs).forEach(function (role) {
+			var above = Object.keys(next).filter(function (one) {
+				return next[one] === role;
+			})[0];
+			var pair = pairs[role];
+
+			while (!pair.Lay && above && pairs[above]) {
+				pair.Lay = pairs[above].Lay;
+				above = Object.keys(next).filter(function (one) {
+					return next[one] === above;
+				})[0];
+			}
+
+			pair.Lay = pair.Lay || [0, 0, 0, 1];
+		});
+
+		/*
+		 * Arms that a model holds down at rest fit its own body as they are: the same direction as on another skeleton would
+		 * push them through it. They count from a source with its arms down, and the clip gives only what it does from there.
+		 */
+		function droop (side) {
+			var arm = pairs['Arm' + side];
+			var fore = pairs['Fore' + side];
+
+			return arm && fore ? unit([at(fore.To)[0] - at(arm.To)[0], at(fore.To)[1] - at(arm.To)[1], at(fore.To)[2] - at(arm.To)[2]])[1] : 0;
+		}
+
+		/* A pose of a model need not be even: the two arms go by what they do together. */
+		var down = !held && droop('L') + droop('R') < -0.6;
+
+		['L', 'R'].forEach(function (side) {
+			var arm = pairs['Arm' + side];
+			var fore = pairs['Fore' + side];
+			if (!arm || !fore || !down) return;
+
+			var theirs = unit(turned(face, [start.Places[fore.From][0] - start.Places[arm.From][0], start.Places[fore.From][1] - start.Places[arm.From][1], start.Places[fore.From][2] - start.Places[arm.From][2]]));
+
+			var lowered = back(between(theirs, unit([theirs[0] * 0.25, -0.97, theirs[2] * 0.25])));
+
+			[arm, fore, pairs['Hand' + side]].forEach(function (pair) {
+				if (!pair) return;
+
+				pair.Lay = lowered;
+			});
+
+			/* A wrist keeps its own pose: a clip was made for a hand that hangs another way. */
+			if (pairs['Hand' + side]) {
+				var hand = at(pairs['Hand' + side].To);
+				var mine = unit([at(fore.To)[0] - at(arm.To)[0], at(fore.To)[1] - at(arm.To)[1], at(fore.To)[2] - at(arm.To)[2]]);
+				var hinge = cross(mine, unit([hand[0] - at(fore.To)[0], hand[1] - at(fore.To)[1], hand[2] - at(fore.To)[2]]));
+
+				pairs['Hand' + side].Still = true;
+
+				/* The elbow a clip bends at rest is in the arm of the model already: that much comes off. */
+				fore.Ease = round(unit(turned(back(fore.Rest), hinge)), -0.24);
+			}
+		});
+
+		/* Parents first: each is turned in its parent as it stands then. */
+		function visit (index) {
+			order.push(index);
+
+			asset.Nodes[index].Children.filter(function (child) {
+				return !followers[child];
+			}).concat(asset.Nodes[index].Children.filter(function (child) {
+				return followers[child];
+			})).forEach(visit);
+		}
+
+		asset.Scene.forEach(visit);
+
+		var count = Math.max(2, Math.round(source.Length * 30));
+		var channels = {};
+		var moves = [];
+		var keys = [];
+		var yaws = [];
+		var i;
+
+		/* How far the clip turns the whole body round: that is for the game to do, or it turns twice. */
+		for (i = 0; i <= count; i++) {
+			var hipsTurn = times(times(times(face, times(pose(i / count * source.Length).Turns[pairs.Hips.From], back(start.Turns[pairs.Hips.From]))), back(face)), [0, 0, 0, 1]);
+			var forward = turned(hipsTurn, [0, 0, 1]);
+			var yaw = Math.atan2(forward[0], forward[2]);
+
+			if (i)
+				yaw += Math.round((yaws[i - 1] - yaw) / (Math.PI * 2)) * Math.PI * 2;
+
+			yaws.push(yaw);
+		}
+
+		var spun = Math.abs(yaws[count] - yaws[0]) > 0.5 ? yaws[count] - yaws[0] : 0;
+
+		Object.keys(pairs).forEach(function (role) {
+			channels[pairs[role].To] = [];
+		});
+
+		Object.keys(followers).forEach(function (index) {
+			followers[index].Rest = times(back(worldTurn(followers[index].To)), worldTurn(Number(index)));
+			channels[index] = [];
+		});
+
+		for (i = 0; i <= count; i++) {
+			var time = i / count * source.Length;
+			var now = pose(time);
+			var worlds = {};
+			var unspin = round([0, 1, 0], -spun * i / count);
+
+			keys.push(time);
+
+			order.forEach(function (index) {
+				var node = asset.Nodes[index];
+				var parent = node.Parent === -1 ? [0, 0, 0, 1] : worlds[node.Parent];
+				var pair = null;
+
+				Object.keys(pairs).forEach(function (role) {
+					if (pairs[role].To === index) {
+						pair = pairs[role];
+						pair.Role = role;
+					}
+				});
+
+				if (followers[index]) {
+					worlds[index] = times(worlds[followers[index].To], followers[index].Rest);
+
+					var along = times(back(parent), worlds[index]);
+
+					channels[index].push(along[0], along[1], along[2], along[3]);
+
+					return;
+				}
+
+				if (!pair) {
+					worlds[index] = times(parent, node.Rotation);
+
+					return;
+				}
+
+				var delta = times(now.Turns[pair.From], back(start.Turns[pair.From]));
+
+				worlds[index] = times(unspin, times(times(times(times(face, delta), back(face)), pair.Lay), pair.Rest));
+
+				var local = times(back(parent), worlds[index]);
+
+				if (pair.Ease)
+					local = times(local, pair.Ease);
+
+				/* Of what a clip does to this bone so much is kept: the way from where it stands at rest, the short way round. */
+				if (options && options.Calm && options.Calm[pair.Role] !== undefined) {
+					var kept = options.Calm[pair.Role];
+					var sign = local[0] * node.Rotation[0] + local[1] * node.Rotation[1] + local[2] * node.Rotation[2] + local[3] * node.Rotation[3] < 0 ? -1 : 1;
+					var eased = [0, 1, 2, 3].map(function (axis) {
+						return node.Rotation[axis] * (1 - kept) + local[axis] * sign * kept;
+					});
+					var size = Math.hypot(eased[0], eased[1], eased[2], eased[3]);
+
+					local = eased.map(function (value) {
+						return value / size;
+					});
+				}
+
+				if (pair.Still)
+					local = node.Rotation;
+
+				worlds[index] = times(parent, local);
+
+				channels[index].push(local[0], local[1], local[2], local[3]);
+			});
+
+			var hips = now.Places[pairs.Hips.From];
+			var first = start.Places[pairs.Hips.From];
+
+			moves.push(turned(face, [hips[0] - first[0], hips[1] - first[1], hips[2] - first[2]]));
+		}
+
+		var made = Object.keys(channels).map(function (index) {
+			return {Node: Number(index), Path: 'rotation', Times: new Float32Array(keys), Values: new Float32Array(channels[index]), Size: 4, Step: false};
+		});
+		var mover = pairs.Hips.To;
+		var spine = pairs.Spine || pairs.Spine1;
+		var up = spine ? spine.To : -1;
+
+		while (up !== -1 && up !== undefined && up !== mover)
+			up = asset.Nodes[up].Parent;
+
+		/* Some rigs hang legs and spine side by side: what moves the body moves what holds them both, or the waist tears. */
+		if (spine && up !== mover && asset.Nodes[mover].Parent !== -1)
+			mover = asset.Nodes[mover].Parent;
+
+		var pelvis = asset.Nodes[mover];
+		var above = pelvis.Parent === -1 ? graphics.Identity() : graphics.Invert(rest[pelvis.Parent]) || graphics.Identity();
+		var values = [];
+		var lastMove = moves[moves.length - 1];
+		var firstMove = moves[0];
+
+		/* What it walks forward goes: the clip stays on the spot, the bounce of the hips is left. */
+		moves.forEach(function (move, index) {
+			var t = index / (moves.length - 1);
+			var d = [(move[0] - firstMove[0] - (lastMove[0] - firstMove[0]) * t) * height, move[1] * height, (move[2] - firstMove[2] - (lastMove[2] - firstMove[2]) * t) * height];
+
+			values.push(pelvis.Translation[0] + above[0] * d[0] + above[4] * d[1] + above[8] * d[2], pelvis.Translation[1] + above[1] * d[0] + above[5] * d[1] + above[9] * d[2], pelvis.Translation[2] + above[2] * d[0] + above[6] * d[1] + above[10] * d[2]);
+		});
+
+		made.push({Node: mover, Path: 'translation', Times: new Float32Array(keys), Values: new Float32Array(values), Size: 3, Step: false});
+
+		return self.Named(name, source.Length, made);
+	},
+
+	/* A bone goes to a place of the world at rest, and what hangs on it stays where it was. */
+	MoveBone: function (asset, index, place) {
+		var graphics = this.$Service('Graphics3D');
+		var rest = this.NodeWorld(asset, this.Sample(asset, null, 0), graphics.Identity());
+		var node = asset.Nodes[index];
+
+		function within (matrix, point) {
+			var m = graphics.Invert(matrix) || graphics.Identity();
+
+			return [m[0] * point[0] + m[4] * point[1] + m[8] * point[2] + m[12], m[1] * point[0] + m[5] * point[1] + m[9] * point[2] + m[13], m[2] * point[0] + m[6] * point[1] + m[10] * point[2] + m[14]];
+		}
+
+		var hung = node.Children.map(function (child) {
+			return [rest[child][12], rest[child][13], rest[child][14]];
+		});
+
+		node.Translation = node.Parent === -1 ? place : within(rest[node.Parent], place);
+		rest = this.NodeWorld(asset, this.Sample(asset, null, 0), graphics.Identity());
+
+		node.Children.forEach(function (child, order) {
+			asset.Nodes[child].Translation = within(rest[index], hung[order]);
+		});
+	},
+
+	Named: function (name, length, channels) {
+		return {Name: name, Length: length, Channels: channels};
+	},
+
+	/*
+	 * Clips made from a skeleton, for a model that came without them: its bones are known by their names (Biped, Mixamo,
+	 * Blender). Each bone turns round an axis of the world, whichever way the file holds it, so one recipe fits all: legs
+	 * that swing and knees that bend, arms let down and swinging against them, a spine that turns. null with no legs.
+	 */
+	Gait: function (asset) {
+		var rest = this.NodeWorld(asset, this.Sample(asset, null, 0), this.$Service('Graphics3D').Identity());
+		var joints = {};
+		var turns = [];
+
+		asset.Skins.forEach(function (skin) {
+			skin.Joints.forEach(function (joint) {
+				joints[joint] = true;
+			});
+		});
+
+		function find (pattern) {
+			var found = Object.keys(joints).filter(function (index) {
+				return pattern.test(asset.Nodes[index].Name);
+			})[0];
+
+			return found === undefined ? -1 : Number(found);
+		}
+
+		function times (a, b) {
+			return [a[3] * b[0] + a[0] * b[3] + a[1] * b[2] - a[2] * b[1], a[3] * b[1] - a[0] * b[2] + a[1] * b[3] + a[2] * b[0], a[3] * b[2] + a[0] * b[1] - a[1] * b[0] + a[2] * b[3], a[3] * b[3] - a[0] * b[0] - a[1] * b[1] - a[2] * b[2]];
+		}
+
+		function round (axis, angle) {
+			var s = Math.sin(angle / 2);
+
+			return [axis[0] * s, axis[1] * s, axis[2] * s, Math.cos(angle / 2)];
+		}
+
+		function worldTurn (index) {
+			var node = asset.Nodes[index];
+
+			return node.Parent === -1 ? node.Rotation : times(worldTurn(node.Parent), node.Rotation);
+		}
+
+		function at (index) {
+			return [rest[index][12], rest[index][13], rest[index][14]];
+		}
+
+		function unit (v) {
+			var length = Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]) || 1;
+
+			return [v[0] / length, v[1] / length, v[2] / length];
+		}
+
+		function cross (a, b) {
+			return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+		}
+
+		var bones = {
+			ThighL: find(/\bL[ _.]*Thigh|Left[ _.]*Up[ _.]*Leg|thigh[._]l\b/i),
+			ThighR: find(/\bR[ _.]*Thigh|Right[ _.]*Up[ _.]*Leg|thigh[._]r\b/i),
+			CalfL: find(/\bL[ _.]*Calf|Left[ _.]*Leg(?!.*Up)|calf[._]l\b/i),
+			CalfR: find(/\bR[ _.]*Calf|Right[ _.]*Leg(?!.*Up)|calf[._]r\b/i),
+			ArmL: find(/\bL[ _.]*Upper[ _.]*Arm|Left[ _.]*Arm(?!.*Fore)|upper[ _]?arm[._]l\b/i),
+			ArmR: find(/\bR[ _.]*Upper[ _.]*Arm|Right[ _.]*Arm(?!.*Fore)|upper[ _]?arm[._]r\b/i),
+			ForeL: find(/\bL[ _.]*Fore[ _.]*arm|Left[ _.]*Fore[ _.]*Arm|fore[ _]?arm[._]l\b/i),
+			ForeR: find(/\bR[ _.]*Fore[ _.]*arm|Right[ _.]*Fore[ _.]*Arm|fore[ _]?arm[._]r\b/i),
+			HandL: find(/\bL[ _.]*Hand|Left[ _.]*Hand|hand[._]l\b/i),
+			HandR: find(/\bR[ _.]*Hand|Right[ _.]*Hand|hand[._]r\b/i),
+			Spine: find(/spine1?(_|$)|spine1?\b/i)
+		};
+		if (bones.ThighL < 0 || bones.ThighR < 0 || bones.CalfL < 0 || bones.CalfR < 0) return null;
+
+		var thighs = [at(bones.ThighR)[0] - at(bones.ThighL)[0], 0, at(bones.ThighR)[2] - at(bones.ThighL)[2]];
+		var forward = unit(cross([0, 1, 0], thighs));
+		var axis = cross([0, 1, 0], forward);
+
+		/* A turn of the world for a bone, at a place of the cycle, as the turn of its node in its parent. */
+		function channel (bone, count, length, angle, first) {
+			var node = asset.Nodes[bone];
+			var parent = node.Parent === -1 ? [0, 0, 0, 1] : worldTurn(node.Parent);
+			var back = [-parent[0], -parent[1], -parent[2], parent[3]];
+			var values = [];
+			var keys = [];
+			var i;
+
+			for (i = 0; i <= count; i++) {
+				var turn = round(axis, angle(i / count * Math.PI * 2));
+
+				if (first)
+					turn = times(turn, first);
+
+				var local = times(times(times(back, turn), parent), node.Rotation);
+
+				values.push(local[0], local[1], local[2], local[3]);
+				keys.push(i / count * length);
+			}
+
+			return {Node: bone, Path: 'rotation', Times: new Float32Array(keys), Values: new Float32Array(values), Size: 4, Step: false};
+		}
+
+		/* An arm held out is let down first: from where it points to the side of the body. */
+		function lowered (arm, fore) {
+			var way = fore < 0 ? [0, -1, 0] : unit([at(fore)[0] - at(arm)[0], at(fore)[1] - at(arm)[1], at(fore)[2] - at(arm)[2]]);
+			var down = unit([way[0] * 0.4, -1, way[2] * 0.4]);
+
+			return turnTo(way, down);
+		}
+
+		function turnTo (way, down) {
+			var pivot = cross(way, down);
+			var size = Math.sqrt(pivot[0] * pivot[0] + pivot[1] * pivot[1] + pivot[2] * pivot[2]);
+
+			return size < 0.05 ? null : round(unit(pivot), Math.atan2(size, way[0] * down[0] + way[1] * down[1] + way[2] * down[2]));
+		}
+
+		/* A forearm goes on along the arm let down, or the elbow stays as a pose of arms held out left it. */
+		function along (fore, hand, arm) {
+			var turn;
+			var way;
+			var down;
+			var r;
+
+			if (fore < 0 || hand < 0 || !arm) return null;
+
+			way = unit([at(hand)[0] - at(fore)[0], at(hand)[1] - at(fore)[1], at(hand)[2] - at(fore)[2]]);
+			down = unit([way[0] * 0.4, -1, way[2] * 0.4]);
+			turn = [-arm[0], -arm[1], -arm[2], arm[3]];
+			r = times(times(turn, [down[0], down[1], down[2], 0]), arm);
+
+			return turnTo(way, [r[0], r[1], r[2]]);
+		}
+
+		function clip (name, length, count, swing) {
+			var channels = turns.map(function (one) {
+				return channel(one.Bone, count, length, swing(one), one.First);
+			});
+
+			return {Name: name, Length: length, Channels: channels};
+		}
+
+		[['ThighL', 'Leg', 1], ['ThighR', 'Leg', -1], ['CalfL', 'Knee', 1], ['CalfR', 'Knee', -1], ['ArmL', 'Arm', -1], ['ArmR', 'Arm', 1], ['ForeL', 'Elbow', 1], ['ForeR', 'Elbow', 1]].forEach(function (one) {
+			var bone = bones[one[0]];
+			if (bone < 0) return;
+
+			var left = /L$/.test(one[0]);
+			var arm = bones[left ? 'ArmL' : 'ArmR'];
+			var first = arm < 0 ? null : lowered(arm, bones[left ? 'ForeL' : 'ForeR']);
+
+			turns.push({Bone: bone, Part: one[1], Side: one[2], First: one[1] === 'Arm' ? first : one[1] === 'Elbow' ? along(bone, bones[left ? 'HandL' : 'HandR'], first) : null});
+		});
+
+		return {
+			Walk: clip('Walk (made)', 1, 24, function (one) {
+				return function (phase) {
+					if (one.Part === 'Leg')
+						return -0.48 * one.Side * Math.sin(phase);
+
+					if (one.Part === 'Knee')
+						return 0.12 + 0.85 * Math.max(0, one.Side * Math.cos(phase));
+
+					if (one.Part === 'Arm')
+						return -0.34 * one.Side * Math.sin(phase);
+
+					return -0.3 + 0.12 * Math.sin(phase);
+				};
+			}),
+			Idle: clip('Idle (made)', 3, 12, function (one) {
+				return function (phase) {
+					if (one.Part === 'Elbow')
+						return -0.14 + 0.02 * Math.sin(phase);
+
+					if (one.Part === 'Arm')
+						return 0.02 * Math.sin(phase);
+
+					return 0;
+				};
+			})
+		};
+	},
+
+	/* The pieces of a model with many, as one for each material: a location of thousands of meshes is a few draws. */
+	Merged: function (pieces) {
+		var graphics = this.$Service('Graphics3D');
+		var groups = [];
+
+		pieces.forEach(function (piece) {
+			var group = groups.filter(function (each) {
+				return each.Material === piece.Material;
+			})[0];
+
+			if (!group) {
+				group = {Material: piece.Material, Parts: []};
+
+				groups.push(group);
+			}
+
+			group.Parts.push({Geometry: piece.Geometry, Matrix: piece.Rest});
+		});
+
+		return groups.map(function (group, index) {
+			return {ID: 'whole-' + index, Parent: '', Pivot: [0, 0, 0], Team: false, Geometry: graphics.Merge(group.Parts), Material: group.Material, Node: -1, Skin: -1, JointOffset: 0, Rest: graphics.Identity(), Placed: null};
+		});
 	},
 
 	/*
@@ -473,20 +1543,56 @@ Elemenx.Service('Models', {
 	 * the texture for each frame. Every copy of a model then only says which line it is at.
 	 */
 	Bake: function (model) {
+		if (!model.Baked)
+			this.BakeStep(model, Infinity);
+
+		return model.Baked;
+	},
+
+	/* Some of the frames, for as long as it is given (milliseconds): true when all are there. A long clip stops no frame. */
+	BakeStep: function (model, budget) {
 		var self = this;
 		var graphics = this.$Service('Graphics3D');
 		var asset = model.Asset;
 		var rate = 30;
-		var frames = [];
-		var starts = {};
-		var done = [];
+		var started = performance.now();
+		var work = model.Baking;
 		var made;
 
-		if (model.Baked)
-			return model.Baked;
+		if (model.Baked) return true;
 
-		function frame (animation, time) {
-			var world = self.NodeWorld(asset, self.Sample(asset, animation, time), model.Fit);
+		function plan () {
+			var done = [];
+			var plain = {Frames: [], Starts: {}, Queue: [{Animation: null, Time: 0}]};
+
+			Object.keys(model.Clips).forEach(function (name) {
+				var clip = model.Clips[name];
+				var count = Math.max(1, Math.ceil(clip.Length * rate));
+				var same = done.filter(function (each) {
+					return each.Animation === clip.Animation;
+				})[0];
+				var i;
+
+				/* One animation under two names (idle and its own) is the same lines of the texture. */
+				if (same) {
+					plain.Starts[name] = same.Place;
+
+					return;
+				}
+
+				plain.Starts[name] = {Start: plain.Queue.length, Count: count, Rate: rate};
+
+				done.push({Animation: clip.Animation, Place: plain.Starts[name]});
+
+				for (i = 0; i <= count; i++)
+					plain.Queue.push({Animation: clip.Animation, Time: Math.min(clip.Length, i / rate)});
+			});
+
+			return plain;
+		}
+
+		function frame (step) {
+			var world = self.NodeWorld(asset, self.Sample(asset, step.Animation, step.Time), model.Fit);
 			var line = [];
 
 			asset.Skins.forEach(function (skin) {
@@ -497,43 +1603,40 @@ Elemenx.Service('Models', {
 				});
 			});
 
-			frames.push(line);
+			work.Frames.push(line);
 		}
 
-		frame(null, 0);
+		work = model.Baking = work || plan();
 
-		Object.keys(model.Clips).forEach(function (name) {
-			var clip = model.Clips[name];
-			var count = Math.max(1, Math.ceil(clip.Length * rate));
-			var same = done.filter(function (each) {
-				return each.Animation === clip.Animation;
-			})[0];
-			var i;
+		while (work.Frames.length < work.Queue.length) {
+			frame(work.Queue[work.Frames.length]);
 
-			/* One animation under two names (idle and its own) is the same lines of the texture. */
-			if (same) {
-				starts[name] = same.Place;
+			if (performance.now() - started > budget) return false;
+		}
 
-				return;
-			}
+		/* The last line is where each joint stands at rest: a fade turns round it, so what it moves keeps its size. */
+		var binds = [];
 
-			starts[name] = {Start: frames.length, Count: count, Rate: rate};
+		asset.Skins.forEach(function (skin) {
+			skin.Joints.forEach(function (joint, index) {
+				var bound = graphics.Invert(self.InverseOf(skin, index));
 
-			done.push({Animation: clip.Animation, Place: starts[name]});
-
-			for (i = 0; i <= count; i++)
-				frame(clip.Animation, Math.min(clip.Length, i / rate));
+				binds.push(bound[12], bound[13], bound[14], 0, 0, 0, 0, 0, 0, 0, 0, 0);
+			});
 		});
 
-		made = new Float32Array(frames.length * model.Joints * 12);
+		made = new Float32Array((work.Frames.length + 1) * model.Joints * 12);
 
-		frames.forEach(function (line, index) {
+		work.Frames.forEach(function (line, index) {
 			made.set(line, index * model.Joints * 12);
 		});
 
-		model.Baked = {Data: made, Width: Math.max(1, model.Joints * 3), Height: frames.length, Clips: starts};
+		made.set(binds, work.Frames.length * model.Joints * 12);
 
-		return model.Baked;
+		model.Baked = {Data: made, Width: Math.max(1, model.Joints * 3), Height: work.Frames.length + 1, Clips: work.Starts};
+		model.Baking = null;
+
+		return true;
 	},
 
 	/* The line of a clip at a second of it, and the fraction of the way to the next. */
@@ -545,9 +1648,108 @@ Elemenx.Service('Models', {
 
 		if (!made || !place) return 0;
 
-		at = (made.Loop ? time % made.Length : Math.min(made.Length, time)) * place.Rate;
+		at = (made.Loop ? (time % made.Length + made.Length) % made.Length : Math.min(made.Length, time)) * place.Rate;
 
 		return place.Start + Math.min(place.Count, Math.floor(at));
+	},
+
+	/* The matrix of a bone of a model of a file at a second of a clip, by its role (HandR, HandL...) or its name; null with none. */
+	BoneMatrix: function (model, bone, clip, time) {
+		var asset = model.Asset;
+		var made = model.Clips[clip];
+		var known = model.Bones = model.Bones || {};
+		var word = this.BoneWord(bone);
+		var side = /^Hand([LR])$/.exec(bone);
+		var moment;
+
+		if (!asset)
+			return null;
+
+		if (known[bone] === undefined) {
+			known[bone] = -1;
+
+			asset.Nodes.forEach(function (node, index) {
+				if (known[bone] === -1 && (node.Name === bone || word && word.test(node.Name) || side && new RegExp('(^|[ _.:-])' + (side[1] === 'L' ? 'left' : 'right') + '[ _.-]*hand($|_)', 'i').test(node.Name)))
+					known[bone] = index;
+			});
+		}
+
+		if (known[bone] === -1) return null;
+
+		moment = made ? (made.Loop ? (time % made.Length + made.Length) % made.Length : Math.min(made.Length, time)) : 0;
+
+		return this.NodeWorld(asset, this.Sample(asset, made ? made.Animation : null, moment), model.Fit)[known[bone]];
+	},
+
+	/*
+	 * Where a thing in a hand stands: the place and the turn of its bone, as a skeleton may be of any scale. With another bone
+	 * to aim at, X goes from the one to the other and Y stays up: a rifle lies in two hands however they are turned.
+	 */
+	Grip: function (bone, aim) {
+		var vectors = this.$Service('Graphics3D').Vectors;
+		var x = vectors.Normalize([bone[0], bone[1], bone[2]]);
+		var y = vectors.Normalize([bone[4], bone[5], bone[6]]);
+		var z = vectors.Normalize([bone[8], bone[9], bone[10]]);
+
+		if (aim) {
+			x = vectors.Normalize([aim[12] - bone[12], aim[13] - bone[13], aim[14] - bone[14]]);
+			z = vectors.Normalize(vectors.Cross(x, [0, 1, 0]));
+			y = vectors.Cross(z, x);
+		}
+
+		return [x[0], x[1], x[2], 0, y[0], y[1], y[2], 0, z[0], z[1], z[2], 0, bone[12], bone[13], bone[14], 1];
+	},
+
+	/* A hand with its place moved from the wrist into the palm, by its middle finger: what it holds lies there. */
+	Palm: function (model, bone, clip, hand) {
+		var asset = model.Asset;
+		var node = asset && model.Bones && asset.Nodes[model.Bones[bone]];
+		var finger = node ? node.Children.filter(function (child) {
+			return /middle|finger2/i.test(asset.Nodes[child].Name);
+		})[0] : undefined;
+		var tip = finger === undefined ? null : this.BoneMatrix(model, asset.Nodes[finger].Name, clip, 0);
+		var made = hand.slice();
+
+		if (tip) {
+			made[12] = hand[12] + (tip[12] - hand[12]) * 0.8;
+			made[13] = hand[13] + (tip[13] - hand[13]) * 0.8;
+			made[14] = hand[14] + (tip[14] - hand[14]) * 0.8;
+		}
+
+		return made;
+	},
+
+	/* The turn from a bone to a thing that lies from it to another, as they stand when idle: it holds through all that the bone does. */
+	GripTurn: function (model, bone, aim) {
+		var graphics = this.$Service('Graphics3D');
+		var kept = model.GripTurns = model.GripTurns || {};
+		var key = bone + '>' + aim;
+		var clip = model.Clips.idle ? 'idle' : '';
+
+		if (!kept[key]) {
+			var hand = this.BoneMatrix(model, bone, clip, 0);
+			var other = this.BoneMatrix(model, aim, clip, 0);
+			var plain = hand ? this.Grip(hand, null) : graphics.Identity();
+			var palm = hand ? this.Palm(model, bone, clip, hand) : null;
+			var far = other ? this.Palm(model, aim, clip, other) : null;
+
+			kept[key] = hand && other ? graphics.Multiply(graphics.Invert(plain), this.Grip(palm, far)) : graphics.Identity();
+		}
+
+		return kept[key];
+	},
+
+	/* How far a second of a clip is from its line to the next one: the frames are baked thirty a second, a screen shows more. */
+	Between: function (model, clip, time) {
+		var made = model.Clips[clip];
+		var place = model.Baked && model.Baked.Clips[clip];
+		var at;
+
+		if (!made || !place) return 0;
+
+		at = (made.Loop ? (time % made.Length + made.Length) % made.Length : Math.min(made.Length, time)) * place.Rate;
+
+		return Math.floor(at) < place.Count ? at - Math.floor(at) : 0;
 	},
 
 	Bounds: function (geometry) {
@@ -641,7 +1843,7 @@ Elemenx.Service('Models', {
 	/* The matrix of each piece of a model of a file, in the space of the model; a skeleton moves by its frames. */
 	PoseOfFile: function (model, clip, time) {
 		var made = model.Clips[clip];
-		var moment = made ? (made.Loop ? time % made.Length : Math.min(made.Length, time)) : 0;
+		var moment = made ? (made.Loop ? (time % made.Length + made.Length) % made.Length : Math.min(made.Length, time)) : 0;
 		var key = (made ? clip : '') + ':' + Math.floor(moment * 30);
 		var kept = model.Poses = model.Poses || {};
 		var world;
@@ -655,7 +1857,7 @@ Elemenx.Service('Models', {
 		matrices = {};
 
 		model.Pieces.forEach(function (piece) {
-			matrices[piece.ID] = piece.Skin === -1 ? world[piece.Node] : model.Fit;
+			matrices[piece.ID] = piece.Node === -1 ? piece.Rest : piece.Skin === -1 ? world[piece.Node] : model.Fit;
 		});
 
 		kept[key] = matrices;

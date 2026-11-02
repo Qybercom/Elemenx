@@ -150,6 +150,32 @@
 	gap: 6px;
 }
 
+/* The axes of the view, in a corner of their own. */
+.elemenx-game-scene-axes {
+	position: absolute;
+	z-index: 2;
+}
+
+.elemenx-game-scene-axes[data-corner='top-left'] {
+	top: 12px;
+	left: 12px;
+}
+
+.elemenx-game-scene-axes[data-corner='top-right'] {
+	top: 12px;
+	right: 12px;
+}
+
+.elemenx-game-scene-axes[data-corner='bottom-left'] {
+	bottom: 12px;
+	left: 12px;
+}
+
+.elemenx-game-scene-axes[data-corner='bottom-right'] {
+	right: 12px;
+	bottom: 12px;
+}
+
 /* On the surface of a body: the way back to space, in a corner. */
 .elemenx-game-scene-takeoff {
 	position: absolute;

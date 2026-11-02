@@ -82,6 +82,27 @@
 	pointer-events: none;
 }
 
+/* A value that always shows stands over the slider, in room of its own: nothing that comes before it goes under it. */
+.elemenx-slider.valued {
+	margin-block-start: 24px;
+}
+
+.elemenx-slider.vertical.valued {
+	margin-block-start: 0;
+}
+
+.elemenx-slider-end {
+	flex: none;
+	min-inline-size: 4ch;
+	margin-inline-start: 12px;
+	color: var(--elemenx-text-muted);
+	font-size: var(--elemenx-font-size-small);
+	line-height: var(--elemenx-line-height);
+	font-variant-numeric: tabular-nums;
+	text-align: end;
+	white-space: nowrap;
+}
+
 .elemenx-slider.small {
 	height: var(--elemenx-control-small);
 }
@@ -136,6 +157,12 @@
 .elemenx-slider.vertical .elemenx-slider-fill {
 	right: 0;
 	left: 0;
+}
+
+.elemenx-slider.vertical .elemenx-slider-end {
+	margin-block-start: 8px;
+	margin-inline-start: 0;
+	text-align: center;
 }
 
 .elemenx-slider.vertical .elemenx-slider-tick,

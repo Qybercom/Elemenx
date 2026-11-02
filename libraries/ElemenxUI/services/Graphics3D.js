@@ -40,14 +40,15 @@
  *   copies of the mesh drawn at once), Destroy(); Lines(points, loop) and Points(positions, extra) (extra {aColor:
  *   {Size, Data}}) make meshes of lines and of points.
  * - Texture(source, options) (a canvas, a picture, or {Width, Height, Data}; options Repeat, Nearest) returns a texture
- *   for a uniform sampler2D; Cube(size) a cube of six faces for a samplerCube, which Bake(cube, program, uniforms)
+ *   for a uniform sampler2D; Volume(size, data) a repeating block of size^3 RGBA bytes for a sampler3D; Cube(size) a cube of six faces for a samplerCube, which Bake(cube, program, uniforms)
  *   draws once: the program is Shaders.Quad with a fragment shader that takes the direction of each texel from
  *   cubeDirection(uFace, vQuad) (Chunks.Cube): a surface of noise computed once, sampled at every frame.
  * - Target(width, height, {Colors, Depth, DepthTexture, Float, Samples, Mipmaps}) returns textures to draw into: Textures,
  *   Depth (with DepthTexture), Begin(), End() (it resolves the samples and makes the mipmaps), Destroy();
  *   Viewport(x, y, width, height) draws in a part of it. Texture takes options Float for an array of floats, Srgb for
  *   the colors of a picture, Mipmaps, and Wrap and Filter of a sampler of glTF.
- * - Shadow(size) returns a shadow map, a depth texture for a uniform sampler2DShadow: between its Begin() and End() the
+ * - Shadow(size) returns a shadow map, a depth texture for a uniform sampler2DShadow (Raw: the same for a sampler2D, to read
+ *   its depths): between its Begin() and End() the
  *   draws write only its depth, as seen from the light; Destroy().
  * - Draw(mesh, program, uniforms, settings): settings Mode (triangles, lines, line-strip, line-loop, points), Blend
  *   (alpha, add or none), Depth (test, true), DepthWrite (true), Cull (back, front or none), Instances (the copies).
@@ -304,7 +305,8 @@ Elemenx.Service('Graphics3D', {
 		};
 
 		camera.Ray = function (x, y, width, height) {
-			var inverse = self.Invert(camera.Matrix(width / Math.max(1, height)));
+			/* An eye that stands on what it looks at has no ray: the matrix of no view is the identity. */
+			var inverse = self.Invert(camera.Matrix(width / Math.max(1, height))) || self.Identity();
 			var nx = x / Math.max(1, width) * 2 - 1;
 			var ny = 1 - y / Math.max(1, height) * 2;
 			var near = self.Apply(inverse, [nx, ny, -1]);
@@ -1147,10 +1149,22 @@ Elemenx.Service('Graphics3D', {
 		Shadow: [
 			'uniform highp sampler2DShadow uShadowMap;',
 			'uniform highp sampler2DShadow uShadowNear;',
+			'uniform sampler2D uShadowRaw;',
+			'uniform sampler2D uShadowNearRaw;',
+			'uniform vec3 uShadowSoft;',
 			'uniform sampler2D uBounce;',
 			'uniform sampler2D uGlow;',
 			'uniform float uGlowOn;',
 			'uniform vec3 uGlowPlace;',
+			'uniform vec4 uCloudShade;',
+			'uniform float uSkyFloor;',
+			'uniform sampler2D uCloudMap;',
+			'uniform vec4 uLocal[72];',
+			'uniform highp sampler2DShadow uLampShadow0;',
+			'uniform highp sampler2DShadow uLampShadow1;',
+			'uniform mat4 uLampMatrix0;',
+			'uniform mat4 uLampMatrix1;',
+			'uniform int uLocalCount;',
 			'uniform mat4 uShadowMatrix;',
 			'uniform mat4 uShadowNearMatrix;',
 			'uniform float uShadowBias;',
@@ -1166,18 +1180,48 @@ Elemenx.Service('Graphics3D', {
 			'	}',
 			'	return sum / 9.0;',
 			'}',
+			/*
+			 * A sun is a disc, not a point: what stands near casts a hard shadow, what stands far a soft one. It looks round for
+			 * what hides the place, how far off that is gives the width of the edge, and that many texels are read, each pixel
+			 * turning its pattern: the frames that add up take the grain away.
+			 */
+			'uniform float uSteady;',
+			'float softIn(highp sampler2DShadow map, sampler2D raw, vec3 place, float texel, float light) {',
+			/* What moves keeps little of its frames, so their adding up takes no grain from it: there the pattern stands, and the edge stays narrow. */
+			'	float turn = uSteady > 0.5 ? 0.0 : fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715)))) * 6.2831853;',
+			'	float found = 0.0;',
+			'	float count = 0.0;',
+			'	for (int i = 0; i < 6; i++) {',
+			'		float r = sqrt((float(i) + 0.5) / 6.0) * 7.0 * texel;',
+			'		float a = float(i) * 2.399963 + turn;',
+			'		float depth = texture(raw, place.xy + vec2(cos(a), sin(a)) * r).r;',
+			'		if (depth < place.z - 0.0002) {',
+			'			found += depth;',
+			'			count += 1.0;',
+			'		}',
+			'	}',
+			'	if (count < 0.5) return 1.0;',
+			'	float wide = clamp((place.z - found / count) * light, 1.1, uSteady > 0.5 ? 3.0 : 16.0) * texel;',
+			'	float sum = 0.0;',
+			'	for (int i = 0; i < 12; i++) {',
+			'		float r = sqrt((float(i) + 0.5) / 12.0) * wide;',
+			'		float a = float(i) * 2.399963 + turn;',
+			'		sum += texture(map, vec3(place.xy + vec2(cos(a), sin(a)) * r, place.z));',
+			'	}',
+			'	return sum / 12.0;',
+			'}',
 			'float sunShadow(vec3 position, vec3 normal) {',
 			'	if (uShadowOn < 0.5) return 1.0;',
 			'	if (uShadowOn > 1.5) {',
 			'		vec4 near = uShadowNearMatrix * vec4(position + normal * uShadowNearBias, 1.0);',
 			'		float inside = max(abs(near.x), abs(near.y));',
-			'		if (inside < 0.92 && abs(near.z) < 1.0) return shadowIn(uShadowNear, near.xyz * 0.5 + 0.5, 1.0 / float(textureSize(uShadowNear, 0).x));',
+			'		if (inside < 0.92 && abs(near.z) < 1.0) return uShadowSoft.z > 0.5 ? softIn(uShadowNear, uShadowNearRaw, near.xyz * 0.5 + 0.5, 1.0 / float(textureSize(uShadowNear, 0).x), uShadowSoft.y) : shadowIn(uShadowNear, near.xyz * 0.5 + 0.5, 1.0 / float(textureSize(uShadowNear, 0).x));',
 			'	}',
 			'	vec4 at = uShadowMatrix * vec4(position + normal * uShadowBias, 1.0);',
 			'	vec3 place = at.xyz * 0.5 + 0.5;',
 			'	float edge = max(abs(at.x), abs(at.y));',
 			'	if (edge >= 1.0 || place.z >= 1.0) return 1.0;',
-			'	return mix(shadowIn(uShadowMap, place, 1.0 / float(textureSize(uShadowMap, 0).x)), 1.0, smoothstep(0.85, 1.0, edge));',
+			'	return mix(uShadowSoft.z > 0.5 ? softIn(uShadowMap, uShadowRaw, place, 1.0 / float(textureSize(uShadowMap, 0).x), uShadowSoft.x) : shadowIn(uShadowMap, place, 1.0 / float(textureSize(uShadowMap, 0).x)), 1.0, smoothstep(0.85, 1.0, edge));',
 			'}',
 			'vec3 sunBounce(vec3 position) {',
 			'	if (uGlowOn > 0.5) return texture(uGlow, (position.xz + uGlowPlace.xy) / uGlowPlace.z + 0.5).rgb;',
@@ -1185,9 +1229,47 @@ Elemenx.Service('Graphics3D', {
 			'	vec4 at = uShadowMatrix * vec4(position, 1.0);',
 			'	return pow(textureLod(uBounce, at.xy * 0.5 + 0.5, 3.0).rgb, vec3(2.2)) * 0.55;',
 			'}',
+			/* The shadows of the clouds that are there: the map of what they hold, along the way to the sun. */
+			'float sunLit(vec3 position, vec3 normal) {',
+			'	float cloud = uCloudShade.w > 0.0 ? texture(uCloudMap, (position.xz + uCloudShade.xy) * uCloudShade.z + 0.5).r : 0.0;',
+			'	return sunShadow(position, normal) * (1.0 - uCloudShade.w * cloud);',
+			'}',
+			/* Lamps, fires, what shines near: each to its radius, a spot within its cone. Their light has no shadow. */
+			'float lampSeen(int index, vec3 position) {',
+			'	vec4 at = (index == 0 ? uLampMatrix0 : uLampMatrix1) * vec4(position, 1.0);',
+			'	vec3 place = at.xyz / at.w * 0.5 + 0.5;',
+			'	if (at.w <= 0.0 || place.x < 0.0 || place.y < 0.0 || place.x > 1.0 || place.y > 1.0 || place.z > 1.0) return 1.0;',
+			'	float texel = 1.0 / 1024.0;',
+			'	float sum = 0.0;',
+			'	for (int x = -1; x <= 1; x += 2) {',
+			'		for (int y = -1; y <= 1; y += 2) {',
+			'			vec3 near = vec3(place.xy + vec2(float(x), float(y)) * texel, place.z - 0.0015);',
+			'			sum += index == 0 ? texture(uLampShadow0, near) : texture(uLampShadow1, near);',
+			'		}',
+			'	}',
+			'	return sum * 0.25;',
+			'}',
+			'vec3 localLight(vec3 position, vec3 normal) {',
+			'	vec3 total = vec3(0.0);',
+			'	for (int i = 0; i < uLocalCount; i++) {',
+			'		vec4 place = uLocal[i * 3];',
+			'		vec4 aim = uLocal[i * 3 + 2];',
+			'		vec3 to = place.xyz - position;',
+			'		float far = length(to);',
+			'		if (far >= place.w) continue;',
+			'		vec3 way = to / max(far, 0.001);',
+			'		float fall = 1.0 - far * far / (place.w * place.w);',
+			'		float cone = aim.w > -1.5 ? smoothstep(aim.w, aim.w + 0.08, dot(-way, aim.xyz)) : 1.0;',
+			/* The two nearest lamps look down at the world and know what stands in their light. */
+			'		if (i < 2 && uLocal[i * 3 + 1].a > 0.5) cone *= lampSeen(i, position + normal * 0.06);',
+			'		total += uLocal[i * 3 + 1].rgb * max(dot(normal, way) * 0.85 + 0.15, 0.0) * fall * fall / (1.0 + far * far * 0.25 * min(1.0, 400.0 / (place.w * place.w))) * cone;',
+			'	}',
+			'	return total;',
+			'}',
 			/* How much of the sky a place sees, of the light of its field. */
 			'float skySeen(vec3 position) {',
-			'	return uGlowOn > 0.5 ? texture(uGlow, (position.xz + uGlowPlace.xy) / uGlowPlace.z + 0.5).a : 1.0;',
+			/* By night the air fills what the day leaves dark: a wood has no holes of pure black. */
+			'	return uGlowOn > 0.5 ? max(texture(uGlow, (position.xz + uGlowPlace.xy) / uGlowPlace.z + 0.5).a, uSkyFloor) : 1.0;',
 			'}'
 		].join('\n')
 	},
@@ -1393,6 +1475,15 @@ Elemenx.Service('Graphics3D', {
 				case gl.SAMPLER_2D_SHADOW:
 					gl.activeTexture(gl.TEXTURE0 + units.Next);
 					gl.bindTexture(gl.TEXTURE_2D, value ? value.Handle : null);
+					gl.bindSampler(units.Next, value && value.Sampler ? value.Sampler : null);
+					gl.uniform1i(location, units.Next);
+
+					units.Next++;
+
+					break;
+				case gl.SAMPLER_3D:
+					gl.activeTexture(gl.TEXTURE0 + units.Next);
+					gl.bindTexture(gl.TEXTURE_3D, value ? value.Handle : null);
 					gl.uniform1i(location, units.Next);
 
 					units.Next++;
@@ -1521,6 +1612,31 @@ Elemenx.Service('Graphics3D', {
 				return texture;
 			},
 
+			/* A block of noise for a uniform sampler3D: size^3 of RGBA bytes, repeating on all sides. */
+			Volume: function (size, data) {
+				var handle = gl.createTexture();
+				var texture = {Handle: handle};
+
+				gl.bindTexture(gl.TEXTURE_3D, handle);
+				gl.texImage3D(gl.TEXTURE_3D, 0, gl.RGBA8, size, size, size, 0, gl.RGBA, gl.UNSIGNED_BYTE, data);
+				gl.generateMipmap(gl.TEXTURE_3D);
+				gl.texParameteri(gl.TEXTURE_3D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+				gl.texParameteri(gl.TEXTURE_3D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+				gl.texParameteri(gl.TEXTURE_3D, gl.TEXTURE_WRAP_R, gl.REPEAT);
+				gl.texParameteri(gl.TEXTURE_3D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+				gl.texParameteri(gl.TEXTURE_3D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+
+				texture.Destroy = function () {
+					gl.deleteTexture(handle);
+
+					textures.splice(textures.indexOf(texture), 1);
+				};
+
+				textures.push(texture);
+
+				return texture;
+			},
+
 			/* A cube of six square faces, size pixels each, for a uniform samplerCube: empty until Bake draws it. */
 			Cube: function (size) {
 				var handle = gl.createTexture();
@@ -1552,9 +1668,10 @@ Elemenx.Service('Graphics3D', {
 			/*
 			 * Draws the six faces of a cube once with a program: its fragment shader takes the direction of each texel
 			 * from cubeDirection(uFace, vQuad) (Chunks.Cube), so a surface made of noise is computed once, not at every
-			 * frame. The vertex shader is Shaders.Quad (aPosition of a quad from -1 to 1, vQuad).
+			 * frame; with only, that face alone, so a large one takes six frames and stops none; with strip [row, rows], that strip of
+			 * the face alone, for one that would still stop a frame. The vertex shader is Shaders.Quad (aPosition of a quad from -1 to 1, vQuad).
 			 */
-			Bake: function (cube, program, uniforms) {
+			Bake: function (cube, program, uniforms, only, strip) {
 				var target = gl.createFramebuffer();
 				var face;
 				var values;
@@ -1565,7 +1682,12 @@ Elemenx.Service('Graphics3D', {
 				gl.bindFramebuffer(gl.FRAMEBUFFER, target);
 				gl.viewport(0, 0, cube.Size, cube.Size);
 
-				for (face = 0; face < 6; face++) {
+				if (strip) {
+					gl.enable(gl.SCISSOR_TEST);
+					gl.scissor(0, Math.floor(cube.Size * strip[0] / strip[1]), cube.Size, Math.ceil(cube.Size / strip[1]));
+				}
+
+				for (face = only === undefined ? 0 : only; face < (only === undefined ? 6 : only + 1); face++) {
 					gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_CUBE_MAP_POSITIVE_X + face, cube.Handle, 0);
 
 					values = Object.assign({}, uniforms || {}, {uFace: face});
@@ -1573,10 +1695,16 @@ Elemenx.Service('Graphics3D', {
 					renderer.Draw(gpuQuad, program, values, {Depth: false, DepthWrite: false, Cull: 'none'});
 				}
 
+				if (strip)
+					gl.disable(gl.SCISSOR_TEST);
+
 				gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 				gl.deleteFramebuffer(target);
 				gl.bindTexture(gl.TEXTURE_CUBE_MAP, cube.Handle);
-				gl.generateMipmap(gl.TEXTURE_CUBE_MAP);
+
+				if (only === undefined || only === 5 && (!strip || strip[0] === strip[1] - 1))
+					gl.generateMipmap(gl.TEXTURE_CUBE_MAP);
+
 				gl.viewport(0, 0, renderer.Width, renderer.Height);
 
 				return cube;
@@ -1705,7 +1833,14 @@ Elemenx.Service('Graphics3D', {
 				var side = Math.max(1, Math.round(size || 2048));
 				var handle = gl.createTexture();
 				var target = gl.createFramebuffer();
-				var map = {Handle: handle, Size: side};
+				var raw = gl.createSampler();
+				var map = {Handle: handle, Size: side, Raw: {Handle: handle, Sampler: raw}};
+
+				gl.samplerParameteri(raw, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+				gl.samplerParameteri(raw, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+				gl.samplerParameteri(raw, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+				gl.samplerParameteri(raw, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+				gl.samplerParameteri(raw, gl.TEXTURE_COMPARE_MODE, gl.NONE);
 
 				gl.bindTexture(gl.TEXTURE_2D, handle);
 				gl.texStorage2D(gl.TEXTURE_2D, 1, gl.DEPTH_COMPONENT24, side, side);
@@ -1798,9 +1933,14 @@ Elemenx.Service('Graphics3D', {
 
 				gl.depthMask(draw.DepthWrite !== false);
 
+				/* What adds light leaves the alpha alone, and so does over: there it holds marks of what lies under. */
 				if (draw.Blend === 'add') {
 					gl.enable(gl.BLEND);
-					gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+					gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE, gl.ZERO, gl.ONE);
+				}
+				else if (draw.Blend === 'over') {
+					gl.enable(gl.BLEND);
+					gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ZERO, gl.ONE);
 				}
 				else if (draw.Blend === 'alpha') {
 					gl.enable(gl.BLEND);

@@ -4,11 +4,13 @@
  *   calls back (error, asset). options Buffers: {uri: ArrayBuffer} for the files a .gltf names.
  * - Load(url, callback): fetches a .glb or a .gltf with the files it names, and its pictures where there is a page.
  * - The asset: {Nodes: [{Name, Parent, Children, Translation, Rotation, Scale, Mesh, Skin}], Meshes: [[{Geometry, Material}]],
+ *   Lights: [{Name, Type, Color, Intensity, Range, Outer}] (a node with one has its Light),
  *   Materials: [{Name, BaseColor, Metallic, Roughness, Emissive, ColorMap, NormalMap, MetalMap, OcclusionMap, EmissiveMap,
  *   Alpha, Cutoff, DoubleSided, Unlit}], Images: [{Data, Type, URI, Picture}], Skins: [{Joints, Inverse}], Animations:
  *   [{Name, Length, Channels: [{Node, Path, Times, Values, Step}]}], Scene (the indices of its roots)}. A Geometry has
  *   Positions, Normals, UVs, Indices, and Joints and Weights when it is skinned.
- * - The extensions read: KHR_mesh_quantization, KHR_texture_transform, KHR_materials_unlit, KHR_materials_specular, EXT_meshopt_compression
+ * - The extensions read: KHR_mesh_quantization, KHR_texture_transform, KHR_materials_unlit, KHR_materials_specular,
+ *   KHR_materials_clearcoat, KHR_materials_emissive_strength, EXT_meshopt_compression
  *   (Meshopt(mode, source, count, stride, filter) decodes one buffer); a file that requires another is refused:
  *   'Elemenx Gltf: extension <name> is not supported'.
  * The same functions run in Node: they read no page, but for the pictures of Load.
@@ -19,7 +21,7 @@ Elemenx.Service('Gltf', {
 		Methods: ['Parse(data, callback, options)', 'Load(url, callback)', 'Meshopt(mode, source, count, stride, filter)']
 	},
 
-	Supported: ['KHR_mesh_quantization', 'KHR_texture_transform', 'KHR_materials_unlit', 'KHR_materials_specular', 'EXT_meshopt_compression'],
+	Supported: ['KHR_mesh_quantization', 'KHR_texture_transform', 'KHR_materials_unlit', 'KHR_materials_specular', 'KHR_materials_clearcoat', 'KHR_materials_emissive_strength', 'KHR_materials_transmission', 'KHR_materials_pbrSpecularGlossiness', 'EXT_meshopt_compression'],
 
 	Parse: function (data, callback, options) {
 		var asset;
@@ -291,6 +293,11 @@ Elemenx.Service('Gltf', {
 
 		asset = {Nodes: [], Meshes: [], Materials: [], Images: [], Textures: [], Skins: [], Animations: [], Scene: []};
 
+		/* The lamps of the file (KHR_lights_punctual): its nodes say where they stand. */
+		asset.Lights = (json.extensions && json.extensions.KHR_lights_punctual ? json.extensions.KHR_lights_punctual.lights || [] : []).map(function (light) {
+			return {Name: light.name || '', Type: light.type, Color: light.color || [1, 1, 1], Intensity: light.intensity === undefined ? 1 : light.intensity, Range: light.range || 0, Outer: light.spot && light.spot.outerConeAngle !== undefined ? light.spot.outerConeAngle : Math.PI / 4};
+		});
+
 		asset.Images = (json.images || []).map(function (image) {
 			if (image.bufferView !== undefined)
 				return {Data: views[image.bufferView].slice(), Type: image.mimeType, URI: '', Picture: null, Mean: null};
@@ -366,7 +373,9 @@ Elemenx.Service('Gltf', {
 
 	Material: function (material, json) {
 		var pbr = material.pbrMetallicRoughness || {};
-		var specular = material.extensions && material.extensions.KHR_materials_specular || {};
+		var extensions = material.extensions || {};
+		var gloss = extensions.KHR_materials_pbrSpecularGlossiness;
+		var specular = extensions.KHR_materials_specular || {};
 
 		function texture (info) {
 			var transform;
@@ -380,11 +389,16 @@ Elemenx.Service('Gltf', {
 
 		return {
 			Name: material.name || '',
-			BaseColor: pbr.baseColorFactor || [1, 1, 1, 1],
-			Metallic: pbr.metallicFactor === undefined ? 1 : pbr.metallicFactor,
-			Roughness: pbr.roughnessFactor === undefined ? 1 : pbr.roughnessFactor,
-			Emissive: material.emissiveFactor || [0, 0, 0],
-			ColorMap: texture(pbr.baseColorTexture),
+			BaseColor: gloss ? gloss.diffuseFactor || [1, 1, 1, 1] : pbr.baseColorFactor || [1, 1, 1, 1],
+			Metallic: gloss ? 0 : pbr.metallicFactor === undefined ? 1 : pbr.metallicFactor,
+			Roughness: gloss ? 1 - (gloss.glossinessFactor === undefined ? 1 : gloss.glossinessFactor) * 0.6 : pbr.roughnessFactor === undefined ? 1 : pbr.roughnessFactor,
+			Emissive: (material.emissiveFactor || [0, 0, 0]).map(function (value) {
+				return value * (extensions.KHR_materials_emissive_strength ? extensions.KHR_materials_emissive_strength.emissiveStrength || 1 : 1);
+			}),
+			Clearcoat: extensions.KHR_materials_clearcoat ? extensions.KHR_materials_clearcoat.clearcoatFactor || 0 : 0,
+			CoatRoughness: extensions.KHR_materials_clearcoat ? extensions.KHR_materials_clearcoat.clearcoatRoughnessFactor || 0 : 0,
+			Transmission: extensions.KHR_materials_transmission ? extensions.KHR_materials_transmission.transmissionFactor || 0 : 0,
+			ColorMap: texture(gloss ? gloss.diffuseTexture : pbr.baseColorTexture),
 			MetalMap: texture(pbr.metallicRoughnessTexture),
 			NormalMap: texture(material.normalTexture),
 			OcclusionMap: texture(material.occlusionTexture),
@@ -406,6 +420,11 @@ Elemenx.Service('Gltf', {
 
 		if (matrix) {
 			scale = [Math.sqrt(matrix[0] * matrix[0] + matrix[1] * matrix[1] + matrix[2] * matrix[2]), Math.sqrt(matrix[4] * matrix[4] + matrix[5] * matrix[5] + matrix[6] * matrix[6]), Math.sqrt(matrix[8] * matrix[8] + matrix[9] * matrix[9] + matrix[10] * matrix[10])];
+
+			/* A mirrored node has no rotation of its own: the mirror goes to its scale, or a wheel of the other side stands across. */
+			if (matrix[0] * (matrix[5] * matrix[10] - matrix[6] * matrix[9]) - matrix[4] * (matrix[1] * matrix[10] - matrix[2] * matrix[9]) + matrix[8] * (matrix[1] * matrix[6] - matrix[2] * matrix[5]) < 0)
+				scale[0] = -scale[0];
+
 			rotation = this.Quaternion([matrix[0] / scale[0], matrix[1] / scale[0], matrix[2] / scale[0], matrix[4] / scale[1], matrix[5] / scale[1], matrix[6] / scale[1], matrix[8] / scale[2], matrix[9] / scale[2], matrix[10] / scale[2]]);
 		}
 
@@ -417,7 +436,8 @@ Elemenx.Service('Gltf', {
 			Rotation: rotation || node.rotation || [0, 0, 0, 1],
 			Scale: scale || node.scale || [1, 1, 1],
 			Mesh: node.mesh === undefined ? -1 : node.mesh,
-			Skin: node.skin === undefined ? -1 : node.skin
+			Skin: node.skin === undefined ? -1 : node.skin,
+			Light: node.extensions && node.extensions.KHR_lights_punctual ? node.extensions.KHR_lights_punctual.light : -1
 		};
 	},
 
@@ -548,7 +568,92 @@ Elemenx.Service('Gltf', {
 		if (!geometry.Normals)
 			geometry.Normals = self.Flat(geometry);
 
-		return geometry;
+		return geometry.Joints ? geometry : self.Mended(geometry);
+	},
+
+	/*
+	 * A triangle whose normals look away from it has a corner shared with faces far from its own, as a map taken out of a game has:
+	 * the light runs black over it. It gets corners of its own, with the normal of its face. Which way a normal lies from its
+	 * face is what most of the triangles of the file say, for some are wound against theirs.
+	 */
+	Mended: function (geometry) {
+		var p = geometry.Positions;
+		var n = geometry.Normals;
+		var indices = geometry.Indices;
+		var faces = [];
+		var against = 0;
+		var i;
+
+		for (i = 0; i + 2 < indices.length; i += 3) {
+			var a = indices[i] * 3;
+			var b = indices[i + 1] * 3;
+			var c = indices[i + 2] * 3;
+			var ux = p[b] - p[a];
+			var uy = p[b + 1] - p[a + 1];
+			var uz = p[b + 2] - p[a + 2];
+			var vx = p[c] - p[a];
+			var vy = p[c + 1] - p[a + 1];
+			var vz = p[c + 2] - p[a + 2];
+			var x = uy * vz - uz * vy;
+			var y = uz * vx - ux * vz;
+			var z = ux * vy - uy * vx;
+			var size = Math.sqrt(x * x + y * y + z * z) || 1;
+
+			x /= size;
+			y /= size;
+			z /= size;
+
+			var seen = [n[a] * x + n[a + 1] * y + n[a + 2] * z, n[b] * x + n[b + 1] * y + n[b + 2] * z, n[c] * x + n[c + 1] * y + n[c + 2] * z];
+			if (seen[0] + seen[1] + seen[2] < 0)
+				against++;
+
+			faces.push({At: i, X: x, Y: y, Z: z, Seen: seen});
+		}
+
+		var way = against * 2 > faces.length ? -1 : 1;
+		var wrong = faces.filter(function (face) {
+			return Math.min(face.Seen[0] * way, face.Seen[1] * way, face.Seen[2] * way) < 0.2;
+		});
+		if (!wrong.length) return geometry;
+
+		var count = p.length / 3;
+		var extra = wrong.length * 3;
+		var positions = new Float32Array(count * 3 + extra * 3);
+		var normals = new Float32Array(count * 3 + extra * 3);
+		var uvs = new Float32Array(count * 2 + extra * 2);
+		var colors = geometry.Colors ? new Float32Array(count * 3 + extra * 3) : null;
+
+		positions.set(p);
+		normals.set(n);
+		uvs.set(geometry.UVs);
+
+		if (colors)
+			colors.set(geometry.Colors);
+
+		wrong.forEach(function (face) {
+			[0, 1, 2].forEach(function (corner) {
+				var from = indices[face.At + corner];
+				var axis;
+
+				for (axis = 0; axis < 3; axis++) {
+					positions[count * 3 + axis] = p[from * 3 + axis];
+
+					if (colors)
+						colors[count * 3 + axis] = geometry.Colors[from * 3 + axis];
+				}
+
+				normals[count * 3] = face.X * way;
+				normals[count * 3 + 1] = face.Y * way;
+				normals[count * 3 + 2] = face.Z * way;
+				uvs[count * 2] = geometry.UVs[from * 2];
+				uvs[count * 2 + 1] = geometry.UVs[from * 2 + 1];
+				indices[face.At + corner] = count;
+
+				count++;
+			});
+		});
+
+		return Object.assign({}, geometry, {Positions: positions, Normals: normals, UVs: uvs, Colors: colors});
 	},
 
 	/* The move of the texture coordinates of a primitive, written into them. */

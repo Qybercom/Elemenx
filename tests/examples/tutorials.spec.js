@@ -744,6 +744,9 @@ var Checks = {
 
 		await expect(page).toHaveURL(/\/checkout$/);
 
+		/* The URL comes before the page: the filters of the shop, radios, may still be on the screen. */
+		await expect(page.locator('.shop-main input[type="tel"]')).toBeVisible();
+
 		await page.locator('.shop-main input').first().fill('Ada Lovelace');
 		await page.locator('.shop-main input[type="tel"]').fill('7911123456');
 		await page.locator('.shop-main textarea').fill('12 Old Street');

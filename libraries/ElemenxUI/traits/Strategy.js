@@ -1798,7 +1798,7 @@ Elemenx.Trait('Strategy', {
 
 		this.$Element().focus({preventScroll: true});
 
-		if (event.target.setPointerCapture)
+		if (event.target.setPointerCapture && !document.pointerLockElement)
 			event.target.setPointerCapture(event.pointerId);
 
 		pointers[event.pointerId] = point;
@@ -1983,7 +1983,7 @@ Elemenx.Trait('Strategy', {
 	MapDown: function (event) {
 		event.preventDefault();
 
-		if (event.target.setPointerCapture)
+		if (event.target.setPointerCapture && !document.pointerLockElement)
 			event.target.setPointerCapture(event.pointerId);
 
 		this.World().MiniDrag = true;

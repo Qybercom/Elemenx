@@ -23,7 +23,7 @@ describe('Contract: the controls and cards of ElemenxUI', function () {
 	beforeAll(async function () {
 		await loadElemenx();
 
-		Use(['Knob', 'DialPad', 'Ruler', 'NavList', 'Mixer', 'ThemeSwitch', 'PlanPicker', 'PostCard', 'ProfileCard', 'CommentCard', 'ProductCard', 'EmptyState', 'Chronicle', 'Toggle', 'service:Theme']);
+		Use(['Slider', 'Knob', 'DialPad', 'Ruler', 'NavList', 'Mixer', 'ThemeSwitch', 'PlanPicker', 'PostCard', 'ProfileCard', 'CommentCard', 'ProductCard', 'EmptyState', 'Chronicle', 'Toggle', 'service:Theme']);
 	});
 
 	beforeEach(function () {
@@ -32,6 +32,58 @@ describe('Contract: the controls and cards of ElemenxUI', function () {
 
 	afterEach(function () {
 		while (owned.length) owned.pop().$Destroy();
+	});
+
+	it('Slider writes its value by Format, on the thumb and to a screen reader, and its Unit after it', async function () {
+		var host = mount('<div><Slider [value]="Value" Min="0" Max="24" Step="0.25" ShowValue="always" Unit=" h" [format]="Clock" /></div>', {
+			Value: 19.5,
+			Clock: function (hours) {
+				return Math.floor(hours) + ':' + String((hours % 1) * 60).padStart(2, '0');
+			}
+		});
+
+		await tick();
+
+		var thumb = host.$Element().querySelector('.elemenx-slider-thumb');
+
+		expect(thumb.textContent.trim()).toBe('19:30 h');
+		expect(thumb.getAttribute('aria-valuetext')).toBe('19:30 h');
+		expect(thumb.getAttribute('aria-valuenow')).toBe('19.5');
+	});
+
+	it('Slider without a Format shows the value as it is', async function () {
+		var host = mount('<div><Slider [value]="7" ShowValue="always" Unit="%" /></div>');
+
+		await tick();
+
+		expect(host.$Element().querySelector('.elemenx-slider-value').textContent).toBe('7%');
+	});
+
+	it('Slider keeps room for a value that always shows, and writes one after the track', async function () {
+		var host = mount('<div><Slider [value]="7" ShowValue="always" /><Slider [value]="3" ShowValue="active" /></div>');
+
+		await tick();
+
+		var sliders = host.$Element().querySelectorAll('.elemenx-slider');
+
+		expect(parseFloat(getComputedStyle(sliders[0]).marginBlockStart)).toBeGreaterThanOrEqual(host.$Element().querySelector('.elemenx-slider-value').offsetHeight);
+		expect(parseFloat(getComputedStyle(sliders[1]).marginBlockStart)).toBe(0);
+
+		var ended = mount('<div><Slider [value]="Value" Unit="%" ShowValue="end" /><Slider [value]="Both" Range="true" ShowValue="end" /></div>', {Value: 7, Both: [2, 9]});
+
+		await tick();
+
+		var ends = ended.$Element().querySelectorAll('.elemenx-slider-end');
+
+		expect(ends[0].textContent).toBe('7%');
+		expect(ends[1].textContent).toBe('2 – 9');
+		expect(ended.$Element().querySelector('.elemenx-slider-value')).toBe(null);
+
+		ended.Value = 8;
+
+		await tick();
+
+		expect(ends[0].textContent).toBe('8%');
 	});
 
 	it('Knob turns by its keys in Steps within Min and Max, tells input and change, and goes back to Default on a double click', async function () {

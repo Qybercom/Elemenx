@@ -123,11 +123,17 @@
 
 ## Тесты
 
-- [puts a body on its orbit of Kepler at a time, and describes stars and planets](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L56) — `tests/regression/library-scene.test.js`
-- [makes the same system of the same seed: a star, planets by their distance, moons, rings and belts](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L102) — `tests/regression/library-scene.test.js`
-- [multiplies, inverts and projects matrices, and makes shapes of triangles](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L137) — `tests/regression/library-scene.test.js`
-- [turns a line into a body, makes a roof of two slopes, flat faces and a box of parallel light](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L168) — `tests/regression/library-scene.test.js`
-- [has the same noise on the CPU as in the shaders, so a heightmap matches a baked surface](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L207) — `tests/regression/library-scene.test.js`
+- [puts a body on its orbit of Kepler at a time, and describes stars and planets](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L68) — `tests/regression/library-scene.test.js`
+- [makes the same system of the same seed: a star, planets by their distance, moons, rings and belts](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L114) — `tests/regression/library-scene.test.js`
+- [multiplies, inverts and projects matrices, and makes shapes of triangles](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L149) — `tests/regression/library-scene.test.js`
+- [turns a line into a body, makes a roof of two slopes, flat faces and a box of parallel light](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L180) — `tests/regression/library-scene.test.js`
+- [has the same noise on the CPU as in the shaders, so a heightmap matches a baked surface](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L219) — `tests/regression/library-scene.test.js`
 - [puts planets on their orbits and makes shapes of three dimensions with the Services of ElemenxUI](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/headless.test.js#L48) — `tests/regression/headless.test.js`
-- [draws the star bright, the day side of a body of its baked surface, not its night side, and the same far from the middle](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L362) — `tests/regression/library-scene.test.js`
-- [has the ground of a planet whose coasts are the ones its baked surface shows, its squares turned outwards](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1690) — `tests/regression/library-scene.test.js`
+- [draws the star bright, the day side of a body of its baked surface, not its night side, and the same far from the middle](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L374) — `tests/regression/library-scene.test.js`
+- [keeps the noise of a ground and of water where they are, not where the eye is](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L955) — `tests/regression/library-scene.test.js`
+- [keeps from the shaders what would blur, flicker or show as noise](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1248) — `tests/regression/library-scene.test.js`
+- [puts rain and snow in the world, clouds in frames that add up, and takes a lens by how strong it is](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1492) — `tests/regression/library-scene.test.js`
+- [burns where it is told: effects with their lamps, those of a body, bursts that end, types of its own](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L1956) — `tests/regression/library-scene.test.js`
+- [A mirrored node keeps its mirror, and what a file keeps as one piece stands apart](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-scene.test.js#L3290) — `tests/regression/library-scene.test.js`
+
++13 ещё в тех же файлах

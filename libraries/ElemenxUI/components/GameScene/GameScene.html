@@ -3,6 +3,7 @@
 	<canvas class="elemenx-game-scene-marks" [hidden]="!Cells" (pointerdown)="MarksDown" (pointermove)="MarksMove" (pointerup)="MarksUp" (pointercancel)="MarksCancel" (pointerleave)="MarksLeft" (wheel)="MarksWheel" (contextmenu)="MarksMenu" (dblclick)="MarksDouble"></canvas>
 	<canvas class="elemenx-game-scene-minimap" *if="Minimap && Cells" role="img" [attribute.aria-label]="$T('ui.gameScene.minimap')" (pointerdown)="MapDown" (pointermove)="MapMove" (pointerup)="MapUp" (pointercancel)="MapUp"></canvas>
 	<div class="elemenx-game-scene-labels" [class.hidden]="Cells || !Labels || Labels === 'false'" (click)="LabelPressed" (dblclick)="LabelDouble"></div>
+	<div class="elemenx-game-scene-axes" *if="Axes && !Cells" [attribute.data-corner]="Axes === true || Axes === 'true' ? 'top-right' : Axes"><Axes [yaw]="ViewYaw" [pitch]="ViewPitch" (axis)="AxisChosen" /></div>
 	<div class="elemenx-game-scene-fallback" *if="Unsupported && !Cells">{{$T('ui.gameScene.unsupported')}}</div>
 	<aside class="elemenx-game-scene-card" *if="Card && !Cells && Details && Details !== 'false'" [attribute.aria-label]="Card.Name">
 		<header class="elemenx-game-scene-card-header">

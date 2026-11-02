@@ -4,7 +4,9 @@
  * names of models), Density (a hundred square units), Size (the smallest and the largest, in sizes of the model),
  * MinHeight, MaxHeight, MaxSlope, Cover (0 to 1: how much of the ground its patches take, 1 all of it), Patch (the size
  * of its patches), Seed, Blocks (no way through them). A GameObject of a kind with the trait Grass (grass) grows blades
- * in the vertex shader round the view: Density, Height, Color, MaxHeight, MaxSlope.
+ * in the vertex shader round the view: Density, Height, Color, MaxHeight, MaxSlope; with Shapes (a model of grass, a file
+ * too) it sows that model, thick, up to Reach from the eye. Reach holds for any rule; Grid (a size) lays Shapes as tiles,
+ * one a cell, turned by quarters, the way to build a land out of ready pieces.
  *
  * Biome on a ground (the Biomes Service) brings its colors, its rules and its grass by itself, so a whole land is one
  * attribute; a GameObject of kind village lays out houses and their roads at its X and Y (Houses, Radius, Seed), and what
@@ -74,9 +76,10 @@ Elemenx.Trait('Scatter', {
 
 		function rules () {
 			var given = scene.Roots.filter(function (object) {
-				return object.Traits.Scatter;
+				return object.Traits.Scatter || object.Traits.Grass && (object.Values.Shapes || object.Traits.Grass.Shapes);
 			}).map(function (object) {
-				return Object.assign({ID: object.ID}, object.Traits.Scatter, object.Values);
+				/* Grass of models: thick, and only round the eye. */
+				return object.Traits.Scatter ? Object.assign({ID: object.ID}, object.Traits.Scatter, object.Values) : Object.assign({ID: object.ID, Reach: 40, Blocks: false}, object.Traits.Grass, {Density: Number(object.Traits.Grass.Density) * 60}, object.Values);
 			});
 			var land = biome();
 
@@ -211,10 +214,15 @@ Elemenx.Trait('Scatter', {
 				var shapes = [].concat(rule.Shapes || 'pine');
 				var count = Number(rule.Density === undefined ? 4 : rule.Density) * size * size / 100;
 				var scale = rule.Size || [0.8, 1.3];
+				var grid = Number(rule.Grid) || 0;
 				var i;
 
+				/* Tiles of ready models: a cell each, turned by quarters, all of a square. */
+				if (grid)
+					count = Math.ceil(size / grid) * Math.ceil(size / grid);
+
 				for (i = 0; i < count; i++) {
-					var place = [square.X + random(0, size), square.Z + random(0, size)];
+					var place = grid ? [Math.ceil(square.X / grid) * grid + (i % Math.ceil(size / grid)) * grid, Math.ceil(square.Z / grid) * grid + Math.floor(i / Math.ceil(size / grid)) * grid] : [square.X + random(0, size), square.Z + random(0, size)];
 					var name = shapes[Math.floor(random(0, shapes.length))];
 					var variant = Math.floor(random(0, 16));
 					var height = chance(rule, place, field, noise);
@@ -230,7 +238,9 @@ Elemenx.Trait('Scatter', {
 					tone = random(0.86, 1.1);
 
 					made.Places.push(place[0], height - 0.05, place[1], info.Size * random(Number(scale[0]), Number(scale[1])));
-					made.Extra.push(random(0, Math.PI * 2), tone, tone * random(0.94, 1.04), tone * random(0.92, 1));
+					made.Extra.push(grid ? Math.floor(random(0, 4)) * Math.PI / 2 : random(0, Math.PI * 2), tone, tone * random(0.94, 1.04), tone * random(0.92, 1));
+
+					made.Reach = rule.Reach ? Number(rule.Reach) : 0;
 
 					if (rule.Blocks !== false && rule.Blocks !== 'false' && info.Size > 2)
 						state.Blocked[Math.floor(place[0] / 2) + ':' + Math.floor(place[1] / 2)] = true;
@@ -240,7 +250,7 @@ Elemenx.Trait('Scatter', {
 			});
 
 			Object.keys(lists).forEach(function (key) {
-				square.Lists[key] = {Places: new Float32Array(lists[key].Places), Extra: new Float32Array(lists[key].Extra), Count: lists[key].Places.length / 4};
+				square.Lists[key] = {Places: new Float32Array(lists[key].Places), Extra: new Float32Array(lists[key].Extra), Count: lists[key].Places.length / 4, Reach: lists[key].Reach};
 			});
 
 			square.Center = [square.X + size / 2, field.Height(square.X + size / 2, square.Z + size / 2), square.Z + size / 2];
@@ -375,6 +385,9 @@ Elemenx.Trait('Scatter', {
 					if (reach ? distance + margin <= from || distance - margin >= to : one !== level) return;
 
 					Object.keys(square.Lists).forEach(function (key) {
+						/* What grows only round the eye is not asked for farther. */
+						if (reach && square.Lists[key].Reach && distance - margin > square.Lists[key].Reach) return;
+
 						append(stream(key, one), square.Lists[key]);
 					});
 				});
@@ -562,7 +575,7 @@ Elemenx.Trait('Scatter', {
 			var x;
 			var z;
 
-			if (!rule || !ground || ground.Field.Whole || self.Graphics().Grass === false) {
+			if (!rule || rule.Shapes || !ground || ground.Field.Whole || self.Graphics().Grass === false) {
 				if (state.Grass)
 					state.Grass.Blades = 0;
 
@@ -668,7 +681,7 @@ Elemenx.Trait('Scatter', {
 			each(function (one) {
 				if (one.Level === 3 || one.Level === 0 && surfaces(one.Key)) return;
 
-				renderer.Draw(levels(one.Key)[Math.max(1, one.Level)], programs().Depth, {uViewProjection: matrix, uOrigin: origin, uWind: scene.Seconds, uSway: 0, uFade: fadeOf(one.Level)}, {Cull: 'none'});
+				renderer.Draw(levels(one.Key)[Math.max(1, one.Level)], programs().Depth, {uViewProjection: matrix, uOrigin: origin, uWind: scene.Gust || 0, uSway: 0, uFade: fadeOf(one.Level)}, {Cull: 'none'});
 			});
 		};
 
@@ -686,14 +699,14 @@ Elemenx.Trait('Scatter', {
 
 				if (one.Level === 0 && surfaces(one.Key)) {
 					surfaces(one.Key).forEach(function (each) {
-						renderer.Draw(each.Mesh, programs().Files, Object.assign({}, uniforms, {uOrigin: origin, uWind: scene.Seconds, uSway: made.Sway, uFade: fadeOf(0), uDither: dither, uSoftness: each.Soft}, engine.Surface(each)), {Cull: each.Material.DoubleSided ? 'none' : 'back'});
+						renderer.Draw(each.Mesh, programs().Files, Object.assign({}, uniforms, {uOrigin: origin, uWind: scene.Gust || 0, uSway: made.Sway, uFade: fadeOf(0), uDither: dither, uSoftness: each.Soft}, engine.Surface(each)), {Cull: each.Material.DoubleSided ? 'none' : 'back'});
 					});
 
 					return;
 				}
 
 				if (one.Level < 3) {
-					renderer.Draw(levels(one.Key)[one.Level], programs().Many, Object.assign({}, uniforms, {uOrigin: origin, uWind: scene.Seconds, uSway: made.Sway, uShine: 8, uSpecular: 0.05, uRough: 0.5, uSoft: made.Sway ? 0.9 : 0, uFade: fadeOf(one.Level), uDither: dither}), {Cull: 'back'});
+					renderer.Draw(levels(one.Key)[one.Level], programs().Many, Object.assign({}, uniforms, {uOrigin: origin, uWind: scene.Gust || 0, uSway: made.Sway, uShine: 8, uSpecular: 0.05, uRough: 0.5, uSoft: made.Sway ? 0.9 : 0, uFade: fadeOf(one.Level), uDither: dither}), {Cull: 'back'});
 
 					return;
 				}
@@ -907,11 +920,11 @@ Elemenx.Trait('Scatter', {
 				'out vec4 outColor;',
 				graphics.Chunks.Shadow,
 				'void main() {',
-				'	float light = max(uSun.y, 0.0) * sunShadow(vWorld, vec3(0.0, 1.0, 0.0));',
+				'	float light = max(uSun.y, 0.0) * sunLit(vWorld, vec3(0.0, 1.0, 0.0));',
 				/* What bends in the wind shows its pale side: from afar the wind is a slow sheen. */
 				'	vec3 color = pow(mix(uRoot, uTip, vAlong) * vTone * (1.0 + vWave * 0.05 * vAlong), vec3(2.2));',
 				'	float through = 1.0 + vAlong * 0.6;',
-				'	outColor = vec4(pow(color * (uSunColor * light * 1.35 * through + mix(uFloorLight, uSkyLight, 0.5 + vAlong * 0.5) * (0.4 + vAlong * 0.6) * skySeen(vWorld) + sunBounce(vWorld)), vec3(1.0 / 2.2)), 1.0);',
+				'	outColor = vec4(pow(color * (uSunColor * light * 1.35 * through + mix(uFloorLight, uSkyLight, 0.5 + vAlong * 0.5) * (0.4 + vAlong * 0.6) * skySeen(vWorld) + sunBounce(vWorld) + localLight(vWorld, vec3(0.0, 1.0, 0.0))), vec3(1.0 / 2.2)), 1.0);',
 				'}'
 			].join('\n')
 		};

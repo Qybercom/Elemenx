@@ -1,6 +1,7 @@
 /*
  * A slider. Value is a number, or [low, high] with Range. Min, Max and Step bound it; Marks shows ticks at
- * every Marks units (or at the listed values). ShowValue: always, active (while dragged or focused) or never.
+ * every Marks units (or at the listed values). ShowValue: always (over the thumb, with room kept for it), active (while dragged or focused), end (after the track) or never; Format
+ * is a function that writes a value as its text.
  * The thumbs follow the pointer and the keys: arrows (Step), Page Up/Down (ten steps), Home and End.
  * Orientation 'vertical' stands the slider upright, its minimum at the bottom, as the vertical Meter.
  * Events: input while moving, change on release.
@@ -23,8 +24,9 @@ Elemenx.Component('Slider', {
 			Max: 'The greatest value.',
 			Step: 'The step.',
 			Marks: 'Ticks every so many units, or at the values listed.',
-			ShowValue: {Options: ['always', 'active', 'never'], Description: 'When the value shows: always, active (while dragged or focused) or never.'},
+			ShowValue: {Options: ['always', 'active', 'end', 'never'], Description: 'When and where the value shows: always over the thumb, with room kept for it; active while dragged or focused; end, always, after the track; or never.'},
 			Unit: 'The unit after the value.',
+			Format: 'A function of a value to the text it shows as (the hours as 19:30).',
 			Size: {Options: ['small', 'medium', 'large'], Description: 'Its size: small, medium or large.'},
 			Orientation: {Options: ['horizontal', 'vertical'], Description: 'horizontal or vertical.'},
 			Label: 'The name of the slider.',
@@ -40,6 +42,7 @@ Elemenx.Component('Slider', {
 	Marks: null,
 	ShowValue: 'active',
 	Unit: '',
+	Format: null,
 	Size: 'medium',
 	Orientation: 'horizontal',
 	Label: '',
@@ -61,6 +64,17 @@ Elemenx.Component('Slider', {
 			var max = Number(self.Max);
 
 			return max === min ? 0 : (Math.max(min, Math.min(max, value)) - min) / (max - min) * 100;
+		};
+
+		this.Shown = function (value, format, unit) {
+			return (typeof format === 'function' ? format(value) : value) + unit;
+		};
+
+		/* What stands after the track: both ends of a range. */
+		this.Ended = function (value, range, format, unit) {
+			return self.Values(value, range).map(function (each) {
+				return self.Shown(each, format, unit);
+			}).join(' – ');
 		};
 
 		this.Ticks = function (marks, min, max) {

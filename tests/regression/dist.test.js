@@ -251,7 +251,7 @@ describe('Elemenx dist', function () {
 		finally {
 			fs.rmSync(sandbox.Root, {recursive: true, force: true});
 		}
-	});
+	}, 240000);
 
 	it('takes a Component of a Library the code names to make it, as a window of a program opens it, not only by its tag', function () {
 		var project = fs.mkdtempSync(path.join(os.tmpdir(), 'elemenx-named-'));

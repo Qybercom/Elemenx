@@ -251,6 +251,7 @@ describe('Contract: the Services of games (Random, Spatial, Pathfinding, Visibil
 			}
 		});
 
+		expect(loop.Now).toBeNull();
 		expect(loop.Advance(25)).toBe(2);
 		expect([updates, loop.Time, loop.Ticks, alphas.pop()]).toEqual([2, 20, 2, 0.5]);
 		expect(loop.Advance(5)).toBe(1);
@@ -283,6 +284,9 @@ describe('Contract: the Services of games (Random, Spatial, Pathfinding, Visibil
 		queued.shift()(1030);
 
 		expect(loop.Ticks).toBe(15);
+
+		/* The time of the frame on the screen is there to read while it is drawn. */
+		expect(loop.Now).toBe(1030);
 
 		loop.Stop();
 

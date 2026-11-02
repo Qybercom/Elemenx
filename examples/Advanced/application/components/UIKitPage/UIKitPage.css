@@ -20,6 +20,20 @@
 	gap: 8px;
 }
 
+/* A named slider in a row of a Ribbon. */
+.ui-kit-tune {
+	display: grid;
+	grid-template-columns: 76px 150px;
+	align-items: center;
+	gap: 4px;
+	font-size: var(--elemenx-font-size-small);
+	color: var(--elemenx-text-muted);
+}
+
+.ui-kit-place-ribbon {
+	margin-block-end: 12px;
+}
+
 .ui-kit-row {
 	display: flex;
 	flex-wrap: wrap;

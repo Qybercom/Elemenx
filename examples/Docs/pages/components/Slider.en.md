@@ -1,7 +1,7 @@
 <!-- generated -->
 # Slider
 
-A slider. Value is a number, or [low, high] with Range. Min, Max and Step bound it; Marks shows ticks at every Marks units (or at the listed values). ShowValue: always, active (while dragged or focused) or never. The thumbs follow the pointer and the keys: arrows (Step), Page Up/Down (ten steps), Home and End. Orientation 'vertical' stands the slider upright, its minimum at the bottom, as the vertical Meter. Events: input while moving, change on release.
+A slider. Value is a number, or [low, high] with Range. Min, Max and Step bound it; Marks shows ticks at every Marks units (or at the listed values). ShowValue: always (over the thumb, with room kept for it), active (while dragged or focused), end (after the track) or never; Format is a function that writes a value as its text. The thumbs follow the pointer and the keys: arrows (Step), Page Up/Down (ten steps), Home and End. Orientation 'vertical' stands the slider upright, its minimum at the bottom, as the vertical Meter. Events: input while moving, change on release.
 
 ## Properties
 
@@ -15,6 +15,7 @@ A slider. Value is a number, or [low, high] with Range. Min, Max and Step bound 
 | `Marks` | `null` |
 | `ShowValue` | `'active'` |
 | `Unit` | `''` |
+| `Format` | `null` |
 | `Size` | `'medium'` |
 | `Orientation` | `'horizontal'` |
 | `Label` | `''` |
@@ -46,3 +47,9 @@ A slider. Value is a number, or [low, high] with Range. Min, Max and Step bound 
 })
 </script>
 ```
+
+## Tests
+
+- [Slider writes its value by Format, on the thumb and to a screen reader, and its Unit after it](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-controls.test.js#L37) — `tests/regression/library-controls.test.js`
+- [Slider without a Format shows the value as it is](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-controls.test.js#L54) — `tests/regression/library-controls.test.js`
+- [Slider keeps room for a value that always shows, and writes one after the track](https://github.com/Qybercom/Elemenx/blob/main/tests/regression/library-controls.test.js#L62) — `tests/regression/library-controls.test.js`

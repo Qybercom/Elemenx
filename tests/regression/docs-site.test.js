@@ -120,6 +120,11 @@ describe('Elemenx docs: the Docs in the package', function () {
 		expect(fs.existsSync(path.join(output, 'tutorials', 'Auth.zip'))).toBe(true);
 		expect(fs.existsSync(path.join(output, 'tutorials', 'Auth', 'index.html'))).toBe(false);
 		expect(fs.readFileSync(path.join(output, 'tutorials', 'Todo', 'index.html'), 'utf8')).toContain('<script id="elemenx">');
+
+		/* A demo is what a browser opens: what the project tests itself with stays in its archive. */
+		expect(fs.existsSync(path.join(output, 'tutorials', 'Todo', 'tests'))).toBe(false);
+		expect(fs.existsSync(path.join(output, 'tutorials', 'Todo', 'vitest.config.mjs'))).toBe(false);
+		expect(fs.existsSync(path.join(output, 'tutorials', 'Todo', 'playwright.config.mjs'))).toBe(false);
 		expect(fs.existsSync(path.join(output, 'tutorials', 'Languages', 'locales', 'ru.json'))).toBe(true);
 	});
 

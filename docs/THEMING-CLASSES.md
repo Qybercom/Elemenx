@@ -911,6 +911,14 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-gallery-track`
 - `elemenx-gallery-viewport`
 
+## Axes
+
+- `elemenx-axes`
+- `elemenx-axes-end`: `other`
+- `elemenx-axes-x`
+- `elemenx-axes-y`
+- `elemenx-axes-z`
+
 ## GameBar
 
 - `elemenx-game-bar`: `large`, `low`, `segmented`, `small`
@@ -1030,6 +1038,7 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 ## GameScene
 
 - `elemenx-game-scene`: `dragging`, `flat`, `panning`
+- `elemenx-game-scene-axes`
 - `elemenx-game-scene-canvas`
 - `elemenx-game-scene-card`
 - `elemenx-game-scene-card-actions`
@@ -1515,8 +1524,9 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 
 ## Slider
 
-- `elemenx-slider`: `disabled`, `large`, `small`, `vertical`
+- `elemenx-slider`: `disabled`, `large`, `small`, `valued`, `vertical`
 - `elemenx-slider-fill`
+- `elemenx-slider-end`
 - `elemenx-slider-thumb`: `active`
 - `elemenx-slider-tick`
 - `elemenx-slider-track`
