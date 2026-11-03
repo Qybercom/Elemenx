@@ -1599,6 +1599,293 @@ function Definition (knowledge, text, offset, language, file) {
 	return null;
 }
 
+/* The definition of a Component, a Service or a Trait in a source around an offset: {Kind, Name, Start, End}, or null. */
+function enclosing (source, offset) {
+	var pattern = /Elemenx\.(Component|Service|Trait)\(\s*(['"])([A-Za-z][\w-]*)\2\s*,\s*\{/g;
+	var match;
+	var open;
+	var end;
+
+	while ((match = pattern.exec(source))) {
+		open = match.index + match[0].length - 1;
+		end = closing(source, open);
+
+		if (offset > open && offset < end)
+			return {Kind: match[1], Name: match[3], Start: open, End: end};
+
+		pattern.lastIndex = Math.max(pattern.lastIndex, open + 1);
+	}
+
+	return null;
+}
+
+/* The .js and .html files under the roots of a project, as the index reads them (no builds, no node_modules). */
+function sourceFiles (roots) {
+	var files = [];
+
+	function walk (directory) {
+		var entries;
+
+		try {
+			entries = fs.readdirSync(directory, {withFileTypes: true});
+		}
+		catch (error) {
+			return;
+		}
+
+		entries.forEach(function (entry) {
+			var file = path.join(directory, entry.name);
+
+			if (files.length > 20000) return;
+
+			if (entry.isDirectory()) {
+				if (!Skipped[entry.name])
+					walk(file);
+			}
+			else if (/\.(js|mjs|html?)$/.test(entry.name)) {
+				files.push(file);
+			}
+		});
+	}
+
+	roots.forEach(walk);
+
+	return files;
+}
+
+/* What a name at an offset is a member of: {Kind (Component, Service, Trait), Owner, Name, Event}, or null. */
+function memberAt (knowledge, text, offset, language, file) {
+	var start = offset - (/[\w$]*$/.exec(text.substring(0, offset)) || [''])[0].length;
+	var name = (/^[\w$]+/.exec(text.substring(start)) || [''])[0];
+	var before = text.substring(Math.max(0, start - 200), start);
+	var found;
+	var around;
+	var alias;
+	var at;
+	var component;
+	var word;
+	var item;
+	var own;
+
+	if (language === 'js') {
+		if (!name)
+			return null;
+
+		/* $Service('Store').Get, Elemenx.Service('Store').Get. */
+		found = /(?:\$Service|Elemenx\.Service)\(\s*(['"])([\w-]+)\1\s*\)\s*\.\s*$/.exec(before);
+
+		if (found)
+			return {Kind: 'Service', Owner: found[2], Name: name};
+
+		/* store.Get, where store = this.$Service('Store'). */
+		alias = /(?:^|[^\w$.])([A-Za-z_$][\w$]*)\s*\.\s*$/.exec(before);
+
+		if (alias && alias[1] !== 'this' && alias[1] !== 'self') {
+			found = new RegExp('(?:^|[^\\w$.])' + alias[1].replace(/\$/g, '\\$') + '\\s*=\\s*(?:[\\w$]+\\.)?(?:\\$Service|Elemenx\\.Service)\\(\\s*([\'"])([\\w-]+)\\1\\s*\\)\\s*[;,\\n]').exec(text);
+
+			return found ? {Kind: 'Service', Owner: found[2], Name: name} : null;
+		}
+
+		around = enclosing(text, start);
+
+		if (!around)
+			return null;
+
+		/* this.Name, self.Name, or the key of the member itself. */
+		if (/(?:^|[^\w$.])(?:this|self)\s*\.\s*$/.test(before) || /\n\t\s*$/.test(before) && /^[\w$]+\s*:/.test(text.substring(start))) return {Kind: around.Kind, Owner: around.Name, Name: name};
+
+		return null;
+	}
+
+	at = scan(text, offset).At;
+
+	/* A prop or an event on the tag of a Component. */
+	if (at.Kind === 'attribute-name' && at.Attribute && at.Tag && knowledge.Component(at.Tag.Name)) {
+		component = knowledge.Component(at.Tag.Name);
+		word = binding(at.Attribute.Name);
+
+		if (word.Kind === 'event')
+			return {Kind: 'Component', Owner: component.Name, Name: word.Name, Event: true};
+
+		item = prop(component, word.Name);
+
+		return item ? {Kind: 'Component', Owner: component.Name, Name: item.Name} : null;
+	}
+
+	/* A name of an expression: a member of the Component of the template. */
+	if ((at.Kind === 'attribute-value' || at.Kind === 'expression') && name) {
+		own = owner(knowledge, file, text, offset);
+
+		if (!own)
+			return null;
+
+		item = own.Methods.filter(function (each) {
+			return each.Name === name;
+		})[0] || prop(own, name);
+
+		return item ? {Kind: 'Component', Owner: own.Name, Name: item.Name} : null;
+	}
+
+	return null;
+}
+
+/*
+ * Where a field, a method or an event is used (Find usages): of a Component, its code (this.Name, self.Name, its key,
+ * $Emit of an event), the expressions of its template and, in every template of the project, the props and the events
+ * on its tags; of a Service, its code and every $Service('Name').Member, Elemenx.Service('Name').Member and variable it
+ * was put in; of a Trait, its code and the code of what has it. [{File, Line, Character, Length}], the definition first.
+ */
+function References (knowledge, text, offset, language, file) {
+	var symbol = memberAt(knowledge, text, offset, language, file);
+	var found = [];
+	var seen = {};
+	var escaped;
+	var homes;
+
+	if (!symbol) return [];
+
+	escaped = symbol.Name.replace(/\$/g, '\\$');
+
+	function add (target, source, index, length) {
+		var position = Position(source, index);
+		var key = target + ':' + index;
+		if (seen[key]) return;
+
+		seen[key] = true;
+
+		found.push({File: target, Line: position.line, Character: position.character, Length: length, Definition: false});
+	}
+
+	/* The code of the definition, and of what extends it or has it as a Trait. */
+	homes = sourceFiles(knowledge.Roots).filter(function (each) {
+		return /\.(js|mjs)$/.test(each);
+	}).map(function (each) {
+		return {File: each, Text: read(each) || ''};
+	});
+
+	homes.forEach(function (each) {
+		var source = each.Text;
+		var own = new RegExp('Elemenx\\.' + symbol.Kind + '\\(\\s*([\'"])' + symbol.Owner + '\\1').exec(source);
+		var heirs = symbol.Kind !== 'Service' && (new RegExp('\\$Extends\\s*:\\s*([\'"])' + symbol.Owner + '\\1').test(source) || new RegExp('\\$Traits\\s*:\\s*\\[[^\\]]*([\'"])' + symbol.Owner + '\\1').test(source));
+		var pattern;
+		var match;
+		var around;
+
+		if (own || heirs) {
+			around = own ? enclosing(source, source.indexOf('{', own.index + own[0].length) + 1) : null;
+
+			/* The key of the member: the definition. */
+			if (around) {
+				match = new RegExp('\\n\\t' + escaped + '\\s*:').exec(source.substring(around.Start, around.End));
+
+				if (match) {
+					add(each.File, source, around.Start + match.index + 2, symbol.Name.length);
+
+					found[found.length - 1].Definition = true;
+				}
+			}
+
+			pattern = new RegExp('(?:^|[^\\w$.])(?:this|self)\\s*\\.\\s*(' + escaped + ')(?![\\w$])', 'g');
+
+			while ((match = pattern.exec(source))) {
+				add(each.File, source, match.index + match[0].length - symbol.Name.length, symbol.Name.length);
+			}
+
+			if (symbol.Event) {
+				pattern = new RegExp('\\$Emit\\(\\s*([\'"])' + escaped + '\\1', 'g');
+
+				while ((match = pattern.exec(source))) {
+					add(each.File, source, match.index + match[0].indexOf(symbol.Name), symbol.Name.length);
+				}
+			}
+
+			/* The expressions of its template. */
+			if (own && symbol.Kind === 'Component') {
+				var template = templateOf(each.File, source);
+				if (template)
+					expressions(template.File, template.Text);
+			}
+		}
+
+		/* A Service from anywhere: by its name, and by a variable it was put in. */
+		if (symbol.Kind === 'Service') {
+			pattern = new RegExp('(?:\\$Service|Elemenx\\.Service)\\(\\s*([\'"])' + symbol.Owner + '\\1\\s*\\)\\s*\\.\\s*(' + escaped + ')(?![\\w$])', 'g');
+
+			while ((match = pattern.exec(source))) {
+				add(each.File, source, match.index + match[0].length - symbol.Name.length, symbol.Name.length);
+			}
+
+			var alias = new RegExp('(?:^|[^\\w$.])([A-Za-z_$][\\w$]*)\\s*=\\s*(?:[\\w$]+\\.)?(?:\\$Service|Elemenx\\.Service)\\(\\s*([\'"])' + symbol.Owner + '\\2\\s*\\)\\s*[;,\\n]', 'g');
+			var names = [];
+
+			while ((match = alias.exec(source))) {
+				names.push(match[1]);
+			}
+
+			names.forEach(function (variable) {
+				var use = new RegExp('(?:^|[^\\w$.])' + variable.replace(/\$/g, '\\$') + '\\s*\\.\\s*(' + escaped + ')(?![\\w$])', 'g');
+
+				while ((match = use.exec(source))) {
+					add(each.File, source, match.index + match[0].length - symbol.Name.length, symbol.Name.length);
+				}
+			});
+		}
+	});
+
+	/* A name in the expressions of a template: its bound attributes and its {{ }}. */
+	function expressions (target, source) {
+		var word = new RegExp('(?:^|[^\\w$.])(' + escaped + ')(?![\\w$])', 'g');
+
+		function within (from, part) {
+			var match;
+
+			word.lastIndex = 0;
+
+			while ((match = word.exec(part))) {
+				add(target, source, from + match.index + match[0].length - symbol.Name.length, symbol.Name.length);
+			}
+		}
+
+		scan(source, -1).Tags.forEach(function (tag) {
+			tag.Attributes.forEach(function (attribute) {
+				if (attribute.Value !== null && /^[\[(*]/.test(attribute.Name))
+					within(attribute.ValueStart, attribute.Value);
+			});
+		});
+
+		var curly = /\{\{([\s\S]*?)\}\}/g;
+		var match;
+
+		while ((match = curly.exec(source))) {
+			within(match.index + 2, match[1]);
+		}
+	}
+
+	/* The props and the events on the tags of the Component, in every template of the project. */
+	if (symbol.Kind === 'Component') {
+		sourceFiles(knowledge.Roots).filter(function (each) {
+			return /\.html?$/.test(each);
+		}).forEach(function (target) {
+			var source = read(target) || '';
+			if (source.indexOf(symbol.Owner) === -1) return;
+
+			scan(source, -1).Tags.forEach(function (tag) {
+				if (lower(tag.Name) !== lower(symbol.Owner)) return;
+
+				tag.Attributes.forEach(function (attribute) {
+					var word = binding(attribute.Name);
+					if ((word.Kind === 'event') === !!symbol.Event && lower(word.Name) === lower(symbol.Name))
+						add(target, source, attribute.Start + attribute.Name.toLowerCase().indexOf(lower(symbol.Name)), symbol.Name.length);
+				});
+			});
+		});
+	}
+
+	return found.sort(function (a, b) {
+		return (b.Definition - a.Definition) || (a.File < b.File ? -1 : a.File > b.File ? 1 : a.Line - b.Line || a.Character - b.Character);
+	});
+}
+
 function Diagnose (knowledge, text, language, file) {
 	var problems = [];
 	var told;
@@ -1680,6 +1967,7 @@ module.exports = {
 	Complete: Complete,
 	Hover: Hover,
 	Definition: Definition,
+	References: References,
 	Diagnose: Diagnose,
 	Position: Position,
 	Offset: Offset,

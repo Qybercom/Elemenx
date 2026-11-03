@@ -63,6 +63,12 @@
 	--elemenx-game-scene-selection: #7fc4ff;
 	--elemenx-game-scene-label: #d9e2f0;
 	--elemenx-game-scene-shadow: rgba(0, 0, 0, 0.9);
+	--elemenx-virtual-pad-fill: rgba(0, 0, 0, 0.25);
+	--elemenx-virtual-pad-edge: rgba(255, 255, 255, 0.38);
+	--elemenx-virtual-pad-knob: rgba(255, 255, 255, 0.72);
+	--elemenx-virtual-pad-pressed: rgba(255, 255, 255, 0.45);
+	--elemenx-virtual-pad-text: #ffffff;
+	--elemenx-virtual-pad-shadow: rgba(0, 0, 0, 0.35);
 	--elemenx-blur-radius: 20px;
 	--elemenx-blur-saturate: 180%;
 	--elemenx-blur-tint: 0.72;

@@ -1048,11 +1048,13 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-game-scene-card-rows`
 - `elemenx-game-scene-card-title`
 - `elemenx-game-scene-fallback`
+- `elemenx-game-scene-loading`
 - `elemenx-game-scene-hud`
 - `elemenx-game-scene-label`
 - `elemenx-game-scene-labels`: `hidden`
 - `elemenx-game-scene-marks`
 - `elemenx-game-scene-minimap`
+- `elemenx-game-scene-screens`
 - `elemenx-game-scene-takeoff`
 
 ## GameSlot
@@ -1726,6 +1728,16 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-tree-rows`
 - `elemenx-tree-twisty`
 
+## VirtualGamepad
+
+- `elemenx-virtual-pad`: `with-right`
+- `elemenx-virtual-pad-button`: `down`, `face-a`, `face-b`, `face-x`, `face-y`, `shoulder`, `small`
+- `elemenx-virtual-pad-face`
+- `elemenx-virtual-pad-knob`
+- `elemenx-virtual-pad-middle`
+- `elemenx-virtual-pad-shoulders`: `left`, `right`
+- `elemenx-virtual-pad-stick`: `left`, `right`
+
 ## VirtualList
 
 - `elemenx-virtual`
@@ -2086,6 +2098,13 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-cropper-image`
 - `elemenx-cropper-size`
 
+## InfiniteList
+
+- `elemenx-infinite`: `scrolls`
+- `elemenx-infinite-above`
+- `elemenx-infinite-end`
+- `elemenx-infinite-status`
+
 ## Jog
 
 - `elemenx-jog`: `disabled`, `touched`
@@ -2116,7 +2135,7 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 
 ## FileBrowser
 
-- `elemenx-file-browser`: `grid`
+- `elemenx-file-browser`: `grid`, `plain`, `tree`
 - `elemenx-file-browser-bar`
 - `elemenx-file-browser-empty`
 - `elemenx-file-browser-head`
@@ -2127,6 +2146,7 @@ The classes of ElemenxUI are its public API for themes: a theme restyles a Compo
 - `elemenx-file-browser-name`
 - `elemenx-file-browser-path`
 - `elemenx-file-browser-size`
+- `elemenx-file-browser-twisty`
 - `elemenx-file-browser-sort`: `active`, `modified`
 - `elemenx-file-browser-view`
 - `elemenx-file-browser-views`

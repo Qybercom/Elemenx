@@ -5,6 +5,9 @@
  * file by the same emits open; Up (Backspace) and the path over it go back. View: list (with Size and Modified, a press
  * on a header sorts by it) or grid. A press selects (Ctrl or Cmd adds, Shift a range, with Multiple), Ctrl+A selects all;
  * select emits the items selected. Arrows move between them. Folders come first, then the files, each by Sort.
+ * View tree shows the whole tree, a folder open under itself (Expanded: the IDs of the folders open, null all of them;
+ * a press on its arrow, Enter, the arrows right and left open and close it, expand tells {Item, Open, Expanded}).
+ * Toolbar (true) shows the bar of the path and the views, Details (true) the sizes and the dates.
  */
 Elemenx.Component('FileBrowser', {
 	$TemplateURL: 'FileBrowser.html',
@@ -17,12 +20,16 @@ Elemenx.Component('FileBrowser', {
 			navigate: 'A folder was opened, or left: {Path, Folder}.',
 			load: 'A folder whose Items are null was opened: {Folder, Path}.',
 			open: 'A file was opened: the item.',
-			select: 'The selection changed: the items selected.'
+			select: 'The selection changed: the items selected.',
+			expand: 'A folder of the tree was opened or closed: {Item, Open, Expanded}.'
 		},
 		Props: {
 			Items: {Schema: {ID: 'text', Name: 'text', Size: 'number', Modified: 'text', Icon: 'icon'}, Description: 'The tree: [{ID, Name, Items, Size, Modified, Icon}]; a folder has Items (null while not loaded).'},
 			Path: 'The IDs of the folders open from the root.',
-			View: {Options: ['list', 'grid'], Description: 'list (with sizes and dates) or grid (big icons).'},
+			View: {Options: ['list', 'grid', 'tree'], Description: 'list (with sizes and dates), grid (big icons) or tree (the whole tree, folders open under themselves).'},
+			Expanded: 'The IDs of the folders open in the tree; null: all of them.',
+			Toolbar: 'Shows the bar of the path and the views.',
+			Details: 'Shows the sizes and the dates.',
 			Sort: {Options: ['Name', 'Size', 'Modified'], Description: 'The column it sorts by.'},
 			Descending: 'Sorts from the last to the first.',
 			Multiple: 'Lets several items be selected.',
@@ -43,6 +50,9 @@ Elemenx.Component('FileBrowser', {
 	Root: '',
 	Height: 360,
 	Label: '',
+	Expanded: null,
+	Toolbar: true,
+	Details: true,
 	Anchor: '',
 
 	$OnCreate: function () {
@@ -77,7 +87,40 @@ Elemenx.Component('FileBrowser', {
 		/* The items of the open folder: folders first, then files, each by the column of Sort. */
 		this.Shown = function (items, path, sort, descending) {
 			var trail = self.Trail(items, path);
-			var list = (trail.length ? trail[trail.length - 1].Items : items) || [];
+
+			return self.Order((trail.length ? trail[trail.length - 1].Items : items) || [], sort, descending);
+		};
+
+		/* The rows: of the open folder; of the tree, each folder open under itself, its Depth from the root. */
+		this.Rows = function (items, path, sort, descending, view, expanded) {
+			var rows = [];
+
+			if (view !== 'tree') {
+				return self.Shown(items, path, sort, descending).map(function (item) {
+					return {Item: item, Depth: 0, Open: false};
+				});
+			}
+
+			(function walk (list, depth) {
+				self.Order(list || [], sort, descending).forEach(function (item) {
+					var open = self.Folder(item) && self.IsOpen(expanded, item.ID);
+
+					rows.push({Item: item, Depth: depth, Open: open});
+
+					if (open && item.Items)
+						walk(item.Items, depth + 1);
+				});
+			})(items, 0);
+
+			return rows;
+		};
+
+		this.IsOpen = function (expanded, id) {
+			return expanded === null || expanded === undefined || expanded.indexOf(id) !== -1;
+		};
+
+		this.Order = function (items, sort, descending) {
+			var list = items || [];
 			var key = sort || 'Name';
 			var sign = descending && descending !== 'false' ? -1 : 1;
 
@@ -124,9 +167,44 @@ Elemenx.Component('FileBrowser', {
 		};
 	},
 
-	/* The items of the open folder, as they are shown. */
+	/* The items shown: of the open folder, or of the tree. */
 	Current: function () {
-		return this.Shown(this.Items, this.Path, this.Sort, this.Descending);
+		return this.Rows(this.Items, this.Path, this.Sort, this.Descending, this.View, this.Expanded).map(function (row) {
+			return row.Item;
+		});
+	},
+
+	/* Every folder of the tree: what Expanded is when it is null. */
+	Folders: function (items) {
+		var self = this;
+
+		return (items || []).reduce(function (all, item) {
+			return self.Folder(item) ? all.concat([item.ID], self.Folders(item.Items)) : all;
+		}, []);
+	},
+
+	/* A folder of the tree opened or closed: one not loaded is asked for. */
+	Expand: function (item, open) {
+		var expanded = this.Expanded === null || this.Expanded === undefined ? this.Folders(this.Items) : this.Expanded.slice();
+		if (!item || !this.Folder(item) || this.IsOpen(expanded, item.ID) === open) return;
+
+		this.Expanded = open ? expanded.concat([item.ID]) : expanded.filter(function (id) {
+			return id !== item.ID;
+		});
+
+		this.$Emit('expand', {Item: item, Open: open, Expanded: this.Expanded});
+
+		if (open && item.Items === null)
+			this.$Emit('load', {Folder: item, Path: []});
+	},
+
+	Toggle: function (event, node) {
+		var item = this.ItemOf(node);
+
+		event.stopPropagation();
+
+		if (item)
+			this.Expand(item, !this.IsOpen(this.Expanded, item.ID));
 	},
 
 	/* The item of a row from its data-id. */
@@ -168,7 +246,8 @@ Elemenx.Component('FileBrowser', {
 	Open: function (item) {
 		if (!item) return;
 
-		if (this.Folder(item)) this.Go(this.Path.concat([item.ID]));
+		if (this.Folder(item) && this.View === 'tree') this.Expand(item, !this.IsOpen(this.Expanded, item.ID));
+		else if (this.Folder(item)) this.Go(this.Path.concat([item.ID]));
 		else this.$Emit('open', item);
 	},
 
@@ -276,6 +355,15 @@ Elemenx.Component('FileBrowser', {
 			event.preventDefault();
 
 			this.Pressed({ctrlKey: true, shiftKey: false}, rows[index]);
+
+			return;
+		}
+
+		/* In the tree the arrows across open and close a folder. */
+		if (this.View === 'tree' && (event.key === 'ArrowLeft' || event.key === 'ArrowRight')) {
+			event.preventDefault();
+
+			this.Expand(this.ItemOf(rows[index]), event.key === 'ArrowRight');
 
 			return;
 		}

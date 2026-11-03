@@ -297,6 +297,71 @@ describe('Contract: the language of Elemenx for the editors (the core, and its L
 		}
 	});
 
+	it('finds the usages of a field, a method and an event of a Component and of a member of a Service, wherever they are', function () {
+		var board = path.join(project, 'application/components/Board/Board.js');
+		var html = path.join(project, 'application/components/Board/Board.html');
+		var code = fs.readFileSync(board, 'utf8');
+		var panel = "Elemenx.Component('Panel', {\n\tShow: function () {\n\t\tvar store = this.$Service('Store');\n\n\t\tstore.Get();\n\t\tElemenx.Service('Store').Get();\n\t\tthis.$Service('Store').Gets();\n\t\tother.Get();\n\t}\n});\n";
+
+		write('application/components/Shelf/Shelf.js', panel);
+
+		/* Where a place is: its file, line and column; * the definition. */
+		function where (list) {
+			return list.map(function (place) {
+				return path.relative(project, place.File).replace(/\\/g, '/') + ':' + place.Line + ':' + place.Character + (place.Definition ? '*' : '');
+			});
+		}
+
+		function at (file, text, needle, plus) {
+			var position = language.Position(text, text.indexOf(needle) + (plus || 0));
+
+			return file + ':' + position.line + ':' + position.character;
+		}
+
+		/* A field: its key in the code, the expression of its template; the same from either. */
+		var count = [at('application/components/Board/Board.js', code, 'Count: 0') + '*', at('application/components/Board/Board.html', template, 'Count')];
+
+		expect(where(language.References(knowledge, code, code.indexOf('Count: 0') + 2, 'js', board))).toEqual(count);
+		expect(where(language.References(knowledge, template, template.indexOf('Count') + 1, 'html', html))).toEqual(count);
+
+		/* A method called by the template. */
+		expect(where(language.References(knowledge, template, template.indexOf('Picked') + 1, 'html', html))).toEqual([at('application/components/Board/Board.js', code, 'Picked: function') + '*', at('application/components/Board/Board.html', template, 'Picked')]);
+
+		/* A prop of a Component of a Library, on its tags, as it is written or bound; an event, to what tells it. */
+		var card = fs.readFileSync(path.join(project, 'libraries/Kit/components/Card/Card.js'), 'utf8');
+
+		expect(where(language.References(knowledge, template, template.indexOf('Title') + 1, 'html', html))).toEqual([at('libraries/Kit/components/Card/Card.js', card, 'Title') + '*', at('application/components/Board/Board.html', template, 'Title'), at('application/components/Board/Board.html', template, '[title]', 1), at('application/components/Panel/Panel.html', fs.readFileSync(path.join(project, 'application/components/Panel/Panel.html'), 'utf8'), 'Title')]);
+		expect(where(language.References(knowledge, template, template.indexOf('(pick)') + 2, 'html', html))).toEqual([at('application/components/Board/Board.html', template, '(pick)', 1), at('libraries/Kit/components/Card/Card.js', card, 'pick')]);
+
+		/* A member of a Service: by its name and by the variable it was put in; Gets is another, other.Get of something else. */
+		var store = fs.readFileSync(path.join(project, 'application/services/Store.js'), 'utf8');
+		var found = where(language.References(knowledge, panel, panel.indexOf('store.Get') + 7, 'js', path.join(project, 'application/components/Shelf/Shelf.js')));
+
+		expect(found).toEqual([at('application/services/Store.js', store, 'Get') + '*', at('application/components/Shelf/Shelf.js', panel, 'store.Get', 6), at('application/components/Shelf/Shelf.js', panel, "Service('Store').Get", 17)]);
+		expect(where(language.References(knowledge, panel, panel.indexOf("Service('Store').Get") + 18, 'js', path.join(project, 'application/components/Shelf/Shelf.js')))).toEqual(found);
+
+		/* Only the bound attributes and {{ }} of its template: class="Size" is a word, not the field; (size) is an event, not the prop. */
+		var shelf = "Elemenx.Component('Shelf', {\n\t$TemplateURL: 'Shelf.html',\n\tSize: 0\n});\n";
+		var markup = '<div class="Size" [title]="Size + 1">{{ Size }}</div>\n<Shelf Size="2" (size)="Grown" />\n';
+
+		write('application/components/Shelf/Shelf.js', shelf);
+		write('application/components/Shelf/Shelf.html', markup);
+
+		knowledge.Update(path.join(project, 'application/components/Shelf/Shelf.js'));
+
+		expect(where(language.References(knowledge, shelf, shelf.indexOf('Size: 0') + 1, 'js', path.join(project, 'application/components/Shelf/Shelf.js')))).toEqual([
+			at('application/components/Shelf/Shelf.js', shelf, 'Size: 0') + '*',
+			at('application/components/Shelf/Shelf.html', markup, '"Size + 1"', 1),
+			at('application/components/Shelf/Shelf.html', markup, '{{ Size', 3),
+			at('application/components/Shelf/Shelf.html', markup, 'Size="2"')
+		]);
+
+		/* Nothing of a word that is no member. */
+		expect(language.References(knowledge, panel, panel.indexOf('other') + 1, 'js', path.join(project, 'application/components/Shelf/Shelf.js'))).toEqual([]);
+
+		fs.rmSync(path.join(project, 'application/components/Shelf'), {recursive: true, force: true});
+	});
+
 	it('speaks LSP over stdio: initialize, a document opened, its diagnostics, a completion, shutdown', async function () {
 		var server = child.spawn(process.execPath, [path.join(root, 'editors', 'server', 'elemenx-language-server.js'), '--stdio'], {stdio: ['pipe', 'pipe', 'inherit']});
 		var received = [];
@@ -378,6 +443,24 @@ describe('Contract: the language of Elemenx for the editors (the core, and its L
 			expect((await answer(function (message) {
 				return message.id === 3;
 			})).error.code).toBe(-32601);
+
+			/* Find usages of Count, from the template: its key in the code and the expression; without the definition when so asked. */
+			var count = language.Position(template, template.indexOf('Count') + 1);
+
+			send({id: 5, method: 'textDocument/references', params: {textDocument: {uri: uri}, position: count, context: {includeDeclaration: true}}});
+			send({id: 6, method: 'textDocument/references', params: {textDocument: {uri: uri}, position: count, context: {includeDeclaration: false}}});
+
+			expect((await answer(function (message) {
+				return message.id === 1;
+			})).result.capabilities.referencesProvider).toBe(true);
+			expect((await answer(function (message) {
+				return message.id === 5;
+			})).result.map(function (place) {
+				return [path.basename(decodeURIComponent(place.uri)), place.range.start.line, place.range.end.character - place.range.start.character];
+			})).toEqual([['Board.js', 3, 5], ['Board.html', 1, 5]]);
+			expect((await answer(function (message) {
+				return message.id === 6;
+			})).result).toHaveLength(1);
 
 			send({id: 4, method: 'shutdown'});
 

@@ -6,7 +6,7 @@
  *   how far into the next step the time has come, for Blend.
  * - Blend(from, to, part): a place between two, a number or a list.
  * - Spring(value, speed, target, stiffness, damping, elapsed): [value, speed] of a thing pulled to a target.
- * - Car(state, input, surface, settings, elapsed): input {Gas, Brake (and then back), Stop (all wheels, and it stays), Steer (-1 to 1, left
+ * - Car(state, input, surface, settings, elapsed): input {Gas, Brake (and then back; true, or 0 to 1 as far as a trigger is pressed), Stop (all wheels, and it stays), Steer (-1 to 1, left
  *   over 0), Hand, Drift (the rear lets go while it is held)}; docs/VEHICLES.md says how all of it hangs together; surface(x, z) is {Height, Grip, Drag}. Settings: Mass, Power, Top, Brake, Base (from axle to axle), Width (between the
  *   wheels), Lock (the most the wheels turn, radians), Answer (how fast they turn, and the car after them), Keep (at what speed they have
  *   half their lock left), Turn (a table of how fast it turns at full steering: [[speed m/s, degrees a second], ...], instead of what Lock and Keep
@@ -15,11 +15,13 @@
  *   (0 a simulator: only the tyres turn it; 1 an arcade: it goes where the wheels point), Rear (the grip behind against the front), Slide
  *   (the grip behind that is left when it drifts), Angle (how far a drift may open, radians), Peak (the slip, radians, at which a tyre gives most), Grip, Downforce (how much grip the air adds at top speed, as a part of it), Ride (how soft the springs are),
  *   Travel (how far a wheel goes up or down), Balance (how high its weight lies), AntiRoll (the bars that hold it level in a turn, N m a
- *   radian). State: {X, Z, Heading, Forward, Aside, Rate, Steer, Y, Rise, Pitch, PitchSpeed, Roll, RollSpeed,
+ *   radian), Gears with Shift, ShiftTime, Redline and Idle (a gearbox: Gearbox; with none, the engine gives its power at any speed). State: {X, Z, Heading, Forward, Aside, Rate, Steer, Y, Rise, Pitch, PitchSpeed, Roll, RollSpeed,
  *   Spin, Wheels, Strokes, Touching}. Force is what the engine gives at a speed, as far as the tyres that touch hold; air and the ground
  *   take it back. Each of the four wheels [front left, front right, rear left, rear right] is a weight of its own on a spring and a
  *   damper under the body, so it follows the road and the body rides over it, leaning as it speeds up, brakes and turns. Strokes is how
  *   far each spring has gone from rest, above 0 when the wheel hangs lower than it did.
+ * - Gearbox(state, input, settings, gas, braking, speed, elapsed): the gears of a car (Car runs it when it has Gears): Gear, Rpm,
+ *   Shifting, Shifted in the state; returns how much of its power the engine gives now.
  * - Hit(state, normal, depth, at, settings): a car at a wall: normal [x, z] looks out of the wall, depth is how far in it went, at [x, z] is
  *   the corner that met it, from its middle. It comes out, gives up its speed into the wall but for a bounce (Bounce, default 0.25),
  *   scrapes (Scrape, default 0.12), and turns round what it hit.
@@ -30,7 +32,7 @@
 Elemenx.Service('Physics', {
 	$Meta: {
 		Description: 'How things move, apart from what shows them: steps of one length, springs, a car on its tyres and springs, a ship in space.',
-		Methods: ['Steps(clock, elapsed, length, each)', 'Blend(from, to, part)', 'Spring(value, speed, target, stiffness, damping, elapsed)', 'Car(state, input, surface, settings, elapsed)', 'Hit(state, normal, depth, at, settings)', 'Bounce(way, normal, depth, bounce)', 'Ship(state, input, settings, elapsed)']
+		Methods: ['Steps(clock, elapsed, length, each)', 'Blend(from, to, part)', 'Spring(value, speed, target, stiffness, damping, elapsed)', 'Car(state, input, surface, settings, elapsed)', 'Gearbox(state, input, settings, gas, braking, speed, elapsed)', 'Hit(state, normal, depth, at, settings)', 'Bounce(way, normal, depth, bounce)', 'Ship(state, input, settings, elapsed)']
 	},
 
 	Gravity: 9.81,
@@ -199,12 +201,19 @@ Elemenx.Service('Physics', {
 			state.Steer += (asked - state.Steer) * Math.min(1, elapsed * answer * 0.8);
 		}
 
-		if (input.Gas)
-			pull = Math.min(power / Math.max(size, 6) / mass, grip);
+		/* Gas and Brake true are full; a number (0 to 1) is a pedal pressed so far, as a trigger of a pad. */
+		var gas = typeof input.Gas === 'number' ? Math.max(0, Math.min(1, input.Gas)) : input.Gas ? 1 : 0;
+		var braking = typeof input.Brake === 'number' ? Math.max(0, Math.min(1, input.Brake)) : input.Brake ? 1 : 0;
 
-		if (input.Brake) {
-			if (speed > 0.5) pull = -Math.min(brake, grip * bite);
-			else pull = -Math.min(power * 0.3 / Math.max(size, 6) / mass, grip) * (speed < -14 ? 0 : 1);
+		/* With a gearbox the engine gives what its revolutions give, nothing while it changes gear, and no more past the red line. */
+		var engine = settings.Gears ? this.Gearbox(state, input, settings, gas, braking, speed, elapsed) : 1;
+
+		if (gas)
+			pull = Math.min(power * engine / Math.max(size, 6) / mass, grip) * gas;
+
+		if (braking) {
+			if (speed > 0.5) pull = -Math.min(brake, grip * bite) * braking;
+			else pull = -Math.min(power * 0.3 * engine / Math.max(size, 6) / mass, grip) * (speed < -14 ? 0 : 1) * braking;
 		}
 
 		if (input.Hand)
@@ -279,6 +288,86 @@ Elemenx.Service('Physics', {
 		this.Ride(state, surface, settings, ahead, pull, Math.max(-grip, Math.min(grip, speed * state.Rate)), elapsed);
 
 		return state;
+	},
+
+	/*
+	 * The gearbox of a car: Gears, the part of Top each gear reaches at the red line ([0.3, 0.45, ...], the last 1 or less); Shift
+	 * auto (up near the red line, down when it labours, into reverse when it stops and is asked back) or manual (ShiftUp and
+	 * ShiftDown of the input, once a press; down past 1 is neutral, then reverse); ShiftTime (seconds without drive, 0.22), Redline and
+	 * Idle (revolutions a minute). Keeps Gear (-1 reverse, 0 neutral, 1 and on), Rpm, Shifting (the seconds of a change left) and
+	 * Shifted (1 up, -1 down, while it changes) in the state, and gives how much of its power the engine gives now, 0 to 1.
+	 */
+	Gearbox: function (state, input, settings, gas, braking, speed, elapsed) {
+		var number = this.Number;
+		var gears = settings.Gears;
+		var count = gears.length;
+		var top = number(settings.Top, 92);
+		var redline = number(settings.Redline, 7500);
+		var idle = number(settings.Idle, 900);
+		var time = number(settings.ShiftTime, 0.22);
+		var manual = settings.Shift === 'manual';
+		var size = Math.abs(speed);
+		var before;
+		var reach;
+		var turning;
+
+		if (state.Gear === undefined) {
+			state.Gear = 0;
+			state.Rpm = idle;
+			state.Shifting = 0;
+			state.Shifted = 0;
+		}
+
+		before = state.Gear;
+
+		function change (gear) {
+			if (gear === state.Gear) return;
+
+			state.Shifted = gear > state.Gear ? 1 : -1;
+			state.Gear = gear;
+			state.Shifting = time;
+		}
+
+		if (manual) {
+			if (input.ShiftUp)
+				change(Math.min(count, state.Gear + 1));
+
+			if (input.ShiftDown)
+				change(Math.max(-1, state.Gear - 1));
+		}
+		else if (state.Shifting <= 0 && gas && state.Gear <= 0 && speed > -0.5) {
+			change(1);
+		}
+		else if (state.Shifting <= 0 && braking && !gas && speed < 0.5 && state.Gear >= 0) {
+			change(-1);
+		}
+		else if (state.Shifting <= 0 && state.Gear > 0) {
+			reach = size / (top * gears[state.Gear - 1]);
+
+			if (reach > 0.93 && state.Gear < count) change(state.Gear + 1);
+			else if (reach < 0.42 && state.Gear > 1) change(state.Gear - 1);
+		}
+
+		state.Shifting = Math.max(0, state.Shifting - elapsed);
+
+		if (state.Shifting <= 0)
+			state.Shifted = 0;
+
+		/* The revolutions follow the wheels in gear; in neutral the gas alone raises them. */
+		if (state.Gear === 0) {
+			state.Rpm += (idle + (redline - idle) * gas - state.Rpm) * Math.min(1, elapsed * 6);
+
+			return 0;
+		}
+
+		reach = size / (top * gears[Math.max(0, state.Gear - 1)]);
+		turning = Math.max(idle, idle * 0.6 + redline * reach);
+		state.Rpm += (turning - state.Rpm) * Math.min(1, elapsed * (before === state.Gear ? 20 : 8));
+
+		if (state.Shifting > 0 || reach >= 1) return 0;
+
+		/* Most at four fifths of the red line, less below and above it. */
+		return Math.max(0.35, 1 - Math.pow((state.Rpm / redline - 0.8) / 0.8, 2));
 	},
 
 	/* What a table of [at, value] gives between its rows, and its ends beyond them. */

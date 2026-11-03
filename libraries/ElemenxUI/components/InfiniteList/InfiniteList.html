@@ -1,0 +1,9 @@
+<div class="elemenx-infinite" role="feed" [class.scrolls]="!!Length(Height)" [class.up]="Direction === 'up'" [attribute.aria-busy]="String(!!Busy)" [attribute.aria-label]="Label || null" [style.height]="Length(Height)" *infinite="{Margin: Margin, Direction: Direction, Busy: Busy, Done: Done}" (more)="More">
+	<div class="elemenx-infinite-above" *if="Direction === 'up'">
+		<div class="elemenx-infinite-status" *if="Busy"><Spinner Size="small" [label]="$T('ui.infiniteList.loading')" /><span>{{$T('ui.infiniteList.loading')}}</span></div>
+	</div>
+	<div class="elemenx-infinite-end" *if="Direction === 'up' && Done && !Busy">{{EndText || $T('ui.infiniteList.end')}}</div>
+	<slot></slot>
+	<div class="elemenx-infinite-status" *if="Direction !== 'up' && Busy"><Spinner Size="small" [label]="$T('ui.infiniteList.loading')" /><span>{{$T('ui.infiniteList.loading')}}</span></div>
+	<div class="elemenx-infinite-end" *if="Direction !== 'up' && Done && !Busy">{{EndText || $T('ui.infiniteList.end')}}</div>
+</div>

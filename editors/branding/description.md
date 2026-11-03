@@ -5,6 +5,7 @@
 - **Completion** of the Components of a template, their props (`Variant`, `[Variant]`), events (`(click)`), the directives (`*if`, `*for`, `*tip`...), the options of a prop, the references of `$Ref('...')` and the Services of `$Service('...')`.
 - **Expressions that know their Component**: `{{Title}}` is the field of the Component of the template, with its type: `CallState.` completes the keys of `CallState`, the item of `*for` has the type of the items. A JSDoc above a key gives it a type of its own.
 - **Go to definition** of a Component, a prop, an event, a directive (the core ones in `elemenx.js`), a field or a function of a template, and a reference (`#Name` and `$Ref('Name')` both ways).
+undefined
 - **Documentation on hover** of all of them.
 - **Diagnostics**: an unknown Component, prop, event or directive, a `$Ref` with no element.
 - **Colors** of their own for the Components, bindings, events, directives, references and `{{ }}`, readable in light and dark themes.

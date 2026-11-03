@@ -537,6 +537,90 @@ describe('Contract: the new Components of ElemenxUI', function () {
 		expect(root.querySelector('.elemenx-file-browser-empty .elemenx-spinner')).not.toBe(null);
 	});
 
+	it('FileBrowser as a tree: every folder open under itself, its arrow, Enter and the arrows across open and close it', async function () {
+		var events = [];
+		var host = mount('<div><FileBrowser View="tree" [items]="Items" (expand)="Expanded" (load)="Load" (open)="Opened"></FileBrowser></div>', {
+			Items: [
+				{ID: 'readme', Name: 'README.md'},
+				{ID: 'src', Name: 'src', Items: [{ID: 'lib', Name: 'lib', Items: [{ID: 'a', Name: 'a.js'}]}, {ID: 'index', Name: 'index.js'}]},
+				{ID: 'later', Name: 'later', Items: null}
+			],
+			Expanded: function (detail) {
+				events.push((detail.Open ? 'open ' : 'close ') + detail.Item.ID + ' ' + detail.Expanded.join(','));
+			},
+			Load: function (detail) {
+				events.push('load ' + detail.Folder.ID);
+			},
+			Opened: function (item) {
+				events.push('file ' + item.ID);
+			}
+		});
+		var root;
+
+		function names () {
+			return Array.from(root.querySelectorAll('.elemenx-file-browser-name')).map(function (node) {
+				return node.textContent;
+			});
+		}
+
+		function row (id) {
+			return root.querySelector('.elemenx-file-browser-item[data-id="' + id + '"]');
+		}
+
+		await tick();
+
+		root = host.$Element().querySelector('.elemenx-file-browser');
+
+		/* Folders first, each open with its own under it, stepped in by its depth. */
+		expect(names()).toEqual(['later', 'src', 'lib', 'a.js', 'index.js', 'README.md']);
+		expect(root.querySelector('[role="tree"]')).toBeTruthy();
+		expect(row('a').getAttribute('aria-level')).toBe('3');
+		expect(row('src').getAttribute('aria-expanded')).toBe('true');
+		expect(parseFloat(row('a').style.paddingInlineStart)).toBeGreaterThan(parseFloat(row('lib').style.paddingInlineStart));
+		expect(root.querySelector('.elemenx-file-browser-path.elemenx-breadcrumbs, .elemenx-breadcrumbs')).toBe(null);
+
+		/* Its arrow closes it; the selection stays as it was. */
+		row('lib').querySelector('.elemenx-file-browser-twisty button').click();
+
+		await tick();
+
+		expect(names()).toEqual(['later', 'src', 'lib', 'index.js', 'README.md']);
+		expect(row('lib').getAttribute('aria-expanded')).toBe('false');
+
+		/* The arrows across: right opens, left closes; Enter on a file opens it. */
+		row('lib').focus();
+		row('lib').dispatchEvent(new KeyboardEvent('keydown', {key: 'ArrowRight', bubbles: true}));
+
+		await tick();
+
+		expect(names()).toContain('a.js');
+
+		row('src').focus();
+		row('src').dispatchEvent(new KeyboardEvent('keydown', {key: 'ArrowLeft', bubbles: true}));
+
+		await tick();
+
+		expect(names()).toEqual(['later', 'src', 'README.md']);
+
+		row('readme').focus();
+		row('readme').dispatchEvent(new KeyboardEvent('keydown', {key: 'Enter', bubbles: true}));
+
+		/* A folder not loaded, opened by Enter: asked for. */
+		row('later').focus();
+		row('later').dispatchEvent(new KeyboardEvent('keydown', {key: 'Enter', bubbles: true}));
+
+		await tick();
+
+		/* later was open already (all of them are when Expanded is null): Enter closed it; again opens and asks. */
+		expect(events).toEqual(['close lib src,later', 'open lib src,later,lib', 'close src later,lib', 'file readme', 'close later lib']);
+
+		row('later').dispatchEvent(new KeyboardEvent('keydown', {key: 'Enter', bubbles: true}));
+
+		await tick();
+
+		expect(events.slice(5)).toEqual(['open later lib,later', 'load later']);
+	});
+
 	it('MediaPlayer loads the sound, shows its time, mutes, changes the speed and follows the keys', async function () {
 		var rate = 8000;
 		var length = rate * 2;

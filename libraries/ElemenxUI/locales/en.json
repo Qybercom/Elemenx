@@ -577,6 +577,10 @@
 		"image": {
 			"broken": "The picture did not load"
 		},
+		"infiniteList": {
+			"end": "That is all",
+			"loading": "Loading more"
+		},
 		"input": {
 			"hidePassword": "Hide password",
 			"showPassword": "Show password"
@@ -828,6 +832,11 @@
 			"empty": "Nothing found",
 			"label": "Tree"
 		},
+		"virtualGamepad": {
+			"label": "Gamepad on the screen",
+			"look": "Look round",
+			"stick": "Stick"
+		},
 		"virtualList": {
 			"empty": "No items",
 			"label": "List"
@@ -901,7 +910,8 @@
 				"fleet": "Fleet"
 			},
 			"land": "Land",
-			"takeOff": "Take off"
+			"takeOff": "Take off",
+			"loading": "Loading the scene"
 		},
 		"signal": {
 			"good": "Good connection",
@@ -1060,6 +1070,8 @@
 			"view": "View",
 			"list": "List",
 			"grid": "Icons",
+			"tree": "Tree",
+			"toggle": "Open or close the folder",
 			"name": "Name",
 			"size": "Size",
 			"modified": "Modified",

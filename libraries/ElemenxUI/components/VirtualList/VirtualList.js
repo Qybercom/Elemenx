@@ -3,7 +3,8 @@
  * lightly as ten. Items: objects (or strings); every row is ItemHeight pixels high; Height is the height of the list.
  * A row shows Icon, Label (LabelKey) and Hint of its item, or the content of Render(container, item, index).
  * Value is the key (ItemKey) of the selected item. Keys: arrows, Page Up and Down, Home, End; Enter selects.
- * ScrollTo(index) brings an item into view. Events: select (the item), range ({Start, End}: the rows drawn).
+ * ScrollTo(index) brings an item into view. Events: select (the item), range ({Start, End}: the rows drawn), more
+ * ({Count}: its last rows are drawn; once for each length of Items, so a list that grows asks again).
  */
 Elemenx.Component('VirtualList', {
 	$TemplateURL: 'VirtualList.html',
@@ -14,7 +15,8 @@ Elemenx.Component('VirtualList', {
 		Description: 'A long list that draws only the rows in view (and Overscan more on each side): a hundred thousand items scroll as lightly as ten.',
 		Events: {
 			select: 'An item was chosen: the item.',
-			range: 'The rows drawn changed: {Start, End}.'
+			range: 'The rows drawn changed: {Start, End}.',
+			more: 'Its last rows are drawn, once for each length of Items: {Count}.'
 		},
 		Methods: ['ScrollTo(index)'],
 		Props: {
@@ -135,7 +137,16 @@ Elemenx.Component('VirtualList', {
 		if (visible !== this.Visible)
 			this.Visible = visible;
 
-		this.$Emit('range', {Start: this.Start, End: Math.min(this.Items.length, this.Start + visible)});
+		var end = Math.min(this.Items.length, this.Start + visible);
+
+		this.$Emit('range', {Start: this.Start, End: end});
+
+		/* Near its last row: more is asked, once for each length of the list. */
+		if (end >= this.Items.length - Number(this.Overscan) && this.Asked !== this.Items.length) {
+			this.Asked = this.Items.length;
+
+			this.$Emit('more', {Count: this.Items.length});
+		}
 	},
 
 	/* Scroll events come faster than frames: the rows follow once a frame. */

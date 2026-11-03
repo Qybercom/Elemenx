@@ -197,6 +197,14 @@
 		grid-template-columns: 1fr;
 	}
 }
+.ui-kit-feed-post {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	padding: 10px 12px;
+	border-bottom: 1px solid var(--elemenx-border);
+}
+
 .ui-kit-stack {
 	display: flex;
 	flex-direction: column;
@@ -934,4 +942,58 @@
 	.ui-kit-calculators {
 		grid-template-columns: minmax(0, 1fr);
 	}
+}
+
+/* The screen behind the wheel of a car: drawn by the scene from this element, out of sight. */
+.ui-kit-dash {
+	display: flex;
+	align-items: center;
+	gap: 18px;
+	box-sizing: border-box;
+	width: 512px;
+	height: 116px;
+	padding: 0 22px;
+	background: #05080c;
+	color: #8fd8ff;
+	font: 600 20px system-ui, sans-serif;
+}
+
+.ui-kit-dash-speed {
+	min-width: 96px;
+	font-size: 64px;
+	font-weight: 700;
+	text-align: right;
+	color: #ffffff;
+}
+
+.ui-kit-dash-gear {
+	font-size: 52px;
+	color: #ffb347;
+}
+
+.ui-kit-dash-rpm {
+	flex: 1;
+	height: 14px;
+	border-radius: 7px;
+	background: #1c2a36;
+	overflow: hidden;
+}
+
+.ui-kit-dash-rpm > span {
+	display: block;
+	height: 100%;
+	background: linear-gradient(90deg, #39d0ff, #ffd24a 70%, #ff4a3a);
+}
+
+.ui-kit-dash-turn,
+.ui-kit-dash-lights {
+	color: #23313d;
+}
+
+.ui-kit-dash-turn.on {
+	color: #4cff7a;
+}
+
+.ui-kit-dash-lights.on {
+	color: #4aa8ff;
 }

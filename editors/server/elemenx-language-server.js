@@ -1,7 +1,7 @@
 /*
- * The language server of Elemenx (LSP over stdio): completion, hover, the definition and diagnostics of the
- * templates and the code of an Elemenx project, for any editor that speaks LSP (IntelliJ through LSP4IJ, Neovim, Zed,
- * Sublime...). Its knowledge is the one of ../core/elemenx-language.js. Options: --meta <file> (a meta.json of a
+ * The language server of Elemenx (LSP over stdio): completion, hover, the definition, the references (Find usages)
+ * and diagnostics of the templates and the code of an Elemenx project, for any editor that speaks LSP (IntelliJ through
+ * LSP4IJ, Neovim, Zed, Sublime...). Its knowledge is the one of ../core/elemenx-language.js. Options: --meta <file> (a meta.json of a
  * Library, beside the ones the project has), --stdio (the default and only transport).
  */
 var path = require('path');
@@ -105,7 +105,8 @@ function handle (message) {
 					textDocumentSync: {openClose: true, change: 1, save: {includeText: false}},
 					completionProvider: {triggerCharacters: ['<', ' ', '[', '(', '*', '"', '\'', '.']},
 					hoverProvider: true,
-					definitionProvider: true
+					definitionProvider: true,
+					referencesProvider: true
 				},
 				serverInfo: {name: 'elemenx-language-server', version: '1.0.0'}
 			});
@@ -167,6 +168,7 @@ function handle (message) {
 		case 'textDocument/completion':
 		case 'textDocument/hover':
 		case 'textDocument/definition':
+		case 'textDocument/references':
 			document = documents[params.textDocument.uri];
 
 			if (!document || !knowledge || !kindOf(params.textDocument.uri)) {
@@ -196,6 +198,14 @@ function handle (message) {
 				respond(message.id, (function (hover) {
 					return hover ? {contents: {kind: 'markdown', value: hover.Markdown}, range: range(document.Text, hover.Start, hover.End)} : null;
 				})(language.Hover(knowledge, document.Text, offset, kindOf(params.textDocument.uri), file)));
+			}
+			else if (message.method === 'textDocument/references') {
+				/* Find usages: every place, the definition too when it is asked for. */
+				respond(message.id, language.References(knowledge, document.Text, offset, kindOf(params.textDocument.uri), file).filter(function (place) {
+					return !place.Definition || !params.context || params.context.includeDeclaration !== false;
+				}).map(function (place) {
+					return {uri: toUri(place.File), range: {start: {line: place.Line, character: place.Character}, end: {line: place.Line, character: place.Character + place.Length}}};
+				}));
 			}
 			else {
 				respond(message.id, (function (place) {

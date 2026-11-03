@@ -3,8 +3,10 @@
  * trait Scatter (forest, grove, thicket, rocks, or one of your own) sows models over a ground by its rules: Shapes (the
  * names of models), Density (a hundred square units), Size (the smallest and the largest, in sizes of the model),
  * MinHeight, MaxHeight, MaxSlope, Cover (0 to 1: how much of the ground its patches take, 1 all of it), Patch (the size
- * of its patches), Seed, Blocks (no way through them). A GameObject of a kind with the trait Grass (grass) grows blades
- * in the vertex shader round the view: Density, Height, Color, MaxHeight, MaxSlope; with Shapes (a model of grass, a file
+ * of its patches), Clumps (0 to 1: thick in groves of the size of Patch and thin between them), Seed, Blocks (no way
+ * through them). A GameObject of a kind with the trait Grass (grass) grows blades in the vertex shader round the view:
+ * Density, Height, Spread (0 to 1: how unlike in height one blade is to the next, a lawn 0.05, a wild meadow 0.6; 0.45),
+ * Clumps (0 to 1: tufts and glades of the size of Patch, 24), Color, MaxHeight, MaxSlope; with Shapes (a model of grass, a file
  * too) it sows that model, thick, up to Reach from the eye. Reach holds for any rule; Grid (a size) lays Shapes as tiles,
  * one a cell, turned by quarters, the way to build a land out of ready pieces.
  *
@@ -50,6 +52,10 @@ Elemenx.Trait('Scatter', {
 
 			return fragment.slice(0, at) + 'in vec2 vFade;\nuniform float uDither;\nvoid main() {\n\tfloat hole = fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715))) + uDither * 0.618034);\n\tif (hole >= vFade.y || hole < 1.0 - vFade.x) discard;' + fragment.slice(at + 13);
 		}
+
+		engine.ScatterWarm = function () {
+			programs();
+		};
 
 		function programs () {
 			if (!state.Programs) {
@@ -200,6 +206,9 @@ Elemenx.Trait('Scatter', {
 			if (field.Slope(place[0], place[1]) > (rule.MaxSlope === undefined ? 0.3 : Number(rule.MaxSlope))) return null;
 
 			if (cover < 1 && noise.Fbm(place[0] / (Number(rule.Patch) || 60), 0.5, place[1] / (Number(rule.Patch) || 60), 3) * 1.6 - 0.3 > cover) return null;
+
+			/* Clumps: thick in groves and thin between them, where Cover would leave none; the same place, the same choice. */
+			if (Number(rule.Clumps) > 0 && Math.abs(Math.sin(place[0] * 12.9898 + place[1] * 78.233) * 43758.5453) % 1 > 1 - Math.min(1, Number(rule.Clumps)) * (1 - self.$Service('Terrain').Smoothstep(0.35, 0.65, noise.Fbm(place[0] / (Number(rule.Patch) || 60), 1.7, place[1] / (Number(rule.Patch) || 60), 3)))) return null;
 
 			return height;
 		}
@@ -533,6 +542,21 @@ Elemenx.Trait('Scatter', {
 					grass.Texture.Destroy();
 
 				grass = state.Grass = {Key: key, Data: new Float32Array(side * side * 4), Row: 0, Side: side, Texture: null, Blades: 0, Near: bladesMesh(1300, 7), Far: bladesMesh(330, 7), Patches: null};
+
+				/* Of a ground of noise a worker makes it all; the rows below are of another ground, or of one it failed. */
+				if (field.Options) {
+					grass.Row = side;
+					grass.Waiting = true;
+
+					self.$Service('Terrain').Work().Run('Terrain', 'Grid', [field.Options, side, top, steep], function (error, data) {
+						if (state.Grass !== grass) return;
+
+						grass.Waiting = false;
+
+						if (error) grass.Row = 0;
+						else grass.Data = data;
+					});
+				}
 			}
 
 			while (grass.Row < side && performance.now() - started < 3) {
@@ -549,10 +573,26 @@ Elemenx.Trait('Scatter', {
 				}
 			}
 
-			if (grass.Row === side && !grass.Texture)
+			if (grass.Row === side && !grass.Waiting && !grass.Texture)
 				grass.Texture = renderer.Texture({Width: side, Height: side, Data: grass.Data}, {Float: true, Nearest: true});
 
 			return grass;
+		}
+
+		/* The height of the ground at a point, of the grid of the grass: no noise in a frame. */
+		function heightOf (grass, field, x, z) {
+			var last = grass.Side - 1;
+			var u = Math.max(0, Math.min(last, (x / field.Size + 0.5) * last));
+			var v = Math.max(0, Math.min(last, (z / field.Size + 0.5) * last));
+			var column = Math.min(last - 1, Math.floor(u));
+			var row = Math.min(last - 1, Math.floor(v));
+			var data = grass.Data;
+			var at = (row * grass.Side + column) * 4;
+			var up = at + grass.Side * 4;
+			var below = data[at] + (data[at + 4] - data[at]) * (u - column);
+			var above = data[up] + (data[up + 4] - data[up]) * (u - column);
+
+			return below + (above - below) * (v - row);
 		}
 
 		function drawGrass (uniforms, matrix) {
@@ -595,7 +635,7 @@ Elemenx.Trait('Scatter', {
 					var px = middleX + x * extent;
 					var pz = middleZ + z * extent;
 					var dx = px + extent / 2 - eye[0];
-					var dy = ground.Field.Height(px, pz) - eye[1];
+					var dy = heightOf(grass, ground.Field, px, pz) - eye[1];
 					var dz = pz + extent / 2 - eye[2];
 					var distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
 					var reach = patches * extent;
@@ -616,7 +656,7 @@ Elemenx.Trait('Scatter', {
 
 			[[grass.Near, near], [grass.Far, far]].forEach(function (each) {
 				if (each[1].length) {
-					renderer.Draw(each[0], programs().Grass, Object.assign({}, uniforms, {uOrigin: vectors.Subtract([0, 0, 0], eye), uField: grass.Texture, uFieldSize: [ground.Field.Size, grass.Side], uBlade: [Number(rule.Height) || 0.7, Number(rule.Density) || 1, each[0] === grass.Far ? 2.2 : 1, patches * extent * 0.95], uRoot: engine.Paint(rule.Root || '#2f5a22').slice(0, 3), uTip: engine.Paint(rule.Color || '#7fae4a').slice(0, 3), uSun: ground.Sun, uSunColor: ground.SunColor, uEye: target}), {Cull: 'none'});
+					renderer.Draw(each[0], programs().Grass, Object.assign({}, uniforms, {uOrigin: vectors.Subtract([0, 0, 0], eye), uField: grass.Texture, uFieldSize: [ground.Field.Size, grass.Side], uBlade: [Number(rule.Height) || 0.7, Number(rule.Density) || 1, each[0] === grass.Far ? 2.2 : 1, patches * extent * 0.95], uClump: [Math.max(0, Math.min(1, Number(rule.Clumps) || 0)), Number(rule.Patch) || 24, rule.Spread === undefined || rule.Spread === '' ? 0.45 : Math.max(0, Math.min(1, Number(rule.Spread)))], uRoot: engine.Paint(rule.Root || '#2f5a22').slice(0, 3), uTip: engine.Paint(rule.Color || '#7fae4a').slice(0, 3), uSun: ground.Sun, uSunColor: ground.SunColor, uEye: target}), {Cull: 'none'});
 				}
 			});
 		}
@@ -689,8 +729,16 @@ Elemenx.Trait('Scatter', {
 			var origin = vectors.Subtract([0, 0, 0], scene.Eye);
 			var ground = scene.Ground;
 			var dither = engine.PostStep ? engine.PostStep() : 0;
+			var files;
+			var many;
+			var far;
 
 			if (!ground) return;
+
+			/* The uniforms of a program made once a frame, what differs set for each draw: no copy of them all for each. */
+			files = Object.assign({}, uniforms, {uOrigin: origin, uWind: scene.Gust || 0, uFade: fadeOf(0), uDither: dither});
+			many = Object.assign({}, uniforms, {uOrigin: origin, uWind: scene.Gust || 0, uShine: 8, uSpecular: 0.05, uRough: 0.5, uDither: dither});
+			far = Object.assign({}, uniforms, {uOrigin: origin, uFade: fadeOf(3), uDither: dither, uSun: ground.Sun, uSunColor: ground.SunColor, uParallel: scene.Camera.Ortho ? vectors.Normalize(vectors.Subtract(scene.Camera.Position, scene.Camera.Target)).concat([1]) : [0, 0, 0, 0]});
 
 			each(function (one) {
 				var parts = one.Key.split('~');
@@ -699,21 +747,34 @@ Elemenx.Trait('Scatter', {
 
 				if (one.Level === 0 && surfaces(one.Key)) {
 					surfaces(one.Key).forEach(function (each) {
-						renderer.Draw(each.Mesh, programs().Files, Object.assign({}, uniforms, {uOrigin: origin, uWind: scene.Gust || 0, uSway: made.Sway, uFade: fadeOf(0), uDither: dither, uSoftness: each.Soft}, engine.Surface(each)), {Cull: each.Material.DoubleSided ? 'none' : 'back'});
+						files.uSway = made.Sway;
+						files.uSoftness = each.Soft;
+
+						renderer.Draw(each.Mesh, programs().Files, Object.assign(files, engine.Surface(each)), {Cull: each.Material.DoubleSided ? 'none' : 'back'});
 					});
 
 					return;
 				}
 
 				if (one.Level < 3) {
-					renderer.Draw(levels(one.Key)[one.Level], programs().Many, Object.assign({}, uniforms, {uOrigin: origin, uWind: scene.Gust || 0, uSway: made.Sway, uShine: 8, uSpecular: 0.05, uRough: 0.5, uSoft: made.Sway ? 0.9 : 0, uFade: fadeOf(one.Level), uDither: dither}), {Cull: 'back'});
+					many.uSway = made.Sway;
+					many.uSoft = made.Sway ? 0.9 : 0;
+					many.uFade = fadeOf(one.Level);
+
+					renderer.Draw(levels(one.Key)[one.Level], programs().Many, many, {Cull: 'back'});
 
 					return;
 				}
 
 				baked = picture(one.Key);
 
-				renderer.Draw(baked.Quad, programs().Picture, Object.assign({}, uniforms, {uOrigin: origin, uColors: baked.Target.Textures[0], uNormals: baked.Target.Textures[1], uFade: fadeOf(3), uDither: dither, uCells: baked.Cells, uRadius: baked.Radius, uMiddle: baked.Middle, uSun: ground.Sun, uSunColor: ground.SunColor, uParallel: scene.Camera.Ortho ? vectors.Normalize(vectors.Subtract(scene.Camera.Position, scene.Camera.Target)).concat([1]) : [0, 0, 0, 0]}), {Cull: 'none'});
+				far.uColors = baked.Target.Textures[0];
+				far.uNormals = baked.Target.Textures[1];
+				far.uCells = baked.Cells;
+				far.uRadius = baked.Radius;
+				far.uMiddle = baked.Middle;
+
+				renderer.Draw(baked.Quad, programs().Picture, far, {Cull: 'none'});
 			});
 
 			drawGrass(uniforms, matrix);
@@ -751,7 +812,16 @@ Elemenx.Trait('Scatter', {
 				'out vec2 vUV;',
 				'out vec3 vTint;',
 				'out vec2 vFade;',
+				/* What is sown is as wet as the weather, none of its own; it stands up, turned only round the up. */
+				'out vec3 vBody;',
+				'out vec3 vBodyNormal;',
+				'out vec3 vDown;',
+				'out vec2 vWet;',
 				'void main() {',
+				'	vWet = vec2(0.0);',
+				'	vBody = aPosition * aInstance.w;',
+				'	vBodyNormal = aNormal;',
+				'	vDown = vec3(0.0, -1.0, 0.0);',
 				'	float c = cos(aInstance2.x);',
 				'	float s = sin(aInstance2.x);',
 				'	vec3 p = aPosition * aInstance.w;',
@@ -869,6 +939,7 @@ Elemenx.Trait('Scatter', {
 				'uniform sampler2D uField;',
 				'uniform vec2 uFieldSize;',
 				'uniform vec4 uBlade;',
+				'uniform vec3 uClump;',
 				'out vec3 vWorld;',
 				'out float vAlong;',
 				'out float vTone;',
@@ -887,7 +958,15 @@ Elemenx.Trait('Scatter', {
 				'	float along = aPosition.y;',
 				'	float seed = aNormal.z;',
 				'	float fade = 1.0 - smoothstep(uBlade.w * 0.7, uBlade.w, distance(place, uEye.xz));',
-				'	float tall = uBlade.x * (0.55 + seed * 0.9) * smoothstep(0.35, 0.8, land.y) * fade * step(seed, uBlade.y);',
+				/* Clumps: the ground thick with grass in places and bare between them, by a noise of Patch; Spread: how unlike one blade is to the next. */
+				'	vec2 cellOf = place / max(1.0, uClump.y);',
+				'	vec2 i = floor(cellOf);',
+				'	vec2 f = cellOf - i;',
+				'	f = f * f * (3.0 - 2.0 * f);',
+				'	float n = mix(mix(fract(sin(dot(i, vec2(127.1, 311.7))) * 43758.5), fract(sin(dot(i + vec2(1.0, 0.0), vec2(127.1, 311.7))) * 43758.5), f.x), mix(fract(sin(dot(i + vec2(0.0, 1.0), vec2(127.1, 311.7))) * 43758.5), fract(sin(dot(i + vec2(1.0, 1.0), vec2(127.1, 311.7))) * 43758.5), f.x), f.y);',
+				'	float thick = mix(1.0, smoothstep(0.3, 0.7, n), uClump.x);',
+				'	float own = fract(seed * 7.31 + 0.13);',
+				'	float tall = uBlade.x * (1.0 + (own - 0.5) * 2.0 * uClump.z) * mix(1.0, 0.6 + 0.6 * thick, uClump.x) * smoothstep(0.35, 0.8, land.y) * fade * step(seed, uBlade.y * thick);',
 				'	vec2 side = vec2(cos(aNormal.y), sin(aNormal.y));',
 				'	vec3 world = vec3(place.x, land.x, place.y) + uOrigin;',
 				/* The wind is waves over the field, one for all the blades of a place; a blade of its own stirs only near the eye. */

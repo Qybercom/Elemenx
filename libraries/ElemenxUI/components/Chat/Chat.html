@@ -8,7 +8,7 @@
 			<span class="elemenx-spacer"></span>
 			<slot name="selection"></slot>
 		</div>
-		<div class="elemenx-column fill elemenx-chat-messages" role="log" aria-live="polite" (scroll)="Scrolled"><slot></slot></div>
+		<div class="elemenx-column fill elemenx-chat-messages" role="log" aria-live="polite" (scroll)="Scrolled" *infinite="{Direction: 'up', Margin: 120, Busy: HistoryBusy, Done: HistoryDone}" (more)="History"><slot></slot></div>
 		<div class="elemenx-chat-jump" *if="!AtEnd"><Button Icon="arrow-down" [title]="$T('ui.chat.latest')" Shape="round" (click)="ToEnd" /></div>
 		<footer class="elemenx-chat-composer-area"><slot name="composer"></slot></footer>
 	</section>

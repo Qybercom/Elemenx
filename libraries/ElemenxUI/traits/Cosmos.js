@@ -196,10 +196,13 @@ Elemenx.Trait('Cosmos', {
 			return {Kind: kind, Key: JSON.stringify([kind, seed, colors, told.Gas, told.Dust, told.Stars, told.Pillars, told.Band, far2, clusters, told.Beacon, told.Style, rays]), Uniforms: {uBursts: bursts, uDrawn: told.Style === 'drawn' ? 1 : 0, uSeed: number % 977 / 9.7, uColors: [].concat(colors[0], colors[1], colors[2], colors[3]), uGas: given(told.Gas, plain.Gas), uDust: given(told.Dust, plain.Dust), uStars: given(told.Stars, plain.Stars), uDisc: given(told.Band, plain.Band), uPole: pole, uKnots: knots, uShine: shine, uBeacon: given(told.Beacon, plain.Beacon), uPillars: given(told.Pillars, plain.Pillars), uGlobular: clusters ? 1 : 0, uColumns: shaped, uShapes: shapes, uLamps: lamps, uTilt: tilt, uLampReach: 1.5 + next() * 0.9, uWall: 0.25 + next() * 0.75, uGalaxies: galaxies, uPlanes: planes}};
 		}
 
-		function program () {
-			space.Program = space.Program || renderer.Program(graphics.Shaders.Quad, shaders.Bake);
+		/* Pillars are most of what the card has to compile: a sky without them does not wait for them. */
+		function program (pillars) {
+			var name = pillars ? 'Program' : 'Plain';
 
-			return space.Program;
+			space[name] = space[name] || renderer.Program(graphics.Shaders.Quad, pillars ? shaders.Bake : shaders.Bake.replace('vec4 standing(vec3 d, vec3 s) {', 'vec4 standing(vec3 d, vec3 s) {\n\treturn vec4(0.0);'), true);
+
+			return space[name];
 		}
 
 		/*
@@ -213,6 +216,9 @@ Elemenx.Trait('Cosmos', {
 
 			if (holder.Key === key) return;
 
+			/* This shader is the slowest of all: the card makes it behind the scene, and the sky comes when it is done. */
+			if (scene.Looping && !renderer.Ready(program(made.Uniforms.uPillars > 0))) return;
+
 			if (!next || next.Key !== key) {
 				if (next)
 					next.Cube.Destroy();
@@ -220,7 +226,7 @@ Elemenx.Trait('Cosmos', {
 				next = holder.Next = {Key: key, Cube: renderer.Cube(size), Face: 0, Row: 0};
 			}
 
-			renderer.Bake(next.Cube, program(), Object.assign({uTexel: 2 / size}, made.Uniforms), next.Face, [next.Row, rows]);
+			renderer.Bake(next.Cube, program(made.Uniforms.uPillars > 0), Object.assign({uTexel: 2 / size}, made.Uniforms), next.Face, [next.Row, rows]);
 
 			next.Row++;
 
@@ -320,6 +326,29 @@ Elemenx.Trait('Cosmos', {
 			if (seen < 0.01 || !night.Cube) return;
 
 			backdrop(night, matrix, turn, seen);
+		};
+
+		/*
+		 * A way far at once, over the far sky (Travel of a ship): the stars drawn out round the point it goes to, a tunnel of
+		 * light round it, a flash, behind what is nearer than Depth (of the screen; the far end by default): the ship stays before it.
+		 * warp {Axis (where it goes), Flow (how far the stars went), Stretch, Tunnel, Flash (0 to 1), Tint, Depth}.
+		 */
+		engine.CosmosWarp = function (matrix, warp) {
+			var uniforms;
+
+			if (!warp || warp.Stretch < 0.002 && warp.Tunnel < 0.002 && warp.Flash < 0.002) return;
+
+			quad = quad || renderer.Mesh({Positions: [-1, -1, 0, 1, -1, 0, 1, 1, 0, -1, 1, 0], Indices: [0, 1, 2, 0, 2, 3]});
+			programs.Warp = programs.Warp || renderer.Program(shaders.WarpVertex, shaders.Warp);
+
+			uniforms = {uInverse: graphics.Invert(matrix), uAxis: graphics.Vectors.Normalize(warp.Axis), uFlow: warp.Flow, uStretch: warp.Stretch, uTunnel: warp.Tunnel, uFlash: warp.Flash, uTint: warp.Tint || [0.35, 0.6, 1], uDepth: warp.Depth === undefined ? 0.99999 : warp.Depth, uPart: 0};
+
+			/* The tunnel hides what is behind it; the stars and the flash are light added over it. Neither touches how glossy the picture is. */
+			renderer.Draw(quad, programs.Warp, uniforms, {DepthWrite: false, Blend: 'over', Cull: 'none'});
+
+			uniforms.uPart = 1;
+
+			renderer.Draw(quad, programs.Warp, uniforms, {DepthWrite: false, Blend: 'add', Cull: 'none'});
 		};
 
 		engine.CosmosReady = function () {
@@ -773,6 +802,94 @@ Elemenx.Trait('Cosmos', {
 				'		color += vec3(0.76, 0.8, 0.8) * pow(swarm, 1.7) * 0.34 * uGlobular;',
 				'	}',
 				'	outColor = vec4(color + (hash(d * 311.0) - 0.5) / 255.0, 1.0);',
+				'}'
+			].join('\n'),
+
+			/* The whole view at a depth (uDepth, of the screen): only where nothing nearer was drawn. */
+			WarpVertex: head + [
+				'in vec3 aPosition;',
+				'uniform float uDepth;',
+				'out vec2 vQuad;',
+				'void main() {',
+				'	vQuad = aPosition.xy;',
+				'	gl_Position = vec4(aPosition.xy, uDepth, 1.0);',
+				'}'
+			].join('\n'),
+
+			/*
+			 * A way far at once, round its axis: a ray is where it lies round the axis (an angle) and how far from it (the log of the
+			 * tangent of half of that, so the stars go out from the point ahead at an even pace). Stars lie in cells of both, each
+			 * drawn out along its way as far as Stretch says, flowing out by Flow; the tunnel is noise on the same two, rings that go
+			 * out, a bright core where it leads. uPart 0 is the tunnel (and the dark it lays over the sky), 1 the light added.
+			 */
+			Warp: head + [
+				'in vec2 vQuad;',
+				'uniform mat4 uInverse;',
+				'uniform vec3 uAxis;',
+				'uniform float uFlow;',
+				'uniform float uStretch;',
+				'uniform float uTunnel;',
+				'uniform float uFlash;',
+				'uniform vec3 uTint;',
+				'uniform float uPart;',
+				'out vec4 outColor;',
+				graphics.Chunks.Noise,
+				'float cellHash(vec3 p) {',
+				'	return fract(sin(dot(p, vec3(127.1, 311.7, 74.7))) * 43758.5453);',
+				'}',
+				'vec3 streaks(float turn, float off, float far, float sectors, float cell, float pace, float seed, float density) {',
+				'	float a = turn * sectors;',
+				'	float q = far - uFlow * pace;',
+				'	float column = floor(a);',
+				'	float row = floor(q / cell);',
+				'	float h1 = cellHash(vec3(mod(column, sectors), row, seed));',
+				'	if (h1 > density) return vec3(0.0);',
+				'	float h2 = cellHash(vec3(mod(column, sectors), row, seed + 1.7));',
+				'	float h3 = cellHash(vec3(mod(column, sectors), row, seed + 3.1));',
+				'	float span = cell * (0.04 + 0.86 * uStretch);',
+				'	float start = row * cell + h2 * (cell - span);',
+				'	float along = (q - start) / span;',
+				'	if (along < 0.0 || along > 1.0) return vec3(0.0);',
+				/* Across, in radians of the view: as thin near the point ahead as far from it. */
+				'	float across = abs(a - column - 0.2 - h3 * 0.6) / sectors * 6.28318 * off;',
+				'	float width = 0.0011 + 0.0016 * h3;',
+				'	float line = exp(-across * across / (width * width));',
+				'	float body = smoothstep(0.0, 0.5, along) * (1.0 - smoothstep(0.93, 1.0, along));',
+				'	vec3 color = mix(vec3(0.62, 0.76, 1.0), vec3(1.0, 0.97, 0.92), h3);',
+				'	return color * line * body * (0.6 + 2.2 * h2 * h2);',
+				'}',
+				'void main() {',
+				'	vec4 far = uInverse * vec4(vQuad, 1.0, 1.0);',
+				'	vec4 close = uInverse * vec4(vQuad, -1.0, 1.0);',
+				'	vec3 ray = normalize(far.xyz / far.w - close.xyz / close.w);',
+				'	vec3 axis = normalize(uAxis);',
+				'	vec3 u = normalize(cross(axis, abs(axis.y) < 0.9 ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0)));',
+				'	vec3 v = cross(axis, u);',
+				'	float angle = acos(clamp(dot(ray, axis), -1.0, 1.0));',
+				'	float turn = atan(dot(ray, v), dot(ray, u)) / 6.28318 + 0.5;',
+				'	float off = sin(angle);',
+				'	float out1 = log(max(tan(min(angle, 3.1) * 0.5), 1e-4));',
+				'	float ahead = exp(-angle * angle * 40.0);',
+				'	if (uPart < 0.5) {',
+				'		float ring = 3.0;',
+				'		vec3 swirl = vec3(cos(turn * 6.28318) * ring, sin(turn * 6.28318) * ring, out1 * 2.2 - uFlow * 2.6);',
+				'		float n = fbm3(swirl, 4);',
+				'		float m = fbm3(swirl * vec3(0.5, 0.5, 0.35) + vec3(7.1, 2.3, 0.0), 3);',
+				'		float bands = pow(0.5 + 0.5 * sin(out1 * 9.0 - uFlow * 11.0 + m * 7.0), 6.0);',
+				'		float wall = smoothstep(0.03, 0.5, angle) * (1.0 - smoothstep(1.7, 2.4, angle));',
+				'		vec3 deep = uTint * 0.05;',
+				'		vec3 bright = mix(uTint * 0.9, vec3(1.0, 0.95, 1.0) * 1.4, smoothstep(0.66, 0.9, n));',
+				'		vec3 tunnel = mix(deep, bright, smoothstep(0.45, 0.85, n) * wall) + uTint * bands * wall * 0.35 + vec3(0.9, 0.95, 1.0) * exp(-angle * angle * 120.0) * 1.2;',
+				'		float hidden = clamp(uTunnel * 0.94 + uStretch * 0.45 * (1.0 - uTunnel), 0.0, 1.0);',
+				'		outColor = vec4(hidden > 0.0 ? tunnel * uTunnel * 0.94 / hidden : vec3(0.0), hidden);',
+				'		return;',
+				'	}',
+				/* Few stars right ahead, where they all start, and none behind. */
+				'	float seen = smoothstep(0.02, 0.18, angle) * (1.0 - smoothstep(1.9, 2.6, angle));',
+				'	vec3 light = (streaks(turn, off, out1, 240.0, 0.32, 1.0, 0.0, 0.2) + streaks(turn, off, out1, 150.0, 0.5, 0.62, 9.0, 0.14) * 0.7) * seen * (0.3 + 1.0 * uStretch) * smoothstep(0.0, 0.05, uStretch);',
+				'	light += vec3(0.75, 0.88, 1.0) * ahead * 0.8 * uStretch;',
+				'	light += vec3(0.85, 0.92, 1.0) * uFlash * (0.25 + 1.8 * exp(-angle * angle * 6.0));',
+				'	outColor = vec4(light, 1.0);',
 				'}'
 			].join('\n'),
 

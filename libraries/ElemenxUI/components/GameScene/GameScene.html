@@ -19,7 +19,9 @@
 		</span>
 	</aside>
 	<Button class="elemenx-game-scene-takeoff" Size="small" Icon="arrow-up" *if="Landed" [label]="$T('ui.gameScene.takeOff')" (click)="TakeOff" />
+	<div class="elemenx-game-scene-loading" [hidden]="Loading === null || !Loader || Loader === 'false'"><slot name="loading"></slot><Progress *if="!LoadingOwn" Size="small" [value]="LoadingEndless ? null : Loading" [label]="$T('ui.gameScene.loading')" /></div>
 	<div class="elemenx-game-scene-hud"><slot name="hud"></slot></div>
 	<div class="elemenx-game-scene-sources" hidden><slot></slot></div>
+	<div class="elemenx-game-scene-screens" aria-hidden="true"><slot name="screens"></slot></div>
 	<div class="elemenx-visually-hidden" aria-live="polite">{{Status}}</div>
 </div>

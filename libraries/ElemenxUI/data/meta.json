@@ -3747,6 +3747,15 @@
 					"Description": "Holds the time."
 				},
 				{
+					"Name": "Loader",
+					"Type": "bool",
+					"Default": true,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Shows how much of the scene has come; a slot named loading takes its place."
+				},
+				{
 					"Name": "Focus",
 					"Type": "text",
 					"Default": "",
@@ -3790,6 +3799,24 @@
 					"Schema": null,
 					"Body": false,
 					"Description": "What a view lets in: a number holds it, empty adapts to the light as an eye does."
+				},
+				{
+					"Name": "Bokeh",
+					"Type": "number",
+					"Default": 0,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The depth of field, 0 to 1: how wide the lens is open; what is far from the focus is blurred, a bright point of it a disc."
+				},
+				{
+					"Name": "BokehFocus",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The distance in focus; empty: the hero, or what the middle of the view shows, followed slowly."
 				},
 				{
 					"Name": "Details",
@@ -3850,7 +3877,9 @@
 				}
 			],
 			"Slots": [
-				"hud"
+				"hud",
+				"loading",
+				"screens"
 			],
 			"Container": true,
 			"Children": [
@@ -3864,6 +3893,7 @@
 				"select",
 				"focus",
 				"person",
+				"loading",
 				"shoulder",
 				"arrive",
 				"load",
@@ -3872,6 +3902,7 @@
 				"view",
 				"land",
 				"takeoff",
+				"travel",
 				"error"
 			],
 			"EventDescriptions": {
@@ -3879,6 +3910,7 @@
 				"select": "The selection changed: {ID, Object, Info, IDs, Objects} (ID empty when none is).",
 				"focus": "The view moved to an object: {ID}.",
 				"person": "V took the view of a walker to another place: third, first or shoulder.",
+				"loading": "What the scene waits for came a step nearer: {Part}, up to 100.",
 				"shoulder": "B took the view over another shoulder: right or left.",
 				"arrive": "An object reached where it was sent: {ID, At} (with a map, X and Y too).",
 				"load": "A map was loaded: {Width, Height} in cells.",
@@ -3887,12 +3919,14 @@
 				"view": "The view of a map moved or zoomed: {X, Y, Zoom}.",
 				"land": "The view went down to the surface of a body: {ID}.",
 				"takeoff": "The view went back up to space: {ID}.",
+				"travel": "A ship on its way far at once (Travel, H or J) came to a phase: {ID, Kind (warp or jump), Phase (enter, inside, exit, done)}.",
 				"error": "There is no WebGL2 ({Reason: webgl2}), or a map could not be loaded (the error)."
 			},
 			"Methods": [
 				"Burst(type, place, options)",
 				"Effects(types)",
 				"MountsOf(id, kind)",
+				"Travel(id, kind, options, callback)",
 				"OpenPart(id, name, amount)",
 				"CosmosKinds()",
 				"Add(kind, props)",
@@ -3914,7 +3948,7 @@
 				"SetTime(days)",
 				"ToScreen(id)",
 				"Pick(clientX, clientY)",
-				"Save()",
+				"Save(options)",
 				"Load(saved)",
 				"Land(id, options)",
 				"TakeOff()",
@@ -9282,11 +9316,39 @@
 					"Default": "list",
 					"Options": [
 						"list",
-						"grid"
+						"grid",
+						"tree"
 					],
 					"Schema": null,
 					"Body": false,
-					"Description": "list (with sizes and dates) or grid (big icons)."
+					"Description": "list (with sizes and dates), grid (big icons) or tree (the whole tree, folders open under themselves)."
+				},
+				{
+					"Name": "Expanded",
+					"Type": "json",
+					"Default": null,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The IDs of the folders open in the tree; null: all of them."
+				},
+				{
+					"Name": "Toolbar",
+					"Type": "bool",
+					"Default": true,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Shows the bar of the path and the views."
+				},
+				{
+					"Name": "Details",
+					"Type": "bool",
+					"Default": true,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Shows the sizes and the dates."
 				},
 				{
 					"Name": "Sort",
@@ -9364,13 +9426,15 @@
 				"navigate",
 				"load",
 				"open",
-				"select"
+				"select",
+				"expand"
 			],
 			"EventDescriptions": {
 				"navigate": "A folder was opened, or left: {Path, Folder}.",
 				"load": "A folder whose Items are null was opened: {Folder, Path}.",
 				"open": "A file was opened: the item.",
-				"select": "The selection changed: the items selected."
+				"select": "The selection changed: the items selected.",
+				"expand": "A folder of the tree was opened or closed: {Item, Open, Expanded}."
 			},
 			"Methods": [],
 			"Sample": {
@@ -18166,6 +18230,24 @@
 					"Schema": null,
 					"Body": false,
 					"Description": "The IDs of the messages chosen; a bar of actions shows while it has some."
+				},
+				{
+					"Name": "HistoryBusy",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Older messages are coming: none more is asked."
+				},
+				{
+					"Name": "HistoryDone",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "There are no older messages."
 				}
 			],
 			"Slots": [
@@ -18179,11 +18261,13 @@
 			"Current": "",
 			"Events": [
 				"clear",
-				"resize"
+				"resize",
+				"history"
 			],
 			"EventDescriptions": {
 				"clear": "The selection of messages was let go (its button, or Escape).",
-				"resize": "The sidebar was resized: SidebarWidth."
+				"resize": "The sidebar was resized: SidebarWidth.",
+				"history": "The reader came near the first message: older ones are asked for."
 			},
 			"Methods": [],
 			"Sample": {}
@@ -23681,11 +23765,13 @@
 			"Current": "",
 			"Events": [
 				"select",
-				"range"
+				"range",
+				"more"
 			],
 			"EventDescriptions": {
 				"select": "An item was chosen: the item.",
-				"range": "The rows drawn changed: {Start, End}."
+				"range": "The rows drawn changed: {Start, End}.",
+				"more": "Its last rows are drawn, once for each length of Items: {Count}."
 			},
 			"Methods": [
 				"ScrollTo(index)"
@@ -23694,6 +23780,192 @@
 				"ItemHeight": 36,
 				"Height": "300px",
 				"Label": "A hundred thousand rows"
+			}
+		},
+		{
+			"Name": "InfiniteList",
+			"Kind": "Component",
+			"Group": "layout",
+			"Icon": "list",
+			"Description": "A list that asks for more as its end comes near: its rows in its slot, a spinner while Busy, a word at its end when Done.",
+			"Props": [
+				{
+					"Name": "Busy",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "What was asked is coming: a spinner shows, and nothing more is asked."
+				},
+				{
+					"Name": "Done",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "There is no more: a word shows at its end."
+				},
+				{
+					"Name": "Direction",
+					"Type": "select",
+					"Default": "down",
+					"Options": [
+						"down",
+						"up"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "down: more at the end; up: more at the start, as the older messages of a chat."
+				},
+				{
+					"Name": "Margin",
+					"Type": "number",
+					"Default": 300,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "How near the end it asks, in pixels."
+				},
+				{
+					"Name": "Height",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "A CSS length (or pixels) makes it scroll inside; without it the page scrolls."
+				},
+				{
+					"Name": "Label",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The name of the list for screen readers."
+				},
+				{
+					"Name": "EndText",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The word at its end when Done (That is all, by default)."
+				}
+			],
+			"Slots": [],
+			"Container": true,
+			"Children": [],
+			"Current": "",
+			"Events": [
+				"more"
+			],
+			"EventDescriptions": {
+				"more": "Its end (up: its start) came near, or it is too short to scroll: {Direction}."
+			},
+			"Methods": [],
+			"Sample": {
+				"Height": "240px",
+				"Label": "News"
+			}
+		},
+		{
+			"Name": "VirtualGamepad",
+			"Kind": "Component",
+			"Group": "game",
+			"Icon": "gamepad",
+			"Description": "A gamepad on the screen for the fingers: a stick, buttons and triggers; a pad of the Gamepad Service as a real one.",
+			"Props": [
+				{
+					"Name": "Buttons",
+					"Type": "json",
+					"Default": [
+						"a",
+						"b",
+						"x",
+						"y"
+					],
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The buttons it shows: a, b, x, y, lb, rb, lt, rt, start, select (a list, or a text with commas)."
+				},
+				{
+					"Name": "Right",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "A second stick, at the right, to look round."
+				},
+				{
+					"Name": "Show",
+					"Type": "select",
+					"Default": "auto",
+					"Options": [
+						"auto",
+						"always",
+						"never"
+					],
+					"Schema": null,
+					"Body": false,
+					"Description": "auto: where the screen is touched; always; never."
+				},
+				{
+					"Name": "Tilt",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The left stick across follows the lean of the device as a wheel."
+				},
+				{
+					"Name": "Navigate",
+					"Type": "bool",
+					"Default": false,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "Its buttons also move the focus and press the controls of the page, as a real pad does."
+				},
+				{
+					"Name": "Size",
+					"Type": "number",
+					"Default": 120,
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The size of a stick, in pixels."
+				},
+				{
+					"Name": "Label",
+					"Type": "text",
+					"Default": "",
+					"Options": null,
+					"Schema": null,
+					"Body": false,
+					"Description": "The name of the pad for screen readers."
+				}
+			],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [
+				"button"
+			],
+			"EventDescriptions": {
+				"button": "A button went down or up: {Button, Down}."
+			},
+			"Methods": [],
+			"Sample": {
+				"Show": "always",
+				"Buttons": "a,b,x,y"
 			}
 		},
 		{
@@ -24571,7 +24843,8 @@
 				"FromMarkdown(text)",
 				"Extend(plugin)",
 				"Plugins()",
-				"Mount(container, options)"
+				"Mount(container, options)",
+				"FileTree(text)"
 			],
 			"Sample": {}
 		},
@@ -24594,7 +24867,10 @@
 				"Label(button, kind)",
 				"Move(direction, scope)",
 				"On(name, callback)",
-				"Off(callback)"
+				"Off(callback)",
+				"Axes()",
+				"Held(button)",
+				"Virtual(name, options)"
 			],
 			"Sample": {}
 		},
@@ -25722,7 +25998,10 @@
 				"Normals(geometry)",
 				"Facets(geometry)",
 				"Simplify(geometry, cell)",
-				"Noise(seed)"
+				"Noise(seed)",
+				"Source(names)",
+				"CloudBlock(size)",
+				"Work()"
 			],
 			"Sample": {}
 		},
@@ -25795,7 +26074,82 @@
 				"Flat(options)",
 				"Sphere(options)",
 				"Cells(options)",
-				"OnRoad(field, x, z, width)"
+				"OnRoad(field, x, z, width)",
+				"Work()",
+				"Piece(shape, options, roads, args)",
+				"Field(shape, options)",
+				"Grid(options, side, top, steep)",
+				"Heights(field, side)",
+				"FromGrid(options, heights, side)",
+				"Source(names)"
+			],
+			"Sample": {}
+		},
+		{
+			"Name": "Workers",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "Work of the Services of the library off the main thread: workers made of the source of their methods.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [
+				"Pool(name, services, size)",
+				"Source(owner, names)"
+			],
+			"Sample": {}
+		},
+		{
+			"Name": "Generated",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "What is made of a seed, saved and made again: its recipe by default, the data made too when baked.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [
+				"Define(kind, definition)",
+				"Kinds()",
+				"Save(kind, params, options)",
+				"Load(record)",
+				"Pack(value)",
+				"Unpack(value)"
+			],
+			"Sample": {}
+		},
+		{
+			"Name": "Motion",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "The motion of the device: its accelerometer, gyroscope and turn in space, and its lean as a controller.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [
+				"Supported()",
+				"Request(callback)",
+				"Start()",
+				"Stop()",
+				"On(name, callback)",
+				"Off(callback)",
+				"State()",
+				"Tilt()",
+				"Center()"
 			],
 			"Sample": {}
 		},
@@ -25815,6 +26169,7 @@
 			"Methods": [
 				"Parse(data, callback, options)",
 				"Load(url, callback)",
+				"Write(asset, options)",
 				"Meshopt(mode, source, count, stride, filter)"
 			],
 			"Sample": {}
@@ -25824,7 +26179,7 @@
 			"Kind": "Service",
 			"Group": "",
 			"Icon": "",
-			"Description": "The skeleton and the animation of an FBX file as text: a clip made for another skeleton.",
+			"Description": "The files of FBX, binary and text: models with meshes, materials, pictures, skins and clips, read and written.",
 			"Props": [],
 			"Slots": [],
 			"Container": false,
@@ -25833,9 +26188,41 @@
 			"Events": [],
 			"EventDescriptions": {},
 			"Methods": [
-				"Parse(text)",
+				"Read(data)",
+				"Write(asset, options)",
+				"Tree(data)",
+				"Parse(data)",
+				"Skeleton(tree)",
 				"Sample(curve, time, fallback)",
-				"Load(url, callback)"
+				"Load(url, callback)",
+				"FromAsset(asset)",
+				"Binary(tree)",
+				"Text(tree)",
+				"Inflate(bytes)"
+			],
+			"Sample": {}
+		},
+		{
+			"Name": "ModelFormats",
+			"Kind": "Service",
+			"Group": "",
+			"Icon": "",
+			"Description": "The files of models read and written in one form: glb, gltf, fbx (binary and text) and obj.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [
+				"Formats()",
+				"Detect(data, name)",
+				"Read(data, options)",
+				"Parse(data, callback, options)",
+				"Load(url, callback)",
+				"Write(asset, format, options)",
+				"FromModel(model)"
 			],
 			"Sample": {}
 		},
@@ -25898,6 +26285,7 @@
 				"Blend(from, to, part)",
 				"Spring(value, speed, target, stiffness, damping, elapsed)",
 				"Car(state, input, surface, settings, elapsed)",
+				"Gearbox(state, input, settings, gas, braking, speed, elapsed)",
 				"Hit(state, normal, depth, at, settings)",
 				"Bounce(way, normal, depth, bounce)",
 				"Ship(state, input, settings, elapsed)"
@@ -26205,6 +26593,22 @@
 			"Group": "",
 			"Icon": "",
 			"Description": "*blur makes an element a surface of frosted glass: what is behind it blurred and seen through the tint of the surface.",
+			"Props": [],
+			"Slots": [],
+			"Container": false,
+			"Children": [],
+			"Current": "",
+			"Events": [],
+			"EventDescriptions": {},
+			"Methods": [],
+			"Sample": {}
+		},
+		{
+			"Name": "infinite",
+			"Kind": "Directive",
+			"Group": "",
+			"Icon": "",
+			"Description": "*infinite asks for more (the event more) when the end of a list comes near: *infinite=\"{Margin: 300, Direction: 'down' or 'up', Busy: false, Done: false}\".",
 			"Props": [],
 			"Slots": [],
 			"Container": false,
@@ -27002,9 +27406,11 @@
 		"elemenx-game-scene-axes": [],
 		"elemenx-game-scene-takeoff": [],
 		"elemenx-game-scene-fallback": [],
+		"elemenx-game-scene-loading": [],
 		"elemenx-game-scene-hud": [],
 		"elemenx-game-scene-marks": [],
 		"elemenx-game-scene-minimap": [],
+		"elemenx-game-scene-screens": [],
 		"elemenx-number-controls": [],
 		"elemenx-date": [],
 		"elemenx-time": [],
@@ -27394,7 +27800,9 @@
 		"elemenx-qr-scanner-frame": [],
 		"elemenx-qr-scanner-status": [],
 		"elemenx-file-browser": [
-			"grid"
+			"grid",
+			"plain",
+			"tree"
 		],
 		"elemenx-file-browser-bar": [],
 		"elemenx-file-browser-path": [],
@@ -27413,6 +27821,7 @@
 		"elemenx-file-browser-size": [],
 		"elemenx-file-browser-modified": [],
 		"elemenx-file-browser-empty": [],
+		"elemenx-file-browser-twisty": [],
 		"elemenx-file-browser-name": [],
 		"elemenx-media-player": [
 			"full"
@@ -28869,6 +29278,35 @@
 		],
 		"elemenx-virtual-label": [],
 		"elemenx-virtual-content": [],
+		"elemenx-infinite": [
+			"scrolls"
+		],
+		"elemenx-infinite-above": [],
+		"elemenx-infinite-status": [],
+		"elemenx-infinite-end": [],
+		"elemenx-virtual-pad": [
+			"with-right"
+		],
+		"elemenx-virtual-pad-stick": [
+			"left",
+			"right"
+		],
+		"elemenx-virtual-pad-button": [
+			"down",
+			"face-a",
+			"face-b",
+			"face-x",
+			"face-y",
+			"shoulder",
+			"small"
+		],
+		"elemenx-virtual-pad-knob": [],
+		"elemenx-virtual-pad-face": [],
+		"elemenx-virtual-pad-shoulders": [
+			"left",
+			"right"
+		],
+		"elemenx-virtual-pad-middle": [],
 		"elemenx-empty": [
 			"error",
 			"search",

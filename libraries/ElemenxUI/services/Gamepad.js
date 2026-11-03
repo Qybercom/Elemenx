@@ -17,14 +17,20 @@
  * kind of pad (A, ✕, B...). Navigate (true) turns the keys and the focus off when false (the events stay).
  * Move(direction, scope) moves the focus to the nearest control left, right, up or down (inside the open dialog,
  * or scope); the keyboard may call it too. Browsers report a pad once a button of it is pressed on the page.
+ * For games: Axes() is the sticks and the triggers of all pads at once, {LeftX, LeftY, RightX, RightY, LeftTrigger,
+ * RightTrigger} (-1 to 1, up -1, as the Gamepad API has them; a small lean is 0), Held(button) whether a button is down
+ * now. Virtual(name, options) makes a pad of the page (a VirtualGamepad on the screen, the tilt of a phone): Press(button),
+ * Release(button), Stick('left' or 'right', x, y), Trigger('left' or 'right', value), Destroy(); it is a pad as any
+ * other, its events and its Axes, Kind virtual; options Navigate (false: it moves no focus and presses no control).
  */
 Elemenx.Service('Gamepad', {
 	$Meta: {
 		Description: 'Gamepads (the Gamepad API, standard mapping): they work the page the way the keyboard does.',
-		Methods: ['Pads()', 'Kind()', 'Label(button, kind)', 'Move(direction, scope)', 'On(name, callback)', 'Off(callback)']
+		Methods: ['Pads()', 'Kind()', 'Label(button, kind)', 'Move(direction, scope)', 'On(name, callback)', 'Off(callback)', 'Axes()', 'Held(button)', 'Virtual(name, options)']
 	},
 	Navigate: true,
 	Threshold: 0.5,
+	Dead: 0.12,
 	Delay: 400,
 	Repeat: 120,
 	Buttons: ['a', 'b', 'x', 'y', 'lb', 'rb', 'lt', 'rt', 'select', 'start', 'ls', 'rs', 'up', 'down', 'left', 'right', 'home'],
@@ -39,8 +45,9 @@ Elemenx.Service('Gamepad', {
 
 		this.Listeners = {};
 		this.Pressed = {};
-		this.Held = {};
+		this.Repeats = {};
 		this.Known = {};
+		this.Virtuals = {};
 		this.Last = '';
 		this.Frame = 0;
 
@@ -91,11 +98,103 @@ Elemenx.Service('Gamepad', {
 			list = [];
 		}
 
-		return Array.prototype.filter.call(list || [], Boolean);
+		var virtuals = this.Virtuals || {};
+
+		return Array.prototype.filter.call(list || [], Boolean).concat(Object.keys(virtuals).map(function (key) {
+			return virtuals[key];
+		}));
+	},
+
+	Virtual: function (name, options) {
+		var self = this;
+		var settings = options || {};
+		var index = 'virtual-' + (name || Object.keys(this.Virtuals).length);
+		var pad = {index: index, id: 'Elemenx virtual ' + (name || ''), mapping: 'standard', connected: true, axes: [0, 0, 0, 0], buttons: this.Buttons.map(function () {
+			return {pressed: false, value: 0};
+		}), Quiet: settings.Navigate === false};
+
+		function set (button, value) {
+			var at = self.Buttons.indexOf(button);
+			if (at !== -1)
+				pad.buttons[at] = {pressed: value > 0.5, value: value};
+		}
+
+		this.Virtuals[index] = pad;
+
+		this.Track(pad, true);
+
+		return {
+			Press: function (button) {
+				set(button, 1);
+			},
+
+			Release: function (button) {
+				set(button, 0);
+			},
+
+			Stick: function (side, x, y) {
+				var at = side === 'right' ? 2 : 0;
+
+				pad.axes[at] = Math.max(-1, Math.min(1, Number(x) || 0));
+				pad.axes[at + 1] = Math.max(-1, Math.min(1, Number(y) || 0));
+			},
+
+			Trigger: function (side, value) {
+				set(side === 'left' ? 'lt' : 'rt', Math.max(0, Math.min(1, Number(value) || 0)));
+			},
+
+			Destroy: function () {
+				if (!self.Virtuals[index]) return;
+
+				delete self.Virtuals[index];
+
+				self.Track(pad, false);
+			}
+		};
+	},
+
+	/* The sticks and the triggers of all pads: on each, the one that leans most; a small lean is none. */
+	Axes: function () {
+		var self = this;
+		var axes = {LeftX: 0, LeftY: 0, RightX: 0, RightY: 0, LeftTrigger: 0, RightTrigger: 0};
+		var names = ['LeftX', 'LeftY', 'RightX', 'RightY'];
+
+		this.Read().forEach(function (pad) {
+			var standard = pad.mapping === 'standard';
+
+			names.forEach(function (name, index) {
+				var value = Number((pad.axes || [])[index]) || 0;
+				if (Math.abs(value) > Math.abs(axes[name]))
+					axes[name] = value;
+			});
+
+			if (standard) {
+				axes.LeftTrigger = Math.max(axes.LeftTrigger, Number(pad.buttons[6] && pad.buttons[6].value) || 0);
+				axes.RightTrigger = Math.max(axes.RightTrigger, Number(pad.buttons[7] && pad.buttons[7].value) || 0);
+			}
+
+			self.Track(pad, true);
+		});
+
+		names.forEach(function (name) {
+			if (Math.abs(axes[name]) < self.Dead)
+				axes[name] = 0;
+		});
+
+		return axes;
+	},
+
+	Held: function (button) {
+		var self = this;
+
+		return this.Read().some(function (pad) {
+			return !!self.State(pad)[button];
+		});
 	},
 
 	KindOf: function (id) {
 		var text = String(id || '');
+		if (/^Elemenx virtual/.test(text)) return 'virtual';
 		if (/xbox|xinput|045e/i.test(text)) return 'xbox';
 		if (/playstation|dualshock|dualsense|054c|wireless controller/i.test(text)) return 'playstation';
 		if (/nintendo|switch|joy-con|pro controller|057e/i.test(text)) return 'nintendo';
@@ -196,21 +295,21 @@ Elemenx.Service('Gamepad', {
 			});
 		});
 
-		Object.keys(this.Held).forEach(function (name) {
+		Object.keys(this.Repeats).forEach(function (name) {
 			if (!state[name])
-				delete self.Held[name];
+				delete self.Repeats[name];
 		});
 
 		Object.keys(state).forEach(function (name) {
 			var direction = /^(up|down|left|right)$/.test(name);
 
 			if (!previous[name]) {
-				self.Held[name] = now + self.Delay;
+				self.Repeats[name] = now + self.Delay;
 
 				self.Press(name, state[name]);
 			}
-			else if (direction && self.Held[name] <= now) {
-				self.Held[name] = now + self.Repeat;
+			else if (direction && self.Repeats[name] <= now) {
+				self.Repeats[name] = now + self.Repeat;
 
 				self.Press(name, state[name]);
 			}
@@ -250,7 +349,7 @@ Elemenx.Service('Gamepad', {
 
 		this.Emit('button', {Button: name, Pad: entry});
 
-		if (this.Navigate && this.Leads())
+		if (this.Navigate && !pad.Quiet && this.Leads())
 			this.Act(name);
 	},
 

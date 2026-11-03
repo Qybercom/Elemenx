@@ -111,6 +111,42 @@
 	padding: 24px;
 }
 
+/* The tree: an arrow before each folder, the rows stepped in by their depth. */
+.elemenx-file-browser.tree .elemenx-file-browser-item {
+	grid-template-columns: 18px 24px 1fr 7rem 10rem;
+}
+
+.elemenx-file-browser.tree .elemenx-file-browser-head {
+	padding-inline-start: 62px;
+}
+
+.elemenx-file-browser-twisty {
+	display: inline-flex;
+}
+
+.elemenx-file-browser-twisty button {
+	display: inline-flex;
+	padding: 0;
+	border: 0;
+	background: none;
+	color: var(--elemenx-text-muted);
+	cursor: pointer;
+}
+
+/* Without the sizes and the dates: the names alone. */
+.elemenx-file-browser.plain .elemenx-file-browser-item {
+	grid-template-columns: 24px 1fr;
+}
+
+.elemenx-file-browser.plain.tree .elemenx-file-browser-item {
+	grid-template-columns: 18px 24px 1fr;
+}
+
+.elemenx-file-browser.plain .elemenx-file-browser-size,
+.elemenx-file-browser.plain .elemenx-file-browser-modified {
+	display: none;
+}
+
 .elemenx-file-browser.grid .elemenx-file-browser-items {
 	display: grid;
 	grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));

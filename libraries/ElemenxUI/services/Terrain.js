@@ -19,12 +19,24 @@
  * - Cells(options) returns the flat ground of a map of cells, a mesh of one piece: options Width, Height (in cells),
  *   Depth (the length of a cell along Z, 1), Color(x, y) ([r, g, b], 0 to 1, of a cell); it has the methods of Flat, and
  *   Whole and Center (the middle of the map: X from 0 to Width, Z from 0 to Height * Depth).
+ * - Work(): the workers of the ground (Workers.Pool), that run Piece and Grid off the main thread.
+ * - Piece(shape, options, roads, args): a square of a ground of a shape (Flat or Sphere) of its options, as a worker
+ *   makes it: of Flat, args [x, z, size, resolution] and the geometry of Chunk; of Sphere, args [face, u, v, size,
+ *   resolution] and {Geometry, Center} of Patch; its lists of numbers Float32Array and Uint32Array. A field of Flat or
+ *   Sphere keeps its options (Options) for it; Field(shape, options) makes it once for the same options.
+ * - Grid(options, side, top, steep): the heights of a flat ground of its options over all its size, side by side
+ *   points, four numbers each (a Float32Array): the height, and 1 where it is over 1 and under top and its slope under
+ *   steep (where grass grows), 0 elsewhere.
+ * - Heights(field, side): the heights of a flat field in a grid of side by side points over all its size (a
+ *   Float32Array, row by row along Z); FromGrid(options, heights, side) a field of Flat whose heights are such a grid (a
+ *   field baked or painted; out of the grid, of its noise): it has Grid and Side, and no Options.
+ * - Source(names): the source of its members, for a worker.
  * The same functions run in Node: they read no page.
  */
 Elemenx.Service('Terrain', {
 	$Meta: {
 		Description: 'The ground of a game, continuous: heights of noise anywhere, meshes in chunks, ways over it; the ground of a planet as its surface shows.',
-		Methods: ['Flat(options)', 'Sphere(options)', 'Cells(options)', 'OnRoad(field, x, z, width)']
+		Methods: ['Flat(options)', 'Sphere(options)', 'Cells(options)', 'OnRoad(field, x, z, width)', 'Work()', 'Piece(shape, options, roads, args)', 'Field(shape, options)', 'Grid(options, side, top, steep)', 'Heights(field, side)', 'FromGrid(options, heights, side)', 'Source(names)']
 	},
 
 	Smoothstep: function (from, to, value) {
@@ -54,6 +66,7 @@ Elemenx.Service('Terrain', {
 		}
 
 		field = {
+			Options: settings,
 			Size: size,
 			Top: height,
 			Water: water,
@@ -860,6 +873,7 @@ Elemenx.Service('Terrain', {
 		}
 
 		field = {
+			Options: settings,
 			Radius: radius,
 			Height: height,
 			Ocean: ocean,
@@ -888,6 +902,118 @@ Elemenx.Service('Terrain', {
 		};
 
 		return field;
+	},
+
+	Work: function () {
+		return this.$Service('Workers').Pool('Terrain', {Graphics3D: ['Noise', 'SeedOffset', 'Vectors'], Terrain: ['Smoothstep', 'Flat', 'Sphere', 'Paint', 'OnRoad', 'Mesh', 'Face', 'SpherePatch', 'Field', 'Piece', 'Grid']});
+	},
+
+	/*
+	 * A flat ground of its options whose heights are a grid (side by side, over all its size, row by row along Z): the
+	 * very ground of a field baked, or painted. Between the points it is smooth, out of the grid it is of its noise. It has
+	 * the methods of Flat, its Grid and Side, and no Options: its squares are made in the page.
+	 */
+	FromGrid: function (options, heights, side) {
+		var field = this.Flat(options);
+		var last = side - 1;
+		var noise = field.Height;
+
+		field.Grid = heights;
+		field.Side = side;
+
+		delete field.Options;
+
+		field.Height = function (x, z) {
+			var u = (x / field.Size + 0.5) * last;
+			var v = (z / field.Size + 0.5) * last;
+			var column;
+			var row;
+			var at;
+			var below;
+			var above;
+
+			if (u < 0 || v < 0 || u > last || v > last) return noise(x, z);
+
+			column = Math.min(last - 1, Math.floor(u));
+			row = Math.min(last - 1, Math.floor(v));
+			at = row * side + column;
+			below = heights[at] + (heights[at + 1] - heights[at]) * (u - column);
+			above = heights[at + side] + (heights[at + side + 1] - heights[at + side]) * (u - column);
+
+			return below + (above - below) * (v - row);
+		};
+
+		return field;
+	},
+
+	/* The heights of a field in a grid of side by side points over all its size, row by row along Z: what FromGrid reads. */
+	Heights: function (field, side) {
+		var heights = new Float32Array(side * side);
+		var step = field.Size / (side - 1);
+		var row;
+		var column;
+
+		for (row = 0; row < side; row++) {
+			for (column = 0; column < side; column++)
+				heights[row * side + column] = field.Height(column * step - field.Size / 2, row * step - field.Size / 2);
+		}
+
+		return heights;
+	},
+
+	Field: function (shape, options) {
+		var fields = this.Fields = this.Fields || {};
+		var key = shape + JSON.stringify(options);
+
+		fields[key] = fields[key] || this[shape](options);
+
+		return fields[key];
+	},
+
+	Piece: function (shape, options, roads, args) {
+		var field = this.Field(shape, options);
+		var made;
+
+		function typed (geometry) {
+			return {Positions: new Float32Array(geometry.Positions), Normals: new Float32Array(geometry.Normals), UVs: new Float32Array(geometry.UVs), Colors: new Float32Array(geometry.Colors || []), Indices: new Uint32Array(geometry.Indices)};
+		}
+
+		if (shape === 'Sphere') {
+			made = field.Patch(args[0], args[1], args[2], args[3], args[4]);
+
+			return {Geometry: typed(made.Geometry), Center: made.Center};
+		}
+
+		field.Roads = roads || null;
+
+		return typed(field.Chunk(args[0], args[1], args[2], args[3]));
+	},
+
+	Grid: function (options, side, top, steep) {
+		var field = this.Field('Flat', options);
+		var data = new Float32Array(side * side * 4);
+		var step = field.Size / (side - 1);
+		var row;
+		var column;
+
+		for (row = 0; row < side; row++) {
+			for (column = 0; column < side; column++) {
+				var x = column * step - field.Size / 2;
+				var z = row * step - field.Size / 2;
+				var height = field.Height(x, z);
+				var at = (row * side + column) * 4;
+
+				data[at] = height;
+				data[at + 1] = height > 1 && height < top && field.Slope(x, z) < steep ? 1 : 0;
+			}
+		}
+
+		return data;
+	},
+
+	/* What a worker of the ground carries: see Workers. */
+	Source: function (names) {
+		return this.$Service('Workers').Source(this, names);
 	},
 
 	/* A direction of a face of a cube, as the shaders take them (Chunks.Cube of Graphics3D). */

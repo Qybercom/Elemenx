@@ -38,10 +38,26 @@ The service `Physics` knows nothing of a scene: `Physics.Car(state, input, surfa
 
 `input.Drift` lets the rear go without braking: the rear keeps `Slide` of its grip and `Assist` stops helping. It is an input of the physics, so a game binds it as it likes. In a scene it is held on Shift. Ctrl is not used, because a browser takes Ctrl+W to close the tab. `state.Slip` is the angle the car goes at to where it points, for sounds, smoke and scores.
 
+## A gearbox
+
+With `Gears` a car has a gearbox: each number is the part of `Top` that gear reaches at `Redline` (`[0.3, 0.45, 0.58, 0.7, 0.81, 0.91, 1]` for seven). The engine gives most at four fifths of the red line and less round it, nothing while it changes gear (`ShiftTime`, 0.22 s) and nothing past the red line in that gear. `Shift: 'auto'` changes up at 93% of a gear and down below 42%, and goes into reverse when the car stands and is asked back; `Shift: 'manual'` changes on `ShiftUp` and `ShiftDown` of the input (E and Q in a scene), down past first to neutral, where the gas only revs the engine, and then reverse. The state keeps `Gear` (-1 reverse, 0 neutral), `Rpm`, `Shifting` (seconds left) and `Shifted` (1 up, -1 down) for a dashboard, a lever, paddles and sounds. Without `Gears` the engine gives its power at any speed, as before.
+
+## Lights and a wet road
+
+`Lamps` are the lights of a car. Each names its glass as an opening does (`Match`, a box, `Both` for a pair): the glass glows when the lamp is lit and the light comes from its middle, or from `At`. `head` throws a spot ahead while the lights are on (L; by default on at dusk, at night, in rain and fog), `rear` glows dim with them and bright as the car brakes, `brake` only as it brakes, `reverse` in reverse, `indicator` blinks on the side Z or X shows and goes off once the wheel has turned and come back; Z and X together are the hazard lights. The state is in `Signals` {Lights, Indicate, Hazard, Wipers} of the car, for a dashboard and its stalk. A wet road holds `WetGrip` of its grip (0.75 where it is wet through), as the weather wets it and dries it.
+
+## Mirrors and screens
+
+A car carries `Mirrors` and `Screens`: panes in its model, each `{At, Normal, Up, Width, Height}`, `Normal` the way it faces. A mirror shows the world reflected by its plane, a picture a quarter of the view, made again every `Every` frames (2). A screen shows an element of the page: put it in the `screens` slot of the scene with `data-screen` the screen's `Source`; it is drawn as it is styled, every `Every` seconds (0.15), into `Pixels` [width, height], so a dashboard is made of the components and bindings of the page. Only the panes of the car that is driven are drawn: those of the others are too small to see and too dear to make.
+
+## Doors and hatches
+
+A door is an opening on a `Hinge`: a point of the model and an `Axis` through it, `Angle` degrees as far as it goes. `Both: true` makes the pair, the other side turning the other way; what the door carries (its glass, its mirror) follows it with `Follow` and `Both`, each half with its own door. Where the file has no door of its own, `Low` and `High` cut it out of the body by its triangles: the cut follows the triangles, so its edge is as fine as the mesh. An ordinary door turns round an upright at its front edge, a scissor door round the axle across the car at its front, a butterfly door round the line of the pillar. A ship opens its hatches the same way. `OpenPart(id, 'doors', 1)` opens them by degrees.
+
 ## Order of a step
 
 1. The wheels come round to the steering by `Answer`, or in the time `Build` says, less the faster it goes (`Keep`).
-2. The engine or the brakes give a force, as far as `Grip` holds.
+2. The engine (through its gearbox, if it has `Gears`) or the brakes give a force, as far as `Grip` holds.
 3. Each axle gives a sideways force by its slip (`Tyre`, `Peak`), the rear less by what the engine takes and by `Slide`.
 4. Those forces change the sideways speed and the turn; `Assist` pulls them to what the wheels ask.
 5. Below 4 m/s nothing slips.

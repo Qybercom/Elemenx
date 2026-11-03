@@ -27,19 +27,24 @@
  * - Noise(seed) returns a smooth noise of space: Value(x, y, z) (0 to 1), Fbm(x, y, z, octaves) (several of it, each
  *   finer and fainter) and Ridge (the folds of mountains). Without a seed it is the very noise of the shaders,
  *   Chunks.Noise (noise3, fbm3, ridge3), to the float: a heightmap of the CPU matches a surface the GPU baked.
+ *   Source(names) gives the source of members (Noise, SeedOffset, Vectors) to a worker of the Workers Service.
+ * - CloudBlock(size): the block of noise of clouds (RGBA of size on each side, a Uint8Array for Volume), the same each
+ *   time; Work() the worker that makes it off the main thread.
  *   Chunks.Lights is the light of up to 4 points on a surface, with the shadows of up to 4 balls (lighting(position,
  *   normal, view, shine, specular); the global lightShade dims its first light). Chunks.Shadow reads a shadow map
  *   (sunShadow(position, normal): 0 in the shadow, 1 in the light; uniforms uShadowMap, uShadowMatrix, uShadowBias,
  *   uShadowOn).
  *
  * Create(canvas, options) returns a renderer, or null where there is no WebGL2 (options: Alpha, Antialias, Ratio):
- * - Program(vertex, fragment): the shaders compiled (each one once), their uniforms found; an error of GLSL is thrown
- *   with its log. The attributes have fixed places: aPosition, aNormal, aUV, aColor, aInstance (and aInstance2 to
+ * - Program(vertex, fragment, behind): the shaders compiled (each one once), their uniforms found; an error of GLSL is thrown
+ *   with its log. With options Patient the card does that in the background and nothing waits for it: Ready(program) tells
+ *   whether it is done, Progress() is {Done, Total, Needed} of the programs (behind: one nothing waits for), and a Draw with
+ *   one not done yet waits, as it must. A slow shader so holds no frame up. The attributes have fixed places: aPosition, aNormal, aUV, aColor, aInstance (and aInstance2 to
  *   aInstance5, one of each copy of an instanced mesh).
  * - Mesh(geometry) returns a mesh: Update(geometry), Instance(data, count) (data {aInstance: {Size, Data}, ...}: the
  *   copies of the mesh drawn at once), Destroy(); Lines(points, loop) and Points(positions, extra) (extra {aColor:
  *   {Size, Data}}) make meshes of lines and of points.
- * - Texture(source, options) (a canvas, a picture, or {Width, Height, Data}; options Repeat, Nearest) returns a texture
+ * - Texture(source, options) (a canvas, a picture, or {Width, Height, Data}; options Repeat, Nearest) returns a texture (Update(picture) puts another canvas or picture in it)
  *   for a uniform sampler2D; Volume(size, data) a repeating block of size^3 RGBA bytes for a sampler3D; Cube(size) a cube of six faces for a samplerCube, which Bake(cube, program, uniforms)
  *   draws once: the program is Shaders.Quad with a fragment shader that takes the direction of each texel from
  *   cubeDirection(uFace, vQuad) (Chunks.Cube): a surface of noise computed once, sampled at every frame.
@@ -51,15 +56,16 @@
  *   its depths): between its Begin() and End() the
  *   draws write only its depth, as seen from the light; Destroy().
  * - Draw(mesh, program, uniforms, settings): settings Mode (triangles, lines, line-strip, line-loop, points), Blend
- *   (alpha, add or none), Depth (test, true), DepthWrite (true), Cull (back, front or none), Instances (the copies).
+ *   (alpha, add or none), Depth (test, true; lequal: what is drawn again over the same surface passes), DepthWrite (true), Cull (back, front or none), Instances (the copies).
  *   The value of a uniform is a number, an array (of a vector, a matrix or a list of them), true or false, or a texture.
- * - Resize(width, height, ratio), Clear(color) ([r, g, b, a], 0 to 1), Lost (the context was taken by the browser),
+ * - Resize(width, height, ratio), Clear(color) ([r, g, b, a], 0 to 1), Winding(clockwise) (the front of a triangle goes round
+ *   clockwise: a world drawn as a mirror shows it), Lost (the context was taken by the browser),
  *   Destroy().
  */
 Elemenx.Service('Graphics3D', {
 	$Meta: {
 		Description: 'The graphics of three dimensions on WebGL2: matrices, a camera, shapes of triangles and a renderer of them.',
-		Methods: ['Create(canvas, options)', 'Camera(options)', 'Identity()', 'Multiply(a, b)', 'Invert(m)', 'Translation(x, y, z)', 'Rotation(axis, angle)', 'Scaling(x, y, z)', 'Compose(position, rotation, scale)', 'Perspective(fov, aspect, near, far)', 'Orthographic(left, right, bottom, top, near, far)', 'LookAt(eye, target, up)', 'NormalMatrix(m)', 'Apply(m, point)', 'Hit(ray, center, radius)', 'Sphere(options)', 'Icosphere(options)', 'Ring(options)', 'Box(options)', 'Cylinder(options)', 'Torus(options)', 'Plane(options)', 'Lathe(options)', 'Wedge(options)', 'Transform(geometry, matrix)', 'Merge(parts)', 'Displace(geometry, amount)', 'Normals(geometry)', 'Facets(geometry)', 'Simplify(geometry, cell)', 'Noise(seed)']
+		Methods: ['Create(canvas, options)', 'Camera(options)', 'Identity()', 'Multiply(a, b)', 'Invert(m)', 'Translation(x, y, z)', 'Rotation(axis, angle)', 'Scaling(x, y, z)', 'Compose(position, rotation, scale)', 'Perspective(fov, aspect, near, far)', 'Orthographic(left, right, bottom, top, near, far)', 'LookAt(eye, target, up)', 'NormalMatrix(m)', 'Apply(m, point)', 'Hit(ray, center, radius)', 'Sphere(options)', 'Icosphere(options)', 'Ring(options)', 'Box(options)', 'Cylinder(options)', 'Torus(options)', 'Plane(options)', 'Lathe(options)', 'Wedge(options)', 'Transform(geometry, matrix)', 'Merge(parts)', 'Displace(geometry, amount)', 'Normals(geometry)', 'Facets(geometry)', 'Simplify(geometry, cell)', 'Noise(seed)', 'Source(names)', 'CloudBlock(size)', 'Work()']
 	},
 
 	/* The places of the attributes, the same in every program: a mesh binds its buffers to them. */
@@ -1013,6 +1019,11 @@ Elemenx.Service('Graphics3D', {
 		};
 	},
 
+	/* The source of its members, for a worker (Workers): Noise, SeedOffset and Vectors run there as they do here. */
+	Source: function (names) {
+		return this.$Service('Workers').Source(this, names);
+	},
+
 	/* The shift of the coordinates of a seed: a number of hundreds, the same for the same seed. */
 	SeedOffset: function (seed) {
 		var text = String(seed);
@@ -1023,6 +1034,93 @@ Elemenx.Service('Graphics3D', {
 			state = Math.imul(state ^ text.charCodeAt(i), 16777619) >>> 0;
 
 		return state % 997 + 0.5;
+	},
+
+	/* The workers of the pictures of numbers (CloudBlock): one is enough. */
+	Work: function () {
+		return this.$Service('Workers').Pool('Graphics3D', {Graphics3D: ['CloudBlock']}, 1);
+	},
+
+	/*
+	 * The block of noise of clouds, size on each side, RGBA in a Uint8Array (for Volume): red for the shape, Perlin eaten
+	 * by Worley; green, blue and alpha Worley ever finer, for the edges. It repeats on all sides, the same each time.
+	 */
+	CloudBlock: function (size) {
+		var data = new Uint8Array(size * size * size * 4);
+		var random = 7;
+		var large;
+		var small;
+		var x;
+		var y;
+		var z;
+
+		function next () {
+			random = (random * 16807) % 2147483647;
+
+			return random / 2147483647;
+		}
+
+		function points (cells) {
+			var made = new Float32Array(cells * cells * cells * 3);
+			var i;
+
+			for (i = 0; i < made.length; i++)
+				made[i] = next();
+
+			return {Cells: cells, Points: made};
+		}
+
+		function worley (field, x, y, z) {
+			var cells = field.Cells;
+			var at = [x * cells, y * cells, z * cells];
+			var cell = [Math.floor(at[0]), Math.floor(at[1]), Math.floor(at[2])];
+			var least = 9;
+			var a;
+			var b;
+			var c;
+
+			for (a = -1; a <= 1; a++) {
+				for (b = -1; b <= 1; b++) {
+					for (c = -1; c <= 1; c++) {
+						var i = (((cell[0] + a) % cells + cells) % cells + ((cell[1] + b) % cells + cells) % cells * cells + ((cell[2] + c) % cells + cells) % cells * cells * cells) * 3;
+						var dx = cell[0] + a + field.Points[i] - at[0];
+						var dy = cell[1] + b + field.Points[i + 1] - at[1];
+						var dz = cell[2] + c + field.Points[i + 2] - at[2];
+
+						least = Math.min(least, dx * dx + dy * dy + dz * dz);
+					}
+				}
+			}
+
+			return Math.max(0, 1 - Math.sqrt(least));
+		}
+
+		function billow (fields, u, v, w) {
+			return worley(fields[0], u, v, w) * 0.625 + worley(fields[1], u, v, w) * 0.25 + worley(fields[2], u, v, w) * 0.125;
+		}
+
+		large = [points(3), points(6), points(12)];
+		small = [points(5), points(10), points(20)];
+
+		for (z = 0; z < size; z++) {
+			for (y = 0; y < size; y++) {
+				for (x = 0; x < size; x++) {
+					var i = (x + y * size + z * size * size) * 4;
+					var u = x / size;
+					var v = y / size;
+					var w = z / size;
+					var low = billow(large, u, v, w);
+					var fine = billow(small, u, v, w);
+
+					data[i] = Math.min(255, Math.max(0, (low * 0.75 + fine * 0.3 - 0.1) * 255));
+					data[i + 1] = fine * 255;
+					data[i + 2] = low * 255;
+					data[i + 3] = worley(small[1], u, v, w) * 255;
+				}
+			}
+		}
+
+		return data;
 	},
 
 	/* The vertex shader of a quad over the whole target (Bake draws it): vQuad from -1 to 1. */
@@ -1284,6 +1382,9 @@ Elemenx.Service('Graphics3D', {
 		var textures = [];
 		var modes;
 		var gpuQuad = null;
+		var patient = !!settings.Patient;
+		var parallel = null;
+		var current = {};
 		var renderer;
 
 		try {
@@ -1296,6 +1397,7 @@ Elemenx.Service('Graphics3D', {
 		if (!gl)
 			return null;
 
+		parallel = gl.getExtension('KHR_parallel_shader_compile');
 		modes = {'triangles': gl.TRIANGLES, 'lines': gl.LINES, 'line-strip': gl.LINE_STRIP, 'line-loop': gl.LINE_LOOP, 'points': gl.POINTS};
 
 		function compile (type, source) {
@@ -1309,12 +1411,45 @@ Elemenx.Service('Graphics3D', {
 			gl.shaderSource(shader, source);
 			gl.compileShader(shader);
 
-			if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS) && !gl.isContextLost())
+			/* Asking waits for the card: what is patient asks when the program is done. */
+			if (!patient && !gl.getShaderParameter(shader, gl.COMPILE_STATUS) && !gl.isContextLost())
 				throw new Error('Elemenx Graphics3D: the shader does not compile: ' + gl.getShaderInfoLog(shader));
 
 			shaders[key] = shader;
 
 			return shader;
+		}
+
+		/* A program the card has finished, or one that is waited for here: its log read and its uniforms found. */
+		function settle (program) {
+			var handle = program.Handle;
+			var count;
+			var i;
+			var info;
+
+			if (program.Settled) return;
+
+			program.Settled = true;
+
+			if (!gl.getProgramParameter(handle, gl.LINK_STATUS) && !gl.isContextLost()) {
+				gl.getAttachedShaders(handle).forEach(function (shader) {
+					if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS))
+						throw new Error('Elemenx Graphics3D: the shader does not compile: ' + gl.getShaderInfoLog(shader));
+				});
+
+				throw new Error('Elemenx Graphics3D: the program does not link: ' + gl.getProgramInfoLog(handle));
+			}
+
+			count = gl.getProgramParameter(handle, gl.ACTIVE_UNIFORMS) || 0;
+			program.List = [];
+
+			for (i = 0; i < count; i++) {
+				info = gl.getActiveUniform(handle, i);
+
+				program.Uniforms[info.name.replace(/\[0\]$/, '')] = {Name: info.name.replace(/\[0\]$/, ''), Location: gl.getUniformLocation(handle, info.name), Type: info.type, Size: info.size, Sampler: [gl.SAMPLER_2D, gl.SAMPLER_3D, gl.SAMPLER_CUBE, gl.SAMPLER_2D_SHADOW, gl.SAMPLER_2D_ARRAY].indexOf(info.type) !== -1};
+
+				program.List.push(program.Uniforms[info.name.replace(/\[0\]$/, '')]);
+			}
 		}
 
 		function buffer (target, data) {
@@ -1434,10 +1569,36 @@ Elemenx.Service('Graphics3D', {
 			return made.Update(geometry);
 		}
 
+		/* A program keeps what was set in it: most of what a frame sets, for each batch again, is what stands there already. */
+		function unchanged (info, value, data) {
+			var last = info.Last;
+			var i = 0;
+
+			if (!data) {
+				if (last === value) return true;
+
+				info.Last = value;
+
+				return false;
+			}
+
+			if (last && last.length === data.length) {
+				while (i < data.length && last[i] === data[i])
+					i++;
+
+				if (i === data.length) return true;
+			}
+
+			info.Last = data.slice ? data.slice() : Array.from(data);
+
+			return false;
+		}
+
 		/* The value of a uniform set by its type, as the program found it. */
 		function uniform (info, value, units) {
 			var location = info.Location;
 			var data = value && value.length !== undefined ? value : null;
+			if (!info.Sampler && unchanged(info, value, data)) return;
 
 			switch (info.Type) {
 				case gl.FLOAT:
@@ -1510,13 +1671,10 @@ Elemenx.Service('Graphics3D', {
 			Ratio: 1,
 			Lost: false,
 
-			Program: function (vertex, fragment) {
+			Program: function (vertex, fragment, behind) {
 				var key = vertex + '\n--\n' + fragment;
 				var program = programs[key];
 				var handle;
-				var count;
-				var i;
-				var info;
 
 				if (program)
 					return program;
@@ -1532,21 +1690,38 @@ Elemenx.Service('Graphics3D', {
 
 				gl.linkProgram(handle);
 
-				if (!gl.getProgramParameter(handle, gl.LINK_STATUS) && !gl.isContextLost())
-					throw new Error('Elemenx Graphics3D: the program does not link: ' + gl.getProgramInfoLog(handle));
+				program = {Handle: handle, Uniforms: {}, Settled: false, Behind: !!behind};
 
-				program = {Handle: handle, Uniforms: {}};
-				count = gl.getProgramParameter(handle, gl.ACTIVE_UNIFORMS) || 0;
-
-				for (i = 0; i < count; i++) {
-					info = gl.getActiveUniform(handle, i);
-
-					program.Uniforms[info.name.replace(/\[0\]$/, '')] = {Location: gl.getUniformLocation(handle, info.name), Type: info.type, Size: info.size};
-				}
+				if (!patient)
+					settle(program);
 
 				programs[key] = program;
 
 				return program;
+			},
+
+			Ready: function (program) {
+				if (program.Settled) return true;
+
+				if (parallel && !gl.getProgramParameter(program.Handle, parallel.COMPLETION_STATUS_KHR)) return false;
+
+				settle(program);
+
+				return true;
+			},
+
+			Progress: function () {
+				var made = {Done: 0, Total: 0, Needed: 0};
+
+				Object.keys(programs).forEach(function (key) {
+					var ready = renderer.Ready(programs[key]);
+
+					made.Total++;
+					made.Done += ready ? 1 : 0;
+					made.Needed += ready || programs[key].Behind ? 0 : 1;
+				});
+
+				return made;
 			},
 
 			Mesh: function (geometry) {
@@ -1605,6 +1780,17 @@ Elemenx.Service('Graphics3D', {
 					gl.deleteTexture(handle);
 
 					textures.splice(textures.indexOf(texture), 1);
+				};
+
+				/* Another picture of a canvas or an image into the same texture, as a screen changes. */
+				texture.Update = function (picture) {
+					gl.bindTexture(gl.TEXTURE_2D, handle);
+					gl.texImage2D(gl.TEXTURE_2D, 0, settings.Srgb ? gl.SRGB8_ALPHA8 : gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, picture);
+
+					if (settings.Mipmaps)
+						gl.generateMipmap(gl.TEXTURE_2D);
+
+					return texture;
 				};
 
 				textures.push(texture);
@@ -1862,6 +2048,9 @@ Elemenx.Service('Graphics3D', {
 					gl.bindFramebuffer(gl.FRAMEBUFFER, target);
 					gl.viewport(0, 0, side, side);
 					gl.depthMask(true);
+
+					current.Write = true;
+
 					gl.clear(gl.DEPTH_BUFFER_BIT);
 					gl.enable(gl.POLYGON_OFFSET_FILL);
 					gl.polygonOffset(1.5, 3);
@@ -1903,10 +2092,18 @@ Elemenx.Service('Graphics3D', {
 				gl.viewport(0, 0, w, h);
 			},
 
+			/* Which way the front of a triangle goes round: clockwise for a world drawn as a mirror shows it (its turn is the other way). */
+			Winding: function (clockwise) {
+				gl.frontFace(clockwise ? gl.CW : gl.CCW);
+			},
+
 			Clear: function (color) {
 				var value = color || [0, 0, 0, 1];
 
 				gl.depthMask(true);
+
+				current.Write = true;
+
 				gl.clearColor(value[0], value[1], value[2], value[3] === undefined ? 1 : value[3]);
 				gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 			},
@@ -1917,45 +2114,73 @@ Elemenx.Service('Graphics3D', {
 				var name = draw.Mode || made.Mode;
 				var mode = modes.hasOwnProperty(name) ? modes[name] : gl.TRIANGLES;
 				var instances = draw.Instances === undefined ? made.Instances : draw.Instances;
+				var list;
+				var value;
+				var blend = draw.Blend === 'add' || draw.Blend === 'over' || draw.Blend === 'alpha' ? draw.Blend : '';
+				var cull = draw.Cull === 'none' || draw.Cull === false ? '' : draw.Cull === 'front' ? 'front' : 'back';
+				var i;
 
 				if (renderer.Lost) return;
 
-				gl.useProgram(program.Handle);
+				settle(program);
 
-				Object.keys(uniforms || {}).forEach(function (name) {
-					var info = program.Uniforms[name];
-					if (info && uniforms[name] !== undefined && uniforms[name] !== null)
-						uniform(info, uniforms[name], units);
-				});
+				/* The state of the context is set only where it differs from what the draw before left. */
+				if (current.Program !== program.Handle) {
+					gl.useProgram(program.Handle);
 
-				if (draw.Depth === false) gl.disable(gl.DEPTH_TEST);
-				else gl.enable(gl.DEPTH_TEST);
+					current.Program = program.Handle;
+				}
 
-				gl.depthMask(draw.DepthWrite !== false);
+				/* The uniforms of the program, not all that was given: a set of them is shared by many programs. */
+				list = uniforms ? program.List : [];
+
+				for (i = 0; i < list.length; i++) {
+					value = uniforms[list[i].Name];
+
+					if (value !== undefined && value !== null)
+						uniform(list[i], value, units);
+				}
+
+				if (current.Depth !== (draw.Depth !== false)) {
+					current.Depth = draw.Depth !== false;
+
+					if (current.Depth) gl.enable(gl.DEPTH_TEST);
+					else gl.disable(gl.DEPTH_TEST);
+				}
+
+				/* Depth 'lequal': what is drawn again over the very same surface passes where it stands. */
+				if (current.Func !== (draw.Depth === 'lequal')) {
+					current.Func = draw.Depth === 'lequal';
+
+					gl.depthFunc(current.Func ? gl.LEQUAL : gl.LESS);
+				}
+
+				if (current.Write !== (draw.DepthWrite !== false)) {
+					current.Write = draw.DepthWrite !== false;
+
+					gl.depthMask(current.Write);
+				}
 
 				/* What adds light leaves the alpha alone, and so does over: there it holds marks of what lies under. */
-				if (draw.Blend === 'add') {
-					gl.enable(gl.BLEND);
-					gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE, gl.ZERO, gl.ONE);
-				}
-				else if (draw.Blend === 'over') {
-					gl.enable(gl.BLEND);
-					gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ZERO, gl.ONE);
-				}
-				else if (draw.Blend === 'alpha') {
-					gl.enable(gl.BLEND);
-					gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-				}
-				else {
-					gl.disable(gl.BLEND);
+				if (current.Blend !== blend) {
+					current.Blend = blend;
+
+					if (blend) gl.enable(gl.BLEND);
+					else gl.disable(gl.BLEND);
+
+					if (blend === 'add') gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE, gl.ZERO, gl.ONE);
+					else if (blend === 'over') gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ZERO, gl.ONE);
+					else if (blend === 'alpha') gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 				}
 
-				if (draw.Cull === 'none' || draw.Cull === false) {
-					gl.disable(gl.CULL_FACE);
-				}
-				else {
-					gl.enable(gl.CULL_FACE);
-					gl.cullFace(draw.Cull === 'front' ? gl.FRONT : gl.BACK);
+				if (current.Cull !== cull) {
+					current.Cull = cull;
+
+					if (cull) gl.enable(gl.CULL_FACE);
+					else gl.disable(gl.CULL_FACE);
+
+					if (cull)
+						gl.cullFace(cull === 'front' ? gl.FRONT : gl.BACK);
 				}
 
 				gl.bindVertexArray(made.VAO);
@@ -2006,6 +2231,7 @@ Elemenx.Service('Graphics3D', {
 			meshes = [];
 			textures = [];
 			gpuQuad = null;
+			current = {};
 			renderer.Lost = false;
 
 			if (settings.Restored)

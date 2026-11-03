@@ -197,6 +197,18 @@
 }
 
 /* The HUD over the scene: it lets the presses through, its own parts take them. */
+.elemenx-game-scene-loading {
+	position: absolute;
+	right: 16px;
+	bottom: 16px;
+	left: 16px;
+	z-index: 4;
+	max-width: 420px;
+	margin: 0 auto;
+	color: var(--elemenx-game-scene-label);
+	pointer-events: none;
+}
+
 .elemenx-game-scene-hud {
 	position: absolute;
 	inset: 0;
@@ -262,4 +274,12 @@
 		width: 120px;
 		height: 120px;
 	}
+}
+
+/* What the screens of a car show: laid out as it is styled, out of sight, for its pictures. */
+.elemenx-game-scene-screens {
+	position: absolute;
+	top: 0;
+	left: -10000px;
+	pointer-events: none;
 }

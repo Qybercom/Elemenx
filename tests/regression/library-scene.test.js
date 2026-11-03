@@ -512,28 +512,72 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 
 		scene.SetTime(42);
 
-		saved = JSON.parse(JSON.stringify(scene.Save()));
-		before = JSON.stringify(scene.Objects().map(function (object) {
-			return [object.ID, object.Parent, object.Values, object.Traits, object.Parts.map(function (part) {
-				return [part.ID, part.Traits];
-			})];
-		}));
+		function state () {
+			return JSON.stringify(scene.Objects().map(function (object) {
+				return [object.ID, object.Parent, object.Values, object.Traits, object.Parts.map(function (part) {
+					return [part.ID, part.Traits];
+				})];
+			}));
+		}
 
-		/* The kind and what differs: an object as its kind gives it keeps no more than its ID and kind. */
+		saved = JSON.parse(JSON.stringify(scene.Save({Baked: true})));
+		before = state();
+
+		/* Baked: the kind and what differs; an object as its kind gives it keeps no more than its ID and kind. */
 		expect(saved.Objects.filter(function (object) {
 			return object.ID === 'outpost-1';
 		})[0].Parts).toContainEqual({ID: 'hub', Removed: true});
+
+		var recipe = JSON.parse(JSON.stringify(scene.Save()));
+
+		/* The recipe: the seed and the changes, not the objects the seed makes again. */
+		expect(recipe.Version).toBe(1);
+		expect(recipe.Seed).toBe('kepler');
+		expect(recipe.Objects).toBeUndefined();
+		expect(recipe.Removed).toEqual([]);
+		expect(JSON.stringify(recipe.Overrides)).toContain('"hub"');
+		expect(recipe.Added.map(function (spec) {
+			return spec.ID;
+		})).toContain('outpost-1');
+		expect(JSON.stringify(recipe).length).toBeLessThan(JSON.stringify(saved).length / 2);
 
 		scene.Remove('planet-b');
 		scene.SetTime(0);
 		scene.Load(saved);
 
 		expect(scene.Now()).toBe(42);
-		expect(JSON.stringify(scene.Objects().map(function (object) {
-			return [object.ID, object.Parent, object.Values, object.Traits, object.Parts.map(function (part) {
-				return [part.ID, part.Traits];
-			})];
-		}))).toBe(before);
+		expect(state()).toBe(before);
+
+		/* A scene loaded baked stays baked. */
+		expect(scene.Save().Objects).toHaveLength(saved.Objects.length);
+
+		scene.Remove('planet-b');
+		scene.Add('station', {ID: 'late', Parent: 'planet-c'});
+
+		scene.Seed = 'other';
+
+		scene.SetTime(0);
+		scene.Load(recipe);
+
+		expect(scene.Seed).toBe('kepler');
+		expect(scene.Now()).toBe(42);
+		expect(state()).toBe(before);
+		expect(scene.Save().Objects).toBeUndefined();
+
+		/* What was removed of what the seed makes stays removed. */
+		scene.Remove('planet-b');
+
+		var without = JSON.parse(JSON.stringify(scene.Save()));
+
+		expect(without.Removed).toContain('planet-b');
+
+		scene.Load(recipe);
+
+		expect(scene.Get('planet-b')).not.toBe(null);
+
+		scene.Load(without);
+
+		expect(scene.Get('planet-b')).toBe(null);
 	});
 
 	it('runs the systems of the application for traits of their own', async function () {
@@ -570,6 +614,9 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 		var inner = scene.Scene();
 		var i;
 
+		/* The frames are given here: the loop of the page would come back in time between them. */
+		inner.Loop.Stop();
+
 		expect(scene.Land('giant')).toBe(false);
 		expect(scene.Land('rock', {Latitude: 10, Longitude: 20, Altitude: 2})).toBe(true);
 		expect(scene.Surface()).toMatchObject({ID: 'rock'});
@@ -579,7 +626,15 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 		for (i = 0; i < 40; i++)
 			scene.Engine().Frame(performance.now() + i * 100);
 
-		expect(Object.keys(inner.Surface.Nodes).length).toBeGreaterThan(20);
+		/* The faces come at once, their parts from the workers of the ground. */
+		expect(Object.keys(inner.Surface.Nodes).length).toBeGreaterThanOrEqual(6);
+
+		await waitFor(function () {
+			scene.Engine().Frame(performance.now() + 4000);
+
+			return Object.keys(inner.Surface.Nodes).length > 20;
+		}, 20000);
+
 		expect(inner.Surface.Field.Altitude(inner.Surface.Eye)).toBeGreaterThan(0);
 		expect(events).toEqual(['land rock']);
 
@@ -1270,6 +1325,11 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 		expect(sown.GrassVertex).not.toMatch(/uWind \* 1\.4 \+ place\.x \* 0\.21 \+ seed/);
 		expect(sown.GrassVertex).toMatch(/tall > 0\.01 \?/);
 
+		/* Clumps thin the blades between the tufts and make them lower there; the height of a blade is not its chance to grow. */
+		expect(sown.GrassVertex).toMatch(/step\(seed, uBlade\.y \* thick\)/);
+		expect(sown.GrassVertex).toMatch(/\(own - 0\.5\) \* 2\.0 \* uClump\.z/);
+		expect(sown.GrassVertex).toMatch(/float own = fract\(seed \* 7\.31/);
+
 		/* Water is lit by what its waves mirror; clouds are a ray through their layer. */
 		expect(lights.Clouds).toMatch(/thick\(p/);
 		expect(lights.Shafts).toMatch(/uSpot/);
@@ -1574,6 +1634,93 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 		expect(Math.abs(inner.Objects.hero.Heading[0] - way[0])).toBeGreaterThan(0.2);
 	});
 
+	it('walks, drives and looks by a pad as far as it leans: half a trigger is half the gas, the stick steers, A jumps', async function () {
+		var gamepad = Elemenx.Service('Gamepad');
+		var pad = gamepad.Virtual(unique('drive'), {Navigate: false});
+		var now = performance.now() + 1000;
+
+		async function scene (vehicle) {
+			var mounted = await mount('<GameScene Paused="true" Quality="low" (ready)="Ready"><GameObject ID="land" Kind="ground" Size="600" Height="0" Water="0" Seed="flat" /></GameScene>');
+			var space = mounted.Space;
+
+			space.Add('unit', Object.assign({ID: 'hero', Size: 1.2, X: 0, Y: 0}, vehicle ? {Vehicle: {Kind: 'car'}} : {}));
+			space.Engine().Frame(now += 30);
+			space.Control('hero');
+
+			return space;
+		}
+
+		function frames (space, count) {
+			for (var i = 0; i < count; i++) {
+				space.Scene().Rest = 0;
+
+				space.Engine().Frame(now += 30);
+			}
+		}
+
+		try {
+			var full = await scene(true);
+
+			pad.Trigger('right', 1);
+
+			frames(full, 30);
+
+			var fast = full.Scene().Objects.hero.Car.Forward;
+
+			var half = await scene(true);
+
+			pad.Trigger('right', 0.5);
+
+			frames(half, 30);
+
+			var slow = half.Scene().Objects.hero.Car.Forward;
+
+			expect(fast).toBeGreaterThan(2);
+			expect(slow).toBeGreaterThan(fast * 0.3);
+			expect(slow).toBeLessThan(fast * 0.7);
+
+			/* The stick to the right steers right, as far as it leans. */
+			pad.Stick('left', 0.5, 0);
+
+			frames(half, 30);
+
+			expect(half.Scene().Objects.hero.Car.Steer).toBeLessThan(-0.3);
+			expect(half.Scene().Objects.hero.Car.Steer).toBeGreaterThan(-0.7);
+
+			pad.Trigger('right', 0);
+			pad.Stick('left', 0, 0);
+
+			/* On foot: the stick ahead walks where the view looks, the right stick turns the view, A jumps. */
+			var walker = await scene(false);
+			var inner = walker.Scene();
+			var at = [inner.Objects.hero.Values.X, inner.Objects.hero.Values.Y];
+			var yaw = inner.Yaw;
+
+			pad.Stick('left', 0, -1);
+
+			frames(walker, 20);
+
+			expect(Math.hypot(inner.Objects.hero.Values.X - at[0], inner.Objects.hero.Values.Y - at[1])).toBeGreaterThan(0.5);
+
+			pad.Stick('left', 0, 0);
+			pad.Stick('right', 1, 0);
+
+			frames(walker, 10);
+
+			expect(inner.Yaw).toBeLessThan(yaw - 0.3);
+
+			pad.Stick('right', 0, 0);
+			pad.Press('a');
+
+			frames(walker, 3);
+
+			expect(inner.Objects.hero.Rise || 0).not.toBe(0);
+		}
+		finally {
+			pad.Destroy();
+		}
+	});
+
 	it('runs its frames with no graphics at all, as a page out of WebGL contexts does', async function () {
 		var get = HTMLCanvasElement.prototype.getContext;
 		var mounted;
@@ -1707,6 +1854,76 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 		mesh.Destroy();
 	});
 
+	it('puts another picture into a texture, and draws an element of the page as it is styled', async function () {
+		var mounted = await mount('<GameScene Paused="true" (ready)="Ready"></GameScene>');
+		var engine = mounted.Space.Engine();
+		var renderer = engine.Renderer;
+		var gl = renderer.GL;
+		var head = '#version 300 es\nprecision highp float;\n';
+		var program = renderer.Program(head + 'in vec3 aPosition;\nvoid main() {\n\tgl_Position = vec4(aPosition, 1.0);\n}', head + 'uniform sampler2D uPicture;\nout vec4 outColor;\nvoid main() {\n\toutColor = texture(uPicture, vec2(0.5));\n}');
+		var mesh = renderer.Mesh({Positions: [-1, -1, 0, 3, -1, 0, -1, 3, 0], Indices: [0, 1, 2]});
+		var pixel = new Uint8Array(4);
+
+		function filled (color) {
+			var canvas = document.createElement('canvas');
+			var context;
+
+			canvas.width = 4;
+			canvas.height = 4;
+			context = canvas.getContext('2d');
+			context.fillStyle = color;
+
+			context.fillRect(0, 0, 4, 4);
+
+			return canvas;
+		}
+
+		var texture = renderer.Texture(filled('#ff0000'));
+
+		expect(texture.Update(filled('#00ff00'))).toBe(texture);
+
+		renderer.Draw(mesh, program, {uPicture: texture}, {Depth: false, Cull: 'none'});
+
+		gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
+
+		expect(gl.getError()).toBe(gl.NO_ERROR);
+		expect(Array.from(pixel).slice(0, 3)).toEqual([0, 255, 0]);
+
+		/* An element, with the styles of its page on it: what it shows, in a canvas a texture takes. */
+		var element = document.createElement('div');
+		var sheet = document.createElement('style');
+
+		/* The style is the page's, not the element's: the picture has none but what is written on its copy. */
+		sheet.textContent = '.test-screen b { display: block; width: 32px; height: 16px; background: rgb(0, 0, 255); }';
+
+		document.head.appendChild(sheet);
+
+		element.className = 'test-screen';
+		element.innerHTML = '<b></b>';
+
+		document.body.appendChild(element);
+
+		var canvas = await new Promise(function (done, fail) {
+			engine.Rasterize(element, 64, 32, function (error, made) {
+				if (error) fail(error);
+				else done(made);
+			});
+		});
+
+		element.remove();
+		sheet.remove();
+
+		expect(Array.from(canvas.getContext('2d').getImageData(4, 4, 1, 1).data)).toEqual([0, 0, 255, 255]);
+		expect(canvas.getContext('2d').getImageData(48, 24, 1, 1).data[3]).toBe(0);
+
+		texture.Update(canvas);
+
+		expect(gl.getError()).toBe(gl.NO_ERROR);
+
+		texture.Destroy();
+		mesh.Destroy();
+	});
+
 	it('moves the weather: fronts, a wind for all, what stays on the ground and the bolts of a storm', async function () {
 		var mounted = await mount('<GameScene Paused="true" (ready)="Ready"></GameScene>');
 		var scene = mounted.Space;
@@ -1836,6 +2053,365 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 		}
 
 		expect(graphicsSource).not.toContain('sin((p.x + uCloudShade.z');
+	});
+
+	it('makes the noise of the clouds and the ground seen from above in workers: no cloud and no light of a field before they come', async function () {
+		var graphics = Elemenx.Service('Graphics3D');
+		var pictures = graphics.Work();
+		var lands = Elemenx.Service('Terrain').Work();
+		var runs = {Pictures: pictures.Run, Lands: lands.Run};
+		var held = [];
+		var asked = 0;
+		var mounted;
+
+		pictures.Run = function (service, method, args, callback) {
+			asked++;
+
+			held.push([pictures, runs.Pictures, arguments]);
+		};
+		lands.Run = function (service, method, args, callback) {
+			if (method === 'Piece' && args[3][3] === 128) {
+				held.push([lands, runs.Lands, arguments]);
+
+				return;
+			}
+
+			return runs.Lands.apply(this, arguments);
+		};
+
+		try {
+			mounted = await mount('<GameScene Paused="true" Quality="high" Weather="cloudy" (ready)="Ready"><GameObject ID="land" Kind="ground" Size="200" Height="10" Seed="test" /><GameObject ID="day" Kind="sun" Time="12" Latitude="45" /></GameScene>');
+
+			var scene = mounted.Space;
+			var engine = scene.Engine();
+			var inner = scene.Scene();
+			var air = {Layer: [100, 220, 0.011], From: [0, 10, 0]};
+			var now = performance.now() + 100;
+			var empty;
+			var i;
+
+			inner.Loop.Stop();
+
+			for (i = 0; i < 4; i++)
+				engine.Frame(now += 100);
+
+			empty = engine.NoiseBlock();
+
+			expect(asked).toBe(1);
+			expect(engine.NoiseBlock()).toBe(empty);
+			expect(engine.CloudShade(air, [0, 1, 0]).uCloudMap).toBeUndefined();
+			expect(engine.FieldOn()).toBe(true);
+			expect(engine.GroundTopReady()).toBe(false);
+			expect(inner.Ground.TopMesh).toBeUndefined();
+
+			pictures.Run = runs.Pictures;
+			lands.Run = runs.Lands;
+
+			held.forEach(function (one) {
+				one[1].apply(one[0], one[2]);
+			});
+
+			await waitFor(function () {
+				engine.Frame(now += 100);
+
+				return engine.NoiseBlock() !== empty && engine.GroundTopReady();
+			}, 10000);
+
+			engine.Frame(now += 100);
+
+			expect(inner.Ground.TopMesh).toBeTruthy();
+			expect(asked).toBe(1);
+
+			/* It draws them if this graphics card has the picture for it. */
+			if (engine.CloudShade(air, [0, 1, 0]).uCloudMap)
+				expect(engine.CloudShade(air, [0, 1, 0]).uCloudShade[3]).toBeGreaterThan(0.5);
+
+			/* The block of a worker is the very one of the page. */
+			var block = null;
+
+			pictures.Run('Graphics3D', 'CloudBlock', [6], function (error, data) {
+				block = data;
+			});
+
+			await waitFor(function () {
+				return block;
+			}, 10000);
+
+			expect(Array.from(block)).toEqual(Array.from(graphics.CloudBlock(6)));
+		}
+		finally {
+			pictures.Run = runs.Pictures;
+			lands.Run = runs.Lands;
+		}
+	});
+
+	it('makes a body or what it holds glow by an effect that follows it, declared; mana rises in bubbles that the wind barely moves', async function () {
+		var mounted = await mount('<GameScene Paused="true" (ready)="Ready">' +
+			'<GameObject ID="land" Kind="ground" Size="100" Height="1" Seed="g" />' +
+			'<GameObject ID="fx" Kind="effect" Type="glow" Follow="hero" Color="#7fd0ff" Appear="0" Offset="[0, 0.5, 0]" />' +
+			'<GameObject ID="bubbles" Kind="effect" Type="mana" Follow="hero" />' +
+		'</GameScene>');
+		var scene = mounted.Space;
+		var inner = scene.Scene();
+		var engine = scene.Engine();
+		var renderer = engine.Renderer;
+		var draw = renderer.Draw;
+		var glows = [];
+		var blown = [];
+		var now = performance.now() + 100;
+
+		function frames (count) {
+			for (var i = 0; i < count; i++) {
+				inner.Rest = 0;
+
+				engine.Frame(now += 33);
+			}
+		}
+
+		inner.Loop.Stop();
+
+		scene.Add('unit', {ID: 'hero', Size: 1, X: 3, Y: 4});
+
+		frames(3);
+
+		/* Follow and Offset, as an attribute is written in a template: regression, they were read as follow and offset, and nothing followed. */
+		expect(inner.Objects.fx.Values.Follow).toBe('hero');
+		expect(inner.Objects.fx.Values.Offset).toEqual([0, 0.5, 0]);
+
+		/* The body glows by its color, as bright as the effect is; what it holds does not, unless Where says so. */
+		expect(inner.Objects.hero.Glow.Body).toBe(true);
+		expect(inner.Objects.hero.Glow.Held).toBe(false);
+		expect(inner.Objects.hero.Glow.Color.map(function (value) {
+			return Math.round(value * 100) / 100;
+		})).toEqual([0.5, 0.82, 1]);
+
+		renderer.Draw = function (mesh, program, uniforms, settings) {
+			if (uniforms && uniforms.uTime !== undefined && settings && settings.Depth === 'lequal')
+				glows.push(settings.Blend);
+
+			if (uniforms && uniforms.uBlow && (uniforms.uKind === 4 || uniforms.uKind === 3))
+				blown.push([uniforms.uKind].concat(uniforms.uBlow));
+
+			return draw.apply(this, arguments);
+		};
+
+		scene.Wind = 3;
+
+		frames(40);
+
+		renderer.Draw = draw;
+
+		expect(Object.keys(inner.GlowLists).filter(function (name) {
+			return inner.GlowLists[name].Count;
+		}).length).toBeGreaterThan(0);
+		expect(glows.length).toBeGreaterThan(0);
+		expect(glows.every(function (blend) {
+			return blend === 'add';
+		})).toBe(true);
+
+		/* Bubbles drift with the wind half as much as the motes of the same effect. */
+		var bubble = blown.filter(function (each) {
+			return each[0] === 4;
+		}).pop();
+		var mote = blown.filter(function (each) {
+			return each[0] === 3;
+		}).pop();
+
+		expect(Math.hypot(mote[1], mote[2])).toBeGreaterThan(0.01);
+		expect(Math.hypot(bubble[1], bubble[2]) / Math.hypot(mote[1], mote[2])).toBeCloseTo(0.5, 2);
+
+		scene.Change('fx', {Where: 'held'});
+
+		frames(2);
+
+		expect(inner.Objects.hero.Glow).toMatchObject({Body: false, Held: true});
+		expect(Object.keys(inner.GlowLists).filter(function (name) {
+			return inner.GlowLists[name].Count;
+		})).toEqual([]);
+
+		scene.Remove('fx');
+
+		frames(2);
+
+		expect(inner.Objects.hero.Glow).toBe(null);
+		expect(inner.EffectTypes.mana.Layers.filter(function (layer) {
+			return layer.Kind === 'bubble';
+		})[0].Wind).toBeLessThan(0.3);
+	});
+
+	it('draws a mirror as the world reflected by its plane, cut at it, and glass blended over what is behind it', async function () {
+		var mounted = await mount('<GameScene Paused="true" Quality="high" (ready)="Ready">' +
+			'<GameObject ID="land" Kind="ground" Size="100" Height="1" Seed="m" />' +
+		'</GameScene>');
+		var scene = mounted.Space;
+		var inner = scene.Scene();
+		var engine = scene.Engine();
+		var renderer = engine.Renderer;
+		var draw = renderer.Draw;
+		var winding = renderer.Winding;
+		var target = renderer.Target;
+		var now = performance.now() + 100;
+		var calls = [];
+		var made = [];
+		var turned = false;
+
+		function frames (count) {
+			for (var i = 0; i < count; i++) {
+				inner.Rest = 0;
+
+				engine.Frame(now += 33);
+			}
+		}
+
+		function clip (m, p) {
+			return [0, 1, 2, 3].map(function (row) {
+				return m[row] * p[0] + m[4 + row] * p[1] + m[8 + row] * p[2] + m[12 + row];
+			});
+		}
+
+		inner.Loop.Stop();
+
+		frames(3);
+
+		/* A mirror ahead of the eye, turned to it; glass beside it that reflects nothing. */
+		var x = inner.Target[0];
+		var z = inner.Target[2];
+		var yaw = Math.atan2(inner.Eye[0] - x, inner.Eye[2] - z) * 180 / Math.PI;
+
+		scene.Add('mirror', {ID: 'm', X: x, Y: z, Width: 4, Height: 3, Lift: 1.5, Yaw: yaw});
+		scene.Add('glass', {ID: 'g', X: x + 3, Y: z, Lift: 1.5, Yaw: yaw, Reflect: 0});
+
+		renderer.Winding = function (clockwise) {
+			turned = clockwise;
+
+			calls.push({Winding: clockwise, Uniforms: {}, Settings: {}});
+
+			return winding.apply(this, arguments);
+		};
+		renderer.Target = function () {
+			var one = target.apply(this, arguments);
+			var destroy = one.Destroy;
+
+			one.Destroy = function () {
+				one.Destroyed = true;
+
+				return destroy.apply(this, arguments);
+			};
+
+			made.push(one);
+
+			return one;
+		};
+		renderer.Draw = function (mesh, program, uniforms, settings) {
+			calls.push({Turned: turned, Uniforms: uniforms || {}, Settings: settings || {}});
+
+			return draw.apply(this, arguments);
+		};
+
+		try {
+			frames(1);
+
+			var mirror = inner.Objects.m;
+
+			/* What the kinds have of their own, beside what was given. */
+			expect(mirror.Traits.Mirror).toEqual({Width: 4, Height: 3, Yaw: yaw, Pitch: 0, Lift: 1.5, Tint: '#ffffff', Blur: 0, Strength: 0.92, Every: 1});
+			expect(inner.Objects.g.Traits.Glass).toEqual({Width: 2, Height: 2, Yaw: yaw, Pitch: 0, Lift: 1.5, Tint: '#cfe6f0', Clarity: 0.88, Frost: 0, Reflect: 0});
+
+			var pane = calls.filter(function (call) {
+				return call.Uniforms.uStrength !== undefined;
+			})[0];
+			var glass = calls.filter(function (call) {
+				return call.Uniforms.uClarity !== undefined;
+			})[0];
+			var reflected = calls.filter(function (call) {
+				return call.Turned && call.Uniforms.uViewProjection;
+			});
+			var main = calls.filter(function (call) {
+				return !call.Turned && call.Uniforms.uViewProjection && call.Uniforms.uStrength === undefined;
+			}).pop().Uniforms.uViewProjection;
+
+			/* The world was drawn once more, its triangles turned, into a picture of half the size: the mirror shows it. */
+			expect(calls.filter(function (call) {
+				return call.Winding !== undefined;
+			}).map(function (call) {
+				return call.Winding;
+			})).toEqual([true, false]);
+			expect(reflected.length).toBeGreaterThan(0);
+			expect(made.length).toBe(1);
+			expect(made[0].Width).toBe(Math.max(1, renderer.Width >> 1));
+			expect(pane.Uniforms.uOn).toBe(1);
+			expect(pane.Uniforms.uMirror).toBe(made[0].Textures[0]);
+			expect(pane.Uniforms.uSize).toEqual([4, 3]);
+
+			/* What is on its plane is where the eye sees it; what stands before it shows where its reflection would be; what is behind it is cut away. */
+			var vp = reflected[0].Uniforms.uViewProjection;
+			var center = [x - inner.Eye[0], inner.Ground.Field.Height(x, z) + 1.5 - inner.Eye[1], z - inner.Eye[2]];
+			var normal = [Math.sin(yaw * Math.PI / 180), 0, Math.cos(yaw * Math.PI / 180)];
+			var on = [center[0] + normal[2] * 0.5, center[1] + 0.3, center[2] - normal[0] * 0.5];
+			var before = [on[0] + normal[0], on[1], on[2] + normal[2]];
+			var behind = [on[0] - normal[0], on[1], on[2] - normal[2]];
+			var a = clip(vp, on);
+			var b = clip(main, on);
+			var c = clip(vp, before);
+			var d = clip(main, behind);
+			var e = clip(vp, behind);
+
+			/* (The view of the eye shakes by less than a pixel from frame to frame; the picture of a mirror keeps still.) */
+			expect(mirror.World).toBeTruthy();
+			expect(a[0] / a[3]).toBeCloseTo(b[0] / b[3], 2);
+			expect(a[1] / a[3]).toBeCloseTo(b[1] / b[3], 2);
+			expect(c[0] / c[3]).toBeCloseTo(d[0] / d[3], 2);
+			expect(c[1] / c[3]).toBeCloseTo(d[1] / d[3], 2);
+			expect(Math.abs(c[2] / c[3])).toBeLessThan(1);
+			expect(e[2] / e[3]).toBeLessThan(-1);
+
+			/* Glass after the mirror, over what is behind it: its alpha, how glossy what is behind is, kept; nothing of the world for it. */
+			expect(calls.indexOf(glass)).toBeGreaterThan(calls.indexOf(pane));
+			expect(glass.Settings).toMatchObject({Blend: 'over', DepthWrite: false});
+			expect(glass.Uniforms.uOn).toBe(0);
+
+			/* Every: the picture made again only every so many frames. */
+			scene.Change('m', {Every: 3});
+
+			calls = [];
+
+			frames(6);
+
+			expect(calls.filter(function (call) {
+				return call.Winding === true;
+			}).length).toBe(2);
+
+			/* Glass that reflects has a picture of its own; from behind a mirror there is none, and it is dark. */
+			scene.Change('m', {Every: 1, Yaw: yaw + 180});
+			scene.Change('g', {Reflect: 0.5});
+
+			calls = [];
+
+			frames(1);
+
+			expect(made.length).toBe(2);
+			expect(calls.filter(function (call) {
+				return call.Uniforms.uStrength !== undefined;
+			})[0].Uniforms.uOn).toBe(0);
+			expect(calls.filter(function (call) {
+				return call.Uniforms.uClarity !== undefined;
+			})[0].Uniforms.uOn).toBe(1);
+
+			/* What is no longer there lets its picture go. */
+			scene.Remove('m');
+			scene.Remove('g');
+
+			frames(1);
+
+			expect(made.every(function (one) {
+				return one.Destroyed;
+			})).toBe(true);
+		}
+		finally {
+			renderer.Draw = draw;
+			renderer.Winding = winding;
+			renderer.Target = target;
+		}
 	});
 
 	it('lights the world with the lamps a model carries, unless it is told not to', async function () {
@@ -2967,6 +3543,91 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 		expect(spring[1]).toBeCloseTo(0, 4);
 	});
 
+	it('Physics shifts the gears of a car: up near the red line, without drive while it changes, into reverse when stopped and asked back, by hand with a manual', function () {
+		var physics = Elemenx.Service('Physics');
+		var flat = function () {
+			return {Height: 0, Grip: 1, Drag: 0};
+		};
+		var settings = {Gears: [0.3, 0.5, 0.7, 1], Redline: 7000, Idle: 800, ShiftTime: 0.25};
+		var state = {X: 0, Z: 0, Heading: 0, Forward: 0, Aside: 0, Rate: 0, Steer: 0, Y: 0, Rise: 0, Pitch: 0, PitchSpeed: 0, Roll: 0, RollSpeed: 0, Spin: 0};
+		var seen = [];
+		var cut = 0;
+		var free = null;
+		var i;
+
+		function step (input, own) {
+			var before = state.Forward;
+
+			physics.Car(state, input, flat, own || settings, 1 / 120);
+
+			return state.Forward - before;
+		}
+
+		/* Up it goes one gear at a time, each near the red line, with no drive while it changes. */
+		for (i = 0; i < 120 * 14; i++) {
+			var gained = step({Gas: true});
+
+			if (seen[seen.length - 1] !== state.Gear)
+				seen.push(state.Gear);
+
+			if (state.Shifting > 0 && state.Shifted === 1 && gained > 0)
+				cut++;
+
+			expect(state.Rpm).toBeLessThanOrEqual(7000 * 1.01);
+		}
+
+		expect(seen).toEqual([1, 2, 3, 4]);
+		expect(cut).toBe(0);
+		expect(state.Rpm).toBeGreaterThan(3000);
+
+		/* Without Gears there is no gearbox: the engine gives its power at any speed, as it did. */
+		var plain = {X: 0, Z: 0, Heading: 0, Forward: 0, Aside: 0, Rate: 0, Steer: 0, Y: 0, Rise: 0, Pitch: 0, PitchSpeed: 0, Roll: 0, RollSpeed: 0, Spin: 0};
+
+		for (i = 0; i < 120; i++)
+			physics.Car(plain, {Gas: true}, flat, {}, 1 / 120);
+
+		expect(plain.Gear).toBeUndefined();
+
+		/* Brought to rest and asked back, an automatic goes into reverse; with the gas again, into first. */
+		for (i = 0; i < 120 * 20 && (state.Forward > 0.1 || state.Gear !== -1); i++)
+			step({Brake: true});
+
+		expect(state.Gear).toBe(-1);
+
+		for (i = 0; i < 120; i++)
+			step({Brake: true});
+
+		expect(state.Forward).toBeLessThan(-0.5);
+
+		for (i = 0; i < 120 * 4 && state.Gear !== 1; i++)
+			step({Gas: true});
+
+		expect(state.Gear).toBe(1);
+
+		/* A manual stays where it is put: up a press at a time, down past first to neutral, where the gas only revs it. */
+		var manual = Object.assign({}, settings, {Shift: 'manual'});
+
+		state.Forward = 0;
+		state.Gear = 1;
+		state.Shifting = 0;
+
+		step({ShiftUp: true}, manual);
+
+		expect(state.Gear).toBe(2);
+		expect(state.Shifted).toBe(1);
+
+		step({ShiftDown: true}, manual);
+		step({ShiftDown: true}, manual);
+
+		expect(state.Gear).toBe(0);
+
+		for (i = 0; i < 120; i++)
+			free = step({Gas: true}, manual);
+
+		expect(free).toBeLessThanOrEqual(0);
+		expect(state.Rpm).toBeGreaterThan(6000);
+	});
+
 	it('Physics drives a car: slowed by grass, on its springs, leaning as it goes', function () {
 		var physics = Elemenx.Service('Physics');
 		var flat = function () {
@@ -3285,6 +3946,391 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 		delete quick.Build;
 
 		expect(coming(30, 0.1)).toBeLessThan(held(30, quick, flat, {Steer: 1}, 0.1).Steer * 0.6);
+	});
+
+	it('Graphics3D makes programs behind the page for who is patient, and sets in a program only what changed', async function () {
+		var graphics = Elemenx.Service('Graphics3D');
+		var quad = graphics.Shaders.Quad;
+		var fragment = '#version 300 es\nprecision highp float;\nuniform float uA;\nuniform vec2 uB;\nout vec4 outColor;\nvoid main() { outColor = vec4(uA, uB, 1.0); }';
+		var patient = graphics.Create(document.createElement('canvas'), {Patient: true, Antialias: false});
+		var plain = graphics.Create(document.createElement('canvas'), {Antialias: false});
+		var gl = patient.GL;
+		var asked = 0;
+		var real = gl.getProgramParameter;
+
+		gl.getProgramParameter = function (program, name) {
+			if (name === gl.LINK_STATUS)
+				asked++;
+
+			return real.apply(this, arguments);
+		};
+
+		var program = patient.Program(quad, fragment + '\n// a');
+		var behind = patient.Program(quad, fragment + '\n// b', true);
+
+		/* To ask how a link went is to wait for it: nothing asks yet. */
+		expect(asked).toBe(0);
+		expect(program.Settled).toBe(false);
+		expect(patient.Progress().Total).toBe(2);
+
+		var mesh = patient.Mesh({Positions: [-1, -1, 0, 1, -1, 0, 1, 1, 0], Indices: [0, 1, 2]});
+
+		/* While the card works it is not asked, and what nothing waits for is not waited for. */
+		var working = gl.getExtension('KHR_parallel_shader_compile').COMPLETION_STATUS_KHR;
+		var told = gl.getProgramParameter;
+
+		gl.getProgramParameter = function (handle, name) {
+			return name === working ? false : told.apply(this, arguments);
+		};
+
+		expect(patient.Ready(program)).toBe(false);
+		expect(patient.Progress()).toEqual({Done: 0, Total: 2, Needed: 1});
+		expect(asked).toBe(0);
+
+		gl.getProgramParameter = told;
+
+		await waitFor(function () {
+			return patient.Progress().Needed === 0;
+		}, 20000);
+
+		await waitFor(function () {
+			return patient.Ready(behind);
+		}, 20000);
+
+		expect(patient.Progress()).toEqual({Done: 2, Total: 2, Needed: 0});
+		expect(program.Uniforms.uA).toBeTruthy();
+		expect(asked).toBe(2);
+
+		var sent = [];
+		var one = gl.uniform1f;
+		var two = gl.uniform2fv;
+
+		gl.uniform1f = function (place, value) {
+			sent.push(value);
+
+			return one.apply(this, arguments);
+		};
+		gl.uniform2fv = function (place, value) {
+			sent.push(Array.from(value));
+
+			return two.apply(this, arguments);
+		};
+
+		patient.Draw(mesh, program, {uA: 0.5, uB: [1, 2]}, {Depth: false});
+		patient.Draw(mesh, program, {uA: 0.5, uB: [1, 2]}, {Depth: false});
+
+		expect(sent).toEqual([0.5, [1, 2]]);
+
+		/* A list changed in its place is still a change. */
+		var list = [4, 5];
+
+		patient.Draw(mesh, program, {uA: 0.25, uB: list}, {Depth: false});
+
+		list[1] = 6;
+
+		patient.Draw(mesh, program, {uA: 0.25, uB: list}, {Depth: false});
+
+		expect(sent.slice(2)).toEqual([0.25, [4, 5], [4, 6]]);
+
+		/* Who is not patient hears of a mistake at once; who is, when the program is done. */
+		var wrong = fragment.replace('void main() {', 'void main() { nothing;');
+
+		expect(function () {
+			plain.Program(quad, wrong);
+		}).toThrow(/does not compile/);
+
+		var late = patient.Program(quad, wrong);
+
+		await waitFor(function () {
+			return late.Settled || gl.getProgramParameter(late.Handle, gl.getExtension('KHR_parallel_shader_compile').COMPLETION_STATUS_KHR);
+		}, 20000);
+
+		expect(function () {
+			patient.Ready(late);
+		}).toThrow(/does not compile/);
+
+		/* A program not done yet waits when it is drawn with. */
+		var wanted = patient.Program(quad, fragment + '\n// c');
+
+		patient.Draw(mesh, wanted, {uA: 1}, {Depth: false});
+
+		expect(wanted.Settled).toBe(true);
+	});
+
+	it('Graphics3D sets the state of the context only where it changes, and only the uniforms a program has', async function () {
+		var renderer = Elemenx.Service('Graphics3D').Create(document.createElement('canvas'), {Antialias: false});
+		var gl = renderer.GL;
+		var fragment = '#version 300 es\nprecision highp float;\nuniform float uA;\nout vec4 outColor;\nvoid main() { outColor = vec4(uA); }';
+		var program = renderer.Program(Elemenx.Service('Graphics3D').Shaders.Quad, fragment);
+		var mesh = renderer.Mesh({Positions: [-1, -1, 0, 1, -1, 0, 1, 1, 0], Indices: [0, 1, 2]});
+		var calls = [];
+		var watched = ['useProgram', 'enable', 'disable', 'depthMask', 'blendFunc', 'blendFuncSeparate', 'cullFace'];
+		var real = {};
+		var given = {uA: 0.5, uMissing: 2};
+
+		watched.forEach(function (name) {
+			real[name] = gl[name];
+			gl[name] = function () {
+				calls.push(name);
+
+				return real[name].apply(this, arguments);
+			};
+		});
+
+		renderer.Draw(mesh, program, given, {Blend: 'add', Cull: 'front'});
+
+		var first = calls.length;
+
+		expect(calls).toEqual(['useProgram', 'enable', 'depthMask', 'enable', 'blendFuncSeparate', 'enable', 'cullFace']);
+		expect(program.List.map(function (info) {
+			return info.Name;
+		})).toEqual(['uA']);
+
+		/* The same again: nothing to set. */
+		renderer.Draw(mesh, program, given, {Blend: 'add', Cull: 'front'});
+
+		expect(calls.length).toBe(first);
+
+		/* Another blending, no culling, no depth written; a clear writes depth again. */
+		renderer.Draw(mesh, program, given, {Blend: 'alpha', Cull: 'none', DepthWrite: false});
+
+		expect(calls.slice(first)).toEqual(['depthMask', 'enable', 'blendFunc', 'disable']);
+
+		calls = [];
+
+		renderer.Clear([0, 0, 0, 1]);
+		renderer.Draw(mesh, program, given, {Blend: 'alpha', Cull: 'none', DepthWrite: false});
+
+		expect(calls).toEqual(['depthMask', 'depthMask']);
+		expect(gl.getParameter(gl.DEPTH_WRITEMASK)).toBe(false);
+		expect(gl.getParameter(gl.BLEND)).toBe(true);
+		expect(gl.getParameter(gl.CULL_FACE)).toBe(false);
+		expect(gl.getError()).toBe(gl.NO_ERROR);
+
+		watched.forEach(function (name) {
+			gl[name] = real[name];
+		});
+
+		renderer.Destroy();
+	});
+
+	it('Workers runs the methods of Services in workers made of their source, and in the page when it cannot', async function () {
+		var terrain = Elemenx.Service('Terrain');
+		var workers = Elemenx.Service('Workers');
+		var options = {Size: 200, Height: 30, Seed: 'work'};
+		var roads = [[[-50, 0], [50, 0]]];
+		var field = terrain.Flat(options);
+		var pool = terrain.Work();
+		var piece = null;
+		var grid = null;
+		var failed = null;
+		var real = window.Worker;
+		var text = workers.Source({A: function (x) {
+			return x * 2;
+		}, B: {C: 1}, D: [1, 2]}, ['A', 'B', 'D']);
+		var made = (0, eval)('(' + text + ')');
+
+		expect(made.A(3)).toBe(6);
+		expect(made.B).toEqual({C: 1});
+		expect(made.D).toEqual([1, 2]);
+
+		expect(terrain.Work()).toBe(pool);
+		expect(pool.Inline()).toBe(false);
+		expect(field.Options).toBe(options);
+
+		pool.Run('Terrain', 'Piece', ['Flat', options, roads, [10, -20, 50, 8]], function (error, result) {
+			piece = result;
+		});
+		pool.Run('Terrain', 'Grid', [options, 5, 20, 0.3], function (error, result) {
+			grid = result;
+		});
+		pool.Run('Terrain', 'Missing', [], function (error) {
+			failed = error;
+		});
+
+		expect(pool.Waiting()).toBe(3);
+
+		await waitFor(function () {
+			return piece && grid && failed;
+		}, 10000);
+
+		expect(pool.Waiting()).toBe(0);
+		expect(failed).toBeInstanceOf(Error);
+
+		/* The very numbers of the page: the same noise, the same colors of the roads. */
+		field.Roads = roads;
+
+		var here = field.Chunk(10, -20, 50, 8);
+
+		expect(piece.Positions).toBeInstanceOf(Float32Array);
+		expect(piece.Indices).toBeInstanceOf(Uint32Array);
+		expect(Array.from(piece.Positions)).toEqual(Array.from(new Float32Array(here.Positions)));
+		expect(Array.from(piece.Colors)).toEqual(Array.from(new Float32Array(here.Colors)));
+		expect(Array.from(piece.Indices)).toEqual(here.Indices);
+		expect(grid[(2 * 5 + 3) * 4]).toBeCloseTo(field.Height(3 * 50 - 100, 2 * 50 - 100), 4);
+
+		/* A worker that cannot start leaves its runs to the page. */
+		var broken = unique('Broken');
+		var answer = null;
+
+		Elemenx.Service(broken, {
+			Bound: Math.max,
+			Plain: function (a) {
+				return a + 1;
+			},
+			Source: function (names) {
+				return this.$Service('Workers').Source(this, names);
+			}
+		});
+
+		var failing = workers.Pool(broken, {[broken]: ['Bound', 'Plain']});
+
+		failing.Run(broken, 'Plain', [1], function (error, value) {
+			answer = value;
+		});
+
+		await waitFor(function () {
+			return answer !== null;
+		}, 10000);
+
+		expect(answer).toBe(2);
+		expect(failing.Inline()).toBe(true);
+
+		/* With no workers at all: at once. */
+		window.Worker = undefined;
+
+		var plain = workers.Pool(unique('Plain'), {Terrain: ['Smoothstep']});
+		var now = null;
+
+		plain.Run('Terrain', 'Smoothstep', [0, 1, 0.5], function (error, value) {
+			now = value;
+		});
+
+		window.Worker = real;
+
+		expect(plain.Inline()).toBe(true);
+		expect(now).toBe(0.5);
+
+		failing.Destroy();
+		plain.Destroy();
+	});
+
+	it('makes the squares of a ground of noise in workers, lets go of what came for roads that changed, and grows grass with no noise in a frame', async function () {
+		var pool = Elemenx.Service('Terrain').Work();
+		var run = pool.Run;
+		var held = [];
+		var grids = [];
+		var mounted;
+
+		pool.Run = function (service, method, args, callback) {
+			if (method === 'Piece')
+				held.push({Args: args, Callback: callback});
+
+			if (method === 'Grid')
+				grids.push({Args: args, Callback: callback});
+		};
+
+		try {
+			mounted = await mount('<GameScene (ready)="Ready">' +
+				'<GameObject ID="land" Kind="ground" Size="192" Height="20" Water="0.2" Seed="test" />' +
+				'<GameObject ID="sun" Kind="sun" />' +
+				'<GameObject ID="blades" Kind="grass" />' +
+			'</GameScene>');
+
+			var scene = mounted.Space;
+			var inner = scene.Scene();
+			var engine = scene.Engine();
+			var ground;
+			var field;
+			var height;
+			var calls = 0;
+
+			inner.Loop.Stop();
+
+			inner.Wanted = inner.Distance = 30;
+
+			await waitFor(function () {
+				engine.Frame(performance.now() + 100);
+
+				return inner.Ground && held.length > 0;
+			}, 8000);
+
+			ground = inner.Ground;
+			field = ground.Field;
+
+			/* The first square is made at once, the others are asked for. */
+			expect(Object.keys(ground.Nodes).length).toBe(1);
+			expect(held[0].Args[0]).toBe('Flat');
+			expect(held[0].Args[1]).toBe(field.Options);
+
+			var one = held[0];
+			var count = held.length;
+
+			/* Roads came while it was made: what came is let go, and asked for again. */
+			field.Roads = [[[-90, 0], [90, 0]]];
+
+			one.Callback(null, Elemenx.Service('Terrain').Piece.apply(null, one.Args));
+
+			expect(Object.keys(ground.Nodes).length).toBe(1);
+
+			engine.Frame(performance.now() + 200);
+
+			var again = held.slice(count).filter(function (each) {
+				return JSON.stringify(each.Args[3]) === JSON.stringify(one.Args[3]);
+			})[0];
+
+			expect(again.Args[2]).toBe(field.Roads);
+
+			again.Callback(null, Elemenx.Service('Terrain').Piece.apply(null, again.Args));
+
+			expect(Object.keys(ground.Nodes).length).toBe(2);
+
+			/* The grass knows the height of the ground from its grid, made by a worker: none grows before it comes. */
+			height = field.Height;
+			field.Height = function () {
+				calls++;
+
+				return height.apply(this, arguments);
+			};
+
+			engine.Frame(performance.now() + 250);
+			engine.Frame(performance.now() + 260);
+
+			field.Height = height;
+
+			expect(grids.length).toBe(1);
+			expect(grids[0].Args[0]).toBe(field.Options);
+			expect(scene.Sown().Blades).toBe(0);
+			expect(calls).toBeLessThan(100);
+
+			calls = 0;
+			pool.Run = run;
+
+			run.call(pool, 'Terrain', 'Grid', grids[0].Args, grids[0].Callback);
+
+			/* And no noise in a frame then. */
+			await waitFor(function () {
+				engine.Frame(performance.now() + 300);
+
+				return scene.Sown().Blades > 1000;
+			}, 10000);
+
+			height = field.Height;
+			field.Height = function () {
+				calls++;
+
+				return height.apply(this, arguments);
+			};
+
+			engine.Frame(performance.now() + 400);
+
+			field.Height = height;
+
+			expect(calls).toBeLessThan(20);
+		}
+		finally {
+			pool.Run = run;
+		}
 	});
 
 	it('A mirrored node keeps its mirror, and what a file keeps as one piece stands apart', function () {
@@ -3823,6 +4869,223 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 		expect(gameSceneSource).toContain('field.Blocked && !(focus && focus.Values.Vehicle)');
 	});
 
+	it('sends a ship far at once: a warp to a body and a jump ahead, each going in, inside and out, and never into a body', async function () {
+		var mounted = await mount('<GameScene Paused="true" Quality="low" (ready)="Ready"><GameObject ID="star" Kind="star" Mass="1"><GameObject ID="world" Kind="planet" Radius="6371" Mass="1" Distance="1"><GameObject ID="moon" Kind="moon" Radius="1737" Distance="384400 km" /></GameObject></GameObject></GameScene>');
+		var scene = mounted.Space;
+		var inner = scene.Scene();
+		var engine = scene.Engine();
+		var now = performance.now() + 100;
+		var emit = scene.$Emit;
+		var drawn = engine.CosmosWarp;
+		var told = [];
+		var warps = [];
+		var ended = null;
+
+		function frames (count) {
+			for (var i = 0; i < count; i++) {
+				inner.Rest = 0;
+
+				engine.Frame(now += 33);
+			}
+		}
+
+		function apart (a, b) {
+			return Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+		}
+
+		/* A key pressed on the scene as a player presses it, for a frame. */
+		function press (code) {
+			scene.$Element().dispatchEvent(new KeyboardEvent('keydown', {code: code, key: code.slice(3).toLowerCase(), bubbles: true}));
+
+			frames(1);
+
+			scene.$Element().dispatchEvent(new KeyboardEvent('keyup', {code: code, key: code.slice(3).toLowerCase(), bubbles: true}));
+		}
+
+		/* Turns the ship to look along a way. */
+		function face (state, way) {
+			var length = Math.hypot(way[0], way[1], way[2]);
+			var ahead = way.map(function (value) {
+				return value / length;
+			});
+			var side = Math.hypot(ahead[2], ahead[0]);
+			var right = [ahead[2] / side, 0, -ahead[0] / side];
+
+			state.Ahead = ahead;
+			state.Right = right;
+			state.Up = [ahead[1] * right[2] - ahead[2] * right[1], ahead[2] * right[0] - ahead[0] * right[2], ahead[0] * right[1] - ahead[1] * right[0]];
+		}
+
+		scene.$Emit = function (name, data) {
+			if (name === 'travel')
+				told.push(data.Kind + ':' + data.Phase);
+
+			return emit.apply(this, arguments);
+		};
+		engine.CosmosWarp = function (matrix, warp) {
+			warps.push(Object.assign({}, warp));
+
+			return drawn.apply(this, arguments);
+		};
+
+		try {
+			frames(2);
+
+			scene.Add('ship', {ID: 'me', Name: '', Size: 0.002, Parent: 'world', Vehicle: {Kind: 'ship', Top: 0.3, Around: 'world', From: [0, 0, 3], Facing: [0, 0, 1], Warp: {To: 'moon', Enter: 0.5, Inside: 0.5, Exit: 0.5}}});
+			scene.Control('me');
+
+			frames(2);
+
+			var ship = inner.Objects.me;
+			var moon = inner.Objects.moon;
+			var fov = inner.Camera.Fov;
+
+			/*
+			 * H: a warp to what its Vehicle says, turned to it on the way in, a tunnel inside, out before it. Regression: the scene
+			 * kept no key H or J of a hero in space, and neither key did anything.
+			 */
+			press('KeyH');
+
+			expect(ship.Travel.Kind).toBe('warp');
+
+			frames(15);
+
+			expect(ship.Travel.Phase).toBe('inside');
+			expect(ship.Ship.Ahead[0] * ship.Travel.Axis[0] + ship.Ship.Ahead[1] * ship.Travel.Axis[1] + ship.Ship.Ahead[2] * ship.Travel.Axis[2]).toBeGreaterThan(0.9);
+
+			frames(8);
+
+			var inside = warps[warps.length - 1];
+
+			expect(inside).toMatchObject({Kind: 'warp', Phase: 'inside', Stretch: 1, Tunnel: 1});
+			expect(inside.Depth).toBeLessThan(0.99999);
+			expect(inner.Camera.Fov).toBeGreaterThan(fov * 1.2);
+
+			frames(30);
+
+			expect(told).toEqual(['warp:enter', 'warp:inside', 'warp:exit', 'warp:done']);
+			expect(ship.Travel).toBe(null);
+			expect(inner.Warp).toBe(null);
+			expect(inner.Camera.Fov).toBe(fov);
+			expect(apart(ship.World, moon.World)).toBeGreaterThan(moon.Size * 5);
+			expect(apart(ship.World, moon.World)).toBeLessThan(moon.Size * 9);
+
+			/* A jump straight ahead goes as far as told, in seconds of its top speed, and leaves it at its speed. */
+			face(ship.Ship, [ship.World[0] - moon.World[0], ship.World[1] - moon.World[1], ship.World[2] - moon.World[2]]);
+
+			var from = ship.World.slice();
+			var ahead = ship.Ship.Ahead.slice();
+
+			warps = [];
+
+			scene.Travel('me', 'jump', {Length: 2, Enter: 0.3, Inside: 0.3, Exit: 0.3}, function (error, result) {
+				ended = [error, result];
+			});
+
+			/* Not two at once. */
+			scene.Travel('me', 'warp', {}, function (error) {
+				expect(error.message).toBe('Elemenx GameScene: me cannot warp now');
+			});
+
+			frames(9);
+
+			var dash = ship.World.slice();
+
+			frames(10);
+
+			expect(warps.some(function (warp) {
+				return warp.Kind === 'jump' && warp.Phase === 'inside' && warp.Stretch > 0.3 && warp.Tunnel === 0;
+			})).toBe(true);
+
+			frames(20);
+
+			expect(ended[0]).toBe(null);
+			expect(ended[1]).toMatchObject({ID: 'me', Kind: 'jump'});
+			expect(apart(dash, from)).toBeLessThan(0.3 * 2 * 0.2);
+			expect(apart(ship.World, from)).toBeGreaterThan(0.3 * 2);
+			expect(Math.hypot.apply(null, ship.Ship.Way)).toBeCloseTo(0.3 * Math.max(ship.Ship.Throttle, 0.4), 5);
+			expect(ship.Ship.Ahead).toEqual(ahead);
+
+			/* Into a body it does not go: it stops before it. */
+			var world = inner.Objects.world;
+
+			ship.Ship.At = ship.Ship.At.map(function (value) {
+				return value * 6;
+			});
+
+			frames(1);
+
+			var before = apart(ship.World, world.World);
+
+			face(ship.Ship, [world.World[0] - ship.World[0], world.World[1] - ship.World[1], world.World[2] - ship.World[2]]);
+
+			scene.Travel('me', 'jump', {Length: 1000, Enter: 0.1, Inside: 0.2, Exit: 0.1});
+
+			frames(20);
+
+			expect(before).toBeGreaterThan(world.Size * 8);
+			expect(apart(ship.World, world.World)).toBeGreaterThan(world.Size * 5.5);
+			expect(apart(ship.World, world.World)).toBeLessThan(world.Size * 6.5);
+
+			/* What is no ship does not go. */
+			scene.Travel('star', 'jump', {}, function (error) {
+				ended = error;
+			});
+
+			expect(ended.message).toBe('Elemenx GameScene: star cannot jump now');
+
+			/* J jumps. */
+			press('KeyJ');
+
+			expect(ship.Travel.Kind).toBe('jump');
+		}
+		finally {
+			scene.$Emit = emit;
+			engine.CosmosWarp = drawn;
+		}
+	});
+
+	it('opens the hatch of a ship by degrees, as a car opens a door: regression, only a car moved what opens', async function () {
+		var mounted = await mount('<GameScene Paused="true" Quality="low" (ready)="Ready"><GameObject ID="star" Kind="star" Mass="1"><GameObject ID="world" Kind="planet" Radius="6371" Mass="1" Distance="1" /></GameObject></GameScene>');
+		var scene = mounted.Space;
+		var inner = scene.Scene();
+		var engine = scene.Engine();
+		var now = performance.now() + 100;
+
+		function frames (count) {
+			for (var i = 0; i < count; i++) {
+				inner.Rest = 0;
+
+				engine.Frame(now += 33);
+			}
+		}
+
+		frames(2);
+
+		scene.Add('ship', {ID: 'me', Name: '', Size: 0.02, Parent: 'world', Vehicle: {Kind: 'ship', Top: 0.3, Around: 'world', From: [0, 0, 3], Openings: [{Name: 'hatch', Match: 'Hatch', Hinge: [0, 0.2, -1], Axis: [1, 0, 0], Angle: 80}]}});
+		scene.Control('me');
+
+		frames(2);
+
+		scene.OpenPart('me', 'hatch', 1);
+
+		frames(10);
+
+		var half = inner.Objects.me.Opens.hatch;
+
+		frames(60);
+
+		expect(half).toBeGreaterThan(0.1);
+		expect(half).toBeLessThan(0.9);
+		expect(inner.Objects.me.Opens.hatch).toBe(1);
+
+		scene.OpenPart('me', 'hatch', 0);
+
+		frames(70);
+
+		expect(inner.Objects.me.Opens.hatch).toBe(0);
+	});
+
 	it('flies a ship by a body: the keys fly it, the mouse only looks, and the model goes with the view', async function () {
 		var mounted = await mount('<GameScene Paused="true" Quality="low" (ready)="Ready"><GameObject ID="star" Kind="star" Mass="1"><GameObject ID="world" Kind="planet" Radius="6371" Mass="1" Distance="1" /></GameObject></GameScene>');
 		var scene = mounted.Space;
@@ -4240,6 +5503,574 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 		turning.Car = {Spin: 0, Steer: 1};
 
 		expect(engine.WheelTurn(turning, pad)[0]).toBeLessThan(0.95);
+	});
+
+	it('turns what the driver moves round its hinge: the steering wheel with the steering, pedals, paddles on the wheel, a pair of doors each its own way', async function () {
+		var models = Elemenx.Service('Models');
+		var graphics = Elemenx.Service('Graphics3D');
+		var vectors = graphics.Vectors;
+		var name = unique('cockpit');
+		var box = function (x, y, z, size) {
+			var made = graphics.Box({Width: size || 0.1, Height: size || 0.1, Depth: 0.02});
+
+			return {Positions: new Float32Array(Array.from(made.Positions).map(function (value, index) {
+				return value + [x, y, z][index % 3];
+			})), Normals: new Float32Array(made.Normals), UVs: new Float32Array(made.UVs), Colors: null, Joints: null, Weights: null, Indices: Array.from(made.Indices)};
+		};
+		var both = function (one, two) {
+			var count = one.Positions.length / 3;
+
+			return {Positions: new Float32Array(Array.from(one.Positions).concat(Array.from(two.Positions))), Normals: new Float32Array(Array.from(one.Normals).concat(Array.from(two.Normals))), UVs: new Float32Array(Array.from(one.UVs).concat(Array.from(two.UVs))), Colors: null, Joints: null, Weights: null, Indices: one.Indices.concat(two.Indices.map(function (index) {
+				return index + count;
+			}))};
+		};
+		var material = function (word) {
+			return {Name: word, BaseColor: [1, 1, 1, 1], Metallic: 0, Roughness: 0.5, Emissive: [0, 0, 0], Clearcoat: 0, CoatRoughness: 0, Transmission: 0, ColorMap: null, MetalMap: null, NormalMap: null, OcclusionMap: null, EmissiveMap: null, Alpha: 'OPAQUE', Cutoff: 0.5, DoubleSided: false, Unlit: false, Specular: 1, SpecularColor: [1, 1, 1], SpecularMap: null};
+		};
+		var node = function (title, mesh) {
+			return {Name: title, Parent: -1, Children: [], Translation: [0, 0, 0], Rotation: [0, 0, 0, 1], Scale: [1, 1, 1], Mesh: mesh, Skin: -1};
+		};
+
+		/* One interior: a wheel in a disc before the dash, the dash behind it; a pedal of its own node; two doors of one material. */
+		models.Define(name, {URL: name, Fit: false, Asset: {
+			Nodes: [node('cabin', 0), node('PedalGas_Alu', 1), node('doors', 2), node('PaddleRight', 3), node('GearLever', 4), node('WiperArm', 5), node('panes', 6)],
+			Meshes: [[{Geometry: both(box(0.3, 0.6, 0.3, 0.2), box(0.3, 0.6, 0.6, 0.2)), Material: 0}], [{Geometry: box(0.3, 0.3, 0.8), Material: 0}], [{Geometry: both(box(0.8, 0.5, 0), box(-0.8, 0.5, 0)), Material: 1}], [{Geometry: box(0.2, 0.6, 0.37, 0.04), Material: 0}], [{Geometry: box(0.5, 0.45, 0.5, 0.04), Material: 0}], [{Geometry: box(0, 0.9, 1.2, 0.04), Material: 0}], [{Geometry: both(box(0.8, 0.7, 0), box(-0.8, 0.7, 0)), Material: 2}]],
+			Lights: [], Materials: [material('Interior'), material('Door'), material('DoorGlass')], Images: [], Skins: [], Animations: [], Scene: [0, 1, 2, 3, 4, 5, 6]
+		}});
+
+		await new Promise(function (done) {
+			models.Load(name, done);
+		});
+
+		var mounted = await mount('<GameScene Paused="true" Quality="low" (ready)="Ready"><GameObject ID="land" Kind="ground" Size="100" Height="1" Seed="test" /></GameScene>');
+		var scene = mounted.Space;
+		var inner = scene.Scene();
+		var engine = scene.Engine();
+		var now = performance.now() + 100;
+
+		function frames (count) {
+			for (var i = 0; i < count; i++) {
+				inner.Rest = 0;
+
+				engine.Frame(now += 33);
+			}
+		}
+
+		frames(2);
+
+		scene.Add('unit', {ID: 'car', Name: '', Model: name, Size: 1, X: 0, Y: 0, Vehicle: {Kind: 'car', Wheels: 'none', Openings: [
+			{Name: 'steering', Match: 'Interior', Disc: {At: [0.3, 0.6, 0.3], Axis: [0, 0, 1], Radius: 0.15, Depth: 0.06}, Hinge: [0.3, 0.6, 0.3], Axis: [0, 0, -1], Angle: 90, Drive: 'steer'},
+			{Name: 'paddle', Match: 'Paddle', Nodes: true, Way: [0, 0, -1], Reach: 0.02, Drive: 'paddle', Sign: 1, Follow: 'steering'},
+			{Name: 'gas', Match: 'PedalGas', Nodes: true, Hinge: [0.3, 0.35, 0.8], Axis: [-1, 0, 0], Angle: 20, Drive: 'gas'},
+			{Name: 'lever', Match: 'GearLever', Nodes: true, Hinge: [0.5, 0.4, 0.5], Axis: [1, 0, 0], Aside: [0, 0, 1], Angle: 15, Drive: 'gear'},
+			{Name: 'wiper', Match: 'WiperArm', Nodes: true, Hinge: [0, 0.9, 1.2], Axis: [0, 1, 0], Angle: 90, Drive: 'wipers', Period: 1},
+			{Name: 'glass', Match: 'DoorGlass', Both: true, Way: [0, -1, 0], Reach: 0.1, Open: 0, Follow: 'doors'},
+			{Name: 'doors', Match: 'Door', Both: true, Low: [0.6, 0, -1], High: [1, 1, 1], Hinge: [0.85, 0.5, 0.05], Axis: [0, 1, 0], Angle: 60, Open: 1}
+		], Gears: [0.4, 1], Wipers: true}});
+		scene.Control('car');
+
+		frames(3);
+
+		var made = models.Make(name);
+		var car = inner.Objects.car;
+
+		function pieces (opening) {
+			return made.Pieces.filter(function (piece) {
+				return piece.Opening === opening;
+			});
+		}
+
+		function moved (piece, point) {
+			return graphics.Apply(engine.OpeningMove(car, piece), point);
+		}
+
+		/* Of the one mesh of the cabin the disc takes the wheel and leaves the dash behind it; the pedal and the paddle come by the names of their nodes. */
+		expect(pieces('steering').length).toBe(1);
+		expect(pieces('steering')[0].Geometry.Indices.length).toBe(36);
+		expect(made.Pieces.filter(function (piece) {
+			return piece.Node === 0 && !piece.Opening;
+		})[0].Geometry.Indices.length).toBe(36);
+		expect(pieces('gas').length).toBe(1);
+		expect(pieces('paddle').length).toBe(1);
+
+		/* Regression: a piece all of which moved stayed behind empty. */
+		expect(made.Pieces.every(function (piece) {
+			return piece.Geometry.Indices.length > 0;
+		})).toBe(true);
+
+		/* Hinged on both sides, the doors are two, each turning out its own way. */
+		var doors = pieces('doors');
+
+		expect(doors.map(function (piece) {
+			return piece.Side;
+		}).sort()).toEqual([-1, 1]);
+
+		frames(60);
+
+		var right = doors.filter(function (piece) {
+			return piece.Side === 1;
+		})[0];
+		var left = doors.filter(function (piece) {
+			return piece.Side === -1;
+		})[0];
+		var a = moved(right, [0.85, 0.5, 0.3]);
+		var b = moved(left, [-0.85, 0.5, 0.3]);
+
+		expect(a[0]).toBeCloseTo(0.85 + 0.25 * Math.sin(Math.PI / 3), 4);
+		expect(b[0]).toBeCloseTo(-a[0], 4);
+		expect(b[2]).toBeCloseTo(a[2], 4);
+
+		/* The glass of each door is its own, and goes with its door. */
+		var panes = pieces('glass');
+		var near = panes.filter(function (piece) {
+			return piece.Side === 1;
+		})[0];
+		var far = panes.filter(function (piece) {
+			return piece.Side === -1;
+		})[0];
+
+		expect(panes.length).toBe(2);
+		expect(moved(near, [0.85, 0.7, 0.3])).toEqual([a[0], 0.7, a[2]].map(function (value) {
+			return expect.closeTo(value, 4);
+		}));
+		expect(moved(far, [-0.85, 0.7, 0.3])).toEqual([b[0], 0.7, b[2]].map(function (value) {
+			return expect.closeTo(value, 4);
+		}));
+
+		/* The wheel goes round its hub with the steering, a quarter turn at full lock, to the left as the car goes left. */
+		var wheel = pieces('steering')[0];
+
+		expect(moved(wheel, [0.3, 0.7, 0.3])).toEqual([0.3, 0.7, 0.3].map(function (value) {
+			return expect.closeTo(value, 6);
+		}));
+
+		/* In neutral the lever stands in the middle; the wipers sweep, as they were told to. */
+		expect(car.Opens.lever).toBe(0);
+
+		var swept = [];
+
+		for (var k = 0; k < 30; k++) {
+			frames(1);
+
+			swept.push(car.Opens.wiper);
+		}
+
+		expect(Math.max.apply(null, swept)).toBeGreaterThan(0.9);
+		expect(Math.min.apply(null, swept)).toBeLessThan(0.1);
+
+		inner.Ground.Keys = {KeyA: true, KeyW: true};
+
+		frames(40);
+
+		var top = moved(wheel, [0.3, 0.7, 0.3]);
+		var hub = moved(wheel, [0.3, 0.6, 0.3]);
+
+		expect(car.Car.Steer).toBeGreaterThan(0.99);
+
+		/* Driving, an automatic's lever stands in D, ahead. */
+		expect(car.Car.Gear).toBeGreaterThan(0);
+		expect(car.Opens.lever).toBeCloseTo(1, 3);
+		expect(car.Opens['lever:aside']).toBe(0);
+		expect(top[0]).toBeCloseTo(0.4, 4);
+		expect(top[1]).toBeCloseTo(0.6, 4);
+		expect(vectors.Distance(hub, [0.3, 0.6, 0.3])).toBeLessThan(1e-6);
+
+		/* The gas pedal goes down as far as it is pressed. */
+		var pedal = moved(pieces('gas')[0], [0.3, 0.25, 0.8]);
+
+		expect(car.Opens.gas).toBeCloseTo(1, 3);
+		expect(pedal[2]).toBeGreaterThan(0.8 + 0.1 * Math.sin(20 * Math.PI / 180) * 0.9);
+
+		/* The paddle goes round with the wheel, and is pulled only while the gearbox changes up. */
+		var paddle = pieces('paddle')[0];
+		var shifted = false;
+		var i;
+
+		for (i = 0; i < 200 && !shifted; i++) {
+			frames(1);
+
+			shifted = car.Car.Shifting > 0 && car.Car.Shifted === 1;
+		}
+
+		expect(shifted).toBe(true);
+
+		frames(2);
+
+		var pulled = moved(paddle, [0.2, 0.6, 0.37]);
+
+		expect(car.Opens.paddle).toBeGreaterThan(0.3);
+		expect(vectors.Distance(pulled, moved(wheel, [0.2, 0.6, 0.37]))).toBeCloseTo(0.02 * car.Opens.paddle, 4);
+
+		inner.Ground.Keys = {};
+
+		frames(30);
+
+		expect(car.Opens.paddle).toBe(0);
+		expect(car.Opens.gas).toBe(0);
+
+		/* Changing down it stays: that is the other paddle's way. */
+		var down = false;
+
+		inner.Ground.Keys = {KeyS: true};
+
+		for (i = 0; i < 300 && !down; i++) {
+			frames(1);
+
+			down = car.Car.Shifting > 0 && car.Car.Shifted === -1;
+		}
+
+		frames(2);
+
+		expect(down).toBe(true);
+		expect(car.Opens.paddle).toBe(0);
+
+		/* Stopped and asked back, it goes into reverse: the lever goes back. */
+		for (i = 0; i < 600 && car.Car.Gear !== -1; i++)
+			frames(1);
+
+		frames(10);
+
+		expect(car.Car.Gear).toBe(-1);
+		expect(car.Opens.lever).toBeCloseTo(-1, 3);
+	});
+
+	it('shows the mirrors and the screens of the car that is driven: the world reflected small, what an element of the page shows', async function () {
+		var mounted = await mount('<GameScene Paused="true" Quality="high" (ready)="Ready">' +
+			'<GameObject ID="land" Kind="ground" Size="100" Height="0.3" Water="0" Seed="flat" />' +
+			'<div slot="screens" data-screen="dash" style="width: 64px; height: 32px; background: rgb(255, 0, 0)"></div>' +
+		'</GameScene>');
+		var scene = mounted.Space;
+		var inner = scene.Scene();
+		var engine = scene.Engine();
+		var renderer = engine.Renderer;
+		var draw = renderer.Draw;
+		var target = renderer.Target;
+		var winding = renderer.Winding;
+		var sizes = [];
+		var turned = 0;
+		var shown = [];
+		var mirrors = [];
+		var now = performance.now() + 100;
+
+		function frames (count) {
+			for (var i = 0; i < count; i++) {
+				inner.Rest = 0;
+
+				engine.Frame(now += 33);
+			}
+		}
+
+		/* What is made for a mirror: deep, of floats, with mipmaps; no other picture of the scene has all three. */
+		renderer.Target = function (width, height, options) {
+			if (options && options.Depth && options.Float && options.Mipmaps)
+				sizes.push([width, height, Math.max(1, renderer.Width >> 2), Math.max(1, renderer.Height >> 2)]);
+
+			return target.apply(this, arguments);
+		};
+		renderer.Winding = function (clockwise) {
+			if (clockwise)
+				turned++;
+
+			return winding.apply(this, arguments);
+		};
+		renderer.Draw = function (mesh, program, uniforms) {
+			if (uniforms && uniforms.uPicture !== undefined && uniforms.uBright !== undefined)
+				shown.push(uniforms.uPicture);
+
+			if (uniforms && uniforms.uStrength !== undefined)
+				mirrors.push(uniforms.uOn);
+
+			return draw.apply(this, arguments);
+		};
+
+		try {
+			frames(2);
+
+			scene.Add('unit', {ID: 'car', Name: '', Size: 1, X: 0, Y: 0, Vehicle: {Kind: 'car', Wheels: 'none',
+				Mirrors: [{At: [0, 1.6, 0], Normal: [0, 0, -1], Width: 0.6, Height: 0.3}],
+				Screens: [{Source: 'dash', At: [0, 1.2, 0], Normal: [0, 0, -1], Width: 0.6, Height: 0.3, Pixels: [64, 32], Every: 0}]
+			}});
+			scene.Control('car');
+
+			/* The view behind the car looks at the back of it: the mirror faces it. */
+			inner.Yaw = Math.PI;
+
+			frames(4);
+
+			/* The mirror: the world drawn again, its triangles turned, into a picture a quarter of the size; it shows it. */
+			expect(turned).toBeGreaterThan(0);
+			/* Made again as the canvas takes its size: each time a quarter of it. */
+			expect(sizes.length).toBeGreaterThan(0);
+			expect(sizes.every(function (size) {
+				return size[0] === size[2] && size[1] === size[3];
+			})).toBe(true);
+			expect(mirrors).toContain(1);
+
+			/* The screen: once its picture is made, the element it names, red. */
+			await waitFor(function () {
+				frames(1);
+
+				return shown.length > 0;
+			}, 10000);
+
+			var pixel = new Uint8Array(4);
+			var gl = renderer.GL;
+			var frame = gl.createFramebuffer();
+
+			gl.bindFramebuffer(gl.FRAMEBUFFER, frame);
+			gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, shown[shown.length - 1].Handle, 0);
+			gl.readPixels(8, 8, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
+			gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+			gl.deleteFramebuffer(frame);
+
+			expect(Array.from(pixel).slice(0, 3)).toEqual([255, 0, 0]);
+
+			/* Another car, not driven: its panes are not drawn. */
+			mirrors = [];
+			shown = [];
+
+			scene.Control('');
+
+			frames(3);
+
+			expect(mirrors).toEqual([]);
+			expect(shown).toEqual([]);
+		}
+		finally {
+			renderer.Draw = draw;
+			renderer.Target = target;
+			renderer.Winding = winding;
+		}
+	});
+
+	it('lights a car: its lamps on at night or by L, the rear brighter as it brakes, reverse, indicators that blink and go off, hazards; a wet road holds less', async function () {
+		var models = Elemenx.Service('Models');
+		var graphics = Elemenx.Service('Graphics3D');
+		var name = unique('lamps');
+		var box = function (x, y, z) {
+			var made = graphics.Box({Width: 0.2, Height: 0.1, Depth: 0.05});
+
+			return {Positions: new Float32Array(Array.from(made.Positions).map(function (value, index) {
+				return value + [x, y, z][index % 3];
+			})), Normals: new Float32Array(made.Normals), UVs: new Float32Array(made.UVs), Colors: null, Joints: null, Weights: null, Indices: Array.from(made.Indices)};
+		};
+		var pair = function (y, z) {
+			var one = box(0.5, y, z);
+			var two = box(-0.5, y, z);
+			var count = one.Positions.length / 3;
+
+			return {Positions: new Float32Array(Array.from(one.Positions).concat(Array.from(two.Positions))), Normals: new Float32Array(Array.from(one.Normals).concat(Array.from(two.Normals))), UVs: new Float32Array(Array.from(one.UVs).concat(Array.from(two.UVs))), Colors: null, Joints: null, Weights: null, Indices: one.Indices.concat(two.Indices.map(function (index) {
+				return index + count;
+			}))};
+		};
+		var material = function (word) {
+			return {Name: word, BaseColor: [1, 1, 1, 1], Metallic: 0, Roughness: 0.5, Emissive: [0, 0, 0], Clearcoat: 0, CoatRoughness: 0, Transmission: 0, ColorMap: null, MetalMap: null, NormalMap: null, OcclusionMap: null, EmissiveMap: null, Alpha: 'OPAQUE', Cutoff: 0.5, DoubleSided: false, Unlit: false, Specular: 1, SpecularColor: [1, 1, 1], SpecularMap: null};
+		};
+
+		models.Define(name, {URL: name, Fit: false, Asset: {
+			Nodes: [{Name: 'body', Parent: -1, Children: [], Translation: [0, 0, 0], Rotation: [0, 0, 0, 1], Scale: [1, 1, 1], Mesh: 0, Skin: -1}],
+			Meshes: [[{Geometry: pair(0.5, 1.8), Material: 0}, {Geometry: pair(0.5, -1.8), Material: 1}, {Geometry: pair(0.7, 1.8), Material: 2}]],
+			Lights: [], Materials: [material('HeadGlass'), material('TailGlass'), material('Amber')], Images: [], Skins: [], Animations: [], Scene: [0]
+		}});
+
+		await new Promise(function (done) {
+			models.Load(name, done);
+		});
+
+		var mounted = await mount('<GameScene Paused="true" Quality="low" (ready)="Ready"><GameObject ID="land" Kind="ground" Size="200" Height="0.2" Water="0" Seed="flat" /><GameObject ID="sun" Kind="sun" Time="12" Latitude="45" /></GameScene>');
+		var scene = mounted.Space;
+		var inner = scene.Scene();
+		var engine = scene.Engine();
+		var physics = scene.$Service('Physics');
+		var car = physics.Car;
+		var grips = [];
+		var now = performance.now() + 100;
+
+		function frames (count) {
+			for (var i = 0; i < count; i++) {
+				inner.Rest = 0;
+
+				engine.Frame(now += 33);
+			}
+		}
+
+		function lamps () {
+			return engine.VehicleLamps().map(function (lamp) {
+				return lamp.Settings;
+			});
+		}
+
+		function glows () {
+			return Object.keys(inner.GlowLists).filter(function (key) {
+				return key.indexOf('lit:') === 0 && inner.GlowLists[key].Count;
+			}).length;
+		}
+
+		physics.Car = function (state, input, surface) {
+			grips.push(surface(state.X, state.Z).Grip);
+
+			return car.apply(this, arguments);
+		};
+
+		try {
+			frames(2);
+
+			scene.Add('unit', {ID: 'car', Name: '', Model: name, Size: 1, X: 0, Y: 0, Vehicle: {Kind: 'car', Wheels: 'none', Gears: [0.4, 1], WetGrip: 0.6, Lamps: [
+				{Kind: 'indicator', Match: 'Amber', Both: true},
+				{Kind: 'head', Match: 'HeadGlass', Both: true},
+				{Kind: 'rear', Match: 'TailGlass', Both: true}
+			]}});
+			scene.Control('car');
+
+			frames(3);
+
+			/* A change of the scene makes its objects anew: the car is asked for each time. */
+			var me = function () {
+				return inner.Objects.car;
+			};
+			var places = me().Values.Vehicle.LampPlaces;
+
+			/* Each glass on its own side, the light from its middle. */
+			expect(places['lamp-1'][1]).toEqual([0.5, 0.5, 1.8].map(function (value) {
+				return expect.closeTo(value, 4);
+			}));
+			expect(places['lamp-1'][-1][0]).toBeCloseTo(-0.5, 4);
+
+			/* By day, dry, and standing still nothing is lit, and the road holds as it is. */
+			expect(me().Signals.Lights).toBe(false);
+			expect(lamps()).toEqual([]);
+			expect(grips[grips.length - 1]).toBe(1);
+
+			/* At night the lights come on by themselves: the head lamps throw a spot ahead, the rear glows dim, their glass glows evenly. */
+			scene.Change('sun', {Time: 23});
+
+			frames(2);
+
+			var lit = lamps();
+
+			expect(me().Signals.Lights).toBe(true);
+			expect(lit.filter(function (lamp) {
+				return lamp.Spot === 60 && lamp.Aim[2] > 0.9;
+			}).length).toBe(2);
+			expect(lit.filter(function (lamp) {
+				return lamp.Color === '#ff1a10';
+			}).map(function (lamp) {
+				return lamp.Power;
+			})).toEqual([0.8 * 0.3, 0.8 * 0.3].map(function (value) {
+				return expect.closeTo(value, 6);
+			}));
+			expect(glows()).toBe(4);
+
+			/* L puts them out, whatever the hour. */
+			inner.Ground.Keys = {KeyL: true};
+
+			frames(1);
+
+			inner.Ground.Keys = {};
+
+			frames(1);
+
+			expect(me().Signals.Lights).toBe(false);
+			expect(lamps()).toEqual([]);
+
+			/* Going and braking, the rear lamps are bright. */
+			inner.Ground.Keys = {KeyW: true};
+
+			frames(40);
+
+			/* Regression: a change of the scene (the hour) made the car anew, and it stopped where it went. */
+			var going = me().Car.Forward;
+
+			expect(going).toBeGreaterThan(5);
+
+			scene.Change('sun', {Time: 22});
+
+			frames(1);
+
+			expect(me().Car.Forward).toBeGreaterThan(going * 0.9);
+			expect(me().Signals.Lights).toBe(false);
+
+			inner.Ground.Keys = {KeyS: true};
+
+			frames(2);
+
+			expect(lamps().map(function (lamp) {
+				return lamp.Power;
+			})).toEqual([0.8, 0.8]);
+
+			/* Stopped and going back, the reverse lamps light: none is told, so none throws light, but the gear says it. */
+			for (var i = 0; i < 300 && me().Car.Gear !== -1; i++)
+				frames(1);
+
+			frames(3);
+
+			expect(me().Car.Gear).toBe(-1);
+			expect(lamps()).toEqual([]);
+
+			inner.Ground.Keys = {};
+
+			frames(5);
+
+			/* Z shows the left, blinking on the left alone, and it goes off once the wheel has turned left and come back. */
+			var left = [];
+			var right = [];
+
+			inner.Ground.Keys = {KeyZ: true};
+
+			frames(1);
+
+			inner.Ground.Keys = {};
+
+			for (i = 0; i < 40; i++) {
+				frames(1);
+
+				left.push(engine.VehicleLamps().filter(function (lamp) {
+					return lamp.Settings.Color === '#ffa020' && lamp.At[0] > me().World[0];
+				}).length);
+				right.push(engine.VehicleLamps().filter(function (lamp) {
+					return lamp.Settings.Color === '#ffa020' && lamp.At[0] < me().World[0];
+				}).length);
+			}
+
+			expect(me().Signals.Indicate).toBe(-1);
+			expect(Math.max.apply(null, left)).toBe(1);
+			expect(Math.min.apply(null, left)).toBe(0);
+			expect(Math.max.apply(null, right)).toBe(0);
+
+			inner.Ground.Keys = {KeyA: true};
+
+			frames(20);
+
+			inner.Ground.Keys = {};
+
+			frames(20);
+
+			expect(me().Signals.Indicate).toBe(0);
+
+			/* Z and X together are the hazard lights: both sides. */
+			inner.Ground.Keys = {KeyZ: true, KeyX: true};
+
+			frames(1);
+
+			inner.Ground.Keys = {};
+
+			frames(1);
+
+			expect(me().Signals.Hazard).toBe(true);
+			expect(lamps().filter(function (lamp) {
+				return lamp.Color === '#ffa020';
+			}).length).toBe(2);
+
+			/* A wet road holds as much as WetGrip says. */
+			inner.Ground.Air.Wet = 1;
+
+			frames(1);
+
+			expect(grips[grips.length - 1]).toBeCloseTo(0.6, 2);
+		}
+		finally {
+			physics.Car = car;
+		}
 	});
 
 	it('looks ahead from the seat of a car while it moves, but while the right button is held', async function () {
@@ -4910,7 +6741,7 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 				return post.apply(this, arguments);
 			};
 
-			for (var i = 0; i < 4; i++) {
+			for (var i = 0; i < 40; i++) {
 				frame();
 
 				shut.push(engine.SunEye());
@@ -4923,6 +6754,44 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 				});
 			}
 		}
+
+		/* Nothing is read while nobody asks for it. */
+		var pixels = engine.Renderer.GL.readPixels;
+		var reads = 0;
+		var keep = engine.NearestStar;
+
+		engine.NearestStar = function () {
+			return null;
+		};
+
+		engine.Renderer.GL.readPixels = function () {
+			reads++;
+
+			return pixels.apply(this, arguments);
+		};
+
+		for (const side of [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]]) {
+			engine.PostEnd = function (view) {
+				view.Sun = side;
+
+				return post.apply(this, arguments);
+			};
+
+			for (var quiet = 0; quiet < 20; quiet++) {
+				frame();
+
+				await new Promise(function (done) {
+					setTimeout(done, 0);
+				});
+			}
+		}
+
+		var calm = reads;
+
+		engine.Renderer.GL.readPixels = pixels;
+		engine.NearestStar = keep;
+
+		expect(calm).toBeLessThanOrEqual(1);
 
 		engine.PostEnd = post;
 		engine.Renderer.GL.getBufferSubData = data;
@@ -6087,7 +7956,26 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 		var inner = scene.Scene();
 		var loop = inner.Loop;
 
+		var engine = scene.Engine();
+		var now = performance.now() + 100;
+		var settled = 0;
+
 		loop.Stop();
+
+		/*
+		 * Nothing is drawn before the programs are done behind the page, and a frame may ask for one more (what the ground brings):
+		 * frames go on until a few in a row need none. Regression: under load a program asked for later sent a frame of the loop
+		 * the way of one that waits, and the rest was not set anew.
+		 */
+		await waitFor(function () {
+			inner.Rest = 0;
+
+			engine.Frame(now += 33);
+
+			settled = engine.Renderer.Progress().Needed === 0 && Elemenx.Service('Terrain').Work().Waiting() === 0 ? settled + 1 : 0;
+
+			return settled >= 5;
+		}, 30000);
 
 		inner.Seen = true;
 		loop.Now = 123456;
@@ -6110,6 +7998,201 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 		loop.Advance(16);
 
 		expect(inner.Rest).not.toBe(far);
+	});
+
+	it('compiles no pillars for a sky without them, and bakes only what is done', async function () {
+		var mounted = await mount('<GameScene Paused="true" (ready)="Ready"><GameObject ID="star" Kind="star" Mass="1" /></GameScene>');
+		var inner = mounted.Space.Scene();
+		var engine = mounted.Space.Engine();
+		var made = [];
+		var program = engine.Renderer.Program;
+		var bake = engine.Renderer.Bake;
+		var baked = 0;
+		var ready = engine.Renderer.Ready;
+		var now = performance.now() + 100;
+
+		inner.Loop.Stop();
+
+		engine.Renderer.Program = function (vertex, fragment, behind) {
+			if (behind)
+				made.push(fragment.indexOf('vec4 standing(vec3 d, vec3 s) {\n\treturn vec4(0.0);') === -1 ? 'pillars' : 'plain');
+
+			return program.apply(this, arguments);
+		};
+		engine.Renderer.Bake = function () {
+			baked++;
+
+			return bake.apply(this, arguments);
+		};
+		engine.Renderer.Ready = function () {
+			return false;
+		};
+
+		function frame () {
+			inner.Rest = 0;
+
+			engine.Frame(now += 33);
+		}
+
+		mounted.Space.Cosmos = 'galaxy';
+
+		await tick(30);
+
+		inner.Looping = true;
+
+		frame();
+		frame();
+
+		expect(baked).toBe(0);
+		expect(made).toEqual(['plain']);
+
+		inner.Looping = false;
+
+		frame();
+
+		expect(baked).toBeGreaterThan(0);
+
+		mounted.Space.Cosmos = 'pillars';
+
+		await tick(30);
+
+		frame();
+
+		expect(made).toEqual(['plain', 'pillars']);
+
+		engine.Renderer.Program = program;
+		engine.Renderer.Bake = bake;
+		engine.Renderer.Ready = ready;
+	});
+
+	it('tells how far a scene has come, and draws nothing until its programs are done', async function () {
+		var mounted = await mount('<GameScene Paused="true" (ready)="Ready"><GameObject ID="land" Kind="ground" Size="100" Height="0" /><div slot="loading" class="mine">wait</div></GameScene>');
+		var scene = mounted.Space;
+		var inner = scene.Scene();
+		var engine = scene.Engine();
+		var loop = inner.Loop;
+		var told = [];
+		var drawn = 0;
+		var draw = engine.Renderer.Draw;
+
+		expect(engine.Renderer.Progress).toBeTypeOf('function');
+
+		loop.Stop();
+
+		var emit = scene.$Emit;
+
+		scene.$Emit = function (name, detail) {
+			if (name === 'loading')
+				told.push(detail.Part);
+
+			return emit.apply(this, arguments);
+		};
+
+		engine.Renderer.Draw = function () {
+			drawn++;
+
+			return draw.apply(this, arguments);
+		};
+
+		var progress = engine.Renderer.Progress;
+
+		inner.Seen = true;
+		inner.Warmed = true;
+		engine.Renderer.Progress = function () {
+			return {Done: 3, Total: 4, Needed: 1};
+		};
+		scene.Loading = null;
+		inner.Rest = 0;
+
+		loop.Advance(16);
+
+		expect(drawn).toBe(0);
+		expect(scene.Loading).toBe(75);
+
+		await tick(20);
+
+		var holder = scene.$Element().querySelector('.elemenx-game-scene-loading');
+
+		/* The slot was filled: that takes the place of the bar. */
+		expect(holder.hidden).toBe(false);
+		expect(holder.querySelector('.mine').textContent).toBe('wait');
+		expect(holder.getBoundingClientRect().height).toBeGreaterThan(0);
+		expect(holder.querySelector('progress, [role="progressbar"]')).toBe(null);
+
+		/* What is behind the page holds no picture: the bar stays and the frames go. */
+		engine.Renderer.Progress = function () {
+			return {Done: 3, Total: 4, Needed: 0};
+		};
+
+		inner.Rest = 0;
+
+		loop.Advance(16);
+
+		expect(drawn).toBeGreaterThan(0);
+		expect(scene.Loading).toBe(75);
+
+		engine.Renderer.Progress = progress;
+
+		await waitFor(function () {
+			return progress().Needed === 0;
+		}, 30000);
+
+		engine.Renderer.Progress = function () {
+			return {Done: 4, Total: 4, Needed: 0};
+		};
+
+		loop.Advance(16);
+
+		expect(scene.Loading).toBe(null);
+		expect(told).toEqual([75, 100]);
+
+		await tick(20);
+
+		expect(holder.hidden).toBe(true);
+
+		engine.Renderer.Progress = progress;
+		engine.Renderer.Draw = draw;
+	});
+
+	it('shows a bar of its own while it loads, that moves when only what is behind the page is left', async function () {
+		var mounted = await mount('<GameScene Paused="true" (ready)="Ready"><GameObject ID="land" Kind="ground" Size="100" Height="0" /></GameScene>');
+		var scene = mounted.Space;
+		var inner = scene.Scene();
+		var engine = scene.Engine();
+		var progress = engine.Renderer.Progress;
+
+		inner.Loop.Stop();
+
+		inner.Warmed = true;
+		inner.Seen = true;
+		engine.Renderer.Progress = function () {
+			return {Done: 1, Total: 2, Needed: 1};
+		};
+
+		inner.Loop.Advance(16);
+
+		await tick(20);
+
+		var holder = scene.$Element().querySelector('.elemenx-game-scene-loading');
+		var bar = holder.querySelector('[role="progressbar"]');
+
+		expect(holder.hidden).toBe(false);
+		expect(bar).toBeTruthy();
+		expect(bar.getBoundingClientRect().height).toBeGreaterThan(0);
+		expect(bar.getAttribute('aria-valuenow')).toBe('50');
+
+		engine.Renderer.Progress = function () {
+			return {Done: 1, Total: 2, Needed: 0};
+		};
+
+		inner.Loop.Advance(16);
+
+		await tick(20);
+
+		expect(scene.LoadingEndless).toBe(true);
+		expect(holder.querySelector('[role="progressbar"]').getAttribute('aria-valuenow')).toBe(null);
+
+		engine.Renderer.Progress = progress;
 	});
 
 	it('leaves the pointer alone while the mouse is captured: the browser refuses to hold both', async function () {
@@ -6461,6 +8544,318 @@ describe('Contract: GameScene and GameObject, the objects of a game in 3D', func
 		}, 8000);
 
 		expect(Math.abs(scene.Sown().Things - first.Things)).toBeLessThan(first.Things * 0.02);
+	});
+
+	it('beads water on what is smooth and wet, its own Wet over the weather, as many drops as it says; none on what is rough', async function () {
+		var models = Elemenx.Service('Models');
+		var graphics = Elemenx.Service('Graphics3D');
+		var made = graphics.Box({Width: 3, Height: 0.05, Depth: 3});
+		var plate = {Positions: new Float32Array(made.Positions), Normals: new Float32Array(made.Normals), UVs: new Float32Array(made.UVs), Colors: null, Joints: null, Weights: null, Indices: Array.from(made.Indices)};
+		var names = {smooth: unique('lacquer'), rough: unique('felt')};
+
+		function material (roughness, coat) {
+			return {Name: 'skin', BaseColor: [0.05, 0.05, 0.06, 1], Metallic: 0, Roughness: roughness, Emissive: [0, 0, 0], Clearcoat: coat, CoatRoughness: 0.05, Transmission: 0, ColorMap: null, MetalMap: null, NormalMap: null, OcclusionMap: null, EmissiveMap: null, Alpha: 'OPAQUE', Cutoff: 0.5, DoubleSided: false, Unlit: false, Specular: 1, SpecularColor: [1, 1, 1], SpecularMap: null};
+		}
+
+		[['smooth', 0.25, 1], ['rough', 0.9, 0]].forEach(function (one) {
+			models.Define(names[one[0]], {URL: names[one[0]], Fit: false, Asset: {Nodes: [{Name: 'plate', Parent: -1, Children: [], Translation: [0, 0, 0], Rotation: [0, 0, 0, 1], Scale: [1, 1, 1], Mesh: 0, Skin: -1}], Meshes: [[{Geometry: plate, Material: 0}]], Lights: [], Materials: [material(one[1], one[2])], Images: [], Skins: [], Animations: [], Scene: [0]}});
+		});
+
+		await new Promise(function (done) {
+			models.Load(names.smooth, function () {
+				models.Load(names.rough, done);
+			});
+		});
+
+		var mounted = await mount('<GameScene Paused="true" Quality="low" (ready)="Ready">' +
+			'<GameObject ID="land" Kind="ground" Size="100" Height="0.5" Water="0" Seed="flat" />' +
+			'<GameObject ID="sun" Kind="sun" Elevation="35" />' +
+			'<GameObject ID="plate" Kind="thing" Model="' + names.smooth + '" Size="1" X="0" Y="0" Z="1.2" Wet="1" Drops="0" />' +
+		'</GameScene>');
+		var scene = mounted.Space;
+		var inner = scene.Scene();
+		var engine = scene.Engine();
+		var renderer = engine.Renderer;
+		var gl = renderer.GL;
+		var mesh = renderer.Mesh;
+		var instanced = [];
+		var now = performance.now() + 100;
+
+		inner.Loop.Stop();
+
+		/* How busy the middle of the picture is: the sum of what each pixel differs from the next. */
+		function busy () {
+			var size = 160;
+			var data = new Uint8Array(size * size * 4);
+			var sum = 0;
+			var x;
+			var y;
+
+			for (x = 0; x < 2; x++) {
+				inner.Rest = 0;
+
+				engine.Frame(now += 33);
+			}
+
+			gl.readPixels((renderer.Width - size) >> 1, (renderer.Height - size) >> 1, size, size, gl.RGBA, gl.UNSIGNED_BYTE, data);
+
+			for (y = 0; y < size; y++) {
+				for (x = 0; x + 1 < size; x++)
+					sum += Math.abs(data[(y * size + x) * 4 + 1] - data[(y * size + x + 1) * 4 + 1]);
+			}
+
+			return sum;
+		}
+
+		renderer.Mesh = function () {
+			var one = mesh.apply(this, arguments);
+			var instance = one.Instance;
+
+			one.Instance = function (data) {
+				if (data.aInstance2)
+					instanced.push([data.aInstance2.Data[3], data.aInstance3.Data[3]]);
+
+				return instance.apply(this, arguments);
+			};
+
+			return one;
+		};
+
+		try {
+			await waitFor(function () {
+				inner.Rest = 0;
+
+				engine.Frame(now += 33);
+
+				return renderer.Progress().Needed === 0;
+			}, 30000);
+
+			scene.FocusOn('plate');
+
+			inner.Pitch = 1.2;
+			inner.Wanted = inner.Distance = 2.2;
+
+			/* The view eases to the plate and the ground comes from workers: the measures are of a picture that no longer moves. */
+			await waitFor(function () {
+				var target = inner.Target.slice();
+
+				inner.Rest = 0;
+
+				engine.Frame(now += 33);
+
+				return Elemenx.Service('Terrain').Work().Waiting() === 0 && Math.hypot(inner.Target[0] - target[0], inner.Target[1] - target[1], inner.Target[2] - target[2]) < 1e-6 && Math.abs(inner.Distance - inner.Wanted) < 1e-4;
+			}, 30000);
+
+			/* Declared, as a template writes them: regression, read as wet and drops they were left out. */
+			expect(inner.Objects.plate.Values.Wet).toBe(1);
+			expect(inner.Objects.plate.Values.Drops).toBe(0);
+
+			var none = busy();
+
+			scene.Change('plate', {Drops: 1});
+
+			var beaded = busy();
+
+			/* Its own wet and drops go with each copy: 1 + them, 0 for the weather's. */
+			expect(instanced.some(function (pair) {
+				return pair[0] === 2 && pair[1] === 2;
+			})).toBe(true);
+
+			expect(beaded).toBeGreaterThan(none * 1.6);
+
+			/* No wet of its own and a dry day: nothing beads. */
+			scene.Change('plate', {Wet: ''});
+
+			var dry = busy();
+
+			expect(dry).toBeLessThan(beaded / 1.6);
+			expect(instanced.some(function (pair) {
+				return pair[0] === 0 && pair[1] === 2;
+			})).toBe(true);
+
+			/* What is rough takes the water in. */
+			scene.Change('plate', {Model: names.rough, Wet: 1, Drops: 1});
+
+			var felt = busy();
+
+			scene.Change('plate', {Drops: 0});
+
+			expect(felt).toBeLessThan(busy() * 1.3);
+		}
+		finally {
+			renderer.Mesh = mesh;
+		}
+	});
+
+	it('blurs what is out of focus by its Bokeh: the hero in focus, or the distance given; nothing of it with none', async function () {
+		var mounted = await mount('<GameScene Quality="high" Paused="true" (ready)="Ready">' +
+			'<GameObject ID="land" Kind="ground" Size="300" Height="30" Water="0" Scale="20" Seed="sharp" />' +
+			'<GameObject ID="sun" Kind="sun" Elevation="40" />' +
+		'</GameScene>');
+		var scene = mounted.Space;
+		var inner = scene.Scene();
+		var engine = scene.Engine();
+		var renderer = engine.Renderer;
+		var gl = renderer.GL;
+		var draw = renderer.Draw;
+		var used = [];
+		var focus = [];
+		var now = performance.now() + 100;
+
+		inner.Loop.Stop();
+
+		renderer.Draw = function (mesh, program, uniforms) {
+			if (uniforms && uniforms.uFixed !== undefined)
+				focus.push(uniforms.uFixed);
+
+			if (uniforms && (uniforms.uNear || uniforms.uDisc))
+				used.push(uniforms.uNear ? 'disc' : 'focused');
+
+			return draw.apply(this, arguments);
+		};
+
+		/* The relief of the ground: how much a little block of the view differs from the next. */
+		function contrast () {
+			var data = new Uint8Array(renderer.Width * renderer.Height * 4);
+			var sum = 0;
+			var x;
+			var y;
+
+			inner.Rest = 0;
+
+			engine.Frame(now += 33);
+
+			gl.readPixels(0, 0, renderer.Width, renderer.Height, gl.RGBA, gl.UNSIGNED_BYTE, data);
+
+			/* Blocks of 6 by 6: the grain the picture is given at its end is evened out, the relief is not. */
+			function block (bx, by) {
+				var total = 0;
+				var i;
+				var j;
+
+				for (j = 0; j < 6; j++) {
+					for (i = 0; i < 6; i++)
+						total += data[((by + j) * renderer.Width + bx + i) * 4 + 1];
+				}
+
+				return total / 36;
+			}
+
+			for (y = 0; y + 6 < renderer.Height; y += 6) {
+				for (x = 0; x + 12 < renderer.Width; x += 6)
+					sum += Math.abs(block(x, y) - block(x + 6, y));
+			}
+
+			return sum;
+		}
+
+		/* Its programs made, and its ground in all its squares (they come from workers): the picture no longer changes. */
+		await waitFor(function () {
+			inner.Rest = 0;
+
+			engine.Frame(now += 33);
+
+			return renderer.Progress().Needed === 0 && Elemenx.Service('Terrain').Work().Waiting() === 0 && Object.keys(inner.Ground.Nodes).length > 4;
+		}, 30000);
+
+		await tick(50);
+
+		contrast();
+
+		var sharp = contrast();
+
+		expect(used).toEqual([]);
+
+		/* Open, in focus a step before the eye: what is far loses its fine lines. */
+		scene.Bokeh = 1;
+		scene.BokehFocus = 2;
+
+		await tick(20);
+
+		var blurred;
+		var i;
+
+		for (i = 0; i < 4; i++)
+			blurred = contrast();
+
+		expect(used).toContain('disc');
+		expect(used).toContain('focused');
+		expect(focus[focus.length - 1]).toBe(2);
+		expect(blurred).toBeLessThan(sharp * 0.75);
+
+		/* A hero: in focus at its body, wherever it walks. */
+		scene.BokehFocus = '';
+
+		scene.Add('unit', {ID: 'hero', Size: 1, X: 0, Y: 0});
+
+		contrast();
+
+		scene.Control('hero');
+
+		contrast();
+		contrast();
+
+		var hero = inner.Objects.hero;
+		var wanted = Math.hypot(hero.World[0] - inner.Eye[0], hero.World[1] + 0.6 - inner.Eye[1], hero.World[2] - inner.Eye[2]);
+
+		expect(focus[focus.length - 1]).toBeCloseTo(wanted, 1);
+
+		renderer.Draw = draw;
+	});
+
+	it('sows in clumps: thick groves and thin ground between them; grass in tufts and glades, its blades unlike by its spread', async function () {
+		var mounted = await mount('<GameScene (ready)="Ready">' +
+			'<GameObject ID="land" Kind="ground" Size="192" Height="2" Water="0" Seed="test" />' +
+			'<GameObject ID="sun" Kind="sun" />' +
+			'<GameObject ID="woods" Kind="forest" Density="4" Seed="a" Cover="1" Patch="40" />' +
+			'<GameObject ID="blades" Kind="grass" Clumps="0.7" Patch="30" Spread="0.05" />' +
+		'</GameScene>');
+		var scene = mounted.Space;
+		var inner = scene.Scene();
+		var engine = scene.Engine();
+		var draws = [];
+		var draw = engine.Renderer.Draw;
+
+		inner.Wanted = inner.Distance = 60;
+
+		async function sown () {
+			await waitFor(function () {
+				engine.Frame(performance.now() + 100);
+
+				return scene.Sown().Squares > 0 && scene.Sown().Waiting === 0;
+			}, 8000);
+
+			return scene.Sown().Things;
+		}
+
+		var even = await sown();
+
+		scene.Change('woods', {Clumps: 1});
+
+		var clumped = await sown();
+
+		/* Thin between the groves: fewer in all, and none of them in places where there were many. */
+		expect(clumped).toBeLessThan(even * 0.8);
+		expect(clumped).toBeGreaterThan(even * 0.2);
+
+		/* The grass takes its clumps, its patch and its spread to its blades. */
+		engine.Renderer.Draw = function (mesh, program, uniforms) {
+			if (uniforms && uniforms.uClump)
+				draws.push(uniforms.uClump);
+
+			return draw.apply(this, arguments);
+		};
+
+		await waitFor(function () {
+			engine.Frame(performance.now() + 200);
+
+			return draws.length > 0;
+		}, 6000);
+
+		engine.Renderer.Draw = draw;
+
+		expect(draws[0]).toEqual([0.7, 30, 0.05]);
+		expect(Elemenx.Service('Kinds').Make('grass', {}).Traits.Grass).toMatchObject({Clumps: 0, Patch: 24, Spread: 0.45});
 	});
 
 	it('draws the model of a file by the same API: fetched, lit, moved and played', async function () {

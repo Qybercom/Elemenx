@@ -7,6 +7,8 @@
  * Selection is the IDs of the messages chosen (the select events of the ChatMessage): while it has some, a bar takes
  * the place of the header with their count, a button that lets them go (the clear event; Escape too) and the slot
  * selection for the actions on them. Each ChatMessage takes [selecting] and [selected] from it.
+ * Near the first message the event history asks for older ones (the directive *infinite, up): HistoryBusy while they
+ * come, HistoryDone when there are none; the reader stays where they were when they come above.
  */
 Elemenx.Component('Chat', {
 	$TemplateURL: 'Chat.html',
@@ -19,18 +21,23 @@ Elemenx.Component('Chat', {
 		Slots: ['sidebar', 'header', 'selection', 'composer'],
 		Events: {
 			clear: 'The selection of messages was let go (its button, or Escape).',
-			resize: 'The sidebar was resized: SidebarWidth.'
+			resize: 'The sidebar was resized: SidebarWidth.',
+			history: 'The reader came near the first message: older ones are asked for.'
 		},
 		Props: {
 			SidebarOpen: 'Shows the sidebar of the conversations.',
 			SidebarWidth: 'The width of the sidebar, in pixels (it can be dragged).',
-			Selection: 'The IDs of the messages chosen; a bar of actions shows while it has some.'
+			Selection: 'The IDs of the messages chosen; a bar of actions shows while it has some.',
+			HistoryBusy: 'Older messages are coming: none more is asked.',
+			HistoryDone: 'There are no older messages.'
 		}
 	},
 	SidebarOpen: true,
 	SidebarWidth: 280,
 	AtEnd: true,
 	Selection: [],
+	HistoryBusy: false,
+	HistoryDone: false,
 
 	/*
 	 * The list keeps to its end while the reader is there: when messages come, and when what is in them grows later (a
@@ -85,6 +92,10 @@ Elemenx.Component('Chat', {
 
 		if (list)
 			list.removeEventListener('load', this.Stick, true);
+	},
+
+	History: function () {
+		this.$Emit('history');
 	},
 
 	Scrolled: function (event, node) {

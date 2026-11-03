@@ -24,7 +24,7 @@
  * The view: a drag turns it round the object in focus, the wheel or two fingers zoom, a click selects an object (or
  * its label; a part of an object near enough), a double click flies to it (from its day side), Escape goes back, the
  * arrows turn, + and - zoom, Enter flies to the selected one, Space holds the time. Orbits, Labels, Details (a card of
- * the selected object), Background (the far stars), Team, the slot hud. Without WebGL2 it says so (and emits error).
+ * the selected object), Background (the far stars), Team, the slot hud, the slot screens (elements a car's screens show, out of sight). Without WebGL2 it says so (and emits error).
  *
  * The view is free in every 3D scene: a drag turns and tilts it, the wheel zooms, the middle button or a drag with Shift
  * carries it (two fingers on a screen), WASD or the arrows move it, Q and E turn it, R and F tilt it.
@@ -39,10 +39,15 @@
  * SkyGlow (0 to 1) is the light towns throw on the air, of SkyGlowColor, from SkyGlowAzimuth or all round: it lights the clouds
  * from under and hides the faint stars. The stars turn with the planet, round its pole at the height of Latitude, and with them
  * the band of the galaxy (Galaxy, 0 for none). Weather (clear, cloudy, overcast, rain, storm, snow, fog) changes in a few
- * seconds, and rain wets what stands in it; Flare (0 to 2) is how strongly a lens shows the sun. At high and ultra what is glossy
+ * seconds, and rain wets what stands in it (pools on what is level, drops on what is smooth; Wet and Drops of an object, 0 to
+ * 1, its own); Flare (0 to 2) is how strongly a lens shows the sun; Bokeh (0 to 1) blurs what is out of focus (BokehFocus, a distance; else the hero, or the middle of the view). At high and ultra what is glossy
  * or wet mirrors what is on the screen, and past it the sky. Kind light (Color, Power, Radius, Height, Spot, Aim, Flicker,
  * Follow, Z) is a lamp: any number, the nearest 24 at once, the nearest 2 with shadows; what shines in a model of a file is
- * a lamp too (Lamps of the Models Service; Lights: false on an object leaves them out). Kind location (Model, Size, Without,
+ * a lamp too (Lamps of the Models Service; Lights: false on an object leaves them out). Kind mirror (Width, Height, Yaw and
+ * Pitch in degrees, Lift over the ground or Z, Tint, Blur, Strength, Every: the frames between two of its pictures) shows the
+ * world reflected by its plane, drawn again at half the size (the nearest one at low and medium, two at high, three at
+ * ultra); kind glass (the same place and size, Tint, Clarity, Frost, Reflect) is a pane blended over what is behind it, the
+ * sky, the sun and, while Reflect is above 0, the world on it by its angle. Kind location (Model, Size, Without,
  * Plane) makes a ground of a model of a file, its floors and walls read from its triangles; Control(id) gives the keys to a
  * walker: a press takes the mouse (Capture), it faces the view, A and D step aside, Shift runs, Shift and Alt sprint, Space
  * jumps, a drag with the right button turns the view and leaves the walk as it was. A
@@ -75,8 +80,12 @@
  * and smokes where it stands, or goes with an object; Burst(type, place, options) happens once, as an explosion (trait Effects).
  * Methods: Add(kind, props), Change(id, changes), Remove(id), Attach(parent, object), Detach(id), Get(id),
  * Objects(filter), Describe(id), Position(id), Select(id), FocusOn(id), Move(id, target), Now(), SetTime(days),
- * Play(id, clip, callback), ToScreen(id), Pick(clientX, clientY), Save(), Load(saved), Land(id, options), TakeOff(),
- * Surface(), Supported().
+ * Play(id, clip, callback), ToScreen(id), Pick(clientX, clientY), Save(options), Load(saved), Land(id, options), TakeOff(),
+ * Surface(), Supported(). Save gives the recipe of a game (Seed, Cosmos, Weather, Time and what the methods changed:
+ * Added, Removed, Overrides), made again by Load; Save({Baked: true}) every object as it is.
+ *
+ * What a scene waits for, its programs and models, comes behind the page and holds no frame up: Loader shows how far it
+ * came, a slot named loading takes the place of the bar, and the event loading tells {Part}, up to 100.
  */
 Elemenx.Component('GameScene', {
 	$TemplateURL: 'GameScene.html',
@@ -88,12 +97,13 @@ Elemenx.Component('GameScene', {
 		Description: 'The scene of a game in 3D: objects of any kind with their traits and parts; the setting space brings a star system on Kepler orbits, stations and fleets, with a landing on the surfaces of its bodies; the setting terrain a ground of noise and its walkers.',
 		Container: true,
 		Children: ['GameObject', 'GameTerrain', 'GameLayer'],
-		Slots: ['hud'],
+		Slots: ['hud', 'loading', 'screens'],
 		Events: {
 			ready: 'The scene is ready: the component itself, to call its methods.',
 			select: 'The selection changed: {ID, Object, Info, IDs, Objects} (ID empty when none is).',
 			focus: 'The view moved to an object: {ID}.',
 			person: 'V took the view of a walker to another place: third, first or shoulder.',
+			loading: 'What the scene waits for came a step nearer: {Part}, up to 100.',
 			shoulder: 'B took the view over another shoulder: right or left.',
 			arrive: 'An object reached where it was sent: {ID, At} (with a map, X and Y too).',
 			load: 'A map was loaded: {Width, Height} in cells.',
@@ -102,9 +112,10 @@ Elemenx.Component('GameScene', {
 			view: 'The view of a map moved or zoomed: {X, Y, Zoom}.',
 			land: 'The view went down to the surface of a body: {ID}.',
 			takeoff: 'The view went back up to space: {ID}.',
+			travel: 'A ship on its way far at once (Travel, H or J) came to a phase: {ID, Kind (warp or jump), Phase (enter, inside, exit, done)}.',
 			error: 'There is no WebGL2 ({Reason: webgl2}), or a map could not be loaded (the error).'
 		},
-		Methods: ['Burst(type, place, options)', 'Effects(types)', 'MountsOf(id, kind)', 'OpenPart(id, name, amount)', 'CosmosKinds()', 'Add(kind, props)', 'Change(id, changes)', 'Remove(id)', 'Attach(parent, object)', 'Detach(id)', 'Get(id)', 'Objects(filter)', 'Describe(id)', 'Position(id)', 'Select(id)', 'Selection()', 'FocusOn(id)', 'Control(id)', 'Move(id, target)', 'Play(id, clip, callback)', 'Now()', 'SetTime(days)', 'ToScreen(id)', 'Pick(clientX, clientY)', 'Save()', 'Load(saved)', 'Land(id, options)', 'TakeOff()', 'Surface()', 'Supported()', 'Order(ids, target, kind)', 'Stop(ids)', 'Cell(x, y)', 'Paint(x, y, key, layer)', 'Near(x, y, radius, filter)', 'Route(from, to)', 'PathGrid()', 'FogOfWar()', 'CenterOn(x, y)', 'ToCell(clientX, clientY)'],
+		Methods: ['Burst(type, place, options)', 'Effects(types)', 'MountsOf(id, kind)', 'Travel(id, kind, options, callback)', 'OpenPart(id, name, amount)', 'CosmosKinds()', 'Add(kind, props)', 'Change(id, changes)', 'Remove(id)', 'Attach(parent, object)', 'Detach(id)', 'Get(id)', 'Objects(filter)', 'Describe(id)', 'Position(id)', 'Select(id)', 'Selection()', 'FocusOn(id)', 'Control(id)', 'Move(id, target)', 'Play(id, clip, callback)', 'Now()', 'SetTime(days)', 'ToScreen(id)', 'Pick(clientX, clientY)', 'Save(options)', 'Load(saved)', 'Land(id, options)', 'TakeOff()', 'Surface()', 'Supported()', 'Order(ids, target, kind)', 'Stop(ids)', 'Cell(x, y)', 'Paint(x, y, key, layer)', 'Near(x, y, radius, filter)', 'Route(from, to)', 'PathGrid()', 'FogOfWar()', 'CenterOn(x, y)', 'ToCell(clientX, clientY)'],
 		Props: {
 			Map: 'A map of cells: its JSON ({Width, Height, Projection, Terrain, Layers, Objects}), or the URL of a JSON of its own or of Tiled.',
 			Projection: {Options: ['', 'isometric', 'orthogonal'], Description: 'A map from above (orthogonal) or at an angle (isometric); the one of the map by default.'},
@@ -140,11 +151,14 @@ Elemenx.Component('GameScene', {
 			Front: 'The seconds a change of the weather takes.',
 			View: {Options: ['', 'top', 'isometric'], Description: 'A ground seen in parallel rays, as a game of two dimensions: from above or at an angle (empty: in perspective).'},
 			Paused: 'Holds the time.',
+			Loader: 'Shows how much of the scene has come; a slot named loading takes its place.',
 			Focus: 'The ID of the object in the middle of the view.',
 			Selected: 'The ID of the selected object.',
 			Orbits: 'Draws the orbits.',
 			Labels: 'Shows the names of the objects.',
 			Exposure: 'What a view lets in: a number holds it, empty adapts to the light as an eye does.',
+			Bokeh: 'The depth of field, 0 to 1: how wide the lens is open; what is far from the focus is blurred, a bright point of it a disc.',
+			BokehFocus: 'The distance in focus; empty: the hero, or what the middle of the view shows, followed slowly.',
 			Details: 'Shows a card of the selected object.',
 			Background: 'Draws the stars far away.',
 			Cosmos: 'What lies far behind a system, made of a seed: nebula, pillars, galaxy, galaxies, cluster, void, or {Kind, Seed, Colors, Gas, Dust, Stars, Pillars, Band, Galaxies, Clusters, Beacon}: a kind is a set of these amounts, and what is told comes on top of it.',
@@ -168,6 +182,8 @@ Elemenx.Component('GameScene', {
 	View: '',
 	Paused: false,
 	Focus: '',
+	Bokeh: 0,
+	BokehFocus: '',
 	Selected: '',
 	Orbits: true,
 	Labels: true,
@@ -183,6 +199,10 @@ Elemenx.Component('GameScene', {
 	Team: '',
 	Label: '',
 	Status: '',
+	Loader: true,
+	Loading: null,
+	LoadingEndless: false,
+	LoadingOwn: false,
 	Unsupported: false,
 	Dragging: false,
 	Card: null,
@@ -240,7 +260,9 @@ Elemenx.Component('GameScene', {
 	Ground: function () {
 		return {
 			'ground': {Traits: {Terrain: {Size: 1000, Height: 60, Water: 0.35, Scale: 180, Ridges: 0.4, Seed: 'ground'}}},
-			'effect': {Traits: {Effect: {Type: 'campfire', Size: 1, Power: 1, Aim: null, Height: 0, Light: true, On: true, Color: '', Hot: '', Volume: 1, Intensity: 1, Length: 1, Width: 1, Spin: 1, Rings: null, Seed: '', Smoke: 1, Appear: 0.45, Tune: null, Pulse: null}}},
+			'effect': {Traits: {Effect: {Type: 'campfire', Size: 1, Power: 1, Aim: null, Height: 0, Light: true, On: true, Color: '', Hot: '', Volume: 1, Intensity: 1, Length: 1, Width: 1, Spin: 1, Rings: null, Seed: '', Smoke: 1, Appear: 0.45, Tune: null, Pulse: null, Where: 'body'}}},
+			'mirror': {Traits: {Mirror: {Width: 2, Height: 2, Yaw: 0, Pitch: 0, Lift: 1, Tint: '#ffffff', Blur: 0, Strength: 0.92, Every: 1}}},
+			'glass': {Traits: {Glass: {Width: 2, Height: 2, Yaw: 0, Pitch: 0, Lift: 1, Tint: '#cfe6f0', Clarity: 0.88, Frost: 0, Reflect: 0.35}}},
 			'light': {Traits: {Light: {Color: '#ffd39a', Power: 1, Radius: 14, Height: 2.5, Spot: 0, Aim: null, Flicker: 0}}},
 			'location': {Traits: {Model: {Shape: 'rock', Size: 1, Color: '#ffffff'}, Location: {}}},
 			'sun': {Traits: {Sun: {Elevation: 35, Azimuth: 140, Color: '#fff4e0', Time: '', Noon: 180, Shade: '#ffffff', DayHours: 24, Latitude: null, Tilt: 23.44, DayOfYear: 172, YearDays: 365, Moon: true, MoonLight: 1, MoonSize: 1, MoonPhase: 0.5, MoonElevation: null, MoonAzimuth: null, MoonTilt: 5.14, MoonNode: 80, NightLight: 1, SkyGlow: 0, SkyGlowColor: '#ffa860', SkyGlowAzimuth: null, Galaxy: 1}}},
@@ -254,7 +276,7 @@ Elemenx.Component('GameScene', {
 			'grove': {Traits: {Scatter: {Shapes: ['oak', 'birch', 'bush'], Density: 0.8, Cover: 0.45, Patch: 40, MaxSlope: 0.25}}},
 			'thicket': {Traits: {Scatter: {Shapes: ['bush', 'bush', 'mushroom', 'stump'], Density: 5, Cover: 0.5, Patch: 25, MaxSlope: 0.3, Size: [0.6, 1.2]}}},
 			'rocks': {Traits: {Scatter: {Shapes: ['rock', 'rock', 'boulder'], Density: 0.5, MinHeight: 0, MaxSlope: 0.8, Size: [0.5, 1.4]}}},
-			'grass': {Traits: {Grass: {Density: 1, Height: 0.75, Color: '#7fae4a', Root: '#2f5a22'}}},
+			'grass': {Traits: {Grass: {Density: 1, Height: 0.75, Color: '#7fae4a', Root: '#2f5a22', Clumps: 0, Patch: 24, Spread: 0.45}}},
 			'village': {Traits: {Settlement: {Houses: 8, Radius: 30}}}
 		};
 	},
@@ -303,6 +325,11 @@ Elemenx.Component('GameScene', {
 		var self = this;
 		var element = this.$Element();
 
+		/* What was put in the slot stands beside the bar of the scene, which then gives way. */
+		this.LoadingOwn = Array.prototype.some.call(element.querySelector('.elemenx-game-scene-loading').children, function (child) {
+			return child.getAttribute('role') !== 'progressbar' && !child.querySelector('[role="progressbar"]');
+		});
+
 		/* What a press had begun ends when the pointer is taken or given back: its place on the screen means nothing any more. */
 		this.LockChanged = function () {
 			if (!self.Scene) return;
@@ -342,7 +369,7 @@ Elemenx.Component('GameScene', {
 		var vectors = graphics.Vectors;
 		var view = element.ownerDocument.defaultView || window;
 		var shaders = this.Shaders(graphics);
-		var renderer = graphics.Create(canvas, {Restored: function () {
+		var renderer = graphics.Create(canvas, {Patient: true, Restored: function () {
 			build();
 		}});
 		var engine = {};
@@ -508,7 +535,7 @@ Elemenx.Component('GameScene', {
 		function canonical (raw, of, given) {
 			var kind = raw.Kind && kinds.Has(raw.Kind) ? raw.Kind : '';
 			var fields = kind || of ? kinds.Fields(kind || of) : {};
-			var common = {clip: 'Clip', soft: 'Soft', biome: 'Biome', houses: 'Houses', radius: 'Radius', type: 'Type', health: 'Health', maxhealth: 'MaxHealth', sight: 'Sight', tall: 'Tall', model: 'Model', roof: 'Roof', speed: 'Speed', shapes: 'Shapes', density: 'Density', size: 'Size', minheight: 'MinHeight', maxheight: 'MaxHeight', maxslope: 'MaxSlope', cover: 'Cover', patch: 'Patch', seed: 'Seed', blocks: 'Blocks', root: 'Root'};
+			var common = {clip: 'Clip', soft: 'Soft', biome: 'Biome', houses: 'Houses', radius: 'Radius', type: 'Type', health: 'Health', maxhealth: 'MaxHealth', sight: 'Sight', tall: 'Tall', model: 'Model', roof: 'Roof', speed: 'Speed', shapes: 'Shapes', density: 'Density', size: 'Size', minheight: 'MinHeight', maxheight: 'MaxHeight', maxslope: 'MaxSlope', cover: 'Cover', patch: 'Patch', clumps: 'Clumps', spread: 'Spread', follow: 'Follow', offset: 'Offset', wet: 'Wet', drops: 'Drops', seed: 'Seed', blocks: 'Blocks', root: 'Root'};
 			var spec = {ID: raw.ID, Kind: self.Cells ? raw.Kind || '' : kind, Parent: raw.Parent, Part: raw.Part, Values: {}, Traits: {}, Parts: []};
 
 			Object.keys(raw).forEach(function (key) {
@@ -739,9 +766,13 @@ Elemenx.Component('GameScene', {
 				var kept = key && made[spec.ID] && made[spec.ID].Key === key ? made[spec.ID].Object : null;
 				var object = kept || (spec.Restored ? JSON.parse(JSON.stringify(spec.Restored)) : make(spec));
 
-				/* A hero made again by the change of its place goes on as it was: where it stands, where it faces, what it plays. */
+				/*
+				 * A hero made again by the change of its place goes on as it was: where it stands, where it faces, what it plays; a
+				 * vehicle its speed, its gear, what opens on it, its lights and its way far at once. Regression: a change of anything
+				 * in the scene (the hour) stopped a car that was driven.
+				 */
 				if (!kept && made[spec.ID] && spec.ID === scene.Hero) {
-					['Air', 'Rise', 'Grounded', 'Facing', 'Heading', 'Spin', 'Clip', 'Frames', 'Pose', 'Pace', 'Walking', 'Back'].forEach(function (name) {
+					['Air', 'Rise', 'Grounded', 'Facing', 'Heading', 'Spin', 'Clip', 'Frames', 'Pose', 'Pace', 'Walking', 'Back', 'Car', 'Ship', 'Clock', 'Last', 'Opens', 'Controls', 'Signals', 'LightsSet', 'SignalKeys', 'Blink', 'Turned', 'Swept', 'Shifts', 'Pressed', 'Travel', 'Strokes', 'Thrust', 'Popped'].forEach(function (name) {
 						object[name] = made[spec.ID].Object[name];
 					});
 				}
@@ -749,8 +780,12 @@ Elemenx.Component('GameScene', {
 				if (spec.Restored)
 					object.Parent = spec.Parent;
 
-				if (!kept)
+				/* Its values as they were made: what changed of them while it lived goes into a recipe (Save). */
+				if (!kept) {
+					object.Composed = JSON.parse(JSON.stringify(object.Values));
+
 					crew(object);
+				}
 
 				if (key)
 					fresh[spec.ID] = {Key: key, Object: object};
@@ -1187,6 +1222,8 @@ Elemenx.Component('GameScene', {
 			gpu.ManyDepth = renderer.Program(shaders.Instanced, shaders.Depth);
 			gpu.Pbr = renderer.Program(shaders.Instanced, shaders.Pbr);
 			gpu.PbrSkinned = renderer.Program(shaders.Skinned, shaders.Pbr);
+			gpu.GlowMany = renderer.Program(shaders.Instanced, shaders.BodyGlow);
+			gpu.GlowSkinned = renderer.Program(shaders.Skinned, shaders.BodyGlow);
 			gpu.SkinDepth = renderer.Program(shaders.Skinned, shaders.Depth);
 			gpu.White = null;
 			gpu.LandDepth = renderer.Program(shaders.LandVertex, shaders.Depth);
@@ -1520,7 +1557,7 @@ Elemenx.Component('GameScene', {
 
 			var flown2 = scene.Objects[scene.Hero];
 
-			if (flown2 && flown2.Values.Vehicle && engine.VehicleStep(flown2, scene.Keys, elapsed) && engine.ShipView(flown2, elapsed)) {
+			if (flown2 && flown2.Values.Vehicle && engine.VehicleStep(flown2, engine.PadKeys(scene.Keys), elapsed) && engine.ShipView(flown2, elapsed)) {
 				scene.Eye = camera.Position.slice();
 				camera.Near = Math.max(1e-6, flown2.Size * 0.05);
 				camera.Far = Math.max(scene.Distance * 40, extent() * 6);
@@ -1559,11 +1596,20 @@ Elemenx.Component('GameScene', {
 			return {Forward: forward, Right: right, Up: vectors.Cross(right, forward)};
 		}
 
+		/* The lens: how wide it is open (Bokeh) and the distance in focus: the one given, the body of the hero, or 0 (the middle of the view). */
+		function lens () {
+			var hero = scene.Hero ? scene.Objects[scene.Hero] : null;
+			var given = number(self.BokehFocus, 0);
+
+			return {Bokeh: Math.max(0, Math.min(1, number(self.Bokeh, 0))), Focus: given > 0 ? given : hero && hero.World && scene.Eye ? vectors.Distance(vectors.Add(hero.World, [0, (hero.Size || 1) * 0.6, 0]), scene.Eye) : 0};
+		}
+
 		/* The keys of a free view in space: WASD go, Q and E turn, R and F tilt. */
 		function steer (elapsed) {
-			var keys = scene.Keys;
+			var keys = engine.PadKeys(scene.Keys);
 			var axes = viewAxes();
 			var speed = scene.Distance * 0.8 * elapsed;
+			var pad = keys.Pad;
 
 			turnKeys(keys, elapsed);
 
@@ -1578,11 +1624,50 @@ Elemenx.Component('GameScene', {
 
 			if (keys.KeyA)
 				scene.Pan = vectors.Add(scene.Pan, vectors.Scale(axes.Right, -speed));
+
+			if (pad.X || pad.Y)
+				scene.Pan = vectors.Add(scene.Pan, vectors.Add(vectors.Scale(axes.Forward, speed * pad.Y), vectors.Scale(axes.Right, speed * pad.X)));
 		}
 
-		/* Q and E turn the view, R and F tilt it. */
+		/*
+		 * The keys of a frame with the pads in them (Gamepad: a pad on the screen, a phone that leans, a real one): A is Space,
+		 * B KeyC, RB or the press of the left stick Shift (run, drift, boost), LB Alt; the sticks and the triggers as they
+		 * lean, in Pad: {X (right), Y (ahead), LookX, LookY (up), Gas, Brake}, for what moves by how far (a walk, a wheel).
+		 */
+		engine.PadKeys = function (keys) {
+			var gamepad = self.$Service('Gamepad');
+			var axes = gamepad.Axes();
+			var made = Object.assign({}, keys);
+			var buttons = {a: 'Space', b: 'KeyC', rb: 'ShiftLeft', ls: 'ShiftLeft', lb: 'AltLeft'};
+
+			Object.keys(buttons).forEach(function (button) {
+				if (gamepad.Held(button))
+					made[buttons[button]] = true;
+			});
+
+			made.Pad = {X: axes.LeftX, Y: -axes.LeftY, LookX: axes.RightX, LookY: -axes.RightY, Gas: axes.RightTrigger, Brake: axes.LeftTrigger};
+
+			return made;
+		};
+
+		/* How far ahead and aside: the keys, and the left stick of a pad as far as it leans. */
+		function leaning (keys) {
+			var pad = keys.Pad || {X: 0, Y: 0};
+			var ahead = (keys.ArrowUp || keys.KeyW ? 1 : 0) - (keys.ArrowDown || keys.KeyS ? 1 : 0) + pad.Y;
+			var aside = (keys.ArrowRight || keys.KeyD ? 1 : 0) - (keys.ArrowLeft || keys.KeyA ? 1 : 0) + pad.X;
+
+			return [Math.max(-1, Math.min(1, ahead)), Math.max(-1, Math.min(1, aside))];
+		}
+
+		/* Q and E turn the view, R and F tilt it; the right stick of a pad as far as it leans. */
 		function turnKeys (keys, elapsed) {
 			var least = scene.Ground ? -1.3 : -1.5;
+			var pad = keys.Pad;
+
+			if (pad && (pad.LookX || pad.LookY)) {
+				scene.Yaw -= pad.LookX * elapsed * 2;
+				scene.Pitch = Math.max(least, Math.min(1.5, scene.Pitch + pad.LookY * elapsed * 1.5));
+			}
 
 			if (keys.KeyQ)
 				scene.Yaw += elapsed * 1.3;
@@ -1781,8 +1866,6 @@ Elemenx.Component('GameScene', {
 			if (!scene.Ground)
 				Object.assign(shade, localLights());
 
-			posted = engine.PostBegin();
-
 			var common = Object.assign({uViewProjection: matrix, uCamera: [0, 0, 0], uLightPositions: light.Positions, uLightColors: light.Colors, uLightCount: light.Count, uSkyLight: scene.Ground ? scene.Ground.SkyLight : [0.004, 0.004, 0.006], uFloorLight: scene.Ground ? scene.Ground.FloorLight : [0.004, 0.004, 0.006], uAmbient: scene.Ground ? [0.17, 0.19, 0.23] : scene.CosmosShade ? [0.025 + scene.CosmosShade[0], 0.027 + scene.CosmosShade[1], 0.035 + scene.CosmosShade[2]] : [0.025, 0.027, 0.035], uOccluderCount: 0, uOccluders: new Array(16).fill(0), uTime: scene.Time, uHighlight: [0, 0, 0, 0], uWind: scene.Gust || 0, uWet: scene.Ground ? scene.Ground.Air.Wet : 0, uSnowed: scene.Ground ? scene.Ground.Air.Cover || 0 : 0, uRainDrops: scene.Ground ? scene.Ground.Air.Rain : 0, uEyeAt: scene.Eye || [0, 0, 0], uTime2: scene.Seconds % 1000}, shade);
 			var selected = scene.Selected ? scene.Objects[scene.Selected] : null;
 			var later = [];
@@ -1811,6 +1894,29 @@ Elemenx.Component('GameScene', {
 
 				return selected && (selected === object || selected.Root === object) ? [color[0], color[1], color[2], 0.9] : [0, 0, 0, 0];
 			}
+
+			/*
+			 * The mirrors first, each the world drawn again as its plane reflects it, from the eye at the origin: the world through
+			 * the reflection, a near plane laid along the mirror (what is behind it is not in it), the triangles turning the other way.
+			 */
+			var mirrored = scene.Ground && !scene.Camera.Ortho ? mirrorsOf(projection, viewMatrix, function (vp, eye) {
+				var mine = Object.assign({}, common, {uViewProjection: vp, uCamera: eye, uMoving: 0, uSteady: 0, uCut: [0, 0, 0, 0]});
+
+				drawGround(vp, nodes, shade, true);
+
+				Object.keys(models).forEach(function (name) {
+					var list = models[name];
+					if (list.Material && seeThrough(list.Material)) return;
+
+					if (list.Material) renderer.Draw(shape(name), list.Skinned ? gpu.PbrSkinned : gpu.Pbr, Object.assign({}, mine, {uOrigin: originOf(list), uPalette: list.Skinned ? palette(list.Skinned) : gpu.White, uJointOffset: list.Offset, uSoftness: list.Soft}, surface(list)), {Cull: list.Material.DoubleSided ? 'none' : 'back'});
+					else renderer.Draw(shape(name), gpu.Many, Object.assign({}, mine, {uShine: list.Matte ? 8 : 36, uSpecular: list.Matte ? 0.05 : 0.5, uRough: list.Rough, uOrigin: originOf(list)}));
+				});
+
+				if (self.Graphics().Level !== 'low')
+					engine.ScatterDraw(mine, vp);
+			}) : {};
+
+			posted = engine.PostBegin();
 
 			renderer.Clear([background[0], background[1], background[2], 1]);
 
@@ -1904,6 +2010,17 @@ Elemenx.Component('GameScene', {
 				renderer.Draw(shape(name), gpu.Many, uniforms({uShine: list.Matte ? 8 : 36, uSpecular: list.Matte ? 0.05 : 0.5, uRough: list.Rough, uOrigin: originOf(list), uMoving: list.Still ? 0 : 1}));
 			});
 
+			/* The mirrors as panes of what they show, the glass after all it shows through. */
+			if (scene.Ground)
+				drawPanes(uniforms, mirrored, later);
+
+			/* What glows: its surfaces once more, their light added, brightest at their edges; bloom spreads it round them. */
+			Object.keys(scene.GlowLists || {}).forEach(function (name) {
+				var list = scene.GlowLists[name];
+				if (list.Count)
+					renderer.Draw(shape(name), list.Skinned ? gpu.GlowSkinned : gpu.GlowMany, uniforms({uOrigin: originOf(list), uPalette: list.Skinned ? palette(list.Skinned) : gpu.White, uJointOffset: list.Offset, uTime: scene.Seconds, uFlat: list.Flat ? 1 : 0}), {Blend: 'add', DepthWrite: false, Depth: 'lequal', Cull: list.Material && list.Material.DoubleSided ? 'none' : 'back'});
+			});
+
 			engine.ScatterDraw(common, matrix);
 
 			/* What shines has a glow of its own where it stands, but a lamp a body carries: it would hang over it. */
@@ -1929,6 +2046,20 @@ Elemenx.Component('GameScene', {
 				each();
 			});
 
+			/*
+			 * A ship on its way far at once: the stars drawn out behind all that stands; as the tunnel opens it comes nearer, to
+			 * just behind the ship, and hides what it goes by.
+			 */
+			if (!scene.Ground && scene.Warp && scene.Objects[scene.Warp.ID] && scene.Objects[scene.Warp.ID].Travel) {
+				var traveller = scene.Objects[scene.Warp.ID];
+				var forward = vectors.Normalize(vectors.Subtract(camera.Target, camera.Position));
+				var furthest = camera.Far * 0.9;
+				var opened = Math.min(1, scene.Warp.Tunnel * 2);
+				var reach = furthest + (vectors.Distance(traveller.World, camera.Position) * 2.5 - furthest) * opened * opened * (3 - 2 * opened);
+
+				engine.CosmosWarp(plain, Object.assign({Depth: Math.min(0.99999, graphics.Apply(plain, vectors.Scale(forward, reach))[2])}, scene.Warp));
+			}
+
 			if (self.Origin && self.Origin !== 'false')
 				drawOrigin(matrix);
 
@@ -1940,7 +2071,7 @@ Elemenx.Component('GameScene', {
 			}
 
 			if (posted)
-				engine.PostEnd(scene.Ground ? {Matrix: matrix, Plain: plain, Eye: scene.Eye, Sun: scene.Ground.Sun, SunColor: scene.Ground.SunColor, Night: scene.Ground.Night, Shimmer: engine.EffectHeat(matrix, width / Math.max(1, height)), Exposure: self.Exposure, Air: scene.Ground.AirTint, Veil: scene.Ground.Air.Fog * (scene.Ground.Air.Rain > 0.05 ? 1 : 0.6), Clouds: scene.Camera.Ortho ? null : groundClouds(), Glare: scene.Ground.Glare, AirLight: scene.Ground.AirLight, AirGlow: scene.Ground.Glow, AirGlowWay: scene.Ground.GlowWay, Fog: scene.Camera.Ortho ? 0 : (scene.Ground.Field.Whole ? 0.12 : 0.4) / Math.max(scene.Ground.Field.Size, 300) + scene.Ground.Air.Fog * 0.011, FogLow: scene.Camera.Ortho ? [0, 0, 0] : [Math.max(0, scene.Eye[1] - Math.max(0, scene.Ground.Field.Height(scene.Eye[0], scene.Eye[2]))), 1 / Math.max(6, scene.Ground.Field.Top * 0.2), scene.Ground.Air.Fog * 0.03], Sky: true, Reach: Math.max(1, scene.Distance * 0.05)} : Object.assign({Matrix: matrix, Plain: plain}, spaceSun(plain, camera)));
+				engine.PostEnd(scene.Ground ? {Matrix: matrix, Plain: plain, Eye: scene.Eye, Sun: scene.Ground.Sun, SunColor: scene.Ground.SunColor, Night: scene.Ground.Night, Shimmer: engine.EffectHeat(matrix, width / Math.max(1, height)), Exposure: self.Exposure, Air: scene.Ground.AirTint, Veil: scene.Ground.Air.Fog * (scene.Ground.Air.Rain > 0.05 ? 1 : 0.6), Clouds: scene.Camera.Ortho ? null : groundClouds(), Glare: scene.Ground.Glare, AirLight: scene.Ground.AirLight, AirGlow: scene.Ground.Glow, AirGlowWay: scene.Ground.GlowWay, Fog: scene.Camera.Ortho ? 0 : (scene.Ground.Field.Whole ? 0.12 : 0.4) / Math.max(scene.Ground.Field.Size, 300) + scene.Ground.Air.Fog * 0.011, FogLow: scene.Camera.Ortho ? [0, 0, 0] : [Math.max(0, scene.Eye[1] - Math.max(0, scene.Ground.Field.Height(scene.Eye[0], scene.Eye[2]))), 1 / Math.max(6, scene.Ground.Field.Top * 0.2), scene.Ground.Air.Fog * 0.03], Sky: true, Reach: Math.max(1, scene.Distance * 0.05), Bokeh: lens().Bokeh, Focus: lens().Focus} : Object.assign({Matrix: matrix, Plain: plain}, spaceSun(plain, camera), lens()));
 		}
 
 		function nearestStar () {
@@ -1979,11 +2110,19 @@ Elemenx.Component('GameScene', {
 		/* The copies of the shapes of a frame: the rocks of the belts, the models of the objects, their pieces as they stand now. */
 		function gather () {
 			var models = scene.Lists = scene.Lists || {};
+			var glows = scene.GlowLists = scene.GlowLists || {};
 			var drawn = {};
 
 			Object.keys(models).forEach(function (name) {
 				models[name].Count = 0;
 			});
+
+			Object.keys(glows).forEach(function (name) {
+				glows[name].Count = 0;
+			});
+
+			if (engine.EffectGlow)
+				engine.EffectGlow();
 
 			scene.Active.forEach(function (object) {
 				var parent = parentOf(object);
@@ -2011,6 +2150,11 @@ Elemenx.Component('GameScene', {
 
 				if (models[name].Count)
 					drawn[name] = models[name];
+			});
+
+			Object.keys(glows).forEach(function (name) {
+				if (glows[name].Count)
+					upload(name, glows[name]);
 			});
 
 			if (!scene.StillLists) {
@@ -2222,13 +2366,14 @@ Elemenx.Component('GameScene', {
 					var wheel = object.Wheels ? object.Wheels[piece.ID] : null;
 					var shifted = piece.Opening ? engine.OpeningMove(object, piece) : null;
 					var whole = shifted ? graphics.Multiply(base, shifted) : base;
+					var lit = piece.Opening ? engine.LampGlow(object, piece) : null;
 
-					batch(models, (still ? 'still:' : '') + made.Key + '/' + piece.ID, object.World, piece.Skin !== -1 ? whole : graphics.Multiply(whole, wheel ? graphics.Multiply(engine.WheelTurn(object, wheel), rest) : rest), color, {Rough: 0, Geometry: piece.Geometry, Still: still, Material: piece.Material, Asset: made.Asset, Skinned: piece.Skin !== -1 ? made : null, Offset: piece.JointOffset, Frames: piece.Skin !== -1 ? object.Frames || [0, 0, 0, 0] : null, Soft: softOf(object, made, piece)});
+					batch(models, (still ? 'still:' : '') + made.Key + '/' + piece.ID, object.World, piece.Skin !== -1 ? whole : graphics.Multiply(whole, wheel ? graphics.Multiply(engine.WheelTurn(object, wheel), rest) : rest), color, {Rough: 0, Geometry: piece.Geometry, Still: still, Material: piece.Material, Asset: made.Asset, Skinned: piece.Skin !== -1 ? made : null, Offset: piece.JointOffset, Frames: piece.Skin !== -1 ? object.Frames || [0, 0, 0, 0] : null, Soft: softOf(object, made, piece), Glow: object.Glow && object.Glow.Body ? object.Glow.Color : lit, Lit: !!lit && !(object.Glow && object.Glow.Body), Wet: object.Values.Wet, Drops: object.Values.Drops});
 
 					return;
 				}
 
-				batch(models, (still ? 'still:' : '') + made.Key + '/' + piece.ID, object.World, pose ? graphics.Multiply(base, pose[piece.ID]) : base, piece.Team ? team : color, {Matte: made.Matte, Rough: made.Matte ? 0.5 : 0.15, Sway: made.Sway, Geometry: piece.Geometry, Still: still});
+				batch(models, (still ? 'still:' : '') + made.Key + '/' + piece.ID, object.World, pose ? graphics.Multiply(base, pose[piece.ID]) : base, piece.Team ? team : color, {Matte: made.Matte, Rough: made.Matte ? 0.5 : 0.15, Sway: made.Sway, Geometry: piece.Geometry, Still: still, Glow: object.Glow && object.Glow.Body ? object.Glow.Color : null, Wet: object.Values.Wet, Drops: object.Values.Drops});
 			});
 		}
 
@@ -2369,7 +2514,7 @@ Elemenx.Component('GameScene', {
 			place = graphics.Multiply(base, graphics.Multiply(bone, place));
 
 			item.Pieces.forEach(function (piece) {
-				batch(models, item.Key + '/' + piece.ID, object.World, graphics.Multiply(place, piece.Rest), [1, 1, 1], {Rough: 0, Geometry: piece.Geometry, Material: piece.Material, Asset: item.Asset, Skinned: null, Offset: piece.JointOffset, Frames: null});
+				batch(models, item.Key + '/' + piece.ID, object.World, graphics.Multiply(place, piece.Rest), [1, 1, 1], {Rough: 0, Geometry: piece.Geometry, Material: piece.Material, Asset: item.Asset, Skinned: null, Offset: piece.JointOffset, Frames: null, Glow: object.Glow && object.Glow.Held ? object.Glow.Color : null, Wet: object.Values.Wet, Drops: object.Values.Drops});
 			});
 		}
 
@@ -2381,8 +2526,12 @@ Elemenx.Component('GameScene', {
 			var at = settings.Still ? world : local(world);
 			var i;
 
+			/* What glows is drawn once more, apart: its light added over it (Glow, the color of its light). */
+			if (settings.Glow && !settings.Still)
+				batch(scene.GlowLists, (settings.Lit ? 'lit:' : 'glow:') + name, world, matrix, settings.Glow, Object.assign({}, settings, {Glow: null}));
+
 			if (!list) {
-				list = models[name] = {Count: 0, Capacity: 0, Matte: !!settings.Matte, Rough: settings.Rough || 0, Geometry: settings.Geometry || null, Still: !!settings.Still, Material: settings.Material || null, Asset: settings.Asset || null, Skinned: settings.Skinned || null, Offset: settings.Offset || 0, Soft: settings.Soft || 0};
+				list = models[name] = {Count: 0, Capacity: 0, Matte: !!settings.Matte, Rough: settings.Rough || 0, Geometry: settings.Geometry || null, Still: !!settings.Still, Material: settings.Material || null, Asset: settings.Asset || null, Skinned: settings.Skinned || null, Offset: settings.Offset || 0, Soft: settings.Soft || 0, Flat: !!settings.Lit};
 			}
 
 			if (list.Count === list.Capacity)
@@ -2408,10 +2557,19 @@ Elemenx.Component('GameScene', {
 			list.Tints[i + 2] = color[2];
 			list.Tints[i + 3] = world[0] * 0.13 + world[2] * 0.17;
 
+			/* Its own wet and drops, 1 + them; 0, those of the weather. */
+			list.X[i + 3] = told(settings.Wet) ? 1 + Math.max(0, Math.min(1, Number(settings.Wet))) : 0;
+			list.Y[i + 3] = told(settings.Drops) ? 1 + Math.max(0, Math.min(1, Number(settings.Drops))) : 0;
+
 			if (settings.Frames)
 				list.Frames.set(settings.Frames, i);
 
 			list.Count++;
+		}
+
+		/* A number told: not empty, not null, a number. */
+		function told (value) {
+			return value !== undefined && value !== null && value !== '' && !isNaN(Number(value));
 		}
 
 		/* The arrays of a list twice as large, kept from frame to frame. */
@@ -2482,6 +2640,19 @@ Elemenx.Component('GameScene', {
 		 * A map of all of a ground from above, colors and heights: of the land alone, or with all that stands on it. It is
 		 * what the light of a field is worked out on.
 		 */
+		/* All the ground in one piece, for the map from above: of noise, asked of a worker; true once it is there. */
+		engine.GroundTopReady = function () {
+			var ground = scene.Ground;
+			var field = ground.Field;
+			if (ground.TopMesh || !field.Options) return true;
+
+			askPiece(ground, 'top', 'Flat', [0, 0, field.Size, 128], function (piece) {
+				ground.TopMesh = renderer.Mesh(piece || field.Chunk(0, 0, field.Size, 128));
+			});
+
+			return !!ground.TopMesh;
+		};
+
 		engine.GroundTop = function (matrix, things, view) {
 			var ground = scene.Ground;
 			var field = ground.Field;
@@ -3258,8 +3429,8 @@ Elemenx.Component('GameScene', {
 			var right = [Math.cos(yaw), 0, -Math.sin(yaw)];
 			var running = keys.ShiftLeft || keys.ShiftRight;
 			var sprint = running && (keys.AltLeft || keys.AltRight);
-			var ahead = (keys.ArrowUp || keys.KeyW ? 1 : 0) - (keys.ArrowDown || keys.KeyS ? 1 : 0);
-			var aside = (keys.ArrowRight || keys.KeyD ? 1 : 0) - (keys.ArrowLeft || keys.KeyA ? 1 : 0);
+			var ahead = leaning(keys)[0];
+			var aside = leaning(keys)[1];
 			var way = vectors.Add(vectors.Scale(forward, ahead), vectors.Scale(right, aside));
 			var x = number(hero.Values.X, 0);
 			var z = number(hero.Values.Y, 0);
@@ -3422,7 +3593,7 @@ Elemenx.Component('GameScene', {
 			var field = ground.Field;
 			var camera = scene.Camera;
 			var focus = scene.Objects[scene.Hero] || (scene.Focus ? scene.Objects[scene.Focus] : null);
-			var keys = ground.Keys;
+			var keys = engine.PadKeys(ground.Keys);
 			var forward = [-Math.sin(scene.Yaw), 0, -Math.cos(scene.Yaw)];
 			var right = [Math.cos(scene.Yaw), 0, -Math.sin(scene.Yaw)];
 			var speed = scene.Distance * 0.9 * elapsed;
@@ -3443,6 +3614,9 @@ Elemenx.Component('GameScene', {
 
 				if (keys.ArrowLeft || keys.KeyA)
 					ground.Target = vectors.Add(ground.Target, vectors.Scale(right, -speed));
+
+				if (keys.Pad && (keys.Pad.X || keys.Pad.Y))
+					ground.Target = vectors.Add(ground.Target, vectors.Add(vectors.Scale(forward, speed * keys.Pad.Y), vectors.Scale(right, speed * keys.Pad.X)));
 			}
 
 			if (scene.Driven) {
@@ -3621,6 +3795,32 @@ Elemenx.Component('GameScene', {
 			camera.Far = far * 2;
 		}
 
+		/*
+		 * A square of a ground of noise asked of a worker (args of Terrain.Piece): until it comes it is missing, as one not
+		 * made yet. What came for a ground gone, or before its roads changed, is let go; a worker that failed leaves it to
+		 * the page.
+		 */
+		function askPiece (owner, key, shape, args, made) {
+			var field = owner.Field;
+			var roads = field.Roads;
+			var asked = owner.Asked = owner.Asked || {};
+			var token = {};
+
+			if (asked[key]) return;
+
+			asked[key] = token;
+
+			self.$Service('Terrain').Work().Run('Terrain', 'Piece', [shape, field.Options, roads || null, args], function (error, piece) {
+				if (scene.Gone || asked[key] !== token) return;
+
+				delete asked[key];
+
+				if (field.Roads !== roads || owner !== scene.Ground && owner !== scene.Surface) return;
+
+				made(error ? null : piece);
+			});
+		}
+
 		/* The squares of the ground in view, the finer the nearer the eye; each made once, a few a frame. */
 		function groundPatches () {
 			var ground = scene.Ground;
@@ -3643,8 +3843,19 @@ Elemenx.Component('GameScene', {
 				return x.toFixed(3) + ':' + z.toFixed(3) + ':' + level;
 			}
 
+			/* The first square at once, the others of noise by a worker; each knows the height of its middle. */
 			function build (x, z, size, level) {
-				ground.Nodes[keyOf(x, z, level)] = {Mesh: renderer.Mesh(field.Chunk(x, z, size, 32)), Center: [x, 0, z], Used: ground.Frame};
+				var key = keyOf(x, z, level);
+
+				if (level && field.Options) {
+					askPiece(ground, key, 'Flat', [x, z, size, 32], function (piece) {
+						ground.Nodes[key] = {Mesh: renderer.Mesh(piece || field.Chunk(x, z, size, 32)), Center: [x, 0, z], Top: Math.max(0, field.Height(x, z)), Used: ground.Frame};
+					});
+
+					return;
+				}
+
+				ground.Nodes[key] = {Mesh: renderer.Mesh(field.Chunk(x, z, size, 32)), Center: [x, 0, z], Top: Math.max(0, field.Height(x, z)), Used: ground.Frame};
 			}
 
 			/*
@@ -3652,8 +3863,8 @@ Elemenx.Component('GameScene', {
 			 * never a hole in the ground. Squares in use keep their parents, so going back up needs nothing to be made.
 			 */
 			function visit (x, z, size, level) {
-				var near = vectors.Distance(scene.Eye, [x, Math.max(0, field.Height(x, z)), z]);
 				var node = ground.Nodes[keyOf(x, z, level)];
+				var near = vectors.Distance(scene.Eye, [x, node.Top, z]);
 				var half = size / 2;
 				var parts = [[x - half / 2, z - half / 2], [x + half / 2, z - half / 2], [x - half / 2, z + half / 2], [x + half / 2, z + half / 2]];
 				var absent;
@@ -3696,7 +3907,7 @@ Elemenx.Component('GameScene', {
 			missing.some(function (one) {
 				build(one.X, one.Z, one.Size, one.Level);
 
-				return window.performance.now() - started > 4;
+				return window.performance.now() - started > 4 || field.Options && terrain.Work().Waiting() > 8;
 			});
 
 			return wanted;
@@ -3783,7 +3994,7 @@ Elemenx.Component('GameScene', {
 				var at = lightPlace(object, settings);
 
 				return {Object: object, Settings: settings, At: at, Far: vectors.Distance(at, scene.Eye)};
-			}).concat(builtLamps()).concat(engine.EffectLamps()).map(function (lamp) {
+			}).concat(builtLamps()).concat(engine.EffectLamps()).concat(engine.VehicleLamps()).map(function (lamp) {
 				lamp.Far = vectors.Distance(lamp.At, from);
 
 				return lamp;
@@ -3844,14 +4055,307 @@ Elemenx.Component('GameScene', {
 		}
 
 		/* The sky, the ground and its water, under the things that stand on it. */
-		function drawGround (matrix, nodes, shade) {
+		/*
+		 * A pane of a mirror or of glass: its middle at X and Y, Lift over the ground (or at Z), turned by Yaw and then
+		 * leaned by Pitch (degrees); Width and Height. {Center, Normal, Model (relative to the eye), Width, Height}.
+		 */
+		function paneOf (object, settings) {
+			var x = number(object.Values.X, 0);
+			var z = number(object.Values.Y, 0);
+			var center = object.Values.Z !== undefined && object.Values.Z !== '' ? [x, number(object.Values.Z, 0), z] : [x, Math.max(0, scene.Ground.Field.Height(x, z)) + number(settings.Lift, 1), z];
+			var turn = graphics.Multiply(graphics.Rotation([0, 1, 0], number(settings.Yaw, 0) * Math.PI / 180), graphics.Rotation([1, 0, 0], number(settings.Pitch, 0) * Math.PI / 180));
+			var width = number(settings.Width, 2);
+			var height = number(settings.Height, 2);
+			var at = vectors.Subtract(center, scene.Eye);
+
+			return {Center: center, Normal: graphics.Apply(turn, [0, 0, 1]), Width: width, Height: height, Model: graphics.Multiply(graphics.Translation(at[0], at[1], at[2]), graphics.Multiply(turn, graphics.Multiply(graphics.Rotation([1, 0, 0], Math.PI / 2), graphics.Scaling(width, 1, height))))};
+		}
+
+		/*
+		 * A pane a vehicle carries (its Mirrors and Screens: {At, Normal, Up, Width, Height} in its model), where it stands now: in the
+		 * size of the vehicle and turned with it.
+		 */
+		function carPane (object, part) {
+			var size = object.Scaled || [object.Size || 1, object.Size || 1, object.Size || 1];
+			var turn = object.Turn || graphics.Identity();
+			var base = graphics.Multiply(turn, graphics.Scaling(size[0], size[1], size[2]));
+			var center = vectors.Add(object.World, graphics.Apply(base, part.At || [0, 0, 0]));
+			var normal = vectors.Normalize(vectors.Subtract(graphics.Apply(turn, part.Normal || [0, 0, -1]), graphics.Apply(turn, [0, 0, 0])));
+			var up = vectors.Normalize(vectors.Subtract(graphics.Apply(turn, part.Up || [0, 1, 0]), graphics.Apply(turn, [0, 0, 0])));
+			var right = vectors.Normalize(vectors.Cross(up, normal));
+			var width = number(part.Width, 0.2) * size[0];
+			var height = number(part.Height, 0.1) * size[1];
+			var at = vectors.Subtract(center, scene.Eye);
+
+			up = vectors.Cross(normal, right);
+
+			return {Center: center, Normal: normal, Width: width, Height: height, Model: graphics.Multiply(graphics.Translation(at[0], at[1], at[2]), graphics.Multiply([right[0], right[1], right[2], 0, up[0], up[1], up[2], 0, normal[0], normal[1], normal[2], 0, 0, 0, 0, 1], graphics.Multiply(graphics.Rotation([1, 0, 0], Math.PI / 2), graphics.Scaling(width, 1, height))))};
+		}
+
+		/* The vehicle the keys drive, if it carries mirrors or screens: only its own are drawn, the others' are too small to see. */
+		function drivenCar () {
+			var hero = scene.Objects[scene.Hero];
+
+			return hero && hero.World && hero.Values.Vehicle && (hero.Values.Vehicle.Mirrors || hero.Values.Vehicle.Screens) ? hero : null;
+		}
+
+		/* What reflects the world: mirrors and glass that reflects, each with its pane; the mirrors of the car that is driven, small. */
+		function reflectorsOf () {
+			var car = drivenCar();
+
+			return scene.Active.filter(reflects).map(function (object) {
+				var settings = trait(object, 'Mirror') || trait(object, 'Glass');
+
+				return {Key: object.ID, Pane: paneOf(object, settings), Settings: settings};
+			}).concat(car ? (car.Values.Vehicle.Mirrors || []).map(function (mirror, index) {
+				return {Key: 'car:' + car.ID + ':' + index, Pane: carPane(car, mirror), Settings: Object.assign({Every: 2}, mirror), Small: true};
+			}) : []);
+		}
+
+		/* What has a picture of the world reflected: a mirror, glass that reflects at all (Reflect). */
+		function reflects (object) {
+			var glass = trait(object, 'Glass');
+
+			return !!trait(object, 'Mirror') || !!glass && number(glass.Reflect, 0.35) > 0;
+		}
+
+		/* A projection whose near plane is a plane of the view ([a, b, c, d], what it keeps on its side): Lengyel's oblique frustum. */
+		function oblique (projection, plane) {
+			var m = projection.slice();
+			var q = [(Math.sign(plane[0]) + m[8]) / m[0], (Math.sign(plane[1]) + m[9]) / m[5], -1, (1 + m[10]) / m[14]];
+			var s = 2 / (plane[0] * q[0] + plane[1] * q[1] + plane[2] * q[2] + plane[3] * q[3]);
+
+			m[2] = plane[0] * s;
+			m[6] = plane[1] * s;
+			m[10] = plane[2] * s + 1;
+			m[14] = plane[3] * s;
+
+			return m;
+		}
+
+		/*
+		 * The mirrors and the glass in view, the nearest first (one at low and medium, two at high, three at ultra): each its picture, the world
+		 * drawn by world(viewProjection, eye) at half the size (a quarter for the mirrors of a car), made again every Every frames. A
+		 * mirror seen from behind shows nothing.
+		 */
+		function mirrorsOf (projection, view, world) {
+			var level = self.Graphics().Level;
+			var most = level === 'ultra' ? 3 : level === 'high' ? 2 : 1;
+			var made = {};
+			var kept = gpu.Mirrors = gpu.Mirrors || {};
+			var tick = scene.MirrorTick = (scene.MirrorTick || 0) + 1;
+			var all = reflectorsOf();
+			var keys = {};
+
+			all.map(function (one) {
+				var at = vectors.Subtract(one.Pane.Center, scene.Eye);
+
+				keys[one.Key] = true;
+
+				return Object.assign(one, {At: at, Far: vectors.Length(at), Seen: vectors.Dot(at, one.Pane.Normal) < 0});
+			}).filter(function (one) {
+				var seen = graphics.Apply(graphics.Multiply(projection, view), one.At);
+
+				return one.Seen && (one.Far < Math.max(one.Pane.Width, one.Pane.Height) * 2 || Math.abs(seen[0]) < 1.4 && Math.abs(seen[1]) < 1.4 && seen[2] < 1);
+			}).sort(function (a, b) {
+				return a.Far - b.Far;
+			}).slice(0, most).forEach(function (one) {
+				var settings = one.Settings;
+				var target = kept[one.Key];
+				var width = Math.max(1, renderer.Width >> (one.Small ? 2 : 1));
+				var height = Math.max(1, renderer.Height >> (one.Small ? 2 : 1));
+				var n = one.Pane.Normal;
+				var d = vectors.Dot(n, one.At);
+				var reflection = [1 - 2 * n[0] * n[0], -2 * n[1] * n[0], -2 * n[2] * n[0], 0, -2 * n[0] * n[1], 1 - 2 * n[1] * n[1], -2 * n[2] * n[1], 0, -2 * n[0] * n[2], -2 * n[1] * n[2], 1 - 2 * n[2] * n[2], 0, 2 * d * n[0], 2 * d * n[1], 2 * d * n[2], 1];
+				var inverse = graphics.Invert(view);
+				var plane = [-n[0], -n[1], -n[2], d];
+				var near = [0, 1, 2, 3].map(function (row) {
+					return inverse[row * 4] * plane[0] + inverse[row * 4 + 1] * plane[1] + inverse[row * 4 + 2] * plane[2] + inverse[row * 4 + 3] * plane[3];
+				});
+
+				if (!target || target.Width !== width || target.Height !== height) {
+					if (target)
+						target.Destroy();
+
+					target = kept[one.Key] = renderer.Target(width, height, {Depth: true, Float: true, Mipmaps: true});
+					target.Drawn = false;
+				}
+
+				made[one.Key] = target;
+
+				if (target.Drawn && tick % Math.max(1, Math.round(number(settings.Every, 1)))) return;
+
+				target.Begin();
+
+				renderer.Clear([0, 0, 0, 1]);
+				renderer.Winding(true);
+
+				world(graphics.Multiply(oblique(projection, near), graphics.Multiply(view, reflection)), [2 * d * n[0], 2 * d * n[1], 2 * d * n[2]]);
+
+				renderer.Winding(false);
+
+				target.End();
+
+				target.Drawn = true;
+			});
+
+			/* What no longer reflects lets its picture go. */
+			Object.keys(kept).forEach(function (id) {
+				if (!keys[id]) {
+					kept[id].Destroy();
+
+					delete kept[id];
+				}
+			});
+
+			return made;
+		}
+
+		/*
+		 * The panes: a mirror opaque, as clear as Strength and as soft as Blur, Tint over it; glass after all, blended over what
+		 * is behind it without touching its alpha (how glossy it is: the reflections of the screen read it).
+		 */
+		function drawPanes (uniforms, mirrored, later) {
+			var ground = scene.Ground;
+			var white = gpu.White = gpu.White || renderer.Texture({Width: 1, Height: 1, Data: new Uint8Array([255, 255, 255, 255])}, {Nearest: true});
+
+			gpu.Pane = gpu.Pane || renderer.Mesh(graphics.Plane({Width: 1, Depth: 1, Segments: 1}));
+			gpu.Mirror = gpu.Mirror || renderer.Program(shaders.PaneVertex, shaders.Mirror);
+			gpu.Glass = gpu.Glass || renderer.Program(shaders.PaneVertex, shaders.Glass);
+
+			scene.Active.forEach(function (object) {
+				var mirror = trait(object, 'Mirror');
+				var glass = trait(object, 'Glass');
+				var pane;
+
+				if (mirror) {
+					pane = paneOf(object, mirror);
+
+					renderer.Draw(gpu.Pane, gpu.Mirror, uniforms({uModel: pane.Model, uMirror: mirrored[object.ID] ? mirrored[object.ID].Textures[0] : white, uOn: mirrored[object.ID] ? 1 : 0, uScreen: [renderer.Width, renderer.Height], uSize: [pane.Width, pane.Height], uSkyLight: ground.SkyLight, uTint: paint(mirror.Tint || '#ffffff').slice(0, 3), uBlur: Math.max(0, Math.min(1, number(mirror.Blur, 0))), uStrength: Math.max(0, Math.min(1, number(mirror.Strength, 0.92)))}), {Cull: 'none'});
+				}
+
+				if (glass) {
+					later.push(function () {
+						pane = paneOf(object, glass);
+
+						renderer.Draw(gpu.Pane, gpu.Glass, uniforms({uModel: pane.Model, uSize: [pane.Width, pane.Height], uMirror: mirrored[object.ID] ? mirrored[object.ID].Textures[0] : white, uOn: mirrored[object.ID] ? 1 : 0, uScreen: [renderer.Width, renderer.Height], uTint: paint(glass.Tint || '#cfe6f0').slice(0, 3), uClarity: Math.max(0, Math.min(1, number(glass.Clarity, 0.88))), uFrost: Math.max(0, Math.min(1, number(glass.Frost, 0))), uReflect: Math.max(0, Math.min(1, number(glass.Reflect, 0.35))), uSun: ground.Sun, uSunColor: ground.SunColor, uSkyLight: ground.SkyLight}), {Blend: 'over', DepthWrite: false, Cull: 'none'});
+					});
+				}
+			});
+
+			var car = drivenCar();
+			if (!car) return;
+
+			/* The mirrors of the car that is driven, and its screens: pictures of what the page shows. */
+			(car.Values.Vehicle.Mirrors || []).forEach(function (mirror, index) {
+				var key = 'car:' + car.ID + ':' + index;
+				var pane = carPane(car, mirror);
+
+				renderer.Draw(gpu.Pane, gpu.Mirror, uniforms({uModel: pane.Model, uMirror: mirrored[key] ? mirrored[key].Textures[0] : white, uOn: mirrored[key] ? 1 : 0, uScreen: [renderer.Width, renderer.Height], uSize: [pane.Width, pane.Height], uSkyLight: ground.SkyLight, uTint: paint(mirror.Tint || '#ffffff').slice(0, 3), uBlur: Math.max(0, Math.min(1, number(mirror.Blur, 0))), uStrength: Math.max(0, Math.min(1, number(mirror.Strength, 0.85)))}), {Cull: 'none'});
+			});
+
+			gpu.ScreenProgram = gpu.ScreenProgram || renderer.Program(shaders.PaneVertex, shaders.Screen);
+
+			(car.Values.Vehicle.Screens || []).forEach(function (screen, index) {
+				var picture = screenOf(car, screen, index);
+				var pane = carPane(car, screen);
+
+				if (picture)
+					renderer.Draw(gpu.Pane, gpu.ScreenProgram, uniforms({uModel: pane.Model, uPicture: picture, uBright: number(screen.Bright, 1)}), {Cull: 'none'});
+			});
+		}
+
+		/*
+		 * The picture of a screen of a car: an element of the page ([data-screen] of its Source, in the screens slot), drawn as it
+		 * is styled into a picture (SVG foreignObject) every Every seconds (0.15), Pixels [width, height] (512 by 256). Null before
+		 * its first picture, or where the browser cannot draw it.
+		 */
+		function screenOf (car, screen, index) {
+			var key = 'screen:' + car.ID + ':' + index;
+			var state = (gpu.Screens = gpu.Screens || {})[key] = gpu.Screens[key] || {At: 0};
+			var moment = view.performance ? view.performance.now() : Date.now();
+			var element = self.$Element().querySelector('[data-screen="' + String(screen.Source || '') + '"]');
+			var pixels = screen.Pixels || [512, 256];
+
+			if (element && !state.Busy && !state.Failed && moment - state.At > number(screen.Every, 0.15) * 1000) {
+				state.Busy = true;
+
+				engine.Rasterize(element, pixels[0], pixels[1], function (error, canvas) {
+					state.Busy = false;
+					state.At = moment;
+
+					if (error) {
+						state.Failed = error;
+
+						return;
+					}
+
+					if (state.Texture) state.Texture.Update(canvas);
+					else state.Texture = renderer.Texture(canvas, {Mipmaps: true});
+				});
+			}
+
+			return state.Texture || null;
+		}
+
+		/*
+		 * An element of the page as a picture: a copy of it with every style it is shown with written on it, in an SVG foreignObject,
+		 * drawn into a canvas of width by height. callback(error, canvas).
+		 */
+		engine.Rasterize = function (element, width, height, callback) {
+			var document = element.ownerDocument;
+			var copy = element.cloneNode(true);
+			var canvas = document.createElement('canvas');
+			var picture = new view.Image();
+
+			/* Each copy takes the styles its original is shown with: the picture has no stylesheet of the page. */
+			function styled (original, made) {
+				var style;
+				var i;
+
+				if (original.nodeType !== 1) return;
+
+				style = view.getComputedStyle(original);
+
+				for (i = 0; i < style.length; i++)
+					made.style.setProperty(style[i], style.getPropertyValue(style[i]));
+
+				for (i = 0; i < original.childNodes.length; i++)
+					styled(original.childNodes[i], made.childNodes[i]);
+			}
+
+			styled(element, copy);
+
+			copy.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
+
+			copy.style.margin = '0';
+			copy.style.width = width + 'px';
+			copy.style.height = height + 'px';
+
+			canvas.width = width;
+			canvas.height = height;
+
+			picture.onload = function () {
+				canvas.getContext('2d').drawImage(picture, 0, 0, width, height);
+
+				callback(null, canvas);
+			};
+
+			picture.onerror = function () {
+				callback(new Error('Elemenx GameScene: a screen could not be drawn'));
+			};
+
+			picture.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="' + width + '" height="' + height + '"><foreignObject width="100%" height="100%">' + new view.XMLSerializer().serializeToString(copy) + '</foreignObject></svg>');
+		};
+
+		function drawGround (matrix, nodes, shade, mirror) {
 			var ground = scene.Ground;
 			var field = ground.Field;
 			var air = [0.55, 0.72, 1, 0.95];
 			var fog = scene.Camera.Ortho || self.Graphics().Post ? 1e9 : field.Size * 0.9;
 
-			/* The stars first: the air, its sun and its moon come over them. */
-			if (!scene.Camera.Ortho && ground.StarLimit < 1) {
+			/* The stars first: the air, its sun and its moon come over them (not in a mirror: they keep to the view of the eye). */
+			if (!scene.Camera.Ortho && ground.StarLimit < 1 && !mirror) {
 				engine.CosmosNight(matrix, ground, ground.StarTurn, ground.GalaxyLight);
 
 				var aspect = renderer.Width / Math.max(1, renderer.Height);
@@ -3864,8 +4368,14 @@ Elemenx.Component('GameScene', {
 			if (!scene.Camera.Ortho)
 				renderer.Draw(gpu.Quad, gpu.Sky, {uInverse: graphics.Invert(matrix), uSun: ground.Sky, uSunColor: ground.SunColor, uAir: air, uUp: [0, 1, 0], uHigh: 0, uCover: ground.Shut, uEclipse: ground.Eclipse, uRainbow: ground.Air.Rainbow || 0, uMoonShade: ground.Moon ? ground.Moon.Shade : 0, uGlow: ground.Glow, uGlowWay: ground.GlowWay, uMoon: ground.Moon ? ground.Moon.Way : [0, 1, 0], uMoonLit: ground.Moon ? ground.Moon.Lit : [0, 1, 0], uMoonSize: ground.Moon ? ground.Moon.Size : 0, uMoonGlow: ground.Moon ? Math.min(1, ground.Moon.Glow) * Math.max(0, Math.min(1, ground.Moon.Way[1] / 0.15)) : 0}, {Depth: false, DepthWrite: false, Blend: 'alpha', Cull: 'none'});
 
+			/* One set of uniforms for all the squares, their places set for each. */
+			var land = Object.assign({uViewProjection: matrix, uSun: ground.Sun, uSunColor: ground.SunColor, uAir: air, uFog: fog, uSkyLight: ground.SkyLight, uFloorLight: ground.FloorLight, uWet: ground.Air.Wet, uSnowed: ground.Air.Cover || 0, uRainDrops: ground.Air.Rain, uTime2: scene.Seconds % 1000}, shade);
+
 			nodes.forEach(function (node) {
-				renderer.Draw(node.Mesh, gpu.Land, Object.assign({uViewProjection: matrix, uOffset: vectors.Subtract(node.Center, scene.Eye), uCenter: node.Center, uSun: ground.Sun, uSunColor: ground.SunColor, uAir: air, uFog: fog, uSkyLight: ground.SkyLight, uFloorLight: ground.FloorLight, uWet: ground.Air.Wet, uSnowed: ground.Air.Cover || 0}, shade), {Cull: 'back'});
+				land.uOffset = vectors.Subtract(node.Center, scene.Eye);
+				land.uCenter = node.Center;
+
+				renderer.Draw(node.Mesh, gpu.Land, land, {Cull: 'back'});
 			});
 
 			Object.keys(ground.Nodes).forEach(function (key) {
@@ -4016,7 +4526,7 @@ Elemenx.Component('GameScene', {
 			var heading;
 			var speed;
 			var move = [0, 0];
-			var keys = surface.Keys;
+			var keys = engine.PadKeys(surface.Keys);
 			var eye;
 			var look;
 
@@ -4034,6 +4544,10 @@ Elemenx.Component('GameScene', {
 
 			if (keys.KeyF)
 				surface.Pitch = Math.max(-1.55, surface.Pitch - elapsed);
+
+			/* The right stick of a pad looks round. */
+			surface.Yaw += keys.Pad.LookX * elapsed * 1.3;
+			surface.Pitch = Math.max(-1.55, Math.min(1.4, surface.Pitch + keys.Pad.LookY * elapsed));
 
 			if (surface.Rising && surface.Altitude > field.Radius * 1.5) {
 				leave();
@@ -4055,6 +4569,8 @@ Elemenx.Component('GameScene', {
 
 			if (keys.ArrowLeft || keys.KeyA)
 				move[1] -= 1;
+
+			move = [Math.max(-1, Math.min(1, move[0] + keys.Pad.Y)), Math.max(-1, Math.min(1, move[1] + keys.Pad.X))];
 
 			/* Walking or flying over the ground: the faster the higher, the way along the surface. */
 			if (move[0] || move[1]) {
@@ -4115,10 +4631,24 @@ Elemenx.Component('GameScene', {
 				return face + ':' + u.toFixed(6) + ':' + v.toFixed(6) + ':' + level;
 			}
 
+			/* The faces at once, their parts by a worker. */
 			function build (face, u, v, size, level) {
-				var made = field.Patch(face, u, v, size, 24);
+				var key = keyOf(face, u, v, level);
+				var made;
 
-				surface.Nodes[keyOf(face, u, v, level)] = {Mesh: renderer.Mesh(made.Geometry), Center: made.Center, Used: surface.Frame};
+				if (level) {
+					askPiece(surface, key, 'Sphere', [face, u, v, size, 24], function (piece) {
+						made = piece || field.Patch(face, u, v, size, 24);
+
+						surface.Nodes[key] = {Mesh: renderer.Mesh(made.Geometry), Center: made.Center, Used: surface.Frame};
+					});
+
+					return;
+				}
+
+				made = field.Patch(face, u, v, size, 24);
+
+				surface.Nodes[key] = {Mesh: renderer.Mesh(made.Geometry), Center: made.Center, Used: surface.Frame};
 			}
 
 			/* Behind the horizon: not drawn. */
@@ -4185,7 +4715,7 @@ Elemenx.Component('GameScene', {
 			missing.some(function (one) {
 				build(one.Face, one.U, one.V, one.Size, one.Level);
 
-				return window.performance.now() - started > 5;
+				return window.performance.now() - started > 5 || terrain.Work().Waiting() > 8;
 			});
 
 			return wanted;
@@ -4286,7 +4816,7 @@ Elemenx.Component('GameScene', {
 			});
 
 			if (posted)
-				engine.PostEnd({Matrix: matrix, Sun: sun, SunColor: sunColor, Sky: false, Heat: surface.Heat, Clouds: surfaceClouds(surface, object, sun, sunColor)});
+				engine.PostEnd(Object.assign({Matrix: matrix, Sun: sun, SunColor: sunColor, Sky: false, Heat: surface.Heat, Clouds: surfaceClouds(surface, object, sun, sunColor)}, lens()));
 
 			forget();
 		}
@@ -4754,12 +5284,51 @@ Elemenx.Component('GameScene', {
 			scene.Sight.observe(element);
 		}
 
+		/*
+		 * What the scene is still waiting for: its programs, made by the card behind the page, and the models it asked for. Told as
+		 * a part of a hundred, null when nothing is left. True while no picture can be drawn yet.
+		 */
+		function loading () {
+			var left = renderer ? renderer.Progress() : {Done: 0, Total: 0, Needed: 0};
+			var models = Object.keys(scene.Asked);
+			var done = left.Done + models.filter(function (name) {
+				return library.Ready(name);
+			}).length;
+			var total = left.Total + models.length;
+			var part = done < total ? Math.floor(done * 100 / total) : null;
+
+			/* All that is left may be one long thing behind the page: a bar that stands still would look stuck. */
+			self.LoadingEndless = left.Needed === 0 && left.Done < left.Total;
+
+			if (self.Loading !== part) {
+				self.Loading = part;
+
+				self.$Emit('loading', {Part: part === null ? 100 : part});
+			}
+
+			return left.Needed > 0;
+		}
+
 		scene.Loop = this.$Service('GameLoop').Create({Window: view, Render: function (part, loop) {
 			var started = view.performance ? view.performance.now() : Date.now();
 			var ended;
 
 			/* The time of the frame the screen shows, not of when its turn came: an uneven turn would shake all that moves. */
 			var now = loop.Now === null ? started : loop.Now;
+
+			if (renderer && !scene.Warmed) {
+				scene.Warmed = true;
+
+				engine.PostWarm();
+				engine.ScatterWarm();
+				engine.EffectsWarm();
+			}
+
+			if (loading()) {
+				frame(now, true);
+
+				return;
+			}
 
 			/* What a person steers skips no frame: a gap in the picture reads as a shake of the view. */
 			if (!scene.Seen || started < scene.Rest && !scene.Hero) {
@@ -4768,7 +5337,12 @@ Elemenx.Component('GameScene', {
 				return;
 			}
 
+			/* Here a frame need not wait for what the card makes behind it; one asked for by hand does. */
+			scene.Looping = true;
+
 			frame(now);
+
+			scene.Looping = false;
 
 			ended = view.performance ? view.performance.now() : Date.now();
 			scene.Rest = ended - started > 24 ? ended + Math.min(1000, ended - started) : 0;
@@ -4806,6 +5380,8 @@ Elemenx.Component('GameScene', {
 		var renderer = this.Engine ? this.Engine().Renderer : null;
 
 		if (!scene || !scene.Loop) return;
+
+		scene.Gone = true;
 
 		this.StrategyStop();
 
@@ -5123,7 +5699,7 @@ Elemenx.Component('GameScene', {
 		if (scene.Hero && /^Shift/.test(event.code))
 			scene.Keys[event.code] = true;
 
-		if (/^Key[WASDQERF]$/.test(event.code) || scene.Hero && /^(Arrow|Space|KeyC|KeyX)/.test(event.code)) {
+		if (/^Key[WASDQERF]$/.test(event.code) || scene.Hero && /^(Arrow|Space|KeyC|KeyX|KeyH|KeyJ)/.test(event.code)) {
 			scene.Keys[event.code] = true;
 
 			event.preventDefault();
@@ -5472,22 +6048,58 @@ Elemenx.Component('GameScene', {
 		return this.Engine().Pick(clientX - box.left, clientY - box.top);
 	},
 
-	/* A saved game: each object as its kind and what differs from it, with what it goes round, the time and the journeys. */
-	Save: function () {
+	/*
+	 * A saved game, its recipe by default: the Seed and the sky it is made of (Seed, Cosmos, Weather), its time, its journeys
+	 * and what the methods changed (Added, Removed, Overrides); Load makes it again of the Seed, the System and what the
+	 * template declares, with the changes over them. Save({Baked: true}) keeps each object instead (Objects: its kind and
+	 * what differs from it), read back as it is; a scene loaded of one stays baked.
+	 */
+	Save: function (options) {
 		var scene = this.Scene();
 		var kinds = this.$Service('Kinds');
-
-		return {
+		var saved = {
+			Version: 1,
+			Seed: this.Seed === null || this.Seed === undefined ? '' : this.Seed,
+			Cosmos: this.Cosmos === undefined ? null : JSON.parse(JSON.stringify(this.Cosmos)),
+			Weather: this.Weather === undefined ? null : this.Weather,
 			Time: scene.Time,
-			Objects: scene.Roots.map(function (object) {
-				return Object.assign(kinds.Diff(object), {Parent: object.Parent || ''});
-			}),
 			Travels: Object.keys(scene.Travels).map(function (id) {
 				var travel = scene.Travels[id];
 
 				return {ID: id, Target: travel.Target, Start: travel.Start, Duration: travel.Duration, From: travel.From, Position: travel.Position};
 			})
 		};
+
+		if (options && options.Baked || scene.Loaded) {
+			saved.Objects = scene.Roots.map(function (object) {
+				return Object.assign(kinds.Diff(object), {Parent: object.Parent || ''});
+			});
+
+			return saved;
+		}
+
+		saved.Added = JSON.parse(JSON.stringify(scene.Added));
+		saved.Removed = Object.keys(scene.Removed);
+		saved.Overrides = JSON.parse(JSON.stringify(scene.Overrides));
+
+		/* What changed of the values of an object while it lived (a unit that walked, a car driven), over its changes. */
+		scene.Roots.forEach(function (object) {
+			var made = object.Composed;
+			if (!made) return;
+
+			Object.keys(object.Values).forEach(function (key) {
+				var value = object.Values[key];
+				var own;
+
+				if (value === undefined || JSON.stringify(value) === JSON.stringify(made[key])) return;
+
+				own = saved.Overrides[object.ID] = saved.Overrides[object.ID] || {};
+				own.Values = own.Values || {};
+				own.Values[key] = JSON.parse(JSON.stringify(value));
+			});
+		});
+
+		return saved;
 	},
 
 	/* A saved game shown again: its objects alone, at its time; or a map (its JSON or its URL), called back when it came. */
@@ -5503,12 +6115,35 @@ Elemenx.Component('GameScene', {
 			return;
 		}
 
-		scene.Loaded = (saved && saved.Objects || []).map(function (each) {
-			return {ID: each.ID, Parent: each.Parent, Restored: kinds.Restore(each)};
-		});
-		scene.Added = [];
-		scene.Removed = {};
-		scene.Overrides = {};
+		/* Baked: its objects as they were; a recipe: what the Seed and the template make, its changes over them. */
+		if (saved.Objects) {
+			scene.Loaded = saved.Objects.map(function (each) {
+				return {ID: each.ID, Parent: each.Parent, Restored: kinds.Restore(each)};
+			});
+			scene.Added = [];
+			scene.Removed = {};
+			scene.Overrides = {};
+		}
+		else {
+			scene.Loaded = null;
+			scene.Added = JSON.parse(JSON.stringify(saved.Added || []));
+			scene.Removed = {};
+			scene.Overrides = JSON.parse(JSON.stringify(saved.Overrides || {}));
+
+			(saved.Removed || []).forEach(function (id) {
+				scene.Removed[id] = true;
+			});
+		}
+
+		if (saved.Seed !== undefined && String(saved.Seed) !== String(this.Seed))
+			this.Seed = saved.Seed;
+
+		if (saved.Cosmos !== undefined && saved.Cosmos !== null)
+			this.Cosmos = saved.Cosmos;
+
+		if (saved.Weather !== undefined && saved.Weather !== null)
+			this.Weather = saved.Weather;
+
 		scene.Travels = {};
 		scene.Time = Number(saved && saved.Time) || 0;
 
@@ -5548,6 +6183,24 @@ Elemenx.Component('GameScene', {
 	/* The shaders: lit things, copies, faces to the view, lines, far stars; the surfaces of bodies baked and lit. */
 	Shaders: function (graphics) {
 		var head = '#version 300 es\nprecision highp float;\n';
+
+		/* The rings of the drops on standing water: each cell of the surface has its drop, at a moment of its own. */
+		var ripples = [
+			'float rings(vec2 p, float t) {',
+			'	vec2 cell = floor(p);',
+			'	float sum = 0.0;',
+			'	for (int x = -1; x <= 1; x++) {',
+			'		for (int y = -1; y <= 1; y++) {',
+			'			vec2 at = cell + vec2(float(x), float(y));',
+			'			float seed = fract(sin(dot(at, vec2(127.1, 311.7))) * 43758.5453);',
+			'			float age = fract(t * (0.8 + seed * 0.6) + seed * 7.0);',
+			'			float far = length(p - at - vec2(0.5 + (seed - 0.5) * 0.7, 0.5 + (fract(seed * 13.0) - 0.5) * 0.7));',
+			'			sum += sin((far - age * 1.1) * 34.0) * smoothstep(0.14, 0.0, abs(far - age * 1.1)) * (1.0 - age) * (1.0 - age);',
+			'		}',
+			'	}',
+			'	return sum;',
+			'}'
+		].join('\n');
 
 		/* The slope of water at a point: waves with sharp crests that each bend the next, so lines run together and part, as on water. */
 		var waves = [
@@ -5617,8 +6270,18 @@ Elemenx.Component('GameScene', {
 				'out vec2 vUV;',
 				'out vec3 vColor;',
 				'out vec3 vTint;',
+				/* A place on the body in metres, its normal and the way down in the axes of the body, and its own wet and drops: what water does on it. */
+				'out vec3 vBody;',
+				'out vec3 vBodyNormal;',
+				'out vec3 vDown;',
+				'out vec2 vWet;',
 				'void main() {',
 				'	mat3 basis = mat3(aInstance2.xyz, aInstance3.xyz, aInstance4.xyz);',
+				'	mat3 turn = mat3(normalize(aInstance2.xyz), normalize(aInstance3.xyz), normalize(aInstance4.xyz));',
+				'	vBody = vec3(length(aInstance2.xyz), length(aInstance3.xyz), length(aInstance4.xyz)) * aPosition;',
+				'	vBodyNormal = aNormal;',
+				'	vDown = transpose(turn) * vec3(0.0, -1.0, 0.0);',
+				'	vWet = vec2(aInstance2.w, aInstance3.w);',
 				'	vec3 world = aInstance.xyz + uOrigin + basis * aPosition;',
 				'	float bend = aInstance.w * aPosition.y * aPosition.y * length(aInstance3.xyz) * 0.035;',
 				'	world.xz += vec2(sin(uWind * 1.3 + aInstance5.a), cos(uWind * 0.9 + aInstance5.a * 1.7)) * bend;',
@@ -5655,6 +6318,10 @@ Elemenx.Component('GameScene', {
 				'out vec2 vUV;',
 				'out vec3 vColor;',
 				'out vec3 vTint;',
+				'out vec3 vBody;',
+				'out vec3 vBodyNormal;',
+				'out vec3 vDown;',
+				'out vec2 vWet;',
 				'mat4 joint(float index, float frame) {',
 				'	ivec2 at = ivec2((int(index + 0.5) + int(uJointOffset)) * 3, int(frame + 0.5));',
 				'	vec4 a = texelFetch(uPalette, at, 0);',
@@ -5686,6 +6353,11 @@ Elemenx.Component('GameScene', {
 				'void main() {',
 				'	mat4 moved = posed(aJoints.x) * aWeights.x + posed(aJoints.y) * aWeights.y + posed(aJoints.z) * aWeights.z + posed(aJoints.w) * aWeights.w;',
 				'	mat3 basis = mat3(aInstance2.xyz, aInstance3.xyz, aInstance4.xyz);',
+				'	mat3 turn = mat3(normalize(aInstance2.xyz), normalize(aInstance3.xyz), normalize(aInstance4.xyz));',
+				'	vBody = vec3(length(aInstance2.xyz), length(aInstance3.xyz), length(aInstance4.xyz)) * (moved * vec4(aPosition, 1.0)).xyz;',
+				'	vBodyNormal = mat3(moved) * aNormal;',
+				'	vDown = transpose(turn) * vec3(0.0, -1.0, 0.0);',
+				'	vWet = vec2(aInstance2.w, aInstance3.w);',
 				'	vec3 world = aInstance.xyz + uOrigin + basis * (moved * vec4(aPosition, 1.0)).xyz;',
 				'	vWorld = world;',
 				'	vNormal = normalize(mat3(normalize(aInstance2.xyz), normalize(aInstance3.xyz), normalize(aInstance4.xyz)) * mat3(moved) * aNormal);',
@@ -5694,6 +6366,121 @@ Elemenx.Component('GameScene', {
 				'	vColor = aInstance5.rgb;',
 				'	vTint = aInstance5.rgb;',
 				'	gl_Position = uViewProjection * vec4(world, 1.0);',
+				'}'
+			].join('\n'),
+
+			/* A pane of a mirror or of glass, relative to the eye. */
+			PaneVertex: head + [
+				'in vec3 aPosition;',
+				'in vec3 aNormal;',
+				'in vec2 aUV;',
+				'uniform mat4 uViewProjection;',
+				'uniform mat4 uModel;',
+				'out vec3 vWorld;',
+				'out vec3 vNormal;',
+				'out vec2 vUV;',
+				'void main() {',
+				'	vec4 world = uModel * vec4(aPosition, 1.0);',
+				'	vWorld = world.xyz;',
+				'	vUV = aUV;',
+				'	vNormal = normalize(mat3(uModel) * aNormal);',
+				'	gl_Position = uViewProjection * world;',
+				'}'
+			].join('\n'),
+
+			/*
+			 * A mirror: what its picture shows where it is on the screen, softened by Blur, tinted, a thin bright bevel round it;
+			 * dark from behind, or with no picture.
+			 */
+			Mirror: head + [
+				'in vec3 vWorld;',
+				'in vec3 vNormal;',
+				'in vec2 vUV;',
+				'uniform sampler2D uMirror;',
+				'uniform vec2 uScreen;',
+				'uniform vec2 uSize;',
+				'uniform vec3 uTint;',
+				'uniform vec3 uSkyLight;',
+				'uniform float uBlur;',
+				'uniform float uStrength;',
+				'uniform float uOn;',
+				'out vec4 outColor;',
+				'void main() {',
+				'	vec3 seen = textureLod(uMirror, gl_FragCoord.xy / uScreen, uBlur * 6.0).rgb;',
+				'	float front = step(0.0, dot(vNormal, -vWorld));',
+				'	vec2 edge = min(vUV, 1.0 - vUV) * uSize;',
+				'	float bevel = 1.0 - smoothstep(0.012, 0.03, min(edge.x, edge.y));',
+				'	vec3 back = vec3(0.04, 0.04, 0.045);',
+				'	vec3 face = seen * uTint * uStrength + back * (1.0 - uStrength);',
+				'	outColor = vec4(mix(back, mix(face, uSkyLight * 1.4 + 0.08, bevel * 0.7), front * uOn), 1.0);',
+				'}'
+			].join('\n'),
+
+			/*
+			 * Glass: as clear as Clarity, milky by Frost; the world (its picture, as a mirror's, or the sky) and the sun on it by its
+			 * angle (Fresnel), a glint as sharp as it is clear; Tint colors what shows through it, and its edge, where the light goes
+			 * through the thickness of the pane.
+			 */
+			Glass: head + [
+				'in vec3 vWorld;',
+				'in vec3 vNormal;',
+				'in vec2 vUV;',
+				'uniform sampler2D uMirror;',
+				'uniform vec2 uScreen;',
+				'uniform float uOn;',
+				'uniform vec2 uSize;',
+				'uniform vec3 uTint;',
+				'uniform float uClarity;',
+				'uniform float uFrost;',
+				'uniform float uReflect;',
+				'uniform vec3 uSun;',
+				'uniform vec3 uSunColor;',
+				'uniform vec3 uSkyLight;',
+				'out vec4 outColor;',
+				'void main() {',
+				'	vec3 v = normalize(-vWorld);',
+				'	vec3 n = normalize(vNormal);',
+				'	float front = step(0.0, dot(n, v));',
+				'	if (front < 0.5) n = -n;',
+				'	float fresnel = 0.04 + 0.96 * pow(1.0 - max(dot(n, v), 0.0), 5.0);',
+				'	vec3 r = reflect(-v, n);',
+				'	float glint = pow(max(dot(r, uSun), 0.0), mix(600.0, 24.0, uFrost)) * mix(6.0, 0.6, uFrost);',
+				'	vec3 sky = uSkyLight * (0.7 + 0.6 * max(r.y, 0.0)) + vec3(0.18, 0.22, 0.28) * max(r.y, 0.0);',
+				'	sky = mix(sky, textureLod(uMirror, gl_FragCoord.xy / uScreen, uFrost * 6.0).rgb, uOn * front);',
+				'	vec2 side = min(vUV, 1.0 - vUV) * uSize;',
+				'	float rim = 1.0 - smoothstep(0.01, 0.035, min(side.x, side.y));',
+				'	vec3 color = uTint * (0.08 + uFrost * 0.55) * (uSkyLight + 0.3) + sky * uReflect * fresnel * 3.0 + uSunColor * glint + uTint * rim * 0.35;',
+				'	float alpha = clamp(1.0 - uClarity + uFrost * 0.6 + fresnel * uReflect + glint * 0.2 + rim * 0.55, 0.0, 1.0);',
+				'	outColor = vec4(color / max(alpha, 0.05), alpha);',
+				'}'
+			].join('\n'),
+
+			/* A screen: its picture, lit by itself as bright as Bright, the right way up; dark from behind. */
+			Screen: head + [
+				'in vec3 vWorld;',
+				'in vec3 vNormal;',
+				'in vec2 vUV;',
+				'uniform sampler2D uPicture;',
+				'uniform float uBright;',
+				'out vec4 outColor;',
+				'void main() {',
+				'	float front = step(0.0, dot(vNormal, -vWorld));',
+				'	outColor = vec4(texture(uPicture, vec2(vUV.x, 1.0 - vUV.y)).rgb * uBright * front, 1.0);',
+				'}'
+			].join('\n'),
+
+			/* The light of what glows: its color, more where its surface turns away from the eye, a slow breath; a lamp's glass (uFlat) evenly. */
+			BodyGlow: head + [
+				'in vec3 vWorld;',
+				'in vec3 vNormal;',
+				'in vec3 vTint;',
+				'uniform float uTime;',
+				'uniform float uFlat;',
+				'out vec4 outColor;',
+				'void main() {',
+				'	float rim = pow(1.0 - abs(dot(normalize(vNormal), normalize(-vWorld))), 2.0);',
+				'	float breath = 0.85 + 0.15 * sin(uTime * 3.0 + vWorld.y * 4.0);',
+				'	outColor = vec4(vTint * mix((0.06 + 1.1 * rim) * breath, 1.0, uFlat), 1.0);',
 				'}'
 			].join('\n'),
 
@@ -5715,20 +6502,46 @@ Elemenx.Component('GameScene', {
 				'uniform float uWind;',
 				'uniform vec3 uEyeAt;',
 				'uniform float uTime2;',
-				/* The rings of the drops on standing water: each cell of the surface has its drop, at a moment of its own. */
-				'float rings(vec2 p, float t) {',
+				ripples,
+				'in vec3 vBody;',
+				'in vec3 vBodyNormal;',
+				'in vec3 vDown;',
+				'in vec2 vWet;',
+				/*
+				 * Drops on what water beads on, held to the body (in metres of it, in the plane of its side that faces most): round where
+				 * it lies flat, drawn out down where it stands up, and in the rain slipping down a little and coming again. The height
+				 * of the drop here, in metres; none where a drop is smaller than a few pixels.
+				 */
+				'float drops(float amount, float rain) {',
+				'	vec3 a = abs(vBodyNormal);',
+				'	vec2 q;',
+				'	vec2 d;',
+				'	if (a.x > a.y && a.x > a.z) { q = vBody.yz; d = vDown.yz; }',
+				'	else if (a.y > a.z) { q = vBody.xz; d = vDown.xz; }',
+				'	else { q = vBody.xy; d = vDown.xy; }',
+				'	float steep = length(d);',
+				'	vec2 along = steep > 0.05 ? d / steep : vec2(0.0, 1.0);',
+				'	vec2 p = vec2(dot(q, vec2(-along.y, along.x)), dot(q, along)) / 0.03;',
+				'	vec2 width = fwidth(p);',
+				'	float seen = 1.0 - smoothstep(0.12, 0.35, max(width.x, width.y));',
+				'	if (seen <= 0.0 || amount <= 0.0) return 0.0;',
 				'	vec2 cell = floor(p);',
-				'	float sum = 0.0;',
+				'	float height = 0.0;',
 				'	for (int x = -1; x <= 1; x++) {',
 				'		for (int y = -1; y <= 1; y++) {',
 				'			vec2 at = cell + vec2(float(x), float(y));',
-				'			float seed = fract(sin(dot(at, vec2(127.1, 311.7))) * 43758.5453);',
-				'			float age = fract(t * (0.8 + seed * 0.6) + seed * 7.0);',
-				'			float far = length(p - at - vec2(0.5 + (seed - 0.5) * 0.7, 0.5 + (fract(seed * 13.0) - 0.5) * 0.7));',
-				'			sum += sin((far - age * 1.1) * 34.0) * smoothstep(0.14, 0.0, abs(far - age * 1.1)) * (1.0 - age) * (1.0 - age);',
+				'			float s = fract(sin(dot(at, vec2(127.1, 311.7))) * 43758.5453);',
+				'			if (s > amount) continue;',
+				'			float s2 = fract(s * 91.7 + 0.31);',
+				'			float slip = rain * steep * fract(uTime2 * (0.08 + 0.12 * s2) + s * 5.0) * 0.7;',
+				'			vec2 off = p - at - vec2(0.2 + 0.6 * s2, 0.15 + 0.5 * fract(s * 7.3) + slip);',
+				'			float radius = 0.1 + 0.26 * pow(fract(s * 13.1), 2.0);',
+				'			off.y /= 1.0 + steep * (off.y < 0.0 ? 2.2 : 0.6);',
+				'			float k = 1.0 - dot(off, off) / (radius * radius);',
+				'			if (k > 0.0) height = max(height, sqrt(k) * radius * 0.03 * 0.7);',
 				'		}',
 				'	}',
-				'	return sum;',
+				'	return height * seen;',
 				'}',
 				'uniform float uCoatRough;',
 				'uniform float uCutoff;',
@@ -5791,22 +6604,41 @@ Elemenx.Component('GameScene', {
 				'	if (dot(n, v) < -0.3) n = -n;',
 				'	if (uNormalScale > 0.0) n = bump(n, v);',
 				'	vec4 surface = texture(uMetalMap, vUV);',
-				/* Water stands where a surface lies flat, and rain makes rings on it; snow lies on what looks up. */
+				/* Its own wet (1 + it, 0 for the weather's) and how much water beads on it (1 + it, 0 for all). */
+				'	float wet = vWet.x > 0.5 ? clamp(vWet.x - 1.0, 0.0, 1.0) : uWet;',
+				'	float beads = vWet.y > 0.5 ? clamp(vWet.y - 1.0, 0.0, 1.0) : 1.0;',
+				/* Water beads on what is smooth (lacquer, glass), not on what is rough or looks down; the height of a drop bends the light as a lens. */
+				'	float smooth2 = max(1.0 - smoothstep(0.35, 0.6, uRoughness * surface.g), max(step(0.01, uClearcoat), step(0.01, uGlass)));',
+				'	float drop = wet > 0.01 ? drops(wet * beads * smooth2 * smoothstep(-0.5, 0.1, n.y) * 0.55 * step(0.99, max(base.a, uGlass)), step(0.01, uRainDrops)) : 0.0;',
+				'	float dropX = dFdx(drop);',
+				'	float dropY = dFdy(drop);',
+				'	vec3 dpx = dFdx(vWorld);',
+				'	vec3 dpy = dFdy(vWorld);',
+				'	if (abs(dropX) + abs(dropY) > 0.0) {',
+				'		vec3 r1 = cross(dpy, n);',
+				'		vec3 r2 = cross(n, dpx);',
+				'		float det = dot(dpx, r1);',
+				'		if (abs(det) > 1e-14) n = normalize(abs(det) * n - sign(det) * (dropX * r1 + dropY * r2));',
+				'	}',
+				'	float inDrop = step(1e-5, drop);',
+				/* Water stands where a surface lies flat and does not bead, and rain makes rings on it, gone where they are smaller than a pixel; snow lies on what looks up. Pools grow as it rains and shrink as it dries. */
 				'	float flat2 = smoothstep(0.86, 0.97, n.y) * step(0.99, base.a);',
-				'	float pool = uWet * flat2 * smoothstep(0.5, 0.64, noise3((vWorld + uEyeAt) * vec3(0.13, 0.0, 0.13)) + noise3((vWorld + uEyeAt) * vec3(0.6, 0.0, 0.6)) * 0.08);',
-				'	if (pool > 0.02 && uRainDrops > 0.0 && dot(vWorld, vWorld) < 1600.0) {',
+				'	float pool = wet * flat2 * (1.0 - smooth2) * smoothstep(0.66 - 0.18 * wet, 0.8 - 0.18 * wet, noise3((vWorld + uEyeAt) * vec3(0.13, 0.0, 0.13)) + noise3((vWorld + uEyeAt) * vec3(0.6, 0.0, 0.6)) * 0.08);',
+				'	float ringSeen = 1.0 - smoothstep(0.03, 0.09, length(fwidth((vWorld.xz + uEyeAt.xz) * 1.7)));',
+				'	if (pool > 0.02 && uRainDrops > 0.0 && ringSeen > 0.0) {',
 				'		vec2 ring = (vWorld.xz + uEyeAt.xz) * 1.7;',
 				'		float h0 = rings(ring, uTime2);',
-				'		n = normalize(n + vec3(rings(ring + vec2(0.03, 0.0), uTime2) - h0, 0.0, rings(ring + vec2(0.0, 0.03), uTime2) - h0) * 1.1 * uRainDrops * pool);',
+				'		n = normalize(n + vec3(rings(ring + vec2(0.03, 0.0), uTime2) - h0, 0.0, rings(ring + vec2(0.0, 0.03), uTime2) - h0) * 1.1 * uRainDrops * pool * ringSeen);',
 				'	}',
-				'	float roughness = clamp(mix(uRoughness * surface.g * (1.0 - uWet * 0.45), 0.06, pool), 0.04, 1.0);',
+				'	float roughness = clamp(mix(uRoughness * surface.g * (1.0 - wet * 0.45), 0.06, pool), 0.04, 1.0);',
 				/* Where the normal turns within a pixel a sharp highlight falls between pixels and flickers as things move: the surface is taken rougher by as much. */
 				'	vec3 stepX = dFdx(n);',
 				'	vec3 stepY = dFdy(n);',
 				'	float spread = min(0.25, (dot(stepX, stepX) + dot(stepY, stepY)) * 1.5);',
 				'	roughness = sqrt(min(1.0, roughness * roughness + spread));',
+				'	roughness = mix(roughness, 0.05, inDrop);',
 				/* Wet things lose their color first: water darkens them and takes the dust off the light. */
-				'	albedo *= 1.0 - uWet * 0.38 - pool * 0.3;',
+				'	albedo *= (1.0 - wet * 0.38 - pool * 0.3) * (1.0 - inDrop * 0.12);',
 				'	float laid = uSnowed * smoothstep(0.3, 0.75, n.y + (noise3((vWorld + uEyeAt) * 0.23) + noise3((vWorld + uEyeAt) * 0.9) * 0.5 - 0.75) * 0.3);',
 				'	albedo = mix(albedo, vec3(0.86, 0.9, 0.95) * (0.72 + dot(albedo, vec3(0.5))), laid);',
 				'	roughness = mix(roughness, 0.7, laid);',
@@ -5853,7 +6685,7 @@ Elemenx.Component('GameScene', {
 				'		return;',
 				'	}',
 				/* How much it mirrors, seen from here: the alpha of the scene carries it to the picture. */
-				'	float gloss = base.a < 0.99 ? 0.0 : max(pow(1.0 - roughness, 2.0) * max(fresnel.r, max(fresnel.g, fresnel.b)), uWet * 0.6 * smoothstep(0.55, 0.95, n.y) * (0.04 + 0.96 * pow(1.0 - nv, 5.0)));',
+				'	float gloss = base.a < 0.99 ? 0.0 : max(pow(1.0 - roughness, 2.0) * max(fresnel.r, max(fresnel.g, fresnel.b)), wet * 0.6 * smoothstep(0.55, 0.95, n.y) * (0.04 + 0.96 * pow(1.0 - nv, 5.0)));',
 				'	outColor = vec4(pow(total, vec3(1.0 / 2.2)), uMoving > 0.5 ? 0.0 : base.a < 0.5 ? base.a : 1.0 - gloss * 0.45);',
 				'}'
 			].join('\n'),
@@ -6127,6 +6959,7 @@ Elemenx.Component('GameScene', {
 				'in vec3 vNormal;',
 				'in vec3 vLocal;',
 				'in vec3 vColor;',
+				'in vec2 vWet;',
 				'uniform vec3 uCamera;',
 				'uniform float uShine;',
 				'uniform float uMoving;',
@@ -6147,7 +6980,7 @@ Elemenx.Component('GameScene', {
 				'	vec3 hot = max(vColor - vec3(1.0), 0.0);',
 				'	lightShade = sunLit(vWorld, n);',
 				'	vec3 light = lighting(vWorld, n, v, uShine, uSpecular) - mix(uFloorLight, uSkyLight, n.y * 0.5 + 0.5) * (1.0 - skySeen(vWorld));',
-				'	light = (max(light, vec3(0.0)) + sunBounce(vWorld) + localLight(vWorld, n)) * (1.0 - uWet * 0.25);',
+				'	light = (max(light, vec3(0.0)) + sunBounce(vWorld) + localLight(vWorld, n)) * (1.0 - (vWet.x > 0.5 ? clamp(vWet.x - 1.0, 0.0, 1.0) : uWet) * 0.25);',
 				'	if (uSoft > 0.0 && uLightCount > 0) {',
 				'		vec3 l = normalize(uLightPositions[0] - vWorld);',
 				'		float through = pow(max(dot(v, -l), 0.0), 3.0) * 0.8 + max(-dot(n, l), 0.0) * 0.35;',
@@ -6400,23 +7233,43 @@ Elemenx.Component('GameScene', {
 				'uniform vec3 uFloorLight;',
 				'uniform float uWet;',
 				'uniform float uSnowed;',
+				'uniform float uRainDrops;',
+				'uniform float uTime2;',
 				'out vec4 outColor;',
 				graphics.Chunks.Noise,
 				graphics.Chunks.Shadow,
+				ripples,
 				'void main() {',
 				'	vec3 n = normalize(vNormal);',
 				'	float grain = 0.88 + 0.24 * noise3(vPlace * 0.35);',
-				'	float pool = uWet * smoothstep(0.42, 0.62, noise3(vPlace * 0.09)) * step(0.92, n.y);',
-				'	vec3 albedo = pow(vColor * grain, vec3(2.2)) * (1.0 - uWet * 0.42);',
+				/* Water stands in the hollows of what is level: the pools grow while it rains and shrink as it dries. */
+				'	float pool = uWet * smoothstep(0.64 - 0.2 * uWet, 0.74 - 0.2 * uWet, noise3(vPlace * 0.09) + noise3(vPlace * 0.41) * 0.07) * smoothstep(0.9, 0.97, n.y);',
+				'	vec3 water = vec3(0.0, 1.0, 0.0);',
+				'	float ringSeen = 1.0 - smoothstep(0.03, 0.09, length(fwidth(vPlace.xz * 1.7)));',
+				'	if (pool > 0.02 && uRainDrops > 0.0 && ringSeen > 0.0) {',
+				'		vec2 ring = vPlace.xz * 1.7;',
+				'		float h0 = rings(ring, uTime2);',
+				'		water = normalize(water + vec3(rings(ring + vec2(0.03, 0.0), uTime2) - h0, 0.0, rings(ring + vec2(0.0, 0.03), uTime2) - h0) * 0.9 * min(1.0, uRainDrops) * ringSeen);',
+				'	}',
+				'	vec3 albedo = pow(vColor * grain, vec3(2.2)) * (1.0 - uWet * 0.42) * (1.0 - pool * 0.35);',
 				'	albedo = mix(albedo, vec3(0.86, 0.9, 0.95), uSnowed * smoothstep(0.55, 0.85, n.y + (grain - 1.0)));',
-				'	vec3 light = uSunColor * 1.35 * max(dot(n, uSun), 0.0) * sunLit(vWorld, n) + mix(uFloorLight, uSkyLight, n.y * 0.5 + 0.5) * skySeen(vWorld) + sunBounce(vWorld) + localLight(vWorld, n);',
+				'	float lit2 = sunLit(vWorld, n);',
+				'	vec3 light = uSunColor * 1.35 * max(dot(n, uSun), 0.0) * lit2 + mix(uFloorLight, uSkyLight, n.y * 0.5 + 0.5) * skySeen(vWorld) + sunBounce(vWorld) + localLight(vWorld, n);',
 				'	vec3 horizon = mix(uAir.rgb, vec3(1.0), 0.45) * clamp(uSun.y * 3.0 + 0.3, 0.0, 1.0);',
-				/* Wet ground darkens, and where water stands it mirrors the sky at a glance. */
+				/*
+				 * Wet ground darkens and takes a sheen: the sun on it, wide where it is only wet, a sharp glint where water stands and its
+				 * rings break it. Water mirrors the sky at a glance.
+				 */
 				'	vec3 v = normalize(-vWorld);',
-				'	vec3 lit = pow(albedo * light, vec3(1.0 / 2.2));',
+				'	vec3 surface = normalize(mix(n, water, pool));',
+				'	vec3 h = normalize(uSun + v);',
+				'	float glance = 0.02 + 0.98 * pow(1.0 - max(dot(surface, v), 0.0), 5.0);',
+				'	float sheen = pow(max(dot(surface, h), 0.0), mix(28.0, 1400.0, pool)) * mix(0.35, 60.0, pool) * (0.1 + glance) * uWet * step(0.0, uSun.y);',
+				'	vec3 linear = albedo * light + uSunColor * sheen * lit2;',
+				'	vec3 lit = pow(linear, vec3(1.0 / 2.2));',
 				'	lit = mix(lit, mix(uAir.rgb, vec3(1.0), 0.5) * clamp(uSkyLight.b * 2.4, 0.03, 1.0), pool * (0.25 + 0.65 * pow(1.0 - max(v.y, 0.0), 3.0)));',
 				'	vec3 color = mix(lit, horizon, 1.0 - exp(-length(vWorld) / uFog));',
-				'	outColor = vec4(color, 1.0 - pool * (0.25 + 0.65 * pow(1.0 - max(v.y, 0.0), 3.0)) * 0.45);',
+				'	outColor = vec4(color, 1.0 - pool * (0.25 + 0.65 * pow(1.0 - max(v.y, 0.0), 3.0)) * 0.45 - uWet * 0.12 * (1.0 - pool));',
 				'}'
 			].join('\n'),
 

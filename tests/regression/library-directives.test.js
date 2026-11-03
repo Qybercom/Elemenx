@@ -362,3 +362,289 @@ describe('Contract: the Directives of ElemenxUI', function () {
 		sword.dispatchEvent(new MouseEvent('mouseleave'));
 	});
 });
+
+describe('Contract: infinite scroll, *infinite and InfiniteList, more of VirtualList and the history of Chat', function () {
+	beforeAll(async function () {
+		await loadElemenx();
+
+		Use(['*infinite', 'InfiniteList', 'VirtualList', 'Chat']);
+	});
+
+	beforeEach(function () {
+		resetDOM();
+	});
+
+	afterEach(function () {
+		while (owned.length) owned.pop().$Destroy();
+	});
+
+	function rows (count, from) {
+		return Array.from({length: count}, function (value, index) {
+			return {ID: (from || 0) + index};
+		});
+	}
+
+	it('*infinite asks once near the end, again when the list grew, never while Busy or Done, and at once when too short', async function () {
+		var asked = [];
+		var host = mount('<div class="list" style="height: 100px; overflow-y: auto" *infinite="{Margin: 30, Busy: Busy, Done: Done}" (more)="More"><div style="height: 20px" *for="row of Rows" *key="row.ID">{{row.ID}}</div></div>', {
+			Rows: rows(10),
+			Busy: false,
+			Done: false,
+			More: function (event) {
+				asked.push(event.detail.Direction);
+			}
+		});
+		var list;
+
+		await frame();
+
+		list = host.$Element().querySelector('.list') || host.$Element();
+
+		/* 200 high in a box of 100: the end is 100 pixels away. */
+		expect(asked).toEqual([]);
+
+		list.scrollTop = 80;
+
+		list.dispatchEvent(new Event('scroll'));
+
+		await frame();
+
+		expect(asked).toEqual(['down']);
+
+		list.scrollTop = 90;
+
+		list.dispatchEvent(new Event('scroll'));
+
+		await frame();
+
+		expect(asked).toEqual(['down']);
+
+		/* Away from the end and back: it asks again; a list that grew and is still near its end too. */
+		list.scrollTop = 0;
+
+		list.dispatchEvent(new Event('scroll'));
+
+		await frame();
+
+		list.scrollTop = 100;
+
+		list.dispatchEvent(new Event('scroll'));
+
+		await frame();
+
+		expect(asked).toEqual(['down', 'down']);
+
+		host.Rows = host.Rows.concat(rows(1, 20));
+
+		await frame();
+		await frame();
+
+		expect(asked).toEqual(['down', 'down', 'down']);
+
+		asked.length = 0;
+
+		asked.push('down');
+
+		/* What came while it was busy is asked for again only when it is not. */
+		host.Busy = true;
+		host.Rows = host.Rows.concat(rows(2, 10));
+
+		await frame();
+
+		list.scrollTop = 1000;
+
+		list.dispatchEvent(new Event('scroll'));
+
+		await frame();
+
+		expect(asked).toEqual(['down']);
+
+		host.Busy = false;
+
+		await frame();
+
+		expect(asked).toEqual(['down', 'down']);
+
+		/* Nothing came: it does not ask again by itself. */
+		await frame();
+		await frame();
+
+		expect(asked).toHaveLength(2);
+
+		host.Done = true;
+		host.Rows = host.Rows.concat(rows(1, 12));
+
+		await frame();
+
+		expect(asked).toHaveLength(2);
+
+		/* A list too short to scroll asks at once. */
+		var short = [];
+
+		mount('<div style="height: 100px; overflow-y: auto" *infinite (more)="More"><div style="height: 20px">one</div></div>', {
+			More: function () {
+				short.push(1);
+			}
+		});
+
+		await frame();
+
+		expect(short).toEqual([1]);
+	});
+
+	it('*infinite up asks at the start, and keeps what the reader sees when rows come above', async function () {
+		var asked = 0;
+		var host = mount('<div class="list" style="height: 100px; overflow-y: auto; overflow-anchor: none" *infinite="{Direction: \'up\', Margin: 30}" (more)="More"><div style="height: 20px" *for="row of Rows" *key="row.ID" [attribute.data-id]="row.ID">{{row.ID}}</div></div>', {
+			Rows: rows(10, 100),
+			More: function () {
+				asked++;
+			}
+		});
+		var list;
+		var before;
+
+		await frame();
+
+		list = host.$Element().querySelector('.list') || host.$Element();
+		list.scrollTop = 100;
+
+		list.dispatchEvent(new Event('scroll'));
+
+		await frame();
+
+		expect(asked).toBe(0);
+
+		list.scrollTop = 10;
+
+		list.dispatchEvent(new Event('scroll'));
+
+		await frame();
+
+		expect(asked).toBe(1);
+
+		before = list.querySelector('[data-id="100"]').getBoundingClientRect().top;
+
+		host.Rows = rows(5, 95).concat(host.Rows);
+
+		await frame();
+
+		/* Five rows of 20 came above: the row that was in view is where it was (by itself: Safari keeps no anchor). */
+		expect(list.scrollTop).toBe(110);
+		expect(list.querySelector('[data-id="100"]').getBoundingClientRect().top).toBeCloseTo(before, 0);
+	});
+
+	it('InfiniteList shows a spinner while busy and a word at its end, and tells more; up its spinner takes no room', async function () {
+		var asked = [];
+		var host = mount('<InfiniteList Height="120" [busy]="Busy" [done]="Done" (more)="More"><div style="height: 30px" *for="row of Rows" *key="row.ID">{{row.ID}}</div></InfiniteList>', {
+			Rows: rows(2),
+			Busy: false,
+			Done: false,
+			More: function (detail) {
+				asked.push(detail.Direction);
+			}
+		});
+		var element;
+
+		await frame();
+		await frame();
+
+		element = host.$Element().querySelector('.elemenx-infinite');
+
+		expect(asked).toEqual(['down']);
+		expect(element.getAttribute('role')).toBe('feed');
+		expect(element.style.height).toBe('120px');
+
+		host.Busy = true;
+
+		await frame();
+
+		expect(element.getAttribute('aria-busy')).toBe('true');
+		expect(element.querySelector('.elemenx-infinite-status').textContent).toContain('Loading more');
+
+		host.Busy = false;
+		host.Done = true;
+
+		await frame();
+
+		expect(element.querySelector('.elemenx-infinite-status')).toBe(null);
+		expect(element.querySelector('.elemenx-infinite-end').textContent).toContain('That is all');
+
+		var up = mount('<InfiniteList Height="120" Direction="up" [busy]="true"><div style="height: 30px">a</div></InfiniteList>');
+
+		await frame();
+
+		expect(up.$Element().querySelector('.elemenx-infinite-above').getBoundingClientRect().height).toBe(0);
+		expect(up.$Element().querySelector('.elemenx-infinite-above .elemenx-infinite-status')).toBeTruthy();
+	});
+
+	it('VirtualList asks for more when its last rows are drawn, once for each length; Chat asks for its history at its start', async function () {
+		var asked = [];
+		var host = mount('<VirtualList [items]="Items" ItemHeight="20" Height="100" Overscan="2" (more)="More" />', {
+			Items: rows(50),
+			More: function (detail) {
+				asked.push(detail.Count);
+			}
+		});
+		var viewport;
+
+		await frame();
+
+		viewport = host.$Element().querySelector('.elemenx-virtual-viewport');
+
+		expect(asked).toEqual([]);
+
+		viewport.scrollTop = 1000;
+
+		viewport.dispatchEvent(new Event('scroll'));
+
+		await frame();
+
+		expect(asked).toEqual([50]);
+
+		viewport.dispatchEvent(new Event('scroll'));
+
+		await frame();
+
+		expect(asked).toEqual([50]);
+
+		host.Items = host.Items.concat(rows(20, 50));
+
+		await frame();
+
+		viewport.scrollTop = 2000;
+
+		viewport.dispatchEvent(new Event('scroll'));
+
+		await frame();
+
+		expect(asked).toEqual([50, 70]);
+
+		/* The page of the tests has no stylesheet of the library: the list of messages gets the height a page gives it. */
+		document.head.appendChild(document.createElement('style')).textContent = '.elemenx-chat-messages { height: 200px; overflow-y: auto; }';
+
+		var history = 0;
+		var chat = mount('<div style="height: 300px; display: grid"><Chat [sidebarOpen]="false" (history)="Older"><div style="height: 40px" *for="row of Rows" *key="row.ID">{{row.ID}}</div></Chat></div>', {
+			Rows: rows(30),
+			Older: function () {
+				history++;
+			}
+		});
+		var messages;
+
+		await frame();
+		await frame();
+
+		messages = chat.$Element().querySelector('.elemenx-chat-messages');
+
+		/* It opens at its end, far from the first message. */
+		expect(history).toBe(0);
+
+		messages.scrollTop = 0;
+
+		messages.dispatchEvent(new Event('scroll'));
+
+		await frame();
+
+		expect(history).toBe(1);
+	});
+});

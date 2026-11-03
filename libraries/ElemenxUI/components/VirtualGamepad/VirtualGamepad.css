@@ -1,0 +1,142 @@
+/* Over what is under it, the whole of it; only its sticks and buttons take the fingers. */
+.elemenx-virtual-pad,
+.elemenx-game-scene-hud .elemenx-virtual-pad {
+	position: absolute;
+	inset: 0;
+	z-index: 5;
+	pointer-events: none;
+	user-select: none;
+	-webkit-user-select: none;
+	touch-action: none;
+}
+
+.elemenx-virtual-pad[hidden] {
+	display: none;
+}
+
+.elemenx-virtual-pad-stick,
+.elemenx-virtual-pad-button {
+	pointer-events: auto;
+	touch-action: none;
+	-webkit-tap-highlight-color: transparent;
+}
+
+.elemenx-virtual-pad-stick {
+	box-sizing: border-box;
+	position: absolute;
+	bottom: 24px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border: 2px solid var(--elemenx-virtual-pad-edge);
+	border-radius: 50%;
+	background: var(--elemenx-virtual-pad-fill);
+	backdrop-filter: blur(4px);
+}
+
+.elemenx-virtual-pad-stick.left {
+	left: 24px;
+}
+
+.elemenx-virtual-pad-stick.right {
+	right: 24px;
+}
+
+.elemenx-virtual-pad-knob {
+	width: 44%;
+	height: 44%;
+	border-radius: 50%;
+	background: var(--elemenx-virtual-pad-knob);
+	box-shadow: 0 2px 8px var(--elemenx-virtual-pad-shadow);
+	pointer-events: none;
+}
+
+.elemenx-virtual-pad-button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 52px;
+	height: 52px;
+	padding: 0;
+	border: 2px solid var(--elemenx-virtual-pad-edge);
+	border-radius: 50%;
+	background: var(--elemenx-virtual-pad-fill);
+	color: var(--elemenx-virtual-pad-text);
+	font: 600 1rem/1 var(--elemenx-font-family, system-ui, sans-serif);
+	backdrop-filter: blur(4px);
+	cursor: pointer;
+}
+
+.elemenx-virtual-pad-button.down {
+	background: var(--elemenx-virtual-pad-pressed);
+	transform: scale(0.94);
+}
+
+/* The face buttons as a diamond, at the bottom right (above the right stick when there is one). */
+.elemenx-virtual-pad-face {
+	position: absolute;
+	right: 24px;
+	bottom: 24px;
+	display: grid;
+	grid-template: repeat(3, 52px) / repeat(3, 52px);
+}
+
+.elemenx-virtual-pad.with-right .elemenx-virtual-pad-face {
+	right: 32px;
+	bottom: 160px;
+}
+
+.elemenx-virtual-pad-button.face-y {
+	grid-area: 1 / 2;
+}
+
+.elemenx-virtual-pad-button.face-x {
+	grid-area: 2 / 1;
+}
+
+.elemenx-virtual-pad-button.face-b {
+	grid-area: 2 / 3;
+}
+
+.elemenx-virtual-pad-button.face-a {
+	grid-area: 3 / 2;
+}
+
+/* The shoulders and the triggers at the top corners; start and select between the sticks. */
+.elemenx-virtual-pad-shoulders {
+	position: absolute;
+	top: 16px;
+	display: flex;
+	gap: 8px;
+}
+
+.elemenx-virtual-pad-shoulders.left {
+	left: 16px;
+}
+
+.elemenx-virtual-pad-shoulders.right {
+	right: 16px;
+}
+
+.elemenx-virtual-pad-button.shoulder {
+	width: 64px;
+	height: 40px;
+	border-radius: var(--elemenx-radius-huge);
+	font-size: 0.875rem;
+}
+
+.elemenx-virtual-pad-middle {
+	position: absolute;
+	left: 50%;
+	bottom: 24px;
+	display: flex;
+	gap: 12px;
+	transform: translateX(-50%);
+}
+
+.elemenx-virtual-pad-button.small {
+	width: 64px;
+	height: 32px;
+	border-radius: var(--elemenx-radius-giant);
+	font-size: 0.75rem;
+}

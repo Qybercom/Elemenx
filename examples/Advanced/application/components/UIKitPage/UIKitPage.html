@@ -799,19 +799,29 @@
 				<Field Label="Wind"><Slider Label="Wind" Min="0" Max="4" Step="0.1" ShowValue="always" [value]="SceneWind" (input)="SceneWindChosen" /></Field>
 				<Field Label="Time of day"><Slider Label="Time of day" Min="0" Max="24" Step="0.25" ShowValue="always" [format]="PlaceClock" [value]="TerrainHour" (input)="TerrainTimed" /></Field>
 				<Field Label="Lens flare"><Slider Label="Lens flare" Min="0" Max="2" Step="0.1" ShowValue="always" [value]="SceneFlare" (input)="SceneFlareChosen" /></Field>
+				<Field Label="Bokeh"><Slider Label="Bokeh" Min="0" Max="1" Step="0.05" ShowValue="always" [value]="SceneBokeh" (input)="SceneBokeh = $event" /></Field>
+				<Field Label="Grass in clumps"><Slider Label="Grass in clumps" Min="0" Max="1" Step="0.05" ShowValue="always" [value]="TerrainClumps" (input)="TerrainClumps = $event" /></Field>
+				<Field Label="Grass height spread"><Slider Label="Grass height spread" Min="0" Max="1" Step="0.05" ShowValue="always" [value]="TerrainSpread" (input)="TerrainSpread = $event" /></Field>
+				<Toggle Label="Mirror" [checked]="TerrainMirror" (change)="TerrainMirror = $event" />
+				<Field Label="Mirror blur"><Slider Label="Mirror blur" Min="0" Max="1" Step="0.05" ShowValue="always" [value]="TerrainMirrorBlur" (input)="TerrainMirrorBlur = $event" /></Field>
+				<Toggle Label="Glass" [checked]="TerrainGlass" (change)="TerrainGlass = $event" />
+				<Field Label="Glass frost"><Slider Label="Glass frost" Min="0" Max="1" Step="0.05" ShowValue="always" [value]="TerrainFrost" (input)="TerrainFrost = $event" /></Field>
 				<Button Label="To the lake" Icon="map-pin" Variant="ghost" (click)="TerrainLake" />
 				<Button Label="All to the village" Icon="home" Variant="ghost" (click)="TerrainVillage" />
 				<Button Label="Save" Icon="save" Variant="ghost" (click)="TerrainSave" />
 				<Button Label="Load" Icon="refresh" Variant="ghost" [disabled]="!TerrainSaved" (click)="TerrainLoad" />
 			</div>
 			<div class="ui-kit-space">
-				<GameScene Setting="terrain" Team="blue" Labels="true" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" [weather]="SceneWeather" [wind]="SceneWind" [flare]="SceneFlare" (ready)="TerrainReady" (select)="TerrainSelected" (arrive)="TerrainArrived">
+				<GameScene Setting="terrain" Team="blue" Labels="true" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" [weather]="SceneWeather" [wind]="SceneWind" [flare]="SceneFlare" [bokeh]="SceneBokeh" (ready)="TerrainReady" (select)="TerrainSelected" (arrive)="TerrainArrived">
 					<GameObject ID="valley" Kind="ground" Size="900" Height="55" Water="0.32" Seed="valley" [biome]="TerrainBiome" />
 					<GameObject ID="sun" Kind="sun" Latitude="45" DayOfYear="172" Noon="150" [time]="TerrainHour" />
 					<GameObject ID="hamlet" Kind="village" X="-70" Y="20" Houses="10" />
 					<GameObject *for="unit of TerrainUnits" *key="unit.ID" Kind="unit" [id]="unit.ID" [name]="unit.Name" [x]="unit.X" [y]="unit.Y" Team="blue" />
 					<GameObject *for="house of TerrainHouses" *key="house.ID" Kind="house" [id]="house.ID" [name]="house.Name" [x]="house.X" [y]="house.Y" />
 					<GameObject ID="boulder" Kind="rock" X="30" Y="-20" />
+					<GameObject ID="meadow" *if="TerrainGrass(TerrainBiome)" Kind="grass" [height]="TerrainGrass(TerrainBiome).Height" [density]="TerrainGrass(TerrainBiome).Density" [color]="TerrainGrass(TerrainBiome).Color" [root]="TerrainGrass(TerrainBiome).Root" [clumps]="TerrainClumps" [spread]="TerrainSpread" />
+					<GameObject ID="looking-glass" *if="TerrainMirror" Kind="mirror" X="-10" Y="-6" Width="7" Height="4.5" Lift="2.4" Yaw="33" [blur]="TerrainMirrorBlur" />
+					<GameObject ID="window" *if="TerrainGlass" Kind="glass" X="-1" Y="-11" Width="4" Height="3" Lift="2" Yaw="25" [frost]="TerrainFrost" />
 				</GameScene>
 			</div>
 		</div>
@@ -830,10 +840,13 @@
 						<Select Label="Camera" Size="small" [options]="PlacePersons" [value]="PlacePerson" (change)="PlacePerson = $event" />
 						<Toggle Label="Free look" [checked]="PlaceFree" (change)="PlaceFree = $event" />
 						<Button Label="Next camera (V)" Variant="ghost" Size="small" (click)="PlaceNextPerson" />
+						<label class="ui-kit-tune"><span>Bokeh</span><Slider Label="Bokeh" Size="small" ShowValue="end" Min="0" Max="1" Step="0.05" [value]="SceneBokeh" (input)="SceneBokeh = $event" /></label>
 					</RibbonGroup>
 					<RibbonGroup Title="Shoulder" Icon="eye">
 						<Toggle Label="Left shoulder (B)" [checked]="PlaceShoulder === 'left'" (change)="PlaceShoulder = $event ? 'left' : 'right'" />
 						<Toggle Label="Lamps" [checked]="PlaceLamps" (change)="PlaceLampsShown" />
+						<Toggle Label="Body glow" [checked]="PlaceGlow" (change)="PlaceGlow = $event" />
+						<Toggle Label="Mana bubbles" [checked]="PlaceMana" (change)="PlaceMana = $event" />
 					</RibbonGroup>
 					<RibbonGroup Title="Axes" Icon="move">
 						<Toggle Label="Axes of the view" [checked]="PlaceAxes" (change)="PlaceAxes = $event" />
@@ -947,12 +960,12 @@
 				</RibbonTab>
 			</Ribbon>
 			<div class="ui-kit-space">
-				<GameScene Team="blue" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" [weather]="SceneWeather" [wind]="SceneWind" [flare]="SceneFlare" [freelook]="PlaceFree" [person]="PlacePerson" [shoulder]="PlaceShoulder" [axes]="PlaceAxes ? 'top-right' : ''" [origin]="PlaceOrigin" (person)="PlacePerson = $event" (shoulder)="PlaceShoulder = $event" (ready)="PlaceReady" />
+				<GameScene Team="blue" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" [weather]="SceneWeather" [wind]="SceneWind" [flare]="SceneFlare" [freelook]="PlaceFree" [person]="PlacePerson" [shoulder]="PlaceShoulder" [axes]="PlaceAxes ? 'top-right' : ''" [origin]="PlaceOrigin" [bokeh]="SceneBokeh" (person)="PlacePerson = $event" (shoulder)="PlaceShoulder = $event" (ready)="PlaceReady"><VirtualGamepad slot="hud" Right="true" Buttons="a,rb,lb" Label="Walk" /><GameObject *if="PlaceGlow" ID="hero-glow" Kind="effect" Type="glow" Follow="hero" Color="#7fd0ff" Intensity="1" Where="both" /><GameObject *if="PlaceMana" ID="hero-mana" Kind="effect" Type="mana" Follow="hero" /></GameScene>
 			</div>
 		</div>
 	</Section>
 
-	<Section *if="Shows('Racing')" Title="Racing" [note]="RaceNote || 'GameScene · Tracks · Vehicles: a click takes the mouse, W drives, S goes back, A and D steer, Space brakes, hold Shift to drift, C is the hand brake, V changes the camera'">
+	<Section *if="Shows('Racing')" Title="Racing" [note]="RaceNote || 'GameScene · Tracks · Vehicles: a click takes the mouse, W drives, S goes back, A and D steer, Space brakes, hold Shift to drift, C is the hand brake, L the lights, Z and X the indicators (both: hazard), V changes the camera'">
 		<div class="ui-kit-lazy" *lazy>
 			<Ribbon class="ui-kit-place-ribbon" Label="Racing" [tab]="RaceTab" (tab)="RaceTab = $event.ID">
 				<RibbonTab ID="drive" Title="Drive">
@@ -960,7 +973,14 @@
 						<Select Label="Car" Size="small" [options]="RaceCars" [value]="RaceCar" (change)="RaceCarChosen" />
 						<Select Label="Camera" Size="small" [options]="PlacePersons" [value]="RacePerson" (change)="RacePerson = $event" />
 						<Button Label="New track" Icon="map-pin" Variant="ghost" Size="small" (click)="RaceNewTrack" />
-						<span>{{RaceSpeed}} km/h</span>
+						<Toggle Label="Doors" [checked]="RaceDoors" (change)="RaceDoorsOpened" />
+						<span>{{RaceSpeed}} km/h{{RaceGear ? ' · ' + RaceGear : ''}}</span>
+					</RibbonGroup>
+					<RibbonGroup Title="Weather" Icon="sliders">
+						<Select Label="Weather" Size="small" [options]="SceneWeathers" [value]="SceneWeather" (change)="SceneWeatherChosen" />
+						<label class="ui-kit-tune"><span>Time of day</span><Slider Label="Time of day" Size="small" ShowValue="end" Min="0" Max="24" Step="0.25" [format]="PlaceClock" [value]="RaceHour" (input)="RaceTimed" /></label>
+						<Toggle Label="Just washed" [checked]="RaceWashed" (change)="RaceWet('Washed', $event)" />
+						<label class="ui-kit-tune"><span>Drops</span><Slider Label="Drops" Size="small" ShowValue="end" Min="0" Max="1" Step="0.05" [value]="RaceDrops" (input)="RaceWet('Drops', $event)" /></label>
 					</RibbonGroup>
 				</RibbonTab>
 				<RibbonTab ID="setup" Title="Setup">
@@ -992,19 +1012,22 @@
 				</RibbonTab>
 			</Ribbon>
 			<div class="ui-kit-space">
-				<GameScene Team="blue" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" [person]="RacePerson" Labels="false" (person)="RacePerson = $event" (ready)="RaceReady" />
+				<GameScene Team="blue" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" [person]="RacePerson" [weather]="SceneWeather" Labels="false" (person)="RacePerson = $event" (ready)="RaceReady"><div slot="screens" data-screen="dash" class="ui-kit-dash"><span class="ui-kit-dash-turn" [class.on]="RaceSignals.Left">&#9664;</span><span class="ui-kit-dash-speed">{{RaceSpeed}}</span><span class="ui-kit-dash-unit">km/h</span><span class="ui-kit-dash-gear">{{RaceGearOnly}}</span><span class="ui-kit-dash-rpm"><span [style.width]="RaceRpmPart + '%'"></span></span><span class="ui-kit-dash-lights" [class.on]="RaceSignals.Lights">&#9679;</span><span class="ui-kit-dash-turn" [class.on]="RaceSignals.Right">&#9654;</span></div><VirtualGamepad slot="hud" Tilt="true" Buttons="a,b,lt,rt,rb" Label="Drive" /></GameScene>
 			</div>
 		</div>
 	</Section>
 
-	<Section *if="Shows('Orbit')" Title="Orbit" [note]="OrbitNote || 'GameScene · Vehicles: W and S set the speed, A and D yaw, R and F pitch, Q and E roll, C and X lift, Shift boosts, Space stops it, the mouse looks round'">
+	<Section *if="Shows('Orbit')" Title="Orbit" [note]="OrbitNote || 'GameScene · Vehicles: W and S set the speed, A and D yaw, R and F pitch, Q and E roll, C and X lift, Shift boosts, Space stops it, H warps to the place chosen, J jumps ahead, the mouse looks round'">
 		<div class="ui-kit-lazy" *lazy>
 			<div class="ui-kit-row">
 				<Select Label="Ship" [options]="OrbitShips" [value]="OrbitShip" (change)="OrbitShipChosen" />
-				<span>{{OrbitSpeed}} m/s</span>
+				<Select Label="Warp to" [options]="OrbitPlaces" [value]="OrbitPlace" (change)="OrbitPlaced" />
+				<Button Label="Warp (H)" Icon="send" Variant="ghost" (click)="OrbitTravel('warp')" />
+				<Button Label="Jump (J)" Icon="chevrons-right" Variant="ghost" (click)="OrbitTravel('jump')" />
+				<span>{{OrbitSpeed}} m/s{{OrbitPhase ? ' · ' + OrbitPhase : ''}}</span>
 			</div>
 			<div class="ui-kit-space">
-				<GameScene Team="blue" Speed="0.004" DaySeconds="600" Orbits="false" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" [cosmos]="OrbitCosmos" (ready)="OrbitReady">
+				<GameScene Team="blue" Speed="0.004" DaySeconds="600" Orbits="false" [quality]="SceneQuality === 'auto' ? '' : SceneQuality" [cosmos]="OrbitCosmos" (ready)="OrbitReady" (travel)="OrbitTravelled">
 					<GameObject ID="sol" Kind="star" Name="Star" Mass="1">
 						<GameObject ID="terra" Kind="planet" Name="Terra" Surface-Type="terran" Radius="6371" Mass="1" Distance="1" Day="23.93" Tilt="23.4">
 							<GameObject ID="luna" Kind="moon" Name="Luna" Surface-Type="moon" Radius="1737" Distance="384400 km" Day="0" />
@@ -1137,6 +1160,13 @@
 					<h5>A hundred thousand rows</h5>
 					<p class="elemenx-text small muted" id="ui-kit-virtual-state">{{VirtualState}}</p>
 					<VirtualList [items]="LongList" Height="320px" Label="Long list" (select)="LongPicked" />
+				</div>
+				<div class="ui-kit-stack">
+					<h5>Endless feed</h5>
+					<p class="elemenx-text small muted" id="ui-kit-feed-state">{{FeedItems.length}} posts{{FeedDone ? ', all of them' : ''}}</p>
+					<InfiniteList Height="320px" Label="Feed" [busy]="FeedBusy" [done]="FeedDone" (more)="FeedMore">
+						<div class="ui-kit-feed-post" *for="post of FeedItems" *key="post.ID"><strong>{{post.Title}}</strong><span class="elemenx-text small muted">{{post.Text}}</span></div>
+					</InfiniteList>
 				</div>
 			</div>
 			<h5>Filters and pages</h5>

@@ -85,6 +85,10 @@ Elemenx.Trait('Lighting', {
 			return sets[level()].Reach;
 		};
 
+		engine.PostWarm = function () {
+			programs();
+		};
+
 		function programs () {
 			if (!state.Programs) {
 				state.Programs = {
@@ -104,7 +108,11 @@ Elemenx.Trait('Lighting', {
 					Adapt: renderer.Program(graphics.Shaders.Quad, shaders.Adapt),
 					CloudMap: renderer.Program(graphics.Shaders.Quad, shaders.CloudMap),
 					CloudFrames: renderer.Program(graphics.Shaders.Quad, shaders.CloudFrames),
-					Mirror: renderer.Program(graphics.Shaders.Quad, shaders.Mirror)
+					Mirror: renderer.Program(graphics.Shaders.Quad, shaders.Mirror),
+					Focus: renderer.Program(graphics.Shaders.Quad, shaders.Focus),
+					Circle: renderer.Program(graphics.Shaders.Quad, shaders.Circle),
+					Disc: renderer.Program(graphics.Shaders.Quad, shaders.Disc),
+					Focused: renderer.Program(graphics.Shaders.Quad, shaders.Focused)
 				};
 			}
 
@@ -112,7 +120,7 @@ Elemenx.Trait('Lighting', {
 		}
 
 		function destroy () {
-			[state.Scene, state.Dark, state.Soft, state.Now, state.Before, state.Shaft, state.ShaftSoft, state.Cloud, state.CloudPast, state.CloudNext, state.Mirror].concat(state.Bloom).forEach(function (target) {
+			[state.Scene, state.Dark, state.Soft, state.Now, state.Before, state.Shaft, state.ShaftSoft, state.Cloud, state.CloudPast, state.CloudNext, state.Mirror, state.Circle, state.Disc, state.Focused].concat(state.Bloom).forEach(function (target) {
 				if (target)
 					target.Destroy();
 			});
@@ -130,6 +138,10 @@ Elemenx.Trait('Lighting', {
 			state.Mirror = null;
 			state.Past = null;
 			state.Bloom = [];
+			state.Circle = null;
+			state.Disc = null;
+			state.Focused = null;
+			state.BokehKey = '';
 		}
 
 		/* The textures, as large as the view, again when it changed. */
@@ -274,7 +286,7 @@ Elemenx.Trait('Lighting', {
 			var stands;
 			var sun;
 
-			if (!engine.FieldOn()) return {};
+			if (!engine.FieldOn() || !engine.GroundTopReady()) return {};
 
 			if (!state.Field) {
 				state.Field = {Key: '', Stands: '', Sun: '', Row: 0, Rounds: 0, Wait: 0, Started: false};
@@ -438,84 +450,21 @@ Elemenx.Trait('Lighting', {
 		};
 
 		/*
-		 * The block of noise of the clouds, made once on the first of them: red for the shape, Perlin eaten by Worley; green,
-		 * blue and alpha Worley ever finer, for the edges. It repeats on all sides.
+		 * The block of noise of the clouds (Graphics3D.CloudBlock), made once by a worker: until it comes, the empty one
+		 * stands for it, and no cloud shows.
 		 */
 		function cloudNoise () {
-			var size = 40;
-			var data = new Uint8Array(size * size * size * 4);
-			var random = 7;
+			if (!state.NoiseAsked) {
+				state.NoiseAsked = true;
 
-			function next () {
-				random = (random * 16807) % 2147483647;
+				graphics.Work().Run('Graphics3D', 'CloudBlock', [40], function (error, data) {
+					if (scene.Gone) return;
 
-				return random / 2147483647;
+					state.Noise = renderer.Volume(40, error ? graphics.CloudBlock(40) : data);
+				});
 			}
 
-			function points (cells) {
-				var made = new Float32Array(cells * cells * cells * 3);
-				var i;
-
-				for (i = 0; i < made.length; i++)
-					made[i] = next();
-
-				return {Cells: cells, Points: made};
-			}
-
-			function worley (field, x, y, z) {
-				var cells = field.Cells;
-				var at = [x * cells, y * cells, z * cells];
-				var cell = [Math.floor(at[0]), Math.floor(at[1]), Math.floor(at[2])];
-				var least = 9;
-				var a;
-				var b;
-				var c;
-
-				for (a = -1; a <= 1; a++) {
-					for (b = -1; b <= 1; b++) {
-						for (c = -1; c <= 1; c++) {
-							var i = (((cell[0] + a) % cells + cells) % cells + ((cell[1] + b) % cells + cells) % cells * cells + ((cell[2] + c) % cells + cells) % cells * cells * cells) * 3;
-							var dx = cell[0] + a + field.Points[i] - at[0];
-							var dy = cell[1] + b + field.Points[i + 1] - at[1];
-							var dz = cell[2] + c + field.Points[i + 2] - at[2];
-
-							least = Math.min(least, dx * dx + dy * dy + dz * dz);
-						}
-					}
-				}
-
-				return Math.max(0, 1 - Math.sqrt(least));
-			}
-
-			var large = [points(3), points(6), points(12)];
-			var small = [points(5), points(10), points(20)];
-			var x;
-			var y;
-			var z;
-
-			function billow (fields, u, v, w) {
-				return worley(fields[0], u, v, w) * 0.625 + worley(fields[1], u, v, w) * 0.25 + worley(fields[2], u, v, w) * 0.125;
-			}
-
-			for (z = 0; z < size; z++) {
-				for (y = 0; y < size; y++) {
-					for (x = 0; x < size; x++) {
-						var i = (x + y * size + z * size * size) * 4;
-						var u = x / size;
-						var v = y / size;
-						var w = z / size;
-						var low = billow(large, u, v, w);
-						var fine = billow(small, u, v, w);
-
-						data[i] = Math.min(255, Math.max(0, (low * 0.75 + fine * 0.3 - 0.1) * 255));
-						data[i + 1] = fine * 255;
-						data[i + 2] = low * 255;
-						data[i + 3] = worley(small[1], u, v, w) * 255;
-					}
-				}
-			}
-
-			return renderer.Volume(size, data);
+			return state.Noise || emptyNoise();
 		}
 
 		/* How bright the picture is, on the mean of its logarithm, and the eye that follows it in a second or two. */
@@ -554,9 +503,7 @@ Elemenx.Trait('Lighting', {
 
 		/* The block of noise, for all that wants it. */
 		engine.NoiseBlock = function () {
-			state.Noise = state.Noise || cloudNoise();
-
-			return state.Noise;
+			return cloudNoise();
 		};
 
 		/* For what reads a picture when there is none. */
@@ -568,12 +515,22 @@ Elemenx.Trait('Lighting', {
 
 		/* How shut the eye is to the sun: all the way where nothing measures it. */
 		engine.SunEye = function () {
+			state.EyeAsked = true;
+
 			return state.SunlitOn && state.EyeShut !== undefined ? state.EyeShut : 1;
 		};
 
 		/* The eye comes back to the code a frame or two late, so that no frame waits for the card to finish. */
 		function readEye () {
 			var gl = renderer.GL;
+
+			/* Only for what asks, and a few times a second: it changes slowly, and a read has a cost even so. */
+			state.EyeWait = (state.EyeWait || 0) - (state.Step || 1 / 60);
+
+			if (!state.EyeAsked || state.EyeWait > 0) return;
+
+			state.EyeAsked = false;
+			state.EyeWait = 0.12;
 
 			if (state.EyeFence) {
 				if (gl.clientWaitSync(state.EyeFence, 0, 0) === gl.TIMEOUT_EXPIRED) return;
@@ -777,6 +734,48 @@ Elemenx.Trait('Lighting', {
 		}
 
 		/*
+		 * The depth of field (view.Bokeh, 0 to 1: how wide the lens is open): what is far from the distance in focus is blurred, a bright
+		 * point of it a disc. The focus is view.Focus (a distance), or found at the middle of the view and followed slowly, as a camera
+		 * does. At half the size: the circle of each pixel, its disc gathered from a spiral of samples, then laid over the sharp picture by
+		 * how blurred each pixel is at its full size, so the edges of what is in focus stay sharp.
+		 */
+		function bokeh (view, run, color, depth, plain) {
+			var width = Math.max(1, renderer.Width >> 1);
+			var height = Math.max(1, renderer.Height >> 1);
+			var key = renderer.Width + ':' + renderer.Height;
+			var inverse = graphics.Invert(plain || view.Matrix);
+			var kept;
+
+			if (state.BokehKey !== key) {
+				[state.Circle, state.Disc, state.Focused].forEach(function (target) {
+					if (target)
+						target.Destroy();
+				});
+
+				state.BokehKey = key;
+				state.Circle = renderer.Target(width, height, {Float: true});
+				state.Disc = renderer.Target(width, height, {Float: true});
+				state.Focused = renderer.Target(renderer.Width, renderer.Height, {Float: true});
+				state.FocusPast = state.FocusPast || renderer.Target(1, 1, {Float: true});
+				state.FocusNext = state.FocusNext || renderer.Target(1, 1, {Float: true});
+				state.FocusOn = false;
+			}
+
+			pass(state.FocusNext, run.Focus, {uDepth: depth, uInverse: inverse, uOld: state.FocusPast.Textures[0], uMix: state.FocusOn ? 1 - Math.exp(-Math.min(state.Step || 1 / 60, 0.1) / 0.35) : 1, uFixed: view.Focus || 0});
+
+			kept = state.FocusPast;
+			state.FocusPast = state.FocusNext;
+			state.FocusNext = kept;
+			state.FocusOn = true;
+
+			pass(state.Circle, run.Circle, {uColor: color, uDepth: depth, uFocus: state.FocusPast.Textures[0], uInverse: inverse, uOpen: view.Bokeh, uPixel: [1 / renderer.Width, 1 / renderer.Height]});
+			pass(state.Disc, run.Disc, {uNear: state.Circle.Textures[0], uPixel: [1 / width, 1 / height], uRadius: 3 + view.Bokeh * 13});
+			pass(state.Focused, run.Focused, {uColor: color, uDepth: depth, uDisc: state.Disc.Textures[0], uFocus: state.FocusPast.Textures[0], uInverse: inverse, uOpen: view.Bokeh, uDiscPixel: [1 / width, 1 / height]});
+
+			return state.Focused.Textures[0];
+		}
+
+		/*
 		 * After all was drawn: the picture of it. view {Matrix (of the view, the eye at the origin), Plain (the same with no shake), Sun, SunColor, Air, Fog
 		 * (how thick the air is), Sky (true: there is a sky to see the sun in)}.
 		 */
@@ -799,12 +798,10 @@ Elemenx.Trait('Lighting', {
 			if (!scene.PostQuad)
 				scene.PostQuad = renderer.Mesh({Positions: [-1, -1, 0, 1, -1, 0, 1, 1, 0, -1, 1, 0], Indices: [0, 1, 2, 0, 2, 3]});
 
-			/* Clouds: at half the size, over all that is nearer than them or behind them. */
-			var air = view.Clouds && state.Cloud && now.Clouds > 0.02 ? view.Clouds : null;
+			/* Clouds: at half the size, over all that is nearer than them or behind them; none before their noise came. */
+			var air = view.Clouds && state.Cloud && now.Clouds > 0.02 && cloudNoise() === state.Noise ? view.Clouds : null;
 
 			if (air) {
-				state.Noise = state.Noise || cloudNoise();
-
 				if (!air.Over)
 					cloudMap(air, run, now);
 
@@ -891,6 +888,9 @@ Elemenx.Trait('Lighting', {
 
 			eyeSteps(view, run, color);
 
+			if (view.Bokeh > 0)
+				color = bokeh(view, run, color, depth, plain);
+
 			pass(state.Bloom[0], run.Down, {uColor: color, uPixel: [1 / renderer.Width, 1 / renderer.Height], uThreshold: 0.85});
 
 			for (i = 1; i < state.Bloom.length; i++)
@@ -930,7 +930,8 @@ Elemenx.Trait('Lighting', {
 
 		/* Frames late for long: a level down, while nobody asked for one. */
 		engine.PostTime = function (elapsed) {
-			state.Step = elapsed || state.Step;
+			if (elapsed > 0)
+				state.Step = elapsed;
 
 			if (self.Quality || !elapsed) return;
 
@@ -1027,6 +1028,102 @@ Elemenx.Trait('Lighting', {
 			].join('\n'),
 
 			/* A frame mixed with the last one, at the place each point was, and no farther from the colors round it. */
+			/* The distance in focus: the one given, or what the middle of the view shows, followed slowly. */
+			Focus: head + [
+				'uniform sampler2D uDepth;',
+				'uniform sampler2D uOld;',
+				'uniform mat4 uInverse;',
+				'uniform float uMix;',
+				'uniform float uFixed;',
+				'out vec4 outColor;',
+				'float far(vec2 ndc) {',
+				'	vec4 p = uInverse * vec4(ndc, texture(uDepth, ndc * 0.5 + 0.5).r * 2.0 - 1.0, 1.0);',
+				'	return length(p.xyz / p.w);',
+				'}',
+				'void main() {',
+				'	float seen = min(min(far(vec2(0.0)), far(vec2(0.04, 0.0))), min(far(vec2(-0.04, 0.0)), min(far(vec2(0.0, 0.05)), far(vec2(0.0, -0.05)))));',
+				'	float wanted = uFixed > 0.0 ? uFixed : min(seen, 1e6);',
+				'	outColor = vec4(uFixed > 0.0 ? wanted : mix(texture(uOld, vec2(0.5)).r, wanted, uMix), 0.0, 0.0, 1.0);',
+				'}'
+			].join('\n'),
+
+			/* How blurred each pixel is (-1 near to 1 far, 0 in focus), with its color, at half the size. */
+			Circle: head + [
+				'in vec2 vQuad;',
+				'uniform sampler2D uColor;',
+				'uniform sampler2D uDepth;',
+				'uniform sampler2D uFocus;',
+				'uniform mat4 uInverse;',
+				'uniform float uOpen;',
+				'uniform vec2 uPixel;',
+				'out vec4 outColor;',
+				'void main() {',
+				'	vec2 uv = vQuad * 0.5 + 0.5;',
+				'	vec3 color = vec3(0.0);',
+				/* Over three pixels each way: the dither of leaves and of what fades does not stay as a grain in the discs. */
+				'	for (int y = -1; y <= 1; y++) {',
+				'		for (int x = -1; x <= 1; x++)',
+				'			color += texture(uColor, uv + vec2(float(x), float(y)) * uPixel * 1.5).rgb;',
+				'	}',
+				'	color /= 9.0;',
+				'	vec4 p = uInverse * vec4(vQuad, texture(uDepth, uv).r * 2.0 - 1.0, 1.0);',
+				'	float d = length(p.xyz / p.w);',
+				'	float f = max(0.05, texture(uFocus, vec2(0.5)).r);',
+				'	outColor = vec4(color, clamp((d - f) / max(d, 1e-3) * (0.6 + uOpen * 2.4), -1.0, 1.0));',
+				'}'
+			].join('\n'),
+
+			/*
+			 * A disc of each pixel: a spiral of samples, each one there as far as its own blur reaches it (what is nearer spreads over what
+			 * is behind it, not the other way); a bright one counts more, so a point of light becomes a disc.
+			 */
+			Disc: head + [
+				'in vec2 vQuad;',
+				'uniform sampler2D uNear;',
+				'uniform vec2 uPixel;',
+				'uniform float uRadius;',
+				'out vec4 outColor;',
+				'void main() {',
+				'	vec2 uv = vQuad * 0.5 + 0.5;',
+				'	vec4 middle = texture(uNear, uv);',
+				'	vec3 sum = middle.rgb;',
+				'	float total = 1.0;',
+				'	for (int i = 0; i < 48; i++) {',
+				'		float r = sqrt((float(i) + 0.5) / 48.0);',
+				'		float a = float(i) * 2.39996;',
+				'		vec4 s = texture(uNear, uv + vec2(cos(a), sin(a)) * r * uRadius * uPixel);',
+				'		float reach = s.a < middle.a ? abs(s.a) : min(abs(s.a), abs(middle.a));',
+				'		float w = smoothstep(r - 0.3, r + 0.05, reach) * (1.0 + 3.0 * max(0.0, dot(s.rgb, vec3(0.2126, 0.7152, 0.0722)) - 1.0));',
+				'		sum += s.rgb * w;',
+				'		total += w;',
+				'	}',
+				'	outColor = vec4(sum / total, abs(middle.a));',
+				'}'
+			].join('\n'),
+
+			/* The sharp picture and its discs, by how blurred each pixel is at its full size: the edges in focus stay sharp. */
+			Focused: head + [
+				'in vec2 vQuad;',
+				'uniform sampler2D uColor;',
+				'uniform sampler2D uDepth;',
+				'uniform sampler2D uDisc;',
+				'uniform sampler2D uFocus;',
+				'uniform mat4 uInverse;',
+				'uniform float uOpen;',
+				'uniform vec2 uDiscPixel;',
+				'out vec4 outColor;',
+				'void main() {',
+				'	vec2 uv = vQuad * 0.5 + 0.5;',
+				'	vec4 sharp = texture(uColor, uv);',
+				'	vec4 p = uInverse * vec4(vQuad, texture(uDepth, uv).r * 2.0 - 1.0, 1.0);',
+				'	float d = length(p.xyz / p.w);',
+				'	float f = max(0.05, texture(uFocus, vec2(0.5)).r);',
+				'	float blur = abs(clamp((d - f) / max(d, 1e-3) * (0.6 + uOpen * 2.4), -1.0, 1.0));',
+				'	vec3 disc = (texture(uDisc, uv).rgb * 2.0 + texture(uDisc, uv + uDiscPixel * vec2(0.75, 0.25)).rgb + texture(uDisc, uv - uDiscPixel * vec2(0.75, 0.25)).rgb + texture(uDisc, uv + uDiscPixel * vec2(-0.25, 0.75)).rgb + texture(uDisc, uv - uDiscPixel * vec2(-0.25, 0.75)).rgb) / 6.0;',
+				'	outColor = vec4(mix(sharp.rgb, disc, smoothstep(0.04, 0.3, blur)), sharp.a);',
+				'}'
+			].join('\n'),
+
 			Frames: head + [
 				'in vec2 vQuad;',
 				'uniform sampler2D uColor;',

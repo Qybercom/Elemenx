@@ -1,5 +1,5 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { loadElemenx, resetDOM, tick, unique } from '../setup.js';
+import { loadElemenx, resetDOM, tick, unique, waitFor } from '../setup.js';
 import titleBarSource from '../../libraries/ElemenxUI/components/TitleBar/TitleBar.js?raw';
 import titleBarTemplate from '../../libraries/ElemenxUI/components/TitleBar/TitleBar.html?raw';
 
@@ -275,7 +275,12 @@ describe('Contract: the frames of the windows of a program (Platform.Frame) and 
 
 		host = mount('<div><TitleBar Title="Notes" /></div>');
 
-		await tick(60);
+		/* Regression: a fixed wait failed under load, the colors told later. */
+		await waitFor(function () {
+			return calls.some(function (call) {
+				return call[0] === 'titlebar';
+			});
+		}, 5000);
 
 		expect(host.$Element().querySelector('.elemenx-title-bar').classList.contains('overlay')).toBe(true);
 		expect(host.$Element().querySelectorAll('.elemenx-title-bar-control').length).toBe(0);

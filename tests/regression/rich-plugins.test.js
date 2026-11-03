@@ -19,7 +19,7 @@ describe('Contract: the plugins of RichText, in Markdown and in a RichEditor', f
 	beforeAll(async function () {
 		await loadElemenx();
 
-		Use(['Markdown', 'RichEditor', 'QRCode', 'Barcode', 'Chart', 'service:RichText']);
+		Use(['Markdown', 'RichEditor', 'QRCode', 'Barcode', 'Chart', 'FileBrowser', 'service:RichText']);
 	});
 
 	beforeEach(function () {
@@ -198,5 +198,40 @@ describe('Contract: the plugins of RichText, in Markdown and in a RichEditor', f
 		expect(content.querySelector('[data-elemenx-plugin="callout"].elemenx-callout')).toBeTruthy();
 		expect(editor.Markdown()).toContain('```qr\ntwo\n```');
 		expect(editor.Markdown()).toContain('::: info\nA note for the reader.\n:::');
+	});
+
+	it('reads a tree of files by its indents, of spaces or of the lines of tree, and Markdown draws it by FileBrowser as a tree', async function () {
+		var rich = Elemenx.Service('RichText');
+
+		expect(rich.FileTree('src/\n  components/\n    App.js   # the root\n  index.js\nREADME.md\n\nempty/')).toEqual([
+			{ID: 'src', Name: 'src', Items: [{ID: 'src/components', Name: 'components', Items: [{ID: 'src/components/App.js', Name: 'App.js'}]}, {ID: 'src/index.js', Name: 'index.js'}]},
+			{ID: 'README.md', Name: 'README.md'},
+			{ID: 'empty', Name: 'empty', Items: []}
+		]);
+		expect(rich.FileTree('.\n├── package.json\n├── src\n│   ├── index.js\n│   └── lib\n│       └── a.js\n└── docs\n    \tguide.md')).toEqual([
+			{ID: '.', Name: '.', Items: [
+				{ID: './package.json', Name: 'package.json'},
+				{ID: './src', Name: 'src', Items: [{ID: './src/index.js', Name: 'index.js'}, {ID: './src/lib', Name: 'lib', Items: [{ID: './src/lib/a.js', Name: 'a.js'}]}]},
+				{ID: './docs', Name: 'docs', Items: [{ID: './docs/guide.md', Name: 'guide.md'}]}
+			]}
+		]);
+		/* A tab is four spaces: two of them go deeper than four spaces. */
+		expect(rich.FileTree('a/\n    b/\n\t\tc.js')[0].Items[0].Items).toEqual([{ID: 'a/b/c.js', Name: 'c.js'}]);
+		expect(rich.Plugins()).toContain('files');
+
+		var host = mount('<div><Markdown [value]="Text" /></div>', {
+			Text: 'The project:\n\n```files\nsrc/\n  index.js\nREADME.md\n```\n'
+		});
+		var browser = await waitFor(function () {
+			return host.$Element().querySelector('.elemenx-file-browser.tree');
+		}, 4000);
+
+		/* A tree, every folder open, the names alone: no bar, no sizes. */
+		expect(Array.from(browser.querySelectorAll('.elemenx-file-browser-name')).map(function (node) {
+			return node.textContent;
+		})).toEqual(['src', 'index.js', 'README.md']);
+		expect(browser.querySelector('[data-id="src/index.js"]').getAttribute('aria-level')).toBe('2');
+		expect(browser.classList.contains('plain')).toBe(true);
+		expect(browser.querySelector('.elemenx-file-browser-bar')).toBe(null);
 	});
 });

@@ -15,14 +15,18 @@
  *   (data-elemenx-plugin, data-elemenx-data) that Sanitize keeps and ToMarkdown writes back as it was. Mount(container,
  *   options) draws the plugins of a document (Markdown and RichEditor do), {Destroy()} takes them away. Built in:
  *   diagram (```mermaid or ```diagram, the Diagram Component), chart (```chart, a JSON of the props of Chart), qrcode
- *   (```qr), barcode (```barcode format=ean13) and callout (::: info, note, tip, success, warning, danger; title=...).
- *   Plugins() lists their names.
+ *   (```qr), barcode (```barcode format=ean13), callout (::: info, note, tip, success, warning, danger; title=...) and
+ *   files (```files, ```tree or ```filetree: a tree of folders and files by its indents, drawn by FileBrowser as a tree;
+ *   view=list, height=..., details=true). Plugins() lists their names.
+ * - FileTree(text): the Items of FileBrowser of such a text: a line a file, its depth by its indent (spaces, tabs, and the
+ *   lines of the tree command: │ ├── └──); a folder ends with / or has lines under it; what follows two spaces and # is
+ *   a comment, left out. The ID of an item is its path.
  * The HTML is read in an inert template: nothing of it runs or loads while it is read.
  */
 Elemenx.Service('RichText', {
 	$Meta: {
 		Description: 'The document of rich text: the HTML RichEditor keeps and the Markdown it reads and writes.',
-		Methods: ['Sanitize(html)', 'Text(html)', 'ToMarkdown(html)', 'FromMarkdown(text)', 'Extend(plugin)', 'Plugins()', 'Mount(container, options)']
+		Methods: ['Sanitize(html)', 'Text(html)', 'ToMarkdown(html)', 'FromMarkdown(text)', 'Extend(plugin)', 'Plugins()', 'Mount(container, options)', 'FileTree(text)']
 	},
 	Blocks: {P: 1, H1: 1, H2: 1, H3: 1, H4: 1, BLOCKQUOTE: 1, PRE: 1, UL: 1, OL: 1, LI: 1, HR: 1, TABLE: 1, THEAD: 1, TBODY: 1, TR: 1, TH: 1, TD: 1},
 	Inline: {STRONG: 1, EM: 1, U: 1, S: 1, CODE: 1, A: 1, BR: 1, IMG: 1},
@@ -60,6 +64,53 @@ Elemenx.Service('RichText', {
 
 			node.innerHTML = (title ? '<p class="elemenx-callout-title">' + self.Escape(title) + '</p>' : '') + self.FromMarkdown(data.Text || '');
 		}, Insert: {Text: 'A note for the reader.', Language: 'info'}});
+		this.Extend({Name: 'files', Label: 'Files', Fences: ['files', 'tree', 'filetree'], Component: 'FileBrowser', Props: function (data) {
+			var items = self.FileTree(data.Text);
+			var rows = String(data.Text || '').split(/\r?\n/).filter(function (line) {
+				return line.trim();
+			}).length;
+
+			return self.PluginProps(data, {Items: items, View: 'tree', Toolbar: false, Details: false, Multiple: false, Height: Math.min(480, rows * 30 + 8)});
+		}, Insert: {Text: 'src/\n  components/\n    App.js\n  index.js\nREADME.md', Language: 'files'}});
+	},
+
+	FileTree: function (text) {
+		var root = {Items: []};
+		var stack = [{Indent: -1, Node: root, Path: ''}];
+
+		String(text || '').split(/\r?\n/).forEach(function (line) {
+			var drawn = /^([\s│├└─|`+\\-]*?)([^\s│├└─|`][\s\S]*)$/.exec(line.replace(/\t/g, '    '));
+			var name;
+			var indent;
+			var folder;
+			var parent;
+			var item;
+
+			if (!drawn || !line.trim()) return;
+
+			indent = drawn[1].length;
+			name = drawn[2].replace(/\s{2,}#.*$/, '').trim();
+			folder = /\/$/.test(name);
+			name = name.replace(/\/+$/, '');
+
+			if (!name) return;
+
+			while (stack.length > 1 && stack[stack.length - 1].Indent >= indent)
+				stack.pop();
+
+			parent = stack[stack.length - 1];
+			parent.Node.Items = parent.Node.Items || [];
+
+			item = {ID: parent.Path + name, Name: name};
+
+			if (folder)
+				item.Items = [];
+
+			parent.Node.Items.push(item);
+			stack.push({Indent: indent, Node: item, Path: item.ID + '/'});
+		});
+
+		return root.Items;
 	},
 
 	Escape: function (value) {

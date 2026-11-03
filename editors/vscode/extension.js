@@ -119,6 +119,20 @@ function activate (context) {
 		}
 	}));
 
+	/* Find usages (Find All References, Shift+F12): of a field, a method or an event of a Component, a member of a Service. */
+	context.subscriptions.push(vscode.languages.registerReferenceProvider(selector, {
+		provideReferences: function (document, position, options) {
+			var kind = kindOf(document);
+			var places = kind ? language.References(knowledge, document.getText(), document.offsetAt(position), kind, document.uri.fsPath) : [];
+
+			return places.filter(function (place) {
+				return !place.Definition || !options || options.includeDeclaration !== false;
+			}).map(function (place) {
+				return new vscode.Location(vscode.Uri.file(place.File), new vscode.Range(place.Line, place.Character, place.Line, place.Character + place.Length));
+			});
+		}
+	}));
+
 	context.subscriptions.push(vscode.workspace.onDidOpenTextDocument(diagnose));
 
 	context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(function (event) {

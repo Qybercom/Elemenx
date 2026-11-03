@@ -289,26 +289,70 @@ Elemenx.Component('UIKitPage', {
 	PlaceTab: 'place',
 	/* What each car is: how it goes, and where its pipes are in its model. */
 	RaceCars: [
-		{Value: 'mclaren', Label: 'McLaren W1', File: '2025_mclaren_w1.glb', Tune: {Turn: [[14, 55], [28, 60], [56, 70], [83, 75]], Build: [0.45, 0.25], Brake: 36, Bite: 2, Coast: 3, Grip: 1.75, Downforce: 0.9, Power: 950000, Answer: 24, Agility: 2.5, Assist: 0.8, Rear: 1.15, Slide: 0.42, Ride: 0.7, Lock: 0.6, Keep: 115, AntiRoll: 120000, Balance: 0.32}, Pipes: [[0.09, 0.53, -1.94], [-0.09, 0.53, -1.94]], Windows: [0.42, 0.52, -0.33]},
-		{Value: 'aston', Label: 'Aston Martin V12 Vantage', File: '2023_aston_martin_v12_vantage.glb', Tune: {Turn: [[14, 52], [28, 56], [56, 64], [83, 68]], Build: [0.5, 0.3], Brake: 28, Bite: 1.8, Coast: 2.5, Grip: 1.35, Downforce: 0.3, Power: 620000, Answer: 20, Agility: 2, Assist: 0.7, Rear: 1.1, Slide: 0.38, Ride: 1, Lock: 0.56, Keep: 95, AntiRoll: 80000, Balance: 0.36}, Pipes: [[0.06, 0.19, -1.54], [-0.06, 0.19, -1.54]]},
-		{Value: 'veneno', Label: 'Lamborghini Veneno', File: '2013_lamborghini_veneno.glb', Size: 1.17, Tune: {Turn: [[14, 54], [28, 58], [56, 67], [83, 72]], Build: [0.45, 0.27], Mass: 1490, Brake: 32, Bite: 1.9, Coast: 2.8, Grip: 1.5, Downforce: 0.6, Power: 620000, Answer: 22, Agility: 2.2, Assist: 0.75, Rear: 1.12, Slide: 0.42, Ride: 0.8, Lock: 0.58, Keep: 105, AntiRoll: 110000, Balance: 0.34}, Pipes: [[0.037, 0.255, -2.04], [-0.037, 0.255, -2.04], [0.037, 0.155, -2], [-0.037, 0.155, -2]]},
-		{Value: 'porsche', Label: 'Porsche 911 GT3 R', File: '2024_porsche_992_gt3_r.glb', Size: 1.28, Wheels: 'EXT_RIM|Tyre', Seat: [0.31, 0.97, -0.25], Tune: {Turn: [[14, 58], [28, 64], [56, 74], [83, 78]], Build: [0.38, 0.22], Mass: 1250, Top: 82, Brake: 40, Bite: 2.2, Coast: 3.2, Grip: 1.85, Downforce: 1, Power: 420000, Answer: 26, Agility: 2.6, Assist: 0.75, Rear: 1.1, Slide: 0.4, Ride: 0.55, Lock: 0.6, Keep: 120, AntiRoll: 150000, Balance: 0.3}, Pipes: [[0.042, 0.257, -1.81], [-0.042, 0.257, -1.81]]},
-		{Value: 'revuelto', Label: 'Lamborghini Revuelto', File: 'lamborghini_revuelto.glb', Size: 1.16, Wheels: 'Wheel\\.001|M_WheelRim', Held: 'M_Caliper', Tune: {Turn: [[14, 53], [28, 57], [56, 66], [83, 70]], Build: [0.48, 0.28], Mass: 1770, Brake: 34, Bite: 1.9, Coast: 2.8, Grip: 1.6, Downforce: 0.55, Power: 750000, Answer: 22, Agility: 2.2, Assist: 0.8, Rear: 1.2, Slide: 0.45, Ride: 0.85, Lock: 0.58, Keep: 110, AntiRoll: 130000, Balance: 0.33}, Pipes: [[0.106, 0.662, -2.08], [-0.106, 0.662, -2.08], [0.184, 0.662, -2.08], [-0.184, 0.662, -2.08]]},
+		{Value: 'mclaren', Label: 'McLaren W1', Mirrors: [
+			{At: [-0.004, 0.839, 0.356], Normal: [0, 0, -1], Width: 0.2, Height: 0.044},
+			{At: [0.841, 0.712, 0.508], Normal: [-0.4, 0.03, -0.92], Width: 0.115, Height: 0.064},
+			{At: [-0.841, 0.712, 0.508], Normal: [0.4, 0.03, -0.92], Width: 0.115, Height: 0.064}
+		], Screens: [{Source: 'dash', At: [0.25, 0.648, 0.468], Normal: [0.02, 0.03, -1], Width: 0.23, Height: 0.052, Pixels: [512, 116]}], Lamps: [{Kind: 'indicator', Match: 'LightEmissiveA|light_glass', Both: true, Low: [0.72, 0.15, 1.2], High: [1, 1, 2.1]}, {Kind: 'head', Match: 'LightEmissiveA|light_glass|LightA', Both: true, Low: [0.05, 0.15, 1.2], High: [1, 1, 2.1]}, {Kind: 'rear', Match: 'red_glass|LightEmissiveA', Both: true, Low: [0.05, 0.15, -2.1], High: [1, 1, -1.4]}], Controls: [
+			{Name: 'steering', Match: 'InteriorA|Carbon1M', Disc: {At: [0.255, 0.632, 0.29], Axis: [-0.006, -0.124, 0.992], Radius: 0.2, Depth: 0.075}, Hinge: [0.255, 0.632, 0.29], Axis: [0.006, 0.124, -0.992], Angle: 140, Drive: 'steer'},
+			{Name: 'paddle-up', Match: 'InteriorA', Disc: {At: [0.144, 0.636, 0.337], Axis: [-0.006, -0.124, 0.992], Radius: 0.05, Depth: 0.03}, Way: [0.006, 0.124, -0.992], Reach: 0.012, Drive: 'paddle', Sign: 1, Follow: 'steering'},
+			{Name: 'paddle-down', Match: 'InteriorA', Disc: {At: [0.362, 0.644, 0.336], Axis: [-0.006, -0.124, 0.992], Radius: 0.05, Depth: 0.03}, Way: [0.006, 0.124, -0.992], Reach: 0.012, Drive: 'paddle', Sign: -1, Follow: 'steering'},
+			{Name: 'doors', Match: 'Paint|Carbon1M|InteriorA', Both: true, Low: [0.5, 0.25, -0.45], High: [0.95, 1, 0.6], Hinge: [0.6, 0.84, 0.5], Axis: [0.835, -0.313, 0.467], Angle: 75}
+		], File: '2025_mclaren_w1.glb', Tune: {Turn: [[14, 55], [28, 60], [56, 70], [83, 75]], Build: [0.45, 0.25], Brake: 36, Bite: 2, Coast: 3, Grip: 1.75, Downforce: 0.9, Power: 950000, Answer: 24, Agility: 2.5, Assist: 0.8, Rear: 1.15, Slide: 0.42, Ride: 0.7, Lock: 0.6, Keep: 115, AntiRoll: 120000, Balance: 0.32}, Pipes: [[0.09, 0.53, -1.94], [-0.09, 0.53, -1.94]], Windows: [0.42, 0.52, -0.33]},
+		{Value: 'aston', Label: 'Aston Martin V12 Vantage', Lamps: [{Kind: 'indicator', Match: 'orange_glass', Both: true}, {Kind: 'head', Match: 'LightA', Both: true, Low: [0.05, 0.15, 1.2], High: [1, 1, 2]}, {Kind: 'rear', Match: 'red_glass', Both: true}], Controls: [
+			{Name: 'doors', Match: '^material$|Paint|Window|InteriorA', Both: true, Low: [0.47, 0.22, -0.62], High: [0.95, 1, 0.56], Hinge: [0.69, 0.5, 0.56], Axis: [0, -0.96, -0.28], Angle: 65}
+		], File: '2023_aston_martin_v12_vantage.glb', Tune: {Turn: [[14, 52], [28, 56], [56, 64], [83, 68]], Build: [0.5, 0.3], Brake: 28, Bite: 1.8, Coast: 2.5, Grip: 1.35, Downforce: 0.3, Power: 620000, Answer: 20, Agility: 2, Assist: 0.7, Rear: 1.1, Slide: 0.38, Ride: 1, Lock: 0.56, Keep: 95, AntiRoll: 80000, Balance: 0.36}, Pipes: [[0.06, 0.19, -1.54], [-0.06, 0.19, -1.54]]},
+		{Value: 'veneno', Label: 'Lamborghini Veneno', Lamps: [{Kind: 'indicator', Match: 'LightA', Both: true, Low: [0.7, 0.15, 1.2], High: [1, 1, 2.2]}, {Kind: 'head', Match: 'LightA', Both: true, Low: [0.05, 0.15, 1.2], High: [1, 1, 2.2]}, {Kind: 'rear', Match: 'LightA', Both: true, Low: [0.05, 0.15, -2.2], High: [1, 1, -1.5]}], Controls: [
+			{Name: 'doors', Match: 'phong1|Paint|Coloured|Window|InteriorA', Both: true, Low: [0.5, 0.22, -0.4], High: [0.95, 1, 0.74], Hinge: [0.82, 0.35, 0.72], Axis: [1, 0, 0], Angle: 75}
+		], File: '2013_lamborghini_veneno.glb', Size: 1.17, Tune: {Turn: [[14, 54], [28, 58], [56, 67], [83, 72]], Build: [0.45, 0.27], Mass: 1490, Brake: 32, Bite: 1.9, Coast: 2.8, Grip: 1.5, Downforce: 0.6, Power: 620000, Answer: 22, Agility: 2.2, Assist: 0.75, Rear: 1.12, Slide: 0.42, Ride: 0.8, Lock: 0.58, Keep: 105, AntiRoll: 110000, Balance: 0.34}, Pipes: [[0.037, 0.255, -2.04], [-0.037, 0.255, -2.04], [0.037, 0.155, -2], [-0.037, 0.155, -2]]},
+		{Value: 'porsche', Label: 'Porsche 911 GT3 R', Lamps: [{Kind: 'head', Match: 'Emissive_Light_Front|Glass_Emissive_Front', Both: true}, {Kind: 'rear', Match: 'Emissive_Light_Rear|Glass_Emissive_Rear', Both: true}], Controls: [
+			{Name: 'steering', Match: 'steer', Nodes: true, Hinge: [0.24, 0.564, 0.165], Axis: [0, 0.33, -0.944], Angle: 140, Drive: 'steer'},
+			{Name: 'wiper', Match: '^WIPER', Nodes: true, Hinge: [-0.01, 0.596, 0.93], Axis: [0, 0.9, 0.436], Angle: 60, Drive: 'wipers'},
+			{Name: 'doors', Match: '^DOOR_(L|R)', Nodes: true, Both: true, Hinge: [0.78, 0.5, 0.6], Axis: [0, -1, 0], Angle: 65}
+		], File: '2024_porsche_992_gt3_r.glb', Size: 1.28, Wheels: 'EXT_RIM|Tyre', Seat: [0.31, 0.97, -0.25], Tune: {Turn: [[14, 58], [28, 64], [56, 74], [83, 78]], Build: [0.38, 0.22], Mass: 1250, Top: 82, Brake: 40, Bite: 2.2, Coast: 3.2, Grip: 1.85, Downforce: 1, Power: 420000, Answer: 26, Agility: 2.6, Assist: 0.75, Rear: 1.1, Slide: 0.4, Ride: 0.55, Lock: 0.6, Keep: 120, AntiRoll: 150000, Balance: 0.3}, Pipes: [[0.042, 0.257, -1.81], [-0.042, 0.257, -1.81]]},
+		{Value: 'revuelto', Label: 'Lamborghini Revuelto', Lamps: [{Kind: 'head', Match: '^HeadLights$', Both: true}, {Kind: 'rear', Match: 'Emission_Red', Both: true}], Controls: [
+			{Name: 'steering', Match: '^SteeringWheel', Nodes: true, Hinge: [0.322, 0.613, 0.342], Axis: [0, 0.243, -0.97], Angle: 140, Drive: 'steer'},
+			{Name: 'paddle-up', Match: '^PaddleShifterR', Nodes: true, Way: [0, 0.243, -0.97], Reach: 0.012, Drive: 'paddle', Sign: 1, Follow: 'steering'},
+			{Name: 'paddle-down', Match: '^PaddleShifterL', Nodes: true, Way: [0, 0.243, -0.97], Reach: 0.012, Drive: 'paddle', Sign: -1, Follow: 'steering'},
+			{Name: 'gas', Match: '^PedalGas', Nodes: true, Hinge: [0.16, 0.349, 0.86], Axis: [-1, 0, 0], Angle: 16, Drive: 'gas'},
+			{Name: 'brake', Match: '^PedalBrake', Nodes: true, Hinge: [0.302, 0.541, 0.88], Axis: [-1, 0, 0], Angle: 14, Drive: 'brake'},
+			{Name: 'wiper-left', Match: '^Wiper(ArmL|BladeL|L_)', Nodes: true, Hinge: [0.46, 0.66, 1.27], Axis: [0.154, 0.89, 0.429], Angle: 95, Drive: 'wipers'},
+			{Name: 'wiper-right', Match: '^Wiper(ArmR|BladeR|R_)', Nodes: true, Hinge: [0.035, 0.65, 1.33], Axis: [0.154, 0.89, 0.429], Angle: 95, Drive: 'wipers'},
+			{Name: 'doors', Match: '^((Door|Glass|DoorCard)(LF|RF)|WingMirror(L|R)|MirrorBase(L|R))', Nodes: true, Both: true, Hinge: [0.75, 0.42, 0.85], Axis: [1, 0, 0], Angle: 75}
+		], File: 'lamborghini_revuelto.glb', Size: 1.16, Wheels: 'Wheel\\.001|M_WheelRim', Held: 'M_Caliper', Tune: {Turn: [[14, 53], [28, 57], [56, 66], [83, 70]], Build: [0.48, 0.28], Mass: 1770, Brake: 34, Bite: 1.9, Coast: 2.8, Grip: 1.6, Downforce: 0.55, Power: 750000, Answer: 22, Agility: 2.2, Assist: 0.8, Rear: 1.2, Slide: 0.45, Ride: 0.85, Lock: 0.58, Keep: 110, AntiRoll: 130000, Balance: 0.33}, Pipes: [[0.106, 0.662, -2.08], [-0.106, 0.662, -2.08], [0.184, 0.662, -2.08], [-0.184, 0.662, -2.08]]},
 		{Value: 'mp420', Label: 'McLaren MP4-20', File: '2005_mclaren_mp4-20 (1).glb', Size: 0.95, Wheels: 'Tyre|MCLARENRIM|MCLHUB|SPOKES|Brake_Disk', Apart: 'Tyre|MCLARENRIM|MCLHUB|SPOKES|Brake_Disk|Caliper', Seat: [0, 0.72, -0.1], Tune: {Turn: [[14, 60], [28, 70], [56, 85], [83, 95]], Build: [0.3, 0.16], Mass: 600, Top: 100, Base: 3.1, Width: 1.5, Brake: 52, Bite: 2.6, Coast: 5, Grip: 2.1, Downforce: 1.6, Power: 690000, Answer: 30, Agility: 3, Assist: 0.85, Rear: 1.1, Slide: 0.5, Ride: 0.45, Lock: 0.5, Keep: 140, AntiRoll: 90000, Balance: 0.24}, Pipes: [[0.135, 0.37, -1.35], [-0.135, 0.37, -1.35]]},
 		{Value: 'mp45', Label: 'McLaren MP4/5', File: 'mclaren_mp45_formula_one.glb', Size: 1, Wheels: 'Object_(18|46)$', Apart: 'Object_(18|46)$', Seat: [0, 0.72, 0.1], Tune: {Turn: [[14, 58], [28, 66], [56, 78], [83, 86]], Build: [0.34, 0.2], Mass: 540, Base: 2.95, Width: 1.5, Brake: 44, Bite: 2.3, Coast: 4.5, Grip: 1.85, Downforce: 1.1, Power: 510000, Answer: 28, Agility: 2.8, Assist: 0.75, Rear: 1.08, Slide: 0.45, Ride: 0.5, Lock: 0.5, Keep: 130, AntiRoll: 80000, Balance: 0.25}, Pipes: [[0.228, 0.14, -1.78], [-0.228, 0.14, -1.78]]},
-		{Value: '350z', Label: 'Nissan 350Z', File: 'rachels_nissan_350z_nfs_underground_2 (1).glb', Size: 1.31, Seat: [0.33, 1.1, -0.25], Tune: {Turn: [[14, 56], [28, 58], [56, 62], [83, 64]], Build: [0.5, 0.32], Mass: 1500, Top: 78, Base: 2.65, Width: 1.6, Brake: 26, Bite: 1.7, Coast: 2.2, Grip: 1.25, Downforce: 0.2, Power: 340000, Answer: 18, Agility: 2, Assist: 0.65, Rear: 0.98, Slide: 0.3, Angle: 0.95, Ride: 1.1, Lock: 0.62, Keep: 90, AntiRoll: 70000, Balance: 0.4}, Pipes: [[0.258, 0.184, -1.63], [-0.258, 0.184, -1.63], [0.338, 0.184, -1.63], [-0.338, 0.184, -1.63]]}
+		{Value: '350z', Label: 'Nissan 350Z', Lamps: [{Kind: 'head', Match: 'Lights_160', Both: true, Low: [0.05, 0.15, 1.2], High: [1, 1, 2]}, {Kind: 'rear', Match: 'Lights_160', Both: true, Low: [0.05, 0.15, -2], High: [1, 1, -1.3]}], Controls: [
+			{Name: 'doors', Match: '350Z_Base|Glass|Interior|Door', Both: true, Low: [0.5, 0.2, -0.54], High: [0.95, 0.95, 0.58], Hinge: [0.68, 0.45, 0.58], Axis: [0, -0.96, -0.2], Angle: 65}
+		], File: 'rachels_nissan_350z_nfs_underground_2 (1).glb', Size: 1.31, Seat: [0.33, 1.1, -0.25], Tune: {Turn: [[14, 56], [28, 58], [56, 62], [83, 64]], Build: [0.5, 0.32], Mass: 1500, Top: 78, Base: 2.65, Width: 1.6, Brake: 26, Bite: 1.7, Coast: 2.2, Grip: 1.25, Downforce: 0.2, Power: 340000, Answer: 18, Agility: 2, Assist: 0.65, Rear: 0.98, Slide: 0.3, Angle: 0.95, Ride: 1.1, Lock: 0.62, Keep: 90, AntiRoll: 70000, Balance: 0.4}, Pipes: [[0.258, 0.184, -1.63], [-0.258, 0.184, -1.63], [0.338, 0.184, -1.63], [-0.338, 0.184, -1.63]]}
 	],
 	RaceTab: 'drive',
 	RaceTune: {Turn: [[14, 55], [28, 60], [56, 70], [83, 75]], Build: [0.45, 0.25], Brake: 36, Grip: 1.75, Downforce: 0.9, Power: 950000, Answer: 24, Agility: 2.5, Assist: 0.8, Rear: 1.15, Slide: 0.42, Ride: 0.7, Coast: 3},
 	RaceWindows: 0,
+	RaceWashed: false,
+	RaceDoors: false,
+	RaceHour: 15,
+	RaceDrops: 1,
 	RaceCar: 'mclaren',
 	RacePerson: 'third',
 	RaceSeed: 1,
 	RaceNote: '',
 	RaceSpeed: 0,
+	RaceGear: '',
+	RaceGearOnly: 'N',
+	RaceRpmPart: 0,
+	RaceSignals: {Left: false, Right: false, Lights: false},
 	OrbitNote: '',
 	OrbitCosmos: {Kind: 'galaxy', Seed: 'orbit'},
 	OrbitSpeed: 0,
+	OrbitPhase: '',
+	OrbitPlace: 'luna',
+	OrbitPlaces: [
+		{Value: 'luna', Label: 'Luna'},
+		{Value: 'terra', Label: 'Terra'},
+		{Value: 'battleship', Label: 'Battleship'},
+		{Value: '', Label: 'Straight ahead'}
+	],
 	/* What each ship is built of, in its own measures: the points are read off the model. */
 	OrbitShips: [
 		{Value: 'space_ship (1).glb', Label: 'Interceptor', Yaw: 0, Mounts: [
@@ -393,13 +437,22 @@ Elemenx.Component('UIKitPage', {
 	TerrainHour: 16,
 	SceneFlare: 1,
 	/* Who walks on the locations: a line for a file of data/models, and the set of clips that suits it if not the usual one. */
-	PlaceCharacters: [{Value: 'elf', Label: 'Elf', File: 'rigged_elf_woman.glb'}, {Value: 'nyx', Label: 'Nyx', File: 'nyx_common.glb'}, {Value: 'swordsman', Label: 'Swordswoman', File: 'hit2_female_swordsman.glb'}, {Value: 'killjoy', Label: 'Killjoy', File: 'killjoy__valorant.glb'}, {Value: 'warrior', Label: 'Warrior', File: 'low_poly_female_warrior_charctor.glb'}, {Value: 'chief', Label: 'Master Chief', File: 'master_chief_high_poly.glb', Clips: 'rifle'}],
+	PlaceCharacters: [{Value: 'elf', Label: 'Elf', File: 'rigged_elf_woman.glb'}, {Value: 'nyx', Label: 'Nyx', File: 'nyx_common.glb'}, {Value: 'swordsman', Label: 'Swordswoman', File: 'hit2_female_swordsman.glb'}, {Value: 'killjoy', Label: 'Killjoy', File: 'killjoy__valorant.glb'}, {Value: 'warrior', Label: 'Warrior', File: 'low_poly_female_warrior_charctor.glb'}, {Value: 'chief', Label: 'Master Chief', File: 'master_chief_high_poly.glb', Clips: 'rifle'}, {Value: 'xbot', Label: 'X Bot (FBX)', File: 'elf_anim/X Bot.fbx'}],
 	PlaceCharacter: 'elf',
 	PlaceList: [{Value: 'tree', Label: 'Tree house'}, {Value: 'forest', Label: 'Forest road'}, {Value: 'gulch', Label: 'Blood Gulch'}, {Value: 'infinity', Label: 'Infinity'}],
 	SceneQuality: 'auto',
 	SceneQualities: [{Value: 'auto', Label: 'Auto'}, {Value: 'low', Label: 'Low'}, {Value: 'medium', Label: 'Medium'}, {Value: 'high', Label: 'High'}, {Value: 'ultra', Label: 'Ultra'}],
 	TerrainNote: '',
 	TerrainBiome: 'temperate',
+	TerrainClumps: 0.5,
+	SceneBokeh: 0,
+	PlaceGlow: false,
+	PlaceMana: false,
+	TerrainSpread: 0.45,
+	TerrainMirror: true,
+	TerrainMirrorBlur: 0,
+	TerrainGlass: true,
+	TerrainFrost: 0,
 	TerrainBiomes: [{Value: 'temperate', Label: 'Temperate'}, {Value: 'taiga', Label: 'Taiga'}, {Value: 'tundra', Label: 'Tundra'}, {Value: 'desert', Label: 'Desert'}, {Value: 'savanna', Label: 'Savanna'}, {Value: 'swamp', Label: 'Swamp'}, {Value: 'alien', Label: 'Alien'}],
 	TerrainSaved: null,
 	TerrainUnits: [
@@ -614,7 +667,7 @@ Elemenx.Component('UIKitPage', {
 	],
 	CodesFlow: 'flowchart LR\n  A([Order]) --> B{Paid?}\n  B -->|yes| C[[Pack]]\n  B -. no .-> D>Remind]\n  C ==> E[(Shipped)]\n  D --> B',
 	CodesSequence: 'sequenceDiagram\n  actor U as User\n  U->>+S: Places an order\n  S-->>-U: The number',
-	CodesMarkdown: '::: tip title="Plugins"\nA fence of a language a plugin takes draws its Component:\n:::\n\n```mermaid\nstateDiagram-v2\n  [*] --> Draft\n  Draft --> Published : approve\n  Published --> [*]\n```\n',
+	CodesMarkdown: '::: tip title="Plugins"\nA fence of a language a plugin takes draws its Component:\n:::\n\n```mermaid\nstateDiagram-v2\n  [*] --> Draft\n  Draft --> Published : approve\n  Published --> [*]\n```\n\nA tree of files by its indents:\n\n```files\nsrc/\n  components/\n    App.js\n    Header.js\n  index.js\npackage.json\nREADME.md\n```\n',
 	SoundNote: 'Spectrum · Waveform · Jog · Sampler · PianoRoll: the Audio Service plays and hears',
 	DrawingNote: 'Drawing · DrawingLayers: shapes, brushes, texts, groups and layers',
 	DrawingLayer: 'sketch',
@@ -1052,6 +1105,9 @@ Elemenx.Component('UIKitPage', {
 	],
 	VirtualState: 'Pick a row',
 	LongList: [],
+	FeedItems: [],
+	FeedBusy: false,
+	FeedDone: false,
 	PeoplePage: 1,
 	ResultsPage: 1,
 	FilterColumns: [
@@ -1855,6 +1911,26 @@ Elemenx.Component('UIKitPage', {
 		this.VirtualState = 'Picked: ' + item.Label;
 	},
 
+	/* The endless feed: the next posts come a moment later, as from a server; five pages of them in all. */
+	FeedMore: function () {
+		var self = this;
+
+		this.FeedBusy = true;
+
+		window.setTimeout(function () {
+			var from = self.FeedItems.length;
+			var page = [];
+			var i;
+
+			for (i = from; i < from + 12; i++)
+				page.push({ID: i, Title: 'Post ' + (i + 1), Text: ['A walk by the sea', 'Notes on a new library', 'The picture of the day', 'What came in the mail'][i % 4]});
+
+			self.FeedItems = self.FeedItems.concat(page);
+			self.FeedBusy = false;
+			self.FeedDone = self.FeedItems.length >= 60;
+		}, 600);
+	},
+
 	/* The settings of the SettingsMenu demos: a fresh copy for each, as a menu turns its own switches and choices. */
 	SettingsItems: function () {
 		return [
@@ -2148,7 +2224,7 @@ Elemenx.Component('UIKitPage', {
 		if (!models.Has(seed))
 			models.Define(seed, {URL: seed, Asset: tracks.Asset(track), Fit: false});
 
-		scene.Add('sun', {ID: 'day', Time: 15, Latitude: 45, DayOfYear: 172, Color: '#fff4e0'});
+		scene.Add('sun', {ID: 'day', Time: this.RaceHour, Latitude: 45, DayOfYear: 172, Color: '#fff4e0'});
 		scene.Add('location', {ID: 'place', Model: seed, Size: 1});
 
 		this.RaceWait(0);
@@ -2165,6 +2241,10 @@ Elemenx.Component('UIKitPage', {
 			}
 
 			self.RaceSpeed = hero && hero.Car ? Math.round(Math.abs(hero.Car.Forward) * 3.6) : 0;
+			self.RaceGearOnly = hero && hero.Car && hero.Car.Gear !== undefined ? (hero.Car.Gear < 0 ? 'R' : hero.Car.Gear === 0 ? 'N' : String(hero.Car.Gear)) : 'N';
+			self.RaceRpmPart = hero && hero.Car && hero.Car.Rpm ? Math.round(Math.min(1, hero.Car.Rpm / 7500) * 100) : 0;
+			self.RaceSignals = {Left: !!(hero && hero.Signals && (hero.Signals.Indicate === -1 || hero.Signals.Hazard) && Math.floor((hero.Blink || 0) / 0.36) % 2 === 0), Right: !!(hero && hero.Signals && (hero.Signals.Indicate === 1 || hero.Signals.Hazard) && Math.floor((hero.Blink || 0) / 0.36) % 2 === 0), Lights: !!(hero && hero.Signals && hero.Signals.Lights)};
+			self.RaceGear = hero && hero.Car && hero.Car.Gear !== undefined ? (hero.Car.Gear < 0 ? 'R' : hero.Car.Gear === 0 ? 'N' : String(hero.Car.Gear)) + ' · ' + Math.round(hero.Car.Rpm / 100) * 100 + ' rpm' : '';
 		}, 200);
 	},
 
@@ -2195,6 +2275,7 @@ Elemenx.Component('UIKitPage', {
 			return each.Value === chosen;
 		})[0];
 		var name = 'car-' + chosen;
+		var doors = this.RaceDoors ? 1 : 0;
 		var mounts = car.Pipes.map(function (at) {
 			return {Kind: 'engine', Type: 'fumes', At: at, Aim: [0, 0, -1], Size: 0.5, Pop: true, Light: false};
 		});
@@ -2207,7 +2288,11 @@ Elemenx.Component('UIKitPage', {
 		if (scene.Get('car'))
 			scene.Remove('car');
 
-		scene.Add('unit', {ID: 'car', Name: '', Model: name, Size: car.Size || 1.25, X: start.X, Y: start.Z, Z: start.Y, Vehicle: Object.assign({Kind: 'car', Track: track, Heading: start.Heading, Wheels: car.Wheels, Held: car.Held, Yaw: car.Yaw, Seat: car.Seat || [0.3, 0.95, 0], Mass: 1400, Base: 2.85, Width: 1.75, Mounts: mounts, Openings: car.Windows ? [{Name: 'windows', Match: 'Window', Both: true, Low: car.Windows, High: [0.7, 0.95, 0.65], Way: [0, -1, 0], Reach: 0.26, Open: this.RaceWindows}] : []}, car.Tune, this.RaceTune)});
+		scene.Add('unit', {ID: 'car', Name: '', Model: name, Size: car.Size || 1.25, X: start.X, Y: start.Z, Z: start.Y, Vehicle: Object.assign({Kind: 'car', Track: track, Heading: start.Heading, Wheels: car.Wheels, Held: car.Held, Yaw: car.Yaw, Seat: car.Seat || [0.3, 0.95, 0], Mass: 1400, Base: 2.85, Width: 1.75, Mounts: mounts, Openings: (car.Windows ? [{Name: 'windows', Match: 'Window', Both: true, Low: car.Windows, High: [0.7, 0.95, 0.65], Way: [0, -1, 0], Reach: 0.26, Open: this.RaceWindows, Follow: (car.Controls || []).some(function (each) {
+			return each.Name === 'doors';
+		}) ? 'doors' : ''}] : []).concat((car.Controls || []).map(function (each) {
+			return each.Name === 'doors' ? Object.assign({}, each, {Open: doors}) : each;
+		})), Gears: car.Gears || [0.3, 0.45, 0.58, 0.7, 0.81, 0.91, 1], Shift: car.Shift || 'auto', Lamps: car.Lamps || [], Mirrors: car.Mirrors || null, Screens: car.Screens || null}, car.Tune, this.RaceTune), Wet: this.RaceWashed ? 1 : '', Drops: this.RaceDrops});
 		scene.Control('car');
 
 		scene.Scene().Wanted = scene.Scene().Distance = 8;
@@ -2276,6 +2361,36 @@ Elemenx.Component('UIKitPage', {
 			car.Values.Vehicle[name] = value;
 	},
 
+	/* The doors of the car, each on its own hinge, as its model has them: out, up as scissors, or up and out as butterfly wings. */
+	RaceDoorsOpened: function (value) {
+		var scene = this.RaceScene ? this.RaceScene() : null;
+
+		this.RaceDoors = value;
+
+		if (scene && scene.Get('car'))
+			scene.OpenPart('car', 'doors', value ? 1 : 0);
+	},
+
+	/* The hour on the track: at dusk and at night the lights come on by themselves. */
+	RaceTimed: function (value) {
+		var scene = this.RaceScene ? this.RaceScene() : null;
+
+		this.RaceHour = value;
+
+		if (scene && scene.Get('day'))
+			scene.Change('day', {Time: value});
+	},
+
+	/* The water on the car: just washed, it is wet whatever the weather; Drops, how much of it beads on its paint and glass. */
+	RaceWet: function (key, value) {
+		var scene = this.RaceScene ? this.RaceScene() : null;
+
+		this['Race' + key] = value;
+
+		if (scene && scene.Get('car'))
+			scene.Change('car', {Wet: this.RaceWashed ? 1 : '', Drops: this.RaceDrops});
+	},
+
 	RaceWindowsMoved: function (value) {
 		var scene = this.RaceScene ? this.RaceScene() : null;
 
@@ -2322,6 +2437,40 @@ Elemenx.Component('UIKitPage', {
 		}, 250);
 	},
 
+	/* A way far at once to the place chosen: warp through its tunnel, or a jump on the afterburner. */
+	OrbitTravel: function (kind) {
+		var self = this;
+		var scene = this.OrbitScene ? this.OrbitScene() : null;
+		var hero = scene ? scene.Scene().Objects.me : null;
+
+		/* Why it does not go, said where the phases are. */
+		if (!scene || !scene.$Element().isConnected) {
+			this.OrbitPhase = kind + ': no scene';
+
+			return;
+		}
+
+		scene.Travel('me', kind, kind === 'warp' ? {To: this.OrbitPlace} : {}, function (error) {
+			if (error)
+				self.OrbitPhase = kind + ': ' + (!hero ? 'no ship' : !hero.Ship ? 'the ship has not flown yet' : hero.Travel ? 'already ' + hero.Travel.Kind + ' ' + hero.Travel.Phase : 'cannot now');
+		});
+	},
+
+	/* Where H warps to, as the buttons do. */
+	OrbitPlaced: function (value) {
+		var scene = this.OrbitScene ? this.OrbitScene() : null;
+		var hero = scene ? scene.Scene().Objects.me : null;
+
+		this.OrbitPlace = value;
+
+		if (hero)
+			hero.Values.Vehicle.Warp = {To: value};
+	},
+
+	OrbitTravelled: function (event) {
+		this.OrbitPhase = event.Phase === 'done' ? '' : event.Kind + ': ' + event.Phase;
+	},
+
 	/* Another ship for the same pilot. */
 	OrbitShipChosen: function (value) {
 		var scene = this.OrbitScene ? this.OrbitScene() : null;
@@ -2343,7 +2492,7 @@ Elemenx.Component('UIKitPage', {
 		if (scene.Get('me'))
 			scene.Remove('me');
 
-		scene.Add('ship', {ID: 'me', Name: '', Model: name, Size: ship.Size || 0.012, Parent: 'terra', Vehicle: {Kind: 'ship', Yaw: ship.Yaw, Mounts: ship.Mounts, Top: 0.09, Around: 'terra', From: [-2.6, 0.3, 1.5], Facing: [1, -0.08, -0.5], Follow: [4.6, 1.1]}});
+		scene.Add('ship', {ID: 'me', Name: '', Model: name, Size: ship.Size || 0.012, Parent: 'terra', Vehicle: {Kind: 'ship', Yaw: ship.Yaw, Mounts: ship.Mounts, Top: 0.09, Around: 'terra', From: [-2.6, 0.3, 1.5], Facing: [1, -0.08, -0.5], Follow: [4.6, 1.1], Warp: {To: 'luna'}}});
 		scene.Control('me');
 	},
 
@@ -2876,6 +3025,13 @@ Elemenx.Component('UIKitPage', {
 		scene.FocusOn('scout');
 	},
 
+	/* The grass of a biome, for the meadow whose clumps and spread the sliders set. */
+	TerrainGrass: function (name) {
+		var biome = this.$Service('Biomes').Get(name);
+
+		return biome ? biome.Grass : null;
+	},
+
 	TerrainBiomed: function (value) {
 		this.TerrainBiome = value;
 	},
@@ -2914,8 +3070,10 @@ Elemenx.Component('UIKitPage', {
 	},
 
 	TerrainSave: function () {
-		this.TerrainSaved = this.Terrained().Save();
-		this.TerrainNote = 'Saved: ' + this.TerrainSaved.Objects.length + ' objects';
+		var saved = this.TerrainSaved = this.Terrained().Save();
+
+		/* A recipe: what the methods changed over what the template declares. */
+		this.TerrainNote = 'Saved: ' + (saved.Added.length + saved.Removed.length + Object.keys(saved.Overrides).length) + ' changes, ' + JSON.stringify(saved).length + ' bytes';
 	},
 
 	TerrainLoad: function () {

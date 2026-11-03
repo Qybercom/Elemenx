@@ -5,7 +5,8 @@
  *
  * Nothing is simulated: each particle is a quad whose place is worked out in its vertex shader from its seed and the time, so
  * a fire costs a draw and no work of the processor. A type is a list of layers of particles {Count, Life, Speed, Spread,
- * Gravity, Rise, Drag, Bounce, Size, Stretch, Wander, Kind, Blend, Color}; Kind says what they look like: flame, smoke or spark.
+ * Gravity, Rise, Drag, Bounce, Size, Stretch, Wander, Wind (how much the wind moves them, 1), Kind, Blend, Color}; Kind says what they
+ * look like: flame, smoke, spark, mote or bubble (clear, a bright rim and a glint, wobbling until it bursts).
  * Where the picture has the depth of the scene they meet what stands there softly. Smoke takes its light from the sun and from
  * the fire under it.
  *
@@ -24,7 +25,9 @@
  *
  * What burns lights what is round it (the lamp of the type, flickering, the nearest ones with shadows) and the air over it
  * trembles. Types: spark, torch, campfire, smoke, steam, dust, exhaust, fumes, backfire, explosion; of magic aura, circle, portal, shield, lightning,
- * healing, frost, poison, beam, fireball, teleport, and pillar, a shaft of light. Effects({Type: {...}}) adds types of its own.
+ * healing, frost, poison, beam, fireball, teleport, and pillar, a shaft of light; mana, bubbles that rise slowly round what it follows;
+ * glow, the light of the body of what it follows (Glow of a type: the color of it): Where body (by default), held (what it holds) or
+ * both, brightest at its edges. Effects({Type: {...}}) adds types of its own.
  * A type with Fly goes along its Aim so many units a second while it lasts, and Then is what bursts where it ends.
  *
  * Pulse of an effect changes what it is told as time goes: {Size: {From: 1, To: 2, Time: 3}, Color: {From: '#ff0000', To: '#0000ff'}, ...}
@@ -44,7 +47,7 @@ Elemenx.Trait('Effects', {
 		var head = '#version 300 es\nprecision highp float;\nprecision highp int;\nprecision highp sampler3D;\nprecision highp sampler2D;\n';
 		var meshes = {};
 		var bursts = [];
-		var kinds = {flame: 0, smoke: 1, spark: 2, mote: 3};
+		var kinds = {flame: 0, smoke: 1, spark: 2, mote: 3, bubble: 4};
 		var volumes = {fire: 0, stream: 1, ball: 2, beam: 3, shell: 4};
 		var plates = {sigil: 0, swirl: 1, pool: 2, wave: 3, nozzle: 4, flare: 5};
 		var born = {};
@@ -93,6 +96,16 @@ Elemenx.Trait('Effects', {
 				{Kind: 'stream', Life: 1, Speed: [5.5, 5.5], Size: [0.42, 0.42], Color: [0.3, 0.55, 1], Blend: 'alpha'},
 				{Kind: 'nozzle', Size: [0.5, 0.5], Color: [0.35, 0.6, 1], Blend: 'add'},
 				{Kind: 'smoke', Count: 16, Life: 1.1, Speed: [10, 14], Spread: 0.1, Drag: 2.2, Size: [0.4, 1.6], Wander: 0.3, Color: [0.5, 0.5, 0.52], Opacity: 0.035, Blend: 'alpha', Start: 0.25}
+			]},
+			/* Bubbles of mana: slow, wobbling as they rise, a bright rim and a glint, growing until they burst. */
+			mana: {Lamp: {Color: '#7aa8ff', Power: 0.08, Radius: 6, Flicker: 0.05}, Layers: [
+				{Kind: 'pool', Size: [1.6, 1.6], Color: [0.3, 0.5, 1], Blend: 'add'},
+				{Kind: 'bubble', Count: 30, Life: 5, Speed: [0.04, 0.12], Spread: 0.5, Rise: 0.28, Drag: 0.5, Size: [0.04, 0.1], Wander: 0.2, Wind: 0.15, Color: [0.4, 0.62, 1], Hot: [0.9, 0.96, 1], Blend: 'add', Base: 12},
+				{Kind: 'mote', Count: 18, Life: 2.4, Speed: [0.05, 0.2], Spread: 0.8, Rise: 0.4, Drag: 0.5, Size: [0.03, 0.008], Wander: 0.3, Wind: 0.3, Color: [0.5, 0.7, 1], Blend: 'add', Base: 12}
+			]},
+			/* The glow of what it follows: its body (or what it holds, Where) lit from within, brighter at its edges; a few motes round it. */
+			glow: {Lamp: {Color: '#8fc8ff', Power: 0.1, Radius: 5, Flicker: 0.04}, Glow: [0.45, 0.75, 1], Layers: [
+				{Kind: 'mote', Count: 22, Life: 1.8, Speed: [0.05, 0.2], Spread: 0.8, Rise: 0.45, Drag: 0.6, Size: [0.025, 0.006], Wander: 0.3, Wind: 0.3, Color: [0.55, 0.8, 1], Blend: 'add', Base: 10}
 			]},
 			aura: {Lamp: {Color: '#ffd27a', Power: 0.14, Radius: 8, Flicker: 0.1}, Layers: [
 				{Kind: 'pool', Size: [2.4, 2.4], Color: [1, 0.66, 0.24], Blend: 'add'},
@@ -445,8 +458,38 @@ Elemenx.Trait('Effects', {
 			return true;
 		};
 
+		engine.EffectsWarm = function () {
+			var made = self.EffectShaders(head);
+
+			program = program || renderer.Program(made.Vertex, made.Fragment);
+			volume = volume || renderer.Program(made.BoxVertex, made.Volume);
+			plateProgram = plateProgram || renderer.Program(made.PlateVertex, made.Plate);
+			boltProgram = boltProgram || renderer.Program(made.BoltVertex, made.Bolt);
+		};
+
 		engine.EffectsCount = function () {
 			return burning().length;
+		};
+
+		/*
+		 * What glows: the object an effect of a type with Glow follows gets Glow {Color (its light, by its Color and Intensity, as it
+		 * comes), Body, Held} for the frame: Where body (by default), held (what it holds) or both.
+		 */
+		engine.EffectGlow = function () {
+			scene.Order.forEach(function (object) {
+				object.Glow = null;
+			});
+
+			burning().forEach(function (one) {
+				var owner = scene.Objects[one.Key];
+				var carrier = owner && owner.Values.Follow ? scene.Objects[owner.Values.Follow] : null;
+				var where = owner ? String(trait(owner).Where || 'body') : 'body';
+				var light = vectors.Scale(one.Color || one.Type.Glow || [1, 1, 1], one.Intensity * one.Power * one.Grown);
+
+				if (!one.Type.Glow || !carrier) return;
+
+				carrier.Glow = {Color: light, Body: where !== 'held', Held: where !== 'body'};
+			});
 		};
 
 		/* The lamps of what burns: the nearest of them cast shadows, as any lamp does. */
@@ -748,7 +791,7 @@ Elemenx.Trait('Effects', {
 							uMove: [layer.Life, layer.Speed[0] * size * one.Length, layer.Speed[1] * size * one.Length, layer.Spread * Math.sqrt(much)],
 							uFall: [(layer.Gravity || 0) * size, layer.Drag || 0, layer.Bounce || 0, (layer.Rise || 0) * size],
 							uGrow: [layer.Size[0] * size * Math.sqrt(much) * one.Width, layer.Size[1] * size * Math.sqrt(much) * one.Width, layer.Stretch || 0, (layer.Wander || 0) * size],
-							uBlow: wind,
+							uBlow: [wind[0] * (layer.Wind === undefined ? 1 : layer.Wind), wind[1] * (layer.Wind === undefined ? 1 : layer.Wind)],
 							uKind: kinds[layer.Kind],
 							uColor: body,
 							uHot: one.Hot || layer.Hot || [1, 0.93, 0.7],
@@ -924,6 +967,15 @@ Elemenx.Trait('Effects', {
 				'		vec3 ramp = mix(vec3(1.0, 0.92, 0.7), uColor, smoothstep(0.0, 0.4, vAge));',
 				'		ramp = mix(ramp, vec3(0.7, 0.1, 0.02), smoothstep(0.5, 1.0, vAge));',
 				'		outColor = vec4(ramp * 2.6, dot2 * inward * soft);',
+				'		return;',
+				'	}',
+				/* A bubble: clear inside, a bright rim, a glint where the light comes from; it wobbles, grows and bursts at its end. */
+				'	if (uKind == 4) {',
+				'		float wobble = r * (1.0 + 0.06 * sin(atan(vAt.y, vAt.x) * 3.0 + uClock * 3.0 + vSeed * 20.0));',
+				'		float rim = smoothstep(0.62, 0.92, wobble) * smoothstep(1.0, 0.92, wobble);',
+				'		float glint = smoothstep(0.22, 0.0, length(vAt - vec2(-0.35, 0.38)));',
+				'		float burst = smoothstep(1.0, 0.9, vAge) * smoothstep(0.0, 0.15, vAge);',
+				'		outColor = vec4(mix(uColor, uHot, glint) * (0.6 + 0.4 * uIntensity), min(1.0, rim * 0.9 + glint * 0.8 + 0.06) * burst * soft);',
 				'		return;',
 				'	}',
 				/* A mote of light: a point in its own soft glow, that wakes, twinkles and goes out. */

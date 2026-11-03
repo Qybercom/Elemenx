@@ -11,7 +11,7 @@
  *   Blob(radius, at, color, rough, scale), Lathe(points, at, color, segments) and Wedge(width, height, depth, at, color,
  *   turn); at is [x, y, z] in the space of the model, turn degrees round x, y and z, a piece with Team takes the color
  *   of its team; tools.Graphics and tools.Rigs (Biped, Quadruped, Tracked: clips to reuse) are at hand.
- *   A recipe may name a file instead of Build: Define('hero', {URL: 'assets/hero.glb', Type, Size, Speed, Clips: {walk:
+ *   A recipe may name a file instead of Build (glb, gltf, fbx or obj: ModelFormats): Define('hero', {URL: 'assets/hero.glb', Type, Size, Speed, Clips: {walk:
  *   'Run'}}) (Clips: the clips of the game and the animations of the file that play them; idle, walk, run, attack, die
  *   and work are found by their names). Load(name, callback) fetches it, (error, model), and Ready(name) tells whether
  *   it came; a model of a file stands on the ground and is 1 tall, as the others are. Make of one not come yet is null. Apart,
@@ -94,7 +94,7 @@ Elemenx.Service('Models', {
 
 		if (recipe.Waiting.length > 1) return;
 
-		this.$Service('Gltf').Load(recipe.URL, function (error, asset) {
+		this.$Service('ModelFormats').Load(recipe.URL, function (error, asset) {
 			/* Clips of other files (Motions: {clip: URL or {URL, Stride, Held}}) come before the model is said to be ready. */
 			var motions = Object.keys(recipe.Motions || {});
 			var left = motions.length;

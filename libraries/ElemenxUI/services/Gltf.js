@@ -1,8 +1,11 @@
 /*
- * glTF 2.0, the models other programs make (Blender and the rest export it; FBX and OBJ go through them).
+ * glTF 2.0, the models other programs make (Blender and the rest export it; FBX and OBJ come through ModelFormats).
  * - Parse(data, callback, options): data an ArrayBuffer, a Uint8Array or the JSON of a .gltf (its text or the object);
  *   calls back (error, asset). options Buffers: {uri: ArrayBuffer} for the files a .gltf names.
  * - Load(url, callback): fetches a .glb or a .gltf with the files it names, and its pictures where there is a page.
+ * - Write(asset, options): an asset as a .glb (an ArrayBuffer), or the JSON of a .gltf with its buffer inside ({Text:
+ *   true}): nodes, meshes, materials with their pictures, skins, clips, lamps (KHR_lights_punctual), light over 1
+ *   (KHR_materials_emissive_strength), moved pictures (KHR_texture_transform), unlit.
  * - The asset: {Nodes: [{Name, Parent, Children, Translation, Rotation, Scale, Mesh, Skin}], Meshes: [[{Geometry, Material}]],
  *   Lights: [{Name, Type, Color, Intensity, Range, Outer}] (a node with one has its Light),
  *   Materials: [{Name, BaseColor, Metallic, Roughness, Emissive, ColorMap, NormalMap, MetalMap, OcclusionMap, EmissiveMap,
@@ -18,7 +21,7 @@
 Elemenx.Service('Gltf', {
 	$Meta: {
 		Description: 'glTF 2.0 and GLB: meshes, materials, skins and animations of the models other programs make.',
-		Methods: ['Parse(data, callback, options)', 'Load(url, callback)', 'Meshopt(mode, source, count, stride, filter)']
+		Methods: ['Parse(data, callback, options)', 'Load(url, callback)', 'Write(asset, options)', 'Meshopt(mode, source, count, stride, filter)']
 	},
 
 	Supported: ['KHR_mesh_quantization', 'KHR_texture_transform', 'KHR_materials_unlit', 'KHR_materials_specular', 'KHR_materials_clearcoat', 'KHR_materials_emissive_strength', 'KHR_materials_transmission', 'KHR_materials_pbrSpecularGlossiness', 'EXT_meshopt_compression'],
@@ -168,7 +171,32 @@ Elemenx.Service('Gltf', {
 			return;
 		}
 
+		/* A picture in the file is unpacked behind the page: a large one would hold a frame up for a long while. */
+		function behind (image) {
+			var blob = new Blob([image.Data], {type: image.Type || 'image/png'});
+
+			createImageBitmap(blob, {premultiplyAlpha: 'none', colorSpaceConversion: 'none'}).then(function (bitmap) {
+				image.Picture = bitmap;
+
+				return createImageBitmap(bitmap, {resizeWidth: 4, resizeHeight: 4}).then(function (small) {
+					image.Mean = self.Mean(small);
+
+					small.close();
+
+					finished();
+				});
+			}).catch(function () {
+				finished();
+			});
+		}
+
 		asset.Images.forEach(function (image) {
+			if (image.Data && typeof createImageBitmap === 'function') {
+				behind(image);
+
+				return;
+			}
+
 			var picture = new Image();
 			var address = image.Data ? URL.createObjectURL(new Blob([image.Data], {type: image.Type || 'image/png'})) : self.Beside(url, image.URI);
 
@@ -244,6 +272,332 @@ Elemenx.Service('Gltf', {
 			throw new Error('Elemenx Gltf: a GLB with no JSON');
 
 		return result;
+	},
+
+	/*
+	 * An asset (as Read gives it, or Fbx and ModelFormats) as glTF 2.0: a .glb (an ArrayBuffer) by default, the JSON of a
+	 * .gltf with its buffer inside ({Text: true}). Its nodes, meshes (positions with their bounds, normals, UVs, colors,
+	 * joints and weights, indices), materials with their pictures, skins, clips and lamps.
+	 */
+	Write: function (asset, options) {
+		var settings = options || {};
+		var parts = [];
+		var length = 0;
+		var json = {asset: {version: '2.0', generator: 'Elemenx'}, scene: 0, scenes: [{nodes: (asset.Scene || []).slice()}], nodes: [], meshes: [], materials: [], buffers: [], bufferViews: [], accessors: []};
+		var textures = {};
+		var used = {};
+
+		/* A view of the buffer for bytes, aligned to four. */
+		function view (bytes, target) {
+			var made = {buffer: 0, byteOffset: length, byteLength: bytes.byteLength};
+
+			if (target)
+				made.target = target;
+
+			parts.push(new Uint8Array(bytes.buffer, bytes.byteOffset, bytes.byteLength));
+
+			length += bytes.byteLength;
+
+			if (length % 4) {
+				parts.push(new Uint8Array(4 - length % 4));
+
+				length += 4 - length % 4;
+			}
+
+			json.bufferViews.push(made);
+
+			return json.bufferViews.length - 1;
+		}
+
+		function accessor (values, type, kind, target, bounds) {
+			var made = {bufferView: view(values, target), componentType: kind, count: values.length / {SCALAR: 1, VEC2: 2, VEC3: 3, VEC4: 4, MAT4: 16}[type], type: type};
+			var size = {SCALAR: 1, VEC2: 2, VEC3: 3, VEC4: 4}[type];
+			var i;
+			var k;
+
+			if (bounds) {
+				made.min = [];
+				made.max = [];
+
+				for (k = 0; k < size; k++) {
+					made.min[k] = Infinity;
+					made.max[k] = -Infinity;
+				}
+
+				for (i = 0; i < made.count; i++) {
+					for (k = 0; k < size; k++) {
+						made.min[k] = Math.min(made.min[k], values[i * size + k]);
+						made.max[k] = Math.max(made.max[k], values[i * size + k]);
+					}
+				}
+			}
+
+			json.accessors.push(made);
+
+			return json.accessors.length - 1;
+		}
+
+		function floats (values) {
+			return values instanceof Float32Array ? values : new Float32Array(values);
+		}
+
+		/* A picture of a material as a texture of the file: its image inside the buffer, or the file it names. */
+		function texture (map) {
+			var image = map ? (asset.Images || [])[map.Image] : null;
+			var made;
+
+			if (!image || !image.Data && !image.URI) return null;
+
+			if (textures[map.Image] === undefined) {
+				json.images = json.images || [];
+				json.textures = json.textures || [];
+
+				json.images.push(image.Data ? {bufferView: view(image.Data instanceof Uint8Array ? image.Data : new Uint8Array(image.Data)), mimeType: image.Type || 'image/png'} : {uri: image.URI});
+				json.textures.push({source: json.images.length - 1});
+
+				textures[map.Image] = json.textures.length - 1;
+			}
+
+			made = {index: textures[map.Image]};
+
+			if (map.Set)
+				made.texCoord = map.Set;
+
+			if (map.Offset && (map.Offset[0] || map.Offset[1]) || map.Repeat && (map.Repeat[0] !== 1 || map.Repeat[1] !== 1)) {
+				used.KHR_texture_transform = true;
+				made.extensions = {KHR_texture_transform: {offset: map.Offset || [0, 0], scale: map.Repeat || [1, 1]}};
+			}
+
+			return made;
+		}
+
+		(asset.Materials || []).forEach(function (material) {
+			var made = {name: material.Name || '', pbrMetallicRoughness: {baseColorFactor: (material.BaseColor || [1, 1, 1, 1]).slice(0, 4), metallicFactor: material.Metallic === undefined ? 1 : material.Metallic, roughnessFactor: material.Roughness === undefined ? 1 : material.Roughness}};
+			var emissive = (material.Emissive || [0, 0, 0]).slice(0, 3);
+			var strongest = Math.max(emissive[0], emissive[1], emissive[2]);
+			var color = texture(material.ColorMap);
+			var metal = texture(material.MetalMap);
+			var normal = texture(material.NormalMap);
+			var occlusion = texture(material.OcclusionMap);
+			var glow = texture(material.EmissiveMap);
+
+			if (color)
+				made.pbrMetallicRoughness.baseColorTexture = color;
+
+			if (metal)
+				made.pbrMetallicRoughness.metallicRoughnessTexture = metal;
+
+			if (normal)
+				made.normalTexture = Object.assign(normal, material.NormalMap.Scale !== 1 ? {scale: material.NormalMap.Scale} : {});
+
+			if (occlusion)
+				made.occlusionTexture = occlusion;
+
+			if (glow)
+				made.emissiveTexture = glow;
+
+			/* Light stronger than 1 keeps its strength of its own. */
+			if (strongest > 1) {
+				used.KHR_materials_emissive_strength = true;
+				made.emissiveFactor = emissive.map(function (value) {
+					return value / strongest;
+				});
+				made.extensions = Object.assign(made.extensions || {}, {KHR_materials_emissive_strength: {emissiveStrength: strongest}});
+			}
+			else if (strongest > 0) {
+				made.emissiveFactor = emissive;
+			}
+
+			if (material.Alpha && material.Alpha !== 'OPAQUE')
+				made.alphaMode = material.Alpha;
+
+			if (material.Alpha === 'MASK')
+				made.alphaCutoff = material.Cutoff === undefined ? 0.5 : material.Cutoff;
+
+			if (material.DoubleSided)
+				made.doubleSided = true;
+
+			if (material.Unlit) {
+				used.KHR_materials_unlit = true;
+				made.extensions = Object.assign(made.extensions || {}, {KHR_materials_unlit: {}});
+			}
+
+			json.materials.push(made);
+		});
+
+		(asset.Meshes || []).forEach(function (mesh, index) {
+			json.meshes.push({name: 'mesh' + index, primitives: mesh.map(function (part) {
+				var shape = part.Geometry;
+				var count = shape.Positions.length / 3;
+				var attributes = {POSITION: accessor(floats(shape.Positions), 'VEC3', 5126, 34962, true)};
+				var made = {attributes: attributes, mode: 4};
+
+				if (shape.Normals && shape.Normals.length)
+					attributes.NORMAL = accessor(floats(shape.Normals), 'VEC3', 5126, 34962);
+
+				if (shape.UVs && shape.UVs.length)
+					attributes.TEXCOORD_0 = accessor(floats(shape.UVs), 'VEC2', 5126, 34962);
+
+				if (shape.Colors && shape.Colors.length)
+					attributes.COLOR_0 = accessor(floats(shape.Colors), shape.Colors.length / count === 4 ? 'VEC4' : 'VEC3', 5126, 34962);
+
+				if (shape.Joints && shape.Joints.length) {
+					attributes.JOINTS_0 = accessor(new Uint16Array(shape.Joints), 'VEC4', 5123, 34962);
+					attributes.WEIGHTS_0 = accessor(floats(shape.Weights), 'VEC4', 5126, 34962);
+				}
+
+				if (shape.Indices && shape.Indices.length)
+					made.indices = accessor(count > 65535 ? new Uint32Array(shape.Indices) : new Uint16Array(shape.Indices), 'SCALAR', count > 65535 ? 5125 : 5123, 34963);
+
+				if (part.Material !== undefined && part.Material !== null && json.materials[part.Material])
+					made.material = part.Material;
+
+				return made;
+			})});
+		});
+
+		json.nodes = asset.Nodes.map(function (node) {
+			var made = {name: node.Name || ''};
+
+			if (node.Children && node.Children.length)
+				made.children = node.Children.slice();
+
+			if (node.Translation && (node.Translation[0] || node.Translation[1] || node.Translation[2]))
+				made.translation = Array.from(node.Translation);
+
+			if (node.Rotation && (node.Rotation[0] || node.Rotation[1] || node.Rotation[2] || node.Rotation[3] !== 1))
+				made.rotation = Array.from(node.Rotation);
+
+			if (node.Scale && (node.Scale[0] !== 1 || node.Scale[1] !== 1 || node.Scale[2] !== 1))
+				made.scale = Array.from(node.Scale);
+
+			if (node.Mesh !== undefined && node.Mesh !== -1)
+				made.mesh = node.Mesh;
+
+			if (node.Skin !== undefined && node.Skin !== -1)
+				made.skin = node.Skin;
+
+			if (node.Light !== undefined && node.Light !== -1)
+				made.extensions = {KHR_lights_punctual: {light: node.Light}};
+
+			return made;
+		});
+
+		if (!json.scenes[0].nodes.length) {
+			json.scenes[0].nodes = asset.Nodes.map(function (node, index) {
+				return node.Parent === -1 || node.Parent === undefined ? index : -1;
+			}).filter(function (index) {
+				return index !== -1;
+			});
+		}
+
+		if ((asset.Skins || []).length) {
+			json.skins = asset.Skins.map(function (skin) {
+				var made = {joints: skin.Joints.slice()};
+
+				if (skin.Inverse)
+					made.inverseBindMatrices = accessor(floats(skin.Inverse), 'MAT4', 5126);
+
+				return made;
+			});
+		}
+
+		if ((asset.Animations || []).length) {
+			json.animations = asset.Animations.map(function (clip) {
+				var made = {name: clip.Name || '', samplers: [], channels: []};
+
+				clip.Channels.forEach(function (channel) {
+					var size = channel.Size || (channel.Path === 'rotation' ? 4 : 3);
+
+					made.samplers.push({input: accessor(floats(channel.Times), 'SCALAR', 5126, null, true), output: accessor(floats(channel.Values), {1: 'SCALAR', 3: 'VEC3', 4: 'VEC4'}[size] || 'VEC3', 5126), interpolation: channel.Step ? 'STEP' : channel.Cubic ? 'CUBICSPLINE' : 'LINEAR'});
+					made.channels.push({sampler: made.samplers.length - 1, target: {node: channel.Node, path: channel.Path}});
+				});
+
+				return made;
+			});
+		}
+
+		if ((asset.Lights || []).length) {
+			used.KHR_lights_punctual = true;
+			json.extensions = {KHR_lights_punctual: {lights: asset.Lights.map(function (light) {
+				var made = {name: light.Name || '', type: light.Type || 'point', color: light.Color || [1, 1, 1], intensity: light.Intensity === undefined ? 1 : light.Intensity};
+
+				if (light.Range)
+					made.range = light.Range;
+
+				if (made.type === 'spot')
+					made.spot = {outerConeAngle: light.Outer === undefined ? Math.PI / 4 : light.Outer};
+
+				return made;
+			})}};
+		}
+
+		if (Object.keys(used).length)
+			json.extensionsUsed = Object.keys(used);
+
+		if (!json.materials.length)
+			delete json.materials;
+
+		if (!json.meshes.length)
+			delete json.meshes;
+
+		var binary = new Uint8Array(length);
+		var at = 0;
+
+		parts.forEach(function (part) {
+			binary.set(part, at);
+
+			at += part.length;
+		});
+
+		if (length) json.buffers.push({byteLength: length});
+		else delete json.buffers;
+
+		if (!json.bufferViews.length)
+			delete json.bufferViews;
+
+		if (!json.accessors.length)
+			delete json.accessors;
+
+		/* A .gltf: the buffer inside, as base64. */
+		if (settings.Text) {
+			if (length) {
+				var text = '';
+				var i;
+
+				for (i = 0; i < binary.length; i += 32768)
+					text += String.fromCharCode.apply(null, binary.subarray(i, i + 32768));
+
+				json.buffers[0].uri = 'data:application/octet-stream;base64,' + btoa(text);
+			}
+
+			return JSON.stringify(json);
+		}
+
+		/* A .glb: its header, the JSON padded with spaces, the binary padded with zeros. */
+		var words = new TextEncoder().encode(JSON.stringify(json));
+		var padded = Math.ceil(words.length / 4) * 4;
+		var total = 12 + 8 + padded + (length ? 8 + length : 0);
+		var file = new Uint8Array(total);
+		var data = new DataView(file.buffer);
+
+		data.setUint32(0, 0x46546c67, true);
+		data.setUint32(4, 2, true);
+		data.setUint32(8, total, true);
+		data.setUint32(12, padded, true);
+		data.setUint32(16, 0x4e4f534a, true);
+
+		file.set(words, 20);
+		file.fill(32, 20 + words.length, 20 + padded);
+
+		if (length) {
+			data.setUint32(20 + padded, length, true);
+			data.setUint32(24 + padded, 0x004e4942, true);
+
+			file.set(binary, 28 + padded);
+		}
+
+		return file.buffer;
 	},
 
 	Base64: function (text) {
